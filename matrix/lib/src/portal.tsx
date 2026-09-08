@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Div } from '@reference-ui/react'
 import { Portal, type PortalContainer } from '@reference-ui/lib'
 
 const TestContext = React.createContext('default')
@@ -10,6 +11,12 @@ export function PortalFixture() {
   const [clickCount, setClickCount] = React.useState(0)
 
   const dynamicRef = React.useRef<HTMLDivElement | null>(null)
+
+  // Theme test state
+  const [docOnlyMounted, setDocOnlyMounted] = React.useState(false)
+  const [islandOpen, setIslandOpen] = React.useState(false)
+  const [liveRootTheme, setLiveRootTheme] = React.useState<'light' | 'dark'>('light')
+  const [livePortalOpen, setLivePortalOpen] = React.useState(false)
 
   return (
     <TestContext.Provider value="logical-provider-value">
@@ -95,6 +102,132 @@ export function PortalFixture() {
           />
 
           <SwitchablePortal destination={currentDestination} />
+        </section>
+
+        {/* Theme Proofs Section */}
+        <section data-testid="portal-theme-section" style={{ marginTop: 32 }}>
+          <h2>Theme &amp; Layer Scope Proofs</h2>
+
+          {/* PT-THEME-01: Bare Portal in Dark Scope */}
+          <Div colorMode="dark" data-testid="portal-theme-dark-parent">
+            <Portal>
+              <Div
+                data-testid="portal-theme-dark-node"
+                bg="ui.dialog.background"
+                color="ui.dialog.foreground"
+              >
+                Dark Portaled Child
+              </Div>
+            </Portal>
+          </Div>
+
+          {/* PT-THEME-02: Bare Portal in Light Scope */}
+          <Div colorMode="light" data-testid="portal-theme-light-parent">
+            <Portal>
+              <Div
+                data-testid="portal-theme-light-node"
+                bg="ui.dialog.background"
+                color="ui.dialog.foreground"
+              >
+                Light Portaled Child
+              </Div>
+            </Portal>
+          </Div>
+
+          {/* PT-THEME-03: Nested Portal under Dark */}
+          <Div colorMode="dark" data-testid="portal-nested-dark-parent">
+            <Portal>
+              <Div
+                data-testid="portal-nested-outer"
+                bg="ui.dialog.background"
+                color="ui.dialog.foreground"
+              >
+                Nested Outer
+                <Portal>
+                  <Div
+                    data-testid="portal-nested-inner"
+                    bg="ui.dialog.background"
+                    color="ui.dialog.foreground"
+                  >
+                    Nested Inner
+                  </Div>
+                </Portal>
+              </Div>
+            </Portal>
+          </Div>
+
+          {/* PT-THEME-04: Document-Only Color Mode (No React Context) */}
+          <button
+            type="button"
+            data-testid="btn-mount-doc-only"
+            onClick={() => setDocOnlyMounted(true)}
+          >
+            Mount Doc Only Portal
+          </button>
+          {docOnlyMounted && (
+            <Portal>
+              <Div
+                data-testid="portal-doc-only-node"
+                bg="ui.dialog.background"
+                color="ui.dialog.foreground"
+              >
+                Doc Only Portaled Child
+              </Div>
+            </Portal>
+          )}
+
+          {/* PT-THEME-05: Island: light app with dark ancestor */}
+          <Div colorMode="light" data-testid="portal-island-light-app">
+            <Div colorMode="dark" data-testid="portal-island-dark-scope">
+              <button
+                type="button"
+                data-testid="btn-open-island-portal"
+                onClick={() => setIslandOpen(true)}
+              >
+                Open Island Portal
+              </button>
+              {islandOpen && (
+                <Portal>
+                  <Div
+                    data-testid="portal-island-content"
+                    bg="ui.dialog.background"
+                    color="ui.dialog.foreground"
+                  >
+                    Island Portaled Content
+                  </Div>
+                </Portal>
+              )}
+            </Div>
+          </Div>
+
+          {/* PT-THEME-06: Live theme toggle on root without remount */}
+          <Div colorMode={liveRootTheme} data-testid="portal-live-root">
+            <button
+              type="button"
+              data-testid="btn-toggle-live-root-theme"
+              onClick={() => setLiveRootTheme(t => (t === 'light' ? 'dark' : 'light'))}
+            >
+              Toggle Live Root Theme ({liveRootTheme})
+            </button>
+            <button
+              type="button"
+              data-testid="btn-open-live-portal"
+              onClick={() => setLivePortalOpen(true)}
+            >
+              Open Live Portal
+            </button>
+            {livePortalOpen && (
+              <Portal>
+                <Div
+                  data-testid="portal-live-content"
+                  bg="ui.dialog.background"
+                  color="ui.dialog.foreground"
+                >
+                  <span data-testid="portal-live-text">Live Portaled Content</span>
+                </Div>
+              </Portal>
+            )}
+          </Div>
         </section>
 
         <div data-testid="parent-click-count">{clickCount}</div>

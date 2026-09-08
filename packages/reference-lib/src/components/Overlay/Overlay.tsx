@@ -3,7 +3,6 @@ import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { Portal, type PortalProps } from '../Portal'
 import { Presence } from '../Presence'
 import { FocusLock } from '../FocusLock'
-import { OverlayPortaledSurface } from './overlay-portal-surface'
 import { overlayStackStore, useOverlayZIndex } from './overlay-stack'
 import { usePreventScroll } from './scroll-lock'
 import { ariaHideOutside } from './aria-hide-outside'
@@ -320,7 +319,7 @@ export function OverlayBackdrop({
 
   const node = (
     <Presence present={context.isOpen}>
-      <OverlayPortaledSurface
+      <Div
         data-reference-overlay-backdrop=""
         data-state={context.isOpen ? 'open' : 'closed'}
         position="fixed"
@@ -344,7 +343,7 @@ export function OverlayBackdrop({
         {...props}
       >
         {children}
-      </OverlayPortaledSurface>
+      </Div>
     </Presence>
   )
 
@@ -636,17 +635,10 @@ export function OverlayContent({
 
   if (!context) return null
 
-  const anchorNode =
-    context.triggerRef.current ??
-    (context.anchor && typeof context.anchor === 'object' && 'current' in context.anchor
-      ? context.anchor.current
-      : null)
-
   const contentElement = (
-    <OverlayPortaledSurface
+    <Div
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
-      anchorNode={anchorNode}
       ref={(node: HTMLDivElement | null) => {
         context.contentRef.current = node
         setMountedContent(node)
@@ -660,7 +652,7 @@ export function OverlayContent({
       {...props}
     >
       {children}
-    </OverlayPortaledSurface>
+    </Div>
   )
 
   const wrappedWithFocusLock = context.isolation.focus ? (

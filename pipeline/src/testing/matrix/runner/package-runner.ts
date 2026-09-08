@@ -42,6 +42,7 @@ import { writeMatrixPackageStageLog } from './logs.js'
 import { matrixLogDir } from './paths.js'
 import {
   announceMatrixPackageStart,
+  announceMatrixPackageTesting,
   appendOutputBlock,
   collectMatrixFailureDetails,
   createAbortedMatrixPackageResult,
@@ -213,6 +214,7 @@ export async function runMatrixPackageInDagger(
     }
 
     phase = 'test'
+    announceMatrixPackageTesting(packageRunContext)
     lines.push(usesSharedWatchSession
       ? (refSyncStrategy.mode === 'watch-full'
           ? '  Running tests against ref sync watch output after full initial completion'

@@ -63,10 +63,33 @@ describe('resolveRhythm', () => {
     expect(resolveRhythm('12% 1r')).toBe('12% var(--spacing-root)')
   })
 
-  it('leaves complex grammar and function values untouched', () => {
-    expect(resolveRhythm('calc(0.34rem + 1r)')).toBe('calc(0.34rem + 1r)')
-    expect(resolveRhythm('min(0.34rem, 1r)')).toBe('min(0.34rem, 1r)')
-    expect(resolveRhythm('var(--space-2) 1r')).toBe('var(--space-2) 1r')
+  it('interpolates "r" inside nested calc() and min()', () => {
+    expect(resolveRhythm('calc(100% - min(2r, 10px))')).toBe(
+      'calc(100% - min(calc(2 * var(--spacing-root)), 10px))',
+    )
+    expect(resolveRhythm('calc(0.34rem + 1r)')).toBe(
+      'calc(0.34rem + var(--spacing-root))',
+    )
+    expect(resolveRhythm('min(0.34rem, 1r)')).toBe(
+      'min(0.34rem, var(--spacing-root))',
+    )
+    expect(resolveRhythm('var(--space-2) 1r')).toBe(
+      'var(--space-2) var(--spacing-root)',
+    )
+  })
+
+  it('ignores var() variables ending in "r" and strings/urls/env', () => {
+    expect(resolveRhythm('var(--r)')).toBe('var(--r)')
+    expect(resolveRhythm('url("/icon-r.png")')).toBe('url("/icon-r.png")')
+    expect(resolveRhythm('env(safe-area-r)')).toBe('env(safe-area-r)')
+    expect(resolveRhythm('"2r"')).toBe('"2r"')
+    expect(resolveRhythm("'1r'")).toBe("'1r'")
+  })
+
+  it('safely resolves rhythm in shorthands with functions', () => {
+    expect(resolveRhythm('1r var(--spacing-y, 10px) 2r')).toBe(
+      'var(--spacing-root) var(--spacing-y, 10px) calc(2 * var(--spacing-root))',
+    )
   })
 
   it('passes through invalid fraction rhythm strings', () => {

@@ -130,6 +130,33 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     expect(surface.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(surface.backgroundColor).not.toBe('transparent')
   })
+
+  test('OV-THEME-02: Portaled Content in light color mode re-establishes layer scope with light tokens', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-open-light-themed-anchored').click()
+    const content = page.getByTestId('overlay-light-themed-content')
+    await expect(content).toBeVisible()
+
+    const surface = await content.evaluate(el => {
+      const style = window.getComputedStyle(el)
+      return {
+        isDirectBodyChild: el.parentElement === document.body,
+        dataLayer: el.getAttribute('data-layer'),
+        dataTheme: el.getAttribute('data-panda-theme'),
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+      }
+    })
+
+    expect(surface.isDirectBodyChild).toBe(true)
+    expect(surface.dataLayer).toBeTruthy()
+    expect(surface.dataTheme).toBe('light')
+    expect(surface.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+    expect(surface.backgroundColor).not.toBe('transparent')
+    // In light mode, text color is dark, not white
+    expect(surface.color).not.toBe('rgb(255, 255, 255)')
+  })
 })
 
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {

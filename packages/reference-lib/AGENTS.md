@@ -7,9 +7,9 @@ Master engineering standards and strict architectural invariants for all 24 comp
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> **DO NOT launch background `pnpm dev:lib` or long-running `cosmos` dev server processes.**
-> The developer prefers running `pnpm dev:lib` locally in their own terminal to monitor logs and prevent port/process conflicts.
-> If port 5000 (Cosmos) or port 5050 (Vite renderer) is not reachable, politely prompt the developer to run `pnpm dev:lib` in their terminal before proceeding with browser fixture verification.
+> **DO NOT launch background `pnpm dev:lib` dev server processes.**
+> The developer runs `pnpm dev:lib` locally in their own terminal to monitor logs and prevent port/process conflicts.
+> If the Book dev server on port 5000 is not reachable, politely prompt the developer to run `pnpm dev:lib` in their terminal before proceeding with browser fixture verification.
 
 ---
 

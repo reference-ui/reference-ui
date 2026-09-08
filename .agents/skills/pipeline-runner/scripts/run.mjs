@@ -33,6 +33,8 @@ export function findRepoRoot(startDir = __dirname) {
 const repoRoot = findRepoRoot(__dirname)
 const SOCKET_PATH = path.join(os.tmpdir(), 'reference-ui-agent.sock')
 const DAEMON_PID_FILE = path.join(os.tmpdir(), 'reference-ui-agent.pid')
+const QUEUE_DIR = path.join(os.tmpdir(), 'reference-ui-agent-queue')
+const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
 
 // 2. Darwin QoS Jailbreak
 function ensureQosJailbreak() {
@@ -124,6 +126,8 @@ function getSystemStatus() {
     }
   }
 
+  const queueInfo = getQueueStatus()
+
   return {
     pid: process.pid,
     platform: process.platform,
@@ -136,10 +140,187 @@ function getSystemStatus() {
     dockerOk,
     verdaccioOk,
     daemonActive,
+    queueInfo,
   }
 }
 
-// 4. Stream unbuffering helper for spawn
+// 4. Cross-Process FIFO Queue Manager
+function isPidAlive(pid) {
+  if (!pid || typeof pid !== 'number' || isNaN(pid) || pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (err) {
+    return err.code === 'EPERM'
+  }
+}
+
+function getQueueStatus() {
+  let activeLock = null
+  let pendingCount = 0
+  if (fs.existsSync(QUEUE_DIR)) {
+    try {
+      if (fs.existsSync(LOCK_FILE)) {
+        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+        if (isPidAlive(lock.pid)) {
+          activeLock = lock
+        }
+      }
+      const files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
+      for (const f of files) {
+        try {
+          const data = JSON.parse(fs.readFileSync(path.join(QUEUE_DIR, f), 'utf-8'))
+          if (isPidAlive(data.pid) && (!activeLock || data.pid !== activeLock.pid)) {
+            pendingCount++
+          }
+        } catch {}
+      }
+    } catch {}
+  }
+  return { activeLock, pendingCount }
+}
+
+async function acquireQueueLock(taskInfo = {}) {
+  try {
+    fs.mkdirSync(QUEUE_DIR, { recursive: true })
+  } catch {}
+
+  const now = Date.now().toString().padStart(16, '0')
+  const myPid = process.pid
+  const rand = Math.random().toString(36).slice(2, 6)
+  const entryFilename = `${now}-${myPid}-${rand}.json`
+  const entryPath = path.join(QUEUE_DIR, entryFilename)
+
+  const entryData = {
+    pid: myPid,
+    createdAt: Date.now(),
+    task: taskInfo,
+  }
+
+  try {
+    fs.writeFileSync(entryPath, JSON.stringify(entryData, null, 2))
+  } catch (err) {
+    console.warn(`[agent-queue] Warning: Could not write queue entry: ${err.message}`)
+  }
+
+  let cleanUpDone = false
+  const cleanup = () => {
+    if (cleanUpDone) return
+    cleanUpDone = true
+    try {
+      if (fs.existsSync(entryPath)) fs.unlinkSync(entryPath)
+    } catch {}
+    try {
+      if (fs.existsSync(LOCK_FILE)) {
+        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+        if (lock.pid === myPid) {
+          fs.unlinkSync(LOCK_FILE)
+        }
+      }
+    } catch {}
+  }
+
+  process.on('SIGINT', cleanup)
+  process.on('SIGTERM', cleanup)
+  process.on('exit', cleanup)
+
+  let loggedWait = false
+  let lastLogTime = 0
+
+  while (true) {
+    // 1. Prune dead entries in QUEUE_DIR
+    let files = []
+    try {
+      files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
+    } catch {}
+
+    const validEntries = []
+    for (const f of files) {
+      const fPath = path.join(QUEUE_DIR, f)
+      try {
+        const data = JSON.parse(fs.readFileSync(fPath, 'utf-8'))
+        if (isPidAlive(data.pid)) {
+          validEntries.push({ file: f, data })
+        } else {
+          try { fs.unlinkSync(fPath) } catch {}
+        }
+      } catch {
+        // If file is corrupt or empty, ignore
+      }
+    }
+
+    // Sort valid entries by filename (which starts with zero-padded timestamp)
+    validEntries.sort((a, b) => a.file.localeCompare(b.file))
+
+    // 2. Check active lock
+    let currentLockHolder = null
+    if (fs.existsSync(LOCK_FILE)) {
+      try {
+        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+        if (isPidAlive(lock.pid)) {
+          currentLockHolder = lock
+        } else {
+          console.log(`[agent-queue] Stale lock detected (PID ${lock.pid} is no longer running). Clearing lock.`)
+          try { fs.unlinkSync(LOCK_FILE) } catch {}
+        }
+      } catch {
+        try { fs.unlinkSync(LOCK_FILE) } catch {}
+      }
+    }
+
+    const myIndex = validEntries.findIndex(e => e.file === entryFilename)
+
+    // Are we first in line?
+    if (myIndex === 0) {
+      // If no active lock, or active lock already belongs to us:
+      if (!currentLockHolder || currentLockHolder.pid === myPid) {
+        // Acquire lock
+        const lockPayload = {
+          pid: myPid,
+          entryFile: entryFilename,
+          acquiredAt: Date.now(),
+          task: taskInfo,
+        }
+        try {
+          fs.writeFileSync(LOCK_FILE, JSON.stringify(lockPayload, null, 2))
+        } catch {}
+        if (loggedWait) {
+          console.log(`[agent-queue] Turn reached (PID ${myPid}). Starting execution...`)
+        }
+        return async () => {
+          cleanup()
+          process.off('SIGINT', cleanup)
+          process.off('SIGTERM', cleanup)
+          process.off('exit', cleanup)
+        }
+      }
+    }
+
+    // We are waiting
+    const queuePos = myIndex >= 0 ? myIndex + 1 : validEntries.length + 1
+    const holderPid = currentLockHolder ? currentLockHolder.pid : (validEntries[0] ? validEntries[0].data.pid : 'unknown')
+    const nowMs = Date.now()
+
+    if (!loggedWait || nowMs - lastLogTime > 10000) {
+      console.log(`[agent-queue] Another test is currently running (PID ${holderPid}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
+      loggedWait = true
+      lastLogTime = nowMs
+    }
+
+    await new Promise(r => setTimeout(r, 1000))
+  }
+}
+
+async function withQueueLock(taskInfo, fn) {
+  const release = await acquireQueueLock(taskInfo)
+  try {
+    return await fn()
+  } finally {
+    await release()
+  }
+}
+
+// 5. Stream unbuffering helper for spawn
 function spawnWithCleanStream(cmd, args, options = {}) {
   return new Promise((resolve) => {
     const spawnCmd = process.platform === 'darwin' ? 'taskpolicy' : cmd
@@ -194,12 +375,95 @@ function spawnWithCleanStream(cmd, args, options = {}) {
   })
 }
 
-// 5. Terminal Bridge Daemon
+// 6. Terminal Bridge Daemon
 function startDaemon() {
   if (fs.existsSync(SOCKET_PATH)) {
     try {
       fs.unlinkSync(SOCKET_PATH)
     } catch {}
+  }
+
+  const queue = []
+  let currentJob = null
+
+  async function processQueue() {
+    if (currentJob || queue.length === 0) return
+
+    const job = queue.shift()
+    currentJob = job
+    const { socket, req } = job
+
+    // Notify all remaining waiting clients of updated queue positions
+    queue.forEach((item, idx) => {
+      try {
+        item.socket.write(JSON.stringify({ type: 'queue', position: idx + 1, total: queue.length }) + '\n')
+      } catch {}
+    })
+
+    console.log(`\n[agent-daemon] Starting execution: ${req.cmd} ${req.args.join(' ')}`)
+    try {
+      socket.write(JSON.stringify({ type: 'start' }) + '\n')
+    } catch {}
+
+    let child = null
+    try {
+      child = spawn(req.cmd, req.args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        cwd: req.cwd || repoRoot,
+        env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
+      })
+
+      child.stdout.on('data', (data) => {
+        process.stdout.write(data)
+        try {
+          socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
+        } catch {}
+      })
+
+      child.stderr.on('data', (data) => {
+        process.stderr.write(data)
+        try {
+          socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
+        } catch {}
+      })
+
+      const onJobEnd = (code, signal) => {
+        console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
+        try {
+          socket.write(JSON.stringify({ type: 'exit', code: code ?? 0, signal }) + '\n')
+          socket.end()
+        } catch {}
+        currentJob = null
+        processQueue()
+      }
+
+      child.on('exit', onJobEnd)
+      child.on('error', (err) => {
+        console.error(`[agent-daemon] Process error:`, err)
+        try {
+          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+          socket.end()
+        } catch {}
+        currentJob = null
+        processQueue()
+      })
+    } catch (err) {
+      try {
+        socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+        socket.end()
+      } catch {}
+      currentJob = null
+      processQueue()
+    }
+
+    socket.on('close', () => {
+      if (currentJob === job && child) {
+        console.log(`[agent-daemon] Client disconnected while job was running. Terminating child process...`)
+        try { child.kill('SIGTERM') } catch {}
+        currentJob = null
+        processQueue()
+      }
+    })
   }
 
   const server = net.createServer((socket) => {
@@ -211,32 +475,31 @@ function startDaemon() {
         buffer = ''
         try {
           const req = JSON.parse(line)
-          console.log(`\n[agent-daemon] Executing: ${req.cmd} ${req.args.join(' ')}`)
+          const job = { socket, req }
+          queue.push(job)
 
-          const child = spawn(req.cmd, req.args, {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            cwd: req.cwd || repoRoot,
-            env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
-          })
+          if (currentJob) {
+            const pos = queue.length
+            console.log(`[agent-daemon] Job queued (position ${pos}): ${req.cmd} ${req.args.join(' ')}`)
+            try {
+              socket.write(JSON.stringify({ type: 'queue', position: pos, total: queue.length }) + '\n')
+            } catch {}
+          } else {
+            processQueue()
+          }
 
-          child.stdout.on('data', (data) => {
-            process.stdout.write(data)
-            socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
-          })
-
-          child.stderr.on('data', (data) => {
-            process.stderr.write(data)
-            socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
-          })
-
-          child.on('exit', (code, signal) => {
-            console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
-            socket.write(JSON.stringify({ type: 'exit', code: code ?? 0, signal }) + '\n')
-            socket.end()
+          socket.on('close', () => {
+            const idx = queue.indexOf(job)
+            if (idx !== -1) {
+              queue.splice(idx, 1)
+              console.log(`[agent-daemon] Queued job canceled (client disconnected)`)
+            }
           })
         } catch (err) {
-          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-          socket.end()
+          try {
+            socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+            socket.end()
+          } catch {}
         }
       }
     })
@@ -246,7 +509,7 @@ function startDaemon() {
     fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
     console.log(`[agent-daemon] Reference UI Agent Daemon listening at ${SOCKET_PATH}`)
     console.log(`[agent-daemon] PID: ${process.pid} (Interactive priority: PRI ${getSystemStatus().qosPriority})`)
-    console.log('[agent-daemon] Keep this terminal open to run agent tasks with full host resources.')
+    console.log('[agent-daemon] FIFO serialized queue active. Keep this terminal open to run tasks.')
   })
 
   const cleanup = () => {
@@ -260,13 +523,20 @@ function startDaemon() {
   process.on('exit', cleanup)
 }
 
-// 6. Execute via daemon or fallback to direct execution
+// 7. Execute via daemon or fallback to direct execution with cross-process FIFO queue
 async function runCommand(cmd, args, options = {}) {
+  const executeDirect = () => {
+    if (options.skipQueue) {
+      return spawnWithCleanStream(cmd, args, options)
+    }
+    return withQueueLock({ cmd, args }, () => spawnWithCleanStream(cmd, args, options))
+  }
+
   if (fs.existsSync(SOCKET_PATH)) {
     return new Promise((resolve) => {
       const client = net.createConnection(SOCKET_PATH, () => {
         console.log(`[agent] Connected to terminal daemon at ${SOCKET_PATH}`)
-        client.write(JSON.stringify({ cmd, args, cwd: options.cwd || repoRoot, env: options.env }) + '\n')
+        client.write(JSON.stringify({ cmd, args, cwd: options.cwd || repoRoot, env: options.env, pid: process.pid }) + '\n')
       })
 
       client.on('data', (chunk) => {
@@ -274,6 +544,12 @@ async function runCommand(cmd, args, options = {}) {
         for (const line of lines) {
           try {
             const msg = JSON.parse(line)
+            if (msg.type === 'queue') {
+              console.log(`[agent-queue] Another test is currently running in daemon. Waiting in queue (position ${msg.position} of ${msg.total})...`)
+            }
+            if (msg.type === 'start') {
+              console.log(`[agent-queue] Turn reached in daemon. Executing test...`)
+            }
             if (msg.type === 'stdout') process.stdout.write(msg.data)
             if (msg.type === 'stderr') process.stderr.write(msg.data)
             if (msg.type === 'exit') {
@@ -286,34 +562,58 @@ async function runCommand(cmd, args, options = {}) {
 
       client.on('error', () => {
         console.log('[agent] Daemon unreachable, falling back to direct execution...')
-        resolve(spawnWithCleanStream(cmd, args, options))
+        resolve(executeDirect())
       })
     })
   }
 
-  return spawnWithCleanStream(cmd, args, options)
+  return executeDirect()
 }
 
-// 7. CLI Actions
+// 8. CLI Actions
 async function actionStatus() {
   const status = getSystemStatus()
+  const queueDesc = status.queueInfo?.activeLock
+    ? `Active PID ${status.queueInfo.activeLock.pid} (${status.queueInfo.pendingCount} waiting)`
+    : `Idle (${status.queueInfo?.pendingCount || 0} waiting)`
+
   console.log('\n========================================')
   console.log(' Reference UI Agent Environment Status  ')
   console.log('========================================')
   console.log(`Platform:          ${status.platform} (${status.cpus} CPUs, ${status.cpuModel})`)
   console.log(`Darwin Priority:   PRI ${status.qosPriority} (Flags: ${status.processFlags})`)
   console.log(`QoS Jailbroken:    ${status.jailbroken ? '✔ YES (Application tier, unthrottled)' : '✖ NO (Clamped)'}`)
+  console.log(`FIFO Queue:        ${queueDesc}`)
   console.log(`Docker Runtime:    ${status.dockerOk ? `✔ Active (${status.dockerContext})` : '✖ Inactive'}`)
   console.log(`Verdaccio Registry:${status.verdaccioOk ? '✔ Active (http://127.0.0.1:4873)' : '✖ Inactive'}`)
   console.log(`Terminal Bridge:   ${status.daemonActive ? `✔ Connected (${SOCKET_PATH})` : '○ Idle (Direct Mode)'}`)
   console.log('========================================\n')
 }
 
+function normalizeTestArgs(rawArgs) {
+  const normalized = []
+  for (let i = 0; i < rawArgs.length; i++) {
+    const arg = rawArgs[i]
+    if (arg === 'matrix') continue
+    if (!arg.startsWith('-')) {
+      // Positional package name e.g. "lib" or "@matrix/lib"
+      const pkg = arg.startsWith('@matrix/') ? arg : `@matrix/${arg}`
+      normalized.push(`--packages=${pkg}`)
+    } else {
+      normalized.push(arg)
+    }
+  }
+  return normalized
+}
+
 async function actionTest(args) {
-  const pnpmArgs = ['pipeline', 'test', ...args]
-  console.log(`[agent] Executing unthrottled: pnpm ${pnpmArgs.join(' ')}`)
-  const result = await runCommand('pnpm', pnpmArgs)
-  process.exit(result.code)
+  const normalizedArgs = normalizeTestArgs(args)
+  const pnpmArgs = ['pipeline', 'test', ...normalizedArgs]
+  return withQueueLock({ cmd: 'agent test', args: pnpmArgs }, async () => {
+    console.log(`[agent] Executing unthrottled: pnpm ${pnpmArgs.join(' ')}`)
+    const result = await runCommand('pnpm', pnpmArgs, { skipQueue: true })
+    process.exit(result.code)
+  })
 }
 
 async function actionVerify(componentName) {
@@ -327,79 +627,84 @@ async function actionVerify(componentName) {
     .toLowerCase()
     .trim()
 
-  console.log(`\n========================================`)
-  console.log(` Verifying Component: ${componentName} `)
-  console.log(`========================================\n`)
+  return withQueueLock({ cmd: 'agent verify', args: [componentName] }, async () => {
+    console.log(`\n========================================`)
+    console.log(` Verifying Component: ${componentName} `)
+    console.log(`========================================\n`)
 
-  // Step 1: Typecheck
-  console.log('Step 1/4: Typechecking @reference-ui/lib...')
-  let res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'typecheck'])
-  if (res.code !== 0) {
-    console.error('\n✖ Step 1 failed: Typecheck errors found.')
-    process.exit(res.code)
-  }
-  console.log('✔ Typecheck passed.\n')
+    // Step 1: Typecheck
+    console.log('Step 1/4: Typechecking @reference-ui/lib...')
+    let res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'typecheck'], { skipQueue: true })
+    if (res.code !== 0) {
+      console.error('\n✖ Step 1 failed: Typecheck errors found.')
+      process.exit(res.code)
+    }
+    console.log('✔ Typecheck passed.\n')
 
-  // Step 2: Unit tests
-  console.log('Step 2/4: Running Vitest unit tests...')
-  res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test'])
-  if (res.code !== 0) {
-    console.error('\n✖ Step 2 failed: Unit tests failed.')
-    process.exit(res.code)
-  }
-  console.log('✔ Unit tests passed.\n')
+    // Step 2: Unit tests
+    console.log('Step 2/4: Running Vitest unit tests...')
+    res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test'], { skipQueue: true })
+    if (res.code !== 0) {
+      console.error('\n✖ Step 2 failed: Unit tests failed.')
+      process.exit(res.code)
+    }
+    console.log('✔ Unit tests passed.\n')
 
-  // Step 3: Build library
-  console.log('Step 3/4: Building @reference-ui/lib for matrix consumption...')
-  res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'build'], {
-    env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
+    // Step 3: Build library
+    console.log('Step 3/4: Building @reference-ui/lib for matrix consumption...')
+    res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'build'], {
+      env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
+      skipQueue: true,
+    })
+    if (res.code !== 0) {
+      console.error('\n✖ Step 3 failed: Library build failed.')
+      process.exit(res.code)
+    }
+    console.log('✔ Library build completed.\n')
+
+    // Step 4: Targeted E2E check
+    const specPath = path.join(repoRoot, `matrix/lib/tests/e2e/${normalized}.spec.ts`)
+    if (fs.existsSync(specPath)) {
+      console.log(`Step 4/4: Running Playwright E2E spec (${normalized}.spec.ts)...`)
+      res = await runCommand('pnpm', [
+        '--dir', 'matrix/lib',
+        'exec', 'playwright', 'test',
+        `tests/e2e/${normalized}.spec.ts`,
+      ], { skipQueue: true })
+      if (res.code !== 0) {
+        console.error('\n✖ Step 4 failed: Browser E2E spec failed.')
+        process.exit(res.code)
+      }
+      console.log(`✔ E2E spec passed.\n`)
+    } else {
+      console.log(`Step 4/4: No dedicated E2E spec found at tests/e2e/${normalized}.spec.ts. Running smoke test...`)
+      res = await runCommand('pnpm', [
+        '--dir', 'matrix/lib',
+        'exec', 'playwright', 'test',
+        'tests/e2e/smoke.spec.ts',
+      ], { skipQueue: true })
+      if (res.code !== 0) {
+        console.error('\n✖ Step 4 failed: Smoke test failed.')
+        process.exit(res.code)
+      }
+      console.log(`✔ Smoke test passed.\n`)
+    }
+
+    console.log(`========================================`)
+    console.log(` All 4 Verification Steps Passed for ${componentName}! `)
+    console.log(`========================================\n`)
   })
-  if (res.code !== 0) {
-    console.error('\n✖ Step 3 failed: Library build failed.')
-    process.exit(res.code)
-  }
-  console.log('✔ Library build completed.\n')
-
-  // Step 4: Targeted E2E check
-  const specPath = path.join(repoRoot, `matrix/lib/tests/e2e/${normalized}.spec.ts`)
-  if (fs.existsSync(specPath)) {
-    console.log(`Step 4/4: Running Playwright E2E spec (${normalized}.spec.ts)...`)
-    res = await runCommand('pnpm', [
-      '--dir', 'matrix/lib',
-      'exec', 'playwright', 'test',
-      `tests/e2e/${normalized}.spec.ts`,
-    ])
-    if (res.code !== 0) {
-      console.error('\n✖ Step 4 failed: Browser E2E spec failed.')
-      process.exit(res.code)
-    }
-    console.log(`✔ E2E spec passed.\n`)
-  } else {
-    console.log(`Step 4/4: No dedicated E2E spec found at tests/e2e/${normalized}.spec.ts. Running smoke test...`)
-    res = await runCommand('pnpm', [
-      '--dir', 'matrix/lib',
-      'exec', 'playwright', 'test',
-      'tests/e2e/smoke.spec.ts',
-    ])
-    if (res.code !== 0) {
-      console.error('\n✖ Step 4 failed: Smoke test failed.')
-      process.exit(res.code)
-    }
-    console.log(`✔ Smoke test passed.\n`)
-  }
-
-  console.log(`========================================`)
-  console.log(` All 4 Verification Steps Passed for ${componentName}! `)
-  console.log(`========================================\n`)
 }
 
-// 8. Programmatic Matrix & Pipeline API
+// 9. Programmatic Matrix & Pipeline API
 export {
   runCommand,
   getSystemStatus,
   actionStatus,
   actionTest,
   actionVerify,
+  acquireQueueLock,
+  withQueueLock,
 }
 
 /**

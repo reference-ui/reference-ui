@@ -13,13 +13,40 @@ describe('shouldDeferHotUpdate', () => {
     ).toBe(true)
   })
 
-  it('defers project source modules with touched Vite modules', () => {
+  it('defers token, theme, and system source modules with touched Vite modules', () => {
     expect(
       shouldDeferHotUpdate(
-        createHmrContext('/repo/src/cosmos/HmrSmoke.fixture.tsx', 1),
+        createHmrContext('/repo/src/core/theme/colors.ts', 1),
         createProjectPaths(),
       ),
     ).toBe(true)
+    expect(
+      shouldDeferHotUpdate(
+        createHmrContext('/repo/src/system/tokens.ts', 1),
+        createProjectPaths(),
+      ),
+    ).toBe(true)
+  })
+
+  it('does not defer story files, book app files, or standard component files', () => {
+    expect(
+      shouldDeferHotUpdate(
+        createHmrContext('/repo/src/components/Button/Button.book.tsx', 1),
+        createProjectPaths(),
+      ),
+    ).toBe(false)
+    expect(
+      shouldDeferHotUpdate(
+        createHmrContext('/repo/book/app/BookShell.tsx', 1),
+        createProjectPaths(),
+      ),
+    ).toBe(false)
+    expect(
+      shouldDeferHotUpdate(
+        createHmrContext('/repo/src/components/Button/Button.tsx', 1),
+        createProjectPaths(),
+      ),
+    ).toBe(false)
   })
 
   it('does not defer files outside the project root', () => {
@@ -52,7 +79,7 @@ describe('shouldDeferHotUpdate', () => {
   it('does not defer project files without touched Vite modules', () => {
     expect(
       shouldDeferHotUpdate(
-        createHmrContext('/repo/src/cosmos/HmrSmoke.fixture.tsx'),
+        createHmrContext('/repo/src/core/theme/colors.ts'),
         createProjectPaths(),
       ),
     ).toBe(false)

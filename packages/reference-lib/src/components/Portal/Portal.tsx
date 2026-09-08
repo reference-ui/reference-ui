@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { LayerScopeContext } from '@reference-ui/react'
+import { LayerScopeContext, DocumentContext } from '@reference-ui/react'
 
 export type PortalContainer = Element | DocumentFragment
 
@@ -94,9 +94,16 @@ export function Portal({ children, container: containerProp }: PortalProps) {
     return null
   }
 
+  const destinationDoc =
+    resolvedNode instanceof Document
+      ? resolvedNode
+      : (resolvedNode as Node).ownerDocument ?? null
+
   return ReactDOM.createPortal(
     <LayerScopeContext.Provider value={false}>
-      {children}
+      <DocumentContext.Provider value={destinationDoc}>
+        {children}
+      </DocumentContext.Provider>
     </LayerScopeContext.Provider>,
     resolvedNode,
   )

@@ -9,7 +9,7 @@ import { defineConfig } from '@reference-ui/core'
 
 export default defineConfig({
   name: 'reference-ui',
-  include: ['src/**/*.{ts,tsx}'],
+  include: ['src/**/*.{ts,tsx}', 'book/**/*.{ts,tsx}'],
   extends: [],
   debug: false,
 })

@@ -7,11 +7,10 @@ import { DocSidebar } from './DocSidebar'
 
 export function DocLayout() {
   const { colorMode } = useDocsTheme()
-  const themeAttr = colorMode === 'dark' ? 'dark' : undefined
 
   return (
     <Div
-      colorMode={themeAttr}
+      colorMode={colorMode}
       w="100%"
       minHeight="100vh"
       bg="docsPageBg"

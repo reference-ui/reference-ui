@@ -12,13 +12,13 @@ import { colorUtilities } from '../color'
 
 type RhythmTransform = {
   property: string
-  values: 'spacing'
+  values: string
   transform: (value: unknown) => Record<string, string | number>
 }
 
-const rhythmTransform = (property: string): RhythmTransform => ({
+const rhythmTransform = (property: string, values = 'spacing'): RhythmTransform => ({
   property,
-  values: 'spacing' as const,
+  values,
   transform: (value: unknown) => ({ [property]: resolveRhythm(value) }),
 })
 
@@ -125,4 +125,7 @@ export const rhythmUtilities = {
   textDecorationThickness: rhythmTransform('textDecorationThickness'),
   textUnderlineOffset: rhythmTransform('textUnderlineOffset'),
   borderSpacing: rhythmTransform('borderSpacing'),
+
+  boxShadow: rhythmTransform('boxShadow', 'shadows'),
+  textShadow: rhythmTransform('textShadow', 'shadows'),
 }

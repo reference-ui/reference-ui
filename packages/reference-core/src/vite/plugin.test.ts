@@ -1,6 +1,6 @@
 /** Focused tests for the Reference UI Vite integration's package and HMR behavior. */
 
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -93,14 +93,14 @@ describe('referenceUiVitePlugin', () => {
 
   it('defers project source-module HMR until sync ready', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
-    mkdirSync(join(cwd, 'src', 'cosmos'), { recursive: true })
-    writeFileSync(join(cwd, 'src', 'cosmos', 'HmrSmoke.fixture.tsx'), 'export default function Fixture() { return null }\n')
+    mkdirSync(join(cwd, 'src', 'theme'), { recursive: true })
+    writeFileSync(join(cwd, 'src', 'theme', 'tokens.ts'), 'export const tokens = {}\n')
 
     const sends: UpdateEvent[] = []
     const { dispose, emitRefresh, session } = createTestSession()
 
     const sourceModule = {
-      url: '/src/cosmos/HmrSmoke.fixture.tsx',
+      url: '/src/theme/tokens.ts',
       type: 'js' as const,
     }
 
@@ -109,7 +109,7 @@ describe('referenceUiVitePlugin', () => {
       cwd,
       invalidateModule,
       modulesByFile: {
-        [`${cwd}/src/cosmos/HmrSmoke.fixture.tsx`]: new Set([sourceModule]),
+        [`${cwd}/src/theme/tokens.ts`]: new Set([sourceModule]),
       },
       sends,
       session,
@@ -118,7 +118,7 @@ describe('referenceUiVitePlugin', () => {
     await Promise.resolve()
 
     const result = await plugin.handleHotUpdate?.({
-      file: `${cwd}/src/cosmos/HmrSmoke.fixture.tsx`,
+      file: `${cwd}/src/theme/tokens.ts`,
       modules: [sourceModule],
     } as never)
 
@@ -133,8 +133,8 @@ describe('referenceUiVitePlugin', () => {
         updates: [
           {
             type: 'js-update',
-            path: '/src/cosmos/HmrSmoke.fixture.tsx',
-            acceptedPath: '/src/cosmos/HmrSmoke.fixture.tsx',
+            path: '/src/theme/tokens.ts',
+            acceptedPath: '/src/theme/tokens.ts',
             timestamp: expect.any(Number),
           },
         ],
@@ -144,6 +144,7 @@ describe('referenceUiVitePlugin', () => {
 
     teardown?.()
     expect(dispose).toHaveBeenCalledTimes(1)
+    rmSync(cwd, { force: true, recursive: true })
   })
 
   it('flushes subscribed managed css writes after sync ready even without Vite hot-update callbacks', async () => {

@@ -1,3 +1,4 @@
+import valueParser, { type Node } from 'postcss-value-parser'
 import type { Config } from '@pandacss/dev'
 import type { FontDefinition, FontFaceRule } from '../../../../api/font'
 import type { BoxPatternExtension } from '../../../../api/patterns'
@@ -23,13 +24,40 @@ function getFontPreset(font: FontDefinition): FontPreset {
   }
 }
 
-function parseFontFamilyName(value: string): string {
-  const match = value.match(/^["']([^"']+)["']/)
-  if (match) {
-    return match[1] ?? 'unknown'
+export function parseFontFamilyName(value: string): string {
+  if (!value || typeof value !== 'string') {
+    return 'unknown'
   }
 
-  return value.split(',')[0]?.trim() ?? 'unknown'
+  const parsed = valueParser(value.trim())
+  const firstFamilyNodes: Node[] = []
+
+  for (const node of parsed.nodes) {
+    if (node.type === 'div' && node.value === ',') {
+      break
+    }
+    firstFamilyNodes.push(node)
+  }
+
+  while (firstFamilyNodes.length > 0 && firstFamilyNodes[0].type === 'space') {
+    firstFamilyNodes.shift()
+  }
+  while (
+    firstFamilyNodes.length > 0 &&
+    firstFamilyNodes[firstFamilyNodes.length - 1].type === 'space'
+  ) {
+    firstFamilyNodes.pop()
+  }
+
+  if (firstFamilyNodes.length === 0) {
+    return 'unknown'
+  }
+
+  if (firstFamilyNodes.length === 1 && firstFamilyNodes[0].type === 'string') {
+    return firstFamilyNodes[0].value
+  }
+
+  return valueParser.stringify(firstFamilyNodes).trim() || 'unknown'
 }
 
 function createFontPatternTransform(

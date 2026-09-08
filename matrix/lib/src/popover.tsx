@@ -1,8 +1,104 @@
 import * as React from 'react'
 import { Popover } from '@reference-ui/lib'
+import { Div, Span } from '@reference-ui/react'
 
 export function PopoverFixture() {
   const [open, setOpen] = React.useState(false)
+  const fixture = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('fixture') : null
+
+  if (fixture === 'Placements') {
+    return (
+      <div data-testid="popover-fixture-root">
+        <Div display="grid" gridTemplateColumns="repeat(2, 1fr)" gap="6r" p="8r">
+          {(['top', 'right', 'bottom', 'left'] as const).map(placement => (
+            <Popover key={placement}>
+              <Popover.Trigger>
+                {placement}
+              </Popover.Trigger>
+              <Popover.Content
+                p="2r"
+                bg="ui.dialog.background"
+                borderRadius="sm"
+                border="1px solid"
+                borderColor="ui.dialog.border"
+                placement={placement}
+                offset={8}
+              >
+                <Span fontSize="3r">placement=&quot;{placement}&quot;</Span>
+              </Popover.Content>
+            </Popover>
+          ))}
+        </Div>
+      </div>
+    )
+  }
+
+  if (fixture === 'ClickToOpen') {
+    return (
+      <div data-testid="popover-fixture-root">
+        <Div p="4r">
+          <Popover>
+            <Popover.Trigger>
+              Open popover
+            </Popover.Trigger>
+            <Popover.Content
+              p="3.5r"
+              bg="ui.dialog.background"
+              color="ui.dialog.foreground"
+              borderRadius="md"
+              border="1px solid"
+              borderColor="ui.dialog.border"
+              boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+              placement="bottom-start"
+              offset={8}
+            >
+              <Div display="flex" flexDirection="column" gap="2r">
+                <Span fontWeight="600" fontSize="3.5r">
+                  Popover title
+                </Span>
+                <Span fontSize="3r" color="design.text.light">
+                  Non-isolating floating content anchored to the trigger.
+                </Span>
+                <Popover.Close alignSelf="flex-start">
+                  Close
+                </Popover.Close>
+              </Div>
+              <Popover.Arrow data-testid="popover-arrow" />
+            </Popover.Content>
+          </Popover>
+        </Div>
+      </div>
+    )
+  }
+
+  if (fixture === 'HoverCard') {
+    return (
+      <div data-testid="popover-fixture-root">
+        <Div p="4r">
+          <Popover openOnHover openDelay={300} closeDelay={200}>
+            <Popover.Trigger>
+              Hover for preview
+            </Popover.Trigger>
+            <Popover.Content
+              p="3r"
+              bg="ui.dialog.background"
+              borderRadius="md"
+              border="1px solid"
+              borderColor="ui.dialog.border"
+              boxShadow="0 4px 12px rgba(0,0,0,0.12)"
+              placement="top"
+              maxW="50r"
+            >
+              <Span fontSize="3r">
+                Hover-opened popover with grace area for pointer travel.
+              </Span>
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover>
+        </Div>
+      </div>
+    )
+  }
 
   return (
     <div data-testid="popover-fixture-root">
@@ -42,3 +138,4 @@ export function PopoverFixture() {
     </div>
   )
 }
+

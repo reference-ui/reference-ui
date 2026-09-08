@@ -22,6 +22,18 @@ export function shouldDeferHotUpdate(
   return isProjectSourceHotUpdate(ctx, projectPaths)
 }
 
+export function isBookOrStoryFile(filePath: string): boolean {
+  const normalized = toNormalizedPath(filePath)
+  if (normalized.includes('/book/')) return true
+  if (/\.(book|fixture)\.[jt]sx?$/.test(normalized)) return true
+  return false
+}
+
+export function isTokenOrThemeOrSystemFile(filePath: string): boolean {
+  const normalized = toNormalizedPath(filePath)
+  return /(?:\/theme\/|\/tokens\/|\/system\/|\.reference-ui\/)/i.test(normalized)
+}
+
 function isProjectSourceHotUpdate(
   ctx: HmrContext,
   projectPaths: ReferenceViteProjectPaths
@@ -35,6 +47,12 @@ function isProjectSourceHotUpdate(
 
   const projectRelativePath = relative(projectPaths.projectRoot, ctx.file)
   if (projectRelativePath.startsWith('node_modules/')) return false
+  if (isBookOrStoryFile(normalizedFile)) return false
 
-  return ctx.modules.length > 0
+  // Defer token, theme, and system sources that invalidate generated CSS
+  if (isTokenOrThemeOrSystemFile(normalizedFile)) {
+    return ctx.modules.length > 0
+  }
+
+  return false
 }

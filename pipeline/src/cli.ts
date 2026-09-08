@@ -87,7 +87,7 @@ devCommand
 
 devCommand
   .command('lib')
-  .description('reference-lib → .pipeline/dev/reference-lib, then pnpm run cosmos')
+  .description('reference-lib → .pipeline/dev/reference-lib, then pnpm run book')
   .option('--trace', 'Print Dagger engine log output during connect')
   .action(async (options: { trace?: boolean }) => {
     await runDevLib({ trace: options.trace })

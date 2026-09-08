@@ -93,6 +93,24 @@ test.describe('color-mode contract', () => {
     expect(darkChildColor.color).toBe(hexToRgb(colorModeMatrixConstants.darkValue))
   })
 
+  test('portaled island preserves dark colorMode and token resolution outside light host DOM', async ({ page }) => {
+    const portaledChild = page.getByTestId('color-mode-portal-island-child')
+    await expect(portaledChild).toBeVisible()
+
+    const surface = await portaledChild.evaluate((node) => ({
+      isDirectBodyChild: node.parentElement === document.body,
+      dataLayer: node.getAttribute('data-layer'),
+      dataTheme: node.getAttribute('data-panda-theme'),
+    }))
+
+    expect(surface.isDirectBodyChild).toBe(true)
+    expect(surface.dataLayer).toBeTruthy()
+    expect(surface.dataTheme).toBe('dark')
+
+    const childColor = await readComputedStyle(portaledChild, ['color'])
+    expect(childColor.color).toBe(hexToRgb(colorModeMatrixConstants.darkValue))
+  })
+
   test('toggling the root theme updates descendant token resolution', async ({ page }) => {
     const rootToken = page.getByTestId('color-mode-live-root-token')
     const toggle = page.getByTestId('color-mode-toggle-root-theme')

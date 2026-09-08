@@ -18,11 +18,11 @@ pnpm run dev    # Watch mode
 
 Component primitives are implemented in this package and proven in `matrix/lib` with Playwright. React 19 is the default agent loop; 17 and 18 are compatibility jobs for that fixture only. See [TESTING.md](./TESTING.md).
 
-## Component playground ([React Cosmos](https://reactcosmos.org/))
+## Component playground (Book)
 
-Follows the [Vite getting started](https://reactcosmos.org/docs/getting-started/vite) layout: `react-cosmos-plugin-vite` in `cosmos.config.json`, and `cosmos` / `cosmos-export` scripts. `globalImports` loads `@reference-ui/react/styles.css` for Panda fixtures. On macOS, Node’s port probe can throw (`EADDRNOTAVAIL` for `0.0.0.0`); `portRetries` / `rendererUrl` avoid that upstream behavior so the dev server can start.
+Book is the component playground for `@reference-ui/lib`. It lives at `packages/reference-lib/book/` and serves on port 5000 as a single-document Fast Refresh app. Component stories are authored alongside components in `src/components/**/*.book.tsx`.
 
-Run `ref sync` before Cosmos so `@reference-ui/react` exists. From the repo root: `pnpm run dev:lib`. Or `pnpm run sync` in this package, then `pnpm run cosmos`. Component fixtures live next to each component under `src/components/**/*.fixture.tsx` (same pattern as `Reference/fixtures/`). Open [http://localhost:5000](http://localhost:5000). Static export: `pnpm run cosmos-export`.
+To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` within this package). Open [http://localhost:5000](http://localhost:5000). To capture component states via Playwright, use `pnpm capture <Component>`.
 
 ```ts
 import { baseSystem } from '@reference-ui/lib'

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { DATA_COLOR_MODE_ATTR, RESOLVED_DATA_LAYER_NAME } from './constants'
 import {
   ColorModeContext,
+  DocumentContext,
   readDocumentColorMode,
   resolveColorModeAttr,
   useColorMode,
@@ -73,7 +74,8 @@ export function usePrimitiveContext(
 ): ResolvedPrimitiveContext {
   const inheritsLayerScope = React.useContext(LayerScopeContext)
   const inheritedColorMode = React.useContext(ColorModeContext)
-  const effectiveInheritedColorMode = inheritedColorMode ?? readDocumentColorMode()
+  const doc = React.useContext(DocumentContext)
+  const effectiveInheritedColorMode = inheritedColorMode ?? readDocumentColorMode(doc)
 
   return resolvePrimitiveContext({
     inheritsLayerScope,
@@ -84,7 +86,7 @@ export function usePrimitiveContext(
 }
 
 // Re-export domain contexts and hooks for convenience
-export { ColorModeContext, useColorMode, readDocumentColorMode } from './color-mode'
+export { ColorModeContext, DocumentContext, useColorMode, readDocumentColorMode } from './color-mode'
 export { LayerScopeContext } from './layers'
 
 // Backward-compatible aliases for existing callers

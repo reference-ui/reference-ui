@@ -1,6 +1,0 @@
-{
-  "plugins": ["react-cosmos-plugin-vite"],
-  "portRetries": 0,
-  "rendererUrl": "http://localhost:5050",
-  "globalImports": ["./cosmos/cosmos-shell.css"]
-}

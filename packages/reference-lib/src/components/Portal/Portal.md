@@ -67,6 +67,15 @@ Radix Portal always wraps in `Primitive.div` unless `asChild`. An extra node bre
 
 **Leave** Radix’s host-node props (`className` on the portal wrapper). There is no wrapper to style.
 
+### Theme and layer scope
+
+Portalled subtrees cross DOM boundaries, which severs CSS inheritance of scoped `[data-layer]` and theme selectors from DOM ancestors, but preserves React logical context (`ColorModeContext`).
+
+1. **Layer scope reset:** On every `createPortal`, `Portal` resets `LayerScopeContext` to `false`.
+2. **No wrapper node:** Portal emits no DOM wrapper element.
+3. **First child primitive:** The first Reference primitive rendered as a child of a portal re-establishes layer scope by stamping `data-layer` and `data-panda-theme` (from logical `ColorModeContext` or destination `Document`). Subsequent nested primitives within that portalled tree stay lean without redundantly repeating the attribute stamps.
+4. **Canonical attribute:** The only physical DOM attribute emitted is `data-panda-theme`. No legacy aliases (`data-color-mode`, `data-theme`) are emitted.
+
 ---
 
 ## Convergence

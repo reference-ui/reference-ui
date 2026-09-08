@@ -18,8 +18,11 @@ function resolveBorderRadiusValue(
 ): string | number {
   const raw = typeof args.raw === 'string' ? args.raw : value
 
-  if (typeof raw === 'string' && raw.endsWith('r')) {
-    return resolveRhythm(raw)
+  if (typeof raw === 'string' && raw.includes('r')) {
+    const resolved = resolveRhythm(raw)
+    if (resolved !== raw) {
+      return resolved
+    }
   }
 
   if (typeof raw === 'string') {

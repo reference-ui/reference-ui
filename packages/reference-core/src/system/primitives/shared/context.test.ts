@@ -50,6 +50,40 @@ describe('resolvePrimitiveContext', () => {
     expect(result.providesLayerScope).toBe(true)
   })
 
+  it('proves colorMode="light" is distinct from omitted colorMode', () => {
+    // 1. Explicit light mode: forces explicit layer re-emission and stamps 'light'
+    const explicitLight = resolvePrimitiveContext({
+      inheritsLayerScope: true,
+      inheritedColorMode: 'dark',
+      colorMode: 'light',
+      dataLayerName: 'my-system',
+    })
+    expect(explicitLight.resolvedColorMode).toBe('light')
+    expect(explicitLight.colorModeAttr).toEqual({ [DATA_COLOR_MODE_ATTR]: 'light' })
+    expect(explicitLight.dataLayerAttr).toEqual({ 'data-layer': 'my-system' })
+
+    // 2. Omitted colorMode: inherits without overriding or stamping
+    const omittedUnderDark = resolvePrimitiveContext({
+      inheritsLayerScope: true,
+      inheritedColorMode: 'dark',
+      colorMode: undefined,
+      dataLayerName: 'my-system',
+    })
+    expect(omittedUnderDark.resolvedColorMode).toBe('dark')
+    expect(omittedUnderDark.colorModeAttr).toEqual({ [DATA_COLOR_MODE_ATTR]: 'dark' })
+    expect(omittedUnderDark.dataLayerAttr).toEqual({})
+
+    // 3. Omitted colorMode with no inherited mode: produces no theme attribute (not 'light')
+    const omittedUnset = resolvePrimitiveContext({
+      inheritsLayerScope: false,
+      inheritedColorMode: undefined,
+      colorMode: undefined,
+      dataLayerName: 'my-system',
+    })
+    expect(omittedUnset.resolvedColorMode).toBeUndefined()
+    expect(omittedUnset.colorModeAttr).toEqual({})
+  })
+
   it('emits data-variant only when variant is non-empty', () => {
     const withVariant = resolvePrimitiveContext({
       inheritsLayerScope: true,

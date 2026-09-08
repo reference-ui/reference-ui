@@ -45,7 +45,7 @@ pnpm capture <Component> --list
 # 2. Script any custom interactions and states directly (RECOMMENDED):
 pnpm capture <Component> [Fixture] -e "
   await capture('resting');
-  await frame.locator('...').click();
+  await canvas.locator('...').click();
   await capture('clicked');
 "
 
@@ -59,11 +59,13 @@ pnpm capture <Component> [Fixture]
 # import { captureFixture } from './.agents/skills/tweak-component/scripts/capture.mjs'
 ```
 
-In scripts, you receive: `{ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait }`.
+In scripts, you receive: `{ page, canvas, root, target, interactive, capture, pressTab, inspectStyles, wait, frame }`.
+- `canvas`: `[data-book-canvas]` story host locator in the single Book document.
+- `root`: Alias of `canvas` (story root).
+- `frame`: Deprecated compat alias for `page` / `canvas` in single-document Book.
 - `capture(label, [locator])`: Captures outline-padded screenshot, syncs to Antigravity brain dir, and adds to markdown table.
 - `pressTab([locator])`: Triggers native keyboard `:focus-visible` outline via temporary shim button.
 - `inspectStyles([locatorOrSelector])`: Inspects computed border, outline, and box-model styles of target or selector.
-- `frame.evaluate(fn, arg)`: Executes code inside the fixture iframe's window/document context directly.
 - `--inspect-styles`: CLI flag that dumps a computed styles table across states or for target.
 
 Captures are automatically saved to `.reference-ui/captures/` with outline-safe padding and synced to the Antigravity conversation brain directory so they render in chat. **Always embed the markdown table emitted by `pnpm capture` directly into your response**.

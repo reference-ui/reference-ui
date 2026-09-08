@@ -1,11 +1,14 @@
 import * as React from 'react'
 import { RESOLVED_DATA_LAYER_NAME } from './constants'
 
+const LAYER_SCOPE_CONTEXT_SYMBOL = Symbol.for('@reference-ui/LayerScopeContext')
+
 /**
  * React Context indicating whether an ancestor primitive has already established
  * the design-system `data-layer="..."` scope in the DOM.
  */
-export const LayerScopeContext = React.createContext(false)
+export const LayerScopeContext: React.Context<boolean> =
+  ((globalThis as any)[LAYER_SCOPE_CONTEXT_SYMBOL] ??= React.createContext<boolean>(false))
 
 export interface ShouldEmitLayerScopeOptions {
   inheritsLayerScope: boolean

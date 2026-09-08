@@ -89,7 +89,7 @@ and the broader ecosystem (Radix, Floating UI, Base UI).
 | Content render callback | `content={(state) => JSX}` with geometry state | CSS custom properties + data attributes | ✅ Different approach |
 | Multiple simultaneous popovers | Class-based container (v8.1+) | Each `Overlay` is independent | ✅ Parity |
 | Presence / exit animation | **Not supported** (immediate unmount) | Full `Presence` system: CSS transitions, keyframes, WAAPI, GSAP | ✅ Exceeds |
-| Color mode in portals | Not handled | `OverlayPortaledSurface` bridges `colorMode` | ✅ Exceeds |
+| Color mode in portals | Not handled | Portal Color Mode Protocol (`Portal` resets layer scope; primitives stamp `data-layer` + `data-panda-theme`) | ✅ Exceeds |
 
 ---
 

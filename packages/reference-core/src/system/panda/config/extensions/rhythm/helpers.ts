@@ -1,3 +1,5 @@
+import valueParser, { type Node } from 'postcss-value-parser'
+
 /**
  * Returns a CSS calc value for the given rhythm units.
  * Use in token configs and wherever you need rhythm values programmatically.
@@ -67,38 +69,94 @@ function resolveSingleRhythmValue(value: string): string | undefined {
   return undefined
 }
 
-function resolveRhythmShorthand(value: string): string | undefined {
-  if (!/\s/.test(value) || /[(),]/.test(value)) {
-    return undefined
-  }
+function transformNodes(nodes: Node[]): boolean {
+  let changed = false
 
-  const parts = value.trim().split(/\s+/)
-  if (parts.length < 2) {
-    return undefined
-  }
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]
 
-  let didResolve = false
-  const resolvedParts = parts.map((part) => {
-    const resolved = resolveSingleRhythmValue(part)
-    if (resolved !== undefined) {
-      didResolve = true
-      return resolved
+    if (node.type === 'function') {
+      const name = node.value.toLowerCase()
+      if (name === 'var' || name === 'url' || name === 'env') {
+        continue
+      }
+      if (node.nodes && node.nodes.length > 0) {
+        if (transformNodes(node.nodes)) {
+          changed = true
+        }
+      }
+      continue
     }
 
-    return part
-  })
+    // Check fraction: e.g. 1/5r or -2/3r (tokenized as word, div '/', word '5r')
+    const next = nodes[i + 1]
+    const nextNext = nodes[i + 2]
+    if (
+      node.type === 'word' &&
+      next?.type === 'div' &&
+      next.value === '/' &&
+      next.before === '' &&
+      next.after === '' &&
+      nextNext?.type === 'word' &&
+      nextNext.value.endsWith('r') &&
+      node.sourceEndIndex === next.sourceIndex &&
+      next.sourceEndIndex === nextNext.sourceIndex
+    ) {
+      const prevNode = nodes[i - 1]
+      const isInvalidPrefix =
+        prevNode?.type === 'div' &&
+        prevNode.value === '/' &&
+        prevNode.after === ''
 
-  return didResolve ? resolvedParts.join(' ') : undefined
+      if (!isInvalidPrefix) {
+        const denomStr = nextNext.value.slice(0, -1)
+        const fractionStr = `${node.value}/${denomStr}`
+        const fraction = parseRhythmFraction(fractionStr)
+        if (fraction) {
+          const resolved = getRhythm(fraction[0], fraction[1])
+          nodes.splice(i, 3, {
+            type: 'word',
+            sourceIndex: node.sourceIndex,
+            sourceEndIndex: nextNext.sourceEndIndex,
+            value: resolved,
+          })
+          changed = true
+          continue
+        }
+      }
+    }
+
+    if (node.type === 'word') {
+      const prevNode = nodes[i - 1]
+      const isDirectSlashChild =
+        prevNode?.type === 'div' &&
+        prevNode.value === '/' &&
+        prevNode.after === ''
+
+      if (!isDirectSlashChild) {
+        const resolved = resolveSingleRhythmValue(node.value)
+        if (resolved !== undefined) {
+          node.value = resolved
+          changed = true
+        }
+      }
+    }
+  }
+
+  return changed
 }
 
 /** Resolves rhythm strings like "2r" or "1/5r" to calc values, passthrough otherwise */
 export function resolveRhythm(value: unknown): string | number {
-  if (typeof value === 'string') {
-    const resolved = resolveSingleRhythmValue(value) ?? resolveRhythmShorthand(value)
-    if (resolved !== undefined) {
-      return resolved
-    }
+  if (typeof value !== 'string') {
+    return value as string | number
   }
 
-  return value as string | number
+  if (!value.includes('r')) {
+    return value
+  }
+
+  const parsed = valueParser(value)
+  const changed = transformNodes(parsed.nodes)
+  return changed ? parsed.toString() : value
 }

@@ -1,3 +1,4 @@
+import valueParser, { type Node } from 'postcss-value-parser'
 import { resolveRhythm } from '../rhythm/helpers'
 import { resolveColorToken } from '../color/utilities'
 
@@ -81,36 +82,31 @@ export function resolveWidth(val: string): string {
   if (lower === '-r') {
     return 'calc(-1 * var(--spacing-root))'
   }
-  if (trimmed.endsWith('r')) {
-    return String(resolveRhythm(trimmed))
-  }
   if (/^(\d+(\.\d+)?|\.\d+)$/.test(trimmed)) {
     return `${trimmed}px`
   }
-  return trimmed
+  return String(resolveRhythm(trimmed))
 }
 
 export function splitShorthandTokens(str: string): string[] {
+  if (!str) return []
+  const parsed = valueParser(str.trim())
   const tokens: string[] = []
-  let current = ''
-  let depth = 0
+  let currentGroup: Node[] = []
 
-  for (const char of str.trim()) {
-    if (char === '(') depth++
-    else if (char === ')') depth--
-
-    if (/\s/.test(char) && depth === 0) {
-      if (current) {
-        tokens.push(current)
-        current = ''
+  for (const node of parsed.nodes) {
+    if (node.type === 'space') {
+      if (currentGroup.length > 0) {
+        tokens.push(valueParser.stringify(currentGroup))
+        currentGroup = []
       }
     } else {
-      current += char
+      currentGroup.push(node)
     }
   }
 
-  if (current) {
-    tokens.push(current)
+  if (currentGroup.length > 0) {
+    tokens.push(valueParser.stringify(currentGroup))
   }
 
   return tokens

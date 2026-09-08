@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button, Div, H1, Main, P } from '@reference-ui/react'
+import { Portal } from '@reference-ui/lib'
 
 import { colorModeMatrixConstants } from './styles'
 
@@ -118,7 +119,18 @@ export function Index() {
         </Div>
       </div>
 
+      <div data-testid="color-mode-portal-light-host" data-panda-theme="light">
+        <Div data-testid="color-mode-portal-dark-island" colorMode="dark">
+          <Portal>
+            <Div data-testid="color-mode-portal-island-child" color={colorModeMatrixConstants.tokenName}>
+              Portal dark island child
+            </Div>
+          </Portal>
+        </Div>
+      </div>
+
       <LiveColorModeControls />
+
     </Main>
   )
 }

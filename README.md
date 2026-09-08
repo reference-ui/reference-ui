@@ -35,7 +35,7 @@ Common root commands:
 
 ```bash
 pnpm dev           # core + docs
-pnpm dev:lib       # core sync watch + React Cosmos for the library
+pnpm dev:lib       # core sync watch + Book for the library
 pnpm build         # build all workspace packages
 pnpm test          # core build + full matrix (Dagger)
 pnpm test:lib      # core build + library tests

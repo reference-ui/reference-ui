@@ -141,9 +141,11 @@ Overlay portals Backdrop, Content, and Arrow internally by default.
 own the overlay content. Trigger never portals.
 
 Portaled Backdrop and Content render under `document.body`, outside the
-themed `data-layer` ancestor. `OverlayPortaledSurface` (internal to this
-module) passes explicit `colorMode` so token-aware StyleProps such as
-`ui.dialog.background` resolve correctly in dark and light mode.
+DOM layer ancestor. Through the Portal Color Mode Protocol (`PORTAL_COLOR_MODE.md`),
+`Portal` resets `LayerScopeContext` to `false` and propagates `DocumentContext`,
+allowing the standard primitive hosts (`Div`) of Backdrop and Content to re-emit
+`data-layer` and `data-panda-theme` from logical React context so token-aware StyleProps
+such as `ui.dialog.background` resolve correctly in dark and light mode without any custom surface wrappers.
 
 ```tsx
 <Overlay open={open} onDismiss={close}>

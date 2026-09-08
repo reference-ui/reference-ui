@@ -15,6 +15,7 @@
     "dev:lib": "pnpm --filter @reference-ui/lib run dev",
     "capture": "node .agents/skills/tweak-component/scripts/capture.mjs",
     "capture:states": "node .agents/skills/tweak-component/scripts/capture.mjs --states",
+    "book:perf": "pnpm --filter @reference-ui/lib run book:perf",
     "changeset": "changeset",
     "release": "pnpm pipeline release",
     "agent": "node .agents/skills/pipeline-runner/scripts/run.mjs",

@@ -93,6 +93,12 @@ export function announceMatrixPackageStart(packageRunContext: MatrixPackageRunCo
   )
 }
 
+export function announceMatrixPackageTesting(packageRunContext: MatrixPackageRunContext): void {
+  console.log(
+    `${pc.cyan('◐')} ${pc.bold(packageRunContext.displayName)} ${pc.dim('running tests')} ${pc.cyan(`(${describeMatrixEnvironment(packageRunContext)})`)}`,
+  )
+}
+
 export function formatMatrixPackageHeading(packageRunContext: MatrixPackageRunContext): string {
   return `${pc.bold(packageRunContext.displayName)} ${pc.dim(`(${describeMatrixEnvironment(packageRunContext)})`)}`
 }

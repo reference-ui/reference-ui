@@ -32,14 +32,13 @@
     "sync": "ref sync",
     "typecheck": "pnpm run build:deps && pnpm run sync && tsc --noEmit",
     "build": "pnpm run build:deps && pnpm run sync && tsup && tsc -p tsconfig.build.json && node scripts/build-package.mjs",
-    "dev": "ref sync && concurrently --kill-others-on-fail \"ref sync --watch\" \"vite\"",
-    "book": "vite",
-    "book:build": "vite build",
+    "dev": "ref sync && concurrently --kill-others-on-fail \"ref sync --watch\" \"vite --config book/vite.config.ts\"",
+    "book": "vite --config book/vite.config.ts",
+    "book:build": "vite build --config book/vite.config.ts",
+    "book:perf": "node book/perf/report.mjs",
     "prepack": "pnpm run build",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "cosmos": "cosmos",
-    "cosmos-export": "cosmos-export"
+    "test:watch": "vitest"
   },
   "publishConfig": {
     "access": "public"
@@ -56,8 +55,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "concurrently": "^9.1.2",
-    "react-cosmos": "7.2.0",
-    "react-cosmos-plugin-vite": "7.2.0",
     "react-dom": "^19.2.4",
     "tsup": "^8.5.1",
     "typescript": "~7.0.2",

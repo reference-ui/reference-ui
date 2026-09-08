@@ -17,19 +17,24 @@ export interface BookModule {
   [key: string]: any
 }
 
-export interface BookEntry {
+export interface BookManifestEntry {
   id: string
   name: string
   title: string
   category: string
   filePath: string
+}
+
+export interface BookLoadedEntry extends BookManifestEntry {
   module: BookModule
   stories: BookStory[]
+  meta?: BookMeta
+  loadTimeMs?: number
 }
 
 export interface BookCategory {
   name: string
-  entries: BookEntry[]
+  entries: BookManifestEntry[]
 }
 
 export type ViewportPreset = 'full' | 'mobile' | 'tablet' | 'desktop'
@@ -40,3 +45,5 @@ export interface ViewportConfig {
   width: string
   height: string
 }
+
+export type BookReadyState = 'live' | 'updating' | 'error'

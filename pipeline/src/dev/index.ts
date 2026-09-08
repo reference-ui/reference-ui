@@ -84,10 +84,10 @@ async function runPipelineDevLibInner(trace?: boolean): Promise<void> {
   }
 
   openBrowserWhenReady('http://localhost:5000')
-  await run('pnpm', ['run', 'cosmos'], {
+  await run('pnpm', ['run', 'book'], {
     cwd: workdir,
     interactive: true,
-    label: 'reference-lib cosmos',
+    label: 'reference-lib book',
   })
 }
 

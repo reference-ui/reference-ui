@@ -25,20 +25,22 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 ## 2. Current Verification & Proof Status
 
 - **Playwright E2E**: `matrix/lib/tests/e2e/portal.spec.ts`
-  - **Current Automated Suite**: 5 tests (`PT-DOM-01`, `PT-CONTAINER-01/02/05`, `PT-REACT-01/02`).
+  - **Current Automated Suite**: 11 tests (`PT-DOM-01`, `PT-CONTAINER-01/02/05`, `PT-REACT-01/02`, and `PT-THEME-01` through `PT-THEME-06`).
 - **Cosmos Harness**: None (Tier 0 foundation primitive; needs fixture in Cosmos).
 - **Executable Contract Count**: 25 tagged behavior cases and composition gates specified in `TESTS.md`.
-- **Testing Ratio**: 1-7 tests currently automated in browser E2E suites; remainder of the behavioral contract in `TESTS.md` requires test implementation in `matrix/lib`.
+- **Testing Ratio**: 11 tests currently automated in browser E2E suites; remainder of the behavioral contract in `TESTS.md` requires test implementation in `matrix/lib`.
 
 ---
 
 ## 3. Detailed Gaps & Missing Functionality
 
 ### Functional & Behavioral Gaps
+- **Theme & Layer Scope Protocol (Completed)**: Layer scope reset (`LayerScopeContext=false`) and destination `DocumentContext` propagation ensure the first portalled primitive correctly re-emits `data-layer` and `data-panda-theme` without wrapper DOM nodes (see `PORTAL_COLOR_MODE.md`).
 - **Late-Resolved Container Ref**: Ensuring no transient mount in `document.body` when a custom container ref resolves asynchronously.
 - **SSR Hydration Cleanliness**: Zero markup rendered on server; hydration gate cleanly attaching after client mount without mismatch.
 - **Shadow DOM Portaling**: Support for teleporting subtrees into Web Component shadow roots.
 - **React Event Bubbling**: Preserving synthetic event propagation back through the logical React hierarchy.
+
 
 ### Universal Part Conformance Gaps (`PART-*`)
 - `PART-DOM-01`: Assert Portal contributes zero wrapper DOM elements.

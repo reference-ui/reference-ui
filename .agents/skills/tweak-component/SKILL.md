@@ -40,7 +40,7 @@ pnpm capture <ComponentName> [FixtureName]
 # Or script custom interactions directly:
 pnpm capture <ComponentName> [FixtureName] -e "
   await capture('resting');
-  await frame.locator('...').click();
+  await canvas.locator('...').click();
   await capture('clicked');
 "
 ```
@@ -108,20 +108,22 @@ pnpm capture [Component] [Fixture] [options]
 ```
 
 Options:
-- `-e, --eval <code>`: Run inline async interaction script with `{ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait }`.
-- `-s, --script <path>`: Run custom `.mjs` script file exporting `default async function({ page, frame, root, target, interactive, capture, pressTab, inspectStyles, wait })`.
+- `-e, --eval <code>`: Run inline async interaction script with `{ page, canvas, root, target, interactive, capture, pressTab, inspectStyles, wait, frame }`.
+- `-s, --script <path>`: Run custom `.mjs` script file exporting `default async function({ page, canvas, root, target, interactive, capture, pressTab, inspectStyles, wait, frame })`.
 - `-l, --list`: List all available fixtures for a component, or list all components in the repo if component is omitted.
 - `--states`: Multi-state capture (`Resting`, `Hover`, `Focus (Click)`, `Tab`, `Open`).
 - `--inspect-styles`: Dumps a computed styles table (outline, border, box-model) across states or for target.
-- `--target <css>`: Specific element to snapshot inside the fixture iframe (auto-defaults to `[data-reference-field]`, then fixture root, then `#root`).
+- `--target <css>`: Specific element to snapshot (auto-defaults to `[data-reference-field]`, then fixture root, then canvas).
 - `--pad <px>`: Padding around the bounding box to preserve focus rings, shadows, and outlines (default `20`).
 - `--out-dir <dir>`: Directory where screenshots will be stored (default: `.reference-ui/captures/`).
-- `--viewport <WxH>`: Custom viewport dimensions (default `1000x700`).
+- `--viewport <WxH>`: Custom viewport dimensions (default `1600x1050`).
 
 Script Context Helpers:
+- `canvas`: `[data-book-canvas]` story host locator in the single Book document.
+- `root`: Alias of `canvas` (story root).
+- `frame`: Deprecated compat alias for `page` / `canvas`.
 - `pressTab([locator])`: Simulates native keyboard tab with outline-preserving DOM shim.
 - `inspectStyles([locatorOrSelector])`: Returns computed border, outline, box-model properties.
-- `frame.evaluate(fn, arg)`: Executes code directly inside the fixture iframe.
 
 Output:
 - Saves unclipped, focus-ring-safe images of component + popovers to workspace directory.

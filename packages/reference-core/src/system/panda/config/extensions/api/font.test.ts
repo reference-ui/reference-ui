@@ -5,6 +5,7 @@ import {
   buildFontPatternExtensions,
   buildFontRecipes,
   buildFontTokens,
+  parseFontFamilyName,
 } from './font'
 import { extendPatterns } from './extendPatterns'
 import { getPandaConfig, initPandaConfig, PANDA_CONFIG_GLOBAL_KEY } from './runtime'
@@ -165,3 +166,14 @@ describe('font config helpers', () => {
     expect(boxPattern?.jsx).toEqual([...PRIMITIVE_JSX_NAMES, 'ToolbarIcon'])
   })
 })
+
+describe('AST-Based Font Family Extraction', () => {
+  it('safely extracts the first font name across varied syntaxes', () => {
+    expect(parseFontFamilyName('"Times New Roman", Inter, sans-serif')).toBe('Times New Roman')
+    expect(parseFontFamilyName('Inter, "Times New Roman"')).toBe('Inter')
+    expect(parseFontFamilyName('var(--my-font), sans-serif')).toBe('var(--my-font)')
+    expect(parseFontFamilyName('Times New Roman, sans-serif')).toBe('Times New Roman')
+    expect(parseFontFamilyName("'Fira Code', monospace")).toBe('Fira Code')
+  })
+})
+

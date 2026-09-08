@@ -4,29 +4,32 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { referenceVite } from '@reference-ui/core'
+import { bookPerfPlugin } from './perf/plugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const workspaceCoreDir = resolve(__dirname, '../reference-core')
+const pkgDir = resolve(__dirname, '..')
+const workspaceCoreDir = resolve(pkgDir, '../reference-core')
 const coreDir = existsSync(workspaceCoreDir)
   ? workspaceCoreDir
-  : resolve(__dirname, 'node_modules/@reference-ui/core')
-const reactRoot = resolve(__dirname, '.reference-ui/react')
+  : resolve(pkgDir, 'node_modules/@reference-ui/core')
+const reactRoot = resolve(pkgDir, '.reference-ui/react')
 const reactStylesCss = resolve(reactRoot, 'styles.css')
-const styledRoot = resolve(__dirname, '.reference-ui/styled')
-const typesRoot = resolve(__dirname, '.reference-ui/types')
+const styledRoot = resolve(pkgDir, '.reference-ui/styled')
+const typesRoot = resolve(pkgDir, '.reference-ui/types')
 
-const workspaceIconsDir = resolve(__dirname, '../reference-icons')
+const workspaceIconsDir = resolve(pkgDir, '../reference-icons')
 const iconsEntry = existsSync(resolve(workspaceIconsDir, 'src/index.ts'))
   ? resolve(workspaceIconsDir, 'src/index.ts')
   : undefined
 
 export default defineConfig({
+  root: __dirname,
   server: {
     port: 5000,
     strictPort: true,
     host: true,
   },
-  plugins: [referenceVite(), react()],
+  plugins: [referenceVite(), bookPerfPlugin(), react()],
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [
@@ -36,8 +39,6 @@ export default defineConfig({
       { find: '@reference-ui/styled', replacement: styledRoot },
       { find: '@reference-ui/types/', replacement: `${typesRoot}/` },
       { find: '@reference-ui/types', replacement: resolve(typesRoot, 'types.mjs') },
-      // reference-lib is a workspace-internal dev target: point system/react at the live
-      // generated/runtime surface instead of treating this as a normal installed consumer.
       {
         find: '@reference-ui/system',
         replacement: resolve(coreDir, 'src/entry/system.ts'),
@@ -46,4 +47,3 @@ export default defineConfig({
     ],
   },
 })
-

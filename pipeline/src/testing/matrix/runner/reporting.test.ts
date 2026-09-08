@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  announceMatrixPackageStart,
+  announceMatrixPackageTesting,
   describeMatrixEnvironment,
   appendOutputBlock,
   collectMatrixFailureDetails,
@@ -95,5 +97,11 @@ describe('matrix runner reporting helpers', () => {
 
     assert.equal(result.failed, false)
     assert.match(result.output, /Aborted before setup after another matrix package failed\./)
+  })
+
+  it('announces package start and testing phase without throwing', () => {
+    const context = createPackageRunContext()
+    assert.doesNotThrow(() => announceMatrixPackageStart(context))
+    assert.doesNotThrow(() => announceMatrixPackageTesting(context))
   })
 })

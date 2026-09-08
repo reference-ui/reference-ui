@@ -16,5 +16,5 @@
       "@reference-ui/types": ["./.reference-ui/types"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx", "book/**/*.ts", "book/**/*.tsx"]
 }

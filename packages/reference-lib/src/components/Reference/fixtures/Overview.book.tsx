@@ -19,18 +19,8 @@ export default (
         Reference Lib playground
       </Span>
       <Span fontSize="lg" color="gray.600" lineHeight="relaxed" maxWidth="36rem">
-        Browse fixtures in the tree to preview components in isolation. This UI is powered
-        by{' '}
-        <A
-          href="https://reactcosmos.org/"
-          target="_blank"
-          rel="noreferrer"
-          color="blue.600"
-          fontWeight="500"
-        >
-          React Cosmos
-        </A>
-        .
+        Browse stories in the sidebar to preview and inspect components in isolation.
+        Powered by the Book single-document playground.
       </Span>
     </Div>
     <Div
@@ -52,13 +42,9 @@ export default (
       <Span fontSize="sm" color="gray.600" lineHeight="relaxed">
         Run{' '}
         <Span fontFamily="mono" color="gray.800">
-          pnpm run cosmos
+          pnpm dev:lib
         </Span>{' '}
-        from this package after{' '}
-        <Span fontFamily="mono" color="gray.800">
-          ref sync
-        </Span>{' '}
-        (core must be built first).
+        from the workspace root to launch Book on port 5000 with Fast Refresh.
       </Span>
     </Div>
   </Div>

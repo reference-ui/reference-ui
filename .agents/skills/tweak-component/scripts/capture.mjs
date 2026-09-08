@@ -274,7 +274,8 @@ export async function runCapture(rawOpts, customScriptFn = null) {
   // Construct Book URL parameter
   const compId = opts.component
   const storyParam = selectedFixture ? `&story=${encodeURIComponent(selectedFixture)}` : ''
-  const url = `http://127.0.0.1:5000/?book=${encodeURIComponent(compId)}${storyParam}`
+  const themeParam = opts.theme ? `&theme=${encodeURIComponent(opts.theme)}` : '&theme=dark'
+  const url = `http://127.0.0.1:5000/?book=${encodeURIComponent(compId)}${storyParam}${themeParam}&chrome=0`
   const baseName = opts.name || (selectedFixture ? `${opts.component}_${selectedFixture}` : opts.component)
 
   console.log(`Connecting to Book story: ${opts.component}${selectedFixture ? ` : ${selectedFixture}` : ''}`)
@@ -285,25 +286,64 @@ export async function runCapture(rawOpts, customScriptFn = null) {
   const savedFiles = []
 
   try {
-    await page.goto(url, { waitUntil: 'load', timeout: 12000 })
+    const navStartTime = Date.now()
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 })
 
-    const frame = page.frameLocator('iframe')
-    const root = frame.locator('#root')
+    // Wait for data-book-ready (contract: 'live' | 'updating' | 'error')
+    try {
+      await page.waitForFunction(
+        () => {
+          const ready = document.documentElement.getAttribute('data-book-ready') ||
+            document.querySelector('[data-book-ready]')?.getAttribute('data-book-ready')
+          return ready === 'live' || ready === 'error'
+        },
+        null,
+        { timeout: 15000 }
+      )
+    } catch (e) {
+      const currentReady = await page.evaluate(() =>
+        document.documentElement.getAttribute('data-book-ready') ||
+        document.querySelector('[data-book-ready]')?.getAttribute('data-book-ready')
+      ).catch(() => null)
 
-    // Wait for root or child to mount
-    await root.locator('> *').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {})
-    await page.waitForTimeout(150)
+      if (currentReady === 'updating') {
+        throw new Error('BOOK_UPDATING: waited 15s (sync in progress). Not a component failure.')
+      }
+      throw new Error(`BOOK_READY_TIMEOUT: waited 15s for Book to be ready. Status was: ${currentReady}`)
+    }
+
+    const finalReady = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-book-ready') ||
+      document.querySelector('[data-book-ready]')?.getAttribute('data-book-ready')
+    )
+
+    if (finalReady === 'error') {
+      const errorText = await page.locator('[data-book-error]').innerText().catch(() => 'Story threw an error')
+      throw new Error(`BOOK_STORY_ERROR: ${errorText}`)
+    }
+
+    const captureReadyMs = Date.now() - navStartTime
+    console.log(`[Book] Connected & live in ${captureReadyMs}ms`)
+
+    const canvas = page.locator('[data-book-canvas]').first()
+    const root = canvas
+
+    // Compat alias: FrameLocator on iframe -> canvas/page locator in single document
+    const frame = {
+      locator: (selector) => page.locator(selector),
+      evaluate: (fn, arg) => page.evaluate(fn, arg),
+    }
 
     // Resolve target locator
     let targetLoc
     if (opts.target) {
-      targetLoc = frame.locator(opts.target).first()
+      targetLoc = page.locator(opts.target).first()
     } else {
-      const fieldLoc = frame.locator('[data-reference-field]').first()
+      const fieldLoc = canvas.locator('[data-reference-field]').first()
       if (await fieldLoc.count() > 0 && await fieldLoc.isVisible()) {
         targetLoc = fieldLoc
       } else {
-        const toastHost = frame.locator('[data-reference-toast-host]').first()
+        const toastHost = page.locator('[data-reference-toast-host]').first()
         if (await toastHost.count() > 0) {
           const fixtureRoot = toastHost.locator('xpath=../*[1]').first()
           if (await fixtureRoot.count() > 0 && await fixtureRoot.isVisible()) {
@@ -312,24 +352,18 @@ export async function runCapture(rawOpts, customScriptFn = null) {
         }
       }
       if (!targetLoc) {
-        const firstChild = root.locator('> *').first()
-        targetLoc = (await firstChild.count() > 0 && await firstChild.isVisible()) ? firstChild : root
+        const firstChild = canvas.locator('> *').first()
+        targetLoc = (await firstChild.count() > 0 && await firstChild.isVisible()) ? firstChild : canvas
       }
     }
 
     // Resolve primary interactive element inside target
     let interactiveEl = targetLoc.locator('input, button, [role="slider"], [role="button"], [role="combobox"], [role="switch"], [tabindex="0"], [role="tab"]').first()
     if (await interactiveEl.count() === 0 || !(await interactiveEl.isVisible())) {
-      interactiveEl = frame.locator('input, button, [role="slider"], [role="button"], [role="combobox"], [role="switch"], [tabindex="0"], [role="tab"]').first()
+      interactiveEl = canvas.locator('input, button, [role="slider"], [role="button"], [role="combobox"], [role="switch"], [tabindex="0"], [role="tab"]').first()
     }
     if (await interactiveEl.count() === 0) {
       interactiveEl = targetLoc
-    }
-
-    // Enhance frame with an evaluate method so scripts calling `await frame.evaluate(...)`
-    // execute code within the fixture iframe's document/window context directly
-    frame.evaluate = async (fn, arg) => {
-      return frame.locator(':root').evaluate(fn, arg)
     }
 
     // Helper: inspect computed styles of target or custom selector/locator
@@ -370,7 +404,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
     // Helper: press Tab with native keyboard :focus-visible outline shim
     async function pressTab(customLoc) {
       await page.mouse.move(0, 0)
-      await frame.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {})
+      await page.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {})
       const el = customLoc || interactiveEl
       await el.evaluate(node => {
         const btn = document.createElement('button')
@@ -381,7 +415,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
       }).catch(() => {})
       await page.keyboard.press('Tab')
       await page.waitForTimeout(200)
-      await frame.locator('#__capture_tab_shim__').evaluate(btn => btn?.remove()).catch(() => {})
+      await page.locator('#__capture_tab_shim__').evaluate(btn => btn?.remove()).catch(() => {})
     }
 
     // Helper: capture screenshot of target or custom element
@@ -397,7 +431,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
           console.log(`  [captured] ${label}: ${outPath}`)
           return outPath
         } else if (typeof customTarget === 'string') {
-          snapTarget = frame.locator(customTarget).first()
+          snapTarget = page.locator(customTarget).first()
         } else {
           snapTarget = customTarget
         }
@@ -413,6 +447,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
     const scriptContext = {
       page,
       frame,
+      canvas,
       root,
       target: targetLoc,
       interactive: interactiveEl,
@@ -498,7 +533,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
         if (hasPopup || role === 'combobox') {
           await trigger.click().catch(() => {})
           await page.waitForTimeout(350)
-          const popupLoc = frame.locator('[role="dialog"], [role="listbox"], [role="menu"], [data-reference-popover]').first()
+          const popupLoc = page.locator('[role="dialog"], [role="listbox"], [role="menu"], [data-reference-popover], [data-reference-overlay-portal]').first()
           if (await popupLoc.count() > 0 && await popupLoc.isVisible()) {
             const fieldBox = await targetLoc.boundingBox().catch(() => null)
             const popupBox = await popupLoc.boundingBox().catch(() => null)
@@ -518,12 +553,12 @@ export async function runCapture(rawOpts, customScriptFn = null) {
       // Single capture mode with optional explicit actions
       await page.mouse.move(0, 0)
       if (opts.hover) {
-        const hoverEl = frame.locator(opts.hover).first()
+        const hoverEl = page.locator(opts.hover).first()
         await hoverEl.hover()
         await page.waitForTimeout(200)
       }
       if (opts.click) {
-        const clickEl = frame.locator(opts.click).first()
+        const clickEl = page.locator(opts.click).first()
         await clickEl.click()
         await page.waitForTimeout(250)
       }
@@ -544,7 +579,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
       }
 
       const outPath = opts.out || path.join(opts.outDir, `${baseName}.png`)
-      const popupLoc = frame.locator('[role="dialog"], [role="listbox"]').first()
+      const popupLoc = page.locator('[role="dialog"], [role="listbox"], [role="menu"], [data-reference-popover], [data-reference-overlay-portal]').first()
       if (!opts.target && await popupLoc.count() > 0 && await popupLoc.isVisible()) {
         const fieldBox = await targetLoc.boundingBox().catch(() => null)
         const popupBox = await popupLoc.boundingBox().catch(() => null)

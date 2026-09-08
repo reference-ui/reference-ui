@@ -14,7 +14,7 @@ import {
 import type { PrimitiveElement, PrimitiveProps } from './types'
 import type * as Components from './types'
 
-export { useColorMode, LayerScopeContext, ColorModeContext } from './shared'
+export { useColorMode, LayerScopeContext, ColorModeContext, DocumentContext } from './shared'
 export { TAGS as HTML_TAGS, type Tag as HtmlTag } from './tags'
 export type { PrimitiveElement, PrimitiveProps } from './types'
 

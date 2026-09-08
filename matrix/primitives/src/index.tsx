@@ -129,6 +129,15 @@ export function Index() {
       <Div data-testid="primitive-size-square" size="2r">
         Size primitive
       </Div>
+      <Div data-testid="primitive-box-shadow-rhythm" boxShadow="0 1r 2r rgba(0, 0, 0, 0.1)">
+        Box shadow rhythm primitive
+      </Div>
+      <Div data-testid="primitive-calc-padding-rhythm" padding="calc(100% - 2r)">
+        Calc padding rhythm primitive
+      </Div>
+      <Div data-testid="primitive-calc-border-rhythm" border="calc(1px + 1r) solid rgba(0, 0, 0, 0.5)">
+        Calc border rhythm primitive
+      </Div>
       <Div data-testid="primitive-responsive-narrow-shell" container="sidebar" width="320px">
         <Div
           data-testid="primitive-responsive-narrow"

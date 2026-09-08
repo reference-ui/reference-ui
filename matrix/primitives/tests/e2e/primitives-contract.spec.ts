@@ -484,6 +484,31 @@ test.describe('primitives contract', () => {
     expect(computed.height).toBe(computed.width)
   })
 
+  test('boxShadow using rhythm units applies correctly with intact color functions', async ({ page }) => {
+    const element = page.getByTestId('primitive-box-shadow-rhythm')
+    const computed = await readComputedStyle(element, ['box-shadow'])
+
+    expect(computed['box-shadow']).toContain('rgba(0, 0, 0, 0.1)')
+    expect(computed['box-shadow']).toContain('4px 8px')
+  })
+
+  test('border shorthand decomposing calc and rhythm units evaluates properly', async ({ page }) => {
+    const element = page.getByTestId('primitive-calc-border-rhythm')
+    const computed = await readComputedStyle(element, ['border-width', 'border-style', 'border-color'])
+
+    expect(computed['border-width']).toBe('5px')
+    expect(computed['border-style']).toBe('solid')
+    expect(computed['border-color']).toBe('rgba(0, 0, 0, 0.5)')
+  })
+
+  test('padding using calc with rhythm subtraction evaluates properly', async ({ page }) => {
+    const element = page.getByTestId('primitive-calc-padding-rhythm')
+    const computed = await readComputedStyle(element, ['padding-top'])
+
+    expect(computed['padding-top']).not.toBe('0px')
+    expect(Number.parseFloat(computed['padding-top'])).toBeGreaterThan(0)
+  })
+
   test('combined custom props keep font family, weight, and size together below the responsive threshold', async ({ page }) => {
     const element = page.getByTestId('primitive-combined-custom-props-narrow')
     const computed = await readComputedStyle(element, ['font-family', 'font-weight', 'font-size', 'width', 'height'])

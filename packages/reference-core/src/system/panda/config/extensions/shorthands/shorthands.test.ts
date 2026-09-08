@@ -61,6 +61,11 @@ describe('shorthands parser & CSS spec compliance', () => {
       'solid',
       'var(--foo, rgb(255, 255, 255))',
     ])
+    expect(splitShorthandTokens('1r var(--spacing-y, 10px) 2r')).toEqual([
+      '1r',
+      'var(--spacing-y, 10px)',
+      '2r',
+    ])
   })
 
   it('correctly identifies valid width lengths including leading decimals and CSS math functions', () => {
@@ -357,6 +362,17 @@ describe('borderShorthandUtilities - advanced units & edge cases', () => {
     ).toEqual({
       borderRightWidth: 'clamp(1px, 2vw, 4px)',
       borderRightStyle: 'dotted',
+    })
+
+    expect(
+      borderShorthandUtilities.border.transform('calc(1px + 1r) solid rgba(0, 0, 0, 0.1)', {
+        raw: 'calc(1px + 1r) solid rgba(0, 0, 0, 0.1)',
+        token,
+      }),
+    ).toEqual({
+      borderWidth: 'calc(1px + var(--spacing-root))',
+      borderStyle: 'solid',
+      borderColor: 'rgba(0, 0, 0, 0.1)',
     })
   })
 

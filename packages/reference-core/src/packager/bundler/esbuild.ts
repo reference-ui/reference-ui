@@ -40,6 +40,7 @@ export async function bundleWithEsbuild(
     write: false,
     format: 'esm',
     platform: 'neutral',
+    mainFields: ['module', 'main'],
     target: 'es2020',
     jsx: 'automatic',
     jsxImportSource: 'react',

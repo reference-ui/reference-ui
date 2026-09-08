@@ -72,12 +72,26 @@ describe('rhythmUtilities border width transforms', () => {
     })
   })
 
-  it('leaves complex grammar alone when shorthand parsing would be ambiguous', () => {
+  it('resolves complex grammar and functions in utilities', () => {
     expect(rhythmUtilities.padding.transform('calc(1r + 2px)')).toEqual({
-      padding: 'calc(1r + 2px)',
+      padding: 'calc(var(--spacing-root) + 2px)',
     })
     expect(rhythmUtilities.padding.transform('min(1r, 2rem)')).toEqual({
-      padding: 'min(1r, 2rem)',
+      padding: 'min(var(--spacing-root), 2rem)',
+    })
+  })
+
+  it('maps boxShadow and textShadow rhythm units without altering color functions', () => {
+    expect(
+      rhythmUtilities.boxShadow.transform('0 1r 2r rgba(0, 0, 0, 0.1)'),
+    ).toEqual({
+      boxShadow:
+        '0 var(--spacing-root) calc(2 * var(--spacing-root)) rgba(0, 0, 0, 0.1)',
+    })
+    expect(
+      rhythmUtilities.textShadow.transform('1r 1r #333'),
+    ).toEqual({
+      textShadow: 'var(--spacing-root) var(--spacing-root) #333',
     })
   })
 

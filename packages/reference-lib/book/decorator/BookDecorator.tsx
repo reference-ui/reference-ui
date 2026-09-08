@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import '@reference-ui/react/styles.css'
-import { ReferenceLibrary } from '../components/ReferenceLibrary'
-import { setupFocusVisible } from '../core/theme/primitives/forms/focus-visible'
+import { ReferenceLibrary } from '../../src/components/ReferenceLibrary'
+import { setupFocusVisible } from '../../src/core/theme/primitives/forms/focus-visible'
 
 setupFocusVisible()
 
@@ -16,7 +16,6 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
   const isDark = theme === 'dark'
 
   React.useEffect(() => {
-    document.documentElement.setAttribute('data-color-mode', theme)
     document.documentElement.setAttribute('data-panda-theme', theme)
     document.documentElement.style.colorScheme = theme
   }, [theme])
@@ -49,7 +48,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
         flexDirection="column"
         boxSizing="border-box"
         height="100%"
-        minHeight="100vh"
+        minHeight="100%"
         width="100%"
         bg={isDark ? 'gray.950' : 'gray.50'}
         color={isDark ? 'gray.100' : 'gray.900'}

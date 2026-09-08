@@ -7,6 +7,7 @@ export function OverlayFixture() {
   const [unboundOpen, setUnboundOpen] = React.useState(false)
   const [anchoredOpen, setAnchoredOpen] = React.useState(false)
   const [themedAnchoredOpen, setThemedAnchoredOpen] = React.useState(false)
+  const [lightThemedAnchoredOpen, setLightThemedAnchoredOpen] = React.useState(false)
 
   return (
     <div data-testid="overlay-fixture-root">
@@ -139,7 +140,38 @@ export function OverlayFixture() {
         </Div>
       </section>
 
+      <section data-testid="overlay-light-themed-portal-section" style={{ marginTop: 32 }}>
+        <h2>Themed portal (light color mode)</h2>
+        <Div colorMode="light" bg="gray.50" p="4" minH="20r" borderRadius="md">
+          <Overlay
+            open={lightThemedAnchoredOpen}
+            onOpenChange={setLightThemedAnchoredOpen}
+            isolation={false}
+          >
+            <Overlay.Trigger data-testid="btn-open-light-themed-anchored">
+              Open light themed popover
+            </Overlay.Trigger>
+            <Overlay.Content
+              data-testid="overlay-light-themed-content"
+              placement="bottom-start"
+              offset={8}
+              bg="ui.dialog.background"
+              color="ui.dialog.foreground"
+              border="1px solid"
+              borderColor="ui.dialog.border"
+              borderRadius="md"
+              p="3r"
+              minW="24r"
+              zIndex={20}
+            >
+              Light themed popover body
+            </Overlay.Content>
+          </Overlay>
+        </Div>
+      </section>
+
       <button type="button" data-testid="btn-outside-element">
+
         Outside Button
       </button>
     </div>

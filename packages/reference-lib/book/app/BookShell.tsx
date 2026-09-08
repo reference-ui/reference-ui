@@ -12,80 +12,45 @@ import {
 import {
   LightModeIcon,
   DarkModeIcon,
-  BoltIcon,
-  IframeIcon,
 } from '@reference-ui/icons'
-import { getBookEntries, getBookEntry, groupEntriesByCategory } from './registry'
-import { BookDecorator } from './decorator'
-import type { BookEntry, BookStory, ViewportPreset, ViewportConfig } from './types'
-
-const VIEWPORT_CONFIGS: Record<ViewportPreset, ViewportConfig> = {
-  full: { id: 'full', label: '100%', width: '100%', height: '100%' },
-  mobile: { id: 'mobile', label: '375px', width: '375px', height: '667px' },
-  tablet: { id: 'tablet', label: '768px', width: '768px', height: '1024px' },
-  desktop: { id: 'desktop', label: '1200px', width: '1200px', height: '800px' },
-}
+import { getManifestEntries, getManifestEntry, groupManifestByCategory } from '../discovery/manifest'
+import { BookDecorator } from '../decorator/BookDecorator'
+import { BookCanvas, VIEWPORT_CONFIGS } from './BookCanvas'
+import type { ViewportPreset } from '../discovery/types'
 
 export function BookShell() {
-  const [hmrVersion, setHmrVersion] = React.useState(0)
+  const allEntries = React.useMemo(() => getManifestEntries(), [])
 
-  // Listen to Vite HMR updates
-  React.useEffect(() => {
-    if (import.meta.hot) {
-      const onHmrUpdate = () => {
-        setHmrVersion(v => v + 1)
-      }
-      import.meta.hot.on('vite:afterUpdate', onHmrUpdate)
-      return () => {
-        import.meta.hot?.off('vite:afterUpdate', onHmrUpdate)
-      }
-    }
-  }, [])
-
-  const allEntries = React.useMemo(() => getBookEntries(), [hmrVersion])
-
-  // Initial params
+  // Parse initial query params
   const initialParams = React.useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return {
       book: params.get('book') || allEntries[0]?.id || '',
       story: params.get('story') || '',
       theme: (params.get('theme') === 'light' ? 'light' : 'dark') as 'dark' | 'light',
-      direct: params.get('direct') === 'true',
+      viewport: (params.get('viewport') || 'full') as ViewportPreset,
+      chrome: params.get('chrome') !== '0',
     }
   }, [allEntries])
 
   const [selectedBookId, setSelectedBookId] = React.useState<string>(initialParams.book)
   const [selectedStoryName, setSelectedStoryName] = React.useState<string>(initialParams.story)
   const [theme, setTheme] = React.useState<'dark' | 'light'>(initialParams.theme)
-  const [viewport, setViewport] = React.useState<ViewportPreset>('full')
-  const [canvasMode, setCanvasMode] = React.useState<'iframe' | 'direct'>(initialParams.direct ? 'direct' : 'iframe')
+  const [viewport, setViewport] = React.useState<ViewportPreset>(initialParams.viewport)
   const [search, setSearch] = React.useState('')
+  const [availableStories, setAvailableStories] = React.useState<{ name: string }[]>([])
 
   const searchInputRef = React.useRef<HTMLInputElement>(null)
-  const iframeRef = React.useRef<HTMLIFrameElement>(null)
-
   const isDark = theme === 'dark'
   const subtleBorder = isDark ? 'gray.800' : 'gray.200'
+  const hasChrome = initialParams.chrome
 
   // Current active entry
   const currentEntry = React.useMemo(() => {
-    return getBookEntry(selectedBookId) || allEntries[0]
+    return getManifestEntry(selectedBookId) || allEntries[0]
   }, [selectedBookId, allEntries])
 
-  const activeStories = currentEntry?.stories || []
-
-  // Ensure selected story is valid for current entry
-  React.useEffect(() => {
-    if (activeStories.length > 0) {
-      const match = activeStories.find(s => s.name.toLowerCase() === selectedStoryName.toLowerCase())
-      if (!match) {
-        setSelectedStoryName(activeStories[0].name)
-      }
-    }
-  }, [currentEntry?.id, activeStories, selectedStoryName])
-
-  // Sync browser URL
+  // Sync browser URL cleanly
   React.useEffect(() => {
     if (!currentEntry) return
     const url = new URL(window.location.href)
@@ -96,54 +61,16 @@ export function BookShell() {
       url.searchParams.delete('story')
     }
     url.searchParams.set('theme', theme)
-    if (canvasMode === 'direct') {
-      url.searchParams.set('direct', 'true')
+    if (viewport !== 'full') {
+      url.searchParams.set('viewport', viewport)
     } else {
-      url.searchParams.delete('direct')
+      url.searchParams.delete('viewport')
+    }
+    if (!hasChrome) {
+      url.searchParams.set('chrome', '0')
     }
     window.history.replaceState({}, '', url.toString())
-  }, [currentEntry, selectedStoryName, theme, canvasMode])
-
-  // Initial Iframe URL
-  const initialIframeSrc = React.useRef(() => {
-    const params = new URLSearchParams()
-    params.set('renderer', 'true')
-    params.set('book', initialParams.book)
-    if (initialParams.story) {
-      params.set('story', initialParams.story)
-    }
-    params.set('theme', initialParams.theme)
-    return `/?${params.toString()}`
-  }).current()
-
-  // Instant iframe communication
-  const dispatchToIframe = React.useCallback((bookId: string, storyName: string, activeTheme: 'dark' | 'light') => {
-    if (!iframeRef.current?.contentWindow) return
-    const win = iframeRef.current.contentWindow as any
-    if (typeof win.__BOOK_NAVIGATE__ === 'function') {
-      win.__BOOK_NAVIGATE__(bookId, storyName)
-      win.__BOOK_SET_THEME__?.(activeTheme)
-    } else {
-      win.postMessage({ type: 'BOOK_NAVIGATE', bookId, storyName }, '*')
-      win.postMessage({ type: 'BOOK_SET_THEME', theme: activeTheme }, '*')
-    }
-  }, [])
-
-  React.useEffect(() => {
-    if (canvasMode === 'iframe' && currentEntry) {
-      dispatchToIframe(currentEntry.id, selectedStoryName, theme)
-    }
-  }, [currentEntry?.id, selectedStoryName, theme, canvasMode, dispatchToIframe])
-
-  React.useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type === 'BOOK_RENDERER_READY' && currentEntry) {
-        dispatchToIframe(currentEntry.id, selectedStoryName, theme)
-      }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [currentEntry, selectedStoryName, theme, dispatchToIframe])
+  }, [currentEntry, selectedStoryName, theme, viewport, hasChrome])
 
   // Global '/' keyboard shortcut to focus search
   React.useEffect(() => {
@@ -163,24 +90,27 @@ export function BookShell() {
   // Filtered categories
   const filteredCategories = React.useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return groupEntriesByCategory(allEntries)
+    if (!q) return groupManifestByCategory(allEntries)
 
     const matching = allEntries.filter(e =>
       e.title.toLowerCase().includes(q) ||
       e.id.toLowerCase().includes(q) ||
-      e.category.toLowerCase().includes(q) ||
-      e.stories.some(s => s.name.toLowerCase().includes(q))
+      e.category.toLowerCase().includes(q)
     )
-    return groupEntriesByCategory(matching)
+    return groupManifestByCategory(matching)
   }, [allEntries, search])
 
-  const activeStory = React.useMemo(() => {
-    return (selectedStoryName ? activeStories.find(s => s.name.toLowerCase() === selectedStoryName.toLowerCase()) : null) || activeStories[0]
-  }, [activeStories, selectedStoryName])
-
-  const ActiveStoryComponent = activeStory?.component || null
-  const vpConfig = VIEWPORT_CONFIGS[viewport]
-  const isFull = viewport === 'full'
+  // Headless mode for capture (?chrome=0)
+  if (!hasChrome) {
+    return (
+      <BookCanvas
+        entry={currentEntry}
+        storyName={selectedStoryName}
+        theme={theme}
+        viewport={viewport}
+      />
+    )
+  }
 
   return (
     <BookDecorator theme={theme} layout="shell">
@@ -222,7 +152,7 @@ export function BookShell() {
             </Span>
           </Div>
 
-          {/* Theme Toggle Button: clean ghost button without harsh border */}
+          {/* Theme Toggle Button */}
           <Button
             type="button"
             variant="ghost"
@@ -243,7 +173,7 @@ export function BookShell() {
           </Button>
         </Header>
 
-        {/* Search Bar: subtle background and border */}
+        {/* Search Bar */}
         <Div p="3r" borderBottom="1px solid" borderBottomColor={subtleBorder}>
           <Input
             ref={searchInputRef}
@@ -273,7 +203,6 @@ export function BookShell() {
           ) : (
             filteredCategories.map(cat => (
               <Div key={cat.name} display="flex" flexDirection="column" gap="0.5r">
-                {/* Category Header */}
                 <Span
                   fontSize="2.4r"
                   fontWeight="600"
@@ -289,17 +218,16 @@ export function BookShell() {
                 <Div display="flex" flexDirection="column" gap="0.5r">
                   {cat.entries.map(entry => {
                     const isSelected = currentEntry?.id === entry.id
-                    const hasMultipleStories = entry.stories.length > 1
+                    const hasMultipleStories = isSelected && availableStories.length > 1
 
                     return (
                       <Div key={entry.id} display="flex" flexDirection="column">
-                        {/* Component Entry Button: Left-aligned with subtle hover */}
                         <Button
                           type="button"
                           variant="ghost"
                           onClick={() => {
                             setSelectedBookId(entry.id)
-                            setSelectedStoryName(entry.stories[0]?.name || '')
+                            setSelectedStoryName('')
                           }}
                           width="100%"
                           display="flex"
@@ -319,36 +247,36 @@ export function BookShell() {
                           }}
                           transition="background 100ms ease, color 100ms ease"
                         >
-                          <Span fontSize="3r" textAlign="left">{entry.title}</Span>
+                          <Span fontSize="2.8r" textAlign="left">{entry.title}</Span>
                           {hasMultipleStories && (
                             <Span
                               fontSize="2.2r"
-                              px="1.2r"
+                              px="1.5r"
                               py="0.2r"
                               borderRadius="sm"
                               bg={isDark ? 'gray.800' : 'gray.300'}
                               color="design.text.light"
                               fontWeight="600"
                             >
-                              {entry.stories.length}
+                              {availableStories.length}
                             </Span>
                           )}
                         </Button>
 
-                        {/* Indented Stories: Left-aligned text, no centering, clear active state */}
+                        {/* Indented Sub-stories for multi-story components */}
                         {isSelected && hasMultipleStories && (
                           <Div
                             pl="3r"
-                            ml="2r"
-                            my="0.8r"
+                            ml="2.5r"
+                            my="1r"
                             display="flex"
                             flexDirection="column"
                             gap="0.5r"
                             borderLeft="2px solid"
                             borderLeftColor={isDark ? 'gray.800' : 'gray.200'}
                           >
-                            {entry.stories.map(story => {
-                              const isStoryActive = (selectedStoryName || entry.stories[0]?.name).toLowerCase() === story.name.toLowerCase()
+                            {availableStories.map(story => {
+                              const isStoryActive = (selectedStoryName || availableStories[0]?.name).toLowerCase() === story.name.toLowerCase()
                               return (
                                 <Button
                                   key={story.name}
@@ -393,7 +321,7 @@ export function BookShell() {
 
       {/* Canvas Area */}
       <Div flex="1" display="flex" flexDirection="column" height="100%" overflow="hidden" bg={isDark ? 'gray.950' : 'gray.100'}>
-        {/* Top Control Bar: clean subtle border without bright wireframe outlines */}
+        {/* Top Control Bar */}
         <Header
           height="12r"
           px="4r"
@@ -416,21 +344,20 @@ export function BookShell() {
             <Span fontSize="3.2r" fontWeight="600" color="design.text.base">
               {currentEntry?.title}
             </Span>
-            {activeStories.length > 1 && (
+            {availableStories.length > 1 && (
               <>
                 <Span fontSize="3.2r" color="design.text.lighter">
                   /
                 </Span>
                 <Span fontSize="3.2r" color="design.text.base" fontWeight="500">
-                  {selectedStoryName || activeStories[0]?.name}
+                  {selectedStoryName || availableStories[0]?.name}
                 </Span>
               </>
             )}
           </Div>
 
-          {/* Controls: Segmented Pills with NO harsh borders */}
+          {/* Controls: Presets Pill */}
           <Div display="flex" alignItems="center" gap="2.5r">
-            {/* Viewport Presets Pill */}
             <Div
               display="flex"
               borderRadius="sm"
@@ -461,114 +388,26 @@ export function BookShell() {
                 </Button>
               ))}
             </Div>
-
-            {/* Direct vs Iframe Switcher Pill */}
-            <Div
-              display="flex"
-              borderRadius="sm"
-              p="0.5r"
-              bg={isDark ? 'gray.900' : 'gray.200'}
-              gap="0.5r"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                px="2r"
-                py="0.8r"
-                fontSize="2.5r"
-                borderRadius="sm"
-                border="none"
-                cursor="pointer"
-                display="inline-flex"
-                alignItems="center"
-                gap="1r"
-                bg={canvasMode === 'direct' ? (isDark ? 'gray.800' : 'white') : 'transparent'}
-                color={canvasMode === 'direct' ? 'design.text.base' : 'design.text.light'}
-                fontWeight={canvasMode === 'direct' ? '600' : 'normal'}
-                onClick={() => setCanvasMode('direct')}
-                title="Direct React render (instantaneous, fastest HMR)"
-                _hover={{
-                  bg: canvasMode === 'direct' ? undefined : (isDark ? 'gray.800' : 'gray.100'),
-                }}
-              >
-                <BoltIcon size="sm" />
-                <Span>Direct</Span>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                px="2r"
-                py="0.8r"
-                fontSize="2.5r"
-                borderRadius="sm"
-                border="none"
-                cursor="pointer"
-                display="inline-flex"
-                alignItems="center"
-                gap="1r"
-                bg={canvasMode === 'iframe' ? (isDark ? 'gray.800' : 'white') : 'transparent'}
-                color={canvasMode === 'iframe' ? 'design.text.base' : 'design.text.light'}
-                fontWeight={canvasMode === 'iframe' ? '600' : 'normal'}
-                onClick={() => setCanvasMode('iframe')}
-                title="Iframe isolated render (CSS sandbox)"
-                _hover={{
-                  bg: canvasMode === 'iframe' ? undefined : (isDark ? 'gray.800' : 'gray.100'),
-                }}
-              >
-                <IframeIcon size="sm" />
-                <Span>Iframe</Span>
-              </Button>
-            </Div>
           </Div>
         </Header>
 
-        {/* Main Canvas Viewport */}
+        {/* Canvas Host */}
         <Main
           flex="1"
           display="flex"
           alignItems="center"
           justifyContent="center"
           overflow="auto"
-          p={isFull ? '0' : '4r'}
+          p={viewport === 'full' ? '0' : '4r'}
           bg={isDark ? 'gray.950' : 'gray.100'}
         >
-          <Div
-            width={vpConfig.width}
-            height={vpConfig.height}
-            maxW="100%"
-            maxH="100%"
-            borderRadius={isFull ? 'none' : 'lg'}
-            overflow="hidden"
-            border={isFull ? 'none' : '1px solid'}
-            borderColor={isDark ? 'gray.800' : 'gray.300'}
-            boxShadow={isFull ? 'none' : '0 12px 40px rgba(0,0,0,0.3)'}
-            display="flex"
-            flexDirection="column"
-            bg={isDark ? 'gray.950' : 'white'}
-            transition="width 200ms ease, height 200ms ease"
-          >
-            {canvasMode === 'iframe' ? (
-              <iframe
-                ref={iframeRef}
-                src={initialIframeSrc}
-                title="Book Preview"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  background: 'transparent',
-                }}
-              />
-            ) : ActiveStoryComponent ? (
-              <BookDecorator theme={theme} layout="story">
-                <ActiveStoryComponent />
-              </BookDecorator>
-            ) : (
-              <Div p="6r" color="design.text.light" fontSize="3.5r" fontFamily="mono">
-                No story available to render.
-              </Div>
-            )}
-          </Div>
+          <BookCanvas
+            entry={currentEntry}
+            storyName={selectedStoryName}
+            theme={theme}
+            viewport={viewport}
+            onAvailableStories={setAvailableStories}
+          />
         </Main>
       </Div>
     </BookDecorator>
