@@ -4,9 +4,16 @@ import {
   getLayerHandlers,
   isRecentlyRemoved,
   layerDocument,
+  setStackChangeListener,
   type Layer,
-} from './stack'
-import { closestFromEvent, isEventInside, isPrimaryPointer, markEventConsumed, isEventConsumed } from './events'
+} from '../stack'
+import {
+  isEventInside,
+  isPrimaryPointer,
+  markEventConsumed,
+  isEventConsumed,
+} from '../shared/events'
+import { isInsideLayer } from './inside'
 
 type DocEntry = {
   escape: (event: KeyboardEvent) => void
@@ -24,36 +31,6 @@ function ownerDoc(event: Event): Document {
   const target = event.target
   if (target instanceof Node) return target.ownerDocument ?? document
   return document
-}
-
-function fieldFor(el: Element | null): Element | null {
-  return el?.closest('[data-reference-field]') ?? null
-}
-
-/** Content, portalled descendants, trigger, and the trigger's Field bezel are inside. */
-export function isInsideLayer(layer: Layer, event: Event): boolean {
-  if (isEventInside(layer.node, event)) return true
-  if (isEventInside(layer.trigger, event)) return true
-  if (closestFromEvent(event, '[data-reference-overlay-ignore]')) return true
-
-  const triggerField = fieldFor(layer.trigger)
-  if (triggerField && isEventInside(triggerField, event)) return true
-
-  const { layers } = overlayStackStore.getState()
-  for (const other of layers) {
-    if (other.id === layer.id) continue
-    let walk: Layer | undefined = other
-    while (walk?.parentId) {
-      if (walk.parentId === layer.id) {
-        if (isEventInside(other.node, event) || isEventInside(other.backdrop, event)) {
-          return true
-        }
-        break
-      }
-      walk = layers.find(l => l.id === walk!.parentId)
-    }
-  }
-  return false
 }
 
 function insideOwnBackdrop(layer: Layer, event: Event): boolean {
@@ -77,6 +54,7 @@ function onEscape(event: KeyboardEvent) {
   const target = event.target
   if (target instanceof Element) {
     try {
+      // Native top-layer popovers consume the first Escape.
       if (target.closest(':popover-open')) return
     } catch {
       // :popover-open unsupported
@@ -97,14 +75,14 @@ function onPointerDown(event: PointerEvent) {
   const top = getTopLiveLayer(overlayStackStore.getState().layers, doc)
   if (!top || isRecentlyRemoved(top.id) || !top.node) return
 
-  // OV-OUT-04: Ignore same-tick opening pointerdown
+  // Same-tick opener pointerdown is not an outside press.
   if (top.openedAt && event.timeStamp <= top.openedAt) {
     return
   }
 
-  // Backdrop is this layer's dismiss surface; the part handles it.
+  // Backdrop is this layer's dismiss surface; the part handles mouse.
+  // Touch on backdrop defers until click so a scroll-gesture can cancel.
   if (insideOwnBackdrop(top, event)) {
-    // OV-OUT-06: Touch on backdrop defers until click
     if (event.pointerType === 'touch') {
       pendingByDoc.set(doc, { layerId: top.id, pointerId: event.pointerId })
     }
@@ -162,8 +140,8 @@ function bind(doc: Document) {
   doc.addEventListener('pointerdown', entry.pointerDown)
   doc.addEventListener('pointermove', entry.pointerMove)
   // Bubble, not capture: password-manager / extension overlays that
-  // stopPropagation on click must abort the deferred outside sequence
-  // (OV-OUT-07). Backdrop mouse dismiss still runs on pointerdown.
+  // stopPropagation on click must abort the deferred outside sequence.
+  // Backdrop mouse dismiss still runs on pointerdown.
   doc.addEventListener('click', entry.click)
   doc.addEventListener('pointercancel', entry.pointerCancel)
   bound.set(doc, entry)
@@ -191,12 +169,21 @@ function openDocs(): Set<Document> {
   return docs
 }
 
+function seenDocs(): Document[] {
+  const out: Document[] = []
+  for (const layer of overlayStackStore.getState().layers) {
+    const doc = layerDocument(layer)
+    if (doc) out.push(doc)
+  }
+  return out
+}
+
 export function syncDismissListeners() {
   if (typeof document === 'undefined') return
 
   const needed = openDocs()
   const known = new Set<Document>(needed)
-  if (typeof document !== 'undefined') known.add(document)
+  known.add(document)
 
   for (const doc of seenDocs()) {
     known.add(doc)
@@ -205,6 +192,7 @@ export function syncDismissListeners() {
   for (const doc of known) {
     if (needed.has(doc)) {
       if (bound.has(doc) || attachTimers.has(doc)) continue
+      // Next task: the opening pointerdown must not bind as an outside press.
       const timer = window.setTimeout(() => {
         attachTimers.delete(doc)
         if (openDocs().has(doc)) bind(doc)
@@ -220,16 +208,5 @@ export function syncDismissListeners() {
     }
   }
 }
-
-function seenDocs(): Document[] {
-  const out: Document[] = []
-  for (const layer of overlayStackStore.getState().layers) {
-    const doc = layerDocument(layer)
-    if (doc) out.push(doc)
-  }
-  return out
-}
-
-import { setStackChangeListener } from './stack'
 
 setStackChangeListener(syncDismissListeners)

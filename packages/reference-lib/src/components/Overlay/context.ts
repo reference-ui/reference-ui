@@ -6,6 +6,9 @@ import type {
   OverlayEdge,
   OverlayProps,
 } from './types'
+import { overlayWarn } from './shared/warn'
+
+export { overlayWarn }
 
 export type OverlayPartName =
   | 'trigger'
@@ -43,12 +46,4 @@ export const OverlayContext = React.createContext<OverlayContextValue | null>(nu
 
 export function useOverlay() {
   return React.useContext(OverlayContext)
-}
-
-export function overlayWarn(message: string) {
-  const isProd =
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'production'
-  if (!isProd) {
-    console.error(`[Overlay] ${message}`)
-  }
 }

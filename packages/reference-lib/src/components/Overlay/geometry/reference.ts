@@ -28,7 +28,8 @@ export function resolveReference(
     }
   }
 
-  // Isolating dialogs keep Trigger as opener only. Popover/menu use it as the reference.
+  // Isolating dialogs keep Trigger as opener only. Popover/menu (`isolation={false}`)
+  // use it as the floating reference. Explicit `anchor` always wins.
   if (trigger && !isolationFocus) {
     return (trigger.closest('[data-reference-field]') as HTMLElement | null) ?? trigger
   }

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Button, type PrimitiveProps } from '@reference-ui/react'
 import { OverlayContext } from '../context'
 import { overlayStackStore } from '../stack'
-import { assignRef } from '../refs'
+import { assignRef } from '../shared/refs'
 
 export type OverlayTriggerProps = PrimitiveProps<'button'>
 

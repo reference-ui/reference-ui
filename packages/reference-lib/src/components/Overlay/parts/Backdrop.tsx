@@ -4,8 +4,8 @@ import { Portal } from '../../Portal'
 import { Presence } from '../../Presence'
 import { OverlayContext } from '../context'
 import { overlayStackStore, isTopLiveLayer, useOverlayZIndex, isRecentlyRemoved, useLayerPointerEvents } from '../stack'
-import { assignRef } from '../refs'
-import { isPrimaryPointer, markEventConsumed, isEventConsumed } from '../events'
+import { assignRef } from '../shared/refs'
+import { isPrimaryPointer, markEventConsumed, isEventConsumed } from '../shared/events'
 import { usePointerLock } from '../isolation/pointer-events'
 
 export type OverlayBackdropProps = PrimitiveProps<'div'>

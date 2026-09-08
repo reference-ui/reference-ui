@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { isNodeInside } from '../events'
+import { isNodeInside } from '../shared/events'
 import { overlayStackStore, layerDocument } from '../stack'
 
 const refCount = new WeakMap<Element, number>()

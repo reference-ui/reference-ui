@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
-import { OverlayContext, overlayWarn } from '../context'
-import { assignRef } from '../refs'
+import { OverlayContext } from '../context'
+import { assignRef } from '../shared/refs'
 import {
   axisSize,
   dismissDelta,

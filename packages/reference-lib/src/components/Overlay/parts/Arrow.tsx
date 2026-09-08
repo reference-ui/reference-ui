@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { OverlayContext } from '../context'
-import { assignRef } from '../refs'
+import { assignRef } from '../shared/refs'
 
 export type OverlayArrowProps = PrimitiveProps<'div'> & {
   edgePadding?: number

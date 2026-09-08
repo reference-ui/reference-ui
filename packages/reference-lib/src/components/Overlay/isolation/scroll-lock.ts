@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { overlayStackStore, layerDocument } from '../stack'
-import { eventPath, isNodeInside } from '../events'
+import { eventPath, isNodeInside } from '../shared/events'
 
 type Restore = () => void
 
@@ -137,6 +137,8 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
 
   const useFixed = positionFixed && isIOS(doc) && !isStandalone()
   if (useFixed) {
+    // iOS Safari: `overflow: hidden` does not stop rubber-band document
+    // scroll. Pin body to `position: fixed` at the current offset instead.
     body.style.position = 'fixed'
     body.style.top = `-${scrollY}px`
     body.style.left = '0'

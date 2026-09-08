@@ -1,55 +1,22 @@
 import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
-import type { IsolationFlags, OverlayEdge } from './types'
-import { isNodeInside } from './events'
+import {
+  clearLayerHandlers,
+  deleteLayerHandlers,
+  getLayerHandlers,
+} from './handlers'
+import {
+  descendantsDeepestFirst,
+  hasIsolatingLayer,
+  isLayerPointerEventsEnabled,
+} from './query'
+import type { Layer, OverlayStackState } from './types'
 
-export type LayerHandlers = {
-  dismiss: () => void
-  onEscape?: (event: KeyboardEvent) => void
-  onOutsidePress?: (event: PointerEvent) => void
-  onInteractOutside?: (event: PointerEvent | FocusEvent) => void
-}
-
-const handlers = new Map<string, LayerHandlers>()
-
-export function setLayerHandlers(id: string, next: LayerHandlers) {
-  handlers.set(id, next)
-}
-
-export function getLayerHandlers(id: string): LayerHandlers | undefined {
-  return handlers.get(id)
-}
-
-export type Layer = {
-  id: string
-  parentId: string | null
-  dismiss: () => void
-  isModal: boolean
-  isolation: IsolationFlags
-  open: boolean
-  edge?: OverlayEdge
-  zIndex: number
-  node: HTMLElement | null
-  backdrop: HTMLElement | null
-  trigger: HTMLElement | null
-  document: Document | null
-  openedAt?: number
-}
-
-type OverlayStackState = {
-  layers: Layer[]
-  addLayer: (layer: Omit<Layer, 'zIndex'>) => void
-  updateLayer: (id: string, patch: Partial<Layer>) => void
-  removeLayer: (id: string) => void
-  cascade: (id: string) => void
-  setLayerNode: (id: string, node: HTMLElement | null) => void
-  setLayerBackdrop: (id: string, node: HTMLElement | null) => void
-  setLayerTrigger: (id: string, node: HTMLElement | null) => void
-  setLayerOpen: (id: string, open: boolean) => void
-  reset: () => void
-}
-
-/** Suppresses focus-outside races for ~2 frames after a layer leaves the stack. */
+/**
+ * Focus-outside can fire on the document after a layer unmounts.
+ * Keep the id inert for two frames so the leaving layer is not treated
+ * as the top live dismiss target.
+ */
 const recentlyRemoved = new Map<string, number>()
 
 function markRemoved(id: string) {
@@ -65,88 +32,6 @@ function markRemoved(id: string) {
 
 export function isRecentlyRemoved(id: string): boolean {
   return recentlyRemoved.has(id)
-}
-
-export function layerDocument(layer: Layer): Document | null {
-  return (
-    layer.document ??
-    layer.node?.ownerDocument ??
-    (typeof document !== 'undefined' ? document : null)
-  )
-}
-
-export function layersFor(layers: Layer[], doc?: Document | null): Layer[] {
-  if (!doc) return layers
-  return layers.filter(l => {
-    const owner = layerDocument(l)
-    return !owner || owner === doc
-  })
-}
-
-export function descendantsDeepestFirst(layers: Layer[], id: string): Layer[] {
-  const children = layers.filter(l => l.parentId === id)
-  const out: Layer[] = []
-  for (const child of children) {
-    out.push(...descendantsDeepestFirst(layers, child.id), child)
-  }
-  return out
-}
-
-export function liveLayers(layers: Layer[], doc?: Document | null): Layer[] {
-  return layersFor(layers, doc).filter(l => l.open)
-}
-
-export function getTopLiveLayer(layers: Layer[], doc?: Document | null): Layer | undefined {
-  const live = liveLayers(layers, doc)
-  return live[live.length - 1]
-}
-
-export function isTopLiveLayer(layers: Layer[], id: string, doc?: Document | null): boolean {
-  return getTopLiveLayer(layers, doc)?.id === id
-}
-
-export function hasIsolatingLayer(layers: Layer[], doc?: Document | null): boolean {
-  return layersFor(layers, doc).some(l => l.isModal)
-}
-
-export function isLayerPointerEventsEnabled(
-  layers: Layer[],
-  layerId: string,
-  doc?: Document | null
-): boolean {
-  const docLayers = layersFor(layers, doc)
-  const modalLayers = docLayers.filter(l => l.isModal && (l.open || l.node !== null))
-  if (modalLayers.length === 0) {
-    return true
-  }
-  const highestModal = modalLayers[modalLayers.length - 1]
-  if (!highestModal) return true
-
-  if (layerId === highestModal.id) return true
-
-  const descendants = descendantsDeepestFirst(docLayers, highestModal.id)
-  return descendants.some(d => d.id === layerId)
-}
-
-export function useLayerPointerEvents(id: string, doc?: Document | null): 'auto' | 'none' | undefined {
-  return useStore(overlayStackStore, state => {
-    const hasModal = hasIsolatingLayer(state.layers, doc)
-    if (!hasModal) return undefined
-    const enabled = isLayerPointerEventsEnabled(state.layers, id, doc)
-    return enabled ? 'auto' : 'none'
-  })
-}
-
-export function edgeStack(layers: Layer[], doc?: Document | null): Layer[] {
-  return layersFor(layers, doc).filter(l => l.edge)
-}
-
-export function isNodeInsideLayers(node: Node | null, layers: Layer[]): boolean {
-  if (!node) return false
-  for (const layer of layers) {
-    if (isNodeInside(layer.node, node) || isNodeInside(layer.backdrop, node)) return true
-  }
-  return false
 }
 
 function patchLayer(layers: Layer[], id: string, patch: Partial<Layer>): Layer[] {
@@ -178,6 +63,8 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
   layers: [],
 
   addLayer: layer => {
+    // Same-tick pointerdown that opened this layer must not count as
+    // outside press. dismiss compares event.timeStamp to openedAt.
     const openedAt = layer.open ? performance.now() : undefined
     set(state => {
       const idx = state.layers.findIndex(l => l.id === layer.id)
@@ -262,7 +149,7 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
     const descendants = descendantsDeepestFirst(layers, id)
     markRemoved(id)
     set({ layers: layers.filter(l => l.id !== id) })
-    handlers.delete(id)
+    deleteLayerHandlers(id)
     syncEdgeStacks(get().layers)
 
     for (const child of descendants) {
@@ -275,7 +162,7 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
 
   reset: () => {
     recentlyRemoved.clear()
-    handlers.clear()
+    clearLayerHandlers()
     set({ layers: [] })
     onStackChange()
   },
@@ -290,4 +177,13 @@ export function useOverlayZIndex(id: string) {
 
 export function useOverlayStore<T>(selector: (state: OverlayStackState) => T): T {
   return useStore(overlayStackStore, selector)
+}
+
+export function useLayerPointerEvents(id: string, doc?: Document | null): 'auto' | 'none' | undefined {
+  return useStore(overlayStackStore, state => {
+    const hasModal = hasIsolatingLayer(state.layers, doc)
+    if (!hasModal) return undefined
+    const enabled = isLayerPointerEventsEnabled(state.layers, id, doc)
+    return enabled ? 'auto' : 'none'
+  })
 }

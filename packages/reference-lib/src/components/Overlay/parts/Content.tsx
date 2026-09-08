@@ -11,36 +11,15 @@ import {
   useLayerPointerEvents,
   useOverlayStore,
 } from '../stack'
-import { useComposedRef } from '../refs'
+import { useComposedRef } from '../shared/refs'
 import { usePreventScroll } from '../isolation/scroll-lock'
 import { useHideOutside } from '../isolation/hide-outside'
 import { usePointerLock } from '../isolation/pointer-events'
 import { useOverlayPosition } from '../geometry/use-position'
 import type { OverlayContentGeometry } from '../types'
+import { nextAfter, tabbables } from './tab-cycle'
 
 export type OverlayContentProps = PrimitiveProps<'div'> & OverlayContentGeometry
-
-const TABBABLE =
-  'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
-
-function tabbables(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>(TABBABLE)).filter(el => {
-    if (el.closest('[inert], [hidden], [aria-hidden="true"]')) return false
-    const style = el.ownerDocument.defaultView?.getComputedStyle(el)
-    return style?.display !== 'none' && style?.visibility !== 'hidden'
-  })
-}
-
-function nextAfter(el: HTMLElement, exclude?: HTMLElement | null): HTMLElement | null {
-  const all = Array.from(el.ownerDocument.querySelectorAll<HTMLElement>(TABBABLE)).filter(cand => {
-    if (exclude && (cand === exclude || exclude.contains(cand))) return false
-    if (cand.closest('[inert], [hidden], [aria-hidden="true"]')) return false
-    const style = cand.ownerDocument.defaultView?.getComputedStyle(cand)
-    return style?.display !== 'none' && style?.visibility !== 'hidden'
-  })
-  const idx = all.indexOf(el)
-  return all[idx + 1] ?? null
-}
 
 export function OverlayContent({
   children,
@@ -92,6 +71,8 @@ export function OverlayContent({
     if (!context || !node) return
     overlayStackStore.getState().setLayerNode(context.id, node)
     return () => {
+      // Presence keeps Content mounted through exit. Drop the stack node on
+      // unmount; if the layer is already closed, remove it so isolation releases.
       overlayStackStore.getState().setLayerNode(context.id, null)
       const current = overlayStackStore.getState().layers.find(l => l.id === context.id)
       if (current && !current.open) overlayStackStore.getState().removeLayer(context.id)

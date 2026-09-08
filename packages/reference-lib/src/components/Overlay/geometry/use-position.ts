@@ -13,7 +13,7 @@ import { bindEdge, publishEdgeStack, clearGeometry } from './edge'
 type Options = {
   isOpen: boolean
   setIsOpen?: (open: boolean) => void
-  anchor: OverlayAnchor
+  anchor?: OverlayAnchor
   edge?: OverlayEdge
   isolationFocus: boolean
   closeOnScroll?: boolean
@@ -69,9 +69,9 @@ export function useOverlayPosition({
       return
     }
 
-    const reference = resolveReference(anchor, trigger, isolationFocus, edge)
+    const reference = resolveReference(anchor ?? null, trigger, isolationFocus, edge)
     if (!reference) {
-      // Unbound: Overlay writes no coordinates.
+      // Unbound dialog: omitted isolation plus Trigger writes no coordinates.
       return
     }
 
