@@ -1,6 +1,6 @@
 # Toast
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md).
 
 Infrastructure for transient application content. Does not prescribe appearance or meaning. No semantic variants (`success`, `error`, `loading`).
 

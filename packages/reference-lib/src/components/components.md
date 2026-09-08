@@ -197,7 +197,7 @@ turns that chrome off.
 
 Reference UI only provides a runtime component when it centralizes behaviour that should not be repeatedly rebuilt by developers or AI agents.
 
-Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/TESTS.md` (contracts to prove, including how vendor e2e suites combine). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. The `vendor/` clones are **port sources**, not runtime dependencies: Overlay synthesizes Floating UI core/DOM, Vaul's edge/handle kernel, and Sonner's nested-stack CSS language; `@floating-ui/react` stays leave. See `vendor/VENDOR.md`. How to run Playwright is `packages/reference-lib/TESTING.md`.
+Working design lives in sibling folders: `Overlay/Overlay.md` (API + problems), `Overlay/SPEC.md` (current freeze, cases, and proof). Overlay family orchestration is [`OVERLAYS.md`](../../OVERLAYS.md). Implementation substrate is [hooks.md](../core/hooks/hooks.md): Zustand plus adapters in `src/core/hooks`. This document remains the freeze-gate overview. Names under Documented compositions do not get folders — they are not runtime components. The `vendor/` clones are **port sources**, not runtime dependencies: Overlay synthesizes Floating UI core/DOM, Vaul's edge/handle kernel, and Sonner's nested-stack CSS language; `@floating-ui/react` stays leave. See `vendor/VENDOR.md`. How to run Playwright is `packages/reference-lib/TESTING.md`.
 
 Foundation components solve application-wide mechanics:
 

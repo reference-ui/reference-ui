@@ -1,6 +1,6 @@
 # Popover
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md).
 
 Controlled, anchored, **non-isolating** floating content with hover policy.
 

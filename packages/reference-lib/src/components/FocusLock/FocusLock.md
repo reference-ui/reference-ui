@@ -1,6 +1,6 @@
 # FocusLock
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md).
 
 Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is reclaimed, focus is restored when the lock deactivates. Overlay uses this internally. Distinct from `RovingFocus`, which moves `tabindex` among items inside a composite widget.
 

@@ -1,14 +1,42 @@
-# Popover test contract
+# Popover SPEC
 
-Playwright: `matrix/lib/tests/e2e/popover.spec.ts`  
-Unit: `matrix/lib/tests/unit/popover-position.test.ts`
+Current freeze, cases, and proof. Design narrative: [Popover.md](./Popover.md).
+System orchestration: [OVERLAYS.md](../../../OVERLAYS.md).
+Kernel cases: [Overlay SPEC](../Overlay/SPEC.md).
+
+Playwright: `matrix/lib/tests/e2e/popover.spec.ts`
 Page: `/popover`
 
-Popover is Overlay with isolation frozen off, plus hover policy.
-`Popover.Trigger` is Overlay.Trigger. Geometry, Tab-order bridge,
-`closeOnScroll`, and Trigger activation are Overlay's. Popover cases
-below prove consumption plus hover grace and impatient click. Shared
-layer-stack behavior is Overlay; exit detection is Presence.
+## Legend
+
+- `[x]` Playwright title contains this case ID.
+- `[ ]` Specified; not E2E-proven. The engine may still exist in source.
+
+## Current (2026-09-08)
+
+**Production: no.** Gate 4 in [OVERLAYS.md](../../../OVERLAYS.md).
+
+| | |
+| :--- | :--- |
+| Engine | Shipped (`isolation={false}` Overlay + hover timers) |
+| Named `[x]` | 7 / 95 |
+| Playwright tests | 9 |
+
+Named proven: `PO-DOM-01`, `PO-DOM-02`, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01`, `PO-HOVER-02`.
+
+Unnamed Playwright: Escape dismiss, `PO-POS` anchoring, outside press. Treat as partial `PO-CLOSE-*` / `PO-POS-01`, not a full close/focus matrix.
+
+### In the tree
+
+Click toggle, delays (`openDelay` 700 / `closeDelay` 300), pointer enter/leave on Trigger and Content, flip/shift/arrow, uncontrolled `defaultOpen`.
+
+### Defects
+
+Hover grace is **timers only**. There is no safe-polygon. `PO-HOVER-02` passes because delay covers a straight move onto Content. Diagonal travel still closes. Freeze item 6 still names 5px safe-area padding — that padding is not implemented.
+
+### Remaining
+
+Ship a pointer-safe polygon, then keep `PO-HOVER-02` as the diagonal proof. Unchecked `PO-HOVER-03+` and layer/env cases stay open.
 
 ## API freeze decisions
 
@@ -78,14 +106,14 @@ add only Popover-specific anatomy and behavior/style conflicts.
   instances across rerenders. Assert `aria-expanded` reflects the prop,
   `aria-controls` stably names mounted Content, and open/closed data hooks
   update atomically; generic native-prop coverage belongs to `PART-PROP-01`.
-- [x] `PO-DOM-03` `[reference]` `[browser]` —
+- [ ] `PO-DOM-03` `[reference]` `[browser]` —
   **Popover should keep ID relationships correct when authored or generated
   Trigger and Content IDs change.**
   Mount multiple instances with omitted IDs, then parameterize explicit IDs,
   rerendered IDs, and Content removal. Assert authored IDs win, generated IDs
   are stable and unique, Trigger references update atomically with Content,
   and unmount removes only Popover-owned ARIA tokens.
-- [x] `PO-DOM-04` `[reference]` `[browser]` —
+- [ ] `PO-DOM-04` `[reference]` `[browser]` —
   **Popover should publish all positioning state when live geometry resolves
   or changes.**
   Open Content, force placement, clipping, size, and anchor visibility changes,
@@ -94,7 +122,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   `data-anchor-hidden`/`data-escaped`, and all five documented
   `--reference-overlay-*` available-size, anchor-size, and transform-origin
   values without stale output.
-- [x] `PO-DOM-05` `[reference]` `[browser]` —
+- [ ] `PO-DOM-05` `[reference]` `[browser]` —
   **Popover should apply exact Arrow collision insets when `edgePadding` is
   omitted, zero, or positive.**
   Render the decorative Arrow against a constrained cross axis with omitted
@@ -102,21 +130,21 @@ add only Popover-specific anatomy and behavior/style conflicts.
   one `aria-hidden` div clamps to four pixels by default, may reach the
   available edge at zero, and stays exactly the supplied positive distance
   from each tested Content edge without truthiness fallback.
-- [x] `PO-DOM-06` `[reference]` `[browser]` —
+- [ ] `PO-DOM-06` `[reference]` `[browser]` —
   **Popover should move its floating subtree without a wrapper when Portal
   receives a direct, ref, or function destination.**
   Parameterize `Popover.Portal` over an element, mutable ref, and destination
   function, including a target that becomes available after mount. Assert
   Content and Arrow move together through shared Portal semantics and no
   configuration node appears at the declaration site or destination.
-- [x] `PO-DOM-07` `[reference]` `[browser]` —
+- [ ] `PO-DOM-07` `[reference]` `[browser]` —
   **Popover should create no trigger semantics when positioning uses only a
   virtual anchor.**
   Mount an open Popover with `anchor={{x: 40, y: 60}}`, Content, and no Trigger,
   then inspect DOM and accessibility output. Assert there is no hidden button,
   guessed `aria-expanded`/`aria-controls` source, focus-restore target, or
   extra host; only authored Content is positioned from the point.
-- [x] `PO-DOM-08` `[reference]` `[browser]` —
+- [ ] `PO-DOM-08` `[reference]` `[browser]` —
   **Popover should keep visual Arrow padding independent when `edgePadding`
   controls collision geometry on the same part.**
   Hold `edgePadding={12}` and all anchor/Content rects fixed while changing the
@@ -124,7 +152,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   `edgePadding`. Assert computed padding changes on the Arrow div without
   moving its owned coordinate or Content, while the behavioral prop changes
   the geometric inset without replacing the visual padding.
-- [x] `PO-DOM-09` `[reference]` `[browser]` —
+- [ ] `PO-DOM-09` `[reference]` `[browser]` —
   **Popover should preserve opaque consumer transforms when live positioning
   coordinates update.**
   Give Content authored `transform`, `transition`, and `transform-origin`
@@ -132,7 +160,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   positioning changes only owned `position`/`top`/`left` and the documented
   transform-origin custom property, never erasing, parsing, or concatenating
   the consumer's transform-related declarations.
-- [x] `PO-DOM-10` `[reference]` `[browser]` —
+- [ ] `PO-DOM-10` `[reference]` `[browser]` —
   **Popover should use every frozen default when optional positioning, hover,
   and portal props are omitted.**
   Mount a closed instance with only Trigger and Content, activate Trigger, and
@@ -140,7 +168,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   requests open and resolved configuration is `bottom-start`, eight-pixel
   offset, eight-pixel collision padding, flip and shift enabled, absolute
   strategy, body portal, and hover opening disabled.
-- [x] `PO-DOM-11` `[reference]` `[browser]` —
+- [ ] `PO-DOM-11` `[reference]` `[browser]` —
   **Popover should avoid accidental form submission when Trigger omits its
   native button type.**
   Place a default Trigger, a MenuButton composition, and an explicitly
@@ -151,7 +179,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Controlled open and dismissal
 
-- [x] `PO-CTRL-01` `[reference]` `[browser]` —
+- [ ] `PO-CTRL-01` `[reference]` `[browser]` —
   **Popover should request the controlled state transition after consumer
   handlers when Trigger receives native activation.**
   Activate a closed and then open Trigger by mouse click, Enter, and Space
@@ -159,14 +187,14 @@ add only Popover-specific anatomy and behavior/style conflicts.
   consumer handler runs first, followed by exactly `onOpen()` when closed or
   `onDismiss()` when open, and neither request mutates controlled DOM without a
   parent rerender.
-- [x] `PO-CTRL-02` `[reference]` `[browser]` —
+- [ ] `PO-CTRL-02` `[reference]` `[browser]` —
   **Popover should change lifecycle state without callbacks when the parent
   updates `open` programmatically.**
   Rerender from `open={false}` to `true`, verify live positioning, then set
   `open={false}` and complete any exit. Assert Content mounts, positions, enters
   closed Presence state, and unmounts according to the prop while `onOpen`,
   `onEscape`, `onOutsidePress`, and `onDismiss` stay silent.
-- [x] `PO-CTRL-03` `[reference]` `[browser]` —
+- [ ] `PO-CTRL-03` `[reference]` `[browser]` —
   **Popover should preserve controlled DOM when the parent rejects an open or
   dismiss request.**
   Keep `open={false}` after a hover `onOpen` request and keep `open={true}`
@@ -174,7 +202,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Assert Content remains respectively absent or open and each intent emits
   only its one documented request rather than spamming callbacks or inventing
   internal state.
-- [x] `PO-CTRL-04` `[reference]` `[browser]` —
+- [ ] `PO-CTRL-04` `[reference]` `[browser]` —
   **Popover should cancel built-in Trigger activation when the consumer click
   handler prevents default.**
   On closed and open fixtures, compare a Trigger handler that calls
@@ -182,49 +210,49 @@ add only Popover-specific anatomy and behavior/style conflicts.
   each. Assert both consumer handlers run first, prevention suppresses
   `onOpen`/`onDismiss`, and propagation stopping alone still permits the
   internal controlled request.
-- [x] `PO-CLOSE-01` `[vendor]` `[browser:all]` —
+- [ ] `PO-CLOSE-01` `[vendor]` `[browser:all]` —
   **Popover should request dismissal after its granular callback when Escape
   reaches the top Popover.**
   Open a controlled Popover as the top shared layer, focus a Content control,
   and press Escape while logging callback order. Assert exactly
   `onEscape(keyboardEvent)` then `onDismiss()` when unprevented, with controlled
   Content unchanged until the parent accepts.
-- [x] `PO-CLOSE-02` `[vendor]` `[browser]` —
+- [ ] `PO-CLOSE-02` `[vendor]` `[browser]` —
   **Popover should distinguish outside presses from interaction in Trigger,
   Content, or Arrow when it is open.**
   Perform complete primary pointer sequences on each inside part and then on
   an ordinary outside control. Assert inside sequences call neither dismissal
   callback, while the outside sequence calls `onOutsidePress(pointerEvent)`
   then `onDismiss()` once.
-- [x] `PO-CLOSE-03` `[reference]` `[browser]` —
+- [ ] `PO-CLOSE-03` `[reference]` `[browser]` —
   **Popover should remain open when either granular dismissal callback prevents
   its default.**
   In separate open fixtures, call `preventDefault()` from `onEscape` and
   `onOutsidePress`, then send real key and pointer input. Assert each granular
   callback receives intact browser metadata exactly once, `onDismiss` is
   skipped, and the controlled layer remains registered and interactive.
-- [x] `PO-CLOSE-04` `[vendor]` `[touch]` —
+- [ ] `PO-CLOSE-04` `[vendor]` `[touch]` —
   **Popover should avoid cascading dismissal when one outside touch traverses
   nested parent and child layers.**
   Open a child Popover over a parent layer, begin an outside touch, verify
   dismissal waits for the safe click sequence, and accept the child's request.
   Assert that tap emits one child dismissal and cannot later dismiss the parent
   from the deferred click, preserving the shared Overlay regression contract.
-- [x] `PO-CLOSE-05` `[reference]` `[browser]` —
+- [ ] `PO-CLOSE-05` `[reference]` `[browser]` —
   **Popover should ignore its opening pointer event and use current handlers
   when later outside input occurs.**
   Open from Trigger `pointerdown`, rerender dismissal handlers and captured
   state before the next independent outside sequence, and then press outside.
   Assert the opening event cannot immediately close Content and the later
   event invokes only the latest granular and high-level closures once.
-- [x] `PO-CLOSE-06` `[reference]` `[browser]` —
+- [ ] `PO-CLOSE-06` `[reference]` `[browser]` —
   **Popover should remain non-modal when it is open over ordinary application
   content.**
   Open Content with focusable and scrollable controls before and after it in
   source order, then focus, Tab, click, and scroll outside. Assert Popover adds
   no focus trap, inert or `aria-hidden` background state, body pointer lock, or
   document scroll lock; only its documented close policy may request state.
-- [x] `PO-CLOSE-07` `[vendor]` `[browser]` —
+- [ ] `PO-CLOSE-07` `[vendor]` `[browser]` —
   **Popover should request dismissal when an unregistered extension overlay
   receives the outside interaction and stops later mouse events.**
   Open a non-modal Popover, interact with a password-manager-style sibling
@@ -237,35 +265,35 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Focus restore
 
-- [x] `PO-FOCUS-01` `[convergence]` `[browser]` —
+- [ ] `PO-FOCUS-01` `[convergence]` `[browser]` —
   **Popover should restore Trigger focus when dismissal follows focus entering
   Content and the owned exit completes.**
   Open from a focused Trigger, move focus to a Content control, request
   dismissal, accept `open={false}`, and run a visible exit. Assert focus remains
   valid during exit and returns once to the original Trigger only after Content
   unmounts.
-- [x] `PO-FOCUS-02` `[reference]` `[browser]` —
+- [ ] `PO-FOCUS-02` `[reference]` `[browser]` —
   **Popover should not steal focus when focus never entered Content or the
   application deliberately moved it elsewhere.**
   Dismiss one instance while focus remains on Trigger and another after
   application code focuses an unrelated valid target. Assert exit completion
   preserves the current target in both cases and does not perform unconditional
   Trigger restoration.
-- [x] `PO-FOCUS-03` `[vendor]` `[browser]` —
+- [ ] `PO-FOCUS-03` `[vendor]` `[browser]` —
   **Popover should choose a live proximity fallback when Trigger is removed or
   disabled before restoration.**
   Open from Trigger, focus Content, remove or disable Trigger, then dismiss and
   complete exit. Assert focus moves to the documented nearest eligible
   source-order target, never detached or disabled Trigger DOM, and no exception
   or body-focus regression occurs.
-- [x] `PO-FOCUS-04` `[reference]` `[browser]` —
+- [ ] `PO-FOCUS-04` `[reference]` `[browser]` —
   **Popover should remain inside its parent modal's focus boundary when it is
   portalled from an Overlay.**
   Open Overlay, then a nested Popover whose Content portals outside Overlay
   Content, and move focus into the child. Assert Popover Content is registered
   as the same shard and dismissal branch, parent FocusLock does not reclaim
   focus, and membership disappears only at the documented exit boundary.
-- [x] `PO-FOCUS-05` `[convergence]` `[browser]` —
+- [ ] `PO-FOCUS-05` `[convergence]` `[browser]` —
   **Popover should bridge forward and reverse Tab order when Content is
   portalled away from Trigger.**
   Put source-order controls around Trigger and multiple tabbables in
@@ -273,21 +301,21 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Content control. Assert forward focus reaches the first Content descendant
   and reverse focus returns to Trigger despite physical portal order, without
   trapping focus.
-- [x] `PO-FOCUS-06` `[convergence]` `[browser]` —
+- [ ] `PO-FOCUS-06` `[convergence]` `[browser]` —
   **Popover should resume source document order when Tab leaves its last
   Content control.**
   Tab from the last Content descendant, then separately Shift+Tab from Trigger
   with tabbables before and after Trigger in source DOM. Assert forward
   traversal requests dismissal once and lands after Trigger, reverse traversal
   lands before Trigger, and neither path follows the portal's body position.
-- [x] `PO-FOCUS-07` `[reference]` `[browser]` —
+- [ ] `PO-FOCUS-07` `[reference]` `[browser]` —
   **Popover should skip non-tabbable Content when sequential focus reaches an
   open popup.**
   Open Content containing no tabbable descendant and press Tab and Shift+Tab
   from Trigger in fixtures with surrounding source-order controls. Assert each
   direction requests one dismissal, skips the popup to the correct outside
   target, and encounters no focus trap or hidden guard stop.
-- [x] `PO-FOCUS-08` `[reference]` `[browser]` —
+- [ ] `PO-FOCUS-08` `[reference]` `[browser]` —
   **Popover should respect consumer focus navigation when a Tab bridge or
   programmatic focus-leave is deliberately handled.**
   Prevent default in a consumer Content key handler before the explicit Tab
@@ -295,7 +323,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   open. Assert prevention leaves focus and open state for the application,
   while focus-leave requests close once and exit never steals the new outside
   focus.
-- [x] `PO-FOCUS-09` `[reference]` `[browser]` —
+- [ ] `PO-FOCUS-09` `[reference]` `[browser]` —
   **Popover should leave outside focus in place when a controlled
   focus-leave dismissal is rejected.**
   Move focus from Content to an ordinary outside control, record the dismissal
@@ -305,35 +333,35 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Base placement and offset
 
-- [x] `PO-POS-01` `[vendor]` `[unit]` —
+- [ ] `PO-POS-01` `[vendor]` `[unit]` —
   **Popover should compute correct coordinates when any supported placement is
   requested.**
   Feed fixed reference and floating rectangles through all 12
   top/right/bottom/left plus start/end placements with collision middleware
   disabled. Assert exact main-axis side and cross-axis alignment coordinates
   for every case, including unequal dimensions, without consulting DOM state.
-- [x] `PO-POS-02` `[vendor]` `[unit]` —
+- [ ] `PO-POS-02` `[vendor]` `[unit]` —
   **Popover should preserve alignment when positive, zero, or negative
   main-axis offset is applied.**
   Compute representative centered, start, and end placements with concrete
   positive, `0`, and negative offsets. Assert only the placement's main-axis
   distance changes by that signed value and start/end anchoring remains exact,
   proving zero is not replaced by the eight-pixel default.
-- [x] `PO-POS-03` `[vendor]` `[browser]` —
+- [ ] `PO-POS-03` `[vendor]` `[browser]` —
   **Popover should mirror logical alignment when inherited direction changes
   to RTL.**
   Position start- and end-aligned Content on each physical side under LTR,
   inherited RTL, and a dynamic direction change. Assert start/end coordinates
   swap on the logical cross axis while physical top, right, bottom, and left
   side selection and offset remain unchanged.
-- [x] `PO-POS-04` `[reference]` `[browser]` —
+- [ ] `PO-POS-04` `[reference]` `[browser]` —
   **Popover should keep placement finite and stable when geometry contains
   subpixels or fractional zoom.**
   Use fractional anchor/Content rects, device scale, and browser zoom, then
   sample several auto-update frames without other movement. Assert `top` and
   `left` remain finite, preserve the intended geometric relationship within
   tolerance, and do not alternate by a pixel across frames.
-- [x] `PO-POS-05` `[vendor]` `[unit]` —
+- [ ] `PO-POS-05` `[vendor]` `[unit]` —
   **Popover should terminate positioning when middleware requests repeated
   resets.**
   Run a chain in which flip and arrow alignment can each request rect or
@@ -350,7 +378,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   and enough room opposite it. Assert its bounding rect fits within collision
   padding, resolved `data-side` changes to the opposite physical side, and
   `data-align`/offset remain correct in all engines.
-- [x] `PO-FLIP-02` `[vendor]` `[unit]` —
+- [ ] `PO-FLIP-02` `[vendor]` `[unit]` —
   **Popover should select the least-overflowing fallback when no placement
   fully fits.**
   Compute collisions with expanded fallback placements, including opposite
@@ -358,7 +386,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Assert the documented fallback order is evaluated and `bestFit` chooses the
   candidate with minimum measured overflow, covering Floating UI
   `flip.test.ts` (“fallbackPlacements: all” and `fallbackStrategy: "bestFit"`).
-- [x] `PO-FLIP-03` `[vendor]` `[browser]` —
+- [ ] `PO-FLIP-03` `[vendor]` `[browser]` —
   **Popover should flip only alignment when start overflows but end fits on the
   same side.**
   Request a start-aligned placement whose side has room but whose start edge
@@ -372,28 +400,28 @@ add only Popover-specific anatomy and behavior/style conflicts.
   still overlaps its anchor, with the limiter enabled. Assert every Content
   edge stays inside the padded clipping rect and movement never detaches it
   beyond the limiter's allowed anchor relationship.
-- [x] `PO-SHIFT-02` `[vendor]` `[browser]` —
+- [ ] `PO-SHIFT-02` `[vendor]` `[browser]` —
   **Popover should include every clipping ancestor when nested overflow
   containers and scrollbars constrain it.**
   Place Trigger and portalled Content within nested scroll/clip ancestors that
   have borders and scrollbars, then move each ancestor. Assert resolved
   coordinates fit the intersection of their client clipping rects rather than
   only the viewport or border boxes.
-- [x] `PO-SHIFT-03` `[reference]` `[browser]` —
+- [ ] `PO-SHIFT-03` `[reference]` `[browser]` —
   **Popover should honor each collision-padding edge when custom padding,
   including zero, is supplied.**
   Exercise top, right, bottom, and left collisions with concrete nonzero
   padding and repeat with `collisionPadding={0}`. Assert each Content edge
   clamps to the corresponding boundary plus its supplied value and zero is not
   replaced by the eight-pixel default.
-- [x] `PO-HIDE-01` `[vendor]` `[browser]` —
+- [ ] `PO-HIDE-01` `[vendor]` `[browser]` —
   **Popover should report a hidden anchor without changing controlled open
   state when clipping fully obscures the reference.**
   Open Content, scroll or clip the entire Trigger/anchor out of its clipping
   rect, and then reveal it. Assert `data-anchor-hidden` appears while
   `open={true}` and Content remains mounted, then clears when visible without
   an unsolicited dismissal callback.
-- [x] `PO-HIDE-02` `[vendor]` `[browser]` —
+- [ ] `PO-HIDE-02` `[vendor]` `[browser]` —
   **Popover should report escaped Content only when its floating rect has left
   the clipping context.**
   Move the floating element outside its clipping boundary independently of the
@@ -411,21 +439,21 @@ add only Popover-specific anatomy and behavior/style conflicts.
   the anchor center within tolerance, its owned coordinate is on the correct
   physical side, and the opposite coordinate is unset, covering Floating UI
   `arrow.test.ts` (“arrow should be centered to the reference …”).
-- [x] `PO-ARROW-02` `[vendor]` `[browser]` —
+- [ ] `PO-ARROW-02` `[vendor]` `[browser]` —
   **Popover should clamp Arrow away from Content edges when `edgePadding`
   limits its centered position.**
   Use a small Content box, off-center anchor, rounded visual edges, and
   explicit positive `edgePadding` on horizontal and vertical sides. Assert the
   Arrow remains at least that inset from both cross-axis edges and reports the
   resulting nonzero center offset rather than overflowing.
-- [x] `PO-ARROW-03` `[vendor]` `[unit]` —
+- [ ] `PO-ARROW-03` `[vendor]` `[unit]` —
   **Popover should terminate arrow alignment when its offset nudges Content
   during flip evaluation.**
   Compute an aligned placement where Arrow cannot center without moving
   Content and track middleware resets. Assert the alignment offset is applied
   once, subsequent flip logic recognizes it, and the chain produces stable
   finite coordinates instead of a flip-reset loop or doubled offset.
-- [x] `PO-ARROW-04` `[reference]` `[browser]` —
+- [ ] `PO-ARROW-04` `[reference]` `[browser]` —
   **Popover should omit Arrow coordinates when valid centering cannot be
   represented.**
   Supply degenerate, detached, or temporarily zero-size geometry that makes
@@ -435,7 +463,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Available size
 
-- [x] `PO-SIZE-01` `[vendor]` `[unit]` —
+- [ ] `PO-SIZE-01` `[vendor]` `[unit]` —
   **Popover should compute available dimensions when preceding placement
   middleware has changed geometry.**
   Run concrete rects through offset, collision padding, flip, shift, and size
@@ -443,7 +471,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   nonnegative available width and height from the final placement/clipping
   state, covering Floating UI `size.test.ts` (“fits the boundary when
   overflowing both sides …”).
-- [x] `PO-SIZE-02` `[vendor]` `[browser]` —
+- [ ] `PO-SIZE-02` `[vendor]` `[browser]` —
   **Popover should update documented available-size properties when viewport or
   anchor geometry changes.**
   Open Content, record
@@ -451,14 +479,14 @@ add only Popover-specific anatomy and behavior/style conflicts.
   move/resize the anchor. Assert both computed CSS properties track current
   finite pixel dimensions after each update and never retain values from the
   previous geometry.
-- [x] `PO-SIZE-03` `[reference]` `[browser]` —
+- [ ] `PO-SIZE-03` `[reference]` `[browser]` —
   **Popover should constrain a long Menu or Listbox when available height is
   smaller than its content.**
   Compose a long Menu/Listbox inside Content near a clipping edge and size its
   scroll region from the published available-height property. Assert Content
   remains inside the clipping viewport, the list scrolls internally to its
   final item, and document scrolling or item semantics are not broken.
-- [x] `PO-SIZE-04` `[vendor]` `[browser]` —
+- [ ] `PO-SIZE-04` `[vendor]` `[browser]` —
   **Popover should settle without an observer loop when size middleware changes
   Content dimensions.**
   Make Content respond to the available-size CSS properties in a way that
@@ -468,42 +496,42 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Virtual anchors
 
-- [x] `PO-VIRTUAL-01` `[vendor]` `[browser]` —
+- [ ] `PO-VIRTUAL-01` `[vendor]` `[browser]` —
   **Popover should position from a zero-size point when virtual anchor supplies
   only `x` and `y`.**
   Open Triggerless Content with a concrete `{x: 120, y: 80}` anchor and test
   representative sides and alignments. Assert the reference rect has implicit
   zero width/height and Content's placement and offset originate from that
   exact point.
-- [x] `PO-VIRTUAL-02` `[vendor]` `[browser]` —
+- [ ] `PO-VIRTUAL-02` `[vendor]` `[browser]` —
   **Popover should use full virtual geometry when anchor supplies dimensions or
   a DOMRect.**
   Position Content from `{x, y, width, height}` and an equivalent `DOMRect`
   across side and start/end placements. Assert offsets and alignment derive
   from all four rect edges, producing the same public coordinates for
   equivalent inputs rather than collapsing them to a point.
-- [x] `PO-VIRTUAL-03` `[vendor]` `[browser]` —
+- [ ] `PO-VIRTUAL-03` `[vendor]` `[browser]` —
   **Popover should read current virtual geometry when
   `getBoundingClientRect()` changes while open.**
   Supply a virtual object whose method returns one rect, mutate it to a second
   rect, and trigger auto-update. Assert Content moves to the second finite
   placement without remounting and never reuses stale coordinates from the
   first result.
-- [x] `PO-VIRTUAL-04` `[vendor]` `[browser]` —
+- [ ] `PO-VIRTUAL-04` `[vendor]` `[browser]` —
   **Popover should follow the correct environment when an Element is used as
   the anchor.**
   Anchor Content to an Element inside nested scrollers and then to one in a
   same-origin document context, scrolling its ancestors while open. Assert
   position updates use that Element's owner window, document, and overflow
   ancestors rather than the React root or global document.
-- [x] `PO-VIRTUAL-05` `[reference]` `[browser]` —
+- [ ] `PO-VIRTUAL-05` `[reference]` `[browser]` —
   **Popover should split interaction from geometry when both Trigger and
   `anchor` are supplied.**
   Render a button Trigger and a spatially separate virtual anchor, activate by
   click/keyboard, focus Content, and dismiss. Assert Trigger owns
   `aria-expanded`/`aria-controls`, callbacks, source-order bridge, and focus
   restore, while Content coordinates follow only the virtual anchor.
-- [x] `PO-VIRTUAL-06` `[reference]` `[browser]` —
+- [ ] `PO-VIRTUAL-06` `[reference]` `[browser]` —
   **Popover should discard stale virtual geometry when anchor is replaced or
   removed while open.**
   Rerender from one valid virtual anchor to another and then to no valid anchor
@@ -513,7 +541,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Scroll-close policy
 
-- [x] `PO-SCROLL-01` `[reference]` `[browser:all]` —
+- [ ] `PO-SCROLL-01` `[reference]` `[browser:all]` —
   **Popover should reposition instead of dismissing on ancestor scroll when
   closeOnScroll is omitted or false.**
   Open omitted and explicit-false fixtures beneath scrolling ancestors of both
@@ -521,7 +549,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   logs. Assert Content tracks the live anchor through `autoUpdate`, no
   dismissal callback runs, and the two forms are equivalent. Living position
   is the general interactive-Popover default.
-- [x] `PO-SCROLL-02` `[vendor]` `[browser]` —
+- [ ] `PO-SCROLL-02` `[vendor]` `[browser]` —
   **Popover should request one dismissal when a relevant anchor ancestor
   scrolls and closeOnScroll is true.**
   Open with `closeOnScroll`, scroll the Trigger's nearest and outer overflow
@@ -530,7 +558,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   callback spam from the same scroll sequence, and no stale position update
   after acceptance. This centralizes React Aria's close-on-scroll behavior for
   Combobox and other anchored consumers.
-- [x] `PO-SCROLL-03` `[vendor]` `[browser]` —
+- [ ] `PO-SCROLL-03` `[vendor]` `[browser]` —
   **Popover closeOnScroll should ignore unrelated scrolling and text-field
   self-scroll that does not move the anchor.**
   Open beside an unrelated scroll region and from an overflowing input or
@@ -538,7 +566,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Assert no dismissal, descriptor/relationship change, or remount until a
   composed ancestor that moves the anchor scrolls. This preserves native
   editing while distinguishing geometry movement from any `scroll` event.
-- [x] `PO-SCROLL-04` `[vendor]` `[shadow]` —
+- [ ] `PO-SCROLL-04` `[vendor]` `[shadow]` —
   **Popover closeOnScroll should discover relevant overflow ancestors across
   open ShadowRoots.**
   Place Trigger beneath nested shadow scrolling ancestors, portal Content to
@@ -550,7 +578,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Auto-update environments
 
-- [x] `PO-AUTO-01` `[vendor]` `[browser:all]` —
+- [ ] `PO-AUTO-01` `[vendor]` `[browser:all]` —
   **Popover should track its anchor when any reference or floating overflow
   ancestor scrolls.**
   Put Trigger and Content under distinct nested overflow ancestors, scroll each
@@ -558,56 +586,56 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Assert Content recomputes against the anchor after every scroll without
   dismissal or stale side hooks, covering Floating UI `autoUpdate.test.ts`
   `ancestorScroll` cases.
-- [x] `PO-AUTO-02` `[vendor]` `[browser:all]` —
+- [ ] `PO-AUTO-02` `[vendor]` `[browser:all]` —
   **Popover should recompute when viewport, anchor, or Content dimensions
   change.**
   Resize the window, resize an overflow ancestor, and trigger ResizeObserver
   changes on both reference and Content while open. Assert coordinates,
   resolved placement, available size, and Arrow update after each change with
   one current observer path.
-- [x] `PO-AUTO-03` `[vendor]` `[browser]` —
+- [ ] `PO-AUTO-03` `[vendor]` `[browser]` —
   **Popover should follow anchor layout shifts only when Content is live.**
   Move, insert around, and remove content before the anchor without scrolling,
   then close Popover and repeat the mutation. Assert open Content tracks the
   final anchor promptly, including two moves during one refresh, while closed
   state performs no further position updates, covering Floating UI
   `autoUpdate.test.ts` `layoutShift` cases.
-- [x] `PO-AUTO-04` `[vendor]` `[browser:all]` —
+- [ ] `PO-AUTO-04` `[vendor]` `[browser:all]` —
   **Popover should retain finite geometric alignment when browser zoom or the
   visual viewport changes.**
   Open near an edge, change browser zoom where supported, then resize and offset
   the visual viewport. Assert Content remains aligned to the visible anchor
   within tolerance, stays in clipping bounds, and never emits `NaN`,
   infinity, or coordinates from the layout viewport alone.
-- [x] `PO-AUTO-05` `[vendor]` `[shadow]` —
+- [ ] `PO-AUTO-05` `[vendor]` `[shadow]` —
   **Popover should discover composed overflow ancestry when anchor or Content
   crosses an open ShadowRoot.**
   Place anchor and custom-portalled Content inside the same and then different
   open shadow trees, with scrolling ancestors on both sides. Assert every
   relevant composed ancestor triggers updates and geometry uses the correct
   owner window despite retargeted nodes.
-- [x] `PO-AUTO-06` `[vendor]` `[browser]` —
+- [ ] `PO-AUTO-06` `[vendor]` `[browser]` —
   **Popover should calculate in the correct coordinate space when anchor or
   portal is in a same-origin iframe.**
   Exercise an iframe anchor with local and outer scrolling and a destination
   in the supported document context. Assert Content rect, clipping, offset
   parent, listeners, and callbacks belong to the intended owner document and
   do not mix frame-relative with top-window coordinates.
-- [x] `PO-AUTO-07` `[vendor]` `[browser]` —
+- [ ] `PO-AUTO-07` `[vendor]` `[browser]` —
   **Popover should preserve clipping and offset calculations when a native
   top-layer popover is an ancestor.**
   Open Reference UI Content from an anchor inside an active native popover/top
   layer and move both near clipping edges. Assert resolved side and rect remain
   anchored in the visible coordinate space without a transformed or missing
   offset parent corrupting placement.
-- [x] `PO-AUTO-08` `[reference]` `[browser]` —
+- [ ] `PO-AUTO-08` `[reference]` `[browser]` —
   **Popover should replace auto-update resources when it closes, unmounts, or
   reopens.**
   Instrument scroll/resize listeners, ResizeObserver, IntersectionObserver, and
   animation-frame work across open, close, direct unmount, and reopen. Assert
   every old resource detaches at its documented boundary, closed mutations do
   nothing, and reopen creates exactly one current listener/observer set.
-- [x] `PO-AUTO-09` `[vendor]` `[browser]` —
+- [ ] `PO-AUTO-09` `[vendor]` `[browser]` —
   **Popover should use the correct containing-block chain when fixed content
   is nested inside a modal and transformed ancestors.**
   Place an anchor inside a transformed or filtered outer containing block and
@@ -619,27 +647,27 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Presence
 
-- [x] `PO-PRES-01` `[reference]` `[browser:all]` —
+- [ ] `PO-PRES-01` `[reference]` `[browser:all]` —
   **Popover should keep its floating subtree positioned when controlled close
   starts an exit.**
   Open Content and Arrow with explicit transitions, set `open={false}`, and
   sample state and geometry before final end events. Assert both receive closed
   state, retain their last valid positioning throughout owned exit, and unmount
   only after completion in each browser engine.
-- [x] `PO-PRES-02` `[reference]` `[browser]` —
+- [ ] `PO-PRES-02` `[reference]` `[browser]` —
   **Popover should resume the current lifecycle when it reopens during exit.**
   Begin an animated close, capture Content and Arrow identities, reopen before
   completion, then fire stale and current end events while moving the anchor.
   Assert the same nodes return to open state, auto-update resumes, and stale
   completion cannot unmount or unregister the live Popover.
-- [x] `PO-PRES-03` `[reference]` `[browser]` —
+- [ ] `PO-PRES-03` `[reference]` `[browser]` —
   **Popover should close immediately when reduced motion or zero duration means
   no exit event will occur.**
   Set `open={false}` under zero effective CSS motion and under
   `prefers-reduced-motion`, then observe one completed update turn. Assert
   Content/Arrow unmount and positioning listeners plus active layer
   registration clean without waiting for a phantom event.
-- [x] `PO-PRES-04` `[reference]` `[browser]` —
+- [ ] `PO-PRES-04` `[reference]` `[browser]` —
   **Popover should separate logical dismissal from delayed focus and branch
   cleanup when Content exits.**
   Focus Content, accept a dismissal into an animated exit, and finish an
@@ -647,7 +675,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   the active dismissal-layer entry disappears at logical close, while focus
   restore and parent FocusLock branch removal wait for the owned exit and occur
   once.
-- [x] `PO-PRES-05` `[reference]` `[browser]` —
+- [ ] `PO-PRES-05` `[reference]` `[browser]` —
   **Popover should make exiting Content non-interactive when it remains mounted
   for animation.**
   Start a long exit and attempt pointer activation, sequential/programmatic
@@ -672,28 +700,28 @@ add only Popover-specific anatomy and behavior/style conflicts.
   path through the documented padded safe polygon and end inside Content.
   Assert no close timer or `onDismiss` starts at any point, preserving access
   across the physical portal gap.
-- [x] `PO-HOVER-03` `[convergence]` `[browser]` —
+- [ ] `PO-HOVER-03` `[convergence]` `[browser]` —
   **Popover should request delayed close when the pointer leaves the safe
   region and should cancel it on reentry.**
   Move from an open Trigger along a path outside the Trigger/Content polygon,
   sample before and after `closeDelay`, and repeat with reentry before expiry.
   Assert the sustained-away path calls `onDismiss` once after the delay while
   reentry cancels the timer without reopening or another callback.
-- [x] `PO-HOVER-04` `[vendor]` `[browser]` —
+- [ ] `PO-HOVER-04` `[vendor]` `[browser]` —
   **Popover should preserve one open interaction when the pointer moves from
   Content back to Trigger through their padded gap.**
   Traverse Content → padded corridor → Trigger and sample node identity,
   callback logs, and coordinates throughout. Assert no close/open request,
   remount, or positioning restart occurs while the pointer remains inside the
   combined interactive region.
-- [x] `PO-HOVER-05` `[vendor]` `[browser]` —
+- [ ] `PO-HOVER-05` `[vendor]` `[browser]` —
   **Popover should leave hover grace when pointer travel is slow, reversed, or
   crosses the side opposite Content.**
   From Trigger, sample each away-intent path while Content is open and advance
   the close timer. Assert every path exits grace and requests one delayed close
   rather than indefinitely treating arbitrary space as safe, matching the
   away-corridor cases in Base UI `safePolygon.test.ts`.
-- [x] `PO-HOVER-06` `[reference]` `[rtl]` —
+- [ ] `PO-HOVER-06` `[reference]` `[rtl]` —
   **Popover should mirror safe hover geometry when placement, alignment,
   collision, or direction changes.**
   Parameterize every physical side, start/end alignment, a collision-flipped
@@ -701,20 +729,20 @@ add only Popover-specific anatomy and behavior/style conflicts.
   away path. Assert the toward path remains open and the away path requests
   close in every resolved geometry, using `data-side` rather than stale
   preferred placement.
-- [x] `PO-HOVER-07` `[vendor]` `[browser]` —
+- [ ] `PO-HOVER-07` `[vendor]` `[browser]` —
   **Popover should remain open when Trigger is clicked within the
   300-millisecond impatient window after hover-open.**
   Hover through `openDelay`, accept controlled open, and click Trigger before
   the frozen impatient-click threshold elapses. Assert native consumer click
   still runs but no `onDismiss` request toggles the just-opened Popover, which
   protects the user's likely intent to open.
-- [x] `PO-HOVER-08` `[reference]` `[browser]` —
+- [ ] `PO-HOVER-08` `[reference]` `[browser]` —
   **Popover should use normal Trigger dismissal when a deliberate click occurs
   after the patient threshold.**
   Hover-open and keep controlled Content open beyond 300 milliseconds, then
   click Trigger. Assert consumer click runs first followed by exactly one
   `onDismiss`, and controlled state remains open until the parent accepts.
-- [x] `PO-HOVER-09` `[reference]` `[touch]` —
+- [ ] `PO-HOVER-09` `[reference]` `[touch]` —
   **Popover should avoid mouse-intent timers when touch or non-hover pen input
   synthesizes pointer entry.**
   Send touch pointer enter/move and pen sequences with and without hover
@@ -722,14 +750,14 @@ add only Popover-specific anatomy and behavior/style conflicts.
   Assert touch and non-hover pen emit no `onOpen`, while any supported pen-hover
   policy is determined by pointer capability rather than a synthetic mouse
   event.
-- [x] `PO-HOVER-10` `[reference]` `[browser]` —
+- [ ] `PO-HOVER-10` `[reference]` `[browser]` —
   **Popover should stay open when pointer or focus remains in interactive hover
   Content.**
   Put links, buttons, and inputs in Content, move the pointer there, then move
   keyboard focus among controls while pointer and focus alternately leave one
   region but not both. Assert no hover dismissal while either modality remains
   inside Trigger/Content and native control interaction continues normally.
-- [x] `PO-HOVER-11` `[convergence]` `[browser]` —
+- [ ] `PO-HOVER-11` `[convergence]` `[browser]` —
   **Popover should share one open intent when keyboard focus drives an
   `openOnHover` instance.**
   Tab to Trigger without mouse entry, accept its immediate open request, move
@@ -740,35 +768,35 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ### Layer smoke and SSR
 
-- [x] `PO-LAYER-01` `[reference]` `[browser]` —
+- [ ] `PO-LAYER-01` `[reference]` `[browser]` —
   **Popover should register once when it is a child layer and focus branch of
   Overlay or Menu.**
   Open a Popover from each parent, inspect behavior through focus entry, one
   top-layer Escape/outside request, and exit. Assert one shared layer entry and
   one parent FocusLock branch exist for the live Content, then clean at their
   documented points; the complete ordering matrix remains owned by Overlay.
-- [x] `PO-ENV-01` `[reference]` `[ssr]` —
+- [ ] `PO-ENV-01` `[reference]` `[ssr]` —
   **Popover should server-render safely when closed and open later after
   hydration.**
   Render a closed Trigger/Content declaration without DOM or layout globals,
   hydrate in a browser, and activate Trigger. Assert no server access or
   hydration warning, stable generated ID relationships, and positioning,
   portal, and observer work only after client open.
-- [x] `PO-ENV-02` `[reference]` `[react:all]` —
+- [ ] `PO-ENV-02` `[reference]` `[react:all]` —
   **Popover should perform one current side effect when React version or
   StrictMode replays lifecycle work.**
   Run click, hover timer, auto-update, dismissal, and exit fixtures under React
   17, 18, and 19 with applicable StrictMode replay. Assert one portal subtree,
   observer set, live layer registration, timer, and callback per physical
   action, followed by one cleanup.
-- [x] `PO-ENV-03` `[reference]` `[browser:all]` —
+- [ ] `PO-ENV-03` `[reference]` `[browser:all]` —
   **Popover should preserve positioning and interaction contracts when the
   browser engine changes.**
   Run representative flip/shift/Arrow, scroll/resize auto-update, outside
   dismissal, animated Presence, and diagonal hover-grace fixtures in Chromium,
   Firefox, and WebKit. Assert equivalent public rect relationships, state
   hooks, callback order, node lifecycle, and timer outcomes in all engines.
-- [x] `PO-A11Y-01` `[reference]` `[browser]` —
+- [ ] `PO-A11Y-01` `[reference]` `[browser]` —
   **Popover should pass accessibility checks when used with triggered,
   interactive, virtual-anchor, and custom-portal compositions.**
   Check controlled Trigger state and interactive Content, then a no-Trigger
@@ -779,7 +807,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
 
 ## Composition gates
 
-- [x] `PO-COMP-01` `[reference]` `[browser]` —
+- [ ] `PO-COMP-01` `[reference]` `[browser]` —
   **Popover should preserve form interaction when a Triggered filters popup
   contains multiple controls.**
   Build a filters Popover with text input, checkboxes, apply/cancel buttons,
@@ -787,7 +815,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   dismiss. Assert native values and handlers work, Tab bridges into and out of
   portalled Content, controlled dismissal restores appropriately, and no modal
   lock is introduced.
-- [x] `PO-COMP-02` `[reference]` `[browser]` —
+- [ ] `PO-COMP-02` `[reference]` `[browser]` —
   **Popover should position and dismiss correctly when a context or selection
   popup uses a virtual anchor without Trigger.**
   Open Content from a pointer point and then a changing selection `DOMRect`,
@@ -795,7 +823,7 @@ add only Popover-specific anatomy and behavior/style conflicts.
   trigger DOM or guessed ARIA appears, coordinates follow the latest full rect,
   callbacks run once in order, and no nonexistent Trigger receives focus
   restore.
-- [x] `PO-COMP-03` `[reference]` `[browser]` —
+- [ ] `PO-COMP-03` `[reference]` `[browser]` —
   **Popover should keep a HoverCard usable when collision flips Content during
   diagonal pointer travel.**
   Build `openOnHover` interactive preview Content near a clipping edge, hover

@@ -28,8 +28,8 @@ Before attempting visual capture:
 ### Step 1: Contract Ingestion
 Read the component design specification and test contract before modifying code:
 - Specification: `packages/reference-lib/src/components/<Component>/<Component>.md`
-- Test Contract: `packages/reference-lib/src/components/<Component>/TESTS.md`
-- Roadmap / Gaps: `packages/reference-lib/src/components/<Component>/NEXT.md` (if present)
+- Spec (current freeze + cases + proof): `SPEC.md` if present
+- Else test contract: `TESTS.md`, roadmap `NEXT.md` if present
 
 ### Step 2: Baseline Capture & Immediate Visual Sharing
 Establish the visual baseline and **share it with the developer immediately in chat**:
@@ -95,7 +95,7 @@ After passing tests, verify the visual result and **always return screenshots in
    - Always paste the markdown snippet printed by `capture.mjs` directly into your user-facing chat response.
    - Present a side-by-side or multi-state comparison table (e.g. `Resting | Hover | Focus (Click) | Tab (Keyboard) | Open`).
    - The user must never have to ask to see screenshots; they should be returned automatically with every verification.
-4. Update `packages/reference-lib/src/components/<Component>/TESTS.md` by marking verified items as `- [x] <PREFIX>-...`.
+4. Update `SPEC.md` (or `TESTS.md`) by marking Playwright-proven items as `- [x] <PREFIX>-...`.
 5. Update `walkthrough.md` with the embedded images and geometric breakdown.
 
 ---

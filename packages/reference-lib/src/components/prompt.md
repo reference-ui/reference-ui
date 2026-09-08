@@ -6,7 +6,7 @@ Master orchestration standard and operational framework for manufacturing all 24
 
 ## 1. System Mission & Manufacturing Mandate
 
-You are manufacturing a designated component for `@reference-ui/lib`. Your mandate is to engineer a production-ready, fully-typed, high-performance, accessible React 19 primitive that satisfies 100% of its design specification (`<Component>.md`) and passes all tagged behavior cases and composition gates in its executable test contract (`TESTS.md`).
+You are manufacturing a designated component for `@reference-ui/lib`. Your mandate is to engineer a production-ready, fully-typed, high-performance, accessible React 19 primitive that satisfies 100% of its design specification (`<Component>.md`) and passes all tagged behavior cases and composition gates in its executable contract (`SPEC.md` if present, otherwise `TESTS.md`).
 
 Reference UI rejects monolithic widgets, polymorphic `as` props, wrapper `<div>` soup, and public context-provider contracts. Every component manufactured must follow a primitive-first, compiler-backed, headless-state architecture that mirrors the web platform directly.
 
@@ -21,7 +21,7 @@ Continue manufacturing `<COMPONENT_NAME>` for `@reference-ui/lib`.
 
 Assigned Component: `packages/reference-lib/src/components/<COMPONENT_NAME>/`
 Design Specification: `packages/reference-lib/src/components/<COMPONENT_NAME>/<COMPONENT_NAME>.md`
-Test Contract: `packages/reference-lib/src/components/<COMPONENT_NAME>/TESTS.md`
+Contract: `packages/reference-lib/src/components/<COMPONENT_NAME>/SPEC.md` (Overlay family) or `TESTS.md`
 Global Architecture: `packages/reference-lib/src/components/components.md`
 Core Hooks & Zustand Substrate: `packages/reference-lib/src/core/hooks/hooks.md`
 Testing Architecture & Proof Harness: `packages/reference-lib/TESTING.md`
@@ -180,7 +180,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Phase 1: Contract Ingestion & Invariant Review                         │
-│ • Inspect <Component>.md, TESTS.md, components.md, and hooks.md        │
+│ • Inspect <Component>.md, SPEC.md or TESTS.md, components.md, hooks.md │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
@@ -209,7 +209,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │ Phase 6: Sign-off, Contract Checklist & Handoff Delivery               │
-│ • Mark verified cases in <Component>/TESTS.md (- [x] <PREFIX>-...)     │
+│ • Mark verified cases in SPEC.md or TESTS.md (- [x] <PREFIX>-...)      │
 │ • Generate standardized manufacturing completion report                │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -218,7 +218,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 
 #### Phase 1: Contract Ingestion & Invariant Review
 1. Read `packages/reference-lib/src/components/<Component>/<Component>.md` for exact anatomy, part names, default props, and behavioral semantics.
-2. Read `packages/reference-lib/src/components/<Component>/TESTS.md` for all freeze decisions, tagged behavior cases (`<PREFIX>-*`), and composition gates (`<PREFIX>-COMP-*`).
+2. Read `packages/reference-lib/src/components/<Component>/SPEC.md` if present, otherwise `TESTS.md`, for freeze decisions, tagged behavior cases (`<PREFIX>-*`), and composition gates (`<PREFIX>-COMP-*`).
 3. Identify all upstream dependencies from Tiers 0–3 and ensure they are satisfied.
 
 #### Phase 2: Headless State Machine Implementation
@@ -247,7 +247,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 3. Run local typecheck and test commands (see Section 7).
 
 #### Phase 6: Sign-off, Contract Checklist & Handoff Delivery
-1. Update `packages/reference-lib/src/components/<Component>/TESTS.md` by marking verified items as `- [x] <PREFIX>-...`.
+1. Update `SPEC.md` (or `TESTS.md`) by marking Playwright-proven items as `- [x] <PREFIX>-...`.
 2. Compile and return the standardized completion report (see Section 9).
 
 ---

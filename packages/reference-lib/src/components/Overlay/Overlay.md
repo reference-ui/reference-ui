@@ -1,6 +1,6 @@
 # Overlay
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md).
 
 One React primitive for content that sits above the application.
 

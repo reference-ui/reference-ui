@@ -1,8 +1,7 @@
-# OVERLAYS.md — Feature Parity & System Status
+# OVERLAYS.md — Overlay System Status
 
-Where we are, where we're going, and what the best libraries do — all in one
-place. This document covers the five interlocking primitives that make up the
-Reference UI overlay system:
+Where we are, what is actually proven, and the remaining production gates.
+This document is the canonical status for the five interlocking primitives:
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -19,382 +18,439 @@ Reference UI overlay system:
 └───────────────────┴──────────────────────────────┘
 ```
 
+> **Verdict (2026-09-08): not production-grade. The remaining work is large.**
+>
+> Happy-path desktop is real and already in `matrix/lib` (31 Playwright tests —
+> denser than most other lib components). That is the **demo**. Production
+> still needs six gates: live kernel defects, nested stacks, iOS scroll, sheet
+> drag, hover polygon, tooltip store split, FocusLock restore races, and a
+> full Toast polish pass. Specs: [Overlay](src/components/Overlay/SPEC.md) ·
+> [Popover](src/components/Popover/SPEC.md) ·
+> [Tooltip](src/components/Tooltip/SPEC.md) ·
+> [Toast](src/components/Toast/SPEC.md) ·
+> [FocusLock](src/components/FocusLock/SPEC.md).
+>
+> This file orchestrates the system. Per-component `SPEC.md` is the current
+> freeze, cases, and proof (`NEXT.md` / `TESTS.md` in these folders are gone).
+
+---
+
+## 0. Production Verdict
+
+**Happy-path ≠ production.** A dialog that opens, traps Tab, and closes on
+Escape is covered. Almost everything that makes overlays *hard* is not.
+
+| Primitive | Engine | Kernel | `matrix/lib` happy-path | Production? |
+| :--- | :---: | :--- | :--- | :---: |
+| **Overlay** | Yes | 5 live defects | 9 tests — dialog open/close/Escape/trap/anchor/theme | **No** |
+| **Popover** | Yes | No safe-polygon | 9 tests — click, flip, shift, arrow, hover delay | **No** |
+| **Tooltip** | Yes | Dual skip-delay stores | 3 tests — focus/hover + `aria-describedby` | **No** |
+| **Toast** | Yes | Modal pause broken; polish APIs missing | 5 tests — show/update/dismiss/stack | **No** |
+| **FocusLock** | Yes | Restore vs Presence unproven | 5 tests — Tab loop, sibling shard, restore trigger | **No** |
+
+**Architectural decision still holds:** Dialog, Drawer, Sheet, and Modal are
+not separate runtimes. They are compositions of `Overlay` with different
+`isolation` / `edge` / `role` values. One `computePosition` engine, one layer
+stack, one dismiss system.
+
+### Covered today (do not redo)
+
+Desktop, light DOM, single layer:
+
+- Isolating dialog: open, Escape, backdrop click, Tab trap, close
+- Anchored popover: click toggle, outside press, Escape, flip, shift, arrow
+- Tooltip: hover/focus open, `role="tooltip"`, `aria-describedby`, anchored
+- Toast: `toast.show` / `update` / `dismiss`, default/custom render, stack expand-on-hover
+- FocusLock: first-tabbable, Tab wrap including a **sibling** shard, reclaim, restore to trigger
+
+`matrix/lib` fixtures do not even **mount** nested stacks, edge sheets, swipe
+targets, skip-delay groups, or portalled shards. Those tests cannot exist until
+the fixtures exist — and the kernel behind them is still wrong in places.
+
+### The remaining mountain
+
+This is the production backlog. It is not “a few more E2E titles.”
+
+1. **Five Overlay kernel bugs in source right now** — iOS scroll lock is
+   `overflow:hidden`; Handle is Y-down only; Backdrop ignores stack top;
+   outside press ignores Shadow DOM; `removeLayer` cascade is a racy
+   `setTimeout`.
+2. **Nested overlay stack** — Escape, outside press, backdrop, and parent
+   cascade. Zero nested fixtures in `matrix/lib`.
+3. **Isolation that actually isolates** — inert walk proof, real iOS /
+   `visualViewport` scroll lock, Handle on all four `edge`s.
+4. **FocusLock for Overlay Presence** — restore after exit, deleted trigger,
+   nested locks, **portalled** shard (popover/menu inside a lock).
+5. **Popover safe-polygon** — timers are not grace. Diagonal pointer travel
+   still closes.
+6. **Tooltip skip-delay is a no-op from `ReferenceLibrary`** — two stores.
+   Then Escape-vs-parent and scroll-close.
+7. **Toast Gate 6 (required)** — overlay-stack pause coupling, swipe / limit /
+   pause E2E, `Alt+T` hotkey, `dismissible`, `onAutoClose`,
+   `toast.promise().unwrap()`.
+8. **Zero unit tests** in `matrix/lib/tests/unit/` for any of these five
+   (only Slot and Presence have them). Queue math, tabbable solver, and
+   `computePosition` still have no model proof.
+
+Until that list is green, do not call this set production-grade.
+
 ---
 
 ## 1. System Architecture at a Glance
 
-| Primitive | Role | Isolation | Geometry | Status |
+| Primitive | Role | Isolation | Geometry | Engine |
 | :--- | :--- | :---: | :---: | :---: |
-| **Overlay** | Universal kernel — layer stack, dismiss, portal, presence | Configurable | Unbound / Anchored / Edge | ✅ Implemented |
-| **Popover** | Policy wrapper — `Overlay` with `isolation={false}`, hover | Off | Anchored | ✅ Implemented |
-| **Tooltip** | Policy wrapper — non-interactive, `aria-describedby`, skip-delay | Off | Anchored | ✅ Implemented |
-| **Toast** | Separate runtime — queue, host, timers, announce | None (not Overlay) | Viewport-attached | ✅ Implemented |
-| **FocusLock** | Focus containment — Tab loop, shards, restore | N/A | N/A | ✅ Implemented |
+| **Overlay** | Universal kernel — layer stack, dismiss, portal, presence | Configurable | Unbound / Anchored / Edge | Shipped |
+| **Popover** | Policy wrapper — `Overlay` with `isolation={false}`, hover | Off | Anchored | Shipped |
+| **Tooltip** | Policy wrapper — non-interactive, `aria-describedby`, skip-delay | Off | Anchored | Shipped |
+| **Toast** | Separate runtime — queue, host, timers, announce | None (not Overlay) | Viewport-attached | Shipped |
+| **FocusLock** | Focus containment — Tab loop, shards, restore | N/A | N/A | Shipped |
 
-**Key architectural decision:** Dialog, Drawer, Sheet, Modal are *not* separate
-runtime components. They are semantic/visual compositions of `Overlay` with
-different `isolation` / `edge` / `role` configurations. There is one
-`computePosition` engine, one layer stack, one dismiss system.
+`ReferenceLibrary` is now a composing shell: it elects a document host and
+mounts `ToastHost` + `AnnouncerHost`. Toast store, Tooltip group store, and
+Announcer live in their own files. Phase 1 of the old roadmap is **done**.
 
----
-
-## 2. Feature Parity Matrix — Overlay & Popover
-
-Comparing our `Overlay` + `Popover` against **react-tiny-popover** (v8.1.6)
-and the broader ecosystem (Radix, Floating UI, Base UI).
-
-### 2.1 Positioning Engine
-
-| Feature | react-tiny-popover | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| 4 cardinal placements | `positions: ['top','bottom','left','right']` | 12 placements (cardinal + start/end) | ✅ Exceeds |
-| Alignment axis | `align: 'start' \| 'center' \| 'end'` | Built into placement (`bottom-start`, etc.) | ✅ Parity |
-| Offset / padding | `padding: number` (px between anchor & floating) | `offset: number` on `Overlay.Content` | ✅ Parity |
-| Collision detection & flip | Iterates `positions[]`, first non-colliding wins | Flip middleware with hysteresis (no jitter) | ✅ Exceeds |
-| Shift / nudge into bounds | Nudges along orthogonal axis, reports `nudgedLeft/Top` | Shift middleware with boundary clamping | ✅ Exceeds |
-| Boundary element | `boundaryElement` prop (default viewport) | `collisionPadding` + viewport boundary | ✅ Parity |
-| Boundary inset | `boundaryInset: number` | `collisionPadding: number` | ✅ Parity |
-| Arrow auto-tracking | `ArrowContainer` clamped to popover edge | `Overlay.Arrow` with `edgePadding` | ✅ Parity |
-| Custom parent portal | `parentElement` (default `document.body`) | `Overlay.Portal` with `container` prop | ✅ Parity |
-| Scout element for stacking contexts | `.react-tiny-popover-scout` measures offsets | In-tree floating engine handles directly | ✅ Parity |
-| Virtual anchor | Not supported | `anchor: { x, y }` / `DOMRect` / `getBoundingClientRect` | ✅ Exceeds |
-| Strategy (absolute / fixed) | Absolute only | `strategy: 'absolute' \| 'fixed'` | ✅ Exceeds |
-| `autoUpdate` (live repositioning) | Not built-in (measures on render only) | Full `autoUpdate`: resize, scroll, ResizeObserver | ✅ Exceeds |
-| Size middleware (available height) | Not supported | `--reference-overlay-available-width/height` | ✅ Exceeds |
-| Hide when clipped | Not supported | `data-anchor-hidden` / `data-escaped` | ✅ Exceeds |
-| `positionTransform` (custom offset) | `positionTransform` absolute/relative modes | Not exposed (use `offset`) | ⚪ N/A |
-
-### 2.2 Interaction & Dismiss
-
-| Feature | react-tiny-popover | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Controlled state | Strictly controlled `isOpen` | Controlled `open` + `onOpen` / `onDismiss` | ✅ Parity |
-| Uncontrolled mode | Not supported | Not supported (by design) | ✅ Aligned |
-| Click-outside dismiss | `onClickOutside` callback, consumer toggles | `onOutsidePress` + auto-dismiss, `preventDefault` cancels | ✅ Exceeds |
-| Capture phase outside click | `clickOutsideCapture: true` default | Deferred pointer sequence (Radix model) | ✅ Exceeds |
-| Escape dismiss | Not built-in | Built-in with `onEscape` handler | ✅ Exceeds |
-| Nested layer stack | Not supported | Document-scoped Zustand stack, Escape = topmost only | ✅ Exceeds |
-| Hover trigger | Not built-in | `Popover` policy: `openOnHover`, `openDelay`, `closeDelay` | ✅ Exceeds |
-| Hover grace polygon | Not built-in | Popover safe-polygon keeping popup open | 🟡 Specced |
-| Backdrop dismiss | N/A (no isolation) | `Overlay.Backdrop` as isolating dismiss surface | ✅ Exceeds |
-
-### 2.3 DOM & Rendering
-
-| Feature | react-tiny-popover | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| No wrapper on trigger | `React.cloneElement` (requires `forwardRef`) | `Slot` composition (no `forwardRef` needed on R19) | ✅ Parity |
-| Portal rendering | Appended to `parentElement` | `ReactDOM.createPortal` via `Overlay.Portal` | ✅ Parity |
-| Compound anatomy | `<Popover>` + `<ArrowContainer>` | `Overlay.{Trigger,Portal,Backdrop,Content,Arrow,Handle}` | ✅ Exceeds |
-| Headless hooks | `usePopover` + `useArrowContainer` | `useOverlay()` context hook | ✅ Parity |
-| Content render callback | `content={(state) => JSX}` with geometry state | CSS custom properties + data attributes | ✅ Different approach |
-| Multiple simultaneous popovers | Class-based container (v8.1+) | Each `Overlay` is independent | ✅ Parity |
-| Presence / exit animation | **Not supported** (immediate unmount) | Full `Presence` system: CSS transitions, keyframes, WAAPI, GSAP | ✅ Exceeds |
-| Color mode in portals | Not handled | Portal Color Mode Protocol (`Portal` resets layer scope; primitives stamp `data-layer` + `data-panda-theme`) | ✅ Exceeds |
+Both Overlay and Popover support **uncontrolled** `defaultOpen` as well as
+controlled `open`. Older copies of this file said uncontrolled was omitted;
+that is no longer true.
 
 ---
 
-## 3. Feature Parity Matrix — Toast
+## 2. Final Gates
 
-Comparing our `Toast` against **Sonner** (emilkowalski/sonner).
+These are the production gates, in order. Toast polish (hotkey, `dismissible`,
+`onAutoClose`, `.unwrap()`, swipe/limit/pause proof) is **Gate 6**, not a
+post-ship extra. Overlay kernel still comes first because Toast pause-on-modal
+depends on a correct layer stack.
 
-### 3.1 Core API
+### Gate 1 — Overlay kernel defects (blocks every overlay)
 
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Imperative `toast()` | `toast('msg')`, `toast.success()`, etc. | `toast.show(Definition, props, opts)` | ✅ Parity (different shape) |
-| Toast definitions | Not concept (inline JSX or string) | `toast.define({ render, duration, position })` — typed, reusable | ✅ Exceeds |
-| Update in-place | Pass same `id` to any `toast()` call | `toast.update(id, newDef, newProps)` | ✅ Parity |
-| Dismiss specific | `toast.dismiss(id)` | `toast.dismiss(id)` | ✅ Parity |
-| Dismiss all | `toast.dismiss()` (no args) | `toast.dismiss()` (no args) | ✅ Parity |
-| Custom render | `toast.custom((id) => JSX)` | `toast.define({ render })` — always custom | ✅ Parity |
-| Promise lifecycle | `toast.promise(p, { loading, success, error })` | Swap definitions via `toast.update()` | 🔵 Different model |
-| Semantic variants | `toast.success/error/warning/info/loading` | **Deliberately omitted** — apps model via definitions | 🔵 By design |
-| `toast.loading()` | Built-in spinner, non-auto-closing | Via `toast.define({ duration: false })` | ✅ Equivalent |
-| Awaitable `.unwrap()` | `const { unwrap } = toast.promise(...)` | Not built-in | ⚪ Not planned |
-
-### 3.2 Toaster Configuration
-
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Mount once at root | `<Toaster />` in layout | `<ReferenceLibrary toaster={...}>` | ✅ Parity |
-| Position | 6 positions (`top-left` thru `bottom-right`) | 6 positions (`top-start` thru `bottom-end`) | ✅ Parity |
-| Default duration | `duration={4000}` | `defaultDuration: 5000` | ✅ Parity |
-| Visible limit | `visibleToasts={3}` | `limit: 4` + FIFO waiting queue | ✅ Exceeds |
-| Gap between toasts | `gap={14}` | CSS custom properties on wrappers | ✅ Parity |
-| Rich colors | `richColors` prop | Application-owned via definitions | 🔵 By design |
-| Theme support | `theme="light\|dark\|system"` | Inherits from `ReferenceLibrary` color mode | ✅ Parity |
-| RTL direction | `dir="rtl\|ltr\|auto"` | Inherits from document/provider | ✅ Parity |
-| Custom icons | `icons={{ success?, error?, ... }}` | Application-owned via `render()` | 🔵 By design |
-| Hotkey focus | `hotkey={['altKey','KeyT']}` | Not built-in | 🟡 Gap |
-| Pause on tab hidden | `pauseWhenPageIsHidden` | Not built-in (could add) | 🟡 Gap |
-| Offset from edge | `offset={32}` | CSS custom properties | ✅ Parity |
-| Container aria-label | `containerAriaLabel="Notifications"` | `data-reference-toast-host` with label | ✅ Parity |
-| Global `toastOptions` | `toastOptions={{...}}` on `<Toaster>` | Toaster defaults on `ReferenceLibrary` | ✅ Parity |
-
-### 3.3 Per-Toast Features
-
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Description text | `description` prop | Part of custom `render()` | 🔵 By design |
-| Action button | `action: { label, onClick }` | Part of custom `render()` with `controls.close` | 🔵 By design |
-| Cancel button | `cancel: { label, onClick }` | Part of custom `render()` | 🔵 By design |
-| `onDismiss` callback | Per-toast callback | Part of custom `render()` logic | 🔵 By design |
-| `onAutoClose` callback | Per-toast callback | Not built-in | 🟡 Gap |
-| `dismissible` toggle | `dismissible={false}` | Not built-in as prop | 🟡 Gap |
-| `important` flag | Boosts to assertive | Via `announce` option politeness | ✅ Parity |
-| `unstyled` mode | `unstyled={true}` | Always unstyled — apps own rendering | ✅ Exceeds |
-| `classNames` granular | Per-part class targets | N/A — apps own all markup | 🔵 By design |
-| Infinite duration | `duration: Infinity` | `duration: false` | ✅ Parity |
-
-### 3.4 Animation & Stacking
-
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Collapsed stack (scale + offset) | CSS vars: `--index`, `--scale`, `--offset` | `--reference-toast-index` / `--reference-toast-count` | ✅ Parity |
-| Expand on hover | Auto-expand to full heights on `mouseenter` | Not built-in | 🟡 Gap |
-| Dynamic height measurement | Real-time DOM height registry | Presence-based wrappers | ✅ Partial |
-| Swipe-to-dismiss | Pointer events, velocity + distance threshold | Not built-in | 🟡 Gap |
-| Interruptible transitions | CSS transitions (not keyframes) | Presence system handles transitions | ✅ Parity |
-| Exit timing | Hardcoded `TIME_BEFORE_UNMOUNT = 200ms` | Presence waits for actual transition/animation end | ✅ Exceeds |
-
-### 3.5 Accessibility
-
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| ARIA live region | `aria-live="polite"` / `"assertive"` for errors | Separate `announce()` live region path | ✅ Parity |
-| Semantic landmark | `<section aria-label>` + `<ol>` | `data-reference-toast-host` with label | ✅ Parity |
-| Keyboard tab navigation | Tab through action/close buttons | Application-owned via render | ✅ Parity |
-| Timer pause on hover/focus | Pauses on hover/focus | Pauses on pointer/keyboard focus inside toast | ✅ Parity |
-| Timer pause on modal overlay | Not built-in | Pauses when modal Overlay is top layer | ✅ Exceeds |
-
-### 3.6 State Management
-
-| Feature | Sonner | Reference UI | Status |
-| :--- | :--- | :--- | :---: |
-| Observer / pub-sub | Singleton `ToastState` class | Document-scoped Zustand store | ✅ Parity |
-| Decoupled from React tree | `toast()` callable anywhere | `toast.show()` callable anywhere | ✅ Parity |
-| Replay on late mount | Replays active toasts on `subscribe` | Replay-on-subscribe | ✅ Parity |
-| Remaining-time pause | Hover pauses remaining time | Remaining-time math with pause/resume | ✅ Parity |
-| StrictMode safety | RAF-deferred dismiss | Controlled via Zustand | ✅ Parity |
-| FIFO queue for excess | Hides with `opacity:0` + `pointer-events:none` | Proper FIFO waiting queue (unmounted, no timers) | ✅ Exceeds |
-
----
-
-## 4. Feature Parity Matrix — FocusLock
-
-Comparing our `FocusLock` against **react-focus-lock** (theKashey) and
-**focus-trap-react** (focus-trap).
-
-### 4.1 Core Trapping
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Tab/Shift+Tab cycling | Focus guards (`data-focus-guard`) + `focusin` redirect | `keydown` interception + `preventDefault` | `keydown` loop (Aria/Radix model) | ✅ Implemented |
-| Tabbable resolver | `focus-lock/focusables.ts` (simpler) | `tabbable` library (strict) | Lifted from `tabbable` (strict catalog) | ✅ Implemented |
-| No DOM injection | Injects 2-3 guard divs | Zero injected elements | No wrapper, slots onto child | ✅ Exceeds |
-| Controlled enable/disable | `disabled` prop | `active` / `paused` props | `disabled` prop | ✅ Parity |
-
-### 4.2 Shards / Multi-Container
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Shard refs | `shards={[ref1, ref2]}` | `containerElements={[el1, el2]}` | `shards={[ref/el, ...]}` | ✅ Implemented |
-| Named groups | `group="name"` string | N/A | Not planned | ⚪ By design |
-| `whiteList` filter | `whiteList={(el) => bool}` | `allowOutsideClick` | Not planned | ⚪ By design |
-| `FreeFocusInside` zone | `<FreeFocusInside>` / `data-no-focus-lock` | N/A | Not planned | ⚪ By design |
-| `InFocusGuard` for shards | `<InFocusGuard />` standalone guard | N/A | Not needed (no guards) | ⚪ N/A |
-| Branch registry context | N/A | N/A | Radix-style branches under `shards` name | ✅ Specced |
-
-### 4.3 Initial Focus
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Auto-focus first tabbable | `autoFocus={true}` (default) | Omit `initialFocus` | Omit `initialFocus` | ✅ Parity |
-| Focus specific element | `<AutoFocusInside>` / `data-autofocus` | `initialFocus` selector/element/fn | `initialFocus` ref/fn | ✅ Parity |
-| Skip focus move (`false`) | **Blurs to `document.body`** ⚠️ | **Does not move focus** ✅ | **Does not move focus** ✅ | ✅ Better than focus-lock |
-| Fallback focus | N/A (warns if no candidates) | `fallbackFocus` (required if empty) | Container itself if no candidates | ✅ Parity |
-
-### 4.4 Focus Restoration
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Return focus on deactivation | `returnFocus` (default **false**) | `returnFocusOnDeactivate` (default **true**) | `restoreFocus` (default **true**) | ✅ Parity |
-| Explicit return target | Callback `(node) => boolean \| FocusOptions` | `setReturnFocus` element/fn | `restoreFocus` accepts `FocusTarget` | ✅ Parity |
-| Proximity fallback | `captureFocusRestore` walks siblings | Not built-in | Proximity restore (lifted from focus-lock) | ✅ Parity |
-| Async return (animation gate) | Microtask defer | `checkCanReturnFocus` Promise | Waits for Presence exit completion | ✅ Exceeds |
-| `preventScroll` on restore | Via `FocusOptions` | `preventScroll: true` | Via FocusOptions | ✅ Parity |
-
-### 4.5 Nesting & Stacking
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Nested lock stacking | "Last trap wins" (implicit) | Explicit `trapStack` with pause/unpause | Stack pause aligned with Overlay layer stack | ✅ Implemented |
-| Lifecycle callbacks | `onActivation` / `onDeactivation` | Full lifecycle (`onActivate` thru `onPostDeactivate`) | Overlay lifecycle hooks | ✅ Parity |
-
-### 4.6 Edge Cases
-
-| Feature | react-focus-lock | focus-trap-react | Reference UI | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| Shadow DOM traversal | `shadowRoot` + `contains` checks | `tabbable` Shadow DOM v1 support | Lifted from `tabbable` | ✅ Specced |
-| `composedPath` for events | Partial | `composedPath()` on events | Lifted | ✅ Specced |
-| Iframe support | `crossFrame` prop | Separate `document` option | Same-document only (by design) | ⚪ By design |
-| Empty container handling | Console warning, no action | Throws unless `fallbackFocus` | Container as fallback | ✅ Parity |
-| Android TalkBack workaround | Not handled | Not handled | Not yet (React Aria has one) | 🟡 Gap |
-| Screen reader isolation (`inert`) | Not built-in (delegates to `react-focus-on`) | `isolateSubtrees: 'inert' \| 'aria-hidden'` | Overlay owns `inert` on siblings | ✅ Parity |
-
-### 4.7 Utility Components
-
-| react-focus-lock | Reference UI Equivalent | Status |
-| :--- | :--- | :---: |
-| `<AutoFocusInside>` | `initialFocus` ref/fn on FocusLock | ✅ Different approach |
-| `<MoveFocusInside>` | `initialFocus` ref/fn | ✅ Different approach |
-| `<FreeFocusInside>` | Not planned | ⚪ By design |
-| `<InFocusGuard>` | Not needed (no guards) | ⚪ N/A |
-| `useFocusInside(ref)` | Not exposed | ⚪ Internal |
-| `useFocusScope()` | Not exposed (RovingFocus owns navigation) | ⚪ By design |
-| `useFocusState()` | Not exposed | ⚪ Internal |
-
----
-
-## 5. Gaps Summary — What's Left to Build
-
-### 🔴 Critical (blocks production readiness)
-
-| Gap | Component | Spec'd? | Notes |
-| :--- | :--- | :---: | :--- |
-| Edge/sheet drag gestures | Overlay | ✅ Yes | Handle-only drag, velocity threshold, 25% distance — ported from Vaul |
-| iOS body scroll lock | Overlay | ✅ Yes | `visualViewport` + touch-move prevention — from React Aria |
-| Inert background (full) | Overlay | ✅ Yes | Sibling-walk + refcount + live-region exceptions |
-| Hierarchical dismiss cascade | Overlay | ✅ Yes | Parent close cascades to nested, focus-race guard |
-| Hover grace polygon | Popover | ✅ Yes | Safe-area polygon from trigger to content |
-| Collision flip & shift (E2E proof) | Popover | ✅ Yes | Engine exists, needs browser E2E proof |
-| Shard integration E2E | FocusLock | ✅ Yes | Shards exist, needs portalled popover proof |
-| Proximity restore E2E | FocusLock | ✅ Yes | Algorithm exists, needs trigger-deleted proof |
-
-### 🟠 Architecture / Tech Debt
-
-| Gap | Component | Spec'd? | Notes |
-| :--- | :--- | :---: | :--- |
-| Decouple subsystems from `ReferenceLibrary` | ReferenceLibrary | 🟡 No | `ReferenceLibrary.tsx` is currently a kitchen sink managing Toast, Tooltip warmup, and Announcer state. Extract `ToastHost`, `ToastItemWrapper`, and stores into their respective components (e.g. `Toast.tsx`). |
-
-### 🟡 Important (enhances parity with best libraries)
-
-| Gap | Component | Inspiration | Notes |
-| :--- | :--- | :--- | :--- |
-| Swipe-to-dismiss on toasts | Toast | Sonner | Pointer events, velocity + distance |
-| Expand-on-hover stack | Toast | Sonner | Dynamic height measurement, cumulative offset |
-| `onAutoClose` callback | Toast | Sonner | Notify when timer expires vs manual dismiss |
-| `dismissible` per-toast toggle | Toast | Sonner | Prevent swipe/close-button on specific toasts |
-| Hotkey to focus toaster | Toast | Sonner | `Alt+T` or configurable shortcut |
-| Pause timers on tab hidden | Toast | Sonner | `document.visibilitychange` |
-| Android TalkBack workaround | FocusLock | React Aria | Skip aggressive reclaim on virtual modality |
-
-### ⚪ Not Planned (deliberate omissions)
-
-| Feature | Why | Library that has it |
+| Defect | Evidence | Required bar |
 | :--- | :--- | :--- |
-| `toast.success/error/warning/info` | Apps model lifecycle via definitions, not built-in chrome | Sonner |
-| `toast.promise()` with `.unwrap()` | Use `toast.update()` with definition swapping | Sonner |
-| `FocusLock` wrapper `div` / `as` prop | Slots onto child, no DOM injection | react-focus-lock |
-| FocusLock `group` / `whiteList` / sidecar | Complexity without clear value | react-focus-lock |
-| `FreeFocusInside` / `InFocusGuard` | No guard DOM means no guard utilities needed | react-focus-lock |
-| Cross-frame focus trapping | Each document owns its own lock | react-focus-lock |
-| `positionTransform` custom offsets | Use standard `offset` prop | react-tiny-popover |
-| Snap points / scale-behind | Drawer composition territory, not kernel | Vaul |
+| iOS / mobile scroll lock is `overflow: hidden` only | `scroll-lock.ts` | `visualViewport` compensation + non-passive touch-move prevention (React Aria / react-remove-scroll) |
+| `Overlay.Handle` only tracks `clientY` and only `deltaY > 0` | `OverlayHandle` | All four `edge` values: bottom/top Y, left/right X, 25% distance **or** velocity |
+| Backdrop click does not consult the layer stack | `OverlayBackdrop` always `setIsOpen(false)` | Topmost layer only; nested backdrops must not close parents |
+| Outside press uses `event.target`, not `composedPath()` | `OverlayContent` pointerdown | Shadow trees inside Content count as inside |
+| Parent-close cascade is a `setTimeout` over stale `state.layers` | `overlay-stack.ts` `removeLayer` | Deterministic child-then-parent cascade with focus-race guard |
+
+### Gate 2 — Overlay isolation + nested-stack E2E
+
+Contract exists in [Overlay SPEC](src/components/Overlay/SPEC.md). None of these IDs have a Playwright test, and `matrix/lib/src/overlay.tsx` has no nested / edge / inert fixtures to run them against:
+
+- `OV-ESC-01` / `OV-ESC-02` — Escape is topmost-only
+- `OV-LAYER-01`..`OV-LAYER-05` — nested / portalled child is inside; one event, one layer
+- `OV-INERT-01` — sibling `inert` + live-region / toast exceptions
+- `OV-SCROLL-01` — body does not scroll under an isolating overlay
+- `OV-EDGE-01`..`OV-EDGE-04` — handle drag + velocity dismiss
+
+### Gate 3 — FocusLock restore and nesting
+
+- Restore must wait for Presence exit (Overlay.md freeze). Current restore runs on FocusLock unmount, which is inside Presence — prove it, then prove the deleted-trigger path (`FL-RESTORE-03` / `FL-RESTORE-04`).
+- Nested lock stack (`FL-NEST-01`): inner deactivation resumes outer without reclaim fight.
+- `FL-SHARD-01` is already proven. Add a **portalled** shard (popover/menu inside a lock), not just a sibling node.
+
+### Gate 4 — Popover hover grace
+
+Hover currently uses enter/leave timers on Trigger and Content. There is **no
+safe-polygon**. `PO-HOVER-01` / `PO-HOVER-02` pass because delay covers a
+straight move onto Content. Diagonal travel across empty space still closes.
+
+Ship a pointer-safe polygon (Floating UI / Base UI model) and keep
+`PO-HOVER-02` as the proof.
+
+### Gate 5 — Tooltip skip-delay is split across two stores
+
+| Store | Who writes | Who reads |
+| :--- | :--- | :--- |
+| `tooltipWarmup.ts` | `ReferenceLibrary tooltip.skipDelay` | **Nobody in Tooltip** |
+| `tooltipGroup.ts` | Tooltip itself | Tooltip open/close |
+
+Unify onto `tooltipGroup` (or delete `tooltipWarmup`). Then E2E `TT-SKIP-01`,
+`TT-ESC-01` (Escape does not dismiss parent overlay), `TT-SCROLL-01`.
+
+### Gate 6 — Toast runtime + polish (required)
+
+Swipe, expand-on-hover, and `visibilitychange` pause **are implemented**.
+`toast.success` / `error` / `warning` / `info` / `loading` / `promise` shipped.
+Older “Out of scope” / “deliberately omitted” notes in Toast are stale — Gate 6 is required. See [Toast SPEC](src/components/Toast/SPEC.md).
+
+This gate is production, not polish-later. Required bar:
+
+| Item | In tree? | Required bar |
+| :--- | :---: | :--- |
+| Pause on isolating Overlay | 🟡 queries `[aria-modal="true"]` | Read overlay stack (`isolation.inert` / `isModal`) |
+| Swipe-to-dismiss | 🟢 physics exist | E2E `TO-SWIPE-01` (distance **or** velocity) |
+| FIFO `limit` | 🟢 queue exists | E2E: excess wait unmounted, timers start on promote |
+| Pause on hover / focus | 🟢 | E2E `TO-PAUSE-01` |
+| Pause when tab hidden | 🟢 `visibilitychange` | E2E |
+| Hotkey to focus toaster | No | Configurable shortcut (Sonner default `Alt+T`), moves focus into the front toast / host |
+| `dismissible` per toast | No | `false` blocks swipe and close; timer may still fire unless duration is `false` |
+| `onAutoClose` | No | Fires only when the timer expires, not on manual dismiss / swipe / `toast.dismiss` |
+| `toast.promise().unwrap()` | No | Return `{ unwrap }` (or equivalent) so callers can await the original promise |
+
+Android TalkBack remains a FocusLock gap, not this gate.
+
+---
+
+## 3. Feature Parity — Overlay & Popover
+
+Compared with **react-tiny-popover** (v8.1.6), Radix, Floating UI, Base UI.
+
+Legend: ✅ engine + proof · 🟢 engine, no E2E · 🟡 partial / defective · ⚪ N/A
+
+### 3.1 Positioning Engine
+
+| Feature | react-tiny-popover | Reference UI | Status |
+| :--- | :--- | :--- | :---: |
+| 12 placements (cardinal + start/end) | 4 cardinal + `align` | Built into placement | ✅ |
+| Offset | `padding` | `offset` on Content | ✅ |
+| Flip with hysteresis | Iterates `positions[]` | Flip middleware | ✅ `PO-FLIP-01` |
+| Shift / nudge | Orthogonal nudge | Shift + collision padding | ✅ `PO-SHIFT-01` |
+| Arrow tracking | `ArrowContainer` | `Overlay.Arrow` `edgePadding` | ✅ `PO-ARROW-01` |
+| Portal `container` | `parentElement` | `Overlay.Portal` | 🟢 |
+| Virtual anchor | No | `anchor: { x, y }` / `DOMRect` / ref | 🟢 |
+| `strategy` absolute / fixed | Absolute only | Both | 🟢 |
+| `autoUpdate` | Measure on render | Resize / scroll / ResizeObserver | 🟢 |
+| Size CSS vars | No | `--reference-overlay-available-width/height` | 🟢 |
+| Hide when clipped | No | `data-anchor-hidden` / `data-escaped` | 🟢 |
+| `positionTransform` | Yes | Not exposed | ⚪ |
+
+### 3.2 Interaction & Dismiss
+
+| Feature | react-tiny-popover | Reference UI | Status |
+| :--- | :--- | :--- | :---: |
+| Controlled `open` | Strictly controlled | `open` + `onOpen` / `onDismiss` / `onOpenChange` | ✅ |
+| Uncontrolled `defaultOpen` | No | Yes | 🟢 |
+| Click-outside | Callback, consumer toggles | Auto-dismiss, `preventDefault` cancels | 🟡 top-layer only; no `composedPath` |
+| Escape | Not built-in | Built-in, topmost layer | 🟡 no nested E2E |
+| Nested layer stack | No | Zustand stack | 🟡 cascade / backdrop defects |
+| Hover trigger | No | `openOnHover` + delays | 🟢 `PO-HOVER-01` |
+| Hover grace polygon | No | **Not implemented** (timers only) | 🟡 Gate 4 |
+| Backdrop dismiss | N/A | `Overlay.Backdrop` | 🟡 ignores stack |
+
+### 3.3 DOM & Rendering
+
+| Feature | react-tiny-popover | Reference UI | Status |
+| :--- | :--- | :--- | :---: |
+| Slot trigger | `cloneElement` + `forwardRef` | Slot / button part | ✅ |
+| Compound anatomy | Popover + Arrow | Trigger, Portal, Backdrop, Content, Arrow, Handle | 🟢 |
+| Presence exit | Immediate unmount | Presence (Tooltip opts out) | 🟢 |
+| Portal color mode | No | `data-layer` + `data-panda-theme` | ✅ `OV-THEME-01/02` |
+
+---
+
+## 4. Feature Parity — Toast vs Sonner
+
+Toast has moved **toward** Sonner since the last revision of this file.
+`toast.success/error/warning/info/loading/promise` exist. `toast.define()`
+remains the typed reusable path.
+
+### 4.1 Core API
+
+| Feature | Sonner | Reference UI | Status |
+| :--- | :--- | :--- | :---: |
+| Imperative `toast()` | `toast('msg')` | `toast()` / `toast.show()` | ✅ |
+| Definitions | Inline JSX | `toast.define({ render })` | ✅ |
+| Update / dismiss / dismiss all | Yes | `update` / `dismiss` / `dismissAll` | ✅ |
+| Semantic variants | Built-in | `toast.success/error/warning/info/loading` | ✅ (was “omitted”) |
+| `toast.promise()` | Yes + `.unwrap()` | Promise returned, no `.unwrap()` | 🟡 Gate 6 |
+| Custom render | `toast.custom` | `toast.custom` + always-custom definitions | ✅ |
+
+### 4.2 Host, stack, gestures
+
+| Feature | Sonner | Reference UI | Status |
+| :--- | :--- | :--- | :---: |
+| Mount once | `<Toaster />` | `<ReferenceLibrary toaster={...}>` | 🟢 |
+| 6 positions | Yes | `top-start` … `bottom-end` | 🟢 |
+| Limit + FIFO queue | Hide extras | Waiting queue (unmounted) | 🟡 no E2E |
+| Expand-on-hover | Yes | Yes | ✅ `TO-STACK-HOVER` |
+| Swipe-to-dismiss | Yes | Pointer distance/velocity | 🟢 no E2E |
+| Pause on hover/focus | Yes | Yes | 🟢 |
+| Pause when tab hidden | `pauseWhenPageIsHidden` | `visibilitychange` | 🟢 |
+| Pause on modal overlay | No | Intended; broken coupling | 🟡 Gate 6 |
+| Hotkey to focus toaster | `Alt+T` | Not built-in | 🟡 Gate 6 |
+| `onAutoClose` / `dismissible` | Yes | Not props | 🟡 Gate 6 |
+| `toast.promise().unwrap()` | Yes | Promise returned, no `.unwrap()` | 🟡 Gate 6 |
+
+---
+
+## 5. Feature Parity — FocusLock
+
+Compared with **react-focus-lock** and **focus-trap-react**.
+
+| Feature | Status | Notes |
+| :--- | :---: | :--- |
+| Tab / Shift+Tab loop | ✅ | `FL-TAB-02/03` |
+| No wrapper / no guards | 🟢 | Slots onto child |
+| `shards` | ✅ sibling shard; 🟡 portalled shard unproven | `FL-SHARD-01` |
+| `initialFocus` ref/fn/`false` | 🟢 | `false` does not blur to body |
+| `restoreFocus` + proximity walk | 🟡 | Algorithm exists; deleted-trigger unproven |
+| Nested lock stack | 🟡 | Global `activeLocks`; no `FL-NEST-01` |
+| Shadow / `composedPath` / slots | 🟡 | Specced, not lifted |
+| Android TalkBack virtual modality | 🟡 | Not implemented |
+| Wait for Presence exit | 🟡 | Restore on FocusLock unmount — prove with Overlay Presence |
+
+Deliberate omissions unchanged: `group`, `whiteList`, `FreeFocusInside`,
+`InFocusGuard`, cross-frame trapping, public `useFocusScope`.
 
 ---
 
 ## 6. Testing Proof Status
 
-| Component | Contract Cases | Automated E2E | Ratio | Priority |
-| :--- | :---: | :---: | :---: | :--- |
-| **Overlay** | 132 | 7 | 5% | 🔴 Highest |
-| **Popover** | 95 | 4 | 4% | 🔴 High |
-| **Tooltip** | ~60 | ~3 | 5% | 🟡 Medium |
-| **Toast** | ~80 | ~5 | 6% | 🟡 Medium |
-| **FocusLock** | 72 | 5 | 7% | 🔴 High |
+Happy-path is covered. The hard surface is not. Do not read “31 tests” as
+“almost done.”
 
-> [!IMPORTANT]
-> The engines and APIs are built. The gap is **proof**: browser E2E tests that
-> exercise the behavioral contracts documented in each component's `TESTS.md`.
-> All matrix tests run via `pnpm pipeline test --packages=@matrix/lib`.
+`matrix/lib` is the only proof location (`tests/e2e/*.spec.ts` +
+`tests/unit/*`). Overlay (9) and Popover (9) are among the **largest** lib
+suites — Listbox/Menu/Tabs are 1–2 tests. That happy-path density is real.
+It does not touch nested stacks, edge drag, iOS scroll, inert, shadow,
+portalled shards, tooltip groups, or toast swipe/limit/pause.
+
+`SPEC.md` `[x]` means the Playwright **title contains that case ID**. Unnamed
+tests (Escape, backdrop, trap) still count as happy-path proof; they do not
+close `OV-ESC-01` / `OV-LAYER-*` / `OV-FOCUS-*`.
+
+| Component | SPEC cases | `matrix/lib` tests | What those tests actually are |
+| :--- | :---: | :---: | :--- |
+| **Overlay** | 133 | 9 | Single dialog + unbound + anchored + theme. No nest, no edge, no inert, no scroll lock |
+| **Popover** | 95 | 9 | Click/flip/shift/arrow/hover-delay. No polygon, no nested layer |
+| **Tooltip** | 61 | 3 | Focus/hover + describedby. No skip-delay, no Escape-vs-parent, no scroll-close |
+| **Toast** | 81 + 4 Gate 6 | 5 | Show/update/dismiss/stack. No swipe, limit, pause, hotkey, dismissible |
+| **FocusLock** | 72 | 5 | Tab loop + sibling shard + restore to live trigger. No Presence, no portal shard, no nest |
+| **Unit** | — | **0** for these five | Only Slot and Presence have `tests/unit/` |
+
+Run matrix proof with `pnpm agent test --packages=@matrix/lib` (or
+`pnpm pipeline test --packages=@matrix/lib`). Do not invoke raw Playwright
+inside `matrix/lib`.
+
+Named Playwright IDs:
+
+- Overlay: `OV-DOM-01/05`, Escape, backdrop, trap, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`
+- Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01/02`
+- Tooltip: `TT-DOM-01/02`, hover, `TT-POS`
+- Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`
+- FocusLock: `FL-INIT-01`, `FL-TAB-02/03`, `FL-TRAP-01`, `FL-SHARD-01`, `FL-RESTORE-01`
 
 ---
 
-## 7. Vendor Inspiration Map
+## 7. Known Defects (implementation, not missing features)
 
-What we lift from each library and where it lands in Reference UI.
+These are in the tree today. Gates 1, 5, and 6 exist because of them.
+
+1. **`scroll-lock.ts`** — body `overflow: hidden` + scrollbar padding. No
+   `visualViewport`, no touch-move prevention, no iOS `position: fixed` restore.
+2. **`Overlay.Handle`** — Y-down only. `edge="top|left|right"` bind CSS, then
+   drag still `translateY` with `deltaY > 0`.
+3. **`Overlay.Backdrop`** — dismisses its own overlay regardless of stack top.
+4. **Outside press** — `Node.contains(event.target)`. Shadow hosts look
+   outside. No Radix deferred pointer-up / click activation guard beyond a
+   `setTimeout(0)` attach.
+5. **`overlay-stack.removeLayer`** — `setTimeout` cascades `dismiss()` on a
+   snapshot of children; re-entrant `addLayer`/`removeLayer` is racy.
+6. **Tooltip skip-delay** — `ReferenceLibrary` writes `tooltipWarmup`;
+   `Tooltip` reads `tooltipGroup`. Config is a no-op.
+7. **Toast vs modal Overlay** — pause looks for `aria-modal="true"`. Overlay
+   isolation does not set that attribute. Isolating overlays do not pause toasts.
+8. **FocusLock tabbable solver** — `querySelectorAll` of a candidate list, not
+   the lifted `tabbable` catalog (shadow, slots, `contenteditable`, details).
+9. **Popover “grace”** — `closeDelay` on pointerleave, not a polygon.
+
+---
+
+## 8. Vendor Inspiration Map
+
+What we lift, what we already match, and what is still outstanding.
 
 ### react-tiny-popover → Overlay positioning
-- **Lift:** Collision iteration model, boundary inset concept, scout offset calibration
-- **Already exceeds:** 12 placements, `autoUpdate`, virtual anchors, size middleware, hide detection, Presence exit animations
+
+- **Lifted:** Collision iteration model, boundary inset, scout-free in-tree engine
+- **Matches:** 12 placements, `autoUpdate`, virtual anchors, size middleware, hide, Presence
+- **Outstanding:** none for geometry; proof beyond flip/shift/arrow is thin
 
 ### Sonner → Toast runtime
-- **Lift:** Swipe-to-dismiss gesture physics, expand-on-hover stack mechanics, `visibilitychange` pause, hotkey focus
-- **Already matches:** Identity/update/dismiss-all, imperative API decoupled from React tree, remaining-time pause, replay-on-subscribe, FIFO queue
-- **Deliberate divergence:** No built-in semantic variants — apps own rendering via `toast.define()`
 
-### react-focus-lock → FocusLock
-- **Lift:** `shards` concept (under Radix `branches` semantics), proximity restore algorithm (`captureFocusRestore`)
-- **Already matches:** Tab cycling, initial focus resolution, nested stack coordination
-- **Deliberate divergence:** No wrapper div, no guard sentinels, `initialFocus={false}` skips (doesn't blur to body)
+- **Lifted:** Stack CSS vars, expand-on-hover, swipe physics, `visibilitychange` pause
+- **Matches:** Identity/update/dismiss-all, imperative API, remaining-time pause, FIFO intent
+- **Outstanding:** Overlay-stack pause coupling; swipe/limit E2E. Semantic variants **did** land.
 
-### focus-trap-react → FocusLock
-- **Lift:** `initialFocus: false` = don't move focus, `checkCanReturnFocus` async gate concept
-- **Already matches:** Stack pause/unpause, `preventScroll` support
-- **Deliberate divergence:** No `escapeDeactivates` (Overlay owns Escape), no `clickOutsideDeactivates` (Overlay owns dismiss)
+### react-focus-lock / focus-trap-react → FocusLock
 
-### Radix Primitives → Overlay layer stack
-- **Lift:** `DismissableLayer` stack model, `FocusScope` branches registry, document-edge guards, deferred outside-press
-- **Already matches:** Nested dismiss ordering, portalled branch awareness, Presence integration
+- **Lifted:** Shards, proximity restore walk, `initialFocus: false` = do not move
+- **Matches:** Tab cycling, nested stack *structure*, `preventScroll` via FocusOptions
+- **Outstanding:** Presence-gated restore proof, portalled shards, shadow/slot solver, TalkBack
+- **Deliberate:** no wrapper, no guard sentinels, Overlay owns Escape and outside click
 
-### Vaul → Overlay edge gestures
-- **Lift:** Handle-only drag, velocity threshold, iOS `position: fixed` + scroll restore
-- **Leave:** Snap points, scale-behind, fade-from-index, drag-anywhere
+### Radix dismissable-layer → Overlay stack
 
-### React Aria → Scroll lock + edge cases
-- **Lift:** iOS `preventScrollMobileWebKit`, `visualViewport` handling, Android TalkBack virtual modality detection
-- **Leave:** `FocusScope` (we have our own), `useOverlayTrigger` (we have Overlay.Trigger)
+- **Lifted in spirit:** Topmost Escape, deferred outside press, branches
+- **Outstanding:** Real branch registry, capture-phase / `composedPath`, child-before-parent races
 
----
+### Vaul → Overlay edge
 
-## 8. Execution Priority
+- **Lifted in spirit:** Handle-only drag, 25% or velocity
+- **Outstanding:** Axis per edge, iOS `position: fixed` + scroll restore
+- **Leave:** Snap points, scale-behind, drag-anywhere
 
-```
-Phase 1: Architecture Refactor                ← CURRENT
-  - Extract Toast store, ToastHost, and PositionStack from ReferenceLibrary to Toast component
-  - Extract Tooltip warmup state from ReferenceLibrary to Tooltip component
-  - Extract Announcer (Live Regions) to separate utility
-  - Keep ReferenceLibrary as a clean composing shell
+### React Aria → Scroll lock + inert
 
-Phase 2: Overlay E2E Proof
-  - Edge drag gestures (OV-EDGE-01..04)
-  - Nested dismiss stack (OV-STACK-01)
-  - Scroll lock (OV-SCROLL-01)
-  - Inert background (OV-INERT-01)
-
-Phase 3: FocusLock E2E Proof
-  - Shard integration (FL-SHARD-01..02)
-  - Nested lock stacking (FL-NEST-01)
-  - Proximity restore (FL-RESTORE-*)
-
-Phase 4: Popover E2E Proof
-  - Hover grace polygon (PO-HOVER-01..02)
-  - Collision flip/shift (PO-COLL-01)
-  - Arrow tracking (PO-ARROW-01)
-
-Phase 5: Toast Enhancements
-  - Swipe-to-dismiss
-  - Expand-on-hover
-  - Hotkey focus
-  - Tab-hidden pause
-
-Phase 6: Tooltip E2E Proof
-  - Skip-delay group
-  - Scroll-close
-  - WCAG 1.4.13 compliance
-```
+- **Specified:** `preventScrollMobileWebKit`, `ariaHideOutside`, TalkBack skip
+- **Partially lifted:** Sibling-walk `inert` + refcount + live-region / toast exceptions
+- **Outstanding:** Real iOS scroll lock; TalkBack
 
 ---
 
-*Last updated: 2026-09-07. Source specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md)*
+## 9. Execution Priority
+
+```
+Gate 1  Overlay kernel defects          ← CURRENT
+        scroll-lock.ts (iOS)
+        Overlay.Handle all four edges
+        Backdrop + removeLayer stack correctness
+        composedPath outside press
+
+Gate 2  Overlay E2E
+        OV-ESC-*, OV-LAYER-*, OV-INERT-01, OV-SCROLL-01, OV-EDGE-*
+
+Gate 3  FocusLock
+        Presence-gated restore, deleted trigger, nested locks, portalled shard
+
+Gate 4  Popover safe-polygon
+        Implement + keep PO-HOVER-02 as the diagonal proof
+
+Gate 5  Tooltip store unification
+        Then TT-SKIP-01, TT-ESC-01, TT-SCROLL-01
+
+Gate 6  Toast runtime + polish          ← required, not post-ship
+        Pause from overlay stack
+        Swipe / limit / hover-pause / tab-hidden E2E
+        Hotkey focus (Alt+T / configurable)
+        dismissible + onAutoClose
+        toast.promise().unwrap()
+```
+
+Still not a production blocker: Android TalkBack virtual-modality skip on FocusLock.
+
+---
+
+## 10. What this file used to get wrong
+
+Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
+
+| Old claim | Reality |
+| :--- | :--- |
+| Phase 1 (extract Toast/Tooltip/Announcer from ReferenceLibrary) is current work | Done |
+| Overlay 132 contracts / 7 E2E | 100 / 9 |
+| Popover 4 E2E; flip/shift/hover unproven | 9 E2E including `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01/02` |
+| Hover grace polygon “specced” as if the feature existed | Timers only |
+| Collision flip/shift needs E2E | Landed |
+| FocusLock shards need E2E | Sibling shard landed; portalled shard has not |
+| Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk exists; cascade and iOS lock are defective |
+| Uncontrolled mode omitted by design | `defaultOpen` exists |
+| `toast.success` etc. deliberately omitted | Implemented |
+| Expand-on-hover / swipe / tab-hidden pause are gaps | Implemented (swipe unproven) |
+| Toast hotkey / `dismissible` / `onAutoClose` / `.unwrap()` are optional polish | **Gate 6**, required for production |
+| `TESTS.md` `[x]` means proven | Overlay family uses `SPEC.md`; `[x]` is Playwright-proven |
+
+---
+
+*Last updated: 2026-09-08. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/lib/tests/e2e/{overlay,popover,tooltip,toast,focus-lock}.spec.ts`.*

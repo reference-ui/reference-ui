@@ -1,6 +1,6 @@
 # Tooltip
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md).
 
 Transient informative descriptions linked from the trigger with `aria-describedby`. Content is non-interactive. Hover intent delays, skip-delay across neighbouring tooltips, keyboard focus display, non-modal Escape dismissal (WCAG 2.1 SC 1.4.13). Interactive hover content is a `Popover` with `openOnHover`.
 
