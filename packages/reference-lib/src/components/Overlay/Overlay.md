@@ -1,8 +1,12 @@
 # Overlay
 
-Proof: [SPEC.md](./SPEC.md).
+Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
 
-One React primitive for content that sits above the application.
+One React primitive for content that sits above the application. Popover and
+Tooltip stay **thin policy** on this kernel. FocusLock is the containment
+solver. Toast is a separate queue that pauses from the
+overlay stack. Dialog, drawer, sheet, and lightbox are compositions, not
+runtimes.
 
 Dialog, drawer, sheet, lightbox, popover, tooltip, and combobox popup are
 not separate overlay runtimes. They are different answers to three

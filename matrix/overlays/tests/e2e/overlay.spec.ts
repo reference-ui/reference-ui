@@ -98,6 +98,91 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(content).toHaveCount(0)
     })
 
+    test('OV-DOM-04: Overlay honors Overlay.Portal container and never portals Trigger', async ({
+      page,
+    }) => {
+      const trigger = page.getByTestId('btn-custom-portal-trigger')
+      const customTarget = page.getByTestId('custom-portal-target')
+      const backdrop = page.getByTestId('custom-portal-backdrop')
+      const content = page.getByTestId('custom-portal-content')
+
+      // Open from trigger
+      await trigger.click()
+      await expect(content).toBeVisible()
+      await expect(backdrop).toBeVisible()
+
+      // Assert Backdrop and Content are children of customTarget
+      const isBackdropInside = await customTarget.evaluate((target, b) => target.contains(b), await backdrop.elementHandle())
+      const isContentInside = await customTarget.evaluate((target, c) => target.contains(c), await content.elementHandle())
+      expect(isBackdropInside).toBe(true)
+      expect(isContentInside).toBe(true)
+
+      // Assert Trigger stays in source DOM, NOT in customTarget
+      const isTriggerInside = await customTarget.evaluate((target, t) => target.contains(t), await trigger.elementHandle())
+      expect(isTriggerInside).toBe(false)
+
+      // Assert no Overlay wrapper host inside customTarget (only portal content directly)
+      const wrapperCount = await customTarget.evaluate(target => {
+        return Array.from(target.children).filter(child =>
+          child.tagName.toLowerCase() === 'reference-overlay' || child.hasAttribute('data-reference-overlay-host')
+        ).length
+      })
+      expect(wrapperCount).toBe(0)
+
+      await page.getByTestId('btn-close-custom-portal').click()
+      await expect(content).toHaveCount(0)
+    })
+
+    test('OV-EDGE-02: Overlay rejects edge combined with anchor with diagnostic', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-mixed-geom')
+      const content = page.getByTestId('content-mixed-geom')
+      const log = page.getByTestId('console-errors-log')
+
+      await openBtn.click()
+
+      // Diagnostic emitted
+      await expect(log).toContainText('`edge` and `anchor` are mutually exclusive.')
+
+      // Neither Floating UI coordinates nor edge binding applied (isCorrupted = true)
+      await expect(content).toHaveCount(0)
+    })
+
+    test('OV-INERT-02: Overlay preserves pre-existing isolation attributes when it closes', async ({
+      page,
+    }) => {
+      const preInert = page.getByTestId('pre-existing-inert')
+      const preAria = page.getByTestId('pre-existing-aria-hidden')
+      const ordinary = page.getByTestId('ordinary-sibling-node')
+      const openBtn = page.getByTestId('btn-open-inert-preserve')
+      const content = page.getByTestId('content-inert-preserve')
+      const closeBtn = page.getByTestId('btn-close-inert-preserve')
+
+      // Initial state before opening:
+      await expect(preInert).toHaveAttribute('inert')
+      await expect(preAria).toHaveAttribute('aria-hidden', 'true')
+      await expect(ordinary).not.toHaveAttribute('inert')
+
+      // Open Overlay
+      await openBtn.click()
+      await expect(content).toBeVisible()
+
+      // While open: ordinary node becomes inert, pre-existing attributes stay intact
+      await expect(ordinary).toHaveAttribute('inert')
+      await expect(preInert).toHaveAttribute('inert')
+      await expect(preAria).toHaveAttribute('aria-hidden', 'true')
+
+      // Close Overlay
+      await closeBtn.click()
+      await expect(content).toHaveCount(0)
+
+      // After close: ordinary node has inert removed, pre-existing inert and aria-hidden remain intact
+      await expect(ordinary).not.toHaveAttribute('inert')
+      await expect(preInert).toHaveAttribute('inert')
+      await expect(preAria).toHaveAttribute('aria-hidden', 'true')
+    })
+
     test('OV-FOCUS-04: Focus is trapped inside overlay content while open', async ({
       page,
     }) => {
@@ -540,6 +625,165 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       // Cleanup
       await page.evaluate(() => document.body.style.removeProperty('pointer-events'))
     })
+
+    test('OV-OUT-04: Overlay should not immediately dismiss when the pointerdown that opens it is also outside its newly mounted Content', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-same-tick')
+      const content = page.getByTestId('same-tick-content')
+      const backdrop = page.getByTestId('same-tick-backdrop')
+      const log = page.getByTestId('same-tick-log')
+
+      await expect(content).toHaveCount(0)
+
+      // Primary pointerdown opens the layer; document listeners settle normally
+      await openBtn.dispatchEvent('pointerdown', { button: 0, isPrimary: true })
+      await expect(content).toBeVisible()
+
+      // Assert opening event produces no onOutsidePress or onDismiss, Content stays open
+      await expect(log).toHaveText('pointerdown:open')
+      await expect(content).toBeVisible()
+
+      // Later independent outside sequence requests close
+      await backdrop.click({ position: { x: 10, y: 10 } })
+      await expect(content).toHaveCount(0)
+      await expect(log).toContainText('outside')
+      await expect(log).toContainText('dismiss')
+    })
+
+    test('OV-OUT-11: Overlay should retain cancelable geometric outside dismissal when no Backdrop part is authored', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-no-backdrop')
+      const content = page.getByTestId('content-no-backdrop')
+      const bgControl = page.getByTestId('btn-bg-control')
+      const log = page.getByTestId('no-backdrop-log')
+      const chkPrevent = page.getByTestId('chk-prevent-no-backdrop')
+
+      // Path 1: Normal outside click calls granular outside then high-level dismiss; bg control is inert
+      await openBtn.click()
+      await expect(content).toBeVisible()
+
+      // Click outside content (e.g. at x=400, y=400)
+      await page.mouse.click(400, 400)
+      await expect(content).toHaveCount(0)
+      await expect(log).toContainText('outside')
+      await expect(log).toContainText('dismiss')
+      // Background control was inert and unactivated
+      expect(await bgControl.textContent()).toBe('Background Control (0)')
+
+      // Path 2: Prevented path skips onDismiss
+      await chkPrevent.check()
+      await openBtn.click()
+      await expect(content).toBeVisible()
+
+      // Click outside content
+      await page.mouse.click(400, 400)
+      // Assert prevented path skips onDismiss and overlay remains open
+      await expect(content).toBeVisible()
+      await expect(log).toContainText('outside')
+      expect(await bgControl.textContent()).toBe('Background Control (0)')
+    })
+
+    test('OV-OUT-06: Overlay should cancel stale outside dismissal when a deferred touch sequence returns inside or is canceled before click', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-touch')
+      const content = page.getByTestId('touch-content')
+      const backdrop = page.getByTestId('touch-backdrop')
+      const log = page.getByTestId('touch-events-log')
+
+      // 1. Touch Backdrop and verify no callback at pointerdown
+      await openBtn.click()
+      await expect(content).toBeVisible()
+      await backdrop.dispatchEvent('pointerdown', { pointerId: 10, pointerType: 'touch', isPrimary: true, button: 0 })
+      await expect(log).toHaveText('open')
+
+      // Path A: Canceled before click
+      await page.evaluate(() => document.dispatchEvent(new Event('pointercancel')))
+      await backdrop.dispatchEvent('click', { bubbles: true })
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+
+      // Path B: Touch down outside, but moves inside Content before click
+      await backdrop.dispatchEvent('pointerdown', { pointerId: 11, pointerType: 'touch', isPrimary: true, button: 0 })
+      await expect(log).toHaveText('open')
+      const touchInsideBtn = page.getByTestId('btn-touch-inside')
+      await touchInsideBtn.dispatchEvent('pointerdown', { pointerId: 11, pointerType: 'touch', isPrimary: true, button: 0 })
+      await page.evaluate(() => document.dispatchEvent(new MouseEvent('click', { bubbles: true })))
+      await expect(content).toBeVisible()
+
+      // Path C: Uninterrupted touch outside completes matching click -> exactly one dismissal
+      await backdrop.dispatchEvent('pointerdown', { pointerId: 12, pointerType: 'touch', isPrimary: true, button: 0 })
+      await expect(log).not.toContainText('outside')
+      await backdrop.dispatchEvent('click', { bubbles: true })
+      await expect(content).toHaveCount(0)
+      await expect(log).toContainText('outside')
+      await expect(log).toContainText('dismiss')
+    })
+
+    test('OV-FOCUS-09: Overlay should never treat focus movement by itself as an outside-dismiss command', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-focus-move')
+      const content = page.getByTestId('focus-move-content')
+      const innerBtn = page.getByTestId('btn-focus-move-inner')
+      const outsideBtn = page.getByTestId('btn-focus-move-outside')
+      const log = page.getByTestId('focus-move-log')
+
+      // State 1: Open with initialFocus={false} while focus remains on the source
+      await openBtn.focus()
+      await openBtn.click()
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+      await expect(content).toBeVisible()
+
+      // State 2: Enter Content and programmatically focus an outside element without a pointer sequence
+      await innerBtn.focus()
+      await expect(innerBtn).toBeFocused()
+
+      // Focus outside element programmatically
+      await outsideBtn.evaluate((el: HTMLElement) => el.focus())
+
+      // Assert FocusLock reclaims focus, and onOutsidePress/onDismiss remain empty
+      await expect(innerBtn).toBeFocused()
+      await expect(content).toBeVisible()
+      await expect(log).toHaveText('open')
+    })
+
+    test('OV-ISO-04: Overlay should defer outside-press only while inert isolation is on', async ({
+      page,
+    }) => {
+      const btnOpenIsoTrue = page.getByTestId('btn-open-iso-true')
+      const btnOpenIsoFalse = page.getByTestId('btn-open-iso-false')
+      const contentTrue = page.getByTestId('content-iso-true')
+      const contentFalse = page.getByTestId('content-iso-false')
+      const log = page.getByTestId('iso-events-log')
+
+      // 1. Isolating path (inert on): waits for deferred click, no dismiss at pointerdown
+      await btnOpenIsoTrue.click()
+      await expect(contentTrue).toBeVisible()
+      await page.mouse.move(450, 450)
+      await page.mouse.down()
+      await expect(log).toHaveText('open:true')
+      await expect(contentTrue).toBeVisible()
+
+      // Complete click -> dismisses
+      await page.mouse.up()
+      await expect(contentTrue).toHaveCount(0)
+      await expect(log).toContainText('dismiss:true')
+
+      // 2. Non-isolating path (isolation={false}): dismisses on initial outside pointerdown event
+      await btnOpenIsoFalse.click()
+      await expect(contentFalse).toBeVisible()
+      await page.mouse.move(450, 450)
+      await page.mouse.down()
+      // Immediate dismiss at pointerdown
+      await expect(contentFalse).toHaveCount(0)
+      await expect(log).toContainText('outside:false')
+      await expect(log).toContainText('dismiss:false')
+      await page.mouse.up()
+    })
   })
 
   test.describe('5. Scroll Lock Mechanics', () => {
@@ -596,6 +840,161 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       const afterInnerScroll = await inner.evaluate(el => el.scrollTop)
       expect(afterInnerScroll).toBeGreaterThan(0)
+    })
+
+    test('OV-ISO-03: Isolation object patches bundle (omitted stay on, iOS position:fixed follows scroll on edge only)', async ({
+      page,
+    }) => {
+      // 1. First scenario: isolation={{ scroll: false }}
+      // Omitted keys stay on: focus=true, inert=true. Explicit key: scroll=false.
+      await page.getByTestId('btn-open-iso-scroll-false').click()
+      const content1 = page.getByTestId('iso-scroll-false-content')
+      await expect(content1).toBeVisible()
+
+      // Body scroll is NOT locked
+      const bodyOverflow1 = await page.evaluate(() => document.body.style.overflow)
+      expect(bodyOverflow1).not.toBe('hidden')
+
+      // Outside elements are inert
+      const outsideInert1 = await page.getByTestId('btn-iso-outside').evaluate(
+        el => el.hasAttribute('inert') || Boolean(el.closest('[inert]'))
+      )
+      expect(outsideInert1).toBe(true)
+
+      // Focus lock is active: Tab cycles inside Content
+      await page.keyboard.press('Tab')
+      const focused1 = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+      expect(['btn-iso-scroll-false-1', 'btn-iso-scroll-false-2', 'btn-close-iso-scroll-false']).toContain(focused1)
+
+      await page.getByTestId('btn-close-iso-scroll-false').click()
+      await expect(content1).toHaveCount(0)
+
+      // 2. Second scenario: isolation={{ focus: false, inert: true, scroll: true }}
+      // Named keys run: focus=false, inert=true, scroll=true.
+      await page.getByTestId('btn-open-iso-focus-false').click()
+      const content2 = page.getByTestId('iso-focus-false-content')
+      await expect(content2).toBeVisible()
+
+      // Body scroll IS locked
+      const bodyOverflow2 = await page.evaluate(() => document.body.style.overflow)
+      expect(bodyOverflow2).toBe('hidden')
+
+      // Outside elements are inert
+      const outsideInert2 = await page.getByTestId('btn-iso-outside').evaluate(
+        el => el.hasAttribute('inert') || Boolean(el.closest('[inert]'))
+      )
+      expect(outsideInert2).toBe(true)
+
+      // Focus is NOT locked into Content: initial focus is not trapped or auto-focused inside Content
+      const activeInside = await content2.evaluate(el => el.contains(document.activeElement))
+      expect(activeInside).toBe(false)
+
+      await page.getByTestId('btn-close-iso-focus-false').click()
+      await expect(content2).toHaveCount(0)
+
+      // 3. iOS position-fixed follows scroll on edge overlays only
+      await page.evaluate(() => document.documentElement.setAttribute('data-test-ios', ''))
+      try {
+        // Edge with scroll=false -> body position is NOT fixed
+        await page.getByTestId('btn-open-ios-edge-scroll-false').click()
+        const edgeFalse = page.getByTestId('ios-edge-scroll-false-content')
+        await expect(edgeFalse).toBeVisible()
+        const posEdgeFalse = await page.evaluate(() => document.body.style.position)
+        expect(posEdgeFalse).not.toBe('fixed')
+        await page.getByTestId('btn-close-ios-edge-scroll-false').click()
+        await expect(edgeFalse).toHaveCount(0)
+
+        // Edge with scroll=true -> body position IS fixed
+        await page.getByTestId('btn-open-ios-edge-scroll-true').click()
+        const edgeTrue = page.getByTestId('ios-edge-scroll-true-content')
+        await expect(edgeTrue).toBeVisible()
+        const posEdgeTrue = await page.evaluate(() => document.body.style.position)
+        expect(posEdgeTrue).toBe('fixed')
+        await page.getByTestId('btn-close-ios-edge-scroll-true').click()
+        await expect(edgeTrue).toHaveCount(0)
+
+        // Unbound with scroll=true -> body position is NOT fixed (edge only!)
+        await page.getByTestId('btn-open-ios-unbound-scroll-true').click()
+        const unboundTrue = page.getByTestId('ios-unbound-scroll-true-content')
+        await expect(unboundTrue).toBeVisible()
+        const posUnbound = await page.evaluate(() => document.body.style.position)
+        expect(posUnbound).not.toBe('fixed')
+        await page.getByTestId('btn-close-ios-unbound-scroll-true').click()
+        await expect(unboundTrue).toHaveCount(0)
+      } finally {
+        await page.evaluate(() => document.documentElement.removeAttribute('data-test-ios'))
+      }
+    })
+
+    test('OV-SCROLL-02: Overlay avoids layout shift when locking page with scrollbar and authored root styles', async ({
+      page,
+    }) => {
+      // 1. Author initial styles and add fixed element to record rect
+      await page.evaluate(() => {
+        document.documentElement.style.overflow = 'scroll'
+        document.documentElement.style.setProperty('scrollbar-gutter', 'stable')
+        document.body.style.margin = '12px'
+        document.body.style.setProperty('padding-right', '16px', 'important')
+
+        const fixed = document.createElement('div')
+        fixed.id = 'ov-fixed-shift-probe'
+        fixed.style.position = 'fixed'
+        fixed.style.top = '10px'
+        fixed.style.right = '20px'
+        fixed.style.width = '120px'
+        fixed.style.height = '40px'
+        fixed.style.background = 'pink'
+        document.body.appendChild(fixed)
+      })
+
+      const probe = page.locator('#ov-fixed-shift-probe')
+      const beforeRect = (await probe.boundingBox())!
+
+      // 2. Open isolating overlay
+      await page.getByTestId('btn-open-at-scroll').click()
+      const content = page.getByTestId('scroll-content')
+      await expect(content).toBeVisible()
+
+      // While open: fixed probe bounding box must NOT shift
+      const duringRect = (await probe.boundingBox())!
+      expect(Math.abs(duringRect.x - beforeRect.x)).toBeLessThanOrEqual(1)
+      expect(Math.abs(duringRect.y - beforeRect.y)).toBeLessThanOrEqual(1)
+
+      // Body overflow is locked to hidden
+      expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
+
+      // 3. Close overlay
+      await page.getByTestId('btn-close-scroll-dialog').click()
+      await expect(content).toHaveCount(0)
+
+      // 4. Assert every authored value and priority restores exactly
+      const restored = await page.evaluate(() => ({
+        htmlOverflow: document.documentElement.style.overflow,
+        htmlScrollbarGutter: document.documentElement.style.getPropertyValue('scrollbar-gutter'),
+        bodyMargin: document.body.style.margin,
+        bodyPadRight: document.body.style.getPropertyValue('padding-right'),
+        bodyPadPriority: document.body.style.getPropertyPriority('padding-right'),
+      }))
+
+      expect(restored.htmlOverflow).toBe('scroll')
+      expect(restored.htmlScrollbarGutter).toBe('stable')
+      expect(restored.bodyMargin).toBe('12px')
+      expect(restored.bodyPadRight).toBe('16px')
+      expect(restored.bodyPadPriority).toBe('important')
+
+      // Probe still at identical position
+      const afterRect = (await probe.boundingBox())!
+      expect(Math.abs(afterRect.x - beforeRect.x)).toBeLessThanOrEqual(1)
+      expect(Math.abs(afterRect.y - beforeRect.y)).toBeLessThanOrEqual(1)
+
+      // Cleanup probe
+      await page.evaluate(() => {
+        document.getElementById('ov-fixed-shift-probe')?.remove()
+        document.documentElement.style.overflow = ''
+        document.documentElement.style.removeProperty('scrollbar-gutter')
+        document.body.style.margin = ''
+        document.body.style.removeProperty('padding-right')
+      })
     })
   })
 
@@ -751,6 +1150,226 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(content).toBeVisible()
       const transform = await content.evaluate(el => el.style.transform)
       expect(transform).toBe('')
+    })
+
+    test('OV-HND-03: Keeps overflowing Content scrollable while Handle interaction remains distinct', async ({
+      page,
+    }) => {
+      await page.getByTestId('btn-open-edge-bottom').click()
+      const content = page.getByTestId('edge-content')
+      await expect(content).toBeVisible()
+
+      const inner = page.getByTestId('edge-scroll-inner')
+      await expect(inner).toBeVisible()
+
+      // Initial scroll state
+      const initialScroll = await inner.evaluate(el => el.scrollTop)
+      expect(initialScroll).toBe(0)
+
+      // 1. Swipe inner overflowing Content -> scrolls Content, does not dismiss
+      const innerBox = await inner.boundingBox()
+      expect(innerBox).toBeTruthy()
+      await page.mouse.move(innerBox!.x + innerBox!.width / 2, innerBox!.y + innerBox!.height / 2)
+      await page.mouse.wheel(0, 100)
+
+      await page.waitForFunction(
+        () => (document.querySelector('[data-testid="edge-scroll-inner"]') as HTMLElement)?.scrollTop > 0,
+        null,
+        { timeout: 3000 }
+      )
+      const scrolled = await inner.evaluate(el => el.scrollTop)
+      expect(scrolled).toBeGreaterThan(0)
+      // Content must still be open!
+      await expect(content).toBeVisible()
+
+      // 2. Underlying document must not have scrolled
+      const docScroll = await page.evaluate(() => window.scrollY)
+      expect(docScroll).toBe(0)
+
+      // 3. Swipe Handle through dismiss threshold -> dismisses
+      const handle = page.getByTestId('edge-handle')
+      const handleBox = await handle.boundingBox()
+      expect(handleBox).toBeTruthy()
+
+      await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + 150, { steps: 10 })
+      await page.mouse.up()
+
+      await expect(content).toHaveCount(0)
+      // Document scroll still 0
+      const finalDocScroll = await page.evaluate(() => window.scrollY)
+      expect(finalDocScroll).toBe(0)
+    })
+
+    test('OV-EDGE-06 & OV-SCROLL-07: Preserves stable visualViewport geometry for edge overlays on iOS without background shift, handles nested sheets, and restores offset', async ({
+      page,
+    }) => {
+      // Simulate iOS
+      await page.evaluate(() => document.documentElement.setAttribute('data-test-ios', ''))
+
+      try {
+        // 1. Page at nonzero scroll offset 200px
+        await page.evaluate(() => window.scrollTo(0, 200))
+        const initialScrollY = await page.evaluate(() => window.scrollY)
+        expect(initialScrollY).toBe(200)
+
+        // Open edge bottom sheet at scroll offset
+        await page.getByTestId('btn-open-edge-at-scroll').click()
+        const content = page.getByTestId('edge-content')
+        await expect(content).toBeVisible()
+
+        // Body must have position: fixed and top: -200px
+        const bodyPosition = await page.evaluate(() => document.body.style.position)
+        const bodyTop = await page.evaluate(() => document.body.style.top)
+        expect(bodyPosition).toBe('fixed')
+        expect(bodyTop).toBe('-200px')
+
+        // 2. Focus inner input and simulate visualViewport resize (iOS keyboard presentation)
+        const input = page.getByTestId('ios-sheet-input')
+        await input.focus()
+        await expect(input).toBeFocused()
+
+        // Dispatch visualViewport resize
+        await page.evaluate(() => {
+          window.visualViewport?.dispatchEvent(new Event('resize'))
+          window.visualViewport?.dispatchEvent(new Event('scroll'))
+        })
+
+        // Position remains stable, body position stays fixed at -200px without background shift
+        const bodyPosDuringVv = await page.evaluate(() => document.body.style.position)
+        const bodyTopDuringVv = await page.evaluate(() => document.body.style.top)
+        expect(bodyPosDuringVv).toBe('fixed')
+        expect(bodyTopDuringVv).toBe('-200px')
+        await expect(content).toBeVisible()
+
+        // 3. Nested edge sheets skip second fixed lock
+        await page.getByTestId('btn-open-nested-sheet').click()
+        const nestedContent = page.getByTestId('nested-edge-content')
+        await expect(nestedContent).toBeVisible()
+
+        // Body position and top remain unchanged (-200px)
+        const bodyTopNested = await page.evaluate(() => document.body.style.top)
+        expect(bodyTopNested).toBe('-200px')
+
+        // Close nested sheet
+        await page.getByTestId('btn-close-nested-sheet').click()
+        await expect(nestedContent).toHaveCount(0)
+
+        // Outer sheet still open and stable
+        await expect(content).toBeVisible()
+        expect(await page.evaluate(() => document.body.style.top)).toBe('-200px')
+
+        // 4. Restore scroll offset after closing outer sheet
+        await page.getByTestId('btn-close-edge').click()
+        await expect(content).toHaveCount(0)
+
+        // Body position restored, scroll offset restored to 200px
+        const finalBodyPos = await page.evaluate(() => document.body.style.position)
+        expect(finalBodyPos).not.toBe('fixed')
+        const finalScrollY = await page.evaluate(() => window.scrollY)
+        expect(finalScrollY).toBe(200)
+      } finally {
+        await page.evaluate(() => document.documentElement.removeAttribute('data-test-ios'))
+      }
+    })
+
+    test('OV-EDGE-03: Overlay treats Trigger as opener, not floating reference, when edge is set', async ({
+      page,
+    }) => {
+      const trigger = page.getByTestId('btn-edge-opener-trigger')
+      const content = page.getByTestId('edge-opener-content')
+      const sourceContainer = page.getByTestId('edge-trigger-source-container')
+
+      // Assert Trigger is in source container
+      const isTriggerInSource = await sourceContainer.evaluate((sc, trg) => sc.contains(trg), await trigger.elementHandle())
+      expect(isTriggerInSource).toBe(true)
+
+      // Open from Trigger
+      await trigger.click()
+      await expect(content).toBeVisible()
+
+      // Trigger remains in source container
+      const isTriggerStillInSource = await sourceContainer.evaluate((sc, trg) => sc.contains(trg), await trigger.elementHandle())
+      expect(isTriggerStillInSource).toBe(true)
+
+      // Content is bound to viewport bottom (data-edge="bottom", style.bottom="0px", position="fixed")
+      await expect(content).toHaveAttribute('data-edge', 'bottom')
+      const contentStyles = await content.evaluate(el => {
+        const style = (el as HTMLElement).style
+        return {
+          position: style.position,
+          bottom: style.bottom,
+          left: style.left,
+          right: style.right,
+        }
+      })
+      expect(contentStyles.position).toBe('fixed')
+      expect(contentStyles.bottom).toBe('0px')
+      expect(contentStyles.left).toBe('0px')
+      expect(contentStyles.right).toBe('0px')
+
+      // Content rect spans viewport width at bottom
+      const contentBox = (await content.boundingBox())!
+      const viewport = page.viewportSize()!
+      expect(Math.abs(contentBox.width - viewport.width)).toBeLessThanOrEqual(2)
+      expect(Math.abs(contentBox.y + contentBox.height - viewport.height)).toBeLessThanOrEqual(2)
+
+      await page.getByTestId('btn-close-edge-opener').click()
+      await expect(content).toHaveCount(0)
+    })
+
+    test('OV-EDGE-04: Overlay publishes nested edge stack CSS variables (--reference-overlay-index, --reference-overlay-count)', async ({
+      page,
+    }) => {
+      // 1. Open primary edge sheet
+      await page.getByTestId('btn-open-edge-bottom').click()
+      const parentContent = page.getByTestId('edge-content')
+      await expect(parentContent).toBeVisible()
+
+      // When only parent is open: count=1, index=0
+      let parentVars = await parentContent.evaluate(el => ({
+        index: (el as HTMLElement).style.getPropertyValue('--reference-overlay-index'),
+        count: (el as HTMLElement).style.getPropertyValue('--reference-overlay-count'),
+      }))
+      expect(parentVars.index).toBe('0')
+      expect(parentVars.count).toBe('1')
+
+      // 2. Open nested edge sheet
+      await page.getByTestId('btn-open-nested-sheet').click()
+      const nestedContent = page.getByTestId('nested-edge-content')
+      await expect(nestedContent).toBeVisible()
+
+      // Topmost (child) has index=0, count=2
+      const childVars = await nestedContent.evaluate(el => ({
+        index: (el as HTMLElement).style.getPropertyValue('--reference-overlay-index'),
+        count: (el as HTMLElement).style.getPropertyValue('--reference-overlay-count'),
+      }))
+      expect(childVars.index).toBe('0')
+      expect(childVars.count).toBe('2')
+
+      // Parent now has index=1, count=2 (distinguishing topmost from parent for displacement)
+      parentVars = await parentContent.evaluate(el => ({
+        index: (el as HTMLElement).style.getPropertyValue('--reference-overlay-index'),
+        count: (el as HTMLElement).style.getPropertyValue('--reference-overlay-count'),
+      }))
+      expect(parentVars.index).toBe('1')
+      expect(parentVars.count).toBe('2')
+
+      // 3. Close nested sheet
+      await page.getByTestId('btn-close-nested-sheet').click()
+      await expect(nestedContent).toHaveCount(0)
+
+      // Parent restores to index=0, count=1
+      parentVars = await parentContent.evaluate(el => ({
+        index: (el as HTMLElement).style.getPropertyValue('--reference-overlay-index'),
+        count: (el as HTMLElement).style.getPropertyValue('--reference-overlay-count'),
+      }))
+      expect(parentVars.index).toBe('0')
+      expect(parentVars.count).toBe('1')
+
+      await page.getByTestId('btn-close-edge').click()
+      await expect(parentContent).toHaveCount(0)
     })
   })
 
@@ -1104,6 +1723,112 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await page.getByTestId('btn-close-parent-modal').click()
       await expect(parentContent).toHaveCount(0)
     })
+
+    test('OV-FOCUS-07: Registers portalled child Content as FocusLock shard without parent reclaim', async ({
+      page,
+    }) => {
+      const openParentBtn = page.getByTestId('btn-open-shard-parent')
+      await openParentBtn.click()
+
+      const parentContent = page.getByTestId('shard-parent-content')
+      await expect(parentContent).toBeVisible()
+      await expect(page.getByTestId('btn-shard-parent-1')).toBeFocused()
+
+      // Open portalled child overlay (whose Content portals to document.body, outside parent Content in DOM)
+      await page.getByTestId('btn-open-shard-child').click()
+      const childContent = page.getByTestId('shard-child-content')
+      await expect(childContent).toBeVisible()
+
+      // Verify child content is NOT a descendant of parentContent in DOM (it portaled elsewhere)
+      const isDescendantInDOM = await page.evaluate(() => {
+        const parent = document.querySelector('[data-testid="shard-parent-content"]')
+        const child = document.querySelector('[data-testid="shard-child-content"]')
+        return Boolean(parent && child && parent.contains(child))
+      })
+      expect(isDescendantInDOM).toBe(false)
+
+      // Focus enters child control (auto-focused or focused)
+      const childBtn1 = page.getByTestId('btn-shard-child-1')
+      const childBtn2 = page.getByTestId('btn-shard-child-2')
+      await expect(childBtn1).toBeFocused()
+
+      // Parent FocusLock wired child as shard: focus is NOT reclaimed to parent
+      await page.keyboard.press('Tab')
+      await expect(childBtn2).toBeFocused()
+
+      // Close child overlay
+      await page.getByTestId('btn-close-shard-child').click()
+      await expect(childContent).toHaveCount(0)
+
+      // Parent policy resumes: parent is active again, tabbing stays inside parent
+      const isInsideParent = await parentContent.evaluate(el => el.contains(document.activeElement))
+      expect(isInsideParent).toBe(true)
+
+      await page.getByTestId('btn-close-shard-parent').click()
+      await expect(parentContent).toHaveCount(0)
+    })
+
+    test('OV-RESTORE-03: Restores focus to live candidate when opener is disabled or removed before exit completes', async ({
+      page,
+    }) => {
+      // 1. Case: opener is disabled before exit completes
+      await page.getByTestId('btn-reset-dead-opener-state').click()
+      const opener = page.getByTestId('btn-dead-opener')
+      const liveSibling = page.getByTestId('btn-live-sibling')
+
+      await opener.click()
+      const content = page.getByTestId('dead-opener-content')
+      await expect(content).toBeVisible()
+
+      // Disable opener and trigger close (with 150ms Presence exit)
+      await page.getByTestId('btn-disable-opener-and-close').click()
+      await expect(content).toHaveCount(0)
+
+      // Opener is disabled, focus must move to nearest live candidate (liveSibling) without throwing
+      await expect(opener).toBeDisabled()
+      await expect(liveSibling).toBeFocused()
+
+      // 2. Case: opener is removed before exit completes
+      await page.getByTestId('btn-reset-dead-opener-state').click()
+      await expect(opener).toBeEnabled()
+
+      await opener.click()
+      await expect(content).toBeVisible()
+
+      // Remove opener and trigger close
+      await page.getByTestId('btn-remove-opener-and-close').click()
+      await expect(content).toHaveCount(0)
+
+      // Opener is removed from DOM, focus must move to liveSibling
+      await expect(opener).toHaveCount(0)
+      await expect(liveSibling).toBeFocused()
+    })
+
+    test('OV-RESTORE-04: Skips focus restoration entirely when restoreFocus={false}', async ({
+      page,
+    }) => {
+      const trigger = page.getByTestId('btn-trigger-restore-false')
+      const consumerTarget = page.getByTestId('btn-consumer-focus-target')
+
+      await trigger.focus()
+      await page.keyboard.press('Enter')
+      const content = page.getByTestId('restore-false-content')
+      await expect(content).toBeVisible()
+
+      // Close the overlay through Presence
+      await page.getByTestId('btn-close-and-move-focus').click()
+
+      // Wait for complete unmount after Presence exit animation
+      await expect(content).toHaveCount(0)
+
+      // restoreFocus={false} skipped restoration: trigger is NOT focused
+      await expect(trigger).not.toBeFocused()
+
+      // Active element remains where consumer left it (or can be moved by consumer without being stolen)
+      await consumerTarget.focus()
+      await expect(consumerTarget).toBeFocused()
+      await expect(trigger).not.toBeFocused()
+    })
   })
 
   test.describe('Anchored Floating UI & Arrow Contracts (OV-POS-*)', () => {
@@ -1254,6 +1979,186 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       expect(customArrowBox.x).toBeGreaterThanOrEqual(customContentBox.x + 15)
       await page.getByTestId('btn-close-arrow-custom').click()
       await expect(contentCustom).toHaveCount(0)
+    })
+
+    test('OV-POS-09 / OV-TRG-06: Overlay accepts virtual anchors as positioning references while Trigger remains interaction source', async ({
+      page,
+    }) => {
+      const trigger = page.getByTestId('btn-virtual-trigger')
+      const content = page.getByTestId('content-virtual')
+      const moveBtn = page.getByTestId('btn-move-virtual-coords')
+      const sizedBtn = page.getByTestId('btn-set-sized-virtual')
+
+      // Initial state: closed, trigger has aria-expanded="false"
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+      await expect(content).toHaveCount(0)
+
+      // Open from Trigger
+      await trigger.click()
+      await expect(content).toBeVisible()
+      await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+      // Point anchor (300, 300) has implicit zero size:
+      // default placement is bottom-start with 8px offset:
+      // left should be 300, top should be 300 + 8 = 308
+      const box1 = (await content.boundingBox())!
+      expect(Math.abs(box1.x - 300)).toBeLessThanOrEqual(2)
+      expect(Math.abs(box1.y - 308)).toBeLessThanOrEqual(2)
+
+      // Published CSS variables: point anchor has 0px anchor width and height
+      const vars1 = await content.evaluate(el => ({
+        width: (el as HTMLElement).style.getPropertyValue('--reference-overlay-anchor-width'),
+        height: (el as HTMLElement).style.getPropertyValue('--reference-overlay-anchor-height'),
+      }))
+      expect(vars1.width).toBe('0px')
+      expect(vars1.height).toBe('0px')
+
+      // Mutate coordinates to (450, 500)
+      await moveBtn.click()
+      const box2 = (await content.boundingBox())!
+      expect(Math.abs(box2.x - 450)).toBeLessThanOrEqual(2)
+      expect(Math.abs(box2.y - 508)).toBeLessThanOrEqual(2)
+
+      // Switch to sized virtual anchor (400, 200, width: 100, height: 50)
+      await sizedBtn.click()
+      const box3 = (await content.boundingBox())!
+      // bottom-start of 400, 200 with height 50 and offset 8: x = 400, y = 200 + 50 + 8 = 258
+      expect(Math.abs(box3.x - 400)).toBeLessThanOrEqual(2)
+      expect(Math.abs(box3.y - 258)).toBeLessThanOrEqual(2)
+      const vars3 = await content.evaluate(el => ({
+        width: (el as HTMLElement).style.getPropertyValue('--reference-overlay-anchor-width'),
+        height: (el as HTMLElement).style.getPropertyValue('--reference-overlay-anchor-height'),
+      }))
+      expect(vars3.width).toBe('100px')
+      expect(vars3.height).toBe('50px')
+
+      // OV-TRG-06: Trigger remains interaction source (dismiss request while open)
+      await trigger.click()
+      await expect(content).toHaveCount(0)
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    })
+
+    test('OV-SCRL-01 / OV-SCRL-02: closeOnScroll omitted maintains living anchored position; closeOnScroll=true dismisses on composed ancestor scroll only', async ({
+      page,
+    }) => {
+      const scrollLog = page.getByTestId('scroll-events-log')
+      const clearLogBtn = page.getByTestId('btn-clear-scroll-log')
+      const ancestorContainer = page.getByTestId('ancestor-scroll-container')
+      const unrelatedContainer = page.getByTestId('unrelated-scroll-container')
+
+      // --- Part 1: OV-SCRL-01 (closeOnScroll omitted) ---
+      await ancestorContainer.evaluate((el: HTMLElement) => {
+        el.scrollIntoView({ block: 'center' })
+      })
+      await page.getByTestId('btn-open-scroll-default').click()
+      const defaultContent = page.getByTestId('content-scroll-default')
+      await expect(defaultContent).toBeVisible()
+
+      const initialBox = (await defaultContent.boundingBox())!
+
+      // Scroll ancestor container by 40px
+      await ancestorContainer.evaluate((el: HTMLElement) => {
+        el.scrollTop += 40
+        el.dispatchEvent(new Event('scroll'))
+      })
+
+      // Content stays open, no onDismiss fired, position updates (living position)
+      await expect(defaultContent).toBeVisible()
+      await expect(scrollLog).not.toContainText('dismiss')
+      const scrolledBox = (await defaultContent.boundingBox())!
+      expect(scrolledBox.y).toBeLessThan(initialBox.y)
+      expect(Math.abs((initialBox.y - scrolledBox.y) - 40)).toBeLessThanOrEqual(2)
+
+      // Close Part 1
+      await page.getByTestId('btn-close-scroll-default').click()
+      await expect(defaultContent).toHaveCount(0)
+      await clearLogBtn.click()
+      await expect(scrollLog).toHaveText('')
+
+      // Reset ancestor container scroll
+      await ancestorContainer.evaluate((el: HTMLElement) => {
+        el.scrollTop = 0
+        el.scrollIntoView({ block: 'center' })
+      })
+
+      // --- Part 2: OV-SCRL-02 (closeOnScroll=true) ---
+      await page.getByTestId('btn-open-close-on-scroll').click()
+      const closeOnScrollContent = page.getByTestId('content-close-on-scroll')
+      await expect(closeOnScrollContent).toBeVisible()
+
+      // 1. Scroll unrelated container -> must NOT dismiss
+      await unrelatedContainer.evaluate((el: HTMLElement) => {
+        el.scrollTop = 50
+        el.dispatchEvent(new Event('scroll'))
+      })
+      await expect(closeOnScrollContent).toBeVisible()
+      await expect(scrollLog).toHaveText('')
+
+      // 2. Scroll inner container in content -> must NOT dismiss
+      const innerScroll = page.getByTestId('content-inner-scroll')
+      await innerScroll.evaluate((el: HTMLElement) => {
+        el.scrollTop = 20
+        el.dispatchEvent(new Event('scroll'))
+      })
+      await expect(closeOnScrollContent).toBeVisible()
+      await expect(scrollLog).toHaveText('')
+
+      // 3. Scroll inner textarea -> must NOT dismiss
+      const innerTextarea = page.getByTestId('content-inner-textarea')
+      await innerTextarea.evaluate((el: HTMLElement) => {
+        el.scrollTop = 10
+        el.dispatchEvent(new Event('scroll'))
+      })
+      await expect(closeOnScrollContent).toBeVisible()
+      await expect(scrollLog).toHaveText('')
+
+      // 4. Scroll composed ancestor container -> requests dismiss and closes
+      await ancestorContainer.evaluate((el: HTMLElement) => {
+        el.scrollTop = 30
+        el.dispatchEvent(new Event('scroll'))
+      })
+      await expect(closeOnScrollContent).toHaveCount(0)
+      await expect(scrollLog).toContainText('dismiss:closeOnScroll')
+    })
+
+    test('OV-POS-06: Overlay publishes available and anchor geometry CSS variables for scrolling popups', async ({
+      page,
+    }) => {
+      const anchor = page.getByTestId('anchor-target-pos-06')
+      await anchor.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center' }))
+      await anchor.click()
+
+      const content = page.getByTestId('content-pos-06')
+      await expect(content).toBeVisible()
+
+      const anchorBox = (await anchor.boundingBox())!
+
+      const vars = await content.evaluate(el => {
+        const style = (el as HTMLElement).style
+        return {
+          availWidth: style.getPropertyValue('--reference-overlay-available-width'),
+          availHeight: style.getPropertyValue('--reference-overlay-available-height'),
+          anchorWidth: style.getPropertyValue('--reference-overlay-anchor-width'),
+          anchorHeight: style.getPropertyValue('--reference-overlay-anchor-height'),
+          transformOrigin: style.getPropertyValue('--reference-overlay-transform-origin'),
+        }
+      })
+
+      // Finite non-negative values
+      const availW = parseFloat(vars.availWidth)
+      const availH = parseFloat(vars.availHeight)
+      expect(Number.isFinite(availW) && availW > 0).toBe(true)
+      expect(Number.isFinite(availH) && availH > 0).toBe(true)
+
+      // Anchor dimensions match exactly
+      expect(vars.anchorWidth).toBe(`${anchorBox.width}px`)
+      expect(vars.anchorHeight).toBe(`${anchorBox.height}px`)
+
+      // Transform origin published
+      expect(['0 0', '0 100%']).toContain(vars.transformOrigin)
+
+      await page.getByTestId('btn-close-pos-06').click()
+      await expect(content).toHaveCount(0)
     })
   })
 
@@ -1709,6 +2614,177 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       await bgBtn.click()
       await expect(bgBtn).toHaveText('Reopen Pointer BG (1)')
+    })
+
+    test('OV-RESTORE-05: Cancels pending focus restoration when reopened during exit animation', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-reopen-pointer')
+      const content = page.getByTestId('dialog-reopen-pointer-content')
+      const quickCycleBtn = page.getByTestId('btn-reopen-pointer-quick-cycle')
+      const finalCloseBtn = page.getByTestId('btn-close-reopen-pointer-final')
+
+      await openBtn.click()
+      await expect(content).toBeVisible()
+
+      // Trigger close followed by reopen at 50ms (during 250ms exit)
+      await quickCycleBtn.click()
+
+      // At 80ms: reopening has occurred, content is open
+      await page.waitForTimeout(80)
+      await expect(content).toHaveAttribute('data-state', 'open')
+
+      // Wait beyond the original 250ms exit window (e.g. 300ms total)
+      await page.waitForTimeout(220)
+      await expect(content).toBeVisible()
+
+      // Interrupted exit's restore target must NOT steal focus from active layer!
+      const activeIdAfterStaleExit = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+      expect(['btn-reopen-pointer-quick-cycle', 'btn-close-reopen-pointer-final']).toContain(activeIdAfterStaleExit)
+      expect(activeIdAfterStaleExit).not.toBe('btn-open-reopen-pointer')
+
+      // Final close
+      await finalCloseBtn.click()
+      await expect(content).toHaveCount(0, { timeout: 3000 })
+    })
+  })
+
+  test.describe('12. Trigger Interaction Suite (OV-TRG-03, OV-TRG-04, OV-TRG-05)', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/overlay/dialog')
+      await expect(page.getByTestId('dialog-fixture-root')).toBeVisible()
+    })
+
+    test('OV-TRG-03: Trigger requests open and dismiss from unprevented activation (click, enter, space); prevented and disabled are ignored', async ({
+      page,
+    }) => {
+      const normalTrg = page.getByTestId('trg-03-normal')
+      const normalContent = page.getByTestId('trg-03-normal-content')
+      const logEl = page.getByTestId('trg-03-log')
+      const resetBtn = page.getByTestId('btn-reset-trg-03-log')
+
+      // 1. Click normal Trigger closed -> opens
+      await resetBtn.click()
+      await normalTrg.click()
+      await expect(normalContent).toBeVisible()
+      await expect(logEl).toHaveText('consumerClick,onOpen')
+
+      // Click normal Trigger open -> dismisses
+      await normalTrg.click()
+      await expect(normalContent).toHaveCount(0)
+      await expect(logEl).toHaveText('consumerClick,onOpen,consumerClick,onDismiss')
+
+      // 2. Enter normal Trigger closed -> opens
+      await resetBtn.click()
+      await normalTrg.focus()
+      await page.keyboard.press('Enter')
+      await expect(normalContent).toBeVisible()
+      await expect(logEl).toHaveText('consumerClick,onOpen')
+
+      // Enter normal Trigger open -> dismisses
+      await page.keyboard.press('Enter')
+      await expect(normalContent).toHaveCount(0)
+      await expect(logEl).toHaveText('consumerClick,onOpen,consumerClick,onDismiss')
+
+      // 3. Space normal Trigger closed -> opens
+      await resetBtn.click()
+      await normalTrg.focus()
+      await page.keyboard.press('Space')
+      await expect(normalContent).toBeVisible()
+      await expect(logEl).toHaveText('consumerClick,onOpen')
+
+      // Space normal Trigger open -> dismisses
+      await page.keyboard.press('Space')
+      await expect(normalContent).toHaveCount(0)
+      await expect(logEl).toHaveText('consumerClick,onOpen,consumerClick,onDismiss')
+
+      // 4. Prevented Trigger: consumer preventDefault() cancels open request
+      await resetBtn.click()
+      const preventedTrg = page.getByTestId('trg-03-prevented')
+      const preventedContent = page.getByTestId('trg-03-prevented-content')
+      await preventedTrg.click()
+      await expect(preventedContent).toHaveCount(0)
+      await expect(logEl).toHaveText('consumerPrevented')
+
+      // 5. Disabled Trigger: no open requests on click, Enter, Space
+      await resetBtn.click()
+      const disabledTrg = page.getByTestId('trg-03-disabled')
+      const disabledContent = page.getByTestId('trg-03-disabled-content')
+      await disabledTrg.click({ force: true })
+      await expect(disabledContent).toHaveCount(0)
+      await disabledTrg.focus()
+      await page.keyboard.press('Enter')
+      await page.keyboard.press('Space')
+      await expect(disabledContent).toHaveCount(0)
+      await expect(logEl).toHaveText('')
+    })
+
+    test('OV-TRG-04: Trigger remains outside focus lock when isolation focus is on', async ({
+      page,
+    }) => {
+      const openBtn = page.getByTestId('btn-open-trg-04')
+      const content = page.getByTestId('trg-04-content')
+      const inner1 = page.getByTestId('btn-trg-04-inner-1')
+      const inner2 = page.getByTestId('btn-trg-04-inner-2')
+      const closeBtn = page.getByTestId('btn-close-trg-04')
+
+      await openBtn.click()
+      await expect(content).toBeVisible()
+
+      // Focus moves into Content
+      await expect(inner1).toBeFocused()
+
+      // Tab cycles inside Content
+      await page.keyboard.press('Tab')
+      await expect(inner2).toBeFocused()
+
+      await page.keyboard.press('Tab')
+      await expect(closeBtn).toBeFocused()
+
+      // Tab from last wraps back to first, Trigger is NOT a trap stop
+      await page.keyboard.press('Tab')
+      await expect(inner1).toBeFocused()
+
+      // Shift+Tab wraps back to last
+      await page.keyboard.press('Shift+Tab')
+      await expect(closeBtn).toBeFocused()
+
+      // Focus was never on openBtn during cycling
+      const activeId = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+      expect(activeId).not.toBe('btn-open-trg-04')
+
+      await closeBtn.click()
+      await expect(content).toHaveCount(0)
+    })
+
+    test('OV-TRG-05: Bridges Tab from Trigger into Content when isolation focus is off, advances past Trigger and dismisses on exit', async ({
+      page,
+    }) => {
+      const openTrg = page.getByTestId('btn-open-trg-05')
+      const content = page.getByTestId('trg-05-content')
+      const inner1 = page.getByTestId('btn-trg-05-inner-1')
+      const inner2 = page.getByTestId('btn-trg-05-inner-2')
+      const afterTrg = page.getByTestId('btn-after-trg-05')
+      const dismissCountEl = page.getByTestId('trg-05-dismiss-count')
+
+      // Open modeless overlay from Trigger
+      await openTrg.click()
+      await expect(content).toBeVisible()
+      await expect(openTrg).toBeFocused()
+
+      // Tab from Trigger into Content
+      await page.keyboard.press('Tab')
+      await expect(inner1).toBeFocused()
+
+      // Tab to second control
+      await page.keyboard.press('Tab')
+      await expect(inner2).toBeFocused()
+
+      // Tab past last control advances relative to Trigger (to afterTrg) and fires onDismiss
+      await page.keyboard.press('Tab')
+      await expect(afterTrg).toBeFocused()
+      await expect(content).toHaveCount(0)
+      await expect(dismissCountEl).toHaveText('1')
     })
   })
 })

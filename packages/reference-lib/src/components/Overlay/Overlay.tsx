@@ -20,6 +20,7 @@ export {
   OverlayArrow,
   OverlayHandle,
 }
+export { resolveIsolation } from './types'
 
 export type {
   OverlayProps,

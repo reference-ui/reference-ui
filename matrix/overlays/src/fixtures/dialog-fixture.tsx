@@ -52,6 +52,35 @@ export function DialogFixture() {
   const [reopenPointerOpen, setReopenPointerOpen] = React.useState(false)
   const [reopenPointerBgClicks, setReopenPointerBgClicks] = React.useState(0)
 
+  // Step 3: Trigger interaction (OV-TRG-03, OV-TRG-04, OV-TRG-05)
+  const [trg03Open, setTrg03Open] = React.useState(false)
+  const [trg03PreventedOpen, setTrg03PreventedOpen] = React.useState(false)
+  const [trg03DisabledOpen, setTrg03DisabledOpen] = React.useState(false)
+  const [trg03Log, setTrg03Log] = React.useState<string[]>([])
+
+  const [trg04Open, setTrg04Open] = React.useState(false)
+
+  const [trg05Open, setTrg05Open] = React.useState(false)
+  const [trg05DismissCount, setTrg05DismissCount] = React.useState(0)
+
+  // Step 7: OV-DOM-04, OV-EDGE-02, OV-INERT-02
+  const [customPortalOpen, setCustomPortalOpen] = React.useState(false)
+  const customContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const [containerMounted, setContainerMounted] = React.useState(false)
+  React.useEffect(() => {
+    setContainerMounted(true)
+  }, [])
+
+  const [mixedGeomOpen, setMixedGeomOpen] = React.useState(false)
+  const [mixedEdge, setMixedEdge] = React.useState<any>(undefined)
+  const [mixedAnchor, setMixedAnchor] = React.useState<any>(undefined)
+  const [openInertPreserve, setOpenInertPreserve] = React.useState(false)
+  const inertContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const preInertRef = React.useRef<HTMLDivElement | null>(null)
+  React.useEffect(() => {
+    preInertRef.current?.setAttribute('inert', '')
+  }, [])
+
   React.useEffect(() => {
     const orig = console.error
     console.error = (...args: any[]) => {
@@ -1132,6 +1161,289 @@ export function DialogFixture() {
               Final Close
             </button>
           </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* 10. Trigger Interaction Suite (OV-TRG-03, OV-TRG-04, OV-TRG-05) */}
+      <section data-testid="section-trigger-suite" style={{ marginTop: 32 }}>
+        <h3>Trigger Interaction Suite</h3>
+
+        {/* OV-TRG-03: Activate + preventDefault + disabled */}
+        <div data-testid="trg-03-log">{trg03Log.join(',')}</div>
+        <button
+          type="button"
+          data-testid="btn-reset-trg-03-log"
+          onClick={() => setTrg03Log([])}
+        >
+          Reset Log
+        </button>
+
+        {/* Normal trigger */}
+        <Overlay
+          open={trg03Open}
+          onOpenChange={setTrg03Open}
+          isolation={false}
+          onOpen={() => setTrg03Log(l => [...l, 'onOpen'])}
+          onDismiss={() => setTrg03Log(l => [...l, 'onDismiss'])}
+        >
+          <Overlay.Trigger
+            data-testid="trg-03-normal"
+            onClick={() => setTrg03Log(l => [...l, 'consumerClick'])}
+          >
+            Trigger Normal
+          </Overlay.Trigger>
+          <Overlay.Content
+            data-testid="trg-03-normal-content"
+            style={{ position: 'fixed', top: 100, left: 100, background: '#fff', padding: 16 }}
+          >
+            <p>Trg 03 Normal Content</p>
+          </Overlay.Content>
+        </Overlay>
+
+        {/* Prevented trigger */}
+        <Overlay
+          open={trg03PreventedOpen}
+          onOpenChange={setTrg03PreventedOpen}
+          isolation={false}
+          onOpen={() => setTrg03Log(l => [...l, 'onOpen'])}
+          onDismiss={() => setTrg03Log(l => [...l, 'onDismiss'])}
+        >
+          <Overlay.Trigger
+            data-testid="trg-03-prevented"
+            onClick={e => {
+              e.preventDefault()
+              setTrg03Log(l => [...l, 'consumerPrevented'])
+            }}
+          >
+            Trigger Prevented
+          </Overlay.Trigger>
+          <Overlay.Content
+            data-testid="trg-03-prevented-content"
+            style={{ position: 'fixed', top: 150, left: 100, background: '#fff', padding: 16 }}
+          >
+            <p>Trg 03 Prevented Content</p>
+          </Overlay.Content>
+        </Overlay>
+
+        {/* Disabled trigger */}
+        <Overlay
+          open={trg03DisabledOpen}
+          onOpenChange={setTrg03DisabledOpen}
+          isolation={false}
+          onOpen={() => setTrg03Log(l => [...l, 'onOpen'])}
+          onDismiss={() => setTrg03Log(l => [...l, 'onDismiss'])}
+        >
+          <Overlay.Trigger
+            data-testid="trg-03-disabled"
+            disabled={true}
+            onClick={() => setTrg03Log(l => [...l, 'consumerDisabled'])}
+          >
+            Trigger Disabled
+          </Overlay.Trigger>
+          <Overlay.Content
+            data-testid="trg-03-disabled-content"
+            style={{ position: 'fixed', top: 200, left: 100, background: '#fff', padding: 16 }}
+          >
+            <p>Trg 03 Disabled Content</p>
+          </Overlay.Content>
+        </Overlay>
+
+        {/* OV-TRG-04: Outside focus lock when isolation focus is on */}
+        <Overlay open={trg04Open} onOpenChange={setTrg04Open}>
+          <Overlay.Trigger data-testid="btn-open-trg-04">
+            Open Isolating Focus Lock
+          </Overlay.Trigger>
+          <Overlay.Backdrop data-testid="trg-04-backdrop" />
+          <Overlay.Content
+            data-testid="trg-04-content"
+            role="dialog"
+            style={{ position: 'fixed', top: 250, left: 100, background: '#fff', padding: 20, zIndex: 1001 }}
+          >
+            <button type="button" data-testid="btn-trg-04-inner-1">
+              Inner 1
+            </button>
+            <button type="button" data-testid="btn-trg-04-inner-2">
+              Inner 2
+            </button>
+            <button
+              type="button"
+              data-testid="btn-close-trg-04"
+              onClick={() => setTrg04Open(false)}
+            >
+              Close
+            </button>
+          </Overlay.Content>
+        </Overlay>
+
+        {/* OV-TRG-05: Tab bridge from Trigger into Content when isolation focus is off */}
+        <div style={{ marginTop: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button type="button" data-testid="btn-before-trg-05">
+            Before Trigger
+          </button>
+          <Overlay
+            open={trg05Open}
+            onOpenChange={setTrg05Open}
+            isolation={false}
+            onDismiss={() => setTrg05DismissCount(c => c + 1)}
+          >
+            <Overlay.Trigger data-testid="btn-open-trg-05">
+              Trigger Modeless Bridge
+            </Overlay.Trigger>
+            <Overlay.Content
+              data-testid="trg-05-content"
+              style={{
+                position: 'fixed',
+                top: 320,
+                left: 100,
+                background: '#fff',
+                border: '1px solid #ccc',
+                padding: 16,
+                zIndex: 1001,
+              }}
+            >
+              <button type="button" data-testid="btn-trg-05-inner-1">
+                Bridge Inner 1
+              </button>
+              <button type="button" data-testid="btn-trg-05-inner-2">
+                Bridge Inner 2
+              </button>
+            </Overlay.Content>
+          </Overlay>
+          <button type="button" data-testid="btn-after-trg-05">
+            After Trigger
+          </button>
+          <span data-testid="trg-05-dismiss-count">{trg05DismissCount}</span>
+        </div>
+      </section>
+
+      {/* 11. OV-DOM-04: Overlay.Portal container and Trigger stays in source DOM */}
+      <section data-testid="section-dom-04" style={{ marginTop: 24 }}>
+        <h3>OV-DOM-04: Overlay.Portal container=element</h3>
+        <div
+          ref={customContainerRef}
+          data-testid="custom-portal-target"
+          style={{ border: '2px dashed #6366f1', padding: 12, minHeight: 80 }}
+        >
+          <p>Custom Portal Container</p>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <Overlay open={customPortalOpen} onOpenChange={setCustomPortalOpen}>
+            <Overlay.Trigger data-testid="btn-custom-portal-trigger">
+              Open Custom Portal Dialog
+            </Overlay.Trigger>
+            {containerMounted && customContainerRef.current && (
+              <Overlay.Portal container={customContainerRef.current}>
+                <Overlay.Backdrop
+                  data-testid="custom-portal-backdrop"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.3)', zIndex: 1000 }}
+                />
+                <Overlay.Content
+                  data-testid="custom-portal-content"
+                  style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: '#fff',
+                    padding: 20,
+                    zIndex: 1001,
+                  }}
+                >
+                  <p>Custom Portalled Content</p>
+                  <button
+                    type="button"
+                    data-testid="btn-close-custom-portal"
+                    onClick={() => setCustomPortalOpen(false)}
+                  >
+                    Close
+                  </button>
+                </Overlay.Content>
+              </Overlay.Portal>
+            )}
+          </Overlay>
+        </div>
+      </section>
+
+      {/* 12. OV-EDGE-02: edge + anchor mutual exclusion */}
+      <section data-testid="section-mixed-geometry" style={{ marginTop: 24 }}>
+        <h3>OV-EDGE-02: Mixed edge and anchor diagnostic</h3>
+        <button
+          type="button"
+          data-testid="btn-open-mixed-geom"
+          onClick={() => {
+            setMixedEdge('bottom')
+            setMixedAnchor({ x: 100, y: 100 })
+            setMixedGeomOpen(true)
+          }}
+        >
+          Open Mixed Geometry
+        </button>
+        <Overlay
+          open={mixedGeomOpen}
+          onOpenChange={setMixedGeomOpen}
+          edge={mixedEdge}
+          anchor={mixedAnchor}
+        >
+          <Overlay.Content
+            data-testid="content-mixed-geom"
+            style={{ width: 100, height: 50, background: 'red' }}
+          >
+            Mixed Geometry Content
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* 13. OV-INERT-02: Pre-existing isolation attributes */}
+      <section
+        ref={inertContainerRef}
+        data-testid="section-inert-preservation"
+        style={{ marginTop: 24, border: '1px solid #ddd', padding: 12 }}
+      >
+        <h3>OV-INERT-02: Preserve pre-existing inert & aria-hidden</h3>
+        <div ref={preInertRef} data-testid="pre-existing-inert" style={{ padding: 4 }}>
+          Pre-existing inert node
+        </div>
+        <div data-testid="pre-existing-aria-hidden" aria-hidden="true" style={{ padding: 4 }}>
+          Pre-existing aria-hidden node
+        </div>
+        <div data-testid="ordinary-sibling-node" style={{ padding: 4 }}>
+          Ordinary sibling node
+        </div>
+        <button
+          type="button"
+          data-testid="btn-open-inert-preserve"
+          onClick={() => setOpenInertPreserve(true)}
+          style={{ marginTop: 8 }}
+        >
+          Open Inert Preserve Dialog
+        </button>
+        <Overlay open={openInertPreserve} onOpenChange={setOpenInertPreserve}>
+          {containerMounted && inertContainerRef.current && (
+            <Overlay.Portal container={inertContainerRef.current}>
+              <Overlay.Content
+                data-testid="content-inert-preserve"
+                style={{
+                  position: 'fixed',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: '#fff',
+                  padding: 20,
+                  zIndex: 1001,
+                }}
+              >
+                <p>Inert Preserve Content</p>
+                <button
+                  type="button"
+                  data-testid="btn-close-inert-preserve"
+                  onClick={() => setOpenInertPreserve(false)}
+                >
+                  Close
+                </button>
+              </Overlay.Content>
+            </Overlay.Portal>
+          )}
         </Overlay>
       </section>
     </div>

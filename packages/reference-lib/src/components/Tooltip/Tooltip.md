@@ -1,6 +1,13 @@
 # Tooltip
 
-Proof: [SPEC.md](./SPEC.md).
+Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Kernel: [Overlay](../Overlay/Overlay.md).
+
+**Thin policy on Overlay.** Tooltip is Overlay with `isolation={false}`,
+`presence={false}`, and `closeOnScroll`. Collision math is Overlay's, not
+Popover's. Skip-delay, `aria-describedby`, and WCAG 1.4.13 (Escape without
+closing a parent Overlay) are what this file owns. Interactive hover is
+`Popover openOnHover`. No public Provider.
 
 Transient informative descriptions linked from the trigger with `aria-describedby`. Content is non-interactive. Hover intent delays, skip-delay across neighbouring tooltips, keyboard focus display, non-modal Escape dismissal (WCAG 2.1 SC 1.4.13). Interactive hover content is a `Popover` with `openOnHover`.
 

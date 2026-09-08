@@ -33,6 +33,7 @@ export type Layer = {
   backdrop: HTMLElement | null
   trigger: HTMLElement | null
   document: Document | null
+  openedAt?: number
 }
 
 type OverlayStackState = {
@@ -162,30 +163,55 @@ export function setStackChangeListener(fn: () => void) {
   onStackChange = fn
 }
 
+function syncEdgeStacks(layers: Layer[]) {
+  const edgeLayers = layers.filter(l => l.edge && l.open && l.node)
+  for (let i = 0; i < edgeLayers.length; i++) {
+    const layer = edgeLayers[i]!
+    if (!layer.node) continue
+    const fromTop = edgeLayers.length - 1 - i
+    layer.node.style.setProperty('--reference-overlay-index', String(fromTop))
+    layer.node.style.setProperty('--reference-overlay-count', String(edgeLayers.length))
+  }
+}
+
 export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
   layers: [],
 
   addLayer: layer => {
+    const openedAt = layer.open ? performance.now() : undefined
     set(state => {
       const idx = state.layers.findIndex(l => l.id === layer.id)
       if (idx >= 0) {
         const next = state.layers.slice()
-        next[idx] = { ...next[idx]!, ...layer, zIndex: next[idx]!.zIndex }
+        next[idx] = {
+          ...next[idx]!,
+          ...layer,
+          openedAt: next[idx]!.openedAt ?? openedAt,
+          zIndex: next[idx]!.zIndex,
+        }
         return { layers: next }
       }
       const last = state.layers[state.layers.length - 1]
       const zIndex = last ? last.zIndex + 10 : 100
-      return { layers: [...state.layers, { ...layer, zIndex }] }
+      return { layers: [...state.layers, { ...layer, openedAt, zIndex }] }
     })
+    syncEdgeStacks(get().layers)
     onStackChange()
   },
 
   updateLayer: (id, patch) => {
     set(state => ({ layers: patchLayer(state.layers, id, patch) }))
+    syncEdgeStacks(get().layers)
   },
 
   setLayerOpen: (id, open) => {
-    set(state => ({ layers: patchLayer(state.layers, id, { open }) }))
+    set(state => ({
+      layers: patchLayer(state.layers, id, {
+        open,
+        ...(open ? { openedAt: performance.now() } : {}),
+      }),
+    }))
+    syncEdgeStacks(get().layers)
     onStackChange()
   },
 
@@ -200,6 +226,7 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
         }),
       }
     })
+    syncEdgeStacks(get().layers)
   },
 
   setLayerBackdrop: (id, node) => {
@@ -236,6 +263,7 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
     markRemoved(id)
     set({ layers: layers.filter(l => l.id !== id) })
     handlers.delete(id)
+    syncEdgeStacks(get().layers)
 
     for (const child of descendants) {
       if (get().layers.some(l => l.id === child.id)) {

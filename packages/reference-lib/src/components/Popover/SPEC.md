@@ -12,9 +12,44 @@ Page: `/popover`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
+## Next agent — thin Popover policy
+
+Read this first. Overlay is the kernel. Popover is Overlay with `isolation`
+frozen **off**, plus hover policy Overlay must not own.
+
+**Do not** add a second `computePosition`, dismiss stack, Tab-order bridge,
+Presence, `edge`/`Handle`, or FocusLock. Do not expand `PO-POS-*` /
+`PO-FLIP-02+` / layer/env catalogs — those are Overlay `OV-POS-*` /
+`OV-LAYER-*` / `OV-TRG-05` / `OV-SCRL-*`. HoverCard is this composition, not a
+primitive. Interactive hover is Popover; non-interactive description is
+Tooltip.
+
+### Owns (keep this list small)
+
+- `openOnHover` delays (700ms open / 300ms close)
+- Placement-aware **safe polygon** (5px pad) — **not implemented**; timers only
+- Impatient click (300ms after hover-open)
+- Isolation cannot be turned on; no Handle
+
+### Work order (Gate 4)
+
+1. Implement the safe polygon (Floating UI / Aria hull). Leave `FloatingTree`.
+2. `PO-HOVER-02` must prove **diagonal travel through empty space**. Today it
+   can pass on delay alone — that is not production.
+3. `PO-HOVER-03` / `04` / `05` — leave, return through gap, abandon slow/reverse
+   / opposite-side grace.
+4. `PO-HOVER-07` / `08` — impatient vs patient Trigger click.
+5. `PO-HOVER-09` — touch must not start mouse hover timers.
+6. One `PO-LAYER-01` smoke that Popover registers on Overlay's stack. Do not
+   copy `OV-ESC-*` / `OV-LAYER-*`.
+
+Then **stop Popover**. Geometry, Escape nested in a dialog, and the Tab
+bridge stay Overlay. `PO-FLIP-01` / `PO-SHIFT-01` / `PO-ARROW-01` already
+exist as Overlay-port smokes; do not grow that matrix here.
+
 ## Current (2026-09-08)
 
-**Production: no.** Gate 4 in [OVERLAYS.md](../../../OVERLAYS.md).
+**Production: no.** Gate 4 — safe polygon. Overlay kernel is separate.
 
 | | |
 | :--- | :--- |
@@ -36,7 +71,9 @@ Hover grace is **timers only**. There is no safe-polygon. `PO-HOVER-02` passes b
 
 ### Remaining
 
-Ship a pointer-safe polygon, then keep `PO-HOVER-02` as the diagonal proof. Unchecked `PO-HOVER-03+` and layer/env cases stay open.
+Ship a pointer-safe polygon, then keep `PO-HOVER-02` as a real diagonal proof.
+`PO-HOVER-03+` hover cases stay. Do **not** treat unchecked `PO-POS-*` /
+layer/env as Popover production — those are Overlay.
 
 ## API freeze decisions
 

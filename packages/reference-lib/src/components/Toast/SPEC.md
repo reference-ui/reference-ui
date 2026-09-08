@@ -12,9 +12,44 @@ Fixture root: `ReferenceLibrary`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
+## Next agent — thin Toast (separate runtime)
+
+Read this first. Toast is **not** Overlay. No trap, no page inert, no
+geometry, no Overlay parts. It is a queue + host + live-region, mounted by
+`ReferenceLibrary`.
+
+The **one Overlay seam**: pause remaining-time timers while the top live
+overlay layer is isolating. Read the overlay stack (`isolation.inert` /
+`isModal`). Do **not** query `[aria-modal="true"]` — Overlay does not stamp
+that. Overlay already exempts the toast host from inert (`OV-INERT-05`).
+
+**Do not** add Overlay.Content, FocusLock, or a second dismiss stack. Toast
+clicks must not dismiss a dialog because Overlay treats the toast host as a
+branch/exception, not because Toast owns dismissable-layer.
+
+### Owns
+
+- Identity / update-in-place / dismiss-all / pre-mount replay
+- Remaining-time pause (hover, focus, `visibilitychange`, isolating Overlay)
+- FIFO `limit` (waiting records unmounted until promote)
+- Swipe, expand-on-hover, Presence on item wrappers
+- Announce via the library live region
+- Gate 6 APIs: hotkey, `dismissible`, `onAutoClose`, `toast.promise().unwrap()`
+
+Semantic `success` / `error` / `warning` / `info` / `loading` / `promise` are
+**in tree**. Toast.md's old "no variants" line is stale.
+
+### Work order (Gate 6)
+
+1. Pause from overlay stack (the Overlay control point).
+2. E2E swipe / limit / hover-pause / tab-hidden (`TO-*` that cover those).
+3. `TO-HOTKEY-01`, `TO-DISMISSIBLE-01`, `TO-AUTOCLOSE-01`, `TO-UNWRAP-01`.
+
+Then **stop Toast**. Styles/icons as library chrome stay leave.
+
 ## Current (2026-09-08)
 
-**Production: no.** Gate 6 in [OVERLAYS.md](../../../OVERLAYS.md) is required (not optional polish).
+**Production: no.** Gate 6 is required (not optional polish). Overlay kernel is separate.
 
 | | |
 | :--- | :--- |

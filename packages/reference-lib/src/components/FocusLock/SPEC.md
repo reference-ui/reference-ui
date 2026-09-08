@@ -11,9 +11,47 @@ Page: `/focus-lock`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
+## Next agent — production FocusLock
+
+FocusLock is **containment**: Tab loop, reclaim, shards, restore. Overlay uses it when
+isolation `focus` is on. Popover, Tooltip, and Toast do not.
+
+Visible keyboard chrome is the `ui.focus.ring` token on parts (`Field`, Button, etc.).
+
+**Do not** own Escape, outside-press, inert, scroll lock, or geometry. Those
+are Overlay. Do not add wrappers, sentinels, `as`, groups, or a second trap
+library.
+
+### Overlay seams (prove the wiring, not Overlay's catalog)
+
+| Overlay | FocusLock |
+| :--- | :--- |
+| Isolation `focus` mounts the lock on Content | Tab loop + reclaim solver |
+| Nested **modal** Overlay pauses the parent lock | `FL-NEST-01` — Overlay `OV-FOCUS-06` already smokes Overlay nesting |
+| Nested **non-modal** Overlay.Content is a shard | Overlay **registers** (`OV-FOCUS-07`); FocusLock **solves** `FL-SHARD-*` |
+| Restore **after Presence exit** | Overlay owns timing (`OV-RESTORE-*`); FocusLock owns proximity walk `FL-RESTORE-03/04` |
+| `initialFocus` / `restoreFocus` on Content | Same `FocusTarget` types; catalog is FocusLock |
+
+### Work order (Gate 3)
+
+1. Restore after Presence with an Overlay fixture — lock stays enabled through
+   closed `data-state`, deactivates after exit (`FL-RESTORE-01` is live-trigger
+   only today).
+2. `FL-RESTORE-03` / `04` — deleted / disabled opener proximity walk. Overlay
+   `OV-RESTORE-03` only asserts Presence timing + one live candidate.
+3. `FL-NEST-01` — inner deactivation resumes outer without reclaim fight.
+4. Portalled shard (`FL-SHARD-02+` / Overlay-wired popover Content), not just
+   the sibling `FL-SHARD-01`.
+5. Lift tabbable catalog (shadow, slots, fieldset, details) — today's
+   `querySelector` list is not production.
+
+TalkBack virtual-modality skip is **not** a production blocker.
+
+Then **stop FocusLock**. Overlay continues to own dismiss and isolation.
+
 ## Current (2026-09-08)
 
-**Production: no.** Gate 3 in [OVERLAYS.md](../../../OVERLAYS.md).
+**Production: no.** Gate 3 — Presence restore, deleted trigger, nest, portalled shard.
 
 | | |
 | :--- | :--- |

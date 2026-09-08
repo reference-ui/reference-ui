@@ -4,7 +4,13 @@ import { Portal } from '../../Portal'
 import { Presence } from '../../Presence'
 import { FocusLock } from '../../FocusLock'
 import { OverlayContext } from '../context'
-import { overlayStackStore, descendantsDeepestFirst, useOverlayZIndex, useLayerPointerEvents } from '../stack'
+import {
+  overlayStackStore,
+  descendantsDeepestFirst,
+  useOverlayZIndex,
+  useLayerPointerEvents,
+  useOverlayStore,
+} from '../stack'
 import { assignRef } from '../refs'
 import { usePreventScroll } from '../isolation/scroll-lock'
 import { useHideOutside } from '../isolation/hide-outside'
@@ -25,8 +31,13 @@ function tabbables(root: HTMLElement): HTMLElement[] {
   })
 }
 
-function nextAfter(el: HTMLElement): HTMLElement | null {
-  const all = Array.from(el.ownerDocument.querySelectorAll<HTMLElement>(TABBABLE))
+function nextAfter(el: HTMLElement, exclude?: HTMLElement | null): HTMLElement | null {
+  const all = Array.from(el.ownerDocument.querySelectorAll<HTMLElement>(TABBABLE)).filter(cand => {
+    if (exclude && (cand === exclude || exclude.contains(cand))) return false
+    if (cand.closest('[inert], [hidden], [aria-hidden="true"]')) return false
+    const style = cand.ownerDocument.defaultView?.getComputedStyle(cand)
+    return style?.display !== 'none' && style?.visibility !== 'hidden'
+  })
   const idx = all.indexOf(el)
   return all[idx + 1] ?? null
 }
@@ -56,12 +67,20 @@ export function OverlayContent({
 
   const isOpen = context?.isOpen ?? false
   const isolation = context?.isolation
+
+  const childLayerKey = useOverlayStore(state => {
+    if (!context?.id) return ''
+    return descendantsDeepestFirst(state.layers, context.id)
+      .map(l => `${l.id}:${l.node ? 1 : 0}`)
+      .join(',')
+  })
+
   const shards = React.useMemo(() => {
     if (!context) return []
     return descendantsDeepestFirst(overlayStackStore.getState().layers, context.id)
       .map(l => l.node)
       .filter((n): n is HTMLElement => n !== null)
-  }, [context, node, isOpen])
+  }, [context, childLayerKey])
 
   React.useLayoutEffect(() => {
     if (!context || !node) return
@@ -116,7 +135,7 @@ export function OverlayContent({
       if (!e.shiftKey && active === last) {
         e.preventDefault()
         context.setIsOpen(false)
-        nextAfter(trigger)?.focus()
+        nextAfter(trigger, node)?.focus()
       }
       if (e.shiftKey && active === first) {
         e.preventDefault()

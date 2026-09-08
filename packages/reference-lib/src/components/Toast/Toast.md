@@ -1,8 +1,17 @@
 # Toast
 
-Proof: [SPEC.md](./SPEC.md).
+Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
 
-Infrastructure for transient application content. Does not prescribe appearance or meaning. No semantic variants (`success`, `error`, `loading`).
+**Separate runtime, one Overlay seam.** Toast is not Overlay: no trap, no
+page inert, no geometry. Queue + host + announce, mounted by
+`ReferenceLibrary`. Timers pause while the top overlay layer is isolating —
+read the overlay stack, not `[aria-modal="true"]`. Overlay already keeps the
+toast host reachable (`OV-INERT-05`).
+
+Infrastructure for transient application content. Does not prescribe
+appearance. Semantic helpers (`toast.success` / `error` / `warning` /
+`info` / `loading` / `promise`) exist as typed shortcuts over `define()`;
+chrome and meaning stay in the definition's `render`.
 
 Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality. The toaster is mounted by `ReferenceLibrary`. It renders at the React root without a portal or a required React context. The queue is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
 
@@ -202,4 +211,4 @@ Base UI store tests supply remaining-time and pause-flag race evidence.
 Spectrum/Zag also cover live-region and dismissable-branch coordination with
 Overlay.
 
-**Leave.** Sonner styles/assets, semantic variants, Overlay trap/inert, public Toast.Provider.
+**Leave.** Sonner styles/assets as library chrome, Overlay trap/inert, public Toast.Provider. Semantic `success` / `error` / etc. are in-tree helpers, not a second visual system.

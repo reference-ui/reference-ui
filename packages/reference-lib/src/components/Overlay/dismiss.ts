@@ -97,8 +97,19 @@ function onPointerDown(event: PointerEvent) {
   const top = getTopLiveLayer(overlayStackStore.getState().layers, doc)
   if (!top || isRecentlyRemoved(top.id) || !top.node) return
 
+  // OV-OUT-04: Ignore same-tick opening pointerdown
+  if (top.openedAt && event.timeStamp <= top.openedAt) {
+    return
+  }
+
   // Backdrop is this layer's dismiss surface; the part handles it.
-  if (insideOwnBackdrop(top, event)) return
+  if (insideOwnBackdrop(top, event)) {
+    // OV-OUT-06: Touch on backdrop defers until click
+    if (event.pointerType === 'touch') {
+      pendingByDoc.set(doc, { layerId: top.id, pointerId: event.pointerId })
+    }
+    return
+  }
   if (isInsideLayer(top, event)) {
     pendingByDoc.delete(doc)
     return
@@ -129,7 +140,7 @@ function onClick(event: MouseEvent) {
 
   const top = getTopLiveLayer(overlayStackStore.getState().layers, doc)
   if (!top || top.id !== pending.layerId || isRecentlyRemoved(top.id)) return
-  if (insideOwnBackdrop(top, event) || isInsideLayer(top, event)) return
+  if (isInsideLayer(top, event)) return
 
   requestOutside(top, event as unknown as PointerEvent)
 }

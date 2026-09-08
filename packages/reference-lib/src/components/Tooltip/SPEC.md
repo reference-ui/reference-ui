@@ -13,9 +13,46 @@ Fixture root: `ReferenceLibrary`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
+## Next agent — thin Tooltip policy
+
+Read this first. Tooltip is Overlay with `isolation={false}`,
+`presence={false}` (immediate unmount), and `closeOnScroll`. It is **not** a
+second overlay runtime and **not** a Popover.
+
+**Do not** add FocusLock, inert, trap, safe-polygon, Presence exit, or a
+flip/shift catalog. Collision math is Overlay `OV-POS-*` (not Popover).
+`TT-SCROLL-*` prove Tooltip's always-on close policy over Overlay
+`OV-SCRL-*` — do not re-implement ancestor detection. Interactive hover content
+is `Popover openOnHover`.
+
+### Owns
+
+- Slot trigger + `role="tooltip"` + `aria-describedby`
+- Hover delay vs keyboard-immediate open
+- Document skip-delay group (one visible Tooltip)
+- WCAG 1.4.13: Escape dismisses Tooltip **without** dismissing a parent Overlay
+- Pointer may rest on non-interactive Content; no buttons/links in Content
+
+### Defect (must fix)
+
+Two skip-delay stores: `ReferenceLibrary tooltip.skipDelay` writes
+`tooltipWarmup.ts`; Tooltip reads `tooltipGroup.ts`. Config is a no-op.
+Unify onto `tooltipGroup` (delete `tooltipWarmup`).
+
+### Work order (Gate 5)
+
+1. Unify the skip-delay store.
+2. `TT-GROUP-01` / `02` / `03` — warm handoff, one visible, cold delay after window.
+3. `TT-CLOSE-01` — Escape closes Tooltip only; parent Overlay stays (the Overlay
+   seam). `TT-CLOSE-03` click-on-trigger suppresses hover reopen.
+4. `TT-SCROLL-01` + `03` — ancestor scroll closes; input/textarea self-scroll
+   does not. Engine proof is Overlay `OV-SCRL-02` if that lands first.
+
+Then **stop Tooltip**. No public Provider. No HoverCard.
+
 ## Current (2026-09-08)
 
-**Production: no.** Gate 5 in [OVERLAYS.md](../../../OVERLAYS.md).
+**Production: no.** Gate 5 — store unification + skip-delay / Escape-vs-parent / scroll-close.
 
 | | |
 | :--- | :--- |
@@ -479,7 +516,7 @@ as owned `aria-describedby` token merging.
   request close once and unrelated shadow scroll stays silent despite event
   retargeting.
 - [ ] `TT-POS-01` `[reference]` `[browser:all]` —
-  **Tooltip should reuse Popover collision math when preferred top placement
+  **Tooltip should reuse Overlay collision math when preferred top placement
   cannot fit.**
   Open a top-placement Tooltip near viewport edges in Chromium, Firefox, and
   WebKit so flip and shift are required. Assert Content remains within the
@@ -556,8 +593,9 @@ as owned `aria-describedby` token merging.
 ## Owned elsewhere
 
 - Full flip/shift/offset/arrow/auto-update and composed overflow-ancestor
-  detection matrix: `Popover`; `TT-SCROLL-*` prove only Tooltip's always-on
-  close policy over that shared engine.
+  detection matrix: `Overlay` `OV-POS-*` / `OV-SCRL-*`. `TT-SCROLL-*` prove
+  only Tooltip's always-on close policy over that engine. Do not treat this as
+  Popover-owned collision math.
 - Safe-polygon interactive HoverCard: `Popover openOnHover`.
 - Runtime mount and group failover: `ReferenceLibrary`.
 

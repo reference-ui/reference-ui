@@ -18,79 +18,74 @@ This document is the canonical status for the five interlocking primitives:
 └───────────────────┴──────────────────────────────┘
 ```
 
-> **Verdict (2026-09-08): not production-grade. The remaining work is large.**
+> **Verdict (2026-09-08): Overlay kernel in progress; siblings stay thin.**
 >
-> Happy-path desktop is real and already in `matrix/lib` (31 Playwright tests —
-> denser than most other lib components). That is the **demo**. Production
-> still needs six gates: live kernel defects, nested stacks, iOS scroll, sheet
-> drag, hover polygon, tooltip store split, FocusLock restore races, and a
-> full Toast polish pass. Specs: [Overlay](src/components/Overlay/SPEC.md) ·
+> Overlay is the control point: one stack, one dismiss, one isolation, one
+> geometry engine. Popover, Tooltip, and Dialog/Drawer must not grow second
+> runtimes. Toast is not Overlay; it pauses from the overlay stack.
+>
+> Per-component `SPEC.md` is the freeze. Overlay SPEC **Next agent** is
+> current kernel work. Gates 3–6 are FocusLock / Popover polygon / Tooltip
+> store / Toast stack-pause — not more Overlay titles.
+>
+> Specs: [Overlay](src/components/Overlay/SPEC.md) ·
+> [FocusLock](src/components/FocusLock/SPEC.md) ·
 > [Popover](src/components/Popover/SPEC.md) ·
 > [Tooltip](src/components/Tooltip/SPEC.md) ·
-> [Toast](src/components/Toast/SPEC.md) ·
-> [FocusLock](src/components/FocusLock/SPEC.md).
->
-> This file orchestrates the system. Per-component `SPEC.md` is the current
-> freeze, cases, and proof (`NEXT.md` / `TESTS.md` in these folders are gone).
+> [Toast](src/components/Toast/SPEC.md).
 
 ---
 
 ## 0. Production Verdict
 
-**Happy-path ≠ production.** A dialog that opens, traps Tab, and closes on
-Escape is covered. Almost everything that makes overlays *hard* is not.
+**Happy-path ≠ production.** Overlay Gate 1 defects are closed in source.
+Nested stack E2E lives in `@matrix/overlays`. Overlay is still not production
+until its SPEC work order is done. Siblings are thinner than their case counts
+look: most `PO-POS-*` / `TT-POS-*` belong to Overlay.
 
-| Primitive | Engine | Kernel | `matrix/lib` & `matrix/overlays` | Production? |
-| :--- | :---: | :--- | :--- | :---: |
-| **Overlay** | Yes | Closed (deep matrix) | 41 tests (23 deep in @matrix/overlays + 18 in @matrix/lib) | **In Progress (Gate 1 closed, 28/133 proven)** |
-| **Popover** | Yes | No safe-polygon | 9 tests — click, flip, shift, arrow, hover delay | **No** |
-| **Tooltip** | Yes | Dual skip-delay stores | 3 tests — focus/hover + `aria-describedby` | **No** |
-| **Toast** | Yes | Modal pause broken; polish APIs missing | 5 tests — show/update/dismiss/stack | **No** |
-| **FocusLock** | Yes | Restore vs Presence unproven | 5 tests — Tab loop, sibling shard, restore trigger | **No** |
+| Primitive | Role | Production? | Next |
+| :--- | :--- | :--- | :--- |
+| **Overlay** | Kernel | **No** — SPEC Must/Should open | Overlay SPEC work order, then stop |
+| **FocusLock** | Containment solver | **No** | Gate 3: Presence restore, deleted trigger, nest, portalled shard |
+| **Popover** | Hover policy on Overlay | **No** | Gate 4: safe polygon (`PO-HOVER-02` must be a real diagonal) |
+| **Tooltip** | Description policy on Overlay | **No** | Gate 5: unify skip-delay store, Escape-vs-parent, scroll-close |
+| **Toast** | Queue runtime | **No** | Gate 6: pause from overlay stack + remaining APIs |
 
 **Architectural decision still holds:** Dialog, Drawer, Sheet, and Modal are
-not separate runtimes. They are compositions of `Overlay` with different
-`isolation` / `edge` / `role` values. One `computePosition` engine, one layer
-stack, one dismiss system.
+not separate runtimes. They are compositions of `Overlay`. Popover/Tooltip are
+named policy. Toast is a separate runtime with one Overlay seam. One
+`computePosition` engine, one layer stack, one dismiss system.
 
-### Covered today (do not redo)
+### Covered today (do not redo on siblings)
 
-Desktop, light DOM, single layer:
+Desktop isolating dialog, nested Overlay stack in `@matrix/overlays`,
+anchored flip/shift/arrow smokes, tooltip describedby, toast show/update,
+FocusLock sibling shard. Do not copy Overlay geometry or layer matrices onto
+Popover or Tooltip.
 
-- Isolating dialog: open, Escape, backdrop click, Tab trap, close
-- Anchored popover: click toggle, outside press, Escape, flip, shift, arrow
-- Tooltip: hover/focus open, `role="tooltip"`, `aria-describedby`, anchored
-- Toast: `toast.show` / `update` / `dismiss`, default/custom render, stack expand-on-hover
-- FocusLock: first-tabbable, Tab wrap including a **sibling** shard, reclaim, restore to trigger
-
-`matrix/lib` fixtures do not even **mount** nested stacks, edge sheets, swipe
-targets, skip-delay groups, or portalled shards. Those tests cannot exist until
-the fixtures exist — and the kernel behind them is still wrong in places.
+`matrix/lib` still does not mount skip-delay groups or portalled shards.
+`@matrix/overlays` now mounts nested stacks and edge sheets — Overlay SPEC is
+the remaining Overlay gate, not “the kernel is missing.”
 
 ### The remaining mountain
 
-This is the production backlog. It is not “a few more E2E titles.”
+Not “check every remaining SPEC box.” Overlay SPEC parks iframe, extension
+overlays, SSR, and the full Floating UI functional matrix.
 
-1. **Five Overlay kernel bugs in source right now** — iOS scroll lock is
-   `overflow:hidden`; Handle is Y-down only; Backdrop ignores stack top;
-   outside press ignores Shadow DOM; `removeLayer` cascade is a racy
-   `setTimeout`.
-2. **Nested overlay stack** — Escape, outside press, backdrop, and parent
-   cascade. Zero nested fixtures in `matrix/lib`.
-3. **Isolation that actually isolates** — inert walk proof, real iOS /
-   `visualViewport` scroll lock, Handle on all four `edge`s.
-4. **FocusLock for Overlay Presence** — restore after exit, deleted trigger,
-   nested locks, **portalled** shard (popover/menu inside a lock).
-5. **Popover safe-polygon** — timers are not grace. Diagonal pointer travel
-   still closes.
-6. **Tooltip skip-delay is a no-op from `ReferenceLibrary`** — two stores.
-   Then Escape-vs-parent and scroll-close.
-7. **Toast Gate 6 (required)** — overlay-stack pause coupling, swipe / limit /
-   pause E2E, `Alt+T` hotkey, `dismissible`, `onAutoClose`,
-   `toast.promise().unwrap()`.
-8. **Zero unit tests** in `matrix/lib/tests/unit/` for any of these five
-   (only Slot and Presence have them). Queue math, tabbable solver, and
-   `computePosition` still have no model proof.
+1. **Overlay SPEC work order** — same-tick open, modeless outside, isolation
+   patch, Trigger, Presence restore *timing*, iOS visualViewport, virtual
+   anchor, `closeOnScroll`. Gate 1 source defects (Handle, composedPath,
+   cascade, iOS lock) are closed.
+2. **FocusLock Gate 3** — restore after Presence, deleted-trigger walk,
+   nested locks, portalled shard, tabbable catalog. Overlay registers shards
+   and owns dismiss; FocusLock solves containment.
+3. **Popover safe-polygon** — timers are not grace. Diagonal travel still
+   closes. Do not expand `PO-POS-*`.
+4. **Tooltip skip-delay store split** — unify `tooltipGroup`; then
+   Escape-vs-parent Overlay and scroll-close *policy*.
+5. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
+   limit E2E, hotkey, `dismissible`, `onAutoClose`, `unwrap()`.
+6. **Unit tests** for overlay stack, gesture, tabbable, toast queue math.
 
 Until that list is green, do not call this set production-grade.
 
@@ -400,30 +395,23 @@ What we lift, what we already match, and what is still outstanding.
 ## 9. Execution Priority
 
 ```
-Gate 1  Overlay kernel defects          ← CURRENT
-        scroll-lock.ts (iOS)
-        Overlay.Handle all four edges
-        Backdrop + removeLayer stack correctness
-        composedPath outside press
-
-Gate 2  Overlay E2E
-        OV-ESC-*, OV-LAYER-*, OV-INERT-01, OV-SCROLL-01, OV-EDGE-*
+Gate 1  Overlay kernel defects            DONE in source
+Gate 2  Overlay nested / isolation E2E   largely in @matrix/overlays
+        Remaining: Overlay SPEC work order, then STOP Overlay titles
 
 Gate 3  FocusLock
-        Presence-gated restore, deleted trigger, nested locks, portalled shard
+        Presence restore, deleted trigger, nest, portalled shard
+        Overlay registers shards; FocusLock solves Tab/restore
 
-Gate 4  Popover safe-polygon
-        Implement + keep PO-HOVER-02 as the diagonal proof
+Gate 4  Popover safe-polygon only
+        Implement + PO-HOVER-02 as a real diagonal. Do not expand PO-POS.
 
-Gate 5  Tooltip store unification
-        Then TT-SKIP-01, TT-ESC-01, TT-SCROLL-01
+Gate 5  Tooltip skip-delay store
+        Unify tooltipGroup. Then Escape-vs-parent Overlay, scroll-close policy.
 
-Gate 6  Toast runtime + polish          ← required, not post-ship
-        Pause from overlay stack
-        Swipe / limit / hover-pause / tab-hidden E2E
-        Hotkey focus (Alt+T / configurable)
-        dismissible + onAutoClose
-        toast.promise().unwrap()
+Gate 6  Toast — separate runtime
+        Pause from overlay stack (not aria-modal)
+        Swipe / limit E2E; hotkey, dismissible, onAutoClose, unwrap()
 ```
 
 Still not a production blocker: Android TalkBack virtual-modality skip on FocusLock.
@@ -442,7 +430,7 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 | Hover grace polygon “specced” as if the feature existed | Timers only |
 | Collision flip/shift needs E2E | Landed |
 | FocusLock shards need E2E | Sibling shard landed; portalled shard has not |
-| Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk exists; cascade and iOS lock are defective |
+| Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk + cascade + iOS lock closed in source (2026-09-08); Overlay SPEC Must still open |
 | Uncontrolled mode omitted by design | `defaultOpen` exists |
 | `toast.success` etc. deliberately omitted | Implemented |
 | Expand-on-hover / swipe / tab-hidden pause are gaps | Implemented (swipe unproven) |

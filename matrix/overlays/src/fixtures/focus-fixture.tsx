@@ -39,6 +39,20 @@ export function FocusFixture() {
   const [openParentModal, setOpenParentModal] = React.useState(false)
   const [openChildModal, setOpenChildModal] = React.useState(false)
 
+  // Step 4: Focus & restore contracts
+  // OV-FOCUS-07: Shard portalled child
+  const [openShardParent, setOpenShardParent] = React.useState(false)
+  const [openShardChild, setOpenShardChild] = React.useState(false)
+  const [portalTargetEl, setPortalTargetEl] = React.useState<HTMLElement | null>(null)
+
+  // OV-RESTORE-03: Opener removed or disabled before exit completes
+  const [openDeadOpener, setOpenDeadOpener] = React.useState(false)
+  const [openerDisabled, setOpenerDisabled] = React.useState(false)
+  const [openerRemoved, setOpenerRemoved] = React.useState(false)
+
+  // OV-RESTORE-04: restoreFocus={false} with Presence
+  const [openRestoreFalse, setOpenRestoreFalse] = React.useState(false)
+
   return (
     <div data-testid="focus-fixture-root" style={{ padding: 16 }}>
       <h2>Overlay Focus Trapping & Restoration Fixtures</h2>
@@ -436,6 +450,216 @@ export function FocusFixture() {
             >
               Close Child
             </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      <hr style={{ margin: '16px 0' }} />
+
+      {/* Section 7: OV-RESTORE-03 Dead or Disabled Opener */}
+      <section data-testid="section-ov-restore-03">
+        <h3>OV-RESTORE-03: Dead or Disabled Opener</h3>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {!openerRemoved && (
+            <button
+              type="button"
+              data-testid="btn-dead-opener"
+              disabled={openerDisabled}
+              onClick={() => setOpenDeadOpener(true)}
+            >
+              Dead Opener Button
+            </button>
+          )}
+          <button type="button" data-testid="btn-live-sibling">
+            Live Sibling Button
+          </button>
+          <button
+            type="button"
+            data-testid="btn-reset-dead-opener-state"
+            onClick={() => {
+              setOpenerDisabled(false)
+              setOpenerRemoved(false)
+            }}
+          >
+            Reset Opener State
+          </button>
+        </div>
+
+        <Overlay open={openDeadOpener} onOpenChange={setOpenDeadOpener}>
+          <Overlay.Backdrop
+            data-testid="dead-opener-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              transition: 'opacity 150ms ease',
+              opacity: openDeadOpener ? 1 : 0,
+            }}
+          />
+          <Overlay.Content
+            data-testid="dead-opener-content"
+            style={{
+              position: 'fixed',
+              top: '20%',
+              left: '20%',
+              background: '#fff',
+              padding: 16,
+              transition: 'opacity 150ms ease',
+              opacity: openDeadOpener ? 1 : 0,
+            }}
+          >
+            <p>Dead Opener Dialog</p>
+            <button
+              type="button"
+              data-testid="btn-disable-opener-and-close"
+              onClick={() => {
+                setOpenerDisabled(true)
+                setOpenDeadOpener(false)
+              }}
+            >
+              Disable Opener & Close
+            </button>
+            <button
+              type="button"
+              data-testid="btn-remove-opener-and-close"
+              onClick={() => {
+                setOpenerRemoved(true)
+                setOpenDeadOpener(false)
+              }}
+            >
+              Remove Opener & Close
+            </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      <hr style={{ margin: '16px 0' }} />
+
+      {/* Section 8: OV-RESTORE-04 restoreFocus=false with Presence */}
+      <section data-testid="section-ov-restore-04">
+        <h3>OV-RESTORE-04: restoreFocus=false with Presence</h3>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            type="button"
+            data-testid="btn-trigger-restore-false"
+            onClick={() => setOpenRestoreFalse(true)}
+          >
+            Open restoreFocus=false
+          </button>
+          <button
+            type="button"
+            id="btn-consumer-focus-target"
+            data-testid="btn-consumer-focus-target"
+            data-reference-overlay-ignore=""
+          >
+            Consumer Focus Target
+          </button>
+        </div>
+
+        <Overlay open={openRestoreFalse} onOpenChange={setOpenRestoreFalse}>
+          <Overlay.Backdrop
+            data-testid="restore-false-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              transition: 'opacity 150ms ease',
+              opacity: openRestoreFalse ? 1 : 0,
+            }}
+          />
+          <Overlay.Content
+            data-testid="restore-false-content"
+            restoreFocus={false}
+            style={{
+              position: 'fixed',
+              top: '25%',
+              left: '25%',
+              background: '#fff',
+              padding: 16,
+              transition: 'opacity 150ms ease',
+              opacity: openRestoreFalse ? 1 : 0,
+            }}
+          >
+            <p>Restore False Dialog</p>
+            <button
+              type="button"
+              data-testid="btn-close-and-move-focus"
+              onClick={() => {
+                setOpenRestoreFalse(false)
+                setTimeout(() => {
+                  document.getElementById('btn-consumer-focus-target')?.focus()
+                }, 0)
+              }}
+            >
+              Close and Move Focus to Target
+            </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      <hr style={{ margin: '16px 0' }} />
+
+      {/* Section 9: OV-FOCUS-07 Portalled child as FocusLock shard */}
+      <section data-testid="section-ov-focus-07">
+        <h3>OV-FOCUS-07: Portalled Child Shard</h3>
+        <button
+          type="button"
+          data-testid="btn-open-shard-parent"
+          onClick={() => setOpenShardParent(true)}
+        >
+          Open Shard Parent
+        </button>
+
+        <div
+          ref={el => setPortalTargetEl(el)}
+          id="external-portal-container"
+          data-testid="external-portal-container"
+          data-reference-portal-container=""
+          style={{ marginTop: 8 }}
+        />
+
+        <Overlay open={openShardParent} onOpenChange={setOpenShardParent}>
+          <Overlay.Backdrop data-testid="shard-parent-backdrop" />
+          <Overlay.Content
+            data-testid="shard-parent-content"
+            style={{ position: 'fixed', top: '15%', left: '15%', background: '#fff', padding: 20, zIndex: 1000 }}
+          >
+            <h4>Shard Parent Dialog</h4>
+            <button type="button" data-testid="btn-shard-parent-1">Parent Btn 1</button>
+            <button
+              type="button"
+              data-testid="btn-open-shard-child"
+              onClick={() => setOpenShardChild(true)}
+            >
+              Open Portalled Child
+            </button>
+            <button type="button" data-testid="btn-shard-parent-2">Parent Btn 2</button>
+            <button
+              type="button"
+              data-testid="btn-close-shard-parent"
+              onClick={() => setOpenShardParent(false)}
+            >
+              Close Parent
+            </button>
+
+            {/* Child Overlay whose Content portals to document.body */}
+            <Overlay open={openShardChild} onOpenChange={setOpenShardChild}>
+              <Overlay.Content
+                data-testid="shard-child-content"
+                style={{ position: 'fixed', top: '40%', left: '40%', background: '#eef', padding: 20, zIndex: 1005 }}
+              >
+                <h5>Portalled Child Overlay</h5>
+                <button type="button" data-testid="btn-shard-child-1">Child Btn 1</button>
+                <button type="button" data-testid="btn-shard-child-2">Child Btn 2</button>
+                <button
+                  type="button"
+                  data-testid="btn-close-shard-child"
+                  onClick={() => setOpenShardChild(false)}
+                >
+                  Close Child
+                </button>
+              </Overlay.Content>
+            </Overlay>
           </Overlay.Content>
         </Overlay>
       </section>

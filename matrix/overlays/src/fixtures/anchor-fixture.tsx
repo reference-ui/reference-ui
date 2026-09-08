@@ -20,6 +20,23 @@ export function AnchorFixture() {
   const [openArrowCustom, setOpenArrowCustom] = React.useState(false)
   const anchorArrowRef = React.useRef<HTMLButtonElement | null>(null)
 
+  // Step 6: Virtual anchor & closeOnScroll
+  const [virtualOpen, setVirtualOpen] = React.useState(false)
+  const [virtualPoint, setVirtualPoint] = React.useState<{
+    x: number
+    y: number
+    width?: number
+    height?: number
+  }>({ x: 300, y: 300 })
+  const [openScrollDefault, setOpenScrollDefault] = React.useState(false)
+  const [openCloseOnScroll, setOpenCloseOnScroll] = React.useState(false)
+  const [scrollLog, setScrollLog] = React.useState<string[]>([])
+  const scrollAnchorRef = React.useRef<HTMLButtonElement | null>(null)
+
+  // OV-POS-06: Published geometry variables
+  const [openPos06, setOpenPos06] = React.useState(false)
+  const anchorPos06Ref = React.useRef<HTMLButtonElement | null>(null)
+
   return (
     <div data-testid="anchor-fixture-root" style={{ padding: 24, minHeight: '200vh' }}>
       <h2>Anchored Floating UI Geometry Fixtures</h2>
@@ -251,6 +268,240 @@ export function AnchorFixture() {
               type="button"
               data-testid="btn-close-arrow-custom"
               onClick={() => setOpenArrowCustom(false)}
+            >
+              Close
+            </button>
+          </Overlay.Content>
+        </Overlay>
+      </section>
+
+      {/* 5. OV-POS-09 + OV-TRG-06: Virtual Anchor + Interactive Trigger */}
+      <section data-testid="section-virtual-anchor" style={{ marginBottom: 48 }}>
+        <h3>OV-POS-09 + OV-TRG-06: Virtual Anchor with Interactive Trigger</h3>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Overlay
+            open={virtualOpen}
+            onOpenChange={setVirtualOpen}
+            anchor={virtualPoint}
+            isolation={false}
+          >
+            <Overlay.Trigger data-testid="btn-virtual-trigger">
+              Virtual Anchor Trigger
+            </Overlay.Trigger>
+            <Overlay.Content
+              data-testid="content-virtual"
+              style={{ width: 180, height: 80, background: '#fef08a', padding: 12 }}
+            >
+              <p>Virtual Content</p>
+              <button
+                type="button"
+                data-testid="btn-close-virtual"
+                onClick={() => setVirtualOpen(false)}
+              >
+                Close Virtual
+              </button>
+            </Overlay.Content>
+          </Overlay>
+
+          <button
+            type="button"
+            data-testid="btn-move-virtual-coords"
+            data-reference-overlay-ignore=""
+            onClick={() => setVirtualPoint({ x: 450, y: 500 })}
+          >
+            Move Virtual to (450, 500)
+          </button>
+          <button
+            type="button"
+            data-testid="btn-set-sized-virtual"
+            data-reference-overlay-ignore=""
+            onClick={() => setVirtualPoint({ x: 400, y: 200, width: 100, height: 50 })}
+          >
+            Set Sized Virtual (400, 200, 100x50)
+          </button>
+          <button
+            type="button"
+            data-testid="btn-reset-virtual-point"
+            data-reference-overlay-ignore=""
+            onClick={() => setVirtualPoint({ x: 300, y: 300 })}
+          >
+            Reset Virtual Point
+          </button>
+        </div>
+      </section>
+
+      {/* 6. OV-SCRL-01 + OV-SCRL-02: closeOnScroll behavior */}
+      <section data-testid="section-close-on-scroll" style={{ marginBottom: 48 }}>
+        <h3>OV-SCRL-01 + OV-SCRL-02: closeOnScroll Mechanics</h3>
+        <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            data-testid="btn-open-scroll-default"
+            onClick={() => setOpenScrollDefault(true)}
+          >
+            Open closeOnScroll Omitted
+          </button>
+          <button
+            type="button"
+            data-testid="btn-open-close-on-scroll"
+            onClick={() => setOpenCloseOnScroll(true)}
+          >
+            Open closeOnScroll=true
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 24 }}>
+          {/* Ancestor scroll container */}
+          <div
+            data-testid="ancestor-scroll-container"
+            style={{
+              width: 320,
+              height: 200,
+              overflowY: 'auto',
+              border: '2px solid #3b82f6',
+              padding: 16,
+            }}
+          >
+            <div style={{ height: 600, position: 'relative' }}>
+              <p>Scrollable Ancestor Content</p>
+              <button
+                type="button"
+                ref={scrollAnchorRef}
+                data-testid="btn-scroll-anchor"
+                style={{ marginTop: 60 }}
+              >
+                Scroll Anchor Target
+              </button>
+
+              {/* OV-SCRL-01: closeOnScroll omitted (false) */}
+              <Overlay
+                open={openScrollDefault}
+                onOpenChange={setOpenScrollDefault}
+                anchor={scrollAnchorRef}
+                isolation={false}
+                onDismiss={() => setScrollLog(l => [...l, 'dismiss:default'])}
+              >
+                <Overlay.Content
+                  data-testid="content-scroll-default"
+                  style={{ width: 180, height: 70, background: '#bbf7d0', padding: 8 }}
+                >
+                  <p>Pins to Anchor</p>
+                  <button
+                    type="button"
+                    data-testid="btn-close-scroll-default"
+                    onClick={() => setOpenScrollDefault(false)}
+                  >
+                    Close
+                  </button>
+                </Overlay.Content>
+              </Overlay>
+
+              {/* OV-SCRL-02: closeOnScroll={true} */}
+              <Overlay
+                open={openCloseOnScroll}
+                onOpenChange={setOpenCloseOnScroll}
+                anchor={scrollAnchorRef}
+                closeOnScroll={true}
+                isolation={false}
+                onDismiss={() => setScrollLog(l => [...l, 'dismiss:closeOnScroll'])}
+              >
+                <Overlay.Content
+                  data-testid="content-close-on-scroll"
+                  style={{ width: 220, height: 160, background: '#fed7aa', padding: 8 }}
+                >
+                  <p>Close on Scroll Content</p>
+                  <div
+                    data-testid="content-inner-scroll"
+                    style={{
+                      maxHeight: 50,
+                      overflowY: 'auto',
+                      border: '1px solid #999',
+                      padding: 4,
+                    }}
+                  >
+                    <p>Inner scroll item 1</p>
+                    <p>Inner scroll item 2</p>
+                    <p>Inner scroll item 3</p>
+                    <p>Inner scroll item 4</p>
+                  </div>
+                  <textarea
+                    data-testid="content-inner-textarea"
+                    defaultValue={'Line 1\nLine 2\nLine 3\nLine 4\nLine 5'}
+                    rows={2}
+                    style={{ width: '100%', marginTop: 4 }}
+                  />
+                  <button
+                    type="button"
+                    data-testid="btn-close-close-on-scroll"
+                    onClick={() => setOpenCloseOnScroll(false)}
+                  >
+                    Close
+                  </button>
+                </Overlay.Content>
+              </Overlay>
+            </div>
+          </div>
+
+          {/* Unrelated sibling scroll container */}
+          <div
+            data-testid="unrelated-scroll-container"
+            style={{
+              width: 240,
+              height: 200,
+              overflowY: 'auto',
+              border: '2px dashed #9ca3af',
+              padding: 16,
+            }}
+          >
+            <div style={{ height: 500 }}>
+              <p>Unrelated Scrollable Container</p>
+              <p>Scrolling here must never dismiss open overlays.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <strong>Scroll events log:</strong>{' '}
+          <span data-testid="scroll-events-log">{scrollLog.join(',')}</span>
+          <button
+            type="button"
+            data-testid="btn-clear-scroll-log"
+            style={{ marginLeft: 8 }}
+            onClick={() => setScrollLog([])}
+          >
+            Clear Log
+          </button>
+        </div>
+      </section>
+
+      {/* 7. OV-POS-06: Published Available and Anchor Geometry Variables */}
+      <section data-testid="section-pos-06" style={{ marginBottom: 48 }}>
+        <h3>OV-POS-06: Available and Anchor Geometry Variables</h3>
+        <button
+          type="button"
+          ref={anchorPos06Ref}
+          data-testid="anchor-target-pos-06"
+          style={{ width: 140, height: 45, marginLeft: 50, marginTop: 20 }}
+          onClick={() => setOpenPos06(true)}
+        >
+          Anchor Size Target (140x45)
+        </button>
+        <Overlay
+          open={openPos06}
+          onOpenChange={setOpenPos06}
+          anchor={anchorPos06Ref}
+          isolation={false}
+        >
+          <Overlay.Content
+            data-testid="content-pos-06"
+            placement="bottom-start"
+            style={{ width: 250, height: 300, background: '#fef9c3', padding: 12 }}
+          >
+            <p>Size Middleware Content</p>
+            <button
+              type="button"
+              data-testid="btn-close-pos-06"
+              onClick={() => setOpenPos06(false)}
             >
               Close
             </button>

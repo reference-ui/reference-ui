@@ -1,6 +1,12 @@
 # Popover
 
-Proof: [SPEC.md](./SPEC.md).
+Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Kernel: [Overlay](../Overlay/Overlay.md).
+
+**Thin policy on Overlay.** Popover is Overlay with `isolation` frozen off,
+plus hover grace Overlay must not own. It does not run a second
+`computePosition`, dismiss stack, Tab bridge, or FocusLock. HoverCard is this
+composition. Non-interactive descriptions are Tooltip.
 
 Controlled, anchored, **non-isolating** floating content with hover policy.
 

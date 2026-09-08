@@ -48,7 +48,8 @@ export function OverlayBackdrop({
             e.defaultPrevented ||
             !isPrimaryPointer(e.nativeEvent) ||
             isEventConsumed(e.nativeEvent) ||
-            isRecentlyRemoved(context.id)
+            isRecentlyRemoved(context.id) ||
+            e.pointerType === 'touch'
           ) {
             return
           }

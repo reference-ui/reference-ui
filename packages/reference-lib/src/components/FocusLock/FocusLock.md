@@ -1,8 +1,11 @@
 # FocusLock
 
-Proof: [SPEC.md](./SPEC.md).
+Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Used by: [Overlay](../Overlay/Overlay.md) when isolation `focus` is on.
 
 Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is reclaimed, focus is restored when the lock deactivates. Overlay uses this internally. Distinct from `RovingFocus`, which moves `tabindex` among items inside a composite widget.
+
+Overlay owns Escape, outside-press, inert, scroll lock, and **when** restore runs (after Presence). FocusLock owns **where** focus goes.
 
 Does not add a wrapper node. Slots onto a single child. Overlay.Content is the lock container for dialogs; this primitive exists so that containment is not Overlay-only.
 

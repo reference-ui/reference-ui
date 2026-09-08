@@ -11,11 +11,14 @@ type Lock = {
 
 const locks = new WeakMap<Document, Lock>()
 
-function isIOS(): boolean {
+function isIOS(doc?: Document): boolean {
+  if (doc?.documentElement?.hasAttribute('data-test-ios') || (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-test-ios'))) {
+    return true
+  }
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
   return (
-    /iP(ad|hone|od)/.test(ua) ||
+    /iP(ad|hone|od)/i.test(ua) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   )
 }
@@ -105,6 +108,9 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
   const gap = scrollbarSize(doc)
   const rtl = isRtl(doc)
   const padProp = rtl ? 'paddingLeft' : 'paddingRight'
+  const padPropKebab = rtl ? 'padding-left' : 'padding-right'
+  const prevPadPriority =
+    body.style.getPropertyPriority(padPropKebab) || body.style.getPropertyPriority(padProp)
 
   const prev = {
     htmlOverflow: html.style.overflow,
@@ -129,7 +135,7 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
   }
   win.scrollTo(scrollX, scrollY)
 
-  const useFixed = positionFixed && isIOS() && !isStandalone()
+  const useFixed = positionFixed && isIOS(doc) && !isStandalone()
   if (useFixed) {
     body.style.position = 'fixed'
     body.style.top = `-${scrollY}px`
@@ -175,7 +181,12 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
     html.style.overscrollBehavior = prev.htmlOverscroll
     body.style.overflow = prev.bodyOverflow
     body.style.overscrollBehavior = prev.bodyOverscroll
-    body.style[padProp] = prev.bodyPad
+    if (prev.bodyPad) {
+      body.style.setProperty(padPropKebab, prev.bodyPad, prevPadPriority)
+    } else {
+      body.style.removeProperty(padPropKebab)
+      body.style.removeProperty(padProp)
+    }
     body.style.position = prev.bodyPosition
     body.style.top = prev.bodyTop
     body.style.left = prev.bodyLeft

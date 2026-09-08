@@ -359,8 +359,12 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       return top?.id === lockId
     }
 
+    const isClosing = () =>
+      container.getAttribute('data-state') === 'closed' ||
+      container.closest('[data-state="closed"]') !== null
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !isTopLock()) return
+      if (e.key !== 'Tab' || !isTopLock() || isClosing()) return
       if (e.ctrlKey || e.altKey || e.metaKey) return
 
       // When initialFocus is false and focus hasn't entered container yet, allow natural tab
@@ -407,7 +411,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
     }
 
     const handleFocusIn = (e: FocusEvent) => {
-      if (!isTopLock()) return
+      if (!isTopLock() || isClosing()) return
       const target = e.target as HTMLElement | null
       if (!target) return
 
@@ -435,7 +439,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
     }
 
     const mutationObserver = new MutationObserver(mutations => {
-      if (!isTopLock()) return
+      if (!isTopLock() || isClosing()) return
       const focusedElement = document.activeElement as HTMLElement | null
       if (focusedElement !== document.body && focusedElement !== null) return
       for (const mutation of mutations) {
