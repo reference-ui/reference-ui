@@ -60,7 +60,13 @@ Apply modifications under `packages/reference-lib/src/components/<Component>/`:
 
 ### Step 4: Verification Suite
 Execute targeted checks locally (never run global `pnpm test` wrappers):
+
 ```bash
+# Recommended: Run all 4 phases in one shot with automatic QoS jailbreak and dependency caching:
+pnpm agent verify <ComponentName>
+# e.g.: pnpm agent verify Toast
+
+# Or run individual phases manually:
 # 1. Typecheck
 pnpm --filter @reference-ui/lib run typecheck
 

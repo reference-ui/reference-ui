@@ -16,7 +16,10 @@
     "capture": "node .agents/skills/tweak-component/scripts/capture.mjs",
     "capture:states": "node .agents/skills/tweak-component/scripts/capture.mjs --states",
     "changeset": "changeset",
-    "release": "pnpm pipeline release"
+    "release": "pnpm pipeline release",
+    "agent": "node .agents/skills/pipeline-runner/scripts/run.mjs",
+    "pipeline:fast": "node .agents/skills/pipeline-runner/scripts/run.mjs test",
+    "pipeline:test:matrix": "node .agents/skills/pipeline-runner/scripts/run.mjs test:matrix"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

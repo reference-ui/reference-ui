@@ -70,11 +70,23 @@ Captures are automatically saved to `.reference-ui/captures/` with outline-safe 
 
 ---
 
-## 3. Targeted Verification Commands
+## 3. Targeted Verification Commands & Agent Runner (`pnpm agent`)
 
-Run only scoped package checks (avoid global root test commands):
+> [!TIP]
+> **macOS QoS Jailbreak & Fast Runner**:
+> Antigravity IDE subshells inherit Darwin background QoS (`PRI 31`).
+> Use the built-in miniature agent CLI (`pnpm agent`) to run commands at full interactive performance (`PRI 46`), unthrottled I/O, and with non-TTY progress unbuffering.
 
 ```bash
+# 0. Check runner & daemon status:
+pnpm agent status
+
+# 1. Full 4-Phase Component Verification in One Shot (RECOMMENDED for components):
+# (Runs typecheck -> vitest -> build -> targeted matrix Playwright spec with cached deps)
+pnpm agent verify <ComponentName>
+# e.g.: pnpm agent verify Toast
+
+# 2. Scoped Individual Checks:
 # Typecheck library
 pnpm --filter @reference-ui/lib run typecheck
 
@@ -84,22 +96,18 @@ pnpm --filter @reference-ui/lib test
 # Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
 pnpm --filter @reference-ui/lib run build
 
-# Matrix Testing (Canonical: ALWAYS use pipeline)
-# NEVER execute raw playwright directly across matrix packages; use the pipeline CLI:
+# 3. Matrix Testing (Unthrottled Dagger Runner):
+pnpm agent test --packages=@matrix/<package>
+# or canonical fallback:
 pnpm pipeline test --packages=@matrix/<package>
-# e.g.:
-# pnpm pipeline test --packages=@matrix/primitives
-# pnpm pipeline test --packages=@matrix/lib
 ```
 
 > [!IMPORTANT]
 > **Matrix Testing Policy**:
-> ALWAYS use `pnpm pipeline test --packages=@matrix/<package>` to test matrix packages.
+> ALWAYS use `pnpm agent test --packages=@matrix/<package>` (or `pnpm pipeline test --packages=@matrix/<package>`) to test matrix packages.
 > Do NOT execute raw `playwright test` directly inside matrix packages. The pipeline CLI is the canonical, hermetic testing system that manages dependencies, environments, and runners correctly.
 
 > [!NOTE]
-> `matrix/lib` playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
-> If you make changes in `packages/reference-lib/src/`, always run:
-> `pnpm --filter @reference-ui/lib run build`
-> before executing the tests so they test your latest source changes.
+> **Terminal Bridge Mode (Optional)**:
+> If you have an external terminal open, run `pnpm agent daemon`. The agent will automatically route heavy test runs through your native terminal session over a local socket (`/tmp/reference-ui-agent.sock`). If the daemon is inactive, `pnpm agent` executes directly with `taskpolicy -a` QoS elevation.
 
