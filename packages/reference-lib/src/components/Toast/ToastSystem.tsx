@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
+import { useStore } from 'zustand'
+import { overlayStackStore } from '../Overlay/stack'
 
 export interface ToastItem {
   id: string
@@ -152,7 +154,7 @@ function ToastItemWrapper({
   const [isHidden, setIsHidden] = React.useState(() => 
     typeof document !== 'undefined' ? document.visibilityState === 'hidden' : false
   )
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const isModalOpen = useStore(overlayStackStore, s => s.layers.some(l => l.isModal))
 
   React.useLayoutEffect(() => {
     if (ref.current) {
@@ -174,16 +176,6 @@ function ToastItemWrapper({
     const onVisibilityChange = () => setIsHidden(document.visibilityState === 'hidden')
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
-  }, [])
-
-  React.useEffect(() => {
-    const updateModalState = () => {
-      setIsModalOpen(!!document.querySelector('[data-reference-overlay-content][aria-modal="true"]'))
-    }
-    updateModalState()
-    const observer = new MutationObserver(updateModalState)
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-modal', 'data-state'] })
-    return () => observer.disconnect()
   }, [])
 
   const isPaused = isExpanded || isFocused || isHidden || isModalOpen || isDragging

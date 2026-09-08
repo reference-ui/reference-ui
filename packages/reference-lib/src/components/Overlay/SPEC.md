@@ -18,12 +18,12 @@ Page: `/overlay`
 | | |
 | :--- | :--- |
 | Engine | Shipped |
-| Named `[x]` | 6 / 133 |
-| Playwright tests | 9 |
+| Named `[x]` | 15 / 133 |
+| Playwright tests | 18 |
 
-Named proven: `OV-DOM-01`, `OV-DOM-05`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01`, `OV-THEME-02`.
+Named proven: `OV-DOM-01`, `OV-DOM-05`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01`, `OV-THEME-02`, `OV-ESC-01`, `OV-ESC-02`, `OV-ESC-04`, `OV-LAYER-02`, `OV-INERT-01`, `OV-SCROLL-01`, `OV-EDGE-01`, `OV-HND-01`, `OV-ISO-02`.
 
-Unnamed Playwright (do **not** check a contract ID): Escape dismiss, backdrop click, focus trap. Those are weaker than `OV-ESC-01`, `OV-LAYER-*`, and `OV-FOCUS-*`.
+Unnamed Playwright (do **not** check a contract ID): focus trap. Those are weaker than `OV-FOCUS-*`.
 
 ### In the tree
 
@@ -31,11 +31,9 @@ Portal, layer stack, controlled + `defaultOpen`, Presence, isolation bundle (foc
 
 ### Defects (must fix before trusting the contract)
 
-- `scroll-lock.ts` is `overflow: hidden` only — not iOS `visualViewport` + touch-move.
-- `Overlay.Handle` tracks `clientY` and only `deltaY > 0` — `edge="top|left|right"` drag is wrong.
-- `Overlay.Backdrop` always dismisses; it does not consult stack top.
-- Outside press uses `event.target`, not `composedPath()`.
-- `overlay-stack.removeLayer` cascades via `setTimeout` over a stale snapshot.
+Gate 1 kernel defects from 2026-09-08 are closed in source: iOS/visualViewport
+scroll lock, four-edge Handle, top-layer Backdrop, `composedPath` outside press,
+and deterministic deepest-first cascade. Remaining work is E2E density.
 
 ### Remaining
 
@@ -171,14 +169,14 @@ Overlay-specific anatomy and behavior/style conflicts.
 
 ### Escape ordering and cancellation
 
-- [ ] `OV-ESC-01` `[vendor]` `[browser:all]` —
+- [x] `OV-ESC-01` `[vendor]` `[browser:all]` —
   **Overlay should request one dismissal after its granular callback when
   Escape reaches the active layer.**
   Open one controlled Overlay, focus a control in Content, press the physical
   Escape key, and record callback order and event identity. Assert exactly
   `onEscape(event)` followed by `onDismiss()` once, with focus and controlled
   DOM unchanged until the parent accepts the request.
-- [ ] `OV-ESC-02` `[vendor]` `[browser]` —
+- [x] `OV-ESC-02` `[vendor]` `[browser]` —
   **Overlay should remain open when its granular Escape callback prevents the
   default dismissal.**
   Open a controlled Overlay whose `onEscape` calls `event.preventDefault()`,
@@ -193,7 +191,7 @@ Overlay-specific anatomy and behavior/style conflicts.
   Radix `dismissable-layer.test.tsx` (“calls the latest escape key handler
   after re-rendering” and “observes the latest state when preventing escape
   dismissal”).
-- [ ] `OV-ESC-04` `[vendor]` `[browser]` —
+- [x] `OV-ESC-04` `[vendor]` `[browser]` —
   **Overlay should route Escape to only the top layer when controlled layers
   are nested.**
   Open a parent Overlay and a registered child layer, press Escape inside the
@@ -328,7 +326,7 @@ Overlay-specific anatomy and behavior/style conflicts.
   neither child nor parent receives an outside or dismissal request merely
   because `Node.contains` is false; the node is one dismiss branch and
   FocusLock shard.
-- [ ] `OV-LAYER-02` `[vendor]` `[browser]` —
+- [x] `OV-LAYER-02` `[vendor]` `[browser]` —
   **Overlay should dismiss only the child layer when a press is inside the
   parent but outside that child.**
   Open nested parent and child layers, then press a parent Content control that
@@ -623,7 +621,7 @@ Overlay-specific anatomy and behavior/style conflicts.
 
 ### Background inert and accessibility tree
 
-- [ ] `OV-INERT-01` `[vendor]` `[browser:all]` —
+- [x] `OV-INERT-01` `[vendor]` `[browser:all]` —
   **Overlay should remove unrelated application content from interaction and
   the accessibility tree when it is open.**
   Open Content beside multiple body and root siblings containing controls,
@@ -711,7 +709,7 @@ Overlay-specific anatomy and behavior/style conflicts.
 
 ### Scroll lock
 
-- [ ] `OV-SCROLL-01` `[vendor]` `[browser:all]` —
+- [x] `OV-SCROLL-01` `[vendor]` `[browser:all]` —
   **Overlay should preserve document position when user scrolling targets the
   locked page.**
   Start at a nonzero page offset, open Overlay, and send real wheel,
@@ -957,7 +955,7 @@ Overlay-specific anatomy and behavior/style conflicts.
   Open Overlay over a focusable, scrollable background. Assert FocusLock,
   background inerting, and document scroll lock all run. Existing modal
   cases remain the omitted-`isolation` proof matrix.
-- [ ] `OV-ISO-02` `[reference]` `[browser]` —
+- [x] `OV-ISO-02` `[reference]` `[browser]` —
   **Overlay should isolate none of the page when `isolation={false}`.**
   Open Overlay with Trigger and Content over a focusable, scrollable
   background. Assert no FocusLock, no inert/`aria-hidden` on the background,
@@ -978,7 +976,7 @@ Overlay-specific anatomy and behavior/style conflicts.
 
 ### Viewport edge
 
-- [ ] `OV-EDGE-01` `[vendor]` `[browser]` —
+- [x] `OV-EDGE-01` `[vendor]` `[browser]` —
   **Overlay should bind Content to the requested viewport edge.**
   Parameterize `edge` over top, right, bottom, and left with no `anchor`.
   Assert Overlay writes the edge binding, `data-edge` matches, flip/arrow
@@ -1015,7 +1013,7 @@ Overlay-specific anatomy and behavior/style conflicts.
 
 ### Handle
 
-- [ ] `OV-HND-01` `[vendor]` `[touch]` —
+- [x] `OV-HND-01` `[vendor]` `[touch]` —
   **Overlay.Handle should request dismiss after distance or velocity
   thresholds.**
   Drag Handle on `edge="bottom"` Content past 25% of height; repeat a short

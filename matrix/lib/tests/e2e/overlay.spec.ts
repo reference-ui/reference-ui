@@ -157,6 +157,136 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     // In light mode, text color is dark, not white
     expect(surface.color).not.toBe('rgb(255, 255, 255)')
   })
+
+  test('OV-ESC-01: Escape requests onEscape then onDismiss on the active layer', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-open-escape').click()
+    const content = page.getByTestId('overlay-escape-content')
+    await expect(content).toBeVisible()
+    await page.getByTestId('btn-escape-inner').focus()
+    await page.keyboard.press('Escape')
+    await expect(content).toHaveCount(0)
+    await expect(page.getByTestId('overlay-escape-log')).toHaveText('escape,dismiss')
+  })
+
+  test('OV-ESC-02: preventing Escape keeps the layer open', async ({ page }) => {
+    await page.getByTestId('chk-block-escape').check()
+    await page.getByTestId('btn-open-escape').click()
+    const content = page.getByTestId('overlay-escape-content')
+    await expect(content).toBeVisible()
+    await page.getByTestId('btn-escape-inner').focus()
+    await page.keyboard.press('Escape')
+    await expect(content).toBeVisible()
+    await expect(page.getByTestId('overlay-escape-log')).toHaveText('escape')
+  })
+
+  test('OV-ESC-04: Escape closes only the top nested layer', async ({ page }) => {
+    await page.getByTestId('btn-open-parent').click()
+    await expect(page.getByTestId('overlay-parent-content')).toBeVisible()
+    await page.getByTestId('btn-open-child').click()
+    await expect(page.getByTestId('overlay-child-content')).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('overlay-child-content')).toHaveCount(0)
+    await expect(page.getByTestId('overlay-parent-content')).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('overlay-parent-content')).toHaveCount(0)
+  })
+
+  test('OV-LAYER-02: press on parent content outside the child dismisses only the child', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-open-parent').click()
+    await page.getByTestId('btn-open-child').click()
+    await expect(page.getByTestId('overlay-child-content')).toBeVisible()
+
+    await page.getByTestId('btn-parent-inner').click()
+    await expect(page.getByTestId('overlay-child-content')).toHaveCount(0)
+    await expect(page.getByTestId('overlay-parent-content')).toBeVisible()
+  })
+
+  test('OV-INERT-01: unrelated siblings are inert while isolating Overlay is open', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-open-overlay').click()
+    await expect(page.getByTestId('overlay-content')).toBeVisible()
+
+    const outside = page.getByTestId('btn-outside-element')
+    const inert = await outside.evaluate(el => Boolean(el.closest('[inert]')))
+    expect(inert).toBe(true)
+
+    const before = await outside.innerText()
+    await outside.click({ force: true })
+    await expect(outside).toHaveText(before)
+  })
+
+  test('OV-SCROLL-01: document position is preserved against background wheel', async ({
+    page,
+  }) => {
+    await page.evaluate(() => window.scrollTo(0, 240))
+    const before = await page.evaluate(() => window.scrollY)
+    expect(before).toBeGreaterThan(0)
+
+    await page.getByTestId('btn-open-overlay').click()
+    await expect(page.getByTestId('overlay-content')).toBeVisible()
+    const locked = await page.evaluate(() => window.scrollY)
+    expect(locked).toBe(before)
+
+    await page.mouse.move(12, 12)
+    await page.mouse.wheel(0, 400)
+    const after = await page.evaluate(() => window.scrollY)
+    expect(after).toBe(before)
+  })
+
+  test('OV-EDGE-01: edge Content binds to the viewport edge', async ({ page }) => {
+    await page.getByTestId('btn-open-edge').click()
+    const content = page.getByTestId('overlay-edge-content')
+    await expect(content).toBeVisible()
+    await expect(content).toHaveAttribute('data-edge', 'bottom')
+
+    const box = await content.evaluate(el => {
+      const style = window.getComputedStyle(el)
+      const rect = el.getBoundingClientRect()
+      return {
+        position: style.position,
+        bottom: (el as HTMLElement).style.bottom,
+        availableWidth: (el as HTMLElement).style.getPropertyValue(
+          '--reference-overlay-available-width'
+        ),
+        nearBottom: Math.abs(rect.bottom - (window.innerHeight - 8)) < 6,
+      }
+    })
+    expect(box.position).toBe('fixed')
+    expect(box.bottom).toBe('8px')
+    expect(box.availableWidth).toBeTruthy()
+    expect(box.nearBottom).toBe(true)
+  })
+
+  test('OV-HND-01: Handle drag past 25% requests dismiss', async ({ page }) => {
+    await page.getByTestId('btn-open-edge').click()
+    const content = page.getByTestId('overlay-edge-content')
+    await expect(content).toBeVisible()
+    const handle = page.getByTestId('overlay-handle')
+    const box = await handle.boundingBox()
+    expect(box).toBeTruthy()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + 220, { steps: 12 })
+    await page.mouse.up()
+    await expect(content).toHaveCount(0)
+  })
+
+  test('OV-ISO-02: isolation={false} does not inert the background', async ({ page }) => {
+    await page.getByTestId('btn-open-anchored').click()
+    await expect(page.getByTestId('overlay-anchored-content')).toBeVisible()
+    const outside = page.getByTestId('btn-outside-element')
+    const inert = await outside.evaluate(el => Boolean(el.closest('[inert]')))
+    expect(inert).toBe(false)
+    await outside.click()
+    await expect(outside).toContainText('1')
+  })
 })
 
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {

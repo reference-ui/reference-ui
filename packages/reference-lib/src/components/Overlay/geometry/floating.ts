@@ -68,19 +68,6 @@ function getAlignment(placement: Placement): Alignment | undefined {
   return placement.split('-')[1] as Alignment | undefined
 }
 
-function getOppositeSide(side: Side): Side {
-  switch (side) {
-    case 'top':
-      return 'bottom'
-    case 'bottom':
-      return 'top'
-    case 'left':
-      return 'right'
-    case 'right':
-      return 'left'
-  }
-}
-
 export function computeCoordsFromPlacement(
   referenceRect: DOMRect,
   floatingRect: DOMRect,
@@ -88,7 +75,6 @@ export function computeCoordsFromPlacement(
 ): { x: number; y: number } {
   const side = getSide(placement)
   const alignment = getAlignment(placement)
-
   const isVertical = side === 'top' || side === 'bottom'
 
   let x = 0
@@ -96,27 +82,50 @@ export function computeCoordsFromPlacement(
 
   if (isVertical) {
     y = side === 'top' ? referenceRect.top - floatingRect.height : referenceRect.bottom
-
     if (!alignment) {
       x = referenceRect.left + (referenceRect.width - floatingRect.width) / 2
     } else if (alignment === 'start') {
       x = referenceRect.left
-    } else if (alignment === 'end') {
+    } else {
       x = referenceRect.right - floatingRect.width
     }
   } else {
     x = side === 'left' ? referenceRect.left - floatingRect.width : referenceRect.right
-
     if (!alignment) {
       y = referenceRect.top + (referenceRect.height - floatingRect.height) / 2
     } else if (alignment === 'start') {
       y = referenceRect.top
-    } else if (alignment === 'end') {
+    } else {
       y = referenceRect.bottom - floatingRect.height
     }
   }
 
   return { x, y }
+}
+
+function transformOrigin(placement: Placement): string {
+  const side = getSide(placement)
+  const alignment = getAlignment(placement) ?? 'center'
+  const align = alignment === 'start' ? '0' : alignment === 'end' ? '100%' : '50%'
+  switch (side) {
+    case 'top':
+      return `${align} 100%`
+    case 'bottom':
+      return `${align} 0`
+    case 'left':
+      return `100% ${align}`
+    case 'right':
+      return `0 ${align}`
+  }
+}
+
+function rectHidden(rect: DOMRect, vw: number, vh: number, pad: number): boolean {
+  return (
+    rect.bottom < pad ||
+    rect.top > vh - pad ||
+    rect.right < pad ||
+    rect.left > vw - pad
+  )
 }
 
 export function computePosition(
@@ -137,87 +146,77 @@ export function computePosition(
 
   const referenceRect = reference.getBoundingClientRect()
   const floatingRect = floating.getBoundingClientRect()
-
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
+  const win = floating.ownerDocument.defaultView ?? window
+  const viewportWidth = win.innerWidth
+  const viewportHeight = win.innerHeight
 
   let currentPlacement = previousPlacement ?? initialPlacement
   let side = getSide(currentPlacement)
   const alignment = getAlignment(currentPlacement) ?? getAlignment(initialPlacement)
 
-  // 1. Apply Flip with hysteresis (if previously placed on a side, only flip if it no longer fits that side)
   if (flip) {
     const isVertical = side === 'top' || side === 'bottom'
     if (isVertical) {
       if (side === 'top') {
-        const overflowsTop = referenceRect.top - floatingRect.height - offset < collisionPadding
-        if (overflowsTop) {
-          const fitsBottom = referenceRect.bottom + floatingRect.height + offset <= viewportHeight - collisionPadding
-          if (fitsBottom) {
-            side = 'bottom'
-            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
-          }
+        const overflows = referenceRect.top - floatingRect.height - offset < collisionPadding
+        const fits =
+          referenceRect.bottom + floatingRect.height + offset <=
+          viewportHeight - collisionPadding
+        if (overflows && fits) {
+          side = 'bottom'
+          currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
         }
       } else if (side === 'bottom') {
-        const overflowsBottom = referenceRect.bottom + floatingRect.height + offset > viewportHeight - collisionPadding
-        if (overflowsBottom) {
-          const fitsTop = referenceRect.top - floatingRect.height - offset >= collisionPadding
-          if (fitsTop) {
-            side = 'top'
-            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
-          }
+        const overflows =
+          referenceRect.bottom + floatingRect.height + offset > viewportHeight - collisionPadding
+        const fits = referenceRect.top - floatingRect.height - offset >= collisionPadding
+        if (overflows && fits) {
+          side = 'top'
+          currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
         }
       }
-    } else {
-      if (side === 'left') {
-        const overflowsLeft = referenceRect.left - floatingRect.width - offset < collisionPadding
-        if (overflowsLeft) {
-          const fitsRight = referenceRect.right + floatingRect.width + offset <= viewportWidth - collisionPadding
-          if (fitsRight) {
-            side = 'right'
-            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
-          }
-        }
-      } else if (side === 'right') {
-        const overflowsRight = referenceRect.right + floatingRect.width + offset > viewportWidth - collisionPadding
-        if (overflowsRight) {
-          const fitsLeft = referenceRect.left - floatingRect.width - offset >= collisionPadding
-          if (fitsLeft) {
-            side = 'left'
-            currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
-          }
-        }
+    } else if (side === 'left') {
+      const overflows = referenceRect.left - floatingRect.width - offset < collisionPadding
+      const fits =
+        referenceRect.right + floatingRect.width + offset <= viewportWidth - collisionPadding
+      if (overflows && fits) {
+        side = 'right'
+        currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
+      }
+    } else if (side === 'right') {
+      const overflows =
+        referenceRect.right + floatingRect.width + offset > viewportWidth - collisionPadding
+      const fits = referenceRect.left - floatingRect.width - offset >= collisionPadding
+      if (overflows && fits) {
+        side = 'left'
+        currentPlacement = alignment ? (`${side}-${alignment}` as Placement) : side
       }
     }
   }
 
-  // 2. Base Coords
   let { x, y } = computeCoordsFromPlacement(referenceRect, floatingRect, currentPlacement)
 
-  // 3. Apply Offset
-  if (side === 'top') {
-    y -= offset
-  } else if (side === 'bottom') {
-    y += offset
-  } else if (side === 'left') {
-    x -= offset
-  } else if (side === 'right') {
-    x += offset
-  }
+  if (side === 'top') y -= offset
+  else if (side === 'bottom') y += offset
+  else if (side === 'left') x -= offset
+  else x += offset
 
-  // 4. Apply Shift
   if (shift) {
-    x = Math.max(collisionPadding, Math.min(x, viewportWidth - floatingRect.width - collisionPadding))
-    y = Math.max(collisionPadding, Math.min(y, viewportHeight - floatingRect.height - collisionPadding))
+    x = Math.max(
+      collisionPadding,
+      Math.min(x, viewportWidth - floatingRect.width - collisionPadding)
+    )
+    y = Math.max(
+      collisionPadding,
+      Math.min(y, viewportHeight - floatingRect.height - collisionPadding)
+    )
   }
 
-  // 5. Account for absolute positioning relative to document scroll if not fixed
   if (strategy === 'absolute') {
-    x += window.scrollX
-    y += window.scrollY
+    x += win.scrollX
+    y += win.scrollY
   }
 
-  // 6. Arrow calculations
   const middlewareData: ComputePositionReturn['middlewareData'] = {
     size: {
       availableWidth: Math.max(0, viewportWidth - collisionPadding * 2),
@@ -225,29 +224,48 @@ export function computePosition(
       anchorWidth: referenceRect.width,
       anchorHeight: referenceRect.height,
     },
+    hide: {
+      referenceHidden: rectHidden(referenceRect, viewportWidth, viewportHeight, collisionPadding),
+      escaped: rectHidden(
+        new DOMRect(strategy === 'absolute' ? x - win.scrollX : x, strategy === 'absolute' ? y - win.scrollY : y, floatingRect.width, floatingRect.height),
+        viewportWidth,
+        viewportHeight,
+        0
+      ),
+    },
   }
 
-  if (arrow && arrow.element) {
-    const arrowEl = arrow.element
-    const arrowRect = arrowEl.getBoundingClientRect()
+  if (arrow?.element) {
+    const arrowRect = arrow.element.getBoundingClientRect()
     const edgePadding = arrow.edgePadding ?? 4
-
     const isVertical = side === 'top' || side === 'bottom'
     if (isVertical) {
-      const centerX = referenceRect.left + referenceRect.width / 2 - (strategy === 'absolute' ? x - window.scrollX : x)
+      const centerX =
+        referenceRect.left +
+        referenceRect.width / 2 -
+        (strategy === 'absolute' ? x - win.scrollX : x)
       const clampedX = Math.max(
         edgePadding,
-        Math.min(centerX - arrowRect.width / 2, floatingRect.width - arrowRect.width - edgePadding)
+        Math.min(
+          centerX - arrowRect.width / 2,
+          floatingRect.width - arrowRect.width - edgePadding
+        )
       )
       middlewareData.arrow = {
         x: clampedX,
         centerOffset: centerX - (clampedX + arrowRect.width / 2),
       }
     } else {
-      const centerY = referenceRect.top + referenceRect.height / 2 - (strategy === 'absolute' ? y - window.scrollY : y)
+      const centerY =
+        referenceRect.top +
+        referenceRect.height / 2 -
+        (strategy === 'absolute' ? y - win.scrollY : y)
       const clampedY = Math.max(
         edgePadding,
-        Math.min(centerY - arrowRect.height / 2, floatingRect.height - arrowRect.height - edgePadding)
+        Math.min(
+          centerY - arrowRect.height / 2,
+          floatingRect.height - arrowRect.height - edgePadding
+        )
       )
       middlewareData.arrow = {
         y: clampedY,
@@ -255,6 +273,11 @@ export function computePosition(
       }
     }
   }
+
+  floating.style.setProperty(
+    '--reference-overlay-transform-origin',
+    transformOrigin(currentPlacement)
+  )
 
   return {
     x,
@@ -271,17 +294,25 @@ export function getOverflowAncestors(node: Node): Array<Element | Window> {
 
   while (current && current.nodeType === Node.ELEMENT_NODE) {
     const element = current as Element
-    const style = window.getComputedStyle(element)
-    const overflow = `${style.overflow}${style.overflowX}${style.overflowY}`
-
-    if (/auto|scroll|overlay|hidden/.test(overflow)) {
-      list.push(element)
+    const style = element.ownerDocument.defaultView?.getComputedStyle(element)
+    if (style) {
+      const overflow = `${style.overflow}${style.overflowX}${style.overflowY}`
+      if (/auto|scroll|overlay|hidden/.test(overflow)) list.push(element)
     }
     current = current.parentNode
   }
 
-  list.push(window)
+  const win = node instanceof Element ? node.ownerDocument.defaultView : window
+  if (win) list.push(win)
   return list
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  )
 }
 
 export function autoUpdate(
@@ -292,8 +323,10 @@ export function autoUpdate(
 ): () => void {
   update()
 
+  const win = floating.ownerDocument.defaultView ?? window
   const handleResize = () => update()
-  const handleScroll = () => {
+  const handleScroll = (event: Event) => {
+    if (isEditableTarget(event.target)) return
     if (options.closeOnScroll) {
       options.onScrollClose?.()
     } else {
@@ -301,19 +334,22 @@ export function autoUpdate(
     }
   }
 
-  window.addEventListener('resize', handleResize)
+  win.addEventListener('resize', handleResize)
 
   let ancestors: Array<Element | Window> = []
   if ('nodeType' in reference && reference.nodeType === Node.ELEMENT_NODE) {
     ancestors = getOverflowAncestors(reference as Element)
-    ancestors.forEach((anc) => anc.addEventListener('scroll', handleScroll, { passive: true }))
+    ancestors.forEach(anc => anc.addEventListener('scroll', handleScroll, { passive: true }))
   } else {
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    win.addEventListener('scroll', handleScroll, { passive: true })
   }
 
-  const resizeObserver = typeof ResizeObserver !== 'undefined'
-    ? new ResizeObserver(() => update())
-    : null
+  const vv = win.visualViewport
+  vv?.addEventListener('resize', handleResize)
+  vv?.addEventListener('scroll', handleResize)
+
+  const resizeObserver =
+    typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => update()) : null
 
   if (resizeObserver) {
     if ('nodeType' in reference && reference.nodeType === Node.ELEMENT_NODE) {
@@ -323,12 +359,14 @@ export function autoUpdate(
   }
 
   return () => {
-    window.removeEventListener('resize', handleResize)
+    win.removeEventListener('resize', handleResize)
     if (ancestors.length > 0) {
-      ancestors.forEach((anc) => anc.removeEventListener('scroll', handleScroll))
+      ancestors.forEach(anc => anc.removeEventListener('scroll', handleScroll))
     } else {
-      window.removeEventListener('scroll', handleScroll)
+      win.removeEventListener('scroll', handleScroll)
     }
+    vv?.removeEventListener('resize', handleResize)
+    vv?.removeEventListener('scroll', handleResize)
     resizeObserver?.disconnect()
   }
 }

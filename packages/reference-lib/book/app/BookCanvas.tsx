@@ -106,7 +106,7 @@ export function BookCanvas({
         el.removeAttribute('inert')
         el.removeAttribute('data-overlay-managed-inert')
       })
-      overlayStackStore.setState({ layers: [] })
+      overlayStackStore.getState().reset()
     }
   }, [entry?.id, storyName])
 

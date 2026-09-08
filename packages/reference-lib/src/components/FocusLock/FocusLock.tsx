@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { overlayStackStore } from '../Overlay/overlay-stack'
+import { isNodeInside } from '../Overlay/events'
 
 export type FocusTarget =
   | HTMLElement
@@ -333,7 +334,7 @@ export function FocusLock({
       const isInside =
         container.contains(target) ||
         resolvedShards.some(shard => shard.contains(target)) ||
-        overlayStackStore.getState().layers.some(l => l.node?.contains(target)) ||
+        overlayStackStore.getState().layers.some(l => isNodeInside(l.node, target)) ||
         Boolean(target.closest('[data-reference-overlay-content][data-state="open"]'))
 
       if (isInside) {

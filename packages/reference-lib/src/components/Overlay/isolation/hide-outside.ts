@@ -1,0 +1,120 @@
+import * as React from 'react'
+import { isNodeInside } from '../events'
+import { overlayStackStore, layerDocument } from '../stack'
+
+const refCount = new WeakMap<Element, number>()
+
+function isExempt(el: Element): boolean {
+  if (el.hasAttribute('data-reference-overlay-ignore')) return true
+  if (el.hasAttribute('data-reference-overlay-backdrop')) return true
+  if (el.hasAttribute('data-reference-overlay-content')) return true
+  if (el.hasAttribute('data-reference-portal-container')) return true
+  if (el.hasAttribute('aria-live')) return true
+  if (el.hasAttribute('data-reference-toast-host')) return true
+  if (el.querySelector?.('[data-reference-toast-host], [aria-live]')) return true
+  return false
+}
+
+function parentOf(el: Element): Element | null {
+  if (el.parentElement) return el.parentElement
+  const root = el.getRootNode()
+  return root instanceof ShadowRoot ? root.host : null
+}
+
+function overlayKeep(doc: Document): Element[] {
+  const keep: Element[] = []
+  for (const layer of overlayStackStore.getState().layers) {
+    if (layerDocument(layer) && layerDocument(layer) !== doc) continue
+    if (layer.node) keep.push(layer.node)
+    if (layer.backdrop) keep.push(layer.backdrop)
+  }
+  return keep
+}
+
+function shouldSkip(el: Element, keep: Element[]): boolean {
+  if (isExempt(el)) return true
+  return keep.some(k => el === k || el.contains(k) || isNodeInside(el, k))
+}
+
+function hide(el: Element) {
+  const count = refCount.get(el) ?? 0
+  refCount.set(el, count + 1)
+  if (count === 0 && !el.hasAttribute('inert')) {
+    el.setAttribute('inert', '')
+    el.setAttribute('data-overlay-managed-inert', '')
+  }
+}
+
+function show(el: Element) {
+  const count = refCount.get(el) ?? 0
+  if (count <= 1) {
+    refCount.delete(el)
+    if (el.hasAttribute('data-overlay-managed-inert')) {
+      el.removeAttribute('inert')
+      el.removeAttribute('data-overlay-managed-inert')
+    }
+  } else {
+    refCount.set(el, count - 1)
+  }
+}
+
+export function hideOutside(overlayEl: HTMLElement): () => void {
+  const doc = overlayEl.ownerDocument
+  const hidden: Element[] = []
+  const keep = overlayKeep(doc)
+
+  let current: Element | null = overlayEl
+  while (current && current !== doc.body && current !== doc.documentElement) {
+    const parent = parentOf(current)
+    if (!parent) break
+    for (const sibling of Array.from(parent.children)) {
+      if (sibling === current) continue
+      if (sibling.getAttribute('aria-hidden') === 'true') continue
+      if (shouldSkip(sibling, keep)) continue
+      hide(sibling)
+      hidden.push(sibling)
+    }
+    current = parent
+  }
+
+  const observer = new MutationObserver(mutations => {
+    const liveKeep = overlayKeep(doc)
+    for (const mutation of mutations) {
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (!(node instanceof Element)) continue
+        if (node.getAttribute('aria-hidden') === 'true') continue
+        if (isNodeInside(overlayEl, node) || overlayEl === node) continue
+        if (shouldSkip(node, liveKeep)) continue
+        const parent = parentOf(node)
+        if (!parent) continue
+        let walk: Element | null = parent
+        let adjacent = false
+        while (walk) {
+          if (walk === overlayEl) break
+          if (walk === doc.body) {
+            adjacent = true
+            break
+          }
+          walk = parentOf(walk)
+        }
+        if (!adjacent || hidden.includes(node)) continue
+        hide(node)
+        hidden.push(node)
+      }
+    }
+  })
+
+  observer.observe(doc.body, { childList: true, subtree: true })
+
+  return () => {
+    observer.disconnect()
+    for (const el of hidden) show(el)
+  }
+}
+
+export function useHideOutside(node: HTMLElement | null, enabled: boolean) {
+  React.useEffect(() => {
+    if (!enabled || !node) return
+    return hideOutside(node)
+  }, [enabled, node])
+}
