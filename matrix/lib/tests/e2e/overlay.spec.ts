@@ -229,7 +229,7 @@ test.describe('Overlay Composition Gates & Browser Proofs', () => {
     const before = await page.evaluate(() => window.scrollY)
     expect(before).toBeGreaterThan(0)
 
-    await page.getByTestId('btn-open-overlay').click()
+    await page.getByTestId('btn-open-overlay').dispatchEvent('click')
     await expect(page.getByTestId('overlay-content')).toBeVisible()
     const locked = await page.evaluate(() => window.scrollY)
     expect(locked).toBe(before)

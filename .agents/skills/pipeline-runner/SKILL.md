@@ -22,13 +22,31 @@ The `pipeline-runner` CLI automatically jailbreaks every command using Darwin's 
 
 ## 2. CLI Usage Reference (`pnpm agent`)
 
-The runner is mapped to `pnpm agent` in the workspace root.
+The runner is mapped to `pnpm agent` in the workspace root (with shortcuts `pnpm agent:pw` and `pnpm agent:vitest`).
 
 ```bash
 # 1. Inspect environment health, priority, and daemon status:
 pnpm agent status
 
-# 2. Run targeted matrix tests (unthrottled wrapper around pipeline test):
+# 2. Fast Native Playwright Iteration (Unthrottled PRI 46, Port Cleanup, Pass Signals):
+# (Bypasses container overhead; runs natively on host hardware with clean signal handling)
+pnpm agent playwright overlays -g "OV-OUT"
+pnpm agent playwright overlays -g "OV-LAYER"
+pnpm agent playwright lib tests/e2e/toast.spec.ts
+pnpm agent pw -g "OV-OUT"              # Auto-infers matrix/overlays from test prefix
+pnpm agent pw --workers 4              # Harness multi-core hardware
+
+# 3. Fast Native Vitest (Unit Tests):
+pnpm agent vitest lib -t "Dialog"
+pnpm agent vitest -t "Overlay"
+pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
+
+# 4. Fast 4-Phase Component Verification:
+# (Runs typecheck -> vitest -> build -> targeted Playwright E2E spec in one command)
+pnpm agent verify Toast
+pnpm agent verify Combobox
+
+# 5. Full Hermetic Matrix Tests (Dagger containers across React versions & bundlers):
 pnpm agent test --packages=@matrix/lib
 pnpm agent test matrix --packages=@matrix/tokens
 pnpm agent test:matrix  # Full matrix run across all variants (--full)
@@ -37,25 +55,34 @@ pnpm agent matrix --packages=@matrix/primitives
 # Canonical root shortcut for full matrix:
 pnpm pipeline:test:matrix
 
-# 3. Fast 4-Phase Component Verification:
-# (Runs typecheck -> vitest -> build -> targeted Playwright E2E spec in one command)
-pnpm agent verify Toast
-pnpm agent verify Combobox
-
-# 4. Direct pipeline pass-through:
+# 6. Direct pipeline pass-through:
 pnpm agent pipeline test --packages=@matrix/tokens
 pnpm agent clean
 pnpm agent setup --packages=@matrix/distro --sync
 ```
+
+### Process Lifecycle, Signal Control & Pass Signaling
+
+Native Playwright and Vitest commands solve several persistent agent challenges:
+1. **Automatic Port 4173 Management**: Because `playwright.config.ts` sets `reuseExistingServer: true`, running raw Playwright directly leaves Vite running as an orphaned daemon (PPID 1). `pnpm agent playwright` automatically clears stale servers before execution and cleans up any test servers on teardown (unless `--keep-server` is passed).
+2. **Deterministic Exit Pass Signals**: If all tests in the requested suite PASS (`N passed, 0 failed`), the runner explicitly guarantees an exit code of `0` and emits an unambiguous pass banner (`✔ [agent] Playwright suite PASSED`), even if SIGINT occurs during worker shutdown or server teardown.
+3. **Clean Process Group Termination**: Intercepts `SIGINT` and `SIGTERM` and ensures child processes and background web servers are terminated cleanly without leaving orphaned zombies.
+4. **Auto-Build Protection**: Automatically checks if `@reference-ui/lib` (`dist/index.mjs`) is built and runs a fast build if missing, preventing stale bundle errors when testing matrix packages. Pass `--build` to force a rebuild or `--no-build` to skip.
 
 ### Programmatic API
 
 You can also import the runner programmatically from any Node script:
 
 ```javascript
-import { runMatrix, runPipeline, runCommand } from './.agents/skills/pipeline-runner/scripts/run.mjs'
+import { runPlaywright, runVitest, runMatrix, runPipeline, runCommand } from './.agents/skills/pipeline-runner/scripts/run.mjs'
 
-// Run matrix tests with options:
+// Run native Playwright tests:
+await runPlaywright(['overlays', '-g', 'OV-OUT'])
+
+// Run native Vitest unit tests:
+await runVitest(['lib', '-t', 'Dialog'])
+
+// Run matrix tests in Dagger:
 await runMatrix({
   packages: '@matrix/tokens',
   react: 'react19',

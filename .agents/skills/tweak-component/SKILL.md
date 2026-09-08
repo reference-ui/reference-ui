@@ -59,30 +59,29 @@ Apply modifications under `packages/reference-lib/src/components/<Component>/`:
 - Maintain APG combobox/dialog accessibility contracts.
 
 ### Step 4: Verification Suite
-Execute targeted checks locally (never run global `pnpm test` wrappers):
+Execute targeted checks locally (never run raw unthrottled subshell commands or global `pnpm test` wrappers):
 
 ```bash
-# Recommended: Run all 4 phases in one shot with automatic QoS jailbreak and dependency caching:
+# Recommended for full 4-phase verification in one shot:
+# (Typecheck -> vitest -> build -> targeted Playwright spec)
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast
 
-# Or run individual phases manually:
-# 1. Typecheck
-pnpm --filter @reference-ui/lib run typecheck
+# Fast Native Iteration (spec tests & greps without full pipeline overhead):
+# (Automatic PRI 46 QoS, port 4173 cleanup, queue locks, and exit pass signals)
+pnpm agent playwright overlays -g "OV-OUT"
+pnpm agent playwright overlays -g "OV-LAYER"
+pnpm agent playwright lib tests/e2e/<component>.spec.ts
+pnpm agent pw -g "OV-OUT"
 
-# 2. Pure Model Unit Tests (Vitest)
-pnpm --filter @reference-ui/lib test
-
-# 3. Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
-pnpm --filter @reference-ui/lib run build
-
-# 4. Browser E2E Tests (Playwright)
-pnpm --dir matrix/lib exec playwright test tests/e2e/<component>.spec.ts
+# Targeted Unit Tests (Vitest):
+pnpm agent vitest lib -t "<Component>"
+pnpm agent vt packages/reference-lib/src/components/<Component>/__tests__/<Component>.test.tsx
 ```
 
 > [!NOTE]
-> `matrix/lib` playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
-> If you make changes in `packages/reference-lib/src/`, always run `pnpm --filter @reference-ui/lib run build` before running Playwright tests.
+> Matrix playwright tests consume `@reference-ui/lib` from `dist/index.mjs`.
+> `pnpm agent playwright` automatically checks if `dist/index.mjs` is present and builds it if missing, ensuring tests never run against stale artifacts. To force a rebuild, pass `--build`.
 
 ### Step 5: Visual Re-inspection & Mandatory Visual Feedback
 After passing tests, verify the visual result and **always return screenshots in chat**:

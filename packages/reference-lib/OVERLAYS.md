@@ -40,9 +40,9 @@ This document is the canonical status for the five interlocking primitives:
 **Happy-path ≠ production.** A dialog that opens, traps Tab, and closes on
 Escape is covered. Almost everything that makes overlays *hard* is not.
 
-| Primitive | Engine | Kernel | `matrix/lib` happy-path | Production? |
+| Primitive | Engine | Kernel | `matrix/lib` & `matrix/overlays` | Production? |
 | :--- | :---: | :--- | :--- | :---: |
-| **Overlay** | Yes | 5 live defects | 9 tests — dialog open/close/Escape/trap/anchor/theme | **No** |
+| **Overlay** | Yes | Closed (deep matrix) | 41 tests (23 deep in @matrix/overlays + 18 in @matrix/lib) | **In Progress (Gate 1 closed, 28/133 proven)** |
 | **Popover** | Yes | No safe-polygon | 9 tests — click, flip, shift, arrow, hover delay | **No** |
 | **Tooltip** | Yes | Dual skip-delay stores | 3 tests — focus/hover + `aria-describedby` | **No** |
 | **Toast** | Yes | Modal pause broken; polish APIs missing | 5 tests — show/update/dismiss/stack | **No** |
@@ -310,22 +310,20 @@ portalled shards, tooltip groups, or toast swipe/limit/pause.
 tests (Escape, backdrop, trap) still count as happy-path proof; they do not
 close `OV-ESC-01` / `OV-LAYER-*` / `OV-FOCUS-*`.
 
-| Component | SPEC cases | `matrix/lib` tests | What those tests actually are |
+| Component | SPEC cases | Matrix tests | What those tests actually are |
 | :--- | :---: | :---: | :--- |
-| **Overlay** | 133 | 9 | Single dialog + unbound + anchored + theme. No nest, no edge, no inert, no scroll lock |
+| **Overlay** | 133 | 41 | 28 `[x]` cases proven across `@matrix/overlays` (23 deep) and `@matrix/lib` (18). DOM, Escape, Outside Press, Nested Stacks, Inert, Scroll Lock, Edge Sheets, Handle Drag |
 | **Popover** | 95 | 9 | Click/flip/shift/arrow/hover-delay. No polygon, no nested layer |
 | **Tooltip** | 61 | 3 | Focus/hover + describedby. No skip-delay, no Escape-vs-parent, no scroll-close |
 | **Toast** | 81 + 4 Gate 6 | 5 | Show/update/dismiss/stack. No swipe, limit, pause, hotkey, dismissible |
 | **FocusLock** | 72 | 5 | Tab loop + sibling shard + restore to live trigger. No Presence, no portal shard, no nest |
 | **Unit** | — | **0** for these five | Only Slot and Presence have `tests/unit/` |
 
-Run matrix proof with `pnpm agent test --packages=@matrix/lib` (or
-`pnpm pipeline test --packages=@matrix/lib`). Do not invoke raw Playwright
-inside `matrix/lib`.
+Run matrix proof with `pnpm agent pw matrix/overlays` (native unthrottled runner) or `pnpm agent verify Overlay`.
 
 Named Playwright IDs:
 
-- Overlay: `OV-DOM-01/05`, Escape, backdrop, trap, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`
+- Overlay: `OV-DOM-01/02/05/06/07`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`, `OV-ESC-01/02/04`, `OV-OUT-01/02/03/05/08/09`, `OV-LAYER-01/02/03`, `OV-INERT-01/05`, `OV-SCROLL-01/03`, `OV-EDGE-01`, `OV-HND-01/02`, `OV-ISO-02`
 - Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01/02`
 - Tooltip: `TT-DOM-01/02`, hover, `TT-POS`
 - Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`

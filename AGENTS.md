@@ -83,31 +83,33 @@ Captures are automatically saved to `.reference-ui/captures/` with outline-safe 
 # 0. Check runner & daemon status:
 pnpm agent status
 
-# 1. Full 4-Phase Component Verification in One Shot (RECOMMENDED for components):
+# 1. Fast Native Iteration (Recommended during component tweaking & spec tests):
+# (Runs unthrottled PRI 46 natively, with port 4173 cleanup, queue locks, and exit pass signals)
+pnpm agent playwright overlays -g "OV-OUT"
+pnpm agent playwright overlays -g "OV-LAYER"
+pnpm agent playwright lib tests/e2e/toast.spec.ts
+pnpm agent pw -g "OV-OUT"              # Auto-infers matrix/overlays
+
+# Native Vitest (unit tests):
+pnpm agent vitest lib -t "Dialog"
+pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
+
+# 2. Full 4-Phase Component Verification in One Shot (Final check before completion):
 # (Runs typecheck -> vitest -> build -> targeted matrix Playwright spec with cached deps)
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast
 
-# 2. Scoped Individual Checks:
-# Typecheck library
-pnpm --filter @reference-ui/lib run typecheck
-
-# Unit tests (Vitest)
-pnpm --filter @reference-ui/lib test
-
-# Build library before browser tests (matrix/lib consumes dist/index.mjs bundle)
-pnpm --filter @reference-ui/lib run build
-
-# 3. Matrix Testing (Unthrottled Dagger Runner):
+# 3. Hermetic Matrix Verification (Unthrottled Dagger Runner across bundlers & React runtimes):
 pnpm agent test --packages=@matrix/<package>
 # or canonical fallback:
 pnpm pipeline test --packages=@matrix/<package>
 ```
 
 > [!IMPORTANT]
-> **Matrix Testing Policy**:
-> ALWAYS use `pnpm agent test --packages=@matrix/<package>` (or `pnpm pipeline test --packages=@matrix/<package>`) to test matrix packages.
-> Do NOT execute raw `playwright test` directly inside matrix packages. The pipeline CLI is the canonical, hermetic testing system that manages dependencies, environments, and runners correctly.
+> **Testing Policy & Native Runner**:
+> - **Never execute raw Playwright or Vitest commands directly in subshells** (e.g. `pnpm --dir matrix/... exec playwright test`). Raw subshell commands run under clamped Darwin QoS (`PRI 31`), orphan Vite processes on port 4173, and lack clean exit pass signaling on SIGINT.
+> - **Always use `pnpm agent playwright` / `pnpm agent vitest`** for fast native iteration.
+> - **Use `pnpm agent test --packages=@matrix/<package>`** when you need full, hermetic multi-runtime/bundler matrix validation in Dagger containers.
 
 > [!NOTE]
 > **Terminal Bridge Mode (Optional)**:

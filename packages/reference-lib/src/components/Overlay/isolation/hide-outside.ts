@@ -11,7 +11,6 @@ function isExempt(el: Element): boolean {
   if (el.hasAttribute('data-reference-portal-container')) return true
   if (el.hasAttribute('aria-live')) return true
   if (el.hasAttribute('data-reference-toast-host')) return true
-  if (el.querySelector?.('[data-reference-toast-host], [aria-live]')) return true
   return false
 }
 
@@ -58,6 +57,23 @@ function show(el: Element) {
   }
 }
 
+function hideExcluding(root: Element, keep: Element[], hidden: Element[]) {
+  for (const child of Array.from(root.children)) {
+    if (child.getAttribute('aria-hidden') === 'true') continue
+    if (isExempt(child)) continue
+    if (keep.some(k => child === k || child.contains(k) || isNodeInside(child, k))) {
+      hideExcluding(child, keep, hidden)
+      continue
+    }
+    if (child.querySelector?.('[data-reference-toast-host], [aria-live]')) {
+      hideExcluding(child, keep, hidden)
+      continue
+    }
+    hide(child)
+    hidden.push(child)
+  }
+}
+
 export function hideOutside(overlayEl: HTMLElement): () => void {
   const doc = overlayEl.ownerDocument
   const hidden: Element[] = []
@@ -70,7 +86,15 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
     for (const sibling of Array.from(parent.children)) {
       if (sibling === current) continue
       if (sibling.getAttribute('aria-hidden') === 'true') continue
-      if (shouldSkip(sibling, keep)) continue
+      if (isExempt(sibling)) continue
+      if (keep.some(k => sibling === k || sibling.contains(k) || isNodeInside(sibling, k))) {
+        hideExcluding(sibling, keep, hidden)
+        continue
+      }
+      if (sibling.querySelector?.('[data-reference-toast-host], [aria-live]')) {
+        hideExcluding(sibling, keep, hidden)
+        continue
+      }
       hide(sibling)
       hidden.push(sibling)
     }
