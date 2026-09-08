@@ -1,4 +1,4 @@
-import type { OverlayEdge } from './types'
+import type { OverlayEdge } from '../types'
 
 /** Ported from Vaul. Distance as a fraction of the surface, velocity in px/ms. */
 export const CLOSE_THRESHOLD = 0.25

@@ -1,14 +1,16 @@
 import * as React from 'react'
-import type { PortalProps } from '../Portal'
+import type { PortalProps } from '../../Portal'
 import type {
   IsolationFlags,
   OverlayAnchor,
   OverlayEdge,
   OverlayProps,
-} from './types'
-import { overlayWarn } from './shared/warn'
+} from '../types'
+import { overlayWarn } from '../shared/warn'
 
 export { overlayWarn }
+
+/** React context for Overlay parts. */
 
 export type OverlayPartName =
   | 'trigger'

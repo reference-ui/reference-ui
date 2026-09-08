@@ -1,7 +1,9 @@
 import * as React from 'react'
-import type { OverlayPartName } from './context'
-import type { OverlayEdge } from './types'
-import { overlayWarn } from './shared/warn'
+import type { OverlayPartName } from '../context'
+import type { OverlayEdge } from '../types'
+import { overlayWarn } from '../shared/warn'
+
+/** One of each part. Duplicate parts or Handle-without-edge corrupt the instance. */
 
 export function usePartRegistry(edge?: OverlayEdge, mixedGeometry = false) {
   const registeredParts = React.useRef(new Map<string, number>())

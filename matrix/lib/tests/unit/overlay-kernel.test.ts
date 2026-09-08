@@ -19,7 +19,7 @@ import {
   isPrimaryPointer,
   markEventConsumed,
   isEventConsumed,
-} from '../../../../packages/reference-lib/src/components/Overlay/events'
+} from '../../../../packages/reference-lib/src/components/Overlay/shared/events'
 import {
   overlayStackStore,
   descendantsDeepestFirst,

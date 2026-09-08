@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { overlayStackStore } from '../Overlay/overlay-stack'
-import { isNodeInside } from '../Overlay/events'
+import { overlayStackStore } from '../Overlay/stack'
+import { isNodeInside } from '../Overlay/shared/events'
 
 export type FocusTarget =
   | HTMLElement

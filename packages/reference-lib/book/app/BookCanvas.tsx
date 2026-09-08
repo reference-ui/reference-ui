@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { BookDecorator } from '../decorator/BookDecorator'
-import { overlayStackStore } from '../../src/components/Overlay/overlay-stack'
+import { overlayStackStore } from '../../src/components/Overlay/stack'
 import { setBookErrorState, setStoryLoadMetrics, setBookUpdatingState } from '../perf/client'
 import type { BookLoadedEntry, BookManifestEntry, ViewportPreset, ViewportConfig } from '../discovery/types'
 import { loadStory } from '../discovery/loadStory'

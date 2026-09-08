@@ -1,5 +1,7 @@
 import * as React from 'react'
-import type { OverlayProps } from './types'
+import type { OverlayProps } from '../types'
+
+/** Controlled / uncontrolled `open` with `onOpen` / `onDismiss` edges. */
 
 export function useOverlayOpenState({
   open: openProp,

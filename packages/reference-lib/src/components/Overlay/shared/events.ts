@@ -1,3 +1,5 @@
+/** Composed-path containment, primary pointer, and consumed-event flags. */
+
 export function eventPath(event: Event): EventTarget[] {
   if (typeof event.composedPath === 'function') {
     return event.composedPath()

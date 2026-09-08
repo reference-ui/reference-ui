@@ -1,5 +1,7 @@
 import * as React from 'react'
 
+/** Assign a node to a ref object or callback. */
+
 export function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null): void {
   if (typeof ref === 'function') {
     ref(node)

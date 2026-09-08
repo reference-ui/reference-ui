@@ -1,8 +1,10 @@
 import * as React from 'react'
-import type { IsolationFlags, OverlayEdge, OverlayProps } from './types'
-import { overlayStackStore, setLayerHandlers } from './stack'
-import { overlayWarn } from './shared/warn'
-import { syncDismissListeners } from './dismiss'
+import type { IsolationFlags, OverlayEdge, OverlayProps } from '../types'
+import { overlayStackStore, setLayerHandlers } from '../stack'
+import { overlayWarn } from '../shared/warn'
+import { syncDismissListeners } from '../dismiss'
+
+/** Registers this Overlay on the document stack while open. */
 
 type Options = {
   overlayId: string

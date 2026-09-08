@@ -9,9 +9,7 @@ import { OverlayContent } from './parts/Content'
 import { OverlayArrow } from './parts/Arrow'
 import { OverlayHandle } from './parts/Handle'
 import { PresenceCoordinatorContext, usePresenceCoordinator } from '../Presence'
-import { useOverlayOpenState } from './use-open-state'
-import { usePartRegistry } from './use-part-registry'
-import { useOverlayLayer } from './use-overlay-layer'
+import { useOverlayOpenState, usePartRegistry, useOverlayLayer } from './hooks'
 
 export {
   OverlayTrigger,

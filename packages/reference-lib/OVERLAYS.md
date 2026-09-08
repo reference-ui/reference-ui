@@ -126,7 +126,7 @@ depends on a correct layer stack.
 | `Overlay.Handle` only tracks `clientY` and only `deltaY > 0` | `OverlayHandle` | All four `edge` values: bottom/top Y, left/right X, 25% distance **or** velocity |
 | Backdrop click does not consult the layer stack | `OverlayBackdrop` always `setIsOpen(false)` | Topmost layer only; nested backdrops must not close parents |
 | Outside press uses `event.target`, not `composedPath()` | `OverlayContent` pointerdown | Shadow trees inside Content count as inside |
-| Parent-close cascade is a `setTimeout` over stale `state.layers` | `overlay-stack.ts` `removeLayer` | Deterministic child-then-parent cascade with focus-race guard |
+| Parent-close cascade is a `setTimeout` over stale `state.layers` | `stack/store.ts` `removeLayer` | Deterministic child-then-parent cascade with focus-race guard |
 
 ### Gate 2 — Overlay isolation + nested-stack E2E
 
@@ -338,7 +338,7 @@ These are in the tree today. Gates 1, 5, and 6 exist because of them.
 4. **Outside press** — `Node.contains(event.target)`. Shadow hosts look
    outside. No Radix deferred pointer-up / click activation guard beyond a
    `setTimeout(0)` attach.
-5. **`overlay-stack.removeLayer`** — `setTimeout` cascades `dismiss()` on a
+5. **`stack.removeLayer`** — `setTimeout` cascades `dismiss()` on a
    snapshot of children; re-entrant `addLayer`/`removeLayer` is racy.
 6. **Tooltip skip-delay** — `ReferenceLibrary` writes `tooltipWarmup`;
    `Tooltip` reads `tooltipGroup`. Config is a no-op.
