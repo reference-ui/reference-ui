@@ -1,4 +1,5 @@
 import type { Config } from '@pandacss/dev'
+import { staticCss } from './static-css'
 
 /**
  * Userspace base config for ref sync.
@@ -25,4 +26,5 @@ export const baseConfig = {
   outdir: 'styled',
   outExtension: 'js' as const,
   hash: false,
+  staticCss,
 } satisfies Partial<Config>

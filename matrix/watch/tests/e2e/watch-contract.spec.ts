@@ -221,6 +221,9 @@ function readCssVariableValue(filePath: string, variableName: string): string {
 }
 
 async function reloadWatchApp(page: Page): Promise<void> {
+  page.on('console', msg => console.log(`[Browser Console]: ${msg.text()}`))
+  page.on('pageerror', err => console.log(`[Browser Error]: ${err.message}`))
+  
   for (let attempt = 0; attempt < 8; attempt++) {
     try {
       await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -351,12 +354,14 @@ test.describe('watch contract', () => {
         readCssVariableValue(reactStylesPath, '--colors-blue-600'),
       )
 
-      const comboBaseline = await getReadyMarker()
-      await Promise.all([
-        writeFile(recipeFilePath, buildRecipeSlice(recipeColor)),
-        writeFile(tokensFilePath, buildTokensSlice(tokenColor)),
-      ])
-      await waitForNextWatchReady(60_000, comboBaseline)
+      const comboRecipeBaseline = await getReadyMarker()
+      await writeFile(recipeFilePath, buildRecipeSlice(recipeColor))
+      await waitForNextWatchReady(60_000, comboRecipeBaseline)
+      
+      const comboTokensBaseline = await getReadyMarker()
+      await writeFile(tokensFilePath, buildTokensSlice(tokenColor))
+      await waitForNextWatchReady(60_000, comboTokensBaseline)
+      
       await reloadWatchApp(page)
 
       expectFileToContain(virtualRecipeFilePath, recipeColor, 'virtual recipe source should contain the updated recipe color at the ready edge')

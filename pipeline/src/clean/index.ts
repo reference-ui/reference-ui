@@ -57,13 +57,11 @@ async function cleanDaggerEngineCache(): Promise<boolean> {
     if (removal.status !== 0) {
       throw new Error(removal.stderr.trim() || 'Failed to remove Dagger engine containers and volumes.')
     }
-    cleanedSomething = true
   }
 
-  runDockerCommand(['volume', 'prune', '-f'])
-  runDockerCommand(['builder', 'prune', '-f'])
+  runDockerCommand(['system', 'prune', '-a', '--volumes', '-f'])
 
-  return cleanedSomething
+  return true
 }
 
 export async function cleanPipeline(): Promise<void> {

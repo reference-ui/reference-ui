@@ -326,10 +326,9 @@ export function reclaimDockerDiskSpace(): boolean {
     cleanedSomething = true
   }
 
-  runCommand('docker', ['volume', 'prune', '-f'])
-  runCommand('docker', ['builder', 'prune', '-f'])
+  runCommand('docker', ['system', 'prune', '-a', '--volumes', '-f'])
 
-  return cleanedSomething
+  return true
 }
 
 function needsMoreDockerResources(options: ContainerRuntimeOptions, runtime: DockerRuntimeInfo): boolean {
