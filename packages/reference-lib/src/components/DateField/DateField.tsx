@@ -138,7 +138,6 @@ export function DateFieldPicker({
       border="1px solid"
       borderColor="ui.dialog.border"
       p="2r"
-      zIndex={50}
       data-reference-date-picker=""
       className={className}
       style={style}

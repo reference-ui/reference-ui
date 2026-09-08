@@ -304,7 +304,6 @@ const contentId = id ?? context.contentId
       px="2.5r"
       borderRadius="sm"
       boxShadow="0 2px 8px rgba(0,0,0,0.2)"
-      zIndex={50}
       {...props}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}

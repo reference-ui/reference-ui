@@ -19,7 +19,6 @@ export default {
             boxShadow="0 4px 16px rgba(0,0,0,0.15)"
             placement="bottom-start"
             offset={8}
-            zIndex={50}
           >
             <Div display="flex" flexDirection="column" gap="2r">
               <Span fontWeight="600" fontSize="3.5r">
@@ -52,7 +51,6 @@ export default {
             boxShadow="0 4px 12px rgba(0,0,0,0.12)"
             placement="top"
             maxW="50r"
-            zIndex={50}
           >
             <Span fontSize="3r">
               Hover-opened popover with grace area for pointer travel.
@@ -77,7 +75,6 @@ export default {
               borderColor="ui.dialog.border"
               placement={placement}
               offset={8}
-              zIndex={50}
             >
               <Span fontSize="3r">placement=&quot;{placement}&quot;</Span>
             </Popover.Content>

@@ -11,7 +11,6 @@ const dialogChrome = {
   borderColor: 'ui.dialog.border' as const,
   boxShadow: '0 10px 40px rgba(0,0,0,0.25)' as const,
   minW: '70r' as const,
-  zIndex: 50,
 }
 
 export default {
@@ -24,7 +23,7 @@ export default {
         </Button>
 
         <Overlay open={open} onOpenChange={setOpen}>
-          <Overlay.Backdrop bg="rgba(0,0,0,0.4)" zIndex={40} />
+          <Overlay.Backdrop bg="rgba(0,0,0,0.4)" />
           <Overlay.Content
             position="fixed"
             top="50%"
@@ -58,7 +57,7 @@ export default {
     return (
       <Overlay open={open} onOpenChange={setOpen}>
         <Overlay.Trigger variant="primary">Open via trigger</Overlay.Trigger>
-        <Overlay.Backdrop bg="rgba(0,0,0,0.4)" zIndex={40} />
+        <Overlay.Backdrop bg="rgba(0,0,0,0.4)" />
         <Overlay.Content
           position="fixed"
           top="50%"
@@ -71,7 +70,6 @@ export default {
           borderColor="ui.dialog.border"
           boxShadow="0 8px 24px rgba(0,0,0,0.2)"
           minW="60r"
-          zIndex={50}
           role="dialog"
           aria-modal="true"
         >
@@ -98,7 +96,6 @@ export default {
             border="1px solid"
             borderColor="ui.dialog.border"
             boxShadow="0 8px 24px rgba(0,0,0,0.2)"
-            zIndex={50}
           >
             <P fontSize="3.5r" m="0">
               Anchored to the trigger. Overlay writes position.

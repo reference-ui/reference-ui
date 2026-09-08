@@ -273,7 +273,6 @@ export function ComboboxPopover({
       border="1px solid"
       borderColor="ui.dialog.border"
       boxShadow="0 4px 16px rgba(0,0,0,0.12)"
-      zIndex={50}
       style={{
         minWidth: 'var(--reference-overlay-anchor-width, 12.5rem)',
         ...style,

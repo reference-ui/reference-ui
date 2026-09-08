@@ -1,20 +1,27 @@
-import { createStore } from 'zustand'
+import { createStore } from 'zustand/vanilla'
+import { useStore } from 'zustand'
 
 export type Layer = {
   id: string
   dismiss: () => void
   isModal: boolean
+  zIndex: number
 }
 
 type OverlayStackState = {
   layers: Layer[]
-  addLayer: (layer: Layer) => void
+  addLayer: (layer: Omit<Layer, 'zIndex'>) => void
   removeLayer: (id: string) => void
 }
 
 export const overlayStackStore = createStore<OverlayStackState>((set) => ({
   layers: [],
-  addLayer: (layer: Layer) => set((state: OverlayStackState) => ({ layers: [...state.layers, layer] })),
+  addLayer: (layer: Omit<Layer, 'zIndex'>) =>
+    set((state: OverlayStackState) => {
+      const lastLayer = state.layers[state.layers.length - 1]
+      const nextZIndex = lastLayer ? lastLayer.zIndex + 10 : 100
+      return { layers: [...state.layers, { ...layer, zIndex: nextZIndex }] }
+    }),
   removeLayer: (id: string) =>
     set((state: OverlayStackState) => {
       const idx = state.layers.findIndex((l: Layer) => l.id === id)
@@ -29,3 +36,7 @@ export const overlayStackStore = createStore<OverlayStackState>((set) => ({
       return { layers: nextLayers }
     }),
 }))
+
+export function useOverlayZIndex(id: string) {
+  return useStore(overlayStackStore, (state) => state.layers.find((l) => l.id === id)?.zIndex ?? 100)
+}

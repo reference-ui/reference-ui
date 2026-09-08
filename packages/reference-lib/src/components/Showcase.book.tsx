@@ -437,7 +437,7 @@ export default function ShowcaseFixture() {
           </Button>
 
           <Overlay open={isOverlayOpen} onOpenChange={setIsOverlayOpen}>
-            <Overlay.Backdrop bg="rgba(0,0,0,0.4)" zIndex={40} />
+            <Overlay.Backdrop bg="rgba(0,0,0,0.4)" />
             <Overlay.Content
                 position="fixed"
                 top="50%"
@@ -451,7 +451,6 @@ export default function ShowcaseFixture() {
                 borderColor="ui.dialog.border"
                 boxShadow="0 10px 40px rgba(0,0,0,0.25)"
                 minW="70r"
-                zIndex={50}
               >
                 <H3 fontSize="4.5r" fontWeight="600" m="0">Modal Dialog</H3>
                 <P fontSize="3r" color="design.text.light" mt="2r">

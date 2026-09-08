@@ -4,7 +4,7 @@ import { Portal, type PortalProps } from '../Portal'
 import { Presence } from '../Presence'
 import { FocusLock } from '../FocusLock'
 import { OverlayPortaledSurface } from './overlay-portal-surface'
-import { overlayStackStore } from './overlay-stack'
+import { overlayStackStore, useOverlayZIndex } from './overlay-stack'
 import { usePreventScroll } from './scroll-lock'
 import { ariaHideOutside } from './aria-hide-outside'
 import {
@@ -314,6 +314,7 @@ export function OverlayBackdrop({
   ...props
 }: OverlayBackdropProps) {
   const context = React.useContext(OverlayContext)
+  const zIndex = useOverlayZIndex(context?.id ?? '') - 1
 
   if (!context) return null
 
@@ -322,6 +323,7 @@ export function OverlayBackdrop({
       <OverlayPortaledSurface
         data-reference-overlay-backdrop=""
         data-state={context.isOpen ? 'open' : 'closed'}
+        zIndex={zIndex}
         position="fixed"
         top={0}
         left={0}
@@ -630,6 +632,8 @@ export function OverlayContent({
 
   usePreventScroll({ isDisabled: !context || !isOpen || !context.isolation.scroll })
 
+  const zIndex = useOverlayZIndex(context?.id ?? '')
+
   if (!context) return null
 
   const anchorNode =
@@ -643,6 +647,7 @@ export function OverlayContent({
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
       anchorNode={anchorNode}
+      zIndex={zIndex}
       ref={(node: HTMLDivElement | null) => {
         context.contentRef.current = node
         setMountedContent(node)
