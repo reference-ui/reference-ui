@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { getBookEntries, getBookEntry } from './registry'
+import { overlayStackStore } from '../components/Overlay/overlay-stack'
 import { BookDecorator } from './decorator'
 
 interface ErrorBoundaryProps {
@@ -91,6 +92,17 @@ export function BookRenderer() {
       }
     }
   }, [])
+
+  // Clean up any stale overlay artifacts from previous HMR cycle or story switch
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('[data-overlay-managed-inert]').forEach(el => {
+        el.removeAttribute('inert')
+        el.removeAttribute('data-overlay-managed-inert')
+      })
+      overlayStackStore.setState({ layers: [] })
+    }
+  }, [currentBookId, currentStoryName, hmrVersion])
 
   // Fast synchronous bridge and postMessage listener
   React.useEffect(() => {

@@ -11,7 +11,11 @@ export function readDocumentColorMode(): string | undefined {
   if (typeof document === 'undefined') return undefined
   return (
     document.documentElement.getAttribute(DATA_COLOR_MODE_ATTR) ??
+    document.documentElement.getAttribute('data-color-mode') ??
+    document.documentElement.getAttribute('data-theme') ??
     document.body?.getAttribute(DATA_COLOR_MODE_ATTR) ??
+    document.body?.getAttribute('data-color-mode') ??
+    document.body?.getAttribute('data-theme') ??
     undefined
   )
 }

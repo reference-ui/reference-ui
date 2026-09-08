@@ -323,7 +323,6 @@ export function OverlayBackdrop({
       <OverlayPortaledSurface
         data-reference-overlay-backdrop=""
         data-state={context.isOpen ? 'open' : 'closed'}
-        zIndex={zIndex}
         position="fixed"
         top={0}
         left={0}
@@ -339,6 +338,7 @@ export function OverlayBackdrop({
         style={{
           position: 'fixed',
           inset: 0,
+          zIndex,
           ...style,
         }}
         {...props}
@@ -647,13 +647,16 @@ export function OverlayContent({
       data-reference-overlay-content=""
       data-state={isOpen ? 'open' : 'closed'}
       anchorNode={anchorNode}
-      zIndex={zIndex}
       ref={(node: HTMLDivElement | null) => {
         context.contentRef.current = node
         setMountedContent(node)
+        overlayStackStore.getState().setLayerNode(context.id, node)
       }}
       className={className}
-      style={style}
+      style={{
+        zIndex,
+        ...style,
+      }}
       {...props}
     >
       {children}

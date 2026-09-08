@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { overlayStackStore } from '../Overlay/overlay-stack'
 
 export type FocusTarget =
   | HTMLElement
@@ -288,6 +289,11 @@ export function FocusLock({
     if (!container) return
 
     const isTopLock = () => {
+      for (let i = activeLocks.length - 1; i >= 0; i--) {
+        if (!activeLocks[i].container.isConnected) {
+          activeLocks.splice(i, 1)
+        }
+      }
       const top = activeLocks[activeLocks.length - 1]
       return top?.id === lockId
     }
@@ -326,7 +332,9 @@ export function FocusLock({
       const resolvedShards = getResolvedShards()
       const isInside =
         container.contains(target) ||
-        resolvedShards.some(shard => shard.contains(target))
+        resolvedShards.some(shard => shard.contains(target)) ||
+        overlayStackStore.getState().layers.some(l => l.node?.contains(target)) ||
+        Boolean(target.closest('[data-reference-overlay-content][data-state="open"]'))
 
       if (isInside) {
         lastFocusedNodeRef.current = target

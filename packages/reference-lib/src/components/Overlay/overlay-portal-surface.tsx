@@ -34,7 +34,12 @@ export const OverlayPortaledSurface = React.forwardRef<HTMLDivElement, OverlayPo
         undefined
     }
     const anchorColorMode = getDomColorMode(anchorNode)
-    const colorMode = colorModeProp ?? inheritedColorMode ?? anchorColorMode
+    const docColorMode =
+      typeof document !== 'undefined'
+        ? (getDomColorMode(document.documentElement) ?? getDomColorMode(document.body))
+        : undefined
+
+    const colorMode = colorModeProp ?? inheritedColorMode ?? anchorColorMode ?? docColorMode ?? 'dark'
 
     return (
       <Div ref={ref} colorMode={colorMode} {...props}>

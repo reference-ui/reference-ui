@@ -17,6 +17,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-color-mode', theme)
+    document.documentElement.setAttribute('data-panda-theme', theme)
     document.documentElement.style.colorScheme = theme
   }, [theme])
 
@@ -24,7 +25,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
     return (
       <ReferenceLibrary>
         <Div
-          colorMode={isDark ? 'dark' : undefined}
+          colorMode={theme}
           display="flex"
           height="100vh"
           width="100vw"
@@ -43,7 +44,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
   return (
     <ReferenceLibrary>
       <Div
-        colorMode={isDark ? 'dark' : undefined}
+        colorMode={theme}
         display="flex"
         flexDirection="column"
         boxSizing="border-box"

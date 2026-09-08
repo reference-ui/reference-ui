@@ -6,12 +6,14 @@ export type Layer = {
   dismiss: () => void
   isModal: boolean
   zIndex: number
+  node?: HTMLElement | null
 }
 
 type OverlayStackState = {
   layers: Layer[]
   addLayer: (layer: Omit<Layer, 'zIndex'>) => void
   removeLayer: (id: string) => void
+  setLayerNode: (id: string, node: HTMLElement | null) => void
 }
 
 export const overlayStackStore = createStore<OverlayStackState>((set) => ({
@@ -33,6 +35,14 @@ export const overlayStackStore = createStore<OverlayStackState>((set) => ({
         children.reverse().forEach((c: Layer) => c.dismiss())
       }, 0)
       
+      return { layers: nextLayers }
+    }),
+  setLayerNode: (id: string, node: HTMLElement | null) =>
+    set((state: OverlayStackState) => {
+      const idx = state.layers.findIndex((l: Layer) => l.id === id)
+      if (idx === -1) return state
+      const nextLayers = [...state.layers]
+      nextLayers[idx] = { ...nextLayers[idx], node }
       return { layers: nextLayers }
     }),
 }))
