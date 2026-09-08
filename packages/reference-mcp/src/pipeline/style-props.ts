@@ -266,7 +266,7 @@ export function getStylePropsReference(input: McpGetStylePropsInput = {}) {
     description:
       'Reference UI primitives accept Panda-style CSS props through StyleProps. Component responses only point here so inherited CSS-style props are not repeated for every component.',
     valueModel:
-      'Most style props accept raw CSS values, token names from compatible categories, responsive objects, and conditional values. Color-bearing props are narrowed to color tokens plus safe CSS keywords. NOTE: Arbitrary runtime-calculated numerical values (e.g. zIndex or opacity formulas) must use inline style={{ ... }} to avoid build-time static atomic CSS engine drops.',
+      'StyleProps are build-time compiled atomic CSS classes. They accept raw CSS values, tokens, responsive objects, and discrete static ternaries (e.g. active ? "primary" : "muted"). NOTE: Arbitrary runtime-calculated math (e.g. zIndex/opacity formulas) cannot be statically extracted by Panda and must use inline style={{ ... }} to bypass codegen.',
     tokenGuidance:
       'Use get_tokens to inspect project token paths and descriptions. Token category compatibility is summarized per style prop category, but a compatible category may be absent in the current project.',
     includeProps,
