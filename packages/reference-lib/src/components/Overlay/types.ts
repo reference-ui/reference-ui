@@ -6,7 +6,13 @@ import type { Placement, Strategy, VirtualAnchor } from './geometry/floating'
 export type OverlayPlacement = Placement
 export type OverlayEdge = 'top' | 'bottom' | 'left' | 'right'
 export type OverlayStrategy = Strategy
-export type { VirtualAnchor }
+
+export type OverlayAnchor =
+  | HTMLElement
+  | VirtualAnchor
+  | React.RefObject<HTMLElement | null>
+  | { x: number; y: number; width?: number; height?: number }
+  | null
 
 export type OverlayIsolation =
   | boolean
@@ -36,19 +42,12 @@ export interface OverlayProps extends OverlayDismissHandlers {
   onOpen?: () => void
   onOpenChange?: (open: boolean) => void
   isolation?: OverlayIsolation
-  anchor?:
-    | HTMLElement
-    | VirtualAnchor
-    | React.RefObject<HTMLElement | null>
-    | { x: number; y: number; width?: number; height?: number }
-    | null
+  anchor?: OverlayAnchor
   edge?: OverlayEdge
   closeOnScroll?: boolean
   /** When false, closed Content unmounts immediately (Tooltip). Default true. */
   presence?: boolean
 }
-
-export type OverlayAnchor = OverlayProps['anchor']
 
 export function resolveIsolation(prop: OverlayIsolation = true): IsolationFlags {
   if (typeof prop === 'boolean') {

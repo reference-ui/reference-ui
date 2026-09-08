@@ -299,9 +299,10 @@ interface PortalProps {
 A controlled foundation for temporary content displayed above the application.
 
 Overlay answers three independent questions: where Content is bound
-(unbound, Trigger/`anchor`, or `edge`), how isolated the rest of the page
-is (`isolation`), and how the layer opens and closes (controlled `open`,
-optional `Overlay.Trigger`, dismiss handlers, optional Handle drag).
+(unbound, `anchor` / non-isolating Trigger, or `edge`), how isolated
+the rest of the page is (`isolation`), and how the layer opens and
+closes (controlled `open`, optional `Overlay.Trigger`, dismiss
+handlers, optional Handle drag).
 
 `vendor/floating-ui` core + DOM is the anchored geometry port — not a
 runtime import, and not `@floating-ui/react`. `vendor/vaul` is the
@@ -480,7 +481,7 @@ type OverlayIsolation =
       scroll?: boolean
     }
 
-type VirtualAnchor =
+type OverlayAnchor =
   | Element
   | DOMRect
   | { getBoundingClientRect(): DOMRect }
@@ -500,7 +501,7 @@ interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
   onOpen?: () => void
-  anchor?: VirtualAnchor
+  anchor?: OverlayAnchor
   edge?: OverlayEdge
   isolation?: OverlayIsolation
   closeOnScroll?: boolean
@@ -543,8 +544,9 @@ interface OverlayHandleProps
 
 Omitted `isolation` is `true`. An object patches that bundle.
 `isolation={false}` is popover-shaped Overlay without hover. Trigger
-never portals. Handle is valid only with `edge`. `edge` and `anchor`
-are exclusive.
+is the default floating reference only then: omitted isolation plus
+Trigger stays unbound. Handle is valid only with `edge`. `edge` and
+`anchor` are exclusive. Trigger never portals.
 
 Unbound Overlay writes no `position` / `top` / `left`. Placement,
 offset, collision, strategy, flip, shift, and Arrow are inert. Anchored

@@ -27,6 +27,7 @@ export type {
   OverlayPlacement,
   OverlayEdge,
   OverlayIsolation,
+  OverlayAnchor,
   OverlayDismissHandlers,
   OverlayPortalProps,
   OverlayContentGeometry,

@@ -12,7 +12,7 @@ Dialog, drawer, sheet, lightbox, popover, tooltip, and combobox popup are
 not separate overlay runtimes. They are different answers to three
 independent questions on this component:
 
-1. **Where is it bound?** Geometry — nothing, a trigger/anchor, or a
+1. **Where is it bound?** Geometry — nothing, an anchor, or a
    viewport edge.
 2. **How isolated is the rest of the page?** Isolation — focus lock,
    inert, scroll lock: all on, all off, or patched.
@@ -120,7 +120,7 @@ That shape is a popover. Popover is the named policy that also owns
 hover. Overlay already has the Trigger, the living position, the layer
 stack, and the Tab-order bridge (because isolation is off).
 
-Virtual anchor when the application owns the hit target:
+Point or rect `anchor` when the application owns the hit target:
 
 ```tsx
 <Overlay
@@ -163,19 +163,34 @@ such as `ui.dialog.background` resolve correctly in dark and light mode without 
 
 ## Geometry
 
-Three mutually exclusive bindings. Mixing `edge` with `anchor`, or `edge`
-with a Trigger used as a floating reference, is a diagnostic. Trigger
-may still open an edge overlay; it is not the floating reference then.
+Three mutually exclusive bindings. Mixing `edge` with `anchor` is a
+diagnostic. Trigger may still open an edge overlay; it is not the
+floating reference then.
+
+Trigger is the default floating reference only when `isolation={false}`.
+Omitted isolation plus Trigger stays unbound: Trigger is the opener,
+not the positioning reference.
+
+| Shape | Resolution |
+| :--- | :--- |
+| Default isolation + Trigger | Unbound dialog |
+| `isolation={false}` + Trigger | Trigger-anchored panel |
+| Explicit `anchor` | Anchored regardless of isolation |
+| Explicit `edge` | Viewport-bound regardless of isolation |
+
+When both Trigger and `anchor` are present, Trigger stays the
+interaction source; `anchor` wins geometry.
 
 **Unbound.** No `anchor`, no `edge`, and Trigger is not used as a
 reference. Overlay writes no `position` / `top` / `left`. Placement,
 offset, collision, strategy, flip, shift, and Arrow are inert. A
 centered dialog is application CSS against Presence `data-state`.
 
-**Anchored.** `anchor` is set, or Trigger is present without `edge`.
-Content is the floating element. Overlay runs the ported engine.
-Defaults are `placement="bottom-start"`, `offset=8`,
-`collisionPadding=8`, absolute strategy, flip and shift enabled.
+**Anchored.** Explicit `anchor`, or Trigger present with
+`isolation={false}` and no `edge`. Content is the floating element.
+Overlay runs the ported engine. Defaults are `placement="bottom-start"`,
+`offset=8`, `collisionPadding=8`, absolute strategy, flip and shift
+enabled.
 Positioning owns `position` / `top` / `left` but never consumer
 `transform`. Content publishes `--reference-overlay-available-width`,
 `--reference-overlay-available-height`, `--reference-overlay-anchor-width`,
@@ -340,7 +355,7 @@ type OverlayPlacement =
 
 type OverlayEdge = "top" | "right" | "bottom" | "left"
 
-type VirtualAnchor =
+type OverlayAnchor =
   | Element
   | DOMRect
   | { getBoundingClientRect(): DOMRect }
@@ -364,7 +379,7 @@ interface OverlayProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
   onOpen?: () => void
-  anchor?: VirtualAnchor
+  anchor?: OverlayAnchor
   edge?: OverlayEdge
   isolation?: OverlayIsolation
   closeOnScroll?: boolean
@@ -406,7 +421,8 @@ interface OverlayHandleProps
 `Overlay.Handle` render `div`. `Overlay.Portal` renders nothing.
 
 Omitted `isolation` is `true`. Omitted `closeOnScroll` is `false`.
-Omitted nested object keys leave that system on.
+Omitted nested object keys leave that system on. Trigger is the
+default floating reference only when `isolation={false}`.
 
 Popover, Tooltip, Combobox.Popover, and Menu.Content consume this API.
 They do not own a second `computePosition` runtime.
