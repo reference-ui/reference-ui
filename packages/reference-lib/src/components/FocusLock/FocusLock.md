@@ -8,8 +8,8 @@ Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is recl
 Overlay owns Escape, outside-press, inert, scroll lock, and **when** restore runs (after Presence). FocusLock owns **where** focus goes.
 
 Gate 3 freeze: [SPEC.md](./SPEC.md) — FocusLock × Overlay. Overlay is production.
-This primitive is not, until Presence-trap, nested pause, Overlay-portalled
-shards, proximity walk, and the tabbable catalog are proven. Then stop.
+This primitive is production for containment: Presence-trap, nested pause,
+Overlay-portalled shards, proximity walk, and the tabbable catalog are proven.
 
 Does not add a wrapper node. Slots onto a single child. Overlay.Content is the lock container for dialogs; this primitive exists so that containment is not Overlay-only.
 

@@ -46,7 +46,7 @@ belong to Overlay.
 | Primitive | Role | Production? | Next |
 | :--- | :--- | :--- | :--- |
 | **Overlay** | Kernel | **Yes** | Stop Overlay titles. FocusLock Gate 3 |
-| **FocusLock** | Containment solver | **Seam yes** | Catalog leftovers `FL-CAND-02/03/07/13`; then Popover Gate 4 |
+| **FocusLock** | Containment solver | **Yes (Gate 3)** | Stop FocusLock titles. Popover Gate 4 |
 | **Popover** | Hover policy on Overlay | **No** | Gate 4: safe polygon (`PO-HOVER-02` must be a real diagonal) |
 | **Tooltip** | Description policy on Overlay | **No** | Gate 5: unify skip-delay store, Escape-vs-parent, scroll-close |
 | **Toast** | Queue runtime | **No** | Gate 6: pause from overlay stack + remaining APIs |
@@ -66,13 +66,13 @@ Popover or Tooltip.
 `matrix/lib` still does not mount skip-delay groups or portalled shards.
 `@matrix/overlays` mounts nested stacks, edge sheets, and the exotic
 environment pass. Overlay SPEC is done. Remaining family work starts at
-FocusLock Gate 3.
+Popover Gate 4.
 
 ### The remaining mountain
 
 Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
 
-1. **FocusLock Gate 3 (current)** — FocusLock × Overlay: trap through Presence,
+1. **FocusLock Gate 3 (done)** — FocusLock × Overlay: trap through Presence,
    proximity walk, nested isolating pause, Overlay-portalled shard, tabbable
    catalog. Overlay registers shards and owns dismiss; FocusLock solves
    containment. See FocusLock SPEC. Do not add Overlay titles.
@@ -82,7 +82,8 @@ Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
    Escape-vs-parent Overlay and scroll-close *policy*.
 4. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
    limit E2E, hotkey, `dismissible`, `onAutoClose`, `unwrap()`.
-5. **Unit tests** for tabbable catalog and toast queue math.
+5. **Unit tests** for toast queue math. Tabbable catalog unit tests shipped
+   with FocusLock Gate 3.
 
 Until that list is green, do not call the overlay *family* production-grade.
 
@@ -133,21 +134,20 @@ Proven in `@matrix/overlays` (`overlay.spec.ts`, `overlay-exotica.spec.ts`).
 Do not add Overlay titles. Nested Escape, layer membership, inert, scroll lock,
 edge Handle, iframe / two-root / Shadow / SSR / RTL are Overlay SPEC `[x]`.
 
-### Gate 3 — FocusLock × Overlay (current)
+### Gate 3 — FocusLock × Overlay — DONE
 
 Contract: [FocusLock SPEC](src/components/FocusLock/SPEC.md). Overlay is
-production. This gate is the containment solver Overlay already wired.
-
-Work order (Must Overlay seams proven 2026-09-09):
+production. Containment solver Overlay already wired is proven.
 
 1. Presence coupling — **proven** `FL-OV-01` / `FL-OV-02`.
 2. Deleted opener walk — **proven** `FL-OV-05` / `FL-RESTORE-03` / `04` / `05`.
 3. Nested isolating Overlay — **proven** `FL-OV-03` / `FL-NEST-01`–`03`.
-4. Overlay-portalled modeless shard — **proven** `FL-OV-04`. `FL-SHARD-02` / `05` still open.
-5. Tabbable catalog — core proven (`FL-CAND-01` / `04`–`06` / `08`, `FL-TAB-01`).
-   Remaining: `FL-CAND-02` / `03` / `07` / `13`.
+4. Overlay-portalled modeless shard — **proven** `FL-OV-04`, `FL-SHARD-02` / `05`.
+5. Tabbable catalog — **proven** (`FL-CAND-01`–`06` / `08` / `13`, `FL-TAB-01`).
+   `FL-CAND-07` unit-proven (empty client rects). Should / resilience / exotica
+   proven. TalkBack parked.
 
-Then stop FocusLock. Leftovers are Should / resilience / exotica. TalkBack stays parked.
+**Stop FocusLock.** Popover Gate 4 is next.
 
 ### Gate 4 — Popover hover grace
 

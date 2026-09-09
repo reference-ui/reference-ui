@@ -1,33 +1,23 @@
 /** Native tabbable catalog for FocusLock. Positive tabIndex stays document order. */
 
-const CANDIDATE_SELECTOR = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]',
-  '[contenteditable]:not([contenteditable="false"])',
-  'summary',
-  'audio[controls]',
-  'video[controls]',
-  'iframe',
-].join(',')
-
 export function isElementVisible(el: HTMLElement): boolean {
   if (!el.isConnected) return false
   if (el.hasAttribute('hidden') || el.closest('[hidden]')) return false
   if (el.hasAttribute('inert') || el.closest('[inert]')) return false
 
   try {
-    const style = el.ownerDocument.defaultView?.getComputedStyle(el)
-    if (
-      !style ||
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      style.visibility === 'collapse'
-    ) {
-      return false
+    let current: HTMLElement | null = el
+    while (current) {
+      const style = current.ownerDocument.defaultView?.getComputedStyle(current)
+      if (
+        !style ||
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        style.visibility === 'collapse'
+      ) {
+        return false
+      }
+      current = current.parentElement
     }
   } catch {
     return false
@@ -144,6 +134,13 @@ function collectRadioState(candidates: HTMLElement[]): Map<string, HTMLInputElem
 function walkComposed(node: Node, into: HTMLElement[]): void {
   if (node instanceof HTMLElement) {
     if (isElementTabbable(node)) into.push(node)
+
+    if (node.tagName === 'IFRAME') return
+
+    const hostTabIndex = tabIndexValue(node)
+    if (node.shadowRoot && hostTabIndex !== null && hostTabIndex < 0) {
+      return
+    }
 
     if (node instanceof HTMLDetailsElement && !node.open) {
       const summary = firstSummary(node)
@@ -273,4 +270,3 @@ export function findFocusableProximity(
   return null
 }
 
-export { CANDIDATE_SELECTOR }

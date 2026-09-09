@@ -55,9 +55,13 @@ function pruneLocks() {
   }
 }
 
-function isTopLock(lockId: string, doc: Document) {
+function locksForDocument(doc: Document) {
   pruneLocks()
-  const live = activeLocks.filter(lock => lock.container.ownerDocument === doc)
+  return activeLocks.filter(lock => lock.container.ownerDocument === doc)
+}
+
+function isTopLock(lockId: string, doc: Document) {
+  const live = locksForDocument(doc)
   return live[live.length - 1]?.id === lockId
 }
 
@@ -65,6 +69,20 @@ function isInsideLock(container: HTMLElement, shards: HTMLElement[], node: Node 
   if (!node) return false
   if (isNodeInside(container, node)) return true
   return shards.some(shard => isNodeInside(shard, node))
+}
+
+function deepActiveElement(doc: Document): HTMLElement | null {
+  let active: Element | null = doc.activeElement
+  while (active instanceof HTMLElement && active.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement
+  }
+  return active instanceof HTMLElement ? active : null
+}
+
+function safeFocus(node: HTMLElement | null) {
+  if (!node || !node.isConnected) return
+  if (deepActiveElement(node.ownerDocument) === node) return
+  node.focus({ preventScroll: true })
 }
 
 export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
@@ -81,6 +99,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
   ) {
     const containerRef = React.useRef<HTMLElement | null>(null)
     const lastFocusedNodeRef = React.useRef<HTMLElement | null>(null)
+    const previousValidNodeRef = React.useRef<HTMLElement | null>(null)
     const previousActiveElementRef = React.useRef<{
       node: HTMLElement | null
       parent: HTMLElement | null
@@ -89,6 +108,9 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
     } | null>(null)
     const restoredRef = React.useRef(false)
     const restoreTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    const reclaimFrameRef = React.useRef<number | null>(null)
+    const addedTabIndexRef = React.useRef(false)
+    const movingFocusRef = React.useRef(false)
 
     const lockIdRef = React.useRef<string | null>(null)
     if (!lockIdRef.current) {
@@ -102,7 +124,13 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       for (const shard of shardsProp) {
         if (shard instanceof HTMLElement && shard.isConnected) {
           list.push(shard)
-        } else if (shard && typeof shard === 'object' && 'current' in shard && shard.current) {
+        } else if (
+          shard &&
+          typeof shard === 'object' &&
+          'current' in shard &&
+          shard.current instanceof HTMLElement &&
+          shard.current.isConnected
+        ) {
           list.push(shard.current)
         }
       }
@@ -139,10 +167,57 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       }
     }, [])
 
-    const restoreOnce = React.useCallback((doc: Document) => {
+    const rememberInside = React.useCallback((node: HTMLElement | null) => {
+      if (!node) return
+      const previous = lastFocusedNodeRef.current
+      if (previous && previous !== node && previous.isConnected) {
+        previousValidNodeRef.current = previous
+      }
+      lastFocusedNodeRef.current = node
+    }, [])
+
+    const pickInsideFallback = React.useCallback(
+      (container: HTMLElement, shards: HTMLElement[]): HTMLElement => {
+        const last = lastFocusedNodeRef.current
+        if (
+          last &&
+          last.isConnected &&
+          isElementFocusable(last) &&
+          isInsideLock(container, shards, last)
+        ) {
+          return last
+        }
+        const previous = previousValidNodeRef.current
+        if (
+          previous &&
+          previous.isConnected &&
+          isElementFocusable(previous) &&
+          isInsideLock(container, shards, previous)
+        ) {
+          return previous
+        }
+        return getTabbableCandidates(container, shards)[0] || container
+      },
+      []
+    )
+
+    const restoreOnce = React.useCallback((doc: Document, container: HTMLElement | null) => {
       if (restoredRef.current) return
       const latestRestoreFocus = restoreFocusRef.current
       if (latestRestoreFocus === false) {
+        restoredRef.current = true
+        return
+      }
+
+      const active = doc.activeElement as HTMLElement | null
+      const shards = getResolvedShardsRef.current()
+      const alreadyMoved =
+        active &&
+        active !== doc.body &&
+        active.isConnected &&
+        isElementFocusable(active) &&
+        (!container || !container.isConnected || !isInsideLock(container, shards, active))
+      if (alreadyMoved) {
         restoredRef.current = true
         return
       }
@@ -152,32 +227,49 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       const defaultTarget = resolveFocusTarget(defaultRestoreTargetRef.current)
 
       let target: HTMLElement | null = null
-      if (explicitRestore && isElementFocusable(explicitRestore)) {
+      if (explicitRestore && explicitRestore.isConnected && isElementFocusable(explicitRestore)) {
         target = explicitRestore
       } else if (captured?.node && captured.node.isConnected && isElementFocusable(captured.node)) {
         target = captured.node
       } else if (captured) {
         target = findFocusableProximity(captured.node, captured.parent, captured.next, captured.prev)
       }
-      if (!target && defaultTarget && isElementFocusable(defaultTarget)) {
+      if (!target && defaultTarget && defaultTarget.isConnected && isElementFocusable(defaultTarget)) {
         target = defaultTarget
       }
 
       restoredRef.current = true
-      if (target && doc.activeElement !== target) {
-        target.focus({ preventScroll: true })
+      if (target) safeFocus(target)
+    }, [])
+
+    const clearReclaimFrame = React.useCallback(() => {
+      if (reclaimFrameRef.current != null) {
+        cancelAnimationFrame(reclaimFrameRef.current)
+        reclaimFrameRef.current = null
       }
     }, [])
 
+    const scheduleRestore = React.useCallback(
+      (doc: Document, container: HTMLElement | null) => {
+        if (restoreTimerRef.current != null) {
+          clearTimeout(restoreTimerRef.current)
+        }
+        restoreTimerRef.current = setTimeout(() => {
+          restoreTimerRef.current = null
+          restoreOnce(doc, container)
+        }, 0)
+      },
+      [restoreOnce]
+    )
+
     React.useEffect(() => {
+      if (disabled) {
+        return
+      }
+
       if (restoreTimerRef.current != null) {
         clearTimeout(restoreTimerRef.current)
         restoreTimerRef.current = null
-      }
-
-      if (disabled) {
-        previousActiveElementRef.current = null
-        return
       }
 
       const container = containerRef.current
@@ -224,48 +316,55 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
 
         if (explicitTarget && isTargetInContainer(explicitTarget)) {
           if (doc.activeElement !== explicitTarget) {
+            movingFocusRef.current = true
             explicitTarget.focus({ preventScroll: true })
+            movingFocusRef.current = false
           }
-          lastFocusedNodeRef.current = explicitTarget
+          rememberInside(explicitTarget)
         } else {
           const currentActive = doc.activeElement as HTMLElement | null
           if (currentActive && isTargetInContainer(currentActive) && currentActive !== container) {
-            lastFocusedNodeRef.current = currentActive
+            rememberInside(currentActive)
           } else {
-            const autoFocusCandidate = container.querySelector<HTMLElement>(
-              '[autofocus], [data-autofocus]'
-            )
-            if (autoFocusCandidate && isElementFocusable(autoFocusCandidate)) {
-              autoFocusCandidate.focus({ preventScroll: true })
-              lastFocusedNodeRef.current = autoFocusCandidate
+            const tabbables = getTabbableCandidates(container, shards)
+            if (tabbables.length > 0 && tabbables[0]) {
+              movingFocusRef.current = true
+              tabbables[0].focus({ preventScroll: true })
+              movingFocusRef.current = false
+              rememberInside(tabbables[0])
             } else {
-              const tabbables = getTabbableCandidates(container, shards)
-              if (tabbables.length > 0 && tabbables[0]) {
-                tabbables[0].focus({ preventScroll: true })
-                lastFocusedNodeRef.current = tabbables[0]
-              } else {
-                if (!container.hasAttribute('tabindex')) {
-                  container.setAttribute('tabindex', '-1')
-                }
-                container.focus({ preventScroll: true })
-                lastFocusedNodeRef.current = container
+              if (!container.hasAttribute('tabindex')) {
+                container.setAttribute('tabindex', '-1')
+                addedTabIndexRef.current = true
               }
+              movingFocusRef.current = true
+              container.focus({ preventScroll: true })
+              movingFocusRef.current = false
+              rememberInside(container)
             }
           }
         }
       }
 
       return () => {
+        clearReclaimFrame()
+        const live = locksForDocument(doc)
+        const wasTop = live[live.length - 1]?.id === lockId
         const index = activeLocks.findIndex(lock => lock.id === lockId)
         if (index !== -1) {
           activeLocks.splice(index, 1)
         }
-        restoreTimerRef.current = setTimeout(() => {
-          restoreTimerRef.current = null
-          restoreOnce(doc)
-        }, 0)
+        if (addedTabIndexRef.current && container.hasAttribute('tabindex')) {
+          container.removeAttribute('tabindex')
+          addedTabIndexRef.current = false
+        }
+        const remaining = locksForDocument(doc)
+        if (!wasTop && remaining.length > 0) {
+          return
+        }
+        scheduleRestore(doc, container)
       }
-    }, [disabled, lockId, restoreOnce])
+    }, [clearReclaimFrame, disabled, lockId, rememberInside, scheduleRestore])
 
     React.useEffect(() => {
       if (disabled) return
@@ -275,9 +374,10 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
 
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key !== 'Tab' || !isTopLock(lockId, doc)) return
+        if (event.defaultPrevented) return
         if (event.ctrlKey || event.altKey || event.metaKey) return
 
-        if (initialFocus === false && !lastFocusedNodeRef.current) {
+        if (initialFocusRef.current === false && !lastFocusedNodeRef.current) {
           return
         }
 
@@ -286,93 +386,129 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
 
         if (tabbables.length === 0) {
           event.preventDefault()
-          container.focus({ preventScroll: true })
+          safeFocus(container)
           return
         }
 
         const first = tabbables[0]
         const last = tabbables[tabbables.length - 1]
-        const active = doc.activeElement as HTMLElement | null
+        const active = deepActiveElement(doc)
         const inside = isInsideLock(container, resolvedShards, active)
 
-        if (!inside) {
-          event.preventDefault()
-          if (event.shiftKey) {
-            last?.focus({ preventScroll: true })
-          } else {
-            first?.focus({ preventScroll: true })
-          }
+        event.preventDefault()
+        if (!inside || !active || !tabbables.includes(active)) {
+          safeFocus(event.shiftKey ? last : first)
           return
         }
 
-        if (!event.shiftKey && active === last) {
-          event.preventDefault()
-          first?.focus({ preventScroll: true })
-        } else if (event.shiftKey && (active === first || active === container)) {
-          event.preventDefault()
-          last?.focus({ preventScroll: true })
+        const index = tabbables.indexOf(active)
+        if (!event.shiftKey) {
+          safeFocus(tabbables[index + 1] ?? first)
+        } else {
+          safeFocus(tabbables[index - 1] ?? last)
         }
+      }
+
+      const reclaimToFallback = () => {
+        if (!isTopLock(lockId, doc)) return
+        if (movingFocusRef.current) return
+        const resolvedShards = getResolvedShardsRef.current()
+        const fallback = pickInsideFallback(container, resolvedShards)
+        movingFocusRef.current = true
+        safeFocus(fallback)
+        movingFocusRef.current = false
+        rememberInside(fallback)
+      }
+
+      const queueReclaim = () => {
+        if (reclaimFrameRef.current != null) return
+        reclaimFrameRef.current = requestAnimationFrame(() => {
+          reclaimFrameRef.current = null
+          if (!container.isConnected) return
+          reclaimToFallback()
+        })
       }
 
       const handleFocusIn = (event: FocusEvent) => {
         if (!isTopLock(lockId, doc)) return
+        if (movingFocusRef.current) return
         const target = event.target
         if (!(target instanceof Node)) return
 
         const resolvedShards = getResolvedShardsRef.current()
         if (isInsideLock(container, resolvedShards, target)) {
           if (target instanceof HTMLElement) {
-            lastFocusedNodeRef.current = target
+            rememberInside(target)
           }
           return
         }
 
-        if (initialFocus === false && !lastFocusedNodeRef.current) {
+        if (initialFocusRef.current === false && !lastFocusedNodeRef.current) {
           return
         }
 
-        const fallback =
-          lastFocusedNodeRef.current && isElementFocusable(lastFocusedNodeRef.current)
-            ? lastFocusedNodeRef.current
-            : getTabbableCandidates(container, resolvedShards)[0] || container
+        if (
+          event.relatedTarget === null &&
+          (target === doc.body || target === doc.documentElement)
+        ) {
+          return
+        }
 
-        fallback.focus({ preventScroll: true })
+        reclaimToFallback()
       }
 
       const mutationObserver = new MutationObserver(() => {
         if (!isTopLock(lockId, doc)) return
+        if (movingFocusRef.current) return
         const focusedElement = doc.activeElement as HTMLElement | null
         const resolvedShards = getResolvedShardsRef.current()
-        if (focusedElement && focusedElement !== doc.body && isInsideLock(container, resolvedShards, focusedElement)) {
+        if (
+          focusedElement &&
+          focusedElement !== doc.body &&
+          isInsideLock(container, resolvedShards, focusedElement) &&
+          isElementFocusable(focusedElement)
+        ) {
+          rememberInside(focusedElement)
           return
         }
-        const last = lastFocusedNodeRef.current
-        const fallback =
-          last && last.isConnected && isElementFocusable(last) && isInsideLock(container, resolvedShards, last)
-            ? last
-            : getTabbableCandidates(container, resolvedShards)[0] || container
-        if (doc.activeElement !== fallback) {
-          fallback.focus({ preventScroll: true })
-        }
-        lastFocusedNodeRef.current = fallback
+        queueReclaim()
       })
-      mutationObserver.observe(doc.documentElement, { childList: true, subtree: true })
+      mutationObserver.observe(doc.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: [
+          'disabled',
+          'hidden',
+          'inert',
+          'open',
+          'style',
+          'class',
+          'tabindex',
+          'contenteditable',
+        ],
+      })
 
       doc.addEventListener('keydown', handleKeyDown)
       doc.addEventListener('focusin', handleFocusIn)
 
       return () => {
+        clearReclaimFrame()
         mutationObserver.disconnect()
         doc.removeEventListener('keydown', handleKeyDown)
         doc.removeEventListener('focusin', handleFocusIn)
       }
-    }, [disabled, lockId, initialFocus])
+    }, [clearReclaimFrame, disabled, lockId, pickInsideFallback, rememberInside])
 
     if (!children) {
       return null
     }
 
     if (typeof children !== 'object' || !React.isValidElement(children)) {
+      throw new Error('Reference UI: FocusLock expects a single valid React element child.')
+    }
+
+    if (children.type === React.Fragment) {
       throw new Error('Reference UI: FocusLock expects a single valid React element child.')
     }
 
