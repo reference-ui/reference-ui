@@ -21,6 +21,11 @@ Toast is **not** Overlay: no focus trap, no page inert, no layer-stack modality.
     defaultPosition: "bottom-end",
     defaultDuration: 5000,
     limit: 4,
+    hotkey: ["altKey", "KeyT"],
+    expand: false,
+    gap: 14,
+    richColors: false,
+    closeButton: false,
   }}
 >
   <App />
@@ -68,8 +73,25 @@ Invocation options → toast definition → toaster defaults
 
 `announce()` is the same live-region path without a toast.
 
-Timers pause while pointer or keyboard focus is inside a toast and while a
-modal Overlay is the top layer. If focused toast content dismisses itself,
+## Sonner surface
+
+The call shape matches Sonner: `toast()`, `toast.success` / `error` / `warning` /
+`info` / `loading` / `promise` / `custom` / `message`, plus `getToasts()` and
+`getHistory()`. Promise `success` and `error` may be a node, a function, a
+promise, or `{ message, ...options }`. Action and cancel dismiss unless
+`preventDefault()` is called. Loading toasts do not swipe. Swipe follows the
+screen edge for the occupied position.
+
+Kept on purpose, not missing: a waiting FIFO `limit` (excess toasts are not
+mounted and do not expire unseen), 5000ms / `bottom-end` / limit 4 defaults,
+and no second toaster id. Appearance stays in definitions and `Toast` parts,
+not a copied stylesheet.
+
+`announce()` is the same live-region path without a toast.
+
+Timers pause while pointer or keyboard focus is inside a toast and while an
+isolating Overlay is on the document stack (`isolation.inert` / `isModal`, not
+`[aria-modal]`). If focused toast content dismisses itself,
 focus safely returns to the previously focused connected control. That is
 queue/focus lifecycle behavior, not Overlay modality.
 
@@ -114,7 +136,25 @@ interface ToastOptions {
   position?: ToastPosition
   announce?: string
   document?: Document
+  dismissible?: boolean
+  onAutoClose?: (id: ToastId) => void
+  onDismiss?: (id: ToastId) => void
+  testId?: string
+  invert?: boolean
+  richColors?: boolean
 }
+
+toast.dismiss(id?: ToastId, options?: { document?: Document }): void
+toast.getToasts(document?: Document)
+toast.getHistory(document?: Document)
+toast.message(message, options?) // alias of toast()
+```
+
+Sonner-shaped helpers sit on the same function: `success`, `error`, `warning`,
+`info`, `loading`, `promise`, `custom`. `toast.promise` success and error may
+return a string, a function, a promise, or `{ message, ...options }`. Action
+and cancel close the toast unless `preventDefault()` is called. Loading toasts
+do not swipe away. `toast.dismiss()` with no id dismisses every toast.
 
 toast.define<Props>(
   definition: ToastDefinition<Props>

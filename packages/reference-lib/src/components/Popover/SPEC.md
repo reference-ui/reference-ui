@@ -71,7 +71,7 @@ policy**. Overlay-port smokes already here (`PO-FLIP-01`, `PO-SHIFT-01`,
 7. `PO-LAYER-01` smoke — Popover registers on Overlay's stack.
 8. `PO-ENV-01` — closed SSR.
 
-**Stop Popover.** Tooltip Gate 5 is done. Next family gate is Toast Gate 6.
+**Stop Popover.** Tooltip Gate 5 and Toast Gate 6 are done. The overlay family is production.
 
 ### Done when
 

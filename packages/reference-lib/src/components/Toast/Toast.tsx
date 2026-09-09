@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Button, Div, type PrimitiveProps } from '@reference-ui/react'
 import { referenceToast, ToastItemContext } from './ToastSystem'
+import { splitPromiseResult } from './toastQueue'
 
 export type ToastPosition =
   | 'top-start'
@@ -17,34 +18,52 @@ export interface ToastActionOption {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
+export type ToastAction = ToastActionOption | React.ReactNode
+
 export interface ToastOptions {
   id?: string
   duration?: number | false
   position?: ToastPosition
   document?: Document
+  dismissible?: boolean
+  onAutoClose?: (id: string) => void
+  onDismiss?: (id: string) => void
+  testId?: string
+  invert?: boolean
+  richColors?: boolean
+  swipeDirections?: Array<'top' | 'right' | 'bottom' | 'left'>
 }
 
 export interface DefaultToastOptions extends ToastOptions {
   description?: React.ReactNode
   closeButton?: boolean
   type?: ToastType
-  action?: ToastActionOption
-  cancel?: ToastActionOption
+  action?: ToastAction
+  cancel?: ToastAction
   icon?: React.ReactNode
+}
+
+export interface PromiseExtendedResult extends Omit<DefaultToastOptions, 'id'> {
+  message: React.ReactNode
+}
+
+export type PromiseResult<T> =
+  | React.ReactNode
+  | ((data: T) => React.ReactNode | Promise<React.ReactNode> | PromiseExtendedResult | Promise<PromiseExtendedResult>)
+  | PromiseExtendedResult
+
+export interface PromiseData<ToastData = any> {
+  loading?: React.ReactNode
+  success?: PromiseResult<ToastData>
+  error?: PromiseResult<any>
+  description?: React.ReactNode | ((data: ToastData) => React.ReactNode)
+  finally?: () => void | Promise<void>
 }
 
 export interface ToastDefinition<P = void> {
   (props: P, options?: ToastOptions): string
   update: (id: string, props: P, options?: ToastOptions) => void
   dismiss: (id: string) => void
-}
-
-export interface PromiseData<ToastData = any> {
-  loading?: React.ReactNode
-  success?: React.ReactNode | ((data: ToastData) => React.ReactNode)
-  error?: React.ReactNode | ((error: any) => React.ReactNode)
-  description?: React.ReactNode | ((data: ToastData) => React.ReactNode)
-  finally?: () => void
 }
 
 export type ToastRootProps = PrimitiveProps<'div'>
@@ -124,6 +143,14 @@ export function ToastAction({
   onClick,
   ...props
 }: ToastActionProps) {
+  const itemContext = React.useContext(ToastItemContext)
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (e.defaultPrevented || !itemContext?.id) return
+    if (itemContext.dismissible === false) return
+    referenceToast.dismiss(itemContext.id)
+  }
+
   return (
     <Button
       type="button"
@@ -138,8 +165,8 @@ export function ToastAction({
       border="1px solid"
       borderColor="ui.field.border"
       cursor="pointer"
-      onClick={onClick}
       {...props}
+      onClick={handleClick}
     >
       {children}
     </Button>
@@ -157,9 +184,9 @@ export function ToastClose({
   const itemContext = React.useContext(ToastItemContext)
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
-    if (!e.defaultPrevented && itemContext?.id) {
-      referenceToast.dismiss(itemContext.id)
-    }
+    if (e.defaultPrevented || !itemContext?.id) return
+    if (itemContext.dismissible === false) return
+    referenceToast.dismiss(itemContext.id)
   }
 
   return (
@@ -178,14 +205,14 @@ export function ToastClose({
       color="design.text.light"
       border="none"
       cursor="pointer"
-      onClick={handleClick}
       style={{
         transition: 'color 150ms ease, background 150ms ease',
         ...style,
       }}
       {...props}
+      onClick={handleClick}
     >
-      {children ?? (
+      {children ?? itemContext?.icons?.close ?? (
         <svg
           width="14"
           height="14"
@@ -212,19 +239,24 @@ export function DefaultToast({
   title: React.ReactNode
   options?: DefaultToastOptions
 }) {
+  const itemContext = React.useContext(ToastItemContext)
   const {
     description,
-    closeButton = true,
+    closeButton = itemContext?.closeButton ?? true,
     type = 'default',
     action,
     cancel,
     icon: customIcon,
+    richColors = itemContext?.richColors,
+    invert = itemContext?.invert,
   } = options ?? {}
 
   const renderIcon = () => {
     if (customIcon !== undefined) return customIcon
+    const icons = itemContext?.icons
     switch (type) {
       case 'success':
+        if (icons?.success) return icons.success
         return (
           <svg
             width="18"
@@ -242,6 +274,7 @@ export function DefaultToast({
           </svg>
         )
       case 'error':
+        if (icons?.error) return icons.error
         return (
           <svg
             width="18"
@@ -260,6 +293,7 @@ export function DefaultToast({
           </svg>
         )
       case 'warning':
+        if (icons?.warning) return icons.warning
         return (
           <svg
             width="18"
@@ -278,6 +312,7 @@ export function DefaultToast({
           </svg>
         )
       case 'info':
+        if (icons?.info) return icons.info
         return (
           <svg
             width="18"
@@ -296,6 +331,7 @@ export function DefaultToast({
           </svg>
         )
       case 'loading':
+        if (icons?.loading) return icons.loading
         return (
           <svg
             width="18"
@@ -306,7 +342,7 @@ export function DefaultToast({
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ flexShrink: 0, animation: 'spin 1s linear infinite' }}
+            style={{ flexShrink: 0, animation: 'reference-toast-spin 1s linear infinite' }}
           >
             <line x1="12" y1="2" x2="12" y2="6" />
             <line x1="12" y1="18" x2="12" y2="22" />
@@ -326,7 +362,11 @@ export function DefaultToast({
   const icon = renderIcon()
 
   return (
-    <ToastRoot data-type={type}>
+    <ToastRoot
+      data-type={type}
+      data-rich-colors={richColors ? 'true' : undefined}
+      data-invert={invert ? 'true' : undefined}
+    >
       <Div display="flex" alignItems="flex-start" gap="2.5r" width="100%">
         {icon && (
           <Div display="flex" alignItems="center" mt="0.5r">
@@ -345,16 +385,8 @@ export function DefaultToast({
           {description && <ToastDescription>{description}</ToastDescription>}
           {(action || cancel) && (
             <Div display="flex" gap="2r" mt="1.5r" alignItems="center">
-              {action && (
-                <ToastAction onClick={action.onClick}>
-                  {action.label}
-                </ToastAction>
-              )}
-              {cancel && (
-                <ToastClose onClick={cancel.onClick}>
-                  {cancel.label}
-                </ToastClose>
-              )}
+              {action && renderToastAction(action, 'action')}
+              {cancel && renderToastAction(cancel, 'cancel')}
             </Div>
           )}
         </Div>
@@ -370,6 +402,24 @@ export function DefaultToast({
       </Div>
     </ToastRoot>
   )
+}
+
+function isActionOption(action: ToastAction): action is ToastActionOption {
+  return (
+    action != null &&
+    typeof action === 'object' &&
+    !React.isValidElement(action) &&
+    'label' in (action as ToastActionOption)
+  )
+}
+
+function renderToastAction(action: ToastAction, kind: 'action' | 'cancel') {
+  if (React.isValidElement(action)) return action
+  if (!isActionOption(action)) return null
+  if (kind === 'cancel') {
+    return <ToastClose onClick={action.onClick}>{action.label}</ToastClose>
+  }
+  return <ToastAction onClick={action.onClick}>{action.label}</ToastAction>
 }
 
 function resolveContent(content: React.ReactNode, options?: DefaultToastOptions): React.ReactNode {
@@ -389,6 +439,35 @@ function updateToast(id: string, content: React.ReactNode, options?: DefaultToas
   referenceToast.show(resolved, { ...options, id })
 }
 
+async function applyPromiseUpdate(
+  id: string,
+  raw: unknown,
+  fallback: React.ReactNode,
+  type: 'success' | 'error',
+  options: ToastOptions | undefined,
+  description?: React.ReactNode
+) {
+  const value = raw instanceof Promise ? await raw : raw
+  const extended = splitPromiseResult(value)
+  if (extended) {
+    const extra = extended.options as DefaultToastOptions
+    updateToast(id, (extended.message as React.ReactNode) ?? fallback, {
+      ...options,
+      ...extra,
+      type: extra.type ?? type,
+      description: extra.description ?? description,
+      duration: extra.duration ?? options?.duration ?? 4000,
+    })
+    return
+  }
+  updateToast(id, (value as React.ReactNode) ?? fallback, {
+    ...options,
+    type,
+    description,
+    duration: options?.duration ?? 4000,
+  })
+}
+
 const toastCallable = (message: React.ReactNode, options?: DefaultToastOptions): string => {
   return showToast(message, options)
 }
@@ -402,7 +481,11 @@ export const toast = Object.assign(toastCallable, {
     updateToast(id, content, options)
   },
 
-  dismiss(id: string, options?: { document?: Document }): void {
+  dismiss(id?: string, options?: { document?: Document }): void {
+    if (id == null) {
+      referenceToast.dismissAll(options)
+      return
+    }
     referenceToast.dismiss(id, options)
   },
 
@@ -410,10 +493,21 @@ export const toast = Object.assign(toastCallable, {
     referenceToast.dismissAll(options)
   },
 
+  getToasts(doc?: Document) {
+    return referenceToast.getToasts(doc)
+  },
+
+  getHistory(doc?: Document) {
+    return referenceToast.getHistory(doc)
+  },
+
+  message(message: React.ReactNode, options?: DefaultToastOptions): string {
+    return showToast(message, options)
+  },
+
   custom(render: (id: string) => React.ReactNode, options?: ToastOptions): string {
     const id = options?.id ?? `toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    const content = render(id)
-    return referenceToast.show(content, { ...options, id })
+    return referenceToast.show(render, { ...options, id })
   },
 
   success(message: React.ReactNode, options?: DefaultToastOptions): string {
@@ -440,42 +534,42 @@ export const toast = Object.assign(toastCallable, {
     promise: Promise<T> | (() => Promise<T>),
     data: PromiseData<T>,
     options?: ToastOptions
-  ): Promise<T> {
+  ): Promise<T> & { unwrap: () => Promise<T> } {
     const id = showToast(data.loading ?? 'Loading...', {
       ...options,
       type: 'loading',
       duration: false,
     })
 
-    const p = typeof promise === 'function' ? promise() : promise
+    const original = typeof promise === 'function' ? promise() : promise
 
-    return p
-      .then((res) => {
-        const successMsg =
-          typeof data.success === 'function' ? data.success(res) : data.success
+    const settled = original
+      .then(async res => {
+        const successRaw =
+          typeof data.success === 'function' ? await data.success(res) : data.success
         const desc =
           typeof data.description === 'function' ? data.description(res) : data.description
-        updateToast(id, successMsg ?? 'Completed successfully', {
-          ...options,
-          type: 'success',
-          description: desc,
-          duration: options?.duration ?? 4000,
-        })
+        await applyPromiseUpdate(
+          id,
+          successRaw,
+          'Completed successfully',
+          'success',
+          options,
+          desc
+        )
         return res
       })
-      .catch((err) => {
-        const errorMsg =
-          typeof data.error === 'function' ? data.error(err) : data.error
-        updateToast(id, errorMsg ?? 'An error occurred', {
-          ...options,
-          type: 'error',
-          duration: options?.duration ?? 4000,
-        })
+      .catch(async err => {
+        const errorRaw = typeof data.error === 'function' ? await data.error(err) : data.error
+        await applyPromiseUpdate(id, errorRaw, 'An error occurred', 'error', options)
         throw err
       })
-      .finally(() => {
-        data.finally?.()
-      })
+      .finally(async () => {
+        await data.finally?.()
+      }) as Promise<T> & { unwrap: () => Promise<T> }
+
+    settled.unwrap = () => original
+    return settled
   },
 
   define<P = void>(config: {
@@ -486,19 +580,19 @@ export const toast = Object.assign(toastCallable, {
     const fn = ((props: P, options?: ToastOptions) => {
       const content = config.render(props)
       return referenceToast.show(content, {
+        ...options,
         duration: options?.duration ?? config.duration,
         position: options?.position ?? config.position,
-        ...options,
       })
     }) as ToastDefinition<P>
 
     fn.update = (id: string, props: P, options?: ToastOptions) => {
       const content = config.render(props)
       referenceToast.show(content, {
+        ...options,
         id,
         duration: options?.duration ?? config.duration,
         position: options?.position ?? config.position,
-        ...options,
       })
     }
 

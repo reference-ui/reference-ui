@@ -22,7 +22,7 @@ a Popover. Interactive hover content is `Popover openOnHover`.
 
 Do not add FocusLock, inert, trap, safe-polygon, Presence exit, a flip/shift
 catalog, a public Provider, or HoverCard. Remaining `[ ]` IDs in this file are
-not Gate 5 homework. Next family gate is Toast (`Toast SPEC` Gate 6).
+not Gate 5 homework. Toast Gate 6 is done. The overlay family is production.
 
 ### Owns (shipped)
 
@@ -71,7 +71,7 @@ None for Gate 5.
 ### Remaining
 
 Stop Tooltip. Remaining `[ ]` IDs are not a production gate. Toast Gate 6 is
-next for the overlay family.
+done. The overlay family is production.
 
 ## API freeze decisions
 

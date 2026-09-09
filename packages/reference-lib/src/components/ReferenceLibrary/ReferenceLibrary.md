@@ -30,6 +30,15 @@ interface ReferenceLibraryProps {
     defaultPosition?: ToastPosition
     defaultDuration?: number | false
     limit?: number
+    hotkey?: string[] | false
+    expand?: boolean
+    gap?: number
+    offset?: number | string
+    closeButton?: boolean
+    richColors?: boolean
+    invert?: boolean
+    dir?: "rtl" | "ltr" | "auto"
+    containerAriaLabel?: string
   }
   tooltip?: {
     skipDelay?: number

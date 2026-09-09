@@ -18,15 +18,14 @@ This document is the canonical status for the five interlocking primitives:
 └───────────────────┴──────────────────────────────┘
 ```
 
-> **Verdict (2026-09-09): Overlay kernel is production.** Siblings stay thin.
+> **Verdict (2026-09-09): Overlay family is production.** Siblings stay thin.
 >
 > Overlay is the control point: one stack, one dismiss, one isolation, one
 > geometry engine. Popover, Tooltip, and Dialog/Drawer must not grow second
 > runtimes. Toast is not Overlay; it pauses from the overlay stack.
 >
-> Per-component `SPEC.md` is the freeze. Overlay SPEC is done. Gates 3–5 are
-> FocusLock / Popover / Tooltip. Gate 6 is Toast stack-pause — not more Overlay,
-> Popover, or Tooltip titles.
+> Per-component `SPEC.md` is the freeze. Overlay SPEC is done. Gates 3–6 are
+> FocusLock / Popover / Tooltip / Toast. Stop overlay-family titles.
 >
 > Specs: [Overlay](src/components/Overlay/SPEC.md) ·
 > [FocusLock](src/components/FocusLock/SPEC.md) ·
@@ -48,8 +47,8 @@ belong to Overlay.
 | **Overlay** | Kernel | **Yes** | Stop Overlay titles |
 | **FocusLock** | Containment solver | **Yes (Gate 3)** | Stop FocusLock titles |
 | **Popover** | Hover policy on Overlay | **Yes (Gate 4)** | Stop Popover titles |
-| **Tooltip** | Description policy on Overlay | **Yes (Gate 5)** | Stop Tooltip titles. Toast Gate 6 |
-| **Toast** | Queue runtime | **No** | Gate 6: pause from overlay stack + remaining APIs |
+| **Tooltip** | Description policy on Overlay | **Yes (Gate 5)** | Stop Tooltip titles |
+| **Toast** | Queue runtime | **Yes (Gate 6)** | Stop Toast titles |
 
 **Architectural decision still holds:** Dialog, Drawer, Sheet, and Modal are
 not separate runtimes. They are compositions of `Overlay`. Popover/Tooltip are
@@ -65,8 +64,8 @@ Popover or Tooltip.
 
 `matrix/lib` mounts skip-delay groups. `@matrix/overlays`
 mounts nested stacks, edge sheets, and the exotic environment pass.
-Overlay SPEC is done. FocusLock Gate 3, Popover Gate 4, and Tooltip Gate 5
-are done. Remaining family work starts at Toast Gate 6.
+Overlay SPEC is done. FocusLock Gate 3, Popover Gate 4, Tooltip Gate 5,
+and Toast Gate 6 are done. Stop overlay-family titles.
 
 ### The remaining mountain
 
@@ -81,13 +80,13 @@ Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
    `PO-LAYER-01` smoke. Do not expand `PO-POS-*`.
 3. **Tooltip Gate 5 (done)** — `tooltipGroup` is the one skip-delay store.
    `TT-GROUP-01`–`03`, `TT-CLOSE-01` / `03`, `TT-SCROLL-01` / `03`. Stop Tooltip.
-4. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
+4. **Toast Gate 6 (done)** — pause from overlay stack (not `[aria-modal]`), swipe /
    limit E2E, hotkey, `dismissible`, `onAutoClose`, `unwrap()`.
-5. **Unit tests** for toast queue math. Tabbable catalog unit tests shipped
-   with FocusLock Gate 3. Polygon math shipped with Popover Gate 4. Skip-delay
-   store math shipped with Tooltip Gate 5.
+5. **Unit tests** for toast queue math, overlay-pause, swipe, hotkey. Tabbable
+   catalog shipped with FocusLock Gate 3. Polygon math shipped with Popover
+   Gate 4. Skip-delay store math shipped with Tooltip Gate 5.
 
-Until that list is green, do not call the overlay *family* production-grade.
+The overlay *family* is production-grade. TalkBack stays parked on FocusLock.
 
 ---
 
@@ -113,10 +112,8 @@ that is no longer true.
 
 ## 2. Final Gates
 
-These are the production gates, in order. Toast polish (hotkey, `dismissible`,
-`onAutoClose`, `.unwrap()`, swipe/limit/pause proof) is **Gate 6**, not a
-post-ship extra. Overlay Gates 1–2 are done; Toast pause-on-modal still needs
-the Gate 6 stack seam, not more Overlay titles.
+These are the production gates, in order. Overlay Gates 1–2 and sibling Gates
+3–6 are done. Toast pause-on-modal reads the overlay stack.
 
 ### Gate 1 — Overlay kernel defects — DONE
 
@@ -149,7 +146,7 @@ production. Containment solver Overlay already wired is proven.
    `FL-CAND-07` unit-proven (empty client rects). Should / resilience / exotica
    proven. TalkBack parked.
 
-**Stop FocusLock.** Popover Gate 4 and Tooltip Gate 5 are done. Toast Gate 6 is next.
+**Stop FocusLock.** Popover Gate 4, Tooltip Gate 5, and Toast Gate 6 are done.
 
 ### Gate 4 — Popover hover grace — DONE
 
@@ -171,25 +168,24 @@ Proven: `TT-GROUP-01`–`03` (warm handoff, one visible, cold after window),
 (click suppresses hover reopen), `TT-SCROLL-01` / `03` (ancestor close;
 field self-scroll does not). **Stop Tooltip.** No public Provider. No HoverCard.
 
-### Gate 6 — Toast runtime + polish (required)
+### Gate 6 — Toast runtime + polish — DONE
 
 Swipe, expand-on-hover, and `visibilitychange` pause **are implemented**.
 `toast.success` / `error` / `warning` / `info` / `loading` / `promise` shipped.
-Older “Out of scope” / “deliberately omitted” notes in Toast are stale — Gate 6 is required. See [Toast SPEC](src/components/Toast/SPEC.md).
-
-This gate is production, not polish-later. Required bar:
+Pause reads the overlay stack (`isToastPausedByOverlay`), not `[aria-modal]`.
+See [Toast SPEC](src/components/Toast/SPEC.md).
 
 | Item | In tree? | Required bar |
 | :--- | :---: | :--- |
-| Pause on isolating Overlay | 🟡 queries `[aria-modal="true"]` | Read overlay stack (`isolation.inert` / `isModal`) |
-| Swipe-to-dismiss | 🟢 physics exist | E2E `TO-SWIPE-01` (distance **or** velocity) |
-| FIFO `limit` | 🟢 queue exists | E2E: excess wait unmounted, timers start on promote |
-| Pause on hover / focus | 🟢 | E2E `TO-PAUSE-01` |
-| Pause when tab hidden | 🟢 `visibilitychange` | E2E |
-| Hotkey to focus toaster | No | Configurable shortcut (Sonner default `Alt+T`), moves focus into the front toast / host |
-| `dismissible` per toast | No | `false` blocks swipe and close; timer may still fire unless duration is `false` |
-| `onAutoClose` | No | Fires only when the timer expires, not on manual dismiss / swipe / `toast.dismiss` |
-| `toast.promise().unwrap()` | No | Return `{ unwrap }` (or equivalent) so callers can await the original promise |
+| Pause on isolating Overlay | ✅ `isolation.inert` / `isModal` | `TO-OV-01` / `TO-OV-02` |
+| Swipe-to-dismiss | ✅ | E2E `TO-SWIPE-01` (distance **or** velocity) |
+| FIFO `limit` | ✅ | E2E `TO-QUEUE-02`: excess wait unmounted, promote on release |
+| Pause on hover / focus | ✅ | E2E `TO-TIME-04` |
+| Pause when tab hidden | ✅ `visibilitychange` | E2E `TO-TIME-07` |
+| Hotkey to focus toaster | ✅ | Configurable shortcut (default `Alt+T`), suppressible |
+| `dismissible` per toast | ✅ | `false` blocks swipe and close; timer may still fire |
+| `onAutoClose` | ✅ | Fires only when the timer expires |
+| `toast.promise().unwrap()` | ✅ | `{ unwrap }` awaits the original promise |
 
 Android TalkBack remains a FocusLock gap, not this gate.
 
@@ -256,7 +252,7 @@ remains the typed reusable path.
 | Definitions | Inline JSX | `toast.define({ render })` | ✅ |
 | Update / dismiss / dismiss all | Yes | `update` / `dismiss` / `dismissAll` | ✅ |
 | Semantic variants | Built-in | `toast.success/error/warning/info/loading` | ✅ (was “omitted”) |
-| `toast.promise()` | Yes + `.unwrap()` | Promise returned, no `.unwrap()` | 🟡 Gate 6 |
+| `toast.promise()` | Yes + `.unwrap()` | Promise returned + `.unwrap()` | ✅ Gate 6 |
 | Custom render | `toast.custom` | `toast.custom` + always-custom definitions | ✅ |
 
 ### 4.2 Host, stack, gestures
@@ -265,15 +261,15 @@ remains the typed reusable path.
 | :--- | :--- | :--- | :---: |
 | Mount once | `<Toaster />` | `<ReferenceLibrary toaster={...}>` | 🟢 |
 | 6 positions | Yes | `top-start` … `bottom-end` | 🟢 |
-| Limit + FIFO queue | Hide extras | Waiting queue (unmounted) | 🟡 no E2E |
+| Limit + FIFO queue | Hide extras | Waiting queue (unmounted) | ✅ `TO-QUEUE-02` |
 | Expand-on-hover | Yes | Yes | ✅ `TO-STACK-HOVER` |
-| Swipe-to-dismiss | Yes | Pointer distance/velocity | 🟢 no E2E |
-| Pause on hover/focus | Yes | Yes | 🟢 |
-| Pause when tab hidden | `pauseWhenPageIsHidden` | `visibilitychange` | 🟢 |
-| Pause on modal overlay | No | Intended; broken coupling | 🟡 Gate 6 |
-| Hotkey to focus toaster | `Alt+T` | Not built-in | 🟡 Gate 6 |
-| `onAutoClose` / `dismissible` | Yes | Not props | 🟡 Gate 6 |
-| `toast.promise().unwrap()` | Yes | Promise returned, no `.unwrap()` | 🟡 Gate 6 |
+| Swipe-to-dismiss | Yes | Pointer distance/velocity | ✅ `TO-SWIPE-01` |
+| Pause on hover/focus | Yes | Yes | ✅ `TO-TIME-04` |
+| Pause when tab hidden | `pauseWhenPageIsHidden` | `visibilitychange` | ✅ `TO-TIME-07` |
+| Pause on modal overlay | No | Overlay stack `isolation.inert` | ✅ `TO-OV-01` / `02` |
+| Hotkey to focus toaster | `Alt+T` | Configurable, default `Alt+T` | ✅ `TO-HOTKEY-01` |
+| `onAutoClose` / `dismissible` | Yes | Yes | ✅ Gate 6 |
+| `toast.promise().unwrap()` | Yes | `.unwrap()` on the returned promise | ✅ `TO-UNWRAP-01` |
 
 ---
 
@@ -319,7 +315,7 @@ close `OV-ESC-01` / `OV-LAYER-*` / `OV-FOCUS-*`.
 | **Overlay** | 133 | 41 | 28 `[x]` cases proven across `@matrix/overlays` (23 deep) and `@matrix/lib` (18). DOM, Escape, Outside Press, Nested Stacks, Inert, Scroll Lock, Edge Sheets, Handle Drag |
 | **Popover** | 95 | 18 | Gate 4 hover + Overlay-port smokes. Remaining IDs are Won't do (Overlay catalogs), see Popover SPEC |
 | **Tooltip** | 61 | 10 | Gate 5 group / Escape-vs-parent / click-suppress / scroll-close. Remaining IDs are not Gate 5 homework |
-| **Toast** | 81 + 4 Gate 6 | 5 | Show/update/dismiss/stack. No swipe, limit, pause, hotkey, dismissible |
+| **Toast** | 81 + Gate 6 | 16 | Show/update/dismiss/stack + overlay pause, swipe, limit, hover/tab-hidden pause, hotkey, dismissible, autocloses |
 | **FocusLock** | 72 | 5 | Tab loop + sibling shard + restore to live trigger. No Presence, no portal shard, no nest |
 | **Unit** | — | Overlay geometry, FocusLock catalog, Popover polygon | Toast queue math still open |
 
@@ -330,7 +326,7 @@ Named Playwright IDs:
 - Overlay: `OV-DOM-01/02/05/06/07`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`, `OV-ESC-01/02/04`, `OV-OUT-01/02/03/05/08/09`, `OV-LAYER-01/02/03`, `OV-INERT-01/05`, `OV-SCROLL-01/03`, `OV-EDGE-01`, `OV-HND-01/02`, `OV-ISO-02`
 - Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01`–`05` / `07`–`11`, `PO-LAYER-01`, `PO-ENV-01`
 - Tooltip: `TT-DOM-01/02`, hover, `TT-POS`, `TT-GROUP-01`–`03`, `TT-CLOSE-01` / `03`, `TT-SCROLL-01` / `03`
-- Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`
+- Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`, `TO-OV-01`/`02`, `TO-QUEUE-02`, `TO-SWIPE-01`, `TO-TIME-04`/`07`, `TO-HOTKEY-01`, `TO-DISMISSIBLE-01`, `TO-AUTOCLOSE-01`
 - FocusLock: `FL-INIT-01`, `FL-TAB-02/03`, `FL-TRAP-01`, `FL-SHARD-01`, `FL-RESTORE-01`
 
 ---
@@ -351,8 +347,8 @@ These are in the tree today. Gate 6 exists because of them.
    snapshot of children; re-entrant `addLayer`/`removeLayer` is racy.
 6. **Tooltip skip-delay** — closed in Gate 5. `ReferenceLibrary` writes
    `tooltipGroup`; Tooltip reads the same store.
-7. **Toast vs modal Overlay** — pause looks for `aria-modal="true"`. Overlay
-   isolation does not set that attribute. Isolating overlays do not pause toasts.
+7. **Toast vs modal Overlay** — closed in Gate 6. Timers read
+   `isolation.inert` / `isModal` on the overlay stack, not `[aria-modal]`.
 8. **FocusLock tabbable solver** — `querySelectorAll` of a candidate list, not
    the lifted `tabbable` catalog (shadow, slots, `contenteditable`, details).
 9. **Popover “grace”** — closed in Gate 4. Polygon + intent, not delay-as-grace.
@@ -373,7 +369,7 @@ What we lift, what we already match, and what is still outstanding.
 
 - **Lifted:** Stack CSS vars, expand-on-hover, swipe physics, `visibilitychange` pause
 - **Matches:** Identity/update/dismiss-all, imperative API, remaining-time pause, FIFO intent
-- **Outstanding:** Overlay-stack pause coupling; swipe/limit E2E. Semantic variants **did** land.
+- **Outstanding:** none for Gate 6. Overlay-stack pause, swipe/limit E2E, hotkey, `dismissible`, `onAutoClose`, `.unwrap()` shipped.
 
 ### react-focus-lock / focus-trap-react → FocusLock
 
@@ -420,9 +416,10 @@ Gate 5  Tooltip skip-delay + Overlay seam  DONE
         tooltipGroup, TT-GROUP-01–03, TT-CLOSE-01/03, TT-SCROLL-01/03.
         STOP Tooltip titles.
 
-Gate 6  Toast — separate runtime           CURRENT
+Gate 6  Toast — separate runtime           DONE
         Pause from overlay stack (not aria-modal)
         Swipe / limit E2E; hotkey, dismissible, onAutoClose, unwrap()
+        STOP Toast titles.
 ```
 
 Still not a production blocker: Android TalkBack virtual-modality skip on FocusLock.
@@ -450,4 +447,4 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 
 ---
 
-*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts` (Popover Gate 4, Tooltip Gate 5).*
+*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts` (Popover Gate 4, Tooltip Gate 5, Toast Gate 6).*

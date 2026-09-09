@@ -18,7 +18,7 @@ Do not add Overlay titles. Next production work is sibling gates, in order:
 - [FocusLock SPEC](../FocusLock/SPEC.md) — Gate 3 done
 - [Popover SPEC](../Popover/SPEC.md) — Gate 4 done
 - [Tooltip SPEC](../Tooltip/SPEC.md) — Gate 5 done
-- [Toast SPEC](../Toast/SPEC.md) — Gate 6 overlay-stack pause (current)
+- [Toast SPEC](../Toast/SPEC.md) — Gate 6 overlay-stack pause (done)
 
 TalkBack virtual-modality skip stays FocusLock. Do not copy FocusLock / Portal / Popover catalogs into Overlay.
 
@@ -85,7 +85,7 @@ Do not add `OV-*` cases. Extend existing `@matrix/overlays` fixtures. Run `pnpm 
 | Named proven | Kernel + Must + resilience + exotic environment pass |
 | Unit tests | Stack cascade, `resolveIsolation`, Handle thresholds, composedPath, RTL coords, document isolation, SSR `renderToString` |
 
-`OVERLAYS.md` Gates 3–6 are the remaining overlay-*system* work, not more Overlay titles.
+`OVERLAYS.md` Gates 3–6 are done. Do not add Overlay titles.
 
 ### Work order
 
@@ -94,13 +94,13 @@ Do not add `OV-*` cases. Extend existing `@matrix/overlays` fixtures. Run `pnpm 
 - [FocusLock SPEC](../FocusLock/SPEC.md) — Gate 3 done
 - [Popover SPEC](../Popover/SPEC.md) — Gate 4 done
 - [Tooltip SPEC](../Tooltip/SPEC.md) — Gate 5 done
-- [Toast SPEC](../Toast/SPEC.md) — Gate 6 overlay-stack pause (current)
+- [Toast SPEC](../Toast/SPEC.md) — Gate 6 overlay-stack pause (done)
 
 ### Done when
 
 - Overlay-owned rows in this file are `[x]` with prose-level asserts.
 - No new Overlay SPEC cases.
-- Next agent starts at Toast Gate 6.
+- Next agent: overlay family is production. Stop Overlay / Toast titles.
 
 ---
 

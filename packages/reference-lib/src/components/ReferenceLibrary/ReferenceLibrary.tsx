@@ -3,16 +3,42 @@ import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visib
 import { ToastHost } from '../Toast'
 import { getTooltipGroupStore } from '../Tooltip/tooltipGroup'
 import { AnnouncerHost } from '../Announcer'
+import { DEFAULT_TOAST_HOTKEY } from '../Toast/toastQueue'
 
 setupFocusVisible()
 
+export interface ReferenceLibraryToaster {
+  defaultPosition?: string
+  defaultDuration?: number | false
+  limit?: number
+  hotkey?: string[] | false
+  expand?: boolean
+  gap?: number
+  offset?: number | string | {
+    top?: string | number
+    right?: string | number
+    bottom?: string | number
+    left?: string | number
+  }
+  closeButton?: boolean
+  richColors?: boolean
+  invert?: boolean
+  dir?: 'rtl' | 'ltr' | 'auto'
+  containerAriaLabel?: string
+  icons?: {
+    success?: React.ReactNode
+    info?: React.ReactNode
+    warning?: React.ReactNode
+    error?: React.ReactNode
+    loading?: React.ReactNode
+    close?: React.ReactNode
+  }
+  swipeDirections?: Array<'top' | 'right' | 'bottom' | 'left'>
+}
+
 export interface ReferenceLibraryProps {
   children?: React.ReactNode
-  toaster?: {
-    defaultPosition?: string
-    defaultDuration?: number | false
-    limit?: number
-  }
+  toaster?: ReferenceLibraryToaster
   tooltip?: {
     skipDelay?: number
   }
@@ -23,10 +49,19 @@ interface ReferenceLibraryStore {
   subscribers: Set<() => void>
 }
 
-const libraryStores = new WeakMap<Document, ReferenceLibraryStore>()
+const LIBRARY_STORES_KEY = '__referenceLibraryStores__'
 const hostRegistry = new Map<string, { doc: Document; update: () => void }>()
-
 let libraryIdCounter = 0
+
+function getLibraryStores(): WeakMap<Document, ReferenceLibraryStore> {
+  const g = globalThis as typeof globalThis & {
+    [LIBRARY_STORES_KEY]?: WeakMap<Document, ReferenceLibraryStore>
+  }
+  if (!g[LIBRARY_STORES_KEY]) {
+    g[LIBRARY_STORES_KEY] = new WeakMap()
+  }
+  return g[LIBRARY_STORES_KEY]
+}
 
 function getLibraryStore(doc?: Document): ReferenceLibraryStore {
   const targetDoc = doc ?? (typeof document !== 'undefined' ? document : undefined)
@@ -34,10 +69,11 @@ function getLibraryStore(doc?: Document): ReferenceLibraryStore {
     return { activeHostId: null, subscribers: new Set() }
   }
 
-  let store = libraryStores.get(targetDoc)
+  const stores = getLibraryStores()
+  let store = stores.get(targetDoc)
   if (!store) {
     store = { activeHostId: null, subscribers: new Set() }
-    libraryStores.set(targetDoc, store)
+    stores.set(targetDoc, store)
   }
   return store
 }
@@ -49,7 +85,8 @@ export function ReferenceLibrary({
 }: ReferenceLibraryProps) {
   const hostIdRef = React.useRef<string | null>(null)
   if (!hostIdRef.current) {
-    hostIdRef.current = `ref-lib-${++libraryIdCounter}`
+    libraryIdCounter += 1
+    hostIdRef.current = `ref-lib-${libraryIdCounter}`
   }
   const hostId = hostIdRef.current
 
@@ -74,12 +111,10 @@ export function ReferenceLibrary({
       },
     })
 
-    // Election: if no active host in this document, claim active host
-    if (s.activeHostId === null) {
+    if (s.activeHostId === null || !hostRegistry.has(s.activeHostId)) {
       s.activeHostId = hostId
     }
 
-    // Notify all registered hosts to sync election state
     for (const [, entry] of hostRegistry.entries()) {
       if (entry.doc === doc) {
         entry.update()
@@ -93,7 +128,6 @@ export function ReferenceLibrary({
       s.subscribers.delete(onStoreChange)
       hostRegistry.delete(hostId)
 
-      // If active host is unmounting, elect next standby host in this document
       if (s.activeHostId === hostId) {
         s.activeHostId = null
         for (const [id, entry] of hostRegistry.entries()) {
@@ -113,10 +147,24 @@ export function ReferenceLibrary({
     <>
       {children}
 
-      {/* Only the elected active host in this document renders runtime roots */}
       {isActiveHost && (
         <>
-          <ToastHost limit={toaster?.limit} />
+          <ToastHost
+            limit={toaster?.limit}
+            defaultDuration={toaster?.defaultDuration}
+            defaultPosition={toaster?.defaultPosition}
+            hotkey={toaster?.hotkey ?? DEFAULT_TOAST_HOTKEY}
+            expand={toaster?.expand}
+            gap={toaster?.gap}
+            offset={toaster?.offset}
+            closeButton={toaster?.closeButton}
+            richColors={toaster?.richColors}
+            invert={toaster?.invert}
+            dir={toaster?.dir}
+            containerAriaLabel={toaster?.containerAriaLabel}
+            icons={toaster?.icons}
+            swipeDirections={toaster?.swipeDirections}
+          />
           <AnnouncerHost />
         </>
       )}

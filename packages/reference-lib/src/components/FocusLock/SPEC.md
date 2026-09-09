@@ -121,7 +121,7 @@ All eight steps are proven. Overlay×FocusLock first. Catalog second. **Stop.**
    TalkBack stays parked.
 
 **Stop FocusLock.** Overlay continues to own dismiss and isolation.
-Popover Gate 4 and Tooltip Gate 5 are done. Toast Gate 6 is next.
+Popover Gate 4, Tooltip Gate 5, and Toast Gate 6 are done. The overlay family is production.
 
 ### Done when
 
