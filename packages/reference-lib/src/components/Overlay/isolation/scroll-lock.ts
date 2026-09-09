@@ -226,9 +226,15 @@ export function acquireScrollLock(doc: Document, positionFixed: boolean): Restor
   }
 }
 
-export function usePreventScroll(enabled: boolean, positionFixed = false) {
+export function usePreventScroll(
+  enabled: boolean,
+  positionFixed = false,
+  doc?: Document | null
+) {
   React.useEffect(() => {
-    if (!enabled || typeof document === 'undefined') return
-    return acquireScrollLock(document, positionFixed)
-  }, [enabled, positionFixed])
+    if (!enabled) return
+    const target = doc ?? (typeof document !== 'undefined' ? document : null)
+    if (!target) return
+    return acquireScrollLock(target, positionFixed)
+  }, [enabled, positionFixed, doc])
 }

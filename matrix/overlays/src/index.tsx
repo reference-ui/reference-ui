@@ -9,6 +9,8 @@ import { InertFixture } from './fixtures/inert-fixture'
 import { ThemeFixture } from './fixtures/theme-fixture'
 import { FocusFixture } from './fixtures/focus-fixture'
 import { AnchorFixture } from './fixtures/anchor-fixture'
+import { ExoticaFixture } from './fixtures/exotica-fixture'
+import { FrameFixture } from './fixtures/frame-fixture'
 
 export function Index() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/'
@@ -22,6 +24,8 @@ export function Index() {
   if (path === '/overlay/theme') return <ThemeFixture />
   if (path === '/overlay/focus') return <FocusFixture />
   if (path === '/overlay/anchor') return <AnchorFixture />
+  if (path === '/overlay/exotica') return <ExoticaFixture />
+  if (path === '/overlay/frame') return <FrameFixture />
 
   return (
     <Main data-testid="overlays-root" p="4" gap="4">
@@ -38,6 +42,7 @@ export function Index() {
         <a href="/overlay/theme">Theming</a>
         <a href="/overlay/focus">Focus & Restoration</a>
         <a href="/overlay/anchor">Anchored & Arrow</a>
+        <a href="/overlay/exotica">Exotica</a>
       </nav>
 
       {/* When loading root / or /overlay, render comprehensive all-in-one suite */}

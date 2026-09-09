@@ -103,17 +103,21 @@ export const overlayStackStore = createStore<OverlayStackState>((set, get) => ({
   },
 
   setLayerNode: (id, node) => {
+    let documentChanged = false
     set(state => {
       const current = state.layers.find(l => l.id === id)
       if (!current || current.node === node) return state
+      const nextDoc = node?.ownerDocument ?? current.document ?? null
+      documentChanged = current.document !== nextDoc
       return {
         layers: patchLayer(state.layers, id, {
           node,
-          document: node?.ownerDocument ?? current.document ?? null,
+          document: nextDoc,
         }),
       }
     })
     syncEdgeStacks(get().layers)
+    if (documentChanged) onStackChange()
   },
 
   setLayerBackdrop: (id, node) => {

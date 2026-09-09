@@ -18,15 +18,15 @@ This document is the canonical status for the five interlocking primitives:
 └───────────────────┴──────────────────────────────┘
 ```
 
-> **Verdict (2026-09-08): Overlay kernel in progress; siblings stay thin.**
+> **Verdict (2026-09-09): Overlay kernel is production.** Siblings stay thin.
 >
 > Overlay is the control point: one stack, one dismiss, one isolation, one
 > geometry engine. Popover, Tooltip, and Dialog/Drawer must not grow second
 > runtimes. Toast is not Overlay; it pauses from the overlay stack.
 >
-> Per-component `SPEC.md` is the freeze. Overlay SPEC **Next agent** is
-> current kernel work. Gates 3–6 are FocusLock / Popover polygon / Tooltip
-> store / Toast stack-pause — not more Overlay titles.
+> Per-component `SPEC.md` is the freeze. Overlay SPEC is done. Gates 3–6 are
+> FocusLock / Popover polygon / Tooltip store / Toast stack-pause — not more
+> Overlay titles.
 >
 > Specs: [Overlay](src/components/Overlay/SPEC.md) ·
 > [FocusLock](src/components/FocusLock/SPEC.md) ·
@@ -38,14 +38,14 @@ This document is the canonical status for the five interlocking primitives:
 
 ## 0. Production Verdict
 
-**Happy-path ≠ production.** Overlay Gate 1 defects are closed in source.
-Nested stack E2E lives in `@matrix/overlays`. Overlay is still not production
-until its SPEC work order is done. Siblings are thinner than their case counts
-look: most `PO-POS-*` / `TT-POS-*` belong to Overlay.
+**Happy-path ≠ production for the family.** Overlay Gate 1 defects, Must/Should,
+resilience, and the exotic environment pass are proven in `@matrix/overlays`.
+Siblings are thinner than their case counts look: most `PO-POS-*` / `TT-POS-*`
+belong to Overlay.
 
 | Primitive | Role | Production? | Next |
 | :--- | :--- | :--- | :--- |
-| **Overlay** | Kernel | **No** — SPEC Must/Should open | Overlay SPEC work order, then stop |
+| **Overlay** | Kernel | **Yes** | Stop Overlay titles. FocusLock Gate 3 |
 | **FocusLock** | Containment solver | **No** | Gate 3: Presence restore, deleted trigger, nest, portalled shard |
 | **Popover** | Hover policy on Overlay | **No** | Gate 4: safe polygon (`PO-HOVER-02` must be a real diagonal) |
 | **Tooltip** | Description policy on Overlay | **No** | Gate 5: unify skip-delay store, Escape-vs-parent, scroll-close |
@@ -64,30 +64,26 @@ FocusLock sibling shard. Do not copy Overlay geometry or layer matrices onto
 Popover or Tooltip.
 
 `matrix/lib` still does not mount skip-delay groups or portalled shards.
-`@matrix/overlays` now mounts nested stacks and edge sheets — Overlay SPEC is
-the remaining Overlay gate, not “the kernel is missing.”
+`@matrix/overlays` mounts nested stacks, edge sheets, and the exotic
+environment pass. Overlay SPEC is done. Remaining family work starts at
+FocusLock Gate 3.
 
 ### The remaining mountain
 
-Not “check every remaining SPEC box.” Overlay SPEC parks iframe, extension
-overlays, SSR, and the full Floating UI functional matrix.
+Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
 
-1. **Overlay SPEC work order** — same-tick open, modeless outside, isolation
-   patch, Trigger, Presence restore *timing*, iOS visualViewport, virtual
-   anchor, `closeOnScroll`. Gate 1 source defects (Handle, composedPath,
-   cascade, iOS lock) are closed.
-2. **FocusLock Gate 3** — restore after Presence, deleted-trigger walk,
+1. **FocusLock Gate 3** — restore after Presence, deleted-trigger walk,
    nested locks, portalled shard, tabbable catalog. Overlay registers shards
    and owns dismiss; FocusLock solves containment.
-3. **Popover safe-polygon** — timers are not grace. Diagonal travel still
+2. **Popover safe-polygon** — timers are not grace. Diagonal travel still
    closes. Do not expand `PO-POS-*`.
-4. **Tooltip skip-delay store split** — unify `tooltipGroup`; then
+3. **Tooltip skip-delay store split** — unify `tooltipGroup`; then
    Escape-vs-parent Overlay and scroll-close *policy*.
-5. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
+4. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
    limit E2E, hotkey, `dismissible`, `onAutoClose`, `unwrap()`.
-6. **Unit tests** for overlay stack, gesture, tabbable, toast queue math.
+5. **Unit tests** for tabbable catalog and toast queue math.
 
-Until that list is green, do not call this set production-grade.
+Until that list is green, do not call the overlay *family* production-grade.
 
 ---
 
@@ -115,10 +111,12 @@ that is no longer true.
 
 These are the production gates, in order. Toast polish (hotkey, `dismissible`,
 `onAutoClose`, `.unwrap()`, swipe/limit/pause proof) is **Gate 6**, not a
-post-ship extra. Overlay kernel still comes first because Toast pause-on-modal
-depends on a correct layer stack.
+post-ship extra. Overlay Gates 1–2 are done; Toast pause-on-modal still needs
+the Gate 6 stack seam, not more Overlay titles.
 
-### Gate 1 — Overlay kernel defects (blocks every overlay)
+### Gate 1 — Overlay kernel defects — DONE
+
+Closed in source. Historical bar, kept so we do not reopen them:
 
 | Defect | Evidence | Required bar |
 | :--- | :--- | :--- |
@@ -128,15 +126,11 @@ depends on a correct layer stack.
 | Outside press uses `event.target`, not `composedPath()` | `OverlayContent` pointerdown | Shadow trees inside Content count as inside |
 | Parent-close cascade is a `setTimeout` over stale `state.layers` | `stack/store.ts` `removeLayer` | Deterministic child-then-parent cascade with focus-race guard |
 
-### Gate 2 — Overlay isolation + nested-stack E2E
+### Gate 2 — Overlay isolation + nested-stack + exotic E2E — DONE
 
-Contract exists in [Overlay SPEC](src/components/Overlay/SPEC.md). None of these IDs have a Playwright test, and `matrix/lib/src/overlay.tsx` has no nested / edge / inert fixtures to run them against:
-
-- `OV-ESC-01` / `OV-ESC-02` — Escape is topmost-only
-- `OV-LAYER-01`..`OV-LAYER-05` — nested / portalled child is inside; one event, one layer
-- `OV-INERT-01` — sibling `inert` + live-region / toast exceptions
-- `OV-SCROLL-01` — body does not scroll under an isolating overlay
-- `OV-EDGE-01`..`OV-EDGE-04` — handle drag + velocity dismiss
+Proven in `@matrix/overlays` (`overlay.spec.ts`, `overlay-exotica.spec.ts`).
+Do not add Overlay titles. Nested Escape, layer membership, inert, scroll lock,
+edge Handle, iframe / two-root / Shadow / SSR / RTL are Overlay SPEC `[x]`.
 
 ### Gate 3 — FocusLock restore and nesting
 
@@ -375,20 +369,21 @@ What we lift, what we already match, and what is still outstanding.
 
 ### Radix dismissable-layer → Overlay stack
 
-- **Lifted in spirit:** Topmost Escape, deferred outside press, branches
-- **Outstanding:** Real branch registry, capture-phase / `composedPath`, child-before-parent races
+- **Lifted:** Topmost Escape, deferred outside press, branch membership, `composedPath`
+- **Proven:** Child-before-parent cascade, iframe / two-root stacks
+- **Leave:** Password-manager extension fixture (`OV-OUT-07` parked)
 
 ### Vaul → Overlay edge
 
-- **Lifted in spirit:** Handle-only drag, 25% or velocity
-- **Outstanding:** Axis per edge, iOS `position: fixed` + scroll restore
+- **Lifted:** Handle-only drag, 25% or velocity, axis per edge
+- **Proven:** Nested `--index`, RTL physical `left`/`right`
 - **Leave:** Snap points, scale-behind, drag-anywhere
 
 ### React Aria → Scroll lock + inert
 
-- **Specified:** `preventScrollMobileWebKit`, `ariaHideOutside`, TalkBack skip
-- **Partially lifted:** Sibling-walk `inert` + refcount + live-region / toast exceptions
-- **Outstanding:** Real iOS scroll lock; TalkBack
+- **Lifted:** `preventScrollMobileWebKit`, sibling-walk `inert`, authored hidden-tree boundaries, nested Shadow
+- **Outstanding on FocusLock, not Overlay:** TalkBack virtual-modality skip
+- **Leave:** react-remove-scroll independent `isDisabled` convenience path
 
 ---
 
@@ -396,8 +391,8 @@ What we lift, what we already match, and what is still outstanding.
 
 ```
 Gate 1  Overlay kernel defects            DONE in source
-Gate 2  Overlay nested / isolation E2E   largely in @matrix/overlays
-        Remaining: Overlay SPEC work order, then STOP Overlay titles
+Gate 2  Overlay nested / isolation / exotic E2E   DONE in @matrix/overlays
+        STOP Overlay titles
 
 Gate 3  FocusLock
         Presence restore, deleted trigger, nest, portalled shard
@@ -430,7 +425,7 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 | Hover grace polygon “specced” as if the feature existed | Timers only |
 | Collision flip/shift needs E2E | Landed |
 | FocusLock shards need E2E | Sibling shard landed; portalled shard has not |
-| Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk + cascade + iOS lock closed in source (2026-09-08); Overlay SPEC Must still open |
+| Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk + cascade + iOS lock closed in source (2026-09-08); Overlay SPEC Must/resilience/exotica proven 2026-09-09 |
 | Uncontrolled mode omitted by design | `defaultOpen` exists |
 | `toast.success` etc. deliberately omitted | Implemented |
 | Expand-on-hover / swipe / tab-hidden pause are gaps | Implemented (swipe unproven) |
@@ -439,4 +434,4 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 
 ---
 
-*Last updated: 2026-09-08. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/lib/tests/e2e/{overlay,popover,tooltip,toast,focus-lock}.spec.ts`.*
+*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`; `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts`.*

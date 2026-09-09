@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest'
-import { hiddenByClipping, isFullyClipped, rectHidden } from './clipping'
+import { getOverflowAncestors, hiddenByClipping, isFullyClipped, rectHidden } from './clipping'
 
 describe('clipping', () => {
   it('treats a rect fully outside the padded viewport as hidden', () => {
@@ -35,5 +35,29 @@ describe('clipping', () => {
     ).toBe(false)
 
     document.body.removeChild(scroller)
+  })
+
+  it('walks overflow ancestors through an open ShadowRoot', () => {
+    const light = document.createElement('div')
+    light.style.overflow = 'auto'
+    light.style.width = '80px'
+    light.style.height = '80px'
+    const host = document.createElement('div')
+    light.appendChild(host)
+    document.body.appendChild(light)
+
+    const shadow = host.attachShadow({ mode: 'open' })
+    const inner = document.createElement('div')
+    inner.style.overflow = 'scroll'
+    inner.style.height = '40px'
+    const source = document.createElement('div')
+    inner.appendChild(source)
+    shadow.appendChild(inner)
+
+    const ancestors = getOverflowAncestors(source)
+    expect(ancestors.some(a => a === inner)).toBe(true)
+    expect(ancestors.some(a => a === light)).toBe(true)
+
+    document.body.removeChild(light)
   })
 })

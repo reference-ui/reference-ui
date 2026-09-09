@@ -98,7 +98,11 @@ export function OverlayContent({
     mixedGeometry: context?.mixedGeometry ?? false,
   })
 
-  usePreventScroll(Boolean(node && isolation?.scroll), Boolean(context?.edge && isolation?.scroll))
+  usePreventScroll(
+    Boolean(node && isolation?.scroll),
+    Boolean(context?.edge && isolation?.scroll),
+    node?.ownerDocument
+  )
   useHideOutside(node, Boolean(node && isolation?.inert))
   usePointerLock(Boolean(node && isolation?.inert), node?.ownerDocument)
 

@@ -19,6 +19,7 @@ type DocEntry = {
   escape: (event: KeyboardEvent) => void
   pointerDown: (event: PointerEvent) => void
   pointerMove: (event: PointerEvent) => void
+  pointerUp: (event: PointerEvent) => void
   click: (event: MouseEvent) => void
   pointerCancel: (event: Event) => void
 }
@@ -127,18 +128,35 @@ function onPointerCancel(event: Event) {
   pendingByDoc.delete(ownerDoc(event))
 }
 
+function onPointerUp(event: PointerEvent) {
+  const doc = ownerDoc(event)
+  const pending = pendingByDoc.get(doc)
+  if (!pending || pending.pointerId !== event.pointerId) return
+  // Click is dispatched after pointerup in the same gesture. If a password
+  // manager / extension stops click, drop the deferred sequence so a later
+  // focus move or unrelated click cannot dismiss (OV-OUT-10).
+  queueMicrotask(() => {
+    const still = pendingByDoc.get(doc)
+    if (still && still.pointerId === pending.pointerId && still.layerId === pending.layerId) {
+      pendingByDoc.delete(doc)
+    }
+  })
+}
+
 function bind(doc: Document) {
   if (bound.has(doc)) return
   const entry: DocEntry = {
     escape: onEscape,
     pointerDown: onPointerDown,
     pointerMove: onPointerMove,
+    pointerUp: onPointerUp,
     click: onClick,
     pointerCancel: onPointerCancel,
   }
   doc.addEventListener('keydown', entry.escape)
   doc.addEventListener('pointerdown', entry.pointerDown)
   doc.addEventListener('pointermove', entry.pointerMove)
+  doc.addEventListener('pointerup', entry.pointerUp)
   // Bubble, not capture: password-manager / extension overlays that
   // stopPropagation on click must abort the deferred outside sequence.
   // Backdrop mouse dismiss still runs on pointerdown.
@@ -153,6 +171,7 @@ function unbind(doc: Document) {
   doc.removeEventListener('keydown', entry.escape)
   doc.removeEventListener('pointerdown', entry.pointerDown)
   doc.removeEventListener('pointermove', entry.pointerMove)
+  doc.removeEventListener('pointerup', entry.pointerUp)
   doc.removeEventListener('click', entry.click)
   doc.removeEventListener('pointercancel', entry.pointerCancel)
   bound.delete(doc)

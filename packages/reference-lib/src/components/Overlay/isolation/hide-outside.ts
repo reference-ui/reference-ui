@@ -35,6 +35,32 @@ function shouldSkip(el: Element, keep: Element[]): boolean {
   return keep.some(k => el === k || el.contains(k) || isNodeInside(el, k))
 }
 
+function isAuthoredHiddenBoundary(el: Element): boolean {
+  if (el.getAttribute('aria-hidden') === 'true') return true
+  return el.hasAttribute('inert') && !el.hasAttribute('data-overlay-managed-inert')
+}
+
+function isInsideOpaqueBackground(el: Element): boolean {
+  let walk = parentOf(el)
+  while (walk) {
+    if (isAuthoredHiddenBoundary(walk)) return true
+    walk = parentOf(walk)
+  }
+  return false
+}
+
+function observeHideRoots(overlayEl: HTMLElement, observer: MutationObserver) {
+  const doc = overlayEl.ownerDocument
+  observer.observe(doc.body, { childList: true, subtree: true })
+  let current: Element | null = overlayEl
+  while (current) {
+    const root = current.getRootNode()
+    if (!(root instanceof ShadowRoot)) break
+    observer.observe(root, { childList: true, subtree: true })
+    current = root.host
+  }
+}
+
 function hide(el: Element) {
   const count = refCount.get(el) ?? 0
   refCount.set(el, count + 1)
@@ -59,7 +85,7 @@ function show(el: Element) {
 
 function hideExcluding(root: Element, keep: Element[], hidden: Element[]) {
   for (const child of Array.from(root.children)) {
-    if (child.getAttribute('aria-hidden') === 'true') continue
+    if (isAuthoredHiddenBoundary(child)) continue
     if (isExempt(child)) continue
     if (keep.some(k => child === k || child.contains(k) || isNodeInside(child, k))) {
       hideExcluding(child, keep, hidden)
@@ -79,13 +105,20 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
   const hidden: Element[] = []
   const keep = overlayKeep(doc)
 
-  let current: Element | null = overlayEl
+  let current: Node | null = overlayEl
   while (current && current !== doc.body && current !== doc.documentElement) {
-    const parent = parentOf(current)
+    const parent: Node | null = current.parentNode
     if (!parent) break
-    for (const sibling of Array.from(parent.children)) {
+
+    const siblings =
+      parent instanceof ShadowRoot || parent instanceof Element
+        ? Array.from(parent.children)
+        : []
+
+    for (const sibling of siblings) {
       if (sibling === current) continue
-      if (sibling.getAttribute('aria-hidden') === 'true') continue
+      if (!(sibling instanceof Element)) continue
+      if (isAuthoredHiddenBoundary(sibling)) continue
       if (isExempt(sibling)) continue
       if (keep.some(k => sibling === k || sibling.contains(k) || isNodeInside(sibling, k))) {
         hideExcluding(sibling, keep, hidden)
@@ -98,7 +131,13 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
       hide(sibling)
       hidden.push(sibling)
     }
-    current = parent
+
+    current =
+      parent instanceof ShadowRoot
+        ? parent.host
+        : parent instanceof Element
+          ? parent
+          : null
   }
 
   const observer = new MutationObserver(mutations => {
@@ -111,10 +150,21 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
     for (const mutation of mutations) {
       for (const node of Array.from(mutation.addedNodes)) {
         if (!(node instanceof Element)) continue
-        if (node.getAttribute('aria-hidden') === 'true') continue
+        if (isAuthoredHiddenBoundary(node)) continue
 
         // OV-INERT-04: a node reparented into Content must drop stale inert.
         if (isKept(node)) {
+          const idx = hidden.indexOf(node)
+          if (idx !== -1) {
+            show(node)
+            hidden.splice(idx, 1)
+          }
+          continue
+        }
+
+        // OV-INERT-10: already-hidden ancestors own the subtree. Drop duplicate
+        // Overlay inert so teardown only restores attributes we added.
+        if (isInsideOpaqueBackground(node)) {
           const idx = hidden.indexOf(node)
           if (idx !== -1) {
             show(node)
@@ -143,7 +193,7 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
     }
   })
 
-  observer.observe(doc.body, { childList: true, subtree: true })
+  observeHideRoots(overlayEl, observer)
 
   return () => {
     observer.disconnect()

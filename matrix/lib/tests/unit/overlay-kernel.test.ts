@@ -377,5 +377,49 @@ describe('Overlay Kernel Unit Contracts', () => {
       expect(isLayerPointerEventsEnabled(layers, 'child', document)).toBe(true)
       expect(isLayerPointerEventsEnabled(layers, 'parent', document)).toBe(false)
     })
+
+    it('getTopLiveLayer keeps independent documents from stealing Escape routing', () => {
+      const otherDoc = document.implementation.createHTMLDocument('frame')
+      overlayStackStore.getState().addLayer({
+        id: 'main',
+        parentId: null,
+        dismiss: vi.fn(),
+        isModal: true,
+        isolation: { focus: true, inert: true, scroll: true },
+        open: true,
+        node: null,
+        backdrop: null,
+        trigger: null,
+        document,
+      })
+      overlayStackStore.getState().addLayer({
+        id: 'frame',
+        parentId: null,
+        dismiss: vi.fn(),
+        isModal: true,
+        isolation: { focus: true, inert: true, scroll: true },
+        open: true,
+        node: null,
+        backdrop: null,
+        trigger: null,
+        document: otherDoc,
+      })
+      overlayStackStore.getState().addLayer({
+        id: 'exiting',
+        parentId: null,
+        dismiss: vi.fn(),
+        isModal: true,
+        isolation: { focus: true, inert: true, scroll: true },
+        open: false,
+        node: null,
+        backdrop: null,
+        trigger: null,
+        document,
+      })
+
+      const layers = overlayStackStore.getState().layers
+      expect(getTopLiveLayer(layers, document)?.id).toBe('main')
+      expect(getTopLiveLayer(layers, otherDoc)?.id).toBe('frame')
+    })
   })
 })

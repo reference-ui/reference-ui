@@ -76,7 +76,8 @@ function getAlignment(placement: Placement): Alignment | undefined {
 export function computeCoordsFromPlacement(
   referenceRect: DOMRect,
   floatingRect: DOMRect,
-  placement: Placement
+  placement: Placement,
+  rtl = false
 ): { x: number; y: number } {
   const side = getSide(placement)
   const alignment = getAlignment(placement)
@@ -90,9 +91,9 @@ export function computeCoordsFromPlacement(
     if (!alignment) {
       x = referenceRect.left + (referenceRect.width - floatingRect.width) / 2
     } else if (alignment === 'start') {
-      x = referenceRect.left
+      x = rtl ? referenceRect.right - floatingRect.width : referenceRect.left
     } else {
-      x = referenceRect.right - floatingRect.width
+      x = rtl ? referenceRect.left : referenceRect.right - floatingRect.width
     }
   } else {
     x = side === 'left' ? referenceRect.left - floatingRect.width : referenceRect.right
@@ -108,10 +109,17 @@ export function computeCoordsFromPlacement(
   return { x, y }
 }
 
-function transformOrigin(placement: Placement): string {
+function isRtl(el: HTMLElement): boolean {
+  const win = el.ownerDocument.defaultView
+  if (win?.getComputedStyle(el).direction === 'rtl') return true
+  return el.ownerDocument.documentElement.dir === 'rtl'
+}
+
+function transformOrigin(placement: Placement, rtl = false): string {
   const side = getSide(placement)
   const alignment = getAlignment(placement) ?? 'center'
-  const align = alignment === 'start' ? '0' : alignment === 'end' ? '100%' : '50%'
+  const align =
+    alignment === 'start' ? (rtl ? '100%' : '0') : alignment === 'end' ? (rtl ? '0' : '100%') : '50%'
   switch (side) {
     case 'top':
       return `${align} 100%`
@@ -145,6 +153,7 @@ export function computePosition(
   const win = floating.ownerDocument.defaultView ?? window
   const viewportWidth = win.innerWidth
   const viewportHeight = win.innerHeight
+  const rtl = isRtl(floating)
 
   let currentPlacement = previousPlacement ?? initialPlacement
   let side = getSide(currentPlacement)
@@ -190,7 +199,7 @@ export function computePosition(
     }
   }
 
-  let { x, y } = computeCoordsFromPlacement(referenceRect, floatingRect, currentPlacement)
+  let { x, y } = computeCoordsFromPlacement(referenceRect, floatingRect, currentPlacement, rtl)
 
   if (side === 'top') y -= offset
   else if (side === 'bottom') y += offset
@@ -284,7 +293,7 @@ export function computePosition(
 
   floating.style.setProperty(
     '--reference-overlay-transform-origin',
-    transformOrigin(currentPlacement)
+    transformOrigin(currentPlacement, rtl)
   )
 
   return {

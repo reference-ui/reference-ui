@@ -16,21 +16,37 @@ export function isFullyClipped(rect: DOMRect, clip: DOMRect, pad: number): boole
   )
 }
 
+function parentNode(node: Node): Node | null {
+  if (node.parentNode) return node.parentNode
+  const root = typeof node.getRootNode === 'function' ? node.getRootNode() : null
+  return root instanceof ShadowRoot ? root.host : null
+}
+
 export function getOverflowAncestors(node: Node): Array<Element | Window> {
   const list: Array<Element | Window> = []
-  let current: Node | null = node.parentNode
+  let current: Node | null = parentNode(node)
 
-  while (current && current.nodeType === Node.ELEMENT_NODE) {
+  while (current) {
+    if (current instanceof ShadowRoot) {
+      current = current.host
+      continue
+    }
+    if (current.nodeType !== Node.ELEMENT_NODE) break
     const element = current as Element
     const style = element.ownerDocument.defaultView?.getComputedStyle(element)
     if (style) {
       const overflow = `${style.overflow}${style.overflowX}${style.overflowY}`
       if (/auto|scroll|overlay|hidden/.test(overflow)) list.push(element)
     }
-    current = current.parentNode
+    current = parentNode(element)
   }
 
-  const win = node instanceof Element ? node.ownerDocument.defaultView : window
+  const win =
+    node instanceof Element
+      ? node.ownerDocument.defaultView
+      : typeof window !== 'undefined'
+        ? window
+        : null
   if (win) list.push(win)
   return list
 }

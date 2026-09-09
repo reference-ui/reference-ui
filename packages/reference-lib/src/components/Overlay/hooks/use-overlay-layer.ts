@@ -63,7 +63,9 @@ export function useOverlayLayer({
         node: contentRef.current,
         backdrop: null,
         trigger: triggerRef.current,
-        document: typeof document !== 'undefined' ? document : null,
+        document:
+          contentRef.current?.ownerDocument ??
+          (typeof document !== 'undefined' ? document : null),
       })
       setLayerHandlers(overlayId, {
         dismiss: () => setIsOpen(false),
