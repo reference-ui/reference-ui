@@ -46,7 +46,7 @@ belong to Overlay.
 | Primitive | Role | Production? | Next |
 | :--- | :--- | :--- | :--- |
 | **Overlay** | Kernel | **Yes** | Stop Overlay titles. FocusLock Gate 3 |
-| **FocusLock** | Containment solver | **No** | Gate 3: Presence restore, deleted trigger, nest, portalled shard |
+| **FocusLock** | Containment solver | **Seam yes** | Catalog leftovers `FL-CAND-02/03/07/13`; then Popover Gate 4 |
 | **Popover** | Hover policy on Overlay | **No** | Gate 4: safe polygon (`PO-HOVER-02` must be a real diagonal) |
 | **Tooltip** | Description policy on Overlay | **No** | Gate 5: unify skip-delay store, Escape-vs-parent, scroll-close |
 | **Toast** | Queue runtime | **No** | Gate 6: pause from overlay stack + remaining APIs |
@@ -72,9 +72,10 @@ FocusLock Gate 3.
 
 Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
 
-1. **FocusLock Gate 3** — restore after Presence, deleted-trigger walk,
-   nested locks, portalled shard, tabbable catalog. Overlay registers shards
-   and owns dismiss; FocusLock solves containment.
+1. **FocusLock Gate 3 (current)** — FocusLock × Overlay: trap through Presence,
+   proximity walk, nested isolating pause, Overlay-portalled shard, tabbable
+   catalog. Overlay registers shards and owns dismiss; FocusLock solves
+   containment. See FocusLock SPEC. Do not add Overlay titles.
 2. **Popover safe-polygon** — timers are not grace. Diagonal travel still
    closes. Do not expand `PO-POS-*`.
 3. **Tooltip skip-delay store split** — unify `tooltipGroup`; then
@@ -132,11 +133,21 @@ Proven in `@matrix/overlays` (`overlay.spec.ts`, `overlay-exotica.spec.ts`).
 Do not add Overlay titles. Nested Escape, layer membership, inert, scroll lock,
 edge Handle, iframe / two-root / Shadow / SSR / RTL are Overlay SPEC `[x]`.
 
-### Gate 3 — FocusLock restore and nesting
+### Gate 3 — FocusLock × Overlay (current)
 
-- Restore must wait for Presence exit (Overlay.md freeze). Current restore runs on FocusLock unmount, which is inside Presence — prove it, then prove the deleted-trigger path (`FL-RESTORE-03` / `FL-RESTORE-04`).
-- Nested lock stack (`FL-NEST-01`): inner deactivation resumes outer without reclaim fight.
-- `FL-SHARD-01` is already proven. Add a **portalled** shard (popover/menu inside a lock), not just a sibling node.
+Contract: [FocusLock SPEC](src/components/FocusLock/SPEC.md). Overlay is
+production. This gate is the containment solver Overlay already wired.
+
+Work order (Must Overlay seams proven 2026-09-09):
+
+1. Presence coupling — **proven** `FL-OV-01` / `FL-OV-02`.
+2. Deleted opener walk — **proven** `FL-OV-05` / `FL-RESTORE-03` / `04` / `05`.
+3. Nested isolating Overlay — **proven** `FL-OV-03` / `FL-NEST-01`–`03`.
+4. Overlay-portalled modeless shard — **proven** `FL-OV-04`. `FL-SHARD-02` / `05` still open.
+5. Tabbable catalog — core proven (`FL-CAND-01` / `04`–`06` / `08`, `FL-TAB-01`).
+   Remaining: `FL-CAND-02` / `03` / `07` / `13`.
+
+Then stop FocusLock. Leftovers are Should / resilience / exotica. TalkBack stays parked.
 
 ### Gate 4 — Popover hover grace
 
@@ -364,7 +375,7 @@ What we lift, what we already match, and what is still outstanding.
 
 - **Lifted:** Shards, proximity restore walk, `initialFocus: false` = do not move
 - **Matches:** Tab cycling, nested stack *structure*, `preventScroll` via FocusOptions
-- **Outstanding:** Presence-gated restore proof, portalled shards, shadow/slot solver, TalkBack
+- **Outstanding:** Overlay Presence trap (`FL-OV-01`), one restore after Presence (`FL-OV-02`), Overlay-portalled shard (`FL-OV-04`), tabbable catalog, TalkBack (parked)
 - **Deliberate:** no wrapper, no guard sentinels, Overlay owns Escape and outside click
 
 ### Radix dismissable-layer → Overlay stack
@@ -394,9 +405,11 @@ Gate 1  Overlay kernel defects            DONE in source
 Gate 2  Overlay nested / isolation / exotic E2E   DONE in @matrix/overlays
         STOP Overlay titles
 
-Gate 3  FocusLock
-        Presence restore, deleted trigger, nest, portalled shard
-        Overlay registers shards; FocusLock solves Tab/restore
+Gate 3  FocusLock × Overlay               CURRENT
+        FL-OV-01/02 Presence trap + one restore
+        FL-OV-05 proximity; FL-OV-03 nested isolating
+        FL-OV-04 Overlay-portalled shard
+        Then tabbable catalog. STOP FocusLock titles.
 
 Gate 4  Popover safe-polygon only
         Implement + PO-HOVER-02 as a real diagonal. Do not expand PO-POS.
@@ -434,4 +447,4 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 
 ---
 
-*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`; `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts`.*
+*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts`.*

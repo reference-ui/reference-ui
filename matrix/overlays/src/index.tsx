@@ -8,6 +8,7 @@ import { EdgeFixture } from './fixtures/edge-fixture'
 import { InertFixture } from './fixtures/inert-fixture'
 import { ThemeFixture } from './fixtures/theme-fixture'
 import { FocusFixture } from './fixtures/focus-fixture'
+import { FocusLockOverlayFixture } from './fixtures/focus-lock-overlay-fixture'
 import { AnchorFixture } from './fixtures/anchor-fixture'
 import { ExoticaFixture } from './fixtures/exotica-fixture'
 import { FrameFixture } from './fixtures/frame-fixture'
@@ -22,7 +23,14 @@ export function Index() {
   if (path === '/overlay/edge') return <EdgeFixture />
   if (path === '/overlay/inert') return <InertFixture />
   if (path === '/overlay/theme') return <ThemeFixture />
-  if (path === '/overlay/focus') return <FocusFixture />
+  if (path === '/overlay/focus') {
+    return (
+      <>
+        <FocusFixture />
+        <FocusLockOverlayFixture />
+      </>
+    )
+  }
   if (path === '/overlay/anchor') return <AnchorFixture />
   if (path === '/overlay/exotica') return <ExoticaFixture />
   if (path === '/overlay/frame') return <FrameFixture />
@@ -62,6 +70,8 @@ export function Index() {
         <ThemeFixture />
         <hr />
         <FocusFixture />
+        <hr />
+        <FocusLockOverlayFixture />
         <hr />
         <AnchorFixture />
       </div>

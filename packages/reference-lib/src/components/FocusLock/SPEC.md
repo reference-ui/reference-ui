@@ -2,79 +2,190 @@
 
 Current freeze, cases, and proof. Design narrative: [FocusLock.md](./FocusLock.md).
 System orchestration: [OVERLAYS.md](../../../OVERLAYS.md).
+Used by: [Overlay](../Overlay/Overlay.md) when isolation `focus` is on.
 
-Playwright: `matrix/lib/tests/e2e/focus-lock.spec.ts`
-Page: `/focus-lock`
+Playwright: `matrix/lib/tests/e2e/focus-lock.spec.ts` · `matrix/overlays/tests/e2e/overlay-focus.spec.ts`
+Fixtures: `matrix/lib` `/focus-lock` · `matrix/overlays` `/overlay/focus`
+Pages: `/focus-lock` · `/overlay/focus`
 
-## Legend
+---
 
-- `[x]` Playwright title contains this case ID.
-- `[ ]` Specified; not E2E-proven. The engine may still exist in source.
+## Next agent — FocusLock × Overlay
 
-## Next agent — production FocusLock
+**Overlay kernel is shipped.** Gate 3 is FocusLock as Overlay's containment solver.
+This is one workstream: Overlay owns dismiss, isolation, Presence timing, and
+shard **registration**. FocusLock owns Tab, reclaim, shard **solving**, and
+where restore lands.
 
-FocusLock is **containment**: Tab loop, reclaim, shards, restore. Overlay uses it when
-isolation `focus` is on. Popover, Tooltip, and Toast do not.
+Do not add Overlay titles. Do not copy Overlay's dismiss / inert / scroll /
+geometry catalog here. Do not add wrappers, sentinels, `as`, groups, or a
+second trap library. Popover, Tooltip, and Toast do not mount FocusLock.
 
-Visible keyboard chrome is the `ui.focus.ring` token on parts (`Field`, Button, etc.).
+Visible keyboard chrome is the `ui.focus.ring` token on parts (`Field`, Button,
+etc.). FocusLock is not a focus ring.
 
-**Do not** own Escape, outside-press, inert, scroll lock, or geometry. Those
-are Overlay. Do not add wrappers, sentinels, `as`, groups, or a second trap
-library.
+TalkBack virtual-modality skip is **not** a production blocker. Park it.
 
-### Overlay seams (prove the wiring, not Overlay's catalog)
+### What FocusLock supports (the surface)
 
-| Overlay | FocusLock |
+| Axis | Public surface | Overlay seam |
+| :--- | :--- | :--- |
+| Containment | Tab loop, reclaim, empty-container fallback | Isolation `focus` slots FocusLock onto `Overlay.Content` |
+| Membership | `shards`, nested lock pause/resume | Overlay registers descendant layer nodes; nested **isolating** Overlay is a second lock; nested **modeless** Content is a shard |
+| Restore | Captured origin, explicit `FocusTarget`, right-then-left/ancestor walk | Overlay owns **when** (after Presence); FocusLock owns **where** |
+| Catalog | Native tabbables: radio, fieldset, details, inert/hidden, shadow/slots | Overlay `initialFocus` omitted → first tabbable from this catalog |
+
+Seams Overlay already proved (do not re-assert Overlay prose): `OV-FOCUS-06`
+(nested modal wiring), `OV-FOCUS-07` (shard registration), `OV-RESTORE-01` /
+`02` / `07` (Presence timing + explicit target), `OV-RESTORE-03` (timing when
+opener is gone — walk is FocusLock), `OV-RESTORE-04` (Overlay does not override
+`restoreFocus={false}`), `OV-TRG-04` (Trigger is outside the lock).
+
+Seams FocusLock still owns: trap through Presence `data-state="closed"`,
+proximity walk, nested pause **solver**, combined Tab across Overlay-registered
+shards, tabbable catalog Overlay `initialFocus` already assumes.
+
+### Overlay × FocusLock coverage (do not skip)
+
+These are the OS cases. Cover them on Overlay fixtures. Vendor tests are
+evidence for the solver, not a second product.
+
+| OS / platform pattern | Overlay mapping | FocusLock proof |
+| :--- | :--- | :--- |
+| Modal dialog Tab trap | Unbound + isolation default | `FL-OV-01` through exit; `FL-TAB-02` / `03` already smoke wrap |
+| Restore after dialog close animation | Presence then deactivate | `FL-OV-02` — Overlay `OV-RESTORE-01` is timing only |
+| Opener removed while closing | Presence then proximity | `FL-OV-05` + `FL-RESTORE-03` / `04` |
+| Nested dialog in a dialog | Nested isolating Overlay | `FL-OV-03` — Overlay `OV-FOCUS-06` is the wiring smoke |
+| Menu / popover inside a dialog | Nested `isolation={false}` Content, portalled | `FL-OV-04` — Overlay `OV-FOCUS-07` registers; FocusLock solves Tab/reclaim |
+| Click outside does not mean FocusLock canceled the click | Overlay pointer lock | `FL-TRAP-02` — reclaim without `preventDefault` on pointer |
+| Deleted control while trapped | Mutation inside Content | `FL-TRAP-04` / `05` — Overlay `OV-FOCUS-05` is the smoke |
+| Shadow / slot candidates | Overlay exotic destination | `FL-CAND-08` / `13`, `FL-SHARD-06` |
+| Two Documents | Overlay iframe stacks | `FL-NEST-06` — one lock stack per Document |
+
+### Do not duplicate
+
+| If you are about to write… | Stop. It lives here |
 | :--- | :--- |
-| Isolation `focus` mounts the lock on Content | Tab loop + reclaim solver |
-| Nested **modal** Overlay pauses the parent lock | `FL-NEST-01` — Overlay `OV-FOCUS-06` already smokes Overlay nesting |
-| Nested **non-modal** Overlay.Content is a shard | Overlay **registers** (`OV-FOCUS-07`); FocusLock **solves** `FL-SHARD-*` |
-| Restore **after Presence exit** | Overlay owns timing (`OV-RESTORE-*`); FocusLock owns proximity walk `FL-RESTORE-03/04` |
-| `initialFocus` / `restoreFocus` on Content | Same `FocusTarget` types; catalog is FocusLock |
+| Escape, outside press, inert, scroll, geometry, Handle | Overlay |
+| Restore **after Presence** timing | Overlay `OV-RESTORE-01` / `02` / `07` |
+| Overlay registers a child Content node as a shard | Overlay `OV-FOCUS-07` |
+| Overlay nested modal mounts a second lock | Overlay `OV-FOCUS-06` |
+| Trigger is not a trap stop | Overlay `OV-TRG-04` |
+| Modeless Tab bridge Trigger → Content | Overlay `OV-TRG-05` (`isolation.focus` off — no FocusLock) |
+| Hover polygon, skip-delay, toast pause | Popover / Tooltip / Toast |
+| `as`, sentinels, groups, whitelist, two trap engines | Out of scope |
+| Cross-document trapping into iframe content | Deferred (`crossFrame`) |
 
-### Work order (Gate 3)
+Do not add `FL-*` titles unless a production bug names a hole. Overlay×FocusLock
+proofs go in `@matrix/overlays` (`overlay-focus.spec.ts`). Standalone solver
+proofs stay in `matrix/lib` (`focus-lock.spec.ts`). Combined titles are fine
+when one Overlay fixture covers a seam ID and a solver ID. `[x]` means the test
+asserts the **prose**. Vendor files are evidence — port the behavior, do not
+ship a second engine.
 
-1. Restore after Presence with an Overlay fixture — lock stays enabled through
-   closed `data-state`, deactivates after exit (`FL-RESTORE-01` is live-trigger
-   only today).
-2. `FL-RESTORE-03` / `04` — deleted / disabled opener proximity walk. Overlay
-   `OV-RESTORE-03` only asserts Presence timing + one live candidate.
-3. `FL-NEST-01` — inner deactivation resumes outer without reclaim fight.
-4. Portalled shard (`FL-SHARD-02+` / Overlay-wired popover Content), not just
-   the sibling `FL-SHARD-01`.
-5. Lift tabbable catalog (shadow, slots, fieldset, details) — today's
-   `querySelector` list is not production.
-
-TalkBack virtual-modality skip is **not** a production blocker.
-
-Then **stop FocusLock**. Overlay continues to own dismiss and isolation.
-
-## Current (2026-09-08)
-
-**Production: no.** Gate 3 — Presence restore, deleted trigger, nest, portalled shard.
+### Status (2026-09-09)
 
 | | |
 | :--- | :--- |
-| Engine | Shipped (slot child, Tab loop, shards, proximity restore) |
-| Named `[x]` | 6 / 72 |
-| Playwright tests | 5 |
+| Engine | Shipped (slot child, Tab wrap, Overlay-portalled shards, Presence restore, proximity, catalog walk) |
+| Production | **Overlay×FocusLock Must 1–4 proven.** Catalog core proven. Remaining: `FL-CAND-02` / `03` / `07` / `13`, `FL-SHARD-02` / `05`, Should / resilience / exotica. TalkBack parked. |
+| Named proven | Overlay seams `FL-OV-01`–`05` plus prior smokes `FL-INIT-01`, `FL-TAB-01`–`03`, `FL-TRAP-01`, `FL-SHARD-01` / `03`, `FL-NEST-01`–`03` / `05`, `FL-RESTORE-01`–`05` / `08`, `FL-CAND-01` / `04`–`06` / `08` |
+| Playwright | `overlay-focus.spec.ts` (5) · `matrix/lib` `focus-lock.spec.ts` (9) |
 
-Named proven: `FL-INIT-01`, `FL-TAB-02`, `FL-TAB-03`, `FL-TRAP-01`, `FL-SHARD-01`, `FL-RESTORE-01`.
+### Defects the Overlay freeze already named
 
-### In the tree
+- `Overlay.Content` keeps FocusLock mounted through Presence. Trap stays
+  **enabled** through `data-state="closed"` (`FL-OV-01`). Restore is deferred
+  one turn after unmount so StrictMode remounts do not restore early (`FL-OV-02`).
+- `FL-SHARD-01` is a sibling node. Production is Overlay-portalled Popover/Menu
+  Content from the layer stack.
+- Candidate solver is `querySelectorAll` of a selector list. Overlay
+  `initialFocus` omitted uses that list. Lift tabbable (radio, fieldset,
+  details, shadow/slots). Positive `tabIndex` stays document order inside the
+  lock. Do not ship tabbable `displayCheck` as public API.
+- Overlay passes `defaultRestoreTarget={triggerRef}`. Freeze that seam; do not
+  add another restore API.
 
-No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/ancestor proximity walk, global `activeLocks`, Overlay content nodes treated as inside for reclaim.
+### Work order (Gate 3)
 
-### Defects / unproven
+Do this in order. Overlay×FocusLock first. Catalog second. Then stop.
 
-- Restore runs on FocusLock unmount (inside Presence). Overlay.md requires restore **after** Presence exit — prove `FL-RESTORE-*` with Overlay Presence.
-- `FL-SHARD-01` is a sibling node, not a portalled popover/menu.
-- Tabbable solver is `querySelectorAll` of a candidate list, not the lifted `tabbable` catalog (shadow, slots).
-- Android TalkBack virtual-modality skip is not implemented (not a production blocker).
+1. **Must — Presence coupling** (`FL-OV-01`, `FL-OV-02`, `FL-RESTORE-02`,
+   `FL-RESTORE-08`) on Overlay fixtures. Trap through `data-state="closed"`.
+   One restore after Presence. `false` skips; explicit target wins.
+2. **Must — Deleted opener walk** (`FL-OV-05`, `FL-RESTORE-03`, `FL-RESTORE-04`,
+   `FL-RESTORE-05`). Overlay `OV-RESTORE-03` already timed one live candidate.
+3. **Must — Nested isolating Overlay** (`FL-OV-03`, `FL-NEST-01`–`03`) — pause,
+   child-only Tab/reclaim, resume without fight.
+4. **Must — Portalled modeless shard** (`FL-OV-04`, `FL-NEST-05`, `FL-SHARD-02`,
+   `FL-SHARD-03`, `FL-SHARD-05`) — Overlay-wired Popover/Menu Content, not a
+   sibling div.
+5. **Must — Catalog Overlay already assumes** (`FL-CAND-01`–`08`, `FL-CAND-13`,
+   `FL-TAB-01`). Vendor `tabbable` / Radix `focus-scope` are the evidence.
+6. **Should — Containment leftovers** (`FL-TRAP-02`–`07`, `FL-INIT-02`–`08`,
+   `FL-TAB-04`–`09`, `FL-DOM-01`).
+7. **Resilience** (`FL-RESTORE-06`, `FL-TRAP-06`, `FL-NEST-04`, `FL-DOM-04`).
+8. **Exotica** (`FL-SHARD-06`, `FL-NEST-06`, `FL-ENV-01`, `FL-CAND-12` / `14`).
+   TalkBack stays parked.
 
-### Remaining
+Then **stop FocusLock**. Overlay continues to own dismiss and isolation.
+Popover Gate 4 is next.
 
-`FL-RESTORE-03/04` (deleted / disabled trigger), `FL-NEST-01`, portalled `FL-SHARD-02+`, shadow/slot candidate cases.
+### Done when
+
+- Overlay×FocusLock Must rows in this file are `[x]` with prose-level asserts
+  in `overlay-focus.spec.ts`.
+- Catalog Must rows are `[x]` (overlays or lib).
+- No new Overlay SPEC cases. No FocusLock wrappers/sentinels.
+- Next agent starts at [Popover SPEC](../Popover/SPEC.md) Gate 4 (safe polygon).
+
+---
+
+## Freeze
+
+Omitted `disabled` is false. Omitted `restoreFocus` is true: restore the
+pre-activation target with proximity fallback. An explicit `FocusTarget`
+resolves at deactivation and wins when connected and focusable, else the
+captured origin, else proximity. `restoreFocus={false}` performs no return
+move. Omitted `initialFocus` focuses the first tabbable descendant; a
+`FocusTarget` focuses that node when valid and inside (container or shard);
+`false` skips the activation move; trap still runs once focus is inside.
+`true` is the omitted path. Overlay may pass `defaultRestoreTarget` (Trigger)
+when activation would otherwise capture `body` or an already-inside node.
+
+FocusLock slots onto a single element child. No wrapper, no local guards, no
+`as`. Overlay.Content is the lock container when isolation `focus` is on.
+
+**Presence:** Overlay keeps FocusLock **enabled** while closed-state Content is
+still mounted for exit. `data-state="closed"` is not a trap-off signal.
+Overlay deactivates the lock after Presence completes (unmount or `disabled`).
+FocusLock then performs the return move once. Overlay does not implement a
+second restore.
+
+**Nesting:** Nested **isolating** Overlay mounts a second FocusLock. The parent
+pauses (last-active stack). Nested **modeless** Overlay.Content is a `shard` of
+the parent lock — one activation, no parent pause, no second restore cycle.
+Overlay registers those nodes from the layer stack; FocusLock does not walk
+the Overlay store itself.
+
+**Shards:** `HTMLElement` or ref. Null refs are ignored until resolved.
+Overlapping/nested registrations dedupe. Removed shards drop out of
+containment. Open shadow shards participate; closed roots are opaque hosts.
+
+**Tab:** Only unmodified Tab and Shift+Tab loop. Ctrl/Alt/Meta+Tab are left to
+the browser. Positive `tabIndex` does not reorder inside the lock.
+
+**Documents:** One activation stack per Document. A lock never traverses iframe
+content. An `<iframe>` element is one opaque candidate.
+
+**Solver:** One engine. Pairing two focus libraries causes recursive `focus()`.
+
+---
+
+## Legend
+
+- `[x]` Playwright title contains this case ID **and** the test asserts the prose (production bar).
+- `[ ]` Specified; not proven. Engine may still exist in source.
 
 ## Source evidence
 
@@ -91,7 +202,193 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
 - `vendor/react-focus-lock` — shards and last-lock-wins behavior; wrappers,
   sidecars, groups, and whitelist APIs are excluded.
 
+Pair with Radix `focus-scope` tests for Overlay-shaped behavior. Do not take
+Floating UI `FloatingFocusManager`. Lift tabbable cases as the catalog; leave
+Ariakit's radio rule, Kashey groups/`as`/sentinels, and restore-on-unmount
+timing.
+
+---
+
+## Production blockers
+
+Full freeze text. These are the only FocusLock cases to implement or prove
+next. Overlay×FocusLock fixtures live in `@matrix/overlays`. Standalone solver
+fixtures stay in `matrix/lib`.
+
+### Must 1 — Overlay Presence coupling
+
+- [x] `FL-OV-01` `[reference]` `[browser]` —
+  **FocusLock should keep trapping while Overlay Content is closed-but-mounted
+  for Presence exit.**
+  Open an isolating Overlay with a non-zero Presence exit, start close so
+  Content is `data-state="closed"` and still mounted, then Tab and
+  programmatically focus a background control. Assert the lock remains the
+  reclaimer for the whole exit: background does not keep sequential or
+  settled programmatic focus, and closed visual state is not a trap-off
+  signal. Overlay `OV-PRES-01` already proves closed `data-state`; do not
+  re-prove animation duration here.
+- [x] `FL-OV-02` `[reference]` `[browser]` —
+  **FocusLock should restore once when Overlay deactivates the lock after
+  Presence completes.**
+  Open isolating Overlay from trigger A, use Content, then close through a
+  real Presence exit. Assert no return move during exit, exactly one restore
+  after Presence completes, and no second restore from an inner unmount plus
+  an Overlay-owned move. Repeat with `restoreFocus={false}` and confirm
+  Overlay does not override FocusLock's skip (`OV-RESTORE-04` is the Overlay
+  half). Overlay `OV-RESTORE-01` / `02` already time the window — this proves
+  FocusLock is the mover.
+- [x] `FL-RESTORE-02` `[reference]` `[browser]` —
+  Prove skip-restore on a standalone lock **and** on Overlay. Overlay must not
+  add a later return after Presence.
+- [x] `FL-RESTORE-08` `[reference]` `[browser]` —
+  Prove explicit `restoreFocus` target at deactivation. Overlay-wired after
+  Presence is `OV-RESTORE-07` for timing; FocusLock asserts B, not A.
+
+### Must 2 — Deleted opener walk
+
+- [x] `FL-OV-05` `[vendor]` `[browser]` —
+  **FocusLock should apply proximity restoration when Overlay's opener is gone
+  after Presence.**
+  Open isolating Overlay from a focusable node between connected left and
+  right siblings, start close, remove or disable the opener before Presence
+  ends, then complete exit. Assert no restore during exit, then the
+  right-then-left/ancestor walk selects one live connected replacement — not
+  the detached opener, not `body` as a guessed fallback. Overlay
+  `OV-RESTORE-03` already asserts timing plus one live candidate; this is the
+  walk. Combined title with `FL-RESTORE-03` / `04` / `05` is fine on one
+  fixture.
+- [x] `FL-RESTORE-03` `[vendor]` `[browser]` — sibling proximity (vendor
+  `return-focus`). Overlay-wired path is `FL-OV-05`.
+- [x] `FL-RESTORE-04` `[vendor]` `[browser]` — ancestor proximity when no
+  sibling remains.
+- [x] `FL-RESTORE-05` `[vendor]` `[browser]` — original target disabled /
+  hidden / inert uses the same walk.
+
+### Must 3 — Nested isolating Overlay
+
+- [x] `FL-OV-03` `[vendor]` `[browser]` —
+  **FocusLock should pause the parent lock when a nested isolating Overlay
+  mounts its own FocusLock.**
+  Open parent Overlay, focus a parent candidate, then open a nested isolating
+  Overlay. Assert initial focus moves into the child, Tab wraps only in the
+  child, programmatic focus on a parent-only candidate is reclaimed to the
+  child's latest inside target, and only one reclaimer runs. Close the child
+  and assert the parent resumes without a reclaim fight or oscillation.
+  Overlay `OV-FOCUS-06` is the wiring smoke — this proves the solver. Combined
+  title with `FL-NEST-01` / `02` / `03` is fine.
+- [x] `FL-NEST-01` `[vendor]` `[browser]` — parent pauses when nested lock
+  activates (standalone or Overlay).
+- [x] `FL-NEST-02` `[vendor]` `[browser]` — Tab and reclaim stay in the active
+  child.
+- [x] `FL-NEST-03` `[convergence]` `[browser]` — child deactivate restores into
+  and resumes the parent.
+
+### Must 4 — Overlay-portalled modeless shard
+
+- [x] `FL-OV-04` `[reference]` `[browser]` —
+  **FocusLock should treat nested modeless Overlay.Content as a shard of the
+  parent lock.**
+  Open an isolating Overlay, then open a nested `isolation={false}` Popover or
+  Menu whose Content is portalled (Overlay layer-stack shard, not a sibling
+  `shards={[el]}` fixture). Tab and Shift+Tab across parent Content and child
+  Content, click a child control, then unmount the child. Assert one
+  continuous parent lock, combined composed Tab order and wrap, no parent
+  pause, no second initial-focus or restore cycle, and reclaim from an
+  unregistered sibling. Overlay `OV-FOCUS-07` already registers the node —
+  this proves Tab/reclaim. Combined title with `FL-NEST-05` / `FL-SHARD-03` is
+  fine. `FL-SHARD-01` is not this case.
+- [ ] `FL-SHARD-02` `[vendor]` `[browser]` — ref shard resolves after mount.
+- [x] `FL-SHARD-03` `[reference]` `[browser]` — combined Tab sequence.
+- [ ] `FL-SHARD-05` `[reference]` `[browser]` — removing the focused shard
+  reclaims inside the lock.
+- [x] `FL-NEST-05` `[reference]` `[browser]` — parent stays active; modeless
+  child is a shard, not a nested lock.
+
+### Must 5 — Catalog Overlay `initialFocus` already assumes
+
+- [x] `FL-CAND-01` through `FL-CAND-08`, `FL-CAND-13` `[vendor]` —
+  Lift tabbable: native kinds, exclusions, hidden/inert, closed details,
+  disabled fieldset legend, named radios, zero-area, open shadow + slots,
+  host/slot tabindex. Positive `tabIndex` stays composed DOM order (`FL-TAB-05`).
+  **Proven in Playwright:** `01` / `04` / `05` / `06` / `08` and `FL-TAB-01`.
+  **Still open:** `02` / `03` / `07` / `13`.
+- [x] `FL-TAB-01` `[vendor]` `[browser:all]` — Tab visits the live catalog in
+  composed document order.
+
+Vendor evidence: `vendor/tabbable/test/e2e`, Radix `focus-scope.test.tsx`,
+focus-lock `focusMerge` / `shadow-dom`. Do not ship tabbable `displayCheck`
+modes. Do not copy Overlay `OV-FOCUS-01`–`05` as new Overlay titles.
+
+### Should — containment leftovers
+
+`FL-TRAP-02` (pointer reclaim without canceling click — Overlay owns modal
+pointer lock; FocusLock must not `preventDefault` pointer), `FL-TRAP-03`
+(null `relatedTarget`), `FL-TRAP-04` / `05` (removed / disabled current node),
+`FL-TRAP-07` (return after window blur), `FL-INIT-02`–`08`, `FL-TAB-04`–`09`,
+`FL-DOM-01` (no wrapper — Overlay slots onto Content).
+
+### Resilience
+
+`FL-RESTORE-06` (StrictMode / stale restore), `FL-TRAP-06` (cancel pending
+reclaim), `FL-NEST-04` (out-of-order deactivate), `FL-DOM-04` (rerender-stable
+refs).
+
+### Exotica
+
+`FL-SHARD-06` (portalled + open-shadow shards), `FL-NEST-06` (per-Document
+stacks; Overlay iframe stacks already exist), `FL-ENV-01` (SSR hydrate),
+`FL-CAND-12` / `FL-CAND-14` (iframe as opaque stop). Android TalkBack
+virtual-modality skip stays parked.
+
+---
+
 ## Required cases
+
+### Overlay integration (FocusLock × Overlay)
+
+Prove these in `@matrix/overlays`. Do not re-assert Overlay dismiss, inert,
+scroll, or Presence duration.
+
+- [x] `FL-OV-01` `[reference]` `[browser]` —
+  **FocusLock should keep trapping while Overlay Content is closed-but-mounted
+  for Presence exit.**
+  Open an isolating Overlay with a non-zero Presence exit, start close so
+  Content is `data-state="closed"` and still mounted, then Tab and
+  programmatically focus a background control. Assert the lock remains the
+  reclaimer for the whole exit: background does not keep sequential or
+  settled programmatic focus, and closed visual state is not a trap-off
+  signal.
+- [x] `FL-OV-02` `[reference]` `[browser]` —
+  **FocusLock should restore once when Overlay deactivates the lock after
+  Presence completes.**
+  Open isolating Overlay from trigger A, use Content, then close through a
+  real Presence exit. Assert no return move during exit, exactly one restore
+  after Presence completes, and no second restore from an inner unmount plus
+  an Overlay-owned move. Repeat with `restoreFocus={false}` and confirm skip.
+- [x] `FL-OV-03` `[vendor]` `[browser]` —
+  **FocusLock should pause the parent lock when a nested isolating Overlay
+  mounts its own FocusLock.**
+  Open parent Overlay, focus a parent candidate, then open a nested isolating
+  Overlay. Assert initial focus moves into the child, Tab wraps only in the
+  child, programmatic focus on a parent-only candidate is reclaimed to the
+  child's latest inside target, and only one reclaimer runs. Close the child
+  and assert the parent resumes without a reclaim fight.
+- [x] `FL-OV-04` `[reference]` `[browser]` —
+  **FocusLock should treat nested modeless Overlay.Content as a shard of the
+  parent lock.**
+  Open an isolating Overlay, then open a nested `isolation={false}` Popover or
+  Menu whose Content is portalled from the Overlay layer stack. Tab and
+  Shift+Tab across parent and child Content, click a child control, then
+  unmount the child. Assert one continuous parent lock, combined composed Tab
+  order and wrap, no parent pause, and no second initial-focus or restore
+  cycle.
+- [x] `FL-OV-05` `[vendor]` `[browser]` —
+  **FocusLock should apply proximity restoration when Overlay's opener is gone
+  after Presence.**
+  Open isolating Overlay from a focusable node between connected left and
+  right siblings, start close, remove or disable the opener before Presence
+  ends, then complete exit. Assert no restore during exit, then the
+  right-then-left/ancestor walk selects one live connected replacement.
 
 ### Public type and anatomy
 
@@ -186,7 +483,7 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
 
 ### Tab loop
 
-- [ ] `FL-TAB-01` `[vendor]` `[browser:all]` —
+- [x] `FL-TAB-01` `[vendor]` `[browser:all]` —
   **FocusLock should move Tab through enabled candidates in composed document order when focus is inside.**
   Activate a lock containing mixed native candidates and disabled controls,
   then press Tab from each enabled stop. Assert focus advances through the
@@ -244,7 +541,7 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
 
 ### Tabbable catalog
 
-- [ ] `FL-CAND-01` `[vendor]` `[browser:all]` —
+- [x] `FL-CAND-01` `[vendor]` `[browser:all]` —
   **FocusLock should include every supported native tabbable kind when each candidate is enabled and rendered.**
   Place an enabled button, input, select, textarea, `a[href]`, controlled
   audio/video, first summary of open details, truthy contenteditable, and
@@ -263,19 +560,19 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   `visibility:hidden`, `visibility:collapse`, `hidden`, and `inert`
   boundaries, alongside one visible candidate. Assert activation and Tab skip
   every concealed subtree and settle only on the visible candidate.
-- [ ] `FL-CAND-04` `[vendor]` `[browser:all]` —
+- [x] `FL-CAND-04` `[vendor]` `[browser:all]` —
   **FocusLock should expose only the native disclosure stop when candidates are inside closed details.**
   Render closed `<details>` with two direct summaries and focusable content,
   then open it in a second phase. Assert only the first direct summary is a
   stop while closed, non-summary descendants and later summaries are skipped,
   and opening adds eligible descendants to current navigation.
-- [ ] `FL-CAND-05` `[vendor]` `[browser:all]` —
+- [x] `FL-CAND-05` `[vendor]` `[browser:all]` —
   **FocusLock should follow native legend exceptions when candidates live in a disabled fieldset.**
   Put controls in the first legend, a later legend, and ordinary content of a
   disabled fieldset, including a nested disabled-fieldset variant. Assert only
   controls protected by the first valid legend remain candidates and all
   others are skipped during activation and Tab.
-- [ ] `FL-CAND-06` `[vendor]` `[browser:all]` —
+- [x] `FL-CAND-06` `[vendor]` `[browser:all]` —
   **FocusLock should follow native named-radio tabbability when a group has a checked radio or no selection.**
   Create named groups with a checked enabled radio and with no checked radio,
   plus equal names in separate forms or roots, then Tab through the lock.
@@ -288,7 +585,7 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   rendered fixed, absolute, and ordinary controls. Assert activation and Tab
   exclude the zero-area/non-rendered nodes while retaining every positioned
   control that has rendered geometry.
-- [ ] `FL-CAND-08` `[convergence]` `[shadow]` —
+- [x] `FL-CAND-08` `[convergence]` `[shadow]` —
   **FocusLock should traverse open shadow roots and assigned slots when composed focus order crosses DOM boundaries.**
   Build nested open roots with slotted light-DOM controls and focus candidates
   before, inside, and after each boundary, then Tab and inspect focus. Assert
@@ -406,7 +703,7 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   location, then attach the shard, rerender, and focus its descendant again.
   Assert null is ignored and outside focus reclaimed initially, while the
   resolved current shard joins containment without remounting the lock.
-- [ ] `FL-SHARD-03` `[reference]` `[browser]` —
+- [x] `FL-SHARD-03` `[reference]` `[browser]` —
   **FocusLock should traverse main content and shards as one tab sequence when both contain candidates.**
   Interleave a lock container and two shard containers in composed document
   order, then press Tab and Shift+Tab through every candidate. Assert focus
@@ -433,19 +730,19 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
 
 ### Nested locks
 
-- [ ] `FL-NEST-01` `[vendor]` `[browser]` —
+- [x] `FL-NEST-01` `[vendor]` `[browser]` —
   **FocusLock should pause its parent when a nested FocusLock becomes active.**
   Activate a parent lock, focus one of its candidates, then mount and activate
   a child lock while logging focus calls from both. Assert initial focus moves
   into the child and only one reclaimer responds to outside focus, with no
   parent-child focus fight or oscillation.
-- [ ] `FL-NEST-02` `[vendor]` `[browser]` —
+- [x] `FL-NEST-02` `[vendor]` `[browser]` —
   **FocusLock should contain Tab and programmatic focus inside the active child when locks are nested.**
   With parent and child locks active, Tab across the child boundary and
   programmatically focus a parent-only candidate. Assert Tab wraps within the
   child and the parent candidate is reclaimed to the child's latest focus,
   while the paused parent does not run competing movement.
-- [ ] `FL-NEST-03` `[convergence]` `[browser]` —
+- [x] `FL-NEST-03` `[convergence]` `[browser]` —
   **FocusLock should restore into and resume its parent when the active child deactivates.**
   Focus the child lock, deactivate it with restoration enabled, and then
   attempt to focus a node outside the parent. Assert focus first restores to a
@@ -456,7 +753,7 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   Activate locks A, B, and C, then disable or unmount B before C and later
   remove C. Assert C remains the sole active reclaimer after B disappears and
   A resumes only when C is gone, with no restoration to dead B.
-- [ ] `FL-NEST-05` `[reference]` `[browser]` —
+- [x] `FL-NEST-05` `[reference]` `[browser]` —
   **FocusLock should keep its parent active when a portalled non-modal child is registered as a shard.**
   Open interactive portalled content from inside the lock, register it in
   `shards`, and move focus between main and portalled candidates. Assert one
@@ -478,27 +775,27 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   activate and use the lock, then deactivate it. Assert A becomes active
   exactly once after deactivation and no other proximity target is chosen
   while A remains connected and focusable.
-- [ ] `FL-RESTORE-02` `[reference]` `[browser]` —
+- [x] `FL-RESTORE-02` `[reference]` `[browser]` —
   **FocusLock should leave deliberate application focus untouched when deactivation uses `restoreFocus=false`.**
   In one controlled action, move focus to a connected outside target and
   deactivate the lock before a queued reclaim, with
   `restoreFocus={false}`. Assert that target keeps focus after all pending
   work settles and the pre-activation element is not refocused.
-- [ ] `FL-RESTORE-03` `[vendor]` `[browser]` —
+- [x] `FL-RESTORE-03` `[vendor]` `[browser]` —
   **FocusLock should restore by sibling proximity when the original focused node was removed.**
   Activate from a focusable node between connected left and right siblings,
   remove the original while locked, and deactivate; repeat without the right
   sibling. Assert focus chooses the nearest focusable replacement to the right
   first and then the nearest focusable left sibling when no right candidate
   remains.
-- [ ] `FL-RESTORE-04` `[vendor]` `[browser]` —
+- [x] `FL-RESTORE-04` `[vendor]` `[browser]` —
   **FocusLock should walk ancestor proximity when no valid sibling can replace a removed restore target.**
   Remove the original target and leave no focusable sibling in its immediate
   parent, but provide a focusable candidate near an ancestor; then repeat with
   none anywhere. Assert restoration chooses the ancestor-proximity candidate
   when available and otherwise completes without throwing or focusing a
   detached node.
-- [ ] `FL-RESTORE-05` `[vendor]` `[browser]` —
+- [x] `FL-RESTORE-05` `[vendor]` `[browser]` —
   **FocusLock should use proximity restoration when the original target becomes disabled, hidden, or inert.**
   Activate from a target, make it disabled, CSS-hidden, or inert while the lock
   is active, and deactivate with valid nearby siblings. Assert the invalid
@@ -514,9 +811,9 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
   **FocusLock should perform its return move when a standalone lock deactivates.**
   Focus a trigger, activate a standalone lock, and disable or unmount that
   lock while its captured origin remains valid. Assert one return move during
-  FocusLock deactivation; Overlay's later Presence-coupled timing is exercised
-  only in Overlay's owned contract.
-- [ ] `FL-RESTORE-08` `[reference]` `[browser]` —
+  FocusLock deactivation. Overlay Presence coupling is `FL-OV-01` / `FL-OV-02`
+  — do not re-assert Presence duration here.
+- [x] `FL-RESTORE-08` `[reference]` `[browser]` —
   **FocusLock should prefer an explicit return target when `restoreFocus` resolves a valid element at deactivation.**
   Activate from origin A while `restoreFocus` is separately supplied as a ref
   to target B and as a resolver returning B, then deactivate in each fixture.
@@ -588,14 +885,19 @@ No wrapper / no guards, `initialFocus` ref/fn/`false`, `restoreFocus` + sibling/
 
 ## Owned elsewhere
 
-- Dialog dismissal, inerting, scroll lock, and resolving return focus only
-  after Presence exit completion: `Overlay`.
+- Escape, outside press, inert, scroll lock, geometry, Handle, Presence
+  duration, shard **registration**, nested-modal **wiring**: `Overlay`.
+- Restore **when** (after Presence completes): Overlay. Restore **where**
+  (origin, explicit target, proximity walk): FocusLock (`FL-OV-02`,
+  `FL-OV-05`).
 - Prop/ref merge matrix: `Slot`.
+- Hover polygon / skip-delay / toast stack pause: Popover / Tooltip / Toast.
 
 ## Deferred
 
 - Traversing or trapping inside iframe content from an outer lock
   (`crossFrame`); each Document owns its own lock.
+- Android TalkBack virtual-modality skip (not a production blocker).
 
 ## Out of scope
 

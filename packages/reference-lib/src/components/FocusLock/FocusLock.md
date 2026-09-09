@@ -7,6 +7,10 @@ Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is recl
 
 Overlay owns Escape, outside-press, inert, scroll lock, and **when** restore runs (after Presence). FocusLock owns **where** focus goes.
 
+Gate 3 freeze: [SPEC.md](./SPEC.md) — FocusLock × Overlay. Overlay is production.
+This primitive is not, until Presence-trap, nested pause, Overlay-portalled
+shards, proximity walk, and the tabbable catalog are proven. Then stop.
+
 Does not add a wrapper node. Slots onto a single child. Overlay.Content is the lock container for dialogs; this primitive exists so that containment is not Overlay-only.
 
 ```tsx
@@ -33,9 +37,10 @@ Does not add a wrapper node. Slots onto a single child. Overlay.Content is the l
 ```
 
 Overlay keeps the lock enabled while closed-state content is still mounted for
-Presence exit. It disables/deactivates the lock only after Presence completes,
-then runs restoration; closed visual state alone must not expose background
-focus early.
+Presence exit. `data-state="closed"` is not a trap-off signal. Overlay
+deactivates the lock only after Presence completes (unmount or `disabled`);
+FocusLock then restores once. Overlay may pass `defaultRestoreTarget` as the
+Trigger when activation would otherwise capture `body`.
 
 ## Proposed API
 
@@ -50,6 +55,7 @@ interface FocusLockProps
   disabled?: boolean
   restoreFocus?: boolean | FocusTarget
   initialFocus?: FocusTarget | false
+  defaultRestoreTarget?: FocusTarget
   shards?: Array<HTMLElement | React.RefObject<HTMLElement | null>>
 }
 ```
