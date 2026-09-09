@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
-import { ToastHost } from '../Toast'
+import { ToastHost, type ToastClassNames, type ToastOffset, type ToastTheme } from '../Toast'
 import { getTooltipGroupStore } from '../Tooltip/tooltipGroup'
 import { AnnouncerHost } from '../Announcer'
 import { DEFAULT_TOAST_HOTKEY } from '../Toast/toastQueue'
@@ -24,6 +24,8 @@ export interface ReferenceLibraryToaster {
   richColors?: boolean
   invert?: boolean
   dir?: 'rtl' | 'ltr' | 'auto'
+  theme?: ToastTheme
+  mobileOffset?: ToastOffset
   containerAriaLabel?: string
   icons?: {
     success?: React.ReactNode
@@ -34,6 +36,13 @@ export interface ReferenceLibraryToaster {
     close?: React.ReactNode
   }
   swipeDirections?: Array<'top' | 'right' | 'bottom' | 'left'>
+  toastOptions?: {
+    classNames?: ToastClassNames
+    unstyled?: boolean
+    className?: string
+    style?: React.CSSProperties
+    closeButton?: boolean
+  }
 }
 
 export interface ReferenceLibraryProps {
@@ -160,10 +169,13 @@ export function ReferenceLibrary({
             closeButton={toaster?.closeButton}
             richColors={toaster?.richColors}
             invert={toaster?.invert}
+            theme={toaster?.theme}
             dir={toaster?.dir}
+            mobileOffset={toaster?.mobileOffset}
             containerAriaLabel={toaster?.containerAriaLabel}
             icons={toaster?.icons}
             swipeDirections={toaster?.swipeDirections}
+            toastOptions={toaster?.toastOptions}
           />
           <AnnouncerHost />
         </>

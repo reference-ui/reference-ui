@@ -12,19 +12,14 @@ Fixture root: `ReferenceLibrary`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
-## Next agent — Rival Sonner (Gate 7)
+## Next agent — Gate 7 proven
 
-Gate 6 is done. **Do not stop Toast.** The call shape is in. The product is not.
+Gate 6 and Gate 7 (rival Sonner) are Playwright-proven. Toast stays a separate
+runtime: queue + host + live-region, mounted by `ReferenceLibrary`. It is not
+Overlay. No trap, no page inert, no geometry, no Overlay parts. FIFO waiting
+queue, one host, no `toasterId`, no copied `sonner/styles.css`.
 
-Toast stays a separate runtime: queue + host + live-region, mounted by
-`ReferenceLibrary`. It is not Overlay. No trap, no page inert, no geometry, no
-Overlay parts. The Overlay seam stays as shipped: pause from the overlay stack
-(`isolation.inert` / `isModal`), not `[aria-modal="true"]`.
-
-**Rival means the default styled toast feels like Sonner**, not that we copy
-`sonner/styles.css` or add a second toaster id. Custom JSX stays untouched
-inside the item wrapper. Default chrome (`toast()`, variants, action, cancel,
-close, loading) is now in scope.
+Older unchecked IDs below remain contract. They are not a new rival work order.
 
 ### Keep (do not “fix” these into Sonner bugs)
 
@@ -35,17 +30,17 @@ close, loading) is now in scope.
 - Library queue defaults stay 5000ms, `bottom-end`, limit 4 unless a later
   freeze explicitly changes them. Feel constants below are motion, not that freeze.
 
-### Work order
+### Work order — DONE
 
 1. Motion: enter, collapsed stack, height-based expand, exit, swipe-out.
 2. Swipe physics: 45px or velocity `> 0.11`, dampen illegal directions, ignore
    selected text.
 3. Default chrome: card, close, action, cancel, loader, rich colors, invert, theme.
 4. Layout: width 356, gap 14, offset 24, `mobileOffset`, `dir`.
-5. Drop-in options still missing: `style`, `className`, `unstyled`, `classNames`,
+5. Drop-in options: `style`, `className`, `unstyled`, `classNames`,
    `actionButtonStyle`, `cancelButtonStyle`.
-6. Prove each `TO-RIVAL-*` in Playwright and a capture table. Do not mark `[x]`
-   from source inspection.
+6. Each `TO-RIVAL-*` is `[x]` from Playwright (`35 passed` in
+   `toast.spec.ts`), not from source inspection.
 
 ### Owns (shipped)
 
@@ -64,19 +59,24 @@ close, loading) is now in scope.
 
 ## Current (2026-09-09)
 
-**Production: Gate 6 yes. Gate 7 (rival Sonner) no.** API shape is in. Motion,
-default chrome, and drop-in styling are not.
+**Production: Gate 6 yes. Gate 7 (rival Sonner) yes.** FIFO waiting queue, one
+host, no Overlay, no `toasterId`, no copied Sonner stylesheet.
 
 | | |
 | :--- | :--- |
-| Engine | Shipped (queue, stack, swipe, overlay-stack pause, Gate 6 APIs) |
-| Named `[x]` | 16 / 81 contract IDs (+ Gate 6 additions) |
-| Playwright tests | 16 |
+| Engine | Shipped (queue, stack, swipe, overlay-stack pause, Gate 6 APIs, Gate 7 chrome/motion) |
+| Named `[x]` | 35 / 81 contract IDs (+ Gate 6 additions + 19 `TO-RIVAL-*`) |
+| Playwright tests | 35 |
 
 Named proven: `TO-DOM-01`, `TO-DEF-01`, `TO-DEF-DEFAULT`, `TO-DEF-CUSTOM`,
 `TO-STACK-01`, `TO-STACK-HOVER`, `TO-OV-01`, `TO-OV-02`, `TO-QUEUE-02`,
 `TO-SWIPE-01`, `TO-TIME-04`, `TO-TIME-07`, `TO-HOTKEY-01`, `TO-DISMISSIBLE-01`,
-`TO-AUTOCLOSE-01`, `TO-UNWRAP-01`.
+`TO-AUTOCLOSE-01`, `TO-UNWRAP-01`, `TO-RIVAL-ENTER`, `TO-RIVAL-STACK`,
+`TO-RIVAL-EXPAND`, `TO-RIVAL-EXIT`, `TO-RIVAL-SWIPE-OUT`,
+`TO-RIVAL-SWIPE-PHYSICS`, `TO-RIVAL-REDUCE`, `TO-RIVAL-CARD`, `TO-RIVAL-CLOSE`,
+`TO-RIVAL-ACTION`, `TO-RIVAL-LOADER`, `TO-RIVAL-RICH`, `TO-RIVAL-THEME`,
+`TO-RIVAL-FOCUS`, `TO-RIVAL-OFFSET`, `TO-RIVAL-DIR`, `TO-RIVAL-STYLE`,
+`TO-RIVAL-CLASSNAMES`, `TO-RIVAL-BUTTON-STYLE`.
 
 ### In the tree
 
@@ -86,17 +86,18 @@ position-aware swipe, `visibilitychange` pause, hover/focus pause, FIFO limit,
 overlay-stack pause, configurable hotkey, `dismissible`, `onAutoClose`,
 `onDismiss`, `getToasts` / `getHistory`, and Sonner extended promise results.
 Toast store is persisted on the owner `Document` so Book HMR cannot fork a
-second empty queue.
+second empty queue. Default chrome, enter/stack/exit/swipe motion, reduced
+motion, focus restore, and drop-in `style` / `classNames` / button styles are
+Playwright-proven.
 
 ### Defects
 
-None for Gate 6.
+None for Gate 6 or Gate 7.
 
 ### Remaining
 
-Gate 7 below is the production bar for “this rivals Sonner.” Older unchecked
-IDs in this file are still contract, but they are not the rival work order.
-Android TalkBack stays FocusLock.
+Older unchecked IDs in this file are still contract. They are not a new rival
+work order. Android TalkBack stays FocusLock.
 
 ## API freeze decisions
 
@@ -825,8 +826,9 @@ Android TalkBack stays FocusLock.
 
 ## Rival Sonner (Gate 7)
 
-The default styled path must feel like Sonner. These are the gaps. `[ ]` means
-not proven. Do not treat a data attribute or a thin CSS rule as done.
+The default styled path must feel like Sonner. These cases are Playwright-proven
+in `matrix/lib/tests/e2e/toast.spec.ts`. Do not treat a data attribute or a thin
+CSS rule as done without that proof.
 
 Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
 
@@ -842,38 +844,38 @@ Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
 
 ### Motion
 
-- [ ] `TO-RIVAL-ENTER` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-ENTER` `[reference]` `[browser]` —
   **A new toast should enter from off the stack axis, not appear in place.**
   Show a `bottom-end` toast and a `top-end` toast. Assert the first painted
   frame is translated away from the anchor (down for bottom, up for top) at
   opacity 0, then settles to identity at opacity 1 over about 400ms.
-- [ ] `TO-RIVAL-STACK` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-STACK` `[reference]` `[browser]` —
   **Collapsed cards behind the front should read as a stack, not a second layout.**
   Show three toasts in one position. Assert the front is scale 1 and full
   height, each card behind scales down by about 0.05 per index, clips to the
   front height, and hides its own title, description, and actions until expand.
-- [ ] `TO-RIVAL-EXPAND` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-EXPAND` `[reference]` `[browser]` —
   **Expand should separate cards by measured height plus gap.**
   Show two toasts of different heights, hover the stack, and assert the offset
   between them is the front card’s height plus 14px, not a fixed peek. Leaving
   the stack, including the gap between cards, collapses again without flicker.
-- [ ] `TO-RIVAL-EXIT` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-EXIT` `[reference]` `[browser]` —
   **Dismissal should leave along the stack axis and fade, then unmount.**
   Auto-close or close the front toast and assert it translates away from the
   anchor and reaches opacity 0 before the wrapper is removed. A stacked card
   that is not swiped does not jump to a large drag offset.
-- [ ] `TO-RIVAL-SWIPE-OUT` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-SWIPE-OUT` `[reference]` `[browser]` —
   **A completing swipe should animate out in the drag direction.**
   Swipe right, left, up, and down on positions that allow that edge. Assert a
   directional leave (not an instant remove) and that a swipe below threshold
   springs back to the stack transform.
-- [ ] `TO-RIVAL-SWIPE-PHYSICS` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-SWIPE-PHYSICS` `[reference]` `[browser]` —
   **Swipe should dismiss on Sonner’s threshold, and only on an allowed edge.**
   A drag of 45px, or a short flick faster than 0.11 px/ms, dismisses.
   A drag of 44px below that velocity springs back. Motion toward a disallowed
   edge is dampened and does not dismiss. A text selection inside the card
   does not start a swipe. `type: "loading"` does not swipe.
-- [ ] `TO-RIVAL-REDUCE` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-REDUCE` `[reference]` `[browser]` —
   **Reduced motion should remove enter, stack, exit, and loader animation.**
   Under `prefers-reduced-motion: reduce`, show and dismiss a toast and assert
   no transform or opacity transition is required to reach the open or removed
@@ -881,39 +883,39 @@ Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
 
 ### Default chrome
 
-- [ ] `TO-RIVAL-CARD` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-CARD` `[reference]` `[browser]` —
   **The default toast should be a 356px card with Sonner’s type anatomy.**
   `toast()`, `success`, `error`, `warning`, `info`, and `loading` render a
   styled card: 13px type, title weight 500, description under it, icon at 16px
   when the type has one, padding 16px, radius 8px, soft shadow. Custom JSX
   from `toast.custom` is not wrapped in that chrome.
-- [ ] `TO-RIVAL-CLOSE` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-CLOSE` `[reference]` `[browser]` —
   **The close control should be an overlapping corner button, off unless asked.**
   Toaster `closeButton` defaults false. A toast with `closeButton: true` shows
   a 20px circular button sitting on the leading top corner, not an icon inside
   the padding. Hover and focus-visible styles are visible. Activating it
   dismisses.
-- [ ] `TO-RIVAL-ACTION` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-ACTION` `[reference]` `[browser]` —
   **Action and cancel should be compact trailing buttons, and close unless prevented.**
   Action is a 24px-tall filled pill. Cancel is the same size on a muted
   surface. Clicking either dismisses. `preventDefault()` on the click keeps
   the toast. A React node passed as `action` or `cancel` renders as given.
-- [ ] `TO-RIVAL-LOADER` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-LOADER` `[reference]` `[browser]` —
   **Loading should use a spinner that crossfades when the type changes.**
   `toast.loading` and the loading phase of `toast.promise` show a 12-bar
   loader, not a stroked sun icon. When the same id becomes success or error,
   the loader fades out and the type icon fades in on that same card.
-- [ ] `TO-RIVAL-RICH` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-RICH` `[reference]` `[browser]` —
   **`richColors` should paint the card and its close button in type color.**
   With toaster or toast `richColors`, success, info, warning, and error use
   distinct light surfaces. `invert` swaps the normal card to the opposite
   surface. Both follow toaster `theme`: `light`, `dark`, and `system`.
-- [ ] `TO-RIVAL-THEME` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-THEME` `[reference]` `[browser]` —
   **The toaster should have an explicit light, dark, and system theme.**
   `theme: "system"` follows `prefers-color-scheme`. A toast `invert` flips
   only that card’s normal surface. This is toaster chrome, not a second color
   mode system for the rest of the library.
-- [ ] `TO-RIVAL-FOCUS` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-FOCUS` `[reference]` `[browser]` —
   **The front card should show a focus ring and restore focus on dismiss.**
   Tab or hotkey into the toast and assert a visible focus ring on the card or
   its control. Dismissing while focus is inside returns focus to the last
@@ -921,29 +923,29 @@ Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
 
 ### Layout
 
-- [ ] `TO-RIVAL-OFFSET` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-OFFSET` `[reference]` `[browser]` —
   **Offset and mobile offset should place the stack, including on a narrow viewport.**
   Toaster `offset` accepts a number, a string, or per-edge values and applies
   to the occupied position. Below 600px, `mobileOffset` wins, side-aligned
   stacks become full width minus that inset, and `top-center` / `bottom-center`
   drop the horizontal translate.
-- [ ] `TO-RIVAL-DIR` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-DIR` `[reference]` `[browser]` —
   **`dir` should flip chrome and the meaning of start and end.**
   `dir: "rtl"` moves the close button to the opposite corner, mirrors icon and
   action alignment, and treats `start` swipe as toward the inline-start edge.
 
 ### Drop-in options
 
-- [ ] `TO-RIVAL-STYLE` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-STYLE` `[reference]` `[browser]` —
   **A toast should accept `style`, `className`, and `unstyled` without losing behavior.**
   `style` and `className` merge onto the default card. `unstyled: true` (or
   `toast.custom`) keeps swipe, timer, stack, and dismiss, and does not force
   the default background, border, shadow, or padding.
-- [ ] `TO-RIVAL-CLASSNAMES` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-CLASSNAMES` `[reference]` `[browser]` —
   **Toaster and toast `classNames` should target the styled parts.**
   A `classNames` map can mark toast, title, description, icon, loader, close,
   action, and cancel. Per-toast values win over toaster `toastOptions`.
-- [ ] `TO-RIVAL-BUTTON-STYLE` `[reference]` `[browser]` —
+- [x] `TO-RIVAL-BUTTON-STYLE` `[reference]` `[browser]` —
   **Action and cancel should accept their own style overrides.**
   `actionButtonStyle` and `cancelButtonStyle` apply only to those buttons and
   do not restyle the card or the close control.

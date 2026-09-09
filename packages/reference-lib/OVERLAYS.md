@@ -48,7 +48,7 @@ belong to Overlay.
 | **FocusLock** | Containment solver | **Yes (Gate 3)** | Stop FocusLock titles |
 | **Popover** | Hover policy on Overlay | **Yes (Gate 4)** | Stop Popover titles |
 | **Tooltip** | Description policy on Overlay | **Yes (Gate 5)** | Stop Tooltip titles |
-| **Toast** | Queue runtime | **Yes (Gate 6)** | Stop Toast titles |
+| **Toast** | Queue runtime | **Yes (Gate 7)** | Older SPEC IDs remain; rival Sonner is proven |
 
 **Architectural decision still holds:** Dialog, Drawer, Sheet, and Modal are
 not separate runtimes. They are compositions of `Overlay`. Popover/Tooltip are
@@ -240,9 +240,10 @@ Legend: ✅ engine + proof · 🟢 engine, no E2E · 🟡 partial / defective ·
 
 ## 4. Feature Parity — Toast vs Sonner
 
-Toast has moved **toward** Sonner since the last revision of this file.
-`toast.success/error/warning/info/loading/promise` exist. `toast.define()`
-remains the typed reusable path.
+Toast Gate 7 (rival Sonner) is Playwright-proven: default chrome, enter/stack/exit
+motion, swipe physics, reduced motion, focus restore, theme, offset, `dir`, and
+drop-in `style` / `classNames`. `toast.define()` remains the typed reusable path.
+FIFO waiting records stay unmounted. No `toasterId`. No copied `sonner/styles.css`.
 
 ### 4.1 Core API
 
@@ -259,11 +260,11 @@ remains the typed reusable path.
 
 | Feature | Sonner | Reference UI | Status |
 | :--- | :--- | :--- | :---: |
-| Mount once | `<Toaster />` | `<ReferenceLibrary toaster={...}>` | 🟢 |
-| 6 positions | Yes | `top-start` … `bottom-end` | 🟢 |
+| Mount once | `<Toaster />` | `<ReferenceLibrary toaster={...}>` | ✅ `TO-DOM-01` |
+| 6 positions | Yes | `top-start` … `bottom-end` | ✅ Gate 7 |
 | Limit + FIFO queue | Hide extras | Waiting queue (unmounted) | ✅ `TO-QUEUE-02` |
-| Expand-on-hover | Yes | Yes | ✅ `TO-STACK-HOVER` |
-| Swipe-to-dismiss | Yes | Pointer distance/velocity | ✅ `TO-SWIPE-01` |
+| Expand-on-hover | Yes | Yes | ✅ `TO-STACK-HOVER` / `TO-RIVAL-EXPAND` |
+| Swipe-to-dismiss | Yes | Pointer distance/velocity | ✅ `TO-SWIPE-01` / `TO-RIVAL-SWIPE-PHYSICS` |
 | Pause on hover/focus | Yes | Yes | ✅ `TO-TIME-04` |
 | Pause when tab hidden | `pauseWhenPageIsHidden` | `visibilitychange` | ✅ `TO-TIME-07` |
 | Pause on modal overlay | No | Overlay stack `isolation.inert` | ✅ `TO-OV-01` / `02` |
@@ -315,7 +316,7 @@ close `OV-ESC-01` / `OV-LAYER-*` / `OV-FOCUS-*`.
 | **Overlay** | 133 | 41 | 28 `[x]` cases proven across `@matrix/overlays` (23 deep) and `@matrix/lib` (18). DOM, Escape, Outside Press, Nested Stacks, Inert, Scroll Lock, Edge Sheets, Handle Drag |
 | **Popover** | 95 | 18 | Gate 4 hover + Overlay-port smokes. Remaining IDs are Won't do (Overlay catalogs), see Popover SPEC |
 | **Tooltip** | 61 | 10 | Gate 5 group / Escape-vs-parent / click-suppress / scroll-close. Remaining IDs are not Gate 5 homework |
-| **Toast** | 81 + Gate 6 | 16 | Show/update/dismiss/stack + overlay pause, swipe, limit, hover/tab-hidden pause, hotkey, dismissible, autocloses |
+| **Toast** | 81 + Gate 6 + Gate 7 | 35 | Show/update/dismiss/stack + overlay pause, swipe, limit, hover/tab-hidden pause, hotkey, dismissible, autocloses, rival Sonner motion/chrome |
 | **FocusLock** | 72 | 5 | Tab loop + sibling shard + restore to live trigger. No Presence, no portal shard, no nest |
 | **Unit** | — | Overlay geometry, FocusLock catalog, Popover polygon | Toast queue math still open |
 
@@ -326,7 +327,7 @@ Named Playwright IDs:
 - Overlay: `OV-DOM-01/02/05/06/07`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`, `OV-ESC-01/02/04`, `OV-OUT-01/02/03/05/08/09`, `OV-LAYER-01/02/03`, `OV-INERT-01/05`, `OV-SCROLL-01/03`, `OV-EDGE-01`, `OV-HND-01/02`, `OV-ISO-02`
 - Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01`–`05` / `07`–`11`, `PO-LAYER-01`, `PO-ENV-01`
 - Tooltip: `TT-DOM-01/02`, hover, `TT-POS`, `TT-GROUP-01`–`03`, `TT-CLOSE-01` / `03`, `TT-SCROLL-01` / `03`
-- Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`, `TO-OV-01`/`02`, `TO-QUEUE-02`, `TO-SWIPE-01`, `TO-TIME-04`/`07`, `TO-HOTKEY-01`, `TO-DISMISSIBLE-01`, `TO-AUTOCLOSE-01`
+- Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`, `TO-OV-01`/`02`, `TO-QUEUE-02`, `TO-SWIPE-01`, `TO-TIME-04`/`07`, `TO-HOTKEY-01`, `TO-DISMISSIBLE-01`, `TO-AUTOCLOSE-01`, `TO-RIVAL-ENTER`/`STACK`/`EXPAND`/`EXIT`/`SWIPE-OUT`/`SWIPE-PHYSICS`/`REDUCE`/`CARD`/`CLOSE`/`ACTION`/`LOADER`/`RICH`/`THEME`/`FOCUS`/`OFFSET`/`DIR`/`STYLE`/`CLASSNAMES`/`BUTTON-STYLE`
 - FocusLock: `FL-INIT-01`, `FL-TAB-02/03`, `FL-TRAP-01`, `FL-SHARD-01`, `FL-RESTORE-01`
 
 ---
@@ -419,7 +420,10 @@ Gate 5  Tooltip skip-delay + Overlay seam  DONE
 Gate 6  Toast — separate runtime           DONE
         Pause from overlay stack (not aria-modal)
         Swipe / limit E2E; hotkey, dismissible, onAutoClose, unwrap()
-        STOP Toast titles.
+
+Gate 7  Toast — rival Sonner               DONE
+        Motion, swipe physics, default chrome, offset/dir, drop-in styles.
+        35 Playwright tests. FIFO waiting queue kept.
 ```
 
 Still not a production blocker: Android TalkBack virtual-modality skip on FocusLock.
@@ -447,4 +451,4 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 
 ---
 
-*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts` (Popover Gate 4, Tooltip Gate 5, Toast Gate 6).*
+*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts` (Popover Gate 4, Tooltip Gate 5, Toast Gate 6–7).*

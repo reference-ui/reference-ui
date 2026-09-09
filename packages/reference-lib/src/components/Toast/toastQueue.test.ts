@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dampenSwipe,
   defaultSwipeDirections,
+  hasTextSelection,
   isAllowedSwipe,
   isToastPausedByOverlay,
   matchesHotkey,
@@ -8,6 +10,7 @@ import {
   shouldAutoDismiss,
   shouldDismissSwipe,
   splitPromiseResult,
+  swipeOffset,
   visibleToasts,
   waitingToasts,
 } from './toastQueue'
@@ -45,9 +48,10 @@ describe('toast remaining time', () => {
 
 describe('toast swipe threshold', () => {
   it('dismisses on distance or velocity', () => {
-    expect(shouldDismissSwipe(76, 0)).toBe(true)
-    expect(shouldDismissSwipe(10, 0.51)).toBe(true)
-    expect(shouldDismissSwipe(75, 0.5)).toBe(false)
+    expect(shouldDismissSwipe(45, 0)).toBe(true)
+    expect(shouldDismissSwipe(44, 0)).toBe(false)
+    expect(shouldDismissSwipe(10, 0.12)).toBe(true)
+    expect(shouldDismissSwipe(44, 0.11)).toBe(false)
   })
 
   it('allows swipe toward the screen edge for the occupied position', () => {
@@ -58,6 +62,15 @@ describe('toast swipe threshold', () => {
     expect(isAllowedSwipe('x', -40, ['bottom', 'right'])).toBe(false)
     expect(isAllowedSwipe('y', 20, ['bottom', 'right'])).toBe(true)
     expect(isAllowedSwipe('y', -20, ['bottom', 'right'])).toBe(false)
+    expect(defaultSwipeDirections('bottom-end', 'rtl')).toEqual(['bottom', 'left'])
+    expect(dampenSwipe(100, true)).toBe(100)
+    expect(dampenSwipe(100, false)).toBe(15)
+    expect(swipeOffset('x', -80, ['bottom', 'right'])).toEqual({ x: -12, y: 0 })
+    expect(swipeOffset('x', 80, ['bottom', 'right'])).toEqual({ x: 80, y: 0 })
+  })
+
+  it('treats a collapsed or empty selection as not blocking swipe', () => {
+    expect(hasTextSelection(undefined)).toBe(false)
   })
 })
 
