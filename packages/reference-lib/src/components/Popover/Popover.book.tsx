@@ -60,6 +60,29 @@ export default {
       </Popover>
     </Div>
   ),
+  HoverGrace: () => (
+    <Div p="10r">
+      <Popover openOnHover openDelay={50} closeDelay={200}>
+        <Popover.Trigger variant="primary" w="30r">
+          Hover
+        </Popover.Trigger>
+        <Popover.Content
+          p="3r"
+          bg="ui.dialog.background"
+          borderRadius="md"
+          border="1px solid"
+          borderColor="ui.dialog.border"
+          placement="bottom"
+          offset={48}
+          w="55r"
+        >
+          <Span fontSize="3r">
+            Diagonal travel through the padded safe polygon stays open.
+          </Span>
+        </Popover.Content>
+      </Popover>
+    </Div>
+  ),
   Placements: () => (
     <Div display="grid" gridTemplateColumns="repeat(2, 1fr)" gap="6r" p="8r">
       {(['top', 'right', 'bottom', 'left'] as const).map(placement => (

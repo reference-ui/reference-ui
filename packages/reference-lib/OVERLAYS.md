@@ -24,9 +24,9 @@ This document is the canonical status for the five interlocking primitives:
 > geometry engine. Popover, Tooltip, and Dialog/Drawer must not grow second
 > runtimes. Toast is not Overlay; it pauses from the overlay stack.
 >
-> Per-component `SPEC.md` is the freeze. Overlay SPEC is done. Gates 3–6 are
-> FocusLock / Popover polygon / Tooltip store / Toast stack-pause — not more
-> Overlay titles.
+> Per-component `SPEC.md` is the freeze. Overlay SPEC is done. Gates 3–4 are
+> FocusLock / Popover polygon. Gates 5–6 are Tooltip store / Toast stack-pause
+> — not more Overlay or Popover titles.
 >
 > Specs: [Overlay](src/components/Overlay/SPEC.md) ·
 > [FocusLock](src/components/FocusLock/SPEC.md) ·
@@ -45,9 +45,9 @@ belong to Overlay.
 
 | Primitive | Role | Production? | Next |
 | :--- | :--- | :--- | :--- |
-| **Overlay** | Kernel | **Yes** | Stop Overlay titles. FocusLock Gate 3 |
-| **FocusLock** | Containment solver | **Yes (Gate 3)** | Stop FocusLock titles. Popover Gate 4 |
-| **Popover** | Hover policy on Overlay | **No** | Gate 4: safe polygon (`PO-HOVER-02` must be a real diagonal) |
+| **Overlay** | Kernel | **Yes** | Stop Overlay titles |
+| **FocusLock** | Containment solver | **Yes (Gate 3)** | Stop FocusLock titles |
+| **Popover** | Hover policy on Overlay | **Yes (Gate 4)** | Stop Popover titles. Tooltip Gate 5 |
 | **Tooltip** | Description policy on Overlay | **No** | Gate 5: unify skip-delay store, Escape-vs-parent, scroll-close |
 | **Toast** | Queue runtime | **No** | Gate 6: pause from overlay stack + remaining APIs |
 
@@ -63,10 +63,10 @@ anchored flip/shift/arrow smokes, tooltip describedby, toast show/update,
 FocusLock sibling shard. Do not copy Overlay geometry or layer matrices onto
 Popover or Tooltip.
 
-`matrix/lib` still does not mount skip-delay groups or portalled shards.
-`@matrix/overlays` mounts nested stacks, edge sheets, and the exotic
-environment pass. Overlay SPEC is done. Remaining family work starts at
-Popover Gate 4.
+`matrix/lib` still does not mount skip-delay groups. `@matrix/overlays`
+mounts nested stacks, edge sheets, and the exotic environment pass.
+Overlay SPEC is done. FocusLock Gate 3 and Popover Gate 4 are done.
+Remaining family work starts at Tooltip Gate 5.
 
 ### The remaining mountain
 
@@ -76,14 +76,15 @@ Not “check every remaining Overlay SPEC box.” Overlay is done. Remaining:
    proximity walk, nested isolating pause, Overlay-portalled shard, tabbable
    catalog. Overlay registers shards and owns dismiss; FocusLock solves
    containment. See FocusLock SPEC. Do not add Overlay titles.
-2. **Popover safe-polygon** — timers are not grace. Diagonal travel still
-   closes. Do not expand `PO-POS-*`.
+2. **Popover Gate 4 (done)** — pointer-safe polygon, real diagonal
+   `PO-HOVER-02`, leave/return/abandon, impatient click, touch filter,
+   `PO-LAYER-01` smoke. Do not expand `PO-POS-*`.
 3. **Tooltip skip-delay store split** — unify `tooltipGroup`; then
    Escape-vs-parent Overlay and scroll-close *policy*.
 4. **Toast Gate 6** — pause from overlay stack (not `[aria-modal]`), swipe /
    limit E2E, hotkey, `dismissible`, `onAutoClose`, `unwrap()`.
 5. **Unit tests** for toast queue math. Tabbable catalog unit tests shipped
-   with FocusLock Gate 3.
+   with FocusLock Gate 3. Polygon math shipped with Popover Gate 4.
 
 Until that list is green, do not call the overlay *family* production-grade.
 
@@ -147,16 +148,17 @@ production. Containment solver Overlay already wired is proven.
    `FL-CAND-07` unit-proven (empty client rects). Should / resilience / exotica
    proven. TalkBack parked.
 
-**Stop FocusLock.** Popover Gate 4 is next.
+**Stop FocusLock.** Popover Gate 4 is done. Tooltip Gate 5 is next.
 
-### Gate 4 — Popover hover grace
+### Gate 4 — Popover hover grace — DONE
 
-Hover currently uses enter/leave timers on Trigger and Content. There is **no
-safe-polygon**. `PO-HOVER-01` / `PO-HOVER-02` pass because delay covers a
-straight move onto Content. Diagonal travel across empty space still closes.
+Pointer-safe polygon (Floating UI cursor triangle + trough, 5px padded
+rects, slow/reverse/opposite-side abandon). Impatient click (300ms).
+Touch does not start mouse hover timers. `PO-HOVER-02` is a real diagonal
+through empty space, not delay coverage.
 
-Ship a pointer-safe polygon (Floating UI / Base UI model) and keep
-`PO-HOVER-02` as the proof.
+Proven: `PO-HOVER-01`–`05`, `PO-HOVER-07`–`09`, `PO-LAYER-01`. **Stop
+Popover.** Do not expand `PO-POS-*`.
 
 ### Gate 5 — Tooltip skip-delay is split across two stores
 
@@ -223,9 +225,9 @@ Legend: ✅ engine + proof · 🟢 engine, no E2E · 🟡 partial / defective ·
 | Uncontrolled `defaultOpen` | No | Yes | 🟢 |
 | Click-outside | Callback, consumer toggles | Auto-dismiss, `preventDefault` cancels | 🟡 top-layer only; no `composedPath` |
 | Escape | Not built-in | Built-in, topmost layer | 🟡 no nested E2E |
-| Nested layer stack | No | Zustand stack | 🟡 cascade / backdrop defects |
-| Hover trigger | No | `openOnHover` + delays | 🟢 `PO-HOVER-01` |
-| Hover grace polygon | No | **Not implemented** (timers only) | 🟡 Gate 4 |
+| Nested layer stack | No | Zustand stack | ✅ Overlay kernel |
+| Hover trigger | No | `openOnHover` + delays | ✅ `PO-HOVER-01` |
+| Hover grace polygon | No | Padded rects + trough + cursor triangle | ✅ Gate 4 `PO-HOVER-02` |
 | Backdrop dismiss | N/A | `Overlay.Backdrop` | 🟡 ignores stack |
 
 ### 3.3 DOM & Rendering
@@ -277,6 +279,7 @@ remains the typed reusable path.
 ## 5. Feature Parity — FocusLock
 
 Compared with **react-focus-lock** and **focus-trap-react**.
+Gate 3 closed the Overlay seams. TalkBack virtual-modality skip remains parked.
 
 | Feature | Status | Notes |
 | :--- | :---: | :--- |
@@ -313,18 +316,18 @@ close `OV-ESC-01` / `OV-LAYER-*` / `OV-FOCUS-*`.
 | Component | SPEC cases | Matrix tests | What those tests actually are |
 | :--- | :---: | :---: | :--- |
 | **Overlay** | 133 | 41 | 28 `[x]` cases proven across `@matrix/overlays` (23 deep) and `@matrix/lib` (18). DOM, Escape, Outside Press, Nested Stacks, Inert, Scroll Lock, Edge Sheets, Handle Drag |
-| **Popover** | 95 | 9 | Click/flip/shift/arrow/hover-delay. No polygon, no nested layer |
+| **Popover** | 95 | 18 | Gate 4 hover + Overlay-port smokes. Remaining IDs are Won't do (Overlay catalogs), see Popover SPEC |
 | **Tooltip** | 61 | 3 | Focus/hover + describedby. No skip-delay, no Escape-vs-parent, no scroll-close |
 | **Toast** | 81 + 4 Gate 6 | 5 | Show/update/dismiss/stack. No swipe, limit, pause, hotkey, dismissible |
 | **FocusLock** | 72 | 5 | Tab loop + sibling shard + restore to live trigger. No Presence, no portal shard, no nest |
-| **Unit** | — | **0** for these five | Only Slot and Presence have `tests/unit/` |
+| **Unit** | — | Overlay geometry, FocusLock catalog, Popover polygon | Toast queue math still open |
 
 Run matrix proof with `pnpm agent pw matrix/overlays` (native unthrottled runner) or `pnpm agent verify Overlay`.
 
 Named Playwright IDs:
 
 - Overlay: `OV-DOM-01/02/05/06/07`, `OV-POS-01`, `OV-TRG-02`, `OV-THEME-01/02`, `OV-ESC-01/02/04`, `OV-OUT-01/02/03/05/08/09`, `OV-LAYER-01/02/03`, `OV-INERT-01/05`, `OV-SCROLL-01/03`, `OV-EDGE-01`, `OV-HND-01/02`, `OV-ISO-02`
-- Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01/02`
+- Popover: `PO-DOM-01/02`, Escape, `PO-POS`, outside press, `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01`–`05` / `07`–`11`, `PO-LAYER-01`, `PO-ENV-01`
 - Tooltip: `TT-DOM-01/02`, hover, `TT-POS`
 - Toast: `TO-DOM-01`/`TO-DEF-01`, default, custom, `TO-STACK-01`, `TO-STACK-HOVER`
 - FocusLock: `FL-INIT-01`, `FL-TAB-02/03`, `FL-TRAP-01`, `FL-SHARD-01`, `FL-RESTORE-01`
@@ -351,7 +354,7 @@ These are in the tree today. Gates 1, 5, and 6 exist because of them.
    isolation does not set that attribute. Isolating overlays do not pause toasts.
 8. **FocusLock tabbable solver** — `querySelectorAll` of a candidate list, not
    the lifted `tabbable` catalog (shadow, slots, `contenteditable`, details).
-9. **Popover “grace”** — `closeDelay` on pointerleave, not a polygon.
+9. **Popover “grace”** — closed in Gate 4. Polygon + intent, not delay-as-grace.
 
 ---
 
@@ -405,16 +408,14 @@ Gate 1  Overlay kernel defects            DONE in source
 Gate 2  Overlay nested / isolation / exotic E2E   DONE in @matrix/overlays
         STOP Overlay titles
 
-Gate 3  FocusLock × Overlay               CURRENT
-        FL-OV-01/02 Presence trap + one restore
-        FL-OV-05 proximity; FL-OV-03 nested isolating
-        FL-OV-04 Overlay-portalled shard
-        Then tabbable catalog. STOP FocusLock titles.
+Gate 3  FocusLock × Overlay               DONE
+        STOP FocusLock titles.
 
-Gate 4  Popover safe-polygon only
-        Implement + PO-HOVER-02 as a real diagonal. Do not expand PO-POS.
+Gate 4  Popover safe-polygon              DONE
+        Diagonal PO-HOVER-02, leave/return/abandon, impatient click,
+        touch filter, PO-LAYER-01. STOP Popover titles.
 
-Gate 5  Tooltip skip-delay store
+Gate 5  Tooltip skip-delay store          CURRENT
         Unify tooltipGroup. Then Escape-vs-parent Overlay, scroll-close policy.
 
 Gate 6  Toast — separate runtime
@@ -435,7 +436,7 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 | Phase 1 (extract Toast/Tooltip/Announcer from ReferenceLibrary) is current work | Done |
 | Overlay 132 contracts / 7 E2E | 100 / 9 |
 | Popover 4 E2E; flip/shift/hover unproven | 9 E2E including `PO-FLIP-01`, `PO-SHIFT-01`, `PO-ARROW-01`, `PO-HOVER-01/02` |
-| Hover grace polygon “specced” as if the feature existed | Timers only |
+| Hover grace polygon “specced” as if the feature existed | Gate 4 shipped; `PO-HOVER-02` is a real diagonal |
 | Collision flip/shift needs E2E | Landed |
 | FocusLock shards need E2E | Sibling shard landed; portalled shard has not |
 | Inert / hierarchical dismiss / iOS scroll lock “implemented” | Inert walk + cascade + iOS lock closed in source (2026-09-08); Overlay SPEC Must/resilience/exotica proven 2026-09-09 |
@@ -447,4 +448,4 @@ Corrected 2026-09-08 against source + `matrix/lib/tests/e2e/*`:
 
 ---
 
-*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts`.*
+*Last updated: 2026-09-09. Specs: [Overlay.md](src/components/Overlay/Overlay.md) · [Popover.md](src/components/Popover/Popover.md) · [Tooltip.md](src/components/Tooltip/Tooltip.md) · [Toast.md](src/components/Toast/Toast.md) · [FocusLock.md](src/components/FocusLock/FocusLock.md). Proof files: `matrix/overlays/tests/e2e/overlay.spec.ts`, `overlay-exotica.spec.ts`, `overlay-focus.spec.ts` (Gate 3); `matrix/lib/tests/e2e/{popover,tooltip,toast,focus-lock}.spec.ts` (Popover Gate 4).*

@@ -121,7 +121,7 @@ All eight steps are proven. Overlay×FocusLock first. Catalog second. **Stop.**
    TalkBack stays parked.
 
 **Stop FocusLock.** Overlay continues to own dismiss and isolation.
-Popover Gate 4 is next.
+Popover Gate 4 is done. Tooltip Gate 5 is next.
 
 ### Done when
 
@@ -129,7 +129,7 @@ Popover Gate 4 is next.
   in `overlay-focus.spec.ts`.
 - Catalog Must rows are `[x]` (overlays or lib).
 - No new Overlay SPEC cases. No FocusLock wrappers/sentinels.
-- Next agent starts at [Popover SPEC](../Popover/SPEC.md) Gate 4 (safe polygon).
+- Next agent starts at [Tooltip SPEC](../Tooltip/SPEC.md) Gate 5.
 
 **This file is at that bar.** Remaining unchecked IDs are Won't do (below), not homework.
 

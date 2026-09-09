@@ -157,8 +157,8 @@ The hard part of hover-opened interactive content is not the open delay. It is p
 **Lift** a first-class placement-aware safe polygon into Popover
 `openOnHover`: pad Trigger and Content by 5px, protect direct diagonal travel
 through their gap, and abandon grace when movement is slow, reversed, or
-crosses the side opposite Content. **Leave** FloatingTree `parentId` coupling
-and Base UI’s vendored `floating-ui-react` as runtime.
+crosses the side opposite Content. **Shipped** (Gate 4). **Leave** FloatingTree
+`parentId` coupling and Base UI’s vendored `floating-ui-react` as runtime.
 
 `closeOnScroll` is Overlay policy on autoUpdate: when true, a composed
 overflow ancestor that moves the anchor requests one close instead of living
@@ -170,7 +170,7 @@ Hover opens; the user clicks within ~500ms intending to “open,” but click di
 
 **Vendor.** Base UI `stickIfOpen` / `PATIENT_CLICK_THRESHOLD` in Popover store.
 
-**Lift** the behaviour. **Leave** the store API.
+**Lift** the behaviour. **Shipped** (Gate 4, 300ms). **Leave** the store API.
 
 ### Nested with Overlay
 

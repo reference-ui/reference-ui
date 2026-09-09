@@ -15,9 +15,9 @@ Pages: `/overlay/*`
 
 Do not add Overlay titles. Next production work is sibling gates, in order:
 
-- [FocusLock SPEC](../FocusLock/SPEC.md) — Gate 3 FocusLock × Overlay (current)
-- [Popover SPEC](../Popover/SPEC.md) — Gate 4 safe polygon only
-- [Tooltip SPEC](../Tooltip/SPEC.md) — Gate 5 skip-delay store
+- [FocusLock SPEC](../FocusLock/SPEC.md) — Gate 3 done
+- [Popover SPEC](../Popover/SPEC.md) — Gate 4 done
+- [Tooltip SPEC](../Tooltip/SPEC.md) — Gate 5 skip-delay store (current)
 - [Toast SPEC](../Toast/SPEC.md) — Gate 6 overlay-stack pause
 
 TalkBack virtual-modality skip stays FocusLock. Do not copy FocusLock / Portal / Popover catalogs into Overlay.
