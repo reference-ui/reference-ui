@@ -1,11 +1,11 @@
 import * as React from 'react'
 
-type Lock = {
+type PointerLockState = {
   count: number
   restore: () => void
 }
 
-const locks = new WeakMap<Document, Lock>()
+const locks = new WeakMap<Document, PointerLockState>()
 
 function apply(doc: Document): () => void {
   const body = doc.body
@@ -35,7 +35,7 @@ export function acquirePointerLock(doc: Document): () => void {
     }
   }
 
-  const lock: Lock = { count: 1, restore: apply(doc) }
+  const lock: PointerLockState = { count: 1, restore: apply(doc) }
   locks.set(doc, lock)
   return () => {
     lock.count -= 1

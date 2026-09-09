@@ -13,68 +13,65 @@ Fixture root: `ReferenceLibrary`
 - `[x]` Playwright title contains this case ID.
 - `[ ]` Specified; not E2E-proven. The engine may still exist in source.
 
-## Next agent — thin Tooltip policy
+## Next agent — Tooltip Gate 5 is done
 
-Read this first. Tooltip is Overlay with `isolation={false}`,
-`presence={false}` (immediate unmount), and `closeOnScroll`. It is **not** a
-second overlay runtime and **not** a Popover.
+**Stop Tooltip.** Overlay is the kernel. Tooltip is Overlay with
+`isolation={false}`, `presence={false}`, and `closeOnScroll`, plus description
+policy Overlay must not own. It is **not** a second overlay runtime and **not**
+a Popover. Interactive hover content is `Popover openOnHover`.
 
-**Do not** add FocusLock, inert, trap, safe-polygon, Presence exit, or a
-flip/shift catalog. Collision math is Overlay `OV-POS-*` (not Popover).
-`TT-SCROLL-*` prove Tooltip's always-on close policy over Overlay
-`OV-SCRL-*` — do not re-implement ancestor detection. Interactive hover content
-is `Popover openOnHover`.
+Do not add FocusLock, inert, trap, safe-polygon, Presence exit, a flip/shift
+catalog, a public Provider, or HoverCard. Remaining `[ ]` IDs in this file are
+not Gate 5 homework. Next family gate is Toast (`Toast SPEC` Gate 6).
 
-### Owns
+### Owns (shipped)
 
 - Slot trigger + `role="tooltip"` + `aria-describedby`
 - Hover delay vs keyboard-immediate open
-- Document skip-delay group (one visible Tooltip)
+- Document skip-delay group on `tooltipGroup` (`ReferenceLibrary tooltip.skipDelay`)
 - WCAG 1.4.13: Escape dismisses Tooltip **without** dismissing a parent Overlay
-- Pointer may rest on non-interactive Content; no buttons/links in Content
+- Click-on-trigger dismiss + suppress hover reopen until leave
+- Always-on `closeOnScroll` over Overlay `OV-SCRL-*`
 
-### Defect (must fix)
+### Work order (Gate 5) — DONE
 
-Two skip-delay stores: `ReferenceLibrary tooltip.skipDelay` writes
-`tooltipWarmup.ts`; Tooltip reads `tooltipGroup.ts`. Config is a no-op.
-Unify onto `tooltipGroup` (delete `tooltipWarmup`).
-
-### Work order (Gate 5)
-
-1. Unify the skip-delay store.
+1. Unify the skip-delay store onto `tooltipGroup` (deleted `tooltipWarmup`).
 2. `TT-GROUP-01` / `02` / `03` — warm handoff, one visible, cold delay after window.
-3. `TT-CLOSE-01` — Escape closes Tooltip only; parent Overlay stays (the Overlay
-   seam). `TT-CLOSE-03` click-on-trigger suppresses hover reopen.
+3. `TT-CLOSE-01` — Escape closes Tooltip only; parent Overlay stays.
+   `TT-CLOSE-03` click-on-trigger suppresses hover reopen.
 4. `TT-SCROLL-01` + `03` — ancestor scroll closes; input/textarea self-scroll
-   does not. Engine proof is Overlay `OV-SCRL-02` if that lands first.
+   does not.
 
-Then **stop Tooltip**. No public Provider. No HoverCard.
+## Current (2026-09-09)
 
-## Current (2026-09-08)
-
-**Production: no.** Gate 5 — store unification + skip-delay / Escape-vs-parent / scroll-close.
+**Production: yes (Gate 5).** Skip-delay store, one-open group, Escape-vs-parent,
+click-suppress, scroll-close policy.
 
 | | |
 | :--- | :--- |
-| Engine | Shipped (hover/focus + group store) |
-| Named `[x]` | 2 / 61 |
-| Playwright tests | 3 |
+| Engine | Shipped (hover/focus + group store + Overlay seam) |
+| Named `[x]` | 9 / 61 |
+| Playwright tests | 10 |
 
-Named proven: `TT-DOM-01`, `TT-DOM-02`.
+Named proven: `TT-DOM-01`, `TT-DOM-02`, `TT-GROUP-01`–`03`, `TT-CLOSE-01`,
+`TT-CLOSE-03`, `TT-SCROLL-01`, `TT-SCROLL-03`.
 
-Unnamed Playwright: hover open + top anchor, focused tooltip `TT-POS`. Partial `TT-HOVER-*` / `TT-POS-01`.
+Unnamed Playwright: hover open + top anchor, focused tooltip `TT-POS`.
 
 ### In the tree
 
-Slot trigger, `role="tooltip"`, `aria-describedby`, `closeOnScroll`, skip-delay group (`tooltipGroup.ts`), Overlay with `isolation={false}` and `presence={false}`.
+Slot trigger, `role="tooltip"`, `aria-describedby`, `closeOnScroll`, one
+document skip-delay store (`tooltipGroup.ts`), Overlay with `isolation={false}`
+and `presence={false}`. `ReferenceLibrary tooltip.skipDelay` writes that store.
 
 ### Defects
 
-Two skip-delay stores: `ReferenceLibrary tooltip.skipDelay` writes `tooltipWarmup.ts`; Tooltip reads `tooltipGroup.ts`. The library config is a no-op.
+None for Gate 5.
 
 ### Remaining
 
-Unify onto `tooltipGroup` (delete `tooltipWarmup`). Then prove `TT-GROUP-*` (skip-delay), Escape without parent overlay dismiss (`TT-CLOSE-*`), and `TT-SCROLL-*`.
+Stop Tooltip. Remaining `[ ]` IDs are not a production gate. Toast Gate 6 is
+next for the overlay family.
 
 ## API freeze decisions
 
@@ -356,7 +353,7 @@ as owned `aria-describedby` token merging.
 
 ### Dismissal and WCAG persistence
 
-- [ ] `TT-CLOSE-01` `[vendor]` `[browser:all]` —
+- [x] `TT-CLOSE-01` `[vendor]` `[browser:all]` —
   **Tooltip should request one dismissal when Escape is pressed while it is
   open.**
   Open by keyboard focus and separately by hover, record active element and
@@ -370,7 +367,7 @@ as owned `aria-describedby` token merging.
   `preventDefault()`, then press Escape. Assert `onEscape(event)` runs before
   any high-level action, `onDismiss` stays uncalled, event metadata remains
   available, and Content plus descriptor remain open.
-- [ ] `TT-CLOSE-03` `[vendor]` `[browser]` —
+- [x] `TT-CLOSE-03` `[vendor]` `[browser]` —
   **Tooltip should dismiss and suppress hover reopening when its open Trigger
   is pressed or clicked.**
   Hover-open Tooltip, press/click Trigger while the pointer remains over it,
@@ -410,7 +407,7 @@ as owned `aria-describedby` token merging.
 
 ### Warm/skip-delay group
 
-- [ ] `TT-GROUP-01` `[vendor]` `[browser]` —
+- [x] `TT-GROUP-01` `[vendor]` `[browser]` —
   **Tooltip should request a neighbor immediately when pointer intent moves
   within the document's warm skip window.**
   Hover the first Trigger through its full cold delay, accept open and close,
@@ -418,7 +415,7 @@ as owned `aria-describedby` token merging.
   neighbor requests `onOpen` in the same interaction turn without its own
   delay, matching Radix `tooltip.test.tsx` (“skips the delay when moving
   between triggers within skipDelayDuration”).
-- [ ] `TT-GROUP-02` `[vendor]` `[browser]` —
+- [x] `TT-GROUP-02` `[vendor]` `[browser]` —
   **Tooltip should close the current instance before requesting its neighbor
   when a warm handoff occurs.**
   Keep Tooltip A controlled open and move intent to B during the instant phase
@@ -426,7 +423,7 @@ as owned `aria-describedby` token merging.
   receives dismissal first, B remains pending until A's accepted close is
   observed, then B receives one open request so accepted state never displays
   two tooltips.
-- [ ] `TT-GROUP-03` `[vendor]` `[browser]` —
+- [x] `TT-GROUP-03` `[vendor]` `[browser]` —
   **Tooltip should return to cold delay when the document skip window has
   expired.**
   Close a shown Tooltip, wait beyond the configured skip duration, then enter a
@@ -487,7 +484,7 @@ as owned `aria-describedby` token merging.
 
 ### Scroll and positioning integration
 
-- [ ] `TT-SCROLL-01` `[vendor]` `[browser]` —
+- [x] `TT-SCROLL-01` `[vendor]` `[browser]` —
   **Tooltip should request close once when an ancestor scroll moves its
   Trigger.**
   Open Tooltip inside a scrollable ancestor, change that ancestor's real scroll
@@ -501,7 +498,7 @@ as owned `aria-describedby` token merging.
   ancestor of Trigger nor part of its path, and inspect callbacks and Content.
   Assert no dismissal request, descriptor change, or unnecessary remount
   occurs.
-- [ ] `TT-SCROLL-03` `[vendor]` `[browser]` —
+- [x] `TT-SCROLL-03` `[vendor]` `[browser]` —
   **Tooltip should remain open when scrolling occurs inside an input or
   textarea Trigger itself.**
   Slot Trigger onto overflowing input and textarea controls, open Tooltip, and

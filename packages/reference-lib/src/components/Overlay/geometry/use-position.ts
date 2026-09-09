@@ -10,7 +10,7 @@ import {
 import { resolveReference } from './reference'
 import { bindEdge, publishEdgeStack, clearGeometry } from './edge'
 
-type Options = {
+type PositionOptions = {
   isOpen: boolean
   setIsOpen?: (open: boolean) => void
   anchor?: OverlayAnchor
@@ -46,7 +46,7 @@ export function useOverlayPosition({
   flip,
   shift,
   mixedGeometry,
-}: Options) {
+}: PositionOptions) {
   const lastPlacementRef = React.useRef<Placement | undefined>(undefined)
 
   React.useEffect(() => {

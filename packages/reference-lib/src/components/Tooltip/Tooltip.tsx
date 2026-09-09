@@ -1,37 +1,60 @@
 import * as React from 'react'
 import { type PrimitiveProps } from '@reference-ui/react'
-import { Overlay, type OverlayContentProps } from '../Overlay'
+import {
+  Overlay,
+  overlayStackStore,
+  useOverlay,
+  type OverlayContentProps,
+  type OverlayDismissHandlers,
+} from '../Overlay'
 import { type PortalProps } from '../Portal'
-import { getTooltipGroupStore } from './tooltipGroup'
+import { isHoverCapablePointer } from '../Popover/hover'
+import { getTooltipGroupStore, isGroupWarmed } from './tooltipGroup'
 
-export interface TooltipProps {
+export interface TooltipProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open?: boolean
   defaultOpen?: boolean
   onOpen?: () => void
   onOpenChange?: (open: boolean) => void
-  onDismiss?: () => void
   openDelay?: number
   closeDelay?: number
+}
+
+interface Session {
+  timer: ReturnType<typeof setTimeout> | null
+  fromPointer: boolean
+  suppressHover: boolean
 }
 
 interface TooltipContextValue {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
-  openDelay: number
-  closeDelay: number
   contentId: string
   triggerRef: React.MutableRefObject<HTMLElement | null>
   contentRef: React.MutableRefObject<HTMLDivElement | null>
-  startOpenTimer: () => void
-  startCloseTimer: () => void
-  cancelTimers: () => void
-  parentContext: TooltipContextValue | null
+  cancelIntent: () => void
+  onTriggerEnter: (event: React.PointerEvent<HTMLElement>) => void
+  onTriggerLeave: (event: React.PointerEvent<HTMLElement>) => void
+  onTriggerPointerDown: (event: React.PointerEvent<HTMLElement>) => void
+  onTriggerFocus: (event: React.FocusEvent<HTMLElement>) => void
+  onTriggerBlur: (event: React.FocusEvent<HTMLElement>) => void
+  onContentEnter: (event: React.PointerEvent<HTMLDivElement>) => void
+  onContentLeave: (event: React.PointerEvent<HTMLDivElement>) => void
 }
 
 const TooltipContext = React.createContext<TooltipContextValue | null>(null)
 
-let tooltipIdCounter = 0
+function emptySession(): Session {
+  return { timer: null, fromPointer: false, suppressHover: false }
+}
+
+function isNestedTooltipTrigger(event: React.SyntheticEvent<HTMLElement>) {
+  const target = event.target
+  if (!(target instanceof Element)) return false
+  const nested = target.closest('[data-reference-tooltip-trigger]')
+  return Boolean(nested && nested !== event.currentTarget)
+}
 
 export function Tooltip({
   children,
@@ -40,6 +63,9 @@ export function Tooltip({
   onOpen,
   onOpenChange,
   onDismiss,
+  onEscape,
+  onOutsidePress,
+  onInteractOutside,
   openDelay = 700,
   closeDelay = 300,
 }: TooltipProps) {
@@ -47,110 +73,243 @@ export function Tooltip({
   const parentContext = React.useContext(TooltipContext)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
+  const session = React.useRef<Session>(emptySession())
+  const contentId = React.useId().replace(/:/g, '')
 
-  const store = React.useMemo(() => getTooltipGroupStore(typeof document !== 'undefined' ? document : undefined), [])
+  const store = React.useMemo(
+    () => getTooltipGroupStore(typeof document !== 'undefined' ? document : undefined),
+    []
+  )
 
   const triggerRef = React.useRef<HTMLElement | null>(null)
   const contentRef = React.useRef<HTMLDivElement | null>(null)
 
-const contentIdRef = React.useRef<string | null>(null)
-  if (!contentIdRef.current) {
-    contentIdRef.current = `tooltip-${++tooltipIdCounter}`
+  const latest = React.useRef({
+    isOpen,
+    openDelay,
+    closeDelay,
+    onOpen,
+    onOpenChange,
+    onDismiss,
+    isControlled,
+    contentId,
+  })
+  latest.current = {
+    isOpen,
+    openDelay,
+    closeDelay,
+    onOpen,
+    onOpenChange,
+    onDismiss,
+    isControlled,
+    contentId,
   }
 
-  const hoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const cancelTimers = React.useCallback(() => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current)
-      hoverTimerRef.current = null
+    if (session.current.timer) {
+      clearTimeout(session.current.timer)
+      session.current.timer = null
     }
   }, [])
 
   const setIsOpen = React.useCallback(
     (nextOpen: boolean) => {
-      if (nextOpen && !isOpen) {
-        onOpen?.()
-      }
-      if (!isControlled) {
-        setInternalOpen(nextOpen)
-      }
-      onOpenChange?.(nextOpen)
-
-      if (!nextOpen && isOpen) {
-        onDismiss?.()
-      }
+      const current = latest.current
+      cancelTimers()
+      if (nextOpen && !current.isOpen) current.onOpen?.()
+      if (!current.isControlled) setInternalOpen(nextOpen)
+      current.onOpenChange?.(nextOpen)
+      if (!nextOpen && current.isOpen) current.onDismiss?.()
     },
-    [isControlled, isOpen, onOpen, onOpenChange, onDismiss]
+    [cancelTimers]
   )
 
-const startOpenTimer = React.useCallback(() => {
-    cancelTimers()
-    if (parentContext) parentContext.cancelTimers()
-    if (!isOpen) {
-      const state = store.getState()
-      const isWarmed = Date.now() < state.warmUntil
+  const setIsOpenRef = React.useRef(setIsOpen)
+  setIsOpenRef.current = setIsOpen
 
-      if (isWarmed) {
-        if (state.activeId && state.activeId !== contentIdRef.current) {
-           store.getState().setPending(contentIdRef.current)
-        } else {
-           setIsOpen(true)
-        }
-      } else {
-        hoverTimerRef.current = setTimeout(() => {
-          setIsOpen(true)
-        }, openDelay)
-      }
+  const requestOpen = React.useCallback(() => {
+    const state = store.getState()
+    const id = latest.current.contentId
+    if (state.activeId && state.activeId !== id) {
+      store.getState().setPending(id)
+      return
     }
-  }, [cancelTimers, isOpen, openDelay, setIsOpen, store, parentContext])
+    setIsOpenRef.current(true)
+  }, [store])
+
+  const startOpenTimer = React.useCallback(() => {
+    cancelTimers()
+    parentContext?.cancelIntent()
+    if (latest.current.isOpen) return
+    if (session.current.suppressHover) return
+    const state = store.getState()
+    if (isGroupWarmed(state)) {
+      requestOpen()
+      return
+    }
+    session.current.timer = setTimeout(() => {
+      session.current.timer = null
+      requestOpen()
+    }, latest.current.openDelay)
+  }, [cancelTimers, parentContext, requestOpen, store])
 
   const startCloseTimer = React.useCallback(() => {
     cancelTimers()
-    hoverTimerRef.current = setTimeout(() => {
-      setIsOpen(false)
-    }, closeDelay)
-  }, [cancelTimers, closeDelay, setIsOpen])
+    session.current.timer = setTimeout(() => {
+      session.current.timer = null
+      setIsOpenRef.current(false)
+    }, latest.current.closeDelay)
+  }, [cancelTimers])
 
-React.useEffect(() => {
-    if (isOpen) {
-      store.getState().setActive(contentIdRef.current!)
-      store.getState().setPending(null)
-      store.getState().warm()
-    } else {
-      if (store.getState().activeId === contentIdRef.current) {
-        store.getState().setActive(null)
+  const onTriggerEnter = React.useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      if (event.defaultPrevented || !isHoverCapablePointer(event)) return
+      if (isNestedTooltipTrigger(event)) return
+      if (parentContext) parentContext.onTriggerLeave(event)
+      if (latest.current.isOpen) {
+        cancelTimers()
+        return
       }
-    }
-  }, [isOpen, store])
+      startOpenTimer()
+    },
+    [cancelTimers, parentContext, startOpenTimer]
+  )
+
+  const onTriggerLeave = React.useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      if (event.defaultPrevented || !isHoverCapablePointer(event)) return
+      session.current.suppressHover = false
+      if (isNestedTooltipTrigger(event)) return
+      const state = store.getState()
+      if (state.pendingId === latest.current.contentId) {
+        store.getState().setPending(null)
+      }
+      if (!latest.current.isOpen) {
+        cancelTimers()
+        return
+      }
+      startCloseTimer()
+    },
+    [cancelTimers, startCloseTimer, store]
+  )
+
+  const onTriggerPointerDown = React.useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      if (event.defaultPrevented) return
+      session.current.fromPointer = true
+      if (!latest.current.isOpen) return
+      session.current.suppressHover = true
+      cancelTimers()
+      setIsOpen(false)
+    },
+    [cancelTimers, setIsOpen]
+  )
+
+  const onTriggerFocus = React.useCallback(
+    (event: React.FocusEvent<HTMLElement>) => {
+      if (event.defaultPrevented) return
+      if (session.current.fromPointer || session.current.suppressHover) return
+      cancelTimers()
+      if (!latest.current.isOpen) setIsOpen(true)
+    },
+    [cancelTimers, setIsOpen]
+  )
+
+  const onTriggerBlur = React.useCallback(
+    (event: React.FocusEvent<HTMLElement>) => {
+      if (event.defaultPrevented) return
+      cancelTimers()
+      if (latest.current.isOpen) setIsOpen(false)
+    },
+    [cancelTimers, setIsOpen]
+  )
+
+  const onContentEnter = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.defaultPrevented || !isHoverCapablePointer(event)) return
+      session.current.suppressHover = false
+      cancelTimers()
+      if (!latest.current.isOpen) setIsOpen(true)
+    },
+    [cancelTimers, setIsOpen]
+  )
+
+  const onContentLeave = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.defaultPrevented || !isHoverCapablePointer(event)) return
+      if (!latest.current.isOpen) return
+      startCloseTimer()
+    },
+    [cancelTimers, startCloseTimer]
+  )
 
   React.useEffect(() => {
-    const unsub = store.subscribe((state) => {
-      if (isOpen && state.pendingId && state.pendingId !== contentIdRef.current) {
+    if (isOpen) {
+      store.getState().setActive(contentId)
+      store.getState().setPending(null)
+    } else if (store.getState().activeId === contentId) {
+      store.getState().setActive(null)
+      store.getState().warm()
+    }
+  }, [isOpen, store, contentId])
+
+  React.useEffect(() => {
+    const unsub = store.subscribe(state => {
+      if (latest.current.isOpen && state.pendingId && state.pendingId !== latest.current.contentId) {
         cancelTimers()
-        setIsOpen(false)
-      } else if (!isOpen && state.pendingId === contentIdRef.current && state.activeId === null) {
-        setIsOpen(true)
+        setIsOpenRef.current(false)
+      } else if (
+        !latest.current.isOpen &&
+        state.pendingId === latest.current.contentId &&
+        state.activeId === null
+      ) {
+        setIsOpenRef.current(true)
       }
     })
     return unsub
-  }, [isOpen, store, cancelTimers, setIsOpen])
+  }, [store, cancelTimers])
 
-  const contextValue = React.useMemo<TooltipContextValue>(() => {
-    return {
+  React.useEffect(() => () => cancelTimers(), [cancelTimers])
+
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return
+    const up = () => {
+      session.current.fromPointer = false
+    }
+    document.addEventListener('pointerup', up, true)
+    return () => document.removeEventListener('pointerup', up, true)
+  }, [])
+
+  const contextValue = React.useMemo<TooltipContextValue>(
+    () => ({
       isOpen,
       setIsOpen,
-      openDelay,
-      closeDelay,
-      contentId: contentIdRef.current!,
+      contentId,
       triggerRef,
       contentRef,
-      startOpenTimer,
-      startCloseTimer,
+      cancelIntent: cancelTimers,
+      onTriggerEnter,
+      onTriggerLeave,
+      onTriggerPointerDown,
+      onTriggerFocus,
+      onTriggerBlur,
+      onContentEnter,
+      onContentLeave,
+    }),
+    [
+      isOpen,
+      setIsOpen,
+      contentId,
       cancelTimers,
-      parentContext,
-    }
-  }, [isOpen, setIsOpen, openDelay, closeDelay, startOpenTimer, startCloseTimer, cancelTimers, parentContext])
+      onTriggerEnter,
+      onTriggerLeave,
+      onTriggerPointerDown,
+      onTriggerFocus,
+      onTriggerBlur,
+      onContentEnter,
+      onContentLeave,
+    ]
+  )
 
   return (
     <TooltipContext.Provider value={contextValue}>
@@ -158,9 +317,12 @@ React.useEffect(() => {
         open={isOpen}
         onOpenChange={setIsOpen}
         isolation={false}
-        closeOnScroll={true}
+        closeOnScroll
         presence={false}
         anchor={triggerRef}
+        onEscape={onEscape}
+        onOutsidePress={onOutsidePress}
+        onInteractOutside={onInteractOutside}
       >
         {children}
       </Overlay>
@@ -168,76 +330,27 @@ React.useEffect(() => {
   )
 }
 
-export function TooltipTrigger({
-  children,
-}: {
-  children: React.ReactElement
-}) {
-  const parentContext = React.useContext(TooltipContext)
+export function TooltipTrigger({ children }: { children: React.ReactElement }) {
   const context = React.useContext(TooltipContext)
+  const overlay = useOverlay()
 
   if (!children || typeof children !== 'object' || !React.isValidElement(children)) {
     throw new Error('Reference UI: Tooltip.Trigger expects a single valid React element child.')
   }
 
   const child = children as React.ReactElement<any>
-  const originalRef = (child.props as any)?.ref
-  const originalOnPointerEnter = child.props.onPointerEnter
-  const originalOnPointerLeave = child.props.onPointerLeave
-  const originalOnFocus = child.props.onFocus
-  const originalOnBlur = child.props.onBlur
-  const originalOnPointerDown = child.props.onPointerDown
+  const originalRef = (child.props as { ref?: React.Ref<HTMLElement> }).ref
 
-const composedRef = (node: HTMLElement | null) => {
-    if (context) {
-      context.triggerRef.current = node
+  const composedRef = (node: HTMLElement | null) => {
+    if (context) context.triggerRef.current = node
+    if (overlay) {
+      overlay.triggerRef.current = node
+      overlayStackStore.getState().setLayerTrigger(overlay.id, node)
     }
     if (typeof originalRef === 'function') {
       originalRef(node)
     } else if (originalRef && typeof originalRef === 'object' && 'current' in originalRef) {
       ;(originalRef as React.MutableRefObject<HTMLElement | null>).current = node
-    }
-  }
-
-const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
-    originalOnPointerDown?.(e)
-    if (!e.defaultPrevented && context && context.isOpen) {
-      context.cancelTimers()
-      context.setIsOpen(false)
-    }
-  }
-
-  const handlePointerEnter = (e: React.PointerEvent<HTMLElement>) => {
-    originalOnPointerEnter?.(e)
-    if (!e.defaultPrevented && context) {
-      context.startOpenTimer()
-    }
-  }
-
-const handlePointerLeave = (e: React.PointerEvent<HTMLElement>) => {
-    originalOnPointerLeave?.(e)
-    if (!e.defaultPrevented && context) {
-      const store = getTooltipGroupStore(typeof document !== 'undefined' ? document : undefined)
-      if (store.getState().pendingId === context.contentId) {
-         store.getState().setPending(null)
-      }
-      context.startCloseTimer()
-    }
-  }
-
-  const handleFocus = (e: React.FocusEvent<HTMLElement>) => {
-    originalOnFocus?.(e)
-    if (!e.defaultPrevented && context) {
-      context.cancelTimers()
-      context.setIsOpen(true)
-    }
-  }
-
-  const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
-    originalOnBlur?.(e)
-    if (!e.defaultPrevented && context) {
-      context.cancelTimers()
-      context.setIsOpen(false)
     }
   }
 
@@ -248,12 +361,30 @@ const handlePointerLeave = (e: React.PointerEvent<HTMLElement>) => {
 
   return React.cloneElement(child, {
     ref: composedRef,
+    'data-reference-tooltip-trigger': '',
     'aria-describedby': ariaDescribedBy,
-    onPointerEnter: handlePointerEnter,
-    onPointerLeave: handlePointerLeave,
-    onPointerDown: handlePointerDown,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
+    onPointerEnter: (e: React.PointerEvent<HTMLElement>) => {
+      child.props.onPointerEnter?.(e)
+      context?.onTriggerEnter(e)
+    },
+    onPointerLeave: (e: React.PointerEvent<HTMLElement>) => {
+      child.props.onPointerLeave?.(e)
+      context?.onTriggerLeave(e)
+    },
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+      child.props.onPointerDown?.(e)
+      context?.onTriggerPointerDown(e)
+    },
+    onFocus: (e: React.FocusEvent<HTMLElement>) => {
+      child.props.onFocus?.(e)
+      context?.onTriggerFocus(e)
+    },
+    onBlur: (e: React.FocusEvent<HTMLElement>) => {
+      child.props.onBlur?.(e)
+      const next = e.relatedTarget
+      if (next instanceof Node && overlay?.contentRef.current?.contains(next)) return
+      context?.onTriggerBlur(e)
+    },
   })
 }
 
@@ -273,22 +404,7 @@ export function TooltipContent({
   const context = React.useContext(TooltipContext)
   if (!context) return null
 
-const contentId = id ?? context.contentId
-
-  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
-    props.onPointerEnter?.(e)
-    if (!e.defaultPrevented) {
-      context.cancelTimers()
-      context.setIsOpen(true)
-    }
-  }
-
-  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
-    props.onPointerLeave?.(e)
-    if (!e.defaultPrevented) {
-      context.startCloseTimer()
-    }
-  }
+  const contentId = id ?? context.contentId
 
   return (
     <Overlay.Content
@@ -305,8 +421,14 @@ const contentId = id ?? context.contentId
       borderRadius="sm"
       boxShadow="0 2px 8px rgba(0,0,0,0.2)"
       {...props}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
+      onPointerEnter={(e: React.PointerEvent<HTMLDivElement>) => {
+        props.onPointerEnter?.(e)
+        context.onContentEnter(e)
+      }}
+      onPointerLeave={(e: React.PointerEvent<HTMLDivElement>) => {
+        props.onPointerLeave?.(e)
+        context.onContentLeave(e)
+      }}
     >
       {children}
     </Overlay.Content>

@@ -4,12 +4,12 @@ import { eventPath, isNodeInside } from '../shared/events'
 
 type Restore = () => void
 
-type Lock = {
+type ScrollLockState = {
   count: number
   restore: Restore
 }
 
-const locks = new WeakMap<Document, Lock>()
+const locks = new WeakMap<Document, ScrollLockState>()
 
 function isIOS(doc?: Document): boolean {
   if (doc?.documentElement?.hasAttribute('data-test-ios') || (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-test-ios'))) {
@@ -215,7 +215,7 @@ export function acquireScrollLock(doc: Document, positionFixed: boolean): Restor
       }
     }
   }
-  const lock: Lock = { count: 1, restore: applyLock(doc, positionFixed) }
+  const lock: ScrollLockState = { count: 1, restore: applyLock(doc, positionFixed) }
   locks.set(doc, lock)
   return () => {
     lock.count -= 1

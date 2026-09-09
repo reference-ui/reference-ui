@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 import { ToastHost } from '../Toast'
-import { tooltipWarmup } from '../Tooltip/tooltipWarmup'
+import { getTooltipGroupStore } from '../Tooltip/tooltipGroup'
 import { AnnouncerHost } from '../Announcer'
 
 setupFocusVisible()
@@ -64,7 +64,7 @@ export function ReferenceLibrary({
     const s = getLibraryStore(doc)
 
     if (tooltip?.skipDelay !== undefined) {
-      tooltipWarmup.setSkipDelay(tooltip.skipDelay, doc)
+      getTooltipGroupStore(doc).getState().setSkipDelay(tooltip.skipDelay)
     }
 
     hostRegistry.set(hostId, {

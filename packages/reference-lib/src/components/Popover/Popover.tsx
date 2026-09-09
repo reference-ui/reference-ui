@@ -8,6 +8,7 @@ import {
   type OverlayContentProps,
   type OverlayTriggerProps,
 } from '../Overlay'
+import type { Side } from '../Overlay/geometry/floating'
 import { type PortalProps } from '../Portal'
 import {
   DEFAULT_CLOSE_DELAY,
@@ -24,7 +25,6 @@ import {
   pointInRect,
   resolvedSide,
   SAFE_AREA_PADDING,
-  type Side,
 } from './safe-polygon'
 
 export interface PopoverProps extends Omit<OverlayProps, 'isolation' | 'edge'> {

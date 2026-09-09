@@ -1,6 +1,6 @@
 /** Placement-aware hover grace: padded rects, trough, cursor triangle, intent. */
 
-export type Side = 'top' | 'right' | 'bottom' | 'left'
+import type { Side } from '../Overlay/geometry/floating'
 
 export type RectLike = {
   x: number

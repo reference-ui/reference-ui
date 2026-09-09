@@ -6,7 +6,7 @@ import { syncDismissListeners } from '../dismiss'
 
 /** Registers this Overlay on the document stack while open. */
 
-type Options = {
+type LayerOptions = {
   overlayId: string
   parentId: string | null
   isOpen: boolean
@@ -38,7 +38,7 @@ export function useOverlayLayer({
   onEscape,
   onOutsidePress,
   onInteractOutside,
-}: Options) {
+}: LayerOptions) {
   React.useEffect(() => {
     if (isCorrupted) {
       overlayStackStore.getState().removeLayer(overlayId)
