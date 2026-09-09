@@ -1,6 +1,14 @@
 import * as React from 'react'
+import { announce } from '../Announcer'
 import { splitPromiseResult } from './toastQueue'
-import { referenceToast } from './toastRuntime'
+import {
+  generateToastId,
+  getToastStore,
+  peekToastGeneration,
+  referenceToast,
+  resolveToastDocument,
+  toastDiagnostic,
+} from './toastRuntime'
 import type { ToastAction, ToastClassNames, ToastType } from './toastContext'
 import {
   DefaultToast,
@@ -59,6 +67,7 @@ export interface ToastOptions {
   classNames?: ToastClassNames
   actionButtonStyle?: React.CSSProperties
   cancelButtonStyle?: React.CSSProperties
+  announce?: string
 }
 
 export interface DefaultToastOptions extends ToastOptions {
@@ -87,6 +96,11 @@ export interface PromiseData<ToastData = any> {
   finally?: () => void | Promise<void>
 }
 
+export interface ToastControls {
+  id: string
+  close(): void
+}
+
 export interface ToastDefinition<P = void> {
   (props: P, options?: ToastOptions): string
   update: (id: string, props: P, options?: ToastOptions) => void
@@ -95,19 +109,26 @@ export interface ToastDefinition<P = void> {
 
 export type { ToastRootProps, ToastTitleProps, ToastDescriptionProps, ToastActionProps, ToastCloseProps } from './ToastChrome'
 
+function maybeAnnounce(options?: ToastOptions) {
+  if (options?.announce == null) return
+  announce(options.announce, { document: options.document })
+}
+
 function showToast(content: React.ReactNode, options?: DefaultToastOptions): string {
-  if (React.isValidElement(content)) {
-    return referenceToast.show(content, options)
-  }
-  return referenceToast.show(undefined, { ...options, title: content })
+  const id = React.isValidElement(content)
+    ? referenceToast.show(content, options)
+    : referenceToast.show(undefined, { ...options, title: content })
+  maybeAnnounce(options)
+  return id
 }
 
 function updateToast(id: string, content: React.ReactNode, options?: DefaultToastOptions): void {
   if (React.isValidElement(content)) {
-    referenceToast.show(content, { ...options, id })
-    return
+    referenceToast.update(id, content, options)
+  } else {
+    referenceToast.update(id, undefined, { ...options, title: content })
   }
-  referenceToast.show(undefined, { ...options, id, title: content })
+  maybeAnnounce(options)
 }
 
 async function applyPromiseUpdate(
@@ -177,8 +198,10 @@ export const toast = Object.assign(toastCallable, {
   },
 
   custom(render: (id: string) => React.ReactNode, options?: ToastOptions): string {
-    const id = options?.id ?? `toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    return referenceToast.show(render, { ...options, id })
+    const id = options?.id ?? generateToastId()
+    const shown = referenceToast.show(render, { ...options, id })
+    maybeAnnounce(options)
+    return shown
   },
 
   success(message: React.ReactNode, options?: DefaultToastOptions): string {
@@ -246,25 +269,43 @@ export const toast = Object.assign(toastCallable, {
   define<P = void>(config: {
     duration?: number | false
     position?: ToastPosition
-    render: (props: P) => React.ReactNode
+    render: (props: P, controls: ToastControls) => React.ReactNode
   }): ToastDefinition<P> {
-    const fn = ((props: P, options?: ToastOptions) => {
-      const content = config.render(props)
-      return referenceToast.show(content, {
-        ...options,
-        duration: options?.duration ?? config.duration,
-        position: options?.position ?? config.position,
-      })
-    }) as ToastDefinition<P>
+    const renderWithControls = (id: string, props: P, options?: ToastOptions) => {
+      const generation = peekToastGeneration(id, options?.document)
+      const close = () => {
+        referenceToast.dismiss(id, { document: options?.document, generation })
+      }
+      return config.render(props, { id, close })
+    }
 
-    fn.update = (id: string, props: P, options?: ToastOptions) => {
-      const content = config.render(props)
-      referenceToast.show(content, {
+    const fn = ((props: P, options?: ToastOptions) => {
+      const id = options?.id ?? generateToastId()
+      const content = renderWithControls(id, props, options)
+      const shown = referenceToast.show(content, {
         ...options,
         id,
         duration: options?.duration ?? config.duration,
         position: options?.position ?? config.position,
       })
+      maybeAnnounce(options)
+      return shown
+    }) as ToastDefinition<P>
+
+    fn.update = (id: string, props: P, options?: ToastOptions) => {
+      const doc = resolveToastDocument(options?.document)
+      const store = getToastStore(doc)
+      if (!store.toasts.some(item => item.id === id && !item.exiting)) {
+        toastDiagnostic(`toast.update: unknown id "${id}"`)
+        return
+      }
+      const content = renderWithControls(id, props, options)
+      referenceToast.update(id, content, {
+        ...options,
+        duration: options?.duration ?? config.duration,
+        position: options?.position ?? config.position,
+      })
+      maybeAnnounce(options)
     }
 
     fn.dismiss = (id: string) => {

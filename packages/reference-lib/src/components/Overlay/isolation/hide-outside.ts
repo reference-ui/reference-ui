@@ -11,6 +11,7 @@ function isExempt(el: Element): boolean {
   if (el.hasAttribute('data-reference-portal-container')) return true
   if (el.hasAttribute('aria-live')) return true
   if (el.hasAttribute('data-reference-toast-host')) return true
+  if (el.hasAttribute('data-reference-announcer-host')) return true
   return false
 }
 
@@ -91,7 +92,7 @@ function hideExcluding(root: Element, keep: Element[], hidden: Element[]) {
       hideExcluding(child, keep, hidden)
       continue
     }
-    if (child.querySelector?.('[data-reference-toast-host], [aria-live]')) {
+    if (child.querySelector?.('[data-reference-toast-host], [data-reference-announcer-host], [aria-live]')) {
       hideExcluding(child, keep, hidden)
       continue
     }
@@ -124,7 +125,7 @@ export function hideOutside(overlayEl: HTMLElement): () => void {
         hideExcluding(sibling, keep, hidden)
         continue
       }
-      if (sibling.querySelector?.('[data-reference-toast-host], [aria-live]')) {
+      if (sibling.querySelector?.('[data-reference-toast-host], [data-reference-announcer-host], [aria-live]')) {
         hideExcluding(sibling, keep, hidden)
         continue
       }

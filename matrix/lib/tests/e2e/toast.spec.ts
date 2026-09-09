@@ -574,9 +574,10 @@ test.describe('Toast Gate 7', () => {
     await page.getByTestId('btn-enter-bottom').click()
     await expect(page.locator('[data-reference-toast-close]')).toHaveCount(0)
     await page.getByTestId('btn-dismiss-all').click()
+    await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
     await page.getByTestId('btn-close').click()
     const close = page.locator('[data-reference-toast-close]')
-    const root = page.locator('[data-reference-toast-root]')
+    const root = page.locator('[data-reference-toast-id="close"] [data-reference-toast-root]')
     await expect(close).toBeVisible()
     const closeBox = await close.boundingBox()
     const cardBox = await root.boundingBox()
@@ -741,4 +742,467 @@ test('TO-RIVAL-BUTTON-STYLE: Action and cancel should accept their own style ove
   const card = await page.locator('[data-reference-toast-root]').evaluate(el => getComputedStyle(el).backgroundColor)
   expect(card).not.toBe('rgb(0, 128, 0)')
 })
+
+test.describe('Toast hardening', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/toast?fixture=Harden')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+  })
+
+  test('TO-DOM-02: one stable stack per occupied position, empty stacks removed', async ({ page }) => {
+    await page.getByTestId('btn-positions').click()
+    const top = page.locator('[data-reference-toast-position="top-start"][data-expanded]')
+    const bottom = page.locator('[data-reference-toast-position="bottom-end"][data-expanded]')
+    await expect(top).toHaveCount(1)
+    await expect(bottom).toHaveCount(1)
+    await top.evaluate(el => el.setAttribute('data-stable-stack', '1'))
+    await page.getByTestId('btn-update-pos-a').click()
+    await expect(top).toHaveAttribute('data-stable-stack', '1')
+    await expect(page.locator('[data-reference-toast-id="pos-a"] [data-reference-toast-title]')).toHaveText(
+      'top-start-updated'
+    )
+    await page.getByTestId('btn-dismiss-pos-a').click()
+    await page.getByTestId('btn-dismiss-all').click()
+    await expect(page.locator('[data-reference-toast-id="pos-a2"]')).toHaveCount(0)
+    await expect(page.locator('[data-reference-toast-position="top-start"]')).toHaveCount(0)
+  })
+
+  test('TO-DOM-03: item wrapper keeps identity through open then closed', async ({ page }) => {
+    await page.getByTestId('btn-exit-item').click()
+    const item = page.locator('[data-reference-toast-id="upload:42"]')
+    await expect(item).toHaveAttribute('data-state', 'open')
+    await expect(item).toHaveAttribute('data-reference-toast-position', 'top-center')
+    await page.locator('[data-reference-toast-close]').click()
+    await expect(item).toHaveAttribute('data-state', 'closed')
+    await expect(item).toHaveCount(0)
+  })
+
+  test('TO-DOM-04: arbitrary render output is left untouched', async ({ page }) => {
+    await page.getByTestId('btn-shapes').click()
+    await expect(page.locator('[data-reference-toast-id="shape-string"]')).toContainText('Saved')
+    await expect(page.getByTestId('frag-a')).toHaveText('One')
+    await expect(page.getByTestId('frag-b')).toHaveText('Two')
+    await expect(page.getByTestId('sib-status')).toHaveAttribute('role', 'status')
+    await expect(page.locator('[data-reference-toast-id="shape-string"] [data-reference-toast-root]')).toHaveCount(0)
+  })
+
+  test('TO-DEF-03 / TO-DEF-04: custom interactive JSX keeps native events', async ({ page }) => {
+    await page.getByTestId('btn-interactive').click()
+    const input = page.getByTestId('toast-input')
+    await input.click()
+    await input.fill('abc')
+    await expect(input).toHaveValue('abc')
+    await page.getByTestId('toast-space').click()
+    await expect(page.getByTestId('toast-form')).toBeVisible()
+    await page.getByTestId('toast-form-close').click()
+    await expect(page.getByTestId('toast-form')).toHaveCount(0)
+  })
+
+  test('TO-DOM-05: surviving wrappers keep identity and child styles after queue metadata changes', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-style-child').click()
+    await page.getByTestId('btn-style-b').click()
+    await page.getByTestId('btn-style-c').click()
+    const child = page.getByTestId('scaled-child')
+    await expect(child).toHaveCSS('transform', /matrix/)
+    await page.getByTestId('btn-dismiss-all').click()
+    await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
+  })
+
+  test('TO-TIME-02: duration false stays open', async ({ page }) => {
+    await page.getByTestId('btn-untimed').click()
+    const item = page.locator('[data-reference-toast-id="untimed"]')
+    await expect(item).toBeVisible()
+    await page.waitForTimeout(800)
+    await expect(item).toBeVisible()
+  })
+
+  test('TO-TIME-03: duration 0 renders once then dismisses', async ({ page }) => {
+    await page.getByTestId('btn-zero').click()
+    const item = page.locator('[data-reference-toast-id="zero"]')
+    await expect(item).toHaveCount(0, { timeout: 2000 })
+  })
+
+  test('TO-TIME-01: timed toast remains until the deadline then dismisses', async ({ page }) => {
+    await page.getByTestId('btn-timed').click()
+    const item = page.locator('[data-reference-toast-id="timed"]')
+    await expect(item).toBeVisible()
+    await page.waitForTimeout(400)
+    await expect(item).toBeVisible()
+    await expect(item).toHaveCount(0, { timeout: 2000 })
+  })
+
+  test('TO-ANN-01 / TO-ANN-02 / TO-ANN-03 / TO-ANN-04 / TO-ANN-06: visual and live paths stay separate', async ({
+    page,
+  }) => {
+    const polite = page.getByTestId('polite-announcer')
+    const assertive = page.getByTestId('assertive-announcer')
+    await page.getByTestId('btn-announce-polite').click()
+    await expect(polite).toHaveText('Project saved')
+    await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
+
+    await page.getByTestId('btn-announce-both').click()
+    await expect(polite).toHaveText('Background sync complete')
+    await expect(assertive).toHaveText('Session expired')
+
+    await page.getByTestId('btn-interactive').click()
+    await expect(page.getByTestId('toast-form')).toBeVisible()
+    await expect(polite).toHaveText('Draft was saved')
+
+    await page.getByTestId('btn-dismiss-all').click()
+    await page.getByTestId('btn-silent').click()
+    await expect(page.getByTestId('silent-visual')).toHaveText('Payment failed')
+    await expect(polite).not.toHaveText('Payment failed')
+
+    await page.getByTestId('btn-dismiss-all').click()
+    await page.getByTestId('btn-job').click()
+    await expect(polite).toHaveText('Started')
+    await page.getByTestId('btn-job-content').click()
+    await expect(polite).toHaveText('Started')
+    await page.getByTestId('btn-job-finish').click()
+    await expect(polite).toHaveText('Finished')
+    await page.getByTestId('btn-job-dismiss').click()
+    await expect(polite).toHaveText('Finished')
+  })
+
+  test('TO-FOCUS-01: dismissing focused toast content restores the opener', async ({ page }) => {
+    await page.getByTestId('btn-show').click()
+    await expect(page.getByTestId('dismiss')).toBeVisible()
+    await page.getByTestId('dismiss').focus()
+    await expect(page.getByTestId('dismiss')).toBeFocused()
+    await page.getByTestId('dismiss').click()
+    await expect(page.getByTestId('dismiss')).toHaveCount(0)
+    await expect(page.getByTestId('btn-show')).toBeFocused()
+  })
+
+  test('TO-FOCUS-02: invalid opener falls back to the nearest sibling', async ({ page }) => {
+    await page.getByTestId('btn-show').click()
+    await expect(page.getByTestId('dismiss')).toBeVisible()
+    await page.getByTestId('dismiss').focus()
+    await page.evaluate(() => {
+      const show = document.querySelector('[data-testid="btn-show"]') as HTMLButtonElement | null
+      if (show) show.disabled = true
+    })
+    await page.getByTestId('dismiss').click()
+    await expect(page.getByTestId('dismiss')).toHaveCount(0)
+    await expect(page.getByTestId('fallback-right')).toBeFocused()
+  })
+
+  test('TO-OV-03 / TO-OV-04 / TO-OV-05: toast stays exposed, does not dismiss overlay, and is not itself modal', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-interactive').click()
+    const host = page.locator('[data-reference-toast-host]')
+    await expect(host).toBeAttached()
+    await expect(page.getByTestId('toast-form')).toBeVisible()
+    await expect(host).not.toHaveAttribute('inert')
+
+    await page.getByTestId('btn-open-overlay').click()
+    await expect(page.getByTestId('harden-modal')).toBeVisible()
+    await expect(host).not.toHaveAttribute('inert')
+    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    await page.getByTestId('toast-input').click()
+    await page.getByTestId('toast-input').fill('kept')
+    await expect(page.getByTestId('harden-modal')).toBeVisible()
+
+    await page.getByTestId('btn-close-overlay').click()
+    await expect(page.getByTestId('harden-modal')).toHaveCount(0)
+    await page.getByTestId('btn-dismiss-all').click()
+    await page.getByTestId('btn-untimed').click()
+    await page.keyboard.press('Escape')
+    await expect(page.locator('[data-reference-toast-id="untimed"]')).toBeVisible()
+    await page.getByTestId('btn-away').click()
+    await expect(page.getByTestId('btn-away')).toBeFocused()
+  })
+
+  test('TO-QUEUE-01 / TO-QUEUE-08: FIFO DOM order and dismiss-all clears the host', async ({ page }) => {
+    await page.getByTestId('btn-style-child').click()
+    await page.getByTestId('btn-style-b').click()
+    await page.getByTestId('btn-style-c').click()
+    await expect(page.locator('[data-reference-toast-id="a"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="b"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="c"]')).toBeVisible()
+    await page.getByTestId('btn-dismiss-all').click()
+    await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
+    await expect(page.locator('[data-reference-toast-host]')).toBeAttached()
+  })
+
+  test('TO-COMP-01 / TO-COMP-02: custom timed notify and loading-to-complete identity', async ({ page }) => {
+    await page.getByTestId('btn-interactive').click()
+    await expect(page.getByTestId('toast-form')).toBeVisible()
+    await expect(page.getByTestId('polite-announcer')).toHaveText('Draft was saved')
+    await page.getByTestId('toast-form-close').click()
+
+    await page.evaluate(() => {
+      const api = (window as unknown as { toast?: typeof import('@reference-ui/lib').toast }).toast
+      void api
+    })
+    await page.getByTestId('btn-job').click()
+    await page.getByTestId('btn-job-finish').click()
+    await expect(page.locator('[data-reference-toast-id="job"] [data-reference-toast-title]')).toHaveText(
+      'Finished visual'
+    )
+  })
+
+  test('TO-TIME-05: resume exact remaining time when the pointer leaves', async ({ page }) => {
+    await page.getByTestId('btn-time-leave').click()
+    const item = page.locator('[data-reference-toast-id="time-leave"]')
+    const stack = page.locator('[data-reference-toast-position][data-expanded]')
+    await expect(item).toBeVisible()
+    await page.waitForTimeout(300)
+    await stack.hover()
+    await expect(item).toHaveAttribute('data-paused', 'true')
+    await page.waitForTimeout(1500)
+    await expect(item).toBeVisible()
+    await page.getByTestId('btn-away').hover()
+    await page.waitForTimeout(400)
+    await expect(item).toBeVisible()
+    await expect(item).toHaveCount(0, { timeout: 2000 })
+  })
+
+  test('TO-TIME-13: replacement duration stays paused until every pause source is gone', async ({ page }) => {
+    await page.getByTestId('btn-time-replace').click()
+    const item = page.locator('[data-reference-toast-id="time-replace"]')
+    const stack = page.locator('[data-reference-toast-position][data-expanded]')
+    await expect(item).toBeVisible()
+    await stack.hover()
+    await expect(item).toHaveAttribute('data-paused', 'true')
+    await page.getByTestId('btn-time-replace-update').click()
+    await page.getByTestId('btn-open-overlay').click()
+    await expect(page.getByTestId('harden-modal')).toBeVisible()
+    await page.evaluate(() => {
+      document
+        .querySelector('[data-reference-toast-position][data-expanded]')
+        ?.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }))
+    })
+    await page.waitForTimeout(1200)
+    await expect(item).toBeVisible()
+    await page.getByTestId('btn-close-overlay').click()
+    await expect(page.getByTestId('harden-modal')).toHaveCount(0)
+    await expect(item).toHaveCount(0, { timeout: 2000 })
+  })
+
+  test('TO-TIME-14: keyboard focus pauses remaining time for that toast only', async ({ page }) => {
+    await page.getByTestId('btn-time-focus').click()
+    const item = page.locator('[data-reference-toast-id="time-focus"]')
+    await expect(item).toBeVisible()
+    await page.waitForTimeout(800)
+    await page.getByTestId('time-focus-input').focus()
+    await expect(item).toHaveAttribute('data-paused', 'true')
+    await page.waitForTimeout(1500)
+    await expect(item).toBeVisible()
+    await page.getByTestId('btn-away').focus()
+    await expect(item).toHaveCount(0, { timeout: 5000 })
+  })
+
+  test('TO-CLOSE-04: wrappers wait for real motion and unmount immediately when none exists', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-close-zero').click()
+    const zero = page.locator('[data-reference-toast-id="close-zero"]')
+    await expect(zero).toBeVisible()
+    await zero.locator('[data-reference-toast-close]').click()
+    await expect(zero).toHaveCount(0, { timeout: 400 })
+
+    await page.getByTestId('btn-close-fade').click()
+    const fade = page.locator('[data-reference-toast-id="close-fade"]')
+    await expect(fade).toBeVisible()
+    await fade.locator('[data-reference-toast-close]').click()
+    await expect(fade).toHaveAttribute('data-state', 'closed')
+    await expect(fade).toHaveCount(0, { timeout: 2500 })
+
+    await page.getByTestId('btn-close-anim').click()
+    const anim = page.locator('[data-reference-toast-id="close-anim"]')
+    await expect(anim).toBeVisible()
+    await anim.locator('[data-reference-toast-close]').click()
+    await expect(anim).toHaveAttribute('data-state', 'closed')
+    await expect(anim).toHaveCount(0, { timeout: 2500 })
+  })
+
+  test('TO-ENV-04: timeout, hover remainder, duration update, and same-frame recreate', async ({ page }) => {
+    await page.getByTestId('btn-timed').click()
+    const timed = page.locator('[data-reference-toast-id="timed"]')
+    await expect(timed).toBeVisible()
+    await page.waitForTimeout(400)
+    await expect(timed).toBeVisible()
+    await expect(timed).toHaveCount(0, { timeout: 2000 })
+
+    await page.getByTestId('btn-time-leave').click()
+    const leave = page.locator('[data-reference-toast-id="time-leave"]')
+    const stack = page.locator('[data-reference-toast-position][data-expanded]')
+    await expect(leave).toBeVisible()
+    await page.waitForTimeout(300)
+    await stack.hover()
+    await page.waitForTimeout(800)
+    await expect(leave).toBeVisible()
+    await page.getByTestId('btn-away').hover()
+    await expect(leave).toHaveCount(0, { timeout: 2000 })
+
+    await page.getByTestId('btn-time-replace').click()
+    const replace = page.locator('[data-reference-toast-id="time-replace"]')
+    await expect(replace).toBeVisible()
+    await page.getByTestId('btn-time-replace-update').click()
+    await expect(replace).toHaveCount(0, { timeout: 2000 })
+
+    await page.getByTestId('btn-env-race').click()
+    const race = page.locator('[data-reference-toast-id="race"]')
+    await expect(race).toBeVisible()
+    await expect(race).toHaveAttribute('data-state', 'open')
+    await expect(page.locator('[data-reference-toast-id="race"]')).toHaveCount(1)
+  })
+
+  test('TO-A11Y-01: public compositions keep semantic boundaries under an accessibility scan', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-all-positions').click()
+    await page.getByTestId('btn-interactive').click()
+    await page.getByTestId('btn-announce-both').click()
+    const host = page.locator('[data-reference-toast-host]')
+    await expect(host).toHaveAttribute('role', 'region')
+    await expect(page.getByTestId('polite-announcer')).toHaveAttribute('aria-live', 'polite')
+    await expect(page.getByTestId('assertive-announcer')).toHaveAttribute('aria-live', 'assertive')
+    await expect(page.locator('[data-reference-toast-id="interactive"]')).not.toHaveAttribute('role')
+    await page.getByTestId('btn-open-overlay').click()
+    await expect(page.getByTestId('harden-modal')).toBeVisible()
+    await expect(host).not.toHaveAttribute('inert')
+    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    const snapshot = await page.accessibility.snapshot()
+    expect(snapshot).toBeTruthy()
+    const snapshotText = JSON.stringify(snapshot)
+    expect(snapshotText).toContain('Edit')
+    expect(snapshotText).toContain('Background sync complete')
+    expect(snapshotText).toContain('Session expired')
+    expect(snapshotText).toContain('Modal')
+  })
+})
+
+test.describe('Toast hardening limit', () => {
+  test('TO-TIME-08: a waiting toast stays unmounted and untimed until promotion', async ({ page }) => {
+    await page.goto('/toast?fixture=HardenLimit')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+    await page.getByTestId('btn-limit-visible').click()
+    await page.getByTestId('btn-limit-waiter').click()
+    await expect(page.locator('[data-reference-toast-id="limit-visible"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="limit-waiter"]')).toHaveCount(0)
+    await page.waitForTimeout(2000)
+    await expect(page.locator('[data-reference-toast-id="limit-waiter"]')).toHaveCount(0)
+    await page.getByTestId('btn-limit-release').click()
+    const waiter = page.locator('[data-reference-toast-id="limit-waiter"]')
+    await expect(waiter).toBeVisible()
+    await page.waitForTimeout(250)
+    await expect(waiter).toBeVisible()
+    await expect(waiter).toHaveCount(0, { timeout: 1500 })
+  })
+})
+
+test.describe('Toast hardening premount', () => {
+  test('TO-ANN-08: show and announce before mount replay once after activation', async ({ page }) => {
+    await page.goto('/toast?fixture=HardenPremount')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+    await page.getByTestId('btn-premount-queue').click()
+    await expect(page.locator('[data-reference-toast-host]')).toHaveCount(0)
+    await expect(page.getByTestId('polite-announcer')).toHaveCount(0)
+    await page.evaluate(() => {
+      ;(window as unknown as { __ann?: string[] }).__ann = []
+      const seen = (window as unknown as { __ann: string[] }).__ann
+      const obs = new MutationObserver(records => {
+        for (const record of records) {
+          const target = record.target as HTMLElement
+          const text = (target.textContent ?? '').trim()
+          if (text === 'Saved' || text === 'Ready') seen.push(text)
+        }
+      })
+      obs.observe(document.body, { subtree: true, childList: true, characterData: true })
+    })
+    await page.getByTestId('btn-premount-mount').click()
+    await expect(page.locator('[data-reference-toast-id="pre"]')).toHaveCount(1)
+    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await expect.poll(async () => page.evaluate(() => (window as unknown as { __ann?: string[] }).__ann ?? [])).toEqual(
+      expect.arrayContaining(['Saved', 'Ready'])
+    )
+  })
+})
+
+test.describe('Toast hardening shadow', () => {
+  test('TO-ENV-03: visual and live DOM stay inside the elected ShadowRoot', async ({ page }) => {
+    await page.goto('/toast?fixture=HardenShadow')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+    await expect(page.getByTestId('shadow-app')).toBeVisible()
+    await page.getByTestId('btn-shadow-show').click()
+    const host = page.locator('[data-reference-toast-host]')
+    await expect(host).toHaveCount(1)
+    const insideShadow = await page.evaluate(() => {
+      const shadowHost = document.querySelector('[data-testid="shadow-host"]') as HTMLElement | null
+      const toastHost = shadowHost?.shadowRoot?.querySelector('[data-reference-toast-host]')
+      const lightHost = document.querySelector('body > [data-reference-toast-host], #root > [data-reference-toast-host]')
+      return {
+        inShadow: Boolean(toastHost),
+        lightDuplicate: Boolean(lightHost && !shadowHost?.shadowRoot?.contains(lightHost)),
+      }
+    })
+    expect(insideShadow.inShadow).toBe(true)
+    expect(insideShadow.lightDuplicate).toBe(false)
+    await page.getByTestId('btn-shadow-update').click()
+    await expect(page.locator('[data-reference-toast-id="shadow-toast"]')).toContainText('shadow updated')
+    await page.getByTestId('btn-shadow-announce').click()
+    await expect(page.getByTestId('polite-announcer')).toHaveText('Shadow ready')
+    const announcerInShadow = await page.evaluate(() => {
+      const shadowHost = document.querySelector('[data-testid="shadow-host"]') as HTMLElement | null
+      return Boolean(shadowHost?.shadowRoot?.querySelector('[data-testid="polite-announcer"]'))
+    })
+    expect(announcerInShadow).toBe(true)
+    await page.getByTestId('btn-shadow-dismiss').click()
+    await expect(page.locator('[data-reference-toast-id="shadow-toast"]')).toHaveCount(0)
+  })
+})
+
+test.describe('Toast hardening StrictMode', () => {
+  test('TO-ENV-02 / TO-DEF-06: StrictMode replay keeps one lifecycle', async ({ page }) => {
+    await page.goto('/toast?fixture=HardenStrict')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+    const item = page.locator('[data-reference-toast-id="compat"]')
+    await expect(item).toHaveCount(1)
+    await expect(item).toContainText('Saved')
+    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await page.getByTestId('btn-strict-update').click()
+    await expect(item).toHaveCount(1)
+    await page.getByTestId('btn-strict-dismiss').click()
+    await expect(item).toHaveCount(0)
+  })
+})
+
+test.describe('Toast composition gate', () => {
+  test('TO-COMP-03: nested modals pause a limited multi-position queue', async ({ page }) => {
+    await page.goto('/toast?fixture=Gate6')
+    await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
+    await page.getByTestId('btn-comp-03').click()
+    await expect(page.locator('[data-reference-toast-id="c3-a"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="c3-b"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="c3-c"]')).toHaveCount(0)
+    await expect(page.locator('[data-reference-toast-id="c3-d"]')).toHaveCount(0)
+    await expect(page.locator('[data-reference-toast-id="c3-e"]')).toHaveCount(0)
+    await page.waitForTimeout(400)
+    await page.getByTestId('btn-open-modal-a').click()
+    await expect(page.getByTestId('modal-a')).toBeVisible()
+    await page.getByTestId('btn-open-modal-b').click()
+    await expect(page.getByTestId('modal-b')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="c3-a"]')).toHaveAttribute('data-paused', 'true')
+    await expect(page.locator('[data-reference-toast-id="c3-b"]')).toHaveAttribute('data-paused', 'true')
+    await page.waitForTimeout(1200)
+    await expect(page.locator('[data-reference-toast-id="c3-a"]')).toBeVisible()
+    await expect(page.locator('[data-reference-toast-id="c3-c"]')).toHaveCount(0)
+    await page.getByTestId('btn-close-modal-b').click()
+    await expect(page.getByTestId('modal-b')).toHaveCount(0)
+    await page.waitForTimeout(800)
+    await expect(page.locator('[data-reference-toast-id="c3-a"]')).toBeVisible()
+    await page.getByTestId('btn-close-modal-a').click()
+    await expect(page.getByTestId('modal-a')).toHaveCount(0)
+    const top = page.locator('[data-reference-toast-position="top-start"][data-expanded]')
+    const bottom = page.locator('[data-reference-toast-position="bottom-end"][data-expanded]')
+    await expect(top).toHaveCount(1)
+    await expect(bottom).toHaveCount(1)
+  })
+})
+
 

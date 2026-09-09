@@ -4,6 +4,7 @@ import {
   defaultSwipeDirections,
   hasTextSelection,
   isAllowedSwipe,
+  isToastItemPaused,
   isToastPausedByOverlay,
   matchesHotkey,
   remainingAfterElapsed,
@@ -87,6 +88,13 @@ describe('toast promise result', () => {
 })
 
 describe('toast overlay-stack pause', () => {
+  it('removing one pause source does not resume while another is active', () => {
+    expect(isToastItemPaused({ pointer: true, overlay: true })).toBe(true)
+    expect(isToastItemPaused({ pointer: false, overlay: true })).toBe(true)
+    expect(isToastItemPaused({ pointer: false, overlay: false, focus: true })).toBe(true)
+    expect(isToastItemPaused({})).toBe(false)
+  })
+
   it('pauses from isolation.inert / isModal, not another document', () => {
     const docA = { id: 'a' } as unknown as Document
     const docB = { id: 'b' } as unknown as Document

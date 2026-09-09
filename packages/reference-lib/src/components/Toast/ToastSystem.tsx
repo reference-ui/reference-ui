@@ -5,10 +5,13 @@ import { overlayStackStore } from '../Overlay/stack'
 import { usePresence } from '../Presence/Presence'
 import { DefaultToast } from './ToastChrome'
 import { ToastItemContext, type ToastClassNames, type ToastIcons } from './toastContext'
+import { findFocusableProximity, isElementFocusable } from '../FocusLock/candidates'
 import {
   getToastStore,
   referenceToast,
+  registerToastDocument,
   setToastDefaults,
+  unregisterToastDocument,
   type ToastDismissReason,
   type ToastItem,
 } from './toastRuntime'
@@ -18,6 +21,7 @@ import {
   defaultSwipeDirections,
   hasTextSelection,
   isAllowedSwipe,
+  isToastItemPaused,
   isToastPausedByOverlay,
   LIBRARY_TOAST_DURATION,
   LIBRARY_TOAST_LIMIT,
@@ -178,7 +182,7 @@ interface ToastItemWrapperProps {
   toasterClassName?: string
   onHeight: (id: string, height: number) => void
   onDismiss: (id: string, reason: ToastDismissReason) => void
-  onExited: (id: string) => void
+  onExited: (id: string, generation: number) => void
   onDragStateChange: (dragging: boolean) => void
 }
 
@@ -291,13 +295,20 @@ function ToastItemWrapper({
     return () => cancelAnimationFrame(frame)
   }, [reducedMotion])
 
+  const handleExited = React.useCallback(() => {
+    onExited(item.id, item.generation)
+  }, [item.id, item.generation, onExited])
+
   React.useEffect(() => {
-    if (!present && !isPresent) onExited(item.id)
-  }, [present, isPresent, item.id, onExited])
+    if (!present && !isPresent) handleExited()
+  }, [present, isPresent, handleExited])
+
+  const durationResetRef = React.useRef(false)
 
   React.useEffect(() => {
     if (duration !== prevDurationRef.current) {
       prevDurationRef.current = duration
+      durationResetRef.current = true
       setRemainingTime(duration)
     }
   }, [duration])
@@ -308,7 +319,14 @@ function ToastItemWrapper({
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
   }, [])
 
-  const isPaused = isExpanded || isFocused || isHidden || isolatingOverlay || isDragging || Boolean(item.exiting)
+  const isPaused = isToastItemPaused({
+    pointer: isExpanded,
+    focus: isFocused,
+    hidden: isHidden,
+    overlay: isolatingOverlay,
+    dragging: isDragging,
+    exiting: Boolean(item.exiting),
+  })
 
   React.useEffect(() => {
     if (item.exiting) return
@@ -317,7 +335,10 @@ function ToastItemWrapper({
     if (isPaused) {
       if (lastResumeTime.current !== null) {
         const elapsed = Date.now() - lastResumeTime.current
-        setRemainingTime(prev => remainingAfterElapsed(prev, elapsed) as number | false)
+        if (!durationResetRef.current) {
+          setRemainingTime(prev => remainingAfterElapsed(prev, elapsed) as number | false)
+        }
+        durationResetRef.current = false
         lastResumeTime.current = null
       }
       return
@@ -328,6 +349,7 @@ function ToastItemWrapper({
       return
     }
 
+    durationResetRef.current = false
     lastResumeTime.current = Date.now()
     const timer = setTimeout(() => {
       onDismiss(item.id, 'auto')
@@ -337,33 +359,52 @@ function ToastItemWrapper({
       clearTimeout(timer)
       if (lastResumeTime.current !== null) {
         const elapsed = Date.now() - lastResumeTime.current
-        setRemainingTime(prev => remainingAfterElapsed(prev, elapsed) as number | false)
+        if (!durationResetRef.current) {
+          setRemainingTime(prev => remainingAfterElapsed(prev, elapsed) as number | false)
+        }
+        durationResetRef.current = false
         lastResumeTime.current = null
       }
     }
   }, [isPaused, remainingTime, item.id, item.exiting, onDismiss])
 
+  const restoreToastFocus = React.useCallback(() => {
+    if (typeof document === 'undefined') return
+    const node = nodeRef.current
+    const recorded = previousFocusRef.current
+    const origin =
+      recorded && (!node || !node.contains(recorded))
+        ? recorded
+        : lastOutsideFocus && (!node || !node.contains(lastOutsideFocus))
+          ? lastOutsideFocus
+          : recorded
+    const parent = origin?.parentElement ?? null
+    const next = origin?.nextElementSibling ?? null
+    const prev = origin?.previousElementSibling ?? null
+    if (origin && isElementFocusable(origin)) {
+      origin.focus({ preventScroll: true })
+      return
+    }
+    if (origin && next instanceof HTMLElement && isElementFocusable(next)) {
+      next.focus({ preventScroll: true })
+      return
+    }
+    findFocusableProximity(origin, parent, next, prev)?.focus({ preventScroll: true })
+  }, [])
+
   React.useLayoutEffect(() => {
     if (present) return
-    const node = nodeRef.current
-    const previous = previousFocusRef.current
-    const active = typeof document !== 'undefined' ? document.activeElement : null
-    if (node && previous?.isConnected && active && (node === active || node.contains(active))) {
-      previous.focus({ preventScroll: true })
-    }
-  }, [present])
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => restoreToastFocus())
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [present, restoreToastFocus])
 
   React.useEffect(() => {
     return () => {
-      const previous = previousFocusRef.current
-      if (previous?.isConnected && document.activeElement && previous !== document.activeElement) {
-        const active = document.activeElement
-        if (active instanceof Node && nodeRef.current?.contains(active)) {
-          previous.focus({ preventScroll: true })
-        }
-      }
+      requestAnimationFrame(() => restoreToastFocus())
     }
-  }, [])
+  }, [restoreToastFocus])
 
   React.useLayoutEffect(() => {
     const node = nodeRef.current
@@ -534,6 +575,7 @@ function ToastItemWrapper({
       ref={composedRef}
       data-reference-toast-id={item.id}
       data-toast-id={item.id}
+      data-reference-toast-generation={item.generation}
       data-reference-toast-position={item.position ?? LIBRARY_TOAST_POSITION}
       data-front={isFront ? 'true' : 'false'}
       data-state={dataState}
@@ -657,7 +699,7 @@ function ToastPositionStack({
   position: string
   toasts: ToastItem[]
   onDismiss: (id: string, reason: ToastDismissReason) => void
-  onExited: (id: string) => void
+  onExited: (id: string, generation: number) => void
   expand?: boolean
   gap?: number
   offset?: ToastOffset
@@ -764,7 +806,7 @@ function ToastPositionStack({
         const expandedOffset = itemOffsets[idx] || 0
         return (
           <ToastItemWrapper
-            key={item.id}
+            key={`${item.id}:${item.generation}`}
             item={item}
             index={idx}
             frontOffset={frontOffset}
@@ -857,6 +899,12 @@ export function ToastHost({
   }, [defaultDuration, defaultPosition, limit])
 
   React.useLayoutEffect(() => {
+    if (typeof document === 'undefined') return
+    registerToastDocument(document)
+    return () => unregisterToastDocument(document)
+  }, [])
+
+  React.useLayoutEffect(() => {
     if (!store) return
     const onStoreChange = () => forceUpdate()
     store.subscribers.add(onStoreChange)
@@ -869,8 +917,20 @@ export function ToastHost({
     referenceToast.dismiss(id, { reason })
   }, [])
 
-  const onExited = React.useCallback((id: string) => {
-    referenceToast.remove(id)
+  const onExited = React.useCallback((id: string, generation: number) => {
+    referenceToast.remove(id, { generation })
+  }, [])
+
+  React.useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const host = document.querySelector('[data-reference-toast-host]')
+      const target = e.target
+      if (target instanceof HTMLElement && host && !host.contains(target)) {
+        lastOutsideFocus = target
+      }
+    }
+    document.addEventListener('focusin', handleFocusIn, true)
+    return () => document.removeEventListener('focusin', handleFocusIn, true)
   }, [])
 
   React.useEffect(() => {

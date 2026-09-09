@@ -120,6 +120,22 @@ export function isToastPausedByOverlay(
   })
 }
 
+export interface ToastItemPauseFlags {
+  pointer?: boolean
+  focus?: boolean
+  hidden?: boolean
+  overlay?: boolean
+  dragging?: boolean
+  exiting?: boolean
+}
+
+/** Per-item pause. Removing one source must not resume while another is active. */
+export function isToastItemPaused(flags: ToastItemPauseFlags): boolean {
+  return Boolean(
+    flags.pointer || flags.focus || flags.hidden || flags.overlay || flags.dragging || flags.exiting
+  )
+}
+
 const MODIFIER_PROPS = {
   altKey: 'altKey',
   ctrlKey: 'ctrlKey',

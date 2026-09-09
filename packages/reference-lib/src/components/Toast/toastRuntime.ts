@@ -21,6 +21,7 @@ export interface ToastHistoryRecord {
 
 export interface ToastItem {
   id: string
+  generation: number
   content?: React.ReactNode | ((id: string) => React.ReactNode)
   title?: React.ReactNode
   description?: React.ReactNode
@@ -82,26 +83,57 @@ interface ToastRuntimeDefaults {
   limit: number
 }
 
-interface ToastRuntimeStore {
+export interface ToastRuntimeStore {
   subscribers: Set<() => void>
   toasts: ToastItem[]
   history: ToastHistoryRecord[]
   defaults: ToastRuntimeDefaults
+  lastGeneration: Map<string, number>
 }
 
 const TOAST_RUNTIME_KEY = '__referenceToastRuntime__'
+const mountedToastDocuments = new Set<Document>()
 
 function createToastStore(): ToastRuntimeStore {
   return {
     subscribers: new Set(),
     toasts: [],
     history: [],
+    lastGeneration: new Map(),
     defaults: {
       duration: LIBRARY_TOAST_DURATION,
       position: LIBRARY_TOAST_POSITION,
       limit: LIBRARY_TOAST_LIMIT,
     },
   }
+}
+
+export function toastDiagnostic(message: string) {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    console.warn(`[reference-ui] ${message}`)
+  }
+}
+
+export function registerToastDocument(doc: Document) {
+  mountedToastDocuments.add(doc)
+}
+
+export function unregisterToastDocument(doc: Document) {
+  mountedToastDocuments.delete(doc)
+}
+
+export function resolveToastDocument(explicit?: Document): Document | undefined {
+  if (explicit) return explicit
+  if (mountedToastDocuments.size > 1) {
+    toastDiagnostic('toast: ambiguous untargeted call with multiple documents; pass { document }')
+    return undefined
+  }
+  if (typeof document !== 'undefined') return document
+  return undefined
+}
+
+export function generateToastId() {
+  return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 export function getToastStore(doc?: Document): ToastRuntimeStore {
@@ -175,6 +207,20 @@ function isMountedVisible(store: ToastRuntimeStore, id: string): boolean {
   return index >= 0 && index < store.defaults.limit
 }
 
+function activeItem(store: ToastRuntimeStore, id: string) {
+  return store.toasts.find(item => tMatches(item, id) && !item.exiting)
+}
+
+function tMatches(item: ToastItem, id: string) {
+  return item.id === id
+}
+
+function nextGeneration(store: ToastRuntimeStore, id: string) {
+  const generation = (store.lastGeneration.get(id) ?? 0) + 1
+  store.lastGeneration.set(id, generation)
+  return generation
+}
+
 function chromeFrom(
   options: ReferenceToastOptions,
   previous?: ToastItem
@@ -209,51 +255,90 @@ function chromeFrom(
   }
 }
 
+function resolveShowId(options: ReferenceToastOptions) {
+  return options.id !== undefined ? options.id : generateToastId()
+}
+
+function resolveDuration(
+  options: ReferenceToastOptions,
+  previous: ToastItem | undefined,
+  defaults: ToastRuntimeDefaults
+) {
+  if (options.duration !== undefined) return options.duration
+  if (previous) return previous.duration
+  return defaults.duration
+}
+
+function resolvePosition(
+  options: ReferenceToastOptions,
+  previous: ToastItem | undefined,
+  defaults: ToastRuntimeDefaults
+) {
+  if (options.position !== undefined) return options.position
+  if (previous) return previous.position
+  return defaults.position
+}
+
+function resolveContent(
+  content: React.ReactNode | ((id: string) => React.ReactNode) | undefined,
+  options: ReferenceToastOptions,
+  previous?: ToastItem
+) {
+  if (content !== undefined) return content
+  if (options.title !== undefined) return undefined
+  return previous?.content
+}
+
+export function peekToastGeneration(id: string, doc?: Document) {
+  const store = getToastStore(doc)
+  const current = activeItem(store, id)
+  if (current) return current.generation
+  return (store.lastGeneration.get(id) ?? 0) + 1
+}
+
 export const referenceToast = {
   show(content: React.ReactNode | ((id: string) => React.ReactNode) | undefined, options: ReferenceToastOptions = {}) {
-    const doc = options.document ?? (typeof document !== 'undefined' ? document : undefined)
-    const store = getToastStore(doc)
-    const id = options.id ?? `toast-${Date.now()}-${Math.random()}`
-    const duration = options.duration ?? store.defaults.duration
-    const position = options.position ?? store.defaults.position
-    const dismissible = options.dismissible ?? true
+    const id = resolveShowId(options)
+    const doc = resolveToastDocument(options.document)
+    if (!doc) {
+      if (options.document === undefined && mountedToastDocuments.size <= 1) {
+        toastDiagnostic(`toast.show is a no-op without a document (id "${id}")`)
+      }
+      return id
+    }
 
+    const store = getToastStore(doc)
     const existingIndex = store.toasts.findIndex(t => t.id === id)
-    const previous = existingIndex !== -1 ? store.toasts[existingIndex] : undefined
+    const existing = existingIndex !== -1 ? store.toasts[existingIndex] : undefined
+    const inPlace = Boolean(existing && !existing.exiting)
+    const previous = inPlace ? existing : undefined
+    const duration = resolveDuration(options, previous, store.defaults)
+    const position = resolvePosition(options, previous, store.defaults)
+    const dismissible = options.dismissible ?? previous?.dismissible ?? true
+    const generation = inPlace ? existing!.generation : nextGeneration(store, id)
+    const durationChanged = previous ? previous.duration !== duration : true
     const item: ToastItem = {
       id,
-      content,
+      generation,
+      content: resolveContent(content, options, previous),
       duration,
       position,
-      createdAt: Date.now(),
-      remaining: duration === false ? false : duration,
+      createdAt: inPlace && !durationChanged ? previous!.createdAt : Date.now(),
+      remaining: durationChanged ? (duration === false ? false : duration) : previous!.remaining,
       dismissible,
-      onAutoClose: options.onAutoClose,
-      onDismiss: options.onDismiss,
-      type: options.type,
-      testId: options.testId,
-      invert: options.invert,
-      richColors: options.richColors,
-      swipeDirections: options.swipeDirections,
+      onAutoClose: options.onAutoClose ?? previous?.onAutoClose,
+      onDismiss: options.onDismiss ?? previous?.onDismiss,
+      type: options.type ?? previous?.type,
+      testId: options.testId ?? previous?.testId,
+      invert: options.invert ?? previous?.invert,
+      richColors: options.richColors ?? previous?.richColors,
+      swipeDirections: options.swipeDirections ?? previous?.swipeDirections,
       ...chromeFrom(options, previous),
     }
 
     if (existingIndex !== -1) {
-      const durationChanged = previous!.duration !== duration
-      store.toasts[existingIndex] = {
-        ...item,
-        onAutoClose: options.onAutoClose ?? previous!.onAutoClose,
-        onDismiss: options.onDismiss ?? previous!.onDismiss,
-        type: options.type ?? previous!.type,
-        testId: options.testId ?? previous!.testId,
-        invert: options.invert ?? previous!.invert,
-        richColors: options.richColors ?? previous!.richColors,
-        swipeDirections: options.swipeDirections ?? previous!.swipeDirections,
-        remaining: durationChanged ? item.remaining : previous!.remaining,
-        createdAt: durationChanged ? item.createdAt : previous!.createdAt,
-        exiting: false,
-      }
-      rememberHistory(store, store.toasts[existingIndex]!)
+      store.toasts[existingIndex] = item
+      rememberHistory(store, item)
     } else {
       store.toasts.push(item)
       rememberHistory(store, item)
@@ -263,14 +348,37 @@ export const referenceToast = {
     return id
   },
 
+  update(
+    id: string,
+    content: React.ReactNode | ((id: string) => React.ReactNode) | undefined,
+    options: ReferenceToastOptions = {}
+  ) {
+    const doc = resolveToastDocument(options.document)
+    if (!doc) {
+      toastDiagnostic(`toast.update is a no-op without a document (id "${id}")`)
+      return
+    }
+    const store = getToastStore(doc)
+    if (!activeItem(store, id)) {
+      toastDiagnostic(`toast.update: unknown id "${id}"`)
+      return
+    }
+    referenceToast.show(content, { ...options, id, document: doc })
+  },
+
   dismiss(
     id: string,
-    options: { document?: Document; reason?: ToastDismissReason } = {}
+    options: { document?: Document; reason?: ToastDismissReason; generation?: number } = {}
   ) {
-    const doc = options.document ?? (typeof document !== 'undefined' ? document : undefined)
+    const doc = resolveToastDocument(options.document)
+    if (!doc) {
+      toastDiagnostic(`toast.dismiss is a no-op without a document (id "${id}")`)
+      return
+    }
     const store = getToastStore(doc)
     const item = store.toasts.find(t => t.id === id)
     if (!item || item.exiting) return
+    if (options.generation != null && item.generation !== options.generation) return
     if (options.reason === 'auto') {
       item.onAutoClose?.(id)
     } else {
@@ -285,17 +393,23 @@ export const referenceToast = {
     notifyStore(store)
   },
 
-  remove(id: string, options: { document?: Document } = {}) {
-    const doc = options.document ?? (typeof document !== 'undefined' ? document : undefined)
+  remove(id: string, options: { document?: Document; generation?: number } = {}) {
+    const doc = resolveToastDocument(options.document)
+    if (!doc) return
     const store = getToastStore(doc)
-    const next = store.toasts.filter(t => t.id !== id)
-    if (next.length === store.toasts.length) return
-    store.toasts = next
+    const item = store.toasts.find(t => t.id === id)
+    if (!item) return
+    if (options.generation != null && item.generation !== options.generation) return
+    store.toasts = store.toasts.filter(t => t.id !== id)
     notifyStore(store)
   },
 
   dismissAll(options: { document?: Document } = {}) {
-    const doc = options.document ?? (typeof document !== 'undefined' ? document : undefined)
+    const doc = resolveToastDocument(options.document)
+    if (!doc) {
+      toastDiagnostic('toast.dismissAll is a no-op without a document')
+      return
+    }
     const store = getToastStore(doc)
     const now = Date.now()
     const visibleIds = new Set(
@@ -314,11 +428,15 @@ export const referenceToast = {
   },
 
   getToasts(doc?: Document): ToastHistoryRecord[] {
-    return snapshotToasts(getToastStore(doc))
+    const resolved = resolveToastDocument(doc)
+    if (!resolved && doc === undefined && mountedToastDocuments.size > 1) return []
+    return snapshotToasts(getToastStore(resolved))
   },
 
   getHistory(doc?: Document): ToastHistoryRecord[] {
-    return getToastStore(doc).history.map(record => ({ ...record }))
+    const resolved = resolveToastDocument(doc)
+    if (!resolved && doc === undefined && mountedToastDocuments.size > 1) return []
+    return getToastStore(resolved).history.map(record => ({ ...record }))
   },
 }
 
