@@ -1,6 +1,6 @@
 # Listbox
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Selection and option-management engine. Single/multi selection, disabled skipping, typeahead, keyboard navigation. Built on `RovingFocus`.
 

@@ -1,5 +1,7 @@
 # Menu test contract
 
+Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+
 Playwright: `matrix/lib/tests/e2e/menu.spec.ts`  
 Unit: `matrix/lib/tests/unit/menu-intent.test.ts`
 Page: `/menu`

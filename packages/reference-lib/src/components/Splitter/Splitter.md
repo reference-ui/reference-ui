@@ -1,6 +1,6 @@
 # Splitter
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 A 1D flex partition with a window-splitter Handle. Splitter owns layout
 along one axis, the pointer drag loop (direct DOM writes, no React commit

@@ -1,6 +1,6 @@
 # Accordion
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Coordinates a collection of Collapsibles: single/multiple expansion and optional keyboard traversal between headers.
 

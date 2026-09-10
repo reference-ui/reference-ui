@@ -5,9 +5,11 @@ This is the normative proof architecture for Reference UI's runtime primitives.
 The public design and freeze gates live in
 [`src/components/components.md`](./src/components/components.md). Shared
 internal state uses Zustand plus `src/core/hooks`
-([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Overlay, Popover,
-Tooltip, Toast, and FocusLock use `src/components/<Name>/SPEC.md` as the
-executable contract. Other components still use `TESTS.md`.
+([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Every runtime
+primitive uses `src/components/<Name>/SPEC.md` as the executable driver.
+`TESTS.md` is the case catalog SPEC points at (setup / action / assert).
+`[x]` in SPEC.md means a passing test title contains the ID. TESTS.md
+checkboxes mean specified, not proven.
 Implementation lives in this package. Black-box proof lives in `matrix/lib`.
 Cosmos is for looking; Playwright is for asserting.
 
@@ -31,7 +33,8 @@ primitive, an internal kernel, native HTML, or a documented composition.
 | Public design and omissions | `src/components/components.md` |
 | Zustand + core hooks spec | `src/core/hooks/hooks.md` |
 | High-level component contract | `src/components/<Name>/<Name>.md` |
-| Exact cases and source provenance | `SPEC.md` (Overlay family) or `TESTS.md` |
+| Driver (freeze, gaps, proof, work order) | `SPEC.md` |
+| Case catalog (setup / action / assert) | `TESTS.md` when SPEC points at it |
 | Visual exploration | this package's Cosmos fixtures |
 | Public-API browser proof | `matrix/lib/tests/e2e/<name>.spec.ts` |
 | Pure model proof | `matrix/lib/tests/unit/<name>.test.ts` |
@@ -53,24 +56,24 @@ composition gates when ownership boundaries require distinct proof:
   [Overlay](./src/components/Overlay/SPEC.md),
   [Popover](./src/components/Popover/SPEC.md),
   [Toast](./src/components/Toast/SPEC.md)
-- **ARIA widgets:** [Listbox](./src/components/Listbox/TESTS.md),
-  [Combobox](./src/components/Combobox/TESTS.md),
-  [Menu](./src/components/Menu/TESTS.md),
-  [Tabs](./src/components/Tabs/TESTS.md),
-  [Slider](./src/components/Slider/TESTS.md),
-  [Switch](./src/components/Switch/TESTS.md),
-  [Tree](./src/components/Tree/TESTS.md),
-  [NumberField](./src/components/NumberField/TESTS.md),
-  [DateField](./src/components/DateField/TESTS.md),
-  [Calendar](./src/components/Calendar/TESTS.md),
-  [Collapsible](./src/components/Collapsible/TESTS.md),
-  [Accordion](./src/components/Accordion/TESTS.md),
-  [Splitter](./src/components/Splitter/TESTS.md),
+- **ARIA widgets:** [Listbox](./src/components/Listbox/SPEC.md),
+  [Combobox](./src/components/Combobox/SPEC.md),
+  [Menu](./src/components/Menu/SPEC.md),
+  [Tabs](./src/components/Tabs/SPEC.md),
+  [Slider](./src/components/Slider/SPEC.md),
+  [Switch](./src/components/Switch/SPEC.md),
+  [Tree](./src/components/Tree/SPEC.md),
+  [NumberField](./src/components/NumberField/SPEC.md),
+  [DateField](./src/components/DateField/SPEC.md),
+  [Calendar](./src/components/Calendar/SPEC.md),
+  [Collapsible](./src/components/Collapsible/SPEC.md),
+  [Accordion](./src/components/Accordion/SPEC.md),
+  [Splitter](./src/components/Splitter/SPEC.md),
   [Tooltip](./src/components/Tooltip/SPEC.md)
-- **Visual chrome:** [Field](./src/components/Field/TESTS.md)
-- **Authoring machinery:** [Slot](./src/components/Slot/TESTS.md),
-  [Presence](./src/components/Presence/TESTS.md),
-  [RovingFocus](./src/components/RovingFocus/TESTS.md),
+- **Visual chrome:** [Field](./src/components/Field/SPEC.md)
+- **Authoring machinery:** [Slot](./src/components/Slot/SPEC.md),
+  [Presence](./src/components/Presence/SPEC.md),
+  [RovingFocus](./src/components/RovingFocus/SPEC.md),
   [FocusLock](./src/components/FocusLock/SPEC.md)
 
 The count is intentionally not a promise that every case becomes a separate
@@ -114,8 +117,9 @@ Design one component in this order:
 
 ## Contract vocabulary
 
-Every checklist item in a component `TESTS.md` or Overlay-family `SPEC.md` is required unless it appears
-under **Deferred** or **Out of scope**.
+Every checklist item in a component `SPEC.md` is required unless it appears
+under **Deferred** or **Out of scope**. `TESTS.md` is the case catalog SPEC
+points at; its checkboxes mean specified, not proven.
 
 Case IDs are stable and become the beginning of the test title:
 
@@ -427,7 +431,7 @@ At minimum, the targeted environment fixtures cover:
 
 Vendored repositories are references, not dependencies.
 
-1. Read the relevant component design and existing `SPEC.md` (Overlay family) or `TESTS.md`.
+1. Read the relevant component design and `SPEC.md` (driver). Use `TESTS.md` for case prose when SPEC points at it.
 2. Search the actual vendor tests, not only source or docs.
 3. Copy the observable bug/behavior into a case; discard vendor anatomy,
    provider contracts, styling, uncontrolled conveniences, and unrelated
@@ -639,7 +643,7 @@ Do not use the full repository pipeline as the daily component loop.
 
 A primitive freezes only when:
 
-1. Every required checklist case in its `SPEC.md` (Overlay family) or `TESTS.md` exists and passes.
+1. Every required checklist case in its `SPEC.md` exists and passes (a passing test title contains the ID).
 2. No API blocker or vendor disagreement remains undecided.
 3. Exact DOM, native props, controlled state, event order/cancellation, IDs,
    refs, and state attributes pass universal conformance.

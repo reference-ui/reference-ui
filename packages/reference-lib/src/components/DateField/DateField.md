@@ -1,6 +1,6 @@
 # DateField
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Locale-aware editing of date values. `DateField` is the recipe:
 - **Childless (folded)**: collapses directly to `DateField.Input`, rendering one

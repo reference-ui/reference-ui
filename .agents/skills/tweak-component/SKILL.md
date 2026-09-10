@@ -28,8 +28,7 @@ Before attempting visual capture:
 ### Step 1: Contract Ingestion
 Read the component design specification and test contract before modifying code:
 - Specification: `packages/reference-lib/src/components/<Component>/<Component>.md`
-- Spec (current freeze + cases + proof): `SPEC.md` if present
-- Else test contract: `TESTS.md`, roadmap `NEXT.md` if present
+- Driver: `SPEC.md` (freeze, gaps, proof). Case catalog: `TESTS.md` when SPEC points at it.
 
 ### Step 2: Baseline Capture & Immediate Visual Sharing
 Establish the visual baseline and **share it with the developer immediately in chat**:

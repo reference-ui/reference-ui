@@ -1,6 +1,6 @@
 # Field
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 The visual bezel around a form control. Field owns chrome: background,
 radius, spacing, prefix/suffix layout, and the visible focus ring.

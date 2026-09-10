@@ -1,6 +1,6 @@
 # Collapsible
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Coordinates a single disclosure trigger and content region: `aria-expanded`, `aria-controls`, controlled visibility.
 

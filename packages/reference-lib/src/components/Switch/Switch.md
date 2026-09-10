@@ -1,6 +1,6 @@
 # Switch
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 A compact on/off control with variable specificity. Mount `Switch` alone and
 it is a complete control: StyleProps land on the track, and a default thumb

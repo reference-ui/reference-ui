@@ -1,6 +1,6 @@
 # Slot
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Named-region registration for declarative component APIs. A part registers
 an element into a slot id; the host reads the shared registry and renders

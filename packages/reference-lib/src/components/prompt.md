@@ -6,7 +6,7 @@ Master orchestration standard and operational framework for manufacturing all 24
 
 ## 1. System Mission & Manufacturing Mandate
 
-You are manufacturing a designated component for `@reference-ui/lib`. Your mandate is to engineer a production-ready, fully-typed, high-performance, accessible React 19 primitive that satisfies 100% of its design specification (`<Component>.md`) and passes all tagged behavior cases and composition gates in its executable contract (`SPEC.md` if present, otherwise `TESTS.md`).
+You are manufacturing a designated component for `@reference-ui/lib`. Your mandate is to engineer a production-ready, fully-typed, high-performance, accessible React 19 primitive that satisfies 100% of its design specification (`<Component>.md`) and passes all tagged behavior cases and composition gates in its executable contract (`SPEC.md`). `TESTS.md` is the case catalog SPEC points at; do not treat TESTS.md checkboxes as proof.
 
 Reference UI rejects monolithic widgets, polymorphic `as` props, wrapper `<div>` soup, and public context-provider contracts. Every component manufactured must follow a primitive-first, compiler-backed, headless-state architecture that mirrors the web platform directly.
 
@@ -21,7 +21,8 @@ Continue manufacturing `<COMPONENT_NAME>` for `@reference-ui/lib`.
 
 Assigned Component: `packages/reference-lib/src/components/<COMPONENT_NAME>/`
 Design Specification: `packages/reference-lib/src/components/<COMPONENT_NAME>/<COMPONENT_NAME>.md`
-Contract: `packages/reference-lib/src/components/<COMPONENT_NAME>/SPEC.md` (Overlay family) or `TESTS.md`
+Contract: `packages/reference-lib/src/components/<COMPONENT_NAME>/SPEC.md`
+Case catalog: `packages/reference-lib/src/components/<COMPONENT_NAME>/TESTS.md` (when SPEC points at it)
 Global Architecture: `packages/reference-lib/src/components/components.md`
 Core Hooks & Zustand Substrate: `packages/reference-lib/src/core/hooks/hooks.md`
 Testing Architecture & Proof Harness: `packages/reference-lib/TESTING.md`
@@ -78,17 +79,33 @@ Components are organized into five strict manufacturing tiers (Tier 0 to Tier 4)
 | **`Field`** | 1 | Form control bezel, label/error linking & `:has()` CSS | `Slot` | `div[data-reference-field]` | Ancestor selector CSS |
 | **`Switch`** | 2 | Sliding thumb toggle & form synchronization | `Slot` | `button[role="switch"]` | Controlled boolean prop |
 | **`Collapsible`** | 2 | Single disclosure panel with animated height | `Presence` | `div[data-reference-collapsible]` | Controlled open state |
-| **`Accordion`** | 2 | Single/multiple collapsible grouping | `Collapsible`, `RovingFocus` | `div[data-reference-accordion]` | Instance collection store |
+| **`Accordion`** | 2 | Single/multiple collapsible grouping | `Collapsible` | `div[data-reference-accordion]` | Instance collection store |
 | **`Tabs`** | 2 | Tab list & tab panel coordination | `RovingFocus` | `div` / `button[role="tab"]` | Instance active-tab store |
 | **`Slider`** | 2 | Single/multi-thumb continuous range slider | `Slot` | `div[role="slider"]` | Constraint & drag engine |
 | **`Splitter`** | 2 | Resizable split-pane layout & keyboard stepping | `Slot` | `div[role="separator"]` | Drag session store |
 | **`Listbox`** | 3 | Flat option selection & virtualized collection | `RovingFocus`, `Slot` | `div[role="listbox"]` | Instance selection store |
-| **`Combobox`** | 3 | Input + popup listbox with autocomplete filtering | `Listbox`, `Popover`, `Field` | `input[role="combobox"]` | Input & popup coordinator |
+| **`Combobox`** | 3 | Input + popup listbox with autocomplete policy | `Listbox`, `Overlay`, `Field` | `input[role="combobox"]` | Input & popup coordinator |
 | **`Menu`** | 3 | Dropdown/context menus & nested submenus | `Overlay`, `RovingFocus` | `div[role="menu"]` | Submenu intent store |
 | **`Tree`** | 3 | Hierarchical multi-level tree navigation | `RovingFocus`, `Collapsible` | `div[role="tree"]` | Tree traversal engine |
 | **`NumberField`** | 4 | Locale-aware numeric parsing, stepping & formatting | `Field`, `Slot` | `input[type="text"]` | Numeric parse/edit engine |
 | **`DateField`** | 4 | Locale date editing, single/range & picker combobox | `Field`, `Popover`, `Calendar` | Dual-host (`input` / `div`) | Segmented date engine |
 | **`Calendar`** | 4 | Gregorian ISO grid, month navigation & range select | `RovingFocus`, `Slot` | `div[role="grid"]` | Gregorian date engine |
+
+### Remaining manufacturing order
+
+Overlay / Popover / Portal / FocusLock / Tooltip / Toast are shipped. `SPEC.md`
+is the driver for every remaining owner. Visual polish is last.
+
+1. Slot (finish hook/provider proof) → RovingFocus → Presence
+2. Switch, Collapsible, Accordion, Tabs, Field
+3. Slider, Splitter
+4. Listbox, Menu, Tree → Combobox
+5. NumberField (dirty-session template)
+6. Calendar day/range + ISO kit (only as far as DateField needs)
+7. DateField (last hard job)
+
+Do not start DateField before NumberField dirty-session and Calendar ISO /
+day-range exist.
 
 ---
 
@@ -180,7 +197,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Phase 1: Contract Ingestion & Invariant Review                         │
-│ • Inspect <Component>.md, SPEC.md or TESTS.md, components.md, hooks.md │
+│ • Inspect <Component>.md, SPEC.md (driver), TESTS.md catalog, components.md, hooks.md │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
@@ -209,7 +226,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │ Phase 6: Sign-off, Contract Checklist & Handoff Delivery               │
-│ • Mark verified cases in SPEC.md or TESTS.md (- [x] <PREFIX>-...)      │
+│ • Mark proven cases in SPEC.md (- [x] <PREFIX>-...)                    │
 │ • Generate standardized manufacturing completion report                │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -218,7 +235,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 
 #### Phase 1: Contract Ingestion & Invariant Review
 1. Read `packages/reference-lib/src/components/<Component>/<Component>.md` for exact anatomy, part names, default props, and behavioral semantics.
-2. Read `packages/reference-lib/src/components/<Component>/SPEC.md` if present, otherwise `TESTS.md`, for freeze decisions, tagged behavior cases (`<PREFIX>-*`), and composition gates (`<PREFIX>-COMP-*`).
+2. Read `packages/reference-lib/src/components/<Component>/SPEC.md` first (status, gaps, proof, work order). Then `TESTS.md` for case prose. `[x]` in SPEC.md means a passing test title contains the ID. TESTS.md `[x]` means specified only.
 3. Identify all upstream dependencies from Tiers 0–3 and ensure they are satisfied.
 
 #### Phase 2: Headless State Machine Implementation
@@ -247,7 +264,7 @@ For your assigned component, execute this 6-phase assembly line in exact sequenc
 3. Run local typecheck and test commands (see Section 7).
 
 #### Phase 6: Sign-off, Contract Checklist & Handoff Delivery
-1. Update `SPEC.md` (or `TESTS.md`) by marking Playwright-proven items as `- [x] <PREFIX>-...`.
+1. Update `SPEC.md` by marking Playwright/Vitest-proven items as `- [x] <PREFIX>-...`. Do not treat TESTS.md checkboxes as proof.
 2. Compile and return the standardized completion report (see Section 9).
 
 ---

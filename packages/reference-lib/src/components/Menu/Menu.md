@@ -1,6 +1,6 @@
 # Menu
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 `role="menu"` keyboard navigation, item activation, typeahead, nested submenu
 orchestration. Built on `RovingFocus`. Composes with `Popover` for dropdown and

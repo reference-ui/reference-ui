@@ -1,6 +1,6 @@
 # NumberField
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Locale-aware numeric text editing and discrete stepping. NumberField owns the
 hard boundary between an ephemeral localized edit string and one controlled

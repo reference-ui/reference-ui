@@ -1,6 +1,6 @@
 # Calendar
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Date-grid engine. Locale-aware week start and weekday headings, padded month
 grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping,

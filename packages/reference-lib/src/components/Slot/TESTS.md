@@ -1,5 +1,7 @@
 # Slot test contract
 
+Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+
 Vitest: `matrix/lib/tests/unit/slot.test.ts`
 Browser smoke: `matrix/lib/tests/e2e/slot.spec.ts`
 Page: `/slot`

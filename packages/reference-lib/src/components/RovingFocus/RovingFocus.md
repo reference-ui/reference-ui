@@ -1,6 +1,6 @@
 # RovingFocus
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Composite-widget keyboard kernel: roving `tabindex`, arrow movement,
 Home/End/PageUp/PageDown boundary movement, disabled skipping, optional

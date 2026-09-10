@@ -1,6 +1,6 @@
 # Slider
 
-Proof: [TESTS.md](./TESTS.md).
+Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
 Pointer drag math, multi-thumb collision, keyboard stepping (arrows, PageUp/PageDown, Home/End), ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
 
