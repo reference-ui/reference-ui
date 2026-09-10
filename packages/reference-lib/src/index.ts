@@ -19,6 +19,11 @@ export { Reference, ReferenceView, referenceBrowserTokenConfig } from './compone
 export * from './components/Slot/index'
 export * from './components/Presence/index'
 export * from './motion/index'
+export {
+  useMeasure,
+  MEASUREMENT_SETTLE_TIMEOUT_MS,
+} from './core/measure'
+export type { MeasureBox, UseMeasureOptions, UseMeasureResult } from './core/measure'
 export * from './components/Portal/index'
 export * from './components/FocusLock/index'
 export * from './components/RovingFocus/index'

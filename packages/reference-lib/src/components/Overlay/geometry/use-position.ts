@@ -6,6 +6,8 @@ import {
   computePosition,
   type Placement,
   type Strategy,
+  type VirtualAnchor,
+  type Side,
 } from './floating'
 import { resolveReference } from './reference'
 import { bindEdge, publishEdgeStack, clearGeometry } from './edge'
@@ -23,6 +25,16 @@ type PositionOptions = {
   placement: Placement
   offset: number
   collisionPadding: number
+  boundary?: HTMLElement | VirtualAnchor | React.RefObject<HTMLElement | null> | 'viewport' | null
+  fallbackPlacements?: Placement[]
+  animationFrame?: boolean
+  onPositionChange?: (data: {
+    placement: Placement
+    side: import('./floating').Side
+    align: string
+    nudgedLeft: number
+    nudgedTop: number
+  }) => void
   strategy: Strategy
   flip: boolean
   shift: boolean
@@ -42,15 +54,31 @@ export function useOverlayPosition({
   placement,
   offset,
   collisionPadding,
+  boundary,
+  fallbackPlacements,
+  animationFrame,
+  onPositionChange,
   strategy,
   flip,
   shift,
   mixedGeometry,
 }: PositionOptions) {
   const lastPlacementRef = React.useRef<Placement | undefined>(undefined)
+  const lastPublishedRef = React.useRef<{
+    placement: Placement
+    side: string
+    align: string
+    nudgedX: number
+    nudgedY: number
+    hidden: boolean
+    escaped: boolean
+  } | null>(null)
 
   React.useEffect(() => {
-    if (!isOpen) lastPlacementRef.current = undefined
+    if (!isOpen) {
+      lastPlacementRef.current = undefined
+      lastPublishedRef.current = null
+    }
   }, [isOpen])
 
   React.useLayoutEffect(() => {
@@ -75,6 +103,11 @@ export function useOverlayPosition({
       return
     }
 
+    const resolvedBoundary =
+      boundary && typeof boundary === 'object' && 'current' in boundary
+        ? (boundary as React.RefObject<HTMLElement | null>).current
+        : (boundary as HTMLElement | VirtualAnchor | 'viewport' | null | undefined)
+
     const update = () => {
       const floating = content
       if (!floating) return
@@ -84,15 +117,19 @@ export function useOverlayPosition({
         strategy,
         offset,
         collisionPadding,
+        boundary: resolvedBoundary,
+        fallbackPlacements,
         flip,
         shift,
         arrow: { element: arrow },
       })
       lastPlacementRef.current = res.placement
 
-      floating.style.position = res.strategy
-      floating.style.left = `${res.x}px`
-      floating.style.top = `${res.y}px`
+      const left = `${res.x}px`
+      const top = `${res.y}px`
+      if (floating.style.position !== res.strategy) floating.style.position = res.strategy
+      if (floating.style.left !== left) floating.style.left = left
+      if (floating.style.top !== top) floating.style.top = top
 
       if (res.middlewareData.size) {
         floating.style.setProperty(
@@ -113,19 +150,52 @@ export function useOverlayPosition({
         )
       }
 
-      floating.setAttribute('data-side', res.placement.split('-')[0] ?? '')
-      floating.setAttribute('data-align', res.placement.split('-')[1] || 'center')
+      const side = res.placement.split('-')[0] ?? ''
+      const align = res.placement.split('-')[1] || 'center'
+      const nudgedX = res.middlewareData.shift?.x ?? 0
+      const nudgedY = res.middlewareData.shift?.y ?? 0
+      const hidden = Boolean(res.middlewareData.hide?.referenceHidden)
+      const escaped = Boolean(res.middlewareData.hide?.escaped)
+      const prev = lastPublishedRef.current
+      const attrsChanged =
+        !prev ||
+        prev.placement !== res.placement ||
+        prev.side !== side ||
+        prev.align !== align ||
+        prev.nudgedX !== nudgedX ||
+        prev.nudgedY !== nudgedY ||
+        prev.hidden !== hidden ||
+        prev.escaped !== escaped
 
-      if (res.middlewareData.hide?.referenceHidden) {
-        floating.setAttribute('data-anchor-hidden', '')
-      } else {
-        floating.removeAttribute('data-anchor-hidden')
+      if (attrsChanged) {
+        floating.setAttribute('data-side', side)
+        floating.setAttribute('data-align', align)
+        floating.setAttribute('data-nudged-x', nudgedX.toFixed(2))
+        floating.setAttribute('data-nudged-y', nudgedY.toFixed(2))
+        if (hidden) floating.setAttribute('data-anchor-hidden', '')
+        else floating.removeAttribute('data-anchor-hidden')
+        if (escaped) floating.setAttribute('data-escaped', '')
+        else floating.removeAttribute('data-escaped')
+        onPositionChange?.({
+          placement: res.placement,
+          side: side as Side,
+          align,
+          nudgedLeft: nudgedX,
+          nudgedTop: nudgedY,
+        })
+        lastPublishedRef.current = {
+          placement: res.placement,
+          side,
+          align,
+          nudgedX,
+          nudgedY,
+          hidden,
+          escaped,
+        }
       }
-      if (res.middlewareData.hide?.escaped) {
-        floating.setAttribute('data-escaped', '')
-      } else {
-        floating.removeAttribute('data-escaped')
-      }
+
+      floating.style.setProperty('--reference-overlay-nudge-x', `${nudgedX.toFixed(2)}px`)
+      floating.style.setProperty('--reference-overlay-nudge-y', `${nudgedY.toFixed(2)}px`)
 
       if (res.middlewareData.arrow && arrow) {
         const { x: arrowX, y: arrowY } = res.middlewareData.arrow
@@ -137,6 +207,8 @@ export function useOverlayPosition({
     return autoUpdate(reference, content, update, {
       closeOnScroll,
       onScrollClose: () => setIsOpen(false),
+      animationFrame,
+      boundary: resolvedBoundary && resolvedBoundary !== 'viewport' ? resolvedBoundary : null,
     })
   }, [
     isOpen,
@@ -151,6 +223,10 @@ export function useOverlayPosition({
     placement,
     offset,
     collisionPadding,
+    boundary,
+    fallbackPlacements,
+    animationFrame,
+    onPositionChange,
     strategy,
     flip,
     shift,

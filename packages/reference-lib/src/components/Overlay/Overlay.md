@@ -624,8 +624,23 @@ Trigger, if present, remains the interaction source.
 Scroll ancestors of **both** reference and floating, resize, layout shift,
 visualViewport, iframe, shadow, zoom.
 
+Default `autoUpdate` is event-driven: ancestor scroll/resize, visualViewport,
+ResizeObserver, and IntersectionObserver layout-shift (`observeMove`).
+There is no rAF loop on that path. ResizeObserver + size unobserves floating
+for a frame (Floating UI #1740). Virtual anchors may supply `contextElement`
+so overflow ancestors still track.
+
+`animationFrame` is opt-in for transform-driven reference motion. It is a
+sleeping dirty poll from `src/core/measure` (resizable's two-mode lesson:
+idle measurement and rAF are exclusive for the *reference*; window
+`pointermove` is not a wake). The poll sleeps after idle frames, pauses while
+`document.hidden`, and wakes on related `animationstart` / layout
+`transitionstart`. Splitter must not use this poll — its handle is in-flow.
+
 **Vendor.** `vendor/floating-ui/packages/dom/src/autoUpdate.ts` and its
 functional tests (`scroll`, `iframe`, `shadow-dom`, `top-layer`, `zoom`).
+`vendor/design-system/resizable/shared/useBoundingClientRect` for settle /
+single-shot rAF / exclusive idle-vs-hot discipline, not `useRealtimeUpdate`.
 
 **Lift** the whole `autoUpdate` + tests onto anchored Overlay.
 `closeOnScroll` is Overlay policy on this engine, not a second document

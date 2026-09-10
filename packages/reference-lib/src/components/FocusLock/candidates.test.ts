@@ -6,7 +6,7 @@ import {
   findFocusableProximity,
 } from './candidates'
 
-function layout(el: HTMLElement) {
+function layout<T extends HTMLElement>(el: T): T {
   Object.defineProperty(el, 'getClientRects', {
     configurable: true,
     value: () => [new DOMRect(0, 0, 16, 16)],

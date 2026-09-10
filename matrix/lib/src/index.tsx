@@ -23,6 +23,7 @@ import { CalendarFixture } from './calendar'
 import { DateFieldFixture } from './date-field'
 import { NumberFieldFixture } from './number-field'
 import { TreeFixture } from './tree'
+import { MeasureFixture } from './measure'
 
 export function Index() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/'
@@ -117,6 +118,10 @@ export function Index() {
 
   if (path === '/tree') {
     return <TreeFixture />
+  }
+
+  if (path === '/measure') {
+    return <MeasureFixture />
   }
 
   return (

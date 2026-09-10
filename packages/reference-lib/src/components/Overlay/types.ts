@@ -1,7 +1,7 @@
 import type * as React from 'react'
 import type { PortalProps } from '../Portal'
 import type { FocusTarget } from '../FocusLock'
-import type { Placement, Strategy, VirtualAnchor } from './geometry/floating'
+import type { Placement, Strategy, VirtualAnchor, Side, Alignment } from './geometry/floating'
 
 export type OverlayPlacement = Placement
 export type OverlayEdge = 'top' | 'bottom' | 'left' | 'right'
@@ -65,10 +65,27 @@ export interface OverlayPortalProps {
   container?: PortalProps['container']
 }
 
+export interface OverlayPositionChangeData {
+  placement: OverlayPlacement
+  side: Side
+  align: string
+  nudgedLeft: number
+  nudgedTop: number
+}
+
 export interface OverlayContentGeometry {
   placement?: OverlayPlacement
   offset?: number
   collisionPadding?: number
+  boundary?: HTMLElement | VirtualAnchor | React.RefObject<HTMLElement | null> | 'viewport' | null
+  fallbackPlacements?: OverlayPlacement[]
+  /**
+   * Opt-in sleeping rAF poll for transform-driven reference motion.
+   * Default living position is event-driven (scroll, resize, ResizeObserver,
+   * IntersectionObserver). Do not use for ordinary anchored overlays.
+   */
+  animationFrame?: boolean
+  onPositionChange?: (data: OverlayPositionChangeData) => void
   strategy?: OverlayStrategy
   flip?: boolean
   shift?: boolean

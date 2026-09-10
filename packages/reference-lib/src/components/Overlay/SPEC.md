@@ -328,7 +328,8 @@ Do these while already in Overlay source. Do not open a new epic for them.
   `--reference-overlay-available-height` / `-width` plus anchor size and
   transform origin. Assert finite values that match the engine's size
   middleware after shift, with no ResizeObserver loop. This ports
-  `size.test.ts` and Floating UI #1740.
+  `size.test.ts` and Floating UI #1740. The engine unobserves floating for
+  one frame when the reference resizes (`geometry/auto-update.test.ts`).
 - [x] `OV-SCRL-01` `[reference]` `[browser]` —
   **Overlay should keep a living anchored position when `closeOnScroll`
   is omitted.**
@@ -545,6 +546,10 @@ These items were unparked to harden the Overlay kernel against real-world race c
   Content coordinates follow, and listeners drop after Presence exit. This
   ports `autoUpdate.ts` functional tests. (`OV-SCRL-01` is the Overlay policy
   half; this is the full Floating UI autoUpdate matrix.)
+  Default autoUpdate is event-driven (no rAF loop). `animationFrame` is an
+  opt-in sleeping poll: no ResizeObserver on the reference, no window
+  `pointermove`, sleep after idle frames, cancel on teardown. Proven in
+  `geometry/auto-update.test.ts` and `src/core/measure/measure.test.ts`.
 
 ### Focus Robustness
 

@@ -105,13 +105,33 @@ export function extractFixtureNames(filePath) {
   return []
 }
 
+const STORY_ROOTS = [
+  path.join(repoRoot, 'packages/reference-lib/src/components'),
+  path.join(repoRoot, 'packages/reference-lib/src/core'),
+]
+const STORY_EXTENSIONS = ['.book.tsx', '.book.ts', '.fixture.tsx', '.fixture.ts']
+
+function collectStoryFiles(dir, acc = [], depth = 0) {
+  if (!fs.existsSync(dir) || depth > 4) return acc
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      collectStoryFiles(fullPath, acc, depth + 1)
+      continue
+    }
+    if (STORY_EXTENSIONS.some(ext => entry.name.endsWith(ext))) acc.push(fullPath)
+  }
+  return acc
+}
+
+function storyNameFromPath(filePath) {
+  const fileName = path.basename(filePath)
+  const match = fileName.match(/^(.+?)\.(book|fixture)\.[jt]sx?$/)
+  return match ? match[1] : null
+}
+
 // 4. Resolve book/fixture file path on disk
 export function resolveFixtureFilePath(componentInput) {
-  const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
-  if (!fs.existsSync(componentsDir)) {
-    return null
-  }
-
   if (componentInput.includes('/') || componentInput.endsWith('.tsx') || componentInput.endsWith('.ts')) {
     const direct = path.resolve(componentInput)
     if (fs.existsSync(direct)) return direct
@@ -120,32 +140,21 @@ export function resolveFixtureFilePath(componentInput) {
     return null
   }
 
-  const extensions = ['.book.tsx', '.book.ts', '.fixture.tsx', '.fixture.ts']
+  const query = componentInput.toLowerCase()
 
-  // Exact matches
-  for (const ext of extensions) {
-    const candidate1 = path.join(componentsDir, componentInput, `${componentInput}${ext}`)
-    if (fs.existsSync(candidate1)) return candidate1
-    const candidate2 = path.join(componentsDir, `${componentInput}${ext}`)
-    if (fs.existsSync(candidate2)) return candidate2
+  for (const root of STORY_ROOTS) {
+    if (!fs.existsSync(root)) continue
+    for (const ext of STORY_EXTENSIONS) {
+      const nested = path.join(root, componentInput, `${componentInput}${ext}`)
+      if (fs.existsSync(nested)) return nested
+      const flat = path.join(root, `${componentInput}${ext}`)
+      if (fs.existsSync(flat)) return flat
+    }
   }
 
-  // Case-insensitive search
-  const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
-  for (const entry of entries) {
-    if (entry.name.toLowerCase() === componentInput.toLowerCase()) {
-      if (entry.isDirectory()) {
-        for (const ext of extensions) {
-          const sub = path.join(componentsDir, entry.name, `${entry.name}${ext}`)
-          if (fs.existsSync(sub)) return sub
-        }
-      }
-    }
-    for (const ext of extensions) {
-      if (entry.name.toLowerCase() === `${componentInput.toLowerCase()}${ext}`) {
-        return path.join(componentsDir, entry.name)
-      }
-    }
+  for (const filePath of STORY_ROOTS.flatMap(root => collectStoryFiles(root))) {
+    const name = storyNameFromPath(filePath)
+    if (name && name.toLowerCase() === query) return filePath
   }
 
   return null
@@ -153,34 +162,14 @@ export function resolveFixtureFilePath(componentInput) {
 
 // 5. Discover all components and books/fixtures in the repository
 export function getAllComponentFixtures() {
-  const componentsDir = path.join(repoRoot, 'packages/reference-lib/src/components')
-  if (!fs.existsSync(componentsDir)) return {}
-
   const result = {}
-  const entries = fs.readdirSync(componentsDir, { withFileTypes: true })
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      for (const ext of ['.book.tsx', '.book.ts', '.fixture.tsx', '.fixture.ts']) {
-        const subFixture = path.join(componentsDir, entry.name, `${entry.name}${ext}`)
-        if (fs.existsSync(subFixture)) {
-          result[entry.name] = {
-            filePath: subFixture,
-            fixtures: extractFixtureNames(subFixture),
-          }
-          break
-        }
-      }
-    } else {
-      const match = entry.name.match(/^(.+?)\.(book|fixture)\.[jt]sx?$/)
-      if (match) {
-        const compName = match[1]
-        const fullPath = path.join(componentsDir, entry.name)
-        if (!result[compName] || entry.name.includes('.book.')) {
-          result[compName] = {
-            filePath: fullPath,
-            fixtures: extractFixtureNames(fullPath),
-          }
-        }
+  for (const filePath of STORY_ROOTS.flatMap(root => collectStoryFiles(root))) {
+    const name = storyNameFromPath(filePath)
+    if (!name) continue
+    if (!result[name] || filePath.includes('.book.')) {
+      result[name] = {
+        filePath,
+        fixtures: extractFixtureNames(filePath),
       }
     }
   }

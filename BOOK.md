@@ -14,7 +14,7 @@ Book is the playground. It is not the design system.
 
 Four commitments:
 
-1. **Stories stay in the library.** `packages/reference-lib/src/components/**/*.book.tsx` is the source of truth. Book discovers them. Components do not move into Book.
+1. **Stories stay in the library.** `packages/reference-lib/src/components/**/*.book.tsx` is the source of truth for components. Core hooks (for example `src/core/measure/*.book.tsx`) are discovered the same way. Book discovers them. Components do not move into Book.
 2. **The Book runtime becomes its own app** at `packages/reference-lib/book/`. Shell, canvas, decorator, discovery, Vite config, and perf instrumentation live there. They are not published with `@reference-ui/lib`.
 3. **One canvas. No iframe mode.** One document, one React tree, one Vite module graph, one Fast Refresh channel. Viewport presets are a sized box in that document, not a nested browsing context.
 4. **Reload must feel fast, stay current, and never lie.** A save that updates the open story in place is success. A full remount, a lingering error overlay, or a wiped overlay stack is failure — even if the component under test is correct. If we cannot **measure** HMR, transform, sync, and story-load time, we cannot keep this bar.

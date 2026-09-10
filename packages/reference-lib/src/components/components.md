@@ -70,6 +70,8 @@ The current top-level runtime candidate is **24 components**:
   `Splitter`, `Tooltip`
 - **Visual chrome:** `Field`
 - **Authoring machinery:** `Slot`, `Presence`, `RovingFocus`, `FocusLock`
+- **Layout hook:** `useMeasure` — settled border-box via ref, not a host
+  component and not a 25th inventory title
 
 Current evidence says this set is complete for the intended layer; that is a
 review conclusion, not an axiom. It does not mean every named UI pattern
@@ -1452,7 +1454,7 @@ interface FieldProps
 
 Authoring primitives are the underlying composition and lifecycle machinery used to construct design-system components from Reference UI primitives without adding wrapper DOM nodes.
 
-Proposed APIs: `Slot/Slot.md`, `Presence/Presence.md`, `RovingFocus/RovingFocus.md`, `FocusLock/FocusLock.md`.
+Proposed APIs: `Slot/Slot.md`, `Presence/Presence.md`, `RovingFocus/RovingFocus.md`, `FocusLock/FocusLock.md`, [`../core/measure/Measure.md`](../core/measure/Measure.md).
 
 > [!NOTE]
 > `Slot` is the named-region registry for declarative component APIs.
@@ -1473,6 +1475,11 @@ Proposed APIs: `Slot/Slot.md`, `Presence/Presence.md`, `RovingFocus/RovingFocus.
   The composite-widget keyboard kernel: roving `tabindex`, arrow movement, Home/End, disabled skipping, optional looping, optional typeahead, and optional two-dimensional movement. Listbox, Menu, Tabs, and Tree use it internally. Accordion deliberately does not because all accordion headers remain native Tab stops. Toolbar, ToggleGroup, tag lists, and picker grids are documented patterns on top of it — they are not reasons to rebuild the same machinery.
 - **`FocusLock`**  
   Contains Tab and programmatic focus inside a subtree, restores focus on deactivation, and allows portalled shards (nested popovers) to remain inside the lock. Overlay uses it internally. Distinct from `RovingFocus`.
+- **`useMeasure`**  
+  Settled border-box of an element you already own. Attach a ref; there is no
+  `<Measure>` wrapper. ResizeObserver + a 20ms quiet window; `paused` during
+  drag/animation. Not Overlay living position and not a rAF poll. See
+  [Measure.md](../core/measure/Measure.md).
 
 `visuallyHidden` is a style prop on typed HTML primitives (clip/absolute/1px), not a component. Every pattern that needs an accessible name without visible text uses it instead of inventing `srOnly`.
 

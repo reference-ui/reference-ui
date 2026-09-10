@@ -879,4 +879,609 @@ export default {
       </Div>
     )
   },
+
+  ReactTinyPopoverDemo: () => {
+    const [open, setOpen] = React.useState(true)
+    const [position, setPosition] = React.useState<'top' | 'right' | 'bottom' | 'left'>('right')
+    const [align, setAlign] = React.useState<'start' | 'center' | 'end'>('center')
+    const [padding, setPadding] = React.useState(10)
+    const [minWidth, setMinWidth] = React.useState(100)
+    const [minHeight, setMinHeight] = React.useState(100)
+    const [repositioning, setRepositioning] = React.useState<'Parent' | 'Window'>('Parent')
+    const [boundaryInset, setBoundaryInset] = React.useState(10)
+    const [transform, setTransform] = React.useState<'Off' | 'On'>('Off')
+    const [transformMode, setTransformMode] = React.useState<'Absolute' | 'Relative'>('Absolute')
+    const [transformLeft, setTransformLeft] = React.useState(0)
+    const [transformTop, setTransformTop] = React.useState(0)
+    const [containerClass, setContainerClass] = React.useState('react-tiny-popover-container')
+
+    // Draggable boundary position
+    const [boundaryPos, setBoundaryPos] = React.useState({ x: 130, y: 15 })
+    const isDraggingBoundaryRef = React.useRef(false)
+    const [boundaryEl, setBoundaryEl] = React.useState<HTMLDivElement | null>(null)
+
+    // Draggable trigger position
+    const [triggerPos, setTriggerPos] = React.useState({ x: 25, y: 80 })
+    const [isDraggingTrigger, setIsDraggingTrigger] = React.useState(false)
+    const [triggerEl, setTriggerEl] = React.useState<HTMLDivElement | null>(null)
+    const [diagData, setDiagData] = React.useState<{
+      side: string
+      align: string
+      nudgedLeft: number
+      nudgedTop: number
+    }>({
+      side: position,
+      align: align,
+      nudgedLeft: 0,
+      nudgedTop: 0,
+    })
+
+    const cyclePosition = () => {
+      const order: Array<'top' | 'right' | 'bottom' | 'left'> = ['top', 'right', 'bottom', 'left']
+      const idx = order.indexOf(position)
+      setPosition(order[(idx + 1) % order.length])
+    }
+
+    const cycleAlign = () => {
+      const order: Array<'center' | 'start' | 'end'> = ['center', 'start', 'end']
+      const idx = order.indexOf(align)
+      setAlign(order[(idx + 1) % order.length])
+    }
+
+    const cycleRepositioning = () => {
+      setRepositioning(prev => (prev === 'Parent' ? 'Window' : 'Parent'))
+    }
+
+    const onTriggerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDraggingTrigger(true)
+
+      const startX = e.clientX
+      const startY = e.clientY
+      const initialPos = { ...triggerPos }
+      let hasMoved = false
+
+      const onPointerMove = (ev: PointerEvent) => {
+        const dx = ev.clientX - startX
+        const dy = ev.clientY - startY
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+          hasMoved = true
+        }
+        setTriggerPos({
+          x: initialPos.x + dx,
+          y: initialPos.y + dy,
+        })
+      }
+
+      const onPointerUp = () => {
+        setIsDraggingTrigger(false)
+        window.removeEventListener('pointermove', onPointerMove)
+        window.removeEventListener('pointerup', onPointerUp)
+        window.removeEventListener('pointercancel', onPointerUp)
+        if (!hasMoved) {
+          setOpen(prev => !prev)
+        }
+      }
+
+      window.addEventListener('pointermove', onPointerMove)
+      window.addEventListener('pointerup', onPointerUp)
+      window.addEventListener('pointercancel', onPointerUp)
+    }
+
+    const onBoundaryPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return
+      if (triggerEl?.contains(e.target as Node)) return
+      e.preventDefault()
+
+      const startX = e.clientX
+      const startY = e.clientY
+      const initialPos = { ...boundaryPos }
+
+      const onPointerMove = (ev: PointerEvent) => {
+        const dx = ev.clientX - startX
+        const dy = ev.clientY - startY
+        setBoundaryPos({
+          x: initialPos.x + dx,
+          y: initialPos.y + dy,
+        })
+      }
+
+      const onPointerUp = () => {
+        window.removeEventListener('pointermove', onPointerMove)
+        window.removeEventListener('pointerup', onPointerUp)
+        window.removeEventListener('pointercancel', onPointerUp)
+      }
+
+      window.addEventListener('pointermove', onPointerMove)
+      window.addEventListener('pointerup', onPointerUp)
+      window.addEventListener('pointercancel', onPointerUp)
+    }
+
+    const placementStr =
+      align === 'center' ? position : (`${position}-${align}` as import('./types').OverlayPlacement)
+
+    return (
+      <Div
+        p="4r"
+        bg="#000000"
+        color="#f8fafc"
+        fontFamily="sans-serif"
+        borderRadius="lg"
+        minH="150r"
+        data-testid="react-tiny-popover-demo-root"
+      >
+        {/* Top Control Bar matching react-tiny-popover UI */}
+        <Div display="flex" flexWrap="wrap" gap="2r" alignItems="flex-start" mb="4r">
+          {/* Group 1: General Popover Params */}
+          <Div
+            display="flex"
+            gap="2r"
+            alignItems="flex-end"
+            p="2r"
+            borderRadius="md"
+            border="1px solid #334155"
+            bg="#0f172a"
+          >
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Open
+              </Span>
+              <button
+                type="button"
+                onClick={() => setOpen(prev => !prev)}
+                style={{
+                  background: open ? '#38bdf8' : '#334155',
+                  color: open ? '#0f172a' : '#94a3b8',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 12px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                Open
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                position
+              </Span>
+              <button
+                type="button"
+                onClick={cyclePosition}
+                style={{
+                  background: '#38bdf8',
+                  color: '#0f172a',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                {position}
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Align
+              </Span>
+              <button
+                type="button"
+                onClick={cycleAlign}
+                style={{
+                  background: '#38bdf8',
+                  color: '#0f172a',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                {align}
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Padding
+              </Span>
+              <input
+                type="number"
+                value={padding}
+                onChange={e => setPadding(Number(e.target.value))}
+                style={{
+                  width: '50px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Min Width
+              </Span>
+              <input
+                type="number"
+                value={minWidth}
+                onChange={e => setMinWidth(Number(e.target.value))}
+                style={{
+                  width: '56px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Min Height
+              </Span>
+              <input
+                type="number"
+                value={minHeight}
+                onChange={e => setMinHeight(Number(e.target.value))}
+                style={{
+                  width: '56px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+          </Div>
+
+          {/* Group 2: Repositioning and Boundaries */}
+          <Div
+            display="flex"
+            gap="2r"
+            alignItems="flex-end"
+            p="2r"
+            borderRadius="md"
+            border="1px solid #334155"
+            bg="#0f172a"
+          >
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Repositioning
+              </Span>
+              <button
+                type="button"
+                onClick={cycleRepositioning}
+                style={{
+                  background: '#38bdf8',
+                  color: '#0f172a',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                {repositioning}
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Boundary Inset
+              </Span>
+              <input
+                type="number"
+                value={boundaryInset}
+                onChange={e => setBoundaryInset(Number(e.target.value))}
+                style={{
+                  width: '50px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+          </Div>
+
+          {/* Group 3: Transforms */}
+          <Div
+            display="flex"
+            gap="2r"
+            alignItems="flex-end"
+            p="2r"
+            borderRadius="md"
+            border="1px solid #334155"
+            bg="#0f172a"
+          >
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Transform
+              </Span>
+              <button
+                type="button"
+                onClick={() => setTransform(prev => (prev === 'Off' ? 'On' : 'Off'))}
+                style={{
+                  background: transform === 'On' ? '#38bdf8' : '#334155',
+                  color: transform === 'On' ? '#0f172a' : '#94a3b8',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                {transform}
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Transform Mode
+              </Span>
+              <button
+                type="button"
+                onClick={() =>
+                  setTransformMode(prev => (prev === 'Absolute' ? 'Relative' : 'Absolute'))
+                }
+                style={{
+                  background: '#1e293b',
+                  color: '#60a5fa',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontWeight: 500,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  height: '28px',
+                }}
+              >
+                {transformMode}
+              </button>
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Transform Left
+              </Span>
+              <input
+                type="number"
+                value={transformLeft}
+                onChange={e => setTransformLeft(Number(e.target.value))}
+                style={{
+                  width: '46px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+
+            <Div display="flex" flexDirection="column" gap="1r" alignItems="center">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Transform Top
+              </Span>
+              <input
+                type="number"
+                value={transformTop}
+                onChange={e => setTransformTop(Number(e.target.value))}
+                style={{
+                  width: '46px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                }}
+              />
+            </Div>
+          </Div>
+
+          {/* Group 4: Container Class Name */}
+          <Div
+            display="flex"
+            gap="2r"
+            alignItems="flex-end"
+            p="2r"
+            borderRadius="md"
+            border="1px solid #334155"
+            bg="#0f172a"
+          >
+            <Div display="flex" flexDirection="column" gap="1r">
+              <Span fontSize="2.2r" color="#94a3b8">
+                Container Class Name
+              </Span>
+              <input
+                type="text"
+                value={containerClass}
+                onChange={e => setContainerClass(e.target.value)}
+                style={{
+                  width: '180px',
+                  height: '28px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  border: '1px solid #475569',
+                  borderRadius: '4px',
+                  padding: '0 8px',
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                }}
+              />
+            </Div>
+          </Div>
+        </Div>
+
+        {/* The Interactive Canvas Area */}
+        <Div
+          position="relative"
+          width="100%"
+          minH="500px"
+          height="520px"
+          bg="#000000"
+          border="1px solid #1e293b"
+          borderRadius="lg"
+          overflow="hidden"
+          data-testid="interactive-canvas"
+        >
+          {/* Draggable Bounding Container ("drag me!") */}
+          <Div
+            ref={setBoundaryEl}
+            position="absolute"
+            width="780px"
+            height="380px"
+            border="2px solid #38bdf8"
+            borderRadius="md"
+            bg="rgba(15, 23, 42, 0.25)"
+            boxShadow="inset 0 0 20px rgba(56, 189, 248, 0.05)"
+            cursor="move"
+            onPointerDown={onBoundaryPointerDown}
+            data-testid="boundary-box"
+            style={{
+              position: 'absolute',
+              left: `${boundaryPos.x}px`,
+              top: `${boundaryPos.y}px`,
+              touchAction: 'none',
+            }}
+          >
+            <Span
+              position="absolute"
+              bottom="10px"
+              left="12px"
+              fontSize="2.8r"
+              color="#64748b"
+              fontFamily="monospace"
+              userSelect="none"
+              pointerEvents="none"
+            >
+              drag me!
+            </Span>
+          </Div>
+
+          {/* Draggable Target Element ("click or drag me!") */}
+          <Div
+            ref={setTriggerEl}
+            position="absolute"
+            width="72px"
+            height="72px"
+            bg="#1e293b"
+            border="2px solid #64748b"
+            borderRadius="lg"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            fontSize="2.5r"
+            color="#cbd5e1"
+            cursor={isDraggingTrigger ? 'grabbing' : 'grab'}
+            userSelect="none"
+            boxShadow="0 4px 12px rgba(0,0,0,0.5)"
+            zIndex={20}
+            onPointerDown={onTriggerPointerDown}
+            data-testid="draggable-trigger"
+            style={{
+              position: 'absolute',
+              left: `${triggerPos.x}px`,
+              top: `${triggerPos.y}px`,
+              touchAction: 'none',
+            }}
+          >
+            click or drag me!
+          </Div>
+
+          {/* The Overlay Floating Element */}
+          <Overlay open={open} onOpenChange={setOpen} isolation={false} anchor={triggerEl}>
+            <Overlay.Content
+              className={containerClass}
+              placement={placementStr}
+              offset={padding}
+              collisionPadding={boundaryInset}
+              boundary={repositioning === 'Parent' ? boundaryEl : 'viewport'}
+              animationFrame={true}
+              onPositionChange={setDiagData}
+              flip={true}
+              shift={true}
+              minW={`${minWidth}px`}
+              minH={`${minHeight}px`}
+              bg="#1e3a5f"
+              border="1px solid #38bdf8"
+              borderRadius="md"
+              p="3r"
+              boxShadow="0 10px 30px rgba(0,0,0,0.6)"
+              data-testid="popover-floating-card"
+              style={
+                transform === 'On'
+                  ? {
+                      transform: `translate(${transformLeft}px, ${transformTop}px)`,
+                    }
+                  : undefined
+              }
+            >
+              <Div
+                display="flex"
+                flexDirection="column"
+                gap="1r"
+                fontFamily="monospace"
+                fontSize="2.8r"
+                color="#e0f2fe"
+                lineHeight="1.5"
+                userSelect="none"
+              >
+                <Div>
+                  position: <Span fontWeight="600">{diagData.side}</Span>
+                </Div>
+                <Div>
+                  align: <Span fontWeight="600">{diagData.align}</Span>
+                </Div>
+                <Div>
+                  padding: <Span fontWeight="600">{padding}</Span>
+                </Div>
+                <Div>
+                  nudgedLeft: <Span fontWeight="600">{diagData.nudgedLeft.toFixed(2)}</Span>
+                </Div>
+                <Div>
+                  nudgedTop: <Span fontWeight="600">{diagData.nudgedTop.toFixed(2)}</Span>
+                </Div>
+              </Div>
+            </Overlay.Content>
+          </Overlay>
+        </Div>
+      </Div>
+    )
+  },
 }

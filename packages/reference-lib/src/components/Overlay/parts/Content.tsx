@@ -18,7 +18,6 @@ import { usePointerLock } from '../isolation/pointer-events'
 import { useOverlayPosition } from '../geometry/use-position'
 import type { OverlayContentGeometry } from '../types'
 import { nextAfter, tabbables } from './tab-cycle'
-
 export type OverlayContentProps = PrimitiveProps<'div'> & OverlayContentGeometry
 
 export function OverlayContent({
@@ -29,6 +28,10 @@ export function OverlayContent({
   strategy = 'absolute',
   flip = true,
   shift = true,
+  boundary,
+  fallbackPlacements,
+  animationFrame,
+  onPositionChange,
   initialFocus,
   restoreFocus,
   style,
@@ -92,6 +95,10 @@ export function OverlayContent({
     placement,
     offset,
     collisionPadding,
+    boundary,
+    fallbackPlacements,
+    animationFrame,
+    onPositionChange,
     strategy,
     flip,
     shift,
