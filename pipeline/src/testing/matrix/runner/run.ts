@@ -201,7 +201,11 @@ export async function runMatrixBootstrapInDagger(
 
   if (failed) {
     process.exitCode = 1
+    console.error('[pipeline] Matrix test run FAILED')
+    return
   }
+
+  console.log(`[pipeline] All ${matrixPackageContexts.length} matrix package tests PASSED`)
 }
 
 export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<void> {
@@ -214,23 +218,32 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
+  // Must return from this callback so dagger.connection() can run
+  // withEngineSession's finally (engineConn.Close()). process.exit() here
+  // skips that and leaves the session child / GraphQL client alive, so
+  // pnpm exec tsx never emits exit to the agent runner.
   const runBootstrap = async () => {
     try {
       await runMatrixBootstrapInDagger(options, plan.jobs)
-      process.exit(process.exitCode ?? 0)
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error))
-      process.exit(1)
+      process.exitCode = 1
     }
   }
 
-  if (options.trace) {
-    console.log('Dagger execution trace enabled (--trace).')
-    await dagger.connection(runBootstrap, { LogOutput: process.stdout })
-    return
+  try {
+    if (options.trace) {
+      console.log('Dagger execution trace enabled (--trace).')
+      await dagger.connection(runBootstrap, { LogOutput: process.stdout })
+    } else {
+      await dagger.connection(runBootstrap)
+    }
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exit(1)
   }
 
-  await dagger.connection(runBootstrap)
+  process.exit(process.exitCode ?? 0)
 }
 
 export type { MatrixRunOptions } from './types.js'

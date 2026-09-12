@@ -42,7 +42,6 @@ const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
 /** Drop act()/Dagger noise after this so the agent stdout pipe cannot stay open. */
 const MAX_STDERR_BYTES = 256 * 1024
 const CHILD_DRAIN_MS = 300
-const SUITE_HANG_GRACE_MS = 1500
 const activeChildPids = new Set()
 
 function numericExitCode(code) {
@@ -118,19 +117,6 @@ function finishAgent({ ok, message, code, killPort = false }) {
   }
   if (!ok) teardownActiveChildren('SIGKILL')
   process.exit(ok ? 0 : numericExitCode(code))
-}
-
-function stripAnsi(str) {
-  return String(str).replace(/\u001B\[[0-9;]*[mK]/g, '')
-}
-
-function isSuiteCompleteLine(line) {
-  const s = stripAnsi(line)
-  // Only the pipeline's final banner. Intermediate vitest "Test Files  1 passed"
-  // lines must not tear down Dagger mid-run.
-  if (s.includes('[pipeline] Matrix test run FAILED')) return { complete: true, code: 1 }
-  if (/\[pipeline\] All \d+ matrix package tests PASSED/.test(s)) return { complete: true, code: 0 }
-  return null
 }
 
 function looksLikePipelineTest(cmd, args = []) {
@@ -456,9 +442,7 @@ function spawnWithCleanStream(cmd, args, options = {}) {
     let settled = false
     let stderrBytes = 0
     let stderrTruncated = false
-    let hangKillTimer = null
     let drainTimer = null
-    let suiteResultCode = null
 
     const killTree = (sig = 'SIGTERM') => {
       if (child.pid) killProcessGroup(child.pid, sig)
@@ -469,10 +453,6 @@ function spawnWithCleanStream(cmd, args, options = {}) {
       if (settled) return
       settled = true
       stopParentDeathWatch(parentDeathWatch)
-      if (hangKillTimer) {
-        clearTimeout(hangKillTimer)
-        hangKillTimer = null
-      }
       if (drainTimer) {
         clearTimeout(drainTimer)
         drainTimer = null
@@ -505,16 +485,6 @@ function spawnWithCleanStream(cmd, args, options = {}) {
     process.on('SIGTERM', onSigTerm)
     process.on('SIGHUP', onSigTerm)
 
-    const armHangKill = () => {
-      if (hangKillTimer || settled) return
-      hangKillTimer = setTimeout(() => {
-        if (settled) return
-        console.error('[agent] Suite reported a result but the child did not exit. Tearing down the process group.')
-        killTree('SIGKILL')
-        settle(typeof suiteResultCode === 'number' ? suiteResultCode : 1, signalReceived)
-      }, SUITE_HANG_GRACE_MS)
-    }
-
     const cleanLine = (chunk, isStderr = false) => {
       if (settled) return
       if (isStderr) {
@@ -542,11 +512,6 @@ function spawnWithCleanStream(cmd, args, options = {}) {
             if (options.onLine) {
               try { options.onLine(sublines[j], isStderr) } catch {}
             }
-            const complete = isSuiteCompleteLine(sublines[j])
-            if (complete) {
-              suiteResultCode = complete.code
-              armHangKill()
-            }
           }
         } else if (line.trim().length > 0) {
           if (!process.stdout.isTTY) {
@@ -556,11 +521,6 @@ function spawnWithCleanStream(cmd, args, options = {}) {
           }
           if (options.onLine) {
             try { options.onLine(line.trim(), isStderr) } catch {}
-          }
-          const complete = isSuiteCompleteLine(line)
-          if (complete) {
-            suiteResultCode = complete.code
-            armHangKill()
           }
         }
       }
