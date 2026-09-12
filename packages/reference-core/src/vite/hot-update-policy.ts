@@ -10,12 +10,16 @@
  */
 
 import { relative } from 'node:path'
-import type { HmrContext } from 'vite'
 import { isManagedOutputFile, toNormalizedPath } from './outputs'
 import type { ReferenceViteProjectPaths } from './types'
 
+export interface ReferenceHotUpdateContext {
+  file: string
+  modules?: { length: number }
+}
+
 export function shouldDeferHotUpdate(
-  ctx: HmrContext,
+  ctx: ReferenceHotUpdateContext,
   projectPaths: ReferenceViteProjectPaths
 ): boolean {
   if (isManagedOutputFile(ctx.file, projectPaths.managedOutputRoots)) return true
@@ -35,7 +39,7 @@ export function isTokenOrThemeOrSystemFile(filePath: string): boolean {
 }
 
 function isProjectSourceHotUpdate(
-  ctx: HmrContext,
+  ctx: ReferenceHotUpdateContext,
   projectPaths: ReferenceViteProjectPaths
 ): boolean {
   const normalizedFile = toNormalizedPath(ctx.file)
@@ -51,7 +55,7 @@ function isProjectSourceHotUpdate(
 
   // Defer token, theme, and system sources that invalidate generated CSS
   if (isTokenOrThemeOrSystemFile(normalizedFile)) {
-    return ctx.modules.length > 0
+    return (ctx.modules?.length ?? 0) > 0
   }
 
   return false

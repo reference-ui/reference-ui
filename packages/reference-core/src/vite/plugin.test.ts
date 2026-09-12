@@ -19,7 +19,7 @@ type TestableReferenceVitePlugin = {
   configResolved?: (config: { root: string }) => void
   configureServer?: (devServer: unknown) => (() => void) | void
   closeBundle?: () => void
-  handleHotUpdate?: (ctx: { file: string }) => unknown
+  handleHotUpdate?: (ctx: { file: string; modules?: { length: number } }) => unknown
 }
 
 function testableReferenceVite(
@@ -202,6 +202,37 @@ describe('referenceUiVitePlugin', () => {
 
     teardown?.()
     expect(dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('warns once and stays up when the Vite server shape is unexpected', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const cwd = mkdtempSync(join(tmpdir(), 'ref-vite-plugin-'))
+    const plugin = testableReferenceVite()
+    plugin.configResolved?.({ root: cwd })
+
+    expect(() => plugin.configureServer?.({})).not.toThrow()
+    plugin.configureServer?.({})
+
+    expect(warn.mock.calls.some((args) => args.some((arg) => typeof arg === 'string' && arg.includes('Generated-file HMR is disabled')))).toBe(true)
+    expect(
+      warn.mock.calls.filter((args) => args.some((arg) => typeof arg === 'string' && arg.includes('Generated-file HMR is disabled'))),
+    ).toHaveLength(1)
+    expect(
+      plugin.handleHotUpdate?.({
+        file: `${cwd}/${DEFAULT_OUT_DIR}/react/react.mjs`,
+      }),
+    ).toEqual([])
+
+    rmSync(cwd, { force: true, recursive: true })
+  })
+
+  it('leaves HMR to Vite when handleHotUpdate receives a malformed context', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const plugin = testableReferenceVite()
+
+    expect(() => plugin.handleHotUpdate?.(undefined as never)).not.toThrow()
+    expect(plugin.handleHotUpdate?.(undefined as never)).toBeUndefined()
+    expect(warn).toHaveBeenCalled()
   })
 })
 

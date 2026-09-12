@@ -12,6 +12,19 @@ export type ReferenceViteInternals = NonNullable<ReferenceBundlerOptions['intern
 
 export type ReferenceViteOptions = ReferenceBundlerOptions
 
+/**
+ * Structural Vite plugin. Not typed as `import('vite').Plugin` so it stays
+ * assignable across pnpm-isolated Vite copies and the plugin's 5/6/7 peer range.
+ */
+export interface ReferenceVitePlugin {
+  name: string
+  config: (userConfig: ReferenceViteUserConfig) => { optimizeDeps: { exclude: string[] } }
+  configResolved: (config: { root: string }) => void
+  configureServer: (devServer: unknown) => void
+  closeBundle: () => void
+  handleHotUpdate: (ctx: { file: string; modules?: { length: number } }) => void | []
+}
+
 /** Subset of Vite user config read by {@link withManagedPackageExcludes}. */
 export interface ReferenceViteUserConfig {
   optimizeDeps?: { exclude?: string[] }

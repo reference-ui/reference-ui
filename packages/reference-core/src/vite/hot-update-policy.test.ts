@@ -1,4 +1,3 @@
-import type { HmrContext } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { shouldDeferHotUpdate } from './hot-update-policy'
 import type { ReferenceViteProjectPaths } from './types'
@@ -100,9 +99,9 @@ function createProjectPaths(): ReferenceViteProjectPaths {
   }
 }
 
-function createHmrContext(file: string, moduleCount = 0): HmrContext {
+function createHmrContext(file: string, moduleCount = 0): { file: string; modules: { url: string }[] } {
   return {
     file,
     modules: Array.from({ length: moduleCount }, () => ({ url: file })),
-  } as never as HmrContext
+  }
 }
