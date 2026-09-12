@@ -50,6 +50,7 @@ const managedDependencies = {
 
 const managedDevDependencies = {
   '@types/node': '^25.1.0',
+  'happy-dom': '^18.0.1',
   typescript: '~7.0.2',
   vitest: '^4.1.0',
 } as const

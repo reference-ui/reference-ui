@@ -10,7 +10,7 @@ uplinks:
     url: https://registry.npmjs.org/
     timeout: 120s
     maxage: 30d
-    cache: true
+    cache: false
     fail_timeout: 1m
     max_fails: 3
 

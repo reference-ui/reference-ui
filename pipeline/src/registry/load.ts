@@ -112,8 +112,10 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
 
   for (const pkg of manifest.packages) {
     if (canSkipRegistryPublishFromState(pkg, loadedState[pkg.name], registryRebuilt)) {
-      logSkip(`Skipping ${pkg.name}@${pkg.version}; already present in ${registryUrl}`)
-      continue
+      if (isPublishedToRegistry(pkg.name, pkg.version, registryUrl)) {
+        logSkip(`Skipping ${pkg.name}@${pkg.version}; already present in ${registryUrl}`)
+        continue
+      }
     }
 
     if (!registryRebuilt && isPublishedToRegistry(pkg.name, pkg.version, registryUrl)) {

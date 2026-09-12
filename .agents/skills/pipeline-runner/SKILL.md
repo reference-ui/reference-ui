@@ -110,11 +110,11 @@ If you prefer to run heavy test workloads 100% inside your external terminal win
 
 ---
 
-## 4. Multi-Agent Cross-Process FIFO Execution Queue
+## 4. Multi-Agent Cross-Process Queue Execution Queue
 
-When multiple agents or processes request matrix tests or component verifications simultaneously, `pipeline-runner` serializes all executions through a strict **First-In, First-Out (FIFO)** queue:
+When multiple agents or processes request matrix tests or component verifications simultaneously, `pipeline-runner` serializes all executions through a strict **First-In, First-Out (Queue)** queue:
 - **Zero Parallel Crashes**: Prevents concurrent Docker / Dagger engine or port collisions by running test suites in series.
 - **Cross-Process File Lock**: Uses an atomic file-based ticket lock in `/tmp/reference-ui-agent-queue` across all OS subshells and agent sessions.
-- **Daemon Queue Support**: The Terminal Bridge daemon also maintains an in-memory FIFO queue with socket disconnect detection and cancellation cleanup.
+- **Daemon Queue Support**: The Terminal Bridge daemon also maintains an in-memory Queue queue with socket disconnect detection and cancellation cleanup.
 - **Automatic Stale Lock Recovery**: If a running or waiting process is killed (`kill -9`, cancel), subsequent processes automatically prune the stale lock and proceed without freezing.
 - **Live Status Reporting**: Waiting agents and developers receive regular updates (`[agent-queue] Another test is currently running (PID ...). Waiting in queue (position 1)...`).

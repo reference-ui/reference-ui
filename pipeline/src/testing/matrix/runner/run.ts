@@ -214,7 +214,15 @@ export async function runMatrixTests(options: MatrixRunOptions = {}): Promise<vo
     minimumDockerMemoryBytes: minimumMatrixDockerMemoryBytes,
   })
 
-  const runBootstrap = () => runMatrixBootstrapInDagger(options, plan.jobs)
+  const runBootstrap = async () => {
+    try {
+      await runMatrixBootstrapInDagger(options, plan.jobs)
+      process.exit(process.exitCode ?? 0)
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error))
+      process.exit(1)
+    }
+  }
 
   if (options.trace) {
     console.log('Dagger execution trace enabled (--trace).')

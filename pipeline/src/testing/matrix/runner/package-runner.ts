@@ -12,6 +12,7 @@ import {
   CONSUMER_DIR_IN_CONTAINER,
   REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
+import { playwrightSummaryReporterCode } from './playwright-reporter.js'
 import { formatDuration } from '../../../lib/log/index.js'
 import {
   createHydrateMatrixInstallCacheFromSharedCommand,
@@ -65,7 +66,7 @@ import type {
 
 const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
-const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e'] as const
+const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e', '--reporter=/tmp/r.js'] as const
 const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
 
 export async function runMatrixPackageInDagger(
@@ -116,7 +117,7 @@ export async function runMatrixPackageInDagger(
       .withServiceBinding('registry', executionContext.registry)
     : executionContext.consumerWorkspace
 
-  const consumerBase = packageConsumerWorkspace
+  let consumerBase = packageConsumerWorkspace
     .withDirectory(
       CONSUMER_DIR_IN_CONTAINER,
       matrixFixtureSourceDirectory(packageRunContext.workspacePackage.dir),
@@ -128,6 +129,11 @@ export async function runMatrixPackageInDagger(
     .withMountedCache(`${CONSUMER_DIR_IN_CONTAINER}/node_modules`, nodeModulesCache)
     .withMountedCache(MATRIX_SHARED_NODE_MODULES_ROOT_PATH, sharedNodeModulesCache)
     .withWorkdir(CONSUMER_DIR_IN_CONTAINER)
+    .withEnvVariable('COREPACK_ENABLE_STRICT', '0')
+
+  if (packageRunContext.source.hasPlaywrightTests) {
+    consumerBase = consumerBase.withNewFile('/tmp/r.js', playwrightSummaryReporterCode)
+  }
 
   try {
     const installStageStartedAt = Date.now()

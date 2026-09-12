@@ -13,13 +13,14 @@
   "dependencies": {
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
-    "@reference-ui/mcp": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@fixtures/extend-library": "workspace:*"
+    "@fixtures/extend-library": "workspace:*",
+    "@reference-ui/mcp": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
+    "happy-dom": "^18.0.1",
     "typescript": "~7.0.2",
     "vitest": "^4.1.0",
     "@types/react": "^19.2.2",
