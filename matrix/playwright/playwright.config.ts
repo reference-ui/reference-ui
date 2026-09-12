@@ -4,12 +4,12 @@ export default defineConfig({
   reporter: 'line',
   testDir: './tests/e2e',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     headless: true,
   },
   webServer: {
-    command: 'vite --port 5173',
-    url: 'http://localhost:5173',
+    command: 'pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort',
+    url: 'http://127.0.0.1:5173',
     reuseExistingServer: false,
   },
 })

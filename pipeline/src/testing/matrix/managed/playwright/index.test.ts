@@ -9,7 +9,9 @@ describe('managed Playwright config', () => {
 
     assert.match(config, /This file is generated and managed by pipeline\./)
     assert.match(config, /name: 'vite7'/)
-    assert.match(config, /pnpm exec vite --host 127\.0\.0\.1 --port 4173/)
+    assert.match(config, /pnpm exec vite --host 127\.0\.0\.1 --port 4173 --strictPort/)
+    assert.match(config, /stdout: 'pipe'/)
+    assert.match(config, /stderr: 'pipe'/)
     assert.doesNotMatch(config, /name: 'webpack5'/)
     assert.doesNotMatch(config, /webpack serve/)
   })
