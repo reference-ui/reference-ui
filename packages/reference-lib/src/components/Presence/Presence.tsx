@@ -469,9 +469,11 @@ export function Presence({ children, present }: PresenceProps) {
     )
   }
 
-  // Compose the child's ref with Presence internal observer ref
-  const child = children as React.ReactElement<any>
-  const originalRef = (child.props as any)?.ref
+  // Compose the child's ref with Presence internal observer ref.
+  // React 19 stores `ref` on props; React 18 stores it on the element.
+  const child = children as React.ReactElement<{ ref?: React.Ref<HTMLElement> }>
+  const originalRef =
+    (child as { ref?: React.Ref<HTMLElement> }).ref ?? child.props?.ref
 
   const composedRef = (node: HTMLElement | null) => {
     ref(node)
