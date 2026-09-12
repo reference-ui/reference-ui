@@ -60,3 +60,9 @@ packages/reference-core/src/reference/browser-component/
 .nx
 
 vitest.config.*.timestamp*
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+

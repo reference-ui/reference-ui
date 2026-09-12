@@ -35,10 +35,11 @@
     "dev": "ref sync && concurrently --kill-others-on-fail \"ref sync --watch\" \"vite --config book/vite.config.ts\"",
     "book": "vite --config book/vite.config.ts",
     "book:build": "vite build --config book/vite.config.ts",
-    "book:perf": "node book/perf/report.mjs",
     "prepack": "pnpm run build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:ct": "playwright test -c playwright/playwright.config.ts",
+    "test:ct:ui": "playwright test -c playwright/playwright.config.ts --ui"
   },
   "publishConfig": {
     "access": "public"
@@ -51,6 +52,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",

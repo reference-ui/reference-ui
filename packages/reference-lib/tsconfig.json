@@ -16,5 +16,13 @@
       "@reference-ui/types": ["./.reference-ui/types"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.jsx", "book/**/*.ts", "book/**/*.tsx"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.jsx",
+    "book/**/*.ts",
+    "book/**/*.tsx",
+    "playwright/**/*.ts",
+    "playwright/**/*.tsx"
+  ]
 }

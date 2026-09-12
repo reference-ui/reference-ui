@@ -373,7 +373,7 @@ Emit a custom Vite ws event `book:perf` so the status bar does not scrape logs. 
 }
 ```
 
-A tiny `pnpm book:perf` (or `node book/perf/report.mjs`) prints p50/p95 for the last N minutes and the worst files. That is the feedback loop after a Book change: run the same save three times, compare p95.
+A tiny `node book/perf/report.mjs` prints p50/p95 for the last N minutes and the worst files. That is the feedback loop after a Book change: run the same save three times, compare p95.
 
 Do **not** ship this file. Do not make it a CI gate on day one. First make the numbers visible locally.
 
@@ -414,7 +414,7 @@ Budgets to treat as **warnings in the status bar / report**, not hard CI fails u
 1. Land Priority 0 (one document, lazy glob, Fast Refresh).
 2. Open Book with the status chip visible. Save `Button.tsx` ten times. Note p95.
 3. Change Book or `referenceVite`. Repeat. If p95 went up, the change failed even if the UI “looks fine.”
-4. If a session feels slow, open `?perf=1` or `pnpm book:perf`: if `syncMs` dominates, do not “optimize React”; if `modules` is 80, the glob is eager again.
+4. If a session feels slow, open `?perf=1` or `node book/perf/report.mjs`: if `syncMs` dominates, do not “optimize React”; if `modules` is 80, the glob is eager again.
 
 This is the opposite of the current failure mode: Book gets slower, we blame components, we add another remount.
 
@@ -512,7 +512,7 @@ Capture is another probe of Book performance, not a separate dashboard.
 
 - Time `goto` → `data-book-ready=live` as `captureReadyMs` and print it. If it is huge, the agent skill should say Book is slow, not that Button is broken.
 - Do not snapshot while `updating`. Do not add a fixed 150ms “hope it’s painted” sleep as the real wait.
-- Optional: append a line to the same JSONL (`kind: "capture"`, `book`, `story`, `captureReadyMs`) so `pnpm book:perf` includes agent sessions.
+- Optional: append a line to the same JSONL (`kind: "capture"`, `book`, `story`, `captureReadyMs`) so `node book/perf/report.mjs` includes agent sessions.
 
 The skill’s baseline capture is only honest if Book is Live. A flake where capture hits a remounting iframe is the current pain; the ready hook is how that flake dies.
 
@@ -583,7 +583,6 @@ packages/reference-lib/book/
 "dev": "ref sync && concurrently --kill-others-on-fail \"ref sync --watch\" \"vite --config book/vite.config.ts\""
 "book": "vite --config book/vite.config.ts"
 "book:build": "vite build --config book/vite.config.ts"
-"book:perf": "node book/perf/report.mjs"
 ```
 
 (Exact flags can be `root: 'book'` inside the config instead.)
@@ -639,7 +638,7 @@ The runtime contract lands in Priority 0. This step is leftover docs and hermeti
 
 - Skill + AGENTS.md: `canvas` / `root` only; drop `frame` from the script context once no `-e` examples remain.
 - Pipeline hermetic lib playground uses `vite` / `book`, not `cosmos`.
-- `pnpm book:perf` / `book:build` visualizer as they become useful.
+- `node book/perf/report.mjs` / `book:build` visualizer as they become useful.
 
 ---
 
@@ -657,7 +656,7 @@ Measurable, not vibes.
 | Errors recover | Throw in a story, fix, save → error panel gone without clicking around. |
 | Capture | `pnpm capture Overlay` uses `?chrome=0`, waits for `data-book-ready=live`, shots `[data-book-canvas]` (plus portals), never an iframe or the sidebar. Timeout while Updating is `BOOK_UPDATING`, not a visual regression. |
 | Agent skill | SKILL.md / AGENTS.md examples use `canvas`/`root`. Still never starts `pnpm dev:lib`. `--list` still works with Book down. |
-| Feedback loop | Status chip + JSONL exist; `pnpm book:perf` can print p95; capture prints `captureReadyMs`. |
+| Feedback loop | Status chip + JSONL exist; `node book/perf/report.mjs` can print p95; capture prints `captureReadyMs`. |
 | Boundary | `src/` has no Book runtime. Cosmos is gone from scripts, deps, patches, pipeline, README. |
 | Publish | `pnpm --filter @reference-ui/lib run build` still does not ship `book/`. |
 
