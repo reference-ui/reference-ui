@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import { resolveMajor } from './runtimes'
 
 const origin = 'http://localhost:3101'
 const hostURL = `${origin}/playwright/index.html`
+const major = resolveMajor()
 
 export default defineConfig({
   testDir: '../src/components',
@@ -35,7 +37,7 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'components',
+      name: `react${major}`,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 800, height: 480 },
@@ -48,7 +50,11 @@ export default defineConfig({
     command: 'pnpm run sync && pnpm exec vite --config playwright/vite.config.ts',
     cwd: '..',
     url: hostURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120 * 1000,
+    env: {
+      ...process.env,
+      CT_REACT: major,
+    },
   },
 })

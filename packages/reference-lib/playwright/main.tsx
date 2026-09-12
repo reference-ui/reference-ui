@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { flushSync } from 'react-dom'
-import { createRoot, type Root } from 'react-dom/client'
+import { createHost } from 'ct-host'
 import '@reference-ui/react/styles.css'
 import '../book/app/book.css'
 
@@ -16,8 +15,7 @@ async function resolve(storyId: string) {
   return Story
 }
 
-const rootEl = document.getElementById('root')!
-let root: Root | undefined
+const host = createHost(document.getElementById('root')!)
 
 window.mount = async ({ story, props }) => {
   const Story = await resolve(story)
@@ -25,18 +23,15 @@ window.mount = async ({ story, props }) => {
     throw new Error(`Unknown story: ${story}`)
   }
   document.documentElement.setAttribute('data-panda-theme', 'dark')
+  document.documentElement.setAttribute('data-react-version', React.version)
   document.documentElement.style.colorScheme = 'dark'
-  root ??= createRoot(rootEl)
-  flushSync(() => {
-    root!.render(
-      <React.StrictMode>
-        <Story {...props} />
-      </React.StrictMode>,
-    )
-  })
+  host.render(
+    <React.StrictMode>
+      <Story {...props} />
+    </React.StrictMode>,
+  )
 }
 
 window.unmount = async () => {
-  root?.unmount()
-  root = undefined
+  host.unmount()
 }

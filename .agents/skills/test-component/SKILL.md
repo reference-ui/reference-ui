@@ -1,6 +1,6 @@
 ---
 name: test-component
-description: Component verification skill for @reference-ui/lib. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified.
+description: Component verification skill for @reference-ui/lib only. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Switch React 17/18/19 locally with --react (Vite aliases, no pipeline). Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified. If packages/reference-core was modified, hand off to test-core (the pipeline runner, not a skill) — do not use this skill for core.
 ---
 
 # Component Testing Skill (`test-component`)
@@ -8,6 +8,12 @@ description: Component verification skill for @reference-ui/lib. Runs colocated 
 Use this skill whenever you need to **verify whether a component passes logic, behavior, and visual/motion requirements**.
 
 `test-component` is a **pure verification skill**. It does not manage feature development or refactoring; higher-level workflows call it as their verification gate.
+
+### Scope: `@reference-ui/lib` only
+
+This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-core`, matrix packages, or the pipeline.
+
+If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, MCP, …), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm ct` will not prove a core change.
 
 ---
 
@@ -55,25 +61,43 @@ flowchart LR
     D --> E[Verdict]
 ```
 
-Always run **unit first**, then e2e, then inspect artifacts. From the repository root:
+Always run **unit first**, then e2e on React 19, then inspect artifacts. From the repository root:
 
 ```bash
-# Full loop for one component (unit → e2e + videos + snapshots):
-pnpm ct Popover
-
-# Unit only
+pnpm ct Popover                 # unit → e2e (React 19 + snapshots)
 pnpm ct Popover --unit
-
-# E2E only
 pnpm ct Popover --e2e
-
-# Name filter (applied to both layers)
+pnpm ct Popover --e2e --react 18
+pnpm ct Popover --e2e --react 17,19
+pnpm ct Popover --e2e --react all
 pnpm ct Popover -g "escape"
+pnpm ct --help
 ```
 
 Never pass `--update-snapshots` during this loop. Snapshot writes are a separate, human-gated step (see below).
 
-The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT serves its own gallery on `http://localhost:3101`.
+The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT serves its own gallery on `http://localhost:3101`. The runner always SIGTERM/SIGKILL that port before each React pin and on exit/abort, so a gallery cannot leak into the next run.
+
+### React runtimes (no pipeline)
+
+Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **not**. `--react` points the CT Vite gallery at isolated `@ct-runtime/react-*` packages under `packages/reference-lib/playwright/runtimes`:
+
+| Flag | Package | Mount |
+| --- | --- | --- |
+| default / `--react 19` | `@ct-runtime/react-19` | `createRoot` |
+| `--react 18` | `@ct-runtime/react-18` | `createRoot` |
+| `--react 17` | `@ct-runtime/react-17` | `ReactDOM.render` (`react-dom/client` + `useId` / `useSyncExternalStore` shims) |
+
+`html[data-react-version]` is set from `React.version` so you can confirm the runtime.
+
+**When to use `--react`**
+- Day to day: omit it. `pnpm ct <Component>` is React 19 + snapshots.
+- After overlay / presence / event / mount work, or when the human asks about compatibility: `--e2e --react all` (or `17,18`).
+- Unit tests always use workspace React 19. `--react` is e2e-only.
+- Visual snapshots (`snap()`) run **only on React 19**. 17/18 are behavioral. `snap()` is a no-op off 19, so specs stay identical.
+- Do not pass `--update-snapshots` with `--react 17`, `18`, or `all`. The runner refuses.
+
+If the change that forced a React/host tweak lives in `packages/reference-core`, prove it with test-core (`pnpm agent`), not this loop.
 
 Human pairing: `pnpm playbook` opens the Playwright UI.
 
@@ -84,15 +108,12 @@ Human pairing: `pnpm playbook` opens the Playwright UI.
 The runner prints absolute paths after e2e:
 
 ```text
-✔ [PASSED] popover opens on trigger click and closes on outside click (845ms)
+✔ [PASSED] react19 popover opens on trigger click and closes on outside click (845ms)
   🎥 Video:      /path/to/.../video.webm
   📸 Screenshot: /path/to/.../test-finished-1.png
 
-✖ [FAILED] tooltip opens on hover ...
-  🖼  Snapshot mismatch:
-     expected: /path/to/.../expected.png
-     actual:   /path/to/.../actual.png
-     diff:     /path/to/.../diff.png
+✖ [FAILED] react18 tooltip opens on hover ...
+  🎥 Video:      /path/to/.../video.webm
 ```
 
 ### Videos (`.webm`)
@@ -107,7 +128,7 @@ Call `view_file` on each `video.webm`. Check:
 
 ### Visual snapshots (drift)
 
-Snapshots are **settled-state** comparisons (`snap(page, 'open')`, stored as `open.png`). Animations are disabled for the comparison so the check is about layout/paint drift, not motion (motion is the video).
+Snapshots are **settled-state** comparisons (`snap(page, 'open')`, stored as `open.png`). Animations are disabled for the comparison so the check is about layout/paint drift, not motion (motion is the video). `snap()` no-ops unless the CT gallery is React 19.
 
 On mismatch: `view_file` the **diff**, then **actual**, then **expected**. Treat a failed snapshot as a **regression until the human says otherwise**. Fix the component. Do **not** update the baseline.
 
@@ -132,7 +153,7 @@ After an explicit yes:
 pnpm ct <Component> --e2e --update-snapshots --confirm
 ```
 
-`--confirm` is the machine record that the human already approved. The runner refuses `--update-snapshots` without it.
+`--confirm` is the machine record that the human already approved. The runner refuses `--update-snapshots` without it, and refuses it with `--react 17`, `18`, or `all`.
 
 Then show the new baselines in chat and wait if the human wants a second look.
 
@@ -142,12 +163,13 @@ Then show the new baselines in chat and wait if the human wants a second look.
 
 Return:
 
-1. **Unit** — passed/failed, what logic was covered.
-2. **E2E** — total / passed / failed.
-3. **Artifact paths** — videos, screenshots, snapshot expected/actual/diff.
+1. **Unit** — passed/failed, what logic was covered (always workspace React 19).
+2. **E2E** — total / passed / failed, **per React major** (`react17` / `react18` / `react19`).
+3. **Artifact paths** — videos, screenshots, snapshot expected/actual/diff (snapshots only on 19).
 4. **Motion notes** — timestamped observations from the video.
 5. **Drift notes** — if snapshots failed, what changed (spacing, color, missing arrow, etc.).
-6. **Handoff** — `pnpm playbook` for interactive debugging.
+6. **Runtime notes** — if `--react` was used, say which majors ran and that paint drift was not compared off 19.
+7. **Handoff** — `pnpm playbook` for interactive debugging.
 
 Do not update snapshot baselines as part of the verdict. That is a separate human-gated step.
 
@@ -193,7 +215,7 @@ export const ClickToOpen = () => (
 
 ### 3. E2E spec (`src/components/<Component>/__e2e__/<Component>.ct.spec.ts`)
 
-Import `test`, `expect`, and `snap` from the CT fixture. Mount stories as `components/<Component>/<Component>/<StoryExportName>`. Snapshot settled frames; let the video cover motion.
+Import `test`, `expect`, and `snap` from the CT fixture. Mount stories as `components/<Component>/<Component>/<StoryExportName>`. Snapshot settled frames; let the video cover motion. Leave `snap()` in the spec even for `--react 17/18` — it no-ops off 19.
 
 ```ts
 import { test, expect, snap } from '../../../../playwright/ct'

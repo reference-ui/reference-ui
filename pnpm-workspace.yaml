@@ -1,6 +1,7 @@
 packages:
   - pipeline
   - packages/*
+  - packages/reference-lib/playwright/runtimes/*
   - fixtures/*
   - matrix/*
   - matrix/*/*
