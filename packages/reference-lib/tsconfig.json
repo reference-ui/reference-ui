@@ -23,6 +23,7 @@
     "book/**/*.ts",
     "book/**/*.tsx",
     "playwright/**/*.ts",
-    "playwright/**/*.tsx"
+    "playwright/**/*.tsx",
+    "playwright/**/*.d.ts"
   ]
 }

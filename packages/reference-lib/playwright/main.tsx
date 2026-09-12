@@ -19,13 +19,6 @@ async function resolve(storyId: string) {
 const rootEl = document.getElementById('root')!
 let root: Root | undefined
 
-declare global {
-  interface Window {
-    mount: (params: { story: string; props?: Record<string, unknown> }) => Promise<void>
-    unmount: () => Promise<void>
-  }
-}
-
 window.mount = async ({ story, props }) => {
   const Story = await resolve(story)
   if (!Story) {

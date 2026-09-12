@@ -14,6 +14,7 @@ export const SCAN_EXCLUDE_DIRS = new Set([
   '.turbo',
   '.nx',
   '__tests__',
+  '__e2e__',
   '.cache',
   '.output',
   'target',

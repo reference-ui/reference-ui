@@ -318,7 +318,7 @@ When resolving available projects or finding a target, MCP v2 combines five disc
 const SCAN_EXCLUDE_DIRS = new Set([
   'node_modules', '.git', '.next', 'dist', 'build',
   '.reference-ui', 'coverage', '.turbo', '.nx',
-  '__tests__', '.cache', '.output', 'target',
+  '__tests__', '__e2e__', '.cache', '.output', 'target',
 ])
 ```
 

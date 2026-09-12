@@ -61,7 +61,15 @@ Apply modifications under `packages/reference-lib/src/components/<Component>/`:
 Execute targeted checks locally (never run raw unthrottled subshell commands or global `pnpm test` wrappers):
 
 ```bash
-# Recommended for full 4-phase verification in one shot:
+# Component verification loop (unit → e2e + videos + visual snapshots):
+# Follow the test-component skill: inspect videos and snapshot diffs after the run.
+# Never --update-snapshots here. Snapshot writes need an explicit human yes.
+pnpm ct <ComponentName>
+# e.g.: pnpm ct Popover
+pnpm ct Popover --unit
+pnpm ct Popover --e2e
+
+# Recommended for full 4-phase matrix verification in one shot:
 # (Typecheck -> vitest -> build -> targeted Playwright spec)
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast

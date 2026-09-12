@@ -51,8 +51,9 @@ finalProps = merge(inputDefaults, rootInputProps, explicitInputProps, managedMac
 - Every style-bearing part inherits token-aware `StyleProps`, `css`, responsive baseline rhythm (`r`), and `colorMode`.
 
 ### Law 6: Separation of Testing Concerns
-- **Model / Unit Tests (`vitest`)**: Execute in pure, deterministic environments (`matrix/lib/tests/unit/`). Test pure state machines, date/math algorithms, string parsing/formatting, and token merging. **Never** use synthetic JSDOM component mocks.
-- **Browser Contract Tests (`playwright`)**: Execute in real browsers (`matrix/lib/tests/e2e/`). Test actual DOM hierarchies, focus management, pointer/touch physics, keyboard traps, APG interactions, animations, and accessibility trees (`role`, `aria-*`, `data-*`).
+- **Unit Tests (`vitest`)**: Colocated next to the source they cover (`src/components/<Component>/*.test.ts(x)`). Pure logic, algorithms, SSR markup, parsing, token merge. Do **not** emulate pointer/keyboard/DOM interaction in Vitest when a real browser test would be more honest.
+- **Component Tests (`playwright` CT)**: `src/components/<Component>/__e2e__/<Component>.ct.spec.ts`. Real browser. Interactions, presence, video, visual snapshots. Run via `pnpm ct <Component>` (unit first, then e2e).
+- **Matrix Contract Tests (`playwright`)**: Execute in real browsers (`matrix/lib/tests/e2e/`). Cross-bundler/runtime DOM, focus, pointer/touch, keyboard, APG, and accessibility trees (`role`, `aria-*`, `data-*`).
 
 ### Law 7: Accessibility & Platform Primacy
 - Conformance with W3C WAI-ARIA Authoring Practices (APG) is mandatory.

@@ -1,23 +1,45 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const hostURL = 'http://localhost:3101/playwright/index.html'
+const origin = 'http://localhost:3101'
+const hostURL = `${origin}/playwright/index.html`
 
 export default defineConfig({
   testDir: '../src/components',
-  testMatch: '**/*.ct.spec.ts',
-  timeout: 10 * 1000,
+  testMatch: '**/__e2e__/**/*.ct.spec.ts',
+  timeout: 20 * 1000,
   fullyParallel: true,
-  reporter: [['html', { outputFolder: './playwright-report', open: 'never' }]],
+  expect: {
+    toHaveScreenshot: {
+      animations: 'disabled',
+      caret: 'hide',
+      scale: 'css',
+      maxDiffPixelRatio: 0.02,
+    },
+  },
+  snapshotPathTemplate: '{testDir}/{testFileDir}/__snapshots__/{arg}{ext}',
+  reporter: [
+    ['html', { outputFolder: './playwright-report', open: 'never' }],
+    ['json', { outputFile: './test-results/results.json' }],
+    ['list'],
+  ],
   outputDir: './test-results',
   use: {
     trace: 'on-first-retry',
+    video: {
+      mode: 'on',
+      size: { width: 800, height: 480 },
+    },
+    screenshot: 'on',
+    viewport: { width: 800, height: 480 },
+    colorScheme: 'dark',
   },
   projects: [
     {
       name: 'components',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: hostURL,
+        viewport: { width: 800, height: 480 },
+        baseURL: origin,
         serviceWorkers: 'block',
       },
     },
