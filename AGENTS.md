@@ -4,6 +4,22 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 ---
 
+## Skills vs `test-core`
+
+`tweak-component` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
+
+**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a manufacturing loop.
+
+| You changed | Use |
+| --- | --- |
+| `@reference-ui/lib` look/feel | `tweak-component` skill |
+| `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm ct`) |
+| `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
+
+If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm ct` does not cover core.
+
+---
+
 ## 0. Component Polishing & Tweaking Contract (`tweak-component`)
 
 Whenever a user prompt asks to fix, polish, style, improve, or adjust how any component in `@reference-ui/lib` feels or looks:
@@ -12,7 +28,7 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
   1. **Contract Ingestion**: Read `<Component>.md` and `SPEC.md` (driver). `TESTS.md` is the case catalog when SPEC points at it.
   2. **Baseline Capture**: Run `pnpm capture <Component>` and embed the screenshot directly in chat.
   3. **Implement & Tweak**: Apply changes in `packages/reference-lib/src/components/<Component>/`.
-  4. **Verification**: Run targeted `typecheck`, `vitest`, `build`, and Playwright E2E checks.
+  4. **Verification**: Follow the `test-component` skill (`pnpm ct`). If `packages/reference-core` was also modified, switch to **test-core** (`pnpm agent`) — that is the pipeline runner, not a skill.
   5. **Multi-State Visual Re-inspection**: Run `pnpm capture <Component> --states` and embed the markdown table into chat.
 
 ---
@@ -72,12 +88,14 @@ Captures are automatically saved to `.reference-ui/captures/` with outline-safe 
 
 ---
 
-## 3. Targeted Verification Commands & Agent Runner (`pnpm agent`)
+## 3. Core / Matrix Verification (`test-core`, `pnpm agent`)
+
+`test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `packages/reference-core` or need hermetic matrix proof. Do not use `test-component` / `pnpm ct` for core.
 
 > [!TIP]
 > **macOS QoS Jailbreak & Fast Runner**:
 > Antigravity IDE subshells inherit Darwin background QoS (`PRI 31`).
-> Use the built-in miniature agent CLI (`pnpm agent`) to run commands at full interactive performance (`PRI 46`), unthrottled I/O, and with non-TTY progress unbuffering.
+> Use the `test-core` CLI (`pnpm agent`) to run commands at full interactive performance (`PRI 46`), unthrottled I/O, and with non-TTY progress unbuffering.
 
 ```bash
 # 0. Check runner & daemon status:
@@ -92,6 +110,7 @@ pnpm agent pw -g "OV-OUT"              # Auto-infers matrix/overlays
 
 # Native Vitest (unit tests):
 pnpm agent vitest lib -t "Dialog"
+pnpm agent vitest core                 # packages/reference-core
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
 # 2. Full 4-Phase Component Verification in One Shot (Final check before completion):
@@ -106,10 +125,11 @@ pnpm pipeline test --packages=@matrix/<package>
 ```
 
 > [!IMPORTANT]
-> **Testing Policy & Native Runner**:
+> **Testing Policy (`test-core`)**:
 > - **Never execute raw Playwright or Vitest commands directly in subshells** (e.g. `pnpm --dir matrix/... exec playwright test`). Raw subshell commands run under clamped Darwin QoS (`PRI 31`), orphan Vite processes on port 4173, and lack clean exit pass signaling on SIGINT.
 > - **Always use `pnpm agent playwright` / `pnpm agent vitest`** for fast native iteration.
 > - **Use `pnpm agent test --packages=@matrix/<package>`** when you need full, hermetic multi-runtime/bundler matrix validation in Dagger containers.
+> - After a `packages/reference-core` change, this section is the proof path — not `pnpm ct`.
 
 > [!NOTE]
 > **Terminal Bridge Mode (Optional)**:

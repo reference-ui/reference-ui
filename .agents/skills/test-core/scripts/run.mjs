@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Miniature Agent CLI & Pipeline Runner
+ * test-core: Miniature Agent CLI & Pipeline Runner
+ *
+ * Not a component skill. This is the core/matrix verification runner
+ * (`pnpm agent`) for packages/reference-core and matrix/*.
  *
  * Provides:
  * 1. Automatic macOS Darwin QoS Jailbreak (elevates child process from PRI 31 to PRI 46/47 via `taskpolicy -a`).
@@ -1925,7 +1928,7 @@ Options for test / matrix (Dagger):
   --trace                               Stream Dagger engine logs for the current exec
 
 Programmatic API:
-  import { runPlaywright, runVitest, runMatrix, runPipeline } from './.agents/skills/pipeline-runner/scripts/run.mjs'
+  import { runPlaywright, runVitest, runMatrix, runPipeline } from './.agents/skills/test-core/scripts/run.mjs'
   await runPlaywright(['overlays', '-g', 'OV-OUT'])
   await runVitest(['lib', '-t', 'Dialog'])
   await runMatrix({ packages: '@matrix/tokens', react: 'react19' })

@@ -7,6 +7,8 @@ description: Autonomous workflow for inspecting, tweaking, styling, and visually
 
 Use this skill when tasked with fixing, implementing, or visually polishing any component in `@reference-ui/lib`.
 
+If the work also changes `packages/reference-core`, this skill is not enough. After the component loop, follow **test-core** (`.agents/skills/test-core/SKILL.md`) — the pipeline runner (`pnpm agent`). test-core is **not a skill**.
+
 ---
 
 ## 1. Pre-flight Check: Book Dev Server
@@ -68,9 +70,11 @@ pnpm ct <ComponentName>
 # e.g.: pnpm ct Popover
 pnpm ct Popover --unit
 pnpm ct Popover --e2e
+pnpm ct Popover --e2e --react all
 
-# Recommended for full 4-phase matrix verification in one shot:
+# Recommended for full 4-phase matrix verification in one shot (test-core, not a skill):
 # (Typecheck -> vitest -> build -> targeted Playwright spec)
+# If you also changed packages/reference-core, follow test-core first.
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast
 

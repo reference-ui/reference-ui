@@ -19,11 +19,11 @@
     "playbook": "pnpm --filter @reference-ui/lib run playbook",
     "changeset": "changeset",
     "release": "pnpm pipeline release",
-    "agent": "node .agents/skills/pipeline-runner/scripts/run.mjs",
-    "agent:pw": "node .agents/skills/pipeline-runner/scripts/run.mjs playwright",
-    "agent:vitest": "node .agents/skills/pipeline-runner/scripts/run.mjs vitest",
-    "pipeline:fast": "node .agents/skills/pipeline-runner/scripts/run.mjs test",
-    "pipeline:test:matrix": "node .agents/skills/pipeline-runner/scripts/run.mjs test:matrix"
+    "agent": "node .agents/skills/test-core/scripts/run.mjs",
+    "agent:pw": "node .agents/skills/test-core/scripts/run.mjs playwright",
+    "agent:vitest": "node .agents/skills/test-core/scripts/run.mjs vitest",
+    "pipeline:fast": "node .agents/skills/test-core/scripts/run.mjs test",
+    "pipeline:test:matrix": "node .agents/skills/test-core/scripts/run.mjs test:matrix"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
