@@ -14,7 +14,7 @@ test('popover opens on trigger click and closes on outside click', async ({ moun
   await page.waitForTimeout(1000)
   await snap(page, 'click-open')
 
-  await page.mouse.click(10, 10)
+  await page.mouse.click(750, 400)
   await expect(content).not.toBeVisible()
   await page.waitForTimeout(600)
   await snap(page, 'click-dismissed')
