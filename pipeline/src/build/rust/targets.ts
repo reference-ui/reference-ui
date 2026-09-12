@@ -14,6 +14,7 @@ import { join, relative, resolve } from 'node:path'
 import { dag, type Platform } from '@dagger.io/dagger'
 import * as dagger from '@dagger.io/dagger'
 
+import { MANAGED_NODE_IMAGE, MANAGED_PNPM_VERSION } from '../../../dependencies.js'
 import type { BuildRegistryArtifactPackage } from '../types.js'
 import { logSkip } from '../../lib/log/index.js'
 import { ensureContainerRuntime } from '../../lib/runtime/ensure-container-runtime.js'
@@ -254,7 +255,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
 
     const container = dag
       .container({ platform: 'linux/amd64' as Platform })
-      .from('node:24-bookworm')
+      .from(MANAGED_NODE_IMAGE)
       .withDirectory('/workspace', repoSource())
       .withMountedCache('/pnpm/store', pnpmStore)
       .withMountedCache('/root/.cargo', cargoHome)
@@ -276,7 +277,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
         'python3',
       ])
       .withExec(['corepack', 'enable'])
-      .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
+      .withExec(['corepack', 'prepare', `pnpm@${MANAGED_PNPM_VERSION}`, '--activate'])
       .withExec([
         'bash',
         '-lc',

@@ -1,19 +1,16 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import {
+  MANAGED_VITE7_DEV_DEPENDENCIES,
+  MANAGED_WEBPACK5_DEV_DEPENDENCIES,
+} from '../../../../../dependencies.js'
 import { createManagedBundlerFiles, getManagedBundlerDevDependencies } from './index.js'
 
 describe('managed bundlers', () => {
   it('describes bundler-owned dependencies', () => {
     assert.deepEqual(getManagedBundlerDevDependencies(['vite7', 'webpack5']), {
-      '@vitejs/plugin-react': '^4.7.0',
-      'css-loader': '^7.1.2',
-      'html-webpack-plugin': '^5.6.3',
-      'style-loader': '^4.0.0',
-      'ts-loader': '^9.5.2',
-      vite: '^7.3.5',
-      webpack: '^5.98.0',
-      'webpack-cli': '^6.0.1',
-      'webpack-dev-server': '^5.2.6',
+      ...MANAGED_VITE7_DEV_DEPENDENCIES,
+      ...MANAGED_WEBPACK5_DEV_DEPENDENCIES,
     })
   })
 

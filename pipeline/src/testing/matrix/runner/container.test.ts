@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import {
+  MANAGED_NODE_IMAGE,
+  MANAGED_PLAYWRIGHT_VERSION,
+  managedPlaywrightContainerImage,
+} from '../../../../dependencies.js'
 import { matrixContainerImage, parsePinnedPlaywrightVersion } from './container.js'
 import type { FixtureSourceFiles } from './types.js'
 
@@ -19,11 +24,11 @@ function createFixtureSourceFiles(overrides?: Partial<FixtureSourceFiles>): Fixt
 describe('matrix runner container helpers', () => {
   it('parses the pinned Playwright version from a range', () => {
     assert.equal(parsePinnedPlaywrightVersion('^1.55.0'), '1.55.0')
-    assert.equal(parsePinnedPlaywrightVersion(undefined), '1.48.0')
+    assert.equal(parsePinnedPlaywrightVersion(undefined), MANAGED_PLAYWRIGHT_VERSION)
   })
 
   it('uses the node image for non-Playwright fixtures', () => {
-    assert.equal(matrixContainerImage(createFixtureSourceFiles()), 'node:24-bookworm')
+    assert.equal(matrixContainerImage(createFixtureSourceFiles()), MANAGED_NODE_IMAGE)
   })
 
   it('uses the Playwright image for Playwright fixtures', () => {
@@ -37,7 +42,7 @@ describe('matrix runner container helpers', () => {
         },
         hasPlaywrightTests: true,
       })),
-      'mcr.microsoft.com/playwright:v1.55.0-jammy',
+      managedPlaywrightContainerImage('1.55.0'),
     )
   })
 })

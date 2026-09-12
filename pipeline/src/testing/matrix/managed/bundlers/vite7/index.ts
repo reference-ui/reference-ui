@@ -1,11 +1,9 @@
+import { MANAGED_VITE7_DEV_DEPENDENCIES } from '../../../../../../dependencies.js'
 import type { MatrixReactRuntime } from '../../../discovery/index.js'
 import { getManagedReactProfile } from '../../react/index.js'
 import { managedGeneratedNotice, renderManagedTemplate } from '../../template.js'
 
-export const managedVite7DevDependencies = {
-  '@vitejs/plugin-react': '^4.7.0',
-  vite: '^7.3.5',
-} as const
+export const managedVite7DevDependencies = MANAGED_VITE7_DEV_DEPENDENCIES
 
 export function createManagedVite7IndexHtmlSource(options: {
   reactRuntime: MatrixReactRuntime

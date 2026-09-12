@@ -8,13 +8,14 @@
  */
 
 import { createHash } from 'node:crypto'
+import { MANAGED_NODE_IMAGE, MANAGED_PNPM_VERSION } from '../../../../dependencies.js'
 import type { RegistryManifestPackage } from '../../../registry/types.js'
 import type { MatrixReactRuntime } from '../discovery/index.js'
 import { getManagedReactProfile } from '../managed/react/index.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
-export const matrixNodeImage = 'node:24-bookworm'
-export const matrixPnpmVersion = '10.29.3'
+export const matrixNodeImage = MANAGED_NODE_IMAGE
+export const matrixPnpmVersion = MANAGED_PNPM_VERSION
 
 interface ReplaceWorkspaceProtocolVersionsOptions {
   dependencies?: Record<string, string>

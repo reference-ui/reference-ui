@@ -7,6 +7,10 @@
  */
 
 import { relative, resolve } from 'node:path'
+import {
+  MANAGED_MATRIX_DEV_DEPENDENCIES,
+  MANAGED_PLAYWRIGHT_VERSION,
+} from '../../../../../dependencies.js'
 import type { MatrixPackageConfig } from '../../discovery/index.js'
 import { getPreferredLocalMatrixBundlers } from '../../discovery/index.js'
 import { repoRoot } from '../../../../build/workspace.js'
@@ -48,12 +52,7 @@ const managedDependencies = {
   '@reference-ui/lib': 'workspace:*',
 } as const
 
-const managedDevDependencies = {
-  '@types/node': '^25.1.0',
-  'happy-dom': '^18.0.1',
-  typescript: '~7.0.2',
-  vitest: '^4.1.0',
-} as const
+const managedDevDependencies = MANAGED_MATRIX_DEV_DEPENDENCIES
 
 const managedIgnoredBuiltDependencies = [
   '@parcel/watcher',
@@ -61,6 +60,19 @@ const managedIgnoredBuiltDependencies = [
   'esbuild',
   'nx',
 ] as const
+
+function withManagedPlaywrightPin(
+  extraDevDependencies: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!extraDevDependencies || extraDevDependencies['@playwright/test'] === undefined) {
+    return extraDevDependencies
+  }
+
+  return {
+    ...extraDevDependencies,
+    '@playwright/test': MANAGED_PLAYWRIGHT_VERSION,
+  }
+}
 
 function omitManagedDependencies(
   dependencies: Record<string, string> | undefined,
@@ -142,7 +154,7 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
       ...managedDevDependencies,
       ...reactProfile.devDependencies,
       ...bundlerDevDependencies,
-      ...extraDevDependencies,
+      ...withManagedPlaywrightPin(extraDevDependencies),
     }),
     exportsValue: JSON.stringify(existingPackageJson.exports ?? { '.': './src/index.ts' }),
     generatedNotice: JSON.stringify(managedGeneratedNotice),

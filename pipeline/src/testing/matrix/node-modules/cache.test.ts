@@ -8,6 +8,11 @@ import {
   matrixSharedNodeModulesCacheKey,
   replaceWorkspaceProtocolVersions,
 } from './cache.js'
+import {
+  MANAGED_NODE_IMAGE,
+  MANAGED_PLAYWRIGHT_VERSION,
+  managedPlaywrightContainerImage,
+} from '../../../../dependencies.js'
 import type { MatrixFixturePackageJson } from '../managed/package-json/index.js'
 
 function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest {
@@ -106,8 +111,8 @@ describe('matrix node_modules cache helpers', () => {
 
     assert.equal(externalPnpmStoreCacheKey(), externalPnpmStoreCacheKey())
     assert.equal(
-      externalPnpmStoreCacheKey('node:24-bookworm'),
-      externalPnpmStoreCacheKey('node:24-bookworm'),
+      externalPnpmStoreCacheKey(MANAGED_NODE_IMAGE),
+      externalPnpmStoreCacheKey(MANAGED_NODE_IMAGE),
     )
 
     const baselineNodeModules = matrixNodeModulesCacheKey({
@@ -253,7 +258,7 @@ describe('matrix node_modules cache helpers', () => {
     const manifest = createManifest()
     const fixturePackageJson = createFixturePackageJson({
       devDependencies: {
-        '@playwright/test': '1.48.0',
+        '@playwright/test': MANAGED_PLAYWRIGHT_VERSION,
         '@types/react': '^19.2.2',
         '@types/react-dom': '^19.2.2',
         typescript: '~7.0.2',
@@ -262,7 +267,7 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     const nodeImage = matrixNodeModulesCacheKey({
-      containerImage: 'node:24-bookworm',
+      containerImage: MANAGED_NODE_IMAGE,
       coreVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
@@ -270,7 +275,7 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     const playwrightImage = matrixNodeModulesCacheKey({
-      containerImage: 'mcr.microsoft.com/playwright:v1.48.0-jammy',
+      containerImage: managedPlaywrightContainerImage(),
       coreVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),

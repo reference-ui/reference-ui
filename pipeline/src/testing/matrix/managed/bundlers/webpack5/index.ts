@@ -1,16 +1,9 @@
+import { MANAGED_WEBPACK5_DEV_DEPENDENCIES } from '../../../../../../dependencies.js'
 import type { MatrixReactRuntime } from '../../../discovery/index.js'
 import { getManagedReactProfile } from '../../react/index.js'
 import { managedGeneratedNotice, renderManagedTemplate } from '../../template.js'
 
-export const managedWebpack5DevDependencies = {
-  'css-loader': '^7.1.2',
-  'html-webpack-plugin': '^5.6.3',
-  'style-loader': '^4.0.0',
-  'ts-loader': '^9.5.2',
-  webpack: '^5.98.0',
-  'webpack-cli': '^6.0.1',
-  'webpack-dev-server': '^5.2.6',
-} as const
+export const managedWebpack5DevDependencies = MANAGED_WEBPACK5_DEV_DEPENDENCIES
 
 export function createManagedWebpack5IndexHtmlSource(options: {
   reactRuntime: MatrixReactRuntime

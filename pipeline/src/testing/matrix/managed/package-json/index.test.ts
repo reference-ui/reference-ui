@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import {
+  MANAGED_MATRIX_DEV_DEPENDENCIES,
+  MANAGED_PLAYWRIGHT_VERSION,
+  MANAGED_REACT_DEPENDENCIES,
+  MANAGED_REACT_DEV_DEPENDENCIES,
+  MANAGED_VITE7_DEV_DEPENDENCIES,
+} from '../../../../../dependencies.js'
 import { createManagedMatrixPackageJson, createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './index.js'
 
 const internalTarballSpecifiers = {
@@ -45,18 +52,19 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
     assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
-    assert.equal(packageJson.dependencies.react, '^19.2.0')
-    assert.equal(packageJson.dependencies['react-dom'], '^19.2.0')
-    assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], '^4.7.0')
-    assert.equal(packageJson.devDependencies.vite, '^7.3.5')
+    assert.equal(packageJson.dependencies.react, MANAGED_REACT_DEPENDENCIES.react19.react)
+    assert.equal(packageJson.dependencies['react-dom'], MANAGED_REACT_DEPENDENCIES.react19['react-dom'])
+    assert.equal(packageJson.devDependencies['@vitejs/plugin-react'], MANAGED_VITE7_DEV_DEPENDENCIES['@vitejs/plugin-react'])
+    assert.equal(packageJson.devDependencies.vite, MANAGED_VITE7_DEV_DEPENDENCIES.vite)
     assert.equal(packageJson.devDependencies.webpack, undefined)
     assert.equal(packageJson.devDependencies['webpack-dev-server'], undefined)
     assert.equal(packageJson.devDependencies['@playwright/test'], undefined)
+    assert.equal(packageJson.devDependencies.postcss, MANAGED_MATRIX_DEV_DEPENDENCIES.postcss)
     assert.equal(packageJson.devDependencies['@modelcontextprotocol/sdk'], '^1.29.0')
     assert.equal(packageJson['//'], 'This file is generated and managed by pipeline.')
   })
 
-  it('preserves package-specific browser runners from the existing fixture package', () => {
+  it('rewrites an existing Playwright pin to the managed exact version', () => {
     const packageJson = JSON.parse(
       createManagedMatrixPackageJson({
         config: {
@@ -65,7 +73,7 @@ describe('createManagedMatrixPackageJson', () => {
         },
         existingPackageJson: {
           devDependencies: {
-            '@playwright/test': '1.48.0',
+            '@playwright/test': '^1.48.0',
           },
         },
         packageName: '@matrix/playwright',
@@ -74,7 +82,23 @@ describe('createManagedMatrixPackageJson', () => {
       devDependencies: Record<string, string>
     }
 
-    assert.equal(packageJson.devDependencies['@playwright/test'], '1.48.0')
+    assert.equal(packageJson.devDependencies['@playwright/test'], MANAGED_PLAYWRIGHT_VERSION)
+  })
+
+  it('writes postcss into every generated matrix package.json', () => {
+    const packageJson = JSON.parse(
+      createManagedMatrixPackageJson({
+        config: {
+          bundlers: ['vite7'],
+          react: 'react19',
+        },
+        packageName: '@matrix/playwright',
+      }),
+    ) as {
+      devDependencies: Record<string, string>
+    }
+
+    assert.equal(packageJson.devDependencies.postcss, MANAGED_MATRIX_DEV_DEPENDENCIES.postcss)
   })
 
   it('routes every matrix package test script through the pipeline CLI', () => {
@@ -86,7 +110,7 @@ describe('createManagedMatrixPackageJson', () => {
         },
         existingPackageJson: {
           devDependencies: {
-            '@playwright/test': '1.48.0',
+            '@playwright/test': MANAGED_PLAYWRIGHT_VERSION,
           },
         },
         packageName: '@matrix/lib',
@@ -112,7 +136,7 @@ describe('createMatrixConsumerPackageJson', () => {
         react: '^19.2.0',
       },
       devDependencies: {
-        '@playwright/test': '1.48.0',
+        '@playwright/test': MANAGED_PLAYWRIGHT_VERSION,
         typescript: '~7.0.2',
         vitest: '^4.0.18',
       },
@@ -147,7 +171,7 @@ describe('createMatrixConsumerPackageJson', () => {
       react: '^19.2.0',
     })
     assert.deepEqual(packageJson.devDependencies, {
-      '@playwright/test': '1.48.0',
+      '@playwright/test': MANAGED_PLAYWRIGHT_VERSION,
       'css-loader': '^7.1.2',
       typescript: '~7.0.2',
       vitest: '^4.0.18',
@@ -249,9 +273,9 @@ describe('createMatrixConsumerPackageJson', () => {
       devDependencies: Record<string, string>
     }
 
-    assert.equal(packageJson.dependencies.react, '^17.0.2')
-    assert.equal(packageJson.dependencies['react-dom'], '^17.0.2')
-    assert.equal(packageJson.devDependencies['@types/react'], '^17.0.83')
-    assert.equal(packageJson.devDependencies['@types/react-dom'], '^17.0.26')
+    assert.equal(packageJson.dependencies.react, MANAGED_REACT_DEPENDENCIES.react17.react)
+    assert.equal(packageJson.dependencies['react-dom'], MANAGED_REACT_DEPENDENCIES.react17['react-dom'])
+    assert.equal(packageJson.devDependencies['@types/react'], MANAGED_REACT_DEV_DEPENDENCIES.react17['@types/react'])
+    assert.equal(packageJson.devDependencies['@types/react-dom'], MANAGED_REACT_DEV_DEPENDENCIES.react17['@types/react-dom'])
   })
 })

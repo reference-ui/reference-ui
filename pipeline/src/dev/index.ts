@@ -7,13 +7,14 @@
 import * as dagger from '@dagger.io/dagger'
 import type { Writable } from 'node:stream'
 import { DEFAULT_REGISTRY_URL, REGISTRY_URL_IN_CONTAINER, RELEASE_PACKAGE_NAMES } from '../../config.js'
+import { MANAGED_NODE_IMAGE } from '../../dependencies.js'
 import { buildWorkspacePackages } from '../build/index.js'
 import { run } from '../build/workspace.js'
 import { ensureContainerRuntime } from '../lib/runtime/ensure-container-runtime.js'
 import { markDevWorkspaceInstallComplete, materializeRegistryBackedDevWorkspace } from './materialize.js'
 import { openBrowserWhenReady } from './open-browser.js'
 import { baseNodeContainer, hostRegistryService } from '../testing/matrix/runner/container.js'
-import { externalPnpmStoreCacheKey, matrixNodeImage } from '../testing/matrix/node-modules/cache.js'
+import { externalPnpmStoreCacheKey } from '../testing/matrix/node-modules/cache.js'
 
 export interface RunPipelineDevOptions {
   trace?: boolean
@@ -21,7 +22,7 @@ export interface RunPipelineDevOptions {
 
 async function runRegistryServicePreflight(): Promise<void> {
   logPhase(`npm ping ${REGISTRY_URL_IN_CONTAINER} from the preflight container`)
-  const workspace = baseNodeContainer(externalPnpmStoreCacheKey(matrixNodeImage))
+  const workspace = baseNodeContainer(externalPnpmStoreCacheKey(MANAGED_NODE_IMAGE))
   const registry = hostRegistryService()
   await workspace
     .withServiceBinding('registry', registry)

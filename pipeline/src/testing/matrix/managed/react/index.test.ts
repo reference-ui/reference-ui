@@ -1,18 +1,16 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import {
+  MANAGED_REACT_DEPENDENCIES,
+  MANAGED_REACT_DEV_DEPENDENCIES,
+} from '../../../../../dependencies.js'
 import { createManagedReactMainSource, getManagedReactProfile } from './index.js'
 
 describe('managed react runtime', () => {
   it('describes the managed React 19 dependency surface', () => {
     assert.deepEqual(getManagedReactProfile('react19'), {
-      dependencies: {
-        react: '^19.2.0',
-        'react-dom': '^19.2.0',
-      },
-      devDependencies: {
-        '@types/react': '^19.2.2',
-        '@types/react-dom': '^19.2.2',
-      },
+      dependencies: { ...MANAGED_REACT_DEPENDENCIES.react19 },
+      devDependencies: { ...MANAGED_REACT_DEV_DEPENDENCIES.react19 },
       mountApi: 'createRoot',
       mountElementId: 'root',
     })
@@ -46,14 +44,8 @@ describe('managed react runtime', () => {
 
   it('describes the managed React 17 dependency surface', () => {
     assert.deepEqual(getManagedReactProfile('react17'), {
-      dependencies: {
-        react: '^17.0.2',
-        'react-dom': '^17.0.2',
-      },
-      devDependencies: {
-        '@types/react': '^17.0.83',
-        '@types/react-dom': '^17.0.26',
-      },
+      dependencies: { ...MANAGED_REACT_DEPENDENCIES.react17 },
+      devDependencies: { ...MANAGED_REACT_DEV_DEPENDENCIES.react17 },
       mountApi: 'render',
       mountElementId: 'root',
     })

@@ -8,10 +8,15 @@ import {
   MANAGED_REGISTRY_PORT,
   REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
-import { matrixNodeImage } from '../node-modules/cache.js'
+import {
+  MANAGED_NODE_IMAGE,
+  MANAGED_PLAYWRIGHT_VERSION,
+  MANAGED_PNPM_VERSION,
+  managedPlaywrightContainerImage,
+} from '../../../../dependencies.js'
 import type { FixtureSourceFiles } from './types.js'
 
-export function baseNodeContainer(pnpmStoreCacheKey: string, image: string = matrixNodeImage) {
+export function baseNodeContainer(pnpmStoreCacheKey: string, image: string = MANAGED_NODE_IMAGE) {
   const pnpmStore = dag.cacheVolume(pnpmStoreCacheKey)
   const container = dag
     .container()
@@ -24,14 +29,14 @@ export function baseNodeContainer(pnpmStoreCacheKey: string, image: string = mat
     .withMountedCache('/pnpm/store', pnpmStore)
     .withExec(['corepack', 'enable'])
 
-  if (image === matrixNodeImage) {
+  if (image === MANAGED_NODE_IMAGE) {
     return container
-      .withExec(['corepack', 'prepare', 'pnpm@10.29.3', '--activate'])
+      .withExec(['corepack', 'prepare', `pnpm@${MANAGED_PNPM_VERSION}`, '--activate'])
       .withEnvVariable('npm_config_registry', REGISTRY_URL_IN_CONTAINER)
   }
 
   return container
-    .withExec(['npm', 'install', '--global', '--force', 'pnpm@10.29.3'])
+    .withExec(['npm', 'install', '--global', '--force', `pnpm@${MANAGED_PNPM_VERSION}`])
     .withEnvVariable('npm_config_registry', REGISTRY_URL_IN_CONTAINER)
 }
 
@@ -42,16 +47,16 @@ export function parsePinnedPlaywrightVersion(versionRange: string | undefined): 
     return match[0]
   }
 
-  return '1.48.0'
+  return MANAGED_PLAYWRIGHT_VERSION
 }
 
 export function matrixContainerImage(source: FixtureSourceFiles): string {
   if (!source.hasPlaywrightTests) {
-    return matrixNodeImage
+    return MANAGED_NODE_IMAGE
   }
 
   const playwrightVersion = parsePinnedPlaywrightVersion(source.fixturePackageJson.devDependencies?.['@playwright/test'])
-  return `mcr.microsoft.com/playwright:v${playwrightVersion}-jammy`
+  return managedPlaywrightContainerImage(playwrightVersion)
 }
 
 export function hostRegistryService() {

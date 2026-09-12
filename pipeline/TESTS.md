@@ -148,10 +148,12 @@ Playwright jobs do not run on the default Node base image.
 
 The matrix runner selects the container image explicitly:
 
-- Vitest-only packages use `node:24-bookworm`
+- Vitest-only packages use `MANAGED_NODE_IMAGE` (`node:24-bookworm`)
 - packages with `e2e/` coverage use `mcr.microsoft.com/playwright:v<version>-jammy`
 
 The `<version>` segment is derived from the matrix package's pinned `@playwright/test` version.
+That pin is owned by `pipeline/dependencies.ts` (`MANAGED_PLAYWRIGHT_VERSION`).
+If a fixture is missing the pin, the runner falls back to the same constant.
 
 This contract is intentional:
 
