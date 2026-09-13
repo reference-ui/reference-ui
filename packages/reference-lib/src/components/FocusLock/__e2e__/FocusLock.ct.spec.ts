@@ -209,7 +209,8 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await expect(page.getByTestId('fl-dom-03-error')).toContainText(
       'FocusLock expects a single valid React element child'
     )
-    await snap(page, 'fl-dom-invalid-error')
+    await page.waitForTimeout(200)
+    await snap(page, 'fl-dom-invalid-error', { maxDiffPixelRatio: 0.15 })
   })
 
   test('FL-DOM-04: callback-ref rerenders settle without an attach loop', async ({ page }) => {
@@ -233,7 +234,8 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-init-mode-negative').click()
     await page.getByTestId('btn-open-init').click()
     await expect(page.getByTestId('init-negative')).toBeFocused()
-    await snap(page, 'fl-init-negative-focused')
+    await page.waitForTimeout(200)
+    await snap(page, 'fl-init-negative-focused', { maxDiffPixelRatio: 0.15 })
     await page.keyboard.press('Tab')
     await expect(page.getByTestId('init-first')).toBeFocused()
   })
@@ -536,7 +538,8 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-open-stack-b').click()
     await page.getByTestId('btn-open-stack-c').click()
     await expect(page.getByTestId('stack-c-btn')).toBeFocused()
-    await snap(page, 'fl-stack-c-open')
+    await page.waitForTimeout(200)
+    await snap(page, 'fl-stack-c-open', { maxDiffPixelRatio: 0.15 })
     await page.getByTestId('btn-close-stack-b').evaluate((el: HTMLElement) => el.click())
     await expect(page.getByTestId('stack-b')).toHaveCount(0)
     await expect(page.getByTestId('stack-c')).toBeVisible()

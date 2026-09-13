@@ -231,7 +231,7 @@ export function usePreventScroll(
   positionFixed = false,
   doc?: Document | null
 ) {
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     if (!enabled) return
     const target = doc ?? (typeof document !== 'undefined' ? document : null)
     if (!target) return

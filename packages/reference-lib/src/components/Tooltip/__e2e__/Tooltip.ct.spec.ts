@@ -2,17 +2,19 @@ import { test, expect, snap } from '../../../../playwright/ct'
 import type { Locator } from '@playwright/test'
 
 async function expectAnchoredTop(trigger: Locator, content: Locator) {
-  const triggerBox = await trigger.boundingBox()
-  const contentBox = await content.boundingBox()
-  expect(triggerBox).toBeTruthy()
-  expect(contentBox).toBeTruthy()
+  await expect(async () => {
+    const triggerBox = await trigger.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(triggerBox).toBeTruthy()
+    expect(contentBox).toBeTruthy()
 
-  expect(contentBox!.y + contentBox!.height).toBeLessThanOrEqual(triggerBox!.y + 2)
-  expect(contentBox!.y + contentBox!.height).toBeGreaterThan(triggerBox!.y - 32)
+    expect(contentBox!.y + contentBox!.height).toBeLessThanOrEqual(triggerBox!.y + 2)
+    expect(contentBox!.y + contentBox!.height).toBeGreaterThan(triggerBox!.y - 32)
 
-  const triggerMid = triggerBox!.x + triggerBox!.width / 2
-  expect(contentBox!.x).toBeLessThan(triggerMid)
-  expect(contentBox!.x + contentBox!.width).toBeGreaterThan(triggerMid)
+    const triggerMid = triggerBox!.x + triggerBox!.width / 2
+    expect(contentBox!.x).toBeLessThan(triggerMid)
+    expect(contentBox!.x + contentBox!.width).toBeGreaterThan(triggerMid)
+  }).toPass()
 }
 
 test.describe('Tooltip Composition Gates & Browser Proofs', () => {

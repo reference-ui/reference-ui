@@ -895,7 +895,7 @@ export function ExoticaFixture() {
           ref={pos10RtlRef}
           dir="rtl"
           data-testid="pos-10-rtl"
-          style={{ padding: 24, border: '1px solid #ddd' }}
+          style={{ padding: 24, paddingBottom: 400, border: '1px solid #ddd' }}
         >
           <button
             type="button"

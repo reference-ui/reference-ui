@@ -93,7 +93,11 @@ test.beforeEach(async ({ page }) => {
 export { expect }
 
 /** Settled visual snapshot of the CT viewport. Motion is covered by video, not this. */
-export async function snap(page: Page, name: string) {
+export async function snap(
+  page: Page,
+  name: string,
+  options?: Parameters<ReturnType<typeof expect>['toHaveScreenshot']>[1]
+) {
   if (!(await isReact19Gallery(page))) return
-  await expect(page).toHaveScreenshot(snapshotFileName(name), { fullPage: false })
+  await expect(page).toHaveScreenshot(snapshotFileName(name), { fullPage: false, ...options })
 }

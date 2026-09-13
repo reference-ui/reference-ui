@@ -165,11 +165,7 @@ test.describe('FocusLock × Overlay', () => {
 
     await page.getByTestId('fl-ov-nest-child-close').evaluate((el: HTMLElement) => el.click())
     await expect(page.getByTestId('fl-ov-nest-child-content')).toHaveCount(0)
-    const parentHasFocus = await page.evaluate(() => {
-      const parent = document.querySelector('[data-testid="fl-ov-nest-parent-content"]')
-      return Boolean(parent?.contains(document.activeElement))
-    })
-    expect(parentHasFocus).toBe(true)
+    await expect(page.getByTestId('fl-ov-nest-parent-1')).toBeFocused()
 
     await page.evaluate(() => {
       document.querySelector<HTMLElement>('[data-testid="fl-ov-background"]')?.focus()
