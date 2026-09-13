@@ -1,3 +1,8 @@
+/**
+ * Runtime dispatch functions and dynamic loader interface for the native Reference UI binary addon.
+ * Resolves platform-specific `.node` binaries, verifies architecture compatibility, and exposes guarded native operations.
+ * Provides fail-safe error handling when native capabilities are unavailable or incompatible with the host environment.
+ */
 import { getVirtualNative, getVirtualNativeUnavailableMessage } from './loader'
 import type { VirtualNativeBinding } from './loader'
 
@@ -77,4 +82,16 @@ export function analyzeStyletrace(rootDir: string, syncRootHint?: string): strin
   const native = requireVirtualNative('analyze Styletrace data')
 
   return native.analyzeStyletrace(rootDir, syncRootHint)
+}
+
+export function compileSystem(requestJson: string): string {
+  const native = requireVirtualNative('compile system') as VirtualNativeBinding & {
+    compileSystem?: (requestJson: string) => string
+  }
+
+  if (typeof native.compileSystem !== 'function') {
+    throw new Error('compileSystem native function is not available on native addon')
+  }
+
+  return native.compileSystem(requestJson)
 }

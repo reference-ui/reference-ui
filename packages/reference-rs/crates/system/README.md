@@ -24,6 +24,11 @@ User TSX / css() / cva() / sva()
         │
         ▼
 ┌───────────────────┐
+│  canon            │  DICTIONARY: webref standards + Reference dialect join
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
 │  styletrace crate │  WHO: StyleProps names + wrapper graph
 └─────────┬─────────┘
           ▼
@@ -65,6 +70,7 @@ Tripwires. Any of these means we built the wrong machine:
 
 One crate. Panda's 12 process crates are internal **modules** inside `system`:
 
+- **Canon (`canon`)**: Central dictionary defining the official set of HTML elements, Reference primitives, canonical CSS properties, StyleProps aliases, and responsive conditions. Represents the two-layer join between living W3C/WHATWG specifications (`@webref/css`, `@webref/elements`) and the Reference UI design system dialect. The generator lives at `packages/reference-rs/canon/` and emits `src/canon/`. It is a compiler dictionary, not a pass or third artifact (`compile()` returns only `{ stylesheet, css, diagnostics }`).
 - **Ingestion (`config`)**: Ingests `tokens()`, recipes, and conditions without external JS hooks.
 - **Extraction (`extract`)**: Discovers JSX attributes, `css()`, and recipe calls using `styletrace` without guessing tags, extracting both branches of conditionals without runtime JS evaluation.
 - **Encoding (`atom`)**: Lowers wants into canonical `(prop, value, conditions)` atomic sets.

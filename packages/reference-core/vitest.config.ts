@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@reference-ui/rust/tasty': resolve(rustPackageRoot, 'dist/tasty.mjs'),
+      '@reference-ui/rust/system': resolve(rustPackageRoot, 'dist/system.mjs'),
       '@reference-ui/styled/jsx': resolve(coreDir, 'src/system/styled/jsx/index.js'),
       '@reference-ui/styled/patterns/box': resolve(coreDir, 'src/system/styled/patterns/box.js'),
       '@reference-ui/styled': resolve(coreDir, 'src/system/styled'),

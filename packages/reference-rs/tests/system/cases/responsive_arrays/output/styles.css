@@ -1,0 +1,10 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .mt_1r { margin-top: var(--spacing-root); }
+  @media screen and (min-width: 40rem) {
+    .sm\:mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  }
+  @media screen and (min-width: 48rem) {
+    .md\:mt_4r { margin-top: calc(4 * var(--spacing-root)); }
+  }
+}

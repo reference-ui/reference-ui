@@ -8,7 +8,10 @@
  * 2. Function Cyclomatic Complexity (McCabe): Target <= 10, warning at > 10, failure at > 15.
  * 3. Function Cognitive Complexity: Target <= 15, warning at > 15, failure at > 20.
  * 4. Function Length: Warning at > 80 lines, failure at > 120 lines.
- * 5. Clippy Integration: Ingests clippy JSON diagnostics (cognitive complexity, too many lines, etc.).
+ * 5. Function arguments: Warning at > 4, failure at > 5. Introduce a context struct.
+ * 6. Clippy #[allow]/#[expect] is banned. Fix the architecture; do not silence lints.
+ * 7. File headers: 2–6 sentences describing what the file does. Thin one-liners warn; essays fail.
+ * 8. Clippy Integration: Ingests clippy JSON diagnostics when --clippy is passed.
  */
 
 import fs from 'node:fs'
@@ -24,7 +27,94 @@ export const THRESHOLDS = {
   CYCLOMATIC_FAIL: 15,
   COGNITIVE_WARN: 15,
   COGNITIVE_FAIL: 20,
+  FN_ARGS_WARN: 4,
+  FN_ARGS_FAIL: 5,
   VERBOSE_COMMENT_WARN: 15,
+  HEADER_SENTENCE_MIN: 2,
+  HEADER_SENTENCE_MAX: 8,
+  HEADER_LINES_FAIL: 20,
+}
+
+/** Clippy allow/expect is banned. Messages tell the agent how to fix, not how to silence. */
+export const CLIPPY_ALLOW_FIXES = {
+  too_many_arguments:
+    'NOPE. Silencing clippy::too_many_arguments is banned. Group the pass/walk session into a context struct and pass that; keep the current AST node as the function argument.',
+  too_many_lines:
+    'NOPE. Silencing clippy::too_many_lines is banned. Split into helpers named after real compiler steps (a node family, a pass, a lowering), not foo_part2.',
+  cognitive_complexity:
+    'NOPE. Silencing clippy::cognitive_complexity is banned. Flatten with early returns; extract match arms into helpers named after the node family.',
+  type_complexity:
+    'NOPE. Silencing clippy::type_complexity is banned. Name the type: a struct or type alias, not a nested generic soup.',
+  large_enum_variant:
+    'NOPE. Silencing clippy::large_enum_variant is banned. Box the fat variant.',
+  result_large_err:
+    'NOPE. Silencing clippy::result_large_err is banned. Shrink the error (Box, a smaller enum, or a shared error type).',
+  large_stack_arrays:
+    'NOPE. Silencing clippy::large_stack_arrays is banned. Use Vec or Box<[T]>.',
+  redundant_clone:
+    'NOPE. Silencing clippy::redundant_clone is banned. Borrow, or fix ownership so the clone is unnecessary.',
+  clone_on_copy:
+    'NOPE. Silencing clippy::clone_on_copy is banned. Copy the value; do not clone it.',
+  needless_pass_by_value:
+    'NOPE. Silencing clippy::needless_pass_by_value is banned. Take &T unless the function must own it.',
+  unwrap_used:
+    'NOPE. Silencing clippy::unwrap_used is banned. Return Result/Option; do not unwrap in domain code.',
+  expect_used:
+    'NOPE. Silencing clippy::expect_used is banned. Return Result/Option; do not expect in domain code.',
+}
+
+export function clippyAllowMessage(lint) {
+  return (
+    CLIPPY_ALLOW_FIXES[lint] ??
+    `NOPE. Silencing clippy::${lint} is banned. Fix the lint. Do not #[allow] or #[expect] Clippy.`
+  )
+}
+
+/**
+ * Fails on #[allow(clippy::...)] / #[expect(clippy::...)] / crate-level #![allow].
+ */
+export function checkClippyAllows(content) {
+  const violations = []
+  const attrRe = /#\!?\[(allow|expect)\s*\(([\s\S]*?)\)\]/g
+  let match
+  while ((match = attrRe.exec(content)) !== null) {
+    const inner = match[2]
+    const lints = [...inner.matchAll(/clippy::([A-Za-z0-9_]+)/g)].map((m) => m[1])
+    if (lints.length === 0) continue
+    const line = content.slice(0, match.index).split(/\r?\n/).length
+    for (const lint of lints) {
+      violations.push({ line, lint, message: clippyAllowMessage(lint) })
+    }
+  }
+  return violations
+}
+
+function splitTopLevelParams(src) {
+  const parts = []
+  let buf = ''
+  let depth = 0
+  for (const ch of src) {
+    if (ch === '(' || ch === '<' || ch === '[') depth++
+    else if (ch === ')' || ch === '>' || ch === ']') depth = Math.max(0, depth - 1)
+    if (ch === ',' && depth === 0) {
+      parts.push(buf)
+      buf = ''
+    } else {
+      buf += ch
+    }
+  }
+  if (buf.trim()) parts.push(buf)
+  return parts
+}
+
+export function countRustFnArgs(paramSrc) {
+  return splitTopLevelParams(paramSrc).filter((part) => {
+    const t = part.trim()
+    if (!t) return false
+    if (/^&?(mut\s+)?self\b/.test(t)) return false
+    if (/^self\s*:/.test(t)) return false
+    return true
+  }).length
 }
 
 const IGNORE_DIRS = new Set([
@@ -114,37 +204,105 @@ export function analyzeLineMetrics(content) {
   return { total, code, comment, blank }
 }
 
-/**
- * Checks if a source file begins with a concise top-of-file commentary describing what it is.
- */
-export function checkTopComment(content, filePath) {
-  const lines = content.split(/\r?\n/)
-  let firstIdx = 0
-  while (firstIdx < lines.length && (!lines[firstIdx].trim() || lines[firstIdx].trim().startsWith('#!'))) {
-    firstIdx++
-  }
-  if (firstIdx >= lines.length) return false
-  const first = lines[firstIdx].trim()
+function countProseSentences(prose) {
+  const cleaned = prose.replace(/`[^`]+`/g, 'X').trim()
+  if (!cleaned) return 0
+  const matches = cleaned.match(/[.!?](?=\s|$)/g)
+  return matches ? matches.length : 1
+}
 
-  if (filePath.endsWith('.rs')) {
-    return first.startsWith('//! ') || first.startsWith('/// ') || first.startsWith('/*')
-  }
-  if (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
-    return first.startsWith('/**') || first.startsWith('// ')
-  }
-  return true
+function stripDocPrefix(line) {
+  return line
+    .replace(/^\/\/\/?!?\s?/, '')
+    .replace(/^\/\*\*?\s?/, '')
+    .replace(/^\*\s?/, '')
+    .replace(/\*\/\s*$/, '')
+    .trim()
 }
 
 /**
- * Checks for overly verbose comment blocks (no filthy long comments, only terse comments).
+ * Module doc at the top of the file (`//!` in Rust, `/**` in TS/JS).
  */
-export function checkVerboseComments(content) {
+export function extractFileHeader(content, filePath) {
+  const lines = content.split(/\r?\n/)
+  let i = 0
+  while (i < lines.length && (!lines[i].trim() || lines[i].trim().startsWith('#!'))) {
+    i++
+  }
+  if (i >= lines.length) {
+    return { present: false, sentences: 0, lineCount: 0, prose: '', endLine: 0 }
+  }
+
+  const isRust = filePath.endsWith('.rs')
+  const isJs =
+    filePath.endsWith('.ts') ||
+    filePath.endsWith('.tsx') ||
+    filePath.endsWith('.js') ||
+    filePath.endsWith('.mjs')
+  const headerLines = []
+
+  if (isRust) {
+    while (i < lines.length) {
+      const t = lines[i].trim()
+      if (t.startsWith('//!')) {
+        headerLines.push(t)
+        i++
+        continue
+      }
+      if (t === '' && lines[i + 1]?.trim().startsWith('//!')) {
+        headerLines.push('')
+        i++
+        continue
+      }
+      break
+    }
+  } else if (isJs) {
+    const t = lines[i].trim()
+    if (t.startsWith('/**')) {
+      while (i < lines.length) {
+        headerLines.push(lines[i].trim())
+        if (lines[i].includes('*/')) {
+          i++
+          break
+        }
+        i++
+      }
+    } else if (t.startsWith('//')) {
+      while (i < lines.length && lines[i].trim().startsWith('//')) {
+        headerLines.push(lines[i].trim())
+        i++
+      }
+    }
+  }
+
+  const prose = headerLines.map(stripDocPrefix).filter(Boolean).join(' ')
+  return {
+    present: prose.length > 0,
+    sentences: countProseSentences(prose),
+    lineCount: headerLines.filter((l) => l.trim().length > 0).length,
+    prose,
+    endLine: i,
+  }
+}
+
+/**
+ * Checks if a source file begins with a module-level header comment.
+ */
+export function checkTopComment(content, filePath) {
+  return extractFileHeader(content, filePath).present
+}
+
+/**
+ * Inline comment blocks only. File headers are measured separately.
+ */
+export function checkVerboseComments(content, headerEndLine = 0) {
   const lines = content.split(/\r?\n/)
   const violations = []
   let commentStreak = 0
   let streakStart = 0
 
   for (let i = 0; i < lines.length; i++) {
+    if (i < headerEndLine) continue
     const trimmed = lines[i].trim()
     const isComment = trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/')
     if (isComment && trimmed.length > 0) {
@@ -152,13 +310,10 @@ export function checkVerboseComments(content) {
       commentStreak++
     } else {
       if (commentStreak > THRESHOLDS.VERBOSE_COMMENT_WARN) {
-        // Exclude the top-of-file header comment if it's within first 30 lines
-        if (streakStart > 5) {
-          violations.push({
-            line: streakStart,
-            length: commentStreak,
-          })
-        }
+        violations.push({
+          line: streakStart,
+          length: commentStreak,
+        })
       }
       commentStreak = 0
     }
@@ -339,6 +494,7 @@ export function analyzeRustComplexity(content) {
     let braceIndex = -1
     let parenDepth = 0
     let searchIdx = startIndex + match[0].length - 1
+    let paramSrc = ''
 
     for (let i = searchIdx; i < cleaned.length; i++) {
       const c = cleaned[i]
@@ -346,6 +502,7 @@ export function analyzeRustComplexity(content) {
       else if (c === ')') {
         parenDepth--
         if (parenDepth === 0) {
+          paramSrc = cleaned.slice(searchIdx + 1, i)
           // After matching closing paren, look for '{' or ';' (trait/extern signature)
           for (let k = i + 1; k < cleaned.length; k++) {
             const ch = cleaned[k]
@@ -429,6 +586,7 @@ export function analyzeRustComplexity(content) {
       startLine,
       endLine,
       lines: fnLines,
+      args: countRustFnArgs(paramSrc),
       cyclomatic,
       cognitive,
     })
@@ -677,25 +835,59 @@ export async function inspectFiles(files, options = {}) {
 
     // 1. Source file comment checks
     if (isRust || isJs) {
-      if (!checkTopComment(content, filePath)) {
+      const header = extractFileHeader(content, filePath)
+      if (!header.present) {
         fileIssues.push({
           type: 'MISSING_TOP_COMMENT',
           severity: 'error',
           line: 1,
-          message: 'Missing top-of-file header comment. All files must begin with a short, precise comment describing what the file is.',
+          message: 'Missing file header. Write 2–6 sentences at the top describing what this file does, what it takes, and what it emits. Not a one-liner, not an essay.',
         })
         totalViolations++
+      } else {
+        if (header.sentences < THRESHOLDS.HEADER_SENTENCE_MIN) {
+          fileIssues.push({
+            type: 'THIN_HEADER',
+            severity: 'warn',
+            line: 1,
+            message: `File header is too thin (${header.sentences} sentence${header.sentences === 1 ? '' : 's'}). Write 2–6 sentences that naturally describe what this file does, what it takes, and what it emits. Complex passes can use a few more. Not a one-liner, not an essay.`,
+          })
+          totalWarnings++
+        }
+        if (header.sentences > THRESHOLDS.HEADER_SENTENCE_MAX || header.lineCount > THRESHOLDS.HEADER_LINES_FAIL) {
+          const essay = header.lineCount > THRESHOLDS.HEADER_LINES_FAIL
+          fileIssues.push({
+            type: 'HEADER_ESSAY',
+            severity: essay ? 'error' : 'warn',
+            line: 1,
+            message: `File header is an essay (${header.sentences} sentences, ${header.lineCount} lines). Describe the file; do not narrate every function. Aim for 2–6 sentences.`,
+          })
+          if (essay) totalViolations++
+          else totalWarnings++
+        }
       }
 
-      const verboseBlocks = checkVerboseComments(content)
+      const verboseBlocks = checkVerboseComments(content, header.endLine)
       for (const vb of verboseBlocks) {
         fileIssues.push({
           type: 'VERBOSE_COMMENT',
           severity: 'warn',
           line: vb.line,
-          message: `Overly verbose comment block (${vb.length} lines). We only like very terse comments.`,
+          message: `Overly verbose inline comment block (${vb.length} lines). Inline comments stay terse (why, not what). File headers may be 2–6 sentences.`,
         })
         totalWarnings++
+      }
+    }
+
+    if (isRust) {
+      for (const allow of checkClippyAllows(content)) {
+        fileIssues.push({
+          type: 'CLIPPY_ALLOW',
+          severity: 'error',
+          line: allow.line,
+          message: allow.message,
+        })
+        totalViolations++
       }
     }
 
@@ -733,7 +925,7 @@ export async function inspectFiles(files, options = {}) {
           severity: 'error',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has ${fn.lines} lines (> ${THRESHOLDS.FN_LINES_FAIL}).`,
+          message: `Function '${fn.name}' has ${fn.lines} lines (> ${THRESHOLDS.FN_LINES_FAIL}). Split into helpers named after real compiler steps, not foo_part2.`,
         })
         totalViolations++
       } else if (fn.lines > THRESHOLDS.FN_LINES_WARN) {
@@ -742,7 +934,7 @@ export async function inspectFiles(files, options = {}) {
           severity: 'warn',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has ${fn.lines} lines (> ${THRESHOLDS.FN_LINES_WARN}).`,
+          message: `Function '${fn.name}' has ${fn.lines} lines (> ${THRESHOLDS.FN_LINES_WARN}). Split into helpers named after real compiler steps, not foo_part2.`,
         })
         totalWarnings++
       }
@@ -753,7 +945,7 @@ export async function inspectFiles(files, options = {}) {
           severity: 'error',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has cyclomatic complexity ${fn.cyclomatic} (> ${THRESHOLDS.CYCLOMATIC_FAIL}).`,
+          message: `Function '${fn.name}' has cyclomatic complexity ${fn.cyclomatic} (> ${THRESHOLDS.CYCLOMATIC_FAIL}). Extract branches into helpers named after the node family or pass step.`,
         })
         totalViolations++
       } else if (fn.cyclomatic > THRESHOLDS.CYCLOMATIC_WARN) {
@@ -762,7 +954,7 @@ export async function inspectFiles(files, options = {}) {
           severity: 'warn',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has cyclomatic complexity ${fn.cyclomatic} (> ${THRESHOLDS.CYCLOMATIC_WARN}).`,
+          message: `Function '${fn.name}' has cyclomatic complexity ${fn.cyclomatic} (> ${THRESHOLDS.CYCLOMATIC_WARN}). Extract branches into helpers named after the node family or pass step.`,
         })
         totalWarnings++
       }
@@ -773,7 +965,7 @@ export async function inspectFiles(files, options = {}) {
           severity: 'error',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has cognitive complexity ${fn.cognitive} (> ${THRESHOLDS.COGNITIVE_FAIL}).`,
+          message: `Function '${fn.name}' has cognitive complexity ${fn.cognitive} (> ${THRESHOLDS.COGNITIVE_FAIL}). Flatten with early returns; extract match arms into helpers named after the node family.`,
         })
         totalViolations++
       } else if (fn.cognitive > THRESHOLDS.COGNITIVE_WARN) {
@@ -782,9 +974,31 @@ export async function inspectFiles(files, options = {}) {
           severity: 'warn',
           fn: fn.name,
           line: fn.startLine,
-          message: `Function '${fn.name}' has cognitive complexity ${fn.cognitive} (> ${THRESHOLDS.COGNITIVE_WARN}).`,
+          message: `Function '${fn.name}' has cognitive complexity ${fn.cognitive} (> ${THRESHOLDS.COGNITIVE_WARN}). Flatten with early returns; extract match arms into helpers named after the node family.`,
         })
         totalWarnings++
+      }
+
+      if (typeof fn.args === 'number') {
+        if (fn.args > THRESHOLDS.FN_ARGS_FAIL) {
+          fileIssues.push({
+            type: 'FN_ARGS_FAIL',
+            severity: 'error',
+            fn: fn.name,
+            line: fn.startLine,
+            message: `Function '${fn.name}' has ${fn.args} arguments (> ${THRESHOLDS.FN_ARGS_FAIL}). NOPE. Introduce a context/session struct for shared pass state; do not #[allow(clippy::too_many_arguments)].`,
+          })
+          totalViolations++
+        } else if (fn.args > THRESHOLDS.FN_ARGS_WARN) {
+          fileIssues.push({
+            type: 'FN_ARGS_WARN',
+            severity: 'warn',
+            fn: fn.name,
+            line: fn.startLine,
+            message: `Function '${fn.name}' has ${fn.args} arguments (> ${THRESHOLDS.FN_ARGS_WARN}). Consider a context/session struct before this becomes a parameter soup.`,
+          })
+          totalWarnings++
+        }
       }
     }
 

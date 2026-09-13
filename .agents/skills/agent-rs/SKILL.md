@@ -1,6 +1,6 @@
 ---
 name: agent-rs
-description: Dedicated workflow and verification runner for reference-rs (Rust domain crates, N-API bridge, and TS runtime wrappers). Enforces fast seam Vitest testing, Rust unit tests, load-balanced CPU gate queueing for multi-agent overnight runs, Darwin QoS elevation, and strict code quality standards (cyclomatic complexity <= 10, cognitive complexity <= 15, file length < 365/500 lines). Activate whenever working in packages/reference-rs or Rust/native bindings.
+description: Dedicated workflow and verification runner for reference-rs (Rust domain crates, N-API bridge, and TS runtime wrappers). Enforces fast seam Vitest testing, Rust unit tests, load-balanced CPU gate queueing for multi-agent overnight runs, Darwin QoS elevation, and strict code quality standards (cyclomatic complexity <= 10, cognitive complexity <= 15, file length < 365/500 lines, Clippy #[allow] banned). Activate whenever working in packages/reference-rs or Rust/native bindings.
 ---
 
 # Reference RS Agent Skill (`agent-rs`)
@@ -56,6 +56,19 @@ We test at two complementary levels:
 > pnpm agentrs <path-to-modified-file>
 > ```
 
+### Stance
+
+This is a compiler, not a toy. Write it the way Holzmann’s *Power of 10* wanted flight software written: small enough to analyze, honest about failure, zero silenced diagnostics. The tables below are the checks. This is the taste.
+
+Four habits, not ten new commandments:
+
+1. **Simple enough to analyze.** One pass, one node family, one idea. Early returns. Named match arms. If a human cannot hold the function in their head, it is too big.
+2. **Failure is explicit.** `Result` and diagnostics, never `unwrap` in domain code. Tests sit next to the pass. Panicking is not a control-flow strategy.
+3. **State is a type.** Shared walk/pass data lives on a context struct at the smallest honest scope. Eight arguments and a clone-party are the same smell as pointer soup.
+4. **The analyzer is the reviewer.** Clippy and `pnpm agentrs q` are not optional style. If the tool is angry, rewrite. Holzmann’s last rule was zero warnings — including the ones you were sure were wrong.
+
+Do not add extra ritual. Do not invent house rules on top of this. If the gate is quiet and the IR is honest, you are done.
+
 ### Guardrails & Limits
 
 | Metric | Target | Soft Warning | Hard Failure | Action on Failure |
@@ -64,22 +77,53 @@ We test at two complementary levels:
 | **Function Cyclomatic Complexity (McCabe)** | $\le 5$ | **$> 10$** | **$> 15$** | Refactor complex conditional branches into focused helper functions. |
 | **Function Cognitive Complexity** | $\le 8$ | **$> 15$** | **$> 20$** | Flatten nested scopes, reduce deep match/if nesting. |
 | **Function Length** | $\le 40$ lines | **$> 80$ lines** | **$> 120$ lines** | Break large functions into smaller steps. |
-| **Top-of-File Commentary** | Required | — | **Missing** | Add short, precise docstring at the top of the file. |
-| **Comment Verbosity** | Terse | **$> 15$ lines** | — | Eliminate filthy long comments; keep explanations terse. |
+| **Function Arguments** | $\le 4$ | **$> 4$** | **$> 5$** | *"NOPE."* Introduce a context/session struct. **Never** `#[allow(clippy::too_many_arguments)]`. |
+| **Top-of-File Commentary** | 2–6 sentences | 1 sentence | **Missing** / **essay ($> 20$ lines)** | Describe what the file does, takes, and emits. Not a one-liner, not an essay. |
+| **Comment Verbosity** | Terse (inline) | **$> 15$ lines** (inline) | — | Inline comments stay terse. Headers are allowed to be a short paragraph. |
 | **README Directory Antipattern** | Prohibited | — | **Directory list** | Remove filename tables from README; describe module architecture. |
-| **Clippy Lints** | Clean | Warning | Error | Clippy strict rules configured in `clippy.toml`. |
+| **Clippy Lints** | Clean | — | **`#[allow]`/`#[expect]`** | **BANNED.** Fix the architecture. See Clippy policy below. |
 
 ### Comment & Documentation Standards
 
-1. **Top-of-File Commentary (Mandatory)**:
-   Every file must start with a short, precise comment string at the top describing what the file is and its role:
-   - Rust: `//! <short precise description of file>`
-   - TypeScript/JS: `/** <short precise description of file> */`
-2. **No Filthy Long Comments**:
-   We do not like long narrative essays or paragraphs in comments. Comments must be very terse and concise, strictly explaining non-obvious *why*, never obvious *what*.
+1. **Top-of-File Commentary (Mandatory & Substantive)**:
+   Every file starts with a real module description — typically **2–6 sentences**. Not a one-liner label, not an essay.
+   - Rust: consecutive `//!` lines at the top of the file
+   - TypeScript/JS: a `/** ... */` block at the top of the file
+   - Say what the file **is**, what it **takes**, what it **emits**, and the non-obvious invariant or boundary.
+   - A tiny type file can be 2 sentences. A walker, resolver, or lowering pass can be 4–6.
+   - **No lazy stubs**: Do NOT write a 3–5 word placeholder (`//! Rhythm r units. See README.md.`). Write complete sentences.
+   - Do **not** narrate every function. That belongs in the code.
+2. **Inline comments stay terse**:
+   Inside functions we still do not want filthy long comments. Explain non-obvious *why*, never obvious *what*. The file header is the one place a short paragraph is expected.
 3. **Module-level README.md Rules**:
    - The module-level `README.md` must describe what the overall module/crate is trying to achieve (architecture, responsibilities, mental model, boundaries).
    - **`README.md` must NEVER contain a directory list of filenames with short explanations.** Those explanations belong in the respective file at the top!
+
+### Architecture Over Cheating: Never Silence, Architect Properly
+
+> [!CAUTION]
+> **DO NOT CHEAT. NO COMPILER OR LINT SUPPRESSIONS.**
+> `#[allow(clippy::…)]`, `#[expect(clippy::…)]`, and `#![allow(clippy::…)]` are **strictly banned** and fail the quality gate immediately.
+> Do NOT attempt syntactic workarounds to bypass limits (such as packing 6+ loose arguments into ad-hoc tuples `(a, b, c, d, e, f)` or mechanical helper splits with the same parameter soup).
+> **Architect properly**: When functions need multiple pieces of pass state, introduce a well-documented context/session data structure (e.g. `LeafWalk`, `ObjectWalk`, `ExtractContext`).
+
+When quality or Clippy fires, **redesign**. Do not add an allow. Copying the same parameter list into every helper is not a design.
+
+| Lint | What it actually means | Do this |
+| :--- | :--- | :--- |
+| **`too_many_arguments`** | The type is missing. Those args are one pass/walk session. | Introduce a context/session struct. Keep the current AST node as the function argument; put `prop` / `origin` / `important` / `wants` / `diagnostics` / `file` on the struct. |
+| **`too_many_lines`** | The function is several steps wearing one name. | Split into helpers named after real compiler steps (a node family, a pass, a lowering). Not `foo_part2`. |
+| **`cognitive_complexity`** | Nesting and match arms are doing too much in one scope. | Flatten with early returns. Extract match arms into helpers named after the node family. |
+| **`type_complexity`** | An unnamed nested generic is a type. | Name it: a struct or a type alias. |
+| **`large_enum_variant`** | One variant is blowing the enum size. | `Box` the fat variant. |
+| **`result_large_err`** | The error payload is huge on every `Result`. | Shrink it (`Box`, a smaller error enum, or a shared error type). |
+| **`large_stack_arrays`** | A giant array does not belong on the stack. | `Vec` or `Box<[T]>`. |
+| **`redundant_clone` / `clone_on_copy`** | Ownership is sloppy. | Borrow, or stop cloning `Copy` values. |
+| **`needless_pass_by_value`** | The callee does not need ownership. | Take `&T`. |
+| **`unwrap_used` / `expect_used`** | Domain code is panicking. | Return `Result`/`Option`. Do not unwrap in library code. |
+| **Anything else** | Clippy is pointing at a real issue. | Apply the Clippy suggestion. Still no `#[allow]`. |
+
+Repeating the same 6+ arguments across `walk_*` helpers after a complexity split is still `too_many_arguments`. That is when you add the struct.
 
 ---
 
@@ -139,6 +183,8 @@ pnpm agentrs                                                 # bare command runs
 flowchart TD
     A[Read Module README.md] --> B[Implement in target crate or js/]
     B --> C[Run Quality Check: pnpm agentrs <file>]
+    C -->|Clippy allow or too many args| D2[NOPE: introduce a context struct / redesign]
+    D2 --> C
     C -->|Violations > 500 lines or CC > 10| D[Refactor / Split File into Submodules]
     D --> C
     C -->|Passed| E[Run Rust Tests: pnpm agentrs c <crate>]
@@ -146,8 +192,10 @@ flowchart TD
     F --> G[Run Full Dev Loop: pnpm agentrs t]
 ```
 
-1. **Keep files small**: Files must stay under 500 lines (warning at 365 lines: *"Can you split this up, please?"*).
-2. **Keep functions simple**: Cyclomatic complexity $\le 10$, cognitive complexity $\le 15$, lines $\le 80$.
-3. **Write top-of-file commentary**: Always place a short, precise description at the top of every file.
-4. **Keep comments terse**: Explain *why*, not *what*.
-5. **Verify both seams and internals**: Pure Rust tests (`pnpm agentrs c`) for domain logic, Vitest (`pnpm agentrs v`) for N-API seams and wrappers.
+1. **Write it like it has to be trusted**: small enough to analyze, explicit failure, pass state on a type, zero silenced lints.
+2. **Keep files small**: Files must stay under 500 lines (warning at 365 lines: *"Can you split this up, please?"*).
+3. **Keep functions simple**: Cyclomatic complexity $\le 10$, cognitive complexity $\le 15$, lines $\le 80$, arguments $\le 5$.
+4. **Never silence Clippy**: No `#[allow(clippy::…)]`. Too many arguments means a context struct, not an allow.
+5. **Write a real file header**: 2–6 sentences at the top describing what the file does, takes, and emits. Not a one-liner, not an essay.
+6. **Keep inline comments terse**: Explain *why*, not *what*. The header is the paragraph; the body is not.
+7. **Verify both seams and internals**: Pure Rust tests (`pnpm agentrs c`) for domain logic, Vitest (`pnpm agentrs v`) for N-API seams and wrappers.

@@ -1,3 +1,7 @@
+//! Node-API boundary exposing high-performance Reference UI compiler capabilities to Node.js environments.
+//! Bridges pure Rust domain modules with JavaScript via ergonomic exports for import rewriting, AST inspection, and system compilation.
+//! Enforces memory safety and efficient JSON-serialized data exchange across the native runtime divide.
+
 #![deny(clippy::all)]
 
 use std::path::PathBuf;
@@ -95,4 +99,13 @@ pub fn analyze_styletrace(root_dir: String, sync_root_hint: Option<String>) -> R
     serde_json::to_string(&result).map_err(|err| {
         napi::Error::from_reason(format!("Failed to serialize styletrace result: {err}"))
     })
+}
+
+#[napi]
+pub fn compile_system(request_json: String) -> Result<String> {
+    let req: system::CompileRequest = serde_json::from_str(&request_json)
+        .map_err(|err| napi::Error::from_reason(format!("Invalid compile request JSON: {err}")))?;
+    let result = system::compile(&req).map_err(napi::Error::from_reason)?;
+    serde_json::to_string(&result)
+        .map_err(|err| napi::Error::from_reason(format!("Failed to serialize compile result: {err}")))
 }

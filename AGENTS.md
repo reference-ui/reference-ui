@@ -165,12 +165,15 @@ pnpm agentrs                                                 # bare command runs
 
 > [!IMPORTANT]
 > **Code Quality & Comment Standards for `reference-rs`**:
+> This is a compiler, not a toy. Write small enough to analyze, fail explicitly (`Result`/diagnostics, not `unwrap`), put pass state in a type, and never silence the analyzer. The numbered limits below are the checks; that is the taste.
 > 1. **Zero tolerance default**: 1 Code violations cause immediate failure (exit 1). Not an optional check.
 > 2. **File length**: Hard failure if a file exceeds **500 lines**; warning at **365 lines** (*"Can you split this up, please?"*).
 > 3. **Cyclomatic complexity**: Keep $\le 10$ (failure $> 15$). Cognitive complexity $\le 15$ (failure $> 20$).
 > 4. **Function length**: Keep $\le 80$ lines (failure $> 120$).
-> 5. **Top-of-file commentary mandatory**: Every file must start with a short, precise header comment (`//!` in Rust, `/**` in TS) describing what the file is.
-> 6. **No filthy long comments**: Keep comments very terse and concise; explain *why*, not *what*.
-> 7. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
-> 8. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
+> 5. **Function arguments**: Warning at $> 4$, failure at $> 5$. Introduce a context/session struct (e.g. `LeafWalk`, `ObjectWalk`, `ExtractContext`). **Never** `#[allow(clippy::too_many_arguments)]`.
+> 6. **Clippy allows & cheating are strictly banned**: `#[allow(clippy::…)]` / `#[expect(clippy::…)]` fail the quality gate immediately. Do NOT attempt syntactic workarounds or parameter soup tuples. Fix the architecture.
+> 7. **Top-of-file commentary**: 2–6 sentences at the top (`//!` / `/**`) describing what the file does, takes, and emits. Tiny types can be 2 sentences; a walker or lowering pass can be 4–6. No lazy one-liners, not an essay.
+> 8. **Inline comments stay terse**: Explain *why*, not *what*. The file header is the paragraph; function bodies are not.
+> 9. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
+> 10. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
 
