@@ -708,6 +708,7 @@ export function FocusFixture() {
             <Overlay.Portal container={focus08PortalEl}>
               <Overlay.Content
                 data-testid="focus-08-content"
+                // @ts-ignore
                 ref={(el: HTMLDivElement | null) => {
                   focus08NodeRef.current = el
                   setFocus08RefLog(l => {

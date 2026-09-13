@@ -6,20 +6,28 @@ export type MountResult = Locator & {
   unmount: () => Promise<void>
 }
 
-export type MountFn = (story: string, props?: Record<string, unknown>) => Promise<MountResult>
+export type MountFn = (story: string, props?: any) => Promise<MountResult>
 
-async function resetViewportScroll(page: Page) {
+async function resetViewportState(page: Page) {
+  await page.mouse.move(0, 0)
   await page.evaluate(() => {
     window.scrollTo(0, 0)
+    document.documentElement.scrollLeft = 0
     document.documentElement.scrollTop = 0
+    document.body.scrollLeft = 0
     document.body.scrollTop = 0
+    document.querySelectorAll('*').forEach((el) => {
+      if (el.scrollTop) el.scrollTop = 0
+      if (el.scrollLeft) el.scrollLeft = 0
+    })
   }).catch(() => {})
+  await page.waitForFunction(() => window.scrollX === 0 && window.scrollY === 0)
 }
 
 async function gotoGallery(page: Page) {
   await page.goto('/playwright/index.html')
   await page.waitForFunction(() => typeof window.mount === 'function')
-  await resetViewportScroll(page)
+  await resetViewportState(page)
 }
 
 async function callMount(page: Page, story: string, props?: Record<string, unknown>) {
@@ -83,11 +91,12 @@ export const test = base.extend<{ mount: MountFn }>({
     await gotoGallery(page)
     await use(createMount(page))
     await callUnmount(page).catch(() => {})
+    await resetViewportState(page)
   },
 })
 
 test.beforeEach(async ({ page }) => {
-  await resetViewportScroll(page)
+  await resetViewportState(page)
 })
 
 export { expect }

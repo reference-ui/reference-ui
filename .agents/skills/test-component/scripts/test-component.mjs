@@ -21,6 +21,8 @@ import net from 'node:net'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+import { acquireCpuGate, withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
+
 function ensureQosJailbreak() {
   if (process.platform !== 'darwin') return false
   if (process.env.__AGENT_CLI_JAILBROKEN === '1') return false
@@ -280,7 +282,9 @@ async function acquireQueueLock(taskInfo = {}) {
 async function withQueueLock(taskInfo, fn) {
   const { slotIndex, release } = await acquireQueueLock(taskInfo)
   try {
-    return await fn(slotIndex)
+    return await withCpuGate('ct', taskInfo.cmd || 'agentct fallback', async () => {
+      return await fn(slotIndex)
+    })
   } finally {
     await release()
   }
@@ -489,10 +493,28 @@ async function startDaemon({ auto = false } = {}) {
     return argv.length ? argv.join(' ') : '(full suite)'
   }
 
-  function startJob(job) {
+  async function startJob(job) {
     const { socket, req } = job
     const exclusive = job.runtime === 'exclusive'
     const label = describeJob(job)
+    const prevGateEnv = process.env.REFERENCE_UI_CPU_GATE_HELD
+    if (req.env && req.env.REFERENCE_UI_CPU_GATE_HELD) {
+      process.env.REFERENCE_UI_CPU_GATE_HELD = req.env.REFERENCE_UI_CPU_GATE_HELD
+    }
+
+    let releaseGate = async () => {}
+    try {
+      releaseGate = await acquireCpuGate('ct', label)
+    } catch(e) {
+      console.error(`[agentct-daemon] Failed to acquire CPU gate:`, e)
+    } finally {
+      if (prevGateEnv !== undefined) {
+        process.env.REFERENCE_UI_CPU_GATE_HELD = prevGateEnv
+      } else {
+        delete process.env.REFERENCE_UI_CPU_GATE_HELD
+      }
+    }
+
     console.log(`[agentct-daemon] Starting (${activeJobs.size}/${MAX_CONCURRENCY} slots, workers=${WORKERS_PER_SLOT}): ${label}`)
     try {
       socket.write(JSON.stringify({ type: 'start', workers: WORKERS_PER_SLOT, port: vitePort }) + '\n')
@@ -505,6 +527,7 @@ async function startDaemon({ auto = false } = {}) {
       if (settled) return
       settled = true
       activeJobs.delete(job)
+      await releaseGate()
       if (exclusive) {
         try { await ensureVite('19') } catch (err) {
           console.error(`[agentct-daemon] Failed to restore Vite 19: ${err.message}`)
@@ -778,7 +801,10 @@ function sendToDaemon(argv) {
         type: 'run',
         argv,
         cwd: process.cwd(),
-        env: { FORCE_COLOR: '1' },
+        env: {
+          FORCE_COLOR: '1',
+          REFERENCE_UI_CPU_GATE_HELD: process.env.REFERENCE_UI_CPU_GATE_HELD
+        },
         pid: process.pid,
       }) + '\n')
     })
@@ -882,6 +908,11 @@ let component = ''
 let grep = ''
 let isJson = false
 let isClean = false
+let isList = false
+let targetId = null
+let targetLine = null
+let exactPlaywrightTarget = null
+let exactVitestTarget = null
 let isHeaded = false
 let updateSnapshots = false
 let confirmSnapshotUpdate = false
@@ -909,6 +940,12 @@ for (let i = 0; i < args.length; i++) {
   } else if (arg === '--help' || arg === '-h') {
     usage()
     process.exit(0)
+  } else if (arg === '--list') {
+    isList = true
+  } else if (arg === '--line') {
+    targetLine = parseInt(args[++i], 10)
+  } else if (arg === '--id') {
+    targetId = args[++i]
   } else if (arg === '--json') {
     isJson = true
   } else if (arg === '--clean') {
@@ -932,13 +969,22 @@ for (let i = 0; i < args.length; i++) {
     reactArg = args[++i]
   } else if (arg === '-g' || arg === '--grep') {
     grep = args[++i] || ''
-  } else if (!arg.startsWith('-') && !component) {
-    component = arg
+  } else if (!arg.startsWith('-')) {
+    if (!component) {
+      component = arg
+    } else if (!targetId) {
+      targetId = arg
+    }
   } else if (arg.startsWith('-')) {
     console.error(`[agentct] Unknown flag: ${arg}`)
     usage()
     process.exit(2)
   }
+}
+
+if (targetId && targetLine) {
+  console.error('[agentct] Error: Cannot pass both --id and --line.')
+  process.exit(2)
 }
 
 if (updateSnapshots && !confirmSnapshotUpdate) {
@@ -1112,6 +1158,122 @@ try {
   pnpmCmd = execSync('which pnpm', { encoding: 'utf-8' }).trim() || 'pnpm'
 } catch {}
 
+if (isList || targetId || targetLine) {
+  const list = []
+  
+  if (runE2e) {
+    let pwOutput = ''
+    try {
+      const pwCmd = ['exec', 'playwright', 'test', '-c', configPath, '--list']
+      if (component) pwCmd.push(`${component}/__e2e__`)
+      pwOutput = execSync(`${pnpmCmd} ${pwCmd.join(' ')}`, { cwd: libDir, encoding: 'utf-8' })
+    } catch (err) {
+      pwOutput = err.stdout?.toString() || ''
+    }
+    
+    for (const line of pwOutput.split('\n')) {
+      const m = line.match(/^\s*\[.*?\]\s+›\s+(.+?):(\d+):(\d+)\s+›\s+(.*)$/)
+      if (m) {
+        const [, file, lineNum, col, titleChain] = m
+        let id = null
+        const idMatch = titleChain.match(/([A-Z]{1,4}(?:-[A-Z0-9]+)+)/)
+        if (idMatch) id = idMatch[1]
+        
+        list.push({
+          id: id || titleChain.split('›').pop().trim(),
+          file,
+          line: parseInt(lineNum, 10),
+          title: titleChain.split('›').pop().trim(),
+          fullTitle: titleChain,
+          type: 'e2e'
+        })
+      }
+    }
+  }
+
+  if (runUnit) {
+    let vtOutput = ''
+    try {
+      const vtCmd = ['exec', 'vitest', 'list']
+      if (component) vtCmd.push(`src/components/${component}`)
+      vtOutput = execSync(`${pnpmCmd} ${vtCmd.join(' ')}`, { cwd: libDir, encoding: 'utf-8' })
+    } catch (err) {
+      vtOutput = err.stdout?.toString() || ''
+    }
+
+    for (const line of vtOutput.split('\n')) {
+      const m = line.match(/^([a-zA-Z0-9/_-]+\.test\.tsx?)\s+>\s+(.*)$/)
+      if (m) {
+        const [, file, titleChain] = m
+        list.push({
+          id: titleChain.split('>').pop().trim(),
+          file,
+          line: null,
+          title: titleChain.split('>').pop().trim(),
+          fullTitle: titleChain.split('>').map(s => s.trim()).join(' > '),
+          type: 'unit'
+        })
+      }
+    }
+  }
+
+  if (isList) {
+    if (isJson) {
+      console.log(JSON.stringify(list, null, 2))
+    } else {
+      console.log(`\n=== Found ${list.length} specs ===\n`)
+      for (const t of list) {
+        if (t.type === 'e2e') {
+          console.log(`- ${t.id} [CT] (${t.file}:${t.line})\n  ${t.fullTitle}`)
+        } else {
+          console.log(`- ${t.id} [Unit] (${t.file})\n  ${t.fullTitle}`)
+        }
+      }
+    }
+    process.exit(0)
+  }
+
+  let found = null
+  if (targetLine) {
+    const matches = list.filter(t => t.line === targetLine)
+    if (matches.length === 0) {
+      console.error(`[agentct] Error: No e2e spec found on line ${targetLine}`)
+      process.exit(1)
+    }
+    if (matches.length > 1) {
+      console.error(`[agentct] Error: Multiple specs found on line ${targetLine}`)
+      process.exit(1)
+    }
+    found = matches[0]
+  } else if (targetId) {
+    const matches = list.filter(t => t.id === targetId || t.title.includes(targetId) || t.fullTitle.includes(targetId))
+    if (matches.length === 0) {
+      console.error(`[agentct] Error: No spec found matching ID or title '${targetId}'`)
+      process.exit(1)
+    }
+    if (matches.length > 1) {
+      console.error(`[agentct] Error: Multiple specs matched '${targetId}'. Be more specific.`)
+      process.exit(1)
+    }
+    found = matches[0]
+  }
+
+  if (found) {
+    if (found.type === 'e2e') {
+      runUnit = false
+      exactPlaywrightTarget = `${found.file}:${found.line}`
+      component = found.file.split('/')[0] // Keep component name for logs
+      grep = ''
+    } else {
+      runE2e = false
+      exactVitestTarget = found.file
+      component = found.file.split('/')[2] || found.file.split('/')[0] // src/components/Toast or Toast
+      const escaped = found.fullTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      grep = `^${escaped}$`
+    }
+  }
+}
+
 function spawnPnpm(pnpmArgs, { cwd, extraEnv = {} } = {}) {
   return spawnSync(pnpmCmd, pnpmArgs, {
     cwd,
@@ -1197,7 +1359,9 @@ let unitResult = {
 
 if (runUnit) {
   const vitestArgs = ['exec', 'vitest', 'run', '--reporter=default', '--reporter=json', '--outputFile', vitestJsonPath]
-  if (component) {
+  if (exactVitestTarget) {
+    vitestArgs.push(exactVitestTarget)
+  } else if (component) {
     vitestArgs.push(`src/components/${component}`)
   }
   if (grep) {
@@ -1345,7 +1509,9 @@ async function runE2eSuites() {
     if (interrupted) break
 
     const pwArgs = ['exec', 'playwright', 'test', '-c', configPath, '--workers', String(workerCount)]
-    if (component) {
+    if (exactPlaywrightTarget) {
+      pwArgs.push(exactPlaywrightTarget)
+    } else if (component) {
       pwArgs.push(`${component}/__e2e__`)
     }
     if (grep) {

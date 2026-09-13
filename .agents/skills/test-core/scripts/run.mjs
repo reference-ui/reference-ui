@@ -19,6 +19,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import os from 'node:os'
 import { fileURLToPath } from 'node:url'
+import { withCpuGate } from './cpu-gate.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -997,22 +998,24 @@ function normalizeTestArgs(rawArgs) {
 async function actionTest(args) {
   const normalizedArgs = normalizeTestArgs(args)
   const pnpmArgs = ['pipeline', 'test', ...normalizedArgs]
-  return withQueueLock({ cmd: 'agent test', args: pnpmArgs }, async () => {
-    console.log(`[agent] Executing unthrottled: pnpm ${pnpmArgs.join(' ')}`)
-    const result = await runCommand('pnpm', pnpmArgs, { skipQueue: true })
-    const exitCode = numericExitCode(result.code)
-    if (exitCode !== 0) {
+  return withCpuGate('exclusive', 'agent test', async () => {
+    return withQueueLock({ cmd: 'agent test', args: pnpmArgs }, async () => {
+      console.log(`[agent] Executing unthrottled: pnpm ${pnpmArgs.join(' ')}`)
+      const result = await runCommand('pnpm', pnpmArgs, { skipQueue: true })
+      const exitCode = numericExitCode(result.code)
+      if (exitCode !== 0) {
+        finishAgent({
+          ok: false,
+          message: `Matrix test suite FAILED (exit code ${exitCode}).`,
+          code: exitCode,
+          killPort: true,
+        })
+      }
       finishAgent({
-        ok: false,
-        message: `Matrix test suite FAILED (exit code ${exitCode}).`,
-        code: exitCode,
-        killPort: true,
+        ok: true,
+        message: 'Matrix test suite PASSED successfully.',
+        code: 0,
       })
-    }
-    finishAgent({
-      ok: true,
-      message: 'Matrix test suite PASSED successfully.',
-      code: 0,
     })
   })
 }
@@ -1347,153 +1350,155 @@ async function actionPlaywright(rawArgs = []) {
     process.exit(1)
   }
 
-  return withQueueLock({ cmd: 'agent playwright', args: rawArgs }, async () => {
-    // 1. Build check
-    if (!skipBuild) {
-      const ok = await ensureLibBuild({ forceBuild })
-      if (!ok) process.exit(1)
-    }
-
-    // 2. Concurrency tuning:
-    // When targeting a single test (by line number or test ID), run with 1 worker to eliminate multi-process spawn overhead.
-    // When running multiple tests, auto-tune to hardware worker capacity (up to 8 workers on 32-core machine).
-    if (!isSingleTest) {
-      for (const a of playwrightArgs) {
-        if (a.includes('.spec.') && a.includes(':')) isSingleTest = true
+  return withCpuGate('exclusive', 'agent playwright', async () => {
+    return withQueueLock({ cmd: 'agent playwright', args: rawArgs }, async () => {
+      // 1. Build check
+      if (!skipBuild) {
+        const ok = await ensureLibBuild({ forceBuild })
+        if (!ok) process.exit(1)
       }
-    }
-
-    // Read package playwright.config.ts if present to respect declared worker/parallel settings
-    let configWorkers = null
-    let configParallel = null
-    const configPath = path.join(fullTargetDir, 'playwright.config.ts')
-    if (fs.existsSync(configPath)) {
-      const configText = fs.readFileSync(configPath, 'utf-8')
-      const wMatch = configText.match(/workers\s*:\s*(\d+)/)
-      if (wMatch) configWorkers = parseInt(wMatch[1], 10)
-      if (configText.includes('fullyParallel: false')) configParallel = false
-      if (configText.includes('fullyParallel: true')) configParallel = true
-    }
-
-    const hasWorkersArg = playwrightArgs.some(a => a === '--workers' || a.startsWith('--workers=') || a === '-j')
-    if (!hasWorkersArg) {
-      if (isSingleTest) {
-        playwrightArgs.push('--workers=1')
-      } else {
-        // Concurrency hardware auto-tuning:
-        // Schedule across available CPU cores (4-8 workers on workstation hardware)
-        const cpus = os.cpus().length
-        const hwWorkers = Math.min(8, Math.max(4, Math.floor(cpus / 4)))
-        const workersToUse = (configWorkers && configWorkers > 1) ? configWorkers : hwWorkers
-        playwrightArgs.push(`--workers=${workersToUse}`)
+  
+      // 2. Concurrency tuning:
+      // When targeting a single test (by line number or test ID), run with 1 worker to eliminate multi-process spawn overhead.
+      // When running multiple tests, auto-tune to hardware worker capacity (up to 8 workers on 32-core machine).
+      if (!isSingleTest) {
+        for (const a of playwrightArgs) {
+          if (a.includes('.spec.') && a.includes(':')) isSingleTest = true
+        }
       }
-    }
-
-    const hasSerialArg = playwrightArgs.some(a => a === '--serial' || a === '--no-parallel')
-    const hasParallelArg = playwrightArgs.some(a => a === '--fully-parallel')
-    if (!isSingleTest && !hasSerialArg && !hasParallelArg) {
-      if (configParallel !== false) {
-        playwrightArgs.push('--fully-parallel')
+  
+      // Read package playwright.config.ts if present to respect declared worker/parallel settings
+      let configWorkers = null
+      let configParallel = null
+      const configPath = path.join(fullTargetDir, 'playwright.config.ts')
+      if (fs.existsSync(configPath)) {
+        const configText = fs.readFileSync(configPath, 'utf-8')
+        const wMatch = configText.match(/workers\s*:\s*(\d+)/)
+        if (wMatch) configWorkers = parseInt(wMatch[1], 10)
+        if (configText.includes('fullyParallel: false')) configParallel = false
+        if (configText.includes('fullyParallel: true')) configParallel = true
       }
-    }
-
-    // 3. Port & Warm Server Management:
-    // Reuse running Vite server if already active for the same package to cut run times to ~3.7s!
-    const runningServer = getRunningServerState()
-    if (cleanServer) {
-      freePort(4173)
-      clearServerState()
-    } else if (runningServer) {
-      if (runningServer.package === resolvedTarget) {
-        console.log(`[agent] ⚡ Reusing warm Vite server on port 4173 for ${resolvedTarget} (fast iteration mode)`)
-      } else {
-        console.log(`[agent] Switching test package (${runningServer.package} → ${resolvedTarget}). Refreshing port 4173...`)
+  
+      const hasWorkersArg = playwrightArgs.some(a => a === '--workers' || a.startsWith('--workers=') || a === '-j')
+      if (!hasWorkersArg) {
+        if (isSingleTest) {
+          playwrightArgs.push('--workers=1')
+        } else {
+          // Concurrency hardware auto-tuning:
+          // Schedule across available CPU cores (4-8 workers on workstation hardware)
+          const cpus = os.cpus().length
+          const hwWorkers = Math.min(8, Math.max(4, Math.floor(cpus / 4)))
+          const workersToUse = (configWorkers && configWorkers > 1) ? configWorkers : hwWorkers
+          playwrightArgs.push(`--workers=${workersToUse}`)
+        }
+      }
+  
+      const hasSerialArg = playwrightArgs.some(a => a === '--serial' || a === '--no-parallel')
+      const hasParallelArg = playwrightArgs.some(a => a === '--fully-parallel')
+      if (!isSingleTest && !hasSerialArg && !hasParallelArg) {
+        if (configParallel !== false) {
+          playwrightArgs.push('--fully-parallel')
+        }
+      }
+  
+      // 3. Port & Warm Server Management:
+      // Reuse running Vite server if already active for the same package to cut run times to ~3.7s!
+      const runningServer = getRunningServerState()
+      if (cleanServer) {
         freePort(4173)
         clearServerState()
+      } else if (runningServer) {
+        if (runningServer.package === resolvedTarget) {
+          console.log(`[agent] ⚡ Reusing warm Vite server on port 4173 for ${resolvedTarget} (fast iteration mode)`)
+        } else {
+          console.log(`[agent] Switching test package (${runningServer.package} → ${resolvedTarget}). Refreshing port 4173...`)
+          freePort(4173)
+          clearServerState()
+        }
+      } else {
+        freePort(4173)
       }
-    } else {
-      freePort(4173)
-    }
-
-    console.log(`\n========================================`)
-    console.log(` Running Native Playwright: ${resolvedTarget}`)
-    if (playwrightArgs.length > 0) {
-      console.log(` Filter / Args: ${playwrightArgs.join(' ')}`)
-    }
-    console.log(`========================================\n`)
-
-    let passedCount = 0
-    let failedCount = 0
-    let skippedCount = 0
-    let totalDuration = ''
-    let suiteSummaryFound = false
-
-    const onLine = (line) => {
-      const passMatch = line.match(/(\d+)\s+passed/i)
-      if (passMatch) {
-        passedCount = parseInt(passMatch[1], 10)
-        suiteSummaryFound = true
+  
+      console.log(`\n========================================`)
+      console.log(` Running Native Playwright: ${resolvedTarget}`)
+      if (playwrightArgs.length > 0) {
+        console.log(` Filter / Args: ${playwrightArgs.join(' ')}`)
       }
-      const failMatch = line.match(/(\d+)\s+failed/i)
-      if (failMatch) {
-        failedCount = parseInt(failMatch[1], 10)
-        suiteSummaryFound = true
+      console.log(`========================================\n`)
+  
+      let passedCount = 0
+      let failedCount = 0
+      let skippedCount = 0
+      let totalDuration = ''
+      let suiteSummaryFound = false
+  
+      const onLine = (line) => {
+        const passMatch = line.match(/(\d+)\s+passed/i)
+        if (passMatch) {
+          passedCount = parseInt(passMatch[1], 10)
+          suiteSummaryFound = true
+        }
+        const failMatch = line.match(/(\d+)\s+failed/i)
+        if (failMatch) {
+          failedCount = parseInt(failMatch[1], 10)
+          suiteSummaryFound = true
+        }
+        const skipMatch = line.match(/(\d+)\s+(?:skipped|did not run)/i)
+        if (skipMatch) {
+          skippedCount = parseInt(skipMatch[1], 10)
+        }
+        const durMatch = line.match(/\(([\d.]+(?:s|ms|m))\)/)
+        if (durMatch && suiteSummaryFound) {
+          totalDuration = durMatch[1]
+        }
       }
-      const skipMatch = line.match(/(\d+)\s+(?:skipped|did not run)/i)
-      if (skipMatch) {
-        skippedCount = parseInt(skipMatch[1], 10)
+  
+      const pnpmArgs = ['--dir', resolvedTarget, 'exec', 'playwright', 'test', ...playwrightArgs]
+      const res = await runCommand('pnpm', pnpmArgs, {
+        onLine,
+        skipQueue: true,
+        cwd: repoRoot,
+      })
+  
+      // Update warm server state for fast follow-up runs
+      if (cleanServer) {
+        freePort(4173)
+        clearServerState()
+      } else {
+        saveServerState(resolvedTarget)
       }
-      const durMatch = line.match(/\(([\d.]+(?:s|ms|m))\)/)
-      if (durMatch && suiteSummaryFound) {
-        totalDuration = durMatch[1]
+  
+      // Signal & result evaluation:
+      const allPassed = (passedCount > 0 && failedCount === 0) || (suiteSummaryFound && failedCount === 0)
+  
+      if (allPassed) {
+        finishAgent({
+          ok: true,
+          message: `Playwright suite PASSED: ${passedCount} passed (0 failed)${totalDuration ? ` in ${totalDuration}` : ''}`,
+          code: 0,
+        })
+      } else if (failedCount > 0) {
+        finishAgent({
+          ok: false,
+          message: `Playwright suite FAILED: ${failedCount} failed (${passedCount} passed)${totalDuration ? ` in ${totalDuration}` : ''}`,
+          code: res.code,
+          killPort: true,
+        })
+      } else if (res.code === 0) {
+        finishAgent({
+          ok: true,
+          message: 'Playwright completed successfully (code 0).',
+          code: 0,
+        })
+      } else {
+        finishAgent({
+          ok: false,
+          message: `Playwright suite FAILED (exit code ${numericExitCode(res.code)}).`,
+          code: res.code,
+          killPort: true,
+        })
       }
-    }
-
-    const pnpmArgs = ['--dir', resolvedTarget, 'exec', 'playwright', 'test', ...playwrightArgs]
-    const res = await runCommand('pnpm', pnpmArgs, {
-      onLine,
-      skipQueue: true,
-      cwd: repoRoot,
     })
-
-    // Update warm server state for fast follow-up runs
-    if (cleanServer) {
-      freePort(4173)
-      clearServerState()
-    } else {
-      saveServerState(resolvedTarget)
-    }
-
-    // Signal & result evaluation:
-    const allPassed = (passedCount > 0 && failedCount === 0) || (suiteSummaryFound && failedCount === 0)
-
-    if (allPassed) {
-      finishAgent({
-        ok: true,
-        message: `Playwright suite PASSED: ${passedCount} passed (0 failed)${totalDuration ? ` in ${totalDuration}` : ''}`,
-        code: 0,
-      })
-    } else if (failedCount > 0) {
-      finishAgent({
-        ok: false,
-        message: `Playwright suite FAILED: ${failedCount} failed (${passedCount} passed)${totalDuration ? ` in ${totalDuration}` : ''}`,
-        code: res.code,
-        killPort: true,
-      })
-    } else if (res.code === 0) {
-      finishAgent({
-        ok: true,
-        message: 'Playwright completed successfully (code 0).',
-        code: 0,
-      })
-    } else {
-      finishAgent({
-        ok: false,
-        message: `Playwright suite FAILED (exit code ${numericExitCode(res.code)}).`,
-        code: res.code,
-        killPort: true,
-      })
-    }
   })
 }
 
@@ -1660,6 +1665,85 @@ export async function runPipeline(subcommand, args = []) {
   return runCommand('pnpm', ['pipeline', ...fullArgs])
 }
 
+async function actionVerifyAll(args) {
+  return withCpuGate('exclusive', 'verify:all', async () => {
+    const failFast = !args.includes('--no-fail-fast')
+    let matrixArgs = args.filter(a => a !== '--no-fail-fast')
+
+    console.log(`\n[agent] === verify:all (Phase 1: Component CT) ===`)
+    const ctScript = path.join(repoRoot, '.agents/skills/test-component/scripts/test-component.mjs')
+    const ctRes = await runCommand('node', [ctScript], { skipQueue: true, cwd: repoRoot })
+    if (ctRes.code !== 0) {
+      if (failFast) {
+        finishAgent({ ok: false, message: `verify:all FAILED during CT (exit code ${ctRes.code}). Matrix skipped.`, code: ctRes.code, killPort: true })
+      }
+      console.log(`\n[agent] ⚠️ CT failed (code ${ctRes.code}), continuing to Matrix because of --no-fail-fast`)
+    }
+
+    console.log(`\n[agent] === verify:all (Phase 2: Matrix) ===`)
+    const pnpmArgs = ['pipeline', 'test']
+    if (matrixArgs.length === 0) pnpmArgs.push('--full')
+    else pnpmArgs.push(...normalizeTestArgs(matrixArgs))
+
+    const matrixRes = await runCommand('pnpm', pnpmArgs, { skipQueue: true, cwd: repoRoot })
+    const matrixCode = numericExitCode(matrixRes.code)
+
+    if (ctRes.code !== 0 || matrixCode !== 0) {
+      finishAgent({ ok: false, message: `verify:all FAILED (CT: ${ctRes.code}, Matrix: ${matrixCode})`, code: matrixCode || ctRes.code, killPort: true })
+    }
+    finishAgent({ ok: true, message: 'verify:all PASSED successfully.', code: 0 })
+  })
+}
+
+async function actionVerify(componentName) {
+  if (!componentName) {
+    console.error(`[agent] Error: Component name required. Usage: pnpm agent verify <Component>`)
+    process.exit(1)
+  }
+
+  return withCpuGate('exclusive', 'verify', async () => {
+    // 1. typecheck
+    console.log(`\n[agent] === verify ${componentName} (Phase 1: Typecheck) ===`)
+    const libPkgPath = path.join(repoRoot, 'packages/reference-lib/package.json')
+    let hasTypecheck = false
+    try {
+      const pkg = JSON.parse(fs.readFileSync(libPkgPath, 'utf-8'))
+      if (pkg.scripts && pkg.scripts.typecheck) hasTypecheck = true
+    } catch {}
+    
+    if (hasTypecheck) {
+      const tcRes = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'typecheck'], { skipQueue: true })
+      if (tcRes.code !== 0) {
+         finishAgent({ ok: false, message: `verify FAILED during typecheck (code ${tcRes.code})`, code: tcRes.code })
+      }
+    } else {
+      console.log(`[agent] Typecheck script not found in @reference-ui/lib, skipping.`)
+    }
+
+    // 2. Unit
+    console.log(`\n[agent] === verify ${componentName} (Phase 2: Unit) ===`)
+    const ctScript = path.join(repoRoot, '.agents/skills/test-component/scripts/test-component.mjs')
+    const unitRes = await runCommand('node', [ctScript, componentName, '--unit'], { skipQueue: true, cwd: repoRoot })
+    if (unitRes.code !== 0) {
+      finishAgent({ ok: false, message: `verify FAILED during unit tests (code ${unitRes.code})`, code: unitRes.code })
+    }
+
+    // 3. Build lib dist if missing
+    console.log(`\n[agent] === verify ${componentName} (Phase 3: Build) ===`)
+    const ok = await ensureLibBuild()
+    if (!ok) finishAgent({ ok: false, message: `verify FAILED during build`, code: 1 })
+
+    // 4. e2e
+    console.log(`\n[agent] === verify ${componentName} (Phase 4: CT E2E) ===`)
+    const e2eRes = await runCommand('node', [ctScript, componentName, '--e2e'], { skipQueue: true, cwd: repoRoot })
+    if (e2eRes.code !== 0) {
+      finishAgent({ ok: false, message: `verify FAILED during CT E2E (code ${e2eRes.code})`, code: e2eRes.code, killPort: true })
+    }
+
+    finishAgent({ ok: true, message: `verify ${componentName} PASSED successfully.`, code: 0 })
+  })
+}
+
 // 9. Main CLI Entrypoint
 async function main() {
   const args = process.argv.slice(2)
@@ -1699,6 +1783,16 @@ async function main() {
     case 'daemon':
       startDaemon()
       break
+
+    case 'verify': {
+      await actionVerify(args[1])
+      break
+    }
+
+    case 'verify:all': {
+      await actionVerifyAll(args.slice(1))
+      break
+    }
 
     case 'test': {
       let testArgs = args.slice(1)

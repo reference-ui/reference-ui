@@ -57,7 +57,12 @@ pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test
 pnpm agent verify Toast
 pnpm agent verify Combobox
 
-# 5. Full Hermetic Matrix Tests (Dagger containers across React versions & bundlers):
+# 5. Full Pipeline & CT Suite (Component CT + Matrix in one shot):
+pnpm agent verify:all                         # fail-fast (stops on CT failure)
+pnpm agent verify:all --packages=@matrix/lib  # targeted matrix
+pnpm agent verify:all --no-fail-fast          # runs matrix even if CT fails
+
+# 6. Full Hermetic Matrix Tests (Dagger containers across React versions & bundlers):
 # This is the default proof after a reference-core change.
 pnpm agent test --packages=@matrix/lib
 pnpm agent test matrix --packages=@matrix/tokens
@@ -130,11 +135,10 @@ If you prefer to run heavy test workloads 100% inside your external terminal win
 
 ---
 
-## 4. Multi-Agent Cross-Process Queue
+## 4. Multi-Agent Shared CPU Gate
 
-When multiple agents or processes request matrix tests or component verifications simultaneously, `test-core` serializes all executions through a strict **First-In, First-Out** queue:
-- **Zero Parallel Crashes**: Prevents concurrent Docker / Dagger engine or port collisions by running test suites in series.
-- **Cross-Process File Lock**: Uses an atomic file-based ticket lock in `/tmp/reference-ui-agent-queue` across all OS subshells and agent sessions.
-- **Daemon Queue Support**: The Terminal Bridge daemon also maintains an in-memory queue with socket disconnect detection and cancellation cleanup.
-- **Automatic Stale Lock Recovery**: If a running or waiting process is killed (`kill -9`, cancel), subsequent processes automatically prune the stale lock and proceed without freezing.
-- **Live Status Reporting**: Waiting agents and developers receive regular updates (`[agent-queue] Another test is currently running (PID ...). Waiting in queue (position 1)...`).
+When multiple agents or processes request matrix tests or component verifications simultaneously, `test-core` and `test-component` coordinate through a shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
+- **Two Queue Classes**: Component CT (`agentct`) uses the `ct` class (up to 3 parallel slots), while Matrix/Dagger/Verify uses the `exclusive` class.
+- **Zero Parallel Crashes**: Prevents concurrent Docker / Dagger engine or port collisions by pausing CT while Matrix runs, and vice versa.
+- **Cross-Process File Lock**: Uses an atomic file-based ticket lock across all OS subshells and agent sessions.
+- **Live Status Reporting**: Waiting agents and developers receive regular updates (`[cpu-gate] Waiting for cpu gate (exclusive). Active: ct(12345)`).

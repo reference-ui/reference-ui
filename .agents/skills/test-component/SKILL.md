@@ -71,9 +71,13 @@ pnpm agentct Popover --e2e
 pnpm agentct Popover --e2e --react 18
 pnpm agentct Popover --e2e --react 17,19
 pnpm agentct Popover --e2e --react all
-pnpm agentct Popover -g "escape"
-pnpm agentct daemon                  # Optional: keep Vite warm in your terminal
-pnpm agentct stop                    # Stop the auto/persistent daemon
+pnpm agentct Popover --list                 # List tests (no queue slot used)
+pnpm agentct Popover "OV-POS-10"            # Run an exact spec by its ID (ergonomic positional argument)
+pnpm agentct Popover --id "OV-POS-10"       # Same as above
+pnpm agentct Popover --line 509             # Deterministic line number targeting (useful for AI agents)
+pnpm agentct Popover -g "escape"            # Fuzzy fallback (avoid if possible)
+pnpm agentct daemon                         # Optional: keep Vite warm in your terminal
+pnpm agentct stop                           # Stop the auto/persistent daemon
 pnpm agentct --help
 ```
 

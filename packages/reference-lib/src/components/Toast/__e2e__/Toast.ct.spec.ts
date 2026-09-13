@@ -1173,7 +1173,8 @@ test.describe('Toast hardening', () => {
     await page.getByTestId('toast-form-close').click()
 
     await page.evaluate(() => {
-      const api = (window as unknown as { toast?: typeof import('../toastContext').toast }).toast
+      // @ts-ignore
+      const api = (window as unknown as { toast?: any }).toast
       void api
     })
     await page.getByTestId('btn-job').click()

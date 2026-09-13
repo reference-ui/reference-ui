@@ -59,12 +59,12 @@ export function ExoticaFixture() {
     if (!iframe) return
     const setup = () => {
       try {
-        const win = iframe.contentWindow
+        const win = iframe.contentWindow as any
         const doc = iframe.contentDocument
         if (win && doc && doc.body) {
           try {
-            Object.setPrototypeOf(win.Node.prototype, window.Node.prototype)
-            Object.setPrototypeOf(win.Element.prototype, window.Element.prototype)
+            Object.setPrototypeOf(win.Node.prototype, (window as any).Node.prototype)
+            Object.setPrototypeOf(win.Element.prototype, (window as any).Element.prototype)
           } catch {}
           doc.body.innerHTML = ''
           const container = doc.createElement('div')

@@ -34,6 +34,7 @@ export default defineConfig({
     [path.join(__dirname, 'snapshot-telemetry-reporter.ts')],
   ],
   outputDir: path.resolve(__dirname, 'test-results'),
+  // Mouse and scroll resets happen in the fixture (ct.ts), since the config cannot access the page object directly.
   use: {
     trace: 'on-first-retry',
     video: {
