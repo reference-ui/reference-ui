@@ -1,6 +1,8 @@
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('FocusLock × Overlay', () => {
+  test.afterEach(async ({ page }) => { await page.evaluate(() => window.scrollTo(0, 0)) })
+
   test('FL-OV-01: FocusLock keeps trapping while Overlay Content is closed-but-mounted', async ({
     mount,
     page,

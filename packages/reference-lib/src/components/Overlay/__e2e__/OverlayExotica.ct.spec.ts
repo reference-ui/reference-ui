@@ -513,7 +513,10 @@ test.describe('Overlay Exotica Pass', () => {
     await mount('components/Overlay/Overlay/Exotica')
     await expect(page.getByTestId('exotica-fixture-root')).toBeVisible()
 
-    await page.getByTestId('btn-pos-10-anchor').click()
+    const anchor = page.getByTestId('btn-pos-10-anchor');
+    await anchor.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollBy(0, 100));
+    await anchor.click();
     const content = page.getByTestId('pos-10-content')
     await expect(content).toBeVisible()
     await expect(content).toHaveAttribute('data-align', 'start')
