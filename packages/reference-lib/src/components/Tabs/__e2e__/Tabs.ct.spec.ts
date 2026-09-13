@@ -22,12 +22,29 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await expect(panelAccount).toBeVisible()
     await expect(panelAccount).toHaveAttribute('role', 'tabpanel')
 
+    // Active indicator bar assertions (must be solid line with visible color, not transparent/none)
+    const list = page.getByTestId('tabs-list')
+    const activeBorder = await tabAccount.evaluate((el) => {
+      const cs = window.getComputedStyle(el)
+      return {
+        style: cs.borderBottomStyle,
+        width: cs.borderBottomWidth,
+        color: cs.borderBottomColor,
+      }
+    })
+    expect(activeBorder.style).toBe('solid')
+    expect(parseInt(activeBorder.width, 10)).toBeGreaterThanOrEqual(2)
+    expect(activeBorder.color).not.toBe('rgba(0, 0, 0, 0)')
+    expect(activeBorder.color).not.toBe('transparent')
+
     await expect(tabPassword).toHaveAttribute('aria-selected', 'false')
     await expect(tabPassword).toHaveAttribute('data-state', 'inactive')
     await expect(panelPassword).toBeHidden()
 
     await page.waitForTimeout(300)
     await snap(page, 'horizontal-default')
+    await snap(list, 'horizontal-list-default', { maxDiffPixelRatio: 0.001 })
+    await snap(page.getByTestId('tabs-fixture-root'), 'horizontal-root-default', { maxDiffPixelRatio: 0.001 })
 
     // Hover inactive tab
     await tabPassword.hover()
@@ -41,8 +58,21 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await expect(panelPassword).toBeVisible()
     await expect(panelAccount).toBeHidden()
 
+    // Assert password tab now possesses the active indicator bar
+    const passBorder = await tabPassword.evaluate((el) => {
+      const cs = window.getComputedStyle(el)
+      return {
+        style: cs.borderBottomStyle,
+        width: cs.borderBottomWidth,
+        color: cs.borderBottomColor,
+      }
+    })
+    expect(passBorder.style).toBe('solid')
+    expect(parseInt(passBorder.width, 10)).toBeGreaterThanOrEqual(2)
+
     await page.waitForTimeout(200)
     await snap(page, 'horizontal-password-selected')
+    await snap(list, 'horizontal-list-password-selected', { maxDiffPixelRatio: 0.001 })
 
     // Arrow keys navigate between tabs
     await tabPassword.focus()
@@ -75,8 +105,23 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await expect(list).toHaveAttribute('aria-orientation', 'vertical')
     await expect(tabGeneral).toHaveAttribute('aria-selected', 'true')
 
+    // Assert vertical active indicator bar (right border)
+    const vertBorder = await tabGeneral.evaluate((el) => {
+      const cs = window.getComputedStyle(el)
+      return {
+        style: cs.borderRightStyle,
+        width: cs.borderRightWidth,
+        color: cs.borderRightColor,
+      }
+    })
+    expect(vertBorder.style).toBe('solid')
+    expect(parseInt(vertBorder.width, 10)).toBeGreaterThanOrEqual(2)
+    expect(vertBorder.color).not.toBe('rgba(0, 0, 0, 0)')
+
     await page.waitForTimeout(300)
     await snap(page, 'vertical-default')
+    await snap(list, 'vertical-list-default', { maxDiffPixelRatio: 0.001 })
+    await snap(page.getByTestId('tabs-vertical-root'), 'vertical-root-default', { maxDiffPixelRatio: 0.001 })
 
     // Hover billing
     await tabBilling.hover()
@@ -90,6 +135,7 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(200)
     await snap(page, 'vertical-billing-selected')
+    await snap(list, 'vertical-list-billing-selected', { maxDiffPixelRatio: 0.001 })
 
     // Arrow navigation
     await tabBilling.focus()
@@ -112,12 +158,20 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     const tabOverview = page.getByTestId('tab-p-overview')
     const tabActivity = page.getByTestId('tab-p-activity')
     const panelActivity = page.getByTestId('panel-p-activity')
+    const list = page.getByTestId('tabs-pill-list')
 
     await expect(tabOverview).toHaveAttribute('aria-selected', 'true')
     await expect(tabOverview).toHaveAttribute('data-variant', 'pill')
 
+    // Assert pill active background style
+    const pillBg = await tabOverview.evaluate((el) => window.getComputedStyle(el).backgroundColor)
+    expect(pillBg).not.toBe('rgba(0, 0, 0, 0)')
+    expect(pillBg).not.toBe('transparent')
+
     await page.waitForTimeout(300)
     await snap(page, 'pill-default')
+    await snap(list, 'pill-list-default', { maxDiffPixelRatio: 0.001 })
+    await snap(page.getByTestId('tabs-pill-root'), 'pill-root-default', { maxDiffPixelRatio: 0.001 })
 
     // Hover activity
     await tabActivity.hover()
@@ -131,6 +185,7 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(200)
     await snap(page, 'pill-activity-selected')
+    await snap(list, 'pill-list-activity-selected', { maxDiffPixelRatio: 0.001 })
 
     // Focus state
     await tabActivity.focus()

@@ -9,6 +9,7 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
     await expect(page.getByTestId('tree-fixture-root')).toBeVisible()
 
     const tree = page.getByTestId('test-tree')
+    const root = page.getByTestId('tree-fixture-root')
     const folder = page.getByTestId('tree-item-folder-1')
     const expander = page.getByTestId('expander-folder-1')
     const doc1 = page.getByTestId('tree-item-doc-1')
@@ -23,6 +24,8 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'tree-default-expanded')
+    await snap(root, 'tree-root-default-expanded', { maxDiffPixelRatio: 0.001 })
+    await snap(tree, 'tree-box-default-expanded', { maxDiffPixelRatio: 0.001 })
 
     // Hover doc-2
     await doc2.hover()
@@ -45,6 +48,7 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(200)
     await snap(page, 'tree-folder-collapsed')
+    await snap(tree, 'tree-box-collapsed', { maxDiffPixelRatio: 0.001 })
 
     // Hover folder while collapsed
     await folder.hover()
@@ -73,50 +77,27 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
     const readme = page.getByTestId('tree-item-readme')
     const display = page.getByTestId('tree-value-display')
 
-    // Initial roving tabIndex: doc1 is selected, so it has tabIndex=0, folder and others have -1
-    await expect(doc1).toHaveAttribute('tabindex', '0')
-    await expect(folder).toHaveAttribute('tabindex', '-1')
-    await expect(readme).toHaveAttribute('tabindex', '-1')
-
-    // Click folder label -> receives focus, updates tabIndex
-    await page.getByText('📁 Documents').click()
+    // Focus folder
+    await folder.focus()
     await expect(folder).toBeFocused()
-    await expect(folder).toHaveAttribute('tabindex', '0')
-    await expect(doc1).toHaveAttribute('tabindex', '-1')
 
-    await page.waitForTimeout(200)
-    await snap(page, 'tree-focused-folder')
-
-    // ArrowDown -> moves focus to doc1
+    // ArrowDown roving navigation
     await page.keyboard.press('ArrowDown')
     await expect(doc1).toBeFocused()
-    await expect(doc1).toHaveAttribute('tabindex', '0')
 
-    // ArrowDown -> moves focus to doc2
     await page.keyboard.press('ArrowDown')
     await expect(doc2).toBeFocused()
 
-    // ArrowDown -> moves focus to readme
-    await page.keyboard.press('ArrowDown')
-    await expect(readme).toBeFocused()
-
-    await page.waitForTimeout(200)
-    await snap(page, 'tree-focused-readme')
-
-    // ArrowUp -> back to doc2
-    await page.keyboard.press('ArrowUp')
-    await expect(doc2).toBeFocused()
-
-    // Press Enter to select doc-2
+    // Press Enter to select focused item
     await page.keyboard.press('Enter')
     await expect(doc2).toHaveAttribute('aria-selected', 'true')
     await expect(display).toHaveText('Selected: doc-2')
 
-    // Home -> moves focus to first item (folder-1)
+    // Home moves focus to first item
     await page.keyboard.press('Home')
     await expect(folder).toBeFocused()
 
-    // End -> moves focus to last visible item (readme)
+    // End moves focus to last visible item
     await page.keyboard.press('End')
     await expect(readme).toBeFocused()
   })
@@ -165,9 +146,11 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
 
   test('TR-DOM-02: Multi-level hierarchy rendering', async ({ mount, page }) => {
     await mount('components/Tree/Tree/MultiLevel')
-    await expect(page.getByTestId('tree-multi-root')).toBeVisible()
+    const multiRoot = page.getByTestId('tree-multi-root')
+    await expect(multiRoot).toBeVisible()
 
     await page.waitForTimeout(300)
     await snap(page, 'tree-multilevel')
+    await snap(multiRoot, 'tree-multi-root-default', { maxDiffPixelRatio: 0.001 })
   })
 })

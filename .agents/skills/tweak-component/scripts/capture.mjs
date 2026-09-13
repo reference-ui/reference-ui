@@ -27,14 +27,19 @@ try {
   playwright = matrixRequire('@playwright/test')
 } catch {
   try {
-    const rootRequire = createRequire(path.join(repoRoot, 'package.json'))
-    playwright = rootRequire('@playwright/test')
+    const libRequire = createRequire(path.join(repoRoot, 'packages/reference-lib/package.json'))
+    playwright = libRequire('@playwright/test')
   } catch {
-    console.error(
-      'PLAYWRIGHT_NOT_FOUND: Could not resolve @playwright/test from matrix/lib or root.\n' +
-      'Please run "pnpm install" or check matrix/lib dependencies.'
-    )
-    process.exit(1)
+    try {
+      const rootRequire = createRequire(path.join(repoRoot, 'package.json'))
+      playwright = rootRequire('@playwright/test')
+    } catch {
+      console.error(
+        'PLAYWRIGHT_NOT_FOUND: Could not resolve @playwright/test from matrix/lib, packages/reference-lib, or root.\n' +
+        'Please run "pnpm install" or check dependencies.'
+      )
+      process.exit(1)
+    }
   }
 }
 const { chromium } = playwright
@@ -467,7 +472,7 @@ export async function runCapture(rawOpts, customScriptFn = null) {
       console.log(`Executing inline script: ${opts.eval.trim()}`)
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
       const fn = new AsyncFunction('ctx', `
-        const { page, frame, root, target, interactive, pressTab, inspectStyles, wait, capture } = ctx;
+        const { page, frame, canvas, root, target, interactive, pressTab, inspectStyles, wait, capture } = ctx;
         return (async () => {
           ${opts.eval}
         })();

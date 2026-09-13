@@ -14,8 +14,12 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
     await expect(trigger).toHaveAttribute('data-state', 'closed')
     await expect(content).toHaveCount(0)
 
+    const root = page.getByTestId('collapsible-fixture-root')
+
     await page.waitForTimeout(300)
     await snap(page, 'resting-closed')
+    await snap(root, 'collapsible-root-resting', { maxDiffPixelRatio: 0.001 })
+    await snap(trigger, 'collapsible-trigger-resting', { maxDiffPixelRatio: 0.001 })
 
     // Hover trigger
     await trigger.hover()
@@ -36,6 +40,8 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'opened')
+    await snap(root, 'collapsible-root-opened', { maxDiffPixelRatio: 0.001 })
+    await snap(content, 'collapsible-content-opened', { maxDiffPixelRatio: 0.001 })
 
     // Click to close
     await trigger.click()
@@ -46,6 +52,7 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'closed')
+    await snap(root, 'collapsible-root-closed', { maxDiffPixelRatio: 0.001 })
   })
 
   test('CO-SIZE-01: Open Content publishes border-box measurement CSS variables', async ({
@@ -87,6 +94,7 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
     page,
   }) => {
     await mount('components/Collapsible/Collapsible/DefaultOpen')
+    const defaultOpenRoot = page.getByTestId('collapsible-default-open-root')
     const trigger = page.getByTestId('btn-default-open-trigger')
     const content = page.getByTestId('default-open-content')
 
@@ -97,6 +105,7 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'default-open-resting')
+    await snap(defaultOpenRoot, 'collapsible-default-open-root', { maxDiffPixelRatio: 0.001 })
 
     await trigger.click()
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
@@ -104,5 +113,6 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'default-open-collapsed')
+    await snap(defaultOpenRoot, 'collapsible-default-open-collapsed', { maxDiffPixelRatio: 0.001 })
   })
 })

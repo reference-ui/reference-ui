@@ -17,8 +17,13 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     await expect(trigger2).toHaveAttribute('aria-expanded', 'false')
     await expect(content2).toHaveCount(0)
 
+    const accordion = page.getByTestId('test-accordion')
+    const root = page.getByTestId('accordion-fixture-root')
+
     await page.waitForTimeout(300)
     await snap(page, 'single-resting')
+    await snap(accordion, 'single-resting-accordion', { maxDiffPixelRatio: 0.001 })
+    await snap(root, 'single-resting-root', { maxDiffPixelRatio: 0.001 })
 
     // Hover trigger 2
     await trigger2.hover()
@@ -35,6 +40,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'single-item-2-open')
+    await snap(accordion, 'single-accordion-item-2-open', { maxDiffPixelRatio: 0.001 })
 
     // Arrow keys navigate between triggers
     await trigger2.focus()
@@ -61,6 +67,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     page,
   }) => {
     await mount('components/Accordion/Accordion/Multiple')
+    const multiRoot = page.getByTestId('accordion-multiple-root')
     const trigger1 = page.getByTestId('multi-trigger-1')
     const content1 = page.getByTestId('multi-content-1')
     const trigger2 = page.getByTestId('multi-trigger-2')
@@ -73,6 +80,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'multiple-both-open')
+    await snap(multiRoot, 'multiple-root-both-open', { maxDiffPixelRatio: 0.001 })
 
     // Click trigger 1 to collapse section 1
     await trigger1.click()
@@ -83,5 +91,6 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'multiple-item-1-closed')
+    await snap(multiRoot, 'multiple-root-item-1-closed', { maxDiffPixelRatio: 0.001 })
   })
 })

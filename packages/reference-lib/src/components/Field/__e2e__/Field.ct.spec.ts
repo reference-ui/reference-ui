@@ -17,14 +17,18 @@ test.describe('Field CT', () => {
 
     // Enclosed input is invalid
     await expect(input).toHaveAttribute('aria-invalid', 'true')
+    const root = page.getByTestId('field-fixture-root')
     await page.waitForTimeout(300)
     await snap(page, 'field-resting')
+    await snap(root, 'field-root-resting', { maxDiffPixelRatio: 0.001 })
+    await snap(field, 'field-control-resting', { maxDiffPixelRatio: 0.001 })
 
     // Field status warning toggle
     await page.getByTestId('btn-toggle-warning').click()
     await expect(field).toHaveAttribute('data-status', 'warning')
     await page.waitForTimeout(300)
     await snap(page, 'field-status-warning')
+    await snap(field, 'field-control-warning', { maxDiffPixelRatio: 0.001 })
   })
 
   test('mouse click changes border color without outline ring; keyboard tab applies focus ring', async ({

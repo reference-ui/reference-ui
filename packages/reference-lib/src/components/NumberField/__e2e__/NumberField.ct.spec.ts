@@ -12,12 +12,17 @@ test.describe('NumberField CT', () => {
     const btnDec = page.getByTestId('btn-decrement')
     const display = page.getByTestId('number-field-value-display')
 
+    const root = page.getByTestId('number-field-fixture-root')
+    const field = page.getByTestId('number-field-root')
+
     await expect(input).toHaveAttribute('role', 'spinbutton')
     await expect(input).toHaveAttribute('aria-valuenow', '42')
     await expect(input).toHaveValue('42')
     await expect(display).toHaveText('Numeric Value: 42')
     await page.waitForTimeout(300)
     await snap(page, 'numberfield-resting')
+    await snap(root, 'numberfield-root-resting', { maxDiffPixelRatio: 0.001 })
+    await snap(field, 'numberfield-control-resting', { maxDiffPixelRatio: 0.001 })
 
     const incBox = await btnInc.boundingBox()
     const decBox = await btnDec.boundingBox()
@@ -233,5 +238,6 @@ test.describe('NumberField CT', () => {
     await expect(root).toBeVisible()
     await page.waitForTimeout(300)
     await snap(page, 'numberfield-disabled')
+    await snap(root, 'numberfield-disabled-root', { maxDiffPixelRatio: 0.001 })
   })
 })
