@@ -13,10 +13,10 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | You changed | Use |
 | --- | --- |
 | `@reference-ui/lib` look/feel | `tweak-component` skill |
-| `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm ct`) |
+| `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 
-If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm ct` does not cover core.
+If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
 
 ---
 
@@ -28,7 +28,7 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
   1. **Contract Ingestion**: Read `<Component>.md` and `SPEC.md` (driver). `TESTS.md` is the case catalog when SPEC points at it.
   2. **Baseline Capture**: Run `pnpm capture <Component>` and embed the screenshot directly in chat.
   3. **Implement & Tweak**: Apply changes in `packages/reference-lib/src/components/<Component>/`.
-  4. **Verification**: Follow the `test-component` skill (`pnpm ct`). If `packages/reference-core` was also modified, switch to **test-core** (`pnpm agent`) — that is the pipeline runner, not a skill.
+  4. **Verification**: Follow the `test-component` skill (`pnpm agentct`). If `packages/reference-core` was also modified, switch to **test-core** (`pnpm agent`) — that is the pipeline runner, not a skill.
   5. **Multi-State Visual Re-inspection**: Run `pnpm capture <Component> --states` and embed the markdown table into chat.
 
 ---
@@ -90,7 +90,7 @@ Captures are automatically saved to `.reference-ui/captures/` with outline-safe 
 
 ## 3. Core / Matrix Verification (`test-core`, `pnpm agent`)
 
-`test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `packages/reference-core` or need hermetic matrix proof. Do not use `test-component` / `pnpm ct` for core.
+`test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `packages/reference-core` or need hermetic matrix proof. Do not use `test-component` / `pnpm agentct` for core.
 
 > [!TIP]
 > **macOS QoS Jailbreak & Fast Runner**:
@@ -129,7 +129,7 @@ pnpm pipeline test --packages=@matrix/<package>
 > - **Never execute raw Playwright or Vitest commands directly in subshells** (e.g. `pnpm --dir matrix/... exec playwright test`). Raw subshell commands run under clamped Darwin QoS (`PRI 31`), orphan Vite processes on port 4173, and lack clean exit pass signaling on SIGINT.
 > - **Always use `pnpm agent playwright` / `pnpm agent vitest`** for fast native iteration.
 > - **Use `pnpm agent test --packages=@matrix/<package>`** when you need full, hermetic multi-runtime/bundler matrix validation in Dagger containers.
-> - After a `packages/reference-core` change, this section is the proof path — not `pnpm ct`.
+> - After a `packages/reference-core` change, this section is the proof path — not `pnpm agentct`.
 
 > [!NOTE]
 > **Terminal Bridge Mode (Optional)**:

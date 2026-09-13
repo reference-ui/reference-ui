@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Component Test Runner for Reference UI (`pnpm ct`)
+ * Component Test Runner for Reference UI (`pnpm agentct`)
  *
  * Default: colocated Vitest, then Playwright CT on workspace React 19.
  * `--react 17|18|19|all` pins the CT Vite gallery via @ct-runtime packages (no pipeline).
  * Visual snapshots run on React 19 only. Snapshot writes need --update-snapshots --confirm.
+ *
+ * Persistent daemon owns ONE Vite gallery on :3101. Concurrent `pnpm agentct`
+ * invocations route specs to that warm server through a 3-slot queue.
  */
 
 import { spawn, spawnSync, execSync } from 'node:child_process'
@@ -69,9 +72,15 @@ function isSnapshotName(name = '') {
 
 const SOCKET_PATH = '/tmp/ref-ct-agent.sock'
 const DAEMON_PID_FILE = '/tmp/ref-ct-agent.pid'
+const DAEMON_SPAWN_LOCK = '/tmp/ref-ct-agent.spawn.lock'
+const DAEMON_LOG_FILE = '/tmp/ref-ct-agent.log'
 const QUEUE_DIR = '/tmp/ref-ct-agent-queue'
 const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
-const MAX_CONCURRENCY = Math.min(4, Math.max(1, Math.floor(os.cpus().length * 0.25)))
+const MAX_CONCURRENCY = 3
+const WORKERS_PER_SLOT = Math.max(1, Math.floor(os.cpus().length / 3))
+const DAEMON_IDLE_MS = 5 * 60 * 1000
+const IS_INNER = process.env.AGENTCT_INNER === '1'
+const DAEMON_OWNS_VITE = process.env.AGENTCT_VITE_OWNED_BY_DAEMON === '1'
 
 // Queue Lock Logic
 function isPidAlive(pid) {
@@ -282,114 +291,329 @@ function numericExitCode(code) {
   return 1
 }
 
-async function startDaemon() {
-  if (fs.existsSync(SOCKET_PATH)) {
-    const isAlive = await new Promise((resolve) => {
-      const probe = net.createConnection(SOCKET_PATH, () => {
-        probe.destroy()
-        resolve(true)
-      })
-      probe.on('error', () => {
-        try { fs.unlinkSync(SOCKET_PATH) } catch {}
-        try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
-        resolve(false)
-      })
-    })
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-    if (isAlive) {
-      console.log(`[agent-daemon] An agent daemon is already running at ${SOCKET_PATH}.`)
-      process.exit(0)
+function probeDaemon(timeoutMs = 400) {
+  return new Promise((resolve) => {
+    const probe = net.createConnection(SOCKET_PATH)
+    const timer = setTimeout(() => {
+      probe.destroy()
+      resolve(false)
+    }, timeoutMs)
+    probe.on('connect', () => {
+      clearTimeout(timer)
+      probe.destroy()
+      resolve(true)
+    })
+    probe.on('error', () => {
+      clearTimeout(timer)
+      resolve(false)
+    })
+  })
+}
+
+async function isDaemonAlive() {
+  if (!fs.existsSync(SOCKET_PATH)) return false
+  const alive = await probeDaemon()
+  if (!alive) {
+    try { fs.unlinkSync(SOCKET_PATH) } catch {}
+    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+  }
+  return alive
+}
+
+function parseJobRuntime(argv = []) {
+  const args = Array.isArray(argv) ? argv : []
+  const unitOnly = args.includes('--unit') && !args.includes('--e2e')
+  if (unitOnly) return null
+  const i = args.indexOf('--react')
+  if (i < 0) return '19'
+  const raw = String(args[i + 1] || '19').trim()
+  if (!raw || raw.startsWith('-')) return '19'
+  if (raw === 'all' || raw.includes(',')) return 'exclusive'
+  return raw.replace(/^react/i, '')
+}
+
+async function stopDaemonProcess() {
+  let pid = 0
+  try {
+    pid = parseInt(fs.readFileSync(DAEMON_PID_FILE, 'utf-8'), 10)
+  } catch {}
+  if (isPidAlive(pid)) {
+    try { process.kill(pid, 'SIGTERM') } catch {}
+    const start = Date.now()
+    while (Date.now() - start < 3000 && isPidAlive(pid)) {
+      await sleep(50)
+    }
+    if (isPidAlive(pid)) {
+      try { process.kill(pid, 'SIGKILL') } catch {}
+    }
+  }
+  try { fs.unlinkSync(SOCKET_PATH) } catch {}
+  try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+  console.log('[agentct] Daemon stopped.')
+}
+
+async function startDaemon({ auto = false } = {}) {
+  if (await isDaemonAlive()) {
+    console.log(`[agentct-daemon] An agentct daemon is already running at ${SOCKET_PATH}.`)
+    process.exit(0)
+  }
+
+  const daemonRoot = findRepoRoot(__dirname)
+  const daemonLibDir = path.join(daemonRoot, 'packages/reference-lib')
+  const vitePort = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
+  const viteUrl = `http://localhost:${vitePort}/playwright/index.html`
+  const queue = []
+  const activeJobs = new Set()
+  let viteChild = null
+  let viteRuntime = null
+  let pumping = false
+  let idleTimer = null
+  let viteLock = Promise.resolve()
+
+  function withViteLock(fn) {
+    const run = viteLock.then(fn, fn)
+    viteLock = run.then(() => undefined, () => {})
+    return run
+  }
+  let daemonPnpm = 'pnpm'
+  try {
+    daemonPnpm = execSync('which pnpm', { encoding: 'utf-8' }).trim() || 'pnpm'
+  } catch {}
+
+  async function isViteUp() {
+    try {
+      const res = await fetch(viteUrl, { signal: AbortSignal.timeout(1500) })
+      return res.status < 500
+    } catch {
+      return false
     }
   }
 
-  const queue = []
-  const activeJobs = new Set()
+  async function stopViteUnlocked() {
+    if (!viteChild?.pid) {
+      viteChild = null
+      viteRuntime = null
+      return
+    }
+    const pid = viteChild.pid
+    viteChild = null
+    viteRuntime = null
+    try { process.kill(-pid, 'SIGTERM') } catch {
+      try { process.kill(pid, 'SIGTERM') } catch {}
+    }
+    await sleep(250)
+    try { process.kill(-pid, 'SIGKILL') } catch {
+      try { process.kill(pid, 'SIGKILL') } catch {}
+    }
+    try { freePort(vitePort, '[agentct-daemon]') } catch {}
+  }
 
-  function processQueue() {
-    while (activeJobs.size < MAX_CONCURRENCY && queue.length > 0) {
-      const job = queue.shift()
-      activeJobs.add(job)
-      const { socket, req } = job
+  async function stopVite() {
+    return withViteLock(() => stopViteUnlocked())
+  }
 
-      queue.forEach((item, idx) => {
+  async function ensureVite(runtime) {
+    return withViteLock(async () => {
+      const target = runtime || '19'
+      if (viteChild?.pid && viteRuntime === target && isPidAlive(viteChild.pid) && await isViteUp()) {
+        return
+      }
+      await stopViteUnlocked()
+      console.log(`[agentct-daemon] Starting persistent Vite on :${vitePort} (react ${target})...`)
+      viteChild = spawn(daemonPnpm, ['exec', 'vite', '--config', 'playwright/vite.config.ts'], {
+        cwd: daemonLibDir,
+        env: {
+          ...process.env,
+          CT_REACT: target,
+          CT_PORT: String(vitePort),
+          FORCE_COLOR: '1',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: process.platform !== 'win32',
+      })
+      viteRuntime = target
+      const child = viteChild
+      child.stderr?.on('data', (data) => {
+        const text = data.toString()
+        if (/error|failed|EADDRINUSE/i.test(text)) process.stderr.write(text)
+      })
+      child.on('exit', (code) => {
+        if (viteChild === child) {
+          console.log(`[agentct-daemon] Vite exited (${code ?? 0})`)
+          viteChild = null
+          viteRuntime = null
+        }
+      })
+      const start = Date.now()
+      while (Date.now() - start < 90_000) {
+        if (await isViteUp()) {
+          console.log(`[agentct-daemon] Vite ready ${viteUrl} (react ${target})`)
+          return
+        }
+        if (!isPidAlive(child.pid)) break
+        await sleep(200)
+      }
+      throw new Error(`Vite failed to become ready at ${viteUrl}`)
+    })
+  }
+
+  function bumpIdle() {
+    if (!auto) return
+    if (idleTimer) clearTimeout(idleTimer)
+    idleTimer = setTimeout(() => {
+      if (activeJobs.size === 0 && queue.length === 0) {
+        console.log('[agentct-daemon] Idle timeout, shutting down persistent Vite + daemon.')
+        cleanup(0)
+      }
+    }, DAEMON_IDLE_MS)
+  }
+
+  function canStart(job) {
+    if (activeJobs.size >= MAX_CONCURRENCY) return false
+    const active = [...activeJobs]
+    if (job.runtime === 'exclusive') return active.length === 0
+    if (active.some((j) => j.runtime === 'exclusive')) return false
+    if (job.runtime && job.runtime !== 'exclusive') {
+      const viteUsers = active.filter((j) => j.runtime && j.runtime !== 'exclusive')
+      if (viteUsers.some((j) => j.runtime !== job.runtime)) return false
+    }
+    return true
+  }
+
+  function describeJob(job) {
+    const argv = job.req.argv || []
+    return argv.length ? argv.join(' ') : '(full suite)'
+  }
+
+  function startJob(job) {
+    const { socket, req } = job
+    const exclusive = job.runtime === 'exclusive'
+    const label = describeJob(job)
+    console.log(`[agentct-daemon] Starting (${activeJobs.size}/${MAX_CONCURRENCY} slots, workers=${WORKERS_PER_SLOT}): ${label}`)
+    try {
+      socket.write(JSON.stringify({ type: 'start', workers: WORKERS_PER_SLOT, port: vitePort }) + '\n')
+    } catch {}
+
+    let child = null
+    let settled = false
+
+    const finishJob = async () => {
+      if (settled) return
+      settled = true
+      activeJobs.delete(job)
+      if (exclusive) {
+        try { await ensureVite('19') } catch (err) {
+          console.error(`[agentct-daemon] Failed to restore Vite 19: ${err.message}`)
+        }
+      }
+      bumpIdle()
+      processQueue()
+    }
+
+    try {
+      child = spawn(process.execPath, [__filename, ...(req.argv || [])], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        cwd: req.cwd || daemonRoot,
+        env: {
+          ...process.env,
+          ...req.env,
+          AGENTCT_INNER: '1',
+          AGENTCT_VITE_OWNED_BY_DAEMON: exclusive ? '0' : '1',
+          CT_PORT: String(vitePort),
+          CT_WORKERS: String(WORKERS_PER_SLOT),
+          __AGENT_CLI_JAILBROKEN: '1',
+          FORCE_COLOR: '1',
+        },
+        detached: process.platform !== 'win32',
+      })
+
+      child.stdout.on('data', (data) => {
+        process.stdout.write(data)
         try {
-          item.socket.write(JSON.stringify({ type: 'queue', position: idx + 1, total: queue.length }) + '\n')
+          socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
         } catch {}
       })
 
-      console.log(`
-[agent-daemon] Starting execution (${activeJobs.size}/${MAX_CONCURRENCY} active): ${req.cmd} ${req.args.join(' ')}`)
-      try {
-        socket.write(JSON.stringify({ type: 'start' }) + '\n')
-      } catch {}
-
-      let child = null
-      let settled = false
-
-      const finishJob = () => {
-        if (settled) return
-        settled = true
-        activeJobs.delete(job)
-        processQueue()
-      }
-
-      try {
-        child = spawn(req.cmd, req.args, {
-          stdio: ['ignore', 'pipe', 'pipe'],
-          cwd: req.cwd || repoRoot,
-          env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
-        })
-
-        child.stdout.on('data', (data) => {
-          process.stdout.write(data)
-          try {
-            socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
-          } catch {}
-        })
-
-        child.stderr.on('data', (data) => {
-          process.stderr.write(data)
-          try {
-            socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
-          } catch {}
-        })
-
-        const onJobEnd = (code, signal) => {
-          console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
-          try {
-            socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
-            socket.end()
-          } catch {}
-          finishJob()
-        }
-
-        child.on('exit', onJobEnd)
-        child.on('error', (err) => {
-          console.error(`[agent-daemon] Process error:`, err)
-          try {
-            socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-            socket.end()
-          } catch {}
-          finishJob()
-        })
-      } catch (err) {
+      child.stderr.on('data', (data) => {
+        process.stderr.write(data)
         try {
-          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+          socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
+        } catch {}
+      })
+
+      const onJobEnd = (code, signal) => {
+        console.log(`[agentct-daemon] Finished (${label}) code ${code ?? 0}`)
+        try {
+          socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
           socket.end()
         } catch {}
         finishJob()
       }
 
-      socket.on('close', () => {
-        if (activeJobs.has(job) && child) {
-          console.log(`[agent-daemon] Client disconnected while job was running. Terminating child process...`)
-          try {
-            if (child.pid) process.kill(-child.pid, 'SIGTERM')
-          } catch {}
-          try { child.kill('SIGTERM') } catch {}
-          finishJob()
-        }
+      child.on('exit', onJobEnd)
+      child.on('error', (err) => {
+        console.error(`[agentct-daemon] Process error:`, err)
+        try {
+          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+          socket.end()
+        } catch {}
+        finishJob()
       })
+    } catch (err) {
+      try {
+        socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+        socket.end()
+      } catch {}
+      finishJob()
+    }
+
+    socket.on('close', () => {
+      if (activeJobs.has(job) && child) {
+        console.log(`[agentct-daemon] Client disconnected. Terminating child...`)
+        try {
+          if (child.pid) process.kill(-child.pid, 'SIGTERM')
+        } catch {}
+        try { child.kill('SIGTERM') } catch {}
+        finishJob()
+      }
+    })
+  }
+
+  async function processQueue() {
+    if (pumping) return
+    pumping = true
+    try {
+      while (true) {
+        const idx = queue.findIndex((job) => canStart(job))
+        if (idx < 0) break
+        const job = queue.splice(idx, 1)[0]
+        activeJobs.add(job)
+        queue.forEach((item, i) => {
+          try {
+            item.socket.write(JSON.stringify({ type: 'queue', position: i + 1, total: queue.length }) + '\n')
+          } catch {}
+        })
+        try {
+          if (job.runtime === 'exclusive') {
+            await stopVite()
+          } else if (job.runtime) {
+            await ensureVite(job.runtime)
+          }
+          startJob(job)
+        } catch (err) {
+          activeJobs.delete(job)
+          try {
+            job.socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+            job.socket.end()
+          } catch {}
+        }
+      }
+    } finally {
+      pumping = false
     }
   }
 
@@ -403,12 +627,17 @@ async function startDaemon() {
         if (!line.trim()) continue
         try {
           const req = JSON.parse(line.trim())
-          const job = { socket, req }
+          const argv = req.argv || req.args || []
+          const job = {
+            socket,
+            req: { ...req, argv },
+            runtime: parseJobRuntime(argv),
+          }
           queue.push(job)
-
+          bumpIdle()
           if (activeJobs.size >= MAX_CONCURRENCY) {
             const pos = queue.length
-            console.log(`[agent-daemon] Job queued (position ${pos}): ${req.cmd} ${req.args.join(' ')}`)
+            console.log(`[agentct-daemon] Job queued (position ${pos}): ${describeJob(job)}`)
             try {
               socket.write(JSON.stringify({ type: 'queue', position: pos, total: queue.length }) + '\n')
             } catch {}
@@ -420,7 +649,7 @@ async function startDaemon() {
             const idx = queue.indexOf(job)
             if (idx !== -1) {
               queue.splice(idx, 1)
-              console.log(`[agent-daemon] Queued job canceled (client disconnected)`)
+              console.log(`[agentct-daemon] Queued job canceled (client disconnected)`)
             }
           })
         } catch (err) {
@@ -433,17 +662,19 @@ async function startDaemon() {
     })
   })
 
-  server.listen(SOCKET_PATH, () => {
-    fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
-    console.log(`[agent-daemon] Reference UI Agent Daemon listening at ${SOCKET_PATH}`)
-    console.log(`[agent-daemon] PID: ${process.pid}`)
-    console.log(`[agent-daemon] Parallel execution queue active (max concurrency: ${MAX_CONCURRENCY}). Keep this terminal open to run tasks.`)
-  })
-
   let isCleaningUp = false
   const cleanup = (code = 0) => {
     if (isCleaningUp) return
     isCleaningUp = true
+    if (idleTimer) clearTimeout(idleTimer)
+    if (viteChild?.pid) {
+      const pid = viteChild.pid
+      try { process.kill(-pid, 'SIGKILL') } catch {
+        try { process.kill(pid, 'SIGKILL') } catch {}
+      }
+      viteChild = null
+    }
+    try { freePort(vitePort, '[agentct-daemon]') } catch {}
     try { fs.unlinkSync(SOCKET_PATH) } catch {}
     try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
     try { server.close() } catch {}
@@ -457,6 +688,155 @@ async function startDaemon() {
     try { fs.unlinkSync(SOCKET_PATH) } catch {}
     try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
   })
+
+  await new Promise((resolve, reject) => {
+    server.listen(SOCKET_PATH, () => {
+      fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
+      console.log(`[agentct-daemon] Listening at ${SOCKET_PATH}`)
+      console.log(`[agentct-daemon] PID: ${process.pid}`)
+      console.log(`[agentct-daemon] Queue: ${MAX_CONCURRENCY} slots × ${WORKERS_PER_SLOT} Playwright workers (cpus=${os.cpus().length})`)
+      console.log(auto
+        ? `[agentct-daemon] Auto mode: idle timeout ${Math.round(DAEMON_IDLE_MS / 1000)}s`
+        : `[agentct-daemon] Keep this terminal open. Persistent Vite on :${vitePort}.`)
+      resolve()
+    })
+    server.on('error', reject)
+  })
+
+  try {
+    await ensureVite('19')
+  } catch (err) {
+    console.error(`[agentct-daemon] Failed to start Vite: ${err.message}`)
+  }
+  bumpIdle()
+}
+
+function spawnAutoDaemon() {
+  const out = fs.openSync(DAEMON_LOG_FILE, 'a')
+  const args = process.platform === 'darwin'
+    ? ['-a', '-d', 'default', '-t', '0', '-l', '0', process.execPath, __filename, 'daemon', '--auto']
+    : [__filename, 'daemon', '--auto']
+  const cmd = process.platform === 'darwin' ? 'taskpolicy' : process.execPath
+  const child = spawn(cmd, args, {
+    detached: true,
+    stdio: ['ignore', out, out],
+    env: {
+      ...process.env,
+      __AGENT_CLI_JAILBROKEN: process.platform === 'darwin' ? '1' : process.env.__AGENT_CLI_JAILBROKEN,
+      FORCE_COLOR: '1',
+    },
+    cwd: findRepoRoot(__dirname),
+  })
+  child.unref()
+}
+
+async function ensureDaemon() {
+  if (await isDaemonAlive()) return true
+
+  let spawnedHere = false
+  try {
+    fs.mkdirSync(DAEMON_SPAWN_LOCK)
+    spawnedHere = true
+  } catch {
+    const start = Date.now()
+    while (Date.now() - start < 20_000) {
+      if (await isDaemonAlive()) return true
+      await sleep(150)
+    }
+    try {
+      const stat = fs.statSync(DAEMON_SPAWN_LOCK)
+      if (Date.now() - stat.mtimeMs > 20_000) fs.rmdirSync(DAEMON_SPAWN_LOCK)
+    } catch {}
+  }
+
+  try {
+    if (await isDaemonAlive()) return true
+    if (spawnedHere) {
+      console.log(`[agentct] Auto-starting persistent daemon (Vite :3101, ${MAX_CONCURRENCY} slots × ${WORKERS_PER_SLOT} workers)...`)
+      spawnAutoDaemon()
+    }
+    const start = Date.now()
+    while (Date.now() - start < 25_000) {
+      if (await isDaemonAlive()) return true
+      await sleep(150)
+    }
+    return false
+  } finally {
+    if (spawnedHere) {
+      try { fs.rmdirSync(DAEMON_SPAWN_LOCK) } catch {}
+    }
+  }
+}
+
+function sendToDaemon(argv) {
+  return new Promise((resolve, reject) => {
+    let completed = false
+    let buffer = ''
+    const client = net.createConnection(SOCKET_PATH, () => {
+      console.log(`[agentct] Connected to daemon at ${SOCKET_PATH}`)
+      client.write(JSON.stringify({
+        type: 'run',
+        argv,
+        cwd: process.cwd(),
+        env: { FORCE_COLOR: '1' },
+        pid: process.pid,
+      }) + '\n')
+    })
+
+    client.on('data', (chunk) => {
+      buffer += chunk.toString()
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (!line.trim()) continue
+        try {
+          const msg = JSON.parse(line.trim())
+          if (msg.type === 'queue') {
+            console.log(`[agentct-queue] Waiting in daemon queue (position ${msg.position} of ${msg.total})...`)
+          }
+          if (msg.type === 'start') {
+            console.log(`[agentct-queue] Slot acquired. Routing to warm Vite :${msg.port || 3101} (${msg.workers || WORKERS_PER_SLOT} workers).`)
+          }
+          if (msg.type === 'stdout') process.stdout.write(msg.data)
+          if (msg.type === 'stderr') process.stderr.write(msg.data)
+          if (msg.type === 'exit') {
+            completed = true
+            client.end()
+            resolve(numericExitCode(msg.code))
+          }
+          if (msg.type === 'error') {
+            completed = true
+            client.end()
+            console.error(`[agentct] Daemon error: ${msg.error}`)
+            resolve(1)
+          }
+        } catch {}
+      }
+    })
+
+    client.on('close', () => {
+      if (!completed) reject(new Error('Daemon connection closed before completion'))
+    })
+    client.on('error', (err) => reject(err))
+  })
+}
+
+async function delegateToDaemon(argv) {
+  const ready = await ensureDaemon()
+  if (!ready) {
+    console.warn('[agentct] Daemon unavailable. Falling back to direct execution (file queue, no persistent Vite).')
+    return null
+  }
+  try {
+    return await sendToDaemon(argv)
+  } catch (err) {
+    console.warn(`[agentct] Daemon handoff failed (${err.message}). Falling back to direct execution.`)
+    if (!(await isDaemonAlive())) {
+      try { fs.unlinkSync(SOCKET_PATH) } catch {}
+      try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    }
+    return null
+  }
 }
 
 const repoRoot = findRepoRoot(__dirname)
@@ -464,7 +844,7 @@ const libDir = path.join(repoRoot, 'packages/reference-lib')
 const playwrightDir = path.join(libDir, 'playwright')
 const resultsDir = path.join(playwrightDir, 'test-results')
 const resultsJsonPath = path.join(resultsDir, 'results.json')
-const vitestJsonPath = path.join(resultsDir, 'vitest.json')
+const vitestJsonPath = path.join(resultsDir, `vitest-${process.pid}.json`)
 const configPath = path.join(playwrightDir, 'playwright.config.ts')
 const CT_PORT = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const activeChildPids = new Set()
@@ -473,20 +853,25 @@ let activeSlotPort = null
 
 function usage() {
   console.log(`
-Usage: pnpm ct [Component] [options]
+Usage: pnpm agentct [Component] [options]
 
-  pnpm ct Popover                 Unit then e2e on React 19 (snapshots on)
-  pnpm ct Popover --unit        Vitest only (always workspace React 19)
-  pnpm ct Popover --e2e        Playwright CT only
-  pnpm ct Popover --react 18   CT against @ct-runtime/react-18 (no snapshots)
-  pnpm ct Popover --react all   CT on 17, then 18, then 19
-  pnpm ct Popover -g "escape"   Name filter (unit -t and Playwright -g)
+  pnpm agentct Popover                 Unit then e2e on React 19 (snapshots on)
+  pnpm agentct Popover --unit        Vitest only (always workspace React 19)
+  pnpm agentct Popover --e2e        Playwright CT only
+  pnpm agentct Popover --react 18   CT against @ct-runtime/react-18 (no snapshots)
+  pnpm agentct Popover --react all   CT on 17, then 18, then 19
+  pnpm agentct Popover -g "escape"   Name filter (unit -t and Playwright -g)
+
+  pnpm agentct daemon               Persistent Vite + 3-slot queue in this terminal
+  pnpm agentct stop                 Stop the persistent daemon and Vite :3101
 
   --headed                     Playwright headed
   --clean                      Wipe playwright/test-results
   --json                       Machine-readable summary
   --update-snapshots --confirm   Rewrite React 19 baselines (human yes required)
 
+Concurrent agentct invocations share ONE Vite gallery on :3101.
+Global queue is ${MAX_CONCURRENCY} slots; each Playwright run uses ${WORKERS_PER_SLOT} workers (floor(cpus/3)).
 React 17/18/19 are isolated @ct-runtime packages. Not the matrix pipeline.
 Visual snapshots are React 19 only. Do not combine --update-snapshots with --react 17 or 18.
 `)
@@ -509,8 +894,18 @@ let reactArg = ''
 for (let i = 0; i < args.length; i++) {
   const arg = args[i]
   if (arg === 'daemon') {
-    startDaemon()
+    const rest = args.slice(i + 1)
+    if (rest.includes('stop') || rest.includes('--stop')) {
+      await stopDaemonProcess()
+      process.exit(0)
+    }
+    await startDaemon({ auto: rest.includes('--auto') })
     await new Promise(() => {})
+  } else if (arg === 'stop') {
+    await stopDaemonProcess()
+    process.exit(0)
+  } else if (arg === '--auto') {
+    continue
   } else if (arg === '--help' || arg === '-h') {
     usage()
     process.exit(0)
@@ -531,7 +926,7 @@ for (let i = 0; i < args.length; i++) {
   } else if (arg === '--react') {
     const next = args[i + 1]
     if (!next || next.startsWith('-')) {
-      console.error('[test-component] --react needs 17, 18, 19, or all. Example: pnpm ct Popover --e2e --react 18')
+      console.error('[agentct] --react needs 17, 18, 19, or all. Example: pnpm agentct Popover --e2e --react 18')
       process.exit(2)
     }
     reactArg = args[++i]
@@ -540,7 +935,7 @@ for (let i = 0; i < args.length; i++) {
   } else if (!arg.startsWith('-') && !component) {
     component = arg
   } else if (arg.startsWith('-')) {
-    console.error(`[test-component] Unknown flag: ${arg}`)
+    console.error(`[agentct] Unknown flag: ${arg}`)
     usage()
     process.exit(2)
   }
@@ -548,14 +943,14 @@ for (let i = 0; i < args.length; i++) {
 
 if (updateSnapshots && !confirmSnapshotUpdate) {
   console.error(`
-[test-component] Refusing --update-snapshots without human verification.
+[agentct] Refusing --update-snapshots without human verification.
 
 Only update snapshots if they are genuinely updating styling, and it always has human verification.
 
 1. Show expected / actual / diff in chat.
 2. Wait for an explicit human yes.
 3. Then re-run:
-   pnpm ct ${component || '<Component>'} --e2e --update-snapshots --confirm
+   pnpm agentct ${component || '<Component>'} --e2e --update-snapshots --confirm
 `)
   process.exit(2)
 }
@@ -571,7 +966,7 @@ function parseReactRuntimes(raw) {
   const versions = raw.split(',').map((s) => s.trim().replace(/^react/i, '')).filter(Boolean)
   for (const v of versions) {
     if (!CT_REACT_ALL.includes(v)) {
-      console.error(`[test-component] Unknown React runtime "${v}". Use 17, 18, 19, or all.`)
+      console.error(`[agentct] Unknown React runtime "${v}". Use 17, 18, 19, or all.`)
       process.exit(2)
     }
   }
@@ -582,12 +977,12 @@ const reactRuntimes = parseReactRuntimes(reactArg)
 
 if (updateSnapshots && reactRuntimes.some((v) => v !== '19')) {
   console.error(`
-[test-component] Visual snapshots are React 19 only.
+[agentct] Visual snapshots are React 19 only.
 
 Do not pass --update-snapshots with --react 17, 18, or all.
 Update baselines on the default runtime:
 
-   pnpm ct ${component || '<Component>'} --e2e --update-snapshots --confirm
+   pnpm agentct ${component || '<Component>'} --e2e --update-snapshots --confirm
 `)
   process.exit(2)
 }
@@ -596,12 +991,12 @@ function assertRuntimeInstalled(runtime) {
   const runtimeDir = path.join(playwrightDir, 'runtimes', `react-${runtime}`)
   const pkg = path.join(runtimeDir, 'package.json')
   if (!fs.existsSync(pkg)) {
-    console.error(`[test-component] Missing @ct-runtime/react-${runtime} at ${pkg}. Run pnpm install.`)
+    console.error(`[agentct] Missing @ct-runtime/react-${runtime} at ${pkg}. Run pnpm install.`)
     process.exit(2)
   }
   const reactPkg = path.join(runtimeDir, 'node_modules', 'react', 'package.json')
   if (!fs.existsSync(reactPkg)) {
-    console.error(`[test-component] @ct-runtime/react-${runtime} has no react install at ${reactPkg}. Run pnpm install.`)
+    console.error(`[agentct] @ct-runtime/react-${runtime} has no react install at ${reactPkg}. Run pnpm install.`)
     process.exit(2)
   }
 }
@@ -611,6 +1006,11 @@ if (runE2e) {
   for (const runtime of installed) {
     assertRuntimeInstalled(runtime)
   }
+}
+
+if (!IS_INNER) {
+  const delegated = await delegateToDaemon(process.argv.slice(2))
+  if (delegated !== null) process.exit(delegated)
 }
 
 function sleepSync(ms) {
@@ -627,7 +1027,7 @@ function getPidsOnPort(port) {
   }
 }
 
-function freePort(port, logPrefix = '[test-component]') {
+function freePort(port, logPrefix = '[agentct]') {
   const pids = getPidsOnPort(port)
   if (pids.length === 0) return
   for (const pid of pids) {
@@ -689,11 +1089,9 @@ function stopParentDeathWatch(watcher) {
 
 function cleanupCtGallery() {
   teardownActiveChildren('SIGKILL')
+  if (DAEMON_OWNS_VITE) return
   if (!ctGalleryOwned) return
-  if (activeSlotPort) {
-    try { freePort(activeSlotPort) } catch {}
-    activeSlotPort = null
-  }
+  try { freePort(CT_PORT) } catch {}
 }
 
 if (isClean && fs.existsSync(resultsDir)) {
@@ -767,7 +1165,7 @@ function spawnPnpmDetached(pnpmArgs, { cwd, extraEnv = {} } = {}) {
       killTree('SIGTERM')
       setTimeout(() => {
         killTree('SIGKILL')
-        if (activeSlotPort) {
+        if (!DAEMON_OWNS_VITE && activeSlotPort) {
           try { freePort(activeSlotPort) } catch {}
           activeSlotPort = null
         }
@@ -940,12 +1338,13 @@ async function runE2eSuites() {
   if (!runE2e) return
 
   const e2eTargets = reactRuntimes.length > 0 ? reactRuntimes : [null]
-  ctGalleryOwned = true
+  ctGalleryOwned = !DAEMON_OWNS_VITE
+  const workerCount = process.env.CT_WORKERS || String(WORKERS_PER_SLOT)
 
   for (const runtime of e2eTargets) {
     if (interrupted) break
 
-    const pwArgs = ['exec', 'playwright', 'test', '-c', configPath]
+    const pwArgs = ['exec', 'playwright', 'test', '-c', configPath, '--workers', String(workerCount)]
     if (component) {
       pwArgs.push(`${component}/__e2e__`)
     }
@@ -958,28 +1357,30 @@ async function runE2eSuites() {
     if (updateSnapshots) {
       pwArgs.push('--update-snapshots')
     }
-    pwArgs.push('--reporter=list,json')
 
     const label = runtime ? `react${runtime}` : 'react19'
-    const runtimeResultsPath = path.join(resultsDir, runtime ? `results-${component || 'all'}-react${runtime}.json` : `results-${component || 'all'}.json`)
+    const runtimeResultsPath = path.join(resultsDir, `results-${component || 'all'}-${label}-${process.pid}.json`)
 
     if (!isJson) {
       console.log('\n=======================================================')
       console.log(` E2E (Playwright CT): ${component || 'All'} [${label}] `)
+      console.log(` Workers: ${workerCount}  |  Vite: :${CT_PORT}${DAEMON_OWNS_VITE ? ' (daemon)' : ''}`)
       if (runtime && runtime !== '19') {
         console.log(' Visual snapshots: skipped (React 19 only)')
       }
       console.log('=======================================================')
     }
 
-    await withQueueLock({ cmd: 'playwright', component }, async (slotIndex) => {
-      let currentPort = 3101 + slotIndex
-      activeSlotPort = currentPort
-      freePort(currentPort)
+    const executePin = async () => {
+      if (!DAEMON_OWNS_VITE) {
+        activeSlotPort = CT_PORT
+        freePort(CT_PORT)
+      }
 
       const extraEnv = {
         PLAYWRIGHT_JSON_OUTPUT_NAME: runtimeResultsPath,
-        CT_PORT: String(currentPort),
+        CT_PORT: String(CT_PORT),
+        CT_WORKERS: String(workerCount),
       }
       if (runtime) {
         extraEnv.CT_REACT = runtime
@@ -992,9 +1393,17 @@ async function runE2eSuites() {
       e2eRan = true
       if ((child.status ?? 0) !== 0) e2eChildStatus = child.status ?? 1
 
-      freePort(currentPort)
-      activeSlotPort = null
-    })
+      if (!DAEMON_OWNS_VITE) {
+        freePort(CT_PORT)
+        activeSlotPort = null
+      }
+    }
+
+    if (IS_INNER) {
+      await executePin()
+    } else {
+      await withQueueLock({ cmd: 'playwright', component }, executePin)
+    }
 
     let parsedResults = null
     if (fs.existsSync(runtimeResultsPath)) {
@@ -1002,7 +1411,7 @@ async function runE2eSuites() {
         parsedResults = JSON.parse(fs.readFileSync(runtimeResultsPath, 'utf-8'))
       } catch (err) {
         if (!isJson) {
-          console.warn(`[test-component] Warning: Could not parse results.json: ${err.message}`)
+          console.warn(`[agentct] Warning: Could not parse results.json: ${err.message}`)
         }
       }
     }
@@ -1100,9 +1509,9 @@ if (isJson) {
         console.log('💡 Visual snapshots are skipped on React 17/18. Compare paint drift on React 19.')
       }
       if (e2eRuns.some((t) => t.snapshotDiff)) {
-        console.log('💡 Agents: `view_file` snapshot diff/actual/expected. Do not update baselines yet.')
+        console.log('💡 Agents: `view_file` snapshot diff/actual/expected. Terminal telemetry above includes bbox + dominant color. Do not update baselines yet.')
         console.log('   Only update snapshots if they are genuinely updating styling, and it always has human verification.')
-        console.log('   After an explicit human yes: pnpm ct <Component> --e2e --update-snapshots --confirm')
+        console.log('   After an explicit human yes: pnpm agentct <Component> --e2e --update-snapshots --confirm')
       }
     }
   } else if (unitResult.ran) {

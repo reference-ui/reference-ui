@@ -52,7 +52,7 @@ finalProps = merge(inputDefaults, rootInputProps, explicitInputProps, managedMac
 
 ### Law 6: Separation of Testing Concerns
 - **Unit Tests (`vitest`)**: Colocated next to the source they cover (`src/components/<Component>/*.test.ts(x)`). Pure logic, algorithms, SSR markup, parsing, token merge. Do **not** emulate pointer/keyboard/DOM interaction in Vitest when a real browser test would be more honest.
-- **Component Tests (`playwright` CT)**: `src/components/<Component>/__e2e__/<Component>.ct.spec.ts`. Real browser. Interactions, presence, video, visual snapshots. Run via `pnpm ct <Component>` (unit first, then e2e on React 19). Pin 17/18/19 with `pnpm ct <Component> --e2e --react 18` (`@ct-runtime` packages, no pipeline).
+- **Component Tests (`playwright` CT)**: `src/components/<Component>/__e2e__/<Component>.ct.spec.ts`. Real browser. Interactions, presence, video, visual snapshots. Run via `pnpm agentct <Component>` (unit first, then e2e on React 19). Pin 17/18/19 with `pnpm agentct <Component> --e2e --react 18` (`@ct-runtime` packages, no pipeline).
 - **Matrix Contract Tests (`playwright`)**: Execute in real browsers (`matrix/lib/tests/e2e/`). Cross-bundler/runtime DOM, focus, pointer/touch, keyboard, APG, and accessibility trees (`role`, `aria-*`, `data-*`).
 
 ### Law 7: Accessibility & Platform Primacy
@@ -65,13 +65,13 @@ finalProps = merge(inputDefaults, rootInputProps, explicitInputProps, managedMac
 
 ## 3. Verification Protocol
 
-Component logic and CT: follow the **`test-component`** skill (`pnpm ct <Component>`).
+Component logic and CT: follow the **`test-component`** skill (`pnpm agentct <Component>`).
 
-Matrix Playwright/Vitest for lib contracts: use **test-core** (`pnpm agent`), not raw subshells. test-core is the pipeline runner, **not a skill**. If you also modified `packages/reference-core`, switch to test-core for core/matrix proof — `pnpm ct` does not cover core.
+Matrix Playwright/Vitest for lib contracts: use **test-core** (`pnpm agent`), not raw subshells. test-core is the pipeline runner, **not a skill**. If you also modified `packages/reference-core`, switch to test-core for core/matrix proof — `pnpm agentct` does not cover core.
 
 ```bash
 # Component CT (test-component):
-pnpm ct <Component>
+pnpm agentct <Component>
 
 # Native matrix iteration (test-core):
 pnpm agent vitest lib -t "<Component>"

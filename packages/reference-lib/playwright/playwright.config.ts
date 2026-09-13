@@ -9,13 +9,15 @@ const port = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const origin = `http://localhost:${port}`
 const hostURL = `${origin}/playwright/index.html`
 const major = resolveMajor()
+const workersPerSlot = Math.max(1, Math.floor(os.cpus().length / 3))
+const workers = process.env.CT_WORKERS ? parseInt(process.env.CT_WORKERS, 10) || workersPerSlot : workersPerSlot
 
 export default defineConfig({
   testDir: '../src/components',
   testMatch: '**/__e2e__/**/*.ct.spec.ts',
   timeout: 30 * 1000,
   fullyParallel: true,
-  workers: Math.min(12, Math.max(1, Math.floor(os.cpus().length * 0.5))),
+  workers,
   expect: {
     toHaveScreenshot: {
       animations: 'disabled',
@@ -29,6 +31,7 @@ export default defineConfig({
     ['html', { outputFolder: './playwright-report', open: 'never' }],
     ['json', { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || './test-results/results.json' }],
     ['list'],
+    [path.join(__dirname, 'snapshot-telemetry-reporter.ts')],
   ],
   outputDir: path.resolve(__dirname, 'test-results'),
   use: {

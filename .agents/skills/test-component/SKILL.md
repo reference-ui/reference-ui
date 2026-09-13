@@ -13,7 +13,7 @@ Use this skill whenever you need to **verify whether a component passes logic, b
 
 This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-core`, matrix packages, or the pipeline.
 
-If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, MCP, …), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm ct` will not prove a core change.
+If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, MCP, …), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm agentct` will not prove a core change.
 
 ---
 
@@ -64,26 +64,31 @@ flowchart LR
 Always run **unit first**, then e2e on React 19, then inspect artifacts. From the repository root:
 
 ```bash
-pnpm ct                         # Run ALL components through the queue harness
-pnpm ct Popover                 # unit → e2e (React 19 + snapshots)
-pnpm ct Popover --unit
-pnpm ct Popover --e2e
-pnpm ct Popover --e2e --react 18
-pnpm ct Popover --e2e --react 17,19
-pnpm ct Popover --e2e --react all
-pnpm ct Popover -g "escape"
-pnpm ct --help
+pnpm agentct                         # Run ALL components through the 3-slot daemon
+pnpm agentct Popover                 # unit → e2e (React 19 + snapshots)
+pnpm agentct Popover --unit
+pnpm agentct Popover --e2e
+pnpm agentct Popover --e2e --react 18
+pnpm agentct Popover --e2e --react 17,19
+pnpm agentct Popover --e2e --react all
+pnpm agentct Popover -g "escape"
+pnpm agentct daemon                  # Optional: keep Vite warm in your terminal
+pnpm agentct stop                    # Stop the auto/persistent daemon
+pnpm agentct --help
 ```
 
 > [!IMPORTANT] 
-> **AGENTIC FLOW & PIPELINE HARNESS:**
-> - **NEVER pass the `--json` flag.** The user wants to see the human-readable progress in the task logs. Run `pnpm ct` natively and parse the terminal output.
-> - **Queue Harness:** The `test-component` CLI is a fully parallelized socket daemon harness. When you invoke `pnpm ct` or `pnpm ct <Component>`, it automatically acquires a parallel queue lock (`MAX_CONCURRENCY`) and dynamically assigns Vite ports (`3101 + slotIndex`). This means you CAN and SHOULD invoke multiple `pnpm ct <Component>` runs concurrently in separate subagents. They will queue up and load balance perfectly.
-> - **Triaging Full Suite Failures:** To run the whole suite, execute `pnpm ct` (no arguments). Once finished, read the console failures, then spawn an independent subagent PER FAILED COMPONENT to fix it, run `pnpm ct <FailedComponent>` to verify, and report back.
+> **AGENTIC FLOW & PERSISTENT DAEMON:**
+> - **NEVER pass the `--json` flag.** The user wants to see the human-readable progress in the task logs. Run `pnpm agentct` natively and parse the terminal output.
+> - **One Vite, three slots:** `agentct` auto-starts a persistent Unix-socket daemon (`/tmp/ref-ct-agent.sock`) that owns a single CT Vite gallery on `http://localhost:3101`. Concurrent `pnpm agentct <Component>` invocations from subagents **must** go through this daemon — they must not boot their own Vite servers.
+> - **Global queue:** hard-capped at **3** parallel execution slots. Each Playwright run gets `Math.floor(os.cpus().length / 3)` workers so three concurrent slots cannot exceed 100% CPU.
+> - **You CAN and SHOULD** invoke multiple `pnpm agentct <Component>` runs concurrently in separate subagents. They queue on the warm server; extra jobs wait for a free slot.
+> - **Snapshot telemetry:** when `toHaveScreenshot` fails, the reporter prints bounding box (`x: min..max`, `y: min..max`) and the dominant color hex difference. Use that before writing image-parsing scripts.
+> - **Triaging Full Suite Failures:** To run the whole suite, execute `pnpm agentct` (no arguments). Once finished, read the console failures, then spawn an independent subagent PER FAILED COMPONENT to fix it, run `pnpm agentct <FailedComponent>` to verify, and report back.
 
 Never pass `--update-snapshots` during this loop. Snapshot writes are a separate, human-gated step (see below).
 
-The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT serves its own gallery on `http://localhost:3101`. The runner always SIGTERM/SIGKILL that port before each React pin and on exit/abort, so a gallery cannot leak into the next run.
+The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT uses the daemon's gallery on `http://localhost:3101`. A global `beforeEach` resets `window.scrollTo(0, 0)` so large fixtures cannot leak scroll into the next test. Do not kill port 3101 between agentct jobs; the daemon owns that process. Use `pnpm agentct stop` when you want it gone.
 
 ### React runtimes (no pipeline)
 
@@ -98,7 +103,7 @@ Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **n
 `html[data-react-version]` is set from `React.version` so you can confirm the runtime.
 
 **When to use `--react`**
-- Day to day: omit it. `pnpm ct <Component>` is React 19 + snapshots.
+- Day to day: omit it. `pnpm agentct <Component>` is React 19 + snapshots.
 - After overlay / presence / event / mount work, or when the human asks about compatibility: `--e2e --react all` (or `17,18`).
 - Unit tests always use workspace React 19. `--react` is e2e-only.
 - Visual snapshots (`snap()`) run **only on React 19**. 17/18 are behavioral. `snap()` is a no-op off 19, so specs stay identical.
@@ -137,7 +142,7 @@ Call `view_file` on each `video.webm`. Check:
 
 Snapshots are **settled-state** comparisons (`snap(page, 'open')`, stored as `open.png`). Animations are disabled for the comparison so the check is about layout/paint drift, not motion (motion is the video). `snap()` no-ops unless the CT gallery is React 19.
 
-On mismatch: `view_file` the **diff**, then **actual**, then **expected**. Treat a failed snapshot as a **regression until the human says otherwise**. Fix the component. Do **not** update the baseline.
+On mismatch: read the **bbox + color telemetry** in the terminal, then `view_file` the **diff**, then **actual**, then **expected**. Treat a failed snapshot as a **regression until the human says otherwise**. Fix the component. Do **not** update the baseline.
 
 ---
 
@@ -157,7 +162,7 @@ Until that yes: do not run `--update-snapshots`, do not pass `--confirm`, do not
 After an explicit yes:
 
 ```bash
-pnpm ct <Component> --e2e --update-snapshots --confirm
+pnpm agentct <Component> --e2e --update-snapshots --confirm
 ```
 
 `--confirm` is the machine record that the human already approved. The runner refuses `--update-snapshots` without it, and refuses it with `--react 17`, `18`, or `all`.

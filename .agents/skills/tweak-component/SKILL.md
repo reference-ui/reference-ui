@@ -66,11 +66,11 @@ Execute targeted checks locally (never run raw unthrottled subshell commands or 
 # Component verification loop (unit → e2e + videos + visual snapshots):
 # Follow the test-component skill: inspect videos and snapshot diffs after the run.
 # Never --update-snapshots here. Snapshot writes need an explicit human yes.
-pnpm ct <ComponentName>
-# e.g.: pnpm ct Popover
-pnpm ct Popover --unit
-pnpm ct Popover --e2e
-pnpm ct Popover --e2e --react all
+pnpm agentct <ComponentName>
+# e.g.: pnpm agentct Popover
+pnpm agentct Popover --unit
+pnpm agentct Popover --e2e
+pnpm agentct Popover --e2e --react all
 
 # Recommended for full 4-phase matrix verification in one shot (test-core, not a skill):
 # (Typecheck -> vitest -> build -> targeted Playwright spec)

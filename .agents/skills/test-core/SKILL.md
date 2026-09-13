@@ -15,7 +15,7 @@ Use `test-core` when you changed any of:
 - `matrix/*` packages
 - pipeline / Dagger / hermetic React + bundler contracts
 
-Do **not** use `pnpm ct` / `test-component` for that work. That skill only covers colocated unit + Playwright CT for `@reference-ui/lib` components.
+Do **not** use `pnpm agentct` / `test-component` for that work. That skill only covers colocated unit + Playwright CT for `@reference-ui/lib` components.
 
 ---
 
@@ -78,7 +78,7 @@ pnpm agent setup --packages=@matrix/distro --sync
 1. Unit/typecheck in core: `pnpm agent vitest core` (and `pnpm agent run pnpm --filter @reference-ui/core typecheck` if needed).
 2. Rebuild what the matrix consumes (`pnpm agent` auto-builds `@reference-ui/lib` dist when Playwright needs it; pass `--build` to force).
 3. Run the matrix package(s) that cover the surface you touched, e.g. `@matrix/virtual`, `@matrix/session`, `@matrix/mcp`, `@matrix/typescript`, `@matrix/distro`, `@matrix/system`, `@matrix/playwright`.
-4. Do not stop at `pnpm ct`. Component CT does not exercise core.
+4. Do not stop at `pnpm agentct`. Component CT does not exercise core.
 
 ### Process Lifecycle, Signal Control & Pass Signaling
 
