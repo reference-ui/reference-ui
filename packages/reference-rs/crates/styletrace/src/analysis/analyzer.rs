@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-use crate::styletrace::resolver::{
+use crate::resolver::{
     collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
 };
 

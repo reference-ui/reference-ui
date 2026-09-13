@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::styletrace::resolver::{
+use crate::resolver::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
     resolve_local_module_path, StyleTraceError,
 };

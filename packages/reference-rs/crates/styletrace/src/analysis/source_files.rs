@@ -6,7 +6,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::styletrace::resolver::StyleTraceError;
+use crate::resolver::StyleTraceError;
 
 pub(super) fn discover_source_files(root_dir: &Path) -> Result<Vec<PathBuf>, StyleTraceError> {
     let mut files = Vec::new();

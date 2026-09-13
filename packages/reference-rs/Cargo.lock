@@ -1010,7 +1010,7 @@ dependencies = [
  "napi-derive",
  "serde",
  "serde_json",
- "system",
+ "styletrace",
  "tasty",
  "virtualrs",
 ]
@@ -1206,18 +1206,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
-name = "syn"
-version = "2.0.117"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-ident",
-]
-
-[[package]]
-name = "system"
+name = "styletrace"
 version = "0.1.0"
 dependencies = [
  "globwalk",
@@ -1230,6 +1219,17 @@ dependencies = [
  "serde_json",
  "shared",
  "tasty",
+]
+
+[[package]]
+name = "syn"
+version = "2.0.117"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
 ]
 
 [[package]]

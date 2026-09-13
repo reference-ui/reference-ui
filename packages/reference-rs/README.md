@@ -6,7 +6,7 @@ Rust-backed native tooling for `reference-ui`. This package ships a **Node-API (
 
 | Piece | Role |
 | --- | --- |
-| **Cargo workspace** (`crates/*`) | Modular, pure Rust domain crates (`shared`, `virtualrs`, `atlas`, `tasty`, `system`) with zero Node dependencies. |
+| **Cargo workspace** (`crates/*`) | Modular, pure Rust domain crates (`shared`, `virtualrs`, `atlas`, `tasty`, `styletrace`) with zero Node dependencies. |
 | **N-API bridge** (`crates/napi`) | Crate `reference-virtual-native`, built as a `cdylib` with `#[napi]` exports wrapping domain crates. |
 | **TypeScript (`js/`)** | Loads the `.node` addon, wraps it with ergonomic/higher-level APIs (runtimes, builders, helpers), and ships bundled ESM/DTS per public subpath (`tsup` → `dist/`). |
 | **Product suite (`tests/`)** | Vitest product tests covering fixtures, snapshots, and public contracts through the native addon and TS wrappers. |
@@ -51,7 +51,7 @@ packages/reference-rs/
 │   ├── tasty/            # TypeScript scanner, AST extraction, generator, emitter
 │   ├── atlas/            # token and component usage analysis
 │   ├── virtualrs/        # virtual module CSS/CVA rewrites and responsive lowering
-│   ├── system/           # styletrace resolver & analysis (styling engine foundation)
+│   ├── styletrace/       # styletrace prop resolver & JSX wrapper tracing
 │   └── napi/             # reference-virtual-native cdylib (#[napi] bridge only)
 ├── js/                   # TypeScript runtime wrappers and tooling
 ├── tests/                # Vitest product test suite (fixtures, snapshots, contracts)

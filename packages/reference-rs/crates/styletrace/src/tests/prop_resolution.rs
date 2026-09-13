@@ -1,6 +1,6 @@
 //! Resolver-focused unit coverage for styletrace type expansion.
 
-use crate::styletrace::{collect_reference_style_prop_names, collect_style_prop_names};
+use crate::{collect_reference_style_prop_names, collect_style_prop_names};
 
 use super::fixtures::{workspace_sync_root, ScratchDir};
 
