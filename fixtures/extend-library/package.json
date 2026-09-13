@@ -34,10 +34,10 @@
   },
   "devDependencies": {
     "@reference-ui/core": "workspace:*",
-    "@types/react": "^18.2.0",
-    "react": "^18.2.0",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
     "tsup": "^8.5.1",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.0"
+    "vitest": "^5.0.0"
   }
 }

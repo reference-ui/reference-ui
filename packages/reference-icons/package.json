@@ -44,7 +44,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@material-symbols-svg/react": "^0.5.0"
+    "@material-symbols-svg/react": "^0.14.0"
   },
   "peerDependencies": {
     "@reference-ui/core": "*",
@@ -53,10 +53,10 @@
   "devDependencies": {
     "@reference-ui/core": "workspace:*",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "^25.1.0",
-    "@types/react": "^19.2.14",
-    "react": "^19.2.4",
-    "rollup": "^4.59.0",
+    "@types/node": "^26.5.1",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
+    "rollup": "^4.63.1",
     "rollup-plugin-esbuild": "^6.2.1",
     "typescript": "~7.0.2"
   }
