@@ -81,11 +81,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Compile native binary
-        run: pnpm --filter @reference-ui/rust exec napi build --platform --release --target ${{ matrix.target }}
+        run: pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${{ matrix.target }} --output-dir native --no-js
 
       - name: Upload native artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact_prefix }}-${{ matrix.target }}
-          path: packages/reference-rs/virtual-native.*.node
+          path: packages/reference-rs/native/virtual-native.*.node
           if-no-files-found: error

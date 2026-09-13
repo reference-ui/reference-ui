@@ -138,8 +138,6 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
   return [
     join(packageDir, 'native', `virtual-native.${triple}.node`),
-    join(packageDir, `virtual-native.${triple}.node`),
-    join(packageDir, 'dist', `virtual-native.${triple}.node`),
   ]
 }
 
@@ -155,29 +153,19 @@ function resolveOptionalTargetPackageDir(
   }
 }
 
-function getVirtualNativeSearchDirs(
-  packageDir: string,
-  triple: VirtualNativeTarget,
-  requireImpl: RequireFn = getDefaultRequire()
-): string[] {
-  const dirs = [packageDir]
-  const optionalTargetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
-
-  if (optionalTargetPackageDir && optionalTargetPackageDir !== packageDir) {
-    dirs.push(optionalTargetPackageDir)
-  }
-
-  return dirs
-}
-
 function getVirtualNativeCandidatePaths(
   packageDir: string,
   triple: VirtualNativeTarget,
   requireImpl: RequireFn = getDefaultRequire()
 ): string[] {
-  return getVirtualNativeSearchDirs(packageDir, triple, requireImpl).flatMap(searchDir =>
-    getVirtualNativeCandidates(searchDir, triple)
-  )
+  const candidates = getVirtualNativeCandidates(packageDir, triple)
+  const optionalTargetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
+
+  if (optionalTargetPackageDir && optionalTargetPackageDir !== packageDir) {
+    candidates.push(join(optionalTargetPackageDir, `virtual-native.${triple}.node`))
+  }
+
+  return candidates
 }
 
 export function resolveVirtualNativeBinaryPath(
