@@ -8,13 +8,16 @@
 ## Table of Contents
 
 1. [Executive Summary & The Case for Permanence](#1-executive-summary--the-case-for-permanence)
-2. [Panda v2 Deep Dive: What We Adopt vs. What We Throw Away](#2-panda-v2-deep-dive-what-we-adopt-vs-what-we-throw-away)
-3. [The Core Architecture of `reference-system`](#3-the-core-architecture-of-reference-system)
-4. [Eliminating the Virtual Filesystem Seam](#4-eliminating-the-virtual-filesystem-seam)
-5. [The Matrix Safety Net: 26+ Suites of Ground Truth](#5-the-matrix-safety-net-26-suites-of-ground-truth)
-6. [The Visual Decision Tree](#6-the-visual-decision-tree)
-7. [Phased Implementation Roadmap](#7-phased-implementation-roadmap)
-8. [Turnkey Implementation Prompt](#8-turnkey-implementation-prompt)
+2. [Forensic Autopsy of Panda v2 (Where It Fell Short)](#2-forensic-autopsy-of-panda-v2-where-it-fell-short)
+3. [The Reference RS Benchmark: Systems Discipline in Practice](#3-the-reference-rs-benchmark-systems-discipline-in-practice)
+4. [Styletrace as the Foundation of the Native Extractor](#4-styletrace-as-the-foundation-of-the-native-extractor)
+5. [The Synthesis: What We Take from Panda vs. What We Do Better](#5-the-synthesis-what-we-take-from-panda-vs-what-we-do-better)
+6. [The Component Triad: Recipes, Data Attributes, and Style Props](#6-the-component-triad-recipes-data-attributes-and-style-props)
+7. [Eliminating the Virtual Filesystem Seam](#7-eliminating-the-virtual-filesystem-seam)
+8. [The Matrix Safety Net: 26+ Suites of Ground Truth](#8-the-matrix-safety-net-26-suites-of-ground-truth)
+9. [The Visual Decision Tree](#9-the-visual-decision-tree)
+10. [Phased Implementation Roadmap](#10-phased-implementation-roadmap)
+11. [Turnkey Implementation Prompt](#11-turnkey-implementation-prompt)
 
 ---
 
@@ -39,113 +42,181 @@ This document defines the blueprint for **`reference-system`**: a lean (~4,000�
 
 ---
 
-## 2. Panda v2 Deep Dive: What We Adopt vs. What We Throw Away
+## 2. Forensic Autopsy of Panda v2 (Where It Fell Short)
 
 We have Panda v2 cloned directly in `vendor/panda`. Across its 12 Rust crates, there are **61,399 lines of Rust source code** and **68,003 lines of tests** (129,402 LOC total).
 
-We do not have to reinvent the wheel from scratch. We can study what Panda built, adopt its best ideas, and ruthlessly eliminate its bloat and architectural flaws.
+A detailed forensic examination of their codebase reveals why Panda v2 exhibits severe edge cases and how its engineering approach fell short of industrial compiler standards.
 
-### A. Crate-by-Crate Assessment
+### A. It Was an Expedient Transliteration of Node.js Hacks
+Panda v2 was not designed from first principles as a native compiler; it was an expedient port of a legacy Babel/JavaScript AST visitor into Rust using OXC.
 
-| Panda Crate | Source LOC | Value to Reference UI | Verdict & Architectural Decision |
-| :--- | :--- | :--- | :--- |
-| **`pandacss_encoder`** | 665 | **HIGH** | **Adopt Core Idea:** The `Atom` struct `(prop, value, conditions, important, hash)` is an excellent, compact data model for atomic declarations. |
-| **`pandacss_stylesheet`**| 8,990 | **HIGH** | **Adopt Core Idea:** The 5-layer cascade model (`@layer reset, base, tokens, recipes, utilities`), specificity sorting, and grouping rules by media/container queries. |
-| **`pandacss_tokens`** | 2,749 | **MEDIUM** | **Adopt Concept:** Token dictionary categorization and CSS variable generation (`var(--colors-*)`). We will unify this directly with `atlas`. |
-| **`pandacss_recipes`** | 461 | **HIGH** | **Adopt Core Idea:** `cva()` / `sva()` (slot recipes) with `base`, `variants`, `compoundVariants`, and `defaultVariants`. |
-| **`pandacss_utility`** | 1,626 | **MEDIUM** | **Refactor:** Useful mapping of shorthands to longhands, but its separation from executable transforms caused the runtime split-brain. |
-| **`pandacss_extractor`**| 11,650 | **LOW (Flawed)** | **Throw Away:** Full of loose heuristics in `literal.rs` and `style_tree.rs`. Replace with a clean **Recursive Leaf Literal Collector** built on our existing `styletrace` engine. |
-| **`pandacss_codegen`** | 12,773 | **ZERO** | **Throw Away:** 80% of this crate is code generation for Vue SFC, Svelte 5, Solid JSX, Astro frontmatter, and Preact. Reference UI is exclusively enterprise React. |
-| **`pandacss_project`** | 16,347 | **ZERO** | **Throw Away:** Contains in-place source file rewriting, watch graph caches, and cross-file tracking. Unnecessary with in-memory OXC AST traversal. |
-| **`pandacss_config`** | 2,733 | **LOW** | **Throw Away:** Overly complex JSON schema validation for general-purpose users. Reference UI has its own strictly typed config in `reference-core`. |
-| **`pandacss_shared`** | 1,949 | **MEDIUM** | **Extract:** Small string helpers (CSS escaping, hyphenation, fast hashing). |
-| **`pandacss_fs`** | 805 | **ZERO** | **Throw Away:** Generic glob scanning. We already use `globwalk` and `fast-glob`. |
-| **`pandacss_tracing`** | 651 | **LOW** | **Throw Away:** Basic wrapper around tracing spans. |
-
-### B. What Panda Did Well (Keep)
-1. **The `Atom` Concept:** Flattening every style declaration into `(property, value, condition_chain, important)` with a precomputed 64-bit `fx_hash` for instantaneous `FxHashSet` deduplication.
-2. **Layered Cascade Ordering:** Structuring emitted CSS into `@layer reset, base, tokens, recipes, utilities` ensures that utilities always cleanly override recipes and base resets regardless of selector specificity.
-3. **Condition Chains:** Representing responsive breakpoints (`sm`, `md`) and pseudo-states (`_hover`, `_focusVisible`) as ordered condition paths that nest neatly into `@media` or CSS pseudo-selectors.
-
-### C. Where Panda Failed (Why We Must Do Better)
-1. **The Fatal Split-Brain:** The Rust compiler in `pandacss_extractor` runs natively without access to JavaScript callbacks. Meanwhile, custom shorthand transforms were implemented in TypeScript (`createShorthandUtility`). At runtime, the browser executed a dumb string concatenator (`styled/css/css.js`) that generated `bd-b_3px_solid`, while the stylesheet compiler emitted `.bd-b-w_3px` and `.bd-b-s_solid`. **Classes rendered with zero matching CSS rules.**
-2. **Heuristic AST Constant-Folding:** Panda attempted partial constant evaluation in Rust (`literal.rs:687`). When encountering runtime variables (`isLine`, `isSelected`), it converted `undefined` into `Literal::Null` and wrapped branches into unflattened `Conditional` variants, dropping valid styles.
-3. **Multi-Framework Bloat:** Over 30,000 LOC are devoted to supporting Svelte runes, Vue templates, Solid signals, and Astro frontmatter. Reference UI builds enterprise web components on React. That bloat adds drag and instability.
-
----
-
-## 3. The Core Architecture of `reference-system`
-
-Instead of 61,000 LOC across 12 crates, `reference-system` will be a single, focused **~4,000–5,000 LOC crate** living inside a Cargo workspace in `packages/reference-rs`.
-
-### A. The Modular Cargo Workspace
-
-```
-packages/reference-rs/
-├── Cargo.toml (Workspace Root)
-├── crates/
-│   ├── tasty/       --> Pure TypeScript semantic graph, AST lowering (docs, MCP)
-│   ├── atlas/       --> Design tokens, OKLCH color models, rhythm math
-│   └── system/      --> The native style engine (styletrace + extractor + emitter)
-└── native/          --> Unified N-API binary export (@reference-ui/rust)
-```
-
-### B. Component 1: In-Memory OXC Extractor (`extractor.rs`)
-`reference-system` builds directly on our existing **`styletrace`** module (`packages/reference-rs/src/styletrace`), which already uses OXC to identify style-bearing JSX tags and trace prop forwarding down component boundaries.
-
-**The Recursive Leaf Literal Collector:**
-Instead of trying to evaluate runtime JavaScript logic, `reference-system` applies **Postel's Law**: extract every literal that could *ever* be requested at runtime:
-
+The comments in their own source code prove this:
 ```rust
-pub fn collect_leaf_literals<'a>(expr: &'a Expression<'a>, out: &mut Vec<&'a str>) {
-    match expr {
-        Expression::StringLiteral(s) => out.push(s.value.as_str()),
-        Expression::NumericLiteral(n) => out.push(...),
-        Expression::ConditionalExpression(c) => {
-            // Unconditionally extract both branches — regardless of nesting!
-            collect_leaf_literals(&c.consequent, out);
-            collect_leaf_literals(&c.alternate, out);
-        }
-        Expression::LogicalExpression(l) => {
-            collect_leaf_literals(&l.right, out);
-        }
-        // undefined, null, or booleans are elisions — safely ignored
-        _ => {}
-    }
-}
+// vendor/panda/crates/pandacss_extractor/src/literal.rs:300:
+// PORT NOTE: folding is lenient per-member, matching the JS extractor.
+
+// vendor/panda/crates/pandacss_extractor/src/literal.rs:681:
+// Left didn't fold, so it's a dynamic condition, not a style alternative —
+// the right operand is the only extractable style (node's
+// `maybeResolveConditionalExpression` does the same).
+
+// vendor/panda/crates/pandacss_extractor/src/literal.rs:701:
+// Keep whatever folds, like node's `maybeResolveConditionalExpression`:
+// both branches fold → Conditional (collapsed to one if equal);
+// only one folds → that branch alone; neither folds → drop.
 ```
-If a developer authors:
+
+Instead of establishing a formal Intermediate Representation (IR), they copied the loose, dynamic, forgiving heuristics of JavaScript into Rust type systems.
+
+### B. The Fatal Split-Brain Architecture
+In Panda v1, both extraction and runtime execution ran in JavaScript, so plugins and transforms could execute in-memory. 
+
+In Panda v2:
+1. **The Extractor and Encoder are in Rust:** They run natively during build time using OXC. But the native crate cannot execute JavaScript callbacks.
+2. **Custom Transforms are in TypeScript:** Shorthand decomposition (like `createShorthandUtility`) was written in TypeScript on the Node.js config side.
+3. **The Runtime is a Dumb String Concatenator:** In the browser, `packages/reference-core/src/system/styled/css/css.js:36` only does:
+   ```javascript
+   transform(prop, value) {
+     const key = resolveShorthand(prop)
+     const propKey = classNameByProp.get(key) || hypenateProperty(key)
+     return { className: `${propKey}_${withoutSpace(value)}` }
+   }
+   ```
+   Runtime `css.js` knows **nothing** about custom transforms or shorthand decomposition!
+
+#### The Consequence (The `borderBottom` Dropout in `Tabs.tsx`):
+- **Build Time:** Reference Core configured `borderBottom: '3px solid'`. The JS config decomposed it into `borderBottomWidth: '3px'` and `borderBottomStyle: 'solid'`. The stylesheet compiler generated `.bd-b-w_3px` and `.bd-b-s_solid`.
+- **Runtime:** React called `css({ borderBottom: '3px solid' })`. Runtime `css.js` generated `className="bd-b_3px_solid"`.
+- **Result:** The browser applied `.bd-b_3px_solid`. Because that class **did not exist in `styles.css`**, the active underline vanished completely.
+
+### C. The Failure on Ternary Expressions
+Why did Panda v2 fail to map ternary statements to atomic classes?
+
 ```tsx
 borderBottom={isLine && horizontal ? isSelected ? '3px solid' : '3px solid transparent' : undefined}
 ```
-The extractor immediately collects `'3px solid'` and `'3px solid transparent'`. Both rules are generated into `styles.css`. Whichever branch runs in React, the CSS rule is guaranteed to exist.
 
-### C. Component 2: Token & Rhythm Resolver (`resolver.rs`)
-- **Native Rhythm Units (`r`):** The rhythm multiplier (`r` -> `px` or `var(--spacing-root)`) is evaluated directly in Rust, eliminating the Panda v1 rhythm hole where `100r` was silently discarded.
-- **Shorthand Decomposition:** Properties like `borderBottom: '3px solid'` or `border: '1px solid red'` are decomposed into width, style, and color longhands deterministically in Rust.
-- **Atlas Tokens:** Resolves `ui.focus.ring` -> `var(--colors-ui-focus-ring)`.
+Panda tried to be "half-clever":
+1. It attempted static constant evaluation on `c.test` in `literal.rs:687`.
+2. When it hit runtime variables (`isLine`, `isSelected`), evaluation returned `None`.
+3. For `undefined` alternates, `literal.rs:511` coerced `undefined` into `Some(Literal::Null)`.
+4. In `style_tree.rs:242` (`finish_ternary`), because `alternate` was `Some(Literal::Null)` (instead of `None`), it created unflattened, invalid nested variants: `Conditional([Conditional([A, B]), Null])`.
+5. The encoder couldn't resolve the nested conditional and silently dropped the style.
 
-### D. Component 3: Atomic Stylesheet Emitter (`emitter.rs`)
-- Emits atomic rules into strict cascade layers:
-  ```css
-  @layer reset, base, tokens, recipes, utilities;
-  ```
-- Unconditional utility classes (`.bd-b-w_3px`) emit first, followed by pseudo-classes (`:hover`, `:focus-visible`), then grouped media queries (`@media`), and container queries (`@container`).
-- Deterministic class naming: e.g. `bd-b_3px_solid` or short hashes (`_1a2b3c`).
+**The Fundamental Flaw:** A CSS compiler does **not** need to evaluate runtime boolean conditions. It does not care *when* `isSelected` is true. It only needs to collect every possible literal leaf across both branches so that all corresponding atomic classes are pre-emitted into the stylesheet!
 
-### E. Component 4: Unified Runtime Bridge (Zero Split-Brain)
-The exact same atom-formatting function:
-```rust
-pub fn format_atom(property: &str, value: &str) -> (String, String) // (className, cssRule)
-```
-is compiled via N-API and shared directly with the JavaScript runtime (`@reference-ui/styled/css`). 
-When React calls `css({ borderBottom: '3px solid' })` at runtime, it calls the exact same logic that emitted the stylesheet. **A runtime class can never desynchronize from build-time CSS.**
+### D. The Corporate / Bureaucracy Signal
+Panda v2's git log on `origin/v2` shows a project with misaligned priorities:
+- **3-person core team:** Segun Adebayo, Gabe Castro, and Lope.
+- **Heavy investment in marketing & peripheral tools:** Building a "Spec Studio" web app, writing blog posts (*"Zero runtime, all the way down"*), and redesigning playgrounds.
+- **Suppression of user issues:** Moving feature requests out of GitHub issues into GitHub Discussions (`chore: move feature requests to GitHub Discussions (#3774)`).
+- **Multi-Framework Distraction:** Over 30,000 LOC dedicated to Vue SFC, Svelte runes, Solid JSX signals, and Astro frontmatter, while core React JSX extraction and runtime parity remained broken.
 
 ---
 
-## 4. Eliminating the Virtual Filesystem Seam
+## 3. The Reference RS Benchmark: Systems Discipline in Practice
 
-The **Reference ↔ Panda virtual filesystem seam** (`.reference-ui/virtual/`) is the single most complex and fragile subsystem in `reference-core` today.
+By contrast, `packages/reference-rs` represents **275 focused commits** over 6+ months of disciplined systems engineering.
+
+### A. Formal, Typed Semantic IR (`model.rs`)
+While Panda uses loose `Literal` enums with heuristic fallbacks, Reference RS defines a formal, closed model:
+- `TypeRef` models 17 distinct variants (`Intrinsic`, `Literal`, `Union`, `Intersection`, `Tuple`, `Object`, `IndexedAccess`, etc.).
+- **Fail-Closed Philosophy:** If an AST node is unsupported, it drops into `Raw { summary }` with the exact source text preserved. Nothing silently vanishes.
+
+### B. Single Source of Truth (`ts-rs`)
+In `reference-rs`, Rust structs use `ts-rs` to automatically generate TypeScript declarations under `js/tasty/generated/`. 
+- If the Rust compiler and the TypeScript runtime diverge by a single field, it fails to compile.
+- Zero serialization drift. Zero split-brain.
+
+### C. Industrial-Grade Verification
+- **Generative Property Fuzzing (`proptest`):** In `src/tasty/tests/type_ref_proptest.rs`, `proptest` generates randomized, deeply nested type trees to prove that recursion never overflows the stack and transformations are idempotent.
+- **38 Matrix Fixture Suites (`tests/tasty/cases/`):** Real-world scenarios tested end-to-end with generated chunk assertion and perf metric tracking.
+- **Criterion Benchmarks (`benches/scan_kitchen_sink.rs`):** Microsecond benchmarking on full-pipeline parsing.
+
+This is the exact level of discipline we will bring to `reference-system`.
+
+---
+
+## 4. Styletrace as the Foundation of the Native Extractor
+
+We do not need to write an AST extractor from scratch. We already built **`styletrace`** (`packages/reference-rs/src/styletrace`)!
+
+### Why Was Styletrace Originally Built?
+Styletrace was built in Rust with OXC to overcome another major limitation in Panda:
+- By default, Panda only extracts style props from hardcoded primitive tags (`Box`, `styled.div`).
+- If an author wrote a custom wrapper component:
+  ```tsx
+  const Card = ({ children, ...props }) => <Box p="4r" {...props}>{children}</Box>
+  ```
+  And then used `<Card bg="blue.500" />`, **Panda silently ignored the style props**!
+- To fix this, `styletrace` was created to:
+  1. Parse TSX files with OXC.
+  2. Read `.reference-ui/react/types/style-props.d.mts` and expand the `StyleProps` type definition.
+  3. Trace component boundaries and forwarding edges (`{...props}`) down to Reference primitives.
+  4. Automatically feed discovered component names into Panda's config.
+
+### Styletrace is Already 70% of an Atomic Extractor
+`styletrace` already knows how to:
+- Parse `.tsx` files at native speed with OXC.
+- Identify which JSX elements carry style props.
+- Resolve whether a component terminates in a Reference primitive.
+
+To turn `styletrace` into the full `reference-system` extractor, we simply add a **Recursive Leaf Literal Collector** to scoop up style props from those elements.
+
+---
+
+## 5. The Synthesis: What We Take from Panda vs. What We Do Better
+
+We are not throwing everything away; we are **synthesizing the best ideas and replacing the broken ones**:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SYNTHESIS BLUEPRINT                             │
+├───────────────────────────────────┬────────────────────────────────────┤
+│   WHAT WE ADOPT FROM PANDA V2     │     WHAT WE DO DIFFERENTLY / BETTER│
+├───────────────────────────────────┼────────────────────────────────────┤
+│ • Atom Data Model:                │ • Unified Single-Engine Runtime:   │
+│   (prop, value, conditions, hash) │   Same Rust algorithm runs at      │
+│ • 5-Layer Cascade Ordering:       │   build time and in runtime css(). │
+│   @layer reset, base, tokens,     │   Zero ghost classes.              │
+│   recipes, utilities              │ • Recursive Leaf Literal Collector:│
+│ • Condition Chains:               │   Scoops all ternary branches;     │
+│   Nested @media & pseudo-selectors│   zero heuristic constant folding. │
+│ • Slot Recipes (sva) & cva:       │ • Native Rhythm & Atlas Tokens:    │
+│   Multi-part compound variants    │   r multipliers & OKLCH color math │
+│ • String Utilities:               │   evaluated natively in Rust.      │
+│   CSS escaping & hyphenation      │ • Elimination of Virtual FS:       │
+│                                   │   Direct in-memory compilation;    │
+│                                   │   deletes .reference-ui/virtual/.  │
+│                                   │ • Laser-Focused on React:          │
+│                                   │   Zero Vue/Svelte/Astro bloat.     │
+└───────────────────────────────────┴────────────────────────────────────┘
+```
+
+---
+
+## 6. The Component Triad: Recipes, Data Attributes, and Style Props
+
+A high-integrity design system must balance **architectural rigor** with **developer velocity**:
+
+| Layer | Tool | Role | Example |
+| :--- | :--- | :--- | :--- |
+| **1. Component Anatomy** | **Recipes (`cva` / `sva`)** | Canonical design system engineering. Defines static variants and sizes at build time. | `variant: 'line' \| 'pill'` |
+| **2. Interactive State** | **Data Attributes** | State transitions handled natively by CSS attribute selectors without JS class churn. | `&[data-state="active"]` |
+| **3. Layout & Prototyping**| **Style Props** | Instant, fluid authoring. Lets developers compose layouts without naming a recipe. | `<Flex gap="4r" mt="2r" />` |
+
+### The "Hell No" Linter + Resilient Extractor
+We want both:
+1. **Linter Discipline:** Because `styletrace` inspects JSX style props with OXC, it can emit a warning when developers write unreadable nested ternaries:
+   > *"Warning: Avoid nested ternaries on style props. Prefer recipes or data-attribute selectors."*
+2. **Compiler Resilience (Postel's Law):** If a developer *does* write a ternary, the compiler does not fail or drop styles. The recursive leaf collector extracts every branch, emits the classes, and the component works 100%.
+
+---
+
+## 7. Eliminating the Virtual Filesystem Seam
+
+The **Reference ↔ Panda virtual filesystem seam** (`.reference-ui/virtual/`) is the single most complex, fragile subsystem in `reference-core` today.
 
 ### Current Pipeline (With Panda):
 ```
@@ -195,7 +266,7 @@ Sync cold-start time drops from **3–5 seconds** down to **< 150 milliseconds**
 
 ---
 
-## 5. The Matrix Safety Net: 26+ Suites of Ground Truth
+## 8. The Matrix Safety Net: 26+ Suites of Ground Truth
 
 We have already codified the contracts of the entire design system under `matrix/`. Any PR or implementation of `reference-system` must pass this exact test suite:
 
@@ -220,7 +291,7 @@ We have already codified the contracts of the entire design system under `matrix
 
 ---
 
-## 6. The Visual Decision Tree
+## 9. The Visual Decision Tree
 
 ```mermaid
 graph TD
@@ -251,7 +322,7 @@ graph TD
 
 ---
 
-## 7. Phased Implementation Roadmap
+## 10. Phased Implementation Roadmap
 
 ### Phase 1: Clean Component Contracts (Immediate)
 - Refactor `Tabs.tsx` and any internal library components away from unreadable runtime JSX ternaries to **Recipes (`cva`)** and DOM data attributes.
@@ -277,7 +348,7 @@ graph TD
 
 ---
 
-## 8. Turnkey Implementation Prompt
+## 11. Turnkey Implementation Prompt
 
 *When ready to execute Phase 2 and 3, copy and paste this prompt into an agent or development session:*
 
