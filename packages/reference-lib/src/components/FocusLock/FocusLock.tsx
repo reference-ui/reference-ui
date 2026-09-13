@@ -362,7 +362,11 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
         if (!wasTop && remaining.length > 0) {
           return
         }
-        scheduleRestore(doc, container)
+        if (remaining.length > 0) {
+          restoreOnce(doc, container)
+        } else {
+          scheduleRestore(doc, container)
+        }
       }
     }, [clearReclaimFrame, disabled, lockId, rememberInside, scheduleRestore])
 

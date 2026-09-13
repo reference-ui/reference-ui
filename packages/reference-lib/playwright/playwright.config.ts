@@ -1,4 +1,5 @@
 import path from 'node:path'
+import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 import { resolveMajor } from './runtimes'
@@ -14,7 +15,7 @@ export default defineConfig({
   testMatch: '**/__e2e__/**/*.ct.spec.ts',
   timeout: 30 * 1000,
   fullyParallel: true,
-  workers: '100%',
+  workers: Math.min(12, Math.max(1, Math.floor(os.cpus().length * 0.5))),
   expect: {
     toHaveScreenshot: {
       animations: 'disabled',

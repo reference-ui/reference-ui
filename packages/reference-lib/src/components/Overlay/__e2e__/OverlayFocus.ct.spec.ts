@@ -9,6 +9,7 @@ test.describe('FocusLock × Overlay', () => {
     await expect(page.getByTestId('focus-lock-overlay-root')).toBeVisible()
 
     const trigger = page.getByTestId('fl-ov-01-trigger')
+    await page.evaluate(() => window.scrollTo(0, 765))
     await trigger.click()
     const content = page.getByTestId('fl-ov-01-content')
     await expect(content).toBeVisible()
@@ -36,6 +37,7 @@ test.describe('FocusLock × Overlay', () => {
     await expect(content).toHaveCount(0)
     await page.waitForTimeout(200)
     await snap(page, 'fl-ov-01-closed')
+    await page.evaluate(() => window.scrollTo(0, 987))
   })
 
   test('FL-OV-02 & FL-RESTORE-02 & FL-RESTORE-08: one restore after Presence, skip, explicit target', async ({

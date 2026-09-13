@@ -12,6 +12,8 @@ import { spawn, spawnSync, execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import os from 'node:os'
+import net from 'node:net'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -64,6 +66,399 @@ function isSnapshotName(name = '') {
   return n === 'expected' || n === 'actual' || n === 'diff' || n.includes('expected') || n.includes('actual') || n.includes('diff')
 }
 
+
+const SOCKET_PATH = '/tmp/ref-ct-agent.sock'
+const DAEMON_PID_FILE = '/tmp/ref-ct-agent.pid'
+const QUEUE_DIR = '/tmp/ref-ct-agent-queue'
+const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
+const MAX_CONCURRENCY = Math.min(4, Math.max(1, Math.floor(os.cpus().length * 0.25)))
+
+// Queue Lock Logic
+function isPidAlive(pid) {
+  if (!pid || typeof pid !== 'number' || isNaN(pid) || pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (err) {
+    return err.code === 'EPERM'
+  }
+}
+
+function withFileMutex(action) {
+  const mutexPath = path.join(QUEUE_DIR, '.lock_mutex')
+  const startTime = Date.now()
+  let acquired = false
+  while (!acquired && Date.now() - startTime < 5000) {
+    try {
+      fs.mkdirSync(mutexPath)
+      acquired = true
+    } catch {
+      try {
+        const stat = fs.statSync(mutexPath)
+        if (Date.now() - stat.mtimeMs > 5000) {
+          fs.rmdirSync(mutexPath)
+        }
+      } catch {}
+      const end = Date.now() + 20
+      while (Date.now() < end) {}
+    }
+  }
+  try {
+    return action()
+  } finally {
+    if (acquired) {
+      try { fs.rmdirSync(mutexPath) } catch {}
+    }
+  }
+}
+
+async function acquireQueueLock(taskInfo = {}) {
+  try {
+    fs.mkdirSync(QUEUE_DIR, { recursive: true })
+  } catch {}
+
+  const now = Date.now().toString().padStart(16, '0')
+  const myPid = process.pid
+  const rand = Math.random().toString(36).slice(2, 6)
+  const entryFilename = `${now}-${myPid}-${rand}.json`
+  const entryPath = path.join(QUEUE_DIR, entryFilename)
+
+  const entryData = {
+    pid: myPid,
+    createdAt: Date.now(),
+    task: taskInfo,
+  }
+
+  try {
+    fs.writeFileSync(entryPath, JSON.stringify(entryData, null, 2))
+  } catch (err) {
+    console.warn(`[agent-queue] Warning: Could not write queue entry: ${err.message}`)
+  }
+
+  let cleanUpDone = false
+  const cleanup = () => {
+    if (cleanUpDone) return
+    cleanUpDone = true
+    try {
+      if (fs.existsSync(entryPath)) fs.unlinkSync(entryPath)
+    } catch {}
+    try {
+      withFileMutex(() => {
+        if (fs.existsSync(LOCK_FILE)) {
+          const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+          const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+          const remaining = parsed.filter(l => l.pid !== myPid && isPidAlive(l.pid))
+          if (remaining.length === 0) {
+            try { fs.unlinkSync(LOCK_FILE) } catch {}
+          } else {
+            fs.writeFileSync(LOCK_FILE, JSON.stringify(remaining, null, 2))
+          }
+        }
+      })
+    } catch {}
+  }
+
+  process.on('SIGINT', cleanup)
+  process.on('SIGTERM', cleanup)
+  process.on('exit', cleanup)
+
+  let loggedWait = false
+  let lastLogTime = 0
+
+  while (true) {
+    let files = []
+    try {
+      files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
+    } catch {}
+
+    const validEntries = []
+    for (const f of files) {
+      const fPath = path.join(QUEUE_DIR, f)
+      try {
+        const data = JSON.parse(fs.readFileSync(fPath, 'utf-8'))
+        if (isPidAlive(data.pid)) {
+          validEntries.push({ file: f, data })
+        } else {
+          try { fs.unlinkSync(fPath) } catch {}
+        }
+      } catch {}
+    }
+
+    validEntries.sort((a, b) => a.file.localeCompare(b.file))
+    const myIndex = validEntries.findIndex(e => e.file === entryFilename)
+
+    let acquired = false
+    let activeLocks = []
+    let assignedSlot = 0
+    withFileMutex(() => {
+      if (fs.existsSync(LOCK_FILE)) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+          const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+          const aliveLocks = parsed.filter(l => isPidAlive(l.pid))
+          if (aliveLocks.length !== parsed.length) {
+            if (aliveLocks.length === 0) {
+              try { fs.unlinkSync(LOCK_FILE) } catch {}
+            } else {
+              try { fs.writeFileSync(LOCK_FILE, JSON.stringify(aliveLocks, null, 2)) } catch {}
+            }
+          }
+          activeLocks = aliveLocks
+        } catch {
+          try { fs.unlinkSync(LOCK_FILE) } catch {}
+        }
+      }
+
+      if (myIndex >= 0 && myIndex < MAX_CONCURRENCY) {
+        const usedSlots = new Set(activeLocks.map(l => l.slotIndex))
+        for (let i = 0; i < MAX_CONCURRENCY; i++) {
+          if (!usedSlots.has(i)) {
+            assignedSlot = i
+            break
+          }
+        }
+        
+        const lockPayload = {
+          pid: myPid,
+          entryFile: entryFilename,
+          acquiredAt: Date.now(),
+          task: taskInfo,
+          slotIndex: assignedSlot
+        }
+        const existingIdx = activeLocks.findIndex(l => l.pid === myPid)
+        if (existingIdx >= 0) {
+          activeLocks[existingIdx] = lockPayload
+          assignedSlot = activeLocks[existingIdx].slotIndex
+        } else {
+          activeLocks.push(lockPayload)
+        }
+        try {
+          fs.writeFileSync(LOCK_FILE, JSON.stringify(activeLocks, null, 2))
+        } catch {}
+        acquired = true
+      }
+    })
+
+    if (acquired) {
+      if (loggedWait) {
+        console.log(`[agent-queue] Turn reached (PID ${myPid}, slot ${assignedSlot + 1}/${MAX_CONCURRENCY}). Starting execution...`)
+      }
+      return {
+        slotIndex: assignedSlot,
+        release: async () => {
+          cleanup()
+          process.off('SIGINT', cleanup)
+          process.off('SIGTERM', cleanup)
+          process.off('exit', cleanup)
+        }
+      }
+    }
+
+    const queuePos = myIndex >= 0 ? myIndex + 1 : validEntries.length + 1
+    const activePids = activeLocks.map(l => l.pid).join(', ') || 'none'
+    const nowMs = Date.now()
+
+    if (!loggedWait || nowMs - lastLogTime > 10000) {
+      console.log(`[agent-queue] Maximum concurrency reached (${activeLocks.length}/${MAX_CONCURRENCY} active PIDs: ${activePids}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
+      loggedWait = true
+      lastLogTime = nowMs
+    }
+
+    await new Promise(r => setTimeout(r, 1000))
+  }
+}
+
+async function withQueueLock(taskInfo, fn) {
+  const { slotIndex, release } = await acquireQueueLock(taskInfo)
+  try {
+    return await fn(slotIndex)
+  } finally {
+    await release()
+  }
+}
+
+function numericExitCode(code) {
+  if (typeof code === 'number' && Number.isFinite(code)) return code | 0
+  return 1
+}
+
+async function startDaemon() {
+  if (fs.existsSync(SOCKET_PATH)) {
+    const isAlive = await new Promise((resolve) => {
+      const probe = net.createConnection(SOCKET_PATH, () => {
+        probe.destroy()
+        resolve(true)
+      })
+      probe.on('error', () => {
+        try { fs.unlinkSync(SOCKET_PATH) } catch {}
+        try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+        resolve(false)
+      })
+    })
+
+    if (isAlive) {
+      console.log(`[agent-daemon] An agent daemon is already running at ${SOCKET_PATH}.`)
+      process.exit(0)
+    }
+  }
+
+  const queue = []
+  const activeJobs = new Set()
+
+  function processQueue() {
+    while (activeJobs.size < MAX_CONCURRENCY && queue.length > 0) {
+      const job = queue.shift()
+      activeJobs.add(job)
+      const { socket, req } = job
+
+      queue.forEach((item, idx) => {
+        try {
+          item.socket.write(JSON.stringify({ type: 'queue', position: idx + 1, total: queue.length }) + '\n')
+        } catch {}
+      })
+
+      console.log(`
+[agent-daemon] Starting execution (${activeJobs.size}/${MAX_CONCURRENCY} active): ${req.cmd} ${req.args.join(' ')}`)
+      try {
+        socket.write(JSON.stringify({ type: 'start' }) + '\n')
+      } catch {}
+
+      let child = null
+      let settled = false
+
+      const finishJob = () => {
+        if (settled) return
+        settled = true
+        activeJobs.delete(job)
+        processQueue()
+      }
+
+      try {
+        child = spawn(req.cmd, req.args, {
+          stdio: ['ignore', 'pipe', 'pipe'],
+          cwd: req.cwd || repoRoot,
+          env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
+        })
+
+        child.stdout.on('data', (data) => {
+          process.stdout.write(data)
+          try {
+            socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
+          } catch {}
+        })
+
+        child.stderr.on('data', (data) => {
+          process.stderr.write(data)
+          try {
+            socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
+          } catch {}
+        })
+
+        const onJobEnd = (code, signal) => {
+          console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
+          try {
+            socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
+            socket.end()
+          } catch {}
+          finishJob()
+        }
+
+        child.on('exit', onJobEnd)
+        child.on('error', (err) => {
+          console.error(`[agent-daemon] Process error:`, err)
+          try {
+            socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+            socket.end()
+          } catch {}
+          finishJob()
+        })
+      } catch (err) {
+        try {
+          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+          socket.end()
+        } catch {}
+        finishJob()
+      }
+
+      socket.on('close', () => {
+        if (activeJobs.has(job) && child) {
+          console.log(`[agent-daemon] Client disconnected while job was running. Terminating child process...`)
+          try {
+            if (child.pid) process.kill(-child.pid, 'SIGTERM')
+          } catch {}
+          try { child.kill('SIGTERM') } catch {}
+          finishJob()
+        }
+      })
+    }
+  }
+
+  const server = net.createServer((socket) => {
+    let buffer = ''
+    socket.on('data', async (chunk) => {
+      buffer += chunk.toString()
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (!line.trim()) continue
+        try {
+          const req = JSON.parse(line.trim())
+          const job = { socket, req }
+          queue.push(job)
+
+          if (activeJobs.size >= MAX_CONCURRENCY) {
+            const pos = queue.length
+            console.log(`[agent-daemon] Job queued (position ${pos}): ${req.cmd} ${req.args.join(' ')}`)
+            try {
+              socket.write(JSON.stringify({ type: 'queue', position: pos, total: queue.length }) + '\n')
+            } catch {}
+          } else {
+            processQueue()
+          }
+
+          socket.on('close', () => {
+            const idx = queue.indexOf(job)
+            if (idx !== -1) {
+              queue.splice(idx, 1)
+              console.log(`[agent-daemon] Queued job canceled (client disconnected)`)
+            }
+          })
+        } catch (err) {
+          try {
+            socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+            socket.end()
+          } catch {}
+        }
+      }
+    })
+  })
+
+  server.listen(SOCKET_PATH, () => {
+    fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
+    console.log(`[agent-daemon] Reference UI Agent Daemon listening at ${SOCKET_PATH}`)
+    console.log(`[agent-daemon] PID: ${process.pid}`)
+    console.log(`[agent-daemon] Parallel execution queue active (max concurrency: ${MAX_CONCURRENCY}). Keep this terminal open to run tasks.`)
+  })
+
+  let isCleaningUp = false
+  const cleanup = (code = 0) => {
+    if (isCleaningUp) return
+    isCleaningUp = true
+    try { fs.unlinkSync(SOCKET_PATH) } catch {}
+    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    try { server.close() } catch {}
+    process.exit(code)
+  }
+
+  process.on('SIGINT', () => cleanup(0))
+  process.on('SIGTERM', () => cleanup(0))
+  process.on('SIGHUP', () => cleanup(0))
+  process.on('exit', () => {
+    try { fs.unlinkSync(SOCKET_PATH) } catch {}
+    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+  })
+}
+
 const repoRoot = findRepoRoot(__dirname)
 const libDir = path.join(repoRoot, 'packages/reference-lib')
 const playwrightDir = path.join(libDir, 'playwright')
@@ -74,6 +469,7 @@ const configPath = path.join(playwrightDir, 'playwright.config.ts')
 const CT_PORT = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const activeChildPids = new Set()
 let ctGalleryOwned = false
+let activeSlotPort = null
 
 function usage() {
   console.log(`
@@ -112,7 +508,10 @@ let reactArg = ''
 
 for (let i = 0; i < args.length; i++) {
   const arg = args[i]
-  if (arg === '--help' || arg === '-h') {
+  if (arg === 'daemon') {
+    startDaemon()
+    await new Promise(() => {})
+  } else if (arg === '--help' || arg === '-h') {
     usage()
     process.exit(0)
   } else if (arg === '--json') {
@@ -291,7 +690,10 @@ function stopParentDeathWatch(watcher) {
 function cleanupCtGallery() {
   teardownActiveChildren('SIGKILL')
   if (!ctGalleryOwned) return
-  try { freePort(CT_PORT) } catch {}
+  if (activeSlotPort) {
+    try { freePort(activeSlotPort) } catch {}
+    activeSlotPort = null
+  }
 }
 
 if (isClean && fs.existsSync(resultsDir)) {
@@ -365,7 +767,10 @@ function spawnPnpmDetached(pnpmArgs, { cwd, extraEnv = {} } = {}) {
       killTree('SIGTERM')
       setTimeout(() => {
         killTree('SIGKILL')
-        try { freePort(CT_PORT) } catch {}
+        if (activeSlotPort) {
+          try { freePort(activeSlotPort) } catch {}
+          activeSlotPort = null
+        }
       }, 400)
     }
 
@@ -567,24 +972,29 @@ async function runE2eSuites() {
       console.log('=======================================================')
     }
 
-    freePort(CT_PORT)
+    await withQueueLock({ cmd: 'playwright', component }, async (slotIndex) => {
+      let currentPort = 3101 + slotIndex
+      activeSlotPort = currentPort
+      freePort(currentPort)
 
-    const extraEnv = {
-      PLAYWRIGHT_JSON_OUTPUT_NAME: runtimeResultsPath,
-      CT_PORT: String(CT_PORT),
-    }
-    if (runtime) {
-      extraEnv.CT_REACT = runtime
-    }
+      const extraEnv = {
+        PLAYWRIGHT_JSON_OUTPUT_NAME: runtimeResultsPath,
+        CT_PORT: String(currentPort),
+      }
+      if (runtime) {
+        extraEnv.CT_REACT = runtime
+      }
 
-    const child = await spawnPnpmDetached(pwArgs, {
-      cwd: libDir,
-      extraEnv,
+      const child = await spawnPnpmDetached(pwArgs, {
+        cwd: libDir,
+        extraEnv,
+      })
+      e2eRan = true
+      if ((child.status ?? 0) !== 0) e2eChildStatus = child.status ?? 1
+
+      freePort(currentPort)
+      activeSlotPort = null
     })
-    e2eRan = true
-    if ((child.status ?? 0) !== 0) e2eChildStatus = child.status ?? 1
-
-    freePort(CT_PORT)
 
     let parsedResults = null
     if (fs.existsSync(runtimeResultsPath)) {

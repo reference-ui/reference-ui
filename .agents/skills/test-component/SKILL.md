@@ -64,6 +64,7 @@ flowchart LR
 Always run **unit first**, then e2e on React 19, then inspect artifacts. From the repository root:
 
 ```bash
+pnpm ct                         # Run ALL components through the queue harness
 pnpm ct Popover                 # unit → e2e (React 19 + snapshots)
 pnpm ct Popover --unit
 pnpm ct Popover --e2e
@@ -73,6 +74,12 @@ pnpm ct Popover --e2e --react all
 pnpm ct Popover -g "escape"
 pnpm ct --help
 ```
+
+> [!IMPORTANT] 
+> **AGENTIC FLOW & PIPELINE HARNESS:**
+> - **NEVER pass the `--json` flag.** The user wants to see the human-readable progress in the task logs. Run `pnpm ct` natively and parse the terminal output.
+> - **Queue Harness:** The `test-component` CLI is a fully parallelized socket daemon harness. When you invoke `pnpm ct` or `pnpm ct <Component>`, it automatically acquires a parallel queue lock (`MAX_CONCURRENCY`) and dynamically assigns Vite ports (`3101 + slotIndex`). This means you CAN and SHOULD invoke multiple `pnpm ct <Component>` runs concurrently in separate subagents. They will queue up and load balance perfectly.
+> - **Triaging Full Suite Failures:** To run the whole suite, execute `pnpm ct` (no arguments). Once finished, read the console failures, then spawn an independent subagent PER FAILED COMPONENT to fix it, run `pnpm ct <FailedComponent>` to verify, and report back.
 
 Never pass `--update-snapshots` during this loop. Snapshot writes are a separate, human-gated step (see below).
 

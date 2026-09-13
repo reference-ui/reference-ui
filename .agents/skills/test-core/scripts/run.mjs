@@ -9,7 +9,7 @@
  * Provides:
  * 1. Automatic macOS Darwin QoS Jailbreak (elevates child process from PRI 31 to PRI 46/47 via `taskpolicy -a`).
  * 2. Unbuffered output stream filtering (prevents \r carriage-return spinners from freezing in IDE logs).
- * 3. Targeted matrix testing and component verification commands.
+ * 3. Targeted matrix testing commands.
  * 4. Optional Terminal Bridge Daemon mode (delegates jobs to external user terminal if running).
  */
 
@@ -38,6 +38,7 @@ const SOCKET_PATH = '/tmp/reference-ui-agent.sock'
 const DAEMON_PID_FILE = '/tmp/reference-ui-agent.pid'
 const QUEUE_DIR = '/tmp/reference-ui-agent-queue'
 const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
+export const MAX_CONCURRENCY = Math.max(1, Math.floor(os.cpus().length / 2))
 
 /** Drop act()/Dagger noise after this so the agent stdout pipe cannot stay open. */
 const MAX_STDERR_BYTES = 256 * 1024
@@ -252,28 +253,61 @@ function isPidAlive(pid) {
 }
 
 function getQueueStatus() {
-  let activeLock = null
+  let activeLocks = []
   let pendingCount = 0
   if (fs.existsSync(QUEUE_DIR)) {
     try {
       if (fs.existsSync(LOCK_FILE)) {
-        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
-        if (isPidAlive(lock.pid)) {
-          activeLock = lock
-        }
+        const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+        const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+        activeLocks = parsed.filter(l => isPidAlive(l.pid))
       }
+      const activePids = new Set(activeLocks.map(l => l.pid))
       const files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
       for (const f of files) {
         try {
           const data = JSON.parse(fs.readFileSync(path.join(QUEUE_DIR, f), 'utf-8'))
-          if (isPidAlive(data.pid) && (!activeLock || data.pid !== activeLock.pid)) {
+          if (isPidAlive(data.pid) && !activePids.has(data.pid)) {
             pendingCount++
           }
         } catch {}
       }
     } catch {}
   }
-  return { activeLock, pendingCount }
+  return {
+    activeLocks,
+    activeLock: activeLocks[0] || null,
+    pendingCount,
+    maxConcurrency: MAX_CONCURRENCY,
+  }
+}
+
+function withFileMutex(action) {
+  const mutexPath = path.join(QUEUE_DIR, '.lock_mutex')
+  const startTime = Date.now()
+  let acquired = false
+  while (!acquired && Date.now() - startTime < 5000) {
+    try {
+      fs.mkdirSync(mutexPath)
+      acquired = true
+    } catch {
+      try {
+        const stat = fs.statSync(mutexPath)
+        if (Date.now() - stat.mtimeMs > 5000) {
+          fs.rmdirSync(mutexPath)
+        }
+      } catch {}
+      const end = Date.now() + 20
+      while (Date.now() < end) {}
+    }
+  }
+  try {
+    return action()
+  } finally {
+    if (acquired) {
+      try { fs.rmdirSync(mutexPath) } catch {}
+    }
+  }
 }
 
 async function acquireQueueLock(taskInfo = {}) {
@@ -307,12 +341,18 @@ async function acquireQueueLock(taskInfo = {}) {
       if (fs.existsSync(entryPath)) fs.unlinkSync(entryPath)
     } catch {}
     try {
-      if (fs.existsSync(LOCK_FILE)) {
-        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
-        if (lock.pid === myPid) {
-          fs.unlinkSync(LOCK_FILE)
+      withFileMutex(() => {
+        if (fs.existsSync(LOCK_FILE)) {
+          const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+          const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+          const remaining = parsed.filter(l => l.pid !== myPid && isPidAlive(l.pid))
+          if (remaining.length === 0) {
+            try { fs.unlinkSync(LOCK_FILE) } catch {}
+          } else {
+            fs.writeFileSync(LOCK_FILE, JSON.stringify(remaining, null, 2))
+          }
         }
-      }
+      })
     } catch {}
   }
 
@@ -348,57 +388,72 @@ async function acquireQueueLock(taskInfo = {}) {
     // Sort valid entries by filename (which starts with zero-padded timestamp)
     validEntries.sort((a, b) => a.file.localeCompare(b.file))
 
-    // 2. Check active lock
-    let currentLockHolder = null
-    if (fs.existsSync(LOCK_FILE)) {
-      try {
-        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
-        if (isPidAlive(lock.pid)) {
-          currentLockHolder = lock
-        } else {
-          console.log(`[agent-queue] Stale lock detected (PID ${lock.pid} is no longer running). Clearing lock.`)
-          try { fs.unlinkSync(LOCK_FILE) } catch {}
-        }
-      } catch {
-        try { fs.unlinkSync(LOCK_FILE) } catch {}
-      }
-    }
-
     const myIndex = validEntries.findIndex(e => e.file === entryFilename)
 
-    // Are we first in line?
-    if (myIndex === 0) {
-      // If no active lock, or active lock already belongs to us:
-      if (!currentLockHolder || currentLockHolder.pid === myPid) {
-        // Acquire lock
+    // 2. Check active lock and acquire if myIndex < MAX_CONCURRENCY
+    let acquired = false
+    let activeLocks = []
+    withFileMutex(() => {
+      if (fs.existsSync(LOCK_FILE)) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+          const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+          const aliveLocks = parsed.filter(l => isPidAlive(l.pid))
+          if (aliveLocks.length !== parsed.length) {
+            const stalePids = parsed.filter(l => !isPidAlive(l.pid)).map(l => l.pid)
+            console.log(`[agent-queue] Stale lock(s) detected (PID ${stalePids.join(', ')} no longer running). Pruning.`)
+            if (aliveLocks.length === 0) {
+              try { fs.unlinkSync(LOCK_FILE) } catch {}
+            } else {
+              try { fs.writeFileSync(LOCK_FILE, JSON.stringify(aliveLocks, null, 2)) } catch {}
+            }
+          }
+          activeLocks = aliveLocks
+        } catch {
+          try { fs.unlinkSync(LOCK_FILE) } catch {}
+        }
+      }
+
+      // If myIndex < MAX_CONCURRENCY, you can acquire the lock!
+      if (myIndex >= 0 && myIndex < MAX_CONCURRENCY) {
         const lockPayload = {
           pid: myPid,
           entryFile: entryFilename,
           acquiredAt: Date.now(),
           task: taskInfo,
         }
+        const existingIdx = activeLocks.findIndex(l => l.pid === myPid)
+        if (existingIdx >= 0) {
+          activeLocks[existingIdx] = lockPayload
+        } else {
+          activeLocks.push(lockPayload)
+        }
         try {
-          fs.writeFileSync(LOCK_FILE, JSON.stringify(lockPayload, null, 2))
+          fs.writeFileSync(LOCK_FILE, JSON.stringify(activeLocks, null, 2))
         } catch {}
-        if (loggedWait) {
-          console.log(`[agent-queue] Turn reached (PID ${myPid}). Starting execution...`)
-        }
-        return async () => {
-          cleanup()
-          process.off('SIGINT', cleanup)
-          process.off('SIGTERM', cleanup)
-          process.off('exit', cleanup)
-        }
+        acquired = true
+      }
+    })
+
+    if (acquired) {
+      if (loggedWait) {
+        console.log(`[agent-queue] Turn reached (PID ${myPid}, slot ${myIndex + 1}/${MAX_CONCURRENCY}). Starting execution...`)
+      }
+      return async () => {
+        cleanup()
+        process.off('SIGINT', cleanup)
+        process.off('SIGTERM', cleanup)
+        process.off('exit', cleanup)
       }
     }
 
     // We are waiting
     const queuePos = myIndex >= 0 ? myIndex + 1 : validEntries.length + 1
-    const holderPid = currentLockHolder ? currentLockHolder.pid : (validEntries[0] ? validEntries[0].data.pid : 'unknown')
+    const activePids = activeLocks.map(l => l.pid).join(', ') || 'none'
     const nowMs = Date.now()
 
     if (!loggedWait || nowMs - lastLogTime > 10000) {
-      console.log(`[agent-queue] Another test is currently running (PID ${holderPid}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
+      console.log(`[agent-queue] Maximum concurrency reached (${activeLocks.length}/${MAX_CONCURRENCY} active PIDs: ${activePids}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
       loggedWait = true
       lastLogTime = nowMs
     }
@@ -657,89 +712,94 @@ async function startDaemon() {
   }
 
   const queue = []
-  let currentJob = null
+  const activeJobs = new Set()
 
-  async function processQueue() {
-    if (currentJob || queue.length === 0) return
+  function processQueue() {
+    while (activeJobs.size < MAX_CONCURRENCY && queue.length > 0) {
+      const job = queue.shift()
+      activeJobs.add(job)
+      const { socket, req } = job
 
-    const job = queue.shift()
-    currentJob = job
-    const { socket, req } = job
+      // Notify all remaining waiting clients of updated queue positions
+      queue.forEach((item, idx) => {
+        try {
+          item.socket.write(JSON.stringify({ type: 'queue', position: idx + 1, total: queue.length }) + '\n')
+        } catch {}
+      })
 
-    // Notify all remaining waiting clients of updated queue positions
-    queue.forEach((item, idx) => {
+      console.log(`\n[agent-daemon] Starting execution (${activeJobs.size}/${MAX_CONCURRENCY} active): ${req.cmd} ${req.args.join(' ')}`)
       try {
-        item.socket.write(JSON.stringify({ type: 'queue', position: idx + 1, total: queue.length }) + '\n')
+        socket.write(JSON.stringify({ type: 'start' }) + '\n')
       } catch {}
-    })
 
-    console.log(`\n[agent-daemon] Starting execution: ${req.cmd} ${req.args.join(' ')}`)
-    try {
-      socket.write(JSON.stringify({ type: 'start' }) + '\n')
-    } catch {}
+      let child = null
+      let settled = false
 
-    let child = null
-    try {
-      child = spawn(req.cmd, req.args, {
-        stdio: ['ignore', 'pipe', 'pipe'],
-        cwd: req.cwd || repoRoot,
-        env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
-      })
-
-      child.stdout.on('data', (data) => {
-        process.stdout.write(data)
-        try {
-          socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
-        } catch {}
-      })
-
-      child.stderr.on('data', (data) => {
-        process.stderr.write(data)
-        try {
-          socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
-        } catch {}
-      })
-
-      const onJobEnd = (code, signal) => {
-        console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
-        try {
-          socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
-          socket.end()
-        } catch {}
-        currentJob = null
+      const finishJob = () => {
+        if (settled) return
+        settled = true
+        activeJobs.delete(job)
         processQueue()
       }
 
-      child.on('exit', onJobEnd)
-      child.on('error', (err) => {
-        console.error(`[agent-daemon] Process error:`, err)
+      try {
+        child = spawn(req.cmd, req.args, {
+          stdio: ['ignore', 'pipe', 'pipe'],
+          cwd: req.cwd || repoRoot,
+          env: { ...process.env, ...req.env, FORCE_COLOR: '1' },
+        })
+
+        child.stdout.on('data', (data) => {
+          process.stdout.write(data)
+          try {
+            socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
+          } catch {}
+        })
+
+        child.stderr.on('data', (data) => {
+          process.stderr.write(data)
+          try {
+            socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
+          } catch {}
+        })
+
+        const onJobEnd = (code, signal) => {
+          console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
+          try {
+            socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
+            socket.end()
+          } catch {}
+          finishJob()
+        }
+
+        child.on('exit', onJobEnd)
+        child.on('error', (err) => {
+          console.error(`[agent-daemon] Process error:`, err)
+          try {
+            socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+            socket.end()
+          } catch {}
+          finishJob()
+        })
+      } catch (err) {
         try {
           socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
           socket.end()
         } catch {}
-        currentJob = null
-        processQueue()
-      })
-    } catch (err) {
-      try {
-        socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-        socket.end()
-      } catch {}
-      currentJob = null
-      processQueue()
-    }
-
-    socket.on('close', () => {
-      if (currentJob === job && child) {
-        console.log(`[agent-daemon] Client disconnected while job was running. Terminating child process...`)
-        try {
-          if (child.pid) process.kill(-child.pid, 'SIGTERM')
-        } catch {}
-        try { child.kill('SIGTERM') } catch {}
-        currentJob = null
-        processQueue()
+        finishJob()
       }
-    })
+
+      socket.on('close', () => {
+        if (activeJobs.has(job) && child) {
+          console.log(`[agent-daemon] Client disconnected while job was running. Terminating child process...`)
+          try {
+            if (child.pid) process.kill(-child.pid, 'SIGTERM')
+          } catch {}
+          try { child.kill('SIGTERM') } catch {}
+          finishJob()
+        }
+      })
+    }
   }
 
   const server = net.createServer((socket) => {
@@ -755,7 +815,7 @@ async function startDaemon() {
           const job = { socket, req }
           queue.push(job)
 
-          if (currentJob) {
+          if (activeJobs.size >= MAX_CONCURRENCY) {
             const pos = queue.length
             console.log(`[agent-daemon] Job queued (position ${pos}): ${req.cmd} ${req.args.join(' ')}`)
             try {
@@ -786,7 +846,7 @@ async function startDaemon() {
     fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
     console.log(`[agent-daemon] Reference UI Agent Daemon listening at ${SOCKET_PATH}`)
     console.log(`[agent-daemon] PID: ${process.pid} (Interactive priority: PRI ${getSystemStatus().qosPriority})`)
-    console.log('[agent-daemon] Queue serialized queue active. Keep this terminal open to run tasks.')
+    console.log(`[agent-daemon] Parallel execution queue active (max concurrency: ${MAX_CONCURRENCY}). Keep this terminal open to run tasks.`)
   })
 
   let isCleaningUp = false
@@ -899,9 +959,11 @@ async function runCommand(cmd, args, options = {}) {
 // 8. CLI Actions
 async function actionStatus() {
   const status = getSystemStatus()
-  const queueDesc = status.queueInfo?.activeLock
-    ? `Active PID ${status.queueInfo.activeLock.pid} (${status.queueInfo.pendingCount} waiting)`
-    : `Idle (${status.queueInfo?.pendingCount || 0} waiting)`
+  const queueDesc = status.queueInfo?.activeLocks?.length
+    ? `Active (${status.queueInfo.activeLocks.length}/${status.queueInfo.maxConcurrency || MAX_CONCURRENCY} slots, PIDs: ${status.queueInfo.activeLocks.map(l => l.pid).join(', ')}) (${status.queueInfo.pendingCount} waiting)`
+    : status.queueInfo?.activeLock
+      ? `Active PID ${status.queueInfo.activeLock.pid} (${status.queueInfo.pendingCount} waiting)`
+      : `Idle (${status.queueInfo?.pendingCount || 0} waiting)`
 
   console.log('\n========================================')
   console.log(' Reference UI Agent Environment Status  ')
@@ -950,144 +1012,6 @@ async function actionTest(args) {
     finishAgent({
       ok: true,
       message: 'Matrix test suite PASSED successfully.',
-      code: 0,
-    })
-  })
-}
-
-async function actionVerify(componentName) {
-  if (!componentName) {
-    console.error('[agent] Error: Please specify a component name, e.g.: pnpm agent verify Toast')
-    process.exit(1)
-  }
-
-  const normalized = componentName
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    .toLowerCase()
-    .trim()
-
-  return withQueueLock({ cmd: 'agent verify', args: [componentName] }, async () => {
-    console.log(`\n========================================`)
-    console.log(` Verifying Component: ${componentName} `)
-    console.log(`========================================\n`)
-
-    // Step 1: Typecheck
-    console.log('Step 1/4: Typechecking @reference-ui/lib...')
-    const componentErrors = []
-    let res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'typecheck'], {
-      env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
-      skipQueue: true,
-      onLine: (line) => {
-        if ((line.includes(`components/${componentName}/`) || line.includes(`components/${componentName}.`)) && line.includes('error TS')) {
-          componentErrors.push(line)
-        }
-      },
-    })
-    if (res.code !== 0 && componentErrors.length > 0) {
-      for (const err of componentErrors) {
-        console.error(err)
-      }
-      finishAgent({
-        ok: false,
-        message: `Step 1 failed: Typecheck errors found in ${componentName} (exit code ${numericExitCode(res.code)}).`,
-        code: res.code,
-      })
-    } else if (res.code !== 0) {
-      console.log(`✔ [agent] 0 typecheck errors in ${componentName} (ignoring external concurrent component errors).\n`)
-    } else {
-      console.log('✔ Typecheck passed.\n')
-    }
-
-    // Step 2: Unit tests
-    console.log(`Step 2/4: Running Vitest unit tests for ${componentName}...`)
-    const matrixUnitPath = path.join(repoRoot, `matrix/lib/tests/unit/${normalized}.test.tsx`)
-    const matrixUnitPathTs = path.join(repoRoot, `matrix/lib/tests/unit/${normalized}.test.ts`)
-    if (fs.existsSync(matrixUnitPath) || fs.existsSync(matrixUnitPathTs)) {
-      const targetUnitFile = fs.existsSync(matrixUnitPath) ? `tests/unit/${normalized}.test.tsx` : `tests/unit/${normalized}.test.ts`
-      res = await runCommand('pnpm', ['--dir', 'matrix/lib', 'exec', 'vitest', 'run', targetUnitFile, '-t', componentName], { skipQueue: true })
-    } else {
-      res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test', '--', '-t', componentName], { skipQueue: true })
-    }
-    if (res.code !== 0) {
-      console.log(`[agent] Running full unit test suite fallback...`)
-      res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'test'], { skipQueue: true })
-      if (res.code !== 0) {
-        finishAgent({
-          ok: false,
-          message: `Step 2 failed: Unit tests failed (exit code ${numericExitCode(res.code)}).`,
-          code: res.code,
-        })
-      }
-    }
-    console.log('✔ Unit tests passed.\n')
-
-    // Step 3: Build library
-    console.log('Step 3/4: Building @reference-ui/lib for matrix consumption...')
-    res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'run', 'build'], {
-      env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '1' },
-      skipQueue: true,
-    })
-    if (res.code !== 0) {
-      console.log(`[agent] Full build failed due to other components; compiling with tsup...`)
-      res = await runCommand('pnpm', ['--filter', '@reference-ui/lib', 'exec', 'tsup'], {
-        skipQueue: true,
-      })
-      if (res.code !== 0) {
-        finishAgent({
-          ok: false,
-          message: `Step 3 failed: Library build failed (exit code ${numericExitCode(res.code)}).`,
-          code: res.code,
-        })
-      }
-    }
-    console.log('✔ Library build completed.\n')
-
-    // Step 4: Targeted E2E check
-    const overlaysSpecPath = path.join(repoRoot, `matrix/overlays/tests/e2e/${normalized}.spec.ts`)
-    const libSpecPath = path.join(repoRoot, `matrix/lib/tests/e2e/${normalized}.spec.ts`)
-    const targetDir = fs.existsSync(overlaysSpecPath) ? 'matrix/overlays' : 'matrix/lib'
-    const specPath = fs.existsSync(overlaysSpecPath) ? overlaysSpecPath : libSpecPath
-    const verifyWorkers = Math.min(8, Math.max(2, Math.floor(os.cpus().length / 4)))
-    if (fs.existsSync(specPath)) {
-      console.log(`Step 4/4: Running Playwright E2E spec (${targetDir}/tests/e2e/${normalized}.spec.ts) with ${verifyWorkers} workers...`)
-      res = await runCommand('pnpm', [
-        '--dir', targetDir,
-        'exec', 'playwright', 'test',
-        `tests/e2e/${normalized}.spec.ts`,
-        `--workers=${verifyWorkers}`,
-        '--fully-parallel',
-      ], { skipQueue: true })
-      if (res.code !== 0) {
-        finishAgent({
-          ok: false,
-          message: `Step 4 failed: Browser E2E spec failed (exit code ${numericExitCode(res.code)}).`,
-          code: res.code,
-          killPort: true,
-        })
-      }
-      console.log(`✔ E2E spec passed.\n`)
-    } else {
-      console.log(`Step 4/4: No dedicated E2E spec found at tests/e2e/${normalized}.spec.ts. Running smoke test...`)
-      res = await runCommand('pnpm', [
-        '--dir', 'matrix/lib',
-        'exec', 'playwright', 'test',
-        'tests/e2e/smoke.spec.ts',
-        `--workers=${verifyWorkers}`,
-      ], { skipQueue: true })
-      if (res.code !== 0) {
-        finishAgent({
-          ok: false,
-          message: `Step 4 failed: Smoke test failed (exit code ${numericExitCode(res.code)}).`,
-          code: res.code,
-          killPort: true,
-        })
-      }
-      console.log(`✔ Smoke test passed.\n`)
-    }
-
-    finishAgent({
-      ok: true,
-      message: `All 4 Verification Steps Passed for ${componentName}! `,
       code: 0,
     })
   })
@@ -1699,7 +1623,6 @@ export {
   getSystemStatus,
   actionStatus,
   actionTest,
-  actionVerify,
   actionPlaywright,
   actionVitest,
   acquireQueueLock,
@@ -1816,12 +1739,6 @@ async function main() {
       break
     }
 
-    case 'verify': {
-      const code = await actionVerify(args[1])
-      process.exit(typeof code === 'number' ? code : 1)
-      break
-    }
-
     case 'playwright':
     case 'pw':
       await actionPlaywright(args.slice(1))
@@ -1856,7 +1773,6 @@ Usage:
   agent run <command...>                Execute ANY command unthrottled (PRI 46, unthrottled I/O)
   agent playwright [pkg] [args...]      Run native Playwright unthrottled (alias: agent pw)
   agent vitest [pkg] [args...]          Run native Vitest unthrottled (alias: agent vt)
-  agent verify <Component>              Run 4-phase verification (typecheck -> vitest -> build -> e2e)
   agent test [options]                  Run unthrottled matrix test in Dagger (wraps pipeline test)
   agent test:matrix [options]           Run full matrix test in Dagger (wraps pipeline test --full)
   agent pipeline <command>              Run any pipeline command unthrottled
