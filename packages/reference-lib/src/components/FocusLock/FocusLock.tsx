@@ -412,6 +412,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
       const reclaimToFallback = () => {
         if (!isTopLock(lockId, doc)) return
         if (movingFocusRef.current) return
+        if (initialFocusRef.current === false && !lastFocusedNodeRef.current) return
         const resolvedShards = getResolvedShardsRef.current()
         const fallback = pickInsideFallback(container, resolvedShards)
         movingFocusRef.current = true

@@ -71,7 +71,7 @@ const resultsDir = path.join(playwrightDir, 'test-results')
 const resultsJsonPath = path.join(resultsDir, 'results.json')
 const vitestJsonPath = path.join(resultsDir, 'vitest.json')
 const configPath = path.join(playwrightDir, 'playwright.config.ts')
-const CT_PORT = 3101
+const CT_PORT = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const activeChildPids = new Set()
 let ctGalleryOwned = false
 
@@ -220,7 +220,7 @@ function sleepSync(ms) {
 
 function getPidsOnPort(port) {
   try {
-    const out = execSync(`lsof -ti :${port}`, { encoding: 'utf-8' }).trim()
+    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t`, { encoding: 'utf-8' }).trim()
     if (!out) return []
     return out.split(/\s+/).map((p) => parseInt(p, 10)).filter((p) => !Number.isNaN(p) && p > 0)
   } catch {
@@ -542,7 +542,7 @@ async function runE2eSuites() {
 
     const pwArgs = ['exec', 'playwright', 'test', '-c', configPath]
     if (component) {
-      pwArgs.push(`src/components/${component}/__e2e__`)
+      pwArgs.push(`${component}/__e2e__`)
     }
     if (grep) {
       pwArgs.push('-g', grep)
@@ -556,7 +556,7 @@ async function runE2eSuites() {
     pwArgs.push('--reporter=list,json')
 
     const label = runtime ? `react${runtime}` : 'react19'
-    const runtimeResultsPath = path.join(resultsDir, runtime ? `results-react${runtime}.json` : 'results.json')
+    const runtimeResultsPath = path.join(resultsDir, runtime ? `results-${component || 'all'}-react${runtime}.json` : `results-${component || 'all'}.json`)
 
     if (!isJson) {
       console.log('\n=======================================================')
@@ -571,6 +571,7 @@ async function runE2eSuites() {
 
     const extraEnv = {
       PLAYWRIGHT_JSON_OUTPUT_NAME: runtimeResultsPath,
+      CT_PORT: String(CT_PORT),
     }
     if (runtime) {
       extraEnv.CT_REACT = runtime

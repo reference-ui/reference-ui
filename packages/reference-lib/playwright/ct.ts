@@ -14,9 +14,20 @@ async function gotoGallery(page: Page) {
 }
 
 async function callMount(page: Page, story: string, props?: Record<string, unknown>) {
-  await page.evaluate(async ({ story, props }) => {
-    await window.mount({ story, props })
-  }, { story, props })
+  try {
+    await page.evaluate(async ({ story, props }) => {
+      await window.mount({ story, props })
+    }, { story, props })
+  } catch (err: any) {
+    if (err?.message?.includes('Execution context was destroyed')) {
+      await page.waitForFunction(() => typeof window.mount === 'function')
+      await page.evaluate(async ({ story, props }) => {
+        await window.mount({ story, props })
+      }, { story, props })
+      return
+    }
+    throw err
+  }
 }
 
 async function callUnmount(page: Page) {

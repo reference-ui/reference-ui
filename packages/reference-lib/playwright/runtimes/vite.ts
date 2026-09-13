@@ -34,7 +34,7 @@ function galleryOverlay(runtime: Runtime): UserConfig {
     root: libDir,
     cacheDir: runtime.cacheDir,
     server: {
-      port: 3101,
+      port: Number(process.env.CT_PORT) || 3101,
       strictPort: true,
       host: true,
       fs: {

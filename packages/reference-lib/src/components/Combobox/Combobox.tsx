@@ -245,7 +245,7 @@ export function ComboboxTrigger({
       aria-haspopup="listbox"
       disabled={context.disabled}
       onClick={handleClick}
-      className={className}
+      className={`ref-input ${className || ''}`}
       style={style}
       {...props}
     >

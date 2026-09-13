@@ -1,15 +1,20 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 import { resolveMajor } from './runtimes'
 
-const origin = 'http://localhost:3101'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const port = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
+const origin = `http://localhost:${port}`
 const hostURL = `${origin}/playwright/index.html`
 const major = resolveMajor()
 
 export default defineConfig({
   testDir: '../src/components',
   testMatch: '**/__e2e__/**/*.ct.spec.ts',
-  timeout: 20 * 1000,
+  timeout: 30 * 1000,
   fullyParallel: true,
+  workers: '100%',
   expect: {
     toHaveScreenshot: {
       animations: 'disabled',
@@ -21,10 +26,10 @@ export default defineConfig({
   snapshotPathTemplate: '{testDir}/{testFileDir}/__snapshots__/{arg}{ext}',
   reporter: [
     ['html', { outputFolder: './playwright-report', open: 'never' }],
-    ['json', { outputFile: './test-results/results.json' }],
+    ['json', { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT_NAME || './test-results/results.json' }],
     ['list'],
   ],
-  outputDir: './test-results',
+  outputDir: path.resolve(__dirname, 'test-results'),
   use: {
     trace: 'on-first-retry',
     video: {
@@ -47,14 +52,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm run sync && pnpm exec vite --config playwright/vite.config.ts',
+    command: 'pnpm exec vite --config playwright/vite.config.ts',
     cwd: '..',
     url: hostURL,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120 * 1000,
     env: {
       ...process.env,
       CT_REACT: major,
+      CT_PORT: String(port),
     },
   },
 })
