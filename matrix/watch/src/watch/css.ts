@@ -1,6 +1,6 @@
 import { css } from '@reference-ui/react'
 
 export const watchCssClass = css({
-  color: '#2266aa',
+  color: '#478011',
   fontWeight: '700',
 })

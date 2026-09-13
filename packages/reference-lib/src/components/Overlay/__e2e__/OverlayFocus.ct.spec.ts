@@ -77,6 +77,7 @@ test.describe('FocusLock × Overlay', () => {
     await page.getByTestId('fl-ov-skip-trigger').click()
     await expect(page.getByTestId('fl-ov-skip-content')).toBeVisible()
     await page.waitForTimeout(200)
+    await page.evaluate(() => { window.scrollTo(0, 0); document.querySelectorAll('*').forEach(el => { if (el.scrollTop) el.scrollTop = 0; if (el.scrollLeft) el.scrollLeft = 0; }) })
     await snap(page, 'fl-ov-skip-open')
 
     await page.getByTestId('fl-ov-skip-close').click()

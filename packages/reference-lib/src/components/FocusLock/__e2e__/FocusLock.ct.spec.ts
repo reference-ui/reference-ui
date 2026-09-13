@@ -230,6 +230,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-init-mode-second').click()
     await page.getByTestId('btn-open-init').click()
     await expect(page.getByTestId('init-second')).toBeFocused()
+    await page.evaluate(() => { window.scrollTo(0, 0); document.querySelectorAll('*').forEach(el => { if (el.scrollTop) el.scrollTop = 0; if (el.scrollLeft) el.scrollLeft = 0; }) })
     await snap(page, 'fl-init-ref-second-focused')
   })
 
@@ -562,6 +563,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
         return Boolean(a?.contains(document.activeElement))
       })
     }).toBe(true)
+    await page.evaluate(() => { window.scrollTo(0, 0); document.querySelectorAll('*').forEach(el => { if (el.scrollTop) el.scrollTop = 0; if (el.scrollLeft) el.scrollLeft = 0; }) })
     await snap(page, 'fl-stack-a-resumed')
   })
 

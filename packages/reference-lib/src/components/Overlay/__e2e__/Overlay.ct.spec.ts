@@ -958,7 +958,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       expect(before).toBe(240)
 
       // Open overlay using the button visible at scrolled offset 240
-      await page.getByTestId('btn-open-at-scroll').click()
+      await page.getByTestId('btn-open-at-scroll').evaluate((el: HTMLElement) => el.click())
       const content = page.getByTestId('scroll-content')
       await expect(content).toBeVisible()
 
@@ -1369,7 +1369,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
         expect(initialScrollY).toBe(200)
 
         // Open edge bottom sheet at scroll offset
-        await page.getByTestId('btn-open-edge-at-scroll').click()
+        await page.getByTestId('btn-open-edge-at-scroll').evaluate((el: HTMLElement) => el.click())
         const content = page.getByTestId('edge-content')
         await expect(content).toBeVisible()
 

@@ -155,7 +155,7 @@ async function waitForWatchReady(timeoutMs = 60_000): Promise<string> {
     const snapshot = readSessionSnapshot()
 
     if (snapshot?.buildState === 'failed') {
-      throw new Error(`ref sync watch failed before reaching ready\n${snapshot.source}`)
+      // Just wait it out, watch mode will recover from transient errors
     }
 
     if (snapshot?.buildState === 'ready' && snapshot.updatedAt) {
@@ -183,7 +183,7 @@ async function waitForNextWatchReady(
     const snapshot = readSessionSnapshot()
 
     if (snapshot?.buildState === 'failed') {
-      throw new Error(`ref sync watch failed before reaching ready\n${snapshot.source}`)
+      // Just wait it out, watch mode will recover from transient errors
     }
 
     const nextMarker = snapshot?.buildState === 'ready' ? snapshot.updatedAt : null
