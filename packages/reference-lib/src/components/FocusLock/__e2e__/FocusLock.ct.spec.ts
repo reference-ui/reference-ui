@@ -60,11 +60,14 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
   }) => {
     await page.getByTestId('btn-trigger').click()
 
+    await expect(page.getByTestId('lock-btn-first')).toBeFocused()
+
     const shardBtn = page.getByTestId('shard-button')
     await shardBtn.click()
 
     // Focus remains in shard without being reclaimed
     await expect(shardBtn).toBeFocused()
+    await page.evaluate(() => { window.scrollTo(0, 0); document.querySelectorAll('*').forEach(el => { if (el.scrollTop) el.scrollTop = 0; if (el.scrollLeft) el.scrollLeft = 0; }) })
     await snap(page, 'fl-shard-permitted')
   })
 
@@ -388,6 +391,8 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
   }) => {
     await page.getByTestId('btn-open-shadow-exotica').click()
     await expect(page.getByTestId('exotica-before')).toBeFocused()
+    await expect(page.getByTestId('slot-inner')).toBeAttached()
+    await page.evaluate(() => document.querySelectorAll('*').forEach(el => { if (el.scrollTop) el.scrollTop = 0; if (el.scrollLeft) el.scrollLeft = 0; }))
     await snap(page, 'fl-shadow-exotica-open')
     const order: string[] = []
     for (let i = 0; i < 10; i++) {
