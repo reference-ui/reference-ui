@@ -39,9 +39,14 @@ Enterprises do not rebuild their design systems every 18 months because an exter
 
 The remaining foreign body in the architecture is **Panda CSS** and the fragile **Virtual Filesystem Seam** (`.reference-ui/virtual/`) required to bridge it.
 
-This document defines the blueprint for **`reference-system`**: a lean (~4,000–5,000 LOC) atomic CSS compiler inside `packages/reference-rs` (`system` is MD-only for now so design is nailed down before coding; it will import or extend `crates/styletrace`). That LOC budget is the engine, not Tasty, Atlas, or the N-API bridge.
+This document defines the blueprint for **`reference-system`**: a lean (~4,000–5,000 LOC) atomic CSS compiler inside `packages/reference-rs`. Living module map: `packages/reference-rs/crates/system/README.md`. Vendor/Panda file map: `crates/system/PANDA.md`. JS face: `packages/reference-rs/js/system/README.md` (Atlas-thin `compile()` → `{ stylesheet, css, diagnostics }`). Styletrace stays a sibling crate; system imports it. That LOC budget is the engine, not Tasty, Atlas, or the N-API bridge.
 
-> **Fine print.** This is **not Panda v3**. Panda still does atomic CSS, layers, conditions, and recipes well. We are deleting the translation layer between JSX we already parse and CSS the matrix already scores. Production today is `@pandacss/*` **^1.11.1** (v1). `vendor/panda` is the v2 autopsy so we **skip** that migration. Public authoring does not change: `tokens()`, `font()`, `globalCss()`, `keyframes()`, `cva()`, `sva()`, `<Box>`, `StyleProps`.
+> **Fine print.** This is **not Panda v3**. Panda still does atomic CSS, layers, conditions, and recipes well. We are deleting the translation layer between JSX we already parse and CSS the matrix already scores. Production today is `@pandacss/*` **^1.11.1** (v1). `vendor/panda` is the v2 autopsy so we **skip** that migration. Public authoring does not change. The accurate surface, by package:
+> - **`@reference-ui/react`** (`src/entry/react.ts`) — `css`, `recipe` (which *is* `cva`, re-exported under that name), the ~90 tag primitives (`Div`, `Span`, `Button`, …) from `src/system/primitives`, and the type surface incl. `StyleProps`.
+> - **`@reference-ui/system`** (`src/entry/system.ts`) — `tokens()`, `font()`, `globalCss()`, `keyframes()`, `getRhythm()`.
+> - **`@reference-ui/styled`** — Panda's generated farm. `sva`, `cx`, `splitCssProps`, and the `box()` pattern live here; they are internal plumbing, not documented authoring.
+>
+> Note there is **no `Box`, `Flex`, or `Grid` component** anywhere in the repo, and `sva` is not exported from `@reference-ui/react`. Earlier drafts of this document listed both. Examples below use real primitives.
 
 ---
 
@@ -78,9 +83,9 @@ Instead of establishing a formal Intermediate Representation (IR), they copied t
 In Panda v1, both extraction and runtime execution ran in JavaScript, so plugins and transforms could execute in-memory. 
 
 In Panda v2:
-1. **The Extractor and Encoder are in Rust:** They run natively during build time using OXC. But the native crate cannot execute JavaScript callbacks.
+1. **The Extractor and Encoder are in Rust:** They run natively during build time using OXC.
 2. **Custom Transforms are in TypeScript:** Shorthand decomposition (like `createShorthandUtility`) was written in TypeScript on the Node.js config side.
-3. **The Runtime is a Dumb String Concatenator:** In the browser, `packages/reference-core/src/system/styled/css/css.js:36` only does:
+3. **The Runtime is a Dumb String Concatenator:** In the browser, Panda's **generated** `css.js` (seen in core's prebuild tree at `packages/reference-core/src/system/styled/css/css.js:36` — that file is Panda output, not Reference-authored code) only does:
    ```javascript
    transform(prop, value) {
      const key = resolveShorthand(prop)
@@ -89,6 +94,12 @@ In Panda v2:
    }
    ```
    Runtime `css.js` knows **nothing** about custom transforms or shorthand decomposition!
+
+> **Correction (verified against the checkout).** It is *not* true that Rust “cannot call JavaScript”. `vendor/panda/packages/compiler/crate/src/project/transforms.rs` exposes `register_utility_transform`, `register_pattern_transform`, and `registerSourceTransform` — live `napi::FunctionRef` handles Rust invokes per value, behind an LRU cache (`UtilityTransformCacheKey`, `MAX_TRANSFORM_CACHE_KEY_BYTES`). Config lowers each function to `{ kind: 'js-callback', id, hash }` and keeps the real closure host-side (`design-notes/config-loading-design.md:106`).
+>
+> So the build side was *correct*: Rust called the TS transform and emitted `.bd-b-w_3px` + `.bd-b-s_solid`. The bug is that the **same decomposition had a second, dumber implementation in the browser** with no shared namer. That makes this a worse mistake, not a smaller one — the capability existed and they still shipped two algorithms.
+>
+> Panda themselves reached our conclusion for *one* feature and stopped there: `design-notes/jsx-tag-matching.md` retires v1's `matchTag` callback for declarative rules "evaluated natively in Rust", because wasm has no threadsafe function and "a per-element JS callback across the NAPI/wasm boundary is not an option". They applied that reasoning to tag matching and **not** to `utility.transform` — which is exactly `createShorthandUtility`, which is exactly the Tabs ghost class.
 
 #### The Consequence (The `borderBottom` Dropout in `Tabs.tsx`):
 - **Build Time:** Reference Core configured `borderBottom: '3px solid'`. The JS config decomposed it into `borderBottomWidth: '3px'` and `borderBottomStyle: 'solid'`. The stylesheet compiler generated `.bd-b-w_3px` and `.bd-b-s_solid`.
@@ -110,6 +121,12 @@ Panda tried to be "half-clever":
 5. The encoder couldn't resolve the nested conditional and silently dropped the style.
 
 **The Fundamental Flaw:** A CSS compiler does **not** need to evaluate runtime boolean conditions. It does not care *when* `isSelected` is true. It only needs to collect every possible literal leaf across both branches so that all corresponding atomic classes are pre-emitted into the stylesheet!
+
+> **Precision (verified against the checkout).** Do not overstate this as “Panda drops ternaries.” It does not. A *flat* ternary with a non-foldable test works fine in v2: `eval_conditional` falls through to `conditional_from_branches`, and `design-notes/literal-evaluator.md` is explicit that `Conditional` "carries alternative branches from a non-foldable ternary" and "the downstream encoder **expands every branch**". So `bg={isSelected ? 'n300' : 'n100'}` compiles correctly today.
+>
+> The dropout needs the **combination** above: `undefined` folding to a `Null` *leaf* (`literal.rs:511`) plus `finish_ternary` nesting rather than flattening (`style_tree.rs:242`). That narrows what we actually have to do differently, and it is the honest version — our `extract/leaves` is Panda's branch expansion made **unconditional, flattened, and `undefined`-free**, not a wholly different idea.
+>
+> There is a **second, separate** dropout class they own that this example hides: logical operators are asymmetric. Per the same note, "a non-foldable `&&` / `||` / `??` resolves to its right operand" (`literal.rs:684`), and a *foldable*, falsy left short-circuits and discards the right. So `x && '1px solid'` keeps the literal by luck, while `false && '1px solid'` loses a literal that was plainly in the source. Symmetric leaf collection is the fix; see `crates/system/src/extract/leaves/README.md`.
 
 ### D. The Corporate / Bureaucracy Signal
 Panda v2's git log on `origin/v2` shows a project with misaligned priorities:
@@ -135,29 +152,29 @@ In `reference-rs`, Rust structs use `ts-rs` to automatically generate TypeScript
 - Zero serialization drift. Zero split-brain.
 
 ### C. Industrial-Grade Verification
-- **Generative Property Fuzzing (`proptest`):** In `src/tasty/tests/type_ref_proptest.rs`, `proptest` generates randomized, deeply nested type trees to prove that recursion never overflows the stack and transformations are idempotent.
+- **Generative Property Fuzzing (`proptest`):** In `crates/tasty/src/tests/type_ref_proptest.rs`, `proptest` generates randomized, deeply nested type trees to prove that recursion never overflows the stack and transformations are idempotent.
 - **Product suite (`tests/tasty/cases/` and the rest of package Vitest):** Kitchen sink, case catalogs, and public N-API contracts. This is how `@reference-ui/rust` is scored. See `REFERENCE_RS_RESTRUCTURE.md`.
 - **Crate internals (`#[cfg(test)]`):** Narrow in-memory tests. Never a second e2e runner, never Criterion.
 
-> **Fine print.** `benches/scan_kitchen_sink.rs` and Criterion are **junk to delete** in the workspace restructure, not a virtue to copy. `reference-system` is scored by matrix Playwright plus Vitest on the published JS API — the same rule as Tasty.
+> **Fine print.** `benches/scan_kitchen_sink.rs` and Criterion **have been deleted** — the restructure landed. Do not reintroduce them. `reference-system` is scored by matrix Playwright plus Vitest on the published JS API — the same rule as Tasty.
 
 ---
 
 ## 4. Styletrace as the Foundation of the Native Extractor
 
-We do not need to write an AST extractor from scratch. We already built **`styletrace`** (`packages/reference-rs/src/styletrace`)!
+We do not need to write an AST extractor from scratch. We already built **`styletrace`** (`packages/reference-rs/crates/styletrace`)!
 
 ### Why Was Styletrace Originally Built?
 Styletrace was built in Rust with OXC to overcome another major limitation in Panda:
 - By default, Panda only extracts style props from hardcoded primitive tags (`Box`, `styled.div`).
 - If an author wrote a custom wrapper component:
   ```tsx
-  const Card = ({ children, ...props }) => <Box p="4r" {...props}>{children}</Box>
+  const Card = ({ children, ...props }) => <Div p="4r" {...props}>{children}</Div>
   ```
   And then used `<Card bg="blue.500" />`, **Panda silently ignored the style props**!
 - To fix this, `styletrace` was created to:
   1. Parse TSX files with OXC.
-  2. Read `.reference-ui/react/types/style-props.d.mts` and expand the `StyleProps` type definition.
+  2. Read `.reference-ui/react/types/public/style-props.d.ts` and expand the `StyleProps` type definition. (`crates/styletrace/src/resolver/tracer.rs:19` tries that path first and falls back to `types/style-props` at `:22`. The `.d.mts` spelling this document used previously exists nowhere on disk.)
   3. Trace component boundaries and forwarding edges (`{...props}`) down to Reference primitives.
   4. Automatically feed discovered component names into Panda's config.
 
@@ -185,9 +202,9 @@ We are not throwing everything away; we are **synthesizing the best ideas and re
 ├───────────────────────────────────┼────────────────────────────────────┤
 │ • Atom Data Model:                │ • Unified Single-Engine Runtime:   │
 │   (prop, value, conditions, hash) │   One Rust source of truth; css()  │
-│ • 5-Layer Cascade Ordering:       │   is generated JS, not a 2nd map.  │
-│   @layer reset, base, tokens,     │   Zero ghost classes.              │
-│   recipes, utilities              │ • Recursive Leaf Literal Collector:│
+│ • Layered Cascade Ordering:       │   is generated JS, not a 2nd map.  │
+│   @layer reset, global, base,     │   Zero ghost classes.              │
+│   tokens, recipes, utilities      │ • Recursive Leaf Literal Collector:│
 │ • Condition Chains:               │   Scoops all ternary branches;     │
 │   Nested @media & pseudo-selectors│   zero heuristic constant folding. │
 │ • Slot Recipes (sva) & cva:       │ • Native Rhythm & Atlas Tokens:    │
@@ -249,7 +266,7 @@ Disk Write: .reference-ui/virtual/**/*.tsx (Rewritten by virtualrs)
 Liquid Template Engine: Renders .reference-ui/panda.config.ts
    │
    ▼
-Panda CLI / Worker: Scans .reference-ui/virtual on disk
+@pandacss/node (programmatic, in a Piscina worker): scans .reference-ui/virtual
    │
    ▼
 Disk Write: .reference-ui/styled/*
@@ -278,6 +295,10 @@ Direct Emission: .reference-ui/styled/styles.css
 
 Sync cold-start time drops from **3–5 seconds** down to **< 150 milliseconds**.
 
+> **Scope warning — the virtual tree is not just a mirror.** `src/virtual/transforms/index.ts` runs a real rewrite pipeline before Panda ever sees a file: MDX → JSX, rewrite `css` / `recipe` imports away from `@reference-ui/react`, **lower responsive `r` sugar** in `css()` / `cva()` calls, and `neutralizeStyleCalls` (rename direct `css()` / `cva()` call sites to `__reference_ui_css` and alias their imports so Panda's extractor will match them). Deleting the folder therefore means `crates/system` must handle those source shapes **natively**: MDX, the real import specifiers, and `r` sugar inside call arguments — no renaming trick, because styletrace already knows which callee is `css`. Budget this; it is not free deletion.
+>
+> Relatedly, responsive `r` is currently lowered in **two** places — the virtual transform at build time and `src/system/runtime/css/customCssFn.ts` (`lowerResponsiveStyles`) at runtime. That is a second, Reference-owned instance of the same split-brain this document indicts Panda for, and it is `resolve/rhythm` + `resolve/conditions`' job to end it.
+
 > **Fine print.** Deleting **`.reference-ui/virtual/`** (the on-disk Panda scan mirror) is not the same as deleting **`crates/virtualrs`**. That crate rewrites imports/CSS/CVA in generated files. It stays until those rewrite jobs are gone. Cutover does not yank `virtualrs` “because the folder was named virtual.” Do not delete `@pandacss/*`, Parcel, or Piscina until Gate 2 (matrix parity) is green. The future pipeline still writes `.reference-ui/styled/styles.css` (and the rest of the styled contract the packager already consumes). We remove the **Panda input** tree, not the **styled output** tree.
 
 ---
@@ -290,13 +311,13 @@ We have already codified the contracts of the entire design system under `matrix
 | :--- | :--- | :--- |
 | **`matrix/css`** | `tests/e2e/css-contract.spec.ts` | Atomic class generation, specificity, CSS class concatenation. |
 | **`matrix/css-selectors`** | `tests/e2e/css-selectors-contract.spec.ts` | Complex pseudo-classes (`_hover`, `_focusVisible`), sibling and child selectors. |
-| **`matrix/primitives`** | `tests/e2e/primitives-contract.spec.ts` | `<Box>`, `<Flex>`, `<Grid>`, style prop forwarding down component boundaries. |
+| **`matrix/primitives`** | `tests/e2e/primitives-contract.spec.ts` | Tag primitives (`Div`, `Span`, …) and style-prop forwarding down component boundaries. Not `Box` / `Flex` / `Grid` — those do not exist. |
 | **`matrix/recipe`** | `tests/e2e/system-contract.spec.ts` | `cva()`, `sva()`, compound variants, high-level variant props on `styled()`. |
 | **`matrix/spacing`** | `tests/e2e/system-contract.spec.ts` | Sub-pixel rhythm multiplier (`r` -> `px`), padding, margins, dimension shorthands. |
 | **`matrix/responsive`** | `tests/e2e/system-contract.spec.ts`<br>`tests/e2e/viewport-contract.spec.ts` | Responsive container queries (`@container`), media queries, breakpoint arrays. |
 | **`matrix/color-mode`** | `tests/e2e/system-contract.spec.ts` | Light/dark switching, semantic token resolution (`_dark`, `_light`). |
 | **`matrix/tokens`** | `tests/e2e/system-contract.spec.ts` | OKLCH color space resolution, CSS variable generation (`--colors-*`). |
-| **`matrix/system`** | `tests/e2e/system-contract.spec.ts`<br>`tests/e2e/system-font-contract.spec.ts` | Layer mounting (`@layer reset, base, tokens, recipes, utilities`), `globalCss`, `keyframes`. |
+| **`matrix/system`** | `tests/e2e/system-contract.spec.ts`<br>`tests/e2e/system-font-contract.spec.ts` | Layer mounting (`@layer reset, global, base, tokens, recipes, utilities` — six, asserted verbatim), `globalCss`, `keyframes`. |
 | **`matrix/chain/T1–T13`**| `tests/e2e/T1..T13-contract.spec.ts` | Multi-tier design system inheritance (`extends`), token overrides, layer isolation. |
 | **`matrix/watch`** | `tests/e2e/watch-contract.spec.ts` | HMR and live atomic stylesheet regeneration during active editing. |
 
@@ -315,10 +336,16 @@ We have already codified the contracts of the entire design system under `matrix
 graph TD
     Start["Current: Panda v1.11.1 + virtual FS<br/>Trigger pulled — skip Panda v2"] --> Split["Workspace split first<br/>REFERENCE_RS_RESTRUCTURE.md"]
     
-    Split --> Door["crates/styletrace standalone<br/>system is MD-only until designed"]
-    Door --> Engine["crates/system: imports styletrace,<br/>leaf collector, shorthand/rhythm,<br/>atom emit, generated css() tables"]
+    Split --> Door["crates/system scaffold + js/system<br/>README-driven module map"]
+    Door --> Engine["crates/system: styletrace → extract → atom,<br/>stylesheet (styles.css) + css() lookup"]
     
-    Engine --> Gate2{"Gate: 26+ matrix E2E green?"}
+    Engine --> Gate1{"Gate: standalone golden cases +<br/>Panda v1 differential green?<br/>(no reference-core on the path)"}
+
+    Gate1 -- "No" --> IterateEngine["Fix the compiler in reference-rs.<br/>Do not integrate to debug."]
+    IterateEngine --> Engine
+    Gate1 -- "Yes" --> Integrate["Wire core sync behind a flag<br/>Panda still runs"]
+
+    Integrate --> Gate2{"Gate: 26+ matrix E2E green?"}
     
     Gate2 -- "No" --> Iterate["Stay on Panda. Iterate on branch."]
     Gate2 -- "Yes" --> Cutover["Cutover: drop @pandacss/*,<br/>.reference-ui/virtual/, Parcel, Piscina"]
@@ -335,7 +362,7 @@ graph TD
 ## 10. Phased Implementation Roadmap
 
 ### Phase 0: Cargo workspace door (ship first, no engine)
-Follow `REFERENCE_RS_RESTRUCTURE.md`. Delete Criterion/`benches/`. Extract `virtualrs` → `atlas` → `tasty` → `crates/styletrace`. One N-API crate. Public `@reference-ui/rust` subpaths unchanged. `reference-system` remains MD-only for now until fully specified. **Do not implement the atomic emitter in this phase.**
+Follow `REFERENCE_RS_RESTRUCTURE.md`. Delete Criterion/`benches/`. Extract `virtualrs` → `atlas` → `tasty` → `crates/styletrace`. One N-API crate. Public `@reference-ui/rust` subpaths unchanged. **Do not implement the atomic emitter in this phase.** The compiler map lives at `crates/system/README.md` (Rust) and `js/system/README.md` (Node `compile()`). Two artifacts: stylesheet + `css()`. Panda crate citations: `crates/system/PANDA.md`.
 
 ### Phase 1: Clean component contracts (optional, parallel)
 - Refactor `Tabs.tsx` and other lib internals off nested style-prop ternaries toward **recipes (`cva`)** and DOM data attributes.
@@ -343,13 +370,21 @@ Follow `REFERENCE_RS_RESTRUCTURE.md`. Delete Criterion/`benches/`. Extract `virt
 - Insulates `@reference-ui/lib` from Panda **now**. Does not reduce extractor scope.
 
 ### Phase 2: Engine in `crates/system` (isolated from the folder-move PR)
-- Leaf literal collector on the styletrace walk.
+Follow the module READMEs under `crates/system/src/` and `js/system/`. Still no emitter in the same PR as a crate shuffle.
+- Leaf literal collector on the styletrace walk (`extract/leaves`).
 - Token / rhythm / shorthand resolver (cascade-correct).
-- Atomic stylesheet emitter with `@layer` sorting.
-- Generate the runtime `css()` tables from the same Rust code.
+- Atomic stylesheet (`src/stylesheet`) with `@layer` sorting.
+- Generate the runtime `css()` lookup (`src/runtime`) from the same namer.
+
+### Phase 2.5: Prove it standalone (the de-risking gate — do not skip)
+The engine is a pure function: sources + config in, CSS + class map out. It must be **provably correct inside `packages/reference-rs`, with zero `reference-core` integration**, before it goes anywhere near sync. No sync worker, no packager, no bundler, no Panda on the path.
+- `tests/system/cases/<case>/` — `input/app/**.tsx` in, golden `output/{styles.css,css.json,diagnostics.json}` out. Same convention as `tests/atlas/cases/` (see its README) and `tests/tasty/`.
+- Case families that mirror the known failure modes: nested ternaries, `undefined` alternates, `&&` / `||`, breakpoint arrays, `_hover` / `_dark` chains, `borderBottom` + `borderColor`, rhythm fractions, wrapper forwarding, `cva` / `sva`, fully dynamic `bg={prop}`.
+- **Panda v1 differential**: same fixture sources through both engines, diff declarations and atom coverage. v1 is in production and its real output is already on disk (`.pipeline/registry/staging/*/.reference-ui/styled/styles.css`), so parity is measurable, not guessed. Class *spelling* may differ; coverage may not.
+- Exit criteria: every `(prop, value, when)` Panda v1 emits has an atom here, no ghost classes, no dropped collected leaf. Only then does Phase 3 start.
 
 ### Phase 3: Matrix validation & pipeline integration
-- Wire `reference-core` sync to `reference-system` **while Panda still runs** if a flag is needed; do not cut the old path first.
+- Wire `reference-core` sync to `reference-system` **while Panda still runs** if a flag is needed; do not cut the old path first. This phase begins **after** Phase 2.5 is green — integration is where we discover seam bugs, not compiler bugs.
 - `pnpm agent test --packages=@matrix/css,primitives,recipe,spacing,responsive,system` (and watch, tokens, color-mode, chain as required).
 - Iterate until those specs pass with 0 regressions.
 
@@ -373,8 +408,8 @@ You are tasked with implementing `reference-system`, the native atomic CSS engin
 ### Context & Safety Net
 1. Read `REFERENCE_SYSTEM.md` in the repository root for the full architectural specification.
 2. The safety net is the matrix test suite under `matrix/` (26+ Playwright e2e specs covering CSS, primitives, recipes, spacing, responsive queries, and tokens across Vite and Webpack).
-3. Do not break existing public APIs (`tokens()`, `font()`, `globalCss()`, `keyframes()`, `cva()`, `sva()`, `<Box>`, style props).
-4. Read `REFERENCE_RS_RESTRUCTURE.md`. Cargo workspace split is complete (`crates/virtualrs`, `crates/atlas`, `crates/tasty`, `crates/styletrace`, `crates/napi`).
+3. Do not break existing public APIs. See the surface-by-package list in §1 — `css` / `recipe` / tag primitives / `StyleProps` on `@reference-ui/react`, and `tokens()` / `font()` / `globalCss()` / `keyframes()` / `getRhythm()` on `@reference-ui/system`.
+4. Read `REFERENCE_RS_RESTRUCTURE.md`. Cargo workspace split is complete (`crates/shared`, `crates/virtualrs`, `crates/atlas`, `crates/tasty`, `crates/styletrace`, `crates/system`, `crates/napi`); root `Cargo.toml` is `members = ["crates/*"]`, oxc pinned at `0.115`.
 5. Do not add Criterion, `crates/testing`, Vue/Svelte extractors, or a second npm package.
 6. Do not delete `.reference-ui/virtual/` or `@pandacss/*` until matrix Gate 2 is green.
 7. `native/` is the gitignored `.node` dump. The N-API crate is `crates/napi`. Do not put `src/lib.rs` in `native/`.
@@ -390,12 +425,12 @@ Cargo workspace is split. `crates/styletrace` exists independently. Root `Cargo.
    - Implement `collect_leaf_literals` to recursively extract all string/numeric literals from nested ternaries and logical expressions without bailing.
 2. **Resolver (`tokens.rs`, `rhythm.rs`, `shorthands.rs`):**
    - Port rhythm multiplier (`r` -> `px`), shorthands (`borderBottom` -> width, style, color), and token variable resolution (`ui.focus.ring` -> `var(--colors-ui-focus-ring)`).
-3. **Emitter (`stylesheet.rs`):**
-   - Emit atomic rules into `@layer reset, base, tokens, recipes, utilities`.
-   - Implement deterministic class hashing/naming (`.bd-b_3px_solid` or short hashes).
+3. **Stylesheet (`src/stylesheet`):**
+   - Emit atomic rules into `@layer reset, global, base, tokens, recipes, utilities` (six — the matrix asserts this string verbatim).
+   - One namer (`stylesheet/name`) — function of `(prop, value, when)`, not a hashed StyleProp object.
    - Support responsive `@container` and `@media` queries.
-4. **Runtime Helper:**
-   - Export the exact same atom hashing algorithm to `@reference-ui/styled/css` so runtime `css()` and build-time CSS are 100% synchronized.
+4. **`css()` (`src/runtime`):**
+   - Same namer, serialized for the browser. Core writes `.reference-ui/styled/css`. Sheet and `css()` cannot drift.
 
 #### Step 3: Matrix Validation & Seam Removal
 1. Update `packages/reference-core/src/sync` to invoke `reference-system`. Keep Panda on the path until matrix is green.
@@ -427,3 +462,4 @@ These are the constraints that keep a solo warp drive from becoming Panda v3 wit
 | 12 | **Linter ≠ compiler.** Warn on nested ternaries; still emit every branch. |
 | 13 | **`native/` is not a crate.** Binary dump only. One published package: `@reference-ui/rust`. |
 | 14 | **~4–5k LOC is `crates/system`**, not a rewrite of Tasty. If the engine starts growing Vue-shaped abstraction, stop. |
+| 15 | **Self-contained before integrated.** v1 is a pure function (sources + config → CSS + class map) and must be proven as one, in `packages/reference-rs`, against golden cases and a Panda v1 differential. Integration is Phase 3. Debugging the compiler *through* `reference-core` sync is how a two-week engine becomes a two-month seam hunt. If a decision only matters once core is wired (who writes the file, who watches, who owns the portable stylesheet stage), it is **not a v1 decision** — see `crates/system/README.md` open questions. |

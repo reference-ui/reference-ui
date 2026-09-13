@@ -39,7 +39,8 @@ surface, not merely because it happens to be PascalCase.
 
 We treat the public synced `StyleProps` type as the source of truth.
 
-The resolver starts at `.reference-ui/react/types/style-props.d.mts` and uses
+The resolver starts at `.reference-ui/react/types/public/style-props.d.ts`
+(falling back to `.reference-ui/react/types/style-props`) and uses
 Oxc to expand that type surface through imports, re-exports, intersections,
 mapped types, indexed accesses, and a small set of utility wrappers used by the
 Reference type system.

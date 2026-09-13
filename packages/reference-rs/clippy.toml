@@ -1,0 +1,7 @@
+# Clippy configuration for Reference RS
+# Enforces strict cognitive complexity, function size, and argument limits.
+
+cognitive-complexity-threshold = 15
+too-many-lines-threshold = 100
+too-many-arguments-threshold = 8
+type-complexity-threshold = 250

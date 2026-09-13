@@ -1,0 +1,9 @@
+[package]
+name = "system"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Native atomic CSS compiler for Reference UI (README-driven scaffold)"
+
+[dependencies]
+styletrace = { path = "../styletrace" }
