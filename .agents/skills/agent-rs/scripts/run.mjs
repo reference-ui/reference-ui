@@ -7,7 +7,7 @@
  * - Darwin QoS elevation (taskpolicy -a PRI 46)
  * - Shared CPU gate concurrency queue (/tmp/reference-ui-cpu-gate)
  * - Pure Rust tests (cargo test) & JS seam tests (Vitest)
- * - Code quality, file length limits (<365 / <500), and cyclomatic complexity
+ * - Code quality, file length limits (<365 / <500), cyclomatic complexity, and banned Clippy allows
  */
 
 import { spawn } from 'node:child_process'
@@ -198,7 +198,10 @@ async function runQualityCommand(args, repoRoot, rsDir) {
   console.log(`  • File lines: soft limit ${THRESHOLDS.FILE_LINES_WARN}, limit ${THRESHOLDS.FILE_LINES_FAIL}`)
   console.log(`  • Cyclomatic complexity: warn > ${THRESHOLDS.CYCLOMATIC_WARN}, fail > ${THRESHOLDS.CYCLOMATIC_FAIL}`)
   console.log(`  • Cognitive complexity: warn > ${THRESHOLDS.COGNITIVE_WARN}, fail > ${THRESHOLDS.COGNITIVE_FAIL}`)
-  console.log(`  • Function lines: warn > ${THRESHOLDS.FN_LINES_WARN}, fail > ${THRESHOLDS.FN_LINES_FAIL}\n`)
+  console.log(`  • Function lines: warn > ${THRESHOLDS.FN_LINES_WARN}, fail > ${THRESHOLDS.FN_LINES_FAIL}`)
+  console.log(`  • Function args: warn > ${THRESHOLDS.FN_ARGS_WARN}, fail > ${THRESHOLDS.FN_ARGS_FAIL} (context struct, not #[allow])`)
+  console.log(`  • Clippy #[allow]/#[expect]: banned. Fix the architecture.`)
+  console.log(`  • File headers: 2–6 sentences (thin one-liners warn; missing/essays fail)\n`)
 
   const report = await inspectFiles(targetFiles, {
     strict,
@@ -218,7 +221,8 @@ async function runQualityCommand(args, repoRoot, rsDir) {
     console.log(`\x1b[1;32m✔ ALL ${report.totalFiles} FILES PASSED QUALITY CHECKS!\x1b[0m`)
     console.log('  • Zero files over 365 lines')
     console.log('  • Zero functions exceeding cyclomatic complexity 10')
-    console.log('  • Zero functions exceeding cognitive complexity 15\n')
+    console.log('  • Zero functions exceeding cognitive complexity 15')
+    console.log('  • Zero Clippy #[allow]/#[expect] attributes\n')
     return 0
   }
 
@@ -251,7 +255,13 @@ async function runQualityCommand(args, repoRoot, rsDir) {
 
   if (!report.ok) {
     console.log(`\x1b[1;31m✖ ${violationsText} (Quality gate failed)!\x1b[0m`)
-    console.log('Please break down over-length files (>500 lines) or refactor complex functions.\n')
+    const hasClippyAllow = flaggedFiles.some((f) => f.issues.some((i) => i.type === 'CLIPPY_ALLOW'))
+    const hasTooManyArgs = flaggedFiles.some((f) => f.issues.some((i) => i.type === 'FN_ARGS_FAIL'))
+    if (hasClippyAllow || hasTooManyArgs) {
+      console.log('NOPE. Do not silence Clippy. Introduce a context/session struct or redesign the pass.\n')
+    } else {
+      console.log('Please break down over-length files (>500 lines) or refactor complex functions.\n')
+    }
     return 1
   }
 
@@ -430,6 +440,10 @@ function printHelp() {
   • Functions with cyclomatic complexity > 10 warn; > 15 fail.
   • Functions with cognitive complexity > 15 warn; > 20 fail.
   • Functions over 80 lines warn; > 120 lines fail.
+  • Functions with > 4 arguments warn; > 5 fail. Introduce a context struct.
+  • #[allow(clippy::...)] and #[expect(clippy::...)] are banned. Fix the architecture.
+  • File headers: 2–6 sentences describing what the file does. One-liners warn; missing/essays fail.
+  • Inline comments stay terse (why, not what). The header is the paragraph.
   • 1 Code violations cause immediate failure.
   • Documentation (.md) files are never constrained by complexity rules.
   • Every agent MUST run 'pnpm agentrs quality [file]' periodically after every generation!

@@ -1,8 +1,12 @@
+//! Common text manipulation, span slicing, and AST utility functions shared across the compiler workspace.
+//! Provides safe string unquoting, bounds-checked span slicing over source buffers, and character hygiene helpers.
+//! Used across AST extraction passes and code generators to eliminate redundant string allocations.
+
 use oxc_span::Span;
 
 /// Slice a span from source text, safely clamped to bounds.
 #[inline]
-pub fn slice_span<'a>(source: &'a str, span: Span) -> &'a str {
+pub fn slice_span(source: &str, span: Span) -> &str {
     let start = span.start as usize;
     let end = span.end as usize;
     if start <= end && end <= source.len() {

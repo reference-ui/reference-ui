@@ -16,6 +16,7 @@ virtualrs = { path = "../virtualrs" }
 atlas = { path = "../atlas" }
 tasty = { path = "../tasty" }
 styletrace = { path = "../styletrace" }
+system = { path = "../system" }
 
 [build-dependencies]
 napi-build = { workspace = true }

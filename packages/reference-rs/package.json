@@ -42,6 +42,10 @@
     "./styletrace": {
       "types": "./dist/styletrace.d.ts",
       "import": "./dist/styletrace.mjs"
+    },
+    "./system": {
+      "types": "./dist/system.d.ts",
+      "import": "./dist/system.mjs"
     }
   },
   "files": [
@@ -54,6 +58,7 @@
   "scripts": {
     "agentrs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
     "rs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
+    "canon": "pnpm exec tsx ./canon/generate.ts",
     "artifacts": "pnpm exec napi artifacts --output-dir artifacts",
     "build": "pnpm run ensure-native && pnpm run build:js",
     "build:js": "tsup && tsc -p tsconfig.build.json && node ./js/tools/create-dts-entrypoints.mjs",
@@ -74,6 +79,8 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
+    "@webref/css": "8.7.4",
+    "@webref/elements": "2.8.0",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "~7.0.2",

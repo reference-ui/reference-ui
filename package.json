@@ -13,6 +13,7 @@
     "dev": "pnpm dev:docs",
     "dev:docs": "pnpm --filter @reference-ui/reference-docs run dev",
     "dev:lib": "pnpm --filter @reference-ui/lib run dev",
+    "dev:lib:native": "REF_SYSTEM_ENGINE=native pnpm dev:lib",
     "test:lib": "pnpm agentct",
     "capture": "node .agents/skills/tweak-component/scripts/capture.mjs",
     "capture:states": "node .agents/skills/tweak-component/scripts/capture.mjs --states",

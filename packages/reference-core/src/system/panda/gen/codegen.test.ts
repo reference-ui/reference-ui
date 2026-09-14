@@ -255,4 +255,42 @@ describe('system/panda/gen/codegen', () => {
       outfile: join(outDir, 'styled', 'global.css'),
     })
   })
+
+  it('appends native compiler stylesheet when REF_SYSTEM_ENGINE is native', async () => {
+    const outDir = createTempDir()
+    const configPath = join(outDir, 'panda.config.ts')
+    writeFileSync(configPath, 'export default {}', 'utf-8')
+    const styledDir = join(outDir, 'styled')
+    const fs = await import('node:fs')
+    fs.mkdirSync(styledDir, { recursive: true })
+    const stylesPath = join(styledDir, 'styles.css')
+    writeFileSync(stylesPath, '/* panda baseline */\n', 'utf-8')
+
+    const prevEnv = process.env.REF_SYSTEM_ENGINE
+    process.env.REF_SYSTEM_ENGINE = 'native'
+
+    try {
+      const compileSyncMock = vi.fn(() => ({
+        stylesheet: '@layer utilities { .native_class { color: red; } }',
+      }))
+      vi.doMock('@reference-ui/rust/system', () => ({
+        compileSync: compileSyncMock,
+      }))
+
+      const { runPandaCss } = await importCodegenModule({ outDir })
+      await runPandaCss()
+
+      expect(compileSyncMock).toHaveBeenCalled()
+      const content = fs.readFileSync(stylesPath, 'utf-8')
+      expect(content).toContain('/* panda baseline */')
+      expect(content).toContain('.native_class { color: red; }')
+    } finally {
+      if (prevEnv !== undefined) {
+        process.env.REF_SYSTEM_ENGINE = prevEnv
+      } else {
+        delete process.env.REF_SYSTEM_ENGINE
+      }
+      vi.doUnmock('@reference-ui/rust/system')
+    }
+  })
 })

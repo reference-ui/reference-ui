@@ -1,7 +1,9 @@
 # Clippy configuration for Reference RS
 # Enforces strict cognitive complexity, function size, and argument limits.
+# Agents MUST NOT #[allow]/#[expect] Clippy. The quality gate fails on any clippy allow.
+# too_many_arguments: introduce a context/session struct, do not silence.
 
 cognitive-complexity-threshold = 15
 too-many-lines-threshold = 100
-too-many-arguments-threshold = 8
+too-many-arguments-threshold = 5
 type-complexity-threshold = 250
