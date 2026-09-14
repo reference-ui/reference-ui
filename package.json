@@ -24,6 +24,9 @@
     "agent": "node .agents/skills/test-core/scripts/run.mjs",
     "agent:pw": "node .agents/skills/test-core/scripts/run.mjs playwright",
     "agent:vitest": "node .agents/skills/test-core/scripts/run.mjs vitest",
+    "agentrs": "node .agents/skills/agent-rs/scripts/run.mjs",
+    "agent:rs": "node .agents/skills/agent-rs/scripts/run.mjs",
+    "rs": "node .agents/skills/agent-rs/scripts/run.mjs",
     "pipeline:fast": "node .agents/skills/test-core/scripts/run.mjs test",
     "pipeline:test:matrix": "node .agents/skills/test-core/scripts/run.mjs test:matrix",
     "pipeline:verify:all": "node .agents/skills/test-core/scripts/run.mjs verify:all"

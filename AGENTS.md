@@ -14,6 +14,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | --- | --- |
 | `@reference-ui/lib` look/feel | `tweak-component` skill |
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
+| `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
@@ -134,4 +135,42 @@ pnpm pipeline test --packages=@matrix/<package>
 > [!NOTE]
 > **Terminal Bridge Mode (Optional)**:
 > If you have an external terminal open, run `pnpm agent daemon`. The agent will automatically route heavy test runs through your native terminal session over a local socket (`/tmp/reference-ui-agent.sock`). If the daemon is inactive, `pnpm agent` executes directly with `taskpolicy -a` QoS elevation.
+
+---
+
+## 4. Reference RS Workflow (`agent-rs`, `pnpm agentrs`)
+
+Follow `.agents/skills/agent-rs/SKILL.md` whenever you work in `packages/reference-rs`.
+
+### The Core Commands
+```bash
+# Fast seam verification (Vitest against N-API / TS wrappers):
+pnpm agentrs v                                               # all vitest tests
+pnpm agentrs v <test-path>                                   # target single file
+
+# Fast domain Rust verification (cargo test):
+pnpm agentrs c                                               # all workspace tests
+pnpm agentrs c system                                        # auto-detects crate (-p system)
+pnpm agentrs c <crate> -t "<pattern>"                        # crate + test filter
+
+# Code quality & comment check (MANDATORY after every generation):
+pnpm agentrs q                                               # smart check (changed files / system)
+pnpm agentrs q <file-or-dir>                                 # target specific file or directory
+pnpm agentrs <path-to-file>                                  # path shorthand runs quality automatically
+
+# Full verification:
+pnpm agentrs t                                               # runs build -> cargo -> vitest -> quality
+pnpm agentrs                                                 # bare command runs full dev loop
+```
+
+> [!IMPORTANT]
+> **Code Quality & Comment Standards for `reference-rs`**:
+> 1. **Zero tolerance default**: 1 Code violations cause immediate failure (exit 1). Not an optional check.
+> 2. **File length**: Hard failure if a file exceeds **500 lines**; warning at **365 lines** (*"Can you split this up, please?"*).
+> 3. **Cyclomatic complexity**: Keep $\le 10$ (failure $> 15$). Cognitive complexity $\le 15$ (failure $> 20$).
+> 4. **Function length**: Keep $\le 80$ lines (failure $> 120$).
+> 5. **Top-of-file commentary mandatory**: Every file must start with a short, precise header comment (`//!` in Rust, `/**` in TS) describing what the file is.
+> 6. **No filthy long comments**: Keep comments very terse and concise; explain *why*, not *what*.
+> 7. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
+> 8. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
 
