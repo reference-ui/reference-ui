@@ -1,6 +1,6 @@
 # reference-rs — one build folder (`dist/`)
 
-This is **after** `PLAN.md` / `PLAN_PT2.md` / `PLAN_PT3.md`. Do not do this in PT2/PT3. After PT3 the cdylib **crate** is `modules/runtime`; this file is only the generated dump (`.node` still named `dist/native/` so it does not sit on the crate).
+This is the remaining dump pass. Source already lives under `modules/` (`modules/runtime` is the cdylib crate). This file only moves **generated** output into `dist/`.
 
 **Orchestration:** one parent agent. Packaging paths only. Do not redesign modules, harnesses, or the public API.
 
@@ -42,10 +42,7 @@ Package root after this pass — **source vs output**:
 ```text
 packages/reference-rs/
 │
-├── native/                         SOURCE — cdylib crate (PT2). No .node in here.
-├── runtime/                        SOURCE — loader, tools
-├── shared/                         SOURCE
-├── modules/                        SOURCE
+├── modules/                        SOURCE — runtime (cdylib + JS host), shared, products
 │
 └── dist/                           ALL generated output. gitignored as a tree,
                                     except we already gitignore `dist` at repo root.
@@ -74,7 +71,7 @@ packages/reference-rs/
 - `native/*.sha256`
 - `native/index.d.ts` (napi junk next to the crate)
 
-`native/` on disk after this is only the crate. If it still has a `.node`, you failed.
+`native/` on disk after this is gone (crate is `modules/runtime`). If a package-root `native/` still has a `.node`, you failed.
 
 ### Why subfolders under `dist/` (not a flat pile)
 
@@ -136,12 +133,12 @@ napi artifacts --output-dir dist/artifacts
 
 Touch:
 
-- `runtime/loader.ts` (`getVirtualNativeCandidates`)
-- `runtime/loader.test.ts`
-- `runtime/tools/ensure-native.ts` (binary path, stamp path, **input hash still includes `native/src`**)
-- `runtime/shared/paths.ts` (`artifactsDir` → `dist/artifacts`)
-- `runtime/tools/stage-local-artifacts.ts`
-- `runtime/tools/publish-native.ts` (`npmDir` → `dist/npm`)
+- `modules/runtime/js/loader.ts` (`getVirtualNativeCandidates`)
+- `modules/runtime/js/loader.test.ts`
+- `modules/runtime/js/tools/ensure-native.ts` (binary path, stamp path, **input hash still includes `modules/runtime/src` + product `native.rs`**)
+- `modules/runtime/js/shared/paths.ts` (`artifactsDir` → `dist/artifacts`)
+- `modules/runtime/js/tools/stage-local-artifacts.ts`
+- `modules/runtime/js/tools/publish-native.ts` (`npmDir` → `dist/npm`)
 - `package.json` `build:native`, `artifacts`, `"files"` (must **not** include `dist/cargo`)
 - `.github/workflows/rust-compile.yml` (`--output-dir` + upload path)
 - `pipeline/src/build/rust/targets.ts` (same `--output-dir native` today)
@@ -176,8 +173,8 @@ Intent: generated tree is invisible; crate source is not.
 
 ## Done when
 
-- Package root has no `target/`, `npm/`, `artifacts/`, or `native/*.node`
-- `native/` is only the cdylib crate
+- Package root has no `target/`, `npm/`, `artifacts/`, or `native/`
+- Cdylib crate is `modules/runtime`; `.node` lives in `dist/native/`
 - All generated output lives under `dist/`
 - `dist/cargo` is gitignored and absent from `"files"`
 - `import { compile } from '@reference-ui/rust/system'` still works (exports still resolve)
@@ -189,13 +186,13 @@ Intent: generated tree is invisible; crate source is not.
 
 ## Read first
 
-- `packages/reference-rs/PLAN_PT2.md` (crate vs dump; do not undo the nest)
+- `packages/reference-rs/PLAN_PT3.md` (host vs dump; do not undo the nest)
 - `packages/reference-rs/package.json` (`build:native`, `files`, `napi`)
 - `packages/reference-rs/tsup.config.ts` (`outDir`, `clean`)
 - `packages/reference-rs/.cargo/config.toml`
-- `packages/reference-rs/runtime/loader.ts`
-- `packages/reference-rs/runtime/tools/ensure-native.ts`
-- `packages/reference-rs/runtime/tools/publish-native.ts`
+- `packages/reference-rs/modules/runtime/js/loader.ts`
+- `packages/reference-rs/modules/runtime/js/tools/ensure-native.ts`
+- `packages/reference-rs/modules/runtime/js/tools/publish-native.ts`
 - `.github/workflows/rust-compile.yml`
 - `pipeline/src/build/rust/targets.ts`
 
