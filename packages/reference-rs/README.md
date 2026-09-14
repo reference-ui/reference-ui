@@ -6,15 +6,10 @@ Rust-backed native tooling for `reference-ui`. This package ships a **Node-API (
 
 | Piece | Role |
 | --- | --- |
-| **Rust crate** (`reference-virtual-native`) | Workspace features implemented in Rust (parsers, transforms, emitters). Built as a `cdylib` for Node and as `rlib` for tests and embedding. |
-| **napi-rs** | Binds selected Rust entrypoints to JavaScript via `#[napi]` on `src/lib.rs` (see **What napi-rs does here**). |
+| **Cargo workspace** (`crates/*`) | Modular, pure Rust domain crates (`shared`, `virtualrs`, `atlas`, `tasty`, `system`) with zero Node dependencies. |
+| **N-API bridge** (`crates/napi`) | Crate `reference-virtual-native`, built as a `cdylib` with `#[napi]` exports wrapping domain crates. |
 | **TypeScript (`js/`)** | Loads the `.node` addon, wraps it with ergonomic/higher-level APIs (runtimes, builders, helpers), and ships bundled ESM/DTS per public subpath (`tsup` → `dist/`). |
-
-New capabilities will typically add a **`src/<module>/`** tree (and often a matching **`js/<module>/`** surface) and extend `lib.rs`, `package.json` `exports`, and `tsup.config.ts` as needed.
-
-## Documentation
-
-Feature-specific docs live under **`docs/`** (e.g. Tasty: [tasty-rs.md](./docs/tasty-rs.md), [tasty-js.md](./docs/tasty-js.md)).
+| **Product suite (`tests/`)** | Vitest product tests covering fixtures, snapshots, and public contracts through the native addon and TS wrappers. |
 
 ## How it is bootstrapped
 
@@ -31,41 +26,34 @@ Feature-specific docs live under **`docs/`** (e.g. Tasty: [tasty-rs.md](./docs/t
    pnpm --filter @reference-ui/rust run ensure-native
    ```
 
-3. **Run tests** (Rust + Vitest):
+3. **Run tests**:
 
    ```sh
+   # Crate unit tests (pure Rust in-memory units):
+   pnpm --filter @reference-ui/rust run test:rust
+
+   # Product suite (Vitest against N-API + wrappers):
+   pnpm --filter @reference-ui/rust run test:vitest
+
+   # Full package verification (ensure-native + cargo test + vitest):
    pnpm --filter @reference-ui/rust run test
    ```
 
 `package.json` declares **napi-rs targets** (e.g. `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`). The compiled artifact is named `virtual-native` and is loaded from `native/virtual-native.<triple>.node` (see `js/runtime/loader.ts`).
 
-## What napi-rs does here
-
-[napi-rs](https://napi.rs/) generates Node-API bindings from Rust:
-
-- **`#[napi]`** exports in `src/lib.rs` are included when the `napi` **Cargo feature** is enabled (it is **on by default**).
-- **`build.rs`** calls `napi_build::setup()` when `CARGO_FEATURE_NAPI` is set so the linker produces a loadable addon.
-
-From JavaScript, `js/runtime/loader.ts` resolves the package directory, finds the correct `.node` file for the current OS/arch, and `require()`s it (`VirtualNativeBinding`). Feature code in **`js/`** then builds on that — thin direct exports in `js/runtime/index.ts`, richer layers under paths like `js/tasty/`.
-
-## Package entrypoints
-
-Exports are defined in `package.json` and built from `tsup.config.ts`.
-
-| Subpath | Role |
-| --- | --- |
-| `@reference-ui/rust` | Native addon: rewrites, scanners, and other functions exposed from `lib.rs`; loader helpers. |
-| `@reference-ui/rust/tasty` | Tasty runtime (TypeScript). |
-| `@reference-ui/rust/tasty/browser` | Tasty browser-oriented entry. |
-| `@reference-ui/rust/tasty/build` | Tasty build helpers (emit + filesystem). |
-| `@reference-ui/rust/styletrace` | Styletrace wrapper analysis for discovering exported JSX names linked to Reference primitives through style props. |
-
-Additional **`exports`** entries will appear as new modules ship.
-
 ## Layout
 
-- `src/lib.rs` — N-API exports and crate re-exports.
-- `src/<module>/` — per-feature Rust code (e.g. `tasty/`, `virtualrs/`).
-- `js/<module>/` — per-feature TypeScript: wrappers and higher-level APIs over the native addon where applicable.
-
-For details on a given feature, see **`docs/`** or the module’s own notes under `src/`.
+```
+packages/reference-rs/
+├── Cargo.toml            # workspace root manifest
+├── crates/               # pure Rust domain crates and N-API bridge
+│   ├── shared/           # oxc parser flags, span helpers, unquoting
+│   ├── tasty/            # TypeScript scanner, AST extraction, generator, emitter
+│   ├── atlas/            # token and component usage analysis
+│   ├── virtualrs/        # virtual module CSS/CVA rewrites and responsive lowering
+│   ├── system/           # styletrace resolver & analysis (styling engine foundation)
+│   └── napi/             # reference-virtual-native cdylib (#[napi] bridge only)
+├── js/                   # TypeScript runtime wrappers and tooling
+├── tests/                # Vitest product test suite (fixtures, snapshots, contracts)
+└── native/               # gitignored compiled .node outputs
+```

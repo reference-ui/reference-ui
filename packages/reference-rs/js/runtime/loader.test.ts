@@ -90,13 +90,11 @@ describe('loader', () => {
     expect(readFileSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/package.json', 'utf-8')
   })
 
-  it('builds package-root and dist candidate paths for a target triple', async () => {
+  it('builds native candidate path for a target triple', async () => {
     const { getVirtualNativeCandidates } = await importLoaderModule()
 
     expect(getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')).toEqual([
       '/workspace/packages/reference-rs/native/virtual-native.darwin-arm64.node',
-      '/workspace/packages/reference-rs/virtual-native.darwin-arm64.node',
-      '/workspace/packages/reference-rs/dist/virtual-native.darwin-arm64.node',
     ])
   })
 
@@ -125,7 +123,7 @@ describe('loader', () => {
     const { existsSync, resolveVirtualNativeBinaryPath } = await importLoaderModule()
 
     expect(resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'linux', 'x64')).toBeNull()
-    expect(existsSync).toHaveBeenCalledTimes(3)
+    expect(existsSync).toHaveBeenCalledTimes(1)
   })
 
   it('prefers the first existing candidate when resolving a binary path', async () => {

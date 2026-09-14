@@ -244,8 +244,8 @@ function repoSource() {
 async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Promise<void> {
   const triple: VirtualNativeTarget = 'linux-x64-gnu'
   const rustTarget = getRustTarget(triple)
-  const outputPathInContainer = `/workspace/packages/reference-rs/virtual-native.${triple}.node`
-  const outputPathOnHost = resolve(packageDir, `virtual-native.${triple}.node`)
+  const outputPathInContainer = `/workspace/packages/reference-rs/native/virtual-native.${triple}.node`
+  const outputPathOnHost = resolve(packageDir, 'native', `virtual-native.${triple}.node`)
 
   const runBuild = async () => {
     const pnpmStore = dag.cacheVolume('reference-ui-rust-linux-pnpm-store')
@@ -299,7 +299,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
       .withExec([
         'bash',
         '-lc',
-        `export PATH=/root/.cargo/bin:$PATH && pnpm --filter @reference-ui/rust exec napi build --platform --release --target ${rustTarget}`,
+        `export PATH=/root/.cargo/bin:$PATH && pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${rustTarget} --output-dir native --no-js`,
       ])
 
     await container.file(outputPathInContainer).export(outputPathOnHost)
@@ -331,7 +331,7 @@ async function ensureReferenceRustTargetInstalled(target: VirtualNativeTarget): 
 }
 
 function referenceRustBuiltBinaryPath(packageDir: string, target: VirtualNativeTarget): string {
-  return resolve(packageDir, `virtual-native.${target}.node`)
+  return resolve(packageDir, 'native', `virtual-native.${target}.node`)
 }
 
 function referenceRustCargoTargetDir(packageDir: string, target: VirtualNativeTarget): string {
@@ -353,7 +353,20 @@ async function buildReferenceRustBinaryWithNapi(
 ): Promise<void> {
   await ensureReferenceRustTargetInstalled(target)
 
-  const args = ['exec', 'napi', 'build', '--platform', '--release', '--target', getRustTarget(target)]
+  const args = [
+    'exec',
+    'napi',
+    'build',
+    '--package',
+    'reference-virtual-native',
+    '--platform',
+    '--release',
+    '--target',
+    getRustTarget(target),
+    '--output-dir',
+    'native',
+    '--no-js',
+  ]
   const builtBinaryPath = referenceRustBuiltBinaryPath(packageDir, target)
 
   if (crossCompile) {
@@ -441,7 +454,7 @@ async function stageRequiredContainerBuiltReferenceRustBinaries(
 
   await buildLinuxReferenceRustBinaryWithDagger(packageDir)
   await copyFile(
-    resolve(packageDir, 'virtual-native.linux-x64-gnu.node'),
+    resolve(packageDir, 'native', 'virtual-native.linux-x64-gnu.node'),
     resolve(targetPackage.dir, 'virtual-native.linux-x64-gnu.node'),
   )
 }
