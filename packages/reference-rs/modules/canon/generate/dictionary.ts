@@ -1,11 +1,11 @@
 /**
  * Static dictionary definitions for Reference UI design system dialects.
- * Authoritative, self-isolated constants for curated HTML primitives,
- * utility class mappings, StyleProps aliases, conditions, and CSS allowlists.
- * Used exclusively by dialect ingest to produce the static compiler canon.
+ * Authoritative overlay constants for curated JSX primitives, popular short class prefixes,
+ * StyleProps authoring aliases, macros, conditions, and dialect-specific CSS extensions.
+ * Used exclusively as an overlay on top of living @webref web platform tables.
  */
 
-// Curated HTML tags exposed as Reference JSX primitives
+// Curated HTML and SVG tags exposed as Reference JSX primitives
 export const PRIMITIVE_TAGS = [
   'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo',
   'blockquote', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col',
@@ -18,13 +18,18 @@ export const PRIMITIVE_TAGS = [
   'ruby', 's', 'samp', 'search', 'section', 'select', 'small', 'source', 'span',
   'strong', 'sub', 'summary', 'sup', 'svg', 'table', 'tbody', 'td', 'textarea',
   'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr',
+  // Curated SVG host child elements styled by authors
+  'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse', 'text',
+  'tspan', 'use', 'g', 'defs', 'clipPath', 'mask', 'linearGradient',
+  'radialGradient', 'stop', 'image', 'foreignObject', 'marker', 'pattern',
+  'switch', 'symbol', 'view',
 ] as const;
 
-// Authoritative canonical utility string
+// Curated short class prefixes and aliases overlay for popular properties
 export const CANONICAL_UTILITY_STRING =
   "display:d,hideFrom:hide-from,hideBelow:hide-below,visibility:vis,boxSizing:bx-sz," +
   "width:w,height:h,inlineSize:w-i,blockSize:h-b,minWidth:min-w,minHeight:min-h," +
-  "maxWidth:max-w,maxHeight:max-h,boxSize:size/boxSize,minInlineSize:min-w-i," +
+  "maxWidth:max-w,maxHeight:max-h,boxSize:box-size/boxSize,minInlineSize:min-w-i," +
   "maxInlineSize:max-w-i,minBlockSize:min-h-b,maxBlockSize:max-h-b,overflow:ov," +
   "position:pos/1,zIndex:z,top:top,right:right,bottom:bottom,left:left,inset:inset," +
   "insetInline:inset-x/insetX,insetBlock:inset-y/insetY,insetInlineStart:inset-s/insetStart," +
@@ -49,7 +54,7 @@ export const CANONICAL_UTILITY_STRING =
   "borderStartRadius:rounded-s/roundedStart,borderEndRadius:rounded-e/roundedEnd," +
   "outline:ring/1,outlineWidth:ring-w,outlineColor:ring-c,outlineOffset:ring-offset," +
   "opacity:op,boxShadow:shadow/1,transform:transform,translate:translate,translateX:x/1," +
-  "translateY:y/1,translateZ:z/1,scale:scale,scaleX:scale-x,scaleY:scale-y,rotate:rotate," +
+  "translateY:y/1,translateZ:translate-z,scale:scale,scaleX:scale-x,scaleY:scale-y,rotate:rotate," +
   "rotateX:rotate-x,rotateY:rotate-y,rotateZ:rotate-z,flex:flex,flexDirection:flex-dir," +
   "flexWrap:flex-wrap,flexBasis:flex-basis,flexGrow:grow/1,flexShrink:shrink/1," +
   "justifyContent:jc,justifyItems:ji,justifySelf:js,alignContent:ac,alignItems:ai," +
@@ -89,6 +94,9 @@ export const CANONICAL_UTILITY_STRING =
   "cursor:cursor,textStyle:textStyle";
 
 export const CUSTOM_PREFIXES: Record<string, string> = {
+  d: 'svg-d',
+  x: 'svg-x',
+  y: 'svg-y',
   borderStyle: 'border-style',
   borderTopStyle: 'bd-t-s',
   borderRightStyle: 'bd-r-s',
@@ -212,27 +220,13 @@ export const KNOWN_ALIASES: Record<string, string> = {
   z: 'translateZ',
 };
 
-export const NATIVE_SHORTHANDS: Record<string, string[]> = {
-  padding: ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'],
-  margin: ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'],
-  border: ['borderWidth', 'borderStyle', 'borderColor'],
-  inset: ['top', 'right', 'bottom', 'left'],
-  outline: ['outlineWidth', 'outlineStyle', 'outlineColor'],
-  borderTop: ['borderTopWidth', 'borderTopStyle', 'borderTopColor'],
-  borderRight: ['borderRightWidth', 'borderRightStyle', 'borderRightColor'],
-  borderBottom: ['borderBottomWidth', 'borderBottomStyle', 'borderBottomColor'],
-  borderLeft: ['borderLeftWidth', 'borderLeftStyle', 'borderLeftColor'],
-  borderInline: ['borderInlineWidth', 'borderInlineStyle', 'borderInlineColor'],
-  borderBlock: ['borderBlockWidth', 'borderBlockStyle', 'borderBlockColor'],
-};
-
 export const ORDERED_BREAKPOINTS = ['base', 'sm', 'md', 'lg', 'xl', '2xl'] as const;
 
+// Pure macro properties that do not exist as standard CSS properties
 export const REFERENCE_ONLY_PROPS = [
   'colorMode',
-  'container',
-  'font',
   'r',
+  'size',
   'variant',
   'weight',
 ] as const;
@@ -256,94 +250,38 @@ export const CONDITION_KEYS = [
   'userValid', 'valid', 'vertical', 'visited',
 ] as const;
 
+export const DIALECT_COLOR_ALLOWLIST = new Set<string>([
+  'background', 'divide-color', 'divideColor',
+  'focus-ring-color', 'focusRingColor',
+  'text-shadow-color', 'textShadowColor',
+]);
+
 export const DIALECT_CSS_ALLOWLIST = new Set<string>([
-  'animation-state',
-  'backdrop-blur',
-  'backdrop-brightness',
-  'backdrop-contrast',
-  'backdrop-grayscale',
-  'backdrop-hue-rotate',
-  'backdrop-invert',
-  'backdrop-opacity',
-  'backdrop-saturate',
-  'backdrop-sepia',
-  'background-conic',
-  'background-gradient',
-  'background-linear',
-  'background-radial',
-  'blur',
-  'border-block-end-style',
-  'border-block-start-style',
-  'border-block-style',
-  'border-bottom-style',
-  'border-end-radius',
-  'border-inline-end-style',
-  'border-inline-start-style',
-  'border-inline-style',
-  'border-left-style',
-  'border-right-style',
-  'border-spacing-x',
-  'border-spacing-y',
-  'border-start-radius',
-  'border-top-style',
-  'box-size',
-  'brightness',
-  'contrast',
-  'debug',
-  'divide-color',
-  'divide-style',
-  'divide-x',
-  'divide-y',
-  'drop-shadow',
-  'focus-ring',
-  'focus-ring-color',
-  'focus-ring-offset',
-  'focus-ring-style',
-  'focus-ring-width',
-  'focus-visible-ring',
-  'font-smoothing',
-  'gradient-from',
-  'gradient-from-position',
-  'gradient-to',
-  'gradient-to-position',
-  'gradient-via',
-  'gradient-via-position',
-  'grayscale',
-  'hide-below',
-  'hide-from',
-  'hue-rotate',
-  'invert',
-  'outline-style',
-  'overflow-clip-box',
-  'rotate-x',
-  'rotate-y',
-  'rotate-z',
-  'saturate',
-  'scale-x',
-  'scale-y',
-  'scrollbar',
-  'scroll-snap-coordinate',
-  'scroll-snap-destination',
-  'scroll-snap-margin',
-  'scroll-snap-margin-bottom',
-  'scroll-snap-margin-left',
-  'scroll-snap-margin-right',
-  'scroll-snap-margin-top',
-  'scroll-snap-points-x',
-  'scroll-snap-points-y',
-  'scroll-snap-strictness',
-  'scroll-snap-type-x',
-  'scroll-snap-type-y',
-  'sepia',
-  'space-x',
-  'space-y',
-  'sr-only',
-  'text-gradient',
-  'text-shadow-color',
-  'text-style',
-  'translate-x',
-  'translate-y',
-  'translate-z',
-  'truncate',
-  'webkit-text-fill-color',
+  'animation-state', 'backdrop-blur', 'backdrop-brightness',
+  'backdrop-contrast', 'backdrop-grayscale', 'backdrop-hue-rotate',
+  'backdrop-invert', 'backdrop-opacity', 'backdrop-saturate',
+  'backdrop-sepia', 'background-conic', 'background-gradient',
+  'background-linear', 'background-radial', 'blur',
+  'border-end-radius', 'border-spacing-x', 'border-spacing-y',
+  'border-start-radius', 'box-size',
+  'brightness', 'contrast', 'debug',
+  'divide-color', 'divide-style', 'divide-x',
+  'divide-y', 'drop-shadow', 'focus-ring',
+  'focus-ring-color', 'focus-ring-offset', 'focus-ring-style',
+  'focus-ring-width', 'focus-visible-ring', 'font-smoothing',
+  'gradient-from', 'gradient-from-position', 'gradient-to',
+  'gradient-to-position', 'gradient-via', 'gradient-via-position',
+  'grayscale', 'hide-below', 'hide-from',
+  'hue-rotate', 'invert',
+  'overflow-clip-box', 'rotate-x', 'rotate-y',
+  'rotate-z', 'saturate', 'scale-x',
+  'scale-y', 'scrollbar', 'scroll-snap-coordinate',
+  'scroll-snap-destination', 'scroll-snap-margin', 'scroll-snap-margin-bottom',
+  'scroll-snap-margin-left', 'scroll-snap-margin-right', 'scroll-snap-margin-top',
+  'scroll-snap-points-x', 'scroll-snap-points-y', 'scroll-snap-strictness',
+  'scroll-snap-type-x', 'scroll-snap-type-y', 'sepia',
+  'space-x', 'space-y', 'sr-only',
+  'text-gradient', 'text-shadow-color', 'text-style',
+  'translate-x', 'translate-y', 'translate-z',
+  'truncate', 'webkit-text-fill-color',
 ]);
