@@ -7,7 +7,7 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 
-import { callNativeJson } from '../../../runtime/native'
+import { scanAndEmitModules } from './runtime'
 import { createTastyApi, type TastyApi } from './index'
 
 interface EmittedModulesPayload {
@@ -53,9 +53,7 @@ export interface TastyBuildSession {
 export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty> {
   const rootDir = resolve(options.rootDir)
   const outputDir = resolve(options.outputDir)
-  const rawPayload = callNativeJson<Partial<EmittedModulesPayload>>('scan and emit modules', (native) =>
-    native.scanAndEmitModules(rootDir, options.include)
-  )
+  const rawPayload = scanAndEmitModules(rootDir, options.include)
   const emitted = validateEmittedPayload(rawPayload)
 
   await writeEmittedArtifacts(outputDir, emitted)

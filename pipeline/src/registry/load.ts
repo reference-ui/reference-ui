@@ -9,7 +9,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/runtime/shared/targets.js'
+import type { VirtualNativeTarget } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
 import { repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'

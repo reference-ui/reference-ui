@@ -3,7 +3,7 @@
  * Exposes synchronous and asynchronous compilation methods bridging JavaScript build tools with the native Rust core.
  * Handles JSON serialization of compilation requests and deserialization of stylesheets, class maps, and diagnostics.
  */
-import { callNativeJson } from '../../../runtime/native'
+import { compileSystem } from './runtime.js'
 import type { CompileRequest, CompileResult } from './types.js'
 
 export type {
@@ -18,9 +18,7 @@ export type {
 
 export function compileSync(request: CompileRequest): CompileResult {
   const requestJson = JSON.stringify(request)
-  return callNativeJson<CompileResult>('compile system', (native) =>
-    native.compileSystem(requestJson)
-  )
+  return compileSystem(requestJson)
 }
 
 export async function compile(request: CompileRequest): Promise<CompileResult> {

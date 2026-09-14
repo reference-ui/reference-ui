@@ -6,7 +6,7 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+export const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 export const distDir = resolve(packageDir, 'dist')
 export const artifactsDir = resolve(distDir, 'artifacts')
 export const npmDir = resolve(distDir, 'npm')

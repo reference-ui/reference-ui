@@ -6,6 +6,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { getVirtualNativePackageName, getVirtualNativeTriple } from './shared/targets'
+import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from './shared/native-contract'
+
+function createDefaultMockBinding() {
+  const binding: Record<string, unknown> = {
+    getNativeCapabilities: vi.fn(() => JSON.stringify({ schema: 1 })),
+  }
+  for (const name of REQUIRED_VIRTUAL_NATIVE_EXPORTS) {
+    binding[name] = vi.fn()
+  }
+  return binding
+}
 
 async function importLoaderModule(options?: {
   currentModulePath?: string
@@ -26,20 +37,7 @@ async function importLoaderModule(options?: {
     JSON.stringify(options?.packageJson ?? { name: '@reference-ui/rust' })
   )
   const requireBinding = vi.fn(
-    options?.requireImpl ??
-      (() => ({
-        getNativeCapabilities: vi.fn(() => JSON.stringify({
-          styletraceSyncRootHint: true,
-          replaceFunctionNameImportFrom: true,
-        })),
-        rewriteCssImports: vi.fn(),
-        rewriteCvaImports: vi.fn(),
-        replaceFunctionName: vi.fn(),
-        applyResponsiveStyles: vi.fn(),
-        scanAndEmitModules: vi.fn(),
-        analyzeAtlas: vi.fn(),
-        analyzeStyletrace: vi.fn(),
-      }))
+    options?.requireImpl ?? createDefaultMockBinding
   )
   const requireResolve = vi.fn(
     options?.requireResolveImpl ??
@@ -147,6 +145,16 @@ describe('loader', () => {
     const triple = getVirtualNativeTriple(process.platform, process.arch)
     expect(triple).not.toBeNull()
 
+    const missingCapabilityBinding = () => {
+      const binding: Record<string, unknown> = {}
+      for (const name of REQUIRED_VIRTUAL_NATIVE_EXPORTS) {
+        if (name !== 'getNativeCapabilities') {
+          binding[name] = vi.fn()
+        }
+      }
+      return binding
+    }
+
     const {
       getVirtualNativeCompatibilityError,
       getVirtualNativeDiagnostics,
@@ -156,27 +164,11 @@ describe('loader', () => {
         '/workspace/packages/reference-rs/package.json',
         `/workspace/packages/reference-rs/dist/native/virtual-native.${triple}.node`,
       ],
-      requireImpl: () => ({
-        rewriteCssImports: vi.fn(),
-        rewriteCvaImports: vi.fn(),
-        replaceFunctionName: vi.fn(),
-        applyResponsiveStyles: vi.fn(),
-        scanAndEmitModules: vi.fn(),
-        analyzeAtlas: vi.fn(),
-        analyzeStyletrace: vi.fn(),
-      }),
+      requireImpl: missingCapabilityBinding,
     })
 
     expect(
-      getVirtualNativeCompatibilityError({
-        rewriteCssImports: vi.fn(),
-        rewriteCvaImports: vi.fn(),
-        replaceFunctionName: vi.fn(),
-        applyResponsiveStyles: vi.fn(),
-        scanAndEmitModules: vi.fn(),
-        analyzeAtlas: vi.fn(),
-        analyzeStyletrace: vi.fn(),
-      })
+      getVirtualNativeCompatibilityError(missingCapabilityBinding())
     ).toContain('getNativeCapabilities')
     expect(loadVirtualNative()).toBeNull()
     expect(getVirtualNativeDiagnostics().status).toBe('load-failed')

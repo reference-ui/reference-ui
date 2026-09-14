@@ -17,7 +17,7 @@ import type {
   BuildRegistryArtifactPackage,
 } from '../types.js'
 import { repoRoot, pipelineStateDir } from '../workspace.js'
-import { SUPPORTED_VIRTUAL_NATIVE_TARGETS, type VirtualNativeTarget } from '../../../../packages/reference-rs/runtime/shared/targets.js'
+import { SUPPORTED_VIRTUAL_NATIVE_TARGETS, type VirtualNativeTarget } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 
 const rustBuildArtifactsVersion = 4 as const
 const rustBuildArtifactsDir = resolve(pipelineStateDir, 'build', 'rust')

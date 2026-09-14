@@ -8,10 +8,10 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist')
+const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..', 'dist')
 
 const entrypoints = [
-  { file: 'index.d.ts', target: './runtime/index' },
+  { file: 'index.d.ts', target: './modules/runtime/js/index' },
   { file: 'tasty.d.ts', target: './modules/tasty/js/index' },
   { file: 'tasty/browser.d.ts', target: '../modules/tasty/js/browser' },
   { file: 'tasty/build.d.ts', target: '../modules/tasty/js/build' },

@@ -530,7 +530,7 @@ async function main() {
   if (command === 'fmt' || command === 'f') {
     console.log('\n\x1b[1;36m[agent-rs] Formatting Rust and TypeScript...\x1b[0m')
     await runChild('cargo', ['fmt', '--all'], rsDir)
-    await runChild('pnpm', ['exec', 'prettier', '--write', 'modules/*/js/**/*', 'modules/*/tests/**/*', 'runtime/**/*'], rsDir)
+    await runChild('pnpm', ['exec', 'prettier', '--write', 'modules/*/js/**/*', 'modules/*/tests/**/*'], rsDir)
     console.log('\x1b[32m✔ Formatting complete.\x1b[0m\n')
     process.exit(0)
   }
