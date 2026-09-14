@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::styletrace::resolver::StyleTraceError;
+use crate::resolver::StyleTraceError;
 
 const PRIMITIVE_DECLARATIONS_ENTRY_STEM: &str = ".reference-ui/react/system/primitives/index";
 

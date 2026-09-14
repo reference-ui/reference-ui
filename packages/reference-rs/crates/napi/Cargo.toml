@@ -15,7 +15,7 @@ serde_json = { workspace = true }
 virtualrs = { path = "../virtualrs" }
 atlas = { path = "../atlas" }
 tasty = { path = "../tasty" }
-system = { path = "../system" }
+styletrace = { path = "../styletrace" }
 
 [build-dependencies]
 napi-build = { workspace = true }

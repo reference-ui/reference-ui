@@ -109,7 +109,7 @@ Rust tests are not a second product suite. They exist only so a crate can be ite
 | TypeRef proptest | internals | `crates/tasty` test modules | `cargo test -p tasty` | Round-trip / identity of IR | Become a shared `crates/testing` crate |
 | virtualrs string rewrites | internals | `crates/virtualrs` `#[cfg(test)]` | `cargo test -p virtualrs` | Exact source transforms | Go through `js/runtime` |
 | Atlas scoring math, alias maps | internals | `crates/atlas` `#[cfg(test)]` | `cargo test -p atlas` | Pure functions | Re-run the Vitest case catalog |
-| Styletrace unit walks on inline snippets | internals | `crates/system` | `cargo test -p system` | Resolver / walk internals | Own the fixture catalog |
+| Styletrace unit walks on inline snippets | internals | `crates/styletrace` | `cargo test -p styletrace` | Resolver / walk internals | Own the fixture catalog |
 
 `pnpm --filter @reference-ui/rust test` remains the package-level command: `ensure-native && cargo test && vitest run`. Vitest is the score; `cargo test` is the fast crate loop.
 
@@ -144,9 +144,9 @@ packages/reference-rs/
 │   ├── shared/                 # oxc parser flags, span helpers, fx_hash
 │   ├── tasty/
 │   ├── atlas/
-│   ├── virtualrs/
-│   ├── system/                 # styletrace today; extractor + emitter later
-│   └── napi/                   # the only crate that depends on napi / napi-derive
+│   ├── virtualrs/              # rewrite_css_imports, responsive lowering
+│   ├── styletrace/             # styletrace prop resolver & JSX wrapper tracing
+│   └── napi/                   # reference-virtual-native cdylib; napi feature ONLY here
 │       ├── Cargo.toml          # crate name remains reference-virtual-native
 │       ├── build.rs            # napi-build::setup()
 │       └── src/lib.rs          # thin #[napi] wrappers, nothing else
@@ -274,20 +274,20 @@ Move `src/virtualrs/` here.
 - `rewrite_css_imports`, `rewrite_cva_imports`, `replace_function_name`, `apply_responsive_styles`
 - Current `tests.rs` is already in-memory string tests. That is the model for crate internals.
 
-### `crates/system`
+### `crates/styletrace`
 
-Move `src/styletrace/` here as `crates/system/src/styletrace/`.
+Move `src/styletrace/` here as `crates/styletrace/`.
 
-- This crate is the future native styling engine (`REFERENCE_SYSTEM.md`). This restructure only relocates styletrace and gives it a crate boundary.
-- Do not implement the Panda replacement in the same PR as the folder move.
-- Crate internals: inline snippet tests. Product suite: `tests/styletrace/cases` via N-API `analyzeStyletrace` / `js/styletrace`.
+- Resolves Reference style-prop surfaces and traces JSX component wrappers back to primitives.
+- Kept as an independent crate; `system` (the native styling engine) is MD-only for now (`REFERENCE_SYSTEM.md`) until designed.
+- Crate internals: inline snippet tests. Product suite: `tests/styletrace/` via N-API `analyzeStyletrace` / `js/styletrace`.
 
 ### `crates/napi` (`reference-virtual-native`)
 
 `crate-type = ["cdylib"]` only. No `rlib`, no domain logic.
 
 ```text
-js string/JSON  ──►  #[napi] fn  ──►  tasty | atlas | system | virtualrs
+js string/JSON  ──►  #[napi] fn  ──►  tasty | atlas | styletrace | virtualrs
 ```
 
 Move the `#[napi]` functions out of today’s `src/lib.rs`. Domain `pub use` belongs on the crates, not on the bridge.
@@ -363,7 +363,7 @@ For each module, in this order (fewest N-API ties first):
 1. `virtualrs` → `crates/virtualrs`
 2. `atlas` → `crates/atlas`
 3. `tasty` → `crates/tasty`
-4. `styletrace` → `crates/system`
+4. `styletrace` → `crates/styletrace`
 
 After each move:
 
@@ -421,7 +421,7 @@ No new benchmark job. No new “Rust e2e” job.
 | `src/tasty/**` | `crates/tasty/src/**` |
 | `src/atlas/**` | `crates/atlas/src/**` |
 | `src/virtualrs/**` | `crates/virtualrs/src/**` |
-| `src/styletrace/**` | `crates/system/src/styletrace/**` |
+| `src/styletrace/**` | `crates/styletrace/src/**` |
 | `src/lib.rs` `#[napi]` fns | `crates/napi/src/lib.rs` |
 | `build.rs` | `crates/napi/build.rs` |
 | `js/**` | stay |
@@ -456,6 +456,6 @@ Internal-only: Cargo package layout, where `.node` is built, where tests live.
 - No `crates/testing`.
 - No Cargo tests under `tests/`.
 - No treating `npm/` or `native/` as source crates.
-- No implementing `reference-system` (atomic CSS engine) in the same change. `crates/system` is a rename/home for styletrace so that work has a door later.
+- No implementing `reference-system` (atomic CSS engine) in the same change. `system` remains MD-only for now (`REFERENCE_SYSTEM.md`) until designed properly.
 - No second npm package. Still one `@reference-ui/rust`.
 - No “build the Rust” extra package folder. `ensure-native` + `crates/napi` + gitignored `native/` is the whole build story.

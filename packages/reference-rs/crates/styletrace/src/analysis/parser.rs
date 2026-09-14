@@ -12,7 +12,7 @@ use oxc_ast::ast::{
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
-use crate::styletrace::resolver::{collect_style_prop_names, StyleTraceError};
+use crate::resolver::{collect_style_prop_names, StyleTraceError};
 
 use super::model::{
     ComponentEdge, ExportTarget, FactoryTarget, PropBindings, TraceComponent, TraceFactory,
