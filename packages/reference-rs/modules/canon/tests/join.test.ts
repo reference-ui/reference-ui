@@ -1,13 +1,14 @@
 /**
- * Poison injection test suite for Canon fail-closed join validation.
- * Verifies that the compiler generator aborts on invalid tags, unallowlisted CSS properties,
- * drifted native shorthands, invalid aliases, invalid colors, and duplicate class prefixes.
- * Proves that join validation guards CAN-FAIL-04 through CAN-FAIL-08 fail closed under mutation.
+ * Join validation and poison injection test suite for Canon fail-closed web standards verification.
+ * Verifies that the live dialect satisfies all platform contracts across elements, CSS properties,
+ * shorthands, aliases, class prefixes, short prefixes, and color extensions.
+ * Proves that join validation guards abort under mutation for invalid tags, unverified properties,
+ * drifted shorthands, unknown aliases, prefix collisions, and unauthorized colors.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { loadDialect, type DialectData } from './dialect';
+import { loadDialect, type DialectData } from '../generate/dialect';
 import {
   validateAliasTargetsJoin,
   validateClassPrefixesJoin,
@@ -16,8 +17,10 @@ import {
   validateElementsJoin,
   validateJoin,
   validateShorthandsJoin,
-} from './join';
-import { loadPlatformCss, loadPlatformElements } from './platform';
+  validateShortPrefixesJoin,
+} from '../generate/join';
+import { SHORT_PREFIXES } from '../generate/overlay';
+import { loadPlatformCss, loadPlatformElements } from '../generate/platform';
 
 describe('Canon Join Validation (Fail-Closed Gates)', async () => {
   const platformElements = await loadPlatformElements();
@@ -36,17 +39,43 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
       aliases: dialect.aliases.map((a) => ({ ...a })),
       referenceProps: [...dialect.referenceProps],
       conditions: [...dialect.conditions],
-      breakpoints: [...dialect.breakpoints],
       colorProperties: [...dialect.colorProperties],
-      dialectColorAllowlist: new Set(dialect.dialectColorAllowlist),
-      dialectCssAllowlist: new Set(dialect.dialectCssAllowlist),
-      dialectShortPrefixes: new Map(dialect.dialectShortPrefixes),
-      dialectAliases: new Map(dialect.dialectAliases),
+      extensions: dialect.extensions,
     };
   }
 
   it('passes join validation on the authoritative platform and dialect', () => {
     const errors = validateJoin(baseDialect, platformElements, platformCss);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-01: dialect JSX primitives join @webref/elements', () => {
+    const errors = validateElementsJoin(baseDialect, platformElements);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-02: full platform CSS emission plus allowlisted dialect extensions', () => {
+    const errors = validateDialectExtJoin(baseDialect, platformCss);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-03: native CSS shorthands decompose to identical longhands as @webref/css', () => {
+    const errors = validateShorthandsJoin(baseDialect, platformCss);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-05: dialect alias targets resolve to platform properties or dialect extensions', () => {
+    const errors = validateAliasTargetsJoin(baseDialect, platformCss);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-06: dialect short-prefix properties exist on platform or dialect allowlist', () => {
+    const errors = validateShortPrefixesJoin(baseDialect, platformCss);
+    expect(errors).toEqual([]);
+  });
+
+  it('CAN-JOIN-07: dialect color extensions exist on explicit color allowlist', () => {
+    const errors = validateColorPropsJoin(baseDialect, platformCss);
     expect(errors).toEqual([]);
   });
 
@@ -89,21 +118,14 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
     expect(errors[0]).toContain('padding');
   });
 
-  it('CAN-FAIL-07: aborts on unknown alias target or unverified color extension', () => {
-    const poisonedAlias = cloneDialect(baseDialect);
-    poisonedAlias.aliases.push({ alias: 'badAlias', canonical: 'unrecognizedTarget' });
+  it('CAN-FAIL-07: aborts on unknown dialect alias targets', () => {
+    const poisoned = cloneDialect(baseDialect);
+    poisoned.aliases.push({ alias: 'badAlias', canonical: 'unrecognizedTarget' });
 
-    const aliasErrors = validateAliasTargetsJoin(poisonedAlias, platformCss);
-    expect(aliasErrors.length).toBeGreaterThan(0);
-    expect(aliasErrors[0]).toContain('badAlias');
-    expect(aliasErrors[0]).toContain('unrecognizedTarget');
-
-    const poisonedColor = cloneDialect(baseDialect);
-    poisonedColor.colorProperties.push('unrecognizedColor');
-
-    const colorErrors = validateColorPropsJoin(poisonedColor, platformCss);
-    expect(colorErrors.length).toBeGreaterThan(0);
-    expect(colorErrors[0]).toContain('unrecognizedColor');
+    const errors = validateAliasTargetsJoin(poisoned, platformCss);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toContain('badAlias');
+    expect(errors[0]).toContain('unrecognizedTarget');
   });
 
   it('CAN-FAIL-08: aborts when duplicate class_prefix is introduced', () => {
@@ -119,5 +141,20 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
     expect(errors[0]).toContain("Duplicate class_prefix 'd'");
     expect(errors[0]).toContain('d');
     expect(errors[0]).toContain('display');
+  });
+
+  it('CAN-FAIL-09: aborts when dialect short prefix property is not on platform or allowlist', () => {
+    const poisonedPrefixes = { ...SHORT_PREFIXES, foobarProp: 'fb' };
+    const errors = validateShortPrefixesJoin(platformCss, poisonedPrefixes);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toContain('foobarProp');
+  });
+
+  it('CAN-FAIL-10: aborts when color extension is not in webref or dialect color allowlist', () => {
+    const poisoned = cloneDialect(baseDialect);
+    poisoned.colorProperties.push('unrecognizedColor');
+    const errors = validateColorPropsJoin(poisoned, platformCss);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]).toContain('unrecognizedColor');
   });
 });

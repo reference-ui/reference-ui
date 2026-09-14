@@ -8,6 +8,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     name: 'canon',
-    include: ['generate/**/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
   },
 });
