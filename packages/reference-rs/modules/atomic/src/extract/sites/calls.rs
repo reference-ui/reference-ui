@@ -1,8 +1,8 @@
-//! Extraction of style calls: css(), css.raw(), cva(), sva(), recipe().
+//! Extraction of style calls: css(), css.raw(), recipe(), recipe.raw().
 //!
 //! Identifies style invocation sites within JavaScript and TypeScript source files.
-//! Parses argument lists from atomic calls, recipes, and slot recipes into structured
-//! property and variant declarations recorded through the extraction context.
+//! Parses argument lists from css() and recipe() into structured property and
+//! variant declarations recorded through the extraction context.
 
 use oxc_ast::ast::{
     Argument, ArrayExpression, CallExpression, Expression, ObjectExpression, ObjectProperty,
@@ -23,11 +23,8 @@ pub fn handle_call_expression(call: &CallExpression<'_>, ctx: &mut ExtractContex
         "css" | "css.raw" | "__reference_ui_css" => {
             handle_css_call(&callee_name, &call.arguments, ctx);
         }
-        "cva" | "recipe" | "recipe.raw" | "__reference_ui_recipe" | "__reference_ui_cva" => {
+        "recipe" | "recipe.raw" | "__reference_ui_recipe" => {
             handle_recipe_call(&callee_name, &call.arguments, ctx);
-        }
-        "sva" => {
-            handle_sva_call(&callee_name, &call.arguments, ctx);
         }
         _ => {}
     }
@@ -44,13 +41,7 @@ fn resolve_callee_name(callee: &Expression<'_>) -> Option<String> {
 fn resolve_identifier_callee(name: &str) -> Option<String> {
     if matches!(
         name,
-        "css"
-            | "cva"
-            | "sva"
-            | "recipe"
-            | "__reference_ui_css"
-            | "__reference_ui_recipe"
-            | "__reference_ui_cva"
+        "css" | "recipe" | "__reference_ui_css" | "__reference_ui_recipe"
     ) {
         Some(name.to_string())
     } else {
@@ -63,7 +54,7 @@ fn resolve_member_callee(member: &StaticMemberExpression<'_>) -> Option<String> 
     if prop == "raw" {
         return resolve_raw_member_callee(&member.object);
     }
-    if matches!(prop, "css" | "cva" | "sva" | "recipe") {
+    if matches!(prop, "css" | "recipe") {
         Some(prop.to_string())
     } else {
         None
@@ -252,53 +243,6 @@ fn extract_compound_css(
                 let mut obj_ctx = ctx.object_walk(origin, false);
                 walk_style_object(&mut obj_ctx, css_obj, &smallvec![]);
             }
-        }
-    }
-}
-
-fn handle_sva_call(callee_name: &str, args: &[Argument<'_>], ctx: &mut ExtractContext<'_>) {
-    let Some(first_arg) = args.first().and_then(Argument::as_expression) else {
-        return;
-    };
-    let Expression::ObjectExpression(obj) = first_arg else {
-        return;
-    };
-
-    let origin = Some(callee_name);
-    for prop_kind in &obj.properties {
-        if let ObjectPropertyKind::ObjectProperty(prop) = prop_kind {
-            handle_sva_property(prop, origin, ctx);
-        }
-    }
-}
-
-fn handle_sva_property(
-    prop: &ObjectProperty<'_>,
-    origin: Option<&str>,
-    ctx: &mut ExtractContext<'_>,
-) {
-    let PropertyKey::StaticIdentifier(ident) = &prop.key else {
-        return;
-    };
-    if ident.name == "base" {
-        if let Expression::ObjectExpression(base_slots) = &prop.value {
-            walk_sva_base_slots(base_slots, origin, ctx);
-        }
-    }
-}
-
-fn walk_sva_base_slots(
-    slots: &ObjectExpression<'_>,
-    origin: Option<&str>,
-    ctx: &mut ExtractContext<'_>,
-) {
-    for slot_kind in &slots.properties {
-        let ObjectPropertyKind::ObjectProperty(slot) = slot_kind else {
-            continue;
-        };
-        if let Expression::ObjectExpression(style_obj) = &slot.value {
-            let mut obj_ctx = ctx.object_walk(origin, false);
-            walk_style_object(&mut obj_ctx, style_obj, &smallvec![]);
         }
     }
 }

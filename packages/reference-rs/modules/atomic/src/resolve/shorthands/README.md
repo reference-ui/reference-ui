@@ -10,8 +10,7 @@ Do not “fix” that by hashing both props into one class. Runtime `css()`
 must still look up each leaf.
 
 Fix, part one: expand the shorthand to longhands that **do not reset color**
-(`border-bottom-width`, `border-bottom-style`), same as the intent of
-`createShorthandUtility` in core. Authors still write
+(`border-bottom-width`, `border-bottom-style`). Authors still write
 `borderBottom="1px solid" borderColor="gray.800"`.
 
 Fix, part two — expansion is **not sufficient on its own**. `borderColor` is
@@ -23,18 +22,6 @@ longhands`) so the longhand always wins. Both halves are required; see
 
 The factory is the *behavior spec* (0 / none / var() / token
 classification). Port the parser. Emit atoms the namer and `css()` share.
-
-## Files (when coded)
-
-- `mod.rs` — shorthand want → longhand atom(s)
-- `border.rs`, `outline.rs`, `parser.rs`
-
-## Panda
-
-`pandacss_utility/src/normalize.rs` plus our core
-`createShorthandUtility` (the behavior spec). Panda v2 could not run
-that factory from Rust — that is the Tabs ghost class. Port the parser
-into this module.
 
 ## Must not
 

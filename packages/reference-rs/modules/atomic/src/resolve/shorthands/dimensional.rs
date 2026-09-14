@@ -5,126 +5,88 @@
 use crate::atom::AtomValue;
 use super::parser::{is_global_keyword, split_tokens};
 
-#[derive(Clone, Copy)]
-struct DimensionalProps {
-    top: &'static str,
-    right: &'static str,
-    bottom: &'static str,
-    left: &'static str,
-}
-
-const DIMENSIONAL_CONFIGS: &[(&str, DimensionalProps)] = &[
-    (
-        "padding",
-        DimensionalProps {
-            top: "paddingTop",
-            right: "paddingRight",
-            bottom: "paddingBottom",
-            left: "paddingLeft",
-        },
-    ),
-    (
-        "margin",
-        DimensionalProps {
-            top: "marginTop",
-            right: "marginRight",
-            bottom: "marginBottom",
-            left: "marginLeft",
-        },
-    ),
-    (
-        "inset",
-        DimensionalProps {
-            top: "top",
-            right: "right",
-            bottom: "bottom",
-            left: "left",
-        },
-    ),
-];
-
-fn lookup_dimensional_props(prop: &str) -> Option<DimensionalProps> {
-    for (name, cfg) in DIMENSIONAL_CONFIGS {
-        if *name == prop {
-            return Some(*cfg);
-        }
-    }
-    None
-}
-
 /// Expand dimensional shorthand into 4 directional longhands.
 pub fn expand_dimensional_shorthand(
     prop: &str,
     raw_val: &str,
 ) -> Option<Vec<(Box<str>, AtomValue)>> {
-    let cfg = lookup_dimensional_props(prop)?;
+    let canon_name = canon::resolve_canonical_prop(prop);
+    let longhands = canon::native_longhands_for_prop(canon_name)?;
+    if longhands.len() != 4 {
+        return None;
+    }
+    let top = longhands[0];
+    let right = longhands[1];
+    let bottom = longhands[2];
+    let left = longhands[3];
+
     let trimmed = raw_val.trim();
 
     if is_global_keyword(trimmed) {
-        return Some(vec![(prop.into(), AtomValue::String(trimmed.into()))]);
+        return Some(vec![(canon_name.into(), AtomValue::String(trimmed.into()))]);
     }
 
     let tokens = split_tokens(trimmed);
-    expand_by_token_count(&cfg, &tokens)
+    expand_by_token_count(&[top, right, bottom, left], &tokens)
 }
 
 fn expand_by_token_count(
-    cfg: &DimensionalProps,
+    lh: &[&str; 4],
     tokens: &[String],
 ) -> Option<Vec<(Box<str>, AtomValue)>> {
     match tokens.len() {
-        1 => Some(expand_single(cfg, &tokens[0])),
-        2 => Some(expand_two(cfg, &tokens[0], &tokens[1])),
-        3 => Some(expand_three(cfg, &tokens[0], &tokens[1], &tokens[2])),
-        4 => Some(expand_four(cfg, tokens)),
+        1 => Some(expand_single(lh, &tokens[0])),
+        2 => Some(expand_two(lh, &tokens[0], &tokens[1])),
+        3 => Some(expand_three(lh, &tokens[0], &tokens[1], &tokens[2])),
+        4 => Some(expand_four(lh, tokens)),
         _ => None,
     }
 }
 
-fn expand_single(cfg: &DimensionalProps, val: &str) -> Vec<(Box<str>, AtomValue)> {
+fn expand_single(lh: &[&str; 4], val: &str) -> Vec<(Box<str>, AtomValue)> {
     vec![
-        (cfg.top.into(), AtomValue::String(val.into())),
-        (cfg.right.into(), AtomValue::String(val.into())),
-        (cfg.bottom.into(), AtomValue::String(val.into())),
-        (cfg.left.into(), AtomValue::String(val.into())),
+        (lh[0].into(), AtomValue::String(val.into())),
+        (lh[1].into(), AtomValue::String(val.into())),
+        (lh[2].into(), AtomValue::String(val.into())),
+        (lh[3].into(), AtomValue::String(val.into())),
     ]
 }
 
 fn expand_two(
-    cfg: &DimensionalProps,
+    lh: &[&str; 4],
     v_tb: &str,
     v_lr: &str,
 ) -> Vec<(Box<str>, AtomValue)> {
     vec![
-        (cfg.top.into(), AtomValue::String(v_tb.into())),
-        (cfg.right.into(), AtomValue::String(v_lr.into())),
-        (cfg.bottom.into(), AtomValue::String(v_tb.into())),
-        (cfg.left.into(), AtomValue::String(v_lr.into())),
+        (lh[0].into(), AtomValue::String(v_tb.into())),
+        (lh[1].into(), AtomValue::String(v_lr.into())),
+        (lh[2].into(), AtomValue::String(v_tb.into())),
+        (lh[3].into(), AtomValue::String(v_lr.into())),
     ]
 }
 
 fn expand_three(
-    cfg: &DimensionalProps,
+    lh: &[&str; 4],
     top: &str,
     lr: &str,
     bottom: &str,
 ) -> Vec<(Box<str>, AtomValue)> {
     vec![
-        (cfg.top.into(), AtomValue::String(top.into())),
-        (cfg.right.into(), AtomValue::String(lr.into())),
-        (cfg.bottom.into(), AtomValue::String(bottom.into())),
-        (cfg.left.into(), AtomValue::String(lr.into())),
+        (lh[0].into(), AtomValue::String(top.into())),
+        (lh[1].into(), AtomValue::String(lr.into())),
+        (lh[2].into(), AtomValue::String(bottom.into())),
+        (lh[3].into(), AtomValue::String(lr.into())),
     ]
 }
 
 fn expand_four(
-    cfg: &DimensionalProps,
+    lh: &[&str; 4],
     tokens: &[String],
 ) -> Vec<(Box<str>, AtomValue)> {
     vec![
-        (cfg.top.into(), AtomValue::String(tokens[0].clone().into())),
-        (cfg.right.into(), AtomValue::String(tokens[1].clone().into())),
-        (cfg.bottom.into(), AtomValue::String(tokens[2].clone().into())),
-        (cfg.left.into(), AtomValue::String(tokens[3].clone().into())),
+        (lh[0].into(), AtomValue::String(tokens[0].clone().into())),
+        (lh[1].into(), AtomValue::String(tokens[1].clone().into())),
+        (lh[2].into(), AtomValue::String(tokens[2].clone().into())),
+        (lh[3].into(), AtomValue::String(tokens[3].clone().into())),
     ]
 }

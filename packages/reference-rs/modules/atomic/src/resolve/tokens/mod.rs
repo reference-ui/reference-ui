@@ -27,37 +27,7 @@ const KNOWN_CATEGORIES: &[&str] = &[
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
-    matches!(
-        prop,
-        "color"
-            | "c"
-            | "background"
-            | "bg"
-            | "backgroundColor"
-            | "bgColor"
-            | "borderColor"
-            | "borderC"
-            | "borderTopColor"
-            | "borderRightColor"
-            | "borderBottomColor"
-            | "borderLeftColor"
-            | "borderInlineColor"
-            | "borderBlockColor"
-            | "borderInlineStartColor"
-            | "borderInlineEndColor"
-            | "borderBlockStartColor"
-            | "borderBlockEndColor"
-            | "outlineColor"
-            | "ringColor"
-            | "ring-c"
-            | "accentColor"
-            | "caretColor"
-            | "fill"
-            | "stroke"
-            | "textDecorationColor"
-            | "textShadowColor"
-            | "boxShadowColor"
-    )
+    canon::is_color_prop(prop)
 }
 
 fn is_css_color_keyword(val: &str) -> bool {

@@ -6,7 +6,6 @@ pub mod atom;
 pub mod config;
 pub mod diagnostics;
 pub mod extract;
-pub mod recipes;
 pub mod resolve;
 pub mod runtime;
 pub mod stylesheet;

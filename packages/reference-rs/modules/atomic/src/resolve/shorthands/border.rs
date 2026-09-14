@@ -7,127 +7,6 @@ use super::parser::{
     is_global_keyword, parse_shorthand_tokens, split_tokens, ParsedShorthand,
 };
 
-#[derive(Clone, Copy)]
-struct BorderProps {
-    main: &'static str,
-    width: &'static str,
-    style: &'static str,
-    color: &'static str,
-    is_outline: bool,
-}
-
-const BORDER_CONFIGS: &[(&str, BorderProps)] = &[
-    (
-        "border",
-        BorderProps {
-            main: "border",
-            width: "borderWidth",
-            style: "borderStyle",
-            color: "borderColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderTop",
-        BorderProps {
-            main: "borderTop",
-            width: "borderTopWidth",
-            style: "borderTopStyle",
-            color: "borderTopColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderRight",
-        BorderProps {
-            main: "borderRight",
-            width: "borderRightWidth",
-            style: "borderRightStyle",
-            color: "borderRightColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderBottom",
-        BorderProps {
-            main: "borderBottom",
-            width: "borderBottomWidth",
-            style: "borderBottomStyle",
-            color: "borderBottomColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderLeft",
-        BorderProps {
-            main: "borderLeft",
-            width: "borderLeftWidth",
-            style: "borderLeftStyle",
-            color: "borderLeftColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderInline",
-        BorderProps {
-            main: "borderInline",
-            width: "borderInlineWidth",
-            style: "borderInlineStyle",
-            color: "borderInlineColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderX",
-        BorderProps {
-            main: "borderInline",
-            width: "borderInlineWidth",
-            style: "borderInlineStyle",
-            color: "borderInlineColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderBlock",
-        BorderProps {
-            main: "borderBlock",
-            width: "borderBlockWidth",
-            style: "borderBlockStyle",
-            color: "borderBlockColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "borderY",
-        BorderProps {
-            main: "borderBlock",
-            width: "borderBlockWidth",
-            style: "borderBlockStyle",
-            color: "borderBlockColor",
-            is_outline: false,
-        },
-    ),
-    (
-        "outline",
-        BorderProps {
-            main: "outline",
-            width: "outlineWidth",
-            style: "outlineStyle",
-            color: "outlineColor",
-            is_outline: true,
-        },
-    ),
-];
-
-fn lookup_border_props(prop: &str) -> Option<BorderProps> {
-    for (name, cfg) in BORDER_CONFIGS {
-        if *name == prop {
-            return Some(*cfg);
-        }
-    }
-    None
-}
-
 fn is_zero_value(raw: &str) -> bool {
     let trimmed = raw.trim();
     trimmed == "0"
@@ -150,19 +29,28 @@ pub fn expand_border_shorthand(
     prop: &str,
     raw_val: &str,
 ) -> Option<Vec<(Box<str>, AtomValue)>> {
-    let cfg = lookup_border_props(prop)?;
+    let canon_name = canon::resolve_canonical_prop(prop);
+    let longhands = canon::native_longhands_for_prop(canon_name)?;
+    if longhands.len() != 3 {
+        return None;
+    }
+    let width_prop = longhands[0];
+    let style_prop = longhands[1];
+    let color_prop = longhands[2];
+    let is_outline = canon_name == "outline";
+
     let trimmed = raw_val.trim();
 
     if is_zero_value(trimmed) {
         return Some(vec![(
-            cfg.width.into(),
+            width_prop.into(),
             AtomValue::String("0px".into()),
         )]);
     }
 
     if trimmed == "none" || is_whole_value(trimmed) {
         return Some(vec![(
-            cfg.main.into(),
+            canon_name.into(),
             AtomValue::String(trimmed.into()),
         )]);
     }
@@ -172,12 +60,14 @@ pub fn expand_border_shorthand(
         return None;
     }
 
-    let parsed = parse_shorthand_tokens(&tokens, cfg.is_outline);
-    build_expanded_atoms(&cfg, &parsed)
+    let parsed = parse_shorthand_tokens(&tokens, is_outline);
+    build_expanded_atoms(width_prop, style_prop, color_prop, &parsed)
 }
 
 fn build_expanded_atoms(
-    cfg: &BorderProps,
+    width_prop: &str,
+    style_prop: &str,
+    color_prop: &str,
     parsed: &ParsedShorthand,
 ) -> Option<Vec<(Box<str>, AtomValue)>> {
     if parsed.width.is_none() && parsed.style.is_none() && parsed.color.is_none() {
@@ -186,13 +76,13 @@ fn build_expanded_atoms(
 
     let mut out = Vec::new();
     if let Some(w) = &parsed.width {
-        out.push((cfg.width.into(), AtomValue::String(w.clone().into())));
+        out.push((width_prop.into(), AtomValue::String(w.clone().into())));
     }
     if let Some(s) = &parsed.style {
-        out.push((cfg.style.into(), AtomValue::String(s.clone().into())));
+        out.push((style_prop.into(), AtomValue::String(s.clone().into())));
     }
     if let Some(c) = &parsed.color {
-        out.push((cfg.color.into(), AtomValue::String(c.clone().into())));
+        out.push((color_prop.into(), AtomValue::String(c.clone().into())));
     }
 
     Some(out)

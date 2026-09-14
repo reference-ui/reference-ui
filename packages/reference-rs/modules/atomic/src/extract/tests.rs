@@ -117,10 +117,10 @@ fn test_dynamic_properties_keep_siblings() {
 fn test_css_and_recipe_call_sites() {
     let res = compile_code(
         r#"
-        import { css, cva } from '@reference-ui/styled';
+        import { css, recipe } from '@reference-ui/react';
         const c1 = css({ mt: '2r' });
         const c2 = css.raw({ p: '1r' });
-        const button = cva({
+        const button = recipe({
             base: { color: 'white' },
             variants: {
                 size: {
@@ -134,4 +134,20 @@ fn test_css_and_recipe_call_sites() {
     assert!(res.wants.iter().any(|w| &*w.prop == "p" && w.value.to_string() == "1r"));
     assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.value.to_string() == "white"));
     assert!(res.wants.iter().any(|w| &*w.prop == "fontSize" && w.value.to_string() == "12px"));
+}
+
+#[test]
+fn test_unknown_helpers_are_not_extract_sites() {
+    let res = compile_code(
+        r#"
+        const alert = sva({
+            slots: ['root', 'icon'],
+            base: {
+                root: { padding: '4r', borderRadius: 'md' },
+                icon: { color: 'green' },
+            },
+        });
+        "#,
+    );
+    assert!(res.wants.is_empty());
 }
