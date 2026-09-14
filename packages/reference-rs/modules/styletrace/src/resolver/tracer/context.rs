@@ -1,0 +1,194 @@
+//! Provides context structures for tracing types across modules.
+//! 
+//! The `TraceSession` holds long-lived caches like loaded modules.
+//! The `TraceContext` provides scoped state for deep recursive type walks, 
+//! avoiding argument soup and keeping track of visited nodes.
+
+use std::collections::{BTreeSet, HashMap};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use tasty::resolve_external_import_path;
+
+use crate::resolver::error::StyleTraceError;
+use crate::resolver::model::{BoundTypeExpr, ParsedModule, TypeDeclaration};
+use crate::resolver::parser::parse_module;
+use crate::resolver::path::{
+    is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
+    resolve_local_module_path,
+};
+
+pub struct TraceSession {
+    pub sync_root: PathBuf,
+    pub module_cache: HashMap<PathBuf, ParsedModule>,
+}
+
+impl TraceSession {
+    pub fn new(sync_root: &Path) -> Self {
+        Self {
+            sync_root: sync_root.to_path_buf(),
+            module_cache: HashMap::new(),
+        }
+    }
+}
+
+pub struct TraceContext<'a> {
+    pub session: &'a mut TraceSession,
+    pub module_path: &'a Path,
+    pub env: &'a HashMap<String, BoundTypeExpr>,
+    pub visited: &'a mut BTreeSet<String>,
+}
+
+impl<'a> TraceContext<'a> {
+    pub fn branch<'b>(&'b mut self, module_path: &'b Path, env: &'b HashMap<String, BoundTypeExpr>) -> TraceContext<'b> {
+        TraceContext {
+            session: self.session,
+            module_path,
+            env,
+            visited: self.visited,
+        }
+    }
+
+    pub fn load_module(&mut self, module_path: &Path) -> Result<ParsedModule, StyleTraceError> {
+        let normalized = normalize_path(module_path);
+        if let Some(module) = self.session.module_cache.get(&normalized) {
+            return Ok(module.clone());
+        }
+
+        let source = fs::read_to_string(&normalized).map_err(|error| {
+            StyleTraceError::new(format!("failed to read {}: {error}", normalized.display()))
+        })?;
+        let parsed = parse_module(&normalized, &source)?;
+        self.session.module_cache.insert(normalized.clone(), parsed.clone());
+        Ok(parsed)
+    }
+
+    pub fn resolve_module_specifier(
+        &self,
+        current_module: &Path,
+        specifier: &str,
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        if specifier == "@reference-ui/styled/types" {
+            if let Some(path) = self.resolve_reference_support_module(
+                current_module,
+                &self.session.sync_root.join(super::STYLED_TYPES_ROOT).join("system-types.d.ts"),
+                specifier,
+            )? {
+                return Ok(Some(path));
+            }
+        }
+
+        if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
+            if let Some(path) = self.resolve_reference_support_module(
+                current_module,
+                &self.session.sync_root.join(super::STYLED_TYPES_ROOT).join(format!("{rest}.d.ts")),
+                specifier,
+            )? {
+                return Ok(Some(path));
+            }
+        }
+
+        if specifier == "@reference-ui/react" {
+            if let Ok(path) = self.resolve_reference_support_module(
+                current_module,
+                &self.session.sync_root.join(super::REFERENCE_REACT_ENTRY),
+                specifier,
+            ) {
+                return Ok(path);
+            }
+        }
+
+        self.resolve_standard_module(current_module, specifier)
+    }
+
+    fn resolve_standard_module(
+        &self,
+        current_module: &Path,
+        specifier: &str,
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        if specifier.starts_with('.') {
+            let base = current_module.parent().unwrap_or(current_module);
+            let candidate = normalize_path(&base.join(specifier));
+            if let Some(resolved) = resolve_local_module_path(&candidate) {
+                return Ok(Some(resolved));
+            }
+        }
+
+        if is_ignorable_module_specifier(specifier) {
+            return Ok(None);
+        }
+
+        let resolution_root = current_module.parent().unwrap_or(current_module);
+        if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
+            return Ok(Some(prefer_sync_root_source_module(
+                &resolved,
+                &self.session.sync_root,
+            )));
+        }
+
+        Err(StyleTraceError::new(format!(
+            "unsupported module specifier {specifier} from {}",
+            current_module.display()
+        )))
+    }
+
+    fn resolve_reference_support_module(
+        &self,
+        current_module: &Path,
+        generated_path: &Path,
+        specifier: &str,
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        if generated_path.is_file() {
+            return Ok(Some(generated_path.to_path_buf()));
+        }
+
+        let resolution_root = current_module.parent().unwrap_or(current_module);
+        if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
+            return Ok(Some(prefer_sync_root_source_module(
+                &resolved,
+                &self.session.sync_root,
+            )));
+        }
+
+        Ok(None)
+    }
+
+    pub fn resolve_declaration(
+        &mut self,
+        module_path: &Path,
+        name: &str,
+    ) -> Result<Option<(PathBuf, TypeDeclaration)>, StyleTraceError> {
+        let module = self.load_module(module_path)?;
+        if let Some(declaration) = module.declarations.get(name) {
+            return Ok(Some((module_path.to_path_buf(), declaration.clone())));
+        }
+
+        if let Some(reexport) = module.reexports.get(name) {
+            let Some(imported_module) =
+                self.resolve_module_specifier(module_path, &reexport.source)?
+            else {
+                return Ok(None);
+            };
+            return self.resolve_declaration(&imported_module, &reexport.imported_name);
+        }
+
+        for source in &module.export_all_sources {
+            let Some(imported_module) = self.resolve_module_specifier(module_path, source)? else {
+                continue;
+            };
+            if let Some(resolved) = self.resolve_declaration(&imported_module, name)? {
+                return Ok(Some(resolved));
+            }
+        }
+
+        let Some(import_binding) = module.imports.get(name) else {
+            return Ok(None);
+        };
+        let Some(imported_module) =
+            self.resolve_module_specifier(module_path, &import_binding.source)?
+        else {
+            return Ok(None);
+        };
+        self.resolve_declaration(&imported_module, &import_binding.imported_name)
+    }
+}

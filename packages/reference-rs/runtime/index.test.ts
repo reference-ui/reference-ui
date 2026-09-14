@@ -1,0 +1,62 @@
+/**
+ * Test suite for runtime index entrypoints and unavailable fallback behavior.
+ * Asserts that graceful error messages are surfaced when the native addon is missing.
+ * Verifies public symbol re-exports and module loading mechanics.
+ */
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+async function importRuntimeModule() {
+  vi.resetModules()
+
+  const getVirtualNative = vi.fn(() => null)
+  const getVirtualNativeUnavailableMessage = vi.fn(
+    (feature: string) => `native unavailable for ${feature}`
+  )
+
+  vi.doMock('./loader', () => ({
+    getVirtualNative,
+    getVirtualNativeUnavailableMessage,
+    getVirtualNativeCandidates: vi.fn(),
+    getVirtualNativeDiagnostics: vi.fn(),
+    getVirtualNativeTriple: vi.fn(),
+    loadVirtualNative: vi.fn(),
+    resolveReferenceRsPackageDir: vi.fn(),
+    resolveVirtualNativeBinaryPath: vi.fn(),
+    SUPPORTED_VIRTUAL_NATIVE_TARGETS: [],
+  }))
+
+  const mod = await import('./index')
+  return { ...mod, getVirtualNative, getVirtualNativeUnavailableMessage }
+}
+
+afterEach(() => {
+  vi.resetModules()
+  vi.doUnmock('./loader')
+  vi.restoreAllMocks()
+})
+
+describe('runtime index', () => {
+  it('throws the loader-provided consumer message when the native addon is unavailable', async () => {
+    const {
+      applyResponsiveStyles,
+      replaceFunctionName,
+      rewriteCssImports,
+      getVirtualNativeUnavailableMessage,
+    } = await importRuntimeModule()
+
+    expect(() => rewriteCssImports('body {}', 'styles.css')).toThrow(
+      'native unavailable for rewrite CSS imports'
+    )
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('rewrite CSS imports')
+
+    expect(() => applyResponsiveStyles('body {}', 'styles.css')).toThrow(
+      'native unavailable for apply responsive styles'
+    )
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('apply responsive styles')
+
+    expect(() => replaceFunctionName('css({})', 'styles.tsx', 'css', '__reference_ui_css')).toThrow(
+      'native unavailable for replace function names'
+    )
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('replace function names')
+  })
+})

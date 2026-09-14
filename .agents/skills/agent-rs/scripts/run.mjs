@@ -158,6 +158,7 @@ async function runQualityCommand(args, repoRoot, rsDir) {
         path.isAbsolute(raw) ? raw : path.resolve(process.env.INIT_CWD || process.cwd(), raw),
         path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw),
         path.isAbsolute(raw) ? raw : path.resolve(rsDir, raw),
+        path.isAbsolute(raw) ? raw : path.resolve(rsDir, 'modules', raw),
       ]
       const fullPath = candidates.find((p) => fs.existsSync(p))
       if (fullPath && fs.existsSync(fullPath)) {
@@ -177,10 +178,12 @@ async function runQualityCommand(args, repoRoot, rsDir) {
       targetFiles = sourceChanged
       console.log(`\x1b[36m• Inspecting ${sourceChanged.length} git-modified source file(s) in reference-rs\x1b[0m`)
     } else {
-      const systemCrate = path.join(rsDir, 'crates/system')
+      const systemCrate = fs.existsSync(path.join(rsDir, 'modules/system'))
+        ? path.join(rsDir, 'modules/system')
+        : path.join(rsDir, 'system')
       if (fs.existsSync(systemCrate)) {
         targetFiles = findSourceFiles(systemCrate, SOURCE_EXTENSIONS)
-        console.log(`\x1b[36m• Git clean: inspecting crates/system (${targetFiles.length} source files)\x1b[0m`)
+        console.log(`\x1b[36m• Git clean: inspecting ${path.relative(rsDir, systemCrate)} (${targetFiles.length} source files)\x1b[0m`)
       } else {
         targetFiles = findSourceFiles(rsDir, SOURCE_EXTENSIONS)
       }
@@ -271,7 +274,7 @@ async function runQualityCommand(args, repoRoot, rsDir) {
 
 async function runCargoTests(args, rsDir) {
   const cargoArgs = ['test']
-  const knownCrates = new Set(['system', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi'])
+  const knownCrates = new Set(['system', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-virtual-native'])
 
   const crateIdx = args.indexOf('--crate')
   let targetedCrate = null
@@ -282,6 +285,10 @@ async function runCargoTests(args, rsDir) {
     if (firstPos && knownCrates.has(firstPos)) {
       targetedCrate = firstPos
     }
+  }
+
+  if (targetedCrate === 'napi') {
+    targetedCrate = 'reference-virtual-native'
   }
 
   if (targetedCrate) {
@@ -321,17 +328,48 @@ async function runCargoTests(args, rsDir) {
 }
 
 async function runVitestTests(args, rsDir) {
-  const testFilter = args.find((a) => !a.startsWith('-'))
+  const hasUpdateGoldens = args.includes('--update-goldens')
+  const nonFlagArgs = args.filter((a) => !a.startsWith('-'))
+  const testFilter = nonFlagArgs[0]
   const watch = args.includes('--watch')
   const testNameIdx = args.indexOf('-t')
 
+  const KNOWN_MODULES = new Map([
+    ['system', 'system'],
+    ['tasty', 'tasty'],
+    ['atlas', 'atlas'],
+    ['styletrace', 'styletrace'],
+    ['virtualrs', 'virtualrs'],
+    ['virtualfs', 'virtualrs'],
+    ['runtime', 'runtime'],
+    ['shared', 'runtime'],
+  ])
+
+  // Validation: --update-goldens is only valid for system fixtures
+  if (hasUpdateGoldens) {
+    if (testFilter && testFilter !== 'system' && KNOWN_MODULES.has(testFilter)) {
+      console.error(
+        `\n\x1b[1;31m[agent-rs] Error: --update-goldens is only supported for the 'system' harness. '${testFilter}' does not use golden snapshots.\x1b[0m\n`
+      )
+      return 1
+    }
+  }
+
   const vitestArgs = ['exec', 'vitest', watch ? 'watch' : 'run']
 
-  if (testFilter) {
+  if (testFilter && KNOWN_MODULES.has(testFilter)) {
+    const projectName = KNOWN_MODULES.get(testFilter)
+    vitestArgs.push('--project', projectName)
+  } else if (testFilter) {
     vitestArgs.push(testFilter)
   }
+
   if (testNameIdx !== -1 && args[testNameIdx + 1]) {
     vitestArgs.push('-t', args[testNameIdx + 1])
+  }
+
+  if (hasUpdateGoldens) {
+    vitestArgs.push('--', '--update-goldens')
   }
 
   console.log(`\n\x1b[1;36m[agent-rs] Running Vitest: pnpm ${vitestArgs.join(' ')}\x1b[0m\n`)
@@ -383,10 +421,13 @@ async function runStatus(repoRoot, rsDir) {
   console.log(`• clippy: ${clippyVer}`)
 
   // 2. Native addon status
-  const nativeDir = path.join(rsDir, 'native')
+  const distNativeDir = path.join(rsDir, 'dist', 'native')
+  const legacyNativeDir = path.join(rsDir, 'native')
   let nativeAddons = []
-  if (fs.existsSync(nativeDir)) {
-    nativeAddons = fs.readdirSync(nativeDir).filter((f) => f.endsWith('.node'))
+  if (fs.existsSync(distNativeDir)) {
+    nativeAddons = fs.readdirSync(distNativeDir).filter((f) => f.endsWith('.node'))
+  } else if (fs.existsSync(legacyNativeDir)) {
+    nativeAddons = fs.readdirSync(legacyNativeDir).filter((f) => f.endsWith('.node'))
   }
   console.log(`• Native Addon (.node): ${nativeAddons.length > 0 ? nativeAddons.join(', ') : 'None built (run pnpm agentrs build)'}`)
 
@@ -419,7 +460,7 @@ function printHelp() {
   \x1b[32mhelp, --help\x1b[0m               Show this help message
 
 \x1b[1mOPTIONS FOR 'quality':\x1b[0m
-  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. crates/system/src/extract/sites.rs)
+  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. modules/system/src/extract/sites.rs)
   \x1b[33m--changed, --staged\x1b[0m        Inspect only files modified according to git status
   \x1b[33m--strict\x1b[0m                   Strict mode: exit with failure if ANY warning or file > 365 lines occurs
   \x1b[33m--clippy\x1b[0m                   Include cargo clippy cognitive complexity JSON diagnostics
@@ -489,12 +530,12 @@ async function main() {
   if (command === 'fmt' || command === 'f') {
     console.log('\n\x1b[1;36m[agent-rs] Formatting Rust and TypeScript...\x1b[0m')
     await runChild('cargo', ['fmt', '--all'], rsDir)
-    await runChild('pnpm', ['exec', 'prettier', '--write', 'js/**/*', 'tests/**/*'], rsDir)
+    await runChild('pnpm', ['exec', 'prettier', '--write', 'modules/*/js/**/*', 'modules/*/tests/**/*', 'runtime/**/*'], rsDir)
     console.log('\x1b[32m✔ Formatting complete.\x1b[0m\n')
     process.exit(0)
   }
 
-  // Direct file or path targeting: e.g. pnpm agentrs crates/system/src/extract/sites.rs
+  // Direct file or path targeting: e.g. pnpm agentrs modules/system/src/extract/sites.rs
   if (command.includes('/') || command.endsWith('.rs') || command.endsWith('.ts') || command.endsWith('.tsx') || command.endsWith('.js') || command.endsWith('.mjs')) {
     const code = await runQualityCommand(args, repoRoot, rsDir)
     process.exit(code)

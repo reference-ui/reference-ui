@@ -16,31 +16,38 @@ Dedicated high-level workflow, dev loop, and verification runner for **`packages
 ```
 packages/reference-rs/
 ├── Cargo.toml            # Rust workspace manifest
-├── crates/               # Pure Rust domain crates (no Node dependencies)
-│   ├── napi/             # N-API bridge crate (#[napi] bindings only)
-│   └── <domain>/         # Focused domain crates
-├── js/                   # TypeScript runtime wrappers & public API
-├── tests/                # Seam Vitest suite (fixtures, contracts, wrappers)
-└── native/               # Compiled .node binary artifacts
+├── native/               # N-API bridge crate (#[napi] bindings only cdylib)
+├── runtime/              # JS shared loader, native client, packaging tools
+├── shared/               # Shared oxc helpers crate
+└── modules/              # Product modules only
+    ├── system/           # System compiler (Rust crate + canon + JS compile() + tests)
+    ├── tasty/            # Tasty module (Rust crate + JS API + tests)
+    ├── atlas/            # Atlas module (Rust crate + JS API + tests)
+    ├── styletrace/       # Styletrace module (Rust crate + JS API + tests)
+    └── virtualrs/        # Virtual transforms crate & tests
 ```
 
-### Layer Responsibilities
-1. **Domain Crates (`crates/*`)**: Pure Rust implementations of data structures, algorithms, and core domain logic. Zero Node or V8 dependencies.
-2. **N-API Bridge (`crates/napi`)**: Thin, safe boundary using `napi-rs` to expose domain crates to JavaScript.
-3. **TypeScript Runtime (`js/`)**: High-level developer-facing APIs, ergonomics, and type exports wrapping the `.node` addon.
-4. **Scope Discipline**: When assigned to work on a specific crate or module, **do not touch out-of-scope crates**. Many legacy crates exist with different historical standards; keep changes tightly focused on your target scope.
+### Layer & Module Responsibilities
+1. **Modules (`modules/system/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`, `modules/virtualrs/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
+2. **N-API Switchboard (`native/`)**: The sole `cdylib` native addon exposing module capabilities to Node.js via `napi-rs`.
+3. **Runtime & Tools (`runtime/`)**: Addon loader, platform detection, packaging, and binary artifact distribution scripts.
+4. **Scope Discipline**: When assigned to work on a specific module, keep changes focused on your target scope.
 
 ---
 
-## 1. Seam Testing Philosophy: Seams vs Internals
+## 1. Testing Philosophy: Per-Module Harnesses
 
-We test at two complementary levels:
+Do **not** hunt for one harness. Each module has different testing needs:
 
-| Layer | Runner | Command | Purpose |
+| Module | What a test is | Harness & Outputs | Command |
 | --- | --- | --- | --- |
-| **Seam & Wrapper Tests** | Vitest | `pnpm agentrs v [pattern]` | Validates how Rust code survives packaging through N-API and public JS/TS wrappers. Fast end-to-end interface validation. |
-| **Domain Unit Tests** | Cargo | `pnpm agentrs c [crate]` | Tests internal domain logic, data structures, and edge cases directly in pure Rust. |
-| **Full Dev Loop** | Full Pipeline | `pnpm agentrs t` | Complete verification (build → cargo → vitest → quality) in under 5 seconds. |
+| **system** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v system` |
+| **tasty** | scan types, emit modules, assert API | `output/` regenerated on suite setup; `api.test.ts` is intent. | `pnpm agentrs v tasty` |
+| **atlas** | analyze an app, named assertions | `api.test.ts` is the case; `analysis.json` is inspection. | `pnpm agentrs v atlas` |
+| **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. | `pnpm agentrs v styletrace` |
+| **native / runtime** | loader, exports exist | Smoke only. | `pnpm agentrs v runtime` |
+| **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
+| **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
 
 ---
 
@@ -146,15 +153,23 @@ The runner is mapped to `pnpm agentrs` (with shortcuts `pnpm agent:rs` and `pnpm
 # 1. Environment health, toolchain, and CPU gate locks:
 pnpm agentrs s                                               # alias: status
 
-# 2. Fast Seam Testing (Vitest against N-API and TS wrappers):
-pnpm agentrs v                                               # alias: vt, vitest (runs all)
-pnpm agentrs v tests/system/cases/smoke.test.ts              # target single test file
-pnpm agentrs v -t "contract"                                 # filter by test describe/it pattern
+# 2. Per-Module Vitest Seam Testing:
+pnpm agentrs v                                               # runs all module test suites (isolated projects)
+pnpm agentrs v system                                        # runs ONLY system tests (never runs tasty setup)
+pnpm agentrs v tasty                                         # runs ONLY tasty tests
+pnpm agentrs v atlas                                         # runs ONLY atlas tests
+pnpm agentrs v styletrace                                    # runs ONLY styletrace tests
+pnpm agentrs v system --update-goldens                       # updates system golden snapshots (CLI only, never env var)
+pnpm agentrs v <path-to-test>                                # target specific test file
+pnpm agentrs v -t "<pattern>"                                # filter by describe/it pattern
 pnpm agentrs v --watch                                       # watch mode
 
 # 3. Fast Rust Testing (cargo test):
 pnpm agentrs c                                               # alias: cargo, ct (runs workspace)
 pnpm agentrs c system                                        # auto-detects crate (-p system)
+pnpm agentrs c tasty                                         # -p tasty
+pnpm agentrs c atlas                                         # -p atlas
+pnpm agentrs c styletrace                                    # -p styletrace
 pnpm agentrs c <crate> -t "<pattern>"                        # crate + test filter
 
 # 4. Code Quality & Comment Check (MANDATORY after every generation):

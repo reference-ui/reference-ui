@@ -11,7 +11,7 @@
 
 import type { WorkspacePackage } from '../types.js'
 import type { BuildRegistryArtifacts } from '../types.js'
-import type { VirtualNativeTarget } from '../../../../packages/reference-rs/js/shared/targets.js'
+import type { VirtualNativeTarget } from '../../../../packages/reference-rs/runtime/shared/targets.js'
 import { computePackageBuildHashes } from '../cache.js'
 import { logSkip } from '../../lib/log/index.js'
 import {

@@ -7,7 +7,7 @@
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { VirtualNativeTarget } from '../../../../../packages/reference-rs/js/shared/targets.js'
+import type { VirtualNativeTarget } from '../../../../../packages/reference-rs/runtime/shared/targets.js'
 
 const runnerDir = dirname(fileURLToPath(import.meta.url))
 

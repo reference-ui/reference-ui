@@ -18,7 +18,6 @@ cosmos-export
 *.node
 *.inputs.sha256
 *.sha256
-packages/reference-rs/native/
 
 # IDE
 .cursor/*

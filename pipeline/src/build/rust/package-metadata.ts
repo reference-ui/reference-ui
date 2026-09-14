@@ -10,7 +10,7 @@ import type { BuildPackageJsonOverride } from '../types.js'
 import {
   getVirtualNativePackageName,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
-} from '../../../../packages/reference-rs/js/shared/targets.js'
+} from '../../../../packages/reference-rs/runtime/shared/targets.js'
 
 export interface ReferenceRustTargetPackageValidationOptions {
   rootVersion: string
