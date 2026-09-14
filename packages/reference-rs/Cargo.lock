@@ -52,10 +52,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "atomic"
+version = "0.1.0"
+dependencies = [
+ "canon",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_ast_visit",
+ "oxc_parser",
+ "oxc_span",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "styletrace",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
+
+[[package]]
+name = "base_system"
+version = "0.1.0"
 
 [[package]]
 name = "bit-set"
@@ -93,6 +114,10 @@ name = "bumpalo"
 version = "3.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb"
+
+[[package]]
+name = "canon"
+version = "0.1.0"
 
 [[package]]
 name = "castaway"
@@ -1005,13 +1030,13 @@ name = "reference-virtual-native"
 version = "0.1.0"
 dependencies = [
  "atlas",
+ "atomic",
  "napi",
  "napi-build",
  "napi-derive",
  "serde",
  "serde_json",
  "styletrace",
- "system",
  "tasty",
  "virtualrs",
 ]
@@ -1234,22 +1259,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "system"
-version = "0.1.0"
-dependencies = [
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_parser",
- "oxc_span",
- "rustc-hash",
- "serde",
- "serde_json",
- "smallvec",
- "styletrace",
-]
-
-[[package]]
 name = "tasty"
 version = "0.1.0"
 dependencies = [
@@ -1344,6 +1353,10 @@ dependencies = [
  "syn",
  "termcolor",
 ]
+
+[[package]]
+name = "typegen"
+version = "0.1.0"
 
 [[package]]
 name = "unarray"

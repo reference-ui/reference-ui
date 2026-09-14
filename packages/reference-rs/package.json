@@ -43,6 +43,10 @@
       "types": "./dist/styletrace.d.ts",
       "import": "./dist/styletrace.mjs"
     },
+    "./atomic": {
+      "types": "./dist/atomic.d.ts",
+      "import": "./dist/atomic.mjs"
+    },
     "./system": {
       "types": "./dist/system.d.ts",
       "import": "./dist/system.mjs"
@@ -59,7 +63,7 @@
   "scripts": {
     "agentrs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
     "rs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
-    "canon": "pnpm exec tsx ./modules/system/canon/generate.ts",
+    "canon": "pnpm exec tsx ./modules/canon/generate/generate.ts",
     "artifacts": "pnpm exec napi artifacts --output-dir dist/artifacts --npm-dir dist/npm",
     "build": "pnpm run ensure-native && pnpm run build:js",
     "build:js": "tsup && tsc -p tsconfig.build.json && node ./modules/runtime/js/tools/create-dts-entrypoints.mjs",

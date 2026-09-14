@@ -1,0 +1,6 @@
+[package]
+name = "typegen"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Token unions and StyleProps .d.ts from a base system plus canon"

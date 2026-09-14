@@ -16,7 +16,7 @@ virtualrs = { workspace = true }
 atlas = { workspace = true }
 tasty = { workspace = true }
 styletrace = { workspace = true }
-system = { workspace = true }
+atomic = { workspace = true }
 
 [build-dependencies]
 napi-build = { workspace = true }

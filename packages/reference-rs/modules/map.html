@@ -360,24 +360,24 @@
               <button class="mod" data-id="base-system" data-lit="base-system">
                 <strong>base-system</strong>
                 <small>The definition. Consumes the fragment dump from TypeScript — does not evaluate author JS. Tokens, fonts, keyframes, globals, declared recipes. What extends / layers pass around.</small>
-                <div class="path">not a crate yet · core writes the artefact today</div>
+                <div class="path">modules/base-system · crate stub</div>
               </button>
               <button class="mod" data-id="atomic" data-lit="atomic">
                 <strong>atomic</strong>
                 <small>Extract → atoms → stylesheet + class map. One namer. Does not own Div. Does not emit StyleProps.</small>
-                <div class="path">today: modules/system</div>
+                <div class="path">modules/atomic</div>
               </button>
               <button class="mod" data-id="typegen" data-lit="typegen">
                 <strong>typegen</strong>
                 <small>.d.ts from the base system + canon. Token unions, recipe variants. Not a jsx farm.</small>
-                <div class="path">not a crate yet</div>
+                <div class="path">modules/typegen · crate stub</div>
               </button>
             </div>
             <div class="mods mods-2">
               <button class="mod" data-id="canon" data-lit="canon">
                 <strong>canon</strong>
                 <small>The language: tags, CSS properties, mt / bg / r / conditions. Not this package’s tokens.</small>
-                <div class="path">nested under system · candidate sibling</div>
+                <div class="path">modules/canon</div>
               </button>
               <button class="mod" data-id="styletrace" data-lit="styletrace">
                 <strong>styletrace</strong>
@@ -397,7 +397,7 @@
         <h2>The stack</h2>
         <div class="meta">TypeScript above the cut. Rust below.</div>
         <p>The engine emits two things: <code>styles.css</code> and types. Above that dotted line is TypeScript land — a build-time layer (<code>tokens()</code>, <code>font()</code>, <code>keyframes()</code>, <code>globalCss()</code>, sitting on fragments) and a runtime layer (<code>css()</code>, <code>recipe()</code>). Primitives sit on the runtime. Fragments stay in JS: authors write real TypeScript. Rust consumes the dump; it does not run the files.</p>
-        <p class="hint">Hover a function to see which module it rests on. tasty, atlas, virtualrs, and <code>modules/runtime</code> (the .node loader) are other products — not this engine.</p>
+        <p class="hint">Hover a function to see which module it rests on. Written plan: <code>docs/atomic.md</code>. tasty, atlas, virtualrs, and <code>modules/runtime</code> (the .node loader) are other products — not this engine.</p>
         </div>
         <div class="rail" aria-hidden="true"><div class="thumb"></div></div>
       </aside>
@@ -519,18 +519,20 @@
               <li>Atomic asks: is <code>n300</code> a token, what’s the CSS value, what recipes exist.</li>
               <li>Typegen asks the same questions for unions.</li>
               <li><code>compile()</code> does not take one yet. That is the missing contract.</li>
-              <li>Today core’s <code>system/base</code> writes <code>baseSystem.mjs</code>. This module is that artefact, owned.</li>
+              <li>Today core’s <code>system/base</code> writes <code>baseSystem.mjs</code>. This crate is the owned artefact — stub until <code>compile()</code> takes one.</li>
+              <li>Verify: <code>pnpm agentrs c base_system</code>.</li>
             </ul>`
         },
         atomic: {
           title: 'atomic',
-          meta: 'Rust module · today modules/system',
+          meta: 'Rust module · modules/atomic',
           body: `
             <p>Want → Atom → AtomSet. Extract both ternary branches (no JS eval). Resolve rhythm, shorthands, conditions. One namer for the sheet and the class map.</p>
             <ul>
               <li>Outputs: <code>styles.css</code>, class map, recipe tables.</li>
               <li>Does not collect <code>tokens()</code>. Does not emit <code>StyleProps</code>. Does not own <code>Div</code>.</li>
-              <li>Rename <code>modules/system</code> → <code>modules/atomic</code> when this crate is next opened.</li>
+              <li>Was <code>modules/system</code>. Live wire from core is still <code>@reference-ui/rust/system</code>.</li>
+              <li>Verify: <code>pnpm agentrs c atomic</code> · <code>pnpm agentrs v atomic</code>.</li>
             </ul>`
         },
         typegen: {
@@ -541,6 +543,7 @@
             <ul>
               <li>Language (Rust vs TypeScript) is a later call. The <em>input</em> is the base system either way.</li>
               <li>Panda v2’s type printer exists so their generated <code>css()</code> cannot drift from the editor types. We author <code>css()</code>; we still generate the unions.</li>
+              <li>Crate stub. Verify: <code>pnpm agentrs c typegen</code>.</li>
             </ul>`
         },
         canon: {
@@ -550,7 +553,8 @@
             <p>Platform + dialect. What tags and CSS properties exist. <code>mt</code> means <code>marginTop</code>. <code>r</code>, <code>container</code>, conditions. Generated from <code>@webref</code> plus a Reference dialect.</p>
             <ul>
               <li>A base system is an utterance (this package’s tokens). Canon is the language.</li>
-              <li>Atomic, typegen, and styletrace all need it. Candidate sibling so they do not import the stylesheet crate to ask “is <code>mt</code> a style prop?”</li>
+              <li>Atomic, typegen, and styletrace all need it. Sibling crate so they do not import the stylesheet crate to ask “is <code>mt</code> a style prop?”</li>
+              <li>Verify: <code>pnpm agentrs c canon</code>. Refine this first.</li>
             </ul>`
         },
         styletrace: {

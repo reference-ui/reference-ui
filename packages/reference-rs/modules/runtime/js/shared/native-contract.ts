@@ -5,7 +5,7 @@
  */
 import { ATLAS_NATIVE_EXPORTS } from '../../../atlas/js/runtime'
 import { STYLETRACE_NATIVE_EXPORTS } from '../../../styletrace/js/runtime'
-import { SYSTEM_NATIVE_EXPORTS } from '../../../system/js/runtime'
+import { ATOMIC_NATIVE_EXPORTS } from '../../../atomic/js/runtime'
 import { TASTY_NATIVE_EXPORTS } from '../../../tasty/js/runtime'
 import { VIRTUALRS_NATIVE_EXPORTS } from '../../../virtualrs/js/runtime'
 
@@ -21,7 +21,7 @@ function composeNativeExports(): readonly string[] {
   const list = [...HOST_NATIVE_EXPORTS]
   appendExports(list, ATLAS_NATIVE_EXPORTS)
   appendExports(list, STYLETRACE_NATIVE_EXPORTS)
-  appendExports(list, SYSTEM_NATIVE_EXPORTS)
+  appendExports(list, ATOMIC_NATIVE_EXPORTS)
   appendExports(list, TASTY_NATIVE_EXPORTS)
   appendExports(list, VIRTUALRS_NATIVE_EXPORTS)
   return list

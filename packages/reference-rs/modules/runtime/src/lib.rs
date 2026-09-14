@@ -11,8 +11,8 @@ use napi_derive::napi;
 mod atlas;
 #[path = "../../styletrace/native.rs"]
 mod styletrace;
-#[path = "../../system/native.rs"]
-mod system;
+#[path = "../../atomic/native.rs"]
+mod atomic;
 #[path = "../../tasty/native.rs"]
 mod tasty;
 #[path = "../../virtualrs/native.rs"]

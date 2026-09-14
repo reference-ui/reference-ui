@@ -146,16 +146,16 @@ Follow `.agents/skills/agent-rs/SKILL.md` whenever you work in `packages/referen
 ```bash
 # Per-module seam verification (Vitest against N-API / TS wrappers):
 pnpm agentrs v                                               # all module vitest suites
-pnpm agentrs v system                                        # ONLY system tests (never runs tasty setup)
+pnpm agentrs v atomic                                        # ONLY atomic tests (never runs tasty setup)
 pnpm agentrs v tasty                                         # ONLY tasty tests
 pnpm agentrs v atlas                                         # ONLY atlas tests
 pnpm agentrs v styletrace                                    # ONLY styletrace tests
-pnpm agentrs v system --update-goldens                       # updates system golden snapshots (CLI only, never env var)
+pnpm agentrs v atomic --update-goldens                       # updates atomic golden snapshots (CLI only, never env var)
 pnpm agentrs v <test-path>                                   # target single file
 
 # Fast domain Rust verification (cargo test):
 pnpm agentrs c                                               # all workspace tests
-pnpm agentrs c system                                        # auto-detects crate (-p system)
+pnpm agentrs c atomic                                        # auto-detects crate (-p atomic)
 pnpm agentrs c tasty                                         # -p tasty
 pnpm agentrs c atlas                                         # -p atlas
 pnpm agentrs c styletrace                                    # -p styletrace

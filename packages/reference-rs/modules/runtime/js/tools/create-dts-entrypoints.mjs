@@ -17,7 +17,8 @@ const entrypoints = [
   { file: 'tasty/build.d.ts', target: '../modules/tasty/js/build' },
   { file: 'atlas.d.ts', target: './modules/atlas/js/index' },
   { file: 'styletrace.d.ts', target: './modules/styletrace/js/index' },
-  { file: 'system.d.ts', target: './modules/system/js/index' },
+  { file: 'atomic.d.ts', target: './modules/atomic/js/index' },
+  { file: 'system.d.ts', target: './modules/atomic/js/index' },
 ]
 
 for (const { file, target } of entrypoints) {

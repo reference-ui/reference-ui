@@ -20,7 +20,10 @@ packages/reference-rs/
 ├── runtime/              # JS shared loader, native client, packaging tools
 ├── shared/               # Shared oxc helpers crate
 └── modules/              # Product modules only
-    ├── system/           # System compiler (Rust crate + canon + JS compile() + tests)
+    ├── atomic/           # Atomic CSS compiler (was system; Rust crate + JS compile() + tests)
+    ├── canon/            # Platform + dialect dictionary (@webref join)
+    ├── base-system/      # Design-system definition (fragment dump)
+    ├── typegen/          # Token unions / StyleProps .d.ts
     ├── tasty/            # Tasty module (Rust crate + JS API + tests)
     ├── atlas/            # Atlas module (Rust crate + JS API + tests)
     ├── styletrace/       # Styletrace module (Rust crate + JS API + tests)
@@ -28,7 +31,7 @@ packages/reference-rs/
 ```
 
 ### Layer & Module Responsibilities
-1. **Modules (`modules/system/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`, `modules/virtualrs/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
+1. **Modules (`modules/atomic/`, `modules/canon/`, `modules/base-system/`, `modules/typegen/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`, `modules/virtualrs/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
 2. **N-API Switchboard (`native/`)**: The sole `cdylib` native addon exposing module capabilities to Node.js via `napi-rs`.
 3. **Runtime & Tools (`runtime/`)**: Addon loader, platform detection, packaging, and binary artifact distribution scripts.
 4. **Scope Discipline**: When assigned to work on a specific module, keep changes focused on your target scope.
@@ -41,7 +44,10 @@ Do **not** hunt for one harness. Each module has different testing needs:
 
 | Module | What a test is | Harness & Outputs | Command |
 | --- | --- | --- | --- |
-| **system** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v system` |
+| **atomic** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v atomic` |
+| **canon** | dictionary membership | Cargo unit tests on generated tables. Generator join is `pnpm canon`. | `pnpm agentrs c canon` |
+| **base-system** | definition artefact | Cargo unit tests. Stub until `compile()` takes a base system. | `pnpm agentrs c base_system` |
+| **typegen** | `.d.ts` unions | Cargo unit tests. Stub until the union printer exists. | `pnpm agentrs c typegen` |
 | **tasty** | scan types, emit modules, assert API | `output/` regenerated on suite setup; `api.test.ts` is intent. | `pnpm agentrs v tasty` |
 | **atlas** | analyze an app, named assertions | `api.test.ts` is the case; `analysis.json` is inspection. | `pnpm agentrs v atlas` |
 | **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. | `pnpm agentrs v styletrace` |
@@ -155,18 +161,19 @@ pnpm agentrs s                                               # alias: status
 
 # 2. Per-Module Vitest Seam Testing:
 pnpm agentrs v                                               # runs all module test suites (isolated projects)
-pnpm agentrs v system                                        # runs ONLY system tests (never runs tasty setup)
+pnpm agentrs v atomic                                        # runs ONLY atomic tests (never runs tasty setup)
 pnpm agentrs v tasty                                         # runs ONLY tasty tests
 pnpm agentrs v atlas                                         # runs ONLY atlas tests
 pnpm agentrs v styletrace                                    # runs ONLY styletrace tests
-pnpm agentrs v system --update-goldens                       # updates system golden snapshots (CLI only, never env var)
+pnpm agentrs v atomic --update-goldens                       # updates atomic golden snapshots (CLI only, never env var)
 pnpm agentrs v <path-to-test>                                # target specific test file
 pnpm agentrs v -t "<pattern>"                                # filter by describe/it pattern
 pnpm agentrs v --watch                                       # watch mode
 
 # 3. Fast Rust Testing (cargo test):
 pnpm agentrs c                                               # alias: cargo, ct (runs workspace)
-pnpm agentrs c system                                        # auto-detects crate (-p system)
+pnpm agentrs c atomic                                        # auto-detects crate (-p atomic)
+pnpm agentrs c canon                                         # -p canon
 pnpm agentrs c tasty                                         # -p tasty
 pnpm agentrs c atlas                                         # -p atlas
 pnpm agentrs c styletrace                                    # -p styletrace
