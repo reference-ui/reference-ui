@@ -4,6 +4,8 @@
 
 use oxc_span::Span;
 
+pub mod testing;
+
 /// Slice a span from source text, safely clamped to bounds.
 #[inline]
 pub fn slice_span(source: &str, span: Span) -> &str {

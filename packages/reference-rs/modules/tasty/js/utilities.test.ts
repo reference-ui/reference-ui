@@ -2,7 +2,8 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import { describe, expect, it } from 'vitest'
+import { join } from 'node:path'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import {
   createTastyApi,
@@ -13,17 +14,25 @@ import {
   getTastyTypeInlineVariants,
   getTastyTypeSemanticKind,
 } from './index'
-
-const baseDir = new URL('../tests/cases/', import.meta.url)
+import { caseRuntimeDir, ensureTastyCaseCompiled } from '../tests/helpers.js'
 
 function manifestPath(caseName: string): string {
-  return new URL(`./${caseName}/output/manifest.js`, baseDir).pathname
+  return join(caseRuntimeDir(caseName), 'manifest.js')
 }
 
 describe('tasty utilities', () => {
+  beforeAll(async () => {
+    await Promise.all([
+      ensureTastyCaseCompiled('TST-DOC-01-jsdoc'),
+      ensureTastyCaseCompiled('TST-SIG-01-signatures'),
+      ensureTastyCaseCompiled('TST-EXT-01-external-libs'),
+      ensureTastyCaseCompiled('TST-VAL-01-value-resolution'),
+    ])
+  })
+
   it('builds useful member utilities for jsdoc-rich interfaces', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('jsdoc'),
+      manifestPath: manifestPath('TST-DOC-01-jsdoc'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -41,7 +50,7 @@ describe('tasty utilities', () => {
 
   it('formats function signatures and parameter details for callback members', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('signatures'),
+      manifestPath: manifestPath('TST-SIG-01-signatures'),
     })
 
     const withCallback = await api.loadSymbolByName('WithCallback')
@@ -62,7 +71,7 @@ describe('tasty utilities', () => {
 
   it('classifies constructor-like members without inventing missing signature data', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('signatures'),
+      manifestPath: manifestPath('TST-SIG-01-signatures'),
     })
 
     const constructible = await api.loadSymbolByName('Constructible')
@@ -74,7 +83,7 @@ describe('tasty utilities', () => {
 
   it('exposes neutral semantic kinds for members and types', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('jsdoc'),
+      manifestPath: manifestPath('TST-DOC-01-jsdoc'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -87,10 +96,10 @@ describe('tasty utilities', () => {
 
   it('collects inline variants for literal, boolean, and callable types', async () => {
     const jsdocApi = createTastyApi({
-      manifestPath: manifestPath('jsdoc'),
+      manifestPath: manifestPath('TST-DOC-01-jsdoc'),
     })
     const signaturesApi = createTastyApi({
-      manifestPath: manifestPath('signatures'),
+      manifestPath: manifestPath('TST-SIG-01-signatures'),
     })
 
     const buttonProps = await jsdocApi.loadSymbolByName('ButtonProps')
@@ -106,7 +115,7 @@ describe('tasty utilities', () => {
 
   it('keeps utility helpers aligned with member and graph methods', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('external_libs'),
+      manifestPath: manifestPath('TST-EXT-01-external-libs'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -118,7 +127,7 @@ describe('tasty utilities', () => {
 
   it('surfaces resolved value-derived types without losing the declared wrapper shape', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('value_resolution'),
+      manifestPath: manifestPath('TST-VAL-01-value-resolution'),
     })
 
     const intentKey = await api.loadSymbolByName('IntentKey')

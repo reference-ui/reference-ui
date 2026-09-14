@@ -1,0 +1,31 @@
+{
+  "modules": [
+    "./chunk-registry.js",
+    "./chunks/_04aec16b71509a65.js",
+    "./chunks/_04ef956b7187e62b.js",
+    "./chunks/_0bf810caf57882a9.js",
+    "./chunks/_2dc9093c3a3d6d41.js",
+    "./chunks/_3031799211148c60.js",
+    "./chunks/_3579cd5c0d8d57b5.js",
+    "./chunks/_36c782771712e2b0.js",
+    "./chunks/_36d3be91845b859c.js",
+    "./chunks/_4905d8c4933f7211.js",
+    "./chunks/_4b35a1d5377e2da3.js",
+    "./chunks/_621025772f95230c.js",
+    "./chunks/_6ffd686c789a1313.js",
+    "./chunks/_7f336cb6e4b225b8.js",
+    "./chunks/_9e91913203f01116.js",
+    "./chunks/_a89e725b5d9411b8.js",
+    "./chunks/_ae2e1cb9bf099d06.js",
+    "./chunks/_b301ab69f00718ba.js",
+    "./chunks/_ce091dfa0911544a.js",
+    "./chunks/_d1504e946c6d1678.js",
+    "./chunks/_f1f14eb73bd5c71c.js",
+    "./manifest.js",
+    "./runtime.js"
+  ],
+  "declarations": [
+    "./manifest.d.ts",
+    "./runtime.d.ts"
+  ]
+}

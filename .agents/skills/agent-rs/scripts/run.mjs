@@ -352,14 +352,13 @@ async function runVitestTests(args, rsDir) {
     ['shared', 'runtime'],
   ])
 
-  // Validation: --update-goldens is only valid for atomic fixtures
-  if (hasUpdateGoldens) {
-    if (testFilter && testFilter !== 'atomic' && testFilter !== 'system' && KNOWN_MODULES.has(testFilter)) {
-      console.error(
-        `\n\x1b[1;31m[agent-rs] Error: --update-goldens is only supported for the 'atomic' harness. '${testFilter}' does not use golden snapshots.\x1b[0m\n`
-      )
-      return 1
-    }
+  // Validation: --update-goldens is supported for station harnesses
+  const GOLDEN_SUPPORTED_MODULES = new Set(['atomic', 'system', 'virtualrs', 'virtualfs', 'atlas', 'tasty'])
+  if (hasUpdateGoldens && testFilter && KNOWN_MODULES.has(testFilter) && !GOLDEN_SUPPORTED_MODULES.has(testFilter)) {
+    console.error(
+      `\n\x1b[1;31m[agent-rs] Error: --update-goldens is not supported for '${testFilter}'. Supported modules: ${[...GOLDEN_SUPPORTED_MODULES].join(', ')}\x1b[0m\n`
+    )
+    return 1
   }
 
   const vitestArgs = ['exec', 'vitest', watch ? 'watch' : 'run']

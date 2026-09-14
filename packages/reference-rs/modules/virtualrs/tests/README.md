@@ -1,18 +1,15 @@
-# Virtualfs tests
+# VirtualRS Tests
 
 This suite uses Vitest plus the compiled N-API addon to exercise the published
-virtual rewrite API end to end.
+virtual rewrite API end to end using declarative station suites.
 
 ## Layout
 
-- `cases/` contains one folder per rewrite scenario.
-- Each case contains `case.json`, `input.tsx`, `expected.tsx`, and `rewrite.test.ts`.
-- `globalSetup.ts` runs the real native API, writes `output/result.tsx`, and
-  records `output/perf-metrics.txt`.
+- `cases/` contains standardized `VRT-*` station folders.
+- Each station contains `case.json`, `input/input.tsx`, `output/expected.tsx`, `spec.ts`, and `README.md`.
+- `cases.test.ts` executes on-demand transforms without globalSetup or ephemeral disk writes.
+- `helpers.ts` provides the runner interface and compiles individual stations.
 
-These tests are intentionally lighter than the Rust unit suite. They verify that
-the JavaScript runtime is successfully loading and calling the native addon with
-real fixture input.
+These tests verify that the JavaScript runtime successfully loads and calls the native addon with
+real fixture input, matching committed goldens and passing domain semantic specs.
 
-`case.json` may also include API-specific fields such as `fromName` and `toName`
-for the generic `replaceFunctionName` transform.

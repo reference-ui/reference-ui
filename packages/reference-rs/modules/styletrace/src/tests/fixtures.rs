@@ -4,49 +4,9 @@
 //! Emits path structures and environment contexts that tests can use for verification.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::path::PathBuf;
 
-pub(super) struct ScratchDir {
-    path: PathBuf,
-}
-
-impl ScratchDir {
-    pub(super) fn new(name: &str) -> Self {
-        Self::new_in(&std::env::temp_dir(), name, "reference-rs-styletrace")
-    }
-
-    pub(super) fn new_in(base_dir: &Path, name: &str, prefix: &str) -> Self {
-        let stamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("expected current time")
-            .as_nanos();
-        let path = base_dir.join(format!(
-            "{prefix}-{name}-{}-{stamp}",
-            std::process::id()
-        ));
-        fs::create_dir_all(&path).expect("expected scratch dir to be created");
-        Self { path }
-    }
-
-    pub(super) fn write(&self, relative_path: &str, content: &str) {
-        let file_path = self.path.join(relative_path);
-        if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent).expect("expected parent dir to be created");
-        }
-        fs::write(file_path, content).expect("expected fixture file to be written");
-    }
-
-    pub(super) fn root(&self) -> &Path {
-        &self.path
-    }
-}
-
-impl Drop for ScratchDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
-    }
-}
+pub(super) type ScratchDir = shared::testing::ScratchWorkspace;
 
 
 pub(super) fn workspace_fixture_dir(relative_path: &str) -> PathBuf {

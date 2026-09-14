@@ -1,15 +1,13 @@
 /**
- * Test file.
- * This file provides coverage for the respective domain.
- * It inputs test cases and emits test results.
+ * Test fixture generators and trace helpers for the styletrace test suite.
+ * Provides virtual workspace fixtures with mock node_modules packages and barrels.
+ * Executes the styletrace traversal pass across local and external component graphs.
  */
-
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 import { trace } from '../js/index'
+import { createVirtualWorkspace } from '../../../testing/index.js'
 
 const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
 const REFERENCE_RS_DIR = path.resolve(TESTS_STYLETRACE_DIR, '../../..')
@@ -204,11 +202,7 @@ export function resolveLabel(label: string) {
 }
 
 export async function createSyncedWorkspaceFixture(): Promise<RuntimeFixture & { syncRootHint: string }> {
-  const scratchBaseDir = path.join(tmpdir(), 'reference-rs-styletrace-synced')
-  await mkdir(scratchBaseDir, { recursive: true })
-  const rootDir = await mkdtemp(path.join(scratchBaseDir, 'reference-rs-styletrace-synced-workspace-'))
-
-  const fixture = await writeRuntimeFixture(rootDir, {
+  const fixture = await createRuntimeFixture('synced', {
     'consumer-app/src/index.tsx': `import { Div } from '@reference-ui/react'
 
 export interface AppCardProps {
@@ -253,7 +247,7 @@ export type CssVarKeys = never
 
   return {
     ...fixture,
-    syncRootHint: path.join(rootDir, 'consumer-app'),
+    syncRootHint: path.join(fixture.rootDir, 'consumer-app'),
   }
 }
 
@@ -279,28 +273,11 @@ async function createRuntimeFixture(
   name: string,
   files: Record<string, string>,
 ): Promise<RuntimeFixture> {
-  const scratchBaseDir = path.join(WORKSPACE_ROOT, 'target', 'styletrace-js-tests')
-  await mkdir(scratchBaseDir, { recursive: true })
-  const rootDir = await mkdtemp(path.join(scratchBaseDir, `reference-rs-styletrace-${name}-`))
-
-  return writeRuntimeFixture(rootDir, files)
-}
-
-async function writeRuntimeFixture(
-  rootDir: string,
-  files: Record<string, string>,
-): Promise<RuntimeFixture> {
-
-  for (const [relativePath, content] of Object.entries(files)) {
-    const filePath = path.join(rootDir, relativePath)
-    await mkdir(path.dirname(filePath), { recursive: true })
-    await writeFile(filePath, content, 'utf8')
-  }
-
+  const ws = await createVirtualWorkspace(files, `styletrace-${name}`)
   return {
-    rootDir,
+    rootDir: ws.rootDir,
     cleanup: async () => {
-      await rm(rootDir, { recursive: true, force: true })
+      await ws.cleanup()
     },
   }
 }
