@@ -24,17 +24,18 @@ export async function bundleFragments(
   options: BundleFragmentsOptions
 ): Promise<FragmentBundle[]> {
   const { files, alias, external = [] } = options
-  const results: FragmentBundle[] = []
   const microOptions = {
     format: 'iife' as const,
+    reactStub: true,
     ...(alias && { alias }),
     external: [...DEFAULT_EXTERNALS, ...external],
   }
-  for (const file of files) {
-    const bundle = await microBundle(file, microOptions)
-    results.push({ file, bundle })
-  }
-  return results
+  return Promise.all(
+    files.map(async file => ({
+      file,
+      bundle: await microBundle(file, microOptions),
+    }))
+  )
 }
 
 export async function bundleCollectorRuntime(
@@ -107,6 +108,7 @@ async function runSingle<TInput, TOutput>(
   mkdirSync(tempDir, { recursive: true })
 
   const microOptions = {
+    reactStub: true,
     ...(alias && { alias }),
     external: [...DEFAULT_EXTERNALS, ...external],
   }
@@ -158,7 +160,7 @@ async function runPlanner(
     const tmpPath = uniqueTmpPath(tempDir)
     initAll(collectors)
     try {
-      const bundled = await microBundle(filePath)
+      const bundled = await microBundle(filePath, { reactStub: true })
       writeFileSync(tmpPath, bundled, 'utf-8')
       await import(pathToFileURL(tmpPath).href)
       for (const c of collectors) {

@@ -65,7 +65,7 @@ describe('system/stylesheet native engine integration', () => {
     writeFileSync(join(styledDir, 'styles.css'), combinedStyles, 'utf-8')
 
     // 4. Run reference-core's postprocessor
-    const processedCss = postprocessCss(outDir, { name: 'test-system' })
+    const processedCss = postprocessCss(outDir, { name: 'test-system', include: [] })
 
     expect(processedCss).toBeDefined()
     expect(existsSync(join(styledDir, 'styles.css'))).toBe(true)

@@ -2,6 +2,8 @@
 
 General-purpose fragment collection for build-time code execution. Users call functions like `tokens()` and `recipe()` in their code; the CLI scans, bundles, executes, and collects the data they pass.
 
+Performance benchmarks & historical extractor comparison: [BENCHMARK.md](./BENCHMARK.md).
+
 ---
 
 ## High-Level API (The Magic)
@@ -225,3 +227,65 @@ Returns `T[]`.
 - **Temp files** – Created under `tempDir`, deleted after each run.
 
 - **reference-core migration** – This replaces the `extendPandaConfig`/`COLLECTOR_KEY`/`runEval` pattern. New system packages should use `createFragmentCollector` + `collectFragments` instead.
+
+- **Future incremental caching** – Feature request for file-level bundle and data caching to drive repeat runs down to ~0ms: [cache.md](./cache.md).
+
+---
+
+## Architectural Deep Dive: The Barrel Leak & Zero-Runtime Boundary
+
+### How Rhythm Leaked into Fragment Collectors (The PostCSS Barrel Trap)
+
+During benchmark profiling on 500 fragment files, we discovered that simple token files (which only contained `tokens({ colors: { ... } })`) were generating **53 KB IIFEs per file** (totalling **26.4 MB of JS** for 500 files).
+
+#### The Root Cause Chain:
+1. **The Public Surface**: `@reference-ui/system` exports both declarative fragment collectors (`tokens`, `keyframes`, `font`, `globalCss`) and helper utilities for writing theme definitions (`getRhythm(1)`).
+2. **The Bootstrap Alias**: During build-time sync/bootstrap, generated packages don't exist yet, so `microbundle` aliases `@reference-ui/system` to `packages/reference-core/src/entry/system.ts`.
+3. **The Barrel Re-Export**: In `src/entry/system.ts`, `getRhythm` was originally re-exported from the rhythm extension barrel:
+   ```ts
+   // BEFORE:
+   export { getRhythm } from '../system/panda/config/extensions/rhythm' // points to rhythm/index.ts
+   ```
+4. **The Transitive Domino Effect**:
+   - `rhythm/index.ts` imported `border.ts`, `utilities.ts`, `globals.ts`, `tokens.ts`, and `helpers.ts`.
+   - `helpers.ts` imported `postcss-value-parser`.
+   - `utilities.ts` imported `color/utilities.ts` and `shorthands/factory.ts`.
+   - Because these modules contain top-level object initializations and regex definitions, esbuild's tree-shaker could not prove they were side-effect-free.
+   - **Result**: Every fragment file (even pure token dumps) had the entire PostCSS value parser and rhythm CSS utility suite bundled into its IIFE. 500 files $\times$ 53 KB = 26.4 MB of redundant JS.
+
+#### The Architectural Fix:
+- `getRhythm` is fundamentally a pure 10-line calculation (`calc(n * var(--spacing-root))`) with **zero external dependencies**.
+- We extracted `getRhythm` into an isolated, standalone module: [`get-rhythm.ts`](../../system/panda/config/extensions/rhythm/get-rhythm.ts).
+- `src/entry/system.ts` now re-exports directly from `get-rhythm.ts`:
+   ```ts
+   // AFTER:
+   export { getRhythm } from '../system/panda/config/extensions/rhythm/get-rhythm'
+   ```
+- **Outcome**: Bundled fragment IIFEs dropped from **53 KB down to 4 KB** per file (**92% reduction in emitted code**), shrinking 500 files from 26.4 MB down to 2.6 MB and speeding up V8 eval by 12.8x.
+
+---
+
+### Zero-Runtime React Boundary (`reactStubPlugin`)
+
+In zero-runtime design systems, developers occasionally colocate token or recipe fragments inside component files (e.g. `Button.tsx`).
+
+1. **The Problem**: In `format: 'iife'`, esbuild cannot emit ESM `import` statements. If React is marked external, esbuild emits `__require("react")`, which crashes in Node ESM (`Dynamic require of "react" is not supported`). If React is NOT marked external, esbuild inlines 118–435 KB of React runtime per file into the fragment bundle!
+2. **The Fix**: `microbundle` includes [`reactStubPlugin`](../microbundle/plugins/react-stub.ts), which intercepts `react`, `react-dom`, and `react/jsx-runtime`, replacing them with an in-memory ~200-byte proxy stub covering `createElement`, `jsx`, `Fragment`, and hooks.
+3. **The Guarantee**: Component JSX and React hooks can coexist with fragment calls without loading or parsing a single byte of React runtime during build-time fragment collection.
+
+---
+
+### User Dependencies: What the Framework Guarantees vs User Code Costs
+
+It is important to understand the boundary between **framework overhead** and **user dependency costs**:
+
+1. **The Framework Guarantee (Zero Tax)**:
+   - The framework guarantees that `@reference-ui/system` imports contribute almost **zero framework bloat** (~4 KB total, zero React runtime, zero PostCSS parser).
+   - The framework guarantees concurrent multi-core bundling via `Promise.all`.
+
+2. **The User Responsibility (Heavy Dependencies)**:
+   - Because `microbundle` compiles each fragment file into an independent IIFE, **any third-party module imported by user code will be bundled into that file's IIFE**.
+   - If a user imports a heavy 150 KB color manipulation or math library (e.g. `chroma-js`, `d3`, `lodash`) inside 500 fragment files, esbuild must bundle that 150 KB library 500 times ($500 \times 150\text{ KB} = 75\text{ MB}$ of JS!).
+   - **Best Practice for Consumers**: Keep fragment files as **declarative data dumps** (`tokens()`, `recipe()`). If complex palette generation or math is needed, calculate it once in a shared theme module or precompute it, rather than importing heavy algorithmic packages across hundreds of component files.
+
+

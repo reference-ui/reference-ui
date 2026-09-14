@@ -14,7 +14,7 @@ export type {
   ReferenceTokenConfig,
   TokenConfig,
 } from '../system/api'
-export { getRhythm } from '../system/panda/config/extensions/rhythm'
+export { getRhythm } from '../system/panda/config/extensions/rhythm/get-rhythm'
 export type { StyleProps, SystemStyleObject } from '../types'
 /** Full design-system type surface (see `src/types/index.ts`). */
 export type * from '../types'

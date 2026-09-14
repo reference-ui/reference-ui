@@ -22,4 +22,8 @@ export interface MicroBundleOptions {
   conditions?: string[]
   tsconfigRaw?: esbuild.TsconfigRaw
   metafile?: boolean
+  /** Intercept react/react-dom and replace with zero-runtime proxy stub. */
+  reactStub?: boolean
+  /** Additional esbuild plugins. */
+  plugins?: esbuild.Plugin[]
 }

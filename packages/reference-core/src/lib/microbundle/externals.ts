@@ -7,4 +7,6 @@ export const DEFAULT_EXTERNALS: string[] = [
   'unconfig',
   'unrun',
   'birpc',
+  'react',
+  'react-dom',
 ]
