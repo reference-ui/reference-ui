@@ -18,11 +18,11 @@ pub use diagnostics::{Diagnostic, DiagnosticSeverity};
 pub use runtime::CssRuntime;
 pub use stylesheet::StylesheetOutput;
 
-use std::path::Path;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 use crate::atom::AtomSet;
 
@@ -42,6 +42,14 @@ pub struct CompileRequest {
     pub root_dir: Option<String>,
     #[serde(default)]
     pub files: Option<Vec<VirtualSource>>,
+    #[serde(default)]
+    pub breakpoints: Option<config::BreakpointConfig>,
+    #[serde(default)]
+    pub tokens: Option<config::TokensConfig>,
+    #[serde(default)]
+    pub fonts: Option<config::FontsConfig>,
+    #[serde(default)]
+    pub base_system: Option<config::BaseSystemConfig>,
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
@@ -57,6 +65,7 @@ pub struct CompileResult {
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
+    breakpoints: &'a config::BreakpointScale,
     wants: &'a mut Vec<Want>,
     diagnostics: &'a mut Vec<Diagnostic>,
 }
@@ -67,9 +76,12 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut wants = Vec::new();
     let mut diagnostics = Vec::new();
     let project_constants = collect_project_constants(&sources);
+    let scale = config::resolve_breakpoints(request);
+    let fonts = config::resolve_fonts(request);
 
     let mut session = ParseSession {
         constants: &project_constants,
+        breakpoints: &scale,
         wants: &mut wants,
         diagnostics: &mut diagnostics,
     };
@@ -78,9 +90,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         parse_and_extract(&mut session, path, content);
     }
 
-    let atom_set = build_atom_set(&wants);
+    let atom_set = build_atom_set(&wants, &fonts);
     let css = build_css_runtime(&atom_set);
-    let stylesheet = build_stylesheet(&atom_set);
+    let stylesheet = build_stylesheet(&atom_set, &scale);
 
     Ok(CompileResult {
         stylesheet,
@@ -165,11 +177,7 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
     project_constants
 }
 
-fn parse_and_extract(
-    session: &mut ParseSession<'_>,
-    path: &str,
-    content: &str,
-) {
+fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(Path::new(path))
         .unwrap_or_default()
@@ -179,25 +187,27 @@ fn parse_and_extract(
     let ret = parser.parse();
 
     for err in ret.errors {
-        session.diagnostics.push(Diagnostic::error(err.to_string()).with_location(path, None, None));
+        session
+            .diagnostics
+            .push(Diagnostic::error(err.to_string()).with_location(path, None, None));
     }
     if !ret.panicked {
         let mut local_constants = extract::constants::collect_local_constants(&ret.program);
         local_constants.merge(session.constants);
-        let mut ctx = extract::ExtractContext::new(
-            path,
-            &local_constants,
-            session.wants,
-            session.diagnostics,
-        );
+        let config = extract::ExtractConfig {
+            constants: &local_constants,
+            breakpoints: session.breakpoints,
+        };
+        let mut ctx =
+            extract::ExtractContext::new(path, config, session.wants, session.diagnostics);
         extract::extract_with_context(&ret.program, &mut ctx);
     }
 }
 
-fn build_atom_set(wants: &[Want]) -> AtomSet {
+fn build_atom_set(wants: &[Want], fonts: &config::FontScale) -> AtomSet {
     let mut atom_set = AtomSet::new();
     for want in wants {
-        let atoms = resolve::resolve_want(want);
+        let atoms = resolve::resolve_want_with(want, fonts);
         for atom in atoms {
             atom_set.insert(atom);
         }
@@ -220,8 +230,8 @@ fn build_css_runtime(atom_set: &AtomSet) -> CssRuntime {
     runtime
 }
 
-fn build_stylesheet(atom_set: &AtomSet) -> String {
-    stylesheet::build_stylesheet(atom_set)
+fn build_stylesheet(atom_set: &AtomSet, scale: &config::BreakpointScale) -> String {
+    stylesheet::build_stylesheet(atom_set, scale)
 }
 
 #[cfg(test)]

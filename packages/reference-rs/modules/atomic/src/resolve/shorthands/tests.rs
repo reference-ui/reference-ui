@@ -2,8 +2,8 @@
 //! Validates that shorthand decomposition strictly queries canon for longhand property definitions.
 //! Ensures no private hardcoded property slices or split-brain dictionary tables exist in atomic.
 
-use crate::atom::AtomValue;
 use super::expand_shorthand;
+use crate::atom::AtomValue;
 
 #[test]
 fn test_atomic_shorthand_tripwire() {
@@ -83,7 +83,13 @@ fn test_unknown_props_refuse_compilation() {
     use crate::atom::Want;
     use crate::resolve::resolve_want;
 
-    for unknown in &["fooBar", "invalidProp", "onClick", "unknownStyle", "dataTest"] {
+    for unknown in &[
+        "fooBar",
+        "invalidProp",
+        "onClick",
+        "unknownStyle",
+        "dataTest",
+    ] {
         let want = Want::new(*unknown, AtomValue::String("10px".into()));
         let atoms = resolve_want(&want);
         assert!(

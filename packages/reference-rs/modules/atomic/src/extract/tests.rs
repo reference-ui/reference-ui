@@ -1,16 +1,16 @@
 //! Unit tests validating AST style extraction across complex TypeScript and JSX syntax trees.
-//! Tests ternary branch flattening, logical expression analysis, responsive arrays, and call-site handling.
+//! Tests ternary branch flattening, logical expression analysis, responsive arrays, `r` objects, and call-site handling.
 //! Guarantees that compile-time analysis captures all possible runtime styling branches without executing user code.
 
 use crate::{compile, CompileRequest, VirtualSource};
 
 fn compile_code(code: &str) -> crate::CompileResult {
     let req = CompileRequest {
-        root_dir: None,
         files: Some(vec![VirtualSource {
             path: "test.tsx".to_string(),
             content: code.to_string(),
         }]),
+        ..Default::default()
     };
     compile(&req).expect("compile succeeds")
 }
@@ -33,14 +33,22 @@ fn test_flat_and_nested_ternaries() {
         "#,
     );
     assert_eq!(res.wants.len(), 2);
-    assert!(res.wants.iter().any(|w| &*w.prop == "borderBottom" && w.value.to_string() == "3px solid"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "borderBottom" && w.value.to_string() == "3px solid transparent"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "borderBottom" && w.value.to_string() == "3px solid"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "borderBottom" && w.value.to_string() == "3px solid transparent"));
     assert!(res.diagnostics.is_empty());
 }
 
 #[test]
 fn test_undefined_alternate_omitted() {
-    let res = compile_code(r#"export const Comp = ({ active }) => <Div bg={active ? 'n300' : undefined} />"#);
+    let res = compile_code(
+        r#"export const Comp = ({ active }) => <Div bg={active ? 'n300' : undefined} />"#,
+    );
     assert_eq!(res.wants.len(), 1);
     assert_eq!(&*res.wants[0].prop, "bg");
     assert_eq!(res.wants[0].value.to_string(), "n300");
@@ -60,19 +68,37 @@ fn test_logical_expressions_symmetric() {
         );
         "#,
     );
-    assert!(res.wants.iter().any(|w| &*w.prop == "border" && w.value.to_string() == "1px solid"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.value.to_string() == "red"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.value.to_string() == "blue"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "bg" && w.value.to_string() == "n200"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "border" && w.value.to_string() == "1px solid"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "red"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "blue"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "bg" && w.value.to_string() == "n200"));
 }
 
 #[test]
 fn test_responsive_arrays() {
     let res = compile_code(r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#);
     assert_eq!(res.wants.len(), 3);
-    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.value.to_string() == "1r" && w.when.as_slice() == ["base".into()]));
-    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && w.when.as_slice() == ["sm".into()]));
-    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.value.to_string() == "4r" && w.when.as_slice() == ["md".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "1r"
+        && w.when.as_slice() == ["base".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "2r"
+        && w.when.as_slice() == ["sm".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "4r"
+        && w.when.as_slice() == ["md".into()]));
 }
 
 #[test]
@@ -130,10 +156,22 @@ fn test_css_and_recipe_call_sites() {
         });
         "#,
     );
-    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "p" && w.value.to_string() == "1r"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.value.to_string() == "white"));
-    assert!(res.wants.iter().any(|w| &*w.prop == "fontSize" && w.value.to_string() == "12px"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "p" && w.value.to_string() == "1r"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "white"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "fontSize" && w.value.to_string() == "12px"));
 }
 
 #[test]
@@ -150,4 +188,138 @@ fn test_unknown_helpers_are_not_extract_sites() {
         "#,
     );
     assert!(res.wants.is_empty());
+}
+
+#[test]
+fn test_custom_breakpoint_scale() {
+    use crate::config::BreakpointConfig;
+
+    let req = CompileRequest {
+        files: Some(vec![VirtualSource {
+            path: "test.tsx".to_string(),
+            content: r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#.to_string(),
+        }]),
+        breakpoints: Some(BreakpointConfig::List(vec![
+            "tablet".to_string(),
+            "desktop".to_string(),
+        ])),
+        ..Default::default()
+    };
+    let res = compile(&req).expect("compile succeeds");
+    assert_eq!(res.wants.len(), 3);
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "1r"
+        && w.when.as_slice() == ["base".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "2r"
+        && w.when.as_slice() == ["tablet".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "4r"
+        && w.when.as_slice() == ["desktop".into()]));
+}
+
+#[test]
+fn test_tokens_breakpoints_scale() {
+    use crate::config::{BreakpointConfig, TokensConfig};
+    use indexmap::IndexMap;
+
+    let mut map = IndexMap::new();
+    map.insert("wide".to_string(), serde_json::json!("1000px"));
+    map.insert("ultra".to_string(), serde_json::json!("1600px"));
+
+    let req = CompileRequest {
+        files: Some(vec![VirtualSource {
+            path: "test.tsx".to_string(),
+            content: r#"export const Comp = () => <Div p={['10px', '20px', '30px']} />"#
+                .to_string(),
+        }]),
+        tokens: Some(TokensConfig {
+            breakpoints: Some(BreakpointConfig::Map(map)),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    let res = compile(&req).expect("compile succeeds");
+    assert_eq!(res.wants.len(), 3);
+    assert!(res.wants.iter().any(|w| &*w.prop == "p"
+        && w.value.to_string() == "10px"
+        && w.when.as_slice() == ["base".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "p"
+        && w.value.to_string() == "20px"
+        && w.when.as_slice() == ["wide".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "p"
+        && w.value.to_string() == "30px"
+        && w.when.as_slice() == ["ultra".into()]));
+}
+
+#[test]
+fn test_locked_aliases_follow_canon() {
+    let res = compile_code(
+        r#"
+        export const Comp = () => (
+            <Div
+                mt="10px"
+                px="20px"
+                w="100px"
+                flexDir="column"
+                rounded="md"
+                c="red"
+                pos="absolute"
+                ps="15px"
+                borderX="1px solid"
+            />
+        );
+        "#,
+    );
+    // Locked aliases must extract as style props
+    assert!(
+        res.wants.iter().any(|w| &*w.prop == "mt"),
+        "mt must extract"
+    );
+    assert!(
+        res.wants.iter().any(|w| &*w.prop == "px"),
+        "px must extract"
+    );
+    assert!(res.wants.iter().any(|w| &*w.prop == "w"), "w must extract");
+    assert!(
+        res.wants.iter().any(|w| &*w.prop == "flexDir"),
+        "flexDir must extract"
+    );
+
+    // Refused aliases must NOT extract as style props
+    assert!(
+        !res.wants.iter().any(|w| &*w.prop == "rounded"),
+        "rounded must NOT extract"
+    );
+    assert!(
+        !res.wants.iter().any(|w| &*w.prop == "c"),
+        "c must NOT extract"
+    );
+    assert!(
+        !res.wants.iter().any(|w| &*w.prop == "pos"),
+        "pos must NOT extract"
+    );
+    assert!(
+        !res.wants.iter().any(|w| &*w.prop == "ps"),
+        "ps must NOT extract"
+    );
+    assert!(
+        !res.wants.iter().any(|w| &*w.prop == "borderX"),
+        "borderX must NOT extract"
+    );
+}
+
+#[test]
+fn test_responsive_r_object() {
+    let res = compile_code(
+        r#"export const Comp = () => <Div r={{ 300: { p: '1r' }, md: { mt: '2r' } }} />"#,
+    );
+    assert!(res.wants.iter().any(|w| &*w.prop == "p"
+        && w.value.to_string() == "1r"
+        && w.when.as_slice() == ["@container (min-width: 300px)".into()]));
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt"
+        && w.value.to_string() == "2r"
+        && w.when.as_slice() == ["@container (min-width: 768px)".into()]));
+    assert!(res.stylesheet.contains("@container (min-width: 300px)"));
+    assert!(res.stylesheet.contains("@container (min-width: 768px)"));
 }

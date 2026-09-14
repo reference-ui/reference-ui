@@ -6,26 +6,33 @@ use std::borrow::Cow;
 
 fn format_denom_rhythm(num: f64, denom: f64) -> String {
     if (num - 1.0).abs() < f64::EPSILON {
+        // 1/3r
         format!("calc(var(--spacing-root) / {denom})")
     } else if (num + 1.0).abs() < f64::EPSILON {
+        // -1/3r
         format!("calc(-1 * var(--spacing-root) / {denom})")
     } else {
+        // 2/3r
         format!("calc({num} * var(--spacing-root) / {denom})")
     }
 }
 
 fn format_single_rhythm(num: f64) -> String {
     if (num - 1.0).abs() < f64::EPSILON {
+        // 1r / r / +r
         "var(--spacing-root)".to_string()
     } else if (num + 1.0).abs() < f64::EPSILON {
+        // -r
         "calc(-1 * var(--spacing-root))".to_string()
     } else {
+        // 2r / -2r / 0.5r
         format!("calc({num} * var(--spacing-root))")
     }
 }
 
 /// Resolves a rhythm unit count to a CSS calc or variable expression.
 pub fn get_rhythm(num: f64, denom: Option<f64>) -> String {
+    // 2r  /  1/3r
     match denom {
         Some(d) => format_denom_rhythm(num, d),
         None => format_single_rhythm(num),
@@ -36,13 +43,16 @@ pub fn get_rhythm(num: f64, denom: Option<f64>) -> String {
 pub fn resolve_single_rhythm(val: &str) -> Option<String> {
     let raw = val.strip_suffix('r')?;
     if raw.is_empty() || raw == "+" {
+        // r  /  +r
         return Some(get_rhythm(1.0, None));
     }
     if raw == "-" {
+        // -r
         return Some(get_rhythm(-1.0, None));
     }
 
     if let Some((num_str, denom_str)) = parse_fraction_parts(raw) {
+        // 1/3r  /  -2/3r
         let num: f64 = num_str.parse().ok()?;
         let denom: f64 = denom_str.parse().ok()?;
         if denom == 0.0 {
@@ -51,11 +61,13 @@ pub fn resolve_single_rhythm(val: &str) -> Option<String> {
         return Some(get_rhythm(num, Some(denom)));
     }
 
+    // 2r  /  0.5r  /  -2r
     let n: f64 = raw.parse().ok()?;
     Some(get_rhythm(n, None))
 }
 
 fn parse_fraction_parts(raw: &str) -> Option<(&str, &str)> {
+    // 1/3  /  -2/3
     let slash_idx = raw.find('/')?;
     if slash_idx == 0 || slash_idx != raw.rfind('/')? {
         return None;
@@ -67,6 +79,7 @@ fn parse_fraction_parts(raw: &str) -> Option<(&str, &str)> {
 
 /// Resolves all rhythm units in an arbitrary CSS value string, passing through non-rhythm tokens.
 pub fn resolve_rhythm(val: &str) -> Cow<'_, str> {
+    // '2r'  /  '1px solid 1/3r'  /  '10px auto'
     if !val.contains('r') {
         return Cow::Borrowed(val);
     }
@@ -77,6 +90,7 @@ pub fn resolve_rhythm(val: &str) -> Cow<'_, str> {
 
     while let Some(word) = words.next() {
         if let Some(resolved) = resolve_single_rhythm(word) {
+            // 2r  /  1/3r
             out.push_str(&resolved);
             changed = true;
         } else {
@@ -118,8 +132,14 @@ mod tests {
     fn test_fractions() {
         assert_eq!(resolve_rhythm("1/3r"), "calc(var(--spacing-root) / 3)");
         assert_eq!(resolve_rhythm("2/3r"), "calc(2 * var(--spacing-root) / 3)");
-        assert_eq!(resolve_rhythm("-1/3r"), "calc(-1 * var(--spacing-root) / 3)");
-        assert_eq!(resolve_rhythm("-2/3r"), "calc(-2 * var(--spacing-root) / 3)");
+        assert_eq!(
+            resolve_rhythm("-1/3r"),
+            "calc(-1 * var(--spacing-root) / 3)"
+        );
+        assert_eq!(
+            resolve_rhythm("-2/3r"),
+            "calc(-2 * var(--spacing-root) / 3)"
+        );
     }
 
     #[test]

@@ -10,7 +10,7 @@ in `@reference-ui/system`, and `css()` / `recipe()` in
 `@reference-ui/react`. Core already knows this data; later it passes a
 JSON/struct in here.
 
-Styletrace’s JSX names become `extract/sites` input, not a config array.
+Styletrace’s JSX names become `extract/jsx` input, not a config array.
 
 ## `staticCss` — config is the third want source
 
@@ -24,7 +24,7 @@ and it is load-bearing: drop it and every fully dynamic style prop loses
 its class.
 
 **Decided:** `config` lowers `staticCss` into **wants**, alongside
-`extract/sites` and `extract/leaves`. So wants come from three places, and by
+`extract/jsx` and `extract/expressions`. So wants come from three places, and by
 the time `resolve` and `stylesheet` see them there is no distinction — one
 AtomSet, one namer, one dedup. We do **not** expand it at emit time; that
 would give staticCss a second path into the sheet that `runtime` cannot see.

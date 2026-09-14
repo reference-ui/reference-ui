@@ -12,6 +12,7 @@ pub struct ParsedShorthand {
 
 impl ParsedShorthand {
     fn assign_token(&mut self, token: &str, is_outline: bool) {
+        // '3px' / 'solid' / 'red'  from  borderBottom: '3px solid red'
         if self.try_assign_style(token, is_outline) {
             return;
         }
@@ -22,6 +23,7 @@ impl ParsedShorthand {
     }
 
     fn try_assign_style(&mut self, token: &str, is_outline: bool) -> bool {
+        // solid / dashed / none  (+ outline: auto)
         if self.style.is_some() {
             return false;
         }
@@ -39,6 +41,7 @@ impl ParsedShorthand {
     }
 
     fn try_assign_width(&mut self, token: &str) -> bool {
+        // 3px / 1r / thin / calc(1r + 2px)
         if self.width.is_some() {
             return false;
         }
@@ -51,6 +54,7 @@ impl ParsedShorthand {
     }
 
     fn assign_color(&mut self, token: &str) {
+        // red / blue.600 / var(--colors-n300)
         if self.color.is_none() {
             self.color = Some(token.to_string());
         }
@@ -82,6 +86,8 @@ impl TokenSplitter {
     }
 
     fn open_paren(&mut self) {
+        // calc(1r + 2px)
+        self.depth = self.depth.saturating_add(1);
         self.depth = self.depth.saturating_add(1);
         self.current.push('(');
     }
@@ -93,8 +99,10 @@ impl TokenSplitter {
 
     fn handle_whitespace(&mut self) {
         if self.depth > 0 {
+            // keep spaces inside calc(...)
             self.current.push(' ');
         } else if !self.current.is_empty() {
+            // '3px solid red' → tokens
             self.tokens.push(std::mem::take(&mut self.current));
         }
     }
@@ -109,6 +117,7 @@ impl TokenSplitter {
 
 /// Tokenize shorthand string by whitespace, preserving nested parenthesized expressions.
 pub fn split_tokens(val: &str) -> Vec<String> {
+    // '3px solid red'  /  '1px solid calc(1r + 2px)'
     let mut splitter = TokenSplitter::new();
     for ch in val.chars() {
         splitter.push_char(ch);
@@ -118,6 +127,7 @@ pub fn split_tokens(val: &str) -> Vec<String> {
 
 /// Check if string matches a standard CSS border-style keyword.
 pub fn is_border_style(val: &str) -> bool {
+    // solid / dashed / none
     matches!(
         val.trim().to_ascii_lowercase().as_str(),
         "none"
@@ -135,12 +145,14 @@ pub fn is_border_style(val: &str) -> bool {
 
 /// Check if string matches an outline-style keyword, including CSS UI 4 'auto'.
 pub fn is_outline_style(val: &str) -> bool {
+    // outline: 'auto'  /  outline: 'solid'
     let lower = val.trim().to_ascii_lowercase();
     lower == "auto" || is_border_style(&lower)
 }
 
 /// Check if string matches a CSS global cascade keyword.
 pub fn is_global_keyword(val: &str) -> bool {
+    // padding: 'inherit'
     matches!(
         val.trim().to_ascii_lowercase().as_str(),
         "inherit" | "initial" | "unset" | "revert" | "revert-layer"
@@ -149,6 +161,7 @@ pub fn is_global_keyword(val: &str) -> bool {
 
 /// Check if string matches a CSS length, line-width keyword, or math function.
 pub fn is_length_width(val: &str) -> bool {
+    // 3px / 1r / thin / calc(1r + 2px) / 1/3r
     let s = val.trim().to_ascii_lowercase();
     if s == "r" || s == "+r" || s == "-r" {
         return true;
@@ -166,6 +179,7 @@ pub fn is_length_width(val: &str) -> bool {
 }
 
 fn is_math_function(s: &str) -> bool {
+    // calc(1r + 2px) / min(1r, 10px)
     (s.starts_with("calc(")
         || s.starts_with("min(")
         || s.starts_with("max(")
@@ -174,6 +188,7 @@ fn is_math_function(s: &str) -> bool {
 }
 
 fn is_number_or_dimension(s: &str) -> bool {
+    // 3px / 2r / 10% / 1.5
     let units = [
         "px", "rem", "em", "r", "%", "vh", "vw", "ch", "vmin", "vmax", "cqw", "cqh", "pt", "pc",
         "ex", "dvh", "lvh", "svh",
@@ -193,7 +208,10 @@ fn is_valid_numeric_str(s: &str) -> bool {
     if s.is_empty() {
         return false;
     }
-    let rest = s.strip_prefix('+').or_else(|| s.strip_prefix('-')).unwrap_or(s);
+    let rest = s
+        .strip_prefix('+')
+        .or_else(|| s.strip_prefix('-'))
+        .unwrap_or(s);
     if rest.is_empty() {
         return false;
     }
@@ -201,6 +219,7 @@ fn is_valid_numeric_str(s: &str) -> bool {
 }
 
 fn is_rhythm_fraction(s: &str) -> bool {
+    // 1/3r
     let Some(inner) = s.strip_suffix('r') else {
         return false;
     };
@@ -213,6 +232,7 @@ fn is_rhythm_fraction(s: &str) -> bool {
 
 /// Parse space-separated tokens into width, style, and color components.
 pub fn parse_shorthand_tokens(tokens: &[String], is_outline: bool) -> ParsedShorthand {
+    // ['3px', 'solid', 'red']
     let mut parsed = ParsedShorthand::default();
     for token in tokens {
         parsed.assign_token(token, is_outline);

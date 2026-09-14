@@ -11,6 +11,7 @@ mod tests;
 use crate::atom::AtomValue;
 
 fn extract_raw_val(value: &AtomValue) -> Option<&str> {
+    // borderBottom: '3px solid'  /  padding: 4
     match value {
         AtomValue::String(s) => Some(s.as_ref()),
         AtomValue::Number(n) => Some(n.as_ref()),
@@ -19,6 +20,7 @@ fn extract_raw_val(value: &AtomValue) -> Option<&str> {
 }
 
 fn expand_dimensional(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
+    // padding: '1r 2r'  /  margin: '1px 2px 3px 4px'  /  inset: '0 auto'
     let canon_name = canon::resolve_canonical_prop(prop);
     if !matches!(canon_name, "padding" | "margin" | "inset") {
         return None;
@@ -31,11 +33,8 @@ fn expand_dimensional(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomVa
 }
 
 /// Expand composite or dimensional shorthand into atomic longhand declarations.
-pub fn expand_shorthand(
-    prop: &str,
-    value: &AtomValue,
-) -> Option<Vec<(Box<str>, AtomValue)>> {
+pub fn expand_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<str>, AtomValue)>> {
+    // borderBottom: '3px solid'  /  padding: '1r 2r'
     let raw_val = extract_raw_val(value)?;
-    border::expand_border_shorthand(prop, raw_val)
-        .or_else(|| expand_dimensional(prop, raw_val))
+    border::expand_border_shorthand(prop, raw_val).or_else(|| expand_dimensional(prop, raw_val))
 }
