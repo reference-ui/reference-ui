@@ -341,6 +341,7 @@ async function runVitestTests(args, rsDir) {
   const testNameIdx = args.indexOf('-t')
 
   const KNOWN_MODULES = new Map([
+    ['canon', 'canon'],
     ['atomic', 'atomic'],
     ['system', 'atomic'],
     ['tasty', 'tasty'],
