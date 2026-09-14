@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/*"]
+members = [
+  "native",
+  "shared",
+  "modules/*",
+]
 resolver = "2"
 
 [workspace.package]
@@ -26,3 +30,11 @@ proptest = "1"
 napi = { version = "2", features = ["napi8"] }
 napi-derive = "2"
 napi-build = "2"
+
+# internal
+shared = { path = "shared" }
+atlas = { path = "modules/atlas" }
+tasty = { path = "modules/tasty" }
+styletrace = { path = "modules/styletrace" }
+system = { path = "modules/system" }
+virtualrs = { path = "modules/virtualrs" }

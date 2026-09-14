@@ -1,25 +1,14 @@
-# Rust build output
-target/
-
-# NAPI artifacts
-artifacts/
-npm/
-native/
-*.node
-*.inputs.sha256
-*.sha256
+# Cargo build scratch (target-dir = "dist/cargo"; dist is gitignored at repo root,
+# but kept explicit here so dist/cargo is never committed even if dist rules change)
+dist/cargo/
 
 # Node
 node_modules/
 
-# Generated Tasty test output
-tests/tasty/cases/**/output/
-
-# Generated Virtualfs test output
-tests/virtualfs/cases/**/output/
-
-# Generated Atlas test output
-tests/atlas/cases/**/output/
+# Generated module test outputs
+modules/tasty/tests/cases/**/output/
+modules/virtualrs/tests/cases/**/output/
+modules/atlas/tests/cases/**/output/
 
 # Generated ts-rs test bindings
 bindings/

@@ -1,0 +1,18 @@
+[package]
+name = "system"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Native atomic CSS compiler for Reference UI (README-driven scaffold)"
+
+[dependencies]
+styletrace.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+smallvec = { version = "1", features = ["serde"] }
+rustc-hash = "2"
+oxc_parser = { workspace = true }
+oxc_ast = { workspace = true }
+oxc_ast_visit = { workspace = true }
+oxc_span = { workspace = true }
+oxc_allocator = { workspace = true }

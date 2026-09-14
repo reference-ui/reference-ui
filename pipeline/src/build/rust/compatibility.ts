@@ -14,9 +14,9 @@ import { dirname, resolve } from 'node:path'
 import {
   getVirtualNativeTriple,
   type VirtualNativeTarget,
-} from '../../../../packages/reference-rs/js/shared/targets.js'
-import { REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS } from '../../../../packages/reference-rs/js/shared/native-contract.js'
-import { getVirtualNativeCompatibilityError } from '../../../../packages/reference-rs/js/runtime/loader.js'
+} from '../../../../packages/reference-rs/runtime/shared/targets.js'
+import { REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS } from '../../../../packages/reference-rs/runtime/shared/native-contract.js'
+import { getVirtualNativeCompatibilityError } from '../../../../packages/reference-rs/runtime/loader.js'
 
 const requireFromPipeline = createRequire(import.meta.url)
 

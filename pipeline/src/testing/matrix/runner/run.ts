@@ -7,7 +7,7 @@
  */
 
 import * as dagger from '@dagger.io/dagger'
-import { getVirtualNativePackageName } from '../../../../../packages/reference-rs/js/shared/targets.js'
+import { getVirtualNativePackageName } from '../../../../../packages/reference-rs/runtime/shared/targets.js'
 import {
   DEFAULT_REGISTRY_URL,
   MANAGED_REGISTRY_PORT,

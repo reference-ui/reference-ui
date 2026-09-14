@@ -6,5 +6,9 @@
     "moduleResolution": "bundler",
     "types": ["node"]
   },
-  "include": ["js/**/*.ts"]
+  "include": [
+    "runtime/**/*.ts",
+    "modules/*/js/**/*.ts",
+    "modules/system/canon/**/*.ts"
+  ]
 }

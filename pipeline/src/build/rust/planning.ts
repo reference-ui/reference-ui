@@ -10,7 +10,7 @@ import {
   getVirtualNativePackageName,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
-} from '../../../../packages/reference-rs/js/shared/targets.js'
+} from '../../../../packages/reference-rs/runtime/shared/targets.js'
 
 export type RustTargetTarballStrategy =
   | 'pack-local-binary'
