@@ -1,59 +1,73 @@
 # @reference-ui/rust
 
-Rust-backed native tooling for `reference-ui`. This package ships a **Node-API (N-API) native addon** built with **[napi-rs](https://github.com/napi-rs/napi-rs)** plus TypeScript in **`js/`** that loads the `.node` binary and provides **higher-level APIs** on top of those low-level bindings.
+High-performance Rust compiler and native runtime tooling for Reference UI. Ships a single **Node-API (N-API) native addon** built with **[napi-rs](https://github.com/napi-rs/napi-rs)**, orchestrated via a shared runtime loader and typed TypeScript modules under `modules/`.
 
-## What lives here
+## Architecture & Responsibilities
 
-| Piece | Role |
-| --- | --- |
-| **Cargo workspace** (`crates/*`) | Modular, pure Rust domain crates (`shared`, `virtualrs`, `atlas`, `tasty`, `styletrace`) with zero Node dependencies. |
-| **N-API bridge** (`crates/napi`) | Crate `reference-virtual-native`, built as a `cdylib` with `#[napi]` exports wrapping domain crates. |
-| **TypeScript (`js/`)** | Loads the `.node` addon, wraps it with ergonomic/higher-level APIs (runtimes, builders, helpers), and ships bundled ESM/DTS per public subpath (`tsup` → `dist/`). |
-| **Product suite (`tests/`)** | Vitest product tests covering fixtures, snapshots, and public contracts through the native addon and TS wrappers. |
-
-## How it is bootstrapped
-
-1. **Install** dependencies from the repo root (this package is part of the workspace).
-2. **Build the native addon** so the `.node` binary exists for your platform:
-
-   ```sh
-   pnpm --filter @reference-ui/rust run build
-   ```
-
-   or only ensure the binary is present:
-
-   ```sh
-   pnpm --filter @reference-ui/rust run ensure-native
-   ```
-
-3. **Run tests**:
-
-   ```sh
-   # Crate unit tests (pure Rust in-memory units):
-   pnpm --filter @reference-ui/rust run test:rust
-
-   # Product suite (Vitest against N-API + wrappers):
-   pnpm --filter @reference-ui/rust run test:vitest
-
-   # Full package verification (ensure-native + cargo test + vitest):
-   pnpm --filter @reference-ui/rust run test
-   ```
-
-`package.json` declares **napi-rs targets** (e.g. `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`). The compiled artifact is named `virtual-native` and is loaded from `native/virtual-native.<triple>.node` (see `js/runtime/loader.ts`).
+| Subsystem | Location | Role |
+| --- | --- | --- |
+| **Native Addon** | `native/` | The sole `cdylib` crate (`reference-virtual-native`) compiling to `.node`. Thin switchboard exposing domain capabilities through `#[napi]` functions with zero business logic. |
+| **Runtime Infrastructure** | `runtime/` | Shared TypeScript layer providing platform detection, addon binary loading (`loader.ts`), and ergonomic JSON call bridging (`native.ts`). |
+| **Shared Rust Helpers** | `shared/` | Internal compiler utilities (Oxc parser helpers, span conversions, unquoting). |
+| **Product Modules** | `modules/*` | Self-contained feature modules (`system`, `tasty`, `atlas`, `styletrace`, `virtualrs`), each encapsulating its pure domain Rust crate, TypeScript API wrappers, and test suites. |
 
 ## Layout
 
-```
+```text
 packages/reference-rs/
-├── Cargo.toml            # workspace root manifest
-├── crates/               # pure Rust domain crates and N-API bridge
-│   ├── shared/           # oxc parser flags, span helpers, unquoting
-│   ├── tasty/            # TypeScript scanner, AST extraction, generator, emitter
-│   ├── atlas/            # token and component usage analysis
-│   ├── virtualrs/        # virtual module CSS/CVA rewrites and responsive lowering
-│   ├── styletrace/       # styletrace prop resolver & JSX wrapper tracing
-│   └── napi/             # reference-virtual-native cdylib (#[napi] bridge only)
-├── js/                   # TypeScript runtime wrappers and tooling
-├── tests/                # Vitest product test suite (fixtures, snapshots, contracts)
-└── native/               # gitignored compiled .node outputs
+├── Cargo.toml                              # Workspace manifest (members = native, shared, modules/*)
+├── package.json                            # Package exports and scripts
+│
+├── native/                                 # Sole cdylib native addon
+│   ├── Cargo.toml                          # Workspace path deps
+│   └── src/                                # #[napi] entrypoint and module bridges
+│
+├── runtime/                                # Shared JS runtime layer
+│   ├── loader.ts                           # Platform resolution & .node loader
+│   ├── native.ts                           # Shared napi client (callNativeJson / requireNative)
+│   ├── index.ts                            # Root runtime export
+│   ├── shared/                             # Contract and platform targets
+│   └── tools/                              # Addon build & verification tooling
+│
+├── shared/                                 # Shared Rust helper crate
+│   └── src/
+│
+├── modules/                                # Product modules
+│   ├── system/                             # Atomic style system compiler & canon
+│   ├── tasty/                              # AST extraction, type contracts, and emitters
+│   ├── atlas/                              # Component and token usage analyzer
+│   ├── styletrace/                         # JSX wrapper hierarchy and style prop tracing
+│   └── virtualrs/                          # Virtual module CSS/CVA rewrites & responsive lowering
+│
+└── dist/                                   # All generated outputs (gitignored)
+    ├── *.mjs, *.d.ts                       # Public JS entrypoints (tsup + tsc)
+    ├── native/                             # Built local .node binary & hash stamp
+    ├── cargo/                              # Cargo target build scratch
+    ├── npm/                                # Platform package stubs (staging for publish-native)
+    └── artifacts/                          # Collected CI / release artifacts
 ```
+
+## How It Is Bootstrapped
+
+1. **Build the native addon** with exclusive concurrency lock:
+
+   ```sh
+   pnpm agentrs b
+   ```
+
+2. **Run tests across modules or workspace**:
+
+   ```sh
+   # Rust workspace unit tests:
+   pnpm agentrs c
+
+   # Per-module Vitest seam tests:
+   pnpm agentrs v system
+   pnpm agentrs v tasty
+   pnpm agentrs v atlas
+   pnpm agentrs v styletrace
+
+   # Full verification pipeline (build -> cargo -> vitest -> quality):
+   pnpm agentrs t
+   ```
+

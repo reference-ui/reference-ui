@@ -74,18 +74,18 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ~/.napi-rs
-            packages/reference-rs/target/
+            packages/reference-rs/dist/cargo/
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('packages/reference-rs/Cargo.lock') }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Compile native binary
-        run: pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${{ matrix.target }} --output-dir native --no-js
+        run: pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${{ matrix.target }} --output-dir dist/native --no-js
 
       - name: Upload native artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact_prefix }}-${{ matrix.target }}
-          path: packages/reference-rs/native/virtual-native.*.node
+          path: packages/reference-rs/dist/native/virtual-native.*.node
           if-no-files-found: error
