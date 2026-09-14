@@ -1,0 +1,6 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .bg_blue\.500 { background: var(--colors-blue-500); }
+  .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .px_4r { padding-inline: calc(4 * var(--spacing-root)); }
+}

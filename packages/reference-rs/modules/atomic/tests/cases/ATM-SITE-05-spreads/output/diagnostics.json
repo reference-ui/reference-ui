@@ -1,0 +1,12 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-SITE-05-spreads/input/src/spreads.ts"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-SITE-05-spreads/input/src/spreads.ts"
+  }
+]

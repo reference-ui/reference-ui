@@ -381,7 +381,12 @@ async function runVitestTests(args, rsDir) {
 
   console.log(`\n\x1b[1;36m[agent-rs] Running Vitest: pnpm ${vitestArgs.join(' ')}\x1b[0m\n`)
   return withCpuGate('rs', 'agentrs vitest', async () => {
-    const code = await runChild('pnpm', vitestArgs, rsDir)
+    const code = await runChild(
+      'pnpm',
+      vitestArgs,
+      rsDir,
+      hasUpdateGoldens ? { UPDATE_GOLDENS: '1' } : {}
+    )
     if (code === 0) {
       console.log('\n\x1b[1;32m✔ [agent-rs] Vitest tests PASSED!\x1b[0m\n')
     } else {

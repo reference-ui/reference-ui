@@ -1,8 +1,0 @@
-{
-  "borderBottomStyle:solid": "bd-b-s_solid",
-  "borderBottomWidth:3px": "bd-b-w_3px",
-  "borderColor:gray.800": "bd-c_gray.800",
-  "outlineColor:blue.600": "ring-c_blue.600",
-  "outlineStyle:solid": "ring-s_solid",
-  "outlineWidth:1px": "ring-w_1px"
-}

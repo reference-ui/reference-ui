@@ -1,0 +1,11 @@
+{
+  "borderBottomStyle:solid": "bd-b-s_solid",
+  "borderBottomWidth:1px": "bd-b-w_1px",
+  "borderBottomWidth:3px": "bd-b-w_3px",
+  "borderColor:gray.800": "bd-c_gray.800",
+  "mt:2r": "mt_2r",
+  "outlineColor:blue.600": "ring-c_blue.600",
+  "outlineStyle:solid": "ring-s_solid",
+  "outlineWidth:1px": "ring-w_1px",
+  "p:1r": "p_1r"
+}

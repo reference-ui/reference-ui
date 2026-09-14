@@ -1,0 +1,15 @@
+{
+  "bg:blue": "bg_blue",
+  "bg:n100": "bg_n100",
+  "bg:n300": "bg_n300",
+  "borderBottomColor:transparent": "bd-b-c_transparent",
+  "borderBottomStyle:solid": "bd-b-s_solid",
+  "borderBottomWidth:3px": "bd-b-w_3px",
+  "color:black": "c_black",
+  "color:red": "c_red",
+  "color:white": "c_white",
+  "fontSize:12px": "fs_12px",
+  "fontSize:14px": "fs_14px",
+  "fontSize:16px": "fs_16px",
+  "fontSize:18px": "fs_18px"
+}

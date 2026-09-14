@@ -1,0 +1,10 @@
+{
+  "md:mt:4r": "md:mt_4r",
+  "md:p:2r": "md:p_2r",
+  "md:p:4r": "md:p_4r",
+  "md:padding:4r": "md:p_4r",
+  "mt:1r": "mt_1r",
+  "p:1r": "p_1r",
+  "padding:2r": "p_2r",
+  "sm:mt:2r": "sm:mt_2r"
+}
