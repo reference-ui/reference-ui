@@ -34,5 +34,8 @@ shared = { path = "modules/shared" }
 atlas = { path = "modules/atlas" }
 tasty = { path = "modules/tasty" }
 styletrace = { path = "modules/styletrace" }
-system = { path = "modules/system" }
+canon = { path = "modules/canon" }
+base_system = { path = "modules/base-system" }
+atomic = { path = "modules/atomic" }
+typegen = { path = "modules/typegen" }
 virtualrs = { path = "modules/virtualrs" }

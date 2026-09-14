@@ -1,0 +1,6 @@
+[package]
+name = "base_system"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Portable design-system definition consumed by atomic and typegen"

@@ -1,0 +1,6 @@
+[package]
+name = "canon"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Platform + dialect dictionary for the Reference UI style engine"

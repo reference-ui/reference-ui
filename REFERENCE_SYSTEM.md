@@ -2,7 +2,7 @@
 
 > **Mandate.** Own the style engine. Public authoring stays small. Atomic CSS stays an implementation detail. Panda v1 (`@pandacss/*` ^1.11.1) remains production until the matrix is green on the native path.
 >
-> Living code: `packages/reference-rs/modules/system` (compiler) and `packages/reference-core/src/system` (host, fragments, types, portable CSS). This file is the map of **what users do**, **what has landed**, and **what still has to be a contract** before we can cut Panda.
+> Living code: `packages/reference-rs/modules/atomic` (compiler) and `packages/reference-core/src/system` (host, fragments, types, portable CSS). Architecture: [`packages/reference-rs/docs/atomic.md`](packages/reference-rs/docs/atomic.md). This file is the map of **what users do**, **what has landed**, and **what still has to be a contract** before we can cut Panda.
 
 Panda still does atomic CSS, layers, conditions, and recipes well. We are not writing Panda v3. We are deleting the translation layer between JSX we already parse and CSS the matrix already scores — and splitting the jobs Panda fused into one “styled-system” farm.
 
@@ -73,7 +73,7 @@ The word is overloaded. Snubbing that first is the whole map.
 | :--- | :--- | :--- |
 | **`@reference-ui/system`** | Authoring API for fragments (`tokens`, `font`, `globalCss`, `keyframes`) | `reference-core` `src/entry/system.ts` |
 | **`reference-core/src/system`** | The **host pipeline**: collect fragments, write Panda config, run Panda, post-process CSS, write `baseSystem`, generate some types, build primitives | TypeScript. Stays the host. |
-| **`reference-rs/modules/system`** | The **atomic CSS compiler**: source in, `{ stylesheet, css, diagnostics }` out | Rust + a thin JS `compile()`. This is the piece people keep calling “system” and it is a bad name for it. |
+| **`reference-rs/modules/atomic`** | The **atomic CSS compiler**: source in, `{ stylesheet, css, diagnostics }` out | Rust + a thin JS `compile()`. Was `modules/system`. |
 | **`baseSystem`** | The design-system **definition**, made portable. Fragments collected (`tokens`, `font`, `globalCss`, `keyframes`) become `fragment`; compiled CSS becomes `css`. This is what `ui.config.ts` `extends` and `layers`. | `reference-core` `src/system/base` |
 
 Call the Rust crate what it does: **stylesheet compiler** / **atomic engine**. Keep `@reference-ui/system` as the authoring package. Do not invent a fourth public name for users.
@@ -181,16 +181,16 @@ The portable CSS stage (`reference-core/src/system/stylesheet`) still has to exi
 
 ## 4. Module map (do not dump this into one crate)
 
-Interactive map (open in a browser): [`packages/reference-rs/modules/map.html`](packages/reference-rs/modules/map.html) — stack from the foundation up. Hover a function to see which module it rests on.
+Interactive map (open in a browser): [`packages/reference-rs/modules/map.html`](packages/reference-rs/modules/map.html) — stack from the foundation up. Hover a function to see which module it rests on. Written plan: [`packages/reference-rs/docs/atomic.md`](packages/reference-rs/docs/atomic.md).
 
-`modules/system` today is **only the atomic CSS compiler**. That is correct. Rename it when we next touch the crate:
+The rename is done. Product modules:
 
 ```
 packages/reference-rs/modules/
-  atomic/          ← today's system. Atoms, extract, resolve, stylesheet, class map.
-  base-system/     ← the definition. Fragments land here. Tokens, fonts, keyframes, globalCss.
-  typegen/         ← .d.ts from base-system + canon. Not a JS farm.
-  canon/           ← platform + dialect. Candidate sibling (today nested under system).
+  atomic/          ← was system. Atoms, extract, resolve, stylesheet, class map.
+  base-system/     ← the definition. Fragments land here. Tokens, fonts, keyframes, globalCss. Stub.
+  typegen/         ← .d.ts from base-system + canon. Not a JS farm. Stub.
+  canon/           ← platform + dialect. Sibling crate.
   styletrace/      ← already a sibling. Which JSX names carry StyleProps.
 ```
 
@@ -216,9 +216,7 @@ packages/reference-rs/modules/
 
 The engine emits **styles.css** (atomic) and **types** (typegen). Above the cut is TypeScript land: **build-time** (`tokens()` / `font()` / `keyframes()` / `globalCss()`, sitting on **fragments**) and **runtime** (`css()` / `recipe()`). Primitives sit on the runtime. Fragments stay in JS — authors write real TypeScript with imports and computed values; Rust consumes the dump. A native fragment evaluator is Panda v2. Do not.
 
-### 4.1 `modules/atomic` (today’s `system`)
-
-### 4.1 `modules/atomic` (today’s `system`)
+### 4.1 `modules/atomic` (was `system`)
 
 The atomic style layer. Definition of an atom. Extract leaves from TSX / `css()` / `cva()`. Resolve rhythm, shorthands, conditions. Print `@layer utilities`. Emit the **class map** the runtime concatenates with.
 
@@ -276,13 +274,13 @@ We are not generating that farm. Typegen for us is unions from the base system. 
 
 ### 4.6 Canon
 
-Canon is the language (tags, properties, `mt`, `r`). A base system is an utterance (this package’s tokens). Types, styletrace, and atomic all need the language. Candidate sibling — split when a second consumer would otherwise import atomic.
+Canon is the language (tags, properties, `mt`, `r`). A base system is an utterance (this package’s tokens). Types, styletrace, and atomic all need the language. It is a sibling crate at `modules/canon` so they do not import atomic to ask what `mt` means.
 
 ---
 
 ## 5. What has landed
 
-The cargo split is done. Product code lives under `packages/reference-rs/modules/` (`system` ← atomic, `tasty`, `atlas`, `styletrace`, `virtualrs`, plus `runtime` as the N-API loader). JS face: `import { compile } from '@reference-ui/rust/system'` — `compileSync({ rootDir | files }) → { stylesheet, css, diagnostics, wants }`. N-API: `compile_system`. Rename `system` → `atomic` when the crate is next touched; do not rename in the same diff as `compile()` taking a base system.
+The cargo split is done. Product code lives under `packages/reference-rs/modules/` (`atomic` ← was `system`, `canon`, `base-system`, `typegen`, `tasty`, `atlas`, `styletrace`, `virtualrs`, plus `runtime` as the N-API loader). JS face: `import { compile } from '@reference-ui/rust/atomic'` — core's live wire is still `@reference-ui/rust/system`. `compileSync({ rootDir | files }) → { stylesheet, css, diagnostics, wants }`. N-API: `compileSystem`. Do not rename the native export in the same diff as `compile()` taking a base system.
 
 The compiler is a real pipeline, not a README scaffold:
 
@@ -319,7 +317,7 @@ Proven inside `packages/reference-rs` (no core, no Panda on the path):
 
 `compile()` currently takes **sources only**. No base system. Token resolution is a **heuristic** (`blue.600` on a color prop → `var(--colors-blue-600)`). It does not know whether `blue.600` was actually declared. It does not print `@layer tokens`. That is the next contract, not a polish item.
 
-Canon is generated (`pnpm --filter @reference-ui/rust run canon`) from `@webref/css` + `@webref/elements` plus the Reference dialect. Passes look up tags / aliases / shorthands from it. Do not grow a second property list in extract or resolve. It is nested under `modules/system` today; see §4 for why it may not stay there.
+Canon is generated (`pnpm --filter @reference-ui/rust run canon`) from `@webref/css` + `@webref/elements` plus the Reference dialect. Passes look up tags / aliases / shorthands from it. Do not grow a second property list in extract or resolve. It lives at `modules/canon`.
 
 ---
 
@@ -434,7 +432,7 @@ Phase 0 (workspace split) and the extract → resolve → utilities sheet are **
 
 1. **`compile()` takes a base system** — the artefact fragments already produce. Token vs not. Not a newly invented format.
 2. **Engine consumes the base system** — `@layer tokens`, `staticCss` → wants, fail-closed unknown tokens vs raw CSS.
-3. **Rename `modules/system` → `modules/atomic`** when that crate is next opened. Stand up `modules/base-system` as the fragment → definition seam. Typegen as its own module (unions, not a jsx farm).
+3. **Folder rename is done** — `modules/atomic`, `modules/canon`, stub `modules/base-system` and `modules/typegen`. Next is refine canon, then the base-system artefact `compile()` can read.
 4. **Runtime stays authored** — `css()` / `recipe()` in core, reading atomic’s class map. Do not generate Panda’s jsx/patterns farm. `box` collapses to `css` once dialect props are in canon.
 5. **Recipes** — closed classes + variant table; types from the same table. `recipe()` runtime is authored JS over that table.
 6. **Reset / global / keyframes** — fill the empty layers.
@@ -453,4 +451,4 @@ Optional and parallel: lib internals off nested StyleProp ternaries onto recipes
 
 We copy the **process** (extract → encode → stylesheet + generated `css()`), not the evaluator, not the 12-crate layout, not the type/jsx/patterns farm. Production is v1.11.1; skipping v2 is already decided.
 
-Detail and citations: `packages/reference-rs/modules/system/PANDA.md`. Module internals: each `src/*/README.md` under `modules/system`. Host pipeline: `packages/reference-core/src/system/README.md`.
+Detail and citations: `packages/reference-rs/modules/atomic/PANDA.md`. Architecture: `packages/reference-rs/docs/atomic.md`. Module internals: each `src/*/README.md` under `modules/atomic`. Host pipeline: `packages/reference-core/src/system/README.md`.

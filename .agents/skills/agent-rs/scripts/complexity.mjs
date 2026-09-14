@@ -38,29 +38,29 @@ export const THRESHOLDS = {
 /** Clippy allow/expect is banned. Messages tell the agent how to fix, not how to silence. */
 export const CLIPPY_ALLOW_FIXES = {
   too_many_arguments:
-    'NOPE. Silencing clippy::too_many_arguments is banned. Group the pass/walk session into a context struct and pass that; keep the current AST node as the function argument.',
+    'NOPE. Silencing clippy::too_many_arguments is banned. Those args are one missing type: group shared state into a named context/session struct and pass that. Keep the primary input as its own argument; do not pack leftovers into a tuple.',
   too_many_lines:
-    'NOPE. Silencing clippy::too_many_lines is banned. Split into helpers named after real compiler steps (a node family, a pass, a lowering), not foo_part2.',
+    'NOPE. Silencing clippy::too_many_lines is banned. The function is several steps wearing one name. Split into helpers named after the work they do (a phase, a case, a transformation), not foo_part2.',
   cognitive_complexity:
-    'NOPE. Silencing clippy::cognitive_complexity is banned. Flatten with early returns; extract match arms into helpers named after the node family.',
+    'NOPE. Silencing clippy::cognitive_complexity is banned. Flatten with early returns; extract nested branches and match arms into helpers named after the decision they make.',
   type_complexity:
-    'NOPE. Silencing clippy::type_complexity is banned. Name the type: a struct or type alias, not a nested generic soup.',
+    'NOPE. Silencing clippy::type_complexity is banned. An unnamed nested generic is a type. Name it: a struct or type alias, not a nested generic soup.',
   large_enum_variant:
-    'NOPE. Silencing clippy::large_enum_variant is banned. Box the fat variant.',
+    'NOPE. Silencing clippy::large_enum_variant is banned. Box the fat variant so the enum stays small on the stack.',
   result_large_err:
-    'NOPE. Silencing clippy::result_large_err is banned. Shrink the error (Box, a smaller enum, or a shared error type).',
+    'NOPE. Silencing clippy::result_large_err is banned. Shrink the error (Box it, a smaller enum, or a shared error type) so Ok stays cheap.',
   large_stack_arrays:
-    'NOPE. Silencing clippy::large_stack_arrays is banned. Use Vec or Box<[T]>.',
+    'NOPE. Silencing clippy::large_stack_arrays is banned. Move it off the stack: Vec or Box<[T]>, not a giant array local.',
   redundant_clone:
-    'NOPE. Silencing clippy::redundant_clone is banned. Borrow, or fix ownership so the clone is unnecessary.',
+    'NOPE. Silencing clippy::redundant_clone is banned. Borrow, take ownership once, or restructure so the clone is unnecessary.',
   clone_on_copy:
-    'NOPE. Silencing clippy::clone_on_copy is banned. Copy the value; do not clone it.',
+    'NOPE. Silencing clippy::clone_on_copy is banned. The type is Copy; assign or dereference it. Do not clone.',
   needless_pass_by_value:
-    'NOPE. Silencing clippy::needless_pass_by_value is banned. Take &T unless the function must own it.',
+    'NOPE. Silencing clippy::needless_pass_by_value is banned. Take &T (or &mut T) unless the function must store, return, or otherwise own the value.',
   unwrap_used:
-    'NOPE. Silencing clippy::unwrap_used is banned. Return Result/Option; do not unwrap in domain code.',
+    'NOPE. Silencing clippy::unwrap_used is banned. Return Result/Option and propagate the failure; do not unwrap in library code.',
   expect_used:
-    'NOPE. Silencing clippy::expect_used is banned. Return Result/Option; do not expect in domain code.',
+    'NOPE. Silencing clippy::expect_used is banned. Return Result/Option and propagate the failure; do not expect in library code.',
 }
 
 export function clippyAllowMessage(lint) {
@@ -145,7 +145,7 @@ export function findSourceFiles(dir, exts = ['.rs', '.ts', '.tsx', '.js', '.mjs'
       if (entry.isDirectory()) {
         const nextPath = path.join(cur, entry.name)
         const normalized = nextPath.replace(/\\/g, '/')
-        if (normalized.endsWith('/system/src/canon')) {
+        if (normalized.endsWith('/canon/src')) {
           continue
         }
         if (!IGNORE_DIRS.has(entry.name)) {
@@ -820,12 +820,12 @@ export async function inspectFiles(files, options = {}) {
   let totalViolations = 0
   let totalWarnings = 0
 
-  // Markdown files, generated files, system canon, and ignore directories are exempt from code checks.
+  // Markdown files, generated files, canon tables, and ignore directories are exempt from code checks.
   const sourceFiles = files.filter((f) => {
     if (f.endsWith('.md') || f.endsWith('.d.ts') || f.endsWith('.min.js')) return false
     const normalized = f.replace(/\\/g, '/')
     if (normalized.includes('/js/generated/')) return false
-    if (normalized.includes('/system/src/canon/')) return false
+    if (normalized.includes('/modules/canon/src/')) return false
     const parts = f.split(path.sep)
     if (parts.some((p) => IGNORE_DIRS.has(p))) return false
     return f.endsWith('.rs') || f.endsWith('.ts') || f.endsWith('.tsx') || f.endsWith('.js') || f.endsWith('.mjs')

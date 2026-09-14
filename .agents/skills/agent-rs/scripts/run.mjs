@@ -171,19 +171,19 @@ async function runQualityCommand(args, repoRoot, rsDir) {
       }
     }
   } else if (!checkAll) {
-    // Default smart inspection: changed files first; fallback to system crate
+    // Default smart inspection: changed files first; fallback to atomic crate
     const changed = await getGitChangedFiles(repoRoot, rsDir)
     const sourceChanged = changed.filter((f) => SOURCE_EXTENSIONS.some((ext) => f.endsWith(ext)))
     if (sourceChanged.length > 0) {
       targetFiles = sourceChanged
       console.log(`\x1b[36m• Inspecting ${sourceChanged.length} git-modified source file(s) in reference-rs\x1b[0m`)
     } else {
-      const systemCrate = fs.existsSync(path.join(rsDir, 'modules/system'))
-        ? path.join(rsDir, 'modules/system')
-        : path.join(rsDir, 'system')
-      if (fs.existsSync(systemCrate)) {
-        targetFiles = findSourceFiles(systemCrate, SOURCE_EXTENSIONS)
-        console.log(`\x1b[36m• Git clean: inspecting ${path.relative(rsDir, systemCrate)} (${targetFiles.length} source files)\x1b[0m`)
+      const atomicCrate = fs.existsSync(path.join(rsDir, 'modules/atomic'))
+        ? path.join(rsDir, 'modules/atomic')
+        : path.join(rsDir, 'atomic')
+      if (fs.existsSync(atomicCrate)) {
+        targetFiles = findSourceFiles(atomicCrate, SOURCE_EXTENSIONS)
+        console.log(`\x1b[36m• Git clean: inspecting ${path.relative(rsDir, atomicCrate)} (${targetFiles.length} source files)\x1b[0m`)
       } else {
         targetFiles = findSourceFiles(rsDir, SOURCE_EXTENSIONS)
       }
@@ -274,7 +274,7 @@ async function runQualityCommand(args, repoRoot, rsDir) {
 
 async function runCargoTests(args, rsDir) {
   const cargoArgs = ['test']
-  const knownCrates = new Set(['system', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-virtual-native'])
+  const knownCrates = new Set(['atomic', 'canon', 'base_system', 'base-system', 'system', 'typegen', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-virtual-native'])
 
   const crateIdx = args.indexOf('--crate')
   let targetedCrate = null
@@ -287,8 +287,14 @@ async function runCargoTests(args, rsDir) {
     }
   }
 
-  if (targetedCrate === 'napi') {
-    targetedCrate = 'reference-virtual-native'
+  const requestedCrate = targetedCrate
+  const crateAliases = {
+    napi: 'reference-virtual-native',
+    system: 'atomic',
+    'base-system': 'base_system',
+  }
+  if (targetedCrate && crateAliases[targetedCrate]) {
+    targetedCrate = crateAliases[targetedCrate]
   }
 
   if (targetedCrate) {
@@ -303,7 +309,7 @@ async function runCargoTests(args, rsDir) {
       i++
       continue
     }
-    if (a === targetedCrate) continue
+    if (a === targetedCrate || a === requestedCrate) continue
     if (a === '--release') cargoArgs.push('--release')
     else if (a === '-t' || a === '--test-name') {
       if (args[i + 1]) {
@@ -335,7 +341,8 @@ async function runVitestTests(args, rsDir) {
   const testNameIdx = args.indexOf('-t')
 
   const KNOWN_MODULES = new Map([
-    ['system', 'system'],
+    ['atomic', 'atomic'],
+    ['system', 'atomic'],
     ['tasty', 'tasty'],
     ['atlas', 'atlas'],
     ['styletrace', 'styletrace'],
@@ -345,11 +352,11 @@ async function runVitestTests(args, rsDir) {
     ['shared', 'runtime'],
   ])
 
-  // Validation: --update-goldens is only valid for system fixtures
+  // Validation: --update-goldens is only valid for atomic fixtures
   if (hasUpdateGoldens) {
-    if (testFilter && testFilter !== 'system' && KNOWN_MODULES.has(testFilter)) {
+    if (testFilter && testFilter !== 'atomic' && testFilter !== 'system' && KNOWN_MODULES.has(testFilter)) {
       console.error(
-        `\n\x1b[1;31m[agent-rs] Error: --update-goldens is only supported for the 'system' harness. '${testFilter}' does not use golden snapshots.\x1b[0m\n`
+        `\n\x1b[1;31m[agent-rs] Error: --update-goldens is only supported for the 'atomic' harness. '${testFilter}' does not use golden snapshots.\x1b[0m\n`
       )
       return 1
     }
@@ -460,14 +467,14 @@ function printHelp() {
   \x1b[32mhelp, --help\x1b[0m               Show this help message
 
 \x1b[1mOPTIONS FOR 'quality':\x1b[0m
-  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. modules/system/src/extract/sites.rs)
+  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. modules/atomic/src/extract/sites.rs)
   \x1b[33m--changed, --staged\x1b[0m        Inspect only files modified according to git status
   \x1b[33m--strict\x1b[0m                   Strict mode: exit with failure if ANY warning or file > 365 lines occurs
   \x1b[33m--clippy\x1b[0m                   Include cargo clippy cognitive complexity JSON diagnostics
   \x1b[33m--json\x1b[0m                     Emit raw JSON report
 
 \x1b[1mOPTIONS FOR 'cargo':\x1b[0m
-  \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate system, --crate virtualrs)
+  \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic, --crate virtualrs)
   \x1b[33m-t <filter>\x1b[0m                Target specific test name substring
   \x1b[33m--release\x1b[0m                  Run tests in release profile
 
@@ -535,7 +542,7 @@ async function main() {
     process.exit(0)
   }
 
-  // Direct file or path targeting: e.g. pnpm agentrs modules/system/src/extract/sites.rs
+  // Direct file or path targeting: e.g. pnpm agentrs modules/atomic/src/extract/sites.rs
   if (command.includes('/') || command.endsWith('.rs') || command.endsWith('.ts') || command.endsWith('.tsx') || command.endsWith('.js') || command.endsWith('.mjs')) {
     const code = await runQualityCommand(args, repoRoot, rsDir)
     process.exit(code)

@@ -177,7 +177,7 @@ Intent: generated tree is invisible; crate source is not.
 - Cdylib crate is `modules/runtime`; `.node` lives in `dist/native/`
 - All generated output lives under `dist/`
 - `dist/cargo` is gitignored and absent from `"files"`
-- `import { compile } from '@reference-ui/rust/system'` still works (exports still resolve)
+- `import { compile } from '@reference-ui/rust/atomic'` (and the live-wire alias `@reference-ui/rust/system`) still works (exports still resolve)
 - Contributor `pnpm agentrs b` still drops a loadable `.node`; loader candidate list finds it
 - CI / pipeline native compile + artifact upload paths match
 - `pnpm agentrs t` passes
