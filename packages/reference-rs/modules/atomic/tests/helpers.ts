@@ -20,7 +20,6 @@ export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})-.+$/
 
 export interface AtomicCaseSpec {
   id: string
-  ids?: string[]
   verify(result: CompileResult): void | Promise<void>
 }
 

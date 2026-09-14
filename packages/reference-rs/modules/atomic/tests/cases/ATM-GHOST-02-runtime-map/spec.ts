@@ -7,7 +7,6 @@ import { type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-02',
-  ids: ['ATM-GHOST-02', 'ATM-NAME-01'],
   verify(result) {
     const classes = result.css.classes ?? {}
     expect(classes['mt:2r']).toBe('mt_2r')

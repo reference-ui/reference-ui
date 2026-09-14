@@ -1,10 +1,8 @@
 {
   "alignItems:center": "ai_center",
   "bg:blue": "bg_blue",
-  "borderRadius:md": "rounded_md",
   "borderStyle:solid": "border-style_solid",
   "borderWidth:1px": "bd-w_1px",
-  "color:green": "c_green",
   "color:red": "c_red",
   "color:white": "c_white",
   "display:flex": "d_flex",
@@ -12,6 +10,5 @@
   "gap:2r": "gap_2r",
   "margin:1r": "m_1r",
   "opacity:0.9": "op_0.9",
-  "padding:2r": "p_2r",
-  "padding:4r": "p_4r"
+  "padding:2r": "p_2r"
 }

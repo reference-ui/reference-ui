@@ -7,7 +7,6 @@ import { type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SHORT-01',
-  ids: ['ATM-SHORT-01', 'ATM-SHORT-02'],
   verify(result) {
     const sheet = result.stylesheet
     expect(sheet).toContain('border-bottom-width: 3px;')

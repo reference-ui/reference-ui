@@ -7,7 +7,6 @@ import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-04',
-  ids: ['ATM-COND-04', 'ATM-COND-02'],
   verify(result) {
     expect(hasWant(result, 'color', 'blue.600')).toBe(true)
     expect(hasWant(result, 'color', 'red.500', ['_hover'])).toBe(true)

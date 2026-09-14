@@ -1,6 +1,6 @@
 /**
- * Panda-absorbed expression table. Each row is a JSX prop whose literal
- * arms must appear as wants, including breakpoint `when` on the array row.
+ * Expression table. Each row is a JSX prop whose literal arms must appear
+ * as wants, including breakpoint `when` on the array row.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'

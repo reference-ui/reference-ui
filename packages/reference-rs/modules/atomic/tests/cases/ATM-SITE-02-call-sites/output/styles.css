@@ -4,7 +4,6 @@
   .bd-w_1px { border-width: 1px; }
   .bg_blue { background: blue; }
   .border-style_solid { border-style: solid; }
-  .c_green { color: green; }
   .c_red { color: red; }
   .c_white { color: white; }
   .d_flex { display: flex; }
@@ -13,6 +12,4 @@
   .m_1r { margin: var(--spacing-root); }
   .op_0\.9 { opacity: 0.9; }
   .p_2r { padding: calc(2 * var(--spacing-root)); }
-  .p_4r { padding: calc(4 * var(--spacing-root)); }
-  .rounded_md { border-radius: md; }
 }

@@ -1,6 +1,6 @@
-import { cva } from '@reference-ui/styled'
+import { recipe } from '@reference-ui/react'
 
-const badge = cva({
+const badge = recipe({
   base: { fontWeight: 'bold' },
   variants: {
     variant: {
