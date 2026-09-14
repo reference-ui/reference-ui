@@ -73,7 +73,7 @@ export default defineConfig({
         test: {
           name: 'runtime',
           include: [
-            'runtime/**/*.test.ts',
+            'modules/runtime/js/**/*.test.ts',
           ],
         },
       },

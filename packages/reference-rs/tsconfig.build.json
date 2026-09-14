@@ -7,7 +7,6 @@
     "outDir": "dist"
   },
   "include": [
-    "runtime/**/*.ts",
     "modules/*/js/**/*.ts"
   ],
   "exclude": [

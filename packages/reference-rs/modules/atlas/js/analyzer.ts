@@ -6,7 +6,7 @@
  */
 import path from 'node:path'
 
-import { callNativeJson } from '../../../runtime/native'
+import { analyzeDetailed as analyzeDetailedNative } from './runtime'
 import type { AtlasAnalysisResult, AtlasConfig, Component } from './types'
 
 /**
@@ -35,7 +35,5 @@ export async function analyzeDetailed(
   const normalizedRoot = path.resolve(rootDir)
   const configJson = config ? JSON.stringify({ ...config, rootDir: normalizedRoot }) : undefined
 
-  return callNativeJson<AtlasAnalysisResult>('analyze Atlas data', (native) =>
-    native.analyzeAtlas(normalizedRoot, configJson)
-  )
+  return analyzeDetailedNative(normalizedRoot, configJson)
 }

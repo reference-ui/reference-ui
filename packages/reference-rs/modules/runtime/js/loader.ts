@@ -17,7 +17,6 @@ import {
   type VirtualNativeTarget,
 } from './shared/targets.js'
 import {
-  REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS,
   REQUIRED_VIRTUAL_NATIVE_EXPORTS,
 } from './shared/native-contract.js'
 
@@ -29,24 +28,7 @@ export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
 
 export interface VirtualNativeBinding {
   getNativeCapabilities: () => string
-  rewriteCssImports: (sourceCode: string, relativePath: string) => string
-  rewriteCvaImports: (sourceCode: string, relativePath: string) => string
-  replaceFunctionName: (
-    sourceCode: string,
-    relativePath: string,
-    fromName: string,
-    toName: string,
-    importFrom?: string,
-  ) => string
-  applyResponsiveStyles: (
-    sourceCode: string,
-    relativePath: string,
-    breakpointsJson?: string,
-  ) => string
-  scanAndEmitModules: (rootDir: string, include: string[]) => string
-  analyzeAtlas: (rootDir: string, configJson?: string) => string
-  analyzeStyletrace: (rootDir: string, syncRootHint?: string) => string
-  compileSystem: (requestJson: string) => string
+  [key: string]: unknown
 }
 
 export interface VirtualNativeDiagnostics {
@@ -89,16 +71,8 @@ export function getVirtualNativeCompatibilityError(binding: Record<string, unkno
     return 'native binary returned malformed capabilities metadata'
   }
 
-  const missingCapabilityMarkers = REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS.filter(
-    (marker: string) => (capabilities as Record<string, unknown>)[marker] !== true
-  )
-
-  if (missingCapabilityMarkers.length > 0) {
-    return `native binary does not advertise required capabilities: ${missingCapabilityMarkers.join(', ')}`
-  }
-
-  if (typeof binding.scanAndEmitBundle === 'function') {
-    return 'native binary still exposes deprecated scanAndEmitBundle'
+  if ((capabilities as Record<string, unknown>).schema !== 1) {
+    return 'native binary returned incompatible capabilities schema'
   }
 
   return null

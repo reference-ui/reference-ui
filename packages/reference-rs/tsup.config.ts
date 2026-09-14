@@ -24,7 +24,7 @@ cleanStaleJsOutputs('dist')
 
 export default defineConfig({
   entry: {
-    index: 'runtime/index.ts',
+    index: 'modules/runtime/js/index.ts',
     tasty: 'modules/tasty/js/index.ts',
     'tasty/browser': 'modules/tasty/js/browser.ts',
     'tasty/build': 'modules/tasty/js/build.ts',

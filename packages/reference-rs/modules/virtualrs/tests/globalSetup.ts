@@ -11,12 +11,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
   applyResponsiveStyles,
-  getVirtualNative,
   replaceFunctionName,
-  resolveReferenceRsPackageDir,
   rewriteCssImports,
   rewriteCvaImports,
-} from '../../../runtime/index'
+} from '../js/runtime'
+import {
+  getVirtualNative,
+  resolveReferenceRsPackageDir,
+} from '../../runtime/js/loader'
 
 type VirtualCaseConfig = {
   api: 'rewriteCssImports' | 'rewriteCvaImports' | 'replaceFunctionName' | 'applyResponsiveStyles'

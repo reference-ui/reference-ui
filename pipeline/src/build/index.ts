@@ -9,7 +9,7 @@ import { computePackageBuildHashes, readBuildState, writeBuildState } from './ca
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
 import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/runtime/shared/targets.js'
+import type { VirtualNativeTarget } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import {
   listRegistryWorkspacePackages,
   run,

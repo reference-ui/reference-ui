@@ -23,11 +23,7 @@ const buildStampPath = join(packageDir, 'dist', 'native', `virtual-native.${trip
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),
   join(packageDir, 'Cargo.lock'),
-  join(packageDir, 'native', 'Cargo.toml'),
-  join(packageDir, 'native', 'build.rs'),
-  join(packageDir, 'native', 'src'),
   join(packageDir, 'modules'),
-  join(packageDir, 'shared'),
 ]
 
 /**

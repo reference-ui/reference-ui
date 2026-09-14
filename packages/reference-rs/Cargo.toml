@@ -1,7 +1,5 @@
 [workspace]
 members = [
-  "native",
-  "shared",
   "modules/*",
 ]
 resolver = "2"
@@ -32,7 +30,7 @@ napi-derive = "2"
 napi-build = "2"
 
 # internal
-shared = { path = "shared" }
+shared = { path = "modules/shared" }
 atlas = { path = "modules/atlas" }
 tasty = { path = "modules/tasty" }
 styletrace = { path = "modules/styletrace" }

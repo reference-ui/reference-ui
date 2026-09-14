@@ -9,11 +9,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pathToFileURL } from 'node:url'
 
+import { scanAndEmitModules } from '../js/runtime'
 import {
   getVirtualNative,
   resolveReferenceRsPackageDir,
-  scanAndEmitModules,
-} from '../../../runtime/index'
+} from '../../runtime/js/loader'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -57,7 +57,7 @@ export default async function globalSetup() {
     const include = [`cases/${scenario}/input/**/*.{ts,tsx}`]
     const scenarioOutputDir = join(casesDir, scenario, 'output')
     const startedAt = performance.now()
-    const emitted = JSON.parse(scanAndEmitModules(tastyDir, include)) as EmittedModulesPayload
+    const emitted = scanAndEmitModules(tastyDir, include) as EmittedModulesPayload
     const rustApiMs = performance.now() - startedAt
 
     rmSync(scenarioOutputDir, { recursive: true, force: true })

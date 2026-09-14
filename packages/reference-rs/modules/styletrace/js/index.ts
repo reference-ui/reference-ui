@@ -6,13 +6,11 @@
  */
 import path from 'node:path'
 
-import { callNativeJson } from '../../../runtime/native'
+import { analyzeStyletrace } from './runtime'
 
 export async function trace(rootDir: string, syncRootHint?: string): Promise<string[]> {
   const normalizedRoot = path.resolve(rootDir)
   const normalizedSyncRootHint = syncRootHint ? path.resolve(syncRootHint) : undefined
 
-  return callNativeJson<string[]>('analyze Styletrace data', (native) =>
-    native.analyzeStyletrace(normalizedRoot, normalizedSyncRootHint)
-  )
+  return analyzeStyletrace(normalizedRoot, normalizedSyncRootHint)
 }
