@@ -1,6 +1,11 @@
-import { getVirtualNative, getVirtualNativeUnavailableMessage } from './loader'
-import type { VirtualNativeBinding } from './loader'
+/**
+ * Runtime dispatch functions and dynamic loader interface for the native Reference UI binary addon.
+ * Resolves platform-specific `.node` binaries, verifies architecture compatibility, and exposes guarded native operations.
+ * Provides fail-safe error handling when native capabilities are unavailable or incompatible with the host environment.
+ */
+import { requireNative } from './native'
 
+export { requireNative, callNativeJson } from './native'
 export type { VirtualNativeBinding } from './loader'
 export {
   getVirtualNative,
@@ -13,23 +18,14 @@ export {
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
 } from './loader'
 
-function requireVirtualNative(feature: string): VirtualNativeBinding {
-  const native = getVirtualNative()
-  if (!native) {
-    throw new Error(getVirtualNativeUnavailableMessage(feature))
-  }
-
-  return native
-}
-
 export function rewriteCssImports(sourceCode: string, relativePath: string): string {
-  const native = requireVirtualNative('rewrite CSS imports')
+  const native = requireNative('rewrite CSS imports')
 
   return native.rewriteCssImports(sourceCode, relativePath)
 }
 
 export function rewriteCvaImports(sourceCode: string, relativePath: string): string {
-  const native = requireVirtualNative('rewrite CVA imports')
+  const native = requireNative('rewrite CVA imports')
 
   return native.rewriteCvaImports(sourceCode, relativePath)
 }
@@ -41,7 +37,7 @@ export function replaceFunctionName(
   toName: string,
   importFrom?: string,
 ): string {
-  const native = requireVirtualNative('replace function names')
+  const native = requireNative('replace function names')
 
   return native.replaceFunctionName(sourceCode, relativePath, fromName, toName, importFrom)
 }
@@ -51,7 +47,7 @@ export function applyResponsiveStyles(
   relativePath: string,
   breakpoints?: Record<string, string>,
 ): string {
-  const native = requireVirtualNative('apply responsive styles')
+  const native = requireNative('apply responsive styles')
 
   const breakpointsJson =
     breakpoints && Object.keys(breakpoints).length > 0
@@ -62,31 +58,25 @@ export function applyResponsiveStyles(
 }
 
 export function scanAndEmitModules(rootDir: string, include: string[]): string {
-  const native = requireVirtualNative('scan and emit modules')
+  const native = requireNative('scan and emit modules')
 
   return native.scanAndEmitModules(rootDir, include)
 }
 
 export function analyzeAtlas(rootDir: string, configJson?: string): string {
-  const native = requireVirtualNative('analyze Atlas data')
+  const native = requireNative('analyze Atlas data')
 
   return native.analyzeAtlas(rootDir, configJson)
 }
 
 export function analyzeStyletrace(rootDir: string, syncRootHint?: string): string {
-  const native = requireVirtualNative('analyze Styletrace data')
+  const native = requireNative('analyze Styletrace data')
 
   return native.analyzeStyletrace(rootDir, syncRootHint)
 }
 
 export function compileSystem(requestJson: string): string {
-  const native = requireVirtualNative('compile system') as VirtualNativeBinding & {
-    compileSystem?: (requestJson: string) => string
-  }
-
-  if (typeof native.compileSystem !== 'function') {
-    throw new Error('compileSystem native function is not available on native addon')
-  }
+  const native = requireNative('compile system')
 
   return native.compileSystem(requestJson)
 }
