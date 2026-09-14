@@ -83,10 +83,10 @@ Atomic is the lookup that matches the API:
 | Atomic | `(prop, value, when)` that’s possible | concat what this instance needs |
 | Hashed | whole style objects that appeared | need that exact object, or a VM |
 
-Recipes (`cva` / `sva`) are the exception: the variant set is **closed**,
-so they can be one class in `@layer recipes`. StyleProps on a recipe
-host are still atoms. Do not hash the host’s StyleProps into the recipe
-name — that reopens composition.
+`recipe()` is the exception: the variant set is **closed**, so it can
+be one class in `@layer recipes`. StyleProps on a recipe host are still
+atoms. Do not hash the host’s StyleProps into the recipe name — that
+reopens composition.
 
 ## The ergonomic cost
 
@@ -96,16 +96,9 @@ classes). DevTools is a soup. HTML class lists are long. Gzip eats
 repeated declarations either way.
 
 We pay that because StyleProps + `css()` are an **open** map, not a
-closed `styled.div`. Fix cascade **inside** `resolve/shorthands` (longhands that
+closed host. Fix cascade **inside** `resolve/shorthands` (longhands that
 don’t reset color; one namer for sheet and `css()`). Do not “fix” it by
 hashing the pair — runtime would then need that pair as a key.
-
-## Panda
-
-`vendor/panda/crates/pandacss_encoder/src/lib.rs` — `Atom { prop, value,
-conditions }`, `process_atomic`, `FxHashSet` dedup. That record **is**
-our IR. Their input is `Literal` from the evaluator; ours is a `Want`
-from leaves. Same output grain.
 
 ## Must not
 
@@ -114,7 +107,9 @@ from leaves. Same output grain.
 - Model ternaries as typed unions.
 - Pretend recipes’ closed set licenses hashing StyleProps.
 
-## Files (when coded)
+## Example (Panda)
 
-- `mod.rs` — `Want`, `Atom`, `AtomSet`
-- `key.rs` — `(prop, value, when)` identity
+`vendor/panda/crates/pandacss_encoder/src/lib.rs` — `Atom { prop, value,
+conditions }`, `process_atomic`, `FxHashSet` dedup. That record is the
+grain. Their input is `Literal` from the evaluator; ours is a `Want`
+from leaves.

@@ -14,18 +14,8 @@ Both color modes’ atoms get emitted; the document picks. Do not fold
 A condition is not a reason to hash the whole style object. It is a
 third coordinate on the same `(prop, value, when)` lookup `css()` uses.
 
-## Files (when coded)
-
-- `mod.rs` — condition key → selector / at-rule
-- `breakpoints.rs`
-
-## Panda
-
-Config: `pandacss_config` `UserConfig.conditions`. CSS lower:
-`pandacss_stylesheet/src/conditions.rs`. Runtime helpers:
-`pandacss_codegen/src/artifacts/conditions`. One condition model, three
-homes there — we keep lower next to resolve and let `stylesheet` print
-it / `css` serialize it from the same atom.when.
+One condition model: lower next to resolve, let `stylesheet` print it
+and `css` serialize it from the same `atom.when`.
 
 ## Must not
 

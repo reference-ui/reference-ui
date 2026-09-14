@@ -18,4 +18,4 @@ JS must not declare a second atom model.
 ## Must not
 
 - Check in a parallel `utilities` string as source of truth.
-- Generate Panda’s `styled-system/jsx` / `types` farm here.
+- Generate a jsx / types / patterns farm here.

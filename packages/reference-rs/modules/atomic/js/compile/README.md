@@ -12,8 +12,8 @@ result.css        // CssRuntime → .reference-ui/styled/css
 result.diagnostics
 ```
 
-No OXC in JS. No walking `virtual/`. Core's sync worker calls this instead
-of spawning Panda — **after** matrix parity, not before.
+No OXC in JS. No walking `virtual/`. Core's sync worker calls this as
+the compile entry — **after** matrix parity, not before.
 
 The sheet and `css()` cannot drift: both come from one `compile()`. See crate
 `src/stylesheet` and `src/runtime`.
