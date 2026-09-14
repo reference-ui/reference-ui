@@ -52,7 +52,10 @@ function isPublishedOnNpm(name: string, version: string, registryUrl: string): b
 }
 
 function isGeneratedRustReleasePackage(pkg: RegistryManifestPackage): boolean {
-  return pkg.sourceDir.startsWith('packages/reference-rs/npm/')
+  return (
+    pkg.sourceDir.startsWith('packages/reference-rs/dist/npm/') ||
+    pkg.sourceDir.startsWith('packages/reference-rs/npm/')
+  )
 }
 
 function isDirectReleasePackage(pkg: RegistryManifestPackage): boolean {

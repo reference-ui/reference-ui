@@ -39,7 +39,7 @@ import {
   getVirtualNativePackageName,
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
-} from '../../../../packages/reference-rs/js/shared/targets.js'
+} from '../../../../packages/reference-rs/runtime/shared/targets.js'
 
 export const REFERENCE_RUST_PACKAGE_NAME = '@reference-ui/rust'
 
@@ -103,11 +103,11 @@ interface MaterializeReferenceRustTargetTarballsOptions {
 }
 
 function referenceRustArtifactsDir(packageDir: string): string {
-  return resolve(packageDir, 'artifacts')
+  return resolve(packageDir, 'dist', 'artifacts')
 }
 
 function referenceRustNpmDir(packageDir: string): string {
-  return resolve(packageDir, 'npm')
+  return resolve(packageDir, 'dist', 'npm')
 }
 
 function packedTarballName(name: string, version: string): string {
@@ -206,7 +206,7 @@ async function stageLocalReferenceRustBinaryIntoTargetPackage(
     return
   }
 
-  const localBinaryPath = resolve(packageDir, 'native', `virtual-native.${triple}.node`)
+  const localBinaryPath = resolve(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)
   if (!existsSync(localBinaryPath)) {
     return
   }
@@ -244,8 +244,8 @@ function repoSource() {
 async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Promise<void> {
   const triple: VirtualNativeTarget = 'linux-x64-gnu'
   const rustTarget = getRustTarget(triple)
-  const outputPathInContainer = `/workspace/packages/reference-rs/native/virtual-native.${triple}.node`
-  const outputPathOnHost = resolve(packageDir, 'native', `virtual-native.${triple}.node`)
+  const outputPathInContainer = `/workspace/packages/reference-rs/dist/native/virtual-native.${triple}.node`
+  const outputPathOnHost = resolve(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)
 
   const runBuild = async () => {
     const pnpmStore = dag.cacheVolume('reference-ui-rust-linux-pnpm-store')
@@ -260,7 +260,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
       .withMountedCache('/pnpm/store', pnpmStore)
       .withMountedCache('/root/.cargo', cargoHome)
       .withMountedCache('/root/.rustup', rustupHome)
-      .withMountedCache('/workspace/packages/reference-rs/target', cargoTarget)
+      .withMountedCache('/workspace/packages/reference-rs/dist/cargo', cargoTarget)
       .withEnvVariable('CI', '1')
       .withEnvVariable('NO_COLOR', '1')
       .withEnvVariable('PNPM_STORE_DIR', '/pnpm/store')
@@ -299,7 +299,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
       .withExec([
         'bash',
         '-lc',
-        `export PATH=/root/.cargo/bin:$PATH && pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${rustTarget} --output-dir native --no-js`,
+        `export PATH=/root/.cargo/bin:$PATH && pnpm --filter @reference-ui/rust exec napi build --package reference-virtual-native --platform --release --target ${rustTarget} --output-dir dist/native --no-js`,
       ])
 
     await container.file(outputPathInContainer).export(outputPathOnHost)
@@ -320,7 +320,7 @@ async function buildLinuxReferenceRustBinaryWithDagger(packageDir: string): Prom
 
 function hasDownloadedReferenceRustArtifact(packageDir: string, target: VirtualNativeTarget): boolean {
   return existsSync(
-    resolve(packageDir, 'artifacts', `bindings-${getRustTarget(target)}`, `virtual-native.${target}.node`),
+    resolve(packageDir, 'dist', 'artifacts', `bindings-${getRustTarget(target)}`, `virtual-native.${target}.node`),
   )
 }
 
@@ -331,11 +331,11 @@ async function ensureReferenceRustTargetInstalled(target: VirtualNativeTarget): 
 }
 
 function referenceRustBuiltBinaryPath(packageDir: string, target: VirtualNativeTarget): string {
-  return resolve(packageDir, 'native', `virtual-native.${target}.node`)
+  return resolve(packageDir, 'dist', 'native', `virtual-native.${target}.node`)
 }
 
 function referenceRustCargoTargetDir(packageDir: string, target: VirtualNativeTarget): string {
-  return resolve(packageDir, 'target', getRustTarget(target))
+  return resolve(packageDir, 'dist', 'cargo', getRustTarget(target))
 }
 
 async function removeReferenceRustBuiltBinaryOutputs(
@@ -364,7 +364,7 @@ async function buildReferenceRustBinaryWithNapi(
     '--target',
     getRustTarget(target),
     '--output-dir',
-    'native',
+    'dist/native',
     '--no-js',
   ]
   const builtBinaryPath = referenceRustBuiltBinaryPath(packageDir, target)
@@ -454,7 +454,7 @@ async function stageRequiredContainerBuiltReferenceRustBinaries(
 
   await buildLinuxReferenceRustBinaryWithDagger(packageDir)
   await copyFile(
-    resolve(packageDir, 'native', 'virtual-native.linux-x64-gnu.node'),
+    resolve(packageDir, 'dist', 'native', 'virtual-native.linux-x64-gnu.node'),
     resolve(targetPackage.dir, 'virtual-native.linux-x64-gnu.node'),
   )
 }
