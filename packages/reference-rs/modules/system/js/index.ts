@@ -1,4 +1,9 @@
-import { compileSystem } from '../../../runtime/index.js'
+/**
+ * High-level TypeScript wrapper and orchestration API for the native Reference UI system compiler.
+ * Exposes synchronous and asynchronous compilation methods bridging JavaScript build tools with the native Rust core.
+ * Handles JSON serialization of compilation requests and deserialization of stylesheets, class maps, and diagnostics.
+ */
+import { callNativeJson } from '../../../runtime/native'
 import type { CompileRequest, CompileResult } from './types.js'
 
 export type {
@@ -13,8 +18,9 @@ export type {
 
 export function compileSync(request: CompileRequest): CompileResult {
   const requestJson = JSON.stringify(request)
-  const resultJson = compileSystem(requestJson)
-  return JSON.parse(resultJson) as CompileResult
+  return callNativeJson<CompileResult>('compile system', (native) =>
+    native.compileSystem(requestJson)
+  )
 }
 
 export async function compile(request: CompileRequest): Promise<CompileResult> {

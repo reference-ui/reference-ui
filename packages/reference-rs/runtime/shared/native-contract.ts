@@ -1,3 +1,8 @@
+/**
+ * Required exports and capability markers for the native Rust addon.
+ * Defines the contract that must be fulfilled by the built .node binary.
+ * Consulted during build verification and native loading sanity checks.
+ */
 export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = [
   'getNativeCapabilities',
   'rewriteCssImports',
@@ -7,6 +12,7 @@ export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = [
   'scanAndEmitModules',
   'analyzeAtlas',
   'analyzeStyletrace',
+  'compileSystem',
 ] as const
 
 export const REQUIRED_VIRTUAL_NATIVE_CAPABILITY_MARKERS = [
