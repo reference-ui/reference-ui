@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>reference-rs · atomic style engine</title>
+    <style>
+      :root {
+        --bg: #0c0d0e;
+        --ink: #eceae4;
+        --muted: #90958d;
+        --line: #2c3034;
+        --panel: #16181a;
+        --engine: #161910;
+        --engine-edge: #3d4a32;
+        --base: #d4a054;
+        --atomic: #7dba6a;
+        --typegen: #6ea8d8;
+        --canon: #c49bdb;
+        --trace: #5ec2c0;
+        --ts: #7a8ea3;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+      body {
+        font: 14.5px/1.5 "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+      header {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+      header p { margin: 0; color: var(--muted); font-size: 13px; }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(400px, 460px);
+        min-height: 0;
+        height: 100%;
+      }
+      .pane {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .pane > .scroll {
+        height: 100%;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+      .pane > .scroll::-webkit-scrollbar { width: 0; height: 0; }
+      #map-pane > .scroll {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #map-pane > .scroll::before,
+      #map-pane > .scroll::after {
+        content: "";
+        flex: 1 0 16px;
+      }
+      .rail {
+        position: absolute;
+        top: 12px;
+        right: 7px;
+        bottom: 12px;
+        width: 3px;
+        border-radius: 99px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 160ms ease;
+      }
+      .pane.is-scrollable .rail { opacity: 1; pointer-events: auto; }
+      .rail .thumb {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        min-height: 24px;
+        border-radius: 99px;
+        background: #4a5158;
+        cursor: grab;
+      }
+      .rail .thumb:hover, .rail.is-drag .thumb { background: #8b939a; }
+      .rail.is-drag .thumb { cursor: grabbing; }
+      .stack {
+        width: min(860px, 100%);
+        padding: 24px 28px 40px;
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto;
+      }
+      .layer-head {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      .up {
+        text-align: center;
+        color: #5c625c;
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        padding: 14px 0 16px;
+        user-select: none;
+      }
+      .cut {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 4px 22px;
+        color: var(--ts);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        user-select: none;
+      }
+      .cut::before, .cut::after {
+        content: "";
+        flex: 1;
+        border-top: 1px dashed #445566;
+      }
+      .pills { display: flex; flex-wrap: wrap; gap: 10px; }
+      .pills.stretch > .fn { width: 100%; min-width: 0; }
+      .fn, .mod, .art {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 11px 13px;
+      }
+      .fn:hover, .mod:hover, .art:hover,
+      .fn:focus-visible, .mod:focus-visible, .art:focus-visible {
+        border-color: #5a6168;
+        outline: none;
+      }
+      .fn[data-on="true"], .mod[data-on="true"], .art[data-on="true"] {
+        background: #1e2226;
+      }
+      .fn code {
+        font-family: ui-monospace, "IBM Plex Mono", Menlo, monospace;
+        font-size: 13px;
+      }
+      .fn small, .mod small, .art small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+        line-height: 1.4;
+      }
+      .fn { border-top: 3px solid var(--line); min-width: 140px; }
+      .fn[data-rests*="base-system"] { border-top-color: var(--base); }
+      .fn[data-rests*="atomic"] { border-top-color: var(--atomic); }
+      .fn[data-rests*="typegen"] { border-top-color: var(--typegen); }
+      .fn[data-rests*="fragments"] { border-top-color: var(--ts); }
+
+      .ts-land {
+        border: 1px dashed #3d4d5c;
+        border-radius: 14px;
+        padding: 22px 14px 16px;
+        background: #101318;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+      .ts-tag {
+        position: absolute;
+        top: -10px;
+        left: 16px;
+        background: #101318;
+        padding: 0 8px;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ts);
+      }
+
+      .arts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .art { min-height: 88px; }
+      .art.styles { border-left: 3px solid var(--atomic); }
+      .art.types { border-left: 3px solid var(--typegen); }
+      .art strong { display: block; font-size: 15px; margin-bottom: 4px; }
+
+      .runtime, .build {
+        border: 1px solid #33383e;
+        border-radius: 10px;
+        padding: 14px;
+        background: #121416;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .group-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .build .under .fn { width: 100%; min-width: 0; }
+
+      .engine {
+        background: var(--engine);
+        border: 1px solid var(--engine-edge);
+        border-radius: 12px;
+        padding: 18px 14px 14px;
+        position: relative;
+      }
+      .engine-tag {
+        position: absolute;
+        top: -10px;
+        left: 16px;
+        background: var(--engine);
+        padding: 0 8px;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #b7c4a8;
+      }
+      .mods { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+      .mods-2 { grid-template-columns: 1fr 1fr; margin-top: 10px; }
+      .mod { border-left: 3px solid var(--line); min-height: 132px; }
+      .mod[data-id="base-system"] { border-left-color: var(--base); }
+      .mod[data-id="atomic"] { border-left-color: var(--atomic); }
+      .mod[data-id="typegen"] { border-left-color: var(--typegen); }
+      .mod[data-id="canon"] { border-left-color: var(--canon); }
+      .mod[data-id="styletrace"] { border-left-color: var(--trace); }
+      .mod strong { display: block; margin-bottom: 4px; }
+      .mod .path {
+        font-family: ui-monospace, "IBM Plex Mono", Menlo, monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+
+      body.lit-base-system .mod[data-id="base-system"],
+      body.lit-atomic .mod[data-id="atomic"],
+      body.lit-typegen .mod[data-id="typegen"],
+      body.lit-canon .mod[data-id="canon"],
+      body.lit-styletrace .mod[data-id="styletrace"],
+      body.lit-runtime .runtime,
+      body.lit-build .build,
+      body.lit-fragments .fn[data-id="fragments"],
+      body.lit-styles .art.styles,
+      body.lit-types .art.types {
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+      }
+      body.lit-base-system .mod[data-id="base-system"] { outline: 1px solid var(--base); }
+      body.lit-atomic .mod[data-id="atomic"] { outline: 1px solid var(--atomic); }
+      body.lit-typegen .mod[data-id="typegen"] { outline: 1px solid var(--typegen); }
+      body.lit-canon .mod[data-id="canon"] { outline: 1px solid var(--canon); }
+      body.lit-styletrace .mod[data-id="styletrace"] { outline: 1px solid var(--trace); }
+      body.lit-fragments .fn[data-id="fragments"] { outline: 1px solid var(--ts); }
+      .fn small code { font-size: inherit; }
+
+      aside {
+        border-left: 1px solid var(--line);
+        background: #101214;
+      }
+      aside > .scroll { padding: 28px 32px 40px 28px; }
+      aside h2 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+      aside .meta { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+      aside p { margin: 0 0 12px; }
+      aside ul { margin: 8px 0 12px; padding-left: 18px; }
+      aside li { margin: 0 0 8px; }
+      aside code {
+        font-family: ui-monospace, "IBM Plex Mono", Menlo, monospace;
+        font-size: 12.5px;
+        background: #1c2024;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .hint { color: var(--muted); font-size: 13px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Atomic style engine</h1>
+      <p>TypeScript above the cut. Rust below. Hover anything — what it rests on lights up. Click for the note.</p>
+    </header>
+    <div class="wrap">
+      <div class="pane" id="map-pane">
+      <div class="scroll">
+      <div class="stack">
+
+        <div class="ts-land">
+          <span class="ts-tag">TypeScript land</span>
+
+          <section>
+            <p class="layer-head">5 · Primitives</p>
+            <div class="pills stretch">
+              <button class="fn" data-id="primitives" data-rests="typegen" data-lit="runtime typegen canon styles types">
+                <code>Div</code> <code>Span</code> <code>Button</code> …
+                <small>React components for the tag set. They split StyleProps from DOM props, call <code>css()</code>, and stamp <code>data-layer</code> / color-mode. Sit on the runtime — atomic never ships a component. No Box / Flex / Grid.</small>
+              </button>
+            </div>
+          </section>
+
+          <div class="up">▲ uses ▲</div>
+
+          <section>
+            <p class="layer-head">4 · Runtime layer</p>
+            <div class="runtime">
+              <p class="group-label">Reads what the engine already named. Authored TypeScript — not generated, not a Rust module.</p>
+              <div class="pills">
+                <button class="fn" data-id="css" data-rests="atomic" data-lit="runtime atomic styles"><code>css()</code><small>open style object → classes</small></button>
+                <button class="fn" data-id="recipe" data-rests="atomic typegen" data-lit="runtime atomic typegen styles types"><code>recipe()</code><small>closed variants → classes</small></button>
+              </div>
+            </div>
+          </section>
+
+          <div class="up">two seams · both cross the cut</div>
+
+          <section>
+            <p class="layer-head">3 · Build-time layer</p>
+            <div class="build">
+              <p class="group-label">Authoring — real TypeScript with imports and computed values, evaluated once at sync</p>
+              <div class="pills">
+                <button class="fn" data-id="tokens" data-rests="base-system" data-lit="build fragments base-system types"><code>tokens()</code><small>scales, color modes</small></button>
+                <button class="fn" data-id="font" data-rests="base-system" data-lit="build fragments base-system types"><code>font()</code><small>faces, weights</small></button>
+                <button class="fn" data-id="keyframes" data-rests="base-system" data-lit="build fragments base-system styles"><code>keyframes()</code><small>@keyframes</small></button>
+                <button class="fn" data-id="globalCss" data-rests="base-system" data-lit="build fragments base-system styles"><code>globalCss()</code><small>global rules</small></button>
+              </div>
+              <div class="under">
+                <p class="group-label">Underneath — the collector. This is why it stays TypeScript.</p>
+                <button class="fn" data-id="fragments" data-rests="fragments" data-lit="build fragments base-system">
+                  fragments
+                  <small>Find <code>tokens()</code> / <code>font()</code> / <code>keyframes()</code> / <code>globalCss()</code> call sites, micro-bundle those files, <code>import()</code> them, capture the objects. Dump into the base system. Authors write real TS. A Rust evaluator is Panda v2 — don’t.</small>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="cut">TypeScript above · engine artefacts below</div>
+
+        <section>
+          <p class="layer-head">2 · What the engine emits</p>
+          <div class="arts">
+            <button class="art styles" data-id="styles" data-lit="atomic">
+              <strong>styles.css</strong>
+              <small>Layered atomic stylesheet. From atomic, given a base system.</small>
+            </button>
+            <button class="art types" data-id="types" data-lit="typegen">
+              <strong>types</strong>
+              <small>.d.ts unions. From typegen, given a base system + canon.</small>
+            </button>
+          </div>
+        </section>
+
+        <div class="up">▲ emitted by ▲</div>
+
+        <section>
+          <p class="layer-head">1 · Rust modules</p>
+          <div class="engine">
+            <span class="engine-tag">the engine</span>
+            <div class="mods">
+              <button class="mod" data-id="base-system" data-lit="base-system">
+                <strong>base-system</strong>
+                <small>The definition. Consumes the fragment dump from TypeScript — does not evaluate author JS. Tokens, fonts, keyframes, globals, declared recipes. What extends / layers pass around.</small>
+                <div class="path">not a crate yet · core writes the artefact today</div>
+              </button>
+              <button class="mod" data-id="atomic" data-lit="atomic">
+                <strong>atomic</strong>
+                <small>Extract → atoms → stylesheet + class map. One namer. Does not own Div. Does not emit StyleProps.</small>
+                <div class="path">today: modules/system</div>
+              </button>
+              <button class="mod" data-id="typegen" data-lit="typegen">
+                <strong>typegen</strong>
+                <small>.d.ts from the base system + canon. Token unions, recipe variants. Not a jsx farm.</small>
+                <div class="path">not a crate yet</div>
+              </button>
+            </div>
+            <div class="mods mods-2">
+              <button class="mod" data-id="canon" data-lit="canon">
+                <strong>canon</strong>
+                <small>The language: tags, CSS properties, mt / bg / r / conditions. Not this package’s tokens.</small>
+                <div class="path">nested under system · candidate sibling</div>
+              </button>
+              <button class="mod" data-id="styletrace" data-lit="styletrace">
+                <strong>styletrace</strong>
+                <small>Which JSX names still carry StyleProps. Atomic extract calls this.</small>
+                <div class="path">modules/styletrace · already a sibling</div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+      </div>
+      <div class="rail" aria-hidden="true"><div class="thumb"></div></div>
+      </div>
+      <aside class="pane" id="note-pane">
+        <div class="scroll" id="detail">
+        <h2>The stack</h2>
+        <div class="meta">TypeScript above the cut. Rust below.</div>
+        <p>The engine emits two things: <code>styles.css</code> and types. Above that dotted line is TypeScript land — a build-time layer (<code>tokens()</code>, <code>font()</code>, <code>keyframes()</code>, <code>globalCss()</code>, sitting on fragments) and a runtime layer (<code>css()</code>, <code>recipe()</code>). Primitives sit on the runtime. Fragments stay in JS: authors write real TypeScript. Rust consumes the dump; it does not run the files.</p>
+        <p class="hint">Hover a function to see which module it rests on. tasty, atlas, virtualrs, and <code>modules/runtime</code> (the .node loader) are other products — not this engine.</p>
+        </div>
+        <div class="rail" aria-hidden="true"><div class="thumb"></div></div>
+      </aside>
+    </div>
+    <script>
+      const notes = {
+        primitives: {
+          title: 'Primitives',
+          meta: 'React · above the runtime',
+          body: `
+            <p><code>Div</code>, <code>Span</code>, and the rest of the tag set. They split StyleProps from DOM props (canon knows which keys are style), call <code>css()</code>, and stamp <code>data-layer</code> / color-mode onto the element.</p>
+            <ul>
+              <li>They are not an output of atomic. Atomic never ships a component.</li>
+              <li>Their prop types come from typegen: <code>StyleProps</code> narrowed by the base system’s tokens.</li>
+              <li>Today they also call Panda’s <code>box()</code> pattern. That collapses to <code>css()</code> once <code>font</code> / <code>weight</code> / <code>container</code> / <code>r</code> live in canon + resolve.</li>
+              <li>No <code>Box</code> / <code>Flex</code> / <code>Grid</code>. The tags are the primitives.</li>
+            </ul>`
+        },
+        tokens: {
+          title: 'tokens()',
+          meta: 'build-time · collected by fragments',
+          body: `
+            <p>The author writes a token scale in TypeScript. Fragments micro-bundle that file and capture the object. That object is the base system’s token catalog — names, categories, values, light/dark.</p>
+            <ul>
+              <li>Typegen turns those names into unions so <code>bg="n300"</code> typechecks.</li>
+              <li>Atomic turns those names into <code>var(--colors-n-300)</code> and prints the custom properties into <code>@layer tokens</code>.</li>
+              <li>Rust does not execute this function. Fragments already did, in JS.</li>
+            </ul>`
+        },
+        font: {
+          title: 'font()',
+          meta: 'build-time · collected by fragments',
+          body: `
+            <p>Faces and weights. Same path as tokens: evaluated JS, stored on the base system.</p>
+            <ul>
+              <li>Typegen already has a font-registry generator in core. That is this, owned.</li>
+              <li>Atomic emits <code>@font-face</code> / font token vars from the same definition.</li>
+            </ul>`
+        },
+        keyframes: {
+          title: 'keyframes()',
+          meta: 'build-time · collected by fragments',
+          body: `
+            <p>Declared motion on the definition. Not a browser helper you call per frame.</p>
+            <ul>
+              <li>Fragments capture it. The base system stores it.</li>
+              <li>Atomic prints <code>@keyframes</code> into the sheet (global layer).</li>
+            </ul>`
+        },
+        globalCss: {
+          title: 'globalCss()',
+          meta: 'build-time · collected by fragments',
+          body: `
+            <p>Global rules that belong to this design system. Same fragment path as tokens.</p>
+            <ul>
+              <li>Atomic emits them into <code>@layer global</code>.</li>
+              <li>Six-layer preamble already exists; this layer’s body is still empty in the native compiler.</li>
+            </ul>`
+        },
+        fragments: {
+          title: 'fragments',
+          meta: 'build-time collector · TypeScript, stays TypeScript',
+          body: `
+            <p>This is the machine under <code>tokens()</code> / <code>font()</code> / <code>keyframes()</code> / <code>globalCss()</code>. Core already does it: find the call sites, micro-bundle those files, <code>import()</code> the bundle, capture the objects. Fast, and the right grain — authors write real TS with imports and computed values.</p>
+            <ul>
+              <li>The product is a <strong>base system</strong>, not CSS. Rust <em>consumes</em> that dump. It does not re-parse author modules to learn a token scale.</li>
+              <li>A native fragment system would need a JS evaluator. That is Panda v2: OXC plus an interpreter, then nested ternaries folding to Null, then ghost classes. Do not.</li>
+              <li>The runtime layer does not collect fragments. <code>css()</code> reads the class map. Fragments run at sync, once, in Node.</li>
+            </ul>`
+        },
+        css: {
+          title: 'css()',
+          meta: 'runtime layer · reads atomic’s class map',
+          body: `
+            <p>Open composition. <code>css({ mt: "2r", bg: on ? "n300" : "n100" })</code> concatenates class names the compiler already printed. The function is authored TypeScript. The map is data out of atomic. This is the runtime conversation with the engine — not fragments.</p>
+            <ul>
+              <li>If sheet and <code>css()</code> disagree, you get a ghost class. That is a P0.</li>
+              <li>Do not generate a new <code>css.js</code> from Rust every compile. The algorithm is stable; only the map changes.</li>
+              <li>Not <code>modules/runtime</code> — that folder is the N-API loader.</li>
+            </ul>`
+        },
+        recipe: {
+          title: 'recipe()',
+          meta: 'runtime layer · this is cva',
+          body: `
+            <p>Closed variants. Atomic can emit one class per declared variant into <code>@layer recipes</code>. Style props on a recipe host still go through <code>css()</code> — they are not baked into the recipe class.</p>
+            <ul>
+              <li>Typegen emits variant prop types from the same table atomic compiles.</li>
+              <li>Panda’s own cva artifact is a fixed string; recipe <em>data</em> is a separate artefact. Same split, honest.</li>
+            </ul>`
+        },
+        styles: {
+          title: 'styles.css',
+          meta: 'emitted by atomic',
+          body: `
+            <p>The stylesheet. <code>@layer reset, global, base, tokens, recipes, utilities</code>. Atomic prints this from the atom set, given a base system (token vars, globals, keyframes, recipe classes, extracted utilities).</p>
+            <ul>
+              <li>This is data out of atomic. Not primitives. Not the <code>css()</code> function.</li>
+              <li>The class map rides alongside so runtime <code>css()</code> can look up the same names.</li>
+              <li>Portable / chain wrapping (<code>[data-layer]</code>, upstream sheets) still lives in core for now.</li>
+            </ul>`
+        },
+        types: {
+          title: 'types',
+          meta: 'emitted by typegen',
+          body: `
+            <p>Token unions, <code>StyleProps</code>, recipe variants, font registry. Input is the base system plus canon (which props exist). Users never write <code>.mt_2r</code> in these files.</p>
+            <ul>
+              <li>Panda v2 prints a whole farm from Rust so <code>css()</code> and <code>.d.ts</code> share one context. We only need the unions.</li>
+              <li>Today <code>SystemStyleObject</code> still aliases Panda. That is the leftover to kill.</li>
+            </ul>`
+        },
+        'base-system': {
+          title: 'base-system',
+          meta: 'Rust module · the definition',
+          body: `
+            <p>A collection of fragments, made portable. TypeScript already evaluated <code>tokens</code> / <code>font</code> / <code>keyframes</code> / <code>globalCss</code> (+ declared recipes) and dumped the objects. This module is that artefact — Rust reads it; it does not run the author files. <code>ui.config.ts</code> already <code>extends</code> / <code>layers</code> it.</p>
+            <ul>
+              <li>Atomic asks: is <code>n300</code> a token, what’s the CSS value, what recipes exist.</li>
+              <li>Typegen asks the same questions for unions.</li>
+              <li><code>compile()</code> does not take one yet. That is the missing contract.</li>
+              <li>Today core’s <code>system/base</code> writes <code>baseSystem.mjs</code>. This module is that artefact, owned.</li>
+            </ul>`
+        },
+        atomic: {
+          title: 'atomic',
+          meta: 'Rust module · today modules/system',
+          body: `
+            <p>Want → Atom → AtomSet. Extract both ternary branches (no JS eval). Resolve rhythm, shorthands, conditions. One namer for the sheet and the class map.</p>
+            <ul>
+              <li>Outputs: <code>styles.css</code>, class map, recipe tables.</li>
+              <li>Does not collect <code>tokens()</code>. Does not emit <code>StyleProps</code>. Does not own <code>Div</code>.</li>
+              <li>Rename <code>modules/system</code> → <code>modules/atomic</code> when this crate is next opened.</li>
+            </ul>`
+        },
+        typegen: {
+          title: 'typegen',
+          meta: 'Rust module · not codegen',
+          body: `
+            <p>.d.ts from the base system + canon. Token unions, recipe variants, font registry. No jsx factory, no patterns farm, no recipes-as-modules.</p>
+            <ul>
+              <li>Language (Rust vs TypeScript) is a later call. The <em>input</em> is the base system either way.</li>
+              <li>Panda v2’s type printer exists so their generated <code>css()</code> cannot drift from the editor types. We author <code>css()</code>; we still generate the unions.</li>
+            </ul>`
+        },
+        canon: {
+          title: 'canon',
+          meta: 'Rust module · the language',
+          body: `
+            <p>Platform + dialect. What tags and CSS properties exist. <code>mt</code> means <code>marginTop</code>. <code>r</code>, <code>container</code>, conditions. Generated from <code>@webref</code> plus a Reference dialect.</p>
+            <ul>
+              <li>A base system is an utterance (this package’s tokens). Canon is the language.</li>
+              <li>Atomic, typegen, and styletrace all need it. Candidate sibling so they do not import the stylesheet crate to ask “is <code>mt</code> a style prop?”</li>
+            </ul>`
+        },
+        styletrace: {
+          title: 'styletrace',
+          meta: 'Rust module · already a sibling',
+          body: `
+            <p>Which JSX names still carry StyleProps down to a Reference primitive. Atomic extract/sites calls this. Do not fork it inside atomic.</p>`
+        }
+      }
+
+      function attachRail(pane) {
+        const scroll = pane.querySelector(':scope > .scroll')
+        const rail = pane.querySelector(':scope > .rail')
+        const thumb = rail.querySelector('.thumb')
+        let drag = null
+
+        function layout() {
+          const view = scroll.clientHeight
+          const full = scroll.scrollHeight
+          const overflow = full > view + 1
+          pane.classList.toggle('is-scrollable', overflow)
+          if (!overflow) return
+          const track = rail.clientHeight
+          const size = Math.max(24, (view / full) * track)
+          const max = Math.max(0, full - view)
+          const top = max === 0 ? 0 : (scroll.scrollTop / max) * (track - size)
+          thumb.style.height = size + 'px'
+          thumb.style.top = top + 'px'
+        }
+
+        scroll.addEventListener('scroll', layout, { passive: true })
+        new ResizeObserver(layout).observe(scroll)
+        new ResizeObserver(layout).observe(pane)
+
+        thumb.addEventListener('pointerdown', (e) => {
+          e.preventDefault()
+          drag = { startY: e.clientY, startTop: scroll.scrollTop }
+          rail.classList.add('is-drag')
+          thumb.setPointerCapture(e.pointerId)
+        })
+        thumb.addEventListener('pointermove', (e) => {
+          if (!drag) return
+          const view = scroll.clientHeight
+          const full = scroll.scrollHeight
+          const track = rail.clientHeight
+          const size = Math.max(24, (view / full) * track)
+          const range = Math.max(1, track - size)
+          const delta = ((e.clientY - drag.startY) / range) * (full - view)
+          scroll.scrollTop = drag.startTop + delta
+        })
+        thumb.addEventListener('pointerup', () => {
+          drag = null
+          rail.classList.remove('is-drag')
+        })
+        rail.addEventListener('pointerdown', (e) => {
+          if (e.target === thumb) return
+          const view = scroll.clientHeight
+          const full = scroll.scrollHeight
+          const rect = rail.getBoundingClientRect()
+          const y = e.clientY - rect.top
+          const size = Math.max(24, (view / full) * rail.clientHeight)
+          const ratio = (y - size / 2) / Math.max(1, rail.clientHeight - size)
+          scroll.scrollTop = ratio * (full - view)
+        })
+
+        layout()
+        return layout
+      }
+
+      const layoutNotes = attachRail(document.getElementById('note-pane'))
+      attachRail(document.getElementById('map-pane'))
+
+      const detail = document.getElementById('detail')
+
+      function clearLit() {
+        ;[...document.body.classList].filter((c) => c.startsWith('lit-')).forEach((c) => document.body.classList.remove(c))
+        document.querySelectorAll('[data-on]').forEach((el) => { el.dataset.on = 'false' })
+      }
+
+      function light(el) {
+        clearLit()
+        const lit = (el.dataset.lit || el.dataset.id || '').split(/\s+/).filter(Boolean)
+        lit.forEach((id) => document.body.classList.add('lit-' + id))
+        el.dataset.on = 'true'
+        const n = notes[el.dataset.id]
+        if (!n) return
+        detail.innerHTML = `<h2>${n.title}</h2><div class="meta">${n.meta}</div>${n.body}`
+        detail.scrollTop = 0
+        layoutNotes()
+      }
+
+      document.querySelectorAll('.fn, .mod, .art').forEach((el) => {
+        el.addEventListener('mouseenter', () => light(el))
+        el.addEventListener('focus', () => light(el))
+        el.addEventListener('click', () => light(el))
+      })
+    </script>
+  </body>
+</html>
