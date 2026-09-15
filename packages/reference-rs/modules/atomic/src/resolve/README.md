@@ -17,19 +17,5 @@ Order:
 4. **conditions** — `_hover` → atom.when + `&:hover`
 
 Does not print the stylesheet. `stylesheet/name` spells the class from
-the atom, not from a hashed object.
-
-## Files (when coded)
-
-- `mod.rs` — `resolve(want, config) -> Atom`
-- `shorthands/`, `rhythm/`, `tokens/`, `conditions/`
-
-## Panda
-
-`vendor/panda/crates/pandacss_utility` — `transform`, `normalize.rs`
-(`StyleNormalizer`), `runtime_class.rs`. Their hole: executable
-transforms stayed host JS callbacks. Ours run here so the sheet and
+the atom, not from a hashed object. Resolve runs here so the sheet and
 `css()` cannot disagree.
-
-Rhythm is ours (`reference-core` `extensions/rhythm`), not a Panda
-primitive. Token vars: `pandacss_tokens` + our `tokens()` dictionary.

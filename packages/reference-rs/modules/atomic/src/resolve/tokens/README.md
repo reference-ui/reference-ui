@@ -17,25 +17,6 @@ from `config/`. It does not become a second color science crate.
 renames. A leaf `color: 'gray.800'` under `_dark` is still this lookup,
 then a condition chain.
 
-## Files (when coded)
-
-- `mod.rs` — `resolve_token(path, dictionary) -> AtomValue`
-- `vars.rs` — CSS custom-property spelling (`--colors-*`, `--spacing-*`)
-
-## Panda
-
-`vendor/panda/crates/pandacss_tokens` — `from_config.rs`, `builder.rs`.
-Codegen `artifacts/tokens.rs` is a JS dump of the same dict; we do not
-need that file if `css` can look up vars already resolved into atoms.
-
-## Lift
-
-- **Panda tokens:** the `token.category.path` → `--{category}-{path}`
-  spelling the matrix already asserts.
-- **Atlas:** who uses which tokens, not the var grammar.
-- **Not lifted:** Panda as the owner of the token JSON. `config/` ingests
-  what `tokens()` already defined.
-
 ## Must not
 
 - Invent a second OKLCH pipeline.
