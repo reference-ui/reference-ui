@@ -16,28 +16,29 @@ Canon is the single source of truth for the Reference UI style engine language: 
 
 ## 2. Legend & Status Counts
 
-- `[x]` Proven by a passing cargo unit test (`tests.rs`) or fail-closed generator check (`generate.ts`).
+- `[x]` Proven by a passing cargo unit test (`tests.rs`), fail-closed poison injection test (`join.test.ts`), or generator validation (`join.ts`).
 - `[ ]` Specified; not yet proven by a dedicated named test. The underlying dictionary table or logic may already exist in source.
 
 ### Status Counts
 
 | Area | Total Cases | Proven `[x]` | Specified `[ ]` | Test Suite Harness |
 | :--- | :---: | :---: | :---: | :--- |
-| **JOIN** (Platform join & compilation) | 7 | 7 | 0 | `[gen]` / `[unit]` |
-| **TAG** (HTML/SVG tags & JSX primitives) | 4 | 4 | 0 | `[unit]` |
-| **PROP** (CSS properties & declarations) | 6 | 6 | 0 | `[unit]` |
+| **JOIN** (Platform join & compilation) | 8 | 8 | 0 | `[gen]` / `[unit]` |
+| **TAG** (HTML/SVG tags & JSX primitives) | 5 | 5 | 0 | `[unit]` |
+| **PROP** (CSS properties & declarations) | 7 | 7 | 0 | `[unit]` |
 | **ALIAS** (StyleProps aliases) | 5 | 5 | 0 | `[unit]` |
 | **EXT** (Dialect extensions & macros) | 3 | 3 | 0 | `[unit]` |
 | **COND** (Conditions & breakpoints) | 4 | 4 | 0 | `[unit]` |
-| **FAIL** (Fail-closed rejection) | 7 | 7 | 0 | `[unit]` / `[gen]` |
-| **Total** | **36** | **36** | **0** | |
+| **FAIL** (Fail-closed rejection) | 8 | 8 | 0 | `[unit]` / `[gen]` |
+| **Total** | **40** | **40** | **0** | |
 
-Named proven: `CAN-JOIN-01`–`07`, `CAN-TAG-01`–`04`, `CAN-PROP-01`–`06`, `CAN-ALIAS-01`–`05`, `CAN-EXT-01`–`03`, `CAN-COND-01`–`04`, `CAN-FAIL-01`–`07`.
+Named proven: `CAN-JOIN-01`–`08`, `CAN-TAG-01`–`05`, `CAN-PROP-01`–`07`, `CAN-ALIAS-01`–`05`, `CAN-EXT-01`–`03`, `CAN-COND-01`–`04`, `CAN-FAIL-01`–`08`.
 
 ### Existing Suites
 
-- **Rust Unit Tests**: `packages/reference-rs/modules/canon/src/tests.rs` (19 passing tests in `cargo test -p canon`).
-- **Platform Join Validation**: `packages/reference-rs/modules/canon/generate/generate.ts` (inverted fail-closed join gates executing via `pnpm --filter @reference-ui/rust run canon`).
+- **Rust Unit Tests**: `packages/reference-rs/modules/canon/src/tests.rs` (22 passing tests in `cargo test -p canon`).
+- **Platform Join & Poison Injection Tests**: `packages/reference-rs/modules/canon/generate/join.test.ts` (7 passing tests in `vitest run --project canon`).
+- **Platform Join Orchestrator**: `packages/reference-rs/modules/canon/generate/generate.ts` (executes via `pnpm --filter @reference-ui/rust run canon`).
 
 ---
 
@@ -70,13 +71,15 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-JOIN-03` `[reference]` `[gen]` —
   **Native CSS shorthands must decompose to identical longhands as `@webref/css`.** Decompose every shorthand in `@webref/css` using its official `longhands` array. Abort with exit code 1 if dialect longhands disagree with `@webref/css`.
 - [x] `CAN-JOIN-04` `[reference]` `[unit]` —
-  **Emitted static tables must be lexicographically pre-sorted for binary search.** Inspect `ELEMENTS`, `CANONICAL_PROPERTIES`, `ALIASES`, `REFERENCE_PROPS`, `CONDITIONS`, and `COLOR_PROPERTIES` slices in emitted Rust code. Assert all slices are sorted in ascending byte order according to their search keys, ensuring `binary_search_by_key` always succeeds in $O(\log N)$ time without panic.
+  **Emitted static tables must be lexicographically pre-sorted for binary search.** Inspect `ELEMENTS`, `PRIMITIVE_JSX`, `CANONICAL_PROPERTIES`, `ALIASES`, `REFERENCE_PROPS`, `CONDITIONS`, and `COLOR_PROPERTIES` slices in emitted Rust code. Assert all slices are sorted in ascending byte order according to their search keys, ensuring `binary_search_by_key` always succeeds in $O(\log N)$ time without panic. Assert every element in `ELEMENTS` is resolved by `is_primitive_jsx_name`.
 - [x] `CAN-JOIN-05` `[reference]` `[gen]` —
   **Dialect alias targets must resolve to platform properties or dialect extensions.** Validate that every alias target in `KNOWN_ALIASES` resolves to a valid `@webref/css` property or allowlisted dialect extension; exit process with code 1 otherwise.
 - [x] `CAN-JOIN-06` `[reference]` `[gen]` —
   **Dialect short-prefix properties must exist on platform or dialect allowlist.** Validate that every property specified in short class prefix maps exists in `@webref/css` or `DIALECT_CSS_ALLOWLIST`; exit process with code 1 otherwise.
 - [x] `CAN-JOIN-07` `[reference]` `[gen]` —
   **Dialect color extensions must exist on explicit color allowlist.** Validate that every color property in `COLOR_PROPERTIES` is either generated from webref syntax (`<color>`, `<paint>`, `color`, `*-color`) or registered in `DIALECT_COLOR_ALLOWLIST`; exit process with code 1 otherwise.
+- [x] `CAN-JOIN-08` `[reference]` `[gen]` `[unit]` —
+  **Unique class prefixes across all canonical properties.** Validate that every `class_prefix` in `CANONICAL_PROPERTIES` is globally unique. Ingest both living webref properties and dialect overlays, proving that colliding property pairs (`display`/`d`, `translateX`/`x`, `translateY`/`y`, `zIndex`/`translateZ`, `boxSize`/`size`) are disambiguated. Assert in Rust unit tests that no two `CANONICAL_PROPERTIES` share a `class_prefix`.
 
 ### HTML Elements & JSX Primitives (`TAG`)
 
@@ -87,7 +90,9 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-TAG-03` `[reference]` `[unit]` —
   **Reserved keyword and tag collision renaming.** Query `is_primitive_jsx_name` and `is_reference_primitive` with mapped primitive names for reserved tags: `object` -> `Obj` and `var` -> `Var`. Assert `Obj` and `Var` match as valid JSX primitives while lowercase `object` and `var` match as HTML tags.
 - [x] `CAN-TAG-04` `[reference]` `[unit]` —
-  **Single-letter HTML tag uppercasing.** Verify single-character HTML and SVG tags (`a`, `p`, `b`, `i`, `q`, `s`, `u`, `g`) map to single-character uppercase JSX primitives (`A`, `P`, `B`, `I`, `Q`, `S`, `U`, `G`). Query `is_reference_primitive` with each identifier. Assert all match successfully.
+  **Single-letter HTML tag uppercasing.** Verify single-character HTML and SVG tags (`a`, `p`, `b`, `i`, `q`, `s`, `u`, `g`) map to single-character uppercase JSX primitives (`A`, `P`, `B`, `I`, `Q`, `S`, `U`, `G`). Query `is_reference_primitive` with each identifier (`A`, `P`, `B`, `I`, `Q`, `S`, `U`, `G`). Assert all match successfully.
+- [x] `CAN-TAG-05` `[reference]` `[unit]` —
+  **React SVG camelCase tag recognition and dual primitive matching.** Query `is_html_tag` and `is_reference_primitive` with React SVG camelCase tag strings (`clipPath`, `linearGradient`, `radialGradient`, `foreignObject`). Assert `is_html_tag` matches via zero-allocation ASCII-lowercasing, `is_primitive_jsx_name` matches their PascalCase primitives (`ClipPath`, `LinearGradient`, `RadialGradient`, `ForeignObject`), and `is_reference_primitive` matches both forms.
 
 ### CSS Properties & Declarations (`PROP`)
 
@@ -96,13 +101,15 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-PROP-02` `[reference]` `[unit]` —
   **Atomic utility class prefix resolution with kebab fallback.** Call `class_prefix_for_prop` with canonical camelCase properties (`marginTop`, `padding`, `borderBottomWidth`, `aspectRatio`, `objectFit`) and shorthand aliases (`mt`, `p`). Assert popular properties resolve to short prefixes (`mt`, `p`, `bd-b-w`) and the platform tail falls back deterministically to kebab-case CSS declaration names (`aspect-ratio`, `object-fit`).
 - [x] `CAN-PROP-03` `[reference]` `[unit]` —
-  **Kebab-case CSS declaration property name generation.** Call `to_css_declaration_property` with camelCase properties (`marginTop`, `paddingInline`, `aspectRatio`), aliases (`mt`, `px`), and custom properties (`--custom-color`). Assert properties format as standard kebab-case declaration strings (`margin-top`, `padding-inline`, `aspect-ratio`, `--custom-color`).
+  **Zero-allocation CSS declaration property name generation.** Call `to_css_declaration_property` with camelCase properties (`marginTop`, `paddingInline`, `aspectRatio`), aliases (`mt`, `px`), and custom properties (`--custom-color`). Assert properties format as standard kebab-case declaration borrowed string slices (`&str`) with zero runtime heap allocations.
 - [x] `CAN-PROP-04` `[reference]` `[unit]` —
   **All-webref native shorthand longhand decomposition.** Call `native_longhands_for_prop` with shorthand properties (`padding`, `margin`, `border`, `background`). Assert `padding`, `margin`, `border` return canonical directional slices, and `background` returns the full webref decomposition containing `backgroundColor` and `backgroundImage`.
 - [x] `CAN-PROP-05` `[reference]` `[unit]` —
   **Custom property (`--*`) passthrough and recognition.** Pass CSS custom property names (e.g. `--custom-token`, `--spacing-root`, `--colors-n-300`) to `is_known_style_prop` and `to_css_declaration_property`. Assert `is_known_style_prop` returns `true` and `to_css_declaration_property` returns the custom property unchanged without kebab-casing.
 - [x] `CAN-PROP-06` `[reference]` `[unit]` —
   **Non-shorthand properties return `None` for native longhand queries.** Call `native_longhands_for_prop` with non-shorthand property names (`color`, `display`, `fontSize`, `opacity`, `aspectRatio`, `order`). Assert the return value is `None`.
+- [x] `CAN-PROP-07` `[reference]` `[unit]` —
+  **Color property resolution follows aliases and webref syntax.** Pass standard color properties (`color`, `backgroundColor`, `borderColor`), native shorthands accepting colors (`border`, `background`), StyleProps aliases (`c`, `bg`, `borderC`, `borderXC`), and non-color properties (`mt`, `aspectRatio`, `display`) to `is_color_prop`. Assert color-syntax properties and aliases return `true`, while non-color properties return `false`.
 
 ### StyleProps Shorthand Aliases (`ALIAS`)
 
@@ -131,7 +138,7 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-COND-01` `[reference]` `[unit]` —
   **Responsive breakpoint scale condition recognition.** Pass standard breakpoint identifiers (`base`, `sm`, `md`, `lg`, `xl`, `2xl`) to `is_condition_prop`. Assert each returns `true`.
 - [x] `CAN-COND-02` `[reference]` `[unit]` —
-  **Underscore-prefixed pseudo and media conditions.** Pass underscore-prefixed pseudo-classes and state conditions (`_hover`, `_focusVisible`, `_dark`, `_active`, `_disabled`) to `is_condition_prop`. Assert all return `true`.
+  **Underscore-prefixed pseudo and state conditions.** Pass underscore-prefixed pseudo-classes and state conditions (`_hover`, `_focusVisible`, `_dark`, `_active`, `_disabled`) to `is_condition_prop`. Assert all return `true`. Note: prefixes `_`, `&`, and `@` are open discriminators for arbitrary pseudo-classes, selector fragments, and media queries, while bare identifiers without prefix must match breakpoint conditions.
 - [x] `CAN-COND-03` `[reference]` `[unit]` —
   **Selector (`&`) and media query (`@`) condition prefix recognition.** Pass arbitrary CSS selector strings (`&:hover`, `& > svg`) and media queries (`@media (min-width: 600px)`) to `is_condition_prop`. Assert both prefix styles return `true` immediately.
 - [x] `CAN-COND-04` `[reference]` `[unit]` —
@@ -146,13 +153,15 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-FAIL-03` `[forbidden]` `[unit]` —
   **Rejection of bare pseudo selector names without prefix.** Pass unprefixed pseudo names (`hover`, `focus`, `active`) to `is_condition_prop`. Assert all return `false`.
 - [x] `CAN-FAIL-04` `[forbidden]` `[gen]` —
-  **Build abort on unknown dialect HTML tags missing from `@webref/elements`.** Execute `validateElementsJoin` with an invalid dialect tag (e.g. `foobar`). Assert the generator logs a failure diagnostic and terminates with `process.exit(1)`.
+  **Build abort on unknown dialect HTML tags missing from `@webref/elements`.** Execute `validateElementsJoin` with an injected invalid dialect tag (e.g. `foobar`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-05` `[forbidden]` `[gen]` —
-  **Build abort on unverified canonical properties missing from `@webref/css` and allowlist.** Execute `validateDialectExtJoin` with an unverified property name. Assert the generator logs a failure diagnostic and terminates with `process.exit(1)`.
+  **Build abort on unverified canonical properties missing from `@webref/css` and allowlist.** Execute `validateDialectExtJoin` with an injected unverified property name. Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-06` `[forbidden]` `[gen]` —
-  **Build abort on native shorthand longhands mismatching `@webref/css`.** Execute `validateShorthandsJoin` with altered longhand slices. Assert the generator logs a mismatch diagnostic and terminates with `process.exit(1)`.
+  **Build abort on native shorthand longhands mismatching `@webref/css`.** Execute `validateShorthandsJoin` with an injected mutated longhand slice. Assert the validator produces a mismatch diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-07` `[forbidden]` `[gen]` —
-  **Build abort on unknown dialect alias targets or invalid color extensions.** Execute `validateAliasTargetsJoin` or `validateColorPropsJoin` with invalid properties. Assert the generator logs a mismatch diagnostic and terminates with `process.exit(1)`.
+  **Build abort on unknown dialect alias targets or invalid color extensions.** Execute `validateAliasTargetsJoin` with an invalid alias target or `validateColorPropsJoin` with an invalid color extension. Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
+- [x] `CAN-FAIL-08` `[forbidden]` `[gen]` —
+  **Build abort on duplicate utility class prefix collision.** Execute `validateClassPrefixesJoin` with two properties assigned the identical class prefix (e.g. `d`). Assert the validator returns an error diagnostic identifying both clashing properties and the generator aborts with `process.exit(1)`.
 
 ---
 
@@ -160,42 +169,46 @@ call sites are examples of the job, not names we ship.
 
 | Case ID | Source Test File | Target Function / Routine | Status |
 | :--- | :--- | :--- | :---: |
-| `CAN-JOIN-01` | `generate/generate.ts` | `validateElementsJoin` | `[x]` |
-| `CAN-JOIN-02` | `generate/generate.ts` | `validateDialectExtJoin` | `[x]` |
-| `CAN-JOIN-03` | `generate/generate.ts` | `validateShorthandsJoin` | `[x]` |
+| `CAN-JOIN-01` | `generate/join.ts` | `validateElementsJoin` | `[x]` |
+| `CAN-JOIN-02` | `generate/join.ts` | `validateDialectExtJoin` | `[x]` |
+| `CAN-JOIN-03` | `generate/join.ts` | `validateShorthandsJoin` | `[x]` |
 | `CAN-JOIN-04` | `src/tests.rs` | `test_slices_are_sorted` | `[x]` |
-| `CAN-JOIN-05` | `generate/generate.ts` | `validateAliasTargetsJoin` | `[x]` |
-| `CAN-JOIN-06` | `generate/generate.ts` | `validateShortPrefixesJoin` | `[x]` |
-| `CAN-JOIN-07` | `generate/generate.ts` | `validateColorPropsJoin` | `[x]` |
+| `CAN-JOIN-05` | `generate/join.ts` | `validateAliasTargetsJoin` | `[x]` |
+| `CAN-JOIN-06` | `generate/join.ts` | `validateShortPrefixesJoin` | `[x]` |
+| `CAN-JOIN-07` | `generate/join.ts` | `validateColorPropsJoin` | `[x]` |
+| `CAN-JOIN-08` | `generate/join.test.ts`, `src/tests.rs` | `validateClassPrefixesJoin`, `test_unique_class_prefixes` | `[x]` |
 | `CAN-TAG-01` | `src/tests.rs` | `test_real_primitives_match` (`Div`..`LinearGradient`) | `[x]` |
 | `CAN-TAG-02` | `src/tests.rs` | `test_lowercase_html_tags_match` (`div`..`path`..`circle`) | `[x]` |
 | `CAN-TAG-03` | `src/tests.rs` | `test_real_primitives_match` (`Obj`, `Var`) | `[x]` |
-| `CAN-TAG-04` | `src/tests.rs` | `test_real_primitives_match` (`P`, `A`, `G`) | `[x]` |
+| `CAN-TAG-04` | `src/tests.rs` | `test_real_primitives_match` (`A`, `P`, `B`, `I`, `Q`, `S`, `U`, `G`) | `[x]` |
+| `CAN-TAG-05` | `src/tests.rs` | `test_react_svg_camel_case_tags_match` | `[x]` |
 | `CAN-PROP-01` | `src/tests.rs` | `test_style_props_match` (`aspectRatio`, `order`, etc.) | `[x]` |
 | `CAN-PROP-02` | `src/tests.rs` | `test_class_prefix_for_prop` | `[x]` |
-| `CAN-PROP-03` | `src/tests.rs` | `test_to_css_declaration_property` | `[x]` |
+| `CAN-PROP-03` | `src/tests.rs` | `test_to_css_declaration_property` (zero-alloc `&str`) | `[x]` |
 | `CAN-PROP-04` | `src/tests.rs` | `test_native_shorthands` (`padding`, `background`) | `[x]` |
 | `CAN-PROP-05` | `src/tests.rs` | `test_style_props_match`, `test_to_css_declaration_property` | `[x]` |
 | `CAN-PROP-06` | `src/tests.rs` | `test_non_shorthands_return_none` | `[x]` |
+| `CAN-PROP-07` | `src/tests.rs` | `test_is_color_prop` (`border`, `c`, `bg`, `borderC`, `mt`) | `[x]` |
 | `CAN-ALIAS-01` | `src/tests.rs` | `test_style_props_match` (`m`, `mt`, `p`, `pt`, `bg`, `rounded`, `borderX`) | `[x]` |
 | `CAN-ALIAS-02` | `src/tests.rs` | `test_resolve_canonical_prop` | `[x]` |
 | `CAN-ALIAS-03` | `src/tests.rs` | `test_directional_logical_alias_resolution` | `[x]` |
 | `CAN-ALIAS-04` | `src/tests.rs` | `test_corner_radius_and_border_alias_resolution` | `[x]` |
-| `CAN-ALIAS-05` | `src/tests.rs` | `test_resolve_canonical_prop` (`color`) | `[x]` |
+| `CAN-ALIAS-05` | `src/tests.rs` | `test_idempotent_resolution_for_canonical_props` (`color`, `marginTop`, `padding`) | `[x]` |
 | `CAN-EXT-01` | `src/tests.rs` | `test_style_props_match` (`r`, `container`, `colorMode`, `variant`, `font`, `weight`) | `[x]` |
 | `CAN-EXT-02` | `src/tests.rs` | `test_reference_only_props` | `[x]` |
 | `CAN-EXT-03` | `src/tests.rs` | `test_extension_isolation_in_find_property` | `[x]` |
 | `CAN-COND-01` | `src/tests.rs` | `test_conditions_and_breakpoints` (`base`–`2xl`) | `[x]` |
-| `CAN-COND-02` | `src/tests.rs` | `test_conditions_and_breakpoints` (`_hover`, `_focusVisible`, `_dark`) | `[x]` |
-| `CAN-COND-03` | `src/tests.rs` | `test_conditions_and_breakpoints` (`&:hover`, `@media`) | `[x]` |
+| `CAN-COND-02` | `src/tests.rs` | `test_conditions_and_breakpoints` (`_hover`, `_focusVisible`, `_dark`, `_active`, `_disabled`) | `[x]` |
+| `CAN-COND-03` | `src/tests.rs` | `test_conditions_and_breakpoints` (`&:hover`, `& > svg`, `@media`) | `[x]` |
 | `CAN-COND-04` | `src/tests.rs` | `test_default_breakpoint_for_index` | `[x]` |
 | `CAN-FAIL-01` | `src/tests.rs` | `test_hallucinated_primitives_fail` | `[x]` |
 | `CAN-FAIL-02` | `src/tests.rs` | `test_non_style_attributes_fail` | `[x]` |
-| `CAN-FAIL-03` | `src/tests.rs` | `test_conditions_and_breakpoints` (`hover`, `focus`) | `[x]` |
-| `CAN-FAIL-04` | `generate/generate.ts` | `validateElementsJoin` exit condition | `[x]` |
-| `CAN-FAIL-05` | `generate/generate.ts` | `validateDialectExtJoin` exit condition | `[x]` |
-| `CAN-FAIL-06` | `generate/generate.ts` | `validateShorthandsJoin` exit condition | `[x]` |
-| `CAN-FAIL-07` | `generate/generate.ts` | `validateAliasTargetsJoin` exit condition | `[x]` |
+| `CAN-FAIL-03` | `src/tests.rs` | `test_conditions_and_breakpoints` (`hover`, `focus`, `active`) | `[x]` |
+| `CAN-FAIL-04` | `generate/join.test.ts` | `validateElementsJoin` poison injection | `[x]` |
+| `CAN-FAIL-05` | `generate/join.test.ts` | `validateDialectExtJoin` poison injection | `[x]` |
+| `CAN-FAIL-06` | `generate/join.test.ts` | `validateShorthandsJoin` poison injection | `[x]` |
+| `CAN-FAIL-07` | `generate/join.test.ts` | `validateAliasTargetsJoin`, `validateColorPropsJoin` poison injection | `[x]` |
+| `CAN-FAIL-08` | `generate/join.test.ts` | `validateClassPrefixesJoin` poison injection | `[x]` |
 
 ---
 

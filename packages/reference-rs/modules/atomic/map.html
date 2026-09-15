@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>atomic · stylesheet compiler pipeline</title>
+    <style>
+      :root {
+        --bg: #0b0d0e;
+        --ink: #edebe6;
+        --muted: #8b929a;
+        --line: #22262b;
+        --panel: #131518;
+        --card-bg: #16191d;
+        --card-hover: #1e2228;
+        
+        /* Step Accents */
+        --c-input: #7a8ea3;
+        --c-extract: #e59344;
+        --c-resolve: #6ea8d8;
+        --c-sheet: #5ec2c0;
+        --c-layer: #7dba6a;
+        --c-canon: #c49bdb;
+        --c-atomset: #b088e0;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+      body {
+        font: 13.5px/1.5 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        overflow: hidden;
+      }
+
+      /* Header */
+      header {
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0e1013;
+        z-index: 10;
+      }
+      .brand { display: flex; align-items: baseline; gap: 12px; }
+      header h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      header h1 .badge {
+        font-size: 10.5px;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 4px;
+        background: rgba(94, 194, 192, 0.15);
+        color: var(--c-sheet);
+        border: 1px solid rgba(94, 194, 192, 0.3);
+      }
+      header p { margin: 0; color: var(--muted); font-size: 12.5px; }
+
+      .nav-actions { display: flex; align-items: center; gap: 10px; }
+      .stepper {
+        display: flex;
+        align-items: center;
+        background: #15181c;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 2px;
+      }
+      .step-btn {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font: inherit;
+        font-size: 11.5px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.14s ease;
+      }
+      .step-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.05); }
+      .step-btn.active {
+        color: var(--ink);
+        background: #252b33;
+        font-weight: 600;
+      }
+      .header-link {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+      .header-link:hover { color: var(--ink); background: var(--panel); border-color: var(--line); }
+
+      /* Main Layout */
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 460px;
+        min-height: 0;
+        height: 100%;
+      }
+
+      /* Flow Canvas Pane (Left to Right Workflow) */
+      .canvas-pane {
+        position: relative;
+        overflow-x: auto;
+        overflow-y: hidden;
+        background: 
+          radial-gradient(circle at 50% 50%, rgba(25, 30, 36, 0.3) 0%, transparent 80%),
+          linear-gradient(to right, #14171b 1px, transparent 1px) 0 0 / 48px 48px,
+          linear-gradient(to bottom, #14171b 1px, transparent 1px) 0 0 / 48px 48px,
+          var(--bg);
+        display: flex;
+        align-items: center;
+      }
+
+      .workflow-track {
+        display: flex;
+        align-items: flex-start;
+        padding: 40px 36px 60px;
+        gap: 20px;
+        min-width: max-content;
+      }
+
+      /* Stage Column */
+      .stage-col {
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: relative;
+      }
+      .stage-col.wide { width: 280px; }
+
+      .col-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--line);
+        margin-bottom: 2px;
+      }
+      .col-header .step-tag {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .col-header .pill {
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: #1e2329;
+        color: var(--muted);
+      }
+
+      .stage-col[data-step="0"] .col-header { border-bottom-color: var(--c-input); }
+      .stage-col[data-step="1"] .col-header { border-bottom-color: var(--c-extract); }
+      .stage-col[data-step="2"] .col-header { border-bottom-color: var(--c-resolve); }
+      .stage-col[data-step="3"] .col-header { border-bottom-color: var(--c-sheet); }
+      .stage-col[data-step="4"] .col-header { border-bottom-color: var(--c-layer); }
+
+      /* Connectors between columns */
+      .connector {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 100%;
+        min-height: 420px;
+        position: relative;
+        color: #3b434c;
+      }
+      .connector::before {
+        content: "";
+        position: absolute;
+        top: 28px;
+        bottom: 20px;
+        left: 50%;
+        border-left: 1px dashed #2c333c;
+      }
+      .arrow-symbol {
+        font-size: 18px;
+        line-height: 1;
+        color: #4f5a67;
+        background: var(--bg);
+        z-index: 2;
+        padding: 4px 0;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: all 0.14s ease;
+        text-align: left;
+        color: inherit;
+        font: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+      }
+      .card:hover, .card:focus-visible {
+        border-color: #55606e;
+        background: var(--card-hover);
+        transform: translateY(-1px);
+        outline: none;
+      }
+      .card.active, .card[data-active="true"] {
+        border-color: #7b889b;
+        background: #1f252d;
+        box-shadow: 0 0 0 1px #7b889b;
+      }
+      .card.lit {
+        box-shadow: 0 0 0 2px #fff, 0 4px 16px rgba(0,0,0,0.5);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .card-title {
+        font-weight: 600;
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .card-title code {
+        font-family: ui-monospace, "IBM Plex Mono", monospace;
+        font-size: 12px;
+      }
+      .card-type {
+        font-size: 9.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .card-desc {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      .card-code {
+        background: #0e1013;
+        border: 1px solid #1f2329;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-family: ui-monospace, "IBM Plex Mono", monospace;
+        font-size: 10.5px;
+        color: #c9d1d9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 2px;
+      }
+
+      /* Subgroup containers */
+      .subgroup {
+        border: 1px solid var(--line);
+        background: rgba(18, 21, 25, 0.6);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .subgroup-title {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0;
+        padding-left: 2px;
+      }
+
+      /* Aside / Detail Inspector */
+      aside {
+        border-left: 1px solid var(--line);
+        background: #111316;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 0;
+      }
+      .inspector-head {
+        padding: 16px 22px 14px;
+        border-bottom: 1px solid var(--line);
+        background: #13161a;
+      }
+      .inspector-head .step-crumb {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .inspector-head h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .inspector-scroll {
+        overflow-y: auto;
+        padding: 20px 22px 40px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .inspector-scroll p { margin: 0 0 12px; }
+      .inspector-scroll ul { margin: 8px 0 14px; padding-left: 18px; }
+      .inspector-scroll li { margin-bottom: 6px; }
+
+      /* Data Transformation Strip */
+      .transform-box {
+        background: #090b0c;
+        border: 1px solid #23282f;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 14px 0 18px;
+      }
+      .transform-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      pre.code-block {
+        margin: 0;
+        background: transparent;
+        padding: 0;
+        font-family: ui-monospace, "IBM Plex Mono", monospace;
+        font-size: 11.5px;
+        line-height: 1.45;
+        color: #d1d5db;
+        overflow-x: auto;
+      }
+
+      .callout {
+        border-left: 3px solid var(--c-resolve);
+        background: rgba(110, 168, 216, 0.06);
+        padding: 10px 12px;
+        border-radius: 0 6px 6px 0;
+        margin: 12px 0;
+        font-size: 12.5px;
+      }
+      .callout.warn {
+        border-left-color: var(--c-extract);
+        background: rgba(229, 147, 68, 0.06);
+      }
+      .callout.green {
+        border-left-color: var(--c-layer);
+        background: rgba(125, 186, 106, 0.06);
+      }
+      .callout.sheet {
+        border-left-color: var(--c-sheet);
+        background: rgba(94, 194, 192, 0.06);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <h1>
+          atomic <span class="badge">stylesheet compiler</span>
+        </h1>
+        <p>Pure-function pipeline: Sources $\to$ AST Extract $\to$ Resolve $\to$ 6-Layer Stylesheet (styles.css)</p>
+      </div>
+      <div class="nav-actions">
+        <div class="stepper" id="stepper">
+          <button class="step-btn active" data-step="all">All Stages</button>
+          <button class="step-btn" data-step="0">0: Ingest</button>
+          <button class="step-btn" data-step="1">1: Extract</button>
+          <button class="step-btn" data-step="2">2: Resolve</button>
+          <button class="step-btn" data-step="3">3: Emitter</button>
+          <button class="step-btn" data-step="4">4: styles.css (Layers)</button>
+        </div>
+        <a class="header-link" href="../map.html">← Reference RS Ecosystem Map</a>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- HORIZONTAL FLOW CANVAS -->
+      <div class="canvas-pane" id="canvas-pane">
+        <div class="workflow-track">
+
+          <!-- STAGE 0: SOURCES & UPSTREAM CONTRACTS -->
+          <div class="stage-col" data-step="0">
+            <div class="col-header">
+              <span class="step-tag">0 · Authoring & Ingest</span>
+              <span class="pill">Inputs</span>
+            </div>
+
+            <div class="subgroup">
+              <p class="subgroup-title">Source Ingestion</p>
+              <button class="card" data-id="sources">
+                <div class="card-header">
+                  <span class="card-title"><code>Sources (.tsx/.ts)</code></span>
+                  <span class="card-type">Files</span>
+                </div>
+                <div class="card-desc">Virtual files or scanned repo sources.</div>
+                <div class="card-code">&lt;Button variant="solid" mt="2r" /&gt;</div>
+              </button>
+            </div>
+
+            <div class="subgroup">
+              <p class="subgroup-title">Upstream Contracts</p>
+              <button class="card" data-id="basesystem">
+                <div class="card-header">
+                  <span class="card-title"><code>BaseSystem</code></span>
+                  <span class="card-type">Definition</span>
+                </div>
+                <div class="card-desc">Token catalog, fonts, declared recipes.</div>
+              </button>
+              <button class="card" data-id="canon">
+                <div class="card-header">
+                  <span class="card-title"><code>canon</code></span>
+                  <span class="card-type">Language</span>
+                </div>
+                <div class="card-desc">Valid CSS properties & dialect (<code>mt</code>, <code>r</code>).</div>
+              </button>
+              <button class="card" data-id="styletrace">
+                <div class="card-header">
+                  <span class="card-title"><code>styletrace</code></span>
+                  <span class="card-type">Oracle</span>
+                </div>
+                <div class="card-desc">Identifies JSX components taking StyleProps.</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="connector">
+            <span class="arrow-symbol">→</span>
+          </div>
+
+          <!-- STAGE 1: EXTRACTION (OXC) -->
+          <div class="stage-col wide" data-step="1">
+            <div class="col-header">
+              <span class="step-tag">1 · AST Extraction</span>
+              <span class="pill">src/extract</span>
+            </div>
+
+            <button class="card" data-id="parser">
+              <div class="card-header">
+                <span class="card-title"><code>OXC Fast Parser</code></span>
+                <span class="card-type">Parser</span>
+              </div>
+              <div class="card-desc">Builds AST in microseconds. Zero JS eval.</div>
+            </button>
+
+            <div class="subgroup">
+              <p class="subgroup-title">Extraction Surfaces</p>
+              <button class="card" data-id="call-css">
+                <div class="card-header">
+                  <span class="card-title"><code>css({ ... })</code></span>
+                  <span class="card-type">Open Calls</span>
+                </div>
+                <div class="card-desc">Extracts dynamic style props & ternaries symmetrically.</div>
+              </button>
+              <button class="card" data-id="call-recipe">
+                <div class="card-header">
+                  <span class="card-title"><code>recipe({ ... })</code></span>
+                  <span class="card-type">Closed Calls</span>
+                </div>
+                <div class="card-desc">Extracts base, variants, and compound variant matrices.</div>
+              </button>
+              <button class="card" data-id="call-jsx">
+                <div class="card-header">
+                  <span class="card-title"><code>&lt;Div /&gt; StyleProps</code></span>
+                  <span class="card-type">JSX Tags</span>
+                </div>
+                <div class="card-desc">Extracts JSX attributes when verified by styletrace.</div>
+              </button>
+            </div>
+
+            <button class="card" data-id="wants" style="border-top: 3px solid var(--c-extract);">
+              <div class="card-header">
+                <span class="card-title"><strong><code>Want</code> Stream</strong></span>
+                <span class="card-type">IR Entity</span>
+              </div>
+              <div class="card-desc">Raw author intentions: <code>(prop, value, conditions)</code>.</div>
+              <div class="card-code">Want { prop: "mt", value: "2r" }</div>
+            </button>
+          </div>
+
+          <div class="connector">
+            <span class="arrow-symbol">→</span>
+          </div>
+
+          <!-- STAGE 2: RESOLUTION -->
+          <div class="stage-col wide" data-step="2">
+            <div class="col-header">
+              <span class="step-tag">2 · Normalization</span>
+              <span class="pill">src/resolve</span>
+            </div>
+
+            <div class="subgroup">
+              <p class="subgroup-title">4 Normalization Passes</p>
+              <button class="card" data-id="pass-rhythm">
+                <div class="card-header">
+                  <span class="card-title"><code>Rhythm Math</code></span>
+                  <span class="card-type">Pass 1</span>
+                </div>
+                <div class="card-desc"><code>2r</code> $\to$ <code>calc(2 * var(--spacing-root))</code>.</div>
+              </button>
+              <button class="card" data-id="pass-shorthand">
+                <div class="card-header">
+                  <span class="card-title"><code>Shorthand Expansion</code></span>
+                  <span class="card-type">Pass 2</span>
+                </div>
+                <div class="card-desc"><code>mt</code> $\to$ <code>marginTop</code>; borders expand safely.</div>
+              </button>
+              <button class="card" data-id="pass-token">
+                <div class="card-header">
+                  <span class="card-title"><code>Token Mapping</code></span>
+                  <span class="card-type">Pass 3</span>
+                </div>
+                <div class="card-desc"><code>n300</code> $\to$ <code>var(--colors-n-300)</code>.</div>
+              </button>
+              <button class="card" data-id="pass-conditions">
+                <div class="card-header">
+                  <span class="card-title"><code>Condition Lowering</code></span>
+                  <span class="card-type">Pass 4</span>
+                </div>
+                <div class="card-desc"><code>_hover</code> $\to$ <code>:hover</code>; breakpoints to <code>@media</code>.</div>
+              </button>
+            </div>
+
+            <button class="card" data-id="atom" style="border-top: 3px solid var(--c-resolve);">
+              <div class="card-header">
+                <span class="card-title"><strong><code>Atom</code></strong></span>
+                <span class="card-type">IR Entity</span>
+              </div>
+              <div class="card-desc">1 CSS rule + 1 deterministic class name.</div>
+              <div class="card-code">.mt_2r { margin-top: calc(...) }</div>
+            </button>
+
+            <button class="card" data-id="atomset" style="border-top: 3px solid var(--c-atomset);">
+              <div class="card-header">
+                <span class="card-title"><strong><code>AtomSet</code> Pool</strong></span>
+                <span class="card-type">Dedup</span>
+              </div>
+              <div class="card-desc">Global deduplicated HashSet of all project atoms.</div>
+            </button>
+          </div>
+
+          <div class="connector">
+            <span class="arrow-symbol">→</span>
+          </div>
+
+          <!-- STAGE 3: STYLESHEET EMITTER -->
+          <div class="stage-col wide" data-step="3">
+            <div class="col-header">
+              <span class="step-tag">3 · Stylesheet Assembly</span>
+              <span class="pill">src/stylesheet</span>
+            </div>
+
+            <button class="card" data-id="emitter" style="border-top: 3px solid var(--c-sheet);">
+              <div class="card-header">
+                <span class="card-title"><code>StylesheetEmitter</code></span>
+                <span class="card-type">Emitter</span>
+              </div>
+              <div class="card-desc">Formats the 6 CSS layers with strict cascade sorting.</div>
+            </button>
+
+            <div class="subgroup">
+              <p class="subgroup-title">Companion Artifact</p>
+              <button class="card" data-id="css-runtime">
+                <div class="card-header">
+                  <span class="card-title"><code>CssRuntime Data</code></span>
+                  <span class="card-type">Map Output</span>
+                </div>
+                <div class="card-desc"><code>[when:]prop:value $\to$ className</code> dictionary returned alongside the CSS text.</div>
+                <div class="card-code">"marginTop:2r": "mt_2r"</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="connector">
+            <span class="arrow-symbol">→</span>
+          </div>
+
+          <!-- STAGE 4: THE 6-LAYER STYLESHEET (styles.css) -->
+          <div class="stage-col wide" data-step="4">
+            <div class="col-header">
+              <span class="step-tag">4 · styles.css Output</span>
+              <span class="pill">6 Layers</span>
+            </div>
+
+            <button class="card" data-id="styles-css" style="border-top: 3px solid var(--c-layer); background: #192019;">
+              <div class="card-header">
+                <span class="card-title"><strong><code>styles.css</code></strong></span>
+                <span class="card-type">Shipped File</span>
+              </div>
+              <div class="card-desc">Complete static stylesheet with strict layer preamble.</div>
+            </button>
+
+            <div class="subgroup">
+              <p class="subgroup-title">Cascade Layer Breakdown</p>
+              <button class="card" data-id="layer-reset">
+                <div class="card-header">
+                  <span class="card-title"><code>1. @layer reset</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc">CSS reset rules & box sizing normalization.</div>
+              </button>
+              <button class="card" data-id="layer-global">
+                <div class="card-header">
+                  <span class="card-title"><code>2. @layer global</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc">Global rules, element defaults, <code>@keyframes</code>.</div>
+              </button>
+              <button class="card" data-id="layer-base">
+                <div class="card-header">
+                  <span class="card-title"><code>3. @layer base</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc">Base architectural rules slot.</div>
+              </button>
+              <button class="card" data-id="layer-tokens">
+                <div class="card-header">
+                  <span class="card-title"><code>4. @layer tokens</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc"><code>:root</code> & theme CSS custom properties (<code>--colors-*</code>).</div>
+              </button>
+              <button class="card" data-id="layer-recipes">
+                <div class="card-header">
+                  <span class="card-title"><code>5. @layer recipes</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc">Closed variant classes (e.g. <code>.recipe-btn--sm</code>).</div>
+              </button>
+              <button class="card" data-id="layer-utilities">
+                <div class="card-header">
+                  <span class="card-title"><code>6. @layer utilities</code></span>
+                  <span class="card-type">Layer</span>
+                </div>
+                <div class="card-desc">Open atomic utilities sorted by shorthand priority.</div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: DETAIL INSPECTOR -->
+      <aside>
+        <div class="inspector-head">
+          <div class="step-crumb" id="crumb">STAGE INSPECTION</div>
+          <h2 id="ins-title">Atomic Compiler Pipeline</h2>
+        </div>
+        <div class="inspector-scroll" id="ins-body">
+          <p>The <strong>atomic</strong> module is Reference UI's native stylesheet compiler. It takes project sources and BaseSystem definitions, and compiles them into a deterministic six-layer stylesheet (<code>styles.css</code>) and a companion runtime class lookup map.</p>
+          
+          <div class="transform-box">
+            <div class="transform-label">Transformation Story Example</div>
+            <pre class="code-block" id="ins-code">// Author writes:
+&lt;Button variant="solid" mt="2r" bg={on ? "n300" : "n100"} /&gt;</pre>
+          </div>
+
+          <div class="callout sheet">
+            <strong>The Atomic Mandate:</strong> Sources in, <code>styles.css</code> + class map out. Does not own React DOM primitives. Does not evaluate author JS at build time. Does not emit TypeScript types (owned by <code>modules/typegen</code>).
+          </div>
+
+          <p>Click on any card in the pipeline to inspect its exact inputs, normalization passes, emitted rules, and architectural invariants.</p>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const data = {
+        sources: {
+          step: 'STAGE 0 · INGESTION',
+          title: 'Author Sources',
+          code: `// In-memory or disk sources:
+export function Button({ variant, ...props }) {
+  return <button className={recipe({ variant }) + " " + css(props)} />;
+}`,
+          desc: `
+            <p>The compiler ingests virtual sources (<code>VirtualSource { path, content }</code>) or traverses project directories for <code>.tsx</code>, <code>.ts</code>, <code>.jsx</code>, and <code>.js</code> files.</p>
+            <ul>
+              <li><strong>Zero build artifact pollution:</strong> Folders like <code>node_modules</code>, <code>.reference-ui</code>, and <code>dist</code> are ignored.</li>
+              <li><strong>Constant collection:</strong> Collects top-level constants to resolve local static expressions during extraction.</li>
+            </ul>`
+        },
+        basesystem: {
+          step: 'STAGE 0 · CONTRACTS',
+          title: 'BaseSystem Definition',
+          code: `// Dumped from TypeScript fragments:
+{
+  "tokens": { "colors": { "n300": "#2c3035", "n100": "#f4f5f7" } },
+  "recipes": { "button": { "base": {...}, "variants": {...} } }
+}`,
+          desc: `
+            <p><strong>BaseSystem</strong> is the design system definition. The author wrote tokens, scales, and component recipe schemas in real TypeScript; the fragment collector bundled it in Node.js and dumped the structured data into Rust.</p>
+            <p>The engine consumes this dump directly—it never evaluates JavaScript modules to learn a token scale.</p>`
+        },
+        canon: {
+          step: 'STAGE 0 · CONTRACTS',
+          title: 'canon (The Language)',
+          code: `// canon resolves:
+"mt" -> "marginTop" (shorthand)
+"r"  -> rhythm multiplier (x --spacing-root)
+"_hover" -> ":hover" (pseudo selector)`,
+          desc: `
+            <p><strong>canon</strong> is the static dictionary of valid CSS properties, HTML tags, and Reference UI dialects. It acts as an independent shared dependency so compiler passes do not re-implement property semantics.</p>`
+        },
+        styletrace: {
+          step: 'STAGE 0 · CONTRACTS',
+          title: 'styletrace Oracle',
+          code: `// styletrace answers:
+styletrace::accepts_style_props("Button") == true
+styletrace::accepts_style_props("ThirdPartyWidget") == false`,
+          desc: `
+            <p><strong>styletrace</strong> is the static analysis oracle that verifies if a JSX identifier forwards StyleProps down to a Reference primitive. If a component does not accept StyleProps, attributes are safely ignored.</p>`
+        },
+        parser: {
+          step: 'STAGE 1 · EXTRACTION',
+          title: 'OXC Fast Parser & Visitor',
+          code: `// AST traversal using OXC:
+let parser = Parser::new(&allocator, content, source_type);
+let program = parser.parse();
+extract::extract_with_context(&program, &mut ctx);`,
+          desc: `
+            <p>Extraction uses the ultra-fast Rust <strong>OXC parser</strong>. It runs in microseconds per file, walking AST nodes without starting a JavaScript runtime.</p>
+            <div class="callout warn">
+              <strong>Zero JS Evaluation:</strong> In Panda v2, an AST interpreter tried to evaluate JavaScript expressions at compile time. That caused compiler crashes and ghost classes. In Reference UI, AST extraction is purely declarative.
+            </div>`
+        },
+        'call-css': {
+          step: 'STAGE 1 · EXTRACTION',
+          title: 'css(...) Calls — Open Composition',
+          code: `// Call site in source:
+const cardStyle = css({
+  display: "flex",
+  gap: "2r",
+  bg: isDark ? "n900" : "n100"
+});`,
+          desc: `
+            <p><code>css()</code> is the authoring function for open style composition. It takes an arbitrary style object.</p>
+            <p>When extracting dynamic expressions (such as ternaries), the extractor extracts <strong>both branches symmetrically</strong>. Both <code>n900</code> and <code>n100</code> are extracted as separate Wants so both classes will exist in the stylesheet regardless of runtime state.</p>`
+        },
+        'call-recipe': {
+          step: 'STAGE 1 · EXTRACTION',
+          title: 'recipe(...) Calls — Closed Variants',
+          code: `// Component recipe definition:
+const button = recipe({
+  base: { display: "inline-flex" },
+  variants: {
+    size: { sm: { px: "2r" }, lg: { px: "4r" } },
+    variant: { solid: { bg: "primary" }, ghost: { bg: "transparent" } }
+  }
+});`,
+          desc: `
+            <p><code>recipe()</code> defines closed component variants (Reference UI's clean alternative to CVA). Because the variant set is closed and finite, the compiler extracts the base styles, variant branches, and compound rules as a structured matrix.</p>`
+        },
+        'call-jsx': {
+          step: 'STAGE 1 · EXTRACTION',
+          title: 'JSX StyleProps',
+          code: `// Authored JSX:
+<Div mt="2r" px="4r" _hover={{ bg: "n200" }}>
+  Content
+</Div>`,
+          desc: `
+            <p>Direct JSX attributes on Reference primitives are extracted as style declarations. Each property is paired with any wrapping conditional or pseudo states.</p>`
+        },
+        wants: {
+          step: 'STAGE 1 · DOMAIN CONCEPT',
+          title: 'Want Stream',
+          code: `// Extracted Want struct:
+Want {
+  prop: "mt",
+  value: "2r",
+  conditions: [],
+  origin: "Card.tsx:14"
+}`,
+          desc: `
+            <p>A <strong>Want</strong> is an unvalidated, raw styling intention captured directly from the AST before normalization. It represents what the author wrote, preserving shorthand names, rhythm units, and token aliases.</p>
+            <ul>
+              <li>Handles dynamic branches without evaluating JS.</li>
+              <li>Carries origin metadata for compiler diagnostics without polluting atom deduplication keys.</li>
+            </ul>`
+        },
+        'pass-rhythm': {
+          step: 'STAGE 2 · PASS 1',
+          title: 'Rhythm Normalization',
+          code: `// Rhythm calculation:
+"2r"   -> "calc(2 * var(--spacing-root))"
+"0.5r" -> "calc(0.5 * var(--spacing-root))"
+"3/4"  -> "75%"`,
+          desc: `
+            <p>Converts Reference UI rhythm multiples into root-anchored CSS expressions. Fractions and decimals are mathematically normalized to standard CSS units.</p>`
+        },
+        'pass-shorthand': {
+          step: 'STAGE 2 · PASS 2',
+          title: 'Shorthand Expansion & Priority',
+          code: `// Shorthand expansion:
+"mt" -> "marginTop"
+"px" -> ["paddingLeft", "paddingRight"]
+"borderBottom" -> expands without resetting borderColor`,
+          desc: `
+            <p>Expands shorthands into canonical longhands. Applies property-priority ranking to guarantee that longhands always rank higher than shorthands, preventing cascade collisions.</p>`
+        },
+        'pass-token': {
+          step: 'STAGE 2 · PASS 3',
+          title: 'Token Resolution',
+          code: `// Token variable mapping:
+"n300"    -> "var(--colors-n-300)"
+"primary" -> "var(--colors-primary)"`,
+          desc: `
+            <p>Cross-references author token identifiers against the BaseSystem token catalog and emits standardized CSS custom properties.</p>`
+        },
+        'pass-conditions': {
+          step: 'STAGE 2 · PASS 4',
+          title: 'Condition Normalization',
+          code: `// Pseudo & Media queries:
+"_hover" -> ":hover"
+"_dark"  -> "[data-color-mode='dark']"
+"sm"     -> "@media (min-width: 640px)"`,
+          desc: `
+            <p>Lowers condition identifiers into CSS pseudo-selectors, data attributes, and media queries in a deterministic order.</p>`
+        },
+        atom: {
+          step: 'STAGE 2 · DOMAIN CONCEPT',
+          title: 'Atom',
+          code: `// Fully resolved Atom:
+Atom {
+  prop: "marginTop",
+  value: AtomValue::Calc("calc(2 * var(--spacing-root))"),
+  conditions: [],
+  class_name: "mt_2r"
+}`,
+          desc: `
+            <p>An <strong>Atom</strong> is a single, fully resolved styling unit. It represents exactly one CSS property declaration bound to one deterministic class name.</p>
+            <p>Because atoms represent individual leaves, runtime <code>css()</code> can compose arbitrary styles without needing the compiler to have seen that exact object combination before.</p>`
+        },
+        atomset: {
+          step: 'STAGE 2 · DOMAIN CONCEPT',
+          title: 'AtomSet Pool',
+          code: `// Global deduplication:
+AtomSet {
+  // Keyed by: (prop, value, conditions)
+  "marginTop:calc(2*var(--root)):[]" => Atom { ... }
+}`,
+          desc: `
+            <p>The <strong>AtomSet</strong> is the global deduplicated pool of all atoms in the project. If 100 components across 50 files author <code>mt="2r"</code>, they produce 100 <code>Want</code>s, but resolve to <strong>exactly one Atom</strong> in the AtomSet.</p>`
+        },
+        emitter: {
+          step: 'STAGE 3 · ASSEMBLY',
+          title: 'StylesheetEmitter Engine',
+          code: `// Emits CSS text conforming to:
+@layer reset, global, base, tokens, recipes, utilities;
+
+// 1. Preamble & Resets
+// 2. Token custom properties under :root
+// 3. Closed recipe variant rules
+// 4. Sorted atomic utility rules`,
+          desc: `
+            <p>The <strong>StylesheetEmitter</strong> takes the deduplicated <code>AtomSet</code>, recipe definitions, and BaseSystem tokens, and serializes them into the final CSS text.</p>
+            <p>It sorts utilities by shorthand priority (shorthands $\\to$ longhands) to guarantee predictable CSS cascade resolution.</p>`
+        },
+        'css-runtime': {
+          step: 'STAGE 3 · COMPANION MAP',
+          title: 'CssRuntime Map Output',
+          code: `// Emitted data structure:
+{
+  "classes": {
+    "marginTop:2r": "mt_2r",
+    "backgroundColor:n300": "bg_n300"
+  }
+}`,
+          desc: `
+            <p>The <strong>CssRuntime</strong> is emitted alongside the stylesheet as data. It provides the exact reverse lookup dictionary required by client-side <code>css()</code> to map dynamic properties to compiled class names in $O(1)$ time.</p>`
+        },
+        'styles-css': {
+          step: 'STAGE 4 · FINAL ARTIFACT',
+          title: 'styles.css Output',
+          code: `@layer reset, global, base, tokens, recipes, utilities;
+
+@layer tokens {
+  :root { --colors-n-300: #2c3035; }
+}
+
+@layer recipes {
+  .recipe-btn--size_sm { padding: 4px 8px; }
+}
+
+@layer utilities {
+  .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}`,
+          desc: `
+            <p>The final static stylesheet generated on disk (<code>.reference-ui/styled/styles.css</code>). It is completely deterministic, order-stable, and contains zero runtime overhead.</p>`
+        },
+        'layer-reset': {
+          step: 'LAYER 1 · RESET',
+          title: '@layer reset',
+          code: `@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+}`,
+          desc: `
+            <p>The lowest priority layer. Contains standard CSS resets and baseline box-sizing rules.</p>`
+        },
+        'layer-global': {
+          step: 'LAYER 2 · GLOBAL',
+          title: '@layer global',
+          code: `@layer global {
+  @keyframes spin { from { transform: rotate(0deg); } to { ... } }
+  a { text-decoration: none; }
+}`,
+          desc: `
+            <p>Contains global design system rules, element defaults, and motion <code>@keyframes</code> definitions.</p>`
+        },
+        'layer-base': {
+          step: 'LAYER 3 · BASE',
+          title: '@layer base',
+          code: `@layer base {
+  /* Reserved layer for base architectural tokens */
+}`,
+          desc: `
+            <p>Reserved layer retained in the preamble to guarantee consistent layer slotting across bundlers and packages.</p>`
+        },
+        'layer-tokens': {
+          step: 'LAYER 4 · TOKENS',
+          title: '@layer tokens',
+          code: `@layer tokens {
+  :root {
+    --colors-n-300: #2c3035;
+    --spacing-root: 8px;
+  }
+  [data-color-mode="dark"] {
+    --colors-n-300: #14171a;
+  }
+}`,
+          desc: `
+            <p>Houses all design system CSS custom properties generated from the BaseSystem token catalog, scoped under <code>:root</code> and theme selectors.</p>`
+        },
+        'layer-recipes': {
+          step: 'LAYER 5 · RECIPES',
+          title: '@layer recipes (Closed Classes)',
+          code: `@layer recipes {
+  .recipe-button { display: inline-flex; align-items: center; }
+  .recipe-button--size_sm { padding: 4px 8px; }
+  .recipe-button--variant_solid { background: var(--colors-primary); }
+}`,
+          desc: `
+            <p>Houses static classes generated for closed component recipes. Because this layer precedes <code>@layer utilities</code>, recipe defaults can be cleanly overridden by open atomic StyleProps without specificity hacks.</p>`
+        },
+        'layer-utilities': {
+          step: 'LAYER 6 · UTILITIES',
+          title: '@layer utilities (Atomic Utilities)',
+          code: `@layer utilities {
+  .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .bg_n300 { background-color: var(--colors-n-300); }
+}`,
+          desc: `
+            <p>The highest priority styling layer. Houses open atomic utility classes extracted from author StyleProps and <code>css()</code> calls, sorted by shorthand priority.</p>
+            <div class="callout green">
+              <strong>Cascade Precedence Guarantee:</strong> Because <code>@layer utilities</code> is the 6th layer, writing <code>&lt;Button variant="solid" mt="2r" bg="red.500" /&gt;</code> ensures that <code>bg="red.500"</code> naturally overrides the recipe's background rule without <code>!important</code>.
+            </div>`
+        }
+      };
+
+      const crumb = document.getElementById('crumb');
+      const insTitle = document.getElementById('ins-title');
+      const insBody = document.getElementById('ins-body');
+
+      function showInspection(id) {
+        const item = data[id];
+        if (!item) return;
+
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        const activeCard = document.querySelector(`[data-id="${id}"]`);
+        if (activeCard) activeCard.classList.add('active');
+
+        crumb.textContent = item.step;
+        insTitle.textContent = item.title;
+        insBody.innerHTML = `
+          <div class="transform-box">
+            <div class="transform-label">Stage Representation</div>
+            <pre class="code-block">${item.code}</pre>
+          </div>
+          ${item.desc}
+        `;
+      }
+
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+          showInspection(card.dataset.id);
+        });
+        card.addEventListener('mouseenter', () => {
+          card.classList.add('lit');
+        });
+        card.addEventListener('mouseleave', () => {
+          card.classList.remove('lit');
+        });
+      });
+
+      // Stepper filter buttons
+      document.querySelectorAll('.step-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const step = btn.dataset.step;
+
+          document.querySelectorAll('.stage-col').forEach(col => {
+            if (step === 'all' || col.dataset.step === step) {
+              col.style.opacity = '1';
+              col.style.pointerEvents = 'auto';
+            } else {
+              col.style.opacity = '0.22';
+              col.style.pointerEvents = 'none';
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
