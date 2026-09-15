@@ -4,6 +4,7 @@
  * Provides canonical W3C/WHATWG data as the primary platform truth for the compiler.
  */
 import * as webrefCss from '@webref/css';
+import type { ElementsGroup } from '@webref/elements';
 import * as webrefElements from '@webref/elements';
 
 export interface PlatformCssProperty {
@@ -39,10 +40,6 @@ const EXCLUDED_HTML_TAGS = new Set<string>([
   'xmp', 'param', 'noembed', 'noframes',
 ]);
 
-interface ElementsGroup {
-  elements?: Array<{ name: string; obsolete?: boolean }>;
-}
-
 function collectHtmlElements(
   data: Record<string, ElementsGroup>,
   target: Set<string>
@@ -74,9 +71,21 @@ function collectSvgElements(
 export async function loadPlatformElements(): Promise<Set<string>> {
   const elementsData = await webrefElements.listAll();
   const elements = new Set<string>();
-  collectHtmlElements(elementsData as Record<string, ElementsGroup>, elements);
-  collectSvgElements(elementsData as Record<string, ElementsGroup>, elements);
+  collectHtmlElements(elementsData, elements);
+  collectSvgElements(elementsData, elements);
   return elements;
+}
+
+function isPlatformColorProperty(kebab: string, syntax: string): boolean {
+  if (kebab === 'color' || kebab === 'background' || kebab.endsWith('-color')) {
+    return true;
+  }
+  return syntax.includes('<color>') || syntax.includes('<paint>');
+}
+
+function extractLonghands(longhands?: string[]): string[] {
+  if (!longhands || longhands.length === 0) return [];
+  return longhands.map(kebabToCamel);
 }
 
 export async function loadPlatformCss(): Promise<PlatformCss> {
@@ -89,10 +98,7 @@ export async function loadPlatformCss(): Promise<PlatformCss> {
   for (const prop of cssData.properties) {
     const kebab = prop.name.toLowerCase();
     const camel = kebabToCamel(prop.name);
-
-    const camelLonghands = (prop.longhands && prop.longhands.length > 0)
-      ? prop.longhands.map(kebabToCamel)
-      : [];
+    const camelLonghands = extractLonghands(prop.longhands);
 
     properties.set(camel, {
       name: camel,
@@ -103,13 +109,7 @@ export async function loadPlatformCss(): Promise<PlatformCss> {
     propertyNames.add(kebab);
     propertyNames.add(camel);
 
-    const syntax = prop.syntax || '';
-    if (
-      syntax.includes('<color>') ||
-      syntax.includes('<paint>') ||
-      kebab.endsWith('-color') ||
-      kebab === 'color'
-    ) {
+    if (isPlatformColorProperty(kebab, prop.syntax || '')) {
       colorProperties.add(kebab);
       colorProperties.add(camel);
     }
@@ -126,3 +126,4 @@ export async function loadPlatformCss(): Promise<PlatformCss> {
     colorProperties,
   };
 }
+

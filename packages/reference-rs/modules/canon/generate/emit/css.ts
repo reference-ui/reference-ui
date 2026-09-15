@@ -5,8 +5,8 @@
  * Emits zero-allocation binary-searchable static slices across modular Rust files.
  */
 
-import type { DialectData, DialectProperty } from './dialect';
-import { formatChunks } from './emitters';
+import type { DialectData, DialectProperty } from '../dialect';
+import { formatChunks } from './format';
 
 function toConstIdent(name: string): string {
   return name

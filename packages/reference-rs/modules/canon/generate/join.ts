@@ -6,7 +6,31 @@
  */
 
 import type { DialectData } from './dialect';
-import { camelToKebab, type PlatformCss } from './platform';
+import { EXTENSIONS, SHORT_PREFIXES, type ExtensionProp } from './overlay';
+import type { PlatformCss } from './platform';
+
+export function isPlatformOrExtension(
+  name: string,
+  platformCss: PlatformCss,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
+): boolean {
+  const isPlatform =
+    platformCss.properties.has(name) ||
+    platformCss.propertyNames.has(name);
+  const isDialectExt = extensions.some(
+    (ext) => ext.name === name || ext.css === name
+  );
+  return isPlatform || isDialectExt;
+}
+
+export function isDialectColorExtension(
+  name: string,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
+): boolean {
+  return extensions.some(
+    (ext) => ext.color && (ext.name === name || ext.css === name)
+  );
+}
 
 export function validateElementsJoin(
   dialect: DialectData,
@@ -26,18 +50,13 @@ export function validateElementsJoin(
 
 export function validateAliasTargetsJoin(
   dialect: DialectData,
-  platformCss: PlatformCss
+  platformCss: PlatformCss,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
 ): string[] {
   const errors: string[] = [];
-  const invalidAliases = dialect.aliases.filter((a) => {
-    const isPlatform =
-      platformCss.properties.has(a.canonical) ||
-      platformCss.propertyNames.has(a.canonical);
-    const isDialectExt =
-      dialect.dialectCssAllowlist.has(a.canonical) ||
-      dialect.dialectCssAllowlist.has(camelToKebab(a.canonical));
-    return !isPlatform && !isDialectExt;
-  });
+  const invalidAliases = dialect.aliases.filter(
+    (a) => !isPlatformOrExtension(a.canonical, platformCss, extensions)
+  );
   if (invalidAliases.length > 0) {
     errors.push(
       `FAIL: Dialect alias targets not in platform properties or allowlist: ${invalidAliases.map((a) => `${a.alias} -> ${a.canonical}`).join(', ')}`
@@ -47,19 +66,26 @@ export function validateAliasTargetsJoin(
 }
 
 export function validateShortPrefixesJoin(
-  dialect: DialectData,
-  platformCss: PlatformCss
+  platformCssOrDialect: PlatformCss | DialectData,
+  platformCssOrPrefixes?: PlatformCss | Record<string, string>,
+  prefixes: Record<string, string> = SHORT_PREFIXES,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
 ): string[] {
+  let platformCss: PlatformCss;
+  let resolvedPrefixes: Record<string, string>;
+
+  if ('propertyNames' in platformCssOrDialect) {
+    platformCss = platformCssOrDialect;
+    resolvedPrefixes = (platformCssOrPrefixes as Record<string, string>) ?? prefixes;
+  } else {
+    platformCss = platformCssOrPrefixes as PlatformCss;
+    resolvedPrefixes = prefixes;
+  }
+
   const errors: string[] = [];
   const invalidPrefixes: string[] = [];
-  for (const prop of dialect.dialectShortPrefixes.keys()) {
-    const isPlatform =
-      platformCss.properties.has(prop) ||
-      platformCss.propertyNames.has(prop);
-    const isDialectExt =
-      dialect.dialectCssAllowlist.has(prop) ||
-      dialect.dialectCssAllowlist.has(camelToKebab(prop));
-    if (!isPlatform && !isDialectExt) {
+  for (const prop of Object.keys(resolvedPrefixes)) {
+    if (!isPlatformOrExtension(prop, platformCss, extensions)) {
       invalidPrefixes.push(prop);
     }
   }
@@ -73,19 +99,15 @@ export function validateShortPrefixesJoin(
 
 export function validateDialectExtJoin(
   dialect: DialectData,
-  platformCss: PlatformCss
+  platformCss: PlatformCss,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
 ): string[] {
   const errors: string[] = [];
-  const unverifiedProps = dialect.canonicalProperties.filter((p) => {
-    const isPlatform =
-      platformCss.properties.has(p.name) ||
-      platformCss.propertyNames.has(p.name) ||
-      platformCss.propertyNames.has(p.css);
-    const isDialectExt =
-      dialect.dialectCssAllowlist.has(p.css) ||
-      dialect.dialectCssAllowlist.has(p.name);
-    return !isPlatform && !isDialectExt;
-  });
+  const unverifiedProps = dialect.canonicalProperties.filter(
+    (p) =>
+      !isPlatformOrExtension(p.name, platformCss, extensions) &&
+      !isPlatformOrExtension(p.css, platformCss, extensions)
+  );
   if (unverifiedProps.length > 0) {
     errors.push(
       `FAIL: Canonical properties not in webref or dialect allowlist: ${unverifiedProps.map((p) => p.name).join(', ')}`
@@ -116,12 +138,13 @@ export function validateShorthandsJoin(
 
 export function validateColorPropsJoin(
   dialect: DialectData,
-  platformCss: PlatformCss
+  platformCss: PlatformCss,
+  extensions: readonly ExtensionProp[] = EXTENSIONS
 ): string[] {
   const errors: string[] = [];
   const unverifiedColorProps = dialect.colorProperties.filter((p) => {
     const inWebref = platformCss.colorProperties.has(p);
-    const inAllowlist = dialect.dialectColorAllowlist.has(p);
+    const inAllowlist = isDialectColorExtension(p, extensions);
     return !inWebref && !inAllowlist;
   });
   if (unverifiedColorProps.length > 0) {

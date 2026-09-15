@@ -1,4 +1,11 @@
-//! The official set of platform elements, CSS properties, aliases, and conditions.
+/**
+ * Library root code emitter for Reference UI Rust canon crate.
+ * Generates module switchboards, re-exports, and public lookup facades.
+ * Emits zero-allocation binary search helpers into modules/canon/src/lib.rs.
+ */
+
+export function emitLibRs(): string {
+  return `//! The official set of platform elements, CSS properties, aliases, and conditions.
 //!
 //! Serves as the central dictionary consulted by all compiler stages (extract, resolve, stylesheet).
 //! Joins living W3C/WHATWG specifications with Reference UI design system dialects.
@@ -58,4 +65,6 @@ pub fn to_css_declaration_property(prop: &str) -> &str {
         return p.css;
     }
     canonical
+}
+`;
 }
