@@ -1,585 +1,729 @@
 export const manifest = {
-  version: '2',
-  warnings: [],
-  symbolsByName: {
-    AdvancedPseudos: ['_4d2c1f4da677ffaf'],
-    AtRules: ['_b300eb3f5f0906a4'],
-    ButtonProps: ['_f50de16f561e4648'],
-    ButtonSchema: ['_68f9aba28cb6a46f'],
-    DocsEntry: ['_8b304d7f2662b9bd'],
-    Fallback: ['_2dcfde0fd6101986'],
-    Globals: ['_50e84a30e03e8de8'],
-    HtmlAttributes: ['_6d136a85d0465ca8'],
-    JSONSchema4: ['_0811faba28dcb072'],
-    JSONSchema4Array: ['_bb8b90fd881a5ea5'],
-    JSONSchema4Object: ['_99e4d69d897eb8b7'],
-    JSONSchema4Type: ['_6216b7fae36ab142'],
-    JSONSchema4TypeName: ['_bc5539d14c73fcc7'],
-    JSONSchema4Version: ['_8fe7cbe660a43a9e'],
-    JSONSchema6: ['_0811faba28dcb070'],
-    JSONSchema6Array: ['_40e2e27b8680389f'],
-    JSONSchema6Definition: ['_660bdb1a39750dcb'],
-    JSONSchema6Object: ['_99324d01891f479d'],
-    JSONSchema6Type: ['_10c6d7e7e8a0ea28'],
-    JSONSchema6TypeName: ['_cba68d6995382a99'],
-    JSONSchema6Version: ['_c98fa3ca66ec6674'],
-    JSONSchema7: ['_0811faba28dcb071'],
-    JSONSchema7Array: ['_61048bc2e763cda8'],
-    JSONSchema7Definition: ['_cba87bd66f453f4a'],
-    JSONSchema7Object: ['_94766d71f5e5ea88'],
-    JSONSchema7Type: ['_1a70b7f34fa0ff39'],
-    JSONSchema7TypeName: ['_824ccc22fb55e8e0'],
-    JSONSchema7Version: ['_8e4b2b3e163b3dcf'],
-    ObsoleteProperties: ['_60f59393e93d055e'],
-    ObsoletePropertiesFallback: ['_39c990439dda1f58'],
-    ObsoletePropertiesHyphen: ['_a51910365714cf56'],
-    ObsoletePropertiesHyphenFallback: ['_0c08aa9ada940cc0'],
-    Properties: ['_c88ec87b27c52de3'],
-    PropertiesFallback: ['_a5cbc693586ce68d'],
-    PropertiesHyphen: ['_30b528cae37da527'],
-    PropertiesHyphenFallback: ['_85faf63cfbf05ad9'],
-    PropertyValue: ['_92acb2709b2a048e'],
-    Pseudos: ['_31c4442cfcc497c1'],
-    SimplePseudos: ['_9537e6436c21d977'],
-    Size: ['_3c64f7035f40ef81'],
-    StandardLonghandProperties: ['_58b443ee4f5387b9'],
-    StandardLonghandPropertiesFallback: ['_03bb4b4d779e235b'],
-    StandardLonghandPropertiesHyphen: ['_e604ce132e18de49'],
-    StandardLonghandPropertiesHyphenFallback: ['_640adaf1b14adcab'],
-    StandardProperties: ['_de968a01a54aa540'],
-    StandardPropertiesFallback: ['_6dd9e49c50a61122'],
-    StandardPropertiesHyphen: ['_eb867d0b99f5245c'],
-    StandardPropertiesHyphenFallback: ['_a9a20709c7c31446'],
-    StandardShorthandProperties: ['_0161b2eb8bc4e9cb'],
-    StandardShorthandPropertiesFallback: ['_95effdbdd0137bc5'],
-    StandardShorthandPropertiesHyphen: ['_180678dc88aa5c2f'],
-    StandardShorthandPropertiesHyphenFallback: ['_b73dae75b17f6f11'],
-    StyleProps: ['_cf57287a9025ba0a'],
-    SvgAttributes: ['_afbe6b914a89bcc5'],
-    SvgProperties: ['_0ea3941b8d013f2d'],
-    SvgPropertiesFallback: ['_d1eec30cd28ae0c7'],
-    SvgPropertiesHyphen: ['_bbaedcb54e6cf3bd'],
-    SvgPropertiesHyphenFallback: ['_bab8df14afb6e157'],
-    ValidationError: ['_b73889ebd43adc4a'],
-    ValidationResult: ['_3e8ce64689a0157b'],
-    VendorLonghandProperties: ['_fb75926fd47e2d6c'],
-    VendorLonghandPropertiesFallback: ['_de953e40770c9696'],
-    VendorLonghandPropertiesHyphen: ['_81c94ffe3c261168'],
-    VendorLonghandPropertiesHyphenFallback: ['_f5d8ff413e103d9a'],
-    VendorProperties: ['_b964b0fa36649df5'],
-    VendorPropertiesFallback: ['_0ca7f70324df3dbf'],
-    VendorPropertiesHyphen: ['_f307c14426e209c5'],
-    VendorPropertiesHyphenFallback: ['_192f7661622eb2cf'],
-    VendorShorthandProperties: ['_e5af152cfb68eff4'],
-    VendorShorthandPropertiesFallback: ['_fc516e52db4b71ce'],
-    VendorShorthandPropertiesHyphen: ['_74a21ba4acaf9690'],
-    VendorShorthandPropertiesHyphenFallback: ['_5c439045f505e6b2'],
+  "version": "2",
+  "warnings": [],
+  "symbolsByName": {
+    "AdvancedPseudos": [
+      "_4d2c1f4da677ffaf"
+    ],
+    "AtRules": [
+      "_b300eb3f5f0906a4"
+    ],
+    "ButtonProps": [
+      "_f50de16f561e4648"
+    ],
+    "ButtonSchema": [
+      "_68f9aba28cb6a46f"
+    ],
+    "DocsEntry": [
+      "_8b304d7f2662b9bd"
+    ],
+    "Fallback": [
+      "_2dcfde0fd6101986"
+    ],
+    "Globals": [
+      "_50e84a30e03e8de8"
+    ],
+    "HtmlAttributes": [
+      "_6d136a85d0465ca8"
+    ],
+    "JSONSchema4": [
+      "_0811faba28dcb072"
+    ],
+    "JSONSchema4Array": [
+      "_bb8b90fd881a5ea5"
+    ],
+    "JSONSchema4Object": [
+      "_99e4d69d897eb8b7"
+    ],
+    "JSONSchema4Type": [
+      "_6216b7fae36ab142"
+    ],
+    "JSONSchema4TypeName": [
+      "_bc5539d14c73fcc7"
+    ],
+    "JSONSchema4Version": [
+      "_8fe7cbe660a43a9e"
+    ],
+    "JSONSchema6": [
+      "_0811faba28dcb070"
+    ],
+    "JSONSchema6Array": [
+      "_40e2e27b8680389f"
+    ],
+    "JSONSchema6Definition": [
+      "_660bdb1a39750dcb"
+    ],
+    "JSONSchema6Object": [
+      "_99324d01891f479d"
+    ],
+    "JSONSchema6Type": [
+      "_10c6d7e7e8a0ea28"
+    ],
+    "JSONSchema6TypeName": [
+      "_cba68d6995382a99"
+    ],
+    "JSONSchema6Version": [
+      "_c98fa3ca66ec6674"
+    ],
+    "JSONSchema7": [
+      "_0811faba28dcb071"
+    ],
+    "JSONSchema7Array": [
+      "_61048bc2e763cda8"
+    ],
+    "JSONSchema7Definition": [
+      "_cba87bd66f453f4a"
+    ],
+    "JSONSchema7Object": [
+      "_94766d71f5e5ea88"
+    ],
+    "JSONSchema7Type": [
+      "_1a70b7f34fa0ff39"
+    ],
+    "JSONSchema7TypeName": [
+      "_824ccc22fb55e8e0"
+    ],
+    "JSONSchema7Version": [
+      "_8e4b2b3e163b3dcf"
+    ],
+    "ObsoleteProperties": [
+      "_60f59393e93d055e"
+    ],
+    "ObsoletePropertiesFallback": [
+      "_39c990439dda1f58"
+    ],
+    "ObsoletePropertiesHyphen": [
+      "_a51910365714cf56"
+    ],
+    "ObsoletePropertiesHyphenFallback": [
+      "_0c08aa9ada940cc0"
+    ],
+    "Properties": [
+      "_c88ec87b27c52de3"
+    ],
+    "PropertiesFallback": [
+      "_a5cbc693586ce68d"
+    ],
+    "PropertiesHyphen": [
+      "_30b528cae37da527"
+    ],
+    "PropertiesHyphenFallback": [
+      "_85faf63cfbf05ad9"
+    ],
+    "PropertyValue": [
+      "_92acb2709b2a048e"
+    ],
+    "Pseudos": [
+      "_31c4442cfcc497c1"
+    ],
+    "SimplePseudos": [
+      "_9537e6436c21d977"
+    ],
+    "Size": [
+      "_3c64f7035f40ef81"
+    ],
+    "StandardLonghandProperties": [
+      "_58b443ee4f5387b9"
+    ],
+    "StandardLonghandPropertiesFallback": [
+      "_03bb4b4d779e235b"
+    ],
+    "StandardLonghandPropertiesHyphen": [
+      "_e604ce132e18de49"
+    ],
+    "StandardLonghandPropertiesHyphenFallback": [
+      "_640adaf1b14adcab"
+    ],
+    "StandardProperties": [
+      "_de968a01a54aa540"
+    ],
+    "StandardPropertiesFallback": [
+      "_6dd9e49c50a61122"
+    ],
+    "StandardPropertiesHyphen": [
+      "_eb867d0b99f5245c"
+    ],
+    "StandardPropertiesHyphenFallback": [
+      "_a9a20709c7c31446"
+    ],
+    "StandardShorthandProperties": [
+      "_0161b2eb8bc4e9cb"
+    ],
+    "StandardShorthandPropertiesFallback": [
+      "_95effdbdd0137bc5"
+    ],
+    "StandardShorthandPropertiesHyphen": [
+      "_180678dc88aa5c2f"
+    ],
+    "StandardShorthandPropertiesHyphenFallback": [
+      "_b73dae75b17f6f11"
+    ],
+    "StyleProps": [
+      "_cf57287a9025ba0a"
+    ],
+    "SvgAttributes": [
+      "_afbe6b914a89bcc5"
+    ],
+    "SvgProperties": [
+      "_0ea3941b8d013f2d"
+    ],
+    "SvgPropertiesFallback": [
+      "_d1eec30cd28ae0c7"
+    ],
+    "SvgPropertiesHyphen": [
+      "_bbaedcb54e6cf3bd"
+    ],
+    "SvgPropertiesHyphenFallback": [
+      "_bab8df14afb6e157"
+    ],
+    "ValidationError": [
+      "_b73889ebd43adc4a"
+    ],
+    "ValidationResult": [
+      "_3e8ce64689a0157b"
+    ],
+    "VendorLonghandProperties": [
+      "_fb75926fd47e2d6c"
+    ],
+    "VendorLonghandPropertiesFallback": [
+      "_de953e40770c9696"
+    ],
+    "VendorLonghandPropertiesHyphen": [
+      "_81c94ffe3c261168"
+    ],
+    "VendorLonghandPropertiesHyphenFallback": [
+      "_f5d8ff413e103d9a"
+    ],
+    "VendorProperties": [
+      "_b964b0fa36649df5"
+    ],
+    "VendorPropertiesFallback": [
+      "_0ca7f70324df3dbf"
+    ],
+    "VendorPropertiesHyphen": [
+      "_f307c14426e209c5"
+    ],
+    "VendorPropertiesHyphenFallback": [
+      "_192f7661622eb2cf"
+    ],
+    "VendorShorthandProperties": [
+      "_e5af152cfb68eff4"
+    ],
+    "VendorShorthandPropertiesFallback": [
+      "_fc516e52db4b71ce"
+    ],
+    "VendorShorthandPropertiesHyphen": [
+      "_74a21ba4acaf9690"
+    ],
+    "VendorShorthandPropertiesHyphenFallback": [
+      "_5c439045f505e6b2"
+    ]
   },
-  symbolsById: {
-    _0161b2eb8bc4e9cb: {
-      id: '_0161b2eb8bc4e9cb',
-      name: 'StandardShorthandProperties',
-      kind: 'interface',
-      chunk: './chunks/_0161b2eb8bc4e9cb.js',
-      library: 'csstype',
-    },
-    _03bb4b4d779e235b: {
-      id: '_03bb4b4d779e235b',
-      name: 'StandardLonghandPropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_03bb4b4d779e235b.js',
-      library: 'csstype',
-    },
-    _0811faba28dcb070: {
-      id: '_0811faba28dcb070',
-      name: 'JSONSchema6',
-      kind: 'interface',
-      chunk: './chunks/_0811faba28dcb070.js',
-      library: 'json-schema',
-    },
-    _0811faba28dcb071: {
-      id: '_0811faba28dcb071',
-      name: 'JSONSchema7',
-      kind: 'interface',
-      chunk: './chunks/_0811faba28dcb071.js',
-      library: 'json-schema',
-    },
-    _0811faba28dcb072: {
-      id: '_0811faba28dcb072',
-      name: 'JSONSchema4',
-      kind: 'interface',
-      chunk: './chunks/_0811faba28dcb072.js',
-      library: 'json-schema',
-    },
-    _0c08aa9ada940cc0: {
-      id: '_0c08aa9ada940cc0',
-      name: 'ObsoletePropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_0c08aa9ada940cc0.js',
-      library: 'csstype',
-    },
-    _0ca7f70324df3dbf: {
-      id: '_0ca7f70324df3dbf',
-      name: 'VendorPropertiesFallback',
-      kind: 'interface',
-      chunk: './chunks/_0ca7f70324df3dbf.js',
-      library: 'csstype',
-    },
-    _0ea3941b8d013f2d: {
-      id: '_0ea3941b8d013f2d',
-      name: 'SvgProperties',
-      kind: 'interface',
-      chunk: './chunks/_0ea3941b8d013f2d.js',
-      library: 'csstype',
-    },
-    _10c6d7e7e8a0ea28: {
-      id: '_10c6d7e7e8a0ea28',
-      name: 'JSONSchema6Type',
-      kind: 'typeAlias',
-      chunk: './chunks/_10c6d7e7e8a0ea28.js',
-      library: 'json-schema',
-    },
-    _180678dc88aa5c2f: {
-      id: '_180678dc88aa5c2f',
-      name: 'StandardShorthandPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_180678dc88aa5c2f.js',
-      library: 'csstype',
-    },
-    _192f7661622eb2cf: {
-      id: '_192f7661622eb2cf',
-      name: 'VendorPropertiesHyphenFallback',
-      kind: 'interface',
-      chunk: './chunks/_192f7661622eb2cf.js',
-      library: 'csstype',
-    },
-    _1a70b7f34fa0ff39: {
-      id: '_1a70b7f34fa0ff39',
-      name: 'JSONSchema7Type',
-      kind: 'typeAlias',
-      chunk: './chunks/_1a70b7f34fa0ff39.js',
-      library: 'json-schema',
-    },
-    _2dcfde0fd6101986: {
-      id: '_2dcfde0fd6101986',
-      name: 'Fallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_2dcfde0fd6101986.js',
-      library: 'csstype',
-    },
-    _30b528cae37da527: {
-      id: '_30b528cae37da527',
-      name: 'PropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_30b528cae37da527.js',
-      library: 'csstype',
-    },
-    _31c4442cfcc497c1: {
-      id: '_31c4442cfcc497c1',
-      name: 'Pseudos',
-      kind: 'typeAlias',
-      chunk: './chunks/_31c4442cfcc497c1.js',
-      library: 'csstype',
-    },
-    _39c990439dda1f58: {
-      id: '_39c990439dda1f58',
-      name: 'ObsoletePropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_39c990439dda1f58.js',
-      library: 'csstype',
-    },
-    _3c64f7035f40ef81: {
-      id: '_3c64f7035f40ef81',
-      name: 'Size',
-      kind: 'typeAlias',
-      chunk: './chunks/_3c64f7035f40ef81.js',
-      library: 'user',
-    },
-    _3e8ce64689a0157b: {
-      id: '_3e8ce64689a0157b',
-      name: 'ValidationResult',
-      kind: 'interface',
-      chunk: './chunks/_3e8ce64689a0157b.js',
-      library: 'json-schema',
-    },
-    _40e2e27b8680389f: {
-      id: '_40e2e27b8680389f',
-      name: 'JSONSchema6Array',
-      kind: 'interface',
-      chunk: './chunks/_40e2e27b8680389f.js',
-      library: 'json-schema',
-    },
-    _4d2c1f4da677ffaf: {
-      id: '_4d2c1f4da677ffaf',
-      name: 'AdvancedPseudos',
-      kind: 'typeAlias',
-      chunk: './chunks/_4d2c1f4da677ffaf.js',
-      library: 'csstype',
-    },
-    _50e84a30e03e8de8: {
-      id: '_50e84a30e03e8de8',
-      name: 'Globals',
-      kind: 'typeAlias',
-      chunk: './chunks/_50e84a30e03e8de8.js',
-      library: 'csstype',
-    },
-    _58b443ee4f5387b9: {
-      id: '_58b443ee4f5387b9',
-      name: 'StandardLonghandProperties',
-      kind: 'interface',
-      chunk: './chunks/_58b443ee4f5387b9.js',
-      library: 'csstype',
-    },
-    _5c439045f505e6b2: {
-      id: '_5c439045f505e6b2',
-      name: 'VendorShorthandPropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_5c439045f505e6b2.js',
-      library: 'csstype',
-    },
-    _60f59393e93d055e: {
-      id: '_60f59393e93d055e',
-      name: 'ObsoleteProperties',
-      kind: 'interface',
-      chunk: './chunks/_60f59393e93d055e.js',
-      library: 'csstype',
-    },
-    _61048bc2e763cda8: {
-      id: '_61048bc2e763cda8',
-      name: 'JSONSchema7Array',
-      kind: 'interface',
-      chunk: './chunks/_61048bc2e763cda8.js',
-      library: 'json-schema',
-    },
-    _6216b7fae36ab142: {
-      id: '_6216b7fae36ab142',
-      name: 'JSONSchema4Type',
-      kind: 'typeAlias',
-      chunk: './chunks/_6216b7fae36ab142.js',
-      library: 'json-schema',
-    },
-    _640adaf1b14adcab: {
-      id: '_640adaf1b14adcab',
-      name: 'StandardLonghandPropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_640adaf1b14adcab.js',
-      library: 'csstype',
-    },
-    _660bdb1a39750dcb: {
-      id: '_660bdb1a39750dcb',
-      name: 'JSONSchema6Definition',
-      kind: 'typeAlias',
-      chunk: './chunks/_660bdb1a39750dcb.js',
-      library: 'json-schema',
-    },
-    _68f9aba28cb6a46f: {
-      id: '_68f9aba28cb6a46f',
-      name: 'ButtonSchema',
-      kind: 'interface',
-      chunk: './chunks/_68f9aba28cb6a46f.js',
-      library: 'user',
-    },
-    _6d136a85d0465ca8: {
-      id: '_6d136a85d0465ca8',
-      name: 'HtmlAttributes',
-      kind: 'typeAlias',
-      chunk: './chunks/_6d136a85d0465ca8.js',
-      library: 'csstype',
-    },
-    _6dd9e49c50a61122: {
-      id: '_6dd9e49c50a61122',
-      name: 'StandardPropertiesFallback',
-      kind: 'interface',
-      chunk: './chunks/_6dd9e49c50a61122.js',
-      library: 'csstype',
-    },
-    _74a21ba4acaf9690: {
-      id: '_74a21ba4acaf9690',
-      name: 'VendorShorthandPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_74a21ba4acaf9690.js',
-      library: 'csstype',
-    },
-    _81c94ffe3c261168: {
-      id: '_81c94ffe3c261168',
-      name: 'VendorLonghandPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_81c94ffe3c261168.js',
-      library: 'csstype',
-    },
-    _824ccc22fb55e8e0: {
-      id: '_824ccc22fb55e8e0',
-      name: 'JSONSchema7TypeName',
-      kind: 'typeAlias',
-      chunk: './chunks/_824ccc22fb55e8e0.js',
-      library: 'json-schema',
-    },
-    _85faf63cfbf05ad9: {
-      id: '_85faf63cfbf05ad9',
-      name: 'PropertiesHyphenFallback',
-      kind: 'interface',
-      chunk: './chunks/_85faf63cfbf05ad9.js',
-      library: 'csstype',
-    },
-    _8b304d7f2662b9bd: {
-      id: '_8b304d7f2662b9bd',
-      name: 'DocsEntry',
-      kind: 'interface',
-      chunk: './chunks/_8b304d7f2662b9bd.js',
-      library: 'user',
-    },
-    _8e4b2b3e163b3dcf: {
-      id: '_8e4b2b3e163b3dcf',
-      name: 'JSONSchema7Version',
-      kind: 'typeAlias',
-      chunk: './chunks/_8e4b2b3e163b3dcf.js',
-      library: 'json-schema',
-    },
-    _8fe7cbe660a43a9e: {
-      id: '_8fe7cbe660a43a9e',
-      name: 'JSONSchema4Version',
-      kind: 'typeAlias',
-      chunk: './chunks/_8fe7cbe660a43a9e.js',
-      library: 'json-schema',
-    },
-    _92acb2709b2a048e: {
-      id: '_92acb2709b2a048e',
-      name: 'PropertyValue',
-      kind: 'typeAlias',
-      chunk: './chunks/_92acb2709b2a048e.js',
-      library: 'csstype',
-    },
-    _94766d71f5e5ea88: {
-      id: '_94766d71f5e5ea88',
-      name: 'JSONSchema7Object',
-      kind: 'interface',
-      chunk: './chunks/_94766d71f5e5ea88.js',
-      library: 'json-schema',
-    },
-    _9537e6436c21d977: {
-      id: '_9537e6436c21d977',
-      name: 'SimplePseudos',
-      kind: 'typeAlias',
-      chunk: './chunks/_9537e6436c21d977.js',
-      library: 'csstype',
-    },
-    _95effdbdd0137bc5: {
-      id: '_95effdbdd0137bc5',
-      name: 'StandardShorthandPropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_95effdbdd0137bc5.js',
-      library: 'csstype',
-    },
-    _99324d01891f479d: {
-      id: '_99324d01891f479d',
-      name: 'JSONSchema6Object',
-      kind: 'interface',
-      chunk: './chunks/_99324d01891f479d.js',
-      library: 'json-schema',
-    },
-    _99e4d69d897eb8b7: {
-      id: '_99e4d69d897eb8b7',
-      name: 'JSONSchema4Object',
-      kind: 'interface',
-      chunk: './chunks/_99e4d69d897eb8b7.js',
-      library: 'json-schema',
-    },
-    _a51910365714cf56: {
-      id: '_a51910365714cf56',
-      name: 'ObsoletePropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_a51910365714cf56.js',
-      library: 'csstype',
-    },
-    _a5cbc693586ce68d: {
-      id: '_a5cbc693586ce68d',
-      name: 'PropertiesFallback',
-      kind: 'interface',
-      chunk: './chunks/_a5cbc693586ce68d.js',
-      library: 'csstype',
-    },
-    _a9a20709c7c31446: {
-      id: '_a9a20709c7c31446',
-      name: 'StandardPropertiesHyphenFallback',
-      kind: 'interface',
-      chunk: './chunks/_a9a20709c7c31446.js',
-      library: 'csstype',
-    },
-    _afbe6b914a89bcc5: {
-      id: '_afbe6b914a89bcc5',
-      name: 'SvgAttributes',
-      kind: 'typeAlias',
-      chunk: './chunks/_afbe6b914a89bcc5.js',
-      library: 'csstype',
-    },
-    _b300eb3f5f0906a4: {
-      id: '_b300eb3f5f0906a4',
-      name: 'AtRules',
-      kind: 'typeAlias',
-      chunk: './chunks/_b300eb3f5f0906a4.js',
-      library: 'csstype',
-    },
-    _b73889ebd43adc4a: {
-      id: '_b73889ebd43adc4a',
-      name: 'ValidationError',
-      kind: 'interface',
-      chunk: './chunks/_b73889ebd43adc4a.js',
-      library: 'json-schema',
-    },
-    _b73dae75b17f6f11: {
-      id: '_b73dae75b17f6f11',
-      name: 'StandardShorthandPropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_b73dae75b17f6f11.js',
-      library: 'csstype',
-    },
-    _b964b0fa36649df5: {
-      id: '_b964b0fa36649df5',
-      name: 'VendorProperties',
-      kind: 'interface',
-      chunk: './chunks/_b964b0fa36649df5.js',
-      library: 'csstype',
-    },
-    _bab8df14afb6e157: {
-      id: '_bab8df14afb6e157',
-      name: 'SvgPropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_bab8df14afb6e157.js',
-      library: 'csstype',
-    },
-    _bb8b90fd881a5ea5: {
-      id: '_bb8b90fd881a5ea5',
-      name: 'JSONSchema4Array',
-      kind: 'interface',
-      chunk: './chunks/_bb8b90fd881a5ea5.js',
-      library: 'json-schema',
-    },
-    _bbaedcb54e6cf3bd: {
-      id: '_bbaedcb54e6cf3bd',
-      name: 'SvgPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_bbaedcb54e6cf3bd.js',
-      library: 'csstype',
-    },
-    _bc5539d14c73fcc7: {
-      id: '_bc5539d14c73fcc7',
-      name: 'JSONSchema4TypeName',
-      kind: 'typeAlias',
-      chunk: './chunks/_bc5539d14c73fcc7.js',
-      library: 'json-schema',
-    },
-    _c88ec87b27c52de3: {
-      id: '_c88ec87b27c52de3',
-      name: 'Properties',
-      kind: 'interface',
-      chunk: './chunks/_c88ec87b27c52de3.js',
-      library: 'csstype',
-    },
-    _c98fa3ca66ec6674: {
-      id: '_c98fa3ca66ec6674',
-      name: 'JSONSchema6Version',
-      kind: 'typeAlias',
-      chunk: './chunks/_c98fa3ca66ec6674.js',
-      library: 'json-schema',
-    },
-    _cba68d6995382a99: {
-      id: '_cba68d6995382a99',
-      name: 'JSONSchema6TypeName',
-      kind: 'typeAlias',
-      chunk: './chunks/_cba68d6995382a99.js',
-      library: 'json-schema',
-    },
-    _cba87bd66f453f4a: {
-      id: '_cba87bd66f453f4a',
-      name: 'JSONSchema7Definition',
-      kind: 'typeAlias',
-      chunk: './chunks/_cba87bd66f453f4a.js',
-      library: 'json-schema',
-    },
-    _cf57287a9025ba0a: {
-      id: '_cf57287a9025ba0a',
-      name: 'StyleProps',
-      kind: 'interface',
-      chunk: './chunks/_cf57287a9025ba0a.js',
-      library: 'user',
-    },
-    _d1eec30cd28ae0c7: {
-      id: '_d1eec30cd28ae0c7',
-      name: 'SvgPropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_d1eec30cd28ae0c7.js',
-      library: 'csstype',
-    },
-    _de953e40770c9696: {
-      id: '_de953e40770c9696',
-      name: 'VendorLonghandPropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_de953e40770c9696.js',
-      library: 'csstype',
-    },
-    _de968a01a54aa540: {
-      id: '_de968a01a54aa540',
-      name: 'StandardProperties',
-      kind: 'interface',
-      chunk: './chunks/_de968a01a54aa540.js',
-      library: 'csstype',
-    },
-    _e5af152cfb68eff4: {
-      id: '_e5af152cfb68eff4',
-      name: 'VendorShorthandProperties',
-      kind: 'interface',
-      chunk: './chunks/_e5af152cfb68eff4.js',
-      library: 'csstype',
-    },
-    _e604ce132e18de49: {
-      id: '_e604ce132e18de49',
-      name: 'StandardLonghandPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_e604ce132e18de49.js',
-      library: 'csstype',
-    },
-    _eb867d0b99f5245c: {
-      id: '_eb867d0b99f5245c',
-      name: 'StandardPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_eb867d0b99f5245c.js',
-      library: 'csstype',
-    },
-    _f307c14426e209c5: {
-      id: '_f307c14426e209c5',
-      name: 'VendorPropertiesHyphen',
-      kind: 'interface',
-      chunk: './chunks/_f307c14426e209c5.js',
-      library: 'csstype',
-    },
-    _f50de16f561e4648: {
-      id: '_f50de16f561e4648',
-      name: 'ButtonProps',
-      kind: 'interface',
-      chunk: './chunks/_f50de16f561e4648.js',
-      library: 'user',
-    },
-    _f5d8ff413e103d9a: {
-      id: '_f5d8ff413e103d9a',
-      name: 'VendorLonghandPropertiesHyphenFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_f5d8ff413e103d9a.js',
-      library: 'csstype',
-    },
-    _fb75926fd47e2d6c: {
-      id: '_fb75926fd47e2d6c',
-      name: 'VendorLonghandProperties',
-      kind: 'interface',
-      chunk: './chunks/_fb75926fd47e2d6c.js',
-      library: 'csstype',
-    },
-    _fc516e52db4b71ce: {
-      id: '_fc516e52db4b71ce',
-      name: 'VendorShorthandPropertiesFallback',
-      kind: 'typeAlias',
-      chunk: './chunks/_fc516e52db4b71ce.js',
-      library: 'csstype',
-    },
-  },
-}
-export default manifest
+  "symbolsById": {
+    "_0161b2eb8bc4e9cb": {
+      "id": "_0161b2eb8bc4e9cb",
+      "name": "StandardShorthandProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_0161b2eb8bc4e9cb.js",
+      "library": "csstype"
+    },
+    "_03bb4b4d779e235b": {
+      "id": "_03bb4b4d779e235b",
+      "name": "StandardLonghandPropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_03bb4b4d779e235b.js",
+      "library": "csstype"
+    },
+    "_0811faba28dcb070": {
+      "id": "_0811faba28dcb070",
+      "name": "JSONSchema6",
+      "kind": "interface",
+      "chunk": "./chunks/_0811faba28dcb070.js",
+      "library": "json-schema"
+    },
+    "_0811faba28dcb071": {
+      "id": "_0811faba28dcb071",
+      "name": "JSONSchema7",
+      "kind": "interface",
+      "chunk": "./chunks/_0811faba28dcb071.js",
+      "library": "json-schema"
+    },
+    "_0811faba28dcb072": {
+      "id": "_0811faba28dcb072",
+      "name": "JSONSchema4",
+      "kind": "interface",
+      "chunk": "./chunks/_0811faba28dcb072.js",
+      "library": "json-schema"
+    },
+    "_0c08aa9ada940cc0": {
+      "id": "_0c08aa9ada940cc0",
+      "name": "ObsoletePropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_0c08aa9ada940cc0.js",
+      "library": "csstype"
+    },
+    "_0ca7f70324df3dbf": {
+      "id": "_0ca7f70324df3dbf",
+      "name": "VendorPropertiesFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_0ca7f70324df3dbf.js",
+      "library": "csstype"
+    },
+    "_0ea3941b8d013f2d": {
+      "id": "_0ea3941b8d013f2d",
+      "name": "SvgProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_0ea3941b8d013f2d.js",
+      "library": "csstype"
+    },
+    "_10c6d7e7e8a0ea28": {
+      "id": "_10c6d7e7e8a0ea28",
+      "name": "JSONSchema6Type",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_10c6d7e7e8a0ea28.js",
+      "library": "json-schema"
+    },
+    "_180678dc88aa5c2f": {
+      "id": "_180678dc88aa5c2f",
+      "name": "StandardShorthandPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_180678dc88aa5c2f.js",
+      "library": "csstype"
+    },
+    "_192f7661622eb2cf": {
+      "id": "_192f7661622eb2cf",
+      "name": "VendorPropertiesHyphenFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_192f7661622eb2cf.js",
+      "library": "csstype"
+    },
+    "_1a70b7f34fa0ff39": {
+      "id": "_1a70b7f34fa0ff39",
+      "name": "JSONSchema7Type",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_1a70b7f34fa0ff39.js",
+      "library": "json-schema"
+    },
+    "_2dcfde0fd6101986": {
+      "id": "_2dcfde0fd6101986",
+      "name": "Fallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_2dcfde0fd6101986.js",
+      "library": "csstype"
+    },
+    "_30b528cae37da527": {
+      "id": "_30b528cae37da527",
+      "name": "PropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_30b528cae37da527.js",
+      "library": "csstype"
+    },
+    "_31c4442cfcc497c1": {
+      "id": "_31c4442cfcc497c1",
+      "name": "Pseudos",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_31c4442cfcc497c1.js",
+      "library": "csstype"
+    },
+    "_39c990439dda1f58": {
+      "id": "_39c990439dda1f58",
+      "name": "ObsoletePropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_39c990439dda1f58.js",
+      "library": "csstype"
+    },
+    "_3c64f7035f40ef81": {
+      "id": "_3c64f7035f40ef81",
+      "name": "Size",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_3c64f7035f40ef81.js",
+      "library": "user"
+    },
+    "_3e8ce64689a0157b": {
+      "id": "_3e8ce64689a0157b",
+      "name": "ValidationResult",
+      "kind": "interface",
+      "chunk": "./chunks/_3e8ce64689a0157b.js",
+      "library": "json-schema"
+    },
+    "_40e2e27b8680389f": {
+      "id": "_40e2e27b8680389f",
+      "name": "JSONSchema6Array",
+      "kind": "interface",
+      "chunk": "./chunks/_40e2e27b8680389f.js",
+      "library": "json-schema"
+    },
+    "_4d2c1f4da677ffaf": {
+      "id": "_4d2c1f4da677ffaf",
+      "name": "AdvancedPseudos",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_4d2c1f4da677ffaf.js",
+      "library": "csstype"
+    },
+    "_50e84a30e03e8de8": {
+      "id": "_50e84a30e03e8de8",
+      "name": "Globals",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_50e84a30e03e8de8.js",
+      "library": "csstype"
+    },
+    "_58b443ee4f5387b9": {
+      "id": "_58b443ee4f5387b9",
+      "name": "StandardLonghandProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_58b443ee4f5387b9.js",
+      "library": "csstype"
+    },
+    "_5c439045f505e6b2": {
+      "id": "_5c439045f505e6b2",
+      "name": "VendorShorthandPropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_5c439045f505e6b2.js",
+      "library": "csstype"
+    },
+    "_60f59393e93d055e": {
+      "id": "_60f59393e93d055e",
+      "name": "ObsoleteProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_60f59393e93d055e.js",
+      "library": "csstype"
+    },
+    "_61048bc2e763cda8": {
+      "id": "_61048bc2e763cda8",
+      "name": "JSONSchema7Array",
+      "kind": "interface",
+      "chunk": "./chunks/_61048bc2e763cda8.js",
+      "library": "json-schema"
+    },
+    "_6216b7fae36ab142": {
+      "id": "_6216b7fae36ab142",
+      "name": "JSONSchema4Type",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_6216b7fae36ab142.js",
+      "library": "json-schema"
+    },
+    "_640adaf1b14adcab": {
+      "id": "_640adaf1b14adcab",
+      "name": "StandardLonghandPropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_640adaf1b14adcab.js",
+      "library": "csstype"
+    },
+    "_660bdb1a39750dcb": {
+      "id": "_660bdb1a39750dcb",
+      "name": "JSONSchema6Definition",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_660bdb1a39750dcb.js",
+      "library": "json-schema"
+    },
+    "_68f9aba28cb6a46f": {
+      "id": "_68f9aba28cb6a46f",
+      "name": "ButtonSchema",
+      "kind": "interface",
+      "chunk": "./chunks/_68f9aba28cb6a46f.js",
+      "library": "user"
+    },
+    "_6d136a85d0465ca8": {
+      "id": "_6d136a85d0465ca8",
+      "name": "HtmlAttributes",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_6d136a85d0465ca8.js",
+      "library": "csstype"
+    },
+    "_6dd9e49c50a61122": {
+      "id": "_6dd9e49c50a61122",
+      "name": "StandardPropertiesFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_6dd9e49c50a61122.js",
+      "library": "csstype"
+    },
+    "_74a21ba4acaf9690": {
+      "id": "_74a21ba4acaf9690",
+      "name": "VendorShorthandPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_74a21ba4acaf9690.js",
+      "library": "csstype"
+    },
+    "_81c94ffe3c261168": {
+      "id": "_81c94ffe3c261168",
+      "name": "VendorLonghandPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_81c94ffe3c261168.js",
+      "library": "csstype"
+    },
+    "_824ccc22fb55e8e0": {
+      "id": "_824ccc22fb55e8e0",
+      "name": "JSONSchema7TypeName",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_824ccc22fb55e8e0.js",
+      "library": "json-schema"
+    },
+    "_85faf63cfbf05ad9": {
+      "id": "_85faf63cfbf05ad9",
+      "name": "PropertiesHyphenFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_85faf63cfbf05ad9.js",
+      "library": "csstype"
+    },
+    "_8b304d7f2662b9bd": {
+      "id": "_8b304d7f2662b9bd",
+      "name": "DocsEntry",
+      "kind": "interface",
+      "chunk": "./chunks/_8b304d7f2662b9bd.js",
+      "library": "user"
+    },
+    "_8e4b2b3e163b3dcf": {
+      "id": "_8e4b2b3e163b3dcf",
+      "name": "JSONSchema7Version",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_8e4b2b3e163b3dcf.js",
+      "library": "json-schema"
+    },
+    "_8fe7cbe660a43a9e": {
+      "id": "_8fe7cbe660a43a9e",
+      "name": "JSONSchema4Version",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_8fe7cbe660a43a9e.js",
+      "library": "json-schema"
+    },
+    "_92acb2709b2a048e": {
+      "id": "_92acb2709b2a048e",
+      "name": "PropertyValue",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_92acb2709b2a048e.js",
+      "library": "csstype"
+    },
+    "_94766d71f5e5ea88": {
+      "id": "_94766d71f5e5ea88",
+      "name": "JSONSchema7Object",
+      "kind": "interface",
+      "chunk": "./chunks/_94766d71f5e5ea88.js",
+      "library": "json-schema"
+    },
+    "_9537e6436c21d977": {
+      "id": "_9537e6436c21d977",
+      "name": "SimplePseudos",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_9537e6436c21d977.js",
+      "library": "csstype"
+    },
+    "_95effdbdd0137bc5": {
+      "id": "_95effdbdd0137bc5",
+      "name": "StandardShorthandPropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_95effdbdd0137bc5.js",
+      "library": "csstype"
+    },
+    "_99324d01891f479d": {
+      "id": "_99324d01891f479d",
+      "name": "JSONSchema6Object",
+      "kind": "interface",
+      "chunk": "./chunks/_99324d01891f479d.js",
+      "library": "json-schema"
+    },
+    "_99e4d69d897eb8b7": {
+      "id": "_99e4d69d897eb8b7",
+      "name": "JSONSchema4Object",
+      "kind": "interface",
+      "chunk": "./chunks/_99e4d69d897eb8b7.js",
+      "library": "json-schema"
+    },
+    "_a51910365714cf56": {
+      "id": "_a51910365714cf56",
+      "name": "ObsoletePropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_a51910365714cf56.js",
+      "library": "csstype"
+    },
+    "_a5cbc693586ce68d": {
+      "id": "_a5cbc693586ce68d",
+      "name": "PropertiesFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_a5cbc693586ce68d.js",
+      "library": "csstype"
+    },
+    "_a9a20709c7c31446": {
+      "id": "_a9a20709c7c31446",
+      "name": "StandardPropertiesHyphenFallback",
+      "kind": "interface",
+      "chunk": "./chunks/_a9a20709c7c31446.js",
+      "library": "csstype"
+    },
+    "_afbe6b914a89bcc5": {
+      "id": "_afbe6b914a89bcc5",
+      "name": "SvgAttributes",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_afbe6b914a89bcc5.js",
+      "library": "csstype"
+    },
+    "_b300eb3f5f0906a4": {
+      "id": "_b300eb3f5f0906a4",
+      "name": "AtRules",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_b300eb3f5f0906a4.js",
+      "library": "csstype"
+    },
+    "_b73889ebd43adc4a": {
+      "id": "_b73889ebd43adc4a",
+      "name": "ValidationError",
+      "kind": "interface",
+      "chunk": "./chunks/_b73889ebd43adc4a.js",
+      "library": "json-schema"
+    },
+    "_b73dae75b17f6f11": {
+      "id": "_b73dae75b17f6f11",
+      "name": "StandardShorthandPropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_b73dae75b17f6f11.js",
+      "library": "csstype"
+    },
+    "_b964b0fa36649df5": {
+      "id": "_b964b0fa36649df5",
+      "name": "VendorProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_b964b0fa36649df5.js",
+      "library": "csstype"
+    },
+    "_bab8df14afb6e157": {
+      "id": "_bab8df14afb6e157",
+      "name": "SvgPropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_bab8df14afb6e157.js",
+      "library": "csstype"
+    },
+    "_bb8b90fd881a5ea5": {
+      "id": "_bb8b90fd881a5ea5",
+      "name": "JSONSchema4Array",
+      "kind": "interface",
+      "chunk": "./chunks/_bb8b90fd881a5ea5.js",
+      "library": "json-schema"
+    },
+    "_bbaedcb54e6cf3bd": {
+      "id": "_bbaedcb54e6cf3bd",
+      "name": "SvgPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_bbaedcb54e6cf3bd.js",
+      "library": "csstype"
+    },
+    "_bc5539d14c73fcc7": {
+      "id": "_bc5539d14c73fcc7",
+      "name": "JSONSchema4TypeName",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_bc5539d14c73fcc7.js",
+      "library": "json-schema"
+    },
+    "_c88ec87b27c52de3": {
+      "id": "_c88ec87b27c52de3",
+      "name": "Properties",
+      "kind": "interface",
+      "chunk": "./chunks/_c88ec87b27c52de3.js",
+      "library": "csstype"
+    },
+    "_c98fa3ca66ec6674": {
+      "id": "_c98fa3ca66ec6674",
+      "name": "JSONSchema6Version",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_c98fa3ca66ec6674.js",
+      "library": "json-schema"
+    },
+    "_cba68d6995382a99": {
+      "id": "_cba68d6995382a99",
+      "name": "JSONSchema6TypeName",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_cba68d6995382a99.js",
+      "library": "json-schema"
+    },
+    "_cba87bd66f453f4a": {
+      "id": "_cba87bd66f453f4a",
+      "name": "JSONSchema7Definition",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_cba87bd66f453f4a.js",
+      "library": "json-schema"
+    },
+    "_cf57287a9025ba0a": {
+      "id": "_cf57287a9025ba0a",
+      "name": "StyleProps",
+      "kind": "interface",
+      "chunk": "./chunks/_cf57287a9025ba0a.js",
+      "library": "user"
+    },
+    "_d1eec30cd28ae0c7": {
+      "id": "_d1eec30cd28ae0c7",
+      "name": "SvgPropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_d1eec30cd28ae0c7.js",
+      "library": "csstype"
+    },
+    "_de953e40770c9696": {
+      "id": "_de953e40770c9696",
+      "name": "VendorLonghandPropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_de953e40770c9696.js",
+      "library": "csstype"
+    },
+    "_de968a01a54aa540": {
+      "id": "_de968a01a54aa540",
+      "name": "StandardProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_de968a01a54aa540.js",
+      "library": "csstype"
+    },
+    "_e5af152cfb68eff4": {
+      "id": "_e5af152cfb68eff4",
+      "name": "VendorShorthandProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_e5af152cfb68eff4.js",
+      "library": "csstype"
+    },
+    "_e604ce132e18de49": {
+      "id": "_e604ce132e18de49",
+      "name": "StandardLonghandPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_e604ce132e18de49.js",
+      "library": "csstype"
+    },
+    "_eb867d0b99f5245c": {
+      "id": "_eb867d0b99f5245c",
+      "name": "StandardPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_eb867d0b99f5245c.js",
+      "library": "csstype"
+    },
+    "_f307c14426e209c5": {
+      "id": "_f307c14426e209c5",
+      "name": "VendorPropertiesHyphen",
+      "kind": "interface",
+      "chunk": "./chunks/_f307c14426e209c5.js",
+      "library": "csstype"
+    },
+    "_f50de16f561e4648": {
+      "id": "_f50de16f561e4648",
+      "name": "ButtonProps",
+      "kind": "interface",
+      "chunk": "./chunks/_f50de16f561e4648.js",
+      "library": "user"
+    },
+    "_f5d8ff413e103d9a": {
+      "id": "_f5d8ff413e103d9a",
+      "name": "VendorLonghandPropertiesHyphenFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_f5d8ff413e103d9a.js",
+      "library": "csstype"
+    },
+    "_fb75926fd47e2d6c": {
+      "id": "_fb75926fd47e2d6c",
+      "name": "VendorLonghandProperties",
+      "kind": "interface",
+      "chunk": "./chunks/_fb75926fd47e2d6c.js",
+      "library": "csstype"
+    },
+    "_fc516e52db4b71ce": {
+      "id": "_fc516e52db4b71ce",
+      "name": "VendorShorthandPropertiesFallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_fc516e52db4b71ce.js",
+      "library": "csstype"
+    }
+  }
+};
+export default manifest;

@@ -1,0 +1,12 @@
+{
+  "name": "local-const",
+  "tokens": {
+    "colors.n300": {
+      "category": "colors",
+      "cssVar": "--colors-n300",
+      "light": "#d4d4d8",
+      "dark": "#3f3f46"
+    }
+  },
+  "globalCss": [":root { --spacing-root: 0.25rem }"]
+}

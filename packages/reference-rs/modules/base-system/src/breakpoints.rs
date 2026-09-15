@@ -1,7 +1,8 @@
 //! Breakpoint scale for one design-system utterance.
 //! Names drive responsive array slots (`mt={['1r', '2r']}` → `base`, then `sm`).
 //! Optional pixel widths are what `r/` looks up for `@container (min-width: Npx)`.
-//! `standard()` is the lib table (sm 640 … 2xl 1536). Default is empty.
+//! `standard()` is the host/Panda scale the lib fixture overlays (sm 640 … 2xl 1536).
+//! Lib authors no breakpoints. Default is empty.
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -25,7 +26,7 @@ pub struct BreakpointScale {
 }
 
 impl BreakpointScale {
-    /// Lib / language default: `base` plus sm/md/lg/xl/2xl with pixel widths.
+    /// Host / Panda default the lib fixture overlays: `base` plus sm/md/lg/xl/2xl.
     pub fn standard() -> Self {
         from_width_pairs(STANDARD_WIDTHS)
     }
@@ -113,7 +114,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn standard_scale_has_lib_widths() {
+    fn standard_scale_has_host_widths() {
         let scale = BreakpointScale::standard();
         assert_eq!(scale.breakpoint_for_index(0), Some("base"));
         assert_eq!(scale.breakpoint_for_index(1), Some("sm"));

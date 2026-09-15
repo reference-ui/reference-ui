@@ -2,6 +2,6 @@
   {
     "severity": "warning",
     "message": "Unknown breakpoint name in r prop: \"wat\"",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-COND-07/input/src/query.tsx"
+    "file": "input/src/query.tsx"
   }
 ]

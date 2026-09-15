@@ -15,9 +15,9 @@ pub mod jsx;
 pub mod recipes;
 
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 mod gating_tests;
+#[cfg(test)]
+mod tests;
 
 use std::cell::Cell;
 use std::collections::HashSet;

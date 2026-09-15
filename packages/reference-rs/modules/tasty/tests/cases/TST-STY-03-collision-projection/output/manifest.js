@@ -1,97 +1,117 @@
 export const manifest = {
-  version: '2',
-  warnings: [
-    'Duplicate symbol name "StyleProps" matched 3 entries: _0198cb19f7dd4fdc (user), _9fa9dee0187a1439 (user), _62e67017b7fa8a6d (user). Use symbol id or scoped lookup to disambiguate.',
+  "version": "2",
+  "warnings": [
+    "Duplicate symbol name \"StyleProps\" matched 3 entries: _0198cb19f7dd4fdc (user), _9fa9dee0187a1439 (user), _62e67017b7fa8a6d (user). Use symbol id or scoped lookup to disambiguate."
   ],
-  symbolsByName: {
-    ContainerProps: ['_e7ec4bb2451751b2'],
-    ExternalStylePropsTouch: ['_7eab0819a5a02b16'],
-    FontProps: ['_5832f334782c752a'],
-    PublicStyleProps: ['_af4976606e6af7c3'],
-    ReferenceProps: ['_eadcd74c11209648'],
-    ResponsiveProps: ['_225e2253d9f0ec6d'],
-    StyleProps: ['_0198cb19f7dd4fdc', '_9fa9dee0187a1439', '_62e67017b7fa8a6d'],
-    SystemStyleObject: ['_5e365f2d93795bd2'],
-    UsesPublicStyleProps: ['_033945eb5619d783'],
+  "symbolsByName": {
+    "ContainerProps": [
+      "_e7ec4bb2451751b2"
+    ],
+    "ExternalStylePropsTouch": [
+      "_7eab0819a5a02b16"
+    ],
+    "FontProps": [
+      "_5832f334782c752a"
+    ],
+    "PublicStyleProps": [
+      "_af4976606e6af7c3"
+    ],
+    "ReferenceProps": [
+      "_eadcd74c11209648"
+    ],
+    "ResponsiveProps": [
+      "_225e2253d9f0ec6d"
+    ],
+    "StyleProps": [
+      "_0198cb19f7dd4fdc",
+      "_9fa9dee0187a1439",
+      "_62e67017b7fa8a6d"
+    ],
+    "SystemStyleObject": [
+      "_5e365f2d93795bd2"
+    ],
+    "UsesPublicStyleProps": [
+      "_033945eb5619d783"
+    ]
   },
-  symbolsById: {
-    _0198cb19f7dd4fdc: {
-      id: '_0198cb19f7dd4fdc',
-      name: 'StyleProps',
-      kind: 'typeAlias',
-      chunk: './chunks/_0198cb19f7dd4fdc.js',
-      library: 'user',
+  "symbolsById": {
+    "_0198cb19f7dd4fdc": {
+      "id": "_0198cb19f7dd4fdc",
+      "name": "StyleProps",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_0198cb19f7dd4fdc.js",
+      "library": "user"
     },
-    _033945eb5619d783: {
-      id: '_033945eb5619d783',
-      name: 'UsesPublicStyleProps',
-      kind: 'interface',
-      chunk: './chunks/_033945eb5619d783.js',
-      library: 'user',
+    "_033945eb5619d783": {
+      "id": "_033945eb5619d783",
+      "name": "UsesPublicStyleProps",
+      "kind": "interface",
+      "chunk": "./chunks/_033945eb5619d783.js",
+      "library": "user"
     },
-    _225e2253d9f0ec6d: {
-      id: '_225e2253d9f0ec6d',
-      name: 'ResponsiveProps',
-      kind: 'interface',
-      chunk: './chunks/_225e2253d9f0ec6d.js',
-      library: 'user',
+    "_225e2253d9f0ec6d": {
+      "id": "_225e2253d9f0ec6d",
+      "name": "ResponsiveProps",
+      "kind": "interface",
+      "chunk": "./chunks/_225e2253d9f0ec6d.js",
+      "library": "user"
     },
-    _5832f334782c752a: {
-      id: '_5832f334782c752a',
-      name: 'FontProps',
-      kind: 'typeAlias',
-      chunk: './chunks/_5832f334782c752a.js',
-      library: 'user',
+    "_5832f334782c752a": {
+      "id": "_5832f334782c752a",
+      "name": "FontProps",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_5832f334782c752a.js",
+      "library": "user"
     },
-    _5e365f2d93795bd2: {
-      id: '_5e365f2d93795bd2',
-      name: 'SystemStyleObject',
-      kind: 'interface',
-      chunk: './chunks/_5e365f2d93795bd2.js',
-      library: 'user',
+    "_5e365f2d93795bd2": {
+      "id": "_5e365f2d93795bd2",
+      "name": "SystemStyleObject",
+      "kind": "interface",
+      "chunk": "./chunks/_5e365f2d93795bd2.js",
+      "library": "user"
     },
-    _62e67017b7fa8a6d: {
-      id: '_62e67017b7fa8a6d',
-      name: 'StyleProps',
-      kind: 'interface',
-      chunk: './chunks/_62e67017b7fa8a6d.js',
-      library: 'user',
+    "_62e67017b7fa8a6d": {
+      "id": "_62e67017b7fa8a6d",
+      "name": "StyleProps",
+      "kind": "interface",
+      "chunk": "./chunks/_62e67017b7fa8a6d.js",
+      "library": "user"
     },
-    _7eab0819a5a02b16: {
-      id: '_7eab0819a5a02b16',
-      name: 'ExternalStylePropsTouch',
-      kind: 'typeAlias',
-      chunk: './chunks/_7eab0819a5a02b16.js',
-      library: 'user',
+    "_7eab0819a5a02b16": {
+      "id": "_7eab0819a5a02b16",
+      "name": "ExternalStylePropsTouch",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_7eab0819a5a02b16.js",
+      "library": "user"
     },
-    _9fa9dee0187a1439: {
-      id: '_9fa9dee0187a1439',
-      name: 'StyleProps',
-      kind: 'interface',
-      chunk: './chunks/_9fa9dee0187a1439.js',
-      library: 'user',
+    "_9fa9dee0187a1439": {
+      "id": "_9fa9dee0187a1439",
+      "name": "StyleProps",
+      "kind": "interface",
+      "chunk": "./chunks/_9fa9dee0187a1439.js",
+      "library": "user"
     },
-    _af4976606e6af7c3: {
-      id: '_af4976606e6af7c3',
-      name: 'PublicStyleProps',
-      kind: 'typeAlias',
-      chunk: './chunks/_af4976606e6af7c3.js',
-      library: 'user',
+    "_af4976606e6af7c3": {
+      "id": "_af4976606e6af7c3",
+      "name": "PublicStyleProps",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_af4976606e6af7c3.js",
+      "library": "user"
     },
-    _e7ec4bb2451751b2: {
-      id: '_e7ec4bb2451751b2',
-      name: 'ContainerProps',
-      kind: 'interface',
-      chunk: './chunks/_e7ec4bb2451751b2.js',
-      library: 'user',
+    "_e7ec4bb2451751b2": {
+      "id": "_e7ec4bb2451751b2",
+      "name": "ContainerProps",
+      "kind": "interface",
+      "chunk": "./chunks/_e7ec4bb2451751b2.js",
+      "library": "user"
     },
-    _eadcd74c11209648: {
-      id: '_eadcd74c11209648',
-      name: 'ReferenceProps',
-      kind: 'typeAlias',
-      chunk: './chunks/_eadcd74c11209648.js',
-      library: 'user',
-    },
-  },
-}
-export default manifest
+    "_eadcd74c11209648": {
+      "id": "_eadcd74c11209648",
+      "name": "ReferenceProps",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_eadcd74c11209648.js",
+      "library": "user"
+    }
+  }
+};
+export default manifest;

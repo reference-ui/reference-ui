@@ -2,6 +2,6 @@
   {
     "severity": "warning",
     "message": "Dynamic non-literal identifier 'prop' encountered for prop 'bg'",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-STATIC-01/input/src/App.tsx"
+    "file": "input/src/App.tsx"
   }
 ]

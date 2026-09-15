@@ -1,4 +1,6 @@
 //! JavaScript object/array/string emission for artifact modules.
+//! Leaf values serialize as compact JSON literals. Nested payloads such as the
+//! manifest can be pretty-printed so committed goldens stay readable.
 
 use std::fmt::Write as _;
 
@@ -35,6 +37,11 @@ impl JsObjectBuilder {
 
 pub(super) fn to_js_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, String> {
     serde_json::to_string(value)
+        .map_err(|error| format!("Failed to serialize artifact value: {error}"))
+}
+
+pub(super) fn to_js_pretty_literal<T: Serialize + ?Sized>(value: &T) -> Result<String, String> {
+    serde_json::to_string_pretty(value)
         .map_err(|error| format!("Failed to serialize artifact value: {error}"))
 }
 

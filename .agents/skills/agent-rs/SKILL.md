@@ -47,7 +47,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **atomic** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v atomic` |
 | **canon** | dictionary membership & fail-closed join | Cargo unit tests on generated tables + Vitest join stations. Generator join is `pnpm canon`. | `pnpm agentrs c canon` / `pnpm agentrs v canon` |
 | **base-system** | definition artefact | Cargo unit tests. Stub until `compile()` takes a base system. | `pnpm agentrs c base_system` |
-| **typegen** | `.d.ts` unions | Cargo unit tests. Stub until the union printer exists. | `pnpm agentrs c typegen` |
+| **typegen** | `.d.ts` unions | Cargo printer tests + Vitest `tsc --noEmit` consumers. Goldens: `TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen`. | `pnpm agentrs c typegen` / `v typegen` |
 | **tasty** | scan types, emit modules, assert API | **spec + committed goldens** (`manifest.js`, `chunks.json`). Runtime emit goes to `.scratch/`. | `pnpm agentrs v tasty` |
 | **atlas** | analyze an app, named assertions | **spec + committed** `analysis.json` / `diagnostics.json`; standing schema gauges. | `pnpm agentrs v atlas` |
 | **virtualrs** | rewrite source | **spec + committed** `output/expected.tsx`. | `pnpm agentrs v virtualrs` |

@@ -1,0 +1,17 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root {
+    --colors-gray-800: #27272a;
+    --colors-red-500: #ef4444;
+  }
+  [data-panda-theme=dark] {
+    --colors-gray-800: #e4e4e7;
+    --colors-red-500: #f87171;
+  }
+}
+@layer utilities {
+  .bd-c_gray\.800 { border-color: var(--colors-gray-800); }
+  .p_1r { padding: var(--spacing-root); }
+  .bd-b-c_red\.500 { border-bottom-color: var(--colors-red-500); }
+  .pt_2r { padding-top: calc(2 * var(--spacing-root)); }
+}

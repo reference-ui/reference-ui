@@ -1,0 +1,8 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .hover\:c_red:is(:hover, [data-hover]) { color: red; }
+  .focus\:c_red:is(:focus, [data-focus]) { color: red; }
+  .focusVisible\:c_red:is(:focus-visible, [data-focus-visible]) { color: red; }
+  .active\:c_red:is(:active, [data-active]) { color: red; }
+  .disabled\:c_red:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { color: red; }
+}

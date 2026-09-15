@@ -1,0 +1,5 @@
+{
+  "@container (min-width: 640px):color:green": "[@container_(min-width:_640px)]:c_green",
+  "_hover:color:blue": "hover:c_blue",
+  "color:red": "c_red"
+}

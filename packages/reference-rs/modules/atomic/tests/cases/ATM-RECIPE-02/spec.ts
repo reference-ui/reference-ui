@@ -3,7 +3,7 @@
  * combinations (and compounds) to closed recipe class names.
  */
 import { expect } from 'vitest'
-import { classSelector, layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-02',
@@ -17,9 +17,7 @@ const spec: AtomicCaseSpec = {
     expect(table.variants.variant?.outline).toBe('button--variant_outline')
     expect(table.compoundVariants).toHaveLength(1)
     expect(table.compoundVariants[0]?.props).toEqual({ variant: 'solid' })
-    expect(table.compoundVariants[0]?.className).toBe(
-      'button--compound-variant_solid'
-    )
+    expect(table.compoundVariants[0]?.className).toBe('button--compound-variant_solid')
 
     const base = table.combinations.find(c => Object.keys(c.props).length === 0)
     expect(base?.className).toBe('button')
@@ -30,19 +28,16 @@ const spec: AtomicCaseSpec = {
       'button--compound-variant_solid',
     ])
     const outline = table.combinations.find(c => c.props.variant === 'outline')
-    expect(outline?.className.split(' ')).toEqual([
-      'button',
-      'button--variant_outline',
-    ])
+    expect(outline?.className.split(' ')).toEqual(['button', 'button--variant_outline'])
 
-    const recipes = layerBody(result.stylesheet, 'recipes')
+    const recipes = layerClassNames(result.stylesheet, 'recipes')
     for (const className of [
       'button',
       'button--variant_solid',
       'button--variant_outline',
       'button--compound-variant_solid',
     ]) {
-      expect(recipes).toContain(classSelector(className))
+      expect(recipes.has(className)).toBe(true)
     }
     expect(result.diagnostics).toHaveLength(0)
   },

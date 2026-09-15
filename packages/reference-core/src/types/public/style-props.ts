@@ -4,9 +4,10 @@ import type { SystemStyleObject } from './system-style-object'
 /**
  * Public style props for React primitives.
  *
- * Color narrowing is not repeated here: `SystemStyleObject` is already wrapped with
- * `StrictColorProps` in `./system-style-object` (see `./colors`), so token-safe colors
- * apply to `StyleProps` automatically.
+ * Color narrowing is not repeated here. The packager wraps
+ * `BaseSystemStyleObject` with `StrictColorProps` in generated
+ * `system-style-object.d.ts` when `ui.config.ts` sets `strict: ['colors', …]`.
+ * This source file always omits dialect keys and adds `ReferenceProps`.
  *
  * This type only omits `font` | `weight` | `container` | `r` (primitives own those via
  * `font` / `container` / `r`) and adds `ReferenceProps`.

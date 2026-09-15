@@ -62,6 +62,8 @@ pub struct CompileResult {
     pub wants: Vec<Want>,
     #[serde(default)]
     pub recipes: Vec<RecipeTable>,
+    #[serde(default)]
+    pub atom_count: usize,
 }
 
 struct ParseSession<'a> {
@@ -103,8 +105,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     static_css::append_wants(system, &mut wants);
 
     let atom_set = build_atom_set(&wants, system, &mut diagnostics);
+    let atom_count = atom_set.len();
     let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
-    let css = build_css_runtime(&atom_set, system);
+    let css = build_css_runtime(&atom_set);
     let stylesheet = stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes);
     let recipe_tables = compiled_recipes
         .into_iter()
@@ -117,10 +120,17 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         diagnostics,
         wants,
         recipes: recipe_tables,
+        atom_count,
     })
 }
 
 fn collect_sources(request: &CompileRequest) -> Vec<(String, String)> {
+    let mut sources = gather_sources(request);
+    sources.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+    sources
+}
+
+fn gather_sources(request: &CompileRequest) -> Vec<(String, String)> {
     if let Some(files) = &request.files {
         if !files.is_empty() {
             return files
@@ -141,8 +151,10 @@ fn scan_dir(dir: &Path, acc: &mut Vec<(String, String)>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
-    for entry in entries.flatten() {
-        handle_dir_entry(&entry.path(), acc);
+    let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
+    paths.sort();
+    for path in paths {
+        handle_dir_entry(&path, acc);
     }
 }
 
@@ -280,15 +292,16 @@ fn compile_recipes(
     recipes::compile(extracted, &mut session)
 }
 
-fn build_css_runtime(atom_set: &AtomSet, system: &BaseSystem) -> CssRuntime {
+fn build_css_runtime(atom_set: &AtomSet) -> CssRuntime {
     let mut runtime = CssRuntime::new();
     for atom in atom_set {
-        let c_name = stylesheet::name::class_name(atom, system);
+        let c_name = stylesheet::name::class_name(atom);
         let val_key = atom.value.class_name_str();
         let key = if atom.conditions.is_empty() {
             format!("{}:{}", atom.prop, val_key)
         } else {
-            format!("{}:{}:{}", atom.conditions.join(":"), atom.prop, val_key)
+            let conds: Vec<&str> = atom.conditions.iter().map(atom::When::authored).collect();
+            format!("{}:{}:{}", conds.join(":"), atom.prop, val_key)
         };
         runtime.insert(key, c_name);
     }

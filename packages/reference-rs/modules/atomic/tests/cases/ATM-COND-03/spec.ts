@@ -10,9 +10,7 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-COND-03',
   verify(result) {
     expect(hasWant(result, 'bg', 'gray.900', ['_dark'])).toBe(true)
-    expect(result.stylesheet).toContain(
-      '[data-panda-theme=dark] .dark\\:bg_gray\\.900'
-    )
+    expect(result.stylesheet).toContain('[data-panda-theme=dark] .dark\\:bg_gray\\.900')
   },
 }
 

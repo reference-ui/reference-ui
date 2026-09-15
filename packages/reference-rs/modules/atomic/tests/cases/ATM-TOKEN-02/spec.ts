@@ -14,9 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('margin-top: blue.600;')
     expect(sheet).not.toContain('margin-top: var(--colors-blue-600);')
     expect(result.diagnostics.length).toBeGreaterThanOrEqual(1)
-    expect(result.diagnostics.some(d => d.message.includes('blue.600'))).toBe(
-      true
-    )
+    expect(result.diagnostics.some(d => d.message.includes('blue.600'))).toBe(true)
   },
 }
 

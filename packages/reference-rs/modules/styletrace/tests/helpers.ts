@@ -1,26 +1,63 @@
 /**
- * Test fixture generators and trace helpers for the styletrace test suite.
- * Provides virtual workspace fixtures with mock node_modules packages and barrels.
- * Executes the styletrace traversal pass across local and external component graphs.
+ * Styletrace station helpers: discovery, VirtualWorkspace compile, goldens, and leftover fixtures.
+ * Each station's committed `input/` is copied into a scratch tree, remapping `packages/` to
+ * `node_modules/` so mock libraries stay git-trackable. Tracing always uses the workspace
+ * `packages/reference-lib` sync root. Synced consumer roots and repo-level fixtures still
+ * build ephemeral trees here; they are not case stations.
  */
 import { fileURLToPath } from 'node:url'
+import fs from 'node:fs'
 import path from 'node:path'
+import { expect } from 'vitest'
 
 import { trace } from '../js/index'
-import { createVirtualWorkspace } from '../../../testing/index.js'
+import {
+  createVirtualWorkspace,
+  type GoldenDefinition,
+  type StandingGauge,
+  type StationContext,
+  type StationSpec,
+} from '../../../testing/index.js'
 
 const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
 const REFERENCE_RS_DIR = path.resolve(TESTS_STYLETRACE_DIR, '../../..')
 const WORKSPACE_ROOT = path.resolve(REFERENCE_RS_DIR, '../..')
 const DEFAULT_SYNC_ROOT = path.join(WORKSPACE_ROOT, 'packages', 'reference-lib')
 
-export function getCaseInputDir(caseName: string): string {
-  return path.join(TESTS_STYLETRACE_DIR, 'cases', caseName, 'input')
+export const CASES_DIR = path.resolve(TESTS_STYLETRACE_DIR, 'cases')
+export const CASE_FOLDER = /^([a-z][a-z0-9_]*)$/
+
+export type StyletraceResult = string[]
+export type StyletraceCaseSpec = StationSpec<StyletraceResult>
+
+export async function compileStyletraceCase(
+  ctx: StationContext
+): Promise<StyletraceResult> {
+  const files = collectStationFiles(ctx.inputDir)
+  const workspace = await createVirtualWorkspace(files, `styletrace-${ctx.caseName}`)
+  try {
+    return await trace(workspace.rootDir, DEFAULT_SYNC_ROOT)
+  } finally {
+    await workspace.cleanup()
+  }
 }
 
-export async function traceCase(caseName: string): Promise<string[]> {
-  return trace(getCaseInputDir(caseName), DEFAULT_SYNC_ROOT)
-}
+export const styletraceGoldens: GoldenDefinition<StyletraceResult>[] = [
+  {
+    fileName: 'components.json',
+    format: 'json',
+    extract: names => [...names].sort(),
+  },
+]
+
+export const styletraceGauges: StandingGauge<StyletraceResult>[] = [
+  names => {
+    expect(names, 'traced component names must be unique').toHaveLength(
+      new Set(names).size
+    )
+    expect(names, 'traced component names must be sorted').toEqual([...names].sort())
+  },
+]
 
 export async function traceDir(rootDir: string): Promise<string[]> {
   return trace(rootDir, DEFAULT_SYNC_ROOT)
@@ -48,138 +85,6 @@ export async function traceFixtureDir(relativePath: string): Promise<string[]> {
 export interface RuntimeFixture {
   rootDir: string
   cleanup: () => Promise<void>
-}
-
-export async function createNodeModulesWrapperFixture(): Promise<RuntimeFixture> {
-  return createRuntimeFixture('node-modules-wrapper', {
-    'index.tsx': `import { PackageCard, type PackageCardProps } from 'fixture-style-lib'
-
-export type AppCardProps = PackageCardProps
-
-export function AppCard(props: AppCardProps) {
-  return <PackageCard {...props} />
-}
-
-export { PackageCard } from 'fixture-style-lib'
-`,
-    'node_modules/fixture-style-lib/index.tsx': `import { Div, type StyleProps } from '@reference-ui/react'
-
-export interface PackageCardProps extends StyleProps {
-  tone?: 'neutral' | 'brand'
-}
-
-export function PackageCard({ tone = 'neutral', ...styleProps }: PackageCardProps) {
-  return <Div data-tone={tone} {...styleProps} />
-}
-`,
-  })
-}
-
-export async function createDefaultExportPackageFixture(): Promise<RuntimeFixture> {
-  return createRuntimeFixture('default-export-package', {
-    'index.tsx': `import type { StyleProps } from '@reference-ui/react'
-import DefaultCard from 'fixture-style-default'
-
-export type AppCardProps = StyleProps & {
-  title?: string
-}
-
-export function AppCard(props: AppCardProps) {
-  return <DefaultCard {...props} />
-}
-
-export { default as PackageCard } from 'fixture-style-default'
-`,
-    'node_modules/fixture-style-default/package.json': `{
-  "name": "fixture-style-default",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    ".": "./index.tsx"
-  }
-}
-`,
-    'node_modules/fixture-style-default/index.tsx': `import { Div, type StyleProps } from '@reference-ui/react'
-
-export type DefaultCardProps = StyleProps & {
-  title?: string
-}
-
-export default function DefaultCard({ title, ...styleProps }: DefaultCardProps) {
-  return <Div {...styleProps}>{title}</Div>
-}
-`,
-  })
-}
-
-export async function createSubpathPackageFixture(): Promise<RuntimeFixture> {
-  return createRuntimeFixture('subpath-package', {
-    'index.tsx': `import { PackageCard, type PackageCardProps } from 'fixture-style-subpath/card'
-
-export type AppCardProps = PackageCardProps
-
-export function AppCard(props: AppCardProps) {
-  return <PackageCard {...props} />
-}
-
-export { PackageCard } from 'fixture-style-subpath/card'
-`,
-    'node_modules/fixture-style-subpath/package.json': `{
-  "name": "fixture-style-subpath",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    "./card": "./card.tsx"
-  }
-}
-`,
-    'node_modules/fixture-style-subpath/card.tsx': `import { Div, type StyleProps } from '@reference-ui/react'
-
-export type PackageCardProps = StyleProps & {
-  title?: string
-}
-
-export function PackageCard({ title, ...styleProps }: PackageCardProps) {
-  return <Div {...styleProps}>{title}</Div>
-}
-`,
-  })
-}
-
-export async function createExportStarPackageFixture(): Promise<RuntimeFixture> {
-  return createRuntimeFixture('export-star-package', {
-    'index.tsx': `import { PackageCard, type PackageCardProps } from 'fixture-style-barrel'
-
-export type AppCardProps = PackageCardProps
-
-export function AppCard(props: AppCardProps) {
-  return <PackageCard {...props} />
-}
-
-export { PackageCard } from 'fixture-style-barrel'
-`,
-    'node_modules/fixture-style-barrel/package.json': `{
-  "name": "fixture-style-barrel",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    ".": "./index.ts"
-  }
-}
-`,
-    'node_modules/fixture-style-barrel/index.ts': `export * from './card'
-`,
-    'node_modules/fixture-style-barrel/card.tsx': `import { Div, type StyleProps } from '@reference-ui/react'
-
-export type PackageCardProps = StyleProps & {
-  title?: string
-}
-
-export function PackageCard({ title, ...styleProps }: PackageCardProps) {
-  return <Div {...styleProps}>{title}</Div>
-}
-`,
-  })
 }
 
 export async function createNodeBuiltinHelperFixture(): Promise<RuntimeFixture> {
@@ -272,6 +177,30 @@ export function AppCard({ title, ...styleProps }: AppCardProps) {
 export type { StyleProps } from '@reference-ui/react'
 `,
   })
+}
+
+function collectStationFiles(inputDir: string): Record<string, string> {
+  const files: Record<string, string> = {}
+  walkStationInput(inputDir, '', files)
+  return files
+}
+
+function walkStationInput(dir: string, rel: string, files: Record<string, string>): void {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const childRel = rel ? `${rel}/${entry.name}` : entry.name
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      walkStationInput(full, childRel, files)
+      continue
+    }
+    files[remapPackagesToNodeModules(childRel)] = fs.readFileSync(full, 'utf-8')
+  }
+}
+
+function remapPackagesToNodeModules(rel: string): string {
+  return rel.startsWith('packages/')
+    ? `node_modules/${rel.slice('packages/'.length)}`
+    : rel
 }
 
 async function createRuntimeFixture(

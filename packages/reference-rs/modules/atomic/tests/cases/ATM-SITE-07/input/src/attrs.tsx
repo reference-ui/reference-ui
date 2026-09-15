@@ -7,13 +7,7 @@ function Foo() {
 export function App() {
   return (
     <>
-      <Div
-        id="root"
-        onClick={() => {}}
-        tabIndex={0}
-        aria-label="hello"
-        mt="2r"
-      />
+      <Div id="root" onClick={() => {}} tabIndex={0} aria-label="hello" mt="2r" />
       <Foo color="red" />
     </>
   )

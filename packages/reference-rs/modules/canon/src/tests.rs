@@ -201,6 +201,19 @@ fn can_prop_06_non_shorthands_none() {
 }
 
 #[test]
+fn property_cascade_rank_follows_longhand_nesting() {
+    assert_eq!(property_cascade_rank("border"), 0);
+    assert_eq!(property_cascade_rank("borderColor"), 1);
+    assert_eq!(property_cascade_rank("padding"), 1);
+    assert_eq!(property_cascade_rank("p"), 1);
+    assert_eq!(property_cascade_rank("paddingInline"), 1);
+    assert_eq!(property_cascade_rank("paddingInlineStart"), 2);
+    assert_eq!(property_cascade_rank("paddingTop"), 3);
+    assert_eq!(property_cascade_rank("borderBottomColor"), 3);
+    assert_eq!(property_cascade_rank("color"), 3);
+}
+
+#[test]
 fn can_prop_07_color_prop_resolution() {
     assert!(is_color_prop("color"));
     assert!(is_color_prop("backgroundColor"));

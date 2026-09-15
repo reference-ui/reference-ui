@@ -1,6 +1,6 @@
 //! Authored declaration representing a raw styling intention extracted from source ASTs.
-//! Captures property names, expression values, conditional scopes, importance flags, and origin metadata before resolution.
-//! Acts as the raw input passed into the resolution engine to produce canonical atoms.
+//! Captures property names, expression values (including Bool/Null), conditional scopes, importance flags, and origin metadata before resolution.
+//! Acts as the raw input passed into the resolution engine; Bool/Null never become `Atom` values.
 
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;

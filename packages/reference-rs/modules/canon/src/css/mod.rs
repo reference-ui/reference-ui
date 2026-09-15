@@ -65,3 +65,27 @@ pub fn native_longhands_for_prop(name: &str) -> Option<&'static [&'static str]> 
         _ => None,
     }
 }
+
+/// Cascade rank derived from existing longhand slices: shorthands-of-shorthands,
+/// then shorthands, then logical longhands (`Inline` / `Block` in the name), then
+/// physical longhands. Lower sorts first so a longhand utility always wins.
+pub fn property_cascade_rank(name: &str) -> u8 {
+    match native_longhands_for_prop(name) {
+        Some(hands) if has_nested_shorthand(hands) => 0,
+        Some(_) => 1,
+        None if is_logical_longhand(name) => 2,
+        None => 3,
+    }
+}
+
+fn has_nested_shorthand(hands: &[&str]) -> bool {
+    hands.iter().any(|hand| native_longhands_for_prop(hand).is_some())
+}
+
+fn is_logical_longhand(name: &str) -> bool {
+    let canonical = match crate::dialect::resolve_alias(name) {
+        Some(c) => c,
+        None => name,
+    };
+    canonical.contains("Inline") || canonical.contains("Block")
+}

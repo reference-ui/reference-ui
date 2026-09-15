@@ -1,0 +1,16 @@
+{
+  "name": "nested-conditions",
+  "tokens": {
+    "colors.n900": {
+      "category": "colors",
+      "cssVar": "--colors-n900",
+      "light": "#18181b",
+      "dark": "#fafafa"
+    }
+  },
+  "conditions": {
+    "_hover": "&:is(:hover, [data-hover])",
+    "_dark": "[data-panda-theme=dark] &",
+    "_focusVisible": "&:is(:focus-visible, [data-focus-visible])"
+  }
+}

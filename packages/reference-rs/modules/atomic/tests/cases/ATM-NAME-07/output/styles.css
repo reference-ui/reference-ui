@@ -1,0 +1,14 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .content_\"\$\" { content: "$"; }
+  .content_\"\*\" { content: "*"; }
+  .content_\"\;\" { content: ";"; }
+  .content_\"\<\" { content: "<"; }
+  .content_\"\?\" { content: "?"; }
+  .content_\"\\\\\" { content: "\\"; }
+  .content_\"\^\" { content: "^"; }
+  .content_\"\`\" { content: "`"; }
+  .content_\"\|\" { content: "|"; }
+  .content_\"\é\" { content: "é"; }
+  .\[\&_\>_\*\]\:p_1r > * { padding: var(--spacing-root); }
+}

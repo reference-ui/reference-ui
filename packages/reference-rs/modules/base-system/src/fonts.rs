@@ -1,7 +1,7 @@
 //! Font table for one design-system utterance.
 //! Stores family names, named weights, the CSS family stack, and optional extras such as
 //! `letterSpacing`. `generic()` is CSS keyword families with no lib tracking. The lib fixture
-//! copies `@reference-ui/lib` `font()` fragments (Inter / Literata / JetBrains Mono).
+//! loads `font()` families from the generated dump; `fontFace` is ignored until FONT-02.
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -93,76 +93,10 @@ fn generic_definition() -> FontDefinition {
     }
 }
 
-/// Frozen `@reference-ui/lib` font() table: stacks, weights, and tracking.
-pub fn lib_fonts() -> FontScale {
-    FontScale::from_definitions(IndexMap::from_iter([
-        ("sans".to_string(), sans_definition()),
-        ("serif".to_string(), serif_definition()),
-        ("mono".to_string(), mono_definition()),
-    ]))
-}
-
-fn sans_definition() -> FontDefinition {
-    FontDefinition {
-        value: "\"Inter\", ui-sans-serif, sans-serif".to_string(),
-        weights: weights(&[
-            ("thin", "200"),
-            ("light", "300"),
-            ("normal", "400"),
-            ("semibold", "600"),
-            ("bold", "700"),
-            ("black", "900"),
-        ]),
-        css: css_extras("-0.01em"),
-    }
-}
-
-fn serif_definition() -> FontDefinition {
-    FontDefinition {
-        value: "\"Literata\", ui-serif, serif".to_string(),
-        weights: weights(&[
-            ("thin", "100"),
-            ("light", "300"),
-            ("normal", "373"),
-            ("semibold", "600"),
-            ("bold", "700"),
-            ("black", "900"),
-        ]),
-        css: css_extras("normal"),
-    }
-}
-
-fn mono_definition() -> FontDefinition {
-    FontDefinition {
-        value: "\"JetBrains Mono\", ui-monospace, monospace".to_string(),
-        weights: weights(&[
-            ("thin", "100"),
-            ("light", "300"),
-            ("normal", "393"),
-            ("semibold", "600"),
-            ("bold", "700"),
-        ]),
-        css: css_extras("-0.04em"),
-    }
-}
-
-fn weights(pairs: &[(&str, &str)]) -> IndexMap<String, String> {
-    pairs
-        .iter()
-        .map(|(name, value)| ((*name).to_string(), (*value).to_string()))
-        .collect()
-}
-
-fn css_extras(letter_spacing: &str) -> IndexMap<String, String> {
-    IndexMap::from_iter([
-        ("letterSpacing".to_string(), letter_spacing.to_string()),
-        ("fontWeight".to_string(), "normal".to_string()),
-    ])
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::BaseSystem;
 
     #[test]
     fn generic_scale_has_css_families() {
@@ -176,7 +110,7 @@ mod tests {
 
     #[test]
     fn lib_fonts_include_tracking() {
-        let scale = lib_fonts();
+        let scale = BaseSystem::lib_fixture().fonts();
         assert_eq!(
             scale.get("sans").unwrap().css.get("letterSpacing"),
             Some(&"-0.01em".to_string())

@@ -1,17 +1,18 @@
 /**
- * Single-namer tripwire. Every `css.classes` value has an identical escaped
- * selector in the stylesheet. No second spelling.
+ * Single-namer tripwire. Every `css.classes` value is a class selector in
+ * `@layer utilities`. No second spelling.
  */
 import { expect } from 'vitest'
-import { classSelector, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-FORBID-03',
   verify(result) {
     const classes = result.css?.classes ?? {}
     expect(Object.keys(classes).length).toBeGreaterThanOrEqual(2)
+    const utilities = layerClassNames(result.stylesheet, 'utilities')
     for (const className of Object.values(classes)) {
-      expect(result.stylesheet).toContain(classSelector(className))
+      expect(utilities.has(className)).toBe(true)
     }
   },
 }

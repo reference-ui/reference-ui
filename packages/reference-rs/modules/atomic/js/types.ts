@@ -87,4 +87,6 @@ export interface CompileResult {
   diagnostics: Diagnostic[]
   wants?: Want[]
   recipes?: RecipeTable[]
+  /** Distinct AtomSet size. Test observability for ATM-GHOST-04. */
+  atomCount?: number
 }

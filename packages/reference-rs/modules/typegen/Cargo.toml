@@ -4,3 +4,7 @@ version.workspace = true
 edition.workspace = true
 publish = false
 description = "Token unions and StyleProps .d.ts from a base system plus canon"
+
+[dependencies]
+base_system.workspace = true
+canon.workspace = true

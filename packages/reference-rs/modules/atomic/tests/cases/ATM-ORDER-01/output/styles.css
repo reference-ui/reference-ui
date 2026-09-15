@@ -1,0 +1,34 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .p_1r { padding: var(--spacing-root); }
+  @media (max-width: 1536px) {
+    .\[\@media_\(max-width\:_1536px\)\]\:m_1r { margin: var(--spacing-root); }
+  }
+  @media (max-width: 1280px) {
+    .\[\@media_\(max-width\:_1280px\)\]\:m_2r { margin: calc(2 * var(--spacing-root)); }
+  }
+  @media (max-width: 1024px) {
+    .\[\@media_\(max-width\:_1024px\)\]\:m_3r { margin: calc(3 * var(--spacing-root)); }
+  }
+  @media (max-width: 768px) {
+    .\[\@media_\(max-width\:_768px\)\]\:m_4r { margin: calc(4 * var(--spacing-root)); }
+  }
+  @media (max-width: 640px) {
+    .\[\@media_\(max-width\:_640px\)\]\:m_5r { margin: calc(5 * var(--spacing-root)); }
+  }
+  @container (min-width: 640px) {
+    .sm\:p_2r { padding: calc(2 * var(--spacing-root)); }
+  }
+  @container (min-width: 768px) {
+    .md\:p_3r { padding: calc(3 * var(--spacing-root)); }
+  }
+  @container (min-width: 1024px) {
+    .lg\:p_4r { padding: calc(4 * var(--spacing-root)); }
+  }
+  @container (min-width: 1280px) {
+    .xl\:p_5r { padding: calc(5 * var(--spacing-root)); }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:p_6r { padding: calc(6 * var(--spacing-root)); }
+  }
+}

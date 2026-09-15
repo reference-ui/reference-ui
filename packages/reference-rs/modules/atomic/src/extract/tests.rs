@@ -181,8 +181,14 @@ fn test_css_and_recipe_call_sites() {
     assert!(res.stylesheet.contains("font-size: 12px"));
     assert!(res.stylesheet.contains("@layer utilities {"));
     assert!(res.stylesheet.contains(".mt_2r"));
-    let recipes_at = res.stylesheet.find("@layer recipes {").expect("recipes layer");
-    let utilities_at = res.stylesheet.find("@layer utilities {").expect("utilities layer");
+    let recipes_at = res
+        .stylesheet
+        .find("@layer recipes {")
+        .expect("recipes layer");
+    let utilities_at = res
+        .stylesheet
+        .find("@layer utilities {")
+        .expect("utilities layer");
     assert!(recipes_at < utilities_at);
     let utilities = &res.stylesheet[utilities_at..];
     assert!(!utilities.contains(".button {"));

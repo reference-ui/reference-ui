@@ -347,6 +347,7 @@ async function runVitestTests(args, rsDir) {
     ['tasty', 'tasty'],
     ['atlas', 'atlas'],
     ['styletrace', 'styletrace'],
+    ['typegen', 'typegen'],
     ['virtualrs', 'virtualrs'],
     ['virtualfs', 'virtualrs'],
     ['runtime', 'runtime'],
@@ -354,7 +355,15 @@ async function runVitestTests(args, rsDir) {
   ])
 
   // Validation: --update-goldens is supported for station harnesses
-  const GOLDEN_SUPPORTED_MODULES = new Set(['atomic', 'system', 'virtualrs', 'virtualfs', 'atlas', 'tasty'])
+  const GOLDEN_SUPPORTED_MODULES = new Set([
+    'atomic',
+    'system',
+    'virtualrs',
+    'virtualfs',
+    'atlas',
+    'tasty',
+    'styletrace',
+  ])
   if (hasUpdateGoldens && testFilter && KNOWN_MODULES.has(testFilter) && !GOLDEN_SUPPORTED_MODULES.has(testFilter)) {
     console.error(
       `\n\x1b[1;31m[agent-rs] Error: --update-goldens is not supported for '${testFilter}'. Supported modules: ${[...GOLDEN_SUPPORTED_MODULES].join(', ')}\x1b[0m\n`

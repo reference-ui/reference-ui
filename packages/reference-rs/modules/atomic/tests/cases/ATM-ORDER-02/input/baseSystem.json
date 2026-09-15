@@ -1,0 +1,9 @@
+{
+  "name": "order-02",
+  "breakpoints": {
+    "names": ["sm"],
+    "widths": {
+      "sm": "640"
+    }
+  }
+}

@@ -27,7 +27,8 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
         return;
     };
     let draft = walk_recipe_object(obj, origin.as_str(), ctx);
-    ctx.recipes.push(finish_recipe(draft, ctx.recipe_binding.as_deref()));
+    ctx.recipes
+        .push(finish_recipe(draft, ctx.recipe_binding.as_deref()));
 }
 
 #[derive(Default)]
@@ -113,11 +114,7 @@ fn handle_recipe_variants(
     let Expression::ObjectExpression(variants_obj) = val else {
         return;
     };
-    let mut walk = RecipeWalk {
-        origin,
-        ctx,
-        draft,
-    };
+    let mut walk = RecipeWalk { origin, ctx, draft };
     for group_kind in &variants_obj.properties {
         let ObjectPropertyKind::ObjectProperty(group_prop) = group_kind else {
             continue;
@@ -132,7 +129,11 @@ fn handle_recipe_variants(
     }
 }
 
-fn walk_variant_items(walk: &mut RecipeWalk<'_, '_>, items_obj: &ObjectExpression<'_>, group_name: &str) {
+fn walk_variant_items(
+    walk: &mut RecipeWalk<'_, '_>,
+    items_obj: &ObjectExpression<'_>,
+    group_name: &str,
+) {
     let mut items = IndexMap::new();
     for item_kind in &items_obj.properties {
         let ObjectPropertyKind::ObjectProperty(item_prop) = item_kind else {

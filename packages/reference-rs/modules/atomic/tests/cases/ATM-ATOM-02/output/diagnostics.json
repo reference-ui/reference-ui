@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "severity": "warning",
+    "message": "`border` value `true` is not valid CSS"
+  }
+]

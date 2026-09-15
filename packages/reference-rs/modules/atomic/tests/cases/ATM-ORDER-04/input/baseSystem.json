@@ -1,0 +1,17 @@
+{
+  "name": "order-04",
+  "tokens": {
+    "colors.gray.800": {
+      "category": "colors",
+      "cssVar": "--colors-gray-800",
+      "light": "#27272a",
+      "dark": "#e4e4e7"
+    },
+    "colors.red.500": {
+      "category": "colors",
+      "cssVar": "--colors-red-500",
+      "light": "#ef4444",
+      "dark": "#f87171"
+    }
+  }
+}

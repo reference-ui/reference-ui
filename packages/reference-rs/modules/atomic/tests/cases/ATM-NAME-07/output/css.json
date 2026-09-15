@@ -1,0 +1,13 @@
+{
+  "& > *:p:1r": "[&_>_*]:p_1r",
+  "content:\"$\"": "content_\"$\"",
+  "content:\"*\"": "content_\"*\"",
+  "content:\";\"": "content_\";\"",
+  "content:\"<\"": "content_\"<\"",
+  "content:\"?\"": "content_\"?\"",
+  "content:\"\\\\\"": "content_\"\\\\\"",
+  "content:\"^\"": "content_\"^\"",
+  "content:\"`\"": "content_\"`\"",
+  "content:\"|\"": "content_\"|\"",
+  "content:\"é\"": "content_\"é\""
+}

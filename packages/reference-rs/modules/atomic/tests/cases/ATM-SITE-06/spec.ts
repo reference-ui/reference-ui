@@ -10,7 +10,9 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(hasWant(result, 'color', 'n300')).toBe(true)
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect((result.wants ?? []).filter(w => w.prop === 'color').length).toBeGreaterThanOrEqual(2)
+    expect(
+      (result.wants ?? []).filter(w => w.prop === 'color').length
+    ).toBeGreaterThanOrEqual(2)
   },
 }
 

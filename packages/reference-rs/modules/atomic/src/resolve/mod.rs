@@ -14,8 +14,9 @@ pub mod tokens;
 use base_system::BaseSystem;
 use smallvec::SmallVec;
 
-use crate::atom::{Atom, AtomValue, Want};
+use crate::atom::{Atom, AtomValue, CssValue, Want, When};
 use crate::diagnostics::Diagnostic;
+use crate::resolve::conditions::{lower_when, LoweredWhen};
 
 /// Pass state for one want → atom lowering.
 pub struct ResolveSession<'a> {
@@ -39,18 +40,21 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
     if !canon::is_known_style_prop(&want.prop) {
         return Vec::new();
     }
+    let Some(clean_when) = lower_conditions(&want.when, session) else {
+        return Vec::new();
+    };
     let pairs = expand_or_passthrough(want, session.system);
-    let clean_when: SmallVec<[Box<str>; 2]> = sanitize_conditions(&want.when);
 
     let mut atoms = Vec::with_capacity(pairs.len());
     for (prop, val) in pairs {
-        let final_val = resolve_atom_value(&prop, val, session);
-        atoms.push(Atom::new(
-            prop,
-            final_val,
-            clean_when.clone(),
-            want.important,
-        ));
+        if let Some(final_val) = resolve_atom_value(&prop, val, session) {
+            atoms.push(Atom::new(
+                prop,
+                final_val,
+                clean_when.clone(),
+                want.important,
+            ));
+        }
     }
     atoms
 }
@@ -90,27 +94,71 @@ fn is_runtime_owned(prop: &str) -> bool {
     matches!(prop, "variant" | "colorMode")
 }
 
-fn sanitize_conditions(conditions: &[Box<str>]) -> SmallVec<[Box<str>; 2]> {
-    conditions
-        .iter()
-        .filter(|w| w.as_ref() != "base")
-        .cloned()
-        .collect()
+fn lower_conditions(
+    when: &[Box<str>],
+    session: &mut ResolveSession<'_>,
+) -> Option<SmallVec<[When; 2]>> {
+    let mut out = SmallVec::new();
+    let mut known = true;
+    for raw in when {
+        match lower_when(raw, session.system) {
+            LoweredWhen::Skip => {}
+            LoweredWhen::Known(cond) => out.push(cond),
+            LoweredWhen::Unknown => {
+                session
+                    .diagnostics
+                    .push(Diagnostic::warning(format!("Unknown condition \"{raw}\"")));
+                known = false;
+            }
+        }
+    }
+    if known {
+        Some(out)
+    } else {
+        None
+    }
 }
 
-fn resolve_atom_value(prop: &str, val: AtomValue, session: &mut ResolveSession<'_>) -> AtomValue {
-    let val_str = val.class_name_str();
+fn resolve_atom_value(
+    prop: &str,
+    val: AtomValue,
+    session: &mut ResolveSession<'_>,
+) -> Option<CssValue> {
+    let css = css_value_from_authored(prop, val, session.diagnostics)?;
+    Some(apply_rhythm_and_tokens(prop, css, session))
+}
+
+fn css_value_from_authored(
+    prop: &str,
+    val: AtomValue,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<CssValue> {
+    if matches!(&val, AtomValue::Bool(_) | AtomValue::Null) {
+        diagnostics.push(Diagnostic::warning(format!(
+            "`{prop}` value `{val}` is not valid CSS"
+        )));
+        return None;
+    }
+    val.into_css_value()
+}
+
+fn apply_rhythm_and_tokens(
+    prop: &str,
+    css: CssValue,
+    session: &mut ResolveSession<'_>,
+) -> CssValue {
+    let val_str = css.class_name_str();
     let rhythm_resolved = rhythm::resolve_rhythm(val_str);
     let token_resolved =
         tokens::resolve_token_value(prop, &rhythm_resolved, session.system, session.diagnostics);
 
     if token_resolved != val_str {
-        AtomValue::Token {
+        CssValue::Token {
             path: val_str.into(),
             value: token_resolved.into_owned().into_boxed_str(),
         }
     } else {
-        val
+        css
     }
 }
 
@@ -237,5 +285,50 @@ mod tests {
 
         let want_color_mode = Want::new("colorMode", AtomValue::String("dark".into()));
         assert!(resolve_want(&want_color_mode).is_empty());
+    }
+
+    #[test]
+    fn test_bool_want_emits_no_atom() {
+        let want = Want::new("border", AtomValue::Bool(true));
+        let mut diagnostics = Vec::new();
+        let system = BaseSystem::default();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+        };
+        let atoms = resolve_want_with(&want, &mut session);
+        assert!(atoms.is_empty());
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics[0].message,
+            "`border` value `true` is not valid CSS"
+        );
+    }
+
+    #[test]
+    fn test_null_want_emits_no_atom() {
+        let want = Want::new("color", AtomValue::Null);
+        let mut diagnostics = Vec::new();
+        let system = BaseSystem::default();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+        };
+        let atoms = resolve_want_with(&want, &mut session);
+        assert!(atoms.is_empty());
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics[0].message,
+            "`color` value `null` is not valid CSS"
+        );
+    }
+
+    #[test]
+    fn test_container_bool_still_lowers() {
+        let want = Want::new("container", AtomValue::Bool(true));
+        let atoms = resolve_want(&want);
+        assert_eq!(atoms.len(), 1);
+        assert_eq!(atoms[0].prop.as_ref(), "containerType");
+        assert_eq!(atoms[0].value.css_value_str(), "inline-size");
     }
 }

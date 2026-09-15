@@ -36,9 +36,7 @@ impl ExtractBindings {
     ) -> Option<String> {
         match callee {
             Expression::Identifier(ident) => live_css_name(self, ident.name.as_str(), shadowed),
-            Expression::StaticMemberExpression(member) => {
-                css_member_origin(self, member, shadowed)
-            }
+            Expression::StaticMemberExpression(member) => css_member_origin(self, member, shadowed),
             _ => None,
         }
     }
@@ -96,7 +94,11 @@ fn record_specifier(bindings: &mut ExtractBindings, spec: &ImportDeclarationSpec
             if named.import_kind == ImportOrExportKind::Type {
                 return;
             }
-            record_named(bindings, named.local.name.as_str(), imported_name(&named.imported));
+            record_named(
+                bindings,
+                named.local.name.as_str(),
+                imported_name(&named.imported),
+            );
         }
         ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
             bindings.namespaces.insert(ns.local.name.to_string());

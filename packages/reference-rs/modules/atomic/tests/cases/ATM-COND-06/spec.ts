@@ -12,12 +12,8 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'colorMode', 'dark')).toBe(true)
     expect(hasWant(result, 'mt', '2r')).toBe(true)
     const classes = result.css?.classes ?? {}
-    expect(Object.keys(classes).some(k => k.startsWith('variant:'))).toBe(
-      false
-    )
-    expect(Object.keys(classes).some(k => k.startsWith('colorMode:'))).toBe(
-      false
-    )
+    expect(Object.keys(classes).some(k => k.startsWith('variant:'))).toBe(false)
+    expect(Object.keys(classes).some(k => k.startsWith('colorMode:'))).toBe(false)
     expect(result.stylesheet).toContain('.mt_2r')
     expect(result.stylesheet).not.toContain('variant')
     expect(result.stylesheet).not.toContain('color-mode')
