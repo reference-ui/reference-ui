@@ -12,74 +12,41 @@ import { fileURLToPath } from 'node:url';
 import { loadDialect, type DialectData } from './dialect';
 import {
   emitConditionsRs,
-  emitCssRs,
   emitDialectRs,
   emitHtmlRs,
   emitLibRs,
 } from './emitters';
+import {
+  emitCssColorRs,
+  emitCssLonghandsRs,
+  emitCssModRs,
+  emitCssPropertiesRs,
+} from './emitters-css';
 import { emitTestsRs } from './emitters-tests';
-import { loadPlatformCss, loadPlatformElements, type PlatformCss } from './platform';
+import { loadPlatformCss, loadPlatformElements } from './platform';
+import { validateJoin } from './join';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const canonSrcDir = path.resolve(__dirname, '../src');
 
-function validateElementsJoin(dialect: DialectData, platformElements: Set<string>): void {
-  const invalidTags = dialect.elements.filter(
-    (el) => !platformElements.has(el.html.toLowerCase())
-  );
-  if (invalidTags.length > 0) {
-    console.error('[canon] FAIL: Dialect HTML tags not found in web standards (@webref):', invalidTags);
-    process.exit(1);
-  }
-}
-
-function validatePropertiesJoin(dialect: DialectData, platformCss: PlatformCss): void {
-  const unverifiedProps = dialect.canonicalProperties.filter((p) => {
-    const inWebref = platformCss.properties.has(p.name) || platformCss.properties.has(p.css);
-    const inAllowlist = dialect.dialectCssAllowlist.has(p.css) || dialect.dialectCssAllowlist.has(p.name);
-    return !inWebref && !inAllowlist;
-  });
-  if (unverifiedProps.length > 0) {
-    console.error('[canon] FAIL: Canonical properties not in webref or dialect allowlist:', unverifiedProps);
-    process.exit(1);
-  }
-}
-
-function validateShorthandsJoin(dialect: DialectData, platformCss: PlatformCss): void {
-  const specShorthands = ['padding', 'margin', 'border', 'inset', 'outline'];
-  for (const sh of specShorthands) {
-    const prop = dialect.canonicalProperties.find((p) => p.name === sh);
-    const webrefLonghands = platformCss.nativeShorthands.get(sh);
-    if (!prop || !webrefLonghands) {
-      console.error(`[canon] FAIL: Missing native shorthand longhands for '${sh}'`);
-      process.exit(1);
-    }
-    const dL = prop.longhands.slice().sort();
-    const wL = webrefLonghands.slice().sort();
-    if (JSON.stringify(dL) !== JSON.stringify(wL)) {
-      console.error(`[canon] FAIL: Mismatched native shorthand longhands for '${sh}':`, { dialect: dL, webref: wL });
-      process.exit(1);
-    }
-  }
-}
-
-function validateJoin(
-  dialect: DialectData,
-  platformElements: Set<string>,
-  platformCss: PlatformCss
-): void {
-  validateElementsJoin(dialect, platformElements);
-  validatePropertiesJoin(dialect, platformCss);
-  validateShorthandsJoin(dialect, platformCss);
-}
-
 function emitAllModules(dialect: DialectData, targetDir: string): void {
   fs.mkdirSync(targetDir, { recursive: true });
+  fs.mkdirSync(path.join(targetDir, 'css'), { recursive: true });
+
+  // Remove old flat css.rs if it exists to avoid module collision with css/
+  const oldCssRs = path.join(targetDir, 'css.rs');
+  if (fs.existsSync(oldCssRs)) {
+    fs.unlinkSync(oldCssRs);
+  }
+
   fs.writeFileSync(path.join(targetDir, 'html.rs'), emitHtmlRs(dialect), 'utf-8');
-  fs.writeFileSync(path.join(targetDir, 'css.rs'), emitCssRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'dialect.rs'), emitDialectRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'conditions.rs'), emitConditionsRs(dialect), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/mod.rs'), emitCssModRs(), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/longhands.rs'), emitCssLonghandsRs(dialect), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/color.rs'), emitCssColorRs(dialect), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/properties.rs'), emitCssPropertiesRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'lib.rs'), emitLibRs(), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'tests.rs'), emitTestsRs(), 'utf-8');
 }
@@ -88,11 +55,17 @@ async function main(): Promise<void> {
   console.log('[canon] Ingesting web standards and Reference UI dialect...');
   const platformElements = await loadPlatformElements();
   const platformCss = await loadPlatformCss();
-  const dialect = loadDialect();
+  const dialect = loadDialect(platformCss);
 
-  console.log('[canon] Validating platform vs dialect join...');
-  validateJoin(dialect, platformElements, platformCss);
-  console.log('[canon] Join validation passed with 100% compliance.');
+  console.log('[canon] Validating platform vs dialect inverted join...');
+  const errors = validateJoin(dialect, platformElements, platformCss);
+  if (errors.length > 0) {
+    for (const err of errors) {
+      console.error(`[canon] ${err}`);
+    }
+    process.exit(1);
+  }
+  console.log('[canon] Inverted join validation passed with 100% compliance.');
 
   console.log('[canon] Emitting Rust canon modules...');
   emitAllModules(dialect, canonSrcDir);

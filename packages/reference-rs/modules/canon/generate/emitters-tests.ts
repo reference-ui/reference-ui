@@ -1,90 +1,26 @@
 /**
- * Test code emitter for Reference UI Rust canon modules.
- * Generates unit test assertions verifying element membership, alias resolution,
- * condition matching, and rejection of hallucinated components.
- * Emitted as tests.rs inside the canon crate.
+ * Root test code emitter for Reference UI Rust canon modules.
+ * Assembles unit test assertions from specialized tag and property test generators.
+ * Emits tests.rs inside the canon crate to verify elements, styles, aliases, conditions, and fail-closed gates.
+ * Ensures the emitted Rust test suite provides 100% test coverage matching SPEC.md.
  */
 
-function emitPrimitiveTests(): string {
-  return `#[test]
-fn test_real_primitives_match() {
-    assert!(is_reference_primitive("Div"));
-    assert!(is_reference_primitive("Span"));
-    assert!(is_reference_primitive("Button"));
-    assert!(is_reference_primitive("P"));
-    assert!(is_reference_primitive("A"));
-    assert!(is_reference_primitive("Obj"));
-    assert!(is_reference_primitive("Var"));
-    assert!(is_reference_primitive("Section"));
-    assert!(is_reference_primitive("Nav"));
-    assert!(is_reference_primitive("Header"));
-    assert!(is_reference_primitive("Footer"));
-    assert!(is_reference_primitive("Main"));
-}
+import {
+  emitHallucinatedPrimitiveTests,
+  emitLowercaseHtmlTagTests,
+  emitReactSvgTagTests,
+  emitRealPrimitiveTests,
+} from './emitters-tests-tags';
+import {
+  emitAliasResolutionTests,
+  emitColorPropTests,
+  emitKnownStylePropTests,
+  emitPropertyConversionTests,
+  emitReferenceExtensionTests,
+  emitShorthandDecompositionTests,
+} from './emitters-tests-props';
 
-#[test]
-fn test_lowercase_html_tags_match() {
-    assert!(is_html_tag("div"));
-    assert!(is_html_tag("span"));
-    assert!(is_html_tag("object"));
-    assert!(is_html_tag("var"));
-    assert!(is_html_tag("button"));
-    assert!(is_html_tag("p"));
-    assert!(is_reference_primitive("div"));
-}
-
-#[test]
-fn test_hallucinated_primitives_fail() {
-    assert!(!is_reference_primitive("Box"));
-    assert!(!is_reference_primitive("Flex"));
-    assert!(!is_reference_primitive("Stack"));
-    assert!(!is_reference_primitive("Center"));
-    assert!(!is_reference_primitive("Spacer"));
-    assert!(!is_reference_primitive("Badge"));
-    assert!(!is_reference_primitive("Card"));
-    assert!(!is_reference_primitive("Tabs"));
-    assert!(!is_reference_primitive("Tab"));
-    assert!(!is_reference_primitive("Image"));
-    assert!(!is_reference_primitive("Portal"));
-    assert!(!is_reference_primitive("AspectRatio"));
-    assert!(!is_reference_primitive("Grid"));
-}`;
-}
-
-function emitStylePropTests(): string {
-  return `#[test]
-fn test_style_props_match() {
-    assert!(is_known_style_prop("r"));
-    assert!(is_known_style_prop("container"));
-    assert!(is_known_style_prop("colorMode"));
-    assert!(is_known_style_prop("variant"));
-    assert!(is_known_style_prop("font"));
-    assert!(is_known_style_prop("weight"));
-    assert!(is_known_style_prop("m"));
-    assert!(is_known_style_prop("mt"));
-    assert!(is_known_style_prop("p"));
-    assert!(is_known_style_prop("pt"));
-    assert!(is_known_style_prop("bg"));
-    assert!(is_known_style_prop("rounded"));
-    assert!(is_known_style_prop("borderX"));
-    assert!(is_known_style_prop("color"));
-    assert!(is_known_style_prop("display"));
-    assert!(is_known_style_prop("--custom-token"));
-}
-
-#[test]
-fn test_non_style_attributes_fail() {
-    assert!(!is_known_style_prop("onClick"));
-    assert!(!is_known_style_prop("id"));
-    assert!(!is_known_style_prop("className"));
-    assert!(!is_known_style_prop("children"));
-    assert!(!is_known_style_prop("href"));
-    assert!(!is_known_style_prop("aria-label"));
-    assert!(!is_known_style_prop("data-testid"));
-}`;
-}
-
-function emitConditionAndConversionTests(): string {
+function emitConditionAndBreakpointTests(): string {
   return `#[test]
 fn test_conditions_and_breakpoints() {
     assert!(is_condition_prop("base"));
@@ -97,52 +33,48 @@ fn test_conditions_and_breakpoints() {
     assert!(is_condition_prop("_hover"));
     assert!(is_condition_prop("_focusVisible"));
     assert!(is_condition_prop("_dark"));
+    assert!(is_condition_prop("_active"));
+    assert!(is_condition_prop("_disabled"));
     assert!(is_condition_prop("&:hover"));
+    assert!(is_condition_prop("& > svg"));
     assert!(is_condition_prop("@media (min-width: 600px)"));
 
     assert!(!is_condition_prop("hover"));
     assert!(!is_condition_prop("focus"));
+    assert!(!is_condition_prop("active"));
 }
 
 #[test]
-fn test_resolve_canonical_prop() {
-    assert_eq!(resolve_canonical_prop("mt"), "marginTop");
-    assert_eq!(resolve_canonical_prop("p"), "padding");
-    assert_eq!(resolve_canonical_prop("bg"), "background");
-    assert_eq!(resolve_canonical_prop("c"), "color");
-    assert_eq!(resolve_canonical_prop("color"), "color");
+fn test_default_breakpoint_for_index() {
+    assert_eq!(default_breakpoint_for_index(0), Some("base"));
+    assert_eq!(default_breakpoint_for_index(1), Some("sm"));
+    assert_eq!(default_breakpoint_for_index(2), Some("md"));
+    assert_eq!(default_breakpoint_for_index(3), Some("lg"));
+    assert_eq!(default_breakpoint_for_index(4), Some("xl"));
+    assert_eq!(default_breakpoint_for_index(5), Some("2xl"));
+    assert_eq!(default_breakpoint_for_index(6), None);
+    assert_eq!(default_breakpoint_for_index(usize::MAX), None);
+}`;
 }
 
-#[test]
-fn test_class_prefix_for_prop() {
-    assert_eq!(class_prefix_for_prop("marginTop"), "mt");
-    assert_eq!(class_prefix_for_prop("mt"), "mt");
-    assert_eq!(class_prefix_for_prop("padding"), "p");
-    assert_eq!(class_prefix_for_prop("p"), "p");
-    assert_eq!(class_prefix_for_prop("borderBottomWidth"), "bd-b-w");
-}
+function emitTableIntegrityTests(): string {
+  return `#[test]
+fn test_slices_are_sorted() {
+    assert!(ELEMENTS.windows(2).all(|w| w[0].html < w[1].html));
+    assert!(PRIMITIVE_JSX.windows(2).all(|w| w[0] < w[1]));
+    assert!(CANONICAL_PROPERTIES.windows(2).all(|w| w[0].name < w[1].name));
+    assert!(ALIASES.windows(2).all(|w| w[0].alias < w[1].alias));
+    assert!(REFERENCE_PROPS.windows(2).all(|w| w[0] < w[1]));
+    assert!(CONDITIONS.windows(2).all(|w| w[0] < w[1]));
+    assert!(COLOR_PROPERTIES.windows(2).all(|w| w[0] < w[1]));
 
-#[test]
-fn test_to_css_declaration_property() {
-    assert_eq!(to_css_declaration_property("marginTop"), "margin-top");
-    assert_eq!(to_css_declaration_property("mt"), "margin-top");
-    assert_eq!(to_css_declaration_property("paddingInline"), "padding-inline");
-    assert_eq!(to_css_declaration_property("px"), "padding-inline");
-    assert_eq!(to_css_declaration_property("--custom-color"), "--custom-color");
-}
-
-#[test]
-fn test_native_shorthands() {
-    let padding_longhands = native_longhands_for_prop("padding").unwrap();
-    assert_eq!(padding_longhands, &["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]);
-
-    let margin_longhands = native_longhands_for_prop("margin").unwrap();
-    assert_eq!(margin_longhands, &["marginTop", "marginRight", "marginBottom", "marginLeft"]);
-
-    let border_longhands = native_longhands_for_prop("border").unwrap();
-    assert_eq!(border_longhands, &["borderWidth", "borderStyle", "borderColor"]);
-
-    assert!(native_longhands_for_prop("color").is_none());
+    for el in ELEMENTS {
+        assert!(
+            is_primitive_jsx_name(el.jsx),
+            "JSX primitive name '{}' must be found by is_primitive_jsx_name",
+            el.jsx
+        );
+    }
 }`;
 }
 
@@ -155,10 +87,28 @@ export function emitTestsRs(): string {
 
 use super::*;
 
-${emitPrimitiveTests()}
+${emitRealPrimitiveTests()}
 
-${emitStylePropTests()}
+${emitLowercaseHtmlTagTests()}
 
-${emitConditionAndConversionTests()}
+${emitReactSvgTagTests()}
+
+${emitHallucinatedPrimitiveTests()}
+
+${emitKnownStylePropTests()}
+
+${emitReferenceExtensionTests()}
+
+${emitColorPropTests()}
+
+${emitAliasResolutionTests()}
+
+${emitPropertyConversionTests()}
+
+${emitShorthandDecompositionTests()}
+
+${emitConditionAndBreakpointTests()}
+
+${emitTableIntegrityTests()}
 `;
 }
