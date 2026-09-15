@@ -2,7 +2,7 @@
 
 High-performance Rust compiler and native runtime tooling for Reference UI. Ships a single **Node-API (N-API) native addon** built with **[napi-rs](https://github.com/napi-rs/napi-rs)**, orchestrated via a shared runtime loader and typed TypeScript modules under `modules/`.
 
-The **atomic style engine** is a stack of sibling crates under `modules/` — TypeScript above the cut, Rust below. Written plan: [`docs/atomic.md`](./docs/atomic.md). Interactive map: [`modules/map.html`](./modules/map.html).
+The **atomic style engine** is a stack of sibling crates under `modules/` — TypeScript above the cut, Rust below. Campaign: [`PLAN.md`](./PLAN.md). Architecture: [`docs/atomic.md`](./docs/atomic.md). Interactive map: [`modules/map.html`](./modules/map.html).
 
 ## Architecture & Responsibilities
 
@@ -42,7 +42,7 @@ packages/reference-rs/
 │   ├── runtime/                            # Sole cdylib + JS loader
 │   ├── shared/                             # Shared Rust helpers
 │   ├── canon/                              # Language dictionary (@webref + dialect)
-│   ├── base-system/                        # Design-system definition (fragment dump)
+│   ├── base-system/                        # Design-system definition (fragment spec)
 │   ├── atomic/                             # Stylesheet compiler (was system)
 │   ├── typegen/                            # Token unions / StyleProps .d.ts
 │   ├── styletrace/                         # StyleProps names + wrapper graph

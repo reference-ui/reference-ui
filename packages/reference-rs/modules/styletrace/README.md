@@ -131,4 +131,4 @@ stations usually have no synced `.reference-ui/react` primitive
 declarations. An empty primitive set yields an empty host list; atomic
 then falls back to scanning every tag (or treating file-local
 `@reference-ui/react` imports as hosts). That gap is
-[ATOMIC.md](./ATOMIC.md). Do not close it with a PascalCase name list.
+[PLAN.md](./PLAN.md). Do not close it with a PascalCase name list.

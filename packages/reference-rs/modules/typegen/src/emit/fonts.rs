@@ -1,6 +1,6 @@
-//! `FontRegistry` from dump font families and weight **keys**, plus `FontProps`.
+//! `FontRegistry` from spec font families and weight **keys**, plus `FontProps`.
 //! Family names are quoted. Weight keys are authored names such as `bold`;
-//! CSS numbers are dump values, not type keys. Families with an empty weight
+//! CSS numbers are spec values, not type keys. Families with an empty weight
 //! map are omitted rather than printed as an empty interface. When StyleProps
 //! is emitted without fonts, the assembler prints `FontRegistry {}` so
 //! `[FontName] extends [never]` falls back instead of collapsing to `never`.

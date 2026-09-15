@@ -1,415 +1,239 @@
-# Types plan
+# Core types — native cutover plan
 
-This plan is for `packages/reference-core/src/types`.
+Reference UI owns its public style type system. Native typegen supplies
+system-specific ingredients; it does not replace the authored public
+architecture.
 
-The direction is simple:
+Campaign sequence and packet C3:
+[`../../../reference-rs/PLAN.md`](../../../reference-rs/PLAN.md).
 
-- Reference UI must own the public style types.
-- Panda can remain the current backend.
-- The public authored surface must stop being a thin alias of the current backend.
-
-We are **not** rebuilding Panda here.
-We are locking down the type surface so we can swap the backend later if we want to.
-
----
-
-## Goal
-
-Define a **Reference UI-owned** `SystemStyleObject`.
-
-That type should:
-
-- be authored and exported from `reference-core`
-- be shaped around Reference UI decisions
-- use generated token/value unions from the current system
-- use `csstype` for CSS property coverage
-- avoid leaking backend-owned style types directly into userland
-- be the only public authored style object name
-
-The key point is:
-
-- from Panda's perspective, the system works with the tokens and config we give it
-- from Reference UI's perspective, users should type against **our** style object, not Panda's
+Printer contract:
+[`../../../reference-rs/modules/typegen/SPEC.md`](../../../reference-rs/modules/typegen/SPEC.md).
 
 ---
 
-## Hard decisions
+## Fixed decisions
 
-### 1. There should be one public `SystemStyleObject`
-
-We should not re-export `SystemStyleObject` directly from the generated styled package and call that done.
-
-We also do not need a second public name like `ReferenceSystemStyleObject`.
-
-That creates two problems:
-
-- users stay coupled to the current backend shape
-- our own API becomes noisier than it needs to be
-
-Instead:
-
-- `SystemStyleObject` should be defined in `src/types`
-- `SystemStyleObject` should be the only public authored style object name
-- backend style object names can exist internally if bridge code needs them
-- user-facing exports should expose only `SystemStyleObject`
-- we should not import the styled `SystemStyleObject` and then tweak or wrap it
-- we should generate/assemble our own `SystemStyleObject` from smaller primitive inputs
-
-### 2. Use `csstype`
-
-We should import `csstype` directly, same general idea Panda uses.
-
-Why:
-
-- CSS property coverage is already a solved problem
-- we do not need to invent the raw CSS property universe ourselves
-- it gives a stable, backend-independent base
-
-So the plan is:
-
-- use `csstype` for raw CSS property names and base property value families
-- narrow those values using Reference UI token/value unions where appropriate
-
-### 3. Use generated token/value unions as primitives, not the generated object model
-
-We already have generated style-system knowledge today.
-
-That means we can use current generated unions such as:
-
-- colors
-- spaces
-- font-related unions
-- any other generated utility value unions
-
-These should feed into the Reference UI type layer, but they should not define the public architecture by themselves.
-
-Concretely:
-
-- importing generated unions like `UtilityValues["color"]` is fine
-- importing generated condition keys is fine
-- importing generated selector helpers is fine
-- importing the generated `SystemStyleObject` is **not** the move
-
-In other words:
-
-- generated unions are inputs
-- generated style-object aliases are not the public contract
-- `SystemStyleObject` is the Reference UI contract built from those inputs
-- the generated styled `SystemStyleObject` should not be the starting point
-
-### 3.5. Panda's assembly pattern is useful, but we should only fork the parts we actually need to own
-
-After inspecting the generated styled declarations, the current Panda-shaped model is roughly:
-
-1. `ConditionalValue<V>`
-   - `V`
-   - `Array<V | null>`
-   - object keyed by generated `Conditions`
-
-2. `Nested<P>`
-   - properties `P`
-   - selector nesting
-   - condition nesting
-
-3. `SystemStyleObject`
-   - `Omit<Nested<SystemProperties & CssVarProperties>, "base">`
-
-4. `SystemProperties`
-   - each property value built from generated token unions, CSS property families, css vars, and string escape hatches
-
-That structure is useful to study, but we should treat it as a reference implementation, not as the public type to import.
-
-Important:
-
-- we do **not** want to recreate all of `ConditionalValue`
-- we only want to take ownership of the public semantics that matter to Reference UI
-- the main thing we want to remove from the inherited public model is the viewport-breakpoint-default story
-- the rest of the current conditional machinery can be reused or mirrored where it is still useful
-
-### 4. Container-query-first must shape the types
-
-The public style object should reflect Reference UI's direction:
-
-- container queries first
-- viewport-width breakpoints not treated as the long-term primary responsive model
-
-That means the future Reference UI conditional shape should be designed by us, not inherited accidentally from Panda.
-
-More specifically:
-
-- we should not inherit viewport breakpoints as the assumed default responsive model
-- we do not need to throw away the entire conditional object machinery to achieve that
-- we should preserve the useful generic nesting/condition behavior while changing the public default direction
+1. `SystemStyleObject` is the one public authored style-object name.
+2. `StylePropValue<T>` and recursive condition/selector structure are owned by
+   Core.
+3. `csstype` supplies the raw CSS property universe.
+4. Native typegen supplies token, condition, and font unions from the exact
+   evaluated system compiled for CSS. Recipe variant types for `recipe()`
+   calls are inferred from Core `RecipeDefinition`. Typegen recipe unions are
+   optional fixture output, not a Core import.
+5. Generated unions are ingredients, not the public object architecture.
+6. Primitive `StyleProps` and `css()` share `SystemStyleObject` for style
+   values. `variant` and `colorMode` are primitive metadata props, not members
+   of the `css()` style-object contract.
+7. There is no Panda bridge, fallback type, or viewport model inherited from a
+   backend package.
+8. `@reference-ui/styled/types` may remain as the generated native data/type
+   location during this cutover. The name does not permit Panda imports or
+   executable style helpers.
 
 ---
 
-## Proposed type model
+## Current state
 
-The likely layering is:
+Already landed:
 
-1. **Raw CSS property base**
-   - from `csstype`
+- authored `StylePropValue`
+- authored `SystemStyleObject`
+- authored `StyleProps`
+- direct `csstype`-based property assembly
+- strict color/radius wrapper infrastructure
+- owned recipe callable/variant types
+- generated font-registry replacement hooks
 
-2. **Reference UI token unions**
-   - `Colors`
-   - `Spaces`
-   - radii / font / shadows / etc.
-   - whatever the generated system already gives us
+Remaining backend leaks:
 
-3. **Reference UI conditional wrapper**
-   - our own `StylePropValue<T>`
-   - initially reuses most of Panda's current conditional machinery
-   - removes viewport-default semantics from the public authored model
-   - eventually becomes container-query-first, Reference UI-owned
+- `colors.ts` / `radii.ts` use generated `UtilityValues`,
+  `SystemProperties`, or `Tokens`
+- `conditions.ts` imports generated backend `Conditions`
+- generated `system-style-object.d.ts` resolves `Properties` through
+  `styled/types/csstype`
+- font/type generators are split between Core mutation and native printer
+- packager exports still assume generated css/cva/jsx/pattern declarations
+- comments and tests still describe Panda as the runtime
 
-4. **Reference UI style property map**
-   - property-by-property overrides
-   - color properties narrowed to token unions
-   - spacing properties narrowed to spacing/token unions
-   - font/container/reference-specific props layered in explicitly
-
-5. **Reference UI `SystemStyleObject`**
-   - recursive/nested style object
-   - selectors / conditions / nested blocks
-   - the single public contract for `css()` and authored style props
-
-The important part is that `SystemStyleObject` is assembled by us from smaller pieces.
-
-No second public alias is needed.
+C3 removes those leaks. Do not reopen the public naming decision.
 
 ---
 
-## What to build
+## Target generated ingredients
 
-### A. Own `StylePropValue<T>`
+The file written from native typegen under
+`.reference-ui/styled/types/index.d.ts` must expose stable ingredients such as:
 
-Today this still points at the backend conditional type.
+- `ColorToken`
+- `SpacingToken`
+- `RadiusToken`
+- other supported token-category unions
+- `Tokens`
+- `StyleConditionKey`
+- `FontRegistry`, `FontName`, and weight relationships
+- recipe variant/compound declarations only when `spec.recipes` is non-empty
+  (Core does not import these names)
 
-That is too much coupling.
+Core public source consumes only the smallest relevant aliases. It does not
+import typegen's `StyleProps` or `SystemStyleObject` and wrap them.
 
-We should replace it with a Reference UI-owned wrapper.
+If current typegen names differ, C3 may add a small generated re-export module.
+It may not synthesize token unions by parsing emitted declaration text.
+Typegen always emits these names, using `never` or `{}` when a category is
+empty. C3 does not own `types/public/BaseSystem.ts` or
+`types/public/recipe.ts`.
 
-Phase 1 can still be backend-compatible in most behavior.
-But the alias itself should belong to us.
+### `csstype` resolution
 
-The goal is not to rewrite every part of the current conditional system.
+Generated packages live outside Core's own package directory under pnpm's
+strict layout. A declaration import from bare `csstype` is not assumed to
+resolve merely because Core depends on it.
 
-The goal is:
+Choose and test one hermetic strategy:
 
-- keep the useful generic conditional mechanics
-- stop making viewport breakpoint defaults the public authored assumption
-- leave room to make container-query-first semantics more explicit over time
+- copy the exact `csstype` declaration into generated
+  `styled/types/csstype.d.ts`, then import it relatively; or
+- package an equivalent self-contained declaration dependency.
 
-Later we can tighten it around container-query-first semantics.
-
-### B. Own `SystemStyleObject`
-
-This should be a real type definition, not a backend alias and not a renamed wrapper around a backend alias.
-
-More clearly:
-
-- do not import styled `SystemStyleObject`
-- do not `Omit<>` or otherwise patch the styled `SystemStyleObject` into our public one
-- do build our own `SystemStyleObject` from owned conditional/nesting structure plus generated primitive unions
-
-The shape will likely look like:
-
-- a property map built from CSS property names
-- narrowed token-aware values for selected properties
-- Reference UI-specific props layered in
-- recursive nesting support
-
-This is the core of the work.
-
-It should be exported simply as `SystemStyleObject`.
-
-### C. Own `StyleProps`
-
-Primitive props should be based on the same Reference UI-owned system object.
-
-That means:
-
-- primitive style props and `css()` object types come from the same source of truth
-- we stop having one "public wrapper" and one hidden "real backend shape"
-
-### D. Keep backend bridge types internal only
-
-If we need bridge types for:
-
-- `@reference-ui/styled/css`
-- Panda-generated runtime functions
-- current generated types
-
-that is fine.
-
-But those types should be internal implementation details, not the public authored surface.
-
-If an internal alias is needed for a generated object shape during migration, keep it private to implementation files.
+Do not rely on workspace hoisting. Do not keep Panda's copied file without
+renaming comments/ownership and proving its source/version.
 
 ---
 
-## Suggested file direction
+## C3 implementation packets
 
-### `src/types/style-prop.ts`
+### TYPE-CUT-01 — write native declarations
 
-Target:
+1. Read `.reference-ui/system/evaluated-system.json` (or receive it from C4's
+   phase A helper).
+2. Pass the exact parsed value plus `config.strict` to
+   `@reference-ui/rust/typegen` from the write helper C4 invokes. C3 does not
+   own production scheduling.
+3. Write declaration text atomically into the path C4's staging root provides.
+4. Assert deterministic bytes on rerun.
+5. Remove stale backend declaration directories before package publication.
 
-- define a Reference UI-owned conditional wrapper
-- stop making this a direct backend alias
-- start by reusing or mirroring the current generated conditional mechanics where useful
-- explicitly avoid baking viewport breakpoint defaults into the public authored contract
+### TYPE-CUT-02 — replace generated ingredient imports
 
-### `src/types/style-props.ts`
+1. `colors.ts` narrows color-bearing keys with native `ColorToken`.
+2. `radii.ts` narrows radius-bearing keys with native `RadiusToken`.
+3. spacing uses native `SpacingToken` while preserving Reference rhythm
+   strings.
+4. `conditions.ts` consumes native `StyleConditionKey`.
+5. fonts consume native `FontRegistry`.
+6. recipes keep variant inference on `RecipeDefinition` in `recipe.ts` (C2
+   owns that file; C3 does not edit it).
 
-Target:
+Do not import:
 
-- define the one public `SystemStyleObject`
-- do not import `SystemStyleObject` from styled types
-- do not start from styled `SystemStyleObject` and tweak it
-- generate our own object type from primitive pieces
-- import generated primitive inputs only as needed:
-  - token/value unions
-  - condition keys
-  - selector keys
-  - css-var key helpers if useful
-- keep any backend object alias private or remove it entirely
+- `UtilityValues`
+- backend `SystemProperties`
+- backend `Conditions`
+- backend `SystemStyleObject`
 
-### `src/types/colors.ts`
+### TYPE-CUT-03 — preserve full property coverage
 
-Target:
+The owned base map remains:
 
-- keep the color-narrowing idea
-- source color values from generated primitive unions
-- narrow our owned property map rather than patching a backend-owned object type
+```text
+csstype.Properties
+  + Reference aliases
+  + token-aware overrides
+  + Reference dialect props
+  + recursive named conditions/selectors
+```
 
-### `src/types/css.ts`
+Add compile tests for:
 
-Target:
+- ordinary properties outside token categories
+- CSS custom properties
+- aliases (`m`, `px`, `bg`, size aliases)
+- rhythm and literal escape hatches
+- named conditions and `&...` selectors
+- `font`, `weight`, `container`, `r`
+- primitive-only `variant` and `colorMode` (not on `css()` / `SystemStyleObject`)
+- React event handlers surviving primitive prop intersections
 
-- point `CssStyles` at the owned `SystemStyleObject`
-- keep the runtime bridge hidden in implementation files
+Container-query-first remains a Reference decision. Do not automatically add
+viewport breakpoint properties because a generated backend once did.
 
-### `src/system/primitives/types.ts`
+### TYPE-CUT-04 — generated package exports
 
-Target:
+Reduce `@reference-ui/styled` to:
 
-- consume the owned `SystemStyleObject` only
-- no direct import from backend style types
+- stylesheet export
+- runtime-data export
+- native types export
 
----
+Remove declarations/exports for:
 
-## How `csstype` fits
+- `./css`
+- `./css/cva`
+- `./jsx`
+- `./patterns/box`
+- generated styled element factories
 
-The likely implementation pattern is:
+Update all generated package manifests and package-copy tests together.
 
-1. import CSS property definitions from `csstype`
-2. select the property names we want to support
-3. override specific property value domains with generated unions
-4. wrap those value domains in `StylePropValue<T>`
-5. make the result recursively nestable
+### TYPE-CUT-05 — remove old mutation generators
 
-However, after inspecting the generated Panda-shaped output, we do not need to force this all in one jump.
+After native output is consumed:
 
-A cleaner migration is:
-
-1. first own the conditional wrapper and nesting structure we actually need
-2. first own the public `SystemStyleObject` name and export
-3. use generated primitive unions for token-aware property values
-4. then progressively replace backend-derived property coverage assumptions with `csstype`-driven coverage
-
-So for example:
-
-- `color` should not just be generic `csstype` color strings
-- it should be narrowed to Reference UI color tokens
-
-Likewise:
-
-- spacing-related props should be narrowed to Reference UI spacing/token values
-- font props should use Reference UI-owned font unions
-
-`csstype` gives the property universe.
-Reference UI gives the allowed authored value universe.
-
-That is the right split.
-
----
-
-## Non-goals
-
-This plan is **not**:
-
-- rebuilding Panda
-- replacing the extractor today
-- inventing a custom CSS spec
-- making the runtime stop using the current styled package immediately
-
-This is about the authored type surface first.
+1. delete generators that patch Panda-emitted declarations
+2. retain authored assembly generators only if they still have an independent
+   output
+3. never regex-edit native declaration output to recover old names
+4. update comments from migration language to current native ownership
 
 ---
 
-## Migration order
+## Verification
 
-### Phase 1: Own the names and structure
+Core unit/type checks:
 
-- own `StylePropValue<T>`
-- own `SystemStyleObject`
-- remove `ReferenceSystemStyleObject` as a public concept
-- keep most of the current conditional/nesting mechanics
-- remove viewport-breakpoint-default semantics from the public contract
-- stop importing styled `SystemStyleObject` as the basis for the public type
-- keep backend compatibility under the hood
+```bash
+pnpm agent vitest core -t "types|strict|font|recipe|packager"
+pnpm agent run pnpm --filter @reference-ui/core typecheck
+```
 
-### Phase 2: Build the real property layer
+Generated consumer:
 
-- define a Reference UI property map
-- narrow important token-bearing properties using generated unions
-- stop patching a backend object alias
-- introduce `csstype` where it improves property ownership and coverage
+```bash
+pnpm agent test --packages=@matrix/typescript
+pnpm agent test --packages=@matrix/distro
+```
 
-### Phase 3: Align responsive/conditional semantics
+Static assertions:
 
-- shape conditional types around container-query-first behavior
-- stop treating backend viewport breakpoint semantics as the public default
+```bash
+! rg -n '@pandacss|UtilityValues|SystemProperties|styled/types/conditions' \
+  packages/reference-core/src/types packages/reference-core/src/packager
+! rg -n '@reference-ui/styled/(css|jsx|patterns)' \
+  packages/reference-core/src/types packages/reference-core/src/system/primitives
+```
 
-### Phase 4: Collapse bridge code
+Done means:
 
-- reduce backend alias usage
-- move runtime bridges into internal files only
-- make public exports fully Reference UI-owned
-- leave only one public style object name: `SystemStyleObject`
-
----
-
-## Success criteria
-
-We know this is working when:
-
-- users import Reference UI types and never need backend style types
-- `SystemStyleObject` is authored in `reference-core`
-- `SystemStyleObject` is the only public authored style object name
-- `SystemStyleObject` is generated/assembled by us rather than imported and patched from styled types
-- `StylePropValue<T>` is authored in `reference-core`
-- token narrowing is expressed through Reference UI-owned types
-- the runtime can still use Panda today
-- a future backend swap would not require rewriting the public authored API
+- native typegen is called on the live evaluated spec
+- strict/open declarations compile
+- token/font/condition/recipe literals match the compiled system
+- common CSS and React props retain useful types
+- generated declarations resolve in a packed consumer
+- no public or generated declaration imports Panda
+- no removed styled runtime/type subpath is exported
 
 ---
 
-## Practical conclusion
+## Do not
 
-The right move is not:
-
-- "wait until we replace Panda"
-
-The right move is:
-
-- "define the public style type system now"
-
-That means:
-
-- use generated token/value unions as ingredients
-- define `SystemStyleObject` ourselves
-- keep Panda as the current implementation detail
-- introduce `csstype` as part of owning the property layer, not as a reason to keep importing Panda's object model
-
-That is the cleanest path to control.
+- Do not expose a second public style-object alias.
+- Do not re-export native typegen's whole `SystemStyleObject` as Core's.
+- Do not parse `.d.ts` text to discover token names.
+- Do not rely on hoisted `csstype`.
+- Do not keep backend bridge aliases "temporarily".
+- Do not add generated jsx/pattern/runtime declarations.
+- Do not weaken TypeScript matrix expectations to `any`.
+- Do not edit browser runtime, compiler-driver, `types/public/BaseSystem.ts`,
+  or `types/public/recipe.ts` from C3.

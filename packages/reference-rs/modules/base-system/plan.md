@@ -1,234 +1,252 @@
-# base-system — plan
+# Base system — native cutover plan
 
-Build this crate into the authoritative design-system artefact, derived from what
-`@reference-ui/lib` already defines. Self-isolated first: no fragment evaluator, no
-`extends`, no `layers`. The goal atomic cares about is narrow and concrete —
-**atomic should see a valid base system with all correct tokens, soon.**
+This crate owns the evaluated system boundary consumed by atomic and typegen.
+It does not evaluate author JavaScript, load package graphs, print CSS, or
+write generated files. Core evaluates fragments; this crate validates,
+normalises, indexes, and answers queries.
 
-Contract: [SPEC.md](./SPEC.md) — 43 cases, 21 proven. Sequencing:
-[../../PLAN.md](../../PLAN.md) Phase 1. Quality: `pnpm agentrs q <path>`.
-Verify: `pnpm agentrs c base_system && pnpm agentrs v atomic`.
+Campaign sequencing and the frozen cross-package contract live in
+[`../../PLAN.md`](../../PLAN.md). This file owns packet **N1**.
+
+Contract: [`SPEC.md`](./SPEC.md).
+
+Runner: `pnpm agentrs c base_system`.
 
 ---
 
-## 1. The one thing to understand first
+## Current state
 
-**There are two shapes, and the crate currently only has one.**
+Already present:
 
-What lib authors, and what fragments emit, is a *nested* tree with mode slots:
+- nested token-spec lowering through `BaseSystem::from_json`
+- indexed token/font/breakpoint/condition/keyframe/recipe queries
+- explicit invalid-leaf, duplicate, and cycle errors
+- a generated `lib.json` fixture
+- an indexed `BaseSystem` that atomic and typegen consume
 
-```json
-{ "colors": { "gray": { "800": { "value": "oklch(...)" } },
-              "text": { "primary": { "light": "{colors.gray.900}", "dark": "{colors.gray.50}" } } } }
+Not sufficient for the cutover:
+
+- the nested wire type is private and unversioned
+- omission silently permits an empty/default system
+- host conditions and breakpoints are secretly overlaid only by
+  `lib_fixture()`
+- `global_css` is `Vec<String>`, but Core collects structured objects
+- canonical conditions still use `data-panda-theme`
+- the wire/query type and Core's portable package artefact are both called
+  `BaseSystem`
+
+Do not solve these by scraping more values into `lib.json`.
+
+---
+
+## Required boundary
+
+Use the root plan's names:
+
+- `EvaluatedSystemSpec` — public nested serde wire input
+- `ResolvedBaseSystem` — planning term for the existing indexed Rust
+  `BaseSystem` query type; a broad source rename is not required
+- `PortableBaseSystem` — Core/package output; not a type in this crate
+
+The v1 evaluated spec has:
+
+```text
+schemaVersion: 1
+profile: "reference-ui"
+name
+tokens
+fonts
+breakpoints?
+conditions?
+globalCss[]
+keyframes
+recipes
+staticCss
+provenance[]
 ```
 
-What `BaseSystem` deserializes today is the *already-indexed* form, because
-`TokenDictionary` is `#[serde(flatten)] IndexMap<String, TokenEntry>`:
+Unknown top-level fields and unsupported versions fail. JSON is evaluated
+data, never TypeScript source. The exact positive and negative fixtures are
+owned by root PLAN packet F0.
 
-```json
-{ "tokens": { "colors.gray.800": { "category": "colors", "cssVar": "--colors-gray-800",
-                                   "light": "oklch(...)", "dark": "oklch(...)" } } }
+### Reference profile
+
+`profile: "reference-ui"` explicitly supplies:
+
+- the canonical named pseudo/state/media conditions
+- standard responsive breakpoint names/widths
+- `_dark` → `[data-theme=dark] &`
+- `_light` → `[data-theme=light] &`
+
+Authored condition/breakpoint entries override same-name profile entries
+deterministically. Missing or unknown profile names are errors. Do not make
+the profile an implicit effect of package name.
+
+### Structured global CSS
+
+Replace `Vec<String>` with a recursive, typed global-style IR:
+
+- top level: ordered `{ source, rules }` fragments
+- each `rules` value is an ordered selector → node map
+- declaration values: string, finite number, boolean (only dialect macros
+  that document it, currently `container`), null array holes, arrays, or
+  nested maps
+- `undefined` is removed by the Core JSON normaliser before Rust
+- custom-property names are preserved
+- named conditions and arbitrary `&` selectors remain distinguishable from
+  declarations
+- non-macro booleans and other unsupported scalar kinds are
+  diagnostics/errors, not stringified
+
+The spec also carries required `staticCss`, `name`, and `provenance`. Empty
+`recipes` is valid production input.
+
+Base-system stores structure. Atomic owns canonical property/value/condition
+lowering and CSS printing.
+
+Do not use unrestricted `serde_json::Value` past the parse boundary. Convert
+to an enum/struct whose invalid states are explicit.
+
+---
+
+## Implementation order
+
+### BAS-NATIVE-01 — public versioned spec
+
+1. Expose the nested spec and parse error needed by the N-API boundaries.
+2. Validate `schemaVersion === 1`.
+3. Deny unknown fields.
+4. Keep the indexed Rust `BaseSystem` distinct from the public evaluated spec.
+   Core renames its package artefact to `PortableBaseSystem`; do not perform a
+   broad Rust rename only for terminology.
+5. Add `from_spec`/`from_json` APIs that return `Result`.
+6. Remove production reliance on `Default` as a valid live system. Default may
+   remain useful for focused Rust unit construction.
+
+**Tests**
+
+- root positive fixture lowers
+- version 0/2 reject
+- absent version rejects
+- unknown field rejects
+- current Core `{ name, fragment, jsxElements }` rejects
+- TypeScript source rejects
+
+### BAS-NATIVE-02 — profile lowering
+
+1. Move the current fixture-only canonical condition/breakpoint overlays into
+   a reusable profile.
+2. Apply profile first, then explicit authored overrides.
+3. Preserve declaration order for new authored breakpoints.
+4. Emit/query only `data-theme`; remove `data-panda-theme` from production
+   Rust and affected goldens.
+5. Make `lib_fixture()` call the same public lowering path with an explicit
+   profile instead of mutating a resolved system afterward.
+
+**Tests**
+
+- profile alone has base + sm/md/lg/xl/2xl
+- profile `_hover`, `_dark`, `_light`, `_print`, and container conditions are
+  exact
+- authored `md` and `_hover` override profile values
+- unknown profile rejects
+- no serialized resolved system contains `data-panda-theme`
+
+### BAS-NATIVE-03 — global-style IR
+
+1. Add recursive global fragment/node/declaration types.
+2. Preserve ordered fragments and selectors.
+3. Preserve strings, finite numbers, custom properties, conditions, and
+   selectors.
+4. Accept boolean only for documented dialect macros (`container`). Accept
+   responsive arrays and `null` holes. Reject booleans on other properties,
+   functions, and non-CSS nested shapes with a path-bearing error that
+   includes `provenance.source` when present.
+5. Add query/iterator APIs atomic can consume without cloning the whole tree.
+
+**Tests**
+
+- implement `BAS-GLOBAL-01` with the real object shape
+- nested `_focus`, `&:focus`, media/container conditions survive
+- rhythm/token strings remain authored strings for atomic
+- `undefined`-free normalised input round-trips
+- invalid value reports selector/property path
+- `container: true` is accepted; `display: true` is rejected
+- two fragments retain source order
+
+### BAS-NATIVE-04 — live-query completeness
+
+Complete the SPEC cases required by native integration:
+
+- `BAS-GLOBAL-02` breakpoints
+- `BAS-GLOBAL-03` conditions
+- `BAS-FONT-01` family/fallback
+- `BAS-FONT-02` structured font-face descriptors
+- `BAS-FONT-03` named weights
+- `BAS-FONT-04` font-level CSS
+- `BAS-TOKEN-05` category contract, or explicitly revise the SPEC if open
+  categories remain intentional
+- `BAS-TOKEN-06` private visibility metadata
+
+Each tick needs a direct unit test asserting the SPEC prose. Do not tick an
+item because another broad fixture happens to contain the field.
+
+---
+
+## Composition case ownership
+
+`BAS-EXTEND-*`, `BAS-LAYER-*`, and `BAS-GLOBAL-04` are required campaign
+proof, but package graph loading does **not** move into this crate.
+
+- This crate provides visibility/private metadata and deterministic system
+  lowering.
+- Core owns fragment evaluation, `extends` adoption, `layers` isolation,
+  portable CSS/runtime transport, deduplication, and conflict diagnostics.
+- Matrix chain T1–T13 owns browser/package proof.
+
+When completing those SPEC rows, point each case at a named Core unit or
+matrix oracle. Do not implement package resolution in Rust merely to make the
+checkbox local.
+
+---
+
+## Commands and done gate
+
+During a slice:
+
+```bash
+pnpm agentrs q packages/reference-rs/modules/base-system
+pnpm agentrs c base_system -t "<case or module>"
 ```
 
-These are not compatible. Handing the crate a nested dump does not produce
-`colors.gray.800` — it fails `TokenEntry` deserialization, or with unknown-field
-tolerance yields a partial map. So `BAS-DUMP-02` is not "wire up serde"; it needs
-a distinct dump type plus a lowering pass.
+Before N1 hand-off:
 
-Naming them apart is the whole design:
+```bash
+pnpm agentrs c base_system
+pnpm agentrs q packages/reference-rs/modules/base-system
+pnpm --filter @reference-ui/rust base-system --check
+```
 
-| Type | Role |
-| :--- | :--- |
-| `BaseSystemDump` | Authored, nested, `{ value \| light \| dark }` leaves, brace aliases intact. The wire format. |
-| `BaseSystem` | Indexed, flat `category.path` keys, precomputed `cssVar`. The query engine atomic uses. |
+Done means:
 
-`from_json` = deserialize `BaseSystemDump`, then lower to `BaseSystem`. Everything
-below follows from that split.
-
-**It is also the fix for a live footgun.** Every field on `BaseSystem` is
-`#[serde(default)]` with no `deny_unknown_fields`, so `{}` deserializes into a
-fully empty system — and so does core's *unrelated* TypeScript `BaseSystem`
-(`{ name, fragment, jsxElements }`, `reference-core/src/types/public/BaseSystem.ts`).
-Passing that binds `name`, leaves every dictionary empty, and because the field is
-`Some`, **skips `lib_fixture()` entirely**. Compile then reports success with no
-tokens, no conditions, and no breakpoints. A `BaseSystemDump` with
-`deny_unknown_fields` rejects it by name. That is atomic's `ATM-TOKEN-10`.
+- the shared v1 fixture is accepted
+- atomic and typegen can receive the same resolved result
+- profile behaviour is explicit and tested
+- global styles are structured
+- production paths cannot obtain `lib_fixture()` by omission
+- production Rust emits/contains no `data-panda-theme`
+- all newly checked SPEC rows have direct assertions
 
 ---
 
-## 2. What atomic actually needs
+## Do not
 
-Measured, not assumed. Atomic reads these fields:
-
-| Field | Used for |
-| :--- | :--- |
-| `tokens` | `var(--…)` lookup (`resolve/tokens/mod.rs:95,99`) and `@layer tokens` emit (`system_layers.rs`) |
-| `fonts` | family / weight / css extras (`resolve/font/*`), `has_family` |
-| `breakpoints` | array slots, `r={{ md }}`, named `sm` → `@container` |
-| `conditions` | `get_condition` for `_hover` / `_dark` wraps |
-| `global_css` | `@layer global` |
-| `keyframes` | `@keyframes` inside `@layer global` (Step 4) |
-| `static_css` | third want source |
-
-It reads **none** of `name` or `recipes`, and after Step 4 it *does* read
-`keyframes` for `@layer global` `@keyframes` emit. It calls **none** of
-`is_token`, `token_category`, `token_css_var`, `token_light`, `token_dark` — it
-reads `TokenEntry` fields directly because they are public. So half the query API
-in `SPEC.md` §ASK is currently dead code, and the light/dark distinction is carried
-by the convention `entry.dark != entry.light`.
-
-Two consequences for this plan. Steps 1–3 below are the whole critical path for
-atomic. And the `ASK` cases should be implemented as the *only* access path, with
-`TokenEntry` fields made private, or they will stay dead.
-
----
-
-## 3. Sequence
-
-### Step 1 — `BaseSystemDump` + `from_json` *(unblocks everything)*
-
-Add the nested wire type and the lowering pass. Owner: `BAS-DUMP-02`,
-`BAS-DUMP-03`, `BAS-DUMP-04`, `BAS-TOKEN-01`, `BAS-TOKEN-02`.
-
-Lowering must do five things, all of which lib exercises today:
-
-1. **Flatten** nested paths to `category.path`, preserving intermediate segments.
-   Deepest real case is `colors.ui.list.definition.description.foreground` —
-   five segments after `colors`, four under the `ui` group.
-2. **Compute `cssVar`** with the existing `css_custom_property`
-   (`tokens/mod.rs:98`): kebab the **category** only; path camelCase stays
-   (`colors.myColor` → `--colors-myColor`, `colors.ui.kbd.shadowMix` →
-   `--colors-ui-kbd-shadowMix`). Do not change this in Step 1.
-3. **Resolve mode slots** per core's **seven**-case table
-   (`resolveColorModeTokens.ts:14-21`): `value`; `light`; `dark`; `value+dark`;
-   `value+light`; `light+dark`; `value+light+dark` (value ignored). Lib only
-   exercises `{ value }`, `{ value, dark }` (6), and `{ light, dark }` (92).
-   Keep today's `dark == light` sentinel; `Option` is Step 3.
-4. **Keep brace aliases verbatim.** `'{colors.gray.800}'` stays a string; atomic
-   strips braces and re-looks-up (`system_layers.rs:82-96`). Do not resolve here.
-   Do detect cycles (`BAS-TOKEN-08`).
-5. **Handle the `light` trap.** `colors.design.text.light` is a token *named*
-   `light` whose value is itself `{ light, dark }`. Distinguish a mode slot from a
-   nested group by whether the value is an object.
-
-Reject on: unknown top-level keys, a leaf with neither `value` nor `light` nor
-`dark`, and duplicate paths within one batch (`BAS-TOKEN-07`).
-
-Keep the token dictionary **open** — arbitrary categories, no closed enum.
-`ReferenceTokenConfig` (`system/api/tokens.ts:11`) is an open recursive type, so a
-consumer may declare any category. `BAS-TOKEN-05`'s fifteen-category list is a
-typegen concern, not a dictionary constraint.
-
-### Step 2 — Generate the lib artefact, and detect drift *(landed 2026-09-15)*
-
-`lib_fixture()` loads `src/lib_fixture/lib.json` through `from_json`. Generator
-is `modules/base-system/generate/` (scanner, not an evaluator). 334 leaves,
-337 indexed (plus three `font()` families). Drift: `pnpm --filter @reference-ui/rust base-system --check`.
-Hand-copied `palette.rs` / `ui.rs` / `semantic.rs` deleted. `standard()` and
-the 78 wraps are documented as host/Panda overlays.
-
-Today `lib_fixture()` is hand-copied tables across `tokens/{palette,semantic,ui}.rs`,
-`fonts.rs`, `conditions.rs`, `breakpoints.rs`, with **no generator, no checksum,
-and no test comparing it to `packages/reference-lib`**.
-
-The hand-copy is closer than expected — 329 tokens versus lib's 334, the gap being
-the six `colors.reference.*` and two `fonts.reference.*` Reference-browser tokens.
-So this is a consolidation, not a rebuild.
-
-Lib's token *data* is plain object literals with `as const`, string values, no
-computed keys and no cross-module spreads, so a generator can serialise it
-**without a JS evaluator**. It must merge six `tokens()` call sites — `colors` is
-split across `colors.ts`, `design.ts`, and `primitives/tokens.ts` — and treat
-`font()` as its own shape.
-
-Two things are **not** derivable this way and stay out of scope:
-
-- **`globalCss` chrome.** Twenty calls across eighteen files, spreading
-  `baseTypography`, `focusRingStyles`, `controlSize`, `fieldBase`, and calling
-  `pressableActiveStyles()`. This genuinely needs the evaluator. The fixture keeps
-  its single `:root { --spacing-root: 0.25rem }` entry until fragments land.
-- **`fontWeights`.** Derived from `font().weights` by core's `buildFontTokens()`,
-  not authored as tokens.
-
-Then add the drift test. That is the deliverable that stops this recurring.
-
-**Correct two false provenance claims while here.** `BreakpointScale::standard()`
-comments that `sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536` is "the lib table" —
-**lib authors no breakpoints at all**. Same for `conditions.rs`: those 78 wraps are
-Panda-preset shapes, not lib TypeScript. The values are fine; the comments claim an
-upstream that does not exist, which is how the next person gets misled.
-
-### Step 3 — Fix the modelling while the types are open
-
-Cheap now, expensive later. Owner: `BAS-ASK-01`, `BAS-ASK-02`, `BAS-ASK-06`,
-`BAS-DUMP-05`.
-
-- **`Option<String>` for dark**, not `dark == light` as the "no dark variant"
-  sentinel. Today a token whose dark value legitimately equals its light value is
-  indistinguishable from one with none (`system_layers.rs:62,78`).
-- **Bare-name, category-scoped lookup inside the crate.** `BAS-ASK-01` specifies
-  `is_token("n300")`; the implementation only accepts full `category.path`, so the
-  fallback ended up in atomic where it **allocates per want**:
-  `system.token(&format!("colors.{path}"))` (`resolve/tokens/mod.rs:99`). Same bug
-  in `get_condition`, which does `format!("_{key}")` on the miss path
-  (`lib.rs:93-97`). Both violate `BAS-ASK-06` and tripwire 8.
-- **Private `TokenEntry` fields**, forcing the `ASK` query API to be the real
-  access path rather than dead code.
-- **`FxHashMap` for the hot maps** as `BAS-ASK-06` requires; `IndexMap` only where
-  insertion order is a contract (the token layer emit order).
-- **`Arc` for O(1) clone** if `BAS-DUMP-05` is to be honest. Today `Clone` deep-
-  copies every map and the only test proves `Send + Sync`.
-
-### Step 4 — Type keyframes and recipes *(landed 2026-09-15)*
-
-Typed `KeyframeDefinition` (name → ordered steps) and `RecipeDefinition`
-(base / variants / defaultVariants / compoundVariants). Generator scans the six
-`keyframes()` files into `lib.json`. Atomic prints `@keyframes` inside `@layer
-global` when the dump has them; custom stations without keyframes stay empty.
-Recipes stay empty on the lib fixture (not scraped from components). FONT-02
-`@font-face` is still out: `FontDefinition` ignores `fontFace`.
-
-Both were `IndexMap<String, String>` placeholders. `BAS-MOTION-01` needs frame
-steps; `BAS-RECIPE-01/02` need base, variants, `defaultVariants`, and compounds.
-Their emptiness is why `@keyframes` and `@font-face` never emit, while the fixture
-ships `--animations-fadeIn-normal: fadeIn 0.5s ease-out` — a dangling reference to
-an animation no sheet defines. Lib has 31 keyframe names across 6 files.
-
-### Step 5 — Defer
-
-`extends` (5 cases) and `layers` (4 cases) have no fields and no consumer. Leave
-them. Fragment evaluation stays in TypeScript.
-
----
-
-## 4. Verification
-
-Per step: `pnpm agentrs c base_system`, then `pnpm agentrs v atomic` (the
-consumer), then `pnpm agentrs q` on every touched file.
-
-The real gate is downstream: atomic's CSS quarantine group 2 (undeclared
-tokens) is already gone via per-station dumps. Step 2 must not reintroduce
-raw `n300` on those stations. Stations still on `lib_fixture()` will churn
-`@layer tokens` if the generated dump adds or reorders tokens — that is
-expected; custom-dump stations must not change.
-
-SPEC proof map is 21/43 after Step 4. `lib_fixture_has_lib_tokens_fonts_and_host_conditions`
-is still a real fixture test.
-
----
-
-## 5. Do not
-
-- Do not evaluate author JavaScript, bundle, or parse TSX here (tripwire 1).
-- Do not do file I/O in the crate (tripwire 6). The generator is a build-time tool
-  that *writes* Rust or JSON; the crate itself stays in-memory.
-- Do not close the token category set into an enum. The authored schema is open.
-- Do not resolve brace aliases during lowering — atomic owns that, along with
-  `/opacity` `color-mix`.
-- Do not reuse `shared/src/testing/base_system.rs` as the dump format. Those JSON
-  helpers are a **third**, Panda-ish nested shape not wired to `lib_fixture()`.
-  Either align them to `BaseSystemDump` or delete them; leaving three shapes is how
-  this went wrong once.
-- Do not print CSS, class names, or `.d.ts` from this crate (tripwires 2, 3).
-- Do not let `extract()`'s standalone path keep silently using the fixture scale
-  while `compile()` uses the request's (`extract/mod.rs:297-300`). Fix or remove.
+- Do not evaluate TypeScript or inspect project directories here.
+- Do not write CSS, class names, runtime modules, or `.d.ts`.
+- Do not store global CSS as pre-rendered strings.
+- Do not use `serde_json::Value` as the long-lived domain model.
+- Do not add an implicit package-name/profile heuristic.
+- Do not keep a Panda condition map beside a native condition map.
+- Do not deep-clone the full system per compiler pass.
+- Do not add `#[allow(clippy::…)]` or `#[expect(clippy::…)]`.
+- Do not change Core files from the N1 agent.

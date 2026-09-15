@@ -1,6 +1,6 @@
 //! Indexed token dictionary for one design-system utterance.
 //! Keys are `category.path` (`colors.gray.800`, `radii.md`) or an authored bare
-//! key (`md`) when a station dump never prefixed the category. Each entry stores
+//! key (`md`) when a station spec never prefixed the category. Each entry stores
 //! the CSS custom property name, the light value, and an optional dark override —
 //! `None` means no dark variant, not a copy of light. Lookup is FxHashMap on
 //! the hot path; emit order stays on the IndexMap. The inner table is Arc so
@@ -84,7 +84,7 @@ struct TokenEntryWire {
     dark: Option<String>,
 }
 
-/// Leaf used by tests and `insert_leaf` to declare a token without Dump lowering.
+/// Leaf used by tests and `insert_leaf` to declare a token without spec lowering.
 pub struct TokenLeaf<'a> {
     pub category: &'a str,
     pub path: &'a str,
@@ -101,7 +101,7 @@ struct TokenStore {
     unique_bare: FxHashMap<String, usize>,
 }
 
-/// Category + path → token entry. Empty until a fixture or dump fills it.
+/// Category + path → token entry. Empty until a fixture or spec fills it.
 #[derive(Debug, Clone)]
 pub struct TokenDictionary {
     inner: Arc<TokenStore>,
@@ -196,7 +196,7 @@ impl TokenDictionary {
         rebuild_indexes(inner);
     }
 
-    /// Build from an already-indexed map. Dump lowering uses this after it has
+    /// Build from an already-indexed map. Spec lowering uses this after it has
     /// rejected duplicates; it does not share `insert_leaf`'s replace-on-duplicate.
     pub(crate) fn from_entries(entries: IndexMap<String, TokenEntry>) -> Self {
         let mut store = TokenStore {

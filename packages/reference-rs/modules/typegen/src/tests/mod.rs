@@ -1,8 +1,8 @@
-//! Shared Dump fixtures and golden helpers for typegen Cargo proof.
+//! Shared spec fixtures and golden helpers for typegen Cargo proof.
 //! Nested JSON is lowered through `from_json`. Goldens compare the full
 //! `emit_dts` string and refresh only when `TYPEGEN_UPDATE_GOLDENS=1` is set.
 //! Empty token categories and recipes are omitted, not `never`. Strict
-//! wrappers are printer options on `emit_dts_with`, not Dump fields.
+//! wrappers are printer options on `emit_dts_with`, not spec fields.
 
 use crate::{emit_dts, emit_dts_with, EmitOptions};
 use base_system::BaseSystem;

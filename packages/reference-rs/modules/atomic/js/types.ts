@@ -1,7 +1,7 @@
 /**
  * TypeScript type definitions for Reference UI atomic compiler inputs, outputs, and intermediate data structures.
  * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, recipe tables, and authored wants.
- * `baseSystem` is the design-system dump; omitted means the frozen `@reference-ui/lib` fixture.
+ * `baseSystem` is the design-system spec; omitted means the frozen `@reference-ui/lib` fixture.
  */
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'

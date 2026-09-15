@@ -1,7 +1,7 @@
 //! Font table for one design-system utterance.
 //! Stores family names, named weights, the CSS family stack, and optional extras such as
 //! `letterSpacing`. `generic()` is CSS keyword families with no lib tracking. The lib fixture
-//! loads `font()` families from the generated dump; `fontFace` is ignored until FONT-02.
+//! loads `font()` families from the generated spec; `fontFace` is ignored until FONT-02.
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};

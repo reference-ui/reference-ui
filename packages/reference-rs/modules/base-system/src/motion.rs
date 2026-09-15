@@ -1,5 +1,5 @@
 //! Keyframe tables for one design-system utterance.
-//! Dump JSON is name → ordered steps, each step an authored selector (`from`, `to`,
+//! Spec JSON is name → ordered steps, each step an authored selector (`from`, `to`,
 //! `50%`, `0%, 100%`) plus a declaration map. `from`/`to` stay as authored for CSS
 //! emit; `model_selector` maps them to `0%`/`100%` for the MOTION-01 model. Animation
 //! tokens name a keyframe in their first CSS ident (`spin 1s linear infinite` →

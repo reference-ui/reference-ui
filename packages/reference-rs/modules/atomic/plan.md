@@ -1,245 +1,364 @@
-# Atomic overnight plan — 2026-09-15
+# Atomic — native cutover plan
 
-**Status 02:27:** SPEC **75 / 75**. Closed `@layer recipes` emit is back. Named
-contract is ticked. Not committed. Morning leftovers are host wiring, not
-missing `ATM-*` IDs: fragments → BaseSystem JSON, lib `globalCss` chrome
-(button `_hover` in `@layer global`), styletrace needing a real primitive
-graph (empty host set still falls back to pre-gate scan), typegen.
+Atomic owns extraction, resolution, class naming, recipe compilation,
+application/portable stylesheet emission, and the data consumed by browser
+runtime helpers. It does not own Core fragment evaluation, filesystem output,
+or browser helper implementation.
 
-Get atomic into a much better place by morning. Two tracks. Track A is the
-blocking architecture move. Track B ticks SPEC cases that do not need Track A.
+Campaign sequencing and frozen wire contracts live in
+[`../../PLAN.md`](../../PLAN.md). This file owns packets **N2**, **N3**, and
+**N4**, then the remaining independent `ATM-*` station queue.
 
-Contract: [SPEC.md](./SPEC.md). Workflow: `.agents/skills/agent-rs/SKILL.md`.
-Quality after every generation: `pnpm agentrs q <path>`.
+Contract: [`SPEC.md`](./SPEC.md).
 
-Tonight we are **not** finishing `modules/base-system` (43 `BAS-*` cases,
-`extends` / `layers`, fragment evaluation). We are **not** wiring
-`reference-core/src/lib/fragments`. JS still owns producing a dump later.
+Runner: `pnpm agentrs v atomic` / `pnpm agentrs c atomic`.
 
 ---
 
-## Verdict (do not reopen)
+## Current state
 
-Atomic `src/config` is a second dialect. Kill it. The utterance lives in
-`modules/base-system`. Atomic compiles sources against that artefact.
-
-Fragments are a future seam. Tonight BaseSystem is a **typed bag** plus a
-**frozen `@reference-ui/lib` fixture** copied from:
-
-- `packages/reference-lib/src/core/theme/colors.ts`
-- `packages/reference-lib/src/core/theme/design.ts`
-- `packages/reference-lib/src/core/theme/primitives/tokens.ts` (`ui.*`)
-- `packages/reference-lib/src/core/theme/radii.ts`
-- `packages/reference-lib/src/core/theme/fonts.ts`
-- `packages/reference-lib/src/core/theme/animations/tokens.ts`
-- `packages/reference-lib/src/core/theme/global.ts` (`--spacing-root` on `:root`)
-
-Last night's drop-in looked "almost right" because extract → utilities already
-works on literal JSX. Basic things like `_hover` still failed for two reasons:
-
-1. **Wrong host selector.** Atomic lowers `_dark` to `.dark &`. Primitives stamp
-   `data-panda-theme`. That is `ATM-COND-08`. The lib fixture's condition map
-   must match the DOM.
-2. **Two hover machines.** StyleProps `_hover` on `<Div>` is `ATM-COND-02`
-   (utilities). Lib chrome (`button.ts`, field, tables) is `globalCss({
-   '.ref-button': { _hover: … } })` — `@layer global`, `ATM-LAYER-03`. Copying
-   **tokens** unblocks token lookup and condition wraps. Primitive chrome hover
-   needs globalCss in the dump. Do tokens + conditions + fonts + `:root`
-   spacing first. GlobalCss chrome is Track A+ if time.
-
-`compile()` takes `Option<BaseSystem>`; omitted uses `lib_fixture()`. Token
-resolve is dictionary lookup. `_dark` wraps `[data-panda-theme=dark]`. `src/config`
-is gone. Remaining hole: print `@layer tokens` / globalCss chrome, plus leftover
-condition stations.
-
----
-
-## Track A — BaseSystem ingest (landed)
-
-`atomic/src/config` deleted. `CompileRequest.base_system: Option<BaseSystem>`.
-`None` → `lib_fixture()`. `ATM-COND-08` ticked. Named `sm` lowers to
-`@container`. Fixture `global_css` is stored, not printed. **COND-01 folder
-still missing** (A+).
-
-## Track A (original brief)
-
-### Shape
-
-`packages/reference-rs/modules/base-system` owns:
+The pipeline already performs:
 
 ```text
-BaseSystem
-  name
-  tokens          nested category maps → indexed lookup
-  fonts           sans / serif / mono + weights + css extras
-  breakpoints     sm/md/lg/xl/2xl widths
-  conditions      _hover / _dark / _groupHover / … → wrap strings
-  global_css      optional; :root --spacing-root tonight; chrome later
-  keyframes       empty ok
-  recipes         empty ok
+source → wants → resolved atoms → deterministic class names
+       → six internal layers + CssRuntime.classes + RecipeTable[]
 ```
 
-Query methods atomic actually calls tonight:
+That proves the compiler shape, but the current output is not a complete
+browser contract:
 
-- `is_token` / category / `css_var` / light+dark value
-- `get_condition("_hover")` → wrap string
-- `breakpoints()` ordered names + widths
-- `fonts()` table (family, weights, css.letterSpacing)
+- `CssRuntime.classes` records resolved atom keys, not how one authored
+  declaration expanded.
+- aliases, shorthands, `font`, `weight`, `size`, `container`, responsive
+  arrays, and `r` can map one authored value to multiple declarations.
+- a browser class bag cannot implement last-wins merge by declaration slot.
+- recipe tables do not carry defaults and compiler-local binding names are not
+  a runtime identity.
+- global CSS is inserted as pre-rendered strings rather than lowered from its
+  structured author form.
+- portable CSS is reconstructed later in Core by parsing emitted CSS.
+- theme conditions still emit `data-panda-theme`.
 
-`BaseSystem::lib_fixture()` (or `reference_lib()`) returns the frozen copy.
-`BaseSystem::default()` stays empty (`BAS-DUMP-01`).
+The old fence against changing `CompileRequest`, `CompileResult`, and runtime
+keys is over. The native cutover requires one deliberate ABI change, frozen by
+root PLAN packet F0. Do not make several transitional shapes.
 
-Prove with Cargo tests in this crate, not through core sync:
+---
 
-- empty default
-- lib fixture has `colors.gray.800`, `colors.ui.*`, `radii.md`, fonts
-- `_dark` wrap is `[data-panda-theme=dark] &` (not `.dark &`)
-- `_hover` wrap is `&:is(:hover, [data-hover])`
-- `Send + Sync`
+## Native critical lane
 
-Do **not** implement `from_json` fragment dumps, `extends`, `layers`,
-`staticCss`, closed recipes, or a JS evaluator.
-
-### Kill `atomic/src/config`
-
-Delete the module. Atomic `Cargo.toml` depends on `base_system`.
-
-`CompileRequest`:
+One atomic agent at a time. Implement and merge in this order:
 
 ```text
-root_dir, files, base_system: Option<BaseSystem>
+N2 authored declaration plans
+  ↓
+N3 recipe identity/table
+  ↓
+N4 global + application/portable stylesheet
 ```
 
-Drop parallel `breakpoints` / `tokens` / `fonts` / `BaseSystemConfig` fields.
-`None` → `BaseSystem::lib_fixture()` so existing stations keep compiling
-against the first real utterance.
+Do not run unrelated station implementors against `atomic/src` during this
+lane. They may prepare read-only research but must wait to edit.
 
-Move `BreakpointScale` / font lookup types into `base_system` (or keep thin
-views on `BaseSystem`). Update every `crate::config::` import in atomic.
+---
 
-Token resolve: look up the fixture dictionary. Keep `color-mix` opacity and
-`{colors.gray.800}` brace stripping in **atomic**. Heuristic
-`KNOWN_CATEGORIES` dies once lookup works. Unknown paths pass through as raw
-CSS + diagnostic (fail closed, not silent drop).
+## N2 — authored-declaration runtime plans
 
-Condition lowering: named `_` keys ask BaseSystem first; fall back to the
-existing preset table only for keys the fixture does not list. After the
-fixture lands, `_dark` / `_light` come from the dump → update `ATM-COND-03`
-goldens to `[data-panda-theme=…]` and tick `ATM-COND-08`.
+### Contract
 
-### JS seam
+`CompileResult.runtime.stylePlans` records this relationship:
 
-`packages/reference-rs/modules/atomic/js/types.ts`: `CompileRequest.baseSystem`
-is the dump. Remove the old config-shaped fields. N-API stays `compileSystem`.
+```text
+(system, authored when[], prop, JSON value, important)
+  → [(opaque cascade slot, system-qualified class), ...]
+```
 
-### Verify Track A
+The input side is captured before expansion. The output side is captured after
+all normal atomic resolution under that system's fonts, breakpoints, and
+tokens. The browser does not need to know that `p` expands, that `font` is a
+macro, or which canonical property an alias targets. Two systems may both
+author `font: "sans"`; their plans and class names must not collide.
+
+### Required implementation
+
+1. Introduce versioned `NativeRuntimeArtifact` and `RuntimeStylePlan` Rust
+   types matching the root F0 fixture. Every plan includes `system`.
+2. Preserve the authored declaration through resolution long enough to attach
+   all resulting atoms.
+3. Derive `slot` from the final cascade identity: resolved property + resolved
+   condition path. `important` is part of the lookup key, not a second slot; a
+   later declaration replaces the earlier slot regardless of either spelling.
+   The slot is opaque outside Rust and is scoped to one owner.
+4. Keep class naming in `stylesheet::name::class_name`. Include a stable
+   system segment so independent systems do not share class names.
+5. Emit `stylePropNames` from the complete canon + Reference dialect set, not
+   the source tree's encountered subset. Omit `variant` and `colorMode`.
+6. Define one canonical serializer for runtime lookup values. Use structured
+   wire values and a shared fixture corpus; do not rely on Rust debug output or
+   JavaScript insertion-order accidents.
+7. Replace the browser-facing `css` field with `runtime`. Remove the old shape
+   after JS binding tests migrate.
+8. Keep `wants` and `atomCount` only as diagnostic/test observability.
+9. Make a missing evaluated system an error at the public Node seam. Rust unit
+   helpers use an explicit fixture constructor.
+
+### Required cases
+
+- scalar string and finite number
+- nested named condition
+- arbitrary `&` selector
+- responsive array
+- numeric and named `r`
+- alias vs canonical longhand
+- four-side shorthand vs one longhand
+- `font`, `weight`, `size`, and `container` multi-atom macros
+- multiple `css()` argument order
+- `!important`
+- unknown/invalid values produce diagnostics and no plan
+- duplicate extracted declarations dedupe deterministically
+
+`ATM-MERGE-01`–`03`, `ATM-UNIT-01`–`02`, `ATM-GHOST-04`, and
+`ATM-SEAM-01` must be reconciled with this contract. If existing SPEC prose
+assumes the old map, update the prose first and preserve its behavioural claim.
+
+### Gate
 
 ```bash
-pnpm agentrs q packages/reference-rs/modules/base-system
-pnpm agentrs q packages/reference-rs/modules/atomic
-pnpm agentrs c base_system
 pnpm agentrs c atomic
 pnpm agentrs v atomic
+pnpm agentrs q packages/reference-rs/modules/atomic
 ```
 
-Goldens that only used `blue.600` / `2r` should still match. `_dark` goldens
-will change — that is COND-08, not a regression. Use
-`pnpm agentrs v atomic --update-goldens` only for goldens whose CSS wrap
-honestly changed.
-
-Update SPEC counts when COND-08 ticks.
+The seam test must index the returned fixture with the tiny TypeScript lookup
+helper and prove exact classes/slots. A test that only snapshots JSON is not
+enough.
 
 ---
 
-## Track B — Independent SPEC ticks (landed 2026-09-15)
+## N3 — recipe identity and complete table
 
-31 stations on disk. SPEC ticked by parent after the case agent finished so
-Track A would not race the proof map. Src: identifier spreads
-(`ATM-SITE-11`) plus `LocalConstants::get_object`.
+### Contract
 
-Do **not** retake these IDs. Do **not** revert SPEC `[x]` rows for them.
+Every production recipe is authored with:
 
-| ID | What |
-| :--- | :--- |
-| `ATM-SITE-04` | unknown helper is not an extract site |
-| `ATM-SITE-09` | `<Div border />` → Bool(true) |
-| `ATM-LEAF-06` | computed key diagnostic |
-| `ATM-LEAF-09` | authored `2r!` → `mt_2r!` |
-| `ATM-WANT-01` `ATM-WANT-02` | Want builder + serde |
-| `ATM-ATOM-01`–`04` | Atom hash, AtomValue, AtomSet, one grain |
-| `ATM-RHYTHM-04` | `1px solid 1/3r` pass-through |
-| `ATM-SHORT-03`–`05` | zero/whole borders, longhand tripwire, dimensional counts |
-| `ATM-NAME-01`–`05` | class spelling + CSS escapes |
-| `ATM-DIAG-01`–`03` | clean diagnostics / locations / parse error no panic |
-| `ATM-LAYER-02` `ATM-LAYER-04` | empty layers; utilities encapsulation |
-| `ATM-FORBID-01`–`05` | hash / eval / second namer / no css.js / no private tables |
+```ts
+recipe({
+  className: 'stableIdentity',
+  // base, variants, defaults, compounds
+})
+```
 
-Do **not** take in Track B: `ATM-TOKEN-05`, `ATM-LAYER-03`, `ATM-STATIC-*`,
-`ATM-RECIPE-*`, `ATM-SITE-08` (styletrace), `ATM-COND-01/07/08/09` until
-Track A has landed the fixture. `ATM-SITE-06` / `ATM-SITE-11` (local const
-objects / `{...base}`) are high value for "hover didn't work" on **JSX**
-and can land in B if they only need extract.
+`className` is the authored stem. Runtime identity and CSS stem are
+`${system}__${className}` so independently published systems may all use
+`button`. Runtime never guesses the compiler's variable binding. A first
+argument that is not an object literal is a diagnostic and fails the compile.
 
-### Verify Track B
+### Required implementation
+
+1. Require a string-literal `className` during extraction.
+2. Emit a diagnostic and no recipe for absent/dynamic identity.
+3. Emit a diagnostic and fail the compile when the first argument is not an
+   inline object literal. Do not skip `recipe(definition)` silently.
+4. Remove binding-name fallback from production compilation.
+5. Extract and preserve `defaultVariants`.
+6. Emit recipes under `NativeRuntimeArtifact.recipes[\`${system}__${className}\`]`.
+7. Include:
+   - qualified identity
+   - base class
+   - variant keys and value maps
+   - default variants
+   - compound selectors/classes
+   - complete normalised combination lookup
+8. Normalise boolean selections to `"true"`/`"false"` at the boundary.
+9. Reject duplicate `(system, className)` in one compile. Across portable
+   systems, Core dedupes byte-identical transitive tables (required for
+   diamonds) and rejects same-identity/different-content conflicts.
+10. Keep recipe atoms in `@layer recipes`; do not leak them into utility plans.
+11. Update production recipe sources and matrices to explicit identity.
+
+### Runtime behaviour the table must enable
+
+- no props applies defaults
+- explicit props override defaults
+- unspecified axes retain defaults
+- matching compounds append after variant classes
+- array-valued compound predicates match any listed value
+- invalid selection does not select an arbitrary combination
+- `.raw()` can be implemented from the original Core config
+- `variantKeys`, `variantMap`, and `splitVariantProps` remain accurate
+
+### Gate
 
 ```bash
+pnpm agentrs c atomic -t recipe
+pnpm agentrs v atomic -t "RECIPE"
 pnpm agentrs q packages/reference-rs/modules/atomic
-pnpm agentrs c atomic
-pnpm agentrs v atomic
 ```
 
-Tick SPEC.md `[x]` + proof map only when the case folder exists and the
-station is green.
+Review all production matches from:
+
+```bash
+rg -n '\b(recipe|cva)\s*\(\s*\{' packages/reference-lib matrix fixtures
+```
+
+Intentional missing-identity refusal fixtures must say so in their README/spec.
 
 ---
 
-## Track A+ if time (after A is green)
+## N4 — structured globals and direct portable output
 
-1. `ATM-COND-01` named breakpoints → `@container`
-2. `ATM-COND-07` `r={{ 300: { p: '1r' } }}`
-3. `ATM-COND-09` `_groupHover` / `_peerFocus` / `&[data-slot]` in the sheet
-4. `ATM-COND-05` / `ATM-COND-06` dialect + runtime-owned props
-5. `ATM-TOKEN-01`–`04` against the lib fixture (not heuristic)
-6. `ATM-SITE-06` / `ATM-SITE-10` / `ATM-SITE-11`
-7. Emit `@layer tokens` custom properties from the fixture (`ATM-LAYER-03` slice)
-8. Optional: copy a **small** `globalCss` chrome slice (button `_hover`) into
-   the fixture so Book primitive hover is not empty. Do not port every
-   `globalCss()` file tonight.
+### Global-style lowering
 
-Still later (not tonight): fragments → BaseSystem JSON, `extends`/`layers`,
-`staticCss` third want source, closed `@layer recipes`, typegen, styletrace
-gating of every JSX tag.
+Receive base-system's recursive global IR. For every selector tree:
+
+1. distinguish declarations from named conditions and nested selectors
+2. canonicalise property names through canon
+3. apply shorthands/macros where valid for global declarations, including
+   `container: true` and responsive arrays; reject non-macro booleans
+4. resolve rhythm and token values
+5. lower named conditions through the same condition table as utilities
+6. print deterministic kebab-case declarations
+7. preserve custom properties and valid at-rules
+8. report unsupported values with selector/property/source path
+9. expand `staticCss` wildcards for every category in the spec table (colors,
+   spacing, size, radius). This is `ATM-STATIC-03` and is required here, not
+   remaining-queue work.
+
+Do not create utility classes for global declarations.
+
+Prove with a real lib-shaped fixture containing:
+
+- `:root` custom property
+- `body` font/rhythm declarations
+- form selector lists
+- `_hover`, `_focus`, `_disabled`, `_placeholder`
+- `&:focus` and same-element attribute selectors
+- token aliases and private token references
+- keyframes and font faces
+
+### Application and portable stylesheet forms
+
+Both forms are printed from the same structured compiler result.
+
+Application form:
+
+- current package layer and internal layer order
+- local token declarations available to the current app
+- `data-theme` light/dark islands
+
+Portable form:
+
+- current package layer and internal layer order
+- token declarations scoped to `[data-layer="<system>"]`
+- selectors required for nearest unthemed/themed descendants
+- no downstream AST rewrite
+
+Core may concatenate upstream portable outputs and prepend its authored reset.
+It may not parse either output to recover token blocks.
+
+### Required cases
+
+- `BAS-GLOBAL-01` consumed end to end
+- `ATM-TOKEN-11` aliases in token output
+- `ATM-COND-10`/`11` named state/media wraps
+- `ATM-COND-13`/`14` ranges and nested `&`
+- `ATM-COND-15` if its contract is global CSS
+- `ATM-COND-16` container conditions
+- `ATM-LAYER-05`/`06`/`08` static/global/font/layer chrome
+- application vs portable token scope
+- no-upstream and composed package layer order
+- CSS parser accepts both strings
+- zero `data-panda-theme`
+
+The current `LAYER_PREAMBLE` is not sacred. Update it once to the package-layer
+contract and review every changed golden. Never run a blanket golden update
+before inspecting one representative output per affected family.
+
+### Gate
+
+```bash
+pnpm agentrs c atomic -t "global"
+pnpm agentrs v atomic -t "LAYER|TOKEN|COND"
+pnpm agentrs v atomic
+pnpm agentrs q packages/reference-rs/modules/atomic
+```
 
 ---
 
-## Tripwires
+## Styletrace join
 
-- Do not evaluate author JS. Do not add QuickJS.
-- Do not invent a second class namer. Ghost class is P0.
-- Do not generate `css.js`.
-- Do not synthesize `currentColor` on shorthands.
-- Do not grow `KNOWN_CATEGORIES` — look up the fixture.
-- Do not complete the 43-case base-system SPEC.
-- Do not start `pnpm dev:lib`. Do not raw Playwright/Vitest; `pnpm agentrs`.
-- `#[allow(clippy::…)]` is banned. Files ≤ 500 lines. Context structs, not
-  argument soup.
-- CPU gate: at most two `pnpm agentrs` test runs at once.
+N2 may retain current positive extraction while
+[`../styletrace/PLAN.md`](../styletrace/PLAN.md) is in flight. Before the
+native gate:
+
+- compile receives `NativeCompileRequest` (source root, staged declaration
+  root, `jsxHosts`)
+- trace results are module-qualified bindings
+- virtual stations have a hermetic primitive declaration fixture
+- tracing errors are diagnostics, not `HashSet::new()`
+- `ATM-SITE-13` removes the scan-all-tags fallback
+- `ATM-SITE-01` and `ATM-SITE-08` remain positive with real imports/graph
+
+Do not solve this with a PascalCase allowlist.
 
 ---
 
-## Morning checklist
+## Remaining station queue
 
-- [x] `atomic/src/config` gone
-- [x] `compile()` takes `BaseSystem`; default is lib fixture
-- [x] `_dark` matches `data-panda-theme` (COND-08 ticked)
-- [x] Token lookup for `gray.800` / `ui.*` / `radii.md`
-- [x] `@layer tokens` / `global` print from the fixture
-- [x] `staticCss` third want source (opt-in dumps; lib fixture empty)
-- [x] Closed `@layer recipes` + variant table
-- [x] SPEC **75 / 75**
-- [x] `pnpm agentrs c base_system && pnpm agentrs c atomic && pnpm agentrs v atomic` green
-- [ ] Not committed
-- [ ] Fragments → BaseSystem JSON (still a later seam)
-- [ ] Lib primitive `globalCss` chrome (button `_hover`) not in the fixture
-- [ ] Styletrace empty-host fallback still scans every tag
-- [ ] Typegen still a stub
+Resume independent station work only after G1 (N2–N4 merged, ABI frozen).
+`ATM-STATIC-03` is part of N4, not this queue. One case per implementor,
+sequential on shared source.
+
+Suggested order:
+
+1. `ATM-SITE-14` — `css={{ … }}` no-input contract
+2. `ATM-SITE-12` — tagged templates refusal
+3. `ATM-SITE-15` — namespace/type-only/internal bindings
+4. `ATM-LEAF-10` — important spellings
+5. `ATM-COND-10`, `11` — state/media proof if not closed by N4
+6. `ATM-TOKEN-06`, `07`, `08`, `09`, `11`
+7. `ATM-ATOM-05`
+8. `ATM-SITE-16` — cross-file constants with unchanged skip policy
+9. `ATM-COND-13`, `14`, `15`, `16`
+10. `ATM-VALID-01`, `03` — valid raw CSS passthrough; invalid warns/skips
+11. `ATM-DIAG-04`, `05`, `06` — portable source spans/codes
+12. `ATM-RECIPE-04`, `05`, `06`
+13. `ATM-LAYER-05`, `06`, `08`
+14. `ATM-FORBID-07`
+15. `ATM-PERF-01` — separate measured incremental-compile campaign
+
+For each slice:
+
+1. Read the exact SPEC row.
+2. Add/strengthen `tests/cases/<ID>/spec.ts`.
+3. Make the smallest compiler change.
+4. Run without golden update first.
+5. Inspect expected CSS/runtime/diagnostics.
+6. Update only the named goldens through the CLI.
+7. Run quality.
+8. Check the SPEC box only when the test asserts the prose.
+
+```bash
+pnpm agentrs v atomic
+pnpm agentrs q packages/reference-rs/modules/atomic
+```
+
+---
+
+## Do not
+
+- Do not generate browser executable style functions.
+- Do not make TypeScript derive class names or cascade slots.
+- Do not keep the old `CssRuntime.classes` as a fallback ABI.
+- Do not use compiler-local variable names as recipe identity.
+- Do not accept a missing live system by calling `lib_fixture()`.
+- Do not ingest raw TypeScript fragment source.
+- Do not store or inject pre-rendered global CSS strings.
+- Do not parse emitted CSS to produce portable CSS.
+- Do not preserve `data-panda-theme`.
+- Do not broaden extraction to every PascalCase tag.
+- Do not refresh all goldens or edit quarantine to create green output.
+- Do not reopen canon from an atomic slice without a demonstrated canon defect.
+- Do not touch `packages/reference-core` from N2/N4; N3 may only add explicit
+  `className` to production fixture sources assigned by the orchestrator.
+- Do not add `#[allow(clippy::…)]` or `#[expect(clippy::…)]`.

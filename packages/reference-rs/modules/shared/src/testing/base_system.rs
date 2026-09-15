@@ -1,12 +1,12 @@
 //! In-memory `BaseSystem` fixtures shared by Rust compiler crate tests.
-//! JSON is a nested `BaseSystemDump` (`tokens.colors.blue.500.value`), which
+//! JSON is a nested `BaseSystemSpec` (`tokens.colors.blue.500.value`), which
 //! `from_json` lowers into indexed `TokenEntry` leaves (`category` + kebab
 //! `cssVar`). Callers should take `minimal_system()` rather than hand-rolling
-//! dumps. `strict` / `semanticTokens` are not Dump fields and are omitted.
+//! specs. `strict` / `semanticTokens` are not spec fields and are omitted.
 
 use base_system::BaseSystem;
 
-/// Nested dump for a small token table plus default breakpoint widths.
+/// Nested spec for a small token table plus default breakpoint widths.
 pub fn minimal_system_json() -> &'static str {
     r##"{
   "tokens": {
@@ -44,7 +44,7 @@ pub fn semantic_tokens_system_json() -> &'static str {
 }"##
 }
 
-/// Typed `RecipeDefinition` tables. Dump recipes are not `Record<string, string>`.
+/// Typed `RecipeDefinition` tables. Spec recipes are not `Record<string, string>`.
 pub fn recipes_system_json() -> &'static str {
     r##"{
   "recipes": {
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn minimal_system_from_json_succeeds() {
         let system = BaseSystem::from_json(minimal_system_json())
-            .expect("minimal dump must be a valid BaseSystemDump");
+            .expect("minimal spec must be a valid BaseSystemSpec");
         assert!(system.is_token("colors.blue.500"));
         assert_eq!(system.token_category("colors.blue.500"), Some("colors"));
         assert_eq!(
