@@ -1,23 +1,27 @@
 # Extract
 
-Finds style-bearing source and inserts **wants** into an AtomSet.
+Finds style-bearing source and inserts **wants**.
 
-Two steps. Mixing them is how you accidentally write a JS evaluator.
+Find the host, then walk the expression. Mixing those is how you
+accidentally write a JS evaluator.
 
-1. **sites** — JSX attributes, `css()`, `recipe()`. Styletrace answers
-   *which tags* and *origin names*. This step answers *which expressions*.
-2. **leaves** — each literal is a want. Both branches of a ternary are
-   two wants. `undefined` is none. Do not eval `isSelected`.
+1. **jsx / css / recipes** — *where*: StyleProps on tags, `css()`,
+   `recipe()`. Styletrace answers which tags keep StyleProps.
+2. **expressions** — *what’s inside*: each literal is a want. Both
+   branches of a ternary are two wants. `undefined` is none. Do not
+   eval `isSelected`.
+
+`constants/` is a lookup index for file-top `const` literals, not a
+fourth host.
 
 Does not print CSS. Does not name classes. Does not hash a whole object.
 
 ## Example (Panda)
 
-`vendor/panda/crates/pandacss_extractor` — `extract.rs`, `jsx.rs`,
-`calls.rs`, `matcher.rs`. Same places. `literal.rs` / `style_tree.rs` /
-`pure_fn.rs` are the evaluator: walk like them, do not fold like them.
-`design-notes/literal-evaluator.md` is what we are not building.
-Styletrace replaces their `jsx` name list. See [PANDA.md](../../PANDA.md).
+`vendor/panda/crates/pandacss_extractor` — `jsx.rs`, `calls.rs`,
+`matcher.rs` are their “where”. Ours are named after the author API.
+`literal.rs` / `style_tree.rs` / `pure_fn.rs` are the evaluator: walk
+like them, do not fold like them. See [PANDA.md](../../PANDA.md).
 
 ## Must not
 

@@ -2,21 +2,17 @@
 //! Unrolls composite style props like `borderBottom` and `outline` into orthogonal width, style, and color longhands.
 //! Strictly guards against the CSS reset-to-currentColor anomaly by never synthesizing default colors for omitted components.
 
+use super::parser::{is_global_keyword, parse_shorthand_tokens, split_tokens, ParsedShorthand};
 use crate::atom::AtomValue;
-use super::parser::{
-    is_global_keyword, parse_shorthand_tokens, split_tokens, ParsedShorthand,
-};
 
 fn is_zero_value(raw: &str) -> bool {
+    // border: 0  /  border: '0px'
     let trimmed = raw.trim();
-    trimmed == "0"
-        || trimmed == "0px"
-        || trimmed == "0rem"
-        || trimmed == "0em"
-        || trimmed == "0%"
+    trimmed == "0" || trimmed == "0px" || trimmed == "0rem" || trimmed == "0em" || trimmed == "0%"
 }
 
 fn is_whole_value(raw: &str) -> bool {
+    // border: 'inherit'  /  border: 'var(--bd)'  /  border: 'borders.subtle'
     let lower = raw.trim().to_ascii_lowercase();
     is_global_keyword(&lower)
         || (lower.starts_with("var(") && lower.ends_with(')'))
@@ -25,10 +21,8 @@ fn is_whole_value(raw: &str) -> bool {
 }
 
 /// Decompose composite border or outline declaration into atomic longhands.
-pub fn expand_border_shorthand(
-    prop: &str,
-    raw_val: &str,
-) -> Option<Vec<(Box<str>, AtomValue)>> {
+pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
+    // borderBottom: '3px solid'  →  width + style  (no color)
     let canon_name = canon::resolve_canonical_prop(prop);
     let longhands = canon::native_longhands_for_prop(canon_name)?;
     if longhands.len() != 3 {
@@ -42,17 +36,13 @@ pub fn expand_border_shorthand(
     let trimmed = raw_val.trim();
 
     if is_zero_value(trimmed) {
-        return Some(vec![(
-            width_prop.into(),
-            AtomValue::String("0px".into()),
-        )]);
+        // border: 0  →  borderWidth: 0px
+        return Some(vec![(width_prop.into(), AtomValue::String("0px".into()))]);
     }
 
     if trimmed == "none" || is_whole_value(trimmed) {
-        return Some(vec![(
-            canon_name.into(),
-            AtomValue::String(trimmed.into()),
-        )]);
+        // border: 'none'  /  outline: 'inherit'
+        return Some(vec![(canon_name.into(), AtomValue::String(trimmed.into()))]);
     }
 
     let tokens = split_tokens(trimmed);
@@ -61,6 +51,7 @@ pub fn expand_border_shorthand(
     }
 
     let parsed = parse_shorthand_tokens(&tokens, is_outline);
+    // '3px solid red' → width / style / color longhands
     build_expanded_atoms(width_prop, style_prop, color_prop, &parsed)
 }
 

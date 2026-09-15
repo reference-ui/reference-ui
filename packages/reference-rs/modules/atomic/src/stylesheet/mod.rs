@@ -6,9 +6,9 @@ pub mod emitter;
 pub mod layers;
 pub mod name;
 
+use crate::diagnostics::Diagnostic;
 pub use emitter::build_stylesheet;
 use serde::{Deserialize, Serialize};
-use crate::diagnostics::Diagnostic;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

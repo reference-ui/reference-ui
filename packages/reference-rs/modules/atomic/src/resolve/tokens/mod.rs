@@ -2,6 +2,7 @@
 //! Translates dot-path token references like `colors.blue.600` into corresponding `var(--...)` custom property expressions.
 //! Bridges compile-time token authoring with runtime theming and stylesheet token layers.
 
+use crate::config::FontScale;
 use std::borrow::Cow;
 
 const KNOWN_CATEGORIES: &[&str] = &[
@@ -27,10 +28,12 @@ const KNOWN_CATEGORIES: &[&str] = &[
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
+    // color / bg / borderColor
     canon::is_color_prop(prop)
 }
 
 fn is_css_color_keyword(val: &str) -> bool {
+    // colors.white / colors.transparent → passthrough
     matches!(
         val.to_ascii_lowercase().as_str(),
         "transparent"
@@ -45,6 +48,7 @@ fn is_css_color_keyword(val: &str) -> bool {
 }
 
 fn category_to_prefix(category: &str) -> String {
+    // fontSizes → --font-sizes    colors → --colors
     let mut out = String::with_capacity(category.len() + 4);
     out.push_str("--");
     for ch in category.chars() {
@@ -59,12 +63,14 @@ fn category_to_prefix(category: &str) -> String {
 }
 
 fn format_token_var(category: &str, path: &str) -> String {
+    // colors.blue.600 → var(--colors-blue-600)
     let prefix = category_to_prefix(category);
     let normalized = path.replace('.', "-");
     format!("var({prefix}-{normalized})")
 }
 
 fn format_color_mix(var_expr: &str, opacity: &str) -> String {
+    // blue.600/50 → color-mix(in srgb, var(--colors-blue-600) 50%, transparent)
     let pct = if opacity.ends_with('%') {
         opacity.to_string()
     } else {
@@ -75,26 +81,31 @@ fn format_color_mix(var_expr: &str, opacity: &str) -> String {
 
 fn resolve_category_path(category: &str, path: &str) -> String {
     if category == "colors" && is_css_color_keyword(path) {
+        // colors.white
         return path.to_string();
     }
 
     if let Some((base, opacity)) = path.split_once('/') {
+        // colors.blue.600/50
         let var_expr = format_token_var(category, base);
         format_color_mix(&var_expr, opacity)
     } else {
+        // colors.blue.600
         format_token_var(category, path)
     }
 }
 
 fn is_potential_token_path(val: &str) -> bool {
+    // blue.600  — not var(...) or #fff
     if val.is_empty() || val.starts_with("var(") || val.starts_with('#') {
         return false;
     }
     val.contains('.') && !val.contains(' ')
 }
 
-fn resolve_font_token(prop: &str, trimmed: &str) -> Option<String> {
-    if (prop == "fontFamily" || prop == "ff") && matches!(trimmed, "sans" | "serif" | "mono") {
+fn resolve_font_token(prop: &str, trimmed: &str, fonts: &FontScale) -> Option<String> {
+    // fontFamily="sans" / ff="mono"
+    if (prop == "fontFamily" || prop == "ff") && fonts.has_family(trimmed) {
         Some(format!("var(--fonts-{trimmed})"))
     } else {
         None
@@ -102,6 +113,7 @@ fn resolve_font_token(prop: &str, trimmed: &str) -> Option<String> {
 }
 
 fn resolve_category_token(trimmed: &str) -> Option<String> {
+    // colors.blue.600  /  radii.md  /  fonts.mono
     for category in KNOWN_CATEGORIES {
         if let Some(rest) = trimmed.strip_prefix(category) {
             if let Some(path) = rest.strip_prefix('.') {
@@ -113,19 +125,25 @@ fn resolve_category_token(trimmed: &str) -> Option<String> {
 }
 
 /// Resolves a raw token value to its CSS custom property representation.
-pub fn resolve_token_value<'a>(prop: &str, raw_val: &'a str) -> Cow<'a, str> {
+pub fn resolve_token_value<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    fonts: &FontScale,
+) -> Cow<'a, str> {
+    // color: 'blue.600'  /  bg: 'colors.blue.600/50'  /  {blue.600}
     let trimmed = raw_val.trim();
     if trimmed.is_empty() || trimmed.starts_with("var(") {
         return Cow::Borrowed(raw_val);
     }
 
     let unbraced = if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
+        // {blue.600}
         &trimmed[1..trimmed.len() - 1]
     } else {
         trimmed
     };
 
-    if let Some(font_var) = resolve_font_token(prop, unbraced) {
+    if let Some(font_var) = resolve_font_token(prop, unbraced, fonts) {
         return Cow::Owned(font_var);
     }
 
@@ -134,6 +152,7 @@ pub fn resolve_token_value<'a>(prop: &str, raw_val: &'a str) -> Cow<'a, str> {
     }
 
     if is_color_prop(prop) && is_potential_token_path(unbraced) {
+        // color: 'blue.600'  (bare, no colors. prefix)
         return Cow::Owned(resolve_category_path("colors", unbraced));
     }
 
@@ -143,32 +162,30 @@ pub fn resolve_token_value<'a>(prop: &str, raw_val: &'a str) -> Cow<'a, str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::FontScale;
+
+    fn resolve(prop: &str, raw: &str) -> Cow<'static, str> {
+        Cow::Owned(
+            resolve_token_value(prop, raw, &FontScale::default_scale()).into_owned(),
+        )
+    }
 
     #[test]
     fn test_category_prefixed_colors() {
+        assert_eq!(resolve("color", "colors.blue.600"), "var(--colors-blue-600)");
         assert_eq!(
-            resolve_token_value("color", "colors.blue.600"),
-            "var(--colors-blue-600)"
-        );
-        assert_eq!(
-            resolve_token_value("bg", "colors.reference.text"),
+            resolve("bg", "colors.reference.text"),
             "var(--colors-reference-text)"
         );
-        assert_eq!(resolve_token_value("color", "colors.white"), "white");
-        assert_eq!(
-            resolve_token_value("color", "colors.transparent"),
-            "transparent"
-        );
+        assert_eq!(resolve("color", "colors.white"), "white");
+        assert_eq!(resolve("color", "colors.transparent"), "transparent");
     }
 
     #[test]
     fn test_bare_color_tokens() {
+        assert_eq!(resolve("bg", "blue.600"), "var(--colors-blue-600)");
         assert_eq!(
-            resolve_token_value("bg", "blue.600"),
-            "var(--colors-blue-600)"
-        );
-        assert_eq!(
-            resolve_token_value("borderColor", "gray.800"),
+            resolve("borderColor", "gray.800"),
             "var(--colors-gray-800)"
         );
     }
@@ -176,11 +193,11 @@ mod tests {
     #[test]
     fn test_color_mix_opacity() {
         assert_eq!(
-            resolve_token_value("bg", "colors.blue.600/50"),
+            resolve("bg", "colors.blue.600/50"),
             "color-mix(in srgb, var(--colors-blue-600) 50%, transparent)"
         );
         assert_eq!(
-            resolve_token_value("color", "red.500/25%"),
+            resolve("color", "red.500/25%"),
             "color-mix(in srgb, var(--colors-red-500) 25%, transparent)"
         );
     }
@@ -188,16 +205,10 @@ mod tests {
     #[test]
     fn test_non_color_categories() {
         assert_eq!(
-            resolve_token_value("fontFamily", "fonts.mono"),
+            resolve("fontFamily", "fonts.mono"),
             "var(--fonts-mono)"
         );
-        assert_eq!(
-            resolve_token_value("borderRadius", "radii.md"),
-            "var(--radii-md)"
-        );
-        assert_eq!(
-            resolve_token_value("fontSize", "fontSizes.xl"),
-            "var(--font-sizes-xl)"
-        );
+        assert_eq!(resolve("borderRadius", "radii.md"), "var(--radii-md)");
+        assert_eq!(resolve("fontSize", "fontSizes.xl"), "var(--font-sizes-xl)");
     }
 }
