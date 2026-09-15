@@ -3,9 +3,6 @@
 `.d.ts` from the base system + canon. Token unions, recipe variants, font
 registry. Not a jsx farm.
 
-Panda's `styled-system/` is a **codegen farm**: `css/`, `cva`, `sva`, `jsx/`,
-`patterns/`, `recipes/`, `tokens/`, `types/`. We do not need that.
-
 Primitives already exist as authored React. They need **types** that stay in
 sync with the base system. Typegen is that printer.
 
@@ -32,11 +29,11 @@ API.
 - Generate a jsx factory, patterns, or recipes-as-modules
 - Import atomic to ask whether `mt` is a style prop — that is canon
 
-Panda v2 prints a whole farm from Rust so generated `css()` and `.d.ts` share
-one context. We author `css()`; we still generate the unions. Language (Rust
-vs TypeScript) is a later call. The **input** is the base system either way.
+We author `css()`; we still generate the unions. Language (Rust vs TypeScript)
+is a later call. The **input** is the base system either way.
 
-Today `SystemStyleObject` still aliases Panda. That is the leftover to kill.
+Today `SystemStyleObject` still aliases `@reference-ui/styled/types`. That is
+the leftover to kill.
 
 ## Verify
 
@@ -45,4 +42,4 @@ pnpm agentrs c typegen
 ```
 
 First real tests land with the union printer, scored against a fixture base
-system — no core, no Panda, no jsx output.
+system — no core, no jsx output.

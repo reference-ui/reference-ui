@@ -4,7 +4,7 @@ Current freeze, cases, and proof. Design narrative: [REFERENCE_SYSTEM.md](../../
 Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
 
 Harness: `cargo test -p base_system` (or `pnpm agentrs c base_system`)
-Verify path: In-memory fixture construction (no sync worker, no packager, no Panda, no bundler).
+Verify path: In-memory fixture construction (no sync worker, no packager, no bundler).
 
 ---
 
@@ -34,27 +34,28 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no Pan
 
 ---
 
-## 3. Crosswalk: Panda Job -> Our ID -> Refuse
+## 3. Crosswalk: Panda job → our ID → refuse
 
-Panda fused configuration parsing, token dictionaries, AST traversal, codegen farms, and utility emission into a single monolithic loop. Reference UI splits these responsibilities cleanly across TypeScript and native crates.
+Panda fused config, tokens, AST, codegen, and utility emission. We split
+those jobs. Vendor crates below are example call sites, not our API.
 
-| Panda v1 / v2 Construct | Reference UI Base System ID | Refuse / Forbidden in `base_system` | Rationale |
+| Panda construct | Our ID | Refuse / forbidden here | Why |
 | :--- | :--- | :--- | :--- |
-| `pandacss_tokens::TokenDictionary` | `BAS-TOKEN-01` .. `08`, `BAS-ASK-01`, `02` | Refuse O(N) token search; refuse runtime color manipulation (`tinycolor`/`chroma-js`) in Rust. | O(1) indexed lookups; color values remain declarative strings. |
-| `pandacss_tokens::color_mix` / modifier parsing | Delegated to `canon` / `atomic` | Refuse token modifier parsing in `base-system`. | `base-system` holds declared tokens; `atomic` resolves `/opacity` mix syntax. |
-| `pandacss_tokens::TokenSuggestion` | None | **REFUSE**: Fuzzy ranking, suggestions, spellchecking. | BaseSystem is a compiler artefact, not an interactive IDE diagnostic service. |
-| `pandacss_tokens::svg` / Asset tokens | None | **REFUSE**: Embedding SVG symbols into tokens. | Tokens are pure CSS values; vector assets belong in the application bundler. |
-| `pandacss_config::Theme` | `BAS-TOKEN-01` .. `05`, `BAS-GLOBAL-02` | Refuse preset file globbing, npm resolution, and plugin execution. | Evaluated fragments land as JSON; composition is explicit `extends: [baseSystem]`. |
-| `pandacss_config::Conditions` | `BAS-GLOBAL-02`, `03`, `BAS-ASK-05` | Refuse arbitrary JS predicate functions in conditions. | Conditions are pure CSS selector and `@media` / `@container` query templates. |
-| `pandacss_config::UtilityMap` (`utilities.extend`) | None (lives in `canon`) | **REFUSE**: Declaring custom utility property transforms in user config. | Utilities are language dialect in `modules/canon`, not user tokens. |
-| `pandacss_config::PatternMap` (`patterns.box`) | None | **REFUSE**: Box pattern configs and transform functions. | Dialect props (`font`, `r`) live in canon; `box()` collapses directly to `css()`. |
-| `pandacss_recipes::Recipe` | `BAS-RECIPE-01`, `02`, `BAS-ASK-04` | **REFUSE**: Generating `cva.js` runtime closures or class concatenation closures. | Static variant schema only; runtime `recipe()` is authored TypeScript in core. |
-| `pandacss_recipes::SlotRecipe` | `BAS-RECIPE-03` | **REFUSE**: Generating multi-part JSX element factories. | Slot schemas only; components are authored in `@reference-ui/react`. |
-| `pandacss_codegen::artifacts::types` | None (lives in `modules/typegen`) | **REFUSE**: Generating `.d.ts` files or TypeScript ASTs inside `base-system`. | `typegen` is a separate consumer of `base-system`; this crate is pure data. |
-| `pandacss_codegen` Utility class names in types | None | **REFUSE**: Emitting `.mt_2r` or `.bg_n300` into type declarations. | Users author `StyleProps`; utility class names are private implementation details. |
-| `pandacss_extractor` Static token evaluator | None (lives in `modules/atomic`) | **REFUSE**: Parsing TSX files or folding `token()` AST call expressions. | Source parsing is owned by `atomic`; `base-system` answers queries. |
-| `@pandacss/dev` `defineConfig({ presets })` | `BAS-EXTEND-01` .. `05` | Refuse deep object mutation with arbitrary prototype inheritance. | Deterministic definition merge with `_private` token stripping. |
-| `@layer` multi-package stylesheet assembly | `BAS-LAYER-01` .. `04` | Refuse importing tokens from layered systems into local dictionary. | `layers` inclusion is CSS-only; tokens stay out of child types. |
+| `pandacss_tokens::TokenDictionary` | `BAS-TOKEN-01`–`08`, `BAS-ASK-01`–`02` | O(N) search; runtime color libs in Rust | O(1) indexed lookups. Color values stay strings. |
+| `pandacss_tokens::color_mix` / modifier parsing | delegated to `atomic` | Token modifier parsing in this crate | We hold declared tokens. Atomic resolves `/opacity`. |
+| `pandacss_tokens::TokenSuggestion` | — | Fuzzy ranking, spellcheck | Compiler artefact, not an IDE service. |
+| `pandacss_tokens::svg` / asset tokens | — | Embedding SVG in tokens | Tokens are CSS values. |
+| `pandacss_config::Theme` | `BAS-TOKEN-01`–`05`, `BAS-GLOBAL-02` | Preset globbing, npm resolution, plugins | Fragments land as JSON. Composition is `extends`. |
+| `pandacss_config::Conditions` | `BAS-GLOBAL-02`–`03`, `BAS-ASK-05` | JS predicate functions as conditions | Conditions are CSS selectors and `@media` / `@container`. |
+| `pandacss_config::UtilityMap` (`utilities.extend`) | lives in `canon` | Custom utility transforms in user config | Dialect, not user tokens. |
+| `pandacss_config::PatternMap` (`patterns.box`) | — | Box/flex/stack pattern configs | Dialect props in canon. Layout is primitives + `css()`. |
+| `pandacss_recipes::Recipe` | `BAS-RECIPE-01`–`02`, `BAS-ASK-04` | Generating `cva.js` / recipe closures | Static schema only. Runtime `recipe()` is authored TypeScript. |
+| `pandacss_recipes::SlotRecipe` | `BAS-RECIPE-03` | Slot-recipe helper / part factories | Our API is `recipe()`. Multi-part components are authored React. |
+| `pandacss_codegen::artifacts::types` | lives in `typegen` | `.d.ts` / TS AST in this crate | Pure data. |
+| Utility class names in types | — | `.mt_2r` in declarations | Users author StyleProps. |
+| `pandacss_extractor` static token evaluator | lives in `atomic` | Parsing TSX / folding `token()` | This crate answers queries. |
+| `@pandacss/dev` `defineConfig({ presets })` | `BAS-EXTEND-01`–`05` | Deep object mutation / prototype inheritance | Deterministic merge, `_private` stripping. |
+| `@layer` multi-package sheet assembly | `BAS-LAYER-01`–`04` | Importing layered tokens into the local dictionary | `layers` is CSS-only. |
 
 ---
 
@@ -80,7 +81,7 @@ Panda fused configuration parsing, token dictionaries, AST traversal, codegen fa
 
 ### Token Dictionary & Value Normalization (`TOKEN`)
 
-- [ ] `BAS-TOKEN-01` `[panda]` `[unit]` —
+- [ ] `BAS-TOKEN-01` `[reference]` `[unit]` —
   **BaseSystem should index nested token paths into canonical dot-separated keys.**
   Ingest a token fragment containing nested structures `{ "colors": { "blue": { "600": { "value": "#2563eb" } } } }`. Assert that the token is indexed under category `Color` with relative path `"blue.600"` and full path `"colors.blue.600"`. Flattening keys with invalid delimiters or dropping intermediate hierarchy violates lookup predictability.
 - [ ] `BAS-TOKEN-02` `[reference]` `[unit]` —
@@ -98,7 +99,7 @@ Panda fused configuration parsing, token dictionaries, AST traversal, codegen fa
 - [ ] `BAS-TOKEN-06` `[reference]` `[unit]` —
   **BaseSystem should isolate `_private` token trees from downstream export while preserving local resolution.**
   Ingest a token set defining `colors.brand` alongside `colors._private.internalAccent`. Assert that local queries inside the owning system resolve `colors._private.internalAccent` and format its CSS variable, while public token enumerations mark the token private. Failing to scope `_private` tokens allows internal library implementation details to leak into consumer autocomplete.
-- [ ] `BAS-TOKEN-07` `[panda]` `[unit]` —
+- [ ] `BAS-TOKEN-07` `[reference]` `[unit]` —
   **BaseSystem should detect and report duplicate token definitions within the same fragment batch.**
   Ingest two token fragments in the same unlayered definition that declare `colors.primary` with conflicting values `"#000"` and `"#fff"`. Assert that ingestion records a collision diagnostic detailing the duplicate key and source fragments. Silently overwriting definitions based on file discovery order produces non-deterministic builds.
 - [ ] `BAS-TOKEN-08` `[reference]` `[unit]` —
@@ -155,9 +156,9 @@ Panda fused configuration parsing, token dictionaries, AST traversal, codegen fa
 - [ ] `BAS-RECIPE-02` `[reference]` `[unit]` —
   **BaseSystem should store compound variant definitions.**
   Ingest a recipe containing compound variants `[{ tone: 'loud', size: 'lg', css: { border: '2px solid' } }]`. Assert that the compound variant condition map and resulting CSS properties are preserved for closed-class generation. Ignoring compound variants leaves multi-variant state styling broken.
-- [ ] `BAS-RECIPE-03` `[reference]` `[unit]` —
-  **BaseSystem should support slot recipes (sva) with part selectors.**
-  Ingest a slot recipe `dialog` with `slots: ['backdrop', 'positioner', 'content']` and per-slot base and variant styles. Assert that the slot recipe structure is stored with part mappings intact for multi-part component styling. Flattening slots into a single recipe corrupts sub-part className assignment.
+- [ ] `BAS-RECIPE-03` `[forbidden]` `[unit]` —
+  **BaseSystem does not store a slot-recipe helper.**
+  The author API is `recipe()`. Multi-part components are authored React in `@reference-ui/react`. Assert that `BaseSystem` has no slot-recipe schema and no part-selector factory. Inventing a second recipe shape here would fork the runtime helper atomic compiles.
 - [ ] `BAS-RECIPE-04` `[forbidden]` `[unit]` —
   **BaseSystem must not execute runtime variant selection or class concatenation.**
   Attempt to invoke runtime recipe variant selection on a `BaseSystem` instance with props `{ tone: 'loud' }`. Assert that `BaseSystem` exposes only the static recipe schema and tables to `atomic` and `typegen`. The runtime `recipe()` function is authored TypeScript in core; embedding a runtime evaluator or closure compiler inside `base-system` is forbidden.
@@ -275,14 +276,14 @@ Panda fused configuration parsing, token dictionaries, AST traversal, codegen fa
 3. **P1 — Token Dictionary & Normalization (`BAS-TOKEN-01` .. `08`):** Implement dot-path normalization, CSS custom property prefixing (`--colors-*`), literal value preservation, and semantic light/dark storage.
 4. **P1 — Extends & Private Token Scoping (`BAS-EXTEND-01` .. `05`):** Implement multi-system definition merge with precedence rules, cycle detection, and strict stripping of `_private` token trees.
 5. **P1 — Layer Isolation (`BAS-LAYER-01` .. `04`):** Implement CSS-only attachment for upstream systems, ensuring tokens from layered dependencies stay strictly out of local token queries and types.
-6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `04`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `04`):** Complete schema storage and iteration for component/slot recipes, font-face descriptors, animation keyframes, and global CSS rule blocks.
+6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `04`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `04`):** Complete schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks.
 
 ---
 
 ## 7. "Do Not" / Tripwires
 
 1. **Do not execute author JavaScript or parse TSX in `base-system`.**
-   `reference-core/src/lib/fragments` already executes author files in Node.js and dumps pure JSON. Emulating Panda v2's OXC-based static JS evaluator in Rust is forbidden.
+   `reference-core/src/lib/fragments` already executes author files in Node.js and dumps pure JSON. A native fragment evaluator is forbidden.
 2. **Do not emit CSS class names, utility atoms, or `.mt_2r`.**
    This crate owns the design-system *definition*, not the *stylesheet compiler*. Class generation belongs solely to `modules/atomic`.
 3. **Do not generate TypeScript types or `.d.ts` files.**
@@ -293,8 +294,8 @@ Panda fused configuration parsing, token dictionaries, AST traversal, codegen fa
    Tokens nested under `_private` are package-internal. They must be stripped during upstream merge so library internals do not pollute application autocomplete.
 6. **Do not perform file I/O, glob walking, or directory scans.**
    `base-system` is an in-memory data structure. File discovery and micro-bundling are host pipeline responsibilities in TypeScript.
-7. **Do not depend on `@pandacss/*` or embed Panda config translation layers.**
-   Panda-specific configuration concepts (`utilities.extend`, `patterns`, `jsxFactory`) are legacy artifacts being deleted.
+7. **Do not grow a second config dialect.**
+   Utility transforms, layout patterns, and jsx name lists are not this crate. Dialect lives in `canon`. Runtime helpers live in `@reference-ui/react`.
 8. **Do not allocate strings or take locks on hot lookup paths.**
    `is_token`, `get_token_css_var`, and `get_condition` are called millions of times during batch TSX extraction. Lookups must borrow slices in $O(1)$ time without mutex contention.
 9. **Do not synthesize runtime `css()` or `recipe()` closures.**

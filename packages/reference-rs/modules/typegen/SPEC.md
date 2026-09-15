@@ -26,7 +26,7 @@ Typegen is the pure declaration printer for Reference UI's styling system. It ta
 ### Current Status (2026-09-14)
 
 **Freeze: Crate stub in `packages/reference-rs/modules/typegen`; generator prototype in `packages/reference-core/src/types/generators/`.**  
-The Panda codegen farm (`styled-system/`) is rejected. Public types are moving to Reference UI-owned declarations. Leftover `@reference-ui/styled/types` alias in `SystemStyleObject` and recipe re-exports are scheduled for immediate termination (`TYP-STYLE-01`, `TYP-RECIPE-03`).
+Public types are Reference UI-owned declarations. Leftover `@reference-ui/styled/types` aliases in `SystemStyleObject` and recipe re-exports are scheduled for termination (`TYP-STYLE-01`, `TYP-RECIPE-03`).
 
 | Metric | Status |
 | :--- | :--- |
@@ -48,36 +48,38 @@ The Panda codegen farm (`styled-system/`) is rejected. Public types are moving t
 
 ### Defects & Leftovers to Kill
 
-1. **Panda `SystemStyleObject` alias:** `packages/reference-core/src/types/public/system-style-object.ts` imports and re-exports `SystemStyleObject` directly from `@reference-ui/styled/types`. `generators/strict.ts` falls back to `StyledSystemStyleObject`. Both must be replaced with an owned `SystemStyleObject` constructed from `csstype` and token unions (`TYP-STYLE-01`).
-2. **Panda `recipe` re-exports:** `packages/reference-core/src/types/public/recipe.ts` re-exports recipe interfaces (`RecipeCreatorFn`, `RecipeDefinition`, `RecipeVariantProps`) from `@reference-ui/styled/types/recipe` (`TYP-RECIPE-03`).
+1. **`SystemStyleObject` alias:** `packages/reference-core/src/types/public/system-style-object.ts` imports and re-exports `SystemStyleObject` directly from `@reference-ui/styled/types`. `generators/strict.ts` falls back to `StyledSystemStyleObject`. Both must be replaced with an owned `SystemStyleObject` constructed from `csstype` and token unions (`TYP-STYLE-01`).
+2. **`recipe()` re-exports:** `packages/reference-core/src/types/public/recipe.ts` re-exports recipe interfaces (`RecipeCreatorFn`, `RecipeDefinition`, `RecipeVariantProps`) from `@reference-ui/styled/types/recipe` (`TYP-RECIPE-03`).
 3. **Viewport breakpoint pollution:** `packages/reference-core/src/types/public/conditions.ts` still imports `Conditions` from `@reference-ui/styled/types/conditions` and manually excludes 25 viewport breakpoint keys (`TYP-STYLE-03`).
 
 ---
 
-## 3. Crosswalk: Panda Codegen vs Reference UI Typegen
+## 3. Crosswalk: Panda codegen vs typegen
 
-Panda v1 and v2 treat codegen as an expansive file farm (`styled-system/`). Reference UI rejects the farm, authoring components and runtime in TypeScript and restricting typegen to union printing from the `BaseSystem`.
+Panda treats codegen as a file farm (`styled-system/`). We author
+`css()` / `recipe()` in TypeScript and restrict typegen to unions from
+`BaseSystem`. Vendor paths are the example of the farm we refuse.
 
-| Panda Codegen Job | Reference UI Contract ID | Disposition | Architectural Rationale |
-| :--- | :--- | :--- | :--- |
-| `styled-system/types/system-style-object.d.ts` | `TYP-STYLE-01` | **Replace with owned type** | Kill the `@reference-ui/styled/types` alias. Assemble `SystemStyleObject` from `csstype` + token unions. |
-| `styled-system/types/tokens.d.ts` | `TYP-TOKEN-01`–`06` | **Replace with unions** | Print category literal unions (`Colors`, `Spacing`, `Radii`) directly from `BaseSystem`. No runtime token dictionary. |
-| `styled-system/types/recipes.d.ts` | `TYP-RECIPE-01`–`03` | **Replace with owned types** | Derive variant prop types (`ButtonVariantProps`) from `BaseSystem` recipe tables. Kill Panda recipe imports. |
-| `styled-system/types/conditions.d.ts` | `TYP-STYLE-03` | **Replace with container-first** | Exclude viewport breakpoint keys (`sm`, `md`, `lg`, `smToMd`). Autocomplete container queries and pseudo-states. |
-| `styled-system/jsx/` (`styled.div`, `HTMLStyledProps`) | `TYP-FORBID-02` | **REFUSE (Forbidden)** | Primitives are authored React (`<Div>`, `<Span>`), not generated wrappers. Style prop splitting is driven by `canon`. |
-| `styled-system/patterns/` (`box`, `flex`, `stack`, `grid`) | `TYP-FORBID-03` | **REFUSE (Forbidden)** | Primitives handle layout. `box()` collapses into `css()`. No pattern helper farm. |
-| `styled-system/recipes/*.d.ts` (per-recipe modules) | `TYP-FORBID-04` | **REFUSE (Forbidden)** | Recipes are declared data; `recipe()` runtime is authored TypeScript. No per-recipe module filesystem tree. |
-| `styled-system/tokens/index.mjs` (runtime token dictionary) | `TYP-FORBID-05` | **REFUSE (Forbidden)** | Runtime tokens are CSS variables in `@layer tokens`. Zero runtime JS reflection dictionary. |
-| Atomic utility class names in `.d.ts` (`.mt_2r`, `_mt`) | `TYP-FORBID-01` | **REFUSE (Forbidden)** | Atomic class names are strictly private compiler outputs; users never author or inspect them in types. |
-| Whole-farm codegen AST in Rust (`pandacss_codegen`) | `TYP-FORBID-06` | **REFUSE (Forbidden)** | Typegen takes `BaseSystem` + `canon` and emits string unions. It does not depend on `atomic` or the compiled atom set. |
-| `strictTokens` / `strictPropertyValues` | `TYP-STRICT-01`–`05` | **Replace with owned wrappers** | Composable TypeScript wrappers (`StrictColorProps`, `StrictRadiiProps`, `StrictSpacingProps`) configured via `ui.config.ts`. |
+| Panda codegen job | Our ID | Disposition |
+| :--- | :--- | :--- |
+| `styled-system/types/system-style-object.d.ts` | `TYP-STYLE-01` | **Owned type** from `csstype` + token unions. |
+| `styled-system/types/tokens.d.ts` | `TYP-TOKEN-01`–`06` | Print category unions from `BaseSystem`. |
+| `styled-system/types/recipes.d.ts` | `TYP-RECIPE-01`–`03` | Derive variant props from `BaseSystem` recipe tables. Own `RecipeDefinition`. |
+| `styled-system/types/conditions.d.ts` | `TYP-STYLE-03` | Container-first. No viewport breakpoint keys as defaults. |
+| `styled-system/jsx/` (`styled.div`, `HTMLStyledProps`) | `TYP-FORBID-02` | **Refuse.** Primitives are authored React. |
+| `styled-system/patterns/` (`box`, `flex`, `stack`, `grid`) | `TYP-FORBID-03` | **Refuse.** Layout is primitives + `css()`. |
+| `styled-system/recipes/*.d.ts` | `TYP-FORBID-04` | **Refuse.** `recipe()` is authored TypeScript. |
+| `styled-system/tokens/index.mjs` | `TYP-FORBID-05` | **Refuse.** Tokens are CSS variables in `@layer tokens`. |
+| Atomic class names in `.d.ts` | `TYP-FORBID-01` | **Refuse.** Users never write `.mt_2r`. |
+| Whole-farm AST in Rust (`pandacss_codegen`, `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`) | `TYP-FORBID-06` | **Refuse.** Typegen does not depend on `atomic`. |
+| `strictTokens` / `strictPropertyValues` | `TYP-STRICT-01`–`05` | Owned wrappers via `ui.config.ts`. |
 
 ---
 
 ## 4. API & Generation Freeze Decisions
 
 1. **BaseSystem + Canon as Exclusive Inputs:** Typegen reads token names and categories from `BaseSystem`, and platform/dialect properties from `canon`. It never accesses compiler internal tables, AST leaves, or the compiled `AtomSet`. If `n300` is declared under `colors`, `bg="n300"` typechecks regardless of whether the engine prints `.bg_n300` or `.background_n300`.
-2. **Killing the Panda `SystemStyleObject` Alias:** `SystemStyleObject` must be an owned type definition authored in `packages/reference-core/src/types/` (and printed by typegen in generated packages), composed of `csstype.Properties`, Reference UI token unions, dialect property overrides, and recursive nesting. Re-exporting from `@reference-ui/styled/types` is strictly forbidden.
+2. **Own `SystemStyleObject`:** `SystemStyleObject` must be an owned type definition authored in `packages/reference-core/src/types/` (and printed by typegen in generated packages), composed of `csstype.Properties`, Reference UI token unions, dialect property overrides, and recursive nesting. Re-exporting from `@reference-ui/styled/types` is strictly forbidden.
 3. **Container-Query-First Condition Keys:** `StylePropValue<T>` supports plain `T`, responsive arrays `Array<T | null>`, and condition object maps. Default public condition keys filter out viewport breakpoints (`sm`, `md`, `lg`, etc.) in favor of container query conditions (`@sm`, `@md`), theme modes (`_dark`, `_light`), and pseudo-selectors (`_hover`, `_focusVisible`).
 4. **Author-Owned FontRegistry Interface Augmentation:** Fonts declared via `font()` generate interface augmentations for `FontRegistry`. When empty, `FontProps` falls back to `string` without causing `StyleProps` to collapse to `never`. When populated, `FontProps` narrows `font` to known names and `weight` to weights registered for that specific font.
 5. **Open Autocomplete by Default, Strict on Opt-In:** By default, token properties use `TokenUnion | (string & {})` to provide instant IDE autocomplete while allowing raw CSS escape hatches. When `strict: ['colors', ...]` is configured in `ui.config.ts`, the `(string & {})` escape hatch is stripped, restricting values strictly to declared tokens plus standardized CSS keywords (`white`, `black`, `currentColor`, `inherit`, `transparent`).
@@ -94,7 +96,7 @@ Panda v1 and v2 treat codegen as an expansive file farm (`styled-system/`). Refe
 - `packages/reference-core/src/types/public/fonts.ts`: Implementation of `FontProps` discriminated union and `[FontName] extends [never]` fallback guard.
 - `packages/reference-core/src/types/generators/strict.ts`: Generator orchestrating composition of strict property wrappers based on `ui.config.ts`.
 - `packages/reference-core/src/types/generators/fonts.ts`: Generator compiling `FontDefinition[]` into `FontRegistry` interface declarations.
-- `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`: Panda's codegen architecture demonstrating the failure mode of generating whole file farms (`types/jsx`, `types/pattern`, `types/recipe`, `types/system`) from compiler context.
+- `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`: example of the whole-farm failure mode (`types/jsx`, `types/pattern`, `types/recipe`, `types/system`).
 
 ---
 
@@ -131,8 +133,8 @@ Panda v1 and v2 treat codegen as an expansive file farm (`styled-system/`). Refe
 ### StyleProps & SystemStyleObject (`TYP-STYLE-*`)
 
 - [ ] `TYP-STYLE-01` `[reference]` `[unit]` —  
-  **Typegen should emit a Reference UI-owned SystemStyleObject without importing Panda styled types.**  
-  Inspect the emitted `system-style-object.d.ts` declaration file. Assert `SystemStyleObject` is assembled from `csstype.Properties` and Reference UI token unions, and contains zero imports from `@reference-ui/styled` or `@pandacss/*`. The failure mode is re-exporting `StyledSystemStyleObject` or leaving Panda as an underlying dependency.
+  **Typegen should emit a Reference UI-owned SystemStyleObject.**
+  Inspect the emitted `system-style-object.d.ts` declaration file. Assert `SystemStyleObject` is assembled from `csstype.Properties` and Reference UI token unions, and contains zero imports from `@reference-ui/styled`. The failure mode is re-exporting `StyledSystemStyleObject`.
 
 - [ ] `TYP-STYLE-02` `[reference]` `[unit]` —  
   **Typegen should narrow StyleProps properties using BaseSystem tokens while preserving canonical aliases.**  
@@ -163,8 +165,8 @@ Panda v1 and v2 treat codegen as an expansive file farm (`styled-system/`). Refe
   Declare a recipe with compound variants in `BaseSystem` (e.g. `compoundVariants: [{ size: 'sm', tone: 'loud', css: {...} }]`). Assert the emitted recipe type enforces that compound variant match criteria are subsets of declared variant literal unions. The failure mode is allowing arbitrary string combinations in compound variants without type validation.
 
 - [ ] `TYP-RECIPE-03` `[reference]` `[unit]` —  
-  **Typegen should provide Reference UI-owned RecipeDefinition contracts without re-exporting Panda recipe types.**  
-  Inspect `packages/reference-core/src/types/public/recipe.ts`. Assert `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, and `RecipeVariantProps` are declared as owned TypeScript interfaces, eliminating all imports from `@reference-ui/styled/types/recipe`. The failure mode is re-exporting recipe types from the Panda styled package.
+  **Typegen should provide owned RecipeDefinition contracts.**
+  Inspect `packages/reference-core/src/types/public/recipe.ts`. Assert `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, and `RecipeVariantProps` are declared as owned TypeScript interfaces, eliminating all imports from `@reference-ui/styled/types/recipe`. The failure mode is re-exporting recipe types from the generated styled package.
 
 ---
 
@@ -216,7 +218,7 @@ Panda v1 and v2 treat codegen as an expansive file farm (`styled-system/`). Refe
 
 - [x] `TYP-FORBID-02` `[forbidden]` `[unit]` —  
   **Typegen must never emit a JSX component factory or styled element farm.**  
-  Run typegen on a complete `BaseSystem`. Assert typegen emits zero JSX component wrappers (`styled.div`, `styled.span`, `HTMLStyledProps`, `StyledComponent`, `JsxFactory`). The failure mode is generating Panda's `types/jsx` farm for primitives that already exist as authored React in `@reference-ui/react`.
+  Run typegen on a complete `BaseSystem`. Assert typegen emits zero JSX component wrappers (`styled.div`, `styled.span`, `HTMLStyledProps`, `StyledComponent`, `JsxFactory`). The failure mode is generating a jsx type farm for primitives that already exist as authored React in `@reference-ui/react`.
 
 - [ ] `TYP-FORBID-03` `[forbidden]` `[unit]` —  
   **Typegen must never emit layout pattern helper functions or types.**  

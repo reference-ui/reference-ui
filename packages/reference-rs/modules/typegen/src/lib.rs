@@ -1,8 +1,8 @@
 //! `.d.ts` from a base system plus canon: token unions, recipe variants, font
 //! registry, `StyleProps`. Input is the definition, not the atom set. Users
-//! never write `.mt_2r` in these files. This is not a jsx factory, not a
-//! patterns farm, and not Panda's `styled-system/` codegen. Language (Rust vs
-//! TypeScript) is a later call; the *input* is the base system either way.
+//! never write `.mt_2r` in these files. This is not a jsx factory and not a
+//! patterns farm. Language (Rust vs TypeScript) is a later call; the *input*
+//! is the base system either way.
 
 /// Placeholder for the type printer. Real emission lands when base-system can
 /// answer token names and categories.
