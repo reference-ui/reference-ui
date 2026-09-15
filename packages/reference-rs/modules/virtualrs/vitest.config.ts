@@ -1,12 +1,9 @@
 /**
  * Vitest configuration for the virtualrs module test suite.
  * Configures test cases for AST transformation, import rewriting, and responsive lowering passes.
- * Registers global fixture test generation setup before executing case assertions.
+ * Discovers and executes station test suites and runtime unit specs across virtual transforms.
  */
-import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-
-const setupPath = fileURLToPath(new URL('./tests/globalSetup.ts', import.meta.url))
 
 export default defineConfig({
   test: {
@@ -15,6 +12,5 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'js/**/*.test.ts',
     ],
-    globalSetup: [setupPath],
   },
 })

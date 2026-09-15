@@ -1,12 +1,14 @@
 /**
  * Atomic case helpers. Specs import this module only: compile a case input
  * tree and match wants on the result. Paths resolve under
- * tests/cases/<ATM-*-NN-slug>. The executor owns standing gauges and goldens.
+ * tests/cases/<ATM-*-NN-slug>. This module owns standing gauges and golden extractors.
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { expect } from 'vitest'
 import { compile } from '../js/index.js'
 import type { CompileResult } from '../js/types.js'
+import type { GoldenDefinition, StandingGauge } from '../../../testing/index.js'
 
 export type { CompileResult, Want } from '../js/types.js'
 
@@ -21,6 +23,33 @@ export interface AtomicCaseSpec {
   ids?: string[]
   verify(result: CompileResult): void | Promise<void>
 }
+
+export const atomicGoldens: GoldenDefinition<CompileResult>[] = [
+  {
+    fileName: 'styles.css',
+    format: 'text',
+    extract: r => r.stylesheet || '',
+  },
+  {
+    fileName: 'css.json',
+    format: 'json',
+    extract: r => r.css?.classes ?? {},
+  },
+  {
+    fileName: 'diagnostics.json',
+    format: 'json',
+    extract: r => r.diagnostics ?? [],
+  },
+]
+
+export const atomicGauges: StandingGauge<CompileResult>[] = [
+  result => {
+    expect(result.stylesheet.startsWith(LAYER_PREAMBLE)).toBe(true)
+    for (const className of Object.values(result.css.classes ?? {})) {
+      expect(result.stylesheet).toContain(classSelector(className))
+    }
+  },
+]
 
 export function parseCaseFolder(folderName: string): string | null {
   const match = CASE_FOLDER.exec(folderName)

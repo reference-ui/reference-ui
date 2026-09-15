@@ -171,11 +171,15 @@ impl AtlasAnalyzer {
             })
             .collect::<BTreeMap<_, _>>();
 
-        for module in modules.values() {
-            if module.path.starts_with(&app_root) {
-                let snapshot = states.clone();
-                collect_usage_for_module(module, &modules, &snapshot, &mut states);
-            }
+        let mut app_modules: Vec<&crate::internal::ModuleInfo> = modules
+            .values()
+            .filter(|m| m.path.starts_with(&app_root))
+            .collect();
+        app_modules.sort_by_key(|m| &m.path);
+
+        for module in app_modules {
+            let snapshot = states.clone();
+            collect_usage_for_module(module, &modules, &snapshot, &mut states);
         }
 
         AtlasAnalysisResult {
@@ -191,10 +195,6 @@ impl AtlasAnalyzer {
         let candidates = [
             root.join("..").join(fixture_name).join("src"),
             root.join("..").join("..").join(fixture_name).join("src"),
-            workspace_root
-                .join("tests/atlas/cases/demo_surface/input")
-                .join(fixture_name)
-                .join("src"),
             workspace_root
                 .join("fixtures")
                 .join(fixture_name)

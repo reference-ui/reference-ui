@@ -5,10 +5,8 @@ dist/cargo/
 # Node
 node_modules/
 
-# Generated module test outputs
-modules/tasty/tests/cases/**/output/
-modules/virtualrs/tests/cases/**/output/
-modules/atlas/tests/cases/**/output/
+# Tasty API loads emitted modules from scratch. Committed goldens live in output/.
+modules/tasty/tests/.scratch/
 
 # Generated ts-rs test bindings
 bindings/

@@ -2004,12 +2004,21 @@ importers:
       '@napi-rs/cli':
         specifier: ^3.5.1
         version: 3.5.1(@emnapi/runtime@1.10.0)(@types/node@25.1.0)(node-addon-api@7.1.1)
+      '@types/json-schema':
+        specifier: ^7.0.15
+        version: 7.0.15
       '@webref/css':
         specifier: 8.7.4
         version: 8.7.4(css-tree@3.2.1)
       '@webref/elements':
         specifier: 2.8.0
         version: 2.8.0
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+      json-schema:
+        specifier: ^0.4.0
+        version: 0.4.0
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.28)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.8.2)

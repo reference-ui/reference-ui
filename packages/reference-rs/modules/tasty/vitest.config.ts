@@ -1,12 +1,9 @@
 /**
  * Vitest configuration for the tasty module test suite.
  * Configures test inclusion for type scanning, declaration generation, and projection cases.
- * Registers global fixture initialization setup for end-to-end tasty artifact testing.
+ * Executes declarative station test suites and internal unit specs without global pre-runners.
  */
-import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-
-const setupPath = fileURLToPath(new URL('./tests/globalSetup.ts', import.meta.url))
 
 export default defineConfig({
   test: {
@@ -15,6 +12,5 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'js/**/*.test.ts',
     ],
-    globalSetup: [setupPath],
   },
 })

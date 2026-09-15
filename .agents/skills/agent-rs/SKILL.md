@@ -48,9 +48,10 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **canon** | dictionary membership | Cargo unit tests on generated tables. Generator join is `pnpm canon`. | `pnpm agentrs c canon` |
 | **base-system** | definition artefact | Cargo unit tests. Stub until `compile()` takes a base system. | `pnpm agentrs c base_system` |
 | **typegen** | `.d.ts` unions | Cargo unit tests. Stub until the union printer exists. | `pnpm agentrs c typegen` |
-| **tasty** | scan types, emit modules, assert API | `output/` regenerated on suite setup; `api.test.ts` is intent. | `pnpm agentrs v tasty` |
-| **atlas** | analyze an app, named assertions | `api.test.ts` is the case; `analysis.json` is inspection. | `pnpm agentrs v atlas` |
-| **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. | `pnpm agentrs v styletrace` |
+| **tasty** | scan types, emit modules, assert API | **spec + committed goldens** (`manifest.js`, `chunks.json`). Runtime emit goes to `.scratch/`. | `pnpm agentrs v tasty` |
+| **atlas** | analyze an app, named assertions | **spec + committed** `analysis.json` / `diagnostics.json`; standing schema gauges. | `pnpm agentrs v atlas` |
+| **virtualrs** | rewrite source | **spec + committed** `output/expected.tsx`. | `pnpm agentrs v virtualrs` |
+| **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. `VirtualWorkspace` for node_modules cases. | `pnpm agentrs v styletrace` |
 | **native / runtime** | loader, exports exist | Smoke only. | `pnpm agentrs v runtime` |
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
 | **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
@@ -165,7 +166,7 @@ pnpm agentrs v atomic                                        # runs ONLY atomic 
 pnpm agentrs v tasty                                         # runs ONLY tasty tests
 pnpm agentrs v atlas                                         # runs ONLY atlas tests
 pnpm agentrs v styletrace                                    # runs ONLY styletrace tests
-pnpm agentrs v atomic --update-goldens                       # updates atomic golden snapshots (CLI only, never env var)
+pnpm agentrs v atomic --update-goldens                       # rewrite committed goldens (atomic, atlas, tasty, virtualrs)
 pnpm agentrs v <path-to-test>                                # target specific test file
 pnpm agentrs v -t "<pattern>"                                # filter by describe/it pattern
 pnpm agentrs v --watch                                       # watch mode

@@ -1,0 +1,24 @@
+{
+  "caseName": "ATL-BAR-01-local-namespace",
+  "diagnostics": [
+    {
+      "code": "unresolved-props-type",
+      "message": "Component Button references props type ButtonProps which Atlas could not resolve.",
+      "source": "./components/Button.tsx",
+      "componentName": "Button",
+      "interfaceName": "ButtonProps"
+    },
+    {
+      "code": "unresolved-props-type",
+      "message": "Component UserBadge references props type BadgeProps which Atlas could not resolve.",
+      "source": "./components/UserBadge.tsx",
+      "componentName": "UserBadge",
+      "interfaceName": "BadgeProps"
+    }
+  ],
+  "notes": [
+    "Atlas currently emits usage and interface mapping only.",
+    "Rich prop/member metadata is expected to be resolved by Tasty in an upper layer.",
+    "Use analyzeDetailed() when callers need both partial results and diagnostics."
+  ]
+}

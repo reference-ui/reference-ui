@@ -1,15 +1,12 @@
-# Virtualfs cases
+# VirtualRS Test Cases
 
-Each direct subfolder here is one end-to-end rewrite case for the compiled
-native addon.
+Each direct subfolder here is a standardized test station (`VRT-*`) executed by the shared station runner in `cases.test.ts`.
 
-Each case contains:
+Each station contains:
 
-- `case.json` to choose the native API and relative virtual path.
-- `case.json` may also provide API-specific fields such as `fromName` / `toName`
-	for generic call-rewrite cases.
-- `input.tsx` as the source passed into the addon.
-- `expected.tsx` as the exact rewritten output we expect back.
-- `rewrite.test.ts` to assert the generated output and perf metrics.
+- `case.json`: Declarative configuration selecting the native rewrite API and relative virtual path.
+- `input/input.tsx`: Source code passed directly into the native transform.
+- `output/expected.tsx`: Exact rewritten output verified as a golden artifact.
+- `spec.ts`: Station-specific semantic assertions implementing `StationSpec<VirtualResult>`.
+- `README.md`: Documents station intent and the SPEC ID anchor proved by the test.
 
-Generated artifacts are written into `output/` during Vitest global setup.

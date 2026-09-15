@@ -24,7 +24,7 @@ describe('buildTasty', () => {
     try {
       const built = await buildTasty({
         rootDir: tastyDir,
-        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
+        include: ['cases/TST-EXT-01-external-libs/input/**/*.{ts,tsx}'],
         outputDir,
       })
 
@@ -51,14 +51,14 @@ describe('buildTasty', () => {
     try {
       const first = await session.rebuild('fixture', {
         rootDir: tastyDir,
-        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
+        include: ['cases/TST-EXT-01-external-libs/input/**/*.{ts,tsx}'],
         outputDir,
       })
       const cached = session.get('fixture')
       const ensured = await session.ensureReady('fixture')
       const reused = await session.getOrRebuild('fixture', {
         rootDir: tastyDir,
-        include: ['cases/external_libs/input/**/*.{ts,tsx}'],
+        include: ['cases/TST-EXT-01-external-libs/input/**/*.{ts,tsx}'],
         outputDir,
       })
 
