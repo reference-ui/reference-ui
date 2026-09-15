@@ -71,6 +71,8 @@ export interface StationSuiteConfig<TResult> {
   standingGauges?: StandingGauge<TResult>[]
   /** Mandatory files required inside each station folder */
   requiredFiles?: string[]
-  /** Normalizer applied to text goldens before diffing */
-  normalizeText?(content: string, fileName: string): string
+  /** Normalizer applied to golden text and JSON serialization before diffing or writing */
+  normalizeText?(content: string, fileName: string, context: StationContext): string
+  /** Known-invalid CSS fragments allowed when writing stylesheet goldens */
+  allowedCssProblems?(context: StationContext): readonly string[]
 }

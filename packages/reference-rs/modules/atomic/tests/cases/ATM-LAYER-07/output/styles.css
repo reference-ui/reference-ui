@@ -1,0 +1,16 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root {
+    --colors-n100: #f4f4f5;
+  }
+  [data-panda-theme=dark] {
+    --colors-n100: #18181b;
+  }
+}
+@layer utilities {
+  @container (min-width: 640px) {
+    .sm\:p_1r { padding: var(--spacing-root); }
+    .sm\:c_n100 { color: var(--colors-n100); }
+    .sm\:mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  }
+}

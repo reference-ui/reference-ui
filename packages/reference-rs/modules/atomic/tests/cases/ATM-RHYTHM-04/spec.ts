@@ -11,9 +11,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain(
       'var(--spacing-root) calc(2 * var(--spacing-root))'
     )
-    expect(result.stylesheet).toContain(
-      '1px solid calc(var(--spacing-root) / 3)'
-    )
+    expect(result.stylesheet).toContain('1px solid calc(var(--spacing-root) / 3)')
     expect(result.stylesheet).toContain('10px auto')
   },
 }

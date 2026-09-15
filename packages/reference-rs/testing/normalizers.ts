@@ -1,8 +1,9 @@
 /**
  * Normalization utilities for deterministic test output comparisons.
  * Provides pure functions for standardizing line endings, whitespace,
- * and stripping non-deterministic runtime tokens from compiler artifacts.
- * Used by station runners and golden diff engines across reference-rs suites.
+ * stripping non-deterministic runtime tokens, and rewriting checkout-absolute
+ * paths out of compiler artifacts. Used by station runners and golden diff
+ * engines across reference-rs suites.
  */
 
 const ANSI_PATTERN = /\u001b\[[0-9;]*[A-Za-z]/g
@@ -31,4 +32,19 @@ export function normalizeCodeText(content: string): string {
  */
 export function stripAnsi(content: string): string {
   return content.replace(ANSI_PATTERN, '')
+}
+
+/**
+ * Rewrites an absolute directory prefix out of golden text so snapshots do
+ * not embed a checkout path. Windows separators are folded so a POSIX golden
+ * still matches a Windows run.
+ */
+export function rewriteAbsoluteRoot(content: string, absoluteRoot: string): string {
+  if (!absoluteRoot) {
+    return content
+  }
+  const posix = absoluteRoot.replace(/\\/g, '/')
+  const posixPrefix = posix.endsWith('/') ? posix : `${posix}/`
+  const escapedWin = posixPrefix.replace(/\//g, '\\\\')
+  return content.split(posixPrefix).join('').split(escapedWin).join('')
 }

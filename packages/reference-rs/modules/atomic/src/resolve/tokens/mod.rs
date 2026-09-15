@@ -95,10 +95,19 @@ fn lookup_entry<'a>(prop: &str, path: &str, system: &'a BaseSystem) -> Option<&'
     if let Some(entry) = system.token(path) {
         return Some(entry);
     }
+    let category = token_category_for_prop(prop)?;
+    system.token_in_category(category, path)
+}
+
+fn token_category_for_prop(prop: &str) -> Option<&'static str> {
     if is_color_prop(prop) {
-        system.token(&format!("colors.{path}"))
-    } else {
-        None
+        return Some("colors");
+    }
+    match prop {
+        "borderRadius" | "rounded" => Some("radii"),
+        "fontFamily" | "ff" => Some("fonts"),
+        "animation" | "animationName" => Some("animations"),
+        _ => None,
     }
 }
 
@@ -119,7 +128,7 @@ fn opacity_suffix(opacity: &str) -> bool {
 }
 
 fn format_entry(entry: &TokenEntry, opacity: Option<&str>) -> String {
-    let var_expr = format!("var({})", entry.css_var);
+    let var_expr = format!("var({})", entry.css_var());
     match opacity {
         Some(opacity) => format_color_mix(&var_expr, opacity),
         None => var_expr,
@@ -210,6 +219,12 @@ mod tests {
         );
         assert_eq!(css, "blue.600");
         assert_eq!(diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn test_bare_radii_md_resolves() {
+        assert_eq!(resolve("borderRadius", "md"), "var(--radii-md)");
+        assert_eq!(resolve("borderRadius", "radii.md"), "var(--radii-md)");
     }
 
     #[test]

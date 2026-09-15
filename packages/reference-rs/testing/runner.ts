@@ -59,6 +59,7 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
     standingGauges = [],
     requiredFiles = ['README.md', 'spec.ts', 'input'],
     normalizeText,
+    allowedCssProblems,
   } = config
 
   const updateGoldens = isUpdateGoldensRequested()
@@ -97,7 +98,13 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
             await gauge(result, context)
           }
 
-          diffOrWriteGoldens(context.outputDir, result, goldens, updateGoldens, normalizeText)
+          diffOrWriteGoldens(context.outputDir, result, goldens, {
+            update: updateGoldens,
+            normalizeText: normalizeText
+              ? (content, fileName) => normalizeText(content, fileName, context)
+              : undefined,
+            allowedCssProblems: allowedCssProblems?.(context),
+          })
         })
       })
     }

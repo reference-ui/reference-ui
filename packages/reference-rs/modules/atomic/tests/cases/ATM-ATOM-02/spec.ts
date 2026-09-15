@@ -1,6 +1,7 @@
 /**
- * AtomValue variant station. String, Number, Bool, and resolved Token
- * leaves emit distinct class names and CSS declaration values.
+ * AtomValue variant station. String, Number, and resolved Token leaves
+ * emit distinct class names and CSS declaration values. Bool stays on
+ * the want and must not appear as a CSS declaration value.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -16,7 +17,7 @@ const spec: AtomicCaseSpec = {
     expect(result.css?.classes?.['color:blue.600']).toBe('c_blue.600')
     expect(result.stylesheet).toContain('margin-top: calc(2 * var(--spacing-root));')
     expect(result.stylesheet).toContain('color: var(--colors-blue-600);')
-    expect(result.stylesheet).toContain('border: true;')
+    expect(result.stylesheet).not.toContain('border: true;')
     expect(result.stylesheet).toMatch(/opacity:\s*0\.5;/)
   },
 }

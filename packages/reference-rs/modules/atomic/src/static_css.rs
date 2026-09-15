@@ -34,7 +34,7 @@ fn append_wildcard(system: &BaseSystem, wants: &mut Vec<Want>, prop: &str) {
         return;
     };
     for (key, entry) in system.tokens.iter() {
-        if entry.category == category {
+        if entry.category() == category {
             push_want(wants, prop, authored_path(key, category));
         }
     }
@@ -62,6 +62,7 @@ fn push_want(wants: &mut Vec<Want>, prop: &str, value: &str) {
 mod tests {
     use super::*;
     use base_system::TokenLeaf;
+    use shared::testing::minimal_system;
 
     fn color_dump() -> BaseSystem {
         let mut system = BaseSystem::default();
@@ -121,7 +122,7 @@ mod tests {
     #[test]
     fn empty_bag_is_a_no_op() {
         let mut wants = Vec::new();
-        append_wants(&color_dump(), &mut wants);
+        append_wants(&minimal_system(), &mut wants);
         assert!(wants.is_empty());
     }
 }

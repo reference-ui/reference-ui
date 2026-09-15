@@ -90,7 +90,12 @@ fn compile_one(recipe: &Recipe, session: &mut ResolveSession<'_>) -> CompiledRec
         (variant_classes, compounds)
     };
     CompiledRecipe {
-        table: table::build(&recipe.name, &recipe.class_name, &variant_classes, &compounds),
+        table: table::build(
+            &recipe.name,
+            &recipe.class_name,
+            &variant_classes,
+            &compounds,
+        ),
         rules,
     }
 }

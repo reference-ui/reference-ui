@@ -3,11 +3,7 @@
  * css leaves compile as closed classes in @layer recipes, not utility wants.
  */
 import { expect } from 'vitest'
-import {
-  hasWant,
-  layerBody,
-  type AtomicCaseSpec,
-} from '../../helpers.js'
+import { hasWant, layerBody, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-03',

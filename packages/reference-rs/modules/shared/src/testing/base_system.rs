@@ -1,20 +1,23 @@
-//! In-memory base system fixture generators for Rust compiler crates.
-//! Emits standardized JSON fragments representing design system configurations.
-//! Provides minimal, semantic, recipe, and strict definitions for unit testing.
-//! Eliminates duplicate mock system definitions across atomic, base-system, and typegen.
+//! In-memory `BaseSystem` fixtures shared by Rust compiler crate tests.
+//! JSON is a nested `BaseSystemDump` (`tokens.colors.blue.500.value`), which
+//! `from_json` lowers into indexed `TokenEntry` leaves (`category` + kebab
+//! `cssVar`). Callers should take `minimal_system()` rather than hand-rolling
+//! dumps. `strict` / `semanticTokens` are not Dump fields and are omitted.
 
-/// Returns a minimal system configuration JSON string with bare tokens and default breakpoints.
+use base_system::BaseSystem;
+
+/// Nested dump for a small token table plus default breakpoint widths.
 pub fn minimal_system_json() -> &'static str {
     r##"{
   "tokens": {
     "colors": {
-      "blue.500": "#3b82f6",
-      "red.500": "#ef4444"
+      "blue": { "500": { "value": "#3b82f6" } },
+      "red": { "500": { "value": "#ef4444" } }
     },
     "spacing": {
-      "1": "0.25rem",
-      "2": "0.5rem",
-      "4": "1rem"
+      "1": { "value": "0.25rem" },
+      "2": { "value": "0.5rem" },
+      "4": { "value": "1rem" }
     }
   },
   "breakpoints": {
@@ -25,31 +28,23 @@ pub fn minimal_system_json() -> &'static str {
 }"##
 }
 
-/// Returns a semantic tokens system configuration JSON string with light and dark mode mappings.
+/// Color leaves with `value` plus optional `dark` — not a `semanticTokens` map.
 pub fn semantic_tokens_system_json() -> &'static str {
     r##"{
   "tokens": {
     "colors": {
-      "bg.canvas": {
-        "light": "#ffffff",
-        "dark": "#09090b"
+      "bg": {
+        "canvas": { "value": "#ffffff", "dark": "#09090b" }
       },
-      "fg.default": {
-        "light": "#09090b",
-        "dark": "#fafafa"
+      "fg": {
+        "default": { "value": "#09090b", "dark": "#fafafa" }
       }
-    }
-  },
-  "semanticTokens": {
-    "colors": {
-      "primary": "blue.500",
-      "danger": "red.500"
     }
   }
 }"##
 }
 
-/// Returns a recipes system configuration JSON string with component and slot recipes.
+/// Typed `RecipeDefinition` tables. Dump recipes are not `Record<string, string>`.
 pub fn recipes_system_json() -> &'static str {
     r##"{
   "recipes": {
@@ -72,18 +67,26 @@ pub fn recipes_system_json() -> &'static str {
 }"##
 }
 
-/// Returns a strict system configuration JSON string enforcing strict token validation.
-pub fn strict_system_json() -> &'static str {
-    r##"{
-  "strict": true,
-  "strictTokens": true,
-  "tokens": {
-    "colors": {
-      "neutral.100": "#f5f5f5",
-      "neutral.900": "#171717"
+/// Indexed system from the minimal nested dump.
+pub fn minimal_system() -> BaseSystem {
+    parse_fixture(minimal_system_json(), "minimal_system")
+}
+
+/// Indexed system from the semantic color dump.
+pub fn semantic_tokens_system() -> BaseSystem {
+    parse_fixture(semantic_tokens_system_json(), "semantic_tokens_system")
+}
+
+/// Indexed system from the typed recipe dump.
+pub fn recipes_system() -> BaseSystem {
+    parse_fixture(recipes_system_json(), "recipes_system")
+}
+
+fn parse_fixture(json: &str, name: &str) -> BaseSystem {
+    match BaseSystem::from_json(json) {
+        Ok(system) => system,
+        Err(err) => panic!("{name} fixture must parse: {err}"),
     }
-  }
-}"##
 }
 
 #[cfg(test)]
@@ -91,10 +94,48 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_system_fixtures() {
-        assert!(minimal_system_json().contains("blue.500"));
-        assert!(semantic_tokens_system_json().contains("bg.canvas"));
-        assert!(recipes_system_json().contains("recipes"));
-        assert!(strict_system_json().contains("strictTokens"));
+    fn minimal_system_from_json_succeeds() {
+        let system = BaseSystem::from_json(minimal_system_json())
+            .expect("minimal dump must be a valid BaseSystemDump");
+        assert!(system.is_token("colors.blue.500"));
+        assert_eq!(system.token_category("colors.blue.500"), Some("colors"));
+        assert_eq!(
+            system.token_css_var("colors.blue.500"),
+            Some("--colors-blue-500")
+        );
+        assert_eq!(system.token_light("colors.blue.500"), Some("#3b82f6"));
+        assert!(system.token_dark("colors.blue.500").is_none());
+        assert_eq!(system.breakpoints().width_px("md"), Some("768"));
+        let via_ctor = minimal_system();
+        assert_eq!(via_ctor.token_light("spacing.4"), Some("1rem"));
+        assert_eq!(
+            via_ctor.token_css_var("spacing.4"),
+            system.token_css_var("spacing.4")
+        );
+    }
+
+    #[test]
+    fn semantic_tokens_system_indexes_value_and_dark() {
+        let system = semantic_tokens_system();
+        assert_eq!(system.token_light("colors.bg.canvas"), Some("#ffffff"));
+        assert_eq!(system.token_dark("colors.bg.canvas"), Some("#09090b"));
+        assert_eq!(
+            system.token_css_var("colors.fg.default"),
+            Some("--colors-fg-default")
+        );
+    }
+
+    #[test]
+    fn recipes_system_stores_typed_recipe_tables() {
+        let system = recipes_system();
+        let button = system.get_recipe("button").expect("button recipe");
+        assert_eq!(
+            button.base.get("display").map(String::as_str),
+            Some("inline-flex")
+        );
+        assert_eq!(
+            button.default_variants.get("variant").map(String::as_str),
+            Some("solid")
+        );
     }
 }

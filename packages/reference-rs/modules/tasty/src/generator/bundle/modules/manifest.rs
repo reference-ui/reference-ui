@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use super::chunk_path_for_export_name;
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::emitted::{TastyManifest, TastySymbolIndexEntry, TastySymbolKind};
-use crate::generator::util::to_js_literal;
+use crate::generator::util::to_js_pretty_literal;
 use crate::model::{TsSymbolKind, TypeScriptBundle};
 
 pub(crate) fn emit_manifest_module(
@@ -33,7 +33,7 @@ pub(crate) fn emit_manifest_module(
         symbols_by_name,
         symbols_by_id,
     };
-    let literal = to_js_literal(&manifest)?;
+    let literal = to_js_pretty_literal(&manifest)?;
 
     Ok(format!(
         "export const manifest = {literal};\nexport default manifest;\n"

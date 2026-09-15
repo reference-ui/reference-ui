@@ -2,6 +2,6 @@
   {
     "severity": "warning",
     "message": "Dynamic computed property key encountered in style object",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-06/input/src/computed.ts"
+    "file": "input/src/computed.ts"
   }
 ]

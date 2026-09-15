@@ -10,12 +10,8 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(hasWant(result, 'marginTop', '-1r')).toBe(true)
     expect(hasWant(result, 'left', '-2r')).toBe(true)
-    expect(result.stylesheet).toContain(
-      'margin-top: calc(-1 * var(--spacing-root));'
-    )
-    expect(result.stylesheet).toContain(
-      'left: calc(-2 * var(--spacing-root));'
-    )
+    expect(result.stylesheet).toContain('margin-top: calc(-1 * var(--spacing-root));')
+    expect(result.stylesheet).toContain('left: calc(-2 * var(--spacing-root));')
   },
 }
 

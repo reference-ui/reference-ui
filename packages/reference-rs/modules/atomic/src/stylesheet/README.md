@@ -24,19 +24,26 @@ sheet is a linter. `css()` without a sheet is a ghost-class machine.
 
 Two mechanisms guard the shorthand cascade, not one. `resolve/shorthands`
 expands `borderBottom` so it never resets `border-bottom-color`. This module
-additionally **orders** utilities so a longhand always beats the shorthand it
-belongs to — expansion alone cannot order two colour utilities against each
-other, because `border-color` is itself a shorthand of four longhands.
+**orders** utilities so a longhand always beats the shorthand it belongs to —
+expansion alone cannot order two colour utilities against each other, because
+`border-color` is itself a shorthand of four longhands.
 
-Sort key:
+`cascade.rs` sorts every utility by `CascadeKey`:
 
-1. rule bucket — base, selector-only, then at-rule / mixed
-2. at-rule priority — supports, media, container, print, other; size queries by
-   resolved length and direction
-3. selector priority — pseudo-class priority table
-4. **property priority** —
+1. rule bucket — unconditioned, selector-only, then at-rule / mixed
+2. at-rule kind — supports, media, container, print, other; then size queries
+   by parsed length (`min-width` ascending, `max-width` descending, millipx,
+   `em`/`rem` × 16)
+3. selector rank — `hover` → `focus` → `focusVisible` → `active` → `disabled`
+4. **property priority** — `canon::property_cascade_rank` over existing
+   longhand slices:
    `shorthands-of-shorthands → shorthands → logical longhands → physical longhands`
-5. deterministic ties — property name, value key, rule conditions, class conditions
+5. deterministic ties — property name, value string, condition authored keys
+
+Identical at-rule wrap sequences share one wrapper tree; the sort unit is that
+tree, then the rules inside it. Two at-rule wraps nest in author order
+(`ATM-GHOST-05`). Adjacent identical declaration blocks do not yet
+coalesce into a selector list.
 
 Class names and rule order are **separate concerns**: condition order inside a
 class name is runtime-visible and must be preserved verbatim, while rule order is
@@ -46,8 +53,7 @@ Does not invent declarations. Does not walk source. If a want is
 missing here, extract or resolve lost it.
 
 `name/` stamps `.mt_2r`. `layers/` buckets the text. Dedup already
-happened in `atom`. Adjacent identical declaration blocks may coalesce
-into a selector list — that is CSS size, not a hashed StyleProp object.
+happened in `atom`.
 
 ## Must not
 

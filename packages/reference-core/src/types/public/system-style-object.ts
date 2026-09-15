@@ -1,15 +1,61 @@
-import type { SystemStyleObject as StyledSystemStyleObject } from '@reference-ui/styled/types'
+import type { Properties } from 'csstype'
+import type { StyleConditionKey } from './conditions'
+import type { StylePropValue } from './style-prop'
 
 /**
  * Reference UI's authored style object.
  *
- * This source defaults to an identity over Panda's style object. The `ref sync`
- * packager rewrites this declaration in the consumer's generated
- * `@reference-ui/types` package to wrap it with the strict-token utilities
- * declared in `ui.config.ts` (`strict: ['colors', 'radii', ...]`). When `strict`
- * is omitted or empty, the wrapping is skipped and this identity definition is
- * what consumers see.
+ * Built from `csstype.Properties` mapped through `StylePropValue`, plus the
+ * canon authoring aliases CSS does not spell (`bg`, `p`/`mt`, `w`/`h`,
+ * `flexDir`). Nested condition keys and `&${string}` selectors recurse on this
+ * type. The packager wraps `BaseSystemStyleObject` with `StrictColorProps` /
+ * `StrictRadiiProps` when `ui.config.ts` sets `strict`; do not author that
+ * wrapping here.
  *
- * Do not author the strict wrapping here — it is generated.
+ * `BaseSystemStyleObject` is an interface so `keyof` stays the named CSS
+ * properties. A mapped-type alias intersected with `&${string}` collapses
+ * `keyof` to `string` and strips native React handlers off primitives.
  */
-export type SystemStyleObject = StyledSystemStyleObject
+
+type CssProperties = {
+  [K in keyof Properties]?: StylePropValue<NonNullable<Properties[K]>>
+}
+
+type CanonAliasMap = {
+  m: 'margin'
+  mt: 'marginTop'
+  mb: 'marginBottom'
+  ml: 'marginLeft'
+  mr: 'marginRight'
+  mx: 'marginInline'
+  my: 'marginBlock'
+  p: 'padding'
+  pt: 'paddingTop'
+  pb: 'paddingBottom'
+  pl: 'paddingLeft'
+  pr: 'paddingRight'
+  px: 'paddingInline'
+  py: 'paddingBlock'
+  w: 'width'
+  h: 'height'
+  minW: 'minWidth'
+  minH: 'minHeight'
+  maxW: 'maxWidth'
+  maxH: 'maxHeight'
+  bg: 'background'
+  flexDir: 'flexDirection'
+}
+
+type CanonAliasOverlay = {
+  [K in keyof CanonAliasMap]?: StylePropValue<
+    NonNullable<Properties[CanonAliasMap[K]]>
+  >
+}
+
+export interface BaseSystemStyleObject extends CssProperties, CanonAliasOverlay {}
+
+export type SystemStyleObject = BaseSystemStyleObject & {
+  [K in StyleConditionKey]?: SystemStyleObject
+} & {
+  [K in `&${string}`]?: SystemStyleObject
+}

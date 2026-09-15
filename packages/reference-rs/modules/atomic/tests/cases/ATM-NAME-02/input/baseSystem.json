@@ -1,0 +1,15 @@
+{
+  "name": "condition-prefix",
+  "tokens": {
+    "colors.n300": {
+      "category": "colors",
+      "cssVar": "--colors-n300",
+      "light": "#d4d4d8",
+      "dark": "#3f3f46"
+    }
+  },
+  "conditions": {
+    "_hover": "&:is(:hover, [data-hover])",
+    "_dark": "[data-panda-theme=dark] &"
+  }
+}

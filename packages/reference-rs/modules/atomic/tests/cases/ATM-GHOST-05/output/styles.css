@@ -1,0 +1,8 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  @media (prefers-color-scheme: dark) {
+    @container (min-width: 640px) {
+      .osDark\:sm\:c_red { color: red; }
+    }
+  }
+}

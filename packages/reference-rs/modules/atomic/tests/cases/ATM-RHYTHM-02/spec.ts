@@ -8,12 +8,8 @@ import { type AtomicCaseSpec } from '../../helpers.js'
 const spec: AtomicCaseSpec = {
   id: 'ATM-RHYTHM-02',
   verify(result) {
-    expect(result.stylesheet).toContain(
-      'margin-bottom: calc(2 * var(--spacing-root));'
-    )
-    expect(result.stylesheet).toContain(
-      'padding-top: calc(0.5 * var(--spacing-root));'
-    )
+    expect(result.stylesheet).toContain('margin-bottom: calc(2 * var(--spacing-root));')
+    expect(result.stylesheet).toContain('padding-top: calc(0.5 * var(--spacing-root));')
   },
 }
 

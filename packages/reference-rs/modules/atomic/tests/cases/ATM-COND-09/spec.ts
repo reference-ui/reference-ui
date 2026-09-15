@@ -10,9 +10,7 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(hasWant(result, 'bg', 'blue.500', ['_groupHover'])).toBe(true)
     expect(hasWant(result, 'color', 'red.500', ['_peerFocus'])).toBe(true)
-    expect(
-      hasWant(result, 'mt', '2r', ['&[data-slot=inner]'])
-    ).toBe(true)
+    expect(hasWant(result, 'mt', '2r', ['&[data-slot=inner]'])).toBe(true)
     expect(result.stylesheet).toContain(
       '.groupHover\\:bg_blue\\.500:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)'
     )

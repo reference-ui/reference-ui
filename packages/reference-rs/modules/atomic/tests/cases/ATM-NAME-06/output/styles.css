@@ -1,0 +1,8 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .p_1r { padding: var(--spacing-root); }
+  .\2d -brand-x_red { --brand-x: red; }
+  @container (min-width: 1536px) {
+    .\32 xl\:p_6r { padding: calc(6 * var(--spacing-root)); }
+  }
+}

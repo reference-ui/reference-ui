@@ -2,6 +2,6 @@
   {
     "severity": "error",
     "message": "Unexpected token",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-DIAG-03/input/src/broken.tsx"
+    "file": "input/src/broken.tsx"
   }
 ]

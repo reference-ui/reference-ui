@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module'
-import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join, parse, resolve } from 'node:path'
 import { generate as pandaGenerate, cssgen as pandaCssgen, loadConfigAndCreateContext } from '@pandacss/node'
 import { getConfig, getCwd } from '../../../config/store'
@@ -143,29 +143,59 @@ async function runWithSuppressedPandaLogs<T>(run: () => Promise<T>): Promise<T> 
   }
 }
 
-async function appendNativeCssIfEnabled(outDir: string, cwd: string): Promise<void> {
-  if (process.env.REF_SYSTEM_ENGINE !== 'native') return
-  try {
-    const { compileSync } = await import('@reference-ui/rust/system')
-    const virtualDir = join(outDir, 'virtual')
-    const targetDir = existsSync(virtualDir) ? virtualDir : cwd
-    const start = performance.now()
-    const nativeResult = compileSync({ rootDir: targetDir })
-    const elapsed = (performance.now() - start).toFixed(1)
-    if (nativeResult?.stylesheet) {
-      const stylesPath = join(outDir, 'styled', 'styles.css')
-      if (existsSync(stylesPath)) {
-        const existing = readFileSync(stylesPath, 'utf-8')
-        writeFileSync(stylesPath, `${existing}\n${nativeResult.stylesheet}`, 'utf-8')
-        emitLog(
-          'info',
-          [`Compiled native CSS with reference-rs in ${elapsed}ms (${nativeResult.wants?.length ?? 0} style wants)`],
-          { badge: 'ref', module: 'sync' }
-        )
-      }
-    }
-  } catch (error) {
-    log.debug('panda', 'native system compiler skipped or failed', error)
+function isNativeSystemEngine(): boolean {
+  return process.env.REF_SYSTEM_ENGINE === 'native'
+}
+
+async function writeNativeStylesheet(outDir: string, cwd: string): Promise<void> {
+  const { compileSync } = await import('@reference-ui/rust/system')
+  const virtualDir = join(outDir, 'virtual')
+  const targetDir = existsSync(virtualDir) ? virtualDir : cwd
+  const start = performance.now()
+  const nativeResult = compileSync({ rootDir: targetDir })
+  const elapsed = (performance.now() - start).toFixed(1)
+  const stylesheet = nativeResult?.stylesheet
+  if (typeof stylesheet !== 'string') {
+    throw new Error('Native system compiler produced no stylesheet')
+  }
+
+  const styledDir = join(outDir, 'styled')
+  mkdirSync(styledDir, { recursive: true })
+  writeFileSync(join(styledDir, 'styles.css'), stylesheet, 'utf-8')
+  emitLog(
+    'info',
+    [`Compiled native CSS with reference-rs in ${elapsed}ms (${nativeResult.wants?.length ?? 0} style wants)`],
+    { badge: 'ref', module: 'sync' }
+  )
+}
+
+async function emitCssAndPostprocess(
+  outDir: string,
+  cwd: string,
+  ctx: Awaited<ReturnType<typeof loadConfigAndCreateContext>>,
+): Promise<void> {
+  const runGlobalCssgen = () =>
+    pandaCssgen(ctx, {
+      cwd: outDir,
+      type: 'global',
+      outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
+    })
+
+  if (isNativeSystemEngine()) {
+    await runWithSuppressedPandaLogs(runGlobalCssgen)
+    log.debug('panda', 'cssgen done', outDir)
+    await writeNativeStylesheet(outDir, cwd)
+    return
+  }
+
+  await runWithSuppressedPandaLogs(() => pandaCssgen(ctx, { cwd: outDir }))
+  await runWithSuppressedPandaLogs(runGlobalCssgen)
+  log.debug('panda', 'cssgen done', outDir)
+
+  const config = getConfig()
+  if (config && cwd) {
+    const layerCss = postprocessCss(outDir, config)
+    if (layerCss) updateBaseSystemCss(cwd, layerCss)
   }
 }
 
@@ -192,23 +222,7 @@ export async function runPandaCodegen(): Promise<void> {
   log.debug('panda', 'codegen done', outDir)
 
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
-  await runWithSuppressedPandaLogs(() => pandaCssgen(ctx, { cwd: outDir }))
-  await runWithSuppressedPandaLogs(() =>
-    pandaCssgen(ctx, {
-      cwd: outDir,
-      type: 'global',
-      outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
-    })
-  )
-  log.debug('panda', 'cssgen done', outDir)
-
-  await appendNativeCssIfEnabled(outDir, cwd)
-
-  const config = getConfig()
-  if (config && cwd) {
-    const layerCss = postprocessCss(outDir, config)
-    if (layerCss) updateBaseSystemCss(cwd, layerCss)
-  }
+  await emitCssAndPostprocess(outDir, cwd, ctx)
 }
 
 /**
@@ -230,21 +244,5 @@ export async function runPandaCss(): Promise<void> {
 
   log.debug('panda', 'cssgen')
   const ctx = await loadConfigAndCreateContext({ config: { cwd: outDir }, configPath })
-  await runWithSuppressedPandaLogs(() => pandaCssgen(ctx, { cwd: outDir }))
-  await runWithSuppressedPandaLogs(() =>
-    pandaCssgen(ctx, {
-      cwd: outDir,
-      type: 'global',
-      outfile: join(outDir, 'styled', PANDA_GLOBAL_CSS_FILENAME),
-    })
-  )
-  log.debug('panda', 'cssgen done', outDir)
-
-  await appendNativeCssIfEnabled(outDir, cwd)
-
-  const config = getConfig()
-  if (config && cwd) {
-    const layerCss = postprocessCss(outDir, config)
-    if (layerCss) updateBaseSystemCss(cwd, layerCss)
-  }
+  await emitCssAndPostprocess(outDir, cwd, ctx)
 }

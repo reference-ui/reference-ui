@@ -16,7 +16,9 @@ const spec: AtomicCaseSpec = {
     expect(p?.important).toBe(true)
     expect(result.css?.classes?.['mt:2r']).toBe('mt_2r!')
     expect(result.stylesheet).toContain('.mt_2r\\!')
-    expect(result.stylesheet).toContain('margin-top: calc(2 * var(--spacing-root)) !important;')
+    expect(result.stylesheet).toContain(
+      'margin-top: calc(2 * var(--spacing-root)) !important;'
+    )
   },
 }
 

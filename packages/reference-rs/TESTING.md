@@ -2,11 +2,17 @@
 
 Shared station harness for **`packages/reference-rs`**: `packages/reference-rs/testing`, plus the per-module suites that consume it.
 
-**Landed:** `testing/` library; `atomic`, `atlas`, `tasty`, and `virtualrs` station runners; `globalSetup.ts` gone; `--update-goldens` works for those four. Tasty runtime emit lives in `tests/.scratch/` (gitignored). Committed goldens are `output/manifest.js` + `output/chunks.json`. Virtualrs goldens are committed `output/expected.tsx`.
+> [!IMPORTANT]
+> **Sequencing lives in [PLAN.md](./PLAN.md).** This file is the harness
+> contract (§3) plus landed migration notes (§4). §6 is a pointer back to PLAN,
+> not a second phase plan. If a snippet here and `testing/*.ts` disagree, the
+> TypeScript is right — fix this file.
 
-**Remaining:** styletrace still uses a monolithic `styletrace.test.ts` (it does use `createVirtualWorkspace`); `typegen` `.d.ts` goldens; `canon` / `base-system` stay Cargo-only.
+**Landed:** `testing/` library; `atomic`, `atlas`, `tasty`, `virtualrs`, and `styletrace` station runners; `globalSetup.ts` gone; `--update-goldens` works for those five (`GOLDEN_SUPPORTED_MODULES` in `run.mjs`). Tasty runtime emit lives in `tests/.scratch/` (gitignored). Virtualrs goldens are `output/expected.tsx`. Styletrace goldens are `output/components.json`. `testing/css.ts` validates emitted CSS on every atomic station. Shared `minimal_system()` / `semantic_tokens_system()` / `recipes_system()` parse nested Dump JSON through `BaseSystem::from_json`. `strict_system()` was dropped — `strict` is not a Dump field.
 
-§3 is the contract. §2 and §4–7 below are the original blueprint; several “current state” rows there are already done.
+**Remaining:** `typegen` `.d.ts` goldens (PLAN Phase 4); `canon` / `base-system` stay Cargo-only. Styletrace `node_builtin` / `react_reexport` still use TS helpers plus Rust string fixtures (not the four promoted package stations).
+
+§3 is the contract. §4 is historical blueprint with current-state notes. Do not implement §6.
 
 ---
 
@@ -31,10 +37,10 @@ Extract the Era 4 station pattern into a reusable, zero-overhead test library (*
 | Module | Test Model Today | Test Files / Fixtures | Flaws & Antipatterns | Target Architecture |
 | :--- | :--- | :--- | :--- | :--- |
 | **`atomic`** | Station pattern (`cases.test.ts`) | 1 runner, ID-named `ATM-*` stations (`tests/cases/ATM-COND-04`) | Shared `testing` runner. Folder name is the SPEC ID. | Keep 1:1 ID folders; no slug suffixes. |
-| **`atlas`** | Decentralized Vitest + `globalSetup` | 4 root tests, 14 `api.test.ts`, 15 case folders | **Phantom Goldens**: `globalSetup` writes `output/analysis.json` every run; nothing asserts it. 4 root tests duplicate assertions on `demo_surface` only. `dynamic_values` has input and no `api.test.ts`. Stale `tests/atlas` path in Rust. | Single `cases.test.ts`, `ATL-*` stations (including `dynamic_values`), real committed `analysis.json` goldens, standing component schema gauges. |
-| **`tasty`** | 38 `api.test.ts` files + `globalSetup` | 38 separate `api.test.ts` files, 38 case folders | **In-test `npm install`**: synchronous `npm install` in setup. Eagerly compiles 38 cases for 1 test. Only snapshots 1st lexicographical chunk. | Single `cases.test.ts`, `TST-*` stations, on-demand compilation per station, full multi-chunk coverage. |
-| **`virtualrs`** | 15 `rewrite.test.ts` + `globalSetup` | 15 identical 3-line files, 15 case folders | Inverted setup: `globalSetup` writes `result.tsx` before tests start. Entire suite crashes if 1 setup fails. Exact `toBe` string comparison breaks on trivial whitespace. | Single `cases.test.ts`, `VRT-*` stations, in-memory execution, normalized code diffs. |
-| **`styletrace`** | Monolithic `styletrace.test.ts` + temp dirs | 1 test file, 14 case folders | 4 on-disk cases (`default_export_package`, `export_star_package`, `node_modules_wrapper`, `subpath_package`) are unused; the same scenarios run from in-memory helper fixtures. Mock packages are duplicated between TS (`helpers.ts`) and Rust (`tracing.rs`). | Single `cases.test.ts`, `STY-*` stations, shared `VirtualWorkspace` helper. |
+| **`atlas`** | Station runner (`cases.test.ts`) | `ATL-*` stations, committed `analysis.json` / `diagnostics.json` | Migrated. | Keep station runner. |
+| **`tasty`** | Station runner (`cases.test.ts`) | `TST-*` stations; runtime emit in `.scratch/` | Migrated. Committed goldens are `manifest.js` + `chunks.json`. | Keep station runner. |
+| **`virtualrs`** | Station runner (`cases.test.ts`) | `VRT-*` stations, committed `output/expected.tsx` | Migrated. | Keep station runner. |
+| **`styletrace`** | Station runner (`cases.test.ts`) | 14 snake_case stations, `output/components.json` | Four package scenarios promoted (`input/packages/` remapped to `node_modules/`). Folder names kept (not `STY-*`). `node_builtin` / `react_reexport` remain non-station fixtures. | Keep station runner; do not reintroduce in-memory copies of the four package cases. |
 | **`canon`** | Cargo unit tests (`src/tests.rs`) | 10 generated unit tests, generator script | Static slices tested in Rust. Generator is already fail-closed (`pnpm canon`). | Keep pure Cargo; do not invent a `--check` flag. |
 | **`base-system`** | Cargo unit tests (`src/lib.rs`) | 1 stub unit test | Pending 42 SPEC cases; needs in-memory fixture generators. | Shared in-memory `BaseSystem` fixtures across Rust crates. |
 | **`typegen`** | Cargo unit tests (`src/lib.rs`) | 1 stub unit test, core prototypes | Will emit `.d.ts` declarations; needs golden snapshot tests and `tsc --noEmit` validation. | Golden `.d.ts` snapshots + TypeScript compilation seam test. |
@@ -125,154 +131,48 @@ export interface StationSuiteConfig<TResult> {
   standingGauges?: StandingGauge<TResult>[]
   /** Mandatory files required inside each station folder */
   requiredFiles?: string[]
-  /** Normalizer applied to text goldens before diffing */
-  normalizeText?(content: string, fileName: string): string
+  /** Normalizer applied to golden text and JSON serialization before diffing or writing */
+  normalizeText?(content: string, fileName: string, context: StationContext): string
+  /** Known-invalid CSS fragments allowed when writing stylesheet goldens */
+  allowedCssProblems?(context: StationContext): readonly string[]
 }
 ```
 
 ### 3.2 The Generic Station Runner (`runner.ts`)
 
-`createStationSuite` replaces hand-rolled loops and `globalSetup.ts` with a single, declarative function call:
+`createStationSuite` is the only loop. Source of truth: `testing/runner.ts`. Lifecycle per station:
 
-```ts
-export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>): void {
-  const {
-    suiteName,
-    casesDir,
-    folderPattern = /^([A-Z]+-[A-Z]+-\d{2}|[a-zA-Z0-9_-]+)-.+$/,
-    compile,
-    goldens,
-    standingGauges = [],
-    requiredFiles = ['README.md', 'spec.ts', 'input'],
-    normalizeText,
-  } = config
+1. Hygiene (`README.md`, `spec.ts`, `input/` by default).
+2. Load `spec.ts`; `spec.id` must equal capture group 1 of `folderPattern` (or the folder name if there is no group).
+3. `compile(context)` on demand.
+4. `spec.verify(result, context)`.
+5. Standing gauges — they run **after** verify, so an exact `toEqual` in the spec will fail first.
+6. `diffOrWriteGoldens(..., { update, normalizeText, allowedCssProblems })`.
 
-  const updateGoldens = isUpdateGoldensRequested()
-
-  function discoverStations(): string[] {
-    if (!fs.existsSync(casesDir)) return []
-    return fs
-      .readdirSync(casesDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .filter((name) => folderPattern.test(name))
-      .sort()
-  }
-
-  describe(suiteName, () => {
-    const stations = discoverStations()
-
-    it(`discovers at least one station under ${path.basename(casesDir)}`, () => {
-      expect(stations.length).toBeGreaterThan(0)
-    })
-
-    for (const stationName of stations) {
-      describe(stationName, () => {
-        it(`${stationName} compiles, passes gauges, and matches goldens`, async () => {
-          const match = folderPattern.exec(stationName)
-          const expectedId = match ? match[1]! : stationName
-          const stationDir = path.join(casesDir, stationName)
-          const context: StationContext = {
-            caseName: stationName,
-            caseId: expectedId,
-            caseDir: stationDir,
-            inputDir: path.join(stationDir, 'input'),
-            outputDir: path.join(stationDir, 'output'),
-          }
-
-          // 1. Validate station folder structural hygiene
-          for (const req of requiredFiles) {
-            expect(
-              fs.existsSync(path.join(stationDir, req)),
-              `Missing required station asset '${req}' in ${stationName}`
-            ).toBe(true)
-          }
-
-          // 2. Dynamically import station specification
-          const specModule = await import(path.join(stationDir, 'spec.ts'))
-          const spec = specModule.default as StationSpec<TResult>
-          expect(spec?.id, `spec.id '${spec?.id}' must match station prefix '${expectedId}'`).toBe(expectedId)
-          expect(typeof spec?.verify, 'spec.verify must be an executable function').toBe('function')
-
-          // 3. Compile case on-demand in memory
-          const result = await compile(context)
-
-          // 4. Run station semantic verification
-          await spec.verify(result, context)
-
-          // 5. Enforce universal standing gauges
-          for (const gauge of standingGauges) {
-            await gauge(result, context)
-          }
-
-          // 6. Assert or update committed goldens
-          diffOrWriteGoldens(context.outputDir, result, goldens, updateGoldens, normalizeText)
-        })
-      })
-    }
-  })
-}
-```
+`normalizeText` on the suite config takes `(content, fileName, context)`. The runner wraps it to the two-argument form `goldens.ts` expects.
 
 ### 3.3 The Golden Snapshot Engine (`goldens.ts`)
 
-Unified handling of `--update-goldens` (CLI). `run.mjs` already forwards that flag as `UPDATE_GOLDENS=1` into Vitest; tests may read either. Authors update goldens through the CLI, not by exporting the env var by hand.
-- **Deterministic Serialization**: JSON is 2-space indent with a trailing newline. Key order is whatever `extract()` returns — keep that shape stable. Do not sort keys in the harness unless a module’s payload is insertion-order-unstable.
-- **Zero Silent Overwrites**: Output files are never rewritten during normal test runs. Updates are strictly opt-in via CLI.
-- **Clear Baseline Diagnostics**: If `output/` is missing, the test fails with: `"Golden output directory missing. Run 'pnpm agentrs v <module> --update-goldens' to initialize."`
-- **Native File Formats**: Output files are pure `.css`, `.json`, `.tsx`, or `.d.ts`—never opaque Vitest `.snap` serializations.
+Unified handling of `--update-goldens` (CLI). `run.mjs` forwards that flag as `UPDATE_GOLDENS=1`. Authors update goldens through the CLI, not by exporting the env var by hand.
+
+- **Deterministic serialization**: JSON is 2-space indent with a trailing newline. Key order is whatever `extract()` returns.
+- **Zero silent overwrites**: files are never rewritten during normal runs.
+- **CSS write guard**: stylesheet goldens go through `assertWritableCss` before disk write (`testing/css.ts`). Quarantined fragments pass via `allowedCssProblems`.
+- **Native file formats**: `.css`, `.json`, `.tsx`, `.d.ts` — never Vitest `.snap`.
 
 ```ts
-export function isUpdateGoldensRequested(): boolean {
-  return process.argv.includes('--update-goldens') || process.env.UPDATE_GOLDENS === '1'
+export interface GoldenDiffOptions {
+  update: boolean
+  normalizeText?: (content: string, fileName: string) => string
+  allowedCssProblems?: readonly string[]
 }
 
 export function diffOrWriteGoldens<TResult>(
   outputDir: string,
   result: TResult,
   goldens: GoldenDefinition<TResult>[],
-  update: boolean,
-  normalizeText?: (content: string, fileName: string) => string
-): void {
-  if (update) {
-    fs.mkdirSync(outputDir, { recursive: true })
-    for (const g of goldens) {
-      const filePath = path.join(outputDir, g.fileName)
-      const value = g.extract(result)
-      const serialized =
-        g.format === 'json'
-          ? JSON.stringify(value ?? {}, null, 2) + '\n'
-          : String(value ?? '')
-      fs.writeFileSync(filePath, serialized, 'utf-8')
-    }
-    return
-  }
-
-  expect(
-    fs.existsSync(outputDir),
-    `Golden output directory missing: ${outputDir}. Run with '--update-goldens' to generate.`
-  ).toBe(true)
-
-  for (const g of goldens) {
-    const filePath = path.join(outputDir, g.fileName)
-    expect(fs.existsSync(filePath), `Missing golden artifact: ${g.fileName}`).toBe(true)
-    const raw = fs.readFileSync(filePath, 'utf-8')
-
-    if (g.format === 'json') {
-      const actual = g.extract(result) ?? {}
-      const expected = JSON.parse(raw)
-      expect(actual).toEqual(expected)
-    } else {
-      let actual = String(g.extract(result) ?? '')
-      let expected = raw
-      if (normalizeText) {
-        actual = normalizeText(actual, g.fileName)
-        expected = normalizeText(expected, g.fileName)
-      }
-      expect(actual).toBe(expected)
-    }
-  }
-}
+  options: GoldenDiffOptions
+): void
 ```
 
 ### 3.4 Virtual Workspace Builder (`workspace.ts`)
@@ -292,6 +192,10 @@ Solves the `node_modules` problem across `styletrace`, `atlas`, and `tasty`:
 ### 3.5 Normalizers (`normalizers.ts`)
 
 Small, named helpers used by `normalizeText` and JSON `extract()` — whitespace/CRLF, unstable hashes/IDs, and anything else a module must strip before a golden diff. Keep them here so modules do not each invent a trim function.
+
+### 3.6 CSS grammar oracle (`css.ts`)
+
+`validateCss(sheet)` parses with css-tree and walks declarations against formal grammar. `assertWritableCss` is the golden-writer guard: `--update-goldens` cannot bless a stylesheet that does not parse or match, unless the fragment is on `allowedCssProblems`. `unexpectedCssProblems` / `staleCssAllowlist` are the quarantine pair — empty a slot by fixing the compiler, not by editing the list. Atomic's station gauges call this; the harness itself has no atomic knowledge.
 
 ---
 
@@ -474,20 +378,14 @@ createStationSuite<CompileResult>({
 
 ### 4.5 `modules/styletrace` (Clean Dead Cases & Shared Workspace)
 
-**Current State**:
-- 4 on-disk case folders (`default_export_package`, `export_star_package`, `node_modules_wrapper`, `subpath_package`) are unused. Tests for those scenarios build temp trees via helpers (`createDefaultExportPackageFixture`, …), not `traceCase('…')`.
-- Duplicated inline package strings in TypeScript (`helpers.ts`) and Rust (`src/tests/tracing.rs`).
-- Ad-hoc `mkdtemp` logic.
+**Current State** *(landed)*:
+- Station runner at `tests/cases.test.ts` discovers `tests/cases/<id>/` (`direct_wrapper`, … plus the four promoted package stations). Folder name is the spec id.
+- The four package/node_modules scenarios are committed under `input/` with mock libraries in `input/packages/` (git cannot track `node_modules/`). Compile remaps that tree through `createVirtualWorkspace`.
+- `ScratchDir` already aliases `shared::testing::ScratchWorkspace`; no second RAII type.
+- Unused-disk-folder claim in older drafts was stale — those four folders were already gone from `tests/cases/` before this migration.
 
-**Target State**:
-1. **Prune Unused Folders or Promote Them**:
-   - Either delete the 4 unused disk cases, or point the station runner at them and drop the duplicate in-memory fixtures. Do not leave both.
-2. **Adopt Shared `VirtualWorkspace`**:
-   - Refactor `helpers.ts:createRuntimeFixture` to use `packages/reference-rs/testing/workspace.ts`.
-3. **Station Runner**:
-   - Group static cases into a station runner checking `output/components.json` (`['Card', 'Button']`).
-4. **Rust RAII Unification**:
-   - Move `styletrace::ScratchDir` into `packages/reference-rs/shared/src/testing/workspace.rs` so Rust tests across crates use a single, shared RAII scratch directory helper.
+**Target State** *(landed 2026-09-15)*:
+Promoted the four package scenarios; station runner checks `output/components.json`; `createRuntimeFixture` uses `createVirtualWorkspace`; `ScratchDir` aliases `ScratchWorkspace`. Leftover: `node_builtin` / `react_reexport` still exist as TS helpers and Rust string fixtures (`fixtures.test.ts` / `tracing.rs`). Do not reintroduce in-memory copies of the four promoted package cases.
 
 ---
 
@@ -496,98 +394,40 @@ createStationSuite<CompileResult>({
 **Current State**:
 - Pure Rust suites verified via `cargo test` (`pnpm agentrs c <crate>`).
 - Zero N-API bindings today.
+- Shared in-memory fixtures live in `shared/src/testing/base_system.rs` and return a lowered `BaseSystem` from nested Dump JSON (`from_json`). `strict_system()` is omitted because `strict` / `strictTokens` are not Dump fields.
 
 **Target State**:
-1. **Shared In-Memory `BaseSystem` Fixtures (`shared/src/testing/base_system.rs`)**:
-   - Provide standard in-memory test systems for Rust unit tests:
-     - `minimal_system()`: Bare tokens and default breakpoints.
-     - `semantic_tokens_system()`: Color modes, light/dark aliases, and opacity layers.
-     - `recipes_system()`: Declared component and slot recipes.
-     - `strict_system()`: Token category enforcement without string fallbacks.
-   - Eliminates duplicate JSON fragment construction across `base-system`, `typegen`, and `atomic`.
-2. **`typegen` Golden `.d.ts` Harness**:
-   - When the declaration printer is implemented, establish a golden runner that writes emitted `.d.ts` blocks to `tests/goldens/` and verifies them with `tsc --noEmit` against consumer fixtures.
+1. **Shared In-Memory `BaseSystem` Fixtures** *(landed)*:
+   - `minimal_system()`, `semantic_tokens_system()`, `recipes_system()` return a lowered `BaseSystem`. Nested Dump JSON (`tokens.colors.blue.500.value`), not the flat TokenEntry station maps.
+   - `strict_system()` was **not** added: `strict` / `strictTokens` / `semanticTokens` are unknown Dump keys (`deny_unknown_fields`).
+2. **`typegen` Golden `.d.ts` Harness** *(PLAN Phase 4)*:
+   - When the declaration printer is implemented, golden `.d.ts` plus `tsc --noEmit` against consumer fixtures.
 
 ---
 
 ## 5. Toolchain & CLI Updates (`run.mjs`)
 
-Currently, `.agents/skills/agent-rs/scripts/run.mjs` (`runVitest`) hardcodes an exclusivity check:
+`--update-goldens` is allowed for station harnesses only:
+
 ```javascript
-// Validation: --update-goldens is only valid for atomic fixtures
-if (hasUpdateGoldens) {
-  if (testFilter && testFilter !== 'atomic' && testFilter !== 'system' && KNOWN_MODULES.has(testFilter)) {
-    console.error(`--update-goldens is only supported for the 'atomic' harness.`)
-    return 1
-  }
-}
+const GOLDEN_SUPPORTED_MODULES = new Set([
+  'atomic',
+  'system',
+  'virtualrs',
+  'virtualfs',
+  'atlas',
+  'tasty',
+  'styletrace',
+])
 ```
 
-### Required Update
-Lift this restriction to permit any module implementing the station golden protocol:
-```javascript
-const GOLDEN_SUPPORTED_MODULES = new Set(['atomic', 'virtualrs', 'atlas', 'tasty'])
-if (hasUpdateGoldens && testFilter && !GOLDEN_SUPPORTED_MODULES.has(testFilter)) {
-  console.error(`--update-goldens is not supported for '${testFilter}'. Supported modules: ${[...GOLDEN_SUPPORTED_MODULES].join(', ')}`)
-  return 1
-}
-```
-`UPDATE_GOLDENS: '1'` is already forwarded when the CLI flag is present. Do not add a second path. The author-facing contract stays `pnpm agentrs v <module> --update-goldens`.
+`UPDATE_GOLDENS: '1'` is forwarded when the CLI flag is present. Do not add a second path. The author-facing contract stays `pnpm agentrs v <module> --update-goldens`.
 
 ---
 
-## 6. Phased Execution & Subagent Orchestration Plan
+## 6. Sequencing
 
-```mermaid
-flowchart TD
-    P1[Phase 1: Shared testing Library & atomic Refactor] --> P2[Phase 2: virtualrs Migration]
-    P1 --> P3[Phase 3: atlas Migration]
-    P2 --> P4[Phase 4: tasty Migration]
-    P3 --> P4
-    P4 --> P5[Phase 5: styletrace & Shared Rust Fixtures]
-```
-
-### Phase 1: Foundation — `packages/reference-rs/testing`
-- **Scope**:
-  - Implement `testing/types.ts`, `testing/runner.ts`, `testing/goldens.ts`, `testing/workspace.ts`, `testing/normalizers.ts`, `testing/index.ts`.
-  - Refactor `modules/atomic/tests/cases.test.ts` and `helpers.ts` to consume the shared runner.
-  - Delete leftover `AT-*` and slug case folders under `atomic/tests/cases/`.
-  - Lift the `--update-goldens` exclusivity check in `run.mjs` so station modules other than `atomic` can use it. Env forwarding is already in place.
-- **Verification**: `pnpm agentrs v atomic`, `pnpm agentrs q`.
-
-### Phase 2: `modules/virtualrs` Migration
-- **Scope**:
-  - Delete 15 `rewrite.test.ts` files and `assertCase.ts`.
-  - Delete `globalSetup.ts` and update `vitest.config.ts`.
-  - Standardize case folder IDs (`VRT-CSS-*`, `VRT-CVA-*`, `VRT-RESP-*`) and add minimal `spec.ts`.
-  - Implement `modules/virtualrs/tests/cases.test.ts` calling `createStationSuite()`.
-- **Verification**: `pnpm agentrs v virtualrs`, `pnpm agentrs v virtualrs --update-goldens`.
-
-### Phase 3: `modules/atlas` Migration
-- **Scope**:
-  - Delete `atlas/tests/globalSetup.ts` and remove from `vitest.config.ts`.
-  - Standardize case folder IDs (`ATL-*`) and add `spec.ts`.
-  - Add universal standing gauges for component/prop schema integrity.
-  - Commit real `analysis.json` and `diagnostics.json` goldens across all 15 stations.
-  - Remove duplicate test blocks in `atlas.test.ts`.
-  - Remove stale `tests/atlas` candidate path in `modules/atlas/src/analyzer.rs`.
-- **Verification**: `pnpm agentrs v atlas`, `pnpm agentrs v atlas --update-goldens`, `pnpm agentrs q`.
-
-### Phase 4: `modules/tasty` Migration
-- **Scope**:
-  - Remove synchronous `npm install` from test setup.
-  - Convert 38 `api.test.ts` files into lightweight `spec.ts` files.
-  - Implement on-demand compilation per station inside `createStationSuite()`.
-  - Replace `__snapshots__/*.snap` with committed goldens covering all generated chunks.
-  - Decouple `js/index.test.ts` from `cases/external_libs/output`.
-- **Verification**: `pnpm agentrs v tasty`, `pnpm agentrs v tasty --update-goldens`, `pnpm agentrs q`.
-
-### Phase 5: `modules/styletrace` & Shared Rust Infrastructure
-- **Scope**:
-  - Resolve the 4 unused styletrace disk cases (delete or promote; not both with the in-memory fixtures).
-  - Unify `ScratchDir` / `TempDir` into `shared::testing::ScratchWorkspace` in Rust.
-  - Implement shared in-memory `BaseSystem` fixtures (`minimal_system()`, `semantic_tokens_system()`, `recipes_system()`) in Rust for `base-system`, `typegen`, and `atomic`.
-- **Verification**: `pnpm agentrs t` (full dev loop across all crates, Vitest suites, and quality gate).
+Superseded. The live sequence is [PLAN.md](./PLAN.md) §4. Harness migration (this document's old Phases 1–5) is done except typegen `.d.ts` goldens, which is PLAN Phase 4.
 
 ---
 
@@ -597,7 +437,7 @@ The test harness modernization is complete when:
 1. `packages/reference-rs/testing` is the single source of truth for case station discovery, standing gauges, and golden management.
 2. Zero modules use `globalSetup.ts` to pre-generate test files on disk.
 3. Over 60 duplicate boilerplate test files (`*.test.ts`) are eliminated.
-4. `pnpm agentrs v <module> --update-goldens` works identically across all station-enabled harnesses (`atomic`, `virtualrs`, `atlas`, `tasty`).
+4. `pnpm agentrs v <module> --update-goldens` works identically across station-enabled harnesses (`atomic`, `virtualrs`, `atlas`, `tasty`, `styletrace`).
 5. Every station folder has a committed `README.md` station card linking intent to `SPEC.md`.
 6. Full test suite verification passes:
    ```bash

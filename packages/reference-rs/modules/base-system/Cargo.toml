@@ -7,5 +7,6 @@ description = "Portable design-system definition consumed by atomic and typegen"
 
 [dependencies]
 indexmap = { workspace = true, features = ["serde"] }
+rustc-hash = "2"
 serde = { workspace = true }
-serde_json = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }

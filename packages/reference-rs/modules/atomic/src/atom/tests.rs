@@ -4,7 +4,7 @@
 
 use smallvec::smallvec;
 
-use super::{Atom, AtomSet, AtomValue, Want};
+use super::{Atom, AtomSet, AtomValue, CssValue, Want};
 
 #[test]
 fn test_want_creation_and_serialization() {
@@ -39,6 +39,12 @@ fn test_atom_value_display_and_equality() {
     assert_eq!(AtomValue::Number("100".into()).to_string(), "100");
     assert_eq!(AtomValue::Bool(true).to_string(), "true");
     assert_eq!(AtomValue::Null.to_string(), "null");
+    assert!(AtomValue::Bool(true).into_css_value().is_none());
+    assert!(AtomValue::Null.into_css_value().is_none());
+    assert_eq!(
+        AtomValue::String("2r".into()).into_css_value(),
+        Some(CssValue::String("2r".into()))
+    );
 
     let val = AtomValue::String("red".into());
     let json = serde_json::to_string(&val).expect("serialize value");
@@ -50,20 +56,20 @@ fn test_atom_value_display_and_equality() {
 fn test_atom_creation_accessors_and_hashing() {
     let atom1 = Atom::new(
         "mt".into(),
-        AtomValue::String("2r".into()),
+        CssValue::String("2r".into()),
         smallvec![],
         false,
     );
 
     assert_eq!(atom1.prop(), "mt");
-    assert_eq!(atom1.value(), &AtomValue::String("2r".into()));
+    assert_eq!(atom1.value(), &CssValue::String("2r".into()));
     assert!(atom1.conditions().is_empty());
     assert!(!atom1.important());
     assert_ne!(atom1.hash(), 0);
 
     let atom2 = Atom::new(
         "mt".into(),
-        AtomValue::String("2r".into()),
+        CssValue::String("2r".into()),
         smallvec![],
         false,
     );
@@ -72,7 +78,7 @@ fn test_atom_creation_accessors_and_hashing() {
 
     let atom_diff = Atom::new(
         "mt".into(),
-        AtomValue::String("4r".into()),
+        CssValue::String("4r".into()),
         smallvec![],
         false,
     );
@@ -88,19 +94,19 @@ fn test_atom_set_dedup_and_iteration() {
 
     let atom1 = Atom::new(
         "mt".into(),
-        AtomValue::String("2r".into()),
+        CssValue::String("2r".into()),
         smallvec![],
         false,
     );
     let atom2 = Atom::new(
         "mt".into(),
-        AtomValue::String("2r".into()),
+        CssValue::String("2r".into()),
         smallvec![],
         false,
     );
     let atom3 = Atom::new(
         "bg".into(),
-        AtomValue::String("n300".into()),
+        CssValue::String("n300".into()),
         smallvec![],
         false,
     );

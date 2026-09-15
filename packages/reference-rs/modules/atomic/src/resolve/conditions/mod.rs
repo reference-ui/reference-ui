@@ -1,61 +1,79 @@
 //! Join point for the `_` catalog and `&` selector application.
-//! Takes a `when` token and emits `LoweredCondition` plus a class-name segment
-//! so stylesheet and `css()` share one wrap. Named `_` keys ask `BaseSystem`
-//! first. Presets remain only for keys the utterance does not list. Named
-//! breakpoint tokens lower to `@container (min-width: Npx)` from the scale.
+//! Lowers an authored `when` string once into `When`, which carries the class
+//! segment and the wrap together. Named `_` keys ask `BaseSystem` first; presets
+//! remain only for keys the utterance does not list. Named breakpoint tokens
+//! lower to `@container (min-width: Npx)` from the scale. Unknown keys return
+//! `LoweredWhen::Unknown` so resolve can warn and drop the want.
 
 pub mod pseudoprops;
 pub mod pseudoselectors;
 
+use crate::atom::When;
 use base_system::BaseSystem;
 
-/// Semantic classification of a lowered condition wrap.
+/// Result of parsing one authored condition string.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LoweredCondition {
-    Media(String),
-    Container(String),
-    Selector(String),
+pub enum LoweredWhen {
+    /// `base` is not a prefix; skip it.
+    Skip,
+    /// Catalog, breakpoint, at-rule, or `&` selector.
+    Known(When),
+    /// Unrecognised `_` key or leftover token. Not a wrap. Not a name segment.
+    Unknown,
 }
 
-/// Class name segment for a `when` token. `base` is not a prefix.
-pub fn finalize_condition_name(raw: &str, system: &BaseSystem) -> Option<String> {
+/// Lower a `when` token into a `When`, or skip / refuse it.
+pub fn lower_when(raw: &str, system: &BaseSystem) -> LoweredWhen {
     if raw == "base" {
+        return LoweredWhen::Skip;
+    }
+    if let Some(when) = named_condition(raw, system) {
+        return LoweredWhen::Known(when);
+    }
+    if let Some(when) = named_breakpoint(raw, system) {
+        return LoweredWhen::Known(when);
+    }
+    if let Some(when) = at_rule_or_ampersand(raw) {
+        return LoweredWhen::Known(when);
+    }
+    LoweredWhen::Unknown
+}
+
+fn named_condition(raw: &str, system: &BaseSystem) -> Option<When> {
+    let preset = named_wrap(raw, system)?;
+    Some(When::from_catalog(raw.into(), preset))
+}
+
+fn named_breakpoint(raw: &str, system: &BaseSystem) -> Option<When> {
+    if !is_named_breakpoint(raw, system) {
         return None;
     }
-    if let Some(name) = pseudoprops::class_segment(raw) {
-        return Some(name);
-    }
-    if let Some(name) = pseudoselectors::class_segment(raw) {
-        return Some(name);
-    }
-    if is_named_breakpoint(raw, system) {
-        Some(raw.to_string())
-    } else {
-        None
+    match system.breakpoints().width_px(raw) {
+        Some(width) => {
+            let query = format!("@container (min-width: {width}px)");
+            Some(When::breakpoint(raw.into(), query.into_boxed_str()))
+        }
+        None => Some(When::selector(raw.into(), raw.into(), "&".into())),
     }
 }
 
-/// Lower a `when` token into a selector template or at-rule.
-pub fn lower_condition(raw: &str, system: &BaseSystem) -> LoweredCondition {
-    if let Some(preset) = named_wrap(raw, system) {
-        return wrap_preset(preset);
+fn at_rule_or_ampersand(raw: &str) -> Option<When> {
+    if raw.starts_with("@media") || raw.starts_with("@container") {
+        return Some(When::at_rule(raw.into(), bracket_segment(raw)));
     }
-    if is_named_breakpoint(raw, system) {
-        return named_breakpoint_wrap(raw, system);
+    if raw.starts_with('&') || raw.starts_with('@') {
+        let template = selector_template(raw);
+        return Some(When::selector(
+            raw.into(),
+            bracket_segment(raw),
+            template.into_boxed_str(),
+        ));
     }
-    let key = raw.strip_prefix('_').unwrap_or(raw);
-    at_rule_or_selector(key)
+    None
 }
 
 fn is_named_breakpoint(raw: &str, system: &BaseSystem) -> bool {
     raw != "base" && system.breakpoints().names().iter().any(|name| name == raw)
-}
-
-fn named_breakpoint_wrap(raw: &str, system: &BaseSystem) -> LoweredCondition {
-    match system.breakpoints().width_px(raw) {
-        Some(width) => LoweredCondition::Container(format!("@container (min-width: {width}px)")),
-        None => LoweredCondition::Selector("&".to_string()),
-    }
 }
 
 fn named_wrap<'a>(raw: &'a str, system: &'a BaseSystem) -> Option<&'a str> {
@@ -66,22 +84,17 @@ fn named_wrap<'a>(raw: &'a str, system: &'a BaseSystem) -> Option<&'a str> {
     pseudoprops::preset_wrap(key)
 }
 
-fn wrap_preset(preset: &str) -> LoweredCondition {
-    if preset.starts_with("@media") {
-        LoweredCondition::Media(preset.to_string())
-    } else {
-        LoweredCondition::Selector(preset.to_string())
-    }
+fn bracket_segment(raw: &str) -> Box<str> {
+    let sanitized = raw.trim().replace(' ', "_");
+    format!("[{sanitized}]").into_boxed_str()
 }
 
-fn at_rule_or_selector(key: &str) -> LoweredCondition {
-    if key.starts_with("@media") {
-        return LoweredCondition::Media(key.to_string());
+fn selector_template(raw: &str) -> String {
+    if raw.contains('&') {
+        raw.to_string()
+    } else {
+        format!("&:{raw}")
     }
-    if key.starts_with("@container") {
-        return LoweredCondition::Container(key.to_string());
-    }
-    LoweredCondition::Selector(pseudoselectors::template_for_key(key))
 }
 
 pub use pseudoselectors::apply as apply_selector_condition;
@@ -89,42 +102,46 @@ pub use pseudoselectors::apply as apply_selector_condition;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::atom::{AtomSet, AtomValue, Want, WhenKind};
+    use crate::resolve::{resolve_want_with, ResolveSession};
+    use crate::stylesheet;
+    use smallvec::smallvec;
 
-    #[test]
-    fn test_finalize_condition_name() {
-        assert_eq!(
-            finalize_condition_name("base", &BaseSystem::default()),
-            None
-        );
-        assert_eq!(
-            finalize_condition_name("_hover", &BaseSystem::default()),
-            Some("hover".into())
-        );
-        assert_eq!(finalize_condition_name("sm", &BaseSystem::default()), None);
-        assert_eq!(
-            finalize_condition_name("sm", BaseSystem::lib_fixture()),
-            Some("sm".into())
-        );
-        assert_eq!(
-            finalize_condition_name("&[data-slot=inner]", &BaseSystem::default()),
-            Some("[&[data-slot=inner]]".into())
-        );
+    fn known(raw: &str, system: &BaseSystem) -> When {
+        match lower_when(raw, system) {
+            LoweredWhen::Known(when) => when,
+            other => panic!("expected known condition for {raw}, got {other:?}"),
+        }
     }
 
     fn assert_selector(raw: &str, expected: &str, system: &BaseSystem) {
-        match lower_condition(raw, system) {
-            LoweredCondition::Selector(s) => assert_eq!(s, expected),
-            _ => panic!("expected selector for {raw}"),
+        match known(raw, system).wrap() {
+            WhenKind::Selector(s) => assert_eq!(s, expected),
+            other => panic!("expected selector for {raw}, got {other:?}"),
         }
     }
 
     fn assert_container(raw: &str, px: &str, system: &BaseSystem) {
-        match lower_condition(raw, system) {
-            LoweredCondition::Container(m) => {
+        match known(raw, system).wrap() {
+            WhenKind::Container(m) => {
                 assert_eq!(m, format!("@container (min-width: {px}px)"))
             }
-            _ => panic!("expected container query for {raw}"),
+            other => panic!("expected container query for {raw}, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_lower_named_segments() {
+        let empty = BaseSystem::default();
+        assert!(matches!(lower_when("base", &empty), LoweredWhen::Skip));
+        let hover = known("_hover", &empty);
+        assert_eq!(hover.class_segment(), "hover");
+        assert_eq!(hover.authored(), "_hover");
+        assert!(matches!(lower_when("sm", &empty), LoweredWhen::Unknown));
+        let sm = known("sm", BaseSystem::lib_fixture());
+        assert_eq!(sm.class_segment(), "sm");
+        let slot = known("&[data-slot=inner]", &empty);
+        assert_eq!(slot.class_segment(), "[&[data-slot=inner]]");
     }
 
     #[test]
@@ -156,11 +173,61 @@ mod tests {
 
     #[test]
     fn test_container_passthrough() {
-        match lower_condition("@container (min-width: 640px)", &BaseSystem::default()) {
-            LoweredCondition::Container(m) => {
+        match known("@container (min-width: 640px)", &BaseSystem::default()).wrap() {
+            WhenKind::Container(m) => {
                 assert_eq!(m, "@container (min-width: 640px)")
             }
             _ => panic!("expected container query"),
         }
+    }
+
+    #[test]
+    fn unknown_underscore_is_refused() {
+        assert!(matches!(
+            lower_when("_nope", BaseSystem::lib_fixture()),
+            LoweredWhen::Unknown
+        ));
+        assert!(matches!(
+            lower_when("_hovr", BaseSystem::lib_fixture()),
+            LoweredWhen::Unknown
+        ));
+    }
+
+    #[test]
+    fn unknown_condition_drops_atom_with_diagnostic() {
+        let want = Want::new("color", AtomValue::String("red".into()))
+            .with_when(smallvec!["_nope".into()]);
+        let mut diagnostics = Vec::new();
+        let system = BaseSystem::lib_fixture();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+        };
+        let atoms = resolve_want_with(&want, &mut session);
+        assert!(atoms.is_empty());
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].message, "Unknown condition \"_nope\"");
+    }
+
+    #[test]
+    fn unknown_condition_keeps_sibling_and_does_not_wrap_nope() {
+        let nope = Want::new("color", AtomValue::String("red".into()))
+            .with_when(smallvec!["_nope".into()]);
+        let sibling = Want::new("color", AtomValue::String("red".into()));
+        let mut diagnostics = Vec::new();
+        let system = BaseSystem::lib_fixture();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+        };
+        let mut atoms = resolve_want_with(&nope, &mut session);
+        atoms.extend(resolve_want_with(&sibling, &mut session));
+        assert_eq!(atoms.len(), 1);
+        assert!(atoms[0].conditions().is_empty());
+        assert_eq!(atoms[0].value.class_name_str(), "red");
+        let css = stylesheet::build_stylesheet(&atoms.into_iter().collect::<AtomSet>(), &system);
+        assert!(css.contains(".c_red { color: red; }"));
+        assert!(!css.contains(":nope"));
+        assert!(!css.contains("nope:"));
     }
 }

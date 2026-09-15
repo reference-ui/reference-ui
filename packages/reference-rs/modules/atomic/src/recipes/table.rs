@@ -80,7 +80,9 @@ fn compound_matches(needed: &IndexMap<String, String>, props: &IndexMap<String, 
         .all(|(key, value)| props.get(key) == Some(value))
 }
 
-fn cartesian(variants: &IndexMap<String, IndexMap<String, String>>) -> Vec<IndexMap<String, String>> {
+fn cartesian(
+    variants: &IndexMap<String, IndexMap<String, String>>,
+) -> Vec<IndexMap<String, String>> {
     let mut acc = vec![IndexMap::new()];
     for (key, values) in variants {
         acc = expand_axis(acc, key, values);
@@ -112,7 +114,10 @@ mod tests {
     #[test]
     fn one_axis_includes_base_and_compound() {
         let mut solid = IndexMap::new();
-        solid.insert("solid".into(), name::variant_class("button", "variant", "solid"));
+        solid.insert(
+            "solid".into(),
+            name::variant_class("button", "variant", "solid"),
+        );
         solid.insert(
             "outline".into(),
             name::variant_class("button", "variant", "outline"),

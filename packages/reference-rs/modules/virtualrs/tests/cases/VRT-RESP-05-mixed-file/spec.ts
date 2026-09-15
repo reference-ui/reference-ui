@@ -14,7 +14,7 @@ const spec: StationSpec<VirtualResult> = {
     expect(result.code).toContain("'@container (min-width: 320px)'")
     expect(result.code).toContain("'@container (min-width: 480px)'")
     expect(result.code).toContain("'@container (min-width: 720px)'")
-    expect(result.code).toContain("const config = { r: { 900: { padding: '9' } } };")
+    expect(result.code).toContain("const config = { r: { 900: { padding: '9' } } }")
   },
 }
 

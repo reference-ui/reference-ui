@@ -1,8 +1,9 @@
-//! Named `_` condition wraps for the `@reference-ui/lib` fixture.
-//! Keys match canon `NAMED_CONDITIONS`. Selector templates are Panda-style
-//! (`&:is(:hover, [data-hover])` on the leaf and on group/peer). Host color mode
-//! uses `[data-panda-theme=…]`, not `.dark` / `.light`. `_osDark` / `_print` /
-//! `_motionReduce` stay `@media`. Empty BaseSystem has no conditions.
+//! Named `_` condition wraps the lib fixture overlays from the Panda preset.
+//! Keys match canon `NAMED_CONDITIONS`. Lib TypeScript authors no conditions;
+//! these 78 wraps are host/Panda shapes (`&:is(:hover, [data-hover])` on the leaf
+//! and on group/peer). Host color mode uses `[data-panda-theme=…]`, not `.dark` /
+//! `.light`. `_osDark` / `_print` / `_motionReduce` stay `@media`. Empty BaseSystem
+//! has no conditions.
 
 use indexmap::IndexMap;
 
@@ -16,7 +17,7 @@ const CHECKED: &str =
 const EXPANDED: &str = "&:is([aria-expanded=true], [data-expanded], [data-state=\"expanded\"])";
 const INVALID: &str = "&:is(:invalid, [data-invalid], [aria-invalid=true])";
 
-/// Frozen lib condition map. Keys include the leading `_`.
+/// Panda-preset condition map the lib fixture overlays. Keys include the leading `_`.
 pub fn lib_conditions() -> IndexMap<String, String> {
     LIB_CONDITIONS
         .iter()

@@ -1,0 +1,9 @@
+{
+  "name": "digit-dash-escape",
+  "breakpoints": {
+    "names": ["2xl"],
+    "widths": {
+      "2xl": "1536"
+    }
+  }
+}

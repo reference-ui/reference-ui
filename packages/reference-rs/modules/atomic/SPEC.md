@@ -11,7 +11,7 @@ The `atomic` style engine compiles authored StyleProps, `css()` calls, and compo
 
 ## 2. Legend & Status
 
-- `[x]` Proven by a dedicated `tests/cases/<ATM-*>` folder whose name **is** the SPEC ID (`ATM-COND-04`). Standing gauges on every station prove `ATM-GHOST-01` and `ATM-LAYER-01`.
+- `[x]` Proven by a dedicated `tests/cases/<ATM-*>` folder whose name **is** the SPEC ID (`ATM-COND-04`). Standing gauges on every station prove `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`, and `ATM-ORDER-06`.
 - `[ ]` Specified; no dedicated case folder. **Cargo `#[test]` is not a tick.** Code in `src/` is not proof.
 
 Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`ATM-COND-02`/`03`/`04`, `ATM-LEAF-01`/`02`/`03`, `ATM-SITE-02`/`03`, `ATM-SHORT-01`/`02`, `ATM-RHYTHM-01`/`02`/`03`/`05`). One folder, one ID, one `spec.ts`.
@@ -21,32 +21,78 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 75 |
-| Named `[x]` proven | 75 |
-| Remaining `[ ]` | 0 |
-| Cargo `#[test]` | 82 (internal; not ticks) |
-| Vitest seam stations | 73 (`tests/cases/<ATM-*>`) |
+| Total contract cases | 130 |
+| Named `[x]` proven | 90 (of which ~32 STRONG, ~35 WEAK, ~8 MISMATCHED — see below) |
+| Remaining `[ ]` | 40 |
+| Cargo `#[test]` | 104 (internal; not ticks) |
+| Vitest seam stations | 85 (`tests/cases/<ATM-*>`) |
+
+A tick means a station folder exists and is green. It does **not** mean the
+station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
+files against their SPEC prose graded roughly 32 STRONG, 35 WEAK (asserts part of
+the claim, often a single `toContain`), and 8 MISMATCHED (proves something other
+than the claim). The weakest are called out inline on the cases below. Two
+examples of MISMATCHED, both material: `ATM-ATOM-01` says importance is part of
+atom identity but its input contains no `!`, so the split is unproven; and
+`ATM-GHOST-03` says the sheet is "exactly the six-layer preamble" while the
+golden is 407 lines, because the lib fixture always prints its token layer.
+
+### 2026-09-15 audit: shape is proven, semantics are not
+
+The first 75 stations prove the **pipeline shape** — a want was extracted, an
+atom was named, a rule was printed. They do not ask whether the emitted CSS
+*means* what the author wrote. A review against `vendor/panda` found four live
+defects that the suite blesses in committed goldens:
+
+| Defect | Evidence | New owner |
+| :--- | :--- | :--- |
+| Breakpoint at-rules used to sort lexicographically, so `md` (768px) overrode `2xl` (1536px). Closed: `CascadeKey` ranks parsed `min-width` ascending. | `stylesheet/cascade.rs`; `ATM-ORDER-01` / `ATM-COND-01` | `ATM-ORDER-01` (landed) |
+| `.2xl\:p_6r` used to be an invalid digit-leading selector. Closed: `escape_css_selector` is an allowlist with a hex escape for a leading digit or dash (`.\32 xl\:p_6r`). | `stylesheet/name/escape.rs`; `ATM-COND-01` / `ATM-NAME-06` | `ATM-NAME-06` (landed) |
+| `<Div border />` used to emit `border: true;`, which every browser drops. Closed: `Atom` holds `CssValue` (no Bool/Null); leftover boolean wants are dropped with a diagnostic. | `atom/value.rs` `CssValue`; `ATM-ATOM-02` / `ATM-SITE-09` | `ATM-VALID-02` (landed) |
+| The namer is not injective. Unrecognised `_` conditions used to wrap illegally (`&:nope`) while `p`/`padding` still collapse onto one prefix. Unknown `_` keys now fail closed (`ATM-COND-12` / station `ATM-GHOST-04`). Dual at-rule wraps nest in author order (`ATM-GHOST-05`). | `atom/when.rs`; `stylesheet/cascade/mod.rs` | `ATM-GHOST-04` (LEAF-05 remains) |
+
+Two structural causes, both of which the new areas are designed to close:
+
+1. **The cascade sorter is built.** `stylesheet/cascade.rs` sorts by `CascadeKey`
+   (bucket → at-rule kind and parsed width → pseudo rank →
+   `canon::property_cascade_rank` → ties) and groups shared at-rule wrappers.
+   `ATM-GHOST-05` (nested dual at-rules) is closed. `ATM-SHORT-07` (paren-depth) is closed.
+2. **Nothing checks that the output is CSS.** There is no CSS parser in the repo —
+   no `lightningcss`, `postcss`, or `css-tree` in `node_modules`, no parser crate in
+   `Cargo.lock`. `ATM-GHOST-01` now walks `css-tree` class selectors inside
+   `@layer utilities` (no TypeScript escaper). Owner: `VALID`, `ATM-FORBID-06`.
 
 ### Breakdown by Area
 
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
-| `GHOST` | Zero ghost class invariants & bijective namer (P0) | 3 | 3 | 0 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 11 | 11 | 0 |
-| `LEAF` | AST leaf literal extraction & branch flattening | 9 | 9 | 0 |
+| `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 16 | 11 | 5 |
+| `LEAF` | AST leaf literal extraction & branch flattening | 10 | 9 | 1 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
-| `ATOM` | Atom representation, values, hashing, & `AtomSet` | 4 | 4 | 0 |
+| `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 4 | 1 |
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
-| `SHORT` | Shorthand decomposition without `currentColor` reset | 5 | 5 | 0 |
-| `COND` | Conditions, media queries, pseudo-classes, & patterns | 9 | 9 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 5 | 5 | 0 |
-| `RECIPE` | Closed variant classes & variant lookup tables | 3 | 3 | 0 |
-| `STATIC` | Static CSS want synthesis from BaseSystem | 2 | 2 | 0 |
-| `LAYER` | Cascade layer order (`@layer`) & layer population | 4 | 4 | 0 |
-| `NAME` | Deterministic class naming & selector escaping | 5 | 5 | 0 |
-| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 3 | 3 | 0 |
-| `FORBID` | Forbidden architectural patterns & tripwires | 5 | 5 | 0 |
-| **Total** | | **75** | **75** | **0** |
+| `SHORT` | Shorthand decomposition without `currentColor` reset | 7 | 7 | 0 |
+| `COND` | Conditions, media queries, pseudo-classes, & patterns | 16 | 9 | 7 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 11 | 5 | 6 |
+| `RECIPE` | Closed variant classes & variant lookup tables | 6 | 3 | 3 |
+| `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 2 | 1 |
+| `LAYER` | Cascade layer order (`@layer`) & layer population | 8 | 5 | 3 |
+| `NAME` | Deterministic class naming & selector escaping | 7 | 5 | 2 |
+| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 6 | 3 | 3 |
+| `FORBID` | Forbidden architectural patterns & tripwires | 7 | 6 | 1 |
+| `ORDER` | **New.** Cascade rule ordering, determinism, & idempotence (P0) | 6 | 6 | 0 |
+| `VALID` | **New.** Emitted CSS must parse and mean something (P0) | 3 | 0 | 3 |
+| `MERGE` | **New.** Last-wins semantics across arguments, aliases, & duplicate keys | 3 | 0 | 3 |
+| `UNIT` | **New.** Numeric value unit policy & canonical number form | 2 | 0 | 2 |
+| `SEAM` | **New.** Rust ⇄ N-API artifact parity | 1 | 0 | 1 |
+| `PERF` | **New.** Time, memory, & scale budgets | 1 | 0 | 1 |
+| **Total** | | **130** | **90** | **40** |
+
+`ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
+rule loses the cascade are the same bug from the author's chair: the style does
+not apply. `GHOST` proved the name exists on both sides; `ORDER` proves the rule
+wins; `VALID` proves a browser accepts it.
 
 ---
 
@@ -65,7 +111,8 @@ map. One namer. No generated `css.js`.
 | atom | `src/atom`<br>`ATM-ATOM-*`, `ATM-WANT-*` | One `(prop, value, when)` = one Atom |
 | recipes (emit) | `src/recipes`<br>`ATM-RECIPE-01`–`03` | Closed `recipe()` tables in `@layer recipes`. Extract of recipe style objects is `extract/recipes` / SITE-03. |
 | stylesheet | `src/stylesheet`<br>`ATM-LAYER-*` | Six layers: `reset, global, base, tokens, recipes, utilities` |
-| runtime | `src/runtime`<br>`ATM-GHOST-01`–`03` | `CssRuntime` map for authored `css()` |
+| order | `src/stylesheet` (sorter)<br>`ATM-ORDER-*`, `ATM-VALID-*` | Cascade sort key + output validity. **Specified in `stylesheet/README.md`, not yet built.** |
+| runtime | `src/runtime`<br>`ATM-GHOST-01`–`03`<br>`ATM-MERGE-*` | `CssRuntime` map for authored `css()`; last-wins merge |
 
 Panda's process crates and file-level call sites: [PANDA.md](./PANDA.md).
 Their names are examples. Our author API is `css()` and `recipe()`.
@@ -100,8 +147,81 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-GHOST-03` `[reference]` `[seam]` —
   **Empty baseline input must emit pure layer preambles with an empty runtime class dictionary.**
   Compile an empty project or virtual source containing no style declarations. Assert that the generated stylesheet contains exactly the six-layer preamble (`@layer reset, global, base, tokens, recipes, utilities;\n`) with no utility rules. Assert that `css.classes` is an empty dictionary and `diagnostics` is empty, proving baseline purity.
+- [ ] `ATM-GHOST-04` `[reference]` `[seam]` —
+  **The namer must be injective: two atoms that differ in any identity field must never share a class name, and no condition may be silently erased from a name it still wraps.**
+  Station `ATM-GHOST-04` compiles `css({ _nope: { color: 'red' }, color: 'red' })`: the unknown condition warns and emits no utility, the sibling still compiles as `c_red`, and the sheet has no `:nope` wrap. That closes the unrecognised-condition collision. The standing gauge still compares `atomCount` to distinct `css.classes` values on every station; `ATM-LEAF-05` is quarantined (`INJECTIVITY_QUARANTINE`) because `p` and `padding` collapse onto one prefix. This case stays open until that list is empty. Lowering is `When` on `Atom.conditions` (`atom/when.rs`); `Want.when` stays authored strings.
+- [x] `ATM-GHOST-05` `[reference]` `[seam]` —
+  **Every at-rule condition on an atom must reach the stylesheet, or the atom must fail closed with a diagnostic.**
+  Station `ATM-GHOST-05`. Nested `sm: { … }` object keys are not extract conditions; the station uses `_osDark` plus array slot 1 (`sm`) so the atom carries two at-rule `When`s. Both wraps print nested in author order (`@media (prefers-color-scheme: dark) { @container (min-width: 640px) { .osDark\:sm\:c_red } }`), and the class name lists both segments. `first_at_rule` (`stylesheet/cascade/mod.rs`) is only the sort key; emit walks every Media/Container wrap. First-match is forbidden.
 
-### Extraction Sites
+### Cascade Order, Determinism & Idempotence (P0)
+
+Rule *order* is a correctness property, not a diff-stability nicety. Two atoms of
+equal specificity are resolved by document order, so a sorter that does not
+understand query magnitude, pseudo precedence, or shorthand/longhand nesting
+emits CSS that contradicts the authored intent. `stylesheet/README.md` already
+specifies this sort key; these cases make it provable.
+
+- [x] `ATM-ORDER-01` `[reference]` `[seam]` —
+  **At-rule blocks must be ordered by resolved query magnitude, not by the lexicographic order of the query string.**
+  Station `ATM-ORDER-01`. `@container` min-width blocks emit 640 → 768 → 1024 → 1280 → 1536. `@media` max-width blocks emit descending. `CascadeKey` parses millipx from the wrap string (`em`/`rem` × 16). Nested `sm: { … }` object keys are not extract conditions; this station uses array slots plus authored `@media (max-width: …)` keys. `ATM-COND-01` also asserts ascending min-width.
+- [x] `ATM-ORDER-02` `[reference]` `[seam]` —
+  **Rules must be bucketed unconditioned first, then selector-conditioned, then at-rule-wrapped.**
+  Station `ATM-ORDER-02`. Unconditioned `color`, then `_hover`, then `sm` `@container`. Selector-conditioned rules never print before the unconditioned rule for the same property.
+- [x] `ATM-ORDER-03` `[reference]` `[seam]` —
+  **Pseudo-class conditions of equal specificity must emit in a declared precedence order, not alphabetically.**
+  Station `ATM-ORDER-03`. Authored alphabetically (`_active` first); emitted order is `hover` → `focus` → `focusVisible` → `active` → `disabled`.
+- [x] `ATM-ORDER-04` `[reference]` `[seam]` —
+  **Property priority must order shorthands before the longhands they contain, so a longhand utility always wins.**
+  Station `ATM-ORDER-04`. `.bd-c_gray.800` precedes `.bd-b-c_red.500` and `.p_1r` precedes `.pt_2r` in both authorship orders. Rank is `canon::property_cascade_rank`.
+- [x] `ATM-ORDER-05` `[reference]` `[seam]` —
+  **Compiling identical input twice must produce byte-identical artifacts.**
+  Compile the same case directory twice in one process and assert `stylesheet`, `css.classes`, and `diagnostics` are byte-for-byte equal. Run this as a standing gauge on every station rather than a single fixture. `AtomSet` is an `FxHashSet` (`atom/set.rs:13`) whose iteration order is insertion-dependent, so any code path that reads the set without sorting can leak that order into output.
+- [x] `ATM-ORDER-06` `[reference]` `[seam]` —
+  **Output must be independent of source-file discovery order.**
+  Compile a multi-file case, then compile it again with the file list reversed, and assert both artifacts are byte-identical. `collect_sources` sorts by path (`lib.rs:127-131`) after a sorted `scan_dir` walk (`lib.rs:150-159`), so `read_dir` order cannot leak. Without this, `css.json` diffs churn between developers and CI even though no source changed.
+
+### Emitted CSS Validity (P0)
+
+`ATM-GHOST-01` asks whether a class name appears as a class selector under
+`@layer utilities`. It does
+not ask whether the browser can parse the rule it appears in. Two of the four
+audit defects are invisible to substring matching and visible to any CSS parser.
+
+- [ ] `ATM-VALID-01` `[reference]` `[seam]` —
+  **The emitted stylesheet must parse without error, and every generated selector must be a valid selector.**
+  Run a real CSS parser over `result.stylesheet` on every station as a standing gauge, asserting zero parse errors, and additionally validate each generated class selector in isolation. Assert that layer nesting, at-rule wrapping, and escaping all survive a round trip. `.2xl\:p_6r` in the current `ATM-COND-01` golden fails this immediately. The parser choice, the two-tier design, the `var()` caveat, and the measured findings are settled in [testing.md](./testing.md) — that document owns the harness, this case owns the claim. A `css-tree` sweep over the committed goldens returns 2 syntax errors and 24 invalid declarations at 0.73 ms per station.
+- [x] `ATM-VALID-02` `[reference]` `[seam]` —
+  **A declaration value must always be valid CSS; `true`, `false`, and `null` must never reach the stylesheet.**
+  `Atom.value` is `CssValue` (String / Token / Number) — Bool and Null are not variants. `Want.value` remains `AtomValue` and may be Bool (`<Div border />`). Resolve is the boundary: leftover Bool/Null pairs are dropped with a warning naming the property and emit zero atoms. There is no closed `border` utility; `ATM-SITE-09` still proves Bool extraction via `hasWant(..., 'border', true)`. `ATM-ATOM-02` asserts the stylesheet does not contain `border: true`.
+- [ ] `ATM-VALID-03` `[reference]` `[seam]` —
+  **Selector escaping must never leak into a declaration value.**
+  Compile a token path that does not resolve (`css({ color: 'ghost.white' })`) and a value containing parentheses and slashes (`css({ color: 'oklch(0.5 0.1 200)' })`). Assert the class selector escapes `.` `(` `)` `/` while the declaration value stays raw. Panda emits `color: ghost\.white` here (`vendor/panda/crates/pandacss_stylesheet/tests/atomic.rs:357`), which is a bug we should not copy — escaping is a selector concern only.
+
+### Merge & Last-Wins Semantics
+
+Atomic utilities compose by concatenation, so "which class wins" is decided by
+the runtime map for a call, not by the stylesheet. That makes merge order a
+compiler contract.
+
+- [ ] `ATM-MERGE-01` `[reference]` `[seam]` —
+  **Multi-argument `css()` must resolve to the last value per property in the runtime class string while the stylesheet still carries every atom.**
+  Compile `css({ margin: '1r' }, { margin: '3r' })`. Assert that `@layer utilities` contains both `.m_1r` and `.m_3r`, because another call site may need either, and that the class list this call resolves to contains only `m_3r`. Emitting both classes for one element leaves the outcome to stylesheet order, which is exactly the ambiguity `ATM-ORDER-*` exists to remove.
+- [ ] `ATM-MERGE-02` `[reference]` `[seam]` —
+  **Property aliases and duplicate keys within one object must collapse to the last authored value.**
+  Compile `css({ bg: 'n100', background: 'n200' })` and `css({ color: 'red.500', padding: '1r', color: 'blue.500' })`. Assert each pair resolves to a single winning class (`bg_n200`, `c_blue.500`) and that sibling properties are unaffected. Aliases that canon maps to one CSS property must be recognised as the same key for merge purposes, not treated as two independent utilities.
+- [ ] `ATM-MERGE-03` `[reference]` `[seam]` —
+  **An array argument to `css()` must be a merge list, never a responsive array.**
+  Compile `css([{ margin: '1r' }, { margin: '3r' }, false])`. Assert both objects emit unconditioned atoms, that `false` is skipped without a diagnostic, and that no breakpoint condition is applied to any of them. Confusing this with the responsive-array form (`ATM-LEAF-05`) silently moves styles to a breakpoint the author never wrote.
+
+### Numeric Values & Unit Policy
+
+- [ ] `ATM-UNIT-01` `[reference]` `[seam]` —
+  **A unitless number must take its property's unit policy: dimensional properties gain `px`, unitless properties do not, and zero stays bare.**
+  Compile `css({ width: 42, opacity: 1, zIndex: 0, fontWeight: 700, lineHeight: 1.5, '--foo': 42 })`. Assert `width: 42px`; assert `opacity`, `zIndex`, `fontWeight`, `lineHeight`, and the custom property stay unitless; assert `zIndex: 0` emits `0` and not `0px`. The policy table belongs in `canon` beside the other property facts, never in a private atomic table (`ATM-FORBID-05`). Today `AtomValue::Number` prints verbatim, so `width={42}` emits `width: 42`, which browsers reject on a length property.
+- [ ] `ATM-UNIT-02` `[reference]` `[seam]` —
+  **Numeric and string spellings of the same number must canonicalise to one atom.**
+  Compile `css({ padding: 1 })` in one file and `css({ padding: '1' })` in another. Assert a single `.p_1` class and one rule. Assert that non-canonical numeric forms (`01`, `Infinity`, `NaN`, `0x10`) are refused with a diagnostic rather than emitted as idents.
 
 - [x] `ATM-SITE-01` `[reference]` `[seam]` —
   **Style props on JSX tags that pass `canon::is_known_style_prop` must extract into wants.**
@@ -136,6 +256,22 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-SITE-11` `[reference]` `[seam]` —
   **Identifier spreads of a local const style object (`<Div {...base} />`, `css({ ...base })`) must unpack known keys.**
   Station `ATM-SITE-11`. File-top `const` objects unpack; inline object spreads remain `ATM-SITE-05`.
+- [ ] `ATM-SITE-12` `[forbidden]` `[seam]` —
+  **Tagged template literals must not be an extract site.**
+  Compile ``css`color: red;` `` and `` styled.div`padding: 1rem` ``. Assert no wants are produced and no diagnostic fires — a tagged template is simply not our author API. This is a named refusal rather than an accident of the walker: the object form is the only surface, so a template literal must never be parsed as CSS text.
+- [ ] `ATM-SITE-13` `[reference]` `[seam]` —
+  **Styletrace gating must fail closed: an unavailable primitive graph is a diagnostic, not a licence to extract every tag.**
+  Compile a project whose `styletrace::trace_style_jsx_names` call yields no names and whose sources import nothing from `@reference-ui/react`. Assert that a local `<Foo mt="4r" />` produces no wants and that a diagnostic reports the missing primitive graph. Assert the empty-project case still compiles clean. This station resolves a **contradiction between `ATM-SITE-01` and `ATM-SITE-08`**: SITE-01's input imports nothing yet extracts `<Div>` and `<Button>`, which only works because `allows_jsx_tag` (`extract/mod.rs:87-93`) treats an empty host set as "scan every tag" — the exact PascalCase-style guessing SITE-08 forbids. The fallback that keeps SITE-01 green is the opposite of the production gate, and `trace_style_jsx_names` errors are swallowed today (`lib.rs:247-250`). Landing this will require SITE-01 to declare its imports.
+
+- [ ] `ATM-SITE-14` `[reference]` `[seam]` —
+  **The `css={{ … }}` JSX attribute must extract the same wants as a `css()` call.**
+  Compile `<Div css={{ mt: '2r', _hover: { color: 'n300' } }} />` and assert the wants and emitted utilities match the equivalent `css({ … })` call exactly. This extract site is implemented (`extract/jsx/mod.rs:114-117`) and **no station input uses it** — `rg 'css=\{\{' tests/cases/*/input` returns nothing. An entire author-facing entry point is live and unproven.
+- [ ] `ATM-SITE-15` `[reference]` `[seam]` —
+  **Binding identity must cover namespace imports and internal aliases, and must exclude type-only and default imports.**
+  Compile `import * as R from '@reference-ui/react'; R.css({ … })`, the compiler-internal `__reference_ui_css(…)` / `__reference_ui_recipe(…)` aliases, `import type { css }`, and `import css from '…'`. Assert the first two extract and the last two produce no sites. `extract/bindings.rs:79-211` implements all four rules; `ATM-SITE-02` names `__reference_ui_css` in its prose but no input contains it, and namespace and type-only handling are unclaimed.
+- [ ] `ATM-SITE-16` `[reference]` `[seam]` —
+  **Constants must resolve across files, and the source scan must respect its extension and directory boundaries.**
+  Place a file-top `const theme` in `tokens.ts` and consume it at a site in `App.tsx`; assert the value resolves. Assert that a style inside `node_modules`, `dist`, or `.reference-ui` is not compiled and that a non-source extension (`.mdx`) is skipped. `lib.rs:180-196` merges constants project-wide and `lib.rs:149-177` holds the skip list; `ATM-SITE-06` proves same-file resolution only, so the cross-file merge — a much bigger behaviour with a much bigger blast radius — is untested.
 
 ### Leaf Literal Extraction
 
@@ -166,6 +302,9 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-LEAF-09` `[reference]` `[seam]` —
   **Authored `!` / `!important` suffixes on string literals must set `Want.important` and emit `mt_2r!`.**
   Station `ATM-LEAF-09`. `mt="2r!"` / `css({ p: '1r!' })` set `Want.important` and print `.mt_2r\!`.
+- [ ] `ATM-LEAF-10` `[reference]` `[seam]` —
+  **Importance must be parsed from every authored spelling, and a bang inside a quoted string must not mark importance.**
+  Compile `css({ padding: '0 !important', color: 'red!IMPORTANT', content: '"hello!"' })`. Assert `padding` and `color` set `Want.important` with the marker stripped from the value (`padding: 0 !important`, class `p_0!`), and assert `content` is **not** important and keeps its literal `"hello!"`. `ATM-LEAF-09` only proves the compact `2r!` form; the spaced and case-insensitive spellings and the quoted-bang exclusion are unproven, and a naive `ends_with('!')` gets `content` wrong.
 
 ### Styling Want IR
 
@@ -182,14 +321,17 @@ Their names are examples. Our author API is `css()` and `recipe()`.
   **`Atom` declaration must encapsulate normalized property, value, condition chain, importance, and fast hash.**
   Station `ATM-ATOM-01`. Identical fields hash equal; identity covers property, value, conditions, and importance.
 - [x] `ATM-ATOM-02` `[reference]` `[seam]` —
-  **`AtomValue` variants must provide distinct class name strings and valid CSS output values.**
-  Station `ATM-ATOM-02`. `String` / `Token` / `Number` / `Bool` / `Null` class keys vs CSS values, serde-stable.
+  **`AtomValue` / `CssValue` variants must provide distinct class name strings and valid CSS output values.**
+  Station `ATM-ATOM-02`. `String` / `Token` / `Number` emit CSS; `Bool` stays on the want and is dropped at resolve. Serde-stable.
 - [x] `ATM-ATOM-03` `[reference]` `[seam]` —
   **`AtomSet` must deduplicate identical atomic declarations across source files using precomputed hashing.**
   Station `ATM-ATOM-03`. Duplicate inserts do not grow the set.
 - [x] `ATM-ATOM-04` `[reference]` `[seam]` —
   **One class per leaf grain must be strictly maintained across all resolved atoms.**
   Station `ATM-ATOM-04`. Every compiled atom is one property.
+- [ ] `ATM-ATOM-05` `[reference]` `[seam]` —
+  **An authored CSS custom property must compile as a declaration, not as a condition.**
+  Compile `css({ '--brand-x': 'red.500', color: 'var(--brand-x)' })`. Assert `--brand-x` becomes a real declaration whose value resolves tokens, that its class name escapes the leading dashes (`ATM-NAME-06`), and that it is never mistaken for a `_`-prefixed or `&`-prefixed condition key. Authoring custom properties beside utilities is how a component exposes a tuning knob; today a `--` key is not a known style prop and is dropped silently by `object.rs`.
 
 ### Rhythm Engine
 
@@ -226,6 +368,12 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-SHORT-05` `[reference]` `[seam]` —
   **Dimensional shorthands with 2–4 tokens expand to physical longhands; a single token does not expand.**
   Station `ATM-SHORT-05`. `padding: 10px 20px` → four longhands; `padding: 10px` / `p: 1r` passthrough.
+- [x] `ATM-SHORT-06` `[reference]` `[seam]` —
+  **A shorthand and one of its longhands authored in the same object must both emit, with the longhand winning.**
+  Station `ATM-SHORT-06`. `padding` then `paddingTop` in both source-file authorship orders. This is `ATM-ORDER-04` observed from the shorthand side.
+- [x] `ATM-SHORT-07` `[reference]` `[seam]` —
+  **The shorthand token splitter must track parenthesis depth correctly so a function value does not swallow its siblings.**
+  Station `ATM-SHORT-07`. Compile `css({ border: 'calc(1px + 1px) solid', margin: 'calc(1r * 2) 3r' })`. Assert the value splits into the expected token count and expands to the right longhands. `open_paren` increments `depth` once per `(`.
 
 ### Condition Scoping & Dialect Patterns
 
@@ -256,6 +404,28 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-COND-09` `[reference]` `[seam]` —
   **Group/peer and arbitrary `&` / `@` conditions must survive into the stylesheet.**
   Station `ATM-COND-09`. `_groupHover` / `_peerFocus` wrap from the lib fixture. `'&[data-slot=inner]'` prints a real rule. Canon `NAMED_CONDITIONS` also lists `_osDark` / `_motionReduce`; those `@media` presets are not this station.
+- [ ] `ATM-COND-10` `[reference]` `[seam]` —
+  **The core interaction pseudo catalog must lower from the utterance: `_active`, `_focus`, `_focusVisible`, `_disabled`, `_checked`.**
+  Compile one file setting a property under each of the five conditions. Assert each lowers to the lib-fixture wrap with its `data-*` twin (`&:is(:disabled, [disabled], [data-disabled], [aria-disabled=true])` and so on) and that each prints a real rule. `ATM-COND-02` explicitly disclaims these five — the SPEC text says the spec "used to list" them as proven and that they are not in that station — so the most common conditions in the entire library are currently unproven.
+- [ ] `ATM-COND-11` `[reference]` `[seam]` —
+  **`@media` preset conditions must print as at-rules, not selectors.**
+  Compile `css({ _osDark: { color: 'n100' }, _motionReduce: { animation: 'none' }, _print: { display: 'none' } })`. Assert each emits its `@media` block inside `@layer utilities` and that the class name carries the condition segment. `ATM-COND-09` names `_osDark` / `_motionReduce` and declares them out of scope; `pseudoprops/mod.rs:7-30` does hold the wraps, so this station is proof, not new engine work.
+- [x] `ATM-COND-12` `[reference]` `[seam]` —
+  **An unrecognised `_`-prefixed condition must emit no utility and must warn.**
+  Station `ATM-COND-12`. `css({ _hovr: { color: 'red.500' }, color: 'blue.500' })` emits no `hovr` rule and no `:hovr` selector, a diagnostic names `"_hovr"`, and the sibling `color: 'blue.500'` still compiles. Resolve drops the unknown-conditioned want; `Want.when` still records `['_hovr']`. Precedent: `ATM-COND-07` unknown `r` keys.
+- [ ] `ATM-COND-13` `[reference]` `[seam]` —
+  **Breakpoint range conditions must lower to the matching bounded query.**
+  Compile `css({ mdDown: { display: 'none' }, mdOnly: { px: '2r' }, smToLg: { maxWidth: '80ch' } })` against the fixture scale. Assert `mdDown` emits a max-width bound, `mdOnly` a min-and-max band, and `smToLg` an exclusive range, with unknown range names warning and skipping. Only the min-width direction exists today (`ATM-COND-01`), so "hide below md" is unexpressible without hand-written at-rules.
+- [ ] `ATM-COND-14` `[reference]` `[seam]` —
+  **Nested arbitrary `&` selectors must compose in author order, and a comma-separated selector list must scope every member.**
+  Compile `css({ '&:last-child': { '& .divider': { display: 'none' } } })` and assert the emitted selector is `.<cls>:last-child .divider`, not `.<cls> .divider:last-child`. Compile `css({ '&:not(:first-child), &:only-child': { mt: '0' } })` and assert both members carry the class. Assert that an `&` appearing inside an attribute value (`'&[data-x="a & b"]'`) is treated as a literal, not a parent reference. `ATM-COND-09` proves one flat `&[data-slot=inner]`; nesting and lists are where selector composition actually breaks.
+- [ ] `ATM-COND-15` `[reference]` `[seam]` —
+  **Container-query conditions must be backed by a container root, or the compiler must say so.**
+  Assert that when any `@container` condition is emitted, the system layers establish `container-type` on a root element (`ATM-LAYER-03`'s `globalCss` slice), or that a diagnostic tells the host it must. Named breakpoints lower to `@container (min-width: …)` (`ATM-COND-01`), and a container query with no `container-type` ancestor never matches — so every responsive utility in the system silently does nothing unless the host cooperates. This station pins down whose job that is.
+
+- [ ] `ATM-COND-16` `[reference]` `[seam]` —
+  **Every authored `container` form must lower correctly, and the named-container query API must be wired or removed.**
+  Compile `<Div container />` (boolean) and assert `container-type: inline-size` with no `container-name`. Compile the named-container `r` form and assert `@container card (min-width: Npx)`. `resolve/container.rs:7-18` handles the boolean case untested at the seam, and `resolve/r/query.rs:13-16` exports a named-container formatter that **no caller invokes** — `walk_r_object` only calls `lower_r_key` (`object.rs:119`). Either the syntax is real and this station proves it, or the function is dead code and should be deleted (§7.14).
 
 ### Design Token Resolution
 
@@ -274,6 +444,27 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-TOKEN-05` `[reference]` `[seam]` —
   **`compile()` must ingest BaseSystem token collections, replacing heuristic category checks with authoritative lookup.**
   Station `ATM-TOKEN-05`. A custom dump resolves `colors.brand`; unknown `blue.600` passes through with a warning. The compiler does not invent tokens.
+- [ ] `ATM-TOKEN-06` `[reference]` `[seam]` —
+  **Opacity-modifier parsing must ignore slashes that belong to the CSS value and must refuse empty segments.**
+  Compile `css({ bg: 'rgb(251 146 60 / 0.3)', color: 'red.500/', borderColor: '/40', outlineColor: 'colors.blue.600/50' })`. Assert the modern `rgb()` slash form passes through untouched with no `color-mix`, that `red.500/` and `/40` pass through and warn, and that only the well-formed modifier produces `color-mix`. `ATM-TOKEN-03` proves the happy path; a naive split on `/` destroys every modern color function, which is the most common real-world value shape in this list.
+- [ ] `ATM-TOKEN-07` `[reference]` `[seam]` —
+  **A leading `-` on a scale token must resolve to a negated custom property reference.**
+  Compile `css({ mt: '-4', mb: '4' })` with `spacing.4` in the dump. Assert `mt` emits `calc(-1 * var(--spacing-4))`, `mb` emits `var(--spacing-4)`, and the class keeps the minus (`mt_-4`). `ATM-RHYTHM-05` covers negative *rhythm* (`-1r`); negative *token scale* values are a separate path and currently pass through raw.
+- [ ] `ATM-TOKEN-08` `[reference]` `[seam]` —
+  **`{category.path}` segments inside a composite value must expand while neighbouring literals pass through.**
+  Compile `css({ border: '1px solid {colors.gray.800}', boxShadow: '0 1px 2px {colors.gray.200}' })`. Assert the token segment becomes `var(--colors-…)` and the surrounding literals are preserved verbatim. Assert an unterminated `{` stays raw and warns. Brace stripping exists for whole values (`resolve/tokens/mod.rs`), but interpolation inside a multi-token string is how shadows and borders are actually authored.
+- [ ] `ATM-TOKEN-09` `[reference]` `[seam]` —
+  **Token lookup must cover every category the dump declares, not only colors, radii, and fonts.**
+  Compile a dump exercising `shadows`, `sizes`, `spacing`, `zIndex`, `easings`, `durations`, and `gradients`, and resolve one property from each. Assert every category resolves to its `var(--<category>-<path>)` form and that a path in the wrong category for the property warns. The three proven categories (`ATM-TOKEN-01`) are the ones the lib fixture happens to use most; the wildcard path in `static_css.rs:43-49` returns `None` for every non-color category, which is direct evidence the breadth is untested.
+- [ ] `ATM-TOKEN-11` `[reference]` `[seam]` —
+  **A token whose dump value is a `{path}` reference must print as a `var()` alias in `@layer tokens`.**
+  Compile a dump where `colors.ui.button.background` is `{colors.gray.950}` and assert `@layer tokens` prints `--colors-ui-button-background: var(--colors-gray-950)`, including under the dark selector. `system_layers.rs:88-96` implements this and the lib fixture depends on it heavily — the `ATM-COND-01` golden is full of `var(--colors-…)` aliases — yet no station claims it. This is distinct from `ATM-TOKEN-08`, which interpolates a brace path inside a composite authored value.
+
+### BaseSystem Dump Validation
+
+- [ ] `ATM-TOKEN-10` `[forbidden]` `[seam]` —
+  **A foreign or malformed BaseSystem dump must be rejected with a diagnostic, never silently accepted as an empty system.**
+  Pass core's portable `BaseSystem` shape (`{ name, fragment, jsxElements }`, `reference-core/src/types/public/BaseSystem.ts`) as `compile({ baseSystem })` and assert the compiler refuses it by name rather than binding `name` and treating every dictionary as empty. Assert a dump missing required collections is an error diagnostic. Two unrelated types share the name `BaseSystem` across this repo, the Rust struct has no `deny_unknown_fields`, and `Some(system)` beats `lib_fixture()` (`lib.rs:84-87`) — so handing over the wrong `BaseSystem` produces a compile with **no tokens, no conditions, and no breakpoints** while reporting success. Every token would pass through raw and every `_hover` would fall back to a preset. That is the single most damaging way to misuse this API and nothing currently stops it.
 
 ### Component Recipes & Closed Variants
 
@@ -286,6 +477,15 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-RECIPE-03` `[reference]` `[seam]` —
   **StyleProps authored on a recipe host component must remain atomic utilities that override recipe styles.**
   Compile a component that applies a recipe and specifies additional StyleProps (e.g. `<Button variant="primary" mt="2r" bg="red.500" />`). Assert that `mt` and `bg` are emitted as utility atoms in `@layer utilities`. Because `@layer utilities` follows `@layer recipes`, assert that atomic StyleProps win naturally by CSS cascade precedence.
+- [ ] `ATM-RECIPE-04` `[reference]` `[seam]` —
+  **`defaultVariants` and boolean variant keys must appear in the variant table and compile to closed classes.**
+  Compile `recipe({ base, variants: { size: { sm, md }, muted: { true: { opacity: '0.5' } } }, defaultVariants: { size: 'md' } })`. Assert the table marks `size: 'md'` as the implicit selection so the runtime helper needs no second source of truth, and assert the boolean axis compiles a `muted_true` class. `Recipe` has no `defaultVariants` field today (`src/recipes/mod.rs`), so every consumer must re-declare its defaults in TypeScript — a split-brain of exactly the kind §7.2 forbids for class names.
+- [ ] `ATM-RECIPE-05` `[reference]` `[seam]` —
+  **Compound variant classes must be emitted after simple variant classes inside `@layer recipes`.**
+  Compile a recipe with `size` and `tone` axes plus a compound matching both. Assert the compound rule is printed after both simple variant rules so that the more specific selection wins within the layer. `ATM-RECIPE-03` only proves utilities beat recipes; order *inside* the recipes layer is currently source order, which makes a compound override a coin flip. Panda hit this exact bug and fixed it with recipe sub-layers.
+- [ ] `ATM-RECIPE-06` `[reference]` `[seam]` —
+  **Recipe class stems must come from the explicit `className`, else the binding name, else a stable fallback.**
+  Compile `recipe({ className: 'btn', … })`, a `const button = recipe({ … })` with no `className`, and an unbound `recipe({ … })`. Assert the emitted stems are `btn`, `button`, and the documented fallback respectively. `recipes/name.rs:8-16` and `extract/recipes/mod.rs:41-43` implement this three-way precedence; every recipe class name in the system depends on it and no station pins it, so a change in binding detection would silently rename every shipped recipe class.
 
 ### Static CSS Expansion
 
@@ -295,6 +495,9 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-STATIC-02` `[reference]` `[seam]` —
   **Static CSS wants must dominate AtomSet size and deduplicate seamlessly with AST-extracted wants.**
   Station `ATM-STATIC-02`. AST `bg="n300"` plus static `bg: ['n100', 'n300']` is one `.bg_n300` class. `n100` still prints from the dump.
+- [ ] `ATM-STATIC-03` `[reference]` `[seam]` —
+  **`staticCss` must support conditions and every token category, and must diagnose a request it cannot satisfy.**
+  Compile a dump requesting `color` under `_hover`, a non-color wildcard (`borderRadius: ['*']` over the `radii` category), and an unknown property. Assert the hover utilities exist so a runtime `css({ color: prop, _hover: … })` can find them, assert the radii wildcard enumerates that category, and assert the unknown property warns. `wildcard_category` (`static_css.rs:43-49`) returns `None` for every non-color category and drops the request with no diagnostic, so a dump can ask for utilities and be silently ignored — the one failure mode that makes `staticCss` untrustworthy, since its whole purpose is guaranteeing a class exists for a value known only at runtime.
 
 ### Cascade Layers & Preamble
 
@@ -310,6 +513,18 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-LAYER-04` `[reference]` `[seam]` —
   **All generated atomic utility rules and media query wrappers must be encapsulated inside `@layer utilities`.**
   Station `ATM-LAYER-04`. Unconditioned classes and wrapping `@media` / `@container` stay inside `@layer utilities`.
+- [ ] `ATM-LAYER-05` `[reference]` `[seam]` —
+  **BaseSystem keyframes must print as `@keyframes` rules in `@layer global`.**
+  Compile a dump declaring `fadeIn { from { opacity: 0 } to { opacity: 1 } }` and a percentage-keyed animation. Assert both print with correct `from`/`to`/`%` selectors, and that an empty keyframes bag leaves the layer omitted (`ATM-LAYER-02`). The `animations.*` tokens already resolve to `var(--animations-fadeIn-normal)` and reference `fadeIn` by name (see the `ATM-COND-01` golden), so today every animation token points at a keyframe the stylesheet never defines — a dangling reference in shipped CSS.
+- [ ] `ATM-LAYER-06` `[reference]` `[seam]` —
+  **BaseSystem font-face declarations must print as `@font-face` blocks in `@layer global`.**
+  Compile a dump with one `globalFontface` entry per family and assert one `@font-face` block each, with `src` and `font-display` preserved. `--fonts-sans: "Inter", …` resolves today with nothing loading Inter, so the token is a promise the stylesheet does not keep.
+- [x] `ATM-LAYER-07` `[reference]` `[seam]` —
+  **Atoms sharing an identical at-rule wrapper must nest under one copy of that at-rule.**
+  Station `ATM-LAYER-07`. Three `sm` utilities share one `@container (min-width: 640px)` block. Nested `sm: { … }` object keys are not extract conditions; array slot 1 is `sm`. `cascade/mod.rs` groups after `CascadeKey` sort. Nested dual at-rules nest in author order (`ATM-GHOST-05`).
+- [ ] `ATM-LAYER-08` `[reference]` `[seam]` —
+  **Reset content from the dump must print inside `@layer reset`, ahead of every other layer.**
+  Compile a dump with a small preflight slice and assert it lands in `@layer reset` and that no utility or token rule precedes it. `ATM-LAYER-02` only proves the empty case stays omitted; §6 notes reset chrome is still empty in the fixture, which means the first layer of the shipped cascade has never emitted anything.
 
 ### Class Naming & Character Hygiene
 
@@ -328,6 +543,12 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-NAME-05` `[reference]` `[seam]` —
   **Whitespace characters in multi-token values must be converted to underscores in class names.**
   Station `ATM-NAME-05`. `3px solid` → `3px_solid`.
+- [x] `ATM-NAME-06` `[reference]` `[seam]` —
+  **Class names that begin with a digit or a double dash must be escaped so the selector is valid.**
+  Station `ATM-NAME-06` plus `ATM-COND-01`. Digit-leading `2xl:p_6r` emits `.\32 xl\:p_6r` (hex escape plus terminating space). `--brand-x` escapes the first dash (`.\2d -brand-x_red`). Runtime class strings stay unescaped. `css({ '2xl': { p: '6r' } })` as a nested key is still dropped by extract (`is_condition_prop` is prefix-only); the digit-leading name comes from the named-breakpoint array path. Custom-property token resolution remains `ATM-ATOM-05`.
+- [x] `ATM-NAME-07` `[reference]` `[seam]` —
+  **Selector escaping must be an allowlist: every character outside `[A-Za-z0-9_-]` is escaped.**
+  Station `ATM-NAME-07`. Values containing `*`, `$`, `^`, `|`, `\`, `;`, `?`, `<`, backtick, and `é`, plus `'& > *'`, emit selectors that parse. `escape_css_selector` allowlists `[A-Za-z0-9_-]` (with the NAME-06 leading hex exceptions) and backslash-escapes everything else, including `*` from the child-selector wrap.
 
 ### Compiler Diagnostics & Fail-Closed Semantics
 
@@ -340,6 +561,15 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-DIAG-03` `[reference]` `[seam]` —
   **AST parsing syntax errors must be recorded as error diagnostics without crashing the process.**
   Station `ATM-DIAG-03`. Malformed source yields `severity: error` and a `CompileResult` (no panic).
+- [ ] `ATM-DIAG-04` `[reference]` `[seam]` —
+  **Every diagnostic must carry a file path, a line, and a column.**
+  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Every call site passes `with_location(path, None, None)` today (`lib.rs:210`, `walk.rs:51-53`) and token warnings carry no file at all (`resolve/tokens/mod.rs:47-49`), so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor.
+- [ ] `ATM-DIAG-05` `[reference]` `[seam]` —
+  **Every diagnostic must carry a stable machine-readable code.**
+  Assert each diagnostic exposes a code (`ATM1001`-style) that is stable across releases, that codes are unique per failure class, and that the same authored mistake always reports the same code. Diagnostics are free-text strings today, with three near-duplicate wordings for unresolved dynamic values (`walk.rs:189-191`, `:225-227`, `:305-307`). Codes are what let a host suppress a known warning, group them in a report, and document them.
+- [ ] `ATM-DIAG-06` `[reference]` `[seam]` —
+  **Non-ASCII source and selectors must compile without panic, and columns must be counted in UTF-16 code units.**
+  Compile a source containing an emoji before a style prop and a global selector with CJK and accented characters. Assert no panic, correct extraction, and that the reported column matches what an editor shows (UTF-16 units, so an emoji counts as two). Rust byte offsets and editor columns disagree for any non-ASCII file, which makes every diagnostic position wrong past the first multibyte character.
 
 ### Forbidden Architectural Patterns
 
@@ -358,19 +588,36 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 - [x] `ATM-FORBID-05` `[forbidden]` `[seam]` —
   **Atomic must not keep private CSS property / color tables next to canon.**
   Station `ATM-FORBID-05`. `border.rs` / `dimensional.rs` / `tokens/mod.rs` must not grow `BORDER_CONFIGS` or hardcoded color props.
+- [x] `ATM-FORBID-06` `[forbidden]` `[seam]` —
+  **The test harness must not reimplement the namer or the escaper.**
+  Assert that no TypeScript in `tests/` or `js/` constructs a class name or a CSS selector from an atom. The harness must obtain selectors from the compiler's own output, and `classSelector` in `tests/helpers.ts` — a regex that re-escaped class names in TypeScript (it lived at lines 149–151, not the 127–129 cited in an earlier draft of this case) — is deleted. A second escaper in the harness is the same split-brain `ATM-FORBID-03` forbids in the product, and it is worse here: because the harness escaped exactly the way the Rust denylist does, both sides agreed on an invalid selector and `ATM-GHOST-01` passed. This is precisely how `.2xl\:p_6r` became a blessed golden. Ghost membership is now `css-tree` class selectors inside `@layer utilities`.
+- [ ] `ATM-FORBID-07` `[forbidden]` `[seam]` —
+  **No golden may contain machine-specific state.**
+  Assert that no file under `tests/cases/*/output/` contains an absolute path, a home directory, a hostname, or a timestamp. Nine `diagnostics.json` goldens embed `/Users/ryn/Developer/reference-ui/…` today (`ATM-COND-07`, `ATM-DIAG-02`, `ATM-DIAG-03`, `ATM-FORBID-02`, `ATM-LEAF-04`, `ATM-LEAF-06`, `ATM-LEAF-07`, `ATM-SITE-05`, `ATM-STATIC-01`), so the suite **cannot pass on any other checkout**. The golden runner must normalise the case root to a relative path. This is the mechanical reason atomic tests are absent from CI, and no amount of new cases matters until it is fixed.
+
+### Engine Parity & Scale
+
+- [ ] `ATM-SEAM-01` `[reference]` `[seam]` —
+  **The in-process Rust compiler and the N-API bridge must produce identical artifacts for the same input.**
+  Compile one representative case through `atomic::compile` in Rust and through `compileSystem` from TypeScript, and assert the `stylesheet`, `css.classes`, `diagnostics`, and `recipes` are deep-equal. Assert the TS types in `js/types.ts` match the serde shape rather than drifting: `CssRuntime.classes` is optional in TS but always present in Rust, and `wants`/`recipes` are likewise optional on one side only. This is the repo's own unimplemented gate C (`README.md`), and without it Cargo tests and Vitest stations can disagree indefinitely — each proving a different engine.
+- [ ] `ATM-PERF-01` `[reference]` `[seam]` —
+  **Compiling a large source tree must stay within a declared time and memory budget, and `AtomSet` size must equal the unique atom count.**
+  Compile a generated tree of a few thousand files, assert the wall time is under a recorded bound, and assert the atom count equals the number of distinct `(prop, value, when, important)` tuples. Every file is currently parsed twice — once for constants (`lib.rs:180-196`) and once for extract (`lib.rs:198-214`) — and there is no timing anywhere in the crate, so the first real `ref sync` on an app-sized tree is where that gets discovered. A budget makes the double parse visible before a user finds it.
 
 ---
 
 ## 5. Existing Proof Map
 
 A tick is a `tests/cases/<ATM-*>` folder whose name is the ID. Standing gauges
-cover `ATM-GHOST-01` and `ATM-LAYER-01`. Cargo `#[test]` is not a tick.
+cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
+`ATM-ORDER-06`, and `ATM-VALID-02` (type + `ATM-ATOM-02`). Cargo `#[test]` is not a tick.
 
 | Contract ID | Status | Harness | Proof Source |
 | :--- | :--- | :--- | :--- |
-| `ATM-GHOST-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
+| `ATM-GHOST-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (css-tree `@layer utilities`) |
 | `ATM-GHOST-02` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-02/` |
 | `ATM-GHOST-03` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-03/` |
+| `ATM-GHOST-05` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-05/` |
 | `ATM-SITE-01` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-01/` |
 | `ATM-SITE-02` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-02/` |
 | `ATM-SITE-03` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-03/` |
@@ -395,6 +642,7 @@ cover `ATM-GHOST-01` and `ATM-LAYER-01`. Cargo `#[test]` is not a tick.
 | `ATM-WANT-02` | `[x]` | `[seam]` | `tests/cases/ATM-WANT-02/` |
 | `ATM-ATOM-01` | `[x]` | `[seam]` | `tests/cases/ATM-ATOM-01/` |
 | `ATM-ATOM-02` | `[x]` | `[seam]` | `tests/cases/ATM-ATOM-02/` |
+| `ATM-VALID-02` | `[x]` | `[seam]` | `CssValue` (no Bool/Null) + `ATM-ATOM-02` / `ATM-SITE-09` |
 | `ATM-ATOM-03` | `[x]` | `[seam]` | `tests/cases/ATM-ATOM-03/` |
 | `ATM-ATOM-04` | `[x]` | `[seam]` | `tests/cases/ATM-ATOM-04/` |
 | `ATM-RHYTHM-01` | `[x]` | `[seam]` | `tests/cases/ATM-RHYTHM-01/` |
@@ -407,6 +655,7 @@ cover `ATM-GHOST-01` and `ATM-LAYER-01`. Cargo `#[test]` is not a tick.
 | `ATM-SHORT-03` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-03/` |
 | `ATM-SHORT-04` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-04/` |
 | `ATM-SHORT-05` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-05/` |
+| `ATM-SHORT-06` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-06/` |
 | `ATM-COND-01` | `[x]` | `[seam]` | `tests/cases/ATM-COND-01/` |
 | `ATM-COND-02` | `[x]` | `[seam]` | `tests/cases/ATM-COND-02/` |
 | `ATM-COND-03` | `[x]` | `[seam]` | `tests/cases/ATM-COND-03/` |
@@ -430,11 +679,14 @@ cover `ATM-GHOST-01` and `ATM-LAYER-01`. Cargo `#[test]` is not a tick.
 | `ATM-LAYER-02` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-02/` |
 | `ATM-LAYER-03` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-03/` |
 | `ATM-LAYER-04` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-04/` |
+| `ATM-LAYER-07` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-07/` |
 | `ATM-NAME-01` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-01/` |
 | `ATM-NAME-02` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-02/` |
 | `ATM-NAME-03` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-03/` |
 | `ATM-NAME-04` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-04/` |
 | `ATM-NAME-05` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-05/` |
+| `ATM-NAME-06` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-06/` + `ATM-COND-01` |
+| `ATM-NAME-07` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-07/` |
 | `ATM-DIAG-01` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-01/` |
 | `ATM-DIAG-02` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-02/` |
 | `ATM-DIAG-03` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-03/` |
@@ -443,20 +695,112 @@ cover `ATM-GHOST-01` and `ATM-LAYER-01`. Cargo `#[test]` is not a tick.
 | `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` |
 | `ATM-FORBID-04` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-04/` |
 | `ATM-FORBID-05` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-05/` |
+| `ATM-FORBID-06` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (`classSelector` deleted) |
+| `ATM-ORDER-01` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-01/` |
+| `ATM-ORDER-02` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-02/` |
+| `ATM-ORDER-03` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-03/` |
+| `ATM-ORDER-04` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-04/` |
+| `ATM-ORDER-05` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
+| `ATM-ORDER-06` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
 
 ---
 
 ## 6. Remaining Cases [ ] (what a real `styles.css` still needs)
 
-Track A+ ticked `COND-01`/`05`/`06`/`07`/`09`, `TOKEN-01`–`05`,
-`LAYER-03`, and closed recipes (`ATM-RECIPE-01`–`03`). Reset chrome and
-keyframes are still empty in tonight's fixture.
+The first 90 IDs are ticked. The 40 open IDs are the 2026-09-15 audit (§2) and
+are grouped below by what they buy. Order is the recommended landing order:
+each tier makes the next tier's goldens trustworthy.
 
-### Still open
+### Tier 0 — stop shipping wrong CSS (P0, blocks production)
 
-None of the 75 named IDs remain. Panda jobs we **do not** add as cases:
-`jsxMatchTag` config, literal evaluator, LightningCSS, `split_css`,
-hooks, `styled.div` factory, slot-recipe `sva`, `$` token rename hook.
+`ATM-FORBID-07` · `ATM-VALID-01` ·
+`ATM-GHOST-04` ·
+`ATM-TOKEN-10`
+
+`ATM-FORBID-07` is listed first because it is a precondition for everything
+else: nine goldens embed this machine's home directory, so the suite cannot run
+anywhere but one laptop. Fix portability, then get the suite into CI, then fix
+correctness — otherwise none of the work below is defended.
+
+Each of these has a live defect behind it. `ATM-VALID-01` is the standing CSS
+gauge; the `ATM-COND-01` digit-leading identifier is closed (`ATM-NAME-06`).
+Remaining syntax in quarantine is `ATM-SHORT-03`.
+
+### Tier 1 — make the suite able to hold a line
+
+`ATM-VALID-03` ·
+`ATM-DIAG-04` · `ATM-DIAG-05` · `ATM-DIAG-06`
+
+Determinism and idempotence are gauges, not fixtures — a suite that cannot prove
+the same input yields the same bytes cannot review a golden diff at all.
+
+### Tier 2 — author APIs that are documented but not proven
+
+`ATM-COND-10` · `ATM-COND-11` · `ATM-LEAF-10` ·
+`ATM-MERGE-01` · `ATM-MERGE-02` · `ATM-MERGE-03` · `ATM-UNIT-01` ·
+`ATM-UNIT-02` · `ATM-ATOM-05` · `ATM-SITE-12` · `ATM-SITE-14` ·
+`ATM-SITE-15` · `ATM-SITE-16` · `ATM-SEAM-01`
+
+`ATM-SITE-14`, `ATM-SITE-15`, and `ATM-SITE-16` are the "implemented but never
+inputted" group. The `css={{ … }}` JSX attribute, namespace imports, the internal
+`__reference_ui_css` alias, and the project-wide constant merge are all live code
+paths with no station input exercising them at all.
+
+`ATM-COND-10` is the sharpest omission in the original 75: `_active`, `_focus`,
+`_focusVisible`, and `_disabled` are the four most-used conditions in the
+library and `ATM-COND-02` explicitly disclaims all of them.
+
+### Tier 3 — capability breadth the design system needs
+
+`ATM-COND-13` · `ATM-COND-14` · `ATM-COND-15` · `ATM-TOKEN-06` ·
+`ATM-TOKEN-07` · `ATM-TOKEN-08` · `ATM-TOKEN-09` · `ATM-TOKEN-11` ·
+`ATM-STATIC-03` · `ATM-RECIPE-04` · `ATM-RECIPE-05` · `ATM-RECIPE-06` ·
+`ATM-LAYER-05` · `ATM-LAYER-06` · `ATM-LAYER-08` ·
+`ATM-COND-16` · `ATM-SITE-13` · `ATM-PERF-01`
+
+`ATM-SITE-13` sits last because it needs a real primitive graph, but note that
+it also **repairs an internal contradiction**: `ATM-SITE-01` only passes because
+the empty-host fallback scans every tag, which is the behaviour `ATM-SITE-08`
+forbids. Until it lands, those two stations disagree about what gating means.
+
+### A tick is not a cutover
+
+Ticking all 121 does not make atomic the production compiler, and the SPEC should
+not be read as claiming it does. Panda still generates the live `styles.css`;
+native compile runs only behind `REF_SYSTEM_ENGINE=native` and **appends** its
+sheet onto Panda's, so two layer preambles ship. `CompileResult.css` and
+`CompileResult.recipes` are discarded by the host entirely, and runtime `css()` /
+`recipe()` still call `@reference-ui/styled`. That means `ATM-GHOST-01` — our P0 —
+is unenforceable in production today, because the class map it protects never
+leaves the N-API boundary, and `ATM-RECIPE-02`'s variant table has no consumer.
+Cutover work is tracked in `chefs_kiss.md`, not here; these cases prove the
+compiler, and the compiler is only half the delivery.
+
+`ATM-LAYER-05` and `ATM-LAYER-06` close dangling references that ship today: the
+fixture emits `--animations-fadeIn-normal: fadeIn 0.5s ease-out` and
+`--fonts-sans: "Inter", …` while nothing defines `@keyframes fadeIn` or loads
+Inter.
+
+### Panda jobs we still do not add as cases
+
+`jsxMatchTag` config, the literal evaluator, pure-function inlining, LightningCSS,
+`split_css`, the `@layer` specificity polyfill, hooks and plugin callbacks,
+`styled.div` factory, slot-recipe `sva`, patterns as factories, the `$` token
+rename hook, `prefix` / `hash` / `separator` config, layer renaming, Vue / Svelte
+/ Astro adapters, `include` globs, cross-file constant folding, and `colorPalette`
+virtual tokens. The first eleven are refusals in §7; the last three are scope
+decisions to revisit only if a component needs them.
+
+### Deliberate divergences from Panda (keep these)
+
+We are not chasing parity where their behavior is worse. Keep: no `currentColor`
+completion on shorthands (§7.5); both ternary branches scooped rather than
+evaluated (`ATM-LEAF-01`); one color-mode wrap via `data-panda-theme` instead of
+their `.dark &` / `[data-panda-theme]` split; `http(s):` values emitted rather
+than silently dropped; unresolved token paths raw in the value with a warning
+rather than escaped into the declaration; six layers with a distinct `global`;
+readable atomic names with no hash option; and `const`-only constant folding
+rather than their `export let` leniency.
 
 ---
 
@@ -482,3 +826,13 @@ The following architectural constraints are strictly enforced across the `atomic
    Design system fragments (`tokens()`, `font()`, `globalCss()`) are collected in JavaScript by `reference-core/src/lib/fragments`. TypeScript interface generation is owned by `modules/typegen`.
 9. **DO NOT own React DOM primitives**:
    Primitives (`Div`, `Button`, `Span`, etc.) live in `@reference-ui/react`. The atomic engine is a pure stylesheet compiler that knows nothing about React component lifecycles or virtual DOMs.
+10. **DO NOT emit a value that is not CSS (`ATM-VALID-02`)**:
+    Never print a Rust `Debug`/`Display` form into a declaration. `true`, `false`, and `null` are not CSS values. A want that cannot become a valid declaration is a diagnostic, not a rule. `border: true` is silently discarded by every browser, which is worse than a compile warning because the suite reports success.
+11. **DO NOT sort rules by their text (`ATM-ORDER-01`, `ATM-ORDER-03`)**:
+    Never order emitted rules by comparing selector or at-rule strings. Cascade order must key on parsed semantics — query magnitude in a normalized unit, declared pseudo precedence, property priority. Lexicographic ordering puts `min-width: 1024px` before `640px` and `_hover` after `_disabled`.
+12. **DO NOT escape with a denylist (`ATM-NAME-07`)**:
+    Never enumerate the characters that need escaping. Escape everything outside `[A-Za-z0-9_-]`, and hex-escape a leading digit. A denylist silently ships an invalid selector the first time an author uses a character nobody listed.
+13. **DO NOT let the harness construct names (`ATM-FORBID-06`)**:
+    Never build a class name or selector in TypeScript, including in test helpers. A harness-side escaper agrees with a compiler-side bug by construction and converts a gauge into a rubber stamp.
+14. **DO NOT let documentation describe unbuilt behavior**:
+    A module README states the contract that module actually enforces. If a guarantee is specified but not implemented, it belongs in this SPEC as a `[ ]` case, not in a README as prose. Three READMEs described the cascade sorter for long enough that a reviewer could read the module, believe ordering was handled, and ship the inversion in `ATM-ORDER-01`.

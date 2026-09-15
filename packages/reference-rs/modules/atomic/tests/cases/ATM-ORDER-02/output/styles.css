@@ -1,0 +1,8 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .c_red { color: red; }
+  .hover\:c_blue:is(:hover, [data-hover]) { color: blue; }
+  @container (min-width: 640px) {
+    .\[\@container_\(min-width\:_640px\)\]\:c_green { color: green; }
+  }
+}

@@ -88,7 +88,6 @@ impl TokenSplitter {
     fn open_paren(&mut self) {
         // calc(1r + 2px)
         self.depth = self.depth.saturating_add(1);
-        self.depth = self.depth.saturating_add(1);
         self.current.push('(');
     }
 
@@ -238,4 +237,16 @@ pub fn parse_shorthand_tokens(tokens: &[String], is_outline: bool) -> ParsedShor
         parsed.assign_token(token, is_outline);
     }
     parsed
+}
+
+#[cfg(test)]
+mod tests {
+    use super::split_tokens;
+
+    #[test]
+    fn calc_function_does_not_glue_following_token() {
+        // Before the depth fix this was one token: "calc(1px + 1px) solid".
+        let tokens = split_tokens("calc(1px + 1px) solid");
+        assert_eq!(tokens.as_slice(), ["calc(1px + 1px)", "solid"]);
+    }
 }

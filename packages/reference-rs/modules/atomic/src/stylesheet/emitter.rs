@@ -1,51 +1,20 @@
 //! Stylesheet rule builder and CSS layer emitter.
 //! Generates valid, deterministic CSS declarations wrapped in cascade layers, selectors, and at-rules.
-//! `@container` wrappers on atoms are already-concrete strings from `r/`; this file prints them.
-//! Closed recipe classes are printed in `@layer recipes` before utilities; empty recipes stay omitted.
+//! Utility rules are sorted and grouped by `cascade`; this file prints the layer shells
+//! and closed recipe classes. Recipe at-rules nest the same wrap sequence as utilities.
 
+use super::cascade::{at_rule_wraps, close_wraps, format_declaration, open_wraps, write_utilities};
 use super::layers::LAYER_PREAMBLE;
 use super::name;
 use super::system_layers::append_system_layers;
-use crate::atom::{Atom, AtomSet};
+use crate::atom::{Atom, AtomSet, WhenKind};
 use crate::recipes::CompiledRecipe;
-use crate::resolve::conditions::{apply_selector_condition, lower_condition, LoweredCondition};
+use crate::resolve::conditions::apply_selector_condition;
 use base_system::BaseSystem;
-use canon::to_css_declaration_property;
 use indexmap::IndexMap;
 
-struct FormattedRule {
-    selector: String,
-    declaration: String,
-    at_rule: Option<String>,
-}
-
-fn format_atom_declaration(atom: &Atom) -> String {
-    let css_prop = to_css_declaration_property(&atom.prop);
-    let css_val = atom.value.css_value_str();
-    if atom.important {
-        format!("{css_prop}: {css_val} !important;")
-    } else {
-        format!("{css_prop}: {css_val};")
-    }
-}
-
-fn extract_at_rule(atom: &Atom, system: &BaseSystem) -> Option<String> {
-    for cond in &atom.conditions {
-        match lower_condition(cond, system) {
-            LoweredCondition::Media(m) => return Some(m),
-            LoweredCondition::Container(c) => return Some(c),
-            LoweredCondition::Selector(_) => {}
-        }
-    }
-    None
-}
-
-fn atom_to_rule(atom: &Atom, system: &BaseSystem) -> FormattedRule {
-    FormattedRule {
-        selector: name::selector(atom, system),
-        declaration: format_atom_declaration(atom),
-        at_rule: extract_at_rule(atom, system),
-    }
+fn extract_at_rules(atom: &Atom) -> Vec<String> {
+    at_rule_wraps(atom).map(str::to_string).collect()
 }
 
 /// Builds complete atomic stylesheet containing layer preambles and generated utility rules.
@@ -61,102 +30,68 @@ pub fn build_stylesheet_with(
 ) -> String {
     let mut out = LAYER_PREAMBLE.to_string();
     append_system_layers(&mut out, system);
-    append_recipes_layer(&mut out, recipes, system);
+    append_recipes_layer(&mut out, recipes);
     if atom_set.is_empty() {
         return out;
     }
 
     out.push_str("@layer utilities {\n");
-
-    let mut direct_rules = Vec::new();
-    let mut at_rules = Vec::new();
-
-    for atom in atom_set {
-        let rule = atom_to_rule(atom, system);
-        if rule.at_rule.is_some() {
-            at_rules.push(rule);
-        } else {
-            direct_rules.push(rule);
-        }
-    }
-
-    direct_rules.sort_by(|a, b| a.selector.cmp(&b.selector));
-    for rule in direct_rules {
-        out.push_str(&format!("  {} {{ {} }}\n", rule.selector, rule.declaration));
-    }
-
-    at_rules.sort_by(|a, b| {
-        let at_a = a.at_rule.as_deref().unwrap_or("");
-        let at_b = b.at_rule.as_deref().unwrap_or("");
-        at_a.cmp(at_b).then_with(|| a.selector.cmp(&b.selector))
-    });
-
-    for rule in at_rules {
-        let at_rule_head = rule.at_rule.as_deref().unwrap_or("");
-        out.push_str(&format!(
-            "  {at_rule_head} {{\n    {} {{ {} }}\n  }}\n",
-            rule.selector, rule.declaration
-        ));
-    }
-
+    write_utilities(&mut out, atom_set);
     out.push_str("}\n");
     out
 }
 
-fn append_recipes_layer(out: &mut String, recipes: &[CompiledRecipe], system: &BaseSystem) {
+fn append_recipes_layer(out: &mut String, recipes: &[CompiledRecipe]) {
     if !recipes.iter().any(|recipe| !recipe.rules.is_empty()) {
         return;
     }
     out.push_str("@layer recipes {\n");
     for recipe in recipes {
         for rule in &recipe.rules {
-            emit_recipe_rule(out, rule, system);
+            emit_recipe_rule(out, rule);
         }
     }
     out.push_str("}\n");
 }
 
-fn emit_recipe_rule(out: &mut String, rule: &crate::recipes::RecipeRule, system: &BaseSystem) {
-    for group in group_recipe_atoms(rule, system) {
+fn emit_recipe_rule(out: &mut String, rule: &crate::recipes::RecipeRule) {
+    for group in group_recipe_atoms(rule) {
         write_recipe_group(out, &group);
     }
 }
 
 struct RecipeGroup {
-    at_rule: Option<String>,
+    at_rules: Vec<String>,
     selector: String,
     declarations: Vec<String>,
 }
 
-fn group_recipe_atoms(
-    rule: &crate::recipes::RecipeRule,
-    system: &BaseSystem,
-) -> Vec<RecipeGroup> {
-    let mut groups: IndexMap<(Option<String>, String), Vec<String>> = IndexMap::new();
+fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
+    let mut groups: IndexMap<(Vec<String>, String), Vec<String>> = IndexMap::new();
     for atom in &rule.atoms {
-        let at_rule = extract_at_rule(atom, system);
-        let selector = recipe_selector(&rule.class_name, atom, system);
+        let at_rules = extract_at_rules(atom);
+        let selector = recipe_selector(&rule.class_name, atom);
         groups
-            .entry((at_rule, selector))
+            .entry((at_rules, selector))
             .or_default()
-            .push(format_atom_declaration(atom));
+            .push(format_declaration(atom));
     }
     groups
         .into_iter()
-        .map(|((at_rule, selector), declarations)| RecipeGroup {
-            at_rule,
+        .map(|((at_rules, selector), declarations)| RecipeGroup {
+            at_rules,
             selector,
             declarations,
         })
         .collect()
 }
 
-fn recipe_selector(class_name: &str, atom: &Atom, system: &BaseSystem) -> String {
+fn recipe_selector(class_name: &str, atom: &Atom) -> String {
     let escaped = name::escape::escape_css_selector(class_name);
     let mut current = format!(".{escaped}");
     for cond in &atom.conditions {
-        if let LoweredCondition::Selector(template) = lower_condition(cond, system) {
-            current = apply_selector_condition(&template, &current);
+        if let WhenKind::Selector(template) = cond.wrap() {
+            current = apply_selector_condition(template, &current);
         }
     }
     current
@@ -164,24 +99,29 @@ fn recipe_selector(class_name: &str, atom: &Atom, system: &BaseSystem) -> String
 
 fn write_recipe_group(out: &mut String, group: &RecipeGroup) {
     let decls = group.declarations.join(" ");
-    if let Some(at_rule) = &group.at_rule {
-        out.push_str(&format!(
-            "  {at_rule} {{\n    {} {{ {decls} }}\n  }}\n",
-            group.selector
-        ));
-    } else {
-        out.push_str(&format!("  {} {{ {decls} }}\n", group.selector));
-    }
+    let wraps: Vec<&str> = group.at_rules.iter().map(String::as_str).collect();
+    open_wraps(out, &wraps);
+    let indent = "  ".repeat(wraps.len() + 1);
+    out.push_str(&format!("{indent}{} {{ {decls} }}\n", group.selector));
+    close_wraps(out, wraps.len());
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::atom::AtomValue;
+    use crate::atom::CssValue;
+    use crate::resolve::conditions::{lower_when, LoweredWhen};
     use smallvec::smallvec;
 
     fn empty_system() -> BaseSystem {
         BaseSystem::default()
+    }
+
+    fn when(raw: &str) -> crate::atom::When {
+        match lower_when(raw, &empty_system()) {
+            LoweredWhen::Known(w) => w,
+            other => panic!("expected known condition for {raw}, got {other:?}"),
+        }
     }
 
     #[test]
@@ -195,6 +135,8 @@ mod tests {
         let css = build_stylesheet(&AtomSet::new(), BaseSystem::lib_fixture());
         assert!(css.starts_with(LAYER_PREAMBLE));
         assert!(css.contains("@layer global {"));
+        assert!(css.contains("@keyframes fadeIn"));
+        assert!(css.contains("@keyframes spin"));
         assert!(css.contains("@layer tokens {"));
         assert!(!css.contains("@layer utilities"));
     }
@@ -204,7 +146,7 @@ mod tests {
         let mut set = AtomSet::new();
         set.insert(Atom::new(
             "marginTop".into(),
-            AtomValue::String("2r".into()),
+            CssValue::String("2r".into()),
             smallvec![],
             false,
         ));
@@ -217,8 +159,8 @@ mod tests {
         let mut set = AtomSet::new();
         set.insert(Atom::new(
             "marginTop".into(),
-            AtomValue::String("2r".into()),
-            smallvec!["@container (min-width: 640px)".into()],
+            CssValue::String("2r".into()),
+            smallvec![when("@container (min-width: 640px)")],
             false,
         ));
         let css = build_stylesheet(&set, &empty_system());

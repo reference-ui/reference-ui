@@ -3,11 +3,7 @@
  * helpers named css must not extract. The live Reference import still does.
  */
 import { expect } from 'vitest'
-import {
-  hasWant,
-  layerBody,
-  type AtomicCaseSpec,
-} from '../../helpers.js'
+import { hasWant, layerBody, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-10',

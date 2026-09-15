@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -6,11 +6,26 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_OUT_DIR } from '../../../constants'
 
 const createdDirs: string[] = []
+const NATIVE_STYLESHEET = '@layer reset, global, base, tokens, recipes, utilities;\n@layer utilities { .native_class { color: red; } }\n'
 
 function createTempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'reference-ui-codegen-'))
   createdDirs.push(dir)
   return dir
+}
+
+async function withNativeEngine<T>(run: () => Promise<T>): Promise<T> {
+  const prevEnv = process.env.REF_SYSTEM_ENGINE
+  process.env.REF_SYSTEM_ENGINE = 'native'
+  try {
+    return await run()
+  } finally {
+    if (prevEnv !== undefined) {
+      process.env.REF_SYSTEM_ENGINE = prevEnv
+    } else {
+      delete process.env.REF_SYSTEM_ENGINE
+    }
+  }
 }
 
 async function importCodegenModule(options: {
@@ -20,6 +35,7 @@ async function importCodegenModule(options: {
   loadConfigThrow?: Error
   cssgenThrow?: Error
   layerCss?: string
+  compileSync?: ReturnType<typeof vi.fn>
 }) {
   vi.resetModules()
   const {
@@ -28,6 +44,7 @@ async function importCodegenModule(options: {
     loadConfigThrow,
     cssgenThrow,
     layerCss = '',
+    compileSync,
   } = options
   const cwd = options.cwd ?? outDir
 
@@ -44,6 +61,7 @@ async function importCodegenModule(options: {
   const updateBaseSystemCss = vi.fn()
   const postprocessCss = vi.fn(() => layerCss)
   const debug = vi.fn()
+  const emitLog = vi.fn()
 
   vi.doMock('../../../config/store', () => ({
     getCwd: () => cwd,
@@ -54,6 +72,7 @@ async function importCodegenModule(options: {
   }))
   vi.doMock('../../../lib/log', () => ({
     log: { debug },
+    emitLog,
   }))
   vi.doMock('@pandacss/node', () => ({
     generate: pandaGenerate,
@@ -67,6 +86,11 @@ async function importCodegenModule(options: {
     PANDA_GLOBAL_CSS_FILENAME: 'global.css',
     postprocessCss,
   }))
+  if (compileSync) {
+    vi.doMock('@reference-ui/rust/system', () => ({
+      compileSync,
+    }))
+  }
 
   const mod = await import('./codegen')
   return {
@@ -88,6 +112,7 @@ afterEach(() => {
   vi.doUnmock('@pandacss/node')
   vi.doUnmock('../../base/create')
   vi.doUnmock('../../stylesheet/postprocess')
+  vi.doUnmock('@reference-ui/rust/system')
   vi.restoreAllMocks()
   for (const dir of createdDirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true })
@@ -256,41 +281,57 @@ describe('system/panda/gen/codegen', () => {
     })
   })
 
-  it('appends native compiler stylesheet when REF_SYSTEM_ENGINE is native', async () => {
+  it('writes native stylesheet and skips panda styles cssgen when native engine is set', async () => {
     const outDir = createTempDir()
     const configPath = join(outDir, 'panda.config.ts')
     writeFileSync(configPath, 'export default {}', 'utf-8')
-    const styledDir = join(outDir, 'styled')
-    const fs = await import('node:fs')
-    fs.mkdirSync(styledDir, { recursive: true })
-    const stylesPath = join(styledDir, 'styles.css')
-    writeFileSync(stylesPath, '/* panda baseline */\n', 'utf-8')
+    const stylesPath = join(outDir, 'styled', 'styles.css')
 
-    const prevEnv = process.env.REF_SYSTEM_ENGINE
-    process.env.REF_SYSTEM_ENGINE = 'native'
+    const compileSyncMock = vi.fn(() => ({ stylesheet: NATIVE_STYLESHEET }))
 
-    try {
-      const compileSyncMock = vi.fn(() => ({
-        stylesheet: '@layer utilities { .native_class { color: red; } }',
-      }))
-      vi.doMock('@reference-ui/rust/system', () => ({
+    await withNativeEngine(async () => {
+      const {
+        runPandaCodegen,
+        pandaGenerate,
+        pandaCssgen,
+        postprocessCss,
+        updateBaseSystemCss,
+      } = await importCodegenModule({ outDir, compileSync: compileSyncMock })
+
+      await runPandaCodegen()
+
+      expect(pandaGenerate).toHaveBeenCalledWith({ cwd: outDir }, configPath)
+      expect(pandaCssgen).toHaveBeenCalledTimes(1)
+      expect(pandaCssgen).not.toHaveBeenCalledWith({}, { cwd: outDir })
+      expect(pandaCssgen).toHaveBeenCalledWith({}, {
+        cwd: outDir,
+        type: 'global',
+        outfile: join(outDir, 'styled', 'global.css'),
+      })
+      expect(compileSyncMock).toHaveBeenCalledWith({ rootDir: outDir })
+      expect(readFileSync(stylesPath, 'utf-8')).toBe(NATIVE_STYLESHEET)
+      expect(readFileSync(stylesPath, 'utf-8')).not.toContain('/* panda baseline */')
+      // Atomic preamble is 6 layers; Panda postprocess expects the 5-layer sheet.
+      expect(postprocessCss).not.toHaveBeenCalled()
+      expect(updateBaseSystemCss).not.toHaveBeenCalled()
+    })
+  })
+
+  it('fails cssgen when native engine compile throws', async () => {
+    const outDir = createTempDir()
+    writeFileSync(join(outDir, 'panda.config.ts'), 'export default {}', 'utf-8')
+    const compileSyncMock = vi.fn(() => {
+      throw new Error('native boom')
+    })
+
+    await withNativeEngine(async () => {
+      const { runPandaCss, postprocessCss } = await importCodegenModule({
+        outDir,
         compileSync: compileSyncMock,
-      }))
+      })
 
-      const { runPandaCss } = await importCodegenModule({ outDir })
-      await runPandaCss()
-
-      expect(compileSyncMock).toHaveBeenCalled()
-      const content = fs.readFileSync(stylesPath, 'utf-8')
-      expect(content).toContain('/* panda baseline */')
-      expect(content).toContain('.native_class { color: red; }')
-    } finally {
-      if (prevEnv !== undefined) {
-        process.env.REF_SYSTEM_ENGINE = prevEnv
-      } else {
-        delete process.env.REF_SYSTEM_ENGINE
-      }
-      vi.doUnmock('@reference-ui/rust/system')
-    }
+      await expect(runPandaCss()).rejects.toThrow('native boom')
+      expect(postprocessCss).not.toHaveBeenCalled()
+    })
   })
 })

@@ -31,13 +31,14 @@ ranking sits on top of shorthand expansion:
 shorthands-of-shorthands → shorthands → logical longhands → physical longhands
 ```
 
-Longhands rank last so they override the shorthands they belong to.
-`resolve/shorthands` stops `borderBottom` from resetting color; this
-ordering makes the longhand color utility beat `border-color` regardless
-of extract order. Expansion alone cannot order two colour utilities
-against each other.
+That rank is `canon::property_cascade_rank` (longhand nesting plus
+`Inline`/`Block` in the name). Longhands rank last so they override the
+shorthands they belong to. `resolve/shorthands` stops `borderBottom` from
+resetting color; this ordering makes the longhand color utility beat
+`border-color` regardless of extract order.
 
-See `../README.md` for the full sort key.
+Utilities that share an at-rule wrap print inside one block. See
+`../README.md` for the full `CascadeKey`.
 
 ## Must not
 

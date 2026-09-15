@@ -1,20 +1,20 @@
 //! Resolved atomic utility declaration representing a single property-value pair with conditions.
-//! Encapsulates CSS property names, normalized values, condition chains, importance flags, and precomputed identity hashes.
-//! Enables deterministic hashing and deduplication during stylesheet generation.
+//! Encapsulates CSS property names, emittable `CssValue`s, lowered `When` chains, importance flags, and precomputed identity hashes.
+//! `value` cannot be Bool or Null: those stay on `Want` and are refused at resolve. Conditions are `When`, not authored strings.
 
 use rustc_hash::FxHasher;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::hash::{Hash, Hasher};
 
-use super::AtomValue;
+use super::{CssValue, When};
 
 /// One resolved atomic utility declaration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Atom {
     pub prop: Box<str>,
-    pub value: AtomValue,
-    pub conditions: SmallVec<[Box<str>; 2]>,
+    pub value: CssValue,
+    pub conditions: SmallVec<[When; 2]>,
     pub important: bool,
     pub hash: u64,
 }
@@ -22,8 +22,8 @@ pub struct Atom {
 impl Atom {
     pub fn new(
         prop: Box<str>,
-        value: AtomValue,
-        conditions: SmallVec<[Box<str>; 2]>,
+        value: CssValue,
+        conditions: SmallVec<[When; 2]>,
         important: bool,
     ) -> Self {
         let hash = Self::compute_hash(&prop, &value, &conditions, important);
@@ -40,11 +40,11 @@ impl Atom {
         &self.prop
     }
 
-    pub fn value(&self) -> &AtomValue {
+    pub fn value(&self) -> &CssValue {
         &self.value
     }
 
-    pub fn conditions(&self) -> &[Box<str>] {
+    pub fn conditions(&self) -> &[When] {
         &self.conditions
     }
 
@@ -56,12 +56,7 @@ impl Atom {
         self.hash
     }
 
-    fn compute_hash(
-        prop: &str,
-        value: &AtomValue,
-        conditions: &[Box<str>],
-        important: bool,
-    ) -> u64 {
+    fn compute_hash(prop: &str, value: &CssValue, conditions: &[When], important: bool) -> u64 {
         let mut hasher = FxHasher::default();
         prop.hash(&mut hasher);
         value.hash(&mut hasher);

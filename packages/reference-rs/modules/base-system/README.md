@@ -9,18 +9,29 @@ TypeScript already evaluated `tokens()` / `font()` / `keyframes()` /
 A base system is an **utterance** (this package's tokens). Canon is the
 **language**. Do not stuff one into the other.
 
-Tonight the crate is a typed bag plus a frozen `@reference-ui/lib`
-fixture (`BaseSystem::lib_fixture()`). `BaseSystem::default()` stays
-empty. `staticCss` is a property → token-list bag (`color: ['*']` or
-`bg: ['n100']`); the lib fixture leaves it empty so AtomSet stays small.
-Fragment `from_json`, `extends`, and `layers` are not here yet.
+The crate keeps two shapes. `BaseSystemDump` is the authored nested
+wire format (`{ value | light | dark }` leaves, brace aliases intact).
+`BaseSystem::from_json` lowers a dump into the indexed `BaseSystem`
+query engine (flat `category.path` keys, precomputed `cssVar`).
+`compile()` still deserializes the indexed shape directly so station
+dumps keep working. `BaseSystem::default()` stays empty. `staticCss` is
+a property → token-list bag (`color: ['*']` or `bg: ['n100']`); the lib
+fixture leaves it empty so AtomSet stays small. `extends` and `layers`
+are not here yet.
+
+`lib_fixture()` loads the committed lib dump (`src/lib_fixture/lib.json`)
+through `from_json`, then overlays host/Panda conditions, the standard
+breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The dump is
+produced by `pnpm --filter @reference-ui/rust base-system` from lib
+theme object literals (tokens, fonts, keyframes); `--check` fails if it
+would change. Recipes are not scraped from components; the fixture map
+stays empty. Atomic prints declared `@keyframes` inside `@layer global`.
 
 ## What it takes
 
-A constructed `BaseSystem`: either empty, or the lib fixture copied from
-the lib theme files (palette, `ui.*`, `design.*`, radii, fonts,
-breakpoints, named `_` conditions, `:root --spacing-root`). JS still
-owns producing a dump later.
+A constructed `BaseSystem`: either empty, or the lib fixture (generated
+lib tokens and fonts, plus host conditions, breakpoints, and
+`--spacing-root`). JS still owns fragment evaluation.
 
 ## What it emits
 
@@ -48,4 +59,5 @@ Atomic `compile()` takes `Option<BaseSystem>`. Omitted means the lib fixture.
 
 ```bash
 pnpm agentrs c base_system
+pnpm --filter @reference-ui/rust base-system --check
 ```

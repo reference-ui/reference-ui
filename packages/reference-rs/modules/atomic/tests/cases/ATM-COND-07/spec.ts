@@ -8,12 +8,8 @@ import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-07',
   verify(result) {
-    expect(
-      hasWant(result, 'p', '1r', ['@container (min-width: 300px)'])
-    ).toBe(true)
-    expect(
-      hasWant(result, 'mt', '2r', ['@container (min-width: 768px)'])
-    ).toBe(true)
+    expect(hasWant(result, 'p', '1r', ['@container (min-width: 300px)'])).toBe(true)
+    expect(hasWant(result, 'mt', '2r', ['@container (min-width: 768px)'])).toBe(true)
     expect(hasWant(result, 'p', '3r')).toBe(false)
     expect(result.stylesheet).toContain('@container (min-width: 300px)')
     expect(result.stylesheet).toContain('@container (min-width: 768px)')

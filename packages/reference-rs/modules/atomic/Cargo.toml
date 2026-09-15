@@ -20,3 +20,6 @@ oxc_span = { workspace = true }
 oxc_allocator = { workspace = true }
 oxc_syntax = "0.115"
 indexmap = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+shared.workspace = true

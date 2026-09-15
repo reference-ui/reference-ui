@@ -3,3 +3,7 @@
 /coverage
 /.nx/cache
 /.nx/workspace-data
+
+# Tasty manifest goldens are pretty-printed JSON object literals from the
+# compiler. Prettier would rewrite them into a different JS dialect.
+/packages/reference-rs/modules/tasty/tests/cases/**/output/manifest.js

@@ -1,0 +1,9 @@
+{
+  "name": "ghost-05",
+  "breakpoints": {
+    "names": ["sm"],
+    "widths": {
+      "sm": "640"
+    }
+  }
+}

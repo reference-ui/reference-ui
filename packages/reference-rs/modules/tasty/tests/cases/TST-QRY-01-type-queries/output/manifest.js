@@ -1,33 +1,39 @@
 export const manifest = {
-  version: '2',
-  warnings: [],
-  symbolsByName: {
-    SpacingScale: ['_afc6e4011a365278'],
-    ThemeConfig: ['_1bbbf42ce59cd490'],
-    WithTypeQueries: ['_7dffd7bb82e10899'],
+  "version": "2",
+  "warnings": [],
+  "symbolsByName": {
+    "SpacingScale": [
+      "_afc6e4011a365278"
+    ],
+    "ThemeConfig": [
+      "_1bbbf42ce59cd490"
+    ],
+    "WithTypeQueries": [
+      "_7dffd7bb82e10899"
+    ]
   },
-  symbolsById: {
-    _1bbbf42ce59cd490: {
-      id: '_1bbbf42ce59cd490',
-      name: 'ThemeConfig',
-      kind: 'typeAlias',
-      chunk: './chunks/_1bbbf42ce59cd490.js',
-      library: 'user',
+  "symbolsById": {
+    "_1bbbf42ce59cd490": {
+      "id": "_1bbbf42ce59cd490",
+      "name": "ThemeConfig",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_1bbbf42ce59cd490.js",
+      "library": "user"
     },
-    _7dffd7bb82e10899: {
-      id: '_7dffd7bb82e10899',
-      name: 'WithTypeQueries',
-      kind: 'interface',
-      chunk: './chunks/_7dffd7bb82e10899.js',
-      library: 'user',
+    "_7dffd7bb82e10899": {
+      "id": "_7dffd7bb82e10899",
+      "name": "WithTypeQueries",
+      "kind": "interface",
+      "chunk": "./chunks/_7dffd7bb82e10899.js",
+      "library": "user"
     },
-    _afc6e4011a365278: {
-      id: '_afc6e4011a365278',
-      name: 'SpacingScale',
-      kind: 'typeAlias',
-      chunk: './chunks/_afc6e4011a365278.js',
-      library: 'user',
-    },
-  },
-}
-export default manifest
+    "_afc6e4011a365278": {
+      "id": "_afc6e4011a365278",
+      "name": "SpacingScale",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_afc6e4011a365278.js",
+      "library": "user"
+    }
+  }
+};
+export default manifest;

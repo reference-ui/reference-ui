@@ -2,6 +2,7 @@
 //! Assembles deduplicated atomic rules into canonical CSS cascade layers and bundles accompanying diagnostics.
 //! Serves as the final compilation stage producing ready-to-inject stylesheets for browser and build environments.
 
+pub mod cascade;
 pub mod emitter;
 pub mod layers;
 pub mod name;

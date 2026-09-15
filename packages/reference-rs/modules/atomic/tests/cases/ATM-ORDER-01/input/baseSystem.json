@@ -1,0 +1,13 @@
+{
+  "name": "order-01",
+  "breakpoints": {
+    "names": ["sm", "md", "lg", "xl", "2xl"],
+    "widths": {
+      "sm": "640",
+      "md": "768",
+      "lg": "1024",
+      "xl": "1280",
+      "2xl": "1536"
+    }
+  }
+}

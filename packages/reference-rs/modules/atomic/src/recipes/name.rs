@@ -51,7 +51,10 @@ mod tests {
 
     #[test]
     fn variant_and_compound_spelling() {
-        assert_eq!(variant_class("button", "variant", "solid"), "button--variant_solid");
+        assert_eq!(
+            variant_class("button", "variant", "solid"),
+            "button--variant_solid"
+        );
         let mut props = IndexMap::new();
         props.insert("variant".into(), "solid".into());
         props.insert("size".into(), "sm".into());
