@@ -2,8 +2,8 @@
 //! Constructs lookup dictionaries mapping property and condition keys to compiled atomic CSS class names.
 //! Delivers the compact JSON payloads required by runtime styling helpers and client-side style injection.
 
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

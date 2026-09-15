@@ -12,7 +12,9 @@ const spec: StationSpec<VirtualResult> = {
   verify(result) {
     expect(result.metrics.rustApiMs).toBeGreaterThanOrEqual(0)
     expect(result.code).toContain("import { css } from 'src/system/runtime'")
-    expect(result.code).toContain("import React, { Box as Card } from '@reference-ui/react'")
+    expect(result.code).toContain(
+      "import React, { Box as Card } from '@reference-ui/react'"
+    )
   },
 }
 

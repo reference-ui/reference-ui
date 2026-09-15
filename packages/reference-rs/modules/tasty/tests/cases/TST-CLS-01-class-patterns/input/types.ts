@@ -80,6 +80,6 @@ class _Decorated {
 class _ParameterProps {
   constructor(
     public x: number,
-    private _y: string,
+    private _y: string
   ) {}
 }

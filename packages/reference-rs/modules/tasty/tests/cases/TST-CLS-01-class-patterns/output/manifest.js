@@ -1,2 +1,73 @@
-export const manifest = {"version":"2","warnings":[],"symbolsByName":{"AbstractBaseForClass":["_a2b0cbf2409deda8"],"BarForImplements":["_ff601ba5aabf9a6c"],"ClassDecorators":["_b6da2918cdb9422c"],"ClassExtendsAbstract":["_9662bf3556d469a7"],"ClassImplements":["_cbae72a86bb90268"],"ClassParameterProperties":["_9b3355f5486a00cc"],"ClassPrivateFields":["_ea4a1c820dfe9900"],"ClassStaticMembers":["_c3af811f0fc04da9"]},"symbolsById":{"_9662bf3556d469a7":{"id":"_9662bf3556d469a7","name":"ClassExtendsAbstract","kind":"interface","chunk":"./chunks/_9662bf3556d469a7.js","library":"user"},"_9b3355f5486a00cc":{"id":"_9b3355f5486a00cc","name":"ClassParameterProperties","kind":"interface","chunk":"./chunks/_9b3355f5486a00cc.js","library":"user"},"_a2b0cbf2409deda8":{"id":"_a2b0cbf2409deda8","name":"AbstractBaseForClass","kind":"interface","chunk":"./chunks/_a2b0cbf2409deda8.js","library":"user"},"_b6da2918cdb9422c":{"id":"_b6da2918cdb9422c","name":"ClassDecorators","kind":"interface","chunk":"./chunks/_b6da2918cdb9422c.js","library":"user"},"_c3af811f0fc04da9":{"id":"_c3af811f0fc04da9","name":"ClassStaticMembers","kind":"interface","chunk":"./chunks/_c3af811f0fc04da9.js","library":"user"},"_cbae72a86bb90268":{"id":"_cbae72a86bb90268","name":"ClassImplements","kind":"interface","chunk":"./chunks/_cbae72a86bb90268.js","library":"user"},"_ea4a1c820dfe9900":{"id":"_ea4a1c820dfe9900","name":"ClassPrivateFields","kind":"interface","chunk":"./chunks/_ea4a1c820dfe9900.js","library":"user"},"_ff601ba5aabf9a6c":{"id":"_ff601ba5aabf9a6c","name":"BarForImplements","kind":"interface","chunk":"./chunks/_ff601ba5aabf9a6c.js","library":"user"}}};
-export default manifest;
+export const manifest = {
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    AbstractBaseForClass: ['_a2b0cbf2409deda8'],
+    BarForImplements: ['_ff601ba5aabf9a6c'],
+    ClassDecorators: ['_b6da2918cdb9422c'],
+    ClassExtendsAbstract: ['_9662bf3556d469a7'],
+    ClassImplements: ['_cbae72a86bb90268'],
+    ClassParameterProperties: ['_9b3355f5486a00cc'],
+    ClassPrivateFields: ['_ea4a1c820dfe9900'],
+    ClassStaticMembers: ['_c3af811f0fc04da9'],
+  },
+  symbolsById: {
+    _9662bf3556d469a7: {
+      id: '_9662bf3556d469a7',
+      name: 'ClassExtendsAbstract',
+      kind: 'interface',
+      chunk: './chunks/_9662bf3556d469a7.js',
+      library: 'user',
+    },
+    _9b3355f5486a00cc: {
+      id: '_9b3355f5486a00cc',
+      name: 'ClassParameterProperties',
+      kind: 'interface',
+      chunk: './chunks/_9b3355f5486a00cc.js',
+      library: 'user',
+    },
+    _a2b0cbf2409deda8: {
+      id: '_a2b0cbf2409deda8',
+      name: 'AbstractBaseForClass',
+      kind: 'interface',
+      chunk: './chunks/_a2b0cbf2409deda8.js',
+      library: 'user',
+    },
+    _b6da2918cdb9422c: {
+      id: '_b6da2918cdb9422c',
+      name: 'ClassDecorators',
+      kind: 'interface',
+      chunk: './chunks/_b6da2918cdb9422c.js',
+      library: 'user',
+    },
+    _c3af811f0fc04da9: {
+      id: '_c3af811f0fc04da9',
+      name: 'ClassStaticMembers',
+      kind: 'interface',
+      chunk: './chunks/_c3af811f0fc04da9.js',
+      library: 'user',
+    },
+    _cbae72a86bb90268: {
+      id: '_cbae72a86bb90268',
+      name: 'ClassImplements',
+      kind: 'interface',
+      chunk: './chunks/_cbae72a86bb90268.js',
+      library: 'user',
+    },
+    _ea4a1c820dfe9900: {
+      id: '_ea4a1c820dfe9900',
+      name: 'ClassPrivateFields',
+      kind: 'interface',
+      chunk: './chunks/_ea4a1c820dfe9900.js',
+      library: 'user',
+    },
+    _ff601ba5aabf9a6c: {
+      id: '_ff601ba5aabf9a6c',
+      name: 'BarForImplements',
+      kind: 'interface',
+      chunk: './chunks/_ff601ba5aabf9a6c.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

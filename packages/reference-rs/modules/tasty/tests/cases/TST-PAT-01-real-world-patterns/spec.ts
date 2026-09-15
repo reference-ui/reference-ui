@@ -22,7 +22,12 @@ async function verifyPatternShapes(api: TastyApi): Promise<void> {
   const zodInfer = await api.loadSymbolByName('ZodInfer')
   const styledSystemProps = await api.loadSymbolByName('StyledSystemProps')
 
-  for (const sym of [reactComponentProps, reactForwardRef, reactContext, builderPatternGeneric]) {
+  for (const sym of [
+    reactComponentProps,
+    reactForwardRef,
+    reactContext,
+    builderPatternGeneric,
+  ]) {
     expectUnderlyingPresent(sym)
   }
 

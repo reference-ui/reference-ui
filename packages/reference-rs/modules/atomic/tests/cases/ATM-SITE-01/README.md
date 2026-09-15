@@ -1,4 +1,4 @@
-# ATM-SITE-01 canon primitives
+# ATM-SITE-01
 
-The dictionary seam. Real Reference primitives (`Div`, `Button`) extract
-style props. Canon decides which tags and props are style-bearing.
+Style props on Reference primitives (`Div`, `Button`) extract as wants.
+Canon decides which tags and props are style-bearing. Contract: [SPEC.md](../../../SPEC.md).

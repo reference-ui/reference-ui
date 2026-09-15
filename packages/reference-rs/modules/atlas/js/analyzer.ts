@@ -33,7 +33,9 @@ export async function analyzeDetailed(
   config?: AtlasConfig
 ): Promise<AtlasAnalysisResult> {
   const normalizedRoot = path.resolve(rootDir)
-  const configJson = config ? JSON.stringify({ ...config, rootDir: normalizedRoot }) : undefined
+  const configJson = config
+    ? JSON.stringify({ ...config, rootDir: normalizedRoot })
+    : undefined
 
   return analyzeDetailedNative(normalizedRoot, configJson)
 }

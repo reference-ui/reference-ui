@@ -174,10 +174,7 @@ fn all_duplicate_symbols_equivalent(
     })
 }
 
-fn symbols_equivalent(
-    left: &crate::model::TsSymbol,
-    right: &crate::model::TsSymbol,
-) -> bool {
+fn symbols_equivalent(left: &crate::model::TsSymbol, right: &crate::model::TsSymbol) -> bool {
     left.name == right.name
         && left.kind == right.kind
         && left.description == right.description
@@ -202,10 +199,7 @@ fn type_parameters_equivalent(
         })
 }
 
-fn members_equivalent(
-    left: &[crate::model::TsMember],
-    right: &[crate::model::TsMember],
-) -> bool {
+fn members_equivalent(left: &[crate::model::TsMember], right: &[crate::model::TsMember]) -> bool {
     left.len() == right.len()
         && left.iter().zip(right).all(|(left, right)| {
             left.name == right.name
@@ -230,10 +224,7 @@ fn optional_type_ref_equivalent(
     }
 }
 
-fn type_refs_equivalent(
-    left: &[crate::model::TypeRef],
-    right: &[crate::model::TypeRef],
-) -> bool {
+fn type_refs_equivalent(left: &[crate::model::TypeRef], right: &[crate::model::TypeRef]) -> bool {
     left.len() == right.len()
         && left
             .iter()
@@ -241,10 +232,7 @@ fn type_refs_equivalent(
             .all(|(left, right)| type_ref_equivalent(left, right))
 }
 
-fn type_ref_equivalent(
-    left: &crate::model::TypeRef,
-    right: &crate::model::TypeRef,
-) -> bool {
+fn type_ref_equivalent(left: &crate::model::TypeRef, right: &crate::model::TypeRef) -> bool {
     use crate::model::TypeRef;
 
     match (left, right) {
@@ -444,10 +432,7 @@ fn optional_boxed_type_ref_equivalent(
     }
 }
 
-fn fn_params_equivalent(
-    left: &[crate::model::FnParam],
-    right: &[crate::model::FnParam],
-) -> bool {
+fn fn_params_equivalent(left: &[crate::model::FnParam], right: &[crate::model::FnParam]) -> bool {
     left.len() == right.len()
         && left.iter().zip(right).all(|(left, right)| {
             left.name == right.name

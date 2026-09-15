@@ -2,10 +2,10 @@
 //! Encapsulates CSS property names, normalized values, condition chains, importance flags, and precomputed identity hashes.
 //! Enables deterministic hashing and deduplication during stylesheet generation.
 
-use std::hash::{Hash, Hasher};
 use rustc_hash::FxHasher;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
+use std::hash::{Hash, Hasher};
 
 use super::AtomValue;
 

@@ -1,4 +1,4 @@
-//! Extract `css()` / `css.raw()` call arguments into wants.
+//! Extract `css()` / `css.object()` call arguments into wants.
 //! Hands object and ternary-of-object arguments to the expression walker.
 //! Does not walk `recipe()` and does not interpret JSX attributes.
 
@@ -28,7 +28,7 @@ fn css_callee_name(callee: &Expression<'_>) -> Option<String> {
             css_identifier_name(ident.name.as_str())
         }
         Expression::StaticMemberExpression(member) => {
-            // css.raw({ ... }) / styled.css({ ... })
+            // css.object({ ... }) / styled.css({ ... })
             css_member_name(member)
         }
         _ => None,
@@ -46,22 +46,22 @@ fn css_identifier_name(name: &str) -> Option<String> {
 
 fn css_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
     let prop = member.property.name.as_str();
-    if prop == "raw" {
-        // css.raw({ p: '1r' })
-        return css_raw_member_name(&member.object);
-    }
     if prop == "css" {
         // styled.css({ mt: '2r' })
         return Some("css".to_string());
     }
+    if prop == "object" {
+        // css.object({ p: '1r' })
+        return css_object_member_name(&member.object);
+    }
     None
 }
 
-fn css_raw_member_name(obj: &Expression<'_>) -> Option<String> {
-    // css.raw({ p: '1r' })
+fn css_object_member_name(obj: &Expression<'_>) -> Option<String> {
+    // css.object({ p: '1r' })
     if let Expression::Identifier(ident) = obj {
         if ident.name.as_str() == "css" {
-            return Some("css.raw".to_string());
+            return Some("css.object".to_string());
         }
     }
     None

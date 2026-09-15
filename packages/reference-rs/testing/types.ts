@@ -9,7 +9,7 @@
  * Execution context provided to station hooks and specs.
  */
 export interface StationContext {
-  /** Folder name, e.g. "ATM-LEAF-01-ternaries" */
+  /** Folder name, e.g. "ATM-LEAF-01" */
   caseName: string
   /** Extracted ID prefix, e.g. "ATM-LEAF-01" */
   caseId: string

@@ -13,7 +13,7 @@ OKLCH and semantic color-mode resolution already have an owner: `tokens()`
 in reference-core / Atlas. This module **looks up** the compiled dictionary
 from `config/`. It does not become a second color science crate.
 
-`_dark` / `_light` are conditions (`resolve/conditions`), not token
+`_dark` / `_light` are pseudo-props (`resolve/conditions/pseudoprops`), not token
 renames. A leaf `color: 'gray.800'` under `_dark` is still this lookup,
 then a condition chain.
 

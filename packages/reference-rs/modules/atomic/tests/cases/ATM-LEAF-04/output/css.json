@@ -7,6 +7,6 @@
   "color:blue": "c_blue",
   "color:red": "c_red",
   "margin:2r": "m_2r",
-  "outlineStyle:solid": "ring-s_solid",
-  "outlineWidth:2px": "ring-w_2px"
+  "outlineStyle:solid": "outline-s_solid",
+  "outlineWidth:2px": "outline-w_2px"
 }

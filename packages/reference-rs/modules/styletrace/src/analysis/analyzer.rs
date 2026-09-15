@@ -10,8 +10,8 @@ use crate::resolver::{
     collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
 };
 
-use super::module_resolution::resolve_imported_module;
 use super::model::{EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule};
+use super::module_resolution::resolve_imported_module;
 use super::parser::parse_trace_module;
 use super::primitive_metadata::collect_reference_primitive_jsx_names;
 use super::source_files::discover_source_files;
@@ -34,12 +34,8 @@ pub fn trace_style_jsx_names_with_hint(
     let source_files = discover_source_files(&normalized_root)?;
     let mut modules = BTreeMap::new();
     for file_path in source_files {
-        let module = parse_trace_module(
-            &file_path,
-            &sync_root,
-            &style_prop_names,
-            &primitive_names,
-        )?;
+        let module =
+            parse_trace_module(&file_path, &sync_root, &style_prop_names, &primitive_names)?;
         modules.insert(file_path, module);
     }
 
@@ -292,8 +288,7 @@ impl StyleTraceAnalyzer {
             return Ok(self.primitive_names.contains(imported_name));
         }
 
-        let Some(resolved_module) =
-            resolve_imported_module(module_path, source, &self.sync_root)?
+        let Some(resolved_module) = resolve_imported_module(module_path, source, &self.sync_root)?
         else {
             return Ok(false);
         };

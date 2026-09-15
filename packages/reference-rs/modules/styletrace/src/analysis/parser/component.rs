@@ -2,16 +2,18 @@
 //! Identifies components and factories based on the presence of style pipeline usage or JSX returns.
 //! Populates the intermediate trace representation.
 
-use std::collections::{BTreeSet, HashMap};
 use oxc_ast::ast::{Expression, FormalParameter, Statement};
+use std::collections::{BTreeSet, HashMap};
 
-use crate::analysis::model::{ComponentEdge, FactoryTarget, TraceComponent, TraceFactory, TraceImport};
-use crate::analysis::util::is_component_name;
-use crate::resolver::StyleTraceError;
 use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
 use super::types::parse_prop_bindings;
+use crate::analysis::model::{
+    ComponentEdge, FactoryTarget, TraceComponent, TraceFactory, TraceImport,
+};
+use crate::analysis::util::is_component_name;
 use crate::analysis::walk::{collect_edges_from_statement, WalkContext};
+use crate::resolver::StyleTraceError;
 
 pub struct FunctionLikeContext<'a, 'b, 'c> {
     pub name: &'a str,
@@ -35,7 +37,7 @@ pub fn component_from_function_declaration(
         body_statements: function.body.as_ref().map(|body| &body.statements),
         wrapper_style_props: BTreeSet::new(),
     };
-    
+
     let component = component_from_function_like(&fl_ctx, ctx)?;
 
     Ok(component.map(|c| (name, c)))
@@ -57,7 +59,9 @@ pub fn factory_from_function_declaration(
         body.statements
             .iter()
             .filter_map(|statement| match statement {
-                Statement::VariableDeclaration(declaration) => Some(declaration.declarations.iter()),
+                Statement::VariableDeclaration(declaration) => {
+                    Some(declaration.declarations.iter())
+                }
                 _ => None,
             })
             .flatten(),
@@ -67,7 +71,9 @@ pub fn factory_from_function_declaration(
     )?;
 
     for statement in &body.statements {
-        if let Some(factory) = extract_factory_from_statement(statement, id.name.as_str(), &local_components, ctx)? {
+        if let Some(factory) =
+            extract_factory_from_statement(statement, id.name.as_str(), &local_components, ctx)?
+        {
             return Ok(Some(factory));
         }
     }
@@ -93,12 +99,16 @@ fn extract_factory_from_statement(
         if let Some(component) = local_components.get(identifier.name.as_str()) {
             return Ok(Some((
                 id_name.to_string(),
-                TraceFactory { component: component.clone() },
+                TraceFactory {
+                    component: component.clone(),
+                },
             )));
         }
     }
 
-    if let Some(component) = component_from_expression("FactoryProduct", argument, ctx, BTreeSet::new())? {
+    if let Some(component) =
+        component_from_expression("FactoryProduct", argument, ctx, BTreeSet::new())?
+    {
         return Ok(Some((id_name.to_string(), TraceFactory { component })));
     }
 
@@ -130,47 +140,27 @@ pub fn component_from_expression(
             },
             ctx,
         ),
-        Expression::ParenthesizedExpression(parenthesized) => component_from_expression(
-            name,
-            &parenthesized.expression,
-            ctx,
-            wrapper_style_props,
-        ),
-        Expression::TSAsExpression(asserted) => component_from_expression(
-            name,
-            &asserted.expression,
-            ctx,
-            wrapper_style_props,
-        ),
-        Expression::TSSatisfiesExpression(asserted) => component_from_expression(
-            name,
-            &asserted.expression,
-            ctx,
-            wrapper_style_props,
-        ),
-        Expression::TSTypeAssertion(asserted) => component_from_expression(
-            name,
-            &asserted.expression,
-            ctx,
-            wrapper_style_props,
-        ),
-        Expression::TSNonNullExpression(asserted) => component_from_expression(
-            name,
-            &asserted.expression,
-            ctx,
-            wrapper_style_props,
-        ),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            component_from_expression(name, &parenthesized.expression, ctx, wrapper_style_props)
+        }
+        Expression::TSAsExpression(asserted) => {
+            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+        }
+        Expression::TSSatisfiesExpression(asserted) => {
+            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+        }
+        Expression::TSTypeAssertion(asserted) => {
+            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+        }
+        Expression::TSNonNullExpression(asserted) => {
+            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+        }
         Expression::TSInstantiationExpression(instantiated) => {
             let next_wrapper = super::types::wrapper_style_props_from_type_arguments(
                 ctx,
                 instantiated.type_arguments.params.iter().nth(1),
             )?;
-            component_from_expression(
-                name,
-                &instantiated.expression,
-                ctx,
-                next_wrapper,
-            )
+            component_from_expression(name, &instantiated.expression, ctx, next_wrapper)
         }
         Expression::CallExpression(call) => extract_component_from_call(name, call, ctx),
         _ => Ok(None),
@@ -210,11 +200,8 @@ pub fn component_from_function_like(
         return Ok(None);
     };
 
-    let bindings = parse_prop_bindings(
-        fl_ctx.first_param,
-        ctx,
-        fl_ctx.wrapper_style_props.clone(),
-    )?;
+    let bindings =
+        parse_prop_bindings(fl_ctx.first_param, ctx, fl_ctx.wrapper_style_props.clone())?;
     let mut edges = Vec::<ComponentEdge>::new();
     for statement in body_statements {
         collect_edges_from_statement(

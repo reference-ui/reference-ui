@@ -4,5 +4,5 @@
  * It inputs test cases and emits test results.
  */
 
-import { css, Box } from '@reference-ui/react';
-const x = css({});
+import { css, Box } from '@reference-ui/react'
+const x = css({})

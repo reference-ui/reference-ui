@@ -9,4 +9,4 @@ export type {
   SymbolAlias,
   NeverAlias,
   VoidAlias,
-} from './types';
+} from './types'

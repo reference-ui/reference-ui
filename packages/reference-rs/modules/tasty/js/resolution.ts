@@ -4,7 +4,9 @@
  */
 import type { TastyTypeRef } from './api-types'
 
-export function getTastyResolvedType(typeRef: TastyTypeRef | undefined): TastyTypeRef | undefined {
+export function getTastyResolvedType(
+  typeRef: TastyTypeRef | undefined
+): TastyTypeRef | undefined {
   let current = typeRef
 
   while (current) {

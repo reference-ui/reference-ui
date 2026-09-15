@@ -13,8 +13,11 @@ export interface AtlasNative {
   analyzeAtlas(rootDir: string, configJson?: string): string
 }
 
-export function analyzeDetailed(rootDir: string, configJson?: string): AtlasAnalysisResult {
-  return callNativeJson<AtlasAnalysisResult, AtlasNative>('analyze Atlas data', (native) =>
+export function analyzeDetailed(
+  rootDir: string,
+  configJson?: string
+): AtlasAnalysisResult {
+  return callNativeJson<AtlasAnalysisResult, AtlasNative>('analyze Atlas data', native =>
     native.analyzeAtlas(rootDir, configJson)
   )
 }

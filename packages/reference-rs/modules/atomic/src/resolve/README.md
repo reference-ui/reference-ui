@@ -17,8 +17,8 @@ Order:
 2. **shorthands** — `borderBottom: 1px solid` → width/style longhands
 3. **rhythm** — `2r` → calc / `--spacing-root`
 4. **tokens** — `n300` → `var(--colors-…)`
-5. **conditions** — stored on the atom; stylesheet lowers selectors.
-   Breakpoint keys go through `r/`.
+5. **conditions** — `_hover` catalog and `&` application. Stored on
+   the atom; stylesheet prints the wrap. Breakpoint keys go through `r/`.
 
 `font/` looks up family and weight from `config/fonts.rs`. CSS
 keyword fallback (`bold` → `700`) is language. `-0.01em` tracking
@@ -26,6 +26,12 @@ is a `font('sans', { css: { letterSpacing } })` fragment.
 
 `r/` looks up widths from `config/breakpoints.rs`. Numeric keys are
 language. `sm` → 640px is a CSS-generic default, not a baked lib theme.
+
+`conditions` is the `when` list. Pseudo-props are the `_` catalog
+JSX can spell. Pseudo-selectors apply `&` templates to the utility
+class. Extract is one object walk; JSX only spells `_` as an
+identifier. `@media` / `@container` pass through. `r/` already
+stamped those onto `when`.
 
 Still to fold into the same convention: `container/` and `size/` as
 the same small-folder convention. `tokens/` stays until a real

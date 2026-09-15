@@ -9,9 +9,32 @@ use super::*;
 #[test]
 fn can_tag_01_pascal_jsx_primitives() {
     let tags = [
-        "Div", "Span", "Button", "P", "A", "B", "I", "Q", "S", "U", "G", "Obj", "Var",
-        "Section", "Nav", "Header", "Footer", "Main", "Path", "Circle", "Rect", "Line",
-        "Polyline", "Polygon", "ClipPath", "LinearGradient",
+        "Div",
+        "Span",
+        "Button",
+        "P",
+        "A",
+        "B",
+        "I",
+        "Q",
+        "S",
+        "U",
+        "G",
+        "Obj",
+        "Var",
+        "Section",
+        "Nav",
+        "Header",
+        "Footer",
+        "Main",
+        "Path",
+        "Circle",
+        "Rect",
+        "Line",
+        "Polyline",
+        "Polygon",
+        "ClipPath",
+        "LinearGradient",
     ];
     for tag in tags {
         assert!(is_reference_primitive(tag));
@@ -22,8 +45,8 @@ fn can_tag_01_pascal_jsx_primitives() {
 #[test]
 fn can_tag_02_lowercase_html_svg_tags() {
     let tags = [
-        "div", "span", "object", "var", "button", "p", "a", "b", "i", "q", "s", "u", "g",
-        "path", "circle",
+        "div", "span", "object", "var", "button", "p", "a", "b", "i", "q", "s", "u", "g", "path",
+        "circle",
     ];
     for tag in tags {
         assert!(is_html_tag(tag));
@@ -121,9 +144,15 @@ fn can_prop_02_class_prefix_for_prop() {
 fn can_prop_03_css_declaration_property() {
     assert_eq!(to_css_declaration_property("marginTop"), "margin-top");
     assert_eq!(to_css_declaration_property("mt"), "margin-top");
-    assert_eq!(to_css_declaration_property("paddingInline"), "padding-inline");
+    assert_eq!(
+        to_css_declaration_property("paddingInline"),
+        "padding-inline"
+    );
     assert_eq!(to_css_declaration_property("px"), "padding-inline");
-    assert_eq!(to_css_declaration_property("--custom-color"), "--custom-color");
+    assert_eq!(
+        to_css_declaration_property("--custom-color"),
+        "--custom-color"
+    );
     assert_eq!(to_css_declaration_property("aspectRatio"), "aspect-ratio");
 }
 
@@ -151,8 +180,14 @@ fn can_prop_05_custom_property_passthrough() {
     assert!(is_known_style_prop("--custom-token"));
     assert!(is_known_style_prop("--spacing-root"));
     assert!(is_known_style_prop("--colors-n-300"));
-    assert_eq!(to_css_declaration_property("--custom-token"), "--custom-token");
-    assert_eq!(to_css_declaration_property("--spacing-root"), "--spacing-root");
+    assert_eq!(
+        to_css_declaration_property("--custom-token"),
+        "--custom-token"
+    );
+    assert_eq!(
+        to_css_declaration_property("--spacing-root"),
+        "--spacing-root"
+    );
 }
 
 #[test]
@@ -366,7 +401,9 @@ fn can_fail_03_bare_pseudos() {
 fn can_join_04_slices_are_sorted() {
     assert!(ELEMENTS.windows(2).all(|w| w[0].html < w[1].html));
     assert!(PRIMITIVE_JSX.windows(2).all(|w| w[0] < w[1]));
-    assert!(CANONICAL_PROPERTIES.windows(2).all(|w| w[0].name < w[1].name));
+    assert!(CANONICAL_PROPERTIES
+        .windows(2)
+        .all(|w| w[0].name < w[1].name));
     assert!(ALIASES.windows(2).all(|w| w[0].alias < w[1].alias));
     assert!(REFERENCE_PROPS.windows(2).all(|w| w[0] < w[1]));
     assert!(CONDITIONS.windows(2).all(|w| w[0] < w[1]));
@@ -395,10 +432,16 @@ fn can_join_08_unique_class_prefixes() {
     assert_ne!(class_prefix_for_prop("display"), class_prefix_for_prop("d"));
     assert_eq!(class_prefix_for_prop("display"), "d");
     assert_eq!(class_prefix_for_prop("d"), "svg-d");
-    assert_ne!(class_prefix_for_prop("zIndex"), class_prefix_for_prop("translateZ"));
+    assert_ne!(
+        class_prefix_for_prop("zIndex"),
+        class_prefix_for_prop("translateZ")
+    );
     assert_eq!(class_prefix_for_prop("zIndex"), "z");
     assert_eq!(class_prefix_for_prop("translateZ"), "translate-z");
-    assert_ne!(class_prefix_for_prop("boxSize"), class_prefix_for_prop("size"));
+    assert_ne!(
+        class_prefix_for_prop("boxSize"),
+        class_prefix_for_prop("size")
+    );
     assert_eq!(class_prefix_for_prop("boxSize"), "box-size");
     assert_eq!(class_prefix_for_prop("size"), "size");
     assert_eq!(find_property("x").unwrap().class_prefix, "svg-x");

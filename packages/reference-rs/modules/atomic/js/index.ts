@@ -7,11 +7,17 @@ import { compileSystem } from './runtime.js'
 import type { CompileRequest, CompileResult } from './types.js'
 
 export type {
+  BaseSystemInput,
+  BreakpointObject,
+  BreakpointsInput,
   CompileRequest,
   CompileResult,
   CssRuntime,
   Diagnostic,
   DiagnosticSeverity,
+  FontInput,
+  FontsInput,
+  TokensInput,
   VirtualSource,
   Want,
 } from './types.js'

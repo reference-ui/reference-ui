@@ -2,16 +2,16 @@
   {
     "severity": "warning",
     "message": "Dynamic non-literal identifier 'customColor' encountered for prop 'color'",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04-logical/input/src/css-fallback.ts"
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04/input/src/css-fallback.ts"
   },
   {
     "severity": "warning",
     "message": "Dynamic non-literal identifier 'customMargin' encountered for prop 'margin'",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04-logical/input/src/css-fallback.ts"
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04/input/src/css-fallback.ts"
   },
   {
     "severity": "warning",
     "message": "Dynamic non-literal identifier 'dynamicColor' encountered for prop 'bg'",
-    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04-logical/input/src/or-nullish.tsx"
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-04/input/src/or-nullish.tsx"
   }
 ]

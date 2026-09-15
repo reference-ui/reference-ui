@@ -75,7 +75,9 @@ describe('tasty runtime', () => {
   })
 
   it('resolves chunk imports relative to the manifest path when created from a manifest object', async () => {
-    const manifestModule = await import(toImportSpecifier(manifestPath('TST-EXT-01-external-libs')))
+    const manifestModule = await import(
+      toImportSpecifier(manifestPath('TST-EXT-01-external-libs'))
+    )
     const loads: string[] = []
     const api = createTastyApiFromManifest({
       manifest: manifestModule.default,
@@ -623,9 +625,7 @@ describe('tasty runtime', () => {
             id: 'Nested',
             name: 'Nested',
             library: './conditions',
-            typeArguments: [
-              { id: 'base', name: 'BaseProps', library: 'user' },
-            ],
+            typeArguments: [{ id: 'base', name: 'BaseProps', library: 'user' }],
           },
         },
       },

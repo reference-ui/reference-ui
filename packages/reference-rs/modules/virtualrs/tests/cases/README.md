@@ -9,4 +9,3 @@ Each station contains:
 - `output/expected.tsx`: Exact rewritten output verified as a golden artifact.
 - `spec.ts`: Station-specific semantic assertions implementing `StationSpec<VirtualResult>`.
 - `README.md`: Documents station intent and the SPEC ID anchor proved by the test.
-

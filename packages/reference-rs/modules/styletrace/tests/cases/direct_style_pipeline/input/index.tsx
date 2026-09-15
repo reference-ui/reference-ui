@@ -27,7 +27,7 @@ export function Panel(props: PanelProps) {
   const classes = joinClassName(
     box(boxProps as Parameters<typeof box>[0]),
     cssProp ? css(cssProp as Parameters<typeof css>[0]) : undefined,
-    className,
+    className
   )
 
   return <div className={classes} {...elementProps} />

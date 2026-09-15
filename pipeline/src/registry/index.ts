@@ -3,7 +3,7 @@
  *
  * The registry implementation is split into smaller files so process control,
  * package preparation, manifest persistence, packing, and loading can evolve
- * independently without turning this module back into a grab bag.
+ * independently without collapsing every registry concern back into this file.
  */
 
 import { manifestPath } from './paths.js'

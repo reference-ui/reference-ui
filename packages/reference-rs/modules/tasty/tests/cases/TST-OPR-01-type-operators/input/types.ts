@@ -5,19 +5,19 @@
 
 /** Base shape used by keyof and readonly operator tests. */
 export interface User {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 /** Type operator alias using keyof. */
-export type KeysOfUser = keyof User;
+export type KeysOfUser = keyof User
 
 /** Type operator alias using readonly on an array type. */
-export type ReadonlyUsers = readonly User[];
+export type ReadonlyUsers = readonly User[]
 
 /** Interface members that use type operators directly. */
 export interface WithOperators {
-  key: keyof User;
-  frozenUsers: readonly User[];
-  readonly token: unique symbol;
+  key: keyof User
+  frozenUsers: readonly User[]
+  readonly token: unique symbol
 }

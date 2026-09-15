@@ -1,7 +1,7 @@
 //! Provides context structures for tracing types across modules.
-//! 
+//!
 //! The `TraceSession` holds long-lived caches like loaded modules.
-//! The `TraceContext` provides scoped state for deep recursive type walks, 
+//! The `TraceContext` provides scoped state for deep recursive type walks,
 //! avoiding argument soup and keeping track of visited nodes.
 
 use std::collections::{BTreeSet, HashMap};
@@ -40,7 +40,11 @@ pub struct TraceContext<'a> {
 }
 
 impl<'a> TraceContext<'a> {
-    pub fn branch<'b>(&'b mut self, module_path: &'b Path, env: &'b HashMap<String, BoundTypeExpr>) -> TraceContext<'b> {
+    pub fn branch<'b>(
+        &'b mut self,
+        module_path: &'b Path,
+        env: &'b HashMap<String, BoundTypeExpr>,
+    ) -> TraceContext<'b> {
         TraceContext {
             session: self.session,
             module_path,
@@ -59,7 +63,9 @@ impl<'a> TraceContext<'a> {
             StyleTraceError::new(format!("failed to read {}: {error}", normalized.display()))
         })?;
         let parsed = parse_module(&normalized, &source)?;
-        self.session.module_cache.insert(normalized.clone(), parsed.clone());
+        self.session
+            .module_cache
+            .insert(normalized.clone(), parsed.clone());
         Ok(parsed)
     }
 
@@ -71,7 +77,11 @@ impl<'a> TraceContext<'a> {
         if specifier == "@reference-ui/styled/types" {
             if let Some(path) = self.resolve_reference_support_module(
                 current_module,
-                &self.session.sync_root.join(super::STYLED_TYPES_ROOT).join("system-types.d.ts"),
+                &self
+                    .session
+                    .sync_root
+                    .join(super::STYLED_TYPES_ROOT)
+                    .join("system-types.d.ts"),
                 specifier,
             )? {
                 return Ok(Some(path));
@@ -81,7 +91,11 @@ impl<'a> TraceContext<'a> {
         if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
             if let Some(path) = self.resolve_reference_support_module(
                 current_module,
-                &self.session.sync_root.join(super::STYLED_TYPES_ROOT).join(format!("{rest}.d.ts")),
+                &self
+                    .session
+                    .sync_root
+                    .join(super::STYLED_TYPES_ROOT)
+                    .join(format!("{rest}.d.ts")),
                 specifier,
             )? {
                 return Ok(Some(path));

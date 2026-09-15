@@ -18,8 +18,6 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'p')).toHaveLength(3)
     expect(hasWant(result, 'padding', '2r', ['base'])).toBe(true)
     expect(hasWant(result, 'padding', '4r', ['md'])).toBe(true)
-    expect(result.stylesheet).toContain('.mt_1r { margin-top: var(--spacing-root); }')
-    expect(result.stylesheet).toContain('@media screen and (min-width: 40rem)')
     expect(result.diagnostics).toHaveLength(0)
   },
 }

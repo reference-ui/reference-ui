@@ -4,7 +4,7 @@
  * It inputs test cases and emits test results.
  */
 
-import { cva } from 'src/system/css';
+import { cva } from 'src/system/css'
 
 const card = cva({
   base: {
@@ -12,4 +12,4 @@ const card = cva({
       480: { padding: '4' },
     },
   },
-});
+})

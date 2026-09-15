@@ -20,21 +20,32 @@ impl Alias {
 
 /// Sorted table of StyleProps shorthand aliases.
 pub const ALIASES: &[Alias] = &[
-    Alias::new("bg", "background"), Alias::new("flexDir", "flexDirection"), Alias::new("h", "height"),
-    Alias::new("m", "margin"), Alias::new("maxH", "maxHeight"), Alias::new("maxW", "maxWidth"),
-    Alias::new("mb", "marginBottom"), Alias::new("minH", "minHeight"), Alias::new("minW", "minWidth"),
-    Alias::new("ml", "marginLeft"), Alias::new("mr", "marginRight"), Alias::new("mt", "marginTop"),
-    Alias::new("mx", "marginInline"), Alias::new("my", "marginBlock"), Alias::new("p", "padding"),
-    Alias::new("pb", "paddingBottom"), Alias::new("pl", "paddingLeft"), Alias::new("pr", "paddingRight"),
-    Alias::new("pt", "paddingTop"), Alias::new("px", "paddingInline"), Alias::new("py", "paddingBlock"),
+    Alias::new("bg", "background"),
+    Alias::new("flexDir", "flexDirection"),
+    Alias::new("h", "height"),
+    Alias::new("m", "margin"),
+    Alias::new("maxH", "maxHeight"),
+    Alias::new("maxW", "maxWidth"),
+    Alias::new("mb", "marginBottom"),
+    Alias::new("minH", "minHeight"),
+    Alias::new("minW", "minWidth"),
+    Alias::new("ml", "marginLeft"),
+    Alias::new("mr", "marginRight"),
+    Alias::new("mt", "marginTop"),
+    Alias::new("mx", "marginInline"),
+    Alias::new("my", "marginBlock"),
+    Alias::new("p", "padding"),
+    Alias::new("pb", "paddingBottom"),
+    Alias::new("pl", "paddingLeft"),
+    Alias::new("pr", "paddingRight"),
+    Alias::new("pt", "paddingTop"),
+    Alias::new("px", "paddingInline"),
+    Alias::new("py", "paddingBlock"),
     Alias::new("w", "width"),
 ];
 
 /// Reference-only custom macro props (e.g. rhythm multipliers, variant discriminators).
-pub const REFERENCE_PROPS: &[&str] = &[
-    "colorMode", "r", "size",
-    "variant", "weight",
-];
+pub const REFERENCE_PROPS: &[&str] = &["colorMode", "r", "size", "variant", "weight"];
 
 /// Resolves a dialect alias or shorthand to its canonical property name.
 pub fn resolve_alias(alias: &str) -> Option<&'static str> {

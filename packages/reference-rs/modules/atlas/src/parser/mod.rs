@@ -2,9 +2,7 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use crate::internal::{
-    ComponentDecl, ImportBinding, ImportKind, ModuleInfo, ReExport, TypeDef,
-};
+use crate::internal::{ComponentDecl, ImportBinding, ImportKind, ModuleInfo, ReExport, TypeDef};
 use crate::scanner::SourceFile;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{

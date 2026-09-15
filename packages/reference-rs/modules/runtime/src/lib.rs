@@ -9,10 +9,10 @@ use napi_derive::napi;
 
 #[path = "../../atlas/native.rs"]
 mod atlas;
-#[path = "../../styletrace/native.rs"]
-mod styletrace;
 #[path = "../../atomic/native.rs"]
 mod atomic;
+#[path = "../../styletrace/native.rs"]
+mod styletrace;
 #[path = "../../tasty/native.rs"]
 mod tasty;
 #[path = "../../virtualrs/native.rs"]
@@ -22,4 +22,3 @@ mod virtualrs;
 pub fn get_native_capabilities() -> Result<String> {
     Ok(serde_json::json!({ "schema": 1 }).to_string())
 }
-

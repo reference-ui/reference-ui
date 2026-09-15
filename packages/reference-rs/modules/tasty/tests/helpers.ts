@@ -15,10 +15,7 @@ import {
   type TastyMember,
   type TastySymbol,
 } from '../js/index.js'
-import {
-  scanAndEmitModules,
-  type EmittedModulesPayload,
-} from '../js/runtime.js'
+import { scanAndEmitModules, type EmittedModulesPayload } from '../js/runtime.js'
 import type {
   GoldenDefinition,
   StandingGauge,
@@ -26,7 +23,14 @@ import type {
   StationSpec,
 } from '../../../testing/index.js'
 
-export type { CreateTastyApiOptions, TastyApi, TastyMember, TastySymbol, StationSpec, StationContext }
+export type {
+  CreateTastyApiOptions,
+  TastyApi,
+  TastyMember,
+  TastySymbol,
+  StationSpec,
+  StationContext,
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const TESTS_DIR = __dirname
@@ -58,13 +62,16 @@ export type TastyCaseSpec = StationSpec<TastyCaseResult>
 
 export async function projectTestTypeParameterMembers(
   api: TastyApi,
-  name: string,
+  name: string
 ): Promise<TastyMember[] | undefined> {
   if (name !== 'P') return undefined
 
   for (const library of TEST_SYSTEM_PROPERTIES_LIBRARIES) {
     try {
-      const projectedSymbol = await api.findSymbolByScopedName(library, 'SystemProperties')
+      const projectedSymbol = await api.findSymbolByScopedName(
+        library,
+        'SystemProperties'
+      )
       if (projectedSymbol) {
         return projectedSymbol.getDisplayMembers()
       }
@@ -81,10 +88,7 @@ export async function projectTestTypeParameterMembers(
   }
 }
 
-function writeArtifactsToDisk(
-  outputDir: string,
-  files: Record<string, string>,
-): void {
+function writeArtifactsToDisk(outputDir: string, files: Record<string, string>): void {
   fs.mkdirSync(outputDir, { recursive: true })
   for (const [relPath, content] of Object.entries(files)) {
     const cleanRel = relPath.replace(/^\.\//, '')
@@ -139,7 +143,9 @@ export async function compileTastyCase(ctx: StationContext): Promise<TastyCaseRe
   return task
 }
 
-export async function ensureTastyCaseCompiled(caseName: string): Promise<TastyCaseResult> {
+export async function ensureTastyCaseCompiled(
+  caseName: string
+): Promise<TastyCaseResult> {
   const caseDir = path.join(CASES_DIR, caseName)
   const match = CASE_FOLDER.exec(caseName)
   const caseId = match ? match[1]! : caseName
@@ -166,7 +172,7 @@ export function caseManifestPath(caseName: string): string {
 
 export function createCaseApi(
   caseName: string,
-  overrides: Partial<CreateTastyApiOptions> = {},
+  overrides: Partial<CreateTastyApiOptions> = {}
 ): TastyApi {
   return createTastyApi({
     manifestPath: caseManifestPath(caseName),
@@ -183,12 +189,12 @@ export const tastyGoldens: GoldenDefinition<TastyCaseResult>[] = [
   {
     fileName: 'manifest.js',
     format: 'text',
-    extract: (r) => r.emitted.modules['./manifest.js'] ?? '',
+    extract: r => r.emitted.modules['./manifest.js'] ?? '',
   },
   {
     fileName: 'chunks.json',
     format: 'json',
-    extract: (r) => ({
+    extract: r => ({
       modules: Object.keys(r.emitted.modules).sort(),
       declarations: Object.keys(r.emitted.type_declarations ?? {}).sort(),
     }),
@@ -196,7 +202,7 @@ export const tastyGoldens: GoldenDefinition<TastyCaseResult>[] = [
 ]
 
 export const tastyGauges: StandingGauge<TastyCaseResult>[] = [
-  async (result) => {
+  async result => {
     const manifest = await result.api.loadManifest()
     expect(manifest.version).toBe('2')
     expect(typeof manifest.symbolsByName).toBe('object')
@@ -212,7 +218,7 @@ export const tastyGauges: StandingGauge<TastyCaseResult>[] = [
     }
 
     const uniqueName = Object.keys(manifest.symbolsByName).find(
-      (name) => manifest.symbolsByName[name]?.length === 1,
+      name => manifest.symbolsByName[name]?.length === 1
     )
     if (uniqueName) {
       const byName = await result.api.loadSymbolByName(uniqueName)
@@ -222,7 +228,7 @@ export const tastyGauges: StandingGauge<TastyCaseResult>[] = [
 ]
 
 export function findMember(symbol: TastySymbol, memberName: string): TastyMember {
-  const member = symbol.getMembers().find((item) => item.getName() === memberName)
+  const member = symbol.getMembers().find(item => item.getName() === memberName)
   if (!member) {
     throw new Error(`Member not found on ${symbol.getName()}: ${memberName}`)
   }
@@ -237,16 +243,18 @@ export function expectUnderlyingPresent(symbol: TastySymbol): void {
   const reference = raw.name != null && raw.id != null
   expect(
     structured || reference,
-    `${symbol.getName()}: expected structured type (\`kind\`) or reference (\`id\`+\`name\`)`,
+    `${symbol.getName()}: expected structured type (\`kind\`) or reference (\`id\`+\`name\`)`
   ).toBe(true)
 }
 
 export function expectUnderlyingKindOneOf(
   symbol: TastySymbol,
-  kinds: readonly string[],
+  kinds: readonly string[]
 ): void {
   const underlying = symbol.getUnderlyingType()
   expect(underlying, `${symbol.getName()}: expected underlying type`).toBeDefined()
   const raw = underlying!.getRaw() as { kind?: string }
-  expect(kinds, `${symbol.getName()}: expected one of ${kinds.join(', ')}`).toContain(raw.kind)
+  expect(kinds, `${symbol.getName()}: expected one of ${kinds.join(', ')}`).toContain(
+    raw.kind
+  )
 }

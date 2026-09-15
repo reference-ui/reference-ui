@@ -12,4 +12,3 @@ virtual rewrite API end to end using declarative station suites.
 
 These tests verify that the JavaScript runtime successfully loads and calls the native addon with
 real fixture input, matching committed goldens and passing domain semantic specs.
-

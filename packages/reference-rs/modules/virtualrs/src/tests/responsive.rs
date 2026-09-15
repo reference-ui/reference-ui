@@ -46,7 +46,11 @@ fn lowers_responsive_css_after_import_normalization() {
         "const x = sx({ r: { 420: { padding: '3' } } } as unknown as CssStyles);\n",
     );
 
-    let rewritten = apply_responsive_styles(&rewrite_css_imports(source, VIRTUAL_PATH), VIRTUAL_PATH, &no_breakpoints());
+    let rewritten = apply_responsive_styles(
+        &rewrite_css_imports(source, VIRTUAL_PATH),
+        VIRTUAL_PATH,
+        &no_breakpoints(),
+    );
 
     assert_eq!(
         rewritten,
@@ -65,7 +69,11 @@ fn lowers_responsive_cva_base_after_recipe_normalization() {
         "const x = cardRecipe({ base: { r: { 480: { padding: '4' } } } });\n",
     );
 
-    let rewritten = apply_responsive_styles(&rewrite_cva_imports(source, VIRTUAL_PATH), VIRTUAL_PATH, &no_breakpoints());
+    let rewritten = apply_responsive_styles(
+        &rewrite_cva_imports(source, VIRTUAL_PATH),
+        VIRTUAL_PATH,
+        &no_breakpoints(),
+    );
 
     assert_eq!(
         rewritten,
@@ -120,7 +128,10 @@ fn leaves_unrelated_r_objects_unchanged() {
         "const y = cssVar({ r: { 560: { padding: '4' } } });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
+    assert_eq!(
+        apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()),
+        source
+    );
 }
 
 #[test]
@@ -130,7 +141,10 @@ fn leaves_existing_container_rules_unchanged() {
         "const x = css({ '@container sidebar (min-width: 420px)': { padding: '3' } });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
+    assert_eq!(
+        apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()),
+        source
+    );
 }
 
 #[test]
@@ -176,7 +190,10 @@ fn leaves_dynamic_responsive_payloads_unchanged() {
         "const styles = css({ color: 'red.500', r: responsiveStyles });\n",
     );
 
-    assert_eq!(apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()), source);
+    assert_eq!(
+        apply_responsive_styles(source, VIRTUAL_PATH, &no_breakpoints()),
+        source
+    );
 }
 
 #[test]

@@ -8,7 +8,7 @@ import { compile } from '@reference-ui/rust/atomic'
 const result = await compile({ rootDir: '/absolute/path/to/app' })
 
 result.stylesheet // CSS → .reference-ui/styled/styles.css
-result.css        // CssRuntime → .reference-ui/styled/css
+result.css // CssRuntime → .reference-ui/styled/css
 result.diagnostics
 ```
 

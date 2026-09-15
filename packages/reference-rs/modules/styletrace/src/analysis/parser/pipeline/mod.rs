@@ -4,11 +4,11 @@ pub mod expr;
 pub mod jsx;
 pub mod util;
 
-use std::collections::{BTreeSet, HashMap};
-use oxc_ast::ast::Statement;
 use crate::analysis::model::{PropBindings, TraceImport};
 use crate::analysis::util::slice_span;
+use oxc_ast::ast::Statement;
 use oxc_span::GetSpan;
+use std::collections::{BTreeSet, HashMap};
 
 #[derive(Default)]
 pub struct PipelineState {
@@ -31,24 +31,35 @@ pub fn component_uses_style_pipeline(
     bindings: &PropBindings,
 ) -> bool {
     let mut state = PipelineState {
-        style_signals: bindings.direct_style_bindings.iter()
+        style_signals: bindings
+            .direct_style_bindings
+            .iter()
             .chain(bindings.props_object_bindings.iter())
             .chain(bindings.spread_bindings.iter())
             .cloned()
             .collect(),
         ..Default::default()
     };
-    let mut ctx = PipelineContext { source, imports, bindings, state: &mut state };
+    let mut ctx = PipelineContext {
+        source,
+        imports,
+        bindings,
+        state: &mut state,
+    };
     for statement in body_statements {
         walk_pipeline_statement(statement, &mut ctx);
-        if ctx.state.uses_style_pipeline { return true; }
+        if ctx.state.uses_style_pipeline {
+            return true;
+        }
     }
     ctx.state.uses_style_pipeline
 }
 
 pub fn walk_pipeline_statement(statement: &Statement<'_>, ctx: &mut PipelineContext) {
     match statement {
-        Statement::ExpressionStatement(expr) => expr::walk_pipeline_expression(&expr.expression, ctx),
+        Statement::ExpressionStatement(expr) => {
+            expr::walk_pipeline_expression(&expr.expression, ctx)
+        }
         Statement::ReturnStatement(ret) => walk_return(ret, ctx),
         Statement::VariableDeclaration(decl) => walk_var_decl(decl, ctx),
         Statement::BlockStatement(block) => walk_block(block, ctx),
@@ -68,7 +79,11 @@ fn walk_var_decl(decl: &oxc_ast::ast::VariableDeclaration<'_>, ctx: &mut Pipelin
     for declarator in &decl.declarations {
         if let Some(init) = &declarator.init {
             expr::walk_pipeline_expression(init, ctx);
-            util::record_pipeline_binding(slice_span(ctx.source, declarator.id.span()).trim(), init, ctx);
+            util::record_pipeline_binding(
+                slice_span(ctx.source, declarator.id.span()).trim(),
+                init,
+                ctx,
+            );
         }
     }
 }

@@ -12,10 +12,7 @@
         "count": 2,
         "props": [],
         "usage": "very common",
-        "examples": [
-          "<UI.Button variant=\"solid\">",
-          "<UI.Button variant=\"ghost\">"
-        ],
+        "examples": ["<UI.Button variant=\"solid\">", "<UI.Button variant=\"ghost\">"],
         "usedWith": {
           "UserBadge": "very common"
         }
@@ -30,9 +27,7 @@
         "count": 1,
         "props": [],
         "usage": "common",
-        "examples": [
-          "<UI.UserBadge tone=\"info\">"
-        ],
+        "examples": ["<UI.UserBadge tone=\"info\">"],
         "usedWith": {
           "Button": "very common"
         }

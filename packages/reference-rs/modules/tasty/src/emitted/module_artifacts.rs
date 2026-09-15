@@ -11,7 +11,11 @@ use super::{TastySymbol, TastySymbolRef};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/tasty/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/tasty/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct TastyModule {
     #[serde(flatten)]
     #[ts(flatten)]
@@ -23,7 +27,11 @@ pub struct TastyModule {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/tasty/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/tasty/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct TastyManifest {
     pub version: String,
     pub warnings: Vec<String>,
@@ -44,7 +52,11 @@ pub struct TastySymbolIndexEntry {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/tasty/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/tasty/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct TastyChunkModule {
     #[serde(flatten)]
     #[ts(flatten)]

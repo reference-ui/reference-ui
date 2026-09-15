@@ -1,0 +1,9 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .bd-w_1px { border-width: 1px; }
+  .bg_blue { background: blue; }
+  .border-style_solid { border-style: solid; }
+  .c_white { color: white; }
+  .font-weight_bold { font-weight: bold; }
+  .op_0\.9 { opacity: 0.9; }
+}

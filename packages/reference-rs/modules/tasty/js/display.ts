@@ -23,13 +23,15 @@ export function formatTastyCallableSignature(type: TastyTypeRef): string {
 
 export function getTastyTypeInlineVariants(type: TastyTypeRef | undefined): string[] {
   if (!type) return []
-  if (type.isUnion()) return uniqueTastyStrings(type.getUnionTypes().flatMap(getInlineTastyTypeVariants))
+  if (type.isUnion())
+    return uniqueTastyStrings(type.getUnionTypes().flatMap(getInlineTastyTypeVariants))
   return getInlineTastyTypeVariants(type)
 }
 
 function getInlineTastyTypeVariants(type: TastyTypeRef): string[] {
   if (type.isUnion()) return type.getUnionTypes().flatMap(getInlineTastyTypeVariants)
-  if (type.isLiteral()) return [normalizeTastyInlineValue(type.getLiteralValue()) ?? type.describe()]
+  if (type.isLiteral())
+    return [normalizeTastyInlineValue(type.getLiteralValue()) ?? type.describe()]
 
   switch (type.getKind()) {
     case 'intrinsic':

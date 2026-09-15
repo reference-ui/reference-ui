@@ -61,7 +61,10 @@ async function projectSymbolMembers(
     return projectTypeMembers(
       api,
       symbol.getUnderlyingType(),
-      withTypeParameterNames(nextContext, raw.typeParameters?.map(param => param.name))
+      withTypeParameterNames(
+        nextContext,
+        raw.typeParameters?.map(param => param.name)
+      )
     )
   }
 
@@ -149,10 +152,7 @@ function withTypeParameterNames(
   if (!names?.length) return context
   return {
     ...context,
-    typeParameterNames: new Set([
-      ...(context.typeParameterNames ?? []),
-      ...names,
-    ]),
+    typeParameterNames: new Set([...(context.typeParameterNames ?? []), ...names]),
   }
 }
 

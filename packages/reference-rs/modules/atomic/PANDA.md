@@ -23,8 +23,8 @@ Panda (`design-notes/crate-layering.md`): **extract → encode → emit**.
 
 | Panda crate | Key files (under `vendor/panda/`) | Our module | Take | Leave |
 | :--- | :--- | :--- | :--- | :--- |
-| `pandacss_extractor` | `crates/pandacss_extractor/src/{extract,jsx,calls,matcher}.rs` | `src/extract/sites` | Where they look: JSX attrs, `css()`, recipes (`cva`/`sva` in their source; ours is `recipe()`) | Vue/Svelte/Astro, `include` globs as a substitute for styletrace |
-| `pandacss_extractor` | `src/literal.rs`, `style_tree.rs`, `pure_fn.rs`, `scope.rs` | `src/extract/leaves` | Walk the expression | **`expression_to_literal` eval / fold / `undefined`→Null.** `design-notes/literal-evaluator.md` |
+| `pandacss_extractor` | `crates/pandacss_extractor/src/{extract,jsx,calls,matcher}.rs` | `src/extract/{jsx,css,recipes}` | Where they look: JSX attrs, `css()`, recipes (`cva`/`sva` in their source; ours is `recipe()`) | Vue/Svelte/Astro, `include` globs as a substitute for styletrace |
+| `pandacss_extractor` | `src/literal.rs`, `style_tree.rs`, `pure_fn.rs`, `scope.rs` | `src/extract/expressions` | Walk the expression | **`expression_to_literal` eval / fold / `undefined`→Null.** `design-notes/literal-evaluator.md` |
 | `pandacss_encoder` | `crates/pandacss_encoder/src/lib.rs` (`Atom`, `process_atomic`) | `src/atom` | `(prop, value, conditions)` records, `FxHashSet` dedup | Their `Literal` IR |
 | `pandacss_utility` | `src/lib.rs` (`format_class_name`, `transform`), `normalize.rs`, `runtime_class.rs` | `src/resolve/*` + `src/stylesheet/name` | Shorthand expand, class spelling, **one namer** (`runtime_class_name_for_atom`) | Host JS `transform()` callbacks (that is the split-brain) |
 | `pandacss_recipes` | `crates/pandacss_recipes/src/lib.rs` | `src/recipes` | Closed variant tables / compound | Encoding StyleProps into the recipe class; their `sva` slot-recipe helper |
@@ -63,7 +63,7 @@ We already know:
 - which tags keep those props wired to Reference primitives —
   `styletrace::trace_style_jsx_names`
 
-`extract/sites` **calls** that crate. It does not reimplement wrapper
+`extract/jsx` **calls** that crate. It does not reimplement wrapper
 tracing. Panda’s `jsx` extra-names array is the fallback we delete.
 
 ## What this file is not

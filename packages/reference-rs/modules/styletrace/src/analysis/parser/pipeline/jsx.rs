@@ -1,5 +1,5 @@
 //! Walk pipeline jsx.
-use super::{PipelineContext, expr, util};
+use super::{expr, util, PipelineContext};
 
 pub fn walk_pipeline_jsx_element(
     element: &oxc_allocator::Box<'_, oxc_ast::ast::JSXElement<'_>>,
@@ -22,11 +22,16 @@ fn walk_jsx_attribute(attribute: &oxc_ast::ast::JSXAttributeItem<'_>, ctx: &mut 
             );
 
             if is_class_name {
-                if let Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) = &attr.value {
+                if let Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) =
+                    &attr.value
+                {
                     if !matches!(
                         &container.expression,
                         oxc_ast::ast::JSXExpression::EmptyExpression(_)
-                    ) && util::expression_uses_class_name_binding(container.expression.to_expression(), ctx.state) {
+                    ) && util::expression_uses_class_name_binding(
+                        container.expression.to_expression(),
+                        ctx.state,
+                    ) {
                         ctx.state.uses_style_pipeline = true;
                     }
                 }
@@ -35,12 +40,22 @@ fn walk_jsx_attribute(attribute: &oxc_ast::ast::JSXAttributeItem<'_>, ctx: &mut 
             if let Some(value) = &attr.value {
                 match value {
                     oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
-                        if !matches!(&container.expression, oxc_ast::ast::JSXExpression::EmptyExpression(_)) {
-                            expr::walk_pipeline_expression(container.expression.to_expression(), ctx);
+                        if !matches!(
+                            &container.expression,
+                            oxc_ast::ast::JSXExpression::EmptyExpression(_)
+                        ) {
+                            expr::walk_pipeline_expression(
+                                container.expression.to_expression(),
+                                ctx,
+                            );
                         }
                     }
-                    oxc_ast::ast::JSXAttributeValue::Element(el) => walk_pipeline_jsx_element(el, ctx),
-                    oxc_ast::ast::JSXAttributeValue::Fragment(frag) => walk_pipeline_jsx_fragment(frag, ctx),
+                    oxc_ast::ast::JSXAttributeValue::Element(el) => {
+                        walk_pipeline_jsx_element(el, ctx)
+                    }
+                    oxc_ast::ast::JSXAttributeValue::Fragment(frag) => {
+                        walk_pipeline_jsx_fragment(frag, ctx)
+                    }
                     oxc_ast::ast::JSXAttributeValue::StringLiteral(_) => {}
                 }
             }
@@ -65,11 +80,16 @@ pub fn walk_pipeline_jsx_child(child: &oxc_ast::ast::JSXChild<'_>, ctx: &mut Pip
         oxc_ast::ast::JSXChild::Element(element) => walk_pipeline_jsx_element(element, ctx),
         oxc_ast::ast::JSXChild::Fragment(fragment) => walk_pipeline_jsx_fragment(fragment, ctx),
         oxc_ast::ast::JSXChild::ExpressionContainer(container) => {
-            if !matches!(&container.expression, oxc_ast::ast::JSXExpression::EmptyExpression(_)) {
+            if !matches!(
+                &container.expression,
+                oxc_ast::ast::JSXExpression::EmptyExpression(_)
+            ) {
                 expr::walk_pipeline_expression(container.expression.to_expression(), ctx);
             }
         }
-        oxc_ast::ast::JSXChild::Spread(spread) => expr::walk_pipeline_expression(&spread.expression, ctx),
+        oxc_ast::ast::JSXChild::Spread(spread) => {
+            expr::walk_pipeline_expression(&spread.expression, ctx)
+        }
         oxc_ast::ast::JSXChild::Text(_) => {}
     }
 }

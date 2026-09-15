@@ -1,1 +1,1 @@
-export type { ButtonProps, ButtonVariant } from './ComponentProps';
+export type { ButtonProps, ButtonVariant } from './ComponentProps'

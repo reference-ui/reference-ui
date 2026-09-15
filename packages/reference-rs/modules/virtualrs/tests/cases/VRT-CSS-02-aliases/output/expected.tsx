@@ -4,7 +4,7 @@
  * It inputs test cases and emits test results.
  */
 
-import { css } from 'src/system/runtime';
-import React, { Box as Card } from '@reference-ui/react';
+import { css } from 'src/system/runtime'
+import React, { Box as Card } from '@reference-ui/react'
 
-export { React, Card };
+export { React, Card }

@@ -5,7 +5,7 @@
 import type { TastyTypeRef } from './api-types'
 
 export function getTastyCallableParameters(
-  type: TastyTypeRef | undefined,
+  type: TastyTypeRef | undefined
 ): Array<{ name: string; type?: string; optional?: boolean }> {
   if (!type?.isCallable()) return []
 

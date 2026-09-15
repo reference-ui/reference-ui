@@ -124,7 +124,9 @@ fn collect_export_all_statement(
         .as_str()
         .trim_matches('"')
         .trim_matches('\'');
-    let Some(target_file_id) = resolve_import(root_dir, &scanned_file.file_id, source_module, file_id_set) else {
+    let Some(target_file_id) =
+        resolve_import(root_dir, &scanned_file.file_id, source_module, file_id_set)
+    else {
         return;
     };
 

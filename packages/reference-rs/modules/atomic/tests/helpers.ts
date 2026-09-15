@@ -1,7 +1,7 @@
 /**
  * Atomic case helpers. Specs import this module only: compile a case input
  * tree and match wants on the result. Paths resolve under
- * tests/cases/<ATM-*-NN-slug>. This module owns standing gauges and golden extractors.
+ * tests/cases/<ATM-AREA-NN>. This module owns standing gauges and golden extractors.
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const CASES_DIR = path.resolve(__dirname, 'cases')
 export const LAYER_PREAMBLE = '@layer reset, global, base, tokens, recipes, utilities;'
-export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})-.+$/
+export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})$/
 
 export interface AtomicCaseSpec {
   id: string

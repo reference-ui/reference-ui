@@ -72,9 +72,9 @@ export class SymbolResolver {
     const manifest = await this.options.loadManifest()
     const ids = manifest.symbolsByName[name] ?? []
     return ids
-      .map((id) => manifest.symbolsById[id])
+      .map(id => manifest.symbolsById[id])
       .filter((entry): entry is RawTastySymbolIndexEntry => entry != null)
-      .map((entry) => ({
+      .map(entry => ({
         id: entry.id,
         name: entry.name,
         kind: entry.kind,
@@ -91,14 +91,19 @@ export class SymbolResolver {
     return symbol
   }
 
-  async findSymbolByScopedName(library: string, name: string): Promise<TastySymbol | undefined> {
-    const matches = (await this.findSymbolsByName(name)).filter((entry) => entry.library === library)
+  async findSymbolByScopedName(
+    library: string,
+    name: string
+  ): Promise<TastySymbol | undefined> {
+    const matches = (await this.findSymbolsByName(name)).filter(
+      entry => entry.library === library
+    )
     if (matches.length === 0) return undefined
     if (matches.length > 1) {
       throw new Error(
         `Ambiguous symbol name "${name}" within library "${library}". Matches: ${matches
-          .map((entry) => `${entry.id} (${entry.library})`)
-          .join(', ')}`,
+          .map(entry => `${entry.id} (${entry.library})`)
+          .join(', ')}`
       )
     }
     return this.loadSymbolById(matches[0]!.id)
@@ -117,9 +122,9 @@ export class SymbolResolver {
     const normalized = query.trim().toLowerCase()
 
     return Object.values(manifest.symbolsById)
-      .filter((entry) => entry.name.toLowerCase().includes(normalized))
+      .filter(entry => entry.name.toLowerCase().includes(normalized))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map((entry) => ({
+      .map(entry => ({
         id: entry.id,
         name: entry.name,
         kind: entry.kind,
@@ -136,15 +141,18 @@ export class SymbolResolver {
     return this.symbolCache.get(id)
   }
 
-  getManifestEntry(id: string, manifest?: RawTastyManifest): RawTastySymbolIndexEntry | undefined {
+  getManifestEntry(
+    id: string,
+    manifest?: RawTastyManifest
+  ): RawTastySymbolIndexEntry | undefined {
     return manifest?.symbolsById[id]
   }
 
   private resolvePreferredBareNameMatch(
     name: string,
-    matches: TastySymbolSearchResult[],
+    matches: TastySymbolSearchResult[]
   ): TastySymbolSearchResult | undefined {
-    const userMatches = matches.filter((entry) => entry.library === 'user')
+    const userMatches = matches.filter(entry => entry.library === 'user')
     const hasSingleUserMatch = userMatches.length === 1
     const hasMultipleUserMatches = userMatches.length > 1
 
@@ -156,19 +164,20 @@ export class SymbolResolver {
       return undefined
     }
 
-    const distinctLibraries = [...new Set(matches.map((entry) => entry.library))]
+    const distinctLibraries = [...new Set(matches.map(entry => entry.library))]
     const spansMultipleLibraries = distinctLibraries.length > 1
     if (!spansMultipleLibraries) {
       return undefined
     }
 
-    const hasExternalLibraryPreferences = this.options.preferredExternalLibraries.length > 0
+    const hasExternalLibraryPreferences =
+      this.options.preferredExternalLibraries.length > 0
     if (!hasExternalLibraryPreferences) {
       return undefined
     }
 
     for (const library of this.options.preferredExternalLibraries) {
-      const libraryMatches = matches.filter((entry) => entry.library === library)
+      const libraryMatches = matches.filter(entry => entry.library === library)
       const hasSinglePreferredLibraryMatch = libraryMatches.length === 1
       const hasMultiplePreferredLibraryMatches = libraryMatches.length > 1
 
@@ -176,9 +185,9 @@ export class SymbolResolver {
         const preferred = libraryMatches[0]
         this.options.runtimeWarnings.add(
           `Ambiguous symbol name "${name}" matched multiple external libraries. Using ${preferred.id} (${preferred.library}); other matches: ${matches
-            .filter((entry) => entry.id !== preferred.id)
-            .map((entry) => `${entry.id} (${entry.library})`)
-            .join(', ')}. Use a scoped lookup to disambiguate.`,
+            .filter(entry => entry.id !== preferred.id)
+            .map(entry => `${entry.id} (${entry.library})`)
+            .join(', ')}. Use a scoped lookup to disambiguate.`
         )
         return preferred
       }
@@ -191,7 +200,9 @@ export class SymbolResolver {
     return undefined
   }
 
-  private async loadRawSymbol(entry: RawTastySymbolIndexEntry): Promise<TastySymbolModel> {
+  private async loadRawSymbol(
+    entry: RawTastySymbolIndexEntry
+  ): Promise<TastySymbolModel> {
     const cached = this.rawSymbolsById.get(entry.id)
     if (cached) return cached
 

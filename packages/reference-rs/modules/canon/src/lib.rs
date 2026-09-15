@@ -18,7 +18,9 @@ pub use css::{
     COLOR_PROPERTIES,
 };
 pub use dialect::{is_reference_prop, resolve_alias, Alias, ALIASES, REFERENCE_PROPS};
-pub use html::{is_html_tag, is_primitive_jsx_name, is_reference_primitive, Element, ELEMENTS, PRIMITIVE_JSX};
+pub use html::{
+    is_html_tag, is_primitive_jsx_name, is_reference_primitive, Element, ELEMENTS, PRIMITIVE_JSX,
+};
 
 /// Returns true if the given property name is a recognized Reference UI style prop.
 pub fn is_known_style_prop(name: &str) -> bool {

@@ -45,7 +45,11 @@ async function importPublishNativeModule(options: {
     nativeDir: resolve(options.packageDir, 'dist', 'native'),
   }))
   vi.doMock('node:child_process', () => ({
-    execFileSync: (command: string, args: string[], execOptions?: { cwd?: string; encoding?: string }) => {
+    execFileSync: (
+      command: string,
+      args: string[],
+      execOptions?: { cwd?: string; encoding?: string }
+    ) => {
       runCalls.push({ command, args, cwd: execOptions?.cwd })
 
       if (command === 'npm' && args[0] === 'view') {
@@ -98,7 +102,7 @@ function filterCommandCalls(
   command: string,
   subcommand: string
 ) {
-  return runCalls.filter((call) => call.command === command && call.args[0] === subcommand)
+  return runCalls.filter(call => call.command === command && call.args[0] === subcommand)
 }
 
 afterEach(() => {
@@ -164,7 +168,9 @@ describe('publish-native', () => {
       ])
     )
 
-    const restoredPackageJson = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8'))
+    const restoredPackageJson = JSON.parse(
+      readFileSync(resolve(packageDir, 'package.json'), 'utf8')
+    )
     expect(restoredPackageJson.optionalDependencies).toBeUndefined()
   })
 
@@ -182,7 +188,9 @@ describe('publish-native', () => {
       'Refusing to publish @reference-ui/rust@0.0.14 because native target packages are already published for that version.'
     )
 
-    const restoredPackageJson = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8'))
+    const restoredPackageJson = JSON.parse(
+      readFileSync(resolve(packageDir, 'package.json'), 'utf8')
+    )
     expect(restoredPackageJson.optionalDependencies).toBeUndefined()
   })
 

@@ -472,7 +472,7 @@ function printHelp() {
   \x1b[32mhelp, --help\x1b[0m               Show this help message
 
 \x1b[1mOPTIONS FOR 'quality':\x1b[0m
-  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. modules/atomic/src/extract/sites.rs)
+  \x1b[33m<path>\x1b[0m                     Inspect specific file or directory (e.g. modules/atomic/src/extract/jsx)
   \x1b[33m--changed, --staged\x1b[0m        Inspect only files modified according to git status
   \x1b[33m--strict\x1b[0m                   Strict mode: exit with failure if ANY warning or file > 365 lines occurs
   \x1b[33m--clippy\x1b[0m                   Include cargo clippy cognitive complexity JSON diagnostics
@@ -547,7 +547,7 @@ async function main() {
     process.exit(0)
   }
 
-  // Direct file or path targeting: e.g. pnpm agentrs modules/atomic/src/extract/sites.rs
+  // Direct file or path targeting: e.g. pnpm agentrs modules/atomic/src/extract/jsx
   if (command.includes('/') || command.endsWith('.rs') || command.endsWith('.ts') || command.endsWith('.tsx') || command.endsWith('.js') || command.endsWith('.mjs')) {
     const code = await runQualityCommand(args, repoRoot, rsDir)
     process.exit(code)

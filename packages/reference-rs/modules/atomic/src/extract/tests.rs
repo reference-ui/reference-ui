@@ -145,7 +145,7 @@ fn test_css_and_recipe_call_sites() {
         r#"
         import { css, recipe } from '@reference-ui/react';
         const c1 = css({ mt: '2r' });
-        const c2 = css.raw({ p: '1r' });
+        const c2 = css.object({ p: '1r' });
         const button = recipe({
             base: { color: 'white' },
             variants: {
@@ -172,6 +172,17 @@ fn test_css_and_recipe_call_sites() {
         .wants
         .iter()
         .any(|w| &*w.prop == "fontSize" && w.value.to_string() == "12px"));
+}
+
+#[test]
+fn test_css_raw_is_not_an_extract_site() {
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        const leftover = css.raw({ p: '1r' });
+        "#,
+    );
+    assert!(res.wants.is_empty());
 }
 
 #[test]

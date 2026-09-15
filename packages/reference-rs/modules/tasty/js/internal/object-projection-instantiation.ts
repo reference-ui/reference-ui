@@ -16,7 +16,7 @@ type TypeSubstitutions = Map<string, RawTastyTypeRef>
 
 export function instantiateTypeAliasDefinition(
   symbol: RawTastyTypeAliasSymbol,
-  typeArguments: RawTastyTypeRef[] | undefined,
+  typeArguments: RawTastyTypeRef[] | undefined
 ): RawTastyTypeRef | undefined {
   if (!symbol.definition) return undefined
 
@@ -28,7 +28,7 @@ export function instantiateTypeAliasDefinition(
 
 function buildTypeSubstitutions(
   typeParameters: RawTastyTypeParameter[],
-  typeArguments: RawTastyTypeRef[] | undefined,
+  typeArguments: RawTastyTypeRef[] | undefined
 ): TypeSubstitutions {
   const substitutions = new Map<string, RawTastyTypeRef>()
 
@@ -42,7 +42,10 @@ function buildTypeSubstitutions(
   return substitutions
 }
 
-function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstitutions): RawTastyTypeRef {
+function instantiateTypeRef(
+  typeRef: RawTastyTypeRef,
+  substitutions: TypeSubstitutions
+): RawTastyTypeRef {
   if (isTypeReference(typeRef)) {
     return instantiateReference(typeRef, substitutions)
   }
@@ -51,13 +54,13 @@ function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstit
     case 'object':
       return {
         ...typeRef,
-        members: typeRef.members.map((member) => instantiateMember(member, substitutions)),
+        members: typeRef.members.map(member => instantiateMember(member, substitutions)),
       }
     case 'union':
     case 'intersection':
       return {
         ...typeRef,
-        types: typeRef.types.map((item) => instantiateTypeRef(item, substitutions)),
+        types: typeRef.types.map(item => instantiateTypeRef(item, substitutions)),
       }
     case 'array':
       return {
@@ -67,7 +70,7 @@ function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstit
     case 'tuple':
       return {
         ...typeRef,
-        elements: typeRef.elements.map((element) => ({
+        elements: typeRef.elements.map(element => ({
           ...element,
           element: instantiateTypeRef(element.element, substitutions),
         })),
@@ -77,31 +80,39 @@ function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstit
         ...typeRef,
         object: instantiateTypeRef(typeRef.object, substitutions),
         index: instantiateTypeRef(typeRef.index, substitutions),
-        resolved: typeRef.resolved ? instantiateTypeRef(typeRef.resolved, substitutions) : undefined,
+        resolved: typeRef.resolved
+          ? instantiateTypeRef(typeRef.resolved, substitutions)
+          : undefined,
       }
     case 'function':
       return {
         ...typeRef,
-        params: typeRef.params.map((param) => instantiateFnParam(param, substitutions)),
+        params: typeRef.params.map(param => instantiateFnParam(param, substitutions)),
         returnType: instantiateTypeRef(typeRef.returnType, substitutions),
       }
     case 'constructor':
       return {
         ...typeRef,
-        params: typeRef.params.map((param) => instantiateFnParam(param, substitutions)),
+        params: typeRef.params.map(param => instantiateFnParam(param, substitutions)),
         returnType: instantiateTypeRef(typeRef.returnType, substitutions),
-        typeParameters: typeRef.typeParameters?.map((param) => instantiateTypeParameter(param, substitutions)),
+        typeParameters: typeRef.typeParameters?.map(param =>
+          instantiateTypeParameter(param, substitutions)
+        ),
       }
     case 'type_operator':
       return {
         ...typeRef,
         target: instantiateTypeRef(typeRef.target, substitutions),
-        resolved: typeRef.resolved ? instantiateTypeRef(typeRef.resolved, substitutions) : undefined,
+        resolved: typeRef.resolved
+          ? instantiateTypeRef(typeRef.resolved, substitutions)
+          : undefined,
       }
     case 'type_query':
       return {
         ...typeRef,
-        resolved: typeRef.resolved ? instantiateTypeRef(typeRef.resolved, substitutions) : undefined,
+        resolved: typeRef.resolved
+          ? instantiateTypeRef(typeRef.resolved, substitutions)
+          : undefined,
       }
     case 'conditional':
       return {
@@ -110,22 +121,32 @@ function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstit
         extendsType: instantiateTypeRef(typeRef.extendsType, substitutions),
         trueType: instantiateTypeRef(typeRef.trueType, substitutions),
         falseType: instantiateTypeRef(typeRef.falseType, substitutions),
-        resolved: typeRef.resolved ? instantiateTypeRef(typeRef.resolved, substitutions) : undefined,
+        resolved: typeRef.resolved
+          ? instantiateTypeRef(typeRef.resolved, substitutions)
+          : undefined,
       }
     case 'mapped':
       return {
         ...typeRef,
         sourceType: instantiateTypeRef(typeRef.sourceType, substitutions),
-        nameType: typeRef.nameType ? instantiateTypeRef(typeRef.nameType, substitutions) : undefined,
-        valueType: typeRef.valueType ? instantiateTypeRef(typeRef.valueType, substitutions) : null,
+        nameType: typeRef.nameType
+          ? instantiateTypeRef(typeRef.nameType, substitutions)
+          : undefined,
+        valueType: typeRef.valueType
+          ? instantiateTypeRef(typeRef.valueType, substitutions)
+          : null,
       }
     case 'template_literal':
       return {
         ...typeRef,
-        parts: typeRef.parts.map((part) =>
-          part.kind === 'type' ? { ...part, value: instantiateTypeRef(part.value, substitutions) } : part
+        parts: typeRef.parts.map(part =>
+          part.kind === 'type'
+            ? { ...part, value: instantiateTypeRef(part.value, substitutions) }
+            : part
         ),
-        resolved: typeRef.resolved ? instantiateTypeRef(typeRef.resolved, substitutions) : undefined,
+        resolved: typeRef.resolved
+          ? instantiateTypeRef(typeRef.resolved, substitutions)
+          : undefined,
       }
     default:
       return typeRef
@@ -134,40 +155,55 @@ function instantiateTypeRef(typeRef: RawTastyTypeRef, substitutions: TypeSubstit
 
 function instantiateReference(
   reference: RawTastyTypeReference,
-  substitutions: TypeSubstitutions,
+  substitutions: TypeSubstitutions
 ): RawTastyTypeRef {
-  const substitution = reference.id === reference.name ? substitutions.get(reference.name) : undefined
+  const substitution =
+    reference.id === reference.name ? substitutions.get(reference.name) : undefined
   if (substitution) {
     return substitution
   }
 
   return {
     ...reference,
-    typeArguments: reference.typeArguments?.map((item) => instantiateTypeRef(item, substitutions)),
+    typeArguments: reference.typeArguments?.map(item =>
+      instantiateTypeRef(item, substitutions)
+    ),
   }
 }
 
-function instantiateMember(member: RawTastyMember, substitutions: TypeSubstitutions): RawTastyMember {
+function instantiateMember(
+  member: RawTastyMember,
+  substitutions: TypeSubstitutions
+): RawTastyMember {
   return {
     ...member,
     type: member.type ? instantiateTypeRef(member.type, substitutions) : member.type,
   }
 }
 
-function instantiateFnParam(param: RawTastyFnParam, substitutions: TypeSubstitutions): RawTastyFnParam {
+function instantiateFnParam(
+  param: RawTastyFnParam,
+  substitutions: TypeSubstitutions
+): RawTastyFnParam {
   return {
     ...param,
-    typeRef: param.typeRef ? instantiateTypeRef(param.typeRef, substitutions) : param.typeRef,
+    typeRef: param.typeRef
+      ? instantiateTypeRef(param.typeRef, substitutions)
+      : param.typeRef,
   }
 }
 
 function instantiateTypeParameter(
   parameter: RawTastyTypeParameter,
-  substitutions: TypeSubstitutions,
+  substitutions: TypeSubstitutions
 ): RawTastyTypeParameter {
   return {
     ...parameter,
-    constraint: parameter.constraint ? instantiateTypeRef(parameter.constraint, substitutions) : parameter.constraint,
-    default: parameter.default ? instantiateTypeRef(parameter.default, substitutions) : parameter.default,
+    constraint: parameter.constraint
+      ? instantiateTypeRef(parameter.constraint, substitutions)
+      : parameter.constraint,
+    default: parameter.default
+      ? instantiateTypeRef(parameter.default, substitutions)
+      : parameter.default,
   }
 }

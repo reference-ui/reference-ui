@@ -4,8 +4,8 @@
 //! Emits the aggregated analysis results detailing style propagation through component hierarchies.
 
 mod analyzer;
-mod module_resolution;
 mod model;
+mod module_resolution;
 mod parser;
 mod primitive_metadata;
 mod source_files;

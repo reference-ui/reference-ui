@@ -17,6 +17,6 @@ pub fn breakpoints(entries: &[(&str, &str)]) -> HashMap<String, String> {
         .collect()
 }
 
-mod imports;
 mod function_name;
+mod imports;
 mod responsive;

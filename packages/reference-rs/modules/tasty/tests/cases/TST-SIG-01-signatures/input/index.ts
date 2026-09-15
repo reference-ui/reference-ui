@@ -14,4 +14,4 @@ export type {
   WithRest,
   Constructible,
   ParenType,
-} from './api';
+} from './api'

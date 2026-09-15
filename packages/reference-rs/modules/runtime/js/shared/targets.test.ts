@@ -48,7 +48,11 @@ describe('targets', () => {
   })
 
   it('returns the npm package name for a runtime triple', () => {
-    expect(getVirtualNativePackageName('linux-x64-gnu')).toBe('@reference-ui/rust-linux-x64-gnu')
-    expect(getVirtualNativePackageName('darwin-arm64')).toBe('@reference-ui/rust-darwin-arm64')
+    expect(getVirtualNativePackageName('linux-x64-gnu')).toBe(
+      '@reference-ui/rust-linux-x64-gnu'
+    )
+    expect(getVirtualNativePackageName('darwin-arm64')).toBe(
+      '@reference-ui/rust-darwin-arm64'
+    )
   })
 })

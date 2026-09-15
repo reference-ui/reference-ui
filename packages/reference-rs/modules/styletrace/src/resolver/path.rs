@@ -27,11 +27,11 @@ pub(crate) fn resolve_local_module_path(candidate: &Path) -> Option<PathBuf> {
     if let Some(path) = resolve_direct_extension(candidate) {
         return Some(path);
     }
-    
+
     if let Some(path) = resolve_mapped_extension(candidate) {
         return Some(path);
     }
-    
+
     resolve_index_file(candidate)
 }
 

@@ -1,2 +1,57 @@
-export const manifest = {"version":"2","warnings":[],"symbolsByName":{"ContainerPropsCore":["_530e410ff80aa22c"],"FontPropsCore":["_df8d8df991c34da2"],"ReferencePropsCore":["_276c7bc5b214c9aa"],"ResponsivePropsCore":["_a062bb05128cfd5d"],"StylePropsCore":["_69878fff9ca6d53a"],"SystemStyleObjectCore":["_12e50fcd994d3752"]},"symbolsById":{"_12e50fcd994d3752":{"id":"_12e50fcd994d3752","name":"SystemStyleObjectCore","kind":"interface","chunk":"./chunks/_12e50fcd994d3752.js","library":"user"},"_276c7bc5b214c9aa":{"id":"_276c7bc5b214c9aa","name":"ReferencePropsCore","kind":"typeAlias","chunk":"./chunks/_276c7bc5b214c9aa.js","library":"user"},"_530e410ff80aa22c":{"id":"_530e410ff80aa22c","name":"ContainerPropsCore","kind":"interface","chunk":"./chunks/_530e410ff80aa22c.js","library":"user"},"_69878fff9ca6d53a":{"id":"_69878fff9ca6d53a","name":"StylePropsCore","kind":"typeAlias","chunk":"./chunks/_69878fff9ca6d53a.js","library":"user"},"_a062bb05128cfd5d":{"id":"_a062bb05128cfd5d","name":"ResponsivePropsCore","kind":"interface","chunk":"./chunks/_a062bb05128cfd5d.js","library":"user"},"_df8d8df991c34da2":{"id":"_df8d8df991c34da2","name":"FontPropsCore","kind":"typeAlias","chunk":"./chunks/_df8d8df991c34da2.js","library":"user"}}};
-export default manifest;
+export const manifest = {
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    ContainerPropsCore: ['_530e410ff80aa22c'],
+    FontPropsCore: ['_df8d8df991c34da2'],
+    ReferencePropsCore: ['_276c7bc5b214c9aa'],
+    ResponsivePropsCore: ['_a062bb05128cfd5d'],
+    StylePropsCore: ['_69878fff9ca6d53a'],
+    SystemStyleObjectCore: ['_12e50fcd994d3752'],
+  },
+  symbolsById: {
+    _12e50fcd994d3752: {
+      id: '_12e50fcd994d3752',
+      name: 'SystemStyleObjectCore',
+      kind: 'interface',
+      chunk: './chunks/_12e50fcd994d3752.js',
+      library: 'user',
+    },
+    _276c7bc5b214c9aa: {
+      id: '_276c7bc5b214c9aa',
+      name: 'ReferencePropsCore',
+      kind: 'typeAlias',
+      chunk: './chunks/_276c7bc5b214c9aa.js',
+      library: 'user',
+    },
+    _530e410ff80aa22c: {
+      id: '_530e410ff80aa22c',
+      name: 'ContainerPropsCore',
+      kind: 'interface',
+      chunk: './chunks/_530e410ff80aa22c.js',
+      library: 'user',
+    },
+    _69878fff9ca6d53a: {
+      id: '_69878fff9ca6d53a',
+      name: 'StylePropsCore',
+      kind: 'typeAlias',
+      chunk: './chunks/_69878fff9ca6d53a.js',
+      library: 'user',
+    },
+    _a062bb05128cfd5d: {
+      id: '_a062bb05128cfd5d',
+      name: 'ResponsivePropsCore',
+      kind: 'interface',
+      chunk: './chunks/_a062bb05128cfd5d.js',
+      library: 'user',
+    },
+    _df8d8df991c34da2: {
+      id: '_df8d8df991c34da2',
+      name: 'FontPropsCore',
+      kind: 'typeAlias',
+      chunk: './chunks/_df8d8df991c34da2.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

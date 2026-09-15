@@ -1,4 +1,4 @@
-# ATM-LEAF-08 expression table
+# ATM-LEAF-08
 
-A batch of JSX prop expressions covering layout, flex, grid, typography,
-borders, and effects. Grain is the want set, not class spelling.
+Batch of JSX prop expressions covering layout, flex, typography, borders, and
+effects. Grain is the want set. Contract: [SPEC.md](../../../SPEC.md).

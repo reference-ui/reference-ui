@@ -5,7 +5,14 @@
  */
 import { createRequire } from 'node:module'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 
@@ -19,7 +26,12 @@ if (!triple) {
 }
 
 const binaryPath = join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)
-const buildStampPath = join(packageDir, 'dist', 'native', `virtual-native.${triple}.inputs.sha256`)
+const buildStampPath = join(
+  packageDir,
+  'dist',
+  'native',
+  `virtual-native.${triple}.inputs.sha256`
+)
 const nativeInputs = [
   join(packageDir, 'Cargo.toml'),
   join(packageDir, 'Cargo.lock'),
@@ -49,7 +61,7 @@ function hashNativeInputs(): string {
     }
 
     const entries = readdirSync(path, { withFileTypes: true })
-      .map((entry) => entry.name)
+      .map(entry => entry.name)
       .sort()
 
     for (const name of entries) {

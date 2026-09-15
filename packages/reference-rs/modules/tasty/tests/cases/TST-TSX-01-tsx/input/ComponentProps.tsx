@@ -6,12 +6,12 @@
 /** Props for a React-like button component (type-only; no JSX usage required). */
 export interface ButtonProps {
   /** Button label. */
-  label: string;
+  label: string
   /** Optional click handler. */
-  onClick?: () => void;
+  onClick?: () => void
   /** Optional disabled state. */
-  disabled?: boolean;
+  disabled?: boolean
 }
 
 /** Variant type used by ButtonProps. */
-export type ButtonVariant = 'default' | 'primary' | 'danger';
+export type ButtonVariant = 'default' | 'primary' | 'danger'

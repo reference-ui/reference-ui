@@ -24,8 +24,13 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
     let mut exports = BTreeMap::new();
 
     for parsed in parsed_files.iter().cloned() {
-        let (file_id, module_specifier, ts_file, file_exports, resolved_symbols) =
-            resolve_file(parsed, &symbol_index, &export_index, &parsed_by_file_id, &mut export_cache);
+        let (file_id, module_specifier, ts_file, file_exports, resolved_symbols) = resolve_file(
+            parsed,
+            &symbol_index,
+            &export_index,
+            &parsed_by_file_id,
+            &mut export_cache,
+        );
 
         files.insert(file_id, ts_file);
         symbols.extend(
@@ -78,10 +83,18 @@ fn build_export_index(
     parsed_files
         .iter()
         .flat_map(|parsed| {
-            collect_file_exports(&parsed.file_id, &parsed_by_file_id, symbol_index, &mut cache, &mut BTreeSet::new())
-                .into_iter()
-                .map(|(export_name, symbol_id)| (file_symbol_key(&parsed.file_id, &export_name), symbol_id))
-                .collect::<Vec<_>>()
+            collect_file_exports(
+                &parsed.file_id,
+                &parsed_by_file_id,
+                symbol_index,
+                &mut cache,
+                &mut BTreeSet::new(),
+            )
+            .into_iter()
+            .map(|(export_name, symbol_id)| {
+                (file_symbol_key(&parsed.file_id, &export_name), symbol_id)
+            })
+            .collect::<Vec<_>>()
         })
         .collect()
 }
@@ -166,8 +179,13 @@ fn collect_file_exports(
         .export_bindings
         .iter()
         .filter_map(|(export_name, local_name)| {
-            resolve_symbol_id(symbol_index, &parsed.file_id, local_name, &parsed.reexport_target)
-                .map(|symbol_id| (export_name.clone(), symbol_id))
+            resolve_symbol_id(
+                symbol_index,
+                &parsed.file_id,
+                local_name,
+                &parsed.reexport_target,
+            )
+            .map(|symbol_id| (export_name.clone(), symbol_id))
         })
         .collect::<ExportMap>();
 

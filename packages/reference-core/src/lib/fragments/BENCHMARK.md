@@ -13,7 +13,7 @@ Comprehensive performance benchmarks comparing build-time fragment evaluation (`
 All stress benchmarks use a matched high-volume enterprise workload:
 
 * **500 individual files** $\times$ **20 styles/tokens per file** = **10,000 declarations**
-* **450 token bag files** (9,000 color tokens with `oklch(...)` expressions)
+* **450 token fragment files** (9,000 color tokens with `oklch(...)` expressions)
 * **50 motion files** (50 keyframe animation rules)
 * Evaluated against real design system imports (`@reference-ui/system`)
 
@@ -41,7 +41,7 @@ Summary across small, medium, enterprise stress, and real production theme suite
 
 | Workload | Files | Items Declared | Emitted JS | Bundle Time | Eval Time | Total Time | Peak RSS |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Real `reference-lib` theme** | **30** | Theme bags & keyframes | **220 KB** (7.3 KB/f) | **19.6 ms** | **5.7 ms** | **26.0 ms** | ~63 MB |
+| **Real `reference-lib` theme** | **30** | Theme fragments & keyframes | **220 KB** (7.3 KB/f) | **19.6 ms** | **5.7 ms** | **26.0 ms** | ~63 MB |
 | **Synthetic (small)** | 31 | 620 tokens | 163 KB (5.3 KB/f) | 37.3 ms | 4.7 ms | **42.3 ms** | ~69 MB |
 | **Synthetic (medium)** | 200 | 4,000 tokens | 1,062 KB (5.3 KB/f) | 203.4 ms | 24.9 ms | **230.6 ms** | ~101 MB |
 | **Synthetic 500 (Tokens)** | 500 | 10,000 tokens | 2,658 KB (5.3 KB/f) | 540.0 ms | 40.0 ms | **580.0 ms** | ~107 MB |

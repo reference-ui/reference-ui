@@ -12,8 +12,8 @@ Numeric keys are language. Named widths (`md` → 768) are utterances from
 exist only as a CSS-generic starting table (`sm` → 640px).
 
 Extract walks the object and asks this module for the query string.
-Conditions ask the same function when a condition token is a
-breakpoint key. This folder does not own `_hover` or `@media`.
+The `@container …` token is already on `when` before stylesheet
+prints it. This folder does not own `_hover` or `@media`.
 
 ## Must not
 

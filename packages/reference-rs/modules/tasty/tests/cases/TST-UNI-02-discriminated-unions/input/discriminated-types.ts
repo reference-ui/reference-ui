@@ -3,7 +3,7 @@
  */
 
 // Basic discriminated union with literal type field
-export type DiscriminatedUnion = 
+export type DiscriminatedUnion =
   | { type: 'add'; value: number }
   | { type: 'remove'; id: string }
 
@@ -25,12 +25,12 @@ export interface SystemAction {
 export type Action = UserAction | SystemAction
 
 // Exhaustive switch pattern with never
-export type ExhaustiveSwitch<T> = T extends { type: infer U } 
-  ? U extends string 
-    ? T extends { type: U } 
-      ? T 
-      : never 
-    : never 
+export type ExhaustiveSwitch<T> = T extends { type: infer U }
+  ? U extends string
+    ? T extends { type: U }
+      ? T
+      : never
+    : never
   : never
 
 // Union of interfaces with discriminator

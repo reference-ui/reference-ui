@@ -2,7 +2,12 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { CreateTastyBrowserRuntimeOptions, TastyApi, TastyBrowserRuntime, TastyRuntimeModule } from '../api-types'
+import type {
+  CreateTastyBrowserRuntimeOptions,
+  TastyApi,
+  TastyBrowserRuntime,
+  TastyRuntimeModule,
+} from '../api-types'
 import { extractTastyRuntimeModule, wrapRuntimeError } from './shared'
 import { createTastyApiFromManifest } from './api-runtime'
 
@@ -26,7 +31,7 @@ export class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
     if (!this.runtimeModulePromise) {
       this.runtimeModulePromise = Promise.resolve()
         .then(() => this.options.loadRuntimeModule())
-        .then((moduleValue) => {
+        .then(moduleValue => {
           const runtimeModule = extractTastyRuntimeModule(moduleValue)
           this.runtimeModule = runtimeModule
           return runtimeModule
@@ -44,7 +49,7 @@ export class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
   async loadApi(): Promise<TastyApi> {
     if (!this.apiPromise) {
       this.apiPromise = this.loadRuntimeModule()
-        .then(async (runtimeModule) => {
+        .then(async runtimeModule => {
           const api = createTastyApiFromManifest({
             manifest: runtimeModule.manifest,
             manifestPath: runtimeModule.manifestUrl,
@@ -67,7 +72,7 @@ export class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
 }
 
 export function createTastyBrowserRuntime(
-  options: CreateTastyBrowserRuntimeOptions,
+  options: CreateTastyBrowserRuntimeOptions
 ): TastyBrowserRuntime {
   return new TastyBrowserRuntimeImpl(options)
 }

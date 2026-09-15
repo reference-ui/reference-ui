@@ -1,5 +1,5 @@
 //! Handles built-in TypeScript utility types during resolution.
-//! 
+//!
 //! This module resolves utility types like `Omit`, `Pick`, `Extract`, and `Exclude`,
 //! as well as Reference-specific builtins like `ConditionalValue` or `StylePropValue`.
 //! It intercepts these names and applies their specific resolution logic.
@@ -10,7 +10,7 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::TypeExpr;
 
 use super::context::TraceContext;
-use super::resolve::{resolve_prop_names, resolve_literal_names};
+use super::resolve::{resolve_literal_names, resolve_prop_names};
 
 pub fn resolve_builtin_props(
     ctx: &mut TraceContext<'_>,

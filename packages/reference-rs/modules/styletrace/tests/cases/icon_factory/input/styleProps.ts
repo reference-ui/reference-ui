@@ -39,7 +39,7 @@ export function splitPrimitiveStyleProps<T extends Record<string, unknown>>(prop
 
 export function resolveSvgPrimitiveClassName(
   styleProps: Record<string, unknown>,
-  userClassName: string | undefined,
+  userClassName: string | undefined
 ): string | undefined {
   const { css: cssProp, ...boxProps } = styleProps
   const boxClass = box(boxProps as Parameters<typeof box>[0])

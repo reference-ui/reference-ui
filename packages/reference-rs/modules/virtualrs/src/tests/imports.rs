@@ -32,8 +32,7 @@ fn rewrites_css_with_default_and_aliased_named_imports() {
 
 #[test]
 fn rewrites_aliased_css_import_to_canonical_css_call() {
-    let source =
-        "import { css as sx, Box } from '@reference-ui/react';\nconst x = sx({});\n";
+    let source = "import { css as sx, Box } from '@reference-ui/react';\nconst x = sx({});\n";
 
     let rewritten = rewrite_css_imports(source, VIRTUAL_PATH);
 

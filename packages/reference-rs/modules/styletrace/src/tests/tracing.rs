@@ -9,9 +9,7 @@ use super::fixtures::{
     workspace_fixture_dir, workspace_scratch_dir, workspace_sync_root, ScratchDir,
 };
 
-fn trace_with_sync_root(
-    root_dir: &std::path::Path,
-) -> Result<Vec<String>, crate::StyleTraceError> {
+fn trace_with_sync_root(root_dir: &std::path::Path) -> Result<Vec<String>, crate::StyleTraceError> {
     let sync_root = workspace_sync_root();
     trace_style_jsx_names_with_hint(root_dir, Some(sync_root.as_path()))
 }

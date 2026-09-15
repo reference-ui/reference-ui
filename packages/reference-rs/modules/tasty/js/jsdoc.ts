@@ -31,7 +31,10 @@ export function getTastyJsDocParamDescriptions(member: TastyMember): Map<string,
   return new Map(
     member
       .getParameters()
-      .filter((param): param is { name: string; description: string } => param.description != null)
-      .map((param) => [param.name, param.description]),
+      .filter(
+        (param): param is { name: string; description: string } =>
+          param.description != null
+      )
+      .map(param => [param.name, param.description])
   )
 }

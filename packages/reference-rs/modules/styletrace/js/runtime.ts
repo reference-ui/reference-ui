@@ -13,7 +13,7 @@ export interface StyletraceNative {
 }
 
 export function analyzeStyletrace(rootDir: string, syncRootHint?: string): string[] {
-  return callNativeJson<string[], StyletraceNative>('analyze Styletrace data', (native) =>
+  return callNativeJson<string[], StyletraceNative>('analyze Styletrace data', native =>
     native.analyzeStyletrace(rootDir, syncRootHint)
   )
 }

@@ -8,6 +8,7 @@
   },
   "include": [
     "modules/*/js/**/*.ts",
-    "modules/canon/generate/**/*.ts"
+    "modules/canon/generate/**/*.ts",
+    "modules/canon/generate/**/*.d.ts"
   ]
 }

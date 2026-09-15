@@ -4,9 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::model::{
-    JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef,
-};
+use crate::model::{JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParsedFileAst {

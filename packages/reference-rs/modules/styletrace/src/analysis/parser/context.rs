@@ -2,9 +2,9 @@
 //! Encapsulates the configuration and state needed across different parsing functions.
 //! Prevents parameter explosion in deeply nested AST traversal.
 
+use crate::analysis::model::TraceImport;
 use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
-use crate::analysis::model::TraceImport;
 
 /// Shared context for component and factory extraction
 pub struct ParserContext<'a> {

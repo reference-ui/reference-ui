@@ -122,7 +122,7 @@ function buildColorProperties(platformCss: PlatformCss): string[] {
 
   // Union dialect color extensions
   for (const ext of EXTENSIONS) {
-    if (ext.color) {
+    if ('color' in ext) {
       colorSet.add(ext.name);
     }
   }

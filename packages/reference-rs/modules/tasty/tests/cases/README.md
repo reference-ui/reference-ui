@@ -10,4 +10,3 @@ When you run the Tasty test suite:
 - Runtime artifacts go to `tests/.scratch/{station}/` so the API can load them. That directory is not committed.
 - Committed goldens under `output/` are `manifest.js` (full emit) and `chunks.json` (sorted module and declaration keys).
 - Each station executes `spec.ts`, standing gauges, and golden diffs. Rewrite goldens with `pnpm agentrs v tasty --update-goldens`.
-

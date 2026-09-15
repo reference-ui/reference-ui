@@ -17,7 +17,10 @@ import type {
 // React component props example
 export type ComponentExample = {
   buttonProps: ReactComponentProps<{ onClick: () => void; disabled?: boolean }>
-  userInputProps: ReactComponentProps<{ value: string; onChange: (value: string) => void }>
+  userInputProps: ReactComponentProps<{
+    value: string
+    onChange: (value: string) => void
+  }>
   getPropType: <T>(props: ReactComponentProps<T>) => T
 }
 
@@ -41,15 +44,23 @@ export type EventHandlerExample = {
   handlers: EventHandlerMap
   clickHandler: (e: MouseEvent) => void
   keydownHandler: (e: KeyboardEvent) => void
-  getHandler: <K extends keyof HTMLElementEventMap>(event: K) => (e: HTMLElementEventMap[K]) => void
+  getHandler: <K extends keyof HTMLElementEventMap>(
+    event: K
+  ) => (e: HTMLElementEventMap[K]) => void
 }
 
 // Builder pattern example
 export type BuilderExample = {
   userBuilder: BuilderPatternGeneric<{ name: string; age: number }>
   configBuilder: BuilderPatternGeneric<{ api: string; timeout: number }>
-  buildUser: (builder: BuilderPatternGeneric<{ name: string; age: number }>) => { name: string; age: number }
-  mergeConfig: <T, U>(builder: BuilderPatternGeneric<T>, other: U) => BuilderPatternGeneric<T & U>
+  buildUser: (builder: BuilderPatternGeneric<{ name: string; age: number }>) => {
+    name: string
+    age: number
+  }
+  mergeConfig: <T, U>(
+    builder: BuilderPatternGeneric<T>,
+    other: U
+  ) => BuilderPatternGeneric<T & U>
 }
 
 // Zod infer example
@@ -66,5 +77,8 @@ export type StyledSystemExample = {
   styledProps: StyledSystemProps
   buttonStyles: { colorPrimary?: string; marginMd?: string; fontSizeSm?: string }
   cardStyles: { colorSecondary?: string; paddingLg?: string; fontSizeMd?: string }
-  getStyleProp: <K extends keyof StyledSystemProps>(props: StyledSystemProps, key: K) => StyledSystemProps[K]
+  getStyleProp: <K extends keyof StyledSystemProps>(
+    props: StyledSystemProps,
+    key: K
+  ) => StyledSystemProps[K]
 }

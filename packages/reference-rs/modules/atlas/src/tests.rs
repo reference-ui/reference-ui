@@ -5,9 +5,7 @@
 #[cfg(test)]
 mod tests {
     use crate::config::AtlasConfig;
-    use crate::model::{
-        Component, ComponentInterface, ComponentProp, Usage, UsageThresholds,
-    };
+    use crate::model::{Component, ComponentInterface, ComponentProp, Usage, UsageThresholds};
     use crate::usage_policy::{score_usage, usage_thresholds};
     use crate::AtlasAnalyzer;
     use std::collections::BTreeMap;
@@ -150,7 +148,8 @@ mod tests {
         std::fs::write(
             root.join("src/components/index.ts"),
             "export * from './Accordion';\n",
-        ).unwrap();
+        )
+        .unwrap();
 
         std::fs::write(
             root.join("src/App.tsx"),

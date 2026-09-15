@@ -5,9 +5,9 @@
 pub mod expr;
 pub mod jsx;
 
-use std::collections::{BTreeSet, HashMap};
-use oxc_ast::ast::{Declaration, Statement};
 use crate::analysis::model::{ComponentEdge, PropBindings, TraceImport};
+use oxc_ast::ast::{Declaration, Statement};
+use std::collections::{BTreeSet, HashMap};
 
 pub struct WalkContext<'a> {
     pub source: &'a str,
@@ -30,16 +30,20 @@ pub fn collect_edges_from_statement(statement: &Statement<'_>, ctx: &mut WalkCon
         Statement::VariableDeclaration(declaration) => walk_variable_declaration(declaration, ctx),
         Statement::BlockStatement(block) => walk_block_statement(block, ctx),
         Statement::IfStatement(if_statement) => walk_if_statement(if_statement, ctx),
-        Statement::SwitchStatement(switch_statement) => walk_switch_statement(switch_statement, ctx),
+        Statement::SwitchStatement(switch_statement) => {
+            walk_switch_statement(switch_statement, ctx)
+        }
         Statement::FunctionDeclaration(function) => walk_function_declaration(function, ctx),
-        Statement::ExportNamedDeclaration(export_decl) => walk_export_named_declaration(export_decl, ctx),
+        Statement::ExportNamedDeclaration(export_decl) => {
+            walk_export_named_declaration(export_decl, ctx)
+        }
         _ => {}
     }
 }
 
 fn walk_variable_declaration(
     declaration: &oxc_ast::ast::VariableDeclaration<'_>,
-    ctx: &mut WalkContext<'_>
+    ctx: &mut WalkContext<'_>,
 ) {
     for declarator in &declaration.declarations {
         if let Some(init) = &declarator.init {
@@ -64,7 +68,7 @@ fn walk_if_statement(if_statement: &oxc_ast::ast::IfStatement<'_>, ctx: &mut Wal
 
 fn walk_switch_statement(
     switch_statement: &oxc_ast::ast::SwitchStatement<'_>,
-    ctx: &mut WalkContext<'_>
+    ctx: &mut WalkContext<'_>,
 ) {
     expr::collect_edges_from_expression(&switch_statement.discriminant, ctx);
     for case in &switch_statement.cases {
@@ -77,10 +81,7 @@ fn walk_switch_statement(
     }
 }
 
-fn walk_function_declaration(
-    function: &oxc_ast::ast::Function<'_>,
-    ctx: &mut WalkContext<'_>
-) {
+fn walk_function_declaration(function: &oxc_ast::ast::Function<'_>, ctx: &mut WalkContext<'_>) {
     if let Some(body) = &function.body {
         for nested in &body.statements {
             collect_edges_from_statement(nested, ctx);
@@ -90,12 +91,14 @@ fn walk_function_declaration(
 
 fn walk_export_named_declaration(
     export_decl: &oxc_ast::ast::ExportNamedDeclaration<'_>,
-    ctx: &mut WalkContext<'_>
+    ctx: &mut WalkContext<'_>,
 ) {
     if let Some(declaration) = &export_decl.declaration {
         match declaration {
             Declaration::FunctionDeclaration(function) => walk_function_declaration(function, ctx),
-            Declaration::VariableDeclaration(declaration) => walk_variable_declaration(declaration, ctx),
+            Declaration::VariableDeclaration(declaration) => {
+                walk_variable_declaration(declaration, ctx)
+            }
             _ => {}
         }
     }

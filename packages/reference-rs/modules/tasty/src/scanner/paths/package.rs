@@ -3,9 +3,7 @@
 //! See module README for architecture details.
 
 use crate::constants::libraries::USER_LIBRARY_NAME;
-use crate::constants::scanner::{
-    NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, TYPES_SCOPE_NAME,
-};
+use crate::constants::scanner::{NODE_MODULES_DIR, PACKAGE_INDEX_BASENAME, TYPES_SCOPE_NAME};
 
 pub(super) fn package_name_from_file_id(file_id: &str) -> String {
     package_name_for_file_id(file_id).unwrap_or_else(|| USER_LIBRARY_NAME.to_string())

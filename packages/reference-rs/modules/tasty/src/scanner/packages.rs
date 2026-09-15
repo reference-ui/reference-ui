@@ -64,10 +64,7 @@ pub(super) fn resolve_external_import(
         .or_else(|| find_installed_declaration_provider(root_dir, source_module))
 }
 
-pub fn resolve_external_import_path(
-    root_dir: &Path,
-    source_module: &str,
-) -> Option<PathBuf> {
+pub fn resolve_external_import_path(root_dir: &Path, source_module: &str) -> Option<PathBuf> {
     resolve_external_import(root_dir, source_module).map(|resolved| root_dir.join(resolved.file_id))
 }
 

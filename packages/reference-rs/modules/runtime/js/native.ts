@@ -20,7 +20,7 @@ export function requireNative<N = VirtualNativeBinding>(feature: string): N {
 
 export function callNativeJson<T, N = VirtualNativeBinding>(
   feature: string,
-  run: (n: N) => string,
+  run: (n: N) => string
 ): T {
   const native = requireNative<N>(feature)
   const resultJson = run(native)

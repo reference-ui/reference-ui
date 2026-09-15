@@ -13,11 +13,11 @@ const spec: StationSpec<TastyCaseResult> = {
     const matches = await api.findSymbolsByName('SharedProps')
 
     expect(matches).toHaveLength(2)
-    expect(matches.map((symbol) => symbol.library)).toEqual(['user', 'user'])
+    expect(matches.map(symbol => symbol.library)).toEqual(['user', 'user'])
     expect(
       api
         .getWarnings()
-        .some((warning) => warning.includes('Duplicate symbol name "SharedProps"'))
+        .some(warning => warning.includes('Duplicate symbol name "SharedProps"'))
     ).toBe(true)
 
     await expect(api.loadSymbolByName('SharedProps')).rejects.toThrow(

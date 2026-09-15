@@ -118,7 +118,7 @@ Fragments do not plug into types or the engine. They **become a base system**. T
 
 `packages/reference-core/src/lib/fragments` already does this: find call sites, micro-bundle, `import()` the bundle, capture the objects passed to `tokens()` / `keyframes()` / …. Fast, and the right grain — authors write real TS with imports and computed values. Rust must not grow a JS evaluator to learn a token scale.
 
-The product of this step is a **base system** — the definition of this package’s design system. Not CSS. Not class names. Other packages do not consume a bag of fragment objects; they import `baseSystem` and pass it to `extends` or `layers` in `ui.config.ts`.
+The product of this step is a **base system** — the definition of this package’s design system. Not CSS. Not class names. Other packages do not import captured fragment objects; they import `baseSystem` and pass it to `extends` or `layers` in `ui.config.ts`.
 
 ### 3.2 Types are a separate compiler
 
@@ -285,13 +285,15 @@ The cargo split is done. Product code lives under `packages/reference-rs/modules
 The compiler is a real pipeline, not a README scaffold:
 
 ```
-User TSX / css() / cva()
+User TSX / css() / recipe()
         │
         ▼
  canon          @webref + Reference dialect (JS generator → Rust tables)
  styletrace     which names are StyleProps / wrappers
- extract/sites  JSX attrs, css(), recipe calls
- extract/leaves both ternary branches; local constants; no JS eval
+ extract/jsx          StyleProps on tags
+ extract/css          css() / css.object()
+ extract/recipes      recipe() style objects (not closed class emit)
+ extract/expressions   both ternary branches; local constants; no JS eval
         │
         ▼
  resolve        rhythm, token→var heuristic, shorthands, conditions, patterns
@@ -389,8 +391,8 @@ These are still the machine. Do not resolve remaining work by violating them.
 
 1. **Wrong machine, right atoms.** Keep atom / layer / condition / recipe *ideas*. Do not keep a JS-eval extractor, a TS-only utility transform, or a dumb `css()` that cannot see those transforms.
 2. **One naming function.** Sheet and runtime `css()` produce the same class for `(prop, value, conditions)`. Ghost class is a P0.
-3. **Collect leaves. Do not run user JS for StyleProps.** Ternaries / `&&` / `||` are bags of literals. `undefined` is no leaf. Fragment eval is a *different* machine, on a *different* set of functions (`tokens`, not `css`).
-4. **Compile CSS, not a bag of racing utilities.** Shorthand expansion before cascade. `borderBottom` + `borderColor` must not flash `currentColor`.
+3. **Collect leaves. Do not run user JS for StyleProps.** Ternaries / `&&` / `||` yield literal branches. `undefined` is no leaf. Fragment eval is a *different* machine, on a *different* set of functions (`tokens`, not `css`).
+4. **Compile CSS, not racing utilities.** Shorthand expansion before cascade. `borderBottom` + `borderColor` must not flash `currentColor`.
 5. **Postel on `StyleProps`.** If the type allows it, the engine supports it or fails closed with a diagnostic — never a missing class in the browser. `staticCss` is part of that promise.
 6. **React/TSX only.** No Vue / Svelte / Astro.
 7. **Atomic CSS is not a public API.** Types describe tokens and style objects. They do not describe `.mt_2r`.

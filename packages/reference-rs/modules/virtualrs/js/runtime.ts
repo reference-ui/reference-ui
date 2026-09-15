@@ -21,12 +21,12 @@ export interface VirtualrsNative {
     relativePath: string,
     fromName: string,
     toName: string,
-    importFrom?: string,
+    importFrom?: string
   ): string
   applyResponsiveStyles(
     sourceCode: string,
     relativePath: string,
-    breakpointsJson?: string,
+    breakpointsJson?: string
   ): string
 }
 
@@ -47,17 +47,23 @@ export function replaceFunctionName(
   relativePath: string,
   fromName: string,
   toName: string,
-  importFrom?: string,
+  importFrom?: string
 ): string {
   const native = requireNative<VirtualrsNative>('replace function names')
 
-  return native.replaceFunctionName(sourceCode, relativePath, fromName, toName, importFrom)
+  return native.replaceFunctionName(
+    sourceCode,
+    relativePath,
+    fromName,
+    toName,
+    importFrom
+  )
 }
 
 export function applyResponsiveStyles(
   sourceCode: string,
   relativePath: string,
-  breakpoints?: Record<string, string>,
+  breakpoints?: Record<string, string>
 ): string {
   const native = requireNative<VirtualrsNative>('apply responsive styles')
 
