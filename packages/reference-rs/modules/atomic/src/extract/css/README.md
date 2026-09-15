@@ -1,23 +1,20 @@
 # Extract / css
 
 Finds `css()` / `css.object()` calls and hands their arguments to
-`extract/expressions`.
+`extract/expressions`. The callee must be a Reference import (or the
+compiler alias `__reference_ui_css`), not a shadowed local or unknown
+helper named `css`.
 
 ```ts
+import { css } from '@reference-ui/react'
 css({ mt: '2r', _hover: { bg: 'n300' } })
 css.object({ p: '1r' })
-css(cond ? { color: 'red' } : { color: 'blue' })
 ```
 
-`css()` returns a class string. `css.object()` is the same style
-object, kept as an object — merge later, pass `css={…}`, return from
-a helper. Extract still has to walk it: those leaves are utilities.
-
-Every object argument is a style object. A ternary argument scoops both
-object branches. This module does not walk JSX and does not walk
-`recipe()`.
+`function f(css) { css({ color: 'red' }) }` is not a site.
 
 ## Must not
 
 - Choose values (expressions).
 - Extract `sva` / `cva` / unknown helpers.
+- Match the identifier `css` without an import binding.

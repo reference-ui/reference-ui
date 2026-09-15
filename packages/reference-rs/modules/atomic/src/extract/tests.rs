@@ -164,14 +164,29 @@ fn test_css_and_recipe_call_sites() {
         .wants
         .iter()
         .any(|w| &*w.prop == "p" && w.value.to_string() == "1r"));
-    assert!(res
+    assert!(!res
         .wants
         .iter()
         .any(|w| &*w.prop == "color" && w.value.to_string() == "white"));
-    assert!(res
+    assert!(!res
         .wants
         .iter()
         .any(|w| &*w.prop == "fontSize" && w.value.to_string() == "12px"));
+    assert_eq!(res.recipes.len(), 1);
+    assert_eq!(res.recipes[0].class_name, "button");
+    assert!(res.stylesheet.contains("@layer recipes {"));
+    assert!(res.stylesheet.contains(".button {"));
+    assert!(res.stylesheet.contains("color: white"));
+    assert!(res.stylesheet.contains(".button--size_sm"));
+    assert!(res.stylesheet.contains("font-size: 12px"));
+    assert!(res.stylesheet.contains("@layer utilities {"));
+    assert!(res.stylesheet.contains(".mt_2r"));
+    let recipes_at = res.stylesheet.find("@layer recipes {").expect("recipes layer");
+    let utilities_at = res.stylesheet.find("@layer utilities {").expect("utilities layer");
+    assert!(recipes_at < utilities_at);
+    let utilities = &res.stylesheet[utilities_at..];
+    assert!(!utilities.contains(".button {"));
+    assert!(!utilities.contains(".button--"));
 }
 
 #[test]
@@ -203,17 +218,15 @@ fn test_unknown_helpers_are_not_extract_sites() {
 
 #[test]
 fn test_custom_breakpoint_scale() {
-    use crate::config::BreakpointConfig;
+    let mut system = crate::BaseSystem::default();
+    system.breakpoints = crate::BreakpointScale::from_names(["tablet", "desktop"]);
 
     let req = CompileRequest {
         files: Some(vec![VirtualSource {
             path: "test.tsx".to_string(),
             content: r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#.to_string(),
         }]),
-        breakpoints: Some(BreakpointConfig::List(vec![
-            "tablet".to_string(),
-            "desktop".to_string(),
-        ])),
+        base_system: Some(system),
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");
@@ -231,12 +244,9 @@ fn test_custom_breakpoint_scale() {
 
 #[test]
 fn test_tokens_breakpoints_scale() {
-    use crate::config::{BreakpointConfig, TokensConfig};
-    use indexmap::IndexMap;
-
-    let mut map = IndexMap::new();
-    map.insert("wide".to_string(), serde_json::json!("1000px"));
-    map.insert("ultra".to_string(), serde_json::json!("1600px"));
+    let mut system = crate::BaseSystem::default();
+    system.breakpoints =
+        crate::BreakpointScale::from_named_widths([("wide", "1000"), ("ultra", "1600")]);
 
     let req = CompileRequest {
         files: Some(vec![VirtualSource {
@@ -244,10 +254,7 @@ fn test_tokens_breakpoints_scale() {
             content: r#"export const Comp = () => <Div p={['10px', '20px', '30px']} />"#
                 .to_string(),
         }]),
-        tokens: Some(TokensConfig {
-            breakpoints: Some(BreakpointConfig::Map(map)),
-            ..Default::default()
-        }),
+        base_system: Some(system),
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");

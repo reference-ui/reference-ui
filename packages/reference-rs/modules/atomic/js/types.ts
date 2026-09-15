@@ -1,7 +1,7 @@
 /**
  * TypeScript type definitions for Reference UI atomic compiler inputs, outputs, and intermediate data structures.
- * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, and authored wants.
- * Ensures strict end-to-end type safety across the native N-API boundary and JavaScript tooling.
+ * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, recipe tables, and authored wants.
+ * `baseSystem` is the design-system dump; omitted means the frozen `@reference-ui/lib` fixture.
  */
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'
@@ -31,41 +31,54 @@ export interface VirtualSource {
   content: string
 }
 
-export interface BreakpointObject {
-  value?: string
-  [k: string]: unknown
+export interface TokenEntry {
+  category: string
+  cssVar: string
+  light: string
+  dark: string
 }
 
-export type BreakpointsInput =
-  | string[]
-  | Record<string, string | number | BreakpointObject>
-
-export interface FontInput {
+export interface FontDefinition {
+  value?: string
   weights?: Record<string, string>
   css?: Record<string, string>
 }
 
-export type FontsInput = Record<string, FontInput>
-
-export interface TokensInput {
-  breakpoints?: BreakpointsInput
-  fonts?: FontsInput
-  [k: string]: unknown
+export interface BreakpointScale {
+  names?: string[]
+  widths?: Record<string, string>
 }
 
 export interface BaseSystemInput {
-  breakpoints?: BreakpointsInput
-  fonts?: FontsInput
-  [k: string]: unknown
+  name?: string
+  tokens?: Record<string, TokenEntry>
+  fonts?: Record<string, FontDefinition>
+  breakpoints?: BreakpointScale
+  conditions?: Record<string, string>
+  globalCss?: string[]
+  keyframes?: Record<string, string>
+  recipes?: Record<string, string>
+  /** Property → token names, or `['*']` for every token in that property's category. */
+  staticCss?: Record<string, string[]>
 }
 
 export interface CompileRequest {
   rootDir?: string
   files?: VirtualSource[]
-  breakpoints?: BreakpointsInput
-  fonts?: FontsInput
-  tokens?: TokensInput
   baseSystem?: BaseSystemInput
+}
+
+export interface RecipeMatch {
+  props: Record<string, string>
+  className: string
+}
+
+export interface RecipeTable {
+  name: string
+  className: string
+  variants: Record<string, Record<string, string>>
+  compoundVariants: RecipeMatch[]
+  combinations: RecipeMatch[]
 }
 
 export interface CompileResult {
@@ -73,4 +86,5 @@ export interface CompileResult {
   css: CssRuntime
   diagnostics: Diagnostic[]
   wants?: Want[]
+  recipes?: RecipeTable[]
 }

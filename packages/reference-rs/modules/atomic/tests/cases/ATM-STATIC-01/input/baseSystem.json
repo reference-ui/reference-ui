@@ -1,0 +1,33 @@
+{
+  "name": "static-css",
+  "tokens": {
+    "colors.n100": {
+      "category": "colors",
+      "cssVar": "--colors-n100",
+      "light": "#f4f4f5",
+      "dark": "#18181b"
+    },
+    "colors.n200": {
+      "category": "colors",
+      "cssVar": "--colors-n200",
+      "light": "#e4e4e7",
+      "dark": "#27272a"
+    },
+    "colors.n300": {
+      "category": "colors",
+      "cssVar": "--colors-n300",
+      "light": "#d4d4d8",
+      "dark": "#3f3f46"
+    },
+    "radii.md": {
+      "category": "radii",
+      "cssVar": "--radii-md",
+      "light": "0.4rem",
+      "dark": "0.4rem"
+    }
+  },
+  "staticCss": {
+    "color": ["*"],
+    "bg": ["n100", "n200", "n300"]
+  }
+}

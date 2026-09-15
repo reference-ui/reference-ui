@@ -15,9 +15,9 @@ authoring package for fragments) and it is not the host pipeline in
 
 ## What it takes
 
-Sources (TSX / `css()` / recipe calls) plus, eventually, a **base system**.
-`compile()` currently takes sources only. Token resolution is a heuristic.
-That is the missing contract, not a polish item.
+Sources (TSX / `css()` / recipe calls) plus a **base system**.
+`compile()` takes `Option<BaseSystem>`; omitted uses the frozen
+`@reference-ui/lib` fixture. Token resolution looks up that dictionary.
 
 Styletrace answers which JSX names still carry StyleProps. Canon answers
 whether `mt` is a style prop. Do not fork either inside this crate.
@@ -57,7 +57,7 @@ The engine operates on five core representations that bridge authored code to em
 
 ## Pipeline Stages
 
-Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { stylesheet, css, diagnostics, wants }`.
+Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { stylesheet, css, diagnostics, wants, recipes }`.
 
 1. **Ingestion & Discovery (`src`)**:
    Accepts virtual sources (`VirtualSource`) or scans disk roots for `.tsx`, `.ts`, `.jsx`, `.js` files, filtering out build caches and node modules. Discovers file-level and project-level constant declarations.
@@ -67,7 +67,8 @@ Compilation follows a deterministic, one-pass pipeline: `compile(request) -> { s
    - JSX StyleProps on Reference primitives
    - `css(...)` open style composition
    - `recipe(...)` closed variant definitions
-   Extracts raw property-value pairs into `Want`s. Never evaluates author JS: branches of ternaries and arrays are extracted symmetrically to capture every possible runtime state.
+   - `staticCss` on the ingested `BaseSystem` (third want source; `['*']` enumerates the property's token category)
+   Extracts raw property-value pairs into `Want`s. Never evaluates author JS: branches of ternaries and arrays are extracted symmetrically to capture every possible runtime state. Does not expand `staticCss` at emit time.
 
 3. **Resolution (`src/resolve`)**:
    Transforms raw `Want`s into normalized `Atom`s through four sequential passes:
@@ -107,7 +108,7 @@ Grain is one class per leaf. Spelling is ours.
 ## Verify
 
 v1 must be provable without `reference-core`. The engine is a pure function —
-sources + config in, CSS + class map out.
+sources + base system in, CSS + class map out.
 
 ```bash
 pnpm agentrs c atomic

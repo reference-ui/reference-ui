@@ -3,18 +3,21 @@
 //! Exposes the primary compilation pipeline and public data structures consumed by build tooling and runtime environments.
 
 pub mod atom;
-pub mod config;
 pub mod diagnostics;
 pub mod extract;
+pub mod recipes;
 pub mod resolve;
 pub mod runtime;
+mod static_css;
 pub mod stylesheet;
 
 #[doc(hidden)]
 pub use styletrace as __styletrace;
 
 pub use atom::Want;
+pub use base_system::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
 pub use diagnostics::{Diagnostic, DiagnosticSeverity};
+pub use recipes::{RecipeMatch, RecipeTable};
 pub use runtime::CssRuntime;
 pub use stylesheet::StylesheetOutput;
 
@@ -23,6 +26,8 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+
+use std::collections::HashSet;
 
 use crate::atom::AtomSet;
 
@@ -43,13 +48,7 @@ pub struct CompileRequest {
     #[serde(default)]
     pub files: Option<Vec<VirtualSource>>,
     #[serde(default)]
-    pub breakpoints: Option<config::BreakpointConfig>,
-    #[serde(default)]
-    pub tokens: Option<config::TokensConfig>,
-    #[serde(default)]
-    pub fonts: Option<config::FontsConfig>,
-    #[serde(default)]
-    pub base_system: Option<config::BaseSystemConfig>,
+    pub base_system: Option<BaseSystem>,
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
@@ -61,12 +60,16 @@ pub struct CompileResult {
     pub diagnostics: Vec<Diagnostic>,
     #[serde(default)]
     pub wants: Vec<Want>,
+    #[serde(default)]
+    pub recipes: Vec<RecipeTable>,
 }
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
-    breakpoints: &'a config::BreakpointScale,
+    breakpoints: &'a BreakpointScale,
+    traced_jsx: &'a HashSet<String>,
     wants: &'a mut Vec<Want>,
+    recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,
 }
 
@@ -74,31 +77,46 @@ struct ParseSession<'a> {
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let sources = collect_sources(request);
     let mut wants = Vec::new();
+    let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let project_constants = collect_project_constants(&sources);
-    let scale = config::resolve_breakpoints(request);
-    let fonts = config::resolve_fonts(request);
+    let traced_jsx = collect_traced_jsx_names(request);
+    let system = request
+        .base_system
+        .as_ref()
+        .unwrap_or_else(|| BaseSystem::lib_fixture());
 
-    let mut session = ParseSession {
-        constants: &project_constants,
-        breakpoints: &scale,
-        wants: &mut wants,
-        diagnostics: &mut diagnostics,
-    };
-
-    for (path, content) in &sources {
-        parse_and_extract(&mut session, path, content);
+    {
+        let mut session = ParseSession {
+            constants: &project_constants,
+            breakpoints: system.breakpoints(),
+            traced_jsx: &traced_jsx,
+            wants: &mut wants,
+            recipes: &mut extracted_recipes,
+            diagnostics: &mut diagnostics,
+        };
+        for (path, content) in &sources {
+            parse_and_extract(&mut session, path, content);
+        }
     }
 
-    let atom_set = build_atom_set(&wants, &fonts);
-    let css = build_css_runtime(&atom_set);
-    let stylesheet = build_stylesheet(&atom_set, &scale);
+    static_css::append_wants(system, &mut wants);
+
+    let atom_set = build_atom_set(&wants, system, &mut diagnostics);
+    let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
+    let css = build_css_runtime(&atom_set, system);
+    let stylesheet = stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes);
+    let recipe_tables = compiled_recipes
+        .into_iter()
+        .map(|recipe| recipe.table)
+        .collect();
 
     Ok(CompileResult {
         stylesheet,
         css,
         diagnostics,
         wants,
+        recipes: recipe_tables,
     })
 }
 
@@ -192,33 +210,80 @@ fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) 
             .push(Diagnostic::error(err.to_string()).with_location(path, None, None));
     }
     if !ret.panicked {
-        let mut local_constants = extract::constants::collect_local_constants(&ret.program);
-        local_constants.merge(session.constants);
-        let config = extract::ExtractConfig {
-            constants: &local_constants,
-            breakpoints: session.breakpoints,
-        };
-        let mut ctx =
-            extract::ExtractContext::new(path, config, session.wants, session.diagnostics);
-        extract::extract_with_context(&ret.program, &mut ctx);
+        extract_parsed_program(session, path, &ret.program);
     }
 }
 
-fn build_atom_set(wants: &[Want], fonts: &config::FontScale) -> AtomSet {
+fn extract_parsed_program(
+    session: &mut ParseSession<'_>,
+    path: &str,
+    program: &oxc_ast::ast::Program<'_>,
+) {
+    let mut local_constants = extract::constants::collect_local_constants(program);
+    local_constants.merge(session.constants);
+    let bindings = extract::collect_bindings(program);
+    let mut jsx_hosts = bindings.jsx_hosts();
+    jsx_hosts.extend(session.traced_jsx.iter().cloned());
+    let config = extract::ExtractConfig {
+        constants: &local_constants,
+        breakpoints: session.breakpoints,
+        bindings: &bindings,
+        jsx_hosts: &jsx_hosts,
+        shadowed: &[],
+    };
+    let sinks = extract::ExtractSinks {
+        wants: session.wants,
+        recipes: session.recipes,
+        diagnostics: session.diagnostics,
+    };
+    let mut ctx = extract::ExtractContext::new(path, config, sinks);
+    extract::extract_with_context(program, &mut ctx);
+}
+
+fn collect_traced_jsx_names(request: &CompileRequest) -> HashSet<String> {
+    let Some(root) = request.root_dir.as_ref() else {
+        return HashSet::new();
+    };
+    match styletrace::trace_style_jsx_names(Path::new(root)) {
+        Ok(names) => names.into_iter().collect(),
+        Err(_) => HashSet::new(),
+    }
+}
+
+fn build_atom_set(
+    wants: &[Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> AtomSet {
     let mut atom_set = AtomSet::new();
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+    };
     for want in wants {
-        let atoms = resolve::resolve_want_with(want, fonts);
-        for atom in atoms {
+        for atom in resolve::resolve_want_with(want, &mut session) {
             atom_set.insert(atom);
         }
     }
     atom_set
 }
 
-fn build_css_runtime(atom_set: &AtomSet) -> CssRuntime {
+fn compile_recipes(
+    extracted: &[recipes::Recipe],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Vec<recipes::CompiledRecipe> {
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+    };
+    recipes::compile(extracted, &mut session)
+}
+
+fn build_css_runtime(atom_set: &AtomSet, system: &BaseSystem) -> CssRuntime {
     let mut runtime = CssRuntime::new();
     for atom in atom_set {
-        let c_name = stylesheet::name::class_name(atom);
+        let c_name = stylesheet::name::class_name(atom, system);
         let val_key = atom.value.class_name_str();
         let key = if atom.conditions.is_empty() {
             format!("{}:{}", atom.prop, val_key)
@@ -228,10 +293,6 @@ fn build_css_runtime(atom_set: &AtomSet) -> CssRuntime {
         runtime.insert(key, c_name);
     }
     runtime
-}
-
-fn build_stylesheet(atom_set: &AtomSet, scale: &config::BreakpointScale) -> String {
-    stylesheet::build_stylesheet(atom_set, scale)
 }
 
 #[cfg(test)]

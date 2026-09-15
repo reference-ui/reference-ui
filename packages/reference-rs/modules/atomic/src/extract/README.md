@@ -6,13 +6,15 @@ Find the host, then walk the expression. Mixing those is how you
 accidentally write a JS evaluator.
 
 1. **jsx / css / recipes** — *where*: StyleProps on tags, `css()`,
-   `recipe()`. Styletrace answers which tags keep StyleProps.
+   `recipe()`. Styletrace answers which tags keep StyleProps. `css()`
+   and `recipe()` extract only when the callee is the Reference import.
 2. **expressions** — *what’s inside*: each literal is a want. Both
    branches of a ternary are two wants. `undefined` is none. Do not
    eval `isSelected`.
 
 `constants/` is a lookup index for file-top `const` literals, not a
-fourth host.
+fourth host. `bindings.rs` records Reference imports so extract can
+fail closed on shadowed `css` and untraced JSX.
 
 Does not print CSS. Does not name classes. Does not hash a whole object.
 

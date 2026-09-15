@@ -1,6 +1,7 @@
 /**
  * Seed station. Empty extract still returns the compile contract: layer
- * preamble, empty class map, no diagnostics. Wants must not appear.
+ * preamble, no utility rules, empty class map, no diagnostics. Fixture
+ * tokens/global may fill those layers (ATM-LAYER-03).
  */
 import { expect } from 'vitest'
 import { LAYER_PREAMBLE, type AtomicCaseSpec } from '../../helpers.js'
@@ -8,7 +9,8 @@ import { LAYER_PREAMBLE, type AtomicCaseSpec } from '../../helpers.js'
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-03',
   verify(result) {
-    expect(result.stylesheet).toBe(`${LAYER_PREAMBLE}\n`)
+    expect(result.stylesheet.startsWith(LAYER_PREAMBLE)).toBe(true)
+    expect(result.stylesheet).not.toContain('@layer utilities')
     expect(result.css?.classes ?? {}).toEqual({})
     expect(result.diagnostics).toEqual([])
     expect(result.wants ?? []).toEqual([])

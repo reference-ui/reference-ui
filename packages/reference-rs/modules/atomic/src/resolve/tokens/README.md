@@ -1,6 +1,7 @@
 # Resolve / tokens
 
-Turns author-facing token paths into CSS variable references.
+Turns author-facing token paths into CSS variable references by looking
+up the `BaseSystem` dictionary.
 
 Examples:
 
@@ -11,7 +12,7 @@ Examples:
 
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
 in reference-core / Atlas. This module **looks up** the compiled dictionary
-from `config/`. It does not become a second color science crate.
+from `BaseSystem`. It does not become a second color science crate.
 
 `_dark` / `_light` are pseudo-props (`resolve/conditions/pseudoprops`), not token
 renames. A leaf `color: 'gray.800'` under `_dark` is still this lookup,

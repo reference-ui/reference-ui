@@ -4,3 +4,8 @@ version.workspace = true
 edition.workspace = true
 publish = false
 description = "Portable design-system definition consumed by atomic and typegen"
+
+[dependencies]
+indexmap = { workspace = true, features = ["serde"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

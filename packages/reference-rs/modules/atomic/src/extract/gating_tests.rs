@@ -1,0 +1,70 @@
+//! Cargo tests for import-bound `css()` and styletrace-gated JSX extract.
+//! Virtual sources have no disk graph; these cases prove fail-closed callee
+//! shadowing and skipping untraced PascalCase once a Reference host is in
+//! scope. Seam stations `ATM-SITE-07` / `08` / `10` are the committed proof.
+
+use crate::{compile, CompileRequest, VirtualSource};
+
+fn compile_code(code: &str) -> crate::CompileResult {
+    let req = CompileRequest {
+        files: Some(vec![VirtualSource {
+            path: "test.tsx".to_string(),
+            content: code.to_string(),
+        }]),
+        ..Default::default()
+    };
+    compile(&req).expect("compile succeeds")
+}
+
+#[test]
+fn test_shadowed_css_param_is_not_an_extract_site() {
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        css({ color: 'blue' });
+        function f(css) { css({ color: 'red' }); }
+        "#,
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "blue"));
+    assert!(!res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "red"));
+}
+
+#[test]
+fn test_unknown_css_is_not_an_extract_site() {
+    let res = compile_code(
+        r#"
+        function f(css) { css({ color: 'red' }); }
+        const localCss = (styles) => styles;
+        localCss({ mt: '2r' });
+        "#,
+    );
+    assert!(res.wants.is_empty());
+}
+
+#[test]
+fn test_untraced_tag_is_skipped_when_a_host_is_known() {
+    let res = compile_code(
+        r#"
+        import { Div } from '@reference-ui/react';
+        function Foo() { return <div />; }
+        export const App = () => (
+            <>
+                <Div mt="2r" />
+                <Foo color="red" />
+            </>
+        );
+        "#,
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
+    assert!(!res.wants.iter().any(|w| &*w.prop == "color"));
+    assert!(res.diagnostics.is_empty());
+}

@@ -1,20 +1,23 @@
-//! Extract `recipe()` / `recipe.raw()` style objects into wants.
-//! Walks `base`, variant items, and `compoundVariants[].css` through the expression walker.
-//! Does not emit closed recipe classes — that is a later pass, still unproven.
+//! Extract `recipe()` / `recipe.raw()` into Recipe IR, not utility wants.
+//! Walks `className`, `base`, variant items, and `compoundVariants[].css`
+//! through the expression walker into per-leaf want lists. Closed classes and
+//! the variant table are `src/recipes`. `sva` is not a site.
 
+use indexmap::IndexMap;
 use oxc_ast::ast::{
     ArrayExpression, CallExpression, Expression, ObjectExpression, ObjectProperty,
-    ObjectPropertyKind, PropertyKey, StaticMemberExpression,
+    ObjectPropertyKind, PropertyKey,
 };
 use smallvec::smallvec;
 
+use crate::atom::Want;
 use crate::extract::expressions::walk_style_object;
 use crate::extract::ExtractContext;
+use crate::recipes::{name, Recipe, RecipeCompound};
 
-/// Extract style objects from a `recipe(...)` call. No-ops if the callee is not recipe.
+/// Collect a live Reference `recipe(...)` call into `ctx.recipes`.
 pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
-    // recipe({ base: { color: 'white' }, variants: { size: { sm: { fontSize: '12px' } } } })
-    let Some(origin) = recipe_callee_name(&call.callee) else {
+    let Some(origin) = ctx.bindings.recipe_origin(&call.callee, ctx.shadowed) else {
         return;
     };
     let Some(first_arg) = call.arguments.first().and_then(|arg| arg.as_expression()) else {
@@ -23,177 +26,219 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Expression::ObjectExpression(obj) = first_arg else {
         return;
     };
-    walk_recipe_object(obj, Some(origin.as_str()), ctx);
+    let draft = walk_recipe_object(obj, origin.as_str(), ctx);
+    ctx.recipes.push(finish_recipe(draft, ctx.recipe_binding.as_deref()));
 }
 
-fn recipe_callee_name(callee: &Expression<'_>) -> Option<String> {
-    match callee {
-        Expression::Identifier(ident) => {
-            // recipe({ ... })
-            recipe_identifier_name(ident.name.as_str())
-        }
-        Expression::StaticMemberExpression(member) => {
-            // recipe.raw({ ... }) / styled.recipe({ ... })
-            recipe_member_name(member)
-        }
-        _ => None,
-    }
+#[derive(Default)]
+struct RecipeDraft {
+    class_name: Option<String>,
+    base: Vec<Want>,
+    variants: IndexMap<String, IndexMap<String, Vec<Want>>>,
+    compounds: Vec<RecipeCompound>,
 }
 
-fn recipe_identifier_name(name: &str) -> Option<String> {
-    // recipe({ ... }) / __reference_ui_recipe({ ... })
-    if matches!(name, "recipe" | "__reference_ui_recipe") {
-        Some(name.to_string())
-    } else {
-        None
+fn finish_recipe(draft: RecipeDraft, binding: Option<&str>) -> Recipe {
+    let class_name = name::stem(draft.class_name.as_deref(), binding);
+    let recipe_name = binding
+        .filter(|name| !name.is_empty())
+        .unwrap_or(class_name.as_str())
+        .to_string();
+    Recipe {
+        name: recipe_name,
+        class_name,
+        base: draft.base,
+        variants: draft.variants,
+        compounds: draft.compounds,
     }
-}
-
-fn recipe_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
-    let prop = member.property.name.as_str();
-    if prop == "raw" {
-        // recipe.raw({ base: { color: 'white' } })
-        return recipe_raw_member_name(&member.object);
-    }
-    if prop == "recipe" {
-        // styled.recipe({ ... })
-        return Some("recipe".to_string());
-    }
-    None
-}
-
-fn recipe_raw_member_name(obj: &Expression<'_>) -> Option<String> {
-    // recipe.raw({ base: { color: 'white' } })
-    if let Expression::Identifier(ident) = obj {
-        if ident.name.as_str() == "recipe" {
-            return Some("recipe.raw".to_string());
-        }
-    }
-    None
 }
 
 fn walk_recipe_object(
     obj: &ObjectExpression<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
-) {
-    // { base, variants, compoundVariants }
+) -> RecipeDraft {
+    let mut draft = RecipeDraft::default();
     for prop_kind in &obj.properties {
         if let ObjectPropertyKind::ObjectProperty(prop) = prop_kind {
-            handle_recipe_property(prop, origin, ctx);
+            handle_recipe_property(prop, origin, ctx, &mut draft);
         }
     }
+    draft
+}
+
+struct RecipeWalk<'a, 'b> {
+    origin: &'a str,
+    ctx: &'a mut ExtractContext<'b>,
+    draft: &'a mut RecipeDraft,
 }
 
 fn handle_recipe_property(
     prop: &ObjectProperty<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
+    draft: &mut RecipeDraft,
 ) {
-    let PropertyKey::StaticIdentifier(ident) = &prop.key else {
+    let Some(key) = static_key(&prop.key) else {
         return;
     };
-    match ident.name.as_str() {
-        "base" => {
-            // base: { color: 'white' }
-            walk_style_value(&prop.value, origin, ctx)
-        }
-        "variants" => {
-            // variants: { size: { sm: { fontSize: '12px' } } }
-            handle_recipe_variants(&prop.value, origin, ctx)
-        }
-        "compoundVariants" => {
-            // compoundVariants: [{ variant: 'solid', css: { opacity: '0.9' } }]
-            handle_recipe_compounds(&prop.value, origin, ctx)
-        }
+    match key.as_str() {
+        "className" => draft.class_name = string_literal(&prop.value),
+        "base" => walk_style_into(&prop.value, origin, ctx, &mut draft.base),
+        "variants" => handle_recipe_variants(&prop.value, origin, ctx, draft),
+        "compoundVariants" => handle_recipe_compounds(&prop.value, origin, ctx, draft),
         _ => {}
     }
 }
 
-fn walk_style_value(val: &Expression<'_>, origin: Option<&str>, ctx: &mut ExtractContext<'_>) {
-    // { color: 'white' }  — a recipe style object
-    if let Expression::ObjectExpression(obj) = val {
-        let mut obj_ctx = ctx.object_walk(origin, false);
-        walk_style_object(&mut obj_ctx, obj, &smallvec![]);
-    }
+fn walk_style_into(
+    val: &Expression<'_>,
+    origin: &str,
+    ctx: &mut ExtractContext<'_>,
+    wants: &mut Vec<Want>,
+) {
+    let Expression::ObjectExpression(obj) = val else {
+        return;
+    };
+    let mut obj_ctx = ctx.object_walk_into(Some(origin), wants);
+    walk_style_object(&mut obj_ctx, obj, &smallvec![]);
 }
 
 fn handle_recipe_variants(
     val: &Expression<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
+    draft: &mut RecipeDraft,
 ) {
-    // variants: { size: { sm: { fontSize: '12px' }, lg: { fontSize: '18px' } } }
     let Expression::ObjectExpression(variants_obj) = val else {
         return;
+    };
+    let mut walk = RecipeWalk {
+        origin,
+        ctx,
+        draft,
     };
     for group_kind in &variants_obj.properties {
         let ObjectPropertyKind::ObjectProperty(group_prop) = group_kind else {
             continue;
         };
+        let Some(group_name) = static_key(&group_prop.key) else {
+            continue;
+        };
         let Expression::ObjectExpression(items_obj) = &group_prop.value else {
             continue;
         };
-        walk_variant_items(items_obj, origin, ctx);
+        walk_variant_items(&mut walk, items_obj, &group_name);
     }
 }
 
-fn walk_variant_items(
-    items_obj: &ObjectExpression<'_>,
-    origin: Option<&str>,
-    ctx: &mut ExtractContext<'_>,
-) {
-    // { sm: { fontSize: '12px' }, lg: { fontSize: '18px' } }
+fn walk_variant_items(walk: &mut RecipeWalk<'_, '_>, items_obj: &ObjectExpression<'_>, group_name: &str) {
+    let mut items = IndexMap::new();
     for item_kind in &items_obj.properties {
         let ObjectPropertyKind::ObjectProperty(item_prop) = item_kind else {
             continue;
         };
-        walk_style_value(&item_prop.value, origin, ctx);
+        let Some(value_name) = static_key(&item_prop.key) else {
+            continue;
+        };
+        let mut wants = Vec::new();
+        walk_style_into(&item_prop.value, walk.origin, walk.ctx, &mut wants);
+        items.insert(value_name, wants);
     }
+    walk.draft.variants.insert(group_name.to_string(), items);
 }
 
 fn handle_recipe_compounds(
     val: &Expression<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
+    draft: &mut RecipeDraft,
 ) {
-    // compoundVariants: [{ variant: 'solid', css: { opacity: '0.9' } }]
     let Expression::ArrayExpression(arr) = val else {
         return;
     };
-    walk_compound_variants(arr, origin, ctx);
+    walk_compound_variants(arr, origin, ctx, draft);
 }
 
 fn walk_compound_variants(
     arr: &ArrayExpression<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
+    draft: &mut RecipeDraft,
 ) {
-    // [{ variant: 'solid', css: { opacity: '0.9' } }]
     for elem in &arr.elements {
         let Some(Expression::ObjectExpression(item_obj)) = elem.as_expression() else {
             continue;
         };
-        extract_compound_css(item_obj, origin, ctx);
+        if let Some(compound) = extract_compound(item_obj, origin, ctx) {
+            draft.compounds.push(compound);
+        }
     }
 }
 
-fn extract_compound_css(
+fn extract_compound(
     item_obj: &ObjectExpression<'_>,
-    origin: Option<&str>,
+    origin: &str,
     ctx: &mut ExtractContext<'_>,
-) {
-    // { variant: 'solid', css: { opacity: '0.9' } }
+) -> Option<RecipeCompound> {
+    let mut props = IndexMap::new();
+    let mut wants = Vec::new();
     for prop_kind in &item_obj.properties {
-        let ObjectPropertyKind::ObjectProperty(p) = prop_kind else {
+        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
             continue;
         };
-        let PropertyKey::StaticIdentifier(ident) = &p.key else {
+        let Some(key) = static_key(&prop.key) else {
             continue;
         };
-        if ident.name == "css" {
-            // css: { opacity: '0.9' }
-            walk_style_value(&p.value, origin, ctx);
+        if key == "css" {
+            walk_style_into(&prop.value, origin, ctx, &mut wants);
+            continue;
         }
+        if let Some(value) = string_literal(&prop.value) {
+            props.insert(key, value);
+        }
+    }
+    if wants.is_empty() {
+        return None;
+    }
+    Some(RecipeCompound { props, wants })
+}
+
+fn static_key(key: &PropertyKey<'_>) -> Option<String> {
+    match key {
+        PropertyKey::StaticIdentifier(ident) => Some(ident.name.to_string()),
+        PropertyKey::StringLiteral(lit) => Some(lit.value.to_string()),
+        _ => None,
+    }
+}
+
+fn string_literal(expr: &Expression<'_>) -> Option<String> {
+    if let Expression::StringLiteral(lit) = expr {
+        return Some(lit.value.to_string());
+    }
+    if let Expression::BooleanLiteral(lit) = expr {
+        return Some(lit.value.to_string());
+    }
+    if let Expression::NumericLiteral(lit) = expr {
+        return Some(numeric_key(lit.value));
+    }
+    static_template_string(expr)
+}
+
+fn static_template_string(expr: &Expression<'_>) -> Option<String> {
+    let Expression::TemplateLiteral(lit) = expr else {
+        return None;
+    };
+    if !lit.expressions.is_empty() {
+        return None;
+    }
+    lit.quasis.first().map(|q| q.value.raw.to_string())
+}
+
+fn numeric_key(n: f64) -> String {
+    if n.fract() == 0.0 {
+        format!("{}", n as i64)
+    } else {
+        n.to_string()
     }
 }

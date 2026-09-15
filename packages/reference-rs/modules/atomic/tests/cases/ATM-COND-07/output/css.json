@@ -1,0 +1,4 @@
+{
+  "@container (min-width: 300px):p:1r": "[@container_(min-width:_300px)]:p_1r",
+  "@container (min-width: 768px):mt:2r": "[@container_(min-width:_768px)]:mt_2r"
+}

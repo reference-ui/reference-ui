@@ -1,0 +1,12 @@
+{
+  "name": "custom-dump",
+  "tokens": {
+    "colors.brand": {
+      "category": "colors",
+      "cssVar": "--colors-brand",
+      "light": "red",
+      "dark": "navy"
+    }
+  },
+  "globalCss": [":root { --spacing-root: 0.25rem }"]
+}

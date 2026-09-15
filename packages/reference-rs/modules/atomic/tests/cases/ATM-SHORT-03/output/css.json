@@ -1,0 +1,6 @@
+{
+  "border:borders.card": "bd_borders.card",
+  "border:inherit": "bd_inherit",
+  "border:none": "bd_none",
+  "borderWidth:0px": "bd-w_0px"
+}

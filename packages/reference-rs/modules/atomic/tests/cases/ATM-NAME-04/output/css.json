@@ -1,0 +1,6 @@
+{
+  "&[data-slot=inner]:mt:1r": "[&[data-slot=inner]]:mt_1r",
+  "_hover:mt:2r": "hover:mt_2r",
+  "color:blue.600": "c_blue.600",
+  "p:1/2r": "p_1/2r"
+}

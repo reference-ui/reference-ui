@@ -2,16 +2,17 @@
 //! Hands object and ternary-of-object arguments to the expression walker.
 //! Does not walk `recipe()` and does not interpret JSX attributes.
 
-use oxc_ast::ast::{CallExpression, Expression, StaticMemberExpression};
+use oxc_ast::ast::{CallExpression, Expression};
 use smallvec::smallvec;
 
 use crate::extract::expressions::walk_style_object;
 use crate::extract::ExtractContext;
 
-/// Extract style objects from a `css(...)` call. No-ops if the callee is not css.
+/// Extract style objects from a `css(...)` call. No-ops if the callee is not
+/// a live Reference `css` import (unknown or shadowed `css` is not a site).
 pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     // css({ mt: '2r' }, { color: 'red' })
-    let Some(origin) = css_callee_name(&call.callee) else {
+    let Some(origin) = ctx.bindings.css_origin(&call.callee, ctx.shadowed) else {
         return;
     };
     for arg in &call.arguments {
@@ -19,52 +20,6 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
             handle_css_arg(expr, Some(origin.as_str()), ctx);
         }
     }
-}
-
-fn css_callee_name(callee: &Expression<'_>) -> Option<String> {
-    match callee {
-        Expression::Identifier(ident) => {
-            // css({ ... })
-            css_identifier_name(ident.name.as_str())
-        }
-        Expression::StaticMemberExpression(member) => {
-            // css.object({ ... }) / styled.css({ ... })
-            css_member_name(member)
-        }
-        _ => None,
-    }
-}
-
-fn css_identifier_name(name: &str) -> Option<String> {
-    // css({ ... }) / __reference_ui_css({ ... })
-    if matches!(name, "css" | "__reference_ui_css") {
-        Some(name.to_string())
-    } else {
-        None
-    }
-}
-
-fn css_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
-    let prop = member.property.name.as_str();
-    if prop == "css" {
-        // styled.css({ mt: '2r' })
-        return Some("css".to_string());
-    }
-    if prop == "object" {
-        // css.object({ p: '1r' })
-        return css_object_member_name(&member.object);
-    }
-    None
-}
-
-fn css_object_member_name(obj: &Expression<'_>) -> Option<String> {
-    // css.object({ p: '1r' })
-    if let Expression::Identifier(ident) = obj {
-        if ident.name.as_str() == "css" {
-            return Some("css.object".to_string());
-        }
-    }
-    None
 }
 
 fn handle_css_arg(expr: &Expression<'_>, origin: Option<&str>, ctx: &mut ExtractContext<'_>) {

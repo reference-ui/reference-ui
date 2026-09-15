@@ -1,0 +1,14 @@
+{
+  "borderBottomColor:red": "bd-b-c_red",
+  "borderBottomStyle:solid": "bd-b-s_solid",
+  "borderBottomWidth:1px": "bd-b-w_1px",
+  "borderColor:red": "bd-c_red",
+  "borderStyle:solid": "border-style_solid",
+  "borderTopColor:red": "bd-t-c_red",
+  "borderTopStyle:solid": "bd-t-s_solid",
+  "borderTopWidth:1px": "bd-t-w_1px",
+  "borderWidth:1px": "bd-w_1px",
+  "outlineColor:red": "outline-c_red",
+  "outlineStyle:solid": "outline-s_solid",
+  "outlineWidth:1px": "outline-w_1px"
+}

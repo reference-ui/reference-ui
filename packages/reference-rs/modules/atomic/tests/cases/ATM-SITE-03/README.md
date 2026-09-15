@@ -1,4 +1,5 @@
 # ATM-SITE-03
 
 `recipe()` extracts `base`, variant, and `compoundVariants[].css` leaves
-into wants. Those wants compile as utilities here. Contract: [SPEC.md](../../../SPEC.md).
+into the recipe artefact (`@layer recipes` and the variant table), not
+utility wants. Contract: [SPEC.md](../../../SPEC.md).

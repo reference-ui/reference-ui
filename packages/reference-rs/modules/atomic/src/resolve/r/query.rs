@@ -2,7 +2,7 @@
 //! Widths come from the ingested breakpoint scale; this file only knows the query language.
 //! Unknown named keys return None so extract can warn. Numeric keys never need the table.
 
-use crate::config::BreakpointScale;
+use base_system::BreakpointScale;
 
 /// Lower an `r` key (`300`, `md`) to `@container (min-width: Npx)`.
 pub fn lower_r_key(key: &str, scale: &BreakpointScale) -> Option<String> {
@@ -11,11 +11,7 @@ pub fn lower_r_key(key: &str, scale: &BreakpointScale) -> Option<String> {
 }
 
 /// Same query, targeting a named container (`@container card (min-width: Npx)`).
-pub fn lower_r_key_named(
-    key: &str,
-    scale: &BreakpointScale,
-    container: &str,
-) -> Option<String> {
+pub fn lower_r_key_named(key: &str, scale: &BreakpointScale, container: &str) -> Option<String> {
     // @container card (min-width: 768px)
     format_query(key, scale, Some(container))
 }

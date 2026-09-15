@@ -3,7 +3,7 @@
 //! Project-specific numeric weights (393, etc.) live on `font()` fragments, not in this table.
 
 use crate::atom::AtomValue;
-use crate::config::FontScale;
+use base_system::FontScale;
 
 const CSS_WEIGHT_KEYWORDS: &[(&str, &str)] = &[
     ("thin", "100"),

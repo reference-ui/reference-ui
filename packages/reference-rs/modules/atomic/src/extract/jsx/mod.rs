@@ -1,7 +1,9 @@
 //! JSX StyleProps extraction on opening tags.
 //!
-//! Scans JSX attributes against known style props and condition keys.
-//! The `r` prop object is walked through `resolve/r`, not as a scalar value.
+//! Scans JSX attributes against known style props and condition keys when the
+//! tag is a StyleProps host. Hosts come from styletrace names plus file-local
+//! `@reference-ui/react` / `@reference-ui/styled` component imports. The `r`
+//! prop object is walked through `resolve/r`, not as a scalar value.
 
 use oxc_ast::ast::{
     Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue,
@@ -17,6 +19,9 @@ use canon::{is_condition_prop, is_known_style_prop};
 pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div mt="2r" css={{ color: 'red' }} r={{ md: { p: '1r' } }} />
     let tag_name = format_jsx_element_name(&opening.name);
+    if !ctx.allows_jsx_tag(&tag_name) {
+        return;
+    }
     let origin = Some(tag_name.as_str());
 
     for item in &opening.attributes {
@@ -26,11 +31,13 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
                 handle_jsx_attribute(attr, origin, ctx);
             }
             JSXAttributeItem::SpreadAttribute(spread) => {
-                // <Div {...{ mt: '2r', _hover: { color: 'red' } }} />
-                if let Expression::ObjectExpression(obj) = &spread.argument {
-                    let mut obj_ctx = ctx.object_walk(origin, false);
-                    crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, &smallvec![]);
-                }
+                // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
+                let mut obj_ctx = ctx.object_walk(origin, false);
+                crate::extract::expressions::walk_spread_argument(
+                    &mut obj_ctx,
+                    &spread.argument,
+                    &smallvec![],
+                );
             }
         }
     }
