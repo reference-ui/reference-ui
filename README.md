@@ -56,14 +56,14 @@ Most package-level dev and test flows build on top of that sync pipeline.
 
 ## Documentation
 
-High-level architecture and repo notes live in:
+Engineering notes live in [`docs/`](./docs/). Start with [`docs/README.md`](./docs/README.md).
 
-- `docs/Architecture.md`
-- `docs/CORE.md`
-- `docs/STRUCTURE.md`
-- `docs/PUBLIC API.md`
-- `packages/reference-core/README.md`
-- `packages/reference-lib/README.md`
+- [`docs/REFERENCE_UI.md`](./docs/REFERENCE_UI.md) — monorepo orientation
+- [`docs/FEATURES/`](./docs/FEATURES/) — supported capabilities
+- [`docs/bugs/`](./docs/bugs/) — open MCP / Atlas / core issues
+- [`docs/archive/`](./docs/archive/) — retired specs and RFCs
+- [`packages/reference-core/README.md`](./packages/reference-core/README.md)
+- [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
 
 ## Status
 

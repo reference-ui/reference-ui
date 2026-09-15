@@ -311,10 +311,10 @@ The matrix color-mode package is the important non-React case: it puts `data-pan
 
 These currently **forbid** `data-theme`. They have to invert.
 
-- `PORTAL_COLOR_MODE.md` — living protocol. Replace every physical mention. Keep the laws (one attribute, no closest(), no invented default).
-- `OVERLAY_THEME.md` — forensic history; update selectors in the explanation or add a one-line “attribute renamed, see DATA_THEME.md”.
-- `VARIANTS.md` — the symmetry table `colorMode → data-panda-theme` becomes `colorMode → data-theme`.
-- `BOOK.md` — decorator theme boundary.
+- [`PORTAL_COLOR_MODE.md`](./PORTAL_COLOR_MODE.md) — living protocol. Replace every physical mention. Keep the laws (one attribute, no closest(), no invented default).
+- [`OVERLAY_THEME.md`](../archive/OVERLAY_THEME.md) — forensic history; update selectors in the explanation or add a one-line “attribute renamed, see DATA_THEME.md”.
+- [`VARIANTS.md`](./VARIANTS.md) — the symmetry table `colorMode → data-panda-theme` becomes `colorMode → data-theme`.
+- [`BOOK.md`](../BOOK.md) — decorator theme boundary.
 - `packages/reference-lib/src/components/Portal/Portal.md`, `Portal/NEXT.md`
 - `packages/reference-lib/src/components/Overlay/Overlay.md`, `Overlay/SPEC.md` (`OV-THEME-01`)
 - `packages/reference-lib/OVERLAYS.md`

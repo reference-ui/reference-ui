@@ -2,7 +2,7 @@
 
 **Status**: Living architecture contract. Documentation only — this file is the roadmap, not an implementation log.  
 **Owner**: `Portal` in `@reference-ui/lib`, backed by the primitive compiler in `@reference-ui/core`.  
-**Predecessor forensics**: [`OVERLAY_THEME.md`](./OVERLAY_THEME.md) (symptom analysis). This document supersedes that file’s *recommendations*. Overlay is a consumer of Portal, not the place the contract is enforced.
+**Predecessor forensics**: [`OVERLAY_THEME.md`](../archive/OVERLAY_THEME.md) (symptom analysis). This document supersedes that file’s *recommendations*. Overlay is a consumer of Portal, not the place the contract is enforced.
 
 ---
 
@@ -334,7 +334,7 @@ Contrast assertions: not `rgb(255, 255, 255)` when dark; WCAG 4.5:1 on portaled 
 - `Portal.md`: add a “Theme and layer scope” section (reset layer, no wrapper, first child primitive, canonical attribute).
 - `Portal/NEXT.md`: theme contract is a Portal milestone, not Overlay.
 - Strike OverlayPortaledSurface from Overlay manufacturing docs.
-- Leave `OVERLAY_THEME.md` as historical forensics; link here as the protocol.
+- Leave [`OVERLAY_THEME.md`](../archive/OVERLAY_THEME.md) as historical forensics; this file is the protocol.
 
 No Phase for MutationObserver, public providers, or per-component theme wrappers.
 

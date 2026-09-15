@@ -91,9 +91,9 @@ reopens composition.
 ## The ergonomic cost
 
 Atoms are not prettier CSS. They fight shorthand cascade
-(`STYLE_ERRORS_REPORT.md`: `border-bottom` vs `border-color` as two
-classes). DevTools is a soup. HTML class lists are long. Gzip eats
-repeated declarations either way.
+(`border-bottom` vs `border-color` as two classes). DevTools is a
+soup. HTML class lists are long. Gzip eats repeated declarations
+either way.
 
 We pay that because StyleProps + `css()` are an **open** map, not a
 closed host. Fix cascade **inside** `resolve/shorthands` (longhands that

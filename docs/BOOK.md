@@ -1,8 +1,8 @@
 # Book
 
-**Status**: Living architecture contract. Documentation only — this file is the roadmap, not an implementation log.  
+**Status**: Living feel contract for Book (`pnpm dev:lib`). Runtime is [`packages/reference-lib/book/`](../packages/reference-lib/book) — one document, no iframe. Sections below that still describe iframe/Cosmos are historical.  
 **Owner**: Book, the component playground for `@reference-ui/lib`.  
-**Related**: [`PORTAL_COLOR_MODE.md`](./PORTAL_COLOR_MODE.md) (theme on portaled surfaces inside Book stories), [`packages/reference-lib/src/Book/`](packages/reference-lib/src/Book).
+**Related**: [`PORTAL_COLOR_MODE.md`](./FEATURES/PORTAL_COLOR_MODE.md) (theme on portaled surfaces inside Book stories), [`packages/reference-lib/book/`](../packages/reference-lib/book).
 
 ---
 
@@ -64,19 +64,19 @@ Book already runs. `pnpm dev:lib` is:
 ref sync && concurrently --kill-others-on-fail "ref sync --watch" "vite"
 ```
 
-Vite serves [`packages/reference-lib/index.html`](packages/reference-lib/index.html) → [`src/main.tsx`](packages/reference-lib/src/main.tsx) → [`BookRoot`](packages/reference-lib/src/Book/BookRoot.tsx) on port 5000.
+Vite serves [`packages/reference-lib/index.html`](../packages/reference-lib/index.html) → [`src/main.tsx`](../packages/reference-lib/src/main.tsx) → [`BookRoot`](../packages/reference-lib/src/Book/BookRoot.tsx) on port 5000.
 
-Book is **not** in the published package. [`tsup.config.ts`](packages/reference-lib/tsup.config.ts) only builds `src/index.ts` and theme. The playground is already a hidden app; it is just sitting in `src/`.
+Book is **not** in the published package. [`tsup.config.ts`](../packages/reference-lib/tsup.config.ts) only builds `src/index.ts` and theme. The playground is already a hidden app; it is just sitting in `src/`.
 
 ### 2.1 Runtime
 
 | Piece | File | Role |
 | --- | --- | --- |
-| Root | [`BookRoot.tsx`](packages/reference-lib/src/Book/BookRoot.tsx) | Same entry for shell and a **second** canvas document. `?renderer=true` (or `isolated`) picks renderer. **Both modules are statically imported.** |
-| Shell | [`BookShell.tsx`](packages/reference-lib/src/Book/BookShell.tsx) | Nav, search, theme, viewport, Direct/Iframe switch. **Default canvas is iframe.** Direct already exists and is the fast path. |
-| Renderer | [`BookRenderer.tsx`](packages/reference-lib/src/Book/BookRenderer.tsx) | Loads the active story, error boundary, overlay wipe, `postMessage` bridge. |
-| Decorator | [`decorator.tsx`](packages/reference-lib/src/Book/decorator.tsx) | `ReferenceLibrary` + `colorMode` / `data-panda-theme` / `colorScheme`. Story vs shell layout. |
-| Registry | [`registry.ts`](packages/reference-lib/src/Book/registry.ts) | `import.meta.glob(..., { eager: true })` of every `*.book.*` and leftover `*.fixture.*`. |
+| Root | [`BookRoot.tsx`](../packages/reference-lib/src/Book/BookRoot.tsx) | Same entry for shell and a **second** canvas document. `?renderer=true` (or `isolated`) picks renderer. **Both modules are statically imported.** |
+| Shell | [`BookShell.tsx`](../packages/reference-lib/src/Book/BookShell.tsx) | Nav, search, theme, viewport, Direct/Iframe switch. **Default canvas is iframe.** Direct already exists and is the fast path. |
+| Renderer | [`BookRenderer.tsx`](../packages/reference-lib/src/Book/BookRenderer.tsx) | Loads the active story, error boundary, overlay wipe, `postMessage` bridge. |
+| Decorator | [`decorator.tsx`](../packages/reference-lib/src/Book/decorator.tsx) | `ReferenceLibrary` + `colorMode` / `data-panda-theme` / `colorScheme`. Story vs shell layout. |
+| Registry | [`registry.ts`](../packages/reference-lib/src/Book/registry.ts) | `import.meta.glob(..., { eager: true })` of every `*.book.*` and leftover `*.fixture.*`. |
 
 There is **no** timing surface: no last-HMR ms, no transform breakdown, no split between `ref sync` and Vite, no story-import clock. Slow is anecdotal.
 
@@ -86,9 +86,9 @@ About 30 `*.book.tsx` files next to components. That placement is correct. The r
 
 ### 2.3 Cosmos leftovers (not on the running path, still in the repo)
 
-- [`packages/reference-lib/cosmos.config.json`](packages/reference-lib/cosmos.config.json) — Vite plugin, port 5050 renderer URL
-- [`src/cosmos.decorator.tsx`](packages/reference-lib/src/cosmos.decorator.tsx)
-- [`cosmos/cosmos-shell.css`](packages/reference-lib/cosmos/cosmos-shell.css)
+- [`packages/reference-lib/cosmos.config.json`](../packages/reference-lib/cosmos.config.json) — Vite plugin, port 5050 renderer URL
+- [`src/cosmos.decorator.tsx`](../packages/reference-lib/src/cosmos.decorator.tsx)
+- [`cosmos/cosmos-shell.css`](../packages/reference-lib/cosmos/cosmos-shell.css)
 - `cosmos` / `cosmos-export` scripts and `react-cosmos` / `react-cosmos-plugin-vite` deps
 - Workspace patches: [`patches/react-cosmos@7.2.0.patch`](patches/react-cosmos@7.2.0.patch), [`patches/react-cosmos-plugin-vite@7.2.0.patch`](patches/react-cosmos-plugin-vite@7.2.0.patch)
 - [`pipeline/src/dev/index.ts`](pipeline/src/dev/index.ts) still runs `pnpm run cosmos`
@@ -123,7 +123,7 @@ referenceVite.handleHotUpdate returns []
 
 ### 3.1 Performance: the module graph is the whole library, twice
 
-[`registry.ts`](packages/reference-lib/src/Book/registry.ts) does:
+[`registry.ts`](../packages/reference-lib/src/Book/registry.ts) does:
 
 ```ts
 const rawModules = import.meta.glob<BookModule>([
@@ -135,7 +135,7 @@ const rawModules = import.meta.glob<BookModule>([
 
 `eager: true` means Vite executes **every** story module at startup and holds every import those stories pull in (the component under test, plus siblings, overlay, focus lock, icons, etc.).
 
-[`BookRoot.tsx`](packages/reference-lib/src/Book/BookRoot.tsx) then statically imports **both** shell and renderer:
+[`BookRoot.tsx`](../packages/reference-lib/src/Book/BookRoot.tsx) then statically imports **both** shell and renderer:
 
 ```ts
 import { BookShell } from './BookShell'
@@ -153,7 +153,7 @@ Consequences:
 
 ### 3.2 Performance: native Fast Refresh is swallowed, then faked
 
-[`referenceVite`](packages/reference-core/src/vite/plugin.ts) `handleHotUpdate` returns `[]` whenever [`shouldDeferHotUpdate`](packages/reference-core/src/vite/hot-update-policy.ts) is true. That is true for:
+[`referenceVite`](../packages/reference-core/src/vite/plugin.ts) `handleHotUpdate` returns `[]` whenever [`shouldDeferHotUpdate`](../packages/reference-core/src/vite/hot-update-policy.ts) is true. That is true for:
 
 1. Managed generated files under `.reference-ui/`
 2. **Any project source file that already has Vite modules**
@@ -172,13 +172,13 @@ That is a **hard remount** of the story, decorator, and error boundary on every 
 
 ### 3.3 Reliability: iframe URL is a snapshot, not the current story
 
-[`BookShell`](packages/reference-lib/src/Book/BookShell.tsx) writes the iframe `src` **once** from the first URL, then navigates only via `__BOOK_NAVIGATE__` / `postMessage`. A Vite `full-reload` inside the iframe resets it to the **first** story of the session while the shell `replaceState` URL has moved on.
+[`BookShell`](../packages/reference-lib/src/Book/BookShell.tsx) writes the iframe `src` **once** from the first URL, then navigates only via `__BOOK_NAVIGATE__` / `postMessage`. A Vite `full-reload` inside the iframe resets it to the **first** story of the session while the shell `replaceState` URL has moved on.
 
 That desync is indistinguishable from “my component is broken.” Removing the iframe deletes this class of bug. There is no nested document to drift.
 
 ### 3.4 Reliability: HMR is treated as “throw the story away”
 
-On every `hmrVersion` change, the renderer remounts the story, strips `[data-overlay-managed-inert]`, and `overlayStackStore.setState({ layers: [] })`. Appropriate on **story switch**. On HMR it makes a working Overlay / Popover / Menu look like it regressed. Combined with [`PORTAL_COLOR_MODE.md`](./PORTAL_COLOR_MODE.md), this is especially noisy for floating surfaces.
+On every `hmrVersion` change, the renderer remounts the story, strips `[data-overlay-managed-inert]`, and `overlayStackStore.setState({ layers: [] })`. Appropriate on **story switch**. On HMR it makes a working Overlay / Popover / Menu look like it regressed. Combined with [`PORTAL_COLOR_MODE.md`](./FEATURES/PORTAL_COLOR_MODE.md), this is especially noisy for floating surfaces.
 
 ### 3.5 Reliability: errors do not recover unless the fake remount fires
 
@@ -211,7 +211,7 @@ BookDecorator layout="shell"
 
 Viewport (full / 375 / 768 / 1200) is CSS width/height on `[data-book-canvas]`, overflow clipped. Not a nested browsing context.
 
-**Why not keep iframe for capture or CSS sandbox?** Isolation is real, but it costs a second module graph, a second HMR socket, and a URL that can desync. Capture can hide chrome with `?chrome=0` (or screenshot `[data-book-canvas]`) in the **same** document. Portaled overlays already escape a canvas box the same way they escape an iframe; that is a Portal/theme problem ([`PORTAL_COLOR_MODE.md`](./PORTAL_COLOR_MODE.md)), not a reason to keep two Book runtimes.
+**Why not keep iframe for capture or CSS sandbox?** Isolation is real, but it costs a second module graph, a second HMR socket, and a URL that can desync. Capture can hide chrome with `?chrome=0` (or screenshot `[data-book-canvas]`) in the **same** document. Portaled overlays already escape a canvas box the same way they escape an iframe; that is a Portal/theme problem ([`PORTAL_COLOR_MODE.md`](./FEATURES/PORTAL_COLOR_MODE.md)), not a reason to keep two Book runtimes.
 
 **Win:** Fast Refresh lands once. Full-reload always matches the parent URL. Transform work is not doubled. The core is one option we can make fast, instead of two options we keep apologizing for.
 
@@ -244,7 +244,7 @@ Drop the leftover `.fixture.` glob. One pattern: `../src/components/**/*.book.{t
 
 ### 4.4 Narrow HMR deferral — wait on CSS when CSS changed, not on every keystroke
 
-**Today:** [`shouldDeferHotUpdate`](packages/reference-core/src/vite/hot-update-policy.ts) defers every in-project source module. Correct for generated `.reference-ui` outputs. Too wide for Book.
+**Today:** [`shouldDeferHotUpdate`](../packages/reference-core/src/vite/hot-update-policy.ts) defers every in-project source module. Correct for generated `.reference-ui` outputs. Too wide for Book.
 
 **Target policy** (Book-aware, still safe for tokens):
 
@@ -262,7 +262,7 @@ Implementation sketch: `referenceVite` keeps buffering managed outputs. For proj
 
 ### 4.5 Startup and Vite cache
 
-- One `optimizeDeps` graph. `optimizeDeps.exclude` stays aligned with [`referenceVite`](packages/reference-core/src/vite/plugin.ts) (`@reference-ui/react`, `system`, `styled`, `types`).
+- One `optimizeDeps` graph. `optimizeDeps.exclude` stays aligned with [`referenceVite`](../packages/reference-core/src/vite/plugin.ts) (`@reference-ui/react`, `system`, `styled`, `types`).
 - `server.warmup.clientFiles` for `book/main.tsx` (or current `src/main.tsx`) plus the **last opened** story path if we persist it — not every `*.book.tsx`.
 - Do not `eager` glob in `optimizeDeps.entries` — that would reintroduce “compile everything.”
 
@@ -522,7 +522,7 @@ Same change set as the capture client, or agents will keep writing `frame.locato
 
 - [`.agents/skills/tweak-component/SKILL.md`](.agents/skills/tweak-component/SKILL.md) — examples, `--target` copy (“inside the fixture iframe”), `frame.evaluate`
 - [`AGENTS.md`](AGENTS.md) §2 — same `frame` examples
-- [`packages/reference-lib/AGENTS.md`](packages/reference-lib/AGENTS.md) — Cosmos / port 5050 wording if any remains
+- [`packages/reference-lib/AGENTS.md`](../packages/reference-lib/AGENTS.md) — Cosmos / port 5050 wording if any remains
 
 Unchanged policies: never background `pnpm dev:lib`; never ad-hoc `node -e` Playwright; `pnpm capture` is the only screenshot path.
 
