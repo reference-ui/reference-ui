@@ -7,7 +7,6 @@ import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RHYTHM-05',
-  ids: ['ATM-RHYTHM-05', 'ATM-RHYTHM-03'],
   verify(result) {
     expect(result.stylesheet).toContain('margin-top: var(--spacing-root);')
     expect(result.stylesheet).toContain('margin-bottom: calc(2 * var(--spacing-root));')

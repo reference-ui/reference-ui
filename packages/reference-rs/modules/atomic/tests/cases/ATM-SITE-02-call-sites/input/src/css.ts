@@ -1,4 +1,4 @@
-import { css } from '@reference-ui/styled'
+import { css } from '@reference-ui/react'
 
 const c1 = css({ display: 'flex' }, { alignItems: 'center' })
 const c2 = css.raw({ gap: '2r' })

@@ -1,5 +1,4 @@
-# ATM-LEAF-08 panda table
+# ATM-LEAF-08 expression table
 
-Absorbed Panda extract one-liners. Each row is a JSX prop expression that
-Panda's suite already considered load-bearing. Grain is the want set, not
-class spelling.
+A batch of JSX prop expressions covering layout, flex, grid, typography,
+borders, and effects. Grain is the want set, not class spelling.

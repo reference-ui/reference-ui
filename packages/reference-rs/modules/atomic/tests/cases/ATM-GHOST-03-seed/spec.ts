@@ -7,7 +7,6 @@ import { LAYER_PREAMBLE, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-03',
-  ids: ['ATM-GHOST-03', 'ATM-LAYER-01', 'ATM-LAYER-02', 'ATM-DIAG-01'],
   verify(result) {
     expect(result.stylesheet).toBe(`${LAYER_PREAMBLE}\n`)
     expect(result.css?.classes ?? {}).toEqual({})

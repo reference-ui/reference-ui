@@ -7,7 +7,6 @@ import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-01',
-  ids: ['ATM-LEAF-01', 'ATM-LEAF-02', 'ATM-LEAF-03'],
   verify(result) {
     expect(hasWant(result, 'bg', 'n300')).toBe(true)
     expect(hasWant(result, 'bg', 'n100')).toBe(true)
