@@ -13,6 +13,9 @@ use crate::atom::{Atom, AtomValue, Want};
 
 /// Resolve a raw styling want into one or more canonical atomic declarations.
 pub fn resolve_want(want: &Want) -> Vec<Atom> {
+    if !canon::is_known_style_prop(&want.prop) {
+        return Vec::new();
+    }
     let pairs = expand_or_passthrough(want);
     let clean_when: SmallVec<[Box<str>; 2]> = sanitize_conditions(&want.when);
 

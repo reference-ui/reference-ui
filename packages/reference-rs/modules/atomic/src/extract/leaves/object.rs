@@ -13,7 +13,7 @@ use super::walk::{walk_expression, LeafWalk};
 use crate::atom::Want;
 use crate::diagnostics::Diagnostic;
 use crate::extract::constants::LocalConstants;
-use canon::is_condition_prop;
+use canon::{is_condition_prop, is_known_style_prop};
 
 /// Context for traversing a style object literal to extract property wants.
 pub struct ObjectWalk<'a> {
@@ -86,7 +86,7 @@ fn handle_object_property(
         let mut nested_when = when.clone();
         nested_when.push(key.into());
         handle_condition_value(ctx, &prop.value, &nested_when);
-    } else {
+    } else if is_known_style_prop(&key) {
         let mut leaf_ctx = ctx.leaf_walk(&key);
         walk_expression(&mut leaf_ctx, &prop.value, when);
     }
