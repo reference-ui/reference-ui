@@ -18,7 +18,11 @@ pub enum AtlasDiagnosticCode {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/atlas/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct AtlasDiagnostic {
     pub code: AtlasDiagnosticCode,
     pub message: String,
@@ -33,7 +37,11 @@ pub struct AtlasDiagnostic {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/atlas/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct AtlasAnalysisResult {
     pub components: Vec<Component>,
     pub diagnostics: Vec<AtlasDiagnostic>,

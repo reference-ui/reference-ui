@@ -4,7 +4,7 @@
  * It inputs test cases and emits test results.
  */
 
-import { css } from 'src/system/css';
+import { css } from 'src/system/css'
 
 const card = css({
   display: 'grid',
@@ -14,4 +14,4 @@ const card = css({
       padding: '4',
     },
   },
-});
+})

@@ -123,7 +123,10 @@ mod tests {
         )
         .expect("expected sync root to resolve from hint");
 
-        assert_eq!(resolved, canonicalize_existing_path(&scratch.join("consumer-app")));
+        assert_eq!(
+            resolved,
+            canonicalize_existing_path(&scratch.join("consumer-app"))
+        );
 
         let _ = fs::remove_dir_all(&scratch);
     }
@@ -145,10 +148,14 @@ mod tests {
             "{\n  \"name\": \"sandbox-app\"\n}\n",
         );
 
-        let resolved = resolve_sync_root(&scratch.join("sandbox/src"), Some(&scratch.join("sandbox")))
-            .expect("expected project root to resolve without .reference-ui");
+        let resolved =
+            resolve_sync_root(&scratch.join("sandbox/src"), Some(&scratch.join("sandbox")))
+                .expect("expected project root to resolve without .reference-ui");
 
-        assert_eq!(resolved, canonicalize_existing_path(&scratch.join("sandbox")));
+        assert_eq!(
+            resolved,
+            canonicalize_existing_path(&scratch.join("sandbox"))
+        );
 
         let _ = fs::remove_dir_all(&scratch);
     }

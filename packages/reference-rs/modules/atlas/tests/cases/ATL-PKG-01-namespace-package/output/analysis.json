@@ -28,9 +28,7 @@
             }
           ],
           "usage": "common",
-          "examples": [
-            "<DemoUi.Badge count={1}>"
-          ],
+          "examples": ["<DemoUi.Badge count={1}>"],
           "usedWith": {
             "Button": "very common"
           }

@@ -1,0 +1,5 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .c_blue\.600 { color: var(--colors-blue-600); }
+  .hover\:c_red\.500:is(:hover, [data-hover]) { color: var(--colors-red-500); }
+}

@@ -1,0 +1,5 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .bg_blue { background: blue; }
+  .c_red { color: red; }
+}

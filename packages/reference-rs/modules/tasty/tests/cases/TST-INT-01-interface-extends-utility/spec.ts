@@ -15,7 +15,7 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(api.hasManifestSymbol('Omit')).toBe(false)
 
     const members = await api.graph.getDisplayMembers(styleProps)
-    const names = new Set(members.map((m) => m.getName()))
+    const names = new Set(members.map(m => m.getName()))
     expect(names.has('keep')).toBe(true)
     expect(names.has('font')).toBe(false)
     expect(names.has('weight')).toBe(false)
@@ -23,9 +23,9 @@ const spec: StationSpec<TastyCaseResult> = {
 
     const child = await api.loadSymbolByName('ChildProps')
     const chain = await api.graph.loadExtendsChain(child)
-    expect(chain.map((s) => s.getName())).toEqual(['StyleProps'])
+    expect(chain.map(s => s.getName())).toEqual(['StyleProps'])
     const display = await api.graph.getDisplayMembers(child)
-    expect(display.find((m) => m.getName() === 'keep')).toBeDefined()
+    expect(display.find(m => m.getName() === 'keep')).toBeDefined()
   },
 }
 

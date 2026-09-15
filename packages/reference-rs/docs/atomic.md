@@ -121,7 +121,7 @@ README: [`modules/typegen`](../modules/typegen).
 ### styletrace — already a sibling
 
 Which JSX names still carry StyleProps down to a Reference primitive. Atomic
-extract/sites calls this. Do not fork it inside atomic.
+extract/jsx calls this. Do not fork it inside atomic.
 
 Verify: `pnpm agentrs c styletrace` and `pnpm agentrs v styletrace`.
 

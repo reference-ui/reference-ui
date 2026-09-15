@@ -36,9 +36,7 @@ async function importLoaderModule(options?: {
   const readFileSync = vi.fn(() =>
     JSON.stringify(options?.packageJson ?? { name: '@reference-ui/rust' })
   )
-  const requireBinding = vi.fn(
-    options?.requireImpl ?? createDefaultMockBinding
-  )
+  const requireBinding = vi.fn(options?.requireImpl ?? createDefaultMockBinding)
   const requireResolve = vi.fn(
     options?.requireResolveImpl ??
       ((path: string) => {
@@ -82,21 +80,35 @@ afterEach(() => {
 
 describe('loader', () => {
   it('resolves the package dir by walking up to the package.json', async () => {
-    const { existsSync, readFileSync, resolveReferenceRsPackageDir } = await importLoaderModule()
+    const { existsSync, readFileSync, resolveReferenceRsPackageDir } =
+      await importLoaderModule()
 
-    expect(resolveReferenceRsPackageDir('file:///workspace/packages/reference-rs/js/runtime/loader.ts')).toBe(
-      '/workspace/packages/reference-rs'
+    expect(
+      resolveReferenceRsPackageDir(
+        'file:///workspace/packages/reference-rs/js/runtime/loader.ts'
+      )
+    ).toBe('/workspace/packages/reference-rs')
+    expect(existsSync).toHaveBeenCalledWith(
+      '/workspace/packages/reference-rs/js/runtime/package.json'
     )
-    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/js/runtime/package.json')
-    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/js/package.json')
-    expect(existsSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/package.json')
-    expect(readFileSync).toHaveBeenCalledWith('/workspace/packages/reference-rs/package.json', 'utf-8')
+    expect(existsSync).toHaveBeenCalledWith(
+      '/workspace/packages/reference-rs/js/package.json'
+    )
+    expect(existsSync).toHaveBeenCalledWith(
+      '/workspace/packages/reference-rs/package.json'
+    )
+    expect(readFileSync).toHaveBeenCalledWith(
+      '/workspace/packages/reference-rs/package.json',
+      'utf-8'
+    )
   })
 
   it('builds native candidate path for a target triple', async () => {
     const { getVirtualNativeCandidates } = await importLoaderModule()
 
-    expect(getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')).toEqual([
+    expect(
+      getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')
+    ).toEqual([
       '/workspace/packages/reference-rs/dist/native/virtual-native.darwin-arm64.node',
     ])
   })
@@ -116,7 +128,12 @@ describe('loader', () => {
     })
 
     expect(
-      resolveVirtualNativeBinaryPath('/workspace/app/node_modules/@reference-ui/rust', 'linux', 'x64', fileExists)
+      resolveVirtualNativeBinaryPath(
+        '/workspace/app/node_modules/@reference-ui/rust',
+        'linux',
+        'x64',
+        fileExists
+      )
     ).toBe(
       '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/virtual-native.linux-x64-gnu.node'
     )
@@ -125,19 +142,31 @@ describe('loader', () => {
   it('returns null when no binary exists for a supported target', async () => {
     const { existsSync, resolveVirtualNativeBinaryPath } = await importLoaderModule()
 
-    expect(resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'linux', 'x64')).toBeNull()
+    expect(
+      resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'linux', 'x64')
+    ).toBeNull()
     expect(existsSync).toHaveBeenCalledTimes(1)
   })
 
   it('prefers the first existing candidate when resolving a binary path', async () => {
     const { resolveVirtualNativeBinaryPath } = await importLoaderModule()
     const fileExists = vi.fn((path: string) => {
-      return path === '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+      return (
+        path ===
+        '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+      )
     })
 
     expect(
-      resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'win32', 'x64', fileExists)
-    ).toBe('/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node')
+      resolveVirtualNativeBinaryPath(
+        '/workspace/packages/reference-rs',
+        'win32',
+        'x64',
+        fileExists
+      )
+    ).toBe(
+      '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+    )
     expect(fileExists).toHaveBeenCalledTimes(1)
   })
 
@@ -167,9 +196,9 @@ describe('loader', () => {
       requireImpl: missingCapabilityBinding,
     })
 
-    expect(
-      getVirtualNativeCompatibilityError(missingCapabilityBinding())
-    ).toContain('getNativeCapabilities')
+    expect(getVirtualNativeCompatibilityError(missingCapabilityBinding())).toContain(
+      'getNativeCapabilities'
+    )
     expect(loadVirtualNative()).toBeNull()
     expect(getVirtualNativeDiagnostics().status).toBe('load-failed')
     expect(getVirtualNativeDiagnostics().cause).toContain('Incompatible native binary')
@@ -177,7 +206,8 @@ describe('loader', () => {
 
   it('returns a consumer-safe missing-binary message without monorepo pnpm guidance', async () => {
     const { getVirtualNativeUnavailableMessage } = await importLoaderModule({
-      currentModulePath: '/workspace/app/node_modules/@reference-ui/rust/js/runtime/loader.ts',
+      currentModulePath:
+        '/workspace/app/node_modules/@reference-ui/rust/js/runtime/loader.ts',
       existingPaths: ['/workspace/app/node_modules/@reference-ui/rust/package.json'],
     })
 
@@ -187,11 +217,17 @@ describe('loader', () => {
     expect(triple).not.toBeNull()
     const packageName = getVirtualNativePackageName(triple!)
 
-    expect(message).toContain('Prebuilt binaries for @reference-ui/rust should install automatically')
+    expect(message).toContain(
+      'Prebuilt binaries for @reference-ui/rust should install automatically'
+    )
     expect(message).toContain(`Expected optional target package: ${packageName}`)
-    expect(message).toContain(`The platform package ${packageName} was not installed alongside @reference-ui/rust`)
+    expect(message).toContain(
+      `The platform package ${packageName} was not installed alongside @reference-ui/rust`
+    )
     expect(message).toContain('Searched paths:')
-    expect(message).toContain('Reinstall dependencies so your package manager can fetch the correct prebuilt binary')
+    expect(message).toContain(
+      'Reinstall dependencies so your package manager can fetch the correct prebuilt binary'
+    )
     expect(message).not.toContain('pnpm --filter @reference-ui/rust run build')
   })
 

@@ -15,7 +15,7 @@ export interface PrimitiveCssProps {
 
 /**
  * Public prop surface for a styled HTML primitive without polymorphic `as`.
- * Useful for extendable style bags that can be spread directly onto primitives.
+ * Useful for extendable style objects that can be spread directly onto primitives.
  */
 export type HTMLStyledProps<T extends PrimitiveTag> = PrimitiveProps<T>
 

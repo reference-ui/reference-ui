@@ -19,7 +19,9 @@ const spec: StationSpec<TastyCaseResult> = {
     const genericInfer = await api.loadSymbolByName('GenericInfer')
     const genericHigherKinded = await api.loadSymbolByName('GenericHigherKinded')
     const genericRecursive = await api.loadSymbolByName('GenericRecursive')
-    const genericDistributive = await api.loadSymbolByName('GenericDistributiveConditional')
+    const genericDistributive = await api.loadSymbolByName(
+      'GenericDistributiveConditional'
+    )
     const genericVariadic = await api.loadSymbolByName('GenericVariadicTuples')
 
     expect(genericDefaults.getTypeParameters()).toHaveLength(2)

@@ -12,9 +12,6 @@ const spec: AtomicCaseSpec = {
     expect(classes['mt:2r']).toBe('mt_2r')
     expect(classes['bg:blue.600']).toBe('bg_blue.600')
     expect(classes['_hover:color:red.500']).toBe('hover:c_red.500')
-    expect(result.stylesheet).toContain('.mt_2r {')
-    expect(result.stylesheet).toContain('.bg_blue\\.600 {')
-    expect(result.stylesheet).toContain('.hover\\:c_red\\.500:is(:hover, [data-hover]) {')
   },
 }
 

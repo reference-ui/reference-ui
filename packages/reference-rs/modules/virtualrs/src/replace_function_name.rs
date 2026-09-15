@@ -59,9 +59,10 @@ pub fn replace_function_name(
         }
         None => None,
     };
-    let call_target_name = import_binding_plan
-        .as_ref()
-        .map_or_else(|| from_name.to_string(), |plan| plan.call_target_name.clone());
+    let call_target_name = import_binding_plan.as_ref().map_or_else(
+        || from_name.to_string(),
+        |plan| plan.call_target_name.clone(),
+    );
 
     let mut collector = FunctionCallCollector {
         from_name: &call_target_name,
@@ -91,7 +92,7 @@ fn resolve_import_binding(
     body: &[Statement<'_>],
     import_from: &str,
     from_name: &str,
- ) -> Option<ImportBindingPlan> {
+) -> Option<ImportBindingPlan> {
     let mut matched_local_name = None;
     let mut last_import_end = None;
 
@@ -103,8 +104,8 @@ fn resolve_import_binding(
         last_import_end = Some(import.span.end as usize);
 
         if matches_import_source(source_code, import, import_from) {
-            matched_local_name = find_import_local_name(source_code, import, from_name)
-                .or(matched_local_name);
+            matched_local_name =
+                find_import_local_name(source_code, import, from_name).or(matched_local_name);
         }
     }
 
@@ -126,7 +127,7 @@ fn find_import_local_name(
     source_code: &str,
     import: &ImportDeclaration<'_>,
     from_name: &str,
- ) -> Option<String> {
+) -> Option<String> {
     let specifiers = import.specifiers.as_ref()?;
 
     for specifier in specifiers {
@@ -146,7 +147,11 @@ fn find_import_local_name(
     None
 }
 
-fn matches_import_source(source_code: &str, import: &ImportDeclaration<'_>, import_from: &str) -> bool {
+fn matches_import_source(
+    source_code: &str,
+    import: &ImportDeclaration<'_>,
+    import_from: &str,
+) -> bool {
     import.import_kind != ImportOrExportKind::Type
         && import_module_specifier(source_code, import) == import_from
 }

@@ -5,4 +5,4 @@ export type {
   WithImportMember,
   WithPredicate,
   WithThisType,
-} from './types';
+} from './types'

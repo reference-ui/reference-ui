@@ -3,9 +3,7 @@
 use super::super::names::namespace_export_lookup_name;
 use super::Resolver;
 use crate::ast::model::ImportBindingKind;
-use crate::model::{
-    TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
-};
+use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
 use crate::shared::type_ref_util::{reference_lookup_name, resolve_object_member_type};
 

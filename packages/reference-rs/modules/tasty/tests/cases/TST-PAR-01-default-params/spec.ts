@@ -23,18 +23,18 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(withDefault.getUnderlyingType()?.describe()).toBe('{ ... }')
 
     const keyValueParams = keyValue.getTypeParameters()
-    expect(keyValueParams.find((p) => p.name === 'K')?.default).toMatchObject({
+    expect(keyValueParams.find(p => p.name === 'K')?.default).toMatchObject({
       kind: 'intrinsic',
       name: 'string',
     })
-    expect(keyValueParams.find((p) => p.name === 'V')?.default).toMatchObject({
+    expect(keyValueParams.find(p => p.name === 'V')?.default).toMatchObject({
       kind: 'intrinsic',
       name: 'unknown',
     })
 
     const partialParams = partialDefault.getTypeParameters()
-    expect(partialParams.find((p) => p.name === 'T')?.default).toBeUndefined()
-    expect(partialParams.find((p) => p.name === 'U')?.default).toMatchObject({
+    expect(partialParams.find(p => p.name === 'T')?.default).toBeUndefined()
+    expect(partialParams.find(p => p.name === 'U')?.default).toMatchObject({
       kind: 'intrinsic',
       name: 'number',
     })

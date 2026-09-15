@@ -349,7 +349,11 @@ fn collect_star_reexport_components(
                 }
                 for export_name in target_module.named_component_reexports.keys() {
                     if let Some((target_path, comp_name, source_display)) =
-                        resolve_named_component_export_target(modules, &target_module_path, export_name)
+                        resolve_named_component_export_target(
+                            modules,
+                            &target_module_path,
+                            export_name,
+                        )
                     {
                         out.insert(
                             component_key(&comp_name, &source_display),

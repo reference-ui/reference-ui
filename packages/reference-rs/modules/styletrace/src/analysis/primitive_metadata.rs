@@ -79,4 +79,3 @@ fn parse_declared_primitive_name(line: &str) -> Option<String> {
 
     Some(name.to_string())
 }
-

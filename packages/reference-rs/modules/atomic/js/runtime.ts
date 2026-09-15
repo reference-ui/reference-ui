@@ -14,7 +14,7 @@ export interface AtomicNative {
 }
 
 export function compileSystem(requestJson: string): CompileResult {
-  return callNativeJson<CompileResult, AtomicNative>('compile atomic', (native) =>
+  return callNativeJson<CompileResult, AtomicNative>('compile atomic', native =>
     native.compileSystem(requestJson)
   )
 }

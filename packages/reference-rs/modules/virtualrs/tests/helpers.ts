@@ -29,7 +29,11 @@ export interface VirtualResult {
 }
 
 export interface VirtualCaseConfig {
-  api: 'rewriteCssImports' | 'rewriteCvaImports' | 'replaceFunctionName' | 'applyResponsiveStyles'
+  api:
+    | 'rewriteCssImports'
+    | 'rewriteCvaImports'
+    | 'replaceFunctionName'
+    | 'applyResponsiveStyles'
   fromName?: string
   importFrom?: string
   relativePath: string

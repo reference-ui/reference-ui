@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, ArrayExpression, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
-    ObjectProperty, ObjectPropertyKind, PropertyKey, PropertyKind,
+    Argument, ArrayExpression, ArrayExpressionElement, CallExpression, Expression,
+    ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey, PropertyKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
@@ -111,7 +111,9 @@ fn rewrite_cva_config_object(
     let mut replacements = Vec::new();
 
     for property in object.properties.iter() {
-        if let Some((span, rewritten)) = rewrite_cva_config_property(property, source_code, breakpoints) {
+        if let Some((span, rewritten)) =
+            rewrite_cva_config_property(property, source_code, breakpoints)
+        {
             replacements.push(relative_replacement(object.span, span, rewritten));
         }
     }
@@ -134,8 +136,13 @@ fn rewrite_cva_config_property(
     }
 
     let name = property_key_name(&property.key, source_code)?;
-    let rewritten = rewrite_cva_node(&name, property.value.get_inner_expression(), source_code, breakpoints);
-    
+    let rewritten = rewrite_cva_node(
+        &name,
+        property.value.get_inner_expression(),
+        source_code,
+        breakpoints,
+    );
+
     rewritten.map(|r| (property.value.get_inner_expression().span(), r))
 }
 
@@ -150,12 +157,12 @@ fn rewrite_cva_node(
             .and_then(|styles| rewrite_style_object(styles, source_code, breakpoints)),
         "variants" => object_expression(expression)
             .and_then(|variants| rewrite_variants_object(variants, source_code, breakpoints)),
-        "compoundVariants" => array_expression(expression)
-            .and_then(|variants| rewrite_compound_variants_array(variants, source_code, breakpoints)),
+        "compoundVariants" => array_expression(expression).and_then(|variants| {
+            rewrite_compound_variants_array(variants, source_code, breakpoints)
+        }),
         _ => None,
     }
 }
-
 
 fn rewrite_variants_object(
     object: &ObjectExpression<'_>,
@@ -294,7 +301,8 @@ fn rewrite_style_object(
     let mut replacements = Vec::new();
 
     for property in object.properties.iter() {
-        if let Some((span, rewritten)) = rewrite_style_property(property, source_code, breakpoints) {
+        if let Some((span, rewritten)) = rewrite_style_property(property, source_code, breakpoints)
+        {
             replacements.push(relative_replacement(object.span, span, rewritten));
         }
     }
@@ -324,9 +332,8 @@ fn rewrite_style_property(
     }
 
     let nested = object_expression(property.value.get_inner_expression())?;
-    
-    rewrite_style_object(nested, source_code, breakpoints)
-        .map(|r| (nested.span, r))
+
+    rewrite_style_object(nested, source_code, breakpoints).map(|r| (nested.span, r))
 }
 
 fn rewrite_responsive_property(
@@ -339,13 +346,12 @@ fn rewrite_responsive_property(
     };
 
     let property_indent = line_indent(source_code, property.span.start as usize);
-    let breakpoint_separator = if property_contains_newline(property, source_code)
-        || entries.properties.len() > 1
-    {
-        format!(",\n{}", property_indent)
-    } else {
-        ", ".to_string()
-    };
+    let breakpoint_separator =
+        if property_contains_newline(property, source_code) || entries.properties.len() > 1 {
+            format!(",\n{}", property_indent)
+        } else {
+            ", ".to_string()
+        };
 
     let mut lowered = Vec::new();
 
@@ -383,4 +389,3 @@ fn rewrite_responsive_property(
         Some(lowered.join(&breakpoint_separator))
     }
 }
-

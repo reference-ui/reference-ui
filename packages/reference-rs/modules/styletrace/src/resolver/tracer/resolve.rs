@@ -1,5 +1,5 @@
 //! Core resolution logic for tracing type properties and literals.
-//! 
+//!
 //! This module implements the main recursive resolution passes. It evaluates
 //! type expressions like unions, intersections, and mapped types.
 
@@ -9,8 +9,8 @@ use std::path::Path;
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeExpr};
 
+use super::builtins::{resolve_builtin_literals, resolve_builtin_props};
 use super::context::TraceContext;
-use super::builtins::{resolve_builtin_props, resolve_builtin_literals};
 
 pub fn resolve_reference_props(
     ctx: &mut TraceContext<'_>,
@@ -65,7 +65,7 @@ pub fn resolve_prop_names(
 
 fn resolve_intersection_props(
     ctx: &mut TraceContext<'_>,
-    types: &[TypeExpr]
+    types: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     let mut names = BTreeSet::new();
     for nested in types {
@@ -77,7 +77,7 @@ fn resolve_intersection_props(
 fn resolve_reference_expr_props(
     ctx: &mut TraceContext<'_>,
     name: &str,
-    args: &[TypeExpr]
+    args: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     if let Some(names) = resolve_builtin_props(ctx, name, args)? {
         return Ok(names);
@@ -98,7 +98,7 @@ fn resolve_reference_expr_props(
 
 fn resolve_indexed_access_props(
     ctx: &mut TraceContext<'_>,
-    object: &TypeExpr
+    object: &TypeExpr,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     match object {
         TypeExpr::Mapped { value_type, .. } => resolve_prop_names(ctx, value_type),
@@ -117,7 +117,9 @@ pub fn resolve_literal_names(
         TypeExpr::Intersection(types) => resolve_intersection_literals(ctx, types),
         TypeExpr::Reference { name, args } => resolve_reference_expr_literals(ctx, name, args),
         TypeExpr::Mapped { key_source, .. } => resolve_literal_names(ctx, key_source),
-        TypeExpr::IndexedAccess { object, index } => resolve_indexed_access_literals(ctx, object, index),
+        TypeExpr::IndexedAccess { object, index } => {
+            resolve_indexed_access_literals(ctx, object, index)
+        }
         TypeExpr::Object(_) => Ok(BTreeSet::new()),
         TypeExpr::Conditional {
             true_type,
@@ -132,7 +134,7 @@ pub fn resolve_literal_names(
 
 fn resolve_intersection_literals(
     ctx: &mut TraceContext<'_>,
-    types: &[TypeExpr]
+    types: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     let mut names = BTreeSet::new();
     for nested in types {
@@ -144,7 +146,7 @@ fn resolve_intersection_literals(
 fn resolve_reference_expr_literals(
     ctx: &mut TraceContext<'_>,
     name: &str,
-    args: &[TypeExpr]
+    args: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     if let Some(values) = resolve_builtin_literals(ctx, name, args)? {
         return Ok(values);
@@ -166,7 +168,7 @@ fn resolve_reference_expr_literals(
 fn resolve_indexed_access_literals(
     ctx: &mut TraceContext<'_>,
     object: &TypeExpr,
-    index: &TypeExpr
+    index: &TypeExpr,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     let _ = resolve_literal_names(ctx, index)?;
     match object {
@@ -183,12 +185,8 @@ fn resolve_decl_props(
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     match declaration {
         TypeDeclaration::Interface(interface_decl) => {
-            let next_env = bind_type_params(
-                &interface_decl.type_params,
-                args,
-                ctx.module_path,
-                ctx.env,
-            );
+            let next_env =
+                bind_type_params(&interface_decl.type_params, args, ctx.module_path, ctx.env);
             let mut names = interface_decl.props.clone();
             let mut next_ctx = ctx.branch(decl_module_path, &next_env);
             for parent in &interface_decl.extends {
@@ -197,12 +195,8 @@ fn resolve_decl_props(
             Ok(names)
         }
         TypeDeclaration::TypeAlias(type_alias) => {
-            let next_env = bind_type_params(
-                &type_alias.type_params,
-                args,
-                ctx.module_path,
-                ctx.env,
-            );
+            let next_env =
+                bind_type_params(&type_alias.type_params, args, ctx.module_path, ctx.env);
             let mut next_ctx = ctx.branch(decl_module_path, &next_env);
             resolve_prop_names(&mut next_ctx, &type_alias.expr)
         }
@@ -217,12 +211,8 @@ fn resolve_decl_literals(
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     match declaration {
         TypeDeclaration::Interface(interface_decl) => {
-            let next_env = bind_type_params(
-                &interface_decl.type_params,
-                args,
-                ctx.module_path,
-                ctx.env,
-            );
+            let next_env =
+                bind_type_params(&interface_decl.type_params, args, ctx.module_path, ctx.env);
             let mut names = interface_decl.props.clone();
             let mut next_ctx = ctx.branch(decl_module_path, &next_env);
             for parent in &interface_decl.extends {
@@ -231,12 +221,8 @@ fn resolve_decl_literals(
             Ok(names)
         }
         TypeDeclaration::TypeAlias(type_alias) => {
-            let next_env = bind_type_params(
-                &type_alias.type_params,
-                args,
-                ctx.module_path,
-                ctx.env,
-            );
+            let next_env =
+                bind_type_params(&type_alias.type_params, args, ctx.module_path, ctx.env);
             let mut next_ctx = ctx.branch(decl_module_path, &next_env);
             resolve_literal_names(&mut next_ctx, &type_alias.expr)
         }

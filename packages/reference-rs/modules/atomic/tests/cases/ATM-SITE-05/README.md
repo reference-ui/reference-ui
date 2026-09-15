@@ -1,4 +1,4 @@
-# ATM-SITE-05 spreads
+# ATM-SITE-05
 
-Object spreads unpack into the same want set as written keys. Logical and
-ternary spreads keep the static sibling and both arms of the condition.
+Inline object spreads unpack into the same want set as written keys. Logical
+and ternary spreads keep siblings and both arms. Contract: [SPEC.md](../../../SPEC.md).

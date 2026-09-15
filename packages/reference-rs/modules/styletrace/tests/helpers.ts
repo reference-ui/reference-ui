@@ -26,7 +26,10 @@ export async function traceDir(rootDir: string): Promise<string[]> {
   return trace(rootDir, DEFAULT_SYNC_ROOT)
 }
 
-export async function traceDirWithHint(rootDir: string, syncRootHint: string): Promise<string[]> {
+export async function traceDirWithHint(
+  rootDir: string,
+  syncRootHint: string
+): Promise<string[]> {
   return trace(rootDir, syncRootHint)
 }
 
@@ -201,7 +204,9 @@ export function resolveLabel(label: string) {
   })
 }
 
-export async function createSyncedWorkspaceFixture(): Promise<RuntimeFixture & { syncRootHint: string }> {
+export async function createSyncedWorkspaceFixture(): Promise<
+  RuntimeFixture & { syncRootHint: string }
+> {
   const fixture = await createRuntimeFixture('synced', {
     'consumer-app/src/index.tsx': `import { Div } from '@reference-ui/react'
 
@@ -271,7 +276,7 @@ export type { StyleProps } from '@reference-ui/react'
 
 async function createRuntimeFixture(
   name: string,
-  files: Record<string, string>,
+  files: Record<string, string>
 ): Promise<RuntimeFixture> {
   const ws = await createVirtualWorkspace(files, `styletrace-${name}`)
   return {

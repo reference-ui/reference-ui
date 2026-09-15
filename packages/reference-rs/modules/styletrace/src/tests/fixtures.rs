@@ -8,10 +8,8 @@ use std::path::PathBuf;
 
 pub(super) type ScratchDir = shared::testing::ScratchWorkspace;
 
-
 pub(super) fn workspace_fixture_dir(relative_path: &str) -> PathBuf {
-    workspace_root()
-        .join(relative_path)
+    workspace_root().join(relative_path)
 }
 
 pub(super) fn workspace_root() -> PathBuf {

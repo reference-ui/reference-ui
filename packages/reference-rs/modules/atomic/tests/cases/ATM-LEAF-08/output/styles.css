@@ -33,13 +33,13 @@
   .w_auto { width: auto; }
   .z_1 { z-index: 1; }
   .z_1000 { z-index: 1000; }
-  @media screen and (min-width: 40rem) {
+  @container (min-width: 1024px) {
+    .lg\:m_3r { margin: calc(3 * var(--spacing-root)); }
+  }
+  @container (min-width: 640px) {
     .sm\:m_1r { margin: var(--spacing-root); }
   }
-  @media screen and (min-width: 48rem) {
+  @container (min-width: 768px) {
     .md\:m_2r { margin: calc(2 * var(--spacing-root)); }
-  }
-  @media screen and (min-width: 64rem) {
-    .lg\:m_3r { margin: calc(3 * var(--spacing-root)); }
   }
 }

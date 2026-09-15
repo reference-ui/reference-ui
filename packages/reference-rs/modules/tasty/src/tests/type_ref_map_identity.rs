@@ -1,8 +1,6 @@
 //! Identity [`TypeRefMap`](crate::shared::type_ref_map::TypeRefMap) for round-trip tests.
 
-use crate::model::{
-    TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
-};
+use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
 
 /// Passes every [`TypeRef`] through unchanged; [`map_reference`] must still remap

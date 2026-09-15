@@ -21,7 +21,7 @@ const spec: StationSpec<TastyCaseResult> = {
       kind: 'intrinsic',
       name: 'object',
     })
-    expect(withGenerics.getTypeParameters().map((param) => param.name)).toEqual(['T', 'U'])
+    expect(withGenerics.getTypeParameters().map(param => param.name)).toEqual(['T', 'U'])
 
     const boxUnderlying = box.getUnderlyingType()?.getRaw() as {
       kind?: string

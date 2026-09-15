@@ -1,3 +1,3 @@
 export interface Widget {
-  id: string;
+  id: string
 }

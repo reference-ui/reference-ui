@@ -25,10 +25,10 @@ export interface TastyNative {
 
 export function scanAndEmitModules(
   rootDir: string,
-  include: string[],
+  include: string[]
 ): Partial<EmittedModulesPayload> {
   return callNativeJson<Partial<EmittedModulesPayload>, TastyNative>(
     'scan and emit modules',
-    (native) => native.scanAndEmitModules(rootDir, include),
+    native => native.scanAndEmitModules(rootDir, include)
   )
 }

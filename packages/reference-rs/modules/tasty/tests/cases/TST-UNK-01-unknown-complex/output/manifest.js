@@ -1,2 +1,73 @@
-export const manifest = {"version":"2","warnings":[],"symbolsByName":{"OptionalKeys":["_53cde9327ddfa331"],"StringKeys":["_6394d6b466d72b96"],"TemplateLiteralAlias":["_b9fe0f9c6dc5b4b4"],"TypeQueryAlias":["_b434ccc2a0a93161"],"User":["_c6336b4c91595ca8"],"UserName":["_229a6dfb4e470519"],"UsesOptionalKeys":["_82bf3e743eaa6aa1"],"WithIndexedAccess":["_07f5cb72493e1ab6"]},"symbolsById":{"_07f5cb72493e1ab6":{"id":"_07f5cb72493e1ab6","name":"WithIndexedAccess","kind":"interface","chunk":"./chunks/_07f5cb72493e1ab6.js","library":"user"},"_229a6dfb4e470519":{"id":"_229a6dfb4e470519","name":"UserName","kind":"typeAlias","chunk":"./chunks/_229a6dfb4e470519.js","library":"user"},"_53cde9327ddfa331":{"id":"_53cde9327ddfa331","name":"OptionalKeys","kind":"typeAlias","chunk":"./chunks/_53cde9327ddfa331.js","library":"user"},"_6394d6b466d72b96":{"id":"_6394d6b466d72b96","name":"StringKeys","kind":"typeAlias","chunk":"./chunks/_6394d6b466d72b96.js","library":"user"},"_82bf3e743eaa6aa1":{"id":"_82bf3e743eaa6aa1","name":"UsesOptionalKeys","kind":"interface","chunk":"./chunks/_82bf3e743eaa6aa1.js","library":"user"},"_b434ccc2a0a93161":{"id":"_b434ccc2a0a93161","name":"TypeQueryAlias","kind":"typeAlias","chunk":"./chunks/_b434ccc2a0a93161.js","library":"user"},"_b9fe0f9c6dc5b4b4":{"id":"_b9fe0f9c6dc5b4b4","name":"TemplateLiteralAlias","kind":"typeAlias","chunk":"./chunks/_b9fe0f9c6dc5b4b4.js","library":"user"},"_c6336b4c91595ca8":{"id":"_c6336b4c91595ca8","name":"User","kind":"interface","chunk":"./chunks/_c6336b4c91595ca8.js","library":"user"}}};
-export default manifest;
+export const manifest = {
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    OptionalKeys: ['_53cde9327ddfa331'],
+    StringKeys: ['_6394d6b466d72b96'],
+    TemplateLiteralAlias: ['_b9fe0f9c6dc5b4b4'],
+    TypeQueryAlias: ['_b434ccc2a0a93161'],
+    User: ['_c6336b4c91595ca8'],
+    UserName: ['_229a6dfb4e470519'],
+    UsesOptionalKeys: ['_82bf3e743eaa6aa1'],
+    WithIndexedAccess: ['_07f5cb72493e1ab6'],
+  },
+  symbolsById: {
+    _07f5cb72493e1ab6: {
+      id: '_07f5cb72493e1ab6',
+      name: 'WithIndexedAccess',
+      kind: 'interface',
+      chunk: './chunks/_07f5cb72493e1ab6.js',
+      library: 'user',
+    },
+    _229a6dfb4e470519: {
+      id: '_229a6dfb4e470519',
+      name: 'UserName',
+      kind: 'typeAlias',
+      chunk: './chunks/_229a6dfb4e470519.js',
+      library: 'user',
+    },
+    _53cde9327ddfa331: {
+      id: '_53cde9327ddfa331',
+      name: 'OptionalKeys',
+      kind: 'typeAlias',
+      chunk: './chunks/_53cde9327ddfa331.js',
+      library: 'user',
+    },
+    _6394d6b466d72b96: {
+      id: '_6394d6b466d72b96',
+      name: 'StringKeys',
+      kind: 'typeAlias',
+      chunk: './chunks/_6394d6b466d72b96.js',
+      library: 'user',
+    },
+    _82bf3e743eaa6aa1: {
+      id: '_82bf3e743eaa6aa1',
+      name: 'UsesOptionalKeys',
+      kind: 'interface',
+      chunk: './chunks/_82bf3e743eaa6aa1.js',
+      library: 'user',
+    },
+    _b434ccc2a0a93161: {
+      id: '_b434ccc2a0a93161',
+      name: 'TypeQueryAlias',
+      kind: 'typeAlias',
+      chunk: './chunks/_b434ccc2a0a93161.js',
+      library: 'user',
+    },
+    _b9fe0f9c6dc5b4b4: {
+      id: '_b9fe0f9c6dc5b4b4',
+      name: 'TemplateLiteralAlias',
+      kind: 'typeAlias',
+      chunk: './chunks/_b9fe0f9c6dc5b4b4.js',
+      library: 'user',
+    },
+    _c6336b4c91595ca8: {
+      id: '_c6336b4c91595ca8',
+      name: 'User',
+      kind: 'interface',
+      chunk: './chunks/_c6336b4c91595ca8.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

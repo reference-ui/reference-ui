@@ -40,8 +40,10 @@ pub fn apply_responsive_styles(
     breakpoints_json: Option<String>,
 ) -> Result<String> {
     let breakpoints = match breakpoints_json {
-        Some(raw) if !raw.is_empty() => serde_json::from_str::<std::collections::HashMap<String, String>>(&raw)
-            .map_err(|err| napi::Error::from_reason(format!("Invalid breakpoints JSON: {err}")))?,
+        Some(raw) if !raw.is_empty() => serde_json::from_str::<
+            std::collections::HashMap<String, String>,
+        >(&raw)
+        .map_err(|err| napi::Error::from_reason(format!("Invalid breakpoints JSON: {err}")))?,
         _ => std::collections::HashMap::new(),
     };
 

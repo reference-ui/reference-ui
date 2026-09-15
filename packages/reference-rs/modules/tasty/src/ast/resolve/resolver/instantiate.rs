@@ -6,9 +6,7 @@ use std::collections::BTreeMap;
 
 use super::Resolver;
 use crate::ast::model::SymbolShell;
-use crate::model::{
-    TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef,
-};
+use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
 
 impl<'a> Resolver<'a> {

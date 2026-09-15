@@ -1,4 +1,4 @@
-# ATM-LEAF-04 logical
+# ATM-LEAF-04
 
 Logical extract without evaluating the guard. Falsy `&&` still yields the
-literal operand. `||` and `??` collect both the left literal and the fallback.
+literal operand. `||` and `??` collect both arms. Contract: [SPEC.md](../../../SPEC.md).

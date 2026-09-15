@@ -1,3 +1,3 @@
 export default {
-  defaultAsNamed: 'value'
+  defaultAsNamed: 'value',
 }

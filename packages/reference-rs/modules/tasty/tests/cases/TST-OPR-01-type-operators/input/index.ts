@@ -1,6 +1,1 @@
-export type {
-  KeysOfUser,
-  ReadonlyUsers,
-  User,
-  WithOperators,
-} from './types';
+export type { KeysOfUser, ReadonlyUsers, User, WithOperators } from './types'

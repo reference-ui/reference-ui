@@ -24,5 +24,9 @@ const entrypoints = [
 for (const { file, target } of entrypoints) {
   const filePath = resolve(distDir, file)
   mkdirSync(dirname(filePath), { recursive: true })
-  writeFileSync(filePath, `export * from '${target}'\nexport { default } from '${target}'\n`, 'utf8')
+  writeFileSync(
+    filePath,
+    `export * from '${target}'\nexport { default } from '${target}'\n`,
+    'utf8'
+  )
 }

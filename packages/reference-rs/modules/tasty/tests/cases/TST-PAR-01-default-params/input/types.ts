@@ -5,17 +5,17 @@
 
 /** Type alias with default type parameter. */
 export type WithDefault<T = string> = {
-  value: T;
-};
+  value: T
+}
 
 /** Interface with default type parameter. */
 export interface KeyValue<K = string, V = unknown> {
-  key: K;
-  value: V;
+  key: K
+  value: V
 }
 
 /** Multiple params, only some with defaults. */
 export type PartialDefault<T, U = number> = {
-  a: T;
-  b: U;
-};
+  a: T
+  b: U
+}

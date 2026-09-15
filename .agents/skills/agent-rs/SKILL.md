@@ -45,7 +45,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | Module | What a test is | Harness & Outputs | Command |
 | --- | --- | --- | --- |
 | **atomic** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v atomic` |
-| **canon** | dictionary membership | Cargo unit tests on generated tables. Generator join is `pnpm canon`. | `pnpm agentrs c canon` |
+| **canon** | dictionary membership & fail-closed join | Cargo unit tests on generated tables + Vitest join stations. Generator join is `pnpm canon`. | `pnpm agentrs c canon` / `pnpm agentrs v canon` |
 | **base-system** | definition artefact | Cargo unit tests. Stub until `compile()` takes a base system. | `pnpm agentrs c base_system` |
 | **typegen** | `.d.ts` unions | Cargo unit tests. Stub until the union printer exists. | `pnpm agentrs c typegen` |
 | **tasty** | scan types, emit modules, assert API | **spec + committed goldens** (`manifest.js`, `chunks.json`). Runtime emit goes to `.scratch/`. | `pnpm agentrs v tasty` |
@@ -119,7 +119,7 @@ Do not add extra ritual. Do not invent house rules on top of this. If the gate i
 > **DO NOT CHEAT. NO COMPILER OR LINT SUPPRESSIONS.**
 > `#[allow(clippy::…)]`, `#[expect(clippy::…)]`, and `#![allow(clippy::…)]` are **strictly banned** and fail the quality gate immediately.
 > Do NOT attempt syntactic workarounds to bypass limits (such as packing 6+ loose arguments into ad-hoc tuples `(a, b, c, d, e, f)` or mechanical helper splits with the same parameter soup).
-> **Architect properly**: When functions need multiple pieces of pass state, introduce a well-documented context/session data structure (e.g. `LeafWalk`, `ObjectWalk`, `ExtractContext`).
+> **Architect properly**: When functions need multiple pieces of pass state, introduce a well-documented context/session data structure (e.g. `ExpressionWalk`, `ObjectWalk`, `ExtractContext`).
 
 When quality or Clippy fires, **redesign**. Do not add an allow. Copying the same parameter list into every helper is not a design.
 

@@ -10,12 +10,10 @@ import type { TastyCaseResult } from '../../helpers.js'
 const spec: StationSpec<TastyCaseResult> = {
   id: 'TST-ERR-01',
   verify({ api, emitted }) {
-    const hasDiagnostic = (emitted.diagnostics ?? []).some(
-      (d) => d.message.includes('parse reported')
+    const hasDiagnostic = (emitted.diagnostics ?? []).some(d =>
+      d.message.includes('parse reported')
     )
-    const hasWarning = api.getWarnings().some(
-      (w) => w.includes('parse reported')
-    )
+    const hasWarning = api.getWarnings().some(w => w.includes('parse reported'))
     expect(hasDiagnostic || hasWarning).toBe(true)
   },
 }

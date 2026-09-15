@@ -65,8 +65,8 @@ export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty
   const scannerDiagnostics = normalizeScannerDiagnostics(emitted.diagnostics)
   const scannerWarningTexts = new Set(scannerDiagnostics.map(formatScannerWarning))
   const manifestDiagnostics = warnings
-    .filter((warning) => !scannerWarningTexts.has(warning))
-    .map((warning) => ({
+    .filter(warning => !scannerWarningTexts.has(warning))
+    .map(warning => ({
       level: 'warning' as const,
       source: 'manifest' as const,
       message: warning,
@@ -106,7 +106,7 @@ class TastyBuildSessionImpl implements TastyBuildSession {
     if (existing) return existing
 
     const rebuild = buildTasty(options)
-      .then((built) => {
+      .then(built => {
         this.buildsByKey.set(key, built)
         return built
       })
@@ -123,7 +123,9 @@ class TastyBuildSessionImpl implements TastyBuildSession {
   }
 }
 
-function validateEmittedPayload(parsed: Partial<EmittedModulesPayload>): EmittedModulesPayload {
+function validateEmittedPayload(
+  parsed: Partial<EmittedModulesPayload>
+): EmittedModulesPayload {
   if (
     parsed.modules == null ||
     typeof parsed.modules !== 'object' ||
@@ -141,20 +143,24 @@ function validateEmittedPayload(parsed: Partial<EmittedModulesPayload>): Emitted
 }
 
 function isRawScannerDiagnostics(value: unknown): value is RawScannerDiagnostic[] {
-  return Array.isArray(value) && value.every((entry) =>
-    entry != null &&
-    typeof entry === 'object' &&
-    'file_id' in entry &&
-    typeof entry.file_id === 'string' &&
-    'message' in entry &&
-    typeof entry.message === 'string'
+  return (
+    Array.isArray(value) &&
+    value.every(
+      entry =>
+        entry != null &&
+        typeof entry === 'object' &&
+        'file_id' in entry &&
+        typeof entry.file_id === 'string' &&
+        'message' in entry &&
+        typeof entry.message === 'string'
+    )
   )
 }
 
 function normalizeScannerDiagnostics(
   diagnostics: RawScannerDiagnostic[] | undefined
 ): TastyBuildDiagnostic[] {
-  return (diagnostics ?? []).map((diagnostic) => ({
+  return (diagnostics ?? []).map(diagnostic => ({
     level: 'warning',
     source: 'scanner',
     fileId: diagnostic.file_id,
@@ -163,7 +169,9 @@ function normalizeScannerDiagnostics(
 }
 
 function formatScannerWarning(diagnostic: TastyBuildDiagnostic): string {
-  return diagnostic.fileId ? `${diagnostic.fileId}: ${diagnostic.message}` : diagnostic.message
+  return diagnostic.fileId
+    ? `${diagnostic.fileId}: ${diagnostic.message}`
+    : diagnostic.message
 }
 
 async function writeEmittedArtifacts(
@@ -184,7 +192,11 @@ async function writeEmittedArtifacts(
       Object.entries(files).map(async ([relativePath, source]) => {
         const outputPath = join(tempDir, stripRelativePrefix(relativePath))
         await mkdir(dirname(outputPath), { recursive: true })
-        await writeFile(outputPath, source.endsWith('\n') ? source : `${source}\n`, 'utf-8')
+        await writeFile(
+          outputPath,
+          source.endsWith('\n') ? source : `${source}\n`,
+          'utf-8'
+        )
       })
     )
 
@@ -201,8 +213,9 @@ function stripRelativePrefix(relativePath: string): string {
 }
 
 function resolveManifestPath(outputDir: string, emitted: EmittedModulesPayload): string {
-  const manifestModulePath = Object.keys(emitted.modules).find((path) => path.endsWith('/manifest.js'))
-    ?? Object.keys(emitted.modules).find((path) => path === './manifest.js')
+  const manifestModulePath =
+    Object.keys(emitted.modules).find(path => path.endsWith('/manifest.js')) ??
+    Object.keys(emitted.modules).find(path => path === './manifest.js')
 
   if (!manifestModulePath) {
     throw new Error('Emitted Tasty modules payload did not include ./manifest.js.')

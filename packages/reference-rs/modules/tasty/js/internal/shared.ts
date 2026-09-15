@@ -30,10 +30,10 @@ export function wrapRuntimeError(prefix: string, error: unknown): Error {
 
 export function createAmbiguousSymbolNameError(
   name: string,
-  matches: TastySymbolSearchResult[],
+  matches: TastySymbolSearchResult[]
 ): Error {
   return new Error(
-    `Ambiguous symbol name "${name}". Matches: ${matches.map(formatSymbolCandidate).join(', ')}`,
+    `Ambiguous symbol name "${name}". Matches: ${matches.map(formatSymbolCandidate).join(', ')}`
   )
 }
 
@@ -41,15 +41,21 @@ export function formatSymbolCandidate(result: TastySymbolSearchResult): string {
   return `${result.id} (${result.library})`
 }
 
-export function isInterfaceSymbol(symbol: TastySymbolModel): symbol is RawTastyInterfaceSymbol {
+export function isInterfaceSymbol(
+  symbol: TastySymbolModel
+): symbol is RawTastyInterfaceSymbol {
   return 'members' in symbol && 'extends' in symbol && 'types' in symbol
 }
 
-export function isTypeAliasSymbol(symbol: TastySymbolModel): symbol is RawTastyTypeAliasSymbol {
+export function isTypeAliasSymbol(
+  symbol: TastySymbolModel
+): symbol is RawTastyTypeAliasSymbol {
   return 'definition' in symbol
 }
 
-export function isTypeReference(typeRef: RawTastyTypeRef): typeRef is RawTastyTypeReference {
+export function isTypeReference(
+  typeRef: RawTastyTypeRef
+): typeRef is RawTastyTypeReference {
   return (
     typeof typeRef === 'object' &&
     typeRef !== null &&
@@ -60,14 +66,14 @@ export function isTypeReference(typeRef: RawTastyTypeRef): typeRef is RawTastyTy
 }
 
 export function isRawStructuredTypeRef(
-  typeRef: RawTastyTypeRef,
+  typeRef: RawTastyTypeRef
 ): typeRef is Extract<RawTastyTypeRef, { kind: 'raw' }> {
   return !isTypeReference(typeRef) && typeRef.kind === 'raw'
 }
 
 export function uniqueById<T>(values: T[], getId: (value: T) => string): T[] {
   const seen = new Set<string>()
-  return values.filter((value) => {
+  return values.filter(value => {
     const id = getId(value)
     if (seen.has(id)) return false
     seen.add(id)
@@ -92,12 +98,12 @@ export function extractManifest(value: unknown): RawTastyManifest {
   const manifest = (moduleValue.default ?? moduleValue.manifest) as unknown
   if (!isRawTastyManifest(manifest)) {
     throw new Error(
-      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.',
+      'Malformed Tasty manifest module. Expected a default or manifest export with version, warnings, symbolsByName, and symbolsById.'
     )
   }
   if (manifest.version !== CURRENT_TASTY_MANIFEST_VERSION) {
     throw new Error(
-      `Unsupported Tasty manifest version "${manifest.version}". Expected "${CURRENT_TASTY_MANIFEST_VERSION}".`,
+      `Unsupported Tasty manifest version "${manifest.version}". Expected "${CURRENT_TASTY_MANIFEST_VERSION}".`
     )
   }
   return manifest
@@ -105,7 +111,7 @@ export function extractManifest(value: unknown): RawTastyManifest {
 
 export function extractChunkSymbol(
   moduleValue: ModuleNamespace,
-  symbolId: string,
+  symbolId: string
 ): TastySymbolModel {
   const direct = moduleValue[symbolId]
   if (isTastySymbolModel(direct)) {
@@ -118,7 +124,7 @@ export function extractChunkSymbol(
   }
 
   throw new Error(
-    `Missing symbol export in Tasty chunk for id "${symbolId}". Expected a named export "${symbolId}" or a matching default export.`,
+    `Missing symbol export in Tasty chunk for id "${symbolId}". Expected a named export "${symbolId}" or a matching default export.`
   )
 }
 
@@ -130,14 +136,17 @@ export function extractTastyRuntimeModule(value: unknown): TastyRuntimeModule {
 
   if (!isTastyRuntimeModule(runtimeModule)) {
     throw new Error(
-      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.',
+      'Malformed Tasty browser runtime module. Expected manifest, manifestUrl, and importTastyArtifact exports.'
     )
   }
 
   return runtimeModule
 }
 
-export async function resolveArtifactPath(basePath: string, relativePath: string): Promise<string> {
+export async function resolveArtifactPath(
+  basePath: string,
+  relativePath: string
+): Promise<string> {
   if (relativePath.startsWith('./') || relativePath.startsWith('../')) {
     const baseSpecifier = await resolveArtifactSpecifier(basePath)
     try {
@@ -145,7 +154,7 @@ export async function resolveArtifactPath(basePath: string, relativePath: string
     } catch (error: unknown) {
       throw wrapRuntimeError(
         `Could not resolve Tasty artifact path "${relativePath}" relative to "${basePath}".`,
-        error,
+        error
       )
     }
   }
@@ -187,12 +196,13 @@ function isRawTastyManifest(value: unknown): value is RawTastyManifest {
   return (
     typeof candidate.version === 'string' &&
     Array.isArray(candidate.warnings) &&
-    candidate.warnings.every((warning) => typeof warning === 'string') &&
+    candidate.warnings.every(warning => typeof warning === 'string') &&
     candidate.symbolsByName != null &&
     typeof candidate.symbolsByName === 'object' &&
     Object.values(candidate.symbolsByName).every(
-      (symbolIds) =>
-        Array.isArray(symbolIds) && symbolIds.every((symbolId) => typeof symbolId === 'string'),
+      symbolIds =>
+        Array.isArray(symbolIds) &&
+        symbolIds.every(symbolId => typeof symbolId === 'string')
     ) &&
     candidate.symbolsById != null &&
     typeof candidate.symbolsById === 'object'
@@ -218,17 +228,19 @@ function isTastySymbolModel(value: unknown): value is TastySymbolModel {
 function assertChunkSymbolId(
   symbol: TastySymbolModel,
   expectedId: string,
-  exportKind: 'default' | 'named',
+  exportKind: 'default' | 'named'
 ): TastySymbolModel {
   if (symbol.id !== expectedId) {
     throw new Error(
-      `Malformed ${exportKind} chunk export for symbol id "${expectedId}". Received "${symbol.id}".`,
+      `Malformed ${exportKind} chunk export for symbol id "${expectedId}". Received "${symbol.id}".`
     )
   }
   return symbol
 }
 
-export function collectUserOwnedReferencesFromSymbol(symbol: TastySymbolModel): RawTastySymbolRef[] {
+export function collectUserOwnedReferencesFromSymbol(
+  symbol: TastySymbolModel
+): RawTastySymbolRef[] {
   const refs: RawTastySymbolRef[] = []
 
   if (isInterfaceSymbol(symbol)) {
@@ -249,13 +261,19 @@ export function collectUserOwnedReferencesFromSymbol(symbol: TastySymbolModel): 
   return refs
 }
 
-function collectUserOwnedReferencesFromMember(member: RawTastyMember, refs: RawTastySymbolRef[]) {
+function collectUserOwnedReferencesFromMember(
+  member: RawTastyMember,
+  refs: RawTastySymbolRef[]
+) {
   if (member.type) {
     collectUserOwnedReferencesFromTypeRef(member.type, refs)
   }
 }
 
-function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: RawTastySymbolRef[]) {
+function collectUserOwnedReferencesFromTypeRef(
+  typeRef: RawTastyTypeRef,
+  refs: RawTastySymbolRef[]
+) {
   if (isTypeReference(typeRef)) {
     refs.push({
       id: typeRef.id,
@@ -305,7 +323,8 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
       }
       collectUserOwnedReferencesFromTypeRef(typeRef.returnType, refs)
       for (const param of typeRef.typeParameters ?? []) {
-        if (param.constraint) collectUserOwnedReferencesFromTypeRef(param.constraint, refs)
+        if (param.constraint)
+          collectUserOwnedReferencesFromTypeRef(param.constraint, refs)
         if (param.default) collectUserOwnedReferencesFromTypeRef(param.default, refs)
       }
       return
@@ -326,7 +345,8 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
     case 'mapped':
       collectUserOwnedReferencesFromTypeRef(typeRef.sourceType, refs)
       if (typeRef.nameType) collectUserOwnedReferencesFromTypeRef(typeRef.nameType, refs)
-      if (typeRef.valueType) collectUserOwnedReferencesFromTypeRef(typeRef.valueType, refs)
+      if (typeRef.valueType)
+        collectUserOwnedReferencesFromTypeRef(typeRef.valueType, refs)
       return
     case 'template_literal':
       for (const part of typeRef.parts) {
@@ -338,4 +358,3 @@ function collectUserOwnedReferencesFromTypeRef(typeRef: RawTastyTypeRef, refs: R
       return
   }
 }
-

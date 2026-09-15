@@ -3,18 +3,19 @@
 //! It takes raw AST state and provides grouped contextual information.
 //! These structures help avoid parameter soup during deeply nested walking.
 
-
 // Handles extraction of style properties and type bindings.
 //! Provides utilities to parse prop bindings and resolve styled typings.
 //! Connects TypeScript typings to the component prop model.
 
-use std::collections::BTreeSet;
-use oxc_span::GetSpan;
-use oxc_ast::ast::{FormalParameter, TSType};
-use crate::analysis::model::PropBindings;
-use crate::analysis::util::{is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, slice_span};
-use crate::resolver::{collect_style_prop_names, StyleTraceError};
 use super::context::ParserContext;
+use crate::analysis::model::PropBindings;
+use crate::analysis::util::{
+    is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, slice_span,
+};
+use crate::resolver::{collect_style_prop_names, StyleTraceError};
+use oxc_ast::ast::{FormalParameter, TSType};
+use oxc_span::GetSpan;
+use std::collections::BTreeSet;
 
 pub fn parse_prop_bindings(
     first_param: Option<&FormalParameter<'_>>,
@@ -46,7 +47,9 @@ pub fn parse_prop_bindings(
     }
 
     if is_identifier(pattern_source) && !resolved_style_props.is_empty() {
-        bindings.props_object_bindings.insert(pattern_source.to_string());
+        bindings
+            .props_object_bindings
+            .insert(pattern_source.to_string());
         bindings.spread_bindings.insert(pattern_source.to_string());
     }
 
@@ -69,7 +72,9 @@ fn parse_object_bindings(
     if explicit_style_props.is_empty() {
         for binding in &destructured {
             if ctx.style_prop_names.contains(&binding.prop_name) {
-                bindings.direct_style_bindings.insert(binding.local_name.clone());
+                bindings
+                    .direct_style_bindings
+                    .insert(binding.local_name.clone());
             }
         }
     } else {
@@ -153,7 +158,9 @@ fn resolve_type_literal(
                 let name = slice_span(ctx.source, property.key.span())
                     .trim_matches('"')
                     .trim_matches('\'');
-                ctx.style_prop_names.contains(name).then(|| name.to_string())
+                ctx.style_prop_names
+                    .contains(name)
+                    .then(|| name.to_string())
             }
             _ => None,
         })

@@ -19,10 +19,9 @@ export type ObjectAliasProps = {
   radius?: number
 }
 
-export type ProjectedStyleProps =
-  & Omit<BaseStyleProps, 'color'>
-  & InlinePatternProps
-  & Pick<LayoutProps, 'display'>
+export type ProjectedStyleProps = Omit<BaseStyleProps, 'color'> &
+  InlinePatternProps &
+  Pick<LayoutProps, 'display'>
 
 export type PublicProjectedStyleProps = ProjectedStyleProps
 

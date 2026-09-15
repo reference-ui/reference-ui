@@ -1,19 +1,19 @@
 //! Recursive type resolver for concrete style-prop name collection.
-//! 
+//!
 //! This module resolves TypeScript types across files to trace style properties.
 //! It uses a recursive resolution strategy handling imports, builtins, and generics.
 //! The resolved property names are emitted as a flat set of strings.
 
+mod builtins;
 mod context;
 mod resolve;
-mod builtins;
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use crate::resolver::error::StyleTraceError;
 
-use context::{TraceSession, TraceContext};
+use context::{TraceContext, TraceSession};
 
 const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
     ".reference-ui/react/types/public/style-props",
@@ -72,7 +72,7 @@ pub fn collect_style_prop_names(
         env: &env,
         visited: &mut visited,
     };
-    
+
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
     Ok(names.into_iter().collect())
 }

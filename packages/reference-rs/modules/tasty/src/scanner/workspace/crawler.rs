@@ -7,9 +7,7 @@ use std::path::Path;
 use crate::constants::libraries::USER_LIBRARY_NAME;
 
 use super::policy::{resolve_import_for_discovery, DiscoveryContext};
-use crate::scanner::imports::{
-    extract_module_specifiers, extract_reexport_module_specifiers,
-};
+use crate::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
 use crate::scanner::model::{DiscoveredFile, ResolvedModule};
 use crate::scanner::paths::module_specifier_for_file_id;
 

@@ -20,8 +20,10 @@ const spec: StationSpec<TastyCaseResult> = {
     }
     expect(raw.description).toBe('Props for a button.\n\nIncludes common sizing options.')
     expect(raw.descriptionRaw).toContain('@deprecated Use NewButtonProps instead.')
-    expect(raw.jsdoc?.summary).toBe('Props for a button.\n\nIncludes common sizing options.')
-    expect(raw.jsdoc?.tags?.map((tag) => tag.name)).toEqual(['deprecated', 'remarks'])
+    expect(raw.jsdoc?.summary).toBe(
+      'Props for a button.\n\nIncludes common sizing options.'
+    )
+    expect(raw.jsdoc?.tags?.map(tag => tag.name)).toEqual(['deprecated', 'remarks'])
 
     const sizeMemberRaw = findMember(buttonProps, 'size').getRaw() as {
       description?: string
@@ -30,7 +32,10 @@ const spec: StationSpec<TastyCaseResult> = {
     }
     expect(sizeMemberRaw.description).toBe('Preferred size variant.')
     expect(sizeMemberRaw.descriptionRaw).toContain('@default "sm"')
-    expect(sizeMemberRaw.jsdoc?.tags?.map((tag) => tag.name)).toEqual(['default', 'example'])
+    expect(sizeMemberRaw.jsdoc?.tags?.map(tag => tag.name)).toEqual([
+      'default',
+      'example',
+    ])
 
     const disabledRaw = findMember(buttonProps, 'disabled').getRaw() as {
       description?: string

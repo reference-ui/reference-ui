@@ -16,9 +16,7 @@ import {
   SUPPORTED_VIRTUAL_NATIVE_TARGETS,
   type VirtualNativeTarget,
 } from './shared/targets.js'
-import {
-  REQUIRED_VIRTUAL_NATIVE_EXPORTS,
-} from './shared/native-contract.js'
+import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from './shared/native-contract.js'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
@@ -51,7 +49,9 @@ export interface VirtualNativeDiagnostics {
 let _native: VirtualNativeBinding | null | undefined = undefined
 let _diagnostics: VirtualNativeDiagnostics | undefined = undefined
 
-export function getVirtualNativeCompatibilityError(binding: Record<string, unknown>): string | null {
+export function getVirtualNativeCompatibilityError(
+  binding: Record<string, unknown>
+): string | null {
   const missingExports = REQUIRED_VIRTUAL_NATIVE_EXPORTS.filter(
     (name: string) => typeof binding[name] !== 'function'
   )
@@ -111,9 +111,7 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
 }
 
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
-  return [
-    join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`),
-  ]
+  return [join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)]
 }
 
 function resolveOptionalTargetPackageDir(
@@ -121,7 +119,9 @@ function resolveOptionalTargetPackageDir(
   requireImpl: RequireFn = getDefaultRequire()
 ): string | null {
   try {
-    const packageJsonPath = requireImpl.resolve(`${getVirtualNativePackageName(triple)}/package.json`)
+    const packageJsonPath = requireImpl.resolve(
+      `${getVirtualNativePackageName(triple)}/package.json`
+    )
     return dirname(packageJsonPath)
   } catch {
     return null
@@ -153,7 +153,11 @@ export function resolveVirtualNativeBinaryPath(
   const triple = getVirtualNativeTriple(platform, arch)
   if (!triple) return null
 
-  return getVirtualNativeCandidatePaths(packageDir, triple, requireImpl).find(path => fileExists(path)) ?? null
+  return (
+    getVirtualNativeCandidatePaths(packageDir, triple, requireImpl).find(path =>
+      fileExists(path)
+    ) ?? null
+  )
 }
 
 export function loadVirtualNative(): VirtualNativeBinding | null {
@@ -235,9 +239,11 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
     return _native
   } catch (error) {
     setDiagnostics({
-      status: error instanceof Error && error.message.includes('package directory could not be resolved')
-        ? 'package-dir-not-found'
-        : 'load-failed',
+      status:
+        error instanceof Error &&
+        error.message.includes('package directory could not be resolved')
+          ? 'package-dir-not-found'
+          : 'load-failed',
       packageDir: null,
       platform,
       arch,
@@ -290,7 +296,9 @@ export function getVirtualNativeUnavailableMessage(feature: string): string {
       break
     case 'binary-not-found':
       if (diagnostics.targetPackageName) {
-        messageParts.push(`Expected optional target package: ${diagnostics.targetPackageName}.`)
+        messageParts.push(
+          `Expected optional target package: ${diagnostics.targetPackageName}.`
+        )
       }
       if (diagnostics.targetPackageDir) {
         messageParts.push(
@@ -309,7 +317,9 @@ export function getVirtualNativeUnavailableMessage(feature: string): string {
       }
       break
     case 'package-dir-not-found':
-      messageParts.push('The installed @reference-ui/rust package could not be resolved. Reinstall dependencies.')
+      messageParts.push(
+        'The installed @reference-ui/rust package could not be resolved. Reinstall dependencies.'
+      )
       break
     case 'load-failed':
       messageParts.push(

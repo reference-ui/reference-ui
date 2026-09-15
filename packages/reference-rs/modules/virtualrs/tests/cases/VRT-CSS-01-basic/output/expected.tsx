@@ -4,7 +4,7 @@
  * It inputs test cases and emits test results.
  */
 
-import { css } from 'src/system/runtime';
-import { Box } from '@reference-ui/react';
+import { css } from 'src/system/runtime'
+import { Box } from '@reference-ui/react'
 
-const x = css({});
+const x = css({})

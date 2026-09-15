@@ -7,10 +7,13 @@ import { expect } from 'vitest'
 import type { StationSpec } from '../../../testing/index.js'
 import type { TastyApi, TastyCaseResult } from '../../helpers.js'
 
-async function displayMemberMap(api: TastyApi, symbolName: string): Promise<Map<string, string>> {
+async function displayMemberMap(
+  api: TastyApi,
+  symbolName: string
+): Promise<Map<string, string>> {
   const symbol = await api.loadSymbolByName(symbolName)
   const members = await api.graph.getDisplayMembers(symbol)
-  return new Map(members.map((m) => [m.getName(), m.getType()?.describe() ?? '']))
+  return new Map(members.map(m => [m.getName(), m.getType()?.describe() ?? '']))
 }
 
 const spec: StationSpec<TastyCaseResult> = {

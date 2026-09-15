@@ -1,0 +1,8 @@
+{
+  "alignItems:center": "ai_center",
+  "color:red": "c_red",
+  "display:flex": "d_flex",
+  "gap:2r": "gap_2r",
+  "margin:1r": "m_1r",
+  "padding:2r": "p_2r"
+}

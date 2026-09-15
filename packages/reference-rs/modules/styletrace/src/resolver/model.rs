@@ -1,5 +1,5 @@
 //! Data models representing lowered TypeScript types and module graphs.
-//! 
+//!
 //! This module defines the essential structures used to track type declarations during resolution.
 //! It takes raw AST nodes from the parser and maps them to a simplified domain representation.
 //! Emits an isolated type graph that the tracer uses for recursive evaluation and property extraction.

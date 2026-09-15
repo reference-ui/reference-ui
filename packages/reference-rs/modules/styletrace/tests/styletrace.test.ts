@@ -126,9 +126,11 @@ describe('styletrace', () => {
     const fixture = await createSyncedWorkspaceFixture()
 
     try {
-      await expect(traceDirWithoutHint(`${fixture.rootDir}/consumer-app/src`)).resolves.toEqual(['AppCard'])
       await expect(
-        traceDirWithHint(`${fixture.rootDir}/consumer-app/src`, fixture.syncRootHint),
+        traceDirWithoutHint(`${fixture.rootDir}/consumer-app/src`)
+      ).resolves.toEqual(['AppCard'])
+      await expect(
+        traceDirWithHint(`${fixture.rootDir}/consumer-app/src`, fixture.syncRootHint)
       ).resolves.toEqual(['AppCard'])
     } finally {
       await fixture.cleanup()
@@ -140,7 +142,9 @@ describe('styletrace', () => {
   })
 
   it('keeps extend-library out of the style-bearing surface', async () => {
-    await expect(traceFixtureDir('fixtures/extend-library/src/components')).resolves.toEqual([])
+    await expect(
+      traceFixtureDir('fixtures/extend-library/src/components')
+    ).resolves.toEqual([])
   })
 
   it('finds wrapped Reference primitive exports in a workspace fixture library', async () => {
@@ -157,6 +161,8 @@ describe('styletrace', () => {
   })
 
   it('keeps atlas-project component wrappers out of the style-bearing surface', async () => {
-    await expect(traceFixtureDir('fixtures/atlas-project/src/components')).resolves.toEqual([])
+    await expect(
+      traceFixtureDir('fixtures/atlas-project/src/components')
+    ).resolves.toEqual([])
   })
 })

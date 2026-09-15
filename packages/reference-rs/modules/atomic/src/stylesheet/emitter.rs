@@ -1,6 +1,6 @@
 //! Stylesheet rule builder and CSS layer emitter.
 //! Generates valid, deterministic CSS declarations wrapped in cascade layers, selectors, and at-rules.
-//! Named breakpoint widths come from the compile-time scale and print as `@container` queries.
+//! `@container` wrappers on atoms are already-concrete strings from `r/`; this file prints them.
 
 use super::layers::LAYER_PREAMBLE;
 use super::name;
@@ -25,9 +25,9 @@ fn format_atom_declaration(atom: &Atom) -> String {
     }
 }
 
-fn extract_at_rule(atom: &Atom, scale: &BreakpointScale) -> Option<String> {
+fn extract_at_rule(atom: &Atom) -> Option<String> {
     for cond in &atom.conditions {
-        match lower_condition(cond, scale) {
+        match lower_condition(cond) {
             LoweredCondition::Media(m) => return Some(m),
             LoweredCondition::Container(c) => return Some(c),
             LoweredCondition::Selector(_) => {}
@@ -36,16 +36,16 @@ fn extract_at_rule(atom: &Atom, scale: &BreakpointScale) -> Option<String> {
     None
 }
 
-fn atom_to_rule(atom: &Atom, scale: &BreakpointScale) -> FormattedRule {
+fn atom_to_rule(atom: &Atom) -> FormattedRule {
     FormattedRule {
-        selector: name::selector(atom, scale),
+        selector: name::selector(atom),
         declaration: format_atom_declaration(atom),
-        at_rule: extract_at_rule(atom, scale),
+        at_rule: extract_at_rule(atom),
     }
 }
 
 /// Builds complete atomic stylesheet containing layer preambles and generated utility rules.
-pub fn build_stylesheet(atom_set: &AtomSet, scale: &BreakpointScale) -> String {
+pub fn build_stylesheet(atom_set: &AtomSet, _scale: &BreakpointScale) -> String {
     let mut out = LAYER_PREAMBLE.to_string();
     if atom_set.is_empty() {
         return out;
@@ -57,7 +57,7 @@ pub fn build_stylesheet(atom_set: &AtomSet, scale: &BreakpointScale) -> String {
     let mut at_rules = Vec::new();
 
     for atom in atom_set {
-        let rule = atom_to_rule(atom, scale);
+        let rule = atom_to_rule(atom);
         if rule.at_rule.is_some() {
             at_rules.push(rule);
         } else {
@@ -92,8 +92,6 @@ pub fn build_stylesheet(atom_set: &AtomSet, scale: &BreakpointScale) -> String {
 mod tests {
     use super::*;
     use crate::atom::AtomValue;
-    use crate::config::BreakpointConfig;
-    use indexmap::IndexMap;
     use smallvec::smallvec;
 
     fn default_scale() -> BreakpointScale {
@@ -125,28 +123,11 @@ mod tests {
         set.insert(Atom::new(
             "marginTop".into(),
             AtomValue::String("2r".into()),
-            smallvec!["sm".into()],
+            smallvec!["@container (min-width: 640px)".into()],
             false,
         ));
         let css = build_stylesheet(&set, &default_scale());
         assert!(css.contains("@container (min-width: 640px)"));
-        assert!(css.contains(".sm\\:mt_2r { margin-top: 2r; }"));
-    }
-
-    #[test]
-    fn test_custom_token_breakpoint_container_query() {
-        let mut map = IndexMap::new();
-        map.insert("wide".to_string(), serde_json::json!("1200px"));
-        let scale = BreakpointScale::from_config(&BreakpointConfig::Map(map));
-        let mut set = AtomSet::new();
-        set.insert(Atom::new(
-            "marginTop".into(),
-            AtomValue::String("2r".into()),
-            smallvec!["wide".into()],
-            false,
-        ));
-        let css = build_stylesheet(&set, &scale);
-        assert!(css.contains("@container (min-width: 1200px)"));
-        assert!(css.contains(".wide\\:mt_2r { margin-top: 2r; }"));
+        assert!(css.contains("margin-top: 2r;"));
     }
 }

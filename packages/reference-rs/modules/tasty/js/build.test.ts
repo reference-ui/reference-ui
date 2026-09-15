@@ -122,8 +122,16 @@ describe('buildTasty', () => {
 
     try {
       await mkdir(sourceDir, { recursive: true })
-      await writeFile(join(sourceDir, 'alpha.ts'), 'export interface AlphaOnly {}\n', 'utf-8')
-      await writeFile(join(sourceDir, 'beta.ts'), 'export interface BetaOnly {}\n', 'utf-8')
+      await writeFile(
+        join(sourceDir, 'alpha.ts'),
+        'export interface AlphaOnly {}\n',
+        'utf-8'
+      )
+      await writeFile(
+        join(sourceDir, 'beta.ts'),
+        'export interface BetaOnly {}\n',
+        'utf-8'
+      )
 
       const first = await session.rebuild('fixture', {
         rootDir,
@@ -133,7 +141,9 @@ describe('buildTasty', () => {
       await expect(first.api.loadSymbolByName('AlphaOnly')).resolves.toMatchObject({
         getName: expect.any(Function),
       })
-      await expect(first.api.loadSymbolByName('BetaOnly')).rejects.toThrow('Symbol not found: BetaOnly')
+      await expect(first.api.loadSymbolByName('BetaOnly')).rejects.toThrow(
+        'Symbol not found: BetaOnly'
+      )
 
       const second = await session.rebuild('fixture', {
         rootDir,
@@ -141,7 +151,9 @@ describe('buildTasty', () => {
         outputDir,
       })
 
-      await expect(second.api.loadSymbolByName('AlphaOnly')).rejects.toThrow('Symbol not found: AlphaOnly')
+      await expect(second.api.loadSymbolByName('AlphaOnly')).rejects.toThrow(
+        'Symbol not found: AlphaOnly'
+      )
       await expect(second.api.loadSymbolByName('BetaOnly')).resolves.toMatchObject({
         getName: expect.any(Function),
       })
@@ -158,7 +170,11 @@ describe('buildTasty', () => {
 
     try {
       await mkdir(sourceDir, { recursive: true })
-      await writeFile(join(sourceDir, 'broken.ts'), 'export interface Broken {\n', 'utf-8')
+      await writeFile(
+        join(sourceDir, 'broken.ts'),
+        'export interface Broken {\n',
+        'utf-8'
+      )
       await writeFile(
         join(sourceDir, 'alpha.ts'),
         'export interface Shared {\n  alpha: string\n}\n',
@@ -192,7 +208,7 @@ describe('buildTasty', () => {
         ])
       )
       expect(
-        built.warnings.some((warning) => warning.includes('Duplicate symbol name "Shared"'))
+        built.warnings.some(warning => warning.includes('Duplicate symbol name "Shared"'))
       ).toBe(true)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
@@ -238,11 +254,13 @@ describe('buildTasty', () => {
 
     try {
       expect(
-        built.warnings.some((warning) => warning.includes('Duplicate symbol name "Shared"'))
+        built.warnings.some(warning => warning.includes('Duplicate symbol name "Shared"'))
       ).toBe(true)
       expect(
         built.diagnostics.some(
-          (d) => d.source === 'manifest' && d.message.includes('Duplicate symbol name "Shared"')
+          d =>
+            d.source === 'manifest' &&
+            d.message.includes('Duplicate symbol name "Shared"')
         )
       ).toBe(true)
     } finally {
@@ -261,7 +279,7 @@ describe('buildTasty', () => {
 
       expect(manifest.symbolsByName['Shared']).toHaveLength(2)
       expect(matches).toHaveLength(2)
-      expect(matches.map((s) => s.name)).toEqual(['Shared', 'Shared'])
+      expect(matches.map(s => s.name)).toEqual(['Shared', 'Shared'])
 
       await expect(built.api.loadSymbolByName('Shared')).rejects.toThrow(
         'Ambiguous symbol name "Shared"'
@@ -280,7 +298,7 @@ describe('buildTasty', () => {
       const matches = await built.api.findSymbolsByName('Shared')
       expect(matches).toHaveLength(2)
 
-      const kinds = matches.map((s) => s.kind).sort()
+      const kinds = matches.map(s => s.kind).sort()
       expect(kinds).toEqual(['interface', 'typeAlias'])
 
       for (const result of matches) {

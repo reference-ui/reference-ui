@@ -11,4 +11,3 @@ export const distDir = resolve(packageDir, 'dist')
 export const artifactsDir = resolve(distDir, 'artifacts')
 export const npmDir = resolve(distDir, 'npm')
 export const nativeDir = resolve(distDir, 'native')
-

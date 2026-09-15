@@ -4,5 +4,5 @@
  * It inputs test cases and emits test results.
  */
 
-import { cva as buttonCva, Box } from '@reference-ui/react';
-const x = buttonCva({});
+import { cva as buttonCva, Box } from '@reference-ui/react'
+const x = buttonCva({})

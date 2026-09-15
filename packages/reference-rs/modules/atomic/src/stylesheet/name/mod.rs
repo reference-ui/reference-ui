@@ -5,7 +5,6 @@
 pub mod escape;
 
 use crate::atom::Atom;
-use crate::config::BreakpointScale;
 use crate::resolve::conditions::{
     apply_selector_condition, finalize_condition_name, lower_condition, LoweredCondition,
 };
@@ -38,13 +37,13 @@ pub fn class_name(atom: &Atom) -> String {
 }
 
 /// Generate the CSS selector for an atom, including necessary selector escapes and pseudo transformations.
-pub fn selector(atom: &Atom, scale: &BreakpointScale) -> String {
+pub fn selector(atom: &Atom) -> String {
     let c_name = class_name(atom);
     let escaped = escape_css_selector(&c_name);
     let mut current_sel = format!(".{escaped}");
 
     for cond in &atom.conditions {
-        if let LoweredCondition::Selector(template) = lower_condition(cond, scale) {
+        if let LoweredCondition::Selector(template) = lower_condition(cond) {
             current_sel = apply_selector_condition(&template, &current_sel);
         }
     }
@@ -58,10 +57,6 @@ mod tests {
     use crate::atom::AtomValue;
     use smallvec::smallvec;
 
-    fn default_scale() -> BreakpointScale {
-        BreakpointScale::default_scale()
-    }
-
     #[test]
     fn test_class_name_unconditioned() {
         let atom = Atom::new(
@@ -71,7 +66,7 @@ mod tests {
             false,
         );
         assert_eq!(class_name(&atom), "mt_2r");
-        assert_eq!(selector(&atom, &default_scale()), ".mt_2r");
+        assert_eq!(selector(&atom), ".mt_2r");
     }
 
     #[test]
@@ -83,7 +78,7 @@ mod tests {
             true,
         );
         assert_eq!(class_name(&atom), "mt_2r!");
-        assert_eq!(selector(&atom, &default_scale()), ".mt_2r\\!");
+        assert_eq!(selector(&atom), ".mt_2r\\!");
     }
 
     #[test]
@@ -96,7 +91,7 @@ mod tests {
         );
         assert_eq!(class_name(&atom), "hover:mt_2r");
         assert_eq!(
-            selector(&atom, &default_scale()),
+            selector(&atom),
             ".hover\\:mt_2r:is(:hover, [data-hover])"
         );
     }
@@ -110,7 +105,7 @@ mod tests {
             false,
         );
         assert_eq!(class_name(&atom_frac), "p_1/2r");
-        assert_eq!(selector(&atom_frac, &default_scale()), ".p_1\\/2r");
+        assert_eq!(selector(&atom_frac), ".p_1\\/2r");
 
         let atom_tok = Atom::new(
             "color".into(),
@@ -119,6 +114,6 @@ mod tests {
             false,
         );
         assert_eq!(class_name(&atom_tok), "c_blue.600");
-        assert_eq!(selector(&atom_tok, &default_scale()), ".c_blue\\.600");
+        assert_eq!(selector(&atom_tok), ".c_blue\\.600");
     }
 }

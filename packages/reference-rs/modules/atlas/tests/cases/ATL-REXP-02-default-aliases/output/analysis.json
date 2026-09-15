@@ -27,10 +27,7 @@
           }
         ],
         "usage": "very common",
-        "examples": [
-          "<CTAButton variant=\"solid\">",
-          "<CTAButton variant=\"ghost\">"
-        ],
+        "examples": ["<CTAButton variant=\"solid\">", "<CTAButton variant=\"ghost\">"],
         "usedWith": {}
       }
     ],

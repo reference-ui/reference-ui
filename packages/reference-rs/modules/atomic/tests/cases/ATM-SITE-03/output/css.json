@@ -1,0 +1,8 @@
+{
+  "bg:blue": "bg_blue",
+  "borderStyle:solid": "border-style_solid",
+  "borderWidth:1px": "bd-w_1px",
+  "color:white": "c_white",
+  "fontWeight:bold": "font-weight_bold",
+  "opacity:0.9": "op_0.9"
+}

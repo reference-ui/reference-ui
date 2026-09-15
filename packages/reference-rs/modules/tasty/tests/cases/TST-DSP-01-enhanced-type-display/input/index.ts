@@ -69,8 +69,7 @@ export interface NestedStyleProps {
   }
 }
 
-export type StyleProps = 
-  & Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'>
-  & ReferenceContainerProps
-  & ReferenceResponsiveProps
-  & ReferenceComplexProps
+export type StyleProps = Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'> &
+  ReferenceContainerProps &
+  ReferenceResponsiveProps &
+  ReferenceComplexProps

@@ -20,17 +20,13 @@ interface PublishOptions {
 }
 
 function shouldPublishWithProvenance(env: NodeJS.ProcessEnv = process.env): boolean {
-  const value = env.REF_RELEASE_PROVENANCE ?? env.NPM_CONFIG_PROVENANCE ?? env.npm_config_provenance
+  const value =
+    env.REF_RELEASE_PROVENANCE ?? env.NPM_CONFIG_PROVENANCE ?? env.npm_config_provenance
   return value === 'true' || value === '1'
 }
 
 function publishArgs(includeProvenance: boolean): string[] {
-  return [
-    'publish',
-    ...(includeProvenance ? ['--provenance'] : []),
-    '--access',
-    'public',
-  ]
+  return ['publish', ...(includeProvenance ? ['--provenance'] : []), '--access', 'public']
 }
 
 function readJson<T>(path: string): T {
@@ -47,11 +43,15 @@ function run(command: string, args: string[], cwd = packageDir) {
 
 function isPublished(name: string, version: string) {
   try {
-    const output = execFileSync('npm', ['view', `${name}@${version}`, 'version', '--json'], {
-      cwd: packageDir,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim()
+    const output = execFileSync(
+      'npm',
+      ['view', `${name}@${version}`, 'version', '--json'],
+      {
+        cwd: packageDir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    ).trim()
 
     return output.length > 0
   } catch {
@@ -65,20 +65,22 @@ function shouldPublishRootPackage(): boolean {
 
 function assertRootPublishIsSafe(
   rootPkg: PackageJson,
-  alreadyPublishedNativePackages: readonly PackageJson[],
+  alreadyPublishedNativePackages: readonly PackageJson[]
 ) {
   if (alreadyPublishedNativePackages.length === 0) {
     return
   }
 
-  const publishedNames = alreadyPublishedNativePackages.map((pkg) => `${pkg.name}@${pkg.version}`).join(', ')
+  const publishedNames = alreadyPublishedNativePackages
+    .map(pkg => `${pkg.name}@${pkg.version}`)
+    .join(', ')
   throw new Error(
     [
       `Refusing to publish ${rootPkg.name}@${rootPkg.version} because native target packages are already published for that version.`,
       `Published native packages: ${publishedNames}.`,
       'Publishing the root package now could mix new JS artifacts with older native binaries.',
       'Cut a new version before retrying the release.',
-    ].join(' '),
+    ].join(' ')
   )
 }
 
@@ -112,7 +114,9 @@ for (const entry of readdirSync(npmDir, { withFileTypes: true })) {
 const rootPackageJsonPath = join(packageDir, 'package.json')
 const rootPackageJsonRaw = readFileSync(rootPackageJsonPath, 'utf8')
 const rootPkg = JSON.parse(rootPackageJsonRaw) as PackageJson
-rootPkg.optionalDependencies = Object.fromEntries(targetPackages.map(({ pkg }) => [pkg.name, pkg.version]))
+rootPkg.optionalDependencies = Object.fromEntries(
+  targetPackages.map(({ pkg }) => [pkg.name, pkg.version])
+)
 writeFileSync(rootPackageJsonPath, `${JSON.stringify(rootPkg, null, 2)}\n`)
 
 try {
@@ -125,7 +129,9 @@ try {
   }
 
   for (const { dir: targetPackageDir, pkg } of targetPackages) {
-    if (alreadyPublishedNativePackages.some((publishedPkg) => publishedPkg.name === pkg.name)) {
+    if (
+      alreadyPublishedNativePackages.some(publishedPkg => publishedPkg.name === pkg.name)
+    ) {
       console.log(`Skipping already published native package ${pkg.name}@${pkg.version}`)
       continue
     }

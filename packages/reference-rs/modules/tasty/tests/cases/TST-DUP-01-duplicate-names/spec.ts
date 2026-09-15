@@ -16,10 +16,14 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(manifest.symbolsByName.Shared).toHaveLength(2)
     expect(matches).toHaveLength(2)
     expect(
-      api.getWarnings().some((warning) => warning.includes('Duplicate symbol name "Shared"'))
+      api
+        .getWarnings()
+        .some(warning => warning.includes('Duplicate symbol name "Shared"'))
     ).toBe(true)
 
-    await expect(api.loadSymbolByName('Shared')).rejects.toThrow('Ambiguous symbol name "Shared"')
+    await expect(api.loadSymbolByName('Shared')).rejects.toThrow(
+      'Ambiguous symbol name "Shared"'
+    )
   },
 }
 

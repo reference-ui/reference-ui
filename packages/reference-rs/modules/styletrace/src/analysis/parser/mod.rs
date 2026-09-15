@@ -12,15 +12,23 @@ use std::fs;
 use std::path::Path;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{Declaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, Statement};
+use oxc_ast::ast::{
+    Declaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclarationSpecifier,
+    ImportOrExportKind, Statement,
+};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
-use crate::resolver::StyleTraceError;
-use crate::analysis::model::{ExportTarget, FactoryTarget, TraceComponent, TraceFactory, TraceImport, TraceModule};
+use crate::analysis::model::{
+    ExportTarget, FactoryTarget, TraceComponent, TraceFactory, TraceImport, TraceModule,
+};
 use crate::analysis::util::{module_export_name, module_source_literal};
+use crate::resolver::StyleTraceError;
 
-use self::component::{component_from_function_declaration, component_from_function_like, factory_from_function_declaration, factory_target_from_expression, component_from_expression};
+use self::component::{
+    component_from_expression, component_from_function_declaration, component_from_function_like,
+    factory_from_function_declaration, factory_target_from_expression,
+};
 use self::context::ParserContext;
 
 pub struct ParseState {
@@ -101,7 +109,9 @@ fn collect_imports(
     imports: &mut HashMap<String, TraceImport>,
 ) {
     let source_module = module_source_literal(source, import_decl.source.span());
-    let Some(specifiers) = &import_decl.specifiers else { return };
+    let Some(specifiers) = &import_decl.specifiers else {
+        return;
+    };
 
     for specifier in specifiers {
         match specifier {
@@ -157,7 +167,12 @@ fn collect_statement(
             }
         }
         Statement::VariableDeclaration(declaration) => {
-            collect_variable_symbols(declaration.declarations.iter(), ctx, &mut state.components, &mut state.component_factories)?;
+            collect_variable_symbols(
+                declaration.declarations.iter(),
+                ctx,
+                &mut state.components,
+                &mut state.component_factories,
+            )?;
         }
         Statement::ExportNamedDeclaration(export_decl) => {
             collect_export_named_declaration(export_decl, ctx, state)?;
@@ -166,7 +181,9 @@ fn collect_statement(
             collect_export_default_declaration(export_default, ctx, state)?;
         }
         Statement::ExportAllDeclaration(export_all) => {
-            state.export_all_sources.push(module_source_literal(ctx.source, export_all.source.span()));
+            state
+                .export_all_sources
+                .push(module_source_literal(ctx.source, export_all.source.span()));
         }
         _ => {}
     }
@@ -180,7 +197,11 @@ fn collect_export_default_declaration(
 ) -> Result<(), StyleTraceError> {
     match &export_default.declaration {
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let component_name = function.id.as_ref().map(|id| id.name.to_string()).unwrap_or_else(|| "__default__".to_string());
+            let component_name = function
+                .id
+                .as_ref()
+                .map(|id| id.name.to_string())
+                .unwrap_or_else(|| "__default__".to_string());
             if let Some(component) = component_from_function_like(
                 &crate::analysis::parser::component::FunctionLikeContext {
                     name: &component_name,
@@ -191,13 +212,18 @@ fn collect_export_default_declaration(
                 ctx,
             )? {
                 state.components.insert(component_name.clone(), component);
-                state.exports.insert("default".to_string(), ExportTarget::Local(component_name));
+                state
+                    .exports
+                    .insert("default".to_string(), ExportTarget::Local(component_name));
             }
         }
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             let name = identifier.name.to_string();
-            if state.components.contains_key(&name) || state.component_factories.contains_key(&name) {
-                state.exports.insert("default".to_string(), ExportTarget::Local(name));
+            if state.components.contains_key(&name) || state.component_factories.contains_key(&name)
+            {
+                state
+                    .exports
+                    .insert("default".to_string(), ExportTarget::Local(name));
             }
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
@@ -210,8 +236,13 @@ fn collect_export_default_declaration(
                 },
                 ctx,
             )? {
-                state.components.insert("__default__".to_string(), component);
-                state.exports.insert("default".to_string(), ExportTarget::Local("__default__".to_string()));
+                state
+                    .components
+                    .insert("__default__".to_string(), component);
+                state.exports.insert(
+                    "default".to_string(),
+                    ExportTarget::Local("__default__".to_string()),
+                );
             }
         }
         ExportDefaultDeclarationKind::FunctionExpression(function) => {
@@ -224,8 +255,13 @@ fn collect_export_default_declaration(
                 },
                 ctx,
             )? {
-                state.components.insert("__default__".to_string(), component);
-                state.exports.insert("default".to_string(), ExportTarget::Local("__default__".to_string()));
+                state
+                    .components
+                    .insert("__default__".to_string(), component);
+                state.exports.insert(
+                    "default".to_string(),
+                    ExportTarget::Local("__default__".to_string()),
+                );
             }
         }
         _ => {}
@@ -243,13 +279,22 @@ fn collect_export_named_declaration(
         return Ok(());
     }
 
-    let source_module = export_decl.source.as_ref().map(|value| module_source_literal(ctx.source, value.span()));
+    let source_module = export_decl
+        .source
+        .as_ref()
+        .map(|value| module_source_literal(ctx.source, value.span()));
     for specifier in &export_decl.specifiers {
         let local = module_export_name(ctx.source, &specifier.local);
         let exported = module_export_name(ctx.source, &specifier.exported);
 
         if let Some(source_module) = &source_module {
-            state.exports.insert(exported, ExportTarget::Imported { source: source_module.clone(), imported_name: local });
+            state.exports.insert(
+                exported,
+                ExportTarget::Imported {
+                    source: source_module.clone(),
+                    imported_name: local,
+                },
+            );
             continue;
         }
 
@@ -259,7 +304,13 @@ fn collect_export_named_declaration(
         }
 
         if let Some(import_binding) = ctx.imports.get(&local) {
-            state.exports.insert(exported, ExportTarget::Imported { source: import_binding.source.clone(), imported_name: import_binding.imported_name.clone() });
+            state.exports.insert(
+                exported,
+                ExportTarget::Imported {
+                    source: import_binding.source.clone(),
+                    imported_name: import_binding.imported_name.clone(),
+                },
+            );
         }
     }
     Ok(())
@@ -274,19 +325,33 @@ fn collect_export_named_declaration_body(
         Declaration::FunctionDeclaration(function) => {
             if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
                 state.components.insert(name.clone(), component);
-                state.exports.insert(name.clone(), ExportTarget::Local(name));
+                state
+                    .exports
+                    .insert(name.clone(), ExportTarget::Local(name));
             }
             if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
                 state.factories.insert(name, factory);
             }
         }
         Declaration::VariableDeclaration(declaration) => {
-            collect_variable_symbols(declaration.declarations.iter(), ctx, &mut state.components, &mut state.component_factories)?;
+            collect_variable_symbols(
+                declaration.declarations.iter(),
+                ctx,
+                &mut state.components,
+                &mut state.component_factories,
+            )?;
             for declarator in &declaration.declarations {
-                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id else { continue };
+                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
+                else {
+                    continue;
+                };
                 let name = identifier.name.to_string();
-                if state.components.contains_key(&name) || state.component_factories.contains_key(&name) {
-                    state.exports.insert(name.clone(), ExportTarget::Local(name));
+                if state.components.contains_key(&name)
+                    || state.component_factories.contains_key(&name)
+                {
+                    state
+                        .exports
+                        .insert(name.clone(), ExportTarget::Local(name));
                 }
             }
         }
@@ -305,9 +370,15 @@ where
     I: IntoIterator<Item = &'a oxc_ast::ast::VariableDeclarator<'a>>,
 {
     for declarator in declarators {
-        let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id else { continue };
-        let Some(init) = declarator.init.as_ref() else { continue };
-        if let Some(component) = component_from_expression(&identifier.name.to_string(), init, ctx, BTreeSet::new())? {
+        let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
+            continue;
+        };
+        let Some(init) = declarator.init.as_ref() else {
+            continue;
+        };
+        if let Some(component) =
+            component_from_expression(&identifier.name.to_string(), init, ctx, BTreeSet::new())?
+        {
             components.insert(identifier.name.to_string(), component);
             continue;
         }

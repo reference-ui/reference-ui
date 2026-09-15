@@ -24,7 +24,11 @@ pub const DEFAULT_USAGE_THRESHOLDS: UsageThresholds = UsageThresholds {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/atlas/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct Component {
     pub name: String,
     pub interface: Option<ComponentInterface>,
@@ -38,7 +42,11 @@ pub struct Component {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/atlas/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct ComponentInterface {
     pub name: String,
     pub source: String,
@@ -46,7 +54,11 @@ pub struct ComponentInterface {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, export_to = "modules/atlas/js/generated/", rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
 pub struct ComponentProp {
     pub name: String,
     pub count: u32,

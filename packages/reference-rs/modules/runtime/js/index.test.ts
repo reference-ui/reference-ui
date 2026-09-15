@@ -52,11 +52,15 @@ describe('runtime index', () => {
     expect(() => applyResponsiveStyles('body {}', 'styles.css')).toThrow(
       'native unavailable for apply responsive styles'
     )
-    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('apply responsive styles')
-
-    expect(() => replaceFunctionName('css({})', 'styles.tsx', 'css', '__reference_ui_css')).toThrow(
-      'native unavailable for replace function names'
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith(
+      'apply responsive styles'
     )
-    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith('replace function names')
+
+    expect(() =>
+      replaceFunctionName('css({})', 'styles.tsx', 'css', '__reference_ui_css')
+    ).toThrow('native unavailable for replace function names')
+    expect(getVirtualNativeUnavailableMessage).toHaveBeenCalledWith(
+      'replace function names'
+    )
   })
 })

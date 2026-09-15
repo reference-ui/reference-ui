@@ -1,0 +1,9 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .dark .dark\:hover\:focusVisible\:bd-c_gold:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { border-color: gold; }
+  .dark .dark\:hover\:focusVisible\:outline-c_yellow:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-color: yellow; }
+  .dark .dark\:hover\:focusVisible\:outline-s_solid:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-style: solid; }
+  .dark .dark\:hover\:focusVisible\:outline-w_2px:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-width: 2px; }
+  .dark .hover\:dark\:bg_n900:is(:hover, [data-hover]) { background: n900; }
+  .dark .hover\:dark\:c_white:is(:hover, [data-hover]) { color: white; }
+}

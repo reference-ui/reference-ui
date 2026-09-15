@@ -12,7 +12,11 @@ import {
 interface ChunkLoaderOptions {
   manifestPath?: string
   importer: ArtifactImporter
-  wrapChunkLoadError: (relativeChunkPath: string, resolvedChunkPath: string, error: unknown) => Error
+  wrapChunkLoadError: (
+    relativeChunkPath: string,
+    resolvedChunkPath: string,
+    error: unknown
+  ) => Error
 }
 
 export class ChunkLoader {
@@ -27,11 +31,16 @@ export class ChunkLoader {
 
     let cached = this.chunkCache.get(resolvedChunkPath)
     if (!cached) {
-      cached = this.options.importer(resolvedChunkPath)
-        .then((moduleValue) => normalizeModuleNamespace(moduleValue))
+      cached = this.options
+        .importer(resolvedChunkPath)
+        .then(moduleValue => normalizeModuleNamespace(moduleValue))
         .catch((error: unknown) => {
           this.chunkCache.delete(resolvedChunkPath)
-          throw this.options.wrapChunkLoadError(relativeChunkPath, resolvedChunkPath, error)
+          throw this.options.wrapChunkLoadError(
+            relativeChunkPath,
+            resolvedChunkPath,
+            error
+          )
         })
       this.chunkCache.set(resolvedChunkPath, cached)
     }

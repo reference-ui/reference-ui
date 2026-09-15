@@ -45,7 +45,11 @@ export type {
   TastyTypeRef,
 } from './api-types'
 
-export { dedupeTastyMembers, getTastyMemberDefaultValue, getTastyMemberId } from './members'
+export {
+  dedupeTastyMembers,
+  getTastyMemberDefaultValue,
+  getTastyMemberId,
+} from './members'
 export {
   getTastyJsDocParamDescriptions,
   normalizeTastyInlineValue,

@@ -40,10 +40,9 @@ pub fn apply_rewrite(source_code: &str, plan: RewritePlan) -> String {
         &source_code[plan.end..]
     );
 
-    if let (Some(local_binding), Some(canonical_call_name)) = (
-        plan.local_binding_to_normalize,
-        plan.canonical_call_name,
-    ) {
+    if let (Some(local_binding), Some(canonical_call_name)) =
+        (plan.local_binding_to_normalize, plan.canonical_call_name)
+    {
         rewritten = normalize_bound_calls(&rewritten, &local_binding, canonical_call_name);
     }
 
@@ -204,5 +203,6 @@ fn normalize_bound_calls(source_code: &str, local_binding: &str, canonical_name:
         return source_code.to_string();
     };
 
-    re.replace_all(source_code, format!("{}(", canonical_name)).to_string()
+    re.replace_all(source_code, format!("{}(", canonical_name))
+        .to_string()
 }

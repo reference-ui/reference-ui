@@ -1,5 +1,4 @@
-# ATM-GHOST-03 seed
+# ATM-GHOST-03
 
-Empty compile. The input is a non-style host so extract produces no wants.
-The stylesheet must still print the six-layer preamble and `css.json` must
-be `{}`.
+Empty extract still returns the compile contract: layer preamble, empty class
+map, no diagnostics. Contract: [SPEC.md](../../../SPEC.md).

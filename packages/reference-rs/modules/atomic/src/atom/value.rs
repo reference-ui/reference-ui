@@ -2,8 +2,8 @@
 //! Distinguishes literal strings, design tokens, numbers, and boolean states while preserving authored semantics.
 //! Formats values for CSS stylesheet emission and runtime class mapping.
 
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AtomValue {
@@ -37,7 +37,11 @@ impl AtomValue {
 }
 
 const fn bool_str(b: bool) -> &'static str {
-    if b { "true" } else { "false" }
+    if b {
+        "true"
+    } else {
+        "false"
+    }
 }
 
 impl fmt::Display for AtomValue {
@@ -51,4 +55,3 @@ impl fmt::Display for AtomValue {
         }
     }
 }
-

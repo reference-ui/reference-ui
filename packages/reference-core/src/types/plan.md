@@ -107,7 +107,7 @@ After inspecting the generated styled declarations, the current Panda-shaped mod
    - object keyed by generated `Conditions`
 
 2. `Nested<P>`
-   - property bag `P`
+   - properties `P`
    - selector nesting
    - condition nesting
 

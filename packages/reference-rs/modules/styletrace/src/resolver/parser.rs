@@ -1,7 +1,7 @@
 //! Oxc-backed parsing and type lowering for the style-prop resolver.
-//! 
+//!
 //! This module parses TypeScript declarations into a simplified type graph.
-//! It extracts `TypeAliasDecl` and `InterfaceDecl` definitions, resolves their properties, 
+//! It extracts `TypeAliasDecl` and `InterfaceDecl` definitions, resolves their properties,
 //! and tracks re-exports across files to build the `ParsedModule`.
 
 use std::collections::{BTreeSet, HashMap};
@@ -9,17 +9,18 @@ use std::path::Path;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    PropertyKey, Statement, TSInterfaceDeclaration, TSLiteral, TSSignature, TSType,
-    TSTypeAliasDeclaration, TSIntersectionType, TSUnionType, TSTypeReference, TSIndexedAccessType, TSMappedType, TSConditionalType, TSTypeLiteral, ImportDeclaration
+    Declaration, ExportNamedDeclaration, ImportDeclaration, ImportDeclarationSpecifier,
+    ImportOrExportKind, PropertyKey, Statement, TSConditionalType, TSIndexedAccessType,
+    TSInterfaceDeclaration, TSIntersectionType, TSLiteral, TSMappedType, TSSignature, TSType,
+    TSTypeAliasDeclaration, TSTypeLiteral, TSTypeReference, TSUnionType,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
+use super::error::StyleTraceError;
 use super::model::{
     ImportBinding, InterfaceDecl, ParsedModule, TypeAliasDecl, TypeDeclaration, TypeExpr,
 };
-use super::error::StyleTraceError;
 
 struct ParseContext<'a> {
     source: &'a str,
@@ -76,23 +77,28 @@ fn collect_statement(statement: &Statement<'_>, ctx: &mut ParseContext<'_>) {
         }
         Statement::TSInterfaceDeclaration(interface_decl) => {
             let parsed = parse_interface(interface_decl, ctx.source);
-            ctx.declarations.insert(parsed.name.clone(), TypeDeclaration::Interface(parsed));
+            ctx.declarations
+                .insert(parsed.name.clone(), TypeDeclaration::Interface(parsed));
         }
         Statement::TSTypeAliasDeclaration(type_alias) => {
             let parsed = parse_type_alias(type_alias, ctx.source);
-            ctx.declarations.insert(parsed.name.clone(), TypeDeclaration::TypeAlias(parsed));
+            ctx.declarations
+                .insert(parsed.name.clone(), TypeDeclaration::TypeAlias(parsed));
         }
         Statement::ExportNamedDeclaration(export_decl) => {
             collect_export_declaration(export_decl, ctx);
         }
-        Statement::ExportAllDeclaration(export_all) => {
-            ctx.export_all_sources.push(unquote(&string_from_span(ctx.source, export_all.source.span())))
-        }
+        Statement::ExportAllDeclaration(export_all) => ctx.export_all_sources.push(unquote(
+            &string_from_span(ctx.source, export_all.source.span()),
+        )),
         _ => {}
     }
 }
 
-fn parse_import_declaration(import_decl: &oxc_allocator::Box<'_, ImportDeclaration<'_>>, ctx: &mut ParseContext<'_>) {
+fn parse_import_declaration(
+    import_decl: &oxc_allocator::Box<'_, ImportDeclaration<'_>>,
+    ctx: &mut ParseContext<'_>,
+) {
     let module_source = unquote(&string_from_span(ctx.source, import_decl.source.span()));
     let Some(specifiers) = &import_decl.specifiers else {
         return;
@@ -129,17 +135,19 @@ fn parse_import_declaration(import_decl: &oxc_allocator::Box<'_, ImportDeclarati
 
 fn collect_export_declaration(
     export_decl: &oxc_allocator::Box<'_, ExportNamedDeclaration<'_>>,
-    ctx: &mut ParseContext<'_>
+    ctx: &mut ParseContext<'_>,
 ) {
     if let Some(declaration) = export_decl.declaration.as_ref() {
         match declaration {
             Declaration::TSInterfaceDeclaration(interface_decl) => {
                 let parsed = parse_interface(interface_decl, ctx.source);
-                ctx.declarations.insert(parsed.name.clone(), TypeDeclaration::Interface(parsed));
+                ctx.declarations
+                    .insert(parsed.name.clone(), TypeDeclaration::Interface(parsed));
             }
             Declaration::TSTypeAliasDeclaration(type_alias) => {
                 let parsed = parse_type_alias(type_alias, ctx.source);
-                ctx.declarations.insert(parsed.name.clone(), TypeDeclaration::TypeAlias(parsed));
+                ctx.declarations
+                    .insert(parsed.name.clone(), TypeDeclaration::TypeAlias(parsed));
             }
             _ => {}
         }
@@ -218,7 +226,6 @@ fn parse_type_alias(
     }
 }
 
-
 fn parse_type_expr_with_source(type_annotation: &TSType<'_>, source: &str) -> TypeExpr {
     match type_annotation {
         TSType::TSTypeLiteral(type_literal) => parse_type_literal(type_literal, source),
@@ -231,7 +238,9 @@ fn parse_type_expr_with_source(type_annotation: &TSType<'_>, source: &str) -> Ty
             .map(|value| TypeExpr::UnionLiterals(BTreeSet::from([value])))
             .unwrap_or(TypeExpr::Unknown),
         TSType::TSTypeReference(reference) => parse_reference_type(reference, source),
-        TSType::TSIndexedAccessType(indexed_access) => parse_indexed_access_type(indexed_access, source),
+        TSType::TSIndexedAccessType(indexed_access) => {
+            parse_indexed_access_type(indexed_access, source)
+        }
         TSType::TSMappedType(mapped) => parse_mapped_type(mapped, source),
         TSType::TSTypeOperatorType(operator) => match operator.operator {
             oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeExpr::Keyof(Box::new(
@@ -257,22 +266,26 @@ fn parse_type_expr_with_source(type_annotation: &TSType<'_>, source: &str) -> Ty
     }
 }
 
-fn parse_type_literal(type_literal: &oxc_allocator::Box<'_, TSTypeLiteral<'_>>, source: &str) -> TypeExpr {
+fn parse_type_literal(
+    type_literal: &oxc_allocator::Box<'_, TSTypeLiteral<'_>>,
+    source: &str,
+) -> TypeExpr {
     TypeExpr::Object(
         type_literal
             .members
             .iter()
             .filter_map(|signature| match signature {
-                TSSignature::TSPropertySignature(property) => {
-                    property_name(&property.key, source)
-                }
+                TSSignature::TSPropertySignature(property) => property_name(&property.key, source),
                 _ => None,
             })
             .collect(),
     )
 }
 
-fn parse_intersection_type(intersection: &oxc_allocator::Box<'_, TSIntersectionType<'_>>, source: &str) -> TypeExpr {
+fn parse_intersection_type(
+    intersection: &oxc_allocator::Box<'_, TSIntersectionType<'_>>,
+    source: &str,
+) -> TypeExpr {
     TypeExpr::Intersection(
         intersection
             .types
@@ -295,7 +308,10 @@ fn parse_union_type(union: &oxc_allocator::Box<'_, TSUnionType<'_>>, source: &st
     }
 }
 
-fn parse_reference_type(reference: &oxc_allocator::Box<'_, TSTypeReference<'_>>, source: &str) -> TypeExpr {
+fn parse_reference_type(
+    reference: &oxc_allocator::Box<'_, TSTypeReference<'_>>,
+    source: &str,
+) -> TypeExpr {
     TypeExpr::Reference {
         name: slice_span(source, reference.type_name.span()).to_string(),
         args: reference
@@ -312,7 +328,10 @@ fn parse_reference_type(reference: &oxc_allocator::Box<'_, TSTypeReference<'_>>,
     }
 }
 
-fn parse_indexed_access_type(indexed_access: &oxc_allocator::Box<'_, TSIndexedAccessType<'_>>, source: &str) -> TypeExpr {
+fn parse_indexed_access_type(
+    indexed_access: &oxc_allocator::Box<'_, TSIndexedAccessType<'_>>,
+    source: &str,
+) -> TypeExpr {
     TypeExpr::IndexedAccess {
         object: Box::new(parse_type_expr_with_source(
             &indexed_access.object_type,
@@ -338,7 +357,10 @@ fn parse_mapped_type(mapped: &oxc_allocator::Box<'_, TSMappedType<'_>>, source: 
     }
 }
 
-fn parse_conditional_type(conditional: &oxc_allocator::Box<'_, TSConditionalType<'_>>, source: &str) -> TypeExpr {
+fn parse_conditional_type(
+    conditional: &oxc_allocator::Box<'_, TSConditionalType<'_>>,
+    source: &str,
+) -> TypeExpr {
     TypeExpr::Conditional {
         true_type: Box::new(parse_type_expr_with_source(&conditional.true_type, source)),
         false_type: Box::new(parse_type_expr_with_source(&conditional.false_type, source)),

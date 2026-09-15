@@ -15,7 +15,10 @@ pub(super) fn discover_source_files(root_dir: &Path) -> Result<Vec<PathBuf>, Sty
     Ok(files)
 }
 
-fn collect_source_files(current_dir: &Path, files: &mut Vec<PathBuf>) -> Result<(), StyleTraceError> {
+fn collect_source_files(
+    current_dir: &Path,
+    files: &mut Vec<PathBuf>,
+) -> Result<(), StyleTraceError> {
     for entry in fs::read_dir(current_dir).map_err(|error| {
         StyleTraceError::new(format!("failed to read {}: {error}", current_dir.display()))
     })? {
@@ -50,7 +53,9 @@ fn should_skip_directory(file_name: &str) -> bool {
 }
 
 fn is_traceable_source_file(path: &Path, file_name: &str) -> bool {
-    matches!(path.extension().and_then(|ext| ext.to_str()), Some("ts" | "tsx" | "js" | "jsx" | "mts"))
-        && !file_name.ends_with(".d.ts")
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()),
+        Some("ts" | "tsx" | "js" | "jsx" | "mts")
+    ) && !file_name.ends_with(".d.ts")
         && !file_name.ends_with(".d.mts")
 }

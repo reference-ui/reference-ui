@@ -7,10 +7,13 @@ import { expect } from 'vitest'
 import type { StationSpec } from '../../../testing/index.js'
 import type { TastyApi, TastyCaseResult } from '../../helpers.js'
 
-async function displayMemberNames(api: TastyApi, symbolName: string): Promise<Set<string>> {
+async function displayMemberNames(
+  api: TastyApi,
+  symbolName: string
+): Promise<Set<string>> {
   const symbol = await api.loadSymbolByName(symbolName)
   const members = await api.graph.getDisplayMembers(symbol)
-  return new Set(members.map((m) => m.getName()))
+  return new Set(members.map(m => m.getName()))
 }
 
 async function verifyBasicUtilityProjections(api: TastyApi): Promise<void> {

@@ -219,4 +219,3 @@ export interface TastyBrowserRuntime {
   loadApi(): Promise<TastyApi>
   getApi(): TastyApi | undefined
 }
-

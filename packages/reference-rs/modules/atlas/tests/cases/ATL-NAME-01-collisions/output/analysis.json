@@ -68,9 +68,7 @@
           }
         ],
         "usage": "common",
-        "examples": [
-          "<HeroButton tone=\"hero\">"
-        ],
+        "examples": ["<HeroButton tone=\"hero\">"],
         "usedWith": {
           "Button": "very common"
         }

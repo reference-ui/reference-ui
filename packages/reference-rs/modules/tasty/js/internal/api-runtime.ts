@@ -31,7 +31,10 @@ import {
   isTypeAliasSymbol,
   type ArtifactImporter,
 } from './shared'
-import { projectMembersFromInterfaceExtends, projectObjectLikeMembers } from './object-projection'
+import {
+  projectMembersFromInterfaceExtends,
+  projectObjectLikeMembers,
+} from './object-projection'
 import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
 import { ChunkLoader } from './chunk-loader'
 import { SymbolResolver } from './symbol-resolver'
@@ -73,7 +76,7 @@ export class TastyApiRuntime implements TastyApi {
       wrapChunkLoadError: (relativeChunkPath, resolvedChunkPath, error) =>
         wrapRuntimeError(
           `Failed to load Tasty chunk "${relativeChunkPath}" from "${resolvedChunkPath}".`,
-          error,
+          error
         ),
     })
     this.symbolResolver = new SymbolResolver({
@@ -84,13 +87,13 @@ export class TastyApiRuntime implements TastyApi {
       loadManifest: () => this.loadManifest(),
     })
     this.graph = {
-      resolveReference: (ref) => this.graphResolveReference(ref),
-      loadImmediateDependencies: (symbol) => this.graphLoadImmediateDependencies(symbol),
-      loadExtendsChain: (symbol) => this.graphLoadExtendsChain(symbol),
-      flattenInterfaceMembers: (symbol) => this.graphFlattenInterfaceMembers(symbol),
-      getDisplayMembers: (symbol) => this.graphGetDisplayMembers(symbol),
-      projectObjectLikeMembers: (symbol) => this.graphProjectObjectLikeMembers(symbol),
-      collectUserOwnedReferences: (symbol) => this.graphCollectUserOwnedReferences(symbol),
+      resolveReference: ref => this.graphResolveReference(ref),
+      loadImmediateDependencies: symbol => this.graphLoadImmediateDependencies(symbol),
+      loadExtendsChain: symbol => this.graphLoadExtendsChain(symbol),
+      flattenInterfaceMembers: symbol => this.graphFlattenInterfaceMembers(symbol),
+      getDisplayMembers: symbol => this.graphGetDisplayMembers(symbol),
+      projectObjectLikeMembers: symbol => this.graphProjectObjectLikeMembers(symbol),
+      collectUserOwnedReferences: symbol => this.graphCollectUserOwnedReferences(symbol),
     }
   }
 
@@ -99,17 +102,19 @@ export class TastyApiRuntime implements TastyApi {
     const id = ref.getId()
     if (!this.hasManifestSymbol(id)) {
       throw new Error(
-        `Reference "${id}" is not backed by the manifest (built-in or external utility).`,
+        `Reference "${id}" is not backed by the manifest (built-in or external utility).`
       )
     }
     return ref.load()
   }
 
-  private async graphLoadImmediateDependencies(symbol: TastySymbol): Promise<TastySymbol[]> {
+  private async graphLoadImmediateDependencies(
+    symbol: TastySymbol
+  ): Promise<TastySymbol[]> {
     await this.loadManifest()
     const refs = await this.graph.collectUserOwnedReferences(symbol)
-    const manifestBacked = refs.filter((ref) => this.hasManifestSymbol(ref.getId()))
-    return Promise.all(manifestBacked.map((ref) => ref.load()))
+    const manifestBacked = refs.filter(ref => this.hasManifestSymbol(ref.getId()))
+    return Promise.all(manifestBacked.map(ref => ref.load()))
   }
 
   /** Walk `extends` for symbols that resolve into the manifest (skips utilities like `Omit`). */
@@ -132,7 +137,9 @@ export class TastyApiRuntime implements TastyApi {
     return chain
   }
 
-  private async loadManifestSymbolRef(ref: TastySymbolRef): Promise<TastySymbol | undefined> {
+  private async loadManifestSymbolRef(
+    ref: TastySymbolRef
+  ): Promise<TastySymbol | undefined> {
     const id = ref.getId()
     if (this.hasManifestSymbol(id)) return ref.load()
 
@@ -151,10 +158,14 @@ export class TastyApiRuntime implements TastyApi {
     return undefined
   }
 
-  private async graphFlattenInterfaceMembers(symbol: TastySymbol): Promise<TastyMember[]> {
+  private async graphFlattenInterfaceMembers(
+    symbol: TastySymbol
+  ): Promise<TastyMember[]> {
     const fromUtilities = await projectMembersFromInterfaceExtends(this, symbol)
     const manifestParents = await this.graph.loadExtendsChain(symbol)
-    const fromParents = (await Promise.all(manifestParents.map((s) => s.getDisplayMembers()))).flat()
+    const fromParents = (
+      await Promise.all(manifestParents.map(s => s.getDisplayMembers()))
+    ).flat()
     return [...fromParents, ...fromUtilities, ...symbol.getMembers()]
   }
 
@@ -169,16 +180,20 @@ export class TastyApiRuntime implements TastyApi {
     return []
   }
 
-  private graphProjectObjectLikeMembers(symbol: TastySymbol): ReturnType<typeof projectObjectLikeMembers> {
+  private graphProjectObjectLikeMembers(
+    symbol: TastySymbol
+  ): ReturnType<typeof projectObjectLikeMembers> {
     return projectObjectLikeMembers(this, symbol, this.projectTypeParameterMembers)
   }
 
-  private async graphCollectUserOwnedReferences(symbol: TastySymbol): Promise<TastySymbolRef[]> {
+  private async graphCollectUserOwnedReferences(
+    symbol: TastySymbol
+  ): Promise<TastySymbolRef[]> {
     const refs = collectUserOwnedReferencesFromSymbol(symbol.getRaw())
     const userRefs = refs
-      .filter((ref) => ref.library === 'user')
-      .map((ref) => this.createSymbolRef(ref))
-    return uniqueById(userRefs, (ref) => ref.getId())
+      .filter(ref => ref.library === 'user')
+      .map(ref => this.createSymbolRef(ref))
+    return uniqueById(userRefs, ref => ref.getId())
   }
 
   async ready(): Promise<void> {
@@ -192,8 +207,8 @@ export class TastyApiRuntime implements TastyApi {
       }
 
       this.manifestPromise = resolveArtifactSpecifier(this.manifestPath)
-        .then((manifestSpecifier) => this.importer(manifestSpecifier))
-        .then((moduleValue) => {
+        .then(manifestSpecifier => this.importer(manifestSpecifier))
+        .then(moduleValue => {
           const manifest = extractManifest(moduleValue)
           this.manifest = manifest
           return manifest
@@ -203,7 +218,7 @@ export class TastyApiRuntime implements TastyApi {
           this.manifest = undefined
           throw wrapRuntimeError(
             `Failed to load Tasty manifest from "${this.manifestPath}".`,
-            error,
+            error
           )
         })
     }
@@ -244,7 +259,10 @@ export class TastyApiRuntime implements TastyApi {
     return this.symbolResolver.loadSymbolByScopedName(library, name)
   }
 
-  async findSymbolByScopedName(library: string, name: string): Promise<TastySymbol | undefined> {
+  async findSymbolByScopedName(
+    library: string,
+    name: string
+  ): Promise<TastySymbol | undefined> {
     return this.symbolResolver.findSymbolByScopedName(library, name)
   }
 
@@ -298,6 +316,8 @@ export function createTastyApi(options: CreateTastyApiOptions): TastyApi {
   })
 }
 
-export function createTastyApiFromManifest(options: CreateTastyApiFromManifestOptions): TastyApi {
+export function createTastyApiFromManifest(
+  options: CreateTastyApiFromManifestOptions
+): TastyApi {
   return new TastyApiRuntime(options)
 }

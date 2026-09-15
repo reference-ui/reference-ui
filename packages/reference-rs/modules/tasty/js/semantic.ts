@@ -41,7 +41,9 @@ export function getTastyMemberSemanticKind(member: TastyMember): TastySemanticKi
   }
 }
 
-export function getTastyTypeSemanticKind(type: TastyTypeRef | undefined): TastySemanticKind {
+export function getTastyTypeSemanticKind(
+  type: TastyTypeRef | undefined
+): TastySemanticKind {
   if (!type) return 'unknown'
   if (type.isLiteral()) return getTastyLiteralSemanticKind(type.getLiteralValue())
   if (type.isUnion()) return inferTastyUnionSemanticKind(type)
@@ -80,7 +82,9 @@ export function getTastyTypeSemanticKind(type: TastyTypeRef | undefined): TastyS
   }
 }
 
-export function getTastyLiteralSemanticKind(value: string | undefined): TastySemanticKind {
+export function getTastyLiteralSemanticKind(
+  value: string | undefined
+): TastySemanticKind {
   const normalized = normalizeTastyInlineValue(value)
   if (normalized === 'true' || normalized === 'false') return 'boolean'
   if (normalized && /^-?\d+(\.\d+)?$/.test(normalized)) return 'number'
@@ -88,7 +92,9 @@ export function getTastyLiteralSemanticKind(value: string | undefined): TastySem
 }
 
 function inferTastyUnionSemanticKind(type: TastyTypeRef): TastySemanticKind {
-  const branchKinds = uniqueSemanticKinds(type.getUnionTypes().map(getUnionBranchSemanticKind))
+  const branchKinds = uniqueSemanticKinds(
+    type.getUnionTypes().map(getUnionBranchSemanticKind)
+  )
   return branchKinds.length === 1 ? branchKinds[0]! : 'union'
 }
 
@@ -121,6 +127,8 @@ function getIntrinsicSemanticKind(description: string): TastySemanticKind {
   }
 }
 
-function uniqueSemanticKinds(values: Array<TastySemanticKind | null | undefined>): TastySemanticKind[] {
+function uniqueSemanticKinds(
+  values: Array<TastySemanticKind | null | undefined>
+): TastySemanticKind[] {
   return [...new Set(values.filter((value): value is TastySemanticKind => value != null))]
 }

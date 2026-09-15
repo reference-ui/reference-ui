@@ -1,0 +1,6 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .outline-c_blue\.600 { outline-color: var(--colors-blue-600); }
+  .outline-s_solid { outline-style: solid; }
+  .outline-w_1px { outline-width: 1px; }
+}

@@ -9,12 +9,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
 import { analyze, analyzeDetailed } from '../js/index.js'
-import type {
-  AtlasConfig,
-  AtlasDiagnostic,
-  Component,
-  Usage,
-} from '../js/types.js'
+import type { AtlasConfig, AtlasDiagnostic, Component, Usage } from '../js/types.js'
 import type {
   GoldenDefinition,
   StandingGauge,

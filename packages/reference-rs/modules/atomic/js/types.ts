@@ -31,9 +31,41 @@ export interface VirtualSource {
   content: string
 }
 
+export interface BreakpointObject {
+  value?: string
+  [k: string]: unknown
+}
+
+export type BreakpointsInput =
+  | string[]
+  | Record<string, string | number | BreakpointObject>
+
+export interface FontInput {
+  weights?: Record<string, string>
+  css?: Record<string, string>
+}
+
+export type FontsInput = Record<string, FontInput>
+
+export interface TokensInput {
+  breakpoints?: BreakpointsInput
+  fonts?: FontsInput
+  [k: string]: unknown
+}
+
+export interface BaseSystemInput {
+  breakpoints?: BreakpointsInput
+  fonts?: FontsInput
+  [k: string]: unknown
+}
+
 export interface CompileRequest {
   rootDir?: string
   files?: VirtualSource[]
+  breakpoints?: BreakpointsInput
+  fonts?: FontsInput
+  tokens?: TokensInput
+  baseSystem?: BaseSystemInput
 }
 
 export interface CompileResult {

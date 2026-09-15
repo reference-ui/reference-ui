@@ -18,7 +18,7 @@ createStationSuite<TastyCaseResult>({
   suiteName: 'tasty cases',
   casesDir: CASES_DIR,
   folderPattern: CASE_FOLDER,
-  compile: (ctx) => compileTastyCase(ctx),
+  compile: ctx => compileTastyCase(ctx),
   goldens: tastyGoldens,
   standingGauges: tastyGauges,
 })

@@ -12,9 +12,13 @@ export const TARGET_TRIPLES = {
 
 export type VirtualNativeTarget = keyof typeof TARGET_TRIPLES
 
-export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = Object.keys(TARGET_TRIPLES) as VirtualNativeTarget[]
+export const SUPPORTED_VIRTUAL_NATIVE_TARGETS = Object.keys(
+  TARGET_TRIPLES
+) as VirtualNativeTarget[]
 
-export function getVirtualNativePackageName(triple: VirtualNativeTarget): `@reference-ui/rust-${VirtualNativeTarget}` {
+export function getVirtualNativePackageName(
+  triple: VirtualNativeTarget
+): `@reference-ui/rust-${VirtualNativeTarget}` {
   return `@reference-ui/rust-${triple}`
 }
 
@@ -29,6 +33,8 @@ export function getVirtualNativeTriple(
   return null
 }
 
-export function getRustTarget(triple: VirtualNativeTarget): (typeof TARGET_TRIPLES)[VirtualNativeTarget] {
+export function getRustTarget(
+  triple: VirtualNativeTarget
+): (typeof TARGET_TRIPLES)[VirtualNativeTarget] {
   return TARGET_TRIPLES[triple]
 }

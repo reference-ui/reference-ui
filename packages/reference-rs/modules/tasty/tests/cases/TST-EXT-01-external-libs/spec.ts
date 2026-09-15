@@ -17,11 +17,14 @@ const spec: StationSpec<TastyCaseResult> = {
     const refs = await api.graph.collectUserOwnedReferences(buttonProps)
     const dependencies = await api.graph.loadImmediateDependencies(buttonProps)
 
-    expect(extendsSymbols.map((symbol) => symbol.getName())).toEqual(['StyleProps'])
-    expect(flattened.map((member) => member.getName())).toContain('tone')
-    expect(flattened.map((member) => member.getName())).toContain('size')
-    expect(refs.map((ref) => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
-    expect(dependencies.map((symbol) => symbol.getName()).sort()).toEqual(['Size', 'StyleProps'])
+    expect(extendsSymbols.map(symbol => symbol.getName())).toEqual(['StyleProps'])
+    expect(flattened.map(member => member.getName())).toContain('tone')
+    expect(flattened.map(member => member.getName())).toContain('size')
+    expect(refs.map(ref => ref.getName()).sort()).toEqual(['Size', 'StyleProps'])
+    expect(dependencies.map(symbol => symbol.getName()).sort()).toEqual([
+      'Size',
+      'StyleProps',
+    ])
 
     const buttonSchema = await api.loadSymbolByName('ButtonSchema')
     const cssType = findMember(buttonProps, 'css').getType()?.getRaw() as {
@@ -42,9 +45,9 @@ const spec: StationSpec<TastyCaseResult> = {
       members: Array<{ name: string; description?: string }>
     }
     expect(buttonPropsRaw.description).toContain('Props for the Button component')
-    expect(buttonPropsRaw.members.find((member) => member.name === 'size')?.description).toBe(
-      'Preferred size variant.'
-    )
+    expect(
+      buttonPropsRaw.members.find(member => member.name === 'size')?.description
+    ).toBe('Preferred size variant.')
 
     const buttonSchemaRaw = buttonSchema.getRaw() as { description?: string }
     expect(buttonSchemaRaw.description).toBe(

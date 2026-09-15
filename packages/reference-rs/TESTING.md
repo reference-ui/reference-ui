@@ -30,7 +30,7 @@ Extract the Era 4 station pattern into a reusable, zero-overhead test library (*
 
 | Module | Test Model Today | Test Files / Fixtures | Flaws & Antipatterns | Target Architecture |
 | :--- | :--- | :--- | :--- | :--- |
-| **`atomic`** | Station pattern (`cases.test.ts`) | 1 runner, 13 live `ATM-*` stations | Hand-rolled discovery & golden writing in local helpers. Leftover `AT-*` and slug folders sit beside the live stations and are ignored by `CASE_FOLDER`. | Shared `testing` runner; delete the leftover folders as part of the refactor. |
+| **`atomic`** | Station pattern (`cases.test.ts`) | 1 runner, ID-named `ATM-*` stations (`tests/cases/ATM-COND-04`) | Shared `testing` runner. Folder name is the SPEC ID. | Keep 1:1 ID folders; no slug suffixes. |
 | **`atlas`** | Decentralized Vitest + `globalSetup` | 4 root tests, 14 `api.test.ts`, 15 case folders | **Phantom Goldens**: `globalSetup` writes `output/analysis.json` every run; nothing asserts it. 4 root tests duplicate assertions on `demo_surface` only. `dynamic_values` has input and no `api.test.ts`. Stale `tests/atlas` path in Rust. | Single `cases.test.ts`, `ATL-*` stations (including `dynamic_values`), real committed `analysis.json` goldens, standing component schema gauges. |
 | **`tasty`** | 38 `api.test.ts` files + `globalSetup` | 38 separate `api.test.ts` files, 38 case folders | **In-test `npm install`**: synchronous `npm install` in setup. Eagerly compiles 38 cases for 1 test. Only snapshots 1st lexicographical chunk. | Single `cases.test.ts`, `TST-*` stations, on-demand compilation per station, full multi-chunk coverage. |
 | **`virtualrs`** | 15 `rewrite.test.ts` + `globalSetup` | 15 identical 3-line files, 15 case folders | Inverted setup: `globalSetup` writes `result.tsx` before tests start. Entire suite crashes if 1 setup fails. Exact `toBe` string comparison breaks on trivial whitespace. | Single `cases.test.ts`, `VRT-*` stations, in-memory execution, normalized code diffs. |
@@ -63,7 +63,7 @@ packages/reference-rs/
  * Execution context provided to station hooks and specs.
  */
 export interface StationContext {
-  /** Folder name, e.g. "ATM-LEAF-01-ternaries" */
+  /** Folder name, e.g. "ATM-LEAF-01" */
   caseName: string
   /** Extracted ID prefix, e.g. "ATM-LEAF-01" */
   caseId: string
@@ -299,7 +299,7 @@ Small, named helpers used by `normalizeText` and JSON `extract()` — whitespace
 
 ### 4.1 `modules/atomic` (The Baseline Refactor)
 
-**Current State**: 114-line `cases.test.ts` + local `helpers.ts` discovery logic. Leftover `AT-*` and slug folders (`nested_ternaries`, `seed_contract`, …) are not discovered (`CASE_FOLDER` is `ATM-*` only).  
+**Current State**: `cases.test.ts` + local `helpers.ts`. Folder name is the SPEC ID (`ATM-COND-04`). `CASE_FOLDER` is `^(ATM-[A-Z]+-\\d{2})$`.  
 **Target State**:
 ```ts
 // packages/reference-rs/modules/atomic/tests/cases.test.ts
@@ -324,7 +324,7 @@ createStationSuite<CompileResult>({
 ```
 - **Line Reduction**: `cases.test.ts` drops from 114 lines to ~18 lines.
 - **Cleanup**: Delete leftover `AT-*` and slug case folders as part of this refactor, not a later phase.
-- **Zero Regressions**: 13 live stations + the discovery test keep identical goldens (`pnpm agentrs v atomic`).
+- **Zero Regressions**: ID-named stations + the discovery test keep identical goldens (`pnpm agentrs v atomic`).
 
 ---
 

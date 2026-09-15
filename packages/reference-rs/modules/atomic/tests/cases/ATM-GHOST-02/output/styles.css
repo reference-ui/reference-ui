@@ -1,17 +1,6 @@
 @layer reset, global, base, tokens, recipes, utilities;
 @layer utilities {
-  .bd-b-s_solid { border-bottom-style: solid; }
-  .bd-b-w_3px { border-bottom-width: 3px; }
-  .bd-c_gray\.800 { border-color: var(--colors-gray-800); }
   .bg_blue\.600 { background: var(--colors-blue-600); }
-  .c_white { color: white; }
-  .dark .dark\:bg_gray\.900 { background: var(--colors-gray-900); }
-  .hover\:bg_blue\.700:is(:hover, [data-hover]) { background: var(--colors-blue-700); }
-  .hover\:c_gray\.100:is(:hover, [data-hover]) { color: var(--colors-gray-100); }
   .hover\:c_red\.500:is(:hover, [data-hover]) { color: var(--colors-red-500); }
   .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
-  .p_4r { padding: calc(4 * var(--spacing-root)); }
-  .ring-c_blue\.600 { outline-color: var(--colors-blue-600); }
-  .ring-s_solid { outline-style: solid; }
-  .ring-w_1px { outline-width: 1px; }
 }
