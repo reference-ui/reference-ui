@@ -1,0 +1,12 @@
+{
+  "bg:green": "bg_green",
+  "borderColor:0": "bd-c_0",
+  "borderColor:red": "bd-c_red",
+  "borderStyle:solid": "border-style_solid",
+  "borderWidth:1px": "bd-w_1px",
+  "color:blue": "c_blue",
+  "color:red": "c_red",
+  "margin:2r": "m_2r",
+  "outlineStyle:solid": "ring-s_solid",
+  "outlineWidth:2px": "ring-w_2px"
+}

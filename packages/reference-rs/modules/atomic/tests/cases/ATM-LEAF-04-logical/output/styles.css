@@ -1,0 +1,13 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .bd-c_0 { border-color: 0; }
+  .bd-c_red { border-color: red; }
+  .bd-w_1px { border-width: 1px; }
+  .bg_green { background: green; }
+  .border-style_solid { border-style: solid; }
+  .c_blue { color: blue; }
+  .c_red { color: red; }
+  .m_2r { margin: calc(2 * var(--spacing-root)); }
+  .ring-s_solid { outline-style: solid; }
+  .ring-w_2px { outline-width: 2px; }
+}

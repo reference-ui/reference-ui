@@ -1,71 +1,46 @@
 /**
- * Test utilities and fixture loaders for Reference UI system compiler integration testing.
- * Provides virtual file compilation helpers, assertion matchers, and path resolvers for case fixtures.
- * Streamlines seam testing by verifying AST extraction and stylesheet emission without disk overhead.
+ * Atomic case helpers. Specs import this module only: compile a case input
+ * tree and match wants on the result. Paths resolve under
+ * tests/cases/<ATM-*-NN-slug>. The executor owns standing gauges and goldens.
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { compile, compileSync } from '../js/index.js'
-import type {
-  CompileRequest,
-  CompileResult,
-  VirtualSource,
-} from '../js/types.js'
+import { compile } from '../js/index.js'
+import type { CompileResult } from '../js/types.js'
+
+export type { CompileResult, Want } from '../js/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export const TESTS_SYSTEM_DIR = __dirname
-export const FIXTURES_DIR = path.resolve(TESTS_SYSTEM_DIR, 'fixtures')
-export const SEED_CONTRACT_DIR = path.join(FIXTURES_DIR, 'seed_contract')
+export const CASES_DIR = path.resolve(__dirname, 'cases')
+export const LAYER_PREAMBLE = '@layer reset, global, base, tokens, recipes, utilities;'
+export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})-.+$/
 
-export function getFixtureDir(fixtureName: string): string {
-  return path.join(FIXTURES_DIR, fixtureName)
+export interface AtomicCaseSpec {
+  id: string
+  ids?: string[]
+  verify(result: CompileResult): void | Promise<void>
 }
 
-export function getFixtureInputDir(fixtureName: string): string {
-  return path.join(getFixtureDir(fixtureName), 'input', 'app')
+export function parseCaseFolder(folderName: string): string | null {
+  const match = CASE_FOLDER.exec(folderName)
+  return match ? match[1]! : null
 }
 
-/**
- * Compile virtual files provided as array or record map.
- */
-export async function compileVirtual(
-  files: VirtualSource[] | Record<string, string>
-): Promise<CompileResult> {
-  const normalizedFiles: VirtualSource[] = Array.isArray(files)
-    ? files
-    : Object.entries(files).map(([pathKey, content]) => ({
-        path: pathKey,
-        content,
-      }))
-
-  return compile({ files: normalizedFiles })
+export function getCaseDir(caseName: string): string {
+  return path.join(CASES_DIR, caseName)
 }
 
-/**
- * Compile a fixture directory.
- */
-export async function compileFixture(
-  fixtureDir: string
-): Promise<CompileResult> {
-  const normalizedRoot = path.resolve(fixtureDir)
-  return compile({ rootDir: normalizedRoot })
+export function getCaseInputDir(caseName: string): string {
+  return path.join(getCaseDir(caseName), 'input')
 }
 
-/**
- * Synchronously compile virtual files.
- */
-export function compileVirtualSync(
-  files: VirtualSource[] | Record<string, string>
-): CompileResult {
-  const normalizedFiles: VirtualSource[] = Array.isArray(files)
-    ? files
-    : Object.entries(files).map(([pathKey, content]) => ({
-        path: pathKey,
-        content,
-      }))
+export function getCaseOutputDir(caseName: string): string {
+  return path.join(getCaseDir(caseName), 'output')
+}
 
-  return compileSync({ files: normalizedFiles })
+export async function compileCase(caseName: string): Promise<CompileResult> {
+  return compile({ rootDir: path.resolve(getCaseInputDir(caseName)) })
 }
 
 function matchesWantValue(actual: unknown, expected: string | number | boolean): boolean {
@@ -81,14 +56,6 @@ function matchesWantValue(actual: unknown, expected: string | number | boolean):
   return false
 }
 
-function matchesConditions(actual: string[], expected: string[]): boolean {
-  if (actual.length !== expected.length) return false
-  return actual.every((cond, idx) => cond === expected[idx])
-}
-
-/**
- * Check if a compile result contains a specific want.
- */
 export function hasWant(
   result: CompileResult,
   prop: string,
@@ -96,14 +63,21 @@ export function hasWant(
   when: string[] = []
 ): boolean {
   return (result.wants ?? []).some(
-    (w) => w.prop === prop && matchesWantValue(w.value, value) && matchesConditions(w.when, when)
+    w =>
+      w.prop === prop &&
+      matchesWantValue(w.value, value) &&
+      w.when.length === when.length &&
+      w.when.every((cond, idx) => cond === when[idx])
   )
 }
 
-/**
- * Filter wants for a given property.
- */
-export function getWantsForProp(result: CompileResult, prop: string): NonNullable<CompileResult['wants']> {
-  return (result.wants ?? []).filter((w) => w.prop === prop)
+export function getWantsForProp(
+  result: CompileResult,
+  prop: string
+): NonNullable<CompileResult['wants']> {
+  return (result.wants ?? []).filter(w => w.prop === prop)
 }
 
+export function classSelector(className: string): string {
+  return `.${className.replace(/[:/.!%#[\](),&=@>+~{}"']/g, '\\$&')}`
+}

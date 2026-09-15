@@ -1,6 +1,0 @@
-@layer reset, global, base, tokens, recipes, utilities;
-@layer utilities {
-  .bd-b-c_transparent { border-bottom-color: transparent; }
-  .bd-b-s_solid { border-bottom-style: solid; }
-  .bd-b-w_3px { border-bottom-width: 3px; }
-}

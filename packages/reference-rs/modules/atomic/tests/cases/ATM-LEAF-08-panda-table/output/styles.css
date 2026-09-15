@@ -1,0 +1,45 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .ai_center { align-items: center; }
+  .ai_stretch { align-items: stretch; }
+  .bd-c_0 { border-color: 0; }
+  .bd-c_red { border-color: red; }
+  .bd-c_transparent { border-color: transparent; }
+  .bd-w_1px { border-width: 1px; }
+  .bg_n100 { background: n100; }
+  .bg_n200 { background: n200; }
+  .border-style_solid { border-style: solid; }
+  .c_primary { color: primary; }
+  .cursor_default { cursor: default; }
+  .cursor_pointer { cursor: pointer; }
+  .d_flex { display: flex; }
+  .d_none { display: none; }
+  .flex-dir_column { flex-direction: column; }
+  .flex-dir_row { flex-direction: row; }
+  .gap_0\.5r { gap: calc(0.5 * var(--spacing-root)); }
+  .gap_1r { gap: var(--spacing-root); }
+  .h_0px { height: 0px; }
+  .h_200px { height: 200px; }
+  .jc_center { justify-content: center; }
+  .jc_flex-start { justify-content: flex-start; }
+  .m_0 { margin: 0; }
+  .op_0\.5 { opacity: 0.5; }
+  .op_1 { opacity: 1; }
+  .rounded_full { border-radius: full; }
+  .rounded_md { border-radius: md; }
+  .ta_left { text-align: left; }
+  .ta_right { text-align: right; }
+  .w_100\% { width: 100%; }
+  .w_auto { width: auto; }
+  .z_1 { z-index: 1; }
+  .z_1000 { z-index: 1000; }
+  @media screen and (min-width: 40rem) {
+    .sm\:m_1r { margin: var(--spacing-root); }
+  }
+  @media screen and (min-width: 48rem) {
+    .md\:m_2r { margin: calc(2 * var(--spacing-root)); }
+  }
+  @media screen and (min-width: 64rem) {
+    .lg\:m_3r { margin: calc(3 * var(--spacing-root)); }
+  }
+}

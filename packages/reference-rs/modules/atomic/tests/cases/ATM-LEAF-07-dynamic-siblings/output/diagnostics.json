@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-07-dynamic-siblings/input/src/partial.ts"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-07-dynamic-siblings/input/src/partial.ts"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal expression encountered for prop 'width'",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-07-dynamic-siblings/input/src/card.ts"
+  }
+]

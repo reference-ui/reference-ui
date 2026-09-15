@@ -82,8 +82,8 @@ pnpm agentrs v atomic --update-goldens
 | # | Gate | Home | Touches core? |
 | :--- | :--- | :--- | :--- |
 | A | Crate internals | `#[cfg(test)]` next to each module | no |
-| B | Golden cases | `tests/fixtures/<case>/` — sources in, `{styles.css,css.json,diagnostics.json}` out | no |
-| C | Panda v1 differential | Same fixtures through both engines; coverage of `(prop, value, when)`, not spelling | no |
+| B | Golden cases | `tests/cases/<ATM-*>/` — sources in, `{styles.css,css.json,diagnostics.json}` out | no |
+| C | Panda v1 differential | Same cases through both engines; coverage of `(prop, value, when)`, not spelling | no |
 | D | Matrix | integration, after A–C | yes |
 
 Panda v1 stays in production until D.
