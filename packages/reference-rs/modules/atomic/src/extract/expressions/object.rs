@@ -10,11 +10,11 @@ use oxc_ast::ast::{
 use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
-use crate::atom::Want;
-use crate::config::BreakpointScale;
+use crate::atom::{AtomValue, Want};
 use crate::diagnostics::Diagnostic;
 use crate::extract::constants::LocalConstants;
 use crate::resolve::r;
+use base_system::BreakpointScale;
 use canon::{is_condition_prop, is_known_style_prop};
 
 /// Context for traversing a style object literal to extract property wants.
@@ -201,38 +201,85 @@ fn handle_spread_property(
     when: &SmallVec<[Box<str>; 2]>,
 ) {
     // ...{ margin: '10px' }
-    handle_spread_argument(ctx, &spread.argument, when);
+    walk_spread_argument(ctx, &spread.argument, when);
 }
 
-fn handle_spread_argument(
+/// Unpack a spread argument: inline objects, identifier local consts, or warn.
+pub fn walk_spread_argument(
     ctx: &mut ObjectWalk<'_>,
     expr: &Expression<'_>,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
+    if walk_spread_value(ctx, expr, when) {
+        return;
+    }
+    if walk_spread_branching(ctx, expr, when) {
+        return;
+    }
+    // ...maybeFn()
+    ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+}
+
+fn walk_spread_value(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
     match expr {
         Expression::ObjectExpression(inner_obj) => {
             // ...{ margin: '10px' }
             walk_style_object(ctx, inner_obj, when);
+            true
         }
-        Expression::ConditionalExpression(cond) => {
-            // ...(on ? { padding: '10px' } : { gap: '8px' })
-            handle_spread_argument(ctx, &cond.consequent, when);
-            handle_spread_argument(ctx, &cond.alternate, when);
-        }
-        Expression::LogicalExpression(log) => {
-            // ...(unk && { padding: '10px' })  /  ...(unk || { margin: '20px' })
-            handle_spread_argument(ctx, &log.left, when);
-            handle_spread_argument(ctx, &log.right, when);
+        Expression::Identifier(ident) => {
+            // ...base  after  const base = { mt: '2r' }
+            unpack_local_const_object(ctx, ident.name.as_str(), when);
+            true
         }
         Expression::ParenthesizedExpression(p) => {
             // ...({ margin: '10px' })
-            handle_spread_argument(ctx, &p.expression, when);
+            walk_spread_argument(ctx, &p.expression, when);
+            true
         }
-        _ => {
-            // ...maybeFn()
-            ctx.warn(
-                "Dynamic object spread encountered in style object; keeping sibling properties",
-            );
+        _ => false,
+    }
+}
+
+fn walk_spread_branching(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
+    match expr {
+        Expression::ConditionalExpression(cond) => {
+            // ...(on ? { padding: '10px' } : { gap: '8px' })
+            walk_spread_argument(ctx, &cond.consequent, when);
+            walk_spread_argument(ctx, &cond.alternate, when);
+            true
         }
+        Expression::LogicalExpression(log) => {
+            // ...(unk && { padding: '10px' })  /  ...(unk || { margin: '20px' })
+            walk_spread_argument(ctx, &log.left, when);
+            walk_spread_argument(ctx, &log.right, when);
+            true
+        }
+        _ => false,
+    }
+}
+
+fn unpack_local_const_object(ctx: &mut ObjectWalk<'_>, name: &str, when: &SmallVec<[Box<str>; 2]>) {
+    let Some(obj) = ctx.constants.get_object(name) else {
+        // ...unknown  — not a file-top const object
+        ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+        return;
+    };
+    let entries: Vec<(String, AtomValue)> = obj
+        .iter()
+        .filter(|(key, _)| is_known_style_prop(key))
+        .map(|(key, val)| (key.clone(), val.clone()))
+        .collect();
+    for (key, val) in entries {
+        let mut expr_ctx = ctx.expression_walk(&key);
+        expr_ctx.push_want(val, when.clone(), false);
     }
 }

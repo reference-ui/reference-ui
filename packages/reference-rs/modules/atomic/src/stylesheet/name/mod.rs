@@ -8,11 +8,12 @@ use crate::atom::Atom;
 use crate::resolve::conditions::{
     apply_selector_condition, finalize_condition_name, lower_condition, LoweredCondition,
 };
+use base_system::BaseSystem;
 use canon::class_prefix_for_prop;
 use escape::{escape_css_selector, sanitize_class_value};
 
 /// Generate canonical atomic class name for an atom (runtime/HTML unescaped string).
-pub fn class_name(atom: &Atom) -> String {
+pub fn class_name(atom: &Atom, system: &BaseSystem) -> String {
     let prefix = class_prefix_for_prop(&atom.prop);
     let val_str = atom.value.class_name_str();
     let sanitized_val = sanitize_class_value(val_str);
@@ -26,7 +27,7 @@ pub fn class_name(atom: &Atom) -> String {
     let cond_parts: Vec<String> = atom
         .conditions
         .iter()
-        .filter_map(|c| finalize_condition_name(c))
+        .filter_map(|c| finalize_condition_name(c, system))
         .collect();
 
     if cond_parts.is_empty() {
@@ -37,13 +38,13 @@ pub fn class_name(atom: &Atom) -> String {
 }
 
 /// Generate the CSS selector for an atom, including necessary selector escapes and pseudo transformations.
-pub fn selector(atom: &Atom) -> String {
-    let c_name = class_name(atom);
+pub fn selector(atom: &Atom, system: &BaseSystem) -> String {
+    let c_name = class_name(atom, system);
     let escaped = escape_css_selector(&c_name);
     let mut current_sel = format!(".{escaped}");
 
     for cond in &atom.conditions {
-        if let LoweredCondition::Selector(template) = lower_condition(cond) {
+        if let LoweredCondition::Selector(template) = lower_condition(cond, system) {
             current_sel = apply_selector_condition(&template, &current_sel);
         }
     }
@@ -65,8 +66,8 @@ mod tests {
             smallvec![],
             false,
         );
-        assert_eq!(class_name(&atom), "mt_2r");
-        assert_eq!(selector(&atom), ".mt_2r");
+        assert_eq!(class_name(&atom, &BaseSystem::default()), "mt_2r");
+        assert_eq!(selector(&atom, &BaseSystem::default()), ".mt_2r");
     }
 
     #[test]
@@ -77,8 +78,8 @@ mod tests {
             smallvec![],
             true,
         );
-        assert_eq!(class_name(&atom), "mt_2r!");
-        assert_eq!(selector(&atom), ".mt_2r\\!");
+        assert_eq!(class_name(&atom, &BaseSystem::default()), "mt_2r!");
+        assert_eq!(selector(&atom, &BaseSystem::default()), ".mt_2r\\!");
     }
 
     #[test]
@@ -89,9 +90,9 @@ mod tests {
             smallvec!["_hover".into()],
             false,
         );
-        assert_eq!(class_name(&atom), "hover:mt_2r");
+        assert_eq!(class_name(&atom, &BaseSystem::default()), "hover:mt_2r");
         assert_eq!(
-            selector(&atom),
+            selector(&atom, &BaseSystem::default()),
             ".hover\\:mt_2r:is(:hover, [data-hover])"
         );
     }
@@ -104,8 +105,8 @@ mod tests {
             smallvec![],
             false,
         );
-        assert_eq!(class_name(&atom_frac), "p_1/2r");
-        assert_eq!(selector(&atom_frac), ".p_1\\/2r");
+        assert_eq!(class_name(&atom_frac, &BaseSystem::default()), "p_1/2r");
+        assert_eq!(selector(&atom_frac, &BaseSystem::default()), ".p_1\\/2r");
 
         let atom_tok = Atom::new(
             "color".into(),
@@ -113,7 +114,7 @@ mod tests {
             smallvec![],
             false,
         );
-        assert_eq!(class_name(&atom_tok), "c_blue.600");
-        assert_eq!(selector(&atom_tok), ".c_blue\\.600");
+        assert_eq!(class_name(&atom_tok, &BaseSystem::default()), "c_blue.600");
+        assert_eq!(selector(&atom_tok, &BaseSystem::default()), ".c_blue\\.600");
     }
 }

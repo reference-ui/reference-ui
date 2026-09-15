@@ -1,0 +1,15 @@
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root {
+    --colors-n100: #f4f4f5;
+    --colors-n300: #d4d4d8;
+  }
+  [data-panda-theme=dark] {
+    --colors-n100: #18181b;
+    --colors-n300: #3f3f46;
+  }
+}
+@layer utilities {
+  .bg_n100 { background: var(--colors-n100); }
+  .bg_n300 { background: var(--colors-n300); }
+}

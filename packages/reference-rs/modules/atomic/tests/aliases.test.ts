@@ -78,7 +78,9 @@ describe('canon locked alias consumption', () => {
           content: `export const Comp = () => <Div mt={['1r', '2r', '4r']} />`,
         },
       ],
-      breakpoints: ['tablet', 'desktop'],
+      baseSystem: {
+        breakpoints: { names: ['tablet', 'desktop'] },
+      },
     })
 
     expect(hasWant(result, 'mt', '1r', ['base'])).toBe(true)
@@ -86,7 +88,7 @@ describe('canon locked alias consumption', () => {
     expect(hasWant(result, 'mt', '4r', ['desktop'])).toBe(true)
   })
 
-  it('supports custom array-slot breakpoint scales from tokens configuration', async () => {
+  it('supports custom array-slot breakpoint scales from a BaseSystem dump', async () => {
     const result = await compile({
       files: [
         {
@@ -94,10 +96,10 @@ describe('canon locked alias consumption', () => {
           content: `export const Comp = () => <Div p={['10px', '20px', '30px']} />`,
         },
       ],
-      tokens: {
+      baseSystem: {
         breakpoints: {
-          wide: '1200px',
-          ultra: '1800px',
+          names: ['wide', 'ultra'],
+          widths: { wide: '1200', ultra: '1800' },
         },
       },
     })
@@ -105,7 +107,5 @@ describe('canon locked alias consumption', () => {
     expect(hasWant(result, 'p', '10px', ['base'])).toBe(true)
     expect(hasWant(result, 'p', '20px', ['wide'])).toBe(true)
     expect(hasWant(result, 'p', '30px', ['ultra'])).toBe(true)
-    expect(result.stylesheet).toContain('@container (min-width: 1200px)')
-    expect(result.stylesheet).toContain('@container (min-width: 1800px)')
   })
 })

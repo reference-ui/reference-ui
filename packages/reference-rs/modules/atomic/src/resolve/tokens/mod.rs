@@ -1,39 +1,75 @@
-//! Design token resolution and CSS custom property substitution for Reference UI.
-//! Translates dot-path token references like `colors.blue.600` into corresponding `var(--...)` custom property expressions.
-//! Bridges compile-time token authoring with runtime theming and stylesheet token layers.
+//! Design token resolution against a `BaseSystem` dictionary.
+//! Turns author paths (`colors.blue.600`, `gray.800`, `{radii.md}`) into `var(--…)`
+//! when the utterance declares them. Opacity `/50` becomes `color-mix` here, not in
+//! base-system. Unknown dotted paths pass through as raw CSS and emit a warning.
+//! Heuristic category lists are gone; lookup is the fixture.
 
-use crate::config::FontScale;
 use std::borrow::Cow;
 
-const KNOWN_CATEGORIES: &[&str] = &[
-    "colors",
-    "spacing",
-    "radii",
-    "fonts",
-    "fontSizes",
-    "fontWeights",
-    "lineHeights",
-    "letterSpacings",
-    "shadows",
-    "zIndex",
-    "opacity",
-    "borders",
-    "durations",
-    "easings",
-    "animations",
-    "aspectRatios",
-    "sizes",
-    "blurs",
-];
+use base_system::{BaseSystem, TokenEntry};
+
+use crate::diagnostics::Diagnostic;
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
-    // color / bg / borderColor
     canon::is_color_prop(prop)
 }
 
+/// Resolves a raw token value to its CSS custom property representation.
+pub fn resolve_token_value<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Cow<'a, str> {
+    let trimmed = raw_val.trim();
+    if trimmed.is_empty() || trimmed.starts_with("var(") {
+        return Cow::Borrowed(raw_val);
+    }
+
+    let unbraced = strip_braces(trimmed);
+    if let Some(font_var) = resolve_font_token(prop, unbraced, system) {
+        return Cow::Owned(font_var);
+    }
+
+    if is_color_prop(prop) {
+        if let Some(keyword) = colors_keyword(unbraced) {
+            return Cow::Owned(keyword.to_string());
+        }
+    }
+
+    let (path, opacity) = split_opacity(unbraced);
+    if let Some(entry) = lookup_entry(prop, path, system) {
+        return Cow::Owned(format_entry(entry, opacity));
+    }
+
+    if looks_like_token_path(unbraced) {
+        diagnostics.push(Diagnostic::warning(format!(
+            "unknown token path `{unbraced}`"
+        )));
+    }
+
+    Cow::Borrowed(raw_val)
+}
+
+fn strip_braces(trimmed: &str) -> &str {
+    if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
+        &trimmed[1..trimmed.len() - 1]
+    } else {
+        trimmed
+    }
+}
+
+fn colors_keyword(path: &str) -> Option<&str> {
+    let rest = path.strip_prefix("colors.").unwrap_or(path);
+    if is_css_color_keyword(rest) {
+        Some(rest)
+    } else {
+        None
+    }
+}
+
 fn is_css_color_keyword(val: &str) -> bool {
-    // colors.white / colors.transparent → passthrough
     matches!(
         val.to_ascii_lowercase().as_str(),
         "transparent"
@@ -47,30 +83,50 @@ fn is_css_color_keyword(val: &str) -> bool {
     )
 }
 
-fn category_to_prefix(category: &str) -> String {
-    // fontSizes → --font-sizes    colors → --colors
-    let mut out = String::with_capacity(category.len() + 4);
-    out.push_str("--");
-    for ch in category.chars() {
-        if ch.is_ascii_uppercase() {
-            out.push('-');
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push(ch);
-        }
+fn resolve_font_token(prop: &str, trimmed: &str, system: &BaseSystem) -> Option<String> {
+    if (prop == "fontFamily" || prop == "ff") && system.fonts().has_family(trimmed) {
+        Some(format!("var(--fonts-{trimmed})"))
+    } else {
+        None
     }
-    out
 }
 
-fn format_token_var(category: &str, path: &str) -> String {
-    // colors.blue.600 → var(--colors-blue-600)
-    let prefix = category_to_prefix(category);
-    let normalized = path.replace('.', "-");
-    format!("var({prefix}-{normalized})")
+fn lookup_entry<'a>(prop: &str, path: &str, system: &'a BaseSystem) -> Option<&'a TokenEntry> {
+    if let Some(entry) = system.token(path) {
+        return Some(entry);
+    }
+    if is_color_prop(prop) {
+        system.token(&format!("colors.{path}"))
+    } else {
+        None
+    }
+}
+
+fn split_opacity(path: &str) -> (&str, Option<&str>) {
+    let Some((base, opacity)) = path.rsplit_once('/') else {
+        return (path, None);
+    };
+    if opacity_suffix(opacity) {
+        (base, Some(opacity))
+    } else {
+        (path, None)
+    }
+}
+
+fn opacity_suffix(opacity: &str) -> bool {
+    let digits = opacity.strip_suffix('%').unwrap_or(opacity);
+    !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit())
+}
+
+fn format_entry(entry: &TokenEntry, opacity: Option<&str>) -> String {
+    let var_expr = format!("var({})", entry.css_var);
+    match opacity {
+        Some(opacity) => format_color_mix(&var_expr, opacity),
+        None => var_expr,
+    }
 }
 
 fn format_color_mix(var_expr: &str, opacity: &str) -> String {
-    // blue.600/50 → color-mix(in srgb, var(--colors-blue-600) 50%, transparent)
     let pct = if opacity.ends_with('%') {
         opacity.to_string()
     } else {
@@ -79,103 +135,32 @@ fn format_color_mix(var_expr: &str, opacity: &str) -> String {
     format!("color-mix(in srgb, {var_expr} {pct}, transparent)")
 }
 
-fn resolve_category_path(category: &str, path: &str) -> String {
-    if category == "colors" && is_css_color_keyword(path) {
-        // colors.white
-        return path.to_string();
-    }
-
-    if let Some((base, opacity)) = path.split_once('/') {
-        // colors.blue.600/50
-        let var_expr = format_token_var(category, base);
-        format_color_mix(&var_expr, opacity)
-    } else {
-        // colors.blue.600
-        format_token_var(category, path)
-    }
-}
-
-fn is_potential_token_path(val: &str) -> bool {
-    // blue.600  — not var(...) or #fff
-    if val.is_empty() || val.starts_with("var(") || val.starts_with('#') {
+fn looks_like_token_path(val: &str) -> bool {
+    if val.is_empty() || val.starts_with('#') || val.contains(' ') || !val.contains('.') {
         return false;
     }
-    val.contains('.') && !val.contains(' ')
-}
-
-fn resolve_font_token(prop: &str, trimmed: &str, fonts: &FontScale) -> Option<String> {
-    // fontFamily="sans" / ff="mono"
-    if (prop == "fontFamily" || prop == "ff") && fonts.has_family(trimmed) {
-        Some(format!("var(--fonts-{trimmed})"))
-    } else {
-        None
-    }
-}
-
-fn resolve_category_token(trimmed: &str) -> Option<String> {
-    // colors.blue.600  /  radii.md  /  fonts.mono
-    for category in KNOWN_CATEGORIES {
-        if let Some(rest) = trimmed.strip_prefix(category) {
-            if let Some(path) = rest.strip_prefix('.') {
-                return Some(resolve_category_path(category, path));
-            }
-        }
-    }
-    None
-}
-
-/// Resolves a raw token value to its CSS custom property representation.
-pub fn resolve_token_value<'a>(
-    prop: &str,
-    raw_val: &'a str,
-    fonts: &FontScale,
-) -> Cow<'a, str> {
-    // color: 'blue.600'  /  bg: 'colors.blue.600/50'  /  {blue.600}
-    let trimmed = raw_val.trim();
-    if trimmed.is_empty() || trimmed.starts_with("var(") {
-        return Cow::Borrowed(raw_val);
-    }
-
-    let unbraced = if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
-        // {blue.600}
-        &trimmed[1..trimmed.len() - 1]
-    } else {
-        trimmed
-    };
-
-    if let Some(font_var) = resolve_font_token(prop, unbraced, fonts) {
-        return Cow::Owned(font_var);
-    }
-
-    if let Some(cat_var) = resolve_category_token(unbraced) {
-        return Cow::Owned(cat_var);
-    }
-
-    if is_color_prop(prop) && is_potential_token_path(unbraced) {
-        // color: 'blue.600'  (bare, no colors. prefix)
-        return Cow::Owned(resolve_category_path("colors", unbraced));
-    }
-
-    Cow::Borrowed(raw_val)
+    let first = val.split('.').next().unwrap_or("");
+    first.chars().any(|ch| ch.is_ascii_alphabetic())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::FontScale;
 
-    fn resolve(prop: &str, raw: &str) -> Cow<'static, str> {
-        Cow::Owned(
-            resolve_token_value(prop, raw, &FontScale::default_scale()).into_owned(),
-        )
+    fn resolve(prop: &str, raw: &str) -> String {
+        let mut diagnostics = Vec::new();
+        resolve_token_value(prop, raw, BaseSystem::lib_fixture(), &mut diagnostics).into_owned()
     }
 
     #[test]
     fn test_category_prefixed_colors() {
-        assert_eq!(resolve("color", "colors.blue.600"), "var(--colors-blue-600)");
         assert_eq!(
-            resolve("bg", "colors.reference.text"),
-            "var(--colors-reference-text)"
+            resolve("color", "colors.blue.600"),
+            "var(--colors-blue-600)"
+        );
+        assert_eq!(
+            resolve("bg", "colors.ui.field.border"),
+            "var(--colors-ui-field-border)"
         );
         assert_eq!(resolve("color", "colors.white"), "white");
         assert_eq!(resolve("color", "colors.transparent"), "transparent");
@@ -184,10 +169,7 @@ mod tests {
     #[test]
     fn test_bare_color_tokens() {
         assert_eq!(resolve("bg", "blue.600"), "var(--colors-blue-600)");
-        assert_eq!(
-            resolve("borderColor", "gray.800"),
-            "var(--colors-gray-800)"
-        );
+        assert_eq!(resolve("borderColor", "gray.800"), "var(--colors-gray-800)");
     }
 
     #[test]
@@ -204,11 +186,42 @@ mod tests {
 
     #[test]
     fn test_non_color_categories() {
-        assert_eq!(
-            resolve("fontFamily", "fonts.mono"),
-            "var(--fonts-mono)"
-        );
+        assert_eq!(resolve("fontFamily", "fonts.mono"), "var(--fonts-mono)");
         assert_eq!(resolve("borderRadius", "radii.md"), "var(--radii-md)");
-        assert_eq!(resolve("fontSize", "fontSizes.xl"), "var(--font-sizes-xl)");
+    }
+
+    #[test]
+    fn test_css_color_keywords_passthrough() {
+        assert_eq!(resolve("color", "transparent"), "transparent");
+        assert_eq!(resolve("bg", "currentColor"), "currentColor");
+        assert_eq!(resolve("borderColor", "black"), "black");
+        assert_eq!(resolve("color", "white"), "white");
+        assert_eq!(resolve("color", "inherit"), "inherit");
+    }
+
+    #[test]
+    fn test_non_color_does_not_treat_bare_dots_as_colors() {
+        let mut diagnostics = Vec::new();
+        let css = resolve_token_value(
+            "mt",
+            "blue.600",
+            BaseSystem::lib_fixture(),
+            &mut diagnostics,
+        );
+        assert_eq!(css, "blue.600");
+        assert_eq!(diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn test_unknown_path_passthrough_warns() {
+        let mut diagnostics = Vec::new();
+        let css = resolve_token_value(
+            "width",
+            "fontSizes.xl",
+            BaseSystem::lib_fixture(),
+            &mut diagnostics,
+        );
+        assert_eq!(css, "fontSizes.xl");
+        assert_eq!(diagnostics.len(), 1);
     }
 }

@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-DIAG-02/input/src/dynamic.ts"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal template expression for prop 'width'",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-DIAG-02/input/src/dynamic.ts"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic computed property key encountered in style object",
+    "file": "/Users/ryn/Developer/reference-ui/packages/reference-rs/modules/atomic/tests/cases/ATM-DIAG-02/input/src/dynamic.ts"
+  }
+]

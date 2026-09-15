@@ -1,6 +1,6 @@
 //! Orchestration pipeline for transforming raw styling wants into fully resolved atomic utilities.
 //! Coordinates dialect utilities (`font`, `weight`, `container`, `size`, `r`), shorthand expansion, rhythm, and tokens.
-//! Font tracking, named weights, and breakpoint widths come from config ingest, not a second preset table here.
+//! Font tracking, named weights, and token lookup come from `BaseSystem`, not a second preset table here.
 
 pub mod conditions;
 pub mod container;
@@ -11,28 +11,40 @@ pub mod shorthands;
 pub mod size;
 pub mod tokens;
 
-use crate::atom::{Atom, AtomValue, Want};
-use crate::config::FontScale;
+use base_system::BaseSystem;
 use smallvec::SmallVec;
+
+use crate::atom::{Atom, AtomValue, Want};
+use crate::diagnostics::Diagnostic;
+
+/// Pass state for one want → atom lowering.
+pub struct ResolveSession<'a> {
+    pub system: &'a BaseSystem,
+    pub diagnostics: &'a mut Vec<Diagnostic>,
+}
 
 /// Resolve a raw styling want into one or more canonical atomic declarations.
 pub fn resolve_want(want: &Want) -> Vec<Atom> {
-    // mt: '2r'  /  borderBottom: '3px solid'  /  color: 'blue.600'
-    resolve_want_with(want, &FontScale::default_scale())
+    let mut diagnostics = Vec::new();
+    let system = BaseSystem::default();
+    let mut session = ResolveSession {
+        system: &system,
+        diagnostics: &mut diagnostics,
+    };
+    resolve_want_with(want, &mut session)
 }
 
-/// Resolve a want against an ingested font scale.
-pub fn resolve_want_with(want: &Want, fonts: &FontScale) -> Vec<Atom> {
-    // font="sans" against FontScale from font() fragments
+/// Resolve a want against an ingested base system.
+pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
     if !canon::is_known_style_prop(&want.prop) {
         return Vec::new();
     }
-    let pairs = expand_or_passthrough(want, fonts);
+    let pairs = expand_or_passthrough(want, session.system);
     let clean_when: SmallVec<[Box<str>; 2]> = sanitize_conditions(&want.when);
 
     let mut atoms = Vec::with_capacity(pairs.len());
     for (prop, val) in pairs {
-        let final_val = resolve_atom_value(&prop, val, fonts);
+        let final_val = resolve_atom_value(&prop, val, session);
         atoms.push(Atom::new(
             prop,
             final_val,
@@ -43,9 +55,8 @@ pub fn resolve_want_with(want: &Want, fonts: &FontScale) -> Vec<Atom> {
     atoms
 }
 
-fn expand_or_passthrough(want: &Want, fonts: &FontScale) -> Vec<(Box<str>, AtomValue)> {
-    // font="sans"  /  borderBottom: '3px solid'  /  mt: '2r'
-    if let Some(expanded) = lower_macro(want, fonts) {
+fn expand_or_passthrough(want: &Want, system: &BaseSystem) -> Vec<(Box<str>, AtomValue)> {
+    if let Some(expanded) = lower_macro(want, system) {
         expanded
     } else if let Some(expanded) = shorthands::expand_shorthand(&want.prop, &want.value) {
         expanded
@@ -54,38 +65,32 @@ fn expand_or_passthrough(want: &Want, fonts: &FontScale) -> Vec<(Box<str>, AtomV
     }
 }
 
-fn lower_macro(want: &Want, fonts: &FontScale) -> Option<Vec<(Box<str>, AtomValue)>> {
+fn lower_macro(want: &Want, system: &BaseSystem) -> Option<Vec<(Box<str>, AtomValue)>> {
     let prop = want.prop.as_ref();
     if is_runtime_owned(prop) {
-        // variant="primary"  /  colorMode="dark"
         return Some(Vec::new());
     }
+    let fonts = system.fonts();
     if prop == "font" {
-        // font="sans"
         return Some(font::lower_font(want.value.class_name_str(), fonts));
     }
     if prop == "weight" {
-        // weight="bold"  /  weight="sans.bold"
         return Some(font::lower_weight(want.value.class_name_str(), fonts));
     }
     if prop == "container" {
-        // container="sidebar"
         return Some(container::lower(want));
     }
     if prop == "size" {
-        // size="20px"
         return Some(size::lower(want));
     }
     None
 }
 
 fn is_runtime_owned(prop: &str) -> bool {
-    // variant="primary"  /  colorMode="dark"
     matches!(prop, "variant" | "colorMode")
 }
 
 fn sanitize_conditions(conditions: &[Box<str>]) -> SmallVec<[Box<str>; 2]> {
-    // when: ['base', '_hover'] → ['_hover']
     conditions
         .iter()
         .filter(|w| w.as_ref() != "base")
@@ -93,11 +98,11 @@ fn sanitize_conditions(conditions: &[Box<str>]) -> SmallVec<[Box<str>; 2]> {
         .collect()
 }
 
-fn resolve_atom_value(prop: &str, val: AtomValue, fonts: &FontScale) -> AtomValue {
-    // mt: '2r' → calc(...)   /  color: 'blue.600' → var(--colors-blue-600)
+fn resolve_atom_value(prop: &str, val: AtomValue, session: &mut ResolveSession<'_>) -> AtomValue {
     let val_str = val.class_name_str();
     let rhythm_resolved = rhythm::resolve_rhythm(val_str);
-    let token_resolved = tokens::resolve_token_value(prop, &rhythm_resolved, fonts);
+    let token_resolved =
+        tokens::resolve_token_value(prop, &rhythm_resolved, session.system, session.diagnostics);
 
     if token_resolved != val_str {
         AtomValue::Token {
@@ -112,8 +117,17 @@ fn resolve_atom_value(prop: &str, val: AtomValue, fonts: &FontScale) -> AtomValu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{FontDefinitionConfig, FontScale};
+    use base_system::{FontDefinition, FontScale};
     use indexmap::IndexMap;
+
+    fn resolve_with(want: &Want, system: &BaseSystem) -> Vec<Atom> {
+        let mut diagnostics = Vec::new();
+        let mut session = ResolveSession {
+            system,
+            diagnostics: &mut diagnostics,
+        };
+        resolve_want_with(want, &mut session)
+    }
 
     #[test]
     fn test_resolve_rhythm_want() {
@@ -142,7 +156,7 @@ mod tests {
     #[test]
     fn test_resolve_token_want() {
         let want = Want::new("color", AtomValue::String("blue.600".into()));
-        let atoms = resolve_want(&want);
+        let atoms = resolve_with(&want, BaseSystem::lib_fixture());
         assert_eq!(atoms.len(), 1);
         assert_eq!(atoms[0].value.class_name_str(), "blue.600");
         assert_eq!(atoms[0].value.css_value_str(), "var(--colors-blue-600)");
@@ -161,8 +175,10 @@ mod tests {
 
     #[test]
     fn test_resolve_default_font_and_css_weight() {
+        let mut system = BaseSystem::default();
+        system.fonts = FontScale::generic();
         let want = Want::new("font", AtomValue::String("sans".into()));
-        let atoms = resolve_want(&want);
+        let atoms = resolve_with(&want, &system);
         assert_eq!(atoms.len(), 2);
         assert_eq!(atoms[0].prop.as_ref(), "fontFamily");
         assert_eq!(atoms[0].value.css_value_str(), "var(--fonts-sans)");
@@ -170,7 +186,7 @@ mod tests {
         assert_eq!(atoms[1].value.class_name_str(), "400");
 
         let weight_want = Want::new("weight", AtomValue::String("bold".into()));
-        let weight_atoms = resolve_want(&weight_want);
+        let weight_atoms = resolve_with(&weight_want, &system);
         assert_eq!(weight_atoms.len(), 1);
         assert_eq!(weight_atoms[0].prop.as_ref(), "fontWeight");
         assert_eq!(weight_atoms[0].value.class_name_str(), "700");
@@ -184,11 +200,19 @@ mod tests {
         let mut weights = IndexMap::new();
         weights.insert("normal".to_string(), "400".to_string());
         let mut map = IndexMap::new();
-        map.insert("sans".to_string(), FontDefinitionConfig { weights, css });
-        let fonts = FontScale::from_config(&map);
+        map.insert(
+            "sans".to_string(),
+            FontDefinition {
+                value: String::new(),
+                weights,
+                css,
+            },
+        );
+        let mut system = BaseSystem::default();
+        system.fonts = FontScale::from_definitions(map);
 
         let want = Want::new("font", AtomValue::String("sans".into()));
-        let atoms = resolve_want_with(&want, &fonts);
+        let atoms = resolve_with(&want, &system);
         assert_eq!(atoms.len(), 3);
         assert_eq!(atoms[1].value.class_name_str(), "normal");
         assert_eq!(atoms[2].prop.as_ref(), "letterSpacing");

@@ -7,5 +7,5 @@ pub mod literal;
 pub mod object;
 pub mod walk;
 
-pub use object::{walk_r_object, walk_style_object, ObjectWalk};
+pub use object::{walk_r_object, walk_spread_argument, walk_style_object, ObjectWalk};
 pub use walk::{walk_expression, ExpressionWalk};

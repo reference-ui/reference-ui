@@ -53,6 +53,12 @@ impl LocalConstants {
             .and_then(|obj| obj.get(prop_name))
     }
 
+    /// Look up a recorded top-level style object (`const base = { mt: '2r' }`).
+    pub fn get_object(&self, name: &str) -> Option<&BTreeMap<String, AtomValue>> {
+        // <Div {...base} />  /  css({ ...base })
+        self.objects.get(name)
+    }
+
     /// Merge another file's index; existing keys win.
     pub fn merge(&mut self, other: &LocalConstants) {
         for (k, v) in &other.scalars {

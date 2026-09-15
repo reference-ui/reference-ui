@@ -1,0 +1,5 @@
+{
+  "&[data-slot=inner]:mt:2r": "[&[data-slot=inner]]:mt_2r",
+  "_groupHover:bg:blue.500": "groupHover:bg_blue.500",
+  "_peerFocus:color:red.500": "peerFocus:c_red.500"
+}

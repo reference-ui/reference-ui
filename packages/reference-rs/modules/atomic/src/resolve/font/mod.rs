@@ -1,6 +1,6 @@
 //! Font dialect utilities: `font` and `weight` as one subsystem, matching core's font transform.
 //! Family tokens, weight tokens, and the font/weight expand live here. Other resolve folders do not know about font.
-//! Ingest stays in `config/fonts.rs`. Defaults are CSS-generic; letter-spacing tracking is a fragment, not a compiler preset.
+//! The table lives on `BaseSystem`. Generic CSS families have no lib tracking; letter-spacing arrives from the fixture.
 
 mod family;
 mod weight;

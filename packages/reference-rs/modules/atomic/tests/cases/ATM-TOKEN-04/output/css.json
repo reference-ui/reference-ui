@@ -1,0 +1,6 @@
+{
+  "bg:currentColor": "bg_currentColor",
+  "borderColor:black": "bd-c_black",
+  "color:transparent": "c_transparent",
+  "outlineColor:white": "outline-c_white"
+}

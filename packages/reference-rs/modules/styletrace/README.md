@@ -123,3 +123,12 @@ So the rule is still the same:
 - wrapper detection comes from actual prop flow
 - package support comes from extending that same analysis through dependency
 	import resolution rather than inventing a separate registry
+
+### Why atomic stations still scan every JSX tag
+
+Atomic `compile()` asks this crate for JSX host names, but hermetic
+stations usually have no synced `.reference-ui/react` primitive
+declarations. An empty primitive set yields an empty host list; atomic
+then falls back to scanning every tag (or treating file-local
+`@reference-ui/react` imports as hosts). That gap is
+[ATOMIC.md](./ATOMIC.md). Do not close it with a PascalCase name list.

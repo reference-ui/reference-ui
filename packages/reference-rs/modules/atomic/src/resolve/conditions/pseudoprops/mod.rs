@@ -11,7 +11,6 @@ const PRESETS: &[(&str, &str)] = &[
         "checked",
         "&:is(:checked, [data-checked], [aria-checked=true], [data-state=\"checked\"])",
     ),
-    ("dark", ".dark &"),
     (
         "disabled",
         "&:is(:disabled, [disabled], [data-disabled], [aria-disabled=true])",
@@ -20,7 +19,6 @@ const PRESETS: &[(&str, &str)] = &[
     ("focusVisible", "&:is(:focus-visible, [data-focus-visible])"),
     ("focusWithin", "&:focus-within"),
     ("hover", "&:is(:hover, [data-hover])"),
-    ("light", ".light &"),
     ("motionReduce", "@media (prefers-reduced-motion: reduce)"),
     (
         "motionSafe",
@@ -53,11 +51,8 @@ mod tests {
 
     #[test]
     fn test_preset_wrap_hover_and_dark() {
-        assert_eq!(
-            preset_wrap("hover"),
-            Some("&:is(:hover, [data-hover])")
-        );
-        assert_eq!(preset_wrap("dark"), Some(".dark &"));
+        assert_eq!(preset_wrap("hover"), Some("&:is(:hover, [data-hover])"));
+        assert_eq!(preset_wrap("dark"), None);
         assert_eq!(
             preset_wrap("osDark"),
             Some("@media (prefers-color-scheme: dark)")

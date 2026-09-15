@@ -5,9 +5,10 @@
 pub mod emitter;
 pub mod layers;
 pub mod name;
+mod system_layers;
 
 use crate::diagnostics::Diagnostic;
-pub use emitter::build_stylesheet;
+pub use emitter::{build_stylesheet, build_stylesheet_with};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]

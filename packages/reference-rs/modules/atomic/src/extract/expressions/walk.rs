@@ -14,9 +14,9 @@ use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
 use crate::atom::{AtomValue, Want};
-use crate::config::BreakpointScale;
 use crate::diagnostics::Diagnostic;
 use crate::extract::constants::LocalConstants;
+use base_system::BreakpointScale;
 
 /// Context for traversing an expression tree to extract style leaf values.
 pub struct ExpressionWalk<'a> {

@@ -8,16 +8,16 @@ import type { CompileRequest, CompileResult } from './types.js'
 
 export type {
   BaseSystemInput,
-  BreakpointObject,
-  BreakpointsInput,
+  BreakpointScale,
   CompileRequest,
   CompileResult,
   CssRuntime,
   Diagnostic,
   DiagnosticSeverity,
-  FontInput,
-  FontsInput,
-  TokensInput,
+  FontDefinition,
+  RecipeMatch,
+  RecipeTable,
+  TokenEntry,
   VirtualSource,
   Want,
 } from './types.js'

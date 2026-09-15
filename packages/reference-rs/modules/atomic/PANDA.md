@@ -30,8 +30,8 @@ Panda (`design-notes/crate-layering.md`): **extract → encode → emit**.
 | `pandacss_recipes` | `crates/pandacss_recipes/src/lib.rs` | `src/recipes` | Closed variant tables / compound | Encoding StyleProps into the recipe class; their `sva` slot-recipe helper |
 | `pandacss_stylesheet` | `src/lib.rs` (`compile`, `StylesheetOutput`), `emitter.rs`, `layers.rs`, `grouped.rs`, `preflight.rs`, `static_css.rs`, `conditions.rs` | **`src/stylesheet`** | CSS string, layer preamble + emit | LightningCSS optimizer, `split_css` zoo in v1, **their five-layer list** (ours is six: `reset, global, base, tokens, recipes, utilities`) |
 | `pandacss_codegen` | `src/artifacts/css/mod.rs` (`css/css`), `artifacts/cva.rs`, `conditions/mod.rs` | **`src/runtime`** | Class-map lookup + concat | `styled-system/{jsx,types,patterns,themes}` artifact farm; we author `css()` / `recipe()` in TypeScript |
-| `pandacss_tokens` | `src/{from_config,builder,token}.rs` | `src/resolve/tokens` + `src/config` | Path → `var(--…)` | Second OKLCH pipeline (ours is `tokens()` / Atlas) |
-| `pandacss_config` | `src/lib.rs` (`UserConfig`) | `src/config` | Tokens, conditions, recipes, globalCss, keyframes | `hooks`, plugin callbacks, `jsx` array as the wrapper list |
+| `pandacss_tokens` | `src/{from_config,builder,token}.rs` | `src/resolve/tokens` + `base_system` | Path → `var(--…)` | Second OKLCH pipeline (ours is `tokens()` / Atlas) |
+| `pandacss_config` | `src/lib.rs` (`UserConfig`) | `base_system::BaseSystem` | Tokens, conditions, recipes, globalCss, keyframes | `hooks`, plugin callbacks, `jsx` array as the wrapper list |
 | `pandacss_project` | `src/lib.rs` (`Project`, `System`), `codegen.rs`, `system.rs` | `src/lib.rs` `compile()` | One façade: extract → atoms → stylesheet + css | Watch transform cache, WASM, Parcel |
 
 `pandacss_fs` / `pandacss_shared` / `pandacss_tracing` / napi/wasm bindings:

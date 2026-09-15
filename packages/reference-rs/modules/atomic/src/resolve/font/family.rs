@@ -6,7 +6,7 @@
 use indexmap::IndexMap;
 
 use crate::atom::AtomValue;
-use crate::config::{FontDefinitionConfig, FontScale};
+use base_system::{FontDefinition, FontScale};
 
 /// Expand `font="sans"` into family, default weight, and any css extras from the scale.
 pub fn lower_font(name: &str, fonts: &FontScale) -> Vec<(Box<str>, AtomValue)> {
@@ -24,7 +24,7 @@ pub fn lower_font(name: &str, fonts: &FontScale) -> Vec<(Box<str>, AtomValue)> {
         .collect()
 }
 
-fn insert_preset(pairs: &mut IndexMap<String, AtomValue>, def: &FontDefinitionConfig) {
+fn insert_preset(pairs: &mut IndexMap<String, AtomValue>, def: &FontDefinition) {
     // fontWeight from css.fontWeight or weights.normal, then css extras
     pairs.insert(
         "fontWeight".to_string(),
@@ -35,7 +35,7 @@ fn insert_preset(pairs: &mut IndexMap<String, AtomValue>, def: &FontDefinitionCo
     }
 }
 
-fn default_weight(def: &FontDefinitionConfig) -> &str {
+fn default_weight(def: &FontDefinition) -> &str {
     // css: { fontWeight: 'normal' }  /  weights: { normal: '400' }  /  else 400
     def.css
         .get("fontWeight")

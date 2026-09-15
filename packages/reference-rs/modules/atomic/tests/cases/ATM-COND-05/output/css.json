@@ -1,0 +1,10 @@
+{
+  "containerName:sidebar": "cq-n_sidebar",
+  "containerType:inline-size": "cq-t_inline-size",
+  "fontFamily:sans": "font-family_sans",
+  "fontWeight:700": "font-weight_700",
+  "fontWeight:normal": "font-weight_normal",
+  "height:20px": "h_20px",
+  "letterSpacing:-0.01em": "tracking_-0.01em",
+  "width:20px": "w_20px"
+}

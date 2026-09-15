@@ -16,7 +16,7 @@ and a wrap string. It does not apply `&` to a class.
 
 ```text
 _hover / _focus / …    selector template   &:is(:hover, [data-hover])
-_dark / _light         host selector        .dark &
+_dark / _light         host selector        [data-panda-theme=dark] &
 _osDark / _print / …   @media
 ```
 
