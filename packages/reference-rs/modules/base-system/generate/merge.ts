@@ -1,7 +1,7 @@
 /**
  * Deep-merge nested token trees from the six `tokens()` call sites.
  * Categories merge by key; a duplicate leaf path with a different value is a
- * hard error. Mode leaves match dump.rs: `{ value | light | dark }` strings, so
+ * hard error. Mode leaves match spec.rs: `{ value | light | dark }` strings, so
  * a token *named* `light` whose value is itself `{ light, dark }` stays a group.
  * Keyframe tables merge by animation name; duplicate names with different steps
  * fail. Leaf-shape counts are for the generator log, not a hardcoded contract.

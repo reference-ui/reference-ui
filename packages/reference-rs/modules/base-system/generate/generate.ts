@@ -1,5 +1,5 @@
 /**
- * Build-time generator for the `@reference-ui/lib` BaseSystem dump.
+ * Build-time generator for the `@reference-ui/lib` BaseSystem spec.
  * Parses the six `tokens()` object literals, six `keyframes()` tables, and the
  * `font()` family table from `packages/reference-lib` without evaluating TypeScript,
  * merges them into a nested JSON artefact `from_json` accepts, and writes it next
@@ -19,18 +19,18 @@ import {
   parseTokensArguments,
   type JsonObject,
 } from './parse';
-import { dumpPath, FONT_FILE, KEYFRAME_FILES, libPath, TOKEN_FILES } from './sources';
+import { FONT_FILE, KEYFRAME_FILES, libPath, specPath, TOKEN_FILES } from './sources';
 
 const SYSTEM_NAME = '@reference-ui/lib';
 
-type LibDump = {
+type LibSpec = {
   name: string;
   tokens: JsonObject;
   fonts: JsonObject;
   keyframes: JsonObject;
 };
 
-function buildDump(): LibDump {
+function buildSpec(): LibSpec {
   const args: JsonObject[] = [];
   for (const rel of TOKEN_FILES) {
     const found = parseTokensArguments(libPath(rel));
@@ -65,8 +65,8 @@ function loadKeyframeTables(): JsonObject {
   return mergeKeyframeTables(tables);
 }
 
-function formatDump(dump: LibDump): string {
-  return `${JSON.stringify(dump, null, 2)}\n`;
+function formatSpec(spec: LibSpec): string {
+  return `${JSON.stringify(spec, null, 2)}\n`;
 }
 
 function firstDiff(committed: string, generated: string): string {
@@ -76,14 +76,14 @@ function firstDiff(committed: string, generated: string): string {
   for (let i = 0; i < n; i++) {
     if (left[i] !== right[i]) {
       return [
-        'base-system dump is stale (run: pnpm --filter @reference-ui/rust base-system)',
+        'base-system spec is stale (run: pnpm --filter @reference-ui/rust base-system)',
         `first difference at line ${i + 1}:`,
         `  committed: ${left[i] ?? '<eof>'}`,
         `  generated: ${right[i] ?? '<eof>'}`,
       ].join('\n');
     }
   }
-  return 'base-system dump is stale';
+  return 'base-system spec is stale';
 }
 
 function hasReferenceColors(tokens: JsonObject): boolean {
@@ -91,10 +91,10 @@ function hasReferenceColors(tokens: JsonObject): boolean {
   return typeof colors === 'object' && 'reference' in colors;
 }
 
-function logStats(dump: LibDump, shapes: LeafShapes): void {
-  const families = Object.keys(dump.fonts).length;
-  const keyframes = Object.keys(dump.keyframes).length;
-  const reference = hasReferenceColors(dump.tokens);
+function logStats(spec: LibSpec, shapes: LeafShapes): void {
+  const families = Object.keys(spec.fonts).length;
+  const keyframes = Object.keys(spec.keyframes).length;
+  const reference = hasReferenceColors(spec.tokens);
   console.log(
     `[base-system] ${shapes.total} token leaves` +
       ` (value=${shapes.value} light+dark=${shapes.lightDark} value+dark=${shapes.valueDark}` +
@@ -107,23 +107,23 @@ function logStats(dump: LibDump, shapes: LeafShapes): void {
 
 function run(argv: string[]): void {
   const check = argv.includes('--check');
-  const dump = buildDump();
-  const generated = formatDump(dump);
-  logStats(dump, countLeaves(dump.tokens));
+  const spec = buildSpec();
+  const generated = formatSpec(spec);
+  logStats(spec, countLeaves(spec.tokens));
   if (check) {
-    if (!fs.existsSync(dumpPath)) {
-      fail(`committed dump missing at ${dumpPath}; run pnpm --filter @reference-ui/rust base-system`);
+    if (!fs.existsSync(specPath)) {
+      fail(`committed spec missing at ${specPath}; run pnpm --filter @reference-ui/rust base-system`);
     }
-    const committed = fs.readFileSync(dumpPath, 'utf8');
+    const committed = fs.readFileSync(specPath, 'utf8');
     if (committed !== generated) {
       fail(firstDiff(committed, generated));
     }
-    console.log('[base-system] dump is current');
+    console.log('[base-system] spec is current');
     return;
   }
-  fs.mkdirSync(path.dirname(dumpPath), { recursive: true });
-  fs.writeFileSync(dumpPath, generated);
-  console.log(`[base-system] wrote ${dumpPath}`);
+  fs.mkdirSync(path.dirname(specPath), { recursive: true });
+  fs.writeFileSync(specPath, generated);
+  console.log(`[base-system] wrote ${specPath}`);
 }
 
 try {

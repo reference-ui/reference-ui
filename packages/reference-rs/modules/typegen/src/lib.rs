@@ -3,11 +3,11 @@
 //! is the definition, not the atom set. Users never write `.mt_2r` in these
 //! files. This is not a jsx factory and not a patterns farm. Token, recipe,
 //! font, and style emission walks `BaseSystem`; missing categories and recipes
-//! are omitted rather than `never`. Style dumps without fonts still print
+//! are omitted rather than `never`. Style systems without fonts still print
 //! `FontRegistry {}` so FontProps cannot collapse StyleProps. Compound `when`
 //! rows that name unknown axes are skipped. `emit_dts` is always open-mode;
 //! strict category wrappers live on `emit_dts_with` because `strict` is not a
-//! Dump field.
+//! spec field.
 
 mod emit;
 

@@ -128,11 +128,11 @@ export async function compileCase(
 }
 
 function readOptionalBaseSystem(rootDir: string): BaseSystemInput | undefined {
-  const dumpPath = path.join(rootDir, 'baseSystem.json')
-  if (!fs.existsSync(dumpPath)) {
+  const specPath = path.join(rootDir, 'baseSystem.json')
+  if (!fs.existsSync(specPath)) {
     return undefined
   }
-  return JSON.parse(fs.readFileSync(dumpPath, 'utf8')) as BaseSystemInput
+  return JSON.parse(fs.readFileSync(specPath, 'utf8')) as BaseSystemInput
 }
 
 /** Decoded class names that appear as class selectors inside `@layer name`. */

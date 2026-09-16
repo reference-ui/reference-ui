@@ -1,37 +1,37 @@
-//! Lower a nested `BaseSystemDump` into today's indexed `BaseSystem`.
+//! Lower a nested `BaseSystemSpec` into today's indexed `BaseSystem`.
 //! Walks open token categories, resolves the seven-case light/dark table, kebabs only the
 //! category when computing `cssVar`, and keeps brace aliases verbatim while failing closed on
-//! cycles among keys that exist. Font families become `fonts.{name}` tokens unless the dump
+//! cycles among keys that exist. Font families become `fonts.{name}` tokens unless the spec
 //! already declared that path. Duplicates error; `insert_leaf` is not used.
 
-use crate::dump::{
-    BaseSystemDump, DumpBreakpointWidth, FromJsonError, TokenDumpLeaf, TokenDumpNode,
+use crate::spec::{
+    BaseSystemSpec, FromJsonError, SpecBreakpointWidth, TokenSpecLeaf, TokenSpecNode,
 };
 use crate::tokens::{css_custom_property, TokenDictionary, TokenEntry};
 use crate::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
 use indexmap::IndexMap;
 use std::collections::HashSet;
 
-/// Parse an evaluated JSON dump and index it.
+/// Parse an evaluated JSON spec and index it.
 pub(crate) fn from_json(json: &str) -> Result<BaseSystem, FromJsonError> {
-    lower(BaseSystemDump::from_json(json)?)
+    lower(BaseSystemSpec::from_json(json)?)
 }
 
-fn lower(dump: BaseSystemDump) -> Result<BaseSystem, FromJsonError> {
+fn lower(spec: BaseSystemSpec) -> Result<BaseSystem, FromJsonError> {
     let mut ctx = LoweringContext::default();
-    ctx.index_tokens(&dump.tokens)?;
+    ctx.index_tokens(&spec.tokens)?;
     ctx.detect_alias_cycles()?;
-    ctx.index_font_tokens(&dump.fonts)?;
+    ctx.index_font_tokens(&spec.fonts)?;
     Ok(BaseSystem {
-        name: dump.name,
+        name: spec.name,
         tokens: TokenDictionary::from_entries(ctx.tokens),
-        fonts: FontScale::from_definitions(dump.fonts),
-        breakpoints: lower_breakpoints(dump.breakpoints),
-        conditions: dump.conditions.into(),
-        global_css: dump.global_css,
-        keyframes: dump.keyframes,
-        recipes: dump.recipes,
-        static_css: dump.static_css,
+        fonts: FontScale::from_definitions(spec.fonts),
+        breakpoints: lower_breakpoints(spec.breakpoints),
+        conditions: spec.conditions.into(),
+        global_css: spec.global_css,
+        keyframes: spec.keyframes,
+        recipes: spec.recipes,
+        static_css: spec.static_css,
     })
 }
 
@@ -43,7 +43,7 @@ struct LoweringContext {
 impl LoweringContext {
     fn index_tokens(
         &mut self,
-        tokens: &IndexMap<String, TokenDumpNode>,
+        tokens: &IndexMap<String, TokenSpecNode>,
     ) -> Result<(), FromJsonError> {
         for (category, node) in tokens {
             self.walk(category, "", node)?;
@@ -55,14 +55,14 @@ impl LoweringContext {
         &mut self,
         category: &str,
         path: &str,
-        node: &TokenDumpNode,
+        node: &TokenSpecNode,
     ) -> Result<(), FromJsonError> {
         match node {
-            TokenDumpNode::Scalar => Err(FromJsonError::InvalidLeaf {
+            TokenSpecNode::Scalar => Err(FromJsonError::InvalidLeaf {
                 path: full_path(category, path),
             }),
-            TokenDumpNode::Leaf(leaf) => self.insert_resolved(category, path, leaf),
-            TokenDumpNode::Group(children) => {
+            TokenSpecNode::Leaf(leaf) => self.insert_resolved(category, path, leaf),
+            TokenSpecNode::Group(children) => {
                 for (segment, child) in children {
                     let child_path = join_path(path, segment);
                     self.walk(category, &child_path, child)?;
@@ -76,7 +76,7 @@ impl LoweringContext {
         &mut self,
         category: &str,
         path: &str,
-        leaf: &TokenDumpLeaf,
+        leaf: &TokenSpecLeaf,
     ) -> Result<(), FromJsonError> {
         let key = full_path(category, path);
         let (light, dark) = resolve_modes(&key, leaf)?;
@@ -199,7 +199,7 @@ fn alias_target(value: &str) -> Option<&str> {
 
 fn resolve_modes(
     path: &str,
-    leaf: &TokenDumpLeaf,
+    leaf: &TokenSpecLeaf,
 ) -> Result<(String, Option<String>), FromJsonError> {
     pair_from_slots(&leaf.value, &leaf.light, &leaf.dark).ok_or_else(|| {
         FromJsonError::InvalidLeaf {
@@ -226,7 +226,7 @@ fn pair_from_slots(
     Some((single.clone(), None))
 }
 
-fn lower_breakpoints(map: IndexMap<String, DumpBreakpointWidth>) -> BreakpointScale {
+fn lower_breakpoints(map: IndexMap<String, SpecBreakpointWidth>) -> BreakpointScale {
     BreakpointScale::from_named_widths(map.into_iter().map(|(name, width)| (name, width.into_px())))
 }
 

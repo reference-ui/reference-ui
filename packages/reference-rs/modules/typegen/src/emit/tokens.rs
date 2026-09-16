@@ -1,7 +1,7 @@
 //! Category-relative token unions plus the aggregate `Tokens` index.
-//! Walks `tokens.iter()`, strips the dump category prefix so
+//! Walks `tokens.iter()`, strips the spec category prefix so
 //! `colors.brand.primary` becomes `brand.primary`, and emits sorted unique
-//! string-literal unions. Unknown dump categories are skipped. Empty
+//! string-literal unions. Unknown spec categories are skipped. Empty
 //! categories are omitted rather than printed as `never`.
 
 use super::ts::join_union;
@@ -9,42 +9,42 @@ use base_system::BaseSystem;
 use std::collections::{BTreeMap, BTreeSet};
 
 struct CategorySpec {
-    dump: &'static str,
+    category: &'static str,
     ts_type: &'static str,
 }
 
-/// Dump category names as `from_json` stores them, mapped to SPEC type aliases.
+/// Spec category names as `from_json` stores them, mapped to SPEC type aliases.
 const CATEGORIES: &[CategorySpec] = &[
     CategorySpec {
-        dump: "colors",
+        category: "colors",
         ts_type: "ColorToken",
     },
     CategorySpec {
-        dump: "spacing",
+        category: "spacing",
         ts_type: "SpacingToken",
     },
     CategorySpec {
-        dump: "radii",
+        category: "radii",
         ts_type: "RadiusToken",
     },
     CategorySpec {
-        dump: "fontSizes",
+        category: "fontSizes",
         ts_type: "FontSizeToken",
     },
     CategorySpec {
-        dump: "fontWeights",
+        category: "fontWeights",
         ts_type: "FontWeightToken",
     },
     CategorySpec {
-        dump: "lineHeights",
+        category: "lineHeights",
         ts_type: "LineHeightToken",
     },
     CategorySpec {
-        dump: "shadows",
+        category: "shadows",
         ts_type: "ShadowToken",
     },
     CategorySpec {
-        dump: "zIndex",
+        category: "zIndex",
         ts_type: "ZIndexToken",
     },
 ];
@@ -54,7 +54,7 @@ pub(super) fn token_unions(system: &BaseSystem) -> String {
     let mut out = String::new();
     let mut fields = Vec::new();
     for spec in CATEGORIES {
-        let Some(lits) = grouped.get(spec.dump) else {
+        let Some(lits) = grouped.get(spec.category) else {
             continue;
         };
         if !out.is_empty() {
@@ -74,15 +74,15 @@ fn group_literals(system: &BaseSystem) -> BTreeMap<&'static str, BTreeSet<String
             continue;
         };
         grouped
-            .entry(spec.dump)
+            .entry(spec.category)
             .or_default()
-            .insert(relative_path(key, spec.dump).to_string());
+            .insert(relative_path(key, spec.category).to_string());
     }
     grouped
 }
 
 fn spec_for(category: &str) -> Option<&'static CategorySpec> {
-    CATEGORIES.iter().find(|spec| spec.dump == category)
+    CATEGORIES.iter().find(|spec| spec.category == category)
 }
 
 fn relative_path<'a>(key: &'a str, category: &str) -> &'a str {
@@ -109,7 +109,7 @@ fn push_tokens_interface(out: &mut String, fields: &[&CategorySpec]) {
     out.push_str("export interface Tokens {\n");
     for spec in fields {
         out.push_str("  ");
-        out.push_str(spec.dump);
+        out.push_str(spec.category);
         out.push_str(": ");
         out.push_str(spec.ts_type);
         out.push_str(";\n");

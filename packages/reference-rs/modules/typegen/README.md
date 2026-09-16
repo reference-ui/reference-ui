@@ -41,7 +41,7 @@ as `never`. An empty system emits an empty string — still no `styled.div`.
 `emit_dts_with(system, &EmitOptions { strict })` wraps `BaseSystemStyleObject`
 (`StyleProps`) as `StrictColorProps` / `StrictRadiiProps` / `StrictSpacingProps`
 in declaration order. Unknown and duplicate strict names are skipped. `strict`
-is not a Dump field and typegen does not parse `ui.config.ts`.
+is not a spec field and typegen does not parse `ui.config.ts`.
 
 Users never write `.mt_2r` in these files. Atomic class names are not a public
 API.
@@ -53,7 +53,7 @@ API.
 - Emit runtime token JS (`tokens.mjs`, `token(`)
 - Depend on `atomic`
 - Dump all of `csstype.Properties` or import `@reference-ui/styled`
-- Kill the leftover Panda `SystemStyleObject` alias in `reference-core`
+- Host-wire the printer into `reference-core` — that is [PLAN.md](./PLAN.md) / root Track T
 
 We author `css()`; we still generate the unions. The **input** is the base
 system either way.

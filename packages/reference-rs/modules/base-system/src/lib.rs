@@ -1,16 +1,16 @@
 //! Portable design-system definition Rust consumes after TypeScript has already
-//! evaluated `tokens()` / `font()` / `keyframes()` / `globalCss()` and dumped the
+//! evaluated `tokens()` / `font()` / `keyframes()` / `globalCss()` and serialized the
 //! objects. This crate does not run author modules. Atomic asks whether a name is
 //! a token, which wrap `_hover` uses, which font/breakpoint/keyframe tables apply,
 //! and which `staticCss` utilities to pre-emit; recipes are static schema only.
-//! `lib_fixture()` loads the generated dump through `from_json` and overlays host
+//! `lib_fixture()` loads the generated spec through `from_json` and overlays host
 //! conditions, breakpoints, and `--spacing-root`. `from_json` lowers a nested
-//! `BaseSystemDump`; `compile()` still deserializes the indexed shape directly.
+//! `BaseSystemSpec`; `compile()` still deserializes the indexed shape directly.
 
 mod breakpoints;
 mod condition_map;
 mod conditions;
-mod dump;
+mod spec;
 mod fonts;
 mod lib_fixture;
 mod lower;
@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 pub use breakpoints::BreakpointScale;
 pub use condition_map::ConditionMap;
-pub use dump::FromJsonError;
+pub use spec::FromJsonError;
 pub use fonts::{FontDefinition, FontScale};
 pub use motion::{AnimationKeyframeGap, KeyframeDefinition};
 pub use recipes::{CompoundVariant, RecipeDefinition};
@@ -62,7 +62,7 @@ pub struct BaseSystem {
 }
 
 impl BaseSystem {
-    /// Nested evaluated dump → indexed query engine. Rejects TypeScript source and unknown keys.
+    /// Nested evaluated spec → indexed query engine. Rejects TypeScript source and unknown keys.
     pub fn from_json(json: &str) -> Result<Self, FromJsonError> {
         lower::from_json(json)
     }

@@ -1,10 +1,10 @@
-//! Authored nested dump of one design-system utterance.
-//! TypeScript evaluates `tokens()` / `font()` / `keyframes()` / `globalCss()` and serializes the
-//! objects; this type is that JSON. Leaves carry `value` / `light` / `dark` strings. When `light`
-//! or `dark` is itself an object, it is a nested group (a token *named* `light`) rather than a
-//! mode slot. Keyframes are name → steps; recipes are static `base` / `variants` tables.
-//! Unknown top-level keys fail closed. Extra leaf keys and `fontFace` are ignored until later
-//! steps grow those types.
+//! Authored nested spec of one design-system utterance.
+//! TypeScript evaluates `tokens()` / `font()` / `keyframes()` / `globalCss()` and serializes
+//! the objects; this type is that JSON — the wire form fragments specify.
+//! Leaves carry `value` / `light` / `dark` strings. When `light` or `dark` is itself an object,
+//! it is a nested group (a token *named* `light`) rather than a mode slot. Keyframes are name →
+//! steps; recipes are static `base` / `variants` tables. Unknown top-level keys fail closed.
+//! Extra leaf keys and `fontFace` are ignored until later steps grow those types.
 
 use crate::fonts::FontDefinition;
 use crate::{KeyframeDefinition, RecipeDefinition, StaticCss};
@@ -15,7 +15,7 @@ use serde_json::Value;
 use std::error::Error;
 use std::fmt;
 
-/// Failure lowering an evaluated JSON dump into an indexed `BaseSystem`.
+/// Failure lowering an evaluated JSON spec into an indexed `BaseSystem`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FromJsonError {
     Parse(String),
@@ -29,7 +29,7 @@ impl fmt::Display for FromJsonError {
         match self {
             Self::Parse(message) => write!(
                 f,
-                "base-system consumes evaluated JSON dumps only: {message}"
+                "base-system consumes evaluated JSON only: {message}"
             ),
             Self::InvalidLeaf { path } => write!(f, "invalid token leaf at {path}"),
             Self::DuplicatePath { path } => write!(f, "duplicate token path {path}"),
@@ -42,7 +42,7 @@ impl Error for FromJsonError {}
 
 /// Mode slots on one token leaf. Extra keys are ignored (no `deny_unknown_fields`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct TokenDumpLeaf {
+pub(crate) struct TokenSpecLeaf {
     pub value: Option<String>,
     pub light: Option<String>,
     pub dark: Option<String>,
@@ -50,24 +50,24 @@ pub(crate) struct TokenDumpLeaf {
 
 /// Nested token tree: a mode leaf, a group of children, or a scalar that lowering rejects.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum TokenDumpNode {
-    Leaf(TokenDumpLeaf),
-    Group(IndexMap<String, TokenDumpNode>),
+pub(crate) enum TokenSpecNode {
+    Leaf(TokenSpecLeaf),
+    Group(IndexMap<String, TokenSpecNode>),
     Scalar,
 }
 
-/// Nested dump wire format. Distinct from indexed `BaseSystem` (`names`/`widths`, flat tokens).
+/// Nested spec wire format. Distinct from indexed `BaseSystem` (`names`/`widths`, flat tokens).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub(crate) struct BaseSystemDump {
+pub(crate) struct BaseSystemSpec {
     #[serde(default)]
     pub name: String,
     #[serde(default)]
-    pub tokens: IndexMap<String, TokenDumpNode>,
+    pub tokens: IndexMap<String, TokenSpecNode>,
     #[serde(default)]
     pub fonts: IndexMap<String, FontDefinition>,
     #[serde(default)]
-    pub breakpoints: IndexMap<String, DumpBreakpointWidth>,
+    pub breakpoints: IndexMap<String, SpecBreakpointWidth>,
     #[serde(default)]
     pub conditions: IndexMap<String, String>,
     #[serde(default)]
@@ -80,15 +80,15 @@ pub(crate) struct BaseSystemDump {
     pub static_css: StaticCss,
 }
 
-/// Dump breakpoint width: `"640px"` or `{ "value": "640px" }`.
+/// Spec breakpoint width: `"640px"` or `{ "value": "640px" }`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(untagged)]
-pub(crate) enum DumpBreakpointWidth {
+pub(crate) enum SpecBreakpointWidth {
     Bare(String),
     Wrapped { value: String },
 }
 
-impl DumpBreakpointWidth {
+impl SpecBreakpointWidth {
     pub(crate) fn into_px(self) -> String {
         let raw = match self {
             Self::Bare(value) | Self::Wrapped { value } => value,
@@ -97,37 +97,37 @@ impl DumpBreakpointWidth {
     }
 }
 
-impl BaseSystemDump {
+impl BaseSystemSpec {
     pub(crate) fn from_json(json: &str) -> Result<Self, FromJsonError> {
         serde_json::from_str(json).map_err(|err| FromJsonError::Parse(err.to_string()))
     }
 }
 
-impl<'de> Deserialize<'de> for TokenDumpNode {
+impl<'de> Deserialize<'de> for TokenSpecNode {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(node_from_value(Value::deserialize(deserializer)?))
     }
 }
 
-fn node_from_value(value: Value) -> TokenDumpNode {
+fn node_from_value(value: Value) -> TokenSpecNode {
     match value {
         Value::Object(map) => node_from_object(map.into_iter().collect()),
-        _ => TokenDumpNode::Scalar,
+        _ => TokenSpecNode::Scalar,
     }
 }
 
-fn node_from_object(map: IndexMap<String, Value>) -> TokenDumpNode {
+fn node_from_object(map: IndexMap<String, Value>) -> TokenSpecNode {
     if is_mode_leaf(&map) {
         return match leaf_from_object(&map) {
-            Some(leaf) => TokenDumpNode::Leaf(leaf),
-            None => TokenDumpNode::Scalar,
+            Some(leaf) => TokenSpecNode::Leaf(leaf),
+            None => TokenSpecNode::Scalar,
         };
     }
     let mut children = IndexMap::new();
     for (key, value) in map {
         children.insert(key, node_from_value(value));
     }
-    TokenDumpNode::Group(children)
+    TokenSpecNode::Group(children)
 }
 
 fn is_mode_leaf(map: &IndexMap<String, Value>) -> bool {
@@ -140,8 +140,8 @@ fn is_plain_object(value: Option<&Value>) -> bool {
     matches!(value, Some(Value::Object(_)))
 }
 
-fn leaf_from_object(map: &IndexMap<String, Value>) -> Option<TokenDumpLeaf> {
-    Some(TokenDumpLeaf {
+fn leaf_from_object(map: &IndexMap<String, Value>) -> Option<TokenSpecLeaf> {
+    Some(TokenSpecLeaf {
         value: slot(map, "value")?,
         light: slot(map, "light")?,
         dark: slot(map, "dark")?,
@@ -191,18 +191,18 @@ mod tests {
         let err = BaseSystem::from_json("tokens({ colors: { primary: '#fff' } })").unwrap_err();
         let message = err.to_string();
         assert!(
-            message.contains("evaluated JSON dumps"),
+            message.contains("evaluated JSON"),
             "unexpected parse diagnostic: {message}"
         );
     }
 
     #[test]
     fn atm_token_10_rejects_foreign_core_shape() {
-        let dump_err = BaseSystem::from_json(FOREIGN).unwrap_err();
-        let dump_message = dump_err.to_string();
+        let spec_err = BaseSystem::from_json(FOREIGN).unwrap_err();
+        let spec_message = spec_err.to_string();
         assert!(
-            dump_message.contains("unknown field"),
-            "unexpected dump diagnostic: {dump_message}"
+            spec_message.contains("unknown field"),
+            "unexpected spec diagnostic: {spec_message}"
         );
         assert!(
             serde_json::from_str::<BaseSystem>(FOREIGN).is_err(),
@@ -212,9 +212,9 @@ mod tests {
 
     #[test]
     fn from_json_empty_object_equals_default() {
-        let via_dump = BaseSystem::from_json("{}").unwrap();
+        let via_spec = BaseSystem::from_json("{}").unwrap();
         let via_index: BaseSystem = serde_json::from_str("{}").unwrap();
-        assert_eq!(via_dump, BaseSystem::default());
+        assert_eq!(via_spec, BaseSystem::default());
         assert_eq!(via_index, BaseSystem::default());
     }
 
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn dump_breakpoints_strip_px_and_stay_empty_when_omitted() {
+    fn spec_breakpoints_strip_px_and_stay_empty_when_omitted() {
         let with_widths =
             BaseSystem::from_json(r#"{"breakpoints":{"sm":"640px","md":{"value":"768px"}}}"#)
                 .unwrap();
@@ -302,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn dump_token_walk_preserves_authored_object_order() {
+    fn spec_token_walk_preserves_authored_object_order() {
         let system =
             BaseSystem::from_json(r#"{"tokens":{"colors":{"b":{"value":"1"},"a":{"value":"2"}}}}"#)
                 .unwrap();

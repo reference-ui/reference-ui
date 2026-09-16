@@ -3,25 +3,25 @@
 The definition. A portable artefact atomic and typegen query.
 
 TypeScript already evaluated `tokens()` / `font()` / `keyframes()` /
-`globalCss()` (+ declared recipes) and dumped the objects. This module
+`globalCss()` (+ declared recipes) and serialized the objects. This module
 **is that artefact**. Rust reads it. It does not run the author files.
 
 A base system is an **utterance** (this package's tokens). Canon is the
 **language**. Do not stuff one into the other.
 
-The crate keeps two shapes. `BaseSystemDump` is the authored nested
-wire format (`{ value | light | dark }` leaves, brace aliases intact).
-`BaseSystem::from_json` lowers a dump into the indexed `BaseSystem`
-query engine (flat `category.path` keys, precomputed `cssVar`).
-`compile()` still deserializes the indexed shape directly so station
-dumps keep working. `BaseSystem::default()` stays empty. `staticCss` is
-a property → token-list bag (`color: ['*']` or `bg: ['n100']`); the lib
-fixture leaves it empty so AtomSet stays small. `extends` and `layers`
-are not here yet.
+The crate keeps two shapes. `BaseSystemSpec` is the authored nested
+wire format (`{ value | light | dark }` leaves, brace aliases intact) —
+what evaluated fragments specify. `BaseSystem::from_json` lowers a spec
+into the indexed `BaseSystem` query engine (flat `category.path` keys,
+precomputed `cssVar`). `compile()` still deserializes the indexed shape
+directly so station `baseSystem.json` files keep working.
+`BaseSystem::default()` stays empty. `staticCss` is a property →
+token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
+it empty so AtomSet stays small. `extends` and `layers` are not here yet.
 
-`lib_fixture()` loads the committed lib dump (`src/lib_fixture/lib.json`)
+`lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
 through `from_json`, then overlays host/Panda conditions, the standard
-breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The dump is
+breakpoint scale, and `:root { --spacing-root: 0.25rem }`. The spec is
 produced by `pnpm --filter @reference-ui/rust base-system` from lib
 theme object literals (tokens, fonts, keyframes); `--check` fails if it
 would change. Recipes are not scraped from components; the fixture map

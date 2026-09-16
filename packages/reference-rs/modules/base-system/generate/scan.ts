@@ -1,5 +1,5 @@
 /**
- * Tokenize TypeScript theme files for the dump generator.
+ * Tokenize TypeScript theme files for the spec generator.
  * Skips whitespace and comments, keeps string / number / identifier / punct
  * tokens, and records 1-based line and column for fail-closed diagnostics.
  * Template literals with substitutions and unclosed strings are errors — this

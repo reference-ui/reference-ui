@@ -17,8 +17,8 @@ export const moduleDir = path.resolve(generateDir, '..');
 /** Repository root (`reference-ui`). */
 export const repoRoot = path.resolve(moduleDir, '../../../..');
 
-/** Committed nested dump `from_json` consumes via `include_str!`. */
-export const dumpPath = path.join(moduleDir, 'src/lib_fixture/lib.json');
+/** Committed nested spec `from_json` consumes via `include_str!`. */
+export const specPath = path.join(moduleDir, 'src/lib_fixture/lib.json');
 
 export const TOKEN_FILES = [
   'packages/reference-lib/src/core/theme/colors.ts',

@@ -22,7 +22,7 @@ packages/reference-rs/
 └── modules/              # Product modules only
     ├── atomic/           # Atomic CSS compiler (was system; Rust crate + JS compile() + tests)
     ├── canon/            # Platform + dialect dictionary (@webref join)
-    ├── base-system/      # Design-system definition (fragment dump)
+    ├── base-system/      # Design-system definition (fragment spec)
     ├── typegen/          # Token unions / StyleProps .d.ts
     ├── tasty/            # Tasty module (Rust crate + JS API + tests)
     ├── atlas/            # Atlas module (Rust crate + JS API + tests)
