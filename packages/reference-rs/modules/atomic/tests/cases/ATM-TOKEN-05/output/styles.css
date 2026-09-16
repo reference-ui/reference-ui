@@ -1,16 +1,18 @@
+@layer custom-dump {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
   :root { --spacing-root: 0.25rem }
 }
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-brand: red;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-brand: navy;
   }
 }
 @layer utilities {
-  .bg_blue\.600 { background: blue.600; }
-  .c_colors\.brand { color: var(--colors-brand); }
+  .custom-dump__bg_blue\.600 { background: blue.600; }
+  .custom-dump__c_colors\.brand { color: var(--colors-brand); }
+}
 }

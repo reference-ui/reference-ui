@@ -1,33 +1,52 @@
-//! Lower a nested `BaseSystemSpec` into today's indexed `BaseSystem`.
-//! Walks open token categories, resolves the seven-case light/dark table, kebabs only the
-//! category when computing `cssVar`, and keeps brace aliases verbatim while failing closed on
-//! cycles among keys that exist. Font families become `fonts.{name}` tokens unless the spec
-//! already declared that path. Duplicates error; `insert_leaf` is not used.
+//! Lowers an `EvaluatedSystemSpec` into an indexed `BaseSystem`.
+//! Validates schemaVersion and profile, applies profile canonical conditions and standard
+//! breakpoints, and overlays explicit authored entries deterministically.
+//! Token categories are walked, light/dark slots normalized, custom properties kebabed,
+//! and cyclic token references detected while carrying provenance source on diagnostics.
+//! Global CSS fragments are validated against macro constraints and preserved as structured IR.
+
+use std::collections::HashSet;
+
+use indexmap::IndexMap;
 
 use crate::spec::{
-    BaseSystemSpec, FromJsonError, SpecBreakpointWidth, TokenSpecLeaf, TokenSpecNode,
+    EvaluatedSystemSpec, FromJsonError, ProvenanceEntry, ProvenanceKind, TokenSpecLeaf,
+    TokenSpecNode,
 };
 use crate::tokens::{css_custom_property, TokenDictionary, TokenEntry};
 use crate::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
-use indexmap::IndexMap;
-use std::collections::HashSet;
 
 /// Parse an evaluated JSON spec and index it.
 pub(crate) fn from_json(json: &str) -> Result<BaseSystem, FromJsonError> {
-    lower(BaseSystemSpec::from_json(json)?)
+    lower(EvaluatedSystemSpec::from_json(json)?)
 }
 
-fn lower(spec: BaseSystemSpec) -> Result<BaseSystem, FromJsonError> {
-    let mut ctx = LoweringContext::default();
+/// Lower a pre-parsed evaluated spec into an indexed BaseSystem.
+pub(crate) fn from_spec(spec: &EvaluatedSystemSpec) -> Result<BaseSystem, FromJsonError> {
+    lower(spec.clone())
+}
+
+fn lower(spec: EvaluatedSystemSpec) -> Result<BaseSystem, FromJsonError> {
+    if spec.schema_version != 1 {
+        return Err(FromJsonError::UnsupportedSchemaVersion(spec.schema_version));
+    }
+    if spec.profile != "reference-ui" {
+        return Err(FromJsonError::UnsupportedProfile(spec.profile));
+    }
+    for fragment in &spec.global_css {
+        crate::global_css::validate_fragment(fragment)?;
+    }
+    let mut ctx = LoweringContext::new(&spec.provenance);
     ctx.index_tokens(&spec.tokens)?;
     ctx.detect_alias_cycles()?;
     ctx.index_font_tokens(&spec.fonts)?;
+    let conditions = lower_conditions(spec.conditions);
     Ok(BaseSystem {
         name: spec.name,
         tokens: TokenDictionary::from_entries(ctx.tokens),
         fonts: FontScale::from_definitions(spec.fonts),
-        breakpoints: lower_breakpoints(spec.breakpoints),
-        conditions: spec.conditions.into(),
+        breakpoints: BreakpointScale::from_profile_and_authored(spec.breakpoints),
+        conditions: conditions.into(),
         global_css: spec.global_css,
         keyframes: spec.keyframes,
         recipes: spec.recipes,
@@ -35,12 +54,43 @@ fn lower(spec: BaseSystemSpec) -> Result<BaseSystem, FromJsonError> {
     })
 }
 
-#[derive(Default)]
-struct LoweringContext {
-    tokens: IndexMap<String, TokenEntry>,
+fn lower_conditions(authored: Option<IndexMap<String, String>>) -> IndexMap<String, String> {
+    let mut conditions = crate::conditions::lib_conditions();
+    if let Some(authored_map) = authored {
+        for (key, wrap) in authored_map {
+            if let Some(stripped) = key.strip_prefix('_') {
+                conditions.shift_remove(stripped);
+            } else {
+                conditions.shift_remove(&format!("_{key}"));
+            }
+            conditions.insert(key, wrap);
+        }
+    }
+    conditions
 }
 
-impl LoweringContext {
+struct LoweringContext<'a> {
+    tokens: IndexMap<String, TokenEntry>,
+    provenance: &'a [ProvenanceEntry],
+}
+
+impl<'a> LoweringContext<'a> {
+    fn new(provenance: &'a [ProvenanceEntry]) -> Self {
+        Self {
+            tokens: IndexMap::new(),
+            provenance,
+        }
+    }
+
+    fn find_source(&self, kind: ProvenanceKind, key: &str) -> Option<String> {
+        for entry in self.provenance {
+            if entry.kind == kind && entry.keys.iter().any(|k| k == key || key.starts_with(k)) {
+                return Some(entry.source.clone());
+            }
+        }
+        None
+    }
+
     fn index_tokens(
         &mut self,
         tokens: &IndexMap<String, TokenSpecNode>,
@@ -58,9 +108,11 @@ impl LoweringContext {
         node: &TokenSpecNode,
     ) -> Result<(), FromJsonError> {
         match node {
-            TokenSpecNode::Scalar => Err(FromJsonError::InvalidLeaf {
-                path: full_path(category, path),
-            }),
+            TokenSpecNode::Scalar => {
+                let key = full_path(category, path);
+                let source = self.find_source(ProvenanceKind::Tokens, &key);
+                Err(FromJsonError::InvalidLeaf { path: key, source })
+            }
             TokenSpecNode::Leaf(leaf) => self.insert_resolved(category, path, leaf),
             TokenSpecNode::Group(children) => {
                 for (segment, child) in children {
@@ -79,9 +131,10 @@ impl LoweringContext {
         leaf: &TokenSpecLeaf,
     ) -> Result<(), FromJsonError> {
         let key = full_path(category, path);
-        let (light, dark) = resolve_modes(&key, leaf)?;
+        let source = self.find_source(ProvenanceKind::Tokens, &key);
+        let (light, dark) = resolve_modes(&key, leaf, source.as_deref())?;
         if self.tokens.contains_key(&key) {
-            return Err(FromJsonError::DuplicatePath { path: key });
+            return Err(FromJsonError::DuplicatePath { path: key, source });
         }
         self.tokens.insert(
             key,
@@ -102,7 +155,8 @@ impl LoweringContext {
         for (name, def) in fonts {
             let key = format!("fonts.{name}");
             if self.tokens.contains_key(&key) {
-                return Err(FromJsonError::DuplicatePath { path: key });
+                let source = self.find_source(ProvenanceKind::Fonts, name);
+                return Err(FromJsonError::DuplicatePath { path: key, source });
             }
             self.tokens.insert(
                 key,
@@ -125,7 +179,10 @@ impl LoweringContext {
             visited: HashSet::new(),
         };
         for key in self.tokens.keys() {
-            walk.visit(key)?;
+            if let Err(path) = walk.visit(key) {
+                let source = self.find_source(ProvenanceKind::Tokens, &path);
+                return Err(FromJsonError::Cycle { path, source });
+            }
         }
         Ok(())
     }
@@ -149,14 +206,12 @@ struct CycleWalk<'a> {
 }
 
 impl CycleWalk<'_> {
-    fn visit(&mut self, key: &str) -> Result<(), FromJsonError> {
+    fn visit(&mut self, key: &str) -> Result<(), String> {
         if self.visited.contains(key) {
             return Ok(());
         }
         if self.visiting.contains(key) {
-            return Err(FromJsonError::Cycle {
-                path: key.to_string(),
-            });
+            return Err(key.to_string());
         }
         self.visiting.insert(key.to_string());
         let edges = self.graph.get(key).cloned().unwrap_or_default();
@@ -200,10 +255,12 @@ fn alias_target(value: &str) -> Option<&str> {
 fn resolve_modes(
     path: &str,
     leaf: &TokenSpecLeaf,
+    source: Option<&str>,
 ) -> Result<(String, Option<String>), FromJsonError> {
     pair_from_slots(&leaf.value, &leaf.light, &leaf.dark).ok_or_else(|| {
         FromJsonError::InvalidLeaf {
             path: path.to_string(),
+            source: source.map(str::to_string),
         }
     })
 }
@@ -224,10 +281,6 @@ fn pair_from_slots(
     }
     let single = value.as_ref().or(light.as_ref()).or(dark.as_ref())?;
     Some((single.clone(), None))
-}
-
-fn lower_breakpoints(map: IndexMap<String, SpecBreakpointWidth>) -> BreakpointScale {
-    BreakpointScale::from_named_widths(map.into_iter().map(|(name, width)| (name, width.into_px())))
 }
 
 fn join_path(parent: &str, segment: &str) -> String {

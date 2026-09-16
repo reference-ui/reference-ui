@@ -6,7 +6,7 @@ write generated files. Core evaluates fragments; this crate validates,
 normalises, indexes, and answers queries.
 
 Campaign sequencing and the frozen cross-package contract live in
-[`../../PLAN.md`](../../PLAN.md). This file owns packet **N1**.
+[`../../PLAN.md`](../../PLAN.md). This file owns packet **N1 — [DONE]**.
 
 Contract: [`SPEC.md`](./SPEC.md).
 

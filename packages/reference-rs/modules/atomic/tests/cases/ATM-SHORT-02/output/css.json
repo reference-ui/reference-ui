@@ -1,5 +1,5 @@
 {
-  "outlineColor:blue.600": "outline-c_blue.600",
-  "outlineStyle:solid": "outline-s_solid",
-  "outlineWidth:1px": "outline-w_1px"
+  "outlineColor:blue.600": "@reference-ui/lib__outline-c_blue.600",
+  "outlineStyle:solid": "@reference-ui/lib__outline-s_solid",
+  "outlineWidth:1px": "@reference-ui/lib__outline-w_1px"
 }

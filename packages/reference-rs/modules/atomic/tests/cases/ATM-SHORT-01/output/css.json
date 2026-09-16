@@ -1,5 +1,5 @@
 {
-  "borderBottomStyle:solid": "bd-b-s_solid",
-  "borderBottomWidth:3px": "bd-b-w_3px",
-  "borderColor:gray.800": "bd-c_gray.800"
+  "borderBottomStyle:solid": "@reference-ui/lib__bd-b-s_solid",
+  "borderBottomWidth:3px": "@reference-ui/lib__bd-b-w_3px",
+  "borderColor:gray.800": "@reference-ui/lib__bd-c_gray.800"
 }

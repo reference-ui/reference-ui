@@ -47,14 +47,16 @@ root PLAN packet F0. Do not make several transitional shapes.
 
 ## Native critical lane
 
-One atomic agent at a time. Implement and merge in this order:
+Implement and merge in this order:
 
 ```text
-N2 authored declaration plans
+N2 authored declaration plans [DONE]
   ↓
-N3 recipe identity/table
+N3 recipe identity/table [DONE]
   ↓
-N4 global + application/portable stylesheet
+N4 global + application/portable stylesheet [DONE]
+  ↓
+G1 native gate [NEXT ENTRY POINT]
 ```
 
 Do not run unrelated station implementors against `atomic/src` during this
@@ -62,7 +64,7 @@ lane. They may prepare read-only research but must wait to edit.
 
 ---
 
-## N2 — authored-declaration runtime plans
+## N2 — authored-declaration runtime plans — [DONE]
 
 ### Contract
 
@@ -135,7 +137,7 @@ enough.
 
 ---
 
-## N3 — recipe identity and complete table
+## N3 — recipe identity and complete table — [DONE]
 
 ### Contract
 
@@ -205,7 +207,7 @@ Intentional missing-identity refusal fixtures must say so in their README/spec.
 
 ---
 
-## N4 — structured globals and direct portable output
+## N4 — structured globals and direct portable output — [DONE]
 
 ### Global-style lowering
 
@@ -285,7 +287,7 @@ pnpm agentrs q packages/reference-rs/modules/atomic
 
 ---
 
-## Styletrace join
+## Styletrace join — [DONE]
 
 N2 may retain current positive extraction while
 [`../styletrace/PLAN.md`](../styletrace/PLAN.md) is in flight. Before the
@@ -359,6 +361,5 @@ pnpm agentrs q packages/reference-rs/modules/atomic
 - Do not broaden extraction to every PascalCase tag.
 - Do not refresh all goldens or edit quarantine to create green output.
 - Do not reopen canon from an atomic slice without a demonstrated canon defect.
-- Do not touch `packages/reference-core` from N2/N4; N3 may only add explicit
-  `className` to production fixture sources assigned by the orchestrator.
+- Do not touch `packages/reference-core` from N2/N4; N3 adds explicit `className` only to assigned fixture sources.
 - Do not add `#[allow(clippy::…)]` or `#[expect(clippy::…)]`.

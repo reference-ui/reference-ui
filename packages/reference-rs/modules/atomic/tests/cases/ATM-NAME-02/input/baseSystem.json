@@ -1,15 +1,23 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "condition-prefix",
   "tokens": {
-    "colors.n300": {
-      "category": "colors",
-      "cssVar": "--colors-n300",
-      "light": "#d4d4d8",
-      "dark": "#3f3f46"
+    "colors": {
+      "n300": {
+        "light": "#d4d4d8",
+        "dark": "#3f3f46"
+      }
     }
   },
+  "fonts": {},
   "conditions": {
     "_hover": "&:is(:hover, [data-hover])",
-    "_dark": "[data-panda-theme=dark] &"
-  }
+    "_dark": "[data-theme=dark] &"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

@@ -1,0 +1,5 @@
+{
+  "name": "core-portable-system",
+  "fragment": "packages/reference-core/src/system/base/fragments/index.ts",
+  "jsxElements": ["styled.div", "styled.button"]
+}

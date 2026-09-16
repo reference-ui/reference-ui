@@ -1,4 +1,4 @@
 {
-  "_hover:color:red": "hover:c_red",
-  "mt:2r": "mt_2r!"
+  "_hover:color:red": "@reference-ui/lib__hover:c_red",
+  "mt:2r": "@reference-ui/lib__mt_2r!"
 }

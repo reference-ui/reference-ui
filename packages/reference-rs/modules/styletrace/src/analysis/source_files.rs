@@ -9,6 +9,14 @@ use std::path::{Path, PathBuf};
 use crate::resolver::StyleTraceError;
 
 pub(super) fn discover_source_files(root_dir: &Path) -> Result<Vec<PathBuf>, StyleTraceError> {
+    if root_dir.is_file() {
+        let file_name = root_dir.file_name().unwrap_or_default().to_string_lossy();
+        if is_traceable_source_file(root_dir, &file_name) {
+            return Ok(vec![root_dir.to_path_buf()]);
+        }
+        return Ok(Vec::new());
+    }
+
     let mut files = Vec::new();
     collect_source_files(root_dir, &mut files)?;
     files.sort();
@@ -59,3 +67,19 @@ fn is_traceable_source_file(path: &Path, file_name: &str) -> bool {
     ) && !file_name.ends_with(".d.ts")
         && !file_name.ends_with(".d.mts")
 }
+
+pub(super) fn format_relative_module(module_path: &Path, source_root: &Path) -> String {
+    let base = if source_root.is_file() {
+        source_root.parent().unwrap_or(source_root)
+    } else {
+        source_root
+    };
+    module_path
+        .strip_prefix(base)
+        .unwrap_or(module_path)
+        .to_string_lossy()
+        .replace('\\', "/")
+        .trim_start_matches('/')
+        .to_string()
+}
+

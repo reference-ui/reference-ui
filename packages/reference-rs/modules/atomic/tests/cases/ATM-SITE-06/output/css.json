@@ -1,4 +1,4 @@
 {
-  "color:n300": "c_n300",
-  "mt:2r": "mt_2r"
+  "color:n300": "local-const__c_n300",
+  "mt:2r": "local-const__mt_2r"
 }

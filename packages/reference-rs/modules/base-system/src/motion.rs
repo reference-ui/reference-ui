@@ -116,22 +116,16 @@ mod tests {
     use super::*;
     use crate::BaseSystem;
 
-    const FADE_IN: &str =
-        r#"{"keyframes":{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}}"#;
-
-    const SPIN_MATCHED: &str = r#"{
-        "tokens":{"animations":{"spin":{"value":"spin 1s linear infinite"}}},
-        "keyframes":{"spin":{"from":{"transform":"rotate(0deg)"},"to":{"transform":"rotate(360deg)"}}}
-    }"#;
-
-    const GHOST_UNMATCHED: &str = r#"{
-        "tokens":{"animations":{"ghost":{"value":"ghost 1s"}}},
-        "keyframes":{"spin":{"from":{"opacity":"1"},"to":{"opacity":"0"}}}
-    }"#;
+    fn motion_spec_json(tokens: &str, keyframes: &str) -> String {
+        format!(
+            r#"{{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{tokens},"fonts":{{}},"globalCss":[],"keyframes":{keyframes},"recipes":{{}},"staticCss":{{}},"provenance":[]}}"#
+        )
+    }
 
     #[test]
     fn bas_motion_01_stores_fade_in_steps() {
-        let system = BaseSystem::from_json(FADE_IN).unwrap();
+        let json = motion_spec_json("{}", r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#);
+        let system = BaseSystem::from_json(&json).unwrap();
         let fade = system.keyframes.get("fadeIn").unwrap();
         assert_eq!(
             fade.step("from")
@@ -150,7 +144,8 @@ mod tests {
 
     #[test]
     fn bas_motion_02_iterates_name_and_steps_for_at_rule_emit() {
-        let system = BaseSystem::from_json(FADE_IN).unwrap();
+        let json = motion_spec_json("{}", r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#);
+        let system = BaseSystem::from_json(&json).unwrap();
         let pairs: Vec<_> = system.list_keyframes().collect();
         assert_eq!(pairs.len(), 1);
         assert_eq!(pairs[0].0, "fadeIn");
@@ -160,7 +155,11 @@ mod tests {
 
     #[test]
     fn bas_motion_03_animation_token_identifies_keyframe_name() {
-        let system = BaseSystem::from_json(SPIN_MATCHED).unwrap();
+        let json = motion_spec_json(
+            r#"{"animations":{"spin":{"value":"spin 1s linear infinite"}}}"#,
+            r#"{"spin":{"from":{"transform":"rotate(0deg)"},"to":{"transform":"rotate(360deg)"}}}"#,
+        );
+        let system = BaseSystem::from_json(&json).unwrap();
         assert_eq!(
             system.keyframe_names_referenced_by_animation_token("animations.spin"),
             Some("spin")
@@ -170,7 +169,11 @@ mod tests {
 
     #[test]
     fn bas_motion_03_unmatched_animation_token_is_a_gap() {
-        let system = BaseSystem::from_json(GHOST_UNMATCHED).unwrap();
+        let json = motion_spec_json(
+            r#"{"animations":{"ghost":{"value":"ghost 1s"}}}"#,
+            r#"{"spin":{"from":{"opacity":"1"},"to":{"opacity":"0"}}}"#,
+        );
+        let system = BaseSystem::from_json(&json).unwrap();
         let gaps = system.animation_keyframe_gaps();
         assert_eq!(gaps.len(), 1);
         assert_eq!(gaps[0].token, "animations.ghost");
@@ -183,8 +186,8 @@ mod tests {
 
     #[test]
     fn keyframe_string_value_is_rejected() {
-        let err =
-            BaseSystem::from_json(r#"{"keyframes":{"fadeIn":"from { opacity: 0 }"}}"#).unwrap_err();
+        let json = motion_spec_json("{}", r#"{"fadeIn":"from { opacity: 0 }"}"#);
+        let err = BaseSystem::from_json(&json).unwrap_err();
         assert!(matches!(err, crate::FromJsonError::Parse(_)));
     }
 

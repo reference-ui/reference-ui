@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "@reference-ui/lib",
+  "tokens": {
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n200": {
+        "light": "#e4e4e7",
+        "dark": "#27272a"
+      },
+      "red": {
+        "500": {
+          "light": "#ef4444",
+          "dark": "#f87171"
+        }
+      },
+      "blue": {
+        "500": {
+          "light": "#3b82f6",
+          "dark": "#60a5fa"
+        }
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

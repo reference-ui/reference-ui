@@ -1,0 +1,18 @@
+@layer layer-reset {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box }
+  body { margin: 0 }
+}
+@layer tokens {
+  :root, [data-theme=light] {
+    --colors-primary: blue;
+  }
+  [data-theme=dark] {
+    --colors-primary: lightblue;
+  }
+}
+@layer utilities {
+  .layer-reset__c_primary { color: var(--colors-primary); }
+}
+}

@@ -1,8 +1,8 @@
 {
-  "2xl:p:6r": "2xl:p_6r",
-  "lg:p:4r": "lg:p_4r",
-  "md:p:3r": "md:p_3r",
-  "p:1r": "p_1r",
-  "sm:p:2r": "sm:p_2r",
-  "xl:p:5r": "xl:p_5r"
+  "2xl:p:6r": "@reference-ui/lib__2xl:p_6r",
+  "lg:p:4r": "@reference-ui/lib__lg:p_4r",
+  "md:p:3r": "@reference-ui/lib__md:p_3r",
+  "p:1r": "@reference-ui/lib__p_1r",
+  "sm:p:2r": "@reference-ui/lib__sm:p_2r",
+  "xl:p:5r": "@reference-ui/lib__xl:p_5r"
 }

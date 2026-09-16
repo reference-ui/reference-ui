@@ -1,6 +1,7 @@
 import { recipe } from '@reference-ui/react'
 
 const badge = recipe({
+  className: 'badge',
   base: { fontWeight: 'bold' },
   variants: {
     variant: {

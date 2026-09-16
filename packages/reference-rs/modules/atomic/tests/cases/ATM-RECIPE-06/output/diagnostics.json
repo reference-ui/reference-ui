@@ -1,0 +1,14 @@
+[
+  {
+    "severity": "error",
+    "message": "recipe(...) requires an explicit string-literal 'className' property"
+  },
+  {
+    "severity": "error",
+    "message": "recipe(...) requires an inline object literal as its first argument"
+  },
+  {
+    "severity": "error",
+    "message": "Duplicate recipe className 'duplicateBadge' within system '@reference-ui/lib'"
+  }
+]

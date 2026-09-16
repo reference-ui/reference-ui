@@ -89,3 +89,61 @@ fn is_logical_longhand(name: &str) -> bool {
     };
     canonical.contains("Inline") || canonical.contains("Block")
 }
+
+/// Properties whose unitless numbers remain bare in CSS without gaining `px`.
+pub const UNITLESS_PROPERTIES: &[&str] = &[
+    "animationIterationCount",
+    "aspectRatio",
+    "borderImageOutset",
+    "borderImageSlice",
+    "borderImageWidth",
+    "boxFlex",
+    "boxFlexGroup",
+    "boxOrdinalGroup",
+    "columnCount",
+    "columns",
+    "fillOpacity",
+    "flex",
+    "flexGrow",
+    "flexOrder",
+    "flexPositive",
+    "flexShrink",
+    "floodOpacity",
+    "fontWeight",
+    "gridColumn",
+    "gridColumnEnd",
+    "gridColumnSpan",
+    "gridColumnStart",
+    "gridRow",
+    "gridRowEnd",
+    "gridRowSpan",
+    "gridRowStart",
+    "lineClamp",
+    "lineHeight",
+    "opacity",
+    "order",
+    "orphans",
+    "scale",
+    "stopOpacity",
+    "strokeDasharray",
+    "strokeDashoffset",
+    "strokeMiterlimit",
+    "strokeOpacity",
+    "tabSize",
+    "widows",
+    "zIndex",
+    "zoom",
+];
+
+/// Returns true if a numeric value on this property should stay unitless without gaining `px`.
+pub fn is_unitless_prop(prop: &str) -> bool {
+    if prop.starts_with("--") {
+        return true;
+    }
+    let canonical = match crate::dialect::resolve_alias(prop) {
+        Some(c) => c,
+        None => prop,
+    };
+    UNITLESS_PROPERTIES.binary_search(&canonical).is_ok()
+}
+

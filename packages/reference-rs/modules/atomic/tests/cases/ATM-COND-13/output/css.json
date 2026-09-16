@@ -1,0 +1,5 @@
+{
+  "mdDown:display:none": "@reference-ui/lib__mdDown:d_none",
+  "mdOnly:px:2r": "@reference-ui/lib__mdOnly:px_2r",
+  "smToLg:maxWidth:80ch": "@reference-ui/lib__smToLg:max-w_80ch"
+}

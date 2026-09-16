@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-reset",
+  "tokens": {
+    "colors": {
+      "primary": {
+        "light": "blue",
+        "dark": "lightblue"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "packages/preflight.ts",
+      "rules": {
+        "*, *::before, *::after": {
+          "boxSizing": "border-box"
+        },
+        "body": {
+          "margin": 0
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

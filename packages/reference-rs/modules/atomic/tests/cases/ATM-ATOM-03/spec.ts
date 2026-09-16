@@ -9,10 +9,10 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-ATOM-03',
   verify(result) {
     const classes = result.css?.classes ?? {}
-    expect(classes['bg:n300']).toBe('bg_n300')
-    expect(classes['color:red']).toBe('c_red')
+    expect(classes['bg:n300']).toBe('atom-dedup__bg_n300')
+    expect(classes['color:red']).toBe('atom-dedup__c_red')
     expect(Object.keys(classes)).toHaveLength(2)
-    expect(result.stylesheet.split('.bg_n300 {').length).toBe(2)
+    expect(result.stylesheet.split('.atom-dedup__bg_n300 {').length).toBe(2)
   },
 }
 

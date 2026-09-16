@@ -9,9 +9,9 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-02',
   verify(result) {
     const classes = result.css.classes ?? {}
-    expect(classes['mt:2r']).toBe('mt_2r')
-    expect(classes['bg:blue.600']).toBe('bg_blue.600')
-    expect(classes['_hover:color:red.500']).toBe('hover:c_red.500')
+    expect(classes['mt:2r']).toBe('@reference-ui/lib__mt_2r')
+    expect(classes['bg:blue.600']).toBe('@reference-ui/lib__bg_blue.600')
+    expect(classes['_hover:color:red.500']).toBe('@reference-ui/lib__hover:c_red.500')
   },
 }
 

@@ -1,4 +1,4 @@
 {
-  "gap:2/3r": "gap_2/3r",
-  "pb:1/3r": "pb_1/3r"
+  "gap:2/3r": "@reference-ui/lib__gap_2/3r",
+  "pb:1/3r": "@reference-ui/lib__pb_1/3r"
 }

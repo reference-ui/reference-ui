@@ -10,6 +10,13 @@ use base_system::{BaseSystem, TokenEntry};
 
 use crate::diagnostics::Diagnostic;
 
+mod interpolate;
+mod scale;
+#[cfg(test)]
+mod tests;
+
+use interpolate::expand_brace_segments;
+
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
     canon::is_color_prop(prop)
@@ -28,28 +35,77 @@ pub fn resolve_token_value<'a>(
     }
 
     let unbraced = strip_braces(trimmed);
-    if let Some(font_var) = resolve_font_token(prop, unbraced, system) {
-        return Cow::Owned(font_var);
+    if let Some(special) = resolve_special_value(prop, unbraced, system) {
+        return special;
     }
+    if let Some(negated) = resolve_negated_token(prop, unbraced, system) {
+        return Cow::Owned(negated);
+    }
+    resolve_pathed_value(prop, raw_val, system, diagnostics)
+}
 
+/// Font families and CSS color keywords resolve before dictionary lookup.
+fn resolve_special_value<'a>(
+    prop: &str,
+    unbraced: &str,
+    system: &BaseSystem,
+) -> Option<Cow<'a, str>> {
+    if let Some(font_var) = resolve_font_token(prop, unbraced, system) {
+        return Some(Cow::Owned(font_var));
+    }
     if is_color_prop(prop) {
         if let Some(keyword) = colors_keyword(unbraced) {
-            return Cow::Owned(keyword.to_string());
+            return Some(Cow::Owned(keyword.to_string()));
         }
     }
+    None
+}
 
+/// Opacity-split dictionary lookup, brace interpolation, then warn-and-pass-through.
+fn resolve_pathed_value<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Cow<'a, str> {
+    let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
+    if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
+        diagnostics.push(Diagnostic::warning(format!(
+            "malformed opacity modifier `{unbraced}`"
+        )));
+        return Cow::Borrowed(raw_val);
+    }
     if let Some(entry) = lookup_entry(prop, path, system) {
         return Cow::Owned(format_entry(entry, opacity));
     }
+    if let Some(expanded) = expand_brace_segments(unbraced, system, diagnostics) {
+        return Cow::Owned(expanded);
+    }
+    warn_unresolved_token(prop, unbraced, system, diagnostics);
+    Cow::Borrowed(raw_val)
+}
 
+/// Warn for an unresolvable value: unknown path, or a real token from a foreign category.
+fn warn_unresolved_token(
+    prop: &str,
+    unbraced: &str,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
     if looks_like_token_path(unbraced) {
         diagnostics.push(Diagnostic::warning(format!(
             "unknown token path `{unbraced}`"
         )));
+        return;
     }
-
-    Cow::Borrowed(raw_val)
+    let (path, _) = split_opacity(unbraced);
+    if let Some(entry) = system.token_by_unique_name(path) {
+        diagnostics.push(Diagnostic::warning(format!(
+            "token `{unbraced}` belongs to category `{}` which property `{prop}` does not accept",
+            entry.category()
+        )));
+    }
 }
 
 fn strip_braces(trimmed: &str) -> &str {
@@ -95,20 +151,56 @@ fn lookup_entry<'a>(prop: &str, path: &str, system: &'a BaseSystem) -> Option<&'
     if let Some(entry) = system.token(path) {
         return Some(entry);
     }
+    if prop.starts_with("--") {
+        return system.token_by_unique_name(path);
+    }
     let category = token_category_for_prop(prop)?;
-    system.token_in_category(category, path)
+    if let Some(entry) = system.token_in_category(category, path) {
+        return Some(entry);
+    }
+    let fallback = fallback_category(category)?;
+    system.token_in_category(fallback, path)
+}
+
+/// Size properties accept the spacing scale when sizes miss, mirroring
+/// `static_css` wildcard expansion so synthesized wants resolve.
+fn fallback_category(category: &str) -> Option<&str> {
+    match category {
+        "sizes" => Some("spacing"),
+        _ => None,
+    }
+}
+
+/// A leading `-` negates a scale token: `-4` becomes `calc(-1 * var(--spacing-4))`.
+fn resolve_negated_token(prop: &str, unbraced: &str, system: &BaseSystem) -> Option<String> {
+    let rest = unbraced.strip_prefix('-')?;
+    if rest.is_empty() || rest.starts_with('-') {
+        return None;
+    }
+    let (path, opacity) = split_opacity(rest);
+    let entry = lookup_entry(prop, path, system)?;
+    Some(format!("calc(-1 * {})", format_entry(entry, opacity)))
+}
+
+/// True when a `/` looks like a broken opacity modifier rather than CSS content.
+fn malformed_opacity(unbraced: &str) -> bool {
+    let Some((base, _)) = unbraced.rsplit_once('/') else {
+        return false;
+    };
+    if base.contains('(') {
+        return false;
+    }
+    if base.is_empty() {
+        return true;
+    }
+    base.starts_with(|ch: char| ch.is_ascii_alphabetic()) && looks_like_token_path(base)
 }
 
 fn token_category_for_prop(prop: &str) -> Option<&'static str> {
     if is_color_prop(prop) {
         return Some("colors");
     }
-    match prop {
-        "borderRadius" | "rounded" => Some("radii"),
-        "fontFamily" | "ff" => Some("fonts"),
-        "animation" | "animationName" => Some("animations"),
-        _ => None,
-    }
+    scale::token_category_for_prop(prop)
 }
 
 fn split_opacity(path: &str) -> (&str, Option<&str>) {
@@ -152,91 +244,3 @@ fn looks_like_token_path(val: &str) -> bool {
     first.chars().any(|ch| ch.is_ascii_alphabetic())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn resolve(prop: &str, raw: &str) -> String {
-        let mut diagnostics = Vec::new();
-        resolve_token_value(prop, raw, BaseSystem::lib_fixture(), &mut diagnostics).into_owned()
-    }
-
-    #[test]
-    fn test_category_prefixed_colors() {
-        assert_eq!(
-            resolve("color", "colors.blue.600"),
-            "var(--colors-blue-600)"
-        );
-        assert_eq!(
-            resolve("bg", "colors.ui.field.border"),
-            "var(--colors-ui-field-border)"
-        );
-        assert_eq!(resolve("color", "colors.white"), "white");
-        assert_eq!(resolve("color", "colors.transparent"), "transparent");
-    }
-
-    #[test]
-    fn test_bare_color_tokens() {
-        assert_eq!(resolve("bg", "blue.600"), "var(--colors-blue-600)");
-        assert_eq!(resolve("borderColor", "gray.800"), "var(--colors-gray-800)");
-    }
-
-    #[test]
-    fn test_color_mix_opacity() {
-        assert_eq!(
-            resolve("bg", "colors.blue.600/50"),
-            "color-mix(in srgb, var(--colors-blue-600) 50%, transparent)"
-        );
-        assert_eq!(
-            resolve("color", "red.500/25%"),
-            "color-mix(in srgb, var(--colors-red-500) 25%, transparent)"
-        );
-    }
-
-    #[test]
-    fn test_non_color_categories() {
-        assert_eq!(resolve("fontFamily", "fonts.mono"), "var(--fonts-mono)");
-        assert_eq!(resolve("borderRadius", "radii.md"), "var(--radii-md)");
-    }
-
-    #[test]
-    fn test_css_color_keywords_passthrough() {
-        assert_eq!(resolve("color", "transparent"), "transparent");
-        assert_eq!(resolve("bg", "currentColor"), "currentColor");
-        assert_eq!(resolve("borderColor", "black"), "black");
-        assert_eq!(resolve("color", "white"), "white");
-        assert_eq!(resolve("color", "inherit"), "inherit");
-    }
-
-    #[test]
-    fn test_non_color_does_not_treat_bare_dots_as_colors() {
-        let mut diagnostics = Vec::new();
-        let css = resolve_token_value(
-            "mt",
-            "blue.600",
-            BaseSystem::lib_fixture(),
-            &mut diagnostics,
-        );
-        assert_eq!(css, "blue.600");
-        assert_eq!(diagnostics.len(), 1);
-    }
-
-    #[test]
-    fn test_bare_radii_md_resolves() {
-        assert_eq!(resolve("borderRadius", "md"), "var(--radii-md)");
-        assert_eq!(resolve("borderRadius", "radii.md"), "var(--radii-md)");
-    }
-
-    #[test]
-    fn test_unknown_path_passthrough_warns() {
-        let mut diagnostics = Vec::new();
-        let css = resolve_token_value(
-            "width",
-            "fontSizes.xl",
-            BaseSystem::lib_fixture(),
-            &mut diagnostics,
-        );
-        assert_eq!(css, "fontSizes.xl");
-        assert_eq!(diagnostics.len(), 1);
-    }
-}

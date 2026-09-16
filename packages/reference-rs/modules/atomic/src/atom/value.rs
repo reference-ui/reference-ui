@@ -21,6 +21,7 @@ pub enum CssValue {
     String(Box<str>),
     Token { path: Box<str>, value: Box<str> },
     Number(Box<str>),
+    Dimension { class_stem: Box<str>, css_val: Box<str> },
 }
 
 impl AtomValue {
@@ -51,6 +52,7 @@ impl CssValue {
             Self::String(s) => s.as_ref(),
             Self::Token { path, .. } => path.as_ref(),
             Self::Number(n) => n.as_ref(),
+            Self::Dimension { class_stem, .. } => class_stem.as_ref(),
         }
     }
 
@@ -59,6 +61,7 @@ impl CssValue {
             Self::String(s) => s.as_ref(),
             Self::Token { value, .. } => value.as_ref(),
             Self::Number(n) => n.as_ref(),
+            Self::Dimension { css_val, .. } => css_val.as_ref(),
         }
     }
 }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-fontface",
+  "tokens": {},
+  "fonts": {
+    "sans": {
+      "value": "\"Inter\", sans-serif",
+      "fontFace": {
+        "src": "url(/fonts/inter.woff2)",
+        "fontDisplay": "swap",
+        "fontWeight": "400 700"
+      }
+    },
+    "mono": {
+      "value": "\"Fira Code\", monospace",
+      "fontFace": {
+        "src": "url(/fonts/fira-code.woff2)",
+        "fontDisplay": "fallback"
+      }
+    }
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

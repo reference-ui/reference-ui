@@ -1,4 +1,4 @@
 {
-  "bg:n300": "bg_n300",
-  "color:red": "c_red"
+  "bg:n300": "atom-dedup__bg_n300",
+  "color:red": "atom-dedup__c_red"
 }

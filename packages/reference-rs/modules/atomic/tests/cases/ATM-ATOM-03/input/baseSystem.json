@@ -1,11 +1,19 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "atom-dedup",
   "tokens": {
-    "colors.n300": {
-      "category": "colors",
-      "cssVar": "--colors-n300",
-      "light": "#d4d4d8",
-      "dark": "#3f3f46"
+    "colors": {
+      "n300": {
+        "light": "#d4d4d8",
+        "dark": "#3f3f46"
+      }
     }
-  }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

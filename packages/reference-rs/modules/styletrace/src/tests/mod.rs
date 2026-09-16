@@ -4,5 +4,6 @@
 //! Emits test results, verifying the correctness of type expansion and JSX wrapper tracing.
 
 mod fixtures;
+mod hermetic_roots;
 mod prop_resolution;
 mod tracing;

@@ -1041,6 +1041,7 @@ version = "0.1.0"
 dependencies = [
  "atlas",
  "atomic",
+ "base_system",
  "napi",
  "napi-build",
  "napi-derive",
@@ -1048,6 +1049,7 @@ dependencies = [
  "serde_json",
  "styletrace",
  "tasty",
+ "typegen",
  "virtualrs",
 ]
 
@@ -1208,6 +1210,7 @@ dependencies = [
  "oxc_allocator",
  "oxc_parser",
  "oxc_span",
+ "serde_json",
 ]
 
 [[package]]
@@ -1372,6 +1375,8 @@ version = "0.1.0"
 dependencies = [
  "base_system",
  "canon",
+ "serde_json",
+ "shared",
 ]
 
 [[package]]

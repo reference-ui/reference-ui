@@ -11,10 +11,10 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(hasWant(result, 'color', 'red', ['_nope'])).toBe(true)
     expect(hasWant(result, 'color', 'red')).toBe(true)
-    expect(result.stylesheet).toContain('.c_red { color: red; }')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__c_red { color: red; }')
     expect(result.stylesheet).not.toContain(':nope')
     expect(result.stylesheet).not.toContain('nope:')
-    expect(result.css.classes?.['color:red']).toBe('c_red')
+    expect(result.css.classes?.['color:red']).toBe('@reference-ui/lib__c_red')
     expect(result.css.classes?.['_nope:color:red']).toBeUndefined()
     expect(result.diagnostics).toHaveLength(1)
     expect(result.diagnostics[0]?.message).toContain('_nope')

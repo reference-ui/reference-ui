@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "message": "malformed opacity modifier `red.500/`"
+  },
+  {
+    "severity": "warning",
+    "message": "malformed opacity modifier `/40`"
+  }
+]

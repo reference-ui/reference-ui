@@ -1,0 +1,142 @@
+
+> @reference-ui/workspace@0.0.0 agent /Users/ryn/Developer/reference-ui
+> node .agents/skills/test-core/scripts/run.mjs test --packages=@matrix/primitives
+
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(29310)
+[cpu-gate] Gate acquired for exclusive (PID 31077)
+[agent] Executing unthrottled: pnpm pipeline test --packages=@matrix/primitives
+
+> @reference-ui/workspace@0.0.0 pipeline /Users/ryn/Developer/reference-ui
+> pnpm --dir pipeline exec tsx src/cli.ts test --packages=@matrix/primitives
+
+Discovering matrix-enabled fixtures...
+Discovered matrix packages:
+- @matrix/chain-t1
+- @matrix/chain-t10
+- @matrix/chain-t11
+- @matrix/chain-t12
+- @matrix/chain-t13
+- @matrix/chain-t2
+- @matrix/chain-t3
+- @matrix/chain-t6
+- @matrix/chain-t7
+- @matrix/chain-t8
+- @matrix/chain-t9
+- @matrix/color-mode
+- @matrix/css
+- @matrix/css-selectors
+- @matrix/distro
+- @matrix/font
+- @matrix/mcp
+- @matrix/playwright
+- @matrix/primitives
+- @matrix/recipe
+- @matrix/reference
+- @matrix/responsive
+- @matrix/session
+- @matrix/spacing
+- @matrix/system
+- @matrix/tokens
+- @matrix/typescript
+- @matrix/virtual
+- @matrix/watch
+Using shared matrix registry at http://127.0.0.1:4873.
+Preparing workspace packages and registry...
+Prepared workspace packages and registry in 4.9s
+Using host registry via registry:4873. Logs: /Users/ryn/Developer/reference-ui/.pipeline/testing/matrix
+- [1m[34mChecking container registry connectivity[39m[22m
+[32m✔[39m [1m[36mChecked container registry connectivity in 914ms[39m[22m
+Docker runtime (colima) exposes 12 CPU(s), 23.5 GiB.
+Running 1 matrix package(s) in parallel (1 selected, configured 4).
+[36m◐[39m [1m@matrix/primitives[22m [2msetting up env[22m [36m(react19 + vite7 + watch-ready)[39m
+[36m◐[39m [1m@matrix/primitives[22m [2mrunning tests[22m [36m(react19 + vite7 + watch-ready)[39m
+
+[1m@matrix/primitives[22m [2m(react19 + vite7 + watch-ready)[22m
+  Reused cached dependencies in 478ms
+  Deferred full ref sync completion; runtime tests will start ref sync --watch and wait only for runtime-ready output.
+  Running tests against ref sync watch-ready output
+  Failed during test. See /Users/ryn/Developer/reference-ui/.pipeline/testing/matrix/matrix-primitives-test.log
+  matrix stdout:
+[matrix ref sync] wait-duration-ms=1166
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/consumer[39m
+
+ [32m✓[39m tests/unit/runtime.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/generated-output.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 4701[2mms[22m[39m
+     [33m[2m✓[22m[39m updates mirrored virtual source while keeping generated CSS stable for source-only fixture changes after ref sync [33m 4643[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m   Start at [22m 18:39:38
+[2m   Duration [22m 4.83s[2m (transform 441ms, setup 0ms, import 641ms, tests 4.71s, environment 0ms)[22m
+
+[matrix ref sync] phase=test:vitest duration-ms=5281
+
+🎭 [1mPlaywright[0m [1;32m46 passed[0m | [1;31m6 failed[0m [2m(52)[0m
+    Start at  18:39:43
+    Duration  99.7s
+  matrix stderr:
+[ref sync watch log]
+[38;5;75mref →[39m [90msync[39m Starting CLI
+[38;5;75mref →[39m [90msync[39m Prepared virtual workspace in 0.23s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.09s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 31.3ms (7173 plans, 1 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.23s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.09s
+[38;5;75mref →[39m [90msync[39m Ready in 0.64s
+[38;5;75mref →[39m [90msync[39m Built reference in 0.02s
+[38;5;75mref →[39m [90msync[39m Built 1 package(s) in 0.04s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.19s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 34.6ms (7173 plans, 1 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.14s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.06s
+[38;5;75mref →[39m [90msync[39m Ready in 0.39s
+[38;5;75mref →[39m [90msync[39m Generated runtime TypeScript declarations in 0.29s
+[38;5;75mref →[39m [90msync[39m Built reference in 0.01s
+[38;5;75mref →[39m [90msync[39m Built 1 package(s) in 0.04s
+[38;5;75mref →[39m [90msync[39m Generated library TypeScript declarations in 0.12s
+[38;5;75mref →[39m [90msync[39m Generated library TypeScript declarations in 0.13s
+[38;5;75mref →[39m [90msync[39m Built reference in 0.01s
+[38;5;75mref →[39m [90msync[39m Built 1 package(s) in 0.03s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.19s
+[38;5;75mref →[39m [90msync[39m Generated library TypeScript declarations in 0.09s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 43.4ms (7173 plans, 1 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.05s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.05s
+[38;5;75mref →[39m [90msync[39m Ready in 0.38s
+[38;5;75mref →[39m [90msync[39m Generated runtime TypeScript declarations in 1.27s
+[38;5;75mref →[39m [90msync[39m Built reference in 0.01s
+[38;5;75mref →[39m [90msync[39m Built 1 package(s) in 0.04s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.19s
+[38;5;75mref →[39m [90msync[39m Generated library TypeScript declarations in 0.10s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 50.3ms (7173 plans, 1 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.05s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.06s
+[38;5;75mref →[39m [90msync[39m Ready in 0.40s
+[38;5;75mref →[39m [90msync[39m Generated runtime TypeScript declarations in 1.39s
+[38;5;75mref →[39m [90msync[39m Built reference in 0.01s
+[38;5;75mref →[39m [90msync[39m Built 1 package(s) in 0.04s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.20s
+[38;5;75mref →[39m [90msync[39m Generated library TypeScript declarations in 0.10s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 47.1ms (7173 plans, 1 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.06s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.06s
+[38;5;75mref →[39m [90msync[39m Ready in 0.42s
+[38;5;75mref →[39m [90msync[39m Generated runtime TypeScript declarations in 1.35s
+test:playwright failed (code=1, signal=null)
+  exit code: 1 [traceparent:c796707a07ce4310bb07f779bfdf23e6-4b1cda8d3599b132]
+[pipeline] Matrix test run FAILED
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 1.[39m
+
+=======================================================
+✖ [agent] Matrix test suite FAILED (exit code 1).
+=======================================================
+
+ ELIFECYCLE  Command failed with exit code 1.

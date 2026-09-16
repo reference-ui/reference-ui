@@ -9,11 +9,11 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-STATIC-02',
   verify(result) {
     const classes = result.css?.classes ?? {}
-    expect(classes['bg:n300']).toBe('bg_n300')
-    expect(classes['bg:n100']).toBe('bg_n100')
+    expect(classes['bg:n300']).toBe('static-css-overlap__bg_n300')
+    expect(classes['bg:n100']).toBe('static-css-overlap__bg_n100')
     expect(Object.keys(classes)).toHaveLength(2)
-    expect(result.stylesheet.split('.bg_n300 {').length).toBe(2)
-    expect(result.stylesheet.split('.bg_n100 {').length).toBe(2)
+    expect(result.stylesheet.split('.static-css-overlap__bg_n300 {').length).toBe(2)
+    expect(result.stylesheet.split('.static-css-overlap__bg_n100 {').length).toBe(2)
   },
 }
 

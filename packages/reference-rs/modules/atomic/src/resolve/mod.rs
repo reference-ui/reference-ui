@@ -10,6 +10,7 @@ pub mod rhythm;
 pub mod shorthands;
 pub mod size;
 pub mod tokens;
+pub mod unit;
 
 use base_system::BaseSystem;
 use smallvec::SmallVec;
@@ -124,22 +125,8 @@ fn resolve_atom_value(
     val: AtomValue,
     session: &mut ResolveSession<'_>,
 ) -> Option<CssValue> {
-    let css = css_value_from_authored(prop, val, session.diagnostics)?;
+    let css = unit::css_value_from_authored(prop, val, session.diagnostics)?;
     Some(apply_rhythm_and_tokens(prop, css, session))
-}
-
-fn css_value_from_authored(
-    prop: &str,
-    val: AtomValue,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<CssValue> {
-    if matches!(&val, AtomValue::Bool(_) | AtomValue::Null) {
-        diagnostics.push(Diagnostic::warning(format!(
-            "`{prop}` value `{val}` is not valid CSS"
-        )));
-        return None;
-    }
-    val.into_css_value()
 }
 
 fn apply_rhythm_and_tokens(
@@ -254,6 +241,7 @@ mod tests {
                 value: String::new(),
                 weights,
                 css,
+                font_face: None,
             },
         );
         let mut system = BaseSystem::default();

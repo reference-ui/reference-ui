@@ -7,9 +7,13 @@ mod analyzer;
 mod model;
 mod module_resolution;
 mod parser;
-mod primitive_metadata;
+pub(crate) mod primitive_metadata;
 mod source_files;
 mod util;
 mod walk;
 
-pub use analyzer::{trace_style_jsx_names, trace_style_jsx_names_with_hint};
+pub use analyzer::{
+    trace_style_bindings, trace_style_bindings_with_hint, trace_style_jsx_names,
+    trace_style_jsx_names_with_hint,
+};
+pub use model::TracedBinding;

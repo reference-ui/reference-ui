@@ -1,6 +1,6 @@
 {
-  "borderBottomColor:red.500": "bd-b-c_red.500",
-  "borderColor:gray.800": "bd-c_gray.800",
-  "padding:1r": "p_1r",
-  "paddingTop:2r": "pt_2r"
+  "borderBottomColor:red.500": "order-04__bd-b-c_red.500",
+  "borderColor:gray.800": "order-04__bd-c_gray.800",
+  "padding:1r": "order-04__p_1r",
+  "paddingTop:2r": "order-04__pt_2r"
 }

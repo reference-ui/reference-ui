@@ -1,3 +1,12 @@
 {
-  "name": "short-07"
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "short-07",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

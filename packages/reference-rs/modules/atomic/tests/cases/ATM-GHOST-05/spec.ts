@@ -13,19 +13,19 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-05',
   verify(result) {
     expect(hasWant(result, 'color', 'red', ['_osDark', 'sm'])).toBe(true)
-    expect(result.css.classes?.['_osDark:sm:color:red']).toBe('osDark:sm:c_red')
+    expect(result.css.classes?.['_osDark:sm:color:red']).toBe('ghost-05__osDark:sm:c_red')
     expect(result.atomCount).toBe(1)
     expect(result.diagnostics).toEqual([])
     const sheet = result.stylesheet
     const mediaAt = sheet.indexOf(MEDIA)
     const containerAt = sheet.indexOf(CONTAINER)
-    const classAt = sheet.indexOf('.osDark\\:sm\\:c_red')
+    const classAt = sheet.indexOf('.ghost-05__osDark\\:sm\\:c_red')
     expect(mediaAt).toBeGreaterThan(-1)
     expect(containerAt).toBeGreaterThan(mediaAt)
     expect(classAt).toBeGreaterThan(containerAt)
     expect(sheet.slice(mediaAt, classAt)).toContain(CONTAINER)
     expect(sheet).not.toMatch(
-      /@media \(prefers-color-scheme: dark\) \{\s*\.osDark\\:sm\\:c_red/
+      /@media \(prefers-color-scheme: dark\) \{\s*\.ghost-05__osDark\\:sm\\:c_red/
     )
   },
 }

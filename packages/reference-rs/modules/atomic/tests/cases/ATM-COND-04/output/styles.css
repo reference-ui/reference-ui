@@ -1,17 +1,19 @@
+@layer nested-conditions {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-n900: #18181b;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-n900: #fafafa;
   }
 }
 @layer utilities {
-  [data-panda-theme=dark] .hover\:dark\:bg_n900:is(:hover, [data-hover]) { background: var(--colors-n900); }
-  [data-panda-theme=dark] .dark\:hover\:focusVisible\:bd-c_gold:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { border-color: gold; }
-  [data-panda-theme=dark] .hover\:dark\:c_white:is(:hover, [data-hover]) { color: white; }
-  [data-panda-theme=dark] .dark\:hover\:focusVisible\:outline-c_yellow:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-color: yellow; }
-  [data-panda-theme=dark] .dark\:hover\:focusVisible\:outline-s_solid:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-style: solid; }
-  [data-panda-theme=dark] .dark\:hover\:focusVisible\:outline-w_2px:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-width: 2px; }
+  [data-theme=dark] .nested-conditions__hover\:dark\:bg_n900:is(:hover, [data-hover]) { background: var(--colors-n900); }
+  [data-theme=dark] .nested-conditions__dark\:hover\:focusVisible\:bd-c_gold:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { border-color: gold; }
+  [data-theme=dark] .nested-conditions__hover\:dark\:c_white:is(:hover, [data-hover]) { color: white; }
+  [data-theme=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-c_yellow:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-color: yellow; }
+  [data-theme=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-s_solid:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-style: solid; }
+  [data-theme=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-w_2px:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-width: 2px; }
+}
 }

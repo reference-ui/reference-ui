@@ -2,7 +2,7 @@
  * Atomic case helpers. Specs import this module only: compile a case input
  * tree and match wants on the result. Paths resolve under
  * tests/cases/<ATM-AREA-NN>. This module owns standing gauges and golden extractors.
- * Gauges enforce the six-layer preamble, CSS grammar (ATM-VALID-01 / ATM-VALID-02),
+ * Gauges enforce the package-wrapped six-layer preamble, CSS grammar (ATM-VALID-01 / ATM-VALID-02),
  * utilities-layer membership for every runtime class, idempotence, input-order
  * independence, and namer injectivity. Class selectors come from css-tree, never
  * from a TypeScript escaper.
@@ -13,12 +13,9 @@ import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
 import * as csstree from 'css-tree'
 import { compile } from '../js/index.js'
-import type {
-  BaseSystemInput,
-  CompileRequest,
-  CompileResult,
-  VirtualSource,
-} from '../js/types.js'
+import type { CompileRequest, CompileResult, VirtualSource } from '../js/types.js'
+import type { EvaluatedSystemSpec } from '../../../contracts/types.js'
+import libSystemSpecJson from './fixtures/lib-system-spec.json'
 import type {
   GoldenDefinition,
   StandingGauge,
@@ -31,20 +28,24 @@ import {
 } from '../../../testing/css.js'
 import { quarantineFor } from './css-quarantine.js'
 import { INJECTIVITY_QUARANTINE } from './injectivity-quarantine.js'
+import { expectPackageWrapped } from './package-layers.js'
 
 export type {
   CompileResult,
   Want,
-  BaseSystemInput,
   RecipeTable,
+  RecipeRuntimeTable,
   RecipeMatch,
 } from '../js/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const CASES_DIR = path.resolve(__dirname, 'cases')
-export const LAYER_PREAMBLE = '@layer reset, global, base, tokens, recipes, utilities;'
 export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})$/
+export { LAYER_PREAMBLE, LIB_PACKAGE_OPEN } from './package-layers.js'
+
+/** Frozen lib spec for stations without their own baseSystem; the seam validates it. */
+export const LIB_SYSTEM_SPEC = libSystemSpecJson as EvaluatedSystemSpec
 
 const SOURCE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx'])
 const SKIP_DIRS = new Set([
@@ -88,7 +89,7 @@ export const atomicGoldens: GoldenDefinition<CompileResult>[] = [
 
 export const atomicGauges: StandingGauge<CompileResult>[] = [
   result => {
-    expect(result.stylesheet.startsWith(LAYER_PREAMBLE)).toBe(true)
+    expectPackageWrapped(result.stylesheet)
   },
   noGhostClasses,
   cssIsValid,
@@ -119,20 +120,16 @@ export async function compileCase(
   extras: Partial<CompileRequest> = {}
 ): Promise<CompileResult> {
   const rootDir = path.resolve(getCaseInputDir(caseName))
-  const baseSystem = extras.baseSystem ?? readOptionalBaseSystem(rootDir)
-  return compile({
-    rootDir,
-    ...extras,
-    ...(baseSystem ? { baseSystem } : {}),
-  })
+  const baseSystem = extras.baseSystem ?? readOptionalBaseSystem(rootDir) ?? LIB_SYSTEM_SPEC
+  return compile({ rootDir, ...extras, baseSystem })
 }
 
-function readOptionalBaseSystem(rootDir: string): BaseSystemInput | undefined {
+function readOptionalBaseSystem(rootDir: string): EvaluatedSystemSpec | undefined {
   const specPath = path.join(rootDir, 'baseSystem.json')
   if (!fs.existsSync(specPath)) {
     return undefined
   }
-  return JSON.parse(fs.readFileSync(specPath, 'utf8')) as BaseSystemInput
+  return JSON.parse(fs.readFileSync(specPath, 'utf8')) as EvaluatedSystemSpec
 }
 
 /** Decoded class names that appear as class selectors inside `@layer name`. */
@@ -156,12 +153,20 @@ export function layerClassNames(sheet: string, layer: string): Set<string> {
 
 export function noGhostClasses(result: CompileResult, context: StationContext): void {
   const utilities = layerClassNames(result.stylesheet, 'utilities')
-  const missing = Object.values(result.css.classes ?? {}).filter(
+  const missing = Object.values(result.css?.classes ?? {}).filter(
     name => !utilities.has(name)
   )
   expect(
     missing,
     `ATM-GHOST-01 ${context.caseId}: runtime class(es) missing from @layer utilities: ${missing.join(', ')}`
+  ).toEqual([])
+  const planClasses = (result.runtime?.stylePlans ?? []).flatMap(plan =>
+    plan.declarations.map(decl => decl.className)
+  )
+  const planMissing = planClasses.filter(name => !utilities.has(name))
+  expect(
+    planMissing,
+    `ATM-SEAM-01 ${context.caseId}: plan class(es) missing from @layer utilities: ${planMissing.join(', ')}`
   ).toEqual([])
 }
 

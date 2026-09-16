@@ -1,0 +1,4 @@
+{
+  "@container card (min-width: 768px):p:2r": "@reference-ui/lib__[@container_card_(min-width:_768px)]:p_2r",
+  "containerType:inline-size": "@reference-ui/lib__cq-t_inline-size"
+}

@@ -41,14 +41,26 @@ pub fn push_bool_want(ctx: &mut ExpressionWalk<'_>, val: bool, when: &SmallVec<[
 
 /// Strip `!important` or trailing `!` from a value string.
 pub fn split_important_flag(val: &str) -> (&str, bool) {
-    if let Some(stripped) = val.strip_suffix("!important") {
-        // '1r!important'
+    if let Some(stripped) = strip_important_suffix(val) {
+        // '1r!important' / '0 !important' / 'red!IMPORTANT'
         (stripped.trim_end(), true)
     } else if val.len() > 1 && val.ends_with('!') {
         // '2r!'
         (&val[..val.len() - 1], true)
     } else {
         (val, false)
+    }
+}
+
+/// Strip a case-insensitive `!important` suffix, if present.
+fn strip_important_suffix(val: &str) -> Option<&str> {
+    const MARKER: &str = "!important";
+    let head_len = val.len().checked_sub(MARKER.len())?;
+    let tail = val.get(head_len..)?;
+    if tail.eq_ignore_ascii_case(MARKER) {
+        val.get(..head_len)
+    } else {
+        None
     }
 }
 

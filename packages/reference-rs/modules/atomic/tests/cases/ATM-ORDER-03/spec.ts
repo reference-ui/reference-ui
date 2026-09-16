@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     const sheet = result.stylesheet
     const positions = ORDER.map(name => {
-      const i = sheet.indexOf(`.${name}\\:c_red`)
+      const i = sheet.indexOf(`.order-03__${name}\\:c_red`)
       expect(i, name).toBeGreaterThan(-1)
       return i
     })

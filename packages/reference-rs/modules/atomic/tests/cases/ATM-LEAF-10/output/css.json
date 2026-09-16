@@ -1,0 +1,5 @@
+{
+  "color:red": "@reference-ui/lib__c_red!",
+  "content:\"hello!\"": "@reference-ui/lib__content_\"hello!\"",
+  "padding:0": "@reference-ui/lib__p_0!"
+}

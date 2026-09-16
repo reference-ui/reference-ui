@@ -1,0 +1,22 @@
+{
+  "expectedPaths": [
+    ".reference-ui/system/evaluated-system.json",
+    ".reference-ui/system/baseSystem.mjs",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/compile-request.json",
+    ".reference-ui/styled/styles.css",
+    ".reference-ui/styled/runtime-data.mjs",
+    ".reference-ui/styled/runtime-data.d.mts",
+    ".reference-ui/styled/types/index.d.ts",
+    ".reference-ui/styled/types/csstype.d.ts",
+    ".reference-ui/react"
+  ],
+  "forbiddenPaths": [
+    "panda.config.ts",
+    ".reference-ui/panda.config.ts",
+    ".reference-ui/styled/global.css",
+    ".reference-ui/styled/css",
+    ".reference-ui/styled/jsx",
+    ".reference-ui/styled/patterns"
+  ]
+}

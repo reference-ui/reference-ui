@@ -1,7 +1,7 @@
 {
-  "color:red": "c_red",
-  "margin:10px": "m_10px",
-  "margin:20px": "m_20px",
-  "padding:10px": "p_10px",
-  "padding:20px": "p_20px"
+  "color:red": "@reference-ui/lib__c_red",
+  "margin:10px": "@reference-ui/lib__m_10px",
+  "margin:20px": "@reference-ui/lib__m_20px",
+  "padding:10px": "@reference-ui/lib__p_10px",
+  "padding:20px": "@reference-ui/lib__p_20px"
 }

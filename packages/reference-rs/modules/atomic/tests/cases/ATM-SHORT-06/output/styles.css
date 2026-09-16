@@ -1,5 +1,7 @@
+@layer short-06 {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer utilities {
-  .p_2r { padding: calc(2 * var(--spacing-root)); }
-  .pt_4r { padding-top: calc(4 * var(--spacing-root)); }
+  .short-06__p_2r { padding: calc(2 * var(--spacing-root)); }
+  .short-06__pt_4r { padding-top: calc(4 * var(--spacing-root)); }
+}
 }

@@ -35,7 +35,7 @@ fn sheet(atoms: &[Atom]) -> String {
         set.insert(atom.clone());
     }
     let mut out = String::new();
-    write_utilities(&mut out, &set);
+    write_utilities(&mut out, &set, "");
     out
 }
 

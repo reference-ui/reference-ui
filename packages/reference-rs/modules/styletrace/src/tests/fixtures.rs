@@ -22,9 +22,16 @@ pub(super) fn workspace_root() -> PathBuf {
     dir
 }
 
-pub(super) fn workspace_sync_root() -> PathBuf {
+pub(super) fn reference_lib_sync_root() -> PathBuf {
     workspace_root().join("packages").join("reference-lib")
 }
+
+pub(super) fn workspace_sync_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join("sync-root")
+}
+
 
 pub(super) fn workspace_scratch_dir(name: &str) -> ScratchDir {
     let base_dir = workspace_root().join("target").join("styletrace-tests");

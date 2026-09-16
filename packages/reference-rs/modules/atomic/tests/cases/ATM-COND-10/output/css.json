@@ -1,0 +1,7 @@
+{
+  "_active:color:red.500": "@reference-ui/lib__active:c_red.500",
+  "_checked:borderColor:green.500": "@reference-ui/lib__checked:bd-c_green.500",
+  "_disabled:opacity:0.5": "@reference-ui/lib__disabled:op_0.5",
+  "_focus:bg:blue.500": "@reference-ui/lib__focus:bg_blue.500",
+  "_focusVisible:outlineColor:yellow.500": "@reference-ui/lib__focusVisible:outline-c_yellow.500"
+}

@@ -1,7 +1,7 @@
 /**
  * Atomic case executor. Discovers tests/cases, compiles each input tree, runs
  * the spec, then diffs committed output goldens using the shared station runner.
- * Standing gauges enforce six-layer preamble, CSS grammar, and zero ghost classes.
+ * Standing gauges enforce package-wrapped six-layer preamble, CSS grammar, and zero ghost classes.
  * Diagnostic goldens are path-normalized so they do not embed a checkout root.
  */
 import { createStationSuite, rewriteAbsoluteRoot } from '../../../testing/index.js'

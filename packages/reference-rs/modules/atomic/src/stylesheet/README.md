@@ -8,6 +8,7 @@ sheet is a linter. `css()` without a sheet is a ghost-class machine.
 `src/runtime` in the same call so the two cannot drift.
 
 ```css
+@layer color-mode {
 @layer reset, global, base, tokens, recipes, utilities;
 
 @layer reset { /* preflight */ }
@@ -18,7 +19,12 @@ sheet is a linter. `css()` without a sheet is a ghost-class machine.
   .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
   .bg_n300 { background: var(--colors-n-300); }
 }
+}
 ```
+
+The six internal layers nest inside the compiling package's layer
+(`M0-fix21-A`): flat internal layers leak to the top level, where they
+outrank another package's nested utilities on a composed page.
 
 ## Cascade sort
 

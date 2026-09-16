@@ -1,0 +1,4 @@
+{
+  "--brand-x:red.500": "@reference-ui/lib__--brand-x_red.500",
+  "color:var(--brand-x)": "@reference-ui/lib__c_var(--brand-x)"
+}

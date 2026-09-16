@@ -1,9 +1,15 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "ghost-05",
+  "tokens": {},
+  "fonts": {},
   "breakpoints": {
-    "names": ["sm"],
-    "widths": {
-      "sm": "640"
-    }
-  }
+    "sm": "640px"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

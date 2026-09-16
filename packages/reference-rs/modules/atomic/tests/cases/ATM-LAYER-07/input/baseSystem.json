@@ -1,17 +1,22 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "layer-07",
-  "breakpoints": {
-    "names": ["sm"],
-    "widths": {
-      "sm": "640"
+  "tokens": {
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      }
     }
   },
-  "tokens": {
-    "colors.n100": {
-      "category": "colors",
-      "cssVar": "--colors-n100",
-      "light": "#f4f4f5",
-      "dark": "#18181b"
-    }
-  }
+  "fonts": {},
+  "breakpoints": {
+    "sm": "640px"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

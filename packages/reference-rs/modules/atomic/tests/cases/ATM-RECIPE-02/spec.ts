@@ -11,31 +11,31 @@ const spec: AtomicCaseSpec = {
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
     const table = tables[0]!
-    expect(table.name).toBe('button')
+    expect(table.qualifiedName).toBe('@reference-ui/lib__button')
     expect(table.className).toBe('button')
-    expect(table.variants.variant?.solid).toBe('button--variant_solid')
-    expect(table.variants.variant?.outline).toBe('button--variant_outline')
+    expect(table.base).toBe('@reference-ui/lib__button__base')
+    expect(table.variantMap.variant?.solid).toBe('@reference-ui/lib__button_v_solid')
+    expect(table.variantMap.variant?.outline).toBe('@reference-ui/lib__button_v_outline')
     expect(table.compoundVariants).toHaveLength(1)
-    expect(table.compoundVariants[0]?.props).toEqual({ variant: 'solid' })
-    expect(table.compoundVariants[0]?.className).toBe('button--compound-variant_solid')
+    expect(table.compoundVariants[0]?.selection).toEqual({ variant: 'solid' })
+    expect(table.compoundVariants[0]?.className).toBe('@reference-ui/lib__button_c_solid')
 
-    const base = table.combinations.find(c => Object.keys(c.props).length === 0)
-    expect(base?.className).toBe('button')
-    const solid = table.combinations.find(c => c.props.variant === 'solid')
-    expect(solid?.className.split(' ')).toEqual([
-      'button',
-      'button--variant_solid',
-      'button--compound-variant_solid',
+    expect(table.combinations['solid']?.split(' ')).toEqual([
+      '@reference-ui/lib__button__base',
+      '@reference-ui/lib__button_v_solid',
+      '@reference-ui/lib__button_c_solid',
     ])
-    const outline = table.combinations.find(c => c.props.variant === 'outline')
-    expect(outline?.className.split(' ')).toEqual(['button', 'button--variant_outline'])
+    expect(table.combinations['outline']?.split(' ')).toEqual([
+      '@reference-ui/lib__button__base',
+      '@reference-ui/lib__button_v_outline',
+    ])
 
     const recipes = layerClassNames(result.stylesheet, 'recipes')
     for (const className of [
-      'button',
-      'button--variant_solid',
-      'button--variant_outline',
-      'button--compound-variant_solid',
+      '@reference-ui/lib__button__base',
+      '@reference-ui/lib__button_v_solid',
+      '@reference-ui/lib__button_v_outline',
+      '@reference-ui/lib__button_c_solid',
     ]) {
       expect(recipes.has(className)).toBe(true)
     }

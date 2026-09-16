@@ -1,6 +1,6 @@
 {
-  "border:borders.card": "bd_borders.card",
-  "border:inherit": "bd_inherit",
-  "border:none": "bd_none",
-  "borderWidth:0px": "bd-w_0px"
+  "border:borders.card": "@reference-ui/lib__bd_borders.card",
+  "border:inherit": "@reference-ui/lib__bd_inherit",
+  "border:none": "@reference-ui/lib__bd_none",
+  "borderWidth:0px": "@reference-ui/lib__bd-w_0px"
 }

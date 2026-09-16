@@ -1,95 +1,172 @@
 //! Authored nested spec of one design-system utterance.
-//! TypeScript evaluates `tokens()` / `font()` / `keyframes()` / `globalCss()` and serializes
-//! the objects; this type is that JSON — the wire form fragments specify.
-//! Leaves carry `value` / `light` / `dark` strings. When `light` or `dark` is itself an object,
-//! it is a nested group (a token *named* `light`) rather than a mode slot. Keyframes are name →
-//! steps; recipes are static `base` / `variants` tables. Unknown top-level keys fail closed.
-//! Extra leaf keys and `fontFace` are ignored until later steps grow those types.
+//! TypeScript evaluates `tokens()`, `font()`, `keyframes()`, and `globalCss()` and serializes
+//! the evaluated objects into an `EvaluatedSystemSpec` with schemaVersion 1 and reference-ui profile.
+//! Leaves carry `value`, `light`, and `dark` strings. When `light` or `dark` is itself an object,
+//! it is a nested group rather than a mode slot. Unknown top-level fields and unsupported
+//! schema versions fail closed with explicit diagnostics.
 
-use crate::fonts::FontDefinition;
-use crate::{KeyframeDefinition, RecipeDefinition, StaticCss};
-use indexmap::IndexMap;
-use serde::de::Deserializer;
-use serde::Deserialize;
-use serde_json::Value;
 use std::error::Error;
 use std::fmt;
+
+use indexmap::IndexMap;
+use serde::de::Deserializer;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::fonts::FontDefinition;
+pub use crate::global_css::GlobalCssFragment;
+use crate::{KeyframeDefinition, RecipeDefinition, StaticCss};
+
+#[cfg(test)]
+#[path = "spec_tests.rs"]
+mod tests;
 
 /// Failure lowering an evaluated JSON spec into an indexed `BaseSystem`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FromJsonError {
     Parse(String),
-    InvalidLeaf { path: String },
-    DuplicatePath { path: String },
-    Cycle { path: String },
+    UnsupportedSchemaVersion(u32),
+    UnsupportedProfile(String),
+    InvalidLeaf {
+        path: String,
+        source: Option<String>,
+    },
+    DuplicatePath {
+        path: String,
+        source: Option<String>,
+    },
+    Cycle {
+        path: String,
+        source: Option<String>,
+    },
+    InvalidGlobalCss {
+        path: String,
+        source: Option<String>,
+        message: String,
+    },
 }
 
 impl fmt::Display for FromJsonError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parse(message) => write!(
-                f,
-                "base-system consumes evaluated JSON only: {message}"
-            ),
-            Self::InvalidLeaf { path } => write!(f, "invalid token leaf at {path}"),
-            Self::DuplicatePath { path } => write!(f, "duplicate token path {path}"),
-            Self::Cycle { path } => write!(f, "cyclic token alias at {path}"),
+        if let Some(res) = self.fmt_envelope_error(f) {
+            return res;
         }
+        self.fmt_domain_error(f)
+    }
+}
+
+impl FromJsonError {
+    fn fmt_envelope_error(&self, f: &mut fmt::Formatter<'_>) -> Option<fmt::Result> {
+        match self {
+            Self::Parse(msg) => Some(write!(f, "base-system consumes evaluated JSON only: {msg}")),
+            Self::UnsupportedSchemaVersion(ver) => {
+                Some(write!(f, "unsupported schema version {ver}; expected 1"))
+            }
+            Self::UnsupportedProfile(prof) => {
+                Some(write!(f, "unsupported profile \"{prof}\"; expected \"reference-ui\""))
+            }
+            _ => None,
+        }
+    }
+
+    fn fmt_domain_error(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidLeaf { path, source } => {
+                fmt_with_source(f, "invalid token leaf", path, source.as_deref())
+            }
+            Self::DuplicatePath { path, source } => {
+                fmt_with_source(f, "duplicate token path", path, source.as_deref())
+            }
+            Self::Cycle { path, source } => {
+                fmt_with_source(f, "cyclic token alias", path, source.as_deref())
+            }
+            Self::InvalidGlobalCss { path, source, message } => {
+                fmt_global_css(f, path, source.as_deref(), message)
+            }
+            _ => Ok(()),
+        }
+    }
+}
+
+fn fmt_with_source(
+    f: &mut fmt::Formatter<'_>,
+    prefix: &str,
+    path: &str,
+    source: Option<&str>,
+) -> fmt::Result {
+    match source {
+        Some(src) => write!(f, "{prefix} at {path} (from {src})"),
+        None => write!(f, "{prefix} at {path}"),
+    }
+}
+
+fn fmt_global_css(
+    f: &mut fmt::Formatter<'_>,
+    path: &str,
+    source: Option<&str>,
+    message: &str,
+) -> fmt::Result {
+    match source {
+        Some(src) => write!(f, "invalid global CSS at {path} in {src}: {message}"),
+        None => write!(f, "invalid global CSS at {path}: {message}"),
     }
 }
 
 impl Error for FromJsonError {}
 
+/// Provenance collector categories.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProvenanceKind {
+    Tokens,
+    Fonts,
+    Keyframes,
+    GlobalCss,
+    Recipes,
+    Fragment,
+}
+
+/// Provenance record attributing keys to their source file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProvenanceEntry {
+    pub source: String,
+    pub kind: ProvenanceKind,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub keys: Vec<String>,
+}
+
 /// Mode slots on one token leaf. Extra keys are ignored (no `deny_unknown_fields`).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct TokenSpecLeaf {
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct TokenSpecLeaf {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub light: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dark: Option<String>,
 }
 
 /// Nested token tree: a mode leaf, a group of children, or a scalar that lowering rejects.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum TokenSpecNode {
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(untagged)]
+pub enum TokenSpecNode {
     Leaf(TokenSpecLeaf),
     Group(IndexMap<String, TokenSpecNode>),
+    #[serde(skip_serializing)]
     Scalar,
 }
 
-/// Nested spec wire format. Distinct from indexed `BaseSystem` (`names`/`widths`, flat tokens).
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub(crate) struct BaseSystemSpec {
-    #[serde(default)]
-    pub name: String,
-    #[serde(default)]
-    pub tokens: IndexMap<String, TokenSpecNode>,
-    #[serde(default)]
-    pub fonts: IndexMap<String, FontDefinition>,
-    #[serde(default)]
-    pub breakpoints: IndexMap<String, SpecBreakpointWidth>,
-    #[serde(default)]
-    pub conditions: IndexMap<String, String>,
-    #[serde(default)]
-    pub global_css: Vec<String>,
-    #[serde(default)]
-    pub keyframes: IndexMap<String, KeyframeDefinition>,
-    #[serde(default)]
-    pub recipes: IndexMap<String, RecipeDefinition>,
-    #[serde(default)]
-    pub static_css: StaticCss,
-}
-
 /// Spec breakpoint width: `"640px"` or `{ "value": "640px" }`.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub(crate) enum SpecBreakpointWidth {
+pub enum SpecBreakpointWidth {
     Bare(String),
     Wrapped { value: String },
 }
 
 impl SpecBreakpointWidth {
-    pub(crate) fn into_px(self) -> String {
+    pub fn into_px(self) -> String {
         let raw = match self {
             Self::Bare(value) | Self::Wrapped { value } => value,
         };
@@ -97,8 +174,32 @@ impl SpecBreakpointWidth {
     }
 }
 
-impl BaseSystemSpec {
-    pub(crate) fn from_json(json: &str) -> Result<Self, FromJsonError> {
+/// Versioned v1 evaluated design-system wire specification.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct EvaluatedSystemSpec {
+    pub schema_version: u32,
+    pub profile: String,
+    pub name: String,
+    pub tokens: IndexMap<String, TokenSpecNode>,
+    pub fonts: IndexMap<String, FontDefinition>,
+    #[serde(default)]
+    pub breakpoints: Option<IndexMap<String, SpecBreakpointWidth>>,
+    #[serde(default)]
+    pub conditions: Option<IndexMap<String, String>>,
+    pub global_css: Vec<GlobalCssFragment>,
+    pub keyframes: IndexMap<String, KeyframeDefinition>,
+    pub recipes: IndexMap<String, RecipeDefinition>,
+    pub static_css: StaticCss,
+    pub provenance: Vec<ProvenanceEntry>,
+}
+
+/// Backwards-compatible alias for existing indexed BaseSystem consumers.
+pub type BaseSystemSpec = EvaluatedSystemSpec;
+
+impl EvaluatedSystemSpec {
+    /// Deserialize an evaluated spec from JSON with strict version and unknown field checks.
+    pub fn from_json(json: &str) -> Result<Self, FromJsonError> {
         serde_json::from_str(json).map_err(|err| FromJsonError::Parse(err.to_string()))
     }
 }
@@ -153,170 +254,5 @@ fn slot(map: &IndexMap<String, Value>, key: &str) -> Option<Option<String>> {
         None | Some(Value::Null) => Some(None),
         Some(Value::String(value)) => Some(Some(value.clone())),
         Some(_) => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::BaseSystem;
-
-    const FOREIGN: &str =
-        r#"{"name":"@reference-ui/lib","fragment":"(function(){})()","jsxElements":["Button"]}"#;
-
-    #[test]
-    fn bas_dump_02_indexes_nested_color_leaf() {
-        let system = BaseSystem::from_json(
-            r##"{"tokens":{"colors":{"blue":{"600":{"value":"#2563eb"}}}}}"##,
-        )
-        .unwrap();
-        assert!(system.is_token("colors.blue.600"));
-        assert_eq!(system.token_category("colors.blue.600"), Some("colors"));
-        assert_eq!(
-            system.token_css_var("colors.blue.600"),
-            Some("--colors-blue-600")
-        );
-        assert_eq!(system.token_light("colors.blue.600"), Some("#2563eb"));
-        assert!(system.token_dark("colors.blue.600").is_none());
-    }
-
-    #[test]
-    fn bas_dump_03_preserves_system_name() {
-        let system = BaseSystem::from_json(r#"{"name":"@reference-ui/lib"}"#).unwrap();
-        assert_eq!(system.name, "@reference-ui/lib");
-    }
-
-    #[test]
-    fn bas_dump_04_rejects_typescript_source() {
-        let err = BaseSystem::from_json("tokens({ colors: { primary: '#fff' } })").unwrap_err();
-        let message = err.to_string();
-        assert!(
-            message.contains("evaluated JSON"),
-            "unexpected parse diagnostic: {message}"
-        );
-    }
-
-    #[test]
-    fn atm_token_10_rejects_foreign_core_shape() {
-        let spec_err = BaseSystem::from_json(FOREIGN).unwrap_err();
-        let spec_message = spec_err.to_string();
-        assert!(
-            spec_message.contains("unknown field"),
-            "unexpected spec diagnostic: {spec_message}"
-        );
-        assert!(
-            serde_json::from_str::<BaseSystem>(FOREIGN).is_err(),
-            "indexed BaseSystem must deny fragment/jsxElements"
-        );
-    }
-
-    #[test]
-    fn from_json_empty_object_equals_default() {
-        let via_spec = BaseSystem::from_json("{}").unwrap();
-        let via_index: BaseSystem = serde_json::from_str("{}").unwrap();
-        assert_eq!(via_spec, BaseSystem::default());
-        assert_eq!(via_index, BaseSystem::default());
-    }
-
-    #[test]
-    fn light_named_nested_group_is_not_a_mode_slot() {
-        let system = BaseSystem::from_json(
-            r#"{"tokens":{"colors":{"design":{"text":{"light":{"light":"{colors.gray.700}","dark":"{colors.gray.300}"}}}}}}"#,
-        )
-        .unwrap();
-        assert!(system.is_token("colors.design.text.light"));
-        assert!(!system.is_token("colors.design.text"));
-        assert_eq!(
-            system.token_light("colors.design.text.light"),
-            Some("{colors.gray.700}")
-        );
-        assert_eq!(
-            system.token_dark("colors.design.text.light"),
-            Some("{colors.gray.300}")
-        );
-    }
-
-    #[test]
-    fn open_category_indexes_arbitrary_token() {
-        let system = BaseSystem::from_json(r#"{"tokens":{"foo":{"bar":{"value":"1"}}}}"#).unwrap();
-        assert!(system.is_token("foo.bar"));
-        assert_eq!(system.token_category("foo.bar"), Some("foo"));
-        assert_eq!(system.token_css_var("foo.bar"), Some("--foo-bar"));
-        assert_eq!(system.token_light("foo.bar"), Some("1"));
-    }
-
-    #[test]
-    fn extra_font_face_is_ignored() {
-        let system = BaseSystem::from_json(
-            r#"{"fonts":{"sans":{"value":"Inter, sans-serif","fontFace":{"src":"url(/x.woff2)"}}}}"#,
-        )
-        .unwrap();
-        assert!(system.fonts().has_family("sans"));
-        assert_eq!(
-            system.fonts().get("sans").unwrap().value,
-            "Inter, sans-serif"
-        );
-        assert!(system.is_token("fonts.sans"));
-    }
-
-    #[test]
-    fn spec_breakpoints_strip_px_and_stay_empty_when_omitted() {
-        let with_widths =
-            BaseSystem::from_json(r#"{"breakpoints":{"sm":"640px","md":{"value":"768px"}}}"#)
-                .unwrap();
-        assert_eq!(with_widths.breakpoints().width_px("sm"), Some("640"));
-        assert_eq!(with_widths.breakpoints().width_px("md"), Some("768"));
-        assert_eq!(
-            with_widths.breakpoints().breakpoint_for_index(0),
-            Some("base")
-        );
-        let empty = BaseSystem::from_json("{}").unwrap();
-        assert!(empty.breakpoints().is_empty());
-    }
-
-    #[test]
-    fn indexed_partial_breakpoints_still_deserialize() {
-        let system: BaseSystem =
-            serde_json::from_str(r#"{"breakpoints":{"names":["tablet","desktop"]}}"#).unwrap();
-        assert_eq!(system.breakpoints().breakpoint_for_index(1), Some("tablet"));
-        assert!(system.tokens.is_empty());
-    }
-
-    #[test]
-    fn string_leaf_is_invalid() {
-        let err = BaseSystem::from_json(r##"{"tokens":{"colors":{"blue":{"500":"#3b82f6"}}}}"##)
-            .unwrap_err();
-        assert!(matches!(
-            err,
-            FromJsonError::InvalidLeaf { path } if path == "colors.blue.500"
-        ));
-    }
-
-    #[test]
-    fn missing_alias_target_is_not_a_cycle() {
-        let system = BaseSystem::from_json(
-            r#"{"tokens":{"colors":{"brand":{"value":"{colors.missing}"}}}}"#,
-        )
-        .unwrap();
-        assert_eq!(system.token_light("colors.brand"), Some("{colors.missing}"));
-    }
-
-    #[test]
-    fn spec_token_walk_preserves_authored_object_order() {
-        let system =
-            BaseSystem::from_json(r#"{"tokens":{"colors":{"b":{"value":"1"},"a":{"value":"2"}}}}"#)
-                .unwrap();
-        let keys: Vec<&str> = system.tokens.iter().map(|(key, _)| key).collect();
-        assert_eq!(keys, ["colors.b", "colors.a"]);
-    }
-
-    #[test]
-    fn indexed_empty_keyframes_and_recipes_deserialize() {
-        let omitted: BaseSystem = serde_json::from_str("{}").unwrap();
-        let empty: BaseSystem = serde_json::from_str(r#"{"keyframes":{},"recipes":{}}"#).unwrap();
-        assert!(omitted.keyframes.is_empty());
-        assert!(omitted.recipes.is_empty());
-        assert!(empty.keyframes.is_empty());
-        assert!(empty.recipes.is_empty());
     }
 }

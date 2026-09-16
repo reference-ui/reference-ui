@@ -1,4 +1,4 @@
 {
-  "bg:colors.blue.600/50": "bg_colors.blue.600/50",
-  "color:red.500/25%": "c_red.500/25%"
+  "bg:colors.blue.600/50": "@reference-ui/lib__bg_colors.blue.600/50",
+  "color:red.500/25%": "@reference-ui/lib__c_red.500/25%"
 }

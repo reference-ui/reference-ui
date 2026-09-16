@@ -6,6 +6,8 @@ pub mod atom;
 pub mod diagnostics;
 pub mod extract;
 pub mod recipes;
+#[cfg(test)]
+mod spec_recipe_tests;
 pub mod resolve;
 pub mod runtime;
 mod static_css;
@@ -18,7 +20,10 @@ pub use atom::Want;
 pub use base_system::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
 pub use diagnostics::{Diagnostic, DiagnosticSeverity};
 pub use recipes::{RecipeMatch, RecipeTable};
-pub use runtime::CssRuntime;
+pub use runtime::{
+    get_style_prop_names, CssRuntime, NativeRuntimeArtifact, RecipeRuntimeTable,
+    RuntimeDeclaration, RuntimeStylePlan,
+};
 pub use stylesheet::StylesheetOutput;
 
 use oxc_allocator::Allocator;
@@ -47,8 +52,7 @@ pub struct CompileRequest {
     pub root_dir: Option<String>,
     #[serde(default)]
     pub files: Option<Vec<VirtualSource>>,
-    #[serde(default)]
-    pub base_system: Option<BaseSystem>,
+    pub base_system: BaseSystem,
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
@@ -56,7 +60,11 @@ pub struct CompileRequest {
 #[serde(rename_all = "camelCase")]
 pub struct CompileResult {
     pub stylesheet: String,
-    pub css: CssRuntime,
+    #[serde(default)]
+    pub portable_stylesheet: String,
+    pub runtime: NativeRuntimeArtifact,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub css: Option<CssRuntime>,
     pub diagnostics: Vec<Diagnostic>,
     #[serde(default)]
     pub wants: Vec<Want>,
@@ -73,6 +81,7 @@ struct ParseSession<'a> {
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,
+    authored: &'a mut Vec<runtime::AuthoredDeclaration>,
 }
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
@@ -81,12 +90,10 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut wants = Vec::new();
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
+    let mut authored = Vec::new();
     let project_constants = collect_project_constants(&sources);
     let traced_jsx = collect_traced_jsx_names(request);
-    let system = request
-        .base_system
-        .as_ref()
-        .unwrap_or_else(|| BaseSystem::lib_fixture());
+    let system = &request.base_system;
 
     {
         let mut session = ParseSession {
@@ -96,19 +103,44 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
             wants: &mut wants,
             recipes: &mut extracted_recipes,
             diagnostics: &mut diagnostics,
+            authored: &mut authored,
         };
         for (path, content) in &sources {
             parse_and_extract(&mut session, path, content);
         }
     }
 
-    static_css::append_wants(system, &mut wants);
+    let mut static_ctx = static_css::StaticCssContext {
+        system,
+        wants: &mut wants,
+        authored: &mut authored,
+        diagnostics: &mut diagnostics,
+    };
+    static_css::append_static_css(&mut static_ctx);
 
-    let atom_set = build_atom_set(&wants, system, &mut diagnostics);
-    let atom_count = atom_set.len();
+    let mut atom_set = build_atom_set(&wants, system, &mut diagnostics);
+    resolve::conditions::check_container_root(system, &atom_set, &mut diagnostics);
     let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
-    let css = build_css_runtime(&atom_set);
+    let mut plan_builder = runtime::PlanBuilder::new(
+        &system.name,
+        system,
+        &mut atom_set,
+        &mut diagnostics,
+    );
+    let style_plans = plan_builder.build(&authored);
+    let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
+    let runtime = NativeRuntimeArtifact {
+        schema_version: 1,
+        style_plans,
+        recipes: runtime_recipes,
+        style_prop_names: runtime::get_style_prop_names(),
+    };
+
+    let atom_count = atom_set.len();
+    let css = build_css_runtime(&atom_set, &system.name);
     let stylesheet = stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes);
+    let portable_stylesheet =
+        stylesheet::build_portable_stylesheet_with(&atom_set, system, &compiled_recipes);
     let recipe_tables = compiled_recipes
         .into_iter()
         .map(|recipe| recipe.table)
@@ -116,7 +148,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
 
     Ok(CompileResult {
         stylesheet,
-        css,
+        portable_stylesheet,
+        runtime,
+        css: Some(css),
         diagnostics,
         wants,
         recipes: recipe_tables,
@@ -133,10 +167,7 @@ fn collect_sources(request: &CompileRequest) -> Vec<(String, String)> {
 fn gather_sources(request: &CompileRequest) -> Vec<(String, String)> {
     if let Some(files) = &request.files {
         if !files.is_empty() {
-            return files
-                .iter()
-                .map(|f| (f.path.clone(), f.content.clone()))
-                .collect();
+            return files.iter().map(|f| (f.path.clone(), f.content.clone())).collect();
         }
     }
 
@@ -161,18 +192,10 @@ fn scan_dir(dir: &Path, acc: &mut Vec<(String, String)>) {
 fn handle_dir_entry(path: &Path, acc: &mut Vec<(String, String)>) {
     if path.is_dir() {
         let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if !matches!(
-            name,
-            "node_modules"
-                | ".git"
-                | "dist"
-                | "build"
-                | ".turbo"
-                | "target"
-                | ".reference-ui"
-                | ".reference"
-                | ".pipeline"
-        ) {
+        const IGNORE: &[&str] = &[
+            "node_modules", ".git", "dist", "build", ".turbo", "target", ".reference-ui", ".reference", ".pipeline",
+        ];
+        if !IGNORE.contains(&name) {
             scan_dir(path, acc);
         }
     } else if is_supported_extension(path) {
@@ -247,6 +270,7 @@ fn extract_parsed_program(
         wants: session.wants,
         recipes: session.recipes,
         diagnostics: session.diagnostics,
+        authored: session.authored,
     };
     let mut ctx = extract::ExtractContext::new(path, config, sinks);
     extract::extract_with_context(program, &mut ctx);
@@ -285,17 +309,30 @@ fn compile_recipes(
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Vec<recipes::CompiledRecipe> {
+    let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
+    let mut seen = std::collections::HashSet::new();
+    let mut valid = Vec::new();
+    for recipe in spec_recipes.iter().chain(extracted.iter()) {
+        if !seen.insert(&recipe.class_name) {
+            diagnostics.push(Diagnostic::error(format!(
+                "Duplicate recipe className '{}' within system '{}'",
+                recipe.class_name, system.name
+            )));
+        } else {
+            valid.push(recipe.clone());
+        }
+    }
     let mut session = resolve::ResolveSession {
         system,
         diagnostics,
     };
-    recipes::compile(extracted, &mut session)
+    recipes::compile(&valid, &system.name, &mut session)
 }
 
-fn build_css_runtime(atom_set: &AtomSet) -> CssRuntime {
+fn build_css_runtime(atom_set: &AtomSet, system: &str) -> CssRuntime {
     let mut runtime = CssRuntime::new();
     for atom in atom_set {
-        let c_name = stylesheet::name::class_name(atom);
+        let c_name = stylesheet::name::class_name_with_system(atom, system);
         let val_key = atom.value.class_name_str();
         let key = if atom.conditions.is_empty() {
             format!("{}:{}", atom.prop, val_key)
@@ -319,7 +356,9 @@ mod tests {
         assert!(res
             .stylesheet
             .starts_with("@layer reset, global, base, tokens, recipes, utilities;"));
-        assert!(res.css.is_empty());
+        assert!(res.css.as_ref().is_some_and(|c| c.is_empty()));
+        assert!(res.runtime.style_plans.is_empty());
         assert!(res.diagnostics.is_empty());
+        assert!(!res.stylesheet.contains("--colors-"));
     }
 }

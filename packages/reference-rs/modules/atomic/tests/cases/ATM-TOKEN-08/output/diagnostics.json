@@ -1,0 +1,6 @@
+[
+  {
+    "severity": "warning",
+    "message": "unterminated `{` in value `\"{oops\"`"
+  }
+]

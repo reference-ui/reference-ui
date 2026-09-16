@@ -462,3 +462,18 @@ fn can_join_08_unique_class_prefixes() {
     assert_eq!(find_property("y").unwrap().class_prefix, "svg-y");
     assert_eq!(find_property("translateY").unwrap().class_prefix, "y");
 }
+
+#[test]
+fn test_unitless_properties_sorted_and_detected() {
+    assert!(UNITLESS_PROPERTIES.windows(2).all(|w| w[0] < w[1]));
+    assert!(is_unitless_prop("zIndex"));
+    assert!(is_unitless_prop("opacity"));
+    assert!(is_unitless_prop("fontWeight"));
+    assert!(is_unitless_prop("lineHeight"));
+    assert!(is_unitless_prop("--custom-prop"));
+    assert!(!is_unitless_prop("width"));
+    assert!(!is_unitless_prop("padding"));
+    assert!(!is_unitless_prop("p"));
+    assert!(!is_unitless_prop("margin"));
+}
+

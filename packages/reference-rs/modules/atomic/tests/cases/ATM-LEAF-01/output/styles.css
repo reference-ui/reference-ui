@@ -1,17 +1,19 @@
+@layer flat-ternary {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-n100: #f4f4f5;
     --colors-n300: #d4d4d8;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-n100: #18181b;
     --colors-n300: #3f3f46;
   }
 }
 @layer utilities {
-  .bg_n100 { background: var(--colors-n100); }
-  .bg_n300 { background: var(--colors-n300); }
-  .c_black { color: black; }
-  .c_white { color: white; }
+  .flat-ternary__bg_n100 { background: var(--colors-n100); }
+  .flat-ternary__bg_n300 { background: var(--colors-n300); }
+  .flat-ternary__c_black { color: black; }
+  .flat-ternary__c_white { color: white; }
+}
 }

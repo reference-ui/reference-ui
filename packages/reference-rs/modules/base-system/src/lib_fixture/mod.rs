@@ -1,23 +1,64 @@
-//! Frozen `@reference-ui/lib` BaseSystem constructor.
-//! Loads the committed nested spec (`lib.json`) through `from_json`, then overlays
-//! host pieces lib does not author: Panda-preset conditions, `BreakpointScale::standard()`,
-//! and the single `:root { --spacing-root: 0.25rem }` globalCss line. The spec is
-//! generated from lib theme object literals; this crate does no runtime file I/O.
+//! Frozen `@reference-ui/lib` BaseSystem constructor for explicit Rust tests.
+//! Loads the committed fragment spec (`lib.json`) into a versioned `EvaluatedSystemSpec`
+//! with `profile: "reference-ui"`, lowering canonical conditions, standard breakpoints,
+//! and the structured `--spacing-root` global rule through the public `from_spec` path.
+//! This fixture is strictly opt-in for testing; production compilation refuses missing specs.
 
-use crate::breakpoints::BreakpointScale;
-use crate::conditions::lib_conditions;
-use crate::BaseSystem;
+use indexmap::IndexMap;
+use serde::Deserialize;
 
-const SPACING_ROOT: &str = ":root { --spacing-root: 0.25rem }";
+use crate::global_css::{GlobalCssFragment, GlobalDeclarationValue};
+use crate::spec::{EvaluatedSystemSpec, ProvenanceEntry, ProvenanceKind, TokenSpecNode};
+use crate::{BaseSystem, FontDefinition, KeyframeDefinition};
+
 const LIB_SPEC: &str = include_str!("lib.json");
 
-/// Build the owned lib fixture. `BaseSystem::lib_fixture` caches the result.
+#[derive(Deserialize)]
+struct LibJsonDump {
+    name: String,
+    tokens: IndexMap<String, TokenSpecNode>,
+    fonts: IndexMap<String, FontDefinition>,
+    keyframes: IndexMap<String, KeyframeDefinition>,
+}
+
+/// Build the owned lib fixture through the public lowering path.
 pub fn build() -> BaseSystem {
-    let mut system = BaseSystem::from_json(LIB_SPEC).unwrap_or_else(|err| panic!("{err}"));
-    system.breakpoints = BreakpointScale::standard();
-    system.conditions = lib_conditions().into();
-    system.global_css = vec![SPACING_ROOT.to_string()];
-    system
+    let dump: LibJsonDump = serde_json::from_str(LIB_SPEC).unwrap_or_else(|err| panic!("{err}"));
+    let mut root_rule = IndexMap::new();
+    root_rule.insert(
+        "--spacing-root".to_string(),
+        GlobalDeclarationValue::String("0.25rem".to_string()),
+    );
+    root_rule.insert(
+        "containerType".to_string(),
+        GlobalDeclarationValue::String("inline-size".to_string()),
+    );
+    let mut rules = IndexMap::new();
+    rules.insert(":root".to_string(), root_rule);
+    let global_css = vec![GlobalCssFragment {
+        source: "packages/reference-lib/src/theme/global.ts".to_string(),
+        rules,
+    }];
+    let spec = EvaluatedSystemSpec {
+        schema_version: 1,
+        profile: "reference-ui".to_string(),
+        name: dump.name,
+        tokens: dump.tokens,
+        fonts: dump.fonts,
+        breakpoints: None,
+        conditions: None,
+        global_css,
+        keyframes: dump.keyframes,
+        recipes: IndexMap::new(),
+        static_css: IndexMap::new(),
+        provenance: vec![ProvenanceEntry {
+            source: "packages/reference-lib".to_string(),
+            kind: ProvenanceKind::Fragment,
+            keys: Vec::new(),
+        }],
+    };
+    BaseSystem::from_spec(&spec)
+        .unwrap_or_else(|err| panic!("lib_fixture lowering failed: {err}"))
 }
 
 #[cfg(test)]
@@ -26,7 +67,6 @@ mod tests {
 
     #[test]
     fn lib_fixture_matches_generated_spec_keys_and_len() {
-        let from_spec = BaseSystem::from_json(LIB_SPEC).unwrap_or_else(|err| panic!("{err}"));
         let fixture = BaseSystem::lib_fixture();
         assert!(fixture.is_token("colors.gray.800"));
         assert!(fixture.is_token("colors.design.text.light"));
@@ -34,13 +74,12 @@ mod tests {
         assert!(fixture.is_token("radii.md"));
         assert!(fixture.fonts().has_family("sans"));
         assert!(fixture.is_token("colors.reference.text"));
-        assert_eq!(fixture.tokens.len(), from_spec.tokens.len());
-        assert_eq!(fixture.tokens, from_spec.tokens);
-        assert_eq!(fixture.fonts, from_spec.fonts);
-        assert_eq!(fixture.keyframes, from_spec.keyframes);
         assert_eq!(fixture.keyframes.len(), 31);
         assert!(fixture.is_token("animations.fadeIn.normal"));
         assert!(fixture.animation_keyframe_gaps().is_empty());
         assert!(fixture.recipes.is_empty());
+        assert_eq!(fixture.global_css.len(), 1);
+        assert_eq!(fixture.breakpoints().width_px("sm"), Some("640"));
+        assert_eq!(fixture.get_condition("_dark"), Some("[data-theme=dark] &"));
     }
 }

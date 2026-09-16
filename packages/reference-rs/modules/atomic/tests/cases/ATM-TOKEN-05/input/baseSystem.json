@@ -1,12 +1,28 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "custom-dump",
   "tokens": {
-    "colors.brand": {
-      "category": "colors",
-      "cssVar": "--colors-brand",
-      "light": "red",
-      "dark": "navy"
+    "colors": {
+      "brand": {
+        "light": "red",
+        "dark": "navy"
+      }
     }
   },
-  "globalCss": [":root { --spacing-root: 0.25rem }"]
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

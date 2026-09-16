@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "static-wildcard",
+  "tokens": {
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n200": {
+        "light": "#e4e4e7",
+        "dark": "#27272a"
+      }
+    },
+    "radii": {
+      "sm": {
+        "value": "0.2rem"
+      },
+      "md": {
+        "value": "0.4rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {
+    "_hover:color": [
+      "n100"
+    ],
+    "borderRadius": [
+      "*"
+    ],
+    "unknownProp": [
+      "val"
+    ]
+  },
+  "provenance": []
+}

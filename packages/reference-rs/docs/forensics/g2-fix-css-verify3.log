@@ -1,0 +1,60 @@
+
+> @reference-ui/workspace@0.0.0 agent /Users/ryn/Developer/reference-ui
+> node .agents/skills/test-core/scripts/run.mjs test --packages=@matrix/css
+
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(31077)
+[cpu-gate] Gate acquired for exclusive (PID 33279)
+[agent] Executing unthrottled: pnpm pipeline test --packages=@matrix/css
+
+> @reference-ui/workspace@0.0.0 pipeline /Users/ryn/Developer/reference-ui
+> pnpm --dir pipeline exec tsx src/cli.ts test --packages=@matrix/css
+
+Discovering matrix-enabled fixtures...
+Discovered matrix packages:
+- @matrix/chain-t1
+- @matrix/chain-t10
+- @matrix/chain-t11
+- @matrix/chain-t12
+- @matrix/chain-t13
+- @matrix/chain-t2
+- @matrix/chain-t3
+- @matrix/chain-t6
+- @matrix/chain-t7
+- @matrix/chain-t8
+- @matrix/chain-t9
+- @matrix/color-mode
+- @matrix/css
+- @matrix/css-selectors
+- @matrix/distro
+- @matrix/font
+- @matrix/mcp
+- @matrix/playwright
+- @matrix/primitives
+- @matrix/recipe
+- @matrix/reference
+- @matrix/responsive
+- @matrix/session
+- @matrix/spacing
+- @matrix/system
+- @matrix/tokens
+- @matrix/typescript
+- @matrix/virtual
+- @matrix/watch
+Using shared matrix registry at http://127.0.0.1:4873.
+Preparing workspace packages and registry...
+Prepared workspace packages and registry in 4.7s
+Using host registry via registry:4873. Logs: /Users/ryn/Developer/reference-ui/.pipeline/testing/matrix
+- [1m[34mChecking container registry connectivity[39m[22m
+[32m✔[39m [1m[36mChecked container registry connectivity in 958ms[39m[22m
+Docker runtime (colima) exposes 12 CPU(s), 23.5 GiB.
+Running 1 matrix package(s) in parallel (1 selected, configured 4).
+[36m◐[39m [1m@matrix/css[22m [2msetting up env[22m [36m(react19 + vite7 + watch-ready)[39m
+[36m◐[39m [1m@matrix/css[22m [2mrunning tests[22m [36m(react19 + vite7 + watch-ready)[39m

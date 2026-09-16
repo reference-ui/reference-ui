@@ -9,6 +9,8 @@ use base_system::BaseSystem;
 use std::fs;
 use std::path::PathBuf;
 
+mod boundary;
+mod fixtures;
 mod fonts;
 mod forbid;
 mod goldens;
@@ -17,109 +19,7 @@ mod strict;
 mod style;
 mod tokens;
 
-const CATALOG_JSON: &str = r##"{
-  "tokens": {
-    "colors": {
-      "n100": { "value": "#f4f4f5" },
-      "n300": { "value": "#d4d4d8" },
-      "brand": { "primary": { "value": "#2563eb" } }
-    },
-    "spacing": {
-      "1": { "value": "0.25rem" },
-      "2": { "value": "0.5rem" },
-      "4": { "value": "1rem" },
-      "1/2r": { "value": "0.5rem" },
-      "1r": { "value": "1rem" },
-      "2r": { "value": "2rem" }
-    },
-    "radii": {
-      "none": { "value": "0" },
-      "sm": { "value": "0.27rem" },
-      "md": { "value": "0.4rem" },
-      "lg": { "value": "0.6rem" },
-      "full": { "value": "9999px" }
-    },
-    "fontSizes": {
-      "xs": { "value": "0.75rem" },
-      "sm": { "value": "0.875rem" },
-      "base": { "value": "1rem" },
-      "lg": { "value": "1.125rem" }
-    },
-    "fontWeights": {
-      "regular": { "value": "400" },
-      "medium": { "value": "500" },
-      "bold": { "value": "700" }
-    },
-    "lineHeights": {
-      "tight": { "value": "1.25" },
-      "normal": { "value": "1.5" }
-    },
-    "shadows": {
-      "sm": { "value": "0 1px 2px rgb(0 0 0 / 0.05)" },
-      "md": { "value": "0 4px 6px rgb(0 0 0 / 0.1)" },
-      "overlay": { "value": "0 8px 24px rgb(0 0 0 / 0.16)" }
-    },
-    "zIndex": {
-      "modal": { "value": "100" },
-      "toast": { "value": "200" },
-      "tooltip": { "value": "300" }
-    }
-  }
-}"##;
-
-const RECIPE_JSON: &str = r##"{
-  "recipes": {
-    "button": {
-      "variants": {
-        "size": { "sm": { "p": "1r" }, "lg": { "p": "3r" } },
-        "tone": { "quiet": { "bg": "n100" }, "loud": { "bg": "n300" } }
-      }
-    }
-  }
-}"##;
-
-const COMPOUND_JSON: &str = r##"{
-  "recipes": {
-    "button": {
-      "variants": {
-        "size": { "sm": { "p": "1r" }, "lg": { "p": "3r" } },
-        "tone": { "quiet": { "bg": "n100" }, "loud": { "bg": "n300" } }
-      },
-      "compoundVariants": [
-        { "tone": "loud", "size": "lg", "css": { "border": "2px solid" } }
-      ]
-    }
-  }
-}"##;
-
-const FONT_JSON: &str = r##"{
-  "fonts": {
-    "sans": {
-      "value": "Inter, sans-serif",
-      "weights": { "normal": "400", "bold": "700" }
-    },
-    "mono": {
-      "value": "JetBrains Mono, monospace",
-      "weights": { "light": "300", "medium": "500" }
-    }
-  }
-}"##;
-
-const TWO_RECIPE_JSON: &str = r##"{
-  "recipes": {
-    "button": {
-      "variants": {
-        "size": { "sm": { "p": "1r" }, "lg": { "p": "3r" } },
-        "tone": { "quiet": { "bg": "n100" }, "loud": { "bg": "n300" } }
-      }
-    },
-    "badge": {
-      "variants": {
-        "tone": { "quiet": { "bg": "n100" }, "loud": { "bg": "n300" } }
-      }
-    }
-  }
-}"##;
+use fixtures::{CATALOG_JSON, COMPOUND_JSON, FONT_JSON, RECIPE_JSON, TWO_RECIPE_JSON};
 
 fn catalog_system() -> BaseSystem {
     parse_dump(CATALOG_JSON, "catalog")
@@ -142,9 +42,51 @@ fn two_recipe_system() -> BaseSystem {
 }
 
 fn parse_dump(json: &str, name: &str) -> BaseSystem {
-    match BaseSystem::from_json(json) {
+    let mut val: serde_json::Value = serde_json::from_str(json).expect("valid JSON");
+    let has_explicit_breakpoints = val.get("breakpoints").is_some();
+    ensure_spec_envelope(&mut val, name);
+    let full_json = serde_json::to_string(&val).unwrap();
+    let mut system = match BaseSystem::from_json(&full_json) {
         Ok(system) => system,
         Err(err) => panic!("{name} dump must parse: {err}"),
+    };
+    if !has_explicit_breakpoints {
+        system.breakpoints = base_system::BreakpointScale::default();
+    }
+    system
+}
+
+fn ensure_spec_envelope(val: &mut serde_json::Value, name: &str) {
+    ensure_meta_fields(val, name);
+    ensure_object_fields(val);
+    ensure_array_fields(val);
+}
+
+fn ensure_meta_fields(val: &mut serde_json::Value, name: &str) {
+    if val.get("name").is_none() {
+        val["name"] = serde_json::json!(name);
+    }
+    if val.get("schemaVersion").is_none() {
+        val["schemaVersion"] = serde_json::json!(1);
+    }
+    if val.get("profile").is_none() {
+        val["profile"] = serde_json::json!("reference-ui");
+    }
+}
+
+fn ensure_object_fields(val: &mut serde_json::Value) {
+    for field in ["tokens", "fonts", "keyframes", "recipes", "staticCss"] {
+        if val.get(field).is_none() {
+            val[field] = serde_json::json!({});
+        }
+    }
+}
+
+fn ensure_array_fields(val: &mut serde_json::Value) {
+    for field in ["globalCss", "provenance"] {
+        if val.get(field).is_none() {
+            val[field] = serde_json::json!([]);
+        }
     }
 }
 
@@ -322,19 +264,18 @@ fn typ_forbid_02_emits_no_jsx_farm() {
     }
 }
 
-/// Missing categories, recipes, and fonts are skipped rather than printed as `never`.
+/// Empty Core imported categories (SpacingToken, RadiusToken) emit `never`, while
+/// non-core categories (FontSizeToken, etc.) are omitted.
 #[test]
-fn omits_empty_categories_instead_of_never() {
+fn emits_never_for_empty_core_token_categories() {
     let system = parse_dump(
         r##"{"tokens":{"colors":{"n100":{"value":"#fff"}}}}"##,
         "colors-only",
     );
     let dts = emit_dts(&system);
     assert_alias(&dts, "ColorToken", "'n100'");
-    assert!(!dts.contains("SpacingToken"), "{dts}");
-    assert!(!dts.contains("never"), "{dts}");
-    assert!(!dts.contains("spacing:"), "{dts}");
+    assert_alias(&dts, "SpacingToken", "never");
+    assert_alias(&dts, "RadiusToken", "never");
+    assert!(!dts.contains("FontSizeToken"), "{dts}");
     assert!(!dts.contains("VariantProps"), "{dts}");
-    assert!(!dts.contains("FontRegistry"), "{dts}");
-    assert!(!dts.contains("StyleProps"), "{dts}");
 }

@@ -52,6 +52,7 @@ pub struct ExtractSinks<'a> {
     pub wants: &'a mut Vec<Want>,
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
 }
 
 /// Context for extracting style declarations across an AST file.
@@ -66,6 +67,7 @@ pub struct ExtractContext<'a> {
     pub wants: &'a mut Vec<Want>,
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
 }
 
 impl<'a> ExtractContext<'a> {
@@ -81,6 +83,7 @@ impl<'a> ExtractContext<'a> {
             wants: sinks.wants,
             recipes: sinks.recipes,
             diagnostics: sinks.diagnostics,
+            authored: sinks.authored,
         }
     }
 
@@ -106,6 +109,7 @@ impl<'a> ExtractContext<'a> {
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
+            authored: Some(self.authored),
         }
     }
 
@@ -123,6 +127,7 @@ impl<'a> ExtractContext<'a> {
             breakpoints: self.breakpoints,
             wants,
             diagnostics: self.diagnostics,
+            authored: None,
         }
     }
 
@@ -158,6 +163,7 @@ pub struct ExtractVisitor<'a> {
     pub wants: Vec<Want>,
     pub recipes: Vec<Recipe>,
     pub diagnostics: Vec<Diagnostic>,
+    pub authored: Vec<crate::runtime::AuthoredDeclaration>,
 }
 
 impl<'a> ExtractVisitor<'a> {
@@ -173,6 +179,7 @@ impl<'a> ExtractVisitor<'a> {
             wants: Vec::new(),
             recipes: Vec::new(),
             diagnostics: Vec::new(),
+            authored: Vec::new(),
         }
     }
 }
@@ -234,6 +241,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
         wants: &mut visitor.wants,
         recipes: &mut visitor.recipes,
         diagnostics: &mut visitor.diagnostics,
+        authored: &mut visitor.authored,
     };
     let mut ctx = ExtractContext::new(visitor.file, config, sinks);
     ctx.recipe_binding = binding;
@@ -282,31 +290,26 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
     ctx.wants.extend(visitor.wants);
     ctx.recipes.extend(visitor.recipes);
     ctx.diagnostics.extend(visitor.diagnostics);
+    ctx.authored.extend(visitor.authored);
 }
 
 /// Extract all style wants and diagnostics from a parsed AST program.
+/// Callers thread the system's breakpoint scale; no fixture is consulted here.
 pub fn extract(
     program: &Program<'_>,
     file: &str,
-    wants: &mut Vec<Want>,
-    diagnostics: &mut Vec<Diagnostic>,
+    breakpoints: &BreakpointScale,
+    sinks: ExtractSinks<'_>,
 ) {
     let constants = collect_local_constants(program);
     let bindings = collect_bindings(program);
     let jsx_hosts = bindings.jsx_hosts();
-    let scale = base_system::BaseSystem::lib_fixture().breakpoints();
     let config = ExtractConfig {
         constants: &constants,
-        breakpoints: &scale,
+        breakpoints,
         bindings: &bindings,
         jsx_hosts: &jsx_hosts,
         shadowed: &[],
-    };
-    let mut recipes = Vec::new();
-    let sinks = ExtractSinks {
-        wants,
-        recipes: &mut recipes,
-        diagnostics,
     };
     let mut ctx = ExtractContext::new(file, config, sinks);
     extract_with_context(program, &mut ctx);

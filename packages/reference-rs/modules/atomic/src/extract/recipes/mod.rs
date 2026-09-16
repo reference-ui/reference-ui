@@ -1,7 +1,7 @@
-//! Extract `recipe()` / `recipe.raw()` into Recipe IR, not utility wants.
-//! Walks `className`, `base`, variant items, and `compoundVariants[].css`
-//! through the expression walker into per-leaf want lists. Closed classes and
-//! the variant table are `src/recipes`. `sva` is not a site.
+//! AST extraction for Reference UI `recipe(...)` and `recipe.raw(...)` calls.
+//! Validates explicit `className` string literals, variant matrices, and compound rules.
+//! Extracts base styles, variant leaves, defaults, and multi-value compound predicates.
+//! Refuses dynamic or absent recipe identity and enforces fail-closed compilation.
 
 use indexmap::IndexMap;
 use oxc_ast::ast::{
@@ -11,9 +11,10 @@ use oxc_ast::ast::{
 use smallvec::smallvec;
 
 use crate::atom::Want;
+use crate::diagnostics::Diagnostic;
 use crate::extract::expressions::walk_style_object;
 use crate::extract::ExtractContext;
-use crate::recipes::{name, Recipe, RecipeCompound};
+use crate::recipes::{Recipe, RecipeCompound};
 
 /// Collect a live Reference `recipe(...)` call into `ctx.recipes`.
 pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
@@ -21,37 +22,75 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
         return;
     };
     let Some(first_arg) = call.arguments.first().and_then(|arg| arg.as_expression()) else {
+        ctx.diagnostics.push(Diagnostic::error(
+            "recipe(...) requires an inline object literal as its first argument",
+        ));
         return;
     };
-    let Expression::ObjectExpression(obj) = first_arg else {
+    let unwrapped = unwrap_expression(first_arg);
+    let Expression::ObjectExpression(obj) = unwrapped else {
+        ctx.diagnostics.push(Diagnostic::error(
+            "recipe(...) requires an inline object literal as its first argument",
+        ));
+        return;
+    };
+    if obj.properties.iter().any(|p| matches!(p, ObjectPropertyKind::SpreadProperty(_))) {
+        ctx.diagnostics.push(Diagnostic::error(
+            "recipe(...) object literal must not contain spread properties",
+        ));
+        return;
+    }
+    let Some(class_name) = extract_class_name(obj, ctx) else {
         return;
     };
     let draft = walk_recipe_object(obj, origin.as_str(), ctx);
-    ctx.recipes
-        .push(finish_recipe(draft, ctx.recipe_binding.as_deref()));
+    ctx.recipes.push(Recipe {
+        class_name,
+        base: draft.base,
+        variants: draft.variants,
+        default_variants: draft.default_variants,
+        compounds: draft.compounds,
+    });
+}
+
+fn find_class_name_prop<'a, 'b>(
+    obj: &'b ObjectExpression<'a>,
+) -> Option<&'b ObjectProperty<'a>> {
+    for p in &obj.properties {
+        if let ObjectPropertyKind::ObjectProperty(prop) = p {
+            if static_key(&prop.key).as_deref() == Some("className") {
+                return Some(prop);
+            }
+        }
+    }
+    None
+}
+
+fn extract_class_name(obj: &ObjectExpression<'_>, ctx: &mut ExtractContext<'_>) -> Option<String> {
+    let Some(prop) = find_class_name_prop(obj) else {
+        ctx.diagnostics.push(Diagnostic::error(
+            "recipe(...) requires an explicit string-literal 'className' property",
+        ));
+        return None;
+    };
+    let unwrapped = unwrap_expression(&prop.value);
+    if let Expression::StringLiteral(lit) = unwrapped {
+        if !lit.value.trim().is_empty() {
+            return Some(lit.value.to_string());
+        }
+    }
+    ctx.diagnostics.push(Diagnostic::error(
+        "recipe(...) 'className' property must be a non-empty string literal",
+    ));
+    None
 }
 
 #[derive(Default)]
 struct RecipeDraft {
-    class_name: Option<String>,
     base: Vec<Want>,
     variants: IndexMap<String, IndexMap<String, Vec<Want>>>,
+    default_variants: IndexMap<String, String>,
     compounds: Vec<RecipeCompound>,
-}
-
-fn finish_recipe(draft: RecipeDraft, binding: Option<&str>) -> Recipe {
-    let class_name = name::stem(draft.class_name.as_deref(), binding);
-    let recipe_name = binding
-        .filter(|name| !name.is_empty())
-        .unwrap_or(class_name.as_str())
-        .to_string();
-    Recipe {
-        name: recipe_name,
-        class_name,
-        base: draft.base,
-        variants: draft.variants,
-        compounds: draft.compounds,
-    }
 }
 
 fn walk_recipe_object(
@@ -84,11 +123,28 @@ fn handle_recipe_property(
         return;
     };
     match key.as_str() {
-        "className" => draft.class_name = string_literal(&prop.value),
         "base" => walk_style_into(&prop.value, origin, ctx, &mut draft.base),
         "variants" => handle_recipe_variants(&prop.value, origin, ctx, draft),
+        "defaultVariants" => handle_recipe_defaults(&prop.value, draft),
         "compoundVariants" => handle_recipe_compounds(&prop.value, origin, ctx, draft),
         _ => {}
+    }
+}
+
+fn handle_recipe_defaults(val: &Expression<'_>, draft: &mut RecipeDraft) {
+    let Expression::ObjectExpression(obj) = unwrap_expression(val) else {
+        return;
+    };
+    for prop_kind in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
+            continue;
+        };
+        let Some(key) = static_key(&prop.key) else {
+            continue;
+        };
+        if let Some(str_val) = normalized_value(&prop.value) {
+            draft.default_variants.insert(key, str_val);
+        }
     }
 }
 
@@ -98,7 +154,7 @@ fn walk_style_into(
     ctx: &mut ExtractContext<'_>,
     wants: &mut Vec<Want>,
 ) {
-    let Expression::ObjectExpression(obj) = val else {
+    let Expression::ObjectExpression(obj) = unwrap_expression(val) else {
         return;
     };
     let mut obj_ctx = ctx.object_walk_into(Some(origin), wants);
@@ -111,7 +167,7 @@ fn handle_recipe_variants(
     ctx: &mut ExtractContext<'_>,
     draft: &mut RecipeDraft,
 ) {
-    let Expression::ObjectExpression(variants_obj) = val else {
+    let Expression::ObjectExpression(variants_obj) = unwrap_expression(val) else {
         return;
     };
     let mut walk = RecipeWalk { origin, ctx, draft };
@@ -122,7 +178,7 @@ fn handle_recipe_variants(
         let Some(group_name) = static_key(&group_prop.key) else {
             continue;
         };
-        let Expression::ObjectExpression(items_obj) = &group_prop.value else {
+        let Expression::ObjectExpression(items_obj) = unwrap_expression(&group_prop.value) else {
             continue;
         };
         walk_variant_items(&mut walk, items_obj, &group_name);
@@ -139,9 +195,10 @@ fn walk_variant_items(
         let ObjectPropertyKind::ObjectProperty(item_prop) = item_kind else {
             continue;
         };
-        let Some(value_name) = static_key(&item_prop.key) else {
+        let Some(raw_val) = static_key(&item_prop.key) else {
             continue;
         };
+        let value_name = raw_val;
         let mut wants = Vec::new();
         walk_style_into(&item_prop.value, walk.origin, walk.ctx, &mut wants);
         items.insert(value_name, wants);
@@ -155,7 +212,7 @@ fn handle_recipe_compounds(
     ctx: &mut ExtractContext<'_>,
     draft: &mut RecipeDraft,
 ) {
-    let Expression::ArrayExpression(arr) = val else {
+    let Expression::ArrayExpression(arr) = unwrap_expression(val) else {
         return;
     };
     walk_compound_variants(arr, origin, ctx, draft);
@@ -168,7 +225,10 @@ fn walk_compound_variants(
     draft: &mut RecipeDraft,
 ) {
     for elem in &arr.elements {
-        let Some(Expression::ObjectExpression(item_obj)) = elem.as_expression() else {
+        let Some(expr) = elem.as_expression() else {
+            continue;
+        };
+        let Expression::ObjectExpression(item_obj) = unwrap_expression(expr) else {
             continue;
         };
         if let Some(compound) = extract_compound(item_obj, origin, ctx) {
@@ -182,7 +242,7 @@ fn extract_compound(
     origin: &str,
     ctx: &mut ExtractContext<'_>,
 ) -> Option<RecipeCompound> {
-    let mut props = IndexMap::new();
+    let mut predicates = IndexMap::new();
     let mut wants = Vec::new();
     for prop_kind in &item_obj.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
@@ -195,45 +255,101 @@ fn extract_compound(
             walk_style_into(&prop.value, origin, ctx, &mut wants);
             continue;
         }
-        if let Some(value) = string_literal(&prop.value) {
-            props.insert(key, value);
-        }
+        extract_compound_predicate(&prop.value, key, &mut predicates);
     }
-    if wants.is_empty() {
+    if wants.is_empty() || predicates.is_empty() {
         return None;
     }
-    Some(RecipeCompound { props, wants })
+    Some(RecipeCompound { predicates, wants })
+}
+
+fn extract_compound_predicate(
+    val: &Expression<'_>,
+    key: String,
+    predicates: &mut IndexMap<String, Vec<String>>,
+) {
+    let unwrapped = unwrap_expression(val);
+    if let Expression::ArrayExpression(arr) = unwrapped {
+        let values = extract_predicate_array(arr);
+        if !values.is_empty() {
+            predicates.insert(key, values);
+        }
+        return;
+    }
+    if let Some(s) = normalized_value(unwrapped) {
+        predicates.insert(key, vec![s]);
+    }
+}
+
+fn extract_predicate_array(arr: &ArrayExpression<'_>) -> Vec<String> {
+    let mut values = Vec::new();
+    for el in &arr.elements {
+        if let Some(expr) = el.as_expression() {
+            if let Some(s) = normalized_value(expr) {
+                values.push(s);
+            }
+        }
+    }
+    values
+}
+
+fn unwrap_paren<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    match expr {
+        Expression::ParenthesizedExpression(p) => Some(&p.expression),
+        _ => None,
+    }
+}
+
+fn unwrap_ts<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    match expr {
+        Expression::TSAsExpression(e) => Some(&e.expression),
+        Expression::TSTypeAssertion(e) => Some(&e.expression),
+        Expression::TSSatisfiesExpression(e) => Some(&e.expression),
+        Expression::TSNonNullExpression(e) => Some(&e.expression),
+        _ => None,
+    }
+}
+
+fn unwrap_expression_once<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    unwrap_paren(expr).or_else(|| unwrap_ts(expr))
+}
+
+fn unwrap_expression<'a, 'b>(mut expr: &'b Expression<'a>) -> &'b Expression<'a> {
+    while let Some(inner) = unwrap_expression_once(expr) {
+        expr = inner;
+    }
+    expr
 }
 
 fn static_key(key: &PropertyKey<'_>) -> Option<String> {
     match key {
         PropertyKey::StaticIdentifier(ident) => Some(ident.name.to_string()),
         PropertyKey::StringLiteral(lit) => Some(lit.value.to_string()),
+        PropertyKey::NumericLiteral(lit) => Some(numeric_key(lit.value)),
         _ => None,
     }
 }
 
-fn string_literal(expr: &Expression<'_>) -> Option<String> {
-    if let Expression::StringLiteral(lit) = expr {
-        return Some(lit.value.to_string());
-    }
-    if let Expression::BooleanLiteral(lit) = expr {
-        return Some(lit.value.to_string());
-    }
-    if let Expression::NumericLiteral(lit) = expr {
-        return Some(numeric_key(lit.value));
-    }
-    static_template_string(expr)
+fn boolean_str(val: bool) -> String {
+    if val { "true".to_string() } else { "false".to_string() }
 }
 
-fn static_template_string(expr: &Expression<'_>) -> Option<String> {
-    let Expression::TemplateLiteral(lit) = expr else {
-        return None;
-    };
+fn static_template_str(lit: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<String> {
     if !lit.expressions.is_empty() {
         return None;
     }
     lit.quasis.first().map(|q| q.value.raw.to_string())
+}
+
+fn normalized_value(expr: &Expression<'_>) -> Option<String> {
+    let unwrapped = unwrap_expression(expr);
+    match unwrapped {
+        Expression::StringLiteral(lit) => Some(lit.value.to_string()),
+        Expression::BooleanLiteral(lit) => Some(boolean_str(lit.value)),
+        Expression::NumericLiteral(lit) => Some(numeric_key(lit.value)),
+        Expression::TemplateLiteral(lit) => static_template_str(lit),
+        _ => None,
+    }
 }
 
 fn numeric_key(n: f64) -> String {

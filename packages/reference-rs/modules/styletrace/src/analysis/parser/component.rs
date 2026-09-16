@@ -207,7 +207,6 @@ pub fn component_from_function_like(
         collect_edges_from_statement(
             statement,
             &mut WalkContext {
-                source: ctx.source,
                 imports: ctx.imports,
                 primitive_names: ctx.primitive_names,
                 bindings: &bindings,

@@ -10,7 +10,6 @@ use oxc_ast::ast::{Declaration, Statement};
 use std::collections::{BTreeSet, HashMap};
 
 pub struct WalkContext<'a> {
-    pub source: &'a str,
     pub imports: &'a HashMap<String, TraceImport>,
     pub primitive_names: &'a BTreeSet<String>,
     pub bindings: &'a PropBindings,

@@ -1,8 +1,8 @@
 {
-  "_dark:_hover:_focusVisible:borderColor:gold": "dark:hover:focusVisible:bd-c_gold",
-  "_dark:_hover:_focusVisible:outlineColor:yellow": "dark:hover:focusVisible:outline-c_yellow",
-  "_dark:_hover:_focusVisible:outlineStyle:solid": "dark:hover:focusVisible:outline-s_solid",
-  "_dark:_hover:_focusVisible:outlineWidth:2px": "dark:hover:focusVisible:outline-w_2px",
-  "_hover:_dark:bg:n900": "hover:dark:bg_n900",
-  "_hover:_dark:color:white": "hover:dark:c_white"
+  "_dark:_hover:_focusVisible:borderColor:gold": "nested-conditions__dark:hover:focusVisible:bd-c_gold",
+  "_dark:_hover:_focusVisible:outlineColor:yellow": "nested-conditions__dark:hover:focusVisible:outline-c_yellow",
+  "_dark:_hover:_focusVisible:outlineStyle:solid": "nested-conditions__dark:hover:focusVisible:outline-s_solid",
+  "_dark:_hover:_focusVisible:outlineWidth:2px": "nested-conditions__dark:hover:focusVisible:outline-w_2px",
+  "_hover:_dark:bg:n900": "nested-conditions__hover:dark:bg_n900",
+  "_hover:_dark:color:white": "nested-conditions__hover:dark:c_white"
 }

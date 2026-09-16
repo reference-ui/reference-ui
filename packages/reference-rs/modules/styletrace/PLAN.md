@@ -5,7 +5,7 @@ graph ultimately carry Reference UI StyleProps? It must derive that answer
 from declarations/imports, not capitalization.
 
 Campaign sequencing is [`../../PLAN.md`](../../PLAN.md). This file owns packet
-**N6** and the styletrace prerequisite for atomic `ATM-SITE-13`.
+**N6 — [DONE]** and the styletrace prerequisite for atomic `ATM-SITE-13`.
 
 Runner: `pnpm agentrs v styletrace` / `pnpm agentrs c styletrace`.
 

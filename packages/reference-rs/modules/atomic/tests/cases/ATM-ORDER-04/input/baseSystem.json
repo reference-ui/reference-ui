@@ -1,17 +1,27 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "order-04",
   "tokens": {
-    "colors.gray.800": {
-      "category": "colors",
-      "cssVar": "--colors-gray-800",
-      "light": "#27272a",
-      "dark": "#e4e4e7"
-    },
-    "colors.red.500": {
-      "category": "colors",
-      "cssVar": "--colors-red-500",
-      "light": "#ef4444",
-      "dark": "#f87171"
+    "colors": {
+      "gray": {
+        "800": {
+          "light": "#27272a",
+          "dark": "#e4e4e7"
+        }
+      },
+      "red": {
+        "500": {
+          "light": "#ef4444",
+          "dark": "#f87171"
+        }
+      }
     }
-  }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

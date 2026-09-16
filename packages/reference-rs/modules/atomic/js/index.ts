@@ -7,20 +7,32 @@ import { compileSystem } from './runtime.js'
 import type { CompileRequest, CompileResult } from './types.js'
 
 export type {
-  BaseSystemInput,
-  BreakpointScale,
   CompileRequest,
   CompileResult,
   CssRuntime,
   Diagnostic,
   DiagnosticSeverity,
-  FontDefinition,
+  EvaluatedSystemSpec,
+  NativeRuntimeArtifact,
   RecipeMatch,
+  RecipeRuntimeTable,
   RecipeTable,
-  TokenEntry,
+  RuntimeDeclaration,
+  RuntimeStylePlan,
   VirtualSource,
   Want,
 } from './types.js'
+
+export {
+  createStylePlanIndex,
+  mergeDeclarations,
+  mergeStylePlans,
+  resolveStyleDeclarations,
+  serializeCanonicalJson,
+  serializeLookupKey,
+  type StylePlanQuery,
+} from './plans.js'
+
 
 export function compileSync(request: CompileRequest): CompileResult {
   const requestJson = JSON.stringify(request)

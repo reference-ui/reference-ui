@@ -8,6 +8,6 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     testTimeout: 10000,
-    projects: ['modules/*/vitest.config.ts'],
+    projects: ['modules/*/vitest.config.ts', 'contracts/vitest.config.ts'],
   },
 })

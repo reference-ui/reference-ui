@@ -1,3 +1,3 @@
 {
-  "_dark:bg:gray.900": "dark:bg_gray.900"
+  "_dark:bg:gray.900": "@reference-ui/lib__dark:bg_gray.900"
 }

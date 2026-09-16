@@ -1,8 +1,8 @@
 {
-  "alignItems:center": "ai_center",
-  "color:red": "c_red",
-  "display:flex": "d_flex",
-  "gap:2r": "gap_2r",
-  "margin:1r": "m_1r",
-  "padding:2r": "p_2r"
+  "alignItems:center": "@reference-ui/lib__ai_center",
+  "color:red": "@reference-ui/lib__c_red",
+  "display:flex": "@reference-ui/lib__d_flex",
+  "gap:2r": "@reference-ui/lib__gap_2r",
+  "margin:1r": "@reference-ui/lib__m_1r",
+  "padding:2r": "@reference-ui/lib__p_2r"
 }

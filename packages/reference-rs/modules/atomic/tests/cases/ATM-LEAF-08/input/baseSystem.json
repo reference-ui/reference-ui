@@ -1,44 +1,49 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "expression-table",
   "tokens": {
-    "colors.n100": {
-      "category": "colors",
-      "cssVar": "--colors-n100",
-      "light": "#f4f4f5",
-      "dark": "#18181b"
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n200": {
+        "light": "#e4e4e7",
+        "dark": "#27272a"
+      },
+      "primary": {
+        "light": "#3b82f6",
+        "dark": "#60a5fa"
+      }
     },
-    "colors.n200": {
-      "category": "colors",
-      "cssVar": "--colors-n200",
-      "light": "#e4e4e7",
-      "dark": "#27272a"
-    },
-    "colors.primary": {
-      "category": "colors",
-      "cssVar": "--colors-primary",
-      "light": "#3b82f6",
-      "dark": "#60a5fa"
-    },
-    "full": {
-      "category": "radii",
-      "cssVar": "--radii-full",
-      "light": "9999px",
-      "dark": "9999px"
-    },
-    "md": {
-      "category": "radii",
-      "cssVar": "--radii-md",
-      "light": "0.4rem",
-      "dark": "0.4rem"
+    "radii": {
+      "full": {
+        "value": "9999px"
+      },
+      "md": {
+        "value": "0.4rem"
+      }
     }
   },
+  "fonts": {},
   "breakpoints": {
-    "names": ["sm", "md", "lg"],
-    "widths": {
-      "sm": "640",
-      "md": "768",
-      "lg": "1024"
-    }
+    "sm": "640px",
+    "md": "768px",
+    "lg": "1024px"
   },
-  "globalCss": [":root { --spacing-root: 0.25rem }"]
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

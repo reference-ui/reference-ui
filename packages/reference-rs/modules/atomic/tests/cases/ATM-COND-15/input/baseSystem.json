@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "cond-15",
+  "tokens": {},
+  "fonts": {},
+  "breakpoints": {
+    "md": "768px"
+  },
+  "globalCss": [
+    {
+      "source": "global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

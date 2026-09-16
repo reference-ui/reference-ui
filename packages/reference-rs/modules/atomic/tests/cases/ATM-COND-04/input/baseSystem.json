@@ -1,16 +1,24 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "nested-conditions",
   "tokens": {
-    "colors.n900": {
-      "category": "colors",
-      "cssVar": "--colors-n900",
-      "light": "#18181b",
-      "dark": "#fafafa"
+    "colors": {
+      "n900": {
+        "light": "#18181b",
+        "dark": "#fafafa"
+      }
     }
   },
+  "fonts": {},
   "conditions": {
     "_hover": "&:is(:hover, [data-hover])",
-    "_dark": "[data-panda-theme=dark] &",
+    "_dark": "[data-theme=dark] &",
     "_focusVisible": "&:is(:focus-visible, [data-focus-visible])"
-  }
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }

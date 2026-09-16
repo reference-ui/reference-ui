@@ -1,0 +1,5 @@
+{
+  "_hover:color:n100": "static-wildcard__hover:c_n100",
+  "borderRadius:md": "static-wildcard__rounded_md",
+  "borderRadius:sm": "static-wildcard__rounded_sm"
+}

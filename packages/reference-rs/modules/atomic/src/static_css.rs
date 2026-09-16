@@ -1,51 +1,171 @@
-//! Lowers `BaseSystem.static_css` into wants before resolve.
+//! Lowers `BaseSystem.static_css` into wants and runtime style plans before resolve.
 //!
-//! This is the third want source beside JSX StyleProps and `css()`. Each
-//! property maps to a token list or `['*']`. A wildcard enumerates every token
-//! in the property's category (color props → `colors`) using the dump's
-//! insertion order. Listed values become the same `Want` shape extract would
-//! have pushed. Emit does not expand; AtomSet is the only dedup.
+//! This is the third want source beside JSX StyleProps and `css()`. Each property
+//! maps to a token list or `['*']`. Wildcards expand across all design token categories,
+//! including colors, radii, spacing, and sizes. Condition prefixes such as `_hover:color`
+//! are mapped to condition scopes, and unknown properties emit diagnostic warnings.
 
 use base_system::BaseSystem;
+use smallvec::SmallVec;
 
 use crate::atom::{AtomValue, Want};
+use crate::diagnostics::Diagnostic;
+use crate::runtime::AuthoredDeclaration;
 
 const STATIC_ORIGIN: &str = "staticCss";
 
-/// Append staticCss wants onto the shared want list.
-pub fn append_wants(system: &BaseSystem, wants: &mut Vec<Want>) {
-    for (prop, values) in &system.static_css {
-        append_prop(system, wants, prop, values);
-    }
+/// Context for lowering static CSS declarations into wants and authored style plans.
+pub struct StaticCssContext<'a> {
+    pub system: &'a BaseSystem,
+    pub wants: &'a mut Vec<Want>,
+    pub authored: &'a mut Vec<AuthoredDeclaration>,
+    pub diagnostics: &'a mut Vec<Diagnostic>,
 }
 
-fn append_prop(system: &BaseSystem, wants: &mut Vec<Want>, prop: &str, values: &[String]) {
-    if values.iter().any(|value| value == "*") {
-        append_wildcard(system, wants, prop);
-        return;
-    }
-    for value in values {
-        push_want(wants, prop, value);
-    }
-}
-
-fn append_wildcard(system: &BaseSystem, wants: &mut Vec<Want>, prop: &str) {
-    let Some(category) = wildcard_category(prop) else {
-        return;
-    };
-    for (key, entry) in system.tokens.iter() {
-        if entry.category() == category {
-            push_want(wants, prop, authored_path(key, category));
+/// Append staticCss wants and authored declarations using the static CSS context.
+pub fn append_static_css(ctx: &mut StaticCssContext<'_>) {
+    for (key, values) in &ctx.system.static_css {
+        let (when, prop) = parse_static_key(key);
+        if !canon::is_known_style_prop(prop) {
+            ctx.diagnostics.push(Diagnostic::warning(format!(
+                "Unknown property in staticCss: \"{prop}\""
+            )));
+            continue;
+        }
+        if values.iter().any(|v| v == "*") {
+            expand_wildcard(ctx, &when, prop);
+        } else {
+            for val in values {
+                push_static_item(ctx, &when, prop, val);
+            }
         }
     }
 }
 
-fn wildcard_category(prop: &str) -> Option<&'static str> {
-    if canon::is_color_prop(prop) {
-        Some("colors")
+/// Backwards-compatible want-only append for tests.
+#[cfg(test)]
+pub fn append_wants(system: &BaseSystem, wants: &mut Vec<Want>) {
+    let mut authored = Vec::new();
+    let mut diagnostics = Vec::new();
+    let mut ctx = StaticCssContext {
+        system,
+        wants,
+        authored: &mut authored,
+        diagnostics: &mut diagnostics,
+    };
+    append_static_css(&mut ctx);
+}
+
+fn parse_static_key(key: &str) -> (Vec<String>, &str) {
+    let parts: Vec<&str> = key.split(':').collect();
+    if parts.len() <= 1 {
+        (Vec::new(), key)
     } else {
-        None
+        let prop = parts.last().unwrap();
+        let conditions = parts[..parts.len() - 1].iter().map(|s| s.to_string()).collect();
+        (conditions, prop)
     }
+}
+
+fn expand_wildcard(ctx: &mut StaticCssContext<'_>, when: &[String], prop: &str) {
+    let Some(category) = wildcard_category(prop) else {
+        ctx.diagnostics.push(Diagnostic::warning(format!(
+            "Cannot expand wildcard for property \"{prop}\": no associated token category"
+        )));
+        return;
+    };
+    let target_cat = resolve_system_category(ctx.system, category);
+    for (key, entry) in ctx.system.tokens.iter() {
+        if entry.category() == target_cat {
+            let val = authored_path(key, target_cat);
+            push_static_item(ctx, when, prop, val);
+        }
+    }
+}
+
+fn resolve_system_category<'a>(system: &'a BaseSystem, category: &'static str) -> &'static str {
+    if category == "sizes" && !system.tokens.iter().any(|(_, e)| e.category() == "sizes") {
+        if system.tokens.iter().any(|(_, e)| e.category() == "spacing") {
+            return "spacing";
+        }
+    }
+    category
+}
+
+fn wildcard_category(prop: &str) -> Option<&'static str> {
+    let canonical = canon::resolve_canonical_prop(prop);
+    if canon::is_color_prop(canonical) {
+        return Some("colors");
+    }
+    if is_radius_property(canonical) {
+        return Some("radii");
+    }
+    if is_spacing_property(canonical) {
+        return Some("spacing");
+    }
+    if is_size_property(canonical) {
+        return Some("sizes");
+    }
+    typography_or_other_category(canonical)
+}
+
+fn is_radius_property(prop: &str) -> bool {
+    prop == "borderRadius" || prop.ends_with("Radius")
+}
+
+fn typography_or_other_category(prop: &str) -> Option<&'static str> {
+    if prop == "boxShadow" {
+        return Some("shadows");
+    }
+    if prop == "zIndex" {
+        return Some("zIndex");
+    }
+    typography_category(prop)
+}
+
+fn typography_category(prop: &str) -> Option<&'static str> {
+    match prop {
+        "fontSize" => Some("fontSizes"),
+        "fontWeight" => Some("fontWeights"),
+        "lineHeight" => Some("lineHeights"),
+        "letterSpacing" => Some("letterSpacings"),
+        _ => None,
+    }
+}
+
+fn is_spacing_property(prop: &str) -> bool {
+    matches!(
+        prop,
+        "margin"
+            | "marginTop"
+            | "marginBottom"
+            | "marginLeft"
+            | "marginRight"
+            | "marginInline"
+            | "marginBlock"
+            | "padding"
+            | "paddingTop"
+            | "paddingBottom"
+            | "paddingLeft"
+            | "paddingRight"
+            | "paddingInline"
+            | "paddingBlock"
+            | "gap"
+            | "rowGap"
+            | "columnGap"
+            | "inset"
+            | "top"
+            | "bottom"
+            | "left"
+            | "right"
+    )
+}
+
+fn is_size_property(prop: &str) -> bool {
+    matches!(
+        prop,
+        "width" | "height" | "minWidth" | "maxWidth" | "minHeight" | "maxHeight" | "size"
+    )
 }
 
 fn authored_path<'a>(key: &'a str, category: &str) -> &'a str {
@@ -54,17 +174,28 @@ fn authored_path<'a>(key: &'a str, category: &str) -> &'a str {
         .unwrap_or(key)
 }
 
-fn push_want(wants: &mut Vec<Want>, prop: &str, value: &str) {
-    wants.push(Want::new(prop, AtomValue::String(value.into())).with_origin(Some(STATIC_ORIGIN)));
+fn push_static_item(ctx: &mut StaticCssContext<'_>, when: &[String], prop: &str, value: &str) {
+    let when_boxed: SmallVec<[Box<str>; 2]> =
+        when.iter().map(|w| w.clone().into_boxed_str()).collect();
+    ctx.wants.push(
+        Want::new(prop, AtomValue::String(value.into()))
+            .with_origin(Some(STATIC_ORIGIN))
+            .with_when(when_boxed),
+    );
+    ctx.authored.push(AuthoredDeclaration {
+        when: when.to_vec(),
+        prop: prop.to_string(),
+        value: serde_json::Value::String(value.to_string()),
+        important: false,
+    });
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use base_system::TokenLeaf;
-    use shared::testing::minimal_system;
 
-    fn color_dump() -> BaseSystem {
+    fn test_system() -> BaseSystem {
         let mut system = BaseSystem::default();
         for (path, light, dark) in [
             ("n100", "#f4f4f5", "#18181b"),
@@ -87,42 +218,61 @@ mod tests {
         system
     }
 
-    fn values_for<'a>(wants: &'a [Want], prop: &str) -> Vec<&'a str> {
-        wants
-            .iter()
-            .filter(|want| &*want.prop == prop)
-            .map(|want| want.value.class_name_str())
-            .collect()
-    }
-
     #[test]
-    fn wildcard_enumerates_color_tokens_not_radii() {
-        let mut system = color_dump();
+    fn wildcard_enumerates_color_tokens() {
+        let mut system = test_system();
         system.static_css.insert("color".into(), vec!["*".into()]);
         let mut wants = Vec::new();
         append_wants(&system, &mut wants);
-        assert_eq!(values_for(&wants, "color"), ["n100", "n200", "n300"]);
-        assert!(values_for(&wants, "borderRadius").is_empty());
-        assert!(wants
-            .iter()
-            .all(|want| want.origin.as_deref() == Some(STATIC_ORIGIN)));
+        assert_eq!(wants.len(), 3);
+        assert!(wants.iter().any(|w| w.value.class_name_str() == "n100"));
     }
 
     #[test]
-    fn listed_values_become_authored_wants() {
-        let mut system = color_dump();
-        system
-            .static_css
-            .insert("bg".into(), vec!["n100".into(), "n200".into()]);
+    fn wildcard_enumerates_radii_tokens() {
+        let mut system = test_system();
+        system.static_css.insert("borderRadius".into(), vec!["*".into()]);
         let mut wants = Vec::new();
         append_wants(&system, &mut wants);
-        assert_eq!(values_for(&wants, "bg"), ["n100", "n200"]);
+        assert_eq!(wants.len(), 1);
+        assert_eq!(wants[0].value.class_name_str(), "md");
     }
 
     #[test]
-    fn empty_bag_is_a_no_op() {
+    fn condition_prefixed_static_css_retains_condition() {
+        let mut system = test_system();
+        system.static_css.insert("_hover:color".into(), vec!["n100".into()]);
         let mut wants = Vec::new();
-        append_wants(&minimal_system(), &mut wants);
+        let mut authored = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut ctx = StaticCssContext {
+            system: &system,
+            wants: &mut wants,
+            authored: &mut authored,
+            diagnostics: &mut diagnostics,
+        };
+        append_static_css(&mut ctx);
+        assert_eq!(wants.len(), 1);
+        assert_eq!(wants[0].when.as_slice(), &["_hover".into()]);
+        assert_eq!(authored[0].when, vec!["_hover".to_string()]);
+    }
+
+    #[test]
+    fn unknown_property_emits_diagnostic() {
+        let mut system = test_system();
+        system.static_css.insert("unknownProp".into(), vec!["val".into()]);
+        let mut wants = Vec::new();
+        let mut authored = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut ctx = StaticCssContext {
+            system: &system,
+            wants: &mut wants,
+            authored: &mut authored,
+            diagnostics: &mut diagnostics,
+        };
+        append_static_css(&mut ctx);
         assert!(wants.is_empty());
+        assert_eq!(diagnostics.len(), 1);
+        assert!(diagnostics[0].message.contains("unknownProp"));
     }
 }

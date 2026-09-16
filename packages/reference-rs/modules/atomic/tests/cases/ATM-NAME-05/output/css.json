@@ -1,4 +1,4 @@
 {
-  "boxShadow:3px solid": "shadow_3px_solid",
-  "gap:10px 20px": "gap_10px_20px"
+  "boxShadow:3px solid": "@reference-ui/lib__shadow_3px_solid",
+  "gap:10px 20px": "@reference-ui/lib__gap_10px_20px"
 }

@@ -25,24 +25,43 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
 fn handle_css_arg(expr: &Expression<'_>, origin: Option<&str>, ctx: &mut ExtractContext<'_>) {
     match expr {
         Expression::ObjectExpression(obj) => {
-            // css({ color: 'red', _hover: { bg: 'n200' } })
-            let mut obj_ctx = ctx.object_walk(origin, false);
-            walk_style_object(&mut obj_ctx, obj, &smallvec![]);
+            walk_object_expr(obj, origin, ctx);
         }
         Expression::ConditionalExpression(cond) => {
-            // css(on ? { color: 'red' } : { color: 'blue' })
             walk_object_branch(&cond.consequent, origin, ctx);
             walk_object_branch(&cond.alternate, origin, ctx);
+        }
+        Expression::ArrayExpression(arr) => {
+            walk_array_arg(arr, origin, ctx);
         }
         _ => {}
     }
 }
 
+fn walk_object_expr(
+    obj: &oxc_ast::ast::ObjectExpression<'_>,
+    origin: Option<&str>,
+    ctx: &mut ExtractContext<'_>,
+) {
+    let mut obj_ctx = ctx.object_walk(origin, false);
+    walk_style_object(&mut obj_ctx, obj, &smallvec![]);
+}
+
+fn walk_array_arg(
+    arr: &oxc_ast::ast::ArrayExpression<'_>,
+    origin: Option<&str>,
+    ctx: &mut ExtractContext<'_>,
+) {
+    for elem in &arr.elements {
+        if let Some(elem_expr) = elem.as_expression() {
+            handle_css_arg(elem_expr, origin, ctx);
+        }
+    }
+}
+
 fn walk_object_branch(expr: &Expression<'_>, origin: Option<&str>, ctx: &mut ExtractContext<'_>) {
-    // { color: 'red' }  — one arm of css(on ? { ... } : { ... })
     let Expression::ObjectExpression(obj) = expr else {
         return;
     };
-    let mut obj_ctx = ctx.object_walk(origin, false);
-    walk_style_object(&mut obj_ctx, obj, &smallvec![]);
+    walk_object_expr(obj, origin, ctx);
 }

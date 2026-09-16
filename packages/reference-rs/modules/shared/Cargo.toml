@@ -9,3 +9,6 @@ oxc_span.workspace = true
 oxc_parser.workspace = true
 oxc_allocator.workspace = true
 base_system.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

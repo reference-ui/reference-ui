@@ -1,14 +1,17 @@
 //! In-memory `BaseSystem` fixtures shared by Rust compiler crate tests.
-//! JSON is a nested `BaseSystemSpec` (`tokens.colors.blue.500.value`), which
-//! `from_json` lowers into indexed `TokenEntry` leaves (`category` + kebab
-//! `cssVar`). Callers should take `minimal_system()` rather than hand-rolling
-//! specs. `strict` / `semanticTokens` are not spec fields and are omitted.
+//! Serializes versioned `EvaluatedSystemSpec` JSON with schemaVersion 1 and reference-ui profile,
+//! which `from_json` lowers into indexed `TokenEntry` leaves (`category` + kebab `cssVar`).
+//! Callers should take `minimal_system()` rather than hand-rolling specs in tests.
+//! Provides canonical fixtures for minimal tokens, semantic color pairs, and typed recipes.
 
 use base_system::BaseSystem;
 
 /// Nested spec for a small token table plus default breakpoint widths.
 pub fn minimal_system_json() -> &'static str {
     r##"{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "minimal-system",
   "tokens": {
     "colors": {
       "blue": { "500": { "value": "#3b82f6" } },
@@ -20,17 +23,26 @@ pub fn minimal_system_json() -> &'static str {
       "4": { "value": "1rem" }
     }
   },
+  "fonts": {},
   "breakpoints": {
     "sm": "640px",
     "md": "768px",
     "lg": "1024px"
-  }
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }"##
 }
 
 /// Color leaves with `value` plus optional `dark` — not a `semanticTokens` map.
 pub fn semantic_tokens_system_json() -> &'static str {
     r##"{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "semantic-tokens-system",
   "tokens": {
     "colors": {
       "bg": {
@@ -40,13 +52,26 @@ pub fn semantic_tokens_system_json() -> &'static str {
         "default": { "value": "#09090b", "dark": "#fafafa" }
       }
     }
-  }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
 }"##
 }
 
 /// Typed `RecipeDefinition` tables. Spec recipes are not `Record<string, string>`.
 pub fn recipes_system_json() -> &'static str {
     r##"{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "recipes-system",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
   "recipes": {
     "button": {
       "base": {
@@ -63,7 +88,9 @@ pub fn recipes_system_json() -> &'static str {
         "variant": "solid"
       }
     }
-  }
+  },
+  "staticCss": {},
+  "provenance": []
 }"##
 }
 

@@ -60,6 +60,11 @@ impl TokenEntry {
     pub fn dark(&self) -> Option<&str> {
         self.dark.as_deref()
     }
+
+    /// True when the token belongs to an internal `_private` tree.
+    pub fn is_private(&self) -> bool {
+        self.css_var.contains("_private") || self.category.starts_with('_')
+    }
 }
 
 impl<'de> Deserialize<'de> for TokenEntry {

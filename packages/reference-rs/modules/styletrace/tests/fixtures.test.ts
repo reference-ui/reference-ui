@@ -4,8 +4,11 @@
  * the remaining traces that either point at workspace fixtures outside the module or
  * need two compile paths (nearest .reference-ui root versus an explicit hint).
  */
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
+import { traceBindings } from '../js/index'
 import {
   createNodeBuiltinHelperFixture,
   createReactReexportFixture,
@@ -15,6 +18,9 @@ import {
   traceDirWithoutHint,
   traceFixtureDir,
 } from './helpers'
+
+const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
+
 
 describe('styletrace fixtures', () => {
   it('ignores node builtin helper imports while tracing local wrappers', async () => {
@@ -80,4 +86,30 @@ describe('styletrace fixtures', () => {
       traceFixtureDir('fixtures/atlas-project/src/components')
     ).resolves.toEqual([])
   })
+
+  it('traces module-qualified bindings on committed sync-root fixture', async () => {
+    const fixtureRoot = path.resolve(TESTS_STYLETRACE_DIR, '../fixtures/sync-root')
+    const bindings = await traceBindings(path.join(fixtureRoot, 'src'), fixtureRoot)
+
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        { module: 'DirectWrapper.tsx', name: 'DirectWrapper' },
+        { module: 'ReexportedWrapper.tsx', name: 'ReexportedWrapper' },
+        { module: 'index.ts', name: 'DirectWrapper' },
+        { module: 'index.ts', name: 'ReexportedWrapper' },
+      ])
+    )
+
+    const names = bindings.map(b => b.name)
+    expect(names).not.toContain('StrippedWrapper')
+    expect(names).not.toContain('UnrelatedComponent')
+  })
+
+  it('fails with explicit error when declaration root is missing', async () => {
+    const fixtureRoot = path.resolve(TESTS_STYLETRACE_DIR, '../fixtures/sync-root')
+    await expect(
+      traceBindings(path.join(fixtureRoot, 'src'), '/nonexistent-decl-root-path')
+    ).rejects.toThrow()
+  })
 })
+

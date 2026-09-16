@@ -17,6 +17,8 @@ atlas = { workspace = true }
 tasty = { workspace = true }
 styletrace = { workspace = true }
 atomic = { workspace = true }
+base_system = { workspace = true }
+typegen = { workspace = true }
 
 [build-dependencies]
 napi-build = { workspace = true }

@@ -1,0 +1,7 @@
+{
+  "background:n200": "@reference-ui/lib__bg_n200",
+  "bg:n100": "@reference-ui/lib__bg_n100",
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "color:red.500": "@reference-ui/lib__c_red.500",
+  "padding:1r": "@reference-ui/lib__p_1r"
+}

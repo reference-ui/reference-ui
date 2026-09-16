@@ -31,6 +31,7 @@ fn test_ingested_font_css_and_scoped_weight() {
             value: String::new(),
             weights,
             css,
+            font_face: None,
         },
     );
     let fonts = FontScale::from_definitions(map);

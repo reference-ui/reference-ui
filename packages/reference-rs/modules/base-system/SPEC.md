@@ -22,15 +22,15 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 | Area | Meaning | Total Cases | Proven `[x]` | Pending `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | **`DUMP`** | `BaseSystemSpec` ingestion & in-memory artefact | 5 | 5 | 0 |
-| **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 6 | 2 |
-| **`FONT`** | Font Definitions & Face Rules | 4 | 0 | 4 |
+| **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 7 | 1 |
+| **`FONT`** | Font Definitions & Face Rules | 4 | 4 | 0 |
 | **`MOTION`** | Keyframes & Animation Steps | 3 | 3 | 0 |
-| **`GLOBAL`** | Global CSS, Reset & Conditions | 4 | 0 | 4 |
+| **`GLOBAL`** | Global CSS, Reset & Conditions | 4 | 3 | 1 |
 | **`RECIPE`** | Declared Component & Slot Recipes | 4 | 4 | 0 |
 | **`EXTEND`** | Upstream Definition Merge & Private Scoping | 5 | 0 | 5 |
 | **`LAYER`** | Upstream CSS Layer Isolation | 4 | 0 | 4 |
 | **`ASK`** | The Five Canonical Query Contracts | 6 | 3 | 3 |
-| **Total** | | **43** | **21** | **22** |
+| **Total** | | **43** | **29** | **14** |
 
 ---
 
@@ -96,7 +96,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [ ] `BAS-TOKEN-05` `[reference]` `[unit]` —
   **BaseSystem should categorize tokens into strict closed design-system scales.**
   Ingest tokens across `colors`, `spacing`, `radii`, `fonts`, `fontSizes`, `fontWeights`, `lineHeights`, `letterSpacings`, `shadows`, `zIndex`, `opacity`, `borders`, `durations`, `easings`, and `animations`. Assert that each token is indexed into its respective `TokenCategory` enum variant without stringly-typed fallback. Uncategorized tokens or arbitrary strings on categories violate typegen contract validation.
-- [ ] `BAS-TOKEN-06` `[reference]` `[unit]` —
+- [x] `BAS-TOKEN-06` `[reference]` `[unit]` —
   **BaseSystem should isolate `_private` token trees from downstream export while preserving local resolution.**
   Ingest a token set defining `colors.brand` alongside `colors._private.internalAccent`. Assert that local queries inside the owning system resolve `colors._private.internalAccent` and format its CSS variable, while public token enumerations mark the token private. Failing to scope `_private` tokens allows internal library implementation details to leak into consumer autocomplete.
 - [x] `BAS-TOKEN-07` `[reference]` `[unit]` —
@@ -108,16 +108,16 @@ those jobs. Vendor crates below are example call sites, not our API.
 
 ### Font Definitions & Face Rules (`FONT`)
 
-- [ ] `BAS-FONT-01` `[reference]` `[unit]` —
+- [x] `BAS-FONT-01` `[reference]` `[unit]` —
   **BaseSystem should store font definitions with family value and fallback stacks.**
   Ingest `font('sans', { value: '"Inter", ui-sans-serif, sans-serif', ... })`. Assert that the font registry stores `"sans"` with the complete fallback family string, retrievable when resolving `fontFamily="sans"` or `font="sans"`. Truncating fallback font families or stripping required quotes breaks font rendering.
-- [ ] `BAS-FONT-02` `[reference]` `[unit]` —
+- [x] `BAS-FONT-02` `[reference]` `[unit]` —
   **BaseSystem should preserve structured `@font-face` descriptor rules for CSS generation.**
   Ingest a font definition containing `fontFace: { src: 'url(/fonts/inter.woff2) format("woff2")', fontWeight: '200 900', fontDisplay: 'swap' }`. Assert that the definition stores structured `@font-face` records with exact `src`, `font-weight`, and `font-display` attributes ready for `@layer global` sheet emission. Dropping descriptors causes unstyled font flashes or missing local font loading.
-- [ ] `BAS-FONT-03` `[reference]` `[unit]` —
+- [x] `BAS-FONT-03` `[reference]` `[unit]` —
   **BaseSystem should map named font weight aliases to numeric CSS weights.**
   Ingest a font definition with `weights: { thin: '200', normal: '400', bold: '700' }`. Assert that querying font `"sans"` with semantic weight `"bold"` yields numeric string `"700"`. Failure to map weight aliases causes typography utilities to emit invalid CSS or fail-closed.
-- [ ] `BAS-FONT-04` `[reference]` `[unit]` —
+- [x] `BAS-FONT-04` `[reference]` `[unit]` —
   **BaseSystem should attach font-level base CSS declarations.**
   Ingest a font definition with `css: { letterSpacing: '-0.01em', fontFeatureSettings: '"cv02"' }`. Assert that font-level CSS rules are stored and associated with the font definition for emission alongside typography utility classes. Dropping font-level CSS rules breaks design-system optical sizing and ligature configurations.
 
@@ -135,13 +135,13 @@ those jobs. Vendor crates below are example call sites, not our API.
 
 ### Global CSS, Reset & Conditions (`GLOBAL`)
 
-- [ ] `BAS-GLOBAL-01` `[reference]` `[unit]` —
+- [x] `BAS-GLOBAL-01` `[reference]` `[unit]` —
   **BaseSystem should collect arbitrary global CSS rule blocks.**
   Ingest `globalCss({ ':root': { '--spacing-root': '0.25rem' }, 'body': { margin: '0' } })`. Assert that selector blocks and CSS property mappings are stored verbatim for `@layer global` sheet compilation. Flattening global selectors into utility atoms or dropping `:root` variables breaks global resets.
-- [ ] `BAS-GLOBAL-02` `[reference]` `[unit]` —
+- [x] `BAS-GLOBAL-02` `[reference]` `[unit]` —
   **BaseSystem should store responsive breakpoint conditions and media queries.**
   Ingest breakpoint conditions `{ sm: '@media (min-width: 640px)', md: '@media (min-width: 768px)', lg: '@media (min-width: 1024px)' }`. Assert that breakpoints are indexed in numeric order, supporting responsive array index mapping `[base, sm, md, lg]`. Unordered breakpoints or corrupted media query strings break responsive style props.
-- [ ] `BAS-GLOBAL-03` `[reference]` `[unit]` —
+- [x] `BAS-GLOBAL-03` `[reference]` `[unit]` —
   **BaseSystem should index pseudo-class, state, and container query conditions.**
   Ingest conditions `{ _hover: '&:hover', _dark: '[data-theme="dark"] &', _focusVisible: '&:focus-visible' }`. Assert that each condition key maps to its exact CSS selector transform template. Missing conditions cause the atomic resolver to fail or emit invalid CSS rules.
 - [ ] `BAS-GLOBAL-04` `[forbidden]` `[unit]` —
@@ -223,29 +223,29 @@ those jobs. Vendor crates below are example call sites, not our API.
 
 | Contract ID | Test File | Test Function / Proof Target |
 | :--- | :--- | :--- |
-| `BAS-DUMP-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::default_definition_is_unnamed` |
-| `BAS-DUMP-02` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_02_indexes_nested_color_leaf` |
-| `BAS-DUMP-03` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_03_preserves_system_name` |
-| `BAS-DUMP-04` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_04_rejects_typescript_source` |
-| `BAS-DUMP-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::bas_dump_05_clone_shares_token_table` |
+| `BAS-DUMP-01` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::default_definition_is_unnamed` |
+| `BAS-DUMP-02` | `packages/reference-rs/modules/base-system/src/spec_tests.rs` | `tests::bas_dump_02_indexes_nested_color_leaf` |
+| `BAS-DUMP-03` | `packages/reference-rs/modules/base-system/src/spec_tests.rs` | `tests::bas_dump_03_preserves_system_name` |
+| `BAS-DUMP-04` | `packages/reference-rs/modules/base-system/src/spec_tests.rs` | `tests::bas_dump_04_rejects_typescript_source` |
+| `BAS-DUMP-05` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_dump_05_clone_shares_token_table` |
 | `BAS-TOKEN-01` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_01_indexes_five_segment_path` |
 | `BAS-TOKEN-02` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_02_kebabs_category_only` |
 | `BAS-TOKEN-03` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_03_value_leaf_has_no_dark_override` |
 | `BAS-TOKEN-04` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_04_resolves_mode_slots` |
 | `BAS-TOKEN-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-TOKEN-06` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
+| `BAS-TOKEN-06` | `packages/reference-rs/modules/base-system/src/tokens/tests.rs` | `tests::bas_token_06_is_private_distinguishes_internal_tokens` |
 | `BAS-TOKEN-07` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_07_fonts_dual_source_duplicate` |
 | `BAS-TOKEN-08` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_08_keeps_brace_aliases_and_detects_cycle` |
-| `BAS-FONT-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-FONT-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-FONT-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-FONT-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
+| `BAS-FONT-01` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_01_stores_family_value_and_fallback_stacks` |
+| `BAS-FONT-02` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_02_preserves_structured_font_face_descriptors` |
+| `BAS-FONT-03` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_03_maps_named_font_weight_aliases_to_numeric_weights` |
+| `BAS-FONT-04` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_04_attaches_font_level_base_css_declarations` |
 | `BAS-MOTION-01` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_01_stores_fade_in_steps` |
 | `BAS-MOTION-02` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_02_iterates_name_and_steps_for_at_rule_emit` |
 | `BAS-MOTION-03` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_03_animation_token_identifies_keyframe_name` |
-| `BAS-GLOBAL-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-GLOBAL-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-GLOBAL-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
+| `BAS-GLOBAL-01` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_01_stores_structured_global_rules` |
+| `BAS-GLOBAL-02` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_02_stores_responsive_breakpoints` |
+| `BAS-GLOBAL-03` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_03_indexes_conditions` |
 | `BAS-GLOBAL-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-RECIPE-01` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_01_stores_base_variants_and_defaults` |
 | `BAS-RECIPE-02` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_02_preserves_compound_variants` |
@@ -260,12 +260,12 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `BAS-LAYER-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-ASK-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::bas_ask_01_unique_bare_name_and_category_string` |
-| `BAS-ASK-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::bas_ask_02_category_scoped_css_var_and_explicit_dark` |
+| `BAS-ASK-01` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_ask_01_unique_bare_name_and_category_string` |
+| `BAS-ASK-02` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_ask_02_category_scoped_css_var_and_explicit_dark` |
 | `BAS-ASK-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-ASK-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-ASK-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-ASK-06` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::bas_ask_06_lookups_are_send_sync_across_threads` |
+| `BAS-ASK-06` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_ask_06_lookups_are_send_sync_across_threads` |
 
 ---
 
