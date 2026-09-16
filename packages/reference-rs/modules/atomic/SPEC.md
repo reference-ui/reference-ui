@@ -1,7 +1,8 @@
 # Atomic Style Engine SPEC
 
 Current freeze, cases, and proof. Design narrative: [README.md](./README.md).
-Mandate and architecture: [REFERENCE_SYSTEM.md](../../../REFERENCE_SYSTEM.md), [atomic.md](../../docs/atomic.md), and [PANDA.md](./PANDA.md) (vendor example / process map).
+Sequencing: [PLAN.md](./PLAN.md) (stations) and [../../PLAN.md](../../PLAN.md) § Reference UI (host).
+Mandate and architecture: [REFERENCE_SYSTEM.md](../../../../docs/archive/REFERENCE_SYSTEM.md), [atomic.md](../../docs/atomic.md), and [PANDA.md](./PANDA.md) (vendor example / process map).
 
 Harness / Runner: `pnpm agentrs c atomic` (Cargo unit tests) | `pnpm agentrs v atomic` (Vitest seam tests)
 
@@ -460,11 +461,11 @@ compiler contract.
   **A token whose dump value is a `{path}` reference must print as a `var()` alias in `@layer tokens`.**
   Compile a dump where `colors.ui.button.background` is `{colors.gray.950}` and assert `@layer tokens` prints `--colors-ui-button-background: var(--colors-gray-950)`, including under the dark selector. `system_layers.rs:88-96` implements this and the lib fixture depends on it heavily — the `ATM-COND-01` golden is full of `var(--colors-…)` aliases — yet no station claims it. This is distinct from `ATM-TOKEN-08`, which interpolates a brace path inside a composite authored value.
 
-### BaseSystem Dump Validation
+### BaseSystem Spec Validation
 
 - [ ] `ATM-TOKEN-10` `[forbidden]` `[seam]` —
-  **A foreign or malformed BaseSystem dump must be rejected with a diagnostic, never silently accepted as an empty system.**
-  Pass core's portable `BaseSystem` shape (`{ name, fragment, jsxElements }`, `reference-core/src/types/public/BaseSystem.ts`) as `compile({ baseSystem })` and assert the compiler refuses it by name rather than binding `name` and treating every dictionary as empty. Assert a dump missing required collections is an error diagnostic. Two unrelated types share the name `BaseSystem` across this repo, the Rust struct has no `deny_unknown_fields`, and `Some(system)` beats `lib_fixture()` (`lib.rs:84-87`) — so handing over the wrong `BaseSystem` produces a compile with **no tokens, no conditions, and no breakpoints** while reporting success. Every token would pass through raw and every `_hover` would fall back to a preset. That is the single most damaging way to misuse this API and nothing currently stops it.
+  **A foreign or malformed BaseSystem spec must be rejected with a diagnostic, never silently accepted as an empty system.**
+  Pass core's portable `BaseSystem` shape (`{ name, fragment, jsxElements }`, `reference-core/src/types/public/BaseSystem.ts`) as `compile({ baseSystem })` and assert the compiler refuses it by name rather than binding `name` and treating every dictionary as empty. Assert a spec missing required collections is an error diagnostic. Two unrelated types share the name `BaseSystem` across this repo, the Rust struct has no `deny_unknown_fields`, and `Some(system)` beats `lib_fixture()` (`lib.rs:84-87`) — so handing over the wrong `BaseSystem` produces a compile with **no tokens, no conditions, and no breakpoints** while reporting success. Every token would pass through raw and every `_hover` would fall back to a preset. That is the single most damaging way to misuse this API and nothing currently stops it.
 
 ### Component Recipes & Closed Variants
 
@@ -766,14 +767,13 @@ forbids. Until it lands, those two stations disagree about what gating means.
 ### A tick is not a cutover
 
 Ticking all 121 does not make atomic the production compiler, and the SPEC should
-not be read as claiming it does. Panda still generates the live `styles.css`;
-native compile runs only behind `REF_SYSTEM_ENGINE=native` and **appends** its
-sheet onto Panda's, so two layer preambles ship. `CompileResult.css` and
-`CompileResult.recipes` are discarded by the host entirely, and runtime `css()` /
-`recipe()` still call `@reference-ui/styled`. That means `ATM-GHOST-01` — our P0 —
-is unenforceable in production today, because the class map it protects never
-leaves the N-API boundary, and `ATM-RECIPE-02`'s variant table has no consumer.
-Cutover work is tracked in `chefs_kiss.md`, not here; these cases prove the
+not be read as claiming it does. Native already writes `styles.css` behind
+`REF_SYSTEM_ENGINE=native`. `CompileResult.css` and `CompileResult.recipes` are
+still discarded by the host, and runtime `css()` / `recipe()` still call
+`@reference-ui/styled`. That means `ATM-GHOST-01` — our P0 — is unenforceable
+in production today, because the class map it protects never leaves the N-API
+boundary, and `ATM-RECIPE-02`'s variant table has no consumer. Cutover work is
+[`../../PLAN.md`](../../PLAN.md) § Reference UI; these cases prove the
 compiler, and the compiler is only half the delivery.
 
 `ATM-LAYER-05` and `ATM-LAYER-06` close dangling references that ship today: the

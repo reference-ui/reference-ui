@@ -145,7 +145,7 @@ Overlay portals Backdrop, Content, and Arrow internally by default.
 own the overlay content. Trigger never portals.
 
 Portaled Backdrop and Content render under `document.body`, outside the
-DOM layer ancestor. Through the Portal Color Mode Protocol (`PORTAL_COLOR_MODE.md`),
+DOM layer ancestor. Through the Portal Color Mode Protocol ([`PORTAL_COLOR_MODE.md`](../../../../../docs/FEATURES/PORTAL_COLOR_MODE.md)),
 `Portal` resets `LayerScopeContext` to `false` and propagates `DocumentContext`,
 allowing the standard primitive hosts (`Div`) of Backdrop and Content to re-emit
 `data-layer` and `data-panda-theme` from logical React context so token-aware StyleProps

@@ -1,7 +1,7 @@
 # Canon SPEC
 
 Current freeze, cases, and proof. Architecture: [README.md](./README.md).
-System orchestration: [REFERENCE_SYSTEM.md](../../../REFERENCE_SYSTEM.md) and [atomic.md](../../docs/atomic.md).
+System orchestration: [REFERENCE_SYSTEM.md](../../../../docs/archive/REFERENCE_SYSTEM.md) and [atomic.md](../../docs/atomic.md).
 
 Harness: Cargo unittests (`packages/reference-rs/modules/canon/src/tests.rs`) + Vitest (`packages/reference-rs/modules/canon/tests/join.test.ts`)  
 Generator: Platform join validation orchestrator (`pnpm --filter @reference-ui/rust run canon`)

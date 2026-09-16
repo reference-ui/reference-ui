@@ -35,7 +35,7 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 ## 3. Detailed Gaps & Missing Functionality
 
 ### Functional & Behavioral Gaps
-- **Theme & Layer Scope Protocol (Completed)**: Layer scope reset (`LayerScopeContext=false`) and destination `DocumentContext` propagation ensure the first portalled primitive correctly re-emits `data-layer` and `data-panda-theme` without wrapper DOM nodes (see `PORTAL_COLOR_MODE.md`).
+- **Theme & Layer Scope Protocol (Completed)**: Layer scope reset (`LayerScopeContext=false`) and destination `DocumentContext` propagation ensure the first portalled primitive correctly re-emits `data-layer` and `data-panda-theme` without wrapper DOM nodes (see [`PORTAL_COLOR_MODE.md`](../../../../../docs/FEATURES/PORTAL_COLOR_MODE.md)).
 - **Late-Resolved Container Ref**: Ensuring no transient mount in `document.body` when a custom container ref resolves asynchronously.
 - **SSR Hydration Cleanliness**: Zero markup rendered on server; hydration gate cleanly attaching after client mount without mismatch.
 - **Shadow DOM Portaling**: Support for teleporting subtrees into Web Component shadow roots.

@@ -1,4 +1,6 @@
-# VARIANTS.md — First-Class Primitive Variants Architecture & Production Rollout Plan
+# First-class primitive variants
+
+**Status:** Implemented. `variant` is a universal primitive prop (`data-variant`) with house styles in `@reference-ui/lib`.
 
 ## 1. Executive Summary & Philosophy
 

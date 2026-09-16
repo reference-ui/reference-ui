@@ -2,11 +2,11 @@
 
 This document is a **long-form map** of what Reference UI is, how the major subsystems connect, and where to look in the tree. It is written for engineers (and agents) who need more than a README tagline.
 
-If you only need the short version, start with the root [README.md](./README.md) and the package READMEs linked at the end.
+If you only need the short version, start with the root [README.md](../README.md) and the package READMEs linked at the end.
 
-The **reference-core internals** are merged from two repo docs: **[docs/Architecture.md](./docs/Architecture.md)** (**§23** — per-file tree, innovations, quick reference) and **[docs/STRUCTURE.md](./docs/STRUCTURE.md)** (**§24** — three-layer build diagram, declarative API table, eval + microbundle **closure** example, design principles, contributor workflow). Both use historical `src/cli/` / `src/styled/` paths; **§23.1** / **§24** call out where those ideas live after refactors (`system/panda/config/`, `lib/fragments/`, `sync/`, `reference-lib` theme, etc.).
+The **reference-core internals** are merged from two repo docs: **[docs/Architecture.md](./Architecture.md)** (**§23** — per-file tree, innovations, quick reference) and **[docs/STRUCTURE.md](./STRUCTURE.md)** (**§24** — three-layer build diagram, declarative API table, eval + microbundle **closure** example, design principles, contributor workflow). Both use historical `src/cli/` / `src/styled/` paths; **§23.1** / **§24** call out where those ideas live after refactors (`system/panda/config/`, `lib/fragments/`, `sync/`, `reference-lib` theme, etc.).
 
-**Native analysis and transforms** live in **[packages/reference-rs](./packages/reference-rs/)** (`@reference-ui/rust`, Rust crate **`reference-virtual-native`**)—see **§25** for the crate layout, N-API surface, Oxc-based modules (Atlas, Tasty, Styletrace, virtualrs), and how that package relates to the rest of this file (**§12–§16**).
+**Native analysis and transforms** live in **[packages/reference-rs](../packages/reference-rs/)** (`@reference-ui/rust`, Rust crate **`reference-virtual-native`**)—see **§25** for the crate layout, N-API surface, Oxc-based modules (Atlas, Tasty, Styletrace, virtualrs), and how that package relates to the rest of this file (**§12–§16**).
 
 ---
 
@@ -30,9 +30,9 @@ The “**AI era**” angle is not marketing fluff: the stack is designed so that
 | `fixtures/*` | Consumer-style fixtures, including `extend-library` and `layer-library` for composition tests. |
 | `matrix/*` | Matrix scenario packages (install/TypeScript stories) discovered by the pipeline. |
 | `pipeline/` | Dagger graph, **Verdaccio** staging, pack → load → test flows, **matrix** bootstrap. |
-| `docs/` | **reference-core story** — [STRUCTURE.md](./docs/STRUCTURE.md) (three layers, API table, microbundle pattern); [Architecture.md](./docs/Architecture.md) (file map); also `CORE.md`, `LAYERS.md`, `SIZE.md`, `RELEASE.md`, etc. **§23–§24** in this file fold both in with current paths. |
+| `docs/` | Engineering notes — [README.md](./README.md), [FEATURES/](./FEATURES/), [bugs/](./bugs/), [archive/](./archive/). Older core maps: [STRUCTURE.md](./STRUCTURE.md), [Architecture.md](./Architecture.md), [CORE.md](./CORE.md), [LAYERS.md](./LAYERS.md), [RELEASE.md](./RELEASE.md). **§23–§24** in this file fold Architecture/STRUCTURE in with current paths. |
 
-Root scripts (`pnpm pipeline`, `pnpm release`, `pnpm changeset`, `pnpm setup:local`) tie these together; see the root [README.md](./README.md).
+Root scripts (`pnpm pipeline`, `pnpm release`, `pnpm changeset`, `pnpm setup:local`) tie these together; see the root [README.md](../README.md).
 
 ---
 
@@ -91,7 +91,7 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | `ref clean` | Deletes the output directory (`.reference-ui`); **main thread only**; use before tests for a cold state. |
 | `ref mcp` | Starts the MCP server: **stdio** (editors) or **HTTP** (`--transport http`) for debugging. Runs in the **CLI process**; the heavy MCP artifact build can use a **child process** (see below). |
 
-Editor integration: prefer `node` + the built CLI path; do not assume `pnpm` exists on the host `PATH` for MCP spawns. Examples live in [packages/reference-core/README.md](./packages/reference-core/README.md).
+Editor integration: prefer `node` + the built CLI path; do not assume `pnpm` exists on the host `PATH` for MCP spawns. Examples live in [packages/reference-core/README.md](../packages/reference-core/README.md).
 
 ---
 
@@ -156,9 +156,9 @@ Paths are resolved with helpers in `packages/reference-core/src/lib/paths/` (e.g
 
 ## 9. System layer: `baseSystem`, Panda, and CSS
 
-- **`system/base`** prepares the portable `baseSystem` **fragment** bundle, writes `baseSystem.mjs` / `baseSystem.d.mts`, and hands the **collector** bundle to Panda config generation. **`baseSystem` is a Reference UI contract**, not an opaque Panda handwave—see [packages/reference-core/src/system/base/README.md](./packages/reference-core/src/system/base/README.md).
+- **`system/base`** prepares the portable `baseSystem` **fragment** bundle, writes `baseSystem.mjs` / `baseSystem.d.mts`, and hands the **collector** bundle to Panda config generation. **`baseSystem` is a Reference UI contract**, not an opaque Panda handwave—see [packages/reference-core/src/system/base/README.md](../packages/reference-core/src/system/base/README.md).
 - **Panda** runs in a worker: codegen, then cssgen; watch can take a **fast CSS-only** path.
-- **Layer postprocessing** updates `baseSystem.css` with a **layer-safe** representation when `layers` participate—so cascade order stays explicit and testable. Deep detail: [packages/reference-core/src/system/css/README.md](./packages/reference-core/src/system/css/README.md).
+- **Layer postprocessing** updates `baseSystem.css` with a **layer-safe** representation when `layers` participate—so cascade order stays explicit and testable. Deep detail: [packages/reference-core/src/system/css/README.md](../packages/reference-core/src/system/css/README.md).
 
 ---
 
@@ -175,11 +175,11 @@ Workers are **discovered** from `packages/reference-core/workers.json` and built
 | `panda` | `src/system/workers/panda.ts` | Panda codegen / cssgen. |
 | `packager` | `src/packager/worker.ts` | Package runtime and final bundle orchestration. |
 | `packager-ts` | `src/packager/ts/worker.ts` | TypeScript / declaration generation coordination. |
-| `mcp` | `src/mcp/worker/worker.ts` | Worker-side MCP support (the **stdio/HTTP** server still runs in the main CLI—see [packages/reference-core/src/mcp/server/README.md](./packages/reference-core/src/mcp/server/README.md)). |
+| `mcp` | `src/mcp/worker/worker.ts` | Worker-side MCP support (the **stdio/HTTP** server still runs in the main CLI—see [packages/reference-core/src/mcp/server/README.md](../packages/reference-core/src/mcp/server/README.md)). |
 
 **Contract:** each worker is **event wiring only**—`on('run:…')`, do work, `emit('…:complete')`, return `KEEP_ALIVE` from `src/lib/thread-pool`. **Business rules for sequencing** live in `sync/events.ts` and `sync/events.utils.ts`, not inside the worker body.
 
-To add a worker: implement `src/.../worker.ts`, add to `workers.json`, register init and events (see [packages/reference-core/src/system/workers/README.md](./packages/reference-core/src/system/workers/README.md) and the root core README’s workers section).
+To add a worker: implement `src/.../worker.ts`, add to `workers.json`, register init and events (see [packages/reference-core/src/system/workers/README.md](../packages/reference-core/src/system/workers/README.md) and the root core README’s workers section).
 
 ---
 
@@ -220,7 +220,7 @@ Package: `packages/reference-rs/`. The Rust crate builds as a **Node-API** (napi
 
 ## 13. Atlas: React/TSX inventory and usage
 
-**Questions Atlas answers** (from [packages/reference-rs/js/atlas/README.md](./packages/reference-rs/js/atlas/README.md)):
+**Questions Atlas answers** (from [packages/reference-rs/js/atlas/README.md](../packages/reference-rs/js/atlas/README.md)):
 
 - Which exported React components exist?
 - What **named props type** does each map to (when resolvable)?
@@ -247,7 +247,7 @@ Atlas is the **spine of “what is actually in this repo’s JSX”** for MCP. I
 **Object-like projection** (for docs, MCP, API tables)
 
 - Tasty preserves a **canonical graph** but can expose a **bounded object-like view** of complex aliases when flattening is safe; otherwise it **falls back** to raw or linked definitions (see the Tasty README’s “Object-Like Projection” and “What Raw Means” sections).
-- The Tasty README discusses treating **`type` aliases** as first-class documentation symbols (see [packages/reference-rs/src/tasty/README.md](./packages/reference-rs/src/tasty/README.md)).
+- The Tasty README discusses treating **`type` aliases** as first-class documentation symbols (see [packages/reference-rs/src/tasty/README.md](../packages/reference-rs/src/tasty/README.md)).
 
 **Re-exports and `node_modules`**
 
@@ -256,7 +256,7 @@ Atlas is the **spine of “what is actually in this repo’s JSX”** for MCP. I
 
 **Bridge into `@reference-ui/types`**
 
-- The packager postprocess **rewrites** a placeholder in the types bundle to **`import('./tasty/runtime.js')`** so esbuild and **app bundlers** retain a **real dynamic import** edge; without that rewrite, the Tasty runtime and **chunk graph** could be left out of production builds ([packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts](./packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts)).
+- The packager postprocess **rewrites** a placeholder in the types bundle to **`import('./tasty/runtime.js')`** so esbuild and **app bundlers** retain a **real dynamic import** edge; without that rewrite, the Tasty runtime and **chunk graph** could be left out of production builds ([packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts](../packages/reference-core/src/packager/postprocess/rewrite-types-runtime-import.ts)).
 
 ---
 
@@ -293,7 +293,7 @@ So Styletrace is the **semantic “this wrapper is still a Reference-styled boun
 3. **Join** — `joinMcpComponentWithReference` merges:
    - Atlas: usage counts, examples, per-prop usage stats, `usedWith`.
    - Tasty: `type` strings, descriptions, optional/readonly, defaults.
-   - If Tasty has **documented** props Atlas never saw in JSX, they appear as **`documentedOnlyProps`** with `usage: 'unused'` (see [packages/reference-core/src/mcp/pipeline/join.ts](./packages/reference-core/src/mcp/pipeline/join.ts))—so **docs stay honest** about “never observed in the repo”.
+   - If Tasty has **documented** props Atlas never saw in JSX, they appear as **`documentedOnlyProps`** with `usage: 'unused'` (see [packages/reference-core/src/mcp/pipeline/join.ts](../packages/reference-core/src/mcp/pipeline/join.ts))—so **docs stay honest** about “never observed in the repo”.
 
 ### 16.3 `createMcpModelState` and warm start
 
@@ -336,7 +336,7 @@ Files: `packages/reference-core/src/reference/browser/` (e.g. `Reference.tsx`, `
 - **`createReferenceComponent`** — Loading states, error UI, and document rendering; uses `useReferenceDocument`.
 - **Runtime** — `createDefaultReferenceRuntime` builds a `TastyBrowserRuntime` with:
   - `loadRuntimeModule: () => import('__REFERENCE_UI_TYPES_RUNTIME__' as string)` — a **build-time placeholder** the packager rewrites to `./tasty/runtime.js` so the consumer bundle can **split** the Tasty runtime.
-  - `apiOptions: getReferenceUiTastyBrowserApiOptions()` — prefers `@reference-ui/react`, `@reference-ui/system`, `@reference-ui/types` for scoping, and custom **generic parameter projection** for the `P` type parameter to **`SystemProperties`** from those libraries (see [packages/reference-core/src/reference/tasty/api.ts](./packages/reference-core/src/reference/tasty/api.ts)).
+  - `apiOptions: getReferenceUiTastyBrowserApiOptions()` — prefers `@reference-ui/react`, `@reference-ui/system`, `@reference-ui/types` for scoping, and custom **generic parameter projection** for the `P` type parameter to **`SystemProperties`** from those libraries (see [packages/reference-core/src/reference/tasty/api.ts](../packages/reference-core/src/reference/tasty/api.ts)).
 - **Data path** — `loadSymbolByName`, `getDisplayMembers`, extends chain and member origins, related symbol graph—mirroring what MCP needs server-side, but in React for human-readable docs in an app.
 
 ---
@@ -372,13 +372,13 @@ Files: `packages/reference-core/src/reference/browser/` (e.g. `Reference.tsx`, `
 
 **Why:** staging copies packages to `.pipeline/registry/staging/`, rewrites **`workspace:`** to concrete versions, strips `private` where needed, and runs `pnpm pack`—matching **real npm** behavior as closely as practical. Downstream test installs pull from the **same** artifact set release would promote.
 
-Full narrative: [pipeline/src/registry/README.md](./pipeline/src/registry/README.md) and [pipeline/Vision.md](./pipeline/Vision.md).
+Full narrative: [pipeline/src/registry/README.md](../pipeline/src/registry/README.md) and [pipeline/Vision.md](../pipeline/Vision.md).
 
 ---
 
 ## 21. Dagger matrix bootstrap (containerized install + `ref sync` + tests)
 
-Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matrix/run.ts) (also summarized in [pipeline/src/testing/matrix/README.md](./pipeline/src/testing/matrix/README.md)).
+Implementation: [pipeline/src/testing/matrix/run.ts](../pipeline/src/testing/matrix/run.ts) (also summarized in [pipeline/src/testing/matrix/README.md](../pipeline/src/testing/matrix/README.md)).
 
 **At a high level**
 
@@ -387,7 +387,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 3. **Read** the **shared** host Verdaccio manifest; fingerprint it for a **Dagger pnpm store cache** key so repeated runs reuse dependency downloads.
 4. **Node container** — e.g. `node:24-bookworm`, pnpm from Corepack, env vars for `CI`, registry URL inside the graph.
 5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `MANAGED_REGISTRY_HOST:MANAGED_REGISTRY_PORT` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
-6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](./pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
+6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](../pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
 7. **Logs** land under **`.pipeline/testing/matrix/`** with per-package, per-stage filenames (`-install.log`, `-ref-sync.log`, `-test.log`).
 
 **macOS:** if Docker uses Colima, `ensureContainerRuntime` can start the VM when needed (see the matrix README).
@@ -408,7 +408,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](./pipeline/src/testing/matr
 
 ---
 
-## 23. Appendix: `reference-core` meaty map (from [docs/Architecture.md](./docs/Architecture.md) + current tree)
+## 23. Appendix: `reference-core` meaty map (from [docs/Architecture.md](./Architecture.md) + current tree)
 
 The content below is **synthesized and expanded** from the long-form **reference-core architecture map** in the repo. That document’s paths are written relative to **`packages/reference-core/src/`** (it says `src/`). The monorepo has **evolved**: orchestration is **`src/index.ts` + `src/sync/`** (not `cli/commands/sync.ts`), Panda config and extensions live primarily under **`src/system/panda/config/`** (not only under a top-level `cli/panda/`), and **build-time collection** also flows through **`src/lib/fragments/`** (see its README: it supersedes older `extendPandaConfig` + `runEval` patterns in many places). First-party **theme/animation** source that looks like the “styled/theme” table often lives in **`packages/reference-lib/src/core/theme/`** in this repo, while **reference-core** owns **generation**, **Panda wiring**, and **primitives** under `src/system/`.
 
@@ -420,7 +420,7 @@ When a row below still says `cli/…` or `styled/…`, read it as the **architec
 | --- | --- |
 | `cli/index.ts` | `packages/reference-core/src/index.ts` (Commander entry; `dist/cli/index.mjs`) |
 | `cli/commands/sync.ts` | `packages/reference-core/src/sync/` (`runSync`, `bootstrap`, `events.ts`) |
-| `cli/eval/*` (scanner, runner, registry) | `packages/reference-core/src/lib/fragments/` (collectors, `collectFragments`, `createFragmentCollector` — see [fragments README](./packages/reference-core/src/lib/fragments/README.md)) |
+| `cli/eval/*` (scanner, runner, registry) | `packages/reference-core/src/lib/fragments/` (collectors, `collectFragments`, `createFragmentCollector` — see [fragments README](../packages/reference-core/src/lib/fragments/README.md)) |
 | `cli/panda/config/*`, `createPandaConfig` | `packages/reference-core/src/system/panda/config/` (`create.ts`, `init.ts`, `extensions/`, `liquid/`) |
 | `cli/panda/boxPattern/*` | Logic absorbed into **extensions** and box pattern under `system/panda/config/extensions/` and related `system/build` inputs |
 | `cli/panda/fontFace/*` | `system/panda/config/extensions/api/font.ts`, `extendFontFaces.ts`, etc. |
@@ -518,7 +518,7 @@ Architecture.md’s “Project Root” table maps to **`packages/reference-core/
 3. **Runner** bundles with esbuild, executes, reads **`globalThis`** collectors.
 4. **Output:** merged config fragments for Panda.
 
-**Current model (see `lib/fragments/`):** named collectors (`createFragmentCollector`), per-concern keys (no one `COLLECTOR_KEY` collision), `collectFragments` driving the same **build-time** idea—**discover, execute in isolation, merge**—for `baseSystem`, tokens, and Panda extension surfaces. The migration story is in [STYLED-SYSTEM-MIGRATION.md](./packages/reference-core/docs/STYLED-SYSTEM-MIGRATION.md) and the fragments plan/README.
+**Current model (see `lib/fragments/`):** named collectors (`createFragmentCollector`), per-concern keys (no one `COLLECTOR_KEY` collision), `collectFragments` driving the same **build-time** idea—**discover, execute in isolation, merge**—for `baseSystem`, tokens, and Panda extension surfaces. The migration story is in [STYLED-SYSTEM-MIGRATION.md](./archive/STYLED-SYSTEM-MIGRATION.md) and the fragments plan/README.
 
 ### 23.5 Panda “microbundles” (config, box pattern, font) — roles
 
@@ -626,7 +626,7 @@ The **large ASCII diagram** in Architecture.md (CLI → eval → microbundles �
 | Change primitive tag set / codegen | `system/primitives/`, `system/build/primitives/` |
 | Run codegen worker | `system/panda/gen/`, `system/workers/panda.ts` |
 | First-party theme colors / animations | `packages/reference-lib/src/core/theme/` |
-| Read the **full** per-file list | [docs/Architecture.md](./docs/Architecture.md) + **§23.2** above |
+| Read the **full** per-file list | [docs/Architecture.md](./Architecture.md) + **§23.2** above |
 
 ### 23.13 Future expansion (from Architecture.md conclusion)
 
@@ -641,13 +641,13 @@ The source doc lists **planned** microbundles (animation, theme switching, desig
 
 Example import lines in Architecture.md (`Box` from system/jsx) illustrate **Panda’s** runtime `Box`—our **public** docs also stress **typed HTML primitives** for app code; know which API layer you are teaching.
 
-For the **three-layer diagram**, **declarative API table**, **PRESETS / closure** example, and **design principles** in one place, continue to **§24** ([docs/STRUCTURE.md](./docs/STRUCTURE.md) merge).
+For the **three-layer diagram**, **declarative API table**, **PRESETS / closure** example, and **design principles** in one place, continue to **§24** ([docs/STRUCTURE.md](./STRUCTURE.md) merge).
 
 ---
 
-## 24. Appendix: Three-layer build & [docs/STRUCTURE.md](./docs/STRUCTURE.md)
+## 24. Appendix: Three-layer build & [docs/STRUCTURE.md](./STRUCTURE.md)
 
-[docs/STRUCTURE.md](./docs/STRUCTURE.md) overlaps [Architecture.md](./docs/Architecture.md) on *what* reference-core is, but it is the clearest place for the **three-layer mental model**, the **full declarative API table** (`tokens()`, `recipe()`, …), the **microbundle** folder pattern, the **closure / inlining** example (why transforms must be self-contained for Panda), **five design principles**, and **contributor** workflow. Everything below is drawn from that doc; **path drift** matches **§23.1** (there is no longer a top-level `packages/reference-core/src/cli/eval/` or `src/styled/` in the form described—use `lib/fragments/`, `system/panda/config/`, `system/build/`, and `reference-lib` as appropriate).
+[docs/STRUCTURE.md](./STRUCTURE.md) overlaps [Architecture.md](./Architecture.md) on *what* reference-core is, but it is the clearest place for the **three-layer mental model**, the **full declarative API table** (`tokens()`, `recipe()`, …), the **microbundle** folder pattern, the **closure / inlining** example (why transforms must be self-contained for Panda), **five design principles**, and **contributor** workflow. Everything below is drawn from that doc; **path drift** matches **§23.1** (there is no longer a top-level `packages/reference-core/src/cli/eval/` or `src/styled/` in the form described—use `lib/fragments/`, `system/panda/config/`, `system/build/`, and `reference-lib` as appropriate).
 
 ### 24.1 Core capabilities (from STRUCTURE overview)
 
@@ -733,7 +733,7 @@ src/styled/
 4. **Collection** — capture config fragments.  
 5. **Merge** — deep merge into a coherent Panda config (and related artifacts).
 
-**Example (conceptual):** a `tokens({ colors: { brand: { value: '…' } } })` in theme source is discovered, executed in isolation, and merged into the eventual **`panda.config.ts`**. The **modern** implementation is **`lib/fragments/`** and related pipeline code—see [fragments README](./packages/reference-core/src/lib/fragments/README.md) and [STYLED-SYSTEM-MIGRATION.md](./packages/reference-core/docs/STYLED-SYSTEM-MIGRATION.md).
+**Example (conceptual):** a `tokens({ colors: { brand: { value: '…' } } })` in theme source is discovered, executed in isolation, and merged into the eventual **`panda.config.ts`**. The **modern** implementation is **`lib/fragments/`** and related pipeline code—see [fragments README](../packages/reference-core/src/lib/fragments/README.md) and [STYLED-SYSTEM-MIGRATION.md](./archive/STYLED-SYSTEM-MIGRATION.md).
 
 ### 24.7 Microbundles: why they exist, folder shape, and the closure pitfall
 
@@ -808,17 +808,17 @@ STRUCTURE’s bottom links point at paths like `src/styled/PLAN.md` and `src/cli
 
 | Original STRUCTURE link | Use this |
 | --- | --- |
-| Eval readme | [packages/reference-core/src/lib/fragments/README.md](./packages/reference-core/src/lib/fragments/README.md) |
-| Config microbundle | [packages/reference-core/src/system/panda/config/README.md](./packages/reference-core/src/system/panda/config/README.md) |
-| STYLED-SYSTEM-MIGRATION | [packages/reference-core/docs/STYLED-SYSTEM-MIGRATION.md](./packages/reference-core/docs/STYLED-SYSTEM-MIGRATION.md) |
-| Overall file map | [docs/Architecture.md](./docs/Architecture.md) and **§23** in this file |
-| This STRUCTURE content | [docs/STRUCTURE.md](./docs/STRUCTURE.md) (source) and **§24** here (merged) |
+| Eval readme | [packages/reference-core/src/lib/fragments/README.md](../packages/reference-core/src/lib/fragments/README.md) |
+| Config microbundle | [packages/reference-core/src/system/panda/config/README.md](../packages/reference-core/src/system/panda/config/README.md) |
+| STYLED-SYSTEM-MIGRATION | [archive/STYLED-SYSTEM-MIGRATION.md](./archive/STYLED-SYSTEM-MIGRATION.md) |
+| Overall file map | [docs/Architecture.md](./Architecture.md) and **§23** in this file |
+| This STRUCTURE content | [docs/STRUCTURE.md](./STRUCTURE.md) (source) and **§24** here (merged) |
 
 ---
 
 ## 25. Appendix: `packages/reference-rs` (`@reference-ui/rust`)
 
-[packages/reference-rs](./packages/reference-rs/) is a **separate published package** from `@reference-ui/core`. It is the **native tier** of Reference UI: heavy parsing and analysis run in **Rust** (with **Oxc** for TypeScript/JSX), and selected entrypoints are exposed to Node through **Node-API** via [napi-rs](https://github.com/napi-rs/napi-rs). TypeScript in **`js/`** loads the **`.node`** binary and provides ergonomic APIs, bundled with **tsup** into **`dist/`**. High-level product behavior of Atlas, Tasty, and Styletrace in the user-facing story is also in **§12–§16** above; this section is the **package/crate** map.
+[packages/reference-rs](../packages/reference-rs/) is a **separate published package** from `@reference-ui/core`. It is the **native tier** of Reference UI: heavy parsing and analysis run in **Rust** (with **Oxc** for TypeScript/JSX), and selected entrypoints are exposed to Node through **Node-API** via [napi-rs](https://github.com/napi-rs/napi-rs). TypeScript in **`js/`** loads the **`.node`** binary and provides ergonomic APIs, bundled with **tsup** into **`dist/`**. High-level product behavior of Atlas, Tasty, and Styletrace in the user-facing story is also in **§12–§16** above; this section is the **package/crate** map.
 
 ### 25.1 Package vs crate
 
@@ -855,13 +855,13 @@ These **`#[napi]`** functions are what Node actually calls (names are the Rust A
 | --- | --- |
 | **`atlas/`** | **React/TSX component** usage analysis: which components, props type mapping, counts, examples, `usedWith`, diagnostics. The JS side is `js/atlas/` (thin wrapper around `analyze_atlas`). |
 | **`tasty/`** | **Type graph**: scan, AST + symbol work, OXC `TypeRef` lowering, **manifest + chunk** emission, generators, tests. Largest subtree (`scanner/`, `ast/`, `generator/`, etc.). |
-| **`styletrace/`** | **Resolver** + **analysis** passes: connect **StyleProps** and primitives (`tags.ts` source of truth) to exported JSX. See the package [styletrace README](./packages/reference-rs/src/styletrace/README.md). |
+| **`styletrace/`** | **Resolver** + **analysis** passes: connect **StyleProps** and primitives (`tags.ts` source of truth) to exported JSX. See the package [styletrace README](../packages/reference-rs/src/styletrace/README.md). |
 | **`virtualrs/`** | String transforms for the **virtual** / pipeline story (CVA, CSS import rewriting) used from N-API above. |
 
 ### 25.5 TypeScript `js/` layer and `package.json` exports
 
 - **`js/runtime/loader.ts`** — Resolves **`native/virtual-native.<target>.node`** (binary name **`virtual-native`** per `package.json` **napi** block) for the current **OS/arch** (`require` or equivalent).  
-- **Per-subpath bundles** (from [package.json exports](./packages/reference-rs/package.json)): `@reference-ui/rust`, `@reference-ui/rust/tasty`, `@reference-ui/rust/tasty/browser`, `@reference-ui/rust/tasty/build`, `@reference-ui/rust/atlas`, `@reference-ui/rust/styletrace`.  
+- **Per-subpath bundles** (from [package.json exports](../packages/reference-rs/package.json)): `@reference-ui/rust`, `@reference-ui/rust/tasty`, `@reference-ui/rust/tasty/browser`, `@reference-ui/rust/tasty/build`, `@reference-ui/rust/atlas`, `@reference-ui/rust/styletrace`.  
 - **tsup** builds ESM + declarations into `dist/`.
 
 `prepublish:npm` / `napi` **targets** in `package.json` (e.g. `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, Windows MSVC) line up with **Matrix** and registry staging: Linux consumers need a **published or staged** per-target **`.node`** for the same version as `@reference-ui/rust` (see **§21**).
@@ -877,7 +877,7 @@ These **`#[napi]`** functions are what Node actually calls (names are the Rust A
 
 **Benchmarks:** `[[bench]]` in `Cargo.toml` (e.g. `scan_kitchen_sink`).
 
-**Docs in tree:** [packages/reference-rs/docs/](./packages/reference-rs/docs/) (e.g. Tasty: `tasty-rs.md`, `tasty-js.md`), plus per-module `README.md` files under `src/`.
+**Docs in tree:** [packages/reference-rs/docs/](../packages/reference-rs/docs/) (e.g. Tasty: `tasty-rs.md`, `tasty-js.md`), plus per-module `README.md` files under `src/`.
 
 ### 25.7 How the rest of the monorepo depends on this package
 
@@ -893,10 +893,10 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 | I want to… | Start here |
 | --- | --- |
 | Change Atlas semantics / diagnostics | `packages/reference-rs/src/atlas/`, `js/atlas/` |
-| Change Tasty IR or emit format | `packages/reference-rs/src/tasty/` (see [tasty README](./packages/reference-rs/src/tasty/README.md)) |
+| Change Tasty IR or emit format | `packages/reference-rs/src/tasty/` (see [tasty README](../packages/reference-rs/src/tasty/README.md)) |
 | Change Styletrace resolution / JSX walk | `packages/reference-rs/src/styletrace/` |
 | Add a new `#[napi]` export | `src/lib.rs` + new Rust module + `js/` binding + `tsup.config` / `package.json` exports |
-| See full package overview | [packages/reference-rs/README.md](./packages/reference-rs/README.md) |
+| See full package overview | [packages/reference-rs/README.md](../packages/reference-rs/README.md) |
 
 ---
 
@@ -904,25 +904,25 @@ If `@reference-ui/rust` fails to load the native binary, any path that needs Atl
 
 | Topic | Path |
 | --- | --- |
-| Root overview | [README.md](./README.md) |
-| Core CLI and threading | [packages/reference-core/README.md](./packages/reference-core/README.md) |
-| MCP tools | [packages/reference-core/src/mcp/README.md](./packages/reference-core/src/mcp/README.md) |
-| System overview | [packages/reference-core/src/system/README.md](./packages/reference-core/src/system/README.md) |
-| Event bus | [packages/reference-core/src/lib/event-bus/README.md](./packages/reference-core/src/lib/event-bus/README.md) |
-| Sync event graph (source) | [packages/reference-core/src/sync/events.ts](./packages/reference-core/src/sync/events.ts) |
-| Tasty Rust | [packages/reference-rs/src/tasty/README.md](./packages/reference-rs/src/tasty/README.md) |
-| Styletrace | [packages/reference-rs/src/styletrace/README.md](./packages/reference-rs/src/styletrace/README.md) |
-| Atlas JS | [packages/reference-rs/js/atlas/README.md](./packages/reference-rs/js/atlas/README.md) |
-| @reference-ui/rust | [packages/reference-rs/README.md](./packages/reference-rs/README.md) — **§25** in this file (N-API, modules, matrix artifacts) |
-| Tasty (Rust/JS) package docs | [packages/reference-rs/docs/](./packages/reference-rs/docs/) (`tasty-rs.md`, `tasty-js.md`) |
-| Packager TS | [packages/reference-core/src/packager/ts/README.md](./packages/reference-core/src/packager/ts/README.md) |
-| Registry | [pipeline/src/registry/README.md](./pipeline/src/registry/README.md) |
-| Matrix + Dagger | [pipeline/src/testing/matrix/README.md](./pipeline/src/testing/matrix/README.md) |
-| Pipeline vision | [pipeline/Vision.md](./pipeline/Vision.md) |
-| `reference-core` file map (original) | [docs/Architecture.md](./docs/Architecture.md) — see also **§23** in this file for path drift and merge |
-| Three-layer build, API table, microbundle closure example (STRUCTURE) | [docs/STRUCTURE.md](./docs/STRUCTURE.md) — see also **§24** in this file (merged + updated paths) |
-| Core vision (CORE) | [docs/CORE.md](./docs/CORE.md) |
-| Layers semantics | [docs/LAYERS.md](./docs/LAYERS.md) |
+| Root overview | [README.md](../README.md) |
+| Core CLI and threading | [packages/reference-core/README.md](../packages/reference-core/README.md) |
+| MCP tools | [packages/reference-core/src/mcp/README.md](../packages/reference-core/src/mcp/README.md) |
+| System overview | [packages/reference-core/src/system/README.md](../packages/reference-core/src/system/README.md) |
+| Event bus | [packages/reference-core/src/lib/event-bus/README.md](../packages/reference-core/src/lib/event-bus/README.md) |
+| Sync event graph (source) | [packages/reference-core/src/sync/events.ts](../packages/reference-core/src/sync/events.ts) |
+| Tasty Rust | [packages/reference-rs/src/tasty/README.md](../packages/reference-rs/src/tasty/README.md) |
+| Styletrace | [packages/reference-rs/src/styletrace/README.md](../packages/reference-rs/src/styletrace/README.md) |
+| Atlas JS | [packages/reference-rs/js/atlas/README.md](../packages/reference-rs/js/atlas/README.md) |
+| @reference-ui/rust | [packages/reference-rs/README.md](../packages/reference-rs/README.md) — **§25** in this file (N-API, modules, matrix artifacts) |
+| Tasty (Rust/JS) package docs | [packages/reference-rs/docs/](../packages/reference-rs/docs/) (`tasty-rs.md`, `tasty-js.md`) |
+| Packager TS | [packages/reference-core/src/packager/ts/README.md](../packages/reference-core/src/packager/ts/README.md) |
+| Registry | [pipeline/src/registry/README.md](../pipeline/src/registry/README.md) |
+| Matrix + Dagger | [pipeline/src/testing/matrix/README.md](../pipeline/src/testing/matrix/README.md) |
+| Pipeline vision | [pipeline/Vision.md](../pipeline/Vision.md) |
+| `reference-core` file map (original) | [docs/Architecture.md](./Architecture.md) — see also **§23** in this file for path drift and merge |
+| Three-layer build, API table, microbundle closure example (STRUCTURE) | [docs/STRUCTURE.md](./STRUCTURE.md) — see also **§24** in this file (merged + updated paths) |
+| Core vision (CORE) | [docs/CORE.md](./CORE.md) |
+| Layers semantics | [docs/LAYERS.md](./LAYERS.md) |
 
 ---
 

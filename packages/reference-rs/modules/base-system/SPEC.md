@@ -1,7 +1,7 @@
 # Base System SPEC
 
-Current freeze, cases, and proof. Design narrative: [REFERENCE_SYSTEM.md](../../../../REFERENCE_SYSTEM.md) (§6 The missing contract: compile against a base system, and §3.4).
-Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
+Current freeze, cases, and proof. Design narrative: [REFERENCE_SYSTEM.md](../../../../docs/archive/REFERENCE_SYSTEM.md) (§6 The missing contract: compile against a base system, and §3.4).
+Sequencing: [PLAN.md](./PLAN.md). Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
 
 Harness: `cargo test -p base_system` (or `pnpm agentrs c base_system`)
 Verify path: In-memory fixture construction (no sync worker, no packager, no bundler).
@@ -10,7 +10,7 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 
 ## 1. The Job of the Crate
 
-`base-system` is the portable design-system definition artefact for Reference UI. It takes the evaluated fragment dump emitted by TypeScript (`tokens()`, `font()`, `keyframes()`, `globalCss()`, declared recipes, and condition/breakpoint maps), deserializing it into a pure, immutable in-memory query engine. It emits authoritative answers to the five canonical questions asked by downstream consumers: custom property variable names, raw token CSS values across light and dark modes, declared recipe variant schemas, keyframes/fonts/globals, and conditions/breakpoints for `modules/atomic`, alongside token existence and category membership for `modules/typegen`. It must not evaluate author JavaScript, bundle modules, parse TSX, run an OXC walker, perform file I/O, print atomic utility classes (such as `.mt_2r`), synthesize runtime `css()` or `recipe()` code, or permit `layers` CSS tokens to leak into the queryable token dictionary.
+`base-system` is the portable design-system definition artefact for Reference UI. It takes the evaluated fragment JSON emitted by TypeScript (`tokens()`, `font()`, `keyframes()`, `globalCss()`, declared recipes, and condition/breakpoint maps) — the `BaseSystemSpec` — and deserializes it into a pure, immutable in-memory query engine. It emits authoritative answers to the five canonical questions asked by downstream consumers: custom property variable names, raw token CSS values across light and dark modes, declared recipe variant schemas, keyframes/fonts/globals, and conditions/breakpoints for `modules/atomic`, alongside token existence and category membership for `modules/typegen`. It must not evaluate author JavaScript, bundle modules, parse TSX, run an OXC walker, perform file I/O, print atomic utility classes (such as `.mt_2r`), synthesize runtime `css()` or `recipe()` code, or permit `layers` CSS tokens to leak into the queryable token dictionary.
 
 ---
 
@@ -21,7 +21,7 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 
 | Area | Meaning | Total Cases | Proven `[x]` | Pending `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
-| **`DUMP`** | Fragment Dump Ingestion & In-Memory Artefact | 5 | 5 | 0 |
+| **`DUMP`** | `BaseSystemSpec` ingestion & in-memory artefact | 5 | 5 | 0 |
 | **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 6 | 2 |
 | **`FONT`** | Font Definitions & Face Rules | 4 | 0 | 4 |
 | **`MOTION`** | Keyframes & Animation Steps | 3 | 3 | 0 |
@@ -67,14 +67,14 @@ those jobs. Vendor crates below are example call sites, not our API.
   **BaseSystem should initialize with empty default state when constructed without parameters.**
   Construct `BaseSystem::default()`. Assert the instance has an empty name, an empty token dictionary, empty font registry, empty keyframes map, empty global CSS list, empty recipe map, empty condition list, and no upstream layers. An uninitialized collection or accidental panic on default query violates the empty-state invariant.
 - [x] `BAS-DUMP-02` `[reference]` `[unit]` —
-  **BaseSystem should ingest JSON-serialized fragment dumps without file I/O or bundler runtime.**
+  **BaseSystem should ingest JSON-serialized fragment specs without file I/O or bundler runtime.**
   Pass a complete serialized JSON payload containing evaluated fragments (`name`, `tokens`, `fonts`, `keyframes`, `globalCss`, `recipes`, `conditions`) to `BaseSystem::from_json(&str)`. Assert that all structures deserialize directly into typed in-memory representations with all lookup indexes built in $O(N)$ time. Deserialization must not spawn Node.js processes, read disk paths, or lose fragment categories.
 - [x] `BAS-DUMP-03` `[reference]` `[unit]` —
   **BaseSystem should preserve system name identity and package attribution.**
   Construct a BaseSystem with `name: "@reference-ui/lib"`. Assert that `system.name()` returns `"@reference-ui/lib"`, maintaining clear provenance for diagnostic reporting, layer naming, and package attribution. Name omission or conflation with downstream root systems violates system identity.
 - [x] `BAS-DUMP-04` `[forbidden]` `[unit]` —
   **BaseSystem must reject raw TypeScript/JavaScript source strings and unexecuted ASTs.**
-  Attempt to instantiate a BaseSystem by passing an unbundled TypeScript string containing `tokens({ colors: { primary: '#fff' } })` or raw JS AST nodes. Assert that parsing fails immediately with an explicit diagnostic indicating that `base-system` consumes evaluated JSON dumps only. Attempting to bundle, execute JS, or run an OXC walker inside this crate is strictly forbidden.
+  Attempt to instantiate a BaseSystem by passing an unbundled TypeScript string containing `tokens({ colors: { primary: '#fff' } })` or raw JS AST nodes. Assert that parsing fails immediately with an explicit diagnostic indicating that `base-system` consumes evaluated JSON only. Attempting to bundle, execute JS, or run an OXC walker inside this crate is strictly forbidden.
 - [x] `BAS-DUMP-05` `[reference]` `[unit]` —
   **BaseSystem should support zero-cost clone and thread-safe sharing across worker threads.**
   Clone an instantiated `BaseSystem` and share it across multiple worker threads executing concurrent `atomic` and `typegen` tasks. Assert that `BaseSystem` implements `Send + Sync`, clones in $O(1)$ via internal `Arc` references, and allows concurrent queries without mutex contention or thread-safety locks. Deep-cloning large token trees on every compilation pass violates performance constraints.
@@ -224,9 +224,9 @@ those jobs. Vendor crates below are example call sites, not our API.
 | Contract ID | Test File | Test Function / Proof Target |
 | :--- | :--- | :--- |
 | `BAS-DUMP-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::default_definition_is_unnamed` |
-| `BAS-DUMP-02` | `packages/reference-rs/modules/base-system/src/dump.rs` | `tests::bas_dump_02_indexes_nested_color_leaf` |
-| `BAS-DUMP-03` | `packages/reference-rs/modules/base-system/src/dump.rs` | `tests::bas_dump_03_preserves_system_name` |
-| `BAS-DUMP-04` | `packages/reference-rs/modules/base-system/src/dump.rs` | `tests::bas_dump_04_rejects_typescript_source` |
+| `BAS-DUMP-02` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_02_indexes_nested_color_leaf` |
+| `BAS-DUMP-03` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_03_preserves_system_name` |
+| `BAS-DUMP-04` | `packages/reference-rs/modules/base-system/src/spec.rs` | `tests::bas_dump_04_rejects_typescript_source` |
 | `BAS-DUMP-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | `tests::bas_dump_05_clone_shares_token_table` |
 | `BAS-TOKEN-01` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_01_indexes_five_segment_path` |
 | `BAS-TOKEN-02` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_02_kebabs_category_only` |

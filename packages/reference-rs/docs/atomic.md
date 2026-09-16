@@ -9,7 +9,7 @@ Interactive map: open `packages/reference-rs/modules/map.html` in a browser.
 Hover a function to see which module it rests on. tasty, atlas, virtualrs, and
 `modules/runtime` (the `.node` loader) are other products — not this engine.
 
-Mandate and user story: [`REFERENCE_SYSTEM.md`](../../REFERENCE_SYSTEM.md).
+Mandate and user story (historical): [`REFERENCE_SYSTEM.md`](../../../docs/archive/REFERENCE_SYSTEM.md). Current campaign: [`PLAN.md`](../PLAN.md).
 Panda autopsy: [`modules/atomic/PANDA.md`](../modules/atomic/PANDA.md).
 
 ---
@@ -70,7 +70,7 @@ README: [`modules/canon`](../modules/canon).
 
 **Status:** crate stub. Core still writes `baseSystem.mjs`.
 
-Consumes the fragment dump from TypeScript — does not evaluate author JS.
+Consumes the fragment spec from TypeScript — does not evaluate author JS.
 Tokens, fonts, keyframes, globals, declared recipes. What `extends` / `layers`
 pass around.
 
