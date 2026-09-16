@@ -33,10 +33,111 @@ pub fn lower_when(raw: &str, system: &BaseSystem) -> LoweredWhen {
     if let Some(when) = named_breakpoint(raw, system) {
         return LoweredWhen::Known(when);
     }
+    if let Some(when) = breakpoint_range(raw, system) {
+        return LoweredWhen::Known(when);
+    }
     if let Some(when) = at_rule_or_ampersand(raw) {
         return LoweredWhen::Known(when);
     }
     LoweredWhen::Unknown
+}
+
+/// Check if any emitted atoms use @container conditions without a container root defined in globalCss.
+pub fn check_container_root(
+    system: &BaseSystem,
+    atom_set: &crate::atom::AtomSet,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
+    let has_cq = atom_set.iter().any(|atom| {
+        atom.conditions
+            .iter()
+            .any(|w| matches!(w.wrap(), crate::atom::WhenKind::Container(_)))
+    });
+    if has_cq && !system.global_css.is_empty() && !has_container_root(system) {
+        diagnostics.push(crate::diagnostics::Diagnostic::warning(
+            "@container condition emitted but no container root (container-type) is defined in globalCss",
+        ));
+    }
+}
+
+fn has_container_root(system: &BaseSystem) -> bool {
+    system.global_css.iter().any(|frag| {
+        frag.rules.iter().any(|(selector, node)| {
+            (selector == ":root" || selector == "html" || selector == "body")
+                && (node.contains_key("containerType")
+                    || node.contains_key("container-type")
+                    || node.contains_key("container"))
+        })
+    })
+}
+
+fn breakpoint_range(raw: &str, system: &BaseSystem) -> Option<When> {
+    if let Some(bp) = raw.strip_suffix("Down") {
+        return breakpoint_down(raw, bp, system);
+    }
+    if let Some(bp) = raw.strip_suffix("Only") {
+        return breakpoint_only(raw, bp, system);
+    }
+    if let Some((from, to)) = raw.split_once("To") {
+        return breakpoint_between(raw, from, to, system);
+    }
+    None
+}
+
+fn breakpoint_down(raw: &str, bp: &str, system: &BaseSystem) -> Option<When> {
+    let scale = system.breakpoints();
+    if bp == "base" || !scale.names().iter().any(|n| n == bp) {
+        return None;
+    }
+    let width_str = scale.width_px(bp)?;
+    let width: f64 = width_str.parse().ok()?;
+    let max_px = width - 0.02;
+    let query = format!("@container (max-width: {max_px:.2}px)");
+    Some(When::breakpoint(raw.into(), query.into_boxed_str()))
+}
+
+fn breakpoint_only(raw: &str, bp: &str, system: &BaseSystem) -> Option<When> {
+    let scale = system.breakpoints();
+    if bp == "base" {
+        return None;
+    }
+    let idx = scale.names().iter().position(|n| n == bp)?;
+    let min_px = scale.width_px(bp)?;
+    if idx + 1 < scale.names().len() {
+        let next_bp = &scale.names()[idx + 1];
+        let next_px: f64 = scale.width_px(next_bp)?.parse().ok()?;
+        let max_px = next_px - 0.02;
+        let query = format!("@container (min-width: {min_px}px) and (max-width: {max_px:.2}px)");
+        Some(When::breakpoint(raw.into(), query.into_boxed_str()))
+    } else {
+        let query = format!("@container (min-width: {min_px}px)");
+        Some(When::breakpoint(raw.into(), query.into_boxed_str()))
+    }
+}
+
+fn breakpoint_between(raw: &str, from: &str, to: &str, system: &BaseSystem) -> Option<When> {
+    let scale = system.breakpoints();
+    if from == "base" || to == "base" {
+        return None;
+    }
+    let from_idx = scale
+        .names()
+        .iter()
+        .position(|n| n.eq_ignore_ascii_case(from))?;
+    let to_idx = scale
+        .names()
+        .iter()
+        .position(|n| n.eq_ignore_ascii_case(to))?;
+    if from_idx >= to_idx {
+        return None;
+    }
+    let from_name = &scale.names()[from_idx];
+    let to_name = &scale.names()[to_idx];
+    let min_px = scale.width_px(from_name)?;
+    let to_px: f64 = scale.width_px(to_name)?.parse().ok()?;
+    let max_px = to_px - 0.02;
+    let query = format!("@container (min-width: {min_px}px) and (max-width: {max_px:.2}px)");
+    Some(When::breakpoint(raw.into(), query.into_boxed_str()))
 }
 
 fn named_condition(raw: &str, system: &BaseSystem) -> Option<When> {
@@ -148,7 +249,7 @@ mod tests {
     fn test_lower_presets() {
         let system = BaseSystem::lib_fixture();
         assert_selector("_hover", "&:is(:hover, [data-hover])", system);
-        assert_selector("_dark", "[data-panda-theme=dark] &", system);
+        assert_selector("_dark", "[data-theme=dark] &", system);
         assert_selector(
             "_groupHover",
             "&:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)",
@@ -226,7 +327,7 @@ mod tests {
         assert!(atoms[0].conditions().is_empty());
         assert_eq!(atoms[0].value.class_name_str(), "red");
         let css = stylesheet::build_stylesheet(&atoms.into_iter().collect::<AtomSet>(), &system);
-        assert!(css.contains(".c_red { color: red; }"));
+        assert!(css.contains(".\\@reference-ui\\/lib__c_red { color: red; }"));
         assert!(!css.contains(":nope"));
         assert!(!css.contains("nope:"));
     }

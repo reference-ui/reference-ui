@@ -1,0 +1,6 @@
+{
+  "bg:rgb(251 146 60 / 0.3)": "@reference-ui/lib__bg_rgb(251_146_60_/_0.3)",
+  "borderColor:/40": "@reference-ui/lib__bd-c_/40",
+  "color:red.500/": "@reference-ui/lib__c_red.500/",
+  "outlineColor:colors.blue.600/50": "@reference-ui/lib__outline-c_colors.blue.600/50"
+}

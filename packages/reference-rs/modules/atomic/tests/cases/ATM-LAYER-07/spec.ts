@@ -17,9 +17,9 @@ const spec: AtomicCaseSpec = {
     expect(sheet.split(WRAP).length).toBe(2)
     const open = sheet.indexOf(WRAP)
     const inner = sheet.slice(open, sheet.indexOf('}\n}', open) + 1)
-    expect(inner).toContain('.sm\\:p_1r')
-    expect(inner).toContain('.sm\\:mt_2r')
-    expect(inner).toContain('.sm\\:c_n100')
+    expect(inner).toContain('.layer-07__sm\\:p_1r')
+    expect(inner).toContain('.layer-07__sm\\:mt_2r')
+    expect(inner).toContain('.layer-07__sm\\:c_n100')
   },
 }
 

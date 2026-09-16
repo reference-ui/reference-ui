@@ -15,6 +15,8 @@ mod atomic;
 mod styletrace;
 #[path = "../../tasty/native.rs"]
 mod tasty;
+#[path = "../../typegen/native.rs"]
+mod typegen;
 #[path = "../../virtualrs/native.rs"]
 mod virtualrs;
 

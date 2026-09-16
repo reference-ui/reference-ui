@@ -16,11 +16,11 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'mt', '2r')).toBe(false)
     expect(hasWant(result, 'bg', 'n300')).toBe(false)
     const recipes = layerBody(result.stylesheet, 'recipes')
-    expect(recipes).toContain('.recipe {')
+    expect(recipes).toContain('button__base')
     expect(recipes).toContain('font-weight: bold')
     expect(recipes).not.toContain('padding')
     expect(result.recipes).toHaveLength(1)
-    expect(result.recipes?.[0]?.className).toBe('recipe')
+    expect(result.recipes?.[0]?.className).toBe('button')
     expect(result.diagnostics).toEqual([])
   },
 }

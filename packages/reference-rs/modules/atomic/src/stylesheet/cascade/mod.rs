@@ -82,7 +82,11 @@ pub(crate) fn format_declaration(atom: &Atom) -> String {
 }
 
 /// Sort utilities by `CascadeKey` and emit, grouping shared at-rule wrappers.
-pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet) {
+///
+/// `system` is the compiling package name. Utility selectors carry the same
+/// `{system}__{stem}` segment as runtime plan class names so every plan
+/// declaration matches a stylesheet rule.
+pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str) {
     let mut ranked: Vec<(&Atom, CascadeKey<'_>)> = atom_set
         .iter()
         .map(|atom| (atom, CascadeKey::from_atom(atom)))
@@ -91,7 +95,7 @@ pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet) {
         a.1.cmp(&b.1)
             .then(cmp_whens(a.0.conditions(), b.0.conditions()))
     });
-    write_groups(out, &ranked);
+    write_groups(out, &ranked, system);
 }
 
 impl<'a> CascadeKey<'a> {
@@ -110,12 +114,12 @@ impl<'a> CascadeKey<'a> {
     }
 }
 
-fn write_groups(out: &mut String, ranked: &[(&Atom, CascadeKey<'_>)]) {
+fn write_groups(out: &mut String, ranked: &[(&Atom, CascadeKey<'_>)], system: &str) {
     let mut start = 0;
     while start < ranked.len() {
         let wraps: Vec<&str> = at_rule_wraps(ranked[start].0).collect();
         let end = group_end(ranked, start, &wraps);
-        write_group(out, &wraps, &ranked[start..end]);
+        write_group(out, &wraps, &ranked[start..end], system);
         start = end;
     }
 }
@@ -132,11 +136,16 @@ fn same_wraps(atom: &Atom, wraps: &[&str]) -> bool {
     at_rule_wraps(atom).eq(wraps.iter().copied())
 }
 
-fn write_group(out: &mut String, wraps: &[&str], rules: &[(&Atom, CascadeKey<'_>)]) {
+fn write_group(
+    out: &mut String,
+    wraps: &[&str],
+    rules: &[(&Atom, CascadeKey<'_>)],
+    system: &str,
+) {
     open_wraps(out, wraps);
     let indent = "  ".repeat(wraps.len() + 1);
     for (atom, _) in rules {
-        write_rule(out, atom, &indent);
+        write_rule(out, atom, &indent, system);
     }
     close_wraps(out, wraps.len());
 }
@@ -155,8 +164,8 @@ pub(crate) fn close_wraps(out: &mut String, count: usize) {
     }
 }
 
-fn write_rule(out: &mut String, atom: &Atom, indent: &str) {
-    let selector = name::selector(atom);
+fn write_rule(out: &mut String, atom: &Atom, indent: &str, system: &str) {
+    let selector = name::selector_with_system(atom, system);
     let declaration = format_declaration(atom);
     out.push_str(&format!("{indent}{selector} {{ {declaration} }}\n"));
 }

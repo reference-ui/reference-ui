@@ -1,13 +1,13 @@
 {
-  "2xl:p:6r": "2xl:p_6r",
-  "@media (max-width: 1024px):m:3r": "[@media_(max-width:_1024px)]:m_3r",
-  "@media (max-width: 1280px):m:2r": "[@media_(max-width:_1280px)]:m_2r",
-  "@media (max-width: 1536px):m:1r": "[@media_(max-width:_1536px)]:m_1r",
-  "@media (max-width: 640px):m:5r": "[@media_(max-width:_640px)]:m_5r",
-  "@media (max-width: 768px):m:4r": "[@media_(max-width:_768px)]:m_4r",
-  "lg:p:4r": "lg:p_4r",
-  "md:p:3r": "md:p_3r",
-  "p:1r": "p_1r",
-  "sm:p:2r": "sm:p_2r",
-  "xl:p:5r": "xl:p_5r"
+  "2xl:p:6r": "order-01__2xl:p_6r",
+  "@media (max-width: 1024px):m:3r": "order-01__[@media_(max-width:_1024px)]:m_3r",
+  "@media (max-width: 1280px):m:2r": "order-01__[@media_(max-width:_1280px)]:m_2r",
+  "@media (max-width: 1536px):m:1r": "order-01__[@media_(max-width:_1536px)]:m_1r",
+  "@media (max-width: 640px):m:5r": "order-01__[@media_(max-width:_640px)]:m_5r",
+  "@media (max-width: 768px):m:4r": "order-01__[@media_(max-width:_768px)]:m_4r",
+  "lg:p:4r": "order-01__lg:p_4r",
+  "md:p:3r": "order-01__md:p_3r",
+  "p:1r": "order-01__p_1r",
+  "sm:p:2r": "order-01__sm:p_2r",
+  "xl:p:5r": "order-01__xl:p_5r"
 }

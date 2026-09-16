@@ -49,32 +49,35 @@ impl crate::BaseSystem {
 mod tests {
     use crate::BaseSystem;
 
+    fn recipe_spec_json(recipes: &str) -> String {
+        format!(
+            r#"{{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{{}},"fonts":{{}},"globalCss":[],"keyframes":{{}},"recipes":{recipes},"staticCss":{{}},"provenance":[]}}"#
+        )
+    }
+
     const CARD: &str = r#"{
-        "recipes":{
-            "card":{
-                "base":{"p":"4r","rounded":"md"},
-                "variants":{"tone":{"quiet":{"bg":"n100"},"loud":{"bg":"n300"}}},
-                "defaultVariants":{"tone":"quiet"}
-            }
+        "card":{
+            "base":{"p":"4r","rounded":"md"},
+            "variants":{"tone":{"quiet":{"bg":"n100"},"loud":{"bg":"n300"}}},
+            "defaultVariants":{"tone":"quiet"}
         }
     }"#;
 
     const CARD_COMPOUND: &str = r#"{
-        "recipes":{
-            "card":{
-                "base":{"p":"4r"},
-                "variants":{
-                    "tone":{"loud":{"bg":"n300"}},
-                    "size":{"lg":{"p":"6r"}}
-                },
-                "compoundVariants":[{"tone":"loud","size":"lg","css":{"border":"2px solid"}}]
-            }
+        "card":{
+            "base":{"p":"4r"},
+            "variants":{
+                "tone":{"loud":{"bg":"n300"}},
+                "size":{"lg":{"p":"6r"}}
+            },
+            "compoundVariants":[{"tone":"loud","size":"lg","css":{"border":"2px solid"}}]
         }
     }"#;
 
     #[test]
     fn bas_recipe_01_stores_base_variants_and_defaults() {
-        let system = BaseSystem::from_json(CARD).unwrap();
+        let json = recipe_spec_json(CARD);
+        let system = BaseSystem::from_json(&json).unwrap();
         let card = system.get_recipe("card").unwrap();
         assert_eq!(card.base.get("p").map(String::as_str), Some("4r"));
         assert_eq!(card.base.get("rounded").map(String::as_str), Some("md"));
@@ -95,7 +98,8 @@ mod tests {
 
     #[test]
     fn bas_recipe_02_preserves_compound_variants() {
-        let system = BaseSystem::from_json(CARD_COMPOUND).unwrap();
+        let json = recipe_spec_json(CARD_COMPOUND);
+        let system = BaseSystem::from_json(&json).unwrap();
         let card = system.get_recipe("card").unwrap();
         assert_eq!(card.compound_variants.len(), 1);
         let rule = &card.compound_variants[0];
@@ -109,10 +113,8 @@ mod tests {
 
     #[test]
     fn bas_recipe_03_has_no_slot_recipe_schema() {
-        let system = BaseSystem::from_json(
-            r#"{"recipes":{"card":{"base":{"p":"4r"},"slots":{"root":{"p":"2"}}}}}"#,
-        )
-        .unwrap();
+        let json = recipe_spec_json(r#"{"card":{"base":{"p":"4r"},"slots":{"root":{"p":"2"}}}}"#);
+        let system = BaseSystem::from_json(&json).unwrap();
         let card = system.get_recipe("card").unwrap();
         assert_eq!(card.base.get("p").map(String::as_str), Some("4r"));
         assert!(card.variants.is_empty());
@@ -121,7 +123,8 @@ mod tests {
 
     #[test]
     fn bas_recipe_04_static_schema_only() {
-        let system = BaseSystem::from_json(CARD).unwrap();
+        let json = recipe_spec_json(CARD);
+        let system = BaseSystem::from_json(&json).unwrap();
         let card = system.get_recipe("card").unwrap();
         assert_eq!(
             card.variants["tone"]["loud"].get("bg").map(String::as_str),

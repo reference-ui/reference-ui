@@ -1,5 +1,5 @@
 {
-  "color:black": "c_black",
-  "color:red": "c_red",
-  "height:100px": "h_100px"
+  "color:black": "@reference-ui/lib__c_black",
+  "color:red": "@reference-ui/lib__c_red",
+  "height:100px": "@reference-ui/lib__h_100px"
 }

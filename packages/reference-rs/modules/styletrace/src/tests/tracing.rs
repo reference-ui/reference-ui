@@ -123,7 +123,7 @@ fn fixture_atlas_project_components_have_no_reference_style_bearing_exports() {
 }
 
 #[test]
-fn clean_consumer_sync_root_without_generated_metadata_traces_no_names() {
+fn clean_consumer_sync_root_without_generated_metadata_fails_explicitly() {
     let fixture = ScratchDir::new("clean-consumer-sync-root");
     fixture.write(
         "consumer-app/ui.config.ts",
@@ -135,11 +135,13 @@ fn clean_consumer_sync_root_without_generated_metadata_traces_no_names() {
     );
 
     let sync_root = fixture.root().join("consumer-app");
-    let names = trace_style_jsx_names_with_hint(&sync_root.join("src"), Some(&sync_root))
-        .expect("expected clean consumer bootstrap to skip missing generated metadata");
-
-    assert!(names.is_empty());
+    let result = trace_style_jsx_names_with_hint(&sync_root.join("src"), Some(&sync_root));
+    assert!(
+        result.is_err(),
+        "expected missing generated metadata to return explicit StyleTraceError"
+    );
 }
+
 
 fn create_node_builtin_helper_fixture() -> super::fixtures::ScratchDir {
     let fixture = workspace_scratch_dir("node-builtin-helper");

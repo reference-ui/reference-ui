@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     const classes = result.css?.classes ?? {}
     expect(Object.keys(classes).some(k => k.startsWith('variant:'))).toBe(false)
     expect(Object.keys(classes).some(k => k.startsWith('colorMode:'))).toBe(false)
-    expect(result.stylesheet).toContain('.mt_2r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__mt_2r')
     expect(result.stylesheet).not.toContain('variant')
     expect(result.stylesheet).not.toContain('color-mode')
     expect(result.stylesheet).not.toContain('colorMode')

@@ -1,5 +1,5 @@
 {
-  "borderRadius:radii.md": "rounded_radii.md",
-  "color:colors.blue.600": "c_colors.blue.600",
-  "fontFamily:fonts.mono": "font-family_fonts.mono"
+  "borderRadius:radii.md": "@reference-ui/lib__rounded_radii.md",
+  "color:colors.blue.600": "@reference-ui/lib__c_colors.blue.600",
+  "fontFamily:fonts.mono": "@reference-ui/lib__font-family_fonts.mono"
 }

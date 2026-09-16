@@ -1,14 +1,22 @@
 # Stylesheet / layers
 
-The shipped contract is **six** layers:
+The shipped contract is **six** layers nested inside the compiling
+package's layer (`M0-fix21-A`):
 
 ```css
+@layer color-mode {
 @layer reset, global, base, tokens, recipes, utilities;
+@layer global { /* ... */ }
+@layer utilities { /* ... */ }
+}
 ```
 
 The engine is the only thing that prints the preamble, and it prints
-this string. Matrix asserts it verbatim. Do not drop a layer to
-"simplify."
+this string. The six-layer order is verbatim and inner; the package
+wrap is what lets a composed page order packages without a top-level
+internal layer outranking another package's nested utilities. Do not
+drop a layer to "simplify." Unnamed compiles and the rejection path
+keep the bare preamble; they never compose.
 
 | Layer | Content |
 | :--- | :--- |

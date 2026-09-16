@@ -11,13 +11,13 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'padding', '2r')).toBe(true)
     expect(hasWant(result, 'paddingTop', '4r')).toBe(true)
     const sheet = result.stylesheet
-    const padding = sheet.indexOf('.p_2r')
-    const paddingTop = sheet.indexOf('.pt_4r')
+    const padding = sheet.indexOf('.short-06__p_2r')
+    const paddingTop = sheet.indexOf('.short-06__pt_4r')
     expect(padding).toBeGreaterThan(-1)
     expect(paddingTop).toBeGreaterThan(-1)
     expect(padding).toBeLessThan(paddingTop)
-    expect(result.css?.classes?.['padding:2r']).toBe('p_2r')
-    expect(result.css?.classes?.['paddingTop:4r']).toBe('pt_4r')
+    expect(result.css?.classes?.['padding:2r']).toBe('short-06__p_2r')
+    expect(result.css?.classes?.['paddingTop:4r']).toBe('short-06__pt_4r')
   },
 }
 

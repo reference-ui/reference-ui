@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'borderColor', 'gold', triple)).toBe(true)
     expect(hasWant(result, 'outline', '2px solid yellow', triple)).toBe(true)
     expect(result.css?.classes?.['_dark:_hover:_focusVisible:borderColor:gold']).toBe(
-      'dark:hover:focusVisible:bd-c_gold'
+      'nested-conditions__dark:hover:focusVisible:bd-c_gold'
     )
   },
 }

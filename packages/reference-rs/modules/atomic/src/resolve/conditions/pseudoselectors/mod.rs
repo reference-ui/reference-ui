@@ -1,17 +1,60 @@
 //! Selector-template application for atomic utilities.
-//! Takes an `&` wrap (`&:is(:hover, [data-hover])`, `[data-panda-theme=dark] &`, or a raw `css()`
+//! Takes an `&` wrap (`&:is(:hover, [data-hover])`, `[data-theme=dark] &`, or a raw `css()`
 //! key) plus the escaped class selector. Emits the CSS selector the stylesheet
 //! prints. Does not own the `_` catalog — that is `pseudoprops`. `@media` /
 //! `@container` strings are at-rules, not selector templates.
 
-/// Substitute `&` in a template with the utility class selector.
-pub fn apply(template: &str, class_selector: &str) -> String {
-    if template.contains('&') {
-        // `&:is(:hover, [data-hover])` + `.hover\:bg_red`
-        template.replace('&', class_selector)
-    } else {
-        format!("{class_selector}{template}")
+#[derive(Default)]
+struct SelectorQuoteState {
+    in_single: bool,
+    in_double: bool,
+    escaped: bool,
+}
+
+enum Action {
+    Keep,
+    Substitute,
+}
+
+impl SelectorQuoteState {
+    fn step(&mut self, ch: char) -> Action {
+        if self.escaped {
+            self.escaped = false;
+            return Action::Keep;
+        }
+        if ch == '\\' {
+            self.escaped = true;
+            return Action::Keep;
+        }
+        if ch == '\'' && !self.in_double {
+            self.in_single = !self.in_single;
+            return Action::Keep;
+        }
+        if ch == '"' && !self.in_single {
+            self.in_double = !self.in_double;
+            return Action::Keep;
+        }
+        if ch == '&' && !self.in_single && !self.in_double {
+            return Action::Substitute;
+        }
+        Action::Keep
     }
+}
+
+/// Substitute `&` in a template with the utility class selector, preserving literal `&` in quotes.
+pub fn apply(template: &str, class_selector: &str) -> String {
+    if !template.contains('&') {
+        return format!("{class_selector}{template}");
+    }
+    let mut out = String::with_capacity(template.len() + class_selector.len());
+    let mut state = SelectorQuoteState::default();
+    for ch in template.chars() {
+        match state.step(ch) {
+            Action::Keep => out.push(ch),
+            Action::Substitute => out.push_str(class_selector),
+        }
+    }
+    out
 }
 
 /// Wrap for a raw `&` key or unknown leftover name (`foo` → `&:foo`).
@@ -45,8 +88,14 @@ mod tests {
         let hover = apply("&:is(:hover, [data-hover])", ".hover\\:bg_red");
         assert_eq!(hover, ".hover\\:bg_red:is(:hover, [data-hover])");
 
-        let dark = apply("[data-panda-theme=dark] &", ".dark\\:bg_red");
-        assert_eq!(dark, "[data-panda-theme=dark] .dark\\:bg_red");
+        let dark = apply("[data-theme=dark] &", ".dark\\:bg_red");
+        assert_eq!(dark, "[data-theme=dark] .dark\\:bg_red");
+
+        let in_quotes = apply("&[data-x=\"a & b\"]", ".cls");
+        assert_eq!(in_quotes, ".cls[data-x=\"a & b\"]");
+
+        let list = apply("&:not(:first-child), &:only-child", ".cls");
+        assert_eq!(list, ".cls:not(:first-child), .cls:only-child");
     }
 
     #[test]

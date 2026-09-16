@@ -26,6 +26,7 @@ pub struct ObjectWalk<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub authored: Option<&'a mut Vec<crate::runtime::AuthoredDeclaration>>,
 }
 
 impl<'a> ObjectWalk<'a> {
@@ -90,16 +91,56 @@ fn handle_object_property(
         }
     }
 
-    if is_condition_prop(&key) {
+    if is_condition_key(&key, ctx.breakpoints) {
         // _hover: { bg: 'n200' }
         let mut nested_when = when.clone();
         nested_when.push(key.into());
         handle_condition_value(ctx, &prop.value, &nested_when);
     } else if is_known_style_prop(&key) {
         // color: 'red'  /  mt: '2r'
-        let mut expr_ctx = ctx.expression_walk(&key);
-        walk_expression(&mut expr_ctx, &prop.value, when);
+        handle_known_style_prop(ctx, &key, &prop.value, when);
     }
+}
+
+fn is_condition_key(key: &str, breakpoints: &BreakpointScale) -> bool {
+    is_condition_prop(key)
+        || breakpoints.names().iter().any(|n| n == key)
+        || is_breakpoint_range(key, breakpoints)
+}
+
+fn is_breakpoint_range(key: &str, breakpoints: &BreakpointScale) -> bool {
+    if key.ends_with("Down") || key.ends_with("Only") {
+        return true;
+    }
+    if let Some((from, to)) = key.split_once("To") {
+        if to.eq_ignore_ascii_case("p") || to.starts_with('p') || to.starts_with('P') {
+            return false;
+        }
+        return breakpoints.names().iter().any(|n| n.eq_ignore_ascii_case(from))
+            || breakpoints.names().iter().any(|n| n.eq_ignore_ascii_case(to));
+    }
+    false
+}
+
+fn handle_known_style_prop(
+    ctx: &mut ObjectWalk<'_>,
+    key: &str,
+    val_expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    if let Some(authored) = ctx.authored.as_mut() {
+        if let Some((val, imp)) = super::ast_value::ast_to_json_value(val_expr, ctx.constants) {
+            let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
+            authored.push(crate::runtime::AuthoredDeclaration {
+                when: when_strings,
+                prop: key.to_string(),
+                value: val,
+                important: ctx.important || imp,
+            });
+        }
+    }
+    let mut expr_ctx = ctx.expression_walk(key);
+    walk_expression(&mut expr_ctx, val_expr, when);
 }
 
 /// Walk an `r` prop object: each key becomes an `@container` condition wrapping nested styles.
@@ -108,25 +149,36 @@ pub fn walk_r_object(
     obj: &ObjectExpression<'_>,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
-    // r={{ 300: { p: '1r' }, md: { mt: '2r' } }}
+    // r={{ 300: { p: '1r' }, md: { mt: '2r' }, "card/md": { p: '1r' } }}
     for prop_kind in &obj.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
             continue;
         };
-        let Some(bp) = resolve_property_key(&prop.key) else {
+        let Some(raw_key) = resolve_property_key(&prop.key) else {
             continue;
         };
-        let Some(query) = r::lower_r_key(bp.trim(), ctx.breakpoints) else {
+        let trimmed = raw_key.trim();
+        let Some(query) = resolve_r_key(trimmed, ctx.breakpoints) else {
             // r={{ wat: { p: '1r' } }}
             ctx.warn(format!(
                 "Unknown breakpoint name in r prop: \"{}\"",
-                bp.trim()
+                trimmed
             ));
             continue;
         };
         let mut nested_when = when.clone();
         nested_when.push(query.into());
         handle_condition_value(ctx, &prop.value, &nested_when);
+    }
+}
+
+fn resolve_r_key(key: &str, scale: &BreakpointScale) -> Option<String> {
+    if let Some((container, bp)) = key.split_once('/') {
+        r::lower_r_key_named(bp.trim(), scale, container.trim())
+    } else if let Some((bp, container)) = key.split_once('@') {
+        r::lower_r_key_named(bp.trim(), scale, container.trim())
+    } else {
+        r::lower_r_key(key, scale)
     }
 }
 

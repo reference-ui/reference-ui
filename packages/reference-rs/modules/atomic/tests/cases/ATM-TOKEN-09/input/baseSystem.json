@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "category-breadth",
+  "tokens": {
+    "shadows": {
+      "card": {
+        "value": "0 1px 2px rgb(0 0 0 / 0.1)"
+      }
+    },
+    "sizes": {
+      "content": {
+        "value": "60ch"
+      }
+    },
+    "spacing": {
+      "2": {
+        "value": "0.5rem"
+      },
+      "4": {
+        "value": "1rem"
+      }
+    },
+    "zIndex": {
+      "modal": {
+        "value": "1400"
+      }
+    },
+    "easings": {
+      "easeOut": {
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)"
+      }
+    },
+    "durations": {
+      "fast": {
+        "value": "150ms"
+      }
+    },
+    "gradients": {
+      "hero": {
+        "value": "linear-gradient(180deg, #fff, #000)"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

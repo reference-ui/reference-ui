@@ -1,4 +1,4 @@
 {
-  "color:blue": "c_blue",
-  "display:flex": "d_flex"
+  "color:blue": "@reference-ui/lib__c_blue",
+  "display:flex": "@reference-ui/lib__d_flex"
 }

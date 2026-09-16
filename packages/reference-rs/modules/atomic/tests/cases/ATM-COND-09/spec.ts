@@ -12,10 +12,10 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'red.500', ['_peerFocus'])).toBe(true)
     expect(hasWant(result, 'mt', '2r', ['&[data-slot=inner]'])).toBe(true)
     expect(result.stylesheet).toContain(
-      '.groupHover\\:bg_blue\\.500:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)'
+      '.\\@reference-ui\\/lib__groupHover\\:bg_blue\\.500:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)'
     )
     expect(result.stylesheet).toContain(
-      '.peerFocus\\:c_red\\.500:is(:where(.peer, [data-peer]):is(:focus, [data-focus]) ~ *)'
+      '.\\@reference-ui\\/lib__peerFocus\\:c_red\\.500:is(:where(.peer, [data-peer]):is(:focus, [data-focus]) ~ *)'
     )
     expect(result.stylesheet).toContain('[data-slot=inner]')
     expect(result.stylesheet).toContain('margin-top:')

@@ -1,12 +1,14 @@
+@layer want-serde {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-n300: #d4d4d8;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-n300: #3f3f46;
   }
 }
 @layer utilities {
-  .hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
+  .want-serde__hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
+}
 }

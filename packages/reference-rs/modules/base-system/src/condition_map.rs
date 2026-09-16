@@ -127,9 +127,9 @@ mod tests {
     #[test]
     fn bare_authored_key_also_answers_underscore() {
         let mut authored = IndexMap::new();
-        authored.insert("dark".into(), "[data-panda-theme=dark] &".into());
+        authored.insert("dark".into(), "[data-theme=dark] &".into());
         let map = ConditionMap::from(authored);
-        assert_eq!(map.get("dark"), Some("[data-panda-theme=dark] &"));
-        assert_eq!(map.get("_dark"), Some("[data-panda-theme=dark] &"));
+        assert_eq!(map.get("dark"), Some("[data-theme=dark] &"));
+        assert_eq!(map.get("_dark"), Some("[data-theme=dark] &"));
     }
 }

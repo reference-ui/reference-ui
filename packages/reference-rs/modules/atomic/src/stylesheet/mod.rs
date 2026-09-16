@@ -4,12 +4,13 @@
 
 pub mod cascade;
 pub mod emitter;
+pub mod global;
 pub mod layers;
 pub mod name;
 mod system_layers;
 
 use crate::diagnostics::Diagnostic;
-pub use emitter::{build_stylesheet, build_stylesheet_with};
+pub use emitter::{build_portable_stylesheet_with, build_stylesheet, build_stylesheet_with};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]

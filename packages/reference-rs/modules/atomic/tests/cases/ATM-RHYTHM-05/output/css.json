@@ -1,4 +1,4 @@
 {
-  "left:-2r": "left_-2r",
-  "marginTop:-1r": "mt_-1r"
+  "left:-2r": "@reference-ui/lib__left_-2r",
+  "marginTop:-1r": "@reference-ui/lib__mt_-1r"
 }

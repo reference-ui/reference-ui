@@ -1,0 +1,24 @@
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root, [data-theme=light] {
+    --colors-n100: #f4f4f5;
+    --colors-n200: #e4e4e7;
+    --colors-red-500: #ef4444;
+    --colors-blue-500: #3b82f6;
+  }
+  [data-theme=dark] {
+    --colors-n100: #18181b;
+    --colors-n200: #27272a;
+    --colors-red-500: #f87171;
+    --colors-blue-500: #60a5fa;
+  }
+}
+@layer utilities {
+  .\@reference-ui\/lib__bg_n200 { background: var(--colors-n200); }
+  .\@reference-ui\/lib__bg_n100 { background: var(--colors-n100); }
+  .\@reference-ui\/lib__p_1r { padding: var(--spacing-root); }
+  .\@reference-ui\/lib__c_blue\.500 { color: var(--colors-blue-500); }
+  .\@reference-ui\/lib__c_red\.500 { color: var(--colors-red-500); }
+}
+}

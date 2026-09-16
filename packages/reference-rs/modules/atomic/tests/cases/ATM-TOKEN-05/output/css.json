@@ -1,4 +1,4 @@
 {
-  "bg:blue.600": "bg_blue.600",
-  "color:colors.brand": "c_colors.brand"
+  "bg:blue.600": "custom-dump__bg_blue.600",
+  "color:colors.brand": "custom-dump__c_colors.brand"
 }

@@ -1,7 +1,8 @@
 /**
  * Named-breakpoint at-rule station. `sm`/`md`/`lg`/`xl`/`2xl` on `when`
  * print `@container (min-width: Npx)`. Array indexing is ATM-LEAF-05.
- * Digit-leading `2xl` uses the NAME-06 hex escape in the selector.
+ * The system segment leads every selector, so digit-leading `2xl` never
+ * starts one; the bare NAME-06 hex form stays proven by escaper unit tests.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -22,12 +23,13 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, 'p', value, [name])).toBe(true)
       expect(result.stylesheet).toContain(`@container (min-width: ${px}px)`)
     }
-    expect(result.stylesheet).toContain('.sm\\:p_2r')
-    expect(result.stylesheet).toContain('.md\\:p_3r')
-    expect(result.stylesheet).toContain('.lg\\:p_4r')
-    expect(result.stylesheet).toContain('.xl\\:p_5r')
-    expect(result.stylesheet).toContain('.\\32 xl\\:p_6r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__sm\\:p_2r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__md\\:p_3r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__lg\\:p_4r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__xl\\:p_5r')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__2xl\\:p_6r')
     expect(result.stylesheet).not.toContain('.2xl\\:')
+    expect(result.stylesheet).not.toContain('.\\32 xl\\:')
     const order = WIDTHS.map(([, px]) =>
       result.stylesheet.indexOf(`@container (min-width: ${px}px)`)
     )

@@ -101,7 +101,7 @@ function collectDeclarationProblems(ast: csstree.CssNode, problems: CssProblem[]
       if (node.type !== 'Declaration') {
         return
       }
-      const problem = matchDeclaration(node)
+      const problem = matchDeclaration(node, this.atrule)
       if (problem) {
         problems.push(problem)
       }
@@ -109,7 +109,10 @@ function collectDeclarationProblems(ast: csstree.CssNode, problems: CssProblem[]
   })
 }
 
-function matchDeclaration(node: csstree.Declaration): CssProblem | null {
+function matchDeclaration(
+  node: csstree.Declaration,
+  atrule?: csstree.Atrule | null
+): CssProblem | null {
   if (node.property.startsWith('--')) {
     return null
   }
@@ -120,6 +123,13 @@ function matchDeclaration(node: csstree.Declaration): CssProblem | null {
   // `padding: calc(4 * var(--spacing-root))`.
   if (value.includes('var(')) {
     return null
+  }
+  if (atrule?.name === 'font-face') {
+    const match = csstree.lexer.matchAtruleDescriptor('font-face', node.property, value)
+    if (!match.error) {
+      return null
+    }
+    return { kind: 'declaration', message: `${node.property}: ${value}` }
   }
   const match = csstree.lexer.matchProperty(node.property, value)
   if (!match.error) {

@@ -59,14 +59,13 @@ fn gather(system: &BaseSystem) -> Option<StyleSection> {
     if system.breakpoints().is_empty() {
         return None;
     }
-    let color = has_category(system, "colors");
-    let spacing = has_category(system, "spacing");
-    if !color && !spacing {
-        return None;
-    }
     Some(StyleSection {
         conditions: condition_keys(system),
-        props: collect_props(color, spacing, has_category(system, "radii")),
+        props: collect_props(
+            has_category(system, "colors"),
+            has_category(system, "spacing"),
+            has_category(system, "radii"),
+        ),
     })
 }
 

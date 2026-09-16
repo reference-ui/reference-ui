@@ -1,8 +1,9 @@
 //! Category-relative token unions plus the aggregate `Tokens` index.
 //! Walks `tokens.iter()`, strips the spec category prefix so
 //! `colors.brand.primary` becomes `brand.primary`, and emits sorted unique
-//! string-literal unions. Unknown spec categories are skipped. Empty
-//! categories are omitted rather than printed as `never`.
+//! string-literal unions. Core imported categories (`colors`, `spacing`,
+//! `radii`) always emit named aliases, printing `never` when empty.
+//! Non-core categories are omitted when unpopulated.
 
 use super::ts::join_union;
 use base_system::BaseSystem;
@@ -51,20 +52,50 @@ const CATEGORIES: &[CategorySpec] = &[
 
 pub(super) fn token_unions(system: &BaseSystem) -> String {
     let grouped = group_literals(system);
+    if grouped.is_empty() && system.breakpoints().is_empty() {
+        return String::new();
+    }
     let mut out = String::new();
     let mut fields = Vec::new();
     for spec in CATEGORIES {
-        let Some(lits) = grouped.get(spec.category) else {
-            continue;
-        };
-        if !out.is_empty() {
-            out.push('\n');
+        if push_category_alias(&mut out, spec, &grouped) {
+            fields.push(spec);
         }
-        push_alias(&mut out, spec.ts_type, lits);
-        fields.push(spec);
     }
     push_tokens_interface(&mut out, &fields);
     out
+}
+
+fn push_category_alias(
+    out: &mut String,
+    spec: &'static CategorySpec,
+    grouped: &BTreeMap<&'static str, BTreeSet<String>>,
+) -> bool {
+    if let Some(lits) = grouped.get(spec.category) {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        push_alias(out, spec.ts_type, lits);
+        true
+    } else if is_core_category(spec.category) {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        push_never_alias(out, spec.ts_type);
+        true
+    } else {
+        false
+    }
+}
+
+fn is_core_category(category: &str) -> bool {
+    matches!(category, "colors" | "spacing" | "radii")
+}
+
+fn push_never_alias(out: &mut String, name: &str) {
+    out.push_str("export type ");
+    out.push_str(name);
+    out.push_str(" = never;\n");
 }
 
 fn group_literals(system: &BaseSystem) -> BTreeMap<&'static str, BTreeSet<String>> {

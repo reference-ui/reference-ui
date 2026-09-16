@@ -2,9 +2,12 @@
 //!
 //! Records which local names were imported from `@reference-ui/react` or
 //! `@reference-ui/styled`. `css()` / `recipe()` extract only when the callee is
-//! one of those bindings (or a compiler-internal `__reference_ui_*` alias) and
-//! is not shadowed. JSX hosts are the component names from the same packages;
-//! unknown `css` is not an extract site.
+//! one of those bindings and is not shadowed. The compiler-internal
+//! `__reference_ui_css` / `__reference_ui_recipe` aliases are reserved: the
+//! virtual neutralize pass declares them as top-level `const` bindings, so
+//! they extract even though the declaration would otherwise read as a shadow.
+//! JSX hosts are the component names from the same packages; unknown `css`
+//! is not an extract site.
 
 use std::collections::HashSet;
 
@@ -138,10 +141,13 @@ fn live_css_name(
     name: &str,
     shadowed: &[HashSet<String>],
 ) -> Option<String> {
+    if name == "__reference_ui_css" {
+        return Some(name.to_string());
+    }
     if is_shadowed(shadowed, name) {
         return None;
     }
-    if name == "__reference_ui_css" || bindings.css.contains(name) {
+    if bindings.css.contains(name) {
         return Some(name.to_string());
     }
     None
@@ -152,10 +158,13 @@ fn live_recipe_name(
     name: &str,
     shadowed: &[HashSet<String>],
 ) -> Option<String> {
+    if name == "__reference_ui_recipe" {
+        return Some(name.to_string());
+    }
     if is_shadowed(shadowed, name) {
         return None;
     }
-    if name == "__reference_ui_recipe" || bindings.recipe.contains(name) {
+    if bindings.recipe.contains(name) {
         return Some(name.to_string());
     }
     None
@@ -197,18 +206,8 @@ fn recipe_member_origin(
         return None;
     }
     let prop = member.property.name.as_str();
-    if prop == "raw" {
-        return recipe_raw_origin(bindings, object_name);
-    }
     if prop == "recipe" && bindings.namespaces.contains(object_name) {
         return Some("recipe".to_string());
-    }
-    None
-}
-
-fn recipe_raw_origin(bindings: &ExtractBindings, object_name: &str) -> Option<String> {
-    if object_name == "__reference_ui_recipe" || bindings.recipe.contains(object_name) {
-        return Some("recipe.raw".to_string());
     }
     None
 }

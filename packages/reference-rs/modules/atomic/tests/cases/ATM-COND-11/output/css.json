@@ -1,0 +1,5 @@
+{
+  "_motionReduce:animation:none": "@reference-ui/lib__motionReduce:anim_none",
+  "_osDark:color:blue.600": "@reference-ui/lib__osDark:c_blue.600",
+  "_print:display:none": "@reference-ui/lib__print:d_none"
+}

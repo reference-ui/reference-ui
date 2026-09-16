@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "message": "Non-canonical numeric value \"01\" on `margin`"
+  },
+  {
+    "severity": "warning",
+    "message": "Non-canonical numeric value \"Infinity\" on `width`"
+  },
+  {
+    "severity": "warning",
+    "message": "Non-canonical numeric value \"NaN\" on `height`"
+  },
+  {
+    "severity": "warning",
+    "message": "Non-canonical numeric value \"0x10\" on `top`"
+  }
+]

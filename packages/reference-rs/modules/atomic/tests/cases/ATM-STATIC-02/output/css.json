@@ -1,4 +1,4 @@
 {
-  "bg:n100": "bg_n100",
-  "bg:n300": "bg_n300"
+  "bg:n100": "static-css-overlap__bg_n100",
+  "bg:n300": "static-css-overlap__bg_n300"
 }

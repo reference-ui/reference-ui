@@ -1,8 +1,10 @@
+@layer order-02 {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer utilities {
-  .c_red { color: red; }
-  .hover\:c_blue:is(:hover, [data-hover]) { color: blue; }
+  .order-02__c_red { color: red; }
+  .order-02__hover\:c_blue:is(:hover, [data-hover]) { color: blue; }
   @container (min-width: 640px) {
-    .\[\@container_\(min-width\:_640px\)\]\:c_green { color: green; }
+    .order-02__\[\@container_\(min-width\:_640px\)\]\:c_green { color: green; }
   }
+}
 }

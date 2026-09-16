@@ -1,6 +1,6 @@
 {
-  "&[data-slot=inner]:mt:1r": "[&[data-slot=inner]]:mt_1r",
-  "_hover:mt:2r": "hover:mt_2r",
-  "color:blue.600": "c_blue.600",
-  "p:1/2r": "p_1/2r"
+  "&[data-slot=inner]:mt:1r": "@reference-ui/lib__[&[data-slot=inner]]:mt_1r",
+  "_hover:mt:2r": "@reference-ui/lib__hover:mt_2r",
+  "color:blue.600": "@reference-ui/lib__c_blue.600",
+  "p:1/2r": "@reference-ui/lib__p_1/2r"
 }

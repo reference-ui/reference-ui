@@ -1,16 +1,18 @@
+@layer local-const {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
   :root { --spacing-root: 0.25rem }
 }
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-n300: #d4d4d8;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-n300: #3f3f46;
   }
 }
 @layer utilities {
-  .c_n300 { color: var(--colors-n300); }
-  .mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .local-const__c_n300 { color: var(--colors-n300); }
+  .local-const__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}
 }

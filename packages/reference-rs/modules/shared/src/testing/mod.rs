@@ -4,7 +4,9 @@
 //! Prevents test state pollution and duplicate mock definitions across workspace crates.
 
 pub mod base_system;
+pub mod contracts;
 pub mod workspace;
 
 pub use base_system::*;
+pub use contracts::*;
 pub use workspace::*;

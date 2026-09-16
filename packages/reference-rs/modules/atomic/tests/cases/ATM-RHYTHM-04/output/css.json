@@ -1,5 +1,5 @@
 {
-  "backgroundPosition:10px auto": "bg-pos_10px_auto",
-  "boxShadow:1px solid 1/3r": "shadow_1px_solid_1/3r",
-  "gap:1r 2r": "gap_1r_2r"
+  "backgroundPosition:10px auto": "@reference-ui/lib__bg-pos_10px_auto",
+  "boxShadow:1px solid 1/3r": "@reference-ui/lib__shadow_1px_solid_1/3r",
+  "gap:1r 2r": "@reference-ui/lib__gap_1r_2r"
 }

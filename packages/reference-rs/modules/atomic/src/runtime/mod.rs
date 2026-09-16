@@ -2,6 +2,20 @@
 //! Constructs lookup dictionaries mapping property and condition keys to compiled atomic CSS class names.
 //! Delivers the compact JSON payloads required by runtime styling helpers and client-side style injection.
 
+pub mod builder;
+pub mod plan;
+pub mod serializer;
+
+pub use builder::{
+    build_recipe_runtime_tables, build_runtime_style_plans, derive_slot, AuthoredDeclaration,
+    PlanBuilder,
+};
+pub use plan::{
+    get_style_prop_names, NativeRuntimeArtifact, RecipeCompoundRecord, RecipeRuntimeTable,
+    RuntimeDeclaration, RuntimeStylePlan,
+};
+pub use serializer::{canonical_json_value, serialize_lookup_key, serialize_value};
+
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -31,3 +45,7 @@ impl CssRuntime {
         self.classes.is_empty()
     }
 }
+
+#[cfg(test)]
+mod tests;
+

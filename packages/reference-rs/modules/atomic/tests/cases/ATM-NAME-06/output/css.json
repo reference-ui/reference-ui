@@ -1,5 +1,9 @@
 {
-  "--brand-x:red": "--brand-x_red",
-  "2xl:p:6r": "2xl:p_6r",
-  "p:1r": "p_1r"
+  "--brand-x:red": "digit-dash-escape__--brand-x_red",
+  "2xl:p:6r": "digit-dash-escape__2xl:p_6r",
+  "lg:p:1r": "digit-dash-escape__lg:p_1r",
+  "md:p:1r": "digit-dash-escape__md:p_1r",
+  "p:1r": "digit-dash-escape__p_1r",
+  "sm:p:1r": "digit-dash-escape__sm:p_1r",
+  "xl:p:1r": "digit-dash-escape__xl:p_1r"
 }

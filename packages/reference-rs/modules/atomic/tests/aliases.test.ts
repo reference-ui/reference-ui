@@ -2,15 +2,20 @@
  * Proof stations for locked canon aliases and responsive array scales in atomic.
  * Asserts that locked aliases (mt, px, w, flexDir) extract as style props,
  * while refused shortcuts (rounded, c, pos, ps, borderX) do not.
- * Asserts responsive array mapping against default and custom token scales.
+ * Asserts responsive array mapping against the profile scale with authored names appended.
  */
 import { describe, expect, it } from 'vitest'
 import { compile } from '../js/index.js'
+import type { EvaluatedSystemSpec } from '../js/types.js'
+import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
 import { hasWant } from './helpers.js'
+
+const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 
 describe('canon locked alias consumption', () => {
   it('extracts locked authoring aliases into style wants', async () => {
     const result = await compile({
+      baseSystem: specSystem,
       files: [
         {
           path: 'test.tsx',
@@ -38,6 +43,7 @@ describe('canon locked alias consumption', () => {
 
   it('refuses non-canonical shortcuts from extracting as style props', async () => {
     const result = await compile({
+      baseSystem: { ...specSystem, staticCss: {} },
       files: [
         {
           path: 'test.tsx',
@@ -70,38 +76,40 @@ describe('canon locked alias consumption', () => {
     expect(hasWant(result, 'b', '1px solid')).toBe(false)
   })
 
-  it('supports custom array-slot breakpoint scales from compile request', async () => {
+  it('maps array slots onto the profile scale with authored names appended', async () => {
     const result = await compile({
+      baseSystem: {
+        ...specSystem,
+        name: 'custom-scale',
+        breakpoints: { tablet: '700px', desktop: '1400px' },
+      },
       files: [
         {
           path: 'test.tsx',
-          content: `export const Comp = () => <Div mt={['1r', '2r', '4r']} />`,
+          content: `export const Comp = () => <Div mt={['1r', '1r', '1r', '1r', '1r', '1r', '2r', '4r']} />`,
         },
       ],
-      baseSystem: {
-        breakpoints: { names: ['tablet', 'desktop'] },
-      },
     })
 
     expect(hasWant(result, 'mt', '1r', ['base'])).toBe(true)
+    expect(hasWant(result, 'mt', '1r', ['sm'])).toBe(true)
     expect(hasWant(result, 'mt', '2r', ['tablet'])).toBe(true)
     expect(hasWant(result, 'mt', '4r', ['desktop'])).toBe(true)
   })
 
-  it('supports custom array-slot breakpoint scales from a BaseSystem dump', async () => {
+  it('maps array slots onto profile widths with authored widths appended', async () => {
     const result = await compile({
+      baseSystem: {
+        ...specSystem,
+        name: 'custom-widths',
+        breakpoints: { wide: '1200px', ultra: { value: '1800px' } },
+      },
       files: [
         {
           path: 'test.tsx',
-          content: `export const Comp = () => <Div p={['10px', '20px', '30px']} />`,
+          content: `export const Comp = () => <Div p={['10px', '10px', '10px', '10px', '10px', '10px', '20px', '30px']} />`,
         },
       ],
-      baseSystem: {
-        breakpoints: {
-          names: ['wide', 'ultra'],
-          widths: { wide: '1200', ultra: '1800' },
-        },
-      },
     })
 
     expect(hasWant(result, 'p', '10px', ['base'])).toBe(true)

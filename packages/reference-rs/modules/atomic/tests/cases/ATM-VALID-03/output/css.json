@@ -1,0 +1,4 @@
+{
+  "color:ghost.white": "@reference-ui/lib__c_ghost.white",
+  "color:oklch(0.5 0.1 200)": "@reference-ui/lib__c_oklch(0.5_0.1_200)"
+}

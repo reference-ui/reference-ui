@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "stylePlans": [
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "color",
+      "value": "blue.500",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "color",
+          "className": "lib-test-system__c_blue-500"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [
+        "_hover"
+      ],
+      "prop": "color",
+      "value": "red.500",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "hover:color",
+          "className": "lib-test-system__hover_c_red-500"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "padding",
+      "value": [
+        "1",
+        null,
+        "4"
+      ],
+      "important": false,
+      "declarations": [
+        {
+          "slot": "padding@base",
+          "className": "lib-test-system__p_1"
+        },
+        {
+          "slot": "padding@lg",
+          "className": "lib-test-system__lg_p_4"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "p",
+      "value": "2",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "paddingTop",
+          "className": "lib-test-system__pt_2"
+        },
+        {
+          "slot": "paddingRight",
+          "className": "lib-test-system__pr_2"
+        },
+        {
+          "slot": "paddingBottom",
+          "className": "lib-test-system__pb_2"
+        },
+        {
+          "slot": "paddingLeft",
+          "className": "lib-test-system__pl_2"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "font",
+      "value": "sans",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "fontFamily",
+          "className": "lib-test-system__ff_sans"
+        },
+        {
+          "slot": "fontWeight",
+          "className": "lib-test-system__fw_sans"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "marginTop",
+      "value": {
+        "$r": 2
+      },
+      "important": false,
+      "declarations": [
+        {
+          "slot": "marginTop",
+          "className": "lib-test-system__mt_r2"
+        }
+      ]
+    },
+    {
+      "system": "lib-test-system",
+      "when": [],
+      "prop": "color",
+      "value": "red.500",
+      "important": true,
+      "declarations": [
+        {
+          "slot": "color",
+          "className": "lib-test-system__c_red-500_i"
+        }
+      ]
+    },
+    {
+      "system": "other-system",
+      "when": [],
+      "prop": "font",
+      "value": "sans",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "fontFamily",
+          "className": "other-system__ff_sans"
+        }
+      ]
+    },
+    {
+      "system": "other-system",
+      "when": [
+        "sm"
+      ],
+      "prop": "padding",
+      "value": "2",
+      "important": false,
+      "declarations": [
+        {
+          "slot": "sm:padding",
+          "className": "other-system__sm_p_2"
+        }
+      ]
+    }
+  ],
+  "recipes": {
+    "lib-test-system__button": {
+      "qualifiedName": "lib-test-system__button",
+      "className": "button",
+      "base": "lib-test-system__button__base",
+      "variantKeys": [
+        "variant",
+        "disabled"
+      ],
+      "variantMap": {
+        "variant": {
+          "solid": "lib-test-system__button_v_solid",
+          "outline": "lib-test-system__button_v_outline"
+        },
+        "disabled": {
+          "true": "lib-test-system__button_d_true",
+          "false": "lib-test-system__button_d_false"
+        }
+      },
+      "defaultVariants": {
+        "variant": "solid",
+        "disabled": "false"
+      },
+      "compoundVariants": [
+        {
+          "selection": {
+            "variant": "solid",
+            "disabled": "true"
+          },
+          "className": "lib-test-system__button_c_solid_disabled"
+        }
+      ],
+      "combinations": {
+        "solid|false": "lib-test-system__button__base lib-test-system__button_v_solid lib-test-system__button_d_false",
+        "solid|true": "lib-test-system__button__base lib-test-system__button_v_solid lib-test-system__button_d_true lib-test-system__button_c_solid_disabled",
+        "outline|false": "lib-test-system__button__base lib-test-system__button_v_outline lib-test-system__button_d_false",
+        "outline|true": "lib-test-system__button__base lib-test-system__button_v_outline lib-test-system__button_d_true"
+      }
+    }
+  },
+  "stylePropNames": [
+    "color",
+    "backgroundColor",
+    "bg",
+    "borderColor",
+    "borderWidth",
+    "padding",
+    "p",
+    "paddingTop",
+    "pt",
+    "paddingRight",
+    "pr",
+    "paddingBottom",
+    "pb",
+    "paddingLeft",
+    "pl",
+    "margin",
+    "m",
+    "marginTop",
+    "mt",
+    "marginRight",
+    "mr",
+    "marginBottom",
+    "mb",
+    "marginLeft",
+    "ml",
+    "font",
+    "fontFamily",
+    "fontSize",
+    "fontWeight",
+    "display",
+    "position",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "width",
+    "w",
+    "height",
+    "h",
+    "size",
+    "borderRadius",
+    "rounded",
+    "gap",
+    "container",
+    "opacity",
+    "transform"
+  ]
+}

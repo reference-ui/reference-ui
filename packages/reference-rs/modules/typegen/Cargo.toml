@@ -8,3 +8,7 @@ description = "Token unions and StyleProps .d.ts from a base system plus canon"
 [dependencies]
 base_system.workspace = true
 canon.workspace = true
+
+[dev-dependencies]
+shared = { workspace = true }
+serde_json = { workspace = true }

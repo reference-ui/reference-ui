@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "spacing-scale",
+  "tokens": {
+    "spacing": {
+      "4": {
+        "value": "1rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

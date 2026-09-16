@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "spec": {
+    "schemaVersion": 1,
+    "profile": "reference-ui",
+    "name": "lib-test-system",
+    "tokens": {
+      "colors": {
+        "blue": {
+          "500": {
+            "value": "#3b82f6"
+          }
+        }
+      }
+    },
+    "fonts": {},
+    "globalCss": [],
+    "keyframes": {},
+    "recipes": {},
+    "staticCss": {
+      "color": [
+        "*"
+      ]
+    },
+    "provenance": [
+      {
+        "source": "src/tokens/colors.ts",
+        "kind": "tokens",
+        "keys": [
+          "colors.blue.500"
+        ]
+      }
+    ]
+  },
+  "jsxHosts": [
+    "Box",
+    "ConfiguredHost",
+    "AdoptedExtendsHost"
+  ],
+  "sourceRoot": "packages/reference-lib/src",
+  "declarationRoot": "packages/reference-lib/.reference-ui/staging/declarations"
+}

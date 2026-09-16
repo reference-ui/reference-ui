@@ -1,8 +1,8 @@
 {
-  "bg:n100": "bg_n100",
-  "bg:n200": "bg_n200",
-  "bg:n300": "bg_n300",
-  "color:n100": "c_n100",
-  "color:n200": "c_n200",
-  "color:n300": "c_n300"
+  "bg:n100": "static-css__bg_n100",
+  "bg:n200": "static-css__bg_n200",
+  "bg:n300": "static-css__bg_n300",
+  "color:n100": "static-css__c_n100",
+  "color:n200": "static-css__c_n200",
+  "color:n300": "static-css__c_n300"
 }

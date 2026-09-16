@@ -684,11 +684,40 @@ The orchestrator reruns each packet's proof after merge. An agent report is
 evidence to inspect, not a gate result. Q1 stations merge after N4 and must
 not land after K1 if they still mention Panda-only behaviour.
 
+### Campaign status checkpoint
+
+Current status as of 2026-09-15:
+
+| Packet | Owner | Status | Gate Proof & Invariants |
+| :--- | :--- | :--- | :--- |
+| **F0** | Orchestrator | **done** | Committed fixtures in `contracts/fixtures/`; TS `contracts/types.ts`; 10/10 Vitest tests pass; Rust serde tests pass. |
+| **N1** | Base-system | **done** | `EvaluatedSystemSpec` v1, profile lowering, structured global IR; `pnpm agentrs c base_system` (64/64), quality 0/21 clean. |
+| **N6** | Styletrace | **done** | `NativeCompileRequest` integration, module-qualified bindings, sync-root fixture; `pnpm agentrs c styletrace` (21/21), `v styletrace` (25/25) clean. |
+| **N2** | Atomic | **done** | `NativeRuntimeArtifact`, authored style plans, cascade slots, 5-tuple serializer; `pnpm agentrs c atomic` (113/113), `v atomic` (110/110) clean. |
+| **N3** | Atomic | **done** | Explicit string `className` enforced, cartesian tables, boolean normalization, all production call sites migrated; `pnpm agentrs c atomic -t recipe` (6/6), `v atomic -t RECIPE` (6/6) clean. |
+| **N4** | Atomic | **done** | Structured global AST lowering, portable CSS chunk, zero `data-panda-theme`, `ATM-STATIC-03` closed; `pnpm agentrs c atomic` (118/118), `v atomic` (124/124) clean. |
+| **N5** | Typegen | **done** | Thin N-API `emitDtsSync`, `@reference-ui/rust/typegen`, stable empty aliases; `pnpm agentrs c typegen` (40/40), `v typegen` (21/21), `v runtime` (17/17) clean. |
+| **G1** | Orchestrator | **done** | Atomic unified on `EvaluatedSystemSpec` via `BaseSystem::from_json` (base_system required, flat inputs removed, lib_fixture production defaults deleted); `pnpm agentrs t` exit 0 (cargo 387/0, vitest 28 files/379 tests, quality 0 violations); shared shape, system-on-plans, 5 aliases, zero `data-panda-theme` all PASS. |
+| **Q1** | Atomic | **done** | COND-10/11/13/14/15/16, RECIPE-04/05/06, LAYER-05/06/08 already green stations; full-suite verified, no changes. |
+| **C1** | Core | **done** | 32 files (14 mod + 18 new) in partition; 50 files/158 tests + 17 owned 106/106 green; lib probe 31 frags/332 leaves/31 kf/3 fonts/20 globals matches §7; zero owned tsc errors, zero @pandacss. |
+| **C2** | Core | **done** | New serialize/registry/system-name/createCss/createRecipe; runtime/primitives/recipe rewritten, lowerResponsiveStyles deleted; 14 files/77 tests green; K1 greps zero. (1 tsc error out-of-partition carried to C4 entry.) |
+| **C3** | Core | **done** | 16 owned/added native-only files (config.ts deleted); src/types 5/40 + packager 8/42 green; zero owned tsc errors; token-light d.ts + byte-identical csstype; forbidden files untouched. |
+| **C4** | Core | **done** | Two-phase driver (typegen→atomic) + workers/scheduler; gen deleted, dev:lib:native removed; tsc exit 0, full vitest 784+4skip/0fail, markers adjudicated (must-fix removed, system/panda/** allowlisted for K1). |
+| **C5** | Core | **done** | verify-packaging 8/8 (31 frags, 3752 plans, hash 893eac7a); bound helper closed over name; transitive chunks+plans; tsup externals fixed; vitest 784+4skip/0fail; tsc exit 0. M0 READY, no corrections. |
+| **M0** | Core/Matrix | **done** | 7/7 GREEN exit 0 (system 33/33, color-mode 15/15, css-selectors 23/23, distro 26/26+1skip, recipe 34/34, responsive 35/35, watch 5/5; zero failed tests/suites). Closer: stale .node proven by hash, rebuilt via sanctioned flow. |
+| **G2** | Orchestrator | **HALTED by captain (2nd)** | Resume halted mid-sweep: css wedged TWICE at same phase (watch-ready run, 19-22 min silent, VM idle) — now a product-bug lead, not infra flake. Stack sample at /tmp/wedge2-sample.txt. Resume requires css-wedge diagnosis first. |
+| **K1** | Orchestrator | **not started** | Delete the old engine. Blocked on G2. |
+| **K2** | Orchestrator | **not started** | Independent residue audit. Blocked on K1. |
+| **M1** | Matrix | **not started** | Remaining native oracles & T4/T5 fixtures. Blocked on K2. |
+| **G3** | Orchestrator | **not started** | Final automated gate across all runtimes/bundlers. Blocked on M1. |
+| **G4** | Orchestrator | **not started** | Book and docs visual gate. Blocked on G3. |
+
 ---
+
 
 ## 6. Native implementation packets
 
-### F0 — freeze fixtures before editors start
+### F0 — freeze fixtures before editors start — [DONE]
 
 **Owner:** orchestrator only.
 
@@ -724,7 +753,7 @@ not land after K1 if they still mention Panda-only behaviour.
 - Do not start implementation before disputed fields are resolved.
 - Do not call a current generated file the contract; it is legacy output.
 
-### N1 — evaluated spec and Reference profile
+### N1 — evaluated spec and Reference profile — [DONE]
 
 **Owner:** base-system agent.
 
@@ -780,7 +809,7 @@ contain `data-theme`; override order stable; `container: true` and responsive
 arrays survive lowering; `display: true` is a path-bearing error; provenance
 source appears on a token diagnostic; omission is not an implicit lib fixture.
 
-### N2 — authored-declaration runtime plans
+### N2 — authored-declaration runtime plans — [DONE]
 
 **Owner:** atomic runtime-contract agent.
 
@@ -831,7 +860,7 @@ the exact class list expected by Rust without implementing a namer. Two
 fixtures with the same authored `font: "sans"` and different `system` values
 produce different class names and do not share a lookup key.
 
-### N3 — recipe identity and runtime table
+### N3 — recipe identity and runtime table — [DONE]
 
 **Owner:** atomic recipe agent.
 
@@ -884,7 +913,7 @@ Every production object-literal match must contain a nearby explicit
 object literal; each is either a named refusal fixture or is migrated to an
 inline object.
 
-### N4 — structured global CSS and portable emission
+### N4 — structured global CSS and portable emission — [DONE]
 
 **Owner:** atomic stylesheet agent.
 
@@ -932,7 +961,7 @@ test. Assert zero `data-panda-theme`, correct package layer, correct scoped
 portable tokens, exact global declarations from a real lib-shaped fixture
 including `container: true`, and static CSS atoms for a spacing wildcard.
 
-### N5 — typegen Node seam
+### N5 — typegen Node seam — [DONE]
 
 **Owner:** typegen agent.
 
@@ -984,7 +1013,7 @@ condition, and font unions; token-light fixture still exports the stable empty
 aliases; schema mismatch throws; output contains no `@pandacss`; recipe unions
 appear only when the fixture declares recipes.
 
-### N6 — hermetic styletrace
+### N6 — hermetic styletrace — [DONE]
 
 **Owner:** styletrace agent.
 
@@ -1013,7 +1042,7 @@ pnpm agentrs v atomic -t "SITE-01|SITE-08|SITE-13"
 pnpm agentrs q packages/reference-rs/modules/styletrace
 ```
 
-### G1 — native gate
+### G1 — native gate — [NEXT ENTRY POINT]
 
 **Owner:** orchestrator.
 

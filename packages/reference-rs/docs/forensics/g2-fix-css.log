@@ -1,0 +1,136 @@
+
+> @reference-ui/workspace@0.0.0 agent /Users/ryn/Developer/reference-ui
+> node .agents/skills/test-core/scripts/run.mjs test --packages=@matrix/css
+
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Waiting for cpu gate (exclusive). Active: exclusive(19317)
+[cpu-gate] Gate acquired for exclusive (PID 20027)
+[agent] Executing unthrottled: pnpm pipeline test --packages=@matrix/css
+
+> @reference-ui/workspace@0.0.0 pipeline /Users/ryn/Developer/reference-ui
+> pnpm --dir pipeline exec tsx src/cli.ts test --packages=@matrix/css
+
+Discovering matrix-enabled fixtures...
+Discovered matrix packages:
+- @matrix/chain-t1
+- @matrix/chain-t10
+- @matrix/chain-t11
+- @matrix/chain-t12
+- @matrix/chain-t13
+- @matrix/chain-t2
+- @matrix/chain-t3
+- @matrix/chain-t6
+- @matrix/chain-t7
+- @matrix/chain-t8
+- @matrix/chain-t9
+- @matrix/color-mode
+- @matrix/css
+- @matrix/css-selectors
+- @matrix/distro
+- @matrix/font
+- @matrix/mcp
+- @matrix/playwright
+- @matrix/primitives
+- @matrix/recipe
+- @matrix/reference
+- @matrix/responsive
+- @matrix/session
+- @matrix/spacing
+- @matrix/system
+- @matrix/tokens
+- @matrix/typescript
+- @matrix/virtual
+- @matrix/watch
+Using shared matrix registry at http://127.0.0.1:4873.
+Preparing workspace packages and registry...
+- [1m[34mBuild @reference-ui/core[39m[22m
+[32m✔[39m [1m[36mBuild @reference-ui/core (1.3s)[39m[22m
+- [1m[34mBuild @reference-ui/lib[39m[22m
+[32m✔[39m [1m[36mBuild @reference-ui/lib (6.0s)[39m[22m
+- [1m[34mBuild @reference-ui/mcp[39m[22m
+[32m✔[39m [1m[36mBuild @reference-ui/mcp (1.6s)[39m[22m
+- [1m[34mPack @reference-ui/core[39m[22m
+[32m✔[39m [1m[36mPack @reference-ui/core (415ms)[39m[22m
+- [1m[34mPack @reference-ui/lib[39m[22m
+[32m✔[39m [1m[36mPack @reference-ui/lib (344ms)[39m[22m
+- [1m[34mPack @reference-ui/mcp[39m[22m
+[32m✔[39m [1m[36mPack @reference-ui/mcp (742ms)[39m[22m
+Prepared workspace packages and registry in 17.7s
+Using host registry via registry:4873. Logs: /Users/ryn/Developer/reference-ui/.pipeline/testing/matrix
+- [1m[34mChecking container registry connectivity[39m[22m
+[32m✔[39m [1m[36mChecked container registry connectivity in 917ms[39m[22m
+Docker runtime (colima) exposes 12 CPU(s), 23.5 GiB.
+Running 1 matrix package(s) in parallel (1 selected, configured 4).
+[36m◐[39m [1m@matrix/css[22m [2msetting up env[22m [36m(react19 + vite7 + watch-ready)[39m
+[36m◐[39m [1m@matrix/css[22m [2mrunning tests[22m [36m(react19 + vite7 + watch-ready)[39m
+
+[1m@matrix/css[22m [2m(react19 + vite7 + watch-ready)[22m
+  Installed dependencies in 9.1s
+  Deferred full ref sync completion; runtime tests will start ref sync --watch and wait only for runtime-ready output.
+  Running tests against ref sync watch-ready output
+  Failed during test. See /Users/ryn/Developer/reference-ui/.pipeline/testing/matrix/matrix-css-test.log
+  matrix stdout:
+[matrix ref sync] wait-duration-ms=529
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/consumer[39m
+
+ [31m❯[39m tests/unit/runtime.test.ts [2m([22m[2m0 test[22m[2m)[22m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 18:33:16
+[2m   Duration [22m 215ms[2m (transform 80ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)[22m
+  matrix stderr:
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/runtime.test.ts[2m [ tests/unit/runtime.test.ts ][22m
+[31m[1mError[22m: [reference-ui] No native runtime plans registered when splitPrimitiveProps() ran. Generated runtime-data must register the merged artefact first.[39m
+[36m [2m❯[22m requireRegistered .reference-ui/react/react.mjs:[2m167:11[22m[39m
+    [90m165|[39m function requireRegistered(caller) {
+    [90m166|[39m   if (!registered) {
+    [90m167|[39m     throw new Error(`[reference-ui] No native runtime plans registered…
+    [90m   |[39m           [31m^[39m
+    [90m168|[39m   }
+    [90m169|[39m }
+[90m [2m❯[22m getStylePropNames .reference-ui/react/react.mjs:[2m179:3[22m[39m
+[90m [2m❯[22m css .reference-ui/react/react.mjs:[2m357:37[22m[39m
+[90m [2m❯[22m src/styles.ts:[2m4:26[22m[39m
+[90m [2m❯[22m src/index.tsx:[2m2:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[ref sync watch log]
+[38;5;75mref →[39m [90msync[39m Starting CLI
+[38;5;75mref →[39m [90msync[39m Prepared virtual workspace in 0.14s
+[38;5;75mref →[39m [90msync[39m Generated system config in 0.03s
+[38;5;75mref →[39m [90msync[39m Compiled native system with reference-rs in 1.8ms (21 plans, 0 recipes, 0 traced bindings, 0 warnings)
+[38;5;75mref →[39m [90msync[39m Generated native system output in 0.03s
+[38;5;75mref →[39m [90msync[39m Built 3 package(s) in 0.03s
+[38;5;75mref →[39m [90msync[39m Ready in 0.22s
+test:vitest failed (code=1, signal=null)
+  exit code: 1 [traceparent:9fe5777693f49a88a118fd2ef175604b-293ac36833deb6c4]
+[pipeline] Matrix test run FAILED
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 1.[39m
+
+=======================================================
+✖ [agent] Matrix test suite FAILED (exit code 1).
+=======================================================
+
+ ELIFECYCLE  Command failed with exit code 1.
+EXIT:1

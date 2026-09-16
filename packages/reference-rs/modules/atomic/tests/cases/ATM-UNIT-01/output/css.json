@@ -1,0 +1,8 @@
+{
+  "--foo:42": "@reference-ui/lib__--foo_42",
+  "fontWeight:700": "@reference-ui/lib__font-weight_700",
+  "lineHeight:1.5": "@reference-ui/lib__leading_1.5",
+  "opacity:1": "@reference-ui/lib__op_1",
+  "width:42": "@reference-ui/lib__w_42",
+  "zIndex:0": "@reference-ui/lib__z_0"
+}

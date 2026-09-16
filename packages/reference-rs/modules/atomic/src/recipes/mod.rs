@@ -1,38 +1,51 @@
-//! Closed `recipe()` emit: IR, readable class names, and the runtime variant table.
-//! Extract hands over style-object wants that must not enter the utility AtomSet.
-//! This pass resolves those wants, stamps one class per base / variant / compound
-//! leaf, and builds the JSON table runtime `recipe()` consumes. `sva` is refused.
+//! Closed `recipe()` compilation, readable class names, and runtime tables.
+//! Extracts and lowers component variant matrices into scoped `@layer recipes` rules.
+//! Constructs authoritative RecipeRuntimeTable entries addressing pre-composed combinations.
+//! Preserves strict layer isolation preventing recipe atoms from polluting utility want sets.
 
 pub mod name;
+mod spec;
 mod table;
 
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
-use crate::atom::{Atom, Want};
+use crate::atom::{Atom, Want, When, WhenKind};
 use crate::resolve::{resolve_want_with, ResolveSession};
+use crate::runtime::RecipeRuntimeTable;
 
-/// Extracted `recipe()` config. Style wants stay here, not on the utility list.
+pub use crate::runtime::{RecipeCompoundRecord, RecipeCompoundRecord as RecipeMatch};
+pub use crate::runtime::RecipeRuntimeTable as RecipeTable;
+pub use spec::from_spec;
+
+/// Extracted recipe definition. Style wants stay here, never entering utility AtomSet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Recipe {
-    pub name: String,
     pub class_name: String,
     pub base: Vec<Want>,
     pub variants: IndexMap<String, IndexMap<String, Vec<Want>>>,
+    pub default_variants: IndexMap<String, String>,
     pub compounds: Vec<RecipeCompound>,
 }
 
-/// One `compoundVariants[]` entry: matching variant props plus a style object.
+/// One compound variant definition matching variant predicates to style wants.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecipeCompound {
-    pub props: IndexMap<String, String>,
+    pub predicates: IndexMap<String, Vec<String>>,
     pub wants: Vec<Want>,
 }
 
-/// Resolved recipe ready to print and to serialize as a lookup table.
+/// One compiled compound variant with its resolved class name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompiledCompound {
+    pub predicates: IndexMap<String, Vec<String>>,
+    pub class_name: String,
+}
+
+/// Resolved recipe ready to print and serialize as a runtime table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompiledRecipe {
-    pub table: RecipeTable,
+    pub table: RecipeRuntimeTable,
     pub rules: Vec<RecipeRule>,
 }
 
@@ -43,118 +56,100 @@ pub struct RecipeRule {
     pub atoms: Vec<Atom>,
 }
 
-/// JSON variant table on `CompileResult`. Runtime looks up `combinations`.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RecipeTable {
-    pub name: String,
-    pub class_name: String,
-    pub variants: IndexMap<String, IndexMap<String, String>>,
-    pub compound_variants: Vec<RecipeMatch>,
-    pub combinations: Vec<RecipeMatch>,
-}
-
-/// Variant prop bag → class name (one leaf, one compound, or a joined permutation).
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RecipeMatch {
-    pub props: IndexMap<String, String>,
-    pub class_name: String,
-}
-
-/// Resolve every recipe into closed classes and a lookup table.
-pub fn compile(recipes: &[Recipe], session: &mut ResolveSession<'_>) -> Vec<CompiledRecipe> {
+/// Resolve every recipe into closed classes and a RecipeRuntimeTable.
+pub fn compile(
+    recipes: &[Recipe],
+    system_name: &str,
+    session: &mut ResolveSession<'_>,
+) -> Vec<CompiledRecipe> {
     recipes
         .iter()
-        .map(|recipe| compile_one(recipe, session))
+        .map(|recipe| compile_one(recipe, system_name, session))
         .collect()
 }
 
-struct RecipeLower<'a, 'b> {
-    stem: &'a str,
-    rules: &'a mut Vec<RecipeRule>,
-    session: &'a mut ResolveSession<'b>,
-}
-
-fn compile_one(recipe: &Recipe, session: &mut ResolveSession<'_>) -> CompiledRecipe {
+fn compile_one(
+    recipe: &Recipe,
+    system_name: &str,
+    session: &mut ResolveSession<'_>,
+) -> CompiledRecipe {
+    let qualified_name = name::qualified_stem(system_name, &recipe.class_name);
+    let base_class = name::base_class(&qualified_name);
     let mut rules = Vec::new();
-    let (variant_classes, compounds) = {
-        let mut lower = RecipeLower {
-            stem: &recipe.class_name,
-            rules: &mut rules,
-            session,
-        };
-        push_rule(&mut lower, &recipe.class_name, &recipe.base);
-        let variant_classes = compile_variants(&mut lower, &recipe.variants);
-        let compounds = compile_compounds(&mut lower, &recipe.compounds);
-        (variant_classes, compounds)
+
+    push_rule(&mut rules, &base_class, &recipe.base, session);
+    let variant_map = compile_variants(&mut rules, &qualified_name, &recipe.variants, session);
+    let compounds = compile_compounds(&mut rules, &qualified_name, &recipe.compounds, session);
+
+    let input = table::RecipeTableInput {
+        qualified_name: &qualified_name,
+        class_name: &recipe.class_name,
+        variant_map: &variant_map,
+        default_variants: &recipe.default_variants,
+        compounds: &compounds,
     };
+
     CompiledRecipe {
-        table: table::build(
-            &recipe.name,
-            &recipe.class_name,
-            &variant_classes,
-            &compounds,
-        ),
+        table: table::build(&input),
         rules,
     }
 }
 
 fn compile_variants(
-    lower: &mut RecipeLower<'_, '_>,
+    rules: &mut Vec<RecipeRule>,
+    stem: &str,
     variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
+    session: &mut ResolveSession<'_>,
 ) -> IndexMap<String, IndexMap<String, String>> {
-    let mut variant_classes = IndexMap::new();
+    let mut variant_map = IndexMap::new();
     for (key, items) in variants {
-        variant_classes.insert(key.clone(), compile_variant_group(lower, key, items));
+        let mut group_map = IndexMap::new();
+        for (value, wants) in items {
+            let class_name = name::variant_class(stem, key, value);
+            push_rule(rules, &class_name, wants, session);
+            group_map.insert(value.clone(), class_name);
+        }
+        variant_map.insert(key.clone(), group_map);
     }
-    variant_classes
+    variant_map
 }
 
 fn compile_compounds(
-    lower: &mut RecipeLower<'_, '_>,
+    rules: &mut Vec<RecipeRule>,
+    stem: &str,
     compounds: &[RecipeCompound],
-) -> Vec<RecipeMatch> {
-    compounds
-        .iter()
-        .map(|compound| compile_compound(lower, compound))
-        .collect()
-}
-
-fn compile_variant_group(
-    lower: &mut RecipeLower<'_, '_>,
-    key: &str,
-    items: &IndexMap<String, Vec<Want>>,
-) -> IndexMap<String, String> {
-    let mut map = IndexMap::new();
-    for (value, wants) in items {
-        let class_name = name::variant_class(lower.stem, key, value);
-        push_rule(lower, &class_name, wants);
-        map.insert(value.clone(), class_name);
+    session: &mut ResolveSession<'_>,
+) -> Vec<CompiledCompound> {
+    let mut out = Vec::new();
+    for compound in compounds {
+        let class_name = name::compound_class(stem, &compound.predicates);
+        push_rule(rules, &class_name, &compound.wants, session);
+        out.push(CompiledCompound {
+            predicates: compound.predicates.clone(),
+            class_name,
+        });
     }
-    map
+    out
 }
 
-fn compile_compound(lower: &mut RecipeLower<'_, '_>, compound: &RecipeCompound) -> RecipeMatch {
-    let class_name = name::compound_class(lower.stem, &compound.props);
-    push_rule(lower, &class_name, &compound.wants);
-    RecipeMatch {
-        props: compound.props.clone(),
-        class_name,
-    }
-}
-
-fn push_rule(lower: &mut RecipeLower<'_, '_>, class_name: &str, wants: &[Want]) {
-    let mut atoms = resolve_wants(wants, lower.session);
+fn push_rule(
+    rules: &mut Vec<RecipeRule>,
+    class_name: &str,
+    wants: &[Want],
+    session: &mut ResolveSession<'_>,
+) {
+    let mut atoms = resolve_wants(wants, session);
     if atoms.is_empty() {
         return;
     }
     atoms.sort_by(|a, b| {
-        a.prop
-            .cmp(&b.prop)
+        recipe_bucket(a)
+            .cmp(&recipe_bucket(b))
+            .then_with(|| a.prop.cmp(&b.prop))
             .then_with(|| a.value.css_value_str().cmp(b.value.css_value_str()))
+            .then_with(|| cmp_authored(&a.conditions, &b.conditions))
     });
-    lower.rules.push(RecipeRule {
+    rules.push(RecipeRule {
         class_name: class_name.to_string(),
         atoms,
     });
@@ -166,4 +161,76 @@ fn resolve_wants(wants: &[Want], session: &mut ResolveSession<'_>) -> Vec<Atom> 
         atoms.extend(resolve_want_with(want, session));
     }
     atoms
+}
+
+/// Cascade bucket shared with the utility sorter: base, selector-only, at-rule.
+fn recipe_bucket(atom: &Atom) -> u8 {
+    let mut has_at = false;
+    let mut has_selector = false;
+    for cond in atom.conditions.iter() {
+        match cond.wrap() {
+            WhenKind::Media(_) | WhenKind::Container(_) => has_at = true,
+            WhenKind::Selector(_) => has_selector = true,
+        }
+    }
+    if has_at {
+        2
+    } else if has_selector {
+        1
+    } else {
+        0
+    }
+}
+
+fn cmp_authored(a: &[When], b: &[When]) -> Ordering {
+    for (left, right) in a.iter().zip(b.iter()) {
+        let ord = left.authored().cmp(right.authored());
+        if ord != Ordering::Equal {
+            return ord;
+        }
+    }
+    a.len().cmp(&b.len())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::atom::AtomValue;
+    use base_system::BaseSystem;
+
+    fn want(prop: &str, value: &str, when: &[&str]) -> Want {
+        Want {
+            prop: prop.into(),
+            value: AtomValue::String(value.into()),
+            when: when.iter().map(|key| (*key).into()).collect(),
+            important: false,
+            origin: None,
+        }
+    }
+
+    #[test]
+    fn base_atoms_sort_before_conditionals_at_equal_specificity() {
+        let system = BaseSystem::lib_fixture();
+        let mut diagnostics = Vec::new();
+        let mut session = ResolveSession {
+            system,
+            diagnostics: &mut diagnostics,
+        };
+        let recipe = Recipe {
+            class_name: "card".to_string(),
+            base: vec![
+                want("color", "blue.600", &["sm"]),
+                want("color", "red.500", &[]),
+            ],
+            variants: IndexMap::new(),
+            default_variants: IndexMap::new(),
+            compounds: vec![],
+        };
+        let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
+        assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");
+        let atoms = &compiled[0].rules[0].atoms;
+        assert_eq!(atoms.len(), 2);
+        assert!(atoms[0].conditions.is_empty(), "base first: {atoms:?}");
+        assert!(!atoms[1].conditions.is_empty(), "conditional last: {atoms:?}");
+    }
 }

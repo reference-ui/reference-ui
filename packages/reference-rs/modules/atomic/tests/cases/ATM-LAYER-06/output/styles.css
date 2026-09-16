@@ -1,0 +1,26 @@
+@layer layer-fontface {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  @font-face {
+    font-family: Inter;
+    src: url(/fonts/inter.woff2);
+    font-display: swap;
+    font-weight: 400 700;
+  }
+  @font-face {
+    font-family: "Fira Code";
+    src: url(/fonts/fira-code.woff2);
+    font-display: fallback;
+  }
+}
+@layer tokens {
+  :root, [data-theme=light] {
+    --fonts-sans: "Inter", sans-serif;
+    --fonts-mono: "Fira Code", monospace;
+  }
+}
+@layer utilities {
+  .layer-fontface__font-family_sans { font-family: var(--fonts-sans); }
+  .layer-fontface__font-weight_400 { font-weight: 400; }
+}
+}

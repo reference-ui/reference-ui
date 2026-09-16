@@ -84,3 +84,16 @@ fn authored_bare_key_and_category_path_both_resolve() {
     assert!(tokens.get_in_category("radii", "radii.md").is_some());
     assert!(tokens.get_unique("md").is_some());
 }
+
+#[test]
+fn bas_token_06_is_private_distinguishes_internal_tokens() {
+    let public_entry = TokenEntry::new("colors".into(), "--colors-brand".into(), "#111".into(), None);
+    let private_entry = TokenEntry::new(
+        "colors".into(),
+        "--colors-_private-secret".into(),
+        "#999".into(),
+        None,
+    );
+    assert!(!public_entry.is_private());
+    assert!(private_entry.is_private());
+}

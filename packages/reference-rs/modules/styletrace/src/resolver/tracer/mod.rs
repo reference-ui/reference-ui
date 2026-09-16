@@ -1,8 +1,7 @@
 //! Recursive type resolver for concrete style-prop name collection.
-//!
-//! This module resolves TypeScript types across files to trace style properties.
+//! Resolves TypeScript types across files to trace style properties from declaration roots.
 //! It uses a recursive resolution strategy handling imports, builtins, and generics.
-//! The resolved property names are emitted as a flat set of strings.
+//! The resolved property names are emitted as a flat set of strings or explicit failure diagnostics.
 
 mod builtins;
 mod context;
@@ -16,46 +15,52 @@ use crate::resolver::error::StyleTraceError;
 use context::{TraceContext, TraceSession};
 
 const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
+    "react/types/public/style-props",
+    "react/types/style-props",
     ".reference-ui/react/types/public/style-props",
     ".reference-ui/react/types/style-props",
+    "types/public/style-props",
+    "types/style-props",
+    "style-props",
 ];
 const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
 const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
 
 pub fn collect_reference_style_prop_names(
-    sync_root: &Path,
+    declaration_root: &Path,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let Some(style_props_path) = resolve_reference_style_props_path(sync_root)? else {
-        return Ok(Vec::new());
+    let Some(style_props_path) = resolve_reference_style_props_path(declaration_root)? else {
+        return Err(StyleTraceError::new(format!(
+            "missing StyleProps declaration entrypoint in {}",
+            declaration_root.display()
+        )));
     };
-    collect_style_prop_names(sync_root, &style_props_path, "StyleProps")
+    let names = collect_style_prop_names(declaration_root, &style_props_path, "StyleProps")?;
+    if names.is_empty() {
+        return Err(StyleTraceError::new(
+            "malformed public type graph: no style properties resolved from StyleProps",
+        ));
+    }
+    Ok(names)
 }
 
 fn resolve_reference_style_props_path(
-    sync_root: &Path,
+    declaration_root: &Path,
 ) -> Result<Option<PathBuf>, StyleTraceError> {
+    if declaration_root.is_file() {
+        return Ok(Some(declaration_root.to_path_buf()));
+    }
+
     for stem in REFERENCE_STYLE_PROPS_ENTRY_STEMS {
-        if let Ok(path) = resolve_generated_declaration(sync_root, stem) {
-            return Ok(Some(path));
+        for suffix in [".d.mts", ".d.ts"] {
+            let candidate = declaration_root.join(format!("{stem}{suffix}"));
+            if candidate.is_file() {
+                return Ok(Some(candidate));
+            }
         }
     }
 
     Ok(None)
-}
-
-fn resolve_generated_declaration(sync_root: &Path, stem: &str) -> Result<PathBuf, StyleTraceError> {
-    for suffix in [".d.mts", ".d.ts"] {
-        let candidate = sync_root.join(format!("{stem}{suffix}"));
-        if candidate.is_file() {
-            return Ok(candidate);
-        }
-    }
-
-    Err(StyleTraceError::new(format!(
-        "failed to read {}.d.mts or {}.d.ts",
-        sync_root.join(stem).display(),
-        sync_root.join(stem).display()
-    )))
 }
 
 pub fn collect_style_prop_names(

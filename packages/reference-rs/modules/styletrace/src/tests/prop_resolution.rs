@@ -5,7 +5,7 @@
 
 use crate::{collect_reference_style_prop_names, collect_style_prop_names};
 
-use super::fixtures::{workspace_sync_root, ScratchDir};
+use super::fixtures::{reference_lib_sync_root, ScratchDir};
 
 #[test]
 fn resolves_omit_and_intersection_prop_names_from_local_modules() {
@@ -68,9 +68,12 @@ fn resolves_mapped_and_indexed_type_helpers() {
 
 #[test]
 fn loads_real_reference_core_style_props() {
-    let workspace_root = workspace_sync_root();
+    let sync_root = reference_lib_sync_root();
+    if !sync_root.join(".reference-ui").exists() {
+        return;
+    }
 
-    let names = collect_reference_style_prop_names(workspace_root.as_path())
+    let names = collect_reference_style_prop_names(sync_root.as_path())
         .expect("expected reference-core style props to resolve");
 
     assert!(

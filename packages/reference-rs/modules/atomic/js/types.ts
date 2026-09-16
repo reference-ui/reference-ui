@@ -1,8 +1,11 @@
 /**
  * TypeScript type definitions for Reference UI atomic compiler inputs, outputs, and intermediate data structures.
  * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, recipe tables, and authored wants.
- * `baseSystem` is the design-system spec; omitted means the frozen `@reference-ui/lib` fixture.
+ * `baseSystem` is the required EvaluatedSystemSpec shared with typegen; there is no implicit fallback system.
  */
+import type { EvaluatedSystemSpec } from '../../../contracts/types.js'
+
+export type { EvaluatedSystemSpec }
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'
 
@@ -31,41 +34,10 @@ export interface VirtualSource {
   content: string
 }
 
-export interface TokenEntry {
-  category: string
-  cssVar: string
-  light: string
-  dark: string
-}
-
-export interface FontDefinition {
-  value?: string
-  weights?: Record<string, string>
-  css?: Record<string, string>
-}
-
-export interface BreakpointScale {
-  names?: string[]
-  widths?: Record<string, string>
-}
-
-export interface BaseSystemInput {
-  name?: string
-  tokens?: Record<string, TokenEntry>
-  fonts?: Record<string, FontDefinition>
-  breakpoints?: BreakpointScale
-  conditions?: Record<string, string>
-  globalCss?: string[]
-  keyframes?: Record<string, string>
-  recipes?: Record<string, string>
-  /** Property → token names, or `['*']` for every token in that property's category. */
-  staticCss?: Record<string, string[]>
-}
-
 export interface CompileRequest {
   rootDir?: string
   files?: VirtualSource[]
-  baseSystem?: BaseSystemInput
+  baseSystem: EvaluatedSystemSpec
 }
 
 export interface RecipeMatch {
@@ -81,12 +53,52 @@ export interface RecipeTable {
   combinations: RecipeMatch[]
 }
 
+export interface RuntimeDeclaration {
+  slot: string
+  className: string
+}
+
+export interface RuntimeStylePlan {
+  system: string
+  when: string[]
+  prop: string
+  value: unknown
+  important: boolean
+  declarations: RuntimeDeclaration[]
+}
+
+export interface RecipeRuntimeTable {
+  qualifiedName: string
+  className: string
+  base: string
+  variantKeys: string[]
+  variantMap: Record<string, Record<string, string>>
+  defaultVariants: Record<string, string>
+  compoundVariants: Array<{
+    selection?: Record<string, string>
+    variant?: string
+    disabled?: string
+    css?: Record<string, unknown>
+    className?: string
+  }>
+  combinations: Record<string, string>
+}
+
+export interface NativeRuntimeArtifact {
+  schemaVersion: 1
+  stylePlans: RuntimeStylePlan[]
+  recipes: Record<string, RecipeRuntimeTable>
+  stylePropNames: string[]
+}
+
 export interface CompileResult {
   stylesheet: string
-  css: CssRuntime
+  portableStylesheet?: string
+  runtime: NativeRuntimeArtifact
+  css?: CssRuntime
   diagnostics: Diagnostic[]
   wants?: Want[]
-  recipes?: RecipeTable[]
+  recipes?: RecipeRuntimeTable[]
   /** Distinct AtomSet size. Test observability for ATM-GHOST-04. */
   atomCount?: number
 }

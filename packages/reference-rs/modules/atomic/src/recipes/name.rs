@@ -1,40 +1,54 @@
-//! Readable class spelling for closed `recipe()` variants.
-//! Utility atoms keep using `stylesheet::name`. These names are only for
-//! recipe tables: the stem, `--key_value` leaves, and `--compound-...`
-//! matches. They are never hashed whole-object classes.
+//! Deterministic class name generation for closed component recipes.
+//! Translates recipe stems, variant axes, and compound selections into qualified class strings.
+//! Produces scoped base, variant, and compound selectors isolated from utility atoms.
+//! Variant and compound suffixes preserve authored predicates without runtime re-evaluation.
 
 use indexmap::IndexMap;
 
-/// CSS class stem: explicit `className`, else the const binding, else `recipe`.
-pub fn stem(class_name: Option<&str>, binding: Option<&str>) -> String {
-    if let Some(name) = non_empty(class_name) {
-        return name.to_string();
+/// Qualified recipe identity: `${system}__${class_name}`.
+pub fn qualified_stem(system: &str, class_name: &str) -> String {
+    if system.is_empty() {
+        class_name.to_string()
+    } else {
+        format!("{system}__{class_name}")
     }
-    if let Some(name) = non_empty(binding) {
-        return name.to_string();
-    }
-    "recipe".to_string()
 }
 
-/// `button--variant_solid` for one declared variant value.
+/// Qualified base class name: `${stem}__base`.
+pub fn base_class(stem: &str) -> String {
+    format!("{stem}__base")
+}
+
+/// Variant class name: `${stem}_${key_prefix}_${value}`.
 pub fn variant_class(stem: &str, key: &str, value: &str) -> String {
-    format!("{stem}--{key}_{value}")
+    let prefix = key.chars().next().unwrap_or('v');
+    format!("{stem}_{prefix}_{value}")
 }
 
-/// `button--compound-variant_solid` (keys in source order). Distinct from variant leaves.
-pub fn compound_class(stem: &str, props: &IndexMap<String, String>) -> String {
-    let mut out = format!("{stem}--compound");
-    for (key, value) in props {
-        out.push('-');
-        out.push_str(key);
-        out.push('_');
-        out.push_str(value);
+/// Compound class name: `${stem}_c_${segments}`.
+pub fn compound_class(stem: &str, predicates: &IndexMap<String, Vec<String>>) -> String {
+    let mut segments = Vec::new();
+    for (key, values) in predicates {
+        if values.as_slice() == ["true"] {
+            segments.push(key.clone());
+        } else {
+            segments.push(values.join("_"));
+        }
     }
-    out
+    if segments.is_empty() {
+        format!("{stem}_c")
+    } else {
+        format!("{stem}_c_{}", segments.join("_"))
+    }
 }
 
-fn non_empty(value: Option<&str>) -> Option<&str> {
-    value.filter(|name| !name.is_empty())
+/// Convenience helper for compound props with single string values.
+pub fn compound_class_from_props(stem: &str, props: &IndexMap<String, String>) -> String {
+    let mut predicates = IndexMap::new();
+    for (k, v) in props {
+        predicates.insert(k.clone(), vec![v.clone()]);
+    }
+    compound_class(stem, &predicates)
 }
 
 #[cfg(test)]
@@ -42,25 +56,39 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stem_prefers_class_name_then_binding() {
-        assert_eq!(stem(Some("button"), Some("badge")), "button");
-        assert_eq!(stem(None, Some("badge")), "badge");
-        assert_eq!(stem(Some(""), Some("badge")), "badge");
-        assert_eq!(stem(None, None), "recipe");
+    fn qualified_stem_combines_system_and_class_name() {
+        assert_eq!(
+            qualified_stem("lib-test-system", "button"),
+            "lib-test-system__button"
+        );
+        assert_eq!(qualified_stem("", "button"), "button");
+    }
+
+    #[test]
+    fn base_class_appends_base_suffix() {
+        assert_eq!(
+            base_class("lib-test-system__button"),
+            "lib-test-system__button__base"
+        );
     }
 
     #[test]
     fn variant_and_compound_spelling() {
         assert_eq!(
-            variant_class("button", "variant", "solid"),
-            "button--variant_solid"
+            variant_class("lib-test-system__button", "variant", "solid"),
+            "lib-test-system__button_v_solid"
         );
-        let mut props = IndexMap::new();
-        props.insert("variant".into(), "solid".into());
-        props.insert("size".into(), "sm".into());
         assert_eq!(
-            compound_class("button", &props),
-            "button--compound-variant_solid-size_sm"
+            variant_class("lib-test-system__button", "disabled", "true"),
+            "lib-test-system__button_d_true"
+        );
+
+        let mut predicates = IndexMap::new();
+        predicates.insert("variant".into(), vec!["solid".into()]);
+        predicates.insert("disabled".into(), vec!["true".into()]);
+        assert_eq!(
+            compound_class("lib-test-system__button", &predicates),
+            "lib-test-system__button_c_solid_disabled"
         );
     }
 }

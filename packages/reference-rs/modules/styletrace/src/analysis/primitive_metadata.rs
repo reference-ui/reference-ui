@@ -1,8 +1,7 @@
 //! Generated primitive metadata helpers for styletrace analysis.
-//!
-//! Styletrace intentionally reads the synced primitive declaration surface
-//! instead of inferring primitive identity from repo layout or handwritten
-//! registries.
+//! Reads the synced primitive declaration surface from the declaration root
+//! instead of inferring primitive identity from repo layout or handwritten registries.
+//! Takes declaration directory paths and emits the set of discovered primitive JSX component names.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -10,13 +9,22 @@ use std::path::{Path, PathBuf};
 
 use crate::resolver::StyleTraceError;
 
-const PRIMITIVE_DECLARATIONS_ENTRY_STEM: &str = ".reference-ui/react/system/primitives/index";
+const PRIMITIVE_DECLARATIONS_ENTRY_STEMS: &[&str] = &[
+    "react/system/primitives/index",
+    ".reference-ui/react/system/primitives/index",
+    "system/primitives/index",
+    "primitives/index",
+    "index",
+];
 
-pub(super) fn collect_reference_primitive_jsx_names(
-    sync_root: &Path,
+pub(crate) fn collect_reference_primitive_jsx_names(
+    declaration_root: &Path,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
-    let Some(declaration_path) = resolve_primitive_declaration_path(sync_root)? else {
-        return Ok(BTreeSet::new());
+    let Some(declaration_path) = resolve_primitive_declaration_path(declaration_root)? else {
+        return Err(StyleTraceError::new(format!(
+            "missing primitive declaration entrypoint in {}",
+            declaration_root.display()
+        )));
     };
     let source = fs::read_to_string(declaration_path).map_err(|error| {
         StyleTraceError::new(format!("failed to read primitive declarations: {error}"))
@@ -32,18 +40,19 @@ pub(super) fn collect_reference_primitive_jsx_names(
     Ok(names)
 }
 
-/// Production contract: the primitive declarations are always emitted under
-/// the consumer's synced `.reference-ui/` tree by the packager. We do not walk
-/// up looking for workspace source files — this resolver runs in arbitrary
-/// consumer apps and must not couple to whatever development tree it happens
-/// to be invoked from.
 fn resolve_primitive_declaration_path(
-    sync_root: &Path,
+    declaration_root: &Path,
 ) -> Result<Option<PathBuf>, StyleTraceError> {
-    for suffix in [".d.mts", ".d.ts"] {
-        let candidate = sync_root.join(format!("{PRIMITIVE_DECLARATIONS_ENTRY_STEM}{suffix}"));
-        if candidate.is_file() {
-            return Ok(Some(candidate));
+    if declaration_root.is_file() {
+        return Ok(Some(declaration_root.to_path_buf()));
+    }
+
+    for stem in PRIMITIVE_DECLARATIONS_ENTRY_STEMS {
+        for suffix in [".d.mts", ".d.ts"] {
+            let candidate = declaration_root.join(format!("{stem}{suffix}"));
+            if candidate.is_file() {
+                return Ok(Some(candidate));
+            }
         }
     }
 

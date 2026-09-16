@@ -31,9 +31,28 @@ pub fn class_name(atom: &Atom) -> String {
     }
 }
 
+/// Generate canonical atomic class name with optional system segment.
+pub fn class_name_with_system(atom: &Atom, system: &str) -> String {
+    let stem = class_name(atom);
+    if system.is_empty() {
+        stem
+    } else {
+        format!("{system}__{stem}")
+    }
+}
+
 /// Generate the CSS selector for an atom, including necessary selector escapes and pseudo transformations.
 pub fn selector(atom: &Atom) -> String {
-    let c_name = class_name(atom);
+    selector_with_system(atom, "")
+}
+
+/// Generate the system-qualified CSS selector matching the runtime plan class name.
+///
+/// The full `{system}__{stem}` runtime string is escaped as one identifier, so the
+/// decoded class selector equals the plan `class_name` byte for byte. An empty
+/// system keeps the bare stem for unit-isolated naming tests.
+pub fn selector_with_system(atom: &Atom, system: &str) -> String {
+    let c_name = class_name_with_system(atom, system);
     let escaped = escape_css_selector(&c_name);
     let mut current_sel = format!(".{escaped}");
 
@@ -95,6 +114,38 @@ mod tests {
         );
         assert_eq!(class_name(&atom), "hover:mt_2r");
         assert_eq!(selector(&atom), ".hover\\:mt_2r:is(:hover, [data-hover])");
+    }
+
+    #[test]
+    fn test_selector_with_system_matches_plan_class_name() {
+        let atom = Atom::new(
+            "color".into(),
+            CssValue::String("blue.600".into()),
+            smallvec![],
+            false,
+        );
+        assert_eq!(
+            class_name_with_system(&atom, "lib-test-system"),
+            "lib-test-system__c_blue.600"
+        );
+        assert_eq!(
+            selector_with_system(&atom, "lib-test-system"),
+            ".lib-test-system__c_blue\\.600"
+        );
+    }
+
+    #[test]
+    fn test_selector_with_system_escapes_scope_chars() {
+        let atom = Atom::new(
+            "marginTop".into(),
+            CssValue::String("2r".into()),
+            smallvec![when("_hover")],
+            false,
+        );
+        assert_eq!(
+            selector_with_system(&atom, "@reference-ui/lib"),
+            ".\\@reference-ui\\/lib__hover\\:mt_2r:is(:hover, [data-hover])"
+        );
     }
 
     #[test]

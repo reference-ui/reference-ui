@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'blue.500')).toBe(true)
     expect(result.stylesheet).not.toContain('hovr')
     expect(result.stylesheet).not.toContain(':hovr')
-    expect(result.stylesheet).toContain('.c_blue\\.500')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__c_blue\\.500')
     expect(result.diagnostics).toHaveLength(1)
     expect(result.diagnostics[0]?.message).toContain('_hovr')
     expect(result.atomCount).toBe(1)

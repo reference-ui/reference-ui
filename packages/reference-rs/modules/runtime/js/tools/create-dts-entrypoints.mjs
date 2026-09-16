@@ -19,6 +19,7 @@ const entrypoints = [
   { file: 'styletrace.d.ts', target: './modules/styletrace/js/index' },
   { file: 'atomic.d.ts', target: './modules/atomic/js/index' },
   { file: 'system.d.ts', target: './modules/atomic/js/index' },
+  { file: 'typegen.d.ts', target: './modules/typegen/js/index' },
 ]
 
 for (const { file, target } of entrypoints) {

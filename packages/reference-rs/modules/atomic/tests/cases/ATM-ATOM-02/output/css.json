@@ -1,5 +1,5 @@
 {
-  "color:blue.600": "c_blue.600",
-  "mt:2r": "mt_2r",
-  "opacity:0.5": "op_0.5"
+  "color:blue.600": "@reference-ui/lib__c_blue.600",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "opacity:0.5": "@reference-ui/lib__op_0.5"
 }

@@ -1,20 +1,28 @@
 {
+  "schemaVersion": 1,
+  "profile": "reference-ui",
   "name": "static-css-overlap",
   "tokens": {
-    "colors.n100": {
-      "category": "colors",
-      "cssVar": "--colors-n100",
-      "light": "#f4f4f5",
-      "dark": "#18181b"
-    },
-    "colors.n300": {
-      "category": "colors",
-      "cssVar": "--colors-n300",
-      "light": "#d4d4d8",
-      "dark": "#3f3f46"
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n300": {
+        "light": "#d4d4d8",
+        "dark": "#3f3f46"
+      }
     }
   },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
   "staticCss": {
-    "bg": ["n100", "n300"]
-  }
+    "bg": [
+      "n100",
+      "n300"
+    ]
+  },
+  "provenance": []
 }

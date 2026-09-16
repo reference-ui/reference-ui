@@ -1,0 +1,6 @@
+[
+  {
+    "severity": "warning",
+    "message": "token `2` belongs to category `spacing` which property `zIndex` does not accept"
+  }
+]

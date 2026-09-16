@@ -50,13 +50,31 @@
     "./system": {
       "types": "./dist/system.d.ts",
       "import": "./dist/system.mjs"
+    },
+    "./typegen": {
+      "types": "./dist/typegen.d.ts",
+      "import": "./dist/typegen.mjs"
     }
   },
   "files": [
-    "dist",
-    "!dist/cargo",
-    "!dist/artifacts",
-    "!dist/npm",
+    "dist/atlas.d.ts",
+    "dist/atlas.mjs",
+    "dist/atomic.d.ts",
+    "dist/atomic.mjs",
+    "dist/contracts",
+    "dist/index.d.ts",
+    "dist/index.mjs",
+    "dist/modules",
+    "dist/native",
+    "dist/styletrace.d.ts",
+    "dist/styletrace.mjs",
+    "dist/system.d.ts",
+    "dist/system.mjs",
+    "dist/tasty",
+    "dist/tasty.d.ts",
+    "dist/tasty.mjs",
+    "dist/typegen.d.ts",
+    "dist/typegen.mjs",
     "README.md",
     "docs"
   ],
@@ -71,7 +89,9 @@
     "build:native": "pnpm exec napi build --package reference-virtual-native --platform --release --output-dir dist/native --no-js",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs --npm-dir dist/npm",
     "ensure-native": "pnpm exec tsx ./modules/runtime/js/tools/ensure-native.ts",
-    "prepack": "pnpm run build:js",
+    "verify:native": "pnpm exec tsx ./modules/runtime/js/tools/verify-native-freshness.ts",
+    "write-native-stamp": "pnpm exec tsx ./modules/runtime/js/tools/write-native-stamp.ts",
+    "prepack": "pnpm run verify:native && pnpm run build:js",
     "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm --npm-dir dist/npm",
     "publish:native": "pnpm exec tsx ./modules/runtime/js/tools/publish-native.ts",
     "stage-local-artifacts": "pnpm exec tsx ./modules/runtime/js/tools/stage-local-artifacts.ts",

@@ -1,7 +1,7 @@
-//! Named `_` condition wraps the lib fixture overlays from the Panda preset.
+//! Named `_` condition wraps the reference profile canonical conditions.
 //! Keys match canon `NAMED_CONDITIONS`. Lib TypeScript authors no conditions;
-//! these 78 wraps are host/Panda shapes (`&:is(:hover, [data-hover])` on the leaf
-//! and on group/peer). Host color mode uses `[data-panda-theme=…]`, not `.dark` /
+//! these 78 wraps are canonical condition shapes (`&:is(:hover, [data-hover])` on the leaf
+//! and on group/peer). Host color mode uses `[data-theme=…]`, not `.dark` /
 //! `.light`. `_osDark` / `_print` / `_motionReduce` stay `@media`. Empty BaseSystem
 //! has no conditions.
 
@@ -36,7 +36,7 @@ const LIB_CONDITIONS: &[(&str, &str)] = &[
     ("_current", "&[aria-current=true]"),
     ("_currentPage", "&[aria-current=page]"),
     ("_currentStep", "&[aria-current=step]"),
-    ("_dark", "[data-panda-theme=dark] &"),
+    ("_dark", "[data-theme=dark] &"),
     ("_default", "&:default"),
     ("_disabled", DISABLED),
     ("_dragging", "&:is([data-dragging], [data-state=\"dragging\"])"),
@@ -94,7 +94,7 @@ const LIB_CONDITIONS: &[(&str, &str)] = &[
     ("_last", "&:last-child"),
     ("_lastOfType", "&:last-of-type"),
     ("_lessContrast", "@media (prefers-contrast: less)"),
-    ("_light", "[data-panda-theme=light] &"),
+    ("_light", "[data-theme=light] &"),
     ("_loading", "&:is([data-loading], [aria-busy=true])"),
     ("_ltr", "[dir=ltr] &"),
     ("_marker", "&::marker"),

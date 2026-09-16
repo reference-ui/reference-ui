@@ -1,62 +1,64 @@
+@layer expression-table {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
   :root { --spacing-root: 0.25rem }
 }
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-n100: #f4f4f5;
     --colors-n200: #e4e4e7;
     --colors-primary: #3b82f6;
     --radii-full: 9999px;
     --radii-md: 0.4rem;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-n100: #18181b;
     --colors-n200: #27272a;
     --colors-primary: #60a5fa;
   }
 }
 @layer utilities {
-  .bg_n100 { background: var(--colors-n100); }
-  .bg_n200 { background: var(--colors-n200); }
-  .bd-c_0 { border-color: 0; }
-  .bd-c_red { border-color: red; }
-  .bd-c_transparent { border-color: transparent; }
-  .rounded_full { border-radius: var(--radii-full); }
-  .rounded_md { border-radius: var(--radii-md); }
-  .border-style_solid { border-style: solid; }
-  .bd-w_1px { border-width: 1px; }
-  .gap_0\.5r { gap: calc(0.5 * var(--spacing-root)); }
-  .gap_1r { gap: var(--spacing-root); }
-  .m_0 { margin: 0; }
-  .ta_left { text-align: left; }
-  .ta_right { text-align: right; }
-  .ai_center { align-items: center; }
-  .ai_stretch { align-items: stretch; }
-  .c_primary { color: var(--colors-primary); }
-  .cursor_default { cursor: default; }
-  .cursor_pointer { cursor: pointer; }
-  .d_flex { display: flex; }
-  .d_none { display: none; }
-  .flex-dir_column { flex-direction: column; }
-  .flex-dir_row { flex-direction: row; }
-  .h_0px { height: 0px; }
-  .h_200px { height: 200px; }
-  .jc_center { justify-content: center; }
-  .jc_flex-start { justify-content: flex-start; }
-  .op_0\.5 { opacity: 0.5; }
-  .op_1 { opacity: 1; }
-  .w_100\% { width: 100%; }
-  .w_auto { width: auto; }
-  .z_1 { z-index: 1; }
-  .z_1000 { z-index: 1000; }
+  .expression-table__bg_n100 { background: var(--colors-n100); }
+  .expression-table__bg_n200 { background: var(--colors-n200); }
+  .expression-table__bd-c_0 { border-color: 0; }
+  .expression-table__bd-c_red { border-color: red; }
+  .expression-table__bd-c_transparent { border-color: transparent; }
+  .expression-table__rounded_full { border-radius: var(--radii-full); }
+  .expression-table__rounded_md { border-radius: var(--radii-md); }
+  .expression-table__border-style_solid { border-style: solid; }
+  .expression-table__bd-w_1px { border-width: 1px; }
+  .expression-table__gap_0\.5r { gap: calc(0.5 * var(--spacing-root)); }
+  .expression-table__gap_1r { gap: var(--spacing-root); }
+  .expression-table__m_0 { margin: 0; }
+  .expression-table__ta_left { text-align: left; }
+  .expression-table__ta_right { text-align: right; }
+  .expression-table__ai_center { align-items: center; }
+  .expression-table__ai_stretch { align-items: stretch; }
+  .expression-table__c_primary { color: var(--colors-primary); }
+  .expression-table__cursor_default { cursor: default; }
+  .expression-table__cursor_pointer { cursor: pointer; }
+  .expression-table__d_flex { display: flex; }
+  .expression-table__d_none { display: none; }
+  .expression-table__flex-dir_column { flex-direction: column; }
+  .expression-table__flex-dir_row { flex-direction: row; }
+  .expression-table__h_0px { height: 0px; }
+  .expression-table__h_200px { height: 200px; }
+  .expression-table__jc_center { justify-content: center; }
+  .expression-table__jc_flex-start { justify-content: flex-start; }
+  .expression-table__op_0\.5 { opacity: 0.5; }
+  .expression-table__op_1 { opacity: 1; }
+  .expression-table__w_100\% { width: 100%; }
+  .expression-table__w_auto { width: auto; }
+  .expression-table__z_1 { z-index: 1; }
+  .expression-table__z_1000 { z-index: 1000; }
   @container (min-width: 640px) {
-    .sm\:m_1r { margin: var(--spacing-root); }
+    .expression-table__sm\:m_1r { margin: var(--spacing-root); }
   }
   @container (min-width: 768px) {
-    .md\:m_2r { margin: calc(2 * var(--spacing-root)); }
+    .expression-table__md\:m_2r { margin: calc(2 * var(--spacing-root)); }
   }
   @container (min-width: 1024px) {
-    .lg\:m_3r { margin: calc(3 * var(--spacing-root)); }
+    .expression-table__lg\:m_3r { margin: calc(3 * var(--spacing-root)); }
   }
+}
 }

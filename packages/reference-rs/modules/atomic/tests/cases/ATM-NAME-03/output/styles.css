@@ -1,6 +1,7 @@
+@layer \@reference-ui\/lib {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  :root { --spacing-root: 0.25rem; container-type: inline-size }
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -135,7 +136,7 @@
   }
 }
 @layer tokens {
-  :root {
+  :root, [data-theme=light] {
     --colors-slate-50: oklch(98.4% 0.003 247.858);
     --colors-slate-100: oklch(96.8% 0.007 247.896);
     --colors-slate-200: oklch(92.9% 0.013 255.508);
@@ -474,7 +475,7 @@
     --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
   }
-  [data-panda-theme=dark] {
+  [data-theme=dark] {
     --colors-text-primary: var(--colors-gray-50);
     --colors-text-secondary: var(--colors-gray-300);
     --colors-text-disabled: var(--colors-gray-500);
@@ -576,5 +577,6 @@
   }
 }
 @layer utilities {
-  .mt_2r\! { margin-top: calc(2 * var(--spacing-root)) !important; }
+  .\@reference-ui\/lib__mt_2r\! { margin-top: calc(2 * var(--spacing-root)) !important; }
+}
 }

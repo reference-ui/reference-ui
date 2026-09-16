@@ -1,4 +1,4 @@
 {
-  "mt:2r": "mt_2r!",
-  "p:1r": "p_1r!"
+  "mt:2r": "@reference-ui/lib__mt_2r!",
+  "p:1r": "@reference-ui/lib__p_1r!"
 }

@@ -32,6 +32,7 @@ export default defineConfig({
     styletrace: 'modules/styletrace/js/index.ts',
     atomic: 'modules/atomic/js/index.ts',
     system: 'modules/atomic/js/index.ts',
+    typegen: 'modules/typegen/js/index.ts',
   },
   format: ['esm'],
   dts: false,

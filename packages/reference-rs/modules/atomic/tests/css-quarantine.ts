@@ -17,6 +17,8 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-SHORT-03': ['Unexpected input', 'border: borders.card'],
   'ATM-TOKEN-02': ['margin-top: blue .600'],
   'ATM-TOKEN-05': ['background: blue .600'],
+  'ATM-TOKEN-06': ['border-color: /40', 'color: red .500/'],
+  'ATM-VALID-03': ['Unexpected input', 'color: ghost.white'],
 }
 
 export function quarantineFor(stationId: string): readonly string[] {

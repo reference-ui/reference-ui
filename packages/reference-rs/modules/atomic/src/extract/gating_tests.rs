@@ -11,6 +11,7 @@ fn compile_code(code: &str) -> crate::CompileResult {
             path: "test.tsx".to_string(),
             content: code.to_string(),
         }]),
+        base_system: crate::BaseSystem::lib_fixture().clone(),
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
@@ -45,6 +46,38 @@ fn test_unknown_css_is_not_an_extract_site() {
         "#,
     );
     assert!(res.wants.is_empty());
+}
+
+#[test]
+fn test_const_aliased_recipe_still_extracts() {
+    let res = compile_code(
+        r#"
+        import { cva } from 'src/system/css';
+        const __reference_ui_recipe = cva;
+        const button = __reference_ui_recipe({
+            className: 'neutralized',
+            base: { fontWeight: 'bold' },
+        });
+        "#,
+    );
+    assert!(res.diagnostics.is_empty());
+    assert!(res.runtime.recipes.keys().any(|key| key.ends_with("__neutralized")));
+    assert!(res.stylesheet.contains("@layer recipes {"));
+}
+
+#[test]
+fn test_const_aliased_css_still_extracts() {
+    let res = compile_code(
+        r#"
+        import { css } from 'src/system/css';
+        const __reference_ui_css = css;
+        const card = __reference_ui_css({ color: 'blue' });
+        "#,
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && w.value.to_string() == "blue"));
 }
 
 #[test]

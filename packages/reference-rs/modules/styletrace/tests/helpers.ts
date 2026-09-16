@@ -22,7 +22,7 @@ import {
 const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
 const REFERENCE_RS_DIR = path.resolve(TESTS_STYLETRACE_DIR, '../../..')
 const WORKSPACE_ROOT = path.resolve(REFERENCE_RS_DIR, '../..')
-const DEFAULT_SYNC_ROOT = path.join(WORKSPACE_ROOT, 'packages', 'reference-lib')
+const DEFAULT_SYNC_ROOT = path.resolve(TESTS_STYLETRACE_DIR, '../fixtures/sync-root')
 
 export const CASES_DIR = path.resolve(TESTS_STYLETRACE_DIR, 'cases')
 export const CASE_FOLDER = /^([a-z][a-z0-9_]*)$/

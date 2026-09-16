@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "lib-test-system",
+  "fragments": [
+    {
+      "source": "src/tokens/index.ts",
+      "code": "export default tokens({ colors: { blue: { 500: { value: '#3b82f6' } } } })"
+    }
+  ],
+  "cssChunks": [
+    {
+      "system": "lib-test-system",
+      "hash": "4f8a92b1c6d3e7f0",
+      "css": "@layer tokens { [data-layer=\"lib-test-system\"] { --colors-blue-500: #3b82f6; } }"
+    }
+  ],
+  "runtime": {
+    "schemaVersion": 1,
+    "stylePlans": [
+      {
+        "system": "lib-test-system",
+        "when": [],
+        "prop": "color",
+        "value": "blue.500",
+        "important": false,
+        "declarations": [
+          {
+            "slot": "color",
+            "className": "lib-test-system__c_blue-500"
+          }
+        ]
+      }
+    ],
+    "recipes": {},
+    "stylePropNames": [
+      "color"
+    ]
+  },
+  "jsxElements": [
+    "Box",
+    "Button",
+    "Card"
+  ]
+}

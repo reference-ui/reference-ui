@@ -1,6 +1,6 @@
 /**
  * Authored-important station. Trailing `!` on JSX and css() string leaves
- * sets Want.important and names the class `mt_2r!`.
+ * sets Want.important and names the class `<system>__mt_2r!`.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -14,8 +14,8 @@ const spec: AtomicCaseSpec = {
     const p = (result.wants ?? []).find(w => w.prop === 'p')
     expect(mt?.important).toBe(true)
     expect(p?.important).toBe(true)
-    expect(result.css?.classes?.['mt:2r']).toBe('mt_2r!')
-    expect(result.stylesheet).toContain('.mt_2r\\!')
+    expect(result.css?.classes?.['mt:2r']).toBe('@reference-ui/lib__mt_2r!')
+    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__mt_2r\\!')
     expect(result.stylesheet).toContain(
       'margin-top: calc(2 * var(--spacing-root)) !important;'
     )

@@ -4,7 +4,7 @@ Typegen prints deterministic declarations from the same resolved system atomic
 compiles. It does not read `ui.config.ts`, evaluate fragments, write files, or
 generate browser runtime code.
 
-The pure Rust printer is already 28/28. The cutover work is packet **N5**:
+The pure Rust printer is already 28/28. The cutover work is packet **N5 — [DONE]**:
 make that printer callable from Core through a thin Node seam without changing
 its ownership.
 

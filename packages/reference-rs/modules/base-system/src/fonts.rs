@@ -1,7 +1,9 @@
 //! Font table for one design-system utterance.
-//! Stores family names, named weights, the CSS family stack, and optional extras such as
-//! `letterSpacing`. `generic()` is CSS keyword families with no lib tracking. The lib fixture
-//! loads `font()` families from the generated spec; `fontFace` is ignored until FONT-02.
+//! Stores family names, named weights, CSS family fallback stacks, structured font-face
+//! descriptors, and font-level CSS rules such as letter spacing.
+//! `generic()` provides standard CSS keyword families without library tracking.
+//! `FontScale` answers family queries, weight resolution, and descriptor enumeration
+//! for atomic stylesheet and font-face emission.
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -17,16 +19,31 @@ const GENERIC_WEIGHTS: &[(&str, &str)] = &[
     ("black", "900"),
 ];
 
-/// One `font()` fragment: stack, named weights, and CSS extras.
+/// Structured `@font-face` descriptor attributes for CSS emission.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FontFaceDefinition {
+    pub src: String,
+    #[serde(default)]
+    pub font_weight: Option<String>,
+    #[serde(default)]
+    pub font_display: Option<String>,
+    #[serde(default)]
+    pub font_style: Option<String>,
+}
+
+/// One `font()` fragment: family stack, named weights, font-face descriptors, and CSS extras.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FontDefinition {
-    #[serde(default)]
+    #[serde(default, alias = "family")]
     pub value: String,
     #[serde(default)]
     pub weights: IndexMap<String, String>,
     #[serde(default)]
     pub css: IndexMap<String, String>,
+    #[serde(default)]
+    pub font_face: Option<FontFaceDefinition>,
 }
 
 /// Name → definition map consulted by atomic `font` / `weight` lowering.
@@ -90,6 +107,7 @@ fn generic_definition() -> FontDefinition {
         value: String::new(),
         weights,
         css: IndexMap::new(),
+        font_face: None,
     }
 }
 
@@ -117,5 +135,95 @@ mod tests {
         );
         assert_eq!(scale.scoped_weight("mono.normal"), Some("393"));
         assert!(scale.get("sans").unwrap().value.contains("Inter"));
+    }
+
+    #[test]
+    fn bas_font_01_stores_family_value_and_fallback_stacks() {
+        let mut fonts = IndexMap::new();
+        fonts.insert(
+            "sans".to_string(),
+            FontDefinition {
+                value: "\"Inter\", ui-sans-serif, sans-serif".to_string(),
+                weights: IndexMap::new(),
+                css: IndexMap::new(),
+                font_face: None,
+            },
+        );
+        let scale = FontScale::from_definitions(fonts);
+        assert!(scale.has_family("sans"));
+        assert_eq!(
+            scale.get("sans").unwrap().value,
+            "\"Inter\", ui-sans-serif, sans-serif"
+        );
+    }
+
+    #[test]
+    fn bas_font_02_preserves_structured_font_face_descriptors() {
+        let mut fonts = IndexMap::new();
+        fonts.insert(
+            "sans".to_string(),
+            FontDefinition {
+                value: "Inter, sans-serif".to_string(),
+                weights: IndexMap::new(),
+                css: IndexMap::new(),
+                font_face: Some(FontFaceDefinition {
+                    src: "url(/fonts/inter.woff2) format(\"woff2\")".to_string(),
+                    font_weight: Some("200 900".to_string()),
+                    font_display: Some("swap".to_string()),
+                    font_style: None,
+                }),
+            },
+        );
+        let scale = FontScale::from_definitions(fonts);
+        let face = scale.get("sans").unwrap().font_face.as_ref().unwrap();
+        assert_eq!(face.src, "url(/fonts/inter.woff2) format(\"woff2\")");
+        assert_eq!(face.font_weight.as_deref(), Some("200 900"));
+        assert_eq!(face.font_display.as_deref(), Some("swap"));
+    }
+
+    #[test]
+    fn bas_font_03_maps_named_font_weight_aliases_to_numeric_weights() {
+        let mut weights = IndexMap::new();
+        weights.insert("thin".to_string(), "200".to_string());
+        weights.insert("normal".to_string(), "400".to_string());
+        weights.insert("bold".to_string(), "700".to_string());
+        let mut fonts = IndexMap::new();
+        fonts.insert(
+            "sans".to_string(),
+            FontDefinition {
+                value: "Inter, sans-serif".to_string(),
+                weights,
+                css: IndexMap::new(),
+                font_face: None,
+            },
+        );
+        let scale = FontScale::from_definitions(fonts);
+        assert_eq!(scale.scoped_weight("sans.bold"), Some("700"));
+        assert_eq!(scale.scoped_weight("sans.normal"), Some("400"));
+        assert_eq!(scale.scoped_weight("sans.thin"), Some("200"));
+    }
+
+    #[test]
+    fn bas_font_04_attaches_font_level_base_css_declarations() {
+        let mut css = IndexMap::new();
+        css.insert("letterSpacing".to_string(), "-0.01em".to_string());
+        css.insert("fontFeatureSettings".to_string(), "\"cv02\"".to_string());
+        let mut fonts = IndexMap::new();
+        fonts.insert(
+            "sans".to_string(),
+            FontDefinition {
+                value: "Inter, sans-serif".to_string(),
+                weights: IndexMap::new(),
+                css,
+                font_face: None,
+            },
+        );
+        let scale = FontScale::from_definitions(fonts);
+        let def = scale.get("sans").unwrap();
+        assert_eq!(def.css.get("letterSpacing").map(String::as_str), Some("-0.01em"));
+        assert_eq!(
+            def.css.get("fontFeatureSettings").map(String::as_str),
+            Some("\"cv02\"")
+        );
     }
 }

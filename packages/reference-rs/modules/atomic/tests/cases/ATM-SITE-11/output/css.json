@@ -1,6 +1,6 @@
 {
-  "bg:n300": "bg_n300",
-  "color:red": "c_red",
-  "mt:2r": "mt_2r",
-  "p:1r": "p_1r"
+  "bg:n300": "identifier-spread__bg_n300",
+  "color:red": "identifier-spread__c_red",
+  "mt:2r": "identifier-spread__mt_2r",
+  "p:1r": "identifier-spread__p_1r"
 }

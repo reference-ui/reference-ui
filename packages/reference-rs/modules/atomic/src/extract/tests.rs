@@ -10,6 +10,7 @@ fn compile_code(code: &str) -> crate::CompileResult {
             path: "test.tsx".to_string(),
             content: code.to_string(),
         }]),
+        base_system: crate::BaseSystem::lib_fixture().clone(),
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
@@ -147,6 +148,7 @@ fn test_css_and_recipe_call_sites() {
         const c1 = css({ mt: '2r' });
         const c2 = css.object({ p: '1r' });
         const button = recipe({
+            className: 'button',
             base: { color: 'white' },
             variants: {
                 size: {
@@ -175,12 +177,12 @@ fn test_css_and_recipe_call_sites() {
     assert_eq!(res.recipes.len(), 1);
     assert_eq!(res.recipes[0].class_name, "button");
     assert!(res.stylesheet.contains("@layer recipes {"));
-    assert!(res.stylesheet.contains(".button {"));
+    assert!(res.stylesheet.contains("button__base"));
     assert!(res.stylesheet.contains("color: white"));
-    assert!(res.stylesheet.contains(".button--size_sm"));
+    assert!(res.stylesheet.contains("button_s_sm"));
     assert!(res.stylesheet.contains("font-size: 12px"));
     assert!(res.stylesheet.contains("@layer utilities {"));
-    assert!(res.stylesheet.contains(".mt_2r"));
+    assert!(res.stylesheet.contains(".\\@reference-ui\\/lib__mt_2r"));
     let recipes_at = res
         .stylesheet
         .find("@layer recipes {")
@@ -191,8 +193,7 @@ fn test_css_and_recipe_call_sites() {
         .expect("utilities layer");
     assert!(recipes_at < utilities_at);
     let utilities = &res.stylesheet[utilities_at..];
-    assert!(!utilities.contains(".button {"));
-    assert!(!utilities.contains(".button--"));
+    assert!(!utilities.contains(".button"));
 }
 
 #[test]
@@ -232,7 +233,7 @@ fn test_custom_breakpoint_scale() {
             path: "test.tsx".to_string(),
             content: r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#.to_string(),
         }]),
-        base_system: Some(system),
+        base_system: system,
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");
@@ -260,7 +261,7 @@ fn test_tokens_breakpoints_scale() {
             content: r#"export const Comp = () => <Div p={['10px', '20px', '30px']} />"#
                 .to_string(),
         }]),
-        base_system: Some(system),
+        base_system: system,
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");

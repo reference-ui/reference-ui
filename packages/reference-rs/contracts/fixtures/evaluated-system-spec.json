@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "lib-test-system",
+  "tokens": {
+    "colors": {
+      "blue": {
+        "500": {
+          "value": "#3b82f6"
+        }
+      },
+      "red": {
+        "500": {
+          "value": "#ef4444"
+        }
+      },
+      "bg": {
+        "canvas": {
+          "value": "#ffffff",
+          "dark": "#09090b"
+        }
+      },
+      "_private": {
+        "secret": {
+          "value": "#000000"
+        }
+      }
+    },
+    "spacing": {
+      "1": {
+        "value": "0.25rem"
+      },
+      "2": {
+        "value": "0.5rem"
+      },
+      "4": {
+        "value": "1rem"
+      }
+    },
+    "radii": {
+      "sm": {
+        "value": "2px"
+      },
+      "md": {
+        "value": "4px"
+      }
+    }
+  },
+  "fonts": {
+    "sans": {
+      "family": "Inter, sans-serif",
+      "weights": {
+        "normal": "400",
+        "bold": "700"
+      }
+    }
+  },
+  "breakpoints": {
+    "sm": "640px",
+    "md": {
+      "value": "768px"
+    },
+    "lg": "1024px"
+  },
+  "conditions": {
+    "_hover": "&:hover",
+    "_dark": "[data-theme=dark] &",
+    "_light": "[data-theme=light] &",
+    "_focus": "&:focus"
+  },
+  "globalCss": [
+    {
+      "source": "src/theme/global.ts",
+      "rules": {
+        ":root": {
+          "--brand-color": "#3b82f6"
+        },
+        "body": {
+          "margin": 0,
+          "fontFamily": "sans"
+        },
+        ".container": {
+          "container": true
+        },
+        ".responsive-box": {
+          "padding": [
+            "1",
+            null,
+            "4"
+          ]
+        },
+        "a": {
+          "_hover": {
+            "color": "blue.500"
+          }
+        },
+        "button": {
+          "&:focus": {
+            "outline": "2px solid"
+          }
+        }
+      }
+    }
+  ],
+  "keyframes": {
+    "spin": {
+      "from": {
+        "transform": "rotate(0deg)"
+      },
+      "to": {
+        "transform": "rotate(360deg)"
+      }
+    }
+  },
+  "recipes": {
+    "button": {
+      "className": "button",
+      "base": {
+        "display": "inline-flex",
+        "alignItems": "center"
+      },
+      "variants": {
+        "variant": {
+          "solid": {
+            "backgroundColor": "blue.500"
+          },
+          "outline": {
+            "borderWidth": "1px"
+          }
+        },
+        "disabled": {
+          "true": {
+            "opacity": "0.5"
+          },
+          "false": {
+            "opacity": "1"
+          }
+        }
+      },
+      "defaultVariants": {
+        "variant": "solid",
+        "disabled": "false"
+      },
+      "compoundVariants": [
+        {
+          "variant": "solid",
+          "disabled": "true",
+          "css": {
+            "cursor": "not-allowed"
+          }
+        }
+      ]
+    }
+  },
+  "staticCss": {
+    "color": [
+      "*"
+    ],
+    "backgroundColor": [
+      "*"
+    ],
+    "borderColor": [
+      "*"
+    ],
+    "padding": [
+      "*"
+    ],
+    "margin": [
+      "*"
+    ],
+    "gap": [
+      "*"
+    ],
+    "width": [
+      "*"
+    ],
+    "height": [
+      "*"
+    ],
+    "size": [
+      "*"
+    ],
+    "borderRadius": [
+      "*"
+    ]
+  },
+  "provenance": [
+    {
+      "source": "src/tokens/colors.ts",
+      "kind": "tokens",
+      "keys": [
+        "colors.blue.500",
+        "colors.red.500",
+        "colors.bg.canvas"
+      ]
+    },
+    {
+      "source": "src/tokens/spacing.ts",
+      "kind": "tokens",
+      "keys": [
+        "spacing.1",
+        "spacing.2",
+        "spacing.4"
+      ]
+    },
+    {
+      "source": "src/theme/fonts.ts",
+      "kind": "fonts",
+      "keys": [
+        "sans"
+      ]
+    },
+    {
+      "source": "src/theme/keyframes.ts",
+      "kind": "keyframes",
+      "keys": [
+        "spin"
+      ]
+    },
+    {
+      "source": "src/theme/global.ts",
+      "kind": "globalCss"
+    },
+    {
+      "source": "src/recipes/button.ts",
+      "kind": "recipes",
+      "keys": [
+        "button"
+      ]
+    }
+  ]
+}

@@ -14,8 +14,8 @@ const spec: AtomicCaseSpec = {
       true
     )
     const sheet = result.stylesheet
-    const base = sheet.indexOf('.c_red')
-    const hover = sheet.indexOf('.hover\\:c_blue')
+    const base = sheet.indexOf('.order-02__c_red')
+    const hover = sheet.indexOf('.order-02__hover\\:c_blue')
     const at = sheet.indexOf('@container (min-width: 640px)')
     expect(base).toBeGreaterThan(-1)
     expect(hover).toBeGreaterThan(-1)

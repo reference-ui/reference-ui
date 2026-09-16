@@ -1,11 +1,13 @@
 //! Breakpoint scale for one design-system utterance.
 //! Names drive responsive array slots (`mt={['1r', '2r']}` → `base`, then `sm`).
 //! Optional pixel widths are what `r/` looks up for `@container (min-width: Npx)`.
-//! `standard()` is the host/Panda scale the lib fixture overlays (sm 640 … 2xl 1536).
-//! Lib authors no breakpoints. Default is empty.
+//! `standard()` is the host scale the reference profile provides (sm 640 … 2xl 1536).
+//! Profile canonical breakpoints merge with authored overrides deterministically.
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+
+use crate::spec::SpecBreakpointWidth;
 
 const STANDARD_WIDTHS: &[(&str, &str)] = &[
     ("sm", "640"),
@@ -26,9 +28,41 @@ pub struct BreakpointScale {
 }
 
 impl BreakpointScale {
-    /// Host / Panda default the lib fixture overlays: `base` plus sm/md/lg/xl/2xl.
+    /// Host default the reference profile provides: `base` plus sm/md/lg/xl/2xl.
     pub fn standard() -> Self {
         from_width_pairs(STANDARD_WIDTHS)
+    }
+
+    /// Combine profile canonical breakpoints (sm..2xl) with authored overrides.
+    /// Authored entries override standard widths deterministically, and new
+    /// authored breakpoint names are appended in their declaration order.
+    pub fn from_profile_and_authored(
+        authored: Option<IndexMap<String, SpecBreakpointWidth>>,
+    ) -> Self {
+        let mut names = vec![
+            "sm".to_string(),
+            "md".to_string(),
+            "lg".to_string(),
+            "xl".to_string(),
+            "2xl".to_string(),
+        ];
+        let mut widths = IndexMap::new();
+        for (name, px) in STANDARD_WIDTHS {
+            widths.insert((*name).to_string(), (*px).to_string());
+        }
+        if let Some(authored_map) = authored {
+            for (name, width) in authored_map {
+                let px = width.into_px();
+                if !names.contains(&name) {
+                    names.push(name.clone());
+                }
+                widths.insert(name, px);
+            }
+        }
+        Self {
+            names: with_leading_base(names),
+            widths,
+        }
     }
 
     /// Construct a scale from an ordered sequence of breakpoint names.
@@ -121,6 +155,21 @@ mod tests {
         assert_eq!(scale.breakpoint_for_index(5), Some("2xl"));
         assert_eq!(scale.width_px("sm"), Some("640"));
         assert_eq!(scale.width_px("md"), Some("768"));
+    }
+
+    #[test]
+    fn profile_and_authored_preserves_order_and_overrides() {
+        let mut authored = IndexMap::new();
+        authored.insert("md".to_string(), SpecBreakpointWidth::Bare("800px".to_string()));
+        authored.insert("tablet".to_string(), SpecBreakpointWidth::Bare("700px".to_string()));
+        let scale = BreakpointScale::from_profile_and_authored(Some(authored));
+        assert_eq!(scale.breakpoint_for_index(0), Some("base"));
+        assert_eq!(scale.breakpoint_for_index(1), Some("sm"));
+        assert_eq!(scale.breakpoint_for_index(2), Some("md"));
+        assert_eq!(scale.width_px("md"), Some("800"));
+        assert_eq!(scale.width_px("sm"), Some("640"));
+        assert_eq!(scale.breakpoint_for_index(6), Some("tablet"));
+        assert_eq!(scale.width_px("tablet"), Some("700"));
     }
 
     #[test]

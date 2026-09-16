@@ -1,4 +1,4 @@
 {
-  "_dark:bg:gray.900": "dark:bg_gray.900",
-  "_light:color:gray.950": "light:c_gray.950"
+  "_dark:bg:gray.900": "@reference-ui/lib__dark:bg_gray.900",
+  "_light:color:gray.950": "@reference-ui/lib__light:c_gray.950"
 }

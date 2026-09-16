@@ -1,0 +1,11 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal identifier 'prop' encountered for prop 'borderRadius'",
+    "file": "input/src/App.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Unknown property in staticCss: \"unknownProp\""
+  }
+]

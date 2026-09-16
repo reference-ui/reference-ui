@@ -1,13 +1,13 @@
 {
-  "& > *:p:1r": "[&_>_*]:p_1r",
-  "content:\"$\"": "content_\"$\"",
-  "content:\"*\"": "content_\"*\"",
-  "content:\";\"": "content_\";\"",
-  "content:\"<\"": "content_\"<\"",
-  "content:\"?\"": "content_\"?\"",
-  "content:\"\\\\\"": "content_\"\\\\\"",
-  "content:\"^\"": "content_\"^\"",
-  "content:\"`\"": "content_\"`\"",
-  "content:\"|\"": "content_\"|\"",
-  "content:\"é\"": "content_\"é\""
+  "& > *:p:1r": "escape-allowlist__[&_>_*]:p_1r",
+  "content:\"$\"": "escape-allowlist__content_\"$\"",
+  "content:\"*\"": "escape-allowlist__content_\"*\"",
+  "content:\";\"": "escape-allowlist__content_\";\"",
+  "content:\"<\"": "escape-allowlist__content_\"<\"",
+  "content:\"?\"": "escape-allowlist__content_\"?\"",
+  "content:\"\\\\\"": "escape-allowlist__content_\"\\\\\"",
+  "content:\"^\"": "escape-allowlist__content_\"^\"",
+  "content:\"`\"": "escape-allowlist__content_\"`\"",
+  "content:\"|\"": "escape-allowlist__content_\"|\"",
+  "content:\"é\"": "escape-allowlist__content_\"é\""
 }
