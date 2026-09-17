@@ -8,5 +8,13 @@
     "url": "https://github.com/reference-ui/reference-ui",
     "directory": "packages/reference-neo"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/node": "^25.1.0",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.63.0",
+    "pngjs": "^7.0.0",
+    "typescript": "~7.0.2"
+  }
 }

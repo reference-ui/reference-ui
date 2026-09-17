@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NEO-PLAY-A-01</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: #e8e8e8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        font-family: system-ui, sans-serif;
+      }
+      #dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: crimson;
+      }
+      #chip {
+        width: 48px;
+        height: 24px;
+        background: teal;
+      }
+      .loser { color: blue; }
+      #winner { color: green; }
+    </style>
+  </head>
+  <body>
+    <div id="dot" role="img" aria-label="crimson dot"></div>
+    <div id="chip" role="img" aria-label="teal chip"></div>
+    <p id="winner" class="loser">specificity duel</p>
+  </body>
+</html>
