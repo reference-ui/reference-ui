@@ -1,0 +1,12 @@
+{
+  "name": "@reference-ui/neo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Successor host for Reference UI. TypeScript above the cut. Not a fork of core.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reference-ui/reference-ui",
+    "directory": "packages/reference-neo"
+  },
+  "type": "module"
+}
