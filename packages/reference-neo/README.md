@@ -73,29 +73,37 @@ a compile that is now a function call, it does not come across.
 This is the work. Lib has `pnpm agentct`: one warm Vite, colocated unit,
 Playwright CT, human-gated snapshots, one package, no Dagger. Rs has
 `pnpm agentrs`: stations, committed goldens, standing gauges, quality
-gates that fail the file. Neo needs the same grain for the host.
+gates that fail the file. Neo takes the lib shape, not the rs shape:
+cases and snapshots, executed in a real browser. No goldens, no
+`--update-goldens`.
 
 `pnpm agentneo`. Darwin QoS like the others. A CPU-gate class that can sit
 next to `ct` / `rs` / `pw` without colliding. No matrix slots.
 
 ### What a test is
 
-Two layers, in this order:
+A case: a leaf folder under `tests/cases/` with a `case.json` id, a
+`README.md` description, a small world source tree, and Playwright specs
+asserting an outcome against that world — the CSS is valid, it wins in
+the cascade, theme and variants paint. Static checks plus computed-style
+assertions plus settled snapshots where rendering matters.
 
-1. **Stations.** Input is a tiny authoring tree (fragments + a few TSX
-   files). Output is the spec, the sheet, the class map, the generated
-   package surface. Committed goldens. Opt-in `--update-goldens`. Standing
-   gauges on every station: spec schema, six-layer preamble, no ghost
-   classes, publish is atomic. This is the rs-shaped loop. It should be
-   seconds. This is where agents live.
-2. **Playwright, later, local, warm.** One React. One bundler, whichever is
-   fastest to boot — Vite, because lib already proved that shape. Did the
-   class actually win in the cascade. Did `data-theme` paint. Did a recipe
-   variant apply. Not webpack5. Not React 17. Those are matrix problems
-   for the day Neo is the installed core.
+The CLI is the distillation layer agents call:
 
-Unit tests sit next to the code they cover. Stations are not matrix
-packages. They do not install from Verdaccio.
+```text
+pnpm agentneo list              # id, name, folder, README line
+pnpm agentneo search <query>    # over id, name, README
+pnpm agentneo run [case-id]     # serve the world, run headless, print artifacts
+pnpm agentneo q [paths...]      # structural quality gate (it fails)
+```
+
+One React (19). One fast bundler path. Headless by default, artifacts
+under the workspace, snapshots human-gated exactly like `agentct`.
+Not webpack5. Not React 17. Those are matrix problems for the day Neo
+is the installed core.
+
+Unit tests sit next to the code they cover in `src/`. Cases are not
+matrix packages. They do not install from Verdaccio.
 
 ### What we refuse at v0
 
@@ -141,9 +149,24 @@ Open on purpose:
 
 ## First move
 
-Harness CLI that can run a station and fail. One station: a `tokens()`
-file in, a spec out, schema asserted. No Playwright yet. No packager.
-No `ref` binary. Quality check on whatever we write.
+Controls, then host. The quality gate (`agentneo q`: Neo's own Biome
+config, measured thresholds as errors, the suppression ban, `any`
+banned) plus the harness skeleton (`list` / `search` / `run`) plus one
+committed smoke case (`NEO-SMOKE-01`: grey page, crimson dot,
+computed-style assertions). No fragments yet. No packager. No `ref`
+binary. The gate runs on everything we write from here on.
 
 The map is the architecture. This file is the stance. The harness is the
 product until the host has somewhere to live.
+
+## Working docs
+
+- [`docs/PLAN.md`](docs/PLAN.md) — the voyage index. Part One is
+  the harness.
+- [`docs/PLAN-harness.md`](docs/PLAN-harness.md) — Part One in full:
+  coordinates, order of work, gate thresholds, harness contracts,
+  agentic workflow, playtesting.
+- [`docs/TESTING.md`](docs/TESTING.md) — how testing works: commands,
+  case anatomy, artifacts, snapshots, quality gate.
+- [`docs/DOMAIN.md`](docs/DOMAIN.md) — the living domain language:
+  the names that build the runtime, plus retired ones to never revive.

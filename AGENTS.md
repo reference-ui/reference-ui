@@ -15,6 +15,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `@reference-ui/lib` look/feel | `tweak-component` skill |
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
+| packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
@@ -184,4 +185,21 @@ pnpm agentrs                                                 # bare command runs
 > 8. **Inline comments stay terse**: Explain *why*, not *what*. The file header is the paragraph; function bodies are not.
 > 9. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
 > 10. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
+
+---
+
+## 5. Neo Runtime Workflow (agent-neo, pnpm agentneo)
+
+Follow `.agents/skills/agent-neo/SKILL.md` whenever you work in `packages/reference-neo`.
+
+Neo is the code word for the runtime portion of reference-rs — TypeScript above the cut (fragments, publish, runtime), Rust below. Neo is not a fork of core and never touches lib; its loop is cases plus Playwright in `packages/reference-neo/tests`, with no matrix and no Dagger in the inner loop.
+
+```bash
+pnpm agentneo list            # all cases: id, name, folder, README first line
+pnpm agentneo search <query>  # find cases by id, name, or README text
+pnpm agentneo run [case-id]   # run one case, or all cases when omitted
+pnpm agentneo q [paths]       # Biome quality gate (section 6 of the skill)
+```
+
+See the skill for Playwright policy, scope discipline, gate limits, and the retirement clause.
 

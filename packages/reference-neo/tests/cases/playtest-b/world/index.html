@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NEO-PLAY-B-01</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        background: #f0f0f0;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+      }
+      div { color: rgb(255, 0, 0); }
+      .mid { color: rgb(0, 0, 255); }
+      #target { color: rgb(0, 128, 0); font-size: 20px; }
+      #swatch {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: rgb(128, 128, 128);
+      }
+      body.fancy #swatch { background: rgb(128, 0, 128); }
+    </style>
+  </head>
+  <body class="plain">
+    <div id="target" class="mid">specificity wins</div>
+    <div id="swatch" role="img" aria-label="theme swatch"></div>
+  </body>
+</html>
