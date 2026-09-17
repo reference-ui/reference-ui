@@ -48,7 +48,7 @@ export const ok: SystemStyleObject = {
       `import type { SystemStyleObject } from './styles'
 
 export const bad: SystemStyleObject = { color: '#123456' }
-`,
+`
     )
   })
 
@@ -58,7 +58,7 @@ export const bad: SystemStyleObject = { color: '#123456' }
       `import type { SystemStyleObject } from './styles'
 
 export const bad: SystemStyleObject = { color: 'red' }
-`,
+`
     )
   })
 
@@ -79,7 +79,7 @@ export const ok: SystemStyleObject = { borderRadius: 'md' }
       `import type { SystemStyleObject } from './styles'
 
 export const bad: SystemStyleObject = { borderRadius: '16px' }
-`,
+`
     )
   })
 
@@ -100,7 +100,7 @@ export const ok: SystemStyleObject = { p: '1r', mt: '4' }
       `import type { SystemStyleObject } from './styles'
 
 export const bad: SystemStyleObject = { p: '13px' }
-`,
+`
     )
   })
 
@@ -121,14 +121,14 @@ export const both: SystemStyleObject = {
       `import type { SystemStyleObject } from './styles'
 
 export const badColor: SystemStyleObject = { color: '#123456', borderRadius: 'md' }
-`,
+`
     )
     expectAssignFail(
       strictDts,
       `import type { SystemStyleObject } from './styles'
 
 export const badRadius: SystemStyleObject = { color: 'n100', borderRadius: '16px' }
-`,
+`
     )
   })
 })

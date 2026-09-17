@@ -1,0 +1,10 @@
+{
+  "bg:amber": "plan-parity__bg_amber",
+  "bg:lime": "plan-parity__bg_lime",
+  "bg:sky": "plan-parity__bg_sky",
+  "color:cherry": "plan-parity__c_cherry",
+  "color:ocean": "plan-parity__c_ocean",
+  "color:teal": "plan-parity__c_teal",
+  "mt:2r": "plan-parity__mt_2r",
+  "p:1r": "plan-parity__p_1r"
+}

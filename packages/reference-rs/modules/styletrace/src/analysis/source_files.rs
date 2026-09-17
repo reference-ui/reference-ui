@@ -82,4 +82,3 @@ pub(super) fn format_relative_module(module_path: &Path, source_root: &Path) -> 
         .trim_start_matches('/')
         .to_string()
 }
-

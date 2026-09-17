@@ -6,8 +6,8 @@
 use base_system::{BaseSystem, GlobalDeclarationValue};
 
 use crate::atom::AtomValue;
-use crate::diagnostics::Diagnostic;
-use crate::resolve::{font, rhythm, tokens};
+use crate::diagnostics::{Diagnostic, DiagnosticLocation};
+use crate::resolve::{font, rhythm, tokens, ResolveSession};
 
 /// Lowering session holding design system references and diagnostic accumulators.
 pub struct ValueSession<'a> {
@@ -115,7 +115,9 @@ fn lower_standard_property(
     let css_prop = to_css_property(prop);
     match val {
         GlobalDeclarationValue::String(s) => {
-            let final_val = resolve_string_val(prop, &css_prop, s, session);
+            let Some(final_val) = resolve_string_val(prop, &css_prop, s, session) else {
+                return Vec::new();
+            };
             vec![(css_prop, final_val)]
         }
         GlobalDeclarationValue::Number(n) => vec![(css_prop, n.to_string())],
@@ -134,13 +136,18 @@ fn resolve_string_val(
     css_prop: &str,
     s: &str,
     session: &mut ValueSession<'_>,
-) -> String {
+) -> Option<String> {
     if prop.starts_with("--") {
-        resolve_token_reference(s, session.system)
+        Some(resolve_token_reference(s, session.system))
     } else {
         let rhythm_val = rhythm::resolve_rhythm(s);
-        tokens::resolve_token_value(css_prop, &rhythm_val, session.system, session.diagnostics)
-            .into_owned()
+        let mut resolve_session = ResolveSession {
+            system: session.system,
+            diagnostics: &mut *session.diagnostics,
+            location: DiagnosticLocation::default(),
+        };
+        tokens::resolve_token_value(css_prop, &rhythm_val, &mut resolve_session)
+            .map(|resolved| resolved.into_owned())
     }
 }
 

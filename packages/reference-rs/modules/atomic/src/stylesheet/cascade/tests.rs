@@ -78,10 +78,7 @@ fn shared_at_rule_emits_one_wrapper() {
 
 #[test]
 fn padding_shorthand_precedes_padding_top() {
-    let css = sheet(&[
-        atom("paddingTop", "4r", &[]),
-        atom("padding", "2r", &[]),
-    ]);
+    let css = sheet(&[atom("paddingTop", "4r", &[]), atom("padding", "2r", &[])]);
     let sh = css.find("padding: 2r;").expect("shorthand");
     let lh = css.find("padding-top: 4r;").expect("longhand");
     assert!(sh < lh, "{css}");
@@ -129,10 +126,7 @@ fn dual_at_rules_nest_in_author_order() {
     let media_at = css.find(media).expect("media");
     let container_at = css.find(container).expect("container");
     let class_at = css.find("osDark").expect("class");
-    assert!(
-        media_at < container_at && container_at < class_at,
-        "{css}"
-    );
+    assert!(media_at < container_at && container_at < class_at, "{css}");
     let between = &css[media_at..class_at];
     assert!(between.contains(container), "{css}");
     assert!(

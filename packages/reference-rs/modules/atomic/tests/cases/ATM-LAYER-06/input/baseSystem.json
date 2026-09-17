@@ -9,14 +9,17 @@
       "fontFace": {
         "src": "url(/fonts/inter.woff2)",
         "fontDisplay": "swap",
-        "fontWeight": "400 700"
+        "fontWeight": "400 700",
+        "sizeAdjust": "104%",
+        "descentOverride": "47%"
       }
     },
     "mono": {
       "value": "\"Fira Code\", monospace",
       "fontFace": {
         "src": "url(/fonts/fira-code.woff2)",
-        "fontDisplay": "fallback"
+        "fontDisplay": "fallback",
+        "sizeAdjust": "101%"
       }
     }
   },

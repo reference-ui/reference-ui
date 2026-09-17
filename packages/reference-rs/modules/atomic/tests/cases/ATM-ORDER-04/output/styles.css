@@ -1,19 +1,28 @@
 @layer order-04 {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-gray-800: #27272a;
-    --colors-red-500: #ef4444;
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-gray-800: #27272a;
+      --colors-red-500: #ef4444;
+    }
+    [data-color-mode='dark'] {
+      --colors-gray-800: #e4e4e7;
+      --colors-red-500: #f87171;
+    }
   }
-  [data-theme=dark] {
-    --colors-gray-800: #e4e4e7;
-    --colors-red-500: #f87171;
+  @layer utilities {
+    .order-04__bd-c_gray\.800 {
+      border-color: var(--colors-gray-800);
+    }
+    .order-04__p_1r {
+      padding: var(--spacing-root);
+    }
+    .order-04__bd-b-c_red\.500 {
+      border-bottom-color: var(--colors-red-500);
+    }
+    .order-04__pt_2r {
+      padding-top: calc(2 * var(--spacing-root));
+    }
   }
-}
-@layer utilities {
-  .order-04__bd-c_gray\.800 { border-color: var(--colors-gray-800); }
-  .order-04__p_1r { padding: var(--spacing-root); }
-  .order-04__bd-b-c_red\.500 { border-bottom-color: var(--colors-red-500); }
-  .order-04__pt_2r { padding-top: calc(2 * var(--spacing-root)); }
-}
 }

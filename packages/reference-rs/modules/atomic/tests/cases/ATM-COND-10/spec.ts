@@ -11,8 +11,12 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain(':is(:active, [data-active])')
     expect(sheet).toContain(':is(:focus, [data-focus])')
     expect(sheet).toContain(':is(:focus-visible, [data-focus-visible])')
-    expect(sheet).toContain(':is(:disabled, [disabled], [data-disabled], [aria-disabled=true])')
-    expect(sheet).toContain(':is(:checked, [data-checked], [aria-checked=true], [data-state="checked"])')
+    expect(sheet).toContain(
+      ':is(:disabled, [disabled], [data-disabled], [aria-disabled=true])'
+    )
+    expect(sheet).toContain(
+      ':is(:checked, [data-checked], [aria-checked=true], [data-state="checked"])'
+    )
   },
 }
 

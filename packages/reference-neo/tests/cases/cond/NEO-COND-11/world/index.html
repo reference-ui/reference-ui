@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="group" id="group"><p id="groupTarget">cond group child</p></div>
+    <div>
+      <button class="peer" id="peer" type="button">cond peer</button>
+      <p id="peerTarget">cond peer sibling</p>
+    </div>
+    <p id="plain">cond group plain</p>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

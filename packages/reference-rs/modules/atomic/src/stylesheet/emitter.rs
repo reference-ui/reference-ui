@@ -4,7 +4,7 @@
 //! and closed recipe classes. Recipe at-rules nest the same wrap sequence as utilities.
 
 use super::cascade::{at_rule_wraps, close_wraps, format_declaration, open_wraps, write_utilities};
-use super::layers::{LAYER_PREAMBLE, wrap_package_layer};
+use super::layers::{wrap_package_layer, LAYER_PREAMBLE};
 use super::name;
 use super::system_layers::{append_portable_system_layers, append_system_layers};
 use crate::atom::{Atom, AtomSet, WhenKind};
@@ -74,8 +74,15 @@ fn append_recipes_layer(out: &mut String, recipes: &[CompiledRecipe]) {
 }
 
 fn emit_recipe_rule(out: &mut String, rule: &crate::recipes::RecipeRule) {
-    for group in group_recipe_atoms(rule) {
-        write_recipe_group(out, &group);
+    let groups = group_recipe_atoms(rule);
+    let mut start = 0;
+    while start < groups.len() {
+        let mut end = start + 1;
+        while end < groups.len() && groups[end].at_rules == groups[start].at_rules {
+            end += 1;
+        }
+        write_recipe_block(out, &groups[start..end]);
+        start = end;
     }
 }
 
@@ -95,10 +102,7 @@ fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
             .or_default()
             .push(format_declaration(atom));
     }
-    let base_selector = format!(
-        ".{}",
-        name::escape::escape_css_selector(&rule.class_name)
-    );
+    let base_selector = format!(".{}", name::escape::escape_css_selector(&rule.class_name));
     let mut ordered: Vec<RecipeGroup> = groups
         .into_iter()
         .map(|((at_rules, selector), declarations)| RecipeGroup {
@@ -111,9 +115,7 @@ fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
         group_bucket(a, &base_selector)
             .cmp(&group_bucket(b, &base_selector))
             .then_with(|| first_wrap_kind(&a.at_rules).cmp(&first_wrap_kind(&b.at_rules)))
-            .then_with(|| {
-                first_wrap_width(&a.at_rules).cmp(&first_wrap_width(&b.at_rules))
-            })
+            .then_with(|| first_wrap_width(&a.at_rules).cmp(&first_wrap_width(&b.at_rules)))
             .then_with(|| a.at_rules.cmp(&b.at_rules))
             .then_with(|| a.selector.cmp(&b.selector))
     });
@@ -196,12 +198,22 @@ fn recipe_selector(class_name: &str, atom: &Atom) -> String {
     current
 }
 
-fn write_recipe_group(out: &mut String, group: &RecipeGroup) {
-    let decls = group.declarations.join(" ");
-    let wraps: Vec<&str> = group.at_rules.iter().map(String::as_str).collect();
+/// Print consecutive same-wrap groups inside one at-rule block.
+///
+/// Groups arrive sorted so equal wraps are adjacent; merging keeps one
+/// rule's base selector and its condition descendants in a single block,
+/// mirroring the utility writer. Unwrapped groups print unchanged.
+fn write_recipe_block(out: &mut String, groups: &[RecipeGroup]) {
+    let Some(first) = groups.first() else {
+        return;
+    };
+    let wraps: Vec<&str> = first.at_rules.iter().map(String::as_str).collect();
     open_wraps(out, &wraps);
     let indent = "  ".repeat(wraps.len() + 1);
-    out.push_str(&format!("{indent}{} {{ {decls} }}\n", group.selector));
+    for group in groups {
+        let decls = group.declarations.join(" ");
+        out.push_str(&format!("{indent}{} {{ {decls} }}\n", group.selector));
+    }
     close_wraps(out, wraps.len());
 }
 
@@ -256,7 +268,9 @@ mod tests {
             false,
         ));
         let css = build_stylesheet(&set, BaseSystem::lib_fixture());
-        let package = css.find("@layer \\@reference-ui\\/lib {").expect("package open");
+        let package = css
+            .find("@layer \\@reference-ui\\/lib {")
+            .expect("package open");
         let global = css.find("@layer global {").expect("global block");
         let utilities = css.find("@layer utilities {").expect("utilities block");
         assert!(package < global && global < utilities);

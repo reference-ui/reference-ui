@@ -1,79 +1,65 @@
 export const manifest = {
-  "version": "2",
-  "warnings": [],
-  "symbolsByName": {
-    "BaseStyleObject": [
-      "_db13e47476ec0e83"
-    ],
-    "FilteredConditionKey": [
-      "_533b61a471a53775"
-    ],
-    "NarrowedStyleObject": [
-      "_3ace24efa566449c"
-    ],
-    "PublicStyleProps": [
-      "_176b662c64a43554"
-    ],
-    "ReferenceProps": [
-      "_110a37bfbe2d7887"
-    ],
-    "SelectorKey": [
-      "_17fe8cc9c6681d48"
-    ],
-    "ViewportConditionKey": [
-      "_6ac058e442e4e186"
-    ]
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    BaseStyleObject: ['_db13e47476ec0e83'],
+    FilteredConditionKey: ['_533b61a471a53775'],
+    NarrowedStyleObject: ['_3ace24efa566449c'],
+    PublicStyleProps: ['_176b662c64a43554'],
+    ReferenceProps: ['_110a37bfbe2d7887'],
+    SelectorKey: ['_17fe8cc9c6681d48'],
+    ViewportConditionKey: ['_6ac058e442e4e186'],
   },
-  "symbolsById": {
-    "_110a37bfbe2d7887": {
-      "id": "_110a37bfbe2d7887",
-      "name": "ReferenceProps",
-      "kind": "interface",
-      "chunk": "./chunks/_110a37bfbe2d7887.js",
-      "library": "user"
+  symbolsById: {
+    _110a37bfbe2d7887: {
+      id: '_110a37bfbe2d7887',
+      name: 'ReferenceProps',
+      kind: 'interface',
+      chunk: './chunks/_110a37bfbe2d7887.js',
+      library: 'user',
     },
-    "_176b662c64a43554": {
-      "id": "_176b662c64a43554",
-      "name": "PublicStyleProps",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_176b662c64a43554.js",
-      "library": "user"
+    _176b662c64a43554: {
+      id: '_176b662c64a43554',
+      name: 'PublicStyleProps',
+      kind: 'typeAlias',
+      chunk: './chunks/_176b662c64a43554.js',
+      library: 'user',
     },
-    "_17fe8cc9c6681d48": {
-      "id": "_17fe8cc9c6681d48",
-      "name": "SelectorKey",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_17fe8cc9c6681d48.js",
-      "library": "user"
+    _17fe8cc9c6681d48: {
+      id: '_17fe8cc9c6681d48',
+      name: 'SelectorKey',
+      kind: 'typeAlias',
+      chunk: './chunks/_17fe8cc9c6681d48.js',
+      library: 'user',
     },
-    "_3ace24efa566449c": {
-      "id": "_3ace24efa566449c",
-      "name": "NarrowedStyleObject",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_3ace24efa566449c.js",
-      "library": "user"
+    _3ace24efa566449c: {
+      id: '_3ace24efa566449c',
+      name: 'NarrowedStyleObject',
+      kind: 'typeAlias',
+      chunk: './chunks/_3ace24efa566449c.js',
+      library: 'user',
     },
-    "_533b61a471a53775": {
-      "id": "_533b61a471a53775",
-      "name": "FilteredConditionKey",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_533b61a471a53775.js",
-      "library": "user"
+    _533b61a471a53775: {
+      id: '_533b61a471a53775',
+      name: 'FilteredConditionKey',
+      kind: 'typeAlias',
+      chunk: './chunks/_533b61a471a53775.js',
+      library: 'user',
     },
-    "_6ac058e442e4e186": {
-      "id": "_6ac058e442e4e186",
-      "name": "ViewportConditionKey",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_6ac058e442e4e186.js",
-      "library": "user"
+    _6ac058e442e4e186: {
+      id: '_6ac058e442e4e186',
+      name: 'ViewportConditionKey',
+      kind: 'typeAlias',
+      chunk: './chunks/_6ac058e442e4e186.js',
+      library: 'user',
     },
-    "_db13e47476ec0e83": {
-      "id": "_db13e47476ec0e83",
-      "name": "BaseStyleObject",
-      "kind": "interface",
-      "chunk": "./chunks/_db13e47476ec0e83.js",
-      "library": "user"
-    }
-  }
-};
-export default manifest;
+    _db13e47476ec0e83: {
+      id: '_db13e47476ec0e83',
+      name: 'BaseStyleObject',
+      kind: 'interface',
+      chunk: './chunks/_db13e47476ec0e83.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

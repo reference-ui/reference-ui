@@ -87,7 +87,12 @@ fn authored_bare_key_and_category_path_both_resolve() {
 
 #[test]
 fn bas_token_06_is_private_distinguishes_internal_tokens() {
-    let public_entry = TokenEntry::new("colors".into(), "--colors-brand".into(), "#111".into(), None);
+    let public_entry = TokenEntry::new(
+        "colors".into(),
+        "--colors-brand".into(),
+        "#111".into(),
+        None,
+    );
     let private_entry = TokenEntry::new(
         "colors".into(),
         "--colors-_private-secret".into(),

@@ -216,7 +216,8 @@ fn assert_matches_golden(name: &str, actual: &str) {
         )
     });
     assert_eq!(
-        actual, expected,
+        actual,
+        expected,
         "golden drift at {}; refresh with TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen",
         path.display()
     );

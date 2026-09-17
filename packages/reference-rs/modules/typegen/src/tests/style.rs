@@ -58,7 +58,14 @@ fn typ_style_02_narrows_style_props_with_aliases_and_tokens() {
 fn typ_style_03_filters_viewport_keys_from_style_condition_key() {
     let dts = style_dts();
     let lits = condition_lits(&dts);
-    for needle in ["'_hover'", "'_focusVisible'", "'_dark'", "'_light'", "'@sm'", "'@md'"] {
+    for needle in [
+        "'_hover'",
+        "'_focusVisible'",
+        "'_dark'",
+        "'_light'",
+        "'@sm'",
+        "'@md'",
+    ] {
         assert!(
             lits.contains(needle),
             "TYP-STYLE-03: StyleConditionKey missing {needle} in {lits:?}"
@@ -82,10 +89,7 @@ fn typ_style_03_filters_viewport_keys_from_style_condition_key() {
 
 fn assert_prop(dts: &str, name: &str, value: &str) {
     let line = format!("  {name}?: {value};");
-    assert!(
-        dts.contains(&line),
-        "missing `{line}` in:\n{dts}"
-    );
+    assert!(dts.contains(&line), "missing `{line}` in:\n{dts}");
 }
 
 fn condition_lits(dts: &str) -> BTreeSet<&str> {
@@ -136,9 +140,9 @@ fn typ_style_04_layers_dialect_props_and_omits_conflicting_css() {
 }
 
 fn style_props_fields(dts: &str) -> &str {
-    let start = dts.find(STYLE_PROPS_HEAD).unwrap_or_else(|| {
-        panic!("TYP-STYLE-04: missing StyleProps in:\n{dts}")
-    });
+    let start = dts
+        .find(STYLE_PROPS_HEAD)
+        .unwrap_or_else(|| panic!("TYP-STYLE-04: missing StyleProps in:\n{dts}"));
     let rest = &dts[start + STYLE_PROPS_HEAD.len()..];
     let end = rest
         .find("\n};")

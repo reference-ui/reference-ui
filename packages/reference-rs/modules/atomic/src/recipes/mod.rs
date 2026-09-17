@@ -14,8 +14,8 @@ use crate::atom::{Atom, Want, When, WhenKind};
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::runtime::RecipeRuntimeTable;
 
-pub use crate::runtime::{RecipeCompoundRecord, RecipeCompoundRecord as RecipeMatch};
 pub use crate::runtime::RecipeRuntimeTable as RecipeTable;
+pub use crate::runtime::{RecipeCompoundRecord, RecipeCompoundRecord as RecipeMatch};
 pub use spec::from_spec;
 
 /// Extracted recipe definition. Style wants stay here, never entering utility AtomSet.
@@ -80,6 +80,7 @@ fn compile_one(
     push_rule(&mut rules, &base_class, &recipe.base, session);
     let variant_map = compile_variants(&mut rules, &qualified_name, &recipe.variants, session);
     let compounds = compile_compounds(&mut rules, &qualified_name, &recipe.compounds, session);
+    compile_responsive_variants(&mut rules, &qualified_name, &recipe.variants, session);
 
     let input = table::RecipeTableInput {
         qualified_name: &qualified_name,
@@ -87,6 +88,7 @@ fn compile_one(
         variant_map: &variant_map,
         default_variants: &recipe.default_variants,
         compounds: &compounds,
+        breakpoints: session.system.breakpoints(),
     };
 
     CompiledRecipe {
@@ -112,6 +114,42 @@ fn compile_variants(
         variant_map.insert(key.clone(), group_map);
     }
     variant_map
+}
+
+/// Emit one `{breakpoint}:{variant_class}` rule per width breakpoint.
+///
+/// Rules print after every plain variant and compound rule so a runtime
+/// `{ base, md }` selection wins at width by source order. Each rule resolves
+/// the same wants with the breakpoint prepended, so selector leaves (`_hover`,
+/// `_disabled`) keep their descendants inside the `@container` block.
+fn compile_responsive_variants(
+    rules: &mut Vec<RecipeRule>,
+    stem: &str,
+    variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
+    session: &mut ResolveSession<'_>,
+) {
+    let breakpoints = table::container_breakpoints(session.system.breakpoints());
+    for (key, items) in variants {
+        for (value, wants) in items {
+            for breakpoint in &breakpoints {
+                let class_name = name::responsive_variant_class(breakpoint, stem, key, value);
+                let scoped = scope_wants_to_breakpoint(wants, breakpoint);
+                push_rule(rules, &class_name, &scoped, session);
+            }
+        }
+    }
+}
+
+/// Clone wants with a breakpoint condition prepended to each `when` chain.
+fn scope_wants_to_breakpoint(wants: &[Want], breakpoint: &str) -> Vec<Want> {
+    wants
+        .iter()
+        .map(|want| {
+            let mut scoped = want.clone();
+            scoped.when.insert(0, breakpoint.into());
+            scoped
+        })
+        .collect()
 }
 
 fn compile_compounds(
@@ -196,6 +234,7 @@ fn cmp_authored(a: &[When], b: &[When]) -> Ordering {
 mod tests {
     use super::*;
     use crate::atom::AtomValue;
+    use crate::diagnostics::DiagnosticLocation;
     use base_system::BaseSystem;
 
     fn want(prop: &str, value: &str, when: &[&str]) -> Want {
@@ -205,6 +244,9 @@ mod tests {
             when: when.iter().map(|key| (*key).into()).collect(),
             important: false,
             origin: None,
+            file: None,
+            line: None,
+            column: None,
         }
     }
 
@@ -215,6 +257,7 @@ mod tests {
         let mut session = ResolveSession {
             system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         let recipe = Recipe {
             class_name: "card".to_string(),
@@ -231,6 +274,70 @@ mod tests {
         let atoms = &compiled[0].rules[0].atoms;
         assert_eq!(atoms.len(), 2);
         assert!(atoms[0].conditions.is_empty(), "base first: {atoms:?}");
-        assert!(!atoms[1].conditions.is_empty(), "conditional last: {atoms:?}");
+        assert!(
+            !atoms[1].conditions.is_empty(),
+            "conditional last: {atoms:?}"
+        );
+    }
+
+    #[test]
+    fn responsive_variants_emit_container_rules_after_plain_ones() {
+        let system = BaseSystem::lib_fixture();
+        let mut diagnostics = Vec::new();
+        let mut session = ResolveSession {
+            system,
+            diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
+        };
+        let mut axis = IndexMap::new();
+        axis.insert(
+            "solid".to_string(),
+            vec![want("backgroundColor", "blue.600", &[])],
+        );
+        axis.insert(
+            "outline".to_string(),
+            vec![want("borderWidth", "1px", &["_hover"])],
+        );
+        let mut variants = IndexMap::new();
+        variants.insert("variant".to_string(), axis);
+        let recipe = Recipe {
+            class_name: "buttonStyle".to_string(),
+            base: vec![],
+            variants,
+            default_variants: IndexMap::new(),
+            compounds: vec![],
+        };
+        let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
+        assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");
+        let rules = &compiled[0].rules;
+        let plain = rules
+            .iter()
+            .position(|rule| rule.class_name == "test-system__buttonStyle_v_outline")
+            .expect("plain outline rule");
+        let md = rules
+            .iter()
+            .position(|rule| rule.class_name == "md:test-system__buttonStyle_v_outline")
+            .expect("md outline rule");
+        assert!(plain < md, "responsive rules print last: {rules:?}");
+        let atoms = &rules[md].atoms;
+        assert!(!atoms.is_empty());
+        for atom in atoms {
+            assert!(
+                atom.conditions
+                    .iter()
+                    .any(|cond| matches!(cond.wrap(), WhenKind::Container(_))),
+                "container wrap missing: {atom:?}"
+            );
+            assert!(
+                atom.conditions
+                    .iter()
+                    .any(|cond| matches!(cond.wrap(), WhenKind::Selector(_))),
+                "hover descendant missing: {atom:?}"
+            );
+        }
+        assert_eq!(
+            compiled[0].table.responsive_variant_map["variant"]["md"]["outline"],
+            "md:test-system__buttonStyle_v_outline"
+        );
     }
 }

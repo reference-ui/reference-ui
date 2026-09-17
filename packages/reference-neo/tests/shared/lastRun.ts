@@ -72,3 +72,31 @@ export function orderFailFirst<T extends { id: string }>(cases: T[], log: LastRu
   const rank = (c: T): number => (failed.has(c.id) ? 0 : 1);
   return [...cases].sort((a, b) => rank(a) - rank(b));
 }
+
+export interface GroupStatus {
+  group: string;
+  pass: number;
+  fail: number;
+  degraded: number;
+}
+
+// Per-group pass/fail/degraded counts over the log. folders maps case id to
+// its catalog folder (`css/NEO-CSS-01`); the group is the first segment, and
+// ids with no known folder land under `unknown`. Sorted by group.
+export function summarizeByGroup(log: LastRunLog, folders: Map<string, string>): GroupStatus[] {
+  const groups = new Map<string, GroupStatus>();
+  for (const row of log.cases) {
+    const folder = folders.get(row.id) ?? '';
+    const slash = folder.indexOf('/');
+    const group = slash > 0 ? folder.slice(0, slash) : 'unknown';
+    let status = groups.get(group);
+    if (!status) {
+      status = { group, pass: 0, fail: 0, degraded: 0 };
+      groups.set(group, status);
+    }
+    if (row.status === 'degraded') status.degraded += 1;
+    else if (row.ok) status.pass += 1;
+    else status.fail += 1;
+  }
+  return [...groups.values()].sort((a, b) => (a.group < b.group ? -1 : a.group > b.group ? 1 : 0));
+}

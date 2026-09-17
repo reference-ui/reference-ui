@@ -57,7 +57,7 @@ function tsconfigJson(): string {
       include: ['./**/*.ts'],
     },
     null,
-    2,
+    2
   )}\n`
 }
 
@@ -66,7 +66,7 @@ function invokeTsc(projectDir: string): TscResult {
     const output = execFileSync(
       'pnpm',
       ['exec', 'tsc', '--noEmit', '-p', join(projectDir, 'tsconfig.json')],
-      { cwd: rsRoot, encoding: 'utf8' },
+      { cwd: rsRoot, encoding: 'utf8' }
     )
     return { status: 0, output }
   } catch (error) {
@@ -85,7 +85,7 @@ function tscFailure(error: unknown): TscResult {
 }
 
 function isStatusError(
-  error: unknown,
+  error: unknown
 ): error is { status?: number | null; stdout?: string; stderr?: string } {
   return typeof error === 'object' && error !== null && 'status' in error
 }

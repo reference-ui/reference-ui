@@ -21,7 +21,6 @@ import {
 
 const TESTS_STYLETRACE_DIR = fileURLToPath(new URL('.', import.meta.url))
 
-
 describe('styletrace fixtures', () => {
   it('ignores node builtin helper imports while tracing local wrappers', async () => {
     const fixture = await createNodeBuiltinHelperFixture()
@@ -112,4 +111,3 @@ describe('styletrace fixtures', () => {
     ).rejects.toThrow()
   })
 })
-

@@ -92,12 +92,12 @@ impl<'a> GlobalWalker<'a> {
         at_rule: Option<&str>,
     ) {
         if cond == "_dark" {
-            let dark_sel = pseudoselectors::apply("[data-theme=dark] &", selector);
+            let dark_sel = pseudoselectors::apply("[data-color-mode=dark] &", selector);
             self.walk_node(&dark_sel, children, at_rule);
             return;
         }
         if cond == "_light" {
-            let light_sel = pseudoselectors::apply("[data-theme=light] &", selector);
+            let light_sel = pseudoselectors::apply("[data-color-mode=light] &", selector);
             self.walk_node(&light_sel, children, at_rule);
             return;
         }
@@ -137,7 +137,11 @@ impl<'a> GlobalWalker<'a> {
         items: &[GlobalDeclarationValue],
         at_rule: Option<&str>,
     ) {
-        let ctx = ListItemContext { selector, key, at_rule };
+        let ctx = ListItemContext {
+            selector,
+            key,
+            at_rule,
+        };
         for (idx, item) in items.iter().enumerate() {
             self.handle_list_item(&ctx, idx, item);
         }

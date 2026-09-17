@@ -46,8 +46,7 @@ fn style_map_to_wants(map: &StyleMap) -> Vec<Want> {
     map.iter()
         .map(|(prop, value)| {
             let (clean, important) = split_important_flag(value);
-            Want::new(prop.as_str(), AtomValue::String(clean.into()))
-                .with_important(important)
+            Want::new(prop.as_str(), AtomValue::String(clean.into())).with_important(important)
         })
         .collect()
 }
@@ -101,10 +100,7 @@ mod tests {
             "solid".to_string(),
             style_map(&[("backgroundColor", "blue.500")]),
         );
-        variant_axis.insert(
-            "outline".to_string(),
-            style_map(&[("borderWidth", "1px")]),
-        );
+        variant_axis.insert("outline".to_string(), style_map(&[("borderWidth", "1px")]));
         variants.insert("variant".to_string(), variant_axis);
         let mut defaults = IndexMap::new();
         defaults.insert("variant".to_string(), "solid".to_string());

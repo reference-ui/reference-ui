@@ -4,10 +4,7 @@
  * skipping false without diagnostics, and applying no breakpoint conditions.
  */
 import { expect } from 'vitest'
-import {
-  createStylePlanIndex,
-  mergeStylePlans,
-} from '../../../js/index.js'
+import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
@@ -18,10 +15,18 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain('@reference-ui/lib__m_3r')
 
     // No media or container query breakpoint wrappers should enclose m_1r or m_3r
-    expect(result.stylesheet).not.toMatch(/@container[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_1r/)
-    expect(result.stylesheet).not.toMatch(/@container[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_3r/)
-    expect(result.stylesheet).not.toMatch(/@media[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_1r/)
-    expect(result.stylesheet).not.toMatch(/@media[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_3r/)
+    expect(result.stylesheet).not.toMatch(
+      /@container[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_1r/
+    )
+    expect(result.stylesheet).not.toMatch(
+      /@container[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_3r/
+    )
+    expect(result.stylesheet).not.toMatch(
+      /@media[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_1r/
+    )
+    expect(result.stylesheet).not.toMatch(
+      /@media[^{]*{[^}]*\.\\@reference-ui\\\/lib__m_3r/
+    )
 
     // Plans must carry empty when
     const plans = result.runtime.stylePlans.filter(p => p.prop === 'margin')

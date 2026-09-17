@@ -9,12 +9,35 @@
     "directory": "packages/reference-neo"
   },
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "exports": {
+    "./runtime": "./src/runtime/index.ts",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "neo": "./bin/neo.ts"
+  },
+  "dependencies": {
+    "@reference-ui/rust": "workspace:*",
+    "esbuild": "^0.28.1",
+    "fast-glob": "^3.3.2"
+  },
   "devDependencies": {
+    "@reference-ui/neo": "workspace:*",
+    "vite": "^7.3.5",
     "@biomejs/biome": "^2.5.14",
     "@types/node": "^25.1.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "pixelmatch": "^7.2.0",
     "playwright": "^1.63.0",
     "pngjs": "^7.0.0",
-    "typescript": "~7.0.2"
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "scheduler": "0.27.0",
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.0"
   }
 }

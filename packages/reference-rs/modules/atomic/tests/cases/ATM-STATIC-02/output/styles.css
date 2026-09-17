@@ -1,17 +1,22 @@
 @layer static-css-overlap {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-n100: #f4f4f5;
-    --colors-n300: #d4d4d8;
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-n100: #f4f4f5;
+      --colors-n300: #d4d4d8;
+    }
+    [data-color-mode='dark'] {
+      --colors-n100: #18181b;
+      --colors-n300: #3f3f46;
+    }
   }
-  [data-theme=dark] {
-    --colors-n100: #18181b;
-    --colors-n300: #3f3f46;
+  @layer utilities {
+    .static-css-overlap__bg_n100 {
+      background: var(--colors-n100);
+    }
+    .static-css-overlap__bg_n300 {
+      background: var(--colors-n300);
+    }
   }
-}
-@layer utilities {
-  .static-css-overlap__bg_n100 { background: var(--colors-n100); }
-  .static-css-overlap__bg_n300 { background: var(--colors-n300); }
-}
 }

@@ -1,7 +1,7 @@
 //! Prints `@layer reset`, `@layer global`, and `@layer tokens` from an ingested `BaseSystem`.
 //! Global is the stored CSS dump (fixture `:root --spacing-root`) plus `@keyframes`
 //! rules from the system's motion table and `@font-face` blocks from the font table.
-//! Tokens become custom properties on `:root, [data-theme=light]` and `[data-theme=dark]`.
+//! Tokens become custom properties on `:root, [data-color-mode=light]` and `[data-color-mode=dark]`.
 //! Empty layers and empty keyframe tables are omitted; recipes and utilities stay separate.
 
 use base_system::{BaseSystem, KeyframeDefinition, StyleMap, TokenEntry};
@@ -11,7 +11,7 @@ use super::global;
 #[cfg(test)]
 mod tests;
 
-const DARK_SELECTOR: &str = "[data-theme=dark]";
+const DARK_SELECTOR: &str = "[data-color-mode=dark]";
 
 /// Append globalCss and token custom-property layers when the dump has them.
 pub fn append_system_layers(out: &mut String, system: &BaseSystem) {
@@ -45,7 +45,10 @@ fn has_printable_global(system: &BaseSystem) -> bool {
 }
 
 fn has_printable_fonts(system: &BaseSystem) -> bool {
-    system.fonts().iter().any(|(_, def)| def.font_face.is_some())
+    system
+        .fonts()
+        .iter()
+        .any(|(_, def)| def.font_face.is_some())
 }
 
 fn has_printable_keyframes(system: &BaseSystem) -> bool {
@@ -80,6 +83,16 @@ fn append_font_faces(out: &mut String, system: &BaseSystem) {
         if let Some(style) = &face.font_style {
             out.push_str("    font-style: ");
             out.push_str(style);
+            out.push_str(";\n");
+        }
+        if let Some(size_adjust) = &face.size_adjust {
+            out.push_str("    size-adjust: ");
+            out.push_str(size_adjust);
+            out.push_str(";\n");
+        }
+        if let Some(descent) = &face.descent_override {
+            out.push_str("    descent-override: ");
+            out.push_str(descent);
             out.push_str(";\n");
         }
         out.push_str("  }\n");
@@ -162,14 +175,14 @@ fn append_tokens(out: &mut String, system: &BaseSystem, portable: bool) {
     let (light_sel, dark_sel) = if portable && !system.name.is_empty() {
         (
             format!(
-                "[data-layer=\"{}\"], [data-layer=\"{}\"][data-theme=light]",
+                "[data-layer=\"{}\"], [data-layer=\"{}\"][data-color-mode=light]",
                 system.name, system.name
             ),
-            format!("[data-layer=\"{}\"][data-theme=dark]", system.name),
+            format!("[data-layer=\"{}\"][data-color-mode=dark]", system.name),
         )
     } else {
         (
-            ":root, [data-theme=light]".to_string(),
+            ":root, [data-color-mode=light]".to_string(),
             DARK_SELECTOR.to_string(),
         )
     };

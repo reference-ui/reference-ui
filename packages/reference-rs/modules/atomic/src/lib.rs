@@ -5,11 +5,14 @@
 pub mod atom;
 pub mod diagnostics;
 pub mod extract;
+pub mod hosts;
+pub mod includes;
 pub mod recipes;
-#[cfg(test)]
-mod spec_recipe_tests;
 pub mod resolve;
 pub mod runtime;
+pub(crate) mod sources;
+#[cfg(test)]
+mod spec_recipe_tests;
 mod static_css;
 pub mod stylesheet;
 
@@ -18,7 +21,7 @@ pub use styletrace as __styletrace;
 
 pub use atom::Want;
 pub use base_system::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
-pub use diagnostics::{Diagnostic, DiagnosticSeverity};
+pub use diagnostics::{Diagnostic, DiagnosticLocation, DiagnosticSeverity};
 pub use recipes::{RecipeMatch, RecipeTable};
 pub use runtime::{
     get_style_prop_names, CssRuntime, NativeRuntimeArtifact, RecipeRuntimeTable,
@@ -53,6 +56,13 @@ pub struct CompileRequest {
     #[serde(default)]
     pub files: Option<Vec<VirtualSource>>,
     pub base_system: BaseSystem,
+    #[serde(default)]
+    pub jsx_hosts: Option<Vec<String>>,
+    #[serde(default)]
+    pub declaration_root: Option<String>,
+    /// Glob scope (RS-10): only matching sources compile; absent or empty scans all.
+    #[serde(default)]
+    pub include: Option<Vec<String>>,
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
@@ -86,13 +96,13 @@ struct ParseSession<'a> {
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
-    let sources = collect_sources(request);
+    let sources = sources::collect(request);
     let mut wants = Vec::new();
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
     let project_constants = collect_project_constants(&sources);
-    let traced_jsx = collect_traced_jsx_names(request);
+    let traced_jsx = hosts::collect_hosts(request);
     let system = &request.base_system;
 
     {
@@ -121,12 +131,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut atom_set = build_atom_set(&wants, system, &mut diagnostics);
     resolve::conditions::check_container_root(system, &atom_set, &mut diagnostics);
     let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
-    let mut plan_builder = runtime::PlanBuilder::new(
-        &system.name,
-        system,
-        &mut atom_set,
-        &mut diagnostics,
-    );
+    let mut plan_builder =
+        runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
     let style_plans = plan_builder.build(&authored);
     let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
     let runtime = NativeRuntimeArtifact {
@@ -156,60 +162,6 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         recipes: recipe_tables,
         atom_count,
     })
-}
-
-fn collect_sources(request: &CompileRequest) -> Vec<(String, String)> {
-    let mut sources = gather_sources(request);
-    sources.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-    sources
-}
-
-fn gather_sources(request: &CompileRequest) -> Vec<(String, String)> {
-    if let Some(files) = &request.files {
-        if !files.is_empty() {
-            return files.iter().map(|f| (f.path.clone(), f.content.clone())).collect();
-        }
-    }
-
-    let mut sources = Vec::new();
-    if let Some(root_dir) = &request.root_dir {
-        scan_dir(Path::new(root_dir), &mut sources);
-    }
-    sources
-}
-
-fn scan_dir(dir: &Path, acc: &mut Vec<(String, String)>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
-    paths.sort();
-    for path in paths {
-        handle_dir_entry(&path, acc);
-    }
-}
-
-fn handle_dir_entry(path: &Path, acc: &mut Vec<(String, String)>) {
-    if path.is_dir() {
-        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        const IGNORE: &[&str] = &[
-            "node_modules", ".git", "dist", "build", ".turbo", "target", ".reference-ui", ".reference", ".pipeline",
-        ];
-        if !IGNORE.contains(&name) {
-            scan_dir(path, acc);
-        }
-    } else if is_supported_extension(path) {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            acc.push((path.to_string_lossy().to_string(), content));
-        }
-    }
-}
-
-fn is_supported_extension(path: &Path) -> bool {
-    let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
-        return false;
-    };
-    matches!(ext, "tsx" | "ts" | "jsx" | "js")
 }
 
 fn collect_project_constants(sources: &[(String, String)]) -> extract::constants::LocalConstants {
@@ -245,13 +197,14 @@ fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) 
             .push(Diagnostic::error(err.to_string()).with_location(path, None, None));
     }
     if !ret.panicked {
-        extract_parsed_program(session, path, &ret.program);
+        extract_parsed_program(session, path, content, &ret.program);
     }
 }
 
 fn extract_parsed_program(
     session: &mut ParseSession<'_>,
     path: &str,
+    content: &str,
     program: &oxc_ast::ast::Program<'_>,
 ) {
     let mut local_constants = extract::constants::collect_local_constants(program);
@@ -272,18 +225,8 @@ fn extract_parsed_program(
         diagnostics: session.diagnostics,
         authored: session.authored,
     };
-    let mut ctx = extract::ExtractContext::new(path, config, sinks);
+    let mut ctx = extract::ExtractContext::new(path, Some(content), config, sinks);
     extract::extract_with_context(program, &mut ctx);
-}
-
-fn collect_traced_jsx_names(request: &CompileRequest) -> HashSet<String> {
-    let Some(root) = request.root_dir.as_ref() else {
-        return HashSet::new();
-    };
-    match styletrace::trace_style_jsx_names(Path::new(root)) {
-        Ok(names) => names.into_iter().collect(),
-        Err(_) => HashSet::new(),
-    }
 }
 
 fn build_atom_set(
@@ -295,6 +238,7 @@ fn build_atom_set(
     let mut session = resolve::ResolveSession {
         system,
         diagnostics,
+        location: DiagnosticLocation::default(),
     };
     for want in wants {
         for atom in resolve::resolve_want_with(want, &mut session) {
@@ -325,6 +269,7 @@ fn compile_recipes(
     let mut session = resolve::ResolveSession {
         system,
         diagnostics,
+        location: DiagnosticLocation::default(),
     };
     recipes::compile(&valid, &system.name, &mut session)
 }

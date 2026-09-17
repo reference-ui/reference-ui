@@ -136,12 +136,7 @@ fn same_wraps(atom: &Atom, wraps: &[&str]) -> bool {
     at_rule_wraps(atom).eq(wraps.iter().copied())
 }
 
-fn write_group(
-    out: &mut String,
-    wraps: &[&str],
-    rules: &[(&Atom, CascadeKey<'_>)],
-    system: &str,
-) {
+fn write_group(out: &mut String, wraps: &[&str], rules: &[(&Atom, CascadeKey<'_>)], system: &str) {
     open_wraps(out, wraps);
     let indent = "  ".repeat(wraps.len() + 1);
     for (atom, _) in rules {

@@ -9,7 +9,9 @@ import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, type AtomicCaseSpec } from '../../hel
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-03',
   verify(result) {
-    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
+    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
+      true
+    )
     expect(result.stylesheet).not.toContain('@layer utilities')
     expect(result.css?.classes ?? {}).toEqual({})
     expect(result.diagnostics).toEqual([])

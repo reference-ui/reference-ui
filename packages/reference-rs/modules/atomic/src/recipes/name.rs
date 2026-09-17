@@ -25,6 +25,15 @@ pub fn variant_class(stem: &str, key: &str, value: &str) -> String {
     format!("{stem}_{prefix}_{value}")
 }
 
+/// Responsive variant class name: `${breakpoint}:${variant_class}`.
+///
+/// The breakpoint segment is a literal prefix, not a re-resolution: the rule
+/// carrying this class is wrapped in that breakpoint's `@container` query so
+/// a runtime `{ base, md }` selection paints by emitting both classes.
+pub fn responsive_variant_class(breakpoint: &str, stem: &str, key: &str, value: &str) -> String {
+    format!("{breakpoint}:{}", variant_class(stem, key, value))
+}
+
 /// Compound class name: `${stem}_c_${segments}`.
 pub fn compound_class(stem: &str, predicates: &IndexMap<String, Vec<String>>) -> String {
     let mut segments = Vec::new();
@@ -89,6 +98,14 @@ mod tests {
         assert_eq!(
             compound_class("lib-test-system__button", &predicates),
             "lib-test-system__button_c_solid_disabled"
+        );
+    }
+
+    #[test]
+    fn responsive_variant_prefixes_breakpoint() {
+        assert_eq!(
+            responsive_variant_class("md", "lib-test-system__button", "variant", "outline"),
+            "md:lib-test-system__button_v_outline"
         );
     }
 }

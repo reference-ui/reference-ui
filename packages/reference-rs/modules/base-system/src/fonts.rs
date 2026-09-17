@@ -30,6 +30,10 @@ pub struct FontFaceDefinition {
     pub font_display: Option<String>,
     #[serde(default)]
     pub font_style: Option<String>,
+    #[serde(default)]
+    pub size_adjust: Option<String>,
+    #[serde(default)]
+    pub descent_override: Option<String>,
 }
 
 /// One `font()` fragment: family stack, named weights, font-face descriptors, and CSS extras.
@@ -171,6 +175,8 @@ mod tests {
                     font_weight: Some("200 900".to_string()),
                     font_display: Some("swap".to_string()),
                     font_style: None,
+                    size_adjust: None,
+                    descent_override: None,
                 }),
             },
         );
@@ -220,10 +226,28 @@ mod tests {
         );
         let scale = FontScale::from_definitions(fonts);
         let def = scale.get("sans").unwrap();
-        assert_eq!(def.css.get("letterSpacing").map(String::as_str), Some("-0.01em"));
+        assert_eq!(
+            def.css.get("letterSpacing").map(String::as_str),
+            Some("-0.01em")
+        );
         assert_eq!(
             def.css.get("fontFeatureSettings").map(String::as_str),
             Some("\"cv02\"")
         );
+    }
+
+    #[test]
+    fn bas_font_05_preserves_metric_override_descriptors() {
+        let def: FontDefinition = serde_json::from_str(
+            r#"{"value":"\"Literata\", serif","fontFace":{"src":"url(/fonts/literata.woff2)","sizeAdjust":"104%","descentOverride":"47%"}}"#,
+        )
+        .unwrap();
+        let face = def.font_face.as_ref().unwrap();
+        assert_eq!(face.size_adjust.as_deref(), Some("104%"));
+        assert_eq!(face.descent_override.as_deref(), Some("47%"));
+        assert!(face.font_weight.is_none());
+        let bare: FontDefinition =
+            serde_json::from_str(r#"{"value":"Inter, sans-serif"}"#).unwrap();
+        assert!(bare.font_face.is_none());
     }
 }

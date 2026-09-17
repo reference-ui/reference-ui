@@ -10,6 +10,7 @@ export interface SpecPage {
   goto(url: string, opts: { waitUntil: string }): Promise<unknown>;
   screenshot(opts: { path: string }): Promise<unknown>;
   viewportSize(): { width: number; height: number } | null;
+  setViewportSize(size: { width: number; height: number }): Promise<void>;
   locator(selector: string): SpecLocator;
 }
 

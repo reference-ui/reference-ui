@@ -65,5 +65,7 @@ playwright-report/
 playwright/.cache/
 blob-report/
 packages/reference-neo/tests/.artifacts/
+packages/reference-neo/tests/cases/**/dist/
+packages/reference-neo/playground/.captures/
 .playwright-mcp/
 

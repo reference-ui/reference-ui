@@ -15,7 +15,10 @@ import { LAYER_PREAMBLE, LIB_SYSTEM_SPEC } from './helpers.js'
 const UTILITY_DECL = 'color: var(--colors-blue-600);'
 const GLOBAL_DECL = 'container-type: inline-size'
 
-function compileUtility(name: string): { stylesheet: string; portableStylesheet: string } {
+function compileUtility(name: string): {
+  stylesheet: string
+  portableStylesheet: string
+} {
   const baseSystem = { ...LIB_SYSTEM_SPEC, name } as EvaluatedSystemSpec
   const result = compileSync({
     baseSystem,

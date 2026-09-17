@@ -6,10 +6,29 @@
 use base_system::{BaseSystem, TokenLeaf};
 
 use super::resolve_token_value;
+use crate::diagnostics::{Diagnostic, DiagnosticLocation, DiagnosticSeverity};
+use crate::resolve::ResolveSession;
+
+fn resolve_with_diagnostics(
+    prop: &str,
+    raw: &str,
+    system: &BaseSystem,
+) -> (Option<String>, Vec<Diagnostic>) {
+    let mut diagnostics = Vec::new();
+    let mut session = ResolveSession {
+        system,
+        diagnostics: &mut diagnostics,
+        location: DiagnosticLocation::default(),
+    };
+    let css = resolve_token_value(prop, raw, &mut session).map(|resolved| resolved.into_owned());
+    drop(session);
+    (css, diagnostics)
+}
 
 fn resolve(prop: &str, raw: &str) -> String {
-    let mut diagnostics = Vec::new();
-    resolve_token_value(prop, raw, BaseSystem::lib_fixture(), &mut diagnostics).into_owned()
+    resolve_with_diagnostics(prop, raw, BaseSystem::lib_fixture())
+        .0
+        .expect("token value resolves")
 }
 
 fn spacing_system() -> BaseSystem {
@@ -40,10 +59,7 @@ fn test_category_prefixed_colors() {
 #[test]
 fn test_bare_color_tokens() {
     assert_eq!(resolve("bg", "blue.600"), "var(--colors-blue-600)");
-    assert_eq!(
-        resolve("borderColor", "gray.800"),
-        "var(--colors-gray-800)"
-    );
+    assert_eq!(resolve("borderColor", "gray.800"), "var(--colors-gray-800)");
 }
 
 #[test]
@@ -75,9 +91,8 @@ fn test_css_color_keywords_passthrough() {
 
 #[test]
 fn test_non_color_does_not_treat_bare_dots_as_colors() {
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value("mt", "blue.600", BaseSystem::lib_fixture(), &mut diagnostics);
-    assert_eq!(css, "blue.600");
+    let (css, diagnostics) = resolve_with_diagnostics("mt", "blue.600", BaseSystem::lib_fixture());
+    assert_eq!(css.as_deref(), Some("blue.600"));
     assert_eq!(diagnostics.len(), 1);
 }
 
@@ -89,34 +104,28 @@ fn test_bare_radii_md_resolves() {
 
 #[test]
 fn test_unknown_path_passthrough_warns() {
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value(
-        "width",
-        "fontSizes.xl",
-        BaseSystem::lib_fixture(),
-        &mut diagnostics,
-    );
-    assert_eq!(css, "fontSizes.xl");
+    let (css, diagnostics) =
+        resolve_with_diagnostics("width", "fontSizes.xl", BaseSystem::lib_fixture());
+    assert_eq!(css.as_deref(), Some("fontSizes.xl"));
     assert_eq!(diagnostics.len(), 1);
 }
 
 #[test]
 fn test_negated_and_bare_scale_tokens() {
     let system = spacing_system();
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value("mt", "-4", &system, &mut diagnostics);
-    assert_eq!(css, "calc(-1 * var(--spacing-4))");
-    let css = resolve_token_value("mb", "4", &system, &mut diagnostics);
-    assert_eq!(css, "var(--spacing-4)");
+    let (css, diagnostics) = resolve_with_diagnostics("mt", "-4", &system);
+    assert_eq!(css.as_deref(), Some("calc(-1 * var(--spacing-4))"));
+    assert!(diagnostics.is_empty());
+    let (css, diagnostics) = resolve_with_diagnostics("mb", "4", &system);
+    assert_eq!(css.as_deref(), Some("var(--spacing-4)"));
     assert!(diagnostics.is_empty());
 }
 
 #[test]
 fn test_malformed_opacity_warns_and_passes_through() {
     for raw in ["red.500/", "/40"] {
-        let mut diagnostics = Vec::new();
-        let css = resolve_token_value("color", raw, BaseSystem::lib_fixture(), &mut diagnostics);
-        assert_eq!(css, *raw);
+        let (css, diagnostics) = resolve_with_diagnostics("color", raw, BaseSystem::lib_fixture());
+        assert_eq!(css.as_deref(), Some(raw));
         assert_eq!(diagnostics.len(), 1);
         assert!(diagnostics[0].message.contains("malformed"));
     }
@@ -124,45 +133,67 @@ fn test_malformed_opacity_warns_and_passes_through() {
 
 #[test]
 fn test_function_slash_passes_through_silently() {
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value(
-        "bg",
-        "rgb(251 146 60 / 0.3)",
-        BaseSystem::lib_fixture(),
-        &mut diagnostics,
-    );
-    assert_eq!(css, "rgb(251 146 60 / 0.3)");
+    let (css, diagnostics) =
+        resolve_with_diagnostics("bg", "rgb(251 146 60 / 0.3)", BaseSystem::lib_fixture());
+    assert_eq!(css.as_deref(), Some("rgb(251 146 60 / 0.3)"));
     assert!(diagnostics.is_empty());
 }
 
 #[test]
 fn test_custom_property_resolves_unique_token() {
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value(
-        "--brand-x",
-        "red.500",
-        BaseSystem::lib_fixture(),
-        &mut diagnostics,
-    );
-    assert_eq!(css, "var(--colors-red-500)");
+    let (css, diagnostics) =
+        resolve_with_diagnostics("--brand-x", "red.500", BaseSystem::lib_fixture());
+    assert_eq!(css.as_deref(), Some("var(--colors-red-500)"));
     assert!(diagnostics.is_empty());
 }
 
 #[test]
 fn test_size_properties_fall_back_to_spacing() {
     let system = spacing_system();
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value("width", "4", &system, &mut diagnostics);
-    assert_eq!(css, "var(--spacing-4)");
+    let (css, diagnostics) = resolve_with_diagnostics("width", "4", &system);
+    assert_eq!(css.as_deref(), Some("var(--spacing-4)"));
     assert!(diagnostics.is_empty());
 }
 
 #[test]
 fn test_wrong_category_warns() {
     let system = spacing_system();
-    let mut diagnostics = Vec::new();
-    let css = resolve_token_value("color", "4", &system, &mut diagnostics);
-    assert_eq!(css, "4");
+    let (css, diagnostics) = resolve_with_diagnostics("color", "4", &system);
+    assert_eq!(css.as_deref(), Some("4"));
     assert_eq!(diagnostics.len(), 1);
     assert!(diagnostics[0].message.contains("spacing"));
+}
+
+#[test]
+fn test_braced_missing_reference_errors_and_drops() {
+    let (css, diagnostics) =
+        resolve_with_diagnostics("color", "{colors.nope}", BaseSystem::lib_fixture());
+    assert_eq!(css, None);
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
+    assert!(diagnostics[0].message.contains("{colors.nope}"));
+}
+
+#[test]
+fn test_embedded_missing_reference_errors_and_drops() {
+    let (css, diagnostics) = resolve_with_diagnostics(
+        "border",
+        "2px solid {colors.nope}",
+        BaseSystem::lib_fixture(),
+    );
+    assert_eq!(css, None);
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
+    assert!(diagnostics[0].message.contains("{colors.nope}"));
+}
+
+#[test]
+fn test_braced_opacity_reference_resolves() {
+    let (css, diagnostics) =
+        resolve_with_diagnostics("bg", "{colors.blue.600/50}", BaseSystem::lib_fixture());
+    assert_eq!(
+        css.as_deref(),
+        Some("color-mix(in srgb, var(--colors-blue-600) 50%, transparent)")
+    );
+    assert!(diagnostics.is_empty());
 }

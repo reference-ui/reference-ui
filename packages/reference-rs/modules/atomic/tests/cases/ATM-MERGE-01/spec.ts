@@ -5,10 +5,7 @@
  * value (m_3r).
  */
 import { expect } from 'vitest'
-import {
-  createStylePlanIndex,
-  mergeStylePlans,
-} from '../../../js/index.js'
+import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {

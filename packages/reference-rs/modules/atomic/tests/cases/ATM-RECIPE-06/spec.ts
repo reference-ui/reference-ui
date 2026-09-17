@@ -19,14 +19,14 @@ const spec: AtomicCaseSpec = {
     ).toBe(true)
 
     // Non-object literal argument
-    expect(
-      errorMessages.some(m => m.includes('inline object literal'))
-    ).toBe(true)
+    expect(errorMessages.some(m => m.includes('inline object literal'))).toBe(true)
 
     // Duplicate className
     expect(
       errorMessages.some(m =>
-        m.includes("Duplicate recipe className 'duplicateBadge' within system '@reference-ui/lib'")
+        m.includes(
+          "Duplicate recipe className 'duplicateBadge' within system '@reference-ui/lib'"
+        )
       )
     ).toBe(true)
 

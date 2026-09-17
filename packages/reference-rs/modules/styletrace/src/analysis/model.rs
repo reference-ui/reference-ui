@@ -7,7 +7,9 @@ use std::collections::{BTreeSet, HashMap};
 
 use oxc_ast::ast::Expression;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub struct TracedBinding {
     pub module: String,
     pub name: String,

@@ -476,4 +476,3 @@ fn test_unitless_properties_sorted_and_detected() {
     assert!(!is_unitless_prop("p"));
     assert!(!is_unitless_prop("margin"));
 }
-

@@ -28,14 +28,8 @@
   "keyframes": {},
   "recipes": {},
   "staticCss": {
-    "color": [
-      "*"
-    ],
-    "bg": [
-      "n100",
-      "n200",
-      "n300"
-    ]
+    "color": ["*"],
+    "bg": ["n100", "n200", "n300"]
   },
   "provenance": []
 }

@@ -1,79 +1,65 @@
 export const manifest = {
-  "version": "2",
-  "warnings": [],
-  "symbolsByName": {
-    "Flatten": [
-      "_df05bb8d0d70aa63"
-    ],
-    "RemoteWidget": [
-      "_8b47727fab460a11"
-    ],
-    "User": [
-      "_aac766172dee15f6"
-    ],
-    "Widget": [
-      "_e544b77991edf017"
-    ],
-    "WithImportMember": [
-      "_2c2e05a79742ab26"
-    ],
-    "WithPredicate": [
-      "_e338300b4f0c86de"
-    ],
-    "WithThisType": [
-      "_f47301e0941b7d67"
-    ]
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    Flatten: ['_df05bb8d0d70aa63'],
+    RemoteWidget: ['_8b47727fab460a11'],
+    User: ['_aac766172dee15f6'],
+    Widget: ['_e544b77991edf017'],
+    WithImportMember: ['_2c2e05a79742ab26'],
+    WithPredicate: ['_e338300b4f0c86de'],
+    WithThisType: ['_f47301e0941b7d67'],
   },
-  "symbolsById": {
-    "_2c2e05a79742ab26": {
-      "id": "_2c2e05a79742ab26",
-      "name": "WithImportMember",
-      "kind": "interface",
-      "chunk": "./chunks/_2c2e05a79742ab26.js",
-      "library": "user"
+  symbolsById: {
+    _2c2e05a79742ab26: {
+      id: '_2c2e05a79742ab26',
+      name: 'WithImportMember',
+      kind: 'interface',
+      chunk: './chunks/_2c2e05a79742ab26.js',
+      library: 'user',
     },
-    "_8b47727fab460a11": {
-      "id": "_8b47727fab460a11",
-      "name": "RemoteWidget",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_8b47727fab460a11.js",
-      "library": "user"
+    _8b47727fab460a11: {
+      id: '_8b47727fab460a11',
+      name: 'RemoteWidget',
+      kind: 'typeAlias',
+      chunk: './chunks/_8b47727fab460a11.js',
+      library: 'user',
     },
-    "_aac766172dee15f6": {
-      "id": "_aac766172dee15f6",
-      "name": "User",
-      "kind": "interface",
-      "chunk": "./chunks/_aac766172dee15f6.js",
-      "library": "user"
+    _aac766172dee15f6: {
+      id: '_aac766172dee15f6',
+      name: 'User',
+      kind: 'interface',
+      chunk: './chunks/_aac766172dee15f6.js',
+      library: 'user',
     },
-    "_df05bb8d0d70aa63": {
-      "id": "_df05bb8d0d70aa63",
-      "name": "Flatten",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_df05bb8d0d70aa63.js",
-      "library": "user"
+    _df05bb8d0d70aa63: {
+      id: '_df05bb8d0d70aa63',
+      name: 'Flatten',
+      kind: 'typeAlias',
+      chunk: './chunks/_df05bb8d0d70aa63.js',
+      library: 'user',
     },
-    "_e338300b4f0c86de": {
-      "id": "_e338300b4f0c86de",
-      "name": "WithPredicate",
-      "kind": "interface",
-      "chunk": "./chunks/_e338300b4f0c86de.js",
-      "library": "user"
+    _e338300b4f0c86de: {
+      id: '_e338300b4f0c86de',
+      name: 'WithPredicate',
+      kind: 'interface',
+      chunk: './chunks/_e338300b4f0c86de.js',
+      library: 'user',
     },
-    "_e544b77991edf017": {
-      "id": "_e544b77991edf017",
-      "name": "Widget",
-      "kind": "interface",
-      "chunk": "./chunks/_e544b77991edf017.js",
-      "library": "user"
+    _e544b77991edf017: {
+      id: '_e544b77991edf017',
+      name: 'Widget',
+      kind: 'interface',
+      chunk: './chunks/_e544b77991edf017.js',
+      library: 'user',
     },
-    "_f47301e0941b7d67": {
-      "id": "_f47301e0941b7d67",
-      "name": "WithThisType",
-      "kind": "interface",
-      "chunk": "./chunks/_f47301e0941b7d67.js",
-      "library": "user"
-    }
-  }
-};
-export default manifest;
+    _f47301e0941b7d67: {
+      id: '_f47301e0941b7d67',
+      name: 'WithThisType',
+      kind: 'interface',
+      chunk: './chunks/_f47301e0941b7d67.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

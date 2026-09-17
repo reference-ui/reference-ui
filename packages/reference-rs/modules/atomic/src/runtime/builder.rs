@@ -12,7 +12,7 @@ use serde_json::Value;
 use super::plan::{RecipeRuntimeTable, RuntimeDeclaration, RuntimeStylePlan};
 use super::serializer::{serialize_lookup_key, LookupKey};
 use crate::atom::{AtomSet, AtomValue, Want};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticLocation};
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::stylesheet::name::class_name_with_system;
 
@@ -110,14 +110,24 @@ fn resolve_with_unique_diagnostics(
     let mut session = ResolveSession {
         system: base_system,
         diagnostics: &mut local,
+        location: DiagnosticLocation::default(),
     };
     let atoms = resolve_want_with(want, &mut session);
     for diag in local {
-        if !diagnostics.contains(&diag) {
+        if !is_duplicate(diagnostics, &diag) {
             diagnostics.push(diag);
         }
     }
     atoms
+}
+
+/// True when a diagnostic with the same severity and message is already recorded.
+/// Rebuilt wants carry no source position, so the re-resolve pass must dedup
+/// on text rather than on full location equality.
+fn is_duplicate(diagnostics: &[Diagnostic], candidate: &Diagnostic) -> bool {
+    diagnostics.iter().any(|existing| {
+        existing.severity == candidate.severity && existing.message == candidate.message
+    })
 }
 
 /// Context for resolving authored declarations into style plans and atoms.
@@ -174,20 +184,27 @@ impl<'a> PlanBuilder<'a> {
         if let Value::Array(arr) = &decl.value {
             return self.resolve_array(decl, arr);
         }
+        if let Value::Object(map) = &decl.value {
+            if !map.contains_key("$r") {
+                return self.resolve_object(decl, map);
+            }
+        }
 
         let Some(atom_val) = json_to_atom_value(&decl.value) else {
             return Vec::new();
         };
 
-        let when_boxed: smallvec::SmallVec<[Box<str>; 2]> =
-            decl.when.iter().map(|w| w.clone().into_boxed_str()).collect();
+        let when_boxed: smallvec::SmallVec<[Box<str>; 2]> = decl
+            .when
+            .iter()
+            .map(|w| w.clone().into_boxed_str())
+            .collect();
 
         let want = Want::new(decl.prop.as_str(), atom_val)
             .with_when(when_boxed)
             .with_important(decl.important);
 
-        let atoms =
-            resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
+        let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
 
         let mut out = Vec::with_capacity(atoms.len());
         for atom in atoms {
@@ -220,18 +237,66 @@ impl<'a> PlanBuilder<'a> {
 
             let mut step_when = decl.when.clone();
             step_when.push(bp.to_string());
-            let when_boxed: smallvec::SmallVec<[Box<str>; 2]> =
-                step_when.iter().map(|w| w.clone().into_boxed_str()).collect();
+            let when_boxed: smallvec::SmallVec<[Box<str>; 2]> = step_when
+                .iter()
+                .map(|w| w.clone().into_boxed_str())
+                .collect();
 
             let want = Want::new(decl.prop.as_str(), atom_val)
                 .with_when(when_boxed)
                 .with_important(decl.important);
 
-            let atoms =
-                resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
+            let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
 
             for atom in atoms {
                 let slot = derive_slot(&atom.prop, &decl.when, Some(bp));
+                let class_name = class_name_with_system(&atom, self.system);
+                self.atom_set.insert(atom);
+                out.push(RuntimeDeclaration { slot, class_name });
+            }
+        }
+        out
+    }
+
+    fn resolve_object(
+        &mut self,
+        decl: &AuthoredDeclaration,
+        map: &serde_json::Map<String, Value>,
+    ) -> Vec<RuntimeDeclaration> {
+        let mut out = Vec::new();
+        let bp_scale = self.base_system.breakpoints();
+
+        for (key, elem) in map {
+            if elem.is_null() {
+                continue;
+            }
+            let Some(atom_val) = json_to_atom_value(elem) else {
+                continue;
+            };
+
+            let mut step_when = decl.when.clone();
+            step_when.push(key.clone());
+            let when_boxed: smallvec::SmallVec<[Box<str>; 2]> = step_when
+                .iter()
+                .map(|w| w.clone().into_boxed_str())
+                .collect();
+
+            let want = Want::new(decl.prop.as_str(), atom_val)
+                .with_when(when_boxed)
+                .with_important(decl.important);
+
+            let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
+            let responsive = key == "base" || bp_scale.names().iter().any(|n| n == key);
+
+            for atom in atoms {
+                // Breakpoints join the `@` responsive family; other conditions
+                // read as nested `when` parts so `_hover` keys merge with
+                // `_hover: { … }` blocks instead of bare props.
+                let slot = if responsive {
+                    derive_slot(&atom.prop, &decl.when, Some(key))
+                } else {
+                    derive_slot(&atom.prop, &step_when, None)
+                };
                 let class_name = class_name_with_system(&atom, self.system);
                 self.atom_set.insert(atom);
                 out.push(RuntimeDeclaration { slot, class_name });

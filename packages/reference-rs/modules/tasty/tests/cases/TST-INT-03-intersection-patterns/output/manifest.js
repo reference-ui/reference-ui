@@ -1,169 +1,137 @@
 export const manifest = {
-  "version": "2",
-  "warnings": [],
-  "symbolsByName": {
-    "A1": [
-      "_96e560a331b428ec"
-    ],
-    "ABasic": [
-      "_d1c49bd9e075b317"
-    ],
-    "AOverride": [
-      "_e2eb43b996442777"
-    ],
-    "AUtil": [
-      "_b3815b85a7393edb"
-    ],
-    "B1": [
-      "_96e55da331b423f5"
-    ],
-    "BBasic": [
-      "_bddd8e5a730a5da6"
-    ],
-    "BarG": [
-      "_792ca39df8beaf30"
-    ],
-    "C1": [
-      "_96e55ea331b42546"
-    ],
-    "D1": [
-      "_96e55ba331b4206f"
-    ],
-    "FooG": [
-      "_55a7029de4612489"
-    ],
-    "IntersectionMultiple": [
-      "_62e28c1826fb6ec5"
-    ],
-    "IntersectionOverride": [
-      "_c03508396de72ab9"
-    ],
-    "IntersectionUtilityLiteral": [
-      "_16bf53cb38725ff0"
-    ],
-    "Merge": [
-      "_ee6e2121756dc8ea"
-    ],
-    "MergedBasic": [
-      "_29319171d06c35f4"
-    ],
-    "MergedGeneric": [
-      "_50628dd932760bf5"
-    ]
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    A1: ['_96e560a331b428ec'],
+    ABasic: ['_d1c49bd9e075b317'],
+    AOverride: ['_e2eb43b996442777'],
+    AUtil: ['_b3815b85a7393edb'],
+    B1: ['_96e55da331b423f5'],
+    BBasic: ['_bddd8e5a730a5da6'],
+    BarG: ['_792ca39df8beaf30'],
+    C1: ['_96e55ea331b42546'],
+    D1: ['_96e55ba331b4206f'],
+    FooG: ['_55a7029de4612489'],
+    IntersectionMultiple: ['_62e28c1826fb6ec5'],
+    IntersectionOverride: ['_c03508396de72ab9'],
+    IntersectionUtilityLiteral: ['_16bf53cb38725ff0'],
+    Merge: ['_ee6e2121756dc8ea'],
+    MergedBasic: ['_29319171d06c35f4'],
+    MergedGeneric: ['_50628dd932760bf5'],
   },
-  "symbolsById": {
-    "_16bf53cb38725ff0": {
-      "id": "_16bf53cb38725ff0",
-      "name": "IntersectionUtilityLiteral",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_16bf53cb38725ff0.js",
-      "library": "user"
+  symbolsById: {
+    _16bf53cb38725ff0: {
+      id: '_16bf53cb38725ff0',
+      name: 'IntersectionUtilityLiteral',
+      kind: 'typeAlias',
+      chunk: './chunks/_16bf53cb38725ff0.js',
+      library: 'user',
     },
-    "_29319171d06c35f4": {
-      "id": "_29319171d06c35f4",
-      "name": "MergedBasic",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_29319171d06c35f4.js",
-      "library": "user"
+    _29319171d06c35f4: {
+      id: '_29319171d06c35f4',
+      name: 'MergedBasic',
+      kind: 'typeAlias',
+      chunk: './chunks/_29319171d06c35f4.js',
+      library: 'user',
     },
-    "_50628dd932760bf5": {
-      "id": "_50628dd932760bf5",
-      "name": "MergedGeneric",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_50628dd932760bf5.js",
-      "library": "user"
+    _50628dd932760bf5: {
+      id: '_50628dd932760bf5',
+      name: 'MergedGeneric',
+      kind: 'typeAlias',
+      chunk: './chunks/_50628dd932760bf5.js',
+      library: 'user',
     },
-    "_55a7029de4612489": {
-      "id": "_55a7029de4612489",
-      "name": "FooG",
-      "kind": "interface",
-      "chunk": "./chunks/_55a7029de4612489.js",
-      "library": "user"
+    _55a7029de4612489: {
+      id: '_55a7029de4612489',
+      name: 'FooG',
+      kind: 'interface',
+      chunk: './chunks/_55a7029de4612489.js',
+      library: 'user',
     },
-    "_62e28c1826fb6ec5": {
-      "id": "_62e28c1826fb6ec5",
-      "name": "IntersectionMultiple",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_62e28c1826fb6ec5.js",
-      "library": "user"
+    _62e28c1826fb6ec5: {
+      id: '_62e28c1826fb6ec5',
+      name: 'IntersectionMultiple',
+      kind: 'typeAlias',
+      chunk: './chunks/_62e28c1826fb6ec5.js',
+      library: 'user',
     },
-    "_792ca39df8beaf30": {
-      "id": "_792ca39df8beaf30",
-      "name": "BarG",
-      "kind": "interface",
-      "chunk": "./chunks/_792ca39df8beaf30.js",
-      "library": "user"
+    _792ca39df8beaf30: {
+      id: '_792ca39df8beaf30',
+      name: 'BarG',
+      kind: 'interface',
+      chunk: './chunks/_792ca39df8beaf30.js',
+      library: 'user',
     },
-    "_96e55ba331b4206f": {
-      "id": "_96e55ba331b4206f",
-      "name": "D1",
-      "kind": "interface",
-      "chunk": "./chunks/_96e55ba331b4206f.js",
-      "library": "user"
+    _96e55ba331b4206f: {
+      id: '_96e55ba331b4206f',
+      name: 'D1',
+      kind: 'interface',
+      chunk: './chunks/_96e55ba331b4206f.js',
+      library: 'user',
     },
-    "_96e55da331b423f5": {
-      "id": "_96e55da331b423f5",
-      "name": "B1",
-      "kind": "interface",
-      "chunk": "./chunks/_96e55da331b423f5.js",
-      "library": "user"
+    _96e55da331b423f5: {
+      id: '_96e55da331b423f5',
+      name: 'B1',
+      kind: 'interface',
+      chunk: './chunks/_96e55da331b423f5.js',
+      library: 'user',
     },
-    "_96e55ea331b42546": {
-      "id": "_96e55ea331b42546",
-      "name": "C1",
-      "kind": "interface",
-      "chunk": "./chunks/_96e55ea331b42546.js",
-      "library": "user"
+    _96e55ea331b42546: {
+      id: '_96e55ea331b42546',
+      name: 'C1',
+      kind: 'interface',
+      chunk: './chunks/_96e55ea331b42546.js',
+      library: 'user',
     },
-    "_96e560a331b428ec": {
-      "id": "_96e560a331b428ec",
-      "name": "A1",
-      "kind": "interface",
-      "chunk": "./chunks/_96e560a331b428ec.js",
-      "library": "user"
+    _96e560a331b428ec: {
+      id: '_96e560a331b428ec',
+      name: 'A1',
+      kind: 'interface',
+      chunk: './chunks/_96e560a331b428ec.js',
+      library: 'user',
     },
-    "_b3815b85a7393edb": {
-      "id": "_b3815b85a7393edb",
-      "name": "AUtil",
-      "kind": "interface",
-      "chunk": "./chunks/_b3815b85a7393edb.js",
-      "library": "user"
+    _b3815b85a7393edb: {
+      id: '_b3815b85a7393edb',
+      name: 'AUtil',
+      kind: 'interface',
+      chunk: './chunks/_b3815b85a7393edb.js',
+      library: 'user',
     },
-    "_bddd8e5a730a5da6": {
-      "id": "_bddd8e5a730a5da6",
-      "name": "BBasic",
-      "kind": "interface",
-      "chunk": "./chunks/_bddd8e5a730a5da6.js",
-      "library": "user"
+    _bddd8e5a730a5da6: {
+      id: '_bddd8e5a730a5da6',
+      name: 'BBasic',
+      kind: 'interface',
+      chunk: './chunks/_bddd8e5a730a5da6.js',
+      library: 'user',
     },
-    "_c03508396de72ab9": {
-      "id": "_c03508396de72ab9",
-      "name": "IntersectionOverride",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_c03508396de72ab9.js",
-      "library": "user"
+    _c03508396de72ab9: {
+      id: '_c03508396de72ab9',
+      name: 'IntersectionOverride',
+      kind: 'typeAlias',
+      chunk: './chunks/_c03508396de72ab9.js',
+      library: 'user',
     },
-    "_d1c49bd9e075b317": {
-      "id": "_d1c49bd9e075b317",
-      "name": "ABasic",
-      "kind": "interface",
-      "chunk": "./chunks/_d1c49bd9e075b317.js",
-      "library": "user"
+    _d1c49bd9e075b317: {
+      id: '_d1c49bd9e075b317',
+      name: 'ABasic',
+      kind: 'interface',
+      chunk: './chunks/_d1c49bd9e075b317.js',
+      library: 'user',
     },
-    "_e2eb43b996442777": {
-      "id": "_e2eb43b996442777",
-      "name": "AOverride",
-      "kind": "interface",
-      "chunk": "./chunks/_e2eb43b996442777.js",
-      "library": "user"
+    _e2eb43b996442777: {
+      id: '_e2eb43b996442777',
+      name: 'AOverride',
+      kind: 'interface',
+      chunk: './chunks/_e2eb43b996442777.js',
+      library: 'user',
     },
-    "_ee6e2121756dc8ea": {
-      "id": "_ee6e2121756dc8ea",
-      "name": "Merge",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_ee6e2121756dc8ea.js",
-      "library": "user"
-    }
-  }
-};
-export default manifest;
+    _ee6e2121756dc8ea: {
+      id: '_ee6e2121756dc8ea',
+      name: 'Merge',
+      kind: 'typeAlias',
+      chunk: './chunks/_ee6e2121756dc8ea.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

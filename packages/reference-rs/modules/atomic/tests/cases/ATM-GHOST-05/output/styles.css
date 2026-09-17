@@ -1,10 +1,12 @@
 @layer ghost-05 {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer utilities {
-  @media (prefers-color-scheme: dark) {
-    @container (min-width: 640px) {
-      .ghost-05__osDark\:sm\:c_red { color: red; }
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer utilities {
+    @media (prefers-color-scheme: dark) {
+      @container (min-width: 640px) {
+        .ghost-05__osDark\:sm\:c_red {
+          color: red;
+        }
+      }
     }
   }
-}
 }

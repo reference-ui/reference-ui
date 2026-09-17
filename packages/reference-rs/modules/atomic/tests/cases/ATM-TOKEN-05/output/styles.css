@@ -1,18 +1,25 @@
 @layer custom-dump {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer global {
-  :root { --spacing-root: 0.25rem }
-}
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-brand: red;
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer global {
+    :root {
+      --spacing-root: 0.25rem;
+    }
   }
-  [data-theme=dark] {
-    --colors-brand: navy;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-brand: red;
+    }
+    [data-color-mode='dark'] {
+      --colors-brand: navy;
+    }
   }
-}
-@layer utilities {
-  .custom-dump__bg_blue\.600 { background: blue.600; }
-  .custom-dump__c_colors\.brand { color: var(--colors-brand); }
-}
+  @layer utilities {
+    .custom-dump__bg_blue\.600 {
+      background: blue.600;
+    }
+    .custom-dump__c_colors\.brand {
+      color: var(--colors-brand);
+    }
+  }
 }

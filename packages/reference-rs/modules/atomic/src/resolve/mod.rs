@@ -16,13 +16,14 @@ use base_system::BaseSystem;
 use smallvec::SmallVec;
 
 use crate::atom::{Atom, AtomValue, CssValue, Want, When};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticLocation};
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 
 /// Pass state for one want → atom lowering.
 pub struct ResolveSession<'a> {
     pub system: &'a BaseSystem,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub location: DiagnosticLocation,
 }
 
 /// Resolve a raw styling want into one or more canonical atomic declarations.
@@ -32,12 +33,14 @@ pub fn resolve_want(want: &Want) -> Vec<Atom> {
     let mut session = ResolveSession {
         system: &system,
         diagnostics: &mut diagnostics,
+        location: DiagnosticLocation::default(),
     };
     resolve_want_with(want, &mut session)
 }
 
 /// Resolve a want against an ingested base system.
 pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
+    session.location = want.location();
     if !canon::is_known_style_prop(&want.prop) {
         return Vec::new();
     }
@@ -126,26 +129,25 @@ fn resolve_atom_value(
     session: &mut ResolveSession<'_>,
 ) -> Option<CssValue> {
     let css = unit::css_value_from_authored(prop, val, session.diagnostics)?;
-    Some(apply_rhythm_and_tokens(prop, css, session))
+    apply_rhythm_and_tokens(prop, css, session)
 }
 
 fn apply_rhythm_and_tokens(
     prop: &str,
     css: CssValue,
     session: &mut ResolveSession<'_>,
-) -> CssValue {
+) -> Option<CssValue> {
     let val_str = css.class_name_str();
     let rhythm_resolved = rhythm::resolve_rhythm(val_str);
-    let token_resolved =
-        tokens::resolve_token_value(prop, &rhythm_resolved, session.system, session.diagnostics);
+    let token_resolved = tokens::resolve_token_value(prop, &rhythm_resolved, session)?;
 
     if token_resolved != val_str {
-        CssValue::Token {
+        Some(CssValue::Token {
             path: val_str.into(),
             value: token_resolved.into_owned().into_boxed_str(),
-        }
+        })
     } else {
-        css
+        Some(css)
     }
 }
 
@@ -160,6 +162,7 @@ mod tests {
         let mut session = ResolveSession {
             system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         resolve_want_with(want, &mut session)
     }
@@ -283,6 +286,7 @@ mod tests {
         let mut session = ResolveSession {
             system: &system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         let atoms = resolve_want_with(&want, &mut session);
         assert!(atoms.is_empty());
@@ -301,6 +305,7 @@ mod tests {
         let mut session = ResolveSession {
             system: &system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         let atoms = resolve_want_with(&want, &mut session);
         assert!(atoms.is_empty());

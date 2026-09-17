@@ -20,6 +20,12 @@ export interface EvaluatedSystemSpec {
   schemaVersion: 1
   profile: 'reference-ui'
   name: string
+  /**
+   * Upstream system names adopted beneath this spec by `BaseSystem::from_specs`
+   * (BAS-EXTEND-*). Absent or empty means standalone; order is declaration order
+   * with later upstreams winning. Added by RS-4; existing fixtures omit it.
+   */
+  extends?: string[]
   tokens: Record<string, unknown>
   fonts: Record<string, unknown>
   breakpoints?: Record<string, string | { value: string }>
@@ -118,6 +124,12 @@ export interface NativeCompileRequest {
   jsxHosts: string[]
   sourceRoot: string
   declarationRoot: string
+  /**
+   * Glob scope (RS-10, station ATM-SCAN-01) relative to `sourceRoot`: only
+   * matching sources compile and the rest are skipped silently. Absent or
+   * empty preserves the legacy scan-all behavior.
+   */
+  include?: string[]
 }
 
 export interface OutputInventory {

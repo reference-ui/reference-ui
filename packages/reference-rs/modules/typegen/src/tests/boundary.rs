@@ -35,10 +35,9 @@ fn typ_native_01_accepts_root_evaluated_system_spec() {
 /// N5: token-light fixture emits stable empty aliases (never, {}) and omits recipes.
 #[test]
 fn typ_native_01_accepts_token_light_spec() {
-    let system = BaseSystem::from_json(
-        shared::testing::contracts::EVALUATED_SYSTEM_SPEC_TOKEN_LIGHT_JSON,
-    )
-    .expect("valid token-light spec");
+    let system =
+        BaseSystem::from_json(shared::testing::contracts::EVALUATED_SYSTEM_SPEC_TOKEN_LIGHT_JSON)
+            .expect("valid token-light spec");
     let dts = emit_dts(&system);
     assert_alias(&dts, "ColorToken", "never");
     assert_alias(&dts, "SpacingToken", "never");
@@ -80,9 +79,8 @@ fn typ_native_01_rejects_invalid_schema_version() {
 /// N5: unknown top-level field fails closed with parse error.
 #[test]
 fn typ_native_01_rejects_unknown_top_level_field() {
-    let err = BaseSystem::from_json(
-        shared::testing::contracts::EVALUATED_SYSTEM_SPEC_UNKNOWN_FIELD_JSON,
-    )
-    .unwrap_err();
+    let err =
+        BaseSystem::from_json(shared::testing::contracts::EVALUATED_SYSTEM_SPEC_UNKNOWN_FIELD_JSON)
+            .unwrap_err();
     assert!(err.to_string().contains("unknown field"));
 }

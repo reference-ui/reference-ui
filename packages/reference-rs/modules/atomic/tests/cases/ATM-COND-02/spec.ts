@@ -9,7 +9,9 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-COND-02',
   verify(result) {
     expect(hasWant(result, 'color', 'red.500', ['_hover'])).toBe(true)
-    expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__hover\\:c_red\\.500:is(:hover, [data-hover])')
+    expect(result.stylesheet).toContain(
+      '.\\@reference-ui\\/lib__hover\\:c_red\\.500:is(:hover, [data-hover])'
+    )
   },
 }
 

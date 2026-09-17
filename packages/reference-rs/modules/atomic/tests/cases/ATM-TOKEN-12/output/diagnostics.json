@@ -1,0 +1,16 @@
+[
+  {
+    "severity": "error",
+    "message": "unknown token reference `{colors.nope}`",
+    "file": "input/src/missing-ref.tsx",
+    "line": 4,
+    "column": 10
+  },
+  {
+    "severity": "error",
+    "message": "unknown token reference `{colors.nope}`",
+    "file": "input/src/missing-ref.tsx",
+    "line": 5,
+    "column": 11
+  }
+]

@@ -151,8 +151,10 @@ describe('ATM-TOKEN-10 spec rejection', () => {
     for (const plan of result.runtime.stylePlans) {
       expect(plan.system).toBe('lib-test-system')
     }
-    expect(result.stylesheet).toContain('[data-theme=dark]')
+    expect(result.stylesheet).toContain('[data-color-mode=dark]')
     expect(result.stylesheet).not.toContain('data-panda-theme')
+    expect(result.stylesheet).not.toContain('[data-theme=')
     expect(result.portableStylesheet ?? '').not.toContain('data-panda-theme')
+    expect(result.portableStylesheet ?? '').not.toContain('[data-theme=')
   })
 })

@@ -161,11 +161,12 @@ product until the host has somewhere to live.
 
 ## Working docs
 
-- [`docs/PLAN.md`](docs/PLAN.md) — the voyage index. Part One is
-  the harness.
-- [`docs/PLAN-harness.md`](docs/PLAN-harness.md) — Part One in full:
-  coordinates, order of work, gate thresholds, harness contracts,
-  agentic workflow, playtesting.
+- [`PLAN.md`](PLAN.md) — the one living plan (the captain's log):
+  Voyage One record, Voyage Two charter, decisions, gates, case catalog.
+- [`docs/archive/`](docs/archive/) — landed Voyage One plan parts
+  (harness, host seed/build spec, old index). History, not orders.
+- [`docs/evidence/`](docs/evidence/) — the probe reports the campaign
+  was planned from. Start at its README; cite, do not re-probe.
 - [`docs/TESTING.md`](docs/TESTING.md) — how testing works: commands,
   case anatomy, artifacts, snapshots, quality gate.
 - [`docs/DOMAIN.md`](docs/DOMAIN.md) — the living domain language:

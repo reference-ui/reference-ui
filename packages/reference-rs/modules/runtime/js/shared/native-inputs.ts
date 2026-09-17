@@ -35,7 +35,11 @@ function framePath(packageDir: string, path: string): string {
   return relative(packageDir, path).split(sep).join('/')
 }
 
-function hashFile(hash: ReturnType<typeof createHash>, packageDir: string, path: string): void {
+function hashFile(
+  hash: ReturnType<typeof createHash>,
+  packageDir: string,
+  path: string
+): void {
   const stats = statSync(path)
   hash.update(`file:${framePath(packageDir, path)}:${stats.size}\n`)
   hash.update(readFileSync(path))

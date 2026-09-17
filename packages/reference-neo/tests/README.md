@@ -1,7 +1,7 @@
 # `tests/` — everything that proves the runtime
 
 The runtime lives in `src/`. Everything that checks it lives here.
-Contracts settled in `../docs/PLAN-harness.md`; usage in `../docs/TESTING.md`.
+Contracts settled in `../docs/archive/PLAN-harness.md`; usage in `../docs/TESTING.md`.
 
 - `cases/` — one leaf folder per case: `case.json` id, `README.md`
   description, a small world, Playwright specs on the CSS it produces.

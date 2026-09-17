@@ -69,7 +69,11 @@ fn typ_strict_02_restricts_radii_to_tokens_and_keywords() {
             && dts.contains("| 'revert'"),
         "TYP-STRICT-02: missing StrictRadiusValue keywords in:\n{dts}"
     );
-    assert_prop(&dts, "borderRadius", "StylePropValue<RadiusToken | (string & {})>");
+    assert_prop(
+        &dts,
+        "borderRadius",
+        "StylePropValue<RadiusToken | (string & {})>",
+    );
     assert_prop(
         &dts,
         "borderTopLeftRadius",
@@ -80,7 +84,9 @@ fn typ_strict_02_restricts_radii_to_tokens_and_keywords() {
         "TYP-STRICT-02: canon refuses Panda rounded* aliases"
     );
     assert!(
-        !dts.contains("rounded?:") && !dts.contains("| 'rounded'") && !dts.contains("| 'roundedTop'"),
+        !dts.contains("rounded?:")
+            && !dts.contains("| 'rounded'")
+            && !dts.contains("| 'roundedTop'"),
         "TYP-STRICT-02: must not invent Panda rounded* keys:\n{dts}"
     );
 }

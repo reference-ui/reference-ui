@@ -54,6 +54,15 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect((spec.tokens as Record<string, unknown>).spacing).toBeUndefined()
   })
 
+  it('EvaluatedSystemSpec accepts an optional extends chain (RS-4 BAS-EXTEND-*)', () => {
+    const spec = {
+      ...evaluatedSystemSpecJson,
+      extends: ['upstream-system'],
+    } satisfies EvaluatedSystemSpec
+    expect(spec.extends).toEqual(['upstream-system'])
+    expect({ ...spec, extends: undefined }).toBeDefined()
+  })
+
   it('Invalid version fixture has schemaVersion !== 1', () => {
     expect(evaluatedSystemSpecInvalidVersionJson.schemaVersion).not.toBe(1)
   })
@@ -121,6 +130,7 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(request.jsxHosts).toContain('AdoptedExtendsHost')
     expect(request.sourceRoot).toBeDefined()
     expect(request.declarationRoot).toBeDefined()
+    expect(request.include).toEqual(['**/*.{ts,tsx}'])
   })
 
   it('Negative compile request identifies illegal layers host', () => {

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { startServer, type ServedWorld } from './server.ts';
+import { buildWorld } from './build.ts';
 import { ARTIFACTS_DIR, type NeoCase } from './cases.ts';
 import type { SpecPage } from './page.ts';
 import { makeSnap, type SnapFn } from './snapshots.ts';
@@ -182,6 +183,44 @@ function messageOf(err: unknown): string {
   return err instanceof Error ? (err.message ?? String(err)) : String(err);
 }
 
+// A case opts into the sync loop with `"sync": true` in its case.json.
+// Read here (not in cases.ts) so the hook stays the one harness touch:
+// any unreadable or flagless case keeps the legacy serve-only behavior.
+function caseOptsIntoSync(caseDir: string): boolean {
+  try {
+    const raw = fs.readFileSync(path.join(caseDir, 'case.json'), 'utf8');
+    return (JSON.parse(raw) as { sync?: unknown }).sync === true;
+  } catch {
+    return false;
+  }
+}
+
+// Runs the per-case sync loop for opted-in cases: regenerate the world's
+// .reference-ui folder fresh before serving. Returns an error string when
+// sync throws, null when the case skips sync or sync succeeds.
+async function runSyncHook(c: NeoCase): Promise<string | null> {
+  if (!caseOptsIntoSync(c.dir)) return null;
+  try {
+    const { sync } = await import('../../src/sync/index.ts');
+    const started = Date.now();
+    await sync(c.worldDir);
+    console.log(`[${c.id}] sync ${Date.now() - started}ms`);
+    return null;
+  } catch (err) {
+    return `sync failed: ${messageOf(err)}`;
+  }
+}
+
+// One pre-serve step so runCase stays flat: build the world sources, then
+// regenerate the synced folder. Returns an error string when either phase
+// fails, null when the world is ready to serve.
+async function prepareWorld(c: NeoCase): Promise<string | null> {
+  const built = await buildWorld(c.worldDir);
+  if ('error' in built) return built.error;
+  if (built.files.length > 0) console.log(`[${c.id}] world build: ${built.files.length} files → dist/`);
+  return runSyncHook(c);
+}
+
 // One GET against the served world root: 200 means an index.html answered,
 // any other status (or no response at all) means the world is empty or
 // broken. Null is "no response", never confused with a status code.
@@ -257,8 +296,8 @@ async function runWithBrowser({ browser, world, c, dir, artifacts, snap }: Brows
   return { ok, degraded: false, artifacts, error, specFailed };
 }
 
-// Runs one case: serve its world, execute each spec headless, dump
-// artifacts. Returns { ok, degraded, artifacts, error? }.
+// Runs one case: build its world sources, sync, serve, execute each spec
+// headless, dump artifacts. Returns { ok, degraded, artifacts, error? }.
 // degraded=true means Playwright/browsers were not resolvable: the world
 // was served but no spec executed (serve-only mode). Never throws for a
 // spec failure; that is ok=false.
@@ -266,6 +305,11 @@ export async function runCase(c: NeoCase, { artifactsDir = ARTIFACTS_DIR, update
   const dir = path.join(artifactsDir, c.id);
   fs.mkdirSync(dir, { recursive: true });
   const artifacts: string[] = [];
+
+  const hookError = await prepareWorld(c);
+  if (hookError) {
+    return { ok: false, degraded: false, artifacts, error: hookError, specFailed: false };
+  }
 
   const served = await serveWorld(c);
   if ('error' in served) {

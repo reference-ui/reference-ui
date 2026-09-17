@@ -16,8 +16,13 @@ const spec: AtomicCaseSpec = {
     expect(Object.keys(classes).some(k => k.startsWith('colorMode:'))).toBe(false)
     expect(result.stylesheet).toContain('.\\@reference-ui\\/lib__mt_2r')
     expect(result.stylesheet).not.toContain('variant')
-    expect(result.stylesheet).not.toContain('color-mode')
     expect(result.stylesheet).not.toContain('colorMode')
+    // Kebab `color-mode` is scoped to utilities: the canonical token island
+    // `[data-color-mode=dark]` in `@layer tokens` is not a prop leak.
+    const utilities = result.stylesheet.slice(
+      result.stylesheet.indexOf('@layer utilities {')
+    )
+    expect(utilities).not.toContain('color-mode')
   },
 }
 

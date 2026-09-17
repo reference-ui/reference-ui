@@ -1,0 +1,74 @@
+// Author font() call plus its fragment collector.
+// It takes font definitions from fragment files and emits collected entries.
+// This module is a Neo-owned copy of the core font collector.
+
+import { createFragmentFunction } from '../lib/collector.ts'
+
+/** @font-face rule shape used by font() */
+export interface FontFaceRule {
+  src: string
+  fontWeight?: string
+  fontStyle?: string
+  fontDisplay?: string
+  sizeAdjust?: string
+  descentOverride?: string
+}
+
+export type FontWeightName =
+  | 'thin'
+  | 'light'
+  | 'normal'
+  | 'semibold'
+  | 'bold'
+  | 'black'
+
+/** Options passed to font(name, options) */
+export interface FontOptions {
+  value: string
+  fontFace: FontFaceRule | FontFaceRule[]
+  weights: Partial<Record<FontWeightName, string>>
+  css?: Record<string, string>
+}
+
+/** Collected shape: one entry per font() call */
+export interface FontDefinition {
+  name: string
+  value: string
+  fontFace: FontFaceRule | FontFaceRule[]
+  weights: Partial<Record<FontWeightName, string>>
+  css?: Record<string, string>
+}
+
+const { fn, collector } = createFragmentFunction<FontDefinition>({
+  name: 'font',
+  targetFunction: 'font',
+  globalKey: '__refFontCollector',
+})
+
+/**
+ * Register a font with tokens, @font-face, recipe variant, and pattern support.
+ * Called from fragment files; collected at sync time.
+ * Downstream consumption (spec merge, pattern merge) is wired separately.
+ *
+ * @example
+ * ```ts
+ * font('sans', {
+ *   value: '"Inter", ui-sans-serif, sans-serif',
+ *   fontFace: {
+ *     src: 'url(/fonts/inter.woff2) format("woff2")',
+ *     fontWeight: '200 900',
+ *     fontDisplay: 'swap',
+ *   },
+ *   weights: { thin: '200', normal: '400', bold: '700' },
+ *   css: { letterSpacing: '-0.01em', fontWeight: 'normal' },
+ * })
+ * ```
+ */
+export function font(name: string, options: FontOptions): void {
+  fn({ name, ...options })
+}
+
+/** Used by the sync runner to collect font fragments when running fragment files. */
+export function createFontCollector() {
+  return collector
+}

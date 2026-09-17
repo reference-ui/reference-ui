@@ -38,5 +38,6 @@
     "AdoptedExtendsHost"
   ],
   "sourceRoot": "packages/reference-lib/src",
-  "declarationRoot": "packages/reference-lib/.reference-ui/staging/declarations"
+  "declarationRoot": "packages/reference-lib/.reference-ui/staging/declarations",
+  "include": ["**/*.{ts,tsx}"]
 }

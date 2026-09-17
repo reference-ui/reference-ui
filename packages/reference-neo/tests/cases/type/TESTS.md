@@ -1,0 +1,10 @@
+# TYPE ledger
+
+| id | claim | status | engine | host | proof | evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| NEO-TYPE-01 | Generated `react.d.mts` compiles a consumer world using primitives, `css`, `recipe` and named types | done | typegen (`emitDtsSync`) | `publish.ts` writes `styled/types`, react types reference them | `tsc --noEmit -p world/tsconfig.json` exit 0 against the generated `.d.mts` | `[core]` `.reference-ui/types`; generated-folder-shape §4 |
+| NEO-TYPE-02 | Token unions are real: a known literal assigns at a `ColorToken`-typed position, `color="nope"` there is TS2322 (open `StyleProps` props keep the `(string & {})` hatch; cook verifies default) | done | typegen (`emitDtsSync`) | — | positive file tsc exit 0, negative file exit ≠ 0 with TS2322 | `[panda-v1]` `generate-token-dts.test.ts`; typegen goldens `tokens.d.ts`; TYP-STRICT-04 |
+| NEO-TYPE-03 | Recipe variant props type as optional literal unions; a wrong variant value is an error (plain unions per TYP-RECIPE-01, not `ConditionalValue`) | done | typegen (`emitDtsSync`) | `sync/publish/types-bundle.ts` tightens `RecipeRuntimeFn` call position (T3/T5) | positive file tsc exit 0, negative file exit ≠ 0 | `[panda-v1]` `generate-recipe.test.ts` (contrast: `ConditionalValue`); golden `recipes.d.ts` |
+| NEO-TYPE-04 | Condition keys `_hover`, `@sm` (bare `sm` excluded), and arrays with `null` typecheck | done | typegen (`emitDtsSync`) | — | `tsc --noEmit` exit 0 on conditions + `[null, '4r']` responsive arrays | typegen `styles.d.ts` `StylePropValue`; `[decision D8,D10]` |
+| NEO-TYPE-05 | `@reference-ui/system` authoring calls typecheck in a fragment file (`tokens`, `font`, `keyframes`, `globalCss`, `getRhythm`) | done | none | `system.d.mts` | `tsc --noEmit` exit 0 on a fragment importing the authoring surface | `[decision D6]` |
+| NEO-TYPE-06 | No `@pandacss/*` import anywhere in generated declarations | done | none | — | `rg` over `.reference-ui` finds zero matches | §4.1 forbidden; TYP-NATIVE-06 |

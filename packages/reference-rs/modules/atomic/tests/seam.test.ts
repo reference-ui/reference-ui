@@ -36,10 +36,22 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
   })
 
   it('serializes five-tuple lookup keys matching Rust format', () => {
-    const key1 = serializeLookupKey('lib-test-system', ['_hover'], 'color', 'red.500', false)
+    const key1 = serializeLookupKey(
+      'lib-test-system',
+      ['_hover'],
+      'color',
+      'red.500',
+      false
+    )
     expect(key1).toBe('["lib-test-system",["_hover"],"color","red.500",false]')
 
-    const key2 = serializeLookupKey('lib-test-system', [], 'padding', ['1', null, '4'], false)
+    const key2 = serializeLookupKey(
+      'lib-test-system',
+      [],
+      'padding',
+      ['1', null, '4'],
+      false
+    )
     expect(key2).toBe('["lib-test-system",[],"padding",["1",null,"4"],false]')
 
     const key3 = serializeLookupKey('lib-test-system', [], 'marginTop', { $r: 2 }, true)
@@ -54,7 +66,9 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     const colorKey = serializeLookupKey('lib-test-system', [], 'color', 'blue.500', false)
     const colorDecls = index.get(colorKey)
     expect(colorDecls).toBeDefined()
-    expect(colorDecls).toEqual([{ slot: 'color', className: 'lib-test-system__c_blue-500' }])
+    expect(colorDecls).toEqual([
+      { slot: 'color', className: 'lib-test-system__c_blue-500' },
+    ])
 
     // Lookup four-side shorthand p: 2
     const pKey = serializeLookupKey('lib-test-system', [], 'p', '2', false)

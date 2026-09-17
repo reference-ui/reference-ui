@@ -54,6 +54,9 @@
     "./typegen": {
       "types": "./dist/typegen.d.ts",
       "import": "./dist/typegen.mjs"
+    },
+    "./contracts": {
+      "types": "./dist/contracts/types.d.ts"
     }
   },
   "files": [

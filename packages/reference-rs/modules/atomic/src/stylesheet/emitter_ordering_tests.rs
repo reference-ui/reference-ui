@@ -25,7 +25,12 @@ fn recipe_rule(class_name: &str, atoms: Vec<Atom>) -> crate::recipes::RecipeRule
 }
 
 fn plain_atom(prop: &str, value: &str) -> Atom {
-    Atom::new(prop.into(), CssValue::String(value.into()), smallvec![], false)
+    Atom::new(
+        prop.into(),
+        CssValue::String(value.into()),
+        smallvec![],
+        false,
+    )
 }
 
 fn conditioned_atom(prop: &str, value: &str, raw: &str) -> Atom {
@@ -95,6 +100,28 @@ fn media_group_sorts_before_container_regardless_of_width() {
         .find("@container (min-width: 640px)")
         .expect("container wrap");
     assert!(media < container, "kind before width:\n{css}");
+}
+
+#[test]
+fn groups_sharing_wraps_merge_into_one_block() {
+    let rule = recipe_rule(
+        "sm:button_v_outline",
+        vec![
+            conditioned_atom("color", "blue", "@container (min-width: 640px)"),
+            Atom::new(
+                "color".into(),
+                CssValue::String("white".into()),
+                smallvec![
+                    when("@container (min-width: 640px)"),
+                    when("&:is(:hover, [data-hover])"),
+                ],
+                false,
+            ),
+        ],
+    );
+    let css = emit_rule(&rule);
+    assert_eq!(css.matches("@container (min-width: 640px)").count(), 1);
+    assert!(css.contains(":is(:hover, [data-hover])"));
 }
 
 #[test]

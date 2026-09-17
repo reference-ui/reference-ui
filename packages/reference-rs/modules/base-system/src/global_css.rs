@@ -139,10 +139,7 @@ mod tests {
         let mut button_node = IndexMap::new();
         let mut focus_node = IndexMap::new();
         focus_node.insert("display".into(), GlobalDeclarationValue::Boolean(false));
-        button_node.insert(
-            "&:focus".into(),
-            GlobalDeclarationValue::Nested(focus_node),
-        );
+        button_node.insert("&:focus".into(), GlobalDeclarationValue::Nested(focus_node));
         rules.insert("button".into(), button_node);
         let fragment = GlobalCssFragment {
             source: "src/theme/button.ts".into(),

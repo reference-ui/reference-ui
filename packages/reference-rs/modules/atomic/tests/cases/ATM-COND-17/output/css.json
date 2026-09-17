@@ -1,0 +1,6 @@
+{
+  "md:width:60px": "@reference-ui/lib__md:w_60px",
+  "w:70px": "@reference-ui/lib__w_70px",
+  "width:50px": "@reference-ui/lib__w_50px",
+  "width:51px": "@reference-ui/lib__w_51px"
+}

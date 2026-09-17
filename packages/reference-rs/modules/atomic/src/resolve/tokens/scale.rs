@@ -119,9 +119,18 @@ mod tests {
         assert_eq!(token_category_for_prop("boxShadow"), Some("shadows"));
         assert_eq!(token_category_for_prop("width"), Some("sizes"));
         assert_eq!(token_category_for_prop("zIndex"), Some("zIndex"));
-        assert_eq!(token_category_for_prop("transitionTimingFunction"), Some("easings"));
-        assert_eq!(token_category_for_prop("transitionDuration"), Some("durations"));
-        assert_eq!(token_category_for_prop("backgroundImage"), Some("gradients"));
+        assert_eq!(
+            token_category_for_prop("transitionTimingFunction"),
+            Some("easings")
+        );
+        assert_eq!(
+            token_category_for_prop("transitionDuration"),
+            Some("durations")
+        );
+        assert_eq!(
+            token_category_for_prop("backgroundImage"),
+            Some("gradients")
+        );
     }
 
     #[test]

@@ -75,9 +75,8 @@ mod tests {
 
     #[test]
     fn unknown_field_fixture_has_extra_key() {
-        let val: serde_json::Value =
-            serde_json::from_str(EVALUATED_SYSTEM_SPEC_UNKNOWN_FIELD_JSON)
-                .expect("valid JSON syntax");
+        let val: serde_json::Value = serde_json::from_str(EVALUATED_SYSTEM_SPEC_UNKNOWN_FIELD_JSON)
+            .expect("valid JSON syntax");
         assert!(val.get("unexpectedProperty").is_some());
     }
 }

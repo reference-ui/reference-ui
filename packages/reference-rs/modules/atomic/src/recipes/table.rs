@@ -3,6 +3,7 @@
 //! Emits an authoritative combination map where each key addresses pre-composed class strings.
 //! Multi-value compound predicates expand to discrete selection entries sharing class names.
 
+use base_system::BreakpointScale;
 use indexmap::IndexMap;
 
 use super::name;
@@ -16,6 +17,7 @@ pub struct RecipeTableInput<'a> {
     pub variant_map: &'a IndexMap<String, IndexMap<String, String>>,
     pub default_variants: &'a IndexMap<String, String>,
     pub compounds: &'a [CompiledCompound],
+    pub breakpoints: &'a BreakpointScale,
 }
 
 /// Assemble the runtime recipe table from compiled variants and compounds.
@@ -24,6 +26,8 @@ pub fn build(input: &RecipeTableInput<'_>) -> RecipeRuntimeTable {
     let variant_keys: Vec<String> = input.variant_map.keys().cloned().collect();
     let compound_variants = build_compound_variants(input.compounds);
     let combinations = build_combinations(&base, &variant_keys, input.variant_map, input.compounds);
+    let responsive_variant_map =
+        build_responsive_map(input.qualified_name, input.variant_map, input.breakpoints);
 
     RecipeRuntimeTable {
         qualified_name: input.qualified_name.to_string(),
@@ -34,7 +38,46 @@ pub fn build(input: &RecipeTableInput<'_>) -> RecipeRuntimeTable {
         default_variants: input.default_variants.clone(),
         compound_variants,
         combinations,
+        responsive_variant_map,
     }
+}
+
+/// Map every variant value to its per-breakpoint classes.
+///
+/// Only breakpoints with a pixel width qualify: each entry has a matching
+/// `@container` rule, and widthless names lower to selector wraps instead.
+fn build_responsive_map(
+    stem: &str,
+    variant_map: &IndexMap<String, IndexMap<String, String>>,
+    breakpoints: &BreakpointScale,
+) -> IndexMap<String, IndexMap<String, IndexMap<String, String>>> {
+    let mut out = IndexMap::new();
+    for (axis, values) in variant_map {
+        let mut per_breakpoint = IndexMap::new();
+        for bp in container_breakpoints(breakpoints) {
+            let mut per_value = IndexMap::new();
+            for value in values.keys() {
+                let class = name::responsive_variant_class(&bp, stem, axis, value);
+                per_value.insert(value.clone(), class);
+            }
+            per_breakpoint.insert(bp, per_value);
+        }
+        out.insert(axis.clone(), per_breakpoint);
+    }
+    out
+}
+
+/// Breakpoint names that emit `@container` rules, in scale order.
+///
+/// Shared by the runtime map and the rule emitter so every table class has a
+/// matching wrapped rule. `base` and widthless names never qualify.
+pub fn container_breakpoints(scale: &BreakpointScale) -> Vec<String> {
+    scale
+        .names()
+        .iter()
+        .filter(|bp| bp.as_str() != "base" && scale.width_px(bp).is_some())
+        .cloned()
+        .collect()
 }
 
 fn build_compound_variants(compounds: &[CompiledCompound]) -> Vec<RecipeCompoundRecord> {
@@ -51,9 +94,7 @@ fn build_compound_variants(compounds: &[CompiledCompound]) -> Vec<RecipeCompound
     out
 }
 
-fn expand_predicates(
-    predicates: &IndexMap<String, Vec<String>>,
-) -> Vec<IndexMap<String, String>> {
+fn expand_predicates(predicates: &IndexMap<String, Vec<String>>) -> Vec<IndexMap<String, String>> {
     let mut acc = vec![IndexMap::new()];
     for (key, values) in predicates {
         let mut next = Vec::new();
@@ -101,10 +142,7 @@ fn build_combinations(
     combinations
 }
 
-fn format_combination_key(
-    variant_keys: &[String],
-    row: &IndexMap<String, String>,
-) -> String {
+fn format_combination_key(variant_keys: &[String], row: &IndexMap<String, String>) -> String {
     if variant_keys.len() == 1 {
         return row.values().next().cloned().unwrap_or_default();
     }
@@ -115,10 +153,7 @@ fn format_combination_key(
         .join("|")
 }
 
-fn format_combination_classes(
-    ctx: &CombinationCtx<'_>,
-    row: &IndexMap<String, String>,
-) -> String {
+fn format_combination_classes(ctx: &CombinationCtx<'_>, row: &IndexMap<String, String>) -> String {
     let mut classes = vec![ctx.base.to_string()];
     for k in ctx.variant_keys {
         if let Some(val) = row.get(k) {
@@ -187,6 +222,7 @@ mod tests {
 
         let mut defaults = IndexMap::new();
         defaults.insert("variant".into(), "solid".into());
+        let scale = BreakpointScale::from_names(Vec::<String>::new());
 
         let input = RecipeTableInput {
             qualified_name: stem,
@@ -194,6 +230,7 @@ mod tests {
             variant_map: &variant_map,
             default_variants: &defaults,
             compounds: &[],
+            breakpoints: &scale,
         };
         let table = build(&input);
         assert_eq!(table.variant_keys, vec!["variant"]);
@@ -219,6 +256,7 @@ mod tests {
             predicates,
             class_name: format!("{stem}_c_sm_md"),
         };
+        let scale = BreakpointScale::from_names(Vec::<String>::new());
 
         let input = RecipeTableInput {
             qualified_name: stem,
@@ -226,11 +264,74 @@ mod tests {
             variant_map: &variant_map,
             default_variants: &IndexMap::new(),
             compounds: &[compound],
+            breakpoints: &scale,
         };
         let table = build(&input);
         assert_eq!(table.compound_variants.len(), 2);
-        assert_eq!(table.compound_variants[0].class_name, table.compound_variants[1].class_name);
-        assert_eq!(table.compound_variants[0].selection.get("size"), Some(&"sm".to_string()));
-        assert_eq!(table.compound_variants[1].selection.get("size"), Some(&"md".to_string()));
+        assert_eq!(
+            table.compound_variants[0].class_name,
+            table.compound_variants[1].class_name
+        );
+        assert_eq!(
+            table.compound_variants[0].selection.get("size"),
+            Some(&"sm".to_string())
+        );
+        assert_eq!(
+            table.compound_variants[1].selection.get("size"),
+            Some(&"md".to_string())
+        );
+    }
+
+    #[test]
+    fn responsive_map_covers_width_breakpoints_only() {
+        let stem = "lib-test-system__button";
+        let mut outline_map = IndexMap::new();
+        outline_map.insert("solid".into(), format!("{stem}_v_solid"));
+        outline_map.insert("outline".into(), format!("{stem}_v_outline"));
+        let mut variant_map = IndexMap::new();
+        variant_map.insert("variant".into(), outline_map);
+        let scale = BreakpointScale::standard();
+
+        let input = RecipeTableInput {
+            qualified_name: stem,
+            class_name: "button",
+            variant_map: &variant_map,
+            default_variants: &IndexMap::new(),
+            compounds: &[],
+            breakpoints: &scale,
+        };
+        let table = build(&input);
+        let axis = &table.responsive_variant_map["variant"];
+        assert_eq!(axis.len(), 5);
+        assert_eq!(
+            axis["md"].get("outline").map(String::as_str),
+            Some("md:lib-test-system__button_v_outline")
+        );
+        assert_eq!(
+            axis["sm"].get("solid").map(String::as_str),
+            Some("sm:lib-test-system__button_v_solid")
+        );
+        assert!(!axis.contains_key("base"));
+    }
+
+    #[test]
+    fn responsive_map_skips_widthless_breakpoints() {
+        let stem = "lib-test-system__button";
+        let mut outline_map = IndexMap::new();
+        outline_map.insert("solid".into(), format!("{stem}_v_solid"));
+        let mut variant_map = IndexMap::new();
+        variant_map.insert("variant".into(), outline_map);
+        let scale = BreakpointScale::from_names(["wide"]);
+
+        let input = RecipeTableInput {
+            qualified_name: stem,
+            class_name: "button",
+            variant_map: &variant_map,
+            default_variants: &IndexMap::new(),
+            compounds: &[],
+            breakpoints: &scale,
+        };
+        let table = build(&input);
+        assert!(table.responsive_variant_map["variant"].is_empty());
     }
 }

@@ -41,9 +41,7 @@ fn crate_root() -> PathBuf {
 }
 
 fn collect_rs_files(dir: &Path, files: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|err| {
-        panic!("read {}: {err}", dir.display())
-    });
+    let entries = fs::read_dir(dir).unwrap_or_else(|err| panic!("read {}: {err}", dir.display()));
     for entry in entries {
         let path = entry.unwrap_or_else(|err| panic!("dirent: {err}")).path();
         if path.is_dir() {
@@ -63,9 +61,8 @@ fn production_rust_sources() -> Vec<(PathBuf, String)> {
         .into_iter()
         .filter(|path| !path.components().any(|c| c.as_os_str() == "tests"))
         .map(|path| {
-            let text = fs::read_to_string(&path).unwrap_or_else(|err| {
-                panic!("read {}: {err}", path.display())
-            });
+            let text = fs::read_to_string(&path)
+                .unwrap_or_else(|err| panic!("read {}: {err}", path.display()));
             (path, text)
         })
         .collect()
@@ -97,7 +94,14 @@ fn typ_forbid_04_emits_recipe_types_in_one_string_not_modules() {
     );
     let module_needles = ["recipes/button.d.ts", "recipes/badge.d.ts", "recipes/"];
     assert_absent("TYP-FORBID-04", &dts, &module_needles);
-    for other in [catalog_dts(), recipe_dts(), compound_dts(), font_dts(), style_dts(), font_style_dts()] {
+    for other in [
+        catalog_dts(),
+        recipe_dts(),
+        compound_dts(),
+        font_dts(),
+        style_dts(),
+        font_style_dts(),
+    ] {
         assert_absent("TYP-FORBID-04", &other, &["recipes/"]);
     }
     assert_matches_golden("recipes-two.d.ts", &dts);

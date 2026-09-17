@@ -4,15 +4,17 @@
  * Handles JSON serialization of compilation requests and deserialization of stylesheets, class maps, and diagnostics.
  */
 import { compileSystem } from './runtime.js'
-import type { CompileRequest, CompileResult } from './types.js'
+import type { AnyCompileRequest, CompileResult } from './types.js'
 
 export type {
+  AnyCompileRequest,
   CompileRequest,
   CompileResult,
   CssRuntime,
   Diagnostic,
   DiagnosticSeverity,
   EvaluatedSystemSpec,
+  NativeCompileRequest,
   NativeRuntimeArtifact,
   RecipeMatch,
   RecipeRuntimeTable,
@@ -30,15 +32,15 @@ export {
   resolveStyleDeclarations,
   serializeCanonicalJson,
   serializeLookupKey,
+  splitSlot,
   type StylePlanQuery,
 } from './plans.js'
 
-
-export function compileSync(request: CompileRequest): CompileResult {
+export function compileSync(request: AnyCompileRequest): CompileResult {
   const requestJson = JSON.stringify(request)
   return compileSystem(requestJson)
 }
 
-export async function compile(request: CompileRequest): Promise<CompileResult> {
+export async function compile(request: AnyCompileRequest): Promise<CompileResult> {
   return compileSync(request)
 }

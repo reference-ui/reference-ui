@@ -1,6 +1,6 @@
 //! Integration tests for BaseSystem query contracts, lib fixture, and global CSS.
 //! Verifies thread-safe Send + Sync lookups, token resolution, category scoping,
-//! condition wrap retrieval with data-theme, and structured global CSS rule blocks.
+//! condition wrap retrieval with data-color-mode, and structured global CSS rule blocks.
 
 use super::*;
 
@@ -53,11 +53,11 @@ fn lib_fixture_has_lib_tokens_fonts_and_host_conditions() {
     );
     assert_eq!(
         system.get_condition("_dark"),
-        Some("[data-theme=dark] &")
+        Some("[data-color-mode=dark] &")
     );
     assert_eq!(
         system.get_condition("_light"),
-        Some("[data-theme=light] &")
+        Some("[data-color-mode=light] &")
     );
     assert_ne!(system.get_condition("_dark"), Some(".dark &"));
     assert_eq!(system.breakpoints().width_px("sm"), Some("640"));
@@ -230,7 +230,7 @@ fn bas_global_03_indexes_conditions() {
         "fonts": {},
         "conditions": {
             "_hover": "&:hover",
-            "_dark": "[data-theme=\"dark\"] &",
+            "_dark": "[data-color-mode=\"dark\"] &",
             "_focusVisible": "&:focus-visible"
         },
         "globalCss": [],
@@ -241,6 +241,12 @@ fn bas_global_03_indexes_conditions() {
     }"#;
     let system = BaseSystem::from_json(json).unwrap();
     assert_eq!(system.get_condition("_hover"), Some("&:hover"));
-    assert_eq!(system.get_condition("_dark"), Some("[data-theme=\"dark\"] &"));
-    assert_eq!(system.get_condition("_focusVisible"), Some("&:focus-visible"));
+    assert_eq!(
+        system.get_condition("_dark"),
+        Some("[data-color-mode=\"dark\"] &")
+    );
+    assert_eq!(
+        system.get_condition("_focusVisible"),
+        Some("&:focus-visible")
+    );
 }

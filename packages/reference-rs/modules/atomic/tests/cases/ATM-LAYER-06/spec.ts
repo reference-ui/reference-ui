@@ -17,6 +17,10 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('font-family: "Fira Code";')
     expect(sheet).toContain('src: url(/fonts/fira-code.woff2);')
     expect(sheet).toContain('font-display: fallback;')
+    expect(sheet).toContain('size-adjust: 104%;')
+    expect(sheet).toContain('descent-override: 47%;')
+    expect(sheet).toContain('size-adjust: 101%;')
+    expect(sheet.match(/descent-override/g) ?? []).toHaveLength(1)
   },
 }
 

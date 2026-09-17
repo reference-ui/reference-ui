@@ -1,0 +1,5 @@
+{
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:2px": "@reference-ui/lib__bd-w_2px",
+  "outlineColor:{colors.gray.800}": "@reference-ui/lib__outline-c_{colors.gray.800}"
+}

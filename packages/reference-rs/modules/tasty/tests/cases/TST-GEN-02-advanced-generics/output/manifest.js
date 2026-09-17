@@ -1,179 +1,145 @@
 export const manifest = {
-  "version": "2",
-  "warnings": [],
-  "symbolsByName": {
-    "Box": [
-      "_e98278c763b413e7"
-    ],
-    "ComplexObject": [
-      "_d59e20293b7547bd"
-    ],
-    "ConstrainedWrapper": [
-      "_ebb180678c08edcd"
-    ],
-    "DeepPartialExample": [
-      "_17ddfaaf916c61e1"
-    ],
-    "GenericConstraintsExtends": [
-      "_aca439018a98f7f4"
-    ],
-    "GenericDefaultsComplex": [
-      "_44bf9693903751fb"
-    ],
-    "GenericDistributiveConditional": [
-      "_f96e8ccc602ae3ff"
-    ],
-    "GenericHigherKinded": [
-      "_1334a107581966bf"
-    ],
-    "GenericInfer": [
-      "_fe87c83c7250fa79"
-    ],
-    "GenericRecursive": [
-      "_2fb2b9a7ee0bd5c9"
-    ],
-    "GenericVariadicTuples": [
-      "_4b4d440e8d483e99"
-    ],
-    "HigherKindedExample": [
-      "_1d67fa2254dc36de"
-    ],
-    "NonNullableExample": [
-      "_767a169270c28c18"
-    ],
-    "PromiseUnwrapper": [
-      "_382de8d91eebb83f"
-    ],
-    "TupleConcatExample": [
-      "_6be674e2ced7727c"
-    ],
-    "UnionWithDefaults": [
-      "_0cf36d050120b017"
-    ],
-    "UserWithId": [
-      "_4abb5435185f165e"
-    ]
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    Box: ['_e98278c763b413e7'],
+    ComplexObject: ['_d59e20293b7547bd'],
+    ConstrainedWrapper: ['_ebb180678c08edcd'],
+    DeepPartialExample: ['_17ddfaaf916c61e1'],
+    GenericConstraintsExtends: ['_aca439018a98f7f4'],
+    GenericDefaultsComplex: ['_44bf9693903751fb'],
+    GenericDistributiveConditional: ['_f96e8ccc602ae3ff'],
+    GenericHigherKinded: ['_1334a107581966bf'],
+    GenericInfer: ['_fe87c83c7250fa79'],
+    GenericRecursive: ['_2fb2b9a7ee0bd5c9'],
+    GenericVariadicTuples: ['_4b4d440e8d483e99'],
+    HigherKindedExample: ['_1d67fa2254dc36de'],
+    NonNullableExample: ['_767a169270c28c18'],
+    PromiseUnwrapper: ['_382de8d91eebb83f'],
+    TupleConcatExample: ['_6be674e2ced7727c'],
+    UnionWithDefaults: ['_0cf36d050120b017'],
+    UserWithId: ['_4abb5435185f165e'],
   },
-  "symbolsById": {
-    "_0cf36d050120b017": {
-      "id": "_0cf36d050120b017",
-      "name": "UnionWithDefaults",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_0cf36d050120b017.js",
-      "library": "user"
+  symbolsById: {
+    _0cf36d050120b017: {
+      id: '_0cf36d050120b017',
+      name: 'UnionWithDefaults',
+      kind: 'typeAlias',
+      chunk: './chunks/_0cf36d050120b017.js',
+      library: 'user',
     },
-    "_1334a107581966bf": {
-      "id": "_1334a107581966bf",
-      "name": "GenericHigherKinded",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_1334a107581966bf.js",
-      "library": "user"
+    _1334a107581966bf: {
+      id: '_1334a107581966bf',
+      name: 'GenericHigherKinded',
+      kind: 'typeAlias',
+      chunk: './chunks/_1334a107581966bf.js',
+      library: 'user',
     },
-    "_17ddfaaf916c61e1": {
-      "id": "_17ddfaaf916c61e1",
-      "name": "DeepPartialExample",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_17ddfaaf916c61e1.js",
-      "library": "user"
+    _17ddfaaf916c61e1: {
+      id: '_17ddfaaf916c61e1',
+      name: 'DeepPartialExample',
+      kind: 'typeAlias',
+      chunk: './chunks/_17ddfaaf916c61e1.js',
+      library: 'user',
     },
-    "_1d67fa2254dc36de": {
-      "id": "_1d67fa2254dc36de",
-      "name": "HigherKindedExample",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_1d67fa2254dc36de.js",
-      "library": "user"
+    _1d67fa2254dc36de: {
+      id: '_1d67fa2254dc36de',
+      name: 'HigherKindedExample',
+      kind: 'typeAlias',
+      chunk: './chunks/_1d67fa2254dc36de.js',
+      library: 'user',
     },
-    "_2fb2b9a7ee0bd5c9": {
-      "id": "_2fb2b9a7ee0bd5c9",
-      "name": "GenericRecursive",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_2fb2b9a7ee0bd5c9.js",
-      "library": "user"
+    _2fb2b9a7ee0bd5c9: {
+      id: '_2fb2b9a7ee0bd5c9',
+      name: 'GenericRecursive',
+      kind: 'typeAlias',
+      chunk: './chunks/_2fb2b9a7ee0bd5c9.js',
+      library: 'user',
     },
-    "_382de8d91eebb83f": {
-      "id": "_382de8d91eebb83f",
-      "name": "PromiseUnwrapper",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_382de8d91eebb83f.js",
-      "library": "user"
+    _382de8d91eebb83f: {
+      id: '_382de8d91eebb83f',
+      name: 'PromiseUnwrapper',
+      kind: 'typeAlias',
+      chunk: './chunks/_382de8d91eebb83f.js',
+      library: 'user',
     },
-    "_44bf9693903751fb": {
-      "id": "_44bf9693903751fb",
-      "name": "GenericDefaultsComplex",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_44bf9693903751fb.js",
-      "library": "user"
+    _44bf9693903751fb: {
+      id: '_44bf9693903751fb',
+      name: 'GenericDefaultsComplex',
+      kind: 'typeAlias',
+      chunk: './chunks/_44bf9693903751fb.js',
+      library: 'user',
     },
-    "_4abb5435185f165e": {
-      "id": "_4abb5435185f165e",
-      "name": "UserWithId",
-      "kind": "interface",
-      "chunk": "./chunks/_4abb5435185f165e.js",
-      "library": "user"
+    _4abb5435185f165e: {
+      id: '_4abb5435185f165e',
+      name: 'UserWithId',
+      kind: 'interface',
+      chunk: './chunks/_4abb5435185f165e.js',
+      library: 'user',
     },
-    "_4b4d440e8d483e99": {
-      "id": "_4b4d440e8d483e99",
-      "name": "GenericVariadicTuples",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_4b4d440e8d483e99.js",
-      "library": "user"
+    _4b4d440e8d483e99: {
+      id: '_4b4d440e8d483e99',
+      name: 'GenericVariadicTuples',
+      kind: 'typeAlias',
+      chunk: './chunks/_4b4d440e8d483e99.js',
+      library: 'user',
     },
-    "_6be674e2ced7727c": {
-      "id": "_6be674e2ced7727c",
-      "name": "TupleConcatExample",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_6be674e2ced7727c.js",
-      "library": "user"
+    _6be674e2ced7727c: {
+      id: '_6be674e2ced7727c',
+      name: 'TupleConcatExample',
+      kind: 'typeAlias',
+      chunk: './chunks/_6be674e2ced7727c.js',
+      library: 'user',
     },
-    "_767a169270c28c18": {
-      "id": "_767a169270c28c18",
-      "name": "NonNullableExample",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_767a169270c28c18.js",
-      "library": "user"
+    _767a169270c28c18: {
+      id: '_767a169270c28c18',
+      name: 'NonNullableExample',
+      kind: 'typeAlias',
+      chunk: './chunks/_767a169270c28c18.js',
+      library: 'user',
     },
-    "_aca439018a98f7f4": {
-      "id": "_aca439018a98f7f4",
-      "name": "GenericConstraintsExtends",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_aca439018a98f7f4.js",
-      "library": "user"
+    _aca439018a98f7f4: {
+      id: '_aca439018a98f7f4',
+      name: 'GenericConstraintsExtends',
+      kind: 'typeAlias',
+      chunk: './chunks/_aca439018a98f7f4.js',
+      library: 'user',
     },
-    "_d59e20293b7547bd": {
-      "id": "_d59e20293b7547bd",
-      "name": "ComplexObject",
-      "kind": "interface",
-      "chunk": "./chunks/_d59e20293b7547bd.js",
-      "library": "user"
+    _d59e20293b7547bd: {
+      id: '_d59e20293b7547bd',
+      name: 'ComplexObject',
+      kind: 'interface',
+      chunk: './chunks/_d59e20293b7547bd.js',
+      library: 'user',
     },
-    "_e98278c763b413e7": {
-      "id": "_e98278c763b413e7",
-      "name": "Box",
-      "kind": "interface",
-      "chunk": "./chunks/_e98278c763b413e7.js",
-      "library": "user"
+    _e98278c763b413e7: {
+      id: '_e98278c763b413e7',
+      name: 'Box',
+      kind: 'interface',
+      chunk: './chunks/_e98278c763b413e7.js',
+      library: 'user',
     },
-    "_ebb180678c08edcd": {
-      "id": "_ebb180678c08edcd",
-      "name": "ConstrainedWrapper",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_ebb180678c08edcd.js",
-      "library": "user"
+    _ebb180678c08edcd: {
+      id: '_ebb180678c08edcd',
+      name: 'ConstrainedWrapper',
+      kind: 'typeAlias',
+      chunk: './chunks/_ebb180678c08edcd.js',
+      library: 'user',
     },
-    "_f96e8ccc602ae3ff": {
-      "id": "_f96e8ccc602ae3ff",
-      "name": "GenericDistributiveConditional",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_f96e8ccc602ae3ff.js",
-      "library": "user"
+    _f96e8ccc602ae3ff: {
+      id: '_f96e8ccc602ae3ff',
+      name: 'GenericDistributiveConditional',
+      kind: 'typeAlias',
+      chunk: './chunks/_f96e8ccc602ae3ff.js',
+      library: 'user',
     },
-    "_fe87c83c7250fa79": {
-      "id": "_fe87c83c7250fa79",
-      "name": "GenericInfer",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_fe87c83c7250fa79.js",
-      "library": "user"
-    }
-  }
-};
-export default manifest;
+    _fe87c83c7250fa79: {
+      id: '_fe87c83c7250fa79',
+      name: 'GenericInfer',
+      kind: 'typeAlias',
+      chunk: './chunks/_fe87c83c7250fa79.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

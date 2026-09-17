@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="combo">recipe compound combo</div>
+    <div id="accentonly">recipe compound accent only</div>
+    <div id="lgonly">recipe compound lg only</div>
+    <div id="hovertwin" data-hover>recipe compound hover twin</div>
+    <div data-color-mode="dark">
+      <div id="comboindark">recipe compound combo in dark</div>
+      <div id="partialindark">recipe compound partial in dark</div>
+    </div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

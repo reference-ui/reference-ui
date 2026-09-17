@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- GLOBAL-03 world. It links the synced stylesheet and stages one button per twin. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+  </head>
+  <body>
+    <button type="button" class="ref-button" id="base">base</button>
+    <button type="button" class="ref-button" id="slotted">
+      <span data-slot="icon" id="icon">i</span>slot
+    </button>
+    <button type="button" class="ref-button" id="disabled" disabled>off</button>
+    <button type="button" class="ref-button" id="hovered" data-hover>hot</button>
+    <button type="button" class="ref-button" id="focused" data-focus-visible>ring</button>
+  </body>
+</html>

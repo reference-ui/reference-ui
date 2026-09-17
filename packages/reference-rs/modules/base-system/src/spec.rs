@@ -3,7 +3,8 @@
 //! the evaluated objects into an `EvaluatedSystemSpec` with schemaVersion 1 and reference-ui profile.
 //! Leaves carry `value`, `light`, and `dark` strings. When `light` or `dark` is itself an object,
 //! it is a nested group rather than a mode slot. Unknown top-level fields and unsupported
-//! schema versions fail closed with explicit diagnostics.
+//! schema versions fail closed with explicit diagnostics. `extends` names upstream systems
+//! that `BaseSystem::from_specs` resolves; empty means standalone.
 
 use std::error::Error;
 use std::fmt;
@@ -39,6 +40,12 @@ pub enum FromJsonError {
         path: String,
         source: Option<String>,
     },
+    UnknownUpstream {
+        name: String,
+    },
+    ExtendsCycle {
+        chain: Vec<String>,
+    },
     InvalidGlobalCss {
         path: String,
         source: Option<String>,
@@ -62,28 +69,65 @@ impl FromJsonError {
             Self::UnsupportedSchemaVersion(ver) => {
                 Some(write!(f, "unsupported schema version {ver}; expected 1"))
             }
-            Self::UnsupportedProfile(prof) => {
-                Some(write!(f, "unsupported profile \"{prof}\"; expected \"reference-ui\""))
-            }
+            Self::UnsupportedProfile(prof) => Some(write!(
+                f,
+                "unsupported profile \"{prof}\"; expected \"reference-ui\""
+            )),
             _ => None,
         }
     }
 
     fn fmt_domain_error(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(res) = self.fmt_extends_error(f) {
+            return res;
+        }
+        if let Some(res) = self.fmt_path_error(f) {
+            return res;
+        }
         match self {
-            Self::InvalidLeaf { path, source } => {
-                fmt_with_source(f, "invalid token leaf", path, source.as_deref())
-            }
-            Self::DuplicatePath { path, source } => {
-                fmt_with_source(f, "duplicate token path", path, source.as_deref())
-            }
-            Self::Cycle { path, source } => {
-                fmt_with_source(f, "cyclic token alias", path, source.as_deref())
-            }
-            Self::InvalidGlobalCss { path, source, message } => {
-                fmt_global_css(f, path, source.as_deref(), message)
-            }
+            Self::InvalidGlobalCss {
+                path,
+                source,
+                message,
+            } => fmt_global_css(f, path, source.as_deref(), message),
             _ => Ok(()),
+        }
+    }
+
+    fn fmt_path_error(&self, f: &mut fmt::Formatter<'_>) -> Option<fmt::Result> {
+        match self {
+            Self::InvalidLeaf { path, source } => Some(fmt_with_source(
+                f,
+                "invalid token leaf",
+                path,
+                source.as_deref(),
+            )),
+            Self::DuplicatePath { path, source } => Some(fmt_with_source(
+                f,
+                "duplicate token path",
+                path,
+                source.as_deref(),
+            )),
+            Self::Cycle { path, source } => Some(fmt_with_source(
+                f,
+                "cyclic token alias",
+                path,
+                source.as_deref(),
+            )),
+            _ => None,
+        }
+    }
+
+    fn fmt_extends_error(&self, f: &mut fmt::Formatter<'_>) -> Option<fmt::Result> {
+        match self {
+            Self::UnknownUpstream { name } => Some(write!(
+                f,
+                "unknown upstream system \"{name}\" in extends graph"
+            )),
+            Self::ExtendsCycle { chain } => {
+                Some(write!(f, "extends cycle detected: {}", chain.join(" -> ")))
+            }
+            _ => None,
         }
     }
 }
@@ -181,6 +225,8 @@ pub struct EvaluatedSystemSpec {
     pub schema_version: u32,
     pub profile: String,
     pub name: String,
+    #[serde(default)]
+    pub extends: Vec<String>,
     pub tokens: IndexMap<String, TokenSpecNode>,
     pub fonts: IndexMap<String, FontDefinition>,
     #[serde(default)]
@@ -202,6 +248,17 @@ impl EvaluatedSystemSpec {
     pub fn from_json(json: &str) -> Result<Self, FromJsonError> {
         serde_json::from_str(json).map_err(|err| FromJsonError::Parse(err.to_string()))
     }
+}
+
+/// Reject specs whose envelope version or profile the lowering cannot honor.
+pub(crate) fn check_envelope(spec: &EvaluatedSystemSpec) -> Result<(), FromJsonError> {
+    if spec.schema_version != 1 {
+        return Err(FromJsonError::UnsupportedSchemaVersion(spec.schema_version));
+    }
+    if spec.profile != "reference-ui" {
+        return Err(FromJsonError::UnsupportedProfile(spec.profile.clone()));
+    }
+    Ok(())
 }
 
 impl<'de> Deserialize<'de> for TokenSpecNode {

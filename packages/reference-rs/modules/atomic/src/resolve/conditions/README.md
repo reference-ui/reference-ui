@@ -19,7 +19,7 @@ not a condition.
 
 ```text
 _hover  →  hover:bg_n200  +  .hover\:bg_n200:is(:hover, [data-hover])
-_dark   →  dark:bg_n200   +  [data-panda-theme=dark] .dark\:bg_n200
+_dark   →  dark:bg_n200   +  [data-color-mode=dark] .dark\:bg_n200
 ```
 
 Nested scopes append, outer to inner. Both color-mode atoms are

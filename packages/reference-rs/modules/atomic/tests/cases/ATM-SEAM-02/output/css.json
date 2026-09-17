@@ -1,0 +1,5 @@
+{
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "padding:1r": "@reference-ui/lib__p_1r"
+}

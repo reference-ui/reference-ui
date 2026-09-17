@@ -4,7 +4,7 @@
 //! traversal, strips inline `!important` markers, and records structured `Want` declarations
 //! onto the active expression-walk context.
 
-use oxc_ast::ast::{NumericLiteral, StringLiteral, TemplateLiteral};
+use oxc_ast::ast::{BooleanLiteral, NumericLiteral, StringLiteral, TemplateLiteral};
 use smallvec::SmallVec;
 
 use super::walk::ExpressionWalk;
@@ -19,7 +19,12 @@ pub fn push_string_want(
     // '2r' / "blue.600" / '2r!' / '1r!important'
     let raw = lit.value.as_str();
     let (val, is_imp) = split_important_flag(raw);
-    ctx.push_want(AtomValue::String(val.into()), when.clone(), is_imp);
+    ctx.push_want(
+        AtomValue::String(val.into()),
+        when.clone(),
+        is_imp,
+        Some(lit.span),
+    );
 }
 
 /// Extract numeric literal value as a string representation.
@@ -30,13 +35,27 @@ pub fn push_number_want(
 ) {
     // opacity={0.5}
     let val = lit.value.to_string();
-    ctx.push_want(AtomValue::Number(val.into_boxed_str()), when.clone(), false);
+    ctx.push_want(
+        AtomValue::Number(val.into_boxed_str()),
+        when.clone(),
+        false,
+        Some(lit.span),
+    );
 }
 
 /// Extract boolean literal value.
-pub fn push_bool_want(ctx: &mut ExpressionWalk<'_>, val: bool, when: &SmallVec<[Box<str>; 2]>) {
+pub fn push_bool_want(
+    ctx: &mut ExpressionWalk<'_>,
+    lit: &BooleanLiteral,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
     // truncate={false}
-    ctx.push_want(AtomValue::Bool(val), when.clone(), false);
+    ctx.push_want(
+        AtomValue::Bool(lit.value),
+        when.clone(),
+        false,
+        Some(lit.span),
+    );
 }
 
 /// Strip `!important` or trailing `!` from a value string.
@@ -74,7 +93,12 @@ pub fn extract_template_literal(
         if let Some(quasi) = lit.quasis.first() {
             // `2r`
             let (val, is_imp) = split_important_flag(&quasi.value.raw);
-            ctx.push_want(AtomValue::String(val.into()), when.clone(), is_imp);
+            ctx.push_want(
+                AtomValue::String(val.into()),
+                when.clone(),
+                is_imp,
+                Some(quasi.span),
+            );
             return;
         }
     }

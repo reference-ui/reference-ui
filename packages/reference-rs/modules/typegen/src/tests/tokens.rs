@@ -10,11 +10,7 @@ use super::{assert_alias, catalog_dts};
 fn typ_token_01_emits_color_token_union() {
     let dts = catalog_dts();
     assert!(!dts.is_empty(), "TYP-TOKEN-01: colors must not emit empty");
-    assert_alias(
-        &dts,
-        "ColorToken",
-        "'brand.primary' | 'n100' | 'n300'",
-    );
+    assert_alias(&dts, "ColorToken", "'brand.primary' | 'n100' | 'n300'");
     assert!(
         !dts.contains("colors.n100"),
         "TYP-TOKEN-01: unions are category-relative"
@@ -46,11 +42,7 @@ fn typ_token_03_emits_radius_token_union() {
 fn typ_token_04_emits_typography_token_unions() {
     let dts = catalog_dts();
     assert_alias(&dts, "FontSizeToken", "'base' | 'lg' | 'sm' | 'xs'");
-    assert_alias(
-        &dts,
-        "FontWeightToken",
-        "'bold' | 'medium' | 'regular'",
-    );
+    assert_alias(&dts, "FontWeightToken", "'bold' | 'medium' | 'regular'");
     assert_alias(&dts, "LineHeightToken", "'normal' | 'tight'");
 }
 

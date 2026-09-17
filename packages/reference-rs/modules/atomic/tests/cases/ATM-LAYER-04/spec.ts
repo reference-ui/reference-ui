@@ -17,7 +17,10 @@ const spec: AtomicCaseSpec = {
     expect(body).toContain('.\\@reference-ui\\/lib__mt_2r')
     expect(body).toContain('@container')
     expect(sheet.slice(0, utilitiesOpen)).not.toContain('.\\@reference-ui\\/lib__mt_2r')
-    expect(sheet.includes('.\\@reference-ui\\/lib__mt_2r {') && !body.includes('.\\@reference-ui\\/lib__mt_2r')).toBe(false)
+    expect(
+      sheet.includes('.\\@reference-ui\\/lib__mt_2r {') &&
+        !body.includes('.\\@reference-ui\\/lib__mt_2r')
+    ).toBe(false)
   },
 }
 
