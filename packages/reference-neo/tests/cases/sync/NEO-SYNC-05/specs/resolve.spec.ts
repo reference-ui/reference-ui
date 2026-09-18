@@ -89,8 +89,23 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   ) as GeneratedPackage;
   assert.deepEqual(
     styledPkg.exports?.['.'],
-    { import: './runtime-data.mjs' },
-    'styled exports map carries its data entry (types ride the runtime-data.d.mts follow-up)',
+    { types: './index.d.ts', import: './runtime-data.mjs' },
+    'styled exports map carries its data entry plus the declaration entry',
+  );
+  assert.deepEqual(
+    styledPkg.exports?.['./tokens'],
+    { types: './tokens.d.ts' },
+    'styled exports map carries ./tokens',
+  );
+  assert.deepEqual(
+    styledPkg.exports?.['./types'],
+    { types: './types/index.d.ts' },
+    'styled exports map carries ./types',
+  );
+  assert.deepEqual(
+    styledPkg.exports?.['./types/*'],
+    { types: './types/*.d.ts' },
+    'styled exports map carries ./types/*',
   );
 
   for (const name of ['system', 'styled', 'react']) {

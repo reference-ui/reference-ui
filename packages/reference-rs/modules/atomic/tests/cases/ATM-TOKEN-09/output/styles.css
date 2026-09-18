@@ -10,7 +10,7 @@
     --spacing-2: 0.5rem;
     --spacing-4: 1rem;
     --z-index-modal: 1400;
-    --easings-easeOut: cubic-bezier(0.16, 1, 0.3, 1);
+    --easings-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --durations-fast: 150ms;
     --gradients-hero: linear-gradient(180deg, #fff, #000);
   }
@@ -20,7 +20,7 @@
   .category-breadth__background-image_hero { background-image: var(--gradients-hero); }
   .category-breadth__mt_4 { margin-top: var(--spacing-4); }
   .category-breadth__trans-dur_fast { transition-duration: var(--durations-fast); }
-  .category-breadth__trans-tf_easeOut { transition-timing-function: var(--easings-easeOut); }
+  .category-breadth__trans-tf_easeOut { transition-timing-function: var(--easings-ease-out); }
   .category-breadth__w_content { width: var(--sizes-content); }
   .category-breadth__z_2 { z-index: 2; }
   .category-breadth__z_modal { z-index: var(--z-index-modal); }

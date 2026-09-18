@@ -8,13 +8,10 @@ import { bookPerfPlugin } from './perf/plugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgDir = resolve(__dirname, '..')
-const workspaceCoreDir = resolve(pkgDir, '../reference-core')
-const coreDir = existsSync(workspaceCoreDir)
-  ? workspaceCoreDir
-  : resolve(pkgDir, 'node_modules/@reference-ui/core')
 const reactRoot = resolve(pkgDir, '.reference-ui/react')
 const reactStylesCss = resolve(reactRoot, 'styles.css')
 const styledRoot = resolve(pkgDir, '.reference-ui/styled')
+const systemRoot = resolve(pkgDir, '.reference-ui/system')
 const typesRoot = resolve(pkgDir, '.reference-ui/types')
 
 const workspaceIconsDir = resolve(pkgDir, '../reference-icons')
@@ -39,9 +36,11 @@ export default defineConfig({
       { find: '@reference-ui/styled', replacement: styledRoot },
       { find: '@reference-ui/types/', replacement: `${typesRoot}/` },
       { find: '@reference-ui/types', replacement: resolve(typesRoot, 'types.mjs') },
+      // Landing Phase C (B5): system resolves to the generated entry (Neo
+      // layout), never core src — the F6/F7 trap bypassed the generated folder.
       {
         find: '@reference-ui/system',
-        replacement: resolve(coreDir, 'src/entry/system.ts'),
+        replacement: resolve(systemRoot, 'system.mjs'),
       },
       { find: '@reference-ui/react', replacement: resolve(reactRoot, 'react.mjs') },
     ],

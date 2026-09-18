@@ -4,6 +4,7 @@
 
 pub mod border;
 pub mod dimensional;
+pub mod flex;
 pub mod pair;
 pub mod parser;
 #[cfg(test)]
@@ -40,5 +41,7 @@ pub fn expand_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<str>, 
         return Some(expanded);
     }
     let raw_val = extract_raw_val(value)?;
-    border::expand_border_shorthand(prop, raw_val).or_else(|| expand_dimensional(prop, raw_val))
+    flex::expand_flex_shorthand(prop, raw_val)
+        .or_else(|| border::expand_border_shorthand(prop, raw_val))
+        .or_else(|| expand_dimensional(prop, raw_val))
 }

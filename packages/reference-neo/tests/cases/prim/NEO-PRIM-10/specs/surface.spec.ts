@@ -130,7 +130,7 @@ const EXPECTED_JSX_NAMES = [
 // (generate.ts plus the publish tail), so the spec pins the exact prefixes.
 const EXPECTED_REACT_DECLS = [
   'export type CssStyles = ',
-  'export type PrimitiveProps = ',
+  'export type PrimitiveProps<',
   'export type PrimitiveTag = ',
   'export type PrimitiveElement<',
   'export type RecipeVariantProps<',
@@ -268,7 +268,7 @@ function consumerSource(): string {
     `const chipClass: string = chip(selection)`,
     ``,
     `const copy: StyleProps = { color: 'ink' }`,
-    `const primitive: PrimitiveProps = { color: 'brand', p: 'sm' }`,
+    `const primitive: PrimitiveProps<'div'> = { color: 'brand', p: 'sm' }`,
     `const fonts: FontProps = { font: 'sans', weight: 'bold' }`,
     `const tag: PrimitiveTag = 'div'`,
     `const host: PrimitiveElement<'div'> = null as unknown as HTMLDivElement`,

@@ -431,6 +431,7 @@ Known RS-lane slices at start (RS-1–RS-6 from the probes; RS-7 from the D1 hum
 | RS-28 | Breakpoint keys + conditional values in `globalCss` print as descendant selectors (`.btn width { base: 40px }`). Full text in `tests/cases/global/TESTS.md` RS lane. | `NEO-PARITY-01` (sub-probe) | done | RS liaison |
 | RS-29 | Empty `@supports` query prints a bare `@supports {` block browsers drop, with zero diagnostics; should refuse with a diagnostic. P5 empty arm proven computed-only. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-PARITY-01` (P5 empty) | done | RS liaison |
 | RS-30 | Shorthand aliases not lowered in keyframes (`h` prints verbatim; `css()` lowers). Keyframe values should run the alias table. Full text in `tests/cases/token/TESTS.md` RS lane. | `NEO-TOKEN-13` (tail assertion) | done (N3b: ATM-LAYER-14, Panda `roll` parity) | RS liaison |
+| RS-41 | Token-name serialization def/use mismatch (LIVE): only the category kebabed, so `progress.track.mixForeground` defined a camel ghost while lib hardcodes Panda's kebab — Slider/Progress/Meter backdrops + button/input press ring silently dropped. Fix: kebab every segment. Full text in `tests/cases/token/TESTS.md` RS lane. | `NEO-TOKEN-14` | done (ATM-TOKEN-13, 28/28 core kebab counterparts, sweep-clean) | RS liaison |
 
 Engine-wide mechanical retargets ship as a single RS row with exact-CSS proof: one liaison, CLI-only golden regen, shape-identical fixtures (RS-7 pattern). Cooks add rows as they find gaps. Rust changes never happen inside a Neo slice.
 
@@ -1371,3 +1372,33 @@ All: tree uncommitted, captain merges. Recon crews read-only + one report.
   importers, only index.ts:18 imports the dir; `referenceBrowserTokenConfig`
   orphaned by nothing. Generated `types/` left unused; paths entry dangles
   harmlessly. RE-COMMISSION tracker (post-green): D19 emission + unmask 1–2.
+
+### Phase C open — LANDING SEQUENCE (captain, 2026-09-18)
+
+Phase B committed (2ef40b287, tree clean). Single switch crew (flag-day
+atomic — no parallel crews in lib's tree): baseline top-5 on core output,
+then landing-atomic edits (tasty mask, B7, B2×3, B5 rewiring), first Neo
+regen (prebuilt-folder workflow, no Vite plugin), top-5 witnesses, then
+fix-forward (Neo lane freely; uncharted lib edits stop+report). Snapshots
+never rewritten (human-gated). Fix-forward crews follow the failure map.
+
+### Phase C doctrine — the oracle loop (HQ, 2026-09-18, governing)
+
+Once lib runs on Neo, CT snapshots are the witnesses. For every failed
+snapshot (or set):
+
+1. Captain sends in an ORACLE crew: analyze before/after images, infer what
+   broke. Package per failure: component, spec, before/after paths, related
+   lib code.
+2. SANITY CHECK FIRST: is lib code using panda-isms (e.g. `rounded` instead
+   of `border-radius`)? If yes → mechanical lib-side fix to standard language
+   (PRE-AUTHORIZED class; expected to be the exception, not the rule).
+3. If not a panda-ism → make the inference, then REPRODUCE AS A FAILING TEST
+   in the Neo suite (likely a style-rule / engine-capability gap). Map the
+   gaps, implement the capabilities, come back, re-run, count pass/fail.
+4. Iterate until snapshots pass. Nothing slips through — the snapshot set was
+   built in-depth for exactly this.
+
+Lib-edit rule updated: panda-ism standardizations pre-authorized; all other
+uncharted lib edits still stop+report. Snapshot baselines still never
+rewritten without explicit HQ yes.

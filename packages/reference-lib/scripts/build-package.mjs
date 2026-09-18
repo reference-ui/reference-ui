@@ -15,9 +15,11 @@ const requiredFiles = [
   resolve(distDir, 'theme/index.d.ts'),
 ]
 
+// Landing Phase C (B5): Neo layout asserts — styled/ is data-only
+// (runtime-data.mjs + styles.css + types), no Panda css/jsx/patterns dirs.
 const packagedRuntimeFiles = [
   resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
-  resolve(distDir, 'runtime/reference-ui/styled/css/index.js'),
+  resolve(distDir, 'runtime/reference-ui/styled/runtime-data.mjs'),
 ]
 
 function run(command, args) {

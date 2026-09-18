@@ -34,7 +34,7 @@ fn bas_token_01_indexes_five_segment_path() {
 }
 
 #[test]
-fn bas_token_02_kebabs_category_only() {
+fn bas_token_02_kebabs_every_segment() {
     let json = spec_json(
         r##"{"colors":{"n300":{"value":"#d4d4d8"},"myColor":{"value":"red"},"ui":{"kbd":{"shadowMix":{"value":"black"}}}},"fontSizes":{"lg":{"value":"1.125rem"}},"spacing":{"4r":{"value":"1rem"}},"radii":{"md":{"value":"0.4rem"}}}"##,
     );
@@ -42,11 +42,11 @@ fn bas_token_02_kebabs_category_only() {
     assert_eq!(system.token_css_var("colors.n300"), Some("--colors-n300"));
     assert_eq!(
         system.token_css_var("colors.myColor"),
-        Some("--colors-myColor")
+        Some("--colors-my-color")
     );
     assert_eq!(
         system.token_css_var("colors.ui.kbd.shadowMix"),
-        Some("--colors-ui-kbd-shadowMix")
+        Some("--colors-ui-kbd-shadow-mix")
     );
     assert_eq!(
         system.token_css_var("fontSizes.lg"),
@@ -87,6 +87,26 @@ fn bas_token_04_resolves_mode_slots() {
     let equal_json = spec_json(r#"{"colors":{"same":{"light":"X","dark":"X"}}}"#);
     let equal = crate::BaseSystem::from_json(&equal_json).unwrap();
     assert_eq!(equal.token_dark("colors.same"), Some("X"));
+}
+
+#[test]
+fn bas_token_05_multi_leaf_group_kebabs_each_leaf() {
+    let json = spec_json(
+        r#"{"colors":{"ui":{"progress":{"track":{"mixForeground":{"light":"F","dark":"f"},"mixBackground":{"light":"B","dark":"b"}}}}}}"#,
+    );
+    let system = crate::BaseSystem::from_json(&json).unwrap();
+    assert_eq!(
+        system.token_css_var("colors.ui.progress.track.mixForeground"),
+        Some("--colors-ui-progress-track-mix-foreground")
+    );
+    assert_eq!(
+        system.token_css_var("colors.ui.progress.track.mixBackground"),
+        Some("--colors-ui-progress-track-mix-background")
+    );
+    assert_eq!(
+        system.token_dark("colors.ui.progress.track.mixForeground"),
+        Some("f")
+    );
 }
 
 #[test]

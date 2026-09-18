@@ -14,6 +14,27 @@
 | NEO-GLOBAL-10 | `:has()` selectors pass through and match | done | ATM-LAYER-03 | — | field bezel reacts to inner `aria-invalid` | `[lib]` styles-css `:has(` ×8, L1044 |
 | NEO-GLOBAL-11 | Vendor pseudo-elements (`::-webkit-slider-thumb`, `::file-selector-button`) pass through unchanged | done | ATM-LAYER-03 | — | sheet text + computed where Chromium exposes it | `[lib]` styles-css vendor family (L811–1200); N12 repair 2026-09-18: world authors lowercase-w `webkitAppearance` (P18 spelling, hyphenates to `-webkit-appearance` verbatim) — hyphen-prefixed keys warn+drop under N12; genuinely-unknown keys still drop |
 | NEO-GLOBAL-12 | Colour mixes inside `globalCss` hover rules (`color-mix(in oklch, … 15.2%, …)`) paint | done | ATM-TOKEN-06 | — | hover computed | `[lib]` styles-css L477–481; global-css Trace C |
+| NEO-GLOBAL-13 | Bare token names in `globalCss` resolve through the property's category and paint | done | ATM-LAYER-15 (RS-35) | — | card computes resolved radius/ring/ink/family; global layer prints `var()` forms | `[atm]` LAYER-15; `[lib]` `global.ts`, `disclosure.ts`, `shared.ts` |
+
+## RS-35 — landed as ATM-LAYER-15 (waiting Neo case NEO-GLOBAL-13, done)
+
+`globalCss` string values printed bare token spellings verbatim —
+`fontFamily: 'sans'` → `font-family: sans`, `borderRadius: 'md'` → `md`,
+`outlineColor: 'ui.focus.ring'` → `ui.focus.ring` — because the global value
+lowering passed the kebab-case CSS prop to the shared token resolver, whose
+font check, color check, and category map all key on the authored prop. Both
+other resolver callers (atomic resolve, keyframe values) already passed the
+authored form. Landing surfaced it as a whole-fixture font shift in every
+Portal CT snapshot (`body` lost `var(--fonts-sans)`). Fix passes the
+authored prop; plain literals still print verbatim and silently, dotted
+misses warn.
+
+- Input: `body { fontFamily: 'sans' }`, `.card { borderRadius: 'md',
+  outlineColor: 'ui.focus.ring', display: 'flex' }` against fonts/radii/colors
+  fixtures.
+- Expected: `var(--fonts-sans)`, `var(--radii-md)`,
+  `var(--colors-ui-focus-ring)`, verbatim `display: flex`, zero diagnostics.
+- Waiting Neo case: NEO-GLOBAL-13 (done).
 
 ## RS-11 — landed as ATM-LAYER-09 (unblocked NEO-GLOBAL-06)
 

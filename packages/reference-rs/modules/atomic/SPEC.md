@@ -291,6 +291,16 @@ compiler contract.
   **Unknown style keys must warn and drop on both paths: `css()` objects and `globalCss` declarations.**
   Station `ATM-SITE-20` (N12 ruling + tails-d). Compile `css({ fooBar, divideX, color })` with a `globalCss` hover rule carrying `divideX` and a const spread carrying `frobnicate`. Assert one located `Unknown style property` diagnostic per `css()` key including the spread key, one `Unknown style property in global CSS` diagnostic, and a sheet with only the known utilities — no silent swallows, no hyphenated dead properties. JSX attr/tag silence (SITE-07/08) stands: attrs share the DOM namespace, style objects do not.
 
+- [x] `ATM-SITE-21` `[reference]` `[seam]` —
+  **Ternary object arms in JSX `css`/condition props must compile every leaf of every arm.**
+  Station `ATM-SITE-21` (RS-34). Compile `<Div _hover={on ? { bg: 'n200' } : { bg: 'n300' }} />` beside the nested Tabs shape (`guard ? (line ? { color, borderColor } : { color, bg }) : undefined`) and a `css={pick ? {...} : {...}}` control. Assert every arm's leaves emit hover/plain utilities with zero diagnostics, and the `undefined` arm stays silent.
+- [x] `ATM-SITE-22` `[reference]` `[seam]` —
+  **Member-expression tags must match concatenated hosts.**
+  Station `ATM-SITE-22` (RS-36). Compile `<Overlay.Content minW="40r" bg="red" />` with `OverlayContent` hosted beside unhosted `<Accordion.Content p="4r" />`. Assert the member's leaves emit utilities (`min-width: calc(40 * var(--spacing-root))`) with zero diagnostics, and the unhosted member stays silent.
+- [x] `ATM-SITE-23` `[reference]` `[seam]` —
+  **Const-bound ternaries and logicals must extract every literal leaf with one plan per leaf.**
+  Station `ATM-SITE-23` (RS-37). Compile the `BookShell.tsx` chrome shape (`const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component body feeding `borderBottomColor={subtleBorder}`) beside top-level ternary, nested ternary, and logical `css()` controls plus a fully dynamic identifier. Assert one want and one runtime plan per leaf (both gray arms, all four call colors), `border-bottom-color` utilities for every shade, and exactly the fail-closed `unknownToken` warning.
+
 ### Leaf Literal Extraction
 
 - [x] `ATM-LEAF-01` `[reference]` `[seam]` —
@@ -501,6 +511,9 @@ compiler contract.
 - [x] `ATM-TOKEN-12` `[reference]` `[seam]` —
   **A `{category.path}` reference that names no token in the dump must be a sync-failing error diagnostic naming the ref with file:line, and its declaration must be dropped.**
   Station `ATM-TOKEN-12`. Compile `css({ color: '{colors.nope}', border: '2px solid {colors.nope}' })` and assert two `severity: error` diagnostics reading ``unknown token reference `{colors.nope}` `` with the authoring file, line, and column; assert the bad declarations are omitted so the sheet stays valid CSS while valid siblings still emit. Panda's serialize path escapes the literal (`colors\.nope`, `core/__tests__/serialize.test.ts` "skip non-existent") — this engine fails closed instead (reference-neo D13, unblocking `NEO-TOKEN-02`).
+- [x] `ATM-TOKEN-13` `[reference]` `[seam]` —
+  **Every token path segment must kebab in the emitted custom property, matching Panda's full-kebab naming.**
+  Station `ATM-TOKEN-13`. Compile a dump with the lib `progress.track` shape (`mixForeground` / `mixBackground` `{light, dark}` leaves) plus a camelCase mid-path segment (`meter.evenLessGood.foreground`) and assert `@layer tokens` defines `--colors-ui-progress-track-mix-foreground`, `--colors-ui-progress-track-mix-background`, and `--colors-ui-meter-even-less-good-foreground` in both color-mode blocks; assert no camelCase ghost (`mixForeground`, `evenLessGood`) appears anywhere; assert resolved uses reference the kebab names. Kebabing only the category left lib's hardcoded `var(--colors-ui-progress-track-mix-foreground)` (Slider `trackBackground`, `shared.ts`) undefined with an invalid `{...}` fallback, silently dropping the backdrop (RS-41, unblocking `NEO-TOKEN-14`).
 
 ### BaseSystem Spec Validation
 
@@ -532,6 +545,10 @@ compiler contract.
   **Responsive variant values must lower to `@container`-wrapped per-breakpoint classes with runtime table entries.**
   Compile `recipe({ className: 'buttonStyle', variants: { variant: { solid, outline } } })` where each value carries `_hover`/`_disabled` leaves. Assert each value also emits `{breakpoint}:`-prefixed classes (one per width breakpoint, after all plain rules) wrapped in that breakpoint's `@container (min-width: …)` query inside `@layer recipes`, with the hover/disabled descendants inside the query block. Assert `RecipeRuntimeTable.responsiveVariantMap` maps axis → breakpoint → value → class so a runtime `{ base: 'solid', md: 'outline' }` selection emits both classes. Never `@media screen` (D8).
 
+- [x] `ATM-RECIPE-08` `[reference]` `[seam]` —
+  **A missing `className` prop must resolve from a `<Name>Recipe` binding, and explicit props must win.**
+  Compile `const chipRecipe = recipe({ base, variants, defaultVariants })` with no `className` prop. Assert the table admits it with `className: 'chip'` (core parity: `summaryChipRecipe` → `summaryChip` in `@reference-ui/lib`), emitting the same base/variant/default classes an explicit `className: 'chip'` would. Assert a bare `Recipe` binding and a non-suffixed binding still refuse with the explicit-identity diagnostic (RS-33).
+
 ### Static CSS Expansion
 
 - [x] `ATM-STATIC-01` `[reference]` `[seam]` —
@@ -560,7 +577,7 @@ compiler contract.
   Station `ATM-LAYER-04`. Unconditioned classes and wrapping `@media` / `@container` stay inside `@layer utilities`.
 - [x] `ATM-LAYER-05` `[reference]` `[seam]` —
   **BaseSystem keyframes must print as `@keyframes` rules in `@layer global`.**
-  Station `ATM-LAYER-05`. Compile a dump declaring `fadeIn { from { opacity: 0 } to { opacity: 1 } }` and a percentage-keyed animation. Assert both print with correct `from`/`to`/`%` selectors, and that an empty keyframes bag leaves the layer omitted (`ATM-LAYER-02`). The `animations.*` tokens already resolve to `var(--animations-fadeIn-normal)` and reference `fadeIn` by name (see the `ATM-COND-01` golden), so today every animation token points at a keyframe the stylesheet never defines — a dangling reference in shipped CSS.
+  Station `ATM-LAYER-05`. Compile a dump declaring `fadeIn { from { opacity: 0 } to { opacity: 1 } }` and a percentage-keyed animation. Assert both print with correct `from`/`to`/`%` selectors, and that an empty keyframes bag leaves the layer omitted (`ATM-LAYER-02`). The `animations.*` tokens already resolve to `var(--animations-fade-in-normal)` and reference `fadeIn` by name (see the `ATM-COND-01` golden), so today every animation token points at a keyframe the stylesheet never defines — a dangling reference in shipped CSS.
 - [x] `ATM-LAYER-06` `[reference]` `[seam]` —
   **BaseSystem font-face declarations must print as `@font-face` blocks in `@layer global`.**
   Station `ATM-LAYER-06`. Compile a dump with one `globalFontface` entry per family and assert one `@font-face` block each, with `src` and `font-display` preserved. Metric-override leaves (`sizeAdjust`, `descentOverride`) print as `size-adjust` / `descent-override` when present and stay omitted when absent. `--fonts-sans: "Inter", …` resolves today with nothing loading Inter, so the token is a promise the stylesheet does not keep.
@@ -588,6 +605,9 @@ compiler contract.
 - [x] `ATM-LAYER-14` `[reference]` `[seam]` —
   **Keyframe bodies must alias props and unitize values through the `css()` chain.**
   Station `ATM-LAYER-14` (RS-30). Compile `keyframes({ roll: { from: { h: '4' }, to: { h: '8' } } })` with a `sizes.4` token beside `css({ h: '4' })` / `css({ h: '8' })` controls. Assert `from { height: var(--sizes-4); }` (Panda parity) and `to { height: 8px; }`, no verbatim `h:`, matching utilities, and zero diagnostics.
+- [x] `ATM-LAYER-15` `[reference]` `[seam]` —
+  **Bare token names in `globalCss` must resolve through the property's category.**
+  Station `ATM-LAYER-15` (RS-35). Compile `body { fontFamily: 'sans' }` and `.card { borderRadius: 'md', outlineColor: 'ui.focus.ring', display: 'flex' }` against fonts/radii/colors fixtures. Assert `var(--fonts-sans)`, `var(--radii-md)`, `var(--colors-ui-focus-ring)`, verbatim `display: flex`, and zero diagnostics.
 
 ### Class Naming & Character Hygiene
 
@@ -710,6 +730,8 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-18` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-18/` |
 | `ATM-SITE-19` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-19/` |
 | `ATM-SITE-20` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-20/` |
+| `ATM-SITE-21` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-21/` |
+| `ATM-SITE-22` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-22/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
@@ -773,6 +795,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-10` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-10/` + `tests/token10.test.ts` |
 | `ATM-TOKEN-11` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-11/` |
 | `ATM-TOKEN-12` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-12/` |
+| `ATM-TOKEN-13` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-13/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |
@@ -780,6 +803,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-RECIPE-05` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-05/` |
 | `ATM-RECIPE-06` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-06/` |
 | `ATM-RECIPE-07` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-07/` |
+| `ATM-RECIPE-08` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-08/` |
 | `ATM-STATIC-01` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-01/` |
 | `ATM-STATIC-02` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-02/` |
 | `ATM-STATIC-03` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-03/` |
@@ -796,6 +820,8 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-LAYER-11` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-11/` |
 | `ATM-LAYER-12` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-12/` |
 | `ATM-LAYER-13` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-13/` |
+| `ATM-LAYER-14` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-14/` |
+| `ATM-LAYER-15` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-15/` |
 | `ATM-NAME-01` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-01/` |
 | `ATM-NAME-02` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-02/` |
 | `ATM-NAME-03` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-03/` |
@@ -884,7 +910,7 @@ boundary, and `ATM-RECIPE-02`'s variant table has no consumer. Cutover work is
 compiler, and the compiler is only half the delivery.
 
 `ATM-LAYER-05` and `ATM-LAYER-06` close dangling references that ship today: the
-fixture emits `--animations-fadeIn-normal: fadeIn 0.5s ease-out` and
+fixture emits `--animations-fade-in-normal: fadeIn 0.5s ease-out` and
 `--fonts-sans: "Inter", …` while nothing defines `@keyframes fadeIn` or loads
 Inter.
 

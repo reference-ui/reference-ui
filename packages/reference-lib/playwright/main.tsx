@@ -22,7 +22,7 @@ window.mount = async ({ story, props }) => {
   if (!Story) {
     throw new Error(`Unknown story: ${story}`)
   }
-  document.documentElement.setAttribute('data-panda-theme', 'dark')
+  document.documentElement.setAttribute('data-color-mode', 'dark')
   document.documentElement.setAttribute('data-react-version', React.version)
   document.documentElement.style.colorScheme = 'dark'
   host.render(

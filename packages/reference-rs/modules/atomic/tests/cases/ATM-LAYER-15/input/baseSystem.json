@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-global-bare-tokens",
+  "tokens": {
+    "colors": {
+      "ui": {
+        "focus": {
+          "ring": {
+            "value": "#0066ff"
+          }
+        }
+      }
+    },
+    "radii": {
+      "md": {
+        "value": "0.375rem"
+      }
+    }
+  },
+  "fonts": {
+    "sans": {
+      "value": "\"Inter\", sans-serif"
+    }
+  },
+  "globalCss": [
+    {
+      "source": "rs-35",
+      "rules": {
+        "body": {
+          "fontFamily": "sans"
+        },
+        ".card": {
+          "borderRadius": "md",
+          "outlineColor": "ui.focus.ring",
+          "display": "flex"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

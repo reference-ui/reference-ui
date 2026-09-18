@@ -1,7 +1,8 @@
 //! AST extraction for Reference UI `recipe(...)` and `recipe.raw(...)` calls.
 //! Validates explicit `className` string literals, variant matrices, and compound rules.
 //! Extracts base styles, variant leaves, defaults, and multi-value compound predicates.
-//! Refuses dynamic or absent recipe identity and enforces fail-closed compilation.
+//! Admits identity from the prop or from a `<Name>Recipe` binding (core parity);
+//! refuses dynamic or otherwise absent identity and enforces fail-closed compilation.
 
 use oxc_ast::ast::{
     CallExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
@@ -101,14 +102,35 @@ fn find_class_name_prop<'a, 'b>(obj: &'b ObjectExpression<'a>) -> Option<&'b Obj
 }
 
 fn extract_class_name(obj: &ObjectExpression<'_>, ctx: &mut ExtractContext<'_>) -> Option<String> {
-    let Some(prop) = find_class_name_prop(obj) else {
-        ctx.diagnostics.push(located_error(
-            ctx,
-            "recipe(...) requires an explicit string-literal 'className' property",
-            obj.span,
-        ));
+    if let Some(prop) = find_class_name_prop(obj) {
+        return extract_literal_class_name(prop, ctx);
+    }
+    if let Some(derived) = infer_binding_class_name(ctx.recipe_binding.as_deref()) {
+        return Some(derived);
+    }
+    ctx.diagnostics.push(located_error(
+        ctx,
+        "recipe(...) requires an explicit string-literal 'className' property",
+        obj.span,
+    ));
+    None
+}
+
+/// Derive the recipe stem from the enclosing declarator when it carries the
+/// conventional `Recipe` suffix (`const chipRecipe = recipe(...)` → `chip`).
+/// A bare `Recipe` binding or any other shape stays uninferrable by design.
+fn infer_binding_class_name(binding: Option<&str>) -> Option<String> {
+    let stem = binding?.strip_suffix("Recipe")?;
+    if stem.is_empty() {
         return None;
-    };
+    }
+    Some(stem.to_string())
+}
+
+fn extract_literal_class_name(
+    prop: &ObjectProperty<'_>,
+    ctx: &mut ExtractContext<'_>,
+) -> Option<String> {
     let unwrapped = walk::unwrap_expression(&prop.value);
     if let Expression::StringLiteral(lit) = unwrapped {
         if !lit.value.trim().is_empty() {

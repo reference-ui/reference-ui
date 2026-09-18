@@ -1,8 +1,10 @@
-//! Plan parity for wants that arrive through indirection (RS-14).
+//! Plan parity for wants that arrive through indirection (RS-14, RS-37).
 //! Ternary arms, member access, and identifier spreads already emit wants and
 //! utilities; these tests prove they also emit one runtime style plan per
 //! want, so the plan index the runtime resolves through never misses a leaf.
-//! Each plan must carry declarations naming classes the css map emits.
+//! RS-37 extends the suite to values bound through a const ternary or logical,
+//! top-level or nested in a component body. Each plan must carry declarations
+//! naming classes the css map emits.
 
 use crate::{compile, CompileRequest, VirtualSource};
 
@@ -102,5 +104,108 @@ fn test_identifier_spread_emits_plan_beside_sibling() {
     assert_eq!(plan_values(&res, "mt"), vec!["gap".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
     assert_plans_point_at_sheet(&res, "mt");
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_function_const_ternary_emits_one_plan_per_arm() {
+    let res = compile_code(
+        r#"
+        import { Div } from '@reference-ui/react';
+        export function Shell({ theme }: { theme: string }) {
+          const isDark = theme === 'dark';
+          const subtleBorder = isDark ? 'gray.800' : 'gray.200';
+          return <Div borderBottom="1px solid" borderBottomColor={subtleBorder} />;
+        }
+        "#,
+    );
+    let mut wants: Vec<String> = res
+        .wants
+        .iter()
+        .filter(|w| w.prop.as_ref() == "borderBottomColor")
+        .map(|w| w.value.class_name_str().to_string())
+        .collect();
+    wants.sort();
+    assert_eq!(wants, vec!["gray.200".to_string(), "gray.800".to_string()]);
+    let mut plans = plan_values(&res, "borderBottomColor");
+    plans.sort();
+    assert_eq!(plans, vec!["gray.200".to_string(), "gray.800".to_string()]);
+    assert_plans_point_at_sheet(&res, "borderBottomColor");
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_top_level_const_ternary_emits_one_plan_per_arm() {
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        const tone = flag ? 'cherry' : 'ocean';
+        export const cls = css({ color: tone });
+        "#,
+    );
+    assert_eq!(res.wants.len(), 2);
+    let mut plans = plan_values(&res, "color");
+    plans.sort();
+    assert_eq!(plans, vec!["cherry".to_string(), "ocean".to_string()]);
+    assert_plans_point_at_sheet(&res, "color");
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_function_const_literal_emits_plan() {
+    let res = compile_code(
+        r#"
+        import { Div } from '@reference-ui/react';
+        export function Card() {
+          const edge = 'gray.800';
+          return <Div borderBottomColor={edge} />;
+        }
+        "#,
+    );
+    assert_eq!(res.wants.len(), 1);
+    assert_eq!(
+        plan_values(&res, "borderBottomColor"),
+        vec!["gray.800".to_string()]
+    );
+    assert_plans_point_at_sheet(&res, "borderBottomColor");
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_const_logical_emits_nonguard_leaf() {
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        const tone = flag && 'cherry';
+        export const cls = css({ color: tone });
+        "#,
+    );
+    assert_eq!(res.wants.len(), 1);
+    assert_eq!(plan_values(&res, "color"), vec!["cherry".to_string()]);
+    assert_plans_point_at_sheet(&res, "color");
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_const_nested_ternary_scoops_every_arm() {
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        const tone = a ? 'cherry' : b ? 'ocean' : 'moss';
+        export const cls = css({ color: tone });
+        "#,
+    );
+    assert_eq!(res.wants.len(), 3);
+    let mut plans = plan_values(&res, "color");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec![
+            "cherry".to_string(),
+            "moss".to_string(),
+            "ocean".to_string()
+        ]
+    );
+    assert_plans_point_at_sheet(&res, "color");
     assert!(res.diagnostics.is_empty());
 }

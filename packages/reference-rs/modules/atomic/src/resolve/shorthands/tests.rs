@@ -158,6 +158,150 @@ fn test_real_radius_properties_never_expand() {
 }
 
 #[test]
+fn test_border_width_style_color_permutations() {
+    // Core battery: all six orders lower to the same three longhands.
+    let orders = [
+        "1px solid red",
+        "solid 1px red",
+        "red 1px solid",
+        "red solid 1px",
+        "solid red 1px",
+        "1px red solid",
+    ];
+    for order in orders {
+        let expanded = expand_shorthand("border", &AtomValue::String(order.into()))
+            .unwrap_or_else(|| panic!("border '{order}' should expand"));
+        let names: Vec<&str> = expanded.iter().map(|(p, _)| p.as_ref()).collect();
+        assert_eq!(names, vec!["borderWidth", "borderStyle", "borderColor"]);
+        assert_eq!(expanded[0].1.class_name_str(), "1px");
+        assert_eq!(expanded[1].1.class_name_str(), "solid");
+        assert_eq!(expanded[2].1.class_name_str(), "red");
+    }
+}
+
+#[test]
+fn test_border_extra_width_token_drops() {
+    // Core battery: '1px 2px solid' keeps width+style; the extra width
+    // never falls through to color.
+    let expanded = expand_shorthand("border", &AtomValue::String("1px 2px solid".into()))
+        .expect("border '1px 2px solid' should expand");
+    let names: Vec<&str> = expanded.iter().map(|(p, _)| p.as_ref()).collect();
+    assert_eq!(names, vec!["borderWidth", "borderStyle"]);
+    assert_eq!(expanded[0].1.class_name_str(), "1px");
+    assert_eq!(expanded[1].1.class_name_str(), "solid");
+}
+
+#[test]
+fn test_border_repeat_style_token_drops() {
+    // 'solid dashed 1px': the first style wins and the repeat drops
+    // instead of becoming a color.
+    let expanded = expand_shorthand("border", &AtomValue::String("solid dashed 1px".into()))
+        .expect("border 'solid dashed 1px' should expand");
+    let names: Vec<&str> = expanded.iter().map(|(p, _)| p.as_ref()).collect();
+    assert_eq!(names, vec!["borderWidth", "borderStyle"]);
+    assert_eq!(expanded[0].1.class_name_str(), "1px");
+    assert_eq!(expanded[1].1.class_name_str(), "solid");
+}
+
+#[test]
+fn test_outline_none_keeps_accessible_ring() {
+    // Core battery: outline noneValue convention — transparent ring plus
+    // offset for high-contrast mode, never bare none.
+    let expanded = expand_shorthand("outline", &AtomValue::String("none".into()))
+        .expect("outline 'none' should expand to the accessible ring");
+    let names: Vec<&str> = expanded.iter().map(|(p, _)| p.as_ref()).collect();
+    assert_eq!(names, vec!["outline", "outlineOffset"]);
+    assert_eq!(expanded[0].1.class_name_str(), "2px solid transparent");
+    assert_eq!(expanded[1].1.class_name_str(), "2px");
+}
+
+#[test]
+fn test_border_none_stays_bare() {
+    // Only outline carries the accessible convention; border 'none' passes through.
+    let expanded = expand_shorthand("borderBottom", &AtomValue::String("none".into()))
+        .expect("borderBottom 'none' should pass through");
+    assert_eq!(expanded.len(), 1);
+    assert_eq!(expanded[0].0.as_ref(), "borderBottom");
+    assert_eq!(expanded[0].1.class_name_str(), "none");
+}
+
+#[test]
+fn test_flex_single_keywords_emit_panda_triples() {
+    // Panda flex utility values (RS-39): exact, case-sensitive, trim-tolerant.
+    for (input, triple) in [
+        ("1", "1 1 0%"),
+        ("auto", "1 1 auto"),
+        ("initial", "0 1 auto"),
+        ("none", "none"),
+    ] {
+        let expanded = expand_shorthand("flex", &AtomValue::String(input.into()))
+            .unwrap_or_else(|| panic!("flex '{input}' should map to its triple"));
+        assert_eq!(expanded.len(), 1);
+        assert_eq!(expanded[0].0.as_ref(), "flex");
+        assert_eq!(expanded[0].1.class_name_str(), triple);
+    }
+    let numeric = expand_shorthand("flex", &AtomValue::Number("1".into()))
+        .expect("numeric flex 1 should map to its triple");
+    assert_eq!(numeric[0].1.class_name_str(), "1 1 0%");
+}
+
+#[test]
+fn test_flex_other_values_pass_through_raw() {
+    // No values-map hit: Panda emits the authored value untouched.
+    for input in [
+        "0 0 auto",
+        "1 1 0%",
+        "2 30px",
+        "2",
+        "0",
+        "1 1",
+        "inherit",
+        "AUTO",
+        "None",
+    ] {
+        assert!(
+            expand_shorthand("flex", &AtomValue::String(input.into())).is_none(),
+            "flex '{input}' must pass through raw, never decompose"
+        );
+    }
+}
+
+#[test]
+fn test_border_gate_rejects_non_border_trios() {
+    // RS-39 family gate: len-3 trios of other families never classify as
+    // border, even when fed straight into the border pass.
+    for (prop, val) in [
+        ("flex", "1 1 0%"),
+        ("columns", "100px 3"),
+        ("lineClamp", "2"),
+        ("caret", "red"),
+        ("listStyle", "square inside"),
+        ("gridTemplate", "1fr 1fr"),
+    ] {
+        assert!(
+            super::border::expand_border_shorthand(prop, val).is_none(),
+            "'{prop}' must never route through border decomposition"
+        );
+    }
+}
+
+#[test]
+fn test_border_gate_keeps_rule_shorthands() {
+    // columnRule/rowRule genuinely are width/style/color and stay pinned.
+    let column = expand_shorthand("columnRule", &AtomValue::String("1px solid red".into()))
+        .expect("columnRule should still decompose");
+    let names: Vec<&str> = column.iter().map(|(p, _)| p.as_ref()).collect();
+    assert_eq!(
+        names,
+        vec!["columnRuleWidth", "columnRuleStyle", "columnRuleColor"]
+    );
+    let row = expand_shorthand("rowRule", &AtomValue::String("1px solid red".into()))
+        .expect("rowRule should still decompose");
+    let names: Vec<&str> = row.iter().map(|(p, _)| p.as_ref()).collect();
+    assert_eq!(names, vec!["rowRuleWidth", "rowRuleStyle", "rowRuleColor"]);
+}
+
+#[test]
 fn test_border_zero_and_whole_values() {
     let zero = expand_shorthand("border", &AtomValue::String("0".into()))
         .expect("border 0 should expand to width 0px");

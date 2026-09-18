@@ -84,7 +84,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await snap(page, 'portal-event-bubbled')
   })
 
-  test('PT-THEME-01: Bare Portal under dark scope emits data-layer and data-panda-theme="dark" on first primitive', async ({
+  test('PT-THEME-01: Bare Portal under dark scope emits data-layer and data-color-mode="dark" on first primitive', async ({
     page,
   }) => {
     const node = page.getByTestId('portal-theme-dark-node')
@@ -95,7 +95,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
       return {
         isDirectBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         backgroundColor: style.backgroundColor,
         color: style.color,
       }
@@ -111,7 +111,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await snap(page, 'portal-theme-dark')
   })
 
-  test('PT-THEME-02: Bare Portal in light mode emits data-layer and data-panda-theme="light", resolves light tokens without dark default', async ({
+  test('PT-THEME-02: Bare Portal in light mode emits data-layer and data-color-mode="light", resolves light tokens without dark default', async ({
     page,
   }) => {
     const node = page.getByTestId('portal-theme-light-node')
@@ -122,7 +122,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
       return {
         isDirectBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         backgroundColor: style.backgroundColor,
         color: style.color,
       }
@@ -150,13 +150,13 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     const outerSurface = await outer.evaluate(el => ({
       isDirectBodyChild: el.parentElement === document.body,
       dataLayer: el.getAttribute('data-layer'),
-      dataTheme: el.getAttribute('data-panda-theme'),
+      dataTheme: el.getAttribute('data-color-mode'),
     }))
 
     const innerSurface = await inner.evaluate(el => ({
       isDirectBodyChild: el.parentElement === document.body,
       dataLayer: el.getAttribute('data-layer'),
-      dataTheme: el.getAttribute('data-panda-theme'),
+      dataTheme: el.getAttribute('data-color-mode'),
     }))
 
     expect(outerSurface.isDirectBodyChild).toBe(true)
@@ -169,12 +169,12 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await snap(page, 'portal-nested-dark')
   })
 
-  test('PT-THEME-04: Document-only data-panda-theme on ownerDocument stamps first primitive without React context', async ({
+  test('PT-THEME-04: Document-only data-color-mode on ownerDocument stamps first primitive without React context', async ({
     page,
   }) => {
-    // Set data-panda-theme on documentElement directly (no React context override)
+    // Set data-color-mode on documentElement directly (no React context override)
     await page.evaluate(() => {
-      document.documentElement.setAttribute('data-panda-theme', 'dark')
+      document.documentElement.setAttribute('data-color-mode', 'dark')
     })
 
     await page.getByTestId('btn-mount-doc-only').click()
@@ -186,7 +186,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
       return {
         isDirectBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         backgroundColor: style.backgroundColor,
       }
     })
@@ -199,7 +199,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
 
     // Clean up documentElement attribute
     await page.evaluate(() => {
-      document.documentElement.removeAttribute('data-panda-theme')
+      document.documentElement.removeAttribute('data-color-mode')
     })
   })
 
@@ -215,7 +215,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
       return {
         isDirectBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         backgroundColor: style.backgroundColor,
       }
     })
@@ -235,7 +235,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await expect(content).toBeVisible()
 
     // Initially light
-    expect(await content.getAttribute('data-panda-theme')).toBe('light')
+    expect(await content.getAttribute('data-color-mode')).toBe('light')
     await snap(page, 'portal-live-light')
 
     // Attach a marker attribute to ensure the node is NOT remounted when theme updates
@@ -247,7 +247,7 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-toggle-live-root-theme').click()
 
     // Assert live update to dark without remount
-    await expect(content).toHaveAttribute('data-panda-theme', 'dark')
+    await expect(content).toHaveAttribute('data-color-mode', 'dark')
     expect(await content.getAttribute('data-preserved-instance')).toBe('true')
     await snap(page, 'portal-live-toggled-dark')
   })

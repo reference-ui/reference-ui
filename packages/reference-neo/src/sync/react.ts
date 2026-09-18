@@ -1,12 +1,13 @@
 // React entry publishing for the Neo generated folder.
 // It takes the system name plus compiled style prop names and emits the
 // react package: a bundled react.mjs plus standalone react.d.mts. React
-// resolves to pinned production builds so the browser bundle stays free of
-// node-only branches, while css()/recipe() bundle in pre-registered over
-// this system's runtime-data (D4: styled stays data-only).
+// stays external (like core's entry): bundling it would fork the dispatcher
+// for any consumer rendering through its own react-dom, so the bundle
+// imports 'react' + 'react-dom/client' and the consumer provides the copy.
+// css()/recipe() bundle in pre-registered over this system's runtime-data
+// (D4: styled stays data-only).
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { microBundle } from '../lib/microbundle/index.ts'
@@ -16,24 +17,10 @@ import {
 } from '../primitives/generate/generate.ts'
 import { GENERATED_VERSION } from './publish.ts'
 
-const require = createRequire(import.meta.url)
-
 export interface ReactPublishInput {
   outDir: string
   systemName: string
   stylePropNames: string[]
-}
-
-function productionBuild(packageName: string, file: string): string {
-  return join(dirname(require.resolve(`${packageName}/package.json`)), 'cjs', file)
-}
-
-function reactAliases(): Record<string, string> {
-  return {
-    react: productionBuild('react', 'react.production.js'),
-    'react-dom/client': productionBuild('react-dom', 'react-dom-client.production.js'),
-    scheduler: productionBuild('scheduler', 'scheduler.production.js'),
-  }
 }
 
 function runtimeModulePath(...parts: string[]): string {
@@ -108,9 +95,8 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
     const bundle = await microBundle(entryPath, {
       format: 'esm',
       platform: 'browser',
-      // Empty, not absent: the seam defaults to leaving react external.
-      external: [],
-      alias: reactAliases(),
+      // React rides with the consumer (see header): external, never bundled.
+      external: ['react', 'react-dom/client'],
     })
     writeFileSync(join(dir, 'react.mjs'), bundle, 'utf-8')
   } finally {

@@ -1,0 +1,10 @@
+{
+  "_hover:backgroundColor:blue": "@reference-ui/lib__hover:bg-c_blue",
+  "_hover:backgroundColor:red": "@reference-ui/lib__hover:bg-c_red",
+  "_hover:bg:gray": "@reference-ui/lib__hover:bg_gray",
+  "_hover:borderColor:black": "@reference-ui/lib__hover:bd-c_black",
+  "_hover:color:green": "@reference-ui/lib__hover:c_green",
+  "_hover:color:white": "@reference-ui/lib__hover:c_white",
+  "color:purple": "@reference-ui/lib__c_purple",
+  "color:yellow": "@reference-ui/lib__c_yellow"
+}

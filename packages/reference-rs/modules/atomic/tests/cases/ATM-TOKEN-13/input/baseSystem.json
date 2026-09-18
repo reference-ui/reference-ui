@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-kebab",
+  "tokens": {
+    "colors": {
+      "gray": {
+        "50": {
+          "light": "#f9fafb",
+          "dark": "#030712"
+        },
+        "950": {
+          "light": "#030712",
+          "dark": "#f9fafb"
+        }
+      },
+      "ui": {
+        "progress": {
+          "bar": {
+            "foreground": {
+              "light": "{colors.gray.950}",
+              "dark": "{colors.gray.50}"
+            }
+          },
+          "track": {
+            "mixForeground": {
+              "light": "{colors.gray.950}",
+              "dark": "{colors.gray.50}"
+            },
+            "mixBackground": {
+              "light": "#ffffff",
+              "dark": "{colors.gray.950}"
+            }
+          }
+        },
+        "meter": {
+          "evenLessGood": {
+            "foreground": {
+              "light": "{colors.gray.950}",
+              "dark": "{colors.gray.50}"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

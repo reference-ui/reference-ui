@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('width: var(--sizes-content);')
     expect(sheet).toContain('margin-top: var(--spacing-4);')
     expect(sheet).toContain('z-index: var(--z-index-modal);')
-    expect(sheet).toContain('transition-timing-function: var(--easings-easeOut);')
+    expect(sheet).toContain('transition-timing-function: var(--easings-ease-out);')
     expect(sheet).toContain('transition-duration: var(--durations-fast);')
     expect(sheet).toContain('background-image: var(--gradients-hero);')
     expect(sheet).toContain('z-index: 2;')

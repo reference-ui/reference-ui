@@ -59,7 +59,7 @@ const selection: ButtonSelection = { tone: 'accent', size: 'lg' }
 const buttonClass: string = button(selection)
 
 const copy: StyleProps = { color: 'ink' }
-const primitive: PrimitiveProps = { color: 'brand', p: 'sm' }
+const primitive: PrimitiveProps<'div'> = { color: 'brand', p: 'sm' }
 const fonts: FontProps = { font: 'sans', weight: 'bold' }
 
 export function Card(props: DivProps): unknown {

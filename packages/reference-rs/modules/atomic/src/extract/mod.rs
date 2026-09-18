@@ -101,8 +101,16 @@ impl<'a> ExtractContext<'a> {
 
     /// True when this tag is a StyleProps host. An empty host set admits
     /// nothing: the caller reports the missing graph once per file.
+    /// Member tags match concatenated hosts (`<Overlay.Content />` admits
+    /// `OverlayContent`), the Panda discovery spelling (core parity).
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
-        !bindings::is_shadowed(self.shadowed, name) && self.jsx_hosts.contains(name)
+        if bindings::is_shadowed(self.shadowed, name) {
+            return false;
+        }
+        if self.jsx_hosts.contains(name) {
+            return true;
+        }
+        name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
     }
 
     /// Record the missing-graph error once per file. With no hosts

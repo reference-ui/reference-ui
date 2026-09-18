@@ -5,6 +5,68 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { getVendorReactCode } from './vendor-react.ts';
+
+const VENDOR_ROUTE = '/__neo__/react.mjs';
+const IMPORTMAP_OPEN = '<script type="importmap">';
+
+// Map the external react specifiers onto the harness vendor bundle. Worlds
+// declare only @reference-ui/react; the generated entry's bare 'react' and
+// 'react-dom/client' imports would otherwise 404 in a raw browser. Skips
+// worlds that already map react themselves, and never double-inserts.
+function injectVendorMap(html: string): string {
+  const start = html.indexOf(IMPORTMAP_OPEN);
+  if (start < 0) return html;
+  const end = html.indexOf('</script>', start);
+  if (end < 0) return html;
+  const block = html.slice(start, end);
+  if (block.includes(VENDOR_ROUTE) || /"react"\s*:/.test(block)) return html;
+  const importsAt = block.indexOf('"imports"');
+  if (importsAt < 0) return html;
+  const open = block.indexOf('{', importsAt);
+  if (open < 0) return html;
+  const insert = `"react": "${VENDOR_ROUTE}", "react-dom/client": "${VENDOR_ROUTE}", `;
+  const at = start + open + 1;
+  return html.slice(0, at) + insert + html.slice(at);
+}
+
+function serveVendor(res: http.ServerResponse): void {
+  getVendorReactCode().then(
+    (code) => {
+      res.writeHead(200, { 'content-type': MIME['.mjs'] ?? 'application/octet-stream' });
+      res.end(code);
+    },
+    () => {
+      res.writeHead(500);
+      res.end('error');
+    },
+  );
+}
+
+function requestPathname(req: http.IncomingMessage): string {
+  return decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
+}
+
+type ResolvedWorldFile = { file: string } | { status: 403 } | { status: 404 };
+
+function resolveWorldFile(base: string, pathname: string): ResolvedWorldFile {
+  const rel = path.normalize(pathname).replace(/^[/\\]+/, '');
+  let file = path.join(base, rel);
+  if (!file.startsWith(base)) return { status: 403 };
+  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return { status: 404 };
+  return { file };
+}
+
+function serveWorldFile(res: http.ServerResponse, file: string): void {
+  const mime = MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream';
+  res.writeHead(200, { 'content-type': mime });
+  if (mime.startsWith('text/html')) {
+    res.end(injectVendorMap(fs.readFileSync(file, 'utf8')));
+    return;
+  }
+  fs.createReadStream(file).pipe(res);
+}
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -42,22 +104,18 @@ export function startServer(root: string, { host = '127.0.0.1', port = 0 }: Serv
   }
   const server = http.createServer((req, res) => {
     try {
-      const pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
-      const rel = path.normalize(pathname).replace(/^[/\\]+/, '');
-      let file = path.join(base, rel);
-      if (!file.startsWith(base)) {
-        res.writeHead(403);
-        res.end('forbidden');
+      const pathname = requestPathname(req);
+      if (pathname === VENDOR_ROUTE) {
+        serveVendor(res);
         return;
       }
-      if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-      if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
-        res.writeHead(404);
-        res.end('not found');
+      const resolved = resolveWorldFile(base, pathname);
+      if (!('file' in resolved)) {
+        res.writeHead(resolved.status);
+        res.end(resolved.status === 403 ? 'forbidden' : 'not found');
         return;
       }
-      res.writeHead(200, { 'content-type': MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream' });
-      fs.createReadStream(file).pipe(res);
+      serveWorldFile(res, resolved.file);
     } catch {
       res.writeHead(500);
       res.end('error');

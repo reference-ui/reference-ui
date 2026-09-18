@@ -14,8 +14,26 @@
 | NEO-RECIPE-08 | Responsive variant value `{ base: 'solid', md: 'outline' }` switches at the container width | done | ATM-RECIPE-07 | `recipe.ts` | resize across `md` flips computed variant styles | `[panda-v1]` `core/__tests__/recipe.test.ts:226` responsive variant |
 | NEO-RECIPE-09 | `_hover` inside a variant paints on the variant class, not a separate atom | done | ATM-RECIPE-02 | — | hover computed; utility count unchanged | `[panda-v1]` `core/__tests__/recipe.test.ts:220` solid hover |
 | NEO-RECIPE-10 | Variant + `css()` utilities on the same node: utilities win via layer order | done | ATM-RECIPE-03, ATM-LAYER-04 | — | computed override | `[atm]` ATM-RECIPE-03, ATM-LAYER-04 (P2 #19) |
+| NEO-RECIPE-11 | ClassName-less `chipRecipe` emits paintable closed classes under the inferred `chip` stem | done | ATM-RECIPE-08 (RS-33) | — | inferred table resolves via the explicit-identity runtime path; both probes paint base + tone | `[atm]` ATM-RECIPE-08; `[lib]` `SummaryChip.tsx` |
 
 ## RS lane (added by this cartography)
+
+**RS-33 — landed** as station ATM-RECIPE-08 (unblocked landing regen; waiting Neo case NEO-RECIPE-11, done).
+
+First `neo sync` over `@reference-ui/lib` failed: `SummaryChip.tsx` calls
+`const summaryChipRecipe = recipe({...})` with no `className` prop, which core
+admitted as `summaryChip` but the engine refused. Admission rule: an explicit
+non-empty string-literal prop wins; else a `<Name>Recipe` enclosing binding
+infers the stem; a bare `Recipe` or non-suffixed binding still refuses with
+the explicit-identity diagnostic at the object literal.
+
+- Input: `const chipRecipe = recipe({ base, variants, defaultVariants })`
+  (no prop) plus `const Recipe = recipe(...)` and `const plain = recipe(...)`
+  refusal arms.
+- Expected: one table (`className: 'chip'`, full variant/default/combination
+  maps, base + variant rules in `@layer recipes`) and two located
+  explicit-identity errors; no utilities.
+- Waiting Neo case: NEO-RECIPE-11 (done).
 
 **RS-8 — landed** as station ATM-RECIPE-07 (unblocked NEO-RECIPE-08).
 No ATM-RECIPE station covered responsive variant values: `grep -ri

@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('border-color: black;')
     expect(sheet).toContain('outline-color: white;')
     expect(sheet).not.toContain('var(--colors-transparent)')
-    expect(sheet).not.toContain('var(--colors-currentColor)')
+    expect(sheet).not.toContain('var(--colors-current-color)')
     expect(sheet).not.toContain('var(--colors-black)')
     expect(sheet).not.toContain('var(--colors-white)')
     expect(result.diagnostics).toEqual([])

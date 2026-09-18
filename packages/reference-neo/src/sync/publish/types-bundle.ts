@@ -9,9 +9,57 @@ import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { BASE_SYSTEM_HEADER } from './types.ts'
 
 /**
+ * Publish the styled subpath declarations beside the central index: the root
+ * entry, the tokens module, and the three classic types modules. Every file
+ * re-exports or derives from the central typegen index, so the subpaths track
+ * the evaluated spec with no second source of truth. Runs inside the
+ * declaration leg; styled stays data-only (D4).
+ */
+function writeStyledSubpathDecls(outDir: string): void {
+  const styledDir = join(outDir, 'styled')
+  const typesDir = join(styledDir, 'types')
+  const root = `${BASE_SYSTEM_HEADER}\nexport type * from './types/index.js'\n`
+  const files: Array<[string, string]> = [
+    [join(styledDir, 'index.d.ts'), root],
+    [join(styledDir, 'tokens.d.ts'), root],
+    [
+      join(typesDir, 'conditions.d.ts'),
+      `${BASE_SYSTEM_HEADER}\nimport type { StyleConditionKey } from './index.js'\n/** Condition table: every generated condition key maps to its selector. */\nexport type Conditions = { [K in StyleConditionKey]: string }\n`,
+    ],
+    [
+      join(typesDir, 'prop-type.d.ts'),
+      `${BASE_SYSTEM_HEADER}\nimport type { StyleProps } from './index.js'\n/** Utility table: every generated style prop maps to its value domain. */\nexport type UtilityValues = { [K in keyof StyleProps]: StyleProps[K] }\n`,
+    ],
+    [
+      join(typesDir, 'style-props.d.ts'),
+      `${BASE_SYSTEM_HEADER}\nimport type { StyleProps } from './index.js'\n/** System style props under the classic module name. */\nexport type SystemProperties = StyleProps\n`,
+    ],
+  ]
+  for (const [file, text] of files) writeFileSync(file, text, 'utf-8')
+}
+
+/**
+ * Wire the react StyleProps onto the styled index: typegen precision where
+ * tokens exist, open over every other compiled prop plus the condition keys.
+ * Font scopes stay in styled under FontProps; their union would poison prop
+ * spreads with distribution. Returns the import plus the merged declaration.
+ */
+function stylePropsWiring(): string {
+  return [
+    "import type { StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject } from '@reference-ui/styled'",
+    '/** React style props: typegen precision where tokens exist, open everywhere else. */',
+    'export type StyleProps = Omit<NarrowStyleProps, \'font\' | \'weight\'> & {',
+    "  [K in Exclude<StylePropName, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown",
+    '} & {',
+    '  [K in StyleConditionKey]?: StyleProps',
+    '}',
+  ].join('\n')
+}
+
+/**
  * Publish the styled type declarations plus the react named graph. Typegen
  * prints one central .d.ts from the evaluated spec into styled/types, then
- * the react entry types narrow their wide StyleProps onto it and re-export
+ * the react entry types merge their wide StyleProps with it and re-export
  * the graph beside authored css()/recipe() declarations. Runs after the
  * react bundle; styled stays data-only (D4).
  */
@@ -26,19 +74,23 @@ export async function publishTypesBundle(outDir: string, spec: EvaluatedSystemSp
     `${BASE_SYSTEM_HEADER}\n${typegen.emitDtsSync({ baseSystem: spec })}`,
     'utf-8'
   )
+  writeStyledSubpathDecls(outDir)
   const reactTypesPath = join(outDir, 'react', 'react.d.mts')
   const wideStyleProps = 'export type StyleProps = { [K in StylePropName]?: unknown }'
   const reactSource = readFileSync(reactTypesPath, 'utf-8')
   if (!reactSource.includes(wideStyleProps)) {
     throw new Error('cannot wire react types: wide StyleProps line missing from react.d.mts')
   }
-  const styledImport = "import type { StyleProps, SystemStyleObject } from '@reference-ui/styled'"
+  const styledImport = stylePropsWiring()
   const namedGraph = [
     'export type * from \'@reference-ui/styled\'',
     '/** One css() input: a style object, a list of them, or a conditional skip. */',
     'export type CssStyles = SystemStyleObject | undefined | null | false',
-    '/** Shared prop shape every primitive accepts: style props plus primitive extras. */',
-    'export type PrimitiveProps = StyleProps & {',
+    '/** Shared prop shape every primitive accepts: native props for one tag plus style props and primitive extras. */',
+    'export type PrimitiveProps<T extends PrimitiveTag> = Omit<',
+    '  React.ComponentPropsWithoutRef<T>,',
+    "  StylePropName | 'css' | 'colorMode' | 'variant'",
+    '> & StyleProps & {',
     '  css?: PrimitiveCssProp',
     '  colorMode?: unknown',
     '  variant?: unknown',
