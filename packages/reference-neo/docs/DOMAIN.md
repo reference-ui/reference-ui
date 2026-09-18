@@ -61,6 +61,12 @@ this file in the same pass.
   (campaign)
 - **roles** — captain, planner, scout, cartographer, line cook, RS
   liaison, oracle: the voyage crew. (campaign)
+- **host** — a JSX name whose style props extract: primitives carry
+  every tag, wrappers earn it by forwarding. (styletrace)
+- **traced** — discovered by StyleTrace inside `compile()`, per
+  project, from the code — never declared. (styletrace)
+- **configured** — from `jsxElements`: the escape hatch for shapes
+  static tracing cannot infer. (styletrace)
 
 ## Retired (do not revive)
 

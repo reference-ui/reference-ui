@@ -64,18 +64,25 @@ export async function sync(cwd: string): Promise<SyncResult> {
     // Frozen D12 request as evolved by RS-10: the engine scans sourceRoot
     // itself (no virtual mirror, no staged declarations — both roots are the
     // project), scoped to the config include globs, and admits the configured
-    // hosts plus every generated primitive without an import.
-    const jsx = resolveJsxElements(config)
+    // hosts plus every generated primitive without an import. The request
+    // records what the author asked for: discovery reaches the publish below,
+    // never this list.
+    const requested = resolveJsxElements(config)
     const request: ScopedCompileRequest = {
       schemaVersion: 1,
       spec,
-      jsxHosts: uniqueSorted([...jsx.merged, ...PRIMITIVE_JSX_NAMES]),
+      jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
       sourceRoot: cwd,
       declarationRoot: cwd,
       include: config.include,
     }
     const result = await compileNative(request)
     throwOnErrorDiagnostics(result.diagnostics)
+
+    // Publish carries configured ∪ traced: hosts the engine discovered
+    // inside compile() join the config names in the artifact and the
+    // portable system, so downstream extends keep their fuel.
+    const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
 
     publishSyncFolder({
       outDir,

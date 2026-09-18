@@ -37,6 +37,12 @@ export interface NativeCompileResult {
   portableStylesheet?: string
   runtime: NativeRuntimeArtifact
   diagnostics: NativeDiagnostic[]
+  /**
+   * Wrapper hosts StyleTrace discovered inside `compile()`, sorted and
+   * unique. Absent on engines older than the discovery slice; publish
+   * treats a missing field as no traced hosts.
+   */
+  tracedJsxHosts?: string[]
 }
 
 interface AtomicModule {
