@@ -74,67 +74,104 @@ impl<'a> TraceContext<'a> {
         current_module: &Path,
         specifier: &str,
     ) -> Result<Option<PathBuf>, StyleTraceError> {
-        if specifier == "@reference-ui/styled/types" {
-            let candidates = [
-                self.session
-                    .sync_root
-                    .join(super::STYLED_TYPES_ROOT)
-                    .join("system-types.d.ts"),
-                self.session
-                    .sync_root
-                    .join("styled/types/system-types.d.ts"),
-                self.session.sync_root.join("types/system-types.d.ts"),
-            ];
-            for candidate in candidates {
-                if let Some(path) =
-                    self.resolve_reference_support_module(current_module, &candidate, specifier)?
-                {
-                    return Ok(Some(path));
-                }
-            }
+        if let Some(path) = self.resolve_styled_module(current_module, specifier)? {
+            return Ok(Some(path));
         }
-
-        if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
-            let candidates = [
-                self.session
-                    .sync_root
-                    .join(super::STYLED_TYPES_ROOT)
-                    .join(format!("{rest}.d.ts")),
-                self.session
-                    .sync_root
-                    .join(format!("styled/types/{rest}.d.ts")),
-                self.session.sync_root.join(format!("types/{rest}.d.ts")),
-            ];
-            for candidate in candidates {
-                if let Some(path) =
-                    self.resolve_reference_support_module(current_module, &candidate, specifier)?
-                {
-                    return Ok(Some(path));
-                }
-            }
+        if let Some(path) = self.resolve_react_module(current_module, specifier)? {
+            return Ok(Some(path));
         }
-
-        if specifier == "@reference-ui/react" {
-            let candidates = [
-                self.session.sync_root.join(super::REFERENCE_REACT_ENTRY),
-                self.session
-                    .sync_root
-                    .join(".reference-ui/react/react.d.ts"),
-                self.session.sync_root.join("react/react.d.mts"),
-                self.session.sync_root.join("react/react.d.ts"),
-                self.session.sync_root.join("react.d.mts"),
-                self.session.sync_root.join("react.d.ts"),
-            ];
-            for candidate in candidates {
-                if let Ok(Some(path)) =
-                    self.resolve_reference_support_module(current_module, &candidate, specifier)
-                {
-                    return Ok(Some(path));
-                }
-            }
-        }
-
         self.resolve_standard_module(current_module, specifier)
+    }
+
+    fn resolve_styled_module(
+        &self,
+        current_module: &Path,
+        specifier: &str,
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        if specifier == "@reference-ui/styled/types" {
+            return self.resolve_support_candidates(
+                current_module,
+                specifier,
+                &[
+                    self.styled_types_path("system-types.d.ts"),
+                    self.sync_path("styled/types/system-types.d.ts"),
+                    self.sync_path("types/system-types.d.ts"),
+                ],
+            );
+        }
+        if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
+            return self.resolve_support_candidates(
+                current_module,
+                specifier,
+                &[
+                    self.styled_types_path(&format!("{rest}.d.ts")),
+                    self.sync_path(&format!("styled/types/{rest}.d.ts")),
+                    self.sync_path(&format!("types/{rest}.d.ts")),
+                ],
+            );
+        }
+        if specifier == "@reference-ui/styled" {
+            return self.resolve_support_candidates(
+                current_module,
+                specifier,
+                &[
+                    self.styled_types_path("index.d.ts"),
+                    self.sync_path(".reference-ui/styled/index.d.ts"),
+                    self.sync_path("styled/types/index.d.ts"),
+                    self.sync_path("styled/index.d.ts"),
+                ],
+            );
+        }
+        Ok(None)
+    }
+
+    fn resolve_react_module(
+        &self,
+        current_module: &Path,
+        specifier: &str,
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        if specifier != "@reference-ui/react" {
+            return Ok(None);
+        }
+        self.resolve_support_candidates(
+            current_module,
+            specifier,
+            &[
+                self.sync_path(super::REFERENCE_REACT_ENTRY),
+                self.sync_path(".reference-ui/react/react.d.ts"),
+                self.sync_path("react/react.d.mts"),
+                self.sync_path("react/react.d.ts"),
+                self.sync_path("react.d.mts"),
+                self.sync_path("react.d.ts"),
+            ],
+        )
+    }
+
+    fn resolve_support_candidates(
+        &self,
+        current_module: &Path,
+        specifier: &str,
+        candidates: &[PathBuf],
+    ) -> Result<Option<PathBuf>, StyleTraceError> {
+        for candidate in candidates {
+            if let Some(path) =
+                self.resolve_reference_support_module(current_module, candidate, specifier)?
+            {
+                return Ok(Some(path));
+            }
+        }
+        Ok(None)
+    }
+
+    fn sync_path(&self, relative: &str) -> PathBuf {
+        self.session.sync_root.join(relative)
+    }
+
+    fn styled_types_path(&self, file: &str) -> PathBuf {
+        self.session
+            .sync_root
+            .join(super::STYLED_TYPES_ROOT)
+            .join(file)
     }
 
     fn resolve_standard_module(
@@ -162,10 +199,8 @@ impl<'a> TraceContext<'a> {
             )));
         }
 
-        Err(StyleTraceError::new(format!(
-            "unsupported module specifier {specifier} from {}",
-            current_module.display()
-        )))
+        // An unresolvable module contributes no names; the trace continues without it.
+        Ok(None)
     }
 
     fn resolve_reference_support_module(

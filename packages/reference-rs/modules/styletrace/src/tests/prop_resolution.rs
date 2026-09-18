@@ -67,6 +67,56 @@ fn resolves_mapped_and_indexed_type_helpers() {
 }
 
 #[test]
+fn resolves_union_members_that_mix_references_and_literals() {
+    let scratch = ScratchDir::new("union-members");
+    scratch.write(
+        "src/style-props.ts",
+        concat!(
+            "export type Names = \"accent\" | \"tone\"\n",
+            "export type StyleProps = {\n",
+            "  [K in Exclude<Names, 'tone'> | 'shade']?: string\n",
+            "} & ({ depth?: string } | { breadth?: string })\n",
+        ),
+    );
+
+    let names = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/style-props.ts"),
+        "StyleProps",
+    )
+    .expect("expected style props to resolve");
+
+    assert_eq!(
+        names,
+        vec!["accent", "breadth", "depth", "shade"]
+            .into_iter()
+            .map(str::to_string)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn unresolvable_module_specifiers_contribute_no_names() {
+    let scratch = ScratchDir::new("phantom-specifier");
+    scratch.write(
+        "src/style-props.ts",
+        concat!(
+            "import type { GhostProps } from '@phantom/missing'\n",
+            "export type StyleProps = GhostProps & { color?: string }\n",
+        ),
+    );
+
+    let names = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/style-props.ts"),
+        "StyleProps",
+    )
+    .expect("expected phantom imports to resolve tolerantly");
+
+    assert_eq!(names, vec!["color".to_string()]);
+}
+
+#[test]
 fn loads_real_reference_core_style_props() {
     let sync_root = reference_lib_sync_root();
     if !sync_root.join(".reference-ui").exists() {

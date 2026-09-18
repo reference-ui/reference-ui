@@ -1,0 +1,1 @@
+{"aliases": ["frozen request", "native request bytes"], "covers": ["sync/compile-request", "sync/jsx-hosts"], "keywords": ["byte-exact", "frozen-shape", "host-union", "tag-registry", "native-bridge"], "related": ["ATM-SEAM-02", "NEO-SYNC-09"]}

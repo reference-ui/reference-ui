@@ -1,0 +1,1 @@
+{"aliases": ["token visibility"], "covers": ["layer/tokens", "tokens/var-resolution"], "keywords": ["--colors-brand", "var()", "token reference", "shared token", "cross-layer"], "related": ["NEO-LAYER-01", "ATM-LAYER-03"]}

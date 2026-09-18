@@ -1,0 +1,1 @@
+{"aliases": ["napi host", "binary loader"], "covers": ["runtime/loader", "runtime/native-bindings", "runtime/capabilities"], "keywords": ["runtime host", "native addon", "target triples", "loader", "callNativeJson", "get_native_capabilities", "cdylib", "binary resolution", "platform detection"], "related": ["rs:virtualrs", "rs:shared"]}

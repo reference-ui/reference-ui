@@ -1,0 +1,1 @@
+{"aliases": ["star operator", "overlap dedup"], "covers": ["static/wildcard", "static/dedup"], "keywords": ["glob", "asterisk", "dedupe", "deduplication"], "related": ["ATM-STATIC-02", "NEO-STATIC-01"]}

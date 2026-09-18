@@ -1,0 +1,1 @@
+{"aliases": ["upstream downstream", "nested package"], "covers": ["layer/nesting", "layer/extends", "layer/portable-scoping"], "keywords": ["system merge", "token adoption", "downstream override", "injected chunk", "cross-frame", "same-origin iframe"], "related": ["NEO-LAYER-05", "NEO-RECIPE-10", "ATM-RECIPE-03"]}

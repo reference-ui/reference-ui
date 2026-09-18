@@ -1,0 +1,1 @@
+{"aliases": ["triple bind"], "covers": ["conditions/hover", "conditions/focus", "selector :is()"], "keywords": ["hover", "focus", "data-hover", "data-focus", ":is()", "triple"], "related": ["NEO-COND-01", "ATM-COND-10"]}

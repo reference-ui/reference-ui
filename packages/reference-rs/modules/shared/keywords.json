@@ -1,0 +1,1 @@
+{"aliases": ["text utilities", "span utils"], "covers": ["shared/spans", "shared/unquote"], "keywords": ["shared", "slice_span", "span slicing", "unquote", "string hygiene", "oxc helpers", "rlib"], "related": ["rs:atlas", "rs:tasty"]}

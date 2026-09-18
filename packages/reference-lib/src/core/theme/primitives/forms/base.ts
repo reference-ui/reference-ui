@@ -30,6 +30,7 @@ export const formBasePrimitiveStyles = {
     fontSize: '3.5r',
     fontWeight: '500',
     lineHeight: '5r',
+    marginBottom: '0.5r',
   },
 
   '.ref-label .ref-input': {

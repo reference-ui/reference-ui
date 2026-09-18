@@ -33,8 +33,9 @@
     "pipeline:test:matrix": "node .agents/skills/test-core/scripts/run.mjs test:matrix",
     "pipeline:verify:all": "node .agents/skills/test-core/scripts/run.mjs verify:all",
     "agentneo": "node packages/reference-neo/tests/shared/cli.ts",
-   "playground": "node packages/reference-neo/playground/tools/serve.mjs",
-   "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs"
+    "playground": "node packages/reference-neo/playground/tools/serve.mjs",
+    "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs",
+    "agent:cases": "node .agents/case-index/cli.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
@@ -42,6 +43,7 @@
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@types/node": "^25.1.0",
+    "minisearch": "^7.2.0",
     "nx": "^22.4.4",
     "prettier": "~3.8.1",
     "typescript": "~7.0.2"

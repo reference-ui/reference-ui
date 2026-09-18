@@ -222,3 +222,36 @@ flowchart TD
 5. **Write a real file header**: 2–6 sentences at the top describing what the file does, takes, and emits. Not a one-liner, not an essay.
 6. **Keep inline comments terse**: Explain *why*, not *what*. The header is the paragraph; the body is not.
 7. **Verify both seams and internals**: Pure Rust tests (`pnpm agentrs c`) for domain logic, Vitest (`pnpm agentrs v`) for N-API seams and wrappers.
+
+---
+
+## 6. Case index
+
+Full-text index over neo cases + RS module surfaces (names, READMEs,
+`specs/*.spec.ts`, hand-authored `keywords.json`, RS suite/case inventory).
+Use it to find **module surfaces by feature**
+instead of grepping — it also surfaces the neo cases that prove a surface.
+
+```bash
+pnpm agent:cases search "<query>" [--limit=N] [--json]  # search surfaces + cases
+pnpm agent:cases list [--kind=neo|rs] [--json]          # list indexed docs (auto-rebuilds if stale)
+pnpm agent:cases reindex [--json]                       # force rebuild
+# direct: node .agents/case-index/cli.mjs search <query> | list [--kind=neo|rs] | reindex
+```
+
+Terms are stemmed (`queries` matches `query`) and typo-tolerant
+(fuzzy+prefix, with "did you mean" on zero hits); `search` caps at 15
+hits unless `--limit=N` raises it. Hand-authored `keywords.json`
+enriches the index — schema: `.agents/case-index/SCHEMA.md`.
+
+Example (RS surface hit):
+
+```text
+$ pnpm agent:cases search "barrels"
+34.031  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
+        packages/reference-rs/modules/atlas
+25.581  rs:styletrace — Styletrace [rs:styletrace] (matched: barrel)
+        packages/reference-rs/modules/styletrace
+
+2 hit(s) for "barrels"
+```

@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import { traceBindings } from '../js/index'
 import {
+  createNeoSyncedWorkspaceFixture,
   createNodeBuiltinHelperFixture,
   createReactReexportFixture,
   createSyncedWorkspaceFixture,
@@ -44,6 +45,21 @@ describe('styletrace fixtures', () => {
 
   it('resolves synced workspaces from the nearest .reference-ui root and accepts explicit sync root hints', async () => {
     const fixture = await createSyncedWorkspaceFixture()
+
+    try {
+      await expect(
+        traceDirWithoutHint(`${fixture.rootDir}/consumer-app/src`)
+      ).resolves.toEqual(['AppCard'])
+      await expect(
+        traceDirWithHint(`${fixture.rootDir}/consumer-app/src`, fixture.syncRootHint)
+      ).resolves.toEqual(['AppCard'])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('traces Neo-shaped sync roots with no react/types or react/system', async () => {
+    const fixture = await createNeoSyncedWorkspaceFixture()
 
     try {
       await expect(

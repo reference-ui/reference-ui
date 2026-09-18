@@ -1,0 +1,1 @@
+{"aliases": ["probe a"], "covers": ["harness/snapshots", "harness/bless", "harness/multi-spec", "harness/cascade"], "keywords": ["visual regression", "golden", "baseline drift", "id selector", "snapshot testing"], "related": ["NEO-PLAY-B-01"]}

@@ -1,0 +1,1 @@
+{"aliases": ["at-rule nesting"], "covers": ["global/at-rules", "global/media", "global/container"], "keywords": ["responsive", "breakpoints", "min-width", "max-width"], "related": ["ATM-COND-11", "NEO-GLOBAL-02"]}

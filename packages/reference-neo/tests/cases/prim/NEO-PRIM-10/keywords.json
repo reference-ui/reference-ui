@@ -1,0 +1,1 @@
+{"aliases": ["surface audit"], "covers": ["prim/entry-exports", "prim/consumer-types"], "keywords": ["public api", "dts", "entrypoint", "api surface"], "related": ["NEO-SYNC-05", "NEO-PRIM-09"]}

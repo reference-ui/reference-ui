@@ -1,0 +1,1 @@
+{"aliases": ["quoted attr"], "covers": ["escaping/quotes", "conditions/expanded", "selector attribute"], "keywords": ["single quotes", "backslash", "data attribute", "special characters", "quote handling"], "related": ["ATM-COND-09"]}

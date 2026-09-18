@@ -1,0 +1,1 @@
+{"aliases": ["double bind"], "covers": ["conditions/hover", "conditions/disabled", "selector :is()"], "keywords": ["data-hover", "data-disabled", "pseudo-class", ":disabled", "combined"], "related": ["NEO-COND-01", "NEO-COND-02", "ATM-COND-02", "ATM-COND-10"]}

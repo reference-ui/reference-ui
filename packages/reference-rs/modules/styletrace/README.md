@@ -124,11 +124,14 @@ So the rule is still the same:
 - package support comes from extending that same analysis through dependency
 	import resolution rather than inventing a separate registry
 
-### Why atomic stations still scan every JSX tag
+### Why atomic hosts fail closed without synced declarations
 
 Atomic `compile()` asks this crate for JSX host names, but hermetic
 stations usually have no synced `.reference-ui/react` primitive
-declarations. An empty primitive set yields an empty host list; atomic
-then falls back to scanning every tag (or treating file-local
-`@reference-ui/react` imports as hosts). That gap is
-[PLAN.md](./PLAN.md). Do not close it with a PascalCase name list.
+declarations. When the trace cannot resolve its declaration entrypoints
+it returns an explicit error, and atomic maps that error to the empty
+host set with a missing-graph diagnostic (ATM-SITE-13) — extraction
+fails closed and never falls back to scanning every tag. The plan to
+make Neo-synced trees traceable lives in
+[styletrace.md](../../../../docs/missions/styletrace.md). Do not close
+it with a PascalCase name list.
