@@ -25,7 +25,7 @@ use super::source_files::discover_source_files;
 pub struct StyleSurface {
     pub style_props: BTreeSet<String>,
     pub primitives: BTreeSet<String>,
-    trust_style_props_name: bool,
+    trust_surface_type_names: bool,
 }
 
 impl StyleSurface {
@@ -33,20 +33,21 @@ impl StyleSurface {
         Self {
             style_props,
             primitives,
-            trust_style_props_name: false,
+            trust_surface_type_names: false,
         }
     }
 
-    /// Mark the surface engine-built: a `StyleProps` type reference the
-    /// declaration graph cannot resolve denotes this surface instead of
-    /// failing. Disk surfaces keep graph resolution.
-    pub fn trust_style_props_name(mut self) -> Self {
-        self.trust_style_props_name = true;
+    /// Mark the surface engine-built: a surface-type reference
+    /// (`StyleProps`, `PrimitiveProps`) the declaration graph cannot
+    /// resolve denotes this surface instead of failing. Disk surfaces
+    /// keep graph resolution.
+    pub fn trust_surface_type_names(mut self) -> Self {
+        self.trust_surface_type_names = true;
         self
     }
 
-    pub(crate) fn trusts_style_props_name(&self) -> bool {
-        self.trust_style_props_name
+    pub(crate) fn trusts_surface_type_names(&self) -> bool {
+        self.trust_surface_type_names
     }
 
     /// Build the surface from a declaration root (disk path).

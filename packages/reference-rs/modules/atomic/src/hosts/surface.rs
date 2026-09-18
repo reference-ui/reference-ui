@@ -20,7 +20,7 @@ pub fn engine_surface(system: &BaseSystem) -> StyleSurface {
         .iter()
         .map(ToString::to_string)
         .collect();
-    StyleSurface::new(style_props, primitives).trust_style_props_name()
+    StyleSurface::new(style_props, primitives).trust_surface_type_names()
 }
 
 /// Condition keys exactly as typegen prints `StyleConditionKey`: canon
