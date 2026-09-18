@@ -39,8 +39,9 @@ export interface ReferenceUIConfig {
   extends?: BaseSystem[]
 
   /**
-   * Explicit JSX element names to include in styletrace discovery.
-   * Use this for generated component surfaces that static tracing cannot infer.
+   * Escape hatch for JSX element names that static tracing cannot infer.
+   * Hosts are discovered by StyleTrace per compile; list here only generated
+   * component surfaces and member spellings (e.g. `NSPanel` for `<NS.Panel>`).
    */
   jsxElements?: string[]
 
