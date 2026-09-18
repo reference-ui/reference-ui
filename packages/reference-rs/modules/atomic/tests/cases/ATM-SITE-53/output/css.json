@@ -1,0 +1,6 @@
+{
+  "backgroundColor:amber.500": "@reference-ui/lib__bg-c_amber.500",
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "color:gray.700": "@reference-ui/lib__c_gray.700",
+  "color:red.500": "@reference-ui/lib__c_red.500"
+}

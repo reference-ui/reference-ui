@@ -4,20 +4,22 @@
 //! prints. Does not own the `_` catalog — that is `pseudoprops`. `@media` /
 //! `@container` strings are at-rules, not selector templates.
 
+pub mod nesting;
+
 #[derive(Default)]
-struct SelectorQuoteState {
+pub(crate) struct SelectorQuoteState {
     in_single: bool,
     in_double: bool,
     escaped: bool,
 }
 
-enum Action {
+pub(crate) enum Action {
     Keep,
     Substitute,
 }
 
 impl SelectorQuoteState {
-    fn step(&mut self, ch: char) -> Action {
+    pub(crate) fn step(&mut self, ch: char) -> Action {
         if self.escaped {
             self.escaped = false;
             return Action::Keep;
@@ -60,19 +62,31 @@ pub fn apply(template: &str, class_selector: &str) -> String {
 /// Scanner for top-level selector structure. Tracks quotes, escapes, and
 /// paren/bracket depth so commas and combinators inside functional pseudos,
 /// attributes, and strings are never treated as selector structure.
-struct SelectorScan {
+pub(crate) struct SelectorScan {
     quote: Option<char>,
     escaped: bool,
     depth: usize,
 }
 
 impl SelectorScan {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             quote: None,
             escaped: false,
             depth: 0,
         }
+    }
+
+    /// Advance over `ch`, reporting whether it arrived as code. Escaped
+    /// chars and string contents are consumed but never structural, so an
+    /// escaped `\,` in a generated class neither splits nor armours.
+    pub(crate) fn step_code(&mut self, ch: char) -> bool {
+        if self.escaped || self.quote.is_some() || ch == '\\' {
+            self.step(ch);
+            return false;
+        }
+        self.step(ch);
+        true
     }
 
     fn step(&mut self, ch: char) {
@@ -108,20 +122,20 @@ impl SelectorScan {
         }
     }
 
-    fn top_level(&self) -> bool {
+    pub(crate) fn top_level(&self) -> bool {
         self.quote.is_none() && self.depth == 0
     }
 }
 
 /// Split a selector list on top-level commas, ignoring commas inside
 /// quotes, parens, and brackets. Members are trimmed; empties are dropped.
-fn split_selector_list(selector: &str) -> Vec<&str> {
+pub(crate) fn split_selector_list(selector: &str) -> Vec<&str> {
     let mut members = Vec::new();
     let mut scan = SelectorScan::new();
     let mut start = 0;
     for (idx, ch) in selector.char_indices() {
-        scan.step(ch);
-        if ch == ',' && scan.top_level() {
+        let code = scan.step_code(ch);
+        if code && ch == ',' && scan.top_level() {
             members.push(selector[start..idx].trim());
             start = idx + ch.len_utf8();
         }
@@ -134,15 +148,15 @@ fn split_selector_list(selector: &str) -> Vec<&str> {
 /// True when a comma member needs `:is()` armour: it carries a top-level
 /// combinator (`>`, `+`, `~`, or descendant space) that reparsing would
 /// reattach to the surrounding selector.
-fn member_needs_is_wrap(member: &str) -> bool {
+pub(crate) fn member_needs_is_wrap(member: &str) -> bool {
     let member = member.trim();
     if member.is_empty() {
         return false;
     }
     let mut scan = SelectorScan::new();
     for ch in member.chars() {
-        scan.step(ch);
-        if !scan.top_level() {
+        let code = scan.step_code(ch);
+        if !code || !scan.top_level() {
             continue;
         }
         if ch == '>' || ch == '+' || ch == '~' || ch.is_whitespace() {
@@ -264,6 +278,7 @@ mod tests {
             apply_distributed("&[data-x=\"a, b\"]", ".a, .b"),
             ".a[data-x=\"a, b\"], .b[data-x=\"a, b\"]"
         );
+        assert_eq!(apply_distributed("&:hover", ".a\\,b"), ".a\\,b:hover");
     }
 
     #[test]

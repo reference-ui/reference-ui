@@ -15,7 +15,7 @@ use super::literal::{
 };
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::{line_col, Diagnostic};
-use crate::extract::constants::LocalConstants;
+use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
 
 /// Context for traversing an expression tree to extract style leaf values.
@@ -25,7 +25,7 @@ pub struct ExpressionWalk<'a> {
     pub important: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
-    pub constants: &'a LocalConstants,
+    pub scopes: Scoped<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
@@ -223,7 +223,9 @@ fn handle_identifier_fallback(
 ) {
     // mt={space}  after  const space = '2r'
     // borderBottomColor={subtleBorder}  after  const subtleBorder = isDark ? 'gray.800' : 'gray.200'
-    let leaves = ctx.constants.scalar_leaves(name);
+    // Resolves through the scope chain: the innermost binding wins, and a
+    // param or inner declarator shadows outer and cross-file consts.
+    let leaves = ctx.scopes.scalar_leaves(name);
     if leaves.is_empty() {
         handle_identifier(ctx, name);
         return;
@@ -241,9 +243,13 @@ fn handle_static_member(
     if let Expression::Identifier(obj_id) = &mem.object {
         let obj_name = obj_id.name.as_str();
         let prop_name = mem.property.name.as_str();
-        if let Some(val) = ctx.constants.get_object_prop(obj_name, prop_name) {
+        if let Some(val) = ctx.scopes.object_prop(obj_name, prop_name) {
             // color={theme.primary}
             ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
+            return;
+        }
+        if mutated_warn(ctx, obj_name, &format!("'{obj_name}.{prop_name}' is stale")) {
+            // color={theme.primary}  after  theme.primary = 'blue'
             return;
         }
     }
@@ -302,11 +308,28 @@ fn handle_identifier(ctx: &mut ExpressionWalk<'_>, name: &str) {
         // bg={on ? 'n300' : undefined}  — omit
         return;
     }
+    if mutated_warn(ctx, name, "declared value is stale") {
+        // css({ color })  after  color = 'blue'  — the init is stale
+        return;
+    }
     // mt={space}  when `space` is not a file-top const
     let prop = ctx.prop;
     ctx.warn(format!(
         "Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"
     ));
+}
+
+/// Warn naming the write when a base name is a mutated binding.
+fn mutated_warn(ctx: &mut ExpressionWalk<'_>, name: &str, detail: &str) -> bool {
+    let Some(write) = ctx.scopes.mutation(name) else {
+        return false;
+    };
+    let prop = ctx.prop;
+    ctx.warn(format!(
+        "Dynamic mutated binding '{name}' encountered for prop '{prop}' (reassigned at {}; {detail})",
+        write.site()
+    ));
+    true
 }
 
 fn handle_unary(

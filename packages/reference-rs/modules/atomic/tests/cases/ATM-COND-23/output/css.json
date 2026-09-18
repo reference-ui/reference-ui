@@ -1,0 +1,5 @@
+{
+  "& .one, .two:color:red.500": "@reference-ui/lib__[&_.one,_.two]:c_red.500",
+  "&:not(:first-child), :only-child:& .left-border:display:none": "@reference-ui/lib__[&:not(:first-child),_:only-child]:[&_.left-border]:d_none",
+  "&:not(:first-child), :only-child:display:none": "@reference-ui/lib__[&:not(:first-child),_:only-child]:d_none"
+}

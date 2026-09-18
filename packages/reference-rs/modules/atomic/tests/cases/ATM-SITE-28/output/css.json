@@ -1,0 +1,6 @@
+{
+  "color:amber.500": "@reference-ui/lib__c_amber.500",
+  "color:blue.600": "@reference-ui/lib__c_blue.600",
+  "color:green": "@reference-ui/lib__c_green",
+  "padding:4px": "@reference-ui/lib__p_4px"
+}

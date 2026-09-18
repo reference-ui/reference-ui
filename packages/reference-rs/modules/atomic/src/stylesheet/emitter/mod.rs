@@ -9,7 +9,7 @@ use super::name;
 use super::system_layers::{append_portable_system_layers, append_system_layers};
 use crate::atom::{Atom, AtomSet, WhenKind};
 use crate::recipes::CompiledRecipe;
-use crate::resolve::conditions::apply_selector_condition;
+use crate::resolve::conditions::nest_selector_condition;
 use base_system::BaseSystem;
 use indexmap::IndexMap;
 
@@ -198,7 +198,7 @@ fn recipe_selector(class_name: &str, atom: &Atom) -> String {
     let mut current = format!(".{escaped}");
     for cond in &atom.conditions {
         if let WhenKind::Selector(template) = cond.wrap() {
-            current = apply_selector_condition(template, &current);
+            current = nest_selector_condition(&current, template);
         }
     }
     current

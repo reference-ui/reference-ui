@@ -192,7 +192,11 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
         let parser = Parser::new(&allocator, content, source_type);
         let ret = parser.parse();
         if !ret.panicked {
-            let file_constants = extract::constants::collect_local_constants(&ret.program);
+            let file_constants = extract::constants::collect_local_constants(
+                &ret.program,
+                path,
+                Some(content.as_str()),
+            );
             project_constants.merge(&file_constants);
         }
     }
@@ -224,13 +228,16 @@ fn extract_parsed_program(
     content: &str,
     program: &oxc_ast::ast::Program<'_>,
 ) {
-    let mut local_constants = extract::constants::collect_local_constants(program);
-    local_constants.merge(session.constants);
+    // Locals resolve through this file's scope table; the project bag survives
+    // only behind the import lookup stub, for imported and unbound names.
+    let table = extract::scope::collect(program);
+    let stub = extract::scope::ImportLookup::ProjectBag(session.constants);
+    let chain = extract::scope::ScopeChain::new(&table, stub);
     let bindings = extract::collect_bindings(program);
     let mut jsx_hosts = bindings.jsx_hosts();
     jsx_hosts.extend(session.traced_jsx.iter().cloned());
     let config = extract::ExtractConfig {
-        constants: &local_constants,
+        chain,
         breakpoints: session.breakpoints,
         bindings: &bindings,
         jsx_hosts: &jsx_hosts,

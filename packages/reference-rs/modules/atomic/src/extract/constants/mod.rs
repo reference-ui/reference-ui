@@ -4,6 +4,7 @@
 
 mod collect;
 mod index;
+mod mutate;
 
 pub use collect::collect_local_constants;
-pub use index::LocalConstants;
+pub use index::{LocalConstants, MutatedBinding};

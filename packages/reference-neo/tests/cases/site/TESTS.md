@@ -19,6 +19,7 @@
 | NEO-SITE-15 | Object ternary arms in a `_hover` prop: both arms compile, the hovered arm paints | done | ATM-SITE-21 (RS-34) | — | twin paints via `data-hover`; real hover paints; sheet carries exactly the two arm atoms | `[atm]` SITE-21; `[lib]` `Tabs.tsx`; `[decision D11]` |
 | NEO-SITE-16 | Member tags (`<NS.Panel />`) extract under concatenated hosts; unhosted twins stay silent | done | ATM-SITE-22 (RS-36) | — | member paints both props; twin transparent; sheet carries exactly the member utilities | `[atm]` SITE-22; `[lib]` `Menu.tsx`, `Showcase.book.tsx` |
 | NEO-SITE-17 | Component-body const ternary feeding `borderBottomColor` extracts both arms; dark paints ink, light reload paints mist | done | ATM-SITE-23 (RS-37) | — | computed both themes; sheet carries exactly the two arm atoms | `[atm]` SITE-23; `[lib]` `BookShell.tsx` chrome dividers |
+| NEO-SITE-27 | Param shadowing a cross-file const: `function Card({ color })` over `a.ts`'s `export const color` diagnoses and paints nothing; an unshadowed imported const still paints | done | ATM-SITE-53 | — | no utility + located warning; twin paints | `[overmatch]` SPEC-V2-75; `[panda-v2]` `scope.rs:1349`, `:1369` |
 
 ## RS lane (added by the SITE batch-1 cook)
 

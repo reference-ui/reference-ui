@@ -13,7 +13,7 @@ use smallvec::SmallVec;
 use super::walk::{walk_expression, ExpressionWalk};
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::Diagnostic;
-use crate::extract::constants::LocalConstants;
+use crate::extract::scope::Scoped;
 use crate::resolve::{conditions::pseudoselectors::has_parent_reference, r};
 use base_system::BreakpointScale;
 use canon::{is_condition_prop, is_known_style_prop};
@@ -24,7 +24,7 @@ pub struct ObjectWalk<'a> {
     pub important: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
-    pub constants: &'a LocalConstants,
+    pub scopes: Scoped<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
@@ -40,7 +40,7 @@ impl<'a> ObjectWalk<'a> {
             important: self.important,
             file: self.file,
             source: self.source,
-            constants: self.constants,
+            scopes: self.scopes,
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
@@ -143,7 +143,7 @@ fn handle_known_style_prop(
 ) {
     if let Some(authored) = ctx.authored.as_mut() {
         let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
-        for (val, imp) in super::ast_value::ast_to_json_values(val_expr, ctx.constants) {
+        for (val, imp) in super::ast_value::ast_to_json_values(val_expr, ctx.scopes) {
             authored.push(crate::runtime::AuthoredDeclaration {
                 when: when_strings.clone(),
                 prop: key.to_string(),
@@ -332,15 +332,28 @@ fn walk_spread_branching(
     }
 }
 
+/// Warn on an unresolvable spread, naming the write when the name is mutated.
+fn spread_miss_warn(ctx: &mut ObjectWalk<'_>, name: &str) {
+    if let Some(write) = ctx.scopes.mutation(name) {
+        // css({ ...palette })  after  palette.color = 'blue'
+        ctx.warn(format!(
+            "Dynamic mutated binding '{name}' spread in style object (reassigned at {}; keeping sibling properties)",
+            write.site()
+        ));
+        return;
+    }
+    ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+}
+
 fn unpack_local_const_object(
     ctx: &mut ObjectWalk<'_>,
     name: &str,
     when: &SmallVec<[Box<str>; 2]>,
     span: Option<Span>,
 ) {
-    let Some(obj) = ctx.constants.get_object(name) else {
+    let Some(obj) = ctx.scopes.object(name) else {
         // ...unknown  — not a file-top const object
-        ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+        spread_miss_warn(ctx, name);
         return;
     };
     for (key, _) in obj.iter() {
