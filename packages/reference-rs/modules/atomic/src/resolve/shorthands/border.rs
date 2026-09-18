@@ -20,12 +20,22 @@ fn is_whole_value(raw: &str) -> bool {
         || lower.starts_with("outlines.")
 }
 
+/// True only for width/style/color trios (border, outline, column/row rules).
+fn is_border_family(longhands: &[&str]) -> bool {
+    // Gate on family, not on count: flex, columns, lineClamp and friends are
+    // len-3 trios of other families and must never classify as border (RS-39).
+    let [width, style, color] = longhands else {
+        return false;
+    };
+    width.ends_with("Width") && style.ends_with("Style") && color.ends_with("Color")
+}
+
 /// Decompose composite border or outline declaration into atomic longhands.
 pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
     // borderBottom: '3px solid'  →  width + style  (no color)
     let canon_name = canon::resolve_canonical_prop(prop);
     let longhands = canon::native_longhands_for_prop(canon_name)?;
-    if longhands.len() != 3 {
+    if !is_border_family(longhands) {
         return None;
     }
     let width_prop = longhands[0];
@@ -38,6 +48,21 @@ pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str
     if is_zero_value(trimmed) {
         // border: 0  →  borderWidth: 0px
         return Some(vec![(width_prop.into(), AtomValue::String("0px".into()))]);
+    }
+
+    if trimmed == "none" && is_outline {
+        // outline: 'none'  →  transparent ring plus offset, core's
+        // high-contrast convention (outline.ts noneValue), never bare none.
+        return Some(vec![
+            (
+                canon_name.into(),
+                AtomValue::String("2px solid transparent".into()),
+            ),
+            (
+                "outlineOffset".into(),
+                AtomValue::String("2px".into()),
+            ),
+        ]);
     }
 
     if trimmed == "none" || is_whole_value(trimmed) {

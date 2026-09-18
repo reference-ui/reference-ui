@@ -1,0 +1,4 @@
+{
+  "bg:red": "@reference-ui/lib__bg_red",
+  "minW:40r": "@reference-ui/lib__min-w_40r"
+}

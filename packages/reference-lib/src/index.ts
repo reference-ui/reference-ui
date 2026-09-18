@@ -15,7 +15,11 @@ export {
 export { setupFocusVisible } from './core/theme/primitives/forms/focus-visible'
 import { setupFocusVisible as initFocusVisible } from './core/theme/primitives/forms/focus-visible'
 initFocusVisible()
-export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
+// HQ 2026-09-18 (landing Phase C): Reference browser masked for the Neo switch —
+// Neo emits no @reference-ui/types (D19 deferred, tasty dark). Code untouched;
+// re-commission by restoring this line + dropping the tsconfig exclude (see
+// packages/reference-neo PLAN.md Phase A-close TASTY DECOMMISSION).
+// export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export * from './components/Slot/index'
 export * from './components/Presence/index'
 export * from './motion/index'

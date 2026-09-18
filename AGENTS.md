@@ -38,10 +38,11 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> **DO NOT start background `pnpm dev:lib` processes.**
-> The developer runs `pnpm dev:lib` locally in their terminal to monitor logs and avoid port collisions.
-> If the Book dev server on port 5000 is not reachable, politely ask the developer:
-> *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Book stories."*
+> Agents MAY run `pnpm dev:lib` themselves (HQ 2026-09-18 — rescinds the
+> former do-not-start rule). Single instance only: check port 5000 first
+> (`curl -s -o /dev/null -w '%{http_code}' localhost:5000`); if it is already
+> up, use it instead of starting a second. Prefer the managed background
+> session so logs stay inspectable, and stop only processes you started.
 
 ---
 

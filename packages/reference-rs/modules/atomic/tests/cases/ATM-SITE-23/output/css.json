@@ -1,0 +1,12 @@
+{
+  "borderBottomColor:gray.200": "@reference-ui/lib__bd-b-c_gray.200",
+  "borderBottomColor:gray.700": "@reference-ui/lib__bd-b-c_gray.700",
+  "borderBottomColor:gray.800": "@reference-ui/lib__bd-b-c_gray.800",
+  "borderBottomStyle:solid": "@reference-ui/lib__bd-b-s_solid",
+  "borderBottomWidth:1px": "@reference-ui/lib__bd-b-w_1px",
+  "color:amber.500": "@reference-ui/lib__c_amber.500",
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "color:green.500": "@reference-ui/lib__c_green.500",
+  "color:red.500": "@reference-ui/lib__c_red.500",
+  "p:3r": "@reference-ui/lib__p_3r"
+}

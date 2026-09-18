@@ -1,0 +1,26 @@
+@layer token-kebab {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-gray-50: #f9fafb;
+    --colors-gray-950: #030712;
+    --colors-ui-progress-bar-foreground: var(--colors-gray-950);
+    --colors-ui-progress-track-mix-foreground: var(--colors-gray-950);
+    --colors-ui-progress-track-mix-background: #ffffff;
+    --colors-ui-meter-even-less-good-foreground: var(--colors-gray-950);
+  }
+  [data-color-mode=dark] {
+    --colors-gray-50: #030712;
+    --colors-gray-950: #f9fafb;
+    --colors-ui-progress-bar-foreground: var(--colors-gray-50);
+    --colors-ui-progress-track-mix-foreground: var(--colors-gray-50);
+    --colors-ui-progress-track-mix-background: var(--colors-gray-950);
+    --colors-ui-meter-even-less-good-foreground: var(--colors-gray-50);
+  }
+}
+@layer utilities {
+  .token-kebab__bg_ui\.progress\.track\.mixBackground { background: var(--colors-ui-progress-track-mix-background); }
+  .token-kebab__bd-c_ui\.meter\.evenLessGood\.foreground { border-color: var(--colors-ui-meter-even-less-good-foreground); }
+  .token-kebab__c_ui\.progress\.track\.mixForeground { color: var(--colors-ui-progress-track-mix-foreground); }
+}
+}

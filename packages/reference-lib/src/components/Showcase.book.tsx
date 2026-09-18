@@ -6,6 +6,7 @@ import {
   Span,
   H2,
   H3,
+  H4,
   P,
 } from '@reference-ui/react'
 import { KeyboardArrowDownIcon } from '@reference-ui/icons'
@@ -29,7 +30,15 @@ import { Toast, toast } from './Toast'
 import { Tooltip } from './Tooltip'
 import { Tree } from './Tree'
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
   return (
     <Div
       p="5r"
@@ -41,11 +50,37 @@ function SectionCard({ title, children }: { title: string; children: React.React
       boxShadow="0 2px 10px rgba(0,0,0,0.06)"
       display="flex"
       flexDirection="column"
+      gap="4r"
+    >
+      <Div display="flex" flexDirection="column" gap="0.5r">
+        <H3 fontSize="4r" fontWeight="600" m="0" color="design.text.base">
+          {title}
+        </H3>
+        {description && (
+          <Span fontSize="3r" color="design.text.light">
+            {description}
+          </Span>
+        )}
+      </Div>
+      {children}
+    </Div>
+  )
+}
+
+function DemoCell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Div
+      p="4r"
+      border="1px solid"
+      borderColor="ui.field.border"
+      borderRadius="md"
+      display="flex"
+      flexDirection="column"
       gap="3r"
     >
-      <H3 fontSize="4r" fontWeight="600" m="0" color="design.text.base">
-        {title}
-      </H3>
+      <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+        {label}
+      </H4>
       <Div display="flex" flexDirection="column" gap="3r">
         {children}
       </Div>
@@ -55,43 +90,32 @@ function SectionCard({ title, children }: { title: string; children: React.React
 
 const disclosureTrigger = dividerTrigger
 
-export default function ShowcaseFixture() {
-  const [switchChecked, setSwitchChecked] = React.useState(true)
-  const [singleSliderVal, setSingleSliderVal] = React.useState(40)
-  const [sliderVal, setSliderVal] = React.useState<number | number[]>([25, 75])
-  const [comboboxVal, setComboboxVal] = React.useState<string | null>('react')
-  const [dateVal, setDateVal] = React.useState<string | null>('2026-08-31')
-  const [numberVal, setNumberVal] = React.useState<number | null>(42)
-  const [listboxVal, setListboxVal] = React.useState<any>('option-1')
-  const [isOverlayOpen, setIsOverlayOpen] = React.useState(false)
-
+function FormInputsRow({
+  switchChecked,
+  setSwitchChecked,
+  numberVal,
+  setNumberVal,
+  singleSliderVal,
+  setSingleSliderVal,
+  sliderVal,
+  setSliderVal,
+}: {
+  switchChecked: boolean
+  setSwitchChecked: (v: boolean) => void
+  numberVal: number | null
+  setNumberVal: (v: number | null) => void
+  singleSliderVal: number
+  setSingleSliderVal: (v: number) => void
+  sliderVal: number | number[]
+  setSliderVal: (v: number | number[]) => void
+}) {
   return (
-    <Div display="flex" flexDirection="column" gap="6r" maxW="300r" mx="auto">
-      {/* Header */}
-      <Div
-        p="6r"
-        borderRadius="lg"
-        bg="ui.dialog.background"
-        border="1px solid"
-        borderColor="ui.dialog.border"
-        boxShadow="0 4px 20px rgba(0,0,0,0.08)"
-      >
-        <H2 fontSize="7r" fontWeight="700" m="0" color="design.text.base">
-          Reference UI Component Suite
-        </H2>
-        <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
-          Interactive Book showcasing all Reference UI components built with JSX primitives & tokens.
-        </P>
-      </Div>
-
-      {/* Grid of components */}
-      <Div
-        display="grid"
-        gridTemplateColumns="repeat(auto-fit, minmax(65r, 1fr))"
-        gap="5r"
-      >
-        {/* Switch */}
-        <SectionCard title="Switch">
+    <SectionCard
+      title="Form Inputs"
+      description="Toggles, text fields, numeric steppers, and sliders for capturing user input."
+    >
+      <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(60r, 1fr))">
+        <DemoCell label="Switch">
           <Div display="flex" alignItems="center" gap="3r">
             <Switch
               checked={switchChecked}
@@ -106,10 +130,9 @@ export default function ShowcaseFixture() {
             <Switch disabled checked aria-label="Disabled Switch" />
             <Span fontSize="3r" color="design.text.light">Disabled Switch</Span>
           </Div>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Field & Input */}
-        <SectionCard title="Field">
+        <DemoCell label="Field">
           <Div display="flex" alignItems="center" gap="2r">
             <Field flex="1">
               <Input placeholder="Enter username..." />
@@ -119,10 +142,9 @@ export default function ShowcaseFixture() {
           <Field borderColor="colors.amber.500" width="100%">
             <Input placeholder="Custom warning styling..." />
           </Field>
-        </SectionCard>
+        </DemoCell>
 
-        {/* NumberField */}
-        <SectionCard title="NumberField">
+        <DemoCell label="NumberField">
           <NumberField
             value={numberVal}
             onChange={setNumberVal}
@@ -137,55 +159,68 @@ export default function ShowcaseFixture() {
             <NumberField.Input />
             <NumberField.Increment />
           </NumberField>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Slider */}
-        <SectionCard title="Slider">
-          <Div display="flex" flexDirection="column" gap="4r">
-            <Div display="flex" flexDirection="column" gap="1.5r">
-              <Span fontSize="3r" color="design.text.light">
-                Single Thumb ({singleSliderVal}%)
-              </Span>
-              <Div px="2r">
-                <Slider
-                  value={singleSliderVal}
-                  onChange={setSingleSliderVal}
-                  min={0}
-                  max={100}
-                  step={1}
-                >
-                  <Slider.Track>
-                    <Slider.Range />
-                    <Slider.Thumb aria-label="Volume" />
-                  </Slider.Track>
-                </Slider>
-              </Div>
-            </Div>
-            <Div display="flex" flexDirection="column" gap="1.5r">
-              <Span fontSize="3r" color="design.text.light">
-                Range Thumbs ({Array.isArray(sliderVal) ? `${sliderVal[0]}% – ${sliderVal[1]}%` : `${sliderVal}%`})
-              </Span>
-              <Div px="2r">
-                <Slider
-                  value={sliderVal}
-                  onChange={setSliderVal}
-                  min={0}
-                  max={100}
-                  step={1}
-                >
-                  <Slider.Track>
-                    <Slider.Range />
-                    <Slider.Thumb index={0} aria-label="Minimum" />
-                    <Slider.Thumb index={1} aria-label="Maximum" />
-                  </Slider.Track>
-                </Slider>
-              </Div>
+        <DemoCell label="Slider">
+          <Div display="flex" flexDirection="column" gap="1.5r">
+            <Span fontSize="3r" color="design.text.light">
+              Single Thumb ({singleSliderVal}%)
+            </Span>
+            <Div px="2r">
+              <Slider
+                value={singleSliderVal}
+                onChange={setSingleSliderVal}
+                min={0}
+                max={100}
+                step={1}
+              >
+                <Slider.Track>
+                  <Slider.Range />
+                  <Slider.Thumb aria-label="Volume" />
+                </Slider.Track>
+              </Slider>
             </Div>
           </Div>
-        </SectionCard>
+          <Div display="flex" flexDirection="column" gap="1.5r">
+            <Span fontSize="3r" color="design.text.light">
+              Range Thumbs ({Array.isArray(sliderVal) ? `${sliderVal[0]}% – ${sliderVal[1]}%` : `${sliderVal}%`})
+            </Span>
+            <Div px="2r">
+              <Slider
+                value={sliderVal}
+                onChange={setSliderVal}
+                min={0}
+                max={100}
+                step={1}
+              >
+                <Slider.Track>
+                  <Slider.Range />
+                  <Slider.Thumb index={0} aria-label="Minimum" />
+                  <Slider.Thumb index={1} aria-label="Maximum" />
+                </Slider.Track>
+              </Slider>
+            </Div>
+          </Div>
+        </DemoCell>
+      </Div>
+    </SectionCard>
+  )
+}
 
-        {/* Tooltip & Popover */}
-        <SectionCard title="Tooltip & Popover">
+function FloatingUIRow({
+  isOverlayOpen,
+  setIsOverlayOpen,
+}: {
+  isOverlayOpen: boolean
+  setIsOverlayOpen: (v: boolean) => void
+}) {
+  return (
+    <SectionCard
+      title="Floating UI & Feedback"
+      description="Tooltips, popovers, menus, modal dialogs, and toasts rendered in floating layers."
+    >
+      <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(60r, 1fr))">
+        <DemoCell label="Tooltip & Popover">
           <Div display="flex" gap="3r" flexWrap="wrap" alignItems="center">
             <Tooltip>
               <Tooltip.Trigger>
@@ -223,10 +258,9 @@ export default function ShowcaseFixture() {
               </Popover.Content>
             </Popover>
           </Div>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Menu */}
-        <SectionCard title="Menu">
+        <DemoCell label="Menu">
           <Menu>
             <Menu.Trigger
               variant="primary"
@@ -242,10 +276,55 @@ export default function ShowcaseFixture() {
               <Menu.Item disabled>Disabled Action</Menu.Item>
             </Menu.Content>
           </Menu>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Toast */}
-        <SectionCard title="Toast Notifications">
+        <DemoCell label="Modal Overlay (Dialog)">
+          <Button
+            variant="primary"
+            alignSelf="flex-start"
+            onClick={() => setIsOverlayOpen(true)}
+          >
+            Open Modal Dialog
+          </Button>
+
+          <Overlay open={isOverlayOpen} onOpenChange={setIsOverlayOpen}>
+            <Overlay.Backdrop bg="rgba(0,0,0,0.4)" />
+            <Overlay.Content
+              position="fixed"
+              top="50%"
+              left="50%"
+              transform="translate(-50%, -50%)"
+              p="5r"
+              bg="ui.dialog.background"
+              color="ui.dialog.foreground"
+              borderRadius="lg"
+              border="1px solid"
+              borderColor="ui.dialog.border"
+              boxShadow="0 10px 40px rgba(0,0,0,0.25)"
+              minW="70r"
+            >
+              <H3 fontSize="4.5r" fontWeight="600" m="0">Modal Dialog</H3>
+              <P fontSize="3r" color="design.text.light" mt="2r">
+                Modal dialog overlay with backdrop and focus trap.
+              </P>
+              <Div display="flex" justifyContent="flex-end" gap="2r" mt="4r">
+                <Button
+                  onClick={() => setIsOverlayOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setIsOverlayOpen(false)}
+                >
+                  Confirm
+                </Button>
+              </Div>
+            </Overlay.Content>
+          </Overlay>
+        </DemoCell>
+
+        <DemoCell label="Toast Notifications">
           <Div display="flex" gap="2r" flexWrap="wrap">
             <Button
               variant="primary"
@@ -276,10 +355,20 @@ export default function ShowcaseFixture() {
               Show Top-Center Toast
             </Button>
           </Div>
-        </SectionCard>
+        </DemoCell>
+      </Div>
+    </SectionCard>
+  )
+}
 
-        {/* Collapsible & Accordion */}
-        <SectionCard title="Collapsible & Accordion">
+function DisclosureRow() {
+  return (
+    <SectionCard
+      title="Disclosure & Tabs"
+      description="Collapsibles, accordions, and tabs for progressively revealing content."
+    >
+      <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(70r, 1fr))">
+        <DemoCell label="Collapsible & Accordion">
           <Collapsible defaultOpen>
             <Collapsible.Trigger {...disclosureTrigger}>
               Toggle Collapsible Section
@@ -309,10 +398,9 @@ export default function ShowcaseFixture() {
               </Collapsible.Content>
             </Collapsible>
           </Accordion>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Tabs */}
-        <SectionCard title="Tabs">
+        <DemoCell label="Tabs">
           <Tabs defaultValue="tab1">
             <Tabs.List>
               <Tabs.Tab value="tab1">Overview</Tabs.Tab>
@@ -329,10 +417,34 @@ export default function ShowcaseFixture() {
               <Span fontSize="3r">Props extending PrimitiveProps for type safety.</Span>
             </Tabs.Panel>
           </Tabs>
-        </SectionCard>
+        </DemoCell>
+      </Div>
+    </SectionCard>
+  )
+}
 
-        {/* Combobox & Listbox */}
-        <SectionCard title="Combobox & Listbox">
+function SelectionRow({
+  comboboxVal,
+  setComboboxVal,
+  listboxVal,
+  setListboxVal,
+  dateVal,
+  setDateVal,
+}: {
+  comboboxVal: string | null
+  setComboboxVal: (v: string | null) => void
+  listboxVal: any
+  setListboxVal: (v: any) => void
+  dateVal: string | null
+  setDateVal: (v: string | null) => void
+}) {
+  return (
+    <SectionCard
+      title="Selection & Pickers"
+      description="Comboboxes, listboxes, and date pickers for choosing from a set of options."
+    >
+      <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(70r, 1fr))">
+        <DemoCell label="Combobox & Listbox">
           <Combobox value={comboboxVal} onChange={setComboboxVal}>
             <Field>
               <Combobox.Input placeholder="Select framework..." />
@@ -376,10 +488,9 @@ export default function ShowcaseFixture() {
             <Listbox.Option value="option-2">Listbox Option 2</Listbox.Option>
             <Listbox.Option value="option-3">Listbox Option 3</Listbox.Option>
           </Listbox>
-        </SectionCard>
+        </DemoCell>
 
-        {/* DateField & Calendar */}
-        <SectionCard title="DateField & Calendar">
+        <DemoCell label="DateField & Calendar">
           <DateField value={dateVal} onChange={setDateVal}>
             <Field>
               <DateField.Input />
@@ -396,10 +507,20 @@ export default function ShowcaseFixture() {
               </Calendar>
             </DateField.Picker>
           </DateField>
-        </SectionCard>
+        </DemoCell>
+      </Div>
+    </SectionCard>
+  )
+}
 
-        {/* Tree */}
-        <SectionCard title="Tree View">
+function DataLayoutRow() {
+  return (
+    <SectionCard
+      title="Data & Layout"
+      description="Tree views and resizable splitter panels for structured content."
+    >
+      <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(70r, 1fr))">
+        <DemoCell label="Tree View">
           <Tree
             defaultValue="file-1"
             defaultExpanded={['folder-1']}
@@ -424,57 +545,9 @@ export default function ShowcaseFixture() {
               <Span fontSize="3r">📄 package.json</Span>
             </Tree.Item>
           </Tree>
-        </SectionCard>
+        </DemoCell>
 
-        {/* Modal Overlay */}
-        <SectionCard title="Modal Overlay (Dialog)">
-          <Button
-            variant="primary"
-            alignSelf="flex-start"
-            onClick={() => setIsOverlayOpen(true)}
-          >
-            Open Modal Dialog
-          </Button>
-
-          <Overlay open={isOverlayOpen} onOpenChange={setIsOverlayOpen}>
-            <Overlay.Backdrop bg="rgba(0,0,0,0.4)" />
-            <Overlay.Content
-                position="fixed"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                p="5r"
-                bg="ui.dialog.background"
-                color="ui.dialog.foreground"
-                borderRadius="lg"
-                border="1px solid"
-                borderColor="ui.dialog.border"
-                boxShadow="0 10px 40px rgba(0,0,0,0.25)"
-                minW="70r"
-              >
-                <H3 fontSize="4.5r" fontWeight="600" m="0">Modal Dialog</H3>
-                <P fontSize="3r" color="design.text.light" mt="2r">
-                  Modal dialog overlay with backdrop and focus trap.
-                </P>
-                <Div display="flex" justifyContent="flex-end" gap="2r" mt="4r">
-                  <Button
-                    onClick={() => setIsOverlayOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsOverlayOpen(false)}
-                  >
-                    Confirm
-                  </Button>
-                </Div>
-              </Overlay.Content>
-          </Overlay>
-        </SectionCard>
-
-        {/* Splitter */}
-        <SectionCard title="Splitter">
+        <DemoCell label="Splitter">
           <Div height="30r" border="1px solid" borderColor="ui.field.border" borderRadius="md" overflow="hidden">
             <Splitter defaultValue={[40, 60]} height="100%">
               <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
@@ -486,8 +559,63 @@ export default function ShowcaseFixture() {
               </Splitter.Panel>
             </Splitter>
           </Div>
-        </SectionCard>
+        </DemoCell>
       </Div>
+    </SectionCard>
+  )
+}
+
+export default function ShowcaseFixture() {
+  const [switchChecked, setSwitchChecked] = React.useState(true)
+  const [singleSliderVal, setSingleSliderVal] = React.useState(40)
+  const [sliderVal, setSliderVal] = React.useState<number | number[]>([25, 75])
+  const [comboboxVal, setComboboxVal] = React.useState<string | null>('react')
+  const [dateVal, setDateVal] = React.useState<string | null>('2026-08-31')
+  const [numberVal, setNumberVal] = React.useState<number | null>(42)
+  const [listboxVal, setListboxVal] = React.useState<any>('option-1')
+  const [isOverlayOpen, setIsOverlayOpen] = React.useState(false)
+
+  return (
+    <Div display="flex" flexDirection="column" gap="6r" maxW="300r" mx="auto">
+      {/* Header */}
+      <Div
+        p="6r"
+        borderRadius="xl"
+        bg="ui.dialog.background"
+        border="1px solid"
+        borderColor="ui.dialog.border"
+        boxShadow="0 4px 20px rgba(0,0,0,0.08)"
+      >
+        <H2 fontSize="7r" fontWeight="700" m="0" color="design.text.base">
+          Reference UI Component Suite
+        </H2>
+        <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
+          Interactive Book showcasing all Reference UI components built with JSX primitives & tokens.
+        </P>
+      </Div>
+
+      {/* Full-width rows of grouped components */}
+      <FormInputsRow
+        switchChecked={switchChecked}
+        setSwitchChecked={setSwitchChecked}
+        numberVal={numberVal}
+        setNumberVal={setNumberVal}
+        singleSliderVal={singleSliderVal}
+        setSingleSliderVal={setSingleSliderVal}
+        sliderVal={sliderVal}
+        setSliderVal={setSliderVal}
+      />
+      <FloatingUIRow isOverlayOpen={isOverlayOpen} setIsOverlayOpen={setIsOverlayOpen} />
+      <DisclosureRow />
+      <SelectionRow
+        comboboxVal={comboboxVal}
+        setComboboxVal={setComboboxVal}
+        listboxVal={listboxVal}
+        setListboxVal={setListboxVal}
+        dateVal={dateVal}
+        setDateVal={setDateVal}
+      />
+      <DataLayoutRow />
     </Div>
   )
 }

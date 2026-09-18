@@ -226,8 +226,10 @@ impl TokenDictionary {
 pub(crate) fn css_custom_property(category: &str, path: &str) -> String {
     let mut out = String::from("--");
     push_kebab(&mut out, category);
-    out.push('-');
-    out.push_str(&path.replace('.', "-"));
+    for segment in path.split('.') {
+        out.push('-');
+        push_kebab(&mut out, segment);
+    }
     out
 }
 

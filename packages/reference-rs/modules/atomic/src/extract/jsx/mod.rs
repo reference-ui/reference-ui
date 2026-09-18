@@ -182,6 +182,15 @@ fn walk_style_attr(
             crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
         }
         Expression::ArrayExpression(arr) => walk_style_attr_array(arr, origin, ctx, when),
+        Expression::ConditionalExpression(cond) => {
+            // <Div _hover={on ? { bg: 'n200' } : { bg: 'n300' }} />
+            // Both literal arms compile; the runtime picks (D11, core parity).
+            walk_style_attr(&cond.consequent, origin, ctx, when);
+            walk_style_attr(&cond.alternate, origin, ctx, when);
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            walk_style_attr(&paren.expression, origin, ctx, when);
+        }
         _ => {}
     }
 }

@@ -1,75 +1,120 @@
-//! Collect top-level `const` scalars and style objects from a parsed program.
-//! Only literals and simple object records are indexed. Imports, functions, and spreads are ignored.
-//! The index is later consulted by the expression walker; this file does not insert wants.
+//! Collect `const` scalars and style objects from a parsed program at every depth.
+//! Component-body declarators resolve like top-level ones; only literals, simple
+//! object records, and branching initializers with literal leaves are indexed.
+//! Imports, functions, and spreads are ignored. The index is later consulted by
+//! the expression walker; this file does not insert wants.
 
 use oxc_ast::ast::{
-    BindingPattern, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
+    BindingPattern, Expression, ObjectPropertyKind, Program, PropertyKey, VariableDeclarator,
 };
+use oxc_ast_visit::{walk, Visit};
 
 use super::index::LocalConstants;
 use crate::atom::AtomValue;
+use crate::extract::expressions::walk::is_guard_expression;
 
-/// Collect all top-level constant definitions from a parsed AST program.
+/// Collect all constant definitions from a parsed AST program.
 pub fn collect_local_constants(program: &Program<'_>) -> LocalConstants {
     // const space = '2r'
     // const theme = { primary: 'n300' }
-    let mut constants = LocalConstants::new();
-    for stmt in &program.body {
-        process_statement(&mut constants, stmt);
-    }
-    constants
+    // const subtleBorder = isDark ? 'gray.800' : 'gray.200'
+    let mut collector = ConstCollector {
+        constants: LocalConstants::new(),
+    };
+    collector.visit_program(program);
+    collector.constants
 }
 
-fn process_statement(constants: &mut LocalConstants, stmt: &Statement<'_>) {
-    if let Statement::VariableDeclaration(var_decl) = stmt {
-        // const space = '2r'
-        extract_from_var_decl(constants, var_decl);
-    } else if let Statement::ExportNamedDeclaration(exp_decl) = stmt {
-        if let Some(Declaration::VariableDeclaration(var_decl)) = &exp_decl.declaration {
-            // export const space = '2r'
-            extract_from_var_decl(constants, var_decl);
+/// Visitor recording every `const` declarator, top-level or nested in a body.
+struct ConstCollector {
+    constants: LocalConstants,
+}
+
+impl<'a> Visit<'a> for ConstCollector {
+    fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
+        if let BindingPattern::BindingIdentifier(ident) = &decl.id {
+            if let Some(init) = &decl.init {
+                record_declaration(
+                    &mut self.constants,
+                    ident.name.as_str(),
+                    unwrap_expression(init),
+                );
+            }
         }
-    }
-}
-
-fn extract_from_var_decl(
-    constants: &mut LocalConstants,
-    var_decl: &oxc_ast::ast::VariableDeclaration<'_>,
-) {
-    for decl in &var_decl.declarations {
-        let BindingPattern::BindingIdentifier(ident) = &decl.id else {
-            // const { primary } = theme  — skip
-            continue;
-        };
-        let Some(init) = &decl.init else {
-            continue;
-        };
-        record_declaration(constants, ident.name.as_str(), unwrap_expression(init));
+        walk::walk_variable_declarator(self, decl);
     }
 }
 
 fn record_declaration(constants: &mut LocalConstants, name: &str, expr: &Expression<'_>) {
+    // const space = '2r'
+    if let Some(leaf) = literal_leaf(expr) {
+        constants.insert_scalar(name, leaf);
+        return;
+    }
+    // const theme = { primary: 'n300' }
+    if let Expression::ObjectExpression(obj) = expr {
+        record_object_properties(constants, name, obj);
+        return;
+    }
+    // const subtleBorder = isDark ? 'gray.800' : 'gray.200'
+    if matches!(
+        expr,
+        Expression::ConditionalExpression(_) | Expression::LogicalExpression(_)
+    ) {
+        let mut leaves = Vec::new();
+        collect_branching_leaves(expr, &mut leaves);
+        constants.insert_scalar_leaves(name, &leaves);
+    }
+}
+
+/// Scoop every literal leaf of a branching initializer, mirroring the want
+/// walker leaf-for-leaf: both ternary arms, non-guard logical operands.
+fn collect_branching_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) {
+    let unwrapped = unwrap_expression(expr);
+    if collect_conditional_leaves(unwrapped, out) {
+        return;
+    }
+    if collect_logical_leaves(unwrapped, out) {
+        return;
+    }
+    if let Some(atom) = literal_leaf(unwrapped) {
+        out.push(atom);
+    }
+}
+
+/// Scoop both arms of a ternary initializer, or false when not a ternary.
+fn collect_conditional_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+    let Expression::ConditionalExpression(cond) = expr else {
+        return false;
+    };
+    collect_branching_leaves(&cond.consequent, out);
+    collect_branching_leaves(&cond.alternate, out);
+    true
+}
+
+/// Scoop the non-guard operands of a logical initializer, or false when not logical.
+fn collect_logical_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+    let Expression::LogicalExpression(log) = expr else {
+        return false;
+    };
+    if !is_guard_expression(&log.left) {
+        collect_branching_leaves(&log.left, out);
+    }
+    if !is_guard_expression(&log.right) {
+        collect_branching_leaves(&log.right, out);
+    }
+    true
+}
+
+/// A literal initializer leaf, or None for dynamic shapes.
+fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
     match expr {
-        Expression::StringLiteral(s) => {
-            // const space = '2r'
-            constants.insert_scalar(name, AtomValue::String(s.value.as_str().into()));
-        }
+        Expression::StringLiteral(s) => Some(AtomValue::String(s.value.as_str().into())),
         Expression::NumericLiteral(n) => {
-            // const z = 0
-            constants.insert_scalar(
-                name,
-                AtomValue::Number(n.value.to_string().into_boxed_str()),
-            );
+            Some(AtomValue::Number(n.value.to_string().into_boxed_str()))
         }
-        Expression::BooleanLiteral(b) => {
-            // const on = true
-            constants.insert_scalar(name, AtomValue::Bool(b.value));
-        }
-        Expression::ObjectExpression(obj) => {
-            // const theme = { primary: 'n300' }
-            record_object_properties(constants, name, obj);
-        }
-        _ => {}
+        Expression::BooleanLiteral(b) => Some(AtomValue::Bool(b.value)),
+        _ => None,
     }
 }
 

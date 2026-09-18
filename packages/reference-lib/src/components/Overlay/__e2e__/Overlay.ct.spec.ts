@@ -1565,7 +1565,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const darkMeta = await darkContent.evaluate(el => ({
         isBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         bg: window.getComputedStyle(el).backgroundColor,
       }))
       expect(darkMeta.isBodyChild).toBe(true)
@@ -1585,7 +1585,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const lightMeta = await lightContent.evaluate(el => ({
         isBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         color: window.getComputedStyle(el).color,
       }))
       expect(lightMeta.isBodyChild).toBe(true)

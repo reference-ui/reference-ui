@@ -121,7 +121,7 @@ fn lower_standard_property(
     let css_prop = to_css_property(prop);
     match val {
         GlobalDeclarationValue::String(s) => {
-            let Some(final_val) = resolve_string_val(prop, &css_prop, s, session) else {
+            let Some(final_val) = resolve_string_val(prop, s, session) else {
                 return Vec::new();
             };
             vec![(css_prop, final_val)]
@@ -145,12 +145,7 @@ fn lower_number_value(prop: &str, n: &serde_json::Number) -> String {
         .to_string()
 }
 
-fn resolve_string_val(
-    prop: &str,
-    css_prop: &str,
-    s: &str,
-    session: &mut ValueSession<'_>,
-) -> Option<String> {
+fn resolve_string_val(prop: &str, s: &str, session: &mut ValueSession<'_>) -> Option<String> {
     if prop.starts_with("--") {
         Some(resolve_token_reference(s, session.system))
     } else {
@@ -161,7 +156,7 @@ fn resolve_string_val(
             diagnostics: &mut *session.diagnostics,
             location: DiagnosticLocation::default(),
         };
-        tokens::resolve_token_value(css_prop, &rhythm_val, &mut resolve_session).map(|resolved| {
+        tokens::resolve_token_value(prop, &rhythm_val, &mut resolve_session).map(|resolved| {
             if resolved.as_ref() != stem {
                 resolved.into_owned()
             } else {

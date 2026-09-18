@@ -15,7 +15,8 @@ interface SpecInput {
 
 // Landed §4.1 expected paths. The rest lands with its own row: system.mjs
 // (SYNC-12), compile-request.json (SYNC-04), runtime-data.d.mts (publish
-// follow-up), styled/types/* (TYPE), react.mjs plus styles.css (SYNC-05).
+// follow-up), react.mjs plus styles.css (SYNC-05). The styled declaration
+// rows (index, tokens, types/*) landed with TYPE-07.
 const EXPECTED_FILES = [
   'system/package.json',
   'system/baseSystem.mjs',
@@ -25,6 +26,12 @@ const EXPECTED_FILES = [
   'styled/package.json',
   'styled/styles.css',
   'styled/runtime-data.mjs',
+  'styled/index.d.ts',
+  'styled/tokens.d.ts',
+  'styled/types/index.d.ts',
+  'styled/types/conditions.d.ts',
+  'styled/types/prop-type.d.ts',
+  'styled/types/style-props.d.ts',
   'react/package.json',
   // Post-D5 react filenames (flipped in the D4/D5 migration follow-up).
   'react/react.mjs',

@@ -171,6 +171,13 @@ pub fn ast_to_json_values(expr: &Expression<'_>, constants: &LocalConstants) -> 
     if let Some(wrapped) = convert_wrapper_values(expr, constants) {
         return wrapped;
     }
+    if let Expression::Identifier(ident) = expr {
+        // borderBottomColor={subtleBorder}  — every static leaf, like the want walker
+        let leaves = convert_identifier_leaves(ident.name.as_str(), constants);
+        if !leaves.is_empty() {
+            return leaves;
+        }
+    }
     if let Expression::StaticMemberExpression(mem) = expr {
         return convert_static_member(mem, constants).into_iter().collect();
     }
@@ -263,6 +270,15 @@ fn convert_identifier(name: &str, constants: &LocalConstants) -> Option<(Value, 
     let atom_val = constants.get_scalar(name)?;
     let val = atom_value_to_json(atom_val)?;
     Some((val, false))
+}
+
+/// Every static leaf recorded for an identifier, for multi-valued positions.
+fn convert_identifier_leaves(name: &str, constants: &LocalConstants) -> Vec<(Value, bool)> {
+    constants
+        .scalar_leaves(name)
+        .iter()
+        .filter_map(|leaf| atom_value_to_json(leaf).map(|val| (val, false)))
+        .collect()
 }
 
 fn convert_unary(

@@ -1,0 +1,7 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic non-literal identifier 'unknownToken' encountered for prop 'borderBottomColor'",
+    "file": "input/src/dynamic.tsx"
+  }
+]

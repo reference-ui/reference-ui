@@ -24,8 +24,8 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
       root.unmount()
     })
     container.remove()
-    document.documentElement.removeAttribute('data-panda-theme')
-    document.body.removeAttribute('data-panda-theme')
+    document.documentElement.removeAttribute('data-color-mode')
+    document.body.removeAttribute('data-color-mode')
     // Remove any portaled nodes left on document.body
     for (const child of Array.from(document.body.children)) {
       if (child.id !== 'root-container') {
@@ -61,7 +61,7 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
     // Without the fix, inheritsLayerScope=true crosses the portal, so data-layer is suppressed (null).
     expect(portaledElement?.getAttribute('data-layer')).toBeTruthy()
     // It should also inherit the dark color mode
-    expect(portaledElement?.getAttribute('data-panda-theme')).toBe('dark')
+    expect(portaledElement?.getAttribute('data-color-mode')).toBe('dark')
   })
 
   it('preserves layer scope for nested descendants inside a portal (no attribute bloat)', async () => {
@@ -87,16 +87,16 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
 
     // Root portal element establishes the layer scope
     expect(portalRoot?.getAttribute('data-layer')).toBeTruthy()
-    expect(portalRoot?.getAttribute('data-panda-theme')).toBe('dark')
+    expect(portalRoot?.getAttribute('data-color-mode')).toBe('dark')
 
     // Nested child inherits scope, so data-layer is cleanly omitted (avoiding DOM bloat)
     expect(portalNested?.getAttribute('data-layer')).toBeNull()
-    expect(portalNested?.getAttribute('data-panda-theme')).toBe('dark')
+    expect(portalNested?.getAttribute('data-color-mode')).toBe('dark')
   })
 
   it('FAILURE MODE 2: primitive reads DOM active theme from documentElement when React context is unset', async () => {
     // External theme toggle sets attribute directly on documentElement
-    document.documentElement.setAttribute('data-panda-theme', 'dark')
+    document.documentElement.setAttribute('data-color-mode', 'dark')
 
     await React.act(async () => {
       root.render(
@@ -112,6 +112,6 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
 
     // Without DOM theme reading, React ColorModeContext is undefined so theme attribute is null.
     // It MUST read 'dark' from document.documentElement!
-    expect(element?.getAttribute('data-panda-theme')).toBe('dark')
+    expect(element?.getAttribute('data-color-mode')).toBe('dark')
   })
 })

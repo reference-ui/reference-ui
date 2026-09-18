@@ -46,7 +46,7 @@ stays callable but unexposed, so strict-mode rejection is an absence).
 Coverage-map rows for this group: 2 (`system.mjs`+`.d.mts` → TYPE-05 with
 SYNC-12), 8 (41 packaged core type files → replaced by native `system.d.mts`,
 Panda-shaped leftovers not reproduced), 14 (`styled/types/*.d.ts` → TYPE-01/
-02/03/06, today missing), 20 (`react/{entry,system,types}/` → TYPE-01 with
+02/03/06/07), 20 (`react/{entry,system,types}/` → TYPE-01 with
 PRIM-10; the single `index.d.mts` must become the named graph).
 
 ## Approved absences

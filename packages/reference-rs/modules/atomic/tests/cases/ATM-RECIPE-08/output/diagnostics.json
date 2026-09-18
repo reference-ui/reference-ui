@@ -1,0 +1,16 @@
+[
+  {
+    "severity": "error",
+    "message": "recipe(...) requires an explicit string-literal 'className' property",
+    "file": "input/src/recipe.ts",
+    "line": 20,
+    "column": 23
+  },
+  {
+    "severity": "error",
+    "message": "recipe(...) requires an explicit string-literal 'className' property",
+    "file": "input/src/recipe.ts",
+    "line": 25,
+    "column": 22
+  }
+]

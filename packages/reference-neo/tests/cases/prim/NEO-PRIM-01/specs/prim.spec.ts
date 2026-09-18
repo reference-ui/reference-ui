@@ -13,8 +13,8 @@ interface SpecInput {
   case: NeoCase;
 }
 
-// The generated react entry bundles every tag plus React and the bound
-// css()/recipe(); the rendered Div paints its style props, passes its DOM
+// The generated react entry bundles every tag plus the bound css()/recipe()
+// over external React; the rendered Div paints its style props, passes its DOM
 // prop through, keeps styling keys off the element, and stamps data-layer.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');

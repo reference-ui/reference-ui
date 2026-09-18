@@ -10,7 +10,6 @@
       "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/react/styles.css": ["./.reference-ui/react/styles.css"],
       "@reference-ui/styled": ["./.reference-ui/styled"],
-      "@reference-ui/styled/jsx": ["./.reference-ui/styled/jsx/index"],
       "@reference-ui/styled/*": ["./.reference-ui/styled/*"],
       "@reference-ui/system": ["./.reference-ui/system"],
       "@reference-ui/types": ["./.reference-ui/types"]
@@ -25,5 +24,10 @@
     "playwright/**/*.ts",
     "playwright/**/*.tsx",
     "playwright/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "tmp",
+    "src/components/Reference/**"
   ]
 }

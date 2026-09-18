@@ -13,44 +13,23 @@ pub struct ParsedShorthand {
 impl ParsedShorthand {
     fn assign_token(&mut self, token: &str, is_outline: bool) {
         // '3px' / 'solid' / 'red'  from  borderBottom: '3px solid red'
-        if self.try_assign_style(token, is_outline) {
+        // Classification first, first wins: an extra width or a repeat
+        // style drops instead of falling through to color (core parity).
+        if is_style_token(token, is_outline) {
+            // solid / dashed / none  (+ outline: auto)
+            if self.style.is_none() {
+                self.style = Some(token.to_ascii_lowercase());
+            }
             return;
         }
-        if self.try_assign_width(token) {
+        if is_length_width(token) {
+            // 3px / 1r / thin / calc(1r + 2px)
+            if self.width.is_none() {
+                self.width = Some(token.to_string());
+            }
             return;
         }
         self.assign_color(token);
-    }
-
-    fn try_assign_style(&mut self, token: &str, is_outline: bool) -> bool {
-        // solid / dashed / none  (+ outline: auto)
-        if self.style.is_some() {
-            return false;
-        }
-        let matched = if is_outline {
-            is_outline_style(token)
-        } else {
-            is_border_style(token)
-        };
-        if matched {
-            self.style = Some(token.to_ascii_lowercase());
-            true
-        } else {
-            false
-        }
-    }
-
-    fn try_assign_width(&mut self, token: &str) -> bool {
-        // 3px / 1r / thin / calc(1r + 2px)
-        if self.width.is_some() {
-            return false;
-        }
-        if is_length_width(token) {
-            self.width = Some(token.to_string());
-            true
-        } else {
-            false
-        }
     }
 
     fn assign_color(&mut self, token: &str) {
@@ -58,6 +37,15 @@ impl ParsedShorthand {
         if self.color.is_none() {
             self.color = Some(token.to_string());
         }
+    }
+}
+
+/// True when the token names a style keyword for this shorthand family.
+fn is_style_token(token: &str, is_outline: bool) -> bool {
+    if is_outline {
+        is_outline_style(token)
+    } else {
+        is_border_style(token)
     }
 }
 

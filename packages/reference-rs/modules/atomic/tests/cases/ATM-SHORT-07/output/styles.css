@@ -3,9 +3,9 @@
 @layer utilities {
   .short-07__border-style_solid { border-style: solid; }
   .short-07__bd-w_calc\(1px_\+_1px\) { border-width: calc(1px + 1px); }
-  .short-07__mb_calc\(1r_\*_2\) { margin-bottom: calc(1r * 2); }
+  .short-07__mb_calc\(1r_\*_2\) { margin-bottom: calc(var(--spacing-root) * 2); }
   .short-07__ml_3r { margin-left: calc(3 * var(--spacing-root)); }
   .short-07__mr_3r { margin-right: calc(3 * var(--spacing-root)); }
-  .short-07__mt_calc\(1r_\*_2\) { margin-top: calc(1r * 2); }
+  .short-07__mt_calc\(1r_\*_2\) { margin-top: calc(var(--spacing-root) * 2); }
 }
 }

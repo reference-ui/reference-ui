@@ -16,8 +16,68 @@
 | NEO-SITE-12 | Unlisted PascalCase `<Random fontSize>` and lowercase `<div color>` are **not** hosts | done | ATM-SITE-08 | — | no utilities | anti-goal `output.test.ts` L3057 |
 | NEO-SITE-13 | Boolean attr `<Div border />` compiles the boolean macro form | done | ATM-SITE-09 + ATM-SITE-18 (RS-19 landed) | — (no change: engine lowers `border: true` to width + style utilities with one plan) | computed 1px solid border; both classes on the probe; bare control | `[atm]` SITE-09, SITE-18 |
 | NEO-SITE-14 | With no hosts resolvable, the hostless tag yields zero utilities, and the emptied-hosts recompile fails closed with the located SITE-13 diagnostic | done | ATM-SITE-13 (RS-5 landed) | — (no change: SITE-06 frozen-recompile precedent) | zero sheet utilities; recompile carries the located `no StyleProps hosts resolvable` error + zero wants/plans | `[atm]` SITE-13 |
+| NEO-SITE-15 | Object ternary arms in a `_hover` prop: both arms compile, the hovered arm paints | done | ATM-SITE-21 (RS-34) | — | twin paints via `data-hover`; real hover paints; sheet carries exactly the two arm atoms | `[atm]` SITE-21; `[lib]` `Tabs.tsx`; `[decision D11]` |
+| NEO-SITE-16 | Member tags (`<NS.Panel />`) extract under concatenated hosts; unhosted twins stay silent | done | ATM-SITE-22 (RS-36) | — | member paints both props; twin transparent; sheet carries exactly the member utilities | `[atm]` SITE-22; `[lib]` `Menu.tsx`, `Showcase.book.tsx` |
+| NEO-SITE-17 | Component-body const ternary feeding `borderBottomColor` extracts both arms; dark paints ink, light reload paints mist | done | ATM-SITE-23 (RS-37) | — | computed both themes; sheet carries exactly the two arm atoms | `[atm]` SITE-23; `[lib]` `BookShell.tsx` chrome dividers |
 
 ## RS lane (added by the SITE batch-1 cook)
+
+**RS-37 — landed** as station ATM-SITE-23 (waiting Neo case NEO-SITE-17, done).
+
+`collect_local_constants` scanned only top-level statements and recorded only
+literal initializers, so `borderBottomColor={subtleBorder}` after
+`const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component body
+compiled zero wants with a `Dynamic non-literal identifier` warning: the
+Book chrome dividers fell back to `currentColor` (white) while width and
+style applied. RS-14 covered the inline ternary/member/spread shapes; the
+const-identifier indirection died one step earlier, at collection. Landing
+collects `const` declarators at every depth and records branching
+initializers as multi-leaf scalars (both ternary arms, non-guard logical
+operands); identifier resolution emits one want plus one authored leaf per
+leaf, so every arm gets its utility and its runtime plan. Fully dynamic
+identifiers keep warning.
+
+- Input: the `BookShell.tsx` chrome shape beside top-level ternary, nested
+  ternary, and logical `css()` controls plus a fully dynamic identifier.
+- Expected: one want and one plan per leaf, `border-bottom-color`
+  utilities for every shade, exactly the fail-closed warning.
+- Waiting Neo case: NEO-SITE-17 (done).
+
+**RS-34 — landed** as station ATM-SITE-21 (waiting Neo case NEO-SITE-15, done).
+
+JSX `walk_style_attr` matched only object/array values and silently dropped
+anything else, so `_hover={on ? {...} : {...}}` — and any `css={ternary}` —
+compiled zero wants with zero diagnostics, while the `css()` object path
+already compiled both arms (P6 probe green). Landing surfaced it as
+`css(): no compiled class` warnings under `Tabs.tsx`'s nested
+`guard ? (line ? { color, borderColor } : { color, bg }) : undefined` hover.
+Fix walks conditional arms (both) and parenthesized values through
+`walk_style_attr`; every other shape keeps its existing silence, and the
+`undefined` arm stays quiet by construction.
+
+- Input: `<Div _hover={on ? { backgroundColor: 'red' } : { backgroundColor: 'blue' }} />`
+  beside the nested Tabs shape and a `css={pick ? {...} : {...}}` control.
+- Expected: every arm's leaves emit hover/plain utilities + `css.classes`
+  entries with zero diagnostics.
+- Waiting Neo case: NEO-SITE-15 (done).
+
+**RS-36 — landed** as station ATM-SITE-22 (waiting Neo case NEO-SITE-16, done).
+
+Member-expression tags formatted with their dot (`Overlay.Content`) never
+matched the concatenated host names (`OverlayContent`) core's discovery
+emits, so `<Overlay.Content minW="40r" …>` (Menu) and the twelve modal
+style props (Showcase) compiled zero wants with zero diagnostics — the
+modal rendered unpositioned and the Menu lost its min-width. Landing
+surfaced it as a 160px modal offset plus a `minW: "40r"` miss warning.
+Fix matches dotted tags against dot-stripped hosts at the `allows_jsx_tag`
+gate; shadowing still compares the full dotted name.
+
+- Input: `<Overlay.Content minW="40r" bg="red" />` with `OverlayContent`
+  hosted beside unhosted `<Accordion.Content p="4r" />`.
+- Expected: the member's leaves emit utilities
+  (`min-width: calc(40 * var(--spacing-root))`) with zero diagnostics; the
+  unhosted member stays silent.
+- Waiting Neo case: NEO-SITE-16 (done).
 
 **RS-10** (unblocks NEO-SITE-01, NEO-SITE-02, NEO-SITE-03; would become a
 station near ATM-MERGE/ATM-SEAM: runtime plans for every want). Wants whose

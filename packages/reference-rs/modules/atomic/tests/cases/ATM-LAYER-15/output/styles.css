@@ -1,0 +1,14 @@
+@layer layer-global-bare-tokens {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  body { font-family: var(--fonts-sans) }
+  .card { border-radius: var(--radii-md); outline-color: var(--colors-ui-focus-ring); display: flex }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-ui-focus-ring: #0066ff;
+    --radii-md: 0.375rem;
+    --fonts-sans: "Inter", sans-serif;
+  }
+}
+}

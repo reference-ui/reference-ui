@@ -222,10 +222,14 @@ fn handle_identifier_fallback(
     span: Span,
 ) {
     // mt={space}  after  const space = '2r'
-    if let Some(val) = ctx.constants.get_scalar(name) {
-        ctx.push_want(val.clone(), when.clone(), false, Some(span));
-    } else {
+    // borderBottomColor={subtleBorder}  after  const subtleBorder = isDark ? 'gray.800' : 'gray.200'
+    let leaves = ctx.constants.scalar_leaves(name);
+    if leaves.is_empty() {
         handle_identifier(ctx, name);
+        return;
+    }
+    for val in leaves {
+        ctx.push_want(val.clone(), when.clone(), false, Some(span));
     }
 }
 

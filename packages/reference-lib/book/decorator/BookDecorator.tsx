@@ -16,7 +16,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
   const isDark = theme === 'dark'
 
   React.useEffect(() => {
-    document.documentElement.setAttribute('data-panda-theme', theme)
+    document.documentElement.setAttribute('data-color-mode', theme)
     document.documentElement.style.colorScheme = theme
   }, [theme])
 
