@@ -6,3 +6,5 @@ beat a class rule). The cascade spec asserts computed styles, the
 layout spec asserts geometry and takes the settled snapshot. The
 baseline is committed and human-eyeballed: any drift fails loud until
 a human re-blesses with --update-snapshots --confirm.
+
+> Search terms: visual regression, golden, baseline drift, id selector, snapshot testing, probe a, harness/snapshots, harness/bless, harness/multi-spec, harness/cascade, NEO-PLAY-B-01

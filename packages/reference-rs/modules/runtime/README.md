@@ -14,3 +14,5 @@ The host operates across two complementary boundaries:
 - **No Product Logic**: The host does not author AST transformations, component indexing, or stylesheet generation. Each product module owns its domain logic and ABI contract.
 - **Root Export Re-exports**: For backwards compatibility with the root `@reference-ui/rust` package entrypoint, the host JS index re-exports virtual transformation helpers defined in `modules/virtualrs/js/runtime.ts`.
 - **Zero Public Module Door**: The runtime host is an internal execution foundation and is not exposed as a public npm subpath.
+
+> Search terms: loader, napi host, binary loader, runtime/loader, runtime/native-bindings, runtime/capabilities, rs:virtualrs, rs:shared

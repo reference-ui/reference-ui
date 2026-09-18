@@ -5,3 +5,5 @@ The world renders `<Div css={{ mt: '8px' }} />` beside a plain node carrying
 sheet carries the single utility once, and both paint 8px.
 
 Evidence: `[atm]` ATM-SITE-14.
+
+> Search terms: jsx styling, parity, deduplication, site/css-prop, NEO-SITE-11

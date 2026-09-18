@@ -1,1 +1,0 @@
-{"aliases": ["repeat prop"], "covers": ["merge/last-wins", "merge/slot-collapse"], "keywords": ["override", "precedence", "conflict", "duplicate property", "variadic"], "related": ["NEO-MERGE-02", "ATM-MERGE-01"]}

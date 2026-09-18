@@ -14,3 +14,5 @@ and keeps quoted `content` verbatim); `[panda-v1]`
 "pseudo-elements sort after pseudo-classes and mixed conditions";
 `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace D (`.ref-q`
 `_before`/`_after` quote contents).
+
+> Search terms: generated content, content property, ordering, double colon, before after, conditions/before, conditions/after, ordering/pseudo-elements

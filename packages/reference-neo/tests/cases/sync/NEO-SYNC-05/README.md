@@ -13,3 +13,5 @@ bound `css`/`recipe`. `system.mjs` itself lands with SYNC-12; until then
 the system `.` export serves `baseSystem.mjs`.
 
 Evidence: `[decision D5]`, generated-folder-shape §3, coverage-map rows 17/18/19/21 + note e.
+
+> Search terms: subpath, self-reference, probe-module, bound-runtime, consumer handles, public names, sync/consumer-specifiers, sync/exports-map, NEO-SYNC-02, NEO-SYNC-12, NEO-SYNC-13

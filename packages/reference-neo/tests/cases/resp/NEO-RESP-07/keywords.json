@@ -1,1 +1,0 @@
-{"aliases": ["opt-in scoping", "scoped queries"], "covers": ["responsive/container", "container/root"], "keywords": ["container-name", "@container", "containment", "scoping", "ancestor"], "related": ["NEO-RESP-01", "ATM-COND-15", "ATM-COND-16"]}

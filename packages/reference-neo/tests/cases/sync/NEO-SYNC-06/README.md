@@ -11,3 +11,5 @@ and the ORDER stations pin print order (query magnitude, bucket, interaction
 order, shorthand-first), so the only way two runs can differ is host-side
 nondeterminism — timestamps, random names, or unordered walks — and this
 spec fails on any of it.
+
+> Search terms: idempotent, repeatable, byte-stable, reproducible, twin runs, repeatability check, sync/determinism, sync/resync-bytes, ATM-ORDER-02, ATM-ORDER-03, ATM-ORDER-04

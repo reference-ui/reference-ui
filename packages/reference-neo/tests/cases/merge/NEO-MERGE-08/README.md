@@ -10,3 +10,5 @@ Evidence: `[panda-v1]`
 `vendor/panda-v1/packages/shared/__tests__/walk-object.test.ts`; stations
 `packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-05`,
 `ATM-LEAF-07`, `ATM-LEAF-10`.
+
+> Search terms: nullish, sparse object, flex-direction, dropped key, void value, flex twin, merge/undefined-skip, merge/alias-remap, NEO-MERGE-02

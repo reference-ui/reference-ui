@@ -13,3 +13,5 @@ paints the tag colour (so the global rule is proven live).
 
 Evidence: `[lib]` `styles.css` L70 (order statement); `[panda-v1]`
 `core/src/layers.ts`; `[atm]` ATM-LAYER-02, ATM-LAYER-03, ATM-LAYER-04.
+
+> Search terms: @layer, layer rank, layer sequence, empty layer elision, custom property, dark mode var, layer precedence, layer/order-statement, layer/empty-elision, layer/utility-rank, NEO-LAYER-05, NEO-LAYER-06

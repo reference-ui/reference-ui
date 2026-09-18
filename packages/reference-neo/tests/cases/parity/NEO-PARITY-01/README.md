@@ -25,3 +25,5 @@ P7 proves the matrix augment-and-use consumer file typechecks green.
 Capital-W `WebkitBoxOrient` (whose Panda output is the dashless
 non-property `webkit-box-orient`) is dropped; P18 pins the Neo lowercase-w
 spelling that passes through with its dash.
+
+> Search terms: theming, dual-theme, color-scheme, multi-root, vendor-prefix, line-clamp, minilib, mini lib paint, parity/world-sync, parity/light-dark, NEO-PARITY-02, NEO-PARITY-03, NEO-PARITY-04

@@ -9,3 +9,5 @@ alone, and both paint ember while the control paints ocean.
 Evidence: `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/global-css.test.ts` important;
 station `packages/reference-rs/modules/atomic/tests/cases/ATM-LEAF-09`.
+
+> Search terms: bang suffix, exclamation mark, trailing bang, priority, exclamation override, merge/important, merge/slot-precedence, NEO-MERGE-01

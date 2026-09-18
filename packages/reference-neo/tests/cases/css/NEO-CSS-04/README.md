@@ -8,3 +8,5 @@ with `px` only on the width, and each declaration paints its computed value.
 Evidence: `[atm]` ATM-UNIT-01, ATM-UNIT-02; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1215`
 "unitless".
+
+> Search terms: z-index, line-height, font-weight, px suffix, unit inference, css/units, css/numeric-values

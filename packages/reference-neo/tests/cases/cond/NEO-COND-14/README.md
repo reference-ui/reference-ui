@@ -7,3 +7,5 @@ sheet pairs `::placeholder` with `[data-placeholder]`, lowers `_file` to
 
 Evidence: `[lib]` styles-css L538 twin lists, `::file-selector-button` ×3;
 `[atm]` ATM-COND-18 (RS-17 landed).
+
+> Search terms: data-checked, file upload, form controls, pseudo-elements, form twins, conditions/placeholder, conditions/file, conditions/checked, NEO-COND-08

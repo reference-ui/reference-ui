@@ -1,1 +1,0 @@
-{"aliases": ["orphan sweep", "clean slate"], "covers": ["sync/stale-cleanup", "sync/clean-resync"], "keywords": ["orphan-files", "rm-rf", "prune", "tidy"], "related": ["NEO-SYNC-02"]}

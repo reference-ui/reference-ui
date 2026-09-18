@@ -12,3 +12,5 @@ grammar row; `[panda-v1]`
 `vendor/panda-v1/packages/shared/__tests__/esc.test.ts` "invalid characters
 are escaped" and `vendor/panda-v1/packages/core/__tests__/classname.test.ts`;
 `[atm]` ATM-NAME-01..07 (escapes in selectors, runtime names unescaped).
+
+> Search terms: backslash, special characters, class names, CSS.escape, special chars, css/escaping, css/selector-grammar, NEO-CSS-07

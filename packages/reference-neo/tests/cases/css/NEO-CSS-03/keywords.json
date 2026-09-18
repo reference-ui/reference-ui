@@ -1,1 +1,0 @@
-{"aliases": ["prop collision"], "covers": ["css/aliases", "css/merge-order"], "keywords": ["precedence", "overrides", "longhand", "conflict resolution"], "related": ["ATM-MERGE-01", "ATM-MERGE-02", "ATM-COND-17", "NEO-CSS-02"]}

@@ -9,3 +9,5 @@ paints through the shared runtime.
 
 Evidence: `[core]` `packages/reference-core/src/system/primitives/shared/layers.ts`
 (`shouldEmitLayerScope`, portal-boundary restamp); Neo `context.test.ts`.
+
+> Search terms: inheritance, scoping, isolation, multi-tree, scope cascade, prim/layer-scope, prim/nested-trees

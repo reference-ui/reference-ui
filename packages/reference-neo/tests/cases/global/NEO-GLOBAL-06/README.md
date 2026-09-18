@@ -20,3 +20,5 @@ every combinator member.
 
 Evidence: `[panda-v1]` `core/__tests__/global-css.test.ts:243` "complex
 recursive nesting"; `[atm]` ATM-LAYER-09 (RS-11 landed).
+
+> Search terms: general sibling, tilde, selector list, child combinator, panda complex nesting, global/nesting, selector :is()

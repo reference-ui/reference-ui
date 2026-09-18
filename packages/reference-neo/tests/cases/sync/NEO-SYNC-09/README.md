@@ -9,3 +9,5 @@ frozen request (RS-10). The skipped file fails silent engine-side — the
 station records zero diagnostics for it — so sync surfaces nothing.
 
 Evidence: `[panda-v1]` `node/__tests__/glob-dirname.test.ts`, `[atm]` ATM-SCAN-01 (RS-10), TESTS.md RS lane.
+
+> Search terms: allowlist, scan-boundary, silent-skip, deny-by-default, in versus out, scoped scan, sync/include-scope, sync/scan-filtering, NEO-SYNC-04

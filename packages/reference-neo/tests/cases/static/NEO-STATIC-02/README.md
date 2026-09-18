@@ -11,3 +11,5 @@ Evidence: `[panda-v1]`
 `packages/core/__tests__/static-css.test.ts` "works" (`color: ['*']`
 expansion); `[atm]` ATM-STATIC-02 (AST + static dedup); `[decision D14]`
 (real tokens only — the count is the token count).
+
+> Search terms: glob, asterisk, dedupe, deduplication, star operator, static/wildcard, static/dedup, NEO-STATIC-01

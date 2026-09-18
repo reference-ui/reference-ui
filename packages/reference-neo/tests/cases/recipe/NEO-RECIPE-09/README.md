@@ -7,3 +7,5 @@ quiet probe never paints it.
 
 Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:220` solid hover;
 `[atm]` ATM-RECIPE-02.
+
+> Search terms: pseudo-class arm, :hover, state arm, interactive tone, recipe/pseudo-classes, recipe/hover, NEO-RECIPE-01

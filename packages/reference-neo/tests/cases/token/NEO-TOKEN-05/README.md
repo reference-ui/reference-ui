@@ -10,3 +10,5 @@ island and asserts computed colour each time.
 Evidence: `[atm]` P0 #1, ATM-COND-03/08; `[lib]` light/dark islands;
 `[panda-v1]` `generator/__tests__/generate-token.test.ts` (contrast:
 `:where([data-theme=dark], .dark)`); `[decision D1]`.
+
+> Search terms: theming, prefers-color-scheme, day/night, appearance, token/color-mode, NEO-TOKEN-14, ATM-COND-08

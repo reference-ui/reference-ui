@@ -9,3 +9,5 @@ ghost, and leaves no half-written folder behind.
 
 Evidence: `[panda-v1]` `core/__tests__/serialize.test.ts` (contrast: Panda
 escapes the literal); `[atm]` ATM-TOKEN-12; `[decision D13]`.
+
+> Search terms: typo, unknown token, unresolved, file:line, token/refs, token/diagnostics, NEO-TOKEN-01

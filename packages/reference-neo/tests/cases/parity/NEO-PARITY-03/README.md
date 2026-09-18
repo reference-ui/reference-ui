@@ -12,3 +12,5 @@ published exports maps, path forms against the folder — re-verifies zero
 `@reference-ui/styled` importers in lib src, and re-checks the D19
 13-importer `types/` caveat against the live lib tree (11 at voyage time,
 bounded, still live).
+
+> Search terms: bare-specifier, node-resolution, import-graph, exports-wiring, resolution-check, importer census, 89/31/1, parity/consumer-resolution, parity/generated-shape, NEO-PARITY-01, NEO-PARITY-02

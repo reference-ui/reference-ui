@@ -17,3 +17,5 @@ Evidence: `[atm]` ATM-STATIC-03 (conditions, non-color wildcards,
 unsatisfiable-request diagnostic), ATM-GHOST-02 (runtime keys match the
 sheet); `[atm]` P1 #14 (`docs/evidence/atomic-claims.md:315`); `[decision
 D11]` with NEO-MERGE-06; `[decision D13]` for the located missing ref.
+
+> Search terms: cache-miss, phantom, fail-closed, unresolved, rollback, absent atom, static miss, static/miss-diagnostic, static/unsatisfiable-request, sync/atomic-failure

@@ -9,3 +9,5 @@ ghosts, and that both probes compute the same gray.
 
 Evidence: `[core]` landing-baseline-core kebab defs; `[lib]`
 `shared.ts` `trackBackground`, `Slider.tsx`; `[atm]` ATM-TOKEN-13 (RS-41).
+
+> Search terms: serialization, naming, case conversion, lowercasing, token/naming, token/color-mode, NEO-TOKEN-05

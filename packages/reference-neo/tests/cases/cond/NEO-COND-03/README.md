@@ -13,3 +13,5 @@ Evidence: `[atm]` ATM-COND-02, ATM-COND-10 (R1 probe
 "nested > nested > property"; `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css:454` (the
 disabled twin list on `.ref-button`).
+
+> Search terms: data-hover, data-disabled, pseudo-class, :disabled, combined, double bind, conditions/hover, conditions/disabled, selector :is(), NEO-COND-01, NEO-COND-02

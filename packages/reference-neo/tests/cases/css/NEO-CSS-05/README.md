@@ -10,3 +10,5 @@ Evidence: `[atm]` ATM-LEAF-03, ATM-GHOST-02; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1205`
 "ignores declarations with null"; `[decision D11]` (holes vanish, never a
 ghost class).
+
+> Search terms: falsy, nullish, nil, conditional styles, missing declarations, css/holes, css/falsy-leaves

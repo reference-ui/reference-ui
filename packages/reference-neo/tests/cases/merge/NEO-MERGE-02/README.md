@@ -7,3 +7,5 @@ background — the alias and the longhand share one cascade slot.
 
 Evidence: `[atm]` MERGE-02 (`docs/evidence/atomic-claims.md` §2); station
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-02`.
+
+> Search terms: shorthand, canonicalization, prop normalization, twin props, merge/alias-collapse, NEO-MERGE-01

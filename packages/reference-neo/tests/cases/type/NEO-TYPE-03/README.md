@@ -19,3 +19,5 @@ literal axes instead of the wide record fallback.
 
 Evidence: `[panda-v1]` `generate-recipe.test.ts` (contrast:
 `ConditionalValue`); typegen golden `recipes.d.ts`; TYP-RECIPE-01.
+
+> Search terms: cva, autocomplete, intellisense, typo, type/recipe-variants, type/negative-typecheck, NEO-TYPE-01, NEO-TYPE-02

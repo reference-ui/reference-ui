@@ -9,3 +9,5 @@ the second still renders its own tag, proving there is no polymorphic `as`.
 
 Evidence: `[core]` `packages/reference-core/src/types/public/primitives.ts`
 ("without polymorphic `as`"); Neo PRIM-01 extends.
+
+> Search terms: spread, forwarding, useRef, event-handlers, prop leaking, prim/dom-props, prim/ref-forwarding, NEO-PRIM-01

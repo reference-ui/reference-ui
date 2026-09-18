@@ -14,3 +14,5 @@ slice proves it here under `sync/`; the captain may move the folder home to
 
 Evidence: `[lib]` `styles.css` L2173–2191 (font vars); `[core]` font
 registry `buildFontTokens`; `[atm]` ATM-COND-05.
+
+> Search terms: type-scale, webfont, font-stack, weight-axis, sans macro, typeface kit, tokens/font-registry, tokens/font-macro, NEO-LAYER-04

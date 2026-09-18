@@ -1,1 +1,0 @@
-{"aliases": ["focus-hover combo"], "covers": ["selectors/comma", "conditions/focus", "conditions/hover"], "keywords": ["multiple selectors", "selector list", "grouped selectors", "either arm"], "related": ["ATM-COND-14", "NEO-COND-02"]}

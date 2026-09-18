@@ -1,1 +1,0 @@
-{"aliases": ["consumer handles", "public names"], "covers": ["sync/consumer-specifiers", "sync/exports-map"], "keywords": ["subpath", "self-reference", "probe-module", "bound-runtime"], "related": ["NEO-SYNC-02", "NEO-SYNC-12", "NEO-SYNC-13"]}

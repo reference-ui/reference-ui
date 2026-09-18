@@ -7,3 +7,5 @@ with emptied hosts fails closed with the located `no StyleProps hosts
 resolvable` error and zero wants.
 
 Evidence: `[atm]` ATM-SITE-13 (RS-5 landed).
+
+> Search terms: fail-closed, unresolvable hosts, empty registry, graceful failure, site/host-resolution, NEO-SITE-12

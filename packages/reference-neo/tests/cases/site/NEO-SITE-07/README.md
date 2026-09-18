@@ -9,3 +9,5 @@ Evidence: `[atm]` ATM-SITE-16 (cross-file consts resolve; generated,
 dist, and module dirs stay out of the scan); `[panda-v1]`
 `vendor/panda-v1/packages/parser/__tests__/css-raw-spread.test.ts:423`
 (spreading across files).
+
+> Search terms: multi-file, separate file, module boundary, project scan, site/cross-file, NEO-SITE-02

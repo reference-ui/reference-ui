@@ -8,3 +8,5 @@ The world is the same mini-lib as PARITY-01 (identical sources, synced
 fresh so the scan never reads a sibling's folder). The node-side spec rgs
 the whole generated folder for the four forbidden strings and asserts
 `panda.config.*` is absent by filename.
+
+> Search terms: forbidden-strings, leak-scan, filename-check, panda-config, theme-attribute, no-panda, panda-free, parity/no-panda-isms, parity/generated-scan, NEO-PARITY-01

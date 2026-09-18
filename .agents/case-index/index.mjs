@@ -1,10 +1,11 @@
 // Shared agent-side case index: MiniSearch over neo cases + RS surfaces.
 //
 // Sources: packages/reference-neo/tests/cases/**/case.json (+ sibling
-// README.md / keywords.json / specs/*.spec.ts; world/ is NEVER indexed)
-// and packages/reference-rs/modules/* (via rs-adapter.mjs). Persisted to
-// .cache/ with a content-hash manifest; the index rebuilds when source
-// hashes or the indexer version below change.
+// README.md / specs/*.spec.ts; world/ is NEVER indexed) and
+// packages/reference-rs/modules/* (via rs-adapter.mjs). The README is the
+// index: no metadata sidecar. Persisted to .cache/ with a content-hash
+// manifest; the index rebuilds when source hashes or the indexer version
+// below change.
 
 import { createHash } from 'node:crypto';
 import {
@@ -18,7 +19,7 @@ import {
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MiniSearch from 'minisearch';
-import { collectRsDocs, readKeywordsFile, RS_MODULES_DIR } from './rs-adapter.mjs';
+import { collectRsDocs, firstParagraph, inferRelated, RS_MODULES_DIR } from './rs-adapter.mjs';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const CACHE_DIR = join(ROOT, '.agents', 'case-index', '.cache');
@@ -28,7 +29,7 @@ export const NEO_CASES_DIR = 'packages/reference-neo/tests/cases';
 
 // Bump when the tokenizer, stemmer, or doc-shaping below changes: the
 // manifest check rebuilds cached indexes built by older indexer code.
-export const INDEX_VERSION = 2;
+export const INDEX_VERSION = 4;
 
 // Split on anything that is not a letter or digit, so hyphen compounds
 // (data-color-mode), backtick-quoted code (`css()`), paths (extract/css),
@@ -198,22 +199,22 @@ export function collectNeoDocs(root) {
     const readmePath = join(dir, 'README.md');
     const readme = existsSync(readmePath) ? readFileSync(readmePath, 'utf8') : '';
     if (existsSync(readmePath)) hashFiles.push(readmePath);
-    if (existsSync(join(dir, 'keywords.json'))) hashFiles.push(join(dir, 'keywords.json'));
     const specFiles = findSpecFiles(join(dir, 'specs'));
     hashFiles.push(...specFiles);
     const specs = specFiles
       .map((f) => `spec ${relative(dir, f)}:\n${readFileSync(f, 'utf8')}`)
       .join('\n');
-    const kw = readKeywordsFile(dir);
     const family = relative(join(root, NEO_CASES_DIR), dir).split('/')[0];
     docs.push({
       id: meta.id,
       kind: 'neo',
       ref: family,
       title: meta.name || meta.id,
+      description: firstParagraph(readme) || (meta.name || ''),
+      readme,
       path: relative(root, dir),
       text: `${meta.id} ${meta.name || ''}\n${readme}\n${specs}`,
-      ...kw,
+      related: inferRelated(readme, meta.id),
     });
   }
   return { docs, hashFiles };
@@ -253,12 +254,11 @@ function toIndexDoc(doc) {
     kind: doc.kind,
     ref: doc.ref,
     title: doc.title,
+    description: doc.description || '',
+    readme: doc.readme || '',
     path: doc.path,
     text: doc.text,
     inventory: doc.inventory || '',
-    keywords: (doc.keywords || []).join(' '),
-    aliases: (doc.aliases || []).join(' '),
-    covers: (doc.covers || []).join(' '),
     related: doc.related || [],
     suiteCount: doc.suiteCount,
     caseCount: doc.caseCount,
@@ -268,10 +268,10 @@ function toIndexDoc(doc) {
 // `inventory` (rs suite paths + golden ids) lives outside `text` so a
 // 148-case inventory does not drown the module's own README prose in BM25
 // length normalization; it stays searchable for id-resolution queries.
-export const MINI_FIELDS = ['title', 'keywords', 'aliases', 'covers', 'text', 'inventory', 'id'];
-export const MINI_STORE_FIELDS = ['id', 'kind', 'ref', 'title', 'path', 'related', 'suiteCount', 'caseCount'];
+export const MINI_FIELDS = ['title', 'text', 'inventory', 'id'];
+export const MINI_STORE_FIELDS = ['id', 'kind', 'ref', 'title', 'description', 'readme', 'path', 'related', 'suiteCount', 'caseCount'];
 export const MINI_SEARCH_OPTIONS = {
-  boost: { title: 3, keywords: 3, aliases: 2, covers: 2, id: 4 },
+  boost: { title: 3, id: 4 },
   prefix: true,
   fuzzy: 0.2,
 };

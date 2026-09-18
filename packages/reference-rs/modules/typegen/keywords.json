@@ -1,1 +1,0 @@
-{"aliases": ["dts printer", "type printer"], "covers": ["typegen/tokens", "typegen/recipes", "typegen/fonts", "typegen/style-props"], "keywords": ["typegen", "emit_dts", ".d.ts", "ColorToken", "StyleProps", "SystemStyleObject", "FontProps", "FontRegistry", "recipe variants", "compoundVariants", "token unions", "open-mode"], "related": ["rs:base-system", "rs:canon", "rs:atomic"]}

@@ -1,1 +1,0 @@
-{"aliases": ["hello world"], "covers": ["harness/discovery", "harness/execution", "harness/artifacts"], "keywords": ["canary", "sanity check", "first run", "minimal", "health check"]}

@@ -14,3 +14,5 @@ captain may move the folder home to `layer/` with no id change.
 
 Evidence: `[lib]` `styles.css` reset layer; `[atm]` ATM-LAYER-08;
 `[core]` `system/stylesheet/reset.ts` (Andy Bell); global-css research §6.3.
+
+> Search terms: box-sizing, user-agent, preflight, opt-out, preflight switch, cascade baseline, layer/reset-layer, sync/normalize-flag, NEO-TOKEN-10

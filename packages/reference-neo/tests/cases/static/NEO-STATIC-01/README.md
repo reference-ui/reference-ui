@@ -13,3 +13,5 @@ Evidence: `[panda-v1]`
 conditions, `color: ['*']`); `[atm]` ATM-STATIC-01 (third want source),
 ATM-STATIC-02 (dedup); `[atm]` P1 #14
 (`docs/evidence/atomic-claims.md:315`).
+
+> Search terms: pre-generated, :hover, pseudo-class, zero wants, unreferenced, zero-usage static, callsite-free, static/declaration-only, static/conditions, NEO-STATIC-02

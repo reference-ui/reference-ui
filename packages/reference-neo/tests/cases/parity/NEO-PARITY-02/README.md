@@ -12,3 +12,5 @@ cite the 159-entry checked-in union (verified verbatim against the SPEC
 §union table and grounded keyword-by-keyword in the owning group SPECs),
 and the known-unproven (b) table verifies empty — all six N2 rows landed
 (TOKEN-13, COND-14/15, SITE-13/14, RECIPE-07).
+
+> Search terms: coverage, completeness, inventory, presence-check, all-families, F1-F37, family roster, parity/family-census, parity/sheet-markers, NEO-PARITY-01, NEO-PARITY-03

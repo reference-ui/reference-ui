@@ -8,3 +8,5 @@ resolved radius, ring, and ink — never the verbatim author strings.
 
 Evidence: `[atm]` ATM-LAYER-15; `[lib]` `global.ts`, `disclosure.ts`,
 `shared.ts` (RS-35).
+
+> Search terms: design tokens, token resolution, semantic tokens, category mapping, implicit tokens, global/token-resolution, global/design-tokens

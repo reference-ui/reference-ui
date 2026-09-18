@@ -22,3 +22,5 @@ import-graph flip to all-from-react.
 
 Evidence: `[core]` `.reference-ui/types`; generated-folder-shape §4;
 `[decision D5]`; typegen goldens `tokens.d.ts`, `styles.d.ts`, `recipes.d.ts`.
+
+> Search terms: integration, e2e, smoke test, baseline, round trip, full pipeline, type/react-declarations, type/consumer-compile

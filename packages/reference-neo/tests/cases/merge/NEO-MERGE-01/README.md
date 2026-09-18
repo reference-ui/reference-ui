@@ -8,3 +8,5 @@ stays complete.
 
 Evidence: `[atm]` P0 #7 (`docs/evidence/atomic-claims.md` §6); station
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-01`.
+
+> Search terms: override, precedence, conflict, duplicate property, variadic, repeat prop, merge/last-wins, merge/slot-collapse, NEO-MERGE-02

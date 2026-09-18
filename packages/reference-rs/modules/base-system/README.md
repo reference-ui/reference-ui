@@ -63,3 +63,5 @@ Atomic `compile()` takes `Option<BaseSystem>`. Omitted means the lib fixture.
 pnpm agentrs c base_system
 pnpm --filter @reference-ui/rust base-system --check
 ```
+
+> Search terms: system definition, theme artefact, base-system/spec, base-system/tokens, base-system/conditions, base-system/extends, base-system/lib-fixture, rs:canon, rs:atomic, rs:typegen

@@ -10,3 +10,5 @@ Evidence: `[panda-v1]`
 `generator/__tests__/generate-token.test.ts` "should reuse css variable in
 semantic token alias"; `token-dictionary/__tests__/alias.test.ts`; `[atm]`
 ATM-TOKEN-11.
+
+> Search terms: indirection, pointer, forwarding, no-inline, token/alias

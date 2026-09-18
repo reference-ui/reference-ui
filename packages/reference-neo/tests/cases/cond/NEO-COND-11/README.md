@@ -13,3 +13,5 @@ Evidence: `[atm]` P1 #13 (group/peer COND-09); R1 probe
 `/tmp/cond-batch4-r1/probe.mjs` emits
 `:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)` and
 `:is(:where(.peer, [data-peer]):is(:focus, [data-focus]) ~ *)`.
+
+> Search terms: general sibling, tilde, marker class, group hover, tailwind group peer, conditions/group-hover, conditions/peer-focus, combinators/sibling

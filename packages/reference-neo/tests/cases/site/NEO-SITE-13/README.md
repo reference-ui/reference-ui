@@ -6,3 +6,5 @@ with their style plan, the probe carries both classes, and it paints a
 1px solid border while the control stays borderless.
 
 Evidence: `[atm]` ATM-SITE-09 (extract) + ATM-SITE-18 (RS-19 landed).
+
+> Search terms: shorthand, flag attribute, bare attribute, macro expansion, site/boolean-macro

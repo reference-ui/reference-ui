@@ -10,3 +10,5 @@ Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace B/E and
 `docs/evidence/lib-sheet-styles-css.md` §3 rhythm row (contrast: L5161
 `var(--spacing-4r)` is a Core token Neo does not mint); `[atm]` P1 #8
 (`docs/evidence/atomic-claims.md`), ATM-RHYTHM-01..05.
+
+> Search terms: spacing scale, multiples, design tokens, r suffix, r steps, css/rhythm, css/spacing

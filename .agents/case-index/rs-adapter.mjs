@@ -3,31 +3,31 @@
 // RS modules are NOT case dirs: they hold vitest suites (*.test.ts),
 // golden case dirs (tests/cases/<ID>/) or golden files (tests/goldens/*),
 // fixtures, and Rust crates. The dumbest pattern that fits: ONE index doc
-// per module, enriched from that module's full README.md plus an optional
-// keywords.json. The indexer never parses suite internals; it only
-// inventories suite file paths and golden ids so searches for a suite or
-// case id still resolve to the owning module. RS stays dumb.
+// per module, sourced from that module's README.md. The indexer never
+// parses suite internals; it only inventories suite file paths and golden
+// ids so searches for a suite or case id still resolve to the owning
+// module. There is no metadata sidecar: the README is the index. RS stays
+// dumb.
 
 import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 export const RS_MODULES_DIR = 'packages/reference-rs/modules';
 
-const SCHEMA_KEYS = ['keywords', 'aliases', 'related', 'covers'];
+const ID_PATTERN = /\b(NEO-[A-Z]+-\d+|ATM-[A-Z]+-\d+|TST-[A-Z]+-\d+|rs:[a-z-]+)\b/g;
 
-export function readKeywordsFile(dir) {
-  const p = join(dir, 'keywords.json');
-  if (!existsSync(p)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(p, 'utf8'));
-    const out = {};
-    for (const k of SCHEMA_KEYS) {
-      if (Array.isArray(raw[k])) out[k] = raw[k].filter((v) => typeof v === 'string');
+export function inferRelated(markdown, selfId) {
+  // Case/station ids mentioned in the README are the doc's related set.
+  // Authors just cite siblings; the index does the linking.
+  const out = [];
+  const seen = new Set([selfId]);
+  for (const m of String(markdown).matchAll(ID_PATTERN)) {
+    if (!seen.has(m[1])) {
+      seen.add(m[1]);
+      out.push(m[1]);
     }
-    return out;
-  } catch {
-    return {};
   }
+  return out;
 }
 
 function firstHeading(markdown) {
@@ -36,6 +36,27 @@ function firstHeading(markdown) {
     if (m) return m[1].trim();
   }
   return '';
+}
+
+export function firstParagraph(markdown, maxLen = 180) {
+  // First prose paragraph after any leading headings: the doc's display
+  // description. Collapsed to one line and truncated with an ellipsis.
+  const lines = String(markdown).split('\n');
+  const para = [];
+  let started = false;
+  for (const line of lines) {
+    const t = line.trim();
+    if (!started) {
+      if (!t || t.startsWith('#')) continue;
+      started = true;
+    }
+    if (!t) break;
+    if (t.startsWith('#') || t.startsWith('|') || t.startsWith('```')) break;
+    para.push(t);
+  }
+  let s = para.join(' ').replace(/\s+/g, ' ').trim();
+  if (s.length > maxLen) s = s.slice(0, maxLen - 1).trimEnd() + '…';
+  return s;
 }
 
 // Dirs that never hold authorial suites: vendored deps, build output,
@@ -99,9 +120,6 @@ export function collectRsDocs(root) {
     const readmePath = join(dir, 'README.md');
     const readme = existsSync(readmePath) ? readFileSync(readmePath, 'utf8') : '';
     if (existsSync(readmePath)) hashFiles.push(readmePath);
-    const kwPath = join(dir, 'keywords.json');
-    if (existsSync(kwPath)) hashFiles.push(kwPath);
-    const kw = readKeywordsFile(dir);
     const testsDir = join(dir, 'tests');
     const suites = walkSuites(dir, testsDir);
     const caseIds = inventoryCases(testsDir);
@@ -115,6 +133,8 @@ export function collectRsDocs(root) {
       kind: 'rs',
       ref: name,
       title: firstHeading(readme) || name,
+      description: firstParagraph(readme),
+      readme,
       path: relative(root, dir),
       text: readme,
       inventory: [
@@ -123,7 +143,7 @@ export function collectRsDocs(root) {
       ].join('\n'),
       suiteCount: suites.length,
       caseCount: caseIds.length,
-      ...kw,
+      related: inferRelated(readme, `rs:${name}`),
     });
   }
   return { docs, hashFiles, hashInventory };

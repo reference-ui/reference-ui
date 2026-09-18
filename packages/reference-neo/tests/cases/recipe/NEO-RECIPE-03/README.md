@@ -7,3 +7,5 @@ each probe paints its computed display.
 
 Evidence: `[panda-v1]` `core/__tests__/rule-processor.test.ts:1162` "cva -
 boolean variant"; `[atm]` ATM-RECIPE-04.
+
+> Search terms: flag prop, binary axis, two-arm, enabled/disabled, recipe/boolean-variants, NEO-RECIPE-01

@@ -10,3 +10,5 @@ Evidence: `[panda-v1]` `core/__tests__/style-decoder.test.ts` "should resolve
 references" (`border: '2px solid {colors.red.300}'`); `[lib]` 3 leftover refs
 (`lib-sheet-styles-css.md` L8308/L8326/L27410, one failed lower); `[atm]`
 ATM-TOKEN-08.
+
+> Search terms: curly, brace, interpolation, border-color, token/refs, NEO-TOKEN-12

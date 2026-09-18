@@ -11,3 +11,5 @@ flips the bezel both ways.
 
 Evidence: `[lib]` `docs/evidence/lib-sheet-styles-css.md` `:has(` ×8,
 L1044 invalid bezel; `[atm]` ATM-LAYER-03.
+
+> Search terms: form validation, invalid state, parent selector, relational selector, error state, validation twin, global/has, selector :has(), NEO-GLOBAL-03

@@ -9,3 +9,5 @@ offset. Unfocused, the probe must not carry the token colour.
 
 Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace A
 (`primitives/base.ts` 9–13 → `global.css` 21–24); `[atm]` ATM-LAYER-03.
+
+> Search terms: keyboard focus, a11y, outline-color, outline-offset, tab focus, focus ring, global/focus-visible, global/token-ref

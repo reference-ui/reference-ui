@@ -9,3 +9,5 @@ invalid-hook-call: one shared dispatcher, exactly the lib shape.
 
 Evidence: `[lib]` landing regen (`Tabs.test.tsx` invalid-hook-call);
 `[core]` `react.mjs` external `react`/`react/jsx-runtime` imports.
+
+> Search terms: dedup, singleton react, peer dependency, externalized, duplicate react, prim/external-react, prim/shared-dispatcher

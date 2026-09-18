@@ -7,3 +7,5 @@ absented per the site SPEC — members and spreads are the author shapes.
 
 Evidence: `[panda-v1]` `extractor/__tests__/unbox.test.ts` L4304;
 `[atm]` ATM-SITE-06.
+
+> Search terms: property lookup, dot notation, token reference, site/member-access, NEO-SITE-03

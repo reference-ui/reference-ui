@@ -1,1 +1,0 @@
-{"aliases": ["layer precedence"], "covers": ["layer/order-statement", "layer/empty-elision", "layer/utility-rank"], "keywords": ["@layer", "layer rank", "layer sequence", "empty layer elision", "custom property", "dark mode var"], "related": ["NEO-LAYER-05", "NEO-LAYER-06", "ATM-LAYER-02", "ATM-LAYER-03", "ATM-LAYER-04"]}

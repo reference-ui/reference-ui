@@ -1,1 +1,0 @@
-{"aliases": ["hover focus disabled"], "covers": ["conditions/hover", "conditions/focus", "conditions/disabled"], "keywords": ["data-hover", "data-focus", "data-disabled", ":is()", "twin"], "related": ["NEO-COND-01", "NEO-COND-02", "NEO-COND-03"]}

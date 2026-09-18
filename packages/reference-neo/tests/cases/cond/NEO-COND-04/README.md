@@ -12,3 +12,5 @@ islands), ATM-COND-03, ATM-COND-08; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:119`
 "respect color mode" (four-way selectors, the contrast Reference
 refuses); `[decision D1]` (single `data-color-mode` attribute).
+
+> Search terms: light mode, dark mode, theming, color scheme, mode switch, light dark, theme toggle, conditions/light, conditions/dark

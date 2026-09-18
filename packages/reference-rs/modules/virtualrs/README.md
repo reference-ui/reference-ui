@@ -41,3 +41,5 @@ easier to debug than binding-level tests alone.
 
 JS tests are still useful, but mostly for loader behavior and a small number of
 integration smoke tests through the published API.
+
+> Search terms: virtual modules, css rewrite, import rewrite, oxc transform, virtual postprocessor, import rewriter, virtualrs/css, virtualrs/cva, virtualrs/imports, rs:runtime, rs:atomic

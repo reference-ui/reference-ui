@@ -9,3 +9,5 @@ Evidence: `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1244`
 "preserves casing for css variable"; `[atm]` ATM-NAME-* (selector
 allowlist leaves custom-property casing alone).
+
+> Search terms: case-sensitive, camelCase, uppercase, CSS variables, cased vars, css/custom-properties, css/casing, NEO-CSS-04

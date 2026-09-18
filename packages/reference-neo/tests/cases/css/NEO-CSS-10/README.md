@@ -9,3 +9,5 @@ set and paints width, height, family, and weight in computed style.
 Evidence: `[atm]` P1 #9 (`docs/evidence/atomic-claims.md`), ATM-COND-05;
 `[lib]` `docs/evidence/lib-sheet-styles-css.md` §3 shorthand row (`size_`
 → `width`+`height`).
+
+> Search terms: font-family, font-weight, multi-declaration, compound props, css/shorthands, css/multi-declaration

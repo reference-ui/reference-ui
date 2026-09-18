@@ -12,3 +12,5 @@ Evidence: `[atm]` ATM-COND-02, ATM-COND-10; `[panda-v1]`
 (grouped conditions lower `_hover` to one `:is()` wrap); `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css`
 `:is(:hover, [data-hover])` ×26 (e.g. L475).
+
+> Search terms: pseudo-class, dual bind, hover twin, conditions/hover, selector :is(), NEO-COND-02

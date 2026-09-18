@@ -1,1 +1,0 @@
-{"aliases": ["validation twin"], "covers": ["global/has", "selector :has()"], "keywords": ["form validation", "invalid state", "parent selector", "relational selector", "error state"], "related": ["ATM-LAYER-03", "NEO-GLOBAL-03"]}

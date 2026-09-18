@@ -11,3 +11,5 @@ keys in the published runtime data.
 Evidence: `[lib]` `docs/evidence/lib-sheet-styles-css.md` §3 (90 `.ref-*`
 stems, `[data-variant]`, empty `recipes` layer); `[atm]` ATM-COND-06; PLAN
 §4.3 ABI.
+
+> Search terms: discriminant, theming, cva, data-attribute, non-style prop, prim/variants, prim/tag-recipes

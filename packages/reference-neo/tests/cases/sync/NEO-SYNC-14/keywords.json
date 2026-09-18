@@ -1,1 +1,0 @@
-{"aliases": ["watch mode", "follow mode"], "covers": ["sync/watch", "sync/incremental-resync"], "keywords": ["parcel-watcher", "file-watcher", "live-reload", "hot-sync"], "related": ["NEO-SYNC-09"]}

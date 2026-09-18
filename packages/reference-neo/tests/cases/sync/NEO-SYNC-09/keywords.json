@@ -1,1 +1,0 @@
-{"aliases": ["in versus out", "scoped scan"], "covers": ["sync/include-scope", "sync/scan-filtering"], "keywords": ["allowlist", "scan-boundary", "silent-skip", "deny-by-default"], "related": ["ATM-SCAN-01", "NEO-SYNC-04"]}

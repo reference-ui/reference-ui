@@ -1,1 +1,0 @@
-{"aliases": ["stylesheet compiler", "atom compiler"], "covers": ["extract/css()", "extract/recipe()", "namer/class-map", "tokens/lookup", "conditions/lowering"], "keywords": ["atomic", "extract", "atoms", "stylesheet", "class map", "namer", "css()", "recipe()", "StyleProps", "utilities"], "related": ["rs:canon", "rs:styletrace", "rs:base-system"]}

@@ -11,3 +11,5 @@ no `@pandacss`, no atomic class names, no jsx farm); no host change was
 needed.
 
 Evidence: PLAN §4.1 forbidden; TYP-NATIVE-06.
+
+> Search terms: decoupling, independence, audit, leak, migration, type/native-typegen, type/forbidden-imports, NEO-TYPE-01

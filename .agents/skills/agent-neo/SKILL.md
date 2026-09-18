@@ -211,14 +211,15 @@ as the installed core — the code word **retires**: update this skill, the
 
 ## 10. Case index
 
-Full-text index over neo cases + RS module surfaces (names, READMEs,
-`specs/*.spec.ts`, hand-authored `keywords.json`, RS suite/case inventory).
+Full-text index over neo cases + RS module surfaces (names, full README
+text, `specs/*.spec.ts`, RS suite/case inventory). The README is the
+index: write it detailed and the index is good.
 Use it to find **cases by feature** instead
 of grepping — it reaches terms `agentneo search` (id/name/README text) misses,
 and surfaces the RS surfaces a case proves.
 
 ```bash
-pnpm agent:cases search "<query>" [--limit=N] [--json]  # search cases + surfaces
+pnpm agent:cases search "<query>" [--limit=N] [--json] [--compact]  # search cases + surfaces
 pnpm agent:cases list [--kind=neo|rs] [--json]          # list indexed docs (auto-rebuilds if stale)
 pnpm agent:cases reindex [--json]                       # force rebuild
 # direct: node .agents/case-index/cli.mjs search <query> | list [--kind=neo|rs] | reindex
@@ -226,17 +227,20 @@ pnpm agent:cases reindex [--json]                       # force rebuild
 
 Terms are stemmed (`queries` matches `query`) and typo-tolerant
 (fuzzy+prefix, with "did you mean" on zero hits); `search` caps at 15
-hits unless `--limit=N` raises it. Hand-authored `keywords.json`
-enriches the index — schema: `.agents/case-index/SCHEMA.md`.
+hits unless `--limit=N` raises it; `--compact` prints headers only, and an exact id query returns just that doc. There is no metadata sidecar —
+enrich the index by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case/station ids (cited ids surface as
+`related`).
 
 Example (RS surface hit):
 
 ```text
-$ pnpm agent:cases search "barrels"
-34.031  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
+$ pnpm agent:cases search "barrels" --limit=1
+11.241  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
         packages/reference-rs/modules/atlas
-25.581  rs:styletrace — Styletrace [rs:styletrace] (matched: barrel)
-        packages/reference-rs/modules/styletrace
-
-2 hit(s) for "barrels"
+        related: rs:tasty, rs:styletrace, rs:shared
+# Atlas Module
+Atlas is the component discovery, props interface mapping, […]
+> Search terms: discovery, call-site analysis, barrels, […]
+[…]
 ```

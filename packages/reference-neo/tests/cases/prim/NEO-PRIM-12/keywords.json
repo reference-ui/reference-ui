@@ -1,1 +1,0 @@
-{"aliases": ["duplicate react"], "covers": ["prim/external-react", "prim/shared-dispatcher"], "keywords": ["dedup", "singleton react", "peer dependency", "externalized"]}
