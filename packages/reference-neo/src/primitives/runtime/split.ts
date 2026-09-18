@@ -13,7 +13,7 @@ export interface SplitPrimitiveProps {
   children?: unknown
   colorMode?: unknown
   variant?: unknown
-  cssProp?: SystemStyleObject
+  cssProp?: SystemStyleObject | SystemStyleObject[]
   ref?: unknown
   styleProps: SystemStyleObject
   elementProps: Record<string, unknown>
@@ -21,6 +21,16 @@ export interface SplitPrimitiveProps {
 
 function isStyleObject(value: unknown): value is SystemStyleObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * The css slot takes one style object or a list of them. Lists reach css()
+ * intact so each element merges under its own plans; a list with a
+ * non-object element drops whole, the way scalar junk does.
+ */
+function isCssProp(value: unknown): value is SystemStyleObject | SystemStyleObject[] {
+  if (Array.isArray(value)) return value.every(isStyleObject)
+  return isStyleObject(value)
 }
 
 /**
@@ -56,7 +66,7 @@ export function createPropSplitter(stylePropNames: readonly string[]) {
       children,
       colorMode,
       variant,
-      cssProp: isStyleObject(css) ? css : undefined,
+      cssProp: isCssProp(css) ? css : undefined,
       ref,
       styleProps: resolved,
       elementProps,

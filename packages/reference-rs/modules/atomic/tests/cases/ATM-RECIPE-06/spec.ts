@@ -34,6 +34,16 @@ const spec: AtomicCaseSpec = {
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
     expect(tables[0]?.className).toBe('duplicateBadge')
+
+    // RS-18: every refusal carries file/line/column at the offending call
+    expect(result.diagnostics).toHaveLength(3)
+    const [missing, dynamic, duplicate] = result.diagnostics
+    expect(missing!.file).toMatch(/input\/src\/recipe\.ts$/)
+    expect([missing!.line, missing!.column]).toEqual([4, 19])
+    expect(dynamic!.file).toMatch(/input\/src\/recipe\.ts$/)
+    expect([dynamic!.line, dynamic!.column]).toEqual([10, 19])
+    expect(duplicate!.file).toMatch(/input\/src\/recipe\.ts$/)
+    expect([duplicate!.line, duplicate!.column]).toEqual([18, 12])
   },
 }
 

@@ -1,4 +1,4 @@
-import { recipe, Button } from '@reference-ui/react'
+import { recipe, Button, Div } from '@reference-ui/react'
 
 recipe({
   className: 'button',

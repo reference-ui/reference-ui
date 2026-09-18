@@ -1,3 +1,5 @@
+import { Div } from '@reference-ui/react'
+
 export function Containers() {
   return <Div container="sidebar" />
 }

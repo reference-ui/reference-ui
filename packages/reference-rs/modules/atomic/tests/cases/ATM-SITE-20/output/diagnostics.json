@@ -1,0 +1,21 @@
+[
+  {
+    "severity": "warning",
+    "message": "Unknown style property \"fooBar\"",
+    "file": "input/src/App.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Unknown style property \"divideX\"",
+    "file": "input/src/App.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Unknown style property \"frobnicate\"",
+    "file": "input/src/App.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Unknown style property in global CSS: \"divideX\""
+  }
+]

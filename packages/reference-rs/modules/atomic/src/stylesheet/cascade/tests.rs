@@ -119,6 +119,36 @@ fn lib_atom(prop: &str, value: &str, conds: &[&str]) -> Atom {
 }
 
 #[test]
+fn supports_nests_outside_container_in_author_order() {
+    let css = sheet(&[lib_atom(
+        "color",
+        "red",
+        &["@supports (display: grid)", "sm", "&:hover"],
+    )]);
+    let supports = "@supports (display: grid)";
+    let container = "@container (min-width: 640px)";
+    let supports_at = css.find(supports).expect("supports");
+    let container_at = css.find(container).expect("container");
+    let rule_at = css.find(":hover").expect("hover rule");
+    assert!(
+        supports_at < container_at && container_at < rule_at,
+        "{css}"
+    );
+    assert!(!css.contains(":@supports"), "{css}");
+}
+
+#[test]
+fn supports_sorts_before_container_across_atoms() {
+    let css = sheet(&[
+        lib_atom("color", "red", &["sm"]),
+        lib_atom("color", "blue", &["@supports (display: grid)"]),
+    ]);
+    let supports = css.find("@supports").expect("supports");
+    let container = css.find("@container").expect("container");
+    assert!(supports < container, "{css}");
+}
+
+#[test]
 fn dual_at_rules_nest_in_author_order() {
     let css = sheet(&[lib_atom("color", "red", &["_osDark", "sm"])]);
     let media = "@media (prefers-color-scheme: dark)";

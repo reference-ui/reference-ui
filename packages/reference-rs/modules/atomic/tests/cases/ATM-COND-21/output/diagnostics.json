@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "message": "Unknown condition \"@supports\""
+  },
+  {
+    "severity": "warning",
+    "message": "Unknown condition \"@media\""
+  }
+]

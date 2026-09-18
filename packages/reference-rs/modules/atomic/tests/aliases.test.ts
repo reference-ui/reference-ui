@@ -20,6 +20,7 @@ describe('canon locked alias consumption', () => {
         {
           path: 'test.tsx',
           content: `
+            import { Div } from '@reference-ui/react'
             export const Comp = () => (
               <Div
                 mt="2r"
@@ -48,6 +49,7 @@ describe('canon locked alias consumption', () => {
         {
           path: 'test.tsx',
           content: `
+            import { Div } from '@reference-ui/react'
             export const Comp = () => (
               <Div
                 rounded="md"
@@ -86,7 +88,7 @@ describe('canon locked alias consumption', () => {
       files: [
         {
           path: 'test.tsx',
-          content: `export const Comp = () => <Div mt={['1r', '1r', '1r', '1r', '1r', '1r', '2r', '4r']} />`,
+          content: `import { Div } from '@reference-ui/react'; export const Comp = () => <Div mt={['1r', '1r', '1r', '1r', '1r', '1r', '2r', '4r']} />`,
         },
       ],
     })
@@ -107,7 +109,7 @@ describe('canon locked alias consumption', () => {
       files: [
         {
           path: 'test.tsx',
-          content: `export const Comp = () => <Div p={['10px', '10px', '10px', '10px', '10px', '10px', '20px', '30px']} />`,
+          content: `import { Div } from '@reference-ui/react'; export const Comp = () => <Div p={['10px', '10px', '10px', '10px', '10px', '10px', '20px', '30px']} />`,
         },
       ],
     })

@@ -1,0 +1,4 @@
+{
+  ":focus > &:color:blue.500": "@reference-ui/lib__[:focus_>_&]:c_blue.500",
+  "input:hover &:color:red.500": "@reference-ui/lib__[input:hover_&]:c_red.500"
+}

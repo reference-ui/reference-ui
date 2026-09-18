@@ -41,6 +41,19 @@ describe('splitPrimitiveProps', () => {
     expect(result.styleProps).toEqual({ color: 'brand' })
   })
 
+  it('keeps array css props intact for css() merge', () => {
+    const css = [{ color: 'blue.300' }, { backgroundColor: 'green.300' }]
+    const result = split({ css, id: 'prim' })
+    expect(result.cssProp).toEqual(css)
+    expect(result.elementProps).toEqual({ id: 'prim' })
+  })
+
+  it('drops array css props carrying a non-object element', () => {
+    const result = split({ css: [{ color: 'brand' }, 'color: red'], color: 'brand' })
+    expect(result.cssProp).toBeUndefined()
+    expect(result.styleProps).toEqual({ color: 'brand' })
+  })
+
   it('routes condition arms to resolution instead of the DOM', () => {
     const result = split({
       color: 'ink',

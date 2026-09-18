@@ -1,21 +1,15 @@
 @layer condition-prefix {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer tokens {
-    :root,
-    [data-color-mode='light'] {
-      --colors-n300: #d4d4d8;
-    }
-    [data-color-mode='dark'] {
-      --colors-n300: #3f3f46;
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-n300: #d4d4d8;
   }
-  @layer utilities {
-    .condition-prefix__hover\:bg_n300:is(:hover, [data-hover]) {
-      background: var(--colors-n300);
-    }
-    [data-color-mode='dark']
-      .condition-prefix__dark\:hover\:bg_n300:is(:hover, [data-hover]) {
-      background: var(--colors-n300);
-    }
+  [data-color-mode=dark] {
+    --colors-n300: #3f3f46;
   }
+}
+@layer utilities {
+  .condition-prefix__hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
+  [data-color-mode=dark] .condition-prefix__dark\:hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
+}
 }

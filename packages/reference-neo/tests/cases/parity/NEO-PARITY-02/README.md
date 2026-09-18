@@ -8,8 +8,7 @@ The world is the same mini-lib as PARITY-01 (identical sources, synced
 fresh for this case so the census never reads a sibling's folder). The
 node-side census checks all 43 families — F1–F37 plus T-A–T-F — against
 the synced sheet: present families print their markers, absent families
-cite the 152-entry checked-in union (verified verbatim against the SPEC
+cite the 159-entry checked-in union (verified verbatim against the SPEC
 §union table and grounded keyword-by-keyword in the owning group SPECs),
-and the 12 known-unproven (b) rows verify still-blocked in their ledgers.
-COND-14 cites RS-17 (captain ruling 2026-09-17: cond's `_file` row is
-relabeled from the RS-14 that collides with site's ternary row).
+and the known-unproven (b) table verifies empty — all six N2 rows landed
+(TOKEN-13, COND-14/15, SITE-13/14, RECIPE-07).

@@ -541,7 +541,7 @@
                   <span class="card-title"><code>Condition Lowering</code></span>
                   <span class="card-type">Pass 4</span>
                 </div>
-                <div class="card-desc"><code>_hover</code> $\to$ <code>:hover</code>; breakpoints to <code>@media</code>.</div>
+                <div class="card-desc"><code>_hover</code> $\to$ <code>:hover</code>; breakpoints to <code>@container</code>.</div>
               </button>
             </div>
 
@@ -837,7 +837,7 @@ Want {
           code: `// Pseudo & Media queries:
 "_hover" -> ":hover"
 "_dark"  -> "[data-color-mode=dark] &"
-"sm"     -> "@media (min-width: 640px)"`,
+"sm"     -> "@container (min-width: 640px)"`,
           desc: `
             <p>Lowers condition identifiers into CSS pseudo-selectors, data attributes, and media queries in a deterministic order.</p>`
         },

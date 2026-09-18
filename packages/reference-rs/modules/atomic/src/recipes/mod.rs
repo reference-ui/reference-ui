@@ -11,6 +11,7 @@ use indexmap::IndexMap;
 use std::cmp::Ordering;
 
 use crate::atom::{Atom, Want, When, WhenKind};
+use crate::diagnostics::DiagnosticLocation;
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::runtime::RecipeRuntimeTable;
 
@@ -26,6 +27,8 @@ pub struct Recipe {
     pub variants: IndexMap<String, IndexMap<String, Vec<Want>>>,
     pub default_variants: IndexMap<String, String>,
     pub compounds: Vec<RecipeCompound>,
+    /// Source call site for refusal diagnostics. Empty for spec-owned recipes.
+    pub location: DiagnosticLocation,
 }
 
 /// One compound variant definition matching variant predicates to style wants.
@@ -207,7 +210,7 @@ fn recipe_bucket(atom: &Atom) -> u8 {
     let mut has_selector = false;
     for cond in atom.conditions.iter() {
         match cond.wrap() {
-            WhenKind::Media(_) | WhenKind::Container(_) => has_at = true,
+            WhenKind::Media(_) | WhenKind::Container(_) | WhenKind::Supports(_) => has_at = true,
             WhenKind::Selector(_) => has_selector = true,
         }
     }
@@ -268,6 +271,7 @@ mod tests {
             variants: IndexMap::new(),
             default_variants: IndexMap::new(),
             compounds: vec![],
+            location: DiagnosticLocation::default(),
         };
         let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
         assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");
@@ -306,6 +310,7 @@ mod tests {
             variants,
             default_variants: IndexMap::new(),
             compounds: vec![],
+            location: DiagnosticLocation::default(),
         };
         let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
         assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");

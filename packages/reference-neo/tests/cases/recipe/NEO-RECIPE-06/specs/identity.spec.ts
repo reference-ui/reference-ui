@@ -108,6 +108,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
       /Duplicate recipe className 'dupBadge' within system 'dup-world'/,
       'duplicate className fails sync naming the duplicate',
     );
+    await assert.rejects(
+      sync(dupDir),
+      /src\/app\.ts:4:19/,
+      'duplicate refusal carries file:line:column at the second call (RS-18)',
+    );
     assert.ok(
       !fs.existsSync(path.join(dupDir, '.reference-ui')),
       'failed sync leaves no half-written folder behind',

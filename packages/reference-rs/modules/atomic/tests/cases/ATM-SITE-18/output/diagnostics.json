@@ -1,0 +1,6 @@
+[
+  {
+    "severity": "warning",
+    "message": "`color` value `true` is not valid CSS"
+  }
+]

@@ -1,5 +1,5 @@
 // census-union.ts — the checked-in PARITY-02 absence list for NEO-PARITY-02.
-// It takes nothing and emits the 151-entry union (150 group entries plus
+// It takes nothing and emits the 159-entry union (158 group entries plus
 // P-DELTA-4) transcribed from the parity SPEC §union table, each with the
 // owner group, the approved/out-of-scope kind, and a grounding keyword the
 // census verifies inside the owner's SPEC. The census spec asserts this
@@ -49,6 +49,9 @@ export const UNION: UnionEntry[] = [
   { id: 'token-a11', group: 'token', kind: 'approved', label: '★OOD forced-colors islands', key: 'forced-colors token islands' },
   { id: 'token-a12', group: 'token', kind: 'approved', label: '★OOD token() fallbacks', key: 'nested fallbacks' },
   { id: 'token-a13', group: 'token', kind: 'approved', label: '★OOD percent cssVar', key: 'percent cssVar' },
+  { id: 'token-a14', group: 'token', kind: 'approved', label: 'leading-zero numerics', key: 'leading-zero numerics' },
+  { id: 'token-a15', group: 'token', kind: 'approved', label: 'flat-nested token miss', key: 'flat-nested token miss' },
+  { id: 'token-a16', group: 'token', kind: 'approved', label: 'slash diagnostic wording', key: 'slash diagnostic wording' },
   { id: 'token-o1', group: 'token', kind: 'oos', label: 'semanticTokens', key: '`semanticTokens`' },
   { id: 'token-o2', group: 'token', kind: 'oos', label: '@slot OR', key: 'selector-only OR' },
   { id: 'token-o3', group: 'token', kind: 'oos', label: 'DEFAULT', key: '`DEFAULT` keyword' },
@@ -62,6 +65,8 @@ export const UNION: UnionEntry[] = [
   { id: 'css-a3', group: 'css', kind: 'approved', label: '@scope', key: '`@scope`' },
   { id: 'css-a4', group: 'css', kind: 'approved', label: 'token()', key: '`token()` string helper' },
   { id: 'css-a5', group: 'css', kind: 'approved', label: 'capital-W vendor keys', key: 'Capital-W vendor keys' },
+  { id: 'css-a6', group: 'css', kind: 'approved', label: 'numerics lower to px', key: 'numerics lower to px' },
+  { id: 'css-a7', group: 'css', kind: 'approved', label: 'no autoprefixer', key: 'no autoprefixer' },
   { id: 'css-o1', group: 'css', kind: 'oos', label: 'prefix/hash', key: 'custom `toHash`' },
   { id: 'css-o2', group: 'css', kind: 'oos', label: 'fromJSON wire', key: 'fromJSON' },
   { id: 'css-o3', group: 'css', kind: 'oos', label: 'truncate', key: 'truncate' },
@@ -120,6 +125,8 @@ export const UNION: UnionEntry[] = [
   { id: 'site-a5', group: 'site', kind: 'approved', label: 'matchTag/PascalCase', key: '`matchTag`' },
   { id: 'site-a6', group: 'site', kind: 'approved', label: 'token() inlining', key: '`token()` inlining' },
   { id: 'site-a7', group: 'site', kind: 'approved', label: 'css.raw', key: '**`css.raw`**' },
+  { id: 'site-a8', group: 'site', kind: 'approved', label: 'element-access refusal', key: 'element-access refusal' },
+  { id: 'site-a9', group: 'site', kind: 'approved', label: 'computed-key refusal', key: 'computed-key refusal' },
   { id: 'site-o1', group: 'site', kind: 'oos', label: 'styled() factory', key: '`styled()` factory' },
   { id: 'site-o2', group: 'site', kind: 'oos', label: 'patterns pack', key: 'Patterns pack' },
   { id: 'site-o3', group: 'site', kind: 'oos', label: 'cva/sva', key: '`cva` / `sva` as author APIs' },

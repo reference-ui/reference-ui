@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-sibling-distribution",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "rs-11",
+      "rules": {
+        "body > p, body > ul": {
+          "margin": 0,
+          "& ~ &": { "marginTop": "10px" }
+        },
+        ".ref-a, .ref-b": {
+          "& .ref-kid": { "color": "red" }
+        },
+        ".ref-c, .ref-d": {
+          "& ~ &": { "marginTop": "5px" }
+        },
+        ".ref-stack > p": {
+          "& ~ &": { "marginTop": "8px" }
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

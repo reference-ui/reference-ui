@@ -85,6 +85,59 @@ fn test_const_aliased_css_still_extracts() {
 }
 
 #[test]
+fn test_hostless_styles_emit_missing_graph_error() {
+    let res = compile_code(
+        r#"
+        export const App = () => (
+            <>
+                <Foo mt="4r" />
+                <Bar color="red" />
+            </>
+        );
+        "#,
+    );
+    assert!(res.wants.is_empty());
+    assert!(res.runtime.style_plans.is_empty());
+    assert_eq!(res.diagnostics.len(), 1);
+    let diag = &res.diagnostics[0];
+    assert_eq!(
+        diag.severity,
+        crate::diagnostics::DiagnosticSeverity::Error
+    );
+    assert!(diag.message.contains("missing primitive graph"), "{}", diag.message);
+    assert!(diag.message.contains("<Foo>"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("test.tsx"));
+    assert_eq!(diag.line, Some(4));
+    assert!(diag.column.is_some());
+}
+
+#[test]
+fn test_empty_project_compiles_clean() {
+    let req = CompileRequest {
+        base_system: crate::BaseSystem::lib_fixture().clone(),
+        ..Default::default()
+    };
+    let res = compile(&req).expect("compile succeeds");
+    assert!(res.wants.is_empty());
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_styleless_hostless_file_stays_silent() {
+    let res = compile_code(
+        r#"
+        export const App = () => (
+            <div id="root">
+                <Foo>hi</Foo>
+            </div>
+        );
+        "#,
+    );
+    assert!(res.wants.is_empty());
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
 fn test_untraced_tag_is_skipped_when_a_host_is_known() {
     let res = compile_code(
         r#"

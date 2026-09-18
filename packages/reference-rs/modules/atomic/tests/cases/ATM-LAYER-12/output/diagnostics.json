@@ -1,0 +1,6 @@
+[
+  {
+    "severity": "warning",
+    "message": "Empty at-rule query in global CSS: \"@supports\""
+  }
+]

@@ -43,9 +43,9 @@ NEO-COND-04 alongside PRIM-07/TOKEN-05).
   design; authors write raw `&`/at-rule keys instead.
 - W4 DELTA-1: `forced-colors`, `@supports` condition keys, `(hover: hover)`
   MQs. Zero-count in the lib sheet (F11); `_print`/`_motionReduce`/`_osDark`
-  are covered, these three have no lib author. `@supports` keys additionally
-  cite RS-15 (COND-15 blocked: the engine mis-lowers them to selector
-  fragments). (w4-synthesis C-DELTA-1.)
+  are covered, these three have no lib author. `@supports` keys landed
+  with RS-15 (COND-15 green, ATM-COND-19); the absence stands on the
+  zero count alone. (w4-synthesis C-DELTA-1.)
 - W4 DELTA-2: zero-count pseudos `:nth-child`, `:empty`, `:invalid`,
   `:visited`, `:indeterminate`. Zero-count in the lib sheet (F13); the COND
   catalog is positive-only. (w4-synthesis C-DELTA-2.)

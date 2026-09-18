@@ -1,0 +1,9 @@
+@layer unit-global-numerics {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  body > p, body > ul { margin: 0 }
+  :is(body > p) ~ :is(body > p), :is(body > ul) ~ :is(body > ul) { margin-top: 10px }
+  .dims { width: 42px; z-index: 5; line-height: 2; opacity: 1; --foo: 42 }
+  .strs { margin-top: 10px; width: 42px; z-index: 5; opacity: 1; --bar: 42 }
+}
+}

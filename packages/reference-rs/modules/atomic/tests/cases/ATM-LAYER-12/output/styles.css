@@ -1,0 +1,16 @@
+@layer layer-top-at-rules {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  @media (min-width: 640px) {
+    body, :root { color: red }
+  }
+  @supports (display: grid) {
+    @media (min-width: 640px) {
+      body { color: blue }
+    }
+  }
+  @media (min-width: 640px) {
+    body { color: green }
+  }
+}
+}

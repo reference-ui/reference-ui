@@ -83,3 +83,98 @@ fn test_compile_rejects_tsx_recipe_duplicating_spec_class_name() {
     assert!(res.stylesheet.contains("display: inline-flex;"));
     assert!(!res.stylesheet.contains("display: block;"));
 }
+
+fn compile_tsx(path: &str, content: &str) -> crate::CompileResult {
+    let req = CompileRequest {
+        files: Some(vec![VirtualSource {
+            path: path.to_string(),
+            content: content.to_string(),
+        }]),
+        base_system: crate::BaseSystem::lib_fixture().clone(),
+        ..CompileRequest::default()
+    };
+    compile(&req).expect("compile tsx")
+}
+
+fn single_error(res: &crate::CompileResult) -> &crate::Diagnostic {
+    assert_eq!(res.diagnostics.len(), 1, "{:?}", res.diagnostics);
+    &res.diagnostics[0]
+}
+
+#[test]
+fn test_recipe_without_args_errors_at_call() {
+    let res = compile_tsx(
+        "src/no-arg.ts",
+        "import { recipe } from '@reference-ui/react'\nconst r = recipe()\nvoid r\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("inline object literal"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/no-arg.ts"));
+    assert_eq!(diag.line, Some(2));
+    assert_eq!(diag.column, Some(11));
+}
+
+#[test]
+fn test_recipe_dynamic_arg_errors_at_arg() {
+    let res = compile_tsx(
+        "src/dyn.ts",
+        "import { recipe } from '@reference-ui/react'\nconst dyn = { className: 'dyn' }\nconst r = recipe(dyn)\nvoid r\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("inline object literal"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/dyn.ts"));
+    assert_eq!(diag.line, Some(3));
+    assert_eq!(diag.column, Some(18));
+}
+
+#[test]
+fn test_recipe_spread_errors_at_spread() {
+    let res = compile_tsx(
+        "src/spread.ts",
+        "import { recipe } from '@reference-ui/react'\nconst base = {}\nconst r = recipe({ className: 'x', ...base })\nvoid r\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("must not contain spread"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/spread.ts"));
+    assert_eq!(diag.line, Some(3));
+    assert_eq!(diag.column, Some(36));
+}
+
+#[test]
+fn test_recipe_missing_class_name_errors_at_object() {
+    let res = compile_tsx(
+        "src/no-name.ts",
+        "import { recipe } from '@reference-ui/react'\nconst r = recipe({ base: {} })\nvoid r\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("explicit string-literal"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/no-name.ts"));
+    assert_eq!(diag.line, Some(2));
+    assert_eq!(diag.column, Some(18));
+}
+
+#[test]
+fn test_recipe_dynamic_class_name_errors_at_value() {
+    let res = compile_tsx(
+        "src/dyn-name.ts",
+        "import { recipe } from '@reference-ui/react'\nconst name = 'x'\nconst r = recipe({ className: name })\nvoid r\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("non-empty string literal"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/dyn-name.ts"));
+    assert_eq!(diag.line, Some(3));
+    assert_eq!(diag.column, Some(31));
+}
+
+#[test]
+fn test_recipe_duplicate_errors_at_second_call() {
+    let res = compile_tsx(
+        "src/dup.ts",
+        "import { recipe } from '@reference-ui/react'\nconst a = recipe({ className: 'dup' })\nconst b = recipe({ className: 'dup' })\nvoid a\nvoid b\n",
+    );
+    let diag = single_error(&res);
+    assert!(diag.message.contains("Duplicate recipe className 'dup'"), "{}", diag.message);
+    assert_eq!(diag.file.as_deref(), Some("src/dup.ts"));
+    assert_eq!(diag.line, Some(3));
+    assert_eq!(diag.column, Some(11));
+}

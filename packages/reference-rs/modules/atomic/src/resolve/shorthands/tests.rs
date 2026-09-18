@@ -34,6 +34,31 @@ fn test_atomic_shorthand_tripwire() {
             "Emitted longhands for '{prop}' must match canon longhands"
         );
     }
+
+    let pair_props = [
+        "borderTopRadius",
+        "borderRightRadius",
+        "borderBottomRadius",
+        "borderLeftRadius",
+        "borderStartRadius",
+        "borderEndRadius",
+    ];
+    for prop in pair_props {
+        let canon_prop = canon::resolve_canonical_prop(prop);
+        let canon_longhands = canon::native_longhands_for_prop(canon_prop)
+            .unwrap_or_else(|| panic!("canon must define longhands for {canon_prop}"));
+        let expanded = expand_shorthand(prop, &AtomValue::String("2r".into()))
+            .unwrap_or_else(|| panic!("expand_shorthand failed for {prop}"));
+        let emitted_names: Vec<&str> = expanded.iter().map(|(p, _)| p.as_ref()).collect();
+        assert_eq!(
+            emitted_names, canon_longhands,
+            "Emitted longhands for '{prop}' must match canon longhands"
+        );
+        assert!(
+            expanded.iter().all(|(_, v)| v.class_name_str() == "2r"),
+            "Pair '{prop}' must copy one value to both corners"
+        );
+    }
 }
 
 #[test]
@@ -116,6 +141,20 @@ fn test_dimensional_shorthand_token_counts() {
     assert_eq!(two[2].1.class_name_str(), "10px");
     assert_eq!(two[3].0.as_ref(), "paddingLeft");
     assert_eq!(two[3].1.class_name_str(), "20px");
+}
+
+#[test]
+fn test_real_radius_properties_never_expand() {
+    for prop in [
+        "borderRadius",
+        "borderTopLeftRadius",
+        "borderStartStartRadius",
+    ] {
+        assert!(
+            expand_shorthand(prop, &AtomValue::String("2r".into())).is_none(),
+            "Real property '{prop}' must pass through, never expand"
+        );
+    }
 }
 
 #[test]

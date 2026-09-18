@@ -75,7 +75,7 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     '/** Compiled style prop names: the styling keys every primitive accepts. */',
     `export type StylePropName = ${union}`,
     'export type StyleProps = { [K in StylePropName]?: unknown }',
-    'export type PrimitiveCssProp = Record<string, unknown>',
+    'export type PrimitiveCssProp = Record<string, unknown> | Array<Record<string, unknown>>',
     '',
     '/** Every platform tag the generated primitives cover. */',
     `export type PrimitiveTag = ${primitiveTagUnion()}`,

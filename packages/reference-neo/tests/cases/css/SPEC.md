@@ -53,6 +53,8 @@ on it; MERGE-06 proves the diagnostic). D15: `token()` is out.
 | `@scope` | Panda `stringify.test.ts` rewrites `&` under `@scope`; the dialect never emits `@scope` and the lib sheet has none. |
 | `token()` string helper | D15. Neither core nor lib exports it; `{path}` refs are the only ref spelling (TOKEN-01/12, CSS-06). |
 | Capital-W vendor keys (`Webkit*`) | Panda `hypenate-property` maps `WebkitBoxOrient` to the dashless non-property browsers drop; Neo drops them at compile instead (zero diagnostics either way). Author the lowercase-w spelling, which passes through hyphenated (P18). No lib/matrix author uses capital-W. |
+| Numerics lower to px | Panda numeric→token lowering is not dialect: `mx: -2`→`-2px`, `padding: 4`→`4px`, recipe `'4'`→`4px` (S1 probes A1/A3/I1). Unitless and custom props stay bare (A2). |
+| No autoprefixer | Vendor properties print exactly as authored (C2 lowercase-w hyphenates, H10 `user-select` stays unprefixed); Panda's prefixed expectations are not parity. |
 
 ## Out of scope (Panda, not Reference's dialect)
 

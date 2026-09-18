@@ -1,0 +1,9 @@
+[
+  {
+    "severity": "error",
+    "message": "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <Foo>",
+    "file": "input/src/App.tsx",
+    "line": 2,
+    "column": 10
+  }
+]

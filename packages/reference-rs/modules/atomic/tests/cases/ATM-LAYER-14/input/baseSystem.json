@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-keyframe-alias",
+  "tokens": {
+    "sizes": {
+      "4": {
+        "value": "1rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {
+    "roll": {
+      "from": {
+        "h": "4"
+      },
+      "to": {
+        "h": "8"
+      }
+    }
+  },
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

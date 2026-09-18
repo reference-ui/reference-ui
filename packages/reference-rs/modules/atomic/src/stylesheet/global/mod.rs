@@ -18,12 +18,15 @@ pub fn has_printable_reset(system: &BaseSystem) -> bool {
 }
 
 /// Append `@layer reset { ... }` when the system defines reset or preflight fragments.
-pub fn append_reset_css(out: &mut String, system: &BaseSystem) {
+pub fn append_reset_css(
+    out: &mut String,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
     if !has_printable_reset(system) {
         return;
     }
-    let mut diagnostics = Vec::new();
-    let mut walker = GlobalWalker::new(system, &mut diagnostics);
+    let mut walker = GlobalWalker::new(system, diagnostics);
     for fragment in &system.global_css {
         if is_reset_fragment(&fragment.source) {
             walker.walk_rules(&fragment.rules);
@@ -38,9 +41,12 @@ pub fn append_reset_css(out: &mut String, system: &BaseSystem) {
 }
 
 /// Append global CSS fragment rules into `@layer global`.
-pub fn append_global_fragment_rules(out: &mut String, system: &BaseSystem) {
-    let mut diagnostics = Vec::new();
-    let mut walker = GlobalWalker::new(system, &mut diagnostics);
+pub fn append_global_fragment_rules(
+    out: &mut String,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
+    let mut walker = GlobalWalker::new(system, diagnostics);
     for fragment in &system.global_css {
         if !is_reset_fragment(&fragment.source) {
             walker.walk_rules(&fragment.rules);

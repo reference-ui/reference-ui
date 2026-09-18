@@ -7,7 +7,7 @@ use base_system::{BaseSystem, GlobalDeclarationValue};
 
 use crate::atom::AtomValue;
 use crate::diagnostics::{Diagnostic, DiagnosticLocation};
-use crate::resolve::{font, rhythm, tokens, ResolveSession};
+use crate::resolve::{font, rhythm, tokens, unit, ResolveSession};
 
 /// Lowering session holding design system references and diagnostic accumulators.
 pub struct ValueSession<'a> {
@@ -32,6 +32,12 @@ pub fn lower_declaration(
     }
     if prop == "weight" {
         return lower_weight_macro(val, session.system);
+    }
+    if !prop.starts_with("--") && !canon::is_known_style_prop(prop) {
+        session.diagnostics.push(Diagnostic::warning(format!(
+            "Unknown style property in global CSS: \"{prop}\""
+        )));
+        return Vec::new();
     }
     lower_standard_property(prop, val, session)
 }
@@ -120,7 +126,7 @@ fn lower_standard_property(
             };
             vec![(css_prop, final_val)]
         }
-        GlobalDeclarationValue::Number(n) => vec![(css_prop, n.to_string())],
+        GlobalDeclarationValue::Number(n) => vec![(css_prop, lower_number_value(prop, n))],
         GlobalDeclarationValue::Boolean(_) => {
             session.diagnostics.push(Diagnostic::warning(format!(
                 "Boolean value is not allowed on standard property \"{prop}\""
@@ -129,6 +135,14 @@ fn lower_standard_property(
         }
         _ => Vec::new(),
     }
+}
+
+/// Unitize a bare global number through the shared `css()` unit policy:
+/// dimensional props gain `px`, unitless-stay props and zero stay bare.
+fn lower_number_value(prop: &str, n: &serde_json::Number) -> String {
+    unit::resolve_numeric_value(prop, &n.to_string())
+        .css_value_str()
+        .to_string()
 }
 
 fn resolve_string_val(
@@ -140,15 +154,37 @@ fn resolve_string_val(
     if prop.starts_with("--") {
         Some(resolve_token_reference(s, session.system))
     } else {
-        let rhythm_val = rhythm::resolve_rhythm(s);
+        let (stem, unitized) = unitized_stem(prop, s);
+        let rhythm_val = rhythm::resolve_rhythm(&stem);
         let mut resolve_session = ResolveSession {
             system: session.system,
             diagnostics: &mut *session.diagnostics,
             location: DiagnosticLocation::default(),
         };
-        tokens::resolve_token_value(css_prop, &rhythm_val, &mut resolve_session)
-            .map(|resolved| resolved.into_owned())
+        tokens::resolve_token_value(css_prop, &rhythm_val, &mut resolve_session).map(|resolved| {
+            if resolved.as_ref() != stem {
+                resolved.into_owned()
+            } else {
+                unitized
+            }
+        })
     }
+}
+
+/// `css()` unit policy for global strings: canonical numerics gain `px` on
+/// dimensional props (color/font carve-outs match `css()`); tokens still win
+/// on the stem when the scale holds the value. Returns (token stem, fallback).
+fn unitized_stem(prop: &str, s: &str) -> (String, String) {
+    if !canon::is_color_prop(prop) && prop != "font" && prop != "fontFamily" {
+        if let Some(num) = unit::parse_canonical_number(s) {
+            let css = unit::resolve_numeric_value(prop, num);
+            return (
+                css.class_name_str().to_string(),
+                css.css_value_str().to_string(),
+            );
+        }
+    }
+    (s.to_string(), s.to_string())
 }
 
 fn resolve_token_reference(raw: &str, system: &BaseSystem) -> String {
@@ -166,24 +202,5 @@ fn to_css_property(prop: &str) -> String {
     if prop.starts_with("--") {
         return prop.to_string();
     }
-    let canon_decl = canon::to_css_declaration_property(prop);
-    if canon_decl != prop || canon::is_known_style_prop(prop) {
-        return canon_decl.to_string();
-    }
-    kebab_case(prop)
-}
-
-fn kebab_case(prop: &str) -> String {
-    let mut out = String::with_capacity(prop.len() + 4);
-    for (i, ch) in prop.chars().enumerate() {
-        if ch.is_ascii_uppercase() {
-            if i > 0 {
-                out.push('-');
-            }
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push(ch);
-        }
-    }
-    out
+    canon::to_css_declaration_property(prop).to_string()
 }

@@ -8,7 +8,7 @@ import type * as React from 'react';
 /** Styling keys every primitive accepts. Worlds promise shape, not membership. */
 export type StylePropName = string;
 export type StyleProps = { [K in StylePropName]?: unknown };
-export type PrimitiveCssProp = Record<string, unknown>;
+export type PrimitiveCssProp = Record<string, unknown> | Array<Record<string, unknown>>;
 
 /** Every platform tag the generated primitives cover. */
 export type PrimitiveTag = 'a' | 'abbr' | 'address' | 'area' | 'article' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'blockquote' | 'br' | 'button' | 'canvas' | 'caption' | 'cite' | 'code' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dialog' | 'div' | 'dl' | 'dt' | 'em' | 'embed' | 'fieldset' | 'figcaption' | 'figure' | 'footer' | 'form' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'header' | 'hgroup' | 'hr' | 'i' | 'iframe' | 'img' | 'input' | 'ins' | 'kbd' | 'label' | 'legend' | 'li' | 'main' | 'map' | 'mark' | 'menu' | 'meter' | 'nav' | 'object' | 'ol' | 'optgroup' | 'option' | 'output' | 'p' | 'picture' | 'pre' | 'progress' | 'q' | 'rp' | 'rt' | 'ruby' | 's' | 'samp' | 'search' | 'section' | 'select' | 'small' | 'source' | 'span' | 'strong' | 'sub' | 'summary' | 'sup' | 'svg' | 'table' | 'tbody' | 'td' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'time' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr';

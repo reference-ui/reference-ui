@@ -144,9 +144,17 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
 
     let atom_count = atom_set.len();
     let css = build_css_runtime(&atom_set, &system.name);
-    let stylesheet = stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes);
-    let portable_stylesheet =
-        stylesheet::build_portable_stylesheet_with(&atom_set, system, &compiled_recipes);
+    let stylesheet =
+        stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes, &mut diagnostics);
+    // Portable build re-walks the same fragments; its diagnostics sink here
+    // so global warnings surface once from the primary build above.
+    let mut portable_sink = Vec::new();
+    let portable_stylesheet = stylesheet::build_portable_stylesheet_with(
+        &atom_set,
+        system,
+        &compiled_recipes,
+        &mut portable_sink,
+    );
     let recipe_tables = compiled_recipes
         .into_iter()
         .map(|recipe| recipe.table)
@@ -258,7 +266,7 @@ fn compile_recipes(
     let mut valid = Vec::new();
     for recipe in spec_recipes.iter().chain(extracted.iter()) {
         if !seen.insert(&recipe.class_name) {
-            diagnostics.push(Diagnostic::error(format!(
+            diagnostics.push(recipe.location.error(format!(
                 "Duplicate recipe className '{}' within system '{}'",
                 recipe.class_name, system.name
             )));

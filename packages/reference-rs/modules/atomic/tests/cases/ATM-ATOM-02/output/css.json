@@ -1,4 +1,6 @@
 {
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
   "color:blue.600": "@reference-ui/lib__c_blue.600",
   "mt:2r": "@reference-ui/lib__mt_2r",
   "opacity:0.5": "@reference-ui/lib__op_0.5"

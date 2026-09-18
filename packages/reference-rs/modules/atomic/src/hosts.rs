@@ -1,7 +1,8 @@
 //! Explicit and traced JSX host resolution for StyleProps gating.
 //! Unions caller-supplied `jsxHosts` with styletrace-traced component names so configured hosts and
 //! generated primitives extract without a file-local import. The declaration root threads through as
-//! styletrace's sync-root hint; an unavailable graph yields no names and the empty set keeps scanning.
+//! styletrace's sync-root hint; an unavailable graph yields no names and extraction fails closed
+//! with a missing-graph diagnostic (ATM-SITE-13), never a scan.
 
 use std::collections::HashSet;
 use std::path::Path;

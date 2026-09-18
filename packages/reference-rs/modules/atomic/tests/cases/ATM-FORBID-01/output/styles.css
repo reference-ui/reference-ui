@@ -1,28 +1,19 @@
 @layer hash-class-tripwire {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer global {
-    :root {
-      --spacing-root: 0.25rem;
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-n300: #d4d4d8;
   }
-  @layer tokens {
-    :root,
-    [data-color-mode='light'] {
-      --colors-n300: #d4d4d8;
-    }
-    [data-color-mode='dark'] {
-      --colors-n300: #3f3f46;
-    }
+  [data-color-mode=dark] {
+    --colors-n300: #3f3f46;
   }
-  @layer utilities {
-    .hash-class-tripwire__bg_n300 {
-      background: var(--colors-n300);
-    }
-    .hash-class-tripwire__c_red {
-      color: red;
-    }
-    .hash-class-tripwire__mt_2r {
-      margin-top: calc(2 * var(--spacing-root));
-    }
-  }
+}
+@layer utilities {
+  .hash-class-tripwire__bg_n300 { background: var(--colors-n300); }
+  .hash-class-tripwire__c_red { color: red; }
+  .hash-class-tripwire__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}
 }

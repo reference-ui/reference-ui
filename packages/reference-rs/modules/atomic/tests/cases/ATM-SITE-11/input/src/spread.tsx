@@ -1,4 +1,4 @@
-import { css } from '@reference-ui/react'
+import { css, Div } from '@reference-ui/react'
 
 const base = { mt: '2r', bg: 'n300' }
 const extra = { p: '1r' }

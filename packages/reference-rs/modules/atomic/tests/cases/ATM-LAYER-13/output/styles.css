@@ -1,0 +1,19 @@
+@layer layer-global-breakpoints {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  .btn { width: 40px; line-height: 2; margin: 0 }
+  @media (min-width: 1024px) {
+    .btn { width: 90px }
+  }
+  @media (min-width: 640px) {
+    .btn { font-size: 12px }
+  }
+  [data-color-mode=dark] .btn { margin: 8px }
+  @media (max-width: 767.98px) {
+    .btn { margin: 6px }
+  }
+  @media (min-width: 640px) and (max-width: 767.98px) {
+    .btn { border-width: 2px }
+  }
+}
+}

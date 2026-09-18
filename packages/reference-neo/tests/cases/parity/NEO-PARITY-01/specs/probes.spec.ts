@@ -49,6 +49,77 @@ async function checkSiblings(page: SpecPage): Promise<void> {
   assert.equal(await computed(page, '#p2-second', (el) => getComputedStyle(el).marginLeft), '8px');
 }
 
+// P5: the mixed supports+container arm paints brand under the wide region
+// only; the narrow root keeps ink, and the empty-query node keeps ink (the
+// engine refuses the queryless arm with a warning diagnostic — RS-29 landed
+// as ATM-COND-21 — so no rule ever targets it; sheet.spec.ts pins the
+// absence of the bare `@supports {` block).
+async function checkSupports(page: SpecPage): Promise<void> {
+  assert.equal((await paint(page, '#p5')).color, 'rgb(124, 58, 237)');
+  assert.equal((await paint(page, '#p5-narrow')).color, 'rgb(17, 17, 17)');
+  assert.equal((await paint(page, '#p5-empty')).color, 'rgb(17, 17, 17)');
+}
+
+// P4: the pair shorthands expand to corners — all four physical corners
+// paint 8px and all four logical corners read back 8px (RS-25 landed as
+// ATM-SHORT-09).
+async function checkPairRadius(page: SpecPage): Promise<void> {
+  assert.equal(await computed(page, '#p4', (el) => getComputedStyle(el).borderTopLeftRadius), '8px');
+  assert.equal(await computed(page, '#p4', (el) => getComputedStyle(el).borderTopRightRadius), '8px');
+  assert.equal(await computed(page, '#p4', (el) => getComputedStyle(el).borderBottomLeftRadius), '8px');
+  assert.equal(await computed(page, '#p4', (el) => getComputedStyle(el).borderBottomRightRadius), '8px');
+  assert.equal(
+    await computed(page, '#p4-logical', (el) => getComputedStyle(el).getPropertyValue('border-start-start-radius')),
+    '8px',
+  );
+  assert.equal(
+    await computed(page, '#p4-logical', (el) => getComputedStyle(el).getPropertyValue('border-start-end-radius')),
+    '8px',
+  );
+  assert.equal(
+    await computed(page, '#p4-logical', (el) => getComputedStyle(el).getPropertyValue('border-end-start-radius')),
+    '8px',
+  );
+  assert.equal(
+    await computed(page, '#p4-logical', (el) => getComputedStyle(el).getPropertyValue('border-end-end-radius')),
+    '8px',
+  );
+}
+
+// P14: the gradient text paints the clip trio — transparent fill over the
+// resolved gradient with the text clip (RS-22 landed as ATM-SHORT-08).
+async function checkGradient(page: SpecPage): Promise<void> {
+  assert.equal((await paint(page, '#p14')).color, 'rgba(0, 0, 0, 0)');
+  const image = await computed(page, '#p14', (el) => getComputedStyle(el).backgroundImage);
+  assert.ok(image.includes('linear-gradient'), `gradient resolves a background image, got ${image}`);
+  assert.equal(
+    await computed(page, '#p14', (el) => getComputedStyle(el).getPropertyValue('-webkit-background-clip')),
+    'text',
+  );
+}
+
+// P15: the array css prop paints both elements — blue ink from the first,
+// red field from the second (RS-23 landed as ATM-SITE-19; NEO-PRIM-11
+// carried the arrays through the split to css() merge).
+async function checkArrayCss(page: SpecPage): Promise<void> {
+  assert.equal((await paint(page, '#p15')).color, 'rgb(147, 197, 253)');
+  assert.equal((await paint(page, '#p15')).background, 'rgb(239, 68, 68)');
+}
+
+// P19: bare numerics in globalCss unitize — the 10 margin and 42 width
+// paint in px (RS-26 landed as ATM-UNIT-03; unitless stays are sheet-pinned).
+async function checkNumeric(page: SpecPage): Promise<void> {
+  assert.equal(await computed(page, '#p19', (el) => getComputedStyle(el).marginTop), '10px');
+  assert.equal(await computed(page, '#p19', (el) => getComputedStyle(el).width), '42px');
+}
+
+// P20: top-level at-rules brace and gate — the matching query paints
+// brand while the far query holds ink (RS-27 landed as ATM-LAYER-12).
+async function checkTopMedia(page: SpecPage): Promise<void> {
+  assert.equal((await paint(page, '#p20')).color, 'rgb(124, 58, 237)');
+  assert.equal((await paint(page, '#p20-far')).color, 'rgb(17, 17, 17)');
+}
+
 // P6: the inline style consumes the :root var the globalCss rule emitted.
 async function checkStyleVar(page: SpecPage): Promise<void> {
   assert.equal(await computed(page, '#p6', (el) => getComputedStyle(el).width), '24px');
@@ -140,6 +211,21 @@ async function checkCensusHelpers(page: SpecPage): Promise<void> {
   assert.equal(await computed(page, '#probe-font', (el) => getComputedStyle(el).fontWeight), '700');
 }
 
+// P21: breakpoint keys lower through the scale's queries — under the
+// narrow viewport the base width and the sm arm paint, under the wide one
+// the lg arm wins (RS-28 landed as ATM-LAYER-13). Moves the viewport, so
+// it sits directly before P9 and nothing between them reads the default.
+async function checkBreakpoints(page: SpecPage): Promise<void> {
+  const node = page.locator('#p21');
+  await node.waitFor();
+  await page.setViewportSize({ width: 900, height: 700 });
+  assert.equal(await node.evaluate((el) => getComputedStyle(el).width), '40px');
+  assert.equal(await node.evaluate((el) => getComputedStyle(el).fontSize), '12px');
+  assert.equal(await node.evaluate((el) => getComputedStyle(el).color), 'rgb(147, 197, 253)');
+  await page.setViewportSize({ width: 1100, height: 800 });
+  assert.equal(await node.evaluate((el) => getComputedStyle(el).width), '90px');
+}
+
 // P9 last: the height-threshold recipe branch flips with the viewport.
 async function checkHeightBranch(page: SpecPage): Promise<void> {
   const height = page.locator('#p9');
@@ -153,11 +239,14 @@ async function checkHeightBranch(page: SpecPage): Promise<void> {
 }
 
 export default async function run({ page }: SpecInput): Promise<void> {
-  // P4 cites RS-25 (radius pair shorthands emit non-properties, so the
-  // world authors none; sheet.spec.ts guards the avoidance). Singles still
-  // paint: the token and rhythm radii in checkCensusHelpers.
   await checkPortalIsland(page);
   await checkSiblings(page);
+  await checkSupports(page);
+  await checkPairRadius(page);
+  await checkGradient(page);
+  await checkArrayCss(page);
+  await checkNumeric(page);
+  await checkTopMedia(page);
   await checkStyleVar(page);
   await checkNamedRegion(page);
   await checkAttrHover(page);
@@ -166,5 +255,6 @@ export default async function run({ page }: SpecInput): Promise<void> {
   await checkDarkMix(page);
   await checkPassthroughs(page);
   await checkCensusHelpers(page);
+  await checkBreakpoints(page);
   await checkHeightBranch(page);
 }

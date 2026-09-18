@@ -1,0 +1,10 @@
+import { Div } from '@reference-ui/react'
+
+export function App() {
+  return (
+    <>
+      <Div border />
+      <Div color={true} />
+    </>
+  )
+}

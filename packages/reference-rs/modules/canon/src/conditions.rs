@@ -25,6 +25,7 @@ pub const NAMED_CONDITIONS: &[&str] = &[
     "_enabled",
     "_even",
     "_expanded",
+    "_file",
     "_first",
     "_firstOfType",
     "_focus",

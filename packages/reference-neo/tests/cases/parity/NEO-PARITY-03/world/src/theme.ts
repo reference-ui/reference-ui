@@ -75,7 +75,7 @@ globalCss({
     backgroundColor: '{colors.ui.file.field}',
   },
   '.ref-range::-webkit-slider-thumb': {
-    '-webkit-appearance': 'none',
+    webkitAppearance: 'none',
     appearance: 'none',
     backgroundColor: '{colors.ui.progress.bar.foreground}',
     width: '24px',

@@ -1,0 +1,5 @@
+{
+  "_checked:color:green.500": "@reference-ui/lib__checked:c_green.500",
+  "_file:color:blue.500": "@reference-ui/lib__file:c_blue.500",
+  "_placeholder:color:red.500": "@reference-ui/lib__placeholder:c_red.500"
+}

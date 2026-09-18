@@ -21,14 +21,16 @@ pick()`) warn and skip without erasing static siblings.
 ## Engine stations
 
 All confirmed present 2026-09-17 (`ls` + README in
-`packages/reference-rs/modules/atomic/tests/cases/`): ATM-SITE-01..12,
-ATM-SITE-14/15/16, ATM-LEAF-07, ATM-FORBID-02, ATM-COND-11. Key leans:
+`packages/reference-rs/modules/atomic/tests/cases/`): ATM-SITE-01..18
+(13 landed with RS-5, 17 with the RS-14 station, 18 with RS-19),
+ATM-LEAF-07, ATM-FORBID-02, ATM-COND-11. Key leans:
 SITE-05 (both ternary arms), SITE-06/11/16 (const / spreads /
 cross-file), SITE-08 (styletrace + imports, never PascalCase),
 SITE-10/15 (import-bound identity), SITE-14 (css prop), LEAF-07 +
 FORBID-02 (dynamic warn-and-skip), COND-11 (string `@media` is an
-at-rule). **ATM-SITE-13 is absent** (no folder): the empty-host-set
-fail-closed diagnostic is RS-5, and NEO-SITE-14 is `blocked-on-rs`.
+at-rule). ATM-SITE-13 is the empty-host-set fail-closed diagnostic
+(RS-5 landed), proven by NEO-SITE-14; ATM-SITE-18 is the boolean
+`border` macro (RS-19 landed), proven by NEO-SITE-13.
 
 ## Decisions
 
@@ -55,6 +57,17 @@ list travels on the frozen request, not a private shape.
   write `{path}` refs (TOKEN group).
 - **`css.raw`**: Panda composition API; Neo has `css.object()` plus
   plain objects.
+- **Whole-object `css(styles)`**: passing an entire const object as the
+  call argument emits nothing (N0 2026-09-17; RS-14 covers arms/member/
+  spread only). Authors inline, spread, or select members (SITE-01/02/03).
+  The silent 0/0/0/0 is documented, not diagnosed — a future RS row may
+  claim it.
+- **Element-access refusal**: reads (`map['k']`, `map[key]`, computed map
+  keys) refuse with a `Dynamic non-literal expression` diagnostic (S1
+  probes O1/O2/O3); member access is the only indirection (SITE-02).
+- **Computed-key refusal**: computed keys in style objects and
+  template-literal values refuse with diagnostics (O4 `Dynamic computed
+  property key…`, O8 `Dynamic non-literal template expression…`).
 
 ## Out of scope (Panda, not Reference)
 

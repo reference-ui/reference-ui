@@ -14,17 +14,18 @@ pub enum When {
     Breakpoint(BreakpointWhen),
     /// Catalog `_` key (`_hover`, `_dark`, `_osDark`).
     Pseudo(PseudoWhen),
-    /// Authored `@media` / `@container` query string (including `r/` stamps).
+    /// Authored `@media` / `@container` / `@supports` query string (including `r/` stamps).
     AtRule(AtRuleWhen),
-    /// Arbitrary `&` selector, or a non-media `@` fallback.
+    /// Arbitrary `&` selector, or a non-at-rule `@` fallback.
     Selector(SelectorWhen),
 }
 
-/// Borrowed wrap used by the stylesheet printer. Emit walks every Media/Container.
+/// Borrowed wrap used by the stylesheet printer. Emit walks every Media/Container/Supports.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WhenKind<'a> {
     Media(&'a str),
     Container(&'a str),
+    Supports(&'a str),
     Selector(&'a str),
 }
 
@@ -138,6 +139,8 @@ impl StoredWrap {
 fn at_rule_kind(query: &str) -> WhenKind<'_> {
     if query.starts_with("@media") {
         WhenKind::Media(query)
+    } else if query.starts_with("@supports") {
+        WhenKind::Supports(query)
     } else {
         WhenKind::Container(query)
     }

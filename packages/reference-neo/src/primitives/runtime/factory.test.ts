@@ -5,7 +5,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import type { SystemStyleObject } from '../../runtime/css/css.ts'
+import type { CssStyles } from '../../runtime/css/css.ts'
 import { createPropSplitter } from './split.ts'
 import { createPrimitive, joinClassName, type CssFn } from './factory.ts'
 
@@ -35,15 +35,23 @@ describe('createPrimitive', () => {
   })
 
   it('resolves style props plus the css prop through css()', () => {
-    const css = vi.fn((_style: SystemStyleObject | undefined, _extra?: SystemStyleObject) => '')
+    const css = vi.fn((_style: CssStyles | CssStyles[], _extra?: CssStyles | CssStyles[]) => '')
     renderToStaticMarkup(
       createElement(makeDiv(css), { color: 'brand', css: { p: 'sm' } })
     )
     expect(css).toHaveBeenCalledWith({ color: 'brand' }, { p: 'sm' })
   })
 
+  it('passes array css props to css() as one merge slot', () => {
+    const css = vi.fn((_style: CssStyles | CssStyles[], _extra?: CssStyles | CssStyles[]) => 'mock-class')
+    renderToStaticMarkup(
+      createElement(makeDiv(css), { css: [{ color: 'blue.300' }, { backgroundColor: 'green.300' }] })
+    )
+    expect(css).toHaveBeenCalledWith({}, [{ color: 'blue.300' }, { backgroundColor: 'green.300' }])
+  })
+
   it('resolves condition arms through css() and keeps them off the element', () => {
-    const css = vi.fn((_style: SystemStyleObject | undefined, _extra?: SystemStyleObject) => 'mock-class')
+    const css = vi.fn((_style: CssStyles | CssStyles[], _extra?: CssStyles | CssStyles[]) => 'mock-class')
     const html = renderToStaticMarkup(
       createElement(makeDiv(css), { color: 'ink', _hover: { color: 'brand' }, id: 'prim' })
     )

@@ -6,12 +6,12 @@
 
 import { createElement } from 'react'
 import type * as React from 'react'
-import type { SystemStyleObject } from '../../runtime/css/css.ts'
+import type { CssStyles } from '../../runtime/css/css.ts'
 import { ColorModeContext, LayerScopeContext, usePrimitiveContext } from './context.ts'
 import type { PropSplitter } from './split.ts'
 
 /** Style resolution seam: the generated entry passes the shared css(). */
-export type CssFn = (...styles: Array<SystemStyleObject | undefined>) => string
+export type CssFn = (...styles: Array<CssStyles | CssStyles[]>) => string
 
 export interface CreatePrimitiveOptions {
   tag: string

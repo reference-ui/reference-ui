@@ -47,6 +47,26 @@ owned in-progress RS rows. Ticked reading: zero `open`/`in-progress`
 census-verified). Items 2–5 tick clean (D1 re-verified: one doc comment
 plus the constant; determinism proven by double-sync diff).
 
+## S3 revisit (Voyage Two, captain, 2026-09-18)
+
+Evidence: 141/141 cases green (138 unique product rows, all `done`, plus
+CSS-02 cross-listed in RESP and 3 harness-infra cases green rowless by
+design per PLAN §8.1); q 0 errors (7 pre-existing warnings); 211 unit
+tests; PARITY-01..04 green; atomic vitest 188/189 with the sole red the
+filed RS-32 stop-line; cargo 215/0.
+
+RS lane: drained. RS-1..RS-19 and RS-22..RS-30 all `done` with stations;
+RS-20/21 R1-cleared and never filed; RS-31 voided (mis-laned, landed as
+NEO-PRIM-11). Only RS-32 open — recipe/globalCss diagnostic hygiene
+(warning dedupe + `fontFamily` lookup); output-correctness-neutral.
+The G6 bite list (RS-14/RS-17/RS-12/RS-16) is fully retired.
+
+Recommendation: ORBIT-ready. The cutover blockers above stand unchanged
+(D19 `types/` leg largest; watch loop, Vite hook, Book, matrix unproven)
+— but every voyage-side item is closed. RS-32 may land before orbit or
+ride it; it changes warning counts only. No switch tonight per standing
+orders; orbit-then-landing is HQ's call at dawn.
+
 ## Recommendation: HARDEN (bounded), then cut over
 
 Do not cut over today: D19 + RS-14/RS-17/RS-12 touch real lib authoring.

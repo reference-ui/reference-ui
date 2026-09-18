@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-keyframe-refs",
+  "tokens": {
+    "colors": {
+      "brand": {
+        "value": "#ff0000"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {
+    "grow": {
+      "from": {
+        "backgroundColor": "{colors.brand}",
+        "width": "1r"
+      },
+      "to": {
+        "backgroundColor": "{colors.brand}",
+        "width": "4r"
+      }
+    }
+  },
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

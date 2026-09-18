@@ -15,8 +15,8 @@ author `outdir` field; output is always `.reference-ui/`.
 
 ## Engine stations (all confirmed: folder + README present)
 
-- `ATM-SITE-*` (SITE-01..12,14,15,16) — extraction wants; SITE-13 has no
-  station folder (known gap, RS-5, owned by SITE not SYNC).
+- `ATM-SITE-*` (SITE-01..16) — extraction wants; SITE-13 landed (RS-5,
+  owned by SITE not SYNC).
 - `ATM-DIAG-01..03` — diagnostics shape; SYNC-11 leans on them.
 - `ATM-ORDER-01..04` — deterministic ordering; SYNC-06 leans on them.
 - `BAS-EXTEND-*` landed (RS-4): upstream adoption proven — SYNC-10 unblocked.
