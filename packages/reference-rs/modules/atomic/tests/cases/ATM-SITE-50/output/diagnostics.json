@@ -1,0 +1,106 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (identifier 'styles')",
+    "file": "input/src/args.ts",
+    "line": 10,
+    "column": 32
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (member expression)",
+    "file": "input/src/args.ts",
+    "line": 11,
+    "column": 30
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (call expression)",
+    "file": "input/src/args.ts",
+    "line": 12,
+    "column": 28
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 2 is not a static style object (logical expression)",
+    "file": "input/src/args.ts",
+    "line": 13,
+    "column": 51
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (spread element)",
+    "file": "input/src/args.ts",
+    "line": 14,
+    "column": 30
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (identifier 'styles')",
+    "file": "input/src/branches.ts",
+    "line": 9,
+    "column": 37
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (identifier 'other')",
+    "file": "input/src/branches.ts",
+    "line": 9,
+    "column": 46
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() argument 1 is not a static style object (call expression)",
+    "file": "input/src/branches.ts",
+    "line": 11,
+    "column": 55
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-JSX-STYLE",
+    "message": "JSX 'css' prop value is not a static style object (identifier 'styles')",
+    "file": "input/src/jsx.tsx",
+    "line": 8,
+    "column": 32
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-JSX-STYLE",
+    "message": "JSX 'css' prop value is not a static style object (logical expression)",
+    "file": "input/src/jsx.tsx",
+    "line": 9,
+    "column": 34
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-JSX-STYLE",
+    "message": "JSX '_hover' prop value is not a static style object (call expression)",
+    "file": "input/src/jsx.tsx",
+    "line": 10,
+    "column": 38
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-JSX-STYLE",
+    "message": "JSX 'css' prop value is not a static style object (spread element)",
+    "file": "input/src/jsx.tsx",
+    "line": 12,
+    "column": 57
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-TAGGED-TEMPLATE-SITE",
+    "message": "tagged template is not a css() site; use css({...})",
+    "file": "input/src/tags.ts",
+    "line": 3,
+    "column": 21
+  }
+]

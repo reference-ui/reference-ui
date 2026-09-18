@@ -1,7 +1,10 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-BREAKPOINT",
     "message": "Unknown breakpoint name in r prop: \"wat\"",
-    "file": "input/src/query.tsx"
+    "file": "input/src/query.tsx",
+    "line": 4,
+    "column": 56
   }
 ]

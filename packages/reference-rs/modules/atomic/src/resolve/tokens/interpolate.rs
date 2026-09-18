@@ -6,7 +6,7 @@
 //! verbatim. A segment that names no token errors and drops the whole atom;
 //! unterminated braces stay raw and warn.
 
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::resolve::ResolveSession;
 
 use super::{format_entry, split_opacity};
@@ -63,10 +63,10 @@ impl<'a, 's> SegmentExpander<'a, 's> {
     fn expand_open(&mut self, rest: &'a str, open: usize) -> Option<&'a str> {
         let after = &rest[open + 1..];
         let Some(close) = after.find('}') else {
-            self.session.diagnostics.push(Diagnostic::warning(format!(
-                "unterminated `{{` in value `{}`",
-                self.source
-            )));
+            self.session.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::UnterminatedBrace,
+                format!("unterminated `{{` in value `{}`", self.source),
+            ));
             self.out.push_str(&rest[open..]);
             return Some("");
         };
@@ -92,10 +92,10 @@ impl<'a, 's> SegmentExpander<'a, 's> {
             self.out.push_str(&rest[open..open + 1 + close + 1]);
             return false;
         }
-        let diagnostic = self
-            .session
-            .location
-            .error(format!("unknown token reference `{{{inner}}}`"));
+        let diagnostic = self.session.location.error(
+            DiagnosticCode::UnknownTokenReference,
+            format!("unknown token reference `{{{inner}}}`"),
+        );
         self.session.diagnostics.push(diagnostic);
         true
     }

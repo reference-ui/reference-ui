@@ -1,17 +1,26 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
     "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/inside/Card.tsx"
+    "file": "input/inside/Card.tsx",
+    "line": 12,
+    "column": 19
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
     "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/inside/Wrapper.tsx"
+    "file": "input/inside/Wrapper.tsx",
+    "line": 11,
+    "column": 21
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
     "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/outside/Other.tsx"
+    "file": "input/outside/Other.tsx",
+    "line": 12,
+    "column": 36
   }
 ]

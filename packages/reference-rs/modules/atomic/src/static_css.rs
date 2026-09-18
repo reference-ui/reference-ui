@@ -9,7 +9,7 @@ use base_system::BaseSystem;
 use smallvec::SmallVec;
 
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::runtime::AuthoredDeclaration;
 
 const STATIC_ORIGIN: &str = "staticCss";
@@ -27,9 +27,10 @@ pub fn append_static_css(ctx: &mut StaticCssContext<'_>) {
     for (key, values) in &ctx.system.static_css {
         let (when, prop) = parse_static_key(key);
         if !canon::is_known_style_prop(prop) {
-            ctx.diagnostics.push(Diagnostic::warning(format!(
-                "Unknown property in staticCss: \"{prop}\""
-            )));
+            ctx.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::UnknownProperty,
+                format!("Unknown property in staticCss: \"{prop}\""),
+            ));
             continue;
         }
         if values.iter().any(|v| v == "*") {
@@ -72,9 +73,10 @@ fn parse_static_key(key: &str) -> (Vec<String>, &str) {
 
 fn expand_wildcard(ctx: &mut StaticCssContext<'_>, when: &[String], prop: &str) {
     let Some(category) = wildcard_category(prop) else {
-        ctx.diagnostics.push(Diagnostic::warning(format!(
-            "Cannot expand wildcard for property \"{prop}\": no associated token category"
-        )));
+        ctx.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::StaticWildcard,
+            format!("Cannot expand wildcard for property \"{prop}\": no associated token category"),
+        ));
         return;
     };
     let target_cat = resolve_system_category(ctx.system, category);

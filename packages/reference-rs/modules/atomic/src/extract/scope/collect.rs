@@ -274,8 +274,7 @@ fn record_specifier(
         }
         ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
             // import * as tokens from './tokens'
-            let binding =
-                import_binding(ns.local.name.as_str(), "*", specifier, ns.local.span);
+            let binding = import_binding(ns.local.name.as_str(), "*", specifier, ns.local.span);
             collector.declare_current(ns.local.name.as_str(), binding);
         }
     }
@@ -303,4 +302,3 @@ fn declaration_kind(kind: VariableDeclarationKind) -> BindingKind {
         VariableDeclarationKind::Using | VariableDeclarationKind::AwaitUsing => BindingKind::Const,
     }
 }
-

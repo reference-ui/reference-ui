@@ -6,15 +6,29 @@
 //! prop object is walked through `resolve/r`, not as a scalar value.
 
 use oxc_ast::ast::{
-    Expression, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue,
-    JSXElementName, JSXExpressionContainer, JSXMemberExpression, JSXOpeningElement, StringLiteral,
+    ArrayExpressionElement, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeValue,
+    JSXExpressionContainer, JSXOpeningElement, StringLiteral,
 };
+use oxc_span::GetSpan;
 use smallvec::{smallvec, SmallVec};
 
 use crate::atom::Want;
-use crate::diagnostics::line_col;
+use crate::diagnostics::{line_col, DiagnosticCode};
+use crate::extract::expressions::walk::{
+    block_value_kind, is_silent_block_value, unwrap_wrapper_target,
+};
 use crate::extract::ExtractContext;
 use canon::{is_condition_prop, is_known_style_prop};
+
+use names::{format_jsx_attribute_name, format_jsx_element_name};
+
+mod names;
+
+/// A JSX style-block prop site (`css`, `r`, or a condition prop) under walk.
+struct StyleAttr<'a> {
+    prop: &'a str,
+    origin: Option<&'a str>,
+}
 
 /// Extract style-bearing attributes from a JSX opening element.
 pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
@@ -85,8 +99,24 @@ fn handle_attribute_value(
             // <Div bg={on ? 'n300' : 'n100'} />
             handle_attribute_container(name, c, origin, ctx);
         }
-        _ => {}
+        _ => {
+            // <Div mt=<span /> /> — element values are never styles; DOM attrs
+            // share the namespace and stay silent (SITE-07/08 stands).
+            if is_style_attr_name(name) {
+                ctx.warn(
+                    val.span(),
+                    DiagnosticCode::NonObjectJsxStyle,
+                    format!("JSX '{name}' prop value is not a static style value (element)"),
+                );
+            }
+        }
     }
+}
+
+/// True for attribute names that carry styles: `css`, `r`, condition props,
+/// and known style props. Every other name is a DOM attribute.
+fn is_style_attr_name(name: &str) -> bool {
+    name == "css" || name == "r" || is_condition_prop(name) || is_known_style_prop(name)
 }
 
 fn handle_attribute_string(
@@ -130,17 +160,20 @@ fn dispatch_attribute_expression(
 ) {
     if name == "css" {
         // <Div css={{ color: 'red', _hover: { bg: 'n200' } }} />
-        walk_style_attr(expr, origin, ctx, &smallvec![]);
+        let site = StyleAttr { prop: name, origin };
+        walk_style_attr(expr, &site, ctx, &smallvec![]);
         return;
     }
     if name == "r" {
         // <Div r={{ 300: { p: '1r' }, md: { mt: '2r' } }} />
-        walk_r_attr(expr, origin, ctx);
+        let site = StyleAttr { prop: name, origin };
+        walk_r_attr(expr, &site, ctx);
         return;
     }
     if is_condition_prop(name) {
         // <Div _hover={{ color: 'red.500' }} />
-        walk_style_attr(expr, origin, ctx, &smallvec![name.into()]);
+        let site = StyleAttr { prop: name, origin };
+        walk_style_attr(expr, &site, ctx, &smallvec![name.into()]);
         return;
     }
     if is_known_style_prop(name) {
@@ -158,53 +191,124 @@ fn dispatch_attribute_expression(
     }
 }
 
-fn walk_r_attr(expr: &Expression<'_>, origin: Option<&str>, ctx: &mut ExtractContext<'_>) {
+fn walk_r_attr(expr: &Expression<'_>, site: &StyleAttr<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div r={{ md: { mt: '2r' } }} />
-    let Expression::ObjectExpression(obj) = expr else {
+    if let Some(inner) = unwrap_wrapper_target(expr) {
+        // <Div r={{...} as const} /> — wrappers erase to the bare block.
+        walk_r_attr(inner, site, ctx);
         return;
-    };
-    let mut obj_ctx = ctx.object_walk(origin, false);
-    crate::extract::expressions::walk_r_object(&mut obj_ctx, obj, &smallvec![]);
+    }
+    match expr {
+        Expression::ObjectExpression(obj) => {
+            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            crate::extract::expressions::walk_r_object(&mut obj_ctx, obj, &smallvec![]);
+        }
+        Expression::ConditionalExpression(cond) => {
+            // <Div r={on ? { md: {...} } : { md: {...} }} /> — both arms walk.
+            walk_r_attr(&cond.consequent, site, ctx);
+            walk_r_attr(&cond.alternate, site, ctx);
+        }
+        _ => {
+            refuse_unless_silent_jsx(expr, site, ctx);
+        }
+    }
 }
 
 fn walk_style_attr(
     expr: &Expression<'_>,
-    origin: Option<&str>,
+    site: &StyleAttr<'_>,
     ctx: &mut ExtractContext<'_>,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
     // <Div css={{ color: 'red' }} />
     // <Div _hover={{ bg: 'n200' }} />
     // <Div css={[{ color: 'blue.300' }, { backgroundColor: 'green.300' }]} />
+    if let Some(inner) = unwrap_wrapper_target(expr) {
+        // <Div css={{...} as const} /> — wrappers erase to the bare block.
+        walk_style_attr(inner, site, ctx, when);
+        return;
+    }
     match expr {
         Expression::ObjectExpression(obj) => {
-            let mut obj_ctx = ctx.object_walk(origin, false);
+            let mut obj_ctx = ctx.object_walk(site.origin, false);
             crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
         }
-        Expression::ArrayExpression(arr) => walk_style_attr_array(arr, origin, ctx, when),
+        Expression::ArrayExpression(arr) => walk_style_attr_array(arr, site, ctx, when),
         Expression::ConditionalExpression(cond) => {
             // <Div _hover={on ? { bg: 'n200' } : { bg: 'n300' }} />
             // Both literal arms compile; the runtime picks (D11, core parity).
-            walk_style_attr(&cond.consequent, origin, ctx, when);
-            walk_style_attr(&cond.alternate, origin, ctx, when);
+            walk_style_attr(&cond.consequent, site, ctx, when);
+            walk_style_attr(&cond.alternate, site, ctx, when);
         }
-        Expression::ParenthesizedExpression(paren) => {
-            walk_style_attr(&paren.expression, origin, ctx, when);
+        _ => {
+            refuse_unless_silent_jsx(expr, site, ctx);
         }
-        _ => {}
     }
+}
+
+/// Diagnose a block value that extracts nothing, unless it skips silently.
+fn refuse_unless_silent_jsx(
+    expr: &Expression<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+) {
+    if !is_silent_block_value(expr) {
+        refuse_style_attr(expr, site, ctx);
+    }
+}
+
+/// Diagnose a JSX style-block value that is not a static style object.
+fn refuse_style_attr(expr: &Expression<'_>, site: &StyleAttr<'_>, ctx: &mut ExtractContext<'_>) {
+    // <Div css={styles} />  /  <Div _hover={on && {...}} />
+    ctx.warn(
+        expr.span(),
+        DiagnosticCode::NonObjectJsxStyle,
+        format!(
+            "JSX '{}' prop value is not a static style object ({})",
+            site.prop,
+            block_value_kind(expr)
+        ),
+    );
 }
 
 fn walk_style_attr_array(
     arr: &oxc_ast::ast::ArrayExpression<'_>,
-    origin: Option<&str>,
+    site: &StyleAttr<'_>,
     ctx: &mut ExtractContext<'_>,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
     // <Div css={[{ color: 'blue.300' }, { backgroundColor: 'green.300' }]} />
     for elem in &arr.elements {
-        if let Some(elem_expr) = elem.as_expression() {
-            walk_style_attr(elem_expr, origin, ctx, when);
+        walk_style_attr_element(elem, site, ctx, when);
+    }
+}
+
+/// Walk one merge-list element of a JSX style-block array.
+fn walk_style_attr_element(
+    elem: &ArrayExpressionElement<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    match elem {
+        ArrayExpressionElement::SpreadElement(spread) => {
+            // <Div css={[{...}, ...rest]} /> — Ph1 refuses; Ph3 flattens.
+            ctx.warn(
+                spread.span,
+                DiagnosticCode::NonObjectJsxStyle,
+                format!(
+                    "JSX '{}' prop value is not a static style object (spread element)",
+                    site.prop
+                ),
+            );
+        }
+        ArrayExpressionElement::Elision(_) => {
+            // Holes skip silently.
+        }
+        _ => {
+            if let Some(elem_expr) = elem.as_expression() {
+                walk_style_attr(elem_expr, site, ctx, when);
+            }
         }
     }
 }
@@ -237,68 +341,4 @@ fn tag_may_carry_styles(opening: &JSXOpeningElement<'_>) -> bool {
         }
         JSXAttributeItem::SpreadAttribute(_) => true,
     })
-}
-
-fn format_jsx_element_name(name: &JSXElementName<'_>) -> String {
-    match name {
-        JSXElementName::Identifier(ident) => {
-            // <div />
-            ident.name.to_string()
-        }
-        JSXElementName::IdentifierReference(ident) => {
-            // <Div />
-            ident.name.to_string()
-        }
-        JSXElementName::NamespacedName(ns) => {
-            // <svg:path />
-            format!("{}:{}", ns.namespace.name, ns.name.name)
-        }
-        JSXElementName::MemberExpression(member) => {
-            // <Foo.Bar />
-            format_jsx_member_expr(member)
-        }
-        JSXElementName::ThisExpression(_) => {
-            // <this />
-            "this".to_string()
-        }
-    }
-}
-
-fn format_jsx_member_expr(member: &JSXMemberExpression<'_>) -> String {
-    // <Foo.Bar /> / <Foo.Bar.Baz />
-    format!(
-        "{}.{}",
-        format_jsx_member_object(&member.object),
-        member.property.name
-    )
-}
-
-fn format_jsx_member_object(object: &oxc_ast::ast::JSXMemberExpressionObject<'_>) -> String {
-    match object {
-        oxc_ast::ast::JSXMemberExpressionObject::IdentifierReference(ident) => {
-            // <Foo.Bar />
-            ident.name.to_string()
-        }
-        oxc_ast::ast::JSXMemberExpressionObject::MemberExpression(inner) => {
-            // <Foo.Bar.Baz />
-            format_jsx_member_expr(inner)
-        }
-        oxc_ast::ast::JSXMemberExpressionObject::ThisExpression(_) => {
-            // <this.Foo />
-            "this".to_string()
-        }
-    }
-}
-
-fn format_jsx_attribute_name(name: &JSXAttributeName<'_>) -> String {
-    match name {
-        JSXAttributeName::Identifier(ident) => {
-            // mt=
-            ident.name.to_string()
-        }
-        JSXAttributeName::NamespacedName(ns) => {
-            // xlink:href=
-            format!("{}:{}", ns.namespace.name, ns.name.name)
-        }
-    }
 }

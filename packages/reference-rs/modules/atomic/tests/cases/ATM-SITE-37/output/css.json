@@ -1,0 +1,8 @@
+{
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:cyan": "@reference-ui/lib__c_cyan",
+  "color:green": "@reference-ui/lib__c_green",
+  "color:red": "@reference-ui/lib__c_red",
+  "padding:8px": "@reference-ui/lib__p_8px",
+  "sm:padding:12px": "@reference-ui/lib__sm:p_12px"
+}

@@ -1,17 +1,24 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-TRACE-SKIPPED",
     "message": "StyleTrace: failed to parse input/src/Broken.tsx: 1 parse error(s)",
     "file": "input/src/Broken.tsx"
   },
   {
     "severity": "error",
+    "code": "ATM-E-PARSE",
     "message": "Expected `}` but found `EOF`",
-    "file": "input/src/Broken.tsx"
+    "file": "input/src/Broken.tsx",
+    "line": 6,
+    "column": 1
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
     "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/Card.tsx"
+    "file": "input/src/Card.tsx",
+    "line": 12,
+    "column": 19
   }
 ]

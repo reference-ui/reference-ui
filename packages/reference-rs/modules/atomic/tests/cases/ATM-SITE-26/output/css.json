@@ -1,0 +1,14 @@
+{
+  "color:cyan": "@reference-ui/lib__c_cyan",
+  "color:green": "@reference-ui/lib__c_green",
+  "color:lime": "@reference-ui/lib__c_lime",
+  "color:navy": "@reference-ui/lib__c_navy",
+  "color:orange": "@reference-ui/lib__c_orange",
+  "color:pink": "@reference-ui/lib__c_pink",
+  "color:purple": "@reference-ui/lib__c_purple",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:teal": "@reference-ui/lib__c_teal",
+  "color:yellow": "@reference-ui/lib__c_yellow",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "padding:1r": "@reference-ui/lib__p_1r"
+}

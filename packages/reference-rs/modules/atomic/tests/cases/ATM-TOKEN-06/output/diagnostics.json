@@ -1,10 +1,12 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-MALFORMED-OPACITY",
     "message": "malformed opacity modifier `red.500/`"
   },
   {
     "severity": "warning",
+    "code": "ATM-W-MALFORMED-OPACITY",
     "message": "malformed opacity modifier `/40`"
   }
 ]

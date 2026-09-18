@@ -145,9 +145,7 @@ impl LocalConstants {
             }
         }
         for (k, v) in &other.mutated {
-            self.mutated
-                .entry(k.clone())
-                .or_insert_with(|| v.clone());
+            self.mutated.entry(k.clone()).or_insert_with(|| v.clone());
         }
     }
 }

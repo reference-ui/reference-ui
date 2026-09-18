@@ -7,12 +7,12 @@
 use oxc_ast::ast::{
     Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey, SpreadElement,
 };
-use oxc_span::Span;
+use oxc_span::{GetSpan, Span};
 use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
 use crate::extract::scope::Scoped;
 use crate::resolve::{conditions::pseudoselectors::has_parent_reference, r};
 use base_system::BreakpointScale;
@@ -47,10 +47,17 @@ impl<'a> ObjectWalk<'a> {
         }
     }
 
-    /// Report a diagnostic warning at the current file.
-    pub fn warn(&mut self, message: impl Into<String>) {
+    /// Report a diagnostic warning at the offending node's span.
+    pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let (line, column) = self.span_position(Some(span)).unzip();
         self.diagnostics
-            .push(Diagnostic::warning(message.into()).with_location(self.file, None, None));
+            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
+    }
+
+    /// 1-based line/column for a span, or None without source text.
+    fn span_position(&self, span: Option<Span>) -> Option<(u32, u32)> {
+        let source = self.source?;
+        line_col(source, span?.start)
     }
 }
 
@@ -82,7 +89,11 @@ fn handle_object_property(
 ) {
     let Some(key) = resolve_property_key(&prop.key) else {
         // { [dynamicKey]: '10px' }
-        ctx.warn("Dynamic computed property key encountered in style object");
+        ctx.warn(
+            prop.key.span(),
+            DiagnosticCode::UnfoldableKey,
+            "Dynamic computed property key encountered in style object",
+        );
         return;
     };
 
@@ -104,7 +115,11 @@ fn handle_object_property(
         handle_known_style_prop(ctx, &key, &prop.value, when);
     } else {
         // fooBar: 'x' — warn and drop (N12), like the globalCss path.
-        ctx.warn(format!("Unknown style property \"{key}\""));
+        ctx.warn(
+            prop.key.span(),
+            DiagnosticCode::UnknownProperty,
+            format!("Unknown style property \"{key}\""),
+        );
     }
 }
 
@@ -173,10 +188,11 @@ pub fn walk_r_object(
         let trimmed = raw_key.trim();
         let Some(query) = resolve_r_key(trimmed, ctx.breakpoints) else {
             // r={{ wat: { p: '1r' } }}
-            ctx.warn(format!(
-                "Unknown breakpoint name in r prop: \"{}\"",
-                trimmed
-            ));
+            ctx.warn(
+                prop.key.span(),
+                DiagnosticCode::UnknownBreakpoint,
+                format!("Unknown breakpoint name in r prop: \"{trimmed}\""),
+            );
             continue;
         };
         let mut nested_when = when.clone();
@@ -255,7 +271,11 @@ fn handle_condition_value(
         }
         _ => {
             // _hover: 'red'  — not an object
-            ctx.warn("Condition block expected object expression");
+            ctx.warn(
+                value.span(),
+                DiagnosticCode::NonObjectCondition,
+                "Condition block expected object expression",
+            );
         }
     }
 }
@@ -282,7 +302,11 @@ pub fn walk_spread_argument(
         return;
     }
     // ...maybeFn()
-    ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+    ctx.warn(
+        expr.span(),
+        DiagnosticCode::UnfoldableSpread,
+        "Dynamic object spread encountered in style object; keeping sibling properties",
+    );
 }
 
 fn walk_spread_value(
@@ -298,7 +322,7 @@ fn walk_spread_value(
         }
         Expression::Identifier(ident) => {
             // ...base  after  const base = { mt: '2r' }
-            unpack_local_const_object(ctx, ident.name.as_str(), when, Some(ident.span));
+            unpack_local_const_object(ctx, ident.name.as_str(), when, ident.span);
             true
         }
         Expression::ParenthesizedExpression(p) => {
@@ -333,34 +357,46 @@ fn walk_spread_branching(
 }
 
 /// Warn on an unresolvable spread, naming the write when the name is mutated.
-fn spread_miss_warn(ctx: &mut ObjectWalk<'_>, name: &str) {
+fn spread_miss_warn(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
     if let Some(write) = ctx.scopes.mutation(name) {
         // css({ ...palette })  after  palette.color = 'blue'
-        ctx.warn(format!(
-            "Dynamic mutated binding '{name}' spread in style object (reassigned at {}; keeping sibling properties)",
-            write.site()
-        ));
+        ctx.warn(
+            span,
+            DiagnosticCode::MutatedBinding,
+            format!(
+                "Dynamic mutated binding '{name}' spread in style object (reassigned at {}; keeping sibling properties)",
+                write.site()
+            ),
+        );
         return;
     }
-    ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
+    ctx.warn(
+        span,
+        DiagnosticCode::UnfoldableSpread,
+        "Dynamic object spread encountered in style object; keeping sibling properties",
+    );
 }
 
 fn unpack_local_const_object(
     ctx: &mut ObjectWalk<'_>,
     name: &str,
     when: &SmallVec<[Box<str>; 2]>,
-    span: Option<Span>,
+    span: Span,
 ) {
     let Some(obj) = ctx.scopes.object(name) else {
         // ...unknown  — not a file-top const object
-        spread_miss_warn(ctx, name);
+        spread_miss_warn(ctx, name, span);
         return;
     };
     for (key, _) in obj.iter() {
         // Spread keys warn and drop like literal keys (N12); conditions stay
         // silent here since unpack only lowers scalar leaves, never scopes.
         if !is_known_style_prop(key) && !is_condition_key(key, ctx.breakpoints) {
-            ctx.warn(format!("Unknown style property \"{key}\""));
+            ctx.warn(
+                span,
+                DiagnosticCode::UnknownProperty,
+                format!("Unknown style property \"{key}\""),
+            );
         }
     }
     let entries: Vec<(String, AtomValue)> = obj
@@ -372,7 +408,7 @@ fn unpack_local_const_object(
     let important = ctx.important;
     for (key, val) in entries {
         let mut expr_ctx = ctx.expression_walk(&key);
-        expr_ctx.push_want(val.clone(), when.clone(), false, span);
+        expr_ctx.push_want(val.clone(), when.clone(), false, Some(span));
         if let Some(authored) = ctx.authored.as_mut() {
             if let Some(json) = super::ast_value::atom_value_to_json(&val) {
                 authored.push(crate::runtime::AuthoredDeclaration {

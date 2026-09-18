@@ -1,6 +1,7 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNTERMINATED-BRACE",
     "message": "unterminated `{` in value `\"{oops\"`"
   }
 ]

@@ -17,7 +17,7 @@ use base_system::BaseSystem;
 use smallvec::SmallVec;
 
 use crate::atom::{Atom, AtomValue, CssValue, Want, When};
-use crate::diagnostics::{Diagnostic, DiagnosticLocation};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 
 /// Pass state for one want → atom lowering.
@@ -43,10 +43,10 @@ pub fn resolve_want(want: &Want) -> Vec<Atom> {
 pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
     session.location = want.location();
     if !canon::is_known_style_prop(&want.prop) {
-        session.diagnostics.push(Diagnostic::warning(format!(
-            "Unknown style property \"{}\"",
-            want.prop
-        )));
+        session.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::UnknownProperty,
+            format!("Unknown style property \"{}\"", want.prop),
+        ));
         return Vec::new();
     }
     let Some(clean_when) = lower_conditions(&want.when, session) else {
@@ -124,9 +124,10 @@ fn lower_conditions(
             LoweredWhen::Skip => {}
             LoweredWhen::Known(cond) => out.push(cond),
             LoweredWhen::Unknown => {
-                session
-                    .diagnostics
-                    .push(Diagnostic::warning(format!("Unknown condition \"{raw}\"")));
+                session.diagnostics.push(Diagnostic::warning(
+                    DiagnosticCode::UnknownCondition,
+                    format!("Unknown condition \"{raw}\""),
+                ));
                 known = false;
             }
         }

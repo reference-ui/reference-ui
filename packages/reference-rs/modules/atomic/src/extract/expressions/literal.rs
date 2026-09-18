@@ -9,6 +9,7 @@ use smallvec::SmallVec;
 
 use super::walk::ExpressionWalk;
 use crate::atom::AtomValue;
+use crate::diagnostics::DiagnosticCode;
 
 /// Extract string literal value, honoring inline important flags.
 pub fn push_string_want(
@@ -104,7 +105,9 @@ pub fn extract_template_literal(
     }
     // `2${n}r`
     let prop = ctx.prop;
-    ctx.warn(format!(
-        "Dynamic non-literal template expression for prop '{prop}'"
-    ));
+    ctx.warn(
+        lit.span,
+        DiagnosticCode::DynamicTemplate,
+        format!("Dynamic non-literal template expression for prop '{prop}'"),
+    );
 }

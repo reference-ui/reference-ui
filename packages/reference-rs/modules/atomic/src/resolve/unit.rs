@@ -4,7 +4,7 @@
 //! Rejects non-canonical numeric spellings (octal, hex, binary, Infinity, NaN) with diagnostics.
 
 use crate::atom::{AtomValue, CssValue};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 
 /// Check if a string represents an illegal non-canonical numeric format.
 pub fn is_non_canonical_numeric(s: &str) -> bool {
@@ -70,9 +70,10 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
 
 fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
-        diagnostics.push(Diagnostic::warning(format!(
-            "Non-canonical numeric value \"{n}\" on `{prop}`"
-        )));
+        diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::NonCanonicalNumeric,
+            format!("Non-canonical numeric value \"{n}\" on `{prop}`"),
+        ));
         return None;
     }
     Some(resolve_numeric_value(prop, &n))
@@ -80,9 +81,10 @@ fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
 
 fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
     if is_non_canonical_numeric(&s) {
-        diagnostics.push(Diagnostic::warning(format!(
-            "Non-canonical numeric value \"{s}\" on `{prop}`"
-        )));
+        diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::NonCanonicalNumeric,
+            format!("Non-canonical numeric value \"{s}\" on `{prop}`"),
+        ));
         return None;
     }
     if let Some(num) = parse_canonical_number(&s) {
@@ -101,9 +103,10 @@ pub fn css_value_from_authored(
 ) -> Option<CssValue> {
     match val {
         AtomValue::Bool(_) | AtomValue::Null => {
-            diagnostics.push(Diagnostic::warning(format!(
-                "`{prop}` value `{val}` is not valid CSS"
-            )));
+            diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::InvalidCssValue,
+                format!("`{prop}` value `{val}` is not valid CSS"),
+            ));
             None
         }
         AtomValue::Number(n) => from_number(prop, n, diagnostics),

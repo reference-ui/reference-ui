@@ -14,6 +14,8 @@ export type DiagnosticSeverity = 'error' | 'warning' | 'info'
 
 export interface Diagnostic {
   severity: DiagnosticSeverity
+  /** Stable failure-class code (`ATM-W-…` / `ATM-E-…`); never parse `message` to filter. */
+  code: string
   message: string
   file?: string
   line?: number

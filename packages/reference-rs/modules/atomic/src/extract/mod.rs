@@ -12,6 +12,7 @@ pub mod bindings;
 pub mod constants;
 pub mod css;
 pub mod expressions;
+pub mod fold;
 pub mod jsx;
 pub mod recipes;
 pub mod scope;
@@ -28,14 +29,15 @@ use std::collections::HashSet;
 
 use oxc_ast::ast::{
     BindingPattern, CallExpression, FormalParameters, JSXOpeningElement, Program,
-    VariableDeclarator,
+    TaggedTemplateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use crate::atom::Want;
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 use expressions::{ExpressionWalk, ObjectWalk};
@@ -117,6 +119,16 @@ impl<'a> ExtractContext<'a> {
         name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
     }
 
+    /// Report a diagnostic warning at the offending node's span.
+    pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let (line, column) = self
+            .source
+            .and_then(|source| line_col(source, span.start))
+            .unzip();
+        self.diagnostics
+            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
+    }
+
     /// Record the missing-graph error once per file. With no hosts
     /// resolvable, style-bearing JSX is skipped instead of scanned.
     pub fn report_missing_graph(&mut self, tag: &str, line: Option<u32>, column: Option<u32>) {
@@ -125,9 +137,12 @@ impl<'a> ExtractContext<'a> {
         }
         self.missing_graph_reported = true;
         self.diagnostics.push(
-            Diagnostic::error(format!(
-                "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <{tag}>"
-            ))
+            Diagnostic::error(
+                DiagnosticCode::MissingHostGraph,
+                format!(
+                    "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <{tag}>"
+                ),
+            )
             .with_location(self.file, line, column),
         );
     }
@@ -274,6 +289,11 @@ impl<'a> Visit<'a> for ExtractVisitor<'a> {
         extract_call(self, call);
         walk::walk_call_expression(self, call);
     }
+
+    fn visit_tagged_template_expression(&mut self, expr: &TaggedTemplateExpression<'a>) {
+        extract_tagged_template(self, expr);
+        walk::walk_tagged_template_expression(self, expr);
+    }
 }
 
 fn extract_opening(visitor: &mut ExtractVisitor<'_>, elem: &JSXOpeningElement<'_>) {
@@ -292,6 +312,23 @@ fn extract_call(visitor: &mut ExtractVisitor<'_>, call: &CallExpression<'_>) {
     let mut ctx = visitor_context(visitor);
     css::extract(call, &mut ctx);
     recipes::extract(call, &mut ctx);
+}
+
+/// Diagnose a tagged template on a live `css` binding. The tag is never a
+/// site (the object form is the only API), but on a live binding the author
+/// meant `css()` and must be told. Any other tag stays silent.
+fn extract_tagged_template(visitor: &mut ExtractVisitor<'_>, expr: &TaggedTemplateExpression<'_>) {
+    // css`color: red;`  — live binding, diagnosed non-site
+    // styled.div`...`  — not our binding, silent
+    let mut ctx = visitor_context(visitor);
+    if ctx.bindings.css_origin(&expr.tag, ctx.shadowed).is_none() {
+        return;
+    }
+    ctx.warn(
+        expr.span,
+        DiagnosticCode::TaggedTemplateSite,
+        "tagged template is not a css() site; use css({...})",
+    );
 }
 
 fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a> {

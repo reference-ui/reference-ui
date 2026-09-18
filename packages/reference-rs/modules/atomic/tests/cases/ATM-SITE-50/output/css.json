@@ -1,0 +1,9 @@
+{
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:cyan": "@reference-ui/lib__c_cyan",
+  "color:green": "@reference-ui/lib__c_green",
+  "color:lime": "@reference-ui/lib__c_lime",
+  "color:navy": "@reference-ui/lib__c_navy",
+  "color:pink": "@reference-ui/lib__c_pink",
+  "color:teal": "@reference-ui/lib__c_teal"
+}

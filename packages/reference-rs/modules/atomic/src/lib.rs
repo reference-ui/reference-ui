@@ -23,7 +23,7 @@ pub use styletrace as __styletrace;
 
 pub use atom::Want;
 pub use base_system::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
-pub use diagnostics::{Diagnostic, DiagnosticLocation, DiagnosticSeverity};
+pub use diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity};
 pub use recipes::{RecipeMatch, RecipeTable};
 pub use runtime::{
     get_style_prop_names, CssRuntime, NativeRuntimeArtifact, RecipeRuntimeTable,
@@ -185,10 +185,11 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
     let mut project_constants = extract::constants::LocalConstants::new();
     for (path, content) in sources {
         let allocator = Allocator::default();
+        // JSX follows the extension (`.tsx` on, `.ts` off): `.ts`-only
+        // `<T>` assertions parse only when JSX is off (SPEC-V2-07).
         let source_type = SourceType::from_path(Path::new(path))
             .unwrap_or_default()
-            .with_typescript(true)
-            .with_jsx(true);
+            .with_typescript(true);
         let parser = Parser::new(&allocator, content, source_type);
         let ret = parser.parse();
         if !ret.panicked {
@@ -205,17 +206,27 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
 
 fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) {
     let allocator = Allocator::default();
+    // JSX follows the extension (`.tsx` on, `.ts` off): `.ts`-only
+    // `<T>` assertions parse only when JSX is off (SPEC-V2-07).
     let source_type = SourceType::from_path(Path::new(path))
         .unwrap_or_default()
-        .with_typescript(true)
-        .with_jsx(true);
+        .with_typescript(true);
     let parser = Parser::new(&allocator, content, source_type);
     let ret = parser.parse();
 
     for err in ret.errors {
-        session
-            .diagnostics
-            .push(Diagnostic::error(err.to_string()).with_location(path, None, None));
+        let offset = err
+            .labels
+            .as_ref()
+            .and_then(|labels| labels.first())
+            .map(|label| label.offset() as u32);
+        let (line, column) = offset
+            .and_then(|start| crate::diagnostics::line_col(content, start))
+            .unzip();
+        session.diagnostics.push(
+            Diagnostic::error(DiagnosticCode::ParseError, err.to_string())
+                .with_location(path, line, column),
+        );
     }
     if !ret.panicked {
         extract_parsed_program(session, path, content, &ret.program);
@@ -282,10 +293,13 @@ fn compile_recipes(
     let mut valid = Vec::new();
     for recipe in spec_recipes.iter().chain(extracted.iter()) {
         if !seen.insert(&recipe.class_name) {
-            diagnostics.push(recipe.location.error(format!(
-                "Duplicate recipe className '{}' within system '{}'",
-                recipe.class_name, system.name
-            )));
+            diagnostics.push(recipe.location.error(
+                DiagnosticCode::DuplicateRecipe,
+                format!(
+                    "Duplicate recipe className '{}' within system '{}'",
+                    recipe.class_name, system.name
+                ),
+            ));
         } else {
             valid.push(recipe.clone());
         }

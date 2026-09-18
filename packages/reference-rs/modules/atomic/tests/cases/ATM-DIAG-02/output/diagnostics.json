@@ -1,17 +1,26 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
     "message": "Dynamic non-literal expression encountered for prop 'color'",
-    "file": "input/src/dynamic.ts"
+    "file": "input/src/dynamic.ts",
+    "line": 6,
+    "column": 10
   },
   {
     "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
     "message": "Dynamic non-literal template expression for prop 'width'",
-    "file": "input/src/dynamic.ts"
+    "file": "input/src/dynamic.ts",
+    "line": 7,
+    "column": 10
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-KEY",
     "message": "Dynamic computed property key encountered in style object",
-    "file": "input/src/dynamic.ts"
+    "file": "input/src/dynamic.ts",
+    "line": 8,
+    "column": 4
   }
 ]

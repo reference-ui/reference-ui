@@ -10,7 +10,7 @@ use canon::is_known_style_prop;
 use indexmap::IndexMap;
 
 use super::value::{lower_declaration, ValueSession};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::resolve::conditions::{breakpoint_media_query, is_bare_query_rule, pseudoselectors};
 
 struct ListItemContext<'a> {
@@ -51,9 +51,10 @@ impl<'a> GlobalWalker<'a> {
     fn walk_top_at_rule(&mut self, at_key: &str, node: &GlobalStyleNode) {
         // '@media (min-width: 640px)': { body: {...} }
         if is_bare_query_rule(at_key) {
-            self.diagnostics.push(Diagnostic::warning(format!(
-                "Empty at-rule query in global CSS: \"{at_key}\""
-            )));
+            self.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::EmptyAtRule,
+                format!("Empty at-rule query in global CSS: \"{at_key}\""),
+            ));
             return;
         }
         for (key, val) in node {
@@ -150,9 +151,10 @@ impl<'a> GlobalWalker<'a> {
             val,
             GlobalDeclarationValue::List(_) | GlobalDeclarationValue::Nested(_)
         ) {
-            self.diagnostics.push(Diagnostic::warning(format!(
-                "Unsupported conditional value for \"{prop}.{sub}\" in global CSS"
-            )));
+            self.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::UnsupportedGlobalValue,
+                format!("Unsupported conditional value for \"{prop}.{sub}\" in global CSS"),
+            ));
             return;
         }
         if sub == "base" {
@@ -169,9 +171,10 @@ impl<'a> GlobalWalker<'a> {
             self.handle_cond_condition(selector, prop, sub, val);
             return;
         }
-        self.diagnostics.push(Diagnostic::warning(format!(
-            "Unknown conditional key \"{sub}\" for \"{prop}\" in global CSS"
-        )));
+        self.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::UnknownCondition,
+            format!("Unknown conditional key \"{sub}\" for \"{prop}\" in global CSS"),
+        ));
     }
 
     /// Scope one conditional member through `_` condition lowering.
@@ -189,9 +192,10 @@ impl<'a> GlobalWalker<'a> {
 
     fn handle_at_rule(&mut self, selector: &str, at_key: &str, children: &GlobalStyleNode) {
         if is_bare_query_rule(at_key) {
-            self.diagnostics.push(Diagnostic::warning(format!(
-                "Empty at-rule query in global CSS: \"{at_key}\""
-            )));
+            self.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::EmptyAtRule,
+                format!("Empty at-rule query in global CSS: \"{at_key}\""),
+            ));
             return;
         }
         self.wraps.push(at_key.to_string());
@@ -219,9 +223,10 @@ impl<'a> GlobalWalker<'a> {
                 self.walk_node(&scoped, children);
             }
         } else {
-            self.diagnostics.push(Diagnostic::warning(format!(
-                "Unknown condition in global CSS: \"{cond}\""
-            )));
+            self.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::UnknownCondition,
+                format!("Unknown condition in global CSS: \"{cond}\""),
+            ));
         }
     }
 

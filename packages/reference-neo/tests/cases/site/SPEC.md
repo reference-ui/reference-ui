@@ -45,8 +45,10 @@ list travels on the frozen request, not a private shape.
 ## Approved absences
 
 - **Tagged templates** (`` css`…` ``): engine station only (ATM-SITE-12
-  refuses: no wants, no diagnostic); no browser case — the object form
-  is the only author API.
+  refuses: no wants, one located diagnostic on a live `css` binding —
+  the no-silence sweep revoked the old "no diagnostic" note); no
+  dedicated browser case (NEO-SITE-24 covers the tag beside the arg
+  shapes) — the object form is the only author API.
 - **Vue/Svelte**: Panda extracts SFCs; Neo worlds are source TSX for
   React 19 only.
 - **Compiled JSX runtimes** (automatic-runtime helpers): worlds are
@@ -60,10 +62,10 @@ list travels on the frozen request, not a private shape.
 - **`css.raw`**: Panda composition API; Neo has `css.object()` plus
   plain objects.
 - **Whole-object `css(styles)`**: passing an entire const object as the
-  call argument emits nothing (N0 2026-09-17; RS-14 covers arms/member/
+  call argument emits nothing but diagnoses (Overmatch Ph1 ATM-SITE-50 /
+  NEO-SITE-24 claimed the old silent 0/0/0/0; RS-14 covers arms/member/
   spread only). Authors inline, spread, or select members (SITE-01/02/03).
-  The silent 0/0/0/0 is documented, not diagnosed — a future RS row may
-  claim it.
+  Whole-object resolve rides Ph3 (SPEC-V2-65).
 - **Element-access refusal**: reads (`map['k']`, `map[key]`, computed map
   keys) refuse with a `Dynamic non-literal expression` diagnostic (S1
   probes O1/O2/O3); member access is the only indirection (SITE-02).

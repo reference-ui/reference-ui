@@ -13,10 +13,7 @@ use crate::atom::AtomValue;
 use crate::extract::scope::Scoped;
 
 /// Convert an AST expression into a JSON value and inline important flag.
-pub fn ast_to_json_value(
-    expr: &Expression<'_>,
-    scoped: Scoped<'_>,
-) -> Option<(Value, bool)> {
+pub fn ast_to_json_value(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, bool)> {
     if let Some(res) = convert_literal(expr) {
         return Some(res);
     }
@@ -62,8 +59,16 @@ fn convert_wrapper(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, 
         return ast_to_json_value(&sat.expression, scoped);
     }
     if let Expression::TSNonNullExpression(non_null) = expr {
-        let (v, _) = ast_to_json_value(&non_null.expression, scoped)?;
-        return Some((v, true));
+        // '2r'!  — transparent, exactly like the want walker (GAP-05b)
+        return ast_to_json_value(&non_null.expression, scoped);
+    }
+    if let Expression::TSTypeAssertion(assertion) = expr {
+        // <string>'2r'  (.ts only) — assertions erase, like `as`
+        return ast_to_json_value(&assertion.expression, scoped);
+    }
+    if let Expression::TSInstantiationExpression(instantiation) = expr {
+        // w<string>  — type arguments erase, like `as`
+        return ast_to_json_value(&instantiation.expression, scoped);
     }
     None
 }
@@ -90,10 +95,7 @@ fn convert_array(
     Some((Value::Array(elements), false))
 }
 
-fn array_elem_to_json(
-    elem: &ArrayExpressionElement<'_>,
-    scoped: Scoped<'_>,
-) -> Option<Value> {
+fn array_elem_to_json(elem: &ArrayExpressionElement<'_>, scoped: Scoped<'_>) -> Option<Value> {
     match elem {
         ArrayExpressionElement::Elision(_) => Some(Value::Null),
         _ => {
@@ -181,13 +183,14 @@ pub fn ast_to_json_values(expr: &Expression<'_>, scoped: Scoped<'_>) -> Vec<(Val
     if let Expression::StaticMemberExpression(mem) = expr {
         return convert_static_member(mem, scoped).into_iter().collect();
     }
+    if let Expression::UnaryExpression(unary) = expr {
+        // -space  /  !true  — every folded leaf, like the want walker
+        return convert_unary_values(unary, scoped);
+    }
     ast_to_json_value(expr, scoped).into_iter().collect()
 }
 
-fn convert_branching(
-    expr: &Expression<'_>,
-    scoped: Scoped<'_>,
-) -> Option<Vec<(Value, bool)>> {
+fn convert_branching(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<(Value, bool)>> {
     match expr {
         Expression::ConditionalExpression(cond) => {
             // color: flag ? 'cherry' : 'ocean'  — both arms, ignore `flag`
@@ -213,26 +216,23 @@ fn logical_values(log: &LogicalExpression<'_>, scoped: Scoped<'_>) -> Vec<(Value
     out
 }
 
-fn convert_wrapper_values(
-    expr: &Expression<'_>,
-    scoped: Scoped<'_>,
-) -> Option<Vec<(Value, bool)>> {
+fn convert_wrapper_values(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<(Value, bool)>> {
     match expr {
-        Expression::ParenthesizedExpression(p) => {
-            Some(ast_to_json_values(&p.expression, scoped))
-        }
+        Expression::ParenthesizedExpression(p) => Some(ast_to_json_values(&p.expression, scoped)),
         Expression::TSAsExpression(as_expr) => {
             Some(ast_to_json_values(&as_expr.expression, scoped))
         }
-        Expression::TSSatisfiesExpression(sat) => {
-            Some(ast_to_json_values(&sat.expression, scoped))
+        Expression::TSSatisfiesExpression(sat) => Some(ast_to_json_values(&sat.expression, scoped)),
+        Expression::TSNonNullExpression(non_null) => {
+            // ('2r'!)  — transparent, exactly like the want walker (GAP-05b)
+            Some(ast_to_json_values(&non_null.expression, scoped))
         }
-        Expression::TSNonNullExpression(non_null) => Some(
-            ast_to_json_values(&non_null.expression, scoped)
-                .into_iter()
-                .map(|(val, _)| (val, true))
-                .collect(),
-        ),
+        Expression::TSTypeAssertion(assertion) => {
+            Some(ast_to_json_values(&assertion.expression, scoped))
+        }
+        Expression::TSInstantiationExpression(instantiation) => {
+            Some(ast_to_json_values(&instantiation.expression, scoped))
+        }
         _ => None,
     }
 }
@@ -283,20 +283,25 @@ fn convert_identifier_leaves(name: &str, scoped: Scoped<'_>) -> Vec<(Value, bool
 
 fn convert_unary(
     unary: &oxc_ast::ast::UnaryExpression<'_>,
-    _scoped: Scoped<'_>,
+    scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     if unary.operator == UnaryOperator::Void {
-        Some((Value::Null, false))
-    } else if let (UnaryOperator::UnaryNegation, Expression::NumericLiteral(lit)) =
-        (unary.operator, &unary.argument)
-    {
-        let val = -lit.value;
-        if (val - val.round()).abs() < 1e-9 {
-            Some((json!(val as i64), false))
-        } else {
-            Some((json!(val), false))
-        }
-    } else {
-        None
+        return Some((Value::Null, false));
     }
+    // Single-valued positions take the first folded leaf, mirroring convert_identifier.
+    let fold = crate::extract::fold::fold_unary(unary.operator, &unary.argument, scoped);
+    let first = fold.values.first()?;
+    atom_value_to_json(first).map(|val| (val, false))
+}
+
+/// Every leaf the unary node folds; refused and dynamic leaves yield nothing.
+fn convert_unary_values(
+    unary: &oxc_ast::ast::UnaryExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    let fold = crate::extract::fold::fold_unary(unary.operator, &unary.argument, scoped);
+    fold.values
+        .iter()
+        .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .collect()
 }

@@ -9,7 +9,7 @@ use std::borrow::Cow;
 
 use base_system::{BaseSystem, TokenEntry};
 
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::resolve::ResolveSession;
 
 mod interpolate;
@@ -72,9 +72,10 @@ fn resolve_pathed_value<'a>(
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
     if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
-        session.diagnostics.push(Diagnostic::warning(format!(
-            "malformed opacity modifier `{unbraced}`"
-        )));
+        session.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::MalformedOpacity,
+            format!("malformed opacity modifier `{unbraced}`"),
+        ));
         return Some(Cow::Borrowed(raw_val));
     }
     if let Some(entry) = lookup_entry(prop, path, session.system) {
@@ -106,9 +107,10 @@ fn unbraced_fallback<'a>(
     let trimmed = raw_val.trim();
     let unbraced = strip_braces(trimmed);
     if is_braced(trimmed) && !unbraced.trim().is_empty() {
-        let diagnostic = session
-            .location
-            .error(format!("unknown token reference `{{{unbraced}}}`"));
+        let diagnostic = session.location.error(
+            DiagnosticCode::UnknownTokenReference,
+            format!("unknown token reference `{{{unbraced}}}`"),
+        );
         session.diagnostics.push(diagnostic);
         return None;
     }
@@ -119,17 +121,21 @@ fn unbraced_fallback<'a>(
 /// Warn for an unresolvable value: unknown path, or a real token from a foreign category.
 fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
     if looks_like_token_path(unbraced) {
-        session.diagnostics.push(Diagnostic::warning(format!(
-            "unknown token path `{unbraced}`"
-        )));
+        session.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::UnknownTokenPath,
+            format!("unknown token path `{unbraced}`"),
+        ));
         return;
     }
     let (path, _) = split_opacity(unbraced);
     if let Some(entry) = session.system.token_by_unique_name(path) {
-        session.diagnostics.push(Diagnostic::warning(format!(
-            "token `{unbraced}` belongs to category `{}` which property `{prop}` does not accept",
-            entry.category()
-        )));
+        session.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::TokenCategoryMismatch,
+            format!(
+                "token `{unbraced}` belongs to category `{}` which property `{prop}` does not accept",
+                entry.category()
+            ),
+        ));
     }
 }
 
