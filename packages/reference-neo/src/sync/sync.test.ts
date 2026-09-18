@@ -8,7 +8,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ConfigNotFoundError } from '../config/errors.ts'
 import { sync } from './index.ts'
 
@@ -359,5 +359,45 @@ describe('sync diagnostics', () => {
     await sync(dir)
 
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
+  })
+
+  it('prints compile warnings to the sync log without failing', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile("  staticCss: { notAStyleProp: ['x'] },"),
+      'theme/tokens.ts': TOKENS_FILE,
+    })
+
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    let output = ''
+    try {
+      await sync(dir)
+      // Capture before restore: mockRestore clears the call history.
+      output = spy.mock.calls.map((args) => String(args[0])).join('\n')
+    } finally {
+      spy.mockRestore()
+    }
+
+    expect(output).toContain('[neo] sync warning:')
+    expect(output).toContain('Unknown property in staticCss')
+    expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
+  })
+
+  it('stays silent when the compile reports no warnings', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile(''),
+      'theme/tokens.ts': TOKENS_FILE,
+    })
+
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    let calls = -1
+    try {
+      await sync(dir)
+      // Capture before restore: mockRestore clears the call history.
+      calls = spy.mock.calls.length
+    } finally {
+      spy.mockRestore()
+    }
+
+    expect(calls).toBe(0)
   })
 })
