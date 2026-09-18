@@ -19,7 +19,8 @@ product of the build-time layer. Rust does not run author files. A native
 fragment evaluator is Panda v2 (OXC plus an interpreter, nested ternaries
 folding to Null, ghost classes). Do not.
 
-Then Neo hands the spec, the source root, and the jsx hosts to
+Then Neo hands the spec, the source root, and the jsx hosts (traced ∪
+configured — `jsxElements` is the escape hatch, not the registry) to
 `@reference-ui/rust`. Atomic emits the stylesheet and the class map. Typegen
 emits the unions. Styletrace answers which JSX names still carry StyleProps.
 Neo does not recreate the namer, does not lower styles in TypeScript, and

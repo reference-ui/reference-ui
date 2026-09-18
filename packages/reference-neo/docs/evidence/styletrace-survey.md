@@ -76,7 +76,7 @@ Every reader found (repo-wide `jsxElements` / `jsx-elements.json` /
 | C3 | Neo baseSystem publish | `packages/reference-neo/src/sync/publish/system.ts:49,178-181` | `jsx.merged` → published `baseSystem.jsxElements` (downstream `extends` fuel). |
 | C4 | Neo artifact publish | `packages/reference-neo/src/sync/publish/system.ts:188` | writes `system/jsx-elements.json` (`{primitives,upstream,local,merged}`). |
 | C5 | Neo validation | `packages/reference-neo/src/config/validate.ts:58-62` (top-level), `:20-25` + `:140-145` (per-system entries) | shape checks; `jsxElements` counts as "synced system data". |
-| C6 | Core config run | `packages/reference-core/src/system/panda/config/run.ts:39-56` | merges configured + **traced** (`traceIncludedJsxElements`) + upstream → `additionalJsxElements` → `createBaseArtifacts` + panda config. The only traced leg in either pipeline. |
+| C6 | Core config run | `packages/reference-core/src/system/panda/config/run.ts:39-56` | merges configured + **traced** (`traceIncludedJsxElements`) + upstream → `additionalJsxElements` → `createBaseArtifacts` + panda config. ~~The only traced leg in either pipeline.~~ Struck slice #6: Neo gained a traced leg in slice #4 (C17). |
 | C7 | Core trace driver | `packages/reference-core/src/system/panda/config/styletrace.ts:69-93` | globs `include` for traceable roots, calls `trace(root, cwd)` per root, warns-and-skips on failure. |
 | C8 | Core upstream/merge | `packages/reference-core/src/system/panda/config/jsx-elements.ts:22-23,27-28,31-50` | `getUpstreamJsxElements`, `resolvePandaJsxElements` (prepends primitives), artifact writer, `system/jsx-elements.json` path. |
 | C9 | Core panda patterns | `packages/reference-core/src/system/panda/config/extensions/api/extendPatterns.ts:62` | feeds `jsx:` patterns into the generated Panda config. |
@@ -87,6 +87,7 @@ Every reader found (repo-wide `jsxElements` / `jsx-elements.json` /
 | C14 | Downstream `extends` | every `matrix/*/ui.config.ts` (`extends: [baseSystem]`), e.g. `matrix/distro/ui.config.ts:7`; `matrix/watch/src/watch-config-base-system.ts:31-32` (spreads `baseSystem` incl. `jsxElements`) | lib's published list becomes every matrix package's `upstream`. |
 | C15 | Lib re-export/ship | `packages/reference-lib/src/index.ts:7`, `scripts/build-package.mjs:11-12` | re-exports + ships `baseSystem.mjs` (list included). |
 | C16 | Distro assertions | `matrix/distro/tests/unit/distro.test.tsx:703-729` | pins `baseSystem.jsxElements ∋ MonoText` and `jsx-elements.json` upstream/merged `∋ MonoText`, primitives `∋ Div`. |
+| C17 | Neo traced publish (slice #4) | `CompileResult.tracedJsxHosts` (`packages/reference-rs/contracts/types.ts:99`) → `resolveJsxElements(config, traced)` (`packages/reference-neo/src/sync/jsx-elements.ts:21-36`), called from `sync/index.ts:96` | `compile()` returns the traced set on the result; Neo publishes configured ∪ traced into `jsx-elements.json` (`local`/`merged`) and `baseSystem.jsxElements`. Config `jsxElements` is the escape hatch. |
 
 Producers (hand lists in-tree): `packages/reference-lib/ui.config.ts:22-34`
 (53 names), `packages/reference-icons/ui.config.ts:7` (`ICON_JSX_NAMES`),

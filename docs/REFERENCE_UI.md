@@ -67,7 +67,7 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 | `include` | Globs of files to scan for Panda extraction; also drives **codegen copy** for isolation. |
 | `extends` | Optional `BaseSystem[]` — upstream **token/fragment** systems merged **before** your own (portable `baseSystem` from other packages). |
 | `layers` | Optional `BaseSystem[]` — upstream **component CSS** in an isolated cascade **layer**; **tokens from upstream do not** merge into your Panda config or TS types. |
-| `jsxElements` | Extra JSX tag names for discovery when static tracing cannot infer them (e.g. generated surfaces). |
+| `jsxElements` | Escape hatch: extra JSX tag names for shapes static tracing cannot infer (e.g. generated surfaces, member spellings). Which JSX elements carry style props is discovered by the engine per compile. |
 | `strict` | Optional `('colors' \| 'radii' \| 'spacing')[]` — restrict the matching style props to design-token values (plus per-category escape hatches). Omit to leave props open. |
 | `normalizeCss` | Toggle normalize CSS reset (default `true`). |
 | `debug` | Verbose logging. |

@@ -2,7 +2,7 @@ OPERATION: GO
 
 # Mission: Full StyleTrace
 
-Status: `active` — voyage opened 2026-09-18 on the full-parity commit.
+Status: `done` — voyage opened 2026-09-18, closed 2026-09-19. All six slices landed; `jsxElements` hand-list deleted with zero drift; Book spot-checks are the one post-commit item (:5000 was down at acceptance).
 Slice #1 landed in `535cf0eb2`. Plan rebuilt 2026-09-18 from the
 three-crew probe (engine seam · Neo pins · gaps) and a root-trace probe.
 Precursor to [Operation Overmatch](operation-overmatch.md): Overmatch
@@ -495,6 +495,29 @@ nothing is lost):
 - StyleTrace's entry-set rule (definitions the project compiles) is the
   same line Overmatch draws for sites: `include` decides what is
   extracted; imports decide what is *resolved*.
+
+### Slice #6 tail record (handoff note, 2026-09-18)
+
+Three stays, confirmed:
+
+1. `matrix/primitives` `jsxElements: ['PrimitiveJsxMarker']` stays, and its
+   e2e pin (`primitives-contract.spec.ts:176-193`) is untouched — the shape
+   is an extractor binding question, now filed as gap #3 below.
+2. `packages/reference-icons` `ICON_JSX_NAMES` stays (core-synced, no
+   in-repo `extends` consumer, core's traced leg out of scope). The day
+   icons move to Neo, `ATM-SITE-56` + the `icon_factory` station are the
+   zero-config proof to run.
+3. `NEO-SITE-16` stays config-spelled per D3 (recommended (a): `jsxElements`
+   as the escape hatch for `const NS = { Panel: Div }`; end state (c) is an
+   Overmatch binding row).
+
+Gap #3 filed into [Operation Overmatch](operation-overmatch.md) §4
+OUT-OF-AXIS table ("JSX tag through a file-local alias", StyleTrace
+handoff): the Overmatch mission did not already cover the
+extractor-binding question (nearest rows are S12 site-identity-through-
+re-export and the §4 `matchTag` host-guessing row — neither resolves a
+JSX tag through a file-local alias), so a new row was added; its SPEC-V2
+ID is minted by the Overmatch cataloger.
 
 ## Captain's notes (not planned, just recorded)
 
