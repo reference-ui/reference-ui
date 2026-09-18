@@ -1,50 +1,19 @@
 @layer nested-conditions {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer tokens {
-    :root,
-    [data-color-mode='light'] {
-      --colors-n900: #18181b;
-    }
-    [data-color-mode='dark'] {
-      --colors-n900: #fafafa;
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-n900: #18181b;
   }
-  @layer utilities {
-    [data-color-mode='dark']
-      .nested-conditions__hover\:dark\:bg_n900:is(:hover, [data-hover]) {
-      background: var(--colors-n900);
-    }
-    [data-color-mode='dark']
-      .nested-conditions__dark\:hover\:focusVisible\:bd-c_gold:is(
-        :hover,
-        [data-hover]
-      ):is(:focus-visible, [data-focus-visible]) {
-      border-color: gold;
-    }
-    [data-color-mode='dark']
-      .nested-conditions__hover\:dark\:c_white:is(:hover, [data-hover]) {
-      color: white;
-    }
-    [data-color-mode='dark']
-      .nested-conditions__dark\:hover\:focusVisible\:outline-c_yellow:is(
-        :hover,
-        [data-hover]
-      ):is(:focus-visible, [data-focus-visible]) {
-      outline-color: yellow;
-    }
-    [data-color-mode='dark']
-      .nested-conditions__dark\:hover\:focusVisible\:outline-s_solid:is(
-        :hover,
-        [data-hover]
-      ):is(:focus-visible, [data-focus-visible]) {
-      outline-style: solid;
-    }
-    [data-color-mode='dark']
-      .nested-conditions__dark\:hover\:focusVisible\:outline-w_2px:is(
-        :hover,
-        [data-hover]
-      ):is(:focus-visible, [data-focus-visible]) {
-      outline-width: 2px;
-    }
+  [data-color-mode=dark] {
+    --colors-n900: #fafafa;
   }
+}
+@layer utilities {
+  [data-color-mode=dark] .nested-conditions__hover\:dark\:bg_n900:is(:hover, [data-hover]) { background: var(--colors-n900); }
+  [data-color-mode=dark] .nested-conditions__dark\:hover\:focusVisible\:bd-c_gold:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { border-color: gold; }
+  [data-color-mode=dark] .nested-conditions__hover\:dark\:c_white:is(:hover, [data-hover]) { color: white; }
+  [data-color-mode=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-c_yellow:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-color: yellow; }
+  [data-color-mode=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-s_solid:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-style: solid; }
+  [data-color-mode=dark] .nested-conditions__dark\:hover\:focusVisible\:outline-w_2px:is(:hover, [data-hover]):is(:focus-visible, [data-focus-visible]) { outline-width: 2px; }
+}
 }

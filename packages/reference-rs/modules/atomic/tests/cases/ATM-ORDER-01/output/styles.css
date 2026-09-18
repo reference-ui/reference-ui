@@ -1,58 +1,36 @@
 @layer order-01 {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer utilities {
-    .order-01__p_1r {
-      padding: var(--spacing-root);
-    }
-    @media (max-width: 1536px) {
-      .order-01__\[\@media_\(max-width\:_1536px\)\]\:m_1r {
-        margin: var(--spacing-root);
-      }
-    }
-    @media (max-width: 1280px) {
-      .order-01__\[\@media_\(max-width\:_1280px\)\]\:m_2r {
-        margin: calc(2 * var(--spacing-root));
-      }
-    }
-    @media (max-width: 1024px) {
-      .order-01__\[\@media_\(max-width\:_1024px\)\]\:m_3r {
-        margin: calc(3 * var(--spacing-root));
-      }
-    }
-    @media (max-width: 768px) {
-      .order-01__\[\@media_\(max-width\:_768px\)\]\:m_4r {
-        margin: calc(4 * var(--spacing-root));
-      }
-    }
-    @media (max-width: 640px) {
-      .order-01__\[\@media_\(max-width\:_640px\)\]\:m_5r {
-        margin: calc(5 * var(--spacing-root));
-      }
-    }
-    @container (min-width: 640px) {
-      .order-01__sm\:p_2r {
-        padding: calc(2 * var(--spacing-root));
-      }
-    }
-    @container (min-width: 768px) {
-      .order-01__md\:p_3r {
-        padding: calc(3 * var(--spacing-root));
-      }
-    }
-    @container (min-width: 1024px) {
-      .order-01__lg\:p_4r {
-        padding: calc(4 * var(--spacing-root));
-      }
-    }
-    @container (min-width: 1280px) {
-      .order-01__xl\:p_5r {
-        padding: calc(5 * var(--spacing-root));
-      }
-    }
-    @container (min-width: 1536px) {
-      .order-01__2xl\:p_6r {
-        padding: calc(6 * var(--spacing-root));
-      }
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .order-01__p_1r { padding: var(--spacing-root); }
+  @media (max-width: 1536px) {
+    .order-01__\[\@media_\(max-width\:_1536px\)\]\:m_1r { margin: var(--spacing-root); }
   }
+  @media (max-width: 1280px) {
+    .order-01__\[\@media_\(max-width\:_1280px\)\]\:m_2r { margin: calc(2 * var(--spacing-root)); }
+  }
+  @media (max-width: 1024px) {
+    .order-01__\[\@media_\(max-width\:_1024px\)\]\:m_3r { margin: calc(3 * var(--spacing-root)); }
+  }
+  @media (max-width: 768px) {
+    .order-01__\[\@media_\(max-width\:_768px\)\]\:m_4r { margin: calc(4 * var(--spacing-root)); }
+  }
+  @media (max-width: 640px) {
+    .order-01__\[\@media_\(max-width\:_640px\)\]\:m_5r { margin: calc(5 * var(--spacing-root)); }
+  }
+  @container (min-width: 640px) {
+    .order-01__sm\:p_2r { padding: calc(2 * var(--spacing-root)); }
+  }
+  @container (min-width: 768px) {
+    .order-01__md\:p_3r { padding: calc(3 * var(--spacing-root)); }
+  }
+  @container (min-width: 1024px) {
+    .order-01__lg\:p_4r { padding: calc(4 * var(--spacing-root)); }
+  }
+  @container (min-width: 1280px) {
+    .order-01__xl\:p_5r { padding: calc(5 * var(--spacing-root)); }
+  }
+  @container (min-width: 1536px) {
+    .order-01__2xl\:p_6r { padding: calc(6 * var(--spacing-root)); }
+  }
+}
 }

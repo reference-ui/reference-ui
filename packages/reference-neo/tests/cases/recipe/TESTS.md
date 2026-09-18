@@ -10,7 +10,7 @@
 | NEO-RECIPE-04 | Compound variants emit after simple variants and require every predicate | done | ATM-RECIPE-05 | — | on/off combinations incl. hover+dark compound (deepens RECIPE-01) | `[panda-v1]` `core/__tests__/static-css.test.ts:2102`; `[atm]` RECIPE-05 |
 | NEO-RECIPE-05 | `recipe(...).raw(props)` returns a style object that `css()` paints identically | done | ATM-RECIPE-02 | `recipe.ts` | computed equality of raw-fed vs class-fed nodes | `[decision D16]`; `[panda-v1]` `generator/src/artifacts/js/cva.ts:63` `raw: resolve` |
 | NEO-RECIPE-06 | Class identity is `${system}__${className}`; duplicate `className` in one system fails sync | done | ATM-RECIPE-06 | `sync` | class prefix in DOM; `sync()` rejects on duplicate | `[atm]` P2 #18 |
-| NEO-RECIPE-07 | A recipe defined as a non-object-literal fails sync with a located diagnostic | blocked-on-rs (RS-18) | ATM-RECIPE-06 + RS-18 | `sync` | `sync()` rejects | `[atm]` RECIPE-06 |
+| NEO-RECIPE-07 | A recipe defined as a non-object-literal fails sync with a located diagnostic | done | ATM-RECIPE-06 + RS-18 located diagnostics (landed, no station by design) | — (no change: `sync` surfaces `file:line:column` via `diagnosticLocation`) | `sync()` rejects with the inline-literal refusal at `app.ts:8:col`; no half-written folder; RECIPE-06 extended with the dup file:line:column | `[atm]` RECIPE-06 |
 | NEO-RECIPE-08 | Responsive variant value `{ base: 'solid', md: 'outline' }` switches at the container width | done | ATM-RECIPE-07 | `recipe.ts` | resize across `md` flips computed variant styles | `[panda-v1]` `core/__tests__/recipe.test.ts:226` responsive variant |
 | NEO-RECIPE-09 | `_hover` inside a variant paints on the variant class, not a separate atom | done | ATM-RECIPE-02 | — | hover computed; utility count unchanged | `[panda-v1]` `core/__tests__/recipe.test.ts:220` solid hover |
 | NEO-RECIPE-10 | Variant + `css()` utilities on the same node: utilities win via layer order | done | ATM-RECIPE-03, ATM-LAYER-04 | — | computed override | `[atm]` ATM-RECIPE-03, ATM-LAYER-04 (P2 #19) |
@@ -59,3 +59,9 @@ fail-closed half works (`sync()` rejects); only the location half gaps.
 - Waiting Neo case: NEO-RECIPE-07 (no case folder until the location
   half lands; the rejection-message half is already proven by
   NEO-RECIPE-06's duplicate-world probe).
+
+N2 update 2026-09-17 (cook): RS-18 landed (located diagnostics, no
+station by design) — both refusals carry `file`/`line`/`column`
+(R1 `/tmp/n2cook-r1.mjs` green). NEO-RECIPE-07 done (located
+inline-literal refusal); NEO-RECIPE-06's spec extended with the dup
+`file:line:column` assertion, still green.

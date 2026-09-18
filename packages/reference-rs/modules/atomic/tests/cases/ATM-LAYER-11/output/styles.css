@@ -1,0 +1,35 @@
+@layer layer-font-face-array {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  @font-face {
+    font-family: Inter;
+    src: url(/fonts/inter-normal.woff2);
+    font-display: swap;
+    font-style: normal;
+    size-adjust: 100%;
+  }
+  @font-face {
+    font-family: Inter;
+    src: url(/fonts/inter-italic.woff2);
+    font-display: swap;
+    font-style: italic;
+    size-adjust: 100%;
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    src: url(/fonts/mono.woff2);
+    font-display: swap;
+    size-adjust: 100%;
+  }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --fonts-sans: "Inter", sans-serif;
+    --fonts-mono: "JetBrains Mono", monospace;
+  }
+}
+@layer utilities {
+  .layer-font-face-array__font-family_sans { font-family: var(--fonts-sans); }
+  .layer-font-face-array__font-weight_400 { font-weight: 400; }
+}
+}

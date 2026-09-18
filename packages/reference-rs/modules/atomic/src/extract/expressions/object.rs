@@ -14,7 +14,7 @@ use super::walk::{walk_expression, ExpressionWalk};
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::Diagnostic;
 use crate::extract::constants::LocalConstants;
-use crate::resolve::r;
+use crate::resolve::{conditions::pseudoselectors::has_parent_reference, r};
 use base_system::BreakpointScale;
 use canon::{is_condition_prop, is_known_style_prop};
 
@@ -102,6 +102,9 @@ fn handle_object_property(
     } else if is_known_style_prop(&key) {
         // color: 'red'  /  mt: '2r'
         handle_known_style_prop(ctx, &key, &prop.value, when);
+    } else {
+        // fooBar: 'x' — warn and drop (N12), like the globalCss path.
+        ctx.warn(format!("Unknown style property \"{key}\""));
     }
 }
 
@@ -109,6 +112,7 @@ fn is_condition_key(key: &str, breakpoints: &BreakpointScale) -> bool {
     is_condition_prop(key)
         || breakpoints.names().iter().any(|n| n == key)
         || is_breakpoint_range(key, breakpoints)
+        || has_parent_reference(key)
 }
 
 fn is_breakpoint_range(key: &str, breakpoints: &BreakpointScale) -> bool {
@@ -339,6 +343,13 @@ fn unpack_local_const_object(
         ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
         return;
     };
+    for (key, _) in obj.iter() {
+        // Spread keys warn and drop like literal keys (N12); conditions stay
+        // silent here since unpack only lowers scalar leaves, never scopes.
+        if !is_known_style_prop(key) && !is_condition_key(key, ctx.breakpoints) {
+            ctx.warn(format!("Unknown style property \"{key}\""));
+        }
+    }
     let entries: Vec<(String, AtomValue)> = obj
         .iter()
         .filter(|(key, _)| is_known_style_prop(key))

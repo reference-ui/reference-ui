@@ -1,0 +1,17 @@
+@layer layer-keyframe-refs {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  @keyframes grow {
+    from { background-color: var(--colors-brand); width: var(--spacing-root); }
+    to { background-color: var(--colors-brand); width: calc(4 * var(--spacing-root)); }
+  }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-brand: #ff0000;
+  }
+}
+@layer utilities {
+  .layer-keyframe-refs__anim_grow { animation: grow; }
+}
+}

@@ -5,7 +5,8 @@
 //! fills Recipe IR (`ctx.recipes`) and must not pollute the utility list.
 //! `ExtractContext` is the session those passes share. Call extract is
 //! import-bound; JSX extract consults styletrace names plus Reference
-//! component imports and fails closed once any host is known.
+//! component imports and fails closed when no host is known: an empty host
+//! set plus style-bearing JSX is a missing-graph error, never a scan.
 
 pub mod bindings;
 pub mod constants;
@@ -71,6 +72,7 @@ pub struct ExtractContext<'a> {
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
+    missing_graph_reported: bool,
 }
 
 impl<'a> ExtractContext<'a> {
@@ -93,15 +95,29 @@ impl<'a> ExtractContext<'a> {
             recipes: sinks.recipes,
             diagnostics: sinks.diagnostics,
             authored: sinks.authored,
+            missing_graph_reported: false,
         }
     }
 
-    /// True when this tag is a StyleProps host. Empty host set keeps scanning.
+    /// True when this tag is a StyleProps host. An empty host set admits
+    /// nothing: the caller reports the missing graph once per file.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
-        if !bindings::is_shadowed(self.shadowed, name) && self.jsx_hosts.contains(name) {
-            return true;
+        !bindings::is_shadowed(self.shadowed, name) && self.jsx_hosts.contains(name)
+    }
+
+    /// Record the missing-graph error once per file. With no hosts
+    /// resolvable, style-bearing JSX is skipped instead of scanned.
+    pub fn report_missing_graph(&mut self, tag: &str, line: Option<u32>, column: Option<u32>) {
+        if self.missing_graph_reported {
+            return;
         }
-        self.jsx_hosts.is_empty()
+        self.missing_graph_reported = true;
+        self.diagnostics.push(
+            Diagnostic::error(format!(
+                "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <{tag}>"
+            ))
+            .with_location(self.file, line, column),
+        );
     }
 
     /// Create an ObjectWalk context for traversing a style object.
@@ -177,6 +193,7 @@ pub struct ExtractVisitor<'a> {
     pub recipes: Vec<Recipe>,
     pub diagnostics: Vec<Diagnostic>,
     pub authored: Vec<crate::runtime::AuthoredDeclaration>,
+    missing_graph_reported: bool,
 }
 
 impl<'a> ExtractVisitor<'a> {
@@ -194,6 +211,7 @@ impl<'a> ExtractVisitor<'a> {
             recipes: Vec::new(),
             diagnostics: Vec::new(),
             authored: Vec::new(),
+            missing_graph_reported: false,
         }
     }
 }
@@ -232,8 +250,15 @@ impl<'a> Visit<'a> for ExtractVisitor<'a> {
 }
 
 fn extract_opening(visitor: &mut ExtractVisitor<'_>, elem: &JSXOpeningElement<'_>) {
+    // The per-element context is ephemeral; the once-per-file report flag
+    // lives on the visitor and syncs across the call.
+    let reported = visitor.missing_graph_reported;
     let mut ctx = visitor_context(visitor);
+    ctx.missing_graph_reported = reported;
     jsx::extract(elem, &mut ctx);
+    let reported = ctx.missing_graph_reported;
+    drop(ctx);
+    visitor.missing_graph_reported = reported;
 }
 
 fn extract_call(visitor: &mut ExtractVisitor<'_>, call: &CallExpression<'_>) {

@@ -1,0 +1,10 @@
+@layer site-unknown-prop-policy {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  .btn:hover { color: blue }
+}
+@layer utilities {
+  .site-unknown-prop-policy__c_green { color: green; }
+  .site-unknown-prop-policy__c_red { color: red; }
+}
+}

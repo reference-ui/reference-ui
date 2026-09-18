@@ -71,6 +71,26 @@ fn has_container_root(system: &BaseSystem) -> bool {
     })
 }
 
+/// `@media` query for a globalCss breakpoint key: plain scale names plus the
+/// `*Down` / `*Only` / `*To*` ranges. Bounds come from the `@container`
+/// twins below with only the at-rule retargeted, so ranges agree on both
+/// paths (utilities print `@container`, global CSS prints `@media`, RS-28).
+pub fn breakpoint_media_query(key: &str, system: &BaseSystem) -> Option<String> {
+    if key == "base" {
+        return None;
+    }
+    if let Some(width) = system.breakpoints().width_px(key) {
+        return Some(format!("@media (min-width: {width}px)"));
+    }
+    let when = breakpoint_range(key, system)?;
+    match when.wrap() {
+        crate::atom::WhenKind::Container(query) => {
+            Some(query.replacen("@container", "@media", 1))
+        }
+        _ => None,
+    }
+}
+
 fn breakpoint_range(raw: &str, system: &BaseSystem) -> Option<When> {
     if let Some(bp) = raw.strip_suffix("Down") {
         return breakpoint_down(raw, bp, system);
@@ -159,10 +179,18 @@ fn named_breakpoint(raw: &str, system: &BaseSystem) -> Option<When> {
 }
 
 fn at_rule_or_ampersand(raw: &str) -> Option<When> {
-    if raw.starts_with("@media") || raw.starts_with("@container") {
+    if raw.starts_with("@media") || raw.starts_with("@container") || raw.starts_with("@supports")
+    {
+        // Bare `@supports` carries no query: not a wrap, refuse it (D11).
+        if is_bare_query_rule(raw) {
+            return None;
+        }
         return Some(When::at_rule(raw.into(), bracket_segment(raw)));
     }
-    if raw.starts_with('&') || raw.starts_with('@') {
+    if raw.starts_with('&')
+        || raw.starts_with('@')
+        || pseudoselectors::has_parent_reference(raw)
+    {
         let template = selector_template(raw);
         return Some(When::selector(
             raw.into(),
@@ -185,6 +213,17 @@ fn named_wrap<'a>(raw: &'a str, system: &'a BaseSystem) -> Option<&'a str> {
     pseudoprops::preset_wrap(key)
 }
 
+/// True when a query-bearing at-rule key carries no query text.
+pub fn is_bare_query_rule(raw: &str) -> bool {
+    const QUERY_AT_RULES: &[&str] = &["@media", "@supports", "@container"];
+    QUERY_AT_RULES.iter().any(|keyword| {
+        raw == *keyword
+            || raw
+                .strip_prefix(keyword)
+                .is_some_and(|rest| rest.trim().is_empty())
+    })
+}
+
 fn bracket_segment(raw: &str) -> Box<str> {
     let sanitized = raw.trim().replace(' ', "_");
     format!("[{sanitized}]").into_boxed_str()
@@ -201,137 +240,4 @@ fn selector_template(raw: &str) -> String {
 pub use pseudoselectors::apply as apply_selector_condition;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::atom::{AtomSet, AtomValue, Want, WhenKind};
-    use crate::diagnostics::DiagnosticLocation;
-    use crate::resolve::{resolve_want_with, ResolveSession};
-    use crate::stylesheet;
-    use smallvec::smallvec;
-
-    fn known(raw: &str, system: &BaseSystem) -> When {
-        match lower_when(raw, system) {
-            LoweredWhen::Known(when) => when,
-            other => panic!("expected known condition for {raw}, got {other:?}"),
-        }
-    }
-
-    fn assert_selector(raw: &str, expected: &str, system: &BaseSystem) {
-        match known(raw, system).wrap() {
-            WhenKind::Selector(s) => assert_eq!(s, expected),
-            other => panic!("expected selector for {raw}, got {other:?}"),
-        }
-    }
-
-    fn assert_container(raw: &str, px: &str, system: &BaseSystem) {
-        match known(raw, system).wrap() {
-            WhenKind::Container(m) => {
-                assert_eq!(m, format!("@container (min-width: {px}px)"))
-            }
-            other => panic!("expected container query for {raw}, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn test_lower_named_segments() {
-        let empty = BaseSystem::default();
-        assert!(matches!(lower_when("base", &empty), LoweredWhen::Skip));
-        let hover = known("_hover", &empty);
-        assert_eq!(hover.class_segment(), "hover");
-        assert_eq!(hover.authored(), "_hover");
-        assert!(matches!(lower_when("sm", &empty), LoweredWhen::Unknown));
-        let sm = known("sm", BaseSystem::lib_fixture());
-        assert_eq!(sm.class_segment(), "sm");
-        let slot = known("&[data-slot=inner]", &empty);
-        assert_eq!(slot.class_segment(), "[&[data-slot=inner]]");
-    }
-
-    #[test]
-    fn test_lower_presets() {
-        let system = BaseSystem::lib_fixture();
-        assert_selector("_hover", "&:is(:hover, [data-hover])", system);
-        assert_selector("_dark", "[data-color-mode=dark] &", system);
-        assert_selector(
-            "_groupHover",
-            "&:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)",
-            system,
-        );
-        assert_selector(
-            "_peerFocus",
-            "&:is(:where(.peer, [data-peer]):is(:focus, [data-focus]) ~ *)",
-            system,
-        );
-    }
-
-    #[test]
-    fn test_named_breakpoint_lowers_to_container() {
-        let system = BaseSystem::lib_fixture();
-        assert_container("sm", "640", system);
-        assert_container("md", "768", system);
-        assert_container("lg", "1024", system);
-        assert_container("xl", "1280", system);
-        assert_container("2xl", "1536", system);
-    }
-
-    #[test]
-    fn test_container_passthrough() {
-        match known("@container (min-width: 640px)", &BaseSystem::default()).wrap() {
-            WhenKind::Container(m) => {
-                assert_eq!(m, "@container (min-width: 640px)")
-            }
-            _ => panic!("expected container query"),
-        }
-    }
-
-    #[test]
-    fn unknown_underscore_is_refused() {
-        assert!(matches!(
-            lower_when("_nope", BaseSystem::lib_fixture()),
-            LoweredWhen::Unknown
-        ));
-        assert!(matches!(
-            lower_when("_hovr", BaseSystem::lib_fixture()),
-            LoweredWhen::Unknown
-        ));
-    }
-
-    #[test]
-    fn unknown_condition_drops_atom_with_diagnostic() {
-        let want = Want::new("color", AtomValue::String("red".into()))
-            .with_when(smallvec!["_nope".into()]);
-        let mut diagnostics = Vec::new();
-        let system = BaseSystem::lib_fixture();
-        let mut session = ResolveSession {
-            system: &system,
-            diagnostics: &mut diagnostics,
-            location: DiagnosticLocation::default(),
-        };
-        let atoms = resolve_want_with(&want, &mut session);
-        assert!(atoms.is_empty());
-        assert_eq!(diagnostics.len(), 1);
-        assert_eq!(diagnostics[0].message, "Unknown condition \"_nope\"");
-    }
-
-    #[test]
-    fn unknown_condition_keeps_sibling_and_does_not_wrap_nope() {
-        let nope = Want::new("color", AtomValue::String("red".into()))
-            .with_when(smallvec!["_nope".into()]);
-        let sibling = Want::new("color", AtomValue::String("red".into()));
-        let mut diagnostics = Vec::new();
-        let system = BaseSystem::lib_fixture();
-        let mut session = ResolveSession {
-            system: &system,
-            diagnostics: &mut diagnostics,
-            location: DiagnosticLocation::default(),
-        };
-        let mut atoms = resolve_want_with(&nope, &mut session);
-        atoms.extend(resolve_want_with(&sibling, &mut session));
-        assert_eq!(atoms.len(), 1);
-        assert!(atoms[0].conditions().is_empty());
-        assert_eq!(atoms[0].value.class_name_str(), "red");
-        let css = stylesheet::build_stylesheet(&atoms.into_iter().collect::<AtomSet>(), &system);
-        assert!(css.contains(".\\@reference-ui\\/lib__c_red { color: red; }"));
-        assert!(!css.contains(":nope"));
-        assert!(!css.contains("nope:"));
-    }
-}
+mod tests;

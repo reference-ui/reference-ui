@@ -39,6 +39,7 @@ fn from_definition(name: &str, definition: &RecipeDefinition) -> Recipe {
         variants: variants_to_wants(&definition.variants),
         default_variants: definition.default_variants.clone(),
         compounds: compounds_to_ir(&definition.compound_variants),
+        location: crate::diagnostics::DiagnosticLocation::default(),
     }
 }
 

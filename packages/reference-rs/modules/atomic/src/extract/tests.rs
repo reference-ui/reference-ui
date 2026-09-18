@@ -20,6 +20,7 @@ fn compile_code(code: &str) -> crate::CompileResult {
 fn test_flat_and_nested_ternaries() {
     let res = compile_code(
         r#"
+        import { Div } from '@reference-ui/react';
         export const Comp = ({ isLine, horizontal, isSelected }) => (
             <Div
                 borderBottom={
@@ -48,7 +49,7 @@ fn test_flat_and_nested_ternaries() {
 #[test]
 fn test_undefined_alternate_omitted() {
     let res = compile_code(
-        r#"export const Comp = ({ active }) => <Div bg={active ? 'n300' : undefined} />"#,
+        r#"import { Div } from '@reference-ui/react'; export const Comp = ({ active }) => <Div bg={active ? 'n300' : undefined} />"#,
     );
     assert_eq!(res.wants.len(), 1);
     assert_eq!(&*res.wants[0].prop, "bg");
@@ -60,6 +61,7 @@ fn test_undefined_alternate_omitted() {
 fn test_logical_expressions_symmetric() {
     let res = compile_code(
         r#"
+        import { Div } from '@reference-ui/react';
         export const Comp = ({ isSelected }) => (
             <Div
                 border={false && '1px solid'}
@@ -89,7 +91,9 @@ fn test_logical_expressions_symmetric() {
 
 #[test]
 fn test_responsive_arrays() {
-    let res = compile_code(r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#);
+    let res = compile_code(
+        r#"import { Div } from '@reference-ui/react'; export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#,
+    );
     assert_eq!(res.wants.len(), 3);
     assert!(res.wants.iter().any(|w| &*w.prop == "mt"
         && w.value.to_string() == "1r"
@@ -231,7 +235,8 @@ fn test_custom_breakpoint_scale() {
     let req = CompileRequest {
         files: Some(vec![VirtualSource {
             path: "test.tsx".to_string(),
-            content: r#"export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#.to_string(),
+            content: r#"import { Div } from '@reference-ui/react'; export const Comp = () => <Div mt={['1r', '2r', '4r']} />"#
+                .to_string(),
         }]),
         base_system: system,
         ..Default::default()
@@ -258,7 +263,7 @@ fn test_tokens_breakpoints_scale() {
     let req = CompileRequest {
         files: Some(vec![VirtualSource {
             path: "test.tsx".to_string(),
-            content: r#"export const Comp = () => <Div p={['10px', '20px', '30px']} />"#
+            content: r#"import { Div } from '@reference-ui/react'; export const Comp = () => <Div p={['10px', '20px', '30px']} />"#
                 .to_string(),
         }]),
         base_system: system,
@@ -281,6 +286,7 @@ fn test_tokens_breakpoints_scale() {
 fn test_locked_aliases_follow_canon() {
     let res = compile_code(
         r#"
+        import { Div } from '@reference-ui/react';
         export const Comp = () => (
             <Div
                 mt="10px"
@@ -337,7 +343,7 @@ fn test_locked_aliases_follow_canon() {
 #[test]
 fn test_responsive_r_object() {
     let res = compile_code(
-        r#"export const Comp = () => <Div r={{ 300: { p: '1r' }, md: { mt: '2r' } }} />"#,
+        r#"import { Div } from '@reference-ui/react'; export const Comp = () => <Div r={{ 300: { p: '1r' }, md: { mt: '2r' } }} />"#,
     );
     assert!(res.wants.iter().any(|w| &*w.prop == "p"
         && w.value.to_string() == "1r"

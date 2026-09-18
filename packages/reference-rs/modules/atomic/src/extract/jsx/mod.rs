@@ -12,6 +12,7 @@ use oxc_ast::ast::{
 use smallvec::{smallvec, SmallVec};
 
 use crate::atom::Want;
+use crate::diagnostics::line_col;
 use crate::extract::ExtractContext;
 use canon::{is_condition_prop, is_known_style_prop};
 
@@ -20,6 +21,7 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div mt="2r" css={{ color: 'red' }} r={{ md: { p: '1r' } }} />
     let tag_name = format_jsx_element_name(&opening.name);
     if !ctx.allows_jsx_tag(&tag_name) {
+        report_dropped_tag(opening, &tag_name, ctx);
         return;
     }
     let origin = Some(tag_name.as_str());
@@ -173,11 +175,59 @@ fn walk_style_attr(
 ) {
     // <Div css={{ color: 'red' }} />
     // <Div _hover={{ bg: 'n200' }} />
-    let Expression::ObjectExpression(obj) = expr else {
+    // <Div css={[{ color: 'blue.300' }, { backgroundColor: 'green.300' }]} />
+    match expr {
+        Expression::ObjectExpression(obj) => {
+            let mut obj_ctx = ctx.object_walk(origin, false);
+            crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
+        }
+        Expression::ArrayExpression(arr) => walk_style_attr_array(arr, origin, ctx, when),
+        _ => {}
+    }
+}
+
+fn walk_style_attr_array(
+    arr: &oxc_ast::ast::ArrayExpression<'_>,
+    origin: Option<&str>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    // <Div css={[{ color: 'blue.300' }, { backgroundColor: 'green.300' }]} />
+    for elem in &arr.elements {
+        if let Some(elem_expr) = elem.as_expression() {
+            walk_style_attr(elem_expr, origin, ctx, when);
+        }
+    }
+}
+
+/// Report a dropped tag when no hosts are resolvable at all. Unknown tags
+/// under a known graph stay silent; style-bearing tags with an empty host
+/// set are a missing-graph error at the tag's position, once per file.
+fn report_dropped_tag(
+    opening: &JSXOpeningElement<'_>,
+    tag_name: &str,
+    ctx: &mut ExtractContext<'_>,
+) {
+    if !ctx.jsx_hosts.is_empty() || !tag_may_carry_styles(opening) {
         return;
-    };
-    let mut obj_ctx = ctx.object_walk(origin, false);
-    crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
+    }
+    let (line, column) = ctx
+        .source
+        .and_then(|source| line_col(source, opening.span.start))
+        .unzip();
+    ctx.report_missing_graph(tag_name, line, column);
+}
+
+/// True when the tag names a style/condition attr or spreads, which may
+/// forward StyleProps. Plain tags (`<div id="x" />`) never report.
+fn tag_may_carry_styles(opening: &JSXOpeningElement<'_>) -> bool {
+    opening.attributes.iter().any(|item| match item {
+        JSXAttributeItem::Attribute(attr) => {
+            let name = format_jsx_attribute_name(&attr.name);
+            is_known_style_prop(&name) || is_condition_prop(&name)
+        }
+        JSXAttributeItem::SpreadAttribute(_) => true,
+    })
 }
 
 fn format_jsx_element_name(name: &JSXElementName<'_>) -> String {

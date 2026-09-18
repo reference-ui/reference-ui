@@ -1,3 +1,5 @@
+import { Div } from '@reference-ui/react'
+
 export const Table = ({
   isHovered,
   isActive,

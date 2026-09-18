@@ -89,7 +89,7 @@ function buildPropertiesAndAliases(platformCss: PlatformCss): {
         name: ext.name,
         css: ext.css,
         classPrefix: ext.classPrefix,
-        longhands: [],
+        longhands: ext.longhands ? [...ext.longhands] : [],
       });
     }
   }

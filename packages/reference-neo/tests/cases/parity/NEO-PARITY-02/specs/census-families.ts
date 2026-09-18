@@ -1,9 +1,10 @@
 // census-families.ts — the checked-in PARITY-02 family table for
 // NEO-PARITY-02. It takes nothing and emits the 43 census rows (F1–F37 plus
 // T-A–T-F per oracle C §2) with their sheet markers, must-not-appear
-// strings, union cites, and blocked cites, plus the 12 known-unproven (b)
-// rows the census shows with their RS owners instead of silently missing.
-// Markers are verbatim sheet substrings proven against the mini-lib sheet.
+// strings, union cites, and blocked cites, plus the known-unproven (b)
+// table the census shows with RS owners instead of silently missing.
+// The (b) table is empty: all six N2 rows landed. Markers are verbatim
+// sheet substrings proven against the mini-lib sheet.
 
 export interface CensusFamily {
   id: string;
@@ -177,7 +178,7 @@ export const FAMILIES: CensusFamily[] = [
     markers: ['::placeholder', 'calc(3.5 * var(--spacing-root))'],
     absent: [],
     union: [],
-    blocked: ['NEO-COND-14'],
+    blocked: [],
   },
   { id: 'T-F', markers: ['font-family_sans', '--font-weights-sans-bold: 700'], absent: [], union: [], blocked: [] },
 ];
@@ -188,17 +189,4 @@ export interface BlockedRow {
   rs: string;
 }
 
-export const BLOCKED: BlockedRow[] = [
-  { row: 'NEO-COND-05', group: 'cond', rs: 'RS-12' },
-  { row: 'NEO-COND-10', group: 'cond', rs: 'RS-12' },
-  { row: 'NEO-COND-15', group: 'cond', rs: 'RS-15' },
-  { row: 'NEO-GLOBAL-06', group: 'global', rs: 'RS-11' },
-  { row: 'NEO-SITE-01', group: 'site', rs: 'RS-14' },
-  { row: 'NEO-SITE-02', group: 'site', rs: 'RS-14' },
-  { row: 'NEO-SITE-03', group: 'site', rs: 'RS-14' },
-  { row: 'NEO-TOKEN-13', group: 'token', rs: 'RS-16' },
-  { row: 'NEO-COND-14', group: 'cond', rs: 'RS-17' },
-  { row: 'NEO-RECIPE-07', group: 'recipe', rs: 'RS-18' },
-  { row: 'NEO-SITE-13', group: 'site', rs: 'RS-19' },
-  { row: 'NEO-SITE-14', group: 'site', rs: 'RS-5' },
-];
+export const BLOCKED: BlockedRow[] = [];

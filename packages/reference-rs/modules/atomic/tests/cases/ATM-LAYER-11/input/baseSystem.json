@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-font-face-array",
+  "tokens": {},
+  "fonts": {
+    "sans": {
+      "value": "\"Inter\", sans-serif",
+      "fontFace": [
+        {
+          "src": "url(/fonts/inter-normal.woff2)",
+          "fontStyle": "normal",
+          "sizeAdjust": "100%"
+        },
+        {
+          "src": "url(/fonts/inter-italic.woff2)",
+          "fontStyle": "italic",
+          "sizeAdjust": "100%"
+        }
+      ]
+    },
+    "mono": {
+      "value": "\"JetBrains Mono\", monospace",
+      "fontFace": {
+        "src": "url(/fonts/mono.woff2)",
+        "sizeAdjust": "100%"
+      }
+    }
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

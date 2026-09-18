@@ -4,6 +4,7 @@
 
 pub mod border;
 pub mod dimensional;
+pub mod pair;
 pub mod parser;
 #[cfg(test)]
 mod tests;
@@ -32,9 +33,12 @@ fn expand_dimensional(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomVa
     dimensional::expand_dimensional_shorthand(prop, raw_val)
 }
 
-/// Expand composite or dimensional shorthand into atomic longhand declarations.
+/// Expand composite, dimensional, or pair shorthand into atomic longhand declarations.
 pub fn expand_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<str>, AtomValue)>> {
-    // borderBottom: '3px solid'  /  padding: '1r 2r'
+    // borderBottom: '3px solid'  /  padding: '1r 2r'  /  borderTopRadius: '2r'
+    if let Some(expanded) = pair::expand_pair_shorthand(prop, value) {
+        return Some(expanded);
+    }
     let raw_val = extract_raw_val(value)?;
     border::expand_border_shorthand(prop, raw_val).or_else(|| expand_dimensional(prop, raw_val))
 }

@@ -39,7 +39,8 @@ fn custom_system() -> BaseSystem {
 
 fn emit(system: &BaseSystem) -> String {
     let mut out = String::new();
-    append_system_layers(&mut out, system);
+    let mut diagnostics = Vec::new();
+    append_system_layers(&mut out, system, &mut diagnostics);
     out
 }
 
@@ -108,6 +109,44 @@ fn camel_case_keyframe_props_emit_kebab() {
 }
 
 #[test]
+fn keyframe_bodies_resolve_token_refs_and_rhythm() {
+    let system = BaseSystem::from_json(
+        r##"{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{"colors":{"brand":{"value":"#ff0000"}}},"fonts":{},"globalCss":[],"keyframes":{"grow":{"from":{"backgroundColor":"{colors.brand}","width":"1r"},"to":{"backgroundColor":"{colors.brand}","width":"4r"}}},"recipes":{},"staticCss":{},"provenance":[]}"##,
+    )
+    .unwrap();
+    let css = emit(&system);
+    assert!(css.contains("@keyframes grow"));
+    assert!(css.contains("background-color: var(--colors-brand);"));
+    assert!(css.contains("width: var(--spacing-root);"));
+    assert!(css.contains("width: calc(4 * var(--spacing-root));"));
+    assert!(!css.contains("{colors.brand}"));
+}
+
+#[test]
+fn keyframe_alias_props_lower_like_css() {
+    let system = BaseSystem::from_json(
+        r#"{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{"sizes":{"4":{"value":"1rem"}}},"fonts":{},"globalCss":[],"keyframes":{"roll":{"from":{"h":"4"},"to":{"h":"8"}}},"recipes":{},"staticCss":{},"provenance":[]}"#,
+    )
+    .unwrap();
+    let css = emit(&system);
+    assert!(css.contains("@keyframes roll"));
+    assert!(css.contains("height: var(--sizes-4);"));
+    assert!(css.contains("height: 8px;"));
+    assert!(!css.contains(" h:"));
+}
+
+#[test]
+fn keyframe_unresolvable_values_print_verbatim() {
+    let system = BaseSystem::from_json(
+        r#"{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{},"fonts":{},"globalCss":[],"keyframes":{"drift":{"from":{"backgroundColor":"{colors.ghost}","transform":"scale(0.3)"}}},"recipes":{},"staticCss":{},"provenance":[]}"#,
+    )
+    .unwrap();
+    let css = emit(&system);
+    assert!(css.contains("background-color: {colors.ghost};"));
+    assert!(css.contains("transform: scale(0.3);"));
+}
+
+#[test]
 fn font_face_prints_in_layer_global() {
     let mut fonts = indexmap::IndexMap::new();
     fonts.insert(
@@ -116,14 +155,14 @@ fn font_face_prints_in_layer_global() {
             value: "Inter, sans-serif".to_string(),
             weights: indexmap::IndexMap::new(),
             css: indexmap::IndexMap::new(),
-            font_face: Some(FontFaceDefinition {
+            font_face: Some(vec![FontFaceDefinition {
                 src: "url(/fonts/inter.woff2)".to_string(),
                 font_weight: Some("400 700".to_string()),
                 font_display: Some("swap".to_string()),
                 font_style: None,
                 size_adjust: Some("104%".to_string()),
                 descent_override: Some("47%".to_string()),
-            }),
+            }]),
         },
     );
     let system = BaseSystem {
@@ -139,6 +178,41 @@ fn font_face_prints_in_layer_global() {
     assert!(css.contains("font-weight: 400 700;"));
     assert!(css.contains("size-adjust: 104%;"));
     assert!(css.contains("descent-override: 47%;"));
+}
+
+#[test]
+fn font_face_array_prints_one_block_per_entry() {
+    let mut fonts = indexmap::IndexMap::new();
+    fonts.insert(
+        "sans".to_string(),
+        base_system::FontDefinition {
+            value: "Inter, sans-serif".to_string(),
+            weights: indexmap::IndexMap::new(),
+            css: indexmap::IndexMap::new(),
+            font_face: Some(vec![
+                FontFaceDefinition {
+                    src: "url(/fonts/inter-normal.woff2)".to_string(),
+                    font_style: Some("normal".to_string()),
+                    ..Default::default()
+                },
+                FontFaceDefinition {
+                    src: "url(/fonts/inter-italic.woff2)".to_string(),
+                    font_style: Some("italic".to_string()),
+                    ..Default::default()
+                },
+            ]),
+        },
+    );
+    let system = BaseSystem {
+        fonts: base_system::FontScale::from_definitions(fonts),
+        ..Default::default()
+    };
+    let css = emit(&system);
+    assert_eq!(css.matches("@font-face {").count(), 2);
+    assert!(css.contains("src: url(/fonts/inter-normal.woff2);"));
+    assert!(css.contains("src: url(/fonts/inter-italic.woff2);"));
+    assert!(css.contains("font-style: normal;"));
+    assert!(css.contains("font-style: italic;"));
 }
 
 #[test]

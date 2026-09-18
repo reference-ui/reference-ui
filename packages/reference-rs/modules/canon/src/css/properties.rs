@@ -401,7 +401,12 @@ pub const CANONICAL_PROPERTIES: &[Property] = &[
         "border-end-end-radius",
         &[],
     ),
-    Property::new("borderEndRadius", "border-end-radius", "rounded-e", &[]),
+    Property::new(
+        "borderEndRadius",
+        "border-end-radius",
+        "rounded-e",
+        super::longhands::BORDER_END_RADIUS_LONGHANDS,
+    ),
     Property::new(
         "borderEndStartRadius",
         "border-end-start-radius",
@@ -603,7 +608,12 @@ pub const CANONICAL_PROPERTIES: &[Property] = &[
         "border-start-end-radius",
         &[],
     ),
-    Property::new("borderStartRadius", "border-start-radius", "rounded-s", &[]),
+    Property::new(
+        "borderStartRadius",
+        "border-start-radius",
+        "rounded-s",
+        super::longhands::BORDER_START_RADIUS_LONGHANDS,
+    ),
     Property::new(
         "borderStartStartRadius",
         "border-start-start-radius",

@@ -15,10 +15,11 @@ reads everything and edits nothing.
 The world authors strictly inside the proven dialect (w4-synthesis §3):
 inline every style object literally — no ternaries, const refs, or spreads
 in extraction positions (RS-14); no parent-combinator keys (RS-12), no
-`@supports` keys (RS-15), no `& ~ &` (RS-11); keyframes hand-write
-`var(--…)` (RS-16); no `_file` (RS-17), boolean-attr macros (RS-19), or
-hostless worlds (RS-5); no F1-style slashes, scoped reset, or
-undispositioned F-items. Tags span button, input + bezel, file-or-range,
+`& ~ &` (RS-11); `@supports` keys landed with RS-15 (P5); keyframes
+hand-write `var(--…)` (RS-16 landed, world unchanged); no `_file`
+(RS-17 landed, world unchanged), boolean-attr macros (RS-19 landed,
+world unchanged), or hostless worlds (RS-5 landed, world unchanged); no
+F1-style slashes, scoped reset, or undispositioned F-items. Tags span button, input + bezel, file-or-range,
 disclosure, table, link + `q` (oracle C §4); a small `staticCss` map covers
 F29 cardinality; the flip is `data-color-mode` only, never
 `data-panda-theme`. RS-18 (recipe diagnostic locations) needs no world
@@ -54,21 +55,21 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 | --- | ---: | --- |
 | sync | 5+5 | types/ pkg D19 · font-registry.json · packaged core types · styled/tokens\|themes\|extensions/ · D7 bugs ‖ panda.config + styled machinery · virtual/ · watch/Vite/Webpack/CLI/session · strict/layers/mcp config · cva/css.raw |
 | cond | 5+6 | rtl/_ltr/_rtl · @slot cartesian · custom conditions table · ★DELTA-1 forced-colors/@supports/(hover:hover) · ★DELTA-2 zero-count pseudos ‖ rtl wraps · @slot · conditions table · four-way dark · _themePrimary · hideFrom/hideBelow |
-| token | 13+8 | colorPalette D14 · token() D15 · composite objects · themes JSON · :where(html) · hashed vars · ★F2 0.33% D7 · ★F3 /half · ★OOD bp-conditioned values · ★OOD osDark:highCon · ★OOD forced-colors islands · ★OOD token() fallbacks · ★OOD percent cssVar ‖ semanticTokens · @slot OR · DEFAULT · strict hatches · token.var · text/layer/animation styles · asset tokens · circular refs |
-| css | 5+6 | hideFrom/hideBelow · shared-class custom utils · @scope · token() · capital-W vendor keys ‖ prefix/hash · fromJSON wire · truncate · textStyle/animationStyle · divideX/Y · template-literal css |
+| token | 16+8 | colorPalette D14 · token() D15 · composite objects · themes JSON · :where(html) · hashed vars · ★F2 0.33% D7 · ★F3 /half · ★OOD bp-conditioned values · ★OOD osDark:highCon · ★OOD forced-colors islands · ★OOD token() fallbacks · ★OOD percent cssVar · leading-zero numerics · flat-nested token miss · slash diagnostic wording ‖ semanticTokens · @slot OR · DEFAULT · strict hatches · token.var · text/layer/animation styles · asset tokens · circular refs |
+| css | 7+6 | hideFrom/hideBelow · shared-class custom utils · @scope · token() · capital-W vendor keys · numerics lower to px · no autoprefixer ‖ prefix/hash · fromJSON wire · truncate · textStyle/animationStyle · divideX/Y · template-literal css |
 | resp | 3+7 | @media breakpoints D8 · hideFrom/hideBelow · {sizes.x} ‖ @breakpoint macro · rem epsilon · RTL×resp · named container statics · sort-mq · recipe resp variants (→RECIPE-08) · globalCss resp keys (→GLOBAL) |
 | merge | 4+5 | red-then-blue · mergeProps · walkObject leaves · GHOST-04 ‖ sort comparators · hideFrom/hideBelow · shared className · token() · sva merge |
 | recipe | 4+6 | sva D9 · cva D3 · _base inner layer · static expansion ‖ sva/slots layer · cva · nested layers · static combo expansion · staticCss.recipes · const-bound indirection |
 | global | 6+10 | banner+var-dump D7 · base global.css artifact D2 · tokens-layer keyframes · comma-merge · colorPalette/size_md/leftover/dup-dark D7 · data-theme rules in global ‖ themes JSON · :where(html)+@property · @position-try · divideX/Y · static cardinality · viewport breakpoints · groupHover/peerFocus · sva · token() · preflight |
-| site | 7+7 | tagged templates · Vue/Svelte · compiled JSX · importMap · matchTag/PascalCase · token() inlining · css.raw ‖ styled() factory · patterns pack · cva/sva · template-literal syntax · jsxFramework modes · strictTokens type-level · staticCss config |
+| site | 9+7 | tagged templates · Vue/Svelte · compiled JSX · importMap · matchTag/PascalCase · token() inlining · css.raw · element-access refusal · computed-key refusal ‖ styled() factory · patterns pack · cva/sva · template-literal syntax · jsxFramework modes · strictTokens type-level · staticCss config |
 | prim | 3+5 | Box/Flex/Grid · as · cx/splitCssProps ‖ styled()/factory · pattern fns · data-panda-theme/data-theme · liquid/forwardRef · sva on primitives |
 | static | 4+5 | static recipes · static slots/patterns · colorPalette wildcards · named container statics ‖ cache/memo/bench · freeform condition strings · sva statics · text/layer statics · prefix/hash |
 | layer | 6+4 | empty base/recipes bodies · recipes._base/slots inner · compositions layer · banner+var-dump D7 · colorPalette atoms · ★F7 scoped reset ‖ custom layer names · LightningCSS five-layer · static recipe expansion · panda.config/global.css inputs |
 | type | 6+6 | strict hatches D17 · pattern+factory types · recipes d.ts + tokens.mjs/token() · styled global.d.ts · TokenCategory/ColorPalette unions · text/layer/animation+asset+formatTokenName+hashed ‖ bare sm keys · ConditionalValue variants · csstype dump · atomic names in d.ts · cva/css.raw · token.var/globalVars |
 | ★ parity-owned | 1 | P-DELTA-4: boolean leaks (`.focus_true`, `.isolation_true`, …) + dotted passthroughs (`background: ui.panel.background`) — D7 extension, captain auto-§3 (w4-synthesis C-DELTA-4) |
 
-Group union: 151 entries (71 approved + 80 out-of-scope, incl. 10 appended
-`★`); census list = 152 with P-DELTA-4. B-G13 strictTokens needs no new
+Group union: 158 entries (78 approved + 80 out-of-scope, incl. 10 appended
+`★`); census list = 159 with P-DELTA-4. B-G13 strictTokens needs no new
 line — type/SPEC.md already absents it (D17).
 
 ## Out of scope (carried, never census input)

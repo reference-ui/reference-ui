@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "site-unknown-prop-policy",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "n12",
+      "rules": {
+        ".btn": {
+          "&:hover": { "divideX": "40px", "color": "blue" }
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

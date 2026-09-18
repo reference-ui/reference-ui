@@ -9,6 +9,7 @@ export interface ExtensionProp {
   css: string;
   classPrefix: string;
   color?: true;
+  longhands?: readonly string[];
 }
 
 export const EXTENSIONS = [
@@ -33,8 +34,8 @@ export const EXTENSIONS = [
   { name: 'backgroundRadial', css: 'background-radial', classPrefix: 'background-radial' },
   { name: 'backgroundConic', css: 'background-conic', classPrefix: 'background-conic' },
   { name: 'textShadowColor', css: 'text-shadow-color', classPrefix: 'text-shadow-color', color: true },
-  { name: 'borderStartRadius', css: 'border-start-radius', classPrefix: 'rounded-s' },
-  { name: 'borderEndRadius', css: 'border-end-radius', classPrefix: 'rounded-e' },
+  { name: 'borderStartRadius', css: 'border-start-radius', classPrefix: 'rounded-s', longhands: ['borderStartStartRadius', 'borderEndStartRadius'] },
+  { name: 'borderEndRadius', css: 'border-end-radius', classPrefix: 'rounded-e', longhands: ['borderStartEndRadius', 'borderEndEndRadius'] },
   { name: 'fontSmoothing', css: 'font-smoothing', classPrefix: 'font-smoothing' },
   { name: 'animationState', css: 'animation-state', classPrefix: 'anim-s' },
   { name: 'webkitTextFillColor', css: 'webkit-text-fill-color', classPrefix: 'webkit-text-fill-color', color: true },

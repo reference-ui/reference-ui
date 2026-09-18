@@ -8,7 +8,7 @@ export const NAMED_CONDITIONS = [
   // CSS-true pseudo-classes and pseudo-elements
   '_active', '_after', '_autofill', '_backdrop', '_before',
   '_checked', '_default', '_disabled', '_empty', '_enabled',
-  '_even', '_first', '_firstOfType', '_focus', '_focusVisible',
+  '_even', '_file', '_first', '_firstOfType', '_focus', '_focusVisible',
   '_focusWithin', '_fullscreen', '_hover', '_indeterminate', '_invalid',
   '_last', '_lastOfType', '_marker', '_odd', '_only',
   '_onlyOfType', '_optional', '_placeholder', '_placeholderShown', '_readOnly',

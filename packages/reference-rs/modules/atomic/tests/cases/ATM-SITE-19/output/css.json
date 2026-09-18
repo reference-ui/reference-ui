@@ -1,0 +1,5 @@
+{
+  "backgroundColor:green.300": "@reference-ui/lib__bg-c_green.300",
+  "color:blue.300": "@reference-ui/lib__c_blue.300",
+  "color:yellow.300": "@reference-ui/lib__c_yellow.300"
+}

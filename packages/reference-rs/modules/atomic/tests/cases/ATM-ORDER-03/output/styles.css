@@ -1,25 +1,10 @@
 @layer order-03 {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer utilities {
-    .order-03__hover\:c_red:is(:hover, [data-hover]) {
-      color: red;
-    }
-    .order-03__focus\:c_red:is(:focus, [data-focus]) {
-      color: red;
-    }
-    .order-03__focusVisible\:c_red:is(:focus-visible, [data-focus-visible]) {
-      color: red;
-    }
-    .order-03__active\:c_red:is(:active, [data-active]) {
-      color: red;
-    }
-    .order-03__disabled\:c_red:is(
-      :disabled,
-      [disabled],
-      [data-disabled],
-      [aria-disabled='true']
-    ) {
-      color: red;
-    }
-  }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .order-03__hover\:c_red:is(:hover, [data-hover]) { color: red; }
+  .order-03__focus\:c_red:is(:focus, [data-focus]) { color: red; }
+  .order-03__focusVisible\:c_red:is(:focus-visible, [data-focus-visible]) { color: red; }
+  .order-03__active\:c_red:is(:active, [data-active]) { color: red; }
+  .order-03__disabled\:c_red:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { color: red; }
+}
 }

@@ -11,9 +11,10 @@ import { Div } from '@reference-ui/react'
 String attrs, expression containers, boolean props, spreads, `r={{…}}`,
 and a `css={…}` attr are all JSX. Tags extract when they are in the
 styletrace name set or imported from `@reference-ui/react` /
-`@reference-ui/styled`. An empty host set keeps the pre-gate scan so
-stations that never imported a primitive still compile. Once any host
-is known, other tags (including local `<Foo mt="2r" />`) are skipped.
+`@reference-ui/styled`. An empty host set admits nothing: style-bearing
+JSX with no hosts resolvable is a missing-graph error (ATM-SITE-13),
+once per file. Once any host is known, other tags (including local
+`<Foo mt="2r" />`) are skipped silently.
 
 ## Must not
 

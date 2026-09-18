@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-global-breakpoints",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "rs-28",
+      "rules": {
+        ".btn": {
+          "width": { "base": "40px", "lg": "90px" },
+          "sm": { "fontSize": "12px" },
+          "base": { "lineHeight": "2" },
+          "margin": { "base": "0", "_dark": "8px", "mdDown": "6px", "nope": "1px" },
+          "smOnly": { "borderWidth": "2px" }
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

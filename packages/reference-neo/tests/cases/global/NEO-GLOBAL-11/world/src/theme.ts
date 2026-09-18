@@ -6,7 +6,7 @@ import { globalCss } from '@reference-ui/neo'
 
 globalCss({
   '.ref-range::-webkit-slider-thumb': {
-    '-webkit-appearance': 'none',
+    webkitAppearance: 'none',
     appearance: 'none',
     backgroundColor: '{colors.ui.progress.bar.foreground}',
     width: '24px',

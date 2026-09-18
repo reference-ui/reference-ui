@@ -1,0 +1,3 @@
+{
+  "@supports (display: grid):sm:&:hover:color:red.500": "@reference-ui/lib__[@supports_(display:_grid)]:sm:[&:hover]:c_red.500"
+}

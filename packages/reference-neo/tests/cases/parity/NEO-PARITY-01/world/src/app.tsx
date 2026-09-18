@@ -1,10 +1,11 @@
 // Entry for the PARITY-01 mini-lib world. It takes the generated primitives
 // plus css()/recipe() and emits the six lib-shaped components (button, field
 // bezel, file, disclosure, table, link) together with every live W4 probe
-// node: the sibling, radius, style-var, height-recipe, named-container,
-// attr-hover, breadth, first-child, dark-mix, and vendor probes, plus the
+// node: the sibling, radius, pair-radius, style-var, height-recipe,
+// named-container, attr-hover, breadth, first-child, dark-mix, supports,
+// vendor, gradient, array-css, and numeric/media/breakpoint probes, plus the
 // F1 slash input. A second root renders the dark island as a body child.
-// Every style object is literal; P5/P14/P15 stay out (RS-15/22/23).
+// Every style object is literal.
 import {
   A,
   Button,
@@ -27,6 +28,14 @@ import {
   recipe,
 } from '@reference-ui/react'
 
+const supportsMix = css({
+  color: 'ink',
+  '@supports (display: grid)': { sm: { color: 'brand' } },
+})
+const supportsEmpty = css({
+  color: 'ink',
+  '@supports': { color: 'accent' },
+})
 const sibling = css({ '& + &': { marginLeft: '8px' } })
 const attrHover = css({ '&[data-state="open"]:hover': { color: 'brand' } })
 const slashInvalid = css({ bg: 'red/abc' })
@@ -38,6 +47,14 @@ const calcSize = css({ fontSize: '3.5r' })
 const importantInk = css({ color: 'brand!' })
 const tokenRadius = css({ borderRadius: 'lg' })
 const rhythmRadius = css({ borderRadius: '1r' })
+const pairRadius = css({
+  borderTopRadius: '2r',
+  borderBottomRadius: '2r',
+  borderLeftRadius: '2r',
+  borderRightRadius: '2r',
+})
+const logicalRadius = css({ borderStartRadius: '2r', borderEndRadius: '2r' })
+const gradientText = css({ textGradient: 'linear-gradient({colors.red.200}, {colors.blue.300})' })
 const animated = css({ animation: 'fade.quick' })
 const namedRoot = css({ container: true })
 const groupOnly = css({ color: 'ink', _groupHover: { color: 'brand' } })
@@ -195,9 +212,15 @@ export function SiteRegion() {
       <Div id="f32" className={containerWidth}>
         wide
       </Div>
+      <Div id="p5" className={supportsMix}>
+        supports wide
+      </Div>
       <Div id="narrow" className={namedRoot} style={{ width: '400px' }}>
         <Div id="p13-narrow-first" className={nestedCls}>
           narrow
+        </Div>
+        <Div id="p5-narrow" className={supportsMix}>
+          supports narrow
         </Div>
       </Div>
     </Div>
@@ -243,6 +266,25 @@ export function SiteProbeLayout() {
       <Div id="p18" className={vendorOrient}>
         orient
       </Div>
+      <Div id="p5-empty" className={supportsEmpty}>
+        supports empty
+      </Div>
+      <Div id="p4" className={pairRadius}>
+        pairs
+      </Div>
+      <Div id="p4-logical" className={logicalRadius}>
+        logical pairs
+      </Div>
+      <Div id="p14" className={gradientText}>
+        gradient
+      </Div>
+      <Div id="p15" css={[{ color: 'blue.300' }, { backgroundColor: 'red.500' }]}>
+        array
+      </Div>
+      <Div id="p19">numeric</Div>
+      <Div id="p20">media</Div>
+      <Div id="p20-far">media far</Div>
+      <Div id="p21">breakpoints</Div>
       <Div id="f1" className={slashInvalid}>
         slash
       </Div>

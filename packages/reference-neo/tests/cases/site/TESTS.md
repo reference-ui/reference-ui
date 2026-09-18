@@ -2,9 +2,9 @@
 
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| NEO-SITE-01 | Literal ternary: both arms compile; the runtime-chosen arm paints; the other atom exists unused | blocked-on-rs (RS-14) | ATM-SITE-05 + RS-14 | — | computed + sheet count | `[decision D11]`; `[panda-v1]` `parser/__tests__/output.test.ts` L878 |
-| NEO-SITE-02 | Local `const` style object passed to `css()` compiles | blocked-on-rs (RS-14) | ATM-SITE-06 + RS-14 | — | computed | `[panda-v1]` `extractor/__tests__/unbox.test.ts` L4304 |
-| NEO-SITE-03 | Identifier spread `...rest` unpacks known keys | blocked-on-rs (RS-14) | ATM-SITE-11 + RS-14 | — | computed both | `[panda-v1]` `unbox.test.ts` L4328 |
+| NEO-SITE-01 | Literal ternary: both arms compile; the runtime-chosen arm paints; the other atom exists unused | done | ATM-SITE-05 + RS-14 | — | computed + sheet count | `[decision D11]`; `[panda-v1]` `parser/__tests__/output.test.ts` L878; `[atm]` SITE-05; JSX const/runtime ternaries fold here (N1/N2/N7) |
+| NEO-SITE-02 | Local `const` member `theme.primary` passed to `css()` compiles | done | ATM-SITE-06 + RS-14 | — | computed | `[panda-v1]` `extractor/__tests__/unbox.test.ts` L4304; `[atm]` SITE-06 |
+| NEO-SITE-03 | Identifier spread `...rest` unpacks known keys | done | ATM-SITE-11 + RS-14 | — | computed both | `[panda-v1]` `unbox.test.ts` L4328; `[atm]` SITE-11 |
 | NEO-SITE-04 | Import alias `css as c` and namespace `ui.css` are sites | done | ATM-SITE-15 | — | computed | `[panda-v1]` `css-2.test.ts` L310, `namespace.test.ts` |
 | NEO-SITE-05 | A local function named `css` is not a site | done | ATM-SITE-10 | — | no utility; no diagnostic noise | contrast Panda `cssParser` |
 | NEO-SITE-06 | Dynamic call value `color: pick()` mints no ghost and emits a located diagnostic (warning), sync succeeds | done | ATM-LEAF-07, ATM-FORBID-02 | `sync` succeeds; warning proven via frozen-request recompile (sync persists no diagnostics — see batch-2 report) | utility count; warning text | `[decision D11]`; `[panda-v1]` `extract.test.ts` L3223 |
@@ -14,8 +14,8 @@
 | NEO-SITE-10 | `css={{}}` on a primitive equals `css()` | done | ATM-SITE-14 | — | class equality | `[atm]` SITE-14 |
 | NEO-SITE-11 | Configured `jsxElements: ['Chart']` makes `<Chart p="1r">` a host | done | ATM-SITE-08 | `jsx-elements.ts` (+ RS-1 frozen `jsxHosts`) | computed | `[decision D12]`; Neo config |
 | NEO-SITE-12 | Unlisted PascalCase `<Random fontSize>` and lowercase `<div color>` are **not** hosts | done | ATM-SITE-08 | — | no utilities | anti-goal `output.test.ts` L3057 |
-| NEO-SITE-13 | Boolean attr `<Div border />` compiles the boolean macro form | blocked-on-rs (RS-19) | ATM-SITE-09 + RS-19 | — | computed border | `[atm]` SITE-09 |
-| NEO-SITE-14 | With no hosts resolvable, sync emits the SITE-13 diagnostic instead of scanning every tag | blocked-on-rs (RS-5) | RS-5 | `sync` | diagnostic present; no stray utilities | `[atm]` SITE-13 open |
+| NEO-SITE-13 | Boolean attr `<Div border />` compiles the boolean macro form | done | ATM-SITE-09 + ATM-SITE-18 (RS-19 landed) | — (no change: engine lowers `border: true` to width + style utilities with one plan) | computed 1px solid border; both classes on the probe; bare control | `[atm]` SITE-09, SITE-18 |
+| NEO-SITE-14 | With no hosts resolvable, the hostless tag yields zero utilities, and the emptied-hosts recompile fails closed with the located SITE-13 diagnostic | done | ATM-SITE-13 (RS-5 landed) | — (no change: SITE-06 frozen-recompile precedent) | zero sheet utilities; recompile carries the located `no StyleProps hosts resolvable` error + zero wants/plans | `[atm]` SITE-13 |
 
 ## RS lane (added by the SITE batch-1 cook)
 
@@ -70,7 +70,15 @@ against `@reference-ui/rust/atomic` `compile()`:
   `runtime.stylePlans` is missing.
 - Waiting Neo cases: NEO-SITE-01, NEO-SITE-02, NEO-SITE-03.
 
-**RS-19** (filed by the T8 mop cook; blocks NEO-SITE-13). The
+N0 update 2026-09-17 (captain): engine core cleared — ternary/member/spread
+emit one plan per want on both request paths (n0-rs-reverify §3 RS-14).
+SITE-01/02/03 return to `open` for R2 (R1 re-confirms first; residual gaps
+file a fresh row, never reopen RS-14). Liaison remainder: adopt
+`site_plan_tests.rs` into a real station. Whole-object `css(styles)` ruled
+out-of-dialect (site SPEC absence); its silence is documented there for a
+future row.
+
+**RS-19 — LANDED as ATM-SITE-18 (NEO-SITE-13 done; gap text below kept for provenance).** Filed by the T8 mop cook. The
 `<Div border />` boolean form extracts (ATM-SITE-09 pins the
 `Bool(true)` want) but lowers to nothing: R1 2026-09-17 via
 `compileSync` shows the want with zero classes, zero plans, and a
@@ -89,3 +97,29 @@ possible until the macro half lands.
   macro; warn-and-skip stays for genuinely non-CSS bools).
 - Waiting Neo case: NEO-SITE-13 (no case folder until the macro half
   lands).
+
+N2 update 2026-09-17 (cook): RS-19 landed as ATM-SITE-18 — `<Div border />`
+lowers to `border-width: 1px` + `border-style: solid` utilities with one
+two-declaration plan (R1 `/tmp/n2cook-r1.mjs` green, zero bool warnings).
+NEO-SITE-13 done (computed border + plan shape + bare control).
+
+**RS-5** (lane drafted by the captain at N1 from N0 re-verify; blocks
+NEO-SITE-14). With no hosts resolvable the engine must fail closed, but
+today the empty styletrace graph scans every tag: input `<Foo mt="4r" />`
+with no `@reference-ui/react` import extracts 1 want, class
+`@reference-ui/lib__mt_4r`, 1 plan, and 0 diagnostics (N0 RS-5;
+importless `<Div mt>`/`<Button color>` likewise extract 2/2/2).
+
+- Input: hostless world (style attrs, zero host imports).
+- Expected: zero wants plus a missing-graph diagnostic naming the file.
+- Should become: station ATM-SITE-13 (`atomic/SPEC.md:265-267`, open).
+- Waiting Neo case: NEO-SITE-14 (diagnostic present; no stray utilities).
+
+N2 update 2026-09-17 (cook): RS-5 landed as ATM-SITE-13 — the empty-host
+request fails closed with the located `no StyleProps hosts resolvable`
+error and zero wants/plans (R1 `/tmp/n2cook-r1.mjs` +
+`/tmp/n2cook-site14d.mjs` green). Real `sync()` always admits the 101
+primitives on the frozen request, so the hostless world syncs green with
+zero utilities and NEO-SITE-14 proves the diagnostic via the SITE-06
+frozen-recompile precedent (emptied `jsxHosts`); any host import or
+admitted host quiets it back to the silent unlisted-tag skip. Done.

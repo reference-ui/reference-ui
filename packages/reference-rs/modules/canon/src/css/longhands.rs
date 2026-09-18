@@ -77,6 +77,8 @@ pub static BORDER_COLOR_LONGHANDS: &[&str] = &[
     "borderBottomColor",
     "borderLeftColor",
 ];
+pub static BORDER_END_RADIUS_LONGHANDS: &[&str] =
+    &["borderStartEndRadius", "borderEndEndRadius"];
 pub static BORDER_IMAGE_LONGHANDS: &[&str] = &[
     "borderImageSource",
     "borderImageSlice",
@@ -121,6 +123,8 @@ pub static BORDER_RIGHT_LONGHANDS: &[&str] =
     &["borderRightWidth", "borderRightStyle", "borderRightColor"];
 pub static BORDER_RIGHT_RADIUS_LONGHANDS: &[&str] =
     &["borderTopRightRadius", "borderBottomRightRadius"];
+pub static BORDER_START_RADIUS_LONGHANDS: &[&str] =
+    &["borderStartStartRadius", "borderEndStartRadius"];
 pub static BORDER_STYLE_LONGHANDS: &[&str] = &[
     "borderTopStyle",
     "borderRightStyle",

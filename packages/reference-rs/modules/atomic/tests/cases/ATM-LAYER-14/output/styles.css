@@ -1,0 +1,18 @@
+@layer layer-keyframe-alias {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  @keyframes roll {
+    from { height: var(--sizes-4); }
+    to { height: 8px; }
+  }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --sizes-4: 1rem;
+  }
+}
+@layer utilities {
+  .layer-keyframe-alias__h_8 { height: 8px; }
+  .layer-keyframe-alias__h_4 { height: var(--sizes-4); }
+}
+}

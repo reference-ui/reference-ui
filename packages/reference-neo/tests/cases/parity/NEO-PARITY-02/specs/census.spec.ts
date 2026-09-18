@@ -79,10 +79,10 @@ function tripleKey(group: string, kind: string, label: string): string {
 }
 
 // The checked-in list equals the SPEC table exactly: same multiset of
-// group/kind/label triples, same per-group counts, 151 entries total.
+// group/kind/label triples, same per-group counts, 152 entries total.
 function checkTranscription(entries: ParsedEntry[], counts: Map<string, [number, number]>): void {
-  assert.equal(UNION.length, 152, `checked-in union holds 152 entries, got ${UNION.length}`);
-  assert.equal(entries.length, 152, `SPEC table holds 152 entries, got ${entries.length}`);
+  assert.equal(UNION.length, 159, `checked-in union holds 159 entries, got ${UNION.length}`);
+  assert.equal(entries.length, 159, `SPEC table holds 159 entries, got ${entries.length}`);
   const wanted = new Map<string, number>();
   for (const entry of entries) {
     const k = tripleKey(entry.group, entry.kind, entry.label);
@@ -148,10 +148,11 @@ function checkFamilies(styles: string): void {
   }
 }
 
-// The 12 known-unproven rows still read blocked-on-rs with their RS
-// owners in their group ledgers — shown, never silently missing.
+// No known-unproven rows remain: every row the (b) table ever showed has
+// landed and flipped to done in its group ledger. The loop below stays so
+// any future blocked row is still shown with its RS owner, never silent.
 function checkBlocked(c: NeoCase): void {
-  assert.equal(BLOCKED.length, 12, `census shows 12 known-unproven rows, got ${BLOCKED.length}`);
+  assert.equal(BLOCKED.length, 0, `census shows 0 known-unproven rows, got ${BLOCKED.length}`);
   for (const row of BLOCKED) {
     const ledger = fs.readFileSync(testsPath(c, row.group), 'utf8');
     const line = ledger.split('\n').find((candidate) => candidate.includes(`| ${row.row} |`));

@@ -76,6 +76,13 @@ escaped literal; TOKEN-02 → RS-3). D14 (`colorPalette` out), D15
 - W4 OOD-4: `token()` nested fallbacks (beyond D15). (w4-synthesis A-OOD.)
 - W4 OOD-5: percent cssVar (`--sizes-100%`). No `sizes` category.
   (w4-synthesis A-OOD.)
+- **Leading-zero numerics**: spellings like `margin: '025'` warn
+  (`Non-canonical numeric value`) and emit nothing (S1 probe N8).
+- **Flat-nested token miss**: paths like `black.10` warn (`unknown token
+  path`) and pass the value through (S1 probe N9).
+- **Slash diagnostic wording**: malformed-slash wording varies by shape
+  (`unknown token path` vs `malformed opacity modifier`; B2/B2b/B5) —
+  passthrough is the pinned behavior, not the text.
 
 ## Out of scope (Panda, not Reference)
 

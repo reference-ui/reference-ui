@@ -6,7 +6,7 @@
 //! for atomic stylesheet and font-face emission.
 
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 const GENERIC_FAMILIES: &[&str] = &["sans", "serif", "mono"];
 
@@ -46,8 +46,27 @@ pub struct FontDefinition {
     pub weights: IndexMap<String, String>,
     #[serde(default)]
     pub css: IndexMap<String, String>,
-    #[serde(default)]
-    pub font_face: Option<FontFaceDefinition>,
+    #[serde(default, deserialize_with = "de_opt_face_list")]
+    pub font_face: Option<Vec<FontFaceDefinition>>,
+}
+
+/// Single `fontFace` object or array of them on the evaluated-spec wire.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+enum SingleOrFaceList {
+    One(FontFaceDefinition),
+    Many(Vec<FontFaceDefinition>),
+}
+
+fn de_opt_face_list<'de, D>(deserializer: D) -> Result<Option<Vec<FontFaceDefinition>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let faces = Option::<SingleOrFaceList>::deserialize(deserializer)?.map(|faces| match faces {
+        SingleOrFaceList::One(face) => vec![face],
+        SingleOrFaceList::Many(faces) => faces,
+    });
+    Ok(faces.filter(|faces| !faces.is_empty()))
 }
 
 /// Name → definition map consulted by atomic `font` / `weight` lowering.
@@ -170,18 +189,18 @@ mod tests {
                 value: "Inter, sans-serif".to_string(),
                 weights: IndexMap::new(),
                 css: IndexMap::new(),
-                font_face: Some(FontFaceDefinition {
+                font_face: Some(vec![FontFaceDefinition {
                     src: "url(/fonts/inter.woff2) format(\"woff2\")".to_string(),
                     font_weight: Some("200 900".to_string()),
                     font_display: Some("swap".to_string()),
                     font_style: None,
                     size_adjust: None,
                     descent_override: None,
-                }),
+                }]),
             },
         );
         let scale = FontScale::from_definitions(fonts);
-        let face = scale.get("sans").unwrap().font_face.as_ref().unwrap();
+        let face = scale.get("sans").unwrap().font_face.as_ref().unwrap().first().unwrap();
         assert_eq!(face.src, "url(/fonts/inter.woff2) format(\"woff2\")");
         assert_eq!(face.font_weight.as_deref(), Some("200 900"));
         assert_eq!(face.font_display.as_deref(), Some("swap"));
@@ -242,12 +261,27 @@ mod tests {
             r#"{"value":"\"Literata\", serif","fontFace":{"src":"url(/fonts/literata.woff2)","sizeAdjust":"104%","descentOverride":"47%"}}"#,
         )
         .unwrap();
-        let face = def.font_face.as_ref().unwrap();
+        let face = def.font_face.as_ref().unwrap().first().unwrap();
         assert_eq!(face.size_adjust.as_deref(), Some("104%"));
         assert_eq!(face.descent_override.as_deref(), Some("47%"));
         assert!(face.font_weight.is_none());
         let bare: FontDefinition =
             serde_json::from_str(r#"{"value":"Inter, sans-serif"}"#).unwrap();
         assert!(bare.font_face.is_none());
+    }
+
+    #[test]
+    fn bas_font_06_accepts_font_face_arrays_and_empty_means_absent() {
+        let def: FontDefinition = serde_json::from_str(
+            r#"{"value":"Inter, sans-serif","fontFace":[{"src":"url(/n.woff2)","fontStyle":"normal"},{"src":"url(/i.woff2)","fontStyle":"italic"}]}"#,
+        )
+        .unwrap();
+        let faces = def.font_face.as_ref().unwrap();
+        assert_eq!(faces.len(), 2);
+        assert_eq!(faces[0].font_style.as_deref(), Some("normal"));
+        assert_eq!(faces[1].font_style.as_deref(), Some("italic"));
+        let empty: FontDefinition =
+            serde_json::from_str(r#"{"value":"Inter, sans-serif","fontFace":[]}"#).unwrap();
+        assert!(empty.font_face.is_none());
     }
 }

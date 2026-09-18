@@ -1,4 +1,4 @@
-import { css } from '@reference-ui/react'
+import { css, Div } from '@reference-ui/react'
 
 const theme = { primary: 'teal' }
 const rest = { mt: '2r' }

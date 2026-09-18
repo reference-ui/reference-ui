@@ -1,6 +1,6 @@
 //! Named `_` condition wraps the reference profile canonical conditions.
 //! Keys match canon `NAMED_CONDITIONS`. Lib TypeScript authors no conditions;
-//! these 78 wraps are canonical condition shapes (`&:is(:hover, [data-hover])` on the leaf
+//! these 79 wraps are canonical condition shapes (`&:is(:hover, [data-hover])` on the leaf
 //! and on group/peer). Host color mode uses `[data-color-mode=…]`, not `.dark` /
 //! `.light`. `_osDark` / `_print` / `_motionReduce` stay `@media`. Empty BaseSystem
 //! has no conditions.
@@ -44,6 +44,7 @@ const LIB_CONDITIONS: &[(&str, &str)] = &[
     ("_enabled", "&:enabled"),
     ("_even", "&:nth-of-type(even)"),
     ("_expanded", EXPANDED),
+    ("_file", "&::file-selector-button"),
     ("_first", "&:first-child"),
     ("_firstOfType", "&:first-of-type"),
     ("_focus", FOCUS),
@@ -143,7 +144,7 @@ const LIB_CONDITIONS: &[(&str, &str)] = &[
         "_peerInvalid",
         "&:is(:where(.peer, [data-peer]):is(:invalid, [data-invalid], [aria-invalid=true]) ~ *)",
     ),
-    ("_placeholder", "&::placeholder"),
+    ("_placeholder", "&::placeholder, &[data-placeholder]"),
     (
         "_placeholderShown",
         "&:is(:placeholder-shown, [data-placeholder-shown])",

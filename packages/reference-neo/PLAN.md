@@ -404,28 +404,33 @@ Known RS-lane slices at start (RS-1–RS-6 from the probes; RS-7 from the D1 hum
 | RS-2 | `FontFaceDefinition` gains `sizeAdjust`, `descentOverride`; `append_font_faces` prints them. | `NEO-GLOBAL-08` | done | RS liaison |
 | RS-3 | Missing `{token}` ref → error diagnostic with location (D13). | `NEO-TOKEN-02` | done | RS liaison |
 | RS-4 | base-system `BAS-EXTEND-*` (fragment adoption from upstream `PortableBaseSystem`) proven. | `NEO-SYNC-10`, `NEO-LAYER-02` | done | RS liaison |
-| RS-5 | `ATM-SITE-13`: empty styletrace graph must not scan all tags (diagnostic). | `NEO-SITE-14` | in-progress | RS liaison |
-| RS-6 | Docs: `atomic/SPEC.md` COND-03/08/LAYER-03 prose and `map.html` say `data-color-mode` + `@container`. | D1 hygiene (docs only) | open | RS liaison |
+| RS-5 | `ATM-SITE-13`: empty styletrace graph must not scan all tags (diagnostic). | `NEO-SITE-14` | done | RS liaison |
+| RS-6 | Docs: `atomic/SPEC.md` COND-03/08/LAYER-03 prose and `map.html` say `data-color-mode` + `@container`. | D1 hygiene (docs only) | done | RS liaison |
 
 | RS-7 | Engine retarget colour mode `data-theme` → `data-color-mode`: `_dark`/`_light` wraps, token islands, ~106 goldens, `contracts/fixtures`, `docs/FEATURES/DATA_THEME.md`. No dual-stamp. | `NEO-PRIM-07`, `NEO-COND-04`, `NEO-TOKEN-05` (P0) | done | RS liaison |
 | RS-8 | Responsive recipe variant values (`{ base, md }`) lower to `@container` per D8; station ATM-RECIPE-07 (ConditionalValue absent from typegen). Full input/expected-CSS/waiting-case text lives in `tests/cases/recipe/TESTS.md`. | `NEO-RECIPE-08` | done | RS liaison |
 | RS-9 | Per-prop responsive objects (`width: { base, md }`) + alias eviction at merge time; station ATM-COND-17 plus merge note. Full input/expected-CSS lives in `tests/cases/css/TESTS.md`. | `NEO-CSS-03` | done | RS liaison |
 | RS-10 | Frozen `NativeCompileRequest` carries no `include` scoping (`atomic::compile` scans all); add scoping so `include` globs limit scanning. Station ATM-SITE-17 or ATM-SCAN-01 at liaison's call. Full text in `tests/cases/sync/TESTS.md` RS lane. | `NEO-SYNC-09` (done; SITE rows need RS-14) | done | RS liaison |
-| RS-14 | Wants through ternary arms, member access, or identifier spread emit utilities but no `stylePlans`, so runtime `css()` returns `''`. Full text in `tests/cases/site/TESTS.md` RS lane. | `NEO-SITE-01/02/03` | in-progress | RS liaison |
-| RS-15 | `@supports` keys lower to selector fragments instead of at-rules (classifier routes only `@media`/`@container`). Station ATM-COND-19. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-COND-15` | in-progress | RS liaison |
-| RS-16 | Keyframe bodies print token refs and rhythm literally (`{colors.brand}`, `4r`) with zero diagnostics. Station ATM-LAYER-09 at liaison's call. Full text in `tests/cases/token/TESTS.md` RS lane. | `NEO-TOKEN-13` | in-progress | RS liaison |
-| RS-17 | `_file` unknown condition; `_placeholder` lacks its `[data-placeholder]` twin (filed as RS-14, relabeled — SITE holds RS-14). Station ATM-COND-18. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-COND-14` | in-progress | RS liaison |
-| RS-11 | `& ~ &` under a comma selector becomes `:is()` siblings. Full input/expected-CSS lives in `tests/cases/global/TESTS.md` RS lane. | `NEO-GLOBAL-06` | in-progress | RS liaison |
-| RS-12 | Parent-combinator keys (`'input:hover &'`) silently dropped: zero classes, zero diagnostics (R1 probes 05a–05d). Full text in `tests/cases/cond/TESTS.md` RS lane (filed mislabeled as RS-1, corrected here). | `NEO-COND-05` | in-progress | RS liaison |
-| RS-13 | RS golden-drift reconciliation: 112+ workspace-wide atomic golden failures from serializer churn (proven unrelated to RS-8/RS-10 slices); categorize every diff format-only vs semantic, fix or re-bless with per-file justification. | Trustworthy RS verdicts (no single case) | in-progress | RS liaison |
-| RS-18 | Recipe error diagnostics carry no source location (`Diagnostic::error` pushed bare in `extract/recipes/mod.rs`); add `file`/`line`/`column` per RS-3/ATM-TOKEN-12 precedent. Full text in `tests/cases/recipe/TESTS.md` RS lane. | `NEO-RECIPE-07` | in-progress | RS liaison |
-| RS-19 | `<Div border />` boolean form extracts (`Bool(true)` want) but lowers to nothing (refusal pinned deliberate; only `container: true` lowers); add boolean macro lowering (proposal: `border-width: 1px; border-style: solid`). Full text in `tests/cases/site/TESTS.md` RS lane. | `NEO-SITE-13` | in-progress | RS liaison |
+| RS-14 | Core cleared N0 (ternary/member/spread emit plans both paths; was: wants without `stylePlans`). Remainder: station adoption of `site_plan_tests.rs`. Whole-object `css(styles)` ruled out-of-dialect (site SPEC). Full text in `tests/cases/site/TESTS.md` RS lane. | `NEO-SITE-01/02/03` | done | RS liaison |
+| RS-15 | `@supports` keys lower to selector fragments instead of at-rules (classifier routes only `@media`/`@container`). Station ATM-COND-19. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-COND-15` | done | RS liaison |
+| RS-16 | Keyframe bodies print token refs and rhythm literally (`{colors.brand}`, `4r`) with zero diagnostics. Station ATM-LAYER-09 at liaison's call. Full text in `tests/cases/token/TESTS.md` RS lane. | `NEO-TOKEN-13` | done | RS liaison |
+| RS-17 | `_file` unknown condition; `_placeholder` lacks its `[data-placeholder]` twin (filed as RS-14, relabeled — SITE holds RS-14). Station ATM-COND-18. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-COND-14` | done | RS liaison |
+| RS-11 | `& ~ &` under a comma selector becomes `:is()` siblings. Full input/expected-CSS lives in `tests/cases/global/TESTS.md` RS lane. | `NEO-GLOBAL-06` | done | RS liaison |
+| RS-12 | Parent-combinator keys (`'input:hover &'`) silently dropped: zero classes, zero diagnostics (R1 probes 05a–05d). Full text in `tests/cases/cond/TESTS.md` RS lane (filed mislabeled as RS-1, corrected here). | `NEO-COND-05`, `NEO-COND-10` | done | RS liaison |
+| RS-13 | RS golden-drift reconciliation: 112+ workspace-wide atomic golden failures from serializer churn (proven unrelated to RS-8/RS-10 slices); categorize every diff format-only vs semantic, fix or re-bless with per-file justification. | Trustworthy RS verdicts (no single case) | done N3b (112F→1F: 108 format-only, 2 stale-golden `[data-theme]`→contract, 1 message-text `extends`; stop-line → RS-32; ledger `/tmp/n3b-rs13-ledger.md`) | RS liaison |
+| RS-18 | Recipe error diagnostics carry no source location (`Diagnostic::error` pushed bare in `extract/recipes/mod.rs`); add `file`/`line`/`column` per RS-3/ATM-TOKEN-12 precedent. Full text in `tests/cases/recipe/TESTS.md` RS lane. | `NEO-RECIPE-07` | done | RS liaison |
+| RS-19 | `<Div border />` boolean form extracts (`Bool(true)` want) but lowers to nothing (refusal pinned deliberate; only `container: true` lowers); add boolean macro lowering (proposal: `border-width: 1px; border-style: solid`). Full text in `tests/cases/site/TESTS.md` RS lane. | `NEO-SITE-13` | done | RS liaison |
 | RS-20 | Not filed: R1 cleared — `& + &` lowers (`compileSync` emits `.x + .x`, zero diagnostics); proven by PARITY-01 probe P2. Number reserved-skipped. | `NEO-PARITY-01` (P2) | not filed | — |
 | RS-21 | Not filed: R1 cleared — `red/abc` passes through Panda-identical; proven by PARITY-01 probe F1. Number reserved-skipped. | `NEO-PARITY-01` (F1) | not filed | — |
-| RS-22 | `textGradient` emits a non-property (`text-gradient: linear-gradient(...)`, browsers drop, zero diagnostics) instead of the Panda clip trio. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P14) | in-progress | RS liaison |
-| RS-23 | Array `css` props extract nothing (zero utilities, zero diagnostics); single-object and `css([...])` controls green. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P15) | in-progress | RS liaison |
-| RS-24 | `fontFace` arrays fail sync (`invalid baseSystem spec`: Rust `FontDefinition.font_face` is single `Option<FontFaceDefinition>` only). Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P8) | in-progress | RS liaison |
-| RS-25 | Radius pair shorthands emit non-properties (`border-top-radius:` etc., computed `0px`, zero diagnostics) instead of corner expansion. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P4) | in-progress | RS liaison |
+| RS-22 | `textGradient` emits a non-property (`text-gradient: linear-gradient(...)`, browsers drop, zero diagnostics) instead of the Panda clip trio. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P14) | done | RS liaison |
+| RS-23 | Array `css` props extract nothing (zero utilities, zero diagnostics); single-object and `css([...])` controls green. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P15) | done | RS liaison |
+| RS-24 | `fontFace` arrays fail sync (`invalid baseSystem spec`: Rust `FontDefinition.font_face` is single `Option<FontFaceDefinition>` only). Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P8) | done | RS liaison |
+| RS-25 | Radius pair shorthands emit non-properties (`border-top-radius:` etc., computed `0px`, zero diagnostics) instead of corner expansion. Full text in `tests/cases/parity/TESTS.md` RS lane. | `NEO-PARITY-01` (P4) | done | RS liaison |
+| RS-26 | `globalCss` bare numerics print unitless (`marginTop: 10` → `margin-top: 10`, dropped; `css()` path unitizes correctly). Unitless-stay props must not unitize. Full text in `tests/cases/global/TESTS.md` RS lane. | `NEO-PARITY-01` (sub-probe) | done | RS liaison |
+| RS-27 | Top-level at-rules in `globalCss` print braceless (`@media … body { … }`, dropped). Nested at-rules proven. Full text in `tests/cases/global/TESTS.md` RS lane. | `NEO-PARITY-01` (sub-probe) | done | RS liaison |
+| RS-28 | Breakpoint keys + conditional values in `globalCss` print as descendant selectors (`.btn width { base: 40px }`). Full text in `tests/cases/global/TESTS.md` RS lane. | `NEO-PARITY-01` (sub-probe) | done | RS liaison |
+| RS-29 | Empty `@supports` query prints a bare `@supports {` block browsers drop, with zero diagnostics; should refuse with a diagnostic. P5 empty arm proven computed-only. Full text in `tests/cases/cond/TESTS.md` RS lane. | `NEO-PARITY-01` (P5 empty) | done | RS liaison |
+| RS-30 | Shorthand aliases not lowered in keyframes (`h` prints verbatim; `css()` lowers). Keyframe values should run the alias table. Full text in `tests/cases/token/TESTS.md` RS lane. | `NEO-TOKEN-13` (tail assertion) | done (N3b: ATM-LAYER-14, Panda `roll` parity) | RS liaison |
 
 Engine-wide mechanical retargets ship as a single RS row with exact-CSS proof: one liaison, CLI-only golden regen, shape-identical fixtures (RS-7 pattern). Cooks add rows as they find gaps. Rust changes never happen inside a Neo slice.
 
@@ -682,7 +687,7 @@ has since been archived to `docs/archive/`; the one living plan is this file.)
 | G1 gate review + handover | **PASS** 2026-09-17 (13/13 groups; no course corrections) | G1 |
 | W2 host contracts (SYNC-02..05,12,13; PRIM-07; TYPE-01) | T3 merged (53/53 green, q 0/8w, vitest 139 full / 134 src-only); **G2 PASS** 2026-09-17 (8 slices, RS-1..4+7 confirmed); T4 next | G2 |
 | Playground D4/D5 repair + showcase policy (HQ) | policy landed (skill §8, PLAN §4.7); dedicated repair crew posts post-T3-merge | G2 |
-| RS-1..RS-25 | RS-1/2/3/4/7/8/9/10 done (RS-9: ATM-COND-17); RS-14/15/16/17 filed (SITE plans, supports, keyframes, twins); RS-18/19 filed (recipe locations, boolean macro); RS-20/21 R1-cleared to P2/F1 probes (not filed); RS-22/23/24/25 filed (textGradient, array-css, fontFace-arrays, radius-pairs); liaison order: RS-14, RS-11, RS-12, RS-16, RS-17, RS-15, RS-5, RS-18, RS-19, RS-22, RS-23, RS-24, RS-25, RS-13, RS-6 | G2/G3 |
+| RS-1..RS-32 | RS lane drained S3: done RS-1–19 + RS-22–30 (N3a +9 stations, N12 warn+drop both paths; N3b RS-30/LAYER-14, RS-13 112F→1F, tails a/c/d); RS-20/21 R1-cleared, not filed; RS-31 voided→NEO-PRIM-11; only RS-32 open (diagnostic hygiene, filed+owned) | G2/G3 |
 | W3 groups: TOKEN, COND, RESP, CSS, MERGE, RECIPE, LAYER, GLOBAL, STATIC, SITE, PRIM, TYPE, SYNC(rest) | T7 merged (117/117 green, q 0/7w, vitest 203; captain merge repair: reset container-type fallout + collectEntries struct); G3 review: 8 open rows un-voyaged + RESP-03 resumed (RS-9 landed) → T8 merged (124/124 green, q 0/7w, vitest 203; 7 done + RS-18/19 filed, zero open/in-progress) → **G3 PASS** 2026-09-17 | G3 |
 | W4 PARITY-01..04 | Phase 1 complete (3 oracle reports + captain synthesis `docs/evidence/w4-synthesis.md`, D21 probe doctrine); Phase 2a cartographer done (parity SPEC/TESTS + 10 ★ absence lines, union 150+1); Phase 2b merged (128/128 green, q 0/7w, vitest 203; R1 cleared +/F1 to probes, RS-22..25 filed; captain rulings: RS-17 relabel, capital-W absence → union 152, P1/P7/P11 laterals accepted) → **G4 PASS** 2026-09-17 | G4 |
 | W5 ergonomics + docs | crew merged (`neo` bin proven literally, sync-ms live, 3 docs rewritten, q 0/7w on 106 files, vitest 208); **G5 PASS** 2026-09-17 | G5 |
@@ -1178,12 +1183,17 @@ is the living charter and evolves in-plan as the night finds things.
 - RS-lane drain for parity blockers (RS-5/11/12/14/15/16/17/18/19/22/23/24/25),
   RS-13 trust reconciliation, RS-6 hygiene.
 - Neo resumes: every blocked row and cited probe, flipped as stations land.
+- Typegen correctness (TYPE group + Neo-runnable type tests): first-class
+  target. Recipes, CSS, and types are the three legs of the night.
 - Absence defense: any gap the night proves out-of-dialect gets a SPEC line
   through the census chain (SPEC → union table → checked-in list), never silence.
 
 ### Scope: out (landing-sequence or later legs, not tonight)
-MCP; D19 `types/` emitter leg; watch loop; Vite plugin; Book integration;
-matrix packages; `strict`/`layers`. Untouched and unblocked-by tonight.
+MCP; D19 `types/` emitter leg; chain/extends/layers (last — needs a matrix
+switch-out, and lib neither extends nor layers); watch loop; Vite plugin;
+Book integration; matrix packages; `strict` config. Untouched tonight.
+First target consumer is reference-lib: no extends, no layers, the first
+user of the Neo framework. No switch tonight — fill the gaps.
 
 ### Guiding principles (non-negotiable overnight)
 - Proven-dialect-only: worlds author what is green; R1 probes before claims.
@@ -1194,6 +1204,10 @@ matrix packages; `strict`/`layers`. Untouched and unblocked-by tonight.
   grows through cartographer discipline.
 - Genuinely new scope gets an RS row + a night-log entry + a morning decision,
   never midnight scope creep.
+- Done-gate rhythm (standing): at every point that feels done, send oracle
+  agents to sweep Panda v1 for missed edge cases, and send refinement
+  engineers into reference-rs (test quality, tests/README alignment) with
+  one harder question: how do we make this robust BEYOND Panda v1?
 
 ### API target (what "parity" means)
 The minimal lib slice (oracle C): `@reference-ui/system` 4 functions
@@ -1202,7 +1216,7 @@ primitives + `PrimitiveProps`/`StyleProps`, the 43 lib-sheet families. Prior
 art: `vendor/panda-v1` tests, matrix non-CHAIN suites, the lib sheet —
 all census-mapped in `docs/evidence/w4-*`.
 
-### Waves (liaison serial; Neo resumes parallel per landing)
+### Stage 1 — parity waves (liaison serial; Neo resumes parallel per landing)
 - **N0 — reassessment (first, HQ-ordered):** oracle scouts re-verify every
   queued RS row still reproduces against the current engine and every
   blocked row/cited probe still reads blocked; captain folds deltas into
@@ -1211,9 +1225,9 @@ all census-mapped in `docs/evidence/w4-*`.
   SITE-01/02/03; RS-11 → resume GLOBAL-06; RS-12 → resume COND-05/10. Gate S1.
 - **N2 — engine breadth:** RS-16 → TOKEN-13; RS-17 → COND-14 (3 lib uses);
   RS-15 → COND-15 (+P5); RS-5 → SITE-14; RS-18 → RECIPE-07; RS-19 → SITE-13. Gate S2.
-- **N3 — probes + trust:** RS-22/23/24/25 → P14/P15/P8/P4 live; RS-13
-  drift reconciliation; RS-6 docs. Gate S3 = SWITCH: exit criteria checked,
-  readiness revisited.
+- **N3a — probe slices:** RS-22/23/24/25 → P14/P15/P8/P4 live; RS-26/27/28/29 → PARITY-01 sub-probes (+P5-empty fix); N12 unknown-prop ruling.
+- **N3b — trust + tails:** RS-13 drift reconciliation; RS-30 keyframe aliases.
+  Gate S3 = SWITCH: exit criteria checked, readiness revisited.
 
 ### Validation (every landing, no exceptions)
 Station: `pnpm agentrs v atomic` + `pnpm agentrs q`. Resume:
@@ -1228,10 +1242,55 @@ PARITY-02 green. Night ends with the four numbers logged below.
 - RS-14 (ternary/const/spread plans) is the hardest station: if it slips,
   N2/N3 proceed and SITE-01/02/03 carry explicitly.
 
+### Stage 2 — refinement loop (HQ-ordered; the Civ VI future-tech phase)
+After S3 declares parity, the night does NOT end. Standing loop until morning:
+- **Opener — retire the parity NAME (HQ-ordered):** parity-to-what? Once
+  S3 says it, the name's job is done. Mint the NEO-WORLD-01..04 capstone
+  (`git mv` parity→world, new IDs, SPEC retitled completeness-proof,
+  TESTS done-with-history, PLAN §8.15/G4/§13 repointed, w4-* evidence
+  left as dated history). Prove behavior-preserving (full suite + census
+  green) before breakers sail. Queued here — never mid-Stage-1 — because
+  N-cooks own the census files while waves sail.
+- **Breakers:** engineers survey reference-rs + reference-neo and author
+  test cases that try to BREAK the systems — hidden bugs, stress shapes,
+  edge interactions. A test that proves broken-then-fixed is a success.
+- **Trophy rule:** a test that cannot prove breakage is noise, not a trophy.
+  Keep it only with a written reason (regression pin, contract lock);
+  otherwise cut it. Duplicates get cut on sight.
+- **Dedup oracles:** read test descriptions across suites, find overlaps,
+  propose merges/cuts. No two tests proving the same thing.
+- **Coverage oracles:** confirm the map is end-to-end; cartographers happy.
+- **Beyond-Panda:** every breaker asks how the system gets MORE robust
+  than Panda v1, not merely equal. Fixes land; the census stays green.
+- Stage 2 exit: oracles say ready-to-switch (minus MCP + deliberate
+  absences, with typegen/primitives/recipes proven) AND the trophy audit
+  is clean. Then the finale sails.
+
+### Finale (morning, HQ-ordered)
+When the night's parity work lands, send MANY crews — plan-oracles, each
+presenting their own piece — to design tomorrow's playground: deeper,
+consistent, modern, futuristic, backed by the night's new vertical slices.
+The playground becomes the representation of everything.
+
 ### Night log (append-only; the charter evolves here)
 | Time | Entry |
 | --- | --- |
 | 2026-09-17 | Charter written; Voyage One closed (128/128, census 152, S-ready:HARDEN). |
+| 2026-09-17 night | HQ brief: oracles-first restart; chain/extends/layers out; typegen first-class; done-gate oracle+refinement rhythm; morning playground armada. N0 relaunched. |
+| 2026-09-17 night | N0-ledger green: 12 blocked, 5 probes, 152-union exact (case-sensitive); absorbed 3 prose drifts (2 stale 151 comments, RS-12 unblocks +COND-10). Carried: RS-5 needs lane text before N2; resumes must shrink BLOCKED same-landing. N0-RS still out. |
+| 2026-09-17 night | **S0 PASS.** N0-RS: 13 reproduce verbatim; RS-14 core cleared (SITE-01/02/03 → open, whole-object absented, station adoption pending); RS-6 cleared (2-line map.html, done). Charter staged (Stage 1 parity / Stage 2 refinement loop + trophy rule + finale). N1 sailing: liaison RS-14-station→RS-11→RS-12, cook SITE-01/02/03. |
+| 2026-09-17 night | HQ goodnight order: retire the parity name → NEO-WORLD capstone. Queued as Stage 2 opener (unsafe mid-Stage-1: N-cooks own census files). HQ asleep; radio silence from here. |
+| 2026-09-17 night | N1-cook merged: SITE-01/02/03 done (R1-confirmed, SITE-02 claim disambiguated to member access), BLOCKED 12→9 with census green. Verified: 131/131, q 0/7w, vitest 208. S1 awaits N1-liaison (RS-14-station/RS-11/RS-12). |
+| 2026-09-17 night | N1-liaison merged: ATM-SITE-17/ATM-LAYER-09/ATM-COND-20 landed, blast 0/124; RS-14/11/12 → done, GLOBAL-06/COND-05/10 → open. Verified: dist carries RS-12 live, v atomic 112F/62P (+3, no new fails), c atomic green, q clean. Cook-2 sailing. S1 needs cook-2. |
+| 2026-09-17 night | **S1 PASS.** Cook-2 merged (GLOBAL-06 + COND-05/10, P11-lateral for hover), BLOCKED 9→6, census green. Captain refuted cook's bare-10 note for css() (globalCss numeric unprobed). Verified: 134/134, q 0/7w, vitest 208. N2 sailing. |
+| 2026-09-17 night | N2 launched: liaison RS-16→17→15→5→18→19 (RS-5 lane drafted by captain from N0); S1 done-gate Panda sweep oracle parallel. |
+| 2026-09-17 night | S1 sweep: S1 HOLDS. Oracle's §4 tail truncated in transit; captain recovered RS-grade N1/N2/N3 from /tmp probes and filed RS-26/27/28 (queued N3). RS-16 pointer relabeled (LAYER-09 taken → 11). §4 micro-oracle reconstructing 7 SPEC lines + 5 fold-ins + N12. Ledger: 12 done, 14 queued. |
+| 2026-09-17 night | §4 applied by captain: 7 SPEC lines (css×2, site×2, token×3), union 152→159 through the full chain, 6 fold notes. Verified: PARITY-02 green, 134/134, q clean. N12 unknown-prop ruling carried to N3 liaison. N2 liaison still sailing. |
+| 2026-09-17 night | N2-liaison merged: 6/6 PASS (ATM-LAYER-10/COND-18/COND-19/SITE-13/SITE-18 + RS-18 located diagnostics, no station by design). No clobber (LAYER-10 is N2-new), no Neo trespass. Verified: v atomic 112F/67P, c atomic green, q clean. RS-16/17/15/5/18/19 → done; 6 rows → open. N2-cook sailing (6 + P5 + RECIPE-06 ext). |
+| 2026-09-17 night | **S2 PASS.** N2-cook merged (6/6 + P5 live + RECIPE-06 loc ext), BLOCKED 6→0. Captain filed RS-29 (P5 cook pinned invalid `@supports {`; unpinned, computed-only). Verified: 140/140, q 0/7w, vitest 208. N3a sailing (RS-22–29 + N12); S2 sweep parallel. |
+| 2026-09-17 night | S2 sweep: S2 HOLDS. 3 follow-ups closed: RS-30 filed (keyframe `h` alias; `css()` proven to lower), RS-19 lane given LANDED header, VALID-02 Null wording fixed (silent is Panda parity). Charter split N3a/N3b. Ledger: 18 done, 10 queued. |
+| 2026-09-17 night | N3a merged: 8/8 + N12 warn+drop BOTH paths (9 stations, SHORT-08/09/SITE-19/20/LAYER-11/12/13/UNIT-03/COND-21). Verified: v atomic 112F/76P, c green, q clean; divide absence compatible. RS-22–29 → done. N3-cook (7 probes + P5 fix) + N3b (RS-30/RS-13/tails) sailing. Canon regen banned (destructive). |
+| 2026-09-17 night | N3-cook merged with 2 rulings: (1) cook's RS-31 VOIDED (Neo-side gap mis-laned; refiled NEO-PRIM-11 open, prim crew sailing); (2) suite RED 139/140 — N12 drops valid `-webkit-appearance` (GLOBAL-11), queued as N3b tail #5. P4/P8/P14/P15-ext/P19/P20/P21/P5-empty all live. S3 awaits N3b + prim-crew. |
 
 ---
 

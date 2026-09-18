@@ -1,20 +1,15 @@
 @layer atom-dedup {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer tokens {
-    :root,
-    [data-color-mode='light'] {
-      --colors-n300: #d4d4d8;
-    }
-    [data-color-mode='dark'] {
-      --colors-n300: #3f3f46;
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-n300: #d4d4d8;
   }
-  @layer utilities {
-    .atom-dedup__bg_n300 {
-      background: var(--colors-n300);
-    }
-    .atom-dedup__c_red {
-      color: red;
-    }
+  [data-color-mode=dark] {
+    --colors-n300: #3f3f46;
   }
+}
+@layer utilities {
+  .atom-dedup__bg_n300 { background: var(--colors-n300); }
+  .atom-dedup__c_red { color: red; }
+}
 }

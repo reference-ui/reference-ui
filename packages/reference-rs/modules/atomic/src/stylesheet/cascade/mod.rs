@@ -59,14 +59,16 @@ pub(crate) fn first_at_rule(atom: &Atom) -> Option<&str> {
     at_rule_wraps(atom).next()
 }
 
-/// Media and container wraps in author order. Selector conditions are skipped.
+/// Media, container, and supports wraps in author order. Selector conditions are skipped.
 pub(crate) fn at_rule_wraps(atom: &Atom) -> impl Iterator<Item = &str> {
     atom.conditions().iter().filter_map(at_wrap)
 }
 
 fn at_wrap(cond: &When) -> Option<&str> {
     match cond.wrap() {
-        WhenKind::Media(query) | WhenKind::Container(query) => Some(query),
+        WhenKind::Media(query) | WhenKind::Container(query) | WhenKind::Supports(query) => {
+            Some(query)
+        }
         WhenKind::Selector(_) => None,
     }
 }
@@ -170,7 +172,7 @@ fn bucket(atom: &Atom) -> u8 {
     let mut has_sel = false;
     for cond in atom.conditions() {
         match cond.wrap() {
-            WhenKind::Media(_) | WhenKind::Container(_) => has_at = true,
+            WhenKind::Media(_) | WhenKind::Container(_) | WhenKind::Supports(_) => has_at = true,
             WhenKind::Selector(_) => has_sel = true,
         }
     }

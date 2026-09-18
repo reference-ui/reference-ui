@@ -1,22 +1,15 @@
 @layer spacing-scale {
-  @layer reset, global, base, tokens, recipes, utilities;
-  @layer global {
-    :root {
-      --spacing-root: 0.25rem;
-    }
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --spacing-4: 1rem;
   }
-  @layer tokens {
-    :root,
-    [data-color-mode='light'] {
-      --spacing-4: 1rem;
-    }
-  }
-  @layer utilities {
-    .spacing-scale__mb_4 {
-      margin-bottom: var(--spacing-4);
-    }
-    .spacing-scale__mt_-4 {
-      margin-top: calc(-1 * var(--spacing-4));
-    }
-  }
+}
+@layer utilities {
+  .spacing-scale__mb_4 { margin-bottom: var(--spacing-4); }
+  .spacing-scale__mt_-4 { margin-top: calc(-1 * var(--spacing-4)); }
+}
 }

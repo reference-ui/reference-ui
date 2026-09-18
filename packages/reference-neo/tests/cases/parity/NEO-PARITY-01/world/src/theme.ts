@@ -2,8 +2,9 @@
 // the lib-shaped global layer: :root rhythm and gutter vars, the body
 // baseline with inline-size containment, nine .ref-* tag recipes with
 // :where() variant scoping (P3) and :is() condition twins, the field bezel
-// with its invalid :has() compound and data-slot children, plus the file and
-// range vendor pseudos. Every style object is literal; every var hand-written.
+// with its invalid :has() compound and data-slot children, the file and
+// range vendor pseudos, plus the P19 numeric, P20 top-level media, and P21
+// breakpoint probe rules. Every style object is literal; every var hand-written.
 import { globalCss } from '@reference-ui/neo'
 
 globalCss({
@@ -75,7 +76,7 @@ globalCss({
     backgroundColor: '{colors.ui.file.field}',
   },
   '.ref-range::-webkit-slider-thumb': {
-    '-webkit-appearance': 'none',
+    webkitAppearance: 'none',
     appearance: 'none',
     backgroundColor: '{colors.ui.progress.bar.foreground}',
     width: '24px',
@@ -128,5 +129,50 @@ globalCss({
   },
   '.ref-list > li::marker': {
     color: '{colors.accent}',
+  },
+})
+
+globalCss({
+  '#p19': {
+    marginTop: 10,
+    width: 42,
+    zIndex: 5,
+    lineHeight: 2,
+  },
+})
+
+globalCss({
+  '#p20': {
+    color: 'ink',
+  },
+})
+
+globalCss({
+  '@media (min-width: 1px)': {
+    '#p20': {
+      color: 'brand',
+    },
+  },
+})
+
+globalCss({
+  '#p20-far': {
+    color: 'ink',
+  },
+})
+
+globalCss({
+  '@media (min-width: 99999px)': {
+    '#p20-far': {
+      color: 'brand',
+    },
+  },
+})
+
+globalCss({
+  '#p21': {
+    width: { base: '40px', lg: '90px' },
+    color: 'blue.300',
+    sm: { fontSize: '12px' },
   },
 })

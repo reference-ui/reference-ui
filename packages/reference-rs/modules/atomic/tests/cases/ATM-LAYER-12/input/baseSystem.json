@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-top-at-rules",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "rs-27",
+      "rules": {
+        "@media (min-width: 640px)": {
+          "body, :root": { "color": "red" }
+        },
+        "@supports (display: grid)": {
+          "@media (min-width: 640px)": {
+            "body": { "color": "blue" }
+          }
+        },
+        "body": {
+          "@media (min-width: 640px)": { "color": "green" }
+        },
+        "@supports": {
+          "body": { "color": "gray" }
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}
