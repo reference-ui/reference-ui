@@ -163,8 +163,7 @@ fn member_needs_is_wrap(member: &str) -> bool {
 /// single plain parent behaves exactly like [`apply`].
 pub fn apply_distributed(template: &str, parent: &str) -> String {
     let members = split_selector_list(parent);
-    let single_plain =
-        matches!(members.as_slice(), [only] if !member_needs_is_wrap(only));
+    let single_plain = matches!(members.as_slice(), [only] if !member_needs_is_wrap(only));
     if single_plain || members.is_empty() {
         return apply(template, parent);
     }
@@ -243,10 +242,7 @@ mod tests {
     #[test]
     fn test_apply_distributed() {
         assert_eq!(apply_distributed("&:hover", ".btn"), ".btn:hover");
-        assert_eq!(
-            apply_distributed("& .kid", ".a, .b"),
-            ".a .kid, .b .kid"
-        );
+        assert_eq!(apply_distributed("& .kid", ".a, .b"), ".a .kid, .b .kid");
         assert_eq!(apply_distributed("& ~ &", ".a, .b"), ".a ~ .a, .b ~ .b");
         assert_eq!(
             apply_distributed("& ~ &", "body > p, body > ul"),

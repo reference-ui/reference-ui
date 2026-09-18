@@ -1,0 +1,7 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/src/Card.tsx"
+  }
+]

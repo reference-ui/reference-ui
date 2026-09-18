@@ -43,9 +43,10 @@ pub fn resolve_want(want: &Want) -> Vec<Atom> {
 pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
     session.location = want.location();
     if !canon::is_known_style_prop(&want.prop) {
-        session
-            .diagnostics
-            .push(Diagnostic::warning(format!("Unknown style property \"{}\"", want.prop)));
+        session.diagnostics.push(Diagnostic::warning(format!(
+            "Unknown style property \"{}\"",
+            want.prop
+        )));
         return Vec::new();
     }
     let Some(clean_when) = lower_conditions(&want.when, session) else {
@@ -101,14 +102,8 @@ fn lower_macro(want: &Want, system: &BaseSystem) -> Option<Vec<(Box<str>, AtomVa
     if prop == "border" && matches!(want.value, AtomValue::Bool(true)) {
         // <Div border /> → border-width: 1px; border-style: solid.
         return Some(vec![
-            (
-                "borderWidth".into(),
-                AtomValue::String("1px".into()),
-            ),
-            (
-                "borderStyle".into(),
-                AtomValue::String("solid".into()),
-            ),
+            ("borderWidth".into(), AtomValue::String("1px".into())),
+            ("borderStyle".into(), AtomValue::String("solid".into())),
         ]);
     }
     None

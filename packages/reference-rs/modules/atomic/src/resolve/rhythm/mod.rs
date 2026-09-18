@@ -269,7 +269,10 @@ mod tests {
     #[test]
     fn test_var_url_env_bodies_stay_literal() {
         // Core parity: var/url/env subtrees never resolve.
-        assert_eq!(resolve_rhythm("var(--spacing-y, 1r)"), "var(--spacing-y, 1r)");
+        assert_eq!(
+            resolve_rhythm("var(--spacing-y, 1r)"),
+            "var(--spacing-y, 1r)"
+        );
         assert_eq!(resolve_rhythm("var(--x)"), "var(--x)");
         assert_eq!(resolve_rhythm("url(1r.png)"), "url(1r.png)");
         assert_eq!(

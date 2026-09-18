@@ -130,12 +130,7 @@ impl<'a> GlobalWalker<'a> {
 
     /// Lower a conditional value object: `base` prints bare, breakpoint keys
     /// print under the scale query, `_` conditions scope the selector.
-    fn handle_cond_value(
-        &mut self,
-        selector: &str,
-        prop: &str,
-        children: &GlobalStyleNode,
-    ) {
+    fn handle_cond_value(&mut self, selector: &str, prop: &str, children: &GlobalStyleNode) {
         for (sub, val) in children {
             self.handle_cond_member(selector, prop, sub, val);
         }
@@ -206,8 +201,7 @@ impl<'a> GlobalWalker<'a> {
 
     fn handle_condition(&mut self, selector: &str, cond: &str, children: &GlobalStyleNode) {
         if cond == "_dark" {
-            let dark_sel =
-                pseudoselectors::apply_distributed("[data-color-mode=dark] &", selector);
+            let dark_sel = pseudoselectors::apply_distributed("[data-color-mode=dark] &", selector);
             self.walk_node(&dark_sel, children);
             return;
         }
@@ -231,12 +225,7 @@ impl<'a> GlobalWalker<'a> {
         }
     }
 
-    fn handle_child_selector(
-        &mut self,
-        selector: &str,
-        key: &str,
-        children: &GlobalStyleNode,
-    ) {
+    fn handle_child_selector(&mut self, selector: &str, key: &str, children: &GlobalStyleNode) {
         let child_sel = if key.contains('&') {
             pseudoselectors::apply_distributed(key, selector)
         } else {
@@ -278,12 +267,7 @@ impl<'a> GlobalWalker<'a> {
         self.wraps.pop();
     }
 
-    fn handle_declaration(
-        &mut self,
-        selector: &str,
-        key: &str,
-        val: &GlobalDeclarationValue,
-    ) {
+    fn handle_declaration(&mut self, selector: &str, key: &str, val: &GlobalDeclarationValue) {
         let mut session = ValueSession {
             system: self.system,
             diagnostics: self.diagnostics,

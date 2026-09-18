@@ -128,6 +128,16 @@ describe('ATM-TOKEN-10 spec rejection', () => {
     expect(() => compileSync({ files: SOURCES } as never)).toThrow(/baseSystem/)
   })
 
+  /**
+   * KNOWN-RED RS-KNOWN-RED-001 (owner: slice-5). Expects 1 opacity-category
+   * warning, gets 6 identical copies: the fixture's single `opacity: "1"`
+   * (disabled:false variant) re-warns once per cartesian recipe-table
+   * combination. Pre-existing on HEAD — slice-3 is behavior-neutral here
+   * (virtual-only input takes the silent vacant host path in both old and
+   * new hosts code; all other slice-3 resolve/recipe diffs are rustfmt).
+   * Fix forward means diagnostic dedup or resolve-once recipe lowering,
+   * both shared-machinery behavior changes, so this stays red until slice-5.
+   */
   it('accepts string-serialized specs like typegen', () => {
     const result = compileSync({
       baseSystem: JSON.stringify(specSystem) as unknown as EvaluatedSystemSpec,

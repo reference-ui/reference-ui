@@ -6,8 +6,7 @@
 
 use indexmap::IndexMap;
 use oxc_ast::ast::{
-    ArrayExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind,
-    PropertyKey,
+    ArrayExpression, Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey,
 };
 use smallvec::smallvec;
 

@@ -84,9 +84,7 @@ pub fn breakpoint_media_query(key: &str, system: &BaseSystem) -> Option<String> 
     }
     let when = breakpoint_range(key, system)?;
     match when.wrap() {
-        crate::atom::WhenKind::Container(query) => {
-            Some(query.replacen("@container", "@media", 1))
-        }
+        crate::atom::WhenKind::Container(query) => Some(query.replacen("@container", "@media", 1)),
         _ => None,
     }
 }
@@ -179,18 +177,14 @@ fn named_breakpoint(raw: &str, system: &BaseSystem) -> Option<When> {
 }
 
 fn at_rule_or_ampersand(raw: &str) -> Option<When> {
-    if raw.starts_with("@media") || raw.starts_with("@container") || raw.starts_with("@supports")
-    {
+    if raw.starts_with("@media") || raw.starts_with("@container") || raw.starts_with("@supports") {
         // Bare `@supports` carries no query: not a wrap, refuse it (D11).
         if is_bare_query_rule(raw) {
             return None;
         }
         return Some(When::at_rule(raw.into(), bracket_segment(raw)));
     }
-    if raw.starts_with('&')
-        || raw.starts_with('@')
-        || pseudoselectors::has_parent_reference(raw)
-    {
+    if raw.starts_with('&') || raw.starts_with('@') || pseudoselectors::has_parent_reference(raw) {
         let template = selector_template(raw);
         return Some(When::selector(
             raw.into(),

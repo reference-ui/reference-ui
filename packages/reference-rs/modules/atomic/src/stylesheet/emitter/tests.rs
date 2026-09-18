@@ -21,7 +21,10 @@ fn when(raw: &str) -> crate::atom::When {
 #[test]
 fn test_empty_stylesheet() {
     let set = AtomSet::new();
-    assert_eq!(build_stylesheet(&set, &empty_system(), &mut Vec::new()), LAYER_PREAMBLE);
+    assert_eq!(
+        build_stylesheet(&set, &empty_system(), &mut Vec::new()),
+        LAYER_PREAMBLE
+    );
 }
 
 #[test]
@@ -54,7 +57,8 @@ fn test_named_system_nests_internal_layers_in_package() {
     let utilities = css.find("@layer utilities {").expect("utilities block");
     assert!(package < global && global < utilities);
     assert!(css.ends_with("}\n"));
-    let portable = build_portable_stylesheet_with(&set, BaseSystem::lib_fixture(), &[], &mut Vec::new());
+    let portable =
+        build_portable_stylesheet_with(&set, BaseSystem::lib_fixture(), &[], &mut Vec::new());
     assert!(portable.starts_with("@layer \\@reference-ui\\/lib {\n"));
     assert!(portable.ends_with("}\n"));
 }

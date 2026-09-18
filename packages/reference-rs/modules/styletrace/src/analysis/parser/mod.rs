@@ -22,6 +22,7 @@ use oxc_span::{GetSpan, SourceType};
 use crate::analysis::model::{
     ExportTarget, FactoryTarget, TraceComponent, TraceFactory, TraceImport, TraceModule,
 };
+use crate::analysis::surface::StyleSurface;
 use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
@@ -54,8 +55,7 @@ impl Default for ParseState {
 pub(super) fn parse_trace_module(
     path: &Path,
     workspace_root: &Path,
-    style_prop_names: &BTreeSet<String>,
-    primitive_names: &BTreeSet<String>,
+    surface: &StyleSurface,
 ) -> Result<TraceModule, StyleTraceError> {
     let source = fs::read_to_string(path).map_err(|error| {
         StyleTraceError::new(format!("failed to read {}: {error}", path.display()))
@@ -85,8 +85,7 @@ pub(super) fn parse_trace_module(
         path,
         workspace_root,
         source: &source,
-        style_prop_names,
-        primitive_names,
+        surface,
         imports: &imports,
     };
 

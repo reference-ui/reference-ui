@@ -66,10 +66,11 @@ fn has_printable_global(system: &BaseSystem) -> bool {
 }
 
 fn has_printable_fonts(system: &BaseSystem) -> bool {
-    system
-        .fonts()
-        .iter()
-        .any(|(_, def)| def.font_face.as_ref().is_some_and(|faces| !faces.is_empty()))
+    system.fonts().iter().any(|(_, def)| {
+        def.font_face
+            .as_ref()
+            .is_some_and(|faces| !faces.is_empty())
+    })
 }
 
 fn has_printable_keyframes(system: &BaseSystem) -> bool {
@@ -91,11 +92,7 @@ fn append_font_faces(out: &mut String, system: &BaseSystem) {
     }
 }
 
-fn write_one_font_face(
-    out: &mut String,
-    family: &str,
-    face: &base_system::FontFaceDefinition,
-) {
+fn write_one_font_face(out: &mut String, family: &str, face: &base_system::FontFaceDefinition) {
     out.push_str("  @font-face {\n");
     out.push_str("    font-family: ");
     out.push_str(&format_font_family_name(family));

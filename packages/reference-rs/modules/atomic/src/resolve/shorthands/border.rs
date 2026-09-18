@@ -58,10 +58,7 @@ pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str
                 canon_name.into(),
                 AtomValue::String("2px solid transparent".into()),
             ),
-            (
-                "outlineOffset".into(),
-                AtomValue::String("2px".into()),
-            ),
+            ("outlineOffset".into(), AtomValue::String("2px".into())),
         ]);
     }
 

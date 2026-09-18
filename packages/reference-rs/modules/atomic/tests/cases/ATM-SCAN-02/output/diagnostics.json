@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/inside/Card.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/inside/Wrapper.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/outside/Other.tsx"
+  }
+]

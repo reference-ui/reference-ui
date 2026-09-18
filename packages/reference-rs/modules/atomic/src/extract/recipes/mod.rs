@@ -144,4 +144,3 @@ fn extract_literal_class_name(
     ));
     None
 }
-

@@ -33,6 +33,20 @@ pub(super) struct TraceModule {
     pub(super) export_all_sources: Vec<String>,
 }
 
+impl TraceModule {
+    /// Empty module standing in for an edge target that failed to parse.
+    /// The failure is recorded as a diagnostic; the edge contributes nothing.
+    pub(super) fn empty() -> Self {
+        Self {
+            components: HashMap::new(),
+            component_factories: HashMap::new(),
+            factories: HashMap::new(),
+            exports: HashMap::new(),
+            export_all_sources: Vec::new(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub(super) enum FactoryTarget {
     Local(String),

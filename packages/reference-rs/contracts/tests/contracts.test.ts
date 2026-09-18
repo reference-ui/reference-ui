@@ -111,6 +111,11 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(result.runtime.schemaVersion).toBe(1)
   })
 
+  it('CompileResult fixture pins discovered host names', () => {
+    const result = compileResultJson satisfies CompileResult
+    expect(result.tracedJsxHosts).toEqual(['Card'])
+  })
+
   it('PortableBaseSystem fixture satisfies interface with hashed cssChunks', () => {
     const portable = portableBaseSystemJson satisfies PortableBaseSystem
     expect(portable.schemaVersion).toBe(1)

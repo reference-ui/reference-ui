@@ -3,7 +3,8 @@
 //! Prevents parameter explosion in deeply nested AST traversal.
 
 use crate::analysis::model::TraceImport;
-use std::collections::{BTreeSet, HashMap};
+use crate::analysis::surface::StyleSurface;
+use std::collections::HashMap;
 use std::path::Path;
 
 /// Shared context for component and factory extraction
@@ -11,7 +12,6 @@ pub struct ParserContext<'a> {
     pub path: &'a Path,
     pub workspace_root: &'a Path,
     pub source: &'a str,
-    pub style_prop_names: &'a BTreeSet<String>,
-    pub primitive_names: &'a BTreeSet<String>,
+    pub surface: &'a StyleSurface,
     pub imports: &'a HashMap<String, TraceImport>,
 }

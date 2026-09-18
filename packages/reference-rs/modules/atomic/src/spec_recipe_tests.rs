@@ -108,7 +108,11 @@ fn test_recipe_without_args_errors_at_call() {
         "import { recipe } from '@reference-ui/react'\nconst r = recipe()\nvoid r\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("inline object literal"), "{}", diag.message);
+    assert!(
+        diag.message.contains("inline object literal"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/no-arg.ts"));
     assert_eq!(diag.line, Some(2));
     assert_eq!(diag.column, Some(11));
@@ -121,7 +125,11 @@ fn test_recipe_dynamic_arg_errors_at_arg() {
         "import { recipe } from '@reference-ui/react'\nconst dyn = { className: 'dyn' }\nconst r = recipe(dyn)\nvoid r\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("inline object literal"), "{}", diag.message);
+    assert!(
+        diag.message.contains("inline object literal"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/dyn.ts"));
     assert_eq!(diag.line, Some(3));
     assert_eq!(diag.column, Some(18));
@@ -134,7 +142,11 @@ fn test_recipe_spread_errors_at_spread() {
         "import { recipe } from '@reference-ui/react'\nconst base = {}\nconst r = recipe({ className: 'x', ...base })\nvoid r\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("must not contain spread"), "{}", diag.message);
+    assert!(
+        diag.message.contains("must not contain spread"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/spread.ts"));
     assert_eq!(diag.line, Some(3));
     assert_eq!(diag.column, Some(36));
@@ -147,7 +159,11 @@ fn test_recipe_missing_class_name_errors_at_object() {
         "import { recipe } from '@reference-ui/react'\nconst r = recipe({ base: {} })\nvoid r\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("explicit string-literal"), "{}", diag.message);
+    assert!(
+        diag.message.contains("explicit string-literal"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/no-name.ts"));
     assert_eq!(diag.line, Some(2));
     assert_eq!(diag.column, Some(18));
@@ -160,7 +176,11 @@ fn test_recipe_dynamic_class_name_errors_at_value() {
         "import { recipe } from '@reference-ui/react'\nconst name = 'x'\nconst r = recipe({ className: name })\nvoid r\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("non-empty string literal"), "{}", diag.message);
+    assert!(
+        diag.message.contains("non-empty string literal"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/dyn-name.ts"));
     assert_eq!(diag.line, Some(3));
     assert_eq!(diag.column, Some(31));
@@ -173,7 +193,11 @@ fn test_recipe_duplicate_errors_at_second_call() {
         "import { recipe } from '@reference-ui/react'\nconst a = recipe({ className: 'dup' })\nconst b = recipe({ className: 'dup' })\nvoid a\nvoid b\n",
     );
     let diag = single_error(&res);
-    assert!(diag.message.contains("Duplicate recipe className 'dup'"), "{}", diag.message);
+    assert!(
+        diag.message.contains("Duplicate recipe className 'dup'"),
+        "{}",
+        diag.message
+    );
     assert_eq!(diag.file.as_deref(), Some("src/dup.ts"));
     assert_eq!(diag.line, Some(3));
     assert_eq!(diag.column, Some(11));
