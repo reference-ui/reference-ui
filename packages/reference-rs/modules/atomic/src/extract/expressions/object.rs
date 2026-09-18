@@ -7,6 +7,7 @@
 use oxc_ast::ast::{
     Expression, ObjectExpression, ObjectProperty, ObjectPropertyKind, PropertyKey, SpreadElement,
 };
+use oxc_span::Span;
 use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
@@ -22,6 +23,7 @@ pub struct ObjectWalk<'a> {
     pub origin: Option<&'a str>,
     pub important: bool,
     pub file: &'a str,
+    pub source: Option<&'a str>,
     pub constants: &'a LocalConstants,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
@@ -37,6 +39,7 @@ impl<'a> ObjectWalk<'a> {
             origin: self.origin,
             important: self.important,
             file: self.file,
+            source: self.source,
             constants: self.constants,
             breakpoints: self.breakpoints,
             wants: self.wants,
@@ -116,8 +119,14 @@ fn is_breakpoint_range(key: &str, breakpoints: &BreakpointScale) -> bool {
         if to.eq_ignore_ascii_case("p") || to.starts_with('p') || to.starts_with('P') {
             return false;
         }
-        return breakpoints.names().iter().any(|n| n.eq_ignore_ascii_case(from))
-            || breakpoints.names().iter().any(|n| n.eq_ignore_ascii_case(to));
+        return breakpoints
+            .names()
+            .iter()
+            .any(|n| n.eq_ignore_ascii_case(from))
+            || breakpoints
+                .names()
+                .iter()
+                .any(|n| n.eq_ignore_ascii_case(to));
     }
     false
 }
@@ -129,10 +138,10 @@ fn handle_known_style_prop(
     when: &SmallVec<[Box<str>; 2]>,
 ) {
     if let Some(authored) = ctx.authored.as_mut() {
-        if let Some((val, imp)) = super::ast_value::ast_to_json_value(val_expr, ctx.constants) {
-            let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
+        let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
+        for (val, imp) in super::ast_value::ast_to_json_values(val_expr, ctx.constants) {
             authored.push(crate::runtime::AuthoredDeclaration {
-                when: when_strings,
+                when: when_strings.clone(),
                 prop: key.to_string(),
                 value: val,
                 important: ctx.important || imp,
@@ -182,7 +191,7 @@ fn resolve_r_key(key: &str, scale: &BreakpointScale) -> Option<String> {
     }
 }
 
-fn resolve_property_key(key: &PropertyKey<'_>) -> Option<String> {
+pub(crate) fn resolve_property_key(key: &PropertyKey<'_>) -> Option<String> {
     match key {
         PropertyKey::StaticIdentifier(ident) => {
             // color:  /  _hover:
@@ -285,7 +294,7 @@ fn walk_spread_value(
         }
         Expression::Identifier(ident) => {
             // ...base  after  const base = { mt: '2r' }
-            unpack_local_const_object(ctx, ident.name.as_str(), when);
+            unpack_local_const_object(ctx, ident.name.as_str(), when, Some(ident.span));
             true
         }
         Expression::ParenthesizedExpression(p) => {
@@ -319,7 +328,12 @@ fn walk_spread_branching(
     }
 }
 
-fn unpack_local_const_object(ctx: &mut ObjectWalk<'_>, name: &str, when: &SmallVec<[Box<str>; 2]>) {
+fn unpack_local_const_object(
+    ctx: &mut ObjectWalk<'_>,
+    name: &str,
+    when: &SmallVec<[Box<str>; 2]>,
+    span: Option<Span>,
+) {
     let Some(obj) = ctx.constants.get_object(name) else {
         // ...unknown  — not a file-top const object
         ctx.warn("Dynamic object spread encountered in style object; keeping sibling properties");
@@ -330,8 +344,20 @@ fn unpack_local_const_object(ctx: &mut ObjectWalk<'_>, name: &str, when: &SmallV
         .filter(|(key, _)| is_known_style_prop(key))
         .map(|(key, val)| (key.clone(), val.clone()))
         .collect();
+    let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
+    let important = ctx.important;
     for (key, val) in entries {
         let mut expr_ctx = ctx.expression_walk(&key);
-        expr_ctx.push_want(val, when.clone(), false);
+        expr_ctx.push_want(val.clone(), when.clone(), false, span);
+        if let Some(authored) = ctx.authored.as_mut() {
+            if let Some(json) = super::ast_value::atom_value_to_json(&val) {
+                authored.push(crate::runtime::AuthoredDeclaration {
+                    when: when_strings.clone(),
+                    prop: key,
+                    value: json,
+                    important,
+                });
+            }
+        }
     }
 }

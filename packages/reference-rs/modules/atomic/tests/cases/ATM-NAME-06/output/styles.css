@@ -1,22 +1,36 @@
 @layer digit-dash-escape {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer utilities {
-  .digit-dash-escape__p_1r { padding: var(--spacing-root); }
-  .digit-dash-escape__--brand-x_red { --brand-x: red; }
-  @container (min-width: 640px) {
-    .digit-dash-escape__sm\:p_1r { padding: var(--spacing-root); }
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer utilities {
+    .digit-dash-escape__p_1r {
+      padding: var(--spacing-root);
+    }
+    .digit-dash-escape__--brand-x_red {
+      --brand-x: red;
+    }
+    @container (min-width: 640px) {
+      .digit-dash-escape__sm\:p_1r {
+        padding: var(--spacing-root);
+      }
+    }
+    @container (min-width: 768px) {
+      .digit-dash-escape__md\:p_1r {
+        padding: var(--spacing-root);
+      }
+    }
+    @container (min-width: 1024px) {
+      .digit-dash-escape__lg\:p_1r {
+        padding: var(--spacing-root);
+      }
+    }
+    @container (min-width: 1280px) {
+      .digit-dash-escape__xl\:p_1r {
+        padding: var(--spacing-root);
+      }
+    }
+    @container (min-width: 1536px) {
+      .digit-dash-escape__2xl\:p_6r {
+        padding: calc(6 * var(--spacing-root));
+      }
+    }
   }
-  @container (min-width: 768px) {
-    .digit-dash-escape__md\:p_1r { padding: var(--spacing-root); }
-  }
-  @container (min-width: 1024px) {
-    .digit-dash-escape__lg\:p_1r { padding: var(--spacing-root); }
-  }
-  @container (min-width: 1280px) {
-    .digit-dash-escape__xl\:p_1r { padding: var(--spacing-root); }
-  }
-  @container (min-width: 1536px) {
-    .digit-dash-escape__2xl\:p_6r { padding: calc(6 * var(--spacing-root)); }
-  }
-}
 }

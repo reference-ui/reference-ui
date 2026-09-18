@@ -1,0 +1,3 @@
+# ATM-RECIPE-07: Responsive Variant Values Lower to Container Queries
+
+Tests that each recipe variant value also compiles to one `{breakpoint}:`-prefixed class per width breakpoint, printed after all plain rules inside `@layer recipes` and wrapped in that breakpoint's `@container (min-width: …)` query, with selector leaves (`_hover`, `_disabled`) kept as descendants inside the query block. Tests that `RecipeRuntimeTable.responsiveVariantMap` carries the per-breakpoint classes so the host helper resolves a runtime `{ base: 'solid', md: 'outline' }` selection by emitting both classes, without re-walking styles. Container queries only, never `@media screen` (D8).

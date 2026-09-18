@@ -1,11 +1,14 @@
 /**
  * TypeScript type definitions for Reference UI atomic compiler inputs, outputs, and intermediate data structures.
  * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, recipe tables, and authored wants.
- * `baseSystem` is the required EvaluatedSystemSpec shared with typegen; there is no implicit fallback system.
+ * `compile()` accepts the legacy `{ baseSystem }` shape and the frozen `NativeCompileRequest` for one wave; both lower to the same native compile.
  */
-import type { EvaluatedSystemSpec } from '../../../contracts/types.js'
+import type {
+  EvaluatedSystemSpec,
+  NativeCompileRequest,
+} from '../../../contracts/types.js'
 
-export type { EvaluatedSystemSpec }
+export type { EvaluatedSystemSpec, NativeCompileRequest }
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'
 
@@ -27,6 +30,9 @@ export interface Want {
   when: string[]
   important: boolean
   origin?: string
+  file?: string
+  line?: number
+  column?: number
 }
 
 export interface VirtualSource {
@@ -38,7 +44,16 @@ export interface CompileRequest {
   rootDir?: string
   files?: VirtualSource[]
   baseSystem: EvaluatedSystemSpec
+  /**
+   * Glob scope (RS-10, station ATM-SCAN-01) relative to `rootDir`: only
+   * matching sources compile and the rest are skipped silently. Absent or
+   * empty preserves the legacy scan-all behavior.
+   */
+  include?: string[]
 }
+
+/** Either wire shape `compile()` accepts: legacy `{ baseSystem, ... }` or frozen `{ schemaVersion: 1, spec, ... }`. */
+export type AnyCompileRequest = CompileRequest | NativeCompileRequest
 
 export interface RecipeMatch {
   props: Record<string, string>
@@ -82,6 +97,8 @@ export interface RecipeRuntimeTable {
     className?: string
   }>
   combinations: Record<string, string>
+  /** Per-breakpoint variant classes: axis → breakpoint → value → class. `base` reads `variantMap`. */
+  responsiveVariantMap: Record<string, Record<string, Record<string, string>>>
 }
 
 export interface NativeRuntimeArtifact {

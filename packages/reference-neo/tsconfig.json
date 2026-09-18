@@ -7,9 +7,18 @@
     "skipLibCheck": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    // Worlds typecheck under the automatic runtime; the world build emits
+    // classic createElement calls instead. Same prop types either way.
+    "jsx": "react-jsx",
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
-    "types": ["node"]
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@reference-ui/neo": ["./src/author/index.ts"],
+      "@reference-ui/styled": ["./src/runtime/index.ts"],
+      "@reference-ui/react": ["./src/primitives/generate/react-surface.d.ts"],
+      "@reference-ui/system": ["./src/author/system-surface.d.ts"]
+    }
   },
-  "include": ["src", "tests", "tools"]
+  "include": ["src", "tests", "tools", "playground", "bin"]
 }

@@ -10,7 +10,7 @@ const spec: AtomicCaseSpec = {
     const sheet = result.stylesheet
     expect(sheet).toContain('--colors-ui-button-background: var(--colors-gray-950);')
     expect(sheet).toContain('--colors-ui-button-foreground: var(--colors-gray-50);')
-    const darkBlock = sheet.slice(sheet.indexOf('[data-theme=dark]'))
+    const darkBlock = sheet.slice(sheet.indexOf('[data-color-mode=dark]'))
     expect(darkBlock).toContain('--colors-ui-button-background: var(--colors-gray-50);')
     expect(darkBlock).toContain('--colors-ui-button-foreground: var(--colors-gray-950);')
   },

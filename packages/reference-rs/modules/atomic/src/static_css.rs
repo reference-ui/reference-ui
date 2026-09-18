@@ -62,7 +62,10 @@ fn parse_static_key(key: &str) -> (Vec<String>, &str) {
         (Vec::new(), key)
     } else {
         let prop = parts.last().unwrap();
-        let conditions = parts[..parts.len() - 1].iter().map(|s| s.to_string()).collect();
+        let conditions = parts[..parts.len() - 1]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         (conditions, prop)
     }
 }
@@ -231,7 +234,9 @@ mod tests {
     #[test]
     fn wildcard_enumerates_radii_tokens() {
         let mut system = test_system();
-        system.static_css.insert("borderRadius".into(), vec!["*".into()]);
+        system
+            .static_css
+            .insert("borderRadius".into(), vec!["*".into()]);
         let mut wants = Vec::new();
         append_wants(&system, &mut wants);
         assert_eq!(wants.len(), 1);
@@ -241,7 +246,9 @@ mod tests {
     #[test]
     fn condition_prefixed_static_css_retains_condition() {
         let mut system = test_system();
-        system.static_css.insert("_hover:color".into(), vec!["n100".into()]);
+        system
+            .static_css
+            .insert("_hover:color".into(), vec!["n100".into()]);
         let mut wants = Vec::new();
         let mut authored = Vec::new();
         let mut diagnostics = Vec::new();
@@ -260,7 +267,9 @@ mod tests {
     #[test]
     fn unknown_property_emits_diagnostic() {
         let mut system = test_system();
-        system.static_css.insert("unknownProp".into(), vec!["val".into()]);
+        system
+            .static_css
+            .insert("unknownProp".into(), vec!["val".into()]);
         let mut wants = Vec::new();
         let mut authored = Vec::new();
         let mut diagnostics = Vec::new();

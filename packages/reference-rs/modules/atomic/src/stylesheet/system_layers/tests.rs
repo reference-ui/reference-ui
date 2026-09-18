@@ -58,9 +58,9 @@ fn fixture_prints_spacing_root_and_token_vars() {
     assert!(css.contains("from { opacity: 0; }"));
     assert!(css.contains("to { opacity: 1; }"));
     assert!(css.contains("@layer tokens {"));
-    assert!(css.contains(":root, [data-theme=light] {"));
+    assert!(css.contains(":root, [data-color-mode=light] {"));
     assert!(css.contains("--colors-blue-600:"));
-    assert!(css.contains("[data-theme=dark]"));
+    assert!(css.contains("[data-color-mode=dark]"));
     assert!(!css.contains("@layer reset {"));
     assert!(!css.contains("@layer recipes {"));
 }
@@ -78,7 +78,7 @@ fn bas_motion_02_fixture_emits_fade_in_and_spin_keyframes() {
 fn custom_dump_prints_only_declared_tokens() {
     let css = emit(&custom_system());
     assert!(css.contains("--colors-brand: red;"));
-    assert!(css.contains("[data-theme=dark] {"));
+    assert!(css.contains("[data-color-mode=dark] {"));
     assert!(css.contains("--colors-brand: navy;"));
     assert!(css.contains("--colors-alias: var(--colors-brand);"));
     assert!(!css.contains("--colors-blue-600"));
@@ -121,6 +121,8 @@ fn font_face_prints_in_layer_global() {
                 font_weight: Some("400 700".to_string()),
                 font_display: Some("swap".to_string()),
                 font_style: None,
+                size_adjust: Some("104%".to_string()),
+                descent_override: Some("47%".to_string()),
             }),
         },
     );
@@ -135,6 +137,8 @@ fn font_face_prints_in_layer_global() {
     assert!(css.contains("src: url(/fonts/inter.woff2);"));
     assert!(css.contains("font-display: swap;"));
     assert!(css.contains("font-weight: 400 700;"));
+    assert!(css.contains("size-adjust: 104%;"));
+    assert!(css.contains("descent-override: 47%;"));
 }
 
 #[test]

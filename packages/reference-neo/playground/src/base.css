@@ -1,0 +1,12 @@
+/* Playground undercoat: margin reset plus the shell's canvas tone in both
+   colour modes, so first paint matches the theme stamp with no white flash.
+   Plain CSS on purpose — it must paint before the module graph boots. */
+html,
+body {
+  margin: 0;
+  background: oklch(13% 0.028 261.692);
+}
+html[data-color-mode='light'],
+html[data-color-mode='light'] body {
+  background: oklch(96.7% 0.003 264.542);
+}

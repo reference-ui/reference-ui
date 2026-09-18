@@ -27,12 +27,7 @@ pub(crate) fn from_spec(spec: &EvaluatedSystemSpec) -> Result<BaseSystem, FromJs
 }
 
 fn lower(spec: EvaluatedSystemSpec) -> Result<BaseSystem, FromJsonError> {
-    if spec.schema_version != 1 {
-        return Err(FromJsonError::UnsupportedSchemaVersion(spec.schema_version));
-    }
-    if spec.profile != "reference-ui" {
-        return Err(FromJsonError::UnsupportedProfile(spec.profile));
-    }
+    crate::spec::check_envelope(&spec)?;
     for fragment in &spec.global_css {
         crate::global_css::validate_fragment(fragment)?;
     }

@@ -6,15 +6,18 @@
     src: url(/fonts/inter.woff2);
     font-display: swap;
     font-weight: 400 700;
+    size-adjust: 104%;
+    descent-override: 47%;
   }
   @font-face {
     font-family: "Fira Code";
     src: url(/fonts/fira-code.woff2);
     font-display: fallback;
+    size-adjust: 101%;
   }
 }
 @layer tokens {
-  :root, [data-theme=light] {
+  :root, [data-color-mode=light] {
     --fonts-sans: "Inter", sans-serif;
     --fonts-mono: "Fira Code", monospace;
   }

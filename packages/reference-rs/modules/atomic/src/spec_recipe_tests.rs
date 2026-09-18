@@ -74,10 +74,11 @@ fn test_compile_rejects_tsx_recipe_duplicating_spec_class_name() {
         ..CompileRequest::default()
     };
     let res = compile(&req).expect("compile duplicate recipe");
-    assert!(
-        res.diagnostics.iter().any(|d| d.message
-            == "Duplicate recipe className 'button' within system 'spec-recipe-system'")
-    );
+    assert!(res
+        .diagnostics
+        .iter()
+        .any(|d| d.message
+            == "Duplicate recipe className 'button' within system 'spec-recipe-system'"));
     assert_eq!(res.runtime.recipes.len(), 1);
     assert!(res.stylesheet.contains("display: inline-flex;"));
     assert!(!res.stylesheet.contains("display: block;"));

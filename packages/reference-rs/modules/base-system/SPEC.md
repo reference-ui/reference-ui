@@ -23,14 +23,14 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 | :--- | :--- | :--- | :--- | :--- |
 | **`DUMP`** | `BaseSystemSpec` ingestion & in-memory artefact | 5 | 5 | 0 |
 | **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 7 | 1 |
-| **`FONT`** | Font Definitions & Face Rules | 4 | 4 | 0 |
+| **`FONT`** | Font Definitions & Face Rules | 5 | 5 | 0 |
 | **`MOTION`** | Keyframes & Animation Steps | 3 | 3 | 0 |
-| **`GLOBAL`** | Global CSS, Reset & Conditions | 4 | 3 | 1 |
+| **`GLOBAL`** | Global CSS, Reset & Conditions | 4 | 4 | 0 |
 | **`RECIPE`** | Declared Component & Slot Recipes | 4 | 4 | 0 |
-| **`EXTEND`** | Upstream Definition Merge & Private Scoping | 5 | 0 | 5 |
+| **`EXTEND`** | Upstream Definition Merge & Private Scoping | 5 | 5 | 0 |
 | **`LAYER`** | Upstream CSS Layer Isolation | 4 | 0 | 4 |
 | **`ASK`** | The Five Canonical Query Contracts | 6 | 3 | 3 |
-| **Total** | | **43** | **29** | **14** |
+| **Total** | | **44** | **36** | **8** |
 
 ---
 
@@ -92,7 +92,7 @@ those jobs. Vendor crates below are example call sites, not our API.
   Query a token `spacing.sm` defined with `{ "value": "0.5rem" }`. Assert that the query returns the exact literal string `"0.5rem"` for `@layer tokens` custom property declarations. Premature value transformation, rounding, or incorrect quotation stripping corrupts CSS output.
 - [x] `BAS-TOKEN-04` `[reference]` `[unit]` —
   **BaseSystem should store and resolve light and dark mode values for semantic tokens.**
-  Ingest a semantic token `colors.text` defined with `{ "value": "#111111", "dark": "#f5f5f5" }` or `{ "light": "#111111", "dark": "#f5f5f5" }`. Assert that base queries resolve `"#111111"`, while dark-mode queries return `"#f5f5f5"`, enabling `@layer tokens` emission under `:root` and `[data-theme="dark"]` selectors. Dropping the dark mode variant or collapsing semantic tokens to single static strings breaks color-mode switching.
+  Ingest a semantic token `colors.text` defined with `{ "value": "#111111", "dark": "#f5f5f5" }` or `{ "light": "#111111", "dark": "#f5f5f5" }`. Assert that base queries resolve `"#111111"`, while dark-mode queries return `"#f5f5f5"`, enabling `@layer tokens` emission under `:root, [data-color-mode="light"]` and `[data-color-mode="dark"]` selectors. Dropping the dark mode variant or collapsing semantic tokens to single static strings breaks color-mode switching.
 - [ ] `BAS-TOKEN-05` `[reference]` `[unit]` —
   **BaseSystem should categorize tokens into strict closed design-system scales.**
   Ingest tokens across `colors`, `spacing`, `radii`, `fonts`, `fontSizes`, `fontWeights`, `lineHeights`, `letterSpacings`, `shadows`, `zIndex`, `opacity`, `borders`, `durations`, `easings`, and `animations`. Assert that each token is indexed into its respective `TokenCategory` enum variant without stringly-typed fallback. Uncategorized tokens or arbitrary strings on categories violate typegen contract validation.
@@ -120,6 +120,9 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [x] `BAS-FONT-04` `[reference]` `[unit]` —
   **BaseSystem should attach font-level base CSS declarations.**
   Ingest a font definition with `css: { letterSpacing: '-0.01em', fontFeatureSettings: '"cv02"' }`. Assert that font-level CSS rules are stored and associated with the font definition for emission alongside typography utility classes. Dropping font-level CSS rules breaks design-system optical sizing and ligature configurations.
+- [x] `BAS-FONT-05` `[reference]` `[unit]` —
+  **BaseSystem should preserve `@font-face` metric-override descriptors for CSS generation.**
+  Ingest a font definition containing `fontFace: { src: 'url(/fonts/literata.woff2)', sizeAdjust: '104%', descentOverride: '47%' }`. Assert that the definition stores the exact `size-adjust` and `descent-override` strings ready for `@layer global` sheet emission, and that a face without them leaves both absent rather than defaulting. Dropping metric overrides breaks fallback-font size matching and vertical metrics alignment.
 
 ### Keyframes & Animation Steps (`MOTION`)
 
@@ -143,8 +146,8 @@ those jobs. Vendor crates below are example call sites, not our API.
   Ingest breakpoint conditions `{ sm: '@media (min-width: 640px)', md: '@media (min-width: 768px)', lg: '@media (min-width: 1024px)' }`. Assert that breakpoints are indexed in numeric order, supporting responsive array index mapping `[base, sm, md, lg]`. Unordered breakpoints or corrupted media query strings break responsive style props.
 - [x] `BAS-GLOBAL-03` `[reference]` `[unit]` —
   **BaseSystem should index pseudo-class, state, and container query conditions.**
-  Ingest conditions `{ _hover: '&:hover', _dark: '[data-theme="dark"] &', _focusVisible: '&:focus-visible' }`. Assert that each condition key maps to its exact CSS selector transform template. Missing conditions cause the atomic resolver to fail or emit invalid CSS rules.
-- [ ] `BAS-GLOBAL-04` `[forbidden]` `[unit]` —
+  Ingest conditions `{ _hover: '&:hover', _dark: '[data-color-mode="dark"] &', _focusVisible: '&:focus-visible' }`. Assert that each condition key maps to its exact CSS selector transform template. Missing conditions cause the atomic resolver to fail or emit invalid CSS rules.
+- [x] `BAS-GLOBAL-04` `[forbidden]` `[unit]` —
   **BaseSystem must reject upstream global CSS duplication across extends.**
   Ingest a downstream system extending an upstream system where the upstream system's global CSS is already included in its compiled layer. Assert that upstream global CSS fragments are not reinjected into the downstream global CSS list. Emitting duplicate resets or duplicate root CSS across package boundaries is strictly forbidden.
 
@@ -165,19 +168,19 @@ those jobs. Vendor crates below are example call sites, not our API.
 
 ### Upstream Definition Merge & Private Scoping (`EXTEND`)
 
-- [ ] `BAS-EXTEND-01` `[reference]` `[unit]` —
+- [x] `BAS-EXTEND-01` `[reference]` `[unit]` —
   **BaseSystem should merge upstream tokens into the local dictionary via `extends`.**
   Construct System B declaring `extends: [System A]`, where System A defines `colors.n100: '#eee'` and System B defines `colors.n200: '#ccc'`. Assert that System B's token dictionary contains both `n100` and `n200`, both answerable to `is_token` and visible to typegen. Dropping upstream tokens breaks token inheritance across packages.
-- [ ] `BAS-EXTEND-02` `[reference]` `[unit]` —
+- [x] `BAS-EXTEND-02` `[reference]` `[unit]` —
   **BaseSystem should allow downstream tokens to override upstream tokens with precedence.**
   System A defines `colors.primary: '#0066cc'`; System B extends System A and defines `colors.primary: '#0055bb'`. Assert that querying `colors.primary` on System B resolves to `'#0055bb'`. Inverting precedence or raising a collision error on intentional downstream extension violates the composition model.
-- [ ] `BAS-EXTEND-03` `[reference]` `[unit]` —
+- [x] `BAS-EXTEND-03` `[reference]` `[unit]` —
   **BaseSystem should strictly strip `_private` token trees when merging upstream systems.**
   System A defines `colors.publicToken: '#111'` and `colors._private.secretAccent: '#999'`. System B extends System A. Assert that System B's token dictionary contains `colors.publicToken` but does NOT contain `colors._private.secretAccent` or any key within `_private`. Internal tokens of base libraries must never leak into downstream application autocomplete.
-- [ ] `BAS-EXTEND-04` `[reference]` `[unit]` —
+- [x] `BAS-EXTEND-04` `[reference]` `[unit]` —
   **BaseSystem should merge recipes and fonts across the extends hierarchy.**
   System A defines recipe `badge` and font `sans`; System B extends System A and defines recipe `button`. Assert that System B exposes recipes `badge` and `button` and font `sans`. Dropping recipes or fonts during definition merge breaks compound design systems.
-- [ ] `BAS-EXTEND-05` `[reference]` `[unit]` —
+- [x] `BAS-EXTEND-05` `[reference]` `[unit]` —
   **BaseSystem should preserve deep multi-level extends chains deterministically.**
   Construct a three-tier chain where System C extends System B, and System B extends System A. Assert that token resolution follows bottom-up priority (C > B > A), with `_private` tokens stripped at each boundary. Cycle detection must identify circular extends chains (`A -> B -> A`) and fail closed with an explicit diagnostic.
 
@@ -212,7 +215,7 @@ those jobs. Vendor crates below are example call sites, not our API.
   Query `get_recipe("card")` and `list_recipes()`. Assert that the query returns a `RecipeDefinition` containing the recipe class name, base style map, variant options map (e.g. `tone: ["quiet", "loud"]`), default variants, and compound variant list, enabling closed-class recipe generation in atomic and variant prop typing in typegen. Malformed recipe schemas or dropped variant keys produce invalid recipe types.
 - [ ] `BAS-ASK-05` `[reference]` `[unit]` —
   **BaseSystem should answer condition and breakpoint definitions (Question 5).**
-  Query `get_condition("_hover")`, `get_condition("_dark")`, and `get_breakpoints()`. Assert that the query returns CSS selector transforms for `_hover` (`"&:hover"`), theme selector transforms for `_dark` (`"[data-theme=\"dark\"] &"`), and the ordered breakpoint list `["sm", "md", "lg"]`, enabling atomic condition resolution and responsive array mapping. Unknown condition queries must return `None` rather than panicking.
+  Query `get_condition("_hover")`, `get_condition("_dark")`, and `get_breakpoints()`. Assert that the query returns CSS selector transforms for `_hover` (`"&:hover"`), theme selector transforms for `_dark` (`"[data-color-mode=\"dark\"] &"`), and the ordered breakpoint list `["sm", "md", "lg"]`, enabling atomic condition resolution and responsive array mapping. Unknown condition queries must return `None` rather than panicking.
 - [x] `BAS-ASK-06` `[reference]` `[unit]` —
   **BaseSystem queries must be thread-safe and non-allocating on hot lookup paths.**
   Execute 100,000 parallel lookups of `is_token`, `get_token_css_var`, and `get_condition` across multiple worker threads. Assert that lookups borrow `&str` references with zero heap allocation, completing in $O(1)$ time via `FxHashMap` or perfect hashing without taking mutexes. Heap allocations or lock contention on hot token lookup paths severely degrade compiler throughput.
@@ -240,22 +243,23 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `BAS-FONT-02` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_02_preserves_structured_font_face_descriptors` |
 | `BAS-FONT-03` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_03_maps_named_font_weight_aliases_to_numeric_weights` |
 | `BAS-FONT-04` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_04_attaches_font_level_base_css_declarations` |
+| `BAS-FONT-05` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_05_preserves_metric_override_descriptors` |
 | `BAS-MOTION-01` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_01_stores_fade_in_steps` |
 | `BAS-MOTION-02` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_02_iterates_name_and_steps_for_at_rule_emit` |
 | `BAS-MOTION-03` | `packages/reference-rs/modules/base-system/src/motion.rs` | `tests::bas_motion_03_animation_token_identifies_keyframe_name` |
 | `BAS-GLOBAL-01` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_01_stores_structured_global_rules` |
 | `BAS-GLOBAL-02` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_02_stores_responsive_breakpoints` |
 | `BAS-GLOBAL-03` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_03_indexes_conditions` |
-| `BAS-GLOBAL-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
+| `BAS-GLOBAL-04` | `packages/reference-rs/modules/base-system/src/extends/adoption_tests.rs` | `extends::adoption_tests::bas_global_04_upstream_global_css_not_reinjected` |
 | `BAS-RECIPE-01` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_01_stores_base_variants_and_defaults` |
 | `BAS-RECIPE-02` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_02_preserves_compound_variants` |
 | `BAS-RECIPE-03` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_03_has_no_slot_recipe_schema` |
 | `BAS-RECIPE-04` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_04_static_schema_only` |
-| `BAS-EXTEND-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-EXTEND-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-EXTEND-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-EXTEND-04` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
-| `BAS-EXTEND-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
+| `BAS-EXTEND-01` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_01_merges_upstream_tokens` |
+| `BAS-EXTEND-02` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_02_downstream_override_wins_without_collision` |
+| `BAS-EXTEND-03` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_03_strips_private_across_boundary` |
+| `BAS-EXTEND-04` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_04_merges_recipes_and_fonts` |
+| `BAS-EXTEND-05` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_05_chain_precedence_and_private_stripped_at_each_boundary`, `extends::tests::bas_extend_05_cycle_and_unknown_fail_closed` |
 | `BAS-LAYER-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
@@ -274,9 +278,9 @@ those jobs. Vendor crates below are example call sites, not our API.
 1. **P0 — In-Memory Artefact & Deserialization (`BAS-DUMP-01` .. `05`):** Define the serializable/deserializable data model so evaluated fragment JSON dumps hydrate cleanly into memory.
 2. **P0 — The Five Canonical Query Contracts (`BAS-ASK-01` .. `06`):** Implement the query methods required by `modules/atomic` and `modules/typegen`, answering token existence, CSS variable naming, light/dark values, keyframes/fonts/globals, recipes, and conditions.
 3. **P1 — Token Dictionary & Normalization (`BAS-TOKEN-01` .. `08`):** Implement dot-path normalization, CSS custom property prefixing (`--colors-*`), literal value preservation, and semantic light/dark storage.
-4. **P1 — Extends & Private Token Scoping (`BAS-EXTEND-01` .. `05`):** Implement multi-system definition merge with precedence rules, cycle detection, and strict stripping of `_private` token trees.
+4. **P1 — Extends & Private Token Scoping (`BAS-EXTEND-01` .. `05`) — DONE:** Multi-system definition merge with precedence rules, cycle detection, and strict stripping of `_private` token trees is implemented (`BaseSystem::from_specs`) and proven.
 5. **P1 — Layer Isolation (`BAS-LAYER-01` .. `04`):** Implement CSS-only attachment for upstream systems, ensuring tokens from layered dependencies stay strictly out of local token queries and types.
-6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `04`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `04`):** Complete schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks.
+6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `05`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `04`) — DONE:** Schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks is complete, including the upstream global CSS exclusion.
 
 ---
 

@@ -12,7 +12,7 @@ Living notes for the Reference UI monorepo. The published site is `packages/refe
 
 ## Architecture (historical, still useful)
 
-These predate the native engine campaign. Paths inside them drift (`src/cli/`, `src/styled/`). Prefer current code and [packages/reference-rs/PLAN.md](../packages/reference-rs/PLAN.md) when they disagree.
+These predate the native engine campaign. Paths inside them drift (`src/cli/`, `src/styled/`). Prefer current code and [packages/reference-neo/PLAN.md](../packages/reference-neo/PLAN.md) when they disagree.
 
 - [Architecture.md](./Architecture.md)
 - [CORE.md](./CORE.md)

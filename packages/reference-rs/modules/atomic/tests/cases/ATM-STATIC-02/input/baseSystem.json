@@ -19,10 +19,7 @@
   "keyframes": {},
   "recipes": {},
   "staticCss": {
-    "bg": [
-      "n100",
-      "n300"
-    ]
+    "bg": ["n100", "n300"]
   },
   "provenance": []
 }

@@ -76,12 +76,19 @@ impl<'a> TraceContext<'a> {
     ) -> Result<Option<PathBuf>, StyleTraceError> {
         if specifier == "@reference-ui/styled/types" {
             let candidates = [
-                self.session.sync_root.join(super::STYLED_TYPES_ROOT).join("system-types.d.ts"),
-                self.session.sync_root.join("styled/types/system-types.d.ts"),
+                self.session
+                    .sync_root
+                    .join(super::STYLED_TYPES_ROOT)
+                    .join("system-types.d.ts"),
+                self.session
+                    .sync_root
+                    .join("styled/types/system-types.d.ts"),
                 self.session.sync_root.join("types/system-types.d.ts"),
             ];
             for candidate in candidates {
-                if let Some(path) = self.resolve_reference_support_module(current_module, &candidate, specifier)? {
+                if let Some(path) =
+                    self.resolve_reference_support_module(current_module, &candidate, specifier)?
+                {
                     return Ok(Some(path));
                 }
             }
@@ -89,12 +96,19 @@ impl<'a> TraceContext<'a> {
 
         if let Some(rest) = specifier.strip_prefix("@reference-ui/styled/types/") {
             let candidates = [
-                self.session.sync_root.join(super::STYLED_TYPES_ROOT).join(format!("{rest}.d.ts")),
-                self.session.sync_root.join(format!("styled/types/{rest}.d.ts")),
+                self.session
+                    .sync_root
+                    .join(super::STYLED_TYPES_ROOT)
+                    .join(format!("{rest}.d.ts")),
+                self.session
+                    .sync_root
+                    .join(format!("styled/types/{rest}.d.ts")),
                 self.session.sync_root.join(format!("types/{rest}.d.ts")),
             ];
             for candidate in candidates {
-                if let Some(path) = self.resolve_reference_support_module(current_module, &candidate, specifier)? {
+                if let Some(path) =
+                    self.resolve_reference_support_module(current_module, &candidate, specifier)?
+                {
                     return Ok(Some(path));
                 }
             }
@@ -103,14 +117,18 @@ impl<'a> TraceContext<'a> {
         if specifier == "@reference-ui/react" {
             let candidates = [
                 self.session.sync_root.join(super::REFERENCE_REACT_ENTRY),
-                self.session.sync_root.join(".reference-ui/react/react.d.ts"),
+                self.session
+                    .sync_root
+                    .join(".reference-ui/react/react.d.ts"),
                 self.session.sync_root.join("react/react.d.mts"),
                 self.session.sync_root.join("react/react.d.ts"),
                 self.session.sync_root.join("react.d.mts"),
                 self.session.sync_root.join("react.d.ts"),
             ];
             for candidate in candidates {
-                if let Ok(Some(path)) = self.resolve_reference_support_module(current_module, &candidate, specifier) {
+                if let Ok(Some(path)) =
+                    self.resolve_reference_support_module(current_module, &candidate, specifier)
+                {
                     return Ok(Some(path));
                 }
             }

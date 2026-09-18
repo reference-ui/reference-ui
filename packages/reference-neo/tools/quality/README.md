@@ -18,6 +18,12 @@ for the two things no linter will ever judge, file headers and README shape.
 The runner itself is plumbing: it shells out, maps severities, prints one fix tip
 per violation, and exits 0 clean, 1 on violations, or 2 when tooling is missing.
 
+One override lives in `biome.json`: `noShadowRestrictedNames` is off for
+`react-surface.d.ts`, whose tag lines mirror generator emit — the `<map>`
+tag's component is honestly named `Map`, so the shadowing is the contract.
+The biome config is strict JSON (no comments), which is why this note lives
+here instead of beside the override.
+
 Two facts about the toolchain shaped this split. First, Biome 2.x has no
 `--diagnostic-format` flag; the runner asks for `--reporter=json` and only falls
 back to scraping rule hits from human-readable text if JSON stops parsing. Run

@@ -8,8 +8,7 @@ use crate::BaseSystem;
 const FOREIGN: &str =
     r#"{"name":"@reference-ui/lib","fragment":"(function(){})()","jsxElements":["Button"]}"#;
 
-const FROZEN_FIXTURE: &str =
-    include_str!("../../../contracts/fixtures/evaluated-system-spec.json");
+const FROZEN_FIXTURE: &str = include_str!("../../../contracts/fixtures/evaluated-system-spec.json");
 
 fn test_envelope(tokens_json: &str) -> String {
     format!(
@@ -98,8 +97,14 @@ fn frozen_fixture_lowers_successfully() {
     assert_eq!(system.breakpoints().width_px("sm"), Some("640"));
     assert_eq!(system.breakpoints().width_px("md"), Some("768"));
     assert_eq!(system.get_condition("_hover"), Some("&:hover"));
-    assert_eq!(system.get_condition("_dark"), Some("[data-theme=dark] &"));
-    assert_eq!(system.get_condition("_light"), Some("[data-theme=light] &"));
+    assert_eq!(
+        system.get_condition("_dark"),
+        Some("[data-color-mode=dark] &")
+    );
+    assert_eq!(
+        system.get_condition("_light"),
+        Some("[data-color-mode=light] &")
+    );
     assert_eq!(system.global_css().len(), 1);
     assert!(system.keyframes.contains_key("spin"));
     assert!(system.get_recipe("button").is_some());

@@ -37,7 +37,9 @@ if (report.issues.length > 0) {
 }
 
 const verifiedNoun = report.verified.length === 1 ? 'binary' : 'binaries'
-console.log(`Verified ${report.verified.length} native ${verifiedNoun}: ${report.verified.join(', ') || '(none)'}`)
+console.log(
+  `Verified ${report.verified.length} native ${verifiedNoun}: ${report.verified.join(', ') || '(none)'}`
+)
 if (report.missing.length > 0) {
   const missingNoun = report.missing.length === 1 ? 'binary' : 'binaries'
   console.log(

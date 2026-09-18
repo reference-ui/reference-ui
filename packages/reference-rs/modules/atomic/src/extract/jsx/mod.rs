@@ -52,7 +52,8 @@ fn handle_jsx_attribute(
     let Some(val) = &attr.value else {
         // <Div truncate />
         if is_known_style_prop(&name) {
-            let want = Want::new(name.clone(), crate::atom::AtomValue::Bool(true)).with_origin(origin);
+            let want =
+                Want::new(name.clone(), crate::atom::AtomValue::Bool(true)).with_origin(origin);
             ctx.wants.push(want);
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
                 when: Vec::new(),
@@ -96,7 +97,8 @@ fn handle_attribute_string(
     if is_known_style_prop(name) {
         let mut expr_ctx = ctx.expression_walk(name, origin, false);
         crate::extract::expressions::literal::push_string_want(&mut expr_ctx, lit, &smallvec![]);
-        let (clean, imp) = crate::extract::expressions::literal::split_important_flag(lit.value.as_str());
+        let (clean, imp) =
+            crate::extract::expressions::literal::split_important_flag(lit.value.as_str());
         ctx.authored.push(crate::runtime::AuthoredDeclaration {
             when: Vec::new(),
             prop: name.to_string(),
@@ -143,7 +145,7 @@ fn dispatch_attribute_expression(
         // <Div bg={on ? 'n300' : 'n100'} />
         let mut expr_ctx = ctx.expression_walk(name, origin, false);
         crate::extract::expressions::walk_expression(&mut expr_ctx, expr, &smallvec![]);
-        if let Some((val, imp)) = crate::extract::expressions::ast_to_json_value(expr, ctx.constants) {
+        for (val, imp) in crate::extract::expressions::ast_to_json_values(expr, ctx.constants) {
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
                 when: Vec::new(),
                 prop: name.to_string(),

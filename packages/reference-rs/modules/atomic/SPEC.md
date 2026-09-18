@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 130 |
-| Named `[x]` proven | 124 |
+| Total contract cases | 132 |
+| Named `[x]` proven | 126 |
 | Remaining `[ ]` | 6 (`ATM-DIAG-04`, `ATM-DIAG-05`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`, `ATM-SITE-13`) |
-| Cargo `#[test]` | 131 (internal; not ticks) |
-| Vitest seam stations | 117 (`tests/cases/<ATM-*>`) |
+| Cargo `#[test]` | 164 (internal; not ticks) |
+| Vitest seam stations | 119 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -75,8 +75,8 @@ Two structural causes, both of which the new areas are designed to close:
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 7 | 7 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 16 | 16 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 11 | 11 | 0 |
-| `RECIPE` | Closed variant classes & variant lookup tables | 6 | 6 | 0 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
+| `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 8 | 8 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 7 | 7 | 0 |
@@ -86,9 +86,9 @@ Two structural causes, both of which the new areas are designed to close:
 | `VALID` | Emitted CSS must parse and mean something (P0) | 3 | 3 | 0 |
 | `MERGE` | Last-wins semantics across arguments, aliases, & duplicate keys | 3 | 3 | 0 |
 | `UNIT` | Numeric value unit policy & canonical number form | 2 | 2 | 0 |
-| `SEAM` | Rust ⇄ N-API artifact parity | 1 | 1 | 0 |
+| `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **130** | **124** | **6** |
+| **Total** | | **133** | **127** | **6** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -214,6 +214,8 @@ compiler contract.
 - [x] `ATM-MERGE-03` `[reference]` `[seam]` —
   **An array argument to `css()` must be a merge list, never a responsive array.**
   Compile `css([{ margin: '1r' }, { margin: '3r' }, false])`. Assert both objects emit unconditioned atoms, that `false` is skipped without a diagnostic, and that no breakpoint condition is applied to any of them. Confusing this with the responsive-array form (`ATM-LEAF-05`) silently moves styles to a breakpoint the author never wrote.
+
+> **Merge note (RS-9): responsive-expansion eviction.** Responsive values (arrays per `ATM-LEAF-05`, per-prop objects per `ATM-COND-17`) expand one authored declaration into several cascade slots: the engine (`runtime/builder.rs`, `derive_slot`) stamps breakpoint members as `[cond ':']* canonical '@' bp` (`width@base`, `width@md`) while a scalar alias lands on the bare slot (`width`). Distinct slots never collide under plain last-wins, so without eviction `css({ width: { base: '50px', md: '60px' }, w: '70px' })` would print all three classes and leave base width to stylesheet order. The runtime (`js/plans.ts` `mergeDeclarations`, mirrored by Neo `src/runtime/css/plans.ts`) therefore merges by slot *family* with overlapping breakpoint coverage: a later bare declaration evicts every earlier slot in its family, and a later `@bp` member evicts the earlier bare slot plus same-`@bp` members, leaving other breakpoints and other condition families untouched. Both directions hold — a later alias evicts the earlier expansion, and a later expansion evicts the earlier alias. The `@` suffix parses as the text after the LAST `@` only when that `@` sits after the last `:` (see `splitSlot`), because `r`-condition families such as `@container (min-width: 300px):p` carry a leading `@` of their own. Non-breakpoint object keys (`_hover`) slot as nested `when` parts (`hover:width`), identical to the `_hover: { … }` block form. Proved by station `ATM-COND-17` (both merge directions through compiled plans) and `tests/merge-eviction.test.ts` (slot grammar boundaries).
 
 ### Numeric Values & Unit Policy
 
@@ -385,8 +387,8 @@ compiler contract.
   **`_hover` lowers to `&:is(:hover, [data-hover])` and that selector is applied to the class.**
   Station `ATM-COND-02`. Spec used to list `_active`, `_focus`, `_focusVisible`, `_disabled` as proven; those presets are not in this station.
 - [x] `ATM-COND-03` `[reference]` `[seam]` —
-  **`_dark` lowers to `[data-panda-theme=dark] &` and applies as `[data-panda-theme=dark] .dark\:…`.**
-  Station `ATM-COND-03`. `_light` is `ATM-COND-08`. Host primitives stamp `DATA_COLOR_MODE_ATTR = 'data-panda-theme'`.
+  **`_dark` lowers to `[data-color-mode=dark] &` and applies as `[data-color-mode=dark] .dark\:…`.**
+  Station `ATM-COND-03`. `_light` is `ATM-COND-08`. Host primitives stamp `DATA_COLOR_MODE_ATTR = 'data-color-mode'`.
 - [x] `ATM-COND-04` `[reference]` `[seam]` —
   **Cumulative nested condition chains must preserve outer-to-inner scope ordering.**
   Compile nested condition scopes (e.g. `_dark: { _hover: { _focusVisible: { borderColor: 'gold' } } }`). Assert that the extracted want retains the exact ordered condition path `['_dark', '_hover', '_focusVisible']`. Assert that the class name prefixes conditions in order (`dark:hover:focusVisible:borderC_gold`).
@@ -401,7 +403,7 @@ compiler contract.
   Station `ATM-COND-07`. `r={{ 300: { p: '1r' }, md: { mt: '2r' } }}` stamps `when` with the query strings and prints those at-rules. Unknown names warn and skip.
 - [x] `ATM-COND-08` `[reference]` `[seam]` —
   **Theme conditions must match the host color-mode attribute, not only a `.dark` class.**
-  Station `ATM-COND-08`. `_dark` / `_light` wrap as `[data-panda-theme=dark] &` / `[data-panda-theme=light] &`. Core primitives use `DATA_COLOR_MODE_ATTR = 'data-panda-theme'`. The wrap comes from `BaseSystem::lib_fixture()`, not a hardcoded `.dark &` preset.
+  Station `ATM-COND-08`. `_dark` / `_light` wrap as `[data-color-mode=dark] &` / `[data-color-mode=light] &`. Core primitives use `DATA_COLOR_MODE_ATTR = 'data-color-mode'`. The wrap comes from `BaseSystem::lib_fixture()`, not a hardcoded `.dark &` preset.
 - [x] `ATM-COND-09` `[reference]` `[seam]` —
   **Group/peer and arbitrary `&` / `@` conditions must survive into the stylesheet.**
   Station `ATM-COND-09`. `_groupHover` / `_peerFocus` wrap from the lib fixture. `'&[data-slot=inner]'` prints a real rule. Canon `NAMED_CONDITIONS` also lists `_osDark` / `_motionReduce`; those `@media` presets are not this station.
@@ -427,6 +429,9 @@ compiler contract.
 - [x] `ATM-COND-16` `[reference]` `[seam]` —
   **Every authored `container` form must lower correctly, and the named-container query API must be wired or removed.**
   Station `ATM-COND-16`. Compile `<Div container />` (boolean) and assert `container-type: inline-size` with no `container-name`. Compile the named-container `r` form and assert `@container card (min-width: Npx)`. `resolve/container.rs:7-18` handles the boolean case untested at the seam, and `resolve/r/query.rs:13-16` exports a named-container formatter that **no caller invokes** — `walk_r_object` only calls `lower_r_key` (`object.rs:119`). Either the syntax is real and this station proves it, or the function is dead code and should be deleted (§7.14).
+- [x] `ATM-COND-17` `[reference]` `[seam]` —
+  **Per-prop responsive objects (`width: { base, md }`) must expand onto breakpoint `when` scopes with `base` unconditioned, and unknown keys must warn and skip.**
+  Station `ATM-COND-17` (RS-9). Compile `css({ width: { base: '50px', md: '60px' }, w: '70px' })`. Assert wants `(width, 50px, [base])`, `(width, 60px, [md])`, `(w, 70px, [])`; assert the sheet carries all three atoms (`.w_50px`, `@container (min-width: 768px) .md\:w_60px`, `.w_70px`); assert the width plan is keyed by authored spellings with declarations on slots `width@base` / `width@md`. Extract passes keys through on `when` — `base`-skipping and unknown-key refusal belong to `resolve/conditions` alone. See the merge note under Merge & Last-Wins Semantics for the runtime eviction this slot family requires.
 
 ### Design Token Resolution
 
@@ -460,6 +465,9 @@ compiler contract.
 - [x] `ATM-TOKEN-11` `[reference]` `[seam]` —
   **A token whose dump value is a `{path}` reference must print as a `var()` alias in `@layer tokens`.**
   Station `ATM-TOKEN-11`. Compile a dump where `colors.ui.button.background` is `{colors.gray.950}` and assert `@layer tokens` prints `--colors-ui-button-background: var(--colors-gray-950)`, including under the dark selector. `system_layers.rs:88-96` implements this and the lib fixture depends on it heavily — the `ATM-COND-01` golden is full of `var(--colors-…)` aliases — yet no station claims it. This is distinct from `ATM-TOKEN-08`, which interpolates a brace path inside a composite authored value.
+- [x] `ATM-TOKEN-12` `[reference]` `[seam]` —
+  **A `{category.path}` reference that names no token in the dump must be a sync-failing error diagnostic naming the ref with file:line, and its declaration must be dropped.**
+  Station `ATM-TOKEN-12`. Compile `css({ color: '{colors.nope}', border: '2px solid {colors.nope}' })` and assert two `severity: error` diagnostics reading ``unknown token reference `{colors.nope}` `` with the authoring file, line, and column; assert the bad declarations are omitted so the sheet stays valid CSS while valid siblings still emit. Panda's serialize path escapes the literal (`colors\.nope`, `core/__tests__/serialize.test.ts` "skip non-existent") — this engine fails closed instead (reference-neo D13, unblocking `NEO-TOKEN-02`).
 
 ### BaseSystem Spec Validation
 
@@ -487,6 +495,9 @@ compiler contract.
 - [x] `ATM-RECIPE-06` `[reference]` `[seam]` —
   **Recipe class stems must require explicit `className` and reject missing/dynamic identity, spread properties, non-object arguments, or duplicate `(system, className)`.**
   Compile `recipe()` call sites with missing `className`, dynamic arguments, and duplicate recipe class names within the same system. Assert that the compiler rejects each invalid construct with descriptive error diagnostics and only admits valid explicit identities.
+- [x] `ATM-RECIPE-07` `[reference]` `[seam]` —
+  **Responsive variant values must lower to `@container`-wrapped per-breakpoint classes with runtime table entries.**
+  Compile `recipe({ className: 'buttonStyle', variants: { variant: { solid, outline } } })` where each value carries `_hover`/`_disabled` leaves. Assert each value also emits `{breakpoint}:`-prefixed classes (one per width breakpoint, after all plain rules) wrapped in that breakpoint's `@container (min-width: …)` query inside `@layer recipes`, with the hover/disabled descendants inside the query block. Assert `RecipeRuntimeTable.responsiveVariantMap` maps axis → breakpoint → value → class so a runtime `{ base: 'solid', md: 'outline' }` selection emits both classes. Never `@media screen` (D8).
 
 ### Static CSS Expansion
 
@@ -510,7 +521,7 @@ compiler contract.
   Station `ATM-LAYER-02`. Empty `reset` / `base` / `recipes` stay omitted. Fixture `globalCss` and tokens populate those layers (`ATM-LAYER-03`).
 - [x] `ATM-LAYER-03` `[reference]` `[seam]` —
   **BaseSystem layer contents must populate `@layer global` and `@layer tokens`.**
-  Station `ATM-LAYER-03`. Stored `globalCss` (`:root --spacing-root`) prints in `@layer global`. Token light values sit on `:root`; dark overrides sit under `[data-panda-theme=dark]`. Empty reset/recipes stay omitted. Reset chrome and keyframes are not in tonight's fixture.
+  Station `ATM-LAYER-03`. Stored `globalCss` (`:root --spacing-root`) prints in `@layer global`. Token light values sit on `:root, [data-color-mode=light]`; dark overrides sit under `[data-color-mode=dark]`. Empty reset/recipes stay omitted. Reset chrome and keyframes are not in tonight's fixture.
 - [x] `ATM-LAYER-04` `[reference]` `[seam]` —
   **All generated atomic utility rules and media query wrappers must be encapsulated inside `@layer utilities`.**
   Station `ATM-LAYER-04`. Unconditioned classes and wrapping `@media` / `@container` stay inside `@layer utilities`.
@@ -519,7 +530,7 @@ compiler contract.
   Station `ATM-LAYER-05`. Compile a dump declaring `fadeIn { from { opacity: 0 } to { opacity: 1 } }` and a percentage-keyed animation. Assert both print with correct `from`/`to`/`%` selectors, and that an empty keyframes bag leaves the layer omitted (`ATM-LAYER-02`). The `animations.*` tokens already resolve to `var(--animations-fadeIn-normal)` and reference `fadeIn` by name (see the `ATM-COND-01` golden), so today every animation token points at a keyframe the stylesheet never defines — a dangling reference in shipped CSS.
 - [x] `ATM-LAYER-06` `[reference]` `[seam]` —
   **BaseSystem font-face declarations must print as `@font-face` blocks in `@layer global`.**
-  Station `ATM-LAYER-06`. Compile a dump with one `globalFontface` entry per family and assert one `@font-face` block each, with `src` and `font-display` preserved. `--fonts-sans: "Inter", …` resolves today with nothing loading Inter, so the token is a promise the stylesheet does not keep.
+  Station `ATM-LAYER-06`. Compile a dump with one `globalFontface` entry per family and assert one `@font-face` block each, with `src` and `font-display` preserved. Metric-override leaves (`sizeAdjust`, `descentOverride`) print as `size-adjust` / `descent-override` when present and stay omitted when absent. `--fonts-sans: "Inter", …` resolves today with nothing loading Inter, so the token is a promise the stylesheet does not keep.
 - [x] `ATM-LAYER-07` `[reference]` `[seam]` —
   **Atoms sharing an identical at-rule wrapper must nest under one copy of that at-rule.**
   Station `ATM-LAYER-07`. Three `sm` utilities share one `@container (min-width: 640px)` block. Nested `sm: { … }` object keys are not extract conditions; array slot 1 is `sm`. `cascade/mod.rs` groups after `CascadeKey` sort. Nested dual at-rules nest in author order (`ATM-GHOST-05`).
@@ -564,7 +575,7 @@ compiler contract.
   Station `ATM-DIAG-03`. Malformed source yields `severity: error` and a `CompileResult` (no panic).
 - [ ] `ATM-DIAG-04` `[reference]` `[seam]` —
   **Every diagnostic must carry a file path, a line, and a column.**
-  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Every call site passes `with_location(path, None, None)` today (`lib.rs:210`, `walk.rs:51-53`) and token warnings carry no file at all (`resolve/tokens/mod.rs:47-49`), so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor.
+  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Every call site passes `with_location(path, None, None)` today (`lib.rs:210`, `walk.rs:51-53`) and token warnings carry no file at all (`resolve/tokens/mod.rs:47-49`), so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor. `ATM-TOKEN-12` is the first located token diagnostic (missing-`{ref}` errors); the general claim stays open.
 - [ ] `ATM-DIAG-05` `[reference]` `[seam]` —
   **Every diagnostic must carry a stable machine-readable code.**
   Assert each diagnostic exposes a code (`ATM1001`-style) that is stable across releases, that codes are unique per failure class, and that the same authored mistake always reports the same code. Diagnostics are free-text strings today, with three near-duplicate wordings for unresolved dynamic values (`walk.rs:189-191`, `:225-227`, `:305-307`). Codes are what let a host suppress a known warning, group them in a report, and document them.
@@ -601,6 +612,15 @@ compiler contract.
 - [x] `ATM-SEAM-01` `[reference]` `[seam]` —
   **The in-process Rust compiler and the N-API bridge must produce identical artifacts for the same input.**
   Compile one representative case through `atomic::compile` in Rust and through `compileSystem` from TypeScript, and assert the `stylesheet`, `css.classes`, `diagnostics`, and `recipes` are deep-equal. Assert the TS types in `js/types.ts` match the serde shape rather than drifting: `CssRuntime.classes` is optional in TS but always present in Rust, and `wants`/`recipes` are likewise optional on one side only. This is the repo's own unimplemented gate C (`README.md`), and without it Cargo tests and Vitest stations can disagree indefinitely — each proving a different engine.
+- [x] `ATM-SEAM-02` `[reference]` `[seam]` —
+  **`compile()` must accept the frozen `NativeCompileRequest` and emit the same CSS as the legacy shape for the same spec.**
+  Station `ATM-SEAM-02`. The frozen `{ schemaVersion: 1, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape compiles the same input tree as legacy `{ baseSystem, rootDir }` and produces byte-identical `stylesheet`, `css.classes`, `diagnostics`, and `atomCount`. `jsxHosts` unions into the JSX host set (`src/hosts.rs`), so a configured host extracts without a file-local import; `declarationRoot` threads to styletrace as the sync-root hint; `include` scopes both shapes to matching sources (`ATM-SCAN-01`). A non-`1` `schemaVersion` fails closed with an error diagnostic. The legacy shape still compiles — the station golden is the legacy compile.
+- [x] `ATM-SEAM-03` `[reference]` `[seam]` —
+  **Every want must emit a runtime style plan, including wants that arrive through ternary arms, member access, and identifier spreads.**
+  Station `ATM-SEAM-03` (RS-14, unblocks NEO-SITE-01/02/03). `css({ color: flag ? 'cherry' : 'ocean' })` emits one plan per arm; `css({ color: theme.primary })` emits the member plan; `css({ bg: 'amber', ...rest })` emits the spread plan beside its literal sibling. Authored capture (`ast_to_json_values`) mirrors `walk_expression` leaf-for-leaf, and identifier-spread unpack pushes authored entries alongside wants, so `css()` and JSX resolve every leaf through the plan index (`createStylePlanIndex` + `mergeStylePlans` returns each leaf's `css.classes` entry, never `''`). `null`, `undefined`, and `void` leaves stay omitted on both sides. Whole-object `css(styles)` is out of scope: it yields no wants at all, a separate gap.
+- [x] `ATM-SCAN-01` `[reference]` `[seam]` —
+  **The frozen request's `include` globs must scope both the `sourceRoot` scan and the legacy virtual `files` list.**
+  Station `ATM-SCAN-01` (RS-10, unblocks NEO-SYNC-09). Under `include: ['theme/**']` the `css()` in `outside/` yields no utility and no diagnostics; an absent or empty include preserves scan-all. One `IncludeScope` (`src/includes/`) serves both paths with fast-glob flavor: `**` crosses directories, `*`/`?` stay in a segment, `{a,b}` expands, `[...]` matches one character, leading `!` negates. The legacy shape accepts `include` too; the station golden is the unscoped legacy compile.
 - [ ] `ATM-PERF-01` `[reference]` `[seam]` —
   **Compiling a large source tree must stay within a declared time and memory budget, and `AtomSet` size must equal the unique atom count.**
   Compile a generated tree of a few thousand files, assert the wall time is under a recorded bound, and assert the atom count equals the number of distinct `(prop, value, when, important)` tuples. Every file is currently parsed twice — once for constants (`lib.rs:180-196`) and once for extract (`lib.rs:198-214`) — and there is no timing anywhere in the crate, so the first real `ref sync` on an app-sized tree is where that gets discovered. A budget makes the double parse visible before a user finds it.
@@ -678,6 +698,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-COND-14` | `[x]` | `[seam]` | `tests/cases/ATM-COND-14/` |
 | `ATM-COND-15` | `[x]` | `[seam]` | `tests/cases/ATM-COND-15/` |
 | `ATM-COND-16` | `[x]` | `[seam]` | `tests/cases/ATM-COND-16/` |
+| `ATM-COND-17` | `[x]` | `[seam]` | `tests/cases/ATM-COND-17/` |
 | `ATM-TOKEN-01` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-01/` |
 | `ATM-TOKEN-02` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-02/` |
 | `ATM-TOKEN-03` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-03/` |
@@ -689,12 +710,14 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-09` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-09/` |
 | `ATM-TOKEN-10` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-10/` + `tests/token10.test.ts` |
 | `ATM-TOKEN-11` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-11/` |
+| `ATM-TOKEN-12` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-12/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |
 | `ATM-RECIPE-04` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-04/` |
 | `ATM-RECIPE-05` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-05/` |
 | `ATM-RECIPE-06` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-06/` |
+| `ATM-RECIPE-07` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-07/` |
 | `ATM-STATIC-01` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-01/` |
 | `ATM-STATIC-02` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-02/` |
 | `ATM-STATIC-03` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-03/` |
@@ -737,6 +760,9 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-UNIT-01` | `[x]` | `[seam]` | `tests/cases/ATM-UNIT-01/` |
 | `ATM-UNIT-02` | `[x]` | `[seam]` | `tests/cases/ATM-UNIT-02/` |
 | `ATM-SEAM-01` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-01/` + `tests/seam.test.ts` |
+| `ATM-SEAM-02` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-02/` |
+| `ATM-SEAM-03` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-03/` |
+| `ATM-SCAN-01` | `[x]` | `[seam]` | `tests/cases/ATM-SCAN-01/` |
 
 ---
 
@@ -802,7 +828,7 @@ Inter.
 `split_css`, the `@layer` specificity polyfill, hooks and plugin callbacks,
 `styled.div` factory, slot-recipe `sva`, patterns as factories, the `$` token
 rename hook, `prefix` / `hash` / `separator` config, layer renaming, Vue / Svelte
-/ Astro adapters, `include` globs, cross-file constant folding, and `colorPalette`
+/ Astro adapters, `include` globs as a styletrace substitute (scan scoping itself landed in `ATM-SCAN-01`), cross-file constant folding, and `colorPalette`
 virtual tokens. The first eleven are refusals in §7; the last three are scope
 decisions to revisit only if a component needs them.
 
@@ -810,7 +836,7 @@ decisions to revisit only if a component needs them.
 
 We are not chasing parity where their behavior is worse. Keep: no `currentColor`
 completion on shorthands (§7.5); both ternary branches scooped rather than
-evaluated (`ATM-LEAF-01`); one color-mode wrap via `data-panda-theme` instead of
+evaluated (`ATM-LEAF-01`); one color-mode wrap via `data-color-mode` instead of
 their `.dark &` / `[data-panda-theme]` split; `http(s):` values emitted rather
 than silently dropped; unresolved token paths raw in the value with a warning
 rather than escaped into the declaration; six layers with a distinct `global`;

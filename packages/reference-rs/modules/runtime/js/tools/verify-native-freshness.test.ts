@@ -3,7 +3,14 @@
  * Asserts stale or unstamped binaries fail closed while missing ones stay shippable-skipped.
  * Validates stamp portability across checkouts and the stamp-then-verify round trip.
  */
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -68,7 +75,11 @@ describe('hashNativeInputs', () => {
   it('changes the hash when rust input content changes', () => {
     const { packageDir } = createPackageFixture()
     const before = hashNativeInputs(packageDir)
-    writeFileSync(join(packageDir, 'modules', 'demo', 'lib.rs'), 'pub fn y() {}\n', 'utf-8')
+    writeFileSync(
+      join(packageDir, 'modules', 'demo', 'lib.rs'),
+      'pub fn y() {}\n',
+      'utf-8'
+    )
 
     expect(hashNativeInputs(packageDir)).not.toBe(before)
   })
@@ -76,9 +87,15 @@ describe('hashNativeInputs', () => {
   it('ignores volatile non-rust files so test outputs cannot churn stamps', () => {
     const { packageDir } = createPackageFixture()
     const before = hashNativeInputs(packageDir)
-    mkdirSync(join(packageDir, 'modules', 'demo', 'node_modules', 'dep'), { recursive: true })
+    mkdirSync(join(packageDir, 'modules', 'demo', 'node_modules', 'dep'), {
+      recursive: true,
+    })
     writeFileSync(join(packageDir, 'modules', 'demo', 'output.json'), '{}\n', 'utf-8')
-    writeFileSync(join(packageDir, 'modules', 'demo', 'node_modules', 'dep', 'x.js'), 'x\n', 'utf-8')
+    writeFileSync(
+      join(packageDir, 'modules', 'demo', 'node_modules', 'dep', 'x.js'),
+      'x\n',
+      'utf-8'
+    )
 
     expect(hashNativeInputs(packageDir)).toBe(before)
   })
@@ -86,7 +103,11 @@ describe('hashNativeInputs', () => {
   it('changes the hash when a crate manifest changes', () => {
     const { packageDir } = createPackageFixture()
     const before = hashNativeInputs(packageDir)
-    writeFileSync(join(packageDir, 'modules', 'demo', 'Cargo.toml'), '[package]\n', 'utf-8')
+    writeFileSync(
+      join(packageDir, 'modules', 'demo', 'Cargo.toml'),
+      '[package]\n',
+      'utf-8'
+    )
 
     expect(hashNativeInputs(packageDir)).not.toBe(before)
   })
@@ -96,7 +117,11 @@ describe('collectNativeFreshnessIssues', () => {
   it('verifies binaries whose stamps match the current inputs hash', () => {
     const { packageDir, nativeDir } = createPackageFixture()
     writeBinary(nativeDir, 'linux-x64-gnu')
-    writeNativeStamp({ nativeDirPath: nativeDir, packageDirPath: packageDir, triple: 'linux-x64-gnu' })
+    writeNativeStamp({
+      nativeDirPath: nativeDir,
+      packageDirPath: packageDir,
+      triple: 'linux-x64-gnu',
+    })
 
     const report = collectNativeFreshnessIssues({
       nativeDirPath: nativeDir,
@@ -120,15 +145,26 @@ describe('collectNativeFreshnessIssues', () => {
     })
 
     expect(report.issues).toHaveLength(1)
-    expect(report.issues[0]).toMatchObject({ triple: 'linux-x64-gnu', kind: 'missing-stamp' })
+    expect(report.issues[0]).toMatchObject({
+      triple: 'linux-x64-gnu',
+      kind: 'missing-stamp',
+    })
     expect(report.verified).toEqual([])
   })
 
   it('flags binaries whose stamps predate the current inputs as stale-binary issues', () => {
     const { packageDir, nativeDir } = createPackageFixture()
     writeBinary(nativeDir, 'linux-x64-gnu')
-    writeNativeStamp({ nativeDirPath: nativeDir, packageDirPath: packageDir, triple: 'linux-x64-gnu' })
-    writeFileSync(join(packageDir, 'modules', 'demo', 'lib.rs'), 'pub fn y() {}\n', 'utf-8')
+    writeNativeStamp({
+      nativeDirPath: nativeDir,
+      packageDirPath: packageDir,
+      triple: 'linux-x64-gnu',
+    })
+    writeFileSync(
+      join(packageDir, 'modules', 'demo', 'lib.rs'),
+      'pub fn y() {}\n',
+      'utf-8'
+    )
 
     const report = collectNativeFreshnessIssues({
       nativeDirPath: nativeDir,
@@ -137,7 +173,10 @@ describe('collectNativeFreshnessIssues', () => {
     })
 
     expect(report.issues).toHaveLength(1)
-    expect(report.issues[0]).toMatchObject({ triple: 'linux-x64-gnu', kind: 'stale-binary' })
+    expect(report.issues[0]).toMatchObject({
+      triple: 'linux-x64-gnu',
+      kind: 'stale-binary',
+    })
     expect(report.verified).toEqual([])
   })
 
@@ -200,10 +239,18 @@ describe('writeNativeStamp', () => {
     const { packageDir, nativeDir } = createPackageFixture()
 
     expect(() =>
-      writeNativeStamp({ nativeDirPath: nativeDir, packageDirPath: packageDir, triple: 'wasm32' })
+      writeNativeStamp({
+        nativeDirPath: nativeDir,
+        packageDirPath: packageDir,
+        triple: 'wasm32',
+      })
     ).toThrow('unknown native triple')
     expect(() =>
-      writeNativeStamp({ nativeDirPath: nativeDir, packageDirPath: packageDir, triple: 'linux-x64-gnu' })
+      writeNativeStamp({
+        nativeDirPath: nativeDir,
+        packageDirPath: packageDir,
+        triple: 'linux-x64-gnu',
+      })
     ).toThrow('missing binary')
   })
 })

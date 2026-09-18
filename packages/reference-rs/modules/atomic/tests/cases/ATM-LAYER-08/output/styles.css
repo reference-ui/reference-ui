@@ -1,18 +1,27 @@
 @layer layer-reset {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer reset {
-  *, *::before, *::after { box-sizing: border-box }
-  body { margin: 0 }
-}
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-primary: blue;
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer reset {
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+    }
   }
-  [data-theme=dark] {
-    --colors-primary: lightblue;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-primary: blue;
+    }
+    [data-color-mode='dark'] {
+      --colors-primary: lightblue;
+    }
   }
-}
-@layer utilities {
-  .layer-reset__c_primary { color: var(--colors-primary); }
-}
+  @layer utilities {
+    .layer-reset__c_primary {
+      color: var(--colors-primary);
+    }
+  }
 }

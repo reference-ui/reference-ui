@@ -94,7 +94,7 @@ function parseArgs(argv: string[]): { report: boolean; paths: string[] } {
 }
 
 async function defaultTargets(): Promise<string[]> {
-  const roots = ['src', 'tests/shared', 'tools/quality'].map((p) => path.join(NEO_DIR, p));
+  const roots = ['src', 'tests/shared', 'tools/quality', 'bin'].map((p) => path.join(NEO_DIR, p));
   try {
     const casesDir = path.join(NEO_DIR, 'tests/cases');
     for (const kid of await readdir(casesDir)) {

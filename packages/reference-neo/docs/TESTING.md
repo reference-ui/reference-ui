@@ -27,10 +27,12 @@ or tooling missing (serve-only degrade, still prints what it did),
 Every executed `run` writes `tests/.artifacts/last-run.json`
 (gitignored): a timestamp plus per-case `{ id, ok, ms }`. Partial
 reruns merge into the previous log, so the file always describes the
-latest known state of every case seen. Each run serves the world and
-preflights its index before any browser launches, so a missing or empty
-world fails loud and fast (`world failed to load`) instead of timing out
-inside a spec. Runs execute fail-first by default — cases that failed
+latest known state of every case seen. Every run starts by typechecking
+the package with ts7: red types refuse the run with the diagnostics and
+exit 1 before any build, sync, or browser launches. Each run then serves
+the world and preflights its index before any browser launches, so a
+missing or empty world fails loud and fast (`world failed to load`)
+instead of timing out inside a spec. Runs execute fail-first by default — cases that failed
 last run go first — and `run --failed`
 runs only those failures (exit 0 with "nothing to rerun" when the log
 shows all green; exit 1 with a clear error when no log exists yet).
@@ -58,6 +60,10 @@ across groups (duplicates fail loud):
   its first line when present. Missing or long is never a failure.
 - `world/` — the case's little source tree, served over local HTTP
   (the browser blocks `file://`, so there is always a server).
+  Worlds are TypeScript-only: every run transpiles `src/**/*.ts(x)`
+  into gitignored `dist/` (clean rebuild, transpile-only, imports
+  untouched for import maps) before serving, and pages reference
+  the `dist/` output — never hand-written JS beside the sources.
 - `specs/` — Playwright assertions against that world: the CSS parses
   and carries the expected rules with no ghost classes, it wins in the
   cascade (computed styles), theme and variants paint. Static checks

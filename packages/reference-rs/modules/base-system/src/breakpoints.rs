@@ -160,8 +160,14 @@ mod tests {
     #[test]
     fn profile_and_authored_preserves_order_and_overrides() {
         let mut authored = IndexMap::new();
-        authored.insert("md".to_string(), SpecBreakpointWidth::Bare("800px".to_string()));
-        authored.insert("tablet".to_string(), SpecBreakpointWidth::Bare("700px".to_string()));
+        authored.insert(
+            "md".to_string(),
+            SpecBreakpointWidth::Bare("800px".to_string()),
+        );
+        authored.insert(
+            "tablet".to_string(),
+            SpecBreakpointWidth::Bare("700px".to_string()),
+        );
         let scale = BreakpointScale::from_profile_and_authored(Some(authored));
         assert_eq!(scale.breakpoint_for_index(0), Some("base"));
         assert_eq!(scale.breakpoint_for_index(1), Some("sm"));

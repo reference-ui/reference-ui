@@ -1,0 +1,104 @@
+// Unit tests for the Neo build option defaults and overrides.
+// They take option bags and assert the esbuild config they produce.
+// This file is a Neo-owned copy of the core build options tests.
+
+import { describe, expect, it } from 'vitest'
+import { buildMicroBundleOptions } from './build-options.ts'
+import { DEFAULT_EXTERNALS } from './externals.ts'
+
+const ENTRY_PATH = '/Users/reference-ui/tests/entry.ts'
+const SYSTEM_ENTRY_PATH = '/Users/reference-ui/tests/system.ts'
+
+describe('buildMicroBundleOptions defaults', () => {
+  it('uses the expected defaults', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {})
+
+    expect(result).toMatchObject({
+      entryPoints: [ENTRY_PATH],
+      bundle: true,
+      format: 'esm',
+      platform: 'node',
+      target: 'node18',
+      write: false,
+      external: DEFAULT_EXTERNALS,
+      packages: undefined,
+      minify: false,
+      keepNames: true,
+      treeShaking: true,
+      splitting: false,
+      mainFields: ['module', 'main'],
+      conditions: ['import', 'node'],
+    })
+    expect(result.plugins).toEqual([])
+  })
+})
+
+describe('buildMicroBundleOptions overrides', () => {
+  it('applies explicit overrides', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      format: 'cjs',
+      platform: 'browser',
+      target: ['es2020'],
+      external: ['foo'],
+      packages: 'external',
+      minify: true,
+      keepNames: false,
+      treeShaking: false,
+      mainFields: ['main'],
+      conditions: ['browser'],
+      alias: {
+        '@reference-ui/system': SYSTEM_ENTRY_PATH,
+      },
+    })
+
+    expect(result).toMatchObject({
+      format: 'cjs',
+      platform: 'browser',
+      target: ['es2020'],
+      external: ['foo'],
+      packages: 'external',
+      minify: true,
+      keepNames: false,
+      treeShaking: false,
+      mainFields: ['main'],
+      conditions: ['browser'],
+    })
+    expect(result.plugins).toHaveLength(1)
+  })
+
+  it('forwards package externalization to esbuild', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      packages: 'external',
+    })
+
+    expect(result.packages).toBe('external')
+  })
+
+  it('filters non-string externals out of the esbuild config', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      external: ['foo', 123 as never, /bar/ as never],
+    })
+
+    expect(result.external).toEqual(['foo'])
+  })
+
+  it('supports iife output format for runtime bundles', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      format: 'iife',
+    })
+
+    expect(result.format).toBe('iife')
+  })
+
+  it('forwards tsconfigRaw overrides', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      tsconfigRaw: {
+        compilerOptions: {},
+      },
+    })
+
+    expect(result.tsconfigRaw).toEqual({
+      compilerOptions: {},
+    })
+  })
+})

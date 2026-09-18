@@ -2,6 +2,7 @@
 //! Turns author paths (`colors.blue.600`, `gray.800`, `{radii.md}`) into `var(--…)`
 //! when the utterance declares them. Opacity `/50` becomes `color-mix` here, not in
 //! base-system. Unknown dotted paths pass through as raw CSS and emit a warning.
+//! Explicit `{path}` references that name no token are errors with source locations.
 //! Heuristic category lists are gone; lookup is the fixture.
 
 use std::borrow::Cow;
@@ -9,13 +10,14 @@ use std::borrow::Cow;
 use base_system::{BaseSystem, TokenEntry};
 
 use crate::diagnostics::Diagnostic;
+use crate::resolve::ResolveSession;
 
 mod interpolate;
 mod scale;
 #[cfg(test)]
 mod tests;
 
-use interpolate::expand_brace_segments;
+use interpolate::{expand_brace_segments, BraceExpansion};
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
@@ -23,25 +25,25 @@ pub fn is_color_prop(prop: &str) -> bool {
 }
 
 /// Resolves a raw token value to its CSS custom property representation.
+/// None drops the atom: the `{path}` named no token and the error is pushed.
 pub fn resolve_token_value<'a>(
     prop: &str,
     raw_val: &'a str,
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Cow<'a, str> {
+    session: &mut ResolveSession<'_>,
+) -> Option<Cow<'a, str>> {
     let trimmed = raw_val.trim();
     if trimmed.is_empty() || trimmed.starts_with("var(") {
-        return Cow::Borrowed(raw_val);
+        return Some(Cow::Borrowed(raw_val));
     }
 
     let unbraced = strip_braces(trimmed);
-    if let Some(special) = resolve_special_value(prop, unbraced, system) {
-        return special;
+    if let Some(special) = resolve_special_value(prop, unbraced, session.system) {
+        return Some(special);
     }
-    if let Some(negated) = resolve_negated_token(prop, unbraced, system) {
-        return Cow::Owned(negated);
+    if let Some(negated) = resolve_negated_token(prop, unbraced, session.system) {
+        return Some(Cow::Owned(negated));
     }
-    resolve_pathed_value(prop, raw_val, system, diagnostics)
+    resolve_pathed_value(prop, raw_val, session)
 }
 
 /// Font families and CSS color keywords resolve before dictionary lookup.
@@ -61,55 +63,82 @@ fn resolve_special_value<'a>(
     None
 }
 
-/// Opacity-split dictionary lookup, brace interpolation, then warn-and-pass-through.
+/// Opacity-split dictionary lookup, then brace interpolation or fallback.
 fn resolve_pathed_value<'a>(
     prop: &str,
     raw_val: &'a str,
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Cow<'a, str> {
+    session: &mut ResolveSession<'_>,
+) -> Option<Cow<'a, str>> {
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
     if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
-        diagnostics.push(Diagnostic::warning(format!(
+        session.diagnostics.push(Diagnostic::warning(format!(
             "malformed opacity modifier `{unbraced}`"
         )));
-        return Cow::Borrowed(raw_val);
+        return Some(Cow::Borrowed(raw_val));
     }
-    if let Some(entry) = lookup_entry(prop, path, system) {
-        return Cow::Owned(format_entry(entry, opacity));
+    if let Some(entry) = lookup_entry(prop, path, session.system) {
+        return Some(Cow::Owned(format_entry(entry, opacity)));
     }
-    if let Some(expanded) = expand_brace_segments(unbraced, system, diagnostics) {
-        return Cow::Owned(expanded);
+    interpolate_or_fallback(prop, raw_val, session)
+}
+
+/// Brace interpolation for values the dictionary missed, else error or warn.
+fn interpolate_or_fallback<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    session: &mut ResolveSession<'_>,
+) -> Option<Cow<'a, str>> {
+    let unbraced = strip_braces(raw_val.trim());
+    match expand_brace_segments(unbraced, session) {
+        BraceExpansion::Expanded(expanded) => Some(Cow::Owned(expanded)),
+        BraceExpansion::Missing => None,
+        BraceExpansion::Absent => unbraced_fallback(prop, raw_val, session),
     }
-    warn_unresolved_token(prop, unbraced, system, diagnostics);
-    Cow::Borrowed(raw_val)
+}
+
+/// A brace-wrapped miss errors and drops the atom; anything else warns through.
+fn unbraced_fallback<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    session: &mut ResolveSession<'_>,
+) -> Option<Cow<'a, str>> {
+    let trimmed = raw_val.trim();
+    let unbraced = strip_braces(trimmed);
+    if is_braced(trimmed) && !unbraced.trim().is_empty() {
+        let diagnostic = session
+            .location
+            .error(format!("unknown token reference `{{{unbraced}}}`"));
+        session.diagnostics.push(diagnostic);
+        return None;
+    }
+    warn_unresolved_token(prop, unbraced, session);
+    Some(Cow::Borrowed(raw_val))
 }
 
 /// Warn for an unresolvable value: unknown path, or a real token from a foreign category.
-fn warn_unresolved_token(
-    prop: &str,
-    unbraced: &str,
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
+fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
     if looks_like_token_path(unbraced) {
-        diagnostics.push(Diagnostic::warning(format!(
+        session.diagnostics.push(Diagnostic::warning(format!(
             "unknown token path `{unbraced}`"
         )));
         return;
     }
     let (path, _) = split_opacity(unbraced);
-    if let Some(entry) = system.token_by_unique_name(path) {
-        diagnostics.push(Diagnostic::warning(format!(
+    if let Some(entry) = session.system.token_by_unique_name(path) {
+        session.diagnostics.push(Diagnostic::warning(format!(
             "token `{unbraced}` belongs to category `{}` which property `{prop}` does not accept",
             entry.category()
         )));
     }
 }
 
+fn is_braced(trimmed: &str) -> bool {
+    trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2
+}
+
 fn strip_braces(trimmed: &str) -> &str {
-    if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
+    if is_braced(trimmed) {
         &trimmed[1..trimmed.len() - 1]
     } else {
         trimmed
@@ -243,4 +272,3 @@ fn looks_like_token_path(val: &str) -> bool {
     let first = val.split('.').next().unwrap_or("");
     first.chars().any(|ch| ch.is_ascii_alphabetic())
 }
-

@@ -1,5 +1,14 @@
 # DATA_THEME.md — Scrub `data-panda-theme` from the public color-mode contract
 
+> **D1 human override (2026-09-17, reference-neo PLAN §3.1): superseded target.**
+> The canonical color-mode attribute is **`data-color-mode`**, not `data-theme`.
+> The engine was retargeted by RS-7 (`_dark`/`_light` wraps, token islands,
+> goldens, contracts). Standing law: `data-color-mode` is canonical;
+> `data-panda-theme` never; no dual-stamp; `data-theme` is Toast chrome only,
+> never color mode. The body below is retained verbatim as the superseded
+> `data-theme` plan — read it with `s/data-theme/data-color-mode/` where it
+> names the color-mode contract.
+
 Research note only. No implementation in this file. The goal is a production-grade rename of the physical light/dark DOM attribute from Panda’s `data-panda-theme` to Reference UI’s `data-theme`, without a dual-attribute forever-period and without leaking the compiler into consumer-facing code, docs, tests, or shipped CSS.
 
 ---

@@ -17,7 +17,9 @@ precomputed `cssVar`). `compile()` still deserializes the indexed shape
 directly so station `baseSystem.json` files keep working.
 `BaseSystem::default()` stays empty. `staticCss` is a property →
 token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
-it empty so AtomSet stays small. `extends` and `layers` are not here yet.
+it empty so AtomSet stays small. `extends` merges named upstream specs via
+`BaseSystem::from_specs` (downstream wins, `_private` stripped, upstream
+global CSS excluded); `layers` is not here yet.
 
 `lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
 through `from_json`, then overlays host/Panda conditions, the standard
@@ -41,7 +43,7 @@ Answers both consumers ask of the same definition:
 | :--- | :--- | :--- |
 | Is `colors.gray.800` a token, and of which category? | atomic + typegen | Atomic: `var(--colors-gray-800)` vs raw CSS. |
 | What is its CSS value (and light/dark)? | atomic | `@layer tokens` custom properties. |
-| What wrap does `_hover` / `_dark` use? | atomic | Host `data-panda-theme`, not `.dark`. |
+| What wrap does `_hover` / `_dark` use? | atomic | Host `data-color-mode`, not `.dark`. |
 | What keyframes / global CSS / fonts exist? | atomic | `@layer global`, `@font-face`. |
 | What breakpoints exist? | atomic | Array slots and `r/` widths. |
 | Which `staticCss` utilities to pre-emit? | atomic | Third want source; `['*']` is category enumeration. |

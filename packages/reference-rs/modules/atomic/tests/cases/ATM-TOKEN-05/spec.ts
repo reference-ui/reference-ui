@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
     const sheet = result.stylesheet
     expect(sheet).toContain('color: var(--colors-brand);')
     expect(sheet).toContain('--colors-brand: red;')
-    expect(sheet).toContain('[data-theme=dark]')
+    expect(sheet).toContain('[data-color-mode=dark]')
     expect(sheet).toContain('--colors-brand: navy;')
     expect(sheet).toContain('background: blue.600;')
     expect(sheet).not.toContain('background: var(--colors-blue-600);')

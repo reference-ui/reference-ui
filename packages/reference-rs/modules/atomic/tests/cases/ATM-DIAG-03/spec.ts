@@ -10,7 +10,9 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(result.diagnostics.length).toBeGreaterThanOrEqual(1)
     expect(result.diagnostics.some(d => d.severity === 'error')).toBe(true)
-    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
+    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
+      true
+    )
     expect(result.css).toBeTruthy()
   },
 }

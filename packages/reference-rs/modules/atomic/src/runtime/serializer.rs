@@ -41,12 +41,7 @@ pub struct LookupKey<'a> {
 }
 
 impl<'a> LookupKey<'a> {
-    pub fn new(
-        system: &'a str,
-        when: &'a [String],
-        prop: &'a str,
-        value: &'a Value,
-    ) -> Self {
+    pub fn new(system: &'a str, when: &'a [String], prop: &'a str, value: &'a Value) -> Self {
         Self {
             system,
             when,
@@ -66,7 +61,13 @@ impl<'a> LookupKey<'a> {
 /// Formats the tuple `(system, when, prop, canonical_value, important)` into compact JSON.
 pub fn serialize_lookup_key(key: &LookupKey<'_>) -> String {
     let canonical_val = canonical_json_value(key.value);
-    let tuple = (key.system, key.when, key.prop, &canonical_val, key.important);
+    let tuple = (
+        key.system,
+        key.when,
+        key.prop,
+        &canonical_val,
+        key.important,
+    );
     serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
 }
 
@@ -86,25 +87,21 @@ mod tests {
     fn test_serialize_lookup_key_format() {
         let hover = ["_hover".to_string()];
         let val = json!("red.500");
-        let key = serialize_lookup_key(&LookupKey::new(
-            "lib-test-system",
-            &hover,
-            "color",
-            &val,
-        ));
-        assert_eq!(key, r#"["lib-test-system",["_hover"],"color","red.500",false]"#);
+        let key = serialize_lookup_key(&LookupKey::new("lib-test-system", &hover, "color", &val));
+        assert_eq!(
+            key,
+            r#"["lib-test-system",["_hover"],"color","red.500",false]"#
+        );
     }
 
     #[test]
     fn test_serialize_lookup_key_array_with_null() {
         let val = json!(["1", null, "4"]);
-        let key = serialize_lookup_key(&LookupKey::new(
-            "lib-test-system",
-            &[],
-            "padding",
-            &val,
-        ));
-        assert_eq!(key, r#"["lib-test-system",[],"padding",["1",null,"4"],false]"#);
+        let key = serialize_lookup_key(&LookupKey::new("lib-test-system", &[], "padding", &val));
+        assert_eq!(
+            key,
+            r#"["lib-test-system",[],"padding",["1",null,"4"],false]"#
+        );
     }
 
     #[test]

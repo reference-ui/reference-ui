@@ -120,7 +120,8 @@ export async function compileCase(
   extras: Partial<CompileRequest> = {}
 ): Promise<CompileResult> {
   const rootDir = path.resolve(getCaseInputDir(caseName))
-  const baseSystem = extras.baseSystem ?? readOptionalBaseSystem(rootDir) ?? LIB_SYSTEM_SPEC
+  const baseSystem =
+    extras.baseSystem ?? readOptionalBaseSystem(rootDir) ?? LIB_SYSTEM_SPEC
   return compile({ rootDir, ...extras, baseSystem })
 }
 

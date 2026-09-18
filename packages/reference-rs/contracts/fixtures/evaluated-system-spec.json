@@ -64,8 +64,8 @@
   },
   "conditions": {
     "_hover": "&:hover",
-    "_dark": "[data-theme=dark] &",
-    "_light": "[data-theme=light] &",
+    "_dark": "[data-color-mode=dark] &",
+    "_light": "[data-color-mode=light] &",
     "_focus": "&:focus"
   },
   "globalCss": [

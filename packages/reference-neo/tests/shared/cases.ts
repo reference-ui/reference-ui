@@ -109,3 +109,14 @@ export function searchCases(query: string): NeoCase[] {
     return c.id.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || readme.toLowerCase().includes(q);
   });
 }
+
+// Exact id or folder wins; otherwise the selector is an id prefix
+// (`agentneo run NEO-COND` runs the group). Unknown stays an error.
+export function matchCases(selector: string): NeoCase[] {
+  const all = listCases();
+  const exact = all.find((c) => c.id === selector || c.folder === selector);
+  if (exact) return [exact];
+  const prefixed = all.filter((c) => c.id.startsWith(selector));
+  if (prefixed.length > 0) return prefixed;
+  return [getCase(selector)];
+}

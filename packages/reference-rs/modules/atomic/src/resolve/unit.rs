@@ -68,11 +68,7 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
     }
 }
 
-fn from_number(
-    prop: &str,
-    n: Box<str>,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<CssValue> {
+fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
         diagnostics.push(Diagnostic::warning(format!(
             "Non-canonical numeric value \"{n}\" on `{prop}`"
@@ -82,11 +78,7 @@ fn from_number(
     Some(resolve_numeric_value(prop, &n))
 }
 
-fn from_string(
-    prop: &str,
-    s: Box<str>,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<CssValue> {
+fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
     if is_non_canonical_numeric(&s) {
         diagnostics.push(Diagnostic::warning(format!(
             "Non-canonical numeric value \"{s}\" on `{prop}`"

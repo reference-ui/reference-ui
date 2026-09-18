@@ -50,8 +50,7 @@ fn test_build_runtime_style_plans_macro() {
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder =
-        PlanBuilder::new("lib-test-system", &system, &mut atom_set, &mut diagnostics);
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 3);
@@ -93,8 +92,7 @@ fn test_build_runtime_style_plans_dimensional_shorthand() {
         value: json!("1r 2r"),
         important: false,
     }];
-    let mut builder =
-        PlanBuilder::new("lib-test-system", &system, &mut atom_set, &mut diagnostics);
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
     let dim_plans = builder.build(&dimensional_decls);
     let slots: Vec<&str> = dim_plans[0]
         .declarations
@@ -120,8 +118,7 @@ fn test_build_runtime_style_plans_responsive_array() {
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder =
-        PlanBuilder::new("lib-test-system", &system, &mut atom_set, &mut diagnostics);
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);
@@ -130,6 +127,81 @@ fn test_build_runtime_style_plans_responsive_array() {
     assert_eq!(plan.declarations[0].slot, "padding@base");
     assert_eq!(plan.declarations[0].class_name, "lib-test-system__p_1");
     assert_eq!(plan.declarations[1].slot, "padding@md");
+}
+
+#[test]
+fn test_build_runtime_style_plans_responsive_object() {
+    let system = BaseSystem::lib_fixture();
+    let decls = vec![AuthoredDeclaration {
+        when: vec![],
+        prop: "width".to_string(),
+        value: json!({"base": "50px", "md": "60px"}),
+        important: false,
+    }];
+
+    let mut atom_set = crate::atom::AtomSet::new();
+    let mut diagnostics = Vec::new();
+
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let plans = builder.build(&decls);
+
+    assert_eq!(plans.len(), 1);
+    let plan = &plans[0];
+    assert_eq!(plan.value, json!({"base": "50px", "md": "60px"}));
+    assert_eq!(plan.declarations.len(), 2);
+    assert_eq!(plan.declarations[0].slot, "width@base");
+    assert_eq!(plan.declarations[0].class_name, "lib-test-system__w_50px");
+    assert_eq!(plan.declarations[1].slot, "width@md");
+    assert_eq!(
+        plan.declarations[1].class_name,
+        "lib-test-system__md:w_60px"
+    );
+    assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn test_responsive_object_condition_key_matches_nested_slot() {
+    let system = BaseSystem::lib_fixture();
+    let decls = vec![AuthoredDeclaration {
+        when: vec![],
+        prop: "width".to_string(),
+        value: json!({"_hover": "50px"}),
+        important: false,
+    }];
+
+    let mut atom_set = crate::atom::AtomSet::new();
+    let mut diagnostics = Vec::new();
+
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let plans = builder.build(&decls);
+
+    assert_eq!(plans.len(), 1);
+    assert_eq!(plans[0].declarations.len(), 1);
+    assert_eq!(plans[0].declarations[0].slot, "hover:width");
+    assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn test_responsive_object_unknown_key_warns_and_skips() {
+    let system = BaseSystem::lib_fixture();
+    let decls = vec![AuthoredDeclaration {
+        when: vec![],
+        prop: "width".to_string(),
+        value: json!({"base": "51px", "wat": "61px"}),
+        important: false,
+    }];
+
+    let mut atom_set = crate::atom::AtomSet::new();
+    let mut diagnostics = Vec::new();
+
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let plans = builder.build(&decls);
+
+    assert_eq!(plans.len(), 1);
+    assert_eq!(plans[0].declarations.len(), 1);
+    assert_eq!(plans[0].declarations[0].slot, "width@base");
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].message, "Unknown condition \"wat\"");
 }
 
 #[test]

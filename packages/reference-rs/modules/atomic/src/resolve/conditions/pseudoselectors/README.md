@@ -1,7 +1,7 @@
 # Resolve / conditions / pseudo-selectors
 
 Applies an `&` template to a utility class. Takes a wrap string
-(`&:is(:hover, [data-hover])`, `[data-panda-theme=dark] &`, or a raw `css()` key) and
+(`&:is(:hover, [data-hover])`, `[data-color-mode=dark] &`, or a raw `css()` key) and
 the escaped class selector. Emits the CSS selector the stylesheet
 prints.
 
@@ -9,8 +9,8 @@ prints.
 &:is(:hover, [data-hover])  +  .hover\:bg_n200
   →  .hover\:bg_n200:is(:hover, [data-hover])
 
-[data-panda-theme=dark] &  +  .dark\:bg_n200
-  →  [data-panda-theme=dark] .dark\:bg_n200
+[data-color-mode=dark] &  +  .dark\:bg_n200
+  →  [data-color-mode=dark] .dark\:bg_n200
 ```
 
 `css()` can write the selector as the key (`'&[data-slot=inner]'`,

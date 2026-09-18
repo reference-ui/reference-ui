@@ -1,5 +1,5 @@
 //! Selector-template application for atomic utilities.
-//! Takes an `&` wrap (`&:is(:hover, [data-hover])`, `[data-theme=dark] &`, or a raw `css()`
+//! Takes an `&` wrap (`&:is(:hover, [data-hover])`, `[data-color-mode=dark] &`, or a raw `css()`
 //! key) plus the escaped class selector. Emits the CSS selector the stylesheet
 //! prints. Does not own the `_` catalog — that is `pseudoprops`. `@media` /
 //! `@container` strings are at-rules, not selector templates.
@@ -88,8 +88,8 @@ mod tests {
         let hover = apply("&:is(:hover, [data-hover])", ".hover\\:bg_red");
         assert_eq!(hover, ".hover\\:bg_red:is(:hover, [data-hover])");
 
-        let dark = apply("[data-theme=dark] &", ".dark\\:bg_red");
-        assert_eq!(dark, "[data-theme=dark] .dark\\:bg_red");
+        let dark = apply("[data-color-mode=dark] &", ".dark\\:bg_red");
+        assert_eq!(dark, "[data-color-mode=dark] .dark\\:bg_red");
 
         let in_quotes = apply("&[data-x=\"a & b\"]", ".cls");
         assert_eq!(in_quotes, ".cls[data-x=\"a & b\"]");

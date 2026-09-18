@@ -28,11 +28,11 @@ pub fn analyze_styletrace_bindings(
 ) -> Result<String> {
     let normalized_source = PathBuf::from(&source_root);
     let normalized_decl = declaration_root.as_deref().map(PathBuf::from);
-    let result = styletrace::trace_style_bindings_with_hint(
-        &normalized_source,
-        normalized_decl.as_deref(),
-    )
-    .map_err(|err| napi::Error::from_reason(format!("Styletrace analysis failed: {err}")))?;
+    let result =
+        styletrace::trace_style_bindings_with_hint(&normalized_source, normalized_decl.as_deref())
+            .map_err(|err| {
+                napi::Error::from_reason(format!("Styletrace analysis failed: {err}"))
+            })?;
     serde_json::to_string(&result).map_err(|err| {
         napi::Error::from_reason(format!("Failed to serialize styletrace result: {err}"))
     })

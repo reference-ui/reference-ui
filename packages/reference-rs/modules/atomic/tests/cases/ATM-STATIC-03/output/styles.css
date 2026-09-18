@@ -1,20 +1,27 @@
 @layer static-wildcard {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-n100: #f4f4f5;
-    --colors-n200: #e4e4e7;
-    --radii-sm: 0.2rem;
-    --radii-md: 0.4rem;
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-n100: #f4f4f5;
+      --colors-n200: #e4e4e7;
+      --radii-sm: 0.2rem;
+      --radii-md: 0.4rem;
+    }
+    [data-color-mode='dark'] {
+      --colors-n100: #18181b;
+      --colors-n200: #27272a;
+    }
   }
-  [data-theme=dark] {
-    --colors-n100: #18181b;
-    --colors-n200: #27272a;
+  @layer utilities {
+    .static-wildcard__rounded_md {
+      border-radius: var(--radii-md);
+    }
+    .static-wildcard__rounded_sm {
+      border-radius: var(--radii-sm);
+    }
+    .static-wildcard__hover\:c_n100:is(:hover, [data-hover]) {
+      color: var(--colors-n100);
+    }
   }
-}
-@layer utilities {
-  .static-wildcard__rounded_md { border-radius: var(--radii-md); }
-  .static-wildcard__rounded_sm { border-radius: var(--radii-sm); }
-  .static-wildcard__hover\:c_n100:is(:hover, [data-hover]) { color: var(--colors-n100); }
-}
 }

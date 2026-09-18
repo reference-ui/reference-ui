@@ -836,7 +836,7 @@ Want {
           title: 'Condition Normalization',
           code: `// Pseudo & Media queries:
 "_hover" -> ":hover"
-"_dark"  -> "[data-color-mode='dark']"
+"_dark"  -> "[data-color-mode=dark] &"
 "sm"     -> "@media (min-width: 640px)"`,
           desc: `
             <p>Lowers condition identifiers into CSS pseudo-selectors, data attributes, and media queries in a deterministic order.</p>`
@@ -945,11 +945,11 @@ AtomSet {
           step: 'LAYER 4 · TOKENS',
           title: '@layer tokens',
           code: `@layer tokens {
-  :root {
+  :root, [data-color-mode=light] {
     --colors-n-300: #2c3035;
     --spacing-root: 8px;
   }
-  [data-color-mode="dark"] {
+  [data-color-mode=dark] {
     --colors-n-300: #14171a;
   }
 }`,

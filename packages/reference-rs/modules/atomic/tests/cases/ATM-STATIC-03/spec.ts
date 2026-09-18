@@ -10,7 +10,9 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'n100', ['_hover'])).toBe(true)
     expect(hasWant(result, 'borderRadius', 'sm')).toBe(true)
     expect(hasWant(result, 'borderRadius', 'md')).toBe(true)
-    expect(result.stylesheet).toContain('.static-wildcard__hover\\:c_n100:is(:hover, [data-hover])')
+    expect(result.stylesheet).toContain(
+      '.static-wildcard__hover\\:c_n100:is(:hover, [data-hover])'
+    )
     expect(result.stylesheet).toContain('.static-wildcard__rounded_sm')
     expect(result.stylesheet).toContain('.static-wildcard__rounded_md')
     expect(result.runtime.stylePlans.some(p => p.prop === 'borderRadius')).toBe(true)

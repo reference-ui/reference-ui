@@ -19,9 +19,15 @@ pub enum AtomValue {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CssValue {
     String(Box<str>),
-    Token { path: Box<str>, value: Box<str> },
+    Token {
+        path: Box<str>,
+        value: Box<str>,
+    },
     Number(Box<str>),
-    Dimension { class_stem: Box<str>, css_val: Box<str> },
+    Dimension {
+        class_stem: Box<str>,
+        css_val: Box<str>,
+    },
 }
 
 impl AtomValue {

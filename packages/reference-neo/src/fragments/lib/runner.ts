@@ -1,0 +1,158 @@
+// Fragment bundling plus single and planner collection over user files.
+// It takes file paths with collectors and emits bundled code or plain data.
+// This module is a Neo-owned copy of the core fragment runner without config templating.
+
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { microBundle, DEFAULT_EXTERNALS } from '../../lib/microbundle/index.ts'
+import { scanForFragments } from './scanner.ts'
+import type {
+  BundleFragmentsOptions,
+  CollectOptions,
+  CollectOptionsPlanner,
+  CollectorForPlanner,
+  FragmentBundle,
+} from './types.ts'
+
+// ---------------------------------------------------------------------------
+// Bundle-only: returns portable IIFE strings, does not execute
+// ---------------------------------------------------------------------------
+
+export async function bundleFragments(
+  options: BundleFragmentsOptions
+): Promise<FragmentBundle[]> {
+  const { files, alias, external = [] } = options
+  const microOptions = {
+    format: 'iife' as const,
+    ...(alias && { alias }),
+    external: [...DEFAULT_EXTERNALS, ...external],
+  }
+  return Promise.all(
+    files.map(async file => ({
+      file,
+      bundle: await microBundle(file, microOptions),
+    }))
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Collect: executes bundles, returns plain data objects
+// ---------------------------------------------------------------------------
+
+export async function collectFragments<TInput, TOutput = TInput>(
+  options: CollectOptions<TInput, TOutput>
+): Promise<TOutput[]>
+export async function collectFragments(
+  options: CollectOptionsPlanner
+): Promise<Record<string, unknown[]>>
+export async function collectFragments<TInput, TOutput>(
+  options: CollectOptions<TInput, TOutput> | CollectOptionsPlanner
+): Promise<TOutput[] | Record<string, unknown[]>> {
+  if ('collectors' in options) {
+    return runPlanner(options)
+  }
+  return runSingle(options)
+}
+
+// ---------------------------------------------------------------------------
+// Single-collector: caller passes resolved file paths explicitly
+// ---------------------------------------------------------------------------
+
+async function runSingle<TInput, TOutput>(
+  options: CollectOptions<TInput, TOutput>
+): Promise<TOutput[]> {
+  const { files, collector, tempDir, alias, external = [] } = options
+  mkdirSync(tempDir, { recursive: true })
+
+  const microOptions = {
+    ...(alias && { alias }),
+    external: [...DEFAULT_EXTERNALS, ...external],
+  }
+
+  const allFragments: TOutput[] = []
+
+  for (const filePath of files) {
+    const tmpPath = uniqueTmpPath(tempDir)
+    collector.init()
+    try {
+      const bundled = await microBundle(filePath, microOptions)
+      writeFileSync(tmpPath, bundled, 'utf-8')
+      await import(pathToFileURL(tmpPath).href)
+      allFragments.push(...collector.getFragments())
+    } finally {
+      collector.cleanup()
+      removeSilently(tmpPath)
+    }
+  }
+
+  return allFragments
+}
+
+// ---------------------------------------------------------------------------
+// Planner: scans via globs, runs all collectors in one pass per file
+// ---------------------------------------------------------------------------
+
+async function runPlanner(
+  options: CollectOptionsPlanner
+): Promise<Record<string, unknown[]>> {
+  const { collectors, include, importFrom, tempDir, cwd } = options
+  mkdirSync(tempDir, { recursive: true })
+
+  const files = scanForFragments({
+    include,
+    ...(importFrom
+      ? { importFrom }
+      : { functionNames: collectors.map(c => c.config.targetFunction ?? c.config.name) }),
+    cwd,
+  })
+
+  // Pre-seed result keyed by collector name
+  const result: Record<string, unknown[]> = {}
+  for (const c of collectors) {
+    result[c.config.name] = []
+  }
+
+  for (const filePath of files) {
+    const tmpPath = uniqueTmpPath(tempDir)
+    initAll(collectors)
+    try {
+      const bundled = await microBundle(filePath, {})
+      writeFileSync(tmpPath, bundled, 'utf-8')
+      await import(pathToFileURL(tmpPath).href)
+      for (const c of collectors) {
+        result[c.config.name].push(...c.getFragments())
+      }
+    } finally {
+      cleanupAll(collectors)
+      removeSilently(tmpPath)
+    }
+  }
+
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function uniqueTmpPath(dir: string): string {
+  return join(dir, `frag-${Date.now()}-${randomBytes(6).toString('hex')}.mjs`)
+}
+
+function initAll(collectors: CollectorForPlanner[]): void {
+  for (const c of collectors) c.init()
+}
+
+function cleanupAll(collectors: CollectorForPlanner[]): void {
+  for (const c of collectors) c.cleanup()
+}
+
+function removeSilently(path: string): void {
+  try {
+    rmSync(path, { force: true })
+  } catch {
+    /* ignore */
+  }
+}

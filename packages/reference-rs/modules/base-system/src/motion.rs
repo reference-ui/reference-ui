@@ -124,7 +124,10 @@ mod tests {
 
     #[test]
     fn bas_motion_01_stores_fade_in_steps() {
-        let json = motion_spec_json("{}", r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#);
+        let json = motion_spec_json(
+            "{}",
+            r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#,
+        );
         let system = BaseSystem::from_json(&json).unwrap();
         let fade = system.keyframes.get("fadeIn").unwrap();
         assert_eq!(
@@ -144,7 +147,10 @@ mod tests {
 
     #[test]
     fn bas_motion_02_iterates_name_and_steps_for_at_rule_emit() {
-        let json = motion_spec_json("{}", r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#);
+        let json = motion_spec_json(
+            "{}",
+            r#"{"fadeIn":{"from":{"opacity":"0"},"to":{"opacity":"1"}}}"#,
+        );
         let system = BaseSystem::from_json(&json).unwrap();
         let pairs: Vec<_> = system.list_keyframes().collect();
         assert_eq!(pairs.len(), 1);

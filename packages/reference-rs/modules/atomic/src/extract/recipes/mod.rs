@@ -34,7 +34,11 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
         ));
         return;
     };
-    if obj.properties.iter().any(|p| matches!(p, ObjectPropertyKind::SpreadProperty(_))) {
+    if obj
+        .properties
+        .iter()
+        .any(|p| matches!(p, ObjectPropertyKind::SpreadProperty(_)))
+    {
         ctx.diagnostics.push(Diagnostic::error(
             "recipe(...) object literal must not contain spread properties",
         ));
@@ -53,9 +57,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     });
 }
 
-fn find_class_name_prop<'a, 'b>(
-    obj: &'b ObjectExpression<'a>,
-) -> Option<&'b ObjectProperty<'a>> {
+fn find_class_name_prop<'a, 'b>(obj: &'b ObjectExpression<'a>) -> Option<&'b ObjectProperty<'a>> {
     for p in &obj.properties {
         if let ObjectPropertyKind::ObjectProperty(prop) = p {
             if static_key(&prop.key).as_deref() == Some("className") {
@@ -331,7 +333,11 @@ fn static_key(key: &PropertyKey<'_>) -> Option<String> {
 }
 
 fn boolean_str(val: bool) -> String {
-    if val { "true".to_string() } else { "false".to_string() }
+    if val {
+        "true".to_string()
+    } else {
+        "false".to_string()
+    }
 }
 
 fn static_template_str(lit: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<String> {

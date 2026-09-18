@@ -36,6 +36,12 @@ pub struct RecipeCompoundRecord {
 }
 
 /// Runtime recipe table mapping variant combinations to compiled class strings.
+///
+/// `responsive_variant_map` carries the per-breakpoint classes (`axis` →
+/// breakpoint → value → class) so a runtime `{ base: 'solid', md: 'outline' }`
+/// selection resolves without re-walking styles: `base` reads `variant_map`,
+/// every other breakpoint reads this map. Each class has a matching rule in
+/// `@layer recipes` wrapped in that breakpoint's `@container` query.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecipeRuntimeTable {
@@ -47,6 +53,8 @@ pub struct RecipeRuntimeTable {
     pub default_variants: IndexMap<String, String>,
     pub compound_variants: Vec<RecipeCompoundRecord>,
     pub combinations: IndexMap<String, String>,
+    #[serde(default)]
+    pub responsive_variant_map: IndexMap<String, IndexMap<String, IndexMap<String, String>>>,
 }
 
 /// Versioned NativeRuntimeArtifact returned to host build tools and runtime loaders.

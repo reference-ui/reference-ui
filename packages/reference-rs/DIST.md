@@ -186,7 +186,7 @@ Intent: generated tree is invisible; crate source is not.
 
 ## Read first
 
-- `packages/reference-rs/PLAN_PT3.md` (host vs dump; do not undo the nest)
+- Do not undo the dist nest (host vs dump)
 - `packages/reference-rs/package.json` (`build:native`, `files`, `napi`)
 - `packages/reference-rs/tsup.config.ts` (`outDir`, `clean`)
 - `packages/reference-rs/.cargo/config.toml`

@@ -26,9 +26,7 @@ function serializeScalar(val: unknown): string | null {
 
 function serializeObject(obj: Record<string, unknown>): string {
   const keys = Object.keys(obj).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-  const pairs = keys.map(
-    k => JSON.stringify(k) + ':' + serializeCanonicalJson(obj[k])
-  )
+  const pairs = keys.map(k => JSON.stringify(k) + ':' + serializeCanonicalJson(obj[k]))
   return '{' + pairs.join(',') + '}'
 }
 
@@ -115,15 +113,56 @@ export function resolveStyleDeclarations(
 }
 
 /**
+ * Split a cascade slot into its merge family and responsive breakpoint.
+ * Engine slots read `[cond ':']* canonical ['@' bp]` (`derive_slot`): the
+ * `@bp` suffix marks one responsive-expansion member (array index or
+ * per-prop object key). The suffix is the text after the LAST '@' only when
+ * that '@' sits after the last ':', because `r`-condition parts such as
+ * `@container (min-width: 300px):p` carry a leading '@' of their own.
+ */
+export function splitSlot(slot: string): { family: string; breakpoint: string | null } {
+  const at = slot.lastIndexOf('@')
+  const colon = slot.lastIndexOf(':')
+  if (at > colon) {
+    return { family: slot.slice(0, at), breakpoint: slot.slice(at + 1) }
+  }
+  return { family: slot, breakpoint: null }
+}
+
+/**
  * Merge runtime declarations by cascade slot using last-wins semantics.
  * Returns the final space-delimited class string for the owner.
+ * A later declaration evicts earlier same-family losers with overlapping
+ * breakpoint coverage: a bare slot (no `@bp`, covers every breakpoint)
+ * evicts the whole family, while a `@bp` member evicts the bare slot and
+ * same-`@bp` members only, leaving other breakpoints untouched. Re-setting
+ * an identical slot keeps its first-seen position; evicted slots re-enter
+ * at the end.
  */
 export function mergeDeclarations(declarations: RuntimeDeclaration[]): string {
   const slots = new Map<string, string>()
   for (const decl of declarations) {
+    const current = splitSlot(decl.slot)
+    for (const key of Array.from(slots.keys())) {
+      if (key !== decl.slot && evictedBy(splitSlot(key), current)) {
+        slots.delete(key)
+      }
+    }
     slots.set(decl.slot, decl.className)
   }
   return Array.from(slots.values()).join(' ')
+}
+
+function evictedBy(
+  prev: { family: string; breakpoint: string | null },
+  current: { family: string; breakpoint: string | null }
+): boolean {
+  if (prev.family !== current.family) return false
+  return (
+    current.breakpoint === null ||
+    prev.breakpoint === null ||
+    prev.breakpoint === current.breakpoint
+  )
 }
 
 /**

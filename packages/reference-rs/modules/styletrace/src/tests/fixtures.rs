@@ -32,7 +32,6 @@ pub(super) fn workspace_sync_root() -> PathBuf {
         .join("sync-root")
 }
 
-
 pub(super) fn workspace_scratch_dir(name: &str) -> ScratchDir {
     let base_dir = workspace_root().join("target").join("styletrace-tests");
     fs::create_dir_all(&base_dir).expect("expected workspace scratch base dir");

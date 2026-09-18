@@ -1,25 +1,24 @@
-# `tests/cases/` — one leaf folder per case
+# `tests/cases/` — groups, specs, and leaf cases
 
-Cases are grouped in folders, not one big bucket. A leaf folder is a
-little world: a small source tree the harness serves over local HTTP
-from an isolated per-case server, plus specs asserting an outcome
-against it.
-Worlds are static until the host exists; `ref sync` and `ui.config`
-are later legs, not today's contract.
+One folder per feature family (group); one leaf folder per case. Thirteen
+groups carry the parity voyage — generated-folder contracts, tokens,
+conditions, responsive lowering, the `css()` value grammar, merge
+semantics, recipes, cascade layers, global CSS, pre-generated atoms,
+extraction shapes, native primitives, and generated declarations — plus
+the parity group with its lib-shaped world and the harness group whose
+three cases prove the runner itself rather than the system.
 
-Leaf shape:
+Each group holds `SPEC.md` (behaviour, decisions, approved absences, the
+out-of-scope table) and `TESTS.md` (the case ledger: one row per id with
+a status word), plus leaf cases `NEO-<GROUP>-NN/`. Leaf shape: `case.json`
+(id, name, `"sync": true` to opt into the sync loop), `README.md` (first
+line is the claim, plus evidence tags), `world/` (TypeScript sources
+built to `dist/` and served over HTTP), `specs/` (default-export `run`:
+computed-style and DOM assertions — sheet text only alongside, never
+alone).
 
-- `case.json` — THE discriminator. A folder with one is a case. An
-  assigned ID plus a name, so `agentneo` list/search/run is cheap.
-- `README.md` — the standard case description. `list` and `search`
-  pick up its first line. Missing or long is never a failure:
-  convention, not gate.
-- `world/` — the case's little source tree.
-- `specs/` — Playwright tests: static checks (parses, expected rules,
-  no ghosts) plus live computed-style assertions plus settled
-  snapshots where rendering matters.
-
-IDs are assigned, lib-style (`OV-POS-10` → `NEO-<group>-<nn>`).
-Deliberately general-purpose: no rigid inputs/outputs contract like a
-compiler station. The case defines its world; the test asserts its
-outcome.
+Discovery is recursive: any folder with a `case.json` is a case at any
+depth, and ids stay unique across groups. Status words: `open`,
+`in-progress`, `done`, `blocked-on-rs`, `approved-absence`, `retired`. A
+case folder exists only once its proof rung is green, so `agentneo run`
+stays green at every merge.

@@ -61,7 +61,11 @@ fn test_const_aliased_recipe_still_extracts() {
         "#,
     );
     assert!(res.diagnostics.is_empty());
-    assert!(res.runtime.recipes.keys().any(|key| key.ends_with("__neutralized")));
+    assert!(res
+        .runtime
+        .recipes
+        .keys()
+        .any(|key| key.ends_with("__neutralized")));
     assert!(res.stylesheet.contains("@layer recipes {"));
 }
 

@@ -33,7 +33,9 @@ const spec: AtomicCaseSpec = {
       size: 'lg',
       tone: 'danger',
     })
-    expect(table?.compoundVariants[0]?.className).toBe('@reference-ui/lib__button_c_lg_danger')
+    expect(table?.compoundVariants[0]?.className).toBe(
+      '@reference-ui/lib__button_c_lg_danger'
+    )
 
     expect(result.diagnostics).toHaveLength(0)
   },

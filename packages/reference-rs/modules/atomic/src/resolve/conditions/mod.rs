@@ -204,6 +204,7 @@ pub use pseudoselectors::apply as apply_selector_condition;
 mod tests {
     use super::*;
     use crate::atom::{AtomSet, AtomValue, Want, WhenKind};
+    use crate::diagnostics::DiagnosticLocation;
     use crate::resolve::{resolve_want_with, ResolveSession};
     use crate::stylesheet;
     use smallvec::smallvec;
@@ -249,7 +250,7 @@ mod tests {
     fn test_lower_presets() {
         let system = BaseSystem::lib_fixture();
         assert_selector("_hover", "&:is(:hover, [data-hover])", system);
-        assert_selector("_dark", "[data-theme=dark] &", system);
+        assert_selector("_dark", "[data-color-mode=dark] &", system);
         assert_selector(
             "_groupHover",
             "&:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)",
@@ -303,6 +304,7 @@ mod tests {
         let mut session = ResolveSession {
             system: &system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         let atoms = resolve_want_with(&want, &mut session);
         assert!(atoms.is_empty());
@@ -320,6 +322,7 @@ mod tests {
         let mut session = ResolveSession {
             system: &system,
             diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
         };
         let mut atoms = resolve_want_with(&nope, &mut session);
         atoms.extend(resolve_want_with(&sibling, &mut session));

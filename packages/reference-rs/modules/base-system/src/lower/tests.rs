@@ -112,9 +112,8 @@ fn bas_token_08_keeps_brace_aliases_and_detects_cycle() {
         system.token_light("colors.brand"),
         Some("{colors.blue.600}")
     );
-    let cycle_json = spec_json(
-        r#"{"colors":{"a":{"value":"{colors.b}"},"b":{"value":"{colors.a}"}}}"#,
-    );
+    let cycle_json =
+        spec_json(r#"{"colors":{"a":{"value":"{colors.b}"},"b":{"value":"{colors.a}"}}}"#);
     let cycle = crate::BaseSystem::from_json(&cycle_json).unwrap_err();
     assert!(matches!(cycle, FromJsonError::Cycle { .. }));
 }

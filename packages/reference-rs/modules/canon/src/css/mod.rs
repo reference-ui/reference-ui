@@ -79,7 +79,9 @@ pub fn property_cascade_rank(name: &str) -> u8 {
 }
 
 fn has_nested_shorthand(hands: &[&str]) -> bool {
-    hands.iter().any(|hand| native_longhands_for_prop(hand).is_some())
+    hands
+        .iter()
+        .any(|hand| native_longhands_for_prop(hand).is_some())
 }
 
 fn is_logical_longhand(name: &str) -> bool {
@@ -146,4 +148,3 @@ pub fn is_unitless_prop(prop: &str) -> bool {
     };
     UNITLESS_PROPERTIES.binary_search(&canonical).is_ok()
 }
-

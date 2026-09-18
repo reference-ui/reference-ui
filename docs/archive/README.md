@@ -2,7 +2,7 @@
 
 Specs, RFCs, and research that are no longer the plan. Keep them for provenance. Do not treat them as current contracts.
 
-Current style-engine campaign: [packages/reference-rs/PLAN.md](../../packages/reference-rs/PLAN.md). Current atomic architecture: [packages/reference-rs/docs/atomic.md](../../packages/reference-rs/docs/atomic.md).
+Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/PLAN.md). Current atomic architecture: [packages/reference-rs/docs/atomic.md](../../packages/reference-rs/docs/atomic.md).
 
 | File | Why it is here |
 | --- | --- |

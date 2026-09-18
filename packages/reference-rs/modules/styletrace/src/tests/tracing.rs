@@ -142,7 +142,6 @@ fn clean_consumer_sync_root_without_generated_metadata_fails_explicitly() {
     );
 }
 
-
 fn create_node_builtin_helper_fixture() -> super::fixtures::ScratchDir {
     let fixture = workspace_scratch_dir("node-builtin-helper");
     fixture.write(

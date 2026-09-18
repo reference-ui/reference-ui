@@ -41,6 +41,12 @@ pnpm agentneo q [paths]       # quality gate (section 6)
 - **Voyage plan:** `packages/reference-neo/docs/PLAN.md` (the map) plus
   `packages/reference-neo/docs/PLAN-harness.md` (Part One detail: gate,
   CLI, cases, skill).
+- **Campaign (Part Three, parity):** `packages/reference-neo/PLAN.md` —
+  decisions, vertical slices, roles, gates, the reserved case catalog.
+- **Evidence:** `packages/reference-neo/docs/evidence/` — the nine
+  read-only probe reports the campaign was planned from (lib sheet,
+  generated folder, core API, Atomic claims, Panda v1 corpus, Neo state).
+  Read `docs/evidence/README.md` first; cite these instead of re-probing.
 - **Usage:** `packages/reference-neo/docs/TESTING.md` (how to run the harness).
 - **Nomenclature:** `packages/reference-neo/docs/DOMAIN.md` (the naming
   authority — check before naming anything load-bearing).
@@ -49,6 +55,10 @@ pnpm agentneo q [paths]       # quality gate (section 6)
 
 `pnpm agentneo` maps to `node packages/reference-neo/tests/shared/cli.ts`.
 Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
+
+- `run` typechecks the package first and refuses on red types; it
+  also builds each world's `src/` to gitignored `dist/` before
+  serving. Worlds are TypeScript-only — never hand-written JS.
 
 - Case IDs look like `NEO-<GROUP>-<nn>` (e.g. `NEO-FRAG-01`) and are
   discovered via each case folder's `case.json`. Cases nest: any folder
@@ -129,22 +139,71 @@ Run the gate after every generation or modification step.
 ## 7. Development Loop
 
 1. Read the stance (`README.md`), the voyage plan (`docs/PLAN.md` plus
-   `docs/PLAN-harness.md`), the usage doc (`docs/TESTING.md`), and the
-   nomenclature authority (`docs/DOMAIN.md`).
+   `docs/PLAN-harness.md`), the campaign (`PLAN.md`) and the evidence it
+   cites (`docs/evidence/`, start at its README), the usage doc
+   (`docs/TESTING.md`), and the nomenclature authority (`docs/DOMAIN.md`).
 2. Find your case: `pnpm agentneo list` / `search <query>`.
 3. Implement in `packages/reference-neo` only.
 4. Run the case: `pnpm agentneo run <NEO-...>` until it passes.
 5. Run the gate: `pnpm agentneo q`. Fix the architecture on failure —
    never an allow, never an `any`, never a suppression.
 6. Re-run the case after gate-driven refactors.
-7. Review: the naming pass, then the beauty pass. Naming — check
-   `docs/DOMAIN.md` FIRST, it is the nomenclature authority: best
-   file/module name for this? confusable with anything else? specific
-   enough? Beauty — good structure? readable flow? would a human
-   reviewer call it beautiful? Refactor toward yes. Whenever the
-   language evolves, update `docs/DOMAIN.md` in the same pass.
+7. Review: the naming pass, the no-panda pass, then the beauty
+   pass. Naming — check `docs/DOMAIN.md` FIRST, it is the
+   nomenclature authority: best file/module name for this?
+   confusable with anything else? specific enough? No-panda —
+   grep new and changed code for `panda` (identifiers, attribute
+   names, comments that copy rather than explain): there is no
+   panda in neo, so core's `data-panda-theme` is `data-color-mode`
+   here and retired names in `docs/DOMAIN.md` stay retired.
+   Rename at the boundary; never carry a panda-ism across
+   verbatim. Beauty — good structure? readable flow? would a
+   human reviewer call it beautiful? Refactor toward yes.
+   Whenever the language evolves, update `docs/DOMAIN.md` in the
+   same pass.
 
-## 8. Retirement Clause
+## 8. Playground Loop
+
+`packages/reference-neo/playground/` is the expendable mess-around app:
+one synced React world for trying combinations fast and screenshotting
+before formalising anything as a case. The playground finds; cases keep.
+Nothing here gates anything.
+
+```bash
+pnpm playground                                # sync fresh, serve :5199 until killed
+pnpm playground:capture                        # every route, dark, to .captures/
+pnpm playground:capture kitchen                # one route
+pnpm playground:capture --theme both           # dark + light (files: <route>.<theme>.png)
+```
+
+- The shell is dark by default with a light/dark toggle in the sidebar
+  header. It stamps `data-color-mode` on `<html>` and syncs `?theme=`, so the
+  engine's token islands and `_dark` wraps respond; capture starts its own
+  server, asserts the stamp, and prints any page errors per route.
+- Mini token set (`src/tokens.ts`): tailwind's palette verbatim (oklch),
+  plus `ink`/`paper`/`brand` with dark leaves (they flip automatically —
+  no twins needed), spacing, and lib's radii.
+- One file per route in `src/pages/*.tsx` exporting `meta` + `Page`.
+  `css()` values must be **static literals**: extraction reads literal
+  calls, so a dynamic ref resolves to nothing (no class, no error).
+- Never import values from `react`: the generated entry bundles its own
+  React and exports no hooks — a second copy breaks every hook call.
+  The shell is hook-free (`createRoot` + explicit render); keep it that
+  way.
+- Cooks may add scratch pages; never restructure the shell architecture or
+  the token set. The captain owns those.
+- Presentation duty: the playground is HQ's window into the voyage. After a
+  slice lands, its cook adds or extends a page showing the landed behavior,
+  named for the case id, screenshots it via capture, and takes pride in it:
+  make it sharp and futuristic with whatever the system can do today — states,
+  hovers, animations as they land — so HQ sees the engine showing off, not
+  demos in a shabby shell. Surface polish to the shell itself (menu, demo
+  list, toggle) is welcome slice by slice; architecture stays the captain's.
+  This is presentation, not process: verify with cases and Playwright however
+  works — nothing here gates anything. Oracles confirm the page exists,
+  matches the claim, and captured clean.
+
+## 9. Retirement Clause
 
 If the user ever says to change Neo into core — to promote or rename Neo
 as the installed core — the code word **retires**: update this skill, the

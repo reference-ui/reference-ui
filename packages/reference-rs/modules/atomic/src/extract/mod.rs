@@ -17,6 +17,8 @@ pub mod recipes;
 #[cfg(test)]
 mod gating_tests;
 #[cfg(test)]
+mod site_plan_tests;
+#[cfg(test)]
 mod tests;
 
 use std::cell::Cell;
@@ -58,6 +60,7 @@ pub struct ExtractSinks<'a> {
 /// Context for extracting style declarations across an AST file.
 pub struct ExtractContext<'a> {
     pub file: &'a str,
+    pub source: Option<&'a str>,
     pub constants: &'a LocalConstants,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
@@ -71,9 +74,15 @@ pub struct ExtractContext<'a> {
 }
 
 impl<'a> ExtractContext<'a> {
-    pub fn new(file: &'a str, config: ExtractConfig<'a>, sinks: ExtractSinks<'a>) -> Self {
+    pub fn new(
+        file: &'a str,
+        source: Option<&'a str>,
+        config: ExtractConfig<'a>,
+        sinks: ExtractSinks<'a>,
+    ) -> Self {
         Self {
             file,
+            source,
             constants: config.constants,
             breakpoints: config.breakpoints,
             bindings: config.bindings,
@@ -105,6 +114,7 @@ impl<'a> ExtractContext<'a> {
             origin,
             important,
             file: self.file,
+            source: self.source,
             constants: self.constants,
             breakpoints: self.breakpoints,
             wants: self.wants,
@@ -123,6 +133,7 @@ impl<'a> ExtractContext<'a> {
             origin,
             important: false,
             file: self.file,
+            source: self.source,
             constants: self.constants,
             breakpoints: self.breakpoints,
             wants,
@@ -143,6 +154,7 @@ impl<'a> ExtractContext<'a> {
             origin,
             important,
             file: self.file,
+            source: self.source,
             constants: self.constants,
             breakpoints: self.breakpoints,
             wants: self.wants,
@@ -154,6 +166,7 @@ impl<'a> ExtractContext<'a> {
 /// AST visitor collecting style wants and diagnostics from JSX and calls.
 pub struct ExtractVisitor<'a> {
     pub file: &'a str,
+    pub source: Option<&'a str>,
     pub constants: LocalConstants,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: ExtractBindings,
@@ -167,9 +180,10 @@ pub struct ExtractVisitor<'a> {
 }
 
 impl<'a> ExtractVisitor<'a> {
-    pub fn new(file: &'a str, config: ExtractConfig<'a>) -> Self {
+    pub fn new(file: &'a str, source: Option<&'a str>, config: ExtractConfig<'a>) -> Self {
         Self {
             file,
+            source,
             constants: config.constants.clone(),
             breakpoints: config.breakpoints,
             bindings: config.bindings.clone(),
@@ -243,7 +257,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
         diagnostics: &mut visitor.diagnostics,
         authored: &mut visitor.authored,
     };
-    let mut ctx = ExtractContext::new(visitor.file, config, sinks);
+    let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
     ctx.recipe_binding = binding;
     ctx
 }
@@ -285,7 +299,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
         jsx_hosts: ctx.jsx_hosts,
         shadowed: &[],
     };
-    let mut visitor = ExtractVisitor::new(ctx.file, config);
+    let mut visitor = ExtractVisitor::new(ctx.file, ctx.source, config);
     visitor.visit_program(program);
     ctx.wants.extend(visitor.wants);
     ctx.recipes.extend(visitor.recipes);
@@ -295,6 +309,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
 
 /// Extract all style wants and diagnostics from a parsed AST program.
 /// Callers thread the system's breakpoint scale; no fixture is consulted here.
+/// Wants carry file-only locations here; `compile()` threads source text for lines.
 pub fn extract(
     program: &Program<'_>,
     file: &str,
@@ -311,6 +326,6 @@ pub fn extract(
         jsx_hosts: &jsx_hosts,
         shadowed: &[],
     };
-    let mut ctx = ExtractContext::new(file, config, sinks);
+    let mut ctx = ExtractContext::new(file, None, config, sinks);
     extract_with_context(program, &mut ctx);
 }

@@ -43,6 +43,7 @@ pub fn build() -> BaseSystem {
         schema_version: 1,
         profile: "reference-ui".to_string(),
         name: dump.name,
+        extends: Vec::new(),
         tokens: dump.tokens,
         fonts: dump.fonts,
         breakpoints: None,
@@ -57,8 +58,7 @@ pub fn build() -> BaseSystem {
             keys: Vec::new(),
         }],
     };
-    BaseSystem::from_spec(&spec)
-        .unwrap_or_else(|err| panic!("lib_fixture lowering failed: {err}"))
+    BaseSystem::from_spec(&spec).unwrap_or_else(|err| panic!("lib_fixture lowering failed: {err}"))
 }
 
 #[cfg(test)]
@@ -80,6 +80,9 @@ mod tests {
         assert!(fixture.recipes.is_empty());
         assert_eq!(fixture.global_css.len(), 1);
         assert_eq!(fixture.breakpoints().width_px("sm"), Some("640"));
-        assert_eq!(fixture.get_condition("_dark"), Some("[data-theme=dark] &"));
+        assert_eq!(
+            fixture.get_condition("_dark"),
+            Some("[data-color-mode=dark] &")
+        );
     }
 }

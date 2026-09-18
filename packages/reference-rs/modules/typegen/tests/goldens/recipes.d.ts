@@ -1,1 +1,1 @@
-export type ButtonVariantProps = { size?: 'lg' | 'sm'; tone?: 'loud' | 'quiet' };
+export type ButtonVariantProps = { size?: 'lg' | 'sm'; tone?: 'loud' | 'quiet' }

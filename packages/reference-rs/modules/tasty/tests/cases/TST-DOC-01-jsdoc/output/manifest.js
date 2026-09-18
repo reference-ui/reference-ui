@@ -1,89 +1,73 @@
 export const manifest = {
-  "version": "2",
-  "warnings": [],
-  "symbolsByName": {
-    "ButtonProps": [
-      "_1491ed5a360d9b3f"
-    ],
-    "ButtonPropsNamedSize": [
-      "_7d065086989f2c65"
-    ],
-    "ButtonSize": [
-      "_5de76ede16b904a0"
-    ],
-    "CreateButton": [
-      "_e56f41870799d053"
-    ],
-    "NamedButtonSize": [
-      "_00bb784a173461fd"
-    ],
-    "SlotOrObjectProp": [
-      "_983e51bbd32002d6"
-    ],
-    "ThemeColorProp": [
-      "_3e40f4d592853ac8"
-    ],
-    "WideningComboProp": [
-      "_6be5de4e6cb24f09"
-    ]
+  version: '2',
+  warnings: [],
+  symbolsByName: {
+    ButtonProps: ['_1491ed5a360d9b3f'],
+    ButtonPropsNamedSize: ['_7d065086989f2c65'],
+    ButtonSize: ['_5de76ede16b904a0'],
+    CreateButton: ['_e56f41870799d053'],
+    NamedButtonSize: ['_00bb784a173461fd'],
+    SlotOrObjectProp: ['_983e51bbd32002d6'],
+    ThemeColorProp: ['_3e40f4d592853ac8'],
+    WideningComboProp: ['_6be5de4e6cb24f09'],
   },
-  "symbolsById": {
-    "_00bb784a173461fd": {
-      "id": "_00bb784a173461fd",
-      "name": "NamedButtonSize",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_00bb784a173461fd.js",
-      "library": "user"
+  symbolsById: {
+    _00bb784a173461fd: {
+      id: '_00bb784a173461fd',
+      name: 'NamedButtonSize',
+      kind: 'typeAlias',
+      chunk: './chunks/_00bb784a173461fd.js',
+      library: 'user',
     },
-    "_1491ed5a360d9b3f": {
-      "id": "_1491ed5a360d9b3f",
-      "name": "ButtonProps",
-      "kind": "interface",
-      "chunk": "./chunks/_1491ed5a360d9b3f.js",
-      "library": "user"
+    _1491ed5a360d9b3f: {
+      id: '_1491ed5a360d9b3f',
+      name: 'ButtonProps',
+      kind: 'interface',
+      chunk: './chunks/_1491ed5a360d9b3f.js',
+      library: 'user',
     },
-    "_3e40f4d592853ac8": {
-      "id": "_3e40f4d592853ac8",
-      "name": "ThemeColorProp",
-      "kind": "interface",
-      "chunk": "./chunks/_3e40f4d592853ac8.js",
-      "library": "user"
+    _3e40f4d592853ac8: {
+      id: '_3e40f4d592853ac8',
+      name: 'ThemeColorProp',
+      kind: 'interface',
+      chunk: './chunks/_3e40f4d592853ac8.js',
+      library: 'user',
     },
-    "_5de76ede16b904a0": {
-      "id": "_5de76ede16b904a0",
-      "name": "ButtonSize",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_5de76ede16b904a0.js",
-      "library": "user"
+    _5de76ede16b904a0: {
+      id: '_5de76ede16b904a0',
+      name: 'ButtonSize',
+      kind: 'typeAlias',
+      chunk: './chunks/_5de76ede16b904a0.js',
+      library: 'user',
     },
-    "_6be5de4e6cb24f09": {
-      "id": "_6be5de4e6cb24f09",
-      "name": "WideningComboProp",
-      "kind": "interface",
-      "chunk": "./chunks/_6be5de4e6cb24f09.js",
-      "library": "user"
+    _6be5de4e6cb24f09: {
+      id: '_6be5de4e6cb24f09',
+      name: 'WideningComboProp',
+      kind: 'interface',
+      chunk: './chunks/_6be5de4e6cb24f09.js',
+      library: 'user',
     },
-    "_7d065086989f2c65": {
-      "id": "_7d065086989f2c65",
-      "name": "ButtonPropsNamedSize",
-      "kind": "interface",
-      "chunk": "./chunks/_7d065086989f2c65.js",
-      "library": "user"
+    _7d065086989f2c65: {
+      id: '_7d065086989f2c65',
+      name: 'ButtonPropsNamedSize',
+      kind: 'interface',
+      chunk: './chunks/_7d065086989f2c65.js',
+      library: 'user',
     },
-    "_983e51bbd32002d6": {
-      "id": "_983e51bbd32002d6",
-      "name": "SlotOrObjectProp",
-      "kind": "interface",
-      "chunk": "./chunks/_983e51bbd32002d6.js",
-      "library": "user"
+    _983e51bbd32002d6: {
+      id: '_983e51bbd32002d6',
+      name: 'SlotOrObjectProp',
+      kind: 'interface',
+      chunk: './chunks/_983e51bbd32002d6.js',
+      library: 'user',
     },
-    "_e56f41870799d053": {
-      "id": "_e56f41870799d053",
-      "name": "CreateButton",
-      "kind": "typeAlias",
-      "chunk": "./chunks/_e56f41870799d053.js",
-      "library": "user"
-    }
-  }
-};
-export default manifest;
+    _e56f41870799d053: {
+      id: '_e56f41870799d053',
+      name: 'CreateButton',
+      kind: 'typeAlias',
+      chunk: './chunks/_e56f41870799d053.js',
+      library: 'user',
+    },
+  },
+}
+export default manifest

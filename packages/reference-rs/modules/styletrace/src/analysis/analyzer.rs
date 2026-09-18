@@ -27,7 +27,12 @@ pub fn trace_style_jsx_names_with_hint(
     sync_root_hint: Option<&Path>,
 ) -> Result<Vec<String>, StyleTraceError> {
     let bindings = trace_style_bindings_with_hint(root_dir, sync_root_hint)?;
-    Ok(bindings.into_iter().map(|b| b.name).collect::<BTreeSet<_>>().into_iter().collect())
+    Ok(bindings
+        .into_iter()
+        .map(|b| b.name)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect())
 }
 
 pub fn trace_style_bindings(
@@ -54,11 +59,21 @@ pub fn trace_style_bindings_with_hint(
 
     let mut modules = BTreeMap::new();
     for file_path in discover_source_files(&normalized_source)? {
-        let module = parse_trace_module(&file_path, &resolved_decl_root, &style_prop_names, &primitive_names)?;
+        let module = parse_trace_module(
+            &file_path,
+            &resolved_decl_root,
+            &style_prop_names,
+            &primitive_names,
+        )?;
         modules.insert(file_path, module);
     }
 
-    let mut analyzer = StyleTraceAnalyzer::new(modules, primitive_names, resolved_decl_root, style_prop_names);
+    let mut analyzer = StyleTraceAnalyzer::new(
+        modules,
+        primitive_names,
+        resolved_decl_root,
+        style_prop_names,
+    );
     analyzer.collect_exported_bindings(&normalized_source)
 }
 
@@ -80,8 +95,13 @@ impl StyleTraceAnalyzer {
         style_prop_names: BTreeSet<String>,
     ) -> Self {
         Self {
-            modules, primitive_names, sync_root, style_prop_names,
-            component_cache: HashMap::new(), factory_cache: HashMap::new(), export_cache: HashMap::new(),
+            modules,
+            primitive_names,
+            sync_root,
+            style_prop_names,
+            component_cache: HashMap::new(),
+            factory_cache: HashMap::new(),
+            export_cache: HashMap::new(),
         }
     }
 
@@ -115,7 +135,8 @@ impl StyleTraceAnalyzer {
         }
 
         for source in &module.export_all_sources {
-            let Some(target) = resolve_imported_module(module_path, source, &self.sync_root)? else {
+            let Some(target) = resolve_imported_module(module_path, source, &self.sync_root)?
+            else {
                 continue;
             };
             self.ensure_module_loaded(&target)?;
@@ -274,8 +295,7 @@ impl StyleTraceAnalyzer {
                 source,
                 imported_name,
             } => {
-                let Some(resolved) =
-                    resolve_imported_module(module_path, source, &self.sync_root)?
+                let Some(resolved) = resolve_imported_module(module_path, source, &self.sync_root)?
                 else {
                     return Ok(false);
                 };

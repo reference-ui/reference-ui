@@ -136,7 +136,7 @@
   }
 }
 @layer tokens {
-  :root, [data-theme=light] {
+  :root, [data-color-mode=light] {
     --colors-slate-50: oklch(98.4% 0.003 247.858);
     --colors-slate-100: oklch(96.8% 0.007 247.896);
     --colors-slate-200: oklch(92.9% 0.013 255.508);
@@ -475,7 +475,7 @@
     --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
   }
-  [data-theme=dark] {
+  [data-color-mode=dark] {
     --colors-text-primary: var(--colors-gray-50);
     --colors-text-secondary: var(--colors-gray-300);
     --colors-text-disabled: var(--colors-gray-500);
@@ -582,5 +582,65 @@
   .\@reference-ui\/lib__button_s_md { font-size: 16px; }
   .\@reference-ui\/lib__button_m_true { opacity: 0.5; }
   .\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  }
 }
 }

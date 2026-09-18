@@ -23,11 +23,7 @@ pub(super) fn recipe_types(system: &BaseSystem) -> String {
         };
         push_type_alias(&mut out, &format!("{stem}VariantProps"), &variant_body);
         if let Some(compound_body) = compound_variant_body(recipe) {
-            push_type_alias(
-                &mut out,
-                &format!("{stem}CompoundVariant"),
-                &compound_body,
-            );
+            push_type_alias(&mut out, &format!("{stem}CompoundVariant"), &compound_body);
         }
     }
     out

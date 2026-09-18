@@ -27,15 +27,9 @@
   "keyframes": {},
   "recipes": {},
   "staticCss": {
-    "_hover:color": [
-      "n100"
-    ],
-    "borderRadius": [
-      "*"
-    ],
-    "unknownProp": [
-      "val"
-    ]
+    "_hover:color": ["n100"],
+    "borderRadius": ["*"],
+    "unknownProp": ["val"]
   },
   "provenance": []
 }

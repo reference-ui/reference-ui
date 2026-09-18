@@ -1,20 +1,23 @@
 @layer token-alias {
-@layer reset, global, base, tokens, recipes, utilities;
-@layer tokens {
-  :root, [data-theme=light] {
-    --colors-gray-50: #f9fafb;
-    --colors-gray-950: #030712;
-    --colors-ui-button-background: var(--colors-gray-950);
-    --colors-ui-button-foreground: var(--colors-gray-50);
+  @layer reset, global, base, tokens, recipes, utilities;
+  @layer tokens {
+    :root,
+    [data-color-mode='light'] {
+      --colors-gray-50: #f9fafb;
+      --colors-gray-950: #030712;
+      --colors-ui-button-background: var(--colors-gray-950);
+      --colors-ui-button-foreground: var(--colors-gray-50);
+    }
+    [data-color-mode='dark'] {
+      --colors-gray-50: #030712;
+      --colors-gray-950: #f9fafb;
+      --colors-ui-button-background: var(--colors-gray-50);
+      --colors-ui-button-foreground: var(--colors-gray-950);
+    }
   }
-  [data-theme=dark] {
-    --colors-gray-50: #030712;
-    --colors-gray-950: #f9fafb;
-    --colors-ui-button-background: var(--colors-gray-50);
-    --colors-ui-button-foreground: var(--colors-gray-950);
+  @layer utilities {
+    .token-alias__bg_ui\.button\.background {
+      background: var(--colors-ui-button-background);
+    }
   }
-}
-@layer utilities {
-  .token-alias__bg_ui\.button\.background { background: var(--colors-ui-button-background); }
-}
 }

@@ -4,7 +4,8 @@
 //! Emits None for dynamic, non-constant expressions that cannot be captured as static plans.
 
 use oxc_ast::ast::{
-    ArrayExpressionElement, Expression, ObjectPropertyKind, PropertyKey, UnaryOperator,
+    ArrayExpressionElement, Expression, LogicalExpression, ObjectPropertyKind, PropertyKey,
+    StaticMemberExpression, UnaryOperator,
 };
 use serde_json::{json, Map, Value};
 
@@ -50,10 +51,7 @@ fn convert_literal(expr: &Expression<'_>) -> Option<(Value, bool)> {
     None
 }
 
-fn convert_wrapper(
-    expr: &Expression<'_>,
-    constants: &LocalConstants,
-) -> Option<(Value, bool)> {
+fn convert_wrapper(expr: &Expression<'_>, constants: &LocalConstants) -> Option<(Value, bool)> {
     if let Expression::ParenthesizedExpression(p) = expr {
         return ast_to_json_value(&p.expression, constants);
     }
@@ -70,10 +68,7 @@ fn convert_wrapper(
     None
 }
 
-fn convert_compound(
-    expr: &Expression<'_>,
-    constants: &LocalConstants,
-) -> Option<(Value, bool)> {
+fn convert_compound(expr: &Expression<'_>, constants: &LocalConstants) -> Option<(Value, bool)> {
     match expr {
         Expression::ArrayExpression(arr) => convert_array(arr, constants),
         Expression::ObjectExpression(obj) => convert_object(obj, constants),
@@ -149,7 +144,7 @@ fn number_atom_to_json(n: &str) -> Value {
     }
 }
 
-fn atom_value_to_json(val: &AtomValue) -> Option<Value> {
+pub(crate) fn atom_value_to_json(val: &AtomValue) -> Option<Value> {
     match val {
         AtomValue::String(s) => Some(Value::String(s.to_string())),
         AtomValue::Number(n) => Some(number_atom_to_json(n)),
@@ -157,6 +152,108 @@ fn atom_value_to_json(val: &AtomValue) -> Option<Value> {
         AtomValue::Null => Some(Value::Null),
         _ => None,
     }
+}
+
+/// Convert an AST expression into every JSON leaf its wants can take at runtime.
+///
+/// Mirrors `walk_expression` leaf-for-leaf: each ternary arm and each
+/// non-guard logical operand becomes its own authored value, so every want
+/// gets a runtime style plan. Single-valued forms delegate to
+/// `ast_to_json_value`; dynamic forms yield no leaves, exactly as they
+/// yield no wants.
+pub fn ast_to_json_values(expr: &Expression<'_>, constants: &LocalConstants) -> Vec<(Value, bool)> {
+    if is_omitted_leaf(expr) {
+        return Vec::new();
+    }
+    if let Some(branched) = convert_branching(expr, constants) {
+        return branched;
+    }
+    if let Some(wrapped) = convert_wrapper_values(expr, constants) {
+        return wrapped;
+    }
+    if let Expression::StaticMemberExpression(mem) = expr {
+        return convert_static_member(mem, constants).into_iter().collect();
+    }
+    ast_to_json_value(expr, constants).into_iter().collect()
+}
+
+fn convert_branching(
+    expr: &Expression<'_>,
+    constants: &LocalConstants,
+) -> Option<Vec<(Value, bool)>> {
+    match expr {
+        Expression::ConditionalExpression(cond) => {
+            // color: flag ? 'cherry' : 'ocean'  — both arms, ignore `flag`
+            let mut out = ast_to_json_values(&cond.consequent, constants);
+            out.extend(ast_to_json_values(&cond.alternate, constants));
+            Some(out)
+        }
+        Expression::LogicalExpression(log) => Some(logical_values(log, constants)),
+        _ => None,
+    }
+}
+
+fn logical_values(log: &LogicalExpression<'_>, constants: &LocalConstants) -> Vec<(Value, bool)> {
+    // Guards (`false &&`, `==`, `null`, `undefined`) are skipped by the
+    // want walker, so they contribute no authored leaf either.
+    let mut out = Vec::new();
+    if !super::walk::is_guard_expression(&log.left) {
+        out.extend(ast_to_json_values(&log.left, constants));
+    }
+    if !super::walk::is_guard_expression(&log.right) {
+        out.extend(ast_to_json_values(&log.right, constants));
+    }
+    out
+}
+
+fn convert_wrapper_values(
+    expr: &Expression<'_>,
+    constants: &LocalConstants,
+) -> Option<Vec<(Value, bool)>> {
+    match expr {
+        Expression::ParenthesizedExpression(p) => {
+            Some(ast_to_json_values(&p.expression, constants))
+        }
+        Expression::TSAsExpression(as_expr) => {
+            Some(ast_to_json_values(&as_expr.expression, constants))
+        }
+        Expression::TSSatisfiesExpression(sat) => {
+            Some(ast_to_json_values(&sat.expression, constants))
+        }
+        Expression::TSNonNullExpression(non_null) => Some(
+            ast_to_json_values(&non_null.expression, constants)
+                .into_iter()
+                .map(|(val, _)| (val, true))
+                .collect(),
+        ),
+        _ => None,
+    }
+}
+
+/// True for leaves the want walker omits: `null`, `undefined`, and `void`.
+///
+/// The walker collects no want for these, so they contribute no authored
+/// leaf either. A synthesized null want would otherwise re-resolve into a
+/// diagnostic the main pass never emits.
+fn is_omitted_leaf(expr: &Expression<'_>) -> bool {
+    match expr {
+        Expression::NullLiteral(_) => true,
+        Expression::Identifier(ident) => ident.name == "undefined" || ident.name == "null",
+        Expression::UnaryExpression(unary) => unary.operator == UnaryOperator::Void,
+        _ => false,
+    }
+}
+
+fn convert_static_member(
+    mem: &StaticMemberExpression<'_>,
+    constants: &LocalConstants,
+) -> Option<(Value, bool)> {
+    // color: theme.primary  after  const theme = { primary: 'cherry' }
+    if let Expression::Identifier(obj) = &mem.object {
+        let atom_val = constants.get_object_prop(obj.name.as_str(), mem.property.name.as_str())?;
+        return atom_value_to_json(atom_val).map(|val| (val, false));
+    }
+    None
 }
 
 fn convert_identifier(name: &str, constants: &LocalConstants) -> Option<(Value, bool)> {

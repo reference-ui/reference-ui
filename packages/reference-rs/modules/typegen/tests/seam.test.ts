@@ -27,7 +27,9 @@ describe('typegen native seam', () => {
     const dts = emitDtsSync({ baseSystem: fullSpec })
 
     expect(typeof dts).toBe('string')
-    expect(dts).toContain("export type ColorToken = '_private.secret' | 'bg.canvas' | 'blue.500' | 'red.500';")
+    expect(dts).toContain(
+      "export type ColorToken = '_private.secret' | 'bg.canvas' | 'blue.500' | 'red.500';"
+    )
     expect(dts).toContain("export type SpacingToken = '1' | '2' | '4';")
     expect(dts).toContain("export type RadiusToken = 'md' | 'sm';")
     expect(dts).toContain('export interface FontRegistry {')
@@ -54,7 +56,9 @@ describe('typegen native seam', () => {
       strict: ['colors', 'radii'],
     })
 
-    expect(strictDts).toContain('StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>')
+    expect(strictDts).toContain(
+      'StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>'
+    )
     expect(strictDts).not.toContain('StrictSpacingProps')
   })
 
@@ -76,7 +80,10 @@ describe('typegen native seam', () => {
     const invalidVersion = { ...fullSpec, schemaVersion: 999 }
     expect(() => emitDtsSync({ baseSystem: invalidVersion })).toThrow(/schema\s*version/i)
 
-    const unknownFields = { ...fullSpec, rogueProperty: 'illegal' } as unknown as EvaluatedSystemSpec
+    const unknownFields = {
+      ...fullSpec,
+      rogueProperty: 'illegal',
+    } as unknown as EvaluatedSystemSpec
     expect(() => emitDtsSync({ baseSystem: unknownFields })).toThrow(/unknown field/i)
   })
 
@@ -94,6 +101,8 @@ describe('typegen native seam', () => {
     expect(typeof distTypegen.emitDtsSync).toBe('function')
     expect(typeof distTypegen.emitDts).toBe('function')
     const dts = distTypegen.emitDtsSync({ baseSystem: fullSpec })
-    expect(dts).toContain("export type ColorToken = '_private.secret' | 'bg.canvas' | 'blue.500' | 'red.500';")
+    expect(dts).toContain(
+      "export type ColorToken = '_private.secret' | 'bg.canvas' | 'blue.500' | 'red.500';"
+    )
   })
 })

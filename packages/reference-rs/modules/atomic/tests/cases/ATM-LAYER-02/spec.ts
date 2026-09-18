@@ -8,7 +8,9 @@ import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, type AtomicCaseSpec } from '../../hel
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-02',
   verify(result) {
-    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
+    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
+      true
+    )
     expect(result.stylesheet).toContain('@layer utilities')
     expect(result.stylesheet).not.toContain('@layer reset {')
     expect(result.stylesheet).not.toContain('@layer base {')

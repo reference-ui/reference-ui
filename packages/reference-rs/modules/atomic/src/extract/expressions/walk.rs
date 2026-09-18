@@ -5,16 +5,16 @@
 //! responsive array ordering and condition scopes without evaluating runtime JavaScript.
 
 use oxc_ast::ast::{
-    ArrayExpression, ArrayExpressionElement, ConditionalExpression, Expression, LogicalExpression,
-    UnaryExpression, UnaryOperator,
+    ConditionalExpression, Expression, LogicalExpression, UnaryExpression, UnaryOperator,
 };
+use oxc_span::Span;
 use smallvec::SmallVec;
 
 use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{line_col, Diagnostic};
 use crate::extract::constants::LocalConstants;
 use base_system::BreakpointScale;
 
@@ -24,6 +24,7 @@ pub struct ExpressionWalk<'a> {
     pub origin: Option<&'a str>,
     pub important: bool,
     pub file: &'a str,
+    pub source: Option<&'a str>,
     pub constants: &'a LocalConstants,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
@@ -38,13 +39,29 @@ impl<'a> ExpressionWalk<'a> {
     }
 
     /// Push an extracted Want to the collection.
-    pub fn push_want(&mut self, value: AtomValue, when: SmallVec<[Box<str>; 2]>, important: bool) {
-        self.wants.push(
-            Want::new(self.prop, value)
-                .with_when(when)
-                .with_important(self.important || important)
-                .with_origin(self.origin),
-        );
+    pub fn push_want(
+        &mut self,
+        value: AtomValue,
+        when: SmallVec<[Box<str>; 2]>,
+        important: bool,
+        span: Option<Span>,
+    ) {
+        let mut want = Want::new(self.prop, value)
+            .with_when(when)
+            .with_important(self.important || important)
+            .with_origin(self.origin);
+        want.file = Some(self.file.into());
+        if let Some(position) = self.span_position(span) {
+            want.line = Some(position.0);
+            want.column = Some(position.1);
+        }
+        self.wants.push(want);
+    }
+
+    /// 1-based line/column for a literal span, or None without source text.
+    fn span_position(&self, span: Option<Span>) -> Option<(u32, u32)> {
+        let source = self.source?;
+        line_col(source, span?.start)
     }
 
     /// Report a diagnostic warning at the current file.
@@ -91,7 +108,7 @@ fn walk_literal(
         }
         Expression::BooleanLiteral(lit) => {
             // truncate={false}
-            push_bool_want(ctx, lit.value, when);
+            push_bool_want(ctx, lit, when);
             true
         }
         Expression::NullLiteral(_) => {
@@ -154,7 +171,12 @@ fn walk_branching(
         }
         Expression::ArrayExpression(arr) => {
             // mt={['1r', '2r', '4r']}
-            walk_array(ctx, arr, when);
+            super::responsive::walk_array(ctx, arr, when);
+            true
+        }
+        Expression::ObjectExpression(obj) => {
+            // width={{ base: '50px', md: '60px' }}
+            super::responsive::walk_object(ctx, obj, when);
             true
         }
         _ => false,
@@ -173,7 +195,7 @@ fn walk_fallback(
         }
         Expression::Identifier(ident) => {
             // mt={space}  where  const space = '2r'
-            handle_identifier_fallback(ctx, ident.name.as_str(), when);
+            handle_identifier_fallback(ctx, ident.name.as_str(), when, ident.span);
         }
         Expression::StaticMemberExpression(mem) => {
             // color={theme.primary}  where  const theme = { primary: 'n300' }
@@ -197,10 +219,11 @@ fn handle_identifier_fallback(
     ctx: &mut ExpressionWalk<'_>,
     name: &str,
     when: &SmallVec<[Box<str>; 2]>,
+    span: Span,
 ) {
     // mt={space}  after  const space = '2r'
     if let Some(val) = ctx.constants.get_scalar(name) {
-        ctx.push_want(val.clone(), when.clone(), false);
+        ctx.push_want(val.clone(), when.clone(), false, Some(span));
     } else {
         handle_identifier(ctx, name);
     }
@@ -216,7 +239,7 @@ fn handle_static_member(
         let prop_name = mem.property.name.as_str();
         if let Some(val) = ctx.constants.get_object_prop(obj_name, prop_name) {
             // color={theme.primary}
-            ctx.push_want(val.clone(), when.clone(), false);
+            ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
             return;
         }
     }
@@ -251,7 +274,7 @@ fn walk_logical(
     }
 }
 
-fn is_guard_expression(expr: &Expression<'_>) -> bool {
+pub(crate) fn is_guard_expression(expr: &Expression<'_>) -> bool {
     // false && '1px solid'  /  null && '2px solid'  /  (a === b) && 'n200'
     matches!(
         expr,
@@ -267,31 +290,6 @@ fn is_undefined_or_null_ident(expr: &Expression<'_>) -> bool {
         ident.name == "undefined" || ident.name == "null"
     } else {
         false
-    }
-}
-
-fn walk_array(
-    ctx: &mut ExpressionWalk<'_>,
-    arr: &ArrayExpression<'_>,
-    when: &SmallVec<[Box<str>; 2]>,
-) {
-    // mt={['1r', '2r', null, '4r']}
-    for (idx, elem) in arr.elements.iter().enumerate() {
-        let Some(breakpoint) = ctx.breakpoint_for_index(idx) else {
-            continue;
-        };
-        let mut item_when = when.clone();
-        item_when.push(Box::from(breakpoint));
-        match elem {
-            ArrayExpressionElement::Elision(_) => {
-                // mt={['1r', , '4r']}
-            }
-            _ => {
-                if let Some(expr) = elem.as_expression() {
-                    walk_expression(ctx, expr, &item_when);
-                }
-            }
-        }
     }
 }
 
@@ -321,7 +319,12 @@ fn handle_unary(
     {
         // left={-2}
         let val = format!("-{}", lit.value);
-        ctx.push_want(AtomValue::Number(val.into_boxed_str()), when.clone(), false);
+        ctx.push_want(
+            AtomValue::Number(val.into_boxed_str()),
+            when.clone(),
+            false,
+            Some(lit.span),
+        );
         return;
     }
     walk_expression(ctx, &unary.argument, when);
