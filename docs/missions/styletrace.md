@@ -1,4 +1,4 @@
-OPERATION: READY
+OPERATION: GO
 
 # Mission: Full StyleTrace
 
