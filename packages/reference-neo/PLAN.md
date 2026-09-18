@@ -1332,3 +1332,42 @@ Panda V1 is studied as a working design, not only mined for edges. It solved
 this same problem well and simply; cooks read the vendored sources to
 understand *how*, then implement from the claim. Read, learn, never copy
 (§11).
+
+## Landing (post-S3, HQ 2026-09-18 — BOARDING reference-lib, switch-first)
+
+Stood down per HQ halt: matrix (out of scope), Book (not needed), Vite
+plugin (skip for now), D17 build (cartography decides), RS-32 ride-along
+(stays filed+owned). Zero-lib-edits voyage rule SUPERSEDED: HQ authorized
+the captain to proactively make the switch in reference-lib (Phase C).
+
+Phase A — PREPARE (now): cartographers map the last bits + watch crew builds.
+Phase B — COMMIT preparations. Phase C — LANDING SEQUENCE: captain flips the
+switch in reference-lib, lib's own suites + snapshots (via lib agent skills)
+become the witnesses, fix-forward crews make it work.
+
+| Crew | Task | Mode | Brief |
+| L1 | Watch loop (HQ: needed) | build | `neo sync --watch` on serial `sync()` + SYNC case proof |
+| C1 | lib→core consumption map | recon | Every lib touchpoint on core → `landing-lib-consumption.md` |
+| C2 | D19 switch-minimal types (HQ: needed) | recon | 11 importers, 12 names → `landing-types-scope.md` ("shim" wording retired by HQ) |
+| L9 | D19 types emission (HQ: complete, not carried) | build | Real `types/` emission in Neo sync via RS tasty engine + case proof |
+| C3 | lib test-harness map | recon | Suites/snapshots that witness the layer → `landing-lib-tests.md` |
+
+All: tree uncommitted, captain merges. Recon crews read-only + one report.
+
+### Phase A close (captain, 2026-09-18)
+
+- L1 watch MERGED (SYNC-14; suite 142). Census fallout sync-o3 (watch retired
+  from absence union) fixed by captain: parity SPEC §union + census-union key.
+- L8 forwardRef MERGED (HQ B3): factory is `forwardRef` w/ `forwardedRef ?? ref`;
+  PRIM-10 contract re-pinned (`$$typeof`+render+displayName; typeof-object is
+  necessary). Full suite + q + 218 vitest green. Stash incident verified clean
+  (stash list intact, 17 tree files all known). Standing rule: NO stashing in
+  the shared tree, ever.
+- L9 STOOD DOWN (HQ: tasty dark like matrix; cancel primitives failed, agent
+  parked in manual_reconciliation, zero tree touches — nothing to revert).
+- TASTY DECOMMISSION (landing-atomic, Phase C crew): (1) mask index.ts:18
+  export w/ dated comment; (2) tsconfig `exclude: src/components/Reference/**`;
+  code untouched, zero tests under dir, no outside `@reference-ui/types`
+  importers, only index.ts:18 imports the dir; `referenceBrowserTokenConfig`
+  orphaned by nothing. Generated `types/` left unused; paths entry dangles
+  harmlessly. RE-COMMISSION tracker (post-green): D19 emission + unmask 1–2.
