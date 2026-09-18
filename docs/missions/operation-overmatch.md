@@ -249,15 +249,15 @@ _Panda:_ same (`polish.rs:331`, `an_undefined_property_does_not_block_the_object
 _Language:_ numeric/string scalar twins dedupe to one atom; vendor prefixes hyphenate into the class.
 _Ours:_ `css({ padding: 1 })` + `css({ padding: '1' })` → one `.p_1`
 _Panda:_ `padding: 1` + `padding: '1'` → one rule (`pandacss_stylesheet/tests/atomic.rs:215`); `WebkitBackgroundClip` → `.-webkit-background-clip_text` (`:33`)
-_Notes:_ token scalars dedupe the same way (`:265`). `[re-graded]` Numeric *strings* (`'1e3'`, `'.5'`, `'01'`): v2 coerces via `Number()` and dedupes with the bare number (`atomic.rs:239-261`, `js_number_string_forms_coerce_and_get_px` → `.p_0\.5`, `.p_1000`); UNIT-02 refuses them today. Refusing a finite numeric string is "we do less" — canonicalization is SPEC-V2-79 (finite → the numeric atom; NaN-producing → refuse with a diagnostic). JS numeric *literals* (`1e3`, `0x10`) already fold as numbers.
+_Notes:_ token scalars dedupe the same way (`:265`). `[re-graded]` Numeric *strings* (`'1e3'`, `'.5'`, `'01'`): v2 coerces via `Number()` and dedupes with the bare number (`atomic.rs:239-261`, `js_number_string_forms_coerce_and_get_px` → `.p_0\.5`, `.p_1000`); UNIT-02 refuses them today. Refusing a finite numeric string is "we do less" — canonicalization is SPEC-V2-79 (finite → the numeric atom; NaN-producing → refuse with a diagnostic). JS numeric *literals* (`1e3`, `0x10`) already fold as numbers. `[Ph0]` GAP-04a: capital-W/M vendor spellings (`WebkitBackgroundClip`, React's standard) dropped as unknown — canon has 202 lowercase `webkit*` rows, zero `Webkit*`/`Moz*`; v2 hyphenates with leading dash (`:33`). Build, Ph3, rides the 79 normalize slice. GAP-04b: token-scalar dedupe (`margin: 4` + `'4'` → one rule, `:265`) unpinned — UNIT-02 pins only px; station arm, Ph2.
 
 ### Family B — unwraps
 
-**SPEC-V2-05 — value-level unwraps — HAVE** · `walk.rs:134`, `ast_value.rs:54`, `collect.rs:179` · ex-15
+**SPEC-V2-05 — value-level unwraps — HAVE** · `extract/expressions/walk.rs:136-148`, `ast_value.rs:54`, `collect.rs:179` · ex-15
 _Language:_ parens / `as` / `satisfies` / `!` are transparent in value position.
 _Ours:_ `css({ width: '2r' as const })` → `2r`
 _Panda:_ wrapped value part (`calls.rs:1660`, `nested_unwraps_and_folding`)
-_Notes:_ `!` also sets the important flag (`ast_value.rs:64`) — keep that coupling.
+_Notes:_ `[Ph0]` GAP-05a: entirely unpinned — zero station/case inputs use the four wraps in value position; needs a station (all four + nesting + JSX attr, v2 `jsx.rs:1108/1129/1153`), Ph2. GAP-05b (soundness, Ph1 unary slice): `!` sets important in plans (`ast_value.rs:64`) but unwraps transparently in wants (`walk.rs:148`) → plan-important + plain-only atom = runtime miss on static input; v2 treats `!` transparent (`:1052`, `:2024`, `diagnostics: []`). Pick transparent-in-both (recommended) or important-in-both, and pin — the old "keep that coupling" note is revoked.
 
 **SPEC-V2-06 — call-arg unwraps — TO-BUILD · Ph1** · `ATM-SITE-26` + `NEO-SITE-20` · ex-16
 _Language:_ `css()` args wrapped in parens / `as const` / `satisfies` / `!` extract like the bare arg.
@@ -329,7 +329,7 @@ _Notes:_ `encode.rs` pins the IR contract (one atom per arm, surrounding conditi
 _Language:_ nested open ternary scoops all leaves; equal branches collapse via `AtomSet` dedupe; one unresolvable branch keeps the resolvable arm + warns the other.
 _Ours:_ `dark ? maybeFn() : 'black'` → black atom + one warning
 _Panda:_ (`conditional_output.rs:487`, `nested_ternary_emits_nested_conditional`; partial `:69`; equal `:110`)
-_Notes:_ call arm warns via the general path (NEO-SITE-06 precedent) — same net as v2 plus our diagnostic. SUPERIOR candidate `[re-graded]`: `literal-evaluator.md:75-76` says an open ternary where one branch cannot fold *drops the whole conditional* ("no half-branch"); we keep the resolvable arm and diagnose the other. Confirm against `:69` at the station and promote.
+_Notes:_ call arm warns via the general path (NEO-SITE-06 precedent) — same net as v2 plus our diagnostic. SUPERIOR promotion REJECTED `[Ph0]`: v2 `:69`/`:91` keep the resolvable arm — the design-note "no half-branch" doesn't describe shipped behavior; parity, not superior. GAP-16: partial-ternary pin missing (`dark ? maybeFn() : 'black'` → black + exactly 1 warning + plan parity, both arm positions) — mechanism present, Ph2 pin.
 
 **SPEC-V2-17 — object-valued ternary arms — TO-BUILD · Ph2** · `ATM-SITE-27` · ex-35
 _Language:_ `color: d ? { base, _hover } : { base }` routes each arm through the per-prop object machinery.
@@ -362,7 +362,7 @@ _Panda:_ (`scope.rs:651`, `object_spread_of_local_identifier_resolves`; inline t
 _Language:_ unresolvable spreads skip keeping static siblings; logical spreads merge the right operand; ternary spreads merge both arms (same-key → conditional value, distinct-key → both keys).
 _Ours:_ `css({ ...unknown, color: 'red' })` → color + warn; `...(u ? { p: '1' } : { p: '2' })` → `1|2`
 _Panda:_ (`conditional_output.rs:315`, `ternary_spread_with_same_key_emits_conditional_value`; logical `:274`; skip `calls.rs:638`; atomic `:1651`)
-_Notes:_ all-dynamic objects yield zero wants + warnings (lenient per-member, ex-D5). Pending paint pin: `NEO-SITE-22` (runtime-`ok` `...(ok && extra)`; engine already HAVE via SITE-05) — TO-BUILD · Ph2.
+_Notes:_ all-dynamic objects yield zero wants + warnings (lenient per-member, ex-D5). Pending paint pin: `NEO-SITE-22` (runtime-`ok` `...(ok && extra)`; engine already HAVE via SITE-05) — TO-BUILD · Ph2. `[Ph0]` GAP-21: bare-`...unknown` extract pin missing (`color` kept + exactly-one "Dynamic object spread" warning) — distinct from the NEO-SITE-22 paint pin, no double-count; Ph2.
 
 **SPEC-V2-22 — colliding ternary-spread union — TO-BUILD · Ph2** · `ATM-SITE-24` + `NEO-SITE-18` · ex-41
 _Language:_ static key + spread-ternary on the same key unions ALL values, order-independent.
@@ -374,7 +374,7 @@ _Notes:_ engine already unions (static want + both arm wants; wants unordered, m
 _Language:_ duplicate keys and overlapping spreads resolve last-wins at runtime.
 _Ours:_ `css({ color: 'red', color: 'blue' })` → both atoms, runtime picks blue
 _Panda:_ (`calls.rs:1736`, `merge_two_inline_object_spreads_second_wins`; dup-key twin `:131`)
-_Notes:_ architecture differs (we keep both atoms, v2 upserts at extract) but the claim holds at runtime.
+_Notes:_ architecture differs (we keep both atoms, v2 upserts at extract) but the claim holds at runtime. `[Ph0]` GAP-23: overlapping-spread order pin missing vs v2 `:1736` (literal dup keys ✓ MERGE-02 + runtime paint ✓); Ph2 pin.
 
 **SPEC-V2-24 — nested-const spread keeps conditions — TO-BUILD · Ph3** · rides `ATM-SITE-29` · ex-44
 _Language:_ spreading a const object whose nested conditions hold ternaries preserves the conditional data.
@@ -393,7 +393,7 @@ _Panda:_ (`calls.rs:444`, `array_value`)
 _Language:_ `null` slots preserved; unresolvable slots omit + warn with arity kept via `enumerate`.
 _Ours:_ `css({ padding: ['black', null, dyn] })` → black atom, null slot, warning
 _Panda:_ (`calls.rs:1893`, `array_value_preserves_null_elements`; dynamic twin `:1922`)
-_Notes:_ elision holes → SPEC-V2-27 control.
+_Notes:_ elision holes → SPEC-V2-27 control. `[Ph0]` GAP-26: dynamic-slot pin missing vs v2 `:1922` (null holes ✓; we warn where v2 is silent — pin must assert our warning); Ph2.
 
 **SPEC-V2-27 — mid-array ternary slots — TO-BUILD · Ph2** · `ATM-SITE-27` · ex-47, ex-46 (elision), `css(c?a:b)` arg (`calls.rs:548` part)
 _Language:_ `padding: [2, c ? 2 : 3, 4]` lands both arms at the same breakpoint; elision keeps arity; top-level `css(c ? a : b)` arg extracts.
@@ -419,6 +419,7 @@ _Notes:_ station-only (`walk_array_arg` recurses per element, `css/mod.rs:50`). 
 _Language:_ `theme.primary` over a const object resolves one hop.
 _Ours:_ `const t = { primary: 'red' }; css({ color: t.primary })`
 _Panda:_ (`scope.rs:762`, `jsx_attribute_resolves_identifier` — JSX twin of the same hop)
+_Notes:_ `[Ph0]` catalog erratum: `:762` is scalar-identifier-in-JSX, not a member test — no single-hop member test exists in v2 (jsx.rs has none either); our SITE-06 + NEO-SITE-02 pin *exceeds* v2 here.
 
 **SPEC-V2-31 — member depth — TO-BUILD · Ph3** · `ATM-SITE-29` (shared) · ex-5, ex-6, ex-7
 _Language:_ multi-hop `tokens.colors.red`, member-hop spreads `...styles.hover` through conditionals, and `tokens!.color` unwrap-through-member all resolve.
@@ -438,6 +439,7 @@ _Notes:_ collector matches `BindingIdentifier` only (`collect.rs:35`) — destru
 _Language:_ a param named `css` shadows the import (call dropped); outer live calls still extract.
 _Ours:_ `function f(css) { css({ color: 'red' }) }` → dropped, zero wants
 _Panda:_ (`scope.rs:690`, `function_parameter_shadows_css_import`; arrow `:707`, outer-lives `:737`)
+_Notes:_ `[Ph0]` arrow-param `:707` unpinned but covered by generic `visit_formal_parameters` — one-line arm suggested, not a GAP row.
 
 **SPEC-V2-34 — const-graph depth — TO-BUILD · Ph3** · `ATM-SITE-29` · ex-13, ex-D10, xf-R3, xf-R4
 _Language:_ scalar alias chains resolve transitively; const objects record identifier values + spreads; inner scope wins over outer (no union bloat).
@@ -449,7 +451,13 @@ _Notes:_ `record_declaration` ignores identifier inits (`collect.rs:48`); `inser
 _Language:_ a `let` with any assignment drops to warn + zero wants (never resolves its stale init).
 _Ours:_ `let color = 'red'; color = 'blue'; css({ color })` → warning, zero wants
 _Panda:_ (`scope.rs:224`, `let_mutated_drops_resolution`)
-_Notes:_ soundness bug: zero mutation tracking anywhere in `extract/` (`grep mutat` empty) — stale `'red'` emits with no diagnostic today. Fix: record `let`/`var` until an assignment, or drop them. Unmutated controls are SPEC-V2-02.
+_Notes:_ soundness bug: zero mutation tracking anywhere in `extract/` (`grep mutat` empty) — stale `'red'` emits with no diagnostic today. Fix: record `let`/`var` until an assignment, or drop them. Unmutated controls are SPEC-V2-02. `[landed]` ATM-SITE-28: 7 mutated shapes drop with write-naming warnings, 4 controls resolve; poison name-wide by design in Ph1.
+
+**SPEC-V2-81 — `delete obj.prop` tracked as a write — TO-BUILD · Ph2** · rides `ATM-SITE-28` (arm) · oracle follow-up on 35
+_Language:_ `delete obj.prop` invalidates the collected init exactly like an assignment — a later `css({ color: obj.prop })` drops with a diagnostic naming the delete, never the stale init.
+_Ours:_ `collect.rs` visits only assignment/update/for-in-of — `delete` is an untracked stale-init vector today
+_Panda:_ (no v2 test cited — file against `scope.rs` neighborhood at the station)
+_Notes:_ outside the 35/02/53 contract; real soundness follow-up, fail-open today. Bare `extract()` (`extract/mod.rs:369`, empty-bag path) also never collects mutations — zero in-repo callers, latent; wire in or doc-comment before any caller appears.
 
 **SPEC-V2-36 — micro-fold bundle — TO-BUILD · Ph2** · `ATM-SITE-30` · ex-1 (shorthand), ex-60 (Ms part), ex-64 (string-head), ex-66
 _Language:_ shorthand `{ color }`, `css({})`, `css('panda', {...})`, `cx('card', css({...}))`, no-arg `css()` — all fold/skip as today, zero new warnings.
@@ -467,7 +475,7 @@ _Notes:_ pins fail-closed mechanics. Declarator shadows register on the enclosin
 _Language:_ literal calls found inside JSX / fn bodies / nested args; multi-arg `css(a, b, …)` merges every arg (no cap); unmatched callees ignored; `` css`…` `` is not a site.
 _Ours:_ `css({ color: 'red' })` anywhere; `css(a, b)` → both atom sets
 _Panda:_ (`calls.rs:480`, `multiple_calls_in_one_source`; in-JSX `:657`, in-fn `:702`, unmatched `:523`, tagged `:2040`; multi-arg `pandacss_stylesheet/tests/atomic.rs:1449`, 4-arg `:1596`, arg-`&&` `:1626`)
-_Notes:_ descent is by construction (SITE-10 shadow test proves fn-body descent). Import alias/namespace identity (`nCss`, `panda.css`) rides here via SITE-15/NEO-SITE-04. `[re-graded]` `` css`…` `` on a LIVE `css` binding stays a non-site but must DIAGNOSE (`tagged template is not a css() site; use css({...})`) — ATM-SITE-12 currently records "no wants, no diagnostic", which the no-silence rule forbids; the sweep is SPEC-V2-65.
+_Notes:_ descent is by construction (SITE-10 shadow test proves fn-body descent). Import alias/namespace identity (`nCss`, `panda.css`) rides here via SITE-15/NEO-SITE-04. `[re-graded]` `` css`…` `` on a LIVE `css` binding stays a non-site but must DIAGNOSE (`tagged template is not a css() site; use css({...})`) — ATM-SITE-12 currently records "no wants, no diagnostic", which the no-silence rule forbids; the sweep is SPEC-V2-65. `[Ph0]` arg-level `&&`/`||`/`??` args (`cond && {margin:'3'}`) hit `handle_css_arg`'s `_ => {}` — zero wants, zero diagnostics — while v2 emits the right operand (`atomic.rs:1626`); absorbed into SPEC-V2-65 (Ph1 diagnose + Ph3 resolve).
 
 ### Family K — helpers + refusals
 
@@ -535,7 +543,13 @@ _Notes:_ `& + &` proven in browser (PARITY P2 parity worlds); `& ~ &` proven in 
 _Language:_ `&::after` lowers; pseudo-classes reorder before pseudo-elements (`:focus::before`); comma pseudo-element lists emit.
 _Ours:_ `_before` / `_after` props (the dialect spelling) + sort after pseudo-classes
 _Panda:_ (`nested_selector_parity.rs:433`, `nested_pseudo_element_compound_after`; reorder `:455`/`:466`, list `:477`)
-_Notes:_ raw `&::` spelling unpinned — same lowering as the `_before`/`_after` dialect, proven in browser.
+_Notes:_ raw `&::` spelling unpinned — same lowering as the `_before`/`_after` dialect, proven in browser. `[Ph0]` stacked pseudo-element-outer + pseudo-class-inner (`{'&::before': {'&:focus': …}}` → invalid `.c::before:focus`; v2 reorders, `:455`/`:466`) is NOT covered — see SPEC-V2-80.
+
+**SPEC-V2-80 — stacked pseudo-compound reorder (wrong paint) — TO-BUILD · Ph1** · `ATM-COND-29` (new; landed max `ATM-COND-28`) · Ph0 GAP-48
+_Language:_ `{'&::before': {'&:focus': {…}}}` (and dialect `_before: {_focus: …}`) must emit `:focus::before`, not invalid `.c::before:focus` — within-selector compounds reorder pseudo-class before pseudo-element at every stack depth.
+_Ours:_ stacks outer-first through textual `apply` → `.c::before:focus`, a rule that never matches
+_Panda:_ (`nested_selector_parity.rs:455`, `:466`)
+_Notes:_ single-level `&:focus::before` is textually fine, so the gap is precisely stacked pseudo-element-outer + pseudo-class-inner. Joins the Ph1 nesting slice with 68/69.
 
 **SPEC-V2-49 — `&:where(:has())` nested functional — TO-BUILD · Ph2** · `ATM-COND-22` + `NEO-COND-16` · ne-§3.10 (missing)
 _Language:_ css()-nested `&:where(:has(> …, > …))` substitutes inside the functional arg (the icon-only button collapse).
@@ -644,7 +658,7 @@ _Panda:_ (`calls.rs:1288`, `computed_key_from_string_literal`; numeric `:1304`; 
 _Notes:_ the static half is HAVE by accident — pin it before the fold table touches `resolve_property_key`. SUPERIOR on the refuse side: v2 drops the WHOLE call for an unfoldable computed key (`computed_keys_skip_extraction`); we drop the one member and keep the rest (SPEC-V2-41).
 
 **SPEC-V2-65 — non-object `css()` args: whole-object, member, wrapped, unresolvable — TO-BUILD · Ph1 (diagnose) / Ph3 (resolve)** · `ATM-SITE-50` + `NEO-SITE-24` · App. A whole-object verdicts, `calls.rs:548` ident/member part, `:1719` (was differ #3; SITE "silent 0/0/0/0")
-_Language:_ `css(styles)`, `css(theme.colors)`, `css(cond ? styles : other)`, `css(primary)` through an alias chain, `css(space)` over a destructured rest — an argument that folds to an object extracts exactly as if spread (`css({ ...styles })`); an argument that does not fold emits a located diagnostic naming the argument position and keeps sibling args; `css({...} as const)` / `satisfies` / `!` / parens / `<any>` unwrap at the arg (SPEC-V2-06/07).
+_Language:_ `css(styles)`, `css(theme.colors)`, `css(cond ? styles : other)`, `css(primary)` through an alias chain, `css(space)` over a destructured rest, `css({margin:'1'}, cond && {margin:'3'})` — an argument that folds to an object extracts exactly as if spread (`css({ ...styles })`), including the right operand of an arg-level `&&`/`||`/`??` when it folds (v2 `atomic.rs:1626`); an argument that does not fold emits a located diagnostic naming the argument position and keeps sibling args; `css({...} as const)` / `satisfies` / `!` / parens / `<any>` unwrap at the arg (SPEC-V2-06/07).
 _Ours:_ `const styles = { color: 'red', padding: '4px' }; css(styles)` → both atoms (Ph3); `css(fn())` → `css() argument 1 is not a static style object (call expression)` + sibling args kept (Ph1)
 _Panda:_ (`scope.rs:43`, `const_object_identifier_resolves`; chain `:63`, `:671`; rest `:587`; staged `calls.rs:548` → `panda_call_unextractable` ×3; positional `None` `:1719`; `literal-evaluator.md:57-59` — `css(styles)` is not a special form, it is the identifier fold of the arg)
 _Notes:_ old rationale — "wholesale object flow is outside the want/plan model; taking it would mean tracking values, not leaves" — is false in the engine's own terms: `unpack_local_const_object` (`object.rs:335-374`) already lowers a const object to wants AND authored plans for `...styles`; an identifier arg is the same object with the braces removed. Today `handle_css_arg` is `_ => {}` (`css/mod.rs:37`) — zero wants, zero diagnostics — and `walk_object_branch` (`:62-66`) silently returns on a non-object ternary arm. Ph1 is the NO-SILENCE SWEEP: every `_ => {}` on a site path (`css/mod.rs:37`, `:57`; `jsx/mod.rs:79-89`, `:125-158`; `responsive.rs` spreads; tagged template on a live binding, SPEC-V2-38) becomes a located diagnostic. A positional diagnostic beats v2's silent `None` slot.
@@ -698,7 +712,7 @@ _Panda:_ (`nested_selector_parity.rs:565`, `nested_child_combinator_stack`; the 
 _Notes:_ pin; the pseudo-class-before-pseudo-element sort is SPEC-V2-48.
 
 **SPEC-V2-74 — shadow pins: JSX tag shadowed by a param; `undefined` shadowed by a param — HAVE · pin Ph2** · `ATM-SITE-52` · ex-14, ex-D11 (was §3B "absurd code")
-_Language:_ `function F(Div) { return <Div mt="2r" /> }` — the tag is a param, not a host: no wants, one diagnostic; `function F(undefined) { css({ color: undefined }) }` — the leaf is omitted either way.
+_Language:_ `function F(Div) { return <Div mt="2r" /> }` — the tag is a param, not a host: no wants, silent skip (pin the silence — `[Ph0]` "one diagnostic" was false: `report_dropped_tag` returns silently when hosts resolve, `jsx/mod.rs:220`, matching v2's equal silence at `scope.rs:803` and pinned SITE-04 non-site behavior); `function F(undefined) { css({ color: undefined }) }` — the leaf is omitted either way.
 _Ours:_ `allows_jsx_tag` consults the shadow stack (`extract/mod.rs:106-114`) → fail-closed; `undefined` omits by name (`walk.rs:300-304`)
 _Panda:_ (`scope.rs:803`; `polish.rs:352` — v2 keeps a shadowed `undefined` open)
 _Notes:_ "absurd code" is not a reason to leave a fail-closed path unpinned — these are exactly the shapes Doom will write. EQUIVALENT on the `undefined` half (both engines emit nothing); pin the reason so the accident becomes a decision.
@@ -874,14 +888,15 @@ rows join the queues as they land.
 | Slice | Entries | Station(s) | What lands |
 |---|---|---|---|
 | Scope-aware identifiers | 75 | `ATM-SITE-53`, `NEO-SITE-27` | `ScopeTable` + `ScopeChain` (§7.2); `handle_identifier_fallback` resolves through the chain; project name-bag retired behind the import lookup stub |
-| Unary sign / fold-or-refuse | 78, 09 (08 rides the same node, pinned in Ph2) | `ATM-SITE-38`, `ATM-SITE-30` | unary node in the fold table; `-space` → `-4`; `!true` → `false`; non-numeric → diagnostic |
-| Mutation tracking | 35, 02, 53 | `ATM-SITE-32`, `ATM-SITE-28` | `AssignmentExpression` / update visitor marks bindings mutated; mutated bindings are dynamic with a diagnostic naming the write; unmutated `let`/`var` keep resolving (02, 53) |
+| Unary sign / fold-or-refuse | 78, 09 (08 rides the same node, pinned in Ph2), 05b (`!` transparency) | `ATM-SITE-38`, `ATM-SITE-30` | unary node in the fold table; `-space` → `-4`; `!true` → `false`; non-numeric → diagnostic; `!` transparent-in-both (fix the wants/plans asymmetry) |
+| Mutation tracking | 35, 02, 53 | `ATM-SITE-28` | `AssignmentExpression` / update visitor marks bindings mutated; mutated bindings are dynamic with a diagnostic naming the write; unmutated `let`/`var` keep resolving (02, 53) |
 | No-silence sweep | 65 (Ph1 half), 06, 07, 38, 28 (Ph1 half) | `ATM-SITE-50`, `ATM-SITE-26`, `ATM-SITE-37`, `NEO-SITE-20`, `NEO-SITE-24` | every `_ => {}` on a site path → located diagnostic; wrapped args (`as const`, `satisfies`, `!`, parens, `<any>`) unwrap; spreads refuse without shifting arity; tagged template on a live binding diagnoses |
 | Diagnostic precision | 77 | `ATM-DIAG-05` | `warn` takes a `Span`; `line:col` on every extract diagnostic; code table |
-| Nesting paint bugs | 68, 69 | `ATM-COND-23`, `ATM-COND-24`, `NEO-COND-17` | comma-member scoping; `:is()` armour on the utility path |
+| Nesting paint bugs | 68, 69, 80 | `ATM-COND-23`, `ATM-COND-24`, `ATM-COND-29`, `NEO-COND-17` | comma-member scoping; `:is()` armour on the utility path; stacked pseudo-compound reorder (80) |
 
-Twelve entries: 02, 06, 07, 09, 28, 35, 65, 68, 69, 75, 77, 78 (the six
-Ph1 rows of the 2026-09-18 catalog plus the six Family Q soundness rows).
+Thirteen entries: 02, 06, 07, 09, 28, 35, 65, 68, 69, 75, 77, 78, 80 (the six
+Ph1 rows of the 2026-09-18 catalog plus the six Family Q soundness rows
+plus Ph0 GAP-48).
 
 **Exit:** a fixture file exercising every Ph1 shape yields zero wants
 that the runtime cannot find (no ghosts), zero silent sites (every
