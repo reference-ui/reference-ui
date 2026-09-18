@@ -1,0 +1,1 @@
+{"aliases": ["full pipeline"], "covers": ["type/react-declarations", "type/consumer-compile"], "keywords": ["integration", "e2e", "smoke test", "baseline", "round trip"]}

@@ -1,0 +1,1 @@
+{"aliases": ["absent atom", "static miss"], "covers": ["static/miss-diagnostic", "static/unsatisfiable-request", "sync/atomic-failure"], "keywords": ["cache-miss", "phantom", "fail-closed", "unresolved", "rollback"], "related": ["NEO-MERGE-06", "ATM-STATIC-03", "ATM-GHOST-02"]}

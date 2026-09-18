@@ -1,0 +1,1 @@
+{"aliases": ["smoke test", "baseline probe"], "covers": ["prim/react-entry", "prim/marker-class"], "keywords": ["react.mjs", "marker class", "ref-div", "utility", "computed style"], "related": ["NEO-PRIM-08"]}

@@ -1,0 +1,1 @@
+{"aliases": ["invalid septet", "rejection catalog"], "covers": ["sync/config-validation", "sync/error-messages"], "keywords": ["validation", "fail-fast", "fail-loud", "guard-rails"], "related": ["NEO-SYNC-10", "NEO-SYNC-11"]}

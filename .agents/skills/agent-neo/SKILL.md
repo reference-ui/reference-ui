@@ -208,3 +208,35 @@ pnpm playground:capture --theme both           # dark + light (files: <route>.<t
 If the user ever says to change Neo into core — to promote or rename Neo
 as the installed core — the code word **retires**: update this skill, the
 `AGENTS.md` routing table, and the package names, and **stop saying Neo**.
+
+## 10. Case index
+
+Full-text index over neo cases + RS module surfaces (names, READMEs,
+`specs/*.spec.ts`, hand-authored `keywords.json`, RS suite/case inventory).
+Use it to find **cases by feature** instead
+of grepping — it reaches terms `agentneo search` (id/name/README text) misses,
+and surfaces the RS surfaces a case proves.
+
+```bash
+pnpm agent:cases search "<query>" [--limit=N] [--json]  # search cases + surfaces
+pnpm agent:cases list [--kind=neo|rs] [--json]          # list indexed docs (auto-rebuilds if stale)
+pnpm agent:cases reindex [--json]                       # force rebuild
+# direct: node .agents/case-index/cli.mjs search <query> | list [--kind=neo|rs] | reindex
+```
+
+Terms are stemmed (`queries` matches `query`) and typo-tolerant
+(fuzzy+prefix, with "did you mean" on zero hits); `search` caps at 15
+hits unless `--limit=N` raises it. Hand-authored `keywords.json`
+enriches the index — schema: `.agents/case-index/SCHEMA.md`.
+
+Example (RS surface hit):
+
+```text
+$ pnpm agent:cases search "barrels"
+34.031  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
+        packages/reference-rs/modules/atlas
+25.581  rs:styletrace — Styletrace [rs:styletrace] (matched: barrel)
+        packages/reference-rs/modules/styletrace
+
+2 hit(s) for "barrels"
+```

@@ -26,41 +26,87 @@ const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
 const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
 const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
 
+/// Neo exact-file entries as (relative path, export name). Neo publishes no
+/// `react/types/`; its full wired surface lives in `react.d.mts`, with the
+/// narrow typegen surface and the `SystemProperties` alias as fallbacks.
+const NEO_STYLE_PROPS_ENTRY_FILES: &[(&str, &str)] = &[
+    (".reference-ui/react/react.d.mts", "StyleProps"),
+    ("react/react.d.mts", "StyleProps"),
+    (".reference-ui/styled/types/index.d.ts", "StyleProps"),
+    ("styled/types/index.d.ts", "StyleProps"),
+    (".reference-ui/styled/index.d.ts", "StyleProps"),
+    ("styled/index.d.ts", "StyleProps"),
+    (".reference-ui/styled/types/style-props.d.ts", "SystemProperties"),
+    ("styled/types/style-props.d.ts", "SystemProperties"),
+];
+
 pub fn collect_reference_style_prop_names(
     declaration_root: &Path,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let Some(style_props_path) = resolve_reference_style_props_path(declaration_root)? else {
+    if declaration_root.is_file() {
+        return collect_entry_names(declaration_root, declaration_root, "StyleProps");
+    }
+    collect_first_resolving_entry(declaration_root)
+}
+
+fn collect_first_resolving_entry(
+    declaration_root: &Path,
+) -> Result<Vec<String>, StyleTraceError> {
+    let candidates = style_props_entry_candidates(declaration_root);
+    if candidates.is_empty() {
         return Err(StyleTraceError::new(format!(
             "missing StyleProps declaration entrypoint in {}",
             declaration_root.display()
         )));
-    };
-    let names = collect_style_prop_names(declaration_root, &style_props_path, "StyleProps")?;
-    if names.is_empty() {
-        return Err(StyleTraceError::new(
+    }
+
+    let mut first_error: Option<StyleTraceError> = None;
+    for (entry_path, export_name) in candidates {
+        match collect_entry_names(declaration_root, &entry_path, export_name) {
+            Ok(names) => return Ok(names),
+            Err(error) => {
+                first_error.get_or_insert(error);
+            }
+        }
+    }
+    Err(first_error.unwrap_or_else(|| {
+        StyleTraceError::new(
             "malformed public type graph: no style properties resolved from StyleProps",
-        ));
+        )
+    }))
+}
+
+fn collect_entry_names(
+    declaration_root: &Path,
+    entry_path: &Path,
+    export_name: &str,
+) -> Result<Vec<String>, StyleTraceError> {
+    let names = collect_style_prop_names(declaration_root, entry_path, export_name)?;
+    if names.is_empty() {
+        return Err(StyleTraceError::new(format!(
+            "malformed public type graph: no style properties resolved from {export_name}"
+        )));
     }
     Ok(names)
 }
 
-fn resolve_reference_style_props_path(
-    declaration_root: &Path,
-) -> Result<Option<PathBuf>, StyleTraceError> {
-    if declaration_root.is_file() {
-        return Ok(Some(declaration_root.to_path_buf()));
-    }
-
+fn style_props_entry_candidates(declaration_root: &Path) -> Vec<(PathBuf, &'static str)> {
+    let mut candidates = Vec::new();
     for stem in REFERENCE_STYLE_PROPS_ENTRY_STEMS {
         for suffix in [".d.mts", ".d.ts"] {
             let candidate = declaration_root.join(format!("{stem}{suffix}"));
             if candidate.is_file() {
-                return Ok(Some(candidate));
+                candidates.push((candidate, "StyleProps"));
             }
         }
     }
-
-    Ok(None)
+    for (relative, export_name) in NEO_STYLE_PROPS_ENTRY_FILES {
+        let candidate = declaration_root.join(relative);
+        if candidate.is_file() {
+            candidates.push((candidate, export_name));
+        }
+    }
+    candidates
 }
 
 pub fn collect_style_prop_names(

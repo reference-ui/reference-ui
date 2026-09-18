@@ -48,6 +48,7 @@ pub(super) enum TypeExpr {
     Object(BTreeSet<String>),
     Intersection(Vec<TypeExpr>),
     UnionLiterals(BTreeSet<String>),
+    Union(Vec<TypeExpr>),
     Reference {
         name: String,
         args: Vec<TypeExpr>,

@@ -296,11 +296,33 @@ fn parse_intersection_type(
 }
 
 fn parse_union_type(union: &oxc_allocator::Box<'_, TSUnionType<'_>>, source: &str) -> TypeExpr {
-    let literals = union
-        .types
-        .iter()
-        .filter_map(|nested| literal_value(nested, source))
-        .collect::<BTreeSet<_>>();
+    let (literals, mut members) = partition_union_members(union, source);
+    if members.is_empty() {
+        return without_members(literals);
+    }
+    if !literals.is_empty() {
+        members.push(TypeExpr::UnionLiterals(literals));
+    }
+    TypeExpr::Union(members)
+}
+
+fn partition_union_members(
+    union: &oxc_allocator::Box<'_, TSUnionType<'_>>,
+    source: &str,
+) -> (BTreeSet<String>, Vec<TypeExpr>) {
+    let mut literals = BTreeSet::new();
+    let mut members = Vec::new();
+    for nested in &union.types {
+        match parse_type_expr_with_source(nested, source) {
+            TypeExpr::UnionLiterals(values) => literals.extend(values),
+            TypeExpr::Unknown => {}
+            member => members.push(member),
+        }
+    }
+    (literals, members)
+}
+
+fn without_members(literals: BTreeSet<String>) -> TypeExpr {
     if literals.is_empty() {
         TypeExpr::Unknown
     } else {

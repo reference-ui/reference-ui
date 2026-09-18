@@ -1,0 +1,1 @@
+{"covers": ["recipe/identity", "recipe/duplicates"], "keywords": ["naming collision", "redefinition", "duplicate className", "namespaced class"], "related": ["NEO-RECIPE-07", "NEO-RECIPE-11", "ATM-RECIPE-06"]}

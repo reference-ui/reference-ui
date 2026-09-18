@@ -1,6 +1,6 @@
 # Mission: Full StyleTrace
 
-Status: `idea` — HQ-queued as the next journey after landing (2026-09-18).
+Status: `active` — voyage opened 2026-09-18 on the full-parity commit.
 
 ## The idea
 

@@ -68,4 +68,5 @@ packages/reference-neo/tests/.artifacts/
 packages/reference-neo/tests/cases/**/dist/
 packages/reference-neo/playground/.captures/
 .playwright-mcp/
+.agents/case-index/.cache/
 

@@ -1,0 +1,1 @@
+{"aliases": ["fail closed", "no half folder"], "covers": ["sync/diagnostic-failure", "sync/atomic-write"], "keywords": ["all-or-nothing", "located-error", "rollback", "poison-world"], "related": ["ATM-DIAG-01", "ATM-DIAG-02", "ATM-DIAG-03", "ATM-TOKEN-12", "NEO-SYNC-08", "NEO-TOKEN-02"]}

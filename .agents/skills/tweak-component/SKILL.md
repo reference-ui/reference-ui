@@ -139,3 +139,36 @@ Output:
 - Saves unclipped, focus-ring-safe images of component + popovers to workspace directory.
 - Automatically syncs to Antigravity brain directory for direct rendering in chat.
 - Emits markdown snippets and tables ready to paste directly into chat messages and `walkthrough.md`.
+
+---
+
+## 4. Case index
+
+Full-text index over neo cases + RS module surfaces (names, READMEs,
+`specs/*.spec.ts`, hand-authored `keywords.json`, RS suite/case inventory).
+Use it to find **related neo cases / RS
+surfaces for the feature being polished**, instead of grepping.
+
+```bash
+pnpm agent:cases search "<query>" [--limit=N] [--json]  # search cases + surfaces
+pnpm agent:cases list [--kind=neo|rs] [--json]          # list indexed docs (auto-rebuilds if stale)
+pnpm agent:cases reindex [--json]                       # force rebuild
+# direct: node .agents/case-index/cli.mjs search <query> | list [--kind=neo|rs] | reindex
+```
+
+Terms are stemmed (`queries` matches `query`) and typo-tolerant
+(fuzzy+prefix, with "did you mean" on zero hits); `search` caps at 15
+hits unless `--limit=N` raises it. Hand-authored `keywords.json`
+enriches the index — schema: `.agents/case-index/SCHEMA.md`.
+
+Example (RS surface hit):
+
+```text
+$ pnpm agent:cases search "barrels"
+34.031  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
+        packages/reference-rs/modules/atlas
+25.581  rs:styletrace — Styletrace [rs:styletrace] (matched: barrel)
+        packages/reference-rs/modules/styletrace
+
+2 hit(s) for "barrels"
+```

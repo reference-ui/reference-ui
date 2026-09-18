@@ -44,11 +44,12 @@ pub fn resolve_prop_names(
     expr: &TypeExpr,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     match expr {
-        TypeExpr::Unknown => Ok(BTreeSet::new()),
+        TypeExpr::Unknown | TypeExpr::UnionLiterals(_) => Ok(BTreeSet::new()),
         TypeExpr::Object(props) => Ok(props.clone()),
-        TypeExpr::Intersection(types) => resolve_intersection_props(ctx, types),
+        TypeExpr::Intersection(types) => resolve_combined_props(ctx, types),
         TypeExpr::Reference { name, args } => resolve_reference_expr_props(ctx, name, args),
-        TypeExpr::UnionLiterals(_) => Ok(BTreeSet::new()),
+        // A name usable in either branch counts as a style prop, like conditional branches.
+        TypeExpr::Union(types) => resolve_combined_props(ctx, types),
         TypeExpr::IndexedAccess { object, .. } => resolve_indexed_access_props(ctx, object),
         TypeExpr::Mapped { key_source, .. } => resolve_literal_names(ctx, key_source),
         TypeExpr::Keyof(_) => Ok(BTreeSet::new()),
@@ -63,7 +64,7 @@ pub fn resolve_prop_names(
     }
 }
 
-fn resolve_intersection_props(
+fn resolve_combined_props(
     ctx: &mut TraceContext<'_>,
     types: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
@@ -111,16 +112,16 @@ pub fn resolve_literal_names(
     expr: &TypeExpr,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     match expr {
-        TypeExpr::Unknown => Ok(BTreeSet::new()),
+        TypeExpr::Unknown | TypeExpr::Object(_) => Ok(BTreeSet::new()),
         TypeExpr::UnionLiterals(values) => Ok(values.clone()),
         TypeExpr::Keyof(target) => resolve_prop_names(ctx, target),
-        TypeExpr::Intersection(types) => resolve_intersection_literals(ctx, types),
+        TypeExpr::Intersection(types) => resolve_combined_literals(ctx, types),
+        TypeExpr::Union(types) => resolve_combined_literals(ctx, types),
         TypeExpr::Reference { name, args } => resolve_reference_expr_literals(ctx, name, args),
         TypeExpr::Mapped { key_source, .. } => resolve_literal_names(ctx, key_source),
         TypeExpr::IndexedAccess { object, index } => {
             resolve_indexed_access_literals(ctx, object, index)
         }
-        TypeExpr::Object(_) => Ok(BTreeSet::new()),
         TypeExpr::Conditional {
             true_type,
             false_type,
@@ -132,7 +133,7 @@ pub fn resolve_literal_names(
     }
 }
 
-fn resolve_intersection_literals(
+fn resolve_combined_literals(
     ctx: &mut TraceContext<'_>,
     types: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
