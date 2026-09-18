@@ -2,14 +2,16 @@
 // neo — the Neo host CLI for case worlds and consumer projects.
 // It takes a verb plus an optional project dir and emits a fresh generated
 // folder or removes one. Sync runs the world's own sync() and prints its
-// cost in ms; clean removes the generated folder plus the scope links sync
-// made. Anything else prints usage; failures name the cause and exit nonzero.
+// cost in ms; sync --watch stays resident and resyncs on every matched
+// add/change/unlink until SIGINT. Clean removes the generated folder plus
+// the scope links sync made. Anything else prints usage; failures name the
+// cause and exit nonzero.
 import { existsSync, lstatSync, readlinkSync, rmSync, unlinkSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { getOutDirPath } from '../src/lib/paths/out-dir.ts';
 
 const LINKED_PACKAGES = ['system', 'styled', 'react'];
-const USAGE = 'usage: neo <sync|clean> [dir]';
+const USAGE = 'usage: neo <sync|clean> [dir]\n       neo sync --watch [dir]';
 
 function messageOf(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
@@ -81,15 +83,52 @@ function usageError(detail: string): number {
   return 1;
 }
 
+async function cmdWatch(dir: string): Promise<number> {
+  try {
+    const { watchSync } = await import('../src/sync/watch.ts');
+    const started = Date.now();
+    const handle = await watchSync(dir, {
+      onChange: (change) => console.log(`[neo] ${change.event} ${change.relativePath}`),
+      onResync: (result) => console.log(`[neo] resync → ${result.outDir}`),
+      onError: (err) => console.log(`[neo] watch error: ${messageOf(err)}`),
+    });
+    console.log(`[neo] sync ${Date.now() - started}ms → ${dir}/.reference-ui`);
+    console.log(`[neo] watching ${dir} — Ctrl-C to stop`);
+    const shutdown = (): void => {
+      void handle.stop().then(
+        () => process.exit(0),
+        () => process.exit(1),
+      );
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+    await new Promise<void>(() => {});
+    return 0;
+  } catch (err) {
+    console.log(`[neo] watch failed: ${messageOf(err)}`);
+    return 1;
+  }
+}
+
+async function routeCommand(verb: string, watch: boolean, dir: string): Promise<number> {
+  if (verb === 'sync') return watch ? cmdWatch(dir) : cmdSync(dir);
+  return cmdClean(dir);
+}
+
+function isVerb(verb: string | undefined): verb is 'sync' | 'clean' {
+  return verb === 'sync' || verb === 'clean';
+}
+
 async function main(argv: string[]): Promise<number> {
   const help = printHelp(argv);
   if (help !== null) return help;
-  const [verb, dirArg, extra] = argv;
-  if (verb !== 'sync' && verb !== 'clean') return usageError(`unknown command: ${verb ?? '(none)'}`);
-  if (extra !== undefined) return usageError(`unexpected argument: ${extra}`);
-  const dir = resolve(dirArg ?? process.cwd());
-  if (verb === 'sync') return cmdSync(dir);
-  return cmdClean(dir);
+  const [verb, ...rest] = argv;
+  if (!isVerb(verb)) return usageError(`unknown command: ${verb ?? '(none)'}`);
+  const watch = rest.includes('--watch');
+  const positional = rest.filter((arg) => arg !== '--watch');
+  if (positional.length > 1) return usageError(`unexpected argument: ${positional[1]}`);
+  if (watch && verb !== 'sync') return usageError('clean takes no --watch');
+  return routeCommand(verb, watch, resolve(positional[0] ?? process.cwd()));
 }
 
 const code = await main(process.argv.slice(2));

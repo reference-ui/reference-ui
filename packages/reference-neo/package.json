@@ -20,9 +20,11 @@
     "neo": "./bin/neo.ts"
   },
   "dependencies": {
+    "@parcel/watcher": "^2.6.0",
     "@reference-ui/rust": "workspace:*",
     "esbuild": "^0.28.1",
-    "fast-glob": "^3.3.2"
+    "fast-glob": "^3.3.2",
+    "picomatch": "^4.0.4"
   },
   "devDependencies": {
     "@reference-ui/neo": "workspace:*",

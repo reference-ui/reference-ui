@@ -59,6 +59,6 @@ lockstep with SYNC-13/D4.
 | --- | --- |
 | `panda.config.ts` driver, `styled/css\|jsx\|patterns\|recipes\|helpers` | Panda machinery; §4.1 forbids, SYNC-02 asserts absent |
 | `virtual/` mirror (336 files) | Panda coercion chassis; never (core-api §2.5) |
-| Watch / Vite / Webpack / CLI `ref` / session | Later-leg host chassis, not folder contracts |
+| Vite / Webpack / CLI `ref` / session | Later-leg host chassis, not folder contracts (watch loop landed: SYNC-14) |
 | `strict`, `layers`, `mcp` config | Deferred/dropped per core-api §2.1 |
 | `cva` alias, `css.raw` | D3/D16: zero lib call sites; `recipe` / `recipe().raw()` only |

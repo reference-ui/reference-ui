@@ -152,8 +152,9 @@ const EXPECTED_STYLED_NAMES = [
   'ScopedFontWeight',
 ] as const;
 
-// First census: the runtime bundle. Every tag is a component naming its own
-// tag, css()/recipe() are bound functions, and the pattern pack (Box/Flex/
+// First census: the runtime bundle. Every tag is a forwarded component
+// naming its own tag (forwardRef carries ref on React 17/18/19 alike),
+// css()/recipe() are bound functions, and the pattern pack (Box/Flex/
 // Grid) stays absent — the map rule at the entry point.
 async function assertRuntimeSurface(outDir: string): Promise<void> {
   const entryPath = path.join(outDir, 'react', 'react.mjs');
@@ -162,7 +163,13 @@ async function assertRuntimeSurface(outDir: string): Promise<void> {
     unknown
   >;
   for (const name of EXPECTED_JSX_NAMES) {
-    assert.equal(typeof entry[name], 'function', `react entry exports the ${name} tag`);
+    const component = entry[name] as { $$typeof?: symbol; render?: unknown };
+    assert.equal(
+      component.$$typeof,
+      Symbol.for('react.forward_ref'),
+      `react entry exports the ${name} tag as a forwarded component`,
+    );
+    assert.equal(typeof component.render, 'function', `${name} renders through forwardRef`);
   }
   assert.equal(typeof entry.css, 'function', 'react entry exports css');
   assert.equal(typeof entry.recipe, 'function', 'react entry exports recipe');

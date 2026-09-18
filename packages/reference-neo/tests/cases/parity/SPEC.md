@@ -53,7 +53,7 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 
 | Group | n | Absence union (approved ‖ out-of-scope) |
 | --- | ---: | --- |
-| sync | 5+5 | types/ pkg D19 · font-registry.json · packaged core types · styled/tokens\|themes\|extensions/ · D7 bugs ‖ panda.config + styled machinery · virtual/ · watch/Vite/Webpack/CLI/session · strict/layers/mcp config · cva/css.raw |
+| sync | 5+5 | types/ pkg D19 · font-registry.json · packaged core types · styled/tokens\|themes\|extensions/ · D7 bugs ‖ panda.config + styled machinery · virtual/ · Vite/Webpack/CLI/session · strict/layers/mcp config · cva/css.raw |
 | cond | 5+6 | rtl/_ltr/_rtl · @slot cartesian · custom conditions table · ★DELTA-1 forced-colors/@supports/(hover:hover) · ★DELTA-2 zero-count pseudos ‖ rtl wraps · @slot · conditions table · four-way dark · _themePrimary · hideFrom/hideBelow |
 | token | 16+8 | colorPalette D14 · token() D15 · composite objects · themes JSON · :where(html) · hashed vars · ★F2 0.33% D7 · ★F3 /half · ★OOD bp-conditioned values · ★OOD osDark:highCon · ★OOD forced-colors islands · ★OOD token() fallbacks · ★OOD percent cssVar · leading-zero numerics · flat-nested token miss · slash diagnostic wording ‖ semanticTokens · @slot OR · DEFAULT · strict hatches · token.var · text/layer/animation styles · asset tokens · circular refs |
 | css | 7+6 | hideFrom/hideBelow · shared-class custom utils · @scope · token() · capital-W vendor keys · numerics lower to px · no autoprefixer ‖ prefix/hash · fromJSON wire · truncate · textStyle/animationStyle · divideX/Y · template-literal css |

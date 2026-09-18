@@ -92,4 +92,19 @@ describe('neo bin', () => {
     expect(run.code).toBe(1);
     expect(run.stdout).toContain('sync failed');
   });
+
+  it('sync --watch fails loud with exit 1 when no config exists', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['sync', '--watch', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout).toContain('watch failed');
+  });
+
+  it('clean rejects --watch with usage and exit 1', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['clean', '--watch', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout).toContain('usage: neo <sync|clean> [dir]');
+    expect(run.stdout).toContain('clean takes no --watch');
+  });
 });

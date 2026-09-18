@@ -22,7 +22,7 @@ export const UNION: UnionEntry[] = [
   { id: 'sync-a5', group: 'sync', kind: 'approved', label: 'D7 bugs', key: 'Panda bugs (D7)' },
   { id: 'sync-o1', group: 'sync', kind: 'oos', label: 'panda.config + styled machinery', key: 'panda.config.ts' },
   { id: 'sync-o2', group: 'sync', kind: 'oos', label: 'virtual/', key: 'virtual/` mirror' },
-  { id: 'sync-o3', group: 'sync', kind: 'oos', label: 'watch/Vite/Webpack/CLI/session', key: 'Watch / Vite / Webpack' },
+  { id: 'sync-o3', group: 'sync', kind: 'oos', label: 'Vite/Webpack/CLI/session', key: 'Vite / Webpack' },
   { id: 'sync-o4', group: 'sync', kind: 'oos', label: 'strict/layers/mcp config', key: '`strict`, `layers`, `mcp`' },
   { id: 'sync-o5', group: 'sync', kind: 'oos', label: 'cva/css.raw', key: '`cva` alias, `css.raw`' },
   { id: 'cond-a1', group: 'cond', kind: 'approved', label: 'rtl/_ltr/_rtl', key: '`[dir=rtl]`' },

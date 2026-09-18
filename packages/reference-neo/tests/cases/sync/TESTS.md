@@ -15,6 +15,7 @@
 | NEO-SYNC-11 | A compile diagnostic fails `sync` with file and line, and no folder is half-written | done | ATM-DIAG-01..03, ATM-TOKEN-12 | `sync/index.ts` surfaces `file:line[:column]`; folder atomic on failure (`display: true` warns by engine design — the failing input is the RS-3 located ref error; unblocks TOKEN-02) | world with `{colors.nope}`; `sync()` rejects; message has `path:line` | `[atm]` DIAG |
 | NEO-SYNC-12 | `@reference-ui/system` exports the authoring surface and `getRhythm` returns the compiled rhythm root; decides the Book vite alias trap | done | none | `sync/publish.ts` system entry; `tsconfig.json` paths | node-side import; `getRhythm(4)` equals the token var/calc used in the sheet | `[decision D6]`, `[core]` core-api §2.1 |
 | NEO-SYNC-13 | `styled` is data-only: no executable module besides `runtime-data.mjs`; `css()`/`recipe()` come from `react` bound to the owner | done | none | `sync/publish.ts`, `sync/react.ts` | forbidden `styled/css.mjs`; `react` exports `css`, `recipe`; `recipe` class carries `${system}__` | `[decision D4]` |
+| NEO-SYNC-14 | `neo sync --watch` resyncs on addition, change, and deletion: parcel `create/update/delete` → `add/change/unlink`, include-scoped, debounced serial resync | done | none | `sync/watch.ts`, `bin/neo.ts` | node-side `watchSync()`: add a source (utility appears), rewrite one (utility swaps), delete both (utilities gone); `add`+`unlink` pinned, rewrite pins alignment | `[core]` watch behaviour |
 
 ## RS lane (filed by the SYNC-rest cook)
 
