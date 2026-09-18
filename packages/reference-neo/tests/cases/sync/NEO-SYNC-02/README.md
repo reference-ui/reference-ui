@@ -18,3 +18,5 @@ TYPE. `react.mjs` / `react.d.mts` / `styles.css` landed with SYNC-05, and
 this spec pins the post-D5 names (flipped in the D4/D5 migration follow-up).
 
 Evidence: `[core]` generated-folder-shape §7, `[decision D2,D4]`.
+
+> Search terms: manifest, allowlist, blocklist, symlink, folder census, census check, sync/folder-inventory, sync/forbidden-paths, NEO-SYNC-04, NEO-SYNC-05, NEO-SYNC-12, NEO-SYNC-13

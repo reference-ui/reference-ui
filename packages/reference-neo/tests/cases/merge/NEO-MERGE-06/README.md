@@ -10,3 +10,5 @@ site — never a ghost class.
 Evidence: `[atm]` GHOST (`docs/evidence/atomic-claims.md` §6); station
 `packages/reference-rs/modules/atomic/tests/cases/ATM-GHOST-02`;
 `[decision D11]`.
+
+> Search terms: unknown value, unextractable, dynamic value, dev warning, missing utility, phantom class, merge/miss-diagnostic, diagnostics/runtime-miss

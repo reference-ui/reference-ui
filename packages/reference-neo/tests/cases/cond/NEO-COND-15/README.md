@@ -9,3 +9,5 @@ and a resync prints the sheet byte-identical.
 Evidence: `[panda-v1]`
 `core/__tests__/rule-processor.test.ts:1928` ("mixed vs at-rule sorting");
 `[atm]` ATM-COND-19 (RS-15 landed).
+
+> Search terms: container queries, feature queries, breakpoint, idempotent, at-rule sandwich, at-rules/supports, at-rules/container, conditions/hover, breakpoints/sm

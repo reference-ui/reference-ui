@@ -68,3 +68,5 @@ pnpm agentrs q packages/reference-rs/modules/canon
 ```
 
 Dictionary membership is proven in generated `src/tests.rs`, and fail-closed join validation is proven in `tests/join.test.ts`. Refine this crate first — everything else looks it up.
+
+> Search terms: shorthands, style dictionary, prop language, canon/dialect, canon/platform, canon/aliases, canon/shorthands, canon/join, rs:base-system, rs:atomic, rs:typegen

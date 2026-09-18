@@ -9,3 +9,5 @@ documented message: missing `include`, missing `name`, unsafe `name`
 (non-array and non-string entries), and an `extends` entry without synced
 data. The bad configs live as spec strings because world files typecheck;
 each rejection also leaves no `.reference-ui/` behind.
+
+> Search terms: validation, fail-fast, fail-loud, guard-rails, invalid septet, rejection catalog, sync/config-validation, sync/error-messages, NEO-SYNC-10, NEO-SYNC-11

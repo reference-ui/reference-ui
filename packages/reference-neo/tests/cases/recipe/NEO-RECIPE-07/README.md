@@ -6,3 +6,5 @@ refusal carrying file, line, and column, and no half-written folder
 survives behind the failure.
 
 Evidence: `[atm]` ATM-RECIPE-06 + RS-18 located diagnostics (landed).
+
+> Search terms: static extraction, dynamic config, variable reference, source span, recipe/static-extraction, recipe/diagnostics, NEO-RECIPE-06

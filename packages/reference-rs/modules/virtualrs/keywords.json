@@ -1,1 +1,0 @@
-{"aliases": ["virtual postprocessor", "import rewriter"], "covers": ["virtualrs/css", "virtualrs/cva", "virtualrs/imports"], "keywords": ["virtualrs", "virtual modules", "css rewrite", "cva", "recipe", "styled-system runtime", "@reference-ui/react", "import rewrite", "oxc transform", "call sites"], "related": ["rs:runtime", "rs:atomic"]}

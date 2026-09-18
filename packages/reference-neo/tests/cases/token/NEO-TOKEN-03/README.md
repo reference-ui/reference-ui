@@ -9,3 +9,5 @@ browser's paint must agree.
 Evidence: `[panda-v1]` `core/__tests__/color-mix.test.ts`; `[lib]` 25 mixes
 (contrast: hand-written `oklch`, not slash opacity); `[atm]` P0 #6,
 ATM-TOKEN-03/06.
+
+> Search terms: alpha, transparency, percentage, translucent, token/opacity, NEO-TOKEN-04, ATM-TOKEN-06

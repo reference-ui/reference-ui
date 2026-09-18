@@ -15,3 +15,5 @@ implementations. The alias edit itself is captain-owned (it touches
 `reference-lib` config); this slice lands the generated target it must point at.
 
 Evidence: `[decision D6]`, `[core]` core-api §2.1, coverage-map row 2 + note e, generated-folder-shape §7 items 5/10.
+
+> Search terms: token-helpers, rhythm-scale, design-tokens-api, authoring-api, public api, authoring kit, sync/system-surface, sync/authoring-exports, NEO-SYNC-02, NEO-SYNC-05

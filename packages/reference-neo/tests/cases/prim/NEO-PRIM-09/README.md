@@ -8,3 +8,5 @@ case split (`svg` reports lowercase, HTML reports uppercase).
 
 Evidence: `[core]` `packages/reference-core/src/system/primitives/tags.ts`
 (the 101-tag set plus the `Obj`/`Var` map rule).
+
+> Search terms: intrinsic elements, host components, jsx tags, element registry, complete roster, prim/tags, prim/intrinsic-set, NEO-PRIM-10

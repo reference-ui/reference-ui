@@ -14,3 +14,5 @@ signatures. No engine rung: the surface is host-authored in `publish.ts`, and
 it already declared every D6 name, so no host change was needed.
 
 Evidence: `[decision D6]`.
+
+> Search terms: theme, setup, entry point, dsl, type/system-entry, type/authoring, NEO-TYPE-01

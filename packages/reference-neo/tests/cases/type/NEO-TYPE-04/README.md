@@ -16,3 +16,5 @@ engine (`emitDtsSync` over this world's spec) prints `StyleConditionKey` with
 needed.
 
 Evidence: typegen golden `styles.d.ts` (`StylePropValue`); `[decision D8,D10]`.
+
+> Search terms: breakpoints, media query, at-rule, placeholder, type/conditions, type/responsive-arrays, NEO-TYPE-01, NEO-COND-01

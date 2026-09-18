@@ -6,3 +6,5 @@ sibling and the spread utilities and the node paints both.
 
 Evidence: `[panda-v1]` `vendor/panda-v1/packages/extractor/__tests__/extract.test.ts`
 (logical spreads); `[atm]` ATM-SITE-05.
+
+> Search terms: short-circuit, ampersand, guarded object, truthy gate, site/spread, NEO-SITE-03

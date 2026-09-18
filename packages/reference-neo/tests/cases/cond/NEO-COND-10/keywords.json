@@ -1,1 +1,0 @@
-{"aliases": ["focus parent"], "covers": ["conditions/focus", "parent-keys", "combinators/child"], "keywords": ["focus within", "parent focus", "child combinator", "gated paint"], "related": ["NEO-COND-05", "NEO-COND-06", "ATM-COND-20"]}

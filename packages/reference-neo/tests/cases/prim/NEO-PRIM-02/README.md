@@ -9,3 +9,5 @@ four utilities in the sheet, and the `css` key staying off the DOM.
 Evidence: `[atm]` ATM-SITE-14; `[panda-v1]`
 `vendor/panda-v1/packages/parser/__tests__/output.test.ts:74-88` (`css` prop
 alongside sibling style props on one element).
+
+> Search terms: override, precedence, cascade, merge, override probe, prim/css-override, prim/sibling-merge, NEO-PRIM-11

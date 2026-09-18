@@ -8,3 +8,5 @@ the functions intact, each probe carries a single class, and each paints.
 Evidence: `[atm]` ATM-NAME-01..07, ATM-LEAF-01..08; `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css:27446`
 (`color-mix(in oklch, currentColor 14%, transparent)`).
+
+> Search terms: hsl(), var(), url(), clamp(), function values, css/arbitrary-values, css/css-functions, NEO-CSS-09

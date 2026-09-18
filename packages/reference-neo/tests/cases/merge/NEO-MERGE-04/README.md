@@ -8,3 +8,5 @@ style only, so the sibling color wins.
 
 Evidence: `[atm]` P0 #4 (`docs/evidence/atomic-claims.md` §6); station
 `packages/reference-rs/modules/atomic/tests/cases/ATM-SHORT-01`.
+
+> Search terms: border-width, border-style, implicit value, sibling prop, border split, merge/border-expansion, merge/no-clobber, NEO-MERGE-03

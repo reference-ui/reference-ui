@@ -135,3 +135,5 @@ fails closed and never falls back to scanning every tag. The plan to
 make Neo-synced trees traceable lives in
 [styletrace.md](../../../../docs/missions/styletrace.md). Do not close
 it with a PascalCase name list.
+
+> Search terms: forwardRef, rest spread, style prop tracer, wrapper analysis, styletrace/resolution, styletrace/wrappers, styletrace/primitives, styletrace/forwarding, rs:canon, rs:atomic, rs:base-system

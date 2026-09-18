@@ -8,3 +8,5 @@ to vars, and the painted gradient resolves to the two token colors.
 Evidence: `[atm]` ATM-TOKEN-08; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/gradient.test.ts`
 "bgGradient with token references".
+
+> Search terms: radial-gradient, color stops, conic-gradient, repeating-linear-gradient, tokenized stops, css/gradients, css/token-refs

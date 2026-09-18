@@ -14,9 +14,10 @@ const limit = limitFlag ? Number(limitFlag) : 15;
 const query = args.find((a) => !a.startsWith('--') && a !== '-h' && a !== cmd);
 
 const HELP = {
-  search: `agent:cases search <query> [--limit=N] [--json]
+  search: `agent:cases search <query> [--limit=N] [--json] [--compact]
   full-text search over neo cases + RS surfaces (default cap: 15 hits).
-  terms are stemmed (queries/query match) and typo-tolerant (fuzzy+prefix).`,
+  terms are stemmed (queries/query match) and typo-tolerant (fuzzy+prefix).
+  exact id queries return just that doc; --compact prints headers only.`,
   list: `agent:cases list [--kind=neo|rs] [--json]
   list indexed docs; the index auto-rebuilds first when sources changed.`,
   reindex: `agent:cases reindex [--json]
@@ -52,41 +53,71 @@ if (cmd === 'reindex') {
 } else if (cmd === 'list') {
   const { docs, manifest, rebuilt } = loadIndex(ROOT);
   noteRebuilt(rebuilt, manifest);
+  const ids = new Set(docs.map((d) => d.id.toLowerCase()));
   const rows = docs
     .filter((d) => !kindFlag || d.kind === kindFlag)
-    .map((d) => ({
-      id: d.id,
-      kind: d.kind,
-      ref: d.ref,
-      title: d.title,
-      path: d.path,
-      ...(d.related?.length ? { related: d.related } : {}),
-      ...(d.covers?.length ? { covers: d.covers } : {}),
-      ...(d.kind === 'rs' ? { suites: d.suiteCount, cases: d.caseCount } : {}),
-    }));
+    .map((d) => {
+      const rel = d.related || [];
+      return {
+        id: d.id,
+        kind: d.kind,
+        ref: d.ref,
+        title: d.title,
+        description: d.description || '',
+        path: d.path,
+        ...(() => {
+          const related = rel.filter((r) => ids.has(r.toLowerCase()));
+          const refs = rel.filter((r) => !ids.has(r.toLowerCase()));
+          return {
+            ...(related.length ? { related } : {}),
+            ...(refs.length ? { refs } : {}),
+          };
+        })(),
+        ...(d.kind === 'rs' ? { suites: d.suiteCount, cases: d.caseCount } : {}),
+      };
+    });
   if (json) console.log(JSON.stringify(rows, null, 2));
   else {
     for (const r of rows) {
       const extra = r.kind === 'rs' ? ` [${r.suites} suites, ${r.cases} cases]` : ` [${r.ref}]`;
-      console.log(`${r.id} — ${r.title}${extra}\n  ${r.path}`);
+      console.log(`${r.id} — ${r.title}${extra}\n  ${r.description}\n  ${r.path}`);
     }
     console.log(`\n${rows.length} docs (index ${rebuilt ? 'rebuilt' : `from cache, ${manifest.builtAt}`})`);
   }
 } else if (cmd === 'search') {
   if (!query) usage('search', 1);
-  const { ms, manifest, rebuilt } = loadIndex(ROOT);
+  const compact = args.includes('--compact');
+  const { ms, docs, manifest, rebuilt } = loadIndex(ROOT);
   noteRebuilt(rebuilt, manifest);
-  const all = ms.search(query, { combineWith: 'AND' });
+  const ids = new Set(docs.map((d) => d.id.toLowerCase()));
+  const splitRefs = (rel) => ({
+    related: (rel || []).filter((r) => ids.has(r.toLowerCase())),
+    refs: (rel || []).filter((r) => !ids.has(r.toLowerCase())),
+  });
+  // Exact id lookup short-circuits: the intent is unambiguous, and stem
+  // fragments of an id (neocas, condit) would only add noise hits.
+  const exact = docs.find((d) => d.id.toLowerCase() === query.toLowerCase());
+  const all = exact
+    ? [{ ...exact, score: 1, match: { id: [query] } }]
+    : ms.search(query, { combineWith: 'AND' });
   const hits = all.slice(0, limit);
   const rows = hits.map((h) => ({
     id: h.id,
-    score: +h.score.toFixed(3),
+    score: exact ? 1 : +h.score.toFixed(3),
     kind: h.kind,
     ref: h.ref,
     title: h.title,
+    description: h.description || '',
+    ...(compact ? {} : { readme: h.readme || '' }),
     path: h.path,
     match: h.match,
-    ...(h.related?.length ? { related: h.related } : {}),
+    ...(() => {
+      const { related, refs } = splitRefs(h.related);
+      return {
+        ...(related.length ? { related } : {}),
+        ...(refs.length ? { refs } : {}),
+      };
+    })(),
   }));
   const cut = all.length - hits.length;
   if (json) {
@@ -108,8 +139,14 @@ if (cmd === 'reindex') {
     if (fixes.length) console.log(`did you mean: ${fixes.join(', ')}?`);
   } else {
     for (const r of rows) {
-      console.log(`${r.score.toFixed(3)}  ${r.id} — ${r.title} [${r.kind}:${r.ref}] (matched: ${Object.keys(r.match).join(', ')})`);
+      console.log(`${exact ? 'exact' : r.score.toFixed(3)}  ${r.id} — ${r.title} [${r.kind}:${r.ref}]` +
+        (exact ? '' : ` (matched: ${Object.keys(r.match).join(', ')})`));
       console.log(`       ${r.path}`);
+      if (r.related?.length) console.log(`       related: ${r.related.join(', ')}`);
+      if (r.refs?.length) console.log(`       refs: ${r.refs.join(', ')}`);
+      if (compact) {
+        if (r.description) console.log(`       ${r.description}`);
+      } else if (r.readme) console.log(`${r.readme.replace(/\s+$/, '')}\n`);
     }
     console.log(`\n${rows.length} hit(s) for "${query}"` +
       (cut > 0 ? ` (+${cut} more; use --limit=${all.length})` : ''));

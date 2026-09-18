@@ -9,3 +9,5 @@ Evidence: `[atm]` ATM-SITE-15 (namespace imports and compiler-internal
 aliases extract; type-only and default imports do not); `[panda-v1]`
 `vendor/panda-v1/packages/parser/__tests__/css-2.test.ts:310` (import alias
 `css as nCss` extracts) and `namespace.test.ts:79` (`panda.css` extracts).
+
+> Search terms: rename, star-import, dotted call, namespaced call, css alias, site/import-binding, NEO-SITE-05

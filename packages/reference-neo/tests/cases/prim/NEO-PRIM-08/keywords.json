@@ -1,1 +1,0 @@
-{"aliases": ["prop leaking"], "covers": ["prim/dom-props", "prim/ref-forwarding"], "keywords": ["spread", "forwarding", "useRef", "event-handlers"], "related": ["NEO-PRIM-01"]}

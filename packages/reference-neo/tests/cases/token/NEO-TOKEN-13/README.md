@@ -9,3 +9,5 @@ no verbatim leftovers, and the probe computes the `to` width and color.
 Evidence: `[panda-v1]`
 `generator/__tests__/generate-keyframes.test.ts` ("should allow tokens");
 `[atm]` ATM-LAYER-10 (RS-16 landed).
+
+> Search terms: from/to, fill mode, tween, interpolate, token/keyframes, token/refs, NEO-TOKEN-11

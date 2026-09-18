@@ -10,3 +10,5 @@ plus a `chip` recipe as extraction sources; the proof imports the bound
 runtime from `react`, never from `styled`.
 
 Evidence: `[decision D4]`, generated-folder-shape §7 items 3/6/10, coverage-map row 13 + note e.
+
+> Search terms: payload-module, owner-prefix, headless-styled, bound-runtime, hollow styled, runtime relocation, sync/styled-data, sync/react-runtime, NEO-SYNC-02, NEO-SYNC-05

@@ -17,3 +17,5 @@ Tasty is structured as a self-contained module containing its Rust compiler, Jav
 1. **First-Class Symbols**: Types and interfaces maintain identity, module boundaries, and stable canonical IDs rather than collapsing into opaque strings.
 2. **Deterministic Emission**: Eager manifests index symbols by ID and name; chunk modules load on demand to minimize memory overhead.
 3. **Bounded Projections**: Derived member projections expand aliases, resolve intersections, and apply `Omit`/`Pick` while strictly respecting recursive boundaries to prevent infinite loops.
+
+> Search terms: generics, mapped types, type metadata engine, ts extractor, tasty/symbols, tasty/projection, tasty/chunks, tasty/jsdoc, tasty/generics, rs:atlas, rs:typegen, rs:shared

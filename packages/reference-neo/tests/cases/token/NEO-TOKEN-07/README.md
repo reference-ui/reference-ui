@@ -10,3 +10,5 @@ slash var, and all three probes compute 2px like their inline references.
 Evidence: `[lib]` rhythm scale (`lib-sheet-styles-css.md` L1821–1823);
 `[panda-v1]` `shared/__tests__/esc.test.ts`; `[atm]` P1 #8,
 ATM-RHYTHM-02/03, ATM-NAME-04/07.
+
+> Search terms: base step, half-step, r suffix, token/rhythm, token/spacing, NEO-TOKEN-08, ATM-RHYTHM-03

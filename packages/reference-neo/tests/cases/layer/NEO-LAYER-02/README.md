@@ -24,3 +24,5 @@ Evidence: `[atm]` P1 #16 (`docs/evidence/atomic-claims.md:317`); contracts
 `portable-base-system.json` fixture; RS-4 `BAS-EXTEND-01..05` (14/14 green);
 `[atm]` ATM-RECIPE-03 via NEO-LAYER-05/NEO-RECIPE-10 (recipes lose to
 utilities by rank).
+
+> Search terms: system merge, token adoption, downstream override, injected chunk, cross-frame, same-origin iframe, upstream downstream, nested package, layer/nesting, layer/extends, layer/portable-scoping

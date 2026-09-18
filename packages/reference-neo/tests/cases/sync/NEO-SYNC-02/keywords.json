@@ -1,1 +1,0 @@
-{"aliases": ["folder census", "census check"], "covers": ["sync/folder-inventory", "sync/forbidden-paths"], "keywords": ["manifest", "allowlist", "blocklist", "symlink"], "related": ["NEO-SYNC-04", "NEO-SYNC-05", "NEO-SYNC-12", "NEO-SYNC-13"]}

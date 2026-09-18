@@ -12,3 +12,5 @@ ATM-LEAF-10; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:10` "respect
 important syntax" (contrast: `vendor/panda-v1/packages/shared/src/important.ts`
 matches `!` anywhere, Atomic strips suffixes only).
+
+> Search terms: specificity, cascade, trailing bang, override, exclamation mark, bang suffix, css/important, css/bang-suffix

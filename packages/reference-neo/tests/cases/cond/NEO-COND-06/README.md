@@ -12,3 +12,5 @@ Evidence: `[atm]` ATM-COND-14 (R1 probe
 "[pseudo] should work with nested selector"; `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css` (15 `>`
 child/descendant selectors, e.g. `.ref-button > svg`).
+
+> Search terms: > selector, direct child, child selector, one level, child only, combinators/child, selector >, NEO-COND-10

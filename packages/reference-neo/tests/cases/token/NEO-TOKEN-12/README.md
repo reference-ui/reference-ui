@@ -8,3 +8,5 @@ its inline reference.
 
 Evidence: `[panda-v1]` `core/__tests__/serialize.test.ts` "expand multiple
 references" (`padding: '{spacing.3} {spacing.5}'`); `[atm]` ATM-TOKEN-08.
+
+> Search terms: double, twin, dual, two refs, token/refs, NEO-TOKEN-01

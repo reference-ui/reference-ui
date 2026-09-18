@@ -11,3 +11,5 @@ Evidence: `[atm]` ATM-LEAF-07 (a dynamic key never erases static
 siblings) and ATM-FORBID-02 (calls are not executed); `[panda-v1]`
 `vendor/panda-v1/packages/extractor/__tests__/extract.test.ts:3223`
 (non-deterministic calls extract nothing).
+
+> Search terms: invocation, unevaluated, partial extraction, diagnostic, site/dynamic-value, diagnostics/located-warning

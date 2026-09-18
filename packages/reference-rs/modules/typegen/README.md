@@ -80,3 +80,5 @@ pnpm agentrs c typegen
 pnpm agentrs v typegen
 pnpm agentrs q packages/reference-rs/modules/typegen
 ```
+
+> Search terms: dts printer, type printer, typegen/tokens, typegen/recipes, typegen/fonts, typegen/style-props, rs:base-system, rs:canon, rs:atomic

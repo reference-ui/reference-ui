@@ -15,3 +15,5 @@ merge could be observed; and upstream-authored `recipe()` definitions are
 not carried by extends fragments (no recipe collector — recipes are
 source-authored per project and extracted locally), so the recipe leg proves
 a local recipe resolving against adopted upstream tokens.
+
+> Search terms: inheritance, override, layering, multi-system, local wins, child overrides parent, sync/extends, sync/fragment-merge, NEO-SYNC-08

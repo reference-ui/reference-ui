@@ -6,3 +6,5 @@ and the DOM, each selection paints, and a second world defining the same
 `className` twice fails `sync()` naming the duplicate.
 
 Evidence: `[atm]` ATM-RECIPE-06 (P2 #18).
+
+> Search terms: naming collision, redefinition, duplicate className, namespaced class, recipe/identity, recipe/duplicates, NEO-RECIPE-07, NEO-RECIPE-11

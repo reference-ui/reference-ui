@@ -5,3 +5,5 @@ color>` beside a `<Div mt>` control. The spec checks the sheet carries
 only the control utility, neither probe carries a class, and neither paints.
 
 Evidence: `[atm]` ATM-SITE-08; anti-goal `output.test.ts` L3057; `[decision D11]`.
+
+> Search terms: unknown element, intrinsic, unregistered, negative case, site/jsx-hosts, NEO-SITE-11

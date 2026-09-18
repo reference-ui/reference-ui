@@ -8,3 +8,5 @@ the default tone.
 
 Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:104` defaults; `[atm]`
 ATM-RECIPE-04 (P2 #17).
+
+> Search terms: fallback values, implicit selection, cva, zero-arg, recipe/defaults, NEO-RECIPE-01

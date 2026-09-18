@@ -12,3 +12,5 @@ twin, so the proof uses the real pseudo.
 
 Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace E
 (`inputs.ts` 19–31 → `global.css` 497–542); `[atm]` ATM-LAYER-03.
+
+> Search terms: input field, form field, spread props, conditional styles, text input, input strip, global/undefined-strip, global/placeholder

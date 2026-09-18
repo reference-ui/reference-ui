@@ -7,3 +7,5 @@ equal to their class-fed twins.
 
 Evidence: `[decision D16]` (`recipe(...).raw()` shipped, `css.raw` not);
 `[panda-v1]` `generator/src/artifacts/js/cva.ts:63` (`raw: resolve`).
+
+> Search terms: plain-object form, css() input, unstyled output, twin parity, object twin, recipe/raw, recipe/css-interop, NEO-RECIPE-10

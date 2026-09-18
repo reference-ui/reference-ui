@@ -13,3 +13,5 @@ Evidence: `[atm]` ATM-COND-01, ATM-COND-02, ATM-COND-03 (R1 probe
 `vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:331`
 "nested > property" (the contrast: Panda `@media` plus four-way dark
 selectors, Reference `@container` plus single D1 wrap).
+
+> Search terms: focus, data-hover, data-focus, triple bind, conditions/hover, conditions/focus, selector :is(), NEO-COND-01, ATM-COND-10

@@ -10,3 +10,5 @@ computes its negative pixel value like its inline reference.
 Evidence: `[lib]` 368 negatives; `[panda-v1]`
 `token-dictionary/__tests__/spacing.test.ts`; `[atm]` P1 #8, ATM-TOKEN-07,
 ATM-RHYTHM-05.
+
+> Search terms: negation, offset, overlap, outdent, token/rhythm, token/negation, NEO-TOKEN-07

@@ -1,1 +1,0 @@
-{"aliases": ["frozen bundle", "portable snapshot"], "covers": ["sync/base-system", "contracts/portable-shape"], "keywords": ["snapshot", "content-hash", "serializable", "deep-freeze"], "related": ["NEO-SYNC-05", "NEO-SYNC-12"]}

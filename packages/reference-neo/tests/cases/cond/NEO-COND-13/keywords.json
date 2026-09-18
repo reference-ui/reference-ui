@@ -1,1 +1,0 @@
-{"aliases": ["hovr typo"], "covers": ["diagnostics/unknown-condition", "sync/recovery"], "keywords": ["typo", "invalid condition", "graceful degradation", "fallback"], "related": ["ATM-COND-12"]}

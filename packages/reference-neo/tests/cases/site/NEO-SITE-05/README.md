@@ -10,3 +10,5 @@ Evidence: `[atm]` ATM-SITE-10 (shadowed parameters and local helpers named
 `[panda-v1]`
 `vendor/panda-v1/packages/parser/__tests__/css-2.test.ts:5` (Panda's
 `cssParser` extracts even the unimported call).
+
+> Search terms: name collision, false positive, negative case, impostor, site/import-identity, NEO-SITE-04

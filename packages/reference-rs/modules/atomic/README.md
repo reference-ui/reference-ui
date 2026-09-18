@@ -124,3 +124,5 @@ pnpm agentrs v atomic --update-goldens
 | D | Matrix | integration, after A–C | yes |
 
 The live compiler stays in production until D.
+
+> Search terms: atom compiler, extract/css(), extract/recipe(), namer/class-map, tokens/lookup, conditions/lowering, rs:canon, rs:styletrace, rs:base-system

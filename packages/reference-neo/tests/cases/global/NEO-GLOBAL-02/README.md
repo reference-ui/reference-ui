@@ -12,3 +12,5 @@ claim, not asserted here.
 Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace B
 (`global.ts` 3–20 → `global.css` 2–15); `[atm]` ATM-LAYER-03,
 ATM-COND-16.
+
+> Search terms: container queries, @container, font-size, spacing scale, body styles, global/body, global/rhythm, global/container-type

@@ -14,3 +14,5 @@ re-scans the include globs from disk, so all three nouns ride the same
 serial sync. The spec restores the edited sources and resyncs in a
 `finally`, so the world is byte-clean for the next run even when an
 assertion fails.
+
+> Search terms: parcel-watcher, file-watcher, live-reload, hot-sync, watch mode, follow mode, sync/watch, sync/incremental-resync, NEO-SYNC-09

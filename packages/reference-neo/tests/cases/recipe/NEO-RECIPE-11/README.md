@@ -14,3 +14,5 @@ core admitted as `summaryChip` (RS-33); core's own runtime resolved that call
 through atoms, never the named table.
 
 Evidence: `[atm]` ATM-RECIPE-08; `[lib]` `SummaryChip.tsx` (RS-33).
+
+> Search terms: inferred className, implicit identity, binding name, export name, recipe/identity, recipe/inference, NEO-RECIPE-06

@@ -11,3 +11,5 @@ registry belongs to TOKEN-11 — this case asserts placement and paint.
 
 Evidence: `[lib]` 31 keyframes / 3 faces; `[research]` global-css §6.4;
 `[atm]` ATM-LAYER-05, ATM-LAYER-06; cross-ref TOKEN-11 (registry).
+
+> Search terms: animation-name, font-family, webfont, dedupe, single emission, fade slide, keyframe placement, layer/global, layer/keyframes, layer/font-face

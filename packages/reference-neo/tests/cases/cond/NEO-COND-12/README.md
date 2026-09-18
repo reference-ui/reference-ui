@@ -11,3 +11,5 @@ flips back when emulation resets.
 Evidence: `[atm]` P1 #12 (`@media` presets COND-11); `[lib]`
 `docs/evidence/lib-sheet-global-css.md` reduced-motion reset; R1 probe
 `/tmp/cond-batch4-r1/probe.mjs` emits the three at-rules.
+
+> Search terms: prefers-reduced-motion, prefers-color-scheme, print stylesheet, dark mode, accessibility, media queries, os prefs, media/motion-reduce, media/os-dark, media/print

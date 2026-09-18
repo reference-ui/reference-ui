@@ -11,3 +11,5 @@ Evidence: `[panda-v1]`
 `generator/__tests__/generate-keyframes.test.ts` ("default keyframes" prints
 `@keyframes` per theme entry); `[lib]` 31 keyframes
 (`lib-sheet-styles-css.md`); `[atm]` P1 #15, ATM-LAYER-05.
+
+> Search terms: motion, loop, replay, token/keyframes, token/animation, NEO-TOKEN-13

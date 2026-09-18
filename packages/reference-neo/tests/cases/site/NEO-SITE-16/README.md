@@ -8,3 +8,5 @@ emits for `<Overlay.Content />` and friends.
 
 Evidence: `[atm]` ATM-SITE-22; `[lib]` `Menu.tsx` `<Overlay.Content
 minW="40r">`, `Showcase.book.tsx` modal (RS-36).
+
+> Search terms: namespaced component, compound component, dot-notation, site/member-tags, NEO-SITE-11

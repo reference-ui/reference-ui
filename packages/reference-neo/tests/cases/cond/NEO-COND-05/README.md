@@ -11,3 +11,5 @@ is the engine composition, pinned by the sheet.)
 
 Evidence: `[panda-v1]` `core/__tests__/atomic-rule.test.ts:231` "[parent
 selector]"; `[atm]` ATM-COND-20 (RS-12 landed).
+
+> Search terms: nesting, ancestor hover, form control, gating, outside-in hover, conditions/hover, parent-keys, NEO-COND-10

@@ -1,1 +1,0 @@
-{"aliases": ["hello sync", "smoke run"], "covers": ["sync/skeleton", "sync/browser-loop"], "keywords": ["smoke", "round-trip", "end-to-end", "bootstrap", "happy-path"]}

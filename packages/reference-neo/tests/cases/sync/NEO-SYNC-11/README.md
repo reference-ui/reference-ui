@@ -13,3 +13,5 @@ unlocated warning and sync succeeds by design (warn-and-skip, consistent
 with SITE-06/D11 — the spec pins that contrast with a temp world). This
 surfacing unblocks NEO-TOKEN-02: the missing-ref diagnostic now reaches
 authors named with file and line.
+
+> Search terms: all-or-nothing, located-error, rollback, poison-world, fail closed, no half folder, sync/diagnostic-failure, sync/atomic-write, ATM-DIAG-02, ATM-DIAG-03, NEO-SYNC-08

@@ -8,3 +8,5 @@ the probes paint the families computed. Font loading itself is not asserted.
 
 Evidence: `[lib]` `styles.css` L1771–1801 (3 faces); `[panda-v1]`
 `core/__tests__/global-fontface.test.ts`; `[atm]` ATM-LAYER-06 (RS-2).
+
+> Search terms: webfonts, typography, font-family, font descriptors, font registration, global/font-face, global/typography

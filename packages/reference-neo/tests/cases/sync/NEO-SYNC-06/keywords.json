@@ -1,1 +1,0 @@
-{"aliases": ["twin runs", "repeatability check"], "covers": ["sync/determinism", "sync/resync-bytes"], "keywords": ["idempotent", "repeatable", "byte-stable", "reproducible"], "related": ["ATM-ORDER-01", "ATM-ORDER-02", "ATM-ORDER-03", "ATM-ORDER-04"]}

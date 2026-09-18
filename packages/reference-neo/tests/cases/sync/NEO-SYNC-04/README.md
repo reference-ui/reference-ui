@@ -19,3 +19,5 @@ keeps `primitives` empty — so `sync()` unions the config hosts with
 `PRIMITIVE_JSX_NAMES` into `jsxHosts`.
 
 Evidence: `[decision D12]`, `[atm]` ATM-SEAM-02, coverage-map row 5 + note a, `contracts/fixtures/native-compile-request.json`, generated-folder-shape §7.
+
+> Search terms: byte-exact, frozen-shape, host-union, tag-registry, native-bridge, frozen request, native request bytes, sync/compile-request, sync/jsx-hosts, NEO-SYNC-09

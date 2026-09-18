@@ -7,3 +7,5 @@ anywhere, and narrow/wide containers paint 50px/60px.
 
 Evidence: `[panda-v1]` `core/__tests__/atomic-rule.test.ts` "skip `_`
 notation"; `[atm]` ATM-COND-01, ATM-COND-17.
+
+> Search terms: object syntax, breakpoint object, default, fallback, unconditional, object form, keyed form, responsive/object, NEO-RESP-04

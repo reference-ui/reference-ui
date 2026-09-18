@@ -10,3 +10,5 @@ resolves to both responsive classes and paints 50px/60px per container.
 Evidence: `[atm]` ATM-COND-17, ATM-MERGE-01, ATM-MERGE-02; `[panda-v1]`
 `vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:39` "should
 resolve shorthand".
+
+> Search terms: precedence, overrides, longhand, conflict resolution, prop collision, css/aliases, css/merge-order, NEO-CSS-02

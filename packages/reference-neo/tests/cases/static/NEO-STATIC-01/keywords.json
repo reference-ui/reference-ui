@@ -1,1 +1,0 @@
-{"aliases": ["zero-usage static", "callsite-free"], "covers": ["static/declaration-only", "static/conditions"], "keywords": ["pre-generated", ":hover", "pseudo-class", "zero wants", "unreferenced"], "related": ["ATM-STATIC-01", "ATM-STATIC-02", "NEO-STATIC-02"]}

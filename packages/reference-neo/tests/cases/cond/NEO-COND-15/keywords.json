@@ -1,1 +1,0 @@
-{"aliases": ["at-rule sandwich"], "covers": ["at-rules/supports", "at-rules/container", "conditions/hover", "breakpoints/sm"], "keywords": ["container queries", "feature queries", "breakpoint", "idempotent"], "related": ["ATM-COND-19"]}

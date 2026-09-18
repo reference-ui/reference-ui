@@ -7,3 +7,5 @@ takes only the runtime-chosen cherry class, and the node paints cherry.
 
 Evidence: `[decision D11]`; `[panda-v1]` `parser/__tests__/output.test.ts` L878;
 `[atm]` ATM-SITE-05.
+
+> Search terms: conditional, branch, unresolvable, query param, if-else, runtime branch, site/ternary, NEO-SITE-15, NEO-SITE-17

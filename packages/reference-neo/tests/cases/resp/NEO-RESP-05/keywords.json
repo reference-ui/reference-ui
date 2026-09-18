@@ -1,1 +1,0 @@
-{"aliases": ["range sugar", "epsilon ranges"], "covers": ["responsive/range", "conditions/range"], "keywords": ["max-width", "between", "clamped", "exclusive", "min-max"], "related": ["NEO-RESP-06", "ATM-COND-13"]}

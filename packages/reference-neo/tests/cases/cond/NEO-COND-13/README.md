@@ -10,3 +10,5 @@ still succeeds past the warning.
 Evidence: `[atm]` ATM-COND-12 (R1 probe
 `/tmp/cond-batch4-r1/probe.mjs` captures the warning text `Unknown
 condition "_hovr"` with the sibling still compiling to one atom).
+
+> Search terms: typo, invalid condition, graceful degradation, fallback, hovr typo, diagnostics/unknown-condition, sync/recovery

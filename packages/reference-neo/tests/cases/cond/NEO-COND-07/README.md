@@ -15,3 +15,5 @@ emits the `[data-state='open']` rule and the `_expanded` triple list);
 "css" (`"&[data-attr='test']"` nesting `_expanded`); `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css`
 (`[data-slot="icon"]` utilities, e.g. L442).
+
+> Search terms: single quotes, backslash, data attribute, special characters, quote handling, escaping/quotes, conditions/expanded, selector attribute

@@ -7,3 +7,5 @@ carry the authored rule (so the negative is not vacuous), and checks the
 styled folder contains no `global.css` file.
 
 Evidence: `[decision D2,D7]`; coverage-map row 11.
+
+> Search terms: --made-with-panda, transform vars, negative assertion, clean sheet, global/sheet-hygiene, NEO-GLOBAL-02

@@ -17,3 +17,5 @@ paints. No engine rung beyond the publish leg (`writeStyledSubpathDecls` in
 no host change was needed.
 
 Evidence: landing C1 chart A5 (type graph status).
+
+> Search terms: package exports, polymorphic, submodules, type/styled-subpaths, type/negative-typecheck, NEO-TYPE-01, NEO-TYPE-06

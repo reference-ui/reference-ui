@@ -8,3 +8,5 @@ the resting ember — the condition arg joins its own slot either way.
 
 Evidence: Neo `plans.test.ts`; station
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-03`.
+
+> Search terms: variant, pseudo-class, array form, underscore condition, state layer, merge/conditional, merge/array-form, NEO-MERGE-01

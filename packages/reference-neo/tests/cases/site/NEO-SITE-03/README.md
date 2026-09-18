@@ -6,3 +6,5 @@ sibling and the spread utilities and the node paints both declarations.
 
 Evidence: `[panda-v1]` `extractor/__tests__/unbox.test.ts` L4328;
 `[atm]` ATM-SITE-11.
+
+> Search terms: object merge, style composition, combined styles, site/spread, NEO-SITE-08, NEO-SITE-02

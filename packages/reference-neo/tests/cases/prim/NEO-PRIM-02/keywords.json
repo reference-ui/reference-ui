@@ -1,1 +1,0 @@
-{"aliases": ["override probe"], "covers": ["prim/css-override", "prim/sibling-merge"], "keywords": ["override", "precedence", "cascade", "merge"], "related": ["ATM-SITE-14", "NEO-PRIM-11"]}

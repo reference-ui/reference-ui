@@ -9,3 +9,5 @@ magenta reference, and the owner type bundle still declares the
 
 Evidence: `[core]` `system/api/tokens.ts` header contract; typegen golden
 `'_private.secret'` (`modules/typegen/tests/seam.test.ts` TYP-NATIVE-01).
+
+> Search terms: internal, encapsulation, package-private, hidden, token/private

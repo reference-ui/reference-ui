@@ -11,3 +11,5 @@ Evidence: `[atm]` ATM-COND-02; `[panda-v1]`
 conditions"); `[lib]`
 `packages/reference-lib/.reference-ui/styled/styles.css`
 `:is(:hover, [data-hover])`.
+
+> Search terms: pseudo-class, pointer, conditional, state, state flip, prim/conditional-style, prim/pseudo-class, NEO-COND-02

@@ -9,3 +9,5 @@ the painted background and color.
 
 Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:226` responsive
 variant; `[atm]` ATM-RECIPE-07.
+
+> Search terms: @container, viewport resize, mobile-first, recipe/responsive, recipe/breakpoints, NEO-RECIPE-01

@@ -7,3 +7,5 @@ the recipe rule and the utility rule referencing it, then checks computed:
 both probes paint brand. One token, two layers, same paint.
 
 Evidence: `[lib]` token-backed recipe/utility paint; `[atm]` ATM-LAYER-03.
+
+> Search terms: --colors-brand, var(), token reference, shared token, cross-layer, token visibility, layer/tokens, tokens/var-resolution, NEO-LAYER-01
