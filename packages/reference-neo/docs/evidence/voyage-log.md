@@ -85,3 +85,9 @@
 - 2026-09-19 ~06:10 UTC — Mutation MERGED (engine green both oracles; 3 doc defects fixed inline: SITE-28 row, counts→163/158/5/242/158 actuals, poison note→76 milestone). Scope arch PASS; scope outcome + entry-80 running.
 - 2026-09-19 ~06:20 UTC — Scope 75 MERGED (outcome + arch PASS). Wave-1 builds all merged except entry-80 (building). Commits held to land per-slice after 80.
 - 2026-09-19 ~06:30 UTC — Entry-80 MERGED (arch PASS + outcome functional PASS; 4 ledger defects fixed inline). Wave-1 build committed 9eedf7dd1 (78 files).
+- 2026-09-19 ~06:35 UTC — Wave-1 committed (9eedf7dd1 build + 7eb5ef15b planning). OVERMATCH WAVE 2 out: unary (78/09/05b), no-silence sweep (65/06/07/38/28), diag precision (77).
+- 2026-09-19 ~07:00 UTC — Entry 77 MERGED (outcome + arch PASS). Unary oracles running; no-silence building.
+- 2026-09-19 ~07:10 UTC — No-silence sweep built (5 stations); oracles out. Unary arch: CONDITIONAL FAIL (2 small: ~ ToInt32 helper + ~-on-bool station arm) — fix pass queued behind unary outcome.
+- 2026-09-19 ~07:20 UTC — No-silence sweep MERGED (arch PASS + outcome behavior green; 3 doc one-liners fixed inline: SITE-24 proof, counts 169/165/164, SITE-50 prose). Unary fix crew running.
+
+Overmatch Ph1 closed — all six BUILD slices green (scope chain, nesting+77, mutation-bail, unary, no-silence, diag-77); relational oracles MERGE on scope/sweep/unary; 42/42 leaked unit tests relocated. Ph1 mutation verdict: [SECURITY_DATA] still open at merge time, continued under Ph2 watch; phases may not consume its wording until it closes.
