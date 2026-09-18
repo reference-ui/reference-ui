@@ -7,10 +7,7 @@ use crate::atom::AtomValue;
 
 /// Expand one radius pair shorthand into its two corner longhands.
 /// Real properties (`borderRadius`, `borderWidth`, …) never reach here.
-pub fn expand_pair_shorthand(
-    prop: &str,
-    value: &AtomValue,
-) -> Option<Vec<(Box<str>, AtomValue)>> {
+pub fn expand_pair_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<str>, AtomValue)>> {
     // borderTopRadius: '2r'  /  borderStartRadius: '2r'
     let canon_name = canon::resolve_canonical_prop(prop);
     if !is_radius_pair(canon_name) {

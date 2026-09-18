@@ -1,5 +1,10 @@
 [
   {
+    "severity": "warning",
+    "message": "StyleTrace: failed to parse input/src/broken.tsx: 1 parse error(s)",
+    "file": "input/src/broken.tsx"
+  },
+  {
     "severity": "error",
     "message": "Unexpected token",
     "file": "input/src/broken.tsx"

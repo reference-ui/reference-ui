@@ -96,6 +96,7 @@ export interface CompileResult {
   diagnostics: Diagnostic[]
   wants?: unknown[]
   atomCount?: number
+  tracedJsxHosts?: string[]
 }
 
 export interface PortableCssChunk {

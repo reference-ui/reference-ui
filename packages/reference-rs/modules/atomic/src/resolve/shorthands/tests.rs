@@ -249,15 +249,7 @@ fn test_flex_single_keywords_emit_panda_triples() {
 fn test_flex_other_values_pass_through_raw() {
     // No values-map hit: Panda emits the authored value untouched.
     for input in [
-        "0 0 auto",
-        "1 1 0%",
-        "2 30px",
-        "2",
-        "0",
-        "1 1",
-        "inherit",
-        "AUTO",
-        "None",
+        "0 0 auto", "1 1 0%", "2 30px", "2", "0", "1 1", "inherit", "AUTO", "None",
     ] {
         assert!(
             expand_shorthand("flex", &AtomValue::String(input.into())).is_none(),

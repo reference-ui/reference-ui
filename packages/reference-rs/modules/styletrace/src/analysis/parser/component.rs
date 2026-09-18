@@ -208,7 +208,7 @@ pub fn component_from_function_like(
             statement,
             &mut WalkContext {
                 imports: ctx.imports,
-                primitive_names: ctx.primitive_names,
+                primitive_names: &ctx.surface.primitives,
                 bindings: &bindings,
                 edges: &mut edges,
             },

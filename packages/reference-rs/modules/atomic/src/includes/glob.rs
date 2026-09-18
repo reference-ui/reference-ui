@@ -20,7 +20,10 @@ pub(crate) enum Token {
     /// `?`: one character inside one segment.
     OneInSegment,
     /// `[...]`: one character inside one segment, never `/`.
-    Class { negated: bool, ranges: Vec<(char, char)> },
+    Class {
+        negated: bool,
+        ranges: Vec<(char, char)>,
+    },
 }
 
 /// Parse one brace-expanded pattern into match tokens.
@@ -155,7 +158,11 @@ fn class_hit(token: &Token, hit: char) -> bool {
         return false;
     }
     let inside = ranges.iter().any(|&(lo, hi)| lo <= hit && hit <= hi);
-    if *negated { !inside } else { inside }
+    if *negated {
+        !inside
+    } else {
+        inside
+    }
 }
 
 /// Match tokens from `at` against characters from `from`.

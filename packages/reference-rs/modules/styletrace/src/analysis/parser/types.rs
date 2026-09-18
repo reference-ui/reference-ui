@@ -71,7 +71,7 @@ fn parse_object_bindings(
 
     if explicit_style_props.is_empty() {
         for binding in &destructured {
-            if ctx.style_prop_names.contains(&binding.prop_name) {
+            if ctx.surface.style_props.contains(&binding.prop_name) {
                 bindings
                     .direct_style_bindings
                     .insert(binding.local_name.clone());
@@ -136,13 +136,18 @@ fn resolve_type_reference(
     ctx: &ParserContext,
     reference: &oxc_ast::ast::TSTypeReference<'_>,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
+    let fallback = ctx
+        .surface
+        .trusts_style_props_name()
+        .then(|| &ctx.surface.style_props);
     Ok(collect_style_prop_names(
         ctx.workspace_root,
         ctx.path,
         slice_span(ctx.source, reference.type_name.span()),
+        fallback,
     )?
     .into_iter()
-    .filter(|name| ctx.style_prop_names.contains(name))
+    .filter(|name| ctx.surface.style_props.contains(name))
     .collect())
 }
 
@@ -158,7 +163,8 @@ fn resolve_type_literal(
                 let name = slice_span(ctx.source, property.key.span())
                     .trim_matches('"')
                     .trim_matches('\'');
-                ctx.style_prop_names
+                ctx.surface
+                    .style_props
                     .contains(name)
                     .then(|| name.to_string())
             }

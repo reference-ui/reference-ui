@@ -15,6 +15,8 @@ pub(crate) mod sources;
 mod spec_recipe_tests;
 mod static_css;
 pub mod stylesheet;
+#[cfg(test)]
+mod tests;
 
 #[doc(hidden)]
 pub use styletrace as __styletrace;
@@ -82,6 +84,10 @@ pub struct CompileResult {
     pub recipes: Vec<RecipeTable>,
     #[serde(default)]
     pub atom_count: usize,
+    /// Component names StyleTrace discovered in this compile (sorted,
+    /// unique). Neo publishes configured ∪ traced downstream.
+    #[serde(default)]
+    pub traced_jsx_hosts: Vec<String>,
 }
 
 struct ParseSession<'a> {
@@ -102,7 +108,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
     let project_constants = collect_project_constants(&sources);
-    let traced_jsx = hosts::collect_hosts(request);
+    let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
+    let traced_jsx = resolved_hosts.hosts();
+    diagnostics.extend(host_diagnostics);
     let system = &request.base_system;
 
     {
@@ -169,6 +177,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         wants,
         recipes: recipe_tables,
         atom_count,
+        traced_jsx_hosts: resolved_hosts.traced,
     })
 }
 
@@ -296,22 +305,4 @@ fn build_css_runtime(atom_set: &AtomSet, system: &str) -> CssRuntime {
         runtime.insert(key, c_name);
     }
     runtime
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_compile_seed_contract() {
-        let req = CompileRequest::default();
-        let res = compile(&req).expect("compile seed contract");
-        assert!(res
-            .stylesheet
-            .starts_with("@layer reset, global, base, tokens, recipes, utilities;"));
-        assert!(res.css.as_ref().is_some_and(|c| c.is_empty()));
-        assert!(res.runtime.style_plans.is_empty());
-        assert!(res.diagnostics.is_empty());
-        assert!(!res.stylesheet.contains("--colors-"));
-    }
 }

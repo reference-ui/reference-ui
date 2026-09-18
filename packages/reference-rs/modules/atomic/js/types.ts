@@ -118,4 +118,6 @@ export interface CompileResult {
   recipes?: RecipeRuntimeTable[]
   /** Distinct AtomSet size. Test observability for ATM-GHOST-04. */
   atomCount?: number
+  /** Component names StyleTrace discovered in this compile (ATM-SEAM-05). */
+  tracedJsxHosts?: string[]
 }

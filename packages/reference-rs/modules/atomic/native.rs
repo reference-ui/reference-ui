@@ -100,6 +100,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
         wants: Vec::new(),
         recipes: Vec::new(),
         atom_count: 0,
+        traced_jsx_hosts: Vec::new(),
     }
 }
 

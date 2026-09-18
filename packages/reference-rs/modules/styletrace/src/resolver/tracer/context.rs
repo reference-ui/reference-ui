@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use tasty::resolve_external_import_path;
 
 use crate::resolver::error::StyleTraceError;
-use crate::resolver::model::{BoundTypeExpr, ParsedModule, TypeDeclaration};
+use crate::resolver::model::{
+    BoundTypeExpr, ParsedModule, TypeAliasDecl, TypeDeclaration, TypeExpr,
+};
 use crate::resolver::parser::parse_module;
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
@@ -21,6 +23,9 @@ use crate::resolver::path::{
 pub struct TraceSession {
     pub sync_root: PathBuf,
     pub module_cache: HashMap<PathBuf, ParsedModule>,
+    /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
+    /// `StyleProps` import denotes. `None` keeps disk resolution strict.
+    pub unresolved_style_props: Option<BTreeSet<String>>,
 }
 
 impl TraceSession {
@@ -28,6 +33,7 @@ impl TraceSession {
         Self {
             sync_root: sync_root.to_path_buf(),
             module_cache: HashMap::new(),
+            unresolved_style_props: None,
         }
     }
 }
@@ -258,8 +264,36 @@ impl<'a> TraceContext<'a> {
         let Some(imported_module) =
             self.resolve_module_specifier(module_path, &import_binding.source)?
         else {
-            return Ok(None);
+            return Ok(self.unresolved_style_props_fallback(
+                &import_binding.source,
+                &import_binding.imported_name,
+                module_path,
+            ));
         };
         self.resolve_declaration(&imported_module, &import_binding.imported_name)
+    }
+
+    /// Engine-mode fallback: an unresolvable `StyleProps` imported from
+    /// `@reference-ui/react` denotes the engine surface. Real declarations
+    /// always win (this runs only when module resolution failed); disk
+    /// sessions carry no fallback and keep returning `None`.
+    fn unresolved_style_props_fallback(
+        &self,
+        source: &str,
+        imported_name: &str,
+        module_path: &Path,
+    ) -> Option<(PathBuf, TypeDeclaration)> {
+        if source != "@reference-ui/react" || imported_name != "StyleProps" {
+            return None;
+        }
+        let fallback = self.session.unresolved_style_props.clone()?;
+        Some((
+            module_path.to_path_buf(),
+            TypeDeclaration::TypeAlias(TypeAliasDecl {
+                name: "StyleProps".to_string(),
+                type_params: Vec::new(),
+                expr: TypeExpr::Object(fallback),
+            }),
+        ))
     }
 }

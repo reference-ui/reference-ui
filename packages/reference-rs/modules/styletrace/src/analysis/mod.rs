@@ -9,11 +9,13 @@ mod module_resolution;
 mod parser;
 pub(crate) mod primitive_metadata;
 mod source_files;
+mod surface;
 mod util;
 mod walk;
 
-pub use analyzer::{
-    trace_style_bindings, trace_style_bindings_with_hint, trace_style_jsx_names,
-    trace_style_jsx_names_with_hint,
-};
 pub use model::TracedBinding;
+pub use surface::{
+    trace_style_bindings, trace_style_bindings_with_hint,
+    trace_style_bindings_with_surface, trace_style_jsx_names,
+    trace_style_jsx_names_with_hint, StyleSurface, TraceDiagnostic, TraceOutcome,
+};

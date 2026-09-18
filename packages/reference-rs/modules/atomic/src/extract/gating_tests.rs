@@ -100,11 +100,12 @@ fn test_hostless_styles_emit_missing_graph_error() {
     assert!(res.runtime.style_plans.is_empty());
     assert_eq!(res.diagnostics.len(), 1);
     let diag = &res.diagnostics[0];
-    assert_eq!(
-        diag.severity,
-        crate::diagnostics::DiagnosticSeverity::Error
+    assert_eq!(diag.severity, crate::diagnostics::DiagnosticSeverity::Error);
+    assert!(
+        diag.message.contains("missing primitive graph"),
+        "{}",
+        diag.message
     );
-    assert!(diag.message.contains("missing primitive graph"), "{}", diag.message);
     assert!(diag.message.contains("<Foo>"), "{}", diag.message);
     assert_eq!(diag.file.as_deref(), Some("test.tsx"));
     assert_eq!(diag.line, Some(4));

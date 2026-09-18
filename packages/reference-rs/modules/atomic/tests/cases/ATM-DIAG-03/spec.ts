@@ -10,6 +10,16 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(result.diagnostics.length).toBeGreaterThanOrEqual(1)
     expect(result.diagnostics.some(d => d.severity === 'error')).toBe(true)
+    // Slice-3 golden intent: host tracing runs before extraction, so the same
+    // broken file also yields exactly one located StyleTrace parse warning.
+    expect(
+      result.diagnostics.filter(
+        d =>
+          d.severity === 'warning' &&
+          d.message.startsWith('StyleTrace: failed to parse') &&
+          (d.file ?? '').endsWith('input/src/broken.tsx')
+      )
+    ).toHaveLength(1)
     expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
       true
     )

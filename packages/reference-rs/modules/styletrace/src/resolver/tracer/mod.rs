@@ -36,7 +36,10 @@ const NEO_STYLE_PROPS_ENTRY_FILES: &[(&str, &str)] = &[
     ("styled/types/index.d.ts", "StyleProps"),
     (".reference-ui/styled/index.d.ts", "StyleProps"),
     ("styled/index.d.ts", "StyleProps"),
-    (".reference-ui/styled/types/style-props.d.ts", "SystemProperties"),
+    (
+        ".reference-ui/styled/types/style-props.d.ts",
+        "SystemProperties",
+    ),
     ("styled/types/style-props.d.ts", "SystemProperties"),
 ];
 
@@ -49,9 +52,7 @@ pub fn collect_reference_style_prop_names(
     collect_first_resolving_entry(declaration_root)
 }
 
-fn collect_first_resolving_entry(
-    declaration_root: &Path,
-) -> Result<Vec<String>, StyleTraceError> {
+fn collect_first_resolving_entry(declaration_root: &Path) -> Result<Vec<String>, StyleTraceError> {
     let candidates = style_props_entry_candidates(declaration_root);
     if candidates.is_empty() {
         return Err(StyleTraceError::new(format!(
@@ -81,7 +82,7 @@ fn collect_entry_names(
     entry_path: &Path,
     export_name: &str,
 ) -> Result<Vec<String>, StyleTraceError> {
-    let names = collect_style_prop_names(declaration_root, entry_path, export_name)?;
+    let names = collect_style_prop_names(declaration_root, entry_path, export_name, None)?;
     if names.is_empty() {
         return Err(StyleTraceError::new(format!(
             "malformed public type graph: no style properties resolved from {export_name}"
@@ -113,8 +114,10 @@ pub fn collect_style_prop_names(
     sync_root: &Path,
     entry_path: &Path,
     export_name: &str,
+    unresolved_style_props: Option<&BTreeSet<String>>,
 ) -> Result<Vec<String>, StyleTraceError> {
     let mut session = TraceSession::new(sync_root);
+    session.unresolved_style_props = unresolved_style_props.cloned();
     let mut visited = BTreeSet::new();
     let env = HashMap::new();
     let mut ctx = TraceContext {

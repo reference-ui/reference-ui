@@ -1,111 +1,56 @@
-//! Serves as the public analysis entry point for coordinating wrapper-graph traversal.
-//! It takes a set of target components and workspace configurations as input.
-//! Traverses the JSX component tree to identify how style properties are forwarded or overridden.
-//! Emits a comprehensive dependency graph or diagnostic report detailing component style relationships.
+//! Walks the parsed wrapper graph to decide which exported components are
+//! style-traced. It takes parsed modules plus the surface sets and follows
+//! local, imported, and factory edges back to Reference primitives.
+//! Emits the exported bindings whose style props reach a primitive. Entry
+//! parsing and surface acquisition live in `surface.rs`; this file stays
+//! the walker.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-use crate::resolver::{
-    collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
-};
+use crate::resolver::StyleTraceError;
 
 use super::model::{
     EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule, TracedBinding,
 };
 use super::module_resolution::resolve_imported_module;
 use super::parser::parse_trace_module;
-use super::primitive_metadata::collect_reference_primitive_jsx_names;
-use super::source_files::{discover_source_files, format_relative_module};
+use super::source_files::format_relative_module;
+use super::surface::{StyleSurface, TraceDiagnostic};
 
-pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
-    trace_style_jsx_names_with_hint(root_dir, None)
-}
-
-pub fn trace_style_jsx_names_with_hint(
-    root_dir: &Path,
-    sync_root_hint: Option<&Path>,
-) -> Result<Vec<String>, StyleTraceError> {
-    let bindings = trace_style_bindings_with_hint(root_dir, sync_root_hint)?;
-    Ok(bindings
-        .into_iter()
-        .map(|b| b.name)
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect())
-}
-
-pub fn trace_style_bindings(
-    source_root: &Path,
-    declaration_root: &Path,
-) -> Result<Vec<TracedBinding>, StyleTraceError> {
-    trace_style_bindings_with_hint(source_root, Some(declaration_root))
-}
-
-pub fn trace_style_bindings_with_hint(
-    source_root: &Path,
-    declaration_root: Option<&Path>,
-) -> Result<Vec<TracedBinding>, StyleTraceError> {
-    let normalized_source = normalize_path(source_root);
-    let resolved_decl_root = match declaration_root {
-        Some(hint) => normalize_path(hint),
-        None => resolve_sync_root(&normalized_source, None)?,
-    };
-
-    let style_prop_names = collect_reference_style_prop_names(&resolved_decl_root)?
-        .into_iter()
-        .collect::<BTreeSet<_>>();
-    let primitive_names = collect_reference_primitive_jsx_names(&resolved_decl_root)?;
-
-    let mut modules = BTreeMap::new();
-    for file_path in discover_source_files(&normalized_source)? {
-        let module = parse_trace_module(
-            &file_path,
-            &resolved_decl_root,
-            &style_prop_names,
-            &primitive_names,
-        )?;
-        modules.insert(file_path, module);
-    }
-
-    let mut analyzer = StyleTraceAnalyzer::new(
-        modules,
-        primitive_names,
-        resolved_decl_root,
-        style_prop_names,
-    );
-    analyzer.collect_exported_bindings(&normalized_source)
-}
-
-struct StyleTraceAnalyzer {
+pub(super) struct StyleTraceAnalyzer {
     modules: BTreeMap<PathBuf, TraceModule>,
-    primitive_names: BTreeSet<String>,
+    surface: StyleSurface,
     sync_root: PathBuf,
-    style_prop_names: BTreeSet<String>,
     component_cache: HashMap<(PathBuf, String), bool>,
     factory_cache: HashMap<(PathBuf, String), bool>,
     export_cache: HashMap<(PathBuf, String), bool>,
+    diagnostics: Vec<TraceDiagnostic>,
 }
 
 impl StyleTraceAnalyzer {
-    fn new(
+    pub(super) fn new(
         modules: BTreeMap<PathBuf, TraceModule>,
-        primitive_names: BTreeSet<String>,
+        surface: StyleSurface,
         sync_root: PathBuf,
-        style_prop_names: BTreeSet<String>,
     ) -> Self {
         Self {
             modules,
-            primitive_names,
+            surface,
             sync_root,
-            style_prop_names,
             component_cache: HashMap::new(),
             factory_cache: HashMap::new(),
             export_cache: HashMap::new(),
+            diagnostics: Vec::new(),
         }
     }
 
-    fn collect_exported_bindings(
+    /// Drain edge-target diagnostics recorded while walking.
+    pub(super) fn take_diagnostics(&mut self) -> Vec<TraceDiagnostic> {
+        std::mem::take(&mut self.diagnostics)
+    }
+
+    pub(super) fn collect_exported_bindings(
         &mut self,
         source_root: &Path,
     ) -> Result<Vec<TracedBinding>, StyleTraceError> {
@@ -265,7 +210,7 @@ impl StyleTraceAnalyzer {
 
         for edge in &component.edges {
             let matched = match &edge.target {
-                EdgeTarget::Primitive(name) => self.primitive_names.contains(name),
+                EdgeTarget::Primitive(name) => self.surface.primitives.contains(name),
                 EdgeTarget::Local(local_name) => {
                     self.component_is_traced(module_path, local_name, stack)?
                 }
@@ -347,7 +292,7 @@ impl StyleTraceAnalyzer {
         stack: &mut Vec<String>,
     ) -> Result<bool, StyleTraceError> {
         if source == "@reference-ui/react" {
-            return Ok(self.primitive_names.contains(imported_name));
+            return Ok(self.surface.primitives.contains(imported_name));
         }
 
         let Some(resolved_module) = resolve_imported_module(module_path, source, &self.sync_root)?
@@ -363,13 +308,19 @@ impl StyleTraceAnalyzer {
             return Ok(());
         }
 
-        let module = parse_trace_module(
-            module_path,
-            &self.sync_root,
-            &self.style_prop_names,
-            &self.primitive_names,
-        )?;
-        self.modules.insert(module_path.to_path_buf(), module);
+        match parse_trace_module(module_path, &self.sync_root, &self.surface) {
+            Ok(module) => {
+                self.modules.insert(module_path.to_path_buf(), module);
+            }
+            Err(error) => {
+                self.diagnostics.push(TraceDiagnostic::for_file(
+                    module_path.to_path_buf(),
+                    error.to_string(),
+                ));
+                self.modules
+                    .insert(module_path.to_path_buf(), TraceModule::empty());
+            }
+        }
         Ok(())
     }
 }

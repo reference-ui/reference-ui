@@ -21,7 +21,11 @@ impl IncludeScope {
         let mut negatives = Vec::new();
         for pattern in patterns {
             let (negated, body) = split_negation(pattern);
-            let target = if negated { &mut negatives } else { &mut positives };
+            let target = if negated {
+                &mut negatives
+            } else {
+                &mut positives
+            };
             for expanded in braces::expand(body) {
                 target.push(glob::parse(&normalize_pattern(&expanded)));
             }
@@ -205,16 +209,14 @@ mod tests {
         let all = crate::compile(&scoped_request(None)).expect("compile succeeds");
         assert!(has_color(&all.wants, "red.500"));
         assert!(has_color(&all.wants, "blue.500"));
-        let empty =
-            crate::compile(&scoped_request(Some(Vec::new()))).expect("compile succeeds");
+        let empty = crate::compile(&scoped_request(Some(Vec::new()))).expect("compile succeeds");
         assert_eq!(empty.wants, all.wants);
         assert_eq!(empty.stylesheet, all.stylesheet);
     }
 
     #[test]
     fn include_scopes_disk_scan() {
-        let root =
-            std::env::temp_dir().join(format!("atomic_include_{}_scan", std::process::id()));
+        let root = std::env::temp_dir().join(format!("atomic_include_{}_scan", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(root.join("theme")).expect("create theme dir");
         std::fs::create_dir_all(root.join("outside")).expect("create outside dir");

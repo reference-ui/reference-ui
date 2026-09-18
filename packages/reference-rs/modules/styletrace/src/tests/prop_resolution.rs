@@ -31,6 +31,7 @@ fn resolves_omit_and_intersection_prop_names_from_local_modules() {
         scratch.root(),
         &scratch.root().join("src/style-props.ts"),
         "StyleProps",
+        None,
     )
     .expect("expected style props to resolve");
 
@@ -56,6 +57,7 @@ fn resolves_mapped_and_indexed_type_helpers() {
         scratch.root(),
         &scratch.root().join("src/style-props.ts"),
         "StyleProps",
+        None,
     )
     .expect("expected style props to resolve");
 
@@ -83,6 +85,7 @@ fn resolves_union_members_that_mix_references_and_literals() {
         scratch.root(),
         &scratch.root().join("src/style-props.ts"),
         "StyleProps",
+        None,
     )
     .expect("expected style props to resolve");
 
@@ -110,6 +113,7 @@ fn unresolvable_module_specifiers_contribute_no_names() {
         scratch.root(),
         &scratch.root().join("src/style-props.ts"),
         "StyleProps",
+        None,
     )
     .expect("expected phantom imports to resolve tolerantly");
 

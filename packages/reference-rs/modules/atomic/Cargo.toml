@@ -23,3 +23,4 @@ indexmap = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 shared.workspace = true
+typegen.workspace = true

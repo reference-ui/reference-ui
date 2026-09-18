@@ -142,8 +142,8 @@ fn unknown_underscore_is_refused() {
 
 #[test]
 fn unknown_condition_drops_atom_with_diagnostic() {
-    let want = Want::new("color", AtomValue::String("red".into()))
-        .with_when(smallvec!["_nope".into()]);
+    let want =
+        Want::new("color", AtomValue::String("red".into())).with_when(smallvec!["_nope".into()]);
     let mut diagnostics = Vec::new();
     let system = BaseSystem::lib_fixture();
     let mut session = ResolveSession {
@@ -159,8 +159,8 @@ fn unknown_condition_drops_atom_with_diagnostic() {
 
 #[test]
 fn unknown_condition_keeps_sibling_and_does_not_wrap_nope() {
-    let nope = Want::new("color", AtomValue::String("red".into()))
-        .with_when(smallvec!["_nope".into()]);
+    let nope =
+        Want::new("color", AtomValue::String("red".into())).with_when(smallvec!["_nope".into()]);
     let sibling = Want::new("color", AtomValue::String("red".into()));
     let mut diagnostics = Vec::new();
     let system = BaseSystem::lib_fixture();

@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "message": "StyleTrace: failed to parse input/src/Broken.tsx: 1 parse error(s)",
+    "file": "input/src/Broken.tsx"
+  },
+  {
+    "severity": "error",
+    "message": "Expected `}` but found `EOF`",
+    "file": "input/src/Broken.tsx"
+  },
+  {
+    "severity": "warning",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/src/Card.tsx"
+  }
+]
