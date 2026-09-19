@@ -1099,6 +1099,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-HARVEST-02` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-02/` |
 | `ATM-HARVEST-03` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-03/` |
 | `ATM-HARVEST-04` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-04/` |
+| `ATM-HARVEST-05` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-05/` |
 
 ---
 

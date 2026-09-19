@@ -14,7 +14,7 @@ the READY-phase asks before GO), `active`, or `done` (done ones live in
 | Capability test index | idea | [test-index.md](test-index.md) |
 | Doom agent | idea (protocol armed; satisfaction marker is the remaining gate) | [doom-agent.md](doom-agent.md) |
 | Operation Error Correct | idea | [operation-error-correct.md](operation-error-correct.md) ([runtime companion](operation-error-correct-runtime.md)) |
-| firstThatWorks | idea | [first-that-works.md](first-that-works.md) |
+| firstThatWorks | idea — out as a primitive; parity pass (prove `@supports` + two-rule fallbacks) | [first-that-works.md](first-that-works.md) |
 | Tooltip focus preset | idea | [tooltip-focus-preset.md](tooltip-focus-preset.md) |
 
 Closed 2026-09-19 and filed under [`completed/`](completed/): Overmatch, StyleTrace, Forge (+ map).
