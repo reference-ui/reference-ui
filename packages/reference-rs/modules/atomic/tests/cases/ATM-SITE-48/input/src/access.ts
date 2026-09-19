@@ -33,3 +33,17 @@ css({ margin: holey[2] })
 
 // Element reads under conditions ride the same walker.
 css({ _hover: { color: colors['blue'] } })
+
+// Concat and interpolated indices fold through the shared nodes (entry 63).
+const shades = { red: 'red', blue: 'blue' }
+css({ color: shades['r' + 'ed'] })
+css({ color: shades[`bl${'ue'}`] })
+
+// Chained reads resolve inside out through nested entries (entry 63).
+const swatches = { red: { 500: 'red' } }
+css({ color: swatches['red']['500'] })
+css({ color: swatches.red['500'] })
+const pal = { a: { b: { c: 'blue' } } }
+css({ color: pal['a']['b']['c'] })
+const matrix = [{ tone: 'red' }]
+css({ color: matrix[0]['tone'] })

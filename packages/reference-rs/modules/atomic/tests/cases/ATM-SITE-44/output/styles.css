@@ -577,13 +577,19 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_10r { margin: calc(10 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_11r { margin: calc(11 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_5r { margin: calc(5 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_6r { margin: calc(6 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_7r { margin: calc(7 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_9r { margin: calc(9 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_8px { padding: 8px; }
   .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_red { color: red; }
   .\@reference-ui\/lib__fs_4 { font-size: 4px; }

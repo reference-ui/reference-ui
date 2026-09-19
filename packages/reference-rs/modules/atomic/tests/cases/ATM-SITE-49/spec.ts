@@ -2,10 +2,9 @@
  * Computed-key station (ATM-SITE-49, SPEC-V2-64 static + folded halves,
  * entry-40 helper-key fold). Static keys (`['color']`, `` [`...`] ``,
  * `[42]`) and single-leaf folded keys (`[k]`, `[t.p]`, `[s[0]]`, `[hov]`
- * conditions, `[gh('cool')]` helper calls) resolve exactly like their bare
- * spellings; multi-leaf and genuinely dynamic keys warn once per member
- * and keep static siblings. Concat keys fold when SITE-33 lands the
- * binary node.
+ * conditions, `[gh('cool')]` helper calls, `['col'+'or']` concats)
+ * resolve exactly like their bare spellings; multi-leaf and genuinely
+ * dynamic keys warn once per member and keep static siblings.
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
@@ -25,6 +24,7 @@ const EXPECTED: Array<{ prop: string; value: string; className: string }> = [
   { prop: 'margin', value: '4px', className: `${SYSTEM}__m_4px` },
   { prop: 'padding', value: '8px', className: `${SYSTEM}__p_8px` },
   { prop: 'margin', value: '8px', className: `${SYSTEM}__m_8px` },
+  { prop: 'padding', value: '12px', className: `${SYSTEM}__p_12px` },
 ]
 
 const spec: AtomicCaseSpec = {
@@ -35,39 +35,51 @@ const spec: AtomicCaseSpec = {
     }
     // The computed `['color']` and the bare control are the same leaf twice;
     // `[k]` adds a third base `color: red`, `[hov]` nests two more under the
-    // condition, and the entry-40 `[gh('cool')]` key nests one under the
-    // group selector. Nothing mints from refused or numeric keys.
-    expect(getWantsForProp(result, 'color')).toHaveLength(6)
+    // condition, the entry-40 `[gh('cool')]` key nests one under the
+    // group selector, and the entry-64 `['col'+'or']` key adds a fourth
+    // base leaf. Nothing mints from refused or numeric keys.
+    expect(getWantsForProp(result, 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'backgroundColor')).toHaveLength(1)
-    expect(getWantsForProp(result, 'padding')).toHaveLength(3)
-    expect(getWantsForProp(result, 'margin')).toHaveLength(3)
+    expect(getWantsForProp(result, 'padding')).toHaveLength(4)
+    expect(getWantsForProp(result, 'margin')).toHaveLength(4)
     expect(hasWant(result, 'color', 'red', ['_hover'])).toBe(true)
     expect(hasWant(result, 'color', 'blue', ['_hover'])).toBe(true)
     expect(hasWant(result, 'color', 'red', ['&[data-group="cool"]'])).toBe(true)
     expect(hasWant(result, '42', 'red')).toBe(false)
     expect(hasWant(result, '-4', 'red')).toBe(false)
-    expect(result.wants).toHaveLength(13)
+    expect(result.wants).toHaveLength(16)
 
     const plans = result.runtime.stylePlans
-    // Plans dedupe by leaf: the tripled `color: red` want shares one plan.
-    expect(plans).toHaveLength(9)
+    // Plans dedupe by leaf: the quadrupled `color: red` want shares one
+    // plan; only the refused concat's `padding: 12px` sibling mints new.
+    expect(plans).toHaveLength(10)
     const hoverRed = plans.filter(
-      p => p.prop === 'color' && p.value === 'red' && p.when.length === 1 && p.when[0] === '_hover',
+      p =>
+        p.prop === 'color' &&
+        p.value === 'red' &&
+        p.when.length === 1 &&
+        p.when[0] === '_hover'
     )
     expect(hoverRed).toHaveLength(1)
     const hoverBlue = plans.filter(
-      p => p.prop === 'color' && p.value === 'blue' && p.when.length === 1,
+      p => p.prop === 'color' && p.value === 'blue' && p.when.length === 1
     )
     expect(hoverBlue).toHaveLength(1)
     expect(hoverBlue[0]!.when[0]).toBe('_hover')
     const groupRed = plans.filter(
-      p => p.prop === 'color' && p.value === 'red' && p.when.length === 1 && p.when[0] !== '_hover',
+      p =>
+        p.prop === 'color' &&
+        p.value === 'red' &&
+        p.when.length === 1 &&
+        p.when[0] !== '_hover'
     )
     expect(groupRed).toHaveLength(1)
     expect(groupRed[0]!.when[0]).toBe('&[data-group="cool"]')
     const emitted = new Set(Object.values(result.css?.classes ?? {}))
     for (const { prop, value, className } of EXPECTED) {
-      const matches = plans.filter(p => p.prop === prop && p.value === value && p.when.length === 0)
+      const matches = plans.filter(
+        p => p.prop === prop && p.value === value && p.when.length === 0
+      )
       expect(matches).toHaveLength(1)
       for (const plan of matches) {
         expect(plan.system).toBe(SYSTEM)
@@ -89,18 +101,20 @@ const spec: AtomicCaseSpec = {
 
     const index = createStylePlanIndex(result.runtime)
     for (const { prop, value, className } of EXPECTED) {
-      expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(className)
+      expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(
+        className
+      )
     }
 
     // `[42]` folds to its spelling, then rides the ordinary unknown-property
     // path — never UnfoldableKey. Each dynamic key warns once, located.
-    expect(result.diagnostics).toHaveLength(6)
+    expect(result.diagnostics).toHaveLength(7)
     const keysDiags = (result.diagnostics ?? []).filter(d => d.file?.match(/keys\.ts$/))
     const foldedDiags = (result.diagnostics ?? []).filter(d =>
-      d.file?.match(/folded\.ts$/),
+      d.file?.match(/folded\.ts$/)
     )
     expect(keysDiags).toHaveLength(3)
-    expect(foldedDiags).toHaveLength(3)
+    expect(foldedDiags).toHaveLength(4)
     const [numeric, ident, call] = keysDiags
     expect(numeric!.severity).toBe('warning')
     expect(numeric!.code).toBe('ATM-W-UNKNOWN-PROPERTY')
@@ -126,6 +140,7 @@ const spec: AtomicCaseSpec = {
       [17, 'ATM-W-UNKNOWN-PROPERTY', /Unknown style property "42"/],
       [19, 'ATM-W-UNKNOWN-PROPERTY', /Unknown style property "-4"/],
       [24, 'ATM-W-UNFOLDABLE-KEY', /Dynamic computed property key/],
+      [34, 'ATM-W-UNFOLDABLE-KEY', /Dynamic computed property key/],
     ] as const) {
       const diag = foldedByLine.get(line)
       expect(diag, `diagnostic at folded.ts:${line}`).toBeDefined()

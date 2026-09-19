@@ -24,3 +24,11 @@ const mk = flag ? 'color' : 'margin'
 css({ [mk]: 'red', padding: '4px' })
 const gh = (name: string) => `&[data-group="${name}"]`
 css({ [gh('cool')]: { color: 'red' }, margin: '8px' })
+
+// Concat keys fold through the shared binary node (entry 64).
+css({ ['col' + 'or']: 'red' })
+css({ ['mar' + 'gin']: '4px' })
+
+// A multi-leaf concat key is ambiguous and refuses, sibling kept.
+const mk2 = flag ? 'olor' : 'argin'
+css({ ['c' + mk2]: 'red', padding: '12px' })

@@ -1,4 +1,6 @@
 {
+  "backgroundColor:blue": "@reference-ui/lib__bg-c_blue",
+  "color:blue": "@reference-ui/lib__c_blue",
   "color:red": "@reference-ui/lib__c_red",
   "height:4px": "@reference-ui/lib__h_4px",
   "left:2": "@reference-ui/lib__left_2",
@@ -8,6 +10,8 @@
   "padding:2px": "@reference-ui/lib__p_2px",
   "padding:4px": "@reference-ui/lib__p_4px",
   "top:-1": "@reference-ui/lib__top_-1",
+  "top:-2": "@reference-ui/lib__top_-2",
   "width:12px": "@reference-ui/lib__w_12px",
+  "zIndex:42": "@reference-ui/lib__z_42",
   "zIndex:99": "@reference-ui/lib__z_99"
 }

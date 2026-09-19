@@ -27,10 +27,12 @@ empty controls, merge list, param shadow), `shared.ts` (the imported
 const objects), `branches.ts` (identifier arms, member arms, logical
 arms, silent null arm, call arm, nested arms), `tags.ts` (live tag
 diagnoses, dead tag silent), `jsx.tsx` (identifier / member / logical /
-call / wrapped / spread-list style props, condition-prop blocks).
+call / wrapped / spread-list style props, condition-prop blocks),
+`compose.ts` (alias-chain whole object, destructured-rest whole object).
 
 Panda: `scope.rs:43` (const object identifier), chain `:63`/`:671`,
 rest `:587`, staged `calls.rs:548`, positional `None` `:1719`, arg-`&&`
 `atomic.rs:1626` — our positional diagnostic beats the silent slot (S7).
-Alias chains (SPEC-V2-34), destructured rest (SPEC-V2-32), and multi-hop
-members (SPEC-V2-31) compose on top when those slices land.
+Alias chains (SPEC-V2-34) and destructured rest (SPEC-V2-32) compose on
+top via `compose.ts`; multi-hop members (SPEC-V2-31) compose when that
+slice lands.

@@ -1,4 +1,5 @@
 {
+  "margin:10r": "@reference-ui/lib__m_10r",
   "margin:1r": "@reference-ui/lib__m_1r",
   "margin:2r": "@reference-ui/lib__m_2r",
   "margin:3r": "@reference-ui/lib__m_3r",

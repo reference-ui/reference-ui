@@ -1,9 +1,12 @@
 /**
  * Param type-literal fence (ATM-SITE-44, SPEC-V2-46). Required literal members
- * fold through member reads and destructured twins (plain and rename);
- * untyped, optional-member, partial, non-literal, nested, rest, and defaulted
- * params warn per use with margin siblings kept. All-or-nothing: one
- * unfoldable member refuses the whole annotation.
+ * fold through member reads and destructured twins (plain and rename).
+ * Patterns are per-name lenient, verbatim v2's `resolve_pattern_path`:
+ * rest binds the unlisted members, defaults fire only on missing keys, and
+ * unresolvable names shadow while siblings fold. Untyped, optional-member,
+ * partial, non-literal, and nested annotations warn per use with margin
+ * siblings kept. All-or-nothing at the annotation: one unfoldable member
+ * refuses the whole annotation.
  */
 import { expect } from 'vitest'
 import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -14,23 +17,38 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'color', 'blue')).toBe(true)
     expect(hasWant(result, 'fontSize', 4)).toBe(true)
-    for (const value of ['1r', '2r', '3r', '4r', '5r', '6r', '7r']) {
+    expect(hasWant(result, 'padding', '4px')).toBe(true)
+    expect(hasWant(result, 'padding', '8px')).toBe(true)
+    for (const value of [
+      '1r',
+      '2r',
+      '3r',
+      '4r',
+      '5r',
+      '6r',
+      '7r',
+      '8r',
+      '9r',
+      '10r',
+      '11r',
+    ]) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
-    expect(getWantsForProp(result, 'color')).toHaveLength(3)
-    expect(result.wants ?? []).toHaveLength(11)
+    expect(getWantsForProp(result, 'color')).toHaveLength(7)
+    expect(getWantsForProp(result, 'fontSize')).toHaveLength(2)
+    expect(hasWant(result, 'backgroundColor', 'missing')).toBe(false)
+    expect(result.wants ?? []).toHaveLength(22)
 
-    // `paint` and `destructure` share one (color, red) plan by lookup key.
+    // Plans dedupe by leaf: the six (color, red) wants share one plan.
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(10)
+    expect(plans).toHaveLength(16)
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(7)
+    expect(diagnostics).toHaveLength(6)
     const codes = diagnostics.map(d => d.code).sort()
     expect(codes).toEqual([
       'ATM-W-DYNAMIC-IDENTIFIER',
       'ATM-W-DYNAMIC-IDENTIFIER',
-      'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',

@@ -6,6 +6,7 @@
   "color:blue": "@reference-ui/lib__c_blue",
   "color:coral": "@reference-ui/lib__c_coral",
   "color:cyan": "@reference-ui/lib__c_cyan",
+  "color:gold": "@reference-ui/lib__c_gold",
   "color:green": "@reference-ui/lib__c_green",
   "color:indigo": "@reference-ui/lib__c_indigo",
   "color:lime": "@reference-ui/lib__c_lime",
@@ -18,8 +19,11 @@
   "color:salmon": "@reference-ui/lib__c_salmon",
   "color:teal": "@reference-ui/lib__c_teal",
   "color:violet": "@reference-ui/lib__c_violet",
+  "margin:13px": "@reference-ui/lib__m_13px",
   "margin:1r": "@reference-ui/lib__m_1r",
   "margin:3r": "@reference-ui/lib__m_3r",
+  "padding:11px": "@reference-ui/lib__p_11px",
+  "padding:12px": "@reference-ui/lib__p_12px",
   "padding:2r": "@reference-ui/lib__p_2r",
   "padding:4px": "@reference-ui/lib__p_4px"
 }

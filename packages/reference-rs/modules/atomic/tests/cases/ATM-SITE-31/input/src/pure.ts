@@ -89,3 +89,27 @@ export const m = css({ width: widthOf(2 + 2) })
 
 // A non-finite binary argument refuses the whole call, sibling kept.
 export const r7 = css({ color: tone('purple', 1 / 0), margin: '8r' })
+
+// --- 39-F2: body-eval failure propagates, verbatim v2's `?` ---
+
+// A missing member left of && refuses the whole call (v2 pure_fn.rs:522).
+const pickMissing = (o: { missing: string }) => o.missing && 'red'
+export const f2a = css({ color: pickMissing({} as { missing: string }), margin: '9r' })
+
+// A division by zero left of || refuses the whole call.
+const orFallback = (n: number) => n / 0 || 'x'
+export const f2b = css({ color: orFallback(1), margin: '10r' })
+
+// A missing member as a ternary test refuses instead of unioning arms.
+const pickBranch = (o: { missing: string }) => (o.missing ? 'a' : 'b')
+export const f2c = css({ color: pickBranch({} as { missing: string }), margin: '11r' })
+
+// A division by zero as a ternary test refuses instead of unioning arms.
+const divBranch = (n: number) => (n / 0 ? 'a' : 'b')
+export const f2d = css({ color: divBranch(1), margin: '12r' })
+
+// --- 39-F3 (scoped follow-up): a pure call in a const init refuses ---
+// v2 folds `const x = getColor()` via resolve_declarator→call_to_literal;
+// the fence folds at call sites only, so the use warns (see README).
+const calledColor = getColor()
+export const f3 = css({ color: calledColor, margin: '13r' })

@@ -21,6 +21,15 @@ binary arg refuses the whole call); imported helpers await the descriptor
 export (SPEC-V2-57, Ph4); helper-returned computed keys compose with the
 folded-key slice (SPEC-V2-40, SITE-49).
 
+Body-eval failure propagates, verbatim v2's `?` (39-F2): a missing
+member left of `&&`, a division by zero left of `||`, and either as a
+ternary test refuse the whole call with a diagnostic — never yield past
+the failure into the surviving arm. A pure call in a const init
+(`const x = getColor()`) is the filed follow-up (39-F3): v2 folds it
+via `resolve_declarator`→`call_to_literal`, the fence folds at call
+sites only, so the use warns `DynamicIdentifier` until a post-attach
+init pass lands.
+
 Panda: `scope.rs:908` (nullary), `:927`/`:1208` (IIFEs), `:945` (decl),
 `:1073` (defaults), `:1030` (object-return spread), `:986` (array index),
 `:1085` (alias refuse), `:1184` (multi-statement refuse).

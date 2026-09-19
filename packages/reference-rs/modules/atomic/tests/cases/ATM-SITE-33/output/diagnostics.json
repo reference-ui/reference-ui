@@ -168,5 +168,20 @@
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
     "message": "`zIndex` value `false` is not valid CSS"
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS"
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS"
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS"
   }
 ]

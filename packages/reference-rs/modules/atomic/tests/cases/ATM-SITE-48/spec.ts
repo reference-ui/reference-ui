@@ -2,10 +2,11 @@
  * Element-access station (ATM-SITE-48, SPEC-V2-63). Reads over const
  * objects, const arrays, and inline literals fold through the shared
  * element node — literal, const-identifier (single- and multi-leaf),
- * member, nested, and optional-chain indices — while an unfoldable index
- * or base, a missing entry, a chained read, and a reassigned table each
- * warn once with the key or side named and keep their static siblings.
- * Holes omit silently. Concat/template indices fold when SITE-33/51 land.
+ * member, nested, optional-chain, concat, and interpolated-template
+ * indices — while an unfoldable index or base, a missing entry, a
+ * scalar-chained read, and a reassigned table each warn once with the key
+ * or side named and keep their static siblings. Holes omit silently.
+ * Chains over nested entries resolve inside out (entry 63).
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
@@ -31,6 +32,9 @@ const EXPECTED: Array<{ prop: string; value: string; className: string }> = [
   { prop: 'padding', value: '16px', className: `${SYSTEM}__p_16px` },
   { prop: 'padding', value: '20px', className: `${SYSTEM}__p_20px` },
   { prop: 'padding', value: '24px', className: `${SYSTEM}__p_24px` },
+  { prop: 'padding', value: '28px', className: `${SYSTEM}__p_28px` },
+  { prop: 'padding', value: '32px', className: `${SYSTEM}__p_32px` },
+  { prop: 'padding', value: '36px', className: `${SYSTEM}__p_36px` },
 ]
 
 const spec: AtomicCaseSpec = {
@@ -43,17 +47,19 @@ const spec: AtomicCaseSpec = {
     }
     expect(hasWant(result, 'color', 'blue', ['_hover'])).toBe(true)
     // Holes omit: no margin want reads the holey slot, the sibling lands.
-    expect(getWantsForProp(result, 'color')).toHaveLength(10)
+    expect(getWantsForProp(result, 'color')).toHaveLength(16)
     expect(getWantsForProp(result, 'margin')).toHaveLength(6)
-    expect(getWantsForProp(result, 'padding')).toHaveLength(7)
-    expect(result.wants).toHaveLength(23)
+    expect(getWantsForProp(result, 'padding')).toHaveLength(10)
+    expect(result.wants).toHaveLength(32)
     expect(hasWant(result, 'color', 'typo')).toBe(false)
 
     // Plans dedupe by leaf: one plan per distinct (prop, value, when).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(13)
+    expect(plans).toHaveLength(16)
     for (const { prop, value, className } of EXPECTED) {
-      const matches = plans.filter(p => p.prop === prop && p.value === value && p.when.length === 0)
+      const matches = plans.filter(
+        p => p.prop === prop && p.value === value && p.when.length === 0
+      )
       expect(matches).toHaveLength(1)
       expect(matches[0]!.declarations.map(d => d.className)).toContain(className)
     }
@@ -68,15 +74,17 @@ const spec: AtomicCaseSpec = {
 
     const index = createStylePlanIndex(result.runtime)
     for (const { prop, value, className } of EXPECTED) {
-      expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(className)
+      expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(
+        className
+      )
     }
 
-    // Eight refusals, each located at the failing side with the key named.
+    // Eleven refusals, each located at the failing side with the key named.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(8)
+    expect(diagnostics).toHaveLength(11)
     const member = diagnostics.filter(d => d.code === 'ATM-W-DYNAMIC-MEMBER')
     const mutated = diagnostics.filter(d => d.code === 'ATM-W-MUTATED-BINDING')
-    expect(member).toHaveLength(7)
+    expect(member).toHaveLength(10)
     expect(mutated).toHaveLength(1)
     const byLine = new Map(diagnostics.map(d => [d.line, d]))
     const at = (line: number) => {
@@ -101,7 +109,14 @@ const spec: AtomicCaseSpec = {
     expect(at(21).message).toMatch(/Element access 'colors\[typo\]' has no static entry/)
     // Chained reads refuse the outer base; reassigned tables name the write.
     expect(at(24).message).toMatch(/Dynamic non-literal element base 'member expression'/)
-    expect(at(29).message).toMatch(/Dynamic mutated binding 'mut'.*reassigned at .*refuse\.ts:28/)
+    expect(at(29).message).toMatch(
+      /Dynamic mutated binding 'mut'.*reassigned at .*refuse\.ts:28/
+    )
+    // Nested chains warn the outer key on a nested miss, the outer base on
+    // a missing or multi-leaf intermediate.
+    expect(at(33).message).toMatch(/\[typo\]' has no static entry/)
+    expect(at(36).message).toMatch(/Dynamic non-literal element base 'member expression'/)
+    expect(at(41).message).toMatch(/Dynamic non-literal element base 'member expression'/)
     for (const diag of diagnostics) {
       expect(diag.severity).toBe('warning')
       expect(diag.file).toMatch(/refuse\.ts$/)

@@ -8,4 +8,5 @@ the static sibling extracts. The blanket net is HAVE (SPEC-V2-41); these
 are the tripwires. Browser paint arm: NEO-SITE-21.
 
 Panda: `scope.rs:1112` (`object_entries_factory_does_not_fold`), random
-`:1020`, loops `:1249`, rest `:1123`, spread-args `:1153`, `f?.()` `:1143`.
+`:1020`, loops `:1249`, rest `:1123`, destructured params `:1174`,
+spread-args `:1153`, `f?.()` `:1143`.

@@ -1257,5 +1257,19 @@ folds; (46) rest/defaulted destructured params refuse whole-param where
 v2 is per-name lenient; (79) entry text miscites v2, two SUPERIOR
 divergences unrecorded (behavior kept — S20 row filed). Tail flips
 (SITE-51 `${2+3}`, SITE-49 helper-key) and both neo triages (SITE-06,
-SITE-18) confirmed correct-not-regressions. Dispositions append here
-when the fix crews land.
+SITE-18) confirmed correct-not-regressions. **Dispositions (fix crews
+landed):** all 9 challenges closed — (12) 3 arms, folded first run;
+(63) binary + interpolated index arms built, nested chains implemented
+(single-hop retired — v2 folds them); (64) concat-key arm built; (65)
+alias-chain + rest-arg arms, engine resolved cleanly; (39-F1) paint arm
+added; (39-F2) fence propagates failure like v2, 4 probes pinned;
+(39-F3) current behavior pinned + scoped follow-up (post-attach
+init-folding pass); (42) tripwire added; (45) computed inits fold via
+empty-scope evaluators; (46) per-name leniency implemented; (79)
+completed — `''` refuses with `ATM-W-INVALID-CSS-VALUE` (S20 fully true).
+Fmt incident during fixes (repo-wide `agentrs f` stripped meaningful
+parens in 8 station inputs) fully repaired: inputs + goldens reverted,
+restored stations re-verified green. Two items stay open past Ph3:
+runtime-table coincidence (refused leaves can paint when another site
+mints the same atom — needs an architect ruling, not a blind fix) and
+the 39-F3 init-folding pass.

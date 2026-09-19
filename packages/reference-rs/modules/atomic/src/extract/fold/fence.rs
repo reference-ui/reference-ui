@@ -72,7 +72,7 @@ pub enum PureExpr {
         left: Box<PureExpr>,
         right: Box<PureExpr>,
     },
-    /// A ternary whose test lowered; eval picks or unions per the general rule.
+    /// A ternary whose test lowered; eval picks its arm, a failed test refuses.
     Conditional {
         test: Box<PureExpr>,
         consequent: Box<PureExpr>,

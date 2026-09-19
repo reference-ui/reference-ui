@@ -33,6 +33,7 @@ pub mod unary;
 mod call_args;
 mod call_object;
 mod coerce;
+mod element_index;
 mod operand;
 mod pairs;
 

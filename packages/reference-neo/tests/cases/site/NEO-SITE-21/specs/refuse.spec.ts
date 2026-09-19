@@ -26,10 +26,11 @@ interface SpecInput {
   case: NeoCase;
 }
 
-// The sheet carries only the static margin siblings, the margins paint,
-// and the refused helper colors leave the default text color. Sync
-// succeeds (the case runs at all) and the frozen recompile carries the
-// two positioned refusal warnings.
+// The sheet carries the static margin siblings plus the fenced pure-helper
+// color, the margins paint, the refused helper colors leave the default
+// text color, and the pure color paints blue. Sync succeeds (the case runs
+// at all) and the frozen recompile carries the two positioned refusal
+// warnings.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -37,8 +38,10 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('.neo-site-21__m_10px {'), 'sheet carries the random sibling');
   assert.ok(styles.includes('.neo-site-21__m_20px {'), 'sheet carries the async sibling');
+  assert.ok(styles.includes('.neo-site-21__m_30px {'), 'sheet carries the pure sibling');
+  assert.ok(styles.includes('.neo-site-21__c_blue {'), 'sheet carries the pure-helper color');
   const utilityCount = styles.match(/\.neo-site-21__/g)?.length ?? 0;
-  assert.equal(utilityCount, 2, `sheet carries exactly the two sibling utilities, got ${utilityCount}`);
+  assert.equal(utilityCount, 4, `sheet carries exactly the four utilities, got ${utilityCount}`);
 
   for (const [id, margin] of [['random', '10px'], ['async', '20px']] as const) {
     const node = page.locator(`#${id}`);
@@ -54,6 +57,19 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
       `#${id} refused color paints nothing`,
     );
   }
+
+  const pure = page.locator('#pure');
+  await pure.waitFor();
+  assert.equal(
+    await pure.evaluate((el) => getComputedStyle(el).marginTop),
+    '30px',
+    '#pure sibling margin paints',
+  );
+  assert.equal(
+    await pure.evaluate((el) => getComputedStyle(el).color),
+    'rgb(0, 0, 255)',
+    '#pure fenced-helper color paints',
+  );
 
   const request = JSON.parse(
     fs.readFileSync(path.join(c.worldDir, '.reference-ui/system/compile-request.json'), 'utf8'),

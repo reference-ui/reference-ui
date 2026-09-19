@@ -10,6 +10,10 @@
   "color:teal.600": "@reference-ui/lib__c_teal.600",
   "color:white": "@reference-ui/lib__c_white",
   "color:yellow.700": "@reference-ui/lib__c_yellow.700",
+  "margin:10r": "@reference-ui/lib__m_10r",
+  "margin:11r": "@reference-ui/lib__m_11r",
+  "margin:12r": "@reference-ui/lib__m_12r",
+  "margin:13r": "@reference-ui/lib__m_13r",
   "margin:1r": "@reference-ui/lib__m_1r",
   "margin:2r": "@reference-ui/lib__m_2r",
   "margin:3r": "@reference-ui/lib__m_3r",
@@ -18,6 +22,7 @@
   "margin:6r": "@reference-ui/lib__m_6r",
   "margin:7r": "@reference-ui/lib__m_7r",
   "margin:8r": "@reference-ui/lib__m_8r",
+  "margin:9r": "@reference-ui/lib__m_9r",
   "padding:4px": "@reference-ui/lib__p_4px",
   "width:4px": "@reference-ui/lib__w_4px"
 }

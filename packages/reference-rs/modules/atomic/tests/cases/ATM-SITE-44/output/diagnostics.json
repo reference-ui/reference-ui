@@ -41,18 +41,10 @@
   },
   {
     "severity": "warning",
-    "code": "ATM-W-DYNAMIC-MEMBER",
-    "message": "Dynamic non-literal expression encountered for prop 'color'",
-    "file": "input/src/params.ts",
-    "line": 36,
-    "column": 23
-  },
-  {
-    "severity": "warning",
     "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'color' encountered for prop 'color'",
+    "message": "Dynamic non-literal identifier 'missing' encountered for prop 'backgroundColor'",
     "file": "input/src/params.ts",
-    "line": 40,
-    "column": 16
+    "line": 58,
+    "column": 40
   }
 ]

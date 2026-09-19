@@ -20,4 +20,5 @@ including member-valued inits.
 Both walkers call the shared `extract/fold/member` node, so want/plan
 parity is structural. Panda: `scope.rs:286` (member init),
 `conditional_output.rs:655` (nested spread), `:707` (member hop),
-`scope.rs:669` (non-null unwrap), `:1349`/`:1369` (inner scope wins).
+`calls.rs:2024` (non-null unwrap), `scope.rs:1349`/`:1369` (inner scope
+wins).

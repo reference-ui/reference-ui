@@ -8,46 +8,56 @@
 import { expect } from 'vitest'
 import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
-const FOLDS: Array<{ prop: string; value: string | number | boolean; when?: string[] }> = [
-  { prop: 'order', value: 5 },
-  { prop: 'order', value: 8 },
-  { prop: 'order', value: 4 },
-  { prop: 'order', value: 1 },
-  { prop: 'order', value: 6 },
-  { prop: 'order', value: 10 },
-  { prop: 'width', value: '1px' },
-  { prop: 'width', value: '4px' },
-  { prop: 'width', value: '50%' },
-  { prop: 'width', value: '2px' },
-  { prop: 'border', value: '8px solid' },
-  { prop: 'color', value: 'red' },
-  { prop: 'color', value: 'blue' },
-  { prop: 'color', value: 'white' },
-  { prop: 'color', value: 'black' },
-  { prop: 'color', value: 'teal' },
-  { prop: 'color', value: 'coral' },
-  { prop: 'color', value: 'navy' },
-  { prop: 'color', value: 'red', when: ['_hover'] },
-  { prop: 'zIndex', value: true },
-  { prop: 'zIndex', value: false },
-  { prop: 'padding', value: '2' },
-  { prop: 'margin', value: '1' },
-  { prop: 'margin', value: '1r' },
-  { prop: 'margin', value: '2r' },
-  { prop: 'margin', value: '3r' },
-  { prop: 'margin', value: '4r' },
-  { prop: 'margin', value: '5r' },
-  { prop: 'margin', value: '6r' },
-  { prop: 'bg', value: 'black' },
-  { prop: 'order', value: 0 },
-]
+const FOLDS: Array<{ prop: string; value: string | number | boolean; when?: string[] }> =
+  [
+    { prop: 'order', value: 5 },
+    { prop: 'order', value: 8 },
+    { prop: 'order', value: 4 },
+    { prop: 'order', value: 1 },
+    { prop: 'order', value: 6 },
+    { prop: 'order', value: 10 },
+    { prop: 'width', value: '1px' },
+    { prop: 'width', value: '4px' },
+    { prop: 'width', value: '50%' },
+    { prop: 'width', value: '2px' },
+    { prop: 'border', value: '8px solid' },
+    { prop: 'color', value: 'red' },
+    { prop: 'color', value: 'blue' },
+    { prop: 'color', value: 'white' },
+    { prop: 'color', value: 'black' },
+    { prop: 'color', value: 'teal' },
+    { prop: 'color', value: 'coral' },
+    { prop: 'color', value: 'navy' },
+    { prop: 'color', value: 'red', when: ['_hover'] },
+    { prop: 'zIndex', value: true },
+    { prop: 'zIndex', value: false },
+    { prop: 'zIndex', value: true },
+    { prop: 'zIndex', value: true },
+    { prop: 'zIndex', value: true },
+    { prop: 'padding', value: '2' },
+    { prop: 'margin', value: '1' },
+    { prop: 'margin', value: '1r' },
+    { prop: 'margin', value: '2r' },
+    { prop: 'margin', value: '3r' },
+    { prop: 'margin', value: '4r' },
+    { prop: 'margin', value: '5r' },
+    { prop: 'margin', value: '6r' },
+    { prop: 'bg', value: 'black' },
+    { prop: 'order', value: 0 },
+  ]
 
-const BINARY_REFUSALS: Array<{ file: string; line: number; op: string; detail: string }> = [
-  { file: 'refuse.ts', line: 7, op: '/', detail: 'does not fold to a finite value' },
-  { file: 'refuse.ts', line: 8, op: '-', detail: 'does not apply to a non-numeric value' },
-  { file: 'refuse.ts', line: 10, op: '|', detail: 'is not foldable' },
-  { file: 'refuse.ts', line: 11, op: '/', detail: 'does not fold to a finite value' },
-]
+const BINARY_REFUSALS: Array<{ file: string; line: number; op: string; detail: string }> =
+  [
+    { file: 'refuse.ts', line: 7, op: '/', detail: 'does not fold to a finite value' },
+    {
+      file: 'refuse.ts',
+      line: 8,
+      op: '-',
+      detail: 'does not apply to a non-numeric value',
+    },
+    { file: 'refuse.ts', line: 10, op: '|', detail: 'is not foldable' },
+    { file: 'refuse.ts', line: 11, op: '/', detail: 'does not fold to a finite value' },
+  ]
 
 const DEAD_ARMS: Array<{ file: string; line: number; arm: string; test: string }> = [
   { file: 'compare.ts', line: 5, arm: "'blue'", test: 'true' },
@@ -70,11 +80,12 @@ const DEAD_ARMS: Array<{ file: string; line: number; arm: string; test: string }
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-33',
   verify(result) {
-    // Every fold emits its wants: 48 across the six inputs.
+    // Every fold emits its wants: 51 across the six inputs (48 + the
+    // <= / !== / ident-operand tail in compare.ts).
     for (const { prop, value, when } of FOLDS) {
       expect(hasWant(result, prop, value, when ?? [])).toBe(true)
     }
-    expect(result.wants ?? []).toHaveLength(48)
+    expect(result.wants ?? []).toHaveLength(51)
 
     // Dead operands compile nothing: the unpicked logical sides and the
     // dead ternary arms never mint wants.
@@ -96,8 +107,8 @@ const spec: AtomicCaseSpec = {
             p =>
               p.prop === prop &&
               p.value === value &&
-              JSON.stringify(p.when ?? []) === JSON.stringify(when ?? []),
-          ),
+              JSON.stringify(p.when ?? []) === JSON.stringify(when ?? [])
+          )
         ).toBe(true)
       }
     }
@@ -112,7 +123,7 @@ const spec: AtomicCaseSpec = {
           d.file?.endsWith(file) &&
           d.line === line &&
           d.message.includes(`operator '${op}'`) &&
-          d.message.includes(detail),
+          d.message.includes(detail)
       )
       expect(match, `missing binary refusal for '${op}' in ${file}:${line}`).toBeDefined()
       expect(match!.severity).toBe('warning')
@@ -120,9 +131,7 @@ const spec: AtomicCaseSpec = {
     }
 
     // The dynamic operand keeps its existing vocabulary.
-    const dynamic = diagnostics.find(
-      d => d.file?.endsWith('refuse.ts') && d.line === 9,
-    )
+    const dynamic = diagnostics.find(d => d.file?.endsWith('refuse.ts') && d.line === 9)
     expect(dynamic?.code).toBe('ATM-W-DYNAMIC-EXPRESSION')
 
     // Fifteen dead arms: one located `ATM-I-DEAD-BRANCH` info each,
@@ -134,7 +143,7 @@ const spec: AtomicCaseSpec = {
           d.file?.endsWith(file) &&
           d.line === line &&
           d.message.includes(`dead branch ${arm}`) &&
-          d.message.includes(`test folds to ${test}`),
+          d.message.includes(`test folds to ${test}`)
       )
       expect(match, `missing dead-arm info in ${file}:${line}`).toBeDefined()
       expect(match!.severity).toBe('info')

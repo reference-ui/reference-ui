@@ -38,6 +38,19 @@ impl ObjectProp {
     }
 }
 
+/// The canonical spelling of a numeric key: integers print without decimals.
+///
+/// One spelling shared by the recorders and the fold nodes, so a recorded
+/// `500` always meets a folded `'500'` index or `['col'+'or']`-style key.
+pub fn canonical_numeric_key(n: f64) -> String {
+    // 300:  /  [42]:
+    if n.fract() == 0.0 && n.is_finite() {
+        format!("{}", n as i64)
+    } else {
+        n.to_string()
+    }
+}
+
 /// Lower every static-keyed entry of a const object initializer.
 pub fn object_entries(obj: &ObjectExpression<'_>) -> ConstObject {
     // const theme = { primary: 'n300', tone: flag ? 'r' : 'b' }
@@ -250,6 +263,10 @@ fn property_key(key: &PropertyKey<'_>) -> Option<String> {
         PropertyKey::StringLiteral(lit) => {
             // { 'primary': 'n300' }
             Some(lit.value.to_string())
+        }
+        PropertyKey::NumericLiteral(lit) => {
+            // { 500: 'red' }  — numerics record canonically, verbatim v2
+            Some(canonical_numeric_key(lit.value))
         }
         _ => None,
     }

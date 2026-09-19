@@ -10,3 +10,10 @@ export const e = css({ color: ('a' < 'b' ? 'red' : 'blue') })
 export const f = css({ color: (3 >= 5 ? 'red' : 'blue') })
 export const g = css({ zIndex: 2 > 1 })
 export const h = css({ zIndex: 1 != 1 })
+
+// SPEC-V2-12 tail: the two remaining operators plus the oracle's
+// ident-operand form (v2 calls.rs:1535 neighborhood).
+const n = 4
+export const i = css({ zIndex: 1 <= 2 })
+export const j = css({ zIndex: 1 !== 2 })
+export const k = css({ zIndex: n > 1 })
