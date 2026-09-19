@@ -1,290 +1,396 @@
+OPERATION: READY
+
 # Mission: Operation Error Correct
 
-Status: `idea` (HQ 2026-09-19 — policy answers in; no crews launch until
-the shape is signed).
+Status: `ready` (HQ 2026-09-19). This is the implementation plan, not an
+implementation. No compiler, Neo, runtime, or lib work begins until the
+READY-phase challenges at the end return without a blocker and HQ writes
+`OPERATION: GO`.
 
-Theme: *awareness*. Panda v1 and v2 silently failed: it either worked or
-it didn't, and the compiler never told you which. Forge built the
-machinery for a compiler that knows what it knows. This operation makes
-it self-aware — warnings it can defend, silence everywhere else.
+Signal protocol: `OPERATION: READY` means the architecture is concrete
+enough to challenge. `OPERATION: GO` starts the slices in order.
 
-## The problem
+## The claim
 
-Post-harvest, the `ATM-W-DYNAMIC-*` warnings are too pessimistic. The
-harvester extracts wholesale values wherever they sit in source —
-mapped, spun, tabled, spread — so a dynamic site usually still paints.
-But the warnings still speak the old meaning ("dynamic site" = "won't
-work"). A warning that fires on working UI is the worst kind of
-diagnostic. Current census: 13 member + 5 identifier + 2 template + 1
-non-object dynamics, plus 74 rest-spreads — most of them paint today.
+Compiler diagnostics are proof, not suspicion.
 
-HQ's rule: **no errors are better than crappy errors.** Panda's silence
-wasn't best, but it beats warning on stuff that works.
+Atomic gets one diagnostics subsystem with two audiences:
 
-The template sites (`minW={`${minWidth}px`}`) are the one place the
-census is *under*-explaining, not over-warning. They are not "we
-hate backticks." They are a **partial style definition**: a skeleton
-plus a hole, assembling a CSS value at runtime. That is the first
-line of defense — and the only new user-facing warning this
-operation adds. Wholesale values, including interpolations that
-already hold a complete CSS value, stay extractable.
+1. **Userspace** receives existing fatal `ATM-E-*` diagnostics unchanged,
+   plus non-fatal warnings only when the compiler can prove that an exact
+   runtime style lookup will have no plan if execution reaches that site.
+2. **Compiler** receives everything useful that does not clear that bar:
+   dynamic refusals, partial assembly, spreads, harvest activity, dead
+   branches, coverage observations, and analysis limits. This is a
+   toggleable backchannel, off by default.
 
-## Philosophy
+No “probably.” No warning because an AST shape looks difficult. No warning
+because harvest minted zero values. If the exact failing lookup is not known,
+the author does not hear it on the default channel.
 
-- Every emitted **user** warning must point at a real failure the author
-  can act on. If we cannot prove the site is the wrong door, we stay
-  quiet in userspace.
-- Warnings must be *reference-UI-related*: tied to what the author did
-  with our framework, not to shapes the engine merely finds exotic.
-- Contrived book scaffolding (the Icon scale tables) is not a use case
-  to contort for — but it shouldn't make the compiler scream either.
-- Two audiences, one module: **userspace** (certain, rare, actionable)
-  and **compiler** (maybes, coverage counts, our development). Never
-  dump the second on the first.
+The current Splitter lines are the motivating defect:
 
-## The two failure modes
-
-With the harvester split up, only two things can actually defeat it:
-
-1. **Values from outside the source.** API responses, user input,
-   storage — information that was never written in any TSX/TS compile
-   input, so no pool can hold it. Genuinely unknowable at build time.
-   (Compile inputs = TS/TSX/JS/JSX sources; JSON is outside.)
-2. **Partial values — assembled at runtime.** `${minWidth}px`,
-   `#${hex}`, `n + 'px'`. The CSS value does not exist in source as
-   a wholesale token; JS will glue it later. Native `style` is that
-   door — Forge's seam stands. This is not "interpolation" as such:
-   a template that already holds a complete CSS value is wholesale,
-   and we extract it.
-
-Everything else — mapped tables, spreads, params with defaults,
-member reads — is harvester's to catch, however the author spins it.
-
-Failure mode 2 is the one we can *see in the AST* when a style site
-assembles a value from parts. That visibility is the first line of
-defense. Failure mode 1 stays a runtime fact.
-
-## The language rule (HQ)
-
-Styles live in TypeScript and JavaScript (`.ts`/`.tsx`/`.js`/`.jsx`).
-That is the language — the same way Sass lives in `.sass`/`.scss` files. Anything outside it (JSON theme
-blobs, CMS payloads, fetched config) is an **external source**:
-failure mode 1, never harvested, never folded, never warned about
-beyond the site that consumes it. If you import it, it's runtime
-data; if you want it compiled, write it in the language.
-
-This needs no implementation — the extractor only parses
-TS/TSX/JS/JSX, so the boundary already holds. It needs *saying*, once, in the
-docs and in the warning policy: the compiler's world is the
-compile inputs, full stop.
-
-## Where errors should live
-
-Errors are based at **style-value slots the extract walk already
-has** — traced host props, `css()` / `recipe()` objects, and
-whatever else that walk already treats as a style position. Judge
-what occupies the slot, not the API name on the door. A helper
-generating RGB strings three files over is not itself an error; it
-may never reach a slot (native `style`), or it may arrive as a
-complete value harvest already caught. New surfaces inherit the
-detector when they become slots. Surfaces the walk does not treat
-as style values (today: likely `globalCss`) are automatically out.
-Do not grow an API allowlist.
-
-The "future detector" that used to live in this paragraph is no
-longer future. It is the first line of defense, scoped so it cannot
-become a wide net.
-
-## First line of defense: partial vs wholesale
-
-The compile surface extracts **static wholesale** values: complete CSS
-(or rhythm) tokens that exist in source — `red`, `200px`, `13r`,
-`1px solid black`. Forge's authorship rule. Templates are not the
-enemy. A template that *is* a wholesale value, or that *joins to
-one* from static parts, is extract.
-
-We cannot extract **partial style definitions**: a skeleton that
-still needs a runtime hole to become a CSS value. `${minWidth}px`
-is not a length in the file. `minWidth` is a number; `px` is glue.
-The length exists later, in the browser. That screams runtime.
-Native `style` is the door. Harvest must not invent that string.
-
-**Be careful — interpolation of a whole CSS value is extract.**
-`` `${'red'}` ``, `` `${brand}` `` where `brand` is `'red'`,
-`` `${color}` `` where the hole *is* the color. In theory, and in
-practice: if the parts fold, SITE-51 already joins them and we
-mint. If the hole is a dynamic identifier with empty quasis, that
-is `color={color}` wearing backticks — a maybe, harvest's job,
-userspace silent. Do not warn just because they used `${}`.
-
-The detector is harvest run in reverse, bounded to the slot.
-
-Harvest asks, of the whole program: is this string a complete CSS
-value? (`classify_harvest_value` / hole-free insert; holey joins
-never enter the pool.) Diagnostics asks, of **this slot**: did
-harvest already treat this expression as information — or is the
-static residue something harvest would skip?
-
-Do **not** grow a second vocabulary of fragments (`px`, `#`, units,
-`solid`). Harvest already knows complete vs not. The warning is
-when the slot is still assembling and the static pieces are not
-values harvest would extract. Empty residue (`` `${color}` ``, `a +
-b`, a call as the slot) is not assembly we can prove — maybe,
-silent. Folded slots are harvest's answer already — extract.
-
-Think this join through as the **simplest** reading of those two
-facts at one node. Not a heuristic engine. If the rule needs a
-list of CSS glue, it is the wrong rule.
-
-| At the slot | Harvest already knows | Userspace |
-|---|---|---|
-| Fully folds (SITE-51) | The join is a complete value | Extract. Silent. |
-| Unfoldable, static residue harvest would skip (`${n}px`, `n + 'px'`, `'px' + n`, `String(n) + 'px'`, `#${hex}`) | Join is not information | **Warn.** |
-| Unfoldable, no static residue (`` `${color}` ``, `foo()`, `a + b`, identifier) | Nothing here was a value; pool may still backfill | Silent. |
-
-**Direct** is the bound: the node in the slot. Not its initializer,
-not its callee. Harvest stays position-free; diagnostics stays
-slot-local. Opposite directions, same classifier.
-
-```tsx
-// residue harvest would skip — same warning
-minW={`${minWidth}px`}
-css({ width: `${n}px` })
-recipe({ base: { color: `#${hex}` } })
-<Box minW={minWidth + 'px'} />
-<Box minW={'px' + minWidth} />
-<Box minW={String(minWidth) + 'px'} />
-css({ border: `1px solid ${c}` })
-
-// harvest can extract, or there is no residue — extract or maybe
-minW="200px"
-minW={`200px`}
-css({ color: `${'red'}` })               // folds
-css({ color: `${color}` })               // wrap, like color={color}
-minW={minWidth}
-minW={toPx(minWidth)}                    // call as the slot
-minW={a + b}                             // two unknowns
-style={{ minWidth: `${minWidth}px` }}    // not a compile slot
+```text
+[neo] sync warning ATM-W-UNFOLDABLE-SPREAD: Dynamic object spread encountered in style object; keeping sibling properties
 ```
 
-`` `${n}px` `` where `n` is a const `200` folds to `'200px'` and
-extracts. Residue plus a hole that *does* fold is wholesale. The
-warning is residue harvest would skip, plus a hole that does not.
+The sibling properties paint, call-site extraction and harvest often cover
+the spread, and the compiler cannot name an exact lookup that will miss.
+That is compiler information wearing a user-warning costume. Error Correct
+moves it to the backchannel.
 
-### Harvest pins
+## Signed policy
 
-Harvest already asks "is this a complete CSS-shaped literal?" — not
-"did it sit in a template." Confirm that, don't invent a second
-pool.
+These decisions are closed:
 
-| Pin | What it proves | Status |
-|---|---|---|
-| `ATM-HARVEST-02` | `` `2${n}r` `` / `` `#${hex}` `` — holey **joins** mint nothing | have |
-| `ATM-SITE-51` | Static pieces fold at the site (`` `${n}px` `` over const `n`, `` `${o.p}` ``) | have |
-| `literals.rs` `strings_harvest_position_free_and_dedupe` | Hole-free `` `4r` `` is wholesale | have |
-| `literals.rs` `whole_css_value_in_a_hole_harvests_the_inner_literal_not_the_join` | `'red'` / `'blue'` / `'#0af'` inside a hole harvest; `` `${n}px` `` and `n + 'px'` do not | **this operation** |
-| `ATM-HARVEST-05` | Inner `'red'` mints onto `` `${color}` ``; `` `${n}px` `` on `width` stays a zero-count sink | **this operation** |
+- A new userspace diagnostic is a **non-fatal warning**.
+- “Certain” means an exact runtime lookup key is known and absent from the
+  final runtime plan. The guarantee is conditional only on execution
+  reaching that lookup; compile time cannot prove that a component renders.
+- Existing fatal `ATM-E-*` behavior is preserved. This operation does not
+  downgrade parse, base-system, recipe, host-graph, or token-reference
+  errors.
+- A source-contract concern is not enough. “This expression is partial,”
+  “this spread is dynamic,” and “we minted nothing here” are not runtime
+  failure proofs.
+- The compiler backchannel is `logs: ['compiler']` in `ui.config.ts`.
+  `debug?: boolean` remains the JS infrastructure logger and does not imply
+  compiler diagnostics.
+- Compiler diagnostics are returned separately from userspace diagnostics.
+  Hosts never re-filter one mixed array.
+- Runtime lookup misses remain the final ground truth. Error Correct does
+  not redesign the runtime miss reporter.
 
-`HARVEST-05` still sees today's `DYNAMIC-TEMPLATE` on the wrap. That
-warning is not the claim — the pool split is. Error Correct will
-demote the wrap; keep the mint.
+Silence is a valid result. A first release with no new userspace warning is
+better than a release with one warning that cannot carry a proof.
 
-Do **not** reverse-trace bindings in this operation
-(`const w = `${minWidth}px`; minW={w}`). That is a wide net. The
-identifier at the site is a maybe. Compiler channel may record it.
-Userspace does not.
+## Correction to the old partial-value idea
 
-This is one warning class with one wording, not a zoo of
-`DYNAMIC-TEMPLATE` / `DYNAMIC-BINARY` user messages. The current
-`DYNAMIC-TEMPLATE` text ("template part 1 (identifier 'minWidth')")
-is accurate and useless. Replacement, every time:
+The previous draft treated direct partial assembly as the one new certain
+warning:
 
-> `minW` is a partial value (`${…}px`) — write a wholesale value, or use the native `style` prop
+```tsx
+minW={`${minWidth}px`}
+css({ width: n + 'px' })
+css({ color: `#${hex}` })
+```
 
-Same sentence for concat. The bar every surviving user warning has
-to clear: deterministic, specific, actionable.
+That is certain only as an extraction fact: the complete value does not
+exist at that source site. It is **not** a certain runtime failure. Runtime
+looks up the evaluated value, not the syntax. If another compile input
+caused `width: 200px` to enter the global style-plan index, then
+`` `${minWidth}px` `` paints when `minWidth === 200`.
 
-The Overlay book card (`Overlay.book.tsx` `minW={`${minWidth}px`}`)
-will warn under this policy, and that is correct — it is assembling
-a measured length. Book scaffolding does not get a pardon for
-certain partials; it also does not set policy for maybes.
+Therefore:
 
-## Maybes go silent
+- partial templates and concats are compiler-channel facts;
+- whole-value wraps such as `` `${color}` `` are compiler-channel facts;
+- identifiers, members, calls, spreads, and unknown operands are
+  compiler-channel facts;
+- none becomes a userspace warning until an exact evaluated lookup key can
+  be derived and proved absent from the final plan.
 
-The other policy is simple. Anything we cannot prove is a wrong door
-is a **maybe**, and maybes do not speak in userspace.
+The same correction applies to harvest counts. Today
+`ATM-I-HARVEST-SINK` reports **net-new pairs minted**. Zero may mean the pair
+already existed as a site want or alias twin. Positive N says nothing about
+which value runtime will request. “Covered” and “uncovered” are not
+userspace verdicts and must not appear as promises.
 
-Maybes include:
+## Architecture decision: one parse, an independent diagnostics analysis
 
-- Dynamic identifiers / members (`color={props.color}`, `css({ color })`)
-- Rest-spreads (`{...props}`)
-- Covered dynamic sites (harvest backfilled the sink — they paint for
-  values in the pool)
-- Uncovered dynamic sites (zero compatible pool values). Coverage is
-  best-effort. A hole we failed to harvest is not a charge we can
-  press against the author. Runtime miss is the backstop.
+Diagnostics needs its own AST **analysis**, not its own AST parser.
 
-Today's `ATM-W-DYNAMIC-IDENTIFIER` / `-MEMBER` / `-EXPRESSION` /
-rest-spread warnings are this class. They come off the user channel.
-The data does not vanish — it reports to the compiler channel.
+The Oxc parser answers one question: what syntax is in this source? It has
+no extraction direction. `atomic::compile` already parses every
+`.ts`/`.tsx`/`.js`/`.jsx` input once, with the correct source mode, and keeps
+the allocators and programs alive for the compile. Reparsing inside
+diagnostics would add:
 
-A hole we stay silent on is a documented coverage gap. A warning that
-fires wrongly is a defect. That is the forgivable/unforgivable line.
+- a second JSX/TypeScript mode decision;
+- a second parse-error and span coordinate system;
+- duplicate CPU and memory;
+- a new way for extraction and diagnostics to disagree before either has
+  analyzed anything.
 
-## Diagnostics: the hub
+The parser remains single-owner infrastructure in `atomic::compile`.
+Diagnostics receives borrowed `Program` values from that parse and runs an
+independent visitor over them. Its analysis is independent in the way that
+matters: it predicts the exact runtime queries implied by source, then
+compares those expectations with what the compiler actually emitted. It
+does not infer success from extraction’s `Want` list.
 
-Name (HQ): **diagnostics** — boring, but clear. It extends the
-existing `diagnostics/` home (codes already live there) rather
-than minting a new top-level name.
+This is the “opposite” pass:
 
-The walk, mint, harvest, resolve, and StyleTrace stay dumb and
-best-effort. They **report candidates** into diagnostics. They do
-not decide what the author hears. All cleverness — verdict,
-wording, audience — lives in one room with its name on the door.
+- extraction asks, “what plans can I build from this source?”;
+- diagnostics asks, “what exact plans will runtime request from this source,
+  and did the compiler build them?”
 
-Diagnostics is almost the opposite of the harvester, bounded: harvest
-scans the program for complete values; diagnostics looks at one slot
-and asks whether that expression *was* such a value. It should
-**use harvest** (the classifier, the hole-free insert rule, the
-pool as evidence) rather than a new heuristic pass. Simplest join
-that answers the slot question. If it starts listing CSS fragments,
-stop and reread harvest.
+Harvest remains a third, different pass: “what complete values exist
+anywhere in the program?”
 
-Two jobs, one module:
+## Placement
 
-1. **Hub.** Other modules push facts: "refused this site as
-   template", "sink `(minWidth, [])` covered with N lengths",
-   "rest-spread here". Clean inputs (sinks with refused-site spans,
-   the final AtomSet, pool stats, the site's AST class). Diagnostics
-   classifies.
-2. **Own user-facing set.** The certain warnings this module is
-   willing to put its name on — starting with *partial style
-   definitions at the interaction surface*, plus the errors that
-   already earn their place (parse, recipe shape, unknown token path
-   is a non-goal of *this* operation but still an error when it
-   fires).
+Diagnostics remains a substantial subsystem of the Atomic product:
 
-Two outputs:
+```text
+packages/reference-rs/modules/atomic/src/diagnostics/
+```
 
-| Audience | When | What |
-|---|---|---|
-| **Userspace** | Always on | Certain, actionable. Today: partial style definitions at a compile site (+ existing real errors). Printed as sync/CLI warnings. |
-| **Compiler** | `logs` includes `'compiler'` | Maybes, sink coverage, harvest counts, dead-branch infos, anything we want while developing the compiler. Not a product warning. |
+It does **not** become a sibling product crate and gets no standalone
+`diagnose()` N-API method. It has no useful caller without the Atomic
+compile, its codes are already `ATM-*`, and its proof requires Atomic’s
+final style plans.
 
-Default `compile()` result **drops** compiler-channel items unless
-the flag is on. Hosts do not each re-filter — diagnostics is the
-filter. Stations that pin compiler-channel items pass the flag.
-Neo sync already prints only `warning` (not `info`); that stays the
-userspace printer. Compiler-channel print, when enabled, is a
-distinct line (`[neo] compiler`, not `[neo] sync warning`) so the
-two never share a costume.
+It is nevertheless a real module, not three helper functions in `mod.rs`.
+The intended shape is:
 
-Bias, stated once: **warnings are sound, coverage is best-effort.**
-Every user warning true; not every truth warned.
+```text
+diagnostics/
+├── mod.rs                 public subsystem seam
+├── README.md              architecture, invariants, audiences
+├── codes.rs               stable wire codes
+├── render.rs              user/compiler rendering
+├── session.rs             compile-long fact and expectation store
+├── facts.rs               typed producer protocol
+├── site.rs                source/site identity and owned locations
+├── channels.rs            userspace/compiler partition
+├── policy.rs              proof-to-verdict table
+├── analysis/
+│   ├── mod.rs             independent AST analysis entry
+│   ├── css.rs             imported css() surfaces
+│   ├── jsx.rs             traced JSX style surfaces
+│   ├── conditions.rs      runtime `when` query shape
+│   └── values.rs          exact-value vs unknown-value classification
+├── adapters/
+│   ├── extract.rs         extraction refusals and outcomes
+│   ├── harvest.rs         pool/sink/mint telemetry
+│   ├── resolve.rs         resolved or rejected exact declarations
+│   └── hosts.rs           StyleTrace/host facts
+└── proof/
+    ├── mod.rs
+    └── plans.rs           expected key vs final plan-key set
+```
 
-## `logs` in `ui.config.ts`
+Names may tighten during Slice 1, but the responsibilities do not collapse
+back into one file. Every Rust file follows the `agent-rs` size,
+complexity, argument-count, and top-of-file commentary gates.
 
-Compiler-level diagnostics are opt-in via an optional config field:
+## The seam: facts in, reports out
+
+Other compiler phases do not construct final user messages. They report
+typed facts to a compile-long `DiagnosticsSession`.
+
+The narrow producer interface is conceptually:
+
+```rust
+pub trait DiagnosticSink {
+    fn report(&mut self, fact: DiagnosticFact);
+}
+```
+
+The session owns data, not AST references. A fact may carry a copyable span
+and a source id; it must not retain an Oxc node or borrow a phase context.
+
+The shared identities are:
+
+```rust
+pub struct SourceSite {
+    pub source: SourceId,
+    pub span: Span,
+    pub surface: StyleSurfaceKind,
+    pub prop: Box<str>,
+    pub when: Vec<Box<str>>,
+}
+
+pub struct OwnedLookupKey {
+    pub system: Box<str>,
+    pub when: Vec<Box<str>>,
+    pub prop: Box<str>,
+    pub value: serde_json::Value,
+    pub important: bool,
+}
+```
+
+`SourceSite` identifies the author location. `OwnedLookupKey` identifies
+runtime truth. The key must be built and serialized by the same runtime-key
+authority used by `RuntimeStylePlan`; diagnostics does not grow a second
+canonical JSON or key serializer.
+
+The fact vocabulary is small and semantic:
+
+```rust
+pub enum DiagnosticFact {
+    ExistingError(Diagnostic),
+    ExactLookupExpected {
+        site: SourceSite,
+        key: OwnedLookupKey,
+    },
+    DynamicSlot {
+        site: SourceSite,
+        shape: DynamicShape,
+    },
+    ExtractOutcome {
+        site: SourceSite,
+        outcome: ExtractOutcome,
+    },
+    HarvestOutcome {
+        site: SourceSite,
+        minted: usize,
+    },
+    ResolveOutcome {
+        site: SourceSite,
+        key: Option<OwnedLookupKey>,
+        outcome: ResolveOutcome,
+    },
+}
+```
+
+The exact enum may split by file, but producers do not send prose and do
+not choose an audience.
+
+### Parse and source coordinator
+
+`atomic::compile` owns:
+
+- source collection;
+- one allocator and one parse per source;
+- parse diagnostics;
+- the source catalog used to render UTF-16 line/column positions;
+- creation of `DiagnosticsSession`.
+
+After StyleTrace has resolved the host surface and import bindings are
+known, the coordinator gives diagnostics an `AnalysisInput` containing the
+borrowed programs, source catalog, base-system surface, and resolved host
+facts.
+
+### Diagnostics AST analysis
+
+`diagnostics::analysis` walks the shared parsed programs independently.
+It covers runtime style-query surfaces, initially:
+
+- imported `css()` style objects;
+- traced JSX style props and JSX `css` objects;
+- their static conditions, responsive values, and `important` state.
+
+It excludes native `style`, `globalCss`, static CSS config, and recipe
+tables because they do not use the same runtime style-plan lookup. Existing
+fatal diagnostics on those surfaces continue through their current paths.
+
+For each runtime style slot, analysis emits one of:
+
+- an exact expected lookup, when runtime’s full key is statically known;
+- a dynamic-shape fact, when any key component is unknown;
+- no fact, when the syntax is not a runtime style lookup.
+
+The analyzer may reuse shared primitives that define language truth:
+canonical property names, condition lowering, static constant values, and
+the runtime lookup-key serializer. It must not reuse extraction’s success
+or final wants as evidence that the plan exists.
+
+### Extract
+
+Extract continues to build wants and authored declarations. It reports:
+
+- site extracted;
+- site refused and refusal class;
+- dynamic identifier/member/template/binary/unary/call;
+- partial template or concat;
+- spread/object residue;
+- source location and condition stack.
+
+These facts explain compiler behavior on the backchannel. They do not
+promote themselves to userspace.
+
+The existing `ExpressionWalk::warn_dynamic` funnel becomes the first
+adapter seam: sink registration stays coupled to the refusal, but final
+wording and audience move out.
+
+### Harvest
+
+Harvest continues to collect the position-free value pool and mint onto
+sinks. It reports facts such as pool counts and net-new minted pairs.
+
+These facts are always compiler-channel telemetry. Neither zero nor
+positive minted count is a failure proof.
+
+### Resolve
+
+Resolve reports whether an exact authored declaration produced atoms or
+was rejected, preserving its reason and location when available. It does
+not decide whether that reason is a userspace warning.
+
+Existing fatal `ATM-E-*` diagnostics pass through unchanged. Warning-level
+resolve facts enter policy like every other candidate: they need an exact
+absent-key proof to remain on the default channel.
+
+### Hosts and other modules
+
+StyleTrace, and any future compiler dependency, keeps its own diagnostic
+type. The Atomic boundary converts it into a `DiagnosticFact`, as
+`hosts/diagnostics.rs` already converts `TraceDiagnostic`.
+
+Dependencies never import Atomic’s final user-message policy. They report
+domain facts; Atomic diagnostics owns compile audiences and wording.
+
+### Assembly and proof
+
+Assembly builds `RuntimeStylePlan` values exactly as today. At the end it
+hands diagnostics the set of final owned lookup keys.
+
+`diagnostics::proof` joins:
+
+```text
+exact lookups predicted independently from source
+                         against
+exact lookup keys present in final RuntimeStylePlan output
+```
+
+The result is mechanical:
+
+- expected key present: success, no userspace diagnostic;
+- expected key absent: proven non-fatal userspace warning;
+- no exact expected key: impossible to prove at build time, compiler
+  channel at most;
+- existing fatal error: preserve unchanged.
+
+An exact key emitted because of another file, site, or harvest still counts
+as present. Runtime will paint; diagnostics stays silent. That is the
+incidental-coverage rule the previous draft was missing.
+
+The userspace warning says only what is proved:
+
+> `width: <value>` has no compiled style plan; this lookup will emit no class
+
+If a resolver fact proves a specific cause, the message may add the
+actionable reason. It never guesses from syntax.
+
+## Compile order
+
+```mermaid
+flowchart TD
+    Sources[Collect sources] --> Parse[Single Oxc parse]
+    Parse --> HostSurface[Resolve host and import surface]
+    HostSurface --> DiagAnalysis[Diagnostics AST analysis]
+    HostSurface --> Extract[Atomic extraction]
+    Extract --> Harvest[Harvest pool and sink mint]
+    Harvest --> Resolve[Resolve wants]
+    Resolve --> Plans[Build runtime style plans]
+    DiagAnalysis --> Session[Diagnostics session]
+    Extract --> Session
+    Harvest --> Session
+    Resolve --> Session
+    Plans --> Proof[Exact plan proof]
+    Session --> Proof
+    Proof --> User[Userspace diagnostics]
+    Proof --> Compiler[Compiler diagnostics when enabled]
+```
+
+The AST analysis runs while parsed programs are alive, then stores owned
+expectations. Final proof runs after plans exist and needs no AST borrow.
+
+## Channels and wire contract
+
+Configuration:
 
 ```ts
 export default defineConfig({
@@ -294,220 +400,264 @@ export default defineConfig({
 })
 ```
 
-Omit or `[]` — userspace only. That is the default.
+Omit `logs` or use `[]` for userspace only.
 
-**Name: `logs`.** Keep it. It is simple, it is clearly extra, and
-the array is how this field grows.
+The public shapes become conceptually:
 
-Rejected:
+```ts
+type LogChannel = 'compiler'
 
-- `debug: ['compiler']` — `debug?: boolean` already exists and
-  gates core's JS `log.debug` (sync, virtual, workers). Wrong type,
-  wrong job. Do not overload it. Do **not** treat `debug: true` as
-  implying compiler logs; that would flood anyone who turned debug
-  on for the JS logger.
-- `diagnostics: { compiler: true }` — makes authors think
-  diagnostics are a knob. Userspace warnings are not optional.
-- `trace` — StyleTrace.
-- `verbose` — implies more of the same, not a second audience.
+interface CompileRequest {
+  // existing fields
+  logs?: LogChannel[]
+}
 
-`logs` names the *channel*, not the data type. The objects are still
-diagnostics (coded, located). The field answers "which extra streams
-are on?"
+interface CompileResult {
+  // existing artifacts
+  diagnostics: Diagnostic[]
+  compilerDiagnostics?: Diagnostic[]
+}
+```
 
-This operation adds one channel: `'compiler'`. Note, do not
-implement, the next ones:
+Rules:
 
-- `'runtime'` — the opt-in miss reporter in
-  [operation-error-correct-runtime.md](./operation-error-correct-runtime.md)
-- others as we earn them (`'sync'`, `'harvest'`, …)
+- `diagnostics` contains existing errors and proof-backed warnings only.
+- `compilerDiagnostics` is absent unless `'compiler'` was requested.
+- the compiler list is separate even when requested; a direct `compile()`
+  caller cannot mistake it for product warnings;
+- Neo prints userspace warnings as `[neo] sync warning …`;
+- Neo prints the opt-in list as `[neo] compiler …`;
+- compiler items retain stable codes and source locations;
+- severity is not used as an audience proxy;
+- `debug: true` does not enable this channel.
 
-The TypeScript shape starts as `logs?: Array<'compiler'>` and the
-union grows. No per-channel option objects in this operation. Empty
-array equals omit.
+The future runtime channel may extend `LogChannel`, but runtime reporting is
+not implemented by this operation.
 
-Plumbing when this ships: thread `logs` from `ui.config` onto the
-compile request so the native compiler can honor it. Small flag, not
-a new subsystem. Existing `debug?: boolean` stays exactly what it is.
+## Policy audit
 
-## Machinery available (no new subsystems)
+The migration audits candidate instances, not just code names. A single
+legacy code can currently represent both exact and inexact situations.
 
-- **Pool + sinks.** The literals pool is position-free; sinks mark the
-  dynamic holes. Coverage per sink is computable.
-- **`ATM-I-HARVEST-SINK`.** Per-sink backfill counts already exist —
-  the data the compiler channel needs, currently emitted after the fact
-  as infos. They move onto the compiler channel (flag-gated), off the
-  default result.
-- **Pool-first sketch.** Still useful — as *compiler-channel phrasing*
-  ("dynamic site, N covering values in pool"), not as a userspace
-  demote/keep switch. Userspace no longer asks harvest to bless a
-  `DYNAMIC-*` warning.
-- **Runtime backstop (already exists).** The dev-console miss warning
-  on actual lookup failure stays the ground truth for what didn't
-  paint.
-- **Site walk.** Template fold (SITE-51) and refusals already exist.
-  The new work is asking harvest's question of the slot: complete
-  value, skipped residue, or nothing here. Same classifier, no
-  second alphabet. Calls as the slot and two unknown operands stay
-  maybes because harvest did not read them as values.
+Every existing `ATM-W-*` and `ATM-I-*` emitter ends in one of three states:
 
-## The honest caveat
+1. **Userspace** — the candidate carries an exact expected lookup and the
+   final key set proves it absent.
+2. **Compiler** — the fact is true and useful but cannot prove an exact
+   runtime miss.
+3. **Drop** — duplicate, non-actionable, or no longer useful even to compiler
+   development.
 
-Coverage is not a guarantee. A pool holding *some* compatible values
-doesn't mean it holds the one runtime asks for. That is why coverage
-never speaks in userspace, and why a compiler-channel line must be
-phrased as what it is ("dynamic site, N covering values in pool") —
-never as a promise it paints.
+All current `ATM-W-DYNAMIC-*`, `ATM-W-UNFOLDABLE-SPREAD`,
+`ATM-I-HARVEST-SINK`, and `ATM-I-DEAD-BRANCH` candidates begin in the
+compiler state. They can move to userspace only through proof, never through
+a code allowlist.
 
-The partial-value warning has no such caveat. Static residue that
-harvest would skip is not a wholesale value. A pool hit on some
-other `'200px'` literal is not extracting the partial; it is not
-mentioned in the message. Slots with no residue never sit this
-warning — they extract or they go silent.
+Codes remain stable for backchannel consumers and old goldens. New codes are
+appended only for genuinely new failure classes.
 
-## Every want ends in one of four states (HQ)
+## Stations: diagnostics owns its proof suite
 
-A want is the unit of demand. Each one is already classifiable today:
+Diagnostics gets a first-class station family under Atomic:
 
-1. **Resolved** — the site walk minted an atom. Filled by definition.
-2. **Refused + backfilled** — dynamic site, harvest minted onto its
-   sink. Paints (for values in the pool). Current user warnings lie
-   here. **Userspace silent; compiler channel.**
-3. **Refused + uncovered** — dynamic site, zero compatible pool values.
-   True hole *given the pool we built*. Still a maybe: harvest is
-   best-effort. **Userspace silent; compiler channel.** Runtime miss
-   if a lookup actually fails.
-4. **Runtime-only** — the value never existed at build (backend, input).
-   Detectable only at lookup time, where the dev-console miss warning
-   already fires with the actual value in hand.
+```text
+packages/reference-rs/modules/atomic/tests/cases/ATM-DIAG-*/
+```
 
-**Beside the four states**, a partial is a site verdict, not a want
-state: the slot was assembling a value, so no want is minted from
-it. That is the userspace warning. Whole-value interpolations are
-ordinary wants or ordinary maybes — they do not get a special
-warning. A sink coverage report, if any, stays on the compiler
-channel — one user line, not two.
+It does not need a sibling product or a new Vitest project. `ATM-DIAG-01`–
+`05` already establish the home; `ATM-DIAG-04` and `06` remain the open
+location/Unicode contracts and land as part of the new source-site
+foundation.
 
-The "reverse style trace" is therefore not a new subsystem: it is
-seeing partials at the interaction surface, extracting wholesale
-(including folded templates), plus honest silence on states 2–3,
-plus the runtime miss reporter for state 4.
+New stations start at `ATM-DIAG-07`:
 
-## Runtime misses (separate doc, opt-in)
+1. **`ATM-DIAG-07` — channel isolation.** Default compile contains no
+   dynamic, spread, harvest, or dead-branch diagnostics. Opting into
+   `'compiler'` returns them only in `compilerDiagnostics`.
+2. **`ATM-DIAG-08` — exact plan present.** Diagnostics predicts a static
+   runtime query; the same key is in `stylePlans`; userspace is silent.
+3. **`ATM-DIAG-09` — exact plan absent.** Diagnostics predicts a static
+   runtime query; the final plan omits it; one located non-fatal warning
+   names that exact declaration.
+4. **`ATM-DIAG-10` — incidental coverage.** The diagnosed site contributes
+   no plan, but another source or harvest contributes the exact key.
+   Userspace is silent because runtime paints.
+5. **`ATM-DIAG-11` — unknown values stay compiler-only.** Identifiers,
+   members, `` `${n}px` ``, `` `${color}` ``, calls, `a + b`, and spreads
+   never become userspace warnings.
+6. **`ATM-DIAG-12` — surface parity.** Imported `css()` and traced JSX
+   produce the same expected key for equivalent declarations; native
+   `style` and `globalCss` produce none.
+7. **`ATM-DIAG-13` — producer seam.** Extract, harvest, resolve, and host
+   facts retain one site identity, deterministic ordering, stable codes,
+   and no duplicate final line.
+8. **`ATM-DIAG-14` — source modes.** `.ts`, `.tsx`, `.js`, and `.jsx` use
+   the one compiler parse; JSX mode, parse errors, and UTF-16 locations do
+   not drift between extraction and diagnostics.
 
-Build-time verdicts are the default channel — always on,
-certain-only. The opt-in runtime miss reporter (cap/collapse,
-generated-pattern detection, pool-stats context, trimmed stacks)
-lives in
-[operation-error-correct-runtime.md](./operation-error-correct-runtime.md).
-It is not the first port of call; it is an option. Boundary
-holds: runtime reports *what missed*, never *why* — shape
-diagnosis lives at build.
+Unit tests live beside the Rust logic:
 
-When that companion ships, its opt-in is the same `logs` field
-(`logs: ['runtime']`, or `['compiler', 'runtime']`). Not a second
-flag, not an env var.
+- source-site identity and UTF-16 rendering;
+- exact/unknown AST value classification;
+- runtime lookup-key parity;
+- expected-key/final-key proof;
+- audience policy;
+- deterministic deduplication and ordering.
 
-## The audit (the work, once signed)
+Neo adds focused sync cases for config threading and the distinct
+`[neo] compiler` printer. Existing runtime miss tests remain the proof that
+an observed missing key emits no class.
 
-Policy is no longer "count and then invent." The audit *confirms*
-the split and rewrites goldens.
+Every station README states the claim, symbols, sibling IDs, and search
+terms so the case index can find the subsystem.
 
-1. All 21 dynamic sites + the 74 rest-spreads: per-site verdict —
-   **partial** (user warning) vs **whole-value wrap / identifier /
-   spread** (maybe, silent / compiler) vs **folded wholesale**
-   (extract). Covered or uncovered is compiler-channel evidence,
-   not a userspace switch.
-2. Deliverable: the partial wording, the list of codes that leave
-   userspace, the compiler-channel inventory (what
-   `logs: ['compiler']` actually prints), and the hub's classify
-   table. Confirm `` `${color}` `` does **not** warn.
-3. Lens: book/story scaffolding vs shipped components, counted
-   separately so demo code never sets policy. One policy anyway —
-   certain partials warn in the book too.
+## Slices
 
-## The three tiers (HQ): never "probably"
+### Slice 0 — ledger and red stations
 
-Build time speaks in certainties or stays silent:
+- Inventory every current `ATM-W-*` and `ATM-I-*` emission site.
+- Record producer, source surface, whether an exact runtime key is knowable,
+  current default behavior, and target state: userspace/compiler/drop.
+- Add red shells for `ATM-DIAG-04`, `06`, and `07`–`14`.
+- Identify at least one real non-fatal, statically known declaration that
+  reaches runtime but is omitted from final plans for `ATM-DIAG-09`.
+  If none exists, do not invent one: the proof engine lands with unit tests
+  and userspace gains no new warning yet.
 
-1. **Unfoldable slot whose static residue harvest would skip → user warning.**
-   Write a wholesale value, or use native `style`.
-2. **Harvest can extract, or there is no residue → extract or silent.**
-   Folded templates extract. Identifiers, wraps, members, spreads,
-   calls-as-the-slot, `a + b`. Compiler channel for the maybes.
-3. **Runtime decides the rest** — via the opt-in reporter
-   (separate doc), never the default channel. Partials already
-   *are* runtime assembly; the warning is that they used the
-   compile door to assemble.
+Done when the ledger has no unclassified warning/info emitter and every
+userspace row names its intended proof witness.
 
-There is no "probably will not paint" user warning. Uncovered is not
-certain enough to speak.
+### Slice 1 — diagnostics module skeleton
 
-## The warning bar: every surviving warning earns its place
+- Split the existing diagnostics directory into source site, facts, session,
+  policy, channels, analysis, adapters, and proof.
+- Keep code/render serialization compatible.
+- Introduce `SourceId`, `SourceSite`, owned locations, `DiagnosticSink`, and
+  `DiagnosticsSession`.
+- Complete the existing location and Unicode contracts (`ATM-DIAG-04/06`).
+- Preserve current output byte-for-byte in this slice.
 
-Each **user** warning code that survives gets a conformity station
-proving all three, or it doesn't ship:
+Done when the module shape exists, quality gates pass, and no diagnostic
+behavior has changed.
 
-1. **Fires where claimed** — positive pin when harvest would skip
-   the slot's static residue (`${n}px`, `'px' + n`, `String(n) + 'px'`,
-   `#${hex}`). Negative pin: no residue, or residue harvest would
-   take (`` `${color}` ``, `toPx(n)`, `a + b`) does not fire.
-2. **Nothing to compile** — the partial contributes zero wants.
-   A pool accident on some other wholesale literal does **not**
-   disqualify the warning.
-3. **Fix named works** — writing a wholesale value (or moving the
-   assembly to native `style`) makes the warning go away *and* the
-   UI paint.
+### Slice 2 — independent AST expectations
 
-A warning that can't pass that bar is a crappy error, and crappy
-errors don't ship. Maybes never sit this bar; they never ship as
-user warnings.
+- Feed diagnostics the compiler’s existing parsed programs and resolved
+  style surface.
+- Implement independent `css()` and traced-JSX analysis.
+- Produce exact `OwnedLookupKey` expectations only when every runtime key
+  component is statically known.
+- Record dynamic/partial/spread shapes without pretending to know a key.
+- Share runtime key canonicalization; do not share extraction success.
 
-## The submodule charter (HQ)
+Done when `ATM-DIAG-08`, `11`, `12`, and `14` pass and no source is reparsed.
 
-Clean inputs, two outputs, one door. Walk and mint stay untouched
-as reporters. Diagnostics owns:
+### Slice 3 — producer protocol
 
-- the candidate sink (codes, spans, AST class: partial-template,
-  whole-value wrap, direct-concat, identifier, member, spread, …)
-- the classify table (user vs compiler vs drop)
-- user wording (partial value; write wholesale or use `style`)
-- compiler wording (coverage counts, former `DYNAMIC-*` text — ours,
-  not the author's)
-- honor `logs`
+- Replace direct final-diagnostic creation in extract, harvest, resolve, and
+  host adapters with typed facts, one producer family at a time.
+- Keep sink creation and compilation behavior unchanged.
+- Move prose and audience decisions into diagnostics policy.
+- Keep existing `ATM-E-*` pass-through behavior.
 
-## Signed (this review)
+Done when `ATM-DIAG-13` proves one stable site across phases and the full
+Atomic artifact output has zero non-diagnostic drift.
 
-1. **Demote-to-debug vs remove.** Userspace silent. Whisper only on
-   `logs: ['compiler']`. Not "demote to info that still rides the
-   default compile output."
-2. **The debug channel.** `logs` in `ui.config.ts`. Not an env var,
-   not a log file, not `debug: true`. Compiler diagnostics still
-   flow through the diagnostics module; the flag is the audience
-   gate. Future channels join the same array.
-3. **Rest-spreads.** Do not survive as user warnings. Harvester +
-   call-site minting. Compiler channel.
-4. **Book-vs-shipped.** Census splits so we can see the noise. One
-   policy. Book partials warn; book spreads do not.
-5. **The detector.** In scope. Harvest inverted, bounded to the
-   slot, **simplest join** of classifier + hole-free insert. No
-   fragment list, no API list, no callee walk, no reverse trace.
+### Slice 4 — final-plan proof
+
+- Expose one owned runtime lookup-key type and one serializer authority.
+- Build the final emitted-key set from `RuntimeStylePlan`.
+- Join expected exact queries against that set after assembly.
+- Emit a non-fatal userspace warning only for an absent expected key.
+- Treat an exact key from any source, including harvest, as success.
+
+Done when `ATM-DIAG-08`–`10` prove present, absent, and incidental-coverage
+behavior.
+
+### Slice 5 — compiler backchannel
+
+- Add typed `logs?: Array<'compiler'>` config and request plumbing.
+- Add optional `compilerDiagnostics` to the compile result.
+- Move dynamic/refusal/spread/harvest/dead-branch candidates off the default
+  result.
+- Add the distinct Neo printer.
+- Leave `debug?: boolean` unchanged.
+
+Done when `ATM-DIAG-07` and the Neo sync cases prove default silence,
+opt-in visibility, and array isolation.
+
+### Slice 6 — audit rewrite and census
+
+- Rewrite affected diagnostic goldens intentionally; no blanket snapshot
+  update.
+- Update Atomic SPEC rows and the diagnostics README.
+- Run the warning census separately for Book/story scaffolding and shipped
+  component source.
+- Confirm the motivating Splitter warnings disappear by default and return
+  only as `[neo] compiler` lines when requested.
+- Run the complete `agent-rs` and targeted `agent-neo` verification paths.
+
+Done when every default warning has an exact proof, every compiler-only fact
+is absent by default, and emitted CSS/runtime artifacts are unchanged.
+
+## Acceptance
+
+Operation Error Correct is done only when all of these are true:
+
+- Atomic parses each compile input once.
+- Diagnostics owns an independent AST analysis over that parse.
+- Extraction, harvest, resolve, hosts, and assembly communicate through
+  typed facts rather than final user prose.
+- `CompileResult.diagnostics` contains no “maybe.”
+- Every new non-fatal userspace warning can name an exact expected lookup
+  key absent from final `stylePlans`.
+- Presence of that exact key anywhere suppresses the warning.
+- Dynamic values, partial assembly, spreads, and harvest counts remain
+  compiler-only.
+- Existing fatal `ATM-E-*` behavior is unchanged.
+- `logs: ['compiler']` is the only compiler-backchannel switch.
+- Compiler diagnostics use a separate result field and printer.
+- Stable codes, deterministic ordering, UTF-16 locations, and deduplication
+  are pinned by stations.
+- No stylesheet, class name, runtime plan, recipe table, or extraction
+  behavior changes as a side effect of routing diagnostics.
 
 ## Non-goals
 
-- `ATM-W-UNKNOWN-TOKEN-PATH` is a separate conversation (HQ) — untouched.
-- No resolver/extract behavior changes until the warning policy is signed.
-- No Doom, no Slice 6, no lib edits. (The Overlay book warning, when
-  this ships, is a compiler change; moving that size onto `style` is
-  a later lib edit, not this operation.)
-- No walking into bindings or callees. Residue is at the slot or
-  it is not (`String(n) + 'px'` has skipped residue; `toPx(n)` does
-  not).
-- No second CSS-fragment vocabulary. If the rule needs `px` / `#` /
-  `solid` as a list, it is not using harvest.
-- No API allowlist (`css` / `recipe` / JSX / `globalCss`). Slots
-  inherit; non-slots stay out.
-- No warning where harvest did not skip a residue (`` `${color}` ``,
-  `a + b`).
-- No merging `logs` with `debug?: boolean`.
-- No `'runtime'` channel implementation (companion doc).
+- No second source parse.
+- No sibling diagnostics product crate, standalone N-API, or JS package.
+- No runtime miss-reporter redesign.
+- No reverse execution of bindings, callees, network data, storage, JSON
+  payloads, or arbitrary JavaScript.
+- No CSS-fragment heuristic list (`px`, `#`, `solid`, and friends).
+- No warning based on harvest minted count or compatible-pool count.
+- No lib component edits to silence diagnostics.
+- No extraction, harvest, resolver, or stylesheet behavior changes.
+- No code renames that break stable `ATM-*` wire values.
+- No `debug: true` alias for compiler logs.
+
+## READY-phase challenges
+
+Before GO, read-only reviewers answer these against the code and proposed
+red stations:
+
+1. **Runtime-key parity.** Can diagnostics derive exactly the same key as
+   Neo runtime for nested conditions, responsive objects/arrays,
+   `important`, aliases, and canonical JSON without importing extraction
+   outcomes?
+2. **Independent-enough analysis.** Does the proposed shared surface input
+   avoid duplicated API allowlists while still allowing diagnostics to catch
+   an extraction omission?
+3. **A real proven warning.** Which existing non-fatal static declaration
+   is expected at runtime but absent from final plans? If there is none,
+   confirm that zero new userspace warnings is the correct first release.
+4. **Dependency shape.** Can `DiagnosticSink`, owned lookup keys, and
+   finalization be placed without a conceptual diagnostics ↔ runtime or
+   diagnostics ↔ extract ownership cycle?
+5. **Ledger completeness.** Does every current warning/info emitter have a
+   userspace/compiler/drop verdict, including resolve, global, static CSS,
+   recipes, hosts, and portable stylesheet paths?
+
+A blocker is any case where a userspace warning cannot carry an exact
+absent-key witness, where the analyzer needs a second parse, or where
+compiler-channel facts can leak into the default result.
