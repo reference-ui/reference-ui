@@ -822,18 +822,51 @@ A row may move from §4 into §1 only by showing it changes which static
 shapes extract. `firstThatWorks` is the standing example of one that does
 not.
 
-## 5. THE PLAN (five phases, each with an exit test)
+## 5. THE PLAN (six phases, each with an exit test)
 
-Order is by risk to the claim, not by size. Ph1 is wrong paint and
-silence — the things that make "better" false today regardless of what
-else lands. Ph2 is cheap and locks the engine's existing behaviour before
-Ph3 replaces the walker underneath it. Ph3 is the fold table. Ph4 is the
-resolver. Ph5 is the claim itself.
+Order is by risk to the claim, not by size. Ph0 re-proves every HAVE
+against v2's tests so no claimed parity hides a gap. Ph1 is wrong paint
+and silence — the things that make "better" false today regardless of
+what else lands. Ph2 is cheap and locks the engine's existing behaviour
+before Ph3 replaces the walker underneath it. Ph3 is the fold table. Ph4
+is the resolver. Ph5 is the claim itself.
 
 Filing rule (unchanged): work is read-only until a row exists on an
 Atomic or Neo ledger. One agent, one slice; phases parallelize once rows
 are filed. `ATM-SITE-30` before `ATM-SITE-38` (pin before narrow);
 `ATM-SITE-53` (scope) before any Ph3 fold.
+
+Oracle rule (HQ): every stage and phase ships with oracles — one verifies
+outcomes against the phase exit test, one keeps the architecture clean
+(no seam drift, no scope creep, ledger discipline). No phase exits on
+builder word alone.
+
+### Ph0 — HAVE reconfirmation (cartographers, HQ order)
+
+Every `HAVE` in §1 is **traced and reconfirmed against Panda v2,
+parallel to the gap phases**. Rationale: v2 has tests around our HAVE
+areas, and comparing
+pin-for-pin may surface gaps *inside* claimed parity — a HAVE with a gap
+becomes a new TO-BUILD row, not a mid-phase surprise.
+
+Method, one probe per HAVE (cartographers, parallel by family):
+
+1. Trace our pin: open the cited case/station bodies, state exactly what
+   behavior is proven (inputs, asserts, paint).
+2. Find v2's tests around the same behavior (`vendor/panda` extractor +
+   stylesheet suites) — not just the catalog's cited file:line, the
+   neighborhood.
+3. Compare pin-for-pin: same shapes in, same classes/diagnostics out?
+4. Verdict per HAVE: `SETTLED`, or `GAP` with the missing shape specified
+   (joins the phase queues as TO-BUILD).
+
+Rules: read-only probes (no engine edits); evidence is opened bodies, not
+grep counts; a probe that cannot find v2's neighborhood reports
+`UNRESOLVED`, never a pass.
+
+**Exit:** every HAVE verdicts SETTLED or carries its GAP row.
+Non-blocking: Ph0 runs parallel to the gap phases from the start; GAP
+rows join the queues as they land.
 
 ### Ph1 — Soundness: nothing paints wrong, nothing is silent
 
