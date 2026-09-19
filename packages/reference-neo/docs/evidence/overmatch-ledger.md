@@ -379,8 +379,14 @@ ex-68 (entry 14); everything else placed is pinned.
 
 ## 5. Deferred and open items (not claimed)
 
-- **S13** (namespace/default value imports): deferred with cause —
-  needs export value tables (`§8` Ph4 log). No station. Not quoted.
+- **S13** (namespace/default value imports): **STRUCK — Forge §6
+  verdict: permanently match v2.** Named imports are the dialect;
+  namespace/default *value* reads refuse with
+  `ATM-W-DYNAMIC-MEMBER` / `ATM-W-NON-OBJECT-CSS-ARG`, which is the
+  contract — not a gap, so no export value tables get built for it.
+  The values still paint: harvest (Forge Part I) mints every
+  complete CSS/rhythm literal onto every compatible sink. No
+  station. Not quoted, nothing further to build.
 - **39-F3 follow-up** (pure calls in const inits): v2 folds, we
   refuse with a diagnostic. Current behavior is pinned
   (`A/tests/cases/ATM-SITE-31/`); the post-attach init-folding pass
@@ -388,16 +394,22 @@ ex-68 (entry 14); everything else placed is pinned.
 - **Poison precision** (35/53): cross-file mutation poison is
   name-wide — fail-closed (over-drops, never stale-resolves) but
   imprecise. `§8` finding (ii). Stations green; precision work open.
-- **Ph1 mutation wording**: the oracle verdict stayed OPEN at merge
-  and continues under watch — no phase may consume its wording
-  (`§8`). `A/tests/cases/ATM-SITE-28/` SPEC text records that
-  station-level mutation interplay "stays with the open Ph1
-  verdict". The station is green; the wording is quarantined.
-- **`__proto__` verdict**: open. Named in the voyage log (Ph3/Ph4
-  close lines); the only on-disk treatment is the pre-existing
-  approved absence in `N/merge/SPEC.md` §5 (Panda `mergeProps`
-  `__proto__` host plumbing; outcome covered by MERGE-01/02/05).
-  No overmatch station; no verdict filed.
+- **Ph1 mutation wording**: the same-file arms are **SIGNED — Forge
+  §8 verdict.** A tracked write to a binding — assignment, compound
+  assignment, update, `for-of` / `for-in` head, `delete` — poisons
+  that binding in its own file: uses drop with a located
+  `ATM-W-MUTATED-BINDING` naming the write, never a stale value. A
+  write through a member path poisons the root binding, not the
+  path. Unmutated `let` / `var` / `export let` fold like `const`.
+  `A/tests/cases/ATM-SITE-28/` is green; the quarantine on
+  same-file wording is lifted. The cross-file clause (poison
+  precise to the origin binding) lands with Forge Slice 3, when
+  rows 35/53 flip — the ledger quotes the full §8 sentence then.
+- **`__proto__` verdict**: **CLOSED — Forge §7: out of axis.** Panda
+  `mergeProps` drops `__proto__` so a spread cannot pollute
+  `Object.prototype`; neo merges cascade slots, not objects, and
+  the outcome stays covered by MERGE-01/02/05. No key-ban, no
+  station. The voyage-log line closes with this sentence.
 - **null-const slice**: open and otherwise undefined — the name
   appears only in the voyage log (Ph3/Ph4 close lines); no owning
   entry, no station. Observed (probe, NOT a pin):
@@ -414,8 +426,15 @@ ex-68 (entry 14); everything else placed is pinned.
   it. This is silence on idiomatic code — the one open hole in the
   no-silence rule.
 - **Runtime-table coincidence** (refused leaves can paint when
-  another site mints the same atom): open past Ph3, needs an
-  architect ruling, not a blind fix (`§8`). Not a station gap.
+  another site mints the same atom): **SIGNED — Forge §2 verdict
+  (accepted).** Extraction refusal is about the *site*, not the
+  *value*. A site the walk cannot read mints nothing and says so.
+  The values the program wrote are still information: the harvest
+  mints every complete CSS or rhythm literal in the compile inputs
+  onto every sink that could ask for it. Runtime paints any
+  `(prop, value, when)` the sheet holds and nothing else. A value
+  the program never wrote never paints. Not a station gap; the
+  floor under this sentence is Forge Part I (Slice 4).
 - **Entries 14 and 81**: pinned by the mop-up crew (SITE-47, SITE-28 arm); removed from the open list.
 
 ## 6. Pre-existing reds (out of mission scope, untouched)
