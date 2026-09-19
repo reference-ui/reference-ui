@@ -1,7 +1,7 @@
 # Operation Overmatch — evidence ledger (Phase 5)
 
 Mission: `docs/missions/completed/operation-overmatch.md` (concluded).
-Successor: `docs/missions/operation-temper.md`. Compiled 2026-09-19 by
+Successor: `docs/missions/operation-forge.md`. Compiled 2026-09-19 by
 role `om-ph5`. This file is the only thing Ph5 writes: the statement
 ("we extract atomic CSS from your tokens, styles and code — and we do
 it better than Panda v2") may be quoted only from here.
