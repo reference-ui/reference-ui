@@ -6,5 +6,6 @@
 mod fixtures;
 mod hermetic_roots;
 mod neo_decl_roots;
+mod owned_props;
 mod prop_resolution;
 mod tracing;

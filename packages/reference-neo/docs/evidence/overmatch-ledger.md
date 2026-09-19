@@ -151,7 +151,7 @@ because the paired station is green.
 
 | Entry | Mission → ledger | Pin station(s) + paths | Panda side |
 |---|---|---|---|
-| 39 pure-helper folds | TO-BUILD → HAVE* | `A/tests/cases/ATM-SITE-31/` + `N/site/NEO-SITE-21/` (pure paint arm landed per 39-F1 fix; README confirms) — carve-out: 39-F3 pure calls in const inits refuse-with-diagnostic where v2 folds (behavior pinned, init-folding pass open, §6) | `scope.rs:908`, `:927`, `:945`, `:1073`, `:1030` |
+| 39 pure-helper folds | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-31/` (f3 arm flips to fold) + `A/tests/cases/ATM-SITE-80/` (post-attach init fold, Forge Slice 2) + `N/site/NEO-SITE-21/` | `scope.rs:908`, `:927`, `:945`, `:1073`, `:1030` |
 | 40 helper-key integration | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-49/` helper-key arm (`[gh('cool')]`) | `scope.rs:966` |
 | 41 refuse net (blanket) | HAVE → HAVE | `A/tests/cases/ATM-SITE-04/` + `-23/`, `ATM-LEAF-07/`, `ATM-FORBID-02/`, `ATM-DIAG-02/` + `N/site/NEO-SITE-06/` | `scope.rs:1020`, `:1112`, `:1164`, `:1281`, `polish.rs:125/162` |
 | 42 per-shape refuse pins | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-32/` + `N/site/NEO-SITE-21/` (impure arm; destructured-params tripwire added per fix) | `scope.rs:1112`, `:1020`, `:1249`, `:1123`, `:1153`, `:1143` |
@@ -379,6 +379,10 @@ ex-68 (entry 14); everything else placed is pinned.
 
 ## 5. Deferred and open items (not claimed)
 
+**Forge close 2026-09-19: no open items remain.** Every row below
+is struck, signed, or closed with its station; entries 14 and 81
+stay pinned. §5 is history, not a backlog.
+
 - **S13** (namespace/default value imports): **STRUCK — Forge §6
   verdict: permanently match v2.** Named imports are the dialect;
   namespace/default *value* reads refuse with
@@ -387,10 +391,12 @@ ex-68 (entry 14); everything else placed is pinned.
   The values still paint: harvest (Forge Part I) mints every
   complete CSS/rhythm literal onto every compatible sink. No
   station. Not quoted, nothing further to build.
-- **39-F3 follow-up** (pure calls in const inits): v2 folds, we
-  refuse with a diagnostic. Current behavior is pinned
-  (`A/tests/cases/ATM-SITE-31/`); the post-attach init-folding pass
-  is scoped but unbuilt. Entry 39 is HAVE* until it lands.
+- **39-F3 follow-up** (pure calls in const inits): **HAVE — Forge
+  Slice 2.** The post-attach init-folding pass is built
+  (`scope/call_init.rs`): `CallExpression` inits with `PureFn`
+  callees fold through the existing fence
+  (`A/tests/cases/ATM-SITE-80/`; `ATM-SITE-31` f3 arm flips to
+  fold). Entry 39 is HAVE.
 - **Poison precision** (35/53): **SIGNED — Forge Slice 3.**
   Cross-file mutation poison is precise to the origin binding:
   `A/tests/cases/ATM-SITE-84/` folds an import from its unmutated
@@ -419,21 +425,18 @@ ex-68 (entry 14); everything else placed is pinned.
   `Object.prototype`; neo merges cascade slots, not objects, and
   the outcome stays covered by MERGE-01/02/05. No key-ban, no
   station. The voyage-log line closes with this sentence.
-- **null-const slice**: open and otherwise undefined — the name
-  appears only in the voyage log (Ph3/Ph4 close lines); no owning
-  entry, no station. Observed (probe, NOT a pin):
-  `const n = null; css({ color: n })` warns
-  `Dynamic non-literal identifier 'n'` and skips with siblings
-  kept — fail-closed; whether a const null should strip silently
-  like a literal null (entry 03) is the open question.
+- **null-const slice**: **CLOSED — Forge §4 verdict (silent strip,
+  Slice 1).** Once resolved, the value is a hole; `NullLiteral` arms
+  in `scope/init.rs` and `constants/collect.rs` route it through the
+  existing strip (`A/tests/cases/ATM-SITE-82/`). A const null now
+  strips silently like a literal null (entry 03).
 - **Doom seed 1** (nested imported-object spread drops silently
-  cross-file): filed with a repro at
-  `docs/missions/doom-agent-protocol.md` §8 (reproduced 2026-09-19:
-  `css(button)` over a re-exported spread keeps `padding`, drops
-  `color`, zero diagnostics; same-file resolves). Attaches to
-  55/76 territory; entries stay HAVE* until a doom cycle fortifies
-  it. This is silence on idiomatic code — the one open hole in the
-  no-silence rule.
+  cross-file): **FORTIFIED — Forge Slice 3.** `value_of` resolves
+  import bindings demand-driven through the module graph, so the
+  three-file shape folds (`A/tests/cases/ATM-SITE-78/` + barrel +
+  cycle arms); unresolvable spreads carry a residue marker with a
+  located `ATM-W-UNFOLDABLE-SPREAD`. Entries 55/76 are whole HAVE.
+  Doom cycle 1 reproduces against this fixed shape.
 - **Runtime-table coincidence** (refused leaves can paint when
   another site mints the same atom): **SIGNED — Forge §2 verdict
   (accepted).** Extraction refusal is about the *site*, not the
@@ -519,8 +522,8 @@ were flipped in the same paperwork pass.
 > on the extraction language we match Panda v2 everywhere it
 > resolves (81 of 81 catalog entries pinned by green stations,
 > 4 with stated carve-outs) and exceed it in 19 pinned
-> superiority rows — except: the S13 value-import rider and the
-> four carve-outs (poison precision, 39-F3 init-folding, Ph1
-> mutation wording, doom seed 1), which are open and listed in
-> §5 with their reasons.
+> superiority rows. The S13 rider is struck (named imports are
+> the dialect — Forge §6); the four carve-outs are closed
+> (poison precision HAVE, 39-F3 HAVE, Ph1 wording signed, doom
+> seed 1 fortified — §5).
 

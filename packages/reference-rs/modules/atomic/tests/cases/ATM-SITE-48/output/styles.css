@@ -577,9 +577,18 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_0 { margin: 0; }
   .\@reference-ui\/lib__m_12px { margin: 12px; }
+  .\@reference-ui\/lib__m_16px { margin: 16px; }
+  .\@reference-ui\/lib__m_20px { margin: 20px; }
+  .\@reference-ui\/lib__m_24px { margin: 24px; }
+  .\@reference-ui\/lib__m_28px { margin: 28px; }
+  .\@reference-ui\/lib__m_2px { margin: 2px; }
+  .\@reference-ui\/lib__m_32px { margin: 32px; }
+  .\@reference-ui\/lib__m_36px { margin: 36px; }
   .\@reference-ui\/lib__m_4px { margin: 4px; }
   .\@reference-ui\/lib__m_8px { margin: 8px; }
+  .\@reference-ui\/lib__m_r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__p_12px { padding: 12px; }
   .\@reference-ui\/lib__p_16px { padding: 16px; }
   .\@reference-ui\/lib__p_20px { padding: 20px; }

@@ -22,5 +22,29 @@
     "file": "input/src/app.ts",
     "line": 14,
     "column": 37
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "borderColor under []: 1 harvested value minted",
+    "file": "input/src/app.ts",
+    "line": 14,
+    "column": 37
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 1 harvested value minted",
+    "file": "input/src/app.ts",
+    "line": 8,
+    "column": 31
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "margin under []: 3 harvested values minted",
+    "file": "input/src/app.ts",
+    "line": 11,
+    "column": 32
   }
 ]

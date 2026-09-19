@@ -38,5 +38,13 @@
     "file": "input/src/warns.ts",
     "line": 18,
     "column": 43
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 3 harvested values minted",
+    "file": "input/src/warns.ts",
+    "line": 6,
+    "column": 38
   }
 ]

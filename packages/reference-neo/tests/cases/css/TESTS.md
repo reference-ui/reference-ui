@@ -17,6 +17,7 @@ Statuses: `open`, `in-progress`, `done`, `blocked-on-rs`, `approved-absence`, `r
 | NEO-CSS-11 | Authored custom properties keep casing (`--testVariable0`) | done | ATM-NAME-* | — | `getPropertyValue('--testVariable0')` | `[panda-v1]` `core/__tests__/rule-processor.test.ts` "preserves casing" |
 | NEO-CSS-12 | Rhythm values `4r`, `3.5r`, `1/2r` lower to `calc()` over `var(--spacing-root)` (no per-key spacing vars) | done | ATM-RHYTHM-01..05 | — | computed px at a known root | `[lib]` global-css Trace B/E; `[atm]` P1 #8 |
 | NEO-CSS-13 | `flex` keywords map to Panda triples (`1`→`1 1 0%`, `auto`→`1 1 auto`, `initial`→`0 1 auto`, `none`) with raw passthrough otherwise and zero grow/shrink/basis longhands | done | ATM-SHORT-11 | — | sheet triples + raws; computed grow/shrink/basis per item incl. the `0%`-vs-`auto` basis split | `[audit]` b37-family-audit §2 #7; `[atm]` ATM-SHORT-11 |
+| NEO-CSS-14 | Harvest floor: a dynamic-site color from a palette array no static site reads paints through harvested plans; an unwritten color paints nothing with exactly one dev console diagnostic; both bundles fan the floor out | done | ATM-HARVEST-01..04 | `plans.ts`, `css.ts` | probe/pick computed colors; miss classless on ink + one diagnostic; red/blue plans in styled + react bundles; frozen recompile warns twice + one sink info | `[forge]` Slice 4 §2 |
 
 ## RS-9 — per-prop responsive objects + alias eviction (blocks NEO-CSS-03)
 

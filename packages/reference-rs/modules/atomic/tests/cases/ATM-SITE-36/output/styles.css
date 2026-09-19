@@ -583,6 +583,9 @@
   .\@reference-ui\/lib__m_5r { margin: calc(5 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__c_blue { color: blue; }
+  .\@reference-ui\/lib__c_green { color: green; }
+  .\@reference-ui\/lib__c_purple { color: purple; }
   .\@reference-ui\/lib__c_red { color: red; }
 }
 }

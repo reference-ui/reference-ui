@@ -579,6 +579,9 @@
 @layer utilities {
   .\@reference-ui\/lib__p_4px { padding: 4px; }
   .\@reference-ui\/lib__mt_-4 { margin-top: -4px; }
+  .\@reference-ui\/lib__mt_4px { margin-top: 4px; }
+  .\@reference-ui\/lib__mt_auto { margin-top: auto; }
+  .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__order_-1 { order: -1; }
   .\@reference-ui\/lib__order_-2 { order: -2; }
   .\@reference-ui\/lib__order_-4 { order: -4; }

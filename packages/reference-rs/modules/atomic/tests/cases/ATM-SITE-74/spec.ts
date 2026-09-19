@@ -1,7 +1,7 @@
 /**
  * Optional-chain drop station (SPEC-V2-44). `?.` on an unresolvable base
- * warns once and mints nothing while static siblings in the same object
- * still extract with their runtime plans.
+ * warns once and mints nothing at the site while static siblings in the
+ * same object still extract with their runtime plans.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -16,9 +16,12 @@ const spec: AtomicCaseSpec = {
     ).toBeDefined()
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(1)
-    expect(diagnostics[0]!.severity).toBe('warning')
-    expect(diagnostics[0]!.message).toMatch(/Dynamic non-literal/)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.message).toMatch(/Dynamic non-literal/)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
   },
 }
 

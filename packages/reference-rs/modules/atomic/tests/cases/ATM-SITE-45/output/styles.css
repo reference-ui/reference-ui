@@ -590,8 +590,11 @@
   .\@reference-ui\/lib__m_9r { margin: calc(9 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__bg-c_\{colors\.red\.500\} { background-color: var(--colors-red-500); }
+  .\@reference-ui\/lib__c_\#000 { color: #000; }
   .\@reference-ui\/lib__c_colors\.nope\.999 { color: #000; }
   .\@reference-ui\/lib__c_colors\.nope\.997 { color: #111; }
+  .\@reference-ui\/lib__c_\#111 { color: #111; }
+  .\@reference-ui\/lib__c_\#fff { color: #fff; }
   .\@reference-ui\/lib__c_colors\.nope\.998 { color: #fff; }
   .\@reference-ui\/lib__c_\{colors\.gray\.800\} { color: var(--colors-gray-800); }
   .\@reference-ui\/lib__c_colors\.red\.500 { color: var(--colors-red-500); }

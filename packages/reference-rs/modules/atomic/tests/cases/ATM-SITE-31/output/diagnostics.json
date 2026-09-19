@@ -102,5 +102,13 @@
     "file": "input/src/xfile.ts",
     "line": 8,
     "column": 32
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 8 harvested values minted",
+    "file": "input/src/pure.ts",
+    "line": 62,
+    "column": 32
   }
 ]

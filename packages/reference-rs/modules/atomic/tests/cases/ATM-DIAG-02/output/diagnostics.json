@@ -14,5 +14,21 @@
     "file": "input/src/dynamic.ts",
     "line": 7,
     "column": 13
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/dynamic.ts",
+    "line": 6,
+    "column": 10
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "width under []: 1 harvested value minted",
+    "file": "input/src/dynamic.ts",
+    "line": 7,
+    "column": 13
   }
 ]

@@ -7,7 +7,7 @@
 use oxc_ast::ast::{BooleanLiteral, NumericLiteral, StringLiteral, TemplateLiteral};
 use smallvec::SmallVec;
 
-use super::walk::ExpressionWalk;
+use super::walk::{DynamicRefusal, ExpressionWalk};
 use crate::atom::AtomValue;
 use crate::diagnostics::DiagnosticCode;
 
@@ -104,10 +104,11 @@ pub fn extract_template_literal(
     }
     for refusal in &fold.refusals {
         // `2${n}r` over a dynamic `n` — the part, not the template, is named
-        ctx.warn(
-            refusal.span(),
-            DiagnosticCode::DynamicTemplate,
-            refusal.message(ctx.prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: refusal.span(),
+            code: DiagnosticCode::DynamicTemplate,
+            message: refusal.message(ctx.prop),
+            when,
+        });
     }
 }

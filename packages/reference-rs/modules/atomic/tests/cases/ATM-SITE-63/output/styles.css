@@ -577,7 +577,9 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__bg-c_black { background-color: black; }
   .\@reference-ui\/lib__bg-c_white { background-color: white; }
   .\@reference-ui\/lib__c_black { color: black; }
+  .\@reference-ui\/lib__c_white { color: white; }
 }
 }

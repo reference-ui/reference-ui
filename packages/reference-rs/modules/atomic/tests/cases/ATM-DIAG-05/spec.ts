@@ -90,19 +90,27 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('margin-top:')
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(EXPECTED.length)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(EXPECTED.length)
     for (const d of diagnostics) {
-      expect(d.severity).toBe('warning')
       expect(d.file ?? '').toContain('precise.ts')
       expect(d.line).toBeGreaterThan(0)
       expect(d.column).toBeGreaterThan(0)
-      expect(d.code).toMatch(/^ATM-[WE]-/)
+    }
+    for (const d of warnings) {
+      expect(d.code).toMatch(/^ATM-W-/)
+    }
+    // Five refused positions sink; every info locates its sink site.
+    expect(infos).toHaveLength(5)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }
 
     // Each refusal lands on its sub-expression with its class code. The
     // mutated-binding message carries its write site, so match by prefix.
     for (const { line, column, code, message } of EXPECTED) {
-      const match = diagnostics.find(
+      const match = warnings.find(
         d => d.message.startsWith(message) && d.line === line && d.column === column
       )
       expect(match, `missing ${code} at ${line}:${column}`).toBeDefined()
@@ -110,7 +118,7 @@ const spec: AtomicCaseSpec = {
     }
 
     // Same authored mistake, same code: both `depth` uses agree.
-    const depthDiags = diagnostics.filter(d => d.message.includes("'depth'"))
+    const depthDiags = warnings.filter(d => d.message.includes("'depth'"))
     expect(depthDiags).toHaveLength(2)
     expect(depthDiags[0]!.code).toBe(depthDiags[1]!.code)
   },

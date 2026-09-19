@@ -16,6 +16,11 @@ fn compile_code(code: &str) -> crate::CompileResult {
     compile(&req).expect("compile succeeds")
 }
 
+/// True when the want was minted by harvest (the §2 floor), not the site walk.
+fn is_harvest(want: &crate::atom::Want) -> bool {
+    want.origin.as_deref() == Some(crate::extract::harvest::HARVEST_ORIGIN)
+}
+
 #[test]
 fn test_flat_and_nested_ternaries() {
     let res = compile_code(
@@ -152,7 +157,21 @@ fn test_dynamic_properties_keep_siblings() {
     assert_eq!(res.wants.len(), 1);
     assert_eq!(&*res.wants[0].prop, "color");
     assert_eq!(res.wants[0].value.to_string(), "red");
-    assert_eq!(res.diagnostics.len(), 1);
+    // The refused width is a sink, but the pool holds only `red`, which the
+    // kind gate refuses onto a length prop: one warning, one zero-count info.
+    assert_eq!(res.diagnostics.len(), 2);
+    assert_eq!(
+        res.diagnostics[0].code,
+        crate::DiagnosticCode::DynamicMember
+    );
+    assert_eq!(res.diagnostics[1].code, crate::DiagnosticCode::HarvestSink);
+    assert!(
+        res.diagnostics[1]
+            .message
+            .contains("width under []: 0 harvested values minted"),
+        "{}",
+        res.diagnostics[1].message
+    );
 }
 
 #[test]
@@ -370,7 +389,10 @@ fn test_responsive_r_object() {
 fn test_baked_object_entry_never_resolves_stale() {
     // Soundness net for the scope dep-strip (SPEC-V2-34 object half): the
     // entry baked from `red` strips when `red` is written, so the stale
-    // init never resolves and the use diagnoses instead of ghosting.
+    // init never resolves at the site and the use diagnoses instead of
+    // ghosting. Harvest still mints the program's literals onto the refused
+    // sink (Forge §2/§3: both colors harvest; which is live is a write
+    // question) — those wants carry the harvest origin, never the site's.
     let res = compile_code(
         r#"import { css } from '@reference-ui/react';
         let red = 'red';
@@ -378,14 +400,28 @@ fn test_baked_object_entry_never_resolves_stale() {
         red = 'blue';
         export const a = css({ color: theme.primary });"#,
     );
-    assert!(res.wants.iter().all(|w| w.value.to_string() != "red"));
+    assert!(res
+        .wants
+        .iter()
+        .filter(|w| !is_harvest(w))
+        .all(|w| w.value.to_string() != "red"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| is_harvest(w) && w.value.to_string() == "red"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
     assert!(!res.diagnostics.is_empty());
 }
 
 #[test]
 fn test_destructured_name_never_resolves_stale() {
     // Soundness net for destructure provenance (SPEC-V2-32): names copied
-    // from a written object strip with it — the stale leaf never resolves.
+    // from a written object strip with it — the stale leaf never resolves
+    // at the site. Harvest still mints the program's literals onto the
+    // refused sink (Forge §2/§3) under the harvest origin, never the site's.
     let res = compile_code(
         r#"import { css } from '@reference-ui/react';
         let theme = { primary: 'red' };
@@ -393,7 +429,19 @@ fn test_destructured_name_never_resolves_stale() {
         theme.primary = 'blue';
         export const a = css({ color: primary });"#,
     );
-    assert!(res.wants.iter().all(|w| w.value.to_string() != "red"));
+    assert!(res
+        .wants
+        .iter()
+        .filter(|w| !is_harvest(w))
+        .all(|w| w.value.to_string() != "red"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| is_harvest(w) && w.value.to_string() == "red"));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
     assert!(!res.diagnostics.is_empty());
 }
 
@@ -441,6 +489,7 @@ fn test_bare_extract_collects_file_mutations() {
         recipes: &mut recipes,
         diagnostics: &mut diagnostics,
         authored: &mut authored,
+        sinks: &mut Vec::new(),
     };
     crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks);
 

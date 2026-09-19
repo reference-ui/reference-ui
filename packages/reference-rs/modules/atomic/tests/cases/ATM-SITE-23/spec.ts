@@ -91,9 +91,14 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('border-bottom-color: var(--colors-gray-200);')
     expect(sheet).toContain('border-bottom-color: var(--colors-gray-700);')
 
-    expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics[0]!.severity).toBe('warning')
-    expect(result.diagnostics[0]!.message).toMatch(/unknownToken/)
+    // The fully dynamic identifier warns and mints nothing at the site;
+    // its sink infos a zero count (the pool holds no compatible value).
+    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.message).toMatch(/unknownToken/)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
   },
 }
 

@@ -37,8 +37,14 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('position-try-fallbacks: none;')
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(6)
-    const codes = diagnostics.map(d => d.code).sort()
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(6)
+    // The refused animationName position sinks with nothing compatible in
+    // the pool: one zero-count info, no new wants or plans.
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    const codes = warnings.map(d => d.code).sort()
     expect(codes).toEqual([
       'ATM-W-DYNAMIC-IDENTIFIER',
       'ATM-W-DYNAMIC-IDENTIFIER',

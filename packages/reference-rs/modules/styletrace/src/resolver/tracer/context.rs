@@ -24,6 +24,9 @@ pub struct TraceSession {
     /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
     /// surface-type import denotes. `None` keeps disk resolution strict.
     pub unresolved_style_props: Option<BTreeSet<String>>,
+    /// Owned-mode prune: references to the surface type names contribute
+    /// no names, so the expansion is the host's own declared props.
+    pub prune_surface: bool,
 }
 
 impl TraceSession {
@@ -32,6 +35,7 @@ impl TraceSession {
             sync_root: sync_root.to_path_buf(),
             module_cache: HashMap::new(),
             unresolved_style_props: None,
+            prune_surface: false,
         }
     }
 }
@@ -292,6 +296,6 @@ impl<'a> TraceContext<'a> {
 
 /// Type names that denote the engine style surface: `StyleProps` is the
 /// surface itself and `PrimitiveProps` is native props plus the surface.
-fn is_surface_type_name(imported_name: &str) -> bool {
+pub(crate) fn is_surface_type_name(imported_name: &str) -> bool {
     matches!(imported_name, "StyleProps" | "PrimitiveProps")
 }

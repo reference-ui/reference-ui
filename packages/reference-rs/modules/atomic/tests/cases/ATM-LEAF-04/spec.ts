@@ -4,7 +4,13 @@
  * Unresolvable dynamic identifiers emit diagnostic warnings while resolving valid operands.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-04',
@@ -14,12 +20,24 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'borderColor', 0)).toBe(true)
     expect(hasWant(result, 'outline', '2px solid')).toBe(true)
     expect(hasWant(result, 'color', 'red')).toBe(true)
-    // The `||` dead arm stays dead: the single `blue` is the `??` fallback.
+    // The `||` dead arm stays dead at the site: the site's single `blue`
+    // is the `??` fallback; harvest mints its own floor below.
     expect(hasWant(result, 'color', 'blue')).toBe(true)
-    expect(getWantsForProp(result, 'color')).toHaveLength(2)
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(2)
+    expect(getWantsForProp(result, 'color')).toHaveLength(3)
     expect(hasWant(result, 'bg', 'green')).toBe(true)
     expect(hasWant(result, 'margin', '2r')).toBe(true)
-    expect(result.diagnostics).toHaveLength(3)
+    // The three refused positions harvest net-new pairs only: bg blue/red
+    // plus color green (twins of site atoms skip).
+    expect(harvestWants(result)).toHaveLength(3)
+    expect(result.wants ?? []).toHaveLength(10)
+    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(3)
+    expect(infos).toHaveLength(3)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+    }
   },
 }
 

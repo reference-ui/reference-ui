@@ -1,0 +1,5 @@
+{
+  "color:red": "@reference-ui/lib__c_red",
+  "height:2r": "@reference-ui/lib__h_2r",
+  "width:2r": "@reference-ui/lib__w_2r"
+}

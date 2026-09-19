@@ -9,7 +9,13 @@
  * refuses the whole annotation.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-44',
@@ -34,18 +40,28 @@ const spec: AtomicCaseSpec = {
     ]) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
+    // The backgroundColor sink harvests red/blue; both color pairs twin
+    // site atoms and skip, so that sink infos zero.
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'fontSize')).toHaveLength(2)
     expect(hasWant(result, 'backgroundColor', 'missing')).toBe(false)
-    expect(result.wants ?? []).toHaveLength(22)
+    expect(harvestWants(result)).toHaveLength(2)
+    expect(result.wants ?? []).toHaveLength(24)
 
     // Plans dedupe by leaf: the six (color, red) wants share one plan.
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(16)
+    expect(plans).toHaveLength(18)
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(6)
-    const codes = diagnostics.map(d => d.code).sort()
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(6)
+    expect(infos).toHaveLength(2)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+    }
+    const codes = warnings.map(d => d.code).sort()
     expect(codes).toEqual([
       'ATM-W-DYNAMIC-IDENTIFIER',
       'ATM-W-DYNAMIC-IDENTIFIER',
@@ -54,7 +70,7 @@ const spec: AtomicCaseSpec = {
       'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',
     ])
-    const messages = diagnostics.map(d => d.message).join('\n')
+    const messages = warnings.map(d => d.message).join('\n')
     expect(messages).toMatch(/'color'.*'color'/)
   },
 }

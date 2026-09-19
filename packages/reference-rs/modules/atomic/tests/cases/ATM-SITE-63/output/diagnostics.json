@@ -14,5 +14,21 @@
     "file": "input/src/partial.ts",
     "line": 9,
     "column": 58
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "backgroundColor under []: 1 harvested value minted",
+    "file": "input/src/partial.ts",
+    "line": 9,
+    "column": 58
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 1 harvested value minted",
+    "file": "input/src/partial.ts",
+    "line": 7,
+    "column": 38
   }
 ]

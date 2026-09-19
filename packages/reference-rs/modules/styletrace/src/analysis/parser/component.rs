@@ -226,6 +226,7 @@ pub fn component_from_function_like(
         exposes_style_props: bindings.exposes_style_props(),
         uses_style_pipeline,
         edges,
+        owned_props: bindings.owned_props.clone(),
     }))
 }
 

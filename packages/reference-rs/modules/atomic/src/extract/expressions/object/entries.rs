@@ -70,21 +70,35 @@ fn push_entry_leaves(
     site: &LowerSite<'_>,
 ) {
     let when_strings: Vec<String> = site.when.iter().map(|w| w.to_string()).collect();
-    let important = ctx.important;
     for val in leaves {
+        // 'transparent !important' splits exactly like an inline literal —
+        // the suffix is a flag, never part of the value (Forge S5-2)
+        let (leaf, is_imp) = split_entry_leaf(val);
+        let leaf_important = ctx.important || is_imp;
+        let json = super::super::ast_value::atom_value_to_json(&leaf);
         let mut expr_ctx = ctx.expression_walk(key);
-        expr_ctx.push_want(val.clone(), site.when.clone(), false, Some(site.span));
+        expr_ctx.push_want(leaf, site.when.clone(), is_imp, Some(site.span));
         if let Some(authored) = ctx.authored.as_mut() {
-            if let Some(json) = super::super::ast_value::atom_value_to_json(val) {
+            if let Some(json) = json {
                 authored.push(crate::runtime::AuthoredDeclaration {
                     when: when_strings.clone(),
                     prop: key.to_string(),
                     value: json,
-                    important,
+                    important: leaf_important,
                 });
             }
         }
     }
+}
+
+/// One recorded leaf with its `!important` suffix split into the flag:
+/// strings strip like inline literals, every other leaf pushes verbatim.
+fn split_entry_leaf(val: &AtomValue) -> (AtomValue, bool) {
+    if let AtomValue::String(text) = val {
+        let (clean, important) = super::super::literal::split_important_flag(text);
+        return (AtomValue::String(clean.into()), important);
+    }
+    (val.clone(), false)
 }
 
 /// Lower responsive sub-entries under their sub-key conditions.
@@ -304,4 +318,47 @@ fn lower_r_sub(ctx: &mut ObjectWalk<'_>, site: &LowerSite<'_>, sub: &RSub<'_>) {
         DiagnosticCode::NonObjectCondition,
         "Condition block expected object expression",
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::diagnostics::DiagnosticSeverity;
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_code(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// Const leaves split `!important` like inline literals: stripped, flagged, silent (S5-2).
+    #[test]
+    fn const_leaf_important_suffix_mints_flagged_and_silent() {
+        let res = compile_code(
+            "import { css } from '@reference-ui/styled';\
+             const trigger = { borderBottomColor: 'transparent !important', \
+             _hover: { color: 'red !important' } };\
+             export const cls = css({ ...trigger });",
+        );
+        let site: Vec<_> = res.wants.iter().filter(|w| {
+            w.origin.as_deref() != Some(crate::extract::harvest::HARVEST_ORIGIN)
+        }).collect();
+        assert_eq!(site.len(), 2);
+        for (prop, value) in [("borderBottomColor", "transparent"), ("color", "red")] {
+            let want = site.iter().find(|w| &*w.prop == prop).expect("leaf mints");
+            assert_eq!(want.value.to_string(), value);
+            assert!(want.important);
+        }
+        let hover = site.iter().find(|w| &*w.prop == "color").expect("leaf mints");
+        assert_eq!(hover.when.as_slice(), &["_hover".into()]);
+        let loud: Vec<_> = res.diagnostics.iter().filter(|d| {
+            !matches!(d.severity, DiagnosticSeverity::Info)
+        }).collect();
+        assert!(loud.is_empty(), "unexpected diagnostics: {loud:?}");
+        assert!(res.stylesheet.contains("border-bottom-color: transparent !important;"));
+        assert!(res.stylesheet.contains("color: red !important;"));
+    }
 }

@@ -6,7 +6,13 @@
  * with a diagnostic while static siblings still extract.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'red' },
@@ -25,12 +31,17 @@ const spec: AtomicCaseSpec = {
     for (const { prop, value } of EXPECTED) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
-    // Fifteen wants: basic, rename, rest spread (2) + rest member, array
-    // identifier + inline (2), default-missing, default-present, computed
-    // key, branching entry (2), array-rest chain, and the warn-control sibling.
+    // Fifteen site wants: basic, rename, rest spread (2) + rest member,
+    // array identifier + inline (2), default-missing, default-present,
+    // computed key, branching entry (2), array-rest chain, and the
+    // warn-control sibling. Red/blue twin site atoms, so the refused
+    // ghost position infos a zero count.
+    expect(siteWants(result)).toHaveLength(15)
+    expect(harvestWants(result)).toHaveLength(0)
     expect(result.wants ?? []).toHaveLength(15)
 
     // The branching entry fans out to both arms.
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'color')).toHaveLength(7)
 
     // One runtime plan per unique leaf.
@@ -40,11 +51,15 @@ const spec: AtomicCaseSpec = {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
-    // The unresolvable-source destructure warns once and mints nothing.
+    // The unresolvable-source destructure warns once and mints nothing at
+    // the site.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(1)
-    expect(diagnostics[0]!.severity).toBe('warning')
-    expect(diagnostics[0]!.message).toMatch(/Dynamic non-literal identifier 'ghost'/)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.message).toMatch(/Dynamic non-literal identifier 'ghost'/)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
     expect(hasWant(result, 'color', 'ghost')).toBe(false)
 
     expect(result.stylesheet).toContain('color: red;')

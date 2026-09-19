@@ -96,6 +96,14 @@
     "column": 23
   },
   {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 3 harvested values minted",
+    "file": "input/src/foreigntoken.ts",
+    "line": 4,
+    "column": 31
+  },
+  {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-TOKEN-PATH",
     "message": "unknown token path `colors.nope.997`"

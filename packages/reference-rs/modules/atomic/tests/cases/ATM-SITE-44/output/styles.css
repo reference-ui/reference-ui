@@ -590,6 +590,8 @@
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
   .\@reference-ui\/lib__p_8px { padding: 8px; }
+  .\@reference-ui\/lib__bg-c_blue { background-color: blue; }
+  .\@reference-ui\/lib__bg-c_red { background-color: red; }
   .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_red { color: red; }
   .\@reference-ui\/lib__fs_4 { font-size: 4px; }

@@ -5,6 +5,7 @@ Living notes for the Reference UI monorepo. The published site is `packages/refe
 ## Start here
 
 - [REFERENCE_UI.md](./REFERENCE_UI.md) — long-form orientation of the monorepo
+- [ATOMIC.md](./ATOMIC.md) — how the native style compiler is put together (extract, harvest, atoms)
 - [FEATURES/](./FEATURES/) — capabilities the system actually supports
 - [BOOK.md](./BOOK.md) — Book playground contract (`pnpm dev:lib`)
 - [RELEASE.md](./RELEASE.md) — changesets and pipeline publish
@@ -12,7 +13,7 @@ Living notes for the Reference UI monorepo. The published site is `packages/refe
 
 ## Architecture (historical, still useful)
 
-These predate the native engine campaign. Paths inside them drift (`src/cli/`, `src/styled/`). Prefer current code and [packages/reference-neo/PLAN.md](../packages/reference-neo/PLAN.md) when they disagree.
+These predate the native engine campaign. Paths inside them drift (`src/cli/`, `src/styled/`). Prefer current code, [ATOMIC.md](./ATOMIC.md), and [packages/reference-neo/PLAN.md](../packages/reference-neo/PLAN.md) when they disagree.
 
 - [Architecture.md](./Architecture.md)
 - [CORE.md](./CORE.md)

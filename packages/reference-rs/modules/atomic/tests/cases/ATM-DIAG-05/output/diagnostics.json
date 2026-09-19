@@ -86,5 +86,45 @@
     "file": "input/src/precise.ts",
     "line": 19,
     "column": 36
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 2 harvested values minted",
+    "file": "input/src/precise.ts",
+    "line": 4,
+    "column": 10
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "height under []: 3 harvested values minted",
+    "file": "input/src/precise.ts",
+    "line": 6,
+    "column": 11
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "margin under []: 3 harvested values minted",
+    "file": "input/src/precise.ts",
+    "line": 8,
+    "column": 14
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "padding under []: 3 harvested values minted",
+    "file": "input/src/precise.ts",
+    "line": 7,
+    "column": 12
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "width under []: 3 harvested values minted",
+    "file": "input/src/precise.ts",
+    "line": 5,
+    "column": 10
   }
 ]

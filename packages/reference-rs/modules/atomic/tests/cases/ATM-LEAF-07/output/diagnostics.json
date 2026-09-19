@@ -22,5 +22,21 @@
     "file": "input/src/partial.ts",
     "line": 4,
     "column": 21
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/partial.ts",
+    "line": 3,
+    "column": 29
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "width under []: 1 harvested value minted",
+    "file": "input/src/card.ts",
+    "line": 5,
+    "column": 10
   }
 ]

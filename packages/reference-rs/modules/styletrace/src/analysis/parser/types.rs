@@ -12,7 +12,7 @@ use crate::analysis::model::PropBindings;
 use crate::analysis::util::{
     is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, slice_span,
 };
-use crate::resolver::{collect_style_prop_names, StyleTraceError};
+use crate::resolver::{collect_declared_prop_names, collect_style_prop_names, StyleTraceError};
 use oxc_ast::ast::{FormalParameter, TSType};
 use oxc_span::GetSpan;
 use std::collections::BTreeSet;
@@ -32,14 +32,14 @@ pub fn parse_prop_bindings(
         wrapper_style_props
     };
 
+    let mut bindings = PropBindings::default();
     if let Some(annotation) = param.type_annotation.as_ref() {
         resolved_style_props.extend(resolve_style_props_from_type_annotation(
             ctx,
             &annotation.type_annotation,
         )?);
+        bindings.owned_props = resolve_owned_prop_names(ctx, &annotation.type_annotation)?;
     }
-
-    let mut bindings = PropBindings::default();
     let pattern_source = slice_span(ctx.source, param.pattern.span()).trim();
     if pattern_source.starts_with('{') {
         parse_object_bindings(pattern_source, ctx, &resolved_style_props, &mut bindings);
@@ -180,6 +180,71 @@ fn resolve_intersection_type(
     let mut names = BTreeSet::new();
     for nested in &intersection.types {
         names.extend(resolve_style_props_from_type_annotation(ctx, nested)?);
+    }
+    Ok(names)
+}
+
+/// The host's own declared prop names: every member of its props type
+/// except names contributed through the surface types. Own-literal
+/// collisions with style props (`size`, `weight`) stay owned — that is
+/// the §14 shadow — while `StyleProps` / `PrimitiveProps` references
+/// prune inside the resolver, so `color` keeps extracting.
+fn resolve_owned_prop_names(
+    ctx: &ParserContext,
+    type_annotation: &TSType<'_>,
+) -> Result<BTreeSet<String>, StyleTraceError> {
+    match type_annotation {
+        TSType::TSTypeReference(reference) => resolve_owned_type_reference(ctx, reference),
+        TSType::TSTypeLiteral(type_literal) => resolve_owned_type_literal(ctx, type_literal),
+        TSType::TSIntersectionType(intersection) => {
+            resolve_owned_intersection_type(ctx, intersection)
+        }
+        TSType::TSParenthesizedType(parenthesized) => {
+            resolve_owned_prop_names(ctx, &parenthesized.type_annotation)
+        }
+        _ => Ok(BTreeSet::new()),
+    }
+}
+
+fn resolve_owned_type_reference(
+    ctx: &ParserContext,
+    reference: &oxc_ast::ast::TSTypeReference<'_>,
+) -> Result<BTreeSet<String>, StyleTraceError> {
+    Ok(collect_declared_prop_names(
+        ctx.workspace_root,
+        ctx.path,
+        slice_span(ctx.source, reference.type_name.span()),
+    )?
+    .into_iter()
+    .collect())
+}
+
+fn resolve_owned_type_literal(
+    ctx: &ParserContext,
+    type_literal: &oxc_ast::ast::TSTypeLiteral<'_>,
+) -> Result<BTreeSet<String>, StyleTraceError> {
+    Ok(type_literal
+        .members
+        .iter()
+        .filter_map(|member| match member {
+            oxc_ast::ast::TSSignature::TSPropertySignature(property) => {
+                let name = slice_span(ctx.source, property.key.span())
+                    .trim_matches('"')
+                    .trim_matches('\'');
+                Some(name.to_string())
+            }
+            _ => None,
+        })
+        .collect())
+}
+
+fn resolve_owned_intersection_type(
+    ctx: &ParserContext,
+    intersection: &oxc_ast::ast::TSIntersectionType<'_>,
+) -> Result<BTreeSet<String>, StyleTraceError> {
+    let mut names = BTreeSet::new();
+    for nested in &intersection.types {
+        names.extend(resolve_owned_prop_names(ctx, nested)?);
     }
     Ok(names)
 }

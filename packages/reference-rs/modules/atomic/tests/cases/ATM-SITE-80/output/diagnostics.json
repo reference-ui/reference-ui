@@ -6,5 +6,13 @@
     "file": "input/src/App.tsx",
     "line": 20,
     "column": 37
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 1 harvested value minted",
+    "file": "input/src/App.tsx",
+    "line": 20,
+    "column": 37
   }
 ]

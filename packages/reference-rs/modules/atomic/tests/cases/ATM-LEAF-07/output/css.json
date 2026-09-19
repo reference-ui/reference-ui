@@ -1,5 +1,6 @@
 {
   "color:black": "@reference-ui/lib__c_black",
   "color:red": "@reference-ui/lib__c_red",
-  "height:100px": "@reference-ui/lib__h_100px"
+  "height:100px": "@reference-ui/lib__h_100px",
+  "width:100px": "@reference-ui/lib__w_100px"
 }

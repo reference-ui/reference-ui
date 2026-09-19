@@ -7,7 +7,13 @@
  * against the surface with siblings kept.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 function tokenWant(result: unknown, prop: string, path: string): boolean {
   const wants = (result as { wants?: unknown[] }).wants ?? []
@@ -28,11 +34,14 @@ const spec: AtomicCaseSpec = {
     expect(tokenWant(result, 'color', 'colors.red.500')).toBe(true)
     expect(tokenWant(result, 'color', 'colors.nope.998')).toBe(true)
     expect(tokenWant(result, 'color', 'colors.nope.997')).toBe(true)
-    expect(getWantsForProp(result, 'color')).toHaveLength(13)
-    expect(result.wants ?? []).toHaveLength(29)
+    // The refused color position harvests the three fallback hexes.
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(13)
+    expect(getWantsForProp(result, 'color')).toHaveLength(16)
+    expect(harvestWants(result)).toHaveLength(3)
+    expect(result.wants ?? []).toHaveLength(32)
 
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(19)
+    expect(plans).toHaveLength(22)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('color: var(--colors-red-500);')
@@ -44,8 +53,12 @@ const spec: AtomicCaseSpec = {
     expect(sheet).not.toContain('nope.996')
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(16)
-    const codes = diagnostics.map(d => d.code).sort()
+    const warnsAndErrors = diagnostics.filter(d => d.severity !== 'info')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnsAndErrors).toHaveLength(16)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    const codes = warnsAndErrors.map(d => d.code).sort()
     expect(codes).toEqual([
       'ATM-E-UNKNOWN-TOKEN',
       'ATM-W-DYNAMIC-EXPRESSION',

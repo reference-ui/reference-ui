@@ -6,5 +6,13 @@
     "file": "input/src/dynamic.tsx",
     "line": 4,
     "column": 42
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "borderBottomColor under []: 0 harvested values minted",
+    "file": "input/src/dynamic.tsx",
+    "line": 4,
+    "column": 42
   }
 ]

@@ -272,6 +272,20 @@ export function getWantsForProp(
   return (result.wants ?? []).filter(w => w.prop === prop)
 }
 
+/** Wants minted by the site walk, excluding the harvest floor (`ATM-HARVEST-01`). */
+export function siteWants(
+  result: CompileResult
+): NonNullable<CompileResult['wants']> {
+  return (result.wants ?? []).filter(w => w.origin !== 'harvest')
+}
+
+/** Wants minted by harvest onto refused dynamic sinks (`ATM-HARVEST-01`). */
+export function harvestWants(
+  result: CompileResult
+): NonNullable<CompileResult['wants']> {
+  return (result.wants ?? []).filter(w => w.origin === 'harvest')
+}
+
 /** Inner text of `@layer name { ... }`, or empty if that layer was omitted. */
 export function layerBody(sheet: string, name: string): string {
   const open = `@layer ${name} {`

@@ -601,7 +601,14 @@
   .\@reference-ui\/lib__bg-c_yellow\.700 { background-color: var(--colors-yellow-700); }
   .\@reference-ui\/lib__c_\#aa1111 { color: #aa1111; }
   .\@reference-ui\/lib__c_black { color: black; }
+  .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_coral { color: coral; }
+  .\@reference-ui\/lib__c_gold { color: gold; }
+  .\@reference-ui\/lib__c_green { color: green; }
+  .\@reference-ui\/lib__c_indigo { color: indigo; }
+  .\@reference-ui\/lib__c_navy { color: navy; }
+  .\@reference-ui\/lib__c_orange { color: orange; }
+  .\@reference-ui\/lib__c_purple { color: purple; }
   .\@reference-ui\/lib__c_red { color: red; }
   .\@reference-ui\/lib__c_green\.600 { color: var(--colors-green-600); }
   .\@reference-ui\/lib__c_indigo\.600 { color: var(--colors-indigo-600); }
@@ -612,6 +619,7 @@
   .\@reference-ui\/lib__c_teal\.600 { color: var(--colors-teal-600); }
   .\@reference-ui\/lib__c_violet\.600 { color: var(--colors-violet-600); }
   .\@reference-ui\/lib__c_yellow\.700 { color: var(--colors-yellow-700); }
+  .\@reference-ui\/lib__c_violet { color: violet; }
   .\@reference-ui\/lib__c_white { color: white; }
   .\@reference-ui\/lib__w_4px { width: 4px; }
 }

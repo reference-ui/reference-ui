@@ -6,5 +6,13 @@
     "file": "input/src/chain.ts",
     "line": 17,
     "column": 31
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/chain.ts",
+    "line": 17,
+    "column": 31
   }
 ]

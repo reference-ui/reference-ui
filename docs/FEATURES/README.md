@@ -1,6 +1,6 @@
 # Features
 
-Capabilities Reference UI supports, or has decided to support. These are product contracts, not the published docs site.
+Capabilities Reference UI supports, or has decided to support. These are product contracts, not the published docs site. How those styles compile (Want → AtomSet, harvest, one namer) is [ATOMIC.md](../ATOMIC.md).
 
 | Doc | What it covers |
 | --- | --- |

@@ -130,3 +130,28 @@ pub fn collect_style_prop_names(
     let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
     Ok(names.into_iter().collect())
 }
+
+/// Declared prop names of one exported props type with the surface pruned:
+/// references to `StyleProps` / `PrimitiveProps` contribute nothing, so the
+/// expansion is the host's own declaration (geometry, variants, collisions
+/// like `size` included). Unresolvable names contribute nothing; there is
+/// no engine fallback because the surface is never owned.
+pub fn collect_declared_prop_names(
+    sync_root: &Path,
+    entry_path: &Path,
+    export_name: &str,
+) -> Result<Vec<String>, StyleTraceError> {
+    let mut session = TraceSession::new(sync_root);
+    session.prune_surface = true;
+    let mut visited = BTreeSet::new();
+    let env = HashMap::new();
+    let mut ctx = TraceContext {
+        session: &mut session,
+        module_path: entry_path,
+        env: &env,
+        visited: &mut visited,
+    };
+
+    let names = resolve::resolve_reference_props(&mut ctx, entry_path, export_name)?;
+    Ok(names.into_iter().collect())
+}

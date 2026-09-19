@@ -46,5 +46,21 @@
     "file": "input/src/params.ts",
     "line": 58,
     "column": 40
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "backgroundColor under []: 2 harvested values minted",
+    "file": "input/src/params.ts",
+    "line": 58,
+    "column": 40
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/params.ts",
+    "line": 16,
+    "column": 23
   }
 ]

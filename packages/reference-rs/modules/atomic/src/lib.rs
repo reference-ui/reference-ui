@@ -38,7 +38,7 @@ use oxc_span::SourceType;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::atom::AtomSet;
 
@@ -97,10 +97,12 @@ struct ParseSession<'a> {
     identity: extract::identity::IdentityGraph<'a>,
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a HashSet<String>,
+    owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,
     authored: &'a mut Vec<runtime::AuthoredDeclaration>,
+    sinks: &'a mut Vec<extract::harvest::Sink>,
 }
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
@@ -118,6 +120,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
+    let mut harvest_sinks = Vec::new();
     let project_constants = collect_project_constants(&sources, &parsed);
     let mut graph = extract::resolver::ValueGraph::new(&sources, &parsed, &project_constants);
     let identity = extract::identity::IdentityGraph::new(&sources);
@@ -134,13 +137,27 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
             identity,
             breakpoints: system.breakpoints(),
             traced_jsx: &traced_jsx,
+            owned_props: &resolved_hosts.owned_props,
             wants: &mut wants,
             recipes: &mut extracted_recipes,
             diagnostics: &mut diagnostics,
             authored: &mut authored,
+            sinks: &mut harvest_sinks,
         };
         extract_all_sources(&mut session, &sources, &parsed);
     }
+
+    // Harvest rides the same parse: the pool crosses the refused sinks into
+    // the wants and authored declarations the site walk filled.
+    let pool = extract::harvest::collect_pool(&parsed);
+    extract::harvest::mint(extract::harvest::MintCtx {
+        pool: &pool,
+        sinks: &harvest_sinks,
+        system,
+        wants: &mut wants,
+        authored: &mut authored,
+        diagnostics: &mut diagnostics,
+    });
 
     let mut assembly = assembly::AssembleCtx {
         wants,
@@ -246,6 +263,7 @@ fn extract_parsed_program(
         breakpoints: session.breakpoints,
         bindings: &bindings,
         jsx_hosts: &jsx_hosts,
+        owned_props: session.owned_props,
         shadowed: &[],
     };
     let sinks = extract::ExtractSinks {
@@ -253,6 +271,7 @@ fn extract_parsed_program(
         recipes: session.recipes,
         diagnostics: session.diagnostics,
         authored: session.authored,
+        sinks: session.sinks,
     };
     let mut ctx = extract::ExtractContext::new(path, Some(content), config, sinks);
     extract::extract_with_context(program, &mut ctx);

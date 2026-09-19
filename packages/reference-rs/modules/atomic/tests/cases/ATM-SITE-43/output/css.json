@@ -7,11 +7,18 @@
   "margin:3r": "@reference-ui/lib__m_3r",
   "margin:8px": "@reference-ui/lib__m_8px",
   "order:1": "@reference-ui/lib__order_1",
+  "padding:12px": "@reference-ui/lib__p_12px",
   "padding:2px": "@reference-ui/lib__p_2px",
+  "padding:3r": "@reference-ui/lib__p_3r",
   "padding:4px": "@reference-ui/lib__p_4px",
+  "padding:8px": "@reference-ui/lib__p_8px",
   "top:-1": "@reference-ui/lib__top_-1",
   "top:-2": "@reference-ui/lib__top_-2",
   "width:12px": "@reference-ui/lib__w_12px",
+  "width:2px": "@reference-ui/lib__w_2px",
+  "width:3r": "@reference-ui/lib__w_3r",
+  "width:4px": "@reference-ui/lib__w_4px",
+  "width:8px": "@reference-ui/lib__w_8px",
   "zIndex:42": "@reference-ui/lib__z_42",
   "zIndex:99": "@reference-ui/lib__z_99"
 }
