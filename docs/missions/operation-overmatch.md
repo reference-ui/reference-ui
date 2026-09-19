@@ -787,14 +787,14 @@ half is asserted without a pin.
 |---|---|---|---|---|
 | S1 | `css(cond ? a : b)` | drops the call (`calls.rs:556`, `calls: []`) | extracts both arms | 27 · `ATM-SITE-05` |
 | S2 | `dyn && 'red'`, `'red' && dyn` | resolves the right operand, silent on the dropped left | resolves the static operand, diagnoses the dynamic one | 18 · `ATM-SITE-05`, `NEO-SITE-08` |
-| S3 | open ternary with one unfoldable arm | drops the whole conditional (`literal-evaluator.md:75-76`) | keeps the resolvable arm, diagnoses the other | 17 · promote at station |
+| S3 | open ternary with one unfoldable arm | drops the whole conditional (`literal-evaluator.md:75-76`) | keeps the resolvable arm, diagnoses the other | 17 · `ATM-SITE-27` (promoted Ph2) |
 | S4 | unfoldable computed key | drops the WHOLE call (`computed_keys_skip_extraction`) | drops the member, keeps siblings, diagnoses | 41, 64 · `ATM-SITE-49` |
 | S5 | unresolvable array spread | drops the whole array, silently (`literal-evaluator.md:47-48`) | refuses the spread with a located diagnostic, keeps arity honest | 28 · `ATM-SITE-37` |
 | S6 | unresolvable import / missing export | drops silently (`cross_file.rs:465`, `:488`) | located diagnostic | 54 · `NEO-SITE-06` |
-| S7 | positional unresolvable `css()` arg | silent `None` slot (`calls.rs:1719`) | positional diagnostic, siblings kept | 65 · *on landing* |
-| S8 | literal-test ternary dead arm | picks one, says nothing | picks one, `info` names the dead arm | 66 · *on landing* |
-| S9 | unfoldable template part | staged drop, silent | diagnostic naming the `${…}` part | 67 · *on landing* |
-| S10 | mutated `let` then extraction | drops the identifier silently (`literal-evaluator.md:79`) | diagnostic naming the mutation site | 35 · *on landing* |
+| S7 | positional unresolvable `css()` arg | silent `None` slot (`calls.rs:1719`) | positional diagnostic, siblings kept | 65 · `ATM-SITE-50` (landed Ph3) |
+| S8 | literal-test ternary dead arm | picks one, says nothing | picks one, `info` names the dead arm | 66 · `ATM-SITE-33` (landed Ph3) |
+| S9 | unfoldable template part | staged drop, silent | diagnostic naming the `${…}` part | 67 · `ATM-SITE-51` (landed Ph3) |
+| S10 | mutated `let` then extraction | drops the identifier silently (`literal-evaluator.md:79`) | diagnostic naming the mutation site | 35 · `ATM-SITE-28` (landed Ph1) |
 | S11 | `token('colors.red')` | parse-time hex, frozen under theme switch | `var(--colors-red)` — correct after a theme change | 61 · `ATM-SITE-45` |
 | S12 | site identity through a consumer re-export | requires `importMap` config | follows the binding, zero config | 76 rider · `ATM-SITE-55` |
 | S13 | namespace / default VALUE imports | refuses (`cross-file-resolution.md:95-96`) | binding walk can resolve them (optional rider) | 76 rider |
@@ -804,6 +804,7 @@ half is asserted without a pin.
 | S17 | `&`-less comma member under nesting | scopes to parent (parity) | scopes to parent AND stays one atom per condition (v2 emits one rule per selector) | 68 · `ATM-COND-23` |
 | S18 | JSX StyleProps as extraction sites (`<Box mt="2r">`) | JSX extraction behind `jsx` config name arrays / PascalCase guessing | hosts come from styletrace, import-bound; `r`-props resolve to `--r` rhythm atoms | existing `ATM-SITE-01..04` |
 | S19 | responsive arrays inside merge lists, `false` / `null` holes | (fold table) | holes skip without diagnostic, arity honest | `ATM-MERGE-03`, 27 |
+| S20 | numeric strings (`'01'`, `' 1'`, hex, `Infinity`, `NaN`, `''`) | keeps `'01'`/`' 1'` (leading-zero guard, no trim — `canonical_number_tests` 6/6), emits invalid CSS for the rest | numerifies `'01'`/`' 1'` (`margin: 1px`), refuses the rest with a diagnostic | 79 · `ATM-UNIT-02` |
 
 Rows S18–S19 are pre-existing architecture, listed so the ledger is the
 one place the claim is enumerated. Anything added here later needs the
@@ -1214,3 +1215,47 @@ with `walk.rs` and `ast_value.rs` cut over in the same PR so the parity
 test becomes structural, 7.6 alongside 79, 7.3 as the Ph4 opener. Every
 module gets its own `README.md` describing the architecture (not a file
 table) and a 2–6 sentence header per file, per the crate rules.
+
+## 8. PHASE EXIT LOG (oracle findings; §1 oracle text above stays byte-identical)
+
+**Ph0 (HAVE reconfirmation)** — closed 29/29. No challenges.
+
+**Ph1 (soundness)** — closed, six BUILD slices green (scope chain,
+nesting+77, mutation-bail, unary, no-silence, diag-77). Relational
+oracles MERGE on scope/sweep/unary. The Ph1 mutation verdict stayed
+OPEN at merge time and continues under later-phase watch: no phase may
+consume its wording until it closes.
+
+**Ph2 (pins)** — closed, 28 pin stations, zero engine changes. Exit
+oracles: low half 30 CONFIRM / 0 CHALLENGE (3 phantom-half-cite flags:
+01 NEO-SITE-02, 03 SITE-21, 18 NEO-SITE-08); high half 32 CONFIRM / 6
+CHALLENGE (42 stale-good → HAVE; 55 substantive — block reproduced,
+no-station correct, re-graded to engine build; 57/58 transposed cites;
+62 five shifted lines; 70-note wrong, crew reading correct). Entry 55
+and GAP-04a refiled to Ph3. HQ action list from Ph2 (catalog
+amendments, not yet applied): promote 02, 06, 07, 08, 09, 13, 17, 22,
+27, 28-half, 29, 35, 36, 37, 42 to HAVE; drop unpinned qualifiers
+49/51/53; re-cite 03 → LEAF-05 + positional note, 18 + LEAF-04 −
+NEO-SITE-08, 38 + SITE-73, 44 + SITE-74; fix cites 57/58/62; amend the
+70 note to spelling-sensitive and the 72 note (v2 `:631` mints WITH
+segment).
+
+**Ph3 (fold table)** — built, exit oracles reported, challenges in fix.
+Folds half: 14 CONFIRM / 4 CHALLENGE — (12) `<=`/`!==`/ident-operand
+comparison unpinned, engine complete; (63) `m['a'+'b']` and
+``m[`a${'b'}`]`` neither fold nor pin, nested `colors['red']['500']`
+unproven; (64) `['col'+'or']` concat-key arm missing, seam open;
+(65) `css(primary)` alias-chain and `css(space)` rest-arg unpinned,
+engine unproven. Fence half: 3 CONFIRM (61, 62, 04a) / 5 CHALLENGE —
+(39-F1) NEO-SITE-21 pure-helper paint arm missing; (39-F2) **fence eval
+silently expands past v2 (wrong paint, empirical)** — `(o) => o.missing
+&& 'red'` over `{}` folds `'red'` with zero diagnostics, `(n) => (n/0)
+|| 'x'` folds `'x'`; v2 propagates failure; (39-F3) pure calls in const
+inits refuse where v2 folds, no owning entry; (42) destructured-params
+tripwire missing, pin-only; (45) computed enum inits refuse where v2
+folds; (46) rest/defaulted destructured params refuse whole-param where
+v2 is per-name lenient; (79) entry text miscites v2, two SUPERIOR
+divergences unrecorded (behavior kept — S20 row filed). Tail flips
+(SITE-51 `${2+3}`, SITE-49 helper-key) and both neo triages (SITE-06,
+SITE-18) confirmed correct-not-regressions. Dispositions append here
+when the fix crews land.
