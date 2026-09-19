@@ -7,12 +7,13 @@
 //! the Ph4 resolver (SPEC-V2-76) will fill. Unknown scope ids resolve as
 //! unbound, so a miscounted scope degrades to today's behavior, never a ghost.
 
-use std::collections::BTreeMap;
-
 use super::binding::{Binding, BindingInit, BindingKind, ImportRef};
 use super::table::{ScopeId, ScopeTable};
 use crate::atom::AtomValue;
-use crate::extract::constants::{LocalConstants, MutatedBinding};
+use crate::extract::constants::{
+    ConstArrayElement, ConstObject, LocalConstants, MutatedBinding, ObjectProp,
+};
+use crate::extract::fold::fence::PureFn;
 
 /// Where a name resolved: a local binding, an import, or nowhere in scope.
 #[derive(Debug, Clone, Copy)]
@@ -43,13 +44,18 @@ impl<'a> ImportLookup<'a> {
     }
 
     /// A member of an object outside local scope.
-    fn object_prop(self, obj: &str, prop: &str) -> Option<&'a AtomValue> {
+    fn object_prop(self, obj: &str, prop: &str) -> Option<&'a ObjectProp> {
         self.bag().get_object_prop(obj, prop)
     }
 
     /// A style object outside local scope.
-    fn object(self, name: &str) -> Option<&'a BTreeMap<String, AtomValue>> {
+    fn object(self, name: &str) -> Option<&'a ConstObject> {
         self.bag().get_object(name)
+    }
+
+    /// A const array outside local scope.
+    fn array(self, name: &str) -> Option<&'a [ConstArrayElement]> {
+        self.bag().get_array(name)
     }
 
     /// The write that poisoned a binding, if any (SPEC-V2-35).
@@ -113,9 +119,22 @@ fn local_scalars(binding: &Binding) -> &[AtomValue] {
 }
 
 /// The style object a local binding carries, if it carries one.
-fn local_object(binding: &Binding) -> Option<&BTreeMap<String, AtomValue>> {
+fn local_object(binding: &Binding) -> Option<&ConstObject> {
     match &binding.init {
         Some(BindingInit::Object(map)) => Some(map),
+        _ => None,
+    }
+}
+
+/// The recorded entry for one member of a local object, if it carries one.
+fn local_object_prop<'a>(binding: &'a Binding, prop: &str) -> Option<&'a ObjectProp> {
+    local_object(binding).and_then(|map| map.get(prop))
+}
+
+/// The const array a local binding carries, if it carries one.
+fn local_array(binding: &Binding) -> Option<&[ConstArrayElement]> {
+    match &binding.init {
+        Some(BindingInit::Array(elements)) => Some(elements),
         _ => None,
     }
 }
@@ -147,21 +166,57 @@ impl<'a> Scoped<'a> {
         self.scalar_leaves(name).first()
     }
 
-    /// A member of a bound object, or the import fallback.
-    pub fn object_prop(self, obj: &str, prop: &str) -> Option<&'a AtomValue> {
+    /// The lowered pure-helper descriptor for a name, same-file only.
+    /// Imported and unbound names carry no descriptor until SPEC-V2-57 lands
+    /// the descriptor export; a mutated callee refuses like any mutated use.
+    pub fn pure_fn(self, name: &str) -> Option<&'a PureFn> {
+        // color={tone('600')}  after  const tone = (shade) => `red.${shade}`
+        if self.mutated(name) {
+            return None;
+        }
+        match self.chain.resolve(name, self.scope) {
+            Lookup::Local(binding) => match &binding.init {
+                Some(BindingInit::PureFn(func)) => Some(func),
+                _ => None,
+            },
+            Lookup::Import(_) | Lookup::Unbound => None,
+        }
+    }
+
+    /// Every static leaf of a bound object's member, or the import fallback.
+    /// A mutated base yields nothing anywhere — the walker names the write.
+    pub fn object_prop_leaves(self, obj: &str, prop: &str) -> &'a [AtomValue] {
         // color={theme.primary}  after  const theme = { primary: 'n300' }
+        self.object_prop_entry(obj, prop)
+            .map_or(&[], |entry| entry.leaves.as_slice())
+    }
+
+    /// A bound object's nested entries one hop down, or the import fallback.
+    /// Scalar and dynamic members carry no object, so member args over them
+    /// refuse; multi-hop paths stay unresolved for SPEC-V2-31.
+    pub fn member_object(self, obj: &str, prop: &str) -> Option<&'a ConstObject> {
+        // css(theme.colors)  after  const theme = { colors: { primary: 'blue' } }
+        let entry = self.object_prop_entry(obj, prop)?;
+        if entry.nested.is_empty() {
+            return None;
+        }
+        Some(&entry.nested)
+    }
+
+    /// The recorded entry for one member, through locals or the fallback.
+    fn object_prop_entry(self, obj: &str, prop: &str) -> Option<&'a ObjectProp> {
         if self.mutated(obj) {
             return None;
         }
         match self.chain.resolve(obj, self.scope) {
-            Lookup::Local(binding) => local_object(binding).and_then(|map| map.get(prop)),
+            Lookup::Local(binding) => local_object_prop(binding, prop),
             Lookup::Import(imp) => self.chain.imports.object_prop(&imp.local, prop),
             Lookup::Unbound => self.chain.imports.object_prop(obj, prop),
         }
     }
 
     /// A bound style object, or the import fallback.
-    pub fn object(self, name: &str) -> Option<&'a BTreeMap<String, AtomValue>> {
+    pub fn object(self, name: &str) -> Option<&'a ConstObject> {
         // css({ ...base })  after  const base = { mt: '2r' }
         if self.mutated(name) {
             return None;
@@ -170,6 +225,27 @@ impl<'a> Scoped<'a> {
             Lookup::Local(binding) => local_object(binding),
             Lookup::Import(imp) => self.chain.imports.object(&imp.local),
             Lookup::Unbound => self.chain.imports.object(name),
+        }
+    }
+
+    /// A bound const array's elements, or the import fallback.
+    pub fn array(self, name: &str) -> Option<&'a [ConstArrayElement]> {
+        // margin: sizes[1]  after  const sizes = ['2px', '4px']
+        if self.mutated(name) {
+            return None;
+        }
+        match self.chain.resolve(name, self.scope) {
+            Lookup::Local(binding) => local_array(binding),
+            Lookup::Import(imp) => self.chain.imports.array(&imp.local),
+            Lookup::Unbound => self.chain.imports.array(name),
+        }
+    }
+
+    /// The import binding for a name, when the chain resolves it to an import.
+    pub fn import_ref(self, name: &str) -> Option<&'a ImportRef> {
+        match self.chain.resolve(name, self.scope) {
+            Lookup::Import(imp) => Some(imp),
+            Lookup::Local(_) | Lookup::Unbound => None,
         }
     }
 

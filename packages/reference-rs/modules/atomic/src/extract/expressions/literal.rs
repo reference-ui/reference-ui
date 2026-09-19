@@ -84,30 +84,30 @@ fn strip_important_suffix(val: &str) -> Option<&str> {
     }
 }
 
-/// Extract static template literals or emit a diagnostic for dynamic expressions.
+/// Extract template literals through the shared fold node: every joined
+/// string becomes its own want, and each unfoldable part warns at its span.
 pub fn extract_template_literal(
     ctx: &mut ExpressionWalk<'_>,
     lit: &TemplateLiteral<'_>,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
-    if lit.expressions.is_empty() {
-        if let Some(quasi) = lit.quasis.first() {
-            // `2r`
-            let (val, is_imp) = split_important_flag(&quasi.value.raw);
-            ctx.push_want(
-                AtomValue::String(val.into()),
-                when.clone(),
-                is_imp,
-                Some(quasi.span),
-            );
-            return;
-        }
+    let fold = crate::extract::fold::fold_template(lit, ctx.scopes);
+    for value in &fold.values {
+        // `2r`  /  `${n}px`  /  `linear-gradient(${a}, ${b})`
+        let (val, is_imp) = split_important_flag(value);
+        ctx.push_want(
+            AtomValue::String(val.into()),
+            when.clone(),
+            is_imp,
+            Some(lit.span),
+        );
     }
-    // `2${n}r`
-    let prop = ctx.prop;
-    ctx.warn(
-        lit.span,
-        DiagnosticCode::DynamicTemplate,
-        format!("Dynamic non-literal template expression for prop '{prop}'"),
-    );
+    for refusal in &fold.refusals {
+        // `2${n}r` over a dynamic `n` — the part, not the template, is named
+        ctx.warn(
+            refusal.span(),
+            DiagnosticCode::DynamicTemplate,
+            refusal.message(ctx.prop),
+        );
+    }
 }

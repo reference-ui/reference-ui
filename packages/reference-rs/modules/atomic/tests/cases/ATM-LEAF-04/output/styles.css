@@ -579,7 +579,6 @@
 @layer utilities {
   .\@reference-ui\/lib__bg_green { background: green; }
   .\@reference-ui\/lib__bd-c_0 { border-color: 0; }
-  .\@reference-ui\/lib__bd-c_red { border-color: red; }
   .\@reference-ui\/lib__border-style_solid { border-style: solid; }
   .\@reference-ui\/lib__bd-w_1px { border-width: 1px; }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }

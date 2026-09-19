@@ -8,9 +8,13 @@
 
 mod binding;
 mod collect;
+mod destructure;
 mod init;
 mod lookup;
+mod spreads;
 mod table;
+mod types;
+mod value;
 
 pub use binding::{Binding, BindingInit, BindingKind, ImportRef};
 pub use collect::collect;

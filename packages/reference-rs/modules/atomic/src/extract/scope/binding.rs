@@ -5,11 +5,11 @@
 //! `Import` bindings carry their specifier so the Ph4 resolver (SPEC-V2-76)
 //! can follow them; until then the import lookup stub answers by local name.
 
-use std::collections::BTreeMap;
-
 use oxc_span::Span;
 
 use crate::atom::AtomValue;
+use crate::extract::constants::{ConstArrayElement, ConstObject};
+use crate::extract::fold::fence::PureFn;
 
 /// Index of a binding in the scope table.
 pub type BindingId = u32;
@@ -29,7 +29,7 @@ pub enum BindingKind {
     Import(ImportRef),
     /// A function or class declaration — always shadows, never resolves.
     Function,
-    /// A TS enum name — always shadows until SPEC-V2-45 folds members.
+    /// A TS enum name — carries initialized members as an object (SPEC-V2-45).
     Enum,
 }
 
@@ -44,13 +44,19 @@ pub struct ImportRef {
     pub specifier: Box<str>,
 }
 
-/// The static value a binding carries: scalar leaves or a style object.
+/// The static value a binding carries: scalar leaves, a style object, a const
+/// array, or a lowered pure-helper descriptor.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BindingInit {
     /// Literal leaves (`'2r'`, both arms of a const ternary).
     Scalars(Vec<AtomValue>),
     /// A const style object (`{ primary: 'n300' }`).
-    Object(BTreeMap<String, AtomValue>),
+    Object(ConstObject),
+    /// A const array (`['2px', '4px']`, holes included for arity).
+    Array(Vec<ConstArrayElement>),
+    /// A lowered pure-helper descriptor (SPEC-V2-39); calls fold through
+    /// it, while the bare name still resolves to nothing and shadows.
+    PureFn(PureFn),
 }
 
 /// A single declared name: its kind, its static value if any, its span.

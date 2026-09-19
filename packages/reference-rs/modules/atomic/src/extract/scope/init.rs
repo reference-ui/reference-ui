@@ -1,19 +1,21 @@
 //! Static values of binding initializers: what a declarator carries.
 //! An identifier declarator carries its init when the init is a literal, a
-//! const object of literals, or a branching form with literal leaves — the
-//! same three shapes the project bag indexes, so locals resolve exactly as
+//! const object (literals, branching leaves, nested entries), a
+//! literal-element const array, or a branching form with literal leaves —
+//! the same shapes the project bag indexes, so locals resolve exactly as
 //! they did before scope. Transparent wrappers (parens, `as`, `satisfies`,
 //! `!`) peel off first. Anything else carries nothing and shadows instead.
 
 use std::collections::BTreeMap;
 
-use oxc_ast::ast::{Expression, ObjectPropertyKind, PropertyKey};
+use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectPropertyKind, PropertyKey};
 
 use super::binding::BindingInit;
 use crate::atom::AtomValue;
+use crate::extract::constants::{object_entries, ConstArrayElement};
 use crate::extract::expressions::walk::is_guard_expression;
 
-/// The static value of an initializer: a literal, an object, or branch leaves.
+/// The static value of an initializer: a literal, an object, an array, or branch leaves.
 pub fn binding_init(expr: &Expression<'_>) -> Option<BindingInit> {
     let expr = unwrap_expression(expr);
     // const space = '2r'
@@ -22,7 +24,11 @@ pub fn binding_init(expr: &Expression<'_>) -> Option<BindingInit> {
     }
     // const theme = { primary: 'n300' }
     if let Expression::ObjectExpression(obj) = expr {
-        return Some(BindingInit::Object(object_leaves(obj)));
+        return Some(BindingInit::Object(object_entries(obj)));
+    }
+    // const sizes = ['2px', '4px']
+    if let Expression::ArrayExpression(arr) = expr {
+        return array_leaves(arr).map(BindingInit::Array);
     }
     // const tone = flag ? 'red.500' : 'blue.500'
     if matches!(
@@ -87,21 +93,60 @@ fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
     }
 }
 
-/// The literal entries of a const object initializer.
-fn object_leaves(obj: &oxc_ast::ast::ObjectExpression<'_>) -> BTreeMap<String, AtomValue> {
+/// The recorded elements of a const array init, or None when any element
+/// is not a literal, a literal-entry object, or a hole.
+fn array_leaves(arr: &oxc_ast::ast::ArrayExpression<'_>) -> Option<Vec<ConstArrayElement>> {
+    let mut elements = Vec::with_capacity(arr.elements.len());
+    for elem in &arr.elements {
+        elements.push(array_element(elem)?);
+    }
+    Some(elements)
+}
+
+/// One recorded array element, or None for dynamic shapes.
+fn array_element(elem: &ArrayExpressionElement<'_>) -> Option<ConstArrayElement> {
+    match elem {
+        ArrayExpressionElement::Elision(_) => {
+            // const sizes = ['2px', , '8px']
+            Some(ConstArrayElement::Hole)
+        }
+        ArrayExpressionElement::SpreadElement(_) => None,
+        _ => array_value_element(elem.as_expression()?),
+    }
+}
+
+/// One recorded array value element: a literal leaf or a static object.
+fn array_value_element(expr: &Expression<'_>) -> Option<ConstArrayElement> {
+    let expr = unwrap_expression(expr);
+    if let Some(leaf) = literal_leaf(expr) {
+        return Some(ConstArrayElement::Leaf(leaf));
+    }
+    if let Expression::ObjectExpression(obj) = expr {
+        return object_leaves(obj).map(ConstArrayElement::Object);
+    }
+    None
+}
+
+/// The literal entries of an object nested in a const array init, or None
+/// when any entry is a spread, a computed key, or a non-literal value.
+/// Array-element objects stay single-leaf; const-object inits lower through
+/// the shared multi-leaf entries instead. Bailing keeps the whole array
+/// unrecorded, so the use site refuses with a diagnostic (SPEC-V2-63).
+fn object_leaves(obj: &oxc_ast::ast::ObjectExpression<'_>) -> Option<BTreeMap<String, AtomValue>> {
     let mut leaves = BTreeMap::new();
     for prop_kind in &obj.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
-            continue;
+            return None;
         };
         let Some(key) = property_key(&prop.key) else {
-            continue;
+            return None;
         };
-        if let Some(leaf) = literal_leaf(unwrap_expression(&prop.value)) {
-            leaves.insert(key, leaf);
-        }
+        let Some(leaf) = literal_leaf(unwrap_expression(&prop.value)) else {
+            return None;
+        };
+        leaves.insert(key, leaf);
     }
-    leaves
+    Some(leaves)
 }
 
 /// A static object key, or None for computed and exotic keys.

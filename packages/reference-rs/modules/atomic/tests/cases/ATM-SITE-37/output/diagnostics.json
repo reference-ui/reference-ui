@@ -4,7 +4,7 @@
     "code": "ATM-W-RESPONSIVE-ARRAY-SPREAD",
     "message": "Spread in responsive array for prop 'padding'; refusing the array to keep breakpoint arity honest",
     "file": "input/src/arrays.ts",
-    "line": 5,
+    "line": 10,
     "column": 47
   },
   {
@@ -12,23 +12,31 @@
     "code": "ATM-W-RESPONSIVE-ARRAY-SPREAD",
     "message": "Spread in responsive array for prop 'margin'; refusing the array to keep breakpoint arity honest",
     "file": "input/src/arrays.ts",
-    "line": 6,
-    "column": 50
+    "line": 13,
+    "column": 49
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MUTATED-BINDING",
+    "message": "Dynamic mutated binding 'mutArr' spread in responsive array for prop 'margin' (reassigned at input/src/arrays.ts:7:1; refusing the array to keep breakpoint arity honest)",
+    "file": "input/src/arrays.ts",
+    "line": 14,
+    "column": 48
   },
   {
     "severity": "warning",
     "code": "ATM-W-NON-OBJECT-CSS-ARG",
     "message": "css() merge-list element 2 is not a static style object (spread element)",
     "file": "input/src/merge.ts",
-    "line": 5,
+    "line": 10,
     "column": 46
   },
   {
     "severity": "warning",
-    "code": "ATM-W-NON-OBJECT-CSS-ARG",
-    "message": "css() merge-list element 2 is not a static style object (spread element)",
+    "code": "ATM-W-MUTATED-BINDING",
+    "message": "Dynamic mutated binding 'mutEx' in css() merge-list element 2 (reassigned at input/src/merge.ts:7:1; keeping sibling args)",
     "file": "input/src/merge.ts",
-    "line": 6,
-    "column": 54
+    "line": 14,
+    "column": 51
   }
 ]

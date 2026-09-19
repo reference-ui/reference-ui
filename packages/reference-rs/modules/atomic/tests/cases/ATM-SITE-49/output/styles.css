@@ -578,8 +578,13 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__m_4px { margin: 4px; }
+  .\@reference-ui\/lib__m_8px { margin: 8px; }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_8px { padding: 8px; }
   .\@reference-ui\/lib__bg-c_blue { background-color: blue; }
   .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__hover\:c_blue:is(:hover, [data-hover]) { color: blue; }
+  .\@reference-ui\/lib__hover\:c_red:is(:hover, [data-hover]) { color: red; }
+  .\@reference-ui\/lib__\[\&\[data-group\=\"cool\"\]\]\:c_red[data-group="cool"] { color: red; }
 }
 }

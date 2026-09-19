@@ -38,9 +38,10 @@ const EXPECTED: Array<{
   },
   {
     line: 8,
-    column: 11,
+    column: 14,
     code: 'ATM-W-DYNAMIC-TEMPLATE',
-    message: "Dynamic non-literal template expression for prop 'margin'",
+    message:
+      "Dynamic non-literal template part 1 (identifier 'gap') encountered for prop 'margin'",
   },
   {
     line: 9,

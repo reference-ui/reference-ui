@@ -11,10 +11,12 @@ css({ mt: space, color: theme.primary })
 
 Not a host. jsx / css / recipes still find the expression. This folder
 only indexes bindings that are obviously literals so we do not need a
-VM for `theme.primary`.
+VM for `theme.primary`. Object entries carry every static leaf —
+literals, branching arms, one nested level — and dynamic values record
+an empty marker so the use site diagnoses them (SITE-50/77).
 
 Imports, `props.w`, functions, and spreads are out. `{...base}` where
-`base` is a const object is still unproven (SITE-11).
+`base` is a const object unpacks through SITE-11.
 
 ## Must not
 

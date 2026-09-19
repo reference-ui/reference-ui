@@ -9,14 +9,19 @@ use oxc_ast::ast::{
     ArrayExpressionElement, Expression, JSXAttribute, JSXAttributeItem, JSXAttributeValue,
     JSXExpressionContainer, JSXOpeningElement, StringLiteral,
 };
-use oxc_span::GetSpan;
+use oxc_span::{GetSpan, Span};
 use smallvec::{smallvec, SmallVec};
 
 use crate::atom::Want;
 use crate::diagnostics::{line_col, DiagnosticCode};
+use crate::extract::constants::ConstArrayElement;
 use crate::extract::expressions::walk::{
     block_value_kind, is_silent_block_value, unwrap_wrapper_target,
 };
+use crate::extract::expressions::{
+    lower_array_object, lower_const_object, resolve_block_target, BlockLookup,
+};
+use crate::extract::fold::{merge_spread, spread_base_name, MergeSpread};
 use crate::extract::ExtractContext;
 use canon::{is_condition_prop, is_known_style_prop};
 
@@ -241,9 +246,80 @@ fn walk_style_attr(
             walk_style_attr(&cond.alternate, site, ctx, when);
         }
         _ => {
+            handle_folding_attr(expr, site, ctx, when);
+        }
+    }
+}
+
+/// Lower a folding style-block shape — logical operands, identifiers,
+/// members — or refuse it at the prop. Anything else is not a style block.
+fn handle_folding_attr(
+    expr: &Expression<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    match expr {
+        Expression::LogicalExpression(log) => {
+            // <Div css={ok && {...}} /> — both operands lower, like spreads.
+            walk_style_attr(&log.left, site, ctx, when);
+            walk_style_attr(&log.right, site, ctx, when);
+        }
+        Expression::Identifier(_) | Expression::StaticMemberExpression(_) => {
+            // <Div css={styles} /> — resolve, lower, or diagnose.
+            lower_block_attr(expr, site, ctx, when);
+        }
+        _ => {
             refuse_unless_silent_jsx(expr, site, ctx);
         }
     }
+}
+
+/// Lower an identifier or member style block through its const object,
+/// exactly as if spread. A miss names the write when the base is mutated,
+/// else refuses at the prop; sibling attributes always survive.
+fn lower_block_attr(
+    expr: &Expression<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    match resolve_block_target(ctx.scoped(), expr) {
+        BlockLookup::Hit(name, obj) => {
+            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            lower_const_object(&mut obj_ctx, &name, obj, when, expr.span());
+        }
+        BlockLookup::Miss(base) => {
+            if !mutated_attr_warn(ctx, &base, expr.span(), site) {
+                refuse_unless_silent_jsx(expr, site, ctx);
+            }
+        }
+        BlockLookup::NotBlock => {
+            refuse_unless_silent_jsx(expr, site, ctx);
+        }
+    }
+}
+
+/// Warn naming the write when a style block's base name is mutated.
+fn mutated_attr_warn(
+    ctx: &mut ExtractContext<'_>,
+    base: &str,
+    span: Span,
+    site: &StyleAttr<'_>,
+) -> bool {
+    let Some(write) = ctx.scoped().mutation(base) else {
+        return false;
+    };
+    ctx.warn(
+        span,
+        DiagnosticCode::MutatedBinding,
+        format!(
+            "Dynamic mutated binding '{base}' in JSX '{}' prop value (reassigned at {}; keeping sibling attributes)",
+            site.prop,
+            write.site()
+        ),
+    );
+    true
 }
 
 /// Diagnose a block value that extracts nothing, unless it skips silently.
@@ -283,7 +359,8 @@ fn walk_style_attr_array(
     }
 }
 
-/// Walk one merge-list element of a JSX style-block array.
+/// Walk one merge-list element of a JSX style-block array: literal and
+/// const-array spreads flatten in place, dynamic spreads refuse.
 fn walk_style_attr_element(
     elem: &ArrayExpressionElement<'_>,
     site: &StyleAttr<'_>,
@@ -292,15 +369,7 @@ fn walk_style_attr_element(
 ) {
     match elem {
         ArrayExpressionElement::SpreadElement(spread) => {
-            // <Div css={[{...}, ...rest]} /> — Ph1 refuses; Ph3 flattens.
-            ctx.warn(
-                spread.span,
-                DiagnosticCode::NonObjectJsxStyle,
-                format!(
-                    "JSX '{}' prop value is not a static style object (spread element)",
-                    site.prop
-                ),
-            );
+            walk_attr_spread(spread, site, ctx, when);
         }
         ArrayExpressionElement::Elision(_) => {
             // Holes skip silently.
@@ -312,6 +381,75 @@ fn walk_style_attr_element(
         }
     }
 }
+
+/// Walk one JSX merge-list spread: flatten, name the write, or refuse.
+fn walk_attr_spread(
+    spread: &oxc_ast::ast::SpreadElement<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    // <Div css={[{...}, ...[{...}], ...extras]} /> — siblings merge whether
+    // this spread flattens or refuses.
+    if flatten_attr_spread(&spread.argument, site, ctx, when) {
+        return;
+    }
+    if let Some(name) = spread_base_name(&spread.argument) {
+        if mutated_attr_warn(ctx, name, spread.span, site) {
+            return;
+        }
+    }
+    ctx.warn(
+        spread.span,
+        DiagnosticCode::NonObjectJsxStyle,
+        format!(
+            "JSX '{}' prop value is not a static style object (spread element)",
+            site.prop
+        ),
+    );
+}
+
+/// Flatten one JSX merge-list spread: inline elements lower one by one,
+/// const elements lower from the recording. False refuses.
+fn flatten_attr_spread(
+    arg: &Expression<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
+    match merge_spread(arg, ctx.scoped()) {
+        Some(MergeSpread::Inline(elements)) => {
+            for elem in elements {
+                walk_style_attr_element(elem, site, ctx, when);
+            }
+            true
+        }
+        Some(MergeSpread::Const(elements)) => {
+            lower_attr_const(elements, arg, site, ctx, when);
+            true
+        }
+        None => false,
+    }
+}
+
+/// Lower a const JSX merge-list spread: objects merge, leaves and holes skip.
+fn lower_attr_const(
+    elements: &[ConstArrayElement],
+    arg: &Expression<'_>,
+    site: &StyleAttr<'_>,
+    ctx: &mut ExtractContext<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    // Literal leaves skip silently, like string-head args.
+    let name = spread_base_name(arg).unwrap_or("array");
+    for element in elements {
+        if let ConstArrayElement::Object(map) = element {
+            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            lower_array_object(&mut obj_ctx, name, map, when, arg.span());
+        }
+    }
+}
+
 
 /// Report a dropped tag when no hosts are resolvable at all. Unknown tags
 /// under a known graph stay silent; style-bearing tags with an empty host

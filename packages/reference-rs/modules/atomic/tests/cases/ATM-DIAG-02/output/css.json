@@ -1,3 +1,4 @@
 {
-  "mt:2r": "@reference-ui/lib__mt_2r"
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "width:10px": "@reference-ui/lib__w_10px"
 }

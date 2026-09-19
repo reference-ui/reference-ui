@@ -208,7 +208,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     expect(planClasses.filter(name => !utilities.has(name))).toEqual([])
   })
 
-  it('rejects non-canonical numbers with diagnostics during compilation', () => {
+  it('canonicalizes finite numeric strings, rejects the rest, with diagnostics', () => {
     const result = compileSync({
       baseSystem: specSystem,
       files: [
@@ -227,9 +227,12 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
       ],
     })
 
-    expect(result.diagnostics.length).toBeGreaterThanOrEqual(4)
+    // SPEC-V2-79: '01' canonicalizes to the numeric atom (the spacing token
+    // wins in this fixture system); hex, Infinity, and NaN still refuse.
+    expect(result.stylesheet).toContain('padding: var(--spacing-1);')
+    expect(result.diagnostics.length).toBeGreaterThanOrEqual(3)
     const messages = result.diagnostics.map(d => d.message)
-    expect(messages.some(m => m.includes('01'))).toBe(true)
+    expect(messages.some(m => m.includes('"01"'))).toBe(false)
     expect(messages.some(m => m.includes('0x10'))).toBe(true)
     expect(messages.some(m => m.includes('Infinity'))).toBe(true)
     expect(messages.some(m => m.includes('NaN'))).toBe(true)

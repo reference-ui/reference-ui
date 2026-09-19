@@ -9,8 +9,9 @@
 //! `delete` never fold; strings refuse where Panda coerces (S15), because a
 //! fold that would need `Number()` belongs to Ph3 canonicalization, not here.
 
-use oxc_ast::ast::{Expression, UnaryOperator};
+use oxc_ast::ast::{Expression, TemplateLiteral, UnaryOperator};
 
+use super::template::{fold_template, TemplateRefusal};
 use crate::atom::AtomValue;
 use crate::extract::expressions::walk::is_guard_expression;
 use crate::extract::scope::Scoped;
@@ -22,6 +23,11 @@ pub struct UnaryFold<'ast, 'expr> {
     pub values: Vec<AtomValue>,
     /// One refusal per leaf or operator the node could not fold.
     pub refusals: Vec<UnaryRefusal>,
+    /// Template-part refusals surfaced without a re-walk, which would leak
+    /// string wants past the operator that refused them.
+    pub template_refusals: Vec<TemplateRefusal>,
+    /// Arms eliminated inside nested tests, always diagnosed by the caller.
+    pub dead_arms: Vec<super::conditional::DeadArm>,
     /// Dynamic sub-operands the want walker re-walks for their own diagnostics.
     pub dynamic: Vec<&'expr Expression<'ast>>,
 }
@@ -40,7 +46,15 @@ pub enum UnaryRefusal {
 impl UnaryRefusal {
     /// The diagnostic text for a refusal at one style prop.
     pub fn message(&self, prop: &str) -> String {
-        let detail = match self {
+        format!(
+            "Dynamic unary expression encountered for prop '{prop}' ({})",
+            self.detail()
+        )
+    }
+
+    /// Short reason text, reused inside template-part diagnostics.
+    pub fn detail(&self) -> String {
+        match self {
             Self::OperatorNotFoldable(op) => {
                 format!("operator '{}' is not foldable", operator_name(*op))
             }
@@ -52,8 +66,7 @@ impl UnaryRefusal {
                 "operator '{}' does not fold an {kind} operand",
                 operator_name(*op)
             ),
-        };
-        format!("Dynamic unary expression encountered for prop '{prop}' ({detail})")
+        }
     }
 }
 
@@ -154,13 +167,7 @@ fn fold_scalar<'ast, 'expr>(
         return true;
     }
     if let Expression::TemplateLiteral(lit) = expr {
-        if lit.expressions.is_empty() {
-            // -`4`  — a static template is still a string
-            fold.refusals.push(UnaryRefusal::NonNumericOperand(op));
-        } else {
-            fold.dynamic.push(expr);
-        }
-        return true;
+        return fold_template_operand(op, lit, scoped, fold);
     }
     if fold_identifier(op, expr, scoped, fold) {
         return true;
@@ -208,6 +215,7 @@ fn fold_nested<'ast, 'expr>(
         // --4  /  !-0  — fold inside out, then apply the outer operator
         let sub = fold_unary(inner.operator, &inner.argument, scoped);
         fold.refusals.extend(sub.refusals);
+        fold.template_refusals.extend(sub.template_refusals);
         fold.dynamic.extend(sub.dynamic);
         for val in &sub.values {
             apply_operator(op, val, fold);
@@ -249,9 +257,23 @@ fn fold_branching<'ast, 'expr>(
     fold: &mut UnaryFold<'ast, 'expr>,
 ) -> bool {
     if let Expression::ConditionalExpression(cond) = expr {
-        // -(pick ? 4 : 8)  — the operator distributes over both arms
-        fold_operand(op, &cond.consequent, scoped, fold);
-        fold_operand(op, &cond.alternate, scoped, fold);
+        // -(pick ? 4 : 8)  — the operator distributes over both arms, or
+        // over the live arm alone when the test folds
+        let test = super::conditional::fold_test(&cond.test, scoped);
+        fold.dead_arms.extend(test.dead_arms);
+        let Some(pick) = test.value else {
+            fold_operand(op, &cond.consequent, scoped, fold);
+            fold_operand(op, &cond.alternate, scoped, fold);
+            return true;
+        };
+        let (live, dead) = if pick {
+            (&cond.consequent, &cond.alternate)
+        } else {
+            (&cond.alternate, &cond.consequent)
+        };
+        fold.dead_arms
+            .push(super::conditional::dead_arm(dead, pick, scoped));
+        fold_operand(op, live, scoped, fold);
         return true;
     }
     if let Expression::LogicalExpression(log) = expr {
@@ -266,6 +288,24 @@ fn fold_branching<'ast, 'expr>(
     false
 }
 
+/// A template operand folds first: folded strings refuse (S15), while part
+/// refusals surface directly — a re-walk would leak string wants past the
+/// operator and diagnose the same parts twice.
+fn fold_template_operand<'ast, 'expr>(
+    op: UnaryOperator,
+    lit: &TemplateLiteral<'_>,
+    scoped: Scoped<'_>,
+    fold: &mut UnaryFold<'ast, 'expr>,
+) -> bool {
+    let sub = fold_template(lit, scoped);
+    if !sub.values.is_empty() {
+        // -`4px`  — strings never fold through unary, folded or literal
+        fold.refusals.push(UnaryRefusal::NonNumericOperand(op));
+    }
+    fold.template_refusals.extend(sub.refusals);
+    true
+}
+
 fn fold_member<'ast, 'expr>(
     op: UnaryOperator,
     expr: &'expr Expression<'ast>,
@@ -274,9 +314,12 @@ fn fold_member<'ast, 'expr>(
 ) -> bool {
     if let Expression::StaticMemberExpression(mem) = expr {
         if let Expression::Identifier(obj) = &mem.object {
-            if let Some(val) = scoped.object_prop(obj.name.as_str(), mem.property.name.as_str()) {
-                // -theme.gap
-                apply_operator(op, val, fold);
+            let leaves = scoped.object_prop_leaves(obj.name.as_str(), mem.property.name.as_str());
+            if !leaves.is_empty() {
+                // -theme.gap  — the operator applies to every leaf
+                for leaf in leaves {
+                    apply_operator(op, leaf, fold);
+                }
                 return true;
             }
         }
@@ -355,7 +398,7 @@ fn apply_to_bool(op: UnaryOperator, b: bool, fold: &mut UnaryFold<'_, '_>) {
     }
 }
 
-fn canon_number(x: f64) -> Box<str> {
+pub(crate) fn canon_number(x: f64) -> Box<str> {
     if x == 0.0 {
         Box::from("0")
     } else {

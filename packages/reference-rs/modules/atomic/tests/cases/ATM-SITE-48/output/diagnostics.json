@@ -1,0 +1,66 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal element index 'dk' encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 8,
+    "column": 21
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal element index 'pick()' encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 10,
+    "column": 21
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal element base 'maybe' encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 14,
+    "column": 14
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Element access 'colors[typo]' has no static entry for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 17,
+    "column": 14
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Element access 'sizes[9]' has no static entry for prop 'margin'",
+    "file": "input/src/refuse.ts",
+    "line": 18,
+    "column": 15
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Element access 'colors[typo]' has no static entry for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 21,
+    "column": 14
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal element base 'member expression' encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 24,
+    "column": 14
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MUTATED-BINDING",
+    "message": "Dynamic mutated binding 'mut' encountered for prop 'margin' (reassigned at input/src/refuse.ts:28:1; element read is stale)",
+    "file": "input/src/refuse.ts",
+    "line": 29,
+    "column": 15
+  }
+]

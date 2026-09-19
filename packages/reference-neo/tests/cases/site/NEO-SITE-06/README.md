@@ -1,7 +1,8 @@
 # NEO-SITE-06 — Dynamic call value `color: pick()` mints no ghost and emits a located warning
 
 The world styles its node with one `css()` call mixing a dynamic call
-value (`color: pick()`) and a static sibling (`background: 'ocean'`).
+value (`color: pick()`, multi-statement so the entry-39 fence refuses it)
+and a static sibling (`background: 'ocean'`).
 The spec asserts the sheet carries exactly the sibling utility, the node
 paints the ocean background while keeping its default text color, and a
 fresh compile of the frozen request reports the `color` warning located

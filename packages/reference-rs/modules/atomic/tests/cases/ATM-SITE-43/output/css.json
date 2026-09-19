@@ -1,0 +1,13 @@
+{
+  "color:red": "@reference-ui/lib__c_red",
+  "height:4px": "@reference-ui/lib__h_4px",
+  "left:2": "@reference-ui/lib__left_2",
+  "margin:3r": "@reference-ui/lib__m_3r",
+  "margin:8px": "@reference-ui/lib__m_8px",
+  "order:1": "@reference-ui/lib__order_1",
+  "padding:2px": "@reference-ui/lib__p_2px",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "top:-1": "@reference-ui/lib__top_-1",
+  "width:12px": "@reference-ui/lib__w_12px",
+  "zIndex:99": "@reference-ui/lib__z_99"
+}
