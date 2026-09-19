@@ -39,12 +39,22 @@ lines. Once-per-value doesn't help when all values differ.
 ## Boundary (non-negotiable)
 
 Runtime reports *what missed*, never *why*. The value arrives
-evaluated — interpolation, loops, and backends are unrecoverable
-pasts. Shape diagnosis (template holes, computed values) lives at
-build, where the source is visible. Neither side does the other's job.
+evaluated — partials, loops, and backends are unrecoverable pasts.
+A partial (`${n}px`) is diagnosed at build. A whole-value
+interpolation that missed is just a miss, same as `color={color}`.
+Neither side does the other's job.
 
-## Open questions
+## Opt-in (signed on the parent)
 
-1. Opt-in mechanism: flag, env var, config key?
-2. K (cap size) and the flood threshold for pattern detection.
-3. Pool-stats payload: counts only, or kind histograms?
+Same field as compiler-level diagnostics:
+`logs` in `ui.config.ts`. This reporter is the `'runtime'` channel
+(`logs: ['runtime']`, or `['compiler', 'runtime']`). Not a second
+flag, not an env var. Parent doc:
+[operation-error-correct.md](./operation-error-correct.md) (`logs`).
+This operation does not implement the channel; it owns the reporter
+once the flag exists.
+
+## Still open
+
+1. K (cap size) and the flood threshold for pattern detection.
+2. Pool-stats payload: counts only, or kind histograms?

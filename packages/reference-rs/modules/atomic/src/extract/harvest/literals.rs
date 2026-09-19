@@ -168,4 +168,22 @@ mod tests {
         );
         assert!(pool.is_empty());
     }
+
+    #[test]
+    fn whole_css_value_in_a_hole_harvests_the_inner_literal_not_the_join() {
+        let pool = pool_for_source(
+            r#"
+            declare const n: number;
+            declare const color: string;
+            const branded = `brand ${'red'} tonight`;
+            const wrap = `${'blue'}`;
+            const hex = `${'#0af'}`;
+            const partial = `${n}px`;
+            const glue = n + 'px';
+            const emptyWrap = `${color}`;
+            "#,
+        );
+        assert_eq!(sorted(&pool, ValueKind::Color), ["#0af", "blue", "red"]);
+        assert_eq!(sorted(&pool, ValueKind::Length), Vec::<&str>::new());
+    }
 }
