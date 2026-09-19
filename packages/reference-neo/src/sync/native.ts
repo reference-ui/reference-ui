@@ -27,6 +27,9 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
 export interface NativeDiagnostic {
   severity: 'error' | 'warning' | 'info'
   message: string
+  // Stable failure-class code from the Rust code table
+  // (`ATM-W-*` warnings, `ATM-E-*` errors, `ATM-I-*` info).
+  code?: string
   file?: string
   line?: number
   column?: number

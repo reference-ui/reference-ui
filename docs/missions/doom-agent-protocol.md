@@ -93,7 +93,9 @@ per-origin scope-resolved objects but does not resolve imported spreads
 at collect time). Doom cycle 1 must reproduce, then route through
 architect consult per §5 — this is silence on idiomatic code, not a
 contrived shape. Shape decision lives in
-[Operation Forge](operation-forge.md) §1.
+[Operation Forge](operation-forge.md) §1, and Forge Slice 3 owns the
+fix (module graph, residue marker, `ATM-SITE-78`), so Doom cycle 1
+reproduces against that fixed shape.
 
 ## 9. Satisfaction pin (what "happy tomorrow" means)
 

@@ -377,7 +377,7 @@ describe('sync diagnostics', () => {
       spy.mockRestore()
     }
 
-    expect(output).toContain('[neo] sync warning:')
+    expect(output).toContain('[neo] sync warning ATM-W-UNKNOWN-PROPERTY:')
     expect(output).toContain('Unknown property in staticCss')
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
