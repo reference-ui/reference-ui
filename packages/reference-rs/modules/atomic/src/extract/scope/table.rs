@@ -147,13 +147,34 @@ impl ScopeTable {
             return out;
         };
         for (name, id) in root.names.iter() {
-            if let Some(BindingInit::PureFn(func)) =
-                self.bindings.get(*id as usize).and_then(|b| b.init.as_ref())
+            if let Some(BindingInit::PureFn(func)) = self
+                .bindings
+                .get(*id as usize)
+                .and_then(|b| b.init.as_ref())
             {
                 out.push((name.clone(), func.clone()));
             }
         }
         out
+    }
+
+    /// One root binding's carried value, for demand-driven origin reads.
+    /// Pure helpers answer None here and ride `root_pure_fn` instead.
+    pub fn root_init(&self, name: &str) -> Option<BindingInit> {
+        let root = self.scopes.first()?;
+        let id = root.names.get(name)?;
+        let init = self.bindings.get(*id as usize)?.init.clone()?;
+        (!matches!(init, BindingInit::PureFn(_))).then_some(init)
+    }
+
+    /// One root binding's lowered helper descriptor, for origin reads.
+    pub fn root_pure_fn(&self, name: &str) -> Option<PureFn> {
+        let root = self.scopes.first()?;
+        let id = root.names.get(name)?;
+        match self.bindings.get(*id as usize)?.init.as_ref()? {
+            BindingInit::PureFn(func) => Some(func.clone()),
+            _ => None,
+        }
     }
 
     /// Every carried value at the program root, in name order: scalars,
@@ -166,7 +187,11 @@ impl ScopeTable {
             return out;
         };
         for (name, id) in root.names.iter() {
-            if let Some(init) = self.bindings.get(*id as usize).and_then(|b| b.init.as_ref()) {
+            if let Some(init) = self
+                .bindings
+                .get(*id as usize)
+                .and_then(|b| b.init.as_ref())
+            {
                 if !matches!(init, BindingInit::PureFn(_)) {
                     out.push((name.clone(), init.clone()));
                 }

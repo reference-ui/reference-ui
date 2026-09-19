@@ -10,6 +10,7 @@ use oxc_ast::ast::{BindingPattern, VariableDeclarationKind, VariableDeclarator};
 
 use super::super::binding::{Binding, BindingInit, BindingKind};
 use super::super::destructure::{bind_pattern, PatternCtx};
+use super::super::fill::SpreadResidue;
 use super::super::init::binding_init;
 use super::super::lookup::{ImportLookup, ScopeChain};
 use super::super::value::{self, Dep, DepKey};
@@ -18,7 +19,7 @@ use crate::atom::AtomValue;
 use crate::extract::constants::LocalConstants;
 
 /// Record a declarator: identifier inits carry values, patterns bind entries.
-pub(crate) fn record_declarator(collector: &mut ScopeCollector, decl: &VariableDeclarator<'_>) {
+pub(crate) fn record_declarator(collector: &mut ScopeCollector<'_>, decl: &VariableDeclarator<'_>) {
     let kind = declaration_kind(collector.decl_kind);
     if let BindingPattern::BindingIdentifier(ident) = &decl.id {
         // const space = '2r'  — the name carries its leaves
@@ -41,9 +42,19 @@ pub(crate) fn record_declarator(collector: &mut ScopeCollector, decl: &VariableD
         table: &collector.table,
         scope,
         kind,
+        fill: collector.fill,
     };
     let bound = bind_pattern(&ctx, &decl.id, decl.init.as_ref());
     collector.deps.extend(bound.deps);
+    for marker in &bound.residues {
+        for (name, _) in &bound.bindings {
+            collector.residues.push(SpreadResidue {
+                scope,
+                name: name.clone(),
+                marker: marker.clone(),
+            });
+        }
+    }
     for (name, binding) in bound.bindings {
         collector.declare_current(&name, binding);
     }
@@ -51,7 +62,7 @@ pub(crate) fn record_declarator(collector: &mut ScopeCollector, decl: &VariableD
 
 /// An identifier declarator's carried value: resolving objects, else as before.
 fn declarator_init(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     init: Option<&oxc_ast::ast::Expression<'_>>,
     name: &str,
 ) -> (Option<BindingInit>, Vec<Dep>) {
@@ -62,15 +73,23 @@ fn declarator_init(
         // const theme = { primary: red, ...base }  — literals plus resolved
         // identifier values and static spreads, with provenance deps.
         let scope = collector.current();
-        let (entries, provenances) = value::object_init(obj, &collector.table, scope);
-        let deps = provenances
+        let sink = value::object_init(obj, &collector.table, scope, collector.fill);
+        let deps = sink
+            .provenances
             .into_iter()
             .map(|provenance| {
                 let key = DepKey::ObjectKey(provenance.key.clone());
                 provenance.into_dep(scope, name, key)
             })
             .collect();
-        return (Some(BindingInit::Object(entries)), deps);
+        for marker in sink.residues {
+            collector.residues.push(SpreadResidue {
+                scope,
+                name: name.to_string(),
+                marker,
+            });
+        }
+        return (Some(BindingInit::Object(sink.entries)), deps);
     }
     if let Some(alias) = alias_init(collector, init, name) {
         return alias;
@@ -97,7 +116,7 @@ fn declarator_init(
 /// resolve (no imports, matching aliases); the copy carries a whole-binding
 /// dep on the root so a later write strips it (SPEC-V2-31, §13).
 fn member_init(
-    collector: &ScopeCollector,
+    collector: &ScopeCollector<'_>,
     init: &oxc_ast::ast::Expression<'_>,
     name: &str,
 ) -> Option<(Option<BindingInit>, Vec<Dep>)> {
@@ -127,7 +146,7 @@ fn member_init(
 
 /// A whole-binding dep from a member init onto its root binding, or None
 /// when the root is not table-local (imports stay valueless here).
-fn member_dep(collector: &ScopeCollector, name: &str, root: &str) -> Option<Dep> {
+fn member_dep(collector: &ScopeCollector<'_>, name: &str, root: &str) -> Option<Dep> {
     let (src_scope, _) = collector.table.resolve_from(root, collector.current())?;
     Some(Dep {
         scope: collector.current(),
@@ -149,7 +168,7 @@ fn member_dep(collector: &ScopeCollector, name: &str, root: &str) -> Option<Dep>
 /// (product codegen is out of axis). `viewTransition` clears in the
 /// post-pass: v2 refuses it as a value too, and the use site warns.
 fn factory_init(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     init: &oxc_ast::ast::Expression<'_>,
     name: &str,
 ) -> Option<(Option<BindingInit>, Vec<Dep>)> {
@@ -194,7 +213,7 @@ fn is_single_object_arg(call: &oxc_ast::ast::CallExpression<'_>) -> bool {
 /// valueless target stays valueless, matching runtime TDZ. The copy carries
 /// a whole-binding dep so a later write to the source strips it (SPEC-V2-34).
 fn alias_init(
-    collector: &ScopeCollector,
+    collector: &ScopeCollector<'_>,
     init: &oxc_ast::ast::Expression<'_>,
     name: &str,
 ) -> Option<(Option<BindingInit>, Vec<Dep>)> {

@@ -14,18 +14,22 @@ use oxc_ast::ast::{BindingPattern, Expression};
 use oxc_span::Span;
 
 use super::binding::{Binding, BindingInit, BindingKind};
+use super::fill::OriginFill;
 use super::table::{ScopeId, ScopeTable};
 use super::value::{self, Dep, DepKey, KeyProvenance};
 use crate::atom::AtomValue;
+use crate::extract::resolver::UnfoldableSpread;
 
 /// Where a pattern binds: the table, the declaring scope, and the kind.
-pub(crate) struct PatternCtx<'t> {
+pub(crate) struct PatternCtx<'t, 'v> {
     /// Bindings recorded so far (sources must already be declared).
     pub(crate) table: &'t ScopeTable,
     /// The scope the pattern declares its names in.
     pub(crate) scope: ScopeId,
     /// The declaration keyword (`const`, `let`, `var`).
     pub(crate) kind: BindingKind,
+    /// The origin file's resolved imports, when baking one.
+    pub(crate) fill: Option<OriginFill<'v>>,
 }
 
 /// Names bound by one pattern plus the deps that strip them when stale.
@@ -34,37 +38,42 @@ pub(crate) struct PatternBind {
     pub(crate) bindings: Vec<(String, Binding)>,
     /// Provenance deps for every value copied from an identifier source.
     pub(crate) deps: Vec<Dep>,
+    /// Markers for refused import spreads inside an inline source.
+    pub(crate) residues: Vec<UnfoldableSpread>,
 }
 
 impl PatternBind {
-    /// No bindings and no deps.
+    /// No bindings, no deps, and no markers.
     pub(crate) fn empty() -> Self {
         Self {
             bindings: Vec::new(),
             deps: Vec::new(),
+            residues: Vec::new(),
         }
     }
 
     /// Every name shadowed (no values), for unresolvable sources and nesting.
-    pub(crate) fn shadowed(ctx: &PatternCtx<'_>, pattern: &BindingPattern<'_>) -> Self {
+    pub(crate) fn shadowed(ctx: &PatternCtx<'_, '_>, pattern: &BindingPattern<'_>) -> Self {
         let mut bindings = Vec::new();
         shadow_names(pattern, &ctx.kind, &mut bindings);
         Self {
             bindings,
             deps: Vec::new(),
+            residues: Vec::new(),
         }
     }
 
-    /// Move this bind's bindings and deps into another.
+    /// Move this bind's bindings, deps, and markers into another.
     pub(crate) fn drain_into(self, out: &mut PatternBind) {
         out.bindings.extend(self.bindings);
         out.deps.extend(self.deps);
+        out.residues.extend(self.residues);
     }
 }
 
 /// Bind every name a declaration pattern declares against its init.
 pub(crate) fn bind_pattern(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     pattern: &BindingPattern<'_>,
     init: Option<&Expression<'_>>,
 ) -> PatternBind {
@@ -91,7 +100,7 @@ pub(crate) struct LeavesBind<'a> {
 }
 
 /// Push one bound scalar with its entry, key, and root deps.
-pub(crate) fn push_leaves(ctx: &PatternCtx<'_>, bind: LeavesBind<'_>, out: &mut PatternBind) {
+pub(crate) fn push_leaves(ctx: &PatternCtx<'_, '_>, bind: LeavesBind<'_>, out: &mut PatternBind) {
     out.bindings.push((
         bind.name.to_string(),
         Binding {
@@ -124,7 +133,7 @@ pub(crate) fn push_leaves(ctx: &PatternCtx<'_>, bind: LeavesBind<'_>, out: &mut 
 
 /// One inline slot's value: a literal or a single-leaf identifier.
 pub(crate) fn slot_value(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     expr: &Expression<'_>,
 ) -> Option<(AtomValue, Option<KeyProvenance>)> {
     if let Some(leaf) = value::literal_leaf(expr) {
@@ -145,14 +154,18 @@ pub(crate) fn slot_value(
 
 /// A destructured default's value: a literal or a single-leaf identifier.
 pub(crate) fn default_value(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     expr: &Expression<'_>,
 ) -> Option<(AtomValue, Option<KeyProvenance>)> {
     slot_value(ctx, value::peel(expr))
 }
 
 /// One shadowed name: bound to shadow, carrying no value.
-pub(crate) fn shadow_binding(ctx: &PatternCtx<'_>, name: &str, span: Span) -> (String, Binding) {
+pub(crate) fn shadow_binding(
+    ctx: &PatternCtx<'_, '_>,
+    name: &str,
+    span: Span,
+) -> (String, Binding) {
     (
         name.to_string(),
         Binding {

@@ -12,4 +12,12 @@ Evidence: `[atm]` ATM-SITE-26 (call-arg unwraps);
 `vendor/panda/crates/pandacss_extractor/tests/calls.rs:1001`, `:1017`,
 `:1033`, `:1052`, `:1068`.
 
+Repin (Forge Slice 3): the `asserted` node paints CSS `plum`
+(rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the
+signed §9 fence and H1, a bare value the alphabet accepts is complete
+CSS — never a token path, never warned — so CSS wins over the
+same-named token while the five sibling tokens still resolve through
+`var()`. The token stays declared deliberately: this case now pins
+CSS-over-token precedence for the angle-assertion wrap.
+
 > Search terms: call arg unwraps, as const, satisfies, non-null assertion, angle assertion, parens, wrapped args, NEO-SITE-24, ATM-SITE-26

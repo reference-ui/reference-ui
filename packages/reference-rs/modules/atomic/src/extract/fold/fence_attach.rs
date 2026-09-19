@@ -25,12 +25,14 @@ use super::fence::{lower_callable_expr, lower_function, PureFn};
 /// never to a wrong one. Named function expressions attach only their outer
 /// declarator name; the inner name never binds a call site. Exported
 /// declarations attach under their declared name for the descriptor export.
+/// Captures bake through `imports`: the project bag for the extracting file,
+/// the resolved map for an origin file's graph-backed bake.
 pub fn attach_pure_fns(
     program: &oxc_ast::ast::Program<'_>,
     table: &mut crate::extract::scope::ScopeTable,
-    project: &crate::extract::constants::LocalConstants,
+    imports: crate::extract::scope::ImportLookup<'_>,
 ) {
-    let chain = crate::extract::scope::ScopeChain::new(table, import_lookup(project));
+    let chain = crate::extract::scope::ScopeChain::new(table, imports);
     let mut pass = AttachPass {
         chain,
         stack: Vec::new(),
@@ -43,13 +45,6 @@ pub fn attach_pure_fns(
     for (scope, name, span, func) in pending {
         table.attach_pure_fn(scope, &name, span, func);
     }
-}
-
-/// The merge-era import lookup captures bake through, like identifiers.
-fn import_lookup(
-    project: &crate::extract::constants::LocalConstants,
-) -> crate::extract::scope::ImportLookup<'_> {
-    crate::extract::scope::ImportLookup::ProjectBag(project)
 }
 
 /// Second-pass visitor lowering helpers with the finished table in hand.
@@ -118,10 +113,7 @@ impl<'a> oxc_ast_visit::Visit<'a> for AttachPass<'a> {
         oxc_ast_visit::walk::walk_statement(self, stmt);
     }
 
-    fn visit_export_named_declaration(
-        &mut self,
-        decl: &oxc_ast::ast::ExportNamedDeclaration<'a>,
-    ) {
+    fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
         if let Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) =
             decl.declaration.as_ref()
         {

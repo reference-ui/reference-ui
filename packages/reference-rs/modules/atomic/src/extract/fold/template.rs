@@ -304,10 +304,7 @@ fn fold_hole_member(mem: &StaticMemberExpression<'_>, hole: &mut HoleFold<'_, '_
         if let Some(write) = hole.scoped.mutation(obj_name) {
             hole.refuse(
                 mem.span,
-                format!(
-                    "mutated binding '{obj_name}' ({})",
-                    write.write_phrase()
-                ),
+                format!("mutated binding '{obj_name}' ({})", write.write_phrase()),
             );
             return Vec::new();
         }

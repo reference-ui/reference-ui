@@ -1,9 +1,11 @@
 //! `tsconfig.json` `paths` and `baseUrl` for bare-specifier resolution.
+//!
 //! A `paths` entry maps one prefix (with at most one `*`) to ordered target
-//! bases; each target joins under `baseUrl` (or the tsconfig dir when no
-//! base URL is set) and the specifier layer probes extensions from there.
-//! Only the first `*` splits; targets without a star match exact specifiers.
-//! `extends` chains stay unread — the nearest tsconfig wins, verbatim.
+//! bases; each target joins under `baseUrl` (or the tsconfig dir when unset)
+//! and the ladder probes extensions from there. Only the first `*` splits;
+//! targets without a star match exact specifiers. `extends` chains stay
+//! unread — the nearest tsconfig wins, verbatim. Lifted from atomic's alias
+//! arm, which SITE-54 pins.
 
 use std::path::{Path, PathBuf};
 
@@ -18,19 +20,20 @@ struct PathEntry {
 
 /// Parsed compiler options for specifier mapping.
 #[derive(Debug, Clone)]
-pub struct Tsconfig {
+pub(crate) struct Tsconfig {
     base_url: PathBuf,
     entries: Vec<PathEntry>,
 }
 
 impl Tsconfig {
     /// Candidate bases for a bare specifier, unprobed, in entry order.
-    pub(crate) fn candidates(&self, specifier: &str) -> Vec<PathBuf> {
+    pub(crate) fn candidates(&self, specifier: &str) -> Vec<String> {
         let mut out = Vec::new();
         for entry in &self.entries {
             if let Some(star) = match_entry(entry, specifier) {
                 for target in &entry.targets {
-                    out.push(join_target(&self.base_url, target, star));
+                    let joined = join_target(&self.base_url, target, star);
+                    out.push(crate::key::normalize_str(&joined.to_string_lossy()));
                 }
             }
         }
@@ -38,20 +41,20 @@ impl Tsconfig {
     }
 }
 
-/// Parse tsconfig text from a config living in `dir`, with comments stripped.
+/// Parse tsconfig text from a config living in `dir`, comments stripped.
 pub(crate) fn parse_text(text: &str, dir: &str) -> Option<Tsconfig> {
     parse(text, &PathBuf::from(dir))
 }
 
 /// Parse tsconfig text with `//` and `/* */` comments stripped.
-fn parse(text: &str, dir: &PathBuf) -> Option<Tsconfig> {
+fn parse(text: &str, dir: &Path) -> Option<Tsconfig> {
     let stripped = strip_comments(text);
     let json: serde_json::Value = serde_json::from_str(&stripped).ok()?;
     let options = json.get("compilerOptions")?;
     let base_url = options
         .get("baseUrl")
         .and_then(serde_json::Value::as_str)
-        .map_or_else(|| dir.clone(), |base| dir.join(base));
+        .map_or_else(|| dir.to_path_buf(), |base| dir.join(base));
     let mut entries = Vec::new();
     if let Some(paths) = options.get("paths").and_then(serde_json::Value::as_object) {
         for (pattern, targets) in paths {
@@ -116,7 +119,7 @@ fn join_target(base_url: &Path, target: &str, star: Option<&str>) -> PathBuf {
 /// A peekable char stream over tsconfig text.
 type CharStream<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 
-/// Strip `//` line and `/* */` block comments, keeping string literals intact.
+/// Strip `//` line and `/* */` block comments, keeping strings intact.
 fn strip_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();
@@ -193,56 +196,5 @@ fn skip_block(chars: &mut CharStream<'_>) {
             break;
         }
         prev = ch;
-    }
-}
-
-/// Read one `paths` map in tests without touching the filesystem.
-#[cfg(test)]
-fn parse_test(text: &str) -> Option<Tsconfig> {
-    parse(text, &PathBuf::from("/root"))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn star_entry_maps_prefix_to_targets() {
-        let ts = parse_test(
-            r#"{"compilerOptions":{"baseUrl":".","paths":{"@/*":["src/*"]}}}"#,
-        )
-        .unwrap();
-        assert_eq!(
-            ts.candidates("@/tokens"),
-            vec![PathBuf::from("/root/./src/tokens")]
-        );
-        assert!(ts.candidates("./tokens").is_empty());
-    }
-
-    #[test]
-    fn exact_entry_matches_whole_specifier() {
-        let ts = parse_test(
-            r#"{"compilerOptions":{"paths":{"theme":["./src/theme.ts"]}}}"#,
-        )
-        .unwrap();
-        assert_eq!(ts.candidates("theme").len(), 1);
-        assert!(ts.candidates("theme/sub").is_empty());
-    }
-
-    #[test]
-    fn comments_strip_before_parse() {
-        let ts = parse_test(
-            "// lead\n{\"compilerOptions\": { /* mid */ \"baseUrl\": \".\", \"paths\": {\"@/*\": [\"src/*\"]}}}",
-        )
-        .unwrap();
-        assert_eq!(ts.candidates("@/x").len(), 1);
-    }
-
-    #[test]
-    fn missing_options_yield_no_entries() {
-        let ts = parse_test(r#"{"compilerOptions":{}}"#).unwrap();
-        assert!(ts.candidates("@/x").is_empty());
-        assert!(parse_test(r#"{"nope": true}"#).is_none());
-        assert!(parse_test(r#"not json"#).is_none());
     }
 }

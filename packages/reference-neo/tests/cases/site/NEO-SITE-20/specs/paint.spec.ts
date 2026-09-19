@@ -32,7 +32,9 @@ const PROBES: Array<{ id: string; rgb: string }> = [
   { id: 'asconst', rgb: 'rgb(245, 158, 11)' },
   { id: 'satisfies', rgb: 'rgb(21, 128, 61)' },
   { id: 'nonnull', rgb: 'rgb(37, 99, 235)' },
-  { id: 'asserted', rgb: 'rgb(168, 85, 247)' },
+  // CSS `plum`, not the world token: a complete CSS value is never a token
+  // path (Forge §9 fence, H1 — CSS wins over tokens). See the README.
+  { id: 'asserted', rgb: 'rgb(221, 160, 221)' },
 ];
 
 // Every wrap form paints its leaf, the sheet carries exactly the six

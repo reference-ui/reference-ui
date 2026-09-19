@@ -1,0 +1,8 @@
+{
+  "color:chartreuse": "@reference-ui/lib__c_chartreuse",
+  "color:red": "@reference-ui/lib__c_red",
+  "margin:2px": "@reference-ui/lib__m_2px",
+  "margin:8px": "@reference-ui/lib__m_8px",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "padding:6px": "@reference-ui/lib__p_6px"
+}

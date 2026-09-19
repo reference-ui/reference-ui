@@ -251,5 +251,14 @@ fn unpack_local_const_object(
         spread_miss_warn(ctx, name, span);
         return;
     };
+    emit_import_residue(ctx, name, span);
     lower_const_object(ctx, name, obj, when, span);
+}
+
+/// Diagnose nested spreads the imported object could not unfold, one per
+/// marker, before its surviving entries lower.
+fn emit_import_residue(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
+    for marker in ctx.scopes.import_unfoldable(name) {
+        ctx.warn(span, DiagnosticCode::UnfoldableSpread, marker.message());
+    }
 }

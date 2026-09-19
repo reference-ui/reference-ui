@@ -2,12 +2,14 @@
 //! A name resolves to the innermost binding in scope: a const with a static
 //! init yields its leaves, while a param, function, or dynamic declarator
 //! yields nothing and shadows everything outside it. Imported names resolve
-//! through the binding walk to the declared export in THAT file and read its
-//! origin values; unresolvable value shapes fall back to the merge bag, as do
-//! unbound value names, preserving the merge-era observable. Helpers never
-//! fall back: an import answers only its walked origin's descriptor, and an
-//! unbound callee refuses, so bindings — never the name bag — decide which
-//! helper folds. Unknown scope ids resolve as unbound.
+//! through the module graph to the declared export in THAT file and read its
+//! origin values only — never the name-wide bag, whose write set stays for
+//! unbound names alone. Mutation poison for imports is the origin file's
+//! write, so a same-named write in another file never blocks an import that
+//! resolves to an unmutated export. Helpers never fall back: an import
+//! answers only its walked origin's descriptor, and an unbound callee
+//! refuses, so bindings — never the name bag — decide which helper folds.
+//! Unknown scope ids resolve as unbound.
 
 use std::collections::HashMap;
 
@@ -18,7 +20,7 @@ use crate::extract::constants::{
     ConstArrayElement, ConstObject, LocalConstants, MutatedBinding, ObjectProp,
 };
 use crate::extract::fold::fence::PureFn;
-use crate::extract::resolver::ResolvedExport;
+use crate::extract::resolver::{ResolvedExport, UnfoldableSpread};
 
 /// Where a name resolved: a local binding, an import, or nowhere in scope.
 #[derive(Debug, Clone, Copy)]
@@ -33,17 +35,18 @@ pub enum Lookup<'a> {
 
 /// Answers names the file does not bind: the import lookup seam.
 /// The resolver map holds imports by local name; the bag stays as the
-/// fallback for unhandled shapes and unbound names. An enum, not a trait
-/// object, so the chain stays covariant and walkers shrink its lifetime.
+/// fallback for unbound names only — imports never consult it. An enum, not
+/// a trait object, so the chain stays covariant and walkers shrink its
+/// lifetime.
 #[derive(Debug, Clone, Copy)]
 pub enum ImportLookup<'a> {
     /// The project name bag alone (bare extracts and unit tests).
     ProjectBag(&'a LocalConstants),
-    /// Resolved imports by local name plus the bag fallback (compiles).
+    /// Resolved imports by local name plus the unbound-name fallback.
     Binding {
         /// Resolved imports of this file, keyed by local name.
         values: &'a HashMap<String, ResolvedExport>,
-        /// Merge-era fallback for unhandled shapes and unbound names.
+        /// Merge-era fallback for unbound names only, never imports.
         fallback: &'a LocalConstants,
     },
 }
@@ -182,12 +185,12 @@ impl<'a> Scoped<'a> {
         }
     }
 
-    /// Scalar leaves for an import: the resolved target, else the bag union.
+    /// Scalar leaves for an import: the resolved target, else nothing.
     fn import_scalars(self, local: &str) -> &'a [AtomValue] {
-        if let Some(value) = self.chain.imports.import_value(local) {
-            return value.scalars();
-        }
-        self.chain.imports.scalar_leaves(local)
+        self.chain
+            .imports
+            .import_value(local)
+            .map_or(&[], ResolvedExport::scalars)
     }
 
     /// The first static leaf for single-valued positions.
@@ -267,12 +270,12 @@ impl<'a> Scoped<'a> {
         }
     }
 
-    /// One member entry for an import: the resolved target, else the bag.
+    /// One member entry for an import: the resolved target, else nothing.
     fn import_object_prop(self, local: &str, prop: &str) -> Option<&'a ObjectProp> {
-        match self.chain.imports.import_value(local) {
-            Some(value) => value.object_prop(prop),
-            None => self.chain.imports.object_prop(local, prop),
-        }
+        self.chain
+            .imports
+            .import_value(local)
+            .and_then(|value| value.object_prop(prop))
     }
 
     /// A bound style object, resolved imports first, then the fallback.
@@ -288,12 +291,12 @@ impl<'a> Scoped<'a> {
         }
     }
 
-    /// A style object for an import: the resolved target, else the bag.
+    /// A style object for an import: the resolved target, else nothing.
     fn import_object(self, local: &str) -> Option<&'a ConstObject> {
-        match self.chain.imports.import_value(local) {
-            Some(value) => value.object(),
-            None => self.chain.imports.object(local),
-        }
+        self.chain
+            .imports
+            .import_value(local)
+            .and_then(ResolvedExport::object)
     }
 
     /// A bound const array's elements, resolved imports first, then fallback.
@@ -309,12 +312,12 @@ impl<'a> Scoped<'a> {
         }
     }
 
-    /// Array elements for an import: the resolved target, else the bag.
+    /// Array elements for an import: the resolved target, else nothing.
     fn import_array(self, local: &str) -> Option<&'a [ConstArrayElement]> {
-        match self.chain.imports.import_value(local) {
-            Some(value) => value.array(),
-            None => self.chain.imports.array(local),
-        }
+        self.chain
+            .imports
+            .import_value(local)
+            .and_then(ResolvedExport::array)
     }
 
     /// The import binding for a name, when the chain resolves it to an import.
@@ -326,11 +329,31 @@ impl<'a> Scoped<'a> {
     }
 
     /// The write that poisoned a binding, for the mutated-use diagnostic.
+    /// Imports answer their origin file's write only, so a same-named
+    /// write in another file never poisons them; locals and unbound names
+    /// keep the name-wide write set.
     pub fn mutation(self, name: &str) -> Option<&'a MutatedBinding> {
-        self.chain.imports.mutation(name)
+        let Lookup::Import(imp) = self.chain.resolve(name, self.scope) else {
+            return self.chain.imports.mutation(name);
+        };
+        self.chain.imports.import_value(&imp.local)?.mutation()
     }
 
-    /// True when a write anywhere in the project poisoned this name.
+    /// Nested spreads the imported object could not unfold, for the use-site
+    /// floor. Only a name that resolves to an import carries markers; locals
+    /// and unbound names diagnose their own spreads at their own sites.
+    pub fn import_unfoldable(self, name: &str) -> &'a [UnfoldableSpread] {
+        let Lookup::Import(imp) = self.chain.resolve(name, self.scope) else {
+            return &[];
+        };
+        self.chain
+            .imports
+            .import_value(&imp.local)
+            .map_or(&[], ResolvedExport::unfoldable)
+    }
+
+    /// True when a write poisoned this name: the origin file's for imports,
+    /// anywhere in the project for locals and unbound names.
     fn mutated(self, name: &str) -> bool {
         self.mutation(name).is_some()
     }

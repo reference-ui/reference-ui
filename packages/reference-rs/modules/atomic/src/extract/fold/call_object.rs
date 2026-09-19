@@ -71,7 +71,10 @@ fn null_slot() -> FenceValue {
 
 /// Splice one array-argument spread: inline arrays recurse, const arrays
 /// convert whole, and anything else refuses the whole argument.
-pub(crate) fn fold_array_spread(fold: &mut ArgFold, arg: &Expression<'_>) -> Option<Vec<FenceValue>> {
+pub(crate) fn fold_array_spread(
+    fold: &mut ArgFold,
+    arg: &Expression<'_>,
+) -> Option<Vec<FenceValue>> {
     let mut arg = arg;
     while let Some(inner) = unwrap_wrapper_target(arg) {
         arg = inner;
@@ -95,7 +98,10 @@ pub(crate) fn fold_array_spread(fold: &mut ArgFold, arg: &Expression<'_>) -> Opt
 /// Fold an object argument leniently per member: static members stay,
 /// dynamic members and spreads skip with a diagnostic, and only an
 /// all-unresolvable object refuses, verbatim v2's object rule.
-pub(crate) fn fold_object_arg(fold: &mut ArgFold, obj: &oxc_ast::ast::ObjectExpression<'_>) -> Option<FenceValue> {
+pub(crate) fn fold_object_arg(
+    fold: &mut ArgFold,
+    obj: &oxc_ast::ast::ObjectExpression<'_>,
+) -> Option<FenceValue> {
     let mut entries = Vec::with_capacity(obj.properties.len());
     let mut kept = false;
     let mut refused = false;
@@ -190,7 +196,10 @@ pub(crate) fn fold_object_member(
 }
 
 /// Fold one member key: static spellings direct, computed keys folded.
-pub(crate) fn fold_member_key(fold: &mut ArgFold, prop: &oxc_ast::ast::ObjectProperty<'_>) -> Option<Box<str>> {
+pub(crate) fn fold_member_key(
+    fold: &mut ArgFold,
+    prop: &oxc_ast::ast::ObjectProperty<'_>,
+) -> Option<Box<str>> {
     if !prop.computed {
         return static_member_key(&prop.key);
     }
@@ -298,10 +307,7 @@ pub(crate) fn fold_const_spread(
                 FenceValue::Leaves(prop.leaves.clone()),
             ));
         } else {
-            entries.push((
-                Box::from(key.as_str()),
-                const_object_value(&prop.nested),
-            ));
+            entries.push((Box::from(key.as_str()), const_object_value(&prop.nested)));
         }
     }
     true

@@ -57,11 +57,7 @@ fn scan_expr(expr: &Expression<'_>, scoped: Scoped<'_>, bake: bool) -> Option<Bo
 }
 
 /// Direct entry reads: identifiers, members, and elements.
-fn direct_entry_residue(
-    expr: &Expression<'_>,
-    scoped: Scoped<'_>,
-    bake: bool,
-) -> Option<Box<str>> {
+fn direct_entry_residue(expr: &Expression<'_>, scoped: Scoped<'_>, bake: bool) -> Option<Box<str>> {
     match expr {
         Expression::Identifier(ident) => {
             if bake {
@@ -70,8 +66,9 @@ fn direct_entry_residue(
                 None
             }
         }
-        Expression::StaticMemberExpression(mem) => member_entry_residue(mem, scoped)
-            .or_else(|| scan_expr(&mem.object, scoped, bake)),
+        Expression::StaticMemberExpression(mem) => {
+            member_entry_residue(mem, scoped).or_else(|| scan_expr(&mem.object, scoped, bake))
+        }
         Expression::ComputedMemberExpression(mem) => element_entry_residue(mem, scoped)
             .or_else(|| scan_expr(&mem.object, scoped, bake))
             .or_else(|| scan_expr(&mem.expression, scoped, bake)),
@@ -113,11 +110,7 @@ fn composite_entry_residue(
 
 /// Helper bodies: arrows and function expressions, defaults plus body.
 /// Key scans never reach here (a bare helper in key position refuses).
-fn helper_entry_residue(
-    expr: &Expression<'_>,
-    scoped: Scoped<'_>,
-    bake: bool,
-) -> Option<Box<str>> {
+fn helper_entry_residue(expr: &Expression<'_>, scoped: Scoped<'_>, bake: bool) -> Option<Box<str>> {
     if !bake {
         return None;
     }
@@ -146,8 +139,9 @@ fn wrapped_entry_residue(
 /// Direct key reads: members, elements, and calls.
 fn key_direct_residue(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<Box<str>> {
     match key {
-        PropertyKey::StaticMemberExpression(mem) => member_entry_residue(mem, scoped)
-            .or_else(|| scan_expr(&mem.object, scoped, false)),
+        PropertyKey::StaticMemberExpression(mem) => {
+            member_entry_residue(mem, scoped).or_else(|| scan_expr(&mem.object, scoped, false))
+        }
         PropertyKey::ComputedMemberExpression(mem) => element_entry_residue(mem, scoped)
             .or_else(|| scan_expr(&mem.object, scoped, false))
             .or_else(|| scan_expr(&mem.expression, scoped, false)),
@@ -249,8 +243,9 @@ fn call_key_residue(
                 None
             }
         }
-        Expression::ArrowFunctionExpression(_)
-        | Expression::FunctionExpression(_) => scan_expr(callee, scoped, true),
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
+            scan_expr(callee, scoped, true)
+        }
         _ => None,
     }
 }

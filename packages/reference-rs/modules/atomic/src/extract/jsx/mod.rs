@@ -452,7 +452,6 @@ fn lower_attr_const(
     }
 }
 
-
 /// Report a dropped tag when no hosts are resolvable at all. Unknown tags
 /// under a known graph stay silent; style-bearing tags with an empty host
 /// set are a missing-graph error at the tag's position, once per file.

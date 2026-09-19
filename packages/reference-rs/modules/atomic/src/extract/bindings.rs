@@ -36,7 +36,8 @@ pub(crate) struct IdentityCtx<'a, 's> {
 impl IdentityCtx<'_, '_> {
     /// The Reference export one import of this file traces to, if any.
     fn trace_named(&self, source: &str, imported: &str) -> Option<String> {
-        self.graph.trace_reference_export(self.file, source, imported)
+        self.graph
+            .trace_reference_export(self.file, source, imported)
     }
 }
 
@@ -169,10 +170,20 @@ fn extend_namespace(
     source: &str,
     ctx: &IdentityCtx<'_, '_>,
 ) {
-    if ctx.graph.trace_reference_export(ctx.file, source, "css").as_deref() == Some("css") {
+    if ctx
+        .graph
+        .trace_reference_export(ctx.file, source, "css")
+        .as_deref()
+        == Some("css")
+    {
         bindings.reexport_css_ns.insert(local.to_string());
     }
-    if ctx.graph.trace_reference_export(ctx.file, source, "recipe").as_deref() == Some("recipe") {
+    if ctx
+        .graph
+        .trace_reference_export(ctx.file, source, "recipe")
+        .as_deref()
+        == Some("recipe")
+    {
         bindings.reexport_recipe_ns.insert(local.to_string());
     }
 }

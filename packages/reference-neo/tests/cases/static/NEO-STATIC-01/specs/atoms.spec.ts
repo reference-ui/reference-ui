@@ -41,5 +41,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const twinCls = await twin.evaluate((el) => el.getAttribute('class'));
   assert.equal(twinCls, 'neo-static-01__hover:c_gold', `twin resolves the static hover class, got ${twinCls}`);
   const twinColor = await twin.evaluate((el) => getComputedStyle(el).color);
-  assert.equal(twinColor, 'rgb(245, 158, 11)', `twin paints hover gold, got ${twinColor}`);
+  // CSS `gold`, not the world token: a complete CSS value is never a token
+  // path (Forge §9 fence, H1 — CSS wins over tokens). See the README.
+  assert.equal(twinColor, 'rgb(255, 215, 0)', `twin paints hover gold, got ${twinColor}`);
 }

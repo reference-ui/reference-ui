@@ -63,9 +63,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
 
   const fan = page.locator('#fan');
+  // CSS `plum`, not the world token: a complete CSS value is never a token
+  // path (Forge §9 fence, H1 — CSS wins over tokens). See the README.
   assert.equal(
     await fan.evaluate((el) => getComputedStyle(el).color),
-    'rgb(168, 85, 247)',
+    'rgb(221, 160, 221)',
     '#fan paints the live plum arm',
   );
 

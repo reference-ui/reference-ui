@@ -97,8 +97,7 @@ fn call_callee_residue(scoped: Scoped<'_>, callee: &Expression<'_>) -> Option<Bo
                 None
             }
         }
-        Expression::ArrowFunctionExpression(_)
-        | Expression::FunctionExpression(_) => {
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
             super::residue::expr_entry_residue(callee, scoped)
                 .map(|path| format!("property '{path}'").into_boxed_str())
         }

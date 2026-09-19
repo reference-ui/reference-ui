@@ -8,6 +8,7 @@ description = "Native atomic CSS compiler for Reference UI"
 [dependencies]
 canon.workspace = true
 base_system.workspace = true
+module_graph.workspace = true
 styletrace.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }

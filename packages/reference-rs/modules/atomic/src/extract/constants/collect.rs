@@ -232,9 +232,7 @@ fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
 /// is not a literal, a literal-entry object, or a hole. Identifier and
 /// spread elements stay unrecorded (SPEC-V2-34 const-graph depth), so the
 /// binding shadows instead of resolving to a partial array.
-fn array_elements(
-    arr: &oxc_ast::ast::ArrayExpression<'_>,
-) -> Option<Vec<ConstArrayElement>> {
+fn array_elements(arr: &oxc_ast::ast::ArrayExpression<'_>) -> Option<Vec<ConstArrayElement>> {
     let mut elements = Vec::with_capacity(arr.elements.len());
     for elem in &arr.elements {
         elements.push(array_element(elem)?);

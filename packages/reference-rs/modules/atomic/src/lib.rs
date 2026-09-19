@@ -3,6 +3,7 @@
 //! Exposes the primary compilation pipeline and public data structures consumed by build tooling and runtime environments.
 
 pub mod atom;
+mod assembly;
 pub mod diagnostics;
 pub mod extract;
 pub mod hosts;
@@ -92,7 +93,7 @@ pub struct CompileResult {
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
-    resolver: &'a extract::resolver::Resolver,
+    resolver: &'a mut extract::resolver::ValueGraph<'a>,
     identity: extract::identity::IdentityGraph<'a>,
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a HashSet<String>,
@@ -105,22 +106,31 @@ struct ParseSession<'a> {
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let sources = sources::collect(request);
+    // One parse per source: allocators and programs live for the whole
+    // compile, so constants, the value graph, and extraction share them.
+    let allocators: Vec<Allocator> = sources.iter().map(|_| Allocator::default()).collect();
+    let parsed: Vec<_> = sources
+        .iter()
+        .zip(allocators.iter())
+        .map(|((path, content), allocator)| parse_source(path, content, allocator))
+        .collect();
     let mut wants = Vec::new();
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
-    let project_constants = collect_project_constants(&sources);
-    let resolver = extract::resolver::Resolver::new(&sources, request.root_dir.as_deref());
+    let project_constants = collect_project_constants(&sources, &parsed);
+    let mut graph = extract::resolver::ValueGraph::new(&sources, &parsed, &project_constants);
     let identity = extract::identity::IdentityGraph::new(&sources);
     let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
     let traced_jsx = resolved_hosts.hosts();
     diagnostics.extend(host_diagnostics);
+    report_parse_errors(&sources, &parsed, &mut diagnostics);
     let system = &request.base_system;
 
     {
         let mut session = ParseSession {
             constants: &project_constants,
-            resolver: &resolver,
+            resolver: &mut graph,
             identity,
             breakpoints: system.breakpoints(),
             traced_jsx: &traced_jsx,
@@ -129,75 +139,76 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
             diagnostics: &mut diagnostics,
             authored: &mut authored,
         };
-        for (path, content) in &sources {
-            parse_and_extract(&mut session, path, content);
-        }
+        extract_all_sources(&mut session, &sources, &parsed);
     }
 
-    let mut static_ctx = static_css::StaticCssContext {
-        system,
-        wants: &mut wants,
-        authored: &mut authored,
-        diagnostics: &mut diagnostics,
-    };
-    static_css::append_static_css(&mut static_ctx);
-
-    let mut atom_set = build_atom_set(&wants, system, &mut diagnostics);
-    resolve::conditions::check_container_root(system, &atom_set, &mut diagnostics);
-    let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
-    let mut plan_builder =
-        runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
-    let style_plans = plan_builder.build(&authored);
-    let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
-    let runtime = NativeRuntimeArtifact {
-        schema_version: 1,
-        style_plans,
-        recipes: runtime_recipes,
-        style_prop_names: runtime::get_style_prop_names(),
-    };
-
-    let atom_count = atom_set.len();
-    let css = build_css_runtime(&atom_set, &system.name);
-    let stylesheet =
-        stylesheet::build_stylesheet_with(&atom_set, system, &compiled_recipes, &mut diagnostics);
-    // Portable build re-walks the same fragments; its diagnostics sink here
-    // so global warnings surface once from the primary build above.
-    let mut portable_sink = Vec::new();
-    let portable_stylesheet = stylesheet::build_portable_stylesheet_with(
-        &atom_set,
-        system,
-        &compiled_recipes,
-        &mut portable_sink,
-    );
-    let recipe_tables = compiled_recipes
-        .into_iter()
-        .map(|recipe| recipe.table)
-        .collect();
-
-    Ok(CompileResult {
-        stylesheet,
-        portable_stylesheet,
-        runtime,
-        css: Some(css),
-        diagnostics,
+    let mut assembly = assembly::AssembleCtx {
         wants,
-        recipes: recipe_tables,
-        atom_count,
-        traced_jsx_hosts: resolved_hosts.traced,
-    })
+        extracted_recipes,
+        diagnostics,
+        authored,
+        traced: resolved_hosts.traced,
+    };
+    assembly.append_static(system);
+    Ok(assembly.finish(system))
 }
 
-fn collect_project_constants(sources: &[(String, String)]) -> extract::constants::LocalConstants {
+/// Extract every unpanicked source through the shared session.
+fn extract_all_sources(
+    session: &mut ParseSession<'_>,
+    sources: &[(String, String)],
+    parsed: &[oxc_parser::ParserReturn<'_>],
+) {
+    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
+        if !ret.panicked {
+            extract_parsed_program(session, path, content, &ret.program);
+        }
+    }
+}
+
+/// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),
+/// so `.ts`-only `<T>` assertions parse only when JSX is off (SPEC-V2-07).
+fn parse_source<'a>(
+    path: &str,
+    content: &'a str,
+    allocator: &'a Allocator,
+) -> oxc_parser::ParserReturn<'a> {
+    let source_type = SourceType::from_path(Path::new(path))
+        .unwrap_or_default()
+        .with_typescript(true);
+    Parser::new(allocator, content, source_type).parse()
+}
+
+/// Report every source's parse errors, in source order.
+fn report_parse_errors(
+    sources: &[(String, String)],
+    parsed: &[oxc_parser::ParserReturn<'_>],
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
+        for err in &ret.errors {
+            let offset = err
+                .labels
+                .as_ref()
+                .and_then(|labels| labels.first())
+                .map(|label| label.offset() as u32);
+            let (line, column) = offset
+                .and_then(|start| crate::diagnostics::line_col(content, start))
+                .unzip();
+            diagnostics.push(
+                Diagnostic::error(DiagnosticCode::ParseError, err.to_string())
+                    .with_location(path, line, column),
+            );
+        }
+    }
+}
+
+fn collect_project_constants(
+    sources: &[(String, String)],
+    parsed: &[oxc_parser::ParserReturn<'_>],
+) -> extract::constants::LocalConstants {
     let mut project_constants = extract::constants::LocalConstants::new();
-    for (path, content) in sources {
-        let allocator = Allocator::default();
-        // JSX follows the extension (`.tsx` on, `.ts` off): `.ts`-only
-        // `<T>` assertions parse only when JSX is off (SPEC-V2-07).
-        let source_type = SourceType::from_path(Path::new(path))
-            .unwrap_or_default()
-            .with_typescript(true);
-        let parser = Parser::new(&allocator, content, source_type);
-        let ret = parser.parse();
+    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
         if !ret.panicked {
             let file_constants = extract::constants::collect_local_constants(
                 &ret.program,
@@ -210,35 +221,6 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
     project_constants
 }
 
-fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) {
-    let allocator = Allocator::default();
-    // JSX follows the extension (`.tsx` on, `.ts` off): `.ts`-only
-    // `<T>` assertions parse only when JSX is off (SPEC-V2-07).
-    let source_type = SourceType::from_path(Path::new(path))
-        .unwrap_or_default()
-        .with_typescript(true);
-    let parser = Parser::new(&allocator, content, source_type);
-    let ret = parser.parse();
-
-    for err in ret.errors {
-        let offset = err
-            .labels
-            .as_ref()
-            .and_then(|labels| labels.first())
-            .map(|label| label.offset() as u32);
-        let (line, column) = offset
-            .and_then(|start| crate::diagnostics::line_col(content, start))
-            .unzip();
-        session.diagnostics.push(
-            Diagnostic::error(DiagnosticCode::ParseError, err.to_string())
-                .with_location(path, line, column),
-        );
-    }
-    if !ret.panicked {
-        extract_parsed_program(session, path, content, &ret.program);
-    }
-}
-
 fn extract_parsed_program(
     session: &mut ParseSession<'_>,
     path: &str,
@@ -246,8 +228,8 @@ fn extract_parsed_program(
     program: &oxc_ast::ast::Program<'_>,
 ) {
     // Locals resolve through this file's scope table; imports answer from
-    // the resolver map, with the bag behind for unhandled shapes and unbound
-    // names. Baked entries strip against the name-wide mutation set.
+    // the resolver map only, with the bag behind for unbound names. Baked
+    // entries strip against the name-wide mutation set.
     let table = extract::scope::collect(program, session.constants);
     let imports = table.import_refs();
     let values = session.resolver.resolve_file_imports(path, &imports);

@@ -105,6 +105,7 @@ fn lower_css_block(
 ) {
     match resolve_block_target(ctx.scopes, expr) {
         BlockLookup::Hit(name, obj) => {
+            emit_import_residue(ctx, &name, expr.span());
             lower_const_object(ctx, &name, obj, when, expr.span());
         }
         BlockLookup::Miss(base) => {
@@ -119,6 +120,13 @@ fn lower_css_block(
 }
 
 /// Warn naming the write when a bag block value's base name is mutated.
+/// Diagnose nested spreads the imported block object could not unfold.
+fn emit_import_residue(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
+    for marker in ctx.scopes.import_unfoldable(name) {
+        ctx.warn(span, DiagnosticCode::UnfoldableSpread, marker.message());
+    }
+}
+
 fn mutated_bag_warn(ctx: &mut ObjectWalk<'_>, prop: &str, base: &str, span: Span) -> bool {
     let Some(write) = ctx.scopes.mutation(base) else {
         return false;

@@ -14,6 +14,7 @@ use super::super::value::{self, Dep, DepKey, KeyProvenance};
 use super::{default_value, push_leaves, shadow_binding, LeavesBind, PatternBind, PatternCtx};
 use crate::atom::AtomValue;
 use crate::extract::constants::ConstObject;
+use crate::extract::resolver::UnfoldableSpread;
 
 /// A resolved object source: its entries plus per-key provenance.
 struct ObjectSource {
@@ -21,6 +22,8 @@ struct ObjectSource {
     provenances: BTreeMap<String, KeyProvenance>,
     /// The source binding when the source is an identifier (for root deps).
     root: Option<(ScopeId, String)>,
+    /// Markers for refused import spreads inside an inline source.
+    residues: Vec<UnfoldableSpread>,
 }
 
 /// The static leaves of one source entry: absent and empty markers bind nothing.
@@ -41,7 +44,7 @@ struct ListedProp<'a> {
 
 /// Bind an object pattern's names against its init.
 pub(crate) fn bind_object_pattern(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     pattern: &BindingPattern<'_>,
     obj: &ObjectPattern<'_>,
     init: Option<&Expression<'_>>,
@@ -50,6 +53,7 @@ pub(crate) fn bind_object_pattern(
         return PatternBind::shadowed(ctx, pattern);
     };
     let mut out = PatternBind::empty();
+    out.residues.extend(source.residues.iter().cloned());
     let mut listed = Vec::new();
     let mut rest_blind = false;
     for prop in &obj.properties {
@@ -92,7 +96,7 @@ struct ObjectRest<'a> {
 
 /// Bind one listed property: the entry, its default, or a shadow.
 fn bind_listed_prop(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     source: &ObjectSource,
     prop: ListedProp<'_>,
     out: &mut PatternBind,
@@ -123,7 +127,7 @@ fn bind_listed_prop(
 
 /// Bind an assignment-pattern value: the entry wins, else the default.
 fn bind_defaulted_prop(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     source: &ObjectSource,
     prop: ListedProp<'_>,
     out: &mut PatternBind,
@@ -182,7 +186,7 @@ fn bind_defaulted_prop(
 
 /// Bind an object rest element to the unlisted entries, if excludable.
 fn bind_object_rest(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     source: &ObjectSource,
     rest: ObjectRest<'_>,
     out: &mut PatternBind,
@@ -237,21 +241,23 @@ fn bind_object_rest(
 
 /// Resolve an object pattern's source: an inline object or a bound object.
 fn resolve_object_source(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     init: Option<&Expression<'_>>,
 ) -> Option<ObjectSource> {
     let init = value::peel(init?);
     if let Expression::ObjectExpression(obj) = init {
         // const { color } = { color: 'red' }
-        let (entries, provenances) = value::object_init(obj, ctx.table, ctx.scope);
-        let provenances = provenances
+        let sink = value::object_init(obj, ctx.table, ctx.scope, ctx.fill);
+        let provenances = sink
+            .provenances
             .into_iter()
             .map(|p| (p.key.clone(), p))
             .collect();
         return Some(ObjectSource {
-            entries,
+            entries: sink.entries,
             provenances,
             root: None,
+            residues: sink.residues,
         });
     }
     if let Expression::Identifier(id) = init {
@@ -274,6 +280,7 @@ fn resolve_object_source(
                 entries: map.clone(),
                 provenances,
                 root: Some((src_scope, id.name.to_string())),
+                residues: Vec::new(),
             });
         }
     }
@@ -282,7 +289,7 @@ fn resolve_object_source(
 
 /// A pattern key: static spellings plus single-string computed identifiers.
 fn pattern_key(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     key: &PropertyKey<'_>,
 ) -> Option<(String, Option<KeyProvenance>)> {
     match key {

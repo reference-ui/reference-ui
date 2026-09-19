@@ -13,7 +13,7 @@ use super::ScopeCollector;
 /// carries its object (or the destructured members); anything else binds
 /// every name to shadow with no value (SPEC-V2-46).
 pub(crate) fn record_param(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     param: &oxc_ast::ast::FormalParameter<'_>,
 ) {
     // function paint(props: { color: 'red' })
@@ -54,7 +54,7 @@ pub(crate) fn record_param(
 
 /// Record every name a pattern binds, with no value.
 pub(crate) fn declare_pattern(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     pattern: &BindingPattern<'_>,
     kind: BindingKind,
 ) {
