@@ -223,6 +223,7 @@ fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
             Some(AtomValue::Number(n.value.to_string().into_boxed_str()))
         }
         Expression::BooleanLiteral(b) => Some(AtomValue::Bool(b.value)),
+        Expression::NullLiteral(_) => Some(AtomValue::Null),
         _ => None,
     }
 }

@@ -9,6 +9,10 @@ Examples:
   dictionary, not from guessing)
 - `gray.800` → `var(--colors-gray-800)`
 - already-`var(--…)` values pass through
+- complete CSS values (`rgba(…)`, `translateX(…)`, `red`, `13px`) fence
+  before lookup: CSS wins over tokens, silently (`ATM-TOKEN-14`)
+- bare misses pass through silently off color props; on color props they
+  warn `ATM-W-UNKNOWN-COLOR` (`ATM-TOKEN-16`)
 
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
 in reference-core / Atlas. This module **looks up** the compiled dictionary

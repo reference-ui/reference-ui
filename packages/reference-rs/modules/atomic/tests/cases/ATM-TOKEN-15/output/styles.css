@@ -1,0 +1,27 @@
+@layer token-radii {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --radii-full: 9999px;
+    --radii-md: 0.375rem;
+  }
+}
+@layer utilities {
+  .token-radii__rounded_full { border-radius: var(--radii-full); }
+  .token-radii__rounded-bl_full { border-bottom-left-radius: var(--radii-full); }
+  .token-radii__rounded-bl_md { border-bottom-left-radius: var(--radii-md); }
+  .token-radii__rounded-br_full { border-bottom-right-radius: var(--radii-full); }
+  .token-radii__rounded-br_md { border-bottom-right-radius: var(--radii-md); }
+  .token-radii__border-end-end-radius_full { border-end-end-radius: var(--radii-full); }
+  .token-radii__border-end-start-radius_full { border-end-start-radius: var(--radii-full); }
+  .token-radii__border-start-end-radius_full { border-start-end-radius: var(--radii-full); }
+  .token-radii__border-start-start-radius_full { border-start-start-radius: var(--radii-full); }
+  .token-radii__rounded-tl_full { border-top-left-radius: var(--radii-full); }
+  .token-radii__rounded-tl_md { border-top-left-radius: var(--radii-md); }
+  .token-radii__rounded-tr_full { border-top-right-radius: var(--radii-full); }
+  .token-radii__rounded-tr_md { border-top-right-radius: var(--radii-md); }
+}
+}

@@ -22,13 +22,13 @@
   }
 }
 @layer utilities {
+  .plan-parity__bg_lime { background: lime; }
   .plan-parity__bg_amber { background: var(--colors-amber); }
-  .plan-parity__bg_lime { background: var(--colors-lime); }
   .plan-parity__bg_sky { background: var(--colors-sky); }
   .plan-parity__p_1r { padding: var(--spacing-root); }
+  .plan-parity__c_teal { color: teal; }
   .plan-parity__c_cherry { color: var(--colors-cherry); }
   .plan-parity__c_ocean { color: var(--colors-ocean); }
-  .plan-parity__c_teal { color: var(--colors-teal); }
   .plan-parity__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
 }
 }

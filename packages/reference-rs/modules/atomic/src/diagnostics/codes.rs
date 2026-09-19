@@ -50,8 +50,13 @@ pub enum DiagnosticCode {
     MalformedOpacity,
     /// `resolve/tokens`: dotted path that names no token.
     UnknownTokenPath,
-    /// `resolve/tokens`: real token from a category the prop rejects.
+    /// Retired in Forge Slice 1 (§11): no unique-name lookup across
+    /// categories, so this code is never emitted. Kept for wire stability —
+    /// pinned codes are never renamed or removed.
     TokenCategoryMismatch,
+    /// `resolve/tokens`: bare value on a color prop that is neither a color
+    /// token nor a CSS color (the color grammar is closed, so this is exact).
+    UnknownColor,
     /// `resolve/tokens/interpolate`: unterminated `{` inside a value.
     UnterminatedBrace,
     /// `static_css`: wildcard on a prop with no token category.
@@ -107,7 +112,7 @@ pub enum DiagnosticCode {
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 40] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 41] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -193,6 +198,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 40] = [
     (DiagnosticCode::DynamicBinary, "ATM-W-DYNAMIC-BINARY"),
     (DiagnosticCode::DeadBranch, "ATM-I-DEAD-BRANCH"),
     (DiagnosticCode::TokenCallRefused, "ATM-W-TOKEN-CALL-REFUSED"),
+    (DiagnosticCode::UnknownColor, "ATM-W-UNKNOWN-COLOR"),
 ];
 
 impl DiagnosticCode {
@@ -313,6 +319,8 @@ mod tests {
             DiagnosticCode::DynamicBinary,
             DiagnosticCode::DeadBranch,
             DiagnosticCode::PartialObjectProp,
+            DiagnosticCode::TokenCallRefused,
+            DiagnosticCode::UnknownColor,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

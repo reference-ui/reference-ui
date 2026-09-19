@@ -1,0 +1,24 @@
+@layer token-fence {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-gray-800: #1f2937;
+  }
+  [data-color-mode=dark] {
+    --colors-gray-800: #f9fafb;
+  }
+}
+@layer utilities {
+  .token-fence__bd-c_color-mix\(in_srgb\,_red_50\%\,_blue\) { border-color: color-mix(in srgb, red 50%, blue); }
+  .token-fence__bg-c_oklch\(0\.7_0\.1_180\) { background-color: oklch(0.7 0.1 180); }
+  .token-fence__background-image_url\(\/img\.png\) { background-image: url(/img.png); }
+  .token-fence__caret-color_ui\.missing\.path { caret-color: ui.missing.path; }
+  .token-fence__c_rgba\(0\,0\,0\,0\.5\) { color: rgba(0,0,0,0.5); }
+  .token-fence__outline-c_gray\.800 { outline-color: var(--colors-gray-800); }
+  .token-fence__transform_translateX\(1\.25rem\) { transform: translateX(1.25rem); }
+  .token-fence__w_calc\(100\%_-_2px\) { width: calc(100% - 2px); }
+}
+}

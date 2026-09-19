@@ -1,0 +1,5 @@
+{
+  "borderRadius:sm": "token-bare__rounded_sm",
+  "color:md": "token-bare__c_md",
+  "fontSize:sm": "token-bare__fs_sm"
+}

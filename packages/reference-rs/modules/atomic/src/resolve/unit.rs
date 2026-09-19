@@ -156,7 +156,10 @@ pub fn css_value_from_authored(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<CssValue> {
     match val {
-        AtomValue::Bool(_) | AtomValue::Null => {
+        // A null leaf (`const n = null`) is a hole, not CSS: strip it
+        // silently, exactly like a literal null the walk omits.
+        AtomValue::Null => None,
+        AtomValue::Bool(_) => {
             diagnostics.push(Diagnostic::warning(
                 DiagnosticCode::InvalidCssValue,
                 format!("`{prop}` value `{val}` is not valid CSS"),

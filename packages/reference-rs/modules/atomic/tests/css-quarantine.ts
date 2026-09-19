@@ -21,7 +21,13 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-TOKEN-02': ['margin-top: blue .600'],
   'ATM-TOKEN-05': ['background: blue .600'],
   'ATM-TOKEN-06': ['border-color: /40', 'color: red .500/'],
+  'ATM-TOKEN-14': ['Unexpected input', 'caret-color: ui.missing.path'],
   'ATM-VALID-03': ['Unexpected input', 'color: ghost.white'],
+
+  // §11 silent bare-value passthrough (intended, permanent): a bare miss
+  // passes its authored text through for the browser to drop, so the sheet
+  // holds declarations the lexer rejects. Forge Slice 1, ATM-TOKEN-16.
+  'ATM-TOKEN-16': ['font-size: sm', 'color: md'],
 
   // Intentional parity pin: `&(:focus)` substitutes textually to
   // `.<cls>(:focus)` (v2 `nested_selector_parity.rs:532` prints the same

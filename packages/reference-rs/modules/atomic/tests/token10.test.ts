@@ -129,14 +129,9 @@ describe('ATM-TOKEN-10 spec rejection', () => {
   })
 
   /**
-   * KNOWN-RED RS-KNOWN-RED-001 (owner: slice-5). Expects 1 opacity-category
-   * warning, gets 6 identical copies: the fixture's single `opacity: "1"`
-   * (disabled:false variant) re-warns once per cartesian recipe-table
-   * combination. Pre-existing on HEAD — slice-3 is behavior-neutral here
-   * (virtual-only input takes the silent vacant host path in both old and
-   * new hosts code; all other slice-3 resolve/recipe diffs are rustfmt).
-   * Fix forward means diagnostic dedup or resolve-once recipe lowering,
-   * both shared-machinery behavior changes, so this stays red until slice-5.
+   * RS-KNOWN-RED-001 closed by Forge Slice 1 (§11): the fixture's
+   * `opacity: "1"` no longer warns at all — bare values miss silently off
+   * color props — so the 6-copy cartesian re-warn is gone with the warning.
    */
   it('accepts string-serialized specs like typegen', () => {
     const result = compileSync({
@@ -144,12 +139,9 @@ describe('ATM-TOKEN-10 spec rejection', () => {
       files: SOURCES,
     })
 
-    // The fixture spec carries a button recipe whose `opacity: "1"` warns exactly
-    // as TSX `css({ opacity: '1' })` does now that spec recipes lower (M0-fix14-A).
-    expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
-    expect(result.diagnostics.map(d => d.message)).toEqual([
-      'token `1` belongs to category `spacing` which property `opacity` does not accept',
-    ])
+    // The fixture spec carries a button recipe whose `opacity: "1"` passes
+    // through silently, exactly as TSX `css({ opacity: '1' })` does (§11).
+    expect(result.diagnostics).toEqual([])
     expect(result.runtime.stylePlans.length).toBeGreaterThan(0)
     expect(Object.keys(result.runtime.recipes)).toContain('lib-test-system__button')
   })

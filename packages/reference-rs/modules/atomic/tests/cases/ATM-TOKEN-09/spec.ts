@@ -1,7 +1,7 @@
 /**
  * Category-breadth station. One property per declared category resolves
- * to its var() form, and a spacing path on a zIndex prop warns while
- * passing its valid value through.
+ * to its var() form, and a bare spacing value on a zIndex prop passes
+ * through silently — bare values never warn off color props (§11).
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../helpers.js'
@@ -18,8 +18,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('transition-duration: var(--durations-fast);')
     expect(sheet).toContain('background-image: var(--gradients-hero);')
     expect(sheet).toContain('z-index: 2;')
-    const messages = result.diagnostics.map(d => d.message)
-    expect(messages.filter(m => m.includes('`2`'))).toHaveLength(1)
+    expect(result.diagnostics).toEqual([])
   },
 }
 

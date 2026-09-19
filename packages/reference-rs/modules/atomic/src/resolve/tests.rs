@@ -190,7 +190,7 @@ fn test_border_false_still_warns_and_skips() {
 }
 
 #[test]
-fn test_null_want_emits_no_atom() {
+fn test_null_want_strips_silently() {
     let want = Want::new("color", AtomValue::Null);
     let mut diagnostics = Vec::new();
     let system = BaseSystem::default();
@@ -201,11 +201,7 @@ fn test_null_want_emits_no_atom() {
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(atoms.is_empty());
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(
-        diagnostics[0].message,
-        "`color` value `null` is not valid CSS"
-    );
+    assert!(diagnostics.is_empty());
 }
 
 #[test]
