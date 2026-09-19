@@ -2,7 +2,7 @@
 
 A foundation picture of the native style compiler in `packages/reference-rs/modules/atomic`. Authors write StyleProps, `css()`, and `recipe()`. They never write class names. Compile emits a stylesheet and a lookup map. Runtime concatenates classes. Nothing is injected in the browser.
 
-This is the living overview. The crate contract is [`packages/reference-rs/modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md). Stations live in that crate’s `SPEC.md`. Harvest as a mission is [Operation Forge](./missions/operation-forge.md) Part I.
+This is the living overview. The crate contract is [`packages/reference-rs/modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md). Stations live in that crate’s `SPEC.md`. Harvest as a mission is [Operation Forge](./missions/completed/operation-forge.md) Part I.
 
 ## The contract
 
@@ -228,6 +228,6 @@ A fully static program harvests nothing. A program with dynamic holes harvests o
 |---|---|
 | Crate pipeline, what it refuses | [`modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md) |
 | Stations (ATM-\*) | [`modules/atomic/SPEC.md`](../packages/reference-rs/modules/atomic/SPEC.md) |
-| Harvest alphabet, sinks, authorship | [operation-forge.md](./missions/operation-forge.md) Part I |
+| Harvest alphabet, sinks, authorship | [operation-forge.md](./missions/completed/operation-forge.md) Part I |
 | `css()` as composition | [FEATURES/CSS_COMPOSITION.md](./FEATURES/CSS_COMPOSITION.md) |
 | Six-layer cascade | [LAYERS.md](./LAYERS.md) (portable `/ layers:` story; engine layers are the crate README) |

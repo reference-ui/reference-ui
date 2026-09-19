@@ -131,9 +131,9 @@ stations usually have no synced `.reference-ui/react` primitive
 declarations. When the trace cannot resolve its declaration entrypoints
 it returns an explicit error, and atomic maps that error to the empty
 host set with a missing-graph diagnostic (ATM-SITE-13) — extraction
-fails closed and never falls back to scanning every tag. The plan to
-make Neo-synced trees traceable lives in
-[styletrace.md](../../../../docs/missions/styletrace.md). Do not close
-it with a PascalCase name list.
+fails closed and never falls back to scanning every tag. The voyage that
+made Neo-synced trees traceable is recorded in
+[styletrace.md](../../../../docs/missions/completed/styletrace.md). Do not close
+the gap with a PascalCase name list.
 
 > Search terms: forwardRef, rest spread, style prop tracer, wrapper analysis, styletrace/resolution, styletrace/wrappers, styletrace/primitives, styletrace/forwarding, rs:canon, rs:atomic, rs:base-system

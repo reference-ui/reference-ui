@@ -40,6 +40,6 @@ PASS — a dynamic `css({ color })` site paints `red` from a hand-added atom whi
 | A hit returns the precomputed class; a miss returns nothing plus one dev warn | `packages/reference-neo/src/runtime/css/css.ts:72-91`, `css.ts:193-202` |
 | Sync fans the compile result out to both `styled/runtime-data.mjs` and `react/react.mjs` (which inlines the styled artifact and calls `registerRuntimeData`) | `packages/reference-neo/src/sync/index.ts:111-116`; observed `// .../styled/runtime-data.mjs` + `var runtimeData = {...}` + `registerRuntimeData(systemName, runtimeData)` in `react.mjs` |
 | The browser reads the `react.mjs` copy, so the probe hand-adds the plan there too — both are generated artifacts, not runtime source | observed: first run edited only `styled/`, spec got class `''`; after the fan-out edit, PASS |
-| Mission contract under test ("runtime paints any `(prop, value, when)` the sheet holds and nothing else") | `docs/missions/operation-forge.md:449-454`; stations `docs/missions/operation-forge.md:461-463`; ask `docs/missions/operation-forge.md:1195-1198` |
+| Mission contract under test ("runtime paints any `(prop, value, when)` the sheet holds and nothing else") | `docs/missions/completed/operation-forge.md:449-454`; stations `docs/missions/completed/operation-forge.md:461-463`; ask `docs/missions/completed/operation-forge.md:1195-1198` |
 
 Slice note: Slice 4's harvest must land the atom in the compile result so publish fans it to both `styled/` and `react/` — a harvest that only reaches one copy leaves the other path dark.

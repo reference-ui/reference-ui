@@ -55,7 +55,7 @@ but `from_engine` returns 873 + 84 = 957 names for any spec, because
 
 **Named mismatch (slice-3's first red test):** the plan's round-trip as
 worded — "`from_engine(fixture spec)` equals `from_declaration_root(neo
-fixture)` … (the eight names)" (`styletrace.md` slice #3) — is
+fixture)` … (the eight names)" (`docs/missions/completed/styletrace.md` slice #3) — is
 unstatable: no `BaseSystem` yields an 8-name prop surface. Restate as:
 
 1. containment: `from_declaration_root(neo fixture) ⊆ from_engine(any

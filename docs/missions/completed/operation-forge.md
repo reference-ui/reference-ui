@@ -1,13 +1,13 @@
-OPERATION: READY
+OPERATION: DONE
 
 # Mission: Operation Forge
 
-Status: `ready` (HQ, 2026-09-19). Successor to Overmatch, which is
-**concluded** — catalog 81/81, ledger quoted, no more language rows.
-Forge is the stretch, not the heat-treat: it puts the last shape of the
-system in place. One document. Every verdict below is signed. There are
-no open questions left in this file — only READY-phase asks (evidence,
-not decisions) and slices.
+Status: `done` (2026-09-19). Slices 0–5 landed. Census 126. Ledger §5:
+no open items; the quoted statement lost its "except". Slice 6 (tasty
+adoption) left as the mission-sanctioned optional follow-up. Map:
+[operation-forge-map.md](operation-forge-map.md). Successor work on
+diagnostics after harvest: [Error Correct](../operation-error-correct.md).
+Doom is the red-team that follows ([doom-agent.md](../doom-agent.md)).
 
 Signal protocol (line 1 of this file): `OPERATION: READY` = the plan has
 enough context for research agents to challenge it; `OPERATION: GO` = the
@@ -17,7 +17,7 @@ the READY-phase asks (end of file) come back without a blocker.
 Folded in and retired: `extract-information-layer.md` (the floor is
 Part I of this file) and `operation-forge-thoughts.md` (HQ's reactions,
 now the verdicts on §1–§4). Overmatch:
-[`completed/operation-overmatch.md`](completed/operation-overmatch.md).
+[`operation-overmatch.md`](operation-overmatch.md).
 Ledger: `packages/reference-neo/docs/evidence/overmatch-ledger.md` §5.
 Warning census: lib neo sync, 2026-09-19, **213** diagnostics.
 
@@ -55,8 +55,8 @@ skipped because the layer exists.
 ## What this is not
 
 - Not a recatalog. SPEC-V2-NN IDs do not move.
-- Not Doom. Doom is the red-team that follows (`doom-agent.md`,
-  `doom-agent-protocol.md`). Forge decides the *shape* so Doom isn't
+- Not Doom. Doom is the red-team that follows
+  (`../doom-agent.md`). Forge decides the *shape* so Doom isn't
   inventing architecture; Doom seed 1 is fortified here (§1, Slice 3).
 - Not firstThatWorks, not full StyleTrace, not a product slice.
 - Not a JS evaluator, not a runtime CSS engine. Build reads source;
@@ -331,7 +331,7 @@ runtime's five-tuple spelled the way `css.json` pins them
 **Verdict: A — fold it.** Not left for Doom cycle 1: Doom reproduces
 against a fixed shape, it does not invent one.
 **Why it matters:** the one hole in the no-silence rule. Filed as Doom
-seed 1 (`doom-agent-protocol.md` §8). SPEC-V2-55 / 76.
+seed 1 (`../doom-agent.md` §8). SPEC-V2-55 / 76.
 
 ### What already works
 
@@ -1130,7 +1130,7 @@ through the shared crate's API.
 
 | # | Slice | Lane | Rows | Stations | Depends on |
 |---|---|---|---|---|---|
-| 0 | **Paperwork + census by code.** Sign §2 / §8 sentences into the ledger; strike S13; close §7; update `doom-agent-protocol.md` §8 to point at Slice 3; neo sync printer surfaces `ATM-W-*` codes. | agent-neo (printer), docs | §2, §6, §7, §8 | — | — |
+| 0 | **Paperwork + census by code.** Sign §2 / §8 sentences into the ledger; strike S13; close §7; update `doom-agent.md` §8 to point at Slice 3; neo sync printer surfaces `ATM-W-*` codes. | agent-neo (printer), docs | §2, §6, §7, §8 | — | — |
 | 1 | **Resolver quick wins + alphabet tables.** canon `css/values/`; §9 fence; §10 longhands; §11 no cross-category unique-name + `UNKNOWN-COLOR`; §4 null arm. Four independent one-file changes on a shared table. | agent-rs | §4, §9, §10, §11 | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | — |
 | 2 | **Scope collect.** Split the three over-cap files (D1). §13 member-path object inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`. | agent-rs | §5, §12, §13 | `ATM-SITE-80/81/83` | 1 (alphabet not required, but ship after the splits) |
 | 3 | **Module graph.** New crate; atomic `ValueGraph` adoption (one parse, demand-driven origins, `export *`, no bag for imports, residue marker); styletrace ladder adoption; §1 fold; §3 precision; sign the cross-file clause of §8. | agent-rs (crate + atomic), styletrace | §1, §3, §8 | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | 2 (scope changes land first so §1's bake has one home) |
