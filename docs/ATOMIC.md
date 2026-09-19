@@ -2,7 +2,7 @@
 
 A foundation picture of the native style compiler in `packages/reference-rs/modules/atomic`. Authors write StyleProps, `css()`, and `recipe()`. They never write class names. Compile emits a stylesheet and a lookup map. Runtime concatenates classes. Nothing is injected in the browser.
 
-This is the living overview. The crate contract is [`packages/reference-rs/modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md). Stations live in that crate’s `SPEC.md`. Harvest as a mission is [Operation Forge](./missions/completed/operation-forge.md) Part I.
+This is the living overview. The crate contract is [`packages/reference-rs/modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md). Stations live in that crate’s `SPEC.md`. Harvest as a mission is [Operation Forge](./missions/completed/operation-forge.md) Part I. The `#00aeff` walkthrough is the harvest section; domain words sit later.
 
 ## The contract
 
@@ -31,6 +31,93 @@ flowchart LR
 | class map | `(when:)prop:value` → class | `"color:red"` → `@reference-ui/lib__c_red` |
 
 Ghost class (runtime asks for a name the sheet never printed) is a P0. Both outputs share `stylesheet/name`. There is no second namer.
+
+## Harvest — define `#00aeff`, then take it away
+
+Harvest is not a dataflow tracer. It does not follow a hex from an array onto `borderColor`. It does two dumb jobs: collect CSS-shaped strings in the program (**pool**), and fill style positions whose *value* the walk could not name (**sinks**). Cross them. That is the class.
+
+Same public API either way — `css()` or a StyleProp on a host:
+
+```ts
+import { css } from '@reference-ui/react'
+
+const palette = ['#00aeff']
+
+export function Card({ color }: { color: string }) {
+  return css({ color, padding: '4px' })
+}
+
+// same sink, same sheet:
+// <Div color={color} padding="4px" />
+```
+
+The walk names `padding: '4px'`. `color` is a parameter, so it is a hole: sink `(color, [])`. The pool has `#00aeff` (a color) and `4px` (a length). Harvest pours every compatible pool value into that hole. `#00aeff` lands on `color`. It does not land on `borderColor` — nothing asked `borderColor` through a hole. `4px` does not land on `color`.
+
+`@layer utilities` (reset / tokens omitted):
+
+```css
+.@reference-ui/lib__p_4px { padding: 4px; }
+.@reference-ui/lib__c_#00aeff { color: #00aeff; }
+```
+
+Map:
+
+```json
+{
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "color:#00aeff": "@reference-ui/lib__c_#00aeff"
+}
+```
+
+Runtime `Card({ color: '#00aeff' })` looks up `"color:#00aeff"` and paints. `Card({ color: 'hotpink' })` misses — `hotpink` was never written. The site still warns: the expression *is* dynamic. Harvest filled the hole; it did not un-warn it.
+
+Now delete the hex.
+
+```ts
+export function Card({ color }: { color: string }) {
+  return css({ color, padding: '4px' })
+}
+```
+
+The sink is still there. The pool is empty of colors.
+
+```css
+.@reference-ui/lib__p_4px { padding: 4px; }
+```
+
+Map: `"padding:4px"` only. Same `Card({ color: '#00aeff' })` now paints nothing. A value the program never wrote never paints.
+
+Keep the hex and drop the hole instead — `css({ color: 'red', padding: '4px' })` with `palette` still in the file — and harvest mints nothing. No sink, no class for `#00aeff`. The string is just JavaScript.
+
+Ten colors and three holes is the same cross, just larger. **10 × 3 = 30 classes.** Harvest does not know which function “owns” the palette.
+
+```ts
+const palette = [
+  '#00aeff', '#ae00ff', '#ff00ae', '#00ffae', '#ae00ae',
+  '#111111', '#ffffff', 'red', 'navy', 'rgba(0,0,0,0.5)',
+]
+
+export function paintColor(color: string) {
+  return css({ color })
+}
+export function paintBorder(borderColor: string) {
+  return css({ borderColor })
+}
+export function paintBg(bg: string) {
+  return css({ bg })
+}
+```
+
+Pool: 10 colors. Sinks: `(color, [])`, `(borderColor, [])`, `(bg, [])`. Each hex becomes three utilities — `color`, `border-color`, and `background` (`bg` is the `background` alias, not `backgroundColor`; that would be a fourth sink).
+
+```css
+.@reference-ui/lib__c_#00aeff { color: #00aeff; }
+.@reference-ui/lib__bd-c_#00aeff { border-color: #00aeff; }
+.@reference-ui/lib__bg_#00aeff { background: #00aeff; }
+/* same three rules for the other nine values → 30 */
+```
+
+Map keys: `"color:#00aeff"`, `"borderColor:#00aeff"`, `"bg:#00aeff"`, … Runtime `paintColor('#00aeff')` only looks up `"color:#00aeff"`. The other twenty-nine sit in the sheet because the holes exist. Delete one hex → three classes vanish. Delete `paintBorder` → the ten `border-color` rows vanish; color and bg stay. A pair the walk already minted statically is not a 31st — harvest skips twins.
 
 ## Grain: Want → Atom → AtomSet
 
@@ -111,6 +198,48 @@ flowchart LR
 
 Harvest cannot carry the system. A value with no prop and no `when` is not an atom. The walk is the surveyor. Harvest is the floor under it.
 
+## Harvest domain
+
+The `#00aeff` walkthrough above is the whole mechanism. These are the words for it.
+
+```text
+pool (values, no props)  ×  sinks (props, no values)  →  wants
+```
+
+### Words
+
+| Term | Meaning |
+|---|---|
+| **Site** | A style position the walk found: a StyleProp on a host, a key in `css()`, a recipe slot. Always has a **prop** and a **`when`**. |
+| **`when`** | The condition scope of that site (`[]` at rest, `["_hover"]`, `["md", "_hover"]`, …). Harvest copies it. It never invents a condition. |
+| **Hole** | A site whose *value* the walk could not name. Six refusal codes: identifier, member, expression, template, binary, unary. The site still warns. |
+| **Sink** | The `(prop, when)` of a hole. Prop known, value unknown. Harvest fills sinks; that is the only place a pooled string becomes an atom. |
+| **Pool** | Distinct wholesale CSS / rhythm strings in compile inputs, bucketed by **kind**. No prop. Position does not matter (array, helper return, const bag). |
+| **Kind** | The CSS family of a value, from canon: color, length, transform, math, url, keyword. Rhythm (`13r`) rides length. |
+| **Kind gate** | Which pool values may land on which sinks (`prop_accepts`). `#ae00ff` on `borderColor` yes; `'4px'` on `color` no. |
+| **Wholesale** | A complete value as a string node. `'#ae00ff'` yes. `` `#${hex}` `` no. Numbers are not wholesale. |
+| **Alphabet** | The recognizer: named colors, hex, `rgba()`, lengths, `13r`, transforms, `var()`, CSS-wide keywords. Not token paths (`gray.800`). |
+| **Mint** | Write a Want (and a runtime authored declaration) for one pool value onto one sink. Origin `"harvest"`. Same wants vector as the walk. |
+| **Twin** | A pair the walk already minted — exact, or an alias like `mt` / `marginTop`. Harvest skips it; infos count net-new only. |
+| **Compile inputs** | The `.ts` / `.tsx` / `.js` / `.jsx` this compile parsed. Not `node_modules`. Not JSON. |
+
+A sink is named that way because values drain into it. Runtime still has to ask for that exact authored string.
+
+### What is not a sink
+
+A refusal is not automatically a sink. No sink, no harvest atom. A palette sitting in an array while every `css()` call is static contributes **zero** classes (ATM-HARVEST-04).
+
+| Shape | Why not |
+|---|---|
+| `css({ color: 'red' })` | Named — not a hole. The walk already minted. |
+| `css({ ...props })` | No prop. Rest-spreads never become sinks. |
+| Unknown props, or runtime-owned (`variant`, `colorMode`) | Would never paint. |
+| Some host-owned props (`gap`, `offset` on Toast / Overlay) | Component props, not style positions. |
+| Mutation, residue, dead-branch codes | Not the six dynamic-value refusals. |
+| A random `<div color="red">` | Not a host. Styletrace never opened a site. |
+
+Two color-kind holes (`css({ color })` and `css({ borderColor: x })`) would mint **both** `"color:#00aeff"` and `"borderColor:#00aeff"`. Harvest does not know the array “is for borders.” False positives are accepted: `status = 'red'` plus a color sink still mints `"color:red"`. One extra class, only if a compatible hole exists.
+
 ## Worked examples
 
 ### 1. A static site — walk only
@@ -140,39 +269,24 @@ Open tests compile every leaf. Runtime picks. Equal leaves collapse in the set. 
 
 Panda will fold a value-level open ternary inside an object; `css(cond ? a : b)` as a **call argument** it drops. We extract both arms. Same optimism as harvest: compile what is possible, let runtime choose.
 
-### 3. A dynamic hole — walk plus harvest
+### 3. A conditioned sink
+
+The same cross, with the sink’s `when`. Harvest copies it. It never invents a condition.
 
 ```ts
-import { css } from '@reference-ui/react'
+const palette = ['red', '#0af']
 
-const palette = ['red']
-
-export function paint(color: string) {
-  return css({ color, padding: '4px' })
+export function paint(shade: string) {
+  return css({ _hover: { color: shade } })
 }
 ```
 
-Walk:
-
-- `padding: '4px'` is static → want `padding:4px`
-- `color` is a parameter → `ATM-W-DYNAMIC-IDENTIFIER`, and `(color, [])` becomes a **sink**
-
-Harvest:
-
-- pool: `'red'` (color), `'4px'` (length)
-- kind gate: `'red'` lands on the color sink; `'4px'` does not
-- mint: want `color:red` with origin `harvest`
-
-Same sheet as example 1. Runtime `paint('red')` looks up `"color:red"` and paints. `paint('hotpink')` misses unless `'hotpink'` is written somewhere in compile inputs. The site still warns — harvest does not un-warn a dynamic expression. It fills the hole.
-
-```mermaid
-flowchart LR
-  pool["pool: red, 4px"] --> mint[mint]
-  sink["sink: color"] --> mint
-  mint --> want["Want color:red"]
+```css
+.@reference-ui/lib__hover:c_red:is(:hover, [data-hover]) { color: red; }
+.@reference-ui/lib__hover:c_#0af:is(:hover, [data-hover]) { color: #0af; }
 ```
 
-Conditioned the same way. `css({ _hover: { color: shade } })` with `['red', '#0af']` in source mints `"_hover:color:red"` and `"_hover:color:#0af"`. Harvest copies the sink’s `when`. It never invents a condition.
+Map: `"_hover:color:red"`, `"_hover:color:#0af"`. No unconditioned `"color:red"`. ATM-HARVEST-03.
 
 ### 4. What is not a value
 
@@ -228,6 +342,6 @@ A fully static program harvests nothing. A program with dynamic holes harvests o
 |---|---|
 | Crate pipeline, what it refuses | [`modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md) |
 | Stations (ATM-\*) | [`modules/atomic/SPEC.md`](../packages/reference-rs/modules/atomic/SPEC.md) |
-| Harvest alphabet, sinks, authorship | [operation-forge.md](./missions/completed/operation-forge.md) Part I |
+| Harvest alphabet, sinks, authorship | this file (`#00aeff` walkthrough, then Harvest domain); [operation-forge.md](./missions/completed/operation-forge.md) Part I |
 | `css()` as composition | [FEATURES/CSS_COMPOSITION.md](./FEATURES/CSS_COMPOSITION.md) |
 | Six-layer cascade | [LAYERS.md](./LAYERS.md) (portable `/ layers:` story; engine layers are the crate README) |
