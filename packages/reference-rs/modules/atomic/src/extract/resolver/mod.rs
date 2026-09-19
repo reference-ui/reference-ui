@@ -1,30 +1,34 @@
 //! Binding-aware import resolution for style extraction (SPEC-V2-76).
 //! Answers each file's import bindings with the declared export in THAT
 //! file: the specifier ladder finds the target, the walk follows `export …
-//! from` hops with a cycle guard, and the origin's per-file bag supplies the
-//! value. Cycles, missing exports, unresolvable specifiers, and namespace or
-//! default imports answer `None`, and the scope chain falls back to the merge
-//! bag so unhandled shapes keep their legacy observable. Values stay in the
-//! per-file constant bags the merge already built, so export richness matches
-//! the merge era exactly. The graph is read-only after collection except for
-//! the resolution cache it shares across files.
+//! from` hops with a cycle guard, and the origin's per-file values supply the
+//! export — scalar leaves, style objects with spreads resolved, const arrays,
+//! and lowered pure-helper descriptors (v2's `ExportEntry::PureFn`). Cycles,
+//! missing exports, unresolvable specifiers, and namespace or default imports
+//! answer `None`, and the scope chain falls back to the merge bag for values
+//! so unhandled shapes keep their legacy observable; helpers never fall back,
+//! so a bare call with no import refuses instead of folding another file's
+//! helper. The graph is read-only after collection except for the resolution
+//! cache it shares across files.
 
 mod bare;
 mod cache;
 mod exports;
+mod overlay;
 mod package;
 mod patterns;
 mod specifier;
 mod tsconfig;
 mod walk;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
 use super::constants::{collect_local_constants, LocalConstants};
+use super::fold::fence::PureFn;
 use cache::ResolveCache;
 use exports::collect_file;
 use specifier::{candidates, normalize_key};
@@ -92,16 +96,20 @@ fn insert_target(graph: &mut ProjectGraph, candidate: &str) -> bool {
 }
 
 /// One file's values for the binding walk: its constant bag plus the export
-/// shapes and import edges one AST pass collected over it.
+/// shapes and import edges one AST pass collected over it, with lowered
+/// pure-helper descriptors beside the bag (v2's `ExportEntry::PureFn`).
 #[derive(Debug)]
 pub struct FileValues {
     bag: LocalConstants,
     exports: exports::ExportTable,
     imports: exports::ImportMap,
+    pure_fns: BTreeMap<String, PureFn>,
 }
 
 impl FileValues {
     /// Collect one file's export shapes and import edges over its bag.
+    /// Descriptors and scope-resolved overlays arrive in the resolver's
+    /// second pass; graph tests without it read literal bags only.
     pub fn collect(program: &oxc_ast::ast::Program<'_>, bag: LocalConstants) -> Self {
         // tokens.ts:  bag { brand: 'red' }  +  shapes { brand: Local }
         let (exports, imports) = collect_file(program);
@@ -109,7 +117,17 @@ impl FileValues {
             bag,
             exports,
             imports,
+            pure_fns: BTreeMap::new(),
         }
+    }
+
+    /// True when this file's values carry any export for a declared name:
+    /// a bag value or a lowered descriptor. The binding walk reads this,
+    /// never the merged bag, so two files declaring the same name never see
+    /// each other's values through it.
+    fn declares(&self, name: &str) -> bool {
+        // export const tone = (s) => ... — helpers declare without bag leaves
+        self.bag.declares(name) || self.pure_fns.contains_key(name)
     }
 }
 
@@ -151,6 +169,7 @@ pub struct ResolvedExport {
     scalars: Vec<crate::atom::AtomValue>,
     object: Option<super::constants::ConstObject>,
     array: Option<Vec<super::constants::ConstArrayElement>>,
+    pure_fn: Option<PureFn>,
 }
 
 impl ResolvedExport {
@@ -173,6 +192,11 @@ impl ResolvedExport {
     pub fn array(&self) -> Option<&[super::constants::ConstArrayElement]> {
         self.array.as_deref()
     }
+
+    /// The lowered helper the origin declares for the imported name, if any.
+    pub fn pure_fn(&self) -> Option<&PureFn> {
+        self.pure_fn.as_ref()
+    }
 }
 
 /// The upfront resolver: the project graph behind the per-file map seam.
@@ -184,15 +208,18 @@ pub struct Resolver {
 }
 
 impl Resolver {
-    /// Build the resolver over the compiled sources. Each source parses
-    /// once for its bag and export shapes; unparseable files stay out, so
-    /// imports targeting them fall back like any unresolvable specifier.
+    /// Build the resolver over the compiled sources. Each source parses for
+    /// its bag and export shapes; a second pass overlays scope-resolved
+    /// top-level values and lowers descriptors per file. Unparseable files
+    /// stay out, so imports targeting them fall back like any unresolvable
+    /// specifier. Externals keep literal bags with no descriptors.
     pub fn new(sources: &[(String, String)], _root_dir: Option<&str>) -> Self {
         let mut graph = ProjectGraph::new();
         for (path, content) in sources {
             insert_source(&mut graph, path, content);
         }
         load_externals(&mut graph);
+        overlay::overlay_scope_values(&mut graph, sources);
         Resolver { graph }
     }
 
@@ -236,17 +263,24 @@ fn insert_source(graph: &mut ProjectGraph, path: &str, content: &str) {
     graph.insert(path.to_string(), FileValues::collect(&ret.program, bag));
 }
 
-/// Clone an origin's three value kinds, or None when it holds nothing.
+/// Clone an origin's value kinds, or None when it holds nothing.
+/// Descriptors ride beside the bag values, never inside them.
 fn export_value(graph: &ProjectGraph, resolved: &Resolved) -> Option<ResolvedExport> {
-    let bag = graph.files.get(&resolved.file).map(|values| &values.bag)?;
+    let values = graph.files.get(&resolved.file)?;
     let export = ResolvedExport {
-        scalars: bag.scalar_leaves(&resolved.local).to_vec(),
-        object: bag.get_object(&resolved.local).cloned(),
-        array: bag
+        scalars: values.bag.scalar_leaves(&resolved.local).to_vec(),
+        object: values.bag.get_object(&resolved.local).cloned(),
+        array: values
+            .bag
             .get_array(&resolved.local)
             .map(<[super::constants::ConstArrayElement]>::to_vec),
+        pure_fn: values.pure_fns.get(&resolved.local).cloned(),
     };
-    if export.scalars.is_empty() && export.object.is_none() && export.array.is_none() {
+    if export.scalars.is_empty()
+        && export.object.is_none()
+        && export.array.is_none()
+        && export.pure_fn.is_none()
+    {
         return None;
     }
     Some(export)

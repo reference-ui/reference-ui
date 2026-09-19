@@ -109,8 +109,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
-    let mut project_constants = collect_project_constants(&sources);
-    export_project_descriptors(&sources, &mut project_constants);
+    let project_constants = collect_project_constants(&sources);
     let resolver = extract::resolver::Resolver::new(&sources, request.root_dir.as_deref());
     let identity = extract::identity::IdentityGraph::new(&sources);
     let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
@@ -209,35 +208,6 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
         }
     }
     project_constants
-}
-
-/// Export every file's attached pure-helper descriptors into the project
-/// bag by declared name (SPEC-V2-57). Runs after the legacy merge so
-/// captures bake against the complete bag; descriptors are closed values,
-/// so a later file's attach never reads an earlier file's export and the
-/// merge stays order-independent. Mutated names stay out, like every
-/// other stale init.
-fn export_project_descriptors(
-    sources: &[(String, String)],
-    project: &mut extract::constants::LocalConstants,
-) {
-    for (path, content) in sources {
-        let allocator = Allocator::default();
-        let source_type = SourceType::from_path(Path::new(path))
-            .unwrap_or_default()
-            .with_typescript(true);
-        let parser = Parser::new(&allocator, content, source_type);
-        let ret = parser.parse();
-        if ret.panicked {
-            continue;
-        }
-        let table = extract::scope::collect(&ret.program, project);
-        for (name, func) in table.export_pure_fns() {
-            if project.mutation(&name).is_none() {
-                project.insert_pure_fn(name, func);
-            }
-        }
-    }
 }
 
 fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) {

@@ -26,6 +26,13 @@ const OBJECTS: Array<{ prop: string; value: string }> = [
   { prop: 'padding', value: '1px' },
 ]
 
+// SPEC-V2-34 cross-file (R3b): the imported spread object resolves both
+// entries, whole-object and spread uses alike — each value wants twice.
+const CROSS: Array<{ prop: string; value: string }> = [
+  { prop: 'color', value: 'plum' },
+  { prop: 'padding', value: '9px' },
+]
+
 const MUTATED: Array<{ name: string; site: string }> = [
   { name: 'color', site: 'mutated.ts:5:1' },
   { name: 'count', site: 'mutated.ts:10:1' },
@@ -45,7 +52,15 @@ const spec: AtomicCaseSpec = {
     for (const { prop, value } of OBJECTS) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
-    expect(result.wants ?? []).toHaveLength(5 + OBJECTS.length)
+    for (const { prop, value } of CROSS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+      expect(
+        (result.wants ?? []).filter(
+          w => w.prop === prop && (w.value as { String: string }).String === value
+        )
+      ).toHaveLength(2)
+    }
+    expect(result.wants ?? []).toHaveLength(5 + OBJECTS.length + CROSS.length * 2)
 
     // Stale inits never emit: no `red` color, no numeric order.
     expect(hasWant(result, 'color', 'red')).toBe(false)
@@ -53,11 +68,14 @@ const spec: AtomicCaseSpec = {
 
     // One runtime plan per unique leaf (the two `padding: 4px` wants share one).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(4 + OBJECTS.length)
+    expect(plans).toHaveLength(4 + OBJECTS.length + CROSS.length)
     for (const { prop, value } of EXPECTED) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
     for (const { prop, value } of OBJECTS) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+    for (const { prop, value } of CROSS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
@@ -83,6 +101,8 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('color: blue;')
     expect(result.stylesheet).toContain('padding: 6px;')
     expect(result.stylesheet).toContain('margin: 8px;')
+    expect(result.stylesheet).toContain('color: plum;')
+    expect(result.stylesheet).toContain('padding: 9px;')
     expect(result.stylesheet).not.toContain('color: red')
   },
 }

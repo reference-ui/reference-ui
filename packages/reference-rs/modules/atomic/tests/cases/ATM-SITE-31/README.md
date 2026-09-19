@@ -21,10 +21,15 @@ binary arg refuses the whole call); helper-returned computed keys compose
 with the folded-key slice (SPEC-V2-40, SITE-49).
 
 Cross-file arms (SPEC-V2-57, Ph4): imported arrow, function declaration,
-and object-return calls fold through the descriptor export, including a
-capture baked from a third file's export; an imported impure helper
-refuses with a diagnostic. Re-exported helpers (barrels) ride the
-binding resolver's slice (SPEC-V2-56/76, SITE-41), not this station.
+and object-return calls fold through the walked origin's descriptor
+(v2's `ExportEntry::PureFn`), including a capture baked from a third
+file's export; an imported impure helper refuses with a diagnostic.
+Binding-walk arms pin the five oracle divergences: same-named helpers in
+two files resolve by binding with no cross (`clash-a`/`clash-b`), three-hop
+and aliased barrel chains fold (`hop-*`), a bare call with no import
+refuses with a located diagnostic (`xbare.ts`), aliased imports fold
+(`xalias.ts`), and import-then-export plus aliased export-from chains fold
+including a re-exported declaration (`rmid.ts`).
 
 Body-eval failure propagates, verbatim v2's `?` (39-F2): a missing
 member left of `&&`, a division by zero left of `||`, and either as a

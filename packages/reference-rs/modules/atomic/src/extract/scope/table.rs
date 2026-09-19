@@ -113,17 +113,37 @@ impl ScopeTable {
         true
     }
 
-    /// Every attached pure-helper descriptor, in scope then name order.
-    /// The descriptor export (SPEC-V2-57) merges these into the project bag
-    /// by declared name; order is deterministic, so file-order gauges hold.
-    pub fn export_pure_fns(&self) -> Vec<(String, PureFn)> {
+    /// Every attached pure-helper descriptor at the program root, in name
+    /// order. Exports are top-level, so the binding walk (SPEC-V2-57) reads
+    /// only these; nested helpers stay same-file. Order is deterministic.
+    pub fn root_pure_fns(&self) -> Vec<(String, PureFn)> {
         let mut out = Vec::new();
-        for scope in &self.scopes {
-            for (name, id) in scope.names.iter() {
-                if let Some(BindingInit::PureFn(func)) =
-                    self.bindings.get(*id as usize).and_then(|b| b.init.as_ref())
-                {
-                    out.push((name.clone(), func.clone()));
+        let Some(root) = self.scopes.first() else {
+            return out;
+        };
+        for (name, id) in root.names.iter() {
+            if let Some(BindingInit::PureFn(func)) =
+                self.bindings.get(*id as usize).and_then(|b| b.init.as_ref())
+            {
+                out.push((name.clone(), func.clone()));
+            }
+        }
+        out
+    }
+
+    /// Every carried value at the program root, in name order: scalars,
+    /// style objects, and const arrays with identifier values, alias chains,
+    /// and static spreads already resolved (SPEC-V2-34 cross-file). Pure
+    /// helpers ride `root_pure_fns`, not this map.
+    pub fn root_values(&self) -> Vec<(String, BindingInit)> {
+        let mut out = Vec::new();
+        let Some(root) = self.scopes.first() else {
+            return out;
+        };
+        for (name, id) in root.names.iter() {
+            if let Some(init) = self.bindings.get(*id as usize).and_then(|b| b.init.as_ref()) {
+                if !matches!(init, BindingInit::PureFn(_)) {
+                    out.push((name.clone(), init.clone()));
                 }
             }
         }
