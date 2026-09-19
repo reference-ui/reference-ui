@@ -108,8 +108,9 @@ export const f2c = css({ color: pickBranch({} as { missing: string }), margin: '
 const divBranch = (n: number) => (n / 0 ? 'a' : 'b')
 export const f2d = css({ color: divBranch(1), margin: '12r' })
 
-// --- 39-F3 (scoped follow-up): a pure call in a const init refuses ---
+// --- 39-F3 (Forge §5): a pure call in a const init folds ---
 // v2 folds `const x = getColor()` via resolve_declarator→call_to_literal;
-// the fence folds at call sites only, so the use warns (see README).
+// the post-attach init pass folds through the same fence, so the use paints
+// exactly like the direct call (see README).
 const calledColor = getColor()
 export const f3 = css({ color: calledColor, margin: '13r' })

@@ -1,0 +1,14 @@
+{
+  "@container (min-width: 768px):marginTop:4px": "@reference-ui/lib__[@container_(min-width:_768px)]:mt_4px",
+  "@container (min-width: 768px):padding:1r": "@reference-ui/lib__[@container_(min-width:_768px)]:p_1r",
+  "_hover:backgroundColor:gray.100": "@reference-ui/lib__hover:bg-c_gray.100",
+  "backgroundColor:transparent": "@reference-ui/lib__bg-c_transparent",
+  "borderBottomColor:gray.700": "@reference-ui/lib__bd-b-c_gray.700",
+  "color:blue.700": "@reference-ui/lib__c_blue.700",
+  "color:green.600": "@reference-ui/lib__c_green.600",
+  "color:red": "@reference-ui/lib__c_red",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "paddingInline:0.5rem": "@reference-ui/lib__px_0.5rem"
+}

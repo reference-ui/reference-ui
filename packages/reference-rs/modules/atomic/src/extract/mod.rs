@@ -45,7 +45,7 @@ use crate::atom::Want;
 use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
-use expressions::{ExpressionWalk, ObjectWalk};
+use expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
 use scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
 pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
@@ -183,6 +183,7 @@ impl<'a> ExtractContext<'a> {
             wants: self.wants,
             diagnostics: self.diagnostics,
             authored: Some(self.authored),
+            bag: BagSemantics::StyleObject,
         }
     }
 
@@ -202,6 +203,7 @@ impl<'a> ExtractContext<'a> {
             wants,
             diagnostics: self.diagnostics,
             authored: None,
+            bag: BagSemantics::StyleObject,
         }
     }
 

@@ -69,7 +69,7 @@ styletrace host drift impossible; everything else is a slice note):
 |---|---|---|---|---|---|
 | 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent-protocol.md`, neo sync printer | — | agent-neo (printer), docs | LANDED (oracle clean: neo sync 16/16) |
 | 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | LANDED (oracle clean: canon 52/52, atomic 328/328, stations 213/213) |
-| 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | pending, after 1 |
+| 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | LANDED (oracle clean: atomic 328/328, stations 216/216) |
 | 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | pending, after 2 |
 | 4 | Harvest (`extract/harvest/`, sinks, mint, info code, §2 floor) | `atomic/src/extract/harvest/` (`literals.rs`, `sinks.rs`, `mint.rs`, `classify.rs` rhythm-then-canon) | `ATM-HARVEST-01..04`; `NEO-CSS-14` | agent-rs + agent-neo | pending, after 1 + 3 |
 | 5 | Host surface (`StyleSurface.owned_props`, host-aware `is_style_attr_name`; census → 131) | styletrace `analysis/surface.rs`, atomic host check | styletrace unit; `ATM-SITE-85`; census log | agent-rs (styletrace + atomic) | pending, after 1 |
@@ -134,3 +134,19 @@ Station IDs are suggested; each slice owner confirms free slots against
   (formatter/semicolon + vendor-prefix drift) fail on this tree but
   touch no slice file — canon's data surface changed only
   additively, and no typegen file is in the diff.
+- S2-1 (landed): D1 splits done — `collect.rs` (838 lines) →
+  `scope/collect/` (6 files), `object.rs` (842) → `expressions/object/`
+  (8 files), `walk.rs` (710) → `expressions/walk/` (6 files); new
+  `scope/call_init.rs` (§5 post-attach fold); `BagSemantics` plumbed
+  via `jsx/mod.rs` (`JsxAttributes` on spread bags) + `extract/mod.rs`
+  (`StyleObject` default). Stations `ATM-SITE-80/81/83` registered in
+  `SPEC.md`, READMEs follow the claim/symbols/siblings/search-terms
+  convention. Oracle: atomic 328/328, stations 216/216.
+- S2-2 (repins, both §5 folds not coincidences): SITE-31 39-F3 now
+  folds (color wants 22→23, wants 51→52, diagnostics 14→13);
+  SITE-46 shadowed arrow folds as pure (`animationName: local`,
+  wants 13→14, plans 12→13, diagnostics 7→6).
+- S2-3 (pre-existing, out of slice cone): clippy warnings remaining
+  in atomic live in `resolver/walk.rs`, `constants/collect.rs`,
+  `fold/*`, `scope/init.rs`, `scope/types.rs` — none in a Slice 2
+  file; no new lints introduced.

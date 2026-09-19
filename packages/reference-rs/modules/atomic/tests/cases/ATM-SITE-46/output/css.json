@@ -1,6 +1,7 @@
 {
   "animationName:aliased": "@reference-ui/lib__anim-n_aliased",
   "animationName:early": "@reference-ui/lib__anim-n_early",
+  "animationName:local": "@reference-ui/lib__anim-n_local",
   "animationName:spin": "@reference-ui/lib__anim-n_spin",
   "margin:1r": "@reference-ui/lib__m_1r",
   "margin:2r": "@reference-ui/lib__m_2r",

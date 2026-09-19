@@ -1,0 +1,19 @@
+{
+  "_focusVisible:outlineColor:ui.focus.ring": "@reference-ui/lib__focusVisible:outline-c_ui.focus.ring",
+  "_focusVisible:outlineOffset:2px": "@reference-ui/lib__focusVisible:outline-offset_2px",
+  "_focusVisible:outlineStyle:solid": "@reference-ui/lib__focusVisible:outline-s_solid",
+  "_focusVisible:outlineWidth:2px": "@reference-ui/lib__focusVisible:outline-w_2px",
+  "backgroundColor:gray.100": "@reference-ui/lib__bg-c_gray.100",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "color:blue.700": "@reference-ui/lib__c_blue.700",
+  "color:red": "@reference-ui/lib__c_red",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "margin:3r": "@reference-ui/lib__m_3r",
+  "margin:4r": "@reference-ui/lib__m_4r",
+  "margin:5r": "@reference-ui/lib__m_5r",
+  "outlineColor:ui.focus.ring": "@reference-ui/lib__outline-c_ui.focus.ring",
+  "outlineOffset:2px": "@reference-ui/lib__outline-offset_2px",
+  "outlineStyle:solid": "@reference-ui/lib__outline-s_solid",
+  "outlineWidth:2px": "@reference-ui/lib__outline-w_2px",
+  "padding:4px": "@reference-ui/lib__p_4px"
+}

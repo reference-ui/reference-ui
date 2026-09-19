@@ -113,6 +113,31 @@ impl ScopeTable {
         true
     }
 
+    /// Fill a valueless declarator binding with its folded call init.
+    /// The binding must be a `const`/`let`/`var` with the expected declaring
+    /// span and no init yet; anything else fails closed with `false`, so a
+    /// misaligned scope id can never plant a value on the wrong name.
+    pub fn attach_call_init(
+        &mut self,
+        scope: ScopeId,
+        name: &str,
+        span: Span,
+        init: BindingInit,
+    ) -> bool {
+        let Some(binding) = self.binding_mut(scope, name) else {
+            return false;
+        };
+        let declarator = matches!(
+            binding.kind,
+            BindingKind::Const | BindingKind::Let | BindingKind::Var
+        );
+        if !declarator || binding.span != span || binding.init.is_some() {
+            return false;
+        }
+        binding.init = Some(init);
+        true
+    }
+
     /// Every attached pure-helper descriptor at the program root, in name
     /// order. Exports are top-level, so the binding walk (SPEC-V2-57) reads
     /// only these; nested helpers stay same-file. Order is deterministic.
