@@ -75,3 +75,13 @@
 - 2026-09-19 ~04:00 UTC — Repair verified on crew evidence (surface-type fallback + SITE-58 wipe station, suites green, repro 3→53 both paths, zero moves). Slice-5 re-run out; repair+warnings+deletion commit after green.
 - 2026-09-19 ~04:20 UTC — Slice-5 ZERO DRIFT: 4 artifacts byte-identical, 53 traced, jsxHosts 154→101 exact, CT 338+same-5/189 (2 runs). Committed repair 5433f412c + warnings 3537ee252. Book captures blocked (:5000 down) — infra, post-commit eyes.
 - 2026-09-19 ~04:30 UTC — Slice-6 tail landed (doc sweep, survey table, 3 stays, gap #3 → Overmatch §4). STYLETEAM MISSION DONE. Turning for Operation Overmatch.
+- 2026-09-19 ~04:40 UTC — OVERMATCH WAVE 1 out (5/8): Ph0 cartographers A (13 HAVEs) + B (16 HAVEs); Ph1 engineers scope (75), nesting (68/69), mutation (35/02/53). Held: unary, no-silence, diag-precision + oracle slots.
+- 2026-09-19 ~05:00 UTC — Ph0 COMPLETE (29/29): A 7 settled/6 gaps, B 13 settled/3 gaps. Folded: new SPEC-V2-80 (Ph1 nesting), 05b→unary slice, 9 entry amendments, 16-promotion rejected, 30-exceeds-v2. GAP-48 feed to nesting engineer bounced twice (mapping) — folds on their report.
+- 2026-09-19 ~05:20 UTC — Nesting 68/69 built (byte-for-byte evidence, gates green). Oracles out (68/69) + entry-80 engineer (COND-29) in parallel.
+- 2026-09-19 ~05:30 UTC — Mutation 35/02/53 built (SITE-28 only; ruled SITE-32 typo belongs to entry 42, table fixed). Scope 75 built (P0 ghost closed). Oracles out for both; 7/8 slots filled.
+- 2026-09-19 ~05:30 UTC — CORRECTION: scope oracles REJECTED on capacity (8/8) — queued, will retry with fresh ids as slots free. Mutation oracles are out.
+- 2026-09-19 ~05:45 UTC — Nesting arch PASS; scope oracles launched (both). Mutation docs must-fix done inline; SPEC-V2-81 filed (delete-as-write, Ph2, rides SITE-28). Awaiting 5: nesting/mutation/scope outcomes, entry-80 build.
+- 2026-09-19 ~06:00 UTC — Nesting 68/69 MERGED (outcome + arch PASS). Commit held to land with entry-80 (same slice, shared area).
+- 2026-09-19 ~06:10 UTC — Mutation MERGED (engine green both oracles; 3 doc defects fixed inline: SITE-28 row, counts→163/158/5/242/158 actuals, poison note→76 milestone). Scope arch PASS; scope outcome + entry-80 running.
+- 2026-09-19 ~06:20 UTC — Scope 75 MERGED (outcome + arch PASS). Wave-1 builds all merged except entry-80 (building). Commits held to land per-slice after 80.
+- 2026-09-19 ~06:30 UTC — Entry-80 MERGED (arch PASS + outcome functional PASS; 4 ledger defects fixed inline). Wave-1 build committed 9eedf7dd1 (78 files).
