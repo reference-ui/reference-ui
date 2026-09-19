@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "diag-unicode",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "input/baseSystem.json",
+      "rules": {
+        ".日本語-café": {
+          "color": "red",
+          "_bogus": { "color": "blue" }
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}
