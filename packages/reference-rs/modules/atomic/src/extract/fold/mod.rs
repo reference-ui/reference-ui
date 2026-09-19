@@ -25,6 +25,7 @@ mod fence_lower_ops;
 pub mod key;
 pub mod logical;
 pub mod member;
+pub mod residue;
 pub mod template;
 pub mod token;
 pub mod token_shape;
@@ -45,7 +46,7 @@ pub use call::{fold_pure_call, CallFold, CallRefusal};
 pub use call_lower::{
     call_value_to_json, call_values_to_json, lower_call_spread, lower_call_value,
 };
-pub use chain::fold_chain;
+pub use chain::{chain_residue_path, fold_chain};
 pub use conditional::{dead_arm, fold_test, DeadArm, TestFold};
 pub use element::{
     describe_base, describe_snippet, fold_element_access, ElementFold, ElementRefusal,
@@ -54,7 +55,10 @@ pub use fence::{FenceValue, PureFn};
 pub use fence_attach::attach_pure_fns;
 pub use key::{canonical_numeric_key, fold_property_key};
 pub use logical::{fold_logical, LogicalFold};
-pub use member::{member_path_leaves, member_path_object, member_path_text, member_root_name};
+pub use residue::{expr_entry_residue, fn_decl_residue, key_entry_residue};
+pub use member::{
+    member_path_leaves, member_path_object, member_path_residue, member_path_text, member_root_name,
+};
 pub use template::{fold_template, TemplateFold, TemplateRefusal};
 pub use token::{fold_token_call, TokenFold, TokenReason, TokenRefusal};
 pub use token_shape::{

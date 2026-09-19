@@ -46,6 +46,40 @@ pub fn member_path_object<'a>(
     }
 }
 
+/// True when a member path's terminal entry kept leaves beside a dropped
+/// dynamic arm (Ph4 residue channel). Intermediate hops name nested maps,
+/// never consumed leaves, so only the terminal entry can carry the loss.
+pub fn member_path_residue(mem: &StaticMemberExpression<'_>, scoped: Scoped<'_>) -> bool {
+    let Some((root, segments)) = split_path(mem) else {
+        return false;
+    };
+    let Some((terminal, hops)) = segments.split_first() else {
+        return false;
+    };
+    if hops.is_empty() {
+        return scoped.object_prop_residue(root, terminal);
+    };
+    let Some(last) = hops.last() else {
+        return false;
+    };
+    let mut current = match scoped.member_object(root, last) {
+        Some(entries) => entries,
+        None => return false,
+    };
+    for segment in hops[..hops.len() - 1].iter().rev() {
+        let Some(prop) = current.get(*segment) else {
+            return false;
+        };
+        if prop.nested.is_empty() {
+            return false;
+        }
+        current = &prop.nested;
+    }
+    current
+        .get(*terminal)
+        .is_some_and(|prop| prop.residue && !prop.leaves.is_empty())
+}
+
 /// The root identifier of a member path, for mutation checks.
 ///
 /// Peels wrappers on every level (`tokens!.color` roots at `tokens`);

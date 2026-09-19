@@ -92,6 +92,10 @@ pub enum DiagnosticCode {
     /// `object.rs`: a recorded const-object prop with no static style value
     /// (SPEC-V2-55/65 Ph3; the use site diagnoses it, siblings kept).
     UnfoldableObjectProp,
+    /// `object.rs` / `walk.rs` / `member.rs` / `element.rs` / `key.rs`: a
+    /// recorded const-object prop that kept static leaves while dropping a
+    /// dynamic arm at collect time (Ph4 residue channel; siblings kept).
+    PartialObjectProp,
     /// `fold/binary`: an operator or pair the binary fold refused.
     DynamicBinary,
     /// `fold/conditional`: a ternary arm eliminated by a folded test.
@@ -103,7 +107,7 @@ pub enum DiagnosticCode {
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 39] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 40] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -181,6 +185,10 @@ const CODE_TABLE: [(DiagnosticCode, &str); 39] = [
     (
         DiagnosticCode::UnfoldableObjectProp,
         "ATM-W-UNFOLDABLE-OBJECT-PROP",
+    ),
+    (
+        DiagnosticCode::PartialObjectProp,
+        "ATM-W-PARTIAL-OBJECT-PROP",
     ),
     (DiagnosticCode::DynamicBinary, "ATM-W-DYNAMIC-BINARY"),
     (DiagnosticCode::DeadBranch, "ATM-I-DEAD-BRANCH"),
@@ -304,6 +312,7 @@ mod tests {
             DiagnosticCode::UnfoldableObjectProp,
             DiagnosticCode::DynamicBinary,
             DiagnosticCode::DeadBranch,
+            DiagnosticCode::PartialObjectProp,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

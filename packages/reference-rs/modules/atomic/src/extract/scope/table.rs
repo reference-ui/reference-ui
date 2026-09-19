@@ -113,6 +113,23 @@ impl ScopeTable {
         true
     }
 
+    /// Every attached pure-helper descriptor, in scope then name order.
+    /// The descriptor export (SPEC-V2-57) merges these into the project bag
+    /// by declared name; order is deterministic, so file-order gauges hold.
+    pub fn export_pure_fns(&self) -> Vec<(String, PureFn)> {
+        let mut out = Vec::new();
+        for scope in &self.scopes {
+            for (name, id) in scope.names.iter() {
+                if let Some(BindingInit::PureFn(func)) =
+                    self.bindings.get(*id as usize).and_then(|b| b.init.as_ref())
+                {
+                    out.push((name.clone(), func.clone()));
+                }
+            }
+        }
+        out
+    }
+
     /// Clear a binding's carried value (it shadows from here on).
     pub fn clear_init(&mut self, scope: ScopeId, name: &str) {
         if let Some(binding) = self.binding_mut(scope, name) {
@@ -141,5 +158,16 @@ impl ScopeTable {
         self.scopes
             .get(scope as usize)
             .and_then(|entry| entry.parent)
+    }
+
+    /// Every import binding in the file, for the resolver's upfront pass.
+    pub fn import_refs(&self) -> Vec<super::binding::ImportRef> {
+        self.bindings
+            .iter()
+            .filter_map(|binding| match &binding.kind {
+                BindingKind::Import(imp) => Some(imp.clone()),
+                _ => None,
+            })
+            .collect()
     }
 }

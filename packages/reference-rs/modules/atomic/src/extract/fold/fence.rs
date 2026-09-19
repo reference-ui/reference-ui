@@ -27,6 +27,9 @@ pub struct PureFn {
     pub defaults: Vec<Option<PureExpr>>,
     /// The single-expression body with captures baked to values.
     pub body: PureExpr,
+    /// True when a capture baked a dropped dynamic arm (Ph4 residue
+    /// channel); the call site diagnoses it. Rides the descriptor export.
+    pub residue: bool,
 }
 
 /// A folded value inside the fence: scalar leaves, an object, or an array.
@@ -207,6 +210,7 @@ fn lower_callable(
         params: names,
         defaults,
         body: lowered,
+        residue: false,
     })
 }
 
@@ -251,7 +255,7 @@ fn param_names(params: &FormalParameters<'_>) -> Option<Vec<Box<str>>> {
 
 /// The single-expression body: an expression arrow's value, or a block with
 /// exactly one `return` and nothing else. Directives are ignored, verbatim v2.
-fn body_expression<'a>(
+pub(crate) fn body_expression<'a>(
     body: &'a FunctionBody<'a>,
     is_expression_arrow: bool,
 ) -> Option<&'a Expression<'a>> {

@@ -50,6 +50,7 @@ pub fn enum_object(decl: &TSEnumDeclaration<'_>) -> ConstObject {
                 ObjectProp {
                     leaves: vec![leaf],
                     nested: ConstObject::new(),
+                    residue: false,
                 },
             );
         }
@@ -180,6 +181,7 @@ pub fn param_type_object(param: &FormalParameter<'_>) -> Option<ConstObject> {
             ObjectProp {
                 leaves: vec![leaf],
                 nested: ConstObject::new(),
+                residue: false,
             },
         );
     }

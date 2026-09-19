@@ -106,6 +106,7 @@ fn handle_object_property(
         );
         return;
     };
+    warn_key_residue(ctx, &prop.key);
 
     if key == "r" {
         if let Expression::ObjectExpression(r_obj) = &prop.value {
@@ -195,6 +196,7 @@ pub fn walk_r_object(
         let Some(raw_key) = resolve_property_key(&prop.key, ctx.scopes) else {
             continue;
         };
+        warn_key_residue(ctx, &prop.key);
         let trimmed = raw_key.trim();
         let Some(query) = resolve_r_key(trimmed, ctx.breakpoints) else {
             // r={{ wat: { p: '1r' } }}
@@ -229,6 +231,19 @@ pub(crate) fn resolve_property_key(
     scoped: Scoped<'_>,
 ) -> Option<String> {
     crate::extract::fold::fold_property_key(key, scoped)
+}
+
+/// Warn when a folded key read a partially static entry (Ph4 residue
+/// channel). Callers run this only after the key folds: a refused key
+/// already warns `UnfoldableKey`, never both.
+pub(crate) fn warn_key_residue(ctx: &mut ObjectWalk<'_>, key: &PropertyKey<'_>) {
+    if let Some(path) = crate::extract::fold::key_entry_residue(key, ctx.scopes) {
+        ctx.warn(
+            key.span(),
+            DiagnosticCode::PartialObjectProp,
+            format!("property '{path}' drops a dynamic arm with no static style value"),
+        );
+    }
 }
 
 fn handle_condition_value(
@@ -342,6 +357,7 @@ fn spread_pure_call(
                 refusal.message_for_spread(),
             );
         }
+        emit_spread_residue(ctx, call.span, fold.residue.as_deref());
         crate::extract::fold::lower_call_spread(ctx, &entries, when, call.span);
         return;
     }
@@ -378,6 +394,18 @@ fn spread_pure_call(
         DiagnosticCode::UnfoldableSpread,
         "Dynamic object spread encountered in style object; keeping sibling properties",
     );
+}
+
+/// Warn when a spread call's callee baked a dropped dynamic arm (Ph4
+/// residue channel). Runs only for folded object spreads, beside the refusals.
+fn emit_spread_residue(ctx: &mut ObjectWalk<'_>, span: Span, residue: Option<&str>) {
+    if let Some(subject) = residue {
+        ctx.warn(
+            span,
+            DiagnosticCode::PartialObjectProp,
+            format!("{subject} drops a dynamic arm with no static style value"),
+        );
+    }
 }
 
 /// Unpack a member-hop spread over its nested entries, or diagnose the miss.
@@ -562,6 +590,7 @@ pub fn lower_array_object(
                 ObjectProp {
                     leaves: vec![val.clone()],
                     nested: ConstObject::new(),
+                    residue: false,
                 },
             )
         })
@@ -672,10 +701,33 @@ fn lower_style_entry(
                 DiagnosticCode::UnfoldableObjectProp,
                 format!("property '{key}' of '{}' has no static style value", site.name),
             );
+        } else if prop.residue {
+            // { ...(c ? { color: { base: 'red' } } : { color: pick() }) } —
+            // the nested entries lowered above; name the dropped value arm
+            ctx.warn(
+                site.span,
+                DiagnosticCode::PartialObjectProp,
+                format!(
+                    "property '{key}' of '{}' drops a dynamic arm with no static style value",
+                    site.name
+                ),
+            );
         }
         return;
     }
     push_entry_leaves(ctx, key, &prop.leaves, site);
+    if prop.residue {
+        // { color: flag ? 'white' : run() } — the kept leaves lowered; name
+        // the dropped arm (Ph4 residue channel)
+        ctx.warn(
+            site.span,
+            DiagnosticCode::PartialObjectProp,
+            format!(
+                "property '{key}' of '{}' drops a dynamic arm with no static style value",
+                site.name
+            ),
+        );
+    }
 }
 
 /// Push one want and one authored plan per recorded leaf at one site.
@@ -731,6 +783,16 @@ fn lower_responsive_entries(
             span: site.span,
         };
         push_entry_leaves(ctx, key, &subprop.leaves, &sub_site);
+        if subprop.residue {
+            ctx.warn(
+                site.span,
+                DiagnosticCode::PartialObjectProp,
+                format!(
+                    "property '{key}.{sub}' of '{}' drops a dynamic arm with no static style value",
+                    site.name
+                ),
+            );
+        }
     }
 }
 
@@ -756,6 +818,17 @@ fn lower_condition_entry(
                 site.span,
                 DiagnosticCode::UnfoldableObjectProp,
                 format!("property '{key}' of '{}' has no static style value", site.name),
+            );
+        } else if prop.residue {
+            // The nested entries lowered above; name the dropped value arm
+            // a union merged beside them
+            ctx.warn(
+                site.span,
+                DiagnosticCode::PartialObjectProp,
+                format!(
+                    "property '{key}' of '{}' drops a dynamic arm with no static style value",
+                    site.name
+                ),
             );
         }
         return;

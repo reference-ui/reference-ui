@@ -577,10 +577,12 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
   .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_cyan { color: cyan; }
   .\@reference-ui\/lib__c_magenta { color: magenta; }
+  .\@reference-ui\/lib__c_pink { color: pink; }
   .\@reference-ui\/lib__c_plum { color: plum; }
   .\@reference-ui\/lib__c_red { color: red; }
   .\@reference-ui\/lib__c_white { color: white; }

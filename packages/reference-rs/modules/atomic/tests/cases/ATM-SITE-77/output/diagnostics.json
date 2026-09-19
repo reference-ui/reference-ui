@@ -1,6 +1,22 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'fb' drops a dynamic arm with no static style value",
+    "file": "input/src/alias.ts",
+    "line": 7,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'fallback' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 17,
+    "column": 42
+  },
+  {
+    "severity": "warning",
     "code": "ATM-W-UNFOLDABLE-OBJECT-PROP",
     "message": "property 'color' of 'dyn' has no static style value",
     "file": "input/src/app.ts",
@@ -9,10 +25,130 @@
   },
   {
     "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'part' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 22,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'part.color' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 23,
+    "column": 43
+  },
+  {
+    "severity": "warning",
     "code": "ATM-W-UNFOLDABLE-OBJECT-PROP",
     "message": "property 'color' of 'both' has no static style value",
     "file": "input/src/app.ts",
     "line": 24,
     "column": 37
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'apart' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 33,
+    "column": 41
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "Element access 'part['color']' drops a dynamic arm with no static style value for prop 'color'",
+    "file": "input/src/app.ts",
+    "line": 34,
+    "column": 41
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'keys.k' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 35,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'part.color' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 36,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "call to 'getPart' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 37,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'deep.nested.color' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 38,
+    "column": 38
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'mix' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 43,
+    "column": 37
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'combo' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 44,
+    "column": 37
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "call to 'getC' drops a dynamic arm with no static style value",
+    "file": "input/src/app.ts",
+    "line": 50,
+    "column": 40
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/src/cycled.ts",
+    "line": 6,
+    "column": 32
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'fb' drops a dynamic arm with no static style value",
+    "file": "input/src/via-barrel.ts",
+    "line": 7,
+    "column": 40
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'color' of 'partial' drops a dynamic arm with no static style value",
+    "file": "input/src/via-barrel.ts",
+    "line": 8,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-PARTIAL-OBJECT-PROP",
+    "message": "property 'partial.color' drops a dynamic arm with no static style value",
+    "file": "input/src/via-barrel.ts",
+    "line": 9,
+    "column": 49
   }
 ]

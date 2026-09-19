@@ -23,6 +23,30 @@ pub struct ExtractBindings {
     recipe: HashSet<String>,
     jsx: HashSet<String>,
     namespaces: HashSet<String>,
+    reexport_css_ns: HashSet<String>,
+    reexport_recipe_ns: HashSet<String>,
+}
+
+/// Where an identity walk starts: the importing file plus the project graph.
+pub(crate) struct IdentityCtx<'a, 's> {
+    pub file: &'a str,
+    pub graph: &'a super::identity::IdentityGraph<'s>,
+}
+
+impl IdentityCtx<'_, '_> {
+    /// The Reference export one import of this file traces to, if any.
+    fn trace_named(&self, source: &str, imported: &str) -> Option<String> {
+        self.graph.trace_reference_export(self.file, source, imported)
+    }
+}
+
+impl ExtractBindings {
+    /// Record a walked import under its Reference origin; a miss records nothing.
+    fn record_traced(&mut self, local: &str, origin: Option<String>) {
+        if let Some(exported) = origin {
+            record_named(self, local, exported);
+        }
+    }
 }
 
 impl ExtractBindings {
@@ -70,6 +94,87 @@ pub fn collect_bindings(program: &Program<'_>) -> ExtractBindings {
         record_import(&mut bindings, decl);
     }
     bindings
+}
+
+/// Collect bindings with project identity: direct Reference imports plus
+/// names that trace to a Reference export through consumer re-exports.
+pub fn collect_bindings_with_identity(
+    program: &Program<'_>,
+    file: &str,
+    graph: &super::identity::IdentityGraph<'_>,
+) -> ExtractBindings {
+    let mut bindings = collect_bindings(program);
+    let ctx = IdentityCtx { file, graph };
+    for stmt in &program.body {
+        let Statement::ImportDeclaration(decl) = stmt else {
+            continue;
+        };
+        extend_identity(&mut bindings, decl, &ctx);
+    }
+    bindings
+}
+
+/// Record identity carried through a non-Reference import, if the walk proves it.
+fn extend_identity(
+    bindings: &mut ExtractBindings,
+    decl: &ImportDeclaration<'_>,
+    ctx: &IdentityCtx<'_, '_>,
+) {
+    if decl.import_kind == ImportOrExportKind::Type {
+        return;
+    }
+    let source = decl.source.value.as_str();
+    if is_reference_package(source) {
+        return;
+    }
+    let Some(specifiers) = &decl.specifiers else {
+        return;
+    };
+    for spec in specifiers {
+        extend_specifier(bindings, spec, source, ctx);
+    }
+}
+
+/// One non-Reference specifier through the identity walk: named and default
+/// imports record by Reference origin; namespaces record live members eagerly.
+fn extend_specifier(
+    bindings: &mut ExtractBindings,
+    spec: &ImportDeclarationSpecifier<'_>,
+    source: &str,
+    ctx: &IdentityCtx<'_, '_>,
+) {
+    match spec {
+        ImportDeclarationSpecifier::ImportSpecifier(named) => {
+            if named.import_kind == ImportOrExportKind::Type {
+                return;
+            }
+            let origin = ctx.trace_named(source, &imported_name(&named.imported));
+            bindings.record_traced(named.local.name.as_str(), origin);
+        }
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
+            let origin = ctx.trace_named(source, "default");
+            bindings.record_traced(default.local.name.as_str(), origin);
+        }
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
+            extend_namespace(bindings, ns.local.name.as_str(), source, ctx);
+        }
+    }
+}
+
+/// A namespace over a wrapper: `ui.css` is live exactly when the wrapper
+/// exports `css` from Reference's `css` (same for `recipe`).
+fn extend_namespace(
+    bindings: &mut ExtractBindings,
+    local: &str,
+    source: &str,
+    ctx: &IdentityCtx<'_, '_>,
+) {
+    if ctx.graph.trace_reference_export(ctx.file, source, "css").as_deref() == Some("css") {
+        bindings.reexport_css_ns.insert(local.to_string());
+    }
+    if ctx.graph.trace_reference_export(ctx.file, source, "recipe").as_deref() == Some("recipe") {
+        bindings.reexport_recipe_ns.insert(local.to_string());
+    }
 }
 
 pub(crate) fn is_shadowed(shadowed: &[HashSet<String>], name: &str) -> bool {
@@ -132,7 +237,7 @@ pub(crate) fn imported_name(name: &ModuleExportName<'_>) -> String {
     }
 }
 
-fn is_reference_package(source: &str) -> bool {
+pub(crate) fn is_reference_package(source: &str) -> bool {
     matches!(source, "@reference-ui/react" | "@reference-ui/styled")
 }
 
@@ -183,10 +288,15 @@ fn css_member_origin(
     if prop == "object" {
         return css_object_origin(bindings, object_name);
     }
-    if prop == "css" && bindings.namespaces.contains(object_name) {
+    if prop == "css" && is_live_css_namespace(bindings, object_name) {
         return Some("css".to_string());
     }
     None
+}
+
+/// True for direct Reference namespaces and wrapper namespaces carrying `css`.
+fn is_live_css_namespace(bindings: &ExtractBindings, object_name: &str) -> bool {
+    bindings.namespaces.contains(object_name) || bindings.reexport_css_ns.contains(object_name)
 }
 
 fn css_object_origin(bindings: &ExtractBindings, object_name: &str) -> Option<String> {
@@ -206,10 +316,15 @@ fn recipe_member_origin(
         return None;
     }
     let prop = member.property.name.as_str();
-    if prop == "recipe" && bindings.namespaces.contains(object_name) {
+    if prop == "recipe" && is_live_recipe_namespace(bindings, object_name) {
         return Some("recipe".to_string());
     }
     None
+}
+
+/// True for direct Reference namespaces and wrapper namespaces carrying `recipe`.
+fn is_live_recipe_namespace(bindings: &ExtractBindings, object_name: &str) -> bool {
+    bindings.namespaces.contains(object_name) || bindings.reexport_recipe_ns.contains(object_name)
 }
 
 fn identifier_name<'a>(expr: &'a Expression<'_>) -> Option<&'a str> {

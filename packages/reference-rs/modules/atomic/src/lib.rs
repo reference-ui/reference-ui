@@ -92,6 +92,8 @@ pub struct CompileResult {
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
+    resolver: &'a extract::resolver::Resolver,
+    identity: extract::identity::IdentityGraph<'a>,
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a HashSet<String>,
     wants: &'a mut Vec<Want>,
@@ -107,7 +109,10 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
-    let project_constants = collect_project_constants(&sources);
+    let mut project_constants = collect_project_constants(&sources);
+    export_project_descriptors(&sources, &mut project_constants);
+    let resolver = extract::resolver::Resolver::new(&sources, request.root_dir.as_deref());
+    let identity = extract::identity::IdentityGraph::new(&sources);
     let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
     let traced_jsx = resolved_hosts.hosts();
     diagnostics.extend(host_diagnostics);
@@ -116,6 +121,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     {
         let mut session = ParseSession {
             constants: &project_constants,
+            resolver: &resolver,
+            identity,
             breakpoints: system.breakpoints(),
             traced_jsx: &traced_jsx,
             wants: &mut wants,
@@ -204,6 +211,35 @@ fn collect_project_constants(sources: &[(String, String)]) -> extract::constants
     project_constants
 }
 
+/// Export every file's attached pure-helper descriptors into the project
+/// bag by declared name (SPEC-V2-57). Runs after the legacy merge so
+/// captures bake against the complete bag; descriptors are closed values,
+/// so a later file's attach never reads an earlier file's export and the
+/// merge stays order-independent. Mutated names stay out, like every
+/// other stale init.
+fn export_project_descriptors(
+    sources: &[(String, String)],
+    project: &mut extract::constants::LocalConstants,
+) {
+    for (path, content) in sources {
+        let allocator = Allocator::default();
+        let source_type = SourceType::from_path(Path::new(path))
+            .unwrap_or_default()
+            .with_typescript(true);
+        let parser = Parser::new(&allocator, content, source_type);
+        let ret = parser.parse();
+        if ret.panicked {
+            continue;
+        }
+        let table = extract::scope::collect(&ret.program, project);
+        for (name, func) in table.export_pure_fns() {
+            if project.mutation(&name).is_none() {
+                project.insert_pure_fn(name, func);
+            }
+        }
+    }
+}
+
 fn parse_and_extract(session: &mut ParseSession<'_>, path: &str, content: &str) {
     let allocator = Allocator::default();
     // JSX follows the extension (`.tsx` on, `.ts` off): `.ts`-only
@@ -239,13 +275,18 @@ fn extract_parsed_program(
     content: &str,
     program: &oxc_ast::ast::Program<'_>,
 ) {
-    // Locals resolve through this file's scope table; the project bag survives
-    // only behind the import lookup stub, for imported and unbound names.
-    // Baked entries strip against the merged bag's name-wide mutation set.
+    // Locals resolve through this file's scope table; imports answer from
+    // the resolver map, with the bag behind for unhandled shapes and unbound
+    // names. Baked entries strip against the name-wide mutation set.
     let table = extract::scope::collect(program, session.constants);
-    let stub = extract::scope::ImportLookup::ProjectBag(session.constants);
-    let chain = extract::scope::ScopeChain::new(&table, stub);
-    let bindings = extract::collect_bindings(program);
+    let imports = table.import_refs();
+    let values = session.resolver.resolve_file_imports(path, &imports);
+    let lookup = extract::scope::ImportLookup::Binding {
+        values: &values,
+        fallback: session.constants,
+    };
+    let chain = extract::scope::ScopeChain::new(&table, lookup);
+    let bindings = extract::collect_bindings_with_identity(program, path, &session.identity);
     let mut jsx_hosts = bindings.jsx_hosts();
     jsx_hosts.extend(session.traced_jsx.iter().cloned());
     let config = extract::ExtractConfig {

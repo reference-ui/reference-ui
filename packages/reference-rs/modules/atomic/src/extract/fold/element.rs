@@ -32,6 +32,9 @@ pub struct ElementFold {
     pub omitted: bool,
     /// One refusal per key or side the node could not fold.
     pub refusals: Vec<ElementRefusal>,
+    /// True when a read entry kept leaves beside a dropped dynamic arm
+    /// (Ph4 residue channel); the want walker diagnoses it.
+    pub residue: bool,
 }
 
 /// Why one key or side of an element access did not fold.
@@ -97,6 +100,7 @@ pub fn fold_element_access(
         values: Vec::new(),
         omitted: false,
         refusals: Vec::new(),
+        residue: false,
     };
     let IndexFold::Keys(keys) = fold_index(index, scoped) else {
         fold.refusals
@@ -180,6 +184,7 @@ fn lookup_nested_entry(entries: &ConstObject, key: &str, fold: &mut ElementFold)
     match entries.get(key) {
         Some(prop) if !prop.leaves.is_empty() => {
             fold.values.extend(prop.leaves.iter().cloned());
+            fold.residue |= prop.residue;
         }
         Some(_) => {
             fold.refusals.push(ElementRefusal::NonScalar {
@@ -300,6 +305,7 @@ fn nested_array_object(object: &Expression<'_>, key: &str, scoped: Scoped<'_>) -
                     crate::extract::constants::ObjectProp {
                         leaves: vec![leaf.clone()],
                         nested: ConstObject::new(),
+                        residue: false,
                     },
                 );
             }
@@ -333,6 +339,7 @@ fn lookup_const_base(
         match map.get(key) {
             Some(prop) if !prop.leaves.is_empty() => {
                 fold.values.extend(prop.leaves.iter().cloned());
+                fold.residue |= prop.residue;
             }
             Some(_) => {
                 fold.refusals.push(ElementRefusal::NonScalar {
@@ -477,7 +484,7 @@ fn lookup_slot_element(
             let Some(expr) = elem.as_expression() else {
                 return;
             };
-            match slot_leaf(expr, scoped) {
+            match slot_leaf(expr, scoped, fold) {
                 Some(leaves) => fold.values.extend(leaves),
                 None => {
                     fold.refusals.push(ElementRefusal::NonScalar {
@@ -490,7 +497,11 @@ fn lookup_slot_element(
 }
 
 /// The leaves of one inline slot expression, or None when not static.
-fn slot_leaf(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<AtomValue>> {
+fn slot_leaf(
+    expr: &Expression<'_>,
+    scoped: Scoped<'_>,
+    fold: &mut ElementFold,
+) -> Option<Vec<AtomValue>> {
     if let Some(leaf) = inline_leaf(expr, scoped) {
         return Some(vec![leaf]);
     }
@@ -505,6 +516,8 @@ fn slot_leaf(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<AtomValue>
         if let Expression::Identifier(obj) = &mem.object {
             let leaves = scoped.object_prop_leaves(obj.name.as_str(), mem.property.name.as_str());
             if !leaves.is_empty() {
+                fold.residue |=
+                    scoped.object_prop_residue(obj.name.as_str(), mem.property.name.as_str());
                 return Some(leaves.to_vec());
             }
         }

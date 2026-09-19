@@ -23,3 +23,28 @@ export const partialSpread = css({ ...part })
 export const partialMember = css({ color: part.color })
 export const bothDynamic = css({ ...both })
 export const emptySpread = css({ ...empty })
+
+import { apart } from './tokens'
+
+const keys = { k: flag ? 'color' : run() }
+const deep = { nested: { color: flag ? 'white' : run() } }
+const getPart = () => part.color
+
+export const importedPartial = css({ ...apart })
+export const elementRead = css({ color: part['color'] })
+export const keyRead = css({ [keys.k]: 'red' })
+export const chainRead = css({ color: part?.color })
+export const fenceRead = css({ color: getPart() })
+export const deepRead = css({ color: deep.nested.color })
+
+const mix = { ...(flag ? { color: { base: 'red' } } : { color: pick() }) }
+const combo = { ...(flag ? part : { color: 'blue' }) }
+
+export const mixedSpread = css({ ...mix })
+export const unionSpread = css({ ...combo })
+
+const ko = { a: 'margin', c: 'pink', b: flag ? 'x' : run() }
+const getC = () => ko.c
+
+export const keyNoTaint = css({ [ko.a]: '1r' })
+export const fenceTaint = css({ color: getC() })

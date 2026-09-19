@@ -24,6 +24,32 @@ pub fn fold_chain(chain: &ChainExpression<'_>, scoped: Scoped<'_>) -> Vec<AtomVa
     descend_links(map, &links)
 }
 
+/// The dotted path a chain read, when its terminal entry kept leaves
+/// beside a dropped dynamic arm (Ph4 residue channel). Mirrors the fold:
+/// intermediate hops name nested maps, only the terminal can carry loss.
+pub fn chain_residue_path(chain: &ChainExpression<'_>, scoped: Scoped<'_>) -> Option<String> {
+    let (base, links) = chain_links(chain)?;
+    let map = scoped.object(&base)?;
+    descend_residue(map, &links)?;
+    Some(format!("{base}.{}", links.join(".")))
+}
+
+/// The terminal entry of a link descent, when it carries residue and leaves.
+fn descend_residue(map: &ConstObject, links: &[String]) -> Option<()> {
+    let first = links.first()?;
+    let prop = map.get(first)?;
+    if links.len() == 1 {
+        if prop.residue && !prop.leaves.is_empty() {
+            return Some(());
+        }
+        return None;
+    }
+    if prop.nested.is_empty() {
+        return None;
+    }
+    descend_residue(&prop.nested, &links[1..])
+}
+
 /// Follow static member links through recorded (nested) entries.
 fn descend_links(map: &ConstObject, links: &[String]) -> Vec<AtomValue> {
     let Some(first) = links.first() else {
