@@ -173,6 +173,7 @@ fn lower_block_arg(
 ) {
     match resolve_block_target(ctx.scoped(), expr) {
         BlockLookup::Hit(name, obj) => {
+            emit_import_residue(ctx, &name, expr.span());
             let mut obj_ctx = ctx.object_walk(origin, false);
             lower_const_object(&mut obj_ctx, &name, obj, &smallvec![], expr.span());
         }
@@ -187,13 +188,15 @@ fn lower_block_arg(
     }
 }
 
+/// Diagnose nested spreads the imported arg object could not unfold.
+fn emit_import_residue(ctx: &mut ExtractContext<'_>, name: &str, span: Span) {
+    for marker in ctx.scoped().import_unfoldable(name) {
+        ctx.warn(span, DiagnosticCode::UnfoldableSpread, marker.message());
+    }
+}
+
 /// Warn naming the write when an arg's base name is a mutated binding.
-fn mutated_arg_warn(
-    ctx: &mut ExtractContext<'_>,
-    base: &str,
-    span: Span,
-    site: ArgSite,
-) -> bool {
+fn mutated_arg_warn(ctx: &mut ExtractContext<'_>, base: &str, span: Span, site: ArgSite) -> bool {
     let Some(write) = ctx.scoped().mutation(base) else {
         return false;
     };
@@ -334,5 +337,3 @@ fn lower_merge_const(
         }
     }
 }
-
-

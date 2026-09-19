@@ -27,7 +27,10 @@ pub(crate) struct ArgFold<'a> {
 impl<'a> ArgFold<'a> {
     /// A fresh session over one call site's scope.
     pub(crate) fn new(scoped: Scoped<'a>) -> Self {
-        ArgFold { scoped, refusals: Vec::new() }
+        ArgFold {
+            scoped,
+            refusals: Vec::new(),
+        }
     }
 
     /// The session's scope lookup.
@@ -118,7 +121,10 @@ impl ArgFold<'_> {
 
     /// Fold a template argument through the shared template node: any
     /// refused part refuses the whole argument, exactly like v2.
-    pub(crate) fn fold_template_arg(&mut self, lit: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<FenceValue> {
+    pub(crate) fn fold_template_arg(
+        &mut self,
+        lit: &oxc_ast::ast::TemplateLiteral<'_>,
+    ) -> Option<FenceValue> {
         let fold = super::template::fold_template(lit, self.scoped);
         if !fold.refusals.is_empty() || fold.values.is_empty() {
             return None;
@@ -133,7 +139,10 @@ impl ArgFold<'_> {
 
     /// Fold a unary argument through the shared unary node; `void` is null
     /// by house rule, and any node refusal fails the whole argument.
-    pub(crate) fn fold_unary_arg(&mut self, unary: &oxc_ast::ast::UnaryExpression<'_>) -> Option<FenceValue> {
+    pub(crate) fn fold_unary_arg(
+        &mut self,
+        unary: &oxc_ast::ast::UnaryExpression<'_>,
+    ) -> Option<FenceValue> {
         use oxc_ast::ast::UnaryOperator;
         if unary.operator == UnaryOperator::Void {
             let null = FenceValue::Leaves(vec![AtomValue::Null]);
@@ -175,7 +184,11 @@ impl ArgFold<'_> {
     }
 
     /// Fold a static member argument over a folded object base.
-    pub(crate) fn fold_static_arg(&mut self, object: &Expression<'_>, prop: &str) -> Option<FenceValue> {
+    pub(crate) fn fold_static_arg(
+        &mut self,
+        object: &Expression<'_>,
+        prop: &str,
+    ) -> Option<FenceValue> {
         let FenceValue::Object(entries) = self.fold_arg(object)? else {
             return None;
         };
@@ -209,7 +222,10 @@ impl ArgFold<'_> {
     }
 
     /// Fold a chain argument: member links unwrap transparently, calls refuse.
-    pub(crate) fn fold_chain_arg(&mut self, chain: &oxc_ast::ast::ChainExpression<'_>) -> Option<FenceValue> {
+    pub(crate) fn fold_chain_arg(
+        &mut self,
+        chain: &oxc_ast::ast::ChainExpression<'_>,
+    ) -> Option<FenceValue> {
         match &chain.expression {
             ChainElement::StaticMemberExpression(member) => {
                 self.fold_static_arg(&member.object, member.property.name.as_str())
@@ -366,4 +382,3 @@ fn is_null_value(value: &FenceValue) -> bool {
         FenceValue::Leaves(leaves) if matches!(leaves.as_slice(), [AtomValue::Null])
     )
 }
-

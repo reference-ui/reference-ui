@@ -215,11 +215,7 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
 /// Scoop every literal leaf of a branching entry, mirroring the want
 /// walker leaf-for-leaf: both ternary arms, non-guard logical operands.
 /// A non-guard leaf position with no literal sets the dropped flag.
-fn collect_branching_leaves(
-    expr: &Expression<'_>,
-    out: &mut Vec<AtomValue>,
-    dropped: &mut bool,
-) {
+fn collect_branching_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>, dropped: &mut bool) {
     let unwrapped = unwrap_entry(expr);
     if collect_conditional_leaves(unwrapped, out, dropped) {
         return;

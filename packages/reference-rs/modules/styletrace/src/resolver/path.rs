@@ -1,11 +1,31 @@
-//! Filesystem and module-specifier helpers shared across styletrace resolution.
+//! Specifier resolution for styletrace over the shared module ladder.
 //!
-//! These helpers stay isolated from the resolver entrypoints so callers can depend on a small,
-//! stable surface while path normalization and source-preference rules evolve independently.
-//! It handles checking module file extensions and index files, and mapping compiled output paths
-//! back to source paths.
+//! Bare and relative imports resolve through `module_graph`'s
+//! `SpecifierLadder` with `ExtensionPolicy::Source`; the `dist` to `src`
+//! sync-root remap stays here as a styletrace loader concern, probing the
+//! remapped base with the local extension tables. Path normalization and
+//! ignorable-specifier checks stay isolated so resolution entrypoints keep
+//! a small, stable surface while the ladder evolves independently.
 
 use std::path::{Path, PathBuf};
+
+use module_graph::{DiskFs, ExtensionPolicy, ModuleKey, SpecifierLadder, TsconfigPolicy};
+
+/// Resolve `specifier` authored in `current_module` through the shared ladder.
+/// Relative specifiers join onto the importer; bare ones resolve via ancestor
+/// `node_modules` only — worlds are self-contained through symlinked
+/// `node_modules`, so an ancestor authoring alias must never win (SYNC-15).
+/// Hits are canonical paths; misses are `None`.
+pub(crate) fn resolve_specifier(current_module: &Path, specifier: &str) -> Option<PathBuf> {
+    let fs = DiskFs;
+    let ladder =
+        SpecifierLadder::new(&fs, ExtensionPolicy::Source).with_tsconfig(TsconfigPolicy::Skip);
+    let from = ModuleKey::new(&current_module.to_string_lossy());
+    ladder
+        .resolve(&from, specifier)
+        .ok()
+        .map(|key| PathBuf::from(key.as_str()))
+}
 
 pub(crate) fn normalize_path(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
@@ -23,6 +43,9 @@ pub(crate) fn is_ignorable_module_specifier(specifier: &str) -> bool {
         )
 }
 
+/// Probe a joined base for the sync-root remap's source candidate.
+/// Specifier resolution rides the shared ladder; this stays as the loader's
+/// file probe for a base the remap already computed, not a specifier.
 pub(crate) fn resolve_local_module_path(candidate: &Path) -> Option<PathBuf> {
     if let Some(path) = resolve_direct_extension(candidate) {
         return Some(path);
@@ -53,20 +76,23 @@ fn resolve_direct_extension(candidate: &Path) -> Option<PathBuf> {
 fn resolve_mapped_extension(candidate: &Path) -> Option<PathBuf> {
     let extension = candidate.extension().and_then(|ext| ext.to_str())?;
     let stem = candidate.with_extension("");
-    let mapped_exts: &[&str] = match extension {
-        "js" => &[".mjs", ".d.ts", ".ts", ".tsx", ".mts", ".d.mts"],
-        "mjs" => &[".js", ".d.mts", ".mts", ".d.ts", ".ts", ".tsx"],
-        "cjs" => &[".js", ".mjs", ".d.ts", ".ts", ".tsx", ".mts", ".d.mts"],
-        _ => &[],
-    };
-
-    for mapped_ext in mapped_exts {
+    for mapped_ext in mapped_compiled_extensions(extension) {
         let path = PathBuf::from(format!("{}{mapped_ext}", stem.display()));
         if path.is_file() {
             return Some(path);
         }
     }
     None
+}
+
+/// Source siblings for a compiled-extension stem, in probe order.
+fn mapped_compiled_extensions(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "js" => &[".mjs", ".d.ts", ".ts", ".tsx", ".mts", ".d.mts"],
+        "mjs" => &[".js", ".d.mts", ".mts", ".d.ts", ".ts", ".tsx"],
+        "cjs" => &[".js", ".mjs", ".d.ts", ".ts", ".tsx", ".mts", ".d.mts"],
+        _ => &[],
+    }
 }
 
 fn resolve_index_file(candidate: &Path) -> Option<PathBuf> {

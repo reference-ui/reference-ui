@@ -12,11 +12,14 @@ use std::collections::HashSet;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, PropertyKey};
 
 use super::binding::BindingInit;
+use super::fill::OriginFill;
+use super::spreads::SpreadCtx;
 use super::table::{ScopeId, ScopeTable};
 use crate::atom::AtomValue;
 use crate::extract::constants::{
     canonical_numeric_key, object_entries, ConstObject, LocalConstants, ObjectProp,
 };
+use crate::extract::resolver::UnfoldableSpread;
 
 /// Which slot of a dependent binding a `Dep` strips.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -82,30 +85,35 @@ pub(crate) fn as_object_init<'a, 'b>(init: &'b Expression<'a>) -> Option<&'b Obj
 }
 
 /// The recorded entries of a const object init: the shared lowering plus
-/// resolved identifier values and static spreads, last key wins.
+/// resolved identifier values and static spreads, last key wins. The fill
+/// answers import bindings from their origin values; without it, imports
+/// stay out exactly as before.
 pub(crate) fn object_init(
     obj: &ObjectExpression<'_>,
     table: &ScopeTable,
     scope: ScopeId,
-) -> (ConstObject, Vec<KeyProvenance>) {
+    fill: Option<OriginFill<'_>>,
+) -> EntrySink {
     // const theme = { primary: red, ...base }  — `red` and `base` resolve
     // only when an earlier declaration in scope already recorded them.
     let base = object_entries(obj);
     let mut build = EntryBuild {
         base: &base,
         sink: EntrySink::default(),
+        fill,
     };
+    let ctx = SpreadCtx { table, scope, fill };
     for prop_kind in &obj.properties {
         match prop_kind {
             ObjectPropertyKind::ObjectProperty(prop) => {
                 record_entry(prop, table, scope, &mut build);
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
-                super::spreads::record_spread(&spread.argument, table, scope, &mut build.sink);
+                super::spreads::record_spread(&spread.argument, ctx, &mut build.sink);
             }
         }
     }
-    (build.sink.entries, build.sink.provenances)
+    build.sink
 }
 
 /// Recorded entries plus where each non-literal entry was copied from.
@@ -113,12 +121,14 @@ pub(crate) fn object_init(
 pub(crate) struct EntrySink {
     pub(crate) entries: ConstObject,
     pub(crate) provenances: Vec<KeyProvenance>,
+    pub(crate) residues: Vec<UnfoldableSpread>,
 }
 
 /// The sink plus the shared lowering it overlays, in property order.
-struct EntryBuild<'b> {
+struct EntryBuild<'b, 'v> {
     base: &'b ConstObject,
     sink: EntrySink,
+    fill: Option<OriginFill<'v>>,
 }
 
 /// Record one object entry: a resolved identifier value, else the base entry.
@@ -126,48 +136,18 @@ fn record_entry(
     prop: &oxc_ast::ast::ObjectProperty<'_>,
     table: &ScopeTable,
     scope: ScopeId,
-    build: &mut EntryBuild<'_>,
+    build: &mut EntryBuild<'_, '_>,
 ) {
     let Some(key) = static_key(&prop.key) else {
         return;
     };
     if let Expression::Identifier(id) = peel(&prop.value) {
-        // { primary: red }  after  const red = 'n300' (or a const ternary —
-        // every leaf fills, so no arm silently drops)
-        if let Some((leaves, src_scope)) = scalar_leaves(table, scope, id.name.as_str()) {
-            build.sink.provenances.push(KeyProvenance {
-                key: key.clone(),
-                src_scope,
-                src_name: id.name.to_string(),
-                src_key: None,
-            });
-            build.sink.entries.insert(
-                key,
-                ObjectProp {
-                    leaves,
-                    nested: ConstObject::new(),
-                    residue: false,
-                },
-            );
-            return;
-        }
-        // { hover: hoverObj }  — object idents clone the nested map so
-        // member paths read through the name (SITE-29 member depth)
-        if let Some((src_scope, map)) = object_binding(table, scope, id.name.as_str()) {
-            build.sink.provenances.push(KeyProvenance {
-                key: key.clone(),
-                src_scope,
-                src_name: id.name.to_string(),
-                src_key: None,
-            });
-            build.sink.entries.insert(
-                key,
-                ObjectProp {
-                    leaves: Vec::new(),
-                    nested: map,
-                    residue: false,
-                },
-            );
+        let ctx = SpreadCtx {
+            table,
+            scope,
+            fill: build.fill,
+        };
+        if record_ident_entry(ctx, id.name.as_str(), &key, &mut build.sink) {
             return;
         }
     }
@@ -177,6 +157,47 @@ fn record_entry(
     if let Some(prop) = build.base.get(&key) {
         build.sink.entries.insert(key, prop.clone());
     }
+}
+
+/// Record one identifier entry: a table-local value, a fill value, or the
+/// base marker. True when an arm recorded, so the base stays untouched.
+fn record_ident_entry(ctx: SpreadCtx<'_, '_>, name: &str, key: &str, sink: &mut EntrySink) -> bool {
+    // { primary: red }  after  const red = 'n300' (or a const ternary —
+    // every leaf fills, so no arm silently drops)
+    if let Some((leaves, src_scope)) = scalar_leaves(ctx.table, ctx.scope, name) {
+        super::fill::push_provenance(sink, key, src_scope, name);
+        sink.entries.insert(
+            key.to_string(),
+            ObjectProp {
+                leaves,
+                nested: ConstObject::new(),
+                residue: false,
+            },
+        );
+        return true;
+    }
+    // { hover: hoverObj }  — object idents clone the nested map so
+    // member paths read through the name (SITE-29 member depth)
+    if let Some((src_scope, map)) = object_binding(ctx.table, ctx.scope, name) {
+        super::fill::push_provenance(sink, key, src_scope, name);
+        sink.entries.insert(
+            key.to_string(),
+            ObjectProp {
+                leaves: Vec::new(),
+                nested: map,
+                residue: false,
+            },
+        );
+        return true;
+    }
+    // { color: accent } with `accent` imported — origin values bake in
+    // with no strip dep: origins arrive unmutated and bags never change.
+    if let Some(export) = super::fill::fill_export(ctx.fill, ctx.table, ctx.scope, name) {
+        if super::fill::record_fill_entry(sink, key, export) {
+            return true;
+        }
+    }
+    false
 }
 
 /// The recorded object of an in-scope object binding, with its scope.

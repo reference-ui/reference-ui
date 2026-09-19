@@ -70,7 +70,7 @@ styletrace host drift impossible; everything else is a slice note):
 | 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent-protocol.md`, neo sync printer | — | agent-neo (printer), docs | LANDED (oracle clean: neo sync 16/16) |
 | 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | LANDED (oracle clean: canon 52/52, atomic 328/328, stations 213/213) |
 | 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | LANDED (oracle clean: atomic 328/328, stations 216/216) |
-| 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | pending, after 2 |
+| 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | LANDED (fix oracle clean: D1 tsconfig-policy knob + styletrace Skip, D2 cycle-Err never memoizes + SITE-78 inner arm, D3 ledger quotes §8 verbatim; neo: SYNC-15 fixed, 4 fence repins, 2 color-mix out-of-cone — notes S3-12/S3-13) |
 | 4 | Harvest (`extract/harvest/`, sinks, mint, info code, §2 floor) | `atomic/src/extract/harvest/` (`literals.rs`, `sinks.rs`, `mint.rs`, `classify.rs` rhythm-then-canon) | `ATM-HARVEST-01..04`; `NEO-CSS-14` | agent-rs + agent-neo | pending, after 1 + 3 |
 | 5 | Host surface (`StyleSurface.owned_props`, host-aware `is_style_attr_name`; census → 131) | styletrace `analysis/surface.rs`, atomic host check | styletrace unit; `ATM-SITE-85`; census log | agent-rs (styletrace + atomic) | pending, after 1 |
 | 6 | Tasty adoption (optional, never gates) | tasty `scanner/packages/*`, `ast/resolve` → ladder + walk | tasty goldens | agent-rs | optional, after 3 |
@@ -150,3 +150,101 @@ Station IDs are suggested; each slice owner confirms free slots against
   in atomic live in `resolver/walk.rs`, `constants/collect.rs`,
   `fold/*`, `scope/init.rs`, `scope/types.rs` — none in a Slice 2
   file; no new lints introduced.
+- S3-7 (DEFECT D1, blocking — B8 zero-drift violated): NEO-SYNC-15
+  red on this tree, caused by the styletrace ladder adoption. The
+  shared ladder runs the tsconfig arm before `node_modules`;
+  `packages/reference-neo/tsconfig.json` maps `@reference-ui/react`
+  to a repo-level authoring alias, so a world bare import resolves
+  to `packages/reference-neo/src/primitives/generate/react-surface.d.ts`
+  instead of the world's `node_modules` symlink
+  (`.../world/src/../node_modules/@reference-ui/react/react.d.mts`,
+  what tasty returned — tasty has no tsconfig arm). The tracer then
+  traces against the wrong surface and `local`/`merged` come back
+  empty. Probed live (ladder vs `tasty::resolve_external_import_path`
+  on the SYNC-15 world; scratch test created, run, and removed same
+  session). Fix shape (in-cone, small): give the ladder a tsconfig
+  policy knob and have styletrace skip (or scope) tsconfig — worlds
+  are self-contained via symlinked `node_modules` — then re-gauge B8
+  on SYNC-15 plus the lib tree. Atomic keeps tsconfig (SITE-54).
+- S3-8 (DEFECT D2 — fail-closed over-refusal, no station):
+  `atomic/src/extract/resolver/mod.rs:186` caches every `value_of`
+  outcome including `ValueCycle` Errs, so a later direct use of an
+  inner origin replays a stale cycle refusal after its file refined.
+  Reproduced live (`/tmp/forge-oracle-cycle-cache.mjs`: `z='red'`
+  direct use warns `ATM-W-DYNAMIC-IDENTIFIER`; only `padding:1px`
+  wants). Fix shape: do not cache cycle Errs (or cache only
+  completed refinements); add a station arm (cycle + later direct
+  use of the inner origin). SITE-78's cycle arm covers the cyclic
+  edge only.
+- S3-9 (DEFECT D3 — paperwork, fix at land):
+  `overmatch-ledger.md:394-412` condenses the §8 sentence and omits
+  the mission's cross-file clause verbatim ("a same-named write in
+  another file never blocks an import that resolves to an unmutated
+  export"; exact phrase absent from the ledger, verified by grep).
+  Slice 3 owns signing the clause; behavior is delivered (SITE-84
+  green, `lookup.rs:8` quotes it) but the ledger must quote it.
+- S3-10 (synthesis: verified green, 2026-09-19): crate 98/98
+  (`MemoryFs`-only, B1 clean — `std::fs` only in `fs.rs`);
+  `ProjectGraph` retired (zero hits); `BindingOrigin` shipped;
+  one parse for the value pipeline (`lib.rs:109-116`); imports never
+  consult the bag (`lookup.rs` Import arms + origin-only `mutation`);
+  SITE-31 `xwidth` fold preserved inside atomic vitest 266/266 (219
+  cases incl. 78/79/84, all `SPEC.md`-registered with
+  claim/symbols/siblings/search-terms READMEs); styletrace suites
+  29 + 28/28 with the tasty call removed and the sync-root remap
+  kept; NEO-SITE-29 PASS (paints red); S3-4 healed (old `bare.rs`
+  gone with the resolver collapse); all new files under caps (max
+  361 lines); `q` 0 errors, 21 warnings all pre-existing complexity
+  in semantically-untouched functions (sampled: lifetime-churn-only,
+  rustfmt-only, adjacent-hunk).
+- S3-11 (synthesis: carried edges, verified): identity keeps its lazy
+  on-demand parse (`identity.rs:45,148-164`, untouched subsystem) —
+  one-parse covers the value pipeline; `exported_names` is crate-side
+  only (crate + its tests) while styletrace keeps its own
+  `export_all_sources` walk (ladder adopted, walk not — row 6
+  enumeration stays where it was); type-only exports skipped
+  (`record/collect.rs:104`); member spreads resolve table-locally
+  only (`spreads.rs:291-292`, documented); main-file intermediate
+  import spreads keep today behavior (suite-green, no dedicated
+  probe). Neo reds triaged, all 7 reproduced: 4 Slice-1-fence
+  (STATIC-01/SITE-20/24/26 — world tokens `gold`/`plum` vs CSS
+  keywords; `resolve/` + neo src zero-diff, HQ decision) + 2
+  resolve-side color-mix (GLOBAL-12/PARITY-02, out of cone) + D1.
+- S3-12 (fix synthesis, LANDED 2026-09-19 — all verified from the
+  tree in-session): D1 closed — ladder ships `TsconfigPolicy`
+  (`module-graph/src/ladder/mod.rs:29-40`, default `Skip`);
+  styletrace resolves bare imports via `node_modules` only
+  (`styletrace/src/resolver/path.rs:19-28` explicit `Skip`,
+  `analysis/module_resolution.rs:46` default-`Skip`), atomic keeps
+  tsconfig (`atomic/.../resolver/mod.rs:161-163` `Follow`, SITE-54
+  arm); `ladder_tsconfig.rs:143-196` pins the SYNC-15 shape (alias
+  vs world-local `node_modules`) and the Skip default. D2 closed —
+  `value_of` never memoizes `ValueCycle` Errs
+  (`resolver/mod.rs:171-188`); Rust arm
+  `resolver/tests.rs:89-113` (`inner_origin_refused_mid_cycle_…`)
+  plus SITE-78's `zest`/`chartreuse` inner-use arm (`spec.ts:22-27`,
+  8 wants, 1 diagnostic) pin cycle + later direct use. D3 closed —
+  ledger `overmatch-ledger.md:400-412` quotes the §8 sentence
+  verbatim against `operation-forge.md:647-655` (line-compared).
+  In-session oracles: module_graph 100/100 (98 + 2 tsconfig-knob
+  pins), atomic 315/315 (314 + D2 arm), styletrace 29/29 unit;
+  `ProjectGraph` zero hits in code; B1 clean (`std::fs` only in
+  `fs.rs`); new-file max 364 lines (`resolver/mod.rs`). Browser
+  suites (atomic/styletrace vitest, neo incl. SYNC-15 re-gauge and
+  NEO-SITE-29) per the fix oracle ref, not re-run here.
+- S3-13 (neo disposition at land): SYNC-15 fixed by the Skip policy
+  (world self-contained via symlinked `node_modules`; authoring
+  alias in `reference-neo/tsconfig.json` no longer wins for
+  styletrace); 4 Slice-1-fence reds repinned in-tree as intended
+  §9/H1 CSS-over-token precedence (NEO-SITE-20/24/26,
+  NEO-STATIC-01 READMEs + specs, "Repin (Forge Slice 3)");
+  GLOBAL-12/PARITY-02 resolve-side color-mix stay red out of cone
+  (unchanged from S3-11); NEO-SITE-29 PASS carried (paints red).
+- S3-14 (captain triage, corrects S3-13): GLOBAL-12/PARITY-02 are NOT
+  out of cone — both worlds author `color-mix(...)` containing
+  `{colors.…}` token refs, and the Slice-1 §9 fence passes the whole
+  value through with no dictionary lookup, so the braces emit raw
+  (`{colors.ink}` in the sheet instead of `var(--colors-ink)`).
+  A value containing token refs is not a complete CSS value, so the
+  fence must not fire there. Slice-1 fixup follows Slice 3's commit;
+  Slice 3's own scope (R-B, 78/79/84, NEO-SITE-29, B8) is green.

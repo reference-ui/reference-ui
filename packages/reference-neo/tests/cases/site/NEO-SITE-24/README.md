@@ -16,4 +16,12 @@ Evidence: `[atm]` ATM-SITE-50 (whole-object / member args);
 `vendor/panda/crates/pandacss_extractor/tests/calls.rs:548`, `:1719`,
 `pandacss_stylesheet/tests/atomic.rs:1626`.
 
+Repin (Forge Slice 3): the `logical` node paints CSS `plum`
+(rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the
+signed §9 fence and H1, a bare value the alphabet accepts is complete
+CSS — never a token path, never warned — so CSS wins over the
+same-named token while the ocean and cherry siblings still resolve
+through `var()`. The token stays declared deliberately: this case now
+pins CSS-over-token precedence for the arg-level `&&` object.
+
 > Search terms: whole-object css args, member args, arg-level logical, tagged template site, refusal diagnostics, siblings kept, NEO-SITE-20, ATM-SITE-50

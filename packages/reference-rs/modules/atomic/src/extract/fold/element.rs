@@ -55,15 +55,15 @@ impl ElementRefusal {
     /// The diagnostic text for a refusal at one style prop.
     pub fn message(&self, prop: &str, base: &str, index: &str) -> String {
         match self {
-            Self::DynamicIndex(_) => format!(
-                "Dynamic non-literal element index '{index}' encountered for prop '{prop}'"
-            ),
-            Self::DynamicBase(_) => format!(
-                "Dynamic non-literal element base '{base}' encountered for prop '{prop}'"
-            ),
-            Self::Missing { key } => format!(
-                "Element access '{base}[{key}]' has no static entry for prop '{prop}'"
-            ),
+            Self::DynamicIndex(_) => {
+                format!("Dynamic non-literal element index '{index}' encountered for prop '{prop}'")
+            }
+            Self::DynamicBase(_) => {
+                format!("Dynamic non-literal element base '{base}' encountered for prop '{prop}'")
+            }
+            Self::Missing { key } => {
+                format!("Element access '{base}[{key}]' has no static entry for prop '{prop}'")
+            }
             Self::NonScalar { key } => format!(
                 "Element access '{base}[{key}]' is not a static style value for prop '{prop}'"
             ),

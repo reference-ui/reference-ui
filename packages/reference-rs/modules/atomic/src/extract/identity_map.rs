@@ -11,9 +11,9 @@
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ArrayPattern, BindingIdentifier, BindingPattern, Declaration, ExportAllDeclaration,
-    ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, ObjectPattern, Program, Statement,
-    StringLiteral, TSModuleDeclarationName, VariableDeclaration,
+    ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration,
+    ExportSpecifier, ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
+    ObjectPattern, Program, Statement, StringLiteral, TSModuleDeclarationName, VariableDeclaration,
 };
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -25,7 +25,10 @@ use super::bindings::imported_name;
 #[derive(Debug)]
 pub(crate) enum NamedTarget {
     /// `export { a as b } from './x'`: follow `a` in `./x`.
-    ReExport { specifier: Box<str>, imported: Box<str> },
+    ReExport {
+        specifier: Box<str>,
+        imported: Box<str>,
+    },
     /// `export { a as b }` / `export default a`: resolve local `a` through this file's imports.
     Local(Box<str>),
     /// A consumer declaration (`export const b`, `export * as b`, `export default <expr>`).

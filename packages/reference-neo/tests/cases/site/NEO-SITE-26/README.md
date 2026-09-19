@@ -15,4 +15,12 @@ Evidence: `[atm]` ATM-SITE-51 (template fold table);
 `vendor/panda/crates/pandacss_extractor/tests/scope.rs:868`, `:887`,
 `calls.rs:1214`, `:1420`, `:1972`.
 
+Repin (Forge Slice 3): the `fan` node paints CSS `plum`
+(rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the
+signed §9 fence and H1, a bare value the alphabet accepts is complete
+CSS — never a token path, never warned — so CSS wins over the
+same-named token while the cherry and ocean siblings still resolve
+through `var()`. The token stays declared deliberately: this case now
+pins CSS-over-token precedence for the fanned ternary arm.
+
 > Search terms: template literals, interpolation, fold table, fan-out, multi-leaf parts, refused parts, siblings kept, NEO-SITE-24, ATM-SITE-51

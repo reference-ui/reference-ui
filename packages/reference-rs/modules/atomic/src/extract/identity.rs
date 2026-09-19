@@ -235,9 +235,7 @@ fn candidates(joined: &str, dir_only: bool) -> Vec<String> {
 
 /// Drop a TS/JS source extension so explicit `./ui.js` probes `ui.ts` first.
 fn strip_source_extension(path: &str) -> &str {
-    const EXTENSIONS: [&str; 8] = [
-        ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts",
-    ];
+    const EXTENSIONS: [&str; 8] = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"];
     for ext in EXTENSIONS {
         if let Some(stem) = path.strip_suffix(ext) {
             return stem;

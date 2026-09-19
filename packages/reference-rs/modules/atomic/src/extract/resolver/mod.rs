@@ -1,331 +1,364 @@
-//! Binding-aware import resolution for style extraction (SPEC-V2-76).
+//! Binding-aware import values over the shared module graph (SPEC-V2-76).
 //! Answers each file's import bindings with the declared export in THAT
-//! file: the specifier ladder finds the target, the walk follows `export …
-//! from` hops with a cycle guard, and the origin's per-file values supply the
-//! export — scalar leaves, style objects with spreads resolved, const arrays,
-//! and lowered pure-helper descriptors (v2's `ExportEntry::PureFn`). Cycles,
-//! missing exports, unresolvable specifiers, and namespace or default imports
-//! answer `None`, and the scope chain falls back to the merge bag for values
-//! so unhandled shapes keep their legacy observable; helpers never fall back,
-//! so a bare call with no import refuses instead of folding another file's
-//! helper. The graph is read-only after collection except for the resolution
-//! cache it shares across files.
+//! file: the ladder finds the target, the walk follows hops and star barrels
+//! with a cycle guard, and `value_of` reads the origin's refined values —
+//! scalar leaves, style objects with import spreads resolved, const arrays,
+//! and lowered pure-helper descriptors. Refinement is demand-driven and
+//! memoized: an origin file collects against its own resolved imports only
+//! when something imports it, chasing nested bindings through the graph with
+//! an in-progress set so cycles refuse instead of recursing. Unresolvable
+//! nested spreads leave residue markers the use site diagnoses; refused,
+//! default, and namespace imports stay out of the map, and the scope chain
+//! falls back to nothing for them — imports never consult the name-wide bag.
 
-mod bare;
-mod cache;
-mod exports;
-mod overlay;
-mod package;
-mod patterns;
-mod specifier;
-mod tsconfig;
-mod walk;
+mod source;
+#[cfg(test)]
+mod tests;
+mod values;
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
-use oxc_allocator::Allocator;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
+use module_graph::{
+    BindingOrigin, BindingWalk, ExtensionPolicy, ModuleGraph, ModuleKey, ModuleRecord,
+    SpecifierLadder, TsconfigPolicy,
+};
+use oxc_ast::ast::Program;
+use oxc_parser::ParserReturn;
 
-use super::constants::{collect_local_constants, LocalConstants};
-use super::fold::fence::PureFn;
-use cache::ResolveCache;
-use exports::collect_file;
-use specifier::{candidates, normalize_key};
-use walk::Walk;
+use super::constants::{collect_local_constants, LocalConstants, MutatedBinding};
+use super::scope::{self, BindingInit, ImportRef};
+use source::{AtomicFs, AtomicLoader};
+use values::{bag_export, keep_outcome, valued};
 
-/// Load referenced-but-absent targets into the graph as values-only files.
-/// The site set stays the compiled sources, but the value graph follows
-/// imports wherever they lead: `node_modules` packages and scope-excluded
-/// targets parse into the graph so the walk reads their declared exports.
-/// Loaded files never become sites — extraction iterates sources only — and
-/// unreadable targets stay absent, leaving their importers on the fallback.
-pub fn load_externals(graph: &mut ProjectGraph) {
-    let mut visited = HashSet::new();
-    for _ in 0..8 {
-        let missing = missing_targets(graph, &visited);
-        if missing.is_empty() {
-            return;
-        }
-        let mut grew = false;
-        for candidate in missing {
-            visited.insert(candidate.clone());
-            if insert_target(graph, &candidate) {
-                grew = true;
-            }
-        }
-        if !grew {
-            return;
-        }
-    }
-}
+pub(crate) use values::{reason_text, RefusalCtx, ValueRefused};
+pub use values::{ResolvedExport, UnfoldableSpread};
 
-/// Referenced ladder candidates absent from the graph and not yet visited.
-fn missing_targets(graph: &ProjectGraph, visited: &HashSet<String>) -> Vec<String> {
-    let mut out = Vec::new();
-    for (file, values) in graph.files.iter() {
-        for edge in values.imports.all_edges() {
-            for candidate in candidates(file, &edge.specifier) {
-                if !graph.files.contains_key(&candidate) && !visited.contains(&candidate) {
-                    out.push(candidate);
-                }
-            }
-        }
-    }
-    out.sort();
-    out.dedup();
-    out
-}
+/// One origin query: the importing file plus the local binding name.
+type OriginQuery = (ModuleKey, String);
 
-/// Read, parse, and insert one target as values-only; false when unreadable.
-fn insert_target(graph: &mut ProjectGraph, candidate: &str) -> bool {
-    let Ok(content) = std::fs::read_to_string(candidate) else {
-        return false;
-    };
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(std::path::Path::new(candidate))
-        .unwrap_or_default()
-        .with_typescript(true);
-    let ret = Parser::new(&allocator, &content, source_type).parse();
-    if ret.panicked {
-        return false;
-    }
-    let bag = collect_local_constants(&ret.program, candidate, Some(&content));
-    graph.insert(candidate.to_string(), FileValues::collect(&ret.program, bag));
-    true
-}
+/// One origin outcome: the declaring origin, or the refusal as data.
+type OriginOutcome = Result<BindingOrigin, module_graph::Refused>;
 
-/// One file's values for the binding walk: its constant bag plus the export
-/// shapes and import edges one AST pass collected over it, with lowered
-/// pure-helper descriptors beside the bag (v2's `ExportEntry::PureFn`).
-#[derive(Debug)]
-pub struct FileValues {
+/// One origin value: the cloned export, or the refusal as data.
+type ValueOutcome = Result<ResolvedExport, ValueRefused>;
+
+/// One origin file's refined values: its graph-backed scope table, the
+/// residue markers keyed by root name, and its literal bag for table gaps.
+struct RefinedFile {
+    table: scope::ScopeTable,
+    markers: HashMap<String, Vec<UnfoldableSpread>>,
     bag: LocalConstants,
-    exports: exports::ExportTable,
-    imports: exports::ImportMap,
-    pure_fns: BTreeMap<String, PureFn>,
 }
 
-impl FileValues {
-    /// Collect one file's export shapes and import edges over its bag.
-    /// Descriptors and scope-resolved overlays arrive in the resolver's
-    /// second pass; graph tests without it read literal bags only.
-    pub fn collect(program: &oxc_ast::ast::Program<'_>, bag: LocalConstants) -> Self {
-        // tokens.ts:  bag { brand: 'red' }  +  shapes { brand: Local }
-        let (exports, imports) = collect_file(program);
+/// One origin file's resolved and refused imports, filled together.
+struct OriginMaps {
+    /// Resolved imports by local name, merged into the bake.
+    resolved: HashMap<String, ResolvedExport>,
+    /// Refused imports by local name, recorded as markers.
+    refused: HashMap<String, ValueRefused>,
+}
+
+/// Whether an origin file refined, is external, or is mid-refinement.
+enum RefineState {
+    /// The file refined; its table answers.
+    Ready,
+    /// No staged program (an external target); the literal bag answers.
+    External,
+    /// The file is mid-refinement up-stack; the chase cycles.
+    Cycling,
+}
+
+/// The upfront value graph: the shared module graph behind demand-driven
+/// origin values. Built once per compile over the single parse; each file's
+/// imports resolve against it before extraction walks the file.
+pub struct ValueGraph<'s> {
+    fs: Rc<AtomicFs<'s>>,
+    graph: ModuleGraph<AtomicLoader<'s>>,
+    programs: HashMap<ModuleKey, &'s Program<'s>>,
+    project: &'s LocalConstants,
+    origins: HashMap<OriginQuery, OriginOutcome>,
+    refined: HashMap<ModuleKey, RefinedFile>,
+    refining: HashSet<ModuleKey>,
+    valued: HashMap<BindingOrigin, ValueOutcome>,
+    valuing: Vec<BindingOrigin>,
+}
+
+impl<'s> ValueGraph<'s> {
+    /// Build the graph over one parse per source. Records and literal bags
+    /// stage eagerly; scope tables refine on demand when something imports
+    /// the file. Unparseable sources stay out, so imports targeting them
+    /// refuse like any unresolvable specifier.
+    pub fn new(
+        sources: &'s [(String, String)],
+        parsed: &'s [ParserReturn<'s>],
+        project: &'s LocalConstants,
+    ) -> Self {
+        debug_assert_eq!(sources.len(), parsed.len());
+        let mut staged = HashMap::new();
+        let mut programs = HashMap::new();
+        for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
+            if ret.panicked {
+                continue;
+            }
+            let key = ModuleKey::new(path);
+            let record = ModuleRecord::collect(&ret.program);
+            let bag = collect_local_constants(&ret.program, path, Some(content));
+            staged.insert(key.clone(), (record, bag));
+            programs.insert(key, &ret.program);
+        }
+        let fs = Rc::new(AtomicFs::new(sources));
+        let graph = ModuleGraph::new(AtomicLoader::new(Rc::clone(&fs), staged));
         Self {
-            bag,
-            exports,
-            imports,
-            pure_fns: BTreeMap::new(),
+            fs,
+            graph,
+            programs,
+            project,
+            origins: HashMap::new(),
+            refined: HashMap::new(),
+            refining: HashSet::new(),
+            valued: HashMap::new(),
+            valuing: Vec::new(),
         }
-    }
-
-    /// True when this file's values carry any export for a declared name:
-    /// a bag value or a lowered descriptor. The binding walk reads this,
-    /// never the merged bag, so two files declaring the same name never see
-    /// each other's values through it.
-    fn declares(&self, name: &str) -> bool {
-        // export const tone = (s) => ... — helpers declare without bag leaves
-        self.bag.declares(name) || self.pure_fns.contains_key(name)
-    }
-}
-
-/// Every compiled file's values plus the shared resolution cache. Built
-/// once per compile beside the merged bag; the externals loader extends it
-/// with values-only targets.
-#[derive(Debug, Default)]
-pub struct ProjectGraph {
-    pub(crate) files: HashMap<String, FileValues>,
-    cache: ResolveCache,
-}
-
-impl ProjectGraph {
-    /// An empty graph. Sources arrive via `insert` during collection.
-    pub fn new() -> Self {
-        Self {
-            files: HashMap::new(),
-            cache: ResolveCache::new(),
-        }
-    }
-
-    /// Record one source file's values, normalizing its path into the key.
-    /// Per-file bags arrive stripped of mutated inits, so a write in the
-    /// origin file already reads as undeclared at the walk.
-    pub fn insert(&mut self, path: String, values: FileValues) {
-        self.files.insert(normalize_key(&path), values);
-    }
-
-    /// A resolver for imports authored in one file of this graph.
-    pub fn for_file<'a>(&'a self, file: &'a str) -> FileResolver<'a> {
-        FileResolver { graph: self, file }
-    }
-}
-
-/// One imported name's resolved value, cloned from its declaring origin.
-/// Empty in every kind means unresolvable and never enters the map.
-#[derive(Debug, Clone, Default)]
-pub struct ResolvedExport {
-    scalars: Vec<crate::atom::AtomValue>,
-    object: Option<super::constants::ConstObject>,
-    array: Option<Vec<super::constants::ConstArrayElement>>,
-    pure_fn: Option<PureFn>,
-}
-
-impl ResolvedExport {
-    /// Every static leaf the origin declares for the imported name.
-    pub fn scalars(&self) -> &[crate::atom::AtomValue] {
-        &self.scalars
-    }
-
-    /// The style object the origin declares for the imported name, if any.
-    pub fn object(&self) -> Option<&super::constants::ConstObject> {
-        self.object.as_ref()
-    }
-
-    /// One member entry of the imported style object, if it carries one.
-    pub fn object_prop(&self, prop: &str) -> Option<&super::constants::ObjectProp> {
-        self.object.as_ref().and_then(|map| map.get(prop))
-    }
-
-    /// The const array the origin declares for the imported name, if any.
-    pub fn array(&self) -> Option<&[super::constants::ConstArrayElement]> {
-        self.array.as_deref()
-    }
-
-    /// The lowered helper the origin declares for the imported name, if any.
-    pub fn pure_fn(&self) -> Option<&PureFn> {
-        self.pure_fn.as_ref()
-    }
-}
-
-/// The upfront resolver: the project graph behind the per-file map seam.
-/// Built once per compile; each file's imports resolve against it before
-/// extraction walks the file.
-#[derive(Debug, Default)]
-pub struct Resolver {
-    graph: ProjectGraph,
-}
-
-impl Resolver {
-    /// Build the resolver over the compiled sources. Each source parses for
-    /// its bag and export shapes; a second pass overlays scope-resolved
-    /// top-level values and lowers descriptors per file. Unparseable files
-    /// stay out, so imports targeting them fall back like any unresolvable
-    /// specifier. Externals keep literal bags with no descriptors.
-    pub fn new(sources: &[(String, String)], _root_dir: Option<&str>) -> Self {
-        let mut graph = ProjectGraph::new();
-        for (path, content) in sources {
-            insert_source(&mut graph, path, content);
-        }
-        load_externals(&mut graph);
-        overlay::overlay_scope_values(&mut graph, sources);
-        Resolver { graph }
     }
 
     /// Resolve one file's import bindings to cloned origins, keyed by local
-    /// name. Namespace and default imports stay out for the rider slices;
-    /// so does anything unresolvable — the caller falls back to the bag.
+    /// name. Refused, namespace, and default imports stay out; mutated
+    /// origins enter value-empty with the origin write, so uses name it.
     pub fn resolve_file_imports(
-        &self,
+        &mut self,
         path: &str,
-        imports: &[super::scope::ImportRef],
+        imports: &[ImportRef],
     ) -> HashMap<String, ResolvedExport> {
-        let file = self.graph.for_file(path);
-        let mut out = HashMap::new();
-        for imp in imports {
-            let Some(resolved) = file.resolve_import(&imp.imported, &imp.specifier) else {
-                continue;
-            };
-            if let Some(export) = export_value(&self.graph, &resolved) {
-                out.insert(imp.local.to_string(), export);
+        let from = ModuleKey::new(path);
+        imports
+            .iter()
+            .filter_map(|imp| self.resolve_one_import(&from, imp))
+            .collect()
+    }
+
+    /// Resolve one import binding: its origin value when it folds, a
+    /// mutation entry when the origin was written, else nothing.
+    fn resolve_one_import(
+        &mut self,
+        from: &ModuleKey,
+        imp: &ImportRef,
+    ) -> Option<(String, ResolvedExport)> {
+        let local = imp.local.as_ref();
+        let resolved = match self.resolve_binding(from, local) {
+            Ok(origin) => self.value_of(&origin),
+            Err(miss) => Err(ValueRefused::Walk(miss)),
+        };
+        keep_outcome(local, resolved)
+    }
+
+    /// Resolve one binding used in `from` to its declaring origin, memoized.
+    fn resolve_binding(&mut self, from: &ModuleKey, local: &str) -> OriginOutcome {
+        let query = (from.clone(), local.to_string());
+        if let Some(hit) = self.origins.get(&query) {
+            return hit.clone();
+        }
+        // Atomic follows tsconfig (SITE-54 alias arm); worlds skip.
+        let ladder = SpecifierLadder::new(self.fs.as_ref(), ExtensionPolicy::Source)
+            .with_tsconfig(TsconfigPolicy::Follow);
+        let mut walk = BindingWalk::new(&mut self.graph, &ladder);
+        let outcome = walk.resolve_binding(from, local);
+        drop(walk);
+        self.origins.insert(query, outcome.clone());
+        outcome
+    }
+
+    /// Read one origin's value, chasing nested import bindings first.
+    /// Completed refinements memoize; cycle refusals are chase-order, so an
+    /// inner origin refused mid-chase re-reads its refined file on later use.
+    fn value_of(&mut self, origin: &BindingOrigin) -> ValueOutcome {
+        if let Some(hit) = self.valued.get(origin) {
+            return hit.clone();
+        }
+        if self.valuing.contains(origin) {
+            return Err(self.cycle_refusal(origin));
+        }
+        self.valuing.push(origin.clone());
+        let outcome = self.value_uncached(origin);
+        self.valuing.pop();
+        if !matches!(outcome, Err(ValueRefused::ValueCycle { .. })) {
+            self.valued.insert(origin.clone(), outcome.clone());
+        }
+        outcome
+    }
+
+    /// Read one origin's value: mutated origins refuse with the write, and
+    /// refined tables answer sources while literal bags answer externals.
+    fn value_uncached(&mut self, origin: &BindingOrigin) -> ValueOutcome {
+        if let Some(write) = self.origin_mutation(&origin.file, &origin.name) {
+            return Err(ValueRefused::Mutated {
+                name: origin.name.clone(),
+                binding: write,
+            });
+        }
+        match self.refined_file(&origin.file) {
+            RefineState::Ready => Ok(self.table_value(origin)),
+            RefineState::External => Ok(self.bag_value(&origin.file, &origin.name)),
+            RefineState::Cycling => Err(self.cycle_refusal(origin)),
+        }
+    }
+
+    /// The cycle refusal for `origin` over the current chase stack.
+    fn cycle_refusal(&self, origin: &BindingOrigin) -> ValueRefused {
+        let mut stack = self.valuing.clone();
+        stack.push(origin.clone());
+        ValueRefused::ValueCycle { stack }
+    }
+
+    /// The origin file's write to a binding, for precise poison.
+    fn origin_mutation(&self, file: &ModuleKey, name: &str) -> Option<MutatedBinding> {
+        self.graph.loader().bag(file)?.mutation(name).cloned()
+    }
+
+    /// Refine one origin file on first use: sources collect against their
+    /// own resolved imports, externals keep literal bags, and a file
+    /// mid-refinement up-stack reports the chase as cycling.
+    fn refined_file(&mut self, file: &ModuleKey) -> RefineState {
+        if self.refined.contains_key(file) {
+            return RefineState::Ready;
+        }
+        if self.refining.contains(file) {
+            return RefineState::Cycling;
+        }
+        let (Some(program), Some(content)) =
+            (self.programs.get(file).copied(), self.fs.content(file))
+        else {
+            return RefineState::External;
+        };
+        self.refining.insert(file.clone());
+        let refined = self.collect_origin(file, program, content);
+        self.refining.remove(file);
+        self.refined.insert(file.clone(), refined);
+        RefineState::Ready
+    }
+
+    /// Collect one origin file: probe its imports, resolve each through the
+    /// graph (recursively valuing their origins first), then bake the table
+    /// against the outcomes. Import-free files keep the probe table.
+    fn collect_origin(
+        &mut self,
+        file: &ModuleKey,
+        program: &Program<'_>,
+        content: &str,
+    ) -> RefinedFile {
+        let probe = scope::collect(program, self.project);
+        let refs = probe.import_refs();
+        if refs.is_empty() {
+            return self.finish_origin(file, probe, Vec::new());
+        }
+        let (resolved, refused) = self.resolve_origin_imports(file, &refs);
+        let fill = scope::OriginFill {
+            file: file.as_str(),
+            content,
+            resolved: &resolved,
+            refused: &refused,
+        };
+        let (table, residues) = scope::collect_with(program, self.project, &fill);
+        self.finish_origin(file, table, residues)
+    }
+
+    /// Resolve every import of an origin file, valuing each origin first.
+    fn resolve_origin_imports(
+        &mut self,
+        file: &ModuleKey,
+        refs: &[ImportRef],
+    ) -> (
+        HashMap<String, ResolvedExport>,
+        HashMap<String, ValueRefused>,
+    ) {
+        let mut maps = OriginMaps {
+            resolved: HashMap::new(),
+            refused: HashMap::new(),
+        };
+        for imp in refs {
+            self.resolve_origin_ref(file, imp, &mut maps);
+        }
+        (maps.resolved, maps.refused)
+    }
+
+    /// Resolve one origin-file import into its outcome map.
+    fn resolve_origin_ref(&mut self, file: &ModuleKey, imp: &ImportRef, maps: &mut OriginMaps) {
+        let local = imp.local.to_string();
+        let outcome = match self.resolve_binding(file, &local) {
+            Ok(target) => self.value_of(&target),
+            Err(miss) => Err(ValueRefused::Walk(miss)),
+        };
+        match outcome {
+            Ok(export) => {
+                maps.resolved.insert(local, export);
+            }
+            Err(no) => {
+                maps.refused.insert(local, no);
             }
         }
-        out
     }
-}
 
-/// Parse one source into the graph, skipping files that do not parse.
-fn insert_source(graph: &mut ProjectGraph, path: &str, content: &str) {
-    use oxc_allocator::Allocator;
-    use oxc_parser::Parser;
-    use oxc_span::SourceType;
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(std::path::Path::new(path))
-        .unwrap_or_default()
-        .with_typescript(true);
-    let parser = Parser::new(&allocator, content, source_type);
-    let ret = parser.parse();
-    if ret.panicked {
-        return;
-    }
-    let bag = super::constants::collect_local_constants(&ret.program, path, Some(content));
-    graph.insert(path.to_string(), FileValues::collect(&ret.program, bag));
-}
-
-/// Clone an origin's value kinds, or None when it holds nothing.
-/// Descriptors ride beside the bag values, never inside them.
-fn export_value(graph: &ProjectGraph, resolved: &Resolved) -> Option<ResolvedExport> {
-    let values = graph.files.get(&resolved.file)?;
-    let export = ResolvedExport {
-        scalars: values.bag.scalar_leaves(&resolved.local).to_vec(),
-        object: values.bag.get_object(&resolved.local).cloned(),
-        array: values
-            .bag
-            .get_array(&resolved.local)
-            .map(<[super::constants::ConstArrayElement]>::to_vec),
-        pure_fn: values.pure_fns.get(&resolved.local).cloned(),
-    };
-    if export.scalars.is_empty()
-        && export.object.is_none()
-        && export.array.is_none()
-        && export.pure_fn.is_none()
-    {
-        return None;
-    }
-    Some(export)
-}
-
-/// A resolved import: the origin file and declared name holding the value,
-/// plus every declared name along the hops for mutation poison.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Resolved {
-    /// The origin file holding the declaration.
-    pub file: String,
-    /// The declared name in the origin file.
-    pub local: String,
-    /// Every declared name along the hops, consumer-near first.
-    pub trail: Vec<String>,
-}
-
-/// Imports authored in one file, resolved against the project graph.
-#[derive(Debug, Clone, Copy)]
-pub struct FileResolver<'a> {
-    graph: &'a ProjectGraph,
-    file: &'a str,
-}
-
-impl<'a> FileResolver<'a> {
-    /// Resolve an import to its declaring origin: probe the specifier from
-    /// the importing file, then walk the target's export. Namespace and
-    /// default imports, cycles, missing exports, and unresolvable specifiers
-    /// yield no origin — never stale, never a panic. Poison is precise by
-    /// construction: a write in the origin file strips its init, so the walk
-    /// reads it as undeclared, while a same-named write in another file never
-    /// blocks this origin.
-    pub fn resolve_import(&self, imported: &str, specifier: &str) -> Option<Resolved> {
-        // import { brand as primary } from './tokens'  →  tokens.ts :: brand
-        if imported == "*" || imported == "default" {
-            return None;
+    /// Store one origin file's table with its root markers and literal bag.
+    fn finish_origin(
+        &self,
+        file: &ModuleKey,
+        table: scope::ScopeTable,
+        residues: Vec<scope::SpreadResidue>,
+    ) -> RefinedFile {
+        let mut markers: HashMap<String, Vec<UnfoldableSpread>> = HashMap::new();
+        for residue in residues {
+            if residue.scope == scope::ROOT_SCOPE {
+                markers
+                    .entry(residue.name)
+                    .or_default()
+                    .push(residue.marker);
+            }
         }
-        let from = normalize_key(self.file);
-        let mut walk = Walk::new(&self.graph.files, &self.graph.cache);
-        let target = walk.probe_target(&from, specifier)?;
-        walk.file_export(&target, imported)
+        let bag = self.graph.loader().bag(file).cloned().unwrap_or_default();
+        RefinedFile {
+            table,
+            markers,
+            bag,
+        }
     }
 
-    /// One file's constant bag, for reading a resolved origin's value.
-    pub fn bag_for(&self, file: &str) -> Option<&'a LocalConstants> {
-        self.graph.files.get(file).map(|values| &values.bag)
+    /// Read one refined origin: the table's root init, its descriptor, or
+    /// its own literal bag, with the root's markers riding along.
+    fn table_value(&self, origin: &BindingOrigin) -> ResolvedExport {
+        let Some(refined) = self.refined.get(&origin.file) else {
+            return self.bag_value(&origin.file, &origin.name);
+        };
+        let mut export = Self::init_export(refined, &origin.name);
+        if let Some(markers) = refined.markers.get(&origin.name) {
+            export.set_unfoldable(markers.clone());
+        }
+        export
+    }
+
+    /// One refined root init as an export, falling back to the descriptor
+    /// and then the file's own literal bag.
+    fn init_export(refined: &RefinedFile, name: &str) -> ResolvedExport {
+        match refined.table.root_init(name) {
+            Some(BindingInit::Scalars(leaves)) => valued(leaves, None, None, None),
+            Some(BindingInit::Object(map)) => valued(Vec::new(), Some(map), None, None),
+            Some(BindingInit::Array(elements)) => valued(Vec::new(), None, Some(elements), None),
+            Some(BindingInit::PureFn(_)) | None => Self::descriptor_export(refined, name),
+        }
+    }
+
+    /// One refined root descriptor as an export, else the literal bag's own.
+    fn descriptor_export(refined: &RefinedFile, name: &str) -> ResolvedExport {
+        match refined.table.root_pure_fn(name) {
+            Some(func) => valued(Vec::new(), None, None, Some(func)),
+            None => bag_export(&refined.bag, name),
+        }
+    }
+
+    /// Read one external origin's literal value, without descriptors.
+    fn bag_value(&self, file: &ModuleKey, name: &str) -> ResolvedExport {
+        match self.graph.loader().bag(file) {
+            Some(bag) => bag_export(bag, name),
+            None => ResolvedExport::default(),
+        }
     }
 }

@@ -5,19 +5,17 @@
 
 use std::path::{Path, PathBuf};
 
+use module_graph::{DiskFs, ExtensionPolicy, ModuleKey, SpecifierLadder};
+
 use crate::resolver::{
-    is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
-    resolve_local_module_path, StyleTraceError,
+    is_ignorable_module_specifier, prefer_sync_root_source_module, StyleTraceError,
 };
-use tasty::resolve_external_import_path;
 
 pub(super) fn resolve_relative_module(
     current_module: &Path,
     source: &str,
 ) -> Result<Option<PathBuf>, StyleTraceError> {
-    let base = current_module.parent().unwrap_or(current_module);
-    let candidate = normalize_path(&base.join(source));
-    Ok(resolve_local_module_path(&candidate))
+    Ok(resolve_specifier(current_module, source))
 }
 
 pub(super) fn resolve_imported_module(
@@ -33,10 +31,22 @@ pub(super) fn resolve_imported_module(
         return Ok(None);
     }
 
-    let resolution_root = current_module.parent().unwrap_or(current_module);
-    let Some(resolved) = resolve_external_import_path(resolution_root, source) else {
+    let Some(resolved) = resolve_specifier(current_module, source) else {
         return Ok(None);
     };
 
     Ok(Some(prefer_sync_root_source_module(&resolved, sync_root)))
+}
+
+/// Resolve `source` authored in `current_module` through the shared ladder
+/// with source-first probing. This mirrors `resolver::path::resolve_specifier`;
+/// it lives here because `analysis` cannot see that private module directly.
+fn resolve_specifier(current_module: &Path, source: &str) -> Option<PathBuf> {
+    let fs = DiskFs;
+    let ladder = SpecifierLadder::new(&fs, ExtensionPolicy::Source);
+    let from = ModuleKey::new(&current_module.to_string_lossy());
+    ladder
+        .resolve(&from, source)
+        .ok()
+        .map(|key| PathBuf::from(key.as_str()))
 }

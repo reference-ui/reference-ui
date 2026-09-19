@@ -26,6 +26,8 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 
 use super::binding::{Binding, BindingInit, BindingKind};
+use super::fill::{OriginFill, SpreadResidue};
+use super::lookup::ImportLookup;
 use super::table::{ScopeId, ScopeTable, ROOT_SCOPE};
 use super::value::{self, Dep};
 use crate::extract::constants::LocalConstants;
@@ -36,6 +38,27 @@ use crate::extract::constants::LocalConstants;
 /// written anywhere in the project strip before return, matching the
 /// name-wide mutation poison the walkers already apply (SPEC-V2-35).
 pub fn collect(program: &Program<'_>, project: &LocalConstants) -> ScopeTable {
+    collect_inner(program, project, None).0
+}
+
+/// Collect one origin file's table against its resolved imports, harvesting
+/// the nested-spread residue markers refusals leave behind. Helpers and call
+/// inits bake captures through the resolved map, never the name-wide bag.
+pub fn collect_with(
+    program: &Program<'_>,
+    project: &LocalConstants,
+    fill: &OriginFill<'_>,
+) -> (ScopeTable, Vec<SpreadResidue>) {
+    collect_inner(program, project, Some(*fill))
+}
+
+/// Collect with an optional origin fill: same-file shapes bake identically
+/// either way, and only the fill answers imports.
+fn collect_inner(
+    program: &Program<'_>,
+    project: &LocalConstants,
+    fill: Option<OriginFill<'_>>,
+) -> (ScopeTable, Vec<SpreadResidue>) {
     // function Card({ color }) { css({ color }) }  — `color` binds as a param
     let mut collector = ScopeCollector {
         table: ScopeTable::new(),
@@ -44,6 +67,8 @@ pub fn collect(program: &Program<'_>, project: &LocalConstants) -> ScopeTable {
         deps: Vec::new(),
         factory: Vec::new(),
         token_waits: Vec::new(),
+        fill,
+        residues: Vec::new(),
     };
     collector.visit_program(program);
     let ScopeCollector {
@@ -51,13 +76,22 @@ pub fn collect(program: &Program<'_>, project: &LocalConstants) -> ScopeTable {
         deps,
         factory,
         token_waits,
+        fill,
+        residues,
         ..
     } = collector;
     clear::clear_unbound_calls(&mut table, &deps, &factory, &token_waits);
     value::strip_stale(&mut table, &deps, project);
-    crate::extract::fold::fence_attach::attach_pure_fns(program, &mut table, project);
-    super::call_init::fold_call_inits(program, &mut table, project);
-    table
+    let lookup = match fill {
+        Some(baked) => ImportLookup::Binding {
+            values: baked.resolved,
+            fallback: project,
+        },
+        None => ImportLookup::ProjectBag(project),
+    };
+    crate::extract::fold::fence_attach::attach_pure_fns(program, &mut table, lookup);
+    super::call_init::fold_call_inits(program, &mut table, lookup);
+    (table, residues)
 }
 
 /// A factory-call init awaiting import verification: the callee must resolve
@@ -78,16 +112,18 @@ pub(crate) struct TokenWait {
 }
 
 /// Visitor recording bindings in the innermost scope at each declaration.
-pub(crate) struct ScopeCollector {
+pub(crate) struct ScopeCollector<'v> {
     pub(crate) table: ScopeTable,
     pub(crate) stack: Vec<ScopeId>,
     pub(crate) decl_kind: VariableDeclarationKind,
     pub(crate) deps: Vec<Dep>,
     pub(crate) factory: Vec<FactoryWait>,
     pub(crate) token_waits: Vec<TokenWait>,
+    pub(crate) fill: Option<OriginFill<'v>>,
+    pub(crate) residues: Vec<SpreadResidue>,
 }
 
-impl<'a> Visit<'a> for ScopeCollector {
+impl<'a, 'v> Visit<'a> for ScopeCollector<'v> {
     fn enter_scope(
         &mut self,
         _flags: oxc_syntax::scope::ScopeFlags,
@@ -180,7 +216,7 @@ impl<'a> Visit<'a> for ScopeCollector {
     }
 }
 
-impl ScopeCollector {
+impl ScopeCollector<'_> {
     /// The innermost scope at the current visit position.
     pub(crate) fn current(&self) -> ScopeId {
         self.stack.last().copied().unwrap_or(ROOT_SCOPE)

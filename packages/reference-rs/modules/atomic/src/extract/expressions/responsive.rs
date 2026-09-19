@@ -79,7 +79,6 @@ fn refuse_array_spread(ctx: &mut ExpressionWalk<'_>, arr: &ArrayExpression<'_>) 
     );
 }
 
-
 /// Walk one flattened slot: elements walk, spliced leaves push, holes skip.
 fn walk_slot(
     ctx: &mut ExpressionWalk<'_>,

@@ -8,8 +8,6 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use tasty::resolve_external_import_path;
-
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{
     BoundTypeExpr, ParsedModule, TypeAliasDecl, TypeDeclaration, TypeExpr,
@@ -17,7 +15,7 @@ use crate::resolver::model::{
 use crate::resolver::parser::parse_module;
 use crate::resolver::path::{
     is_ignorable_module_specifier, normalize_path, prefer_sync_root_source_module,
-    resolve_local_module_path,
+    resolve_specifier,
 };
 
 pub struct TraceSession {
@@ -186,27 +184,21 @@ impl<'a> TraceContext<'a> {
         specifier: &str,
     ) -> Result<Option<PathBuf>, StyleTraceError> {
         if specifier.starts_with('.') {
-            let base = current_module.parent().unwrap_or(current_module);
-            let candidate = normalize_path(&base.join(specifier));
-            if let Some(resolved) = resolve_local_module_path(&candidate) {
-                return Ok(Some(resolved));
-            }
+            return Ok(resolve_specifier(current_module, specifier));
         }
 
         if is_ignorable_module_specifier(specifier) {
             return Ok(None);
         }
 
-        let resolution_root = current_module.parent().unwrap_or(current_module);
-        if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(Some(prefer_sync_root_source_module(
-                &resolved,
-                &self.session.sync_root,
-            )));
-        }
-
-        // An unresolvable module contributes no names; the trace continues without it.
-        Ok(None)
+        let Some(resolved) = resolve_specifier(current_module, specifier) else {
+            // An unresolvable module contributes no names; the trace continues without it.
+            return Ok(None);
+        };
+        Ok(Some(prefer_sync_root_source_module(
+            &resolved,
+            &self.session.sync_root,
+        )))
     }
 
     fn resolve_reference_support_module(
@@ -219,15 +211,13 @@ impl<'a> TraceContext<'a> {
             return Ok(Some(generated_path.to_path_buf()));
         }
 
-        let resolution_root = current_module.parent().unwrap_or(current_module);
-        if let Some(resolved) = resolve_external_import_path(resolution_root, specifier) {
-            return Ok(Some(prefer_sync_root_source_module(
-                &resolved,
-                &self.session.sync_root,
-            )));
-        }
-
-        Ok(None)
+        let Some(resolved) = resolve_specifier(current_module, specifier) else {
+            return Ok(None);
+        };
+        Ok(Some(prefer_sync_root_source_module(
+            &resolved,
+            &self.session.sync_root,
+        )))
     }
 
     pub fn resolve_declaration(

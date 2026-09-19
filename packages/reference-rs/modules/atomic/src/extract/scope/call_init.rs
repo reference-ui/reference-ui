@@ -19,23 +19,24 @@ use super::lookup::{ImportLookup, ScopeChain, Scoped};
 use super::table::{ScopeId, ScopeTable, ROOT_SCOPE};
 use super::value::peel;
 use crate::atom::AtomValue;
-use crate::extract::constants::{ConstArrayElement, ConstObject, LocalConstants, ObjectProp};
+use crate::extract::constants::{ConstArrayElement, ConstObject, ObjectProp};
 use crate::extract::fold::{fold_pure_call, FenceValue};
 
 /// Fold every pure-call init into its binding now that descriptors attached.
 ///
 /// Same-file helpers resolve through the finished table; imports answer
-/// nothing here (the graph lands in Slice 3), so imported-helper inits stay
-/// valueless until then. Inits that already carry a value — factory and
-/// `token()` calls — never reach the fill, which only plants on empty slots.
+/// through `imports` — the project bag for the extracting file, the resolved
+/// map for an origin file's graph-backed bake. Inits that already carry a
+/// value — factory and `token()` calls — never reach the fill, which only
+/// plants on empty slots.
 pub(crate) fn fold_call_inits(
     program: &Program<'_>,
     table: &mut ScopeTable,
-    project: &LocalConstants,
+    imports: ImportLookup<'_>,
 ) {
     let mut pass = CallInitPass {
         table,
-        project,
+        imports,
         stack: Vec::new(),
         next: 0,
     };
@@ -43,9 +44,9 @@ pub(crate) fn fold_call_inits(
 }
 
 /// Second-pass visitor folding call inits with the finished table in hand.
-struct CallInitPass<'a, 'p> {
+struct CallInitPass<'a, 'l> {
     table: &'a mut ScopeTable,
-    project: &'p LocalConstants,
+    imports: ImportLookup<'l>,
     stack: Vec<ScopeId>,
     next: ScopeId,
 }
@@ -70,7 +71,7 @@ impl CallInitPass<'_, '_> {
         let name = ident.name.as_str();
         let scope = self.current();
         let folded = {
-            let chain = ScopeChain::new(&*self.table, ImportLookup::ProjectBag(self.project));
+            let chain = ScopeChain::new(&*self.table, self.imports);
             fold_call_init(call, chain.at(scope))
         };
         let Some(init) = folded else {

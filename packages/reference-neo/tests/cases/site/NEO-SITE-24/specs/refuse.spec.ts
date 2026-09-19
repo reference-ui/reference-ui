@@ -50,7 +50,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const painted: Array<{ id: string; rgb: string }> = [
     { id: 'sibling', rgb: 'rgb(37, 99, 235)' },
     { id: 'spread', rgb: 'rgb(220, 38, 38)' },
-    { id: 'logical', rgb: 'rgb(168, 85, 247)' },
+    // CSS `plum`, not the world token: a complete CSS value is never a token
+    // path (Forge §9 fence, H1 — CSS wins over tokens). See the README.
+    { id: 'logical', rgb: 'rgb(221, 160, 221)' },
   ];
   for (const { id, rgb } of painted) {
     const node = page.locator(`#${id}`);

@@ -26,7 +26,11 @@ pub(crate) fn eval_binary_expr(
 }
 
 /// Arithmetic and comparison over two single leaves, verbatim v2.
-pub(crate) fn eval_binary(op: FenceBinary, left: &AtomValue, right: &AtomValue) -> Option<FenceValue> {
+pub(crate) fn eval_binary(
+    op: FenceBinary,
+    left: &AtomValue,
+    right: &AtomValue,
+) -> Option<FenceValue> {
     if let Some(number) = eval_arithmetic(op, left, right) {
         return Some(number);
     }
@@ -144,9 +148,7 @@ pub(crate) fn strict_eq(left: &AtomValue, right: &AtomValue) -> bool {
         (AtomValue::Null, AtomValue::Null) => true,
         (AtomValue::String(first), AtomValue::String(second)) => first == second,
         (AtomValue::Bool(first), AtomValue::Bool(second)) => first == second,
-        (AtomValue::Number(first), AtomValue::Number(second)) => {
-            numbers_equal(first, second)
-        }
+        (AtomValue::Number(first), AtomValue::Number(second)) => numbers_equal(first, second),
         _ => false,
     }
 }
@@ -201,7 +203,11 @@ fn loose_eq_mixed(left: &AtomValue, right: &AtomValue) -> Option<bool> {
 /// Compare a string against a number by parsing both sides.
 fn loose_eq_string_number(text: &str, number: &str) -> Option<bool> {
     let parsed: f64 = number.parse().ok()?;
-    Some(text.trim().parse::<f64>().is_ok_and(|value| value == parsed))
+    Some(
+        text.trim()
+            .parse::<f64>()
+            .is_ok_and(|value| value == parsed),
+    )
 }
 
 /// JS `<`: lexicographic for two strings, otherwise numeric with `ToNumber`.
@@ -211,4 +217,3 @@ pub(crate) fn less_than(left: &AtomValue, right: &AtomValue) -> Option<bool> {
     }
     Some(coerce_to_number(left)? < coerce_to_number(right)?)
 }
-

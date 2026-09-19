@@ -20,7 +20,7 @@ use super::ScopeCollector;
 /// from going stale. An unbound callee records optimistically for a forward
 /// import and verifies after the visit; anything else records nothing.
 pub(crate) fn token_init(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     init: &oxc_ast::ast::Expression<'_>,
     name: &str,
 ) -> Option<(Option<BindingInit>, Vec<Dep>)> {
@@ -103,7 +103,7 @@ enum TokenCalleeStatus {
 /// Verify a `token()` init callee: bound records, forward records with a
 /// post-visit wait, and refused (shadowed or foreign) answers false.
 fn token_init_verify(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     scope: ScopeId,
     name: &str,
     local: &str,

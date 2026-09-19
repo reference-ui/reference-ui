@@ -55,10 +55,10 @@ pub use fence::{FenceValue, PureFn};
 pub use fence_attach::attach_pure_fns;
 pub use key::{canonical_numeric_key, fold_property_key};
 pub use logical::{fold_logical, LogicalFold};
-pub use residue::{expr_entry_residue, fn_decl_residue, key_entry_residue};
 pub use member::{
     member_path_leaves, member_path_object, member_path_residue, member_path_text, member_root_name,
 };
+pub use residue::{expr_entry_residue, fn_decl_residue, key_entry_residue};
 pub use template::{fold_template, TemplateFold, TemplateRefusal};
 pub use token::{fold_token_call, TokenFold, TokenReason, TokenRefusal};
 pub use token_shape::{

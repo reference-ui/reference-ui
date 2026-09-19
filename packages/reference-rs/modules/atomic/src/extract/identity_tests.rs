@@ -29,10 +29,7 @@ fn direct_reference_import_traces_without_sources() {
 
 #[test]
 fn wrapper_re_export_traces_to_reference() {
-    let graph = graph(&[(
-        "src/ui.ts",
-        "export { css } from '@reference-ui/react'\n",
-    )]);
+    let graph = graph(&[("src/ui.ts", "export { css } from '@reference-ui/react'\n")]);
     assert_eq!(
         graph.trace_reference_export("src/app.tsx", "./ui", "css"),
         Some("css".to_string())
@@ -124,10 +121,7 @@ fn missing_export_and_missing_file_answer_none() {
 
 #[test]
 fn bare_specifiers_wait_for_the_resolver() {
-    let graph = graph(&[(
-        "src/ui.ts",
-        "export { css } from '@reference-ui/react'\n",
-    )]);
+    let graph = graph(&[("src/ui.ts", "export { css } from '@reference-ui/react'\n")]);
     assert_eq!(
         graph.trace_reference_export("src/app.tsx", "@/ui", "css"),
         None
@@ -218,10 +212,7 @@ fn re_exported_namespace_object_is_opaque() {
 
 #[test]
 fn js_suffixed_specifier_finds_ts_source() {
-    let graph = graph(&[(
-        "src/ui.ts",
-        "export { css } from '@reference-ui/react'\n",
-    )]);
+    let graph = graph(&[("src/ui.ts", "export { css } from '@reference-ui/react'\n")]);
     assert_eq!(
         graph.trace_reference_export("src/app.ts", "./ui.js", "css"),
         Some("css".to_string())

@@ -44,7 +44,7 @@ struct ListedSlot<'a> {
 
 /// Bind an array pattern's names against its init.
 pub(crate) fn bind_array_pattern(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     pattern: &BindingPattern<'_>,
     arr: &ArrayPattern<'_>,
     init: Option<&Expression<'_>>,
@@ -65,7 +65,7 @@ pub(crate) fn bind_array_pattern(
 
 /// Bind one listed slot: the element, its default, or a shadow.
 fn bind_listed_slot(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     source: &ArraySource,
     slot: ListedSlot<'_>,
     out: &mut PatternBind,
@@ -118,7 +118,7 @@ struct DefaultedSlot<'a> {
 
 /// Bind a defaulted slot: leaves win, holes fall to the default, dynamic shadows.
 fn bind_defaulted_slot(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     source: &ArraySource,
     slot: DefaultedSlot<'_>,
     out: &mut PatternBind,
@@ -169,7 +169,7 @@ fn bind_defaulted_slot(
 
 /// Bind an array rest element to the trailing slots as a const array.
 fn bind_array_rest(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     arr: &ArrayPattern<'_>,
     source: &ArraySource,
     out: &mut PatternBind,
@@ -235,7 +235,7 @@ fn bind_array_rest(
 
 /// Resolve an array pattern's source: an inline array or a bound array.
 fn resolve_array_source(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     init: Option<&Expression<'_>>,
 ) -> Option<ArraySource> {
     let init = value::peel(init?);
@@ -276,7 +276,7 @@ struct InlineSlots {
 
 /// Positional slots of an inline array; a blind spread ends resolution.
 fn inline_array_source(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     arr: &oxc_ast::ast::ArrayExpression<'_>,
 ) -> ArraySource {
     let mut slots = InlineSlots::default();
@@ -296,7 +296,7 @@ fn inline_array_source(
 
 /// Push one inline slot; an unresolvable spread blinds the tail.
 fn inline_array_element(
-    ctx: &PatternCtx<'_>,
+    ctx: &PatternCtx<'_, '_>,
     elem: &oxc_ast::ast::ArrayExpressionElement<'_>,
     slots: &mut InlineSlots,
 ) {
@@ -329,7 +329,11 @@ fn inline_array_element(
 }
 
 /// Splice a recorded array's leaves, or false when the spread is unresolvable.
-fn splice_spread(ctx: &PatternCtx<'_>, argument: &Expression<'_>, slots: &mut InlineSlots) -> bool {
+fn splice_spread(
+    ctx: &PatternCtx<'_, '_>,
+    argument: &Expression<'_>,
+    slots: &mut InlineSlots,
+) -> bool {
     let Expression::Identifier(id) = value::peel(argument) else {
         return false;
     };

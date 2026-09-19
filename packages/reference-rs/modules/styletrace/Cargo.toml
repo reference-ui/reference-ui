@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 shared.workspace = true
+module_graph.workspace = true
 tasty.workspace = true
 oxc_parser.workspace = true
 oxc_allocator.workspace = true

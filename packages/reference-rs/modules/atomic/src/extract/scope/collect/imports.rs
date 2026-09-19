@@ -10,7 +10,7 @@ use super::super::binding::{Binding, BindingKind, ImportRef};
 use super::ScopeCollector;
 
 /// Record the value bindings of an import declaration, skipping type-only.
-pub(crate) fn record_import(collector: &mut ScopeCollector, decl: &ImportDeclaration<'_>) {
+pub(crate) fn record_import(collector: &mut ScopeCollector<'_>, decl: &ImportDeclaration<'_>) {
     if decl.import_kind == ImportOrExportKind::Type {
         return;
     }
@@ -24,7 +24,7 @@ pub(crate) fn record_import(collector: &mut ScopeCollector, decl: &ImportDeclara
 
 /// Record one import specifier as an import binding in the current scope.
 fn record_specifier(
-    collector: &mut ScopeCollector,
+    collector: &mut ScopeCollector<'_>,
     specifier: &str,
     spec: &ImportDeclarationSpecifier<'_>,
 ) {

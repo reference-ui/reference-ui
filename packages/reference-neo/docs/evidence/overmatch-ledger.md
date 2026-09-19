@@ -141,7 +141,7 @@ because the paired station is green.
 |---|---|---|---|
 | 33 param shadows css | HAVE → HAVE | `A/tests/cases/ATM-SITE-10/` + `N/site/NEO-SITE-05/` + `A/tests/cases/ATM-SITE-72/` (arrow arm) | `scope.rs:690`, `:707`, `:737` |
 | 34 const-graph depth | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-29/` (chains) + `A/tests/cases/ATM-SITE-28/` (Ph3 object half) | `scope.rs:1349`, `:1369`, `cross_file.rs:265`, `:242`, `:291` |
-| 35 mutated let drops | TO-BUILD → HAVE* | `A/tests/cases/ATM-SITE-28/` — carve-outs: cross-file poison is name-wide (fail-closed over-drop, precision follow-up open); Ph1 oracle wording stays OPEN/quarantined (§6) | `scope.rs:224` |
+| 35 mutated let drops | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-28/` (same-file arms) + `A/tests/cases/ATM-SITE-84/` (cross-file precision: import folds `#f59e0b` despite a same-named write elsewhere; the written file's own use names its write) | `scope.rs:224` |
 | 36 micro-fold bundle | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-30/` arms | `scope.rs:262`, `calls.rs:224`, `:1697`, `:679`, `:1687` |
 | 37 callee/drop micros | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-36/` | `calls.rs:965`, `:981`, `scope.rs:720`, `:832`, `:1403`, `:305` |
 | 38 discovery + multi-arg | HAVE → HAVE | `A/tests/cases/ATM-SITE-02/` + `-04/` + `-12/` + `N/site/NEO-SITE-04/` + `A/tests/cases/ATM-SITE-73/` (discovery) + tagged-diagnose via SITE-12/SITE-50 | `calls.rs:480`, `:657`, `:702`, `:523`, `:2040`, `atomic.rs:1449/1596/1626` |
@@ -186,7 +186,7 @@ because the paired station is green.
 | 50 xfile const+member | HAVE → HAVE | `N/site/NEO-SITE-07/` + `A/tests/cases/ATM-SITE-16/` (observable kept under the new binding mechanism, SITE-77) | `cross_file.rs:200`, `:219` |
 | 51 imported spreads | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-39/` | `cross_file.rs:316` |
 | 52 aliased import | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-40/` (targeted gate PASSED) | `cross_file.rs:421` |
-| 53 `export let` folds | HAVE → HAVE* | `A/tests/cases/ATM-SITE-28/` cross-file arm — carve-out: same name-wide poison precision as 35 | `cross_file.rs:502` |
+| 53 `export let` folds | HAVE → HAVE | `A/tests/cases/ATM-SITE-28/` cross-file arm + `A/tests/cases/ATM-SITE-84/` (unmutated `export let` folds across files under a same-named write elsewhere) | `cross_file.rs:502` |
 | 54 unresolvable import | SUPERIOR → SUPERIOR | `N/site/NEO-SITE-06/` precedent + `A/tests/cases/ATM-SITE-75/` | `cross_file.rs:465`, `:488` (both silent) |
 | 55 imported conditional | TO-BUILD → HAVE* | `A/tests/cases/ATM-SITE-77/` (Ph3 fold + Ph4 crew-B alias/barrel/cycle ext) — carve-out: doom seed 1 nested-imported-spread silence (§6); NOTE §1's `ATM-SITE-42` cite is the collision — 42 on disk is entry 32 | `cross_file.rs:1368` |
 | 56 barrels | TO-BUILD → HAVE | `A/tests/cases/ATM-SITE-41/` (probe→build; targeted gate PASSED) + SITE-77 barrel arms | `cross_file.rs:1194`, `:751`, `:962`, `:995`, `:1038` |
@@ -391,20 +391,29 @@ ex-68 (entry 14); everything else placed is pinned.
   refuse with a diagnostic. Current behavior is pinned
   (`A/tests/cases/ATM-SITE-31/`); the post-attach init-folding pass
   is scoped but unbuilt. Entry 39 is HAVE* until it lands.
-- **Poison precision** (35/53): cross-file mutation poison is
-  name-wide — fail-closed (over-drops, never stale-resolves) but
-  imprecise. `§8` finding (ii). Stations green; precision work open.
-- **Ph1 mutation wording**: the same-file arms are **SIGNED — Forge
-  §8 verdict.** A tracked write to a binding — assignment, compound
-  assignment, update, `for-of` / `for-in` head, `delete` — poisons
-  that binding in its own file: uses drop with a located
-  `ATM-W-MUTATED-BINDING` naming the write, never a stale value. A
-  write through a member path poisons the root binding, not the
-  path. Unmutated `let` / `var` / `export let` fold like `const`.
-  `A/tests/cases/ATM-SITE-28/` is green; the quarantine on
-  same-file wording is lifted. The cross-file clause (poison
-  precise to the origin binding) lands with Forge Slice 3, when
-  rows 35/53 flip — the ledger quotes the full §8 sentence then.
+- **Poison precision** (35/53): **SIGNED — Forge Slice 3.**
+  Cross-file mutation poison is precise to the origin binding:
+  `A/tests/cases/ATM-SITE-84/` folds an import from its unmutated
+  export despite a same-named write in another file, and the
+  written file's own use still names its write. `§8` finding (ii)
+  is closed; rows 35/53 are HAVE.
+- **Ph1 mutation wording**: **SIGNED — Forge §8 verdict** (same-file
+  arms) **+ Forge Slice 3** (cross-file clause). The §8 sentence,
+  quoted verbatim from `docs/missions/operation-forge.md` §8:
+
+  > A tracked write to a binding — assignment, compound assignment,
+  > update, `for-of` / `for-in` head, `delete` — poisons that binding in
+  > its own file: uses drop with a located `ATM-W-MUTATED-BINDING` naming
+  > the write, never a stale value. A write through a member path
+  > (`theme.primary = …`) poisons the root binding (`theme`), not the
+  > path. Across files, poison is precise to the origin binding: a
+  > same-named write in another file never blocks an import that resolves
+  > to an unmutated export. Unmutated `let` / `var` / `export let` fold
+  > like `const`.
+
+  `A/tests/cases/ATM-SITE-28/` (same-file) and
+  `A/tests/cases/ATM-SITE-84/` (cross-file precision) are green;
+  the wording quarantine is lifted in full.
 - **`__proto__` verdict**: **CLOSED — Forge §7: out of axis.** Panda
   `mergeProps` drops `__proto__` so a spread cannot pollute
   `Object.prototype`; neo merges cascade slots, not objects, and

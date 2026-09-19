@@ -39,3 +39,4 @@ base_system = { path = "modules/base-system" }
 atomic = { path = "modules/atomic" }
 typegen = { path = "modules/typegen" }
 virtualrs = { path = "modules/virtualrs" }
+module_graph = { path = "modules/module-graph" }
