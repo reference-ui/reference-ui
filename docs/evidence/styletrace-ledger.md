@@ -1,6 +1,6 @@
 # StyleTrace Discovery Ledger (Slice #2)
 
-Date: 2026-09-18. Mission: `docs/missions/styletrace.md` § "Slice #2", steps 3–5.
+Date: 2026-09-18. Mission: `docs/missions/completed/styletrace.md` § "Slice #2", steps 3–5.
 Scope: read-only. Every name in lib's 53-line `jsxElements`
 (`packages/reference-lib/ui.config.ts:22-34`) classified by how it traces;
 every PascalCase tag used with style props in lib `src`+`book` that does

@@ -1,6 +1,6 @@
 # StyleTrace Slice #2 — Witness Baseline (W)
 
-Date: 2026-09-18. Mission: `docs/missions/styletrace.md` § "Slice #2", step 1.
+Date: 2026-09-18. Mission: `docs/missions/completed/styletrace.md` § "Slice #2", step 1.
 Method: `pnpm --filter @reference-ui/lib sync` with the current binary and
 config (Book watcher on :5000 running; sync only rewrites the gitignored
 folder it watches), then copy the five frozen files here. No source edits.

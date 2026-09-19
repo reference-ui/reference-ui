@@ -197,6 +197,34 @@ fn test_const_logical_emits_nonguard_leaf() {
 }
 
 #[test]
+fn test_tabs_selected_guard_keeps_both_indicator_arms() {
+    // Tabs Tab: `const isSelected = context ? context.value === value : false`
+    // gates `borderBottom={isSelected ? '3px solid' : '3px solid transparent'}`.
+    // The binding has one dynamic arm and one literal arm, so the test stays
+    // open and both arms must emit plans (no white indicator otherwise).
+    let res = compile_code(
+        r#"
+        import { Button } from '@reference-ui/react';
+        export const Tab = ({ value }) => {
+          const context = useTabsContext();
+          const isSelected = context ? context.value === value : false;
+          return <Button borderBottom={isSelected ? '3px solid' : '3px solid transparent'} />;
+        };
+        "#,
+    );
+    let mut plans = plan_values(&res, "borderBottom");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec![
+            "3px solid".to_string(),
+            "3px solid transparent".to_string()
+        ]
+    );
+    assert_plans_point_at_sheet(&res, "borderBottom");
+}
+
+#[test]
 fn test_const_nested_ternary_scoops_every_arm() {
     let res = compile_code(
         r#"

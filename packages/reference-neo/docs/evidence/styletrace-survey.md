@@ -1,6 +1,6 @@
 # StyleTrace Survey — Full-Discovery Voyage Baseline
 
-Date: 2026-09-18. Mission: `docs/missions/styletrace.md`. Read-only recon; the only
+Date: 2026-09-18. Mission: `docs/missions/completed/styletrace.md`. Read-only recon; the only
 repo write is this file. Probe script lives at `/tmp/styletrace-survey-probe.mjs`
 (control + experiment, re-runnable, no tree writes).
 

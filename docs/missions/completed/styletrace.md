@@ -1,11 +1,11 @@
-OPERATION: GO
+OPERATION: DONE
 
 # Mission: Full StyleTrace
 
 Status: `done` — voyage opened 2026-09-18, closed 2026-09-19. All six slices landed; `jsxElements` hand-list deleted with zero drift; Book spot-checks are the one post-commit item (:5000 was down at acceptance).
 Slice #1 landed in `535cf0eb2`. Plan rebuilt 2026-09-18 from the
 three-crew probe (engine seam · Neo pins · gaps) and a root-trace probe.
-Precursor to [Operation Overmatch](completed/operation-overmatch.md): Overmatch
+Precursor to [Operation Overmatch](operation-overmatch.md): Overmatch
 leaves `hosts.rs` untouched (§7.7) and states "hosts come from styletrace,
 import-bound" (S18). This mission makes the first half of that sentence
 true and hands the second half over with named rows.
@@ -244,7 +244,7 @@ run as two crews once the contract field name is committed (a one-line
 ### Slice #1 — Neo decl-root resolution (gap #0, #5) — DONE
 
 Landed in `535cf0eb2`. Evidence:
-[`styletrace-slice1-traced-vs-53.md`](../../packages/reference-neo/docs/evidence/styletrace-slice1-traced-vs-53.md)
+[`styletrace-slice1-traced-vs-53.md`](../../../packages/reference-neo/docs/evidence/styletrace-slice1-traced-vs-53.md)
 (53 = 53), canary `prop_resolution::loads_real_reference_core_style_props`
 green, styletrace README re-pointed at this file.
 
@@ -511,7 +511,7 @@ Three stays, confirmed:
    as the escape hatch for `const NS = { Panel: Div }`; end state (c) is an
    Overmatch binding row).
 
-Gap #3 filed into [Operation Overmatch](completed/operation-overmatch.md) §4
+Gap #3 filed into [Operation Overmatch](operation-overmatch.md) §4
 OUT-OF-AXIS table ("JSX tag through a file-local alias", StyleTrace
 handoff): the Overmatch mission did not already cover the
 extractor-binding question (nearest rows are S12 site-identity-through-
@@ -531,17 +531,17 @@ ID is minted by the Overmatch cataloger.
   ordering and the swallowed error.
 - "Fails closed" was doing two jobs — refusing to guess, and hiding a
   broken leg. After this mission it does only the first.
-- Feeds the [test index](test-index.md) (discovered capabilities become
+- Feeds the [test index](../test-index.md) (discovered capabilities become
   searchable: the new station READMEs are the index) and the
-  [Doom agent](doom-agent.md) (the boundary becomes Doom's starting
+  [Doom agent](../doom-agent.md) (the boundary becomes Doom's starting
   context: *hosts are discovered; config is the exception list*). The
   three missions compose.
 
 ## Evidence
 
-- [`styletrace-survey.md`](../../packages/reference-neo/docs/evidence/styletrace-survey.md)
+- [`styletrace-survey.md`](../../../packages/reference-neo/docs/evidence/styletrace-survey.md)
   — the 16-consumer table, gap list, snapshot pins (2026-09-18).
-- [`styletrace-slice1-traced-vs-53.md`](../../packages/reference-neo/docs/evidence/styletrace-slice1-traced-vs-53.md)
+- [`styletrace-slice1-traced-vs-53.md`](../../../packages/reference-neo/docs/evidence/styletrace-slice1-traced-vs-53.md)
   — per-name proof that Neo trees trace.
 - `styletrace-baseline/` and `styletrace-ledger.md` — produced by slice #2.
 - Probe scripts (re-runnable, `/tmp` only, no tree writes):

@@ -1,6 +1,6 @@
-# Operation Forge — Map v1 (READY synthesis, 2026-09-19)
+# Operation Forge — Map v1 (DONE, 2026-09-19)
 
-Source of truth for shape: [operation-forge.md](/Users/ryn/Developer/reference-ui/docs/missions/operation-forge.md).
+Source of truth for shape: [operation-forge.md](operation-forge.md).
 Evidence dir: `packages/reference-neo/docs/evidence/`.
 
 ## READY verdict: GO
@@ -67,7 +67,7 @@ styletrace host drift impossible; everything else is a slice note):
 
 | # | Slice | Files | Stations | Owner | Status |
 |---|---|---|---|---|---|
-| 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent-protocol.md`, neo sync printer | — | agent-neo (printer), docs | LANDED (oracle clean: neo sync 16/16) |
+| 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent.md`, neo sync printer | — | agent-neo (printer), docs | LANDED (oracle clean: neo sync 16/16) |
 | 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | LANDED (oracle clean: canon 52/52, atomic 328/328, stations 213/213) |
 | 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | LANDED (oracle clean: atomic 328/328, stations 216/216) |
 | 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | LANDED (fix oracle clean: D1 tsconfig-policy knob + styletrace Skip, D2 cycle-Err never memoizes + SITE-78 inner arm, D3 ledger quotes §8 verbatim; neo: SYNC-15 fixed, 4 fence repins, 2 color-mix out-of-cone — notes S3-12/S3-13) |

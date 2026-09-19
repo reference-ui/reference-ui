@@ -1,7 +1,7 @@
 # Mission: Operation Overmatch (Panda v2 language, exceeded)
 
 Status: `done` (2026-09-19). Catalog 81/81, ledger quoted, HQ paperwork
-aligned. Successor: [Operation Forge](../operation-forge.md) — leftover
+aligned. Successor: [Operation Forge](operation-forge.md) — leftover
 rulings plus the Book support surface, not more language rows. Doom protocol is a
 separate mission; the satisfaction marker is not written. Not a
 campaign. Not a port. Not a parity checklist either — a claim with a
@@ -605,7 +605,8 @@ _Notes:_ fail-closed-PLUS-diagnostic vs v2's silent drop — ours is the upgrade
 _Language:_ an imported const object holding a ternary compiles both arms on spread.
 _Ours:_ `tokens.ts`: `export const c = { color: flag ? 'red' : 'blue' }`; `css({ ...c })` → both arm utilities + plans
 _Panda:_ (`cross_file.rs:1368`, `imported_conditional_object_keeps_encode_branches`)
-_Notes:_ `[HQ 2026-09-19]` HAVE for the pinned station work (`ATM-SITE-77`; Ph3 fold + Ph4 alias/barrel/cycle). Carve-out: **doom seed 1** — nested imported-object spread can drop silently cross-file (`docs/missions/doom-agent-protocol.md` §8). The silence hole stays listed, not claimed-closed. Disk: 42 is entry 32 (destructure), not this row. There is no `ATM-SITE-35`.
+_Notes:_ `[HQ 2026-09-19]` HAVE for the pinned station work (`ATM-SITE-77`; Ph3 fold + Ph4 alias/barrel/cycle). Carve-out: **doom seed 1** — nested imported-object spread can drop silently cross-file (`docs/missions/doom-agent.md` §8). The silence hole was later
+   fortified in Forge Slice 3 (`ATM-SITE-78`). Disk: 42 is entry 32 (destructure), not this row. There is no `ATM-SITE-35`.
 
 **SPEC-V2-56 — barrel re-export chains — HAVE** `[re-graded]` `[HQ 2026-09-19]` · `ATM-SITE-41` (was X-26) + SITE-77 barrel arms · xf-X1
 _Language:_ `export { x } from` chains (1–3 hops, incl. barrels and aliased re-exports) resolve by binding to the origin declaration.
@@ -741,7 +742,8 @@ _Notes:_ `handle_identifier_fallback` (`walk.rs:217-234`) reads `constants.scala
 _Language:_ `import { brand as primary } from './tokens'` resolves `primary` to the `brand` export of THAT file; `export { x } from` hops (barrels, aliased re-exports) follow by binding; specifiers resolve relative → `tsconfig` `paths`/`baseUrl` → extension probing → package `exports`; cycles guard to nothing + diagnostic; an unresolvable specifier or missing export → located diagnostic. Rider (SUPERIOR, pinned): site identity through re-exports (`export { css } from '@reference-ui/react'` in a consumer module, zero config — `ATM-SITE-55`, S12). Rider S13 (namespace member imports / `export default` objects) is **DEFERRED** — needs export value tables; v2 refuses (`cross-file-resolution.md:95-96`); not claimed.
 _Ours:_ `tokens.ts: export const brand = 'red'`; `import { brand as primary } from './tokens'; css({ color: primary })` → `c_red`; `a.ts: export const gap = '4px'`, `b.ts: export const gap = '8px'`, a consumer importing from `b` → `8px` only (collision control, `ATM-SITE-54`)
 _Panda:_ (`cross_file.rs:421`, `aliased_import_resolves_by_exported_name`; chain `:1194`; cycles `:545`, `:569`; resolver `:146`, `:442`; design `cross-file-resolution.md:102-129`, cache keyed `PathBuf → export → ExportEntry`)
-_Notes:_ `[HQ 2026-09-19]` HAVE for the built binding walk / **S12**. **S13** (namespace/default value imports) is a rider, DEFERRED with cause — needs export value tables; not claimed. Doom seed 1 attaches to 55/76 territory (`docs/missions/doom-agent-protocol.md` §8) and stays open. Replaces merge-not-resolve. The value graph follows imports wherever they lead (read-only, cached by `(path, export)` — v2's `CachedFileExports` shape) while the SITE set stays the `include` globs — the same split v2 makes. Watch invalidation of dependents is the Neo sync layer's rider (§4). Absorbs SPEC-V2-52 (alias), 56 (barrels), 57 (imported helpers), and gives 50/51/55 their real mechanism.
+_Notes:_ `[HQ 2026-09-19]` HAVE for the built binding walk / **S12**. **S13** (namespace/default value imports) is a rider, DEFERRED with cause — needs export value tables; not claimed. Doom seed 1 attaches to 55/76 territory (`docs/missions/doom-agent.md` §8) and was later fortified in Forge
+  Slice 3. Replaces merge-not-resolve. The value graph follows imports wherever they lead (read-only, cached by `(path, export)` — v2's `CachedFileExports` shape) while the SITE set stays the `include` globs — the same split v2 makes. Watch invalidation of dependents is the Neo sync layer's rider (§4). Absorbs SPEC-V2-52 (alias), 56 (barrels), 57 (imported helpers), and gives 50/51/55 their real mechanism.
 
 **SPEC-V2-77 — diagnostic precision: `line:col` on every extract diagnostic, stable codes — HAVE** `[HQ 2026-09-19]` · `ATM-DIAG-05` · xf-I5, ex-65
 _Language:_ every diagnostic the extractor emits carries `file:line:col` of the offending node and a stable code (`ATM-W-…` / `ATM-E-…`), so the author can jump to the sub-expression that stopped extraction and tooling can filter by kind.
