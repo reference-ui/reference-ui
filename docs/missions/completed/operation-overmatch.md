@@ -1,8 +1,8 @@
 # Mission: Operation Overmatch (Panda v2 language, exceeded)
 
 Status: `done` (2026-09-19). Catalog 81/81, ledger quoted, HQ paperwork
-aligned. Successor: [Operation Temper](../operation-temper.md) — the
-eight leftover rulings, not more language rows. Doom protocol is a
+aligned. Successor: [Operation Forge](../operation-forge.md) — leftover
+rulings plus the Book support surface, not more language rows. Doom protocol is a
 separate mission; the satisfaction marker is not written. Not a
 campaign. Not a port. Not a parity checklist either — a claim with a
 proof per row.

@@ -108,4 +108,6 @@ Overmatch Ph5 CLOSED — mission work complete. Ledger overmatch-ledger.md: 81/8
 
 HQ catalog amendments landed 2026-09-19 — `docs/missions/operation-overmatch.md` aligned to overmatch-ledger.md (81 entries; SITE-42/77 deconflict). Design-open items (doom seed 1, poison precision, 39-F3, Ph1 mutation wording, `__proto__`, null-const, runtime-table coincidence, S13) stay open.
 
-Overmatch CONCLUDED 2026-09-19 — moved to `docs/missions/completed/operation-overmatch.md`. Successor: Operation Temper (`docs/missions/operation-temper.md`) — eight leftover rulings, example-first, not a recatalog. Analysis companion retired (folded into Temper).
+Overmatch CONCLUDED 2026-09-19 — moved to `docs/missions/completed/operation-overmatch.md`. Successor: Operation Forge (`docs/missions/operation-forge.md`) — leftover Overmatch rulings plus the Book warning census (support surface), example-first, not a recatalog. Temper name retired.
+
+Forge OPENED 2026-09-19 — renamed from Temper. Book census: 213 neo-sync warnings on `pnpm dev:lib`. Gaps filed as §9–§13 (rgba/translateX false-positive token paths; corner-radius category map; unique-name `radii.sm` collision; host keys `css`/`style` in spread bags; `focusRing` const alias). Noise left off the list: `{...props}` ×74, missing `ui.*`/`design.*` names ×31 (not in the dictionary), runtime identifiers/expressions.
