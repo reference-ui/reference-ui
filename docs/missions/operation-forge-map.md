@@ -71,8 +71,8 @@ styletrace host drift impossible; everything else is a slice note):
 | 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | LANDED (oracle clean: canon 52/52, atomic 328/328, stations 213/213) |
 | 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | LANDED (oracle clean: atomic 328/328, stations 216/216) |
 | 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | LANDED (fix oracle clean: D1 tsconfig-policy knob + styletrace Skip, D2 cycle-Err never memoizes + SITE-78 inner arm, D3 ledger quotes §8 verbatim; neo: SYNC-15 fixed, 4 fence repins, 2 color-mix out-of-cone — notes S3-12/S3-13) |
-| 4 | Harvest (`extract/harvest/`, sinks, mint, info code, §2 floor) | `atomic/src/extract/harvest/` (`literals.rs`, `sinks.rs`, `mint.rs`, `classify.rs` rhythm-then-canon) | `ATM-HARVEST-01..04`; `NEO-CSS-14` | agent-rs + agent-neo | pending, after 1 + 3 |
-| 5 | Host surface (`StyleSurface.owned_props`, host-aware `is_style_attr_name`; census → 131) | styletrace `analysis/surface.rs`, atomic host check | styletrace unit; `ATM-SITE-85`; census log | agent-rs (styletrace + atomic) | pending, after 1 |
+| 4 | Harvest (`extract/harvest/`, sinks, mint, info code, §2 floor) | `atomic/src/extract/harvest/` (`literals.rs`, `sinks.rs`, `mint/` (`mod.rs`, `twins.rs`, `validity.rs`), `classify.rs` rhythm-then-canon) | `ATM-HARVEST-01..04`; `NEO-CSS-14` | agent-rs + agent-neo | LANDED (S4-4 split verified from tree: 226/47/316, all ≤365, same API — note S4-5; suites per S4-3 lane refs, post-split re-green unattested, not re-run here) |
+| 5 | Host surface (`StyleSurface.owned_props`, host-aware `is_style_attr_name`; census → 126) | styletrace `analysis/surface.rs`, atomic host check | styletrace unit; `ATM-SITE-85`; census log | agent-rs (styletrace + atomic) | LANDED (census 126 honest after fixup; retarget + fixup closed — notes S5-1/S5-2/S5-4) |
 | 6 | Tasty adoption (optional, never gates) | tasty `scanner/packages/*`, `ast/resolve` → ladder + walk | tasty goldens | agent-rs | optional, after 3 |
 
 Station IDs are suggested; each slice owner confirms free slots against
@@ -275,3 +275,126 @@ Station IDs are suggested; each slice owner confirms free slots against
   here. Captain closed the gap firsthand 2026-09-19: GLOBAL-12 PASS,
   PARITY-02 PASS (F22 prints; `red/abc` UNKNOWN-COLOR stands — the
   world names it `slashInvalid`, deliberate invalid input, §11-true).
+- S4-3 (synthesis, LANDED 2026-09-19 — structure verified from the
+  tree in-session; all suites per lane refs, nothing re-run here):
+  `harvest/` ships all four modules (`classify.rs` rhythm-then-canon
+  with angle/time/flex guard, `literals.rs` strings + hole-free
+  templates over compile inputs, `sinks.rs` six-code gate with the
+  S4-1 `gap`/`offset` drop plus unknown-prop and runtime-owned
+  filters, `mint.rs` pool×sinks through `prop_accepts` with
+  twin suppression, `when`-lowering skip, and one
+  `ATM-I-HARVEST-SINK` per sink); one sink hook
+  (`walk/mod.rs:105 warn_dynamic`); same-parse wiring
+  (`lib.rs:152-153` pool + mint into the same wants vector, one
+  namer, `HARVEST_ORIGIN`); `HarvestSink` code registered
+  (`codes.rs`); stations `ATM-HARVEST-01..04` + `NEO-CSS-14` exist
+  with inputs/outputs/specs (HARVEST-01 goldens match its spec:
+  warning + 1 info, `css.json` `color:red` + `padding:4px`) and
+  `SPEC.md`/`TESTS.md` rows; sibling repins are additions-tolerant
+  (DIAG-02 asserts infos are `HARVEST-SINK`-only;
+  `siteWants`/`harvestWants` split by origin); zero neo src changes
+  (publish fan-out rides the same wants vector; NEO-CSS-14 spec
+  pins both bundles); zero-sink → zero-output is code-evident
+  (S4-2 mechanism). Soft note: `mint.rs` is 559 lines (validity
+  tables), over the 365 soft cap but a warning only — the
+  implemented `q` gate fails at 1500 (`complexity.mjs:23`), not the
+  500 of the AGENTS.md prose (doc/implementation skew, not a D1
+  error). Cargo/vitest/neo greens and the HARVEST-04 byte-identical
+  run are attributed to the lane refs (see synthesis unresolved),
+  per the S3-12 precedent.
+- S5-1 (synthesis, LANDED 2026-09-19 — structure verified from the
+  tree in-session; census counts per `forge-census-after.md`, not
+  re-run here): §14 end-to-end — styletrace `StyleSurface.owned_props`
+  + `with_owned_props` + `TraceOutcome.owned_props` with seed union
+  (`surface.rs`), analyzer `record_owned`/`take_owned_props`,
+  surface-pruned `collect_declared_prop_names`, 3 `owned_props.rs`
+  tests (declaration-minus-surface, unannotated fail-closed, seed
+  union); atomic `ResolvedHosts.owned_props` threaded from the
+  engine surface, `host_owns` exact + dot-stripped member match
+  (`extract/mod.rs:138-149`), gates at `jsx/mod.rs:75` (early
+  return before macro/style checks), `:132-135`
+  (`is_style_attr_name`), `:492` (missing-graph check); spreads
+  host-blind (no gate in the spread path, pinned by SITE-85);
+  `ATM-SITE-85` station + `SPEC.md` row. Census 160→156 verified
+  structurally: the 4 removed rows match in-tree declarations
+  (`ToastSystem.tsx:846-847` gap/offset, `Overlay/types.ts:78`
+  offset) through the verified `host_owns` path; `hosts::resolve`
+  reads no files so the `react.d.mts` row is retired by mechanism;
+  mission noise-table staleness confirmed against
+  `operation-forge.md:909-915` (offset + react.d.mts rows predate
+  §14). The 30-count table and zero-mission-gap-rows claim are
+  attributed to `forge-census-after.md`.
+- S5-2 (carried, out of lane — Slice-1 fixup + parent retarget, S3-14
+  style): the 30 `ATM-W-UNKNOWN-COLOR` "`transparent !important`"
+  lies are a Slice-1 §11 const-lowering defect, mechanism verified
+  firsthand — `entries.rs:66-88 push_entry_leaves` pushes recorded
+  leaves verbatim without `split_important_flag`, so
+  `warn_unknown_color` (`resolve/tokens/mod.rs:149-160`) fires on
+  the unsplit string, while the inline path splits
+  (`literal.rs:22`) and stays silent; the 3 leaves sit at
+  `disclosureChrome.ts:51/55/59` inside `dividerTrigger.css`.
+  Untouched per lane constraint; needs the one-line important-strip
+  fixup to reach honest 126. Census target: 131 is stale by −5
+  (−1 retired `react.d.mts` row, −4 §14-owned `gap`/`offset`
+  silences the mission noise table predates); honest target is
+  126 = 131−1−4, and 156 = 126+30 reconciles the tree. Parent
+  retarget decision required; literal "exactly 131" cannot hold on
+  correct code. Open question for the parent: the lane factors 30
+  as 3 leaves × 10 spreads, but the tree holds 15
+  `{...dividerTrigger}` spreads (8 in book files, 7 in stories;
+  sync includes all of `src/` with no story exclusion and the
+  pipeline dedupes nothing) — which 5 spreads stay silent was not
+  determinable statically and needs the lane's located log or a
+  re-run; the defect diagnosis itself is unaffected.
+- S5-3 (captain adjudication 2026-09-19 — retarget ACCEPTED): the
+  census target moves 131 → 126. Signed verdicts outrank the
+  mission's arithmetic: §14's verdict explicitly silences host-owned
+  props (the 4 `gap`/`offset` rows the Part III noise table predates),
+  and Slice 3 retired the `react.d.mts` failure mode structurally
+  (engine surface reads no files; zero trace diagnostics in both
+  censuses). The mission invariant — every remaining line true —
+  holds at 126. Tree reconciles: 131−1−4+30 = 156 now; the
+  important-strip fixup removes the 30 lies → 126. Literal "exactly
+  131" cannot hold on correct code; 126 is the honest number and the
+  voyage report will show the arithmetic to HQ.
+- S4-4 (captain order 2026-09-19): `mint.rs` at 559 lines violates
+  mission D1 (files under 365/500, invoked from AGENTS.md §4). The
+  tool's implemented 1500 fail-line is doc/implementation skew; the
+  mission wins. Split into cohesive submodules, behavior-neutral,
+  stations re-green, each file ≤ 365. Slice 4 NEEDS-FIX until then.
+- S4-5 (fixup synthesis, LANDED 2026-09-19 — structure verified from
+  the tree in-session; no suite re-runs, none attested post-split —
+  see synthesis unresolved): S4-4 closed — `mint.rs` (559) is now
+  `harvest/mint/` (`mod.rs` 226 driver + infos + tests, `twins.rs`
+  47 twin suppression, `validity.rs` 316 auto/none tables + kind
+  gate), each ≤ 365; no `mint.rs` remains. Behavior-neutral by
+  structure: same public API (`harvest/mod.rs:18` re-exports `mint`,
+  `MintCtx`, `HARVEST_ORIGIN`), same call site (`lib.rs:153`),
+  same unit pins (`mint/mod.rs:196-225` auto/none gate, css-wide,
+  twin skip). No evidence file attests a post-split suite run
+  (re-runs forbidden this lane); stations-re-green rests on the
+  S4-3 lane refs for the pre-split tree plus the move-only
+  structure.
+- S5-4 (fixup synthesis, LANDED 2026-09-19 — fix verified from the
+  tree in-session; counts per `forge-census-after.md` Fixup §, not
+  re-run here): S5-2 closed — `push_entry_leaves` now strips string
+  leaves via `split_entry_leaf` → `literal::split_important_flag`
+  (`entries.rs:76/96-99`, `literal.rs:63`), carrying
+  `ctx.important || is_imp`; unit pin
+  `const_leaf_important_suffix_mints_flagged_and_silent`
+  (`entries.rs:339`); the 3 `disclosureChrome.ts:51/55/59` leaves
+  confirmed in-tree. Census 156→126 per the lane's pre/post
+  captures (UNKNOWN-COLOR 30→0, zero new rows; 131−1−4 = 126
+  holds per S5-3); gates atomic cargo 328/328 + vitest 271/271
+  and the 3×10 factorization (silent 5 = Accordion.story
+  non-host spreads, settling the S5-2 open question) per the same
+  section. Slice 5 stands LANDED at the honest 126.
+
+## Forge close (captain, 2026-09-19)
+
+Slices 0–5 LANDED. Census 126 firsthand (74 spreads, 31 named
+missing tokens, 21 honest dynamics, zero gap rows). Ledger §5:
+no open items; quoted statement lost its "except". Doom seed 1
+fortified by `ATM-SITE-78`. Slice 6 (tasty adoption) left as the
+mission-sanctioned optional follow-up. Voyage report delivered
+to HQ; the health probe stands down with this commit.
