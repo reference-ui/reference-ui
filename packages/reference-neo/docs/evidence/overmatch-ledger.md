@@ -1,6 +1,7 @@
 # Operation Overmatch — evidence ledger (Phase 5)
 
-Mission: `docs/missions/operation-overmatch.md`. Compiled 2026-09-19 by
+Mission: `docs/missions/completed/operation-overmatch.md` (concluded).
+Successor: `docs/missions/operation-temper.md`. Compiled 2026-09-19 by
 role `om-ph5`. This file is the only thing Ph5 writes: the statement
 ("we extract atomic CSS from your tokens, styles and code — and we do
 it better than Panda v2") may be quoted only from here.
@@ -445,10 +446,11 @@ rustc-hash + serde; `canon` = no `[dependencies]` at all. The
 word "atomic" appears in none of these manifests; the three
 suites cannot observe atomic behavior changes.
 
-## 7. Ph2 HQ catalog-amendment action list (still open)
+## 7. Ph2 HQ catalog-amendment action list (applied 2026-09-19)
 
-Quoted from `§8`; the mission file is HQ-owned and intentionally
-byte-identical, so none of these has been applied. Still open:
+Quoted from `§8`; HQ applied 2026-09-19. Mission catalog statuses,
+cites, IDs, and counts now match this ledger. The quoted list is
+the list that was applied:
 
 > promote 02, 06, 07, 08, 09, 13, 17, 22, 27, 28-half, 29, 35,
 > 36, 37, 42 to HAVE; drop unpinned qualifiers 49/51/53; re-cite
@@ -457,11 +459,10 @@ byte-identical, so none of these has been applied. Still open:
 > note to spelling-sensitive and the 72 note (v2 `:631` mints
 > WITH segment).
 
-This ledger implements the *substance* (ledger statuses and pins
-above follow the re-cites) but the catalog text is HQ's to amend.
 Related: 28-half is now whole (Ph3 flatten landed); 55 and
 GAP-04a were refiled to Ph3 and both landed (SITE-77, canon
-aliases).
+aliases). Remaining ledger-HAVE rows beyond this minimum list
+were flipped in the same paperwork pass.
 
 ## 8. Ph5 errata for HQ (new findings)
 

@@ -11,6 +11,6 @@ shipped yet. Status line at the top of each file says where it stands:
 |---|---|---|
 | Capability test index | idea | [test-index.md](test-index.md) |
 | Doom agent | idea | [doom-agent.md](doom-agent.md) |
-| Operation Overmatch (Panda v2 language, exceeded) | idea (plan rebuilt under the no-gap frame; ready to activate) | [operation-overmatch.md](operation-overmatch.md) |
+| Operation Temper (eight Overmatch leftover rulings) | idea | [operation-temper.md](operation-temper.md) |
 | Full StyleTrace | active | [styletrace.md](styletrace.md) |
 | firstThatWorks | idea | [first-that-works.md](first-that-works.md) |
