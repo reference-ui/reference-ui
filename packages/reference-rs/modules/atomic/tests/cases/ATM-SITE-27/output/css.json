@@ -1,0 +1,12 @@
+{
+  "color:black": "@reference-ui/lib__c_black",
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:white": "@reference-ui/lib__c_white",
+  "md:padding:3": "@reference-ui/lib__md:p_3",
+  "md:padding:4": "@reference-ui/lib__md:p_4",
+  "padding:1": "@reference-ui/lib__p_1",
+  "padding:2": "@reference-ui/lib__p_2",
+  "sm:padding:2": "@reference-ui/lib__sm:p_2",
+  "sm:padding:3": "@reference-ui/lib__sm:p_3"
+}

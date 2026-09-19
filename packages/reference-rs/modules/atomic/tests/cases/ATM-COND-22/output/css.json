@@ -1,0 +1,3 @@
+{
+  "&:where(:has(> [data-slot=\"icon\"]:only-child, > svg:only-child)):paddingInline:0": "@reference-ui/lib__[&:where(:has(>_[data-slot=\"icon\"]:only-child,_>_svg:only-child))]:px_0"
+}

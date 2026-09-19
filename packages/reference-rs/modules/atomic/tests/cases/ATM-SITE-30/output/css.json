@@ -1,5 +1,10 @@
 {
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:green": "@reference-ui/lib__c_green",
+  "color:purple": "@reference-ui/lib__c_purple",
+  "color:red": "@reference-ui/lib__c_red",
   "margin:-4": "@reference-ui/lib__m_-4",
+  "margin:4px": "@reference-ui/lib__m_4px",
   "opacity:-0.5": "@reference-ui/lib__op_-0.5",
   "order:0": "@reference-ui/lib__order_0",
   "width:50": "@reference-ui/lib__w_50"

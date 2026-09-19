@@ -1,0 +1,11 @@
+{
+  "borderColor:black": "@reference-ui/lib__bd-c_black",
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "color:red": "@reference-ui/lib__c_red",
+  "fontWeight:bold": "@reference-ui/lib__font-weight_bold",
+  "margin:1r": "@reference-ui/lib__m_1r",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "opacity:0.5": "@reference-ui/lib__op_0.5",
+  "padding:4px": "@reference-ui/lib__p_4px"
+}

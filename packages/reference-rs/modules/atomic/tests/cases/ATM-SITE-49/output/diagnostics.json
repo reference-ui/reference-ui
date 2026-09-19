@@ -1,0 +1,26 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"42\"",
+    "file": "input/src/keys.ts",
+    "line": 10,
+    "column": 8
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-KEY",
+    "message": "Dynamic computed property key encountered in style object",
+    "file": "input/src/keys.ts",
+    "line": 14,
+    "column": 8
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-KEY",
+    "message": "Dynamic computed property key encountered in style object",
+    "file": "input/src/keys.ts",
+    "line": 17,
+    "column": 8
+  }
+]

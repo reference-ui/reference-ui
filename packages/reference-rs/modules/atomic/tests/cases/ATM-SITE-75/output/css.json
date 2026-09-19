@@ -1,0 +1,5 @@
+{
+  "padding:12px": "@reference-ui/lib__p_12px",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "padding:8px": "@reference-ui/lib__p_8px"
+}

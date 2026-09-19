@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <button id="iconOnly"><span data-slot="icon">+</span></button>
+    <button id="text">Hello</button>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

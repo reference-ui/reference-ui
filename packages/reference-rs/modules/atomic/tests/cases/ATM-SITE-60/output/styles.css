@@ -1,0 +1,14 @@
+@layer spacing-scale {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --spacing-4: 1rem;
+  }
+}
+@layer utilities {
+  .spacing-scale__m_4 { margin: var(--spacing-4); }
+}
+}
