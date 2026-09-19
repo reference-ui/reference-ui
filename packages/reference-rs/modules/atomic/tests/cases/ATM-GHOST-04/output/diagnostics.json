@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"_nope\""
+    "message": "Unknown condition \"_nope\"",
+    "file": "input/src/nope.ts",
+    "line": 3,
+    "column": 23
   }
 ]

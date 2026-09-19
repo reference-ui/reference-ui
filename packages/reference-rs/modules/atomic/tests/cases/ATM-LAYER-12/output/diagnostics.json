@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-EMPTY-AT-RULE",
-    "message": "Empty at-rule query in global CSS: \"@supports\""
+    "message": "Empty at-rule query in global CSS: \"@supports\"",
+    "file": "rs-27",
+    "line": 1,
+    "column": 1
   }
 ]

@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"_hovr\""
+    "message": "Unknown condition \"_hovr\"",
+    "file": "input/src/unknown.ts",
+    "line": 3,
+    "column": 23
   }
 ]

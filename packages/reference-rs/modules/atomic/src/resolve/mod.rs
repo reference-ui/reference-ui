@@ -44,10 +44,11 @@ pub fn resolve_want(want: &Want) -> Vec<Atom> {
 pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
     session.location = want.location();
     if !canon::is_known_style_prop(&want.prop) {
-        session.diagnostics.push(Diagnostic::warning(
+        let diagnostic = session.location.warning(
             DiagnosticCode::UnknownProperty,
             format!("Unknown style property \"{}\"", want.prop),
-        ));
+        );
+        session.diagnostics.push(diagnostic);
         return Vec::new();
     }
     let Some(clean_when) = lower_conditions(&want.when, session) else {
@@ -125,10 +126,11 @@ fn lower_conditions(
             LoweredWhen::Skip => {}
             LoweredWhen::Known(cond) => out.push(cond),
             LoweredWhen::Unknown => {
-                session.diagnostics.push(Diagnostic::warning(
+                let diagnostic = session.location.warning(
                     DiagnosticCode::UnknownCondition,
                     format!("Unknown condition \"{raw}\""),
-                ));
+                );
+                session.diagnostics.push(diagnostic);
                 known = false;
             }
         }
@@ -145,7 +147,7 @@ fn resolve_atom_value(
     val: AtomValue,
     session: &mut ResolveSession<'_>,
 ) -> Option<CssValue> {
-    let css = unit::css_value_from_authored(prop, val, session.diagnostics)?;
+    let css = unit::css_value_from_authored(prop, val, &session.location, session.diagnostics)?;
     apply_rhythm_and_tokens(prop, css, session)
 }
 

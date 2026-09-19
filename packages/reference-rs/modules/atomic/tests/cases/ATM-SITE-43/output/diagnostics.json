@@ -34,11 +34,17 @@
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`flexGrow` value `true` is not valid CSS"
+    "message": "`flexGrow` value `true` is not valid CSS",
+    "file": "input/src/enums.ts",
+    "line": 49,
+    "column": 13
   },
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`flexGrow` value `true` is not valid CSS"
+    "message": "`flexGrow` value `true` is not valid CSS",
+    "file": "input/src/enums.ts",
+    "line": 66,
+    "column": 37
   }
 ]

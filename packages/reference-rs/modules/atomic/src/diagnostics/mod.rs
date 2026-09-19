@@ -1,16 +1,33 @@
-//! Compiler diagnostic definitions and severity reporting for Reference UI.
-//! Formats errors, warnings, and informational notices with source locations during extraction and resolution.
-//! Enforces fail-closed compilation semantics to surface invalid styling patterns early.
-//! Every diagnostic carries a stable [`DiagnosticCode`] so hosts can filter by
-//! failure class, and renders through [`render`] as `{file}:{line}:{col} {code} {message}`.
+//! Compiler diagnostics subsystem: proof, not suspicion.
+//!
+//! Phases report typed facts through [`DiagnosticSink`] into a
+//! [`DiagnosticsSession`]; policy decides wording and audience, and proof
+//! joins independent expectations against final plans. [`Diagnostic`] keeps
+//! its stable wire shape (`codes.rs` table plus `{file}:{line}:{col}`
+//! rendering in `render.rs`) so hosts and goldens never drift with refactors.
+
+pub mod adapters;
+pub mod analysis;
+mod channels;
+mod codes;
+mod facts;
+mod policy;
+pub mod proof;
+mod render;
+mod session;
+mod site;
+
+pub use channels::DiagnosticChannels;
+pub use codes::DiagnosticCode;
+pub use facts::{
+    DiagnosticFact, DiagnosticSink, DynamicShape, ExtractOutcome, OwnedLookupKey, ResolveOutcome,
+};
+pub use policy::{Audience, Policy};
+pub use render::render;
+pub use session::DiagnosticsSession;
+pub use site::{line_col, DiagnosticLocation, SourceId, SourceSite, StyleSurfaceKind};
 
 use serde::{Deserialize, Serialize};
-
-mod codes;
-mod render;
-
-pub use codes::DiagnosticCode;
-pub use render::render;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -32,39 +49,6 @@ pub struct Diagnostic {
     pub line: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub column: Option<u32>,
-}
-
-/// File/line/column carried from extract to resolve for located diagnostics.
-/// Extract populates it from literal spans; resolve attaches it to errors.
-/// Empty when the want was synthesized rather than authored in source.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct DiagnosticLocation {
-    pub file: Option<String>,
-    pub line: Option<u32>,
-    pub column: Option<u32>,
-}
-
-impl DiagnosticLocation {
-    /// Build an error diagnostic carrying this location, when known.
-    pub fn error(&self, code: DiagnosticCode, message: impl Into<String>) -> Diagnostic {
-        let mut diagnostic = Diagnostic::error(code, message);
-        if let Some(file) = &self.file {
-            diagnostic.file = Some(file.clone());
-            diagnostic.line = self.line;
-            diagnostic.column = self.column;
-        }
-        diagnostic
-    }
-}
-
-/// 1-based (line, column) for a byte offset, or None past the end.
-/// Columns count UTF-16 code units so positions match editor carets.
-pub fn line_col(source: &str, offset: u32) -> Option<(u32, u32)> {
-    let prefix = source.get(..offset as usize)?;
-    let line = prefix.bytes().filter(|byte| *byte == b'\n').count() as u32 + 1;
-    let tail = prefix.rsplit('\n').next().unwrap_or(prefix);
-    let column = tail.chars().map(|ch| ch.len_utf16() as u32).sum::<u32>() + 1;
-    Some((line, column))
 }
 
 impl Diagnostic {
@@ -119,44 +103,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn line_col_counts_from_one() {
-        assert_eq!(line_col("ab\ncd", 0), Some((1, 1)));
-        assert_eq!(line_col("ab\ncd", 3), Some((2, 1)));
-        assert_eq!(line_col("ab\ncd", 4), Some((2, 2)));
-    }
-
-    #[test]
-    fn line_col_counts_columns_in_utf16_units() {
-        assert_eq!(line_col("a😀b", 5), Some((1, 4)));
-    }
-
-    #[test]
-    fn line_col_rejects_offsets_past_the_end() {
-        assert_eq!(line_col("ab", 3), None);
-    }
-
-    #[test]
-    fn located_error_carries_file_and_position() {
-        let loc = DiagnosticLocation {
-            file: Some("a.tsx".to_string()),
-            line: Some(4),
-            column: Some(12),
-        };
-        let diagnostic = loc.error(
-            DiagnosticCode::UnknownTokenReference,
-            "unknown token reference `{colors.nope}`",
+    fn diagnostic_json_shape_is_stable() {
+        let located =
+            Diagnostic::warning(DiagnosticCode::UnknownTokenPath, "unknown token path `x`")
+                .with_location("a.ts", Some(5), Some(15));
+        assert_eq!(
+            serde_json::to_string(&located).unwrap(),
+            "{\"severity\":\"warning\",\"code\":\"ATM-W-UNKNOWN-TOKEN-PATH\",\
+             \"message\":\"unknown token path `x`\",\"file\":\"a.ts\",\"line\":5,\"column\":15}"
         );
-        assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
-        assert_eq!(diagnostic.code, DiagnosticCode::UnknownTokenReference);
-        assert_eq!(diagnostic.file.as_deref(), Some("a.tsx"));
-        assert_eq!(diagnostic.line, Some(4));
-        assert_eq!(diagnostic.column, Some(12));
-    }
-
-    #[test]
-    fn empty_location_errors_without_position() {
-        let diagnostic = DiagnosticLocation::default().error(DiagnosticCode::ParseError, "boom");
-        assert_eq!(diagnostic.file, None);
-        assert_eq!(diagnostic.line, None);
+        let bare = Diagnostic::warning(DiagnosticCode::UnknownTokenPath, "unknown token path `x`");
+        assert_eq!(
+            serde_json::to_string(&bare).unwrap(),
+            "{\"severity\":\"warning\",\"code\":\"ATM-W-UNKNOWN-TOKEN-PATH\",\
+             \"message\":\"unknown token path `x`\"}"
+        );
+        let back: Diagnostic =
+            serde_json::from_str(&serde_json::to_string(&located).unwrap()).unwrap();
+        assert_eq!(back, located);
     }
 }

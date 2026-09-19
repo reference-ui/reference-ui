@@ -1,0 +1,26 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'depth' encountered for prop 'height'",
+    "file": "input/src/located.ts",
+    "line": 4,
+    "column": 11
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "height under []: 1 harvested value minted",
+    "file": "input/src/located.ts",
+    "line": 4,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `ui.missing.path`",
+    "file": "input/src/located.ts",
+    "line": 5,
+    "column": 15
+  }
+]

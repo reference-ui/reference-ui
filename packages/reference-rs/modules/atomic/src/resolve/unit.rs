@@ -6,7 +6,7 @@
 //! `Infinity`, and `NaN` spellings refuse with diagnostics.
 
 use crate::atom::{AtomValue, CssValue};
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
 
 /// Canonicalize a finite numeric spelling to the bare-number form (`'1e3'`
 /// → `"1000"`, `'.5'` → `"0.5"`, `'01'` → `"1"`), or None when the string
@@ -88,9 +88,14 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
     }
 }
 
-fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
+fn from_number(
+    prop: &str,
+    n: Box<str>,
+    location: &DiagnosticLocation,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
-        diagnostics.push(Diagnostic::warning(
+        diagnostics.push(location.warning(
             DiagnosticCode::NonCanonicalNumeric,
             format!("Non-canonical numeric value \"{n}\" on `{prop}`"),
         ));
@@ -99,7 +104,12 @@ fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
     Some(resolve_numeric_value(prop, &n))
 }
 
-fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
+fn from_string(
+    prop: &str,
+    s: Box<str>,
+    location: &DiagnosticLocation,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<CssValue> {
     // SPEC-V2-14: structural runs collapse before anything else reads the
     // string, so spaced twins share one numeric parse and one atom.
     let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
@@ -109,7 +119,7 @@ fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
             return Some(resolve_numeric_value(prop, &canonical));
         }
     }
-    legacy_string_value(prop, collapsed, diagnostics)
+    legacy_string_value(prop, collapsed, location, diagnostics)
 }
 
 /// True when a bare number is a valid value: every prop except colors, where
@@ -123,19 +133,20 @@ fn accepts_bare_number(prop: &str) -> bool {
 fn legacy_string_value(
     prop: &str,
     s: Box<str>,
+    location: &DiagnosticLocation,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<CssValue> {
     // Empty-after-trim strings are never CSS (`margin: ;` is invalid);
     // refuse with a diagnostic instead of emitting the empty declaration.
     if s.trim().is_empty() {
-        diagnostics.push(Diagnostic::warning(
+        diagnostics.push(location.warning(
             DiagnosticCode::InvalidCssValue,
             format!("Empty string value on `{prop}`"),
         ));
         return None;
     }
     if is_non_canonical_numeric(&s) {
-        diagnostics.push(Diagnostic::warning(
+        diagnostics.push(location.warning(
             DiagnosticCode::NonCanonicalNumeric,
             format!("Non-canonical numeric value \"{s}\" on `{prop}`"),
         ));
@@ -150,9 +161,11 @@ fn legacy_string_value(
 }
 
 /// Lower an authored AtomValue into an intermediate CssValue, enforcing unit and numeric canonicalization.
+/// Refusal warnings carry the want's location when the want was authored in source.
 pub fn css_value_from_authored(
     prop: &str,
     val: AtomValue,
+    location: &DiagnosticLocation,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<CssValue> {
     match val {
@@ -160,14 +173,14 @@ pub fn css_value_from_authored(
         // silently, exactly like a literal null the walk omits.
         AtomValue::Null => None,
         AtomValue::Bool(_) => {
-            diagnostics.push(Diagnostic::warning(
+            diagnostics.push(location.warning(
                 DiagnosticCode::InvalidCssValue,
                 format!("`{prop}` value `{val}` is not valid CSS"),
             ));
             None
         }
-        AtomValue::Number(n) => from_number(prop, n, diagnostics),
-        AtomValue::String(s) => from_string(prop, s, diagnostics),
+        AtomValue::Number(n) => from_number(prop, n, location, diagnostics),
+        AtomValue::String(s) => from_string(prop, s, location, diagnostics),
         AtomValue::Token { path, value } => Some(CssValue::Token { path, value }),
     }
 }

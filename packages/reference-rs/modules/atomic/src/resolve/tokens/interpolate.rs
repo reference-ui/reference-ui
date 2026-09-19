@@ -6,7 +6,7 @@
 //! verbatim. A segment that names no token errors and drops the whole atom;
 //! unterminated braces stay raw and warn.
 
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::DiagnosticCode;
 use crate::resolve::ResolveSession;
 
 use super::{format_entry, split_opacity};
@@ -63,10 +63,11 @@ impl<'a, 's> SegmentExpander<'a, 's> {
     fn expand_open(&mut self, rest: &'a str, open: usize) -> Option<&'a str> {
         let after = &rest[open + 1..];
         let Some(close) = after.find('}') else {
-            self.session.diagnostics.push(Diagnostic::warning(
+            let diagnostic = self.session.location.warning(
                 DiagnosticCode::UnterminatedBrace,
                 format!("unterminated `{{` in value `{}`", self.source),
-            ));
+            );
+            self.session.diagnostics.push(diagnostic);
             self.out.push_str(&rest[open..]);
             return Some("");
         };
@@ -104,7 +105,7 @@ impl<'a, 's> SegmentExpander<'a, 's> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::diagnostics::{DiagnosticLocation, DiagnosticSeverity};
+    use crate::diagnostics::{Diagnostic, DiagnosticLocation, DiagnosticSeverity};
     use base_system::{BaseSystem, TokenLeaf};
 
     fn test_system() -> BaseSystem {

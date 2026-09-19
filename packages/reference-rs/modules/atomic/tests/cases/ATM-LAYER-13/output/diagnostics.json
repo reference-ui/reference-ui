@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown conditional key \"nope\" for \"margin\" in global CSS"
+    "message": "Unknown conditional key \"nope\" for \"margin\" in global CSS",
+    "file": "rs-28",
+    "line": 1,
+    "column": 1
   }
 ]
