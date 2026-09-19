@@ -7,6 +7,7 @@
 //! names still consult the bag (SPEC-V2-76 lands the walk; siblings retire it).
 
 mod binding;
+mod call_init;
 mod collect;
 mod destructure;
 mod init;

@@ -34,14 +34,6 @@
   {
     "severity": "warning",
     "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'local' encountered for prop 'animationName'",
-    "file": "input/src/factories.ts",
-    "line": 28,
-    "column": 31
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-IDENTIFIER",
     "message": "Dynamic non-literal identifier 'foreign' encountered for prop 'animationName'",
     "file": "input/src/foreign.ts",
     "line": 7,

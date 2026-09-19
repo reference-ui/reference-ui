@@ -17,7 +17,6 @@ use crate::atom::AtomValue;
 use crate::extract::constants::{
     canonical_numeric_key, object_entries, ConstObject, LocalConstants, ObjectProp,
 };
-use crate::extract::expressions::walk::is_guard_expression;
 
 /// Which slot of a dependent binding a `Dep` strips.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -102,7 +101,7 @@ pub(crate) fn object_init(
                 record_entry(prop, table, scope, &mut build);
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
-                record_spread(&spread.argument, table, scope, &mut build.sink);
+                super::spreads::record_spread(&spread.argument, table, scope, &mut build.sink);
             }
         }
     }
@@ -192,53 +191,6 @@ pub(crate) fn object_binding(
     } else {
         None
     }
-}
-
-/// Copy a static spread's entries verbatim; branching spreads union every
-/// resolvable arm; other spreads stay out.
-fn record_spread(
-    argument: &Expression<'_>,
-    table: &ScopeTable,
-    scope: ScopeId,
-    sink: &mut EntrySink,
-) {
-    let spread = peel(argument);
-    if let Expression::Identifier(id) = spread {
-        // { ...base }  after  const base = { mt: '2r' }
-        if let Some((src_scope, map)) = object_binding(table, scope, id.name.as_str()) {
-            for (key, prop) in map {
-                super::spreads::push_spread_provenance(sink, &key, src_scope, id.name.as_str());
-                sink.entries.insert(key, prop);
-            }
-        }
-        return;
-    }
-    if let Expression::ObjectExpression(inner) = spread {
-        // { ...{ mt: '2r' } }  — inline spreads recurse with their provenance
-        let (inner_entries, inner_provenances) = object_init(inner, table, scope);
-        sink.provenances.extend(inner_provenances);
-        sink.entries.extend(inner_entries);
-        return;
-    }
-    if let Expression::ConditionalExpression(cond) = spread {
-        // { ...(c ? a : b) }  — union every arm that resolves (SPEC-V2-24)
-        super::spreads::union_spread_arms(&[&cond.consequent, &cond.alternate], table, scope, sink);
-        return;
-    }
-    if let Expression::LogicalExpression(log) = spread {
-        // { ...(u && a) }  — non-guard operands union, as walked
-        super::spreads::union_spread_arms(&logical_arms(log), table, scope, sink);
-    }
-    // Member spreads (`...styles.hover`) ride a follow-up: recording them
-    // needs member-path reads at collect time. Calls never spread statically.
-}
-
-/// The non-guard operands of a logical spread, as the walk lowers them.
-fn logical_arms<'a, 'b>(log: &'b oxc_ast::ast::LogicalExpression<'a>) -> Vec<&'b Expression<'a>> {
-    [&log.left, &log.right]
-        .into_iter()
-        .filter(|side| !is_guard_expression(side))
-        .collect()
 }
 
 /// Every static leaf carried by an in-scope scalar binding, with its scope.

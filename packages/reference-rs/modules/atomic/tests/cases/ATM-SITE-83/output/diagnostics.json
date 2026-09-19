@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"css\"",
+    "file": "input/src/App.tsx",
+    "line": 42,
+    "column": 30
+  }
+]

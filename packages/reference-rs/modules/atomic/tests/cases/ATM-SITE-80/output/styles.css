@@ -577,18 +577,14 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_13r { margin: calc(13 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_5r { margin: calc(5 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_6r { margin: calc(6 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_7r { margin: calc(7 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
-  .\@reference-ui\/lib__anim-n_aliased { animation-name: aliased; }
-  .\@reference-ui\/lib__anim-n_early { animation-name: early; }
-  .\@reference-ui\/lib__anim-n_local { animation-name: local; }
-  .\@reference-ui\/lib__anim-n_spin { animation-name: spin; }
-  .\@reference-ui\/lib__position-try-fallbacks_none { position-try-fallbacks: none; }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__bg-c_navy { background-color: navy; }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_teal\.600 { color: var(--colors-teal-600); }
+  .\@reference-ui\/lib__mb_6px { margin-bottom: 6px; }
+  .\@reference-ui\/lib__mt_4px { margin-top: 4px; }
 }
 }

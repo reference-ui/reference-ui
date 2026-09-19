@@ -577,18 +577,22 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__bd-w_1px { border-width: 1px; }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_5r { margin: calc(5 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_6r { margin: calc(6 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_7r { margin: calc(7 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
-  .\@reference-ui\/lib__anim-n_aliased { animation-name: aliased; }
-  .\@reference-ui\/lib__anim-n_early { animation-name: early; }
-  .\@reference-ui\/lib__anim-n_local { animation-name: local; }
-  .\@reference-ui\/lib__anim-n_spin { animation-name: spin; }
-  .\@reference-ui\/lib__position-try-fallbacks_none { position-try-fallbacks: none; }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__bg-c_gray\.100 { background-color: var(--colors-gray-100); }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_blue\.700 { color: var(--colors-blue-700); }
+  .\@reference-ui\/lib__outline-c_ui\.focus\.ring { outline-color: var(--colors-ui-focus-ring); }
+  .\@reference-ui\/lib__outline-offset_2px { outline-offset: 2px; }
+  .\@reference-ui\/lib__outline-s_solid { outline-style: solid; }
+  .\@reference-ui\/lib__outline-w_2px { outline-width: 2px; }
+  .\@reference-ui\/lib__focusVisible\:outline-c_ui\.focus\.ring:is(:focus-visible, [data-focus-visible]) { outline-color: var(--colors-ui-focus-ring); }
+  .\@reference-ui\/lib__focusVisible\:outline-offset_2px:is(:focus-visible, [data-focus-visible]) { outline-offset: 2px; }
+  .\@reference-ui\/lib__focusVisible\:outline-s_solid:is(:focus-visible, [data-focus-visible]) { outline-style: solid; }
+  .\@reference-ui\/lib__focusVisible\:outline-w_2px:is(:focus-visible, [data-focus-visible]) { outline-width: 2px; }
 }
 }

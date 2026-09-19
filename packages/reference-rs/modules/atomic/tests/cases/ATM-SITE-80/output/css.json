@@ -1,0 +1,11 @@
+{
+  "backgroundColor:navy": "@reference-ui/lib__bg-c_navy",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:teal.600": "@reference-ui/lib__c_teal.600",
+  "margin:13r": "@reference-ui/lib__m_13r",
+  "margin:1r": "@reference-ui/lib__m_1r",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "marginBottom:6px": "@reference-ui/lib__mb_6px",
+  "marginTop:4px": "@reference-ui/lib__mt_4px",
+  "padding:4px": "@reference-ui/lib__p_4px"
+}

@@ -19,7 +19,7 @@ use crate::extract::expressions::walk::{
     block_value_kind, is_silent_block_value, unwrap_wrapper_target,
 };
 use crate::extract::expressions::{
-    lower_array_object, lower_const_object, resolve_block_target, BlockLookup,
+    lower_array_object, lower_const_object, resolve_block_target, BagSemantics, BlockLookup,
 };
 use crate::extract::fold::{merge_spread, spread_base_name, MergeSpread};
 use crate::extract::ExtractContext;
@@ -53,7 +53,9 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
             }
             JSXAttributeItem::SpreadAttribute(spread) => {
                 // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
+                // A spread bag names attributes, not style positions (§12).
                 let mut obj_ctx = ctx.object_walk(origin, false);
+                obj_ctx.bag = BagSemantics::JsxAttributes;
                 crate::extract::expressions::walk_spread_argument(
                     &mut obj_ctx,
                     &spread.argument,

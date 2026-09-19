@@ -578,17 +578,18 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_5r { margin: calc(5 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_6r { margin: calc(6 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_7r { margin: calc(7 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
-  .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
-  .\@reference-ui\/lib__anim-n_aliased { animation-name: aliased; }
-  .\@reference-ui\/lib__anim-n_early { animation-name: early; }
-  .\@reference-ui\/lib__anim-n_local { animation-name: local; }
-  .\@reference-ui\/lib__anim-n_spin { animation-name: spin; }
-  .\@reference-ui\/lib__position-try-fallbacks_none { position-try-fallbacks: none; }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__px_0\.5rem { padding-inline: 0.5rem; }
+  .\@reference-ui\/lib__bg-c_transparent { background-color: transparent; }
+  .\@reference-ui\/lib__bd-b-c_gray\.700 { border-bottom-color: var(--colors-gray-700); }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_blue\.700 { color: var(--colors-blue-700); }
+  .\@reference-ui\/lib__c_green\.600 { color: var(--colors-green-600); }
+  .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__hover\:bg-c_gray\.100:is(:hover, [data-hover]) { background-color: var(--colors-gray-100); }
+  @container (min-width: 768px) {
+    .\@reference-ui\/lib__\[\@container_\(min-width\:_768px\)\]\:p_1r { padding: var(--spacing-root); }
+    .\@reference-ui\/lib__\[\@container_\(min-width\:_768px\)\]\:mt_4px { margin-top: 4px; }
+  }
 }
 }
