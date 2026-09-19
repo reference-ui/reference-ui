@@ -91,6 +91,8 @@ pub(crate) struct LeavesBind<'a> {
     name: &'a str,
     span: Span,
     leaves: Vec<AtomValue>,
+    /// True when the copied entry or default dropped a dynamic arm.
+    residue: bool,
     /// Provenance of the copied entry, default, or slot, if identifier-fed.
     entry: Option<KeyProvenance>,
     /// Provenance of a computed pattern key, if identifier-fed.
@@ -105,7 +107,10 @@ pub(crate) fn push_leaves(ctx: &PatternCtx<'_, '_>, bind: LeavesBind<'_>, out: &
         bind.name.to_string(),
         Binding {
             kind: ctx.kind.clone(),
-            init: Some(BindingInit::Scalars(bind.leaves)),
+            init: Some(BindingInit::Scalars {
+                leaves: bind.leaves,
+                residue: bind.residue,
+            }),
             span: bind.span,
         },
     ));
@@ -131,13 +136,14 @@ pub(crate) fn push_leaves(ctx: &PatternCtx<'_, '_>, bind: LeavesBind<'_>, out: &
     }
 }
 
-/// One inline slot's value: a literal or a single-leaf identifier.
+/// One inline slot's value: a literal or a single-leaf identifier, plus
+/// whether the identifier's binding dropped a dynamic arm beside its leaf.
 pub(crate) fn slot_value(
     ctx: &PatternCtx<'_, '_>,
     expr: &Expression<'_>,
-) -> Option<(AtomValue, Option<KeyProvenance>)> {
+) -> Option<(AtomValue, Option<KeyProvenance>, bool)> {
     if let Some(leaf) = value::literal_leaf(expr) {
-        return Some((leaf, None));
+        return Some((leaf, None, false));
     }
     if let Expression::Identifier(id) = expr {
         let (leaf, src_scope) = value::single_scalar(ctx.table, ctx.scope, id.name.as_str())?;
@@ -147,16 +153,18 @@ pub(crate) fn slot_value(
             src_name: id.name.to_string(),
             src_key: None,
         };
-        return Some((leaf, Some(prov)));
+        let residue = value::scalar_residue(ctx.table, ctx.scope, id.name.as_str());
+        return Some((leaf, Some(prov), residue));
     }
     None
 }
 
-/// A destructured default's value: a literal or a single-leaf identifier.
+/// A destructured default's value: a literal or a single-leaf identifier,
+/// plus whether the identifier's binding dropped a dynamic arm.
 pub(crate) fn default_value(
     ctx: &PatternCtx<'_, '_>,
     expr: &Expression<'_>,
-) -> Option<(AtomValue, Option<KeyProvenance>)> {
+) -> Option<(AtomValue, Option<KeyProvenance>, bool)> {
     slot_value(ctx, value::peel(expr))
 }
 

@@ -120,7 +120,10 @@ fn fold_call_init(call: &CallExpression<'_>, scoped: Scoped<'_>) -> Option<Bindi
 /// arrays, multi-leaf slots) refuse the whole init.
 fn fence_init(value: &FenceValue) -> Option<BindingInit> {
     match value {
-        FenceValue::Leaves(leaves) => Some(BindingInit::Scalars(leaves.clone())),
+        FenceValue::Leaves(leaves) => Some(BindingInit::Scalars {
+            leaves: leaves.clone(),
+            residue: false,
+        }),
         FenceValue::Object(entries) => Some(BindingInit::Object(fence_object(entries)?)),
         FenceValue::Array(elements) => Some(BindingInit::Array(fence_array(elements)?)),
     }

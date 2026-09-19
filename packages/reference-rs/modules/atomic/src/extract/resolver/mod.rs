@@ -29,7 +29,7 @@ use oxc_parser::ParserReturn;
 use super::constants::{collect_local_constants, LocalConstants, MutatedBinding};
 use super::scope::{self, BindingInit, ImportRef};
 use source::{AtomicFs, AtomicLoader};
-use values::{bag_export, keep_outcome, valued};
+use values::{bag_export, keep_outcome, valued, valued_scalars};
 
 pub(crate) use values::{reason_text, RefusalCtx, ValueRefused};
 pub use values::{ResolvedExport, UnfoldableSpread};
@@ -339,7 +339,7 @@ impl<'s> ValueGraph<'s> {
     /// and then the file's own literal bag.
     fn init_export(refined: &RefinedFile, name: &str) -> ResolvedExport {
         match refined.table.root_init(name) {
-            Some(BindingInit::Scalars(leaves)) => valued(leaves, None, None, None),
+            Some(BindingInit::Scalars { leaves, residue }) => valued_scalars(leaves, residue),
             Some(BindingInit::Object(map)) => valued(Vec::new(), Some(map), None, None),
             Some(BindingInit::Array(elements)) => valued(Vec::new(), None, Some(elements), None),
             Some(BindingInit::PureFn(_)) | None => Self::descriptor_export(refined, name),

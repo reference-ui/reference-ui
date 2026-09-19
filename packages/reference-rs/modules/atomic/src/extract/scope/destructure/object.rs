@@ -26,13 +26,14 @@ struct ObjectSource {
     residues: Vec<UnfoldableSpread>,
 }
 
-/// The static leaves of one source entry: absent and empty markers bind nothing.
-fn entry_leaves(source: &ObjectSource, key: &str) -> Option<Vec<AtomValue>> {
+/// The static leaves of one source entry, plus whether the entry dropped a
+/// dynamic arm: absent and empty markers bind nothing.
+fn entry_leaves(source: &ObjectSource, key: &str) -> Option<(Vec<AtomValue>, bool)> {
     let prop = source.entries.get(key)?;
     if prop.leaves.is_empty() {
         return None;
     }
-    Some(prop.leaves.clone())
+    Some((prop.leaves.clone(), prop.residue))
 }
 
 /// One property a pattern lists: its key plus the value pattern.
@@ -103,7 +104,7 @@ fn bind_listed_prop(
 ) {
     if let BindingPattern::BindingIdentifier(id) = prop.value {
         // const { color } = tokens  /  const { primary: color } = tokens
-        let Some(leaves) = entry_leaves(source, &prop.key) else {
+        let Some((leaves, residue)) = entry_leaves(source, &prop.key) else {
             out.bindings
                 .push(shadow_binding(ctx, id.name.as_str(), id.span));
             return;
@@ -114,6 +115,7 @@ fn bind_listed_prop(
                 name: id.name.as_str(),
                 span: id.span,
                 leaves,
+                residue,
                 entry: source.provenances.get(&prop.key).cloned(),
                 key: prop.key_dep,
                 root: source.root.clone(),
@@ -144,7 +146,7 @@ fn bind_defaulted_prop(
     if source.entries.contains_key(&prop.key) {
         // A present key holds its runtime value — even an empty marker feeds
         // the shadow, never the default (the default only fires on `undefined`).
-        let Some(leaves) = entry_leaves(source, &prop.key) else {
+        let Some((leaves, residue)) = entry_leaves(source, &prop.key) else {
             out.bindings
                 .push(shadow_binding(ctx, id.name.as_str(), id.span));
             return;
@@ -156,6 +158,7 @@ fn bind_defaulted_prop(
                 name: id.name.as_str(),
                 span: id.span,
                 leaves,
+                residue,
                 entry: source.provenances.get(&prop.key).cloned(),
                 key: prop.key_dep,
                 root: source.root.clone(),
@@ -165,7 +168,7 @@ fn bind_defaulted_prop(
         return;
     }
     // const { color = 'red' } = props  — a missing key falls to the default
-    let Some((leaf, default_dep)) = default_value(ctx, &assign.right) else {
+    let Some((leaf, default_dep, residue)) = default_value(ctx, &assign.right) else {
         out.bindings
             .push(shadow_binding(ctx, id.name.as_str(), id.span));
         return;
@@ -176,6 +179,7 @@ fn bind_defaulted_prop(
             name: id.name.as_str(),
             span: id.span,
             leaves: vec![leaf],
+            residue,
             entry: default_dep,
             key: prop.key_dep,
             root: source.root.clone(),

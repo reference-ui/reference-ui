@@ -88,6 +88,7 @@ fn bind_listed_slot(
                 name: id.name.as_str(),
                 span: id.span,
                 leaves: vec![leaf],
+                residue: false,
                 entry: source.provenances.get(&slot.index).cloned(),
                 key: None,
                 root: source.root.clone(),
@@ -134,6 +135,7 @@ fn bind_defaulted_slot(
                 name: id.name.as_str(),
                 span: id.span,
                 leaves: vec![leaf],
+                residue: false,
                 entry: source.provenances.get(&slot.index).cloned(),
                 key: None,
                 root: source.root.clone(),
@@ -148,7 +150,7 @@ fn bind_defaulted_slot(
             .push(shadow_binding(ctx, id.name.as_str(), id.span));
         return;
     }
-    let Some((leaf, default_dep)) = default_value(ctx, &slot.assign.right) else {
+    let Some((leaf, default_dep, residue)) = default_value(ctx, &slot.assign.right) else {
         out.bindings
             .push(shadow_binding(ctx, id.name.as_str(), id.span));
         return;
@@ -159,6 +161,7 @@ fn bind_defaulted_slot(
             name: id.name.as_str(),
             span: id.span,
             leaves: vec![leaf],
+            residue,
             entry: default_dep,
             key: None,
             root: source.root.clone(),
@@ -318,7 +321,9 @@ fn inline_array_element(
         return;
     };
     let index = slots.elements.len();
-    let Some((leaf, prov)) = slot_value(ctx, value::peel(expr)) else {
+    let Some((leaf, prov, false)) = slot_value(ctx, value::peel(expr)) else {
+        // Unresolvable — or partially static ([isSelected] holds its runtime
+        // value on the dynamic arm) — so the slot stays dark.
         slots.elements.push(ArraySlot::Dynamic);
         return;
     };

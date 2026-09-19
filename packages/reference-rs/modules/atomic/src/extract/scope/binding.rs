@@ -48,8 +48,16 @@ pub struct ImportRef {
 /// array, or a lowered pure-helper descriptor.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BindingInit {
-    /// Literal leaves (`'2r'`, both arms of a const ternary).
-    Scalars(Vec<AtomValue>),
+    /// Literal leaves (`'2r'`, both arms of a const ternary). `residue` marks
+    /// a partially static binding: leaves were kept while a dynamic arm was
+    /// dropped at collect time, so value positions still scoop the union
+    /// while test folding stays open (a single kept leaf never folds).
+    Scalars {
+        /// Every static leaf the init recorded.
+        leaves: Vec<AtomValue>,
+        /// True when a dynamic arm was dropped beside the kept leaves.
+        residue: bool,
+    },
     /// A const style object (`{ primary: 'n300' }`).
     Object(ConstObject),
     /// A const array (`['2px', '4px']`, holes included for arity).

@@ -273,6 +273,12 @@ fn fold_hole_identifier(name: &str, span: Span, hole: &mut HoleFold<'_, '_>) -> 
         );
         return Vec::new();
     }
+    if hole.scoped.scalar_residue(name) {
+        // `${partial}` — a dropped arm rides the leaves; the join must not
+        // fold on the kept leaf, so the hole refuses like a dynamic name
+        hole.refuse(span, format!("identifier '{name}'"));
+        return Vec::new();
+    }
     let leaves = hole.scoped.scalar_leaves(name);
     if leaves.is_empty() {
         hole.refuse(span, format!("identifier '{name}'"));
@@ -291,6 +297,12 @@ fn fold_hole_member(mem: &StaticMemberExpression<'_>, hole: &mut HoleFold<'_, '_
     if let Expression::Identifier(obj) = &mem.object {
         let obj_name = obj.name.as_str();
         let prop_name = mem.property.name.as_str();
+        if super::member::member_path_residue(mem, hole.scoped) {
+            // `${o.p}` over a dropped arm — the join must not fold on the
+            // kept leaves, so the hole refuses like a dynamic member
+            hole.refuse(mem.span, format!("member '{obj_name}.{prop_name}'"));
+            return Vec::new();
+        }
         // `${o.p}` — branching props fan out, as in value position
         let out: Vec<String> = hole
             .scoped

@@ -194,6 +194,12 @@ fn fold_identifier<'ast, 'expr>(
         fold.dynamic.push(expr);
         return true;
     }
+    if scoped.scalar_residue(ident.name.as_str()) {
+        // -partial  — a dropped arm rides the leaves; the operator must not
+        // fold on the kept leaf, so the caller walks the name itself
+        fold.dynamic.push(expr);
+        return true;
+    }
     // -space  — the operator applies to every leaf
     for leaf in leaves {
         apply_operator(op, leaf, fold);

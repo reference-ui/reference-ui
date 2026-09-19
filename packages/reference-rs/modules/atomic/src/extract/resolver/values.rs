@@ -18,6 +18,7 @@ use crate::extract::fold::fence::PureFn;
 #[derive(Debug, Clone, Default)]
 pub struct ResolvedExport {
     scalars: Vec<AtomValue>,
+    scalar_residue: bool,
     object: Option<ConstObject>,
     array: Option<Vec<ConstArrayElement>>,
     pure_fn: Option<PureFn>,
@@ -29,6 +30,12 @@ impl ResolvedExport {
     /// Every static leaf the origin declares for the imported name.
     pub fn scalars(&self) -> &[AtomValue] {
         &self.scalars
+    }
+
+    /// True when the origin's scalar init dropped a dynamic arm beside its
+    /// leaves: values scoop the union while test folding stays open.
+    pub fn scalar_residue(&self) -> bool {
+        self.scalar_residue
     }
 
     /// The style object the origin declares for the imported name, if any.
@@ -94,6 +101,11 @@ impl ResolvedExport {
     /// Carry the origin's nested-spread residue markers to the use site.
     pub(crate) fn set_unfoldable(&mut self, markers: Vec<UnfoldableSpread>) {
         self.unfoldable = markers;
+    }
+
+    /// Carry the origin scalar's dropped-arm mark to the use site.
+    pub(crate) fn set_scalar_residue(&mut self, residue: bool) {
+        self.scalar_residue = residue;
     }
 }
 
@@ -220,6 +232,13 @@ pub(crate) fn valued(
     export
 }
 
+/// An export carrying scalar leaves plus their dropped-arm mark.
+pub(crate) fn valued_scalars(leaves: Vec<AtomValue>, residue: bool) -> ResolvedExport {
+    let mut export = valued(leaves, None, None, None);
+    export.set_scalar_residue(residue);
+    export
+}
+
 /// Keep a folded value or a mutation entry; refusals stay out.
 pub(crate) fn keep_outcome(
     local: &str,
@@ -236,12 +255,14 @@ pub(crate) fn keep_outcome(
 
 /// One file's literal value for a name, from its own bag only.
 pub(crate) fn bag_export(bag: &LocalConstants, name: &str) -> ResolvedExport {
-    valued(
+    let mut export = valued(
         bag.scalar_leaves(name).to_vec(),
         bag.get_object(name).cloned(),
         bag.get_array(name).map(<[ConstArrayElement]>::to_vec),
         None,
-    )
+    );
+    export.set_scalar_residue(bag.scalar_residue(name));
+    export
 }
 
 #[cfg(test)]
