@@ -59,7 +59,8 @@ beyond atomic styles — crews are expected to find them.
    code, no narrow special-cases that dodge the approved shape.
 5. **Periodic review.** Each doom cycle ends with a review before the
    next cycle launches: what broke, what was contrived, what got
-   fortified, what the next cycle targets.
+   fortified, what the next cycle targets. Minimum run: **6 cycles**
+   (§8).
 
 ## 6. Safeguards
 
@@ -78,3 +79,12 @@ launch orders override this section. Launch each cycle as a role-split
 multi-agent workflow (breaker / contrivance-reviewer / architect-oracle /
 implementor crews with review gates between roles); check for a
 workflow-authoring skill at launch time and follow it when present.
+
+## 8. Satisfaction pin (what "happy tomorrow" means)
+
+The doom run is a minimum of **6 full cycles** (break → review → consult
+→ fortify → cycle review, per §5). Six clean cycles with every real
+break fortified or architect-deferred is the starting pin for user
+satisfaction. Fewer than six, or six with un-fortified real breaks and
+no deferral ruling, does not earn the pin. The pin informs the
+satisfaction marker — it does not replace the user's explicit signal.
