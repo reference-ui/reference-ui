@@ -456,6 +456,19 @@ a code allowlist.
 Codes remain stable for backchannel consumers and old goldens. New codes are
 appended only for genuinely new failure classes.
 
+## First blood: the tokens stillbirth
+
+Six token leaves, 31 sites, zero definitions — `ui.button.*`,
+`ui.panel.*`, `ui.status.*`, `design.positive.*`, `design.bg.*`
+were referenced by analogy and never built (archaeology:
+`fbfc83fca` wrote the usages; the leaves never existed in any
+version — Panda v1 silently agreed). Fixed ahead of Slice 0 as
+the getting-started job: every site traced, every leaf defined
+with documented values or repointed at the obviously-correct
+existing token. This is exactly what the diagnostics module must
+prove as routine — verdicts on real author mistakes with located,
+grouped output — and stays on board as the onboarding case.
+
 ## Stations: diagnostics owns its proof suite
 
 Diagnostics gets a first-class station family under Atomic:
