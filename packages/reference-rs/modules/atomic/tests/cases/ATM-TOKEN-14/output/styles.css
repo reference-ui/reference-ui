@@ -6,13 +6,16 @@
 @layer tokens {
   :root, [data-color-mode=light] {
     --colors-gray-800: #1f2937;
+    --colors-red-500: #ef4444;
   }
   [data-color-mode=dark] {
     --colors-gray-800: #f9fafb;
+    --colors-red-500: #f87171;
   }
 }
 @layer utilities {
   .token-fence__bd-c_color-mix\(in_srgb\,_red_50\%\,_blue\) { border-color: color-mix(in srgb, red 50%, blue); }
+  .token-fence__accent-color_color-mix\(in_srgb\,_\{colors\.gray\.800\}_50\%\,_\{colors\.red\.500\}\) { accent-color: color-mix(in srgb, var(--colors-gray-800) 50%, var(--colors-red-500)); }
   .token-fence__bg-c_oklch\(0\.7_0\.1_180\) { background-color: oklch(0.7 0.1 180); }
   .token-fence__background-image_url\(\/img\.png\) { background-image: url(/img.png); }
   .token-fence__caret-color_ui\.missing\.path { caret-color: ui.missing.path; }

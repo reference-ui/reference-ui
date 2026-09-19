@@ -9,4 +9,5 @@ export const cls = css({
   width: 'calc(100% - 2px)',
   backgroundImage: 'url(/img.png)',
   caretColor: 'ui.missing.path',
+  accentColor: 'color-mix(in srgb, {colors.gray.800} 50%, {colors.red.500})',
 })

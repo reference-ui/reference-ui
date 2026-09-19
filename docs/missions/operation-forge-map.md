@@ -248,3 +248,30 @@ Station IDs are suggested; each slice owner confirms free slots against
   A value containing token refs is not a complete CSS value, so the
   fence must not fire there. Slice-1 fixup follows Slice 3's commit;
   Slice 3's own scope (R-B, 78/79/84, NEO-SITE-29, B8) is green.
+- S1-4 (Slice-1 §9 fixup for S3-14, in working tree 2026-09-19 —
+  verified from the tree, parent commits): the fence no longer fires
+  on values carrying `{…}` refs — `classify_css_value` refuses any
+  brace (`canon/.../values/classify.rs:112-114`,
+  `has_token_braces :163-165`) before all tables, so
+  `resolve_token_value` falls through to brace interpolation
+  (`atomic/.../resolve/tokens/mod.rs:91-102` → `var()`s) instead of
+  raw passthrough (`:38-40`). Rhythm cannot bypass
+  (`resolve/rhythm/mod.rs:43` needs an `r`-suffix numeric;
+  `color-mix(…)` ends `)`). Unit pins cover the exact triaged
+  strings (`classify.rs:283-297`, incl. GLOBAL-12 `theme.ts:12` /
+  `:15-16` and PARITY-02 `theme.ts:105` verbatim);
+  `ATM-TOKEN-14` gains a two-ref `color-mix` arm (`App.tsx:12`)
+  asserting `var(--colors-gray-800)` / `var(--colors-red-500)`
+  expansion (`spec.ts:23-25`) with complete-CSS silence intact
+  (single `ui.missing.path` diagnostic pin, `:26-32`) and goldens
+  repinned (`styles.css` accent-color, `css.json`,
+  `baseSystem.json` red.500). The `globalCss` path shares the
+  fence (`stylesheet/global/value.rs:161`), so the GLOBAL-12 /
+  PARITY-02 mixes fix identically. In-session oracles: canon
+  53/53 (classify 5/5), atomic `resolve::tokens` 29/29, atomic
+  vitest stations 219/219. Neo GLOBAL-12/PARITY-02 browser
+  re-gauge (sheet `var()`s per `colormix.spec.ts:33-35` /
+  `:43-45` + paint twins) per the fix oracle ref, not re-run
+  here. Captain closed the gap firsthand 2026-09-19: GLOBAL-12 PASS,
+  PARITY-02 PASS (F22 prints; `red/abc` UNKNOWN-COLOR stands — the
+  world names it `slashInvalid`, deliberate invalid input, §11-true).
