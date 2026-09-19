@@ -147,7 +147,7 @@ fn dispatch_attribute_expression(
         // <Div bg={on ? 'n300' : 'n100'} />
         let mut expr_ctx = ctx.expression_walk(name, origin, false);
         crate::extract::expressions::walk_expression(&mut expr_ctx, expr, &smallvec![]);
-        for (val, imp) in crate::extract::expressions::ast_to_json_values(expr, ctx.constants) {
+        for (val, imp) in crate::extract::expressions::ast_to_json_values(expr, ctx.scoped()) {
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
                 when: Vec::new(),
                 prop: name.to_string(),

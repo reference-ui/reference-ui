@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 139 |
-| Named `[x]` proven | 134 |
+| Total contract cases | 163 |
+| Named `[x]` proven | 158 |
 | Remaining `[ ]` | 5 (`ATM-DIAG-04`, `ATM-DIAG-05`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
-| Cargo `#[test]` | 164 (internal; not ticks) |
-| Vitest seam stations | 127 (`tests/cases/<ATM-*>`) |
+| Cargo `#[test]` | 251 (internal; not ticks) |
+| Vitest seam stations | 158 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -68,13 +68,13 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 20 | 20 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 21 | 21 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 10 | 10 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 9 | 9 | 0 |
-| `COND` | Conditions, media queries, pseudo-classes, & patterns | 21 | 21 | 0 |
+| `COND` | Conditions, media queries, pseudo-classes, & patterns | 24 | 24 | 0 |
 | `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
@@ -88,7 +88,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **142** | **136** | **6** |
+| **Total** | | **146** | **140** | **6** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -300,6 +300,12 @@ compiler contract.
 - [x] `ATM-SITE-23` `[reference]` `[seam]` —
   **Const-bound ternaries and logicals must extract every literal leaf with one plan per leaf.**
   Station `ATM-SITE-23` (RS-37). Compile the `BookShell.tsx` chrome shape (`const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component body feeding `borderBottomColor={subtleBorder}`) beside top-level ternary, nested ternary, and logical `css()` controls plus a fully dynamic identifier. Assert one want and one runtime plan per leaf (both gray arms, all four call colors), `border-bottom-color` utilities for every shade, and exactly the fail-closed `unknownToken` warning.
+- [x] `ATM-SITE-53` `[reference]` `[seam]` — **[SPEC-V2-75, Overmatch Ph1]**
+  **An identifier in value position must resolve through its binding: the innermost declarator in scope, else the file's import binding, else dynamic.**
+  Station `ATM-SITE-53` (Overmatch Ph1). Compile `a.ts` (`export const color = 'red'`) beside `b.ts` (`function Card({ color }) { return css({ color }) }`). Assert `color` in `b.ts` is a param → a located `Dynamic non-literal identifier` diagnostic and zero wants (never the silent `'red'` from `a.ts`, which today mints a ghost with no warning). Assert an inner `const` shadows an outer same-named `const` (innermost leaves only, no union bloat) and that two files declaring the same name never see each other's values through locals. Same-file const/member/spread resolution is unchanged; genuinely unbound names still consult the project bag, now retired behind the `ImportLookup` stub (`extract/scope/`, mission §7.2; the real binding walk is SPEC-V2-76). Panda: scope-correct by construction (`scope.rs:1349`, `:1369`).
+- [x] `ATM-SITE-28` `[reference]` `[seam]` — **[SPEC-V2-35/02/53, Overmatch Ph1]**
+  **A `let`/`var` with any assignment must drop to a diagnostic naming the write; unmutated `let`/`var` keep resolving.**
+  Station `ATM-SITE-28` (Overmatch Ph1). Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53, cross-file arm via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/` per mission §7.2). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until SPEC-V2-76 lands the binding walk. Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241` (unmutated `let`/`var`), `cross_file.rs:502` (`export_let_currently_folds_too`).
 
 ### Leaf Literal Extraction
 
@@ -475,6 +481,15 @@ compiler contract.
 - [x] `ATM-COND-21` `[reference]` `[seam]` —
   **Queryless `@supports` / `@media` / `@container` keys must refuse with a diagnostic and print nothing.**
   Station `ATM-COND-21` (RS-29). Compile bare `@supports` and `@media` keys beside the queried `@supports (display: grid)` control. Assert no `@supports {` / `@media {` block, one utility for the control, and one `Unknown condition` diagnostic per bare key (D11 fail-closed; cargo `bare_query_rules_are_refused`).
+- [x] `ATM-COND-23` `[reference]` `[seam]` —
+  **In a comma-list selector key, a member without `&` must scope to the parent (`& <member>`), and a stacked template must distribute over every parent member.**
+  Station `ATM-COND-23` (SPEC-V2-68). Compile `css({ '&:not(:first-child), :only-child': { display: 'none' } })` and assert the rule selector is `.<cls>:not(:first-child), .<cls> :only-child` — the bare `:only-child` member must carry the class as a descendant, never print bare (a bare member matches every `:only-child` in the document). Compile the same key with a nested `'& .left-border'` child and assert `.<cls>:not(:first-child) .left-border, .<cls> :only-child .left-border`. Compile `css({ '& .one, .two': { color: 'red.500' } })` and assert `.<cls> .one, .<cls> .two`. Selectors print v2's `nested_selector_parity.rs:642/:653/:664` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-24` `[reference]` `[seam]` —
+  **Under a stacked parent that carries a top-level combinator, a template member with multiple `&` must substitute `:is(parent)`, not the parent text; a single leading `&` stays textual.**
+  Station `ATM-COND-24` (SPEC-V2-69). Compile `css({ '& .divider': { '& .bar & .baz': { color: 'red.500' } } })` and assert `:is(.<cls> .divider) .bar :is(.<cls> .divider) .baz`. Compile `css({ '& > .row': { '& + &': { color: 'red.500' } } })` and assert `:is(.<cls> > .row) + :is(.<cls> > .row)`. Compile the control `css({ '& > p': { '&:hover': { color: 'red.500' } } })` and assert the unchanged textual `.<cls> > p:hover`. Selectors print v2's `nested_selector_parity.rs:675/:686` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-29` `[reference]` `[seam]` —
+  **A pseudo-class stacked under a pseudo-element parent must reorder before the pseudo-element in the same compound.**
+  Station `ATM-COND-29` (SPEC-V2-80). Compile `css({ '&::before': { '&:focus': { color: 'red.500' } } })` and assert `:focus::before`, never the invalid `::before:focus`; the `'&::after'` + `'&:hover'` twin asserts `:hover::after`. Compile the dialect `css({ _before: { _focus: { color: 'green.500' } } })` and assert the `:is(:focus, [data-focus])` compound lands before `::before`. Compile the three-level `{'&::before': {'&:hover': {'&:focus': …}}}` stack and assert `:hover:focus::before`. Controls: pseudo-class-outer + pseudo-element-inner (`{'&:hover': {'&::before': …}}`) stays textually `:hover::before`, and a descendant member under a pseudo-element parent (`{'&::before': {'& .kid': …}}`) keeps the pseudo-element in its own compound. Selectors print v2's `nested_selector_parity.rs:455/:466` shapes byte-for-byte modulo our class stem.
 
 ### Design Token Resolution
 
@@ -732,6 +747,8 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-20` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-20/` |
 | `ATM-SITE-21` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-21/` |
 | `ATM-SITE-22` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-22/` |
+| `ATM-SITE-28` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-28/` |
+| `ATM-SITE-53` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-53/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
@@ -783,6 +800,9 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-COND-19` | `[x]` | `[seam]` | `tests/cases/ATM-COND-19/` |
 | `ATM-COND-20` | `[x]` | `[seam]` | `tests/cases/ATM-COND-20/` |
 | `ATM-COND-21` | `[x]` | `[seam]` | `tests/cases/ATM-COND-21/` |
+| `ATM-COND-23` | `[x]` | `[seam]` | `tests/cases/ATM-COND-23/` |
+| `ATM-COND-24` | `[x]` | `[seam]` | `tests/cases/ATM-COND-24/` |
+| `ATM-COND-29` | `[x]` | `[seam]` | `tests/cases/ATM-COND-29/` |
 | `ATM-TOKEN-01` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-01/` |
 | `ATM-TOKEN-02` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-02/` |
 | `ATM-TOKEN-03` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-03/` |

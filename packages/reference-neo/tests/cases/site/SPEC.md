@@ -30,7 +30,9 @@ SITE-10/15 (import-bound identity), SITE-14 (css prop), LEAF-07 +
 FORBID-02 (dynamic warn-and-skip), COND-11 (string `@media` is an
 at-rule). ATM-SITE-13 is the empty-host-set fail-closed diagnostic
 (RS-5 landed), proven by NEO-SITE-14; ATM-SITE-18 is the boolean
-`border` macro (RS-19 landed), proven by NEO-SITE-13.
+`border` macro (RS-19 landed), proven by NEO-SITE-13. ATM-SITE-53 is
+scope-aware identifier resolution (SPEC-V2-75 landed), proven by
+NEO-SITE-27.
 
 ## Decisions
 

@@ -14,6 +14,7 @@ pub mod css;
 pub mod expressions;
 pub mod jsx;
 pub mod recipes;
+pub mod scope;
 
 #[cfg(test)]
 mod gating_tests;
@@ -30,20 +31,21 @@ use oxc_ast::ast::{
     VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_syntax::scope::{ScopeFlags, ScopeId};
+use oxc_syntax::scope::ScopeFlags;
+use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use crate::atom::Want;
 use crate::diagnostics::Diagnostic;
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
-use constants::{collect_local_constants, LocalConstants};
 use expressions::{ExpressionWalk, ObjectWalk};
+use scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
 pub use bindings::{collect_bindings, ExtractBindings};
 
 /// Configuration references passed into style extraction contexts.
 pub struct ExtractConfig<'a> {
-    pub constants: &'a LocalConstants,
+    pub chain: ScopeChain<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: &'a HashSet<String>,
@@ -62,7 +64,8 @@ pub struct ExtractSinks<'a> {
 pub struct ExtractContext<'a> {
     pub file: &'a str,
     pub source: Option<&'a str>,
-    pub constants: &'a LocalConstants,
+    pub chain: ScopeChain<'a>,
+    pub scope: ScopeId,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: &'a HashSet<String>,
@@ -85,7 +88,8 @@ impl<'a> ExtractContext<'a> {
         Self {
             file,
             source,
-            constants: config.constants,
+            chain: config.chain,
+            scope: ROOT_SCOPE,
             breakpoints: config.breakpoints,
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
@@ -128,6 +132,11 @@ impl<'a> ExtractContext<'a> {
         );
     }
 
+    /// The identifier lookup handle fixed at this context's use-site scope.
+    pub fn scoped(&self) -> Scoped<'a> {
+        self.chain.at(self.scope)
+    }
+
     /// Create an ObjectWalk context for traversing a style object.
     pub fn object_walk<'b>(
         &'b mut self,
@@ -139,7 +148,7 @@ impl<'a> ExtractContext<'a> {
             important,
             file: self.file,
             source: self.source,
-            constants: self.constants,
+            scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
@@ -158,7 +167,7 @@ impl<'a> ExtractContext<'a> {
             important: false,
             file: self.file,
             source: self.source,
-            constants: self.constants,
+            scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants,
             diagnostics: self.diagnostics,
@@ -179,7 +188,7 @@ impl<'a> ExtractContext<'a> {
             important,
             file: self.file,
             source: self.source,
-            constants: self.constants,
+            scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
@@ -191,11 +200,13 @@ impl<'a> ExtractContext<'a> {
 pub struct ExtractVisitor<'a> {
     pub file: &'a str,
     pub source: Option<&'a str>,
-    pub constants: LocalConstants,
+    pub chain: ScopeChain<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: ExtractBindings,
     pub jsx_hosts: HashSet<String>,
     pub shadows: Vec<HashSet<String>>,
+    pub scope_stack: Vec<ScopeId>,
+    next_scope: ScopeId,
     pub recipe_binding: Option<String>,
     pub wants: Vec<Want>,
     pub recipes: Vec<Recipe>,
@@ -209,11 +220,13 @@ impl<'a> ExtractVisitor<'a> {
         Self {
             file,
             source,
-            constants: config.constants.clone(),
+            chain: config.chain,
             breakpoints: config.breakpoints,
             bindings: config.bindings.clone(),
             jsx_hosts: config.jsx_hosts.clone(),
             shadows: Vec::new(),
+            scope_stack: Vec::new(),
+            next_scope: ROOT_SCOPE,
             recipe_binding: None,
             wants: Vec::new(),
             recipes: Vec::new(),
@@ -225,12 +238,18 @@ impl<'a> ExtractVisitor<'a> {
 }
 
 impl<'a> Visit<'a> for ExtractVisitor<'a> {
-    fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<ScopeId>>) {
+    fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
         self.shadows.push(HashSet::new());
+        // One id per enter_scope in walk order, mirroring the collector, so
+        // the use-site scope here is the binding scope there.
+        let id = self.next_scope;
+        self.next_scope += 1;
+        self.scope_stack.push(id);
     }
 
     fn leave_scope(&mut self) {
         self.shadows.pop();
+        self.scope_stack.pop();
     }
 
     fn visit_formal_parameters(&mut self, params: &FormalParameters<'a>) {
@@ -277,8 +296,9 @@ fn extract_call(visitor: &mut ExtractVisitor<'_>, call: &CallExpression<'_>) {
 
 fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a> {
     let binding = visitor.recipe_binding.clone();
+    let scope = visitor.scope_stack.last().copied().unwrap_or(ROOT_SCOPE);
     let config = ExtractConfig {
-        constants: &visitor.constants,
+        chain: visitor.chain,
         breakpoints: visitor.breakpoints,
         bindings: &visitor.bindings,
         jsx_hosts: &visitor.jsx_hosts,
@@ -292,6 +312,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
     };
     let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
     ctx.recipe_binding = binding;
+    ctx.scope = scope;
     ctx
 }
 
@@ -326,7 +347,7 @@ fn binding_ident_name(pattern: &BindingPattern<'_>) -> Option<String> {
 /// Extract all style wants and diagnostics from a parsed AST program with provided context.
 pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>) {
     let config = ExtractConfig {
-        constants: ctx.constants,
+        chain: ctx.chain,
         breakpoints: ctx.breakpoints,
         bindings: ctx.bindings,
         jsx_hosts: ctx.jsx_hosts,
@@ -343,17 +364,22 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
 /// Extract all style wants and diagnostics from a parsed AST program.
 /// Callers thread the system's breakpoint scale; no fixture is consulted here.
 /// Wants carry file-only locations here; `compile()` threads source text for lines.
+/// Without a project, the import stub answers from an empty bag: locals
+/// resolve through the chain, cross-file names stay dynamic.
 pub fn extract(
     program: &Program<'_>,
     file: &str,
     breakpoints: &BreakpointScale,
     sinks: ExtractSinks<'_>,
 ) {
-    let constants = collect_local_constants(program);
+    let table = scope::collect(program);
+    let empty = constants::LocalConstants::new();
+    let stub = scope::ImportLookup::ProjectBag(&empty);
+    let chain = scope::ScopeChain::new(&table, stub);
     let bindings = collect_bindings(program);
     let jsx_hosts = bindings.jsx_hosts();
     let config = ExtractConfig {
-        constants: &constants,
+        chain,
         breakpoints,
         bindings: &bindings,
         jsx_hosts: &jsx_hosts,

@@ -124,7 +124,7 @@ fn record_named(bindings: &mut ExtractBindings, local: &str, imported: String) {
     }
 }
 
-fn imported_name(name: &ModuleExportName<'_>) -> String {
+pub(crate) fn imported_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(),
         ModuleExportName::IdentifierReference(id) => id.name.to_string(),

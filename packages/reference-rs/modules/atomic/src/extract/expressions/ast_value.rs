@@ -1,6 +1,6 @@
 //! AST expression conversion to structured JSON values for authored declaration capture.
 //! Traverses JavaScript expressions before compiler lowering to preserve authored values.
-//! Supports literals, arrays with null holes, rhythm objects, unary negatives, and file constants.
+//! Supports literals, arrays with null holes, rhythm objects, unary negatives, and scoped bindings.
 //! Emits None for dynamic, non-constant expressions that cannot be captured as static plans.
 
 use oxc_ast::ast::{
@@ -10,20 +10,20 @@ use oxc_ast::ast::{
 use serde_json::{json, Map, Value};
 
 use crate::atom::AtomValue;
-use crate::extract::constants::LocalConstants;
+use crate::extract::scope::Scoped;
 
 /// Convert an AST expression into a JSON value and inline important flag.
 pub fn ast_to_json_value(
     expr: &Expression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     if let Some(res) = convert_literal(expr) {
         return Some(res);
     }
-    if let Some(res) = convert_wrapper(expr, constants) {
+    if let Some(res) = convert_wrapper(expr, scoped) {
         return Some(res);
     }
-    convert_compound(expr, constants)
+    convert_compound(expr, scoped)
 }
 
 fn convert_literal(expr: &Expression<'_>) -> Option<(Value, bool)> {
@@ -51,40 +51,40 @@ fn convert_literal(expr: &Expression<'_>) -> Option<(Value, bool)> {
     None
 }
 
-fn convert_wrapper(expr: &Expression<'_>, constants: &LocalConstants) -> Option<(Value, bool)> {
+fn convert_wrapper(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, bool)> {
     if let Expression::ParenthesizedExpression(p) = expr {
-        return ast_to_json_value(&p.expression, constants);
+        return ast_to_json_value(&p.expression, scoped);
     }
     if let Expression::TSAsExpression(as_expr) = expr {
-        return ast_to_json_value(&as_expr.expression, constants);
+        return ast_to_json_value(&as_expr.expression, scoped);
     }
     if let Expression::TSSatisfiesExpression(sat) = expr {
-        return ast_to_json_value(&sat.expression, constants);
+        return ast_to_json_value(&sat.expression, scoped);
     }
     if let Expression::TSNonNullExpression(non_null) = expr {
-        let (v, _) = ast_to_json_value(&non_null.expression, constants)?;
+        let (v, _) = ast_to_json_value(&non_null.expression, scoped)?;
         return Some((v, true));
     }
     None
 }
 
-fn convert_compound(expr: &Expression<'_>, constants: &LocalConstants) -> Option<(Value, bool)> {
+fn convert_compound(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, bool)> {
     match expr {
-        Expression::ArrayExpression(arr) => convert_array(arr, constants),
-        Expression::ObjectExpression(obj) => convert_object(obj, constants),
-        Expression::Identifier(ident) => convert_identifier(ident.name.as_str(), constants),
-        Expression::UnaryExpression(unary) => convert_unary(unary, constants),
+        Expression::ArrayExpression(arr) => convert_array(arr, scoped),
+        Expression::ObjectExpression(obj) => convert_object(obj, scoped),
+        Expression::Identifier(ident) => convert_identifier(ident.name.as_str(), scoped),
+        Expression::UnaryExpression(unary) => convert_unary(unary, scoped),
         _ => None,
     }
 }
 
 fn convert_array(
     arr: &oxc_ast::ast::ArrayExpression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     let mut elements = Vec::with_capacity(arr.elements.len());
     for elem in &arr.elements {
-        let v = array_elem_to_json(elem, constants)?;
+        let v = array_elem_to_json(elem, scoped)?;
         elements.push(v);
     }
     Some((Value::Array(elements), false))
@@ -92,13 +92,13 @@ fn convert_array(
 
 fn array_elem_to_json(
     elem: &ArrayExpressionElement<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<Value> {
     match elem {
         ArrayExpressionElement::Elision(_) => Some(Value::Null),
         _ => {
             let expr = elem.as_expression()?;
-            let (v, _) = ast_to_json_value(expr, constants)?;
+            let (v, _) = ast_to_json_value(expr, scoped)?;
             Some(v)
         }
     }
@@ -106,7 +106,7 @@ fn array_elem_to_json(
 
 fn convert_object(
     obj: &oxc_ast::ast::ObjectExpression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     let mut map = Map::new();
     for prop_kind in &obj.properties {
@@ -118,7 +118,7 @@ fn convert_object(
             PropertyKey::StringLiteral(lit) => lit.value.to_string(),
             _ => return None,
         };
-        let (v, _) = ast_to_json_value(&prop.value, constants)?;
+        let (v, _) = ast_to_json_value(&prop.value, scoped)?;
         map.insert(key, v);
     }
     Some((Value::Object(map), false))
@@ -161,74 +161,74 @@ pub(crate) fn atom_value_to_json(val: &AtomValue) -> Option<Value> {
 /// gets a runtime style plan. Single-valued forms delegate to
 /// `ast_to_json_value`; dynamic forms yield no leaves, exactly as they
 /// yield no wants.
-pub fn ast_to_json_values(expr: &Expression<'_>, constants: &LocalConstants) -> Vec<(Value, bool)> {
+pub fn ast_to_json_values(expr: &Expression<'_>, scoped: Scoped<'_>) -> Vec<(Value, bool)> {
     if is_omitted_leaf(expr) {
         return Vec::new();
     }
-    if let Some(branched) = convert_branching(expr, constants) {
+    if let Some(branched) = convert_branching(expr, scoped) {
         return branched;
     }
-    if let Some(wrapped) = convert_wrapper_values(expr, constants) {
+    if let Some(wrapped) = convert_wrapper_values(expr, scoped) {
         return wrapped;
     }
     if let Expression::Identifier(ident) = expr {
         // borderBottomColor={subtleBorder}  — every static leaf, like the want walker
-        let leaves = convert_identifier_leaves(ident.name.as_str(), constants);
+        let leaves = convert_identifier_leaves(ident.name.as_str(), scoped);
         if !leaves.is_empty() {
             return leaves;
         }
     }
     if let Expression::StaticMemberExpression(mem) = expr {
-        return convert_static_member(mem, constants).into_iter().collect();
+        return convert_static_member(mem, scoped).into_iter().collect();
     }
-    ast_to_json_value(expr, constants).into_iter().collect()
+    ast_to_json_value(expr, scoped).into_iter().collect()
 }
 
 fn convert_branching(
     expr: &Expression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<Vec<(Value, bool)>> {
     match expr {
         Expression::ConditionalExpression(cond) => {
             // color: flag ? 'cherry' : 'ocean'  — both arms, ignore `flag`
-            let mut out = ast_to_json_values(&cond.consequent, constants);
-            out.extend(ast_to_json_values(&cond.alternate, constants));
+            let mut out = ast_to_json_values(&cond.consequent, scoped);
+            out.extend(ast_to_json_values(&cond.alternate, scoped));
             Some(out)
         }
-        Expression::LogicalExpression(log) => Some(logical_values(log, constants)),
+        Expression::LogicalExpression(log) => Some(logical_values(log, scoped)),
         _ => None,
     }
 }
 
-fn logical_values(log: &LogicalExpression<'_>, constants: &LocalConstants) -> Vec<(Value, bool)> {
+fn logical_values(log: &LogicalExpression<'_>, scoped: Scoped<'_>) -> Vec<(Value, bool)> {
     // Guards (`false &&`, `==`, `null`, `undefined`) are skipped by the
     // want walker, so they contribute no authored leaf either.
     let mut out = Vec::new();
     if !super::walk::is_guard_expression(&log.left) {
-        out.extend(ast_to_json_values(&log.left, constants));
+        out.extend(ast_to_json_values(&log.left, scoped));
     }
     if !super::walk::is_guard_expression(&log.right) {
-        out.extend(ast_to_json_values(&log.right, constants));
+        out.extend(ast_to_json_values(&log.right, scoped));
     }
     out
 }
 
 fn convert_wrapper_values(
     expr: &Expression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<Vec<(Value, bool)>> {
     match expr {
         Expression::ParenthesizedExpression(p) => {
-            Some(ast_to_json_values(&p.expression, constants))
+            Some(ast_to_json_values(&p.expression, scoped))
         }
         Expression::TSAsExpression(as_expr) => {
-            Some(ast_to_json_values(&as_expr.expression, constants))
+            Some(ast_to_json_values(&as_expr.expression, scoped))
         }
         Expression::TSSatisfiesExpression(sat) => {
-            Some(ast_to_json_values(&sat.expression, constants))
+            Some(ast_to_json_values(&sat.expression, scoped))
         }
         Expression::TSNonNullExpression(non_null) => Some(
-            ast_to_json_values(&non_null.expression, constants)
+            ast_to_json_values(&non_null.expression, scoped)
                 .into_iter()
                 .map(|(val, _)| (val, true))
                 .collect(),
@@ -253,28 +253,28 @@ fn is_omitted_leaf(expr: &Expression<'_>) -> bool {
 
 fn convert_static_member(
     mem: &StaticMemberExpression<'_>,
-    constants: &LocalConstants,
+    scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     // color: theme.primary  after  const theme = { primary: 'cherry' }
     if let Expression::Identifier(obj) = &mem.object {
-        let atom_val = constants.get_object_prop(obj.name.as_str(), mem.property.name.as_str())?;
+        let atom_val = scoped.object_prop(obj.name.as_str(), mem.property.name.as_str())?;
         return atom_value_to_json(atom_val).map(|val| (val, false));
     }
     None
 }
 
-fn convert_identifier(name: &str, constants: &LocalConstants) -> Option<(Value, bool)> {
+fn convert_identifier(name: &str, scoped: Scoped<'_>) -> Option<(Value, bool)> {
     if name == "undefined" || name == "null" {
         return Some((Value::Null, false));
     }
-    let atom_val = constants.get_scalar(name)?;
+    let atom_val = scoped.scalar(name)?;
     let val = atom_value_to_json(atom_val)?;
     Some((val, false))
 }
 
 /// Every static leaf recorded for an identifier, for multi-valued positions.
-fn convert_identifier_leaves(name: &str, constants: &LocalConstants) -> Vec<(Value, bool)> {
-    constants
+fn convert_identifier_leaves(name: &str, scoped: Scoped<'_>) -> Vec<(Value, bool)> {
+    scoped
         .scalar_leaves(name)
         .iter()
         .filter_map(|leaf| atom_value_to_json(leaf).map(|val| (val, false)))
@@ -283,7 +283,7 @@ fn convert_identifier_leaves(name: &str, constants: &LocalConstants) -> Vec<(Val
 
 fn convert_unary(
     unary: &oxc_ast::ast::UnaryExpression<'_>,
-    _constants: &LocalConstants,
+    _scoped: Scoped<'_>,
 ) -> Option<(Value, bool)> {
     if unary.operator == UnaryOperator::Void {
         Some((Value::Null, false))

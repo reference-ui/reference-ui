@@ -231,7 +231,7 @@ fn selector_template(raw: &str) -> String {
     }
 }
 
-pub use pseudoselectors::apply as apply_selector_condition;
+pub use pseudoselectors::nesting::nest as nest_selector_condition;
 
 #[cfg(test)]
 mod tests;

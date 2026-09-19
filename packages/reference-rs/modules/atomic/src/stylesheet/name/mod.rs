@@ -6,7 +6,7 @@
 pub mod escape;
 
 use crate::atom::{Atom, When, WhenKind};
-use crate::resolve::conditions::apply_selector_condition;
+use crate::resolve::conditions::nest_selector_condition;
 use canon::class_prefix_for_prop;
 use escape::{escape_css_selector, sanitize_class_value};
 
@@ -58,7 +58,7 @@ pub fn selector_with_system(atom: &Atom, system: &str) -> String {
 
     for cond in &atom.conditions {
         if let WhenKind::Selector(template) = cond.wrap() {
-            current_sel = apply_selector_condition(template, &current_sel);
+            current_sel = nest_selector_condition(&current_sel, template);
         }
     }
 

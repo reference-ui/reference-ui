@@ -1,0 +1,5 @@
+{
+  "& .divider:& .bar & .baz:color:red.500": "@reference-ui/lib__[&_.divider]:[&_.bar_&_.baz]:c_red.500",
+  "& > .row:& + &:color:red.500": "@reference-ui/lib__[&_>_.row]:[&_+_&]:c_red.500",
+  "& > p:&:hover:color:red.500": "@reference-ui/lib__[&_>_p]:[&:hover]:c_red.500"
+}

@@ -1,36 +1,57 @@
-//! Collect `const` scalars and style objects from a parsed program at every depth.
+//! Collect scalar and style-object declarators from a parsed program at every depth.
 //! Component-body declarators resolve like top-level ones; only literals, simple
 //! object records, and branching initializers with literal leaves are indexed.
-//! Imports, functions, and spreads are ignored. The index is later consulted by
-//! the expression walker; this file does not insert wants.
+//! Imports, functions, and spreads are ignored. Any declarator kind may resolve,
+//! but a write anywhere in the file poisons the binding and its init is dropped.
+//! The index is later consulted by the expression walker; this file inserts no wants.
 
 use oxc_ast::ast::{
-    BindingPattern, Expression, ObjectPropertyKind, Program, PropertyKey, VariableDeclarator,
+    AssignmentExpression, BindingPattern, Expression, ForInStatement, ForOfStatement,
+    ObjectPropertyKind, Program, PropertyKey, UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
 
-use super::index::LocalConstants;
+use super::index::{LocalConstants, MutatedBinding};
+use super::mutate::{for_head_writes, simple_target_writes, target_writes, Write};
 use crate::atom::AtomValue;
+use crate::diagnostics::line_col;
 use crate::extract::expressions::walk::is_guard_expression;
 
 /// Collect all constant definitions from a parsed AST program.
-pub fn collect_local_constants(program: &Program<'_>) -> LocalConstants {
+///
+/// File and source locate the write sites of mutated bindings; without source
+/// text the mutation record still names the binding and its file. Mutated
+/// bindings are stripped before return, so both walkers read them as dynamic.
+pub fn collect_local_constants(
+    program: &Program<'_>,
+    file: &str,
+    source: Option<&str>,
+) -> LocalConstants {
     // const space = '2r'
     // const theme = { primary: 'n300' }
     // const subtleBorder = isDark ? 'gray.800' : 'gray.200'
     let mut collector = ConstCollector {
         constants: LocalConstants::new(),
+        file,
+        source,
     };
     collector.visit_program(program);
+    collector.constants.drop_mutated();
     collector.constants
 }
 
-/// Visitor recording every `const` declarator, top-level or nested in a body.
-struct ConstCollector {
+/// Visitor recording every declarator, top-level or nested in a body.
+///
+/// Any kind (`const`, `let`, `var`, `export let`) may resolve; a later write
+/// anywhere in the file poisons the binding instead (SPEC-V2-35).
+struct ConstCollector<'a> {
     constants: LocalConstants,
+    file: &'a str,
+    source: Option<&'a str>,
 }
 
-impl<'a> Visit<'a> for ConstCollector {
+impl<'a> Visit<'a> for ConstCollector<'a> {
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
         if let BindingPattern::BindingIdentifier(ident) = &decl.id {
             if let Some(init) = &decl.init {
@@ -42,6 +63,54 @@ impl<'a> Visit<'a> for ConstCollector {
             }
         }
         walk::walk_variable_declarator(self, decl);
+    }
+
+    fn visit_assignment_expression(&mut self, expr: &AssignmentExpression<'a>) {
+        // color = 'blue'  — the init is stale from here on
+        let mut writes = Vec::new();
+        target_writes(&expr.left, &mut writes);
+        self.mark_writes(writes);
+        walk::walk_assignment_expression(self, expr);
+    }
+
+    fn visit_update_expression(&mut self, expr: &UpdateExpression<'a>) {
+        // count++  — self-assignment is still a write
+        let mut writes = Vec::new();
+        simple_target_writes(&expr.argument, &mut writes);
+        self.mark_writes(writes);
+        walk::walk_update_expression(self, expr);
+    }
+
+    fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
+        // for (picked in theme)  — the head reassigns each iteration
+        let mut writes = Vec::new();
+        for_head_writes(&stmt.left, &mut writes);
+        self.mark_writes(writes);
+        walk::walk_for_in_statement(self, stmt);
+    }
+
+    fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
+        // for (picked of list)
+        let mut writes = Vec::new();
+        for_head_writes(&stmt.left, &mut writes);
+        self.mark_writes(writes);
+        walk::walk_for_of_statement(self, stmt);
+    }
+}
+
+impl ConstCollector<'_> {
+    /// Poison every written name with its write site.
+    fn mark_writes(&mut self, writes: Vec<Write<'_>>) {
+        for (name, span) in writes {
+            self.mark_write(name, span);
+        }
+    }
+
+    /// Poison one name; the first write site wins.
+    fn mark_write(&mut self, name: &str, span: Span) {
+        let position = self.source.and_then(|source| line_col(source, span.start));
+        self.constants
+            .mark_mutated(name, MutatedBinding::new(self.file, position));
     }
 }
 

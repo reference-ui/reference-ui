@@ -15,6 +15,35 @@ use crate::atom::AtomValue;
 pub struct LocalConstants {
     scalars: BTreeMap<String, Vec<AtomValue>>,
     objects: BTreeMap<String, BTreeMap<String, AtomValue>>,
+    mutated: BTreeMap<String, MutatedBinding>,
+}
+
+/// A binding poisoned by a write, with the write site for diagnostics.
+#[derive(Debug, Clone)]
+pub struct MutatedBinding {
+    file: Box<str>,
+    line: Option<u32>,
+    column: Option<u32>,
+}
+
+impl MutatedBinding {
+    /// Record a write at `file`, with 1-based line/column when source was known.
+    pub fn new(file: &str, position: Option<(u32, u32)>) -> Self {
+        let (line, column) = position.unzip();
+        Self {
+            file: file.into(),
+            line,
+            column,
+        }
+    }
+
+    /// `path/to/file.ts:line:col`, or the bare file when offsets are unknown.
+    pub fn site(&self) -> String {
+        match (self.line, self.column) {
+            (Some(line), Some(column)) => format!("{}:{line}:{column}", self.file),
+            _ => self.file.to_string(),
+        }
+    }
 }
 
 impl LocalConstants {
@@ -84,6 +113,26 @@ impl LocalConstants {
         self.objects.get(name)
     }
 
+    /// Mark a binding mutated by a write; the first write site wins.
+    pub fn mark_mutated(&mut self, name: &str, write: MutatedBinding) {
+        // color = 'blue'  after  let color = 'red'
+        self.mutated.entry(name.to_string()).or_insert(write);
+    }
+
+    /// Look up the write that poisoned a binding, if any.
+    pub fn mutation(&self, name: &str) -> Option<&MutatedBinding> {
+        // css({ color })  after  color = 'blue'
+        self.mutated.get(name)
+    }
+
+    /// Drop every leaf of every mutated binding; their inits are stale.
+    pub fn drop_mutated(&mut self) {
+        for name in self.mutated.keys() {
+            self.scalars.remove(name);
+            self.objects.remove(name);
+        }
+    }
+
     /// Merge another file's index; scalar leaves union, existing object keys win.
     pub fn merge(&mut self, other: &LocalConstants) {
         for (k, leaves) in &other.scalars {
@@ -94,6 +143,11 @@ impl LocalConstants {
             for (prop_k, prop_v) in v {
                 obj.entry(prop_k.clone()).or_insert_with(|| prop_v.clone());
             }
+        }
+        for (k, v) in &other.mutated {
+            self.mutated
+                .entry(k.clone())
+                .or_insert_with(|| v.clone());
         }
     }
 }
