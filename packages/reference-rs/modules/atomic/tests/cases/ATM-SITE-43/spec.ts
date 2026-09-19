@@ -1,9 +1,10 @@
 /**
  * TS enum member fence (ATM-SITE-43, SPEC-V2-45). Initialized string, numeric,
- * unary-numeric, and boolean members fold; member-reference, computed, and
- * uninitialized members warn per member with siblings kept; an inner const
- * shadows the enum. Boolean members record and refuse at resolve, exactly
- * like bare bools (planless, one InvalidCssValue warning).
+ * unary-numeric, boolean, and computed (`+` binaries, templates, `!`/`~`,
+ * wrapped) members fold; member-reference and uninitialized members warn
+ * per member with siblings kept; an inner const shadows the enum. Boolean
+ * members record and refuse at resolve, exactly like bare bools
+ * (planless, one InvalidCssValue warning).
  */
 import { expect } from 'vitest'
 import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -22,13 +23,19 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'top', -1)).toBe(true)
     expect(hasWant(result, 'left', 2)).toBe(true)
     expect(hasWant(result, 'color', 'red')).toBe(true)
+    expect(hasWant(result, 'color', 'blue')).toBe(true)
+    expect(hasWant(result, 'zIndex', 42)).toBe(true)
+    expect(hasWant(result, 'backgroundColor', 'blue')).toBe(true)
+    expect(hasWant(result, 'top', -2)).toBe(true)
     expect(hasWant(result, 'flexGrow', true)).toBe(true)
-    expect(result.wants ?? []).toHaveLength(12)
+    expect(getWantsForProp(result, 'flexGrow')).toHaveLength(2)
+    expect(result.wants ?? []).toHaveLength(19)
 
-    expect(getWantsForProp(result, 'padding')).toHaveLength(2)
+    expect(getWantsForProp(result, 'padding')).toHaveLength(3)
+    expect(getWantsForProp(result, 'margin')).toHaveLength(3)
 
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(11)
+    expect(plans).toHaveLength(15)
 
     const diagnostics = result.diagnostics ?? []
     expect(diagnostics).toHaveLength(4)
@@ -36,7 +43,7 @@ const spec: AtomicCaseSpec = {
     expect(codes).toEqual([
       'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',
-      'ATM-W-DYNAMIC-MEMBER',
+      'ATM-W-INVALID-CSS-VALUE',
       'ATM-W-INVALID-CSS-VALUE',
     ])
   },

@@ -18,25 +18,100 @@ interface ExpectedDiagnostic {
 const EXPECTED_DIAGNOSTICS: ExpectedDiagnostic[] = [
   // args.ts: calls, scalars, missing names, and deep members refuse; the
   // logical left operands refuse while their object rights still lower.
-  { file: 'args.ts', line: 24, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
-  { file: 'args.ts', line: 25, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'count')" },
-  { file: 'args.ts', line: 26, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'missing')" },
-  { file: 'args.ts', line: 27, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (member expression)' },
-  { file: 'args.ts', line: 28, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (member expression)' },
-  { file: 'args.ts', line: 29, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 2 is not a static style object (identifier 'cond')" },
-  { file: 'args.ts', line: 30, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'missing')" },
-  { file: 'args.ts', line: 31, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'yes')" },
-  { file: 'args.ts', line: 33, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (spread element)' },
-  { file: 'args.ts', line: 42, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'styles')" },
+  {
+    file: 'args.ts',
+    line: 24,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: 'css() argument 1 is not a static style object (call expression)',
+  },
+  {
+    file: 'args.ts',
+    line: 25,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'count')",
+  },
+  {
+    file: 'args.ts',
+    line: 26,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'missing')",
+  },
+  {
+    file: 'args.ts',
+    line: 27,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: 'css() argument 1 is not a static style object (member expression)',
+  },
+  {
+    file: 'args.ts',
+    line: 28,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: 'css() argument 1 is not a static style object (member expression)',
+  },
+  {
+    file: 'args.ts',
+    line: 29,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 2 is not a static style object (identifier 'cond')",
+  },
+  {
+    file: 'args.ts',
+    line: 30,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'missing')",
+  },
+  {
+    file: 'args.ts',
+    line: 31,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'yes')",
+  },
+  {
+    file: 'args.ts',
+    line: 33,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: 'css() argument 1 is not a static style object (spread element)',
+  },
+  {
+    file: 'args.ts',
+    line: 42,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'styles')",
+  },
   // branches.ts: the dynamic logical left and the call arm refuse.
-  { file: 'branches.ts', line: 13, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'ok')" },
-  { file: 'branches.ts', line: 15, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
+  {
+    file: 'branches.ts',
+    line: 13,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: "css() argument 1 is not a static style object (identifier 'ok')",
+  },
+  {
+    file: 'branches.ts',
+    line: 15,
+    code: 'ATM-W-NON-OBJECT-CSS-ARG',
+    message: 'css() argument 1 is not a static style object (call expression)',
+  },
   // tags.ts: the live tag diagnoses; the dead tag stays silent.
-  { file: 'tags.ts', line: 3, code: 'ATM-W-TAGGED-TEMPLATE-SITE', message: 'tagged template is not a css() site; use css({...})' },
+  {
+    file: 'tags.ts',
+    line: 3,
+    code: 'ATM-W-TAGGED-TEMPLATE-SITE',
+    message: 'tagged template is not a css() site; use css({...})',
+  },
   // jsx.tsx: the logical left and the call condition refuse. The literal
   // spread element flattens silently (SPEC-V2-28 Ph3, sibling slice).
-  { file: 'jsx.tsx', line: 14, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX 'css' prop value is not a static style object (identifier 'cond')" },
-  { file: 'jsx.tsx', line: 15, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX '_hover' prop value is not a static style object (call expression)" },
+  {
+    file: 'jsx.tsx',
+    line: 14,
+    code: 'ATM-W-NON-OBJECT-JSX-STYLE',
+    message: "JSX 'css' prop value is not a static style object (identifier 'cond')",
+  },
+  {
+    file: 'jsx.tsx',
+    line: 15,
+    code: 'ATM-W-NON-OBJECT-JSX-STYLE',
+    message: "JSX '_hover' prop value is not a static style object (call expression)",
+  },
 ]
 
 // Every unique surviving leaf: whole objects, members, arms, and logical
@@ -65,6 +140,11 @@ const EXPECTED_WANTS: Array<{ prop: string; value: string; when?: string[] }> = 
   { prop: 'color', value: 'coral', when: ['_hover'] },
   { prop: 'color', value: 'maroon', when: ['_hover'] },
   { prop: 'color', value: 'salmon' },
+  // compose.ts: alias-chain whole object + destructured-rest whole object.
+  { prop: 'color', value: 'gold' },
+  { prop: 'padding', value: '11px' },
+  { prop: 'padding', value: '12px' },
+  { prop: 'margin', value: '13px' },
 ]
 
 const spec: AtomicCaseSpec = {
@@ -76,11 +156,14 @@ const spec: AtomicCaseSpec = {
     // Whole-object and wrapped twins arrive twice each, as do the
     // cross-file red/blue/green/cyan/teal/pink leaves; the flattened
     // literal spread adds one more teal, the const-true logical one salmon.
-    expect(result.wants ?? []).toHaveLength(35)
+    // The compose.ts alias-chain and rest arms add four unique leaves.
+    expect(result.wants ?? []).toHaveLength(39)
 
     // Refused positions yield nothing: no stale crimson, and nothing
-    // under _hover from the refused call condition.
+    // under _hover from the refused call condition. The destructured-away
+    // rest color never leaks into the rest arg.
     expect(hasWant(result, 'color', 'crimson')).toBe(false)
+    expect(hasWant(result, 'color', 'khaki')).toBe(false)
     expect(hasWant(result, 'color', 'pink', ['_hover'])).toBe(false)
 
     // One runtime plan per unique leaf.
@@ -95,15 +178,23 @@ const spec: AtomicCaseSpec = {
     expect(diagnostics).toHaveLength(EXPECTED_DIAGNOSTICS.length + 1)
     for (const expected of EXPECTED_DIAGNOSTICS) {
       const match = diagnostics.find(
-        d => d.file?.endsWith(expected.file) && d.line === expected.line && d.message === expected.message,
+        d =>
+          d.file?.endsWith(expected.file) &&
+          d.line === expected.line &&
+          d.message === expected.message
       )
-      expect(match, `missing ${expected.file}:${expected.line} ${expected.message}`).toBeDefined()
+      expect(
+        match,
+        `missing ${expected.file}:${expected.line} ${expected.message}`
+      ).toBeDefined()
       expect(match!.severity).toBe('warning')
       expect(match!.code).toBe(expected.code)
       expect(match!.column).toBeDefined()
     }
-    const mutated = diagnostics.find(d =>
-      d.file?.endsWith('args.ts') && d.message.includes("Dynamic mutated binding 'dying'"),
+    const mutated = diagnostics.find(
+      d =>
+        d.file?.endsWith('args.ts') &&
+        d.message.includes("Dynamic mutated binding 'dying'")
     )
     expect(mutated, 'missing mutated-args.ts:34 diagnostic').toBeDefined()
     expect(mutated!.severity).toBe('warning')
@@ -116,9 +207,14 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('color: red;')
     expect(result.stylesheet).toContain('color: aqua;')
     expect(result.stylesheet).toContain('color: beige;')
+    expect(result.stylesheet).toContain('color: gold;')
+    expect(result.stylesheet).toContain('padding: 11px;')
+    expect(result.stylesheet).toContain('padding: 12px;')
+    expect(result.stylesheet).toContain('margin: 13px;')
     expect(result.stylesheet).toContain('margin: calc(3 * var(--spacing-root));')
     expect(result.stylesheet).toContain('margin: var(--spacing-root);')
     expect(result.stylesheet).not.toContain('crimson')
+    expect(result.stylesheet).not.toContain('khaki')
   },
 }
 

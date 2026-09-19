@@ -577,6 +577,7 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_10r { margin: calc(10 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }

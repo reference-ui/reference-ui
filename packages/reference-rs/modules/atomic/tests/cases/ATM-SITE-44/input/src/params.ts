@@ -39,3 +39,21 @@ export function rest({ ...all }: { color: 'red' }) {
 export function defaults({ color = 'blue' }: { color: 'red' }) {
   return css({ color, margin: '7r' })
 }
+
+export function restListed({ color, ...rest }: { color: 'red'; size: 4 }) {
+  return css({ color, fontSize: rest.size, margin: '8r' })
+}
+
+export function defaultMissing({ size = '4px' }: { color: 'red' }) {
+  return css({ padding: size, margin: '9r' })
+}
+
+const fallbackSize = '8px'
+
+export function defaultIdent({ size = fallbackSize }: { color: 'red' }) {
+  return css({ padding: size, margin: '10r' })
+}
+
+export function partialLeniency({ color, missing }: { color: 'red' }) {
+  return css({ color, backgroundColor: missing, margin: '11r' })
+}

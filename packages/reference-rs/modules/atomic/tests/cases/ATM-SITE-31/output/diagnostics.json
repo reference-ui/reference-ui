@@ -54,5 +54,45 @@
     "file": "input/src/pure.ts",
     "line": 91,
     "column": 32
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "input/src/pure.ts",
+    "line": 97,
+    "column": 33
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "input/src/pure.ts",
+    "line": 101,
+    "column": 33
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "input/src/pure.ts",
+    "line": 105,
+    "column": 33
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "input/src/pure.ts",
+    "line": 109,
+    "column": 33
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'calledColor' encountered for prop 'color'",
+    "file": "input/src/pure.ts",
+    "line": 115,
+    "column": 32
   }
 ]

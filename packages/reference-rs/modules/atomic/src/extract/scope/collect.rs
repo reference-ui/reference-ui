@@ -579,7 +579,9 @@ fn record_param(collector: &mut ScopeCollector, param: &oxc_ast::ast::FormalPara
         return;
     }
     // function paint({ color }: { color: 'red' })
-    let Some(bound) = super::types::bind_param_pattern(&param.pattern, &entries) else {
+    let scope = collector.current();
+    let bound = super::types::bind_param_pattern(&param.pattern, &entries, &collector.table, scope);
+    let Some(bound) = bound else {
         declare_pattern(collector, &param.pattern, BindingKind::Param);
         return;
     };
@@ -588,7 +590,7 @@ fn record_param(collector: &mut ScopeCollector, param: &oxc_ast::ast::FormalPara
             &name,
             Binding {
                 kind: BindingKind::Param,
-                init: Some(init),
+                init,
                 span,
             },
         );

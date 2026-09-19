@@ -25,6 +25,14 @@
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-KEY",
+    "message": "Dynamic computed property key encountered in style object",
+    "file": "input/src/folded.ts",
+    "line": 34,
+    "column": 8
+  },
+  {
+    "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property \"42\"",
     "file": "input/src/keys.ts",

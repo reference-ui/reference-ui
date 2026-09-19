@@ -38,3 +38,9 @@ function ident(x: string) {
 }
 export const spreadArgs = css({ color: ident(...['red']), margin: '8r' })
 export const optionalCall = css({ color: getColor?.(), margin: '9r' })
+
+const pickTone = ({ color }: { color: string }) => color
+export const destructuredParams = css({
+  color: pickTone({ color: 'red' }),
+  margin: '10r',
+})

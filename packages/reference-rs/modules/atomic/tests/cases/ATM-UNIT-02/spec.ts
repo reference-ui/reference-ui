@@ -3,8 +3,10 @@
  * Asserts that padding: 1 and padding: '1' produce a single canonical
  * system-qualified .p_1 class and rule. SPEC-V2-79 arm: finite numeric strings
  * ('1e3', '.5', '01') canonicalize to the numeric atom and dedupe with the
- * bare number. Asserts that non-canonical forms (Infinity, NaN, 0x10) emit
- * warning diagnostics and are refused.
+ * bare number. Contrast arm (S20): padded spellings (' 1', '1 ') numerify
+ * where v2 keeps them as strings (no trim), and the unparseable spellings
+ * (Infinity, NaN, 0x10) refuse with a coded warning where v2 emits
+ * invalid CSS.
  */
 import { expect } from 'vitest'
 import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
@@ -31,17 +33,34 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain('@reference-ui/lib__op_0.5')
     expect(result.stylesheet).toContain('opacity: 0.5;')
 
-    // Non-canonical forms must NOT appear in utilities
+    // S20 contrast, numerify half: v2's `canonical_number` returns None
+    // for '01' (leading-zero guard) and ' 1' (no trim), keeping them as
+    // strings; we numerify all four margin spellings (1, '01', ' 1',
+    // '1 ') to the one `m_1` rule above, silently.
+    const messages = result.diagnostics.map(d => d.message)
+    expect(messages.some(m => m.includes('"01"'))).toBe(false)
+    expect(messages.some(m => m.includes('" 1"'))).toBe(false)
+    expect(messages.some(m => m.includes('"1 "'))).toBe(false)
+    expect(result.stylesheet).not.toContain('margin:  1')
+
+    // S20 contrast, refuse half: v2 keeps Infinity/NaN/0x10/'' as strings
+    // and emits invalid CSS; we refuse each with a coded warning and
+    // mint no utility.
     expect(utilities).not.toContain('@reference-ui/lib__w_Infinity')
     expect(utilities).not.toContain('@reference-ui/lib__h_NaN')
     expect(utilities).not.toContain('@reference-ui/lib__top_0x10')
-
-    // Diagnostics must report the 3 non-canonical values
-    const messages = result.diagnostics.map(d => d.message)
-    expect(messages.some(m => m.includes('Infinity'))).toBe(true)
-    expect(messages.some(m => m.includes('NaN'))).toBe(true)
-    expect(messages.some(m => m.includes('0x10'))).toBe(true)
-    expect(messages.some(m => m.includes('"01"'))).toBe(false)
+    expect(result.stylesheet).not.toContain('margin: ;')
+    expect(result.diagnostics).toHaveLength(4)
+    for (const spelling of ['Infinity', 'NaN', '0x10']) {
+      const match = result.diagnostics.find(d => d.message.includes(spelling))
+      expect(match, `missing refusal for '${spelling}'`).toBeDefined()
+      expect(match!.severity).toBe('warning')
+      expect(match!.code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
+    }
+    const empty = result.diagnostics.find(d => d.message.includes('Empty string'))
+    expect(empty, `missing refusal for ''`).toBeDefined()
+    expect(empty!.severity).toBe('warning')
+    expect(empty!.code).toBe('ATM-W-INVALID-CSS-VALUE')
   },
 }
 

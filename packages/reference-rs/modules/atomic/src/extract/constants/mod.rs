@@ -8,6 +8,6 @@ mod index;
 mod mutate;
 
 pub use collect::collect_local_constants;
-pub use entries::{object_entries, ConstObject, ObjectProp};
 pub(crate) use entries::union_entry;
+pub use entries::{canonical_numeric_key, object_entries, ConstObject, ObjectProp};
 pub use index::{ConstArrayElement, LocalConstants, MutatedBinding};

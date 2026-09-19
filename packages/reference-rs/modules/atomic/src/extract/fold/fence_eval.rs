@@ -142,16 +142,15 @@ fn eval_negate(value: &FenceValue) -> Option<FenceValue> {
 }
 
 /// Evaluate one logical operator with v2 short-circuiting: a folded left
-/// picks its side, and an unfoldable left yields to the right operand.
+/// picks its side, and a failed left refuses the whole body, verbatim v2's
+/// `?` propagation (pure_fn.rs:522) — yielding past failure mints ghosts.
 fn eval_logical_expr(
     op: FenceLogical,
     left: &PureExpr,
     right: &PureExpr,
     bound: &[FenceValue],
 ) -> Option<FenceValue> {
-    let Some(left_val) = eval_expr(left, bound) else {
-        return eval_expr(right, bound);
-    };
+    let left_val = eval_expr(left, bound)?;
     match op {
         FenceLogical::And => eval_and(&left_val, right, bound),
         FenceLogical::Or => eval_or(&left_val, right, bound),
@@ -160,11 +159,7 @@ fn eval_logical_expr(
 }
 
 /// Short-circuit `&&`: the right side when the left is truthy.
-fn eval_and(
-    left: &FenceValue,
-    right: &PureExpr,
-    bound: &[FenceValue],
-) -> Option<FenceValue> {
+fn eval_and(left: &FenceValue, right: &PureExpr, bound: &[FenceValue]) -> Option<FenceValue> {
     if truthy(left) {
         eval_expr(right, bound)
     } else {
@@ -182,11 +177,7 @@ fn eval_or(left: &FenceValue, right: &PureExpr, bound: &[FenceValue]) -> Option<
 }
 
 /// Short-circuit `??`: the right side only when the left is null.
-fn eval_coalesce(
-    left: &FenceValue,
-    right: &PureExpr,
-    bound: &[FenceValue],
-) -> Option<FenceValue> {
+fn eval_coalesce(left: &FenceValue, right: &PureExpr, bound: &[FenceValue]) -> Option<FenceValue> {
     if is_null(left) {
         eval_expr(right, bound)
     } else {
@@ -194,35 +185,20 @@ fn eval_coalesce(
     }
 }
 
-/// Evaluate a ternary: a folded test picks its arm, an unfoldable test
-/// unions both arms keeping whatever folds, verbatim v2's general rule.
-/// Compound unions have no fence representation and refuse.
+/// Evaluate a ternary: a folded test picks its arm; a failed test refuses
+/// the whole body, verbatim v2's `?` (pure_fn.rs:552) — unioning past a
+/// failed test would mint arms the test never selected.
 fn eval_conditional_expr(
     test: &PureExpr,
     consequent: &PureExpr,
     alternate: &PureExpr,
     bound: &[FenceValue],
 ) -> Option<FenceValue> {
-    if let Some(test_val) = eval_expr(test, bound) {
-        if truthy(&test_val) {
-            return eval_expr(consequent, bound);
-        }
-        return eval_expr(alternate, bound);
-    }
-    union_arms(eval_expr(consequent, bound), eval_expr(alternate, bound))
-}
-
-/// Union two unfolded arms: both leaves concatenate, a lone folded arm
-/// survives on its own, and compound unions refuse without a silent half.
-fn union_arms(first: Option<FenceValue>, second: Option<FenceValue>) -> Option<FenceValue> {
-    match (first, second) {
-        (Some(FenceValue::Leaves(mut left)), Some(FenceValue::Leaves(right))) => {
-            left.extend(right);
-            Some(FenceValue::Leaves(left))
-        }
-        (Some(only), None) | (None, Some(only)) => Some(only),
-        (None, None) => None,
-        _ => None,
+    let test_val = eval_expr(test, bound)?;
+    if truthy(&test_val) {
+        eval_expr(consequent, bound)
+    } else {
+        eval_expr(alternate, bound)
     }
 }
 

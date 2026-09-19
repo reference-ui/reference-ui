@@ -14,7 +14,9 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, PropertyKey
 use super::binding::BindingInit;
 use super::table::{ScopeId, ScopeTable};
 use crate::atom::AtomValue;
-use crate::extract::constants::{object_entries, ConstObject, LocalConstants, ObjectProp};
+use crate::extract::constants::{
+    canonical_numeric_key, object_entries, ConstObject, LocalConstants, ObjectProp,
+};
 use crate::extract::expressions::walk::is_guard_expression;
 
 /// Which slot of a dependent binding a `Dep` strips.
@@ -305,8 +307,11 @@ fn static_key(key: &PropertyKey<'_>) -> Option<String> {
             // { 'primary': 'n300' }  (computed or not — the spelling is static)
             Some(lit.value.to_string())
         }
-        // Computed `[k]` keys fold through the SITE-49 key node; numerics
-        // stay out with the sibling array fence.
+        PropertyKey::NumericLiteral(lit) => {
+            // { 500: 'red' }  — numerics record canonically, verbatim v2
+            Some(canonical_numeric_key(lit.value))
+        }
+        // Computed `[k]` keys fold through the SITE-49 key node.
         _ => None,
     }
 }

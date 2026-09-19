@@ -122,6 +122,15 @@ fn legacy_string_value(
     s: Box<str>,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<CssValue> {
+    // Empty-after-trim strings are never CSS (`margin: ;` is invalid);
+    // refuse with a diagnostic instead of emitting the empty declaration.
+    if s.trim().is_empty() {
+        diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::InvalidCssValue,
+            format!("Empty string value on `{prop}`"),
+        ));
+        return None;
+    }
     if is_non_canonical_numeric(&s) {
         diagnostics.push(Diagnostic::warning(
             DiagnosticCode::NonCanonicalNumeric,

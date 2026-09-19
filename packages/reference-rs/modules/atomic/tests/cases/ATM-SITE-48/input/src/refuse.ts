@@ -27,3 +27,15 @@ css({ color: colors['red']['length'], padding: '20px' })
 let mut = ['4px', '8px']
 mut = ['12px']
 css({ margin: mut[0], padding: '24px' })
+
+// A chained read past a missing nested entry warns the outer key.
+const swatches2 = { red: { 500: 'red' } }
+css({ color: swatches2['red']['typo'], padding: '28px' })
+
+// A chained read past a missing intermediate refuses the outer base.
+css({ color: swatches2['typo']['500'], padding: '32px' })
+
+// A chained read over a multi-leaf intermediate refuses the outer base.
+declare const flag2: boolean
+const kk2 = flag2 ? 'red' : 'blue'
+css({ color: swatches2[kk2]['500'], padding: '36px' })

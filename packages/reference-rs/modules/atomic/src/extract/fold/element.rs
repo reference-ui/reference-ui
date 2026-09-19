@@ -2,19 +2,21 @@
 //!
 //! `fold_element_access` resolves one computed read over a const object, a
 //! const array, or an inline literal whose index folds to a string or number,
-//! fanning out over multi-leaf indices the way ternaries scoop both arms. The
-//! base is single-hop by design: chained reads need nested const objects
-//! (SITE-29) and refuse here. Anything unresolvable becomes a refusal the
-//! want walker warns on while the plan walker yields no leaf for it.
+//! fanning out over multi-leaf indices the way ternaries scoop both arms.
+//! Chained reads resolve inside out through nested const entries
+//! (`colors['red']['500']`), mirroring the static member path; anything
+//! unresolvable becomes a refusal the want walker warns on while the plan
+//! walker yields no leaf for it.
 
 use oxc_ast::ast::{ArrayExpressionElement, Expression};
 use oxc_span::{GetSpan, Span};
 
 use super::array::flatten_value_slots;
-use super::key::{canonical_numeric_key, fold_property_key};
-use super::unary::fold_unary;
+use super::element_index::{fold_index, IndexFold};
+use super::key::fold_property_key;
+use super::member::{member_path_object, member_root_name};
 use crate::atom::AtomValue;
-use crate::extract::constants::ConstArrayElement;
+use crate::extract::constants::{object_entries, ConstArrayElement, ConstObject};
 use crate::extract::expressions::walk::{block_value_kind, unwrap_wrapper_target};
 use crate::extract::scope::Scoped;
 
@@ -107,165 +109,15 @@ pub fn fold_element_access(
     fold
 }
 
-/// A folded index: one key per leaf, or a refusal to fold at all.
-enum IndexFold {
-    Keys(Vec<String>),
-    Dynamic,
-}
-
-/// Fold an index expression to its key spellings, fanning out over leaves.
-///
-/// Literals, single- and multi-leaf const identifiers, one-hop members, and
-/// nested element reads fold; calls, binaries, interpolated templates, and
-/// unbound names refuse for the caller to diagnose.
-fn fold_index(expr: &Expression<'_>, scoped: Scoped<'_>) -> IndexFold {
-    if let Some(keys) = fold_index_literal(expr, scoped) {
-        return keys;
-    }
-    if let Some(inner) = unwrap_wrapper_target(expr) {
-        // colors[(k)]  /  sizes[i as const]
-        return fold_index(inner, scoped);
-    }
-    IndexFold::Dynamic
-}
-
-/// Fold the literal and resolvable index forms, or None to try wrappers.
-fn fold_index_literal(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<IndexFold> {
-    match expr {
-        Expression::StringLiteral(lit) => {
-            // colors['red']
-            Some(IndexFold::Keys(vec![lit.value.to_string()]))
-        }
-        Expression::NumericLiteral(lit) => {
-            // sizes[1]
-            Some(IndexFold::Keys(vec![canonical_numeric_key(lit.value)]))
-        }
-        Expression::BooleanLiteral(lit) => Some(IndexFold::Keys(vec![lit.value.to_string()])),
-        Expression::NullLiteral(_) => Some(IndexFold::Keys(vec!["null".to_string()])),
-        Expression::TemplateLiteral(lit) => {
-            if lit.expressions.is_empty() {
-                let raw = lit.quasis.first().map(|q| q.value.raw.to_string())?;
-                Some(IndexFold::Keys(vec![raw]))
-            } else {
-                // m[`a${b}`]  — interpolated templates are SITE-51's node
-                Some(IndexFold::Dynamic)
-            }
-        }
-        Expression::Identifier(ident) => Some(fold_index_identifier(ident.name.as_str(), scoped)),
-        Expression::StaticMemberExpression(mem) => Some(fold_index_member(mem, scoped)),
-        Expression::ComputedMemberExpression(mem) => {
-            // m[a[0]]  — nested reads fold inside out
-            Some(fold_index_element(&mem.object, &mem.expression, scoped))
-        }
-        Expression::ChainExpression(chain) => Some(fold_index_chain(chain, scoped)),
-        Expression::UnaryExpression(unary) => Some(fold_index_unary(unary, scoped)),
-        _ => None,
-    }
-}
-
-/// An identifier index: every const leaf becomes a key; unbound refuses.
-fn fold_index_identifier(name: &str, scoped: Scoped<'_>) -> IndexFold {
-    if name == "undefined" || name == "null" {
-        return IndexFold::Keys(vec![name.to_string()]);
-    }
-    // colors[k]  after  const k = 'red'
-    let keys: Vec<String> = scoped
-        .scalar_leaves(name)
-        .iter()
-        .filter_map(leaf_key)
-        .collect();
-    if keys.is_empty() {
-        IndexFold::Dynamic
-    } else {
-        IndexFold::Keys(keys)
-    }
-}
-
-/// A one-hop member index (`m[o.p]`), or Dynamic when unresolvable.
-fn fold_index_member(
-    mem: &oxc_ast::ast::StaticMemberExpression<'_>,
-    scoped: Scoped<'_>,
-) -> IndexFold {
-    if let Expression::Identifier(obj) = &mem.object {
-        // m[o.p]  — every const leaf becomes a key
-        let keys: Vec<String> = scoped
-            .object_prop_leaves(obj.name.as_str(), mem.property.name.as_str())
-            .iter()
-            .filter_map(leaf_key)
-            .collect();
-        if !keys.is_empty() {
-            return IndexFold::Keys(keys);
-        }
-    }
-    IndexFold::Dynamic
-}
-
-/// A nested element index: each folded leaf becomes a key.
-fn fold_index_element(
-    object: &Expression<'_>,
-    index: &Expression<'_>,
-    scoped: Scoped<'_>,
-) -> IndexFold {
-    match fold_element_access(object, index, scoped) {
-        ElementFold { values, .. } if !values.is_empty() => {
-            let keys: Vec<String> = values.iter().filter_map(leaf_key).collect();
-            if keys.is_empty() {
-                IndexFold::Dynamic
-            } else {
-                IndexFold::Keys(keys)
-            }
-        }
-        ElementFold { omitted, .. } if omitted => {
-            // m[hole]  — a hole reads undefined, keyed 'undefined'
-            IndexFold::Keys(vec!["undefined".to_string()])
-        }
-        _ => IndexFold::Dynamic,
-    }
-}
-
-/// A chained index: computed chains fold, member chains refuse (SITE-34).
-fn fold_index_chain(chain: &oxc_ast::ast::ChainExpression<'_>, scoped: Scoped<'_>) -> IndexFold {
-    if let oxc_ast::ast::ChainElement::ComputedMemberExpression(mem) = &chain.expression {
-        return fold_index_element(&mem.object, &mem.expression, scoped);
-    }
-    IndexFold::Dynamic
-}
-
-/// A unary index (`sizes[-n]`) with fully folded leaves, else Dynamic.
-fn fold_index_unary(unary: &oxc_ast::ast::UnaryExpression<'_>, scoped: Scoped<'_>) -> IndexFold {
-    let fold = fold_unary(unary.operator, &unary.argument, scoped);
-    if fold.values.is_empty()
-        || !fold.refusals.is_empty()
-        || !fold.template_refusals.is_empty()
-        || !fold.dynamic.is_empty()
-    {
-        return IndexFold::Dynamic;
-    }
-    let keys: Vec<String> = fold.values.iter().filter_map(leaf_key).collect();
-    if keys.is_empty() {
-        IndexFold::Dynamic
-    } else {
-        IndexFold::Keys(keys)
-    }
-}
-
-/// The key spelling of one scalar leaf, or None for token references.
-fn leaf_key(leaf: &AtomValue) -> Option<String> {
-    match leaf {
-        AtomValue::String(s) => Some(s.to_string()),
-        AtomValue::Number(n) => Some(n.to_string()),
-        AtomValue::Bool(b) => Some(b.to_string()),
-        AtomValue::Null => Some("null".to_string()),
-        AtomValue::Token { .. } => None,
-    }
-}
-
 /// Look one key up in the base, pushing values or refusals onto the fold.
 fn lookup_key(object: &Expression<'_>, key: &str, scoped: Scoped<'_>, fold: &mut ElementFold) {
     if lookup_const_base(object, key, scoped, fold) {
         return;
     }
     if lookup_inline_base(object, key, scoped, fold) {
+        return;
+    }
+    if lookup_nested_base(object, key, scoped, fold) {
         return;
     }
     if let Some(inner) = unwrap_wrapper_target(object) {
@@ -275,6 +127,186 @@ fn lookup_key(object: &Expression<'_>, key: &str, scoped: Scoped<'_>, fold: &mut
     }
     fold.refusals
         .push(ElementRefusal::DynamicBase(object.span()));
+}
+
+/// A chained base resolved to entries, a named write, or unresolvable.
+enum Nested {
+    /// The entries the chain names; the caller looks the key up in them.
+    Entries(ConstObject),
+    /// An identifier hop was reassigned; the caller names the write.
+    Mutated { name: String, site: String },
+    /// Anything else; the caller refuses the base at its span.
+    Dynamic,
+}
+
+/// Look one key up in a chained base (`colors['red']['500']`), or false.
+///
+/// Member and computed chains resolve inside out through [`nested_entries`];
+/// the outer key then looks up exactly like a single-hop read, so misses
+/// and non-scalars diagnose with the outer key. An unresolvable chain falls
+/// through to the caller's base refusal, so only a named write returns handled.
+fn lookup_nested_base(
+    object: &Expression<'_>,
+    key: &str,
+    scoped: Scoped<'_>,
+    fold: &mut ElementFold,
+) -> bool {
+    let mut probe = object;
+    while let Some(inner) = unwrap_wrapper_target(probe) {
+        probe = inner;
+    }
+    if !matches!(
+        probe,
+        Expression::ComputedMemberExpression(_) | Expression::StaticMemberExpression(_)
+    ) {
+        return false;
+    }
+    match nested_entries(probe, scoped) {
+        Nested::Entries(entries) => {
+            lookup_nested_entry(&entries, key, fold);
+            true
+        }
+        Nested::Mutated { name, site } => {
+            fold.refusals
+                .push(ElementRefusal::MutatedBase { name, site });
+            true
+        }
+        Nested::Dynamic => false,
+    }
+}
+
+/// Look the outer key up in resolved nested entries.
+fn lookup_nested_entry(entries: &ConstObject, key: &str, fold: &mut ElementFold) {
+    match entries.get(key) {
+        Some(prop) if !prop.leaves.is_empty() => {
+            fold.values.extend(prop.leaves.iter().cloned());
+        }
+        Some(_) => {
+            fold.refusals.push(ElementRefusal::NonScalar {
+                key: key.to_string(),
+            });
+        }
+        None => fold.refusals.push(ElementRefusal::Missing {
+            key: key.to_string(),
+        }),
+    }
+}
+
+/// Resolve a chained base to its entries, peeling wrappers first.
+fn nested_entries(expr: &Expression<'_>, scoped: Scoped<'_>) -> Nested {
+    if let Some(inner) = unwrap_wrapper_target(expr) {
+        return nested_entries(inner, scoped);
+    }
+    nested_entries_inner(expr, scoped)
+}
+
+/// Resolve an unwrapped chained base: identifier tables, static member
+/// paths, inline objects, and computed reads over them, inside out.
+fn nested_entries_inner(expr: &Expression<'_>, scoped: Scoped<'_>) -> Nested {
+    match expr {
+        Expression::Identifier(base) => nested_ident(base.name.as_str(), scoped),
+        Expression::StaticMemberExpression(mem) => nested_static(mem, scoped),
+        Expression::ComputedMemberExpression(mem) => nested_computed(mem, scoped),
+        Expression::ObjectExpression(obj) => Nested::Entries(object_entries(obj)),
+        _ => Nested::Dynamic,
+    }
+}
+
+/// An identifier hop: its const table, or the write that poisoned it.
+fn nested_ident(name: &str, scoped: Scoped<'_>) -> Nested {
+    if let Some(write) = scoped.mutation(name) {
+        return Nested::Mutated {
+            name: name.to_string(),
+            site: write.site(),
+        };
+    }
+    match scoped.object(name) {
+        Some(entries) => Nested::Entries(entries.clone()),
+        None => Nested::Dynamic,
+    }
+}
+
+/// A static-member hop (`o.red['500']`) through the member path node.
+fn nested_static(mem: &oxc_ast::ast::StaticMemberExpression<'_>, scoped: Scoped<'_>) -> Nested {
+    if let Some(root) = member_root_name(mem) {
+        if let Some(write) = scoped.mutation(root) {
+            return Nested::Mutated {
+                name: root.to_string(),
+                site: write.site(),
+            };
+        }
+    }
+    match member_path_object(mem, scoped) {
+        Some(entries) => Nested::Entries(entries.clone()),
+        None => Nested::Dynamic,
+    }
+}
+
+/// A computed hop: its base's entries under its single intermediate key.
+///
+/// Multi-leaf intermediates refuse, verbatim v2 (Conditional keys drop in
+/// `literal_to_property_key`); only the terminal index fans out.
+fn nested_computed(mem: &oxc_ast::ast::ComputedMemberExpression<'_>, scoped: Scoped<'_>) -> Nested {
+    let IndexFold::Keys(keys) = fold_index(&mem.expression, scoped) else {
+        return Nested::Dynamic;
+    };
+    let [key] = keys.as_slice() else {
+        return Nested::Dynamic;
+    };
+    match nested_entries(&mem.object, scoped) {
+        Nested::Entries(entries) => nested_prop_object(&entries, key),
+        Nested::Mutated { name, site } => Nested::Mutated { name, site },
+        Nested::Dynamic => nested_array_object(&mem.object, key, scoped),
+    }
+}
+
+/// The nested entries under one intermediate key, if it holds an object.
+fn nested_prop_object(entries: &ConstObject, key: &str) -> Nested {
+    match entries.get(key) {
+        Some(prop) if !prop.nested.is_empty() => Nested::Entries(prop.nested.clone()),
+        _ => Nested::Dynamic,
+    }
+}
+
+/// A const-array hop (`matrix[0]['x']`): the indexed object entries.
+fn nested_array_object(object: &Expression<'_>, key: &str, scoped: Scoped<'_>) -> Nested {
+    let mut probe = object;
+    while let Some(inner) = unwrap_wrapper_target(probe) {
+        probe = inner;
+    }
+    let Expression::Identifier(base) = probe else {
+        return Nested::Dynamic;
+    };
+    let name = base.name.as_str();
+    if let Some(write) = scoped.mutation(name) {
+        return Nested::Mutated {
+            name: name.to_string(),
+            site: write.site(),
+        };
+    }
+    let Some(elements) = scoped.array(name) else {
+        return Nested::Dynamic;
+    };
+    let Some(pos) = array_position(key) else {
+        return Nested::Dynamic;
+    };
+    match elements.get(pos) {
+        Some(ConstArrayElement::Object(leaves)) => {
+            // Array objects record flat leaf maps; lift each leaf to an entry.
+            let mut entries = ConstObject::new();
+            for (name, leaf) in leaves {
+                entries.insert(
+                    name.clone(),
+                    crate::extract::constants::ObjectProp {
+                        leaves: vec![leaf.clone()],
+                        nested: ConstObject::new(),
+                    },
+                );
+            }
+            Nested::Entries(entries)
+        }
+        _ => Nested::Dynamic,
+    }
 }
 
 /// Look one key up in a const-object or const-array binding, or false.

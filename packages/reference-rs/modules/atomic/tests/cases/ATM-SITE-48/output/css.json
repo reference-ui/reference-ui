@@ -9,7 +9,10 @@
   "padding:16px": "@reference-ui/lib__p_16px",
   "padding:20px": "@reference-ui/lib__p_20px",
   "padding:24px": "@reference-ui/lib__p_24px",
+  "padding:28px": "@reference-ui/lib__p_28px",
   "padding:2px": "@reference-ui/lib__p_2px",
+  "padding:32px": "@reference-ui/lib__p_32px",
+  "padding:36px": "@reference-ui/lib__p_36px",
   "padding:4px": "@reference-ui/lib__p_4px",
   "padding:8px": "@reference-ui/lib__p_8px"
 }
