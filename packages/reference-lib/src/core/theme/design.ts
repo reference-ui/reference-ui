@@ -32,6 +32,19 @@ export const design = {
     background: { light: '{colors.blue.200}', dark: '{colors.blue.950}' },
     foreground: { light: '{colors.blue.950}', dark: '{colors.blue.200}' },
   },
+
+  // Provenance: stillborn-leaf fix; no green sibling exists in theme, so this
+  // mirrors the 600-light/400-dark semantic-foreground convention of
+  // ui.meter.evenLessGood.foreground, transposed to the green hue.
+  positive: {
+    text: { light: '{colors.green.600}', dark: '{colors.green.400}' },
+  },
+
+  // Provenance: stillborn-leaf fix; mirrors the convergent quiet-inset fills
+  // ui.pre.background and ui.tab.track.background (both gray.100/900).
+  bg: {
+    muted: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+  },
 } as const
 
 tokens({ colors: { design } })

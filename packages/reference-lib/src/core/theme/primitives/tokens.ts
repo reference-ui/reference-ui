@@ -164,6 +164,9 @@ export const ui = {
   button: {
     background: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.950}' },
+    // Provenance: stillborn-leaf fix; twins ui.table.row.mutedBackground below
+    // (ghost-button _hover + NumberField _active already use that token as the hover wash).
+    mutedBackground: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
     disabled: {
       background: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
       foreground: { light: '{colors.design.text.lighter}', dark: '{colors.design.text.lighter}' },
@@ -228,6 +231,21 @@ export const ui = {
   tab: {
     track: {
       background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+    },
+  },
+
+  // Provenance: stillborn-leaf fix; mirrors the convergent quiet-inset fills
+  // ui.pre.background (gray.100/900) and ui.tab.track.background (gray.100/900).
+  panel: {
+    background: { light: '{colors.gray.100}', dark: '{colors.gray.900}' },
+  },
+
+  // Provenance: stillborn-leaf fix; mirrors ui.meter.evenLessGood.foreground
+  // (red.600/400), the only both-modes semantic red foreground in ui.*.
+  status: {
+    error: {
+      border: { light: '{colors.red.600}', dark: '{colors.red.400}' },
+      text: { light: '{colors.red.600}', dark: '{colors.red.400}' },
     },
   },
 } as const
