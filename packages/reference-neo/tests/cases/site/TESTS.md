@@ -20,6 +20,8 @@
 | NEO-SITE-16 | Member tags (`<NS.Panel />`) extract under concatenated hosts; unhosted twins stay silent | done | ATM-SITE-22 (RS-36) | — | member paints both props; twin transparent; sheet carries exactly the member utilities | `[atm]` SITE-22; `[lib]` `Menu.tsx`, `Showcase.book.tsx` |
 | NEO-SITE-17 | Component-body const ternary feeding `borderBottomColor` extracts both arms; dark paints ink, light reload paints mist | done | ATM-SITE-23 (RS-37) | — | computed both themes; sheet carries exactly the two arm atoms | `[atm]` SITE-23; `[lib]` `BookShell.tsx` chrome dividers |
 | NEO-SITE-27 | Param shadowing a cross-file const: `function Card({ color })` over `a.ts`'s `export const color` diagnoses and paints nothing; an unshadowed imported const still paints | done | ATM-SITE-53 | — | no utility + located warning; twin paints | `[overmatch]` SPEC-V2-75; `[panda-v2]` `scope.rs:1349`, `:1369` |
+| NEO-SITE-20 | Wrapped `css()` args (`as const`, parens, `satisfies`, `!`, `.ts` `<T>`) paint exactly like the bare arg with zero diagnostics | done | ATM-SITE-26 | — | computed every wrap; sheet carries each utility; recompile carries zero diagnostics | `[overmatch]` SPEC-V2-06/07; `[panda-v2]` `calls.rs:1001`, `:1017`, `:1033`, `:1052`, `:1068` |
+| NEO-SITE-24 | Non-object `css()` args diagnose and paint nothing while sibling args still paint: `css(styles)`, arg-level `cond && {...}`, and live `` css`…` `` | done | ATM-SITE-50 | — | sibling paints; diagnosed nodes paint nothing; sheet carries sibling + twin utilities; recompile carries the three positioned warnings | `[overmatch]` SPEC-V2-65 Ph1; `[panda-v2]` `calls.rs:548`, `:1719`, `atomic.rs:1626` |
 
 ## RS lane (added by the SITE batch-1 cook)
 

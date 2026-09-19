@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 163 |
-| Named `[x]` proven | 158 |
-| Remaining `[ ]` | 5 (`ATM-DIAG-04`, `ATM-DIAG-05`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
+| Total contract cases | 169 |
+| Named `[x]` proven | 165 |
+| Remaining `[ ]` | 4 (`ATM-DIAG-04`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 251 (internal; not ticks) |
-| Vitest seam stations | 158 (`tests/cases/<ATM-*>`) |
+| Vitest seam stations | 164 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -262,9 +262,9 @@ compiler contract.
 - [x] `ATM-SITE-11` `[reference]` `[seam]` —
   **Identifier spreads of a local const style object (`<Div {...base} />`, `css({ ...base })`) must unpack known keys.**
   Station `ATM-SITE-11`. File-top `const` objects unpack; inline object spreads remain `ATM-SITE-05`.
-- [x] `ATM-SITE-12` `[forbidden]` `[seam]` —
+- [x] `ATM-SITE-12` `[forbidden]` `[seam]` — **[SPEC-V2-38, Overmatch Ph1]**
   **Tagged template literals must not be an extract site.**
-  Compile ``css`color: red;` `` and `` styled.div`padding: 1rem` ``. Assert no wants are produced and no diagnostic fires — a tagged template is simply not our author API. This is a named refusal rather than an accident of the walker: the object form is the only surface, so a template literal must never be parsed as CSS text.
+  Compile ``css`color: red;` `` and `` styled.div`padding: 1rem` ``. Assert no wants are produced; a tag on a live `css` binding emits one located `tagged template is not a css() site; use css({...})` diagnostic (no-silence sweep, SPEC-V2-65), while a non-`css` tag stays silent. This is a named refusal rather than an accident of the walker: the object form is the only surface, so a template literal must never be parsed as CSS text.
 - [x] `ATM-SITE-13` `[reference]` `[seam]` —
   **Styletrace gating must fail closed: an unavailable primitive graph is a diagnostic, not a licence to extract every tag.**
   Compile a project whose `styletrace::trace_style_jsx_names` call yields no names and whose sources import nothing from `@reference-ui/react`. Assert that a local `<Foo mt="4r" />` produces no wants and that a diagnostic reports the missing primitive graph. Assert the empty-project case still compiles clean. Station `ATM-SITE-13` (RS-5). Landing this resolved the **contradiction between `ATM-SITE-01` and `ATM-SITE-08`**: `allows_jsx_tag` no longer treats an empty host set as "scan every tag"; style-bearing JSX with no hosts resolvable is a missing-graph error once per file, and unknown tags under a known graph stay silent. Every station input that relied on the fallback now declares its primitive imports (outputs identical modulo import lines).
@@ -280,7 +280,7 @@ compiler contract.
   Place a file-top `const theme` in `tokens.ts` and consume it at a site in `App.tsx`; assert the value resolves. Assert that a style inside `node_modules`, `dist`, or `.reference-ui` is not compiled and that a non-source extension (`.mdx`) is skipped. Station `ATM-SITE-16` proves the cross-file merge plus every skip boundary.
 - [x] `ATM-SITE-17` `[reference]` `[seam]` —
   **Wants that arrive through indirection must emit one runtime style plan per want.**
-  Ternary arms (`css({ color: flag ? 'red.500' : 'blue.500' })`), member access (`css({ color: theme.primary })`), and identifier spreads (`css({ color: 'amber.500', ...rest })`) already emit wants and utilities; assert they also emit one plan per want with `when: []`, each declaration naming an emitted utility class, and that the plan index resolves every leaf. Station `ATM-SITE-17` adopts `extract/site_plan_tests.rs` (RS-14). Whole-object `css(styles)` is out of dialect and stays silent.
+  Ternary arms (`css({ color: flag ? 'red.500' : 'blue.500' })`), member access (`css({ color: theme.primary })`), and identifier spreads (`css({ color: 'amber.500', ...rest })`) already emit wants and utilities; assert they also emit one plan per want with `when: []`, each declaration naming an emitted utility class, and that the plan index resolves every leaf. Station `ATM-SITE-17` adopts `extract/site_plan_tests.rs` (RS-14). Whole-object `css(styles)` diagnoses in Ph1 (`ATM-SITE-50`) and resolves in Ph3 (SPEC-V2-65); the old "stays silent" note is revoked by the no-silence sweep.
 - [x] `ATM-SITE-18` `[reference]` `[seam]` —
   **`<Div border />` must lower the boolean macro to `border-width: 1px` plus `border-style: solid`.**
   Compile `<Div border />` alongside `<Div color={true} />` and assert the border want emits both longhand utilities with one two-declaration plan the index resolves, while the color bool warns `` `color` value `true` is not valid CSS`` and mints nothing. Station `ATM-SITE-18` (RS-19).
@@ -306,6 +306,21 @@ compiler contract.
 - [x] `ATM-SITE-28` `[reference]` `[seam]` — **[SPEC-V2-35/02/53, Overmatch Ph1]**
   **A `let`/`var` with any assignment must drop to a diagnostic naming the write; unmutated `let`/`var` keep resolving.**
   Station `ATM-SITE-28` (Overmatch Ph1). Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53, cross-file arm via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/` per mission §7.2). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until SPEC-V2-76 lands the binding walk. Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241` (unmutated `let`/`var`), `cross_file.rs:502` (`export_let_currently_folds_too`).
+- [x] `ATM-SITE-30` `[reference]` `[seam]` — **[SPEC-V2-08, Overmatch Ph1/Ph2]**
+  **Unary `+`/`-` on numeric literals must fold at the literal.**
+  Station `ATM-SITE-30` (Overmatch pin-before-narrow: filed before SITE-38 narrows the unary fallthrough). Compile `css({ margin: -4, opacity: -0.5 })` beside `css({ width: +50 })` and a `-0` control. Assert `-4`, `-0.5`, and `50` extract with one want and one runtime plan per leaf, `-0` canonicalizes to `0` on both sides, and zero diagnostics emit. Catalog entries 13 (static backticks) and 36 (micro-fold bundle) ride the same station number and land as Ph2 arms. Panda: `calls.rs:1093` (`unary_negation_on_numeric_literal`), `:1110` (`unary_plus_on_numeric_literal`).
+- [x] `ATM-SITE-38` `[reference]` `[seam]` — **[SPEC-V2-09/78, GAP-05b, Overmatch Ph1]**
+  **Unary `-`/`+`/`!`/`~` must fold over literal and const-resolved numeric/boolean operands and refuse anything else with a diagnostic — never a dropped sign or a walked-through operand.**
+  Station `ATM-SITE-38` (Overmatch Ph1). Compile `-space` over `const space = 4`, `+n`, `-theme.gap`, and `!flag` over const booleans beside multi-leaf (`-w` over a ternary const folds every leaf) and literal (`!true` → `false`, `~5` → `-6`) arms. Assert every fold emits one want per leaf and one runtime plan per resolvable leaf with zero extract diagnostics (folded bools are planless exactly like bare bools, SITE-18). Assert `-m`'s non-numeric leaf over a mixed-leaf const, `!` on strings, `~true` on a boolean, `typeof`/`delete`, and array/object operands each yield zero wants plus one `Dynamic unary expression …` diagnostic naming the operator — and that `!true` never emits `true`. Assert dynamic operands keep their existing vocabulary (unbound/mutated identifiers warn as today) and inline ternaries distribute (`-(pick ? 4 : 8)` → `-4`, `-8`). Assert TS non-null `!` is transparent in both walkers (`css({ width: '2r'! })` extracts plain `2r` with a plain plan — GAP-05b). Both walkers call the shared `extract/fold/unary.rs` node, so want/plan parity is structural. Panda: `calls.rs:1126` (`unary_logical_not_on_literal`), `literal-evaluator.md:51`; strings refuse where v2 coerces (S15).
+- [x] `ATM-SITE-26` `[reference]` `[seam]` — **[SPEC-V2-06/07, Overmatch Ph1]**
+  **`css()` args wrapped in parens / `as` / `satisfies` / `!` / `<T>` must extract like the bare arg.**
+  Station `ATM-SITE-26` (Overmatch Ph1 no-silence sweep). Compile `css({...} as const)` beside paren-wrapped, `satisfies`, non-null `!`, and `.ts`-only `<any>` args plus the bare control. Assert every wrapped arg emits the bare arg's wants with one runtime plan per want and zero diagnostics; value-level `<any>` and `TSInstantiationExpression` unwrap the same way. Panda: `calls.rs:1001` (parens), `:1017` (`as const`), `:1033`+`:2000` (satisfies), `:1052` (`!`), `:1068` (`<any>`).
+- [x] `ATM-SITE-37` `[reference]` `[seam]` — **[SPEC-V2-28 Ph1, Overmatch Ph1]**
+  **Array spreads must refuse with a located diagnostic without shifting arity (Ph1); literal flatten rides Ph3.**
+  Station `ATM-SITE-37` (Overmatch Ph1 no-silence sweep). Compile `css({ padding: [1, ...dyn, 4] })` and the literal `...[2, 3]` twin beside merge-list `css([{...}, ...dyn, {...}])`. Assert every spread yields a located diagnostic: the value array yields zero wants (never shifts `4` a breakpoint early) with zero plans, while merge-list siblings still extract. Ph3 flattens literal / const-array spreads (SPEC-V2-63). Panda flattens literal (`calls.rs:1265`) and drops unresolvable spreads silently (`literal-evaluator.md:47-48`); our diagnostic is the upgrade (S5).
+- [x] `ATM-SITE-50` `[reference]` `[seam]` — **[SPEC-V2-65 Ph1, SPEC-V2-38 tagged, Overmatch Ph1]**
+  **Every non-object `css()` arg and every `_ => {}` on a site path must diagnose with position (Ph1); whole-object resolve rides Ph3.**
+  Station `ATM-SITE-50` (Overmatch Ph1 no-silence sweep). Compile `css(styles)`, `css(theme.colors)`, `css(fn())`, `css(a, cond && {...})`, conditional args with identifier/call arms, `css(...args)`, a live-binding `` css`...` `` tag, and JSX `css={styles}` / `css={cond && {...}}` / `_hover={fn()}` shapes. Assert each yields zero wants from that position plus one located `css() argument N is not a static style object (kind)` diagnostic (JSX/tag twins worded for their site), with sibling args/arms kept. Assert the silence controls stay silent: `css()`, `css({})`, `false`/`null`/`undefined` holes, string/boolean literal args (`css('panda', {...})`, SPEC-V2-36), null ternary arms, and non-`css` tags. Whole-object/member/logical resolve is the Ph3 half. Panda: staged `calls.rs:548`, positional `None` `:1719`, arg-`&&` `atomic.rs:1626`.
 
 ### Leaf Literal Extraction
 
@@ -661,10 +676,10 @@ compiler contract.
   Station `ATM-DIAG-03`. Malformed source yields `severity: error` and a `CompileResult` (no panic).
 - [ ] `ATM-DIAG-04` `[reference]` `[seam]` —
   **Every diagnostic must carry a file path, a line, and a column.**
-  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Every call site passes `with_location(path, None, None)` today (`lib.rs:210`, `walk.rs:51-53`) and token warnings carry no file at all (`resolve/tokens/mod.rs:47-49`), so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor. `ATM-TOKEN-12` is the first located token diagnostic (missing-`{ref}` errors); the general claim stays open.
-- [ ] `ATM-DIAG-05` `[reference]` `[seam]` —
-  **Every diagnostic must carry a stable machine-readable code.**
-  Assert each diagnostic exposes a code (`ATM1001`-style) that is stable across releases, that codes are unique per failure class, and that the same authored mistake always reports the same code. Diagnostics are free-text strings today, with three near-duplicate wordings for unresolved dynamic values (`walk.rs:189-191`, `:225-227`, `:305-307`). Codes are what let a host suppress a known warning, group them in a report, and document them.
+  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Extract call sites locate through `warn(span, …)` since `ATM-DIAG-05`; token and other resolve warnings still carry no position at all, so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor. `ATM-TOKEN-12` is the first located token diagnostic (missing-`{ref}` errors); the general claim stays open.
+- [x] `ATM-DIAG-05` `[reference]` `[seam]` — **[SPEC-V2-77, Overmatch Ph1]**
+  **Every diagnostic the extractor emits must carry `file:line:col` of the offending node and a stable machine-readable code.**
+  Station `ATM-DIAG-05` (Overmatch Ph1). `ExpressionWalk::warn` and `ObjectWalk::warn` take the offending `Span` and resolve it through `line_col`, so every extract refusal — dynamic identifiers, members, templates, spreads, computed keys, unknown props, mutated bindings — reports the sub-expression's position, not just the file. `Diagnostic` gains `code: DiagnosticCode` (`diagnostics/codes.rs`), an enum with stable `ATM-W-…` / `ATM-E-…` / `ATM-I-…` strings serialized on every diagnostic, unique per failure class so the same authored mistake always reports the same code; `diagnostics/render.rs` provides the `{file}:{line}:{col} {code} {message}` format shared by CLI, Neo, and tests. Messages and warn-vs-silent behavior are unchanged; goldens move only by gaining `line`/`column`/`code`. The DIAG-04 general claim (token-resolution and other non-extract positions) stays open. Panda: byte spans on every diagnostic (`imports.rs:518`, `:527`; `calls.rs:749`); kinds like `panda_call_unextractable`, no published code table.
 - [ ] `ATM-DIAG-06` `[reference]` `[seam]` —
   **Non-ASCII source and selectors must compile without panic, and columns must be counted in UTF-16 code units.**
   Compile a source containing an emoji before a style prop and a global selector with CJK and accented characters. Assert no panic, correct extraction, and that the reported column matches what an editor shows (UTF-16 units, so an emoji counts as two). Rust byte offsets and editor columns disagree for any non-ASCII file, which makes every diagnostic position wrong past the first multibyte character.
@@ -747,7 +762,12 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-20` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-20/` |
 | `ATM-SITE-21` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-21/` |
 | `ATM-SITE-22` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-22/` |
+| `ATM-SITE-26` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-26/` |
 | `ATM-SITE-28` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-28/` |
+| `ATM-SITE-30` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-30/` |
+| `ATM-SITE-37` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-37/` |
+| `ATM-SITE-38` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-38/` |
+| `ATM-SITE-50` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-50/` |
 | `ATM-SITE-53` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-53/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
@@ -852,6 +872,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-DIAG-01` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-01/` |
 | `ATM-DIAG-02` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-02/` |
 | `ATM-DIAG-03` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-03/` |
+| `ATM-DIAG-05` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-05/` |
 | `ATM-FORBID-01` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-01/` |
 | `ATM-FORBID-02` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-02/` |
 | `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` |

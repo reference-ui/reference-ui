@@ -1,6 +1,7 @@
 [
   {
     "severity": "error",
+    "code": "ATM-E-RECIPE-CLASSNAME",
     "message": "recipe(...) requires an explicit string-literal 'className' property",
     "file": "input/src/recipe.ts",
     "line": 20,
@@ -8,6 +9,7 @@
   },
   {
     "severity": "error",
+    "code": "ATM-E-RECIPE-CLASSNAME",
     "message": "recipe(...) requires an explicit string-literal 'className' property",
     "file": "input/src/recipe.ts",
     "line": 25,

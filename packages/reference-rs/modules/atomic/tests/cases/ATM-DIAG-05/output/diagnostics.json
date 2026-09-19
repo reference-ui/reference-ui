@@ -1,0 +1,90 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-EXPRESSION",
+    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "file": "input/src/precise.ts",
+    "line": 4,
+    "column": 10
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal expression encountered for prop 'width'",
+    "file": "input/src/precise.ts",
+    "line": 5,
+    "column": 10
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'depth' encountered for prop 'height'",
+    "file": "input/src/precise.ts",
+    "line": 6,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'depth' encountered for prop 'padding'",
+    "file": "input/src/precise.ts",
+    "line": 7,
+    "column": 12
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template expression for prop 'margin'",
+    "file": "input/src/precise.ts",
+    "line": 8,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-KEY",
+    "message": "Dynamic computed property key encountered in style object",
+    "file": "input/src/precise.ts",
+    "line": 9,
+    "column": 4
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"frobnicate\"",
+    "file": "input/src/precise.ts",
+    "line": 10,
+    "column": 3
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/src/precise.ts",
+    "line": 11,
+    "column": 6
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CONDITION",
+    "message": "Condition block expected object expression",
+    "file": "input/src/precise.ts",
+    "line": 12,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-BREAKPOINT",
+    "message": "Unknown breakpoint name in r prop: \"wat\"",
+    "file": "input/src/precise.ts",
+    "line": 13,
+    "column": 8
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MUTATED-BINDING",
+    "message": "Dynamic mutated binding 'tint' encountered for prop 'color' (reassigned at input/src/precise.ts:18:1; declared value is stale)",
+    "file": "input/src/precise.ts",
+    "line": 19,
+    "column": 36
+  }
+]

@@ -9,7 +9,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::{GetSpan, Span};
 
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticLocation};
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::extract::ExtractContext;
 use crate::recipes::Recipe;
 
@@ -23,6 +23,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Some(first_arg) = call.arguments.first().and_then(|arg| arg.as_expression()) else {
         ctx.diagnostics.push(located_error(
             ctx,
+            DiagnosticCode::RecipeArgShape,
             "recipe(...) requires an inline object literal as its first argument",
             call.span,
         ));
@@ -32,6 +33,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Expression::ObjectExpression(obj) = unwrapped else {
         ctx.diagnostics.push(located_error(
             ctx,
+            DiagnosticCode::RecipeArgShape,
             "recipe(...) requires an inline object literal as its first argument",
             first_arg.span(),
         ));
@@ -40,6 +42,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     if let Some(spread) = first_spread(obj) {
         ctx.diagnostics.push(located_error(
             ctx,
+            DiagnosticCode::RecipeSpread,
             "recipe(...) object literal must not contain spread properties",
             spread.span,
         ));
@@ -60,12 +63,17 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
 }
 
 /// Error diagnostic at a span's file/line/column, like the wants from this pass.
-fn located_error(ctx: &ExtractContext<'_>, message: &str, span: Span) -> Diagnostic {
+fn located_error(
+    ctx: &ExtractContext<'_>,
+    code: DiagnosticCode,
+    message: &str,
+    span: Span,
+) -> Diagnostic {
     let (line, column) = ctx
         .source
         .and_then(|source| line_col(source, span.start))
         .unzip();
-    Diagnostic::error(message).with_location(ctx.file, line, column)
+    Diagnostic::error(code, message).with_location(ctx.file, line, column)
 }
 
 /// Source call site for a collected recipe, carried for refusal diagnostics.
@@ -110,6 +118,7 @@ fn extract_class_name(obj: &ObjectExpression<'_>, ctx: &mut ExtractContext<'_>) 
     }
     ctx.diagnostics.push(located_error(
         ctx,
+        DiagnosticCode::RecipeClassName,
         "recipe(...) requires an explicit string-literal 'className' property",
         obj.span,
     ));
@@ -139,6 +148,7 @@ fn extract_literal_class_name(
     }
     ctx.diagnostics.push(located_error(
         ctx,
+        DiagnosticCode::RecipeClassName,
         "recipe(...) 'className' property must be a non-empty string literal",
         unwrapped.span(),
     ));

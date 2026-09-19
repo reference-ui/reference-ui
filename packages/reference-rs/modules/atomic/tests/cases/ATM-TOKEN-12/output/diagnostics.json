@@ -1,6 +1,7 @@
 [
   {
     "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
     "message": "unknown token reference `{colors.nope}`",
     "file": "input/src/missing-ref.tsx",
     "line": 4,
@@ -8,6 +9,7 @@
   },
   {
     "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
     "message": "unknown token reference `{colors.nope}`",
     "file": "input/src/missing-ref.tsx",
     "line": 5,

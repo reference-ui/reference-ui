@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-RESPONSIVE-ARRAY-SPREAD",
+    "message": "Spread in responsive array for prop 'padding'; refusing the array to keep breakpoint arity honest",
+    "file": "input/src/arrays.ts",
+    "line": 5,
+    "column": 47
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-RESPONSIVE-ARRAY-SPREAD",
+    "message": "Spread in responsive array for prop 'margin'; refusing the array to keep breakpoint arity honest",
+    "file": "input/src/arrays.ts",
+    "line": 6,
+    "column": 50
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() merge-list element 2 is not a static style object (spread element)",
+    "file": "input/src/merge.ts",
+    "line": 5,
+    "column": 46
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-OBJECT-CSS-ARG",
+    "message": "css() merge-list element 2 is not a static style object (spread element)",
+    "file": "input/src/merge.ts",
+    "line": 6,
+    "column": 54
+  }
+]

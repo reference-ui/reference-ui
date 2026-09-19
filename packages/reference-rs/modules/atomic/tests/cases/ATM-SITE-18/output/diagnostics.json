@@ -1,6 +1,7 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
     "message": "`color` value `true` is not valid CSS"
   }
 ]

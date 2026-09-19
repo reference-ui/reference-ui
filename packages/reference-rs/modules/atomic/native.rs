@@ -96,7 +96,10 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
         portable_stylesheet: preamble,
         runtime: ::atomic::NativeRuntimeArtifact::default(),
         css: Some(::atomic::CssRuntime::new()),
-        diagnostics: vec![::atomic::Diagnostic::error(message)],
+        diagnostics: vec![::atomic::Diagnostic::error(
+            ::atomic::DiagnosticCode::InvalidBaseSystem,
+            message,
+        )],
         wants: Vec::new(),
         recipes: Vec::new(),
         atom_count: 0,

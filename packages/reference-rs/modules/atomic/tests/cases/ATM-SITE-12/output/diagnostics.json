@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-TAGGED-TEMPLATE-SITE",
+    "message": "tagged template is not a css() site; use css({...})",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 18
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-TAGGED-TEMPLATE-SITE",
+    "message": "tagged template is not a css() site; use css({...})",
+    "file": "input/src/App.tsx",
+    "line": 7,
+    "column": 18
+  }
+]

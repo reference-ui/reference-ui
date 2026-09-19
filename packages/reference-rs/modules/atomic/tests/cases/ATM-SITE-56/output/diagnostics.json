@@ -1,7 +1,10 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
     "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/Card.tsx"
+    "file": "input/src/Card.tsx",
+    "line": 12,
+    "column": 19
   }
 ]

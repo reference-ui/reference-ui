@@ -1,12 +1,16 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-TRACE-SKIPPED",
     "message": "StyleTrace: failed to parse input/src/broken.tsx: 1 parse error(s)",
     "file": "input/src/broken.tsx"
   },
   {
     "severity": "error",
+    "code": "ATM-E-PARSE",
     "message": "Unexpected token",
-    "file": "input/src/broken.tsx"
+    "file": "input/src/broken.tsx",
+    "line": 3,
+    "column": 1
   }
 ]

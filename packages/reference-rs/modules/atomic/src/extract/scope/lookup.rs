@@ -91,10 +91,7 @@ impl<'a> ScopeChain<'a> {
 
     /// Fix a use-site scope, for the walkers that resolve many names there.
     pub fn at(self, scope: ScopeId) -> Scoped<'a> {
-        Scoped {
-            chain: self,
-            scope,
-        }
+        Scoped { chain: self, scope }
     }
 }
 

@@ -1,6 +1,7 @@
 [
   {
     "severity": "error",
+    "code": "ATM-E-INVALID-BASE-SYSTEM",
     "message": "invalid baseSystem spec: base-system consumes evaluated JSON only: unknown field `fragment`, expected one of `schemaVersion`, `profile`, `name`, `extends`, `tokens`, `fonts`, `breakpoints`, `conditions`, `globalCss`, `keyframes`, `recipes`, `staticCss`, `provenance` at line 1 column 41"
   }
 ]

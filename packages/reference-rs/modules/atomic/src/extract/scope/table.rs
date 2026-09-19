@@ -73,6 +73,8 @@ impl ScopeTable {
 
     /// The enclosing scope, or None at the root and for unknown ids.
     pub fn parent_of(&self, scope: ScopeId) -> Option<ScopeId> {
-        self.scopes.get(scope as usize).and_then(|entry| entry.parent)
+        self.scopes
+            .get(scope as usize)
+            .and_then(|entry| entry.parent)
     }
 }

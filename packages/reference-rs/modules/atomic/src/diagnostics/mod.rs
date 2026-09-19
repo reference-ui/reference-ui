@@ -1,8 +1,16 @@
 //! Compiler diagnostic definitions and severity reporting for Reference UI.
 //! Formats errors, warnings, and informational notices with source locations during extraction and resolution.
 //! Enforces fail-closed compilation semantics to surface invalid styling patterns early.
+//! Every diagnostic carries a stable [`DiagnosticCode`] so hosts can filter by
+//! failure class, and renders through [`render`] as `{file}:{line}:{col} {code} {message}`.
 
 use serde::{Deserialize, Serialize};
+
+mod codes;
+mod render;
+
+pub use codes::DiagnosticCode;
+pub use render::render;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -16,6 +24,7 @@ pub enum DiagnosticSeverity {
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostic {
     pub severity: DiagnosticSeverity,
+    pub code: DiagnosticCode,
     pub message: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file: Option<String>,
@@ -37,8 +46,8 @@ pub struct DiagnosticLocation {
 
 impl DiagnosticLocation {
     /// Build an error diagnostic carrying this location, when known.
-    pub fn error(&self, message: impl Into<String>) -> Diagnostic {
-        let mut diagnostic = Diagnostic::error(message);
+    pub fn error(&self, code: DiagnosticCode, message: impl Into<String>) -> Diagnostic {
+        let mut diagnostic = Diagnostic::error(code, message);
         if let Some(file) = &self.file {
             diagnostic.file = Some(file.clone());
             diagnostic.line = self.line;
@@ -59,9 +68,10 @@ pub fn line_col(source: &str, offset: u32) -> Option<(u32, u32)> {
 }
 
 impl Diagnostic {
-    pub fn error(message: impl Into<String>) -> Self {
+    pub fn error(code: DiagnosticCode, message: impl Into<String>) -> Self {
         Self {
             severity: DiagnosticSeverity::Error,
+            code,
             message: message.into(),
             file: None,
             line: None,
@@ -69,9 +79,10 @@ impl Diagnostic {
         }
     }
 
-    pub fn warning(message: impl Into<String>) -> Self {
+    pub fn warning(code: DiagnosticCode, message: impl Into<String>) -> Self {
         Self {
             severity: DiagnosticSeverity::Warning,
+            code,
             message: message.into(),
             file: None,
             line: None,
@@ -120,8 +131,12 @@ mod tests {
             line: Some(4),
             column: Some(12),
         };
-        let diagnostic = loc.error("unknown token reference `{colors.nope}`");
+        let diagnostic = loc.error(
+            DiagnosticCode::UnknownTokenReference,
+            "unknown token reference `{colors.nope}`",
+        );
         assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
+        assert_eq!(diagnostic.code, DiagnosticCode::UnknownTokenReference);
         assert_eq!(diagnostic.file.as_deref(), Some("a.tsx"));
         assert_eq!(diagnostic.line, Some(4));
         assert_eq!(diagnostic.column, Some(12));
@@ -129,7 +144,7 @@ mod tests {
 
     #[test]
     fn empty_location_errors_without_position() {
-        let diagnostic = DiagnosticLocation::default().error("boom");
+        let diagnostic = DiagnosticLocation::default().error(DiagnosticCode::ParseError, "boom");
         assert_eq!(diagnostic.file, None);
         assert_eq!(diagnostic.line, None);
     }

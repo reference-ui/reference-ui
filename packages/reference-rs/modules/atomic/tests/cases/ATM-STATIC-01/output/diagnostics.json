@@ -1,7 +1,10 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
     "message": "Dynamic non-literal identifier 'prop' encountered for prop 'bg'",
-    "file": "input/src/App.tsx"
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 19
   }
 ]

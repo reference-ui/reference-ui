@@ -55,6 +55,7 @@ pub fn check_container_root(
     });
     if has_cq && !system.global_css.is_empty() && !has_container_root(system) {
         diagnostics.push(crate::diagnostics::Diagnostic::warning(
+            crate::diagnostics::DiagnosticCode::MissingContainerRoot,
             "@container condition emitted but no container root (container-type) is defined in globalCss",
         ));
     }

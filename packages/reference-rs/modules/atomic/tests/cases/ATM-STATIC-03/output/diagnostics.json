@@ -1,11 +1,15 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
     "message": "Dynamic non-literal identifier 'prop' encountered for prop 'borderRadius'",
-    "file": "input/src/App.tsx"
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 29
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown property in staticCss: \"unknownProp\""
   }
 ]

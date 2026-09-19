@@ -11,7 +11,7 @@ use base_system::{CompoundVariant, RecipeDefinition, StyleMap};
 
 use super::{Recipe, RecipeCompound};
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::extract::expressions::literal::split_important_flag;
 
 /// Lower every spec recipe into `Recipe` IR keyed by its explicit className.
@@ -23,6 +23,7 @@ pub fn from_spec(
     for (name, definition) in recipes {
         if name.is_empty() {
             diagnostics.push(Diagnostic::error(
+                DiagnosticCode::RecipeClassName,
                 "spec recipe requires a non-empty className key",
             ));
             continue;

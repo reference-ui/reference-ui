@@ -7,14 +7,14 @@
 use oxc_ast::ast::{
     ConditionalExpression, Expression, LogicalExpression, UnaryExpression, UnaryOperator,
 };
-use oxc_span::Span;
+use oxc_span::{GetSpan, Span};
 use smallvec::SmallVec;
 
 use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::{line_col, Diagnostic};
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
 
@@ -64,10 +64,11 @@ impl<'a> ExpressionWalk<'a> {
         line_col(source, span?.start)
     }
 
-    /// Report a diagnostic warning at the current file.
-    pub fn warn(&mut self, message: impl Into<String>) {
+    /// Report a diagnostic warning at the offending node's span.
+    pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let (line, column) = self.span_position(Some(span)).unzip();
         self.diagnostics
-            .push(Diagnostic::warning(message.into()).with_location(self.file, None, None));
+            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
     }
 }
 
@@ -131,7 +132,12 @@ fn walk_wrapper(
     true
 }
 
-fn unwrap_wrapper_target<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+/// The inner expression when `expr` is a transparent TS wrapper, else None.
+/// Type wrappers erase at compile time, so every site unwraps through them
+/// (`css()` args, JSX style blocks, and value positions alike).
+pub(crate) fn unwrap_wrapper_target<'a, 'b>(
+    expr: &'b Expression<'a>,
+) -> Option<&'b Expression<'a>> {
     match expr {
         Expression::ParenthesizedExpression(p) => {
             // ('2r')
@@ -149,7 +155,54 @@ fn unwrap_wrapper_target<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Express
             // '2r'!
             Some(&non_null.expression)
         }
+        Expression::TSTypeAssertion(assertion) => {
+            // <string>'2r'  (.ts only)
+            Some(&assertion.expression)
+        }
+        Expression::TSInstantiationExpression(instantiation) => {
+            // w<string>  — type arguments erase, like `as`
+            Some(&instantiation.expression)
+        }
         _ => None,
+    }
+}
+
+/// True for block-position shapes that skip silently: falsy holes plus
+/// literal fillers (`css('panda', {...})`, SPEC-V2-36). Everything else in
+/// a style-block position either extracts or diagnoses (SPEC-V2-65).
+pub(crate) fn is_silent_block_value(expr: &Expression<'_>) -> bool {
+    match expr {
+        Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_) => true,
+        Expression::Identifier(ident) => ident.name == "undefined" || ident.name == "null",
+        Expression::UnaryExpression(unary) => unary.operator == UnaryOperator::Void,
+        _ => false,
+    }
+}
+
+/// Short kind name for a refused style-block value (`css()` args, JSX style
+/// props). Identifiers name their binding; the span pinpoints the rest.
+pub(crate) fn block_value_kind(expr: &Expression<'_>) -> String {
+    match expr {
+        Expression::Identifier(ident) => format!("identifier '{}'", ident.name.as_str()),
+        Expression::StaticMemberExpression(_)
+        | Expression::ComputedMemberExpression(_)
+        | Expression::PrivateFieldExpression(_)
+        | Expression::ChainExpression(_) => "member expression".to_string(),
+        Expression::CallExpression(_) => "call expression".to_string(),
+        Expression::LogicalExpression(_) => "logical expression".to_string(),
+        Expression::TemplateLiteral(_) | Expression::TaggedTemplateExpression(_) => {
+            "template expression".to_string()
+        }
+        Expression::UnaryExpression(_) | Expression::UpdateExpression(_) => {
+            "unary expression".to_string()
+        }
+        Expression::ArrowFunctionExpression(_)
+        | Expression::FunctionExpression(_)
+        | Expression::ClassExpression(_) => "function expression".to_string(),
+        _ => "expression".to_string(),
     }
 }
 
@@ -208,9 +261,11 @@ fn walk_fallback(
         _ => {
             // width={props.w}  — dynamic, warn, keep siblings
             let prop = ctx.prop;
-            ctx.warn(format!(
-                "Dynamic non-literal expression encountered for prop '{prop}'"
-            ));
+            ctx.warn(
+                expr.span(),
+                DiagnosticCode::DynamicExpression,
+                format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+            );
         }
     }
 }
@@ -227,7 +282,7 @@ fn handle_identifier_fallback(
     // param or inner declarator shadows outer and cross-file consts.
     let leaves = ctx.scopes.scalar_leaves(name);
     if leaves.is_empty() {
-        handle_identifier(ctx, name);
+        handle_identifier(ctx, name, span);
         return;
     }
     for val in leaves {
@@ -248,16 +303,23 @@ fn handle_static_member(
             ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
             return;
         }
-        if mutated_warn(ctx, obj_name, &format!("'{obj_name}.{prop_name}' is stale")) {
+        if mutated_warn(
+            ctx,
+            obj_name,
+            mem.span,
+            &format!("'{obj_name}.{prop_name}' is stale"),
+        ) {
             // color={theme.primary}  after  theme.primary = 'blue'
             return;
         }
     }
     // width={props.w}
     let prop = ctx.prop;
-    ctx.warn(format!(
-        "Dynamic non-literal expression encountered for prop '{prop}'"
-    ));
+    ctx.warn(
+        mem.span,
+        DiagnosticCode::DynamicMember,
+        format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+    );
 }
 
 fn walk_conditional(
@@ -303,32 +365,38 @@ fn is_undefined_or_null_ident(expr: &Expression<'_>) -> bool {
     }
 }
 
-fn handle_identifier(ctx: &mut ExpressionWalk<'_>, name: &str) {
+fn handle_identifier(ctx: &mut ExpressionWalk<'_>, name: &str, span: Span) {
     if name == "undefined" || name == "null" {
         // bg={on ? 'n300' : undefined}  — omit
         return;
     }
-    if mutated_warn(ctx, name, "declared value is stale") {
+    if mutated_warn(ctx, name, span, "declared value is stale") {
         // css({ color })  after  color = 'blue'  — the init is stale
         return;
     }
     // mt={space}  when `space` is not a file-top const
     let prop = ctx.prop;
-    ctx.warn(format!(
-        "Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"
-    ));
+    ctx.warn(
+        span,
+        DiagnosticCode::DynamicIdentifier,
+        format!("Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"),
+    );
 }
 
 /// Warn naming the write when a base name is a mutated binding.
-fn mutated_warn(ctx: &mut ExpressionWalk<'_>, name: &str, detail: &str) -> bool {
+fn mutated_warn(ctx: &mut ExpressionWalk<'_>, name: &str, span: Span, detail: &str) -> bool {
     let Some(write) = ctx.scopes.mutation(name) else {
         return false;
     };
     let prop = ctx.prop;
-    ctx.warn(format!(
-        "Dynamic mutated binding '{name}' encountered for prop '{prop}' (reassigned at {}; {detail})",
-        write.site()
-    ));
+    ctx.warn(
+        span,
+        DiagnosticCode::MutatedBinding,
+        format!(
+            "Dynamic mutated binding '{name}' encountered for prop '{prop}' (reassigned at {}; {detail})",
+            write.site()
+        ),
+    );
     true
 }
 
@@ -341,18 +409,21 @@ fn handle_unary(
         // void 0
         return;
     }
-    if let (UnaryOperator::UnaryNegation, Expression::NumericLiteral(lit)) =
-        (unary.operator, &unary.argument)
-    {
-        // left={-2}
-        let val = format!("-{}", lit.value);
-        ctx.push_want(
-            AtomValue::Number(val.into_boxed_str()),
-            when.clone(),
-            false,
-            Some(lit.span),
-        );
-        return;
+    // -space  /  !true  /  ~5  — the shared fold node; refusals diagnose,
+    // dynamic operands re-walk for their own diagnostics, never for wants
+    let fold = crate::extract::fold::fold_unary(unary.operator, &unary.argument, ctx.scopes);
+    for val in &fold.values {
+        ctx.push_want(val.clone(), when.clone(), false, Some(unary.span));
     }
-    walk_expression(ctx, &unary.argument, when);
+    for refusal in &fold.refusals {
+        let prop = ctx.prop;
+        ctx.warn(
+            unary.span,
+            DiagnosticCode::DynamicUnary,
+            refusal.message(prop),
+        );
+    }
+    for operand in fold.dynamic {
+        walk_expression(ctx, operand, when);
+    }
 }

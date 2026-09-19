@@ -31,8 +31,8 @@ fn test_explicit_hosts_admit_unimported_tags() {
     let gated = compile(&host_request(None)).expect("compile succeeds");
     assert!(!has_mt(&gated.wants, "4r"));
 
-    let admitted = compile(&host_request(Some(vec!["ConfiguredHost".to_string()])))
-        .expect("compile succeeds");
+    let admitted =
+        compile(&host_request(Some(vec!["ConfiguredHost".to_string()]))).expect("compile succeeds");
     assert!(has_mt(&admitted.wants, "4r"));
     assert!(admitted.stylesheet.contains("mt_4r"));
 }

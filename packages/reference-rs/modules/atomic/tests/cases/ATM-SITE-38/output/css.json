@@ -1,0 +1,11 @@
+{
+  "marginTop:-4": "@reference-ui/lib__mt_-4",
+  "order:-1": "@reference-ui/lib__order_-1",
+  "order:-2": "@reference-ui/lib__order_-2",
+  "order:-4": "@reference-ui/lib__order_-4",
+  "order:-6": "@reference-ui/lib__order_-6",
+  "order:-8": "@reference-ui/lib__order_-8",
+  "order:8": "@reference-ui/lib__order_8",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "width:2r": "@reference-ui/lib__w_2r"
+}

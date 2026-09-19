@@ -1,6 +1,7 @@
 [
   {
     "severity": "error",
+    "code": "ATM-E-MISSING-HOST-GRAPH",
     "message": "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <Foo>",
     "file": "input/src/App.tsx",
     "line": 2,

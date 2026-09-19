@@ -1,6 +1,7 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
     "message": "Unknown conditional key \"nope\" for \"margin\" in global CSS"
   }
 ]

@@ -1,18 +1,22 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
     "message": "Non-canonical numeric value \"01\" on `margin`"
   },
   {
     "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
     "message": "Non-canonical numeric value \"Infinity\" on `width`"
   },
   {
     "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
     "message": "Non-canonical numeric value \"NaN\" on `height`"
   },
   {
     "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
     "message": "Non-canonical numeric value \"0x10\" on `top`"
   }
 ]

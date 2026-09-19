@@ -1,10 +1,12 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
     "message": "Unknown condition \"@supports\""
   },
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
     "message": "Unknown condition \"@media\""
   }
 ]

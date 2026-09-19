@@ -6,7 +6,7 @@
 use base_system::{BaseSystem, GlobalDeclarationValue};
 
 use crate::atom::AtomValue;
-use crate::diagnostics::{Diagnostic, DiagnosticLocation};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::resolve::{font, rhythm, tokens, unit, ResolveSession};
 
 /// Lowering session holding design system references and diagnostic accumulators.
@@ -34,9 +34,10 @@ pub fn lower_declaration(
         return lower_weight_macro(val, session.system);
     }
     if !prop.starts_with("--") && !canon::is_known_style_prop(prop) {
-        session.diagnostics.push(Diagnostic::warning(format!(
-            "Unknown style property in global CSS: \"{prop}\""
-        )));
+        session.diagnostics.push(Diagnostic::warning(
+            DiagnosticCode::UnknownProperty,
+            format!("Unknown style property in global CSS: \"{prop}\""),
+        ));
         return Vec::new();
     }
     lower_standard_property(prop, val, session)
@@ -128,9 +129,10 @@ fn lower_standard_property(
         }
         GlobalDeclarationValue::Number(n) => vec![(css_prop, lower_number_value(prop, n))],
         GlobalDeclarationValue::Boolean(_) => {
-            session.diagnostics.push(Diagnostic::warning(format!(
-                "Boolean value is not allowed on standard property \"{prop}\""
-            )));
+            session.diagnostics.push(Diagnostic::warning(
+                DiagnosticCode::InvalidCssValue,
+                format!("Boolean value is not allowed on standard property \"{prop}\""),
+            ));
             Vec::new()
         }
         _ => Vec::new(),

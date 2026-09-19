@@ -132,10 +132,7 @@ pub(super) fn binding_pattern_writes<'a>(pattern: &BindingPattern<'a>, out: &mut
 }
 
 /// Names bound by an object declaration pattern.
-fn object_binding_writes<'a>(
-    pattern: &oxc_ast::ast::ObjectPattern<'a>,
-    out: &mut Vec<Write<'a>>,
-) {
+fn object_binding_writes<'a>(pattern: &oxc_ast::ast::ObjectPattern<'a>, out: &mut Vec<Write<'a>>) {
     for property in &pattern.properties {
         binding_pattern_writes(&property.value, out);
     }
