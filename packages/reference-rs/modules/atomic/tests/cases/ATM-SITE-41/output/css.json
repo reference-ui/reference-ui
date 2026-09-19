@@ -1,0 +1,4 @@
+{
+  "color:red": "@reference-ui/lib__c_red",
+  "padding:4px": "@reference-ui/lib__p_4px"
+}

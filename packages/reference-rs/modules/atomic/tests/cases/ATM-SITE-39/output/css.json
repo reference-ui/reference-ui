@@ -1,0 +1,5 @@
+{
+  "_hover:color:red": "@reference-ui/lib__hover:c_red",
+  "backgroundColor:blue": "@reference-ui/lib__bg-c_blue",
+  "color:red": "@reference-ui/lib__c_red"
+}

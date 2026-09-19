@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'space' encountered for prop 'margin'",
+    "file": "input/src/Alias.tsx",
+    "line": 7,
+    "column": 15
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "sm:color:black": "@reference-ui/lib__sm:c_black"
+}

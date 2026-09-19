@@ -1,0 +1,9 @@
+{
+  "& .bar & .baz & .qux:color:pink.500": "@reference-ui/lib__[&_.bar_&_.baz_&_.qux]:c_pink.500",
+  "&&&:color:green.500": "@reference-ui/lib__[&&&]:c_green.500",
+  "&&+&:color:red.500": "@reference-ui/lib__[&&+&]:c_red.500",
+  "&&:color:blue.500": "@reference-ui/lib__[&&]:c_blue.500",
+  "&+&:color:cyan.500": "@reference-ui/lib__[&+&]:c_cyan.500",
+  "&.b &:color:amber.500": "@reference-ui/lib__[&.b_&]:c_amber.500",
+  "&.b&:color:violet.500": "@reference-ui/lib__[&.b&]:c_violet.500"
+}

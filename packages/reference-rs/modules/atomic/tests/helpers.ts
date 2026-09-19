@@ -28,6 +28,7 @@ import {
 } from '../../../testing/css.js'
 import { quarantineFor } from './css-quarantine.js'
 import { INJECTIVITY_QUARANTINE } from './injectivity-quarantine.js'
+import { assertExemptionsFresh, isUnmatchable } from './unmatchable-classes.js'
 import { expectPackageWrapped } from './package-layers.js'
 
 export type {
@@ -154,17 +155,21 @@ export function layerClassNames(sheet: string, layer: string): Set<string> {
 
 export function noGhostClasses(result: CompileResult, context: StationContext): void {
   const utilities = layerClassNames(result.stylesheet, 'utilities')
-  const missing = Object.values(result.css?.classes ?? {}).filter(
-    name => !utilities.has(name)
+  const emitted = Object.values(result.css?.classes ?? {})
+  const missing = emitted.filter(
+    name => !utilities.has(name) && !isUnmatchable(context.caseId, name)
   )
   expect(
     missing,
     `ATM-GHOST-01 ${context.caseId}: runtime class(es) missing from @layer utilities: ${missing.join(', ')}`
   ).toEqual([])
+  assertExemptionsFresh(emitted, utilities, context.caseId)
   const planClasses = (result.runtime?.stylePlans ?? []).flatMap(plan =>
     plan.declarations.map(decl => decl.className)
   )
-  const planMissing = planClasses.filter(name => !utilities.has(name))
+  const planMissing = planClasses.filter(
+    name => !utilities.has(name) && !isUnmatchable(context.caseId, name)
+  )
   expect(
     planMissing,
     `ATM-SEAM-01 ${context.caseId}: plan class(es) missing from @layer utilities: ${planMissing.join(', ')}`

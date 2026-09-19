@@ -1,0 +1,10 @@
+{
+  "&.b :is(&):color:violet.500": "@reference-ui/lib__[&.b_:is(&)]:c_violet.500",
+  "&.b :not(& + &):color:green.500": "@reference-ui/lib__[&.b_:not(&_+_&)]:c_green.500",
+  "&.b:is(&):color:cyan.500": "@reference-ui/lib__[&.b:is(&)]:c_cyan.500",
+  "&.b:not(& + &):color:amber.500": "@reference-ui/lib__[&.b:not(&_+_&)]:c_amber.500",
+  "&:has(&, :not(&)):color:blue.500": "@reference-ui/lib__[&:has(&,_:not(&))]:c_blue.500",
+  "&:is(.bar, &.baz):color:pink.500": "@reference-ui/lib__[&:is(.bar,_&.baz)]:c_pink.500",
+  "&:not(&):color:orange.500": "@reference-ui/lib__[&:not(&)]:c_orange.500",
+  "&:not(&.no):color:red.500": "@reference-ui/lib__[&:not(&.no)]:c_red.500"
+}

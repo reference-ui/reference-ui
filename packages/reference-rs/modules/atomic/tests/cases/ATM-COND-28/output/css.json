@@ -1,0 +1,9 @@
+{
+  "& .b:& .c:& .d:color:violet.500": "@reference-ui/lib__[&_.b]:[&_.c]:[&_.d]:c_violet.500",
+  "& ::after:color:red.500": "@reference-ui/lib__[&_::after]:c_red.500",
+  "& > .row:& > .cell:color:cyan.500": "@reference-ui/lib__[&_>_.row]:[&_>_.cell]:c_cyan.500",
+  "&:last-child:& :is(.a, .b):display:none": "@reference-ui/lib__[&:last-child]:[&_:is(.a,_.b)]:d_none",
+  "::before &:color:amber.500": "@reference-ui/lib__[::before_&]:c_amber.500",
+  "::before&:color:blue.500": "@reference-ui/lib__[::before&]:c_blue.500",
+  ":before&:color:green.500": "@reference-ui/lib__[:before&]:c_green.500"
+}

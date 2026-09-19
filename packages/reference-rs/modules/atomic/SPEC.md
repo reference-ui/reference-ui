@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 169 |
-| Named `[x]` proven | 165 |
+| Total contract cases | 197 |
+| Named `[x]` proven | 193 |
 | Remaining `[ ]` | 4 (`ATM-DIAG-04`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 251 (internal; not ticks) |
-| Vitest seam stations | 164 (`tests/cases/<ATM-*>`) |
+| Vitest seam stations | 192 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -68,13 +68,13 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 21 | 21 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 42 | 42 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 10 | 10 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 9 | 9 | 0 |
-| `COND` | Conditions, media queries, pseudo-classes, & patterns | 24 | 24 | 0 |
+| `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
 | `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
@@ -88,7 +88,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **146** | **140** | **6** |
+| **Total** | | **174** | **168** | **6** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -308,7 +308,7 @@ compiler contract.
   Station `ATM-SITE-28` (Overmatch Ph1). Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53, cross-file arm via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/` per mission §7.2). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until SPEC-V2-76 lands the binding walk. Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241` (unmutated `let`/`var`), `cross_file.rs:502` (`export_let_currently_folds_too`).
 - [x] `ATM-SITE-30` `[reference]` `[seam]` — **[SPEC-V2-08, Overmatch Ph1/Ph2]**
   **Unary `+`/`-` on numeric literals must fold at the literal.**
-  Station `ATM-SITE-30` (Overmatch pin-before-narrow: filed before SITE-38 narrows the unary fallthrough). Compile `css({ margin: -4, opacity: -0.5 })` beside `css({ width: +50 })` and a `-0` control. Assert `-4`, `-0.5`, and `50` extract with one want and one runtime plan per leaf, `-0` canonicalizes to `0` on both sides, and zero diagnostics emit. Catalog entries 13 (static backticks) and 36 (micro-fold bundle) ride the same station number and land as Ph2 arms. Panda: `calls.rs:1093` (`unary_negation_on_numeric_literal`), `:1110` (`unary_plus_on_numeric_literal`).
+  Station `ATM-SITE-30` (Overmatch pin-before-narrow: filed before SITE-38 narrows the unary fallthrough). Compile `css({ margin: -4, opacity: -0.5 })` beside `css({ width: +50 })` and a `-0` control. Assert `-4`, `-0.5`, and `50` extract with one want and one runtime plan per leaf, `-0` canonicalizes to `0` on both sides, and zero diagnostics emit. Catalog entries 13 (static backticks: `` `red` `` folds as the plain string) and 36 (micro-fold bundle: shorthand, `css({})`, string-head, nested `cx`, no-arg) ride the same station number and landed as Ph2 arms (nine wants, nine plans, zero diagnostics). Panda: `calls.rs:1093` (`unary_negation_on_numeric_literal`), `:1110` (`unary_plus_on_numeric_literal`); backticks ``calls.rs:1194``; micros `scope.rs:262`, `calls.rs:224`, `:1697`, `:679`, `:1687`.
 - [x] `ATM-SITE-38` `[reference]` `[seam]` — **[SPEC-V2-09/78, GAP-05b, Overmatch Ph1]**
   **Unary `-`/`+`/`!`/`~` must fold over literal and const-resolved numeric/boolean operands and refuse anything else with a diagnostic — never a dropped sign or a walked-through operand.**
   Station `ATM-SITE-38` (Overmatch Ph1). Compile `-space` over `const space = 4`, `+n`, `-theme.gap`, and `!flag` over const booleans beside multi-leaf (`-w` over a ternary const folds every leaf) and literal (`!true` → `false`, `~5` → `-6`) arms. Assert every fold emits one want per leaf and one runtime plan per resolvable leaf with zero extract diagnostics (folded bools are planless exactly like bare bools, SITE-18). Assert `-m`'s non-numeric leaf over a mixed-leaf const, `!` on strings, `~true` on a boolean, `typeof`/`delete`, and array/object operands each yield zero wants plus one `Dynamic unary expression …` diagnostic naming the operator — and that `!true` never emits `true`. Assert dynamic operands keep their existing vocabulary (unbound/mutated identifiers warn as today) and inline ternaries distribute (`-(pick ? 4 : 8)` → `-4`, `-8`). Assert TS non-null `!` is transparent in both walkers (`css({ width: '2r'! })` extracts plain `2r` with a plain plan — GAP-05b). Both walkers call the shared `extract/fold/unary.rs` node, so want/plan parity is structural. Panda: `calls.rs:1126` (`unary_logical_not_on_literal`), `literal-evaluator.md:51`; strings refuse where v2 coerces (S15).
@@ -321,6 +321,69 @@ compiler contract.
 - [x] `ATM-SITE-50` `[reference]` `[seam]` — **[SPEC-V2-65 Ph1, SPEC-V2-38 tagged, Overmatch Ph1]**
   **Every non-object `css()` arg and every `_ => {}` on a site path must diagnose with position (Ph1); whole-object resolve rides Ph3.**
   Station `ATM-SITE-50` (Overmatch Ph1 no-silence sweep). Compile `css(styles)`, `css(theme.colors)`, `css(fn())`, `css(a, cond && {...})`, conditional args with identifier/call arms, `css(...args)`, a live-binding `` css`...` `` tag, and JSX `css={styles}` / `css={cond && {...}}` / `_hover={fn()}` shapes. Assert each yields zero wants from that position plus one located `css() argument N is not a static style object (kind)` diagnostic (JSX/tag twins worded for their site), with sibling args/arms kept. Assert the silence controls stay silent: `css()`, `css({})`, `false`/`null`/`undefined` holes, string/boolean literal args (`css('panda', {...})`, SPEC-V2-36), null ternary arms, and non-`css` tags. Whole-object/member/logical resolve is the Ph3 half. Panda: staged `calls.rs:548`, positional `None` `:1719`, arg-`&&` `atomic.rs:1626`.
+- [x] `ATM-SITE-24` `[reference]` `[seam]` — **[SPEC-V2-22, Overmatch Ph2]**
+  **A static key plus a spread ternary on the same key must union all values, order-independent.**
+  Station `ATM-SITE-24` (Overmatch Ph2 station-only). Compile `css({ padding: '0', ...(u ? { padding: '1' } : { padding: '2' }) })` beside the before-order twin. Assert all six values extract with one want and one runtime plan per leaf and zero diagnostics. Panda: `conditional_output.rs:363`, before-order twin `:389`.
+- [x] `ATM-SITE-25` `[reference]` `[seam]` — **[SPEC-V2-29, Overmatch Ph2]**
+  **Call-form `css([...])` must merge object elements and skip falsy holes silently, never responsive.**
+  Station `ATM-SITE-25` (Overmatch Ph2 station-only). Compile `css([{ margin: '1r' }, { margin: '3r' }, false])` beside a `null`-hole twin and a cond-element twin. Assert every element lands unconditioned with one want and one runtime plan per leaf and zero diagnostics. Panda: `pandacss_stylesheet/tests/atomic.rs:1474`, in-conditional `:1680`, cond-element `:1711`.
+- [x] `ATM-SITE-27` `[reference]` `[seam]` — **[SPEC-V2-17/27, §3 S3, Overmatch Ph2]**
+  **Object-valued ternary arms must route per arm with the resolvable arm kept when its sibling is unfoldable; mid-array ternaries must project both arms at one breakpoint.**
+  Station `ATM-SITE-27` (Overmatch Ph2 station-only). Compile `css({ color: flag ? { base: 'white' } : { base: 'black' } })` beside both one-unfoldable-arm mirrors (S3: resolvable arm kept plus exactly one `Dynamic non-literal expression` warning — v2 drops the whole conditional, `literal-evaluator.md:75-76`), `css({ padding: [2, flag ? 2 : 3, 4] })` (2@base, 2+3@sm, 4@md), elision `[1, , 3]` (arity kept), and top-level `css(u ? a : b)` (both arms — v2 `calls.rs:556` drops the call, SUPERIOR S1). Assert twelve wants with exact when-conditions, five plans (dup arms dedupe; ternary arrays are planless — fold-table follow-up), exactly two warnings, and the arm utilities. Panda: `conditional_output.rs:631`, `:683`, elision `calls.rs:1946`.
+- [x] `ATM-SITE-32` `[reference]` `[seam]` — **[SPEC-V2-42, Overmatch Ph2]**
+  **Highest-risk refusals must pin per shape: warn once, mint nothing, keep siblings.**
+  Station `ATM-SITE-32` (Overmatch Ph2 station-only; doom tripwires for the Ph3 fold table). Compile nine `css({ color: <refuse>, margin: 'Nr' })` shapes — `Math.random` helper, `.map`/`.reduce` chains, async call, loop helper, rest params, nested unknown call, spread args, `f?.()`. Assert zero color wants, nine margin wants with nine runtime plans, and exactly nine warnings. Panda: `scope.rs:1112`, `:1020`, `:1249`, `:1123`, `:1153`, `:1143`.
+- [x] `ATM-SITE-36` `[reference]` `[seam]` — **[SPEC-V2-37, Overmatch Ph2]**
+  **Shadowed and off-allowlist callees must skip silently; broken bindings must warn once with siblings kept.**
+  Station `ATM-SITE-36` (Overmatch Ph2 station-only). Compile block-scoped `const css`, bare `panda({...})`, and `panda.somethingElse({...})` (each zero wants, zero diagnostics — the silence is pinned) beside self-init, const-cycle, no-init `let`, bare uncalled function, and missing-member shapes each paired with a margin sibling. Assert the control wants plus five sibling wants with seven runtime plans and exactly five identifier/expression warnings naming each binding. Panda: `calls.rs:965`, `:981`, `scope.rs:720`, `:832`, `:1403`, `:305`.
+- [x] `ATM-SITE-39` `[reference]` `[seam]` — **[SPEC-V2-51, Overmatch Ph2]**
+  **Imported const objects must spread at top level and under conditions.**
+  Station `ATM-SITE-39` (Overmatch Ph2 station-only). Place `export const hover` in `styles.ts` and compile `css({ ...hover, backgroundColor: 'blue' })` beside `css({ _hover: { ...hover } })`. Assert three wants with exact when-conditions, three runtime plans, and zero diagnostics. Panda: `cross_file.rs:316`.
+- [x] `ATM-SITE-52` `[reference]` `[seam]` — **[SPEC-V2-74, Overmatch Ph2]**
+  **A JSX tag shadowed by a param and an `undefined` shadowed by a param must both stay fail-closed and silent.**
+  Station `ATM-SITE-52` (Overmatch Ph2 shadow decisions). Compile `function F(Div) { return <Div mt="2r" /> }` beside an unshadowed `<Div mt="2r" />` control, and `function G(undefined) { css({ color: undefined }) }` beside the bare-`undefined` control. Assert the shadowed tag yields zero wants with zero diagnostics (`allows_jsx_tag` consults the shadow stack; `report_dropped_tag` stays silent under a resolved host graph), the control tag extracts, and both `undefined` leaves omit with zero wants and zero diagnostics. Panda: `scope.rs:803`, `polish.rs:352`.
+- [x] `ATM-SITE-49` `[reference]` `[seam]` — **[SPEC-V2-64 static half, Overmatch Ph2]**
+  **Static computed style-object keys must resolve; an unfoldable computed key must warn once and keep siblings.**
+  Station `ATM-SITE-49` (Overmatch Ph2 static computed keys). Compile `css({ ['color']: 'red' })`, `css({ [42]: v })`, and `` css({ [`color`]: 'red' }) `` beside dynamic-key twins `css({ [k]: 'red', padding: '4px' })` with unbound/call `k`. Assert the static string/template keys extract exactly like their bare spellings with one runtime plan per want; the numeric key folds to its spelling (`42`, then the ordinary unknown-property path — never `UnfoldableKey`); and each dynamic key yields zero wants from that member plus one located `Dynamic computed property key` diagnostic with the static sibling kept. Folded keys (`[k]` over `const k`, concat keys) are the Ph3 half. Panda: `calls.rs:1288` (string), `:1304` (numeric), `:1320` (concat); v2 drops the whole call on an unfoldable key where we keep siblings (S4).
+- [x] `ATM-SITE-41` `[reference]` `[seam]` — **[SPEC-V2-56 probe, Overmatch Ph2]**
+  **Barrel re-export chains must resolve in the merge era (probe); the binding-walk build rides Ph4.**
+  Station `ATM-SITE-41` (Overmatch Ph2 barrel probe). Compile `tokens.ts` (`export const brand = 'red'`) beside `barrel.ts` (`export { brand } from './tokens'`), a two-hop `index.ts` barrel, and an aliased re-export, with `App.tsx` importing from each barrel. Assert every barrel-imported use resolves to the origin value with zero diagnostics — the probe records that `export … from` is inert to the merge and the origin file carries the value. SPEC-V2-76 replaces the mechanism with a binding walk (cycle-guarded); the observable stays. Panda: `cross_file.rs:1194` (deep chain), `:751`/`:962`/`:995`/`:1038` (chain-cache twins).
+- [x] `ATM-SITE-60` `[reference]` `[seam]` — **[SPEC-V2-04 GAP-04b, Overmatch Ph2]**
+  **Numeric and string token scalars must dedupe to one rule with the token winning over px.**
+  Station `ATM-SITE-60` (Overmatch Ph2 pins). Compile `css({ margin: 4 })` beside `css({ margin: '4' })` against a spacing scale holding `4`. Assert both spellings arrive as wants but land on one class and one `margin: var(--spacing-4)` rule (never `4px`), with zero diagnostics. Panda: `pandacss_stylesheet/tests/atomic.rs:265`.
+- [x] `ATM-SITE-61` `[reference]` `[seam]` — **[SPEC-V2-05 GAP-05a, GAP-05b transparent, Overmatch Ph2]**
+  **Parens / `as` / `satisfies` / `!` must unwrap transparently in value position, in wants and plans alike.**
+  Station `ATM-SITE-61` (Overmatch Ph2 pins). Compile all four wraps beside a triply-nested `((('9px' as const)))` and a JSX `mt={('2r' as const)}` attr. Assert every wrapped value extracts exactly like the bare literal with its closed class and sheet declaration, every plan carries `important: false` (no `!important` anywhere — `!` is transparent-in-both, GAP-05b's recommended pick), and zero diagnostics emit. Panda: `calls.rs:1660` (`nested_unwraps_and_folding`), `jsx.rs` wrap arms.
+- [x] `ATM-SITE-63` `[reference]` `[seam]` — **[SPEC-V2-16 GAP-16, Overmatch Ph2]**
+  **An open-test ternary with one unresolvable arm must keep the resolvable arm and warn exactly once on the other, in both arm positions.**
+  Station `ATM-SITE-63` (Overmatch Ph2 pins). Compile `dark ? maybeFn() : 'black'` beside the mirrored `dark ? 'white' : maybeFn()`. Assert both resolvable arms extract with their runtime style plans and exactly two `Dynamic non-literal` warnings emit at the two call lines. Panda keeps the resolvable arm too (`conditional_output.rs:69`, `:91`).
+- [x] `ATM-SITE-64` `[reference]` `[seam]` — **[SPEC-V2-15/16 arms, Overmatch Ph2]**
+  **Equal ternary branches must collapse to one class; mixed-type arms must both compile; per-arm `!` must stick to its arm.**
+  Station `ATM-SITE-64` (Overmatch Ph2 pins). Compile `flag ? 'red' : 'red'` beside `ok ? '4px' : 8` and `flag ? '2r!' : '3r'`. Assert one `color:red` class key, both margin arms compiled, `p_2r!` beside plain `p_3r`, one runtime plan per leaf, and zero diagnostics. Panda: `conditional_output.rs:110` (equal branches); per-arm `!important` is the `pandacss_encoder` IR contract.
+- [x] `ATM-SITE-66` `[reference]` `[seam]` — **[SPEC-V2-21 GAP-21, Overmatch Ph2]**
+  **A bare unresolvable spread must warn exactly once and skip while static siblings extract.**
+  Station `ATM-SITE-66` (Overmatch Ph2 pins). Compile `css({ ...unknown, color: 'red' })`. Assert the `color` sibling extracts with its runtime plan and closed class, and exactly one `Dynamic object spread` warning emits. Panda skips the spread (`calls.rs:638`); our diagnostic is the upgrade.
+- [x] `ATM-SITE-67` `[reference]` `[seam]` — **[SPEC-V2-23 GAP-23, Overmatch Ph2]**
+  **Overlapping inline-object spreads must mint both atoms while the runtime merge resolves last-wins.**
+  Station `ATM-SITE-67` (Overmatch Ph2 pins). Compile `css({ ...{ color: 'red' }, ...{ color: 'blue' } })`. Assert both wants and both utilities exist, the plan-index merge resolves to `c_blue`, and zero diagnostics emit. Panda: `calls.rs:1736` (`merge_two_inline_object_spreads_second_wins`).
+- [x] `ATM-SITE-69` `[reference]` `[seam]` — **[SPEC-V2-26 GAP-26, Overmatch Ph2]**
+  **A dynamic responsive-array slot must warn once and omit while static leaves keep their breakpoints.**
+  Station `ATM-SITE-69` (Overmatch Ph2 pins). Compile `css({ padding: ['4px', null, dyn] })` beside `css({ color: [dyn, 'black'] })`. Assert `4px` lands on `base` and `black` on `sm` (arity honest in both directions), the null hole skips silently, and exactly two `Dynamic non-literal` warnings emit. Panda: `calls.rs:1922` (stays silent; our warning is the upgrade).
+- [x] `ATM-SITE-72` `[reference]` `[seam]` — **[SPEC-V2-33 arrow arm, Overmatch Ph2]**
+  **Arrow-function params named `css` must shadow the import like function params do.**
+  Station `ATM-SITE-72` (Overmatch Ph2 pins). Compile `(css) => css({ color: 'red' })` beside the function-declaration twin and a live top-level call. Assert both shadowed calls drop silently and the live call extracts with zero diagnostics. Panda: `scope.rs:707` (arrow), `:690` (function).
+- [x] `ATM-SITE-73` `[reference]` `[seam]` — **[SPEC-V2-38 discovery, Overmatch Ph2]**
+  **Literal `css()` calls inside function bodies and JSX expression containers must extract; multi-arg `css()` must merge every arg with no cap.**
+  Station `ATM-SITE-73` (Overmatch Ph2 pins). Compile a `css()` call in a function body beside `className={css(…) + …}` in JSX and a five-arg `css()` call. Assert all eight leaves extract with one runtime plan per leaf, the plan index resolves the fifth arg, and zero diagnostics emit. Panda: `calls.rs:480` (multiple calls), `:657` (in-JSX), `:702` (in-fn); multi-arg `pandacss_stylesheet/tests/atomic.rs:1449`, `:1596`.
+- [x] `ATM-SITE-74` `[reference]` `[seam]` — **[SPEC-V2-44, Overmatch Ph2]**
+  **`?.` on an unresolvable base must warn once and mint nothing while static siblings extract.**
+  Station `ATM-SITE-74` (Overmatch Ph2 pins). Compile `css({ color: maybe?.foo, padding: '4px' })` over a declared-but-unresolvable `maybe`. Assert zero wants from the chain, the `padding` sibling extracts with its plan, and exactly one `Dynamic non-literal` warning emits. Panda: `optional_chaining.rs:58` (known-base fold is SPEC-V2-43).
+- [x] `ATM-SITE-75` `[reference]` `[seam]` — **[SPEC-V2-54, SPEC-V2-58, Overmatch Ph2]**
+  **An unresolvable specifier, a missing export, and a bare imported function value must each warn once and mint nothing while siblings extract.**
+  Station `ATM-SITE-75` (Overmatch Ph2 pins). Compile `css({ color: ghost, … })` over `import { ghost } from './missing'` beside a missing-export twin and `css({ borderColor: getColor, … })` over an imported uncalled function. Assert zero wants from all three dynamic leaves, all three `padding` siblings extract, and exactly three `Dynamic non-literal` warnings emit — fail-closed-plus-diagnostic where v2 drops silently. Panda: `cross_file.rs:465` (specifier), `:488` (missing export), `:1310` (bare fn value).
+- [x] `ATM-SITE-76` `[reference]` `[seam]` — **[SPEC-V2-59 alias + I2, Overmatch Ph2]**
+  **Aliased, named multi-declaration, and string-literal `css` imports must all be live sites.**
+  Station `ATM-SITE-76` (Overmatch Ph2 pins). Compile `c(…)` over `import { css as c }` beside a `import { css, Div }` multi-declaration call and `x(…)` over `import { "css" as x }`. Assert all three calls plus the hosted JSX attr extract with zero diagnostics. Panda: `imports.rs:34` (alias); the string-literal arm is xf-I2 (`bindings.rs:131`).
 
 ### Leaf Literal Extraction
 
@@ -496,6 +559,9 @@ compiler contract.
 - [x] `ATM-COND-21` `[reference]` `[seam]` —
   **Queryless `@supports` / `@media` / `@container` keys must refuse with a diagnostic and print nothing.**
   Station `ATM-COND-21` (RS-29). Compile bare `@supports` and `@media` keys beside the queried `@supports (display: grid)` control. Assert no `@supports {` / `@media {` block, one utility for the control, and one `Unknown condition` diagnostic per bare key (D11 fail-closed; cargo `bare_query_rules_are_refused`).
+- [x] `ATM-COND-22` `[reference]` `[seam]` — **[SPEC-V2-49, Overmatch Ph2]**
+  **A css()-nested `&:where(:has(> …, > …))` key must substitute inside the functional arg.**
+  Station `ATM-COND-22` (Overmatch Ph2 station-only). Compile the `button.ts:29` verbatim key wrapping `{ paddingInline: '0' }` and assert the want carries the `&:where(...)` when-condition with one runtime plan, and the sheet prints `:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))` with `padding-inline: 0` and zero diagnostics. Prints v2's `nested_selector_parity.rs:389` shape byte-for-byte modulo our class stem.
 - [x] `ATM-COND-23` `[reference]` `[seam]` —
   **In a comma-list selector key, a member without `&` must scope to the parent (`& <member>`), and a stacked template must distribute over every parent member.**
   Station `ATM-COND-23` (SPEC-V2-68). Compile `css({ '&:not(:first-child), :only-child': { display: 'none' } })` and assert the rule selector is `.<cls>:not(:first-child), .<cls> :only-child` — the bare `:only-child` member must carry the class as a descendant, never print bare (a bare member matches every `:only-child` in the document). Compile the same key with a nested `'& .left-border'` child and assert `.<cls>:not(:first-child) .left-border, .<cls> :only-child .left-border`. Compile `css({ '& .one, .two': { color: 'red.500' } })` and assert `.<cls> .one, .<cls> .two`. Selectors print v2's `nested_selector_parity.rs:642/:653/:664` shapes byte-for-byte modulo our class stem.
@@ -505,6 +571,24 @@ compiler contract.
 - [x] `ATM-COND-29` `[reference]` `[seam]` —
   **A pseudo-class stacked under a pseudo-element parent must reorder before the pseudo-element in the same compound.**
   Station `ATM-COND-29` (SPEC-V2-80). Compile `css({ '&::before': { '&:focus': { color: 'red.500' } } })` and assert `:focus::before`, never the invalid `::before:focus`; the `'&::after'` + `'&:hover'` twin asserts `:hover::after`. Compile the dialect `css({ _before: { _focus: { color: 'green.500' } } })` and assert the `:is(:focus, [data-focus])` compound lands before `::before`. Compile the three-level `{'&::before': {'&:hover': {'&:focus': …}}}` stack and assert `:hover:focus::before`. Controls: pseudo-class-outer + pseudo-element-inner (`{'&:hover': {'&::before': …}}`) stays textually `:hover::before`, and a descendant member under a pseudo-element parent (`{'&::before': {'& .kid': …}}`) keeps the pseudo-element in its own compound. Selectors print v2's `nested_selector_parity.rs:455/:466` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-25` `[reference]` `[seam]` —
+  **Every unquoted `&` must substitute, including inside functional-pseudo argument lists.**
+  Station `ATM-COND-25` (SPEC-V2-70). Compile the eight self-`&` shapes — `&:not(&.no)`, `&:has(&, :not(&))`, `&.b :not(& + &)`, `&.b:not(& + &)`, `&.b :is(&)`, `&.b:is(&)`, `&:is(.bar, &.baz)`, `&:not(&)` — and assert each rule carries the runtime class in every `&` position (regex class backreferences, one want per arm, zero diagnostics). Selectors print v2's `nested_selector_parity.rs:169/:224/:301/:312/:334/:356/:411/:422` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-26` `[reference]` `[seam]` —
+  **Compound and multi-`&` keys must substitute every `&` textually at one level.**
+  Station `ATM-COND-26` (SPEC-V2-71). Compile `&&`, `&&&`, `&.b&`, `&&+&`, `&+&`, `&.b &`, and `& .bar & .baz & .qux`, and assert `.<cls>.<cls>`, `.<cls>.<cls>.<cls>`, `.<cls>.b.<cls>`, `.<cls>.<cls>+.<cls>`, `.<cls>+.<cls>`, `.<cls>.b .<cls>`, and `.<cls> .bar .<cls> .baz .<cls> .qux` (one want per arm, zero diagnostics). Selectors print v2's `nested_selector_parity.rs:235/:257/:268/:323/:345/:367/:400` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-27` `[reference]` `[seam]` —
+  **Tag / class / BEM compounds, ancestors, tails, and bare `&` must substitute textually; bare `&` is a distinct key with a class-only selector.**
+  Station `ATM-COND-27` (SPEC-V2-72). Compile `&_elem`, `body &:hover b`, the three-level `.c &` tail, `&html`, `html&`, `&h1, &h2`, `&(:focus)`, `&+.baz, &.qux`, `&>.bar`, `body&`, `.foo&`, and bare `&` beside a same-value unconditioned control. Assert `.<cls>_elem`, `body .<cls>:hover b`, `.c .<cls>:hover .b`, `.<cls>html`, `html.<cls>`, `.<cls>h1, .<cls>h2`, `.<cls>(:focus)`, `.<cls>+.baz, .<cls>.qux`, `.<cls>>.bar`, `body.<cls>`, `.foo.<cls>`, and two bare `.<cls>` rules whose classes differ (`[&]` vs none). `&_elem` / `&html` / `&h1, &h2` merge the class into a longer identifier and `&(:focus)` is unparsable, so those four runtime classes are documented unmatchable (`UNMATCHABLE_CLASSES`) and the selector quarantined (`CSS_QUARANTINE`) — both engines print the shapes, neither can match them. Selectors print v2's `nested_selector_parity.rs:48/:59/:103/:279/:290/:378/:532/:587/:598/:609/:620/:631` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-28` `[reference]` `[seam]` —
+  **Pseudo-element placements must print textually and `&`-first stacks must distribute down the chain.**
+  Station `ATM-COND-28` (SPEC-V2-73). Compile `& ::after`, `::before&`, `:before&`, and `::before &`, and assert `.<cls> ::after`, `::before.<cls>`, `:before.<cls>`, and `::before .<cls>`. Compile the `&:last-child` + `& :is(.a, .b)` stack, the `& .b/.c/.d` tower, and the `& > .row > .cell` tower, and assert `.<cls>:last-child :is(.a, .b)`, `.<cls> .b .c .d`, and `.<cls> > .row > .cell` (one want per arm, zero diagnostics). Selectors print v2's `nested_selector_parity.rs:444/:488/:499/:510/:543/:554/:565` shapes byte-for-byte modulo our class stem.
+- [x] `ATM-COND-30` `[reference]` `[seam]` — **[SPEC-V2-47 utility half, Overmatch Ph2]**
+  **`& + &` and `& ~ &` authored in `css()` must substitute both positions; two-level stacks and comma descendant lists must scope every member.**
+  Station `ATM-COND-30` (Overmatch Ph2 pins). Compile `css({ '& + &': … })` beside `& ~ &`, a two-level `'& > p': { '&:hover': … }` stack, and `'& .one, & .two'`. Assert `.<cls> + .<cls>`, `.<cls> ~ .<cls>`, `.<cls> > p:hover`, and `.<cls> .one, .<cls> .two` with zero diagnostics — the utility-path spelling the globalCss stations prove only globally. Panda: `nested_selector_parity.rs:92`, `:125`, `:180`, `:202`.
+- [x] `ATM-COND-31` `[reference]` `[seam]` — **[SPEC-V2-48 raw arm, Overmatch Ph2]**
+  **Raw `&::` spelling must lower like the `_before`/`_after` dialect, with compound order and comma lists.**
+  Station `ATM-COND-31` (Overmatch Ph2 pins). Compile `css({ '&::after': … })` beside single-level `'&:hover::before'` and `'&::before, &::after'`. Assert `.<cls>::after`, `.<cls>:hover::before` (pseudo-class before pseudo-element), and the two-member comma list with zero diagnostics. Stacked pseudo-element-outer reorder is SPEC-V2-80. Panda: `nested_selector_parity.rs:433`, `:466`, `:477`.
 
 ### Design Token Resolution
 
@@ -762,13 +846,34 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-20` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-20/` |
 | `ATM-SITE-21` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-21/` |
 | `ATM-SITE-22` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-22/` |
+| `ATM-SITE-24` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-24/` |
+| `ATM-SITE-25` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-25/` |
 | `ATM-SITE-26` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-26/` |
+| `ATM-SITE-27` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-27/` |
 | `ATM-SITE-28` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-28/` |
 | `ATM-SITE-30` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-30/` |
+| `ATM-SITE-32` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-32/` |
+| `ATM-SITE-36` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-36/` |
 | `ATM-SITE-37` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-37/` |
 | `ATM-SITE-38` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-38/` |
+| `ATM-SITE-39` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-39/` |
+| `ATM-SITE-41` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-41/` |
+| `ATM-SITE-49` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-49/` |
 | `ATM-SITE-50` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-50/` |
+| `ATM-SITE-52` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-52/` |
 | `ATM-SITE-53` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-53/` |
+| `ATM-SITE-60` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-60/` |
+| `ATM-SITE-61` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-61/` |
+| `ATM-SITE-63` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-63/` |
+| `ATM-SITE-64` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-64/` |
+| `ATM-SITE-66` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-66/` |
+| `ATM-SITE-67` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-67/` |
+| `ATM-SITE-69` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-69/` |
+| `ATM-SITE-72` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-72/` |
+| `ATM-SITE-73` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-73/` |
+| `ATM-SITE-74` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-74/` |
+| `ATM-SITE-75` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-75/` |
+| `ATM-SITE-76` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-76/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
@@ -820,9 +925,16 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-COND-19` | `[x]` | `[seam]` | `tests/cases/ATM-COND-19/` |
 | `ATM-COND-20` | `[x]` | `[seam]` | `tests/cases/ATM-COND-20/` |
 | `ATM-COND-21` | `[x]` | `[seam]` | `tests/cases/ATM-COND-21/` |
+| `ATM-COND-22` | `[x]` | `[seam]` | `tests/cases/ATM-COND-22/` |
 | `ATM-COND-23` | `[x]` | `[seam]` | `tests/cases/ATM-COND-23/` |
 | `ATM-COND-24` | `[x]` | `[seam]` | `tests/cases/ATM-COND-24/` |
 | `ATM-COND-29` | `[x]` | `[seam]` | `tests/cases/ATM-COND-29/` |
+| `ATM-COND-25` | `[x]` | `[seam]` | `tests/cases/ATM-COND-25/` |
+| `ATM-COND-26` | `[x]` | `[seam]` | `tests/cases/ATM-COND-26/` |
+| `ATM-COND-27` | `[x]` | `[seam]` | `tests/cases/ATM-COND-27/` |
+| `ATM-COND-28` | `[x]` | `[seam]` | `tests/cases/ATM-COND-28/` |
+| `ATM-COND-30` | `[x]` | `[seam]` | `tests/cases/ATM-COND-30/` |
+| `ATM-COND-31` | `[x]` | `[seam]` | `tests/cases/ATM-COND-31/` |
 | `ATM-TOKEN-01` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-01/` |
 | `ATM-TOKEN-02` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-02/` |
 | `ATM-TOKEN-03` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-03/` |

@@ -1,0 +1,5 @@
+{
+  "&::after:color:red": "@reference-ui/lib__[&::after]:c_red",
+  "&::before, &::after:color:green": "@reference-ui/lib__[&::before,_&::after]:c_green",
+  "&:hover::before:color:blue": "@reference-ui/lib__[&:hover::before]:c_blue"
+}

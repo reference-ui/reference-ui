@@ -1,0 +1,26 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'ghost' encountered for prop 'color'",
+    "file": "input/src/app.ts",
+    "line": 8,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'nope' encountered for prop 'margin'",
+    "file": "input/src/app.ts",
+    "line": 11,
+    "column": 32
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'getColor' encountered for prop 'borderColor'",
+    "file": "input/src/app.ts",
+    "line": 14,
+    "column": 37
+  }
+]
