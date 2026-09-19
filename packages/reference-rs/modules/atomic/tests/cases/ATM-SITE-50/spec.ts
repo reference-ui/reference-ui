@@ -1,7 +1,9 @@
 /**
- * No-silence sweep station (ATM-SITE-50, Overmatch Ph1). Every non-object
- * css() arg and every _ => {} on a site path diagnoses with position and
- * keeps siblings; the silence controls stay quiet.
+ * Whole-object / member-arg station (ATM-SITE-50, Overmatch Ph1+Ph3). An
+ * argument that folds to an object extracts exactly as if spread —
+ * identifiers, single-hop members, conditional arms, and logical operands
+ * over const objects — while an argument that does not fold diagnoses with
+ * its position and keeps sibling args.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -14,57 +16,83 @@ interface ExpectedDiagnostic {
 }
 
 const EXPECTED_DIAGNOSTICS: ExpectedDiagnostic[] = [
-  { file: 'args.ts', line: 10, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'styles')" },
-  { file: 'args.ts', line: 11, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (member expression)' },
-  { file: 'args.ts', line: 12, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
-  { file: 'args.ts', line: 13, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 2 is not a static style object (logical expression)' },
-  { file: 'args.ts', line: 14, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (spread element)' },
-  { file: 'branches.ts', line: 9, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'styles')" },
-  { file: 'branches.ts', line: 9, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'other')" },
-  { file: 'branches.ts', line: 11, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
+  // args.ts: calls, scalars, missing names, and deep members refuse; the
+  // logical left operands refuse while their object rights still lower.
+  { file: 'args.ts', line: 24, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
+  { file: 'args.ts', line: 25, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'count')" },
+  { file: 'args.ts', line: 26, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'missing')" },
+  { file: 'args.ts', line: 27, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (member expression)' },
+  { file: 'args.ts', line: 28, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (member expression)' },
+  { file: 'args.ts', line: 29, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 2 is not a static style object (identifier 'cond')" },
+  { file: 'args.ts', line: 30, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'missing')" },
+  { file: 'args.ts', line: 31, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'yes')" },
+  { file: 'args.ts', line: 33, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (spread element)' },
+  { file: 'args.ts', line: 42, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'styles')" },
+  // branches.ts: the dynamic logical left and the call arm refuse.
+  { file: 'branches.ts', line: 13, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: "css() argument 1 is not a static style object (identifier 'ok')" },
+  { file: 'branches.ts', line: 15, code: 'ATM-W-NON-OBJECT-CSS-ARG', message: 'css() argument 1 is not a static style object (call expression)' },
+  // tags.ts: the live tag diagnoses; the dead tag stays silent.
   { file: 'tags.ts', line: 3, code: 'ATM-W-TAGGED-TEMPLATE-SITE', message: 'tagged template is not a css() site; use css({...})' },
-  { file: 'jsx.tsx', line: 8, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX 'css' prop value is not a static style object (identifier 'styles')" },
-  { file: 'jsx.tsx', line: 9, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX 'css' prop value is not a static style object (logical expression)" },
-  { file: 'jsx.tsx', line: 10, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX '_hover' prop value is not a static style object (call expression)" },
-  { file: 'jsx.tsx', line: 12, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX 'css' prop value is not a static style object (spread element)" },
+  // jsx.tsx: the logical left and the call condition refuse. The literal
+  // spread element flattens silently (SPEC-V2-28 Ph3, sibling slice).
+  { file: 'jsx.tsx', line: 14, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX 'css' prop value is not a static style object (identifier 'cond')" },
+  { file: 'jsx.tsx', line: 15, code: 'ATM-W-NON-OBJECT-JSX-STYLE', message: "JSX '_hover' prop value is not a static style object (call expression)" },
 ]
 
-// Sibling args, live arms, and the wrapped JSX block still extract.
-const EXPECTED_WANTS: Array<{ prop: string; value: string }> = [
+// Every unique surviving leaf: whole objects, members, arms, and logical
+// rights lower; the mutated stale init and the refused positions emit nothing.
+const EXPECTED_WANTS: Array<{ prop: string; value: string; when?: string[] }> = [
+  { prop: 'color', value: 'red' },
+  { prop: 'padding', value: '4px' },
+  { prop: 'color', value: 'blue' },
+  { prop: 'color', value: 'aqua' },
+  { prop: 'color', value: 'beige' },
   { prop: 'color', value: 'green' },
+  { prop: 'margin', value: '3r' },
+  { prop: 'padding', value: '2r' },
+  { prop: 'color', value: 'plum' },
+  { prop: 'color', value: 'olive' },
   { prop: 'color', value: 'cyan' },
-  { prop: 'color', value: 'pink' },
+  { prop: 'margin', value: '1r' },
   { prop: 'color', value: 'teal' },
+  { prop: 'color', value: 'indigo' },
+  { prop: 'color', value: 'violet' },
+  { prop: 'color', value: 'magenta' },
+  { prop: 'color', value: 'pink' },
   { prop: 'color', value: 'navy' },
   { prop: 'color', value: 'lime' },
-  { prop: 'color', value: 'blue' },
+  { prop: 'color', value: 'coral' },
+  { prop: 'color', value: 'coral', when: ['_hover'] },
+  { prop: 'color', value: 'maroon', when: ['_hover'] },
+  { prop: 'color', value: 'salmon' },
 ]
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-50',
   verify(result) {
-    for (const { prop, value } of EXPECTED_WANTS) {
-      expect(hasWant(result, prop, value)).toBe(true)
+    for (const { prop, value, when } of EXPECTED_WANTS) {
+      expect(hasWant(result, prop, value, when ?? [])).toBe(true)
     }
-    // Green and pink each arrive twice (two sibling positions).
-    expect(result.wants ?? []).toHaveLength(9)
+    // Whole-object and wrapped twins arrive twice each, as do the
+    // cross-file red/blue/green/cyan/teal/pink leaves; the flattened
+    // literal spread adds one more teal, the const-true logical one salmon.
+    expect(result.wants ?? []).toHaveLength(35)
 
-    // Refused positions yield nothing: no margin from the logical arg, no
-    // whole-object red/padding, no member blue, no spread teal.
-    expect(hasWant(result, 'margin', '3r')).toBe(false)
-    expect(hasWant(result, 'padding', '4px')).toBe(false)
-    expect(hasWant(result, 'color', 'red')).toBe(false)
+    // Refused positions yield nothing: no stale crimson, and nothing
+    // under _hover from the refused call condition.
+    expect(hasWant(result, 'color', 'crimson')).toBe(false)
+    expect(hasWant(result, 'color', 'pink', ['_hover'])).toBe(false)
 
-    // One runtime plan per unique surviving leaf.
+    // One runtime plan per unique leaf.
     const plans = result.runtime.stylePlans
     expect(plans).toHaveLength(EXPECTED_WANTS.length)
     for (const { prop, value } of EXPECTED_WANTS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
-    // Thirteen refusals, each located with its code and message.
+    // Fifteen positioned refusals plus the mutated-arg write-naming warning.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(EXPECTED_DIAGNOSTICS.length)
+    expect(diagnostics).toHaveLength(EXPECTED_DIAGNOSTICS.length + 1)
     for (const expected of EXPECTED_DIAGNOSTICS) {
       const match = diagnostics.find(
         d => d.file?.endsWith(expected.file) && d.line === expected.line && d.message === expected.message,
@@ -74,9 +102,23 @@ const spec: AtomicCaseSpec = {
       expect(match!.code).toBe(expected.code)
       expect(match!.column).toBeDefined()
     }
+    const mutated = diagnostics.find(d =>
+      d.file?.endsWith('args.ts') && d.message.includes("Dynamic mutated binding 'dying'"),
+    )
+    expect(mutated, 'missing mutated-args.ts:34 diagnostic').toBeDefined()
+    expect(mutated!.severity).toBe('warning')
+    expect(mutated!.code).toBe('ATM-W-MUTATED-BINDING')
+    expect(mutated!.line).toBe(34)
+    expect(mutated!.message).toContain('reassigned at')
+    expect(mutated!.message).toContain('args.ts:17:1')
+    expect(mutated!.message).toContain('keeping sibling args')
 
-    expect(result.stylesheet).not.toContain('margin: 3r')
-    expect(result.stylesheet).toContain('color: cyan;')
+    expect(result.stylesheet).toContain('color: red;')
+    expect(result.stylesheet).toContain('color: aqua;')
+    expect(result.stylesheet).toContain('color: beige;')
+    expect(result.stylesheet).toContain('margin: calc(3 * var(--spacing-root));')
+    expect(result.stylesheet).toContain('margin: var(--spacing-root);')
+    expect(result.stylesheet).not.toContain('crimson')
   },
 }
 

@@ -58,7 +58,7 @@ fn test_undefined_alternate_omitted() {
 }
 
 #[test]
-fn test_logical_expressions_symmetric() {
+fn test_logical_expressions_fold_and_guard() {
     let res = compile_code(
         r#"
         import { Div } from '@reference-ui/react';
@@ -75,11 +75,12 @@ fn test_logical_expressions_symmetric() {
         .wants
         .iter()
         .any(|w| &*w.prop == "border" && w.value.to_string() == "1px solid"));
+    // 'red' || 'blue' folds to the picked operand; the dead atom is gone.
     assert!(res
         .wants
         .iter()
         .any(|w| &*w.prop == "color" && w.value.to_string() == "red"));
-    assert!(res
+    assert!(!res
         .wants
         .iter()
         .any(|w| &*w.prop == "color" && w.value.to_string() == "blue"));
@@ -353,4 +354,35 @@ fn test_responsive_r_object() {
         && w.when.as_slice() == ["@container (min-width: 768px)".into()]));
     assert!(res.stylesheet.contains("@container (min-width: 300px)"));
     assert!(res.stylesheet.contains("@container (min-width: 768px)"));
+}
+
+#[test]
+fn test_baked_object_entry_never_resolves_stale() {
+    // Soundness net for the scope dep-strip (SPEC-V2-34 object half): the
+    // entry baked from `red` strips when `red` is written, so the stale
+    // init never resolves and the use diagnoses instead of ghosting.
+    let res = compile_code(
+        r#"import { css } from '@reference-ui/react';
+        let red = 'red';
+        const theme = { primary: red };
+        red = 'blue';
+        export const a = css({ color: theme.primary });"#,
+    );
+    assert!(res.wants.iter().all(|w| w.value.to_string() != "red"));
+    assert!(!res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_destructured_name_never_resolves_stale() {
+    // Soundness net for destructure provenance (SPEC-V2-32): names copied
+    // from a written object strip with it — the stale leaf never resolves.
+    let res = compile_code(
+        r#"import { css } from '@reference-ui/react';
+        let theme = { primary: 'red' };
+        const { primary } = theme;
+        theme.primary = 'blue';
+        export const a = css({ color: primary });"#,
+    );
+    assert!(res.wants.iter().all(|w| w.value.to_string() != "red"));
+    assert!(!res.diagnostics.is_empty());
 }

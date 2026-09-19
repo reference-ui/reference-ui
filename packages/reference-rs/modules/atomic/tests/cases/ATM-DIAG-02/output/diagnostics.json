@@ -10,17 +10,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template expression for prop 'width'",
+    "message": "Dynamic non-literal template part 1 (member 'props.w') encountered for prop 'width'",
     "file": "input/src/dynamic.ts",
     "line": 7,
-    "column": 10
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-KEY",
-    "message": "Dynamic computed property key encountered in style object",
-    "file": "input/src/dynamic.ts",
-    "line": 8,
-    "column": 4
+    "column": 13
   }
 ]

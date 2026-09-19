@@ -1,6 +1,11 @@
 {
+  "&[data-group=\"cool\"]:color:red": "@reference-ui/lib__[&[data-group=\"cool\"]]:c_red",
+  "_hover:color:blue": "@reference-ui/lib__hover:c_blue",
+  "_hover:color:red": "@reference-ui/lib__hover:c_red",
   "backgroundColor:blue": "@reference-ui/lib__bg-c_blue",
   "color:red": "@reference-ui/lib__c_red",
   "margin:4px": "@reference-ui/lib__m_4px",
-  "padding:4px": "@reference-ui/lib__p_4px"
+  "margin:8px": "@reference-ui/lib__m_8px",
+  "padding:4px": "@reference-ui/lib__p_4px",
+  "padding:8px": "@reference-ui/lib__p_8px"
 }

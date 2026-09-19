@@ -1,10 +1,30 @@
 //! Unit policy and numeric canonicalization for atomic values (ATM-UNIT-01, ATM-UNIT-02).
 //! Ensures consistent CSS dimension units (px suffix) on dimensional properties.
 //! Unitless properties and zero stay bare numbers.
-//! Rejects non-canonical numeric spellings (octal, hex, binary, Infinity, NaN) with diagnostics.
+//! Finite numeric spellings (`'1e3'`, `'.5'`, `'01'`) canonicalize to the
+//! numeric atom and dedupe with the bare number; hex, binary, octal,
+//! `Infinity`, and `NaN` spellings refuse with diagnostics.
 
 use crate::atom::{AtomValue, CssValue};
 use crate::diagnostics::{Diagnostic, DiagnosticCode};
+
+/// Canonicalize a finite numeric spelling to the bare-number form (`'1e3'`
+/// → `"1000"`, `'.5'` → `"0.5"`, `'01'` → `"1"`), or None when the string
+/// is not a finite number. Rust `f64` parsing is the fence: hex, binary,
+/// octal, empty, and unit-suffixed strings never parse, exactly like v2's
+/// `trimmed.parse::<f64>()`; non-finite results refuse. Rendering matches
+/// the bare-literal path (`to_string`), so dedupe is structural.
+pub fn canonical_numeric_string(s: &str) -> Option<String> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let parsed: f64 = trimmed.parse().ok()?;
+    if !parsed.is_finite() {
+        return None;
+    }
+    Some(parsed.to_string())
+}
 
 /// Check if a string represents an illegal non-canonical numeric format.
 pub fn is_non_canonical_numeric(s: &str) -> bool {
@@ -80,6 +100,28 @@ fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
 }
 
 fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
+    // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
+    if let Some(canonical) = canonical_numeric_string(&s) {
+        if accepts_bare_number(prop) {
+            return Some(resolve_numeric_value(prop, &canonical));
+        }
+    }
+    legacy_string_value(prop, s, diagnostics)
+}
+
+/// True when a bare number is a valid value: every prop except colors, where
+/// numbers never paint, plus the font shorthands whose strings must survive.
+fn accepts_bare_number(prop: &str) -> bool {
+    !canon::is_color_prop(prop) && prop != "font" && prop != "fontFamily"
+}
+
+/// The pre-79 string path: non-canonical spellings refuse, canonical numbers
+/// resolve off color props, and everything else passes through as a string.
+fn legacy_string_value(
+    prop: &str,
+    s: Box<str>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<CssValue> {
     if is_non_canonical_numeric(&s) {
         diagnostics.push(Diagnostic::warning(
             DiagnosticCode::NonCanonicalNumeric,
@@ -88,7 +130,7 @@ fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
         return None;
     }
     if let Some(num) = parse_canonical_number(&s) {
-        if !canon::is_color_prop(prop) && prop != "font" && prop != "fontFamily" {
+        if accepts_bare_number(prop) {
             return Some(resolve_numeric_value(prop, num));
         }
     }

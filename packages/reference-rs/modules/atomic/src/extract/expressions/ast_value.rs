@@ -4,17 +4,19 @@
 //! Emits None for dynamic, non-constant expressions that cannot be captured as static plans.
 
 use oxc_ast::ast::{
-    ArrayExpressionElement, Expression, LogicalExpression, ObjectPropertyKind, PropertyKey,
-    StaticMemberExpression, UnaryOperator,
+    ArrayExpressionElement, ChainElement, ComputedMemberExpression, Expression, LogicalExpression,
+    ObjectPropertyKind, StaticMemberExpression, UnaryOperator,
 };
 use serde_json::{json, Map, Value};
 
 use crate::atom::AtomValue;
+use crate::extract::constants::ConstArrayElement;
+use crate::extract::expressions::walk::unwrap_wrapper_target;
 use crate::extract::scope::Scoped;
 
 /// Convert an AST expression into a JSON value and inline important flag.
 pub fn ast_to_json_value(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, bool)> {
-    if let Some(res) = convert_literal(expr) {
+    if let Some(res) = convert_literal(expr, scoped) {
         return Some(res);
     }
     if let Some(res) = convert_wrapper(expr, scoped) {
@@ -23,7 +25,7 @@ pub fn ast_to_json_value(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(V
     convert_compound(expr, scoped)
 }
 
-fn convert_literal(expr: &Expression<'_>) -> Option<(Value, bool)> {
+fn convert_literal(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value, bool)> {
     if let Expression::StringLiteral(lit) = expr {
         let (clean, imp) = super::literal::split_important_flag(lit.value.as_str());
         return Some((Value::String(clean.to_string()), imp));
@@ -43,7 +45,7 @@ fn convert_literal(expr: &Expression<'_>) -> Option<(Value, bool)> {
         return Some((Value::Null, false));
     }
     if let Expression::TemplateLiteral(lit) = expr {
-        return convert_template(lit);
+        return convert_template(lit, scoped);
     }
     None
 }
@@ -79,8 +81,52 @@ fn convert_compound(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<(Value,
         Expression::ObjectExpression(obj) => convert_object(obj, scoped),
         Expression::Identifier(ident) => convert_identifier(ident.name.as_str(), scoped),
         Expression::UnaryExpression(unary) => convert_unary(unary, scoped),
+        Expression::BinaryExpression(binary) => convert_binary(binary, scoped),
+        Expression::ComputedMemberExpression(mem) => convert_computed_member(mem, scoped),
+        Expression::ChainExpression(chain) => convert_chain(chain, scoped),
+        Expression::CallExpression(call) => convert_call(call, scoped),
         _ => None,
     }
+}
+
+/// A `token()` call's planned leaf: the folded reference or path-plus-fallback
+/// token, exactly like the want walker. Anything else plans nothing.
+fn convert_token_call(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    let fold = crate::extract::fold::fold_token_call(call, scoped)?;
+    let value = fold.value?;
+    atom_value_to_json(&value).map(|val| (val, false))
+}
+
+/// A call's planned leaf: a `token()` reference first, else the first fold
+/// of a pure-helper call, mirroring the want walker's value lowering.
+fn convert_call(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    if let Some(token) = convert_token_call(call, scoped) {
+        return Some(token);
+    }
+    let fold = crate::extract::fold::fold_pure_call(call, scoped);
+    let value = fold.value?;
+    crate::extract::fold::call_value_to_json(&value).map(|val| (val, false))
+}
+
+/// Every planned leaf of a call for multi-valued positions: a `token()`
+/// reference first, else every folded leaf of a pure-helper call.
+fn convert_call_values(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    if let Some(token) = convert_token_call(call, scoped) {
+        return vec![token];
+    }
+    let fold = crate::extract::fold::fold_pure_call(call, scoped);
+    fold.value
+        .map(|value| crate::extract::fold::call_values_to_json(&value))
+        .unwrap_or_default()
 }
 
 fn convert_array(
@@ -89,10 +135,63 @@ fn convert_array(
 ) -> Option<(Value, bool)> {
     let mut elements = Vec::with_capacity(arr.elements.len());
     for elem in &arr.elements {
-        let v = array_elem_to_json(elem, scoped)?;
-        elements.push(v);
+        if let ArrayExpressionElement::SpreadElement(spread) = elem {
+            // padding: ['1px', ...['2px'], '4px']  — spliced in place
+            elements.extend(spread_array_json(&spread.argument, scoped)?);
+        } else {
+            elements.push(array_elem_to_json(elem, scoped)?);
+        }
     }
     Some((Value::Array(elements), false))
+}
+
+/// The planned values of one array spread: an inline array's elements or a
+/// const array's recorded elements, spliced in place. Dynamic spreads and
+/// object elements plan nothing — the want walker refuses those arrays too.
+fn spread_array_json(arg: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<Value>> {
+    let mut arg = arg;
+    while let Some(inner) = unwrap_wrapper_target(arg) {
+        // ...([1, 2])  /  ...(sizes as const)
+        arg = inner;
+    }
+    if let Expression::ArrayExpression(arr) = arg {
+        return spread_inline_json(arr, scoped);
+    }
+    if let Expression::Identifier(ident) = arg {
+        return spread_const_json(ident.name.as_str(), scoped);
+    }
+    None
+}
+
+/// The planned values of an inline array spread, recursing through nesting.
+fn spread_inline_json(
+    arr: &oxc_ast::ast::ArrayExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<Vec<Value>> {
+    let mut out = Vec::with_capacity(arr.elements.len());
+    for elem in &arr.elements {
+        if let ArrayExpressionElement::SpreadElement(spread) = elem {
+            out.extend(spread_array_json(&spread.argument, scoped)?);
+        } else {
+            out.push(array_elem_to_json(elem, scoped)?);
+        }
+    }
+    Some(out)
+}
+
+/// The planned values of a const-array spread: leaves convert, holes null.
+fn spread_const_json(name: &str, scoped: Scoped<'_>) -> Option<Vec<Value>> {
+    let mut out = Vec::new();
+    for element in scoped.array(name)? {
+        match element {
+            ConstArrayElement::Leaf(leaf) => {
+                out.push(atom_value_to_json(leaf)?);
+            }
+            ConstArrayElement::Hole => out.push(Value::Null),
+            ConstArrayElement::Object(_) => return None,
+        }
+    }
+    Some(out)
 }
 
 fn array_elem_to_json(elem: &ArrayExpressionElement<'_>, scoped: Scoped<'_>) -> Option<Value> {
@@ -115,25 +214,24 @@ fn convert_object(
         let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
             return None;
         };
-        let key = match &prop.key {
-            PropertyKey::StaticIdentifier(id) => id.name.to_string(),
-            PropertyKey::StringLiteral(lit) => lit.value.to_string(),
-            _ => return None,
-        };
+        // width: { [bp]: '50px' }  — keys fold exactly like the want walker
+        let key = crate::extract::fold::fold_property_key(&prop.key, scoped)?;
         let (v, _) = ast_to_json_value(&prop.value, scoped)?;
         map.insert(key, v);
     }
     Some((Value::Object(map), false))
 }
 
-fn convert_template(lit: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<(Value, bool)> {
-    if lit.expressions.is_empty() && lit.quasis.len() == 1 {
-        let raw = lit.quasis[0].value.raw.as_str();
-        let (clean, imp) = super::literal::split_important_flag(raw);
-        Some((Value::String(clean.to_string()), imp))
-    } else {
-        None
-    }
+/// The first joined string of a folded template; refused templates plan nothing.
+fn convert_template(
+    lit: &oxc_ast::ast::TemplateLiteral<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    // Single-valued positions take the first fold, mirroring convert_unary.
+    let fold = crate::extract::fold::fold_template(lit, scoped);
+    let first = fold.values.first()?;
+    let (clean, imp) = super::literal::split_important_flag(first);
+    Some((Value::String(clean.to_string()), imp))
 }
 
 fn number_atom_to_json(n: &str) -> Value {
@@ -152,7 +250,9 @@ pub(crate) fn atom_value_to_json(val: &AtomValue) -> Option<Value> {
         AtomValue::Number(n) => Some(number_atom_to_json(n)),
         AtomValue::Bool(b) => Some(Value::Bool(*b)),
         AtomValue::Null => Some(Value::Null),
-        _ => None,
+        AtomValue::Token { path, value } => Some(json!({
+            "$token": {"path": path.as_ref(), "value": value.as_ref()}
+        })),
     }
 }
 
@@ -181,11 +281,30 @@ pub fn ast_to_json_values(expr: &Expression<'_>, scoped: Scoped<'_>) -> Vec<(Val
         }
     }
     if let Expression::StaticMemberExpression(mem) = expr {
-        return convert_static_member(mem, scoped).into_iter().collect();
+        return convert_static_member_leaves(mem, scoped);
     }
     if let Expression::UnaryExpression(unary) = expr {
         // -space  /  !true  — every folded leaf, like the want walker
         return convert_unary_values(unary, scoped);
+    }
+    if let Expression::BinaryExpression(binary) = expr {
+        // 1 + 'px'  /  2 * 3  — every folded pair, like the want walker
+        return convert_binary_values(binary, scoped);
+    }
+    if let Expression::TemplateLiteral(lit) = expr {
+        // `${n}px`  — every joined string, like the want walker
+        return convert_template_values(lit, scoped);
+    }
+    if let Expression::ComputedMemberExpression(mem) = expr {
+        // colors['red']  — every folded leaf, like the want walker
+        return convert_computed_member_values(&mem.object, &mem.expression, scoped);
+    }
+    if let Expression::ChainExpression(chain) = expr {
+        return convert_chain_values(chain, scoped);
+    }
+    if let Expression::CallExpression(call) = expr {
+        // tone('600')  — every folded leaf, like the want walker
+        return convert_call_values(call, scoped);
     }
     ast_to_json_value(expr, scoped).into_iter().collect()
 }
@@ -193,10 +312,18 @@ pub fn ast_to_json_values(expr: &Expression<'_>, scoped: Scoped<'_>) -> Vec<(Val
 fn convert_branching(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<(Value, bool)>> {
     match expr {
         Expression::ConditionalExpression(cond) => {
-            // color: flag ? 'cherry' : 'ocean'  — both arms, ignore `flag`
-            let mut out = ast_to_json_values(&cond.consequent, scoped);
-            out.extend(ast_to_json_values(&cond.alternate, scoped));
-            Some(out)
+            // color: true ? 'cherry' : 'ocean'  — the live arm only, like
+            // the want walker; open tests still walk both arms
+            let test = crate::extract::fold::fold_test(&cond.test, scoped);
+            match test.value {
+                Some(true) => Some(ast_to_json_values(&cond.consequent, scoped)),
+                Some(false) => Some(ast_to_json_values(&cond.alternate, scoped)),
+                None => {
+                    let mut out = ast_to_json_values(&cond.consequent, scoped);
+                    out.extend(ast_to_json_values(&cond.alternate, scoped));
+                    Some(out)
+                }
+            }
         }
         Expression::LogicalExpression(log) => Some(logical_values(log, scoped)),
         _ => None,
@@ -206,6 +333,11 @@ fn convert_branching(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Vec<(V
 fn logical_values(log: &LogicalExpression<'_>, scoped: Scoped<'_>) -> Vec<(Value, bool)> {
     // Guards (`false &&`, `==`, `null`, `undefined`) are skipped by the
     // want walker, so they contribute no authored leaf either.
+    let fold = crate::extract::fold::fold_logical(log.operator, &log.left, &log.right, scoped);
+    if let Some(value) = fold.value {
+        // 'red' || 'blue'  — the picked operand only, like the want walker
+        return folded_value_to_json(&value).into_iter().collect();
+    }
     let mut out = Vec::new();
     if !super::walk::is_guard_expression(&log.left) {
         out.extend(ast_to_json_values(&log.left, scoped));
@@ -251,16 +383,16 @@ fn is_omitted_leaf(expr: &Expression<'_>) -> bool {
     }
 }
 
-fn convert_static_member(
+/// Every static leaf of a const member, for multi-valued positions.
+fn convert_static_member_leaves(
     mem: &StaticMemberExpression<'_>,
     scoped: Scoped<'_>,
-) -> Option<(Value, bool)> {
-    // color: theme.primary  after  const theme = { primary: 'cherry' }
-    if let Expression::Identifier(obj) = &mem.object {
-        let atom_val = scoped.object_prop(obj.name.as_str(), mem.property.name.as_str())?;
-        return atom_value_to_json(atom_val).map(|val| (val, false));
-    }
-    None
+) -> Vec<(Value, bool)> {
+    // color: theme.primary  /  color: tokens.colors.red, like the walker
+    crate::extract::fold::member_path_leaves(mem, scoped)
+        .iter()
+        .filter_map(|leaf| atom_value_to_json(leaf).map(|val| (val, false)))
+        .collect()
 }
 
 fn convert_identifier(name: &str, scoped: Scoped<'_>) -> Option<(Value, bool)> {
@@ -303,5 +435,108 @@ fn convert_unary_values(
     fold.values
         .iter()
         .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .collect()
+}
+
+fn convert_binary(
+    binary: &oxc_ast::ast::BinaryExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    // Single-valued positions take the first folded pair, mirroring convert_unary.
+    let fold =
+        crate::extract::fold::fold_binary(binary.operator, &binary.left, &binary.right, scoped);
+    let first = fold.values.first()?;
+    folded_value_to_json(first)
+}
+
+/// Every pair the binary node folds; refused pairs plan nothing.
+fn convert_binary_values(
+    binary: &oxc_ast::ast::BinaryExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    let fold =
+        crate::extract::fold::fold_binary(binary.operator, &binary.left, &binary.right, scoped);
+    fold.values
+        .iter()
+        .filter_map(folded_value_to_json)
+        .collect()
+}
+
+/// One folded leaf as its plan value: strings split `!important` like the
+/// want walker, so folded plans and wants agree leaf-for-leaf.
+fn folded_value_to_json(val: &AtomValue) -> Option<(Value, bool)> {
+    if let AtomValue::String(text) = val {
+        let (clean, imp) = super::literal::split_important_flag(text);
+        return Some((Value::String(clean.to_string()), imp));
+    }
+    atom_value_to_json(val).map(|json| (json, false))
+}
+
+/// The first folded leaf of an element access; refused reads plan nothing.
+fn convert_computed_member(
+    mem: &ComputedMemberExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    // Single-valued positions take the first fold, mirroring convert_unary.
+    let fold = crate::extract::fold::fold_element_access(&mem.object, &mem.expression, scoped);
+    let first = fold.values.first()?;
+    atom_value_to_json(first).map(|val| (val, false))
+}
+
+/// The first folded leaf of a chain; unfoldable chains plan nothing.
+fn convert_chain(
+    chain: &oxc_ast::ast::ChainExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Option<(Value, bool)> {
+    if let ChainElement::ComputedMemberExpression(mem) = &chain.expression {
+        return convert_computed_member(mem, scoped);
+    }
+    // tokens?.color  — the first fold, mirroring convert_unary
+    let first = crate::extract::fold::fold_chain(chain, scoped)
+        .into_iter()
+        .next()?;
+    atom_value_to_json(&first).map(|val| (val, false))
+}
+
+/// Every leaf the element node folds; refused reads plan nothing.
+fn convert_computed_member_values(
+    object: &Expression<'_>,
+    index: &Expression<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    let fold = crate::extract::fold::fold_element_access(object, index, scoped);
+    fold.values
+        .iter()
+        .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .collect()
+}
+
+/// Every leaf of a chain; unfoldable chains plan nothing.
+fn convert_chain_values(
+    chain: &oxc_ast::ast::ChainExpression<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    if let ChainElement::ComputedMemberExpression(mem) = &chain.expression {
+        return convert_computed_member_values(&mem.object, &mem.expression, scoped);
+    }
+    // tokens?.color  — every folded leaf, like the want walker
+    crate::extract::fold::fold_chain(chain, scoped)
+        .iter()
+        .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .collect()
+}
+
+/// Every string the template node joins; refused templates plan nothing.
+fn convert_template_values(
+    lit: &oxc_ast::ast::TemplateLiteral<'_>,
+    scoped: Scoped<'_>,
+) -> Vec<(Value, bool)> {
+    let fold = crate::extract::fold::fold_template(lit, scoped);
+    fold.values
+        .iter()
+        .map(|val| {
+            let (clean, imp) = super::literal::split_important_flag(val);
+            (Value::String(clean.to_string()), imp)
+        })
         .collect()
 }

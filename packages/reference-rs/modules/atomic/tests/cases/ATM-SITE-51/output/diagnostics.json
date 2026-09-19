@@ -1,0 +1,82 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (identifier 'dyn') encountered for prop 'mt'",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 30
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (call expression) encountered for prop 'borderColor'",
+    "file": "input/src/fanout.ts",
+    "line": 8,
+    "column": 55
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template expression for prop 'color' (16 combinations exceed the 8-combination fan-out limit)",
+    "file": "input/src/fanout.ts",
+    "line": 19,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (member 'props.w') encountered for prop 'width'",
+    "file": "input/src/refuse.ts",
+    "line": 3,
+    "column": 34
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (identifier 'missing') encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 4,
+    "column": 34
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (call expression) encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 5,
+    "column": 34
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (mutated binding 'shade' (reassigned at input/src/refuse.ts:9:1)) encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 10,
+    "column": 34
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-UNARY",
+    "message": "Dynamic unary expression encountered for prop 'order' (operator '-' does not apply to a non-numeric value)",
+    "file": "input/src/refuse.ts",
+    "line": 13,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (identifier 'dyn') encountered for prop 'order'",
+    "file": "input/src/refuse.ts",
+    "line": 14,
+    "column": 35
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (void expression) encountered for prop 'color'",
+    "file": "input/src/refuse.ts",
+    "line": 16,
+    "column": 34
+  }
+]

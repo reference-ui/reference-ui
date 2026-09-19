@@ -8,6 +8,7 @@ import { emitTagTests } from './tags';
 import { emitPropTests } from './props';
 import { emitConditionTests } from './conditions';
 import { emitJoinTests } from './join';
+import { emitVendorTests } from './vendors';
 
 export function emitTestsRs(): string {
   return `//! Unit tests verifying the canon dictionary and all lookup contracts.
@@ -25,5 +26,7 @@ ${emitPropTests()}
 ${emitConditionTests()}
 
 ${emitJoinTests()}
+
+${emitVendorTests()}
 `;
 }

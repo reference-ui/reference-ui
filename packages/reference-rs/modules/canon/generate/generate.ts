@@ -64,7 +64,7 @@ function emitAllModules(dialect: DialectData, targetDir: string): void {
   fs.writeFileSync(path.join(targetDir, 'html.rs'), emitHtmlRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'dialect.rs'), emitDialectRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'conditions.rs'), emitConditionsRs(dialect), 'utf-8');
-  fs.writeFileSync(path.join(targetDir, 'css/mod.rs'), emitCssModRs(), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/mod.rs'), emitCssModRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'css/longhands.rs'), emitCssLonghandsRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'css/color.rs'), emitCssColorRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'css/properties.rs'), emitCssPropertiesRs(dialect), 'utf-8');

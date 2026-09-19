@@ -51,7 +51,13 @@ The generator enforces fail-closed validation:
 
 ```bash
 pnpm --filter @reference-ui/rust run canon
+cargo fmt -p canon
 ```
+
+The emitter writes compact chunks; `cargo fmt` expands them to the committed
+form, so a clean regen plus fmt diffs only the rows you meant to change.
+Vendor-prefixed rows live in `overlay/vendors.ts` (GAP-04a, derived from
+csstype, never hand-extended); unitless rows union `overlay/unitless.ts`.
 
 Do not hand-edit generated tables under `src/`. Lookup facades live in `src/lib.rs`
 and are re-emitted with the tables.

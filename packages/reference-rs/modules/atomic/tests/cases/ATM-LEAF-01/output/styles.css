@@ -13,7 +13,6 @@
 @layer utilities {
   .flat-ternary__bg_n100 { background: var(--colors-n100); }
   .flat-ternary__bg_n300 { background: var(--colors-n300); }
-  .flat-ternary__c_black { color: black; }
   .flat-ternary__c_white { color: white; }
 }
 }

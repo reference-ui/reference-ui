@@ -129,6 +129,16 @@ impl<'a> ExtractContext<'a> {
             .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
     }
 
+    /// Report an info diagnostic at the offending node's span.
+    pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let (line, column) = self
+            .source
+            .and_then(|source| line_col(source, span.start))
+            .unzip();
+        self.diagnostics
+            .push(Diagnostic::info(code, message.into()).with_location(self.file, line, column));
+    }
+
     /// Record the missing-graph error once per file. With no hosts
     /// resolvable, style-bearing JSX is skipped instead of scanned.
     pub fn report_missing_graph(&mut self, tag: &str, line: Option<u32>, column: Option<u32>) {
@@ -409,8 +419,8 @@ pub fn extract(
     breakpoints: &BreakpointScale,
     sinks: ExtractSinks<'_>,
 ) {
-    let table = scope::collect(program);
     let empty = constants::LocalConstants::new();
+    let table = scope::collect(program, &empty);
     let stub = scope::ImportLookup::ProjectBag(&empty);
     let chain = scope::ScopeChain::new(&table, stub);
     let bindings = collect_bindings(program);

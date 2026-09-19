@@ -577,9 +577,16 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_2px { margin: 2px; }
+  .\@reference-ui\/lib__m_8px { margin: 8px; }
+  .\@reference-ui\/lib__p_1px { padding: 1px; }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_6px { padding: 6px; }
+  .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_green { color: green; }
+  .\@reference-ui\/lib__c_teal { color: teal; }
   .\@reference-ui\/lib__c_amber\.500 { color: var(--colors-amber-500); }
+  .\@reference-ui\/lib__c_amber\.600 { color: var(--colors-amber-600); }
   .\@reference-ui\/lib__c_blue\.600 { color: var(--colors-blue-600); }
 }
 }

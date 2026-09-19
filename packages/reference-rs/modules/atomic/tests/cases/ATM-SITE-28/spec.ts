@@ -13,6 +13,19 @@ const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'amber.500' },
 ]
 
+// SPEC-V2-34 object half (Overmatch Ph3): const objects record identifier
+// values and static spreads. Pure reads only — every source here is an
+// unmutated const.
+const OBJECTS: Array<{ prop: string; value: string }> = [
+  { prop: 'color', value: 'amber.600' },
+  { prop: 'color', value: 'teal' },
+  { prop: 'padding', value: '6px' },
+  { prop: 'margin', value: '8px' },
+  { prop: 'color', value: 'blue' },
+  { prop: 'margin', value: '2px' },
+  { prop: 'padding', value: '1px' },
+]
+
 const MUTATED: Array<{ name: string; site: string }> = [
   { name: 'color', site: 'mutated.ts:5:1' },
   { name: 'count', site: 'mutated.ts:10:1' },
@@ -29,7 +42,10 @@ const spec: AtomicCaseSpec = {
     for (const { prop, value } of EXPECTED) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
-    expect(result.wants ?? []).toHaveLength(5)
+    for (const { prop, value } of OBJECTS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+    }
+    expect(result.wants ?? []).toHaveLength(5 + OBJECTS.length)
 
     // Stale inits never emit: no `red` color, no numeric order.
     expect(hasWant(result, 'color', 'red')).toBe(false)
@@ -37,8 +53,11 @@ const spec: AtomicCaseSpec = {
 
     // One runtime plan per unique leaf (the two `padding: 4px` wants share one).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(4)
+    expect(plans).toHaveLength(4 + OBJECTS.length)
     for (const { prop, value } of EXPECTED) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+    for (const { prop, value } of OBJECTS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
@@ -59,6 +78,11 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('color: green;')
     expect(result.stylesheet).toContain('color: var(--colors-amber-500);')
     expect(result.stylesheet).toContain('padding: 4px;')
+    expect(result.stylesheet).toContain('color: var(--colors-amber-600);')
+    expect(result.stylesheet).toContain('color: teal;')
+    expect(result.stylesheet).toContain('color: blue;')
+    expect(result.stylesheet).toContain('padding: 6px;')
+    expect(result.stylesheet).toContain('margin: 8px;')
     expect(result.stylesheet).not.toContain('color: red')
   },
 }

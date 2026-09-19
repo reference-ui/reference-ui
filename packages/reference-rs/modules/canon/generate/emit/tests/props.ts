@@ -265,6 +265,21 @@ fn can_ext_03_extension_isolation_in_find_property() {
 }`;
 }
 
+export function emitCascadeRankTest(): string {
+  return `#[test]
+fn property_cascade_rank_follows_longhand_nesting() {
+    assert_eq!(property_cascade_rank("border"), 0);
+    assert_eq!(property_cascade_rank("borderColor"), 1);
+    assert_eq!(property_cascade_rank("padding"), 1);
+    assert_eq!(property_cascade_rank("p"), 1);
+    assert_eq!(property_cascade_rank("paddingInline"), 1);
+    assert_eq!(property_cascade_rank("paddingInlineStart"), 2);
+    assert_eq!(property_cascade_rank("paddingTop"), 3);
+    assert_eq!(property_cascade_rank("borderBottomColor"), 3);
+    assert_eq!(property_cascade_rank("color"), 3);
+}`;
+}
+
 export function emitPropTests(): string {
   return [
     emitCanProp01(),
@@ -273,6 +288,7 @@ export function emitPropTests(): string {
     emitCanProp04(),
     emitCanProp05(),
     emitCanProp06(),
+    emitCascadeRankTest(),
     emitCanProp07(),
     emitCanFail02(),
     emitCanAlias01(),

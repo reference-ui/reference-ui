@@ -13,6 +13,12 @@ Inputs: `mutated.ts` (plain, compound, update, member-root, for-of, and
 spread writes), `controls.ts` (unmutated `let`/`var`/`const`), `tokens.ts`
 (unmutated + mutated `export let`), `app.ts` (cross-file uses).
 
+Ph3 arms (`objects.ts`, SPEC-V2-34 object half): const objects record
+identifier values and static spreads — pure reads only, every source an
+unmutated const. Baked entries strip when their source is written (dep
+provenance in `extract/scope/`); station-level mutation interplay stays
+with the open Ph1 verdict.
+
 Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241`
 (unmutated `let`/`var`), `cross_file.rs:502`
 (`export_let_currently_folds_too`).

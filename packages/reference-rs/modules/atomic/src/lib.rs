@@ -241,7 +241,8 @@ fn extract_parsed_program(
 ) {
     // Locals resolve through this file's scope table; the project bag survives
     // only behind the import lookup stub, for imported and unbound names.
-    let table = extract::scope::collect(program);
+    // Baked entries strip against the merged bag's name-wide mutation set.
+    let table = extract::scope::collect(program, session.constants);
     let stub = extract::scope::ImportLookup::ProjectBag(session.constants);
     let chain = extract::scope::ScopeChain::new(&table, stub);
     let bindings = extract::collect_bindings(program);

@@ -22,7 +22,6 @@
   .expression-table__bg_n200 { background: var(--colors-n200); }
   .expression-table__bd-c_0 { border-color: 0; }
   .expression-table__bd-c_red { border-color: red; }
-  .expression-table__bd-c_transparent { border-color: transparent; }
   .expression-table__rounded_full { border-radius: var(--radii-full); }
   .expression-table__rounded_md { border-radius: var(--radii-md); }
   .expression-table__border-style_solid { border-style: solid; }

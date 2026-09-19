@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "severity": "info",
+    "code": "ATM-I-DEAD-BRANCH",
+    "message": "dead branch 'black' for prop 'color' (test folds to true)",
+    "file": "input/src/css.ts",
+    "line": 3,
+    "column": 31
+  }
+]

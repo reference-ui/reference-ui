@@ -29,26 +29,28 @@ interface SpecInput {
 }
 
 const EXPECTED_WARNINGS: Array<{ line: number; message: string }> = [
-  { line: 18, message: "css() argument 1 is not a static style object (identifier 'styles')" },
-  { line: 19, message: 'css() argument 1 is not a static style object (logical expression)' },
+  { line: 19, message: "css() argument 1 is not a static style object (identifier 'cond')" },
   { line: 22, message: 'tagged template is not a css() site; use css({...})' },
 ];
 
-// The sibling arg and the spread twin paint; the whole-object arg, the
-// arg-level &&, and the live tag paint nothing. The sheet carries exactly
-// the two surviving utilities, and the frozen recompile carries exactly
-// the three positioned refusal warnings.
+// The sibling arg and the spread twin paint; the whole-object arg lowers
+// beside its live sibling (ocean wins the merge), the arg-level && lowers
+// its object right while the const-true left diagnoses, and only the live
+// tag paints nothing. The sheet carries exactly the three surviving
+// utilities, and the frozen recompile carries exactly the two positioned
+// refusal warnings.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
     'utf8',
   );
   const utilityCount = styles.match(/\.neo-site-24__/g)?.length ?? 0;
-  assert.equal(utilityCount, 2, `sheet carries exactly the sibling + twin utilities, got ${utilityCount}`);
+  assert.equal(utilityCount, 3, `sheet carries exactly the sibling + twin + logical utilities, got ${utilityCount}`);
 
   const painted: Array<{ id: string; rgb: string }> = [
     { id: 'sibling', rgb: 'rgb(37, 99, 235)' },
     { id: 'spread', rgb: 'rgb(220, 38, 38)' },
+    { id: 'logical', rgb: 'rgb(168, 85, 247)' },
   ];
   for (const { id, rgb } of painted) {
     const node = page.locator(`#${id}`);
@@ -56,7 +58,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     const color = await node.evaluate((el) => getComputedStyle(el).color);
     assert.equal(color, rgb, `#${id} paints ${rgb}, got ${color}`);
   }
-  for (const id of ['logical', 'tagged']) {
+  for (const id of ['tagged']) {
     const node = page.locator(`#${id}`);
     const color = await node.evaluate((el) => getComputedStyle(el).color);
     assert.equal(color, 'rgb(0, 0, 0)', `#${id} paints nothing, got ${color}`);
@@ -68,7 +70,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
   const warnings = result.diagnostics ?? [];
-  assert.equal(warnings.length, 3, `three refusal warnings, got ${JSON.stringify(warnings)}`);
+  assert.equal(warnings.length, 2, `two refusal warnings, got ${JSON.stringify(warnings)}`);
   for (const expected of EXPECTED_WARNINGS) {
     const match = warnings.find(
       (entry) => entry.message === expected.message && entry.line === expected.line,

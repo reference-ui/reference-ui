@@ -90,6 +90,17 @@ impl Diagnostic {
         }
     }
 
+    pub fn info(code: DiagnosticCode, message: impl Into<String>) -> Self {
+        Self {
+            severity: DiagnosticSeverity::Info,
+            code,
+            message: message.into(),
+            file: None,
+            line: None,
+            column: None,
+        }
+    }
+
     pub fn with_location(
         mut self,
         file: impl Into<String>,

@@ -1,0 +1,31 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal expression encountered for prop 'padding'",
+    "file": "input/src/enums.ts",
+    "line": 21,
+    "column": 12
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal expression encountered for prop 'margin'",
+    "file": "input/src/enums.ts",
+    "line": 22,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal expression encountered for prop 'width'",
+    "file": "input/src/enums.ts",
+    "line": 23,
+    "column": 10
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`flexGrow` value `true` is not valid CSS"
+  }
+]

@@ -577,12 +577,28 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_2r { padding: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__c_aqua { color: aqua; }
+  .\@reference-ui\/lib__c_beige { color: beige; }
   .\@reference-ui\/lib__c_blue { color: blue; }
+  .\@reference-ui\/lib__c_coral { color: coral; }
   .\@reference-ui\/lib__c_cyan { color: cyan; }
   .\@reference-ui\/lib__c_green { color: green; }
+  .\@reference-ui\/lib__c_indigo { color: indigo; }
   .\@reference-ui\/lib__c_lime { color: lime; }
+  .\@reference-ui\/lib__c_magenta { color: magenta; }
   .\@reference-ui\/lib__c_navy { color: navy; }
+  .\@reference-ui\/lib__c_olive { color: olive; }
   .\@reference-ui\/lib__c_pink { color: pink; }
+  .\@reference-ui\/lib__c_plum { color: plum; }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_salmon { color: salmon; }
   .\@reference-ui\/lib__c_teal { color: teal; }
+  .\@reference-ui\/lib__c_violet { color: violet; }
+  .\@reference-ui\/lib__hover\:c_coral:is(:hover, [data-hover]) { color: coral; }
+  .\@reference-ui\/lib__hover\:c_maroon:is(:hover, [data-hover]) { color: maroon; }
 }
 }

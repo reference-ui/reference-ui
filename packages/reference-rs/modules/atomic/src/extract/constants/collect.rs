@@ -1,18 +1,23 @@
-//! Collect scalar and style-object declarators from a parsed program at every depth.
-//! Component-body declarators resolve like top-level ones; only literals, simple
-//! object records, and branching initializers with literal leaves are indexed.
-//! Imports, functions, and spreads are ignored. Any declarator kind may resolve,
-//! but a write anywhere in the file poisons the binding and its init is dropped.
-//! The index is later consulted by the expression walker; this file inserts no wants.
+//! Collect scalar, style-object, and const-array declarators from a parsed
+//! program at every depth. Component-body declarators resolve like top-level
+//! ones; only literals, multi-leaf style objects (literals, branching
+//! leaves, nested entries), literal-element arrays, and branching
+//! initializers with literal leaves are indexed. Imports, functions, and
+//! spreads are ignored. Any declarator kind may resolve, but a write
+//! anywhere in the file poisons the binding and its init is dropped. The
+//! index is later consulted by the expression walker; this file inserts no wants.
+
+use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
-    AssignmentExpression, BindingPattern, Expression, ForInStatement, ForOfStatement,
-    ObjectPropertyKind, Program, PropertyKey, UpdateExpression, VariableDeclarator,
+    ArrayExpressionElement, AssignmentExpression, BindingPattern, Expression, ForInStatement,
+    ForOfStatement, ObjectPropertyKind, Program, PropertyKey, UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 
-use super::index::{LocalConstants, MutatedBinding};
+use super::entries::object_entries;
+use super::index::{ConstArrayElement, LocalConstants, MutatedBinding};
 use super::mutate::{for_head_writes, simple_target_writes, target_writes, Write};
 use crate::atom::AtomValue;
 use crate::diagnostics::line_col;
@@ -125,6 +130,13 @@ fn record_declaration(constants: &mut LocalConstants, name: &str, expr: &Express
         record_object_properties(constants, name, obj);
         return;
     }
+    // const sizes = ['2px', '4px']
+    if let Expression::ArrayExpression(arr) = expr {
+        if let Some(elements) = array_elements(arr) {
+            constants.insert_array(name, elements);
+        }
+        return;
+    }
     // const subtleBorder = isDark ? 'gray.800' : 'gray.200'
     if matches!(
         expr,
@@ -187,47 +199,75 @@ fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
     }
 }
 
+/// The recorded elements of a const array init, or None when any element
+/// is not a literal, a literal-entry object, or a hole. Identifier and
+/// spread elements stay unrecorded (SPEC-V2-34 const-graph depth), so the
+/// binding shadows instead of resolving to a partial array.
+fn array_elements(
+    arr: &oxc_ast::ast::ArrayExpression<'_>,
+) -> Option<Vec<ConstArrayElement>> {
+    let mut elements = Vec::with_capacity(arr.elements.len());
+    for elem in &arr.elements {
+        elements.push(array_element(elem)?);
+    }
+    Some(elements)
+}
+
+/// One recorded array element, or None for dynamic shapes.
+fn array_element(elem: &ArrayExpressionElement<'_>) -> Option<ConstArrayElement> {
+    match elem {
+        ArrayExpressionElement::Elision(_) => {
+            // const sizes = ['2px', , '8px']
+            Some(ConstArrayElement::Hole)
+        }
+        ArrayExpressionElement::SpreadElement(_) => None,
+        _ => array_value_element(elem.as_expression()?),
+    }
+}
+
+/// One recorded array value element: a literal leaf or a static object.
+fn array_value_element(expr: &Expression<'_>) -> Option<ConstArrayElement> {
+    let expr = unwrap_expression(expr);
+    if let Some(leaf) = literal_leaf(expr) {
+        return Some(ConstArrayElement::Leaf(leaf));
+    }
+    if let Expression::ObjectExpression(obj) = expr {
+        return object_element_map(obj).map(ConstArrayElement::Object);
+    }
+    None
+}
+
+/// The literal entries of an object nested in a const array init, or None
+/// when any entry is a spread, a computed key, or a non-literal value — the
+/// whole array stays unrecorded so the use site refuses with a diagnostic
+/// instead of spreading a partial object.
+fn object_element_map(
+    obj: &oxc_ast::ast::ObjectExpression<'_>,
+) -> Option<BTreeMap<String, AtomValue>> {
+    let mut leaves = BTreeMap::new();
+    for prop_kind in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
+            return None;
+        };
+        let Some(key) = resolve_property_key(&prop.key) else {
+            return None;
+        };
+        let Some(leaf) = literal_leaf(unwrap_expression(&prop.value)) else {
+            return None;
+        };
+        leaves.insert(key, leaf);
+    }
+    Some(leaves)
+}
+
 fn record_object_properties(
     constants: &mut LocalConstants,
     obj_name: &str,
     obj: &oxc_ast::ast::ObjectExpression<'_>,
 ) {
-    // const theme = { primary: 'n300', space: '2r' }
-    for prop_kind in &obj.properties {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
-            continue;
-        };
-        let Some(key) = resolve_property_key(&prop.key) else {
-            continue;
-        };
-        record_object_entry(constants, obj_name, &key, unwrap_expression(&prop.value));
-    }
-}
-
-fn record_object_entry(
-    constants: &mut LocalConstants,
-    obj_name: &str,
-    key: &str,
-    expr: &Expression<'_>,
-) {
-    match expr {
-        Expression::StringLiteral(s) => {
-            // { primary: 'n300' }
-            constants.insert_object_prop(obj_name, key, AtomValue::String(s.value.as_str().into()));
-        }
-        Expression::NumericLiteral(n) => {
-            // { opacity: 0.5 }
-            constants.insert_object_prop(
-                obj_name,
-                key,
-                AtomValue::Number(n.value.to_string().into_boxed_str()),
-            );
-        }
-        Expression::BooleanLiteral(b) => {
-            // { truncate: true }
-            constants.insert_object_prop(obj_name, key, AtomValue::Bool(b.value));
-        }
-        _ => {}
+    // const theme = { primary: 'n300', tone: flag ? 'r' : 'b' }
+    for (key, prop) in object_entries(obj) {
+        constants.insert_object_prop(obj_name, key, prop);
     }
 }
 

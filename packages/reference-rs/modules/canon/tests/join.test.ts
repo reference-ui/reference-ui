@@ -40,6 +40,7 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
       referenceProps: [...dialect.referenceProps],
       conditions: [...dialect.conditions],
       colorProperties: [...dialect.colorProperties],
+      unitlessProperties: [...dialect.unitlessProperties],
       extensions: dialect.extensions,
     }
   }

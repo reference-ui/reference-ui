@@ -1,0 +1,26 @@
+# ATM-SITE-31 — fenced pure-helper call folding
+
+Overmatch build station (SPEC-V2-39, Ph3 row 6): closed single-expression
+helpers fold at call sites — nullary, args, defaults (including defaults
+that reference earlier params), `function` declarations, both IIFE
+spellings, index over param arrays, member reads over param objects,
+folded-test ternaries in bodies, and multi-leaf captures that fan out
+through passthrough. Object returns spread into `css()` and JSX beside
+static siblings. The fence is v2's `pure_fn` descriptor adopted verbatim:
+aliases, multi-statement bodies, `~`, and assignment in bodies refuse
+with a diagnostic; a reassigned callee names its write; bare uncalled
+function values never fold.
+
+The impure-shape tripwires (`Math.random`, `.map`/`.reduce`, async, loops,
+rest params, nested calls, spread args, `f?.()`) stay pinned at ATM-SITE-32
+(SPEC-V2-42), which this slice must keep green untouched.
+
+Known seams, filed not silent: binary arguments fold through the
+shared binary node (SITE-33 seam, closed by the tail crew — a non-finite
+binary arg refuses the whole call); imported helpers await the descriptor
+export (SPEC-V2-57, Ph4); helper-returned computed keys compose with the
+folded-key slice (SPEC-V2-40, SITE-49).
+
+Panda: `scope.rs:908` (nullary), `:927`/`:1208` (IIFEs), `:945` (decl),
+`:1073` (defaults), `:1030` (object-return spread), `:986` (array index),
+`:1085` (alias refuse), `:1184` (multi-statement refuse).

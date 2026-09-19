@@ -1,9 +1,9 @@
 // Entry for the NEO-SITE-24 world. It styles the sibling node through a
-// multi-arg call whose first arg is a whole const object (Ph1: diagnoses,
-// contributes nothing) beside a live object arg that paints; the logical
-// node through an arg-level && (diagnoses, paints nothing); the spread
-// node through the same const object with braces (extracts, paints); and
-// the tagged node through a live css tag (diagnoses, paints nothing).
+// multi-arg call whose whole-object first arg lowers beside the live
+// object arg that wins the merge; the logical node through an arg-level
+// && whose object right lowers while the const-true left diagnoses; the
+// spread node through the same const object with braces; and the tagged
+// node through a live css tag (diagnoses, paints nothing).
 import { css } from '@reference-ui/react'
 
 const styles = { color: 'cherry' }

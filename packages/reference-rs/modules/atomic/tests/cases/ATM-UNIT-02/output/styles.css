@@ -577,6 +577,9 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__m_1 { margin: 1px; }
+  .\@reference-ui\/lib__p_1000 { padding: 1000px; }
   .\@reference-ui\/lib__p_1 { padding: 1px; }
+  .\@reference-ui\/lib__op_0\.5 { opacity: 0.5; }
 }
 }

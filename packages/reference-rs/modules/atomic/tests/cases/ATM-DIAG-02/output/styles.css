@@ -578,5 +578,6 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__w_10px { width: 10px; }
 }
 }

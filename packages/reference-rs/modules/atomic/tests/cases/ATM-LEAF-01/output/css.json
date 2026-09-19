@@ -1,6 +1,5 @@
 {
   "bg:n100": "flat-ternary__bg_n100",
   "bg:n300": "flat-ternary__bg_n300",
-  "color:black": "flat-ternary__c_black",
   "color:white": "flat-ternary__c_white"
 }

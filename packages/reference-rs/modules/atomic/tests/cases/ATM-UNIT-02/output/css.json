@@ -1,3 +1,6 @@
 {
-  "padding:1": "@reference-ui/lib__p_1"
+  "margin:1": "@reference-ui/lib__m_1",
+  "opacity:0.5": "@reference-ui/lib__op_0.5",
+  "padding:1": "@reference-ui/lib__p_1",
+  "padding:1000": "@reference-ui/lib__p_1000"
 }

@@ -10,8 +10,13 @@ function el(id: string): HTMLElement {
   return node
 }
 
+// A closed single-return helper would FOLD under entry 39 (ATM-SITE-31),
+// so the dynamic pin needs a fence-refusing shape: a multi-statement body
+// refuses with one located call-site warning while still returning cherry
+// at runtime, where the missing plan keeps it a ghost-free miss.
 function pick(): string {
-  return 'cherry'
+  const choice = 'cherry'
+  return choice
 }
 
 el('target').className = css({ color: pick(), background: 'ocean' })

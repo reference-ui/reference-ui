@@ -5,14 +5,14 @@
  * The orchestrator consumes these diagnostics and aborts the build if any check fails.
  */
 
-import type { DialectData } from './dialect';
-import { EXTENSIONS, SHORT_PREFIXES, type ExtensionProp } from './overlay';
+import { EXTENSION_ALLOWLIST, type DialectData } from './dialect';
+import { SHORT_PREFIXES, type ExtensionProp } from './overlay';
 import type { PlatformCss } from './platform';
 
 export function isPlatformOrExtension(
   name: string,
   platformCss: PlatformCss,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): boolean {
   const isPlatform =
     platformCss.properties.has(name) ||
@@ -25,7 +25,7 @@ export function isPlatformOrExtension(
 
 export function isDialectColorExtension(
   name: string,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): boolean {
   return extensions.some(
     (ext) => ext.color && (ext.name === name || ext.css === name)
@@ -51,7 +51,7 @@ export function validateElementsJoin(
 export function validateAliasTargetsJoin(
   dialect: DialectData,
   platformCss: PlatformCss,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): string[] {
   const errors: string[] = [];
   const invalidAliases = dialect.aliases.filter(
@@ -69,7 +69,7 @@ export function validateShortPrefixesJoin(
   platformCssOrDialect: PlatformCss | DialectData,
   platformCssOrPrefixes?: PlatformCss | Record<string, string>,
   prefixes: Record<string, string> = SHORT_PREFIXES,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): string[] {
   let platformCss: PlatformCss;
   let resolvedPrefixes: Record<string, string>;
@@ -100,7 +100,7 @@ export function validateShortPrefixesJoin(
 export function validateDialectExtJoin(
   dialect: DialectData,
   platformCss: PlatformCss,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): string[] {
   const errors: string[] = [];
   const unverifiedProps = dialect.canonicalProperties.filter(
@@ -139,7 +139,7 @@ export function validateShorthandsJoin(
 export function validateColorPropsJoin(
   dialect: DialectData,
   platformCss: PlatformCss,
-  extensions: readonly ExtensionProp[] = EXTENSIONS
+  extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): string[] {
   const errors: string[] = [];
   const unverifiedColorProps = dialect.colorProperties.filter((p) => {

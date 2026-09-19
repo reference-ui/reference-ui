@@ -60,6 +60,18 @@ pub fn derive_slot(prop: &str, when: &[String], breakpoint: Option<&str>) -> Str
     }
 }
 
+/// A `$token` plan object back to its path-plus-fallback value, or None when
+/// the shape is not exactly `{"$token": {"path": str, "value": str}}`.
+fn t_object_to_atom_value(map: &serde_json::Map<String, Value>) -> Option<AtomValue> {
+    let inner = map.get("$token")?.as_object()?;
+    let path = inner.get("path")?.as_str()?;
+    let value = inner.get("value")?.as_str()?;
+    Some(AtomValue::Token {
+        path: path.into(),
+        value: value.into(),
+    })
+}
+
 fn r_object_to_atom_value(map: &serde_json::Map<String, Value>) -> Option<AtomValue> {
     let r_val = map.get("$r")?;
     let multiplier = if let Some(f) = r_val.as_f64() {
@@ -96,6 +108,9 @@ fn json_to_atom_value(val: &Value) -> Option<AtomValue> {
         return Some(scalar);
     }
     if let Some(map) = val.as_object() {
+        if map.contains_key("$token") {
+            return t_object_to_atom_value(map);
+        }
         return r_object_to_atom_value(map);
     }
     None
@@ -185,7 +200,7 @@ impl<'a> PlanBuilder<'a> {
             return self.resolve_array(decl, arr);
         }
         if let Value::Object(map) = &decl.value {
-            if !map.contains_key("$r") {
+            if !map.contains_key("$r") && !map.contains_key("$token") {
                 return self.resolve_object(decl, map);
             }
         }

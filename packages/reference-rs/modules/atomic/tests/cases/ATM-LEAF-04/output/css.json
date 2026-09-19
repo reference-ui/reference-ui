@@ -1,7 +1,6 @@
 {
   "bg:green": "@reference-ui/lib__bg_green",
   "borderColor:0": "@reference-ui/lib__bd-c_0",
-  "borderColor:red": "@reference-ui/lib__bd-c_red",
   "borderStyle:solid": "@reference-ui/lib__border-style_solid",
   "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
   "color:blue": "@reference-ui/lib__c_blue",

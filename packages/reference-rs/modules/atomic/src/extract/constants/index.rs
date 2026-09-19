@@ -8,14 +8,28 @@
 
 use std::collections::BTreeMap;
 
+use super::entries::{ConstObject, ObjectProp};
 use crate::atom::AtomValue;
 
 /// Index of local scalar leaves and style objects declared anywhere in a file.
 #[derive(Debug, Default, Clone)]
 pub struct LocalConstants {
     scalars: BTreeMap<String, Vec<AtomValue>>,
-    objects: BTreeMap<String, BTreeMap<String, AtomValue>>,
+    objects: BTreeMap<String, ConstObject>,
+    arrays: BTreeMap<String, Vec<ConstArrayElement>>,
     mutated: BTreeMap<String, MutatedBinding>,
+}
+
+/// One recorded element of a const array initializer: a literal leaf, a
+/// literal-entry object (for merge-list spreads), or an elision hole.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConstArrayElement {
+    /// A literal leaf (`'2px'`, `4`, `true`).
+    Leaf(AtomValue),
+    /// An inline object of literal entries (`{ color: 'pink' }`).
+    Object(BTreeMap<String, AtomValue>),
+    /// An elision hole (`[a, , c]`) — consumes its slot, yields nothing.
+    Hole,
 }
 
 /// A binding poisoned by a write, with the write site for diagnostics.
@@ -78,13 +92,13 @@ impl LocalConstants {
         &mut self,
         obj_name: &str,
         prop_name: impl Into<String>,
-        value: AtomValue,
+        prop: ObjectProp,
     ) {
         // const theme = { primary: 'n300' }
         self.objects
             .entry(obj_name.to_string())
             .or_default()
-            .insert(prop_name.into(), value);
+            .insert(prop_name.into(), prop);
     }
 
     /// Look up the first scalar leaf by binding name (single-value contexts).
@@ -100,7 +114,7 @@ impl LocalConstants {
     }
 
     /// Look up `obj.prop` on a recorded style object.
-    pub fn get_object_prop(&self, obj_name: &str, prop_name: &str) -> Option<&AtomValue> {
+    pub fn get_object_prop(&self, obj_name: &str, prop_name: &str) -> Option<&ObjectProp> {
         // color={theme.primary}
         self.objects
             .get(obj_name)
@@ -108,9 +122,21 @@ impl LocalConstants {
     }
 
     /// Look up a recorded top-level style object (`const base = { mt: '2r' }`).
-    pub fn get_object(&self, name: &str) -> Option<&BTreeMap<String, AtomValue>> {
+    pub fn get_object(&self, name: &str) -> Option<&ConstObject> {
         // <Div {...base} />  /  css({ ...base })
         self.objects.get(name)
+    }
+
+    /// Record a const array (`const sizes = ['2px', '4px']`), first init wins.
+    pub fn insert_array(&mut self, name: impl Into<String>, elements: Vec<ConstArrayElement>) {
+        // const sizes = ['2px', '4px']
+        self.arrays.entry(name.into()).or_insert(elements);
+    }
+
+    /// Look up a recorded const array's elements.
+    pub fn get_array(&self, name: &str) -> Option<&[ConstArrayElement]> {
+        // padding: [1, ...sizes]  /  margin: sizes[1]
+        self.arrays.get(name).map(Vec::as_slice)
     }
 
     /// Mark a binding mutated by a write; the first write site wins.
@@ -130,6 +156,7 @@ impl LocalConstants {
         for name in self.mutated.keys() {
             self.scalars.remove(name);
             self.objects.remove(name);
+            self.arrays.remove(name);
         }
     }
 
@@ -143,6 +170,9 @@ impl LocalConstants {
             for (prop_k, prop_v) in v {
                 obj.entry(prop_k.clone()).or_insert_with(|| prop_v.clone());
             }
+        }
+        for (k, v) in &other.arrays {
+            self.arrays.entry(k.clone()).or_insert_with(|| v.clone());
         }
         for (k, v) in &other.mutated {
             self.mutated.entry(k.clone()).or_insert_with(|| v.clone());

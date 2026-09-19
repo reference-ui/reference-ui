@@ -581,7 +581,7 @@
   .\@reference-ui\/lib__button_s_sm { font-size: 12px; }
   .\@reference-ui\/lib__button_s_md { font-size: 16px; }
   .\@reference-ui\/lib__button_m_true { opacity: 0.5; }
-  .\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+  .\@reference-ui\/lib__button_m_false { opacity: 1; }
   @container (min-width: 640px) {
     .sm\:\@reference-ui\/lib__button_s_sm { font-size: 12px; }
   }
@@ -628,19 +628,19 @@
     .\32 xl\:\@reference-ui\/lib__button_m_true { opacity: 0.5; }
   }
   @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+    .sm\:\@reference-ui\/lib__button_m_false { opacity: 1; }
   }
   @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+    .md\:\@reference-ui\/lib__button_m_false { opacity: 1; }
   }
   @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+    .lg\:\@reference-ui\/lib__button_m_false { opacity: 1; }
   }
   @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+    .xl\:\@reference-ui\/lib__button_m_false { opacity: 1; }
   }
   @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_m_false { opacity: 1.0; }
+    .\32 xl\:\@reference-ui\/lib__button_m_false { opacity: 1; }
   }
 }
 }

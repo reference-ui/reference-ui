@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="arith">folded arithmetic and concat</div>
+    <div id="logic">picked short-circuit operands</div>
+    <div id="nullish">nullish winners</div>
+    <div id="compare">live ternary arms</div>
+    <div id="member">multi-hop member reads</div>
+    <div id="refused">bitwise refusal beside a sibling</div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-OBJECT-PROP",
+    "message": "property 'color' of 'dyn' has no static style value",
+    "file": "input/src/app.ts",
+    "line": 21,
+    "column": 39
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-OBJECT-PROP",
+    "message": "property 'color' of 'both' has no static style value",
+    "file": "input/src/app.ts",
+    "line": 24,
+    "column": 37
+  }
+]

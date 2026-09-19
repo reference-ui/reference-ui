@@ -25,8 +25,8 @@
   },
   {
     "severity": "warning",
-    "code": "ATM-W-DYNAMIC-EXPRESSION",
-    "message": "Dynamic non-literal expression encountered for prop 'color'",
+    "code": "ATM-W-DYNAMIC-MEMBER",
+    "message": "Dynamic non-literal element base 'call expression' encountered for prop 'color'",
     "file": "input/src/refuse.ts",
     "line": 20,
     "column": 38

@@ -21,8 +21,8 @@ mod tests;
 
 pub use conditions::{is_condition, CONDITIONS, NAMED_CONDITIONS};
 pub use css::{
-    find_property, is_color_prop, native_longhands_for_prop, Property, CANONICAL_PROPERTIES,
-    COLOR_PROPERTIES,
+    find_property, is_color_prop, is_unitless_prop, native_longhands_for_prop,
+    property_cascade_rank, Property, CANONICAL_PROPERTIES, COLOR_PROPERTIES, UNITLESS_PROPERTIES,
 };
 pub use dialect::{is_reference_prop, resolve_alias, Alias, ALIASES, REFERENCE_PROPS};
 pub use html::{is_html_tag, is_primitive_jsx_name, is_reference_primitive, Element, ELEMENTS, PRIMITIVE_JSX};

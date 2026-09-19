@@ -10,6 +10,9 @@ pub mod responsive;
 pub mod walk;
 
 pub use ast_value::{ast_to_json_value, ast_to_json_values};
-pub use object::{walk_r_object, walk_spread_argument, walk_style_object, ObjectWalk};
+pub use object::{
+    lower_array_object, lower_const_object, resolve_block_target, walk_r_object,
+    walk_spread_argument, walk_style_object, BlockLookup, ObjectWalk,
+};
 pub use responsive::{walk_array, walk_object};
 pub use walk::{walk_expression, ExpressionWalk};

@@ -12,8 +12,17 @@ import {
   PRIMITIVE_TAGS,
   REFERENCE_ONLY_PROPS,
   SHORT_PREFIXES,
+  UNITLESS_PROPS,
+  VENDOR_ALIASES,
+  VENDOR_EXTENSIONS,
+  VENDOR_UNITLESS,
   type ExtensionProp,
 } from './overlay';
+
+export const EXTENSION_ALLOWLIST: readonly ExtensionProp[] = [
+  ...EXTENSIONS,
+  ...VENDOR_EXTENSIONS,
+];
 import type { PlatformCss } from './platform';
 
 export interface DialectElement {
@@ -41,6 +50,7 @@ export interface DialectData {
   referenceProps: string[];
   conditions: string[];
   colorProperties: string[];
+  unitlessProperties: string[];
   extensions: readonly ExtensionProp[];
 }
 
@@ -69,6 +79,9 @@ function buildPropertiesAndAliases(platformCss: PlatformCss): {
 } {
   const canonicalPropsMap = new Map<string, string>(Object.entries(SHORT_PREFIXES));
   const aliasMap = new Map<string, string>(Object.entries(ALIASES));
+  for (const vendor of VENDOR_ALIASES) {
+    aliasMap.set(vendor.alias, vendor.canonical);
+  }
   const propMap = new Map<string, DialectProperty>();
 
   // 1. Emit all living CSS properties from @webref
@@ -82,8 +95,8 @@ function buildPropertiesAndAliases(platformCss: PlatformCss): {
     });
   }
 
-  // 2. Add explicit dialect extensions
-  for (const ext of EXTENSIONS) {
+  // 2. Add explicit dialect extensions (plus vendor rows absent from webref)
+  for (const ext of EXTENSION_ALLOWLIST) {
     if (!propMap.has(ext.name)) {
       propMap.set(ext.name, {
         name: ext.name,
@@ -120,14 +133,20 @@ function buildColorProperties(platformCss: PlatformCss): string[] {
     }
   }
 
-  // Union dialect color extensions
-  for (const ext of EXTENSIONS) {
+  // Union dialect color extensions (plus vendor color rows)
+  for (const ext of EXTENSION_ALLOWLIST) {
     if ('color' in ext) {
       colorSet.add(ext.name);
     }
   }
 
   return Array.from(colorSet).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+function buildUnitlessProperties(): string[] {
+  return Array.from(new Set([...UNITLESS_PROPS, ...VENDOR_UNITLESS])).sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0
+  );
 }
 
 export function loadDialect(platformCss: PlatformCss): DialectData {
@@ -137,6 +156,7 @@ export function loadDialect(platformCss: PlatformCss): DialectData {
   );
   const { canonicalProperties, aliases } = buildPropertiesAndAliases(platformCss);
   const colorProperties = buildColorProperties(platformCss);
+  const unitlessProperties = buildUnitlessProperties();
   const conditions = [...NAMED_CONDITIONS].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
   return {
@@ -147,7 +167,8 @@ export function loadDialect(platformCss: PlatformCss): DialectData {
     referenceProps: [...REFERENCE_ONLY_PROPS].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
     conditions,
     colorProperties,
-    extensions: EXTENSIONS,
+    unitlessProperties,
+    extensions: EXTENSION_ALLOWLIST,
   };
 }
 

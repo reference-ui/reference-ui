@@ -5,7 +5,6 @@
   "bg:n200": "expression-table__bg_n200",
   "borderColor:0": "expression-table__bd-c_0",
   "borderColor:red": "expression-table__bd-c_red",
-  "borderColor:transparent": "expression-table__bd-c_transparent",
   "borderRadius:full": "expression-table__rounded_full",
   "borderRadius:md": "expression-table__rounded_md",
   "borderStyle:solid": "expression-table__border-style_solid",

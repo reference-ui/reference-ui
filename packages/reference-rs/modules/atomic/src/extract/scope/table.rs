@@ -7,7 +7,10 @@
 
 use std::collections::BTreeMap;
 
-use super::binding::{Binding, BindingId};
+use oxc_span::Span;
+
+use super::binding::{Binding, BindingId, BindingInit, BindingKind};
+use crate::extract::fold::fence::PureFn;
 
 /// Index of a scope in the table. The program scope is always 0: both the
 /// collector and the extract visitor allocate one id per `enter_scope` in
@@ -69,6 +72,68 @@ impl ScopeTable {
         let entry = self.scopes.get(scope as usize)?;
         let id = entry.names.get(name)?;
         self.bindings.get(*id as usize)
+    }
+
+    /// Resolve a name from a scope outward, returning the declaring scope.
+    /// Collect-time counterpart of the chain lookup: destructure and object
+    /// sources read already-declared bindings through this.
+    pub fn resolve_from(&self, name: &str, scope: ScopeId) -> Option<(ScopeId, &Binding)> {
+        let mut cursor = Some(scope);
+        while let Some(id) = cursor {
+            if let Some(binding) = self.lookup_in(id, name) {
+                return Some((id, binding));
+            }
+            cursor = self.parent_of(id);
+        }
+        None
+    }
+
+    /// Attach a lowered pure-helper descriptor to a valueless binding.
+    /// The binding must be a declarator or function with the expected
+    /// declaring span; anything else fails closed with `false`, so a
+    /// misaligned scope id can never plant a descriptor on the wrong name.
+    pub fn attach_pure_fn(
+        &mut self,
+        scope: ScopeId,
+        name: &str,
+        span: Span,
+        pure_fn: PureFn,
+    ) -> bool {
+        let Some(binding) = self.binding_mut(scope, name) else {
+            return false;
+        };
+        let callable = matches!(
+            binding.kind,
+            BindingKind::Const | BindingKind::Let | BindingKind::Var | BindingKind::Function
+        );
+        if !callable || binding.span != span || binding.init.is_some() {
+            return false;
+        }
+        binding.init = Some(BindingInit::PureFn(pure_fn));
+        true
+    }
+
+    /// Clear a binding's carried value (it shadows from here on).
+    pub fn clear_init(&mut self, scope: ScopeId, name: &str) {
+        if let Some(binding) = self.binding_mut(scope, name) {
+            binding.init = None;
+        }
+    }
+
+    /// Remove one entry of a bound const object, if it carries one.
+    pub fn remove_object_key(&mut self, scope: ScopeId, name: &str, key: &str) {
+        if let Some(binding) = self.binding_mut(scope, name) {
+            if let Some(BindingInit::Object(map)) = binding.init.as_mut() {
+                map.remove(key);
+            }
+        }
+    }
+
+    /// Mutable access to a name declared directly in one scope.
+    fn binding_mut(&mut self, scope: ScopeId, name: &str) -> Option<&mut Binding> {
+        let entry = self.scopes.get(scope as usize)?;
+        let id = *entry.names.get(name)?;
+        self.bindings.get_mut(id as usize)
     }
 
     /// The enclosing scope, or None at the root and for unknown ids.
