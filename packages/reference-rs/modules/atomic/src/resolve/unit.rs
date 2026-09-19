@@ -100,13 +100,16 @@ fn from_number(prop: &str, n: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Op
 }
 
 fn from_string(prop: &str, s: Box<str>, diagnostics: &mut Vec<Diagnostic>) -> Option<CssValue> {
+    // SPEC-V2-14: structural runs collapse before anything else reads the
+    // string, so spaced twins share one numeric parse and one atom.
+    let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
     // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
-    if let Some(canonical) = canonical_numeric_string(&s) {
+    if let Some(canonical) = canonical_numeric_string(&collapsed) {
         if accepts_bare_number(prop) {
             return Some(resolve_numeric_value(prop, &canonical));
         }
     }
-    legacy_string_value(prop, s, diagnostics)
+    legacy_string_value(prop, collapsed, diagnostics)
 }
 
 /// True when a bare number is a valid value: every prop except colors, where

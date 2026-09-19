@@ -24,6 +24,12 @@ exported object resolves through the binding walk — whole-object and
 spread uses both fold color and padding with zero diagnostics, exactly
 like the same-file `cardButton`.
 
+Delete arm (`delete.ts`, SPEC-V2-81, oracle follow-up on 35): `delete
+obj.prop` poisons the root exactly like an assignment — member reads,
+computed deletes, and spreads each drop with a `Dynamic mutated binding`
+warning naming the delete (`deleted at file:line:col`), never the stale
+init. Outside the 35/02/53 contract; those arms are byte-untouched.
+
 Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241`
 (unmutated `let`/`var`), `cross_file.rs:502`
 (`export_let_currently_folds_too`), `:242`

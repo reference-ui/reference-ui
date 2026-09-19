@@ -7,6 +7,7 @@
   "color:plum": "@reference-ui/lib__c_plum",
   "color:teal": "@reference-ui/lib__c_teal",
   "margin:2px": "@reference-ui/lib__m_2px",
+  "margin:3px": "@reference-ui/lib__m_3px",
   "margin:8px": "@reference-ui/lib__m_8px",
   "padding:1px": "@reference-ui/lib__p_1px",
   "padding:4px": "@reference-ui/lib__p_4px",

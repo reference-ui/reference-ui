@@ -623,8 +623,8 @@ fn mutated_warn(ctx: &mut ExpressionWalk<'_>, name: &str, span: Span, detail: &s
         span,
         DiagnosticCode::MutatedBinding,
         format!(
-            "Dynamic mutated binding '{name}' encountered for prop '{prop}' (reassigned at {}; {detail})",
-            write.site()
+            "Dynamic mutated binding '{name}' encountered for prop '{prop}' ({}; {detail})",
+            write.write_phrase()
         ),
     );
     true

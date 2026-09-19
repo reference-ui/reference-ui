@@ -47,8 +47,8 @@ pub enum ElementRefusal {
     Missing { key: String },
     /// The entry exists but is not a scalar style value.
     NonScalar { key: String },
-    /// The base name was reassigned after its init; the site names the write.
-    MutatedBase { name: String, site: String },
+    /// The base name was written after its init; the phrase names the write.
+    MutatedBase { name: String, write: String },
 }
 
 impl ElementRefusal {
@@ -67,8 +67,8 @@ impl ElementRefusal {
             Self::NonScalar { key } => format!(
                 "Element access '{base}[{key}]' is not a static style value for prop '{prop}'"
             ),
-            Self::MutatedBase { name, site } => format!(
-                "Dynamic mutated binding '{name}' encountered for prop '{prop}' (reassigned at {site}; element read is stale)"
+            Self::MutatedBase { name, write } => format!(
+                "Dynamic mutated binding '{name}' encountered for prop '{prop}' ({write}; element read is stale)"
             ),
         }
     }
@@ -137,8 +137,8 @@ fn lookup_key(object: &Expression<'_>, key: &str, scoped: Scoped<'_>, fold: &mut
 enum Nested {
     /// The entries the chain names; the caller looks the key up in them.
     Entries(ConstObject),
-    /// An identifier hop was reassigned; the caller names the write.
-    Mutated { name: String, site: String },
+    /// An identifier hop was written; the caller names the write.
+    Mutated { name: String, write: String },
     /// Anything else; the caller refuses the base at its span.
     Dynamic,
 }
@@ -170,9 +170,9 @@ fn lookup_nested_base(
             lookup_nested_entry(&entries, key, fold);
             true
         }
-        Nested::Mutated { name, site } => {
+        Nested::Mutated { name, write } => {
             fold.refusals
-                .push(ElementRefusal::MutatedBase { name, site });
+                .push(ElementRefusal::MutatedBase { name, write });
             true
         }
         Nested::Dynamic => false,
@@ -222,7 +222,7 @@ fn nested_ident(name: &str, scoped: Scoped<'_>) -> Nested {
     if let Some(write) = scoped.mutation(name) {
         return Nested::Mutated {
             name: name.to_string(),
-            site: write.site(),
+            write: write.write_phrase(),
         };
     }
     match scoped.object(name) {
@@ -237,7 +237,7 @@ fn nested_static(mem: &oxc_ast::ast::StaticMemberExpression<'_>, scoped: Scoped<
         if let Some(write) = scoped.mutation(root) {
             return Nested::Mutated {
                 name: root.to_string(),
-                site: write.site(),
+                write: write.write_phrase(),
             };
         }
     }
@@ -260,7 +260,7 @@ fn nested_computed(mem: &oxc_ast::ast::ComputedMemberExpression<'_>, scoped: Sco
     };
     match nested_entries(&mem.object, scoped) {
         Nested::Entries(entries) => nested_prop_object(&entries, key),
-        Nested::Mutated { name, site } => Nested::Mutated { name, site },
+        Nested::Mutated { name, write } => Nested::Mutated { name, write },
         Nested::Dynamic => nested_array_object(&mem.object, key, scoped),
     }
 }
@@ -286,7 +286,7 @@ fn nested_array_object(object: &Expression<'_>, key: &str, scoped: Scoped<'_>) -
     if let Some(write) = scoped.mutation(name) {
         return Nested::Mutated {
             name: name.to_string(),
-            site: write.site(),
+            write: write.write_phrase(),
         };
     }
     let Some(elements) = scoped.array(name) else {
@@ -330,7 +330,7 @@ fn lookup_const_base(
         // sizes[1]  after  sizes = [...]  — the init is stale
         fold.refusals.push(ElementRefusal::MutatedBase {
             name: name.to_string(),
-            site: write.site(),
+            write: write.write_phrase(),
         });
         return true;
     }

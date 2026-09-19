@@ -1,0 +1,6 @@
+{
+  "content:\"x  y\"": "@reference-ui/lib__content_\"x__y\"",
+  "fontFamily:'Fira  Code', monospace": "@reference-ui/lib__font-family_'Fira__Code',_monospace",
+  "fontFamily:Fira Sans": "@reference-ui/lib__font-family_Fira_Sans",
+  "gridTemplateAreas:\"preview name delete\" \"preview size delete\"": "@reference-ui/lib__grid-areas_\"preview_name_delete\"_\"preview_size_delete\""
+}

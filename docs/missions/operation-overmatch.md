@@ -785,7 +785,7 @@ half is asserted without a pin.
 
 | # | Shape | Panda v2 | Reference | Entry / pin |
 |---|---|---|---|---|
-| S1 | `css(cond ? a : b)` | drops the call (`calls.rs:556`, `calls: []`) | extracts both arms | 27 · `ATM-SITE-05` |
+| S1 | `css(cond ? a : b)` | drops the call (`calls.rs:556`, `calls: []`) | extracts both arms | 27 · `ATM-SITE-27` |
 | S2 | `dyn && 'red'`, `'red' && dyn` | resolves the right operand, silent on the dropped left | resolves the static operand, diagnoses the dynamic one | 18 · `ATM-SITE-05`, `NEO-SITE-08` |
 | S3 | open ternary with one unfoldable arm | drops the whole conditional (`literal-evaluator.md:75-76`) | keeps the resolvable arm, diagnoses the other | 17 · `ATM-SITE-27` (promoted Ph2) |
 | S4 | unfoldable computed key | drops the WHOLE call (`computed_keys_skip_extraction`) | drops the member, keeps siblings, diagnoses | 41, 64 · `ATM-SITE-49` |
@@ -1294,3 +1294,11 @@ reproduced at merge). Tasty/virtualrs/typegen suite reds proven
 pre-existing (clean trees, zero atomic dependency — virtualrs's own
 Rust tests contradict its vitest goldens); out of mission scope,
 untouched. S13 deferred with cause (needs export value tables).
+
+**Ph5 (the statement) + mop-up** — ledger compiled: 81 §1 rows, 20 §3
+rows, 374 Panda tests placed. Ledger review caught two assigned-phase
+gaps (14 whitespace collapse, 81 delete-as-write); mop-up crew built
+both (SITE-47, SITE-28 arm) and the ledger now reads 81/81 pinned (4
+with stated carve-outs), §3 19/20 (S13 deferred with cause). Quoted
+claim committed as §9 of the ledger. Mission work complete; doom
+protocol double-gate awaits the satisfaction marker.

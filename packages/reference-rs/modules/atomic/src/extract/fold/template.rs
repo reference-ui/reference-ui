@@ -148,7 +148,12 @@ fn join(lit: &TemplateLiteral<'_>, holes: &[Vec<String>], fold: &mut TemplateFol
         ));
         return;
     }
-    fold.values = combinations(&cooked, holes);
+    // Panda trims template joins after collapsing (SPEC-V2-14): the
+    // collapse lands downstream at resolve, so the fold trims here.
+    fold.values = combinations(&cooked, holes)
+        .into_iter()
+        .map(|joined| joined.trim().to_string())
+        .collect();
 }
 
 /// Cooked quasi text, or a whole-template refusal on an invalid escape.
@@ -264,7 +269,7 @@ fn fold_hole_identifier(name: &str, span: Span, hole: &mut HoleFold<'_, '_>) -> 
     if let Some(write) = hole.scoped.mutation(name) {
         hole.refuse(
             span,
-            format!("mutated binding '{name}' (reassigned at {})", write.site()),
+            format!("mutated binding '{name}' ({})", write.write_phrase()),
         );
         return Vec::new();
     }
@@ -300,8 +305,8 @@ fn fold_hole_member(mem: &StaticMemberExpression<'_>, hole: &mut HoleFold<'_, '_
             hole.refuse(
                 mem.span,
                 format!(
-                    "mutated binding '{obj_name}' (reassigned at {})",
-                    write.site()
+                    "mutated binding '{obj_name}' ({})",
+                    write.write_phrase()
                 ),
             );
             return Vec::new();

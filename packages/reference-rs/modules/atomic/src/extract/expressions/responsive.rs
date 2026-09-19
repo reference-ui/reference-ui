@@ -62,8 +62,8 @@ fn refuse_array_spread(ctx: &mut ExpressionWalk<'_>, arr: &ArrayExpression<'_>) 
                 spread.span,
                 DiagnosticCode::MutatedBinding,
                 format!(
-                    "Dynamic mutated binding '{name}' spread in responsive array for prop '{prop}' (reassigned at {}; refusing the array to keep breakpoint arity honest)",
-                    write.site()
+                    "Dynamic mutated binding '{name}' spread in responsive array for prop '{prop}' ({}; refusing the array to keep breakpoint arity honest)",
+                    write.write_phrase()
                 ),
             );
             return;

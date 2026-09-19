@@ -4,21 +4,25 @@
 //! leaves, nested entries), literal-element arrays, and branching
 //! initializers with literal leaves are indexed. Imports, functions, and
 //! spreads are ignored. Any declarator kind may resolve, but a write
-//! anywhere in the file poisons the binding and its init is dropped. The
-//! index is later consulted by the expression walker; this file inserts no wants.
+//! anywhere in the file poisons the binding and its init is dropped, and
+//! `delete` is a write too (SPEC-V2-81). The index is later consulted by
+//! the expression walker; this file inserts no wants.
 
 use std::collections::BTreeMap;
 
 use oxc_ast::ast::{
     ArrayExpressionElement, AssignmentExpression, BindingPattern, Expression, ForInStatement,
-    ForOfStatement, ObjectPropertyKind, Program, PropertyKey, UpdateExpression, VariableDeclarator,
+    ForOfStatement, ObjectPropertyKind, Program, PropertyKey, UnaryExpression, UnaryOperator,
+    UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 
 use super::entries::object_entries;
 use super::index::{ConstArrayElement, LocalConstants, MutatedBinding};
-use super::mutate::{for_head_writes, simple_target_writes, target_writes, Write};
+use super::mutate::{
+    delete_target_writes, for_head_writes, simple_target_writes, target_writes, Write,
+};
 use crate::atom::AtomValue;
 use crate::diagnostics::line_col;
 use crate::extract::expressions::walk::is_guard_expression;
@@ -101,6 +105,16 @@ impl<'a> Visit<'a> for ConstCollector<'a> {
         self.mark_writes(writes);
         walk::walk_for_of_statement(self, stmt);
     }
+
+    fn visit_unary_expression(&mut self, expr: &UnaryExpression<'a>) {
+        // delete theme.primary  — the init is stale from here on
+        if expr.operator == UnaryOperator::Delete {
+            let mut writes = Vec::new();
+            delete_target_writes(&expr.argument, &mut writes);
+            self.mark_deletes(writes);
+        }
+        walk::walk_unary_expression(self, expr);
+    }
 }
 
 impl ConstCollector<'_> {
@@ -116,6 +130,20 @@ impl ConstCollector<'_> {
         let position = self.source.and_then(|source| line_col(source, span.start));
         self.constants
             .mark_mutated(name, MutatedBinding::new(self.file, position));
+    }
+
+    /// Poison every deleted name with its delete site.
+    fn mark_deletes(&mut self, writes: Vec<Write<'_>>) {
+        for (name, span) in writes {
+            self.mark_delete(name, span);
+        }
+    }
+
+    /// Poison one name with its delete site; the first write site wins.
+    fn mark_delete(&mut self, name: &str, span: Span) {
+        let position = self.source.and_then(|source| line_col(source, span.start));
+        self.constants
+            .mark_mutated(name, MutatedBinding::deleted(self.file, position));
     }
 }
 

@@ -386,3 +386,55 @@ fn test_destructured_name_never_resolves_stale() {
     assert!(res.wants.iter().all(|w| w.value.to_string() != "red"));
     assert!(!res.diagnostics.is_empty());
 }
+
+#[test]
+fn test_delete_poison_never_resolves_stale() {
+    // Soundness net for `delete` as a write (SPEC-V2-81): the deleted init
+    // drops exactly like an assignment, with a diagnostic naming the delete.
+    let res = compile_code(
+        r#"import { css } from '@reference-ui/react';
+        const o = { color: 'red' };
+        delete o.color;
+        export const a = css({ color: o.color });"#,
+    );
+    assert!(res.wants.is_empty());
+    assert_eq!(res.diagnostics.len(), 1);
+    assert!(res.diagnostics[0].message.contains("deleted at"));
+}
+
+#[test]
+fn test_bare_extract_collects_file_mutations() {
+    // The single-file `extract()` backs its import stub with the file's own
+    // constants, so a write in the file poisons instead of resolving stale.
+    use oxc_allocator::Allocator;
+    use oxc_parser::Parser;
+    use oxc_span::SourceType;
+
+    let code = r#"import { css } from '@reference-ui/react';
+        const o = { color: 'red' };
+        delete o.color;
+        export const a = css({ color: o.color });"#;
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(std::path::Path::new("t.ts"))
+        .unwrap_or_default()
+        .with_typescript(true);
+    let parsed = Parser::new(&allocator, code, source_type).parse();
+    assert!(!parsed.panicked);
+
+    let system = crate::BaseSystem::lib_fixture().clone();
+    let mut wants = Vec::new();
+    let mut recipes = Vec::new();
+    let mut diagnostics = Vec::new();
+    let mut authored = Vec::new();
+    let sinks = crate::extract::ExtractSinks {
+        wants: &mut wants,
+        recipes: &mut recipes,
+        diagnostics: &mut diagnostics,
+        authored: &mut authored,
+    };
+    crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks);
+
+    assert!(wants.is_empty());
+    assert_eq!(diagnostics.len(), 1);
+    assert!(diagnostics[0].message.contains("deleted at"));
+}

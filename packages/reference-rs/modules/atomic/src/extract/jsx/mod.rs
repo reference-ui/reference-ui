@@ -314,9 +314,9 @@ fn mutated_attr_warn(
         span,
         DiagnosticCode::MutatedBinding,
         format!(
-            "Dynamic mutated binding '{base}' in JSX '{}' prop value (reassigned at {}; keeping sibling attributes)",
+            "Dynamic mutated binding '{base}' in JSX '{}' prop value ({}; keeping sibling attributes)",
             site.prop,
-            write.site()
+            write.write_phrase()
         ),
     );
     true

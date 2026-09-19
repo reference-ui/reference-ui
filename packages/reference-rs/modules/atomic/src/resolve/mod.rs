@@ -6,6 +6,7 @@ pub mod conditions;
 pub mod container;
 pub mod font;
 pub mod gradient;
+pub mod normalize;
 pub mod r;
 pub mod rhythm;
 pub mod shorthands;
