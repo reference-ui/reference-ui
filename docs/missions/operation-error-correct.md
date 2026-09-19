@@ -80,13 +80,16 @@ compile inputs, full stop.
 
 ## Where errors should live
 
-Authors touch the framework in two ways: style props on a host, and
-the `css()` / `recipe()` functions. That interaction surface is where
-errors get based — what was asked for *there*, and can it be honored?
-A helper generating RGB strings three files over is not itself an
-error; it may never reach a style prop (native `style`), or it may
-arrive as a complete value harvest already caught. Judge at the site,
-not at the shape.
+Errors are based at **style-value slots the extract walk already
+has** — traced host props, `css()` / `recipe()` objects, and
+whatever else that walk already treats as a style position. Judge
+what occupies the slot, not the API name on the door. A helper
+generating RGB strings three files over is not itself an error; it
+may never reach a slot (native `style`), or it may arrive as a
+complete value harvest already caught. New surfaces inherit the
+detector when they become slots. Surfaces the walk does not treat
+as style values (today: likely `globalCss`) are automatically out.
+Do not grow an API allowlist.
 
 The "future detector" that used to live in this paragraph is no
 longer future. It is the first line of defense, scoped so it cannot
@@ -114,48 +117,59 @@ mint. If the hole is a dynamic identifier with empty quasis, that
 is `color={color}` wearing backticks — a maybe, harvest's job,
 userspace silent. Do not warn just because they used `${}`.
 
-Cheap, deterministic split at a known style site (traced primitive
-prop, `css()`, `recipe()`):
+The detector is harvest run in reverse, bounded to the slot.
 
-| Shape | What it is | Userspace |
+Harvest asks, of the whole program: is this string a complete CSS
+value? (`classify_harvest_value` / hole-free insert; holey joins
+never enter the pool.) Diagnostics asks, of **this slot**: did
+harvest already treat this expression as information — or is the
+static residue something harvest would skip?
+
+Do **not** grow a second vocabulary of fragments (`px`, `#`, units,
+`solid`). Harvest already knows complete vs not. The warning is
+when the slot is still assembling and the static pieces are not
+values harvest would extract. Empty residue (`` `${color}` ``, `a +
+b`, a call as the slot) is not assembly we can prove — maybe,
+silent. Folded slots are harvest's answer already — extract.
+
+Think this join through as the **simplest** reading of those two
+facts at one node. Not a heuristic engine. If the rule needs a
+list of CSS glue, it is the wrong rule.
+
+| At the slot | Harvest already knows | Userspace |
 |---|---|---|
-| Fully folds (SITE-51) | Static wholesale, possibly written in pieces | Extract. Silent. |
-| Single hole, empty / whitespace-only quasis, unfoldable | Whole CSS value in the interpolation | Treat as the hole. Maybe. Silent. |
-| Unfoldable hole **and** a non-empty skeleton (`px`, `#`, `solid`, extra holes, …) | Partial style definition | **Warn.** |
-| `ident + 'px'` / `+ 'r'` / `+ '%'` (unfoldable ident) | Same partial, concat costume | **Warn.** |
+| Fully folds (SITE-51) | The join is a complete value | Extract. Silent. |
+| Unfoldable, static residue harvest would skip (`${n}px`, `n + 'px'`, `'px' + n`, `String(n) + 'px'`, `#${hex}`) | Join is not information | **Warn.** |
+| Unfoldable, no static residue (`` `${color}` ``, `foo()`, `a + b`, identifier) | Nothing here was a value; pool may still backfill | Silent. |
 
-**Direct** means that expression *is* the site's value. Not a name
-three files over. Direct is what we can see without a wide net.
-
-**The partial class** (same intent, same warning):
+**Direct** is the bound: the node in the slot. Not its initializer,
+not its callee. Harvest stays position-free; diagnostics stays
+slot-local. Opposite directions, same classifier.
 
 ```tsx
+// residue harvest would skip — same warning
 minW={`${minWidth}px`}
-minH={`${minHeight}px`}
 css({ width: `${n}px` })
 recipe({ base: { color: `#${hex}` } })
 <Box minW={minWidth + 'px'} />
-css({ border: `1px solid ${c}` })   // skeleton assembles the border
-```
+<Box minW={'px' + minWidth} />
+<Box minW={String(minWidth) + 'px'} />
+css({ border: `1px solid ${c}` })
 
-**Wholesale / maybe — not this class:**
-
-```tsx
-minW="200px"                             // static wholesale
-minW={`200px`}                           // static template, no hole
-css({ color: `${'red'}` })               // whole value, folds (SITE-51)
-css({ color: `${brand}` })               // whole value if `brand` folds
-css({ color: `${color}` })               // whole value wrap — maybe, like color={color}
-minW={minWidth}                          // identifier — maybe; silent
-<Box {...props} />                       // rest-spread — maybe; silent
-border: '1px solid {colors.gray.800}'    // our token braces, not JS `${}`; folds
-style={{ minWidth: `${minWidth}px` }}    // the correct door for partials; out of scope
+// harvest can extract, or there is no residue — extract or maybe
+minW="200px"
+minW={`200px`}
+css({ color: `${'red'}` })               // folds
+css({ color: `${color}` })               // wrap, like color={color}
+minW={minWidth}
+minW={toPx(minWidth)}                    // call as the slot
+minW={a + b}                             // two unknowns
+style={{ minWidth: `${minWidth}px` }}    // not a compile slot
 ```
 
 `` `${n}px` `` where `n` is a const `200` folds to `'200px'` and
-extracts. That is static wholesale, not a partial. The detector
-fires only when a hole does **not** fold *and* the template is
-still assembling.
+extracts. Residue plus a hole that *does* fold is wholesale. The
+warning is residue harvest would skip, plus a hole that does not.
 
 ### Harvest pins
 
@@ -227,6 +241,14 @@ The walk, mint, harvest, resolve, and StyleTrace stay dumb and
 best-effort. They **report candidates** into diagnostics. They do
 not decide what the author hears. All cleverness — verdict,
 wording, audience — lives in one room with its name on the door.
+
+Diagnostics is almost the opposite of the harvester, bounded: harvest
+scans the program for complete values; diagnostics looks at one slot
+and asks whether that expression *was* such a value. It should
+**use harvest** (the classifier, the hole-free insert rule, the
+pool as evidence) rather than a new heuristic pass. Simplest join
+that answers the slot question. If it starts listing CSS fragments,
+stop and reread harvest.
 
 Two jobs, one module:
 
@@ -324,9 +346,10 @@ a new subsystem. Existing `debug?: boolean` stays exactly what it is.
   on actual lookup failure stays the ground truth for what didn't
   paint.
 - **Site walk.** Template fold (SITE-51) and refusals already exist.
-  The new work is splitting unfoldable templates: empty-quasi whole
-  value → maybe; non-empty skeleton → partial → user warning.
-  Concat-to-unit is the same partial. Other `Dynamic*` stay maybes.
+  The new work is asking harvest's question of the slot: complete
+  value, skipped residue, or nothing here. Same classifier, no
+  second alphabet. Calls as the slot and two unknown operands stay
+  maybes because harvest did not read them as values.
 
 ## The honest caveat
 
@@ -336,11 +359,11 @@ never speaks in userspace, and why a compiler-channel line must be
 phrased as what it is ("dynamic site, N covering values in pool") —
 never as a promise it paints.
 
-The partial-value warning has no such caveat. A skeleton plus a
-runtime hole is not a wholesale value. A pool hit on some other
-`'200px'` literal is not extracting the partial; it is not
-mentioned in the message. Whole-value interpolations never sit
-this warning — they extract or they go silent.
+The partial-value warning has no such caveat. Static residue that
+harvest would skip is not a wholesale value. A pool hit on some
+other `'200px'` literal is not extracting the partial; it is not
+mentioned in the message. Slots with no residue never sit this
+warning — they extract or they go silent.
 
 ## Every want ends in one of four states (HQ)
 
@@ -407,14 +430,11 @@ the split and rewrites goldens.
 
 Build time speaks in certainties or stays silent:
 
-1. **Partial style definition on a compile site → user warning.**
-   Unfoldable hole plus a skeleton (`${…}px`, `#${…}`, `1px solid ${…}`,
-   unit-concat) *directly* in a traced primitive prop, `css()`, or
-   `recipe()`. Write a wholesale value, or use native `style`.
-2. **Wholesale, or maybe a wholesale (identifier, whole-value
-   wrap, member, spread) → extract or silent.** Folded templates
-   extract. `` `${color}` `` is a maybe, same as `color={color}`.
-   Compiler channel for the maybes.
+1. **Unfoldable slot whose static residue harvest would skip → user warning.**
+   Write a wholesale value, or use native `style`.
+2. **Harvest can extract, or there is no residue → extract or silent.**
+   Folded templates extract. Identifiers, wraps, members, spreads,
+   calls-as-the-slot, `a + b`. Compiler channel for the maybes.
 3. **Runtime decides the rest** — via the opt-in reporter
    (separate doc), never the default channel. Partials already
    *are* runtime assembly; the warning is that they used the
@@ -428,10 +448,10 @@ certain enough to speak.
 Each **user** warning code that survives gets a conformity station
 proving all three, or it doesn't ship:
 
-1. **Fires where claimed** — positive pin on the exact partial
-   (`${n}px`, `#${hex}`, unit-concat, assembled shorthand) at
-   `css` / `recipe` / traced prop. Negative pin: `` `${color}` ``
-   does not fire.
+1. **Fires where claimed** — positive pin when harvest would skip
+   the slot's static residue (`${n}px`, `'px' + n`, `String(n) + 'px'`,
+   `#${hex}`). Negative pin: no residue, or residue harvest would
+   take (`` `${color}` ``, `toPx(n)`, `a + b`) does not fire.
 2. **Nothing to compile** — the partial contributes zero wants.
    A pool accident on some other wholesale literal does **not**
    disqualify the warning.
@@ -469,10 +489,9 @@ as reporters. Diagnostics owns:
    call-site minting. Compiler channel.
 4. **Book-vs-shipped.** Census splits so we can see the noise. One
    policy. Book partials warn; book spreads do not.
-5. **The detector.** In scope. First line of defense, interaction
-   surface only: unfoldable **partials** (skeleton + hole, unit
-   concat). Whole-value interpolations extract or stay maybe. Not
-   a whole-program reverse trace. Not a blanket "no `${}`."
+5. **The detector.** In scope. Harvest inverted, bounded to the
+   slot, **simplest join** of classifier + hole-free insert. No
+   fragment list, no API list, no callee walk, no reverse trace.
 
 ## Non-goals
 
@@ -481,7 +500,14 @@ as reporters. Diagnostics owns:
 - No Doom, no Slice 6, no lib edits. (The Overlay book warning, when
   this ships, is a compiler change; moving that size onto `style` is
   a later lib edit, not this operation.)
-- No chasing indirect partials through bindings.
-- No warning on whole-value interpolations (`` `${color}` ``).
+- No walking into bindings or callees. Residue is at the slot or
+  it is not (`String(n) + 'px'` has skipped residue; `toPx(n)` does
+  not).
+- No second CSS-fragment vocabulary. If the rule needs `px` / `#` /
+  `solid` as a list, it is not using harvest.
+- No API allowlist (`css` / `recipe` / JSX / `globalCss`). Slots
+  inherit; non-slots stay out.
+- No warning where harvest did not skip a residue (`` `${color}` ``,
+  `a + b`).
 - No merging `logs` with `debug?: boolean`.
 - No `'runtime'` channel implementation (companion doc).
