@@ -1,4 +1,5 @@
 {
+  "accentColor:color-mix(in srgb, {colors.gray.800} 50%, {colors.red.500})": "token-fence__accent-color_color-mix(in_srgb,_{colors.gray.800}_50%,_{colors.red.500})",
   "backgroundColor:oklch(0.7 0.1 180)": "token-fence__bg-c_oklch(0.7_0.1_180)",
   "backgroundImage:url(/img.png)": "token-fence__background-image_url(/img.png)",
   "borderColor:color-mix(in srgb, red 50%, blue)": "token-fence__bd-c_color-mix(in_srgb,_red_50%,_blue)",

@@ -101,10 +101,15 @@ const URL_PROPERTIES: &[&str] = &[
 
 /// The value kind when the whole string is complete CSS, else None.
 /// Hex, functions, named colors, keywords, and lengths are disjoint shapes,
-/// so order here is readability, not precedence.
+/// so order here is readability, not precedence. A value carrying `{…}`
+/// token references is never complete CSS: the braces name dictionary
+/// lookups the caller must expand, so the fence refuses before any table.
 pub fn classify_css_value(value: &str) -> Option<ValueKind> {
     let text = value.trim();
     if text.is_empty() {
+        return None;
+    }
+    if has_token_braces(text) {
         return None;
     }
     if is_hex_color(text) {
@@ -150,6 +155,13 @@ fn function_value_kind(text: &str) -> Option<ValueKind> {
         FunctionKind::Url => Some(ValueKind::Url),
         FunctionKind::Opaque => Some(ValueKind::Keyword),
     }
+}
+
+/// True when the value carries token-reference braces, whole or embedded.
+/// Either brace refuses: an unterminated `{` still names a lookup the
+/// caller must diagnose, never a value the fence may pass through.
+fn has_token_braces(text: &str) -> bool {
+    text.contains('{') || text.contains('}')
 }
 
 /// True for `#` plus 3/4/6/8 hex digits and nothing else.
@@ -262,6 +274,23 @@ mod tests {
             "#12345",
             "2px solid red",
             "rgb(0,0,0",
+        ] {
+            assert_eq!(classify_css_value(val), None, "{val}");
+        }
+    }
+
+    #[test]
+    fn token_ref_values_reject() {
+        for val in [
+            "color-mix(in oklch, {colors.ui.table.row.muted} 80%, {colors.gray.300})",
+            "color-mix(in srgb, {colors.ink} 80%, {colors.paper})",
+            "0 0 0 4px color-mix(in oklch, {colors.ui.table.row.muted} 15.2%, transparent)",
+            "1px solid {colors.gray.800}",
+            "{colors.gray.800}",
+            "rgb({colors.red.500}, 0, 0)",
+            "calc(100% - {spacing.4})",
+            "url({assets.logo})",
+            "color-mix(in srgb, {colors.gray.800 50%, blue)",
         ] {
             assert_eq!(classify_css_value(val), None, "{val}");
         }
