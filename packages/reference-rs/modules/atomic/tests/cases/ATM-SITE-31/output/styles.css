@@ -582,6 +582,7 @@
   .\@reference-ui\/lib__m_12r { margin: calc(12 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_13r { margin: calc(13 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_14r { margin: calc(14 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_15r { margin: calc(15 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
@@ -592,16 +593,24 @@
   .\@reference-ui\/lib__m_9r { margin: calc(9 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__bg-c_\#bb2222 { background-color: #bb2222; }
   .\@reference-ui\/lib__bg-c_blue { background-color: blue; }
+  .\@reference-ui\/lib__bg-c_gold { background-color: gold; }
   .\@reference-ui\/lib__bg-c_navy { background-color: navy; }
   .\@reference-ui\/lib__bg-c_blue\.700 { background-color: var(--colors-blue-700); }
+  .\@reference-ui\/lib__bg-c_yellow\.700 { background-color: var(--colors-yellow-700); }
+  .\@reference-ui\/lib__c_\#aa1111 { color: #aa1111; }
   .\@reference-ui\/lib__c_black { color: black; }
+  .\@reference-ui\/lib__c_coral { color: coral; }
   .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_green\.600 { color: var(--colors-green-600); }
+  .\@reference-ui\/lib__c_indigo\.600 { color: var(--colors-indigo-600); }
   .\@reference-ui\/lib__c_orange\.600 { color: var(--colors-orange-600); }
   .\@reference-ui\/lib__c_purple\.500 { color: var(--colors-purple-500); }
   .\@reference-ui\/lib__c_purple\.900 { color: var(--colors-purple-900); }
   .\@reference-ui\/lib__c_red\.600 { color: var(--colors-red-600); }
   .\@reference-ui\/lib__c_teal\.600 { color: var(--colors-teal-600); }
+  .\@reference-ui\/lib__c_violet\.600 { color: var(--colors-violet-600); }
   .\@reference-ui\/lib__c_yellow\.700 { color: var(--colors-yellow-700); }
   .\@reference-ui\/lib__c_white { color: white; }
   .\@reference-ui\/lib__w_4px { width: 4px; }

@@ -19,6 +19,12 @@ unmutated const. Baked entries strip when their source is written (dep
 provenance in `extract/scope/`); station-level mutation interplay stays
 with the open Ph1 verdict.
 
+Ph4 arm (`tokens.ts` + `app.ts`, SPEC-V2-34 R3b): a spread inside an
+exported object resolves through the binding walk — whole-object and
+spread uses both fold color and padding with zero diagnostics, exactly
+like the same-file `cardButton`.
+
 Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241`
 (unmutated `let`/`var`), `cross_file.rs:502`
-(`export_let_currently_folds_too`).
+(`export_let_currently_folds_too`), `:242`
+(`exported_object_can_reference_file_local_const`).

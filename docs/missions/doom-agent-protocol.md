@@ -60,7 +60,7 @@ beyond atomic styles — crews are expected to find them.
 5. **Periodic review.** Each doom cycle ends with a review before the
    next cycle launches: what broke, what was contrived, what got
    fortified, what the next cycle targets. Minimum run: **6 cycles**
-   (§8).
+   (§9).
 
 ## 6. Safeguards
 
@@ -80,7 +80,21 @@ multi-agent workflow (breaker / contrivance-reviewer / architect-oracle /
 implementor crews with review gates between roles); check for a
 workflow-authoring skill at launch time and follow it when present.
 
-## 8. Satisfaction pin (what "happy tomorrow" means)
+## 8. P1 seeds (confirmed breaks awaiting a doom cycle)
+
+**Seed 1 — nested imported-object spread drops silently cross-file**
+(reproduced 2026-09-19, merge probe). `base.ts`: `export const base =
+{ color: 'red' }`; `tokens.ts`: `import { base } from './base'; export
+const button = { ...base, padding: '4px' }`; `app.ts`: `import {
+button } from './tokens'; css(button)` → padding only, color silently
+dropped, zero diagnostics. Same-file equivalent resolves. Needs
+origin-import resolution during collection (the Ph4 overlay pass stores
+per-origin scope-resolved objects but does not resolve imported spreads
+at collect time). Doom cycle 1 must reproduce, then route through
+architect consult per §5 — this is silence on idiomatic code, not a
+contrived shape.
+
+## 9. Satisfaction pin (what "happy tomorrow" means)
 
 The doom run is a minimum of **6 full cycles** (break → review → consult
 → fortify → cycle review, per §5). Six clean cycles with every real

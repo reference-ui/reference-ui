@@ -4,10 +4,12 @@
   "color:blue": "@reference-ui/lib__c_blue",
   "color:blue.600": "@reference-ui/lib__c_blue.600",
   "color:green": "@reference-ui/lib__c_green",
+  "color:plum": "@reference-ui/lib__c_plum",
   "color:teal": "@reference-ui/lib__c_teal",
   "margin:2px": "@reference-ui/lib__m_2px",
   "margin:8px": "@reference-ui/lib__m_8px",
   "padding:1px": "@reference-ui/lib__p_1px",
   "padding:4px": "@reference-ui/lib__p_4px",
-  "padding:6px": "@reference-ui/lib__p_6px"
+  "padding:6px": "@reference-ui/lib__p_6px",
+  "padding:9px": "@reference-ui/lib__p_9px"
 }

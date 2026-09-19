@@ -97,7 +97,7 @@ impl<'a> Walk<'a> {
         mut trail: Vec<String>,
     ) -> Option<Resolved> {
         trail.push(local.to_string());
-        if values.bag.declares(local) {
+        if values.declares(local) {
             // export const brand = 'red'  — the origin, with its trail
             return Some(Resolved {
                 file: file.to_string(),

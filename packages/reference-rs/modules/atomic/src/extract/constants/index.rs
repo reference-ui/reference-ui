@@ -10,7 +10,6 @@ use std::collections::BTreeMap;
 
 use super::entries::{ConstObject, ObjectProp};
 use crate::atom::AtomValue;
-use crate::extract::fold::fence::PureFn;
 
 /// Index of local scalar leaves and style objects declared anywhere in a file.
 #[derive(Debug, Default, Clone)]
@@ -19,7 +18,6 @@ pub struct LocalConstants {
     objects: BTreeMap<String, ConstObject>,
     arrays: BTreeMap<String, Vec<ConstArrayElement>>,
     mutated: BTreeMap<String, MutatedBinding>,
-    pure_fns: BTreeMap<String, PureFn>,
 }
 
 /// One recorded element of a const array initializer: a literal leaf, a
@@ -163,16 +161,25 @@ impl LocalConstants {
         self.mutated.get(name)
     }
 
-    /// Record an exported pure-helper descriptor (SPEC-V2-57), first init wins.
-    pub fn insert_pure_fn(&mut self, name: impl Into<String>, func: PureFn) {
-        // export const tone = (shade) => `red.${shade}`
-        self.pure_fns.entry(name.into()).or_insert(func);
+    /// Replace a top-level scalar's leaves with scope-resolved ones (SPEC-V2-34
+    /// cross-file: alias chains). The scope table already stripped stale
+    /// bakes, so wholesale replace is sound where union would keep ghosts.
+    pub fn set_scalars(&mut self, name: impl Into<String>, leaves: Vec<AtomValue>) {
+        // const b = a  after  const a = 'red' — `b` carries red
+        self.scalars.insert(name.into(), leaves);
     }
 
-    /// Look up an exported pure-helper descriptor by declared name.
-    pub fn get_pure_fn(&self, name: &str) -> Option<&PureFn> {
-        // color={tone('600')}  after  import { tone } from './helpers'
-        self.pure_fns.get(name)
+    /// Replace a top-level style object with its scope-resolved entries
+    /// (SPEC-V2-34 cross-file: identifier values and static spreads).
+    pub fn set_object(&mut self, name: impl Into<String>, map: ConstObject) {
+        // export const button = { ...base, padding: '4px' } — color rides along
+        self.objects.insert(name.into(), map);
+    }
+
+    /// Replace a top-level const array with its scope-resolved elements.
+    pub fn set_array(&mut self, name: impl Into<String>, elements: Vec<ConstArrayElement>) {
+        // const doubled = sizes — the alias carries the elements
+        self.arrays.insert(name.into(), elements);
     }
 
     /// Drop every leaf of every mutated binding; their inits are stale.
@@ -181,7 +188,6 @@ impl LocalConstants {
             self.scalars.remove(name);
             self.objects.remove(name);
             self.arrays.remove(name);
-            self.pure_fns.remove(name);
         }
     }
 
@@ -196,9 +202,6 @@ impl LocalConstants {
         }
         for (k, v) in &other.mutated {
             self.mutated.entry(k.clone()).or_insert_with(|| v.clone());
-        }
-        for (k, v) in &other.pure_fns {
-            self.pure_fns.entry(k.clone()).or_insert_with(|| v.clone());
         }
     }
 

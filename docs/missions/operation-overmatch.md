@@ -1273,3 +1273,24 @@ restored stations re-verified green. Two items stay open past Ph3:
 runtime-table coincidence (refused leaves can paint when another site
 mints the same atom — needs an architect ruling, not a blind fix) and
 the 39-F3 init-folding pass.
+
+**Ph4 (cross-file by binding)** — built, exit oracles reported,
+challenges in fix. Resolution half: 5 CONFIRM (76/52/56/54/55) with 3
+non-verdict findings — (i) exit bar is import-bound (unbound names
+still union by design; phrasing should say "import-bound uses"), (ii)
+cross-file poison over-drops via the name-wide bag (fail-closed,
+belongs to 35/53 precision), (iii) R3/R4 cross-file unresolved with
+R3b silently dropping (out of the verdict set — build slices never
+owned R3/R4). Identity half: 57 CHALLENGE (merge-bag descriptors
+diverge observably — 5 failing probes incl. silent cross-file wrong
+paint and bare-call frame violation), S12 CONFIRM, residue CONFIRM (8
+fresh-name probes), sync rider NEEDS-WORK (2 major + 1 minor).
+**Dispositions:** 57 re-implemented on the binding walk
+(`ResolvedExport.pure_fn`, bag fallback deleted, all 5 probes flipped
+and pinned); R3b resolved outright + pinned at SITE-28 (bonus: R4
+alias chains); rider rev 2 answers all 4 oracle points. Remaining
+silence filed as doom seed 1 (nested imported-object spread;
+reproduced at merge). Tasty/virtualrs/typegen suite reds proven
+pre-existing (clean trees, zero atomic dependency — virtualrs's own
+Rust tests contradict its vitest goldens); out of mission scope,
+untouched. S13 deferred with cause (needs export value tables).

@@ -3,9 +3,11 @@
 //! init yields its leaves, while a param, function, or dynamic declarator
 //! yields nothing and shadows everything outside it. Imported names resolve
 //! through the binding walk to the declared export in THAT file and read its
-//! origin bag; unresolvable shapes fall back to the merge bag, as do unbound
-//! names, preserving the merge-era observable. Unknown scope ids resolve as
-//! unbound, so a miscounted scope degrades to today's behavior, never a ghost.
+//! origin values; unresolvable value shapes fall back to the merge bag, as do
+//! unbound value names, preserving the merge-era observable. Helpers never
+//! fall back: an import answers only its walked origin's descriptor, and an
+//! unbound callee refuses, so bindings — never the name bag — decide which
+//! helper folds. Unknown scope ids resolve as unbound.
 
 use std::collections::HashMap;
 
@@ -65,11 +67,6 @@ impl<'a> ImportLookup<'a> {
     /// A const array outside local scope.
     fn array(self, name: &str) -> Option<&'a [ConstArrayElement]> {
         self.bag().get_array(name)
-    }
-
-    /// An exported pure-helper descriptor outside local scope (SPEC-V2-57).
-    fn pure_fn(self, name: &str) -> Option<&'a PureFn> {
-        self.bag().get_pure_fn(name)
     }
 
     /// The write that poisoned a binding, if any (SPEC-V2-35).
@@ -198,29 +195,27 @@ impl<'a> Scoped<'a> {
         self.scalar_leaves(name).first()
     }
 
-    /// The lowered pure-helper descriptor for a name: the same-file
-    /// binding, else the merge-era descriptor export by local name
-    /// (SPEC-V2-57). A mutated callee refuses like any mutated use; the
-    /// Ph4 resolver (SPEC-V2-76) will answer imports by binding instead.
+    /// The lowered pure-helper descriptor for a name: the same-file binding,
+    /// else the walked import origin's descriptor (SPEC-V2-57). Imports
+    /// answer only their target's descriptor — aliases and re-export chains
+    /// fold through the walk — while unbound names refuse with no fallback,
+    /// so a bare call with no import warns instead of folding another file's
+    /// helper. A mutated callee refuses like any mutated use.
     pub fn pure_fn(self, name: &str) -> Option<&'a PureFn> {
-        // color={tone('600')}  after  const tone = (shade) => `red.${shade}`
+        // color={tone('600')}  after  import { tone } from './helpers'
         if self.mutated(name) {
             return None;
         }
         match self.chain.resolve(name, self.scope) {
             Lookup::Local(binding) => Self::local_pure_fn(binding),
-            found => self.fallback_pure_fn(name, found),
+            Lookup::Import(imp) => self.import_pure_fn(&imp.local),
+            Lookup::Unbound => None,
         }
     }
 
-    /// A descriptor outside local scope: imports answer by local name,
-    /// unbound names by name, both from the descriptor export.
-    fn fallback_pure_fn(self, name: &str, found: Lookup<'_>) -> Option<&'a PureFn> {
-        match found {
-            Lookup::Import(imp) => self.chain.imports.pure_fn(&imp.local),
-            Lookup::Unbound => self.chain.imports.pure_fn(name),
-            Lookup::Local(_) => None,
-        }
+    /// A descriptor for an import: the walked origin's export, if it lowered.
+    fn import_pure_fn(self, local: &str) -> Option<&'a PureFn> {
+        self.chain.imports.import_value(local)?.pure_fn()
     }
 
     /// Every static leaf of a bound object's member, or the import fallback.
