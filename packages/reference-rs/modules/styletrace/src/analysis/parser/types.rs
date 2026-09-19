@@ -138,7 +138,7 @@ fn resolve_type_reference(
 ) -> Result<BTreeSet<String>, StyleTraceError> {
     let fallback = ctx
         .surface
-        .trusts_style_props_name()
+        .trusts_surface_type_names()
         .then(|| &ctx.surface.style_props);
     Ok(collect_style_prop_names(
         ctx.workspace_root,

@@ -24,7 +24,7 @@ pub struct TraceSession {
     pub sync_root: PathBuf,
     pub module_cache: HashMap<PathBuf, ParsedModule>,
     /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
-    /// `StyleProps` import denotes. `None` keeps disk resolution strict.
+    /// surface-type import denotes. `None` keeps disk resolution strict.
     pub unresolved_style_props: Option<BTreeSet<String>>,
 }
 
@@ -264,7 +264,7 @@ impl<'a> TraceContext<'a> {
         let Some(imported_module) =
             self.resolve_module_specifier(module_path, &import_binding.source)?
         else {
-            return Ok(self.unresolved_style_props_fallback(
+            return Ok(self.unresolved_surface_type_fallback(
                 &import_binding.source,
                 &import_binding.imported_name,
                 module_path,
@@ -273,27 +273,35 @@ impl<'a> TraceContext<'a> {
         self.resolve_declaration(&imported_module, &import_binding.imported_name)
     }
 
-    /// Engine-mode fallback: an unresolvable `StyleProps` imported from
-    /// `@reference-ui/react` denotes the engine surface. Real declarations
-    /// always win (this runs only when module resolution failed); disk
-    /// sessions carry no fallback and keep returning `None`.
-    fn unresolved_style_props_fallback(
+    /// Engine-mode fallback: an unresolvable surface-type import
+    /// (`StyleProps`, `PrimitiveProps`) from `@reference-ui/react` denotes
+    /// the engine surface, so wipe-state traces resolve without file edges.
+    /// Real declarations always win (this runs only when module resolution
+    /// failed); disk sessions carry no fallback and other names keep
+    /// returning `None`.
+    fn unresolved_surface_type_fallback(
         &self,
         source: &str,
         imported_name: &str,
         module_path: &Path,
     ) -> Option<(PathBuf, TypeDeclaration)> {
-        if source != "@reference-ui/react" || imported_name != "StyleProps" {
+        if source != "@reference-ui/react" || !is_surface_type_name(imported_name) {
             return None;
         }
         let fallback = self.session.unresolved_style_props.clone()?;
         Some((
             module_path.to_path_buf(),
             TypeDeclaration::TypeAlias(TypeAliasDecl {
-                name: "StyleProps".to_string(),
+                name: imported_name.to_string(),
                 type_params: Vec::new(),
                 expr: TypeExpr::Object(fallback),
             }),
         ))
     }
+}
+
+/// Type names that denote the engine style surface: `StyleProps` is the
+/// surface itself and `PrimitiveProps` is native props plus the surface.
+fn is_surface_type_name(imported_name: &str) -> bool {
+    matches!(imported_name, "StyleProps" | "PrimitiveProps")
 }

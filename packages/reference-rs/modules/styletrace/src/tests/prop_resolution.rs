@@ -3,6 +3,8 @@
 //! Exercises the parser and tracer pipelines to ensure correct property collection.
 //! Emits assertions that validate the resolved set of style properties against expected outcomes.
 
+use std::collections::BTreeSet;
+
 use crate::{collect_reference_style_prop_names, collect_style_prop_names};
 
 use super::fixtures::{reference_lib_sync_root, ScratchDir};
@@ -118,6 +120,41 @@ fn unresolvable_module_specifiers_contribute_no_names() {
     .expect("expected phantom imports to resolve tolerantly");
 
     assert_eq!(names, vec!["color".to_string()]);
+}
+
+#[test]
+fn engine_surface_type_imports_resolve_without_files() {
+    let scratch = ScratchDir::new("surface-type-fallback");
+    scratch.write(
+        "src/card.ts",
+        concat!(
+            "import type { PrimitiveProps, GhostProps } from '@reference-ui/react'\n",
+            "export type CardProps = Omit<PrimitiveProps<'div'>, 'onChange'> & { title?: string }\n",
+            "export type GhostCardProps = GhostProps\n",
+        ),
+    );
+    let surface = BTreeSet::from(["color".to_string(), "mt".to_string()]);
+
+    let names = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/card.ts"),
+        "CardProps",
+        Some(&surface),
+    )
+    .expect("expected surface-type import to resolve");
+    assert_eq!(
+        names,
+        vec!["color".to_string(), "mt".to_string(), "title".to_string()]
+    );
+
+    let ghost = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/card.ts"),
+        "GhostCardProps",
+        Some(&surface),
+    )
+    .expect("expected unknown imports to resolve tolerantly");
+    assert!(ghost.is_empty());
 }
 
 #[test]

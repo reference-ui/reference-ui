@@ -1,0 +1,38 @@
+/**
+ * Wipe-state discovery station (ATM-SITE-58). Both wrappers use
+ * `PrimitiveProps`-family boundaries (the 50-wrapper lib shape) while the
+ * fixture's `@reference-ui/react` self-link dangles exactly as in-sync wipe
+ * (no `.reference-ui` dir); the tracer must resolve the surface-type names
+ * from the engine surface. `tracedJsxHosts` carries both names, both use
+ * sites extract, and the bare-div antihost stays silent.
+ */
+import { expect } from 'vitest'
+import {
+  getWantsForProp,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
+
+const spec: AtomicCaseSpec = {
+  id: 'ATM-SITE-58',
+  verify(result) {
+    expect(result.tracedJsxHosts ?? []).toEqual(['Badge', 'Card'])
+    expect(hasWant(result, 'mt', '4r')).toBe(true)
+    expect(hasWant(result, 'mt', '2r')).toBe(true)
+    expect(result.wants ?? []).toHaveLength(2)
+    expect(getWantsForProp(result, 'color')).toHaveLength(0)
+    expect(result.stylesheet).toContain('mt_4r')
+    expect(result.stylesheet).toContain('mt_2r')
+    expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
+    // Discovery itself is silent here; the two warnings are extraction's
+    // rest-spread notes for Card's and Badge's `{...rest}` forwarders.
+    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    expect(warnings).toHaveLength(2)
+    for (const warning of warnings) {
+      expect(warning.message).toContain('spread')
+    }
+    expect(Object.keys(result.css?.classes ?? {})).toHaveLength(2)
+  },
+}
+
+export default spec
