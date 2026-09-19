@@ -18,7 +18,7 @@ In practice that boundary is made from four distinct surfaces:
 - `name`: the design-system identity from `ui.config.name`
 - `fragment`: the portable config-time fragment bundle used by `extends`
 - `css`: the portable layer-safe stylesheet used by `layers` and other downstream CSS consumers
-- `jsxElements`: extra JSX element metadata used for discovery
+- `jsxElements`: published host metadata (discovered ∪ configured names); the config field is an escape hatch, not a registry
 
 The important rule is simple:
 

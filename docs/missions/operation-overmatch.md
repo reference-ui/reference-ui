@@ -810,6 +810,7 @@ the mission that owns it) so "absence" never reappears as the reason.
 | Vue / Svelte / Astro scan (29/20/12 tests) | framework adapters | React/JSX only by charter; styletrace is the host oracle |
 | Compiled JSX runtimes (`dist/` scanning) | input format | worlds are source TSX; reopen only if someone scans `dist/` |
 | `matchTag` PascalCase / `jsx` name arrays | host guessing | import-bound hosts (`bindings.rs`) — strictly better precision |
+| JSX tag through a file-local alias (`const Marker = Div; <Marker mt>`) | extractor binding (StyleTrace handoff, gap #3) | resolve the tag through its binding — no host name involved (v2 resolves identifiers through scope, `scope.rs`); witness `matrix/primitives` (`jsxElements: ['PrimitiveJsxMarker']` retires when this lands). SPEC-V2 ID to be minted by the cataloger; promote to §1 (it changes which shapes extract). |
 | Source transform (`extract_for_transform`, ~400 `pandacss_project` tests, all 13 `local_bindings.rs`, ex-D13) | bundler output | Neo runtime lookup (`runtime/`); no rewrite by charter |
 | LightningCSS, `split_css`, `@layer` specificity polyfill (26 tests) | CSS post-processing | six-layer sheet (`stylesheet/layers`); no polyfill |
 | Export cache / source hashes / provenance / sessions / read-once (xf-C3/C4, 11 tests); watch-hash inversion / `affectedFiles` (xf-C5); memory-fs / `Send+Sync` (xf-C7) | tooling / harness | single-shot compile today; dependent invalidation becomes a Neo sync rider once 76 lands (the resolver knows the edges) |
