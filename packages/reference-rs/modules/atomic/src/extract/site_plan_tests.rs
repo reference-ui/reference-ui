@@ -20,6 +20,16 @@ fn compile_code(code: &str) -> crate::CompileResult {
     compile(&req).expect("compile succeeds")
 }
 
+/// Assert exactly `count` unknown-color diagnostics and nothing else: bare
+/// non-token values on color props warn since Forge Slice 1 (§11).
+fn assert_unknown_colors(res: &crate::CompileResult, count: usize) {
+    assert_eq!(res.diagnostics.len(), count);
+    assert!(res
+        .diagnostics
+        .iter()
+        .all(|d| d.message.contains("neither a color token")));
+}
+
 fn plan_values(res: &crate::CompileResult, prop: &str) -> Vec<String> {
     res.runtime
         .style_plans
@@ -72,7 +82,7 @@ fn test_ternary_arms_emit_one_plan_per_arm() {
     plans.sort();
     assert_eq!(plans, vec!["cherry".to_string(), "ocean".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 2);
 }
 
 #[test]
@@ -87,7 +97,7 @@ fn test_member_access_emits_plan() {
     assert_eq!(res.wants.len(), 1);
     assert_eq!(plan_values(&res, "color"), vec!["cherry".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 1);
 }
 
 #[test]
@@ -104,7 +114,7 @@ fn test_identifier_spread_emits_plan_beside_sibling() {
     assert_eq!(plan_values(&res, "mt"), vec!["gap".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
     assert_plans_point_at_sheet(&res, "mt");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 1);
 }
 
 #[test]
@@ -148,7 +158,7 @@ fn test_top_level_const_ternary_emits_one_plan_per_arm() {
     plans.sort();
     assert_eq!(plans, vec!["cherry".to_string(), "ocean".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 2);
 }
 
 #[test]
@@ -183,7 +193,7 @@ fn test_const_logical_emits_nonguard_leaf() {
     assert_eq!(res.wants.len(), 1);
     assert_eq!(plan_values(&res, "color"), vec!["cherry".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 1);
 }
 
 #[test]
@@ -207,5 +217,5 @@ fn test_const_nested_ternary_scoops_every_arm() {
         ]
     );
     assert_plans_point_at_sheet(&res, "color");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 3);
 }

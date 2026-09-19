@@ -46,6 +46,16 @@ fn test_flat_and_nested_ternaries() {
     assert!(res.diagnostics.is_empty());
 }
 
+/// Assert exactly `count` unknown-color diagnostics and nothing else: bare
+/// non-token values on color props warn since Forge Slice 1 (§11).
+fn assert_unknown_colors(res: &crate::CompileResult, count: usize) {
+    assert_eq!(res.diagnostics.len(), count);
+    assert!(res
+        .diagnostics
+        .iter()
+        .all(|d| d.message.contains("neither a color token")));
+}
+
 #[test]
 fn test_undefined_alternate_omitted() {
     let res = compile_code(
@@ -54,7 +64,7 @@ fn test_undefined_alternate_omitted() {
     assert_eq!(res.wants.len(), 1);
     assert_eq!(&*res.wants[0].prop, "bg");
     assert_eq!(res.wants[0].value.to_string(), "n300");
-    assert!(res.diagnostics.is_empty());
+    assert_unknown_colors(&res, 1);
 }
 
 #[test]

@@ -35,6 +35,9 @@ pub fn resolve_token_value<'a>(
     if trimmed.is_empty() || trimmed.starts_with("var(") {
         return Some(Cow::Borrowed(raw_val));
     }
+    if is_whole_css_value(trimmed) {
+        return Some(Cow::Borrowed(raw_val));
+    }
 
     let unbraced = strip_braces(trimmed);
     if let Some(special) = resolve_special_value(prop, unbraced, session.system) {
@@ -118,7 +121,18 @@ fn unbraced_fallback<'a>(
     Some(Cow::Borrowed(raw_val))
 }
 
-/// Warn for an unresolvable value: unknown path, or a real token from a foreign category.
+/// True for a complete CSS or rhythm value, which never consults the dictionary.
+/// Braced `{path}` references are explicit token lookups and never fence.
+fn is_whole_css_value(trimmed: &str) -> bool {
+    !is_braced(trimmed)
+        && (canon::classify_css_value(trimmed).is_some()
+            || crate::resolve::rhythm::resolve_single_rhythm(trimmed).is_some())
+}
+
+/// Warn for an unresolvable value: a dotted path that names no token, or a
+/// bare value on a color prop that is neither a token nor CSS. Bare values
+/// elsewhere pass through silently; cross-category unique-name stories are
+/// retired, since the author typed a scale the theme does not have.
 fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
     if looks_like_token_path(unbraced) {
         session.diagnostics.push(Diagnostic::warning(
@@ -127,16 +141,23 @@ fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSessio
         ));
         return;
     }
-    let (path, _) = split_opacity(unbraced);
-    if let Some(entry) = session.system.token_by_unique_name(path) {
-        session.diagnostics.push(Diagnostic::warning(
-            DiagnosticCode::TokenCategoryMismatch,
-            format!(
-                "token `{unbraced}` belongs to category `{}` which property `{prop}` does not accept",
-                entry.category()
-            ),
-        ));
+    warn_unknown_color(prop, unbraced, session);
+}
+
+/// Warn when a bare value on a color prop is neither a token nor CSS color.
+/// The color grammar is closed, so this is the one true bare-value diagnostic.
+fn warn_unknown_color(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
+    if !is_color_prop(prop) {
+        return;
     }
+    let (path, _) = split_opacity(unbraced);
+    if path.is_empty() || canon::classify_css_value(path).is_some() {
+        return;
+    }
+    session.diagnostics.push(Diagnostic::warning(
+        DiagnosticCode::UnknownColor,
+        format!("`{unbraced}` is neither a color token nor a CSS color"),
+    ));
 }
 
 fn is_braced(trimmed: &str) -> bool {

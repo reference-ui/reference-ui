@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "site-null",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

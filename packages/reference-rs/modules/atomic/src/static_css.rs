@@ -114,8 +114,25 @@ fn wildcard_category(prop: &str) -> Option<&'static str> {
     typography_or_other_category(canonical)
 }
 
+/// True for `borderRadius` and the twelve corner longhands. Mirrors
+/// `resolve::tokens::scale` so wildcard synthesis resolves what it mints.
 fn is_radius_property(prop: &str) -> bool {
-    prop == "borderRadius" || prop.ends_with("Radius")
+    matches!(
+        prop,
+        "borderRadius"
+            | "borderTopLeftRadius"
+            | "borderTopRightRadius"
+            | "borderBottomLeftRadius"
+            | "borderBottomRightRadius"
+            | "borderStartStartRadius"
+            | "borderStartEndRadius"
+            | "borderEndStartRadius"
+            | "borderEndEndRadius"
+            | "borderTopRadius"
+            | "borderBottomRadius"
+            | "borderLeftRadius"
+            | "borderRightRadius"
+    )
 }
 
 fn typography_or_other_category(prop: &str) -> Option<&'static str> {
@@ -243,6 +260,28 @@ mod tests {
         append_wants(&system, &mut wants);
         assert_eq!(wants.len(), 1);
         assert_eq!(wants[0].value.class_name_str(), "md");
+    }
+
+    #[test]
+    fn wildcard_mirrors_radius_longhands() {
+        for prop in [
+            "borderRadius",
+            "borderTopLeftRadius",
+            "borderTopRightRadius",
+            "borderBottomLeftRadius",
+            "borderBottomRightRadius",
+            "borderStartStartRadius",
+            "borderStartEndRadius",
+            "borderEndStartRadius",
+            "borderEndEndRadius",
+            "borderTopRadius",
+            "borderBottomRadius",
+            "borderLeftRadius",
+            "borderRightRadius",
+        ] {
+            assert_eq!(wildcard_category(prop), Some("radii"), "{prop}");
+        }
+        assert_eq!(wildcard_category("display"), None);
     }
 
     #[test]

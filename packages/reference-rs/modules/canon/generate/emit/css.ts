@@ -46,9 +46,11 @@ export function emitCssModRs(dialect: DialectData): string {
 pub mod color;
 pub mod longhands;
 pub mod properties;
+pub mod values;
 
 pub use color::COLOR_PROPERTIES;
 pub use properties::CANONICAL_PROPERTIES;
+pub use values::{classify_css_value, prop_accepts, ValueKind};
 
 /// Canonical property specification in the compiler canon.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

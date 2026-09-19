@@ -1,0 +1,16 @@
+@layer token-bare {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --radii-sm: 0.125rem;
+  }
+}
+@layer utilities {
+  .token-bare__rounded_sm { border-radius: var(--radii-sm); }
+  .token-bare__c_md { color: md; }
+  .token-bare__fs_sm { font-size: sm; }
+}
+}

@@ -1,0 +1,10 @@
+{
+  "backgroundColor:oklch(0.7 0.1 180)": "token-fence__bg-c_oklch(0.7_0.1_180)",
+  "backgroundImage:url(/img.png)": "token-fence__background-image_url(/img.png)",
+  "borderColor:color-mix(in srgb, red 50%, blue)": "token-fence__bd-c_color-mix(in_srgb,_red_50%,_blue)",
+  "caretColor:ui.missing.path": "token-fence__caret-color_ui.missing.path",
+  "color:rgba(0,0,0,0.5)": "token-fence__c_rgba(0,0,0,0.5)",
+  "outlineColor:gray.800": "token-fence__outline-c_gray.800",
+  "transform:translateX(1.25rem)": "token-fence__transform_translateX(1.25rem)",
+  "width:calc(100% - 2px)": "token-fence__w_calc(100%_-_2px)"
+}

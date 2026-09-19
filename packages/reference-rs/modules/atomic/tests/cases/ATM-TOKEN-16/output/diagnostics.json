@@ -1,0 +1,7 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-COLOR",
+    "message": "`md` is neither a color token nor a CSS color"
+  }
+]

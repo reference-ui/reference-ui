@@ -67,8 +67,8 @@ styletrace host drift impossible; everything else is a slice note):
 
 | # | Slice | Files | Stations | Owner | Status |
 |---|---|---|---|---|---|
-| 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent-protocol.md`, neo sync printer | — | agent-neo (printer), docs | pending |
-| 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | pending |
+| 0 | Paperwork + census by code (sign §2/§8, strike S13, close §7, doom-protocol §8 → Slice 3, neo printer surfaces `ATM-W-*`) | ledger, `doom-agent-protocol.md`, neo sync printer | — | agent-neo (printer), docs | LANDED (oracle clean: neo sync 16/16) |
+| 1 | Resolver quick wins + alphabet tables (canon `css/values/`, §9 fence, §10 longhands, §11 no cross-category + `UNKNOWN-COLOR`, §4 null arm) | `canon/src/css/values/` (`named_colors.rs`, `functions.rs`, `lengths.rs`, `classify.rs`), atomic resolver fence + null arm | `ATM-TOKEN-14/15/16`, `ATM-SITE-82` | agent-rs | LANDED (oracle clean: canon 52/52, atomic 328/328, stations 213/213) |
 | 2 | Scope collect (split over-cap files first per D1; §13 member-path inits + member spreads; §5 post-attach init fold; §12 `BagSemantics`) | `scope/collect.rs`, `expressions/object.rs`, `expressions/walk.rs` (split, behavior-neutral) | `ATM-SITE-80/81/83` | agent-rs | pending, after 1 |
 | 3 | Module graph (new crate; atomic `ValueGraph` adoption; styletrace ladder adoption; §1 fold; §3 precision; §8 cross-file clause) | `modules/module-graph/` (`fs.rs`, `key.rs`, `ladder/`, `record.rs`, `graph.rs`, `walk.rs`, `tests/`); atomic `extract/resolver/` → thin `ValueGraph`; styletrace `resolver/path.rs` | crate tests; `ATM-SITE-78/79/84`; `NEO-SITE-29` | agent-rs (crate + atomic), styletrace | pending, after 2 |
 | 4 | Harvest (`extract/harvest/`, sinks, mint, info code, §2 floor) | `atomic/src/extract/harvest/` (`literals.rs`, `sinks.rs`, `mint.rs`, `classify.rs` rhythm-then-canon) | `ATM-HARVEST-01..04`; `NEO-CSS-14` | agent-rs + agent-neo | pending, after 1 + 3 |
@@ -118,3 +118,19 @@ Station IDs are suggested; each slice owner confirms free slots against
   `styled/` and `react/` copies (asks 2, 6).
 - S4-2: `ATM-HARVEST-04` zero-harvest control: static program sheet
   byte-identical before/after Slice 4.
+- S0-1 (landed): ledger signs §2/§8, strikes S13, closes §7;
+  doom-protocol §8 routes to Slice 3; sync printer prints stable
+  `ATM-W-*` codes (`NativeDiagnostic.code`) so censuses count by
+  `rg -c`. Oracle: neo `sync.test.ts` 16/16.
+- S1-1 (landed): `TokenCategoryMismatch` retired (kept for wire
+  stability, never emitted); TOKEN-09 repinned to zero diagnostics;
+  RS-KNOWN-RED-001 closed by §11 silence (`token10.test.ts`); SEAM-03
+  sheet churn is intended (named colors now CSS-first: literal
+  `lime`/`teal`, not `var()`).
+- S1-2 (carried gap, not a defect): `parser.rs` `is_length_width` is
+  not yet a canon consumer (file outside Slice-1 allowlist);
+  `lengths.rs` was seeded from it. A later slice may re-point it.
+- S1-3 (pre-existing, out of slice cone): 8 typegen golden failures
+  (formatter/semicolon + vendor-prefix drift) fail on this tree but
+  touch no slice file — canon's data surface changed only
+  additively, and no typegen file is in the diff.

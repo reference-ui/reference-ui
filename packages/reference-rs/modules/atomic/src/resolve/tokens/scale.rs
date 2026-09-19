@@ -18,12 +18,35 @@ pub fn token_category_for_prop(prop: &str) -> Option<&'static str> {
 
 /// Shape properties: radii, font families, animations.
 fn shape_category(canonical: &str) -> Option<&'static str> {
+    if is_radius_longhand(canonical) {
+        return Some("radii");
+    }
     match canonical {
         "borderRadius" | "rounded" => Some("radii"),
         "fontFamily" | "ff" => Some("fonts"),
         "animation" | "animationName" => Some("animations"),
         _ => None,
     }
+}
+
+/// The twelve corner radius longhands canon knows: four physical corners,
+/// four logical corners, and four side pairs. Each takes `radii` tokens.
+fn is_radius_longhand(canonical: &str) -> bool {
+    matches!(
+        canonical,
+        "borderTopLeftRadius"
+            | "borderTopRightRadius"
+            | "borderBottomLeftRadius"
+            | "borderBottomRightRadius"
+            | "borderStartStartRadius"
+            | "borderStartEndRadius"
+            | "borderEndStartRadius"
+            | "borderEndEndRadius"
+            | "borderTopRadius"
+            | "borderBottomRadius"
+            | "borderLeftRadius"
+            | "borderRightRadius"
+    )
 }
 
 /// Surface properties: shadows, stacking, gradients.
@@ -137,5 +160,25 @@ mod tests {
     fn unknown_properties_have_no_category() {
         assert_eq!(token_category_for_prop("display"), None);
         assert_eq!(token_category_for_prop("color"), None);
+    }
+
+    #[test]
+    fn every_radius_longhand_takes_radii() {
+        for prop in [
+            "borderTopLeftRadius",
+            "borderTopRightRadius",
+            "borderBottomLeftRadius",
+            "borderBottomRightRadius",
+            "borderStartStartRadius",
+            "borderStartEndRadius",
+            "borderEndStartRadius",
+            "borderEndEndRadius",
+            "borderTopRadius",
+            "borderBottomRadius",
+            "borderLeftRadius",
+            "borderRightRadius",
+        ] {
+            assert_eq!(token_category_for_prop(prop), Some("radii"), "{prop}");
+        }
     }
 }

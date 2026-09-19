@@ -1,0 +1,10 @@
+@layer site-null {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer utilities {
+  .site-null__m_2px { margin: 2px; }
+  .site-null__p_4px { padding: 4px; }
+}
+}

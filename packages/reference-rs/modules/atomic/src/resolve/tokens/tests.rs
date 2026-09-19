@@ -156,12 +156,50 @@ fn test_size_properties_fall_back_to_spacing() {
 }
 
 #[test]
-fn test_wrong_category_warns() {
+fn test_unknown_color_warns_on_color_props() {
+    use crate::diagnostics::DiagnosticCode;
     let system = spacing_system();
     let (css, diagnostics) = resolve_with_diagnostics("color", "4", &system);
     assert_eq!(css.as_deref(), Some("4"));
     assert_eq!(diagnostics.len(), 1);
-    assert!(diagnostics[0].message.contains("spacing"));
+    assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownColor);
+    assert!(diagnostics[0].message.contains("neither a color token"));
+}
+
+#[test]
+fn test_bare_value_misses_silently_off_color_props() {
+    let system = spacing_system();
+    for (prop, raw) in [("fontSize", "sm"), ("zIndex", "2"), ("width", "sm")] {
+        let (css, diagnostics) = resolve_with_diagnostics(prop, raw, &system);
+        assert_eq!(css.as_deref(), Some(raw));
+        assert!(diagnostics.is_empty(), "{prop}={raw} stays silent");
+    }
+}
+
+#[test]
+fn test_whole_css_values_fence_before_lookup() {
+    let system = BaseSystem::lib_fixture();
+    for (prop, raw) in [
+        ("backgroundColor", "rgba(0,0,0,0.5)"),
+        ("transform", "translateX(1.25rem)"),
+        ("color", "oklch(0.7 0.1 180)"),
+        ("color", "red"),
+        ("width", "13px"),
+        ("margin", "4r"),
+    ] {
+        let (css, diagnostics) = resolve_with_diagnostics(prop, raw, &system);
+        assert_eq!(css.as_deref(), Some(raw));
+        assert!(diagnostics.is_empty(), "{prop}={raw} stays silent");
+    }
+}
+
+#[test]
+fn test_dotted_non_token_still_warns() {
+    let (css, diagnostics) =
+        resolve_with_diagnostics("color", "ui.missing.path", BaseSystem::lib_fixture());
+    assert_eq!(css.as_deref(), Some("ui.missing.path"));
+    assert_eq!(diagnostics.len(), 1);
+    assert!(diagnostics[0].message.contains("unknown token path"));
 }
 
 #[test]

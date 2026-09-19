@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-fence",
+  "tokens": {
+    "colors": {
+      "gray": {
+        "800": {
+          "light": "#1f2937",
+          "dark": "#f9fafb"
+        }
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}
