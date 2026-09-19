@@ -201,9 +201,9 @@ fn mutated_arg_warn(
         span,
         DiagnosticCode::MutatedBinding,
         format!(
-            "Dynamic mutated binding '{base}' in css() {} (reassigned at {}; keeping sibling args)",
+            "Dynamic mutated binding '{base}' in css() {} ({}; keeping sibling args)",
             site.describe(),
-            write.site()
+            write.write_phrase()
         ),
     );
     true

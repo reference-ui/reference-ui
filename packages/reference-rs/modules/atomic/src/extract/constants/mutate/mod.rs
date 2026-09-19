@@ -1,6 +1,7 @@
 //! Written-binding collection for mutation tracking (SPEC-V2-35).
-//! Every `AssignmentExpression`, `UpdateExpression`, and for-in/of head yields
-//! the names it writes with the span of each write. Identifier targets resolve
+//! Every `AssignmentExpression`, `UpdateExpression`, for-in/of head, and
+//! `delete` operand (SPEC-V2-81) yields the names it writes with the span of
+//! each write. Identifier targets resolve
 //! directly; member targets resolve by root object (a computed key is a read,
 //! never a write). Destructuring patterns resolve in the `pattern` submodule
 //! while defaults and computed keys stay reads. The collector marks these
@@ -75,6 +76,14 @@ fn pattern_target_writes<'a>(target: &AssignmentTarget<'a>, out: &mut Vec<Write<
         }
         _ => {}
     }
+}
+
+/// Root written by a `delete` operand (`delete theme.primary`).
+///
+/// The operand is read-shaped, so the member/wrapper/chain walk resolves
+/// its root exactly like an assignment target: a computed key stays a read.
+pub fn delete_target_writes<'a>(operand: &Expression<'a>, out: &mut Vec<Write<'a>>) {
+    expr_root_writes(operand, out);
 }
 
 /// Names written by an update target (`count++`, `--gap`).

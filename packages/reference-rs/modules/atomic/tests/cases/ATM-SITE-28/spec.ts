@@ -43,6 +43,18 @@ const MUTATED: Array<{ name: string; site: string }> = [
   { name: 'shifted', site: 'tokens.ts:5:1' },
 ]
 
+// SPEC-V2-81 (oracle follow-up on 35): `delete` poisons like an
+// assignment. The sibling margin survives; every deleted read drops.
+const DELETE_WANTS: Array<{ prop: string; value: string }> = [
+  { prop: 'margin', value: '3px' },
+]
+
+const DELETED: Array<{ name: string; site: string }> = [
+  { name: 'delMember', site: 'delete.ts:5:8' },
+  { name: 'delKey', site: 'delete.ts:10:8' },
+  { name: 'delSpread', site: 'delete.ts:15:8' },
+]
+
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-28',
   verify(result) {
@@ -60,7 +72,12 @@ const spec: AtomicCaseSpec = {
         )
       ).toHaveLength(2)
     }
-    expect(result.wants ?? []).toHaveLength(5 + OBJECTS.length + CROSS.length * 2)
+    for (const { prop, value } of DELETE_WANTS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+    }
+    expect(result.wants ?? []).toHaveLength(
+      5 + OBJECTS.length + CROSS.length * 2 + DELETE_WANTS.length
+    )
 
     // Stale inits never emit: no `red` color, no numeric order.
     expect(hasWant(result, 'color', 'red')).toBe(false)
@@ -68,7 +85,7 @@ const spec: AtomicCaseSpec = {
 
     // One runtime plan per unique leaf (the two `padding: 4px` wants share one).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(4 + OBJECTS.length + CROSS.length)
+    expect(plans).toHaveLength(4 + OBJECTS.length + CROSS.length + DELETE_WANTS.length)
     for (const { prop, value } of EXPECTED) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
@@ -78,10 +95,13 @@ const spec: AtomicCaseSpec = {
     for (const { prop, value } of CROSS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
+    for (const { prop, value } of DELETE_WANTS) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
 
     // Every mutated use warns once and names its write site.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(MUTATED.length)
+    expect(diagnostics).toHaveLength(MUTATED.length + DELETED.length)
     for (const { name, site } of MUTATED) {
       const match = diagnostics.find(d =>
         d.message.includes(`Dynamic mutated binding '${name}'`),
@@ -89,6 +109,19 @@ const spec: AtomicCaseSpec = {
       expect(match, `missing mutated diagnostic for '${name}'`).toBeDefined()
       expect(match!.severity).toBe('warning')
       expect(match!.message).toContain('reassigned at')
+      expect(match!.message).toContain(site)
+    }
+
+    // Every deleted use warns once and names its delete site.
+    for (const { name, site } of DELETED) {
+      const match = diagnostics.find(d =>
+        d.message.includes(`Dynamic mutated binding '${name}'`),
+      )
+      expect(match, `missing deleted diagnostic for '${name}'`).toBeDefined()
+      expect(match!.severity).toBe('warning')
+      expect(match!.code).toBe('ATM-W-MUTATED-BINDING')
+      expect(match!.message).toContain('deleted at')
+      expect(match!.message).not.toContain('reassigned at')
       expect(match!.message).toContain(site)
     }
 
@@ -103,6 +136,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('margin: 8px;')
     expect(result.stylesheet).toContain('color: plum;')
     expect(result.stylesheet).toContain('padding: 9px;')
+    expect(result.stylesheet).toContain('margin: 3px;')
     expect(result.stylesheet).not.toContain('color: red')
   },
 }

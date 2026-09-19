@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 212 |
-| Named `[x]` proven | 208 |
+| Total contract cases | 213 |
+| Named `[x]` proven | 209 |
 | Remaining `[ ]` | 4 (`ATM-DIAG-04`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 251 (internal; not ticks) |
-| Vitest seam stations | 207 (`tests/cases/<ATM-*>`) |
+| Vitest seam stations | 208 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -68,7 +68,7 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 57 | 57 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 58 | 58 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 10 | 10 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
@@ -88,7 +88,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **189** | **183** | **6** |
+| **Total** | | **190** | **184** | **6** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -314,6 +314,7 @@ compiler contract.
   **A `let`/`var` with any assignment must drop to a diagnostic naming the write; unmutated `let`/`var` keep resolving.**
   Station `ATM-SITE-28` (Overmatch Ph1). Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53, cross-file arm via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/` per mission §7.2). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until SPEC-V2-76 lands the binding walk. Panda: `scope.rs:224` (`let_mutated_drops_resolution`), `:203`/`:241` (unmutated `let`/`var`), `cross_file.rs:502` (`export_let_currently_folds_too`).
   Station `ATM-SITE-28` (Overmatch Ph3 arms, SPEC-V2-34 object half). Compile `const emberTheme = { primary: ember }` over `const ember`, `{ ...cardBase, margin }` and last-wins `{ ...cardBase, color }` spreads, and an inline-object spread beside the unchanged Ph1 arms. Assert seven more wants with one runtime plan per unique leaf and zero new diagnostics — pure reads only, every source an unmutated const. Baked entries carry dep provenance and strip when their source is written (`extract/scope/value.rs`); station-level mutation interplay stays with the open Ph1 verdict. Panda: `cross_file.rs:242` (spread-of-const), `:291` (identifier value).
+  Station `ATM-SITE-28` (mop-up arm, SPEC-V2-81). Compile `delete obj.prop` and computed `delete obj[k]` beside a spread control. Assert each deleted use drops with a diagnostic naming the delete (`deleted at file:line:col`, never `reassigned at`) with siblings kept; golden diff purely additive, 35/02/53 wording untouched.
 - [x] `ATM-SITE-29` `[reference]` `[seam]` — **[SPEC-V2-24/31/34-chains, Overmatch Ph3]**
   **Multi-hop member reads, alias chains, and nested const spreads must resolve transitively.**
   Station `ATM-SITE-29` (Overmatch Ph3). Compile `tokens.colors.red` multi-hop reads, `...styles.hover` member-hop spreads, and `tokens!.color` `!`-unwraps beside scalar/object alias chains (`const b = a`) in declaration order and nested conditions plus responsive maps lowering through const spreads. Assert 20 wants with zero diagnostics, transitive resolution with whole-binding provenance, and inline-identical lowering for nested shapes. Misses keep the `DynamicMember`/spread vocabulary, cycles and forward refs stay valueless (runtime TDZ). Panda: `conditional_output.rs:655`, `scope.rs:286`, `conditional_output.rs:707`, `calls.rs:2024`, `cross_file.rs:265`, `:242`, `:291`.
@@ -368,6 +369,9 @@ compiler contract.
   **Static and single-leaf folded computed style-object keys must resolve; an unfoldable computed key must warn once and keep siblings.**
   Station `ATM-SITE-49` (Overmatch Ph2 static computed keys). Compile `css({ ['color']: 'red' })`, `css({ [42]: v })`, and `` css({ [`color`]: 'red' }) `` beside dynamic-key twins `css({ [k]: 'red', padding: '4px' })` with unbound/call `k`. Assert the static string/template keys extract exactly like their bare spellings with one runtime plan per want; the numeric key folds to its spelling (`42`, then the ordinary unknown-property path — never `UnfoldableKey`); and each dynamic key yields zero wants from that member plus one located `Dynamic computed property key` diagnostic with the static sibling kept. Folded keys (`[k]` over `const k`, concat keys) are the Ph3 half. Panda: `calls.rs:1288` (string), `:1304` (numeric), `:1320` (concat); v2 drops the whole call on an unfoldable key where we keep siblings (S4).
   Station `ATM-SITE-49` (Overmatch Ph3 folded-keys arm). Compile `[k]` over `const k`, `[t.p]`, `[s[0]]`, `[hov]` conditions including nested `{ [hov]: { [k]: v } }`, and folded numerics `[n]`/`[-pad]` beside multi-leaf and helper-call key refusals. Assert every single-leaf key extracts exactly like its bare spelling with one runtime plan per leaf; folded numerics ride the unknown-property path; and each refusing key yields zero wants from that member plus one located `Dynamic computed property key` diagnostic with its sibling kept. Helper-call keys fold through the landed fence (SPEC-V2-40 integration: `[gh('cool')]` mints `color:red` under `&[data-group="cool"]` with want, plan, and emitted rule all pinned); `[pick()]`/`[key]`/multi-leaf keys still refuse located with siblings kept. Concat keys fold with SITE-33. Panda: ident `scope.rs:360`, in-condition `:375`, helper-key `:966`.
+- [x] `ATM-SITE-47` `[reference]` `[seam]` — **[SPEC-V2-14, Overmatch Ph3 mop-up]**
+  **Structural whitespace in values must collapse: spaced twins mint one class and one declaration.**
+  Station `ATM-SITE-47` (Overmatch Ph3 mop-up). Compile `'Fira  Sans'` twins beside a multiline backtick grid and quoted-substring controls (`content: '"x  y"'`, single-quoted font runs). Assert 7 raw wants collapse to 4 atoms, twin pairs share class identity via `css.classes` and plan `className`, single declarations emit, and zero diagnostics emit; quoted runs survive verbatim. No browser arm (paint-identical either way). Panda: `calls.rs:156`, `:179`.
 - [x] `ATM-SITE-48` `[reference]` `[seam]` — **[SPEC-V2-63, Overmatch Ph3]**
   **Element access over const objects, const arrays, and inline literals must fold when the index folds; an unfoldable index, base, or entry must warn once naming the side, siblings kept.**
   Station `ATM-SITE-48` (Overmatch Ph3 element access). Compile literal, const-identifier (single- and multi-leaf), member, nested, and `?.[` indices over const objects, const arrays, and inline tables beside unfoldable-index/base twins, missing-entry and out-of-bounds twins, a partial multi-leaf index, a chained read, a reassigned table, and a hole read. Assert every resolving read mints one want per leaf with one runtime plan per leaf; holes omit silently; and each refusal yields one located `DynamicMember`/`MutatedBinding` diagnostic naming the index, base, or entry with static siblings kept. Concat/template indices fold with SITE-33/51; nested chains compose with SITE-29. Panda: `scope.rs:321`, `:340`, `:393`-`:449`, `:468`, `:486`, `:505`, `optional_chaining.rs:38`.
@@ -918,6 +922,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-44` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-44/` |
 | `ATM-SITE-45` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-45/` |
 | `ATM-SITE-46` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-46/` |
+| `ATM-SITE-47` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-47/` |
 | `ATM-SITE-48` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-48/` |
 | `ATM-SITE-49` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-49/` |
 | `ATM-SITE-50` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-50/` |

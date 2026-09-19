@@ -380,9 +380,9 @@ fn spread_pure_call(
                 call.span,
                 DiagnosticCode::MutatedBinding,
                 format!(
-                    "Dynamic mutated binding '{}' spread in style object (reassigned at {}; keeping sibling properties)",
+                    "Dynamic mutated binding '{}' spread in style object ({}; keeping sibling properties)",
                     ident.name.as_str(),
-                    write.site()
+                    write.write_phrase()
                 ),
             );
             return;
@@ -606,8 +606,8 @@ fn spread_miss_warn(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
             span,
             DiagnosticCode::MutatedBinding,
             format!(
-                "Dynamic mutated binding '{name}' spread in style object (reassigned at {}; keeping sibling properties)",
-                write.site()
+                "Dynamic mutated binding '{name}' spread in style object ({}; keeping sibling properties)",
+                write.write_phrase()
             ),
         );
         return;

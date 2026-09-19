@@ -416,17 +416,18 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
 /// Extract all style wants and diagnostics from a parsed AST program.
 /// Callers thread the system's breakpoint scale; no fixture is consulted here.
 /// Wants carry file-only locations here; `compile()` threads source text for lines.
-/// Without a project, the import stub answers from an empty bag: locals
-/// resolve through the chain, cross-file names stay dynamic.
+/// Without a project, the file's own collected constants back the import
+/// stub: locals resolve through the chain, cross-file names stay dynamic,
+/// and writes in the file poison through the usual mutation check.
 pub fn extract(
     program: &Program<'_>,
     file: &str,
     breakpoints: &BreakpointScale,
     sinks: ExtractSinks<'_>,
 ) {
-    let empty = constants::LocalConstants::new();
-    let table = scope::collect(program, &empty);
-    let stub = scope::ImportLookup::ProjectBag(&empty);
+    let bag = constants::collect_local_constants(program, file, None);
+    let table = scope::collect(program, &bag);
+    let stub = scope::ImportLookup::ProjectBag(&bag);
     let chain = scope::ScopeChain::new(&table, stub);
     let bindings = collect_bindings(program);
     let jsx_hosts = bindings.jsx_hosts();

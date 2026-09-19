@@ -38,16 +38,35 @@ pub struct MutatedBinding {
     file: Box<str>,
     line: Option<u32>,
     column: Option<u32>,
+    kind: MutationKind,
+}
+
+/// How a binding was poisoned: reassigned, or `delete`d (SPEC-V2-81).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MutationKind {
+    Reassigned,
+    Deleted,
 }
 
 impl MutatedBinding {
     /// Record a write at `file`, with 1-based line/column when source was known.
     pub fn new(file: &str, position: Option<(u32, u32)>) -> Self {
+        Self::written(file, position, MutationKind::Reassigned)
+    }
+
+    /// Record a `delete` at `file`, with 1-based line/column when source was known.
+    pub fn deleted(file: &str, position: Option<(u32, u32)>) -> Self {
+        Self::written(file, position, MutationKind::Deleted)
+    }
+
+    /// Record a poison of one kind; the collector keeps the first write site.
+    fn written(file: &str, position: Option<(u32, u32)>, kind: MutationKind) -> Self {
         let (line, column) = position.unzip();
         Self {
             file: file.into(),
             line,
             column,
+            kind,
         }
     }
 
@@ -57,6 +76,15 @@ impl MutatedBinding {
             (Some(line), Some(column)) => format!("{}:{line}:{column}", self.file),
             _ => self.file.to_string(),
         }
+    }
+
+    /// `reassigned at <site>` or `deleted at <site>` for use-site diagnostics.
+    pub fn write_phrase(&self) -> String {
+        let action = match self.kind {
+            MutationKind::Reassigned => "reassigned",
+            MutationKind::Deleted => "deleted",
+        };
+        format!("{action} at {}", self.site())
     }
 }
 
