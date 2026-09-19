@@ -1,5 +1,8 @@
 {
   "backgroundColor:{colors.red.500}": "@reference-ui/lib__bg-c_{colors.red.500}",
+  "color:#000": "@reference-ui/lib__c_#000",
+  "color:#111": "@reference-ui/lib__c_#111",
+  "color:#fff": "@reference-ui/lib__c_#fff",
   "color:colors.nope.997": "@reference-ui/lib__c_colors.nope.997",
   "color:colors.nope.998": "@reference-ui/lib__c_colors.nope.998",
   "color:colors.nope.999": "@reference-ui/lib__c_colors.nope.999",

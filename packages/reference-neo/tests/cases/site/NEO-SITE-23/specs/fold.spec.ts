@@ -28,11 +28,12 @@ interface SpecInput {
 }
 
 // Every folded shape paints; the refused index paints nothing. Sync
-// succeeds (the case runs at all), the sheet carries exactly the eleven
-// utilities, the target paints its four folded declarations, the flattened
-// array paints base padding narrow and lg padding wide in its container,
-// the merge paints last-wins pink, the refused node paints only its
-// sibling, and the frozen request still reports the located dk warning.
+// succeeds (the case runs at all), the sheet carries the eleven folded
+// utilities plus the harvested red floor, the target paints its four
+// folded declarations, the flattened array paints base padding narrow and
+// lg padding wide in its container, the merge paints last-wins pink, the
+// refused node paints only its sibling, and the frozen request still
+// reports the located dk warning.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assertSheet(c);
   await assertTarget(page);
@@ -42,8 +43,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   await assertWarning(c);
 }
 
-// The sheet carries exactly the eleven folded utilities plus the three
-// breakpoint container rules the flattened array rides.
+// The sheet carries the eleven folded utilities plus the harvested red
+// floor, with the three breakpoint container rules the flattened array
+// rides.
 function assertSheet(c: NeoCase): void {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -58,6 +60,7 @@ function assertSheet(c: NeoCase): void {
     '.neo-site-23__c_green {',
     '.neo-site-23__c_pink {',
     '.neo-site-23__m_6px {',
+    '.neo-site-23__c_red {',
   ]) {
     assert.ok(styles.includes(utility), `sheet carries ${utility}`);
   }
@@ -65,7 +68,7 @@ function assertSheet(c: NeoCase): void {
   assert.ok(styles.includes('@container (min-width: 768px)'), 'sheet carries the md rule');
   assert.ok(styles.includes('@container (min-width: 1024px)'), 'sheet carries the lg rule');
   const utilityCount = styles.match(/\.neo-site-23__/g)?.length ?? 0;
-  assert.equal(utilityCount, 11, `sheet carries exactly the eleven utilities, got ${utilityCount}`);
+  assert.equal(utilityCount, 12, `sheet carries the folded utilities plus the harvest floor, got ${utilityCount}`);
 }
 
 // The target carries the four folded classes and paints every declaration:

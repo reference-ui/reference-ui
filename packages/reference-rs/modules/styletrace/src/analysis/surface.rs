@@ -25,6 +25,9 @@ use super::source_files::discover_source_files;
 pub struct StyleSurface {
     pub style_props: BTreeSet<String>,
     pub primitives: BTreeSet<String>,
+    /// Per-host owned prop names: a host's own declared props shadow
+    /// style props on that host (§14). Seeds union with traced-owned.
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
     trust_surface_type_names: bool,
 }
 
@@ -33,8 +36,16 @@ impl StyleSurface {
         Self {
             style_props,
             primitives,
+            owned_props: BTreeMap::new(),
             trust_surface_type_names: false,
         }
+    }
+
+    /// Seed per-host owned prop names; the trace unions these with the
+    /// owned props it reads from each traced host's declaration.
+    pub fn with_owned_props(mut self, owned_props: BTreeMap<String, BTreeSet<String>>) -> Self {
+        self.owned_props = owned_props;
+        self
     }
 
     /// Mark the surface engine-built: a surface-type reference
@@ -88,6 +99,9 @@ impl TraceDiagnostic {
 pub struct TraceOutcome {
     pub bindings: Vec<TracedBinding>,
     pub diagnostics: Vec<TraceDiagnostic>,
+    /// Each traced export name to its owned declared prop names (§14),
+    /// unioned with the input surface's seeds.
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
 }
 
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
@@ -166,10 +180,17 @@ impl SurfaceTraceSession<'_> {
     fn trace(&self, entries: &[PathBuf]) -> TraceOutcome {
         let mut diagnostics = Vec::new();
         let modules = self.parse_entries(entries, &mut diagnostics);
-        let bindings = self.walk(modules, &mut diagnostics);
+        let (bindings, mut owned_props) = self.walk(modules, &mut diagnostics);
+        for (host, names) in &self.surface.owned_props {
+            owned_props
+                .entry(host.clone())
+                .or_default()
+                .extend(names.iter().cloned());
+        }
         TraceOutcome {
             bindings,
             diagnostics,
+            owned_props,
         }
     }
 
@@ -198,7 +219,7 @@ impl SurfaceTraceSession<'_> {
         &self,
         modules: BTreeMap<PathBuf, TraceModule>,
         diagnostics: &mut Vec<TraceDiagnostic>,
-    ) -> Vec<TracedBinding> {
+    ) -> (Vec<TracedBinding>, BTreeMap<String, BTreeSet<String>>) {
         let mut analyzer = StyleTraceAnalyzer::new(
             modules,
             self.surface.clone(),
@@ -214,6 +235,6 @@ impl SurfaceTraceSession<'_> {
             }
         };
         diagnostics.extend(analyzer.take_diagnostics());
-        bindings
+        (bindings, analyzer.take_owned_props())
     }
 }

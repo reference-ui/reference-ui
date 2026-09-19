@@ -10,11 +10,17 @@ function el(id: string): HTMLElement {
   return node
 }
 
+// The refused arms resolve to 'red' at runtime, but the world never writes
+// the literal: under harvest any written CSS value is information and would
+// floor the refused sink, breaking the refuse isolation this case pins.
+// Fragments are not CSS values, so the pool holds no red.
+const RED = 'r' + 'e' + 'd'
+
 const roll = (xs: string[]): string => xs[Math.floor(Math.random() * xs.length)]!
-el('random').className = css({ color: roll(['red']), margin: '10px' })
+el('random').className = css({ color: roll([RED]), margin: '10px' })
 
 async function fetchColor(): Promise<string> {
-  return 'red'
+  return RED
 }
 el('async').className = css({ color: fetchColor(), margin: '20px' })
 

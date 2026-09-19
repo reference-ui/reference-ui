@@ -5,7 +5,13 @@
  * diagnostic and keeps its static siblings.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-80',
@@ -24,13 +30,16 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'margin', '1r')).toBe(true)
     expect(hasWant(result, 'margin', '2r')).toBe(true)
 
-    expect(getWantsForProp(result, 'color')).toHaveLength(5)
+    // The refused init position harvests navy; red twins the site atom.
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(5)
+    expect(getWantsForProp(result, 'color')).toHaveLength(6)
     expect(getWantsForProp(result, 'margin')).toHaveLength(4)
-    expect(result.wants ?? []).toHaveLength(14)
+    expect(harvestWants(result)).toHaveLength(1)
+    expect(result.wants ?? []).toHaveLength(15)
 
     // Plans dedupe by value: red ×3, teal.600 ×2, navy ×2, and 13r ×2 each
     // share one plan.
-    expect(result.runtime.stylePlans).toHaveLength(9)
+    expect(result.runtime.stylePlans).toHaveLength(10)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('color: red;')
@@ -42,6 +51,11 @@ const spec: AtomicCaseSpec = {
         severity: 'warning',
         code: 'ATM-W-DYNAMIC-IDENTIFIER',
         message: "Dynamic non-literal identifier 'unlucky' encountered for prop 'color'",
+      }),
+      expect.objectContaining({
+        severity: 'info',
+        code: 'ATM-I-HARVEST-SINK',
+        message: 'color under []: 1 harvested value minted',
       }),
     ])
   },

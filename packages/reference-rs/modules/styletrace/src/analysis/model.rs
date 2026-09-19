@@ -82,6 +82,7 @@ pub(super) struct TraceComponent {
     pub(super) exposes_style_props: bool,
     pub(super) uses_style_pipeline: bool,
     pub(super) edges: Vec<ComponentEdge>,
+    pub(super) owned_props: BTreeSet<String>,
 }
 
 #[derive(Clone)]
@@ -104,6 +105,7 @@ pub(super) struct PropBindings {
     pub(super) direct_style_bindings: BTreeSet<String>,
     pub(super) props_object_bindings: BTreeSet<String>,
     pub(super) spread_bindings: BTreeSet<String>,
+    pub(super) owned_props: BTreeSet<String>,
 }
 
 impl PropBindings {

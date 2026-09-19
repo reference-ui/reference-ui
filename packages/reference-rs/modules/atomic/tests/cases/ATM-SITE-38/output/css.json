@@ -1,5 +1,8 @@
 {
   "marginTop:-4": "@reference-ui/lib__mt_-4",
+  "marginTop:2r": "@reference-ui/lib__mt_2r",
+  "marginTop:4px": "@reference-ui/lib__mt_4px",
+  "marginTop:auto": "@reference-ui/lib__mt_auto",
   "order:-1": "@reference-ui/lib__order_-1",
   "order:-2": "@reference-ui/lib__order_-2",
   "order:-4": "@reference-ui/lib__order_-4",

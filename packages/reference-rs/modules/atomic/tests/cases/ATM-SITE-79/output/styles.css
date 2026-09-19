@@ -578,5 +578,7 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__c_blue { color: blue; }
+  .\@reference-ui\/lib__c_red { color: red; }
 }
 }

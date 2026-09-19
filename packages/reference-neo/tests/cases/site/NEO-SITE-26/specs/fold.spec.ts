@@ -36,16 +36,19 @@ const EXPECTED_WARNING = {
 
 // The folded member part paints cherry, the sized number part paints 4px,
 // the fan-out part paints the live plum arm, and the refused node paints
-// only its ocean background sibling. The sheet carries exactly the five
-// utilities, and the frozen recompile carries exactly the one positioned
-// part warning.
+// only its ocean background sibling. The sheet carries the five folded
+// utilities plus the three harvested hex floors, and the frozen recompile
+// carries exactly the one positioned part warning.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
     'utf8',
   );
+  assert.ok(styles.includes('.neo-site-26__c_\\#dc2626 {'), 'sheet carries the harvested cherry-hex floor');
+  assert.ok(styles.includes('.neo-site-26__c_\\#2563eb {'), 'sheet carries the harvested ocean-hex floor');
+  assert.ok(styles.includes('.neo-site-26__c_\\#a855f7 {'), 'sheet carries the harvested purple-hex floor');
   const utilityCount = styles.match(/\.neo-site-26__/g)?.length ?? 0;
-  assert.equal(utilityCount, 5, `sheet carries exactly the five utilities, got ${utilityCount}`);
+  assert.equal(utilityCount, 8, `sheet carries the folded utilities plus the harvest floor, got ${utilityCount}`);
 
   const folded = page.locator('#folded');
   await folded.waitFor();
@@ -88,8 +91,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const warnings = result.diagnostics ?? [];
-  assert.equal(warnings.length, 1, `one part warning, got ${JSON.stringify(warnings)}`);
+  const diagnostics = result.diagnostics ?? [];
+  const warnings = diagnostics.filter((entry) => entry.severity === 'warning');
+  const infos = diagnostics.filter((entry) => entry.severity === 'info');
+  assert.equal(warnings.length, 1, `one part warning, got ${JSON.stringify(diagnostics)}`);
+  assert.equal(infos.length, 1, `one sink info, got ${JSON.stringify(diagnostics)}`);
   const match = warnings.find(
     (entry) => entry.message === EXPECTED_WARNING.message && entry.line === EXPECTED_WARNING.line,
   );

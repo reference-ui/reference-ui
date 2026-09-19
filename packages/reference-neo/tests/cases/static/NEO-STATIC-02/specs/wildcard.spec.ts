@@ -14,9 +14,9 @@ interface SpecInput {
 }
 
 // The world wildcarded the color category over three tokens with one static
-// want overlapping n100. The sheet carries exactly three atoms — expansion
-// hit every leaf and the overlap deduped — and the control plus both
-// runtime probes paint their shades.
+// want overlapping n100. The sheet carries the three leaf atoms — expansion
+// hit every leaf and the overlap deduped — plus the three harvested leaf-hex
+// floors, and the control plus both runtime probes paint their shades.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -25,8 +25,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   for (const leaf of ['n100', 'n200', 'n300']) {
     assert.ok(styles.includes(`.neo-static-02__c_${leaf}`), `sheet carries the ${leaf} atom`);
   }
+  for (const hex of ['f4f4f5', 'e4e4e7', 'd4d4d8']) {
+    assert.ok(styles.includes(`.neo-static-02__c_\\#${hex} {`), `sheet carries the harvested ${hex} floor`);
+  }
   const utilityCount = styles.match(/\.neo-static-02__/g)?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries exactly the token count, got ${utilityCount}`);
+  assert.equal(utilityCount, 6, `sheet carries the token count plus the harvest floor, got ${utilityCount}`);
 
   const control = page.locator('#control');
   await control.waitFor();

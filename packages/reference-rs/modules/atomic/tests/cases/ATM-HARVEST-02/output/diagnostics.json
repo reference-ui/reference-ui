@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (identifier 'n') encountered for prop 'margin'",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 29
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-TEMPLATE",
+    "message": "Dynamic non-literal template part 1 (identifier 'hex') encountered for prop 'color'",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 55
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 55
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "margin under []: 0 harvested values minted",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 29
+  }
+]

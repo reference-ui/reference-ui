@@ -1,4 +1,6 @@
 {
+  "backgroundColor:blue": "@reference-ui/lib__bg-c_blue",
+  "backgroundColor:red": "@reference-ui/lib__bg-c_red",
   "color:blue": "@reference-ui/lib__c_blue",
   "color:red": "@reference-ui/lib__c_red",
   "fontSize:4": "@reference-ui/lib__fs_4",

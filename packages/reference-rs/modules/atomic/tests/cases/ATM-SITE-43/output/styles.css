@@ -579,8 +579,11 @@
 @layer utilities {
   .\@reference-ui\/lib__m_8px { margin: 8px; }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
+  .\@reference-ui\/lib__p_12px { padding: 12px; }
   .\@reference-ui\/lib__p_2px { padding: 2px; }
   .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_8px { padding: 8px; }
+  .\@reference-ui\/lib__p_3r { padding: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__bg-c_blue { background-color: blue; }
   .\@reference-ui\/lib__c_blue { color: blue; }
   .\@reference-ui\/lib__c_red { color: red; }
@@ -590,6 +593,10 @@
   .\@reference-ui\/lib__top_-1 { top: -1px; }
   .\@reference-ui\/lib__top_-2 { top: -2px; }
   .\@reference-ui\/lib__w_12px { width: 12px; }
+  .\@reference-ui\/lib__w_2px { width: 2px; }
+  .\@reference-ui\/lib__w_4px { width: 4px; }
+  .\@reference-ui\/lib__w_8px { width: 8px; }
+  .\@reference-ui\/lib__w_3r { width: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__z_42 { z-index: 42; }
   .\@reference-ui\/lib__z_99 { z-index: 99; }
 }

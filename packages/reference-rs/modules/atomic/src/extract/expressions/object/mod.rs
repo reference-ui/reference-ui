@@ -24,6 +24,7 @@ use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
 use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
+use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
 use canon::is_known_style_prop;
@@ -55,6 +56,7 @@ pub struct ObjectWalk<'a> {
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: Option<&'a mut Vec<crate::runtime::AuthoredDeclaration>>,
     pub bag: BagSemantics,
+    pub sinks: &'a mut Vec<Sink>,
 }
 
 impl<'a> ObjectWalk<'a> {
@@ -70,6 +72,7 @@ impl<'a> ObjectWalk<'a> {
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
+            sinks: self.sinks,
         }
     }
 

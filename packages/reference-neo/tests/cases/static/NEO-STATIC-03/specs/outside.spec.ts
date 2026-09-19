@@ -28,17 +28,21 @@ interface DiagnosticWindow {
 }
 
 // One static atom, one runtime hit, one set-miss, one failing sibling: the
-// sheet carries the ember utility alone, the hit probe paints ember while
-// the gold probe stays classless on inherited ink with exactly one page
-// diagnostic, the node-side calls agree, and the bad sibling's unsatisfiable
-// staticCss request rejects sync naming the ref with no folder left behind.
+// sheet carries the ember utility plus the three harvested hex floors, the
+// hit probe paints ember while the unwritten-gold probe stays classless on
+// inherited ink with exactly one page diagnostic, the node-side calls agree,
+// and the bad sibling's unsatisfiable staticCss request rejects sync naming
+// the ref with no folder left behind.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
   assert.ok(styles.includes('.neo-static-03__c_ember {'), 'sheet carries the ember atom');
-  assert.ok(!styles.includes('.neo-static-03__c_gold'), 'no ghost rule leaks in for gold');
+  assert.ok(!styles.includes('.neo-static-03__c_gold'), 'no ghost rule leaks in for the unwritten gold');
+  assert.ok(styles.includes('.neo-static-03__c_\\#111111 {'), 'sheet carries the harvested ink floor');
+  assert.ok(styles.includes('.neo-static-03__c_\\#ef4444 {'), 'sheet carries the harvested ember-hex floor');
+  assert.ok(styles.includes('.neo-static-03__c_\\#f59e0b {'), 'sheet carries the harvested amber-hex floor');
   const utilityCount = styles.match(/\.neo-static-03__/g)?.length ?? 0;
-  assert.equal(utilityCount, 1, `sheet carries exactly the static atom, got ${utilityCount}`);
+  assert.equal(utilityCount, 4, `sheet carries the static atom plus the harvest floor, got ${utilityCount}`);
 
   const hit = page.locator('#hit');
   await hit.waitFor();

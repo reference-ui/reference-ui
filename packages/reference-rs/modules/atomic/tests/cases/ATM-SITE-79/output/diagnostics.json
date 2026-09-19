@@ -14,5 +14,13 @@
     "file": "input/src/app.ts",
     "line": 5,
     "column": 32
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 2 harvested values minted",
+    "file": "input/src/app.ts",
+    "line": 4,
+    "column": 36
   }
 ]

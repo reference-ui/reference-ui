@@ -8,6 +8,7 @@
 import { expect } from 'vitest'
 import {
   getWantsForProp,
+  harvestWants,
   hasWant,
   type AtomicCaseSpec,
 } from '../../helpers.js'
@@ -40,11 +41,14 @@ const UNARY_REFUSALS: Array<{ file: string; line: number; op: string; detail: st
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-38',
   verify(result) {
-    // Every fold emits its wants: 15 across the four inputs.
+    // Every fold emits its wants: 15 across the four inputs. The marginTop
+    // sink harvests 2r/4px/auto; `auto` is invalid on `order`, so that sink
+    // infos a zero count.
     for (const { prop, value } of FOLDS) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
-    expect(result.wants ?? []).toHaveLength(15)
+    expect(harvestWants(result)).toHaveLength(3)
+    expect(result.wants ?? []).toHaveLength(18)
 
     // `!true` folds to `false`, never `true`: the only `true` want is `!0`'s.
     const falses = (result.wants ?? []).filter(
@@ -61,8 +65,9 @@ const spec: AtomicCaseSpec = {
     // One runtime plan per unique resolvable leaf: the doubled `-4`/`-8`
     // wants share, and the folded bools are planless exactly like bare bools
     // (ATM-SITE-18: `color={true}` warns and mints nothing, no plan either).
+    // The three harvested pairs plan beside the nine site plans.
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(9)
+    expect(plans).toHaveLength(12)
     for (const { prop, value } of FOLDS) {
       if (typeof value === 'boolean') {
         expect(plans.some(p => p.prop === prop && p.value === value)).toBe(false)
@@ -111,7 +116,13 @@ const spec: AtomicCaseSpec = {
     const invalid = diagnostics.filter(d => d.code === 'ATM-W-INVALID-CSS-VALUE')
     expect(invalid).toHaveLength(3)
 
-    expect(diagnostics).toHaveLength(14)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(14)
+    expect(infos).toHaveLength(2)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+    }
 
     expect(result.stylesheet).toContain('margin-top: -4px;')
     expect(result.stylesheet).toContain('order: 8;')

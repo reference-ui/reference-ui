@@ -603,10 +603,23 @@
   .\@reference-ui\/lib__mt_-8px { margin-top: -8px; }
   .\@reference-ui\/lib__mt_1px { margin-top: 1px; }
   .\@reference-ui\/lib__mt_2px { margin-top: 2px; }
+  .\@reference-ui\/lib__mt_3px { margin-top: 3px; }
+  .\@reference-ui\/lib__mt_4px { margin-top: 4px; }
+  .\@reference-ui\/lib__mt_5px { margin-top: 5px; }
+  .\@reference-ui\/lib__mt_6px { margin-top: 6px; }
+  .\@reference-ui\/lib__mt_8px { margin-top: 8px; }
+  .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__mt_4r { margin-top: calc(4 * var(--spacing-root)); }
   .\@reference-ui\/lib__order_5 { order: 5; }
   .\@reference-ui\/lib__pt_6px { padding-top: 6px; }
+  .\@reference-ui\/lib__w_1px { width: 1px; }
+  .\@reference-ui\/lib__w_2px { width: 2px; }
+  .\@reference-ui\/lib__w_3px { width: 3px; }
   .\@reference-ui\/lib__w_4px { width: 4px; }
+  .\@reference-ui\/lib__w_5px { width: 5px; }
+  .\@reference-ui\/lib__w_6px { width: 6px; }
+  .\@reference-ui\/lib__w_8px { width: 8px; }
   .\@reference-ui\/lib__w_calc\(2_\*_8px\) { width: calc(2 * 8px); }
+  .\@reference-ui\/lib__w_2r { width: calc(2 * var(--spacing-root)); }
 }
 }

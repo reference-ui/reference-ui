@@ -46,5 +46,13 @@
     "file": "input/src/foreign.ts",
     "line": 8,
     "column": 39
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "animationName under []: 0 harvested values minted",
+    "file": "input/src/factories.ts",
+    "line": 20,
+    "column": 39
   }
 ]

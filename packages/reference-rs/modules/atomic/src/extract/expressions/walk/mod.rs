@@ -24,6 +24,7 @@ use super::literal::{
 };
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
+use crate::extract::harvest::{is_sink_code, Sink, SinkSite};
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
 
@@ -38,6 +39,16 @@ pub struct ExpressionWalk<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub sinks: &'a mut Vec<Sink>,
+}
+
+/// One refused dynamic value position: the diagnostic to emit plus the
+/// harvest sink it records. Bundled so the hook stays under the arg cap.
+pub struct DynamicRefusal<'w> {
+    pub span: Span,
+    pub code: DiagnosticCode,
+    pub message: String,
+    pub when: &'w SmallVec<[Box<str>; 2]>,
 }
 
 impl<'a> ExpressionWalk<'a> {
@@ -85,6 +96,32 @@ impl<'a> ExpressionWalk<'a> {
         let (line, column) = self.span_position(Some(span)).unzip();
         self.diagnostics
             .push(Diagnostic::info(code, message.into()).with_location(self.file, line, column));
+    }
+
+    /// Warn a dynamic refusal in value position, recording its harvest sink.
+    /// This is the one sink hook: every Dynamic* call site funnels through
+    /// here, so sinks stay exactly the refused value positions. Non-dynamic
+    /// codes (a mutated element base) warn without recording.
+    pub fn warn_dynamic(&mut self, refusal: DynamicRefusal<'_>) {
+        let DynamicRefusal {
+            span,
+            code,
+            message,
+            when,
+        } = refusal;
+        if is_sink_code(code) {
+            let (line, column) = self.span_position(Some(span)).unzip();
+            if let Some(sink) = Sink::for_site(SinkSite {
+                prop: self.prop,
+                when,
+                file: self.file,
+                line,
+                column,
+            }) {
+                self.sinks.push(sink);
+            }
+        }
+        self.warn(span, code, message);
     }
 }
 
@@ -188,7 +225,7 @@ fn walk_fallback(
         }
         _ => {
             // width={props.w}  — dynamic, warn, keep siblings
-            call::warn_dynamic_expression(ctx, expr.span());
+            call::warn_dynamic_expression(ctx, expr.span(), when);
         }
     }
 }

@@ -5,7 +5,7 @@
 //! include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::Path;
 
 use styletrace::trace_style_bindings_with_surface;
@@ -26,6 +26,8 @@ pub use surface::engine_surface;
 pub struct ResolvedHosts {
     pub traced: Vec<String>,
     pub configured: Vec<String>,
+    /// Each traced export name to its owned declared prop names (§14).
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
 }
 
 impl ResolvedHosts {
@@ -53,6 +55,7 @@ pub fn resolve(request: &CompileRequest) -> (ResolvedHosts, Vec<Diagnostic>) {
             ResolvedHosts {
                 traced: Vec::new(),
                 configured: configured.clone(),
+                owned_props: BTreeMap::new(),
             },
             Vec::new(),
         )
@@ -84,5 +87,12 @@ pub fn resolve(request: &CompileRequest) -> (ResolvedHosts, Vec<Diagnostic>) {
         .into_iter()
         .map(render_trace_diagnostic)
         .collect();
-    (ResolvedHosts { traced, configured }, diagnostics)
+    (
+        ResolvedHosts {
+            traced,
+            configured,
+            owned_props: outcome.owned_props,
+        },
+        diagnostics,
+    )
 }

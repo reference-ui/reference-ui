@@ -9,11 +9,16 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-02',
   verify(result) {
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect(result.diagnostics.length).toBeGreaterThanOrEqual(1)
+    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    expect(warnings.length).toBeGreaterThanOrEqual(1)
     for (const d of result.diagnostics) {
-      expect(d.severity).toBe('warning')
       expect(d.file).toBeTruthy()
       expect(d.message.length).toBeGreaterThan(0)
+    }
+    // Harvest infos locate like warnings: every info is a sink count.
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }
     expect(result.stylesheet).toContain('@layer utilities')
   },

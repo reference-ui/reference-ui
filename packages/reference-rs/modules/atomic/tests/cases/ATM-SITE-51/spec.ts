@@ -7,7 +7,7 @@
  * part while static siblings extract.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean }> = [
   { prop: 'width', value: '4px' },
@@ -72,17 +72,22 @@ const PART_REFUSALS: Array<{
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-51',
   verify(result) {
-    // Every fold emits its wants: 38 across the five inputs.
+    // Every fold emits its wants: 38 across the five inputs. The mt sink
+    // harvests six net-new lengths (1px/2px twin the site's marginTop
+    // atoms); the width sink harvests seven (4px twins the site); the
+    // color, borderColor, and order sinks find nothing net-new.
     for (const { prop, value } of FOLDS) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
-    expect(result.wants ?? []).toHaveLength(38)
+    expect(siteWants(result)).toHaveLength(38)
+    expect(harvestWants(result)).toHaveLength(13)
+    expect(result.wants ?? []).toHaveLength(51)
 
     // One runtime plan per unique resolvable leaf: the doubled color-red,
     // margin-4px, borderColor-red, and fontFamily-null wants share one plan
     // each (SITE-38 precedent: plans dedupe by prop+value+when).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(31)
+    expect(plans).toHaveLength(44)
     for (const { prop, value } of FOLDS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
@@ -137,7 +142,13 @@ const spec: AtomicCaseSpec = {
     )
     expect(unary, 'unary refusal over a folded template').toBeDefined()
 
-    expect(diagnostics).toHaveLength(10)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(10)
+    expect(infos).toHaveLength(5)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+    }
 
     expect(result.stylesheet).toContain('order: 5;')
     expect(result.stylesheet).toContain('width: 4px;')

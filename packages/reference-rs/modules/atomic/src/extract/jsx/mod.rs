@@ -72,6 +72,11 @@ fn handle_jsx_attribute(
     ctx: &mut ExtractContext<'_>,
 ) {
     let name = format_jsx_attribute_name(&attr.name);
+    if origin.is_some_and(|tag| ctx.host_owns(tag, &name)) {
+        // A host's own declared prop is an attribute on that host (§14),
+        // never a style — the resolver never sees it.
+        return;
+    }
     let Some(val) = &attr.value else {
         // <Div truncate />
         if is_known_style_prop(&name) {
@@ -109,7 +114,7 @@ fn handle_attribute_value(
         _ => {
             // <Div mt=<span /> /> — element values are never styles; DOM attrs
             // share the namespace and stay silent (SITE-07/08 stands).
-            if is_style_attr_name(name) {
+            if is_style_attr_name(ctx, origin.unwrap_or(""), name) {
                 ctx.warn(
                     val.span(),
                     DiagnosticCode::NonObjectJsxStyle,
@@ -120,10 +125,13 @@ fn handle_attribute_value(
     }
 }
 
-/// True for attribute names that carry styles: `css`, `r`, condition props,
-/// and known style props. Every other name is a DOM attribute.
-fn is_style_attr_name(name: &str) -> bool {
-    name == "css" || name == "r" || is_condition_prop(name) || is_known_style_prop(name)
+/// True for attribute names that carry styles on this host: `css`, `r`,
+/// condition props, and known style props. A name the host's own
+/// declaration owns short-circuits first (§14); every other name is a
+/// DOM attribute.
+fn is_style_attr_name(ctx: &ExtractContext<'_>, tag: &str, name: &str) -> bool {
+    !ctx.host_owns(tag, name)
+        && (name == "css" || name == "r" || is_condition_prop(name) || is_known_style_prop(name))
 }
 
 fn handle_attribute_string(
@@ -460,7 +468,7 @@ fn report_dropped_tag(
     tag_name: &str,
     ctx: &mut ExtractContext<'_>,
 ) {
-    if !ctx.jsx_hosts.is_empty() || !tag_may_carry_styles(opening) {
+    if !ctx.jsx_hosts.is_empty() || !tag_may_carry_styles(opening, ctx, tag_name) {
         return;
     }
     let (line, column) = ctx
@@ -471,12 +479,17 @@ fn report_dropped_tag(
 }
 
 /// True when the tag names a style/condition attr or spreads, which may
-/// forward StyleProps. Plain tags (`<div id="x" />`) never report.
-fn tag_may_carry_styles(opening: &JSXOpeningElement<'_>) -> bool {
+/// forward StyleProps. Plain tags (`<div id="x" />`) never report, and
+/// neither do attrs the host's own declaration owns (§14).
+fn tag_may_carry_styles(
+    opening: &JSXOpeningElement<'_>,
+    ctx: &ExtractContext<'_>,
+    tag: &str,
+) -> bool {
     opening.attributes.iter().any(|item| match item {
         JSXAttributeItem::Attribute(attr) => {
             let name = format_jsx_attribute_name(&attr.name);
-            is_known_style_prop(&name) || is_condition_prop(&name)
+            !ctx.host_owns(tag, &name) && (is_known_style_prop(&name) || is_condition_prop(&name))
         }
         JSXAttributeItem::SpreadAttribute(_) => true,
     })

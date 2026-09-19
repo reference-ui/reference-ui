@@ -6,17 +6,23 @@
  * top-level ternary args extract both arms.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-27',
   verify(result) {
     expect(hasWant(result, 'color', 'white', ['base'])).toBe(true)
     expect(hasWant(result, 'color', 'black', ['base'])).toBe(true)
-    expect(getWantsForProp(result, 'color').filter(w =>
+    const siteColor = siteWants(result).filter(w => w.prop === 'color')
+    expect(siteColor.filter(w =>
       (w.value as Record<string, string>).String === 'white',
     )).toHaveLength(2)
-    expect(getWantsForProp(result, 'color').filter(w =>
+    expect(siteColor.filter(w =>
       (w.value as Record<string, string>).String === 'black',
     )).toHaveLength(2)
     expect(hasWant(result, 'color', 'red', [])).toBe(true)
@@ -29,10 +35,14 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'padding', 1, ['base'])).toBe(true)
     expect(hasWant(result, 'padding', 3, ['md'])).toBe(true)
 
-    expect(result.wants ?? []).toHaveLength(12)
+    expect(siteWants(result)).toHaveLength(12)
+    // The refused color position harvests black/white; red/blue twin the
+    // site's unscoped plans and skip.
+    expect(harvestWants(result)).toHaveLength(2)
+    expect(result.wants ?? []).toHaveLength(14)
 
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(5)
+    expect(plans).toHaveLength(7)
     expect(plans.some(p => p.prop === 'color' && p.value === 'red')).toBe(true)
     expect(plans.some(p => p.prop === 'color' && p.value === 'blue')).toBe(true)
     expect(plans.some(
@@ -44,12 +54,22 @@ const spec: AtomicCaseSpec = {
     expect(plans.some(
       p => p.prop === 'padding' && JSON.stringify(p.value) === '[1,null,3]',
     )).toBe(true)
+    // Harvested black/white plan beside the red/blue site plans.
+    expect(plans.some(
+      p => p.prop === 'color' && p.value === 'black' && p.when.length === 0,
+    )).toBe(true)
+    expect(plans.some(
+      p => p.prop === 'color' && p.value === 'white' && p.when.length === 0,
+    )).toBe(true)
 
-    expect(result.diagnostics ?? []).toHaveLength(2)
-    for (const diagnostic of result.diagnostics ?? []) {
-      expect(diagnostic.severity).toBe('warning')
+    const warnings = (result.diagnostics ?? []).filter(d => d.severity === 'warning')
+    const infos = (result.diagnostics ?? []).filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(2)
+    for (const diagnostic of warnings) {
       expect(diagnostic.message).toMatch(/Dynamic non-literal expression/)
     }
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
 
     expect(result.stylesheet).toContain('color: white;')
     expect(result.stylesheet).toContain('color: black;')

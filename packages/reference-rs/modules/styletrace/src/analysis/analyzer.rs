@@ -22,9 +22,10 @@ pub(super) struct StyleTraceAnalyzer {
     modules: BTreeMap<PathBuf, TraceModule>,
     surface: StyleSurface,
     sync_root: PathBuf,
-    component_cache: HashMap<(PathBuf, String), bool>,
-    factory_cache: HashMap<(PathBuf, String), bool>,
-    export_cache: HashMap<(PathBuf, String), bool>,
+    component_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    factory_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    export_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    owned_props: BTreeMap<String, BTreeSet<String>>,
     diagnostics: Vec<TraceDiagnostic>,
 }
 
@@ -41,6 +42,7 @@ impl StyleTraceAnalyzer {
             component_cache: HashMap::new(),
             factory_cache: HashMap::new(),
             export_cache: HashMap::new(),
+            owned_props: BTreeMap::new(),
             diagnostics: Vec::new(),
         }
     }
@@ -48,6 +50,25 @@ impl StyleTraceAnalyzer {
     /// Drain edge-target diagnostics recorded while walking.
     pub(super) fn take_diagnostics(&mut self) -> Vec<TraceDiagnostic> {
         std::mem::take(&mut self.diagnostics)
+    }
+
+    /// Drain the owned-props map: each traced export name to the prop
+    /// names its own declaration owns. Same-named exports union.
+    pub(super) fn take_owned_props(&mut self) -> BTreeMap<String, BTreeSet<String>> {
+        std::mem::take(&mut self.owned_props)
+    }
+
+    /// Record one traced export's owned props under its export name.
+    /// Empty sets stay out: untraced and own-nothing hosts both mean
+    /// no shadow, so the map carries only real shadows.
+    fn record_owned(&mut self, export_name: &str, owned: BTreeSet<String>) {
+        if owned.is_empty() {
+            return;
+        }
+        self.owned_props
+            .entry(export_name.to_string())
+            .or_default()
+            .extend(owned);
     }
 
     pub(super) fn collect_exported_bindings(
@@ -74,8 +95,9 @@ impl StyleTraceAnalyzer {
         let rel_module = format_relative_module(module_path, source_root);
 
         for export_name in module.exports.keys() {
-            if self.export_is_traced(module_path, export_name, &mut Vec::new())? {
+            if let Some(owned) = self.export_is_traced(module_path, export_name, &mut Vec::new())? {
                 bindings.insert(TracedBinding::new(&rel_module, export_name));
+                self.record_owned(export_name, owned);
             }
         }
 
@@ -89,28 +111,33 @@ impl StyleTraceAnalyzer {
                 continue;
             };
             for export_name in target_module.exports.keys() {
-                if self.export_is_traced(&target, export_name, &mut Vec::new())? {
+                if let Some(owned) = self.export_is_traced(&target, export_name, &mut Vec::new())? {
                     bindings.insert(TracedBinding::new(&rel_module, export_name));
+                    self.record_owned(export_name, owned);
                 }
             }
         }
         Ok(())
     }
 
+    /// The export's owned props when its component traces to a
+    /// primitive; `None` when the export is not a style host. The owned
+    /// set is the resolved component's own declaration, so re-exports
+    /// carry the origin's names.
     fn export_is_traced(
         &mut self,
         module_path: &Path,
         export_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let cache_key = (module_path.to_path_buf(), export_name.to_string());
         if let Some(cached) = self.export_cache.get(&cache_key) {
-            return Ok(*cached);
+            return Ok(cached.clone());
         }
 
         let stack_key = format!("export:{}::{export_name}", module_path.display());
         if stack.contains(&stack_key) {
-            return Ok(false);
+            return Ok(None);
         }
         stack.push(stack_key);
 
@@ -135,10 +162,12 @@ impl StyleTraceAnalyzer {
                     .map(|module| module.export_all_sources.clone())
                     .unwrap_or_default();
 
-                let mut traced = false;
+                let mut traced = None;
                 for source in export_all_sources {
-                    if self.import_target_is_traced(module_path, &source, export_name, stack)? {
-                        traced = true;
+                    if let Some(owned) =
+                        self.import_target_is_traced(module_path, &source, export_name, stack)?
+                    {
+                        traced = Some(owned);
                         break;
                     }
                 }
@@ -147,7 +176,7 @@ impl StyleTraceAnalyzer {
         };
 
         stack.pop();
-        self.export_cache.insert(cache_key, result);
+        self.export_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 
@@ -156,15 +185,15 @@ impl StyleTraceAnalyzer {
         module_path: &Path,
         component_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let cache_key = (module_path.to_path_buf(), component_name.to_string());
         if let Some(cached) = self.component_cache.get(&cache_key) {
-            return Ok(*cached);
+            return Ok(cached.clone());
         }
 
         let stack_key = format!("component:{}::{component_name}", module_path.display());
         if stack.contains(&stack_key) {
-            return Ok(false);
+            return Ok(None);
         }
         stack.push(stack_key);
 
@@ -186,12 +215,12 @@ impl StyleTraceAnalyzer {
                 Some(factory_target) => {
                     self.factory_target_is_traced(module_path, &factory_target, stack)?
                 }
-                None => false,
+                None => None,
             },
         };
 
         stack.pop();
-        self.component_cache.insert(cache_key, result);
+        self.component_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 
@@ -200,30 +229,32 @@ impl StyleTraceAnalyzer {
         module_path: &Path,
         component: &TraceComponent,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         if !component.exposes_style_props {
-            return Ok(false);
+            return Ok(None);
         }
         if component.uses_style_pipeline {
-            return Ok(true);
+            return Ok(Some(component.owned_props.clone()));
         }
 
         for edge in &component.edges {
             let matched = match &edge.target {
                 EdgeTarget::Primitive(name) => self.surface.primitives.contains(name),
-                EdgeTarget::Local(local_name) => {
-                    self.component_is_traced(module_path, local_name, stack)?
-                }
+                EdgeTarget::Local(local_name) => self
+                    .component_is_traced(module_path, local_name, stack)?
+                    .is_some(),
                 EdgeTarget::Imported {
                     source,
                     imported_name,
-                } => self.import_target_is_traced(module_path, source, imported_name, stack)?,
+                } => self
+                    .import_target_is_traced(module_path, source, imported_name, stack)?
+                    .is_some(),
             };
             if matched {
-                return Ok(true);
+                return Ok(Some(component.owned_props.clone()));
             }
         }
-        Ok(false)
+        Ok(None)
     }
 
     fn factory_target_is_traced(
@@ -231,7 +262,7 @@ impl StyleTraceAnalyzer {
         module_path: &Path,
         target: &FactoryTarget,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         match target {
             FactoryTarget::Local(factory_name) => {
                 self.factory_is_traced(module_path, factory_name, stack)
@@ -242,7 +273,7 @@ impl StyleTraceAnalyzer {
             } => {
                 let Some(resolved) = resolve_imported_module(module_path, source, &self.sync_root)?
                 else {
-                    return Ok(false);
+                    return Ok(None);
                 };
                 self.ensure_module_loaded(&resolved)?;
                 self.factory_is_traced(&resolved, imported_name, stack)
@@ -255,15 +286,15 @@ impl StyleTraceAnalyzer {
         module_path: &Path,
         factory_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         let cache_key = (module_path.to_path_buf(), factory_name.to_string());
         if let Some(cached) = self.factory_cache.get(&cache_key) {
-            return Ok(*cached);
+            return Ok(cached.clone());
         }
 
         let stack_key = format!("factory:{}::{factory_name}", module_path.display());
         if stack.contains(&stack_key) {
-            return Ok(false);
+            return Ok(None);
         }
         stack.push(stack_key);
 
@@ -276,11 +307,11 @@ impl StyleTraceAnalyzer {
             Some(factory) => {
                 self.component_value_is_traced(module_path, &factory.component, stack)?
             }
-            None => false,
+            None => None,
         };
 
         stack.pop();
-        self.factory_cache.insert(cache_key, result);
+        self.factory_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 
@@ -290,14 +321,19 @@ impl StyleTraceAnalyzer {
         source: &str,
         imported_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<bool, StyleTraceError> {
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
         if source == "@reference-ui/react" {
-            return Ok(self.surface.primitives.contains(imported_name));
+            // Primitives own nothing in the trace flow; the match is the host.
+            return Ok(self
+                .surface
+                .primitives
+                .contains(imported_name)
+                .then(BTreeSet::new));
         }
 
         let Some(resolved_module) = resolve_imported_module(module_path, source, &self.sync_root)?
         else {
-            return Ok(false);
+            return Ok(None);
         };
         self.ensure_module_loaded(&resolved_module)?;
         self.export_is_traced(&resolved_module, imported_name, stack)

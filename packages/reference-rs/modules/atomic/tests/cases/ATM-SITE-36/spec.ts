@@ -5,7 +5,13 @@
  * each while their margin siblings extract with runtime plans.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  getWantsForProp,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-36',
@@ -15,21 +21,29 @@ const spec: AtomicCaseSpec = {
     for (const value of ['1r', '2r', '3r', '4r', '5r']) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
+    // Refused callees leak nothing at the site; the literals they name
+    // still harvest onto the refused color sink (Forge §2 floor).
+    const siteColor = siteWants(result).filter(w => w.prop === 'color')
     for (const leaked of ['blue', 'green', 'purple']) {
-      expect(hasWant(result, 'color', leaked)).toBe(false)
+      expect(siteColor.some(w =>
+        (w.value as Record<string, string>).String === leaked)).toBe(false)
+      expect(hasWant(result, 'color', leaked)).toBe(true)
     }
-    expect(getWantsForProp(result, 'color')).toHaveLength(1)
-    expect(result.wants ?? []).toHaveLength(7)
+    expect(siteColor).toHaveLength(1)
+    expect(getWantsForProp(result, 'color')).toHaveLength(4)
+    expect(harvestWants(result)).toHaveLength(3)
+    expect(result.wants ?? []).toHaveLength(10)
 
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(7)
+    expect(plans).toHaveLength(10)
 
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(5)
-    for (const diagnostic of diagnostics) {
-      expect(diagnostic.severity).toBe('warning')
-    }
-    const messages = diagnostics.map(d => d.message).join('\n')
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(5)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    const messages = warnings.map(d => d.message).join('\n')
     expect(messages).toMatch(/'s'/)
     expect(messages).toMatch(/'c1'/)
     expect(messages).toMatch(/'shade'/)

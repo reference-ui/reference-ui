@@ -11,7 +11,7 @@ use smallvec::SmallVec;
 
 use super::{
     branch::{emit_dead_arms, push_folded_want},
-    walk_expression, ExpressionWalk,
+    walk_expression, DynamicRefusal, ExpressionWalk,
 };
 use crate::diagnostics::DiagnosticCode;
 
@@ -27,7 +27,7 @@ pub(crate) fn handle_identifier_fallback(
     // param or inner declarator shadows outer and cross-file consts.
     let leaves = ctx.scopes.scalar_leaves(name);
     if leaves.is_empty() {
-        handle_identifier(ctx, name, span);
+        handle_identifier(ctx, name, span, when);
         return;
     }
     for val in leaves {
@@ -35,7 +35,12 @@ pub(crate) fn handle_identifier_fallback(
     }
 }
 
-fn handle_identifier(ctx: &mut ExpressionWalk<'_>, name: &str, span: Span) {
+fn handle_identifier(
+    ctx: &mut ExpressionWalk<'_>,
+    name: &str,
+    span: Span,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
     if name == "undefined" || name == "null" {
         // bg={on ? 'n300' : undefined}  — omit
         return;
@@ -46,11 +51,12 @@ fn handle_identifier(ctx: &mut ExpressionWalk<'_>, name: &str, span: Span) {
     }
     // mt={space}  when `space` is not a file-top const
     let prop = ctx.prop;
-    ctx.warn(
+    ctx.warn_dynamic(DynamicRefusal {
         span,
-        DiagnosticCode::DynamicIdentifier,
-        format!("Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"),
-    );
+        code: DiagnosticCode::DynamicIdentifier,
+        message: format!("Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"),
+        when,
+    });
 }
 
 /// Warn naming the write when a base name is a mutated binding.
@@ -92,19 +98,21 @@ pub(crate) fn handle_unary(
     }
     for refusal in &fold.refusals {
         let prop = ctx.prop;
-        ctx.warn(
-            unary.span,
-            DiagnosticCode::DynamicUnary,
-            refusal.message(prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: unary.span,
+            code: DiagnosticCode::DynamicUnary,
+            message: refusal.message(prop),
+            when,
+        });
     }
     for refusal in &fold.template_refusals {
         let prop = ctx.prop;
-        ctx.warn(
-            refusal.span(),
-            DiagnosticCode::DynamicTemplate,
-            refusal.message(prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: refusal.span(),
+            code: DiagnosticCode::DynamicTemplate,
+            message: refusal.message(prop),
+            when,
+        });
     }
     emit_dead_arms(ctx, &fold.dead_arms);
     for operand in fold.dynamic {
@@ -126,27 +134,30 @@ pub(crate) fn handle_binary(
     }
     for refusal in &fold.refusals {
         let prop = ctx.prop;
-        ctx.warn(
-            binary.span,
-            DiagnosticCode::DynamicBinary,
-            refusal.message(prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: binary.span,
+            code: DiagnosticCode::DynamicBinary,
+            message: refusal.message(prop),
+            when,
+        });
     }
     for refusal in &fold.unary_refusals {
         let prop = ctx.prop;
-        ctx.warn(
-            binary.span,
-            DiagnosticCode::DynamicUnary,
-            refusal.message(prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: binary.span,
+            code: DiagnosticCode::DynamicUnary,
+            message: refusal.message(prop),
+            when,
+        });
     }
     for refusal in &fold.template_refusals {
         let prop = ctx.prop;
-        ctx.warn(
-            binary.span,
-            DiagnosticCode::DynamicTemplate,
-            refusal.message(prop),
-        );
+        ctx.warn_dynamic(DynamicRefusal {
+            span: binary.span,
+            code: DiagnosticCode::DynamicTemplate,
+            message: refusal.message(prop),
+            when,
+        });
     }
     emit_dead_arms(ctx, &fold.dead_arms);
     for operand in fold.dynamic {

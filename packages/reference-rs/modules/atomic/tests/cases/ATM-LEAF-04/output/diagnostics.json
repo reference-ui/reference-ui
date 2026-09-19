@@ -22,5 +22,29 @@
     "file": "input/src/or-nullish.tsx",
     "line": 4,
     "column": 36
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "bg under []: 2 harvested values minted",
+    "file": "input/src/or-nullish.tsx",
+    "line": 4,
+    "column": 36
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 1 harvested value minted",
+    "file": "input/src/css-fallback.ts",
+    "line": 3,
+    "column": 14
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "margin under []: 0 harvested values minted",
+    "file": "input/src/css-fallback.ts",
+    "line": 4,
+    "column": 15
   }
 ]

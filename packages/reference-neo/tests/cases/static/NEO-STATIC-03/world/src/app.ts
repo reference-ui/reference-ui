@@ -23,8 +23,13 @@ console.warn = (...args: unknown[]) => {
   warn(...args)
 }
 
+// The miss shade resolves to 'gold' at runtime, but the world never writes
+// the literal: under harvest any written CSS value is information and would
+// floor the sink, so the unwritten miss is built from fragments.
+const GOLD = 'g' + 'o' + 'l' + 'd'
+
 el('hit').className = paint('ember')
-el('miss').className = paint('gold')
+el('miss').className = paint(GOLD)
 
 function paint(shade: string): string {
   return css({ color: shade })

@@ -32,6 +32,16 @@ fn has_want(result: &crate::CompileResult, prop: &str, value: &str) -> bool {
     })
 }
 
+/// True when a site (non-harvest) want carries this prop and value: the
+/// refusal half of a §2-floor assertion, where harvest still mints.
+fn has_site_want(result: &crate::CompileResult, prop: &str, value: &str) -> bool {
+    result.wants.iter().any(|want| {
+        want.prop.as_ref() == prop
+            && want.origin.as_deref() != Some(crate::extract::harvest::HARVEST_ORIGIN)
+            && matches!(&want.value, crate::atom::AtomValue::String(text) if text.as_ref() == value)
+    })
+}
+
 /// Messages of diagnostics carrying this code.
 fn messages_for(result: &crate::CompileResult, code: crate::DiagnosticCode) -> Vec<String> {
     result
@@ -139,8 +149,16 @@ fn ambiguous_star_twin_refuses_the_import() {
             "import { css } from '@reference-ui/react'\nimport { tone } from './barrel'\nexport const x = css({ color: tone })",
         ),
     ]);
-    assert!(!has_want(&res, "color", "red"));
-    assert!(!has_want(&res, "color", "blue"));
+    // The twin refuses at the site, but both literals harvest onto the
+    // refused sink (Forge §1: harvest can hide the miss; the fold stands).
+    assert!(!has_site_want(&res, "color", "red"));
+    assert!(!has_site_want(&res, "color", "blue"));
+    assert!(has_want(&res, "color", "red"));
+    assert!(has_want(&res, "color", "blue"));
+    assert!(
+        !messages_for(&res, crate::DiagnosticCode::DynamicIdentifier).is_empty(),
+        "the refused import still diagnoses"
+    );
 }
 
 #[test]
@@ -187,5 +205,12 @@ fn default_and_namespace_edges_refuse_values() {
             "import { css } from '@reference-ui/react'\nimport * as t from './tokens'\nimport tokens from './tokens'\nexport const a = css({ color: t.brand })\nexport const b = css(tokens)",
         ),
     ]);
-    assert!(!has_want(&res, "color", "red"));
+    // Namespace and default edges refuse at the site (§6), but the literal
+    // harvests onto the refused member sink (Forge §2 floor).
+    assert!(!has_site_want(&res, "color", "red"));
+    assert!(has_want(&res, "color", "red"));
+    assert!(
+        !messages_for(&res, crate::DiagnosticCode::DynamicMember).is_empty(),
+        "the refused member still diagnoses"
+    );
 }

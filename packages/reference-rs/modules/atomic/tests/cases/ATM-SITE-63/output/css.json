@@ -1,4 +1,6 @@
 {
+  "backgroundColor:black": "@reference-ui/lib__bg-c_black",
   "backgroundColor:white": "@reference-ui/lib__bg-c_white",
-  "color:black": "@reference-ui/lib__c_black"
+  "color:black": "@reference-ui/lib__c_black",
+  "color:white": "@reference-ui/lib__c_white"
 }

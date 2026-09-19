@@ -14,9 +14,10 @@ interface SpecInput {
 }
 
 // The world declared two base colors plus a hover color in staticCss with
-// no static wants. The sheet carries exactly those three atoms with one
-// hover :is() wrap; the base probe paints ember and the data-hover twin
-// paints gold, both through runtime values that found pre-generated atoms.
+// no static wants. The sheet carries those three atoms with one declared
+// hover :is() wrap, plus the four harvested hex floors (each hex base and
+// hover); the base probe paints ember and the data-hover twin paints gold,
+// both through runtime values that found pre-generated atoms.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -24,10 +25,12 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('.neo-static-01__c_ember'), 'sheet carries the ember atom');
   assert.ok(styles.includes('.neo-static-01__c_gold'), 'sheet carries the gold atom');
+  assert.ok(styles.includes('.neo-static-01__c_\\#ef4444'), 'sheet carries the harvested ember-hex floor');
+  assert.ok(styles.includes('.neo-static-01__c_\\#f59e0b'), 'sheet carries the harvested amber-hex floor');
   const wraps = styles.split(':is(:hover, [data-hover])').length - 1;
-  assert.equal(wraps, 1, `sheet carries one hover :is() selector, got ${wraps}`);
+  assert.equal(wraps, 3, `sheet carries the declared wrap plus the two harvested hover floors, got ${wraps}`);
   const utilityCount = styles.match(/\.neo-static-01__/g)?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries exactly the declared atoms, got ${utilityCount}`);
+  assert.equal(utilityCount, 7, `sheet carries the declared atoms plus the harvest floor, got ${utilityCount}`);
 
   const base = page.locator('#base');
   await base.waitFor();

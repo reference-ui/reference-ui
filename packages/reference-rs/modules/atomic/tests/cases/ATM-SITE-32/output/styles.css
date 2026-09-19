@@ -587,5 +587,6 @@
   .\@reference-ui\/lib__m_8r { margin: calc(8 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_9r { margin: calc(9 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_1r { margin: var(--spacing-root); }
+  .\@reference-ui\/lib__c_red { color: red; }
 }
 }

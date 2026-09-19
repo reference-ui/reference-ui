@@ -66,12 +66,17 @@ const spec: AtomicCaseSpec = {
       }
     }
 
-    expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics[0]!.severity).toBe('warning')
-    expect(result.diagnostics[0]!.message).toMatch(
+    // The dynamic identifier warns and mints nothing at the site; its sink
+    // infos a zero count (the pool holds no compatible value).
+    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.message).toMatch(
       /Dynamic non-literal identifier 'color'/
     )
-    expect(result.diagnostics[0]!.file).toMatch(/Card\.tsx$/)
+    expect(warnings[0]!.file).toMatch(/Card\.tsx$/)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
   },
 }
 

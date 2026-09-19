@@ -6,5 +6,13 @@
     "file": "input/src/Card.tsx",
     "line": 8,
     "column": 16
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/Card.tsx",
+    "line": 8,
+    "column": 16
   }
 ]

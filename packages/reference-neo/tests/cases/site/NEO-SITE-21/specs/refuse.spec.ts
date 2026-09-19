@@ -77,9 +77,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
   const diagnostics = result.diagnostics ?? [];
-  assert.equal(diagnostics.length, 2, `two refusal warnings, got ${JSON.stringify(diagnostics)}`);
-  for (const diagnostic of diagnostics) {
-    assert.equal(diagnostic.severity, 'warning');
+  const warnings = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning');
+  const infos = diagnostics.filter((diagnostic) => diagnostic.severity === 'info');
+  assert.equal(warnings.length, 2, `two refusal warnings, got ${JSON.stringify(diagnostics)}`);
+  for (const diagnostic of warnings) {
     assert.match(diagnostic.message, /Dynamic non-literal/);
   }
+  assert.equal(infos.length, 1, `one zero-count sink info, got ${JSON.stringify(diagnostics)}`);
 }

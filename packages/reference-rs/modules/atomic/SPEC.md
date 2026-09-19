@@ -951,6 +951,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-82` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-82/` |
 | `ATM-SITE-83` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-83/` |
 | `ATM-SITE-84` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-84/` |
+| `ATM-SITE-85` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-85/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
@@ -1090,6 +1091,10 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SEAM-02` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-02/` |
 | `ATM-SEAM-03` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-03/` |
 | `ATM-SCAN-01` | `[x]` | `[seam]` | `tests/cases/ATM-SCAN-01/` |
+| `ATM-HARVEST-01` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-01/` |
+| `ATM-HARVEST-02` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-02/` |
+| `ATM-HARVEST-03` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-03/` |
+| `ATM-HARVEST-04` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-04/` |
 
 ---
 

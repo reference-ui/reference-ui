@@ -10,13 +10,16 @@ use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeExpr};
 
 use super::builtins::{resolve_builtin_literals, resolve_builtin_props};
-use super::context::TraceContext;
+use super::context::{is_surface_type_name, TraceContext};
 
 pub fn resolve_reference_props(
     ctx: &mut TraceContext<'_>,
     module_path: &Path,
     name: &str,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
+    if ctx.session.prune_surface && is_surface_type_name(name) {
+        return Ok(BTreeSet::new());
+    }
     if let Some(bound) = ctx.env.get(name) {
         let mut next_ctx = ctx.branch(&bound.module_path, ctx.env);
         return resolve_prop_names(&mut next_ctx, &bound.expr);
@@ -80,6 +83,9 @@ fn resolve_reference_expr_props(
     name: &str,
     args: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
+    if ctx.session.prune_surface && is_surface_type_name(name) {
+        return Ok(BTreeSet::new());
+    }
     if let Some(names) = resolve_builtin_props(ctx, name, args)? {
         return Ok(names);
     }
@@ -149,6 +155,9 @@ fn resolve_reference_expr_literals(
     name: &str,
     args: &[TypeExpr],
 ) -> Result<BTreeSet<String>, StyleTraceError> {
+    if ctx.session.prune_surface && is_surface_type_name(name) {
+        return Ok(BTreeSet::new());
+    }
     if let Some(values) = resolve_builtin_literals(ctx, name, args)? {
         return Ok(values);
     }

@@ -86,5 +86,21 @@
     "file": "input/src/refuse.ts",
     "line": 41,
     "column": 14
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/refuse.ts",
+    "line": 8,
+    "column": 21
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "margin under []: 9 harvested values minted",
+    "file": "input/src/refuse.ts",
+    "line": 18,
+    "column": 15
   }
 ]

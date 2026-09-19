@@ -1,4 +1,6 @@
 {
+  "color:black": "@reference-ui/lib__c_black",
+  "md:padding:4px": "@reference-ui/lib__md:p_4px",
   "padding:4px": "@reference-ui/lib__p_4px",
   "sm:color:black": "@reference-ui/lib__sm:c_black"
 }

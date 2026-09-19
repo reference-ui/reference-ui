@@ -13,6 +13,7 @@ pub mod constants;
 pub mod css;
 pub mod expressions;
 pub mod fold;
+pub mod harvest;
 pub mod identity;
 pub mod identity_map;
 pub mod jsx;
@@ -30,7 +31,7 @@ mod site_plan_tests;
 mod tests;
 
 use std::cell::Cell;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use oxc_ast::ast::{
     BindingPattern, CallExpression, FormalParameters, JSXOpeningElement, Program,
@@ -56,6 +57,7 @@ pub struct ExtractConfig<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: &'a HashSet<String>,
+    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub shadowed: &'a [HashSet<String>],
 }
 
@@ -65,6 +67,7 @@ pub struct ExtractSinks<'a> {
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
+    pub sinks: &'a mut Vec<harvest::Sink>,
 }
 
 /// Context for extracting style declarations across an AST file.
@@ -76,12 +79,14 @@ pub struct ExtractContext<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: &'a HashSet<String>,
+    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub shadowed: &'a [HashSet<String>],
     pub recipe_binding: Option<String>,
     pub wants: &'a mut Vec<Want>,
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
+    pub sinks: &'a mut Vec<harvest::Sink>,
     missing_graph_reported: bool,
 }
 
@@ -100,12 +105,14 @@ impl<'a> ExtractContext<'a> {
             breakpoints: config.breakpoints,
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
+            owned_props: config.owned_props,
             shadowed: config.shadowed,
             recipe_binding: None,
             wants: sinks.wants,
             recipes: sinks.recipes,
             diagnostics: sinks.diagnostics,
             authored: sinks.authored,
+            sinks: sinks.sinks,
             missing_graph_reported: false,
         }
     }
@@ -122,6 +129,23 @@ impl<'a> ExtractContext<'a> {
             return true;
         }
         name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+    }
+
+    /// True when the host's own declaration owns this prop name (§14).
+    /// Owned names shadow style props on that host, so the JSX check
+    /// consults this before any macro or style-prop test. Member tags
+    /// match concatenated hosts, mirroring [`Self::allows_jsx_tag`].
+    pub fn host_owns(&self, tag: &str, name: &str) -> bool {
+        if let Some(owned) = self.owned_props.get(tag) {
+            if owned.contains(name) {
+                return true;
+            }
+        }
+        tag.contains('.')
+            && self
+                .owned_props
+                .get(&tag.replace('.', ""))
+                .is_some_and(|owned| owned.contains(name))
     }
 
     /// Report a diagnostic warning at the offending node's span.
@@ -184,6 +208,7 @@ impl<'a> ExtractContext<'a> {
             diagnostics: self.diagnostics,
             authored: Some(self.authored),
             bag: BagSemantics::StyleObject,
+            sinks: self.sinks,
         }
     }
 
@@ -204,6 +229,7 @@ impl<'a> ExtractContext<'a> {
             diagnostics: self.diagnostics,
             authored: None,
             bag: BagSemantics::StyleObject,
+            sinks: self.sinks,
         }
     }
 
@@ -224,6 +250,7 @@ impl<'a> ExtractContext<'a> {
             breakpoints: self.breakpoints,
             wants: self.wants,
             diagnostics: self.diagnostics,
+            sinks: self.sinks,
         }
     }
 }
@@ -236,6 +263,7 @@ pub struct ExtractVisitor<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: ExtractBindings,
     pub jsx_hosts: HashSet<String>,
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
     pub shadows: Vec<HashSet<String>>,
     pub scope_stack: Vec<ScopeId>,
     next_scope: ScopeId,
@@ -244,6 +272,7 @@ pub struct ExtractVisitor<'a> {
     pub recipes: Vec<Recipe>,
     pub diagnostics: Vec<Diagnostic>,
     pub authored: Vec<crate::runtime::AuthoredDeclaration>,
+    pub sinks: Vec<harvest::Sink>,
     missing_graph_reported: bool,
 }
 
@@ -256,6 +285,7 @@ impl<'a> ExtractVisitor<'a> {
             breakpoints: config.breakpoints,
             bindings: config.bindings.clone(),
             jsx_hosts: config.jsx_hosts.clone(),
+            owned_props: config.owned_props.clone(),
             shadows: Vec::new(),
             scope_stack: Vec::new(),
             next_scope: ROOT_SCOPE,
@@ -264,6 +294,7 @@ impl<'a> ExtractVisitor<'a> {
             recipes: Vec::new(),
             diagnostics: Vec::new(),
             authored: Vec::new(),
+            sinks: Vec::new(),
             missing_graph_reported: false,
         }
     }
@@ -356,6 +387,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
         breakpoints: visitor.breakpoints,
         bindings: &visitor.bindings,
         jsx_hosts: &visitor.jsx_hosts,
+        owned_props: &visitor.owned_props,
         shadowed: &visitor.shadows,
     };
     let sinks = ExtractSinks {
@@ -363,6 +395,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
         recipes: &mut visitor.recipes,
         diagnostics: &mut visitor.diagnostics,
         authored: &mut visitor.authored,
+        sinks: &mut visitor.sinks,
     };
     let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
     ctx.recipe_binding = binding;
@@ -405,6 +438,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
         breakpoints: ctx.breakpoints,
         bindings: ctx.bindings,
         jsx_hosts: ctx.jsx_hosts,
+        owned_props: ctx.owned_props,
         shadowed: &[],
     };
     let mut visitor = ExtractVisitor::new(ctx.file, ctx.source, config);
@@ -413,6 +447,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
     ctx.recipes.extend(visitor.recipes);
     ctx.diagnostics.extend(visitor.diagnostics);
     ctx.authored.extend(visitor.authored);
+    ctx.sinks.extend(visitor.sinks);
 }
 
 /// Extract all style wants and diagnostics from a parsed AST program.
@@ -433,11 +468,13 @@ pub fn extract(
     let chain = scope::ScopeChain::new(&table, stub);
     let bindings = collect_bindings(program);
     let jsx_hosts = bindings.jsx_hosts();
+    let owned_props = BTreeMap::new();
     let config = ExtractConfig {
         chain,
         breakpoints,
         bindings: &bindings,
         jsx_hosts: &jsx_hosts,
+        owned_props: &owned_props,
         shadowed: &[],
     };
     let mut ctx = ExtractContext::new(file, None, config, sinks);

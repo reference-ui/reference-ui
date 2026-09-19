@@ -12,8 +12,10 @@ import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import {
   getWantsForProp,
+  harvestWants,
   hasWant,
   layerClassNames,
+  siteWants,
   type AtomicCaseSpec,
 } from '../../helpers.js'
 
@@ -47,15 +49,21 @@ const spec: AtomicCaseSpec = {
     }
     expect(hasWant(result, 'color', 'blue', ['_hover'])).toBe(true)
     // Holes omit: no margin want reads the holey slot, the sibling lands.
+    // The margin sink harvests nine net-new pool lengths; red/blue twin
+    // site atoms, so the color sink infos zero.
+    const site = siteWants(result)
+    expect(site.filter(w => w.prop === 'color')).toHaveLength(16)
     expect(getWantsForProp(result, 'color')).toHaveLength(16)
-    expect(getWantsForProp(result, 'margin')).toHaveLength(6)
+    expect(site.filter(w => w.prop === 'margin')).toHaveLength(6)
+    expect(getWantsForProp(result, 'margin')).toHaveLength(15)
     expect(getWantsForProp(result, 'padding')).toHaveLength(10)
-    expect(result.wants).toHaveLength(32)
+    expect(harvestWants(result)).toHaveLength(9)
+    expect(result.wants).toHaveLength(41)
     expect(hasWant(result, 'color', 'typo')).toBe(false)
 
     // Plans dedupe by leaf: one plan per distinct (prop, value, when).
     const plans = result.runtime.stylePlans
-    expect(plans).toHaveLength(16)
+    expect(plans).toHaveLength(25)
     for (const { prop, value, className } of EXPECTED) {
       const matches = plans.filter(
         p => p.prop === prop && p.value === value && p.when.length === 0
@@ -81,12 +89,19 @@ const spec: AtomicCaseSpec = {
 
     // Eleven refusals, each located at the failing side with the key named.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(11)
-    const member = diagnostics.filter(d => d.code === 'ATM-W-DYNAMIC-MEMBER')
-    const mutated = diagnostics.filter(d => d.code === 'ATM-W-MUTATED-BINDING')
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(11)
+    expect(infos).toHaveLength(2)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+      expect(d.file).toMatch(/refuse\.ts$/)
+    }
+    const member = warnings.filter(d => d.code === 'ATM-W-DYNAMIC-MEMBER')
+    const mutated = warnings.filter(d => d.code === 'ATM-W-MUTATED-BINDING')
     expect(member).toHaveLength(10)
     expect(mutated).toHaveLength(1)
-    const byLine = new Map(diagnostics.map(d => [d.line, d]))
+    const byLine = new Map(warnings.map(d => [d.line, d]))
     const at = (line: number) => {
       const diag = byLine.get(line)
       expect(diag, `diagnostic at refuse.ts:${line}`).toBeDefined()
@@ -117,8 +132,7 @@ const spec: AtomicCaseSpec = {
     expect(at(33).message).toMatch(/\[typo\]' has no static entry/)
     expect(at(36).message).toMatch(/Dynamic non-literal element base 'member expression'/)
     expect(at(41).message).toMatch(/Dynamic non-literal element base 'member expression'/)
-    for (const diag of diagnostics) {
-      expect(diag.severity).toBe('warning')
+    for (const diag of warnings) {
       expect(diag.file).toMatch(/refuse\.ts$/)
       expect(diag.line).toBeDefined()
       expect(diag.column).toBeDefined()

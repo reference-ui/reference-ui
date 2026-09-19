@@ -577,12 +577,15 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__bg_blue { background: blue; }
   .\@reference-ui\/lib__bg_green { background: green; }
+  .\@reference-ui\/lib__bg_red { background: red; }
   .\@reference-ui\/lib__bd-c_0 { border-color: 0; }
   .\@reference-ui\/lib__border-style_solid { border-style: solid; }
   .\@reference-ui\/lib__bd-w_1px { border-width: 1px; }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__c_blue { color: blue; }
+  .\@reference-ui\/lib__c_green { color: green; }
   .\@reference-ui\/lib__c_red { color: red; }
   .\@reference-ui\/lib__outline-s_solid { outline-style: solid; }
   .\@reference-ui\/lib__outline-w_2px { outline-width: 2px; }

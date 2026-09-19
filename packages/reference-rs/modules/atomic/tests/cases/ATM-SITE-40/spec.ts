@@ -9,8 +9,10 @@ import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import {
   getWantsForProp,
+  harvestWants,
   hasWant,
   layerClassNames,
+  siteWants,
   type AtomicCaseSpec,
 } from '../../helpers.js'
 
@@ -21,8 +23,11 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-40',
   verify(result) {
     // Aliased scalar, object (spread + member), and array-index reads.
+    // Red/blue twin site atoms, so the sink infos a zero count.
     expect(hasWant(result, 'color', 'red')).toBe(true)
+    expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(3)
     expect(getWantsForProp(result, 'color')).toHaveLength(3)
+    expect(harvestWants(result)).toHaveLength(0)
     expect(hasWant(result, 'padding', '4px')).toBe(true)
     expect(hasWant(result, 'margin', '8px')).toBe(true)
     // Sibling paddings behind the missing export and the three cycles.
@@ -67,7 +72,11 @@ const spec: AtomicCaseSpec = {
     // with siblings kept. Cycle names are declared nowhere, so the
     // merge-bag fallback genuinely misses and the guard stays observable.
     const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(4)
+    const warnings = diagnostics.filter(d => d.severity === 'warning')
+    const infos = diagnostics.filter(d => d.severity === 'info')
+    expect(warnings).toHaveLength(4)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
     for (const expected of [
       {
         file: 'missing.ts',
@@ -94,7 +103,7 @@ const spec: AtomicCaseSpec = {
         message: "Dynamic non-literal identifier 'spin'",
       },
     ]) {
-      const match = diagnostics.find(
+      const match = warnings.find(
         d =>
           d.file?.endsWith(expected.file) &&
           d.line === expected.line &&

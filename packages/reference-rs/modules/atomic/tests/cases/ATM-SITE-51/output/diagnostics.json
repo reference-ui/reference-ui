@@ -78,5 +78,45 @@
     "file": "input/src/refuse.ts",
     "line": 16,
     "column": 34
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "borderColor under []: 0 harvested values minted",
+    "file": "input/src/fanout.ts",
+    "line": 8,
+    "column": 55
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "color under []: 0 harvested values minted",
+    "file": "input/src/fanout.ts",
+    "line": 19,
+    "column": 31
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "mt under []: 6 harvested values minted",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 30
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "order under []: 0 harvested values minted",
+    "file": "input/src/refuse.ts",
+    "line": 13,
+    "column": 31
+  },
+  {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "width under []: 7 harvested values minted",
+    "file": "input/src/refuse.ts",
+    "line": 3,
+    "column": 34
   }
 ]

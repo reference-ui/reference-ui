@@ -8,7 +8,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 use oxc_span::Span;
 use smallvec::SmallVec;
 
-use super::{leaf::mutated_warn, util::unwrap_wrapper_target, ExpressionWalk};
+use super::{leaf::mutated_warn, util::unwrap_wrapper_target, DynamicRefusal, ExpressionWalk};
 use crate::diagnostics::DiagnosticCode;
 
 /// Fold one call: a `token()` value pushes its want, a refused shape warns
@@ -47,11 +47,12 @@ fn handle_pure_call(
     if let Some(value) = fold.value {
         for refusal in &fold.refusals {
             let prop = ctx.prop;
-            ctx.warn(
-                refusal.span(),
-                DiagnosticCode::DynamicExpression,
-                refusal.message_for_value(prop),
-            );
+            ctx.warn_dynamic(DynamicRefusal {
+                span: refusal.span(),
+                code: DiagnosticCode::DynamicExpression,
+                message: refusal.message_for_value(prop),
+                when,
+            });
         }
         if let Some(subject) = fold.residue.as_ref() {
             ctx.warn(
@@ -73,15 +74,20 @@ fn handle_pure_call(
         }
     }
     // width={pick()}  — dynamic, warn, keep siblings
-    warn_dynamic_expression(ctx, call.span);
+    warn_dynamic_expression(ctx, call.span, when);
 }
 
 /// The generic dynamic-expression warning for an unhandled value shape.
-pub(crate) fn warn_dynamic_expression(ctx: &mut ExpressionWalk<'_>, span: Span) {
+pub(crate) fn warn_dynamic_expression(
+    ctx: &mut ExpressionWalk<'_>,
+    span: Span,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
     let prop = ctx.prop;
-    ctx.warn(
+    ctx.warn_dynamic(DynamicRefusal {
         span,
-        DiagnosticCode::DynamicExpression,
-        format!("Dynamic non-literal expression encountered for prop '{prop}'"),
-    );
+        code: DiagnosticCode::DynamicExpression,
+        message: format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+        when,
+    });
 }

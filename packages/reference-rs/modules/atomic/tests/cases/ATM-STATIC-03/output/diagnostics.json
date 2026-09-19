@@ -8,6 +8,14 @@
     "column": 29
   },
   {
+    "severity": "info",
+    "code": "ATM-I-HARVEST-SINK",
+    "message": "borderRadius under []: 0 harvested values minted",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 29
+  },
+  {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown property in staticCss: \"unknownProp\""
