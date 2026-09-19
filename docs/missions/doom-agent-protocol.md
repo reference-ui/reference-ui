@@ -95,7 +95,10 @@ architect consult per §5 — this is silence on idiomatic code, not a
 contrived shape. Shape decision lives in
 [Operation Forge](operation-forge.md) §1, and Forge Slice 3 owns the
 fix (module graph, residue marker, `ATM-SITE-78`), so Doom cycle 1
-reproduces against that fixed shape.
+reproduces against that fixed shape. **FORTIFIED 2026-09-19** —
+Forge Slice 3 landed the module graph, `ATM-SITE-78`
+(three-file fold + barrel + cycle arm) is green, and the diagnose
+floor (residue marker + `ATM-W-UNFOLDABLE-SPREAD`) is armed.
 
 ## 9. Satisfaction pin (what "happy tomorrow" means)
 
