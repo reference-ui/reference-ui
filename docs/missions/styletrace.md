@@ -5,7 +5,7 @@ OPERATION: GO
 Status: `done` — voyage opened 2026-09-18, closed 2026-09-19. All six slices landed; `jsxElements` hand-list deleted with zero drift; Book spot-checks are the one post-commit item (:5000 was down at acceptance).
 Slice #1 landed in `535cf0eb2`. Plan rebuilt 2026-09-18 from the
 three-crew probe (engine seam · Neo pins · gaps) and a root-trace probe.
-Precursor to [Operation Overmatch](operation-overmatch.md): Overmatch
+Precursor to [Operation Overmatch](completed/operation-overmatch.md): Overmatch
 leaves `hosts.rs` untouched (§7.7) and states "hosts come from styletrace,
 import-bound" (S18). This mission makes the first half of that sentence
 true and hands the second half over with named rows.
@@ -511,7 +511,7 @@ Three stays, confirmed:
    as the escape hatch for `const NS = { Panel: Div }`; end state (c) is an
    Overmatch binding row).
 
-Gap #3 filed into [Operation Overmatch](operation-overmatch.md) §4
+Gap #3 filed into [Operation Overmatch](completed/operation-overmatch.md) §4
 OUT-OF-AXIS table ("JSX tag through a file-local alias", StyleTrace
 handoff): the Overmatch mission did not already cover the
 extractor-binding question (nearest rows are S12 site-identity-through-
