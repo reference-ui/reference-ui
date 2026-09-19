@@ -38,6 +38,16 @@ function throwOnErrorDiagnostics(diagnostics: NativeDiagnostic[]): void {
   throw new Error(`native compile failed:\n${lines.join('\n')}`)
 }
 
+// Warnings print LOUD on every sync and never throw: a drifting sync that
+// stays green must still show what the engine disliked, and a failing sync
+// must not take its warnings down with the throw.
+function reportWarningDiagnostics(diagnostics: NativeDiagnostic[]): void {
+  const warnings = diagnostics.filter(entry => entry.severity === 'warning')
+  if (warnings.length === 0) return
+  const lines = warnings.map(entry => `[neo] sync warning: ${entry.message}${diagnosticLocation(entry)}`)
+  console.warn(lines.join('\n'))
+}
+
 function uniqueSorted(names: readonly string[]): string[] {
   return [...new Set(names)].sort()
 }
@@ -77,6 +87,7 @@ export async function sync(cwd: string): Promise<SyncResult> {
       include: config.include,
     }
     const result = await compileNative(request)
+    reportWarningDiagnostics(result.diagnostics)
     throwOnErrorDiagnostics(result.diagnostics)
 
     // Publish carries configured ∪ traced: hosts the engine discovered
