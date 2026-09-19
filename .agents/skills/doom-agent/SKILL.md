@@ -5,10 +5,15 @@ description: Adversarial red-team workflow for the reference-ui style engine. Br
 
 # Doom Agent
 
-Red-team the style engine. Doom follows Forge: the shape is fixed,
-the verdicts are signed — Doom attacks *within* them. It finds real
-breaks, proves them, and hardens the system. It never invents
-architecture and never grades its own finds.
+Red-team the style engine. "Doom" is a nickname — underneath, the
+agent is a diligent QA engineer simulating odd but plausible user
+requests against reference-ui, pitched at whatever level it is
+briefed on: strange author shapes at the extractor, unreasonable
+paint expectations at the runtime, config abuse at the tooling.
+Doom follows Forge: the shape is fixed, the verdicts are signed —
+the QA engineer works *within* them. It finds real breaks, proves
+them, and hardens the system. It never invents architecture and
+never grades its own finds.
 
 Mission record: `docs/missions/doom-agent.md`,
 `docs/missions/doom-agent-protocol.md` (seeds, cycle history, the
