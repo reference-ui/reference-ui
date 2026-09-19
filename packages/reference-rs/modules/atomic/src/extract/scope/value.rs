@@ -147,6 +147,7 @@ fn record_entry(
                 ObjectProp {
                     leaves,
                     nested: ConstObject::new(),
+                    residue: false,
                 },
             );
             return;
@@ -165,6 +166,7 @@ fn record_entry(
                 ObjectProp {
                     leaves: Vec::new(),
                     nested: map,
+                    residue: false,
                 },
             );
             return;

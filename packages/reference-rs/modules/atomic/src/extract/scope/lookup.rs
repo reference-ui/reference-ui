@@ -1,11 +1,13 @@
 //! Identifier resolution through the scope chain, then the import lookup.
 //! A name resolves to the innermost binding in scope: a const with a static
 //! init yields its leaves, while a param, function, or dynamic declarator
-//! yields nothing and shadows everything outside it. Imported and unbound
-//! names fall through to the import lookup, whose Ph1 stub answers from the
-//! merged project bag — the merge-era observable, preserved behind the seam
-//! the Ph4 resolver (SPEC-V2-76) will fill. Unknown scope ids resolve as
+//! yields nothing and shadows everything outside it. Imported names resolve
+//! through the binding walk to the declared export in THAT file and read its
+//! origin bag; unresolvable shapes fall back to the merge bag, as do unbound
+//! names, preserving the merge-era observable. Unknown scope ids resolve as
 //! unbound, so a miscounted scope degrades to today's behavior, never a ghost.
+
+use std::collections::HashMap;
 
 use super::binding::{Binding, BindingInit, BindingKind, ImportRef};
 use super::table::{ScopeId, ScopeTable};
@@ -14,6 +16,7 @@ use crate::extract::constants::{
     ConstArrayElement, ConstObject, LocalConstants, MutatedBinding, ObjectProp,
 };
 use crate::extract::fold::fence::PureFn;
+use crate::extract::resolver::ResolvedExport;
 
 /// Where a name resolved: a local binding, an import, or nowhere in scope.
 #[derive(Debug, Clone, Copy)]
@@ -27,14 +30,20 @@ pub enum Lookup<'a> {
 }
 
 /// Answers names the file does not bind: the import lookup seam.
-/// Ph1 carries only the merge-era project bag; SPEC-V2-76 extends this
-/// with the binding-aware resolver. An enum, not a trait object, so the
-/// chain stays covariant and the walkers can shrink its lifetime.
+/// The resolver map holds imports by local name; the bag stays as the
+/// fallback for unhandled shapes and unbound names. An enum, not a trait
+/// object, so the chain stays covariant and walkers shrink its lifetime.
 #[derive(Debug, Clone, Copy)]
 pub enum ImportLookup<'a> {
-    /// The retired project name bag, consulted by local name. Unbound and
-    /// imported names resolve exactly as the merge era resolved them.
+    /// The project name bag alone (bare extracts and unit tests).
     ProjectBag(&'a LocalConstants),
+    /// Resolved imports by local name plus the bag fallback (compiles).
+    Binding {
+        /// Resolved imports of this file, keyed by local name.
+        values: &'a HashMap<String, ResolvedExport>,
+        /// Merge-era fallback for unhandled shapes and unbound names.
+        fallback: &'a LocalConstants,
+    },
 }
 
 impl<'a> ImportLookup<'a> {
@@ -58,15 +67,29 @@ impl<'a> ImportLookup<'a> {
         self.bag().get_array(name)
     }
 
+    /// An exported pure-helper descriptor outside local scope (SPEC-V2-57).
+    fn pure_fn(self, name: &str) -> Option<&'a PureFn> {
+        self.bag().get_pure_fn(name)
+    }
+
     /// The write that poisoned a binding, if any (SPEC-V2-35).
     fn mutation(self, name: &str) -> Option<&'a MutatedBinding> {
         self.bag().mutation(name)
     }
 
+    /// The resolved import value for a local name, when the map holds it.
+    fn import_value(self, local: &str) -> Option<&'a ResolvedExport> {
+        match self {
+            Self::ProjectBag(_) => None,
+            Self::Binding { values, .. } => values.get(local),
+        }
+    }
+
     /// The backing project bag.
     fn bag(self) -> &'a LocalConstants {
-        let Self::ProjectBag(bag) = self;
-        bag
+        match self {
+            Self::ProjectBag(bag) | Self::Binding { fallback: bag, .. } => bag,
+        }
     }
 }
 
@@ -147,8 +170,9 @@ pub struct Scoped<'a> {
 }
 
 impl<'a> Scoped<'a> {
-    /// Every static leaf for a name: local leaves, or the import fallback.
+    /// Every static leaf for a name: locals, resolved imports, or the fallback.
     /// A mutated binding yields nothing anywhere — the walker names the write.
+    /// A resolved import answers only its target's value, never the bag union.
     pub fn scalar_leaves(self, name: &str) -> &'a [AtomValue] {
         // mt={space}  after  const space = '2r'
         if self.mutated(name) {
@@ -156,9 +180,17 @@ impl<'a> Scoped<'a> {
         }
         match self.chain.resolve(name, self.scope) {
             Lookup::Local(binding) => local_scalars(binding),
-            Lookup::Import(imp) => self.chain.imports.scalar_leaves(&imp.local),
+            Lookup::Import(imp) => self.import_scalars(&imp.local),
             Lookup::Unbound => self.chain.imports.scalar_leaves(name),
         }
+    }
+
+    /// Scalar leaves for an import: the resolved target, else the bag union.
+    fn import_scalars(self, local: &str) -> &'a [AtomValue] {
+        if let Some(value) = self.chain.imports.import_value(local) {
+            return value.scalars();
+        }
+        self.chain.imports.scalar_leaves(local)
     }
 
     /// The first static leaf for single-valued positions.
@@ -166,20 +198,28 @@ impl<'a> Scoped<'a> {
         self.scalar_leaves(name).first()
     }
 
-    /// The lowered pure-helper descriptor for a name, same-file only.
-    /// Imported and unbound names carry no descriptor until SPEC-V2-57 lands
-    /// the descriptor export; a mutated callee refuses like any mutated use.
+    /// The lowered pure-helper descriptor for a name: the same-file
+    /// binding, else the merge-era descriptor export by local name
+    /// (SPEC-V2-57). A mutated callee refuses like any mutated use; the
+    /// Ph4 resolver (SPEC-V2-76) will answer imports by binding instead.
     pub fn pure_fn(self, name: &str) -> Option<&'a PureFn> {
         // color={tone('600')}  after  const tone = (shade) => `red.${shade}`
         if self.mutated(name) {
             return None;
         }
         match self.chain.resolve(name, self.scope) {
-            Lookup::Local(binding) => match &binding.init {
-                Some(BindingInit::PureFn(func)) => Some(func),
-                _ => None,
-            },
-            Lookup::Import(_) | Lookup::Unbound => None,
+            Lookup::Local(binding) => Self::local_pure_fn(binding),
+            found => self.fallback_pure_fn(name, found),
+        }
+    }
+
+    /// A descriptor outside local scope: imports answer by local name,
+    /// unbound names by name, both from the descriptor export.
+    fn fallback_pure_fn(self, name: &str, found: Lookup<'_>) -> Option<&'a PureFn> {
+        match found {
+            Lookup::Import(imp) => self.chain.imports.pure_fn(&imp.local),
+            Lookup::Unbound => self.chain.imports.pure_fn(name),
+            Lookup::Local(_) => None,
         }
     }
 
@@ -203,19 +243,44 @@ impl<'a> Scoped<'a> {
         Some(&entry.nested)
     }
 
+    /// A same-file binding's descriptor, when it lowered as a pure helper.
+    fn local_pure_fn(binding: &Binding) -> Option<&PureFn> {
+        match &binding.init {
+            Some(BindingInit::PureFn(func)) => Some(func),
+            _ => None,
+        }
+    }
+
+    /// True when a bound object's member kept leaves beside a dropped
+    /// dynamic arm (Ph4 residue channel), through locals or the fallback.
+    pub fn object_prop_residue(self, obj: &str, prop: &str) -> bool {
+        // color={part.color}  after  const part = { color: flag ? 'white' : run() }
+        self.object_prop_entry(obj, prop)
+            .is_some_and(|entry| entry.residue && !entry.leaves.is_empty())
+    }
+
     /// The recorded entry for one member, through locals or the fallback.
+    /// A resolved import answers only its target's object, never the bag's.
     fn object_prop_entry(self, obj: &str, prop: &str) -> Option<&'a ObjectProp> {
         if self.mutated(obj) {
             return None;
         }
         match self.chain.resolve(obj, self.scope) {
             Lookup::Local(binding) => local_object_prop(binding, prop),
-            Lookup::Import(imp) => self.chain.imports.object_prop(&imp.local, prop),
+            Lookup::Import(imp) => self.import_object_prop(&imp.local, prop),
             Lookup::Unbound => self.chain.imports.object_prop(obj, prop),
         }
     }
 
-    /// A bound style object, or the import fallback.
+    /// One member entry for an import: the resolved target, else the bag.
+    fn import_object_prop(self, local: &str, prop: &str) -> Option<&'a ObjectProp> {
+        match self.chain.imports.import_value(local) {
+            Some(value) => value.object_prop(prop),
+            None => self.chain.imports.object_prop(local, prop),
+        }
+    }
+
+    /// A bound style object, resolved imports first, then the fallback.
     pub fn object(self, name: &str) -> Option<&'a ConstObject> {
         // css({ ...base })  after  const base = { mt: '2r' }
         if self.mutated(name) {
@@ -223,12 +288,20 @@ impl<'a> Scoped<'a> {
         }
         match self.chain.resolve(name, self.scope) {
             Lookup::Local(binding) => local_object(binding),
-            Lookup::Import(imp) => self.chain.imports.object(&imp.local),
+            Lookup::Import(imp) => self.import_object(&imp.local),
             Lookup::Unbound => self.chain.imports.object(name),
         }
     }
 
-    /// A bound const array's elements, or the import fallback.
+    /// A style object for an import: the resolved target, else the bag.
+    fn import_object(self, local: &str) -> Option<&'a ConstObject> {
+        match self.chain.imports.import_value(local) {
+            Some(value) => value.object(),
+            None => self.chain.imports.object(local),
+        }
+    }
+
+    /// A bound const array's elements, resolved imports first, then fallback.
     pub fn array(self, name: &str) -> Option<&'a [ConstArrayElement]> {
         // margin: sizes[1]  after  const sizes = ['2px', '4px']
         if self.mutated(name) {
@@ -236,8 +309,16 @@ impl<'a> Scoped<'a> {
         }
         match self.chain.resolve(name, self.scope) {
             Lookup::Local(binding) => local_array(binding),
-            Lookup::Import(imp) => self.chain.imports.array(&imp.local),
+            Lookup::Import(imp) => self.import_array(&imp.local),
             Lookup::Unbound => self.chain.imports.array(name),
+        }
+    }
+
+    /// Array elements for an import: the resolved target, else the bag.
+    fn import_array(self, local: &str) -> Option<&'a [ConstArrayElement]> {
+        match self.chain.imports.import_value(local) {
+            Some(value) => value.array(),
+            None => self.chain.imports.array(local),
         }
     }
 

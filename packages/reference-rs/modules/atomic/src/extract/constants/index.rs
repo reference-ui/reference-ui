@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 
 use super::entries::{ConstObject, ObjectProp};
 use crate::atom::AtomValue;
+use crate::extract::fold::fence::PureFn;
 
 /// Index of local scalar leaves and style objects declared anywhere in a file.
 #[derive(Debug, Default, Clone)]
@@ -18,6 +19,7 @@ pub struct LocalConstants {
     objects: BTreeMap<String, ConstObject>,
     arrays: BTreeMap<String, Vec<ConstArrayElement>>,
     mutated: BTreeMap<String, MutatedBinding>,
+    pure_fns: BTreeMap<String, PureFn>,
 }
 
 /// One recorded element of a const array initializer: a literal leaf, a
@@ -139,6 +141,16 @@ impl LocalConstants {
         self.arrays.get(name).map(Vec::as_slice)
     }
 
+    /// True when this file's bag carries any value for a declared name.
+    /// The binding walk reads this, never the merged bag, so two files
+    /// declaring the same name never see each other's values through it.
+    pub fn declares(&self, name: &str) -> bool {
+        // export const brand = 'red'  — tokens.ts declares `brand`
+        self.scalars.contains_key(name)
+            || self.objects.contains_key(name)
+            || self.arrays.contains_key(name)
+    }
+
     /// Mark a binding mutated by a write; the first write site wins.
     pub fn mark_mutated(&mut self, name: &str, write: MutatedBinding) {
         // color = 'blue'  after  let color = 'red'
@@ -151,12 +163,25 @@ impl LocalConstants {
         self.mutated.get(name)
     }
 
+    /// Record an exported pure-helper descriptor (SPEC-V2-57), first init wins.
+    pub fn insert_pure_fn(&mut self, name: impl Into<String>, func: PureFn) {
+        // export const tone = (shade) => `red.${shade}`
+        self.pure_fns.entry(name.into()).or_insert(func);
+    }
+
+    /// Look up an exported pure-helper descriptor by declared name.
+    pub fn get_pure_fn(&self, name: &str) -> Option<&PureFn> {
+        // color={tone('600')}  after  import { tone } from './helpers'
+        self.pure_fns.get(name)
+    }
+
     /// Drop every leaf of every mutated binding; their inits are stale.
     pub fn drop_mutated(&mut self) {
         for name in self.mutated.keys() {
             self.scalars.remove(name);
             self.objects.remove(name);
             self.arrays.remove(name);
+            self.pure_fns.remove(name);
         }
     }
 
@@ -165,17 +190,25 @@ impl LocalConstants {
         for (k, leaves) in &other.scalars {
             self.insert_scalar_leaves(k.clone(), leaves);
         }
-        for (k, v) in &other.objects {
-            let obj = self.objects.entry(k.clone()).or_default();
-            for (prop_k, prop_v) in v {
-                obj.entry(prop_k.clone()).or_insert_with(|| prop_v.clone());
-            }
-        }
+        self.merge_objects(&other.objects);
         for (k, v) in &other.arrays {
             self.arrays.entry(k.clone()).or_insert_with(|| v.clone());
         }
         for (k, v) in &other.mutated {
             self.mutated.entry(k.clone()).or_insert_with(|| v.clone());
+        }
+        for (k, v) in &other.pure_fns {
+            self.pure_fns.entry(k.clone()).or_insert_with(|| v.clone());
+        }
+    }
+
+    /// Merge another file's style objects; existing keys win per object.
+    fn merge_objects(&mut self, objects: &BTreeMap<String, ConstObject>) {
+        for (k, v) in objects {
+            let obj = self.objects.entry(k.clone()).or_default();
+            for (prop_k, prop_v) in v {
+                obj.entry(prop_k.clone()).or_insert_with(|| prop_v.clone());
+            }
         }
     }
 }

@@ -13,12 +13,17 @@ pub mod constants;
 pub mod css;
 pub mod expressions;
 pub mod fold;
+pub mod identity;
+pub mod identity_map;
 pub mod jsx;
 pub mod recipes;
+pub mod resolver;
 pub mod scope;
 
 #[cfg(test)]
 mod gating_tests;
+#[cfg(test)]
+mod identity_tests;
 #[cfg(test)]
 mod site_plan_tests;
 #[cfg(test)]
@@ -43,7 +48,7 @@ use base_system::BreakpointScale;
 use expressions::{ExpressionWalk, ObjectWalk};
 use scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
-pub use bindings::{collect_bindings, ExtractBindings};
+pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
 
 /// Configuration references passed into style extraction contexts.
 pub struct ExtractConfig<'a> {

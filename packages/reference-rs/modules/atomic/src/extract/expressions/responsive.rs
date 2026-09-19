@@ -139,6 +139,13 @@ pub fn walk_object(
             );
             continue;
         };
+        if let Some(path) = crate::extract::fold::key_entry_residue(&prop.key, ctx.scopes) {
+            ctx.warn(
+                prop.key.span(),
+                DiagnosticCode::PartialObjectProp,
+                format!("property '{path}' drops a dynamic arm with no static style value"),
+            );
+        }
         let mut entry_when = when.clone();
         entry_when.push(key.into());
         walk_expression(ctx, &prop.value, &entry_when);

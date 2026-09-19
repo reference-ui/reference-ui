@@ -4,10 +4,12 @@
 //! thing in both indexes. Each static-keyed entry carries its literal leaves,
 //! both arms of a branching value, or a nested entry map; anything else
 //! records an empty marker so the use site can diagnose it instead of going
-//! silent (SPEC-V2-55/65). Inline spreads merge here — sequential spreads
-//! overwrite like last-wins, conditional and logical spreads union every
-//! inline arm (SPEC-V2-24) — while computed keys stay unrecorded and
-//! identifier spreads resolve in the scope layer (SPEC-V2-34).
+//! silent (SPEC-V2-55/65). A branching value that keeps a static leaf while
+//! dropping a dynamic arm sets the entry's residue flag at collect time, so
+//! the use site can diagnose the loss (Ph4 residue channel). Inline spreads
+//! merge here — sequential spreads overwrite like last-wins, conditional and
+//! logical spreads union every inline arm (SPEC-V2-24) — while computed keys
+//! stay unrecorded and identifier spreads resolve in the scope layer (SPEC-V2-34).
 
 use std::collections::BTreeMap;
 
@@ -22,13 +24,17 @@ pub type ConstObject = BTreeMap<String, ObjectProp>;
 /// One recorded entry of a const style object: its static leaves plus, for
 /// a nested object literal, the nested entries one level down. Empty leaves
 /// with an empty map mark a dynamic value (call, identifier, member), which
-/// the use site diagnoses — never silently skipped, never a ghost.
+/// the use site diagnoses — never silently skipped, never a ghost. The
+/// residue flag marks a partially static entry: leaves were kept while a
+/// dynamic arm was dropped at collect time, which the use site diagnoses.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ObjectProp {
     /// Literal and branching leaves (`'red'`, both arms of `flag ? 'r' : 'b'`).
     pub leaves: Vec<AtomValue>,
     /// Nested entries (`{ colors: { primary: 'blue' } }`).
     pub nested: ConstObject,
+    /// True when a dynamic arm was dropped beside the kept leaves.
+    pub residue: bool,
 }
 
 impl ObjectProp {
@@ -149,13 +155,17 @@ fn union_entries(into: &mut ConstObject, from: ConstObject) {
 
 /// Union one spread entry into the accumulated map, shared with the scope
 /// layer so branching spreads record identically in both collectors.
+/// Residue unions too: an empty marker merged beside kept leaves is a
+/// dropped dynamic arm, exactly like a partially static branch.
 pub(crate) fn union_entry(into: &mut ConstObject, key: String, prop: ObjectProp) {
     match into.get_mut(&key) {
         Some(existing) => {
+            let dropped = prop.residue || prop.is_empty();
             for leaf in prop.leaves {
                 push_leaf(&mut existing.leaves, leaf);
             }
             union_entries(&mut existing.nested, prop.nested);
+            existing.residue |= dropped;
         }
         None => {
             into.insert(key, prop);
@@ -164,12 +174,16 @@ pub(crate) fn union_entry(into: &mut ConstObject, key: String, prop: ObjectProp)
 }
 
 /// Lower one entry value: literals, branching leaves, or a nested map.
+/// A branching value that keeps leaves while dropping a dynamic arm records
+/// the residue flag beside them; a value with no static leaf at all stays an
+/// empty marker, which the use site diagnoses on its own path.
 fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
     if let Some(leaf) = literal_leaf(expr) {
         // { primary: 'n300' }
         return ObjectProp {
             leaves: vec![leaf],
             nested: ConstObject::new(),
+            residue: false,
         };
     }
     if matches!(
@@ -178,8 +192,10 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
     ) {
         // { tone: flag ? 'red' : 'blue' } — both arms, like the want walker
         let mut leaves = Vec::new();
-        collect_branching_leaves(expr, &mut leaves);
+        let mut dropped = false;
+        collect_branching_leaves(expr, &mut leaves, &mut dropped);
         return ObjectProp {
+            residue: !leaves.is_empty() && dropped,
             leaves,
             nested: ConstObject::new(),
         };
@@ -189,6 +205,7 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
         return ObjectProp {
             leaves: Vec::new(),
             nested: object_entries(nested),
+            residue: false,
         };
     }
     // { color: pick() } — empty marker; the use site diagnoses it
@@ -197,39 +214,54 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
 
 /// Scoop every literal leaf of a branching entry, mirroring the want
 /// walker leaf-for-leaf: both ternary arms, non-guard logical operands.
-fn collect_branching_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) {
+/// A non-guard leaf position with no literal sets the dropped flag.
+fn collect_branching_leaves(
+    expr: &Expression<'_>,
+    out: &mut Vec<AtomValue>,
+    dropped: &mut bool,
+) {
     let unwrapped = unwrap_entry(expr);
-    if collect_conditional_leaves(unwrapped, out) {
+    if collect_conditional_leaves(unwrapped, out, dropped) {
         return;
     }
-    if collect_logical_leaves(unwrapped, out) {
+    if collect_logical_leaves(unwrapped, out, dropped) {
         return;
     }
     if let Some(atom) = literal_leaf(unwrapped) {
         push_leaf(out, atom);
+    } else {
+        *dropped = true;
     }
 }
 
 /// Scoop both arms of a ternary entry, or false when not a ternary.
-fn collect_conditional_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+fn collect_conditional_leaves(
+    expr: &Expression<'_>,
+    out: &mut Vec<AtomValue>,
+    dropped: &mut bool,
+) -> bool {
     let Expression::ConditionalExpression(cond) = expr else {
         return false;
     };
-    collect_branching_leaves(&cond.consequent, out);
-    collect_branching_leaves(&cond.alternate, out);
+    collect_branching_leaves(&cond.consequent, out, dropped);
+    collect_branching_leaves(&cond.alternate, out, dropped);
     true
 }
 
 /// Scoop the non-guard operands of a logical entry, or false when not logical.
-fn collect_logical_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+fn collect_logical_leaves(
+    expr: &Expression<'_>,
+    out: &mut Vec<AtomValue>,
+    dropped: &mut bool,
+) -> bool {
     let Expression::LogicalExpression(log) = expr else {
         return false;
     };
     if !is_guard_expression(&log.left) {
-        collect_branching_leaves(&log.left, out);
+        collect_branching_leaves(&log.left, out, dropped);
     }
     if !is_guard_expression(&log.right) {
-        collect_branching_leaves(&log.right, out);
+        collect_branching_leaves(&log.right, out, dropped);
     }
     true
 }

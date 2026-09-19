@@ -25,6 +25,10 @@ pub struct CallFold {
     pub value: Option<FenceValue>,
     /// Dropped members, arms, and slots, warned by the want walker.
     pub refusals: Vec<CallRefusal>,
+    /// The residue subject when the callee baked a dropped dynamic arm
+    /// (Ph4 residue channel); the want walker diagnoses it beside the
+    /// folded value. Bound callees name the callee, IIFEs name the entry.
+    pub residue: Option<Box<str>>,
 }
 
 /// One refused fragment of a folded call's arguments.
@@ -67,10 +71,38 @@ impl CallRefusal {
 /// Fold one call expression against the pure-helper fence.
 pub fn fold_pure_call(call: &CallExpression<'_>, scoped: Scoped<'_>) -> CallFold {
     let mut fold = ArgFold::new(scoped);
+    let residue = call_callee_residue(scoped, &call.callee);
     let value = apply_call(&mut fold, scoped, call);
     CallFold {
         value,
         refusals: fold.take_refusals(),
+        residue,
+    }
+}
+
+/// The residue subject when the callee baked a dropped dynamic arm.
+/// Bound callees carry the attach-time flag and name the callee; inline
+/// IIFEs scan their own body and name the entry read.
+fn call_callee_residue(scoped: Scoped<'_>, callee: &Expression<'_>) -> Option<Box<str>> {
+    let mut callee = callee;
+    while let Some(inner) = unwrap_wrapper_target(callee) {
+        callee = inner;
+    }
+    match callee {
+        Expression::Identifier(ident) => {
+            let name = ident.name.as_str();
+            if scoped.pure_fn(name).is_some_and(|func| func.residue) {
+                Some(format!("call to '{name}'").into_boxed_str())
+            } else {
+                None
+            }
+        }
+        Expression::ArrowFunctionExpression(_)
+        | Expression::FunctionExpression(_) => {
+            super::residue::expr_entry_residue(callee, scoped)
+                .map(|path| format!("property '{path}'").into_boxed_str())
+        }
+        _ => None,
     }
 }
 

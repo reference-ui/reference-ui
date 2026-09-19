@@ -581,6 +581,7 @@
   .\@reference-ui\/lib__m_11r { margin: calc(11 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_12r { margin: calc(12 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_13r { margin: calc(13 * var(--spacing-root)); }
+  .\@reference-ui\/lib__m_14r { margin: calc(14 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_2r { margin: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_3r { margin: calc(3 * var(--spacing-root)); }
   .\@reference-ui\/lib__m_4r { margin: calc(4 * var(--spacing-root)); }
@@ -596,6 +597,7 @@
   .\@reference-ui\/lib__bg-c_blue\.700 { background-color: var(--colors-blue-700); }
   .\@reference-ui\/lib__c_black { color: black; }
   .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_orange\.600 { color: var(--colors-orange-600); }
   .\@reference-ui\/lib__c_purple\.500 { color: var(--colors-purple-500); }
   .\@reference-ui\/lib__c_purple\.900 { color: var(--colors-purple-900); }
   .\@reference-ui\/lib__c_red\.600 { color: var(--colors-red-600); }

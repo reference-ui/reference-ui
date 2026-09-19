@@ -332,6 +332,13 @@ fn handle_pure_call(
                 refusal.message_for_value(prop),
             );
         }
+        if let Some(subject) = fold.residue.as_ref() {
+            ctx.warn(
+                call.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("{subject} drops a dynamic arm with no static style value"),
+            );
+        }
         crate::extract::fold::lower_call_value(ctx, &value, when, call.span);
         return;
     }
@@ -389,6 +396,14 @@ fn handle_static_member(
         for val in leaves {
             ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
         }
+        if crate::extract::fold::member_path_residue(mem, ctx.scopes) {
+            let path = crate::extract::fold::member_path_text(mem);
+            ctx.warn(
+                mem.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("property '{path}' drops a dynamic arm with no static style value"),
+            );
+        }
         return;
     }
     if let Some(root) = crate::extract::fold::member_root_name(mem) {
@@ -418,6 +433,18 @@ fn handle_computed_member(
     let fold = fold_element_access(&mem.object, &mem.expression, ctx.scopes);
     for val in &fold.values {
         ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
+    }
+    if fold.residue {
+        let prop = ctx.prop;
+        let base = describe_base(&mem.object);
+        let index = describe_snippet(&mem.expression, ctx.source);
+        ctx.warn(
+            mem.span,
+            DiagnosticCode::PartialObjectProp,
+            format!(
+                "Element access '{base}[{index}]' drops a dynamic arm with no static style value for prop '{prop}'"
+            ),
+        );
     }
     if fold.refusals.is_empty() {
         return;
@@ -452,6 +479,13 @@ fn handle_chain(
     if !values.is_empty() {
         for val in &values {
             ctx.push_want(val.clone(), when.clone(), false, Some(chain.span));
+        }
+        if let Some(path) = crate::extract::fold::chain_residue_path(chain, ctx.scopes) {
+            ctx.warn(
+                chain.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("property '{path}' drops a dynamic arm with no static style value"),
+            );
         }
         return;
     }

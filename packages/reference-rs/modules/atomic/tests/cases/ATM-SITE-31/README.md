@@ -17,9 +17,14 @@ rest params, nested calls, spread args, `f?.()`) stay pinned at ATM-SITE-32
 
 Known seams, filed not silent: binary arguments fold through the
 shared binary node (SITE-33 seam, closed by the tail crew — a non-finite
-binary arg refuses the whole call); imported helpers await the descriptor
-export (SPEC-V2-57, Ph4); helper-returned computed keys compose with the
-folded-key slice (SPEC-V2-40, SITE-49).
+binary arg refuses the whole call); helper-returned computed keys compose
+with the folded-key slice (SPEC-V2-40, SITE-49).
+
+Cross-file arms (SPEC-V2-57, Ph4): imported arrow, function declaration,
+and object-return calls fold through the descriptor export, including a
+capture baked from a third file's export; an imported impure helper
+refuses with a diagnostic. Re-exported helpers (barrels) ride the
+binding resolver's slice (SPEC-V2-56/76, SITE-41), not this station.
 
 Body-eval failure propagates, verbatim v2's `?` (39-F2): a missing
 member left of `&&`, a division by zero left of `||`, and either as a
@@ -32,4 +37,6 @@ init pass lands.
 
 Panda: `scope.rs:908` (nullary), `:927`/`:1208` (IIFEs), `:945` (decl),
 `:1073` (defaults), `:1030` (object-return spread), `:986` (array index),
-`:1085` (alias refuse), `:1184` (multi-statement refuse).
+`:1085` (alias refuse), `:1184` (multi-statement refuse);
+`cross_file.rs:1220` (imported arrow), `:1262` (imported decl),
+`:1344` (imported object-return).

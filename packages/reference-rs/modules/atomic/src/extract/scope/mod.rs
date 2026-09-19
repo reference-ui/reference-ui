@@ -1,10 +1,10 @@
 //! Scope-aware identifier resolution for style extraction (SPEC-V2-75).
 //! Replaces the project-wide name bag for locals: each file collects its
-//! bindings into a `ScopeTable`, and `handle_identifier_fallback` resolves
-//! through the `ScopeChain` from the use-site scope outward. Params and
-//! inner declarators shadow outer and cross-file consts; imported and
-//! genuinely unbound names fall through to the `ImportLookup` stub, which
-//! answers from the merged bag until SPEC-V2-76 lands the binding walk.
+//! bindings into a `ScopeTable`, and identifier uses resolve through the
+//! `ScopeChain` from the use-site scope outward. Params and inner declarators
+//! shadow outer and cross-file consts; imported names answer from the
+//! resolver's per-file map with the bag as fallback, while genuinely unbound
+//! names still consult the bag (SPEC-V2-76 lands the walk; siblings retire it).
 
 mod binding;
 mod collect;

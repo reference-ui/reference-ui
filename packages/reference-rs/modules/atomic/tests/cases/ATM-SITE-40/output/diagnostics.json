@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNFOLDABLE-SPREAD",
+    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
+    "file": "input/src/cycled.ts",
+    "line": 7,
+    "column": 27
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'nah' encountered for prop 'color'",
+    "file": "input/src/missing.ts",
+    "line": 6,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'spin' encountered for prop 'color'",
+    "file": "input/src/selfed.ts",
+    "line": 6,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-DYNAMIC-IDENTIFIER",
+    "message": "Dynamic non-literal identifier 'whirl' encountered for prop 'color'",
+    "file": "input/src/v2cycled.ts",
+    "line": 7,
+    "column": 31
+  }
+]

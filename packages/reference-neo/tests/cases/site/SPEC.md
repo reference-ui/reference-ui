@@ -32,7 +32,8 @@ at-rule). ATM-SITE-13 is the empty-host-set fail-closed diagnostic
 (RS-5 landed), proven by NEO-SITE-14; ATM-SITE-18 is the boolean
 `border` macro (RS-19 landed), proven by NEO-SITE-13. ATM-SITE-53 is
 scope-aware identifier resolution (SPEC-V2-75 landed), proven by
-NEO-SITE-27.
+NEO-SITE-27. ATM-SITE-55 is re-export identity (SPEC-V2-76 rider S12),
+proven by NEO-SITE-28.
 
 ## Decisions
 
@@ -55,6 +56,8 @@ list travels on the frozen request, not a private shape.
   source TSX, not bundled output.
 - **`importMap`**: Panda remaps `@pandacss/dev` outdir imports; Neo
   scans Reference runtime imports only (no config field, deliberate).
+  Identity still follows consumer re-exports by binding (NEO-SITE-28) —
+  zero config, not a remap.
 - **`matchTag` / PascalCase guessing**: anti-goal; NEO-SITE-12 proves
   the opposite (unlisted `<Random>` is not a host).
 - **`token()` inlining**: Panda parse-time hex eval; Reference authors
