@@ -46,7 +46,13 @@ pub(crate) fn token_init(
     let Some(value) = token_init_value(&ctx, &args, &mut deps) else {
         return Some((None, Vec::new()));
     };
-    Some((Some(BindingInit::Scalars(vec![value])), deps))
+    Some((
+        Some(BindingInit::Scalars {
+            leaves: vec![value],
+            residue: false,
+        }),
+        deps,
+    ))
 }
 
 /// Fold a validated call's path and fallback to its carried value.
@@ -166,7 +172,7 @@ fn token_init_operand(
         };
     };
     let (src_scope, binding) = ctx.table.resolve_from(target, ctx.scope)?;
-    let BindingInit::Scalars(leaves) = binding.init.as_ref()? else {
+    let BindingInit::Scalars { leaves, .. } = binding.init.as_ref()? else {
         return None;
     };
     let resolved = if is_path {

@@ -225,6 +225,102 @@ fn test_tabs_selected_guard_keeps_both_indicator_arms() {
 }
 
 #[test]
+fn test_disabled_coalesce_guard_keeps_both_arms() {
+    // Tabs Tab: `const isDisabled = disabledProp ?? context?.disabled ?? false`
+    // gates `cursor={isDisabled ? 'not-allowed' : 'pointer'}`. Every operand
+    // but the `false` is dynamic, so the test stays open and both arms emit.
+    let res = compile_code(
+        r#"
+        import { Button } from '@reference-ui/react';
+        export const Tab = ({ value, disabledProp }) => {
+          const context = useTabsContext();
+          const isDisabled = disabledProp ?? context?.disabled ?? false;
+          return <Button cursor={isDisabled ? 'not-allowed' : 'pointer'} />;
+        };
+        "#,
+    );
+    let mut plans = plan_values(&res, "cursor");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec!["not-allowed".to_string(), "pointer".to_string()]
+    );
+    assert_plans_point_at_sheet(&res, "cursor");
+}
+
+#[test]
+fn test_negated_partial_guard_keeps_both_arms() {
+    // `!isSelected` over a partially static binding must not fold on the
+    // kept leaf: the unary sees the dropped arm and the test stays open.
+    let res = compile_code(
+        r#"
+        import { Button } from '@reference-ui/react';
+        export const Tab = ({ value }) => {
+          const context = useTabsContext();
+          const isSelected = context ? context.value === value : false;
+          return <Button cursor={!isSelected ? 'not-allowed' : 'pointer'} />;
+        };
+        "#,
+    );
+    let mut plans = plan_values(&res, "cursor");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec!["not-allowed".to_string(), "pointer".to_string()]
+    );
+    assert_plans_point_at_sheet(&res, "cursor");
+}
+
+#[test]
+fn test_partial_guard_gates_css_object_arms() {
+    // A partially static binding gating whole css() objects keeps both
+    // blocks: the arg test stays open exactly like a style-prop test.
+    let res = compile_code(
+        r#"
+        import { css } from '@reference-ui/react';
+        const context = useTabsContext();
+        const isSelected = context ? context.value === value : false;
+        export const cls = css(
+          isSelected ? { borderBottom: '3px solid' } : { borderBottom: '3px solid transparent' },
+        );
+        "#,
+    );
+    let mut plans = plan_values(&res, "borderBottom");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec![
+            "3px solid".to_string(),
+            "3px solid transparent".to_string()
+        ]
+    );
+    assert_plans_point_at_sheet(&res, "borderBottom");
+}
+
+#[test]
+fn test_partial_member_guard_keeps_both_arms() {
+    // A member read over a partially static entry (`{ sel: c ? dyn : false }`)
+    // keeps its leaves for values but never folds a test on them.
+    let res = compile_code(
+        r#"
+        import { Button } from '@reference-ui/react';
+        export const Tab = ({ value }) => {
+          const context = useTabsContext();
+          const part = { sel: context ? context.value === value : false };
+          return <Button cursor={part.sel ? 'not-allowed' : 'pointer'} />;
+        };
+        "#,
+    );
+    let mut plans = plan_values(&res, "cursor");
+    plans.sort();
+    assert_eq!(
+        plans,
+        vec!["not-allowed".to_string(), "pointer".to_string()]
+    );
+    assert_plans_point_at_sheet(&res, "cursor");
+}
+
+#[test]
 fn test_const_nested_ternary_scoops_every_arm() {
     let res = compile_code(
         r#"

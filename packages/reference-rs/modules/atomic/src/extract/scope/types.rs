@@ -280,10 +280,10 @@ impl ParamBind<'_> {
     /// Bind a plain selection: the member's leaves, or a shadow when missing.
     fn plain(&mut self, key: &str, id: &oxc_ast::ast::BindingIdentifier<'_>) {
         // function paint({ color }: { color: 'red' })
-        let init = self
-            .annotation
-            .get(key)
-            .map(|entry| BindingInit::Scalars(entry.leaves.clone()));
+        let init = self.annotation.get(key).map(|entry| BindingInit::Scalars {
+            leaves: entry.leaves.clone(),
+            residue: entry.residue,
+        });
         self.bound.push((id.name.to_string(), id.span, init));
     }
 
@@ -295,26 +295,34 @@ impl ParamBind<'_> {
         };
         if let Some(entry) = self.annotation.get(key) {
             // { color = 'blue' } over a present key — the source wins
-            let init = BindingInit::Scalars(entry.leaves.clone());
+            let init = BindingInit::Scalars {
+                leaves: entry.leaves.clone(),
+                residue: entry.residue,
+            };
             self.bound.push((id.name.to_string(), id.span, Some(init)));
             return;
         }
         // A missing key falls to the default; an unfoldable default shadows.
         let init = self
             .default_leaf(&assign.right)
-            .map(|leaf| BindingInit::Scalars(vec![leaf]));
+            .map(|(leaf, residue)| BindingInit::Scalars {
+                leaves: vec![leaf],
+                residue,
+            });
         self.bound.push((id.name.to_string(), id.span, init));
     }
 
-    /// A default's leaf: a literal or a single-leaf identifier.
-    fn default_leaf(&self, expr: &Expression<'_>) -> Option<AtomValue> {
+    /// A default's leaf: a literal or a single-leaf identifier, plus whether
+    /// the identifier's binding dropped a dynamic arm beside its leaf.
+    fn default_leaf(&self, expr: &Expression<'_>) -> Option<(AtomValue, bool)> {
         let peeled = peel(expr);
         if let Some(leaf) = value::literal_leaf(peeled) {
-            return Some(leaf);
+            return Some((leaf, false));
         }
         if let Expression::Identifier(id) = peeled {
             let (leaf, _) = value::single_scalar(self.table, self.scope, id.name.as_str())?;
-            return Some(leaf);
+            let residue = value::scalar_residue(self.table, self.scope, id.name.as_str());
+            return Some((leaf, residue));
         }
         None
     }

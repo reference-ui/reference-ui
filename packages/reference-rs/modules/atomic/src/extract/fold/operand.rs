@@ -5,7 +5,10 @@
 //! every fold node reads operands identically. Anything else is [`Dynamic`],
 //! and the caller either recurses (nested folds, open branches) or re-walks
 //! it for its own diagnostic. Static member paths resolve through the
-//! member node; computed reads belong to the element node.
+//! member node; computed reads belong to the element node. Partially static
+//! names — bindings that dropped a dynamic arm beside kept leaves — read as
+//! [`Dynamic`]: a binding is single-leaf-constant only when every arm folds
+//! to that same leaf, so folds never dead-arm-eliminate on a kept leaf.
 
 use oxc_ast::ast::Expression;
 
@@ -35,6 +38,9 @@ pub fn operand_leaves(expr: &Expression<'_>, scoped: Scoped<'_>) -> Operand {
         return identifier_leaves(ident.name.as_str(), scoped);
     }
     if let Expression::StaticMemberExpression(mem) = expr {
+        if super::member::member_path_residue(mem, scoped) {
+            return Operand::Dynamic;
+        }
         let leaves = super::member::member_path_leaves(mem, scoped);
         if leaves.is_empty() {
             return Operand::Dynamic;
@@ -67,9 +73,14 @@ fn literal_leaf(expr: &Expression<'_>) -> Option<AtomValue> {
 }
 
 /// Scope leaves for an identifier, with `undefined` lowering to null.
+/// A binding that dropped a dynamic arm reads dynamic: its kept leaves
+/// still scoop at value positions, but no fold may treat them as constant.
 fn identifier_leaves(name: &str, scoped: Scoped<'_>) -> Operand {
     if name == "undefined" || name == "null" {
         return Operand::Leaves(vec![AtomValue::Null]);
+    }
+    if scoped.scalar_residue(name) {
+        return Operand::Dynamic;
     }
     let leaves = scoped.scalar_leaves(name);
     if leaves.is_empty() {

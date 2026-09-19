@@ -166,12 +166,13 @@ fn record_ident_entry(ctx: SpreadCtx<'_, '_>, name: &str, key: &str, sink: &mut 
     // every leaf fills, so no arm silently drops)
     if let Some((leaves, src_scope)) = scalar_leaves(ctx.table, ctx.scope, name) {
         super::fill::push_provenance(sink, key, src_scope, name);
+        let residue = scalar_residue(ctx.table, ctx.scope, name);
         sink.entries.insert(
             key.to_string(),
             ObjectProp {
                 leaves,
                 nested: ConstObject::new(),
-                residue: false,
+                residue,
             },
         );
         return true;
@@ -222,12 +223,25 @@ pub(crate) fn scalar_leaves(
 ) -> Option<(Vec<AtomValue>, ScopeId)> {
     // { tone: t }  after  const t = flag ? 'red' : 'blue'
     let (src_scope, binding) = table.resolve_from(name, scope)?;
-    if let Some(BindingInit::Scalars(leaves)) = &binding.init {
+    if let Some(BindingInit::Scalars { leaves, .. }) = &binding.init {
         if !leaves.is_empty() {
             return Some((leaves.clone(), src_scope));
         }
     }
     None
+}
+
+/// True when an in-scope scalar binding dropped a dynamic arm beside its
+/// leaves, so copies of its value carry the same residue mark.
+pub(crate) fn scalar_residue(table: &ScopeTable, scope: ScopeId, name: &str) -> bool {
+    // { sel: isSelected }  after  const isSelected = c ? dyn : false
+    let Some((_, binding)) = table.resolve_from(name, scope) else {
+        return false;
+    };
+    matches!(
+        &binding.init,
+        Some(BindingInit::Scalars { residue: true, .. })
+    )
 }
 
 /// A single-leaf scalar carried by an in-scope binding, with its scope.

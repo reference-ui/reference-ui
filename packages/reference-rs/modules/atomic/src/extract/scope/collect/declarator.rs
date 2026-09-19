@@ -133,7 +133,9 @@ fn member_init(
     let leaves = crate::extract::fold::member_path_leaves(mem, scoped);
     if !leaves.is_empty() {
         let dep = member_dep(collector, name, root)?;
-        return Some((Some(BindingInit::Scalars(leaves)), vec![dep]));
+        let residue = crate::extract::fold::member_path_residue(mem, scoped);
+        let init = BindingInit::Scalars { leaves, residue };
+        return Some((Some(init), vec![dep]));
     }
     if let Some(entries) = crate::extract::fold::member_path_object(mem, scoped) {
         // const hover = styles.hover  — the nested entries carry, so alias
@@ -188,9 +190,10 @@ fn factory_init(
         callee: callee.name.to_string(),
     });
     Some((
-        Some(BindingInit::Scalars(vec![AtomValue::String(
-            name.to_string().into_boxed_str(),
-        )])),
+        Some(BindingInit::Scalars {
+            leaves: vec![AtomValue::String(name.to_string().into_boxed_str())],
+            residue: false,
+        }),
         Vec::new(),
     ))
 }

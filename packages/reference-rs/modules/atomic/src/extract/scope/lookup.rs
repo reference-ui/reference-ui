@@ -57,6 +57,11 @@ impl<'a> ImportLookup<'a> {
         self.bag().scalar_leaves(name)
     }
 
+    /// True when the fallback's scalar init dropped a dynamic arm.
+    fn scalar_residue(self, name: &str) -> bool {
+        self.bag().scalar_residue(name)
+    }
+
     /// A member of an object outside local scope.
     fn object_prop(self, obj: &str, prop: &str) -> Option<&'a ObjectProp> {
         self.bag().get_object_prop(obj, prop)
@@ -136,9 +141,17 @@ fn classify(binding: &Binding) -> Lookup<'_> {
 /// The scalar leaves a local binding carries, if it carries any.
 fn local_scalars(binding: &Binding) -> &[AtomValue] {
     match &binding.init {
-        Some(BindingInit::Scalars(leaves)) => leaves,
+        Some(BindingInit::Scalars { leaves, .. }) => leaves,
         _ => &[],
     }
+}
+
+/// True when a local scalar binding dropped a dynamic arm beside its leaves.
+fn local_scalar_residue(binding: &Binding) -> bool {
+    matches!(
+        &binding.init,
+        Some(BindingInit::Scalars { residue: true, .. })
+    )
 }
 
 /// The style object a local binding carries, if it carries one.
@@ -191,6 +204,29 @@ impl<'a> Scoped<'a> {
             .imports
             .import_value(local)
             .map_or(&[], ResolvedExport::scalars)
+    }
+
+    /// True when a name's scalar init dropped a dynamic arm beside its
+    /// leaves: locals, resolved imports, or the fallback. A mutated binding
+    /// carries nothing, so it carries no residue either.
+    pub fn scalar_residue(self, name: &str) -> bool {
+        // isSelected ? a : b  after  const isSelected = c ? dyn : false
+        if self.mutated(name) {
+            return false;
+        }
+        match self.chain.resolve(name, self.scope) {
+            Lookup::Local(binding) => local_scalar_residue(binding),
+            Lookup::Import(imp) => self.import_scalar_residue(&imp.local),
+            Lookup::Unbound => self.chain.imports.scalar_residue(name),
+        }
+    }
+
+    /// True when an import's resolved scalar dropped a dynamic arm.
+    fn import_scalar_residue(self, local: &str) -> bool {
+        self.chain
+            .imports
+            .import_value(local)
+            .is_some_and(ResolvedExport::scalar_residue)
     }
 
     /// The first static leaf for single-valued positions.

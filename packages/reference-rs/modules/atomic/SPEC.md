@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 213 |
-| Named `[x]` proven | 209 |
+| Total contract cases | 214 |
+| Named `[x]` proven | 210 |
 | Remaining `[ ]` | 4 (`ATM-DIAG-04`, `ATM-DIAG-06`, `ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 251 (internal; not ticks) |
-| Vitest seam stations | 208 (`tests/cases/<ATM-*>`) |
+| Vitest seam stations | 209 (`tests/cases/<ATM-*>`) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -68,7 +68,7 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 58 | 58 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 59 | 59 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 10 | 10 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
@@ -301,6 +301,9 @@ compiler contract.
 - [x] `ATM-SITE-23` `[reference]` `[seam]` —
   **Const-bound ternaries and logicals must extract every literal leaf with one plan per leaf.**
   Station `ATM-SITE-23` (RS-37). Compile the `BookShell.tsx` chrome shape (`const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component body feeding `borderBottomColor={subtleBorder}`) beside top-level ternary, nested ternary, and logical `css()` controls plus a fully dynamic identifier. Assert one want and one runtime plan per leaf (both gray arms, all four call colors), `border-bottom-color` utilities for every shade, and exactly the fail-closed `unknownToken` warning.
+- [x] `ATM-SITE-86` `[reference]` `[seam]` —
+  **A binding that drops a dynamic arm beside kept leaves must keep its values but never fold a test.**
+  Station `ATM-SITE-86` (Tabs indicator). Compile the verbatim `Tabs.tsx` guards (`const isSelected = context ? context.value === value : false`, `const isDisabled = disabledProp ?? context?.disabled ?? false`) gating `borderBottom`/`cursor`/`opacity` ternaries beside whole-`css()`-object gated twins for the mirror position (`flag ? false : pick()`), both-dynamic, coalesce, truthy-tail coalesce (`dynA ?? 'blue.500'`), negated (`!selA`), member (`part.sel`), and nested (`isLine && selA`) shapes plus partial value-union controls. Assert every guard stays open with both arms emitting one want and one runtime plan (24 wants, 9 plans), the value unions still scoop their kept leaves, `border-bottom-*` longhands plus cursor/opacity/color utilities print, and zero diagnostics emit — no dead arm is ever named for a kept leaf.
 - [x] `ATM-SITE-53` `[reference]` `[seam]` — **[SPEC-V2-75, Overmatch Ph1]**
   **An identifier in value position must resolve through its binding: the innermost declarator in scope, else the file's import binding, else dynamic.**
   Station `ATM-SITE-53` (Overmatch Ph1). Compile `a.ts` (`export const color = 'red'`) beside `b.ts` (`function Card({ color }) { return css({ color }) }`). Assert `color` in `b.ts` is a param → a located `Dynamic non-literal identifier` diagnostic and zero wants (never the silent `'red'` from `a.ts`, which today mints a ghost with no warning). Assert an inner `const` shadows an outer same-named `const` (innermost leaves only, no union bloat) and that two files declaring the same name never see each other's values through locals. Same-file const/member/spread resolution is unchanged; genuinely unbound names still consult the project bag, now retired behind the `ImportLookup` stub (`extract/scope/`, mission §7.2; the real binding walk is SPEC-V2-76). Panda: scope-correct by construction (`scope.rs:1349`, `:1369`).
@@ -952,6 +955,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-83` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-83/` |
 | `ATM-SITE-84` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-84/` |
 | `ATM-SITE-85` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-85/` |
+| `ATM-SITE-86` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-86/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |

@@ -6,7 +6,7 @@
 //! and the runtime picks by live value. Imported bindings and `props.w` stay
 //! dynamic. This is a lookup table, not an interpreter.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::entries::{ConstObject, ObjectProp};
 use crate::atom::AtomValue;
@@ -18,6 +18,8 @@ pub struct LocalConstants {
     objects: BTreeMap<String, ConstObject>,
     arrays: BTreeMap<String, Vec<ConstArrayElement>>,
     mutated: BTreeMap<String, MutatedBinding>,
+    /// Names whose branching init dropped a dynamic arm beside kept leaves.
+    scalar_residue: BTreeSet<String>,
 }
 
 /// One recorded element of a const array initializer: a literal leaf, a
@@ -141,6 +143,19 @@ impl LocalConstants {
         self.scalars.get(name).map_or(&[], Vec::as_slice)
     }
 
+    /// Mark a scalar binding partially static: its branching init dropped a
+    /// dynamic arm beside the kept leaves, so values scoop the union while
+    /// test folding stays open.
+    pub fn mark_scalar_residue(&mut self, name: &str) {
+        // const isSelected = context ? context.value === value : false
+        self.scalar_residue.insert(name.to_string());
+    }
+
+    /// True when a scalar binding dropped a dynamic arm beside its leaves.
+    pub fn scalar_residue(&self, name: &str) -> bool {
+        self.scalar_residue.contains(name)
+    }
+
     /// Look up `obj.prop` on a recorded style object.
     pub fn get_object_prop(&self, obj_name: &str, prop_name: &str) -> Option<&ObjectProp> {
         // color={theme.primary}
@@ -192,9 +207,13 @@ impl LocalConstants {
     /// Replace a top-level scalar's leaves with scope-resolved ones (SPEC-V2-34
     /// cross-file: alias chains). The scope table already stripped stale
     /// bakes, so wholesale replace is sound where union would keep ghosts.
+    /// The residue mark clears with the old leaves: the replacement is a
+    /// fresh resolution, and a caller baking partial leaves re-marks it.
     pub fn set_scalars(&mut self, name: impl Into<String>, leaves: Vec<AtomValue>) {
         // const b = a  after  const a = 'red' — `b` carries red
-        self.scalars.insert(name.into(), leaves);
+        let name = name.into();
+        self.scalars.insert(name.clone(), leaves);
+        self.scalar_residue.remove(&name);
     }
 
     /// Replace a top-level style object with its scope-resolved entries
@@ -216,6 +235,7 @@ impl LocalConstants {
             self.scalars.remove(name);
             self.objects.remove(name);
             self.arrays.remove(name);
+            self.scalar_residue.remove(name);
         }
     }
 
@@ -223,6 +243,9 @@ impl LocalConstants {
     pub fn merge(&mut self, other: &LocalConstants) {
         for (k, leaves) in &other.scalars {
             self.insert_scalar_leaves(k.clone(), leaves);
+        }
+        for name in &other.scalar_residue {
+            self.scalar_residue.insert(name.clone());
         }
         self.merge_objects(&other.objects);
         for (k, v) in &other.arrays {

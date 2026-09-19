@@ -171,46 +171,62 @@ fn record_declaration(constants: &mut LocalConstants, name: &str, expr: &Express
         Expression::ConditionalExpression(_) | Expression::LogicalExpression(_)
     ) {
         let mut leaves = Vec::new();
-        collect_branching_leaves(expr, &mut leaves);
+        let mut dropped = false;
+        collect_branching_leaves(expr, &mut leaves, &mut dropped);
         constants.insert_scalar_leaves(name, &leaves);
+        if dropped && !leaves.is_empty() {
+            constants.mark_scalar_residue(name);
+        }
     }
 }
 
 /// Scoop every literal leaf of a branching initializer, mirroring the want
 /// walker leaf-for-leaf: both ternary arms, non-guard logical operands.
-fn collect_branching_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) {
+/// A non-guard leaf position with no literal sets the dropped flag, so the
+/// binding keeps its union for values while test folding stays open.
+fn collect_branching_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>, dropped: &mut bool) {
     let unwrapped = unwrap_expression(expr);
-    if collect_conditional_leaves(unwrapped, out) {
+    if collect_conditional_leaves(unwrapped, out, dropped) {
         return;
     }
-    if collect_logical_leaves(unwrapped, out) {
+    if collect_logical_leaves(unwrapped, out, dropped) {
         return;
     }
     if let Some(atom) = literal_leaf(unwrapped) {
         out.push(atom);
+    } else {
+        *dropped = true;
     }
 }
 
 /// Scoop both arms of a ternary initializer, or false when not a ternary.
-fn collect_conditional_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+fn collect_conditional_leaves(
+    expr: &Expression<'_>,
+    out: &mut Vec<AtomValue>,
+    dropped: &mut bool,
+) -> bool {
     let Expression::ConditionalExpression(cond) = expr else {
         return false;
     };
-    collect_branching_leaves(&cond.consequent, out);
-    collect_branching_leaves(&cond.alternate, out);
+    collect_branching_leaves(&cond.consequent, out, dropped);
+    collect_branching_leaves(&cond.alternate, out, dropped);
     true
 }
 
 /// Scoop the non-guard operands of a logical initializer, or false when not logical.
-fn collect_logical_leaves(expr: &Expression<'_>, out: &mut Vec<AtomValue>) -> bool {
+fn collect_logical_leaves(
+    expr: &Expression<'_>,
+    out: &mut Vec<AtomValue>,
+    dropped: &mut bool,
+) -> bool {
     let Expression::LogicalExpression(log) = expr else {
         return false;
     };
     if !is_guard_expression(&log.left) {
-        collect_branching_leaves(&log.left, out);
+        collect_branching_leaves(&log.left, out, dropped);
     }
     if !is_guard_expression(&log.right) {
-        collect_branching_leaves(&log.right, out);
+        collect_branching_leaves(&log.right, out, dropped);
     }
     true
 }
