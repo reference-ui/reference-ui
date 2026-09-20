@@ -31,6 +31,8 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 3 all three broke: (h) calc-wrap → fortify building; (g) IN-BOUNDS scan-all-minus-negatives → fortify on IncludeScope + SCAN-01; (i) BREAK-FOUND (~26 fictional canon css forms served dead) → architect dispatched. Cycles banked: 6/6. Next: landings → chains → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) landed → chain reviewing; (g) landed → chain reviewing; (i) IN-BOUNDS refuse+SKIP over generated set → fortify on resolve fall-through + ATM-EXT-01. Live: 3. Next: chain verdicts → commits → wave 4.
 - 2026-09-20 07:22 tick: W3g COMMITTED (negation-only VERIFIED; SPEC excluded — shared with (h)+(i), rides last with all-verified hunks). Chain (h) reviewing; fortify (i) building. Peer active (2 new mission docs: jettison, reaper — hands off). Cycles banked: 7/6. Next: chain (h) verdict → commit (h); (i) landing → chain → commit + SPEC → wave 4.
+- 2026-09-20 watch: W3h COMMITTED (4c776b7c2 — negated-brace calc-wrap VERIFIED; SPEC still held). Fortify (i) building (resolve fall-through + canon set in tree). Cycles banked: 8/6. Next: (i) landing → chain → commit + SPEC → wave 4.
+- 2026-09-20 07:40 tick: chain (i) reviewing (~15 min, only live crew, no verdict — normal length for webref + full-suite + diff arc). Tree stable (25 paths). No deadlock, no pings sent. Next: chain (i) verdict → commit + SPEC → wave 4.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 - 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
@@ -1980,6 +1982,254 @@ the (h) write-set (2 `.rs` + SPEC TOKEN-17 row hunk + new
 `ATM-TOKEN-17/` dir + finder report + log sections) per the
 hunk-split plan with (g)'s SPEC sentence and (i); `dist/` is
 untracked build output, nothing to commit there.
+
+### Wave 3, find (i) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: refuse with a
+default-visible diagnostic + SKIP at the RESOLVE fall-through over a
+GENERATED unrealizable set in canon; table correction OUT (no
+`EXTENSIONS` row touched, no join-gate change).
+
+**(1) Generated set INTO canon.** New `DialectData.unrealizableExtensions`
+(`generate/dialect.ts`, `EXTENSIONS` only — vendor out) computed at
+build from live webref truth: rows with `css` ∉ webref kebab names,
+no longhands, name not platform-shadowed. Emitted as
+`css/unrealizable.rs` (`UNREALIZABLE_EXTENSIONS` + binary-searched
+`is_unrealizable_extension`), wired through `css/mod.rs` + `lib.rs`
+re-exports. Firsthand enumeration (`/tmp/wave3i-enumerate.mts`, all 30
+rows vs live `@webref/css` 821 props): **27 members** — boxSize,
+hideFrom, hideBelow, spaceX, spaceY, srOnly, debug, textStyle,
+truncate, gradientFrom/To/Via + 3 positions, textGradient,
+backgroundGradient/Linear/Radial/Conic, textShadowColor,
+fontSmoothing, animationState, translateX/Y/Z, scrollSnapStrictness;
+excluded with evidence: borderStart/EndRadius (longhands),
+webkitTextFillColor (platform-shadowed), and ZERO rows have `css` in
+webref (all 30 checked absent). textGradient is IN the set by rule —
+its working arm above the refusal is the exemption, by order.
+Regen per README (`pnpm canon` + `cargo fmt -p canon` — raw emitter
+chunks need the fmt step; without it the diff is 5k lines of packing
+noise): existing `src/` diff attested additive-only (mod.rs +2,
+lib.rs re-export reflow, tests.rs +19 guard), new file byte-stable
+across double regen+fmt (md5 `d104f94d…` twice),
+`generated/platform-names.ts` untouched. Rust guard
+`unrealizable_extensions_table_contract` is structural only (sorted +
+self-consistent + exemption negatives) — no positive-name pins.
+
+**(2) Resolve fall-through refusal.** `expand_or_passthrough` now takes
+the session; after the macro arm (textGradient keeps working) and the
+shorthand arm (radius pairs keep working) comes
+`refuse_unrealizable_extension`: canonical prop in the generated set
+→ `session.emit` keyed `Rejected` with new code
+`ATM-W-UNREALIZABLE-EXTENSION` (CODE_TABLE 46→47), sentence `` `{prop}`
+has no CSS lowering; the declaration was dropped `` (new
+`NameDetail::UnrealizableExtension` arm; all existing sentences
+untouched), warn-and-SKIP (no atoms). Located: want spans reach
+resolve (`want.location()`), so every line carries file:line:col.
+Default-visible by construction: `resolve_audience` keeps non-false
+`Rejected` userspace, and proof joins the fact as the resolver cause
+(final line keeps code + site, message gains the proof prefix).
+Runtime plan decision, written + pinned: NO plan served — there is no
+atom to serve, so a served class key would be a ghost class; loudness
+comes from the compile warning plus the standard dev miss path, never
+silence. Covers `css()` + JSX + conditions + recipes (all route
+through `resolve_want_with`); static/global synthesize atoms directly
+and are outside the ruled funnel — untouched, zero usage either way.
+
+**(3) PRIMARY station `ATM-EXT-01`** (new EXT family). Input probes 8
+direct props + a `&:hover` arm + a JSX leg (10 diagnostics, all new
+code, all located, each naming its prop); siblings (`color`,
+`translate`) extract; textGradient trio + radius corners prove the
+arms above; sheet carries zero fictional declarations (all 10 `css`
+forms + `text-gradient` asserted absent), `css.json` has zero refused
+keys, and zero runtime plans serve refused props. Goldens scoped
+(`-t EXT-01 --update-goldens`) and attested per pair: diagnostics 10
+located warnings, css.json 7 entries, utilities layer exactly 7 real
+rules. FINDING while probing: `srOnly` never reaches resolve —
+extraction claims every `*Only` key as a breakpoint range
+(`is_breakpoint_range`) before the known-prop check, so it warns
+causeless `MissingStylePlan` instead; pre-existing, separate gap,
+carried as doom fodder (probe: `/tmp/wave3i-sronly-probe.mjs`).
+Station probes `hideFrom` in its place; `srOnly` stays in the set and
+the SPEC/README say why it is unprobable.
+
+**(4) SECONDARY: `CAN-JOIN-02` extended in-place** (no new case ID, no
+count change): the same `it` now also asserts
+`baseDialect.unrealizableExtensions` equals the live-oracle
+recomputation spelled independently from `EXTENSIONS` + webref, so
+generator predicate drift fails loudly. One sentence added to the
+`CAN-JOIN-02` SPEC row.
+
+**(5) SPEC + suites.** Atomic SPEC: new `EXT` family section +
+breakdown row + status counts + proof-map row (all +1 my delta only;
+pre-existing count staleness elsewhere untouched). Suites, all
+`pnpm agentrs` this session: cargo atomic 464/464 (462 + 2 new
+resolve tests), vitest atomic 286/286 (11 files, incl. EXT-01,
+SHORT-08/09, webkit pins), cargo canon 54/54 (incl. new guard),
+vitest canon 15/15. **Zero other golden moves** (no `output/` paths
+outside EXT-01; `--update-goldens` ran once, `-t`-scoped). Census
+re-verified firsthand: zero compilable usage of the 27 in lib/neo
+(only a `.d.ts` evidence file + one exempt textGradient in a neo
+parity world). `agentrs q`: 0 violations everywhere; soft warnings
+only in accepted pre-existing categories (codes.rs/facts.rs table
+growth, emitCssModRs template length). `cargo fmt -p atomic --check`
+shows tree-wide pre-existing drift; my lines match their neighbors
+except one assert I reformatted to clean. Repro
+`/tmp/doom-wave3-canon-emit-dead-decl.mjs` flips red→green (exit 0:
+3 located default diagnostics, no classes minted, controls green).
+
+**Must-NOTs honored:** no hardcoded list in atomic (one
+`canon::is_unrealizable_extension` call; test files name probes,
+never a lookup table), no weakened tests, no blanket goldens, no lib
+touch, no table/join-gate/rewording drive-bys, finder report
+untouched, peer files (`resolve/tokens/*`, TOKEN-17, SCAN-01, docs,
+operation docs) never touched.
+
+**Files (mine only, 19 + this section).** Canon: `generate/dialect.ts`
+(set builder + field), `generate/emit/css.ts` (new emitter + mod
+wiring), `generate/emit/index.ts`, `generate/emit/lib.ts`
+(re-export), `generate/emit/tests/join.ts` (structural guard),
+`generate/generate.ts` (write step), `src/css/unrealizable.rs` (new,
+generated), `src/css/mod.rs`, `src/lib.rs`, `src/tests.rs`
+(generated), `tests/join.test.ts` (JOIN-02 oracle), `SPEC.md` (JOIN-02
+sentence). Atomic: `src/resolve/mod.rs` (fall-through refusal +
+header clause), `src/resolve/tests.rs` (2 guards),
+`src/diagnostics/codes.rs` (new code), `src/diagnostics/facts.rs`
+(new detail), `src/diagnostics/policy/resolve.rs` (new sentence +
+pin), `SPEC.md` (EXT section + registry + counts — shared with crew
+(h), commit per hunk), `tests/cases/ATM-EXT-01/` (css.ts, App.tsx,
+spec.ts, README.md, `output/` × 3). Captain: atomic SPEC.md shared
+with (h); canon files + VOYAGE-LOG-3 section are mine.
+
+### Wave 3, find (i) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (i) files only —
+write-set audited via `git status` paths: exactly the landing's 19
+(12 canon + 7 atomic incl. new `unrealizable.rs` + new `ATM-EXT-01/`);
+peer paths (`docs/ATOMIC.md`, `docs/missions/README.md`, untracked
+`operation-jettison/reaper.md`) were never touched or adjudicated.
+Atomic SPEC.md is shared with (h) — hunks attributed below; commit per
+hunk. Swap windows announced here for sibling attribution: mod.rs
+07:37:39–07:38:09 BST, dialect.ts ~07:39 BST; both restored
+byte-identical (`cmp` clean, shas match), binding rebuilt after each.
+
+**1. Finder repro** (`/tmp/doom-wave3-canon-emit-dead-decl.mjs`,
+unmodified): exit 0 firsthand — 3 located default
+`ATM-W-UNREALIZABLE-EXTENSION` warnings naming `translateX`/`boxSize`/
+`spaceX` (`src/css.ts:2:37, 3:34, 4:33`), zero classes minted
+(`emitted null` × 3, no dead rules in sheet), controls green
+(`translate` real, `borderStartRadius` expands to both corners).
+`result.diagnostics` is the default channel — refusal is
+default-visible naming each prop, exactly as ruled.
+
+**2. Suites** (repo runners, this session, post-restore): `pnpm agentrs
+c atomic` 464/464 (462 + 2 new resolve pins, green by name); `pnpm
+agentrs v atomic` 286/286 (11 files, 239 stations — 285 + EXT-01);
+`pnpm agentrs c canon` 54/54 (53 + structural guard, green by name);
+`pnpm agentrs v canon` 15/15 (join station incl. extended CAN-JOIN-02).
+EXT-01 isolation: 1 passed / 285 skipped. Zero failures anywhere —
+nothing to attribute, nothing absorbed. Zero other golden moves:
+no modified `output/` path in status (only the 3 new EXT-01 goldens),
+attested per pair below. Quality: `agentrs q` on the 4 touched
+atomic `.rs` files — 0 violations, 2 soft warnings (codes.rs 380 /
+facts.rs 366 vs the 365 *soft* file-length limit — table growth by
+design, same accepted category as wave-1/2; gate passes).
+
+**3. Generated set vs live webref** (independent oracle,
+`/tmp/chainrev-i-webref.mts`, tsx + `@webref/css` queried live):
+821 webref props; generated table == independently recomputed
+expectation EXACTLY (27 members, sorted — binary-search contract
+holds). Per-row evidence over all 30 `EXTENSIONS` rows: every `css`
+∉ webref (zero webref-present members, so no wrongful inclusion to
+exclude); excluded with reason: `borderStart/EndRadius` (longhands),
+`webkitTextFillColor` (platform-shadowed — `platformCss.properties`
+hit confirmed). `textGradient` is IN the set by rule and keeps
+working via the arm above (pinned both sides). VENDOR excluded:
+223 `VENDOR_EXTENSIONS` ∩ set = ∅ (vendor aliases are Moz/canonical
+pairs, disjoint namespace). Canon `src/` regen determinism:
+`pnpm canon` + `cargo fmt -p canon` reproduces the whole tree
+`src/` byte-identically (`diff -rq` clean; `unrealizable.rs` md5
+`d104f94d…` matches the landing's claim twice). No hardcoded list in
+atomic: exactly one call-site (`resolve/mod.rs:183`
+`canon::is_unrealizable_extension`); the only name literals are
+probes in `tests.rs` + station files, never a lookup table.
+
+**4. Fail-without-fix / pass-with-fix:** (a) resolve refusal
+disabled (`false &&`): cargo red pin FAILS (exemption-guard passes —
+pass-pass BY DESIGN, it guards arms the fix must not move), EXT-01
+FAILS 1 failed / 285 skipped (`expected [] to have a length of 10`),
+finder repro exits 1 with the verbatim BREAK (3/3 RED, `space-x`
+minted silently). Restored: all green. (b) JOIN-02 oracle
+sensitivity (longhands exclusion dropped from the generator
+predicate): exactly CAN-JOIN-02 × FAILS, other 14 pass — the live
+oracle bites on drift. Restored byte-identical, 15/15.
+
+**5. Diff review (line-by-line, (i) write-set):** `resolve/mod.rs` —
+`expand_or_passthrough` takes the session (sole caller
+`resolve_want_with:147`, so `css()`+JSX+conditions+recipes share the
+funnel); refusal sits AFTER `lower_macro` (textGradient) and the
+shorthand arm (radius pairs) — exemption order preserved, 8
+minus-lines are the if/else→early-return restructure only;
+`lower_macro` untouched. `codes.rs` — appended variant + CODE_TABLE
+46→47 row + round-trip test (both-directions table, no drift).
+`facts.rs` — one `NameDetail` arm; `policy/resolve.rs` — one
+sentence `` `{prop}` has no CSS lowering; the declaration was
+dropped `` + one render pin. Default-visible by construction AND
+by observation: the detail is `Name(..)`, never
+`Value(InvalidValue{false})`, so `resolve_audience` → Userspace
+(`policy/mod.rs:73-80`, untouched); every golden line carries
+file:line:col (want spans reach resolve). Warn-and-SKIP bound:
+refusal returns `Vec::new()` — no atoms, no classes, no plans
+(station pins all three absences + `hasWant` true, proving
+extraction untouched and resolve the dropping layer). Canon
+generator: `buildUnrealizableExtensions` is exactly the ruled
+predicate (`EXTENSIONS` only, `css` ∉ webref kebab, no longhands,
+not platform-shadowed, sorted); emitter + mod/lib wiring +
+`generate.ts` write step additive; Rust guard is structural only
+(sorted + self-consistent + 5 exemption negatives) — no
+positive-name pins, per the ruling. `join.test.ts` — CAN-JOIN-02
+`it` extended in place (import + baseDialect spread + independent
+recomputation block), original abort assert untouched above it; no
+new case ID, no count change. Untouched as ordered: join gate
+(`join.ts` zero diff — NAME-only stands), `EXTENSIONS` table, all
+`overlay/`, `diagnostics/policy/mod.rs`, `proof/render.rs`, neo,
+lib, core, finder report. No existing test touched (both `.rs`
+test diffs pure addition), none weakened; no per-prop expansions;
+no blanket goldens. Goldens attested per pair: diagnostics.json 10
+located warnings (App.tsx:3 + css.ts:4-12, code+message+position
+each); css.json 7 real entries (textGradient trio + 2 corners +
+color + translate); styles.css utilities layer exactly 7 real
+rules, zero fictional declarations (keyframe `translateX()` hits
+are `transform` *values*, and the spec's `deadDecl:` colon-anchored
+asserts can't false-hit them).
+
+**6. Contracts hold.** Canon SPEC §1 + `CAN-PROP-03`: no served `css`
+form is fictional anymore — the 27 unrealizable extensions refuse
+loudly on default naming the prop instead of minting dead rules,
+and the generated set tracks live webref truth via the CAN-JOIN-02
+oracle. Wave-2d's Law-2 deferral ("legit name + hallucinated css")
+is discharged with its repro. SPEC rows: atomic EXT section +
+breakdown row + counts + registry + proof-map row are exactly +1
+my-delta (the TOKEN-17 count staleness is chain-(h)-verified
+pre-existing, correctly untouched); canon JOIN-02 sentence is the
+ruled one sentence. Runtime plan decision (no plan served — a
+served key would be a ghost class) is written in SPEC + README and
+pinned (`planProps not.toContain` per refused prop).
+
+**Findings confirmed, not gaps:** (a) `srOnly` never reaches resolve
+— firsthand probe shows causeless unlocated `ATM-W-MISSING-STYLE-
+PLAN` (`is_breakpoint_range` claims `*Only` first,
+`condition.rs:21-25`); pre-existing extraction gap, correctly kept
+in the set and documented in SPEC + README + station (which probes
+`hideFrom` in its place) — carried as doom fodder. (b) Zero-usage
+census re-verified firsthand: lib hits are all `translateX/Y()`
+`transform` values / keyframes / docs prose; neo authored sources
+carry only the exempt `textGradient` parity input (census-union
+rows are expectation labels, not compiled inputs); zero
+key-position usages anywhere; zero station inputs outside EXT-01.
+Captain: commit the 19 (i) paths + finder report + log sections
+per the hunk-split plan with (h)'s SPEC row; keep the 4 peer doc
+paths out. `dist/` is untracked build output, nothing to commit.
 
 ## Useful
 

@@ -127,12 +127,19 @@ pub enum DiagnosticCode {
     /// channel. The refused leaf pushes no want; the plan still serves
     /// the stripped value as a diagnosed non-important fallback.
     ResponsiveLeafImportant,
+    /// `resolve`: a dialect extension whose served `css` form is fictional
+    /// per live webref, refused at the expansion fall-through (ATM-EXT-01).
+    /// The diagnostic names the prop, rides default, and the want yields
+    /// no atoms; lowering arms above (textGradient, longhands, platform
+    /// rows) keep working, and each future expansion un-refuses its prop
+    /// with its own red test plus station.
+    UnrealizableExtension,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 46] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 47] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -226,6 +233,10 @@ const CODE_TABLE: [(DiagnosticCode, &str); 46] = [
     (
         DiagnosticCode::ResponsiveLeafImportant,
         "ATM-W-RESPONSIVE-LEAF-IMPORTANT",
+    ),
+    (
+        DiagnosticCode::UnrealizableExtension,
+        "ATM-W-UNREALIZABLE-EXTENSION",
     ),
 ];
 
@@ -354,6 +365,7 @@ mod tests {
             DiagnosticCode::ExpectedLookup,
             DiagnosticCode::DynamicSlot,
             DiagnosticCode::ResponsiveLeafImportant,
+            DiagnosticCode::UnrealizableExtension,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

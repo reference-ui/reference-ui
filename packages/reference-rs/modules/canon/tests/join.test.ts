@@ -19,7 +19,7 @@ import {
   validateShorthandsJoin,
   validateShortPrefixesJoin,
 } from '../generate/join'
-import { SHORT_PREFIXES } from '../generate/overlay'
+import { EXTENSIONS, SHORT_PREFIXES } from '../generate/overlay'
 import { loadPlatformCss, loadPlatformElements } from '../generate/platform'
 
 describe('Canon Join Validation (Fail-Closed Gates)', async () => {
@@ -42,6 +42,7 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
       colorProperties: [...dialect.colorProperties],
       unitlessProperties: [...dialect.unitlessProperties],
       extensions: dialect.extensions,
+      unrealizableExtensions: [...dialect.unrealizableExtensions],
     }
   }
 
@@ -58,6 +59,23 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
   it('CAN-JOIN-02: full platform CSS emission plus allowlisted dialect extensions', () => {
     const errors = validateDialectExtJoin(baseDialect, platformCss)
     expect(errors).toEqual([])
+
+    // The generated unrealizable set must equal the live-oracle recomputation:
+    // EXTENSIONS rows with css absent from @webref/css, no longhands, and no
+    // platform row shadowing the name. Recomputed here from first principles
+    // so generator predicate drift fails loudly.
+    const webrefKebab = new Set(
+      Array.from(platformCss.properties.values()).map(p => p.kebab.toLowerCase())
+    )
+    const expected = EXTENSIONS.filter(
+      ext =>
+        !platformCss.properties.has(ext.name) &&
+        (ext.longhands?.length ?? 0) === 0 &&
+        !webrefKebab.has(ext.css.toLowerCase())
+    )
+      .map(ext => ext.name)
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    expect(baseDialect.unrealizableExtensions).toEqual(expected)
   })
 
   it('CAN-JOIN-03: native CSS shorthands decompose to identical longhands as @webref/css', () => {

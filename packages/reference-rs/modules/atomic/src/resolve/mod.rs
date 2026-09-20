@@ -2,6 +2,7 @@
 //! Coordinates dialect utilities (`font`, `weight`, `container`, `size`, `r`), shorthand expansion, rhythm, and tokens.
 //! Font tracking, named weights, and token lookup come from `BaseSystem`, not a second preset table here.
 //! Refusals report typed resolve facts through the session sink and render byte-identical lines via policy.
+//! Dialect extensions with no CSS realization refuse at the expansion fall-through (warn-and-skip, default-visible).
 
 pub mod conditions;
 pub mod container;
@@ -143,7 +144,7 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
     let Some(clean_when) = lower_conditions(&want.when, &key_for_want, session) else {
         return Vec::new();
     };
-    let pairs = expand_or_passthrough(want, session.system);
+    let pairs = expand_or_passthrough(want, session);
 
     let mut atoms = Vec::with_capacity(pairs.len());
     for (prop, val) in pairs {
@@ -159,14 +160,41 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
     atoms
 }
 
-fn expand_or_passthrough(want: &Want, system: &BaseSystem) -> Vec<(Box<str>, AtomValue)> {
-    if let Some(expanded) = lower_macro(want, system) {
-        expanded
-    } else if let Some(expanded) = shorthands::expand_shorthand(&want.prop, &want.value) {
-        expanded
-    } else {
-        vec![(want.prop.clone(), want.value.clone())]
+fn expand_or_passthrough(
+    want: &Want,
+    session: &mut ResolveSession<'_>,
+) -> Vec<(Box<str>, AtomValue)> {
+    if let Some(expanded) = lower_macro(want, session.system) {
+        return expanded;
     }
+    if let Some(expanded) = shorthands::expand_shorthand(&want.prop, &want.value) {
+        return expanded;
+    }
+    if refuse_unrealizable_extension(want, session) {
+        return Vec::new();
+    }
+    vec![(want.prop.clone(), want.value.clone())]
+}
+
+/// Refuse a dialect extension with no CSS realization: default-visible
+/// diagnostic naming the prop, no atoms. True when the prop refused.
+fn refuse_unrealizable_extension(want: &Want, session: &mut ResolveSession<'_>) -> bool {
+    let canonical = canon::resolve_canonical_prop(&want.prop);
+    if !canon::is_unrealizable_extension(canonical) {
+        return false;
+    }
+    session.emit(
+        want_key(session, &want.prop, atom_value_to_json(&want.value)),
+        ResolveOutcome::Rejected {
+            code: DiagnosticCode::UnrealizableExtension,
+            detail: ResolveDetail::Declaration(DeclarationDetail::Name(
+                NameDetail::UnrealizableExtension {
+                    prop: want.prop.clone(),
+                },
+            )),
+        },
+    );
+    true
 }
 
 fn lower_macro(want: &Want, system: &BaseSystem) -> Option<Vec<(Box<str>, AtomValue)>> {

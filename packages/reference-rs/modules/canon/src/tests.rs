@@ -464,6 +464,25 @@ fn can_join_08_unique_class_prefixes() {
 }
 
 #[test]
+fn unrealizable_extensions_table_contract() {
+    assert!(UNREALIZABLE_EXTENSIONS.windows(2).all(|w| w[0] < w[1]));
+    for name in UNREALIZABLE_EXTENSIONS {
+        assert!(
+            is_unrealizable_extension(name),
+            "table member '{}' must resolve through is_unrealizable_extension",
+            name
+        );
+    }
+    // Exemptions the resolve fall-through relies on: longhand rows expand,
+    // platform-shadowed rows serve platform css, platform props passthrough.
+    assert!(!is_unrealizable_extension("borderStartRadius"));
+    assert!(!is_unrealizable_extension("borderEndRadius"));
+    assert!(!is_unrealizable_extension("webkitTextFillColor"));
+    assert!(!is_unrealizable_extension("color"));
+    assert!(!is_unrealizable_extension("translate"));
+}
+
+#[test]
 fn test_unitless_properties_sorted_and_detected() {
     assert!(UNITLESS_PROPERTIES.windows(2).all(|w| w[0] < w[1]));
     assert!(is_unitless_prop("zIndex"));

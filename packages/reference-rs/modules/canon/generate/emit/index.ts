@@ -13,6 +13,7 @@ export {
   emitCssLonghandsRs,
   emitCssColorRs,
   emitCssPropertiesRs,
+  emitCssUnrealizableRs,
 } from './css';
 export { emitLibRs } from './lib';
 export { emitTestsRs } from './tests/index';

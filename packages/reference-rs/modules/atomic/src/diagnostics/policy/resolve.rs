@@ -47,6 +47,9 @@ fn name_sentence(name: &NameDetail) -> String {
         NameDetail::Condition { name } => {
             format!("Unknown condition \"{name}\"")
         }
+        NameDetail::UnrealizableExtension { prop } => {
+            format!("`{prop}` has no CSS lowering; the declaration was dropped")
+        }
     }
 }
 
@@ -129,6 +132,17 @@ mod tests {
             ResolveDetail::Declaration(declaration),
         )));
         assert_eq!(rendered.message, "Unknown condition \"_nope\"");
+
+        let declaration = DeclarationDetail::Name(NameDetail::UnrealizableExtension {
+            prop: "translateX".into(),
+        });
+        let rendered = Policy::render_resolve(&report(rejected(
+            ResolveDetail::Declaration(declaration),
+        )));
+        assert_eq!(
+            rendered.message,
+            "`translateX` has no CSS lowering; the declaration was dropped"
+        );
 
         let declaration = DeclarationDetail::Value(ValueDetail::NonCanonicalNumber {
             prop: "width".into(),

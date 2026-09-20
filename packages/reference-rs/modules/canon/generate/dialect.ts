@@ -52,6 +52,7 @@ export interface DialectData {
   colorProperties: string[];
   unitlessProperties: string[];
   extensions: readonly ExtensionProp[];
+  unrealizableExtensions: string[];
 }
 
 function toJsxName(tag: string): string {
@@ -149,6 +150,26 @@ function buildUnitlessProperties(): string[] {
   );
 }
 
+/**
+ * Extension props no browser can honor by serving their `css` form: `EXTENSIONS`
+ * rows whose `css` is absent from live `@webref/css`, with no longhands and no
+ * platform row shadowing the name. `EXTENSIONS` only — vendor rows are real
+ * declarations webref happens not to list. Sorted for binary search.
+ */
+function buildUnrealizableExtensions(platformCss: PlatformCss): string[] {
+  const webrefKebab = new Set(
+    Array.from(platformCss.properties.values()).map((p) => p.kebab.toLowerCase())
+  );
+  return EXTENSIONS.filter(
+    (ext) =>
+      !platformCss.properties.has(ext.name) &&
+      (ext.longhands?.length ?? 0) === 0 &&
+      !webrefKebab.has(ext.css.toLowerCase())
+  )
+    .map((ext) => ext.name)
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
 export function loadDialect(platformCss: PlatformCss): DialectData {
   const elements = buildElements();
   const primitiveJsx = Array.from(new Set(elements.map((e) => e.jsx))).sort((a, b) =>
@@ -158,6 +179,7 @@ export function loadDialect(platformCss: PlatformCss): DialectData {
   const colorProperties = buildColorProperties(platformCss);
   const unitlessProperties = buildUnitlessProperties();
   const conditions = [...NAMED_CONDITIONS].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const unrealizableExtensions = buildUnrealizableExtensions(platformCss);
 
   return {
     elements,
@@ -169,6 +191,7 @@ export function loadDialect(platformCss: PlatformCss): DialectData {
     colorProperties,
     unitlessProperties,
     extensions: EXTENSION_ALLOWLIST,
+    unrealizableExtensions,
   };
 }
 

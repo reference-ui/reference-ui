@@ -271,6 +271,49 @@ fn bool_refusals_report_distinct_spellings_with_keys() {
 }
 
 #[test]
+fn unrealizable_extension_refuses_with_named_diagnostic_and_no_atoms() {
+    for prop in ["translateX", "boxSize", "spaceX"] {
+        let want = Want::new(prop, AtomValue::String("10px".into()));
+        let mut diagnostics = Vec::new();
+        let system = BaseSystem::default();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
+            sink: None,
+            want: None,
+        };
+        let atoms = resolve_want_with(&want, &mut session);
+        drop(session);
+        assert!(atoms.is_empty(), "{prop} yields no atoms");
+        assert_eq!(diagnostics.len(), 1, "{prop} warns once");
+        assert_eq!(diagnostics[0].code, DiagnosticCode::UnrealizableExtension);
+        assert!(
+            diagnostics[0].message.contains(prop),
+            "refusal names the prop: {}",
+            diagnostics[0].message
+        );
+    }
+}
+
+#[test]
+fn unrealizable_fall_through_keeps_lowering_arms_working() {
+    let system = BaseSystem::default();
+    let gradient = Want::new(
+        "textGradient",
+        AtomValue::String("linear-gradient(red, blue)".into()),
+    );
+    assert_eq!(resolve_with(&gradient, &system).len(), 3);
+    let pair = Want::new("borderStartRadius", AtomValue::String("4px".into()));
+    let corners = resolve_with(&pair, &system);
+    assert_eq!(corners.len(), 2);
+    assert_eq!(corners[0].prop.as_ref(), "borderStartStartRadius");
+    assert_eq!(corners[1].prop.as_ref(), "borderEndStartRadius");
+    let platform = Want::new("translate", AtomValue::String("10px".into()));
+    assert_eq!(resolve_with(&platform, &system).len(), 1);
+}
+
+#[test]
 fn authored_key_carries_the_five_tuple() {
     let mut when = smallvec::SmallVec::new();
     when.push("_hover".into());
