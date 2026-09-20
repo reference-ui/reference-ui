@@ -85,12 +85,12 @@ function runStep(step: LowerStep, ctx: LowerContext): LoweredPair[] | undefined 
   return [[ctx.orig, ctx.value]]
 }
 
-/** Guards evaluate on the rendered value; absent guard passes. */
+/** Guards evaluate on the rendered value, trimmed unless the step opts out; absent guard passes. */
 function guardPasses(on: NamerGuard | undefined, ctx: LowerContext): boolean {
   if (on === undefined) return true
   if (typeof on === 'string') return namedGuardPasses(on, ctx)
   const trimmed = trimStructural(ctx.rendered)
-  if ('eq' in on) return trimmed === on.eq
+  if ('eq' in on) return (on.trimmed === false ? ctx.rendered : trimmed) === on.eq
   return (ctx.tables.keywords[on.in] ?? []).includes(trimmed)
 }
 

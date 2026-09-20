@@ -107,7 +107,7 @@ fn container_steps_follow_guard_order_with_rendered_default() {
         serde_json::json!([
             {"on": "bool:true", "emit": [["containerType", "inline-size"]]},
             {"on": "empty", "emit": [["containerType", "inline-size"]]},
-            {"on": {"eq": "true"}, "emit": [["containerType", "inline-size"]]},
+            {"on": {"eq": "true", "trimmed": false}, "emit": [["containerType", "inline-size"]]},
             {"emit": [["containerType", "inline-size"], ["containerName", "$"]]},
         ])
     );

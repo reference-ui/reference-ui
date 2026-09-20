@@ -89,7 +89,7 @@ lowerings 29 props · breakpoints verbatim with `base` first.
 | 9 | six radius pairs `borderTopRadius` … | two corner longhands, same value | `shorthands/pair.rs` |
 | 10 | `flex: '1'` / `'auto'` / `'initial'` / `'none'` | **value rewritten**: `flex_1_1_0%`, `flex_1_1_auto`, `flex_0_1_auto`, `flex_none`; exact, case-sensitive, trim-tolerant; JSON number `1` rewrites too | `shorthands/flex.rs` |
 | 11 | `size` | `width` + `height` | `resolve/size.rs` |
-| 12 | `container` | `containerType: inline-size`, plus `containerName <rendered>` unless the `class_name_str` rendering is empty or `"true"` — so `true`, `"true"`, and `""` stamp the type alone, while `false`, `null`, `0` stamp the name too; guard order bool → empty → eq-`"true"` → default | `resolve/container.rs` |
+| 12 | `container` | `containerType: inline-size`, plus `containerName <rendered>` unless the `class_name_str` rendering is empty or `"true"` — so `true`, `"true"`, and `""` stamp the type alone, while `false`, `null`, `0` stamp the name too; the `"true"` test is UNTRIMMED, so padded spellings stamp the name too; guard order bool → empty → untrimmed eq-`"true"` → default | `resolve/container.rs` |
 | 13 | `textGradient` | `backgroundImage` + `webkitBackgroundClip: text` + `color: transparent` | `resolve/gradient.rs` |
 | 14 | `border: true` | `borderWidth: 1px` + `borderStyle: solid` (bool-`true` only; `false` refuses) | `resolve/mod.rs::lower_macro` |
 | 15 | `font: 'sans'` | `fontFamily: sans` + `fontWeight: <scale default or 400>` + every `css` extra on the definition — **system data**; extras ordered, later keys overwrite keeping first-insertion position | `resolve/font/family.rs` |

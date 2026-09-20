@@ -15,6 +15,16 @@ use crate::resolve::{container, gradient, size, BORDER_TRUE_MACRO, RUNTIME_OWNED
 /// Marker substituting the rendered authored string in an emit pair.
 const RENDERED_VALUE: &str = "$";
 
+/// `{eq}` trims unless the step says otherwise; absent means trimmed.
+fn trimmed_by_default() -> bool {
+    true
+}
+
+/// Skip the trim flag on the wire when it holds the default.
+fn is_trimmed(trimmed: &bool) -> bool {
+    *trimmed
+}
+
 /// Longhand shape a step fans out to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Shape {
@@ -114,10 +124,14 @@ pub enum LowerStep {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Guard {
-    /// Trimmed rendered equals the string, case-sensitive.
+    /// Rendered equals the string, case-sensitive; trimmed unless the step
+    /// opts out. Only `container` opts out: its oracle compares untrimmed.
     Eq {
         /// Expected rendering.
         eq: String,
+        /// Compare against the trimmed rendering; absent means trimmed.
+        #[serde(default = "trimmed_by_default", skip_serializing_if = "is_trimmed")]
+        trimmed: bool,
     },
     /// Trimmed rendered is a member of the keyword set, case-sensitive.
     In {
@@ -253,6 +267,7 @@ fn outline_none_step(canon: &str) -> LowerStep {
     LowerStep::Emit {
         on: Some(Guard::Eq {
             eq: "none".to_string(),
+            trimmed: true,
         }),
         emit: vec![
             (canon.to_string(), border::OUTLINE_NONE_VALUE.to_string()),
@@ -356,6 +371,8 @@ fn container_steps() -> Vec<LowerStep> {
         LowerStep::Emit {
             on: Some(Guard::Eq {
                 eq: container::BARE_VALUE.to_string(),
+                // Untrimmed: `container::lower` compares the raw rendering.
+                trimmed: false,
             }),
             emit: bare,
         },

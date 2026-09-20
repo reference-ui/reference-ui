@@ -90,7 +90,13 @@ export type LowerStep =
   | { on?: NamerGuard; keep: true }
   | { drop: true }
 
-export type NamerGuard = 'bool:true' | 'empty' | 'whole' | { eq: string } | { in: string }
+export type NamerGuard =
+  | 'bool:true'
+  | 'empty'
+  | 'whole'
+  /** `{eq}` trims unless the step opts out; only container's `{eq:'true'}` carries `trimmed: false`. */
+  | { eq: string; trimmed?: boolean }
+  | { in: string }
 
 export interface NamerFontTable {
   weight: string

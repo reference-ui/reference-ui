@@ -1,6 +1,6 @@
 {
   "function": "collapseWhitespace",
-  "rulesVersion": 1,
+  "rulesVersion": 2,
   "cases": [
     {
       "input": "1px  solid   red",
