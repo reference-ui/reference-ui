@@ -123,6 +123,70 @@ fn test_negated_and_bare_scale_tokens() {
     assert!(diagnostics.is_empty());
 }
 
+fn negated_brace_system() -> BaseSystem {
+    let mut system = spacing_system();
+    system.tokens.insert_leaf(TokenLeaf {
+        category: "colors",
+        path: "blue.600",
+        light: "#2563eb",
+        dark: "#3b82f6",
+    });
+    system
+}
+
+#[test]
+fn test_negated_braced_ref_calc_wraps_silently() {
+    let system = negated_brace_system();
+    for (prop, raw, expected) in [
+        ("mt", "-{spacing.4}", "calc(-1 * var(--spacing-4))"),
+        ("mt", "-{4}", "calc(-1 * var(--spacing-4))"),
+        (
+            "color",
+            "-{colors.blue.600/50}",
+            "calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent))",
+        ),
+        (
+            "backgroundColor",
+            "-{colors.blue.600}/50",
+            "calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent))",
+        ),
+    ] {
+        let (css, diagnostics) = resolve_with_diagnostics(prop, raw, &system);
+        assert_eq!(css.as_deref(), Some(expected), "{prop}={raw}");
+        assert!(diagnostics.is_empty(), "{prop}={raw} stays silent");
+    }
+}
+
+#[test]
+fn test_negated_braced_unknown_errors_and_drops() {
+    let system = negated_brace_system();
+    let (css, diagnostics) = resolve_with_diagnostics("ml", "-{unknown.path}", &system);
+    assert_eq!(css, None);
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
+    assert!(diagnostics[0].message.contains("{unknown.path}"));
+}
+
+#[test]
+fn test_negated_composite_keeps_interpolation() {
+    let system = negated_brace_system();
+    let (css, diagnostics) =
+        resolve_with_diagnostics("border", "-1px solid {colors.blue.600}", &system);
+    assert_eq!(
+        css.as_deref(),
+        Some("-1px solid var(--colors-blue-600)"),
+        "composite keeps literal + expansion, no calc-wrap"
+    );
+    assert!(diagnostics.is_empty());
+    // Opacity in both positions at once is outside the calc-wrap scope and
+    // keeps its fallthrough: no calc-wrap, whatever interpolation emits.
+    let (css, _) = resolve_with_diagnostics("color", "-{colors.blue.600/50}/60", &system);
+    assert!(
+        !css.expect("double opacity falls through").contains("calc("),
+        "double opacity does not calc-wrap"
+    );
+}
+
 #[test]
 fn test_malformed_opacity_warns_and_passes_through() {
     for raw in ["red.500/", "/40"] {

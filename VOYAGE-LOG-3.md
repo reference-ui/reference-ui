@@ -30,6 +30,7 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 3: (h) IN-BOUNDS, calc-wrap negation → fortify on resolve_negated_token + ATM-TOKEN-17; (g) BREAK-FOUND (negation-only include still extracts) → architect ruling; (i) canon-emit still hunting. Cycles banked: 6/6 (floor held, cycle continues). Next: (h) landing → chain → commit; (g) ruling → fortify → chain → commit; (i) verdict → arc → wave 4.
 - 2026-09-20 watch: wave 3 all three broke: (h) calc-wrap → fortify building; (g) IN-BOUNDS scan-all-minus-negatives → fortify on IncludeScope + SCAN-01; (i) BREAK-FOUND (~26 fictional canon css forms served dead) → architect dispatched. Cycles banked: 6/6. Next: landings → chains → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) landed → chain reviewing; (g) landed → chain reviewing; (i) IN-BOUNDS refuse+SKIP over generated set → fortify on resolve fall-through + ATM-EXT-01. Live: 3. Next: chain verdicts → commits → wave 4.
+- 2026-09-20 07:22 tick: W3g COMMITTED (negation-only VERIFIED; SPEC excluded — shared with (h)+(i), rides last with all-verified hunks). Chain (h) reviewing; fortify (i) building. Peer active (2 new mission docs: jettison, reaper — hands off). Cycles banked: 7/6. Next: chain (h) verdict → commit (h); (i) landing → chain → commit + SPEC → wave 4.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 - 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
@@ -1853,6 +1854,132 @@ holds — verified firsthand `picomatch(['!outside/**'])` → theme true
 / outside false, exactly the engine's new behavior, so baseline sync
 and watch agree. Captain: commit the 4 (g) paths + finder report +
 log sections per hunk with (h); keep peer docs + (h)/(i) files out.
+
+### Wave 3, find (h) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (h) files only —
+write-set audited via `git status` paths + sha: exactly
+`resolve/tokens/mod.rs` (+39/-0, sha `6ca5d4ac` stable across the
+review), `resolve/tokens/tests.rs` (+64/-0), the TOKEN-17 SPEC table
+row (1 hunk; the SCAN-01 SPEC sentence is sibling (g)'s, committed
+separately per the 07:22 tick plan), and the new `ATM-TOKEN-17/` dir
+(5 inputs + 3 goldens). Sibling (g) files (now in HEAD `305cf4f66`),
+live sibling (i) canon files, peer docs (`ATOMIC.md`,
+`missions/README.md`, `operation-jettison/reaper.md`), and all doom
+reports were never touched or adjudicated. NOTE for the log: the (g)
+commit landed mid-review (07:22:36) and (i) canon edits arrived
+07:26+; all post-restore greens below ran on the current tree
+including (i)'s in-flight edits — zero interference observed.
+
+**1. Finder repro** (`/tmp/doom-wave3-neg-brace-repro.mts`,
+unmodified): exit 0 firsthand — `mints -var(...): false`,
+`diagnostics: []`, served `spacing-scale__mt_-{spacing.4}`, zero
+runtime warns. The repro only asserts absence of the break, so this
+oracle added `/tmp/chainrev-h-positive.mts` (8/8 PASS): the sheet
+positively contains `margin-top: calc(-1 * var(--spacing-4));`, no
+`-var(` anywhere, compile silent, served class non-empty with no
+runtime warns, the served class's own rule is the healed calc-wrap,
+and both half-spelling controls still green (bare `-4` calc-wraps,
+bare `{spacing.4}` resolves — TOKEN-07 + braced twin untouched).
+
+**2. Suites** (repo runners, this session, current tree):
+`ATM-TOKEN-17 -t` filter 1 passed / 284 skipped; `pnpm agentrs c
+atomic` 462/462 (458 baseline + 3 new guards green by name +
+(g)'s `negation_only_excludes`, read-only attributed); FULL `pnpm
+agentrs v atomic` 285/285 (11 files, 238 stations). Quality:
+`agentrs q` on both touched `.rs` files — 0 violations, 1 soft
+warning (mod.rs 372 vs the 365 *soft* file-length limit from this
+change; gate passes, same accepted category as wave-1
+walk/channels/codes and wave-2 types.rs — splitting mid-fortify
+would be scope creep, noted not gap). Zero failures anywhere —
+nothing to attribute, nothing absorbed. Binding discipline:
+`ensure-native` content-hash verified (`b88c...`); the one stale
+oracle attempted (Sep-16 `dist/npm` x64) loads but predates waves
+1–2 diagnostics — it still mints `-var(` (old shape confirmed) yet
+cannot run the station meaningfully, so fail-without-fix was proven
+by surgical revert + rebuild instead (below), not counted from stale.
+
+**3. Fail-without-fix / pass-with-fix (surgical revert, restored
+byte-identical):** swap window 07:23:52–07:24:33 BST, mod.rs only
+(tests + station kept), announced here for sibling attribution.
+(a) Cargo: new `test_negated_braced_ref_calc_wraps_silently` FAILS
+on old code with the exact finder symptom (`left:
+Some("-var(--spacing-4)")`, `right: Some("calc(-1 *
+var(--spacing-4))")`); the unknown-errors and composite guards pass
+on old code — pass-pass BY DESIGN (TOKEN-12 parity pin + composite
+control pin, both disclosed in the landing), guarding arms the fix
+must not move. (b) Station: old-code binding rebuilt (8.2s),
+TOKEN-17 FAILS 1 failed / 284 skipped (`AssertionError: expected
+... to contain 'margin-top: calc(-1 * var(--spacing-4...'`);
+finder repro on the old binding exits 1 with the verbatim BREAK
+(`mints -var: true`, silent, served). Restored via `/tmp` backup:
+`cmp` clean, sha back to `6ca5d4ac`, diff back to +39/+64,
+binding rebuilt with stamp back to `b88c...` and size 8260744;
+post-restore station + repro + probes + full suites all green
+(cargo 462/462, vitest 285/285, re-run again after (i)'s edits
+arrived — still green).
+
+**4. Diff review (line-by-line, (h) write-set):**
+`resolve_negated_token` gains one early arm — a `-` remainder
+starting with `{` routes to `resolve_negated_braced`; everything
+else is untouched (single caller at mod.rs:47, the sole funnel for
+all values). The trigger is exact per the ruling: inner trimmed
+(the `expand_open` convention, `interpolate.rs:89`), tail empty or
+exactly `/opacity` (`negated_brace_tail` rejects second brace
+pairs, trailing literals, bad opacity), inner split via the same
+`split_opacity` the bare path uses, double-opacity (both positions)
+rejected, empty/brace-containing inners rejected — all return None
+into the EXISTING fallthrough, so behavior changes ONLY on the
+ruling's arms. Lookup is `lookup_entry(prop, path, system)` —
+identical call to the non-negated braced twin (mod.rs:95), which is
+why `-{4}` flips error→calc-wrap in parity with resolving `{4}`
+(both verified firsthand: `{4}`→var, `-{4}`→calc silent — the
+ruling's anti-asymmetry clause (c)). Missing falls through to the
+TOKEN-12 path by construction: None → pathed miss →
+`expand_brace_segments` → `keep_raw_segment` pushes
+`UnknownTokenReference` (`interpolate.rs:111-115`, message template
+byte-identical to the TOKEN-12 path) → `Missing` → atom dropped;
+station golden shows `ATM-E-UNKNOWN-TOKEN` + dropped `margin-left`
++ siblings intact. No new codes (`diagnostics/` zero diff; the code
+pre-exists at `codes.rs:83/192`); no runtime change (zero neo
+paths); class keys follow the existing convention raw
+(`mt:-{spacing.4}` → `negated-brace__mt_-{spacing.4}`, cf. TOKEN-07
+`mt:-4` → `__mt_-4`) with escaping identical to the TOKEN-08
+brace precedent (`\{…\.…\}`, `\/`), and the station's ghost gauge
+is green. TOKEN-07 untouched (zero paths), no lib touch, finder
+report untouched, no existing test touched (both `.rs` diffs pure
+addition, zero `-` lines), no blanket goldens (only the 3 new
+TOKEN-17 outputs; zero `output/` paths modified in status).
+
+**5. Contracts hold.** TOKEN-07 composition: `-{spacing.4}` now
+calc-wraps exactly like bare `-4`, both opacity positions compose
+to `calc(-1 * color-mix(...))` (verified firsthand on the fixed
+binding alongside the station asserts). README fail-closed: the
+fabricated `-var()` is gone on all ruled arms — resolvable refs
+calc-wrap, `-{unknown.path}` errors `UnknownTokenReference` and
+drops the declaration with `atomCount` 6 and the exact-2-diagnostics
+shape (error + proven-miss warning, proving the valid arms silent).
+TOKEN-12 parity: same error code/message shape as TOKEN-12's
+`{colors.nope}` golden plus the same `ATM-W-MISSING-STYLE-PLAN`
+`has no compiled style plan` warning. SPEC (h) hunk is exactly the
+ruled table row, no prose bullet.
+
+**6. Residual carried as doom fodder (NOT a gap):** double-opacity
+`-{p/50}/60` is outside the ruling's trigger ("optional opacity in
+EITHER position") and keeps its pre-fix fallthrough, which mints
+`color: -color-mix(...)/60` silently (observed firsthand; the
+fallthrough code path has zero diff — preserved, not introduced).
+The landing discloses it and pins no-calc-wrap at unit level, which
+is the ruling-consistent conservative reading; refusing it would
+have been scope expansion (the token resolves — it wants a
+malformed-modifier rule, not UnknownTokenReference). Next brief:
+negated double-opacity (and the untouched non-negated `{p}/50` →
+`var()/50` wart, likewise disclosed OUT of scope). Captain: commit
+the (h) write-set (2 `.rs` + SPEC TOKEN-17 row hunk + new
+`ATM-TOKEN-17/` dir + finder report + log sections) per the
+hunk-split plan with (g)'s SPEC sentence and (i); `dist/` is
+untracked build output, nothing to commit there.
 
 ## Useful
 

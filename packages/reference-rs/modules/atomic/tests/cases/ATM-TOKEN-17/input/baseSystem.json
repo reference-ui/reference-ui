@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "negated-brace",
+  "tokens": {
+    "spacing": {
+      "4": {
+        "value": "1rem"
+      }
+    },
+    "colors": {
+      "blue": {
+        "600": {
+          "light": "#2563eb",
+          "dark": "#3b82f6"
+        }
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}
