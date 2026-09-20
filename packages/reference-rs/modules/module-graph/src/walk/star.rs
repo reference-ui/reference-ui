@@ -89,7 +89,7 @@ impl<'g, L: Loader, F: FileSystem> BindingWalk<'g, L, F> {
         };
         match outcome {
             Ok(origin) => poll.candidates.push(origin),
-            Err(Refused::MissingExport { .. } | Refused::Unresolved { .. }) => {}
+            Err(Refused::MissingExport { .. }) => {}
             Err(other) => {
                 if poll.pending.is_none() {
                     poll.pending = Some(other);

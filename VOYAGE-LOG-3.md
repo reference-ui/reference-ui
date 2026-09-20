@@ -26,6 +26,8 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 2: (d) BREAK-FOUND (canon join OR-bypass) → architect dispatched; (e) BREAK-FOUND (styletrace body-destructure gap) → architect dispatched; (f) module-graph still hunting. Cycles banked: 3/6. Next: rulings → fortify → chain reviews → commits → wave 3.
 - 2026-09-20 watch: wave 2: (d) IN-BOUNDS, NAME-only join → fortify on join.ts + join.test.ts; (e) IN-BOUNDS, body-destructure extension → fortify on parser/types.rs + tracing.rs + 2 cases; (f) module-graph still hunting. Cycles banked: 3/6. Next: landings → chain reviews → commits → wave 3.
 - 2026-09-20 06:42 tick: W2d COMMITTED (6aeb9c062 — canon NAME-only VERIFIED). W2e fortify building (parser/types.rs + tracing.rs + component.rs in tree); W2f BREAK-FOUND (barreled lookup swallows nested unresolvable hop) → architect dispatched. Cycles banked: 4/6. Live: 2 (+1 spawned). Next: (e) landing → chain → commit; (f) ruling → fortify → chain → commit; then wave 3.
+- 2026-09-20 watch: W2e COMMITTED (5b527a0e6 — styletrace body-destructure VERIFIED). W2f ruling IN-BOUNDS (surface nested hop, walk_refused.rs pins) → fortify dispatched. Cycles banked: 5/6. Next: (f) landing → chain → commit (floor hit) → wave 3.
+- 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 
 ## Waves
 
@@ -1130,6 +1132,148 @@ are traced) now holds for body-destructured authorship: same boundary,
 same flow, same verdict. Captain: commit the 11 styletrace paths +
 finder report + log sections; keep the peer docs + wave2-star report
 out.
+
+### Wave 2, find (f) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: nested `Unresolved`
+moved from the skip arm to the pending arm; `MissingExport` still
+skips (ESM null-skip); `star_candidate → None` skip untouched;
+enumeration untouched. One match arm, two tests, nothing else.
+
+**Fix (`walk/star.rs:92`, one line).** The skip arm is now
+`Err(Refused::MissingExport { .. }) => {}` — `Unresolved` falls
+through to the existing pending arm, so winner-beats-error is
+preserved exactly like Cycle/Ambiguous: a declaring twin still
+beats a broken-hop sibling, and only a star subtree yielding
+nested `Unresolved` with no winner changes outcome (previously
+misattributed `MissingExport`). `stars_never_carry_default` and
+the whole `walk_star.rs` file hold untouched.
+
+**Pins (both in `walk_refused.rs`, crate `common` MemoryFs
+harness — no station, no new case).** (1)
+`star_lookup_surfaces_the_nested_unresolvable_hop`: the finder's
+world (`app → barrel → *lib`, `lib = export { x } from
+'./typo'`), asserting `Unresolved{lib, ./typo}`. (2)
+`one_winner_beats_a_pending_star_unresolved`: nested-`Unresolved`
+sibling + declaring twin → winner wins (extends
+`one_winner_beats_a_pending_star_error` to the `Unresolved` arm).
+Fail-without-fix verified firsthand via brief revert: the ported
+test FAILS on old code with the exact finder symptom
+(`MissingExport{barrel, x}`), passes with the fix; fix restored,
+diff back to the 2 files.
+
+**Repro.** `/tmp/doom-wave2-modulegraph-t1` (`cargo test
+--offline`, read-only run): the red test flips red→green,
+control 1 stays green, and control 2 now fails — expected, its
+final assert pins the OLD incoherent behavior
+(`matches!(via_lookup, Refused::MissingExport)`), so that failure
+is itself confirmation lookup no longer returns `MissingExport`.
+Report untouched.
+
+**Suites (all `pnpm agentrs`, this session).** module_graph cargo
+102/102 (`walk_refused` 10/10 incl. both new pins by name,
+`walk_star` 9/9); atomic cargo 458/458; atomic vitest 284/284
+(11 files, 237 stations) re-run on a FRESH binding
+(`ensure-native` rebuilt darwin-x64 post-fix — the first vitest
+pass ran against a stale 06:43 binary, discarded as vacuous);
+styletrace cargo 34/34 (dependent-crate ripple check; tasty does
+not depend on module_graph). Quality: `agentrs q` on both
+touched files PASS (0 over-length, 0 complex, 0 clippy allows).
+
+**Goldens — zero movement, attested.** Atomic vitest 284/284 on
+the fresh binding = all 237 stations byte-stable; no
+MissingExport→Unresolved flips anywhere because no atomic
+fixture carries a broken-hop star shape. Zero intended flips,
+zero regressions, zero golden files touched (`git status` shows
+no golden paths; `--update-goldens` never run).
+
+**Must-NOTs honored:** no weakened tests (both pins strictly
+additive), no blanket goldens, no lib touch, no enumeration
+change, no atomic `edge_reason` rewording, no
+MissingExport-beneath-a-hop expansion (both OUT per ruling, still
+doom fodder), finder report untouched, no contracts amended.
+
+**Files (mine only, 2 + this section).**
+`modules/module-graph/src/walk/star.rs` (one arm),
+`modules/module-graph/tests/walk_refused.rs` (2 pins). Peer paths
+in tree (`docs/ATOMIC.md`, `docs/missions/README.md`, untracked
+`operation-seize.md`) are not mine, not touched.
+
+### Wave 2, find (f) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (f) files only —
+write-set audited via `git status` paths: exactly
+`modules/module-graph/src/walk/star.rs` (1 line) +
+`modules/module-graph/tests/walk_refused.rs` (+40) under module-graph;
+peer paths (`docs/ATOMIC.md`, `docs/missions/README.md` — both 1-line
+operation-seize links, read-only; untracked `operation-seize.md`)
+were never touched or adjudicated.
+
+**1. Finder repro** (`/tmp/doom-wave2-modulegraph-t1`, `cargo test
+--offline`, unmodified): red test `star_lookup_surfaces_the_nested_
+unresolvable_hop` now PASSES with `Unresolved{lib, ./typo}`; control 1
+(direct import) still green. Control 2 FAILS — expected and
+adjudicated, not a gap: its enumeration half still passes (x listed,
+zero refused) and the panic is at its final assert which pins the OLD
+incoherent behavior (`matches!(via_lookup, MissingExport)`); the panic
+message itself shows lookup now returns `Unresolved{from: lib,
+specifier: ./typo}`. The mission brief's "controls still green" is
+inaccurate for control 2's final assert — that failure IS the
+confirmation. Report untouched.
+
+**2. Suites** (repo runners, this session): module_graph cargo 102/102
+green (`walk_refused` 10/10 incl. both new pins by name, `walk_star`
+9/9 incl. `stars_never_carry_default` + pre-existing winner-beats
+guard); atomic cargo 458/458; atomic vitest 284/284 (11 files, 237
+stations) on a sha-verified fresh darwin-x64 binding
+(`ensure-native`: binary current, post-fix rebuild per landing);
+styletrace cargo 34/34 (dependent-crate ripple check). Quality:
+`agentrs q` on both touched files PASS (0 over-length, 0 complex,
+0 clippy allows).
+
+**3. Fail-without-fix / pass-with-fix:** HEAD `star.rs` + new tests:
+ported test FAILS with the exact finder symptom
+(`MissingExport{file: barrel, name: x}`), winner-beats guard passes
+(pass-pass, as designed — it guards the pending arm, not the bug);
+fixed `star.rs`: 102/102. Swap restored byte-identical (`cmp` clean)
+and the full suite re-ran green post-restore. NOTE for the captain:
+the 07:01 tick's "star.rs shows unmodified" was my fail-without-fix
+swap window — adjudicated: fix present in tree, diff shows the
+1-line change, green post-restore.
+
+**4. Golden attestation:** zero movement, confirmed firsthand —
+284/284 atomic vitest on the fresh binding = all 237 stations
+byte-stable; no MissingExport→Unresolved flips anywhere because no
+atomic fixture carries a broken-hop star shape. Zero intended flips,
+zero regressions, zero golden files touched, `--update-goldens`
+never run.
+
+**5. Diff review (line-by-line):** `star.rs` — one match arm: skip arm
+is now `Err(Refused::MissingExport { .. }) => {}`, `Unresolved`
+falls through to the existing pending arm (first-error-wins,
+winner-beats-error preserved exactly like Cycle/Ambiguous);
+`star_candidate → None` skip untouched; `star_step`'s
+`pending.unwrap_or_else(missing)` surfacing untouched; enumeration
+(`exported_names`/`collect_star`) zero diff. `walk_refused.rs` —
+pure addition (40 `+`, zero `-`): ported red test mirrors the
+finder's world exactly (app→barrel→\*lib, `export { x } from
+'./typo'`, asserts `Unresolved{lib, ./typo}`), winner-beats guard
+extends `one_winner_beats_a_pending_star_error` to the Unresolved
+arm per the ruling. Untouched as ordered: `walk_star.rs`, atomic
+`edge_reason` (OUT per ruling — no files), lib/core/neo (zero
+paths), finder report; no existing test touched, none weakened;
+no contracts amended; OUT-scope nuances (MissingExport-beneath-a-
+hop, atomic rewording) verified absent from the diff, still doom
+fodder.
+
+**6. Contract holds.** The finder's violated pair (Forge R-B3 spirit
++ walk coherence: direct path pins `Unresolved`, enumeration lists
+the name) is now satisfied — barreled lookup returns
+`Unresolved{lib, ./typo}` for the broken hop, agreeing with both.
+Captain: commit the 2 module-graph paths + finder report + log
+sections (floor hit: 6/6); keep the operation-seize docs + peer
+paths out.
 
 ## Useful
 
