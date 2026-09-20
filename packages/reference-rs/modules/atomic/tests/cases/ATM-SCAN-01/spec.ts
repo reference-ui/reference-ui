@@ -3,6 +3,7 @@
  * both the sourceRoot scan and the legacy virtual `files` list: a `css()` in
  * `outside/` yields no utility under `include: ['theme/**']`, while an absent
  * or empty include preserves the legacy scan-all behavior without new diagnostics.
+ * A negation-only include (e.g. `['!outside/**']`) scopes to scan-all-minus-negatives.
  */
 import path from 'node:path'
 import { expect } from 'vitest'
@@ -86,6 +87,19 @@ const spec: AtomicCaseSpec = {
     const negated = await compile({ ...base, include: ['**/*.ts', '!outside/**'] })
     expectNoErrors(negated)
     expectRedOnly(negated)
+
+    const negationOnly = await compile({ ...base, include: ['!outside/**'] })
+    expectNoErrors(negationOnly)
+    expectRedOnly(negationOnly)
+
+    const negationOnlyVirtual = await compile({
+      baseSystem: LIB_SYSTEM_SPEC,
+      rootDir: sourceRoot,
+      include: ['!outside/**'],
+      files: virtualFiles(sourceRoot),
+    })
+    expectNoErrors(negationOnlyVirtual)
+    expectRedOnly(negationOnlyVirtual)
 
     const missed = await compile({ ...base, include: ['nowhere/**'] })
     expectNoErrors(missed)
