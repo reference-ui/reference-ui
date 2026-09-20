@@ -243,6 +243,13 @@ fn parse_object_bindings(
     bindings: &mut PropBindings,
 ) {
     let destructured = parse_object_pattern_bindings(pattern_source);
+    // Every pulled-out prop name, style or not: the §14 shadow keeps only
+    // these, so quoted keys normalize like the type side does.
+    bindings.destructured_prop_names.extend(
+        destructured
+            .iter()
+            .map(|binding| binding.prop_name.trim_matches(['"', '\'']).to_string()),
+    );
     let explicit_style_props = destructured
         .iter()
         .filter(|binding| resolved_style_props.contains(&binding.prop_name))
@@ -368,7 +375,9 @@ fn resolve_intersection_type(
 /// except names contributed through the surface types. Own-literal
 /// collisions with style props (`size`, `weight`) stay owned — that is
 /// the §14 shadow — while `StyleProps` / `PrimitiveProps` references
-/// prune inside the resolver, so `color` keeps extracting.
+/// prune inside the resolver, so `color` keeps extracting. The shadow
+/// later keeps only destructured names: forwarded members ride the
+/// props/rest spread and the call site mints them.
 fn resolve_owned_prop_names(
     ctx: &ParserContext,
     type_annotation: &TSType<'_>,

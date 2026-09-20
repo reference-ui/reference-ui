@@ -98,6 +98,79 @@ fn unannotated_hosts_own_nothing() {
     assert!(!outcome.owned_props.contains_key("Card"));
 }
 
+const CHART_TSX: &str = concat!(
+    "import { Div } from '@reference-ui/react'\n",
+    "interface ChartProps {\n",
+    "  p?: string\n",
+    "  id?: string\n",
+    "}\n",
+    "export function Chart(props: ChartProps) {\n",
+    "  return <Div {...props}>chart</Div>\n",
+    "}\n",
+);
+
+const PANEL_TSX: &str = concat!(
+    "import { Div } from '@reference-ui/react'\n",
+    "interface PanelProps {\n",
+    "  p?: string\n",
+    "  id?: string\n",
+    "}\n",
+    "export function Panel({ id, ...rest }: PanelProps) {\n",
+    "  void id\n",
+    "  return <Div {...rest} />\n",
+    "}\n",
+);
+
+fn forward_surface() -> StyleSurface {
+    StyleSurface::new(
+        BTreeSet::from(["p".to_string(), "color".to_string(), "size".to_string()]),
+        BTreeSet::from(["Div".to_string()]),
+    )
+}
+
+#[test]
+fn whole_props_forward_owns_nothing() {
+    let surface = forward_surface();
+    let outcome = trace_scratch(
+        "owned-props-chart",
+        &[("Chart.tsx", CHART_TSX)],
+        "Chart.tsx",
+        &surface,
+    );
+
+    let names: Vec<String> = outcome.bindings.iter().map(|b| b.name.clone()).collect();
+    assert_eq!(names, vec!["Chart".to_string()]);
+
+    // Declared `p` rides the whole-props spread into the primitive, so the
+    // §14 shadow keeps nothing and the call site mints (NEO-SITE-11).
+    assert!(!outcome.owned_props.contains_key("Chart"));
+}
+
+#[test]
+fn destructured_member_stays_owned_while_rest_forwards() {
+    let surface = forward_surface();
+    let outcome = trace_scratch(
+        "owned-props-panel",
+        &[("Panel.tsx", PANEL_TSX)],
+        "Panel.tsx",
+        &surface,
+    );
+
+    let names: Vec<String> = outcome.bindings.iter().map(|b| b.name.clone()).collect();
+    assert_eq!(names, vec!["Panel".to_string()]);
+
+    // Pulled-out `id` is the component's own API; `p` rides `rest` and
+    // keeps extracting at call sites.
+    assert_eq!(
+        outcome
+            .owned_props
+            .get("Panel")
+            .cloned()
+            .unwrap_or_default(),
+        BTreeSet::from(["id".to_string()])
+    );
+}
+
 #[test]
 fn input_seeds_union_with_traced_owned() {
     let seeds = BTreeMap::from([("Seed".to_string(), BTreeSet::from(["weight".to_string()]))]);

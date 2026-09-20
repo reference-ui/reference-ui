@@ -106,6 +106,11 @@ pub(super) struct PropBindings {
     pub(super) props_object_bindings: BTreeSet<String>,
     pub(super) spread_bindings: BTreeSet<String>,
     pub(super) owned_props: BTreeSet<String>,
+    /// Prop names pulled out of the props object (param or top-level body
+    /// destructure). The §14 shadow keeps only these: names riding the
+    /// props/rest spread into the primitive are forwarded styles, and the
+    /// call site mints them.
+    pub(super) destructured_prop_names: BTreeSet<String>,
 }
 
 impl PropBindings {
