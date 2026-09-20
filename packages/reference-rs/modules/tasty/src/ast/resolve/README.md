@@ -8,6 +8,10 @@ into the final `ResolvedTypeScriptGraph`.
 
 ## Responsibilities
 
+- fold same-file same-name declaration shells before resolution (M1–M3:
+  all-Interface groups merge with unioned members; nominal member
+  collisions keep first + diagnostic; alias/mixed collisions keep last
+  + diagnostic)
 - build symbol and export lookup indexes
 - resolve imported references through export maps
 - resolve local symbol references within a file
@@ -19,6 +23,7 @@ into the final `ResolvedTypeScriptGraph`.
 - `mod.rs`: module wiring and public re-exports
 - `graph.rs`: resolved graph output type
 - `index.rs`: top-level orchestration and lookup-index construction
+- `merge.rs`: pre-resolution same-file declaration-merge fold (M1–M3)
 - `resolver/`: recursive type and symbol reference resolution
   split into symbol-shape and type-reference passes
 - `names.rs`: shared reference-name parsing helpers

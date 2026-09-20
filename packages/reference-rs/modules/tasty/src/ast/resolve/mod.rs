@@ -4,6 +4,7 @@
 
 mod graph;
 mod index;
+mod merge;
 mod names;
 mod resolver;
 

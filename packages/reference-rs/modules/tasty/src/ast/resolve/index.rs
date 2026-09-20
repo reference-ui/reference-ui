@@ -3,15 +3,19 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::graph::ResolvedTypeScriptGraph;
+use super::merge::fold_same_file_merges;
 use super::resolver::Resolver;
 use crate::ast::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
 use crate::model::{ExportMap, TsFile, TsSymbol};
 
 pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScriptGraph {
     let ParsedTypeScriptAst {
-        files: parsed_files,
-        diagnostics,
+        files: mut parsed_files,
+        mut diagnostics,
     } = parsed_ast;
+    for parsed in parsed_files.iter_mut() {
+        fold_same_file_merges(parsed, &mut diagnostics);
+    }
     let symbol_index = build_symbol_index(&parsed_files);
     let export_index = build_export_index(&parsed_files, &symbol_index);
     let parsed_by_file_id = parsed_files
