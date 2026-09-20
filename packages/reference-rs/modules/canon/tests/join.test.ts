@@ -106,6 +106,20 @@ describe('Canon Join Validation (Fail-Closed Gates)', async () => {
     const errors = validateDialectExtJoin(poisoned, platformCss)
     expect(errors.length).toBeGreaterThan(0)
     expect(errors[0]).toContain('foobarProp')
+
+    // Borrowed-css shape: a hallucinated name riding a legit css form must
+    // still abort — the css field is an emission form, not an identity witness.
+    const borrowedCss = cloneDialect(baseDialect)
+    borrowedCss.canonicalProperties.push({
+      name: 'foobarProp',
+      css: 'color',
+      classPrefix: 'fb',
+      longhands: [],
+    })
+
+    const borrowedErrors = validateDialectExtJoin(borrowedCss, platformCss)
+    expect(borrowedErrors.length).toBeGreaterThan(0)
+    expect(borrowedErrors[0]).toContain('foobarProp')
   })
 
   it('CAN-FAIL-06: aborts when native shorthand longhands disagree with @webref/css', () => {
