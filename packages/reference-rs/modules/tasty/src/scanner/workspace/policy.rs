@@ -89,24 +89,18 @@ fn next_external_depth(ctx: &DiscoveryContext<'_>, target_library: &str) -> Opti
         return Some(ctx.external_depth);
     }
 
-    if ctx.external_depth < 2 {
-        return Some(ctx.external_depth + 1);
-    }
-
+    // Scan boundary (scanner README): from a library file we only follow
+    // imports that stay within the same package. Cross-library hops end here.
     None
 }
 
 fn should_skip_user_external_import(
     is_user_file: bool,
-    _reexport_specifiers: &BTreeSet<String>,
+    reexport_specifiers: &BTreeSet<String>,
     source_module: &str,
 ) -> bool {
-    // Reference docs should follow public external types, but development-only
-    // test helpers still do not belong in the scan graph.
-    let is_dev_dependency = source_module.starts_with("@types/")
-        || source_module.starts_with("vitest")
-        || source_module.starts_with("@vitest")
-        || source_module.starts_with("test");
-
-    is_user_file && is_dev_dependency
+    // Scan boundary (scanner README): a user file pulls an external library
+    // into the scan graph only by re-exporting from it. Plain imports are
+    // not part of the public bridge, so they stay local.
+    is_user_file && !reexport_specifiers.contains(source_module)
 }

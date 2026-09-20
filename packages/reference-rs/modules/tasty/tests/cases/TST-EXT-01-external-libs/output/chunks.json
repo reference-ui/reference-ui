@@ -16,6 +16,7 @@
     "./chunks/_2dcfde0fd6101986.js",
     "./chunks/_30b528cae37da527.js",
     "./chunks/_31c4442cfcc497c1.js",
+    "./chunks/_3500846feb953bc0.js",
     "./chunks/_39c990439dda1f58.js",
     "./chunks/_3c64f7035f40ef81.js",
     "./chunks/_3e8ce64689a0157b.js",
@@ -76,5 +77,8 @@
     "./manifest.js",
     "./runtime.js"
   ],
-  "declarations": ["./manifest.d.ts", "./runtime.d.ts"]
+  "declarations": [
+    "./manifest.d.ts",
+    "./runtime.d.ts"
+  ]
 }

@@ -6,5 +6,8 @@
     "./manifest.js",
     "./runtime.js"
   ],
-  "declarations": ["./manifest.d.ts", "./runtime.d.ts"]
+  "declarations": [
+    "./manifest.d.ts",
+    "./runtime.d.ts"
+  ]
 }
