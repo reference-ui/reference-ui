@@ -4,9 +4,13 @@
 //! plans, stylesheets, and runtime map. The portable build re-walks the same
 //! fragments into its own diagnostic sink so global warnings surface once.
 
+use std::collections::HashSet;
+
 use crate::{
-    build_atom_set, build_css_runtime, compile_recipes, recipes, resolve, runtime, static_css,
-    stylesheet, BaseSystem, CompileResult, Diagnostic, NativeRuntimeArtifact,
+    atom::{AtomSet, When},
+    diagnostics::DiagnosticsSession,
+    recipes, resolve, runtime, static_css, stylesheet, BaseSystem, CompileResult, Diagnostic,
+    DiagnosticCode, DiagnosticLocation, NativeRuntimeArtifact,
 };
 
 /// The compile's filled sinks, assembled into the artifact bundle.
@@ -36,7 +40,7 @@ impl AssembleCtx {
     }
 
     /// Build the atom set, plans, sheets, and runtime map into the result.
-    pub(crate) fn finish(self, system: &BaseSystem) -> CompileResult {
+    pub(crate) fn finish(self, system: &BaseSystem, sink: &mut DiagnosticsSession) -> CompileResult {
         let Self {
             wants,
             extracted_recipes,
@@ -44,9 +48,15 @@ impl AssembleCtx {
             authored,
             traced,
         } = self;
-        let mut atom_set = build_atom_set(&wants, system, &mut diagnostics);
-        resolve::conditions::check_container_root(system, &atom_set, &mut diagnostics);
-        let compiled_recipes = compile_recipes(&extracted_recipes, system, &mut diagnostics);
+        let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
+        resolve::conditions::check_container_root(
+            system,
+            &atom_set,
+            &mut diagnostics,
+            Some(&mut *sink),
+        );
+        let compiled_recipes =
+            compile_recipes(&extracted_recipes, system, &mut diagnostics, Some(&mut *sink));
         let mut plan_builder =
             runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
         let style_plans = plan_builder.build(&authored);
@@ -92,4 +102,77 @@ impl AssembleCtx {
             traced_jsx_hosts: traced,
         }
     }
+}
+
+/// Resolve every want into the compile's atom set, reporting resolve facts.
+fn build_atom_set(
+    wants: &[crate::atom::Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    sink: Option<&mut DiagnosticsSession>,
+) -> AtomSet {
+    let mut atom_set = AtomSet::new();
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+        location: DiagnosticLocation::default(),
+        sink,
+        want: None,
+    };
+    for want in wants {
+        for atom in resolve::resolve_want_with(want, &mut session) {
+            atom_set.insert(atom);
+        }
+    }
+    atom_set
+}
+
+/// Deduplicate spec and extracted recipes, then compile them to rules.
+fn compile_recipes(
+    extracted: &[recipes::Recipe],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    sink: Option<&mut DiagnosticsSession>,
+) -> Vec<recipes::CompiledRecipe> {
+    let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
+    let mut seen = HashSet::new();
+    let mut valid = Vec::new();
+    for recipe in spec_recipes.iter().chain(extracted.iter()) {
+        if !seen.insert(&recipe.class_name) {
+            diagnostics.push(recipe.location.error(
+                DiagnosticCode::DuplicateRecipe,
+                format!(
+                    "Duplicate recipe className '{}' within system '{}'",
+                    recipe.class_name, system.name
+                ),
+            ));
+        } else {
+            valid.push(recipe.clone());
+        }
+    }
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+        location: DiagnosticLocation::default(),
+        sink,
+        want: None,
+    };
+    recipes::compile(&valid, &system.name, &mut session)
+}
+
+/// Index the atom set's class names by their runtime lookup shape.
+fn build_css_runtime(atom_set: &AtomSet, system: &str) -> runtime::CssRuntime {
+    let mut runtime = runtime::CssRuntime::new();
+    for atom in atom_set {
+        let c_name = stylesheet::name::class_name_with_system(atom, system);
+        let val_key = atom.value.class_name_str();
+        let key = if atom.conditions.is_empty() {
+            format!("{}:{}", atom.prop, val_key)
+        } else {
+            let conds: Vec<&str> = atom.conditions.iter().map(When::authored).collect();
+            format!("{}:{}:{}", conds.join(":"), atom.prop, val_key)
+        };
+        runtime.insert(key, c_name);
+    }
+    runtime
 }

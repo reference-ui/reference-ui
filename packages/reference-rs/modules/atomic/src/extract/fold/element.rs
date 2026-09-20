@@ -38,6 +38,7 @@ pub struct ElementFold {
 }
 
 /// Why one key or side of an element access did not fold.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ElementRefusal {
     /// The index expression does not fold; the span is the index.
     DynamicIndex(Span),
@@ -52,27 +53,6 @@ pub enum ElementRefusal {
 }
 
 impl ElementRefusal {
-    /// The diagnostic text for a refusal at one style prop.
-    pub fn message(&self, prop: &str, base: &str, index: &str) -> String {
-        match self {
-            Self::DynamicIndex(_) => {
-                format!("Dynamic non-literal element index '{index}' encountered for prop '{prop}'")
-            }
-            Self::DynamicBase(_) => {
-                format!("Dynamic non-literal element base '{base}' encountered for prop '{prop}'")
-            }
-            Self::Missing { key } => {
-                format!("Element access '{base}[{key}]' has no static entry for prop '{prop}'")
-            }
-            Self::NonScalar { key } => format!(
-                "Element access '{base}[{key}]' is not a static style value for prop '{prop}'"
-            ),
-            Self::MutatedBase { name, write } => format!(
-                "Dynamic mutated binding '{name}' encountered for prop '{prop}' ({write}; element read is stale)"
-            ),
-        }
-    }
-
     /// The diagnostic code: mutation names the write, everything else is a member refusal.
     pub fn code(&self) -> crate::diagnostics::DiagnosticCode {
         match self {

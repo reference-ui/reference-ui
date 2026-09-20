@@ -1,9 +1,10 @@
 //! Host adapter: StyleTrace and host facts as facts. Owns the ledger H
 //! family. Dependencies keep their own diagnostic types; this boundary
 //! converts them, mirroring `hosts/diagnostics.rs` (file-only location).
-//! Slice 3 migrates the host conversion call site.
+//! The message stays dependency prose (like `ATM-E-*` pass-throughs);
+//! policy owns the code, severity, and file-only wrap.
 
-use super::super::{Diagnostic, DiagnosticCode, DiagnosticFact};
+use super::super::DiagnosticFact;
 
 /// One skipped host trace, ready to report as a fact.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,33 +15,28 @@ pub struct HostReport {
 
 impl From<HostReport> for DiagnosticFact {
     fn from(report: HostReport) -> Self {
-        let warning = Diagnostic::warning(DiagnosticCode::TraceSkipped, report.message);
-        let diagnostic = match report.file {
-            Some(file) => warning.with_location(file, None, None),
-            None => warning,
-        };
-        DiagnosticFact::ExistingError(diagnostic)
+        DiagnosticFact::HostOutcome {
+            file: report.file.map(String::into_boxed_str),
+            message: report.message.into_boxed_str(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::diagnostics::DiagnosticSeverity;
 
     #[test]
-    fn host_report_converts_to_file_only_fact() {
+    fn host_report_converts_to_host_outcome() {
         let fact = DiagnosticFact::from(HostReport {
             file: Some("entry.ts".to_string()),
             message: "trace skipped".to_string(),
         });
-        let DiagnosticFact::ExistingError(diagnostic) = fact else {
-            panic!("host reports convert to existing errors");
+        let DiagnosticFact::HostOutcome { file, message } = fact else {
+            panic!("host reports convert to host outcomes");
         };
-        assert_eq!(diagnostic.severity, DiagnosticSeverity::Warning);
-        assert_eq!(diagnostic.code, DiagnosticCode::TraceSkipped);
-        assert_eq!(diagnostic.file.as_deref(), Some("entry.ts"));
-        assert_eq!(diagnostic.line, None);
+        assert_eq!(file.as_deref(), Some("entry.ts"));
+        assert_eq!(message.as_ref(), "trace skipped");
     }
 
     #[test]
@@ -49,9 +45,9 @@ mod tests {
             file: None,
             message: "trace skipped".to_string(),
         });
-        let DiagnosticFact::ExistingError(diagnostic) = fact else {
-            panic!("host reports convert to existing errors");
-        };
-        assert_eq!(diagnostic.file, None);
+        assert!(matches!(
+            fact,
+            DiagnosticFact::HostOutcome { file: None, .. }
+        ));
     }
 }

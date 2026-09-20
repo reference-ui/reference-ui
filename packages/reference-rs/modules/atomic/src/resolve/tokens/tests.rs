@@ -19,6 +19,8 @@ fn resolve_with_diagnostics(
         system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let css = resolve_token_value(prop, raw, &mut session).map(|resolved| resolved.into_owned());
     drop(session);

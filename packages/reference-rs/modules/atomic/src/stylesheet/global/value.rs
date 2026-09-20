@@ -160,6 +160,8 @@ fn resolve_string_val(prop: &str, s: &str, session: &mut ValueSession<'_>) -> Op
             system: session.system,
             diagnostics: &mut *session.diagnostics,
             location: session.location.clone(),
+            sink: None,
+            want: None,
         };
         tokens::resolve_token_value(prop, &rhythm_val, &mut resolve_session).map(|resolved| {
             if resolved.as_ref() != stem {

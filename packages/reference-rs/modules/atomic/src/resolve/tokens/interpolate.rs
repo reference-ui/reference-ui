@@ -6,8 +6,8 @@
 //! verbatim. A segment that names no token errors and drops the whole atom;
 //! unterminated braces stay raw and warn.
 
-use crate::diagnostics::DiagnosticCode;
-use crate::resolve::ResolveSession;
+use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
+use crate::resolve::{want_key, ResolveSession};
 
 use super::{format_entry, split_opacity};
 
@@ -22,7 +22,11 @@ pub enum BraceExpansion {
 }
 
 /// Expand embedded `{path}` segments of a composite value.
-pub fn expand_brace_segments(unbraced: &str, session: &mut ResolveSession<'_>) -> BraceExpansion {
+pub fn expand_brace_segments(
+    unbraced: &str,
+    prop: &str,
+    session: &mut ResolveSession<'_>,
+) -> BraceExpansion {
     if !unbraced.contains('{') {
         return BraceExpansion::Absent;
     }
@@ -32,6 +36,7 @@ pub fn expand_brace_segments(unbraced: &str, session: &mut ResolveSession<'_>) -
         let mut expander = SegmentExpander {
             out: &mut out,
             source: unbraced,
+            prop,
             session,
         };
         while let Some(open) = rest.find('{') {
@@ -50,6 +55,7 @@ pub fn expand_brace_segments(unbraced: &str, session: &mut ResolveSession<'_>) -
 struct SegmentExpander<'a, 's> {
     out: &'a mut String,
     source: &'a str,
+    prop: &'a str,
     session: &'a mut ResolveSession<'s>,
 }
 
@@ -63,11 +69,20 @@ impl<'a, 's> SegmentExpander<'a, 's> {
     fn expand_open(&mut self, rest: &'a str, open: usize) -> Option<&'a str> {
         let after = &rest[open + 1..];
         let Some(close) = after.find('}') else {
-            let diagnostic = self.session.location.warning(
-                DiagnosticCode::UnterminatedBrace,
-                format!("unterminated `{{` in value `{}`", self.source),
+            let key = want_key(
+                self.session,
+                self.prop,
+                serde_json::Value::String(self.source.to_string()),
             );
-            self.session.diagnostics.push(diagnostic);
+            self.session.emit(
+                key,
+                ResolveOutcome::Passthrough {
+                    code: DiagnosticCode::UnterminatedBrace,
+                    detail: ResolveDetail::Token(TokenDetail::UnterminatedBrace {
+                        value: self.source.into(),
+                    }),
+                },
+            );
             self.out.push_str(&rest[open..]);
             return Some("");
         };
@@ -126,8 +141,10 @@ mod tests {
             system: &system,
             diagnostics: &mut diagnostics,
             location: DiagnosticLocation::default(),
+            sink: None,
+            want: None,
         };
-        let out = expand_brace_segments(raw, &mut session);
+        let out = expand_brace_segments(raw, "border", &mut session);
         drop(session);
         (out, diagnostics)
     }

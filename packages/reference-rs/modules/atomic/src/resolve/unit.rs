@@ -4,9 +4,13 @@
 //! Finite numeric spellings (`'1e3'`, `'.5'`, `'01'`) canonicalize to the
 //! numeric atom and dedupe with the bare number; hex, binary, octal,
 //! `Infinity`, and `NaN` spellings refuse with diagnostics.
+//! Refusals report typed value facts through the session and render byte-identical lines via policy.
 
+use super::{want_key, ResolveSession};
 use crate::atom::{AtomValue, CssValue};
-use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
+use crate::diagnostics::{
+    DeclarationDetail, DiagnosticCode, ResolveDetail, ResolveOutcome, ValueDetail,
+};
 
 /// Canonicalize a finite numeric spelling to the bare-number form (`'1e3'`
 /// → `"1000"`, `'.5'` → `"0.5"`, `'01'` → `"1"`), or None when the string
@@ -88,28 +92,27 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
     }
 }
 
-fn from_number(
-    prop: &str,
-    n: Box<str>,
-    location: &DiagnosticLocation,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<CssValue> {
+fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
-        diagnostics.push(location.warning(
-            DiagnosticCode::NonCanonicalNumeric,
-            format!("Non-canonical numeric value \"{n}\" on `{prop}`"),
-        ));
+        let key = want_key(session, prop, serde_json::Value::String(n.to_string()));
+        session.emit(
+            key,
+            ResolveOutcome::Rejected {
+                code: DiagnosticCode::NonCanonicalNumeric,
+                detail: ResolveDetail::Declaration(DeclarationDetail::Value(
+                    ValueDetail::NonCanonicalNumber {
+                        prop: prop.into(),
+                        spelling: n.clone(),
+                    },
+                )),
+            },
+        );
         return None;
     }
     Some(resolve_numeric_value(prop, &n))
 }
 
-fn from_string(
-    prop: &str,
-    s: Box<str>,
-    location: &DiagnosticLocation,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<CssValue> {
+fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
     // SPEC-V2-14: structural runs collapse before anything else reads the
     // string, so spaced twins share one numeric parse and one atom.
     let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
@@ -119,7 +122,7 @@ fn from_string(
             return Some(resolve_numeric_value(prop, &canonical));
         }
     }
-    legacy_string_value(prop, collapsed, location, diagnostics)
+    legacy_string_value(prop, collapsed, session)
 }
 
 /// True when a bare number is a valid value: every prop except colors, where
@@ -133,23 +136,37 @@ fn accepts_bare_number(prop: &str) -> bool {
 fn legacy_string_value(
     prop: &str,
     s: Box<str>,
-    location: &DiagnosticLocation,
-    diagnostics: &mut Vec<Diagnostic>,
+    session: &mut ResolveSession<'_>,
 ) -> Option<CssValue> {
     // Empty-after-trim strings are never CSS (`margin: ;` is invalid);
     // refuse with a diagnostic instead of emitting the empty declaration.
     if s.trim().is_empty() {
-        diagnostics.push(location.warning(
-            DiagnosticCode::InvalidCssValue,
-            format!("Empty string value on `{prop}`"),
-        ));
+        let key = want_key(session, prop, serde_json::Value::String(s.to_string()));
+        session.emit(
+            key,
+            ResolveOutcome::Rejected {
+                code: DiagnosticCode::InvalidCssValue,
+                detail: ResolveDetail::Declaration(DeclarationDetail::Value(
+                    ValueDetail::EmptyString { prop: prop.into() },
+                )),
+            },
+        );
         return None;
     }
     if is_non_canonical_numeric(&s) {
-        diagnostics.push(location.warning(
-            DiagnosticCode::NonCanonicalNumeric,
-            format!("Non-canonical numeric value \"{s}\" on `{prop}`"),
-        ));
+        let key = want_key(session, prop, serde_json::Value::String(s.to_string()));
+        session.emit(
+            key,
+            ResolveOutcome::Rejected {
+                code: DiagnosticCode::NonCanonicalNumeric,
+                detail: ResolveDetail::Declaration(DeclarationDetail::Value(
+                    ValueDetail::NonCanonicalNumber {
+                        prop: prop.into(),
+                        spelling: s.clone(),
+                    },
+                )),
+            },
+        );
         return None;
     }
     if let Some(num) = parse_canonical_number(&s) {
@@ -165,22 +182,31 @@ fn legacy_string_value(
 pub fn css_value_from_authored(
     prop: &str,
     val: AtomValue,
-    location: &DiagnosticLocation,
-    diagnostics: &mut Vec<Diagnostic>,
+    session: &mut ResolveSession<'_>,
 ) -> Option<CssValue> {
     match val {
         // A null leaf (`const n = null`) is a hole, not CSS: strip it
         // silently, exactly like a literal null the walk omits.
         AtomValue::Null => None,
-        AtomValue::Bool(_) => {
-            diagnostics.push(location.warning(
-                DiagnosticCode::InvalidCssValue,
-                format!("`{prop}` value `{val}` is not valid CSS"),
-            ));
+        // `b.to_string()` is the legacy `{val}` Display spelling.
+        AtomValue::Bool(b) => {
+            let key = want_key(session, prop, serde_json::Value::Bool(b));
+            session.emit(
+                key,
+                ResolveOutcome::Rejected {
+                    code: DiagnosticCode::InvalidCssValue,
+                    detail: ResolveDetail::Declaration(DeclarationDetail::Value(
+                        ValueDetail::InvalidValue {
+                            prop: prop.into(),
+                            value: b.to_string().into(),
+                        },
+                    )),
+                },
+            );
             None
         }
-        AtomValue::Number(n) => from_number(prop, n, location, diagnostics),
-        AtomValue::String(s) => from_string(prop, s, location, diagnostics),
+        AtomValue::Number(n) => from_number(prop, n, session),
+        AtomValue::String(s) => from_string(prop, s, session),
         AtomValue::Token { path, value } => Some(CssValue::Token { path, value }),
     }
 }

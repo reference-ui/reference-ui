@@ -126,6 +126,10 @@ fn resolve_with_unique_diagnostics(
         system: base_system,
         diagnostics: &mut local,
         location: DiagnosticLocation::default(),
+        // Plan re-resolve echoes the rendered line with no facts attached,
+        // so is_duplicate still drops repeats by message as today.
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(want, &mut session);
     for diag in local {

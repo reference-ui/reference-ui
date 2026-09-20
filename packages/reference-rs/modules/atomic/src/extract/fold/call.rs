@@ -46,12 +46,9 @@ impl CallRefusal {
         }
     }
 
-    /// The diagnostic text at one style prop in value position.
-    pub fn message_for_value(&self, prop: &str) -> String {
-        format!(
-            "Dynamic non-literal {} in call argument for prop '{prop}'",
-            self.detail
-        )
+    /// The refused fragment's detail phrase for policy rendering.
+    pub fn detail(&self) -> &str {
+        &self.detail
     }
 
     /// The diagnostic text in spread position, where no prop is in scope.

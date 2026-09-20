@@ -194,19 +194,19 @@ fn write_declarations(out: &mut String, decls: &StyleMap, system: &BaseSystem) {
 /// runs on a discarded sink: successes print resolved, misses keep verbatim.
 fn resolve_keyframe_value(prop: &str, value: &str, system: &BaseSystem) -> String {
     let mut sink = Vec::new();
-    let location = DiagnosticLocation::default();
-    let Some(css) =
-        css_value_from_authored(prop, AtomValue::String(value.into()), &location, &mut sink)
+    let mut session = ResolveSession {
+        system,
+        diagnostics: &mut sink,
+        location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
+    };
+    let Some(css) = css_value_from_authored(prop, AtomValue::String(value.into()), &mut session)
     else {
         return value.to_string();
     };
     let stem = css.class_name_str().to_string();
     let rhythm = resolve_rhythm(&stem);
-    let mut session = ResolveSession {
-        system,
-        diagnostics: &mut sink,
-        location: DiagnosticLocation::default(),
-    };
     match resolve_token_value(prop, &rhythm, &mut session) {
         Some(resolved) if resolved.as_ref() != stem => resolved.into_owned(),
         _ => css.css_value_str().to_string(),

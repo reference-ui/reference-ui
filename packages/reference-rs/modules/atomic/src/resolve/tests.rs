@@ -1,12 +1,18 @@
 //! Lowering proofs for the resolve pipeline: rhythm, shorthands, tokens, and macros.
 //! Pins rhythm expansion, border shorthand decomposition, token var() links,
 //! the container/size/border-bool macros, and warn-and-skip for leftover
-//! Bool/Null pairs. Sits beside `mod.rs` so that file stays under the
-//! line budget, mirroring the conditions and cascade tests.
+//! Bool/Null pairs. Bool-refusal facts pin distinct true/false spellings with
+//! keys. Sits beside `mod.rs` so that file stays under the line budget,
+//! mirroring the conditions and cascade tests.
 
 use super::*;
 use base_system::{FontDefinition, FontScale};
 use indexmap::IndexMap;
+
+use crate::diagnostics::{
+    DeclarationDetail, DiagnosticCode, DiagnosticFact, DiagnosticsSession, ResolveDetail,
+    ResolveOutcome, ValueDetail,
+};
 
 fn resolve_with(want: &Want, system: &BaseSystem) -> Vec<Atom> {
     let mut diagnostics = Vec::new();
@@ -14,6 +20,8 @@ fn resolve_with(want: &Want, system: &BaseSystem) -> Vec<Atom> {
         system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     resolve_want_with(want, &mut session)
 }
@@ -128,6 +136,8 @@ fn test_unknown_prop_drops_atom_with_diagnostic() {
         system: BaseSystem::lib_fixture(),
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(atoms.is_empty());
@@ -153,6 +163,8 @@ fn test_bool_want_emits_no_atom() {
         system: &system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(atoms.is_empty());
@@ -172,6 +184,8 @@ fn test_border_bool_macro_emits_width_and_style() {
         system: &system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
@@ -198,6 +212,8 @@ fn test_null_want_strips_silently() {
         system: &system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(atoms.is_empty());
@@ -211,4 +227,70 @@ fn test_container_bool_still_lowers() {
     assert_eq!(atoms.len(), 1);
     assert_eq!(atoms[0].prop.as_ref(), "containerType");
     assert_eq!(atoms[0].value.css_value_str(), "inline-size");
+}
+
+#[test]
+fn bool_refusals_report_distinct_spellings_with_keys() {
+    for (flag, spelling) in [(true, "true"), (false, "false")] {
+        let want = Want::new("display", AtomValue::Bool(flag));
+        let mut diagnostics = Vec::new();
+        let mut facts = DiagnosticsSession::new();
+        let system = BaseSystem::default();
+        let mut session = ResolveSession {
+            system: &system,
+            diagnostics: &mut diagnostics,
+            location: DiagnosticLocation::default(),
+            sink: Some(&mut facts),
+            want: None,
+        };
+        let atoms = resolve_want_with(&want, &mut session);
+        drop(session);
+        assert!(atoms.is_empty());
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(facts.facts().len(), 1);
+        let DiagnosticFact::ResolveOutcome { key, outcome, .. } = &facts.facts()[0] else {
+            panic!("bool refusal reports a resolve fact");
+        };
+        let key = key.as_ref().expect("bool refusal carries its key");
+        assert_eq!(key.prop.as_ref(), "display");
+        assert_eq!(key.value, serde_json::Value::Bool(flag));
+        let ResolveOutcome::Rejected { code, detail } = outcome else {
+            panic!("bool refusal rejects");
+        };
+        assert_eq!(*code, DiagnosticCode::InvalidCssValue);
+        let ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::InvalidValue {
+            prop,
+            value,
+        })) = detail
+        else {
+            panic!("bool refusal names the invalid value");
+        };
+        assert_eq!(prop.as_ref(), "display");
+        assert_eq!(value.as_ref(), spelling);
+    }
+}
+
+#[test]
+fn authored_key_carries_the_five_tuple() {
+    let mut when = smallvec::SmallVec::new();
+    when.push("_hover".into());
+    let context = WantContext {
+        when,
+        important: true,
+    };
+    let key = authored_key(
+        "test",
+        "color",
+        serde_json::Value::String("red".to_string()),
+        &context,
+    );
+    assert_eq!(key.system.as_ref(), "test");
+    assert_eq!(key.when, vec![Box::<str>::from("_hover")]);
+    assert_eq!(key.prop.as_ref(), "color");
+    assert_eq!(key.value, serde_json::Value::String("red".to_string()));
+    assert!(key.important);
+    assert_eq!(
+        key.lookup_key(),
+        r#"["test",["_hover"],"color","red",true]"#
+    );
 }

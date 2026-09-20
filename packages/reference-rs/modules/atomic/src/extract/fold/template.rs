@@ -76,18 +76,9 @@ impl TemplateRefusal {
         self.span
     }
 
-    /// The diagnostic text for a refusal at one style prop.
-    pub fn message(&self, prop: &str) -> String {
-        match self.part {
-            Some(index) => format!(
-                "Dynamic non-literal template part {index} ({}) encountered for prop '{prop}'",
-                self.detail
-            ),
-            None => format!(
-                "Dynamic non-literal template expression for prop '{prop}' ({})",
-                self.detail
-            ),
-        }
+    /// The hole index (one-based) and reason phrase policy renders.
+    pub fn parts(&self) -> (Option<usize>, &str) {
+        (self.part, &self.detail)
     }
 }
 

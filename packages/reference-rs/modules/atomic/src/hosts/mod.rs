@@ -10,7 +10,10 @@ use std::path::Path;
 
 use styletrace::trace_style_bindings_with_surface;
 
-use crate::{CompileRequest, Diagnostic};
+use crate::{
+    diagnostics::{DiagnosticFact, DiagnosticSink, DiagnosticsSession, Policy},
+    CompileRequest, Diagnostic,
+};
 
 mod diagnostics;
 mod entries;
@@ -18,7 +21,7 @@ mod surface;
 #[cfg(test)]
 mod tests;
 
-use diagnostics::render_trace_diagnostic;
+use diagnostics::convert_trace_diagnostic;
 use entries::entry_paths;
 pub use surface::engine_surface;
 
@@ -42,13 +45,18 @@ impl ResolvedHosts {
 
 /// Caller hosts plus traced names for one compile.
 pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
-    resolve(request).0.hosts()
+    let mut session = DiagnosticsSession::new();
+    resolve(request, &mut session).0.hosts()
 }
 
 /// Trace the include-scoped entry set against the engine surface.
 /// Returns traced and configured names plus trace warnings for the
-/// compile diagnostics. Empty entry sets trace nothing, silently.
-pub fn resolve(request: &CompileRequest) -> (ResolvedHosts, Vec<Diagnostic>) {
+/// compile diagnostics, reporting one host fact per skip into the
+/// session. Empty entry sets trace nothing, silently.
+pub fn resolve(
+    request: &CompileRequest,
+    sink: &mut DiagnosticsSession,
+) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
     let vacant = || {
         (
@@ -85,7 +93,12 @@ pub fn resolve(request: &CompileRequest) -> (ResolvedHosts, Vec<Diagnostic>) {
     let diagnostics = outcome
         .diagnostics
         .into_iter()
-        .map(render_trace_diagnostic)
+        .map(|diagnostic| {
+            let report = convert_trace_diagnostic(diagnostic);
+            let rendered = Policy::render_host(&report);
+            sink.report(DiagnosticFact::from(report));
+            rendered
+        })
         .collect();
     (
         ResolvedHosts {

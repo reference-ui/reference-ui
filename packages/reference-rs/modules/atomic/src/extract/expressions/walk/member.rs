@@ -9,7 +9,7 @@ use oxc_ast::ast::{ChainExpression, ComputedMemberExpression, StaticMemberExpres
 use smallvec::SmallVec;
 
 use super::{leaf::mutated_warn, DynamicRefusal, ExpressionWalk};
-use crate::diagnostics::DiagnosticCode;
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, LeafDetail};
 
 pub(crate) fn handle_static_member(
     ctx: &mut ExpressionWalk<'_>,
@@ -40,11 +40,10 @@ pub(crate) fn handle_static_member(
         }
     }
     // width={props.w}
-    let prop = ctx.prop;
     ctx.warn_dynamic(DynamicRefusal {
         span: mem.span,
         code: DiagnosticCode::DynamicMember,
-        message: format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
         when,
     });
 }
@@ -76,14 +75,17 @@ pub(crate) fn handle_computed_member(
     if fold.refusals.is_empty() {
         return;
     }
-    let prop = ctx.prop;
     let base = describe_base(&mem.object);
     let index = describe_snippet(&mem.expression, ctx.source);
     for refusal in &fold.refusals {
         ctx.warn_dynamic(DynamicRefusal {
             span: refusal.span(mem.span),
             code: refusal.code(),
-            message: refusal.message(prop, &base, &index),
+            detail: ExtractDetail::Element {
+                refusal: refusal.clone(),
+                base: base.clone().into(),
+                index: index.clone().into(),
+            },
             when,
         });
     }
@@ -118,11 +120,10 @@ pub(crate) fn handle_chain(
         return;
     }
     // maybe?.foo  /  getColor?.()  — dynamic, warn, keep siblings
-    let prop = ctx.prop;
     ctx.warn_dynamic(DynamicRefusal {
         span: chain.span,
         code: DiagnosticCode::DynamicExpression,
-        message: format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
         when,
     });
 }

@@ -49,7 +49,7 @@ absent key, including unknown-condition drops (see R2 note).
 | R2 | `resolve/mod.rs:129` | UnknownCondition (W, unlocated) | whole want dropped (`lower_conditions` → None → `:53-55` empty) | YES — raw `when` + prop + value + important + system in hand; runtime key uses raw whens, no lowering needed (lead override of worker compiler-suggest; matches architect Q4 prime suspect) | `ATM-DIAG-09` (+ `04`); witness-hunt confirms a live runtime query |
 | R4 | `resolve/unit.rs:94` | NonCanonicalNumeric, Number (W, unlocated) | pair dropped (`return None` `:97` → `?` at `resolve/mod.rs:148` → atom skipped) | YES — via upstream authored decl/want (prop post-expansion, value/when/important upstream) | `ATM-DIAG-09` (+ `04`) |
 | R5 | `resolve/unit.rs:132` | InvalidCssValue, empty string (W, unlocated) | pair dropped (`return None` `:135`, same `?` path) | YES — via upstream authored decl/want | `ATM-DIAG-09` (+ `04`) |
-| R7 | `resolve/unit.rs:164` | InvalidCssValue, Bool (W, unlocated) | pair dropped (`return None` `:167`, same `?` path; `border=true` intercepted earlier at `resolve/mod.rs:103`) | YES — via upstream authored decl/want | `ATM-DIAG-09` (+ `04`) |
+| R7 | `resolve/unit.rs:164` | InvalidCssValue, Bool (W, unlocated) | pair dropped (`return None` `:167`, same `?` path; `border=true` intercepted earlier at `resolve/mod.rs:103`) | SPLIT by value (E9, O4-F6): `true` → YES, userspace-provable (runtime queries it, resolve drops it → genuine miss); `false` → compiler-at-most (runtime `isHole` skips, no query exists — never userspace). S3 adapters carry the value so policy splits by (code, value). | `ATM-DIAG-09` (+ `04`) for `true`; compiler channel for `false` |
 
 ## Compiler (91)
 
@@ -164,7 +164,7 @@ the value still reaches atoms/plans, so none is a miss.
 | id | site | code | behavior | exact key? |
 |---|---|---|---|---|
 | R3 | `resolve/conditions/mod.rs:58` | MissingContainerRoot (W) | advisory over already-emitted atoms; drops nothing | NO — aggregate (`has_cq` × globalCss scan), no per-declaration key |
-| R6 | `resolve/unit.rs:139` | NonCanonicalNumeric, String (W) | PASSTHROUGH — no `return None`; falls to `:149` `Some(CssValue::String)` → atom minted with raw spelling. Asymmetry vs R4 (Number drops, String paints) | n/a (paints) |
+| R6 | `resolve/unit.rs:139` | NonCanonicalNumeric, String (W) | REJECTED — warns then `return None` (drops the pair, same as R4 Number; S3 correction: the S0 "passthrough, no return None" read was wrong — verified `return None` present S0..HEAD — so no R4/R6 asymmetry exists) | DROP-WITH-KEY like R4 (prop post-expansion, value/when/important upstream) — verdict needs S4-oracle re-check: userspace-shaped (ATM-DIAG-09 witness) by R4's logic; S3 keeps the compiler cell pending that ruling and records the fact as Rejected honestly |
 | R8 | `resolve/tokens/mod.rs:79` | MalformedOpacity (W) | PASSTHROUGH — `:82` returns raw value → atom minted unchanged | n/a (paints) |
 | R9 | `resolve/tokens/mod.rs:139` | UnknownTokenPath (W) | PASSTHROUGH — warns, returns raw via `unbraced_fallback` `:121` → atom minted ("pass through as raw CSS") | n/a (paints) |
 | R10 | `resolve/tokens/mod.rs:158` | UnknownColor (W) | PASSTHROUGH — same `Some(Borrowed)` path as R9 | n/a (paints) |
@@ -229,8 +229,9 @@ a different subsystem's codes, not `ATM-*` — out of scope.
   (O2, O34, O47) and on static/global surfaces (S1, G6); UnknownCondition is
   userspace at resolve (R2) but compiler on the global surface (G3, G5);
   InvalidCssValue is userspace at resolve (R5, R7) but compiler on the global
-  surface (G7); NonCanonicalNumeric drops at R4 but paints at R6. Slice 3
-  adapters must carry the site, not just the code.
+  surface (G7); NonCanonicalNumeric drops at R4 and at R6 (S3 correction:
+  R6 was misread as passthrough in S0 — both drop). Slice 3 adapters must
+  carry the site, not just the code.
 - R2 override rationale (lead, firsthand): the resolve-family worker suggested
   compiler on the theory that an unlowered `when` cannot form an exact key.
   Overruled: both key authorities use RAW `when` strings — compile

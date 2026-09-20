@@ -43,7 +43,7 @@ use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use crate::atom::Want;
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticsSession};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 use expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
@@ -68,6 +68,7 @@ pub struct ExtractSinks<'a> {
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
+    pub session: &'a mut DiagnosticsSession,
 }
 
 /// Context for extracting style declarations across an AST file.
@@ -87,6 +88,7 @@ pub struct ExtractContext<'a> {
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
+    pub session: &'a mut DiagnosticsSession,
     missing_graph_reported: bool,
 }
 
@@ -113,6 +115,7 @@ impl<'a> ExtractContext<'a> {
             diagnostics: sinks.diagnostics,
             authored: sinks.authored,
             sinks: sinks.sinks,
+            session: sinks.session,
             missing_graph_reported: false,
         }
     }
@@ -209,6 +212,7 @@ impl<'a> ExtractContext<'a> {
             authored: Some(self.authored),
             bag: BagSemantics::StyleObject,
             sinks: self.sinks,
+            session: self.session,
         }
     }
 
@@ -230,6 +234,7 @@ impl<'a> ExtractContext<'a> {
             authored: None,
             bag: BagSemantics::StyleObject,
             sinks: self.sinks,
+            session: self.session,
         }
     }
 
@@ -251,6 +256,7 @@ impl<'a> ExtractContext<'a> {
             wants: self.wants,
             diagnostics: self.diagnostics,
             sinks: self.sinks,
+            session: self.session,
         }
     }
 }
@@ -273,6 +279,7 @@ pub struct ExtractVisitor<'a> {
     pub diagnostics: Vec<Diagnostic>,
     pub authored: Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: Vec<harvest::Sink>,
+    pub session: DiagnosticsSession,
     missing_graph_reported: bool,
 }
 
@@ -295,6 +302,7 @@ impl<'a> ExtractVisitor<'a> {
             diagnostics: Vec::new(),
             authored: Vec::new(),
             sinks: Vec::new(),
+            session: DiagnosticsSession::new(),
             missing_graph_reported: false,
         }
     }
@@ -396,6 +404,7 @@ fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a
         diagnostics: &mut visitor.diagnostics,
         authored: &mut visitor.authored,
         sinks: &mut visitor.sinks,
+        session: &mut visitor.session,
     };
     let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
     ctx.recipe_binding = binding;
@@ -448,6 +457,8 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
     ctx.diagnostics.extend(visitor.diagnostics);
     ctx.authored.extend(visitor.authored);
     ctx.sinks.extend(visitor.sinks);
+    let facts = visitor.session.take_facts();
+    ctx.session.extend_facts(facts);
 }
 
 /// Extract all style wants and diagnostics from a parsed AST program.

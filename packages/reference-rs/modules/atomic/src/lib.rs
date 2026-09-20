@@ -40,7 +40,6 @@ use std::path::Path;
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::atom::AtomSet;
 use diagnostics::DiagnosticSink;
 
 /// In-memory source file to compile.
@@ -104,6 +103,7 @@ struct ParseSession<'a> {
     diagnostics: &'a mut Vec<Diagnostic>,
     authored: &'a mut Vec<runtime::AuthoredDeclaration>,
     sinks: &'a mut Vec<extract::harvest::Sink>,
+    session: &'a mut diagnostics::DiagnosticsSession,
 }
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
@@ -125,25 +125,23 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let project_constants = collect_project_constants(&sources, &parsed);
     let mut graph = extract::resolver::ValueGraph::new(&sources, &parsed, &project_constants);
     let identity = extract::identity::IdentityGraph::new(&sources);
-    let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
+    // One compile-long diagnostics session (S3): analysis reports first,
+    // then producers report beside their rendered lines through assembly.
+    // Nothing renders the session yet; Slice 4 joins proof from it.
+    let mut diag_session = diagnostics::DiagnosticsSession::new();
+    let (resolved_hosts, host_diagnostics) = hosts::resolve(request, &mut diag_session);
     let traced_jsx = resolved_hosts.hosts();
     diagnostics.extend(host_diagnostics);
     // Independent diagnostics analysis over the borrowed parse (S2): runs,
-    // renders nothing yet. The session drops here; Slice 4/5 render it.
-    let parse = diagnostics::analysis::CompileParse {
-        sources: &sources,
-        parsed: &parsed,
-    };
+    // renders nothing yet.
+    let parse = diagnostics::analysis::CompileParse { sources: &sources, parsed: &parsed };
     let analysis = diagnostics::analysis::AnalysisInput::for_compile(
         &parse,
         &resolved_hosts,
         &project_constants,
         &request.base_system.name,
     );
-    let mut session = diagnostics::DiagnosticsSession::new();
-    for fact in diagnostics::analysis::analyze(&analysis) {
-        session.report(fact);
-    }
+    report_analysis_expectations(&analysis, &mut diag_session);
     report_parse_errors(&sources, &parsed, &mut diagnostics);
     let system = &request.base_system;
 
@@ -160,6 +158,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
             diagnostics: &mut diagnostics,
             authored: &mut authored,
             sinks: &mut harvest_sinks,
+            session: &mut diag_session,
         };
         extract_all_sources(&mut session, &sources, &parsed);
     }
@@ -174,6 +173,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         wants: &mut wants,
         authored: &mut authored,
         diagnostics: &mut diagnostics,
+        sink: &mut diag_session,
     });
 
     let mut assembly = assembly::AssembleCtx {
@@ -184,7 +184,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         traced: resolved_hosts.traced,
     };
     assembly.append_static(system);
-    Ok(assembly.finish(system))
+    Ok(assembly.finish(system, &mut diag_session))
 }
 
 /// Extract every unpanicked source through the shared session.
@@ -289,71 +289,20 @@ fn extract_parsed_program(
         diagnostics: session.diagnostics,
         authored: session.authored,
         sinks: session.sinks,
+        session: session.session,
     };
     let mut ctx = extract::ExtractContext::new(path, Some(content), config, sinks);
     extract::extract_with_context(program, &mut ctx);
 }
 
-fn build_atom_set(
-    wants: &[Want],
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> AtomSet {
-    let mut atom_set = AtomSet::new();
-    let mut session = resolve::ResolveSession {
-        system,
-        diagnostics,
-        location: DiagnosticLocation::default(),
-    };
-    for want in wants {
-        for atom in resolve::resolve_want_with(want, &mut session) {
-            atom_set.insert(atom);
-        }
+/// Report the independent diagnostics analysis expectations into the
+/// compile session. Renders nothing; Slice 4 joins proof from these facts
+/// after plans exist.
+fn report_analysis_expectations(
+    analysis: &diagnostics::analysis::AnalysisInput<'_>,
+    session: &mut diagnostics::DiagnosticsSession,
+) {
+    for fact in diagnostics::analysis::analyze(analysis) {
+        session.report(fact);
     }
-    atom_set
-}
-
-fn compile_recipes(
-    extracted: &[recipes::Recipe],
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Vec<recipes::CompiledRecipe> {
-    let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
-    let mut seen = std::collections::HashSet::new();
-    let mut valid = Vec::new();
-    for recipe in spec_recipes.iter().chain(extracted.iter()) {
-        if !seen.insert(&recipe.class_name) {
-            diagnostics.push(recipe.location.error(
-                DiagnosticCode::DuplicateRecipe,
-                format!(
-                    "Duplicate recipe className '{}' within system '{}'",
-                    recipe.class_name, system.name
-                ),
-            ));
-        } else {
-            valid.push(recipe.clone());
-        }
-    }
-    let mut session = resolve::ResolveSession {
-        system,
-        diagnostics,
-        location: DiagnosticLocation::default(),
-    };
-    recipes::compile(&valid, &system.name, &mut session)
-}
-
-fn build_css_runtime(atom_set: &AtomSet, system: &str) -> CssRuntime {
-    let mut runtime = CssRuntime::new();
-    for atom in atom_set {
-        let c_name = stylesheet::name::class_name_with_system(atom, system);
-        let val_key = atom.value.class_name_str();
-        let key = if atom.conditions.is_empty() {
-            format!("{}:{}", atom.prop, val_key)
-        } else {
-            let conds: Vec<&str> = atom.conditions.iter().map(atom::When::authored).collect();
-            format!("{}:{}:{}", conds.join(":"), atom.prop, val_key)
-        };
-        runtime.insert(key, c_name);
-    }
-    runtime
 }

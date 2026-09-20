@@ -86,6 +86,11 @@ fn spread_pure_call(
 ) {
     let fold = crate::extract::fold::fold_pure_call(call, ctx.scopes);
     if let Some(crate::extract::fold::FenceValue::Object(entries)) = fold.value {
+        // Slice 3 Q5b: spread-position call refusals warn here, NOT through
+        // the warn_dynamic sink hook. The refused fragment is interior to
+        // the call's arguments with no prop in scope, so it is not a
+        // mintable value position — recording a sink would mint pool values
+        // onto a position the author never refused. Spreads are never sinks.
         for refusal in &fold.refusals {
             ctx.warn(
                 refusal.span(),
