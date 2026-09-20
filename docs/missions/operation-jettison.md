@@ -196,7 +196,7 @@ same function with the same tables.
 | Table | Source | Size (verified) |
 |---|---|---:|
 | alias → canonical | `canon::ALIASES` | 315 entries (~8 KB) |
-| canonical → class prefix, **where the prefix is not the kebab CSS name** | `canon::CANONICAL_PROPERTIES` (`Property::class_prefix`); ~84% of entries are kebab and fall back | ~150–180 entries (~4 KB) |
+| canonical → class prefix, **where the prefix is not the kebab CSS name** | `canon::CANONICAL_PROPERTIES` (`Property::class_prefix`); ~84% of entries are kebab and fall back | ~150–180 entries (~4 KB) [Slice-4 correction 2026-09-20: **198** by the shippable `prefix ≠ kebab(canonical)` criterion (five `ms-` props break kebab-purity); fallback order table → `--*` verbatim → kebab] |
 | shorthand → longhands, for the families expand touches | `canon::native_longhands_for_prop`: `padding` / `margin` / `inset` (4), `border*` / `outline` / `columnRule` trios (3, gated by `is_border_family`), six radius pairs (2) | ~30 entries (~3 KB) |
 | color props | `canon::COLOR_PROPERTIES` — only for the numeric-spelling exemption (`accepts_bare_number`) | 71 |
 | breakpoint names, in scale order | `BaseSystem::breakpoints().names()` (excl. `base`) | 5 default |
@@ -214,6 +214,13 @@ This list is the substance of Slice 2, and after Slice 4 it lives in
 runtime namer must mirror, and each is a differential-corpus family.
 Rules that are table-shaped travel as lowerings or keyword sets (D7);
 the rest are procedures (§9).
+
+[Slice-4 correction 2026-09-20: rules 2/3 (numeric fence + color
+carve-out), 7 (allowlist + 2–4 window), 8 (case/order facts), 12
+(`class_name_str` of any kind), and 20 (anonymous numeric `r` only)
+were corrected per READY asks 1–2, and rule 21 (`--*` verbatim prefix)
+was added. The README is the permanent home; this table is the
+superseded index.]
 
 | # | Authored | What the class becomes | Rust site |
 |---|---|---|---|
@@ -240,7 +247,11 @@ the rest are procedures (§9).
 
 Rhythm (`2r` → `calc()`), tokens (`n300` → `var()`), and gradients'
 token interpolation are **not** naming rules: they change the CSS body,
-never the class. The runtime README's "do not reimplement resolve" holds
+never the class. [Slice-4 correction 2026-09-20: resolution is
+sheet-side, but refusal is membership-affecting — an unknown token path
+drops its declaration (witness `ATM-TOKEN-12`, `ATM-E-UNKNOWN-TOKEN`);
+the differential carves exactly braced-plus-absent extras. See the §9
+boundary correction.] The runtime README's "do not reimplement resolve" holds
 for them exactly as before.
 
 ### Conditions → class segment
@@ -393,8 +404,8 @@ Correct runtime companion (cap, collapse, pool-stats in dev
 | `ATM-GHOST-02` | dictionary keys are bijective `prop:val` / `when:prop:val` | retitled: constructed names are deterministic and equal the plan declarations (the differential) |
 | `ATM-GHOST-04` | namer injectivity, `ATM-LEAF-05` quarantined (`p` vs `padding`) | unchanged; orthogonal (both sides canonicalize first) |
 | `NEO-MERGE-06` | miss → `''`, one page diagnostic, one node diagnostic | miss → miss class, no paint, one page diagnostic (per D2) |
-| `src/runtime/README.md` | "we emit the map; do not generate `css.js`; do not reimplement resolve" | "we emit namer tables and lowerings; the runtime namer — the JS mirror of nine procedures and five lexical functions — lives beside this crate (D6) and reproduces the namer goldens; do not reimplement resolve (tokens, rhythm, wraps)". Carries the naming rules table (§3) and the builtin-divergence table (§9) as their permanent home |
-| `SPEC.md` §Class Naming, §Engine Parity | seven `ATM-NAME`, five `ATM-SEAM` | + `ATM-NAME-08`, `ATM-SEAM-06..08` (below); the legend's "Cargo `#[test]` is not a tick" holds — the golden-freshness test is a guard, not a station |
+| `src/runtime/README.md` | "we emit the map; do not generate `css.js`; do not reimplement resolve" | "we emit namer tables and lowerings; the runtime namer — the JS mirror of nine procedures and six lexical functions [Slice-4 correction 2026-09-20: five→six; `sanitize_value` was missing from the list] — lives beside this crate (D6) and reproduces the namer goldens; do not reimplement resolve (tokens, rhythm, wraps)". Carries the naming rules table (§3) and the builtin-divergence table (§9) as their permanent home |
+| `SPEC.md` §Class Naming, §Engine Parity | seven `ATM-NAME`, five `ATM-SEAM` [Slice-4 correction 2026-09-20: SPEC prose held three `ATM-SEAM` (01–03); SEAM-05 existed folder-only, SEAM-04 citation-only (reserved, undefined). Landed: +`ATM-NAME-08`, +`ATM-SEAM-06..08`] | + `ATM-NAME-08`, `ATM-SEAM-06..08` (below); the legend's "Cargo `#[test]` is not a tick" holds — the golden-freshness test is a guard, not a station |
 | `docs/ATOMIC.md` "Two artefacts, one namer", "Runtime" | class map artefact; miss → `""` | one namer, two implementations, one gate; miss → miss class, no paint, dev warn |
 | `packages/reference-neo/docs/DOMAIN.md` | no namer entries | + **compiler namer**, **runtime namer**, **namer tables**, **lowering**, **naming rules**, **rules version**, **namer golden**, **differential**, **miss class** (Vocabulary), same pass as the code |
 
@@ -457,7 +468,7 @@ lib-shaped end-to-end world and owns no engine stations.
 | D1 | Miss returns a constructed class (dead in the DOM) instead of `""` | Accept. It is the price of having no catalog; Panda/Tailwind semantics; paint is identical. |
 | D2 | Dev miss source of truth | A (CSSOM probe), re-pin `NEO-MERGE-06`; B if lib CT needs node-side warnings. |
 | D3 | Where the tables come from | Compiler emits `namer` in the v2 artifact; nothing hand-copied into TS. |
-| D4 | Refusal parity: must TS refuse exactly where Rust refuses? | Refuse where the table makes it free (unknown prop, unknown `_` condition, runtime-owned, `null`/bool outside macros, empty string). Construct otherwise (`'01'`, `NaN`, bare `@supports`). The gate only requires "no class that exists in the sheet" on the refused set. |
+| D4 | Refusal parity: must TS refuse exactly where Rust refuses? | Refuse where the table makes it free (unknown prop, unknown `_` condition, runtime-owned, `null`/bool outside macros, empty string). Construct otherwise (`'01'`, `NaN`, bare `@supports`). The gate only requires "no class that exists in the sheet" on the refused set. [Slice-4 correction 2026-09-20: as implemented — refuse {unknown `_` conditions, the 27 unrealizable extensions as `keywords.unrealizable` data (lowerings checked first), runtime-owned drops, `null`/bool outside macros, empty strings, bare `@supports` (both sides)}; construct otherwise — unknown props mint absent-from-sheet classes (no known-prop gate: the tables ship no canonical list), numerics follow the `[1e-6, 1e21)` fence; token-membership refusal is compiler-only and the differential carves exactly braced-plus-absent extras (witness `ATM-TOKEN-12`)] |
 | D5 | `stylePropNames` stays as a separate list (~25 KB) or is derived from the tables | Stays for now (the primitives' `split.ts` needs the full set and the prefix table lists only non-kebab entries). Revisit if the lib `react.mjs` budget bites. |
 | D6 | Custody of the runtime namer (§9): neo `src/runtime/css/namer/`, `packages/reference-rs/modules/atomic/js/namer/` exported as `@reference-ui/rust/namer`, or Rust prints it into the artifact | **`@reference-ui/rust/namer`.** One crate owns the Rust and its mirror; one skill and one gate (`pnpm agentrs`) cover a naming change end to end; same npm version as the binary that printed the sheet; `ATM-FORBID-04` untouched. The printer is the upgrade if HQ wants per-compile lockstep and accepts amending FORBID-04. |
 | D7 | How much of the naming rules becomes generated data | **Lowerings + keyword sets in `NamerTables`** (§5). The JS is the lowering interpreter plus the nine procedures in §9; every table-shaped rule has exactly one author, Rust. |
@@ -481,14 +492,14 @@ without a two-backend DSL or WASM, and neither is the ask.
 | Stage | File | Lines | Class-affecting? |
 |---|---|---:|---|
 | Shape: arrays, per-prop objects, dedupe, slot | `runtime/builder.rs` (`PlanBuilder`, `derive_slot`, `$token` / `$r` values) | 344 | yes |
-| Gate, conditions, expand, macros | `resolve/mod.rs` (`resolve_want_with`, `lower_macro`, `is_runtime_owned`) | 270 | yes |
+| Gate, conditions, expand, macros | `resolve/mod.rs` (`resolve_want_with`, `lower_macro`, `is_runtime_owned`) | 270 [Slice-4 correction 2026-09-20: 298 when READY-measured, 309 at Slice-4 landing] | yes |
 | Condition → segment + wrap | `resolve/conditions/mod.rs` (`lower_when`) | 253 | segment yes; wrap sheet-only |
 | Shorthands | `resolve/shorthands/{parser,border,dimensional,pair,flex}.rs` | 240 / 102 / 95 / 36 / 30 | yes |
 | Numeric canon | `resolve/unit.rs` | 212 | stem yes; `px` sheet-only |
 | Whitespace | `resolve/normalize.rs` | 123 | yes |
 | Font macros (system data) | `resolve/font/{family,weight}.rs` | 45 / 33 | yes |
 | `size`, `container`, `textGradient` | `resolve/{size,container,gradient}.rs` | 14 / 20 / 19 | yes |
-| Rhythm, tokens | `resolve/rhythm/*`, `resolve/tokens/*` | ~280 / ~700 | **no** — the class carries the authored path |
+| Rhythm, tokens | `resolve/rhythm/*`, `resolve/tokens/*` | ~280 / ~700 | **no** — the class carries the authored path [Slice-4 correction 2026-09-20: resolution is sheet-side, but **refusal is membership-affecting** — an unknown token path drops its declaration (`ATM-TOKEN-12` refuses only the color longhand via `ATM-E-UNKNOWN-TOKEN`), so no form-based rule separates minted from dropped braced values; the differential carves exactly braced-stem + absent-from-sheet extras] |
 | The join | `stylesheet/name/mod.rs::class_name_with_system` | ~40 of 171 | yes |
 | Selector spelling | `stylesheet/name/escape.rs::escape_css_selector` | — | **no** — sheet-only |
 
@@ -635,7 +646,10 @@ without bumping it (the guard under `ATM-SEAM-08`).
 - **R10** Lib `react.mjs` ≤ 160 KB raw / ≤ 26 KB gzip (from 527 / 47);
   `runtime-data.mjs` ≤ 60 KB raw. Estimates (527 − 420 plans + ~15–20 KB
   tables + ~10 KB namer); READY ask 5 sets the final bound from data.
-  R2 is the invariant, R10 the sanity bound.
+  R2 is the invariant, R10 the sanity bound. [Slice-4 correction 2026-09-20:
+  R10 **HOLDS as-written** via build-time minify — `react/react.mjs`
+  115,672 raw / 24,615 gzip-6, `runtime-data.mjs` 53,166 raw; see
+  `jettison-03-sizes.md` including the Slice 3b addendum.]
 - **R11** Quality gates: `pnpm agentrs q` on every touched Rust file
   (≤365 lines, complexity limits, no clippy allows); `pnpm agentneo q` on
   every touched TS file.
@@ -692,7 +706,7 @@ after Slice 4.
 - `runtime/tables.rs` (new): build `NamerTables` from canon +
   `BaseSystem` + the atomic constants (§5, §9 kind 1). Lookups sorted;
   lowerings ordered (arrays). `rulesVersion` starts at 1.
-- `resolve/lexical.rs` (new): the five lexical functions (§9 divergence
+- `resolve/lexical.rs` (new): the six lexical functions [Slice-4 correction 2026-09-20: five→six] (§9 divergence
   table); `unit.rs`, `normalize.rs`, `parser.rs` call them.
   `render_decimal` implements the READY-ask-2 rendering. `preserve_order`
   enabled explicitly in `atomic/Cargo.toml` with a test on
@@ -717,8 +731,8 @@ after Slice 4.
 - `packages/reference-rs/modules/atomic/js/namer/{lexical,lower,shorthand,value,when,shape,slot,index}.ts`
   (D6 home; the neo path if D6 goes the other way), each ≤ 365 lines,
   each with a header paragraph naming its compiler function and its
-  golden file. `lexical.ts` mirrors `resolve/lexical.rs` (the five
-  lexical functions, no procedures); `lower.ts` is the interpreter over
+  golden file. `lexical.ts` mirrors `resolve/lexical.rs` (the six
+  lexical functions [Slice-4 correction 2026-09-20: five→six], no procedures); `lower.ts` is the interpreter over
   `NamerTables.lowerings`; the nine procedures of §9 map as `value.ts`
   1–3 (whitespace collapse, numeric canon, `!` strip), `shorthand.ts` 4–6
   (token split, border classification, whole-value gates), `when.ts` 7,
@@ -831,8 +845,8 @@ Reaper's acceptance is its own.
 
 A DONE line can say: the shipped map is gone (three artifacts), the
 namer is one algorithm in two implementations — every table-shaped rule
-written once by Rust as namer tables, the nine procedures and five
-lexical functions mirrored beside the Rust they mirror and held equal by
+written once by Rust as namer tables, the nine procedures and six
+lexical functions [Slice-4 correction 2026-09-20: five→six] mirrored beside the Rust they mirror and held equal by
 namer goldens (`ATM-SEAM-08`, `ATM-NAME-08`) and the differential
 (`NEO-NAMER-01`) — and `react.mjs` for lib is under the R10 bound. The
 sheet's size, the census, and the pool lever are

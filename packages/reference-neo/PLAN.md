@@ -43,7 +43,11 @@ breadth, its file tree, or its bugs.
 - **Boundary.** Neo never imports `@reference-ui/core` or `@reference-ui/lib`.
   Rust is reached only through `@reference-ui/rust/*`. The gate enforces this.
 - **One Atomic.** No second stylesheet compiler, no TypeScript lowering that
-  rewrites style objects into CSS, no namer, no hashed whole-object classes.
+  rewrites style objects into CSS, no hashed whole-object classes. The one
+  exception is the runtime namer: the JS mirror of the compiler namer, owned
+  by the atomic crate and held equal by the differential gate — it
+  re-evaluates request → class with compiler-emitted tables, it does not
+  lower styles into CSS.
   If the engine lacks a behaviour, the slice goes to the RS lane (§5.3).
 - **Frozen contracts.** `EvaluatedSystemSpec`, `NativeRuntimeArtifact`,
   `PortableBaseSystem`, `NativeCompileRequest`, `OutputInventory` in
@@ -193,8 +197,8 @@ answer because it changes the DOM contract of every primitive.
 | **D1** | Colour-mode DOM/stylesheet attribute | **`data-color-mode`** (human override 2026-09-17, status in §3.1). Neo already stamps it (`DOMAIN.md`, `context.ts`, generated react entry, playground shell); the engine is retargeted by **RS-7**. Never `data-panda-theme`; never `data-theme` for colour mode (Toast owns `data-theme` for chrome). | Panda split brand packs (`config.themes` → `[data-panda-theme=<name>]`) from colour mode (`.dark &`); Reference folded light/dark into the themes slot for nested islands — right mechanism, wrong name, and `data-theme` keeps the leak while reading as “many themes”. Neo's model: `colorMode` prop → `data-color-mode` attr, `variant` for flavours, another layer library for another system. RS-7 retargets the engine (mechanical: two values, one attribute). | W0 (docs + playground), RS-7 (engine), proof `NEO-PRIM-07`, `NEO-COND-04`, `NEO-TOKEN-05` |
 | D2 | `styled/global.css` | Do not write it. Add to forbidden paths. | The one sheet is `styles.css`; `@layer global` lives inside it. | W2 `NEO-SYNC-02` |
 | D3 | `cva` alias | Not exported. `recipe` only. | Zero lib call sites; one word per idea. | W2 |
-| D4 | Where bound `css()`/`recipe()` live | `styled` is **data only** (`styles.css`, `runtime-data.mjs`, `.d.mts`). The bound runtime moves into the `react` bundle. | §4.1 forbids executable css in styled; consumers import from react. | W2 `NEO-SYNC-13` |
-| D5 | Generated filenames / exports | `react/react.mjs`, `react/react.d.mts`, `react/styles.css` (copy of `styled/styles.css`); `system/system.mjs`, `system/system.d.mts`, `system/baseSystem.mjs`; `package.json` `exports` maps `.`, `./styles.css`, `./baseSystem`. | Book, CT, matrix and lib tsconfig resolve these names today. | W2 `NEO-SYNC-05` |
+| D4 | Where bound `css()`/`recipe()` live | `styled` is **data only** (`styles.css`, `runtime-data.mjs`, `.d.mts`). The bound runtime moves into the `react` bundle. | §4.1 forbids executable css in styled; consumers import from react. | W2 `NEO-SYNC-13`; holds 2026-09-20 (the runtime namer bundles into `react.mjs` through `css.ts`) |
+| D5 | Generated filenames / exports | `react/react.mjs`, `react/react.d.mts`, `react/styles.css` (copy of `styled/styles.css`); `system/system.mjs`, `system/system.d.mts`, `system/baseSystem.mjs`; `package.json` `exports` maps `.`, `./styles.css`, `./baseSystem`. | Book, CT, matrix and lib tsconfig resolve these names today. | W2 `NEO-SYNC-05`; holds 2026-09-20 (names unchanged) |
 | D6 | `@reference-ui/system` authoring surface | Export `defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`, `extendPattern`, `getRhythm`, `baseSystem`, config types. `getRhythm` is a pure helper over the compiled rhythm root. | Consumer census §3; matrix imports `getRhythm`. | W2 `NEO-SYNC-12` |
 | D7 | Panda bugs are not parity | `.size_md{width:md}`, leftover `{colors.ui.focus.ring}` class, `--made-with-panda`, the `*` transform-var dump, duplicated dark semantics in the default block, `colorPalette` no-op atoms: **approved absences**. | Parity of capability, not of defects. | W1 SPECs, W4 census |
 | D8 | Breakpoints | `@container (min-width: Npx)` stays (rs decision). Neo proves the container-root requirement and the `container: true` macro; no `@media screen` breakpoints. Named ranges (`mdDown`, `mdOnly`) are proven, not invented. | Lib sheet has no viewport queries to be compatible with; engine already lowers to `@container`. | RESP group |
@@ -260,9 +264,11 @@ are *conditions*, matched by `:is()` wraps, never stamped by primitives.
 
 ### 4.3 Runtime ABI
 
-`runtime-data.mjs` exports `{ schemaVersion: 1, systemName, recipes, stylePlans,
-stylePropNames }` with owner-qualified class names; `stylePropNames` excludes
-`variant` and `colorMode`. Unchanged by this voyage.
+`runtime-data.mjs` exports `{ schemaVersion: 2, namer, recipes,
+stylePropNames }`: the namer tables replace the per-atom `stylePlans` rows
+(compile-internal plans stay behind the differential gate); `stylePropNames`
+(1,389 names for lib) still excludes `variant` and `colorMode`. Recipes
+unchanged.
 
 ### 4.4 Stylesheet
 
