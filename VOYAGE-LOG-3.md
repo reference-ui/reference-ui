@@ -37,6 +37,7 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 4: (j) BREAK-FOUND (tasty merge drops alpha member) → architect dispatched; (k) BREAK-FOUND (styletrace pipeline misses object form) → architect dispatched; (l) diagnostics proof/adapters still hunting. Cycles banked: 9/6. Next: rulings → fortify → chains → commits → wave 5.
 - 2026-09-20 watch: wave 4: (j) IN-BOUNDS, resolve-layer MERGE M1–M3 → fortify on pre-resolution fold + resolve.rs pins + TST-INT-04; (k) IN-BOUNDS, shared-predicate recursion → fortify on util.rs + tracing.rs + direct_style_pipeline; (l) diagnostics proof/adapters still hunting. Cycles banked: 9/6. Next: landings → chains → commits → wave 5.
 - 2026-09-20 watch: wave 4: (j) fortify building (MERGE fold + TST-INT-04); (k) landed → chain reviewing; (l) BREAK-FOUND (custom-prop object silent miss) → architect dispatched. Cycles banked: 9/6. Next: verdicts → commits → wave 5.
+- 2026-09-20 watch: wave 4: (k) COMMITTED (936a0e961 — pipeline object-arg VERIFIED); (j) landed → chain reviewing; (l) IN-BOUNDS, query-side expansion → fortify on collectEntries + is_style_value_position + ATOM-06. Cycles banked: 10/6. Next: chain (j) verdict → commit; (l) landing → chain → commit → wave 5.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 - 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
@@ -2904,3 +2905,99 @@ lines — failure mode confirmed).
    disproportionate for query resolution the runtime unit pins
    directly; chain review replays the finder repro end-to-end
    (compile + runtime) as the e2e proof.
+
+### Wave 4, find (j) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (j) files only —
+sibling (l) fortify paths (`reference-neo/.../css.ts`, `css.test.ts`,
+`conditions.rs`, `object.rs`) plus `docs/ATOMIC.md`,
+`docs/missions/README.md`, jettison/reaper, and the captain's
+cycle-board tick appeared in-tree during this review and were never
+touched or adjudicated (write-set audited via `git status` paths at
+start and end: the (j) set is exactly the landing's 6 + finder report
++ this section; zero golden modifications anywhere in the tree).
+
+**1. Finder repro** (`/tmp/doom-tasty-merge-repro.mjs`, unmodified,
+fresh 07:56 `dist/native/darwin-x64` binding): exit 0, MERGE COMPLETE
+— one Widget entry, chunk members `["alpha","beta"]` in declaration
+order, `warnings []`, `diagnostics []`. The clean merge of legal TS is
+silent, exactly as ruled; the repro's third WARNED check correctly
+reports FAIL because no refusal is owed. Pre-fix red is attested twice
+independently (finder exit 1, architect read-only replay
+`members=["beta"]`, both channels empty).
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c tasty`
+65/65 green (62 + 3 new pins); `pnpm agentrs v tasty` 82/82 green (5
+files: 42 unit + 40 stations incl. new INT-04); `pnpm agentrs v tasty
+-t "TST-INT-04"` 1 passed / 81 skipped. M2/M3 end-to-end via
+`/tmp/doom-wave4j-fortify-verify.mjs` (exit 0 firsthand): manifest
+warnings carry `input/index.ts: interface "Widget" declares member
+"alpha" more than once; keeping the first` and `input/index.ts:
+duplicate declaration of "Dup" (TypeAlias + TypeAlias); keeping the
+last`, and `out.diagnostics` carries both with `file_id` set — file
+rides the existing channel convention, symbol/member/kinds named in
+the message per M2/M3. Quality: `agentrs q` on the 4 touched `.rs`
+files — 0 violations; 2 warnings are pre-existing 5-arg advisories on
+`resolve_file`/`collect_file_exports`, whose signatures this change
+never touched; `merge.rs` fully clean (header 4 sentences, no allows).
+
+**3. Fail-without-fix / pass-with-fix:** HEAD worktree (old resolve
+code, new `resolve.rs` pins copied in — shared tree untouched): all 3
+pins FAIL, 62 filtered — M1 shows the exact original break
+(`left: ["beta"]` vs `["alpha","beta"]`), M2/M3 fail on the owed
+diagnostic (silence on old code). In-tree: 65/65. Worktree removed
+after the run. Sweep re-run (`/tmp/doom-wave4j-sweep.mjs`): 88 input
+files, 2 hits — INT-04 itself (intended) and RXP-02 `AmbientModule`,
+attested FALSE POSITIVE firsthand (the interface sits nested inside
+`declare module 'ambient-module' {`, lines 24–28; only the line-31
+type alias is a top-level shell, so the fold passes it through
+untouched — and RXP-02's station is green with byte-stable goldens).
+Zero existing golden moves, no sweep surprise, no re-consult owed.
+
+**4. Diff review (line-by-line, (j) write-set):** `merge.rs` (new,
+174 lines) — `fold_same_file_merges` drains `parsed.exports` per file
+into name groups, preserving first-occurrence order via the `order`
+vec (BTreeMap iteration never leaks into output); groups of one
+return the shell untouched (zero behavior change by construction).
+M1: all-Interface groups fold via the `InterfaceMerge` accumulator —
+members union in declaration order, nominal (property/method)
+collisions first-wins + diagnostic (M2), call/construct/index
+signatures union additively (tsc overloads, confirmed not
+false-colliding), `extends`/`references` concatenated, docs
+first-Some, type params first's, `exported` OR-ed, silent. M3:
+alias/mixed groups return `group.into_iter().last()` byte-identical
+(zero change to served content) + diagnostic naming symbol/kinds;
+kinds joined for N-arity, deterministic in declaration order.
+`index.rs` — 5-line hook: fold runs over every file BEFORE
+`build_symbol_index`, `build_export_index`, and
+`resolve_symbol_references` (via `resolve_file`), so member TypeRefs
+resolve once against folded indices, exactly per ruling; export
+resolution is unaffected (folded shells keep the shared id).
+`mod.rs` — one `mod merge;` wiring line. `resolve.rs` pins — purely
+additive (one import line + 3 appended tests, zero existing bodies
+touched): M1 asserts one symbol + `[alpha, beta]` + empty
+diagnostics; M2 asserts first-wins (`alpha: string`, not `number`) +
+1 diagnostic naming Widget/alpha with `file_id`; M3 asserts
+alias+alias survivor `number` + mixed survivor kind TypeAlias + 2
+diagnostics naming Dup/Mix with `TypeAlias + TypeAlias` /
+`Interface + TypeAlias`. Resolve README + INT-04 README document
+M1–M3 incl. the DUP-01 semantic-opposite note (no central tasty
+SPEC.md exists — TST anchors live in case READMEs, confirmed; the
+flag is accurate, not drift). INT-04 goldens attested as data: one
+Widget entry (`symbolsByName.Widget = ["_e03d..."]`), `warnings []`,
+one chunk module. Untouched as ordered: id scheme
+(`scanner/paths/mod.rs` unmodified, no span suffix, no
+per-declaration chunks), emit/manifest/lookup layers, all of `js/`,
+lib, core, neo, finder report. No test weakened, no blanket goldens
+(only 2 new INT-04 outputs).
+
+**5. Contract holds.** The finder's violated emitted-fidelity contract
+is now satisfied in merged form: legal same-file declaration merging
+emits the whole interface (unioned members, one id, one chunk —
+downstream display/flatten/projection inherit the correct whole
+automatically), member collisions stay loud with first-wins, and
+tsc-error shapes stay loud with a deterministic survivor. Captain:
+commit the (j) write-set (4 modified `.rs`/README + new `merge.rs` +
+new INT-04 dir + finder report + this log section); `dist/` is
+untracked build output, nothing to commit there.
