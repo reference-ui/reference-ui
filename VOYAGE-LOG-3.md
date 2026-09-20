@@ -25,6 +25,7 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: WAVE 1 COMPLETE — 3/3 breaks fortified + verified + committed (W1c tasty tighten c361dd7c2; W1a responsive-! refuse da2232587; W1b unknown-prop carve-out 72268f795). Cycles banked: 3/6 toward the floor. Wave 2 hunting: 3 finders × 3 theories — (d) canon, (e) styletrace, (f) module-graph. Tree holds peer files only. Next: wave-2 verdicts → arcs → commits → wave 3.
 - 2026-09-20 watch: wave 2: (d) BREAK-FOUND (canon join OR-bypass) → architect dispatched; (e) BREAK-FOUND (styletrace body-destructure gap) → architect dispatched; (f) module-graph still hunting. Cycles banked: 3/6. Next: rulings → fortify → chain reviews → commits → wave 3.
 - 2026-09-20 watch: wave 2: (d) IN-BOUNDS, NAME-only join → fortify on join.ts + join.test.ts; (e) IN-BOUNDS, body-destructure extension → fortify on parser/types.rs + tracing.rs + 2 cases; (f) module-graph still hunting. Cycles banked: 3/6. Next: landings → chain reviews → commits → wave 3.
+- 2026-09-20 06:42 tick: W2d COMMITTED (6aeb9c062 — canon NAME-only VERIFIED). W2e fortify building (parser/types.rs + tracing.rs + component.rs in tree); W2f BREAK-FOUND (barreled lookup swallows nested unresolvable hop) → architect dispatched. Cycles banked: 4/6. Live: 2 (+1 spawned). Next: (e) landing → chain → commit; (f) ruling → fortify → chain → commit; then wave 3.
 
 ## Waves
 
@@ -812,7 +813,73 @@ poison block). Final tree: exactly these 2 paths modified.
 
 ### Wave 2, find (e) — fortify landing
 
-**Status: BUILDING (interim note, crew on conn).** Ruling + finder report + repro ingested. Plan: extend `parse_prop_bindings` (`types.rs`) with a top-level one-hop body scan (direct + rest, props-identifier-sourced only, rebinding/shadow guard halts the scan, strictly additive — no drops, no sink changes); signature gains `body_statements`, single caller in `component.rs`. Primary pins in `tracing.rs` (BodyCard + BodyRestCard twins); secondary extends existing `direct_wrapper` + `rest_spread_wrapper` inputs/specs/goldens. Full cargo + vitest styletrace suites + per-pair golden attestation before landing. Sibling crew (d) files untouched.
+**Status: LANDED.** Ruling followed exactly: wrapper analysis extended to
+one-hop body destructuring; README untouched; no narrowing, no refactor
+mandate taken (pattern parsing already shared via `util.rs`).
+
+**Fix.** `parse_prop_bindings` (`modules/styletrace/src/analysis/parser/
+types.rs`) gains `body_statements` (single caller `component.rs`
+threads `fl_ctx.body_statements` through). When the first param is a
+plain identifier, a top-level-only scan collects `const { x } = props`
+(direct) and `const { a, ...rest } = props` (rest) from the
+already-parsed Oxc AST, reusing `parse_object_bindings` for style gating
+— so the StyleProps-boundary and sink checks are unchanged. Precision
+guard: init must be the props identifier modulo transparent wrappers
+(parens/`as`/`satisfies`/`!`/assertion); the scan halts at the first
+top-level shadowing/reassignment of `props` or a collected local
+(declarator patterns via AST `BindingPattern` walk, function ids,
+plain-identifier assignment targets). Strictly additive — names gained,
+never removed — so previously-traced hosts stay traced by construction.
+Conditional/nested destructures and `const p = props` chains are out of
+scope per the ruling (future doom fodder); only top-level statements
+are scanned. Pass state rides a `BodyBindingScan` struct (no 5-arg soup,
+no clippy allows).
+
+**Pins.** (1) PRIMARY Rust unit `tracing.rs`: `traces_body_destructured_
+direct_forwarding` (BodyCard twin) + `traces_body_destructured_rest_
+forwarding` (BodyRestCard twin), each with the finder's ParamCard
+control. Fail-without-fix verified via stash: both FAIL on old code,
+both pass with the fix. (2) SECONDARY existing stations only:
+`direct_wrapper` input gains BodyCard + spec `['BodyCard','Card']`;
+`rest_spread_wrapper` input gains BodyRestCard (mirroring the station's
+`id`-peel shape) + spec `['BodyRestCard','Card']`; one-line case README
+touch-ups each. No new case, no new station.
+
+**Repro.** `/tmp/doom-styletrace-body-destructure.mjs` flips red→green
+on the fresh binding: `traced: ["BodyCard","BodyRestCard","ParamCard"]`,
+exit 0, CONTRACT HOLDS. Report untouched.
+
+**Suites (all `pnpm agentrs`, this session).** cargo styletrace 34/34;
+vitest styletrace 28/28 (11 fixtures + 17 cases, incl. both extended
+stations). Downstream ripple check (atomic + runtime depend on
+styletrace): cargo atomic 458/458, vitest atomic 284/284 — zero ripple.
+Quality: `agentrs q` on touched files — 0 violations; remaining warnings
+are the types.rs file-length soft limit (431 vs 365 — same accepted
+category as wave-1 channels/codes/walk; splitting mid-fortify is scope
+creep), `unwrap_transparent_expression` cognitive 18 (under the hard
+line; the identical chain warns at 34/58 in pre-existing model.rs/
+walk/expr.rs, so this matches convention), and pre-existing
+component.rs warnings in functions I did not touch. Two self-introduced
+cognitive-28/21 warnings were refactored away before landing. Never ran
+`agentrs f` (formatter-war trap).
+
+**Goldens — attested per pair, hand-written (no `--update-goldens`
+blanket).** Exactly 2 move, both intended silent-to-traced on
+body-destructure shapes, zero removals: direct_wrapper
+`["Card"]`→`["BodyCard","Card"]`; rest_spread_wrapper
+`["Card"]`→`["BodyRestCard","Card"]`. All other 15 station goldens
+byte-identical (suite-green proves it). Zero traced-to-silent flips.
+
+**Must-NOTs honored:** no README amendment, no weakened tests (specs
+strictly strengthened), no blanket goldens, no lib touch, finder report
+untouched, sibling (d) canon files untouched (observed their tree state
+change mid-flight — not mine, not touched).
+
+**Files (mine only, 11 + this section).**
+`parser/types.rs` (extension + guard + struct), `parser/component.rs`
+(call-site threading), `tests/tracing.rs` (2 pins), `direct_wrapper/`
+(input + spec + golden + README), `rest_spread_wrapper/` (input + spec
++ golden + README).
 
 ### Wave 2, find (d) — chain review
 
@@ -891,6 +958,178 @@ not in W3C standards or `EXTENSIONS` aborts the build naming the
 property, regardless of what css form it borrows. Captain: commit
 the 2 canon paths + finder report + log sections; keep the
 operation-seize docs + peer doom reports out.
+
+### Wave 2, find (f) — architecture ruling
+
+Find: barreled lookup `app → barrel → *lib` where
+`lib = export { x } from './typo'` (unresolvable) returns
+`MissingExport{barrel, x}`, while the direct import of the same
+broken edge is `Unresolved{lib, ./typo}` and
+`exported_names(barrel)` lists `x` with zero refused — lookup
+refuses as missing a name enumeration promises. Root cause per
+report: `poll_star` (`walk/star.rs:92`) skips `MissingExport` AND
+`Unresolved` from any depth, but the pin it cites ("missing targets
+simply do not declare the name") covers only unusable direct star
+targets, which already return `None` from `star_candidate`.
+Finder report:
+`.agents/doom/logs/2026-09-20-wave2-star-swallows-nested-unresolved.md`;
+repro `/tmp/doom-wave2-modulegraph-t1` (replayed by architect
+read-only: `cargo test --offline` → 1 red
+`star_lookup_surfaces_the_nested_unresolvable_hop` with
+`MissingExport{barrel, x}`, 2 green controls — failure mode
+confirmed).
+
+1. **IN-BOUNDS.** Fully static TS compile inputs, named-import
+   dialect, `export *` + `export {} from` shapes — the pinned
+   walk surface. Touches nothing on the will-never-work list (no
+   interpolation, no runtime-only values, no external config, no
+   spread, no namespace/default value imports). Falls squarely
+   under the skill's misdiagnosis clause: the refusal must be
+   right, not just present — and here the barreled path returns
+   the wrong refusal for an edge the direct path pins as
+   `Unresolved`. Forge R-B3's letter (a `Refused`, never stale/
+   `None`/panic) is technically met, but its spirit plus the
+   walk's own coherence pins are violated: `walk_refused.rs`
+   ("silence is not an outcome"), the direct-path pin
+   (`unresolvable_specifiers_refuse_as_unresolved`), and
+   enumeration listing the refused name. ESM agrees this shape is
+   not a miss: whole-graph link fails naming the broken hop.
+   User-facing: atomic's `edge_reason` words the two refusals
+   differently ("unresolvable import" vs "no export 'x' from
+   './barrel'"), so the barreled author hunts the barrel instead
+   of the broken hop.
+
+2. **FIX DIRECTION (binding): surface the nested hop — route
+   nested `Unresolved` to pending, keep skipping terminal miss.**
+   Concretely: in `poll_star`, move `Unresolved` from the skip
+   arm to the pending arm (winner-beats-error, like
+   Cycle/Ambiguous); keep skipping `MissingExport`; keep the
+   `star_candidate → None` skip for unusable direct targets. Do
+   NOT touch enumeration. Weighed:
+   (a) Coherence: `Unresolved{lib, ./typo}` dissolves the
+   contradiction — declared-but-broken-hop agrees with
+   enumeration listing the declared name — where `MissingExport`
+   contradicts it. The alternative (drop `x` from enumeration)
+   would contradict `names_of` and hide a real declaration.
+   (b) The pin's own scope: "missing targets simply do not
+   declare the name" covers direct targets that fail to
+   resolve/load (`None`); a resolvable target whose explicit hop
+   dangles is neither a missing target nor a miss.
+   (c) Consumer expectations: `resolve_binding` consumers
+   (atomic resolver → `ValueRefused::Walk` → `edge_reason`)
+   branch on variant; `exported_names` consumers get declared
+   names plus refused *star targets* as data — no consumer
+   expects nested-hop breakage in the refused vector.
+   (d) Pending, not immediate-Err: preserves the pinned
+   "one winner beats a pending star error" rule — a declaring
+   twin still wins over a broken-hop sibling. Immediate return
+   would break that pin; skip keeps the bug.
+   (e) Blast radius is one match arm: behavior changes only
+   where a star subtree yields nested `Unresolved` with no
+   winner (previously misattributed `MissingExport`).
+   Multi-star-with-winner is unchanged. Fortify runs the
+   module-graph cargo suite + atomic suites and attests golden
+   movement per pair — MissingExport→Unresolved flips on
+   broken-hop star shapes are intended, all else regressions.
+   SCOPE (binding): `MissingExport` skipping stays — a star
+   target that genuinely does not declare the name must keep
+   skipping (ESM null-skip; `stars_never_carry_default`). The
+   MissingExport-beneath-a-hop nuance is indistinguishable from
+   terminal miss in the `Refused` value and is OUT — future
+   doom fodder, do not expand. Likewise OUT: atomic
+   `edge_reason` words `Unresolved` from `RefusalCtx` (the
+   top-level authored edge), ignoring the payload's
+   from/specifier — a pre-existing systematic gap affecting
+   even the direct path, with its own golden churn. The walk
+   fix delivers the true payload; rewording atomic is a
+   separate consult, never a drive-by in this fortify.
+
+3. **TEST PLACEMENT: Rust crate level —
+   `packages/reference-rs/modules/module-graph/tests/walk_refused.rs`
+   primary, no station, no new case.** Lower than the finder's
+   /tmp path-dep probe: port the red test into the crate's own
+   `common` MemoryFs harness asserting `Unresolved{lib, ./typo}`
+   for the finder's world, plus a winner-beats guard (nested-
+   `Unresolved` sibling + declaring twin → winner wins,
+   extending `one_winner_beats_a_pending_star_error` to the
+   `Unresolved` arm; place beside it in `walk_refused.rs` or
+   `walk_star.rs`, fortify's call). No atomic case (atomic
+   untouched), no enumeration test change, no neo case.
+
+### Wave 2, find (e) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (e) files only —
+write-set audited via `git status` paths: exactly the landing's 11
+styletrace paths (2 parser + 1 unit-test + 4 direct_wrapper + 4
+rest_spread_wrapper); sibling (f) + peer paths (`docs/ATOMIC.md`,
+`docs/missions/README.md`, untracked `operation-seize.md`, untracked
+wave2-star doom report) were never touched or adjudicated.
+
+**1. Finder repro** (`/tmp/doom-styletrace-body-destructure.mjs`,
+unmodified): exit 0 firsthand — `traced:
+["BodyCard","BodyRestCard","ParamCard"]`, CONTRACT HOLDS. Both
+body-destructured twins now trace alongside the ParamCard control.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c styletrace`
+34/34 green (incl. both new pins by name); `pnpm agentrs v styletrace`
+28/28 green (11 fixtures + 17 cases, incl. both extended stations).
+Downstream ripple check: `pnpm agentrs c atomic` 458/458,
+`pnpm agentrs v atomic` 284/284 (11 files) — zero ripple. Quality:
+`agentrs q` on the 3 touched `.rs` files — 0 violations, 6 warnings:
+types.rs file-length soft limit (431 vs 365) + `unwrap_transparent_
+expression` cognitive 18 are the only self-introduced warns (gate
+passes; splitting the parser mid-fortify would be scope creep, noted
+not gap); the 4 component.rs warns sit in `component_from_expression`
+/ `factory_target_from_expression`, functions the diff does not touch
+(pre-existing). Zero clippy allows (grep clean).
+
+**3. Fail-without-fix / pass-with-fix:** HEAD worktree + new `tracing.rs`
+(plus the gitignored `.reference-ui` metadata the worktree lacks):
+exactly the 2 new pins FAIL with `left: ["ParamCard"]` on both — the
+finder's reported behavior reproduced firsthand through the same
+`trace_style_jsx_names_with_hint` the NAPI binding calls
+(`native.rs:15`; stations reach it via `trace()` → `analyzeStyletrace`,
+so no old-binding rebuild was needed in the shared tree); in-tree:
+34/34. One worktree-only failure (`styletrace_consumer`, `[]`) also
+fails at pure HEAD — environmental (no node_modules linkage), not
+caused by the pins. Worktree removed after the run.
+
+**4. Golden attestation (per pair, not a blanket):** exactly 2 goldens
+move, both intended silent-to-traced, zero removals: direct_wrapper
+`["Card"]`→`["BodyCard","Card"]`; rest_spread_wrapper
+`["Card"]`→`["BodyRestCard","Card"]`. All other 15 station goldens
+byte-identical (28/28 suite-green proves it). Zero traced-to-silent
+flips. Specs strictly strengthened (exact `toEqual` arrays, inputs
+additive only); `tracing.rs` diff is pure addition (zero `-` lines).
+
+**5. Diff review (line-by-line):** `types.rs` — `parse_prop_bindings`
+gains `body_statements`; the identifier-param arm keeps its existing
+gate for the whole-object inserts and adds the body scan. One-hop
+only: init must be the props identifier modulo transparent wrappers
+(parens/`as`/`satisfies`/assertion/`!`); `const p = props` chains and
+conditional/nested destructures are not followed (verified by read —
+out of scope per ruling, still doom fodder). Direct + rest via the
+shared `parse_object_bindings` (StyleProps gating unchanged).
+Precision guard verified sound: the halt check runs before each
+statement's own collection (no self-trigger on first bind, halt on
+later rebinding), covering declarator patterns (full `BindingPattern`
+walk), function ids, and plain-identifier assignment targets.
+Additive-only (inserts, no removals); param-pattern path returns early
+untouched; sink/edge/boundary checks untouched (`model.rs`, edge loop,
+`parse_object_bindings` zero diff). `component.rs` — single call-site
+hunk threading `fl_ctx.body_statements` (the already-parsed Oxc AST
+the edge loop below reuses; no re-parse); `parse_prop_bindings` has
+exactly one caller (grep). Pass state rides `BodyBindingScan` (no arg
+soup). Untouched as ordered: module README, pipeline detector, lib,
+core, finder report; no new case/station (existing families only).
+
+**6. Contract holds.** The finder's violated README rule (boundary style
+props flowing into the primitive via `color={color}` and `{...rest}`
+are traced) now holds for body-destructured authorship: same boundary,
+same flow, same verdict. Captain: commit the 11 styletrace paths +
+finder report + log sections; keep the peer docs + wave2-star report
+out.
 
 ## Useful
 

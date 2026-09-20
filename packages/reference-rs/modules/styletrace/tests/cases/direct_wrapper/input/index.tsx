@@ -14,6 +14,11 @@ export function Card({ title, ...styleProps }: CardProps) {
   return <Div {...styleProps}>{title}</Div>
 }
 
+export function BodyCard(props: CardProps) {
+  const { color } = props
+  return <Div color={color} />
+}
+
 export function PlainTitle({ title }: { title: string }) {
   return <div>{title}</div>
 }
