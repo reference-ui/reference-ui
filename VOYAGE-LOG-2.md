@@ -681,6 +681,261 @@ suite re-run + diff review), then sequences Slice 3 (needs Q5b
 spread-site rule — already in log: funnel iff mintable value
 position, else codify exclusion + pin).
 
+### Oracle O4 — Slice-2 review verdict + Slice 3 dispatch (2026-09-20)
+
+Review oracle reproduced every Slice-2 claim firsthand (inline, no
+nested workers: cargo + suite + parity + quality re-runs, full
+line-by-line diff review against engine + neo runtime sources).
+**Verdict: GAPS — one gap (G1), narrowly scoped.** All O3-amended
+checkable criteria pass (V1–V8 below); G1 is a semantic
+over-prediction in S2's core deliverable that breaks S4's premise and
+must be fixed in a rework crew before S2 clears. The Slice 3 dispatch
+spec is fully written below so the captain can launch S3 the moment
+the rework clears (write-sets are disjoint — captain may parallelize
+at discretion, but the rework lands first in commit order).
+
+**V1. Cargo — VERIFIED.** `pnpm agentrs c atomic`: **394 passed / 0
+failed** (356 S1 + 38 S2), no warnings. 71 diagnostics tests, all ok:
+classification pins (exact/unknown/hole/dynamic across
+css/jsx/conditions/values/object/block/structured/const/imports),
+`lookup_key_*` five-tuple/canonical/nested-when tests, parity test
+`nested_conditions_responsive_values_important_and_aliases`
+(nested whens, responsive array-nulls, responsive object-sort,
+important-bang/word, authored alias).
+
+**V2. Key parity — VERIFIED (crew probe re-run + own probe vs REAL
+neo source).** `/tmp/s2-parity/check.mjs` re-runs 13/13 byte-equal;
+the /tmp `plans.mjs` copy was eyeballed line-identical to
+`neo/src/runtime/css/plans.ts:17-70`, so the oracle additionally ran
+its own `/tmp/s2-oracle-parity/check.ts` via the repo `tsx` importing
+the REAL `serializeLookupKey`: 10/10 byte-equal (the 6 Rust-pinned
+shapes + nested-object-value, array-of-objects, empty-when,
+quoted-unicode extras). Rust side shares the one authority
+(`facts.rs:lookup_key` → `serialize_lookup_key`, `canonical_json_value`
+recursive BTreeMap sort).
+
+**V3. Atomic suite — VERIFIED.** `pnpm agentrs v atomic`: **275
+passed / 8 failed (283)** — byte-identical totals to the O3-V1
+record. The 8 red are exactly `ATM-DIAG-07–14`, each for its recorded
+reason (07: 12 on default; 08: `compilerDiags` undef @ hinge :38,
+pins pass; 09: `miss.message` must name color @ hinge-2, location
+pins pass; 10: dynamic+harvest on default; 11: 8 on default @ E8
+guard/hinge, spec untouched — E8 stands; 12/14:
+`compilerDiagnostics` undef @ hinges :53/:64, pins pass; 13:
+`cssIsValid` gauge `Unexpected input`, spec passes). `ATM-DIAG-04/06`
+re-verified green in isolation (1 passed / 235 skipped each).
+
+**V4. Zero drift — VERIFIED.** `git status` before/after all suite
+runs: identical (S2's 7 tracked + 8 new analysis files + log; peer
+files `operation-seize.md`, `missions/README.md`, `ATOMIC.md`
+untouched per orders). No golden/input/spec file modified by any run.
+
+**V5. No re-parse + wiring — VERIFIED.** `AnalysisInput::for_compile`
+(`mod.rs:51-74`) zips borrowed `&sources`/`&parsed`, filters panicked,
+adds no parse; `lib.rs` constructs it post-`hosts::resolve` from
+borrowed parse + `&resolved_hosts` + `&project_constants` + system
+name; `analyze()` facts drop in an unrendered session. Only `Parser`
+uses: test-only `support.rs` + one `mod.rs` test fn. No
+`hosts/entries.rs` touch (Q3 honored), no wire fields, no producer
+migration, no `css.ts` (neg-grep over added lines: zero
+`compilerDiagnostics`/`logs`/`warn_dynamic`/`.warn(`/`DiagnosticCode`
+hits; tracked files exactly the 7 S2 files).
+
+**V6. Sharing discipline — VERIFIED.** Analysis imports ONLY:
+`serialize_lookup_key` (via `facts.rs`), canon prop
+(`is_condition_prop`/`is_known_style_prop`), `get_style_prop_names`,
+const values (`LocalConstants`/`ConstObject`/`ConstArrayElement`/
+`canonical_numeric_key`), `AtomValue` (value spelling, not extraction
+success). `lower_when` deliberately unused — oracle verified the
+raw-when rule firsthand at every `AuthoredDeclaration` construction
+site (`entries.rs:83-88`, `object/mod.rs:203-208`,
+`call_lower.rs:185-190`, `jsx/mod.rs:86/149/199`, `mint/mod.rs:128`,
+`static_css.rs:207` — all push authored `when` verbatim) and neo
+`collectEntries` (`css.ts:153-168`, pushes raw segments). Using
+`lower_when` would DIVERGE from both key authorities; the crew's
+decision is correct and documented (`conditions.rs:1-10`).
+
+**V7. Surface parity — VERIFIED (spot).** css gating mirrors
+`extract/bindings.rs` exactly (reserved `__reference_ui_css` w/o
+shadow check, `ns.css`, `css.object`); package allowlist identical
+two-string match w/ drift watch; `split_important` byte-mirrors
+`split_important_flag` (incl. `strip_important_suffix`);
+`number_to_json` identical 1e-9/i64 spelling to `ast_value.rs:34-38`;
+JSX tag formatter duplicated w/ drift watch; native `style`,
+`variant`/`colorMode`, host-owned props excluded (pinned by unit
+tests + 12's native pins).
+
+**V8. Quality — VERIFIED.** `pnpm agentrs q` on `diagnostics/` +
+`lib.rs`: **ALL 29 FILES PASS**, zero warnings, zero complexity/file
+violations, zero clippy allows.
+
+**G1 — GAP (blocking): const-folded holes predict Exact where runtime
+queries nothing.** `walk_leaf` gates syntactic holes (`object.rs:251-258`:
+`null`, `undefined`, `void`, literal `false` — pinned by
+`holes_emit_no_fact`), but the const/unary paths bypass it:
+`const C = false; css({v: C})` → `const_class` →
+`atom_to_json(Bool(false))` → `Exact{false}` (`values.rs:148-153`,
+`const_values.rs:103-114`; const recording confirmed at
+`constants/collect.rs:241`); `const N = null` → `Exact{Null}`
+(same path; engine itself strips const-null silently,
+`resolve/unit.rs:172-174`); `css({v: !true})` → `Exact{false}`
+(`values.rs:186-194`); const-object/merge/bag entries with false/null
+leaves → Exact (`const_leaf_value`, `walk_const_flat_object`).
+Runtime truth (`neo/src/runtime/css/css.ts:129-131`): `isHole`
+skips `null`/`undefined`/`false` — NO query. Expected: no fact
+(Hole). Actual: `ExactLookupExpected`. Consequence: S4 proof would
+emit false userspace warnings ("this lookup will emit no class" for a
+lookup that never happens); violates the code's own invariant
+(`object.rs:107-109` "Holes … emit no fact: runtime skips them").
+Note the asymmetry is load-bearing: `true` MUST stay Exact (runtime
+queries it, resolve R7 drops it → genuine miss); only `false`→Hole.
+Rework (new crew, S2 files only): centralize hole mapping for
+const/unary `false`+`Null` (suggest `atom_to_class` in
+`const_values.rs` used by `const_class`, `const_leaf_value`,
+`walk_const_flat_object`; `unary_not`-false→Hole), plus pins for
+const-false, const-null, `!true`, const-object-false-entry, and a
+`true`-stays-Exact regression pin. Re-verify: `agentrs c atomic` +
+`v atomic` (still 275/8, same reasons) + `q`. No station changes.
+
+**Findings (not gaps):** F1. `lib.rs` moves `pub mod atom;` below
+`mod assembly;` — unclaimed cosmetic reorder, harmless. F2. Const-array
+spread: object position stays dynamic (`object.rs:150-152`) but JSX
+bag/merge positions vanish (`jsx.rs:183-185`, `jsx_attrs.rs:173-176`,
+`block.rs:127-131`) — inconsistent, both silence-valid; suggest
+unifying on vanish with a comment. F3. Duplicated truth
+(`split_important`, tag formatter, package allowlist) is deliberate
+independence with drift watches — accepted, S6 re-audit. F4
+(pre-existing, exotic): Rust `BTreeMap` sorts keys byte-wise, neo
+`sort()` UTF-16-wise — agree on ASCII, may diverge on non-BMP keys;
+S6 watch, not S2's to fix. F5 (Obj-3 doom fodder, oracle-verified):
+engine `convert_object` (`ast_value.rs:208-222`) strips `!` recursively
+via `ast_to_json_value`, runtime `cleanResponsiveObject` only at top
+level — `padding: ['1!']`-style nested-`!` shapes mint unreachable
+plans; S2 correctly follows runtime (`nested_shapes_stay_raw`). F6
+(S3 policy carry-forward): ledger R7-userspace needs a value split —
+Bool-`true` drops are userspace-provable (queried + unminted),
+Bool-`false` drops can NEVER be userspace (no query exists); S3
+adapters must carry the value so policy splits by (code, value).
+
+**E9 — ledger erratum (log-only, S3 owns):** R7 row says Bool drops
+are userspace unconditionally; per F6 it must read "`true` →
+userspace, `false` → compiler-at-most". No verdict changes today.
+
+**SEQUENCE — Slice 3 (producer protocol).** Launches when G1 rework
+clears (or parallel at captain's discretion — disjoint write-sets:
+rework = `analysis/{values,const_values,block,jsx_attrs}.rs` + tests;
+S3 = adapters/producers/policy + `ATM-DIAG-13`). Single implementor
+crew (one coupled protocol; may fan nested workers over disjoint
+producer families ONLY: extract / harvest / resolve / hosts — policy
++ 13 stay with the lead). Scope per doc Slice 3 + map §C, one family
+at a time: extract FIRST (`ExpressionWalk::warn_dynamic` →
+sink+fact first, wording/audience out), then harvest, resolve, hosts
+(`hosts/diagnostics.rs` → typed fact); prose+audience move to policy;
+`ATM-E-*` passthrough byte-unchanged (8 codes, §A3). Q5b spread-site
+rule (already in log): funnel `spread.rs:90` through the sink hook
+iff the refused fragment is a mintable value position, else codify
+an explicit exclusion + repair the invariant comment — either outcome
+gets a pin. Q5a `MutatedBinding` no-sink stays intentional (fact
+records no sink). Done-criteria (checkable): `ATM-DIAG-13` GREEN
+(one site identity, deterministic order, stable codes, no dupes —
+INCL. the Obj-1 ×2 double-emit regression: unknown-token under
+`_hover` warns once); zero non-diagnostic drift on existing goldens
+(full `v atomic` still 275-pass with 07–12/14 red for the same
+reasons — 13 flips green); `agentrs q` clean; `agentrs c atomic`
+green. Must-not-touch (map §D): `ATM-E-*` behavior, stable wire
+codes, extraction/harvest/resolve/stylesheet semantics (goldens are
+the drift net), `hosts/entries.rs`, no second parse, no `logs` /
+`compilerDiagnostics` threading (S5 owns per Q2), no `css.ts` (Q1
+DEFER), no default-output change beyond 13's contract, no blanket
+golden updates, no weakened tests. Carry F6 into policy design
+(R7 true/false split). Oracle reviews the landing firsthand (13
+green + drift-net suite re-run + diff review), then sequences Slice
+4 (needs G1-closed analysis + S3 facts as its join inputs).
+
+### Oracle O5 — G1 rework review verdict (2026-09-20)
+
+Rework oracle reproduced every G1 claim firsthand (inline: full
+line-by-line review of the 4 files against engine + neo runtime
+sources, cargo + suite + pin + quality re-runs, scope audit).
+**Verdict: G1 CLEAR.** No gaps. S2 clears with G1 folded in; S3
+dispatch (O4) stands as written.
+
+**W1. Hole mapping complete — VERIFIED.** `atom_to_class`
+(`const_values.rs:104-112`) is the single mapping (`Bool(false)`/
+`Null`→Hole, `true`→Exact via `atom_to_json(_, true)`) and every
+const leaf path funnels through it: identifier + member scalars via
+`const_class` (`values.rs:150-152`, call sites `:76`/`:142`); const
+object style/condition entries via `const_leaf_value`
+(`block.rs:245-250`, call sites `:205`/`:219`); merge-flat entries
+via `walk_const_flat_object` (`block.rs:150-164`, `:162`); JSX bag
+r/condition/style entries (`jsx_attrs.rs:240/256/270`, `r` keeps
+`UnknownWhen`). Unary leaves via `leaf_unary` (`values.rs:188-196`,
+folded `Exact{false}`→Hole, `!false`→`Exact{true}`). Syntactic holes
+still gate in `is_hole` (`object.rs:251-258`, untouched). Full
+`.expect(` census: all 6 Exact sites route through a hole-mapped
+classifier or a non-hole shape (bare-attr `true`, text strings,
+structured whole-values). No const/unary `false`/`Null` path left
+predicting Exact.
+
+**W2. `true` stays Exact — VERIFIED.** Literal (`plain_literal` +
+`is_hole` excludes `true`), const scalar (`atom_to_class` falls to
+`atom_to_json`), member chain, `!false` (`leaf_unary` passthrough),
+const-object + merge + bag entries (`const_leaf_value`/
+`walk_const_flat_object`), bare attrs — all predict; pinned in all
+4 pin tests.
+
+**W3. `atom_to_json` untouched rationale — VERIFIED.** Still the raw
+baker for compounds only (`structured.rs:72/146/233`,
+`classify_unary` at `:93` — compounds never see `leaf_unary` or
+`atom_to_class`). Runtime truth read firsthand: `isHole` skips
+`null`/`undefined`/`false` with no query (`css.ts:129-131`,
+`collectEntries` `:164-166`), while `cleanResponsiveObject`
+(`:139-145`) passes `false` through raw inside queried whole
+objects — so leaf-Hole + compound-raw is exactly right. The
+`leaf_unary`-not-`unary_not` deviation is endorsed: hole-mapping in
+`unary_not` would have baked `null` where runtime queries `false`.
+
+**W4. Suites — VERIFIED (`pnpm agentrs` only).** `c atomic`: **397
+passed / 0 failed** (394 + 3 new; the 4th pin updates an existing
+test). `v atomic`: **275 passed / 8 failed (283)** — the 8 red are
+exactly `ATM-DIAG-07–14`, each for its O4-V3 reason (07: 12 on
+default; 08: `compilerDiags` undef; 09: message must name color;
+10: dynamic+harvest on default; 11: 8 on default, E8 intact; 12/14:
+`compilerDiagnostics` undef; 13: `cssIsValid` gauge `Unexpected
+input`). `q` on all 4 touched files: **ALL PASS**, zero warnings,
+zero complexity/file violations, zero clippy allows.
+
+**W5. Pins — VERIFIED (all 4 cargo tests re-run by name, all ok).**
+`const_values.rs:197` const-false + const-null + member-false +
+true-Exact; `values.rs:331` `!true`→Hole + `!false`→`Exact{true}`;
+`block.rs:339` object/condition/merge-flat false + true-Exact +
+null-dynamic; `jsx_attrs.rs:356` bag false/true. The 5 claimed pins
+(const-false, const-null, `!true`, const-object-false-entry,
+true-stays-Exact) all exist and pass.
+
+**W6. Scope — VERIFIED.** `git status` byte-identical before/after
+all runs; zero changes under `modules/atomic/tests/` (no
+station/input/spec/golden touches); only the 4 G1 files postdate S2
+in `analysis/` (02:10–02:16 vs 01:41–01:47); adapters/policy/session
+still S1-era (S3 crew has written nothing — no exclusions needed);
+peer files ignored per orders. Symbol confinement confirms the
+footprint: `atom_to_class` used only in values+block,
+`walk_leaf_class` only in block+jsx_attrs, `leaf_unary` private to
+values. (No git baseline exists for S2-vs-G1 — S2 uncommitted — so
+the diff was reviewed as current-content-vs-O4-gap-spec, not
+commit-vs-commit.)
+
+**Findings (not gaps, inherited from landing, oracle-confirmed):**
+F-G1a HOLDS (`entries.rs:273-279` records no Null leaf, unlike
+scalar `collect.rs:242` — null const-object entries stay dynamic,
+silence-valid). F-G1b HOLDS structurally (`css.rs:148-150`,
+`jsx.rs:204-206` + `mod.rs:141-153/119-121`: every declared const
+self-shadows end-to-end — S4 watch: no const-driven Exact can arise
+end-to-end until fixed; walker-level pins are the only coverage).
+Pre-existing oddity (S2, untouched by G1, log-only): BigInt leaves
+predict `Exact{Null}` (`values.rs:127-130`) — S4's problem, not
+this rework's.
+
 ## Landings
 
 _(implementors, per slice)_
@@ -857,7 +1112,206 @@ scope per O2 — S6/oracle downstream); (2) neo `sync.test.ts`
 
 ### S2 expectations
 
-_(placeholder — slice2 crew)_
+_(slice2 replacement crew, live 2026-09-20 — single crew inline, no nested
+workers spawned: one coupled analysis, disjoint fan-out not worth the
+coherence risk. Phase: READ→BUILD; design locked, implementing.)_
+
+- Read: O3 dispatch (E8-amended criteria) + Q3 GRANDFATHERED + Q1 DEFER +
+  Q5b rule; Slice-2 contract; agent-rs gates; S1 `diagnostics/` shape
+  (`AnalysisInput`/`analyze` seams, facts, session, proof join).
+- Key-authority findings (firsthand): plans key on AUTHORED prop + RAW
+  whens (`builder.rs:31-39`, `entries.rs:83-88`); neo queries identical
+  five-tuples (`plans.ts:55-70`, `css.ts:153-162` verbatim nesting);
+  `base` stays raw in whens (extract tests); `style_prop_names` on the
+  real artifact = `get_style_prop_names()` (`assembly.rs:58`); system =
+  `system.name` (`assembly.rs:51`).
+- Design locked: `AnalysisInput` = borrowed `&parsed` + host surface
+  (traced ∪ configured + owned_props, built post-`hosts::resolve`) +
+  shared `&LocalConstants` + system name. No BaseSystem (keys never
+  lower), no re-parse, no wire fields. `analyze()` runs in `compile()`,
+  facts stored in a dropped `DiagnosticsSession` (renders nothing →
+  zero drift). Static-but-unlowerable conditions (`_hovr`) yield EXACT
+  keys (ledger R2, witness P1a); `lower_when` genuinely unused for key
+  prediction — raw-when rule documented, not imported. Conservative
+  everywhere else: holes → no fact; conditionals/calls/binary/members
+  (unresolved) → DynamicSlot; `r` subtrees → DynamicSlot(UnknownWhen)
+  until `r`-parity is proven; `css(styles)`/spread-bags via shared
+  `ConstObject` iff cheap, else DynamicSlot + gap note.
+- Hinge shapes covered: 08 literal, 09 `_hovr` exact, 10 param-dynamic +
+  exacts, 11 seven dynamics + spread + static, 12 css/jsx parity +
+  native-`style` exclusion, 14 per-mode + panicked-file skip.
+- Files to touch (planned): `diagnostics/analysis/{mod,css,jsx,
+  conditions,values}.rs`, `diagnostics/facts.rs` (`OwnedLookupKey`
+  serializer — shares `serialize_lookup_key`), `lib.rs` (construct
+  input + run `analyze`, drop session). Nothing else.
+- Vitals 01:0x: READ done, BUILD starting. Blocked on nothing. No
+  nested workers (inline by design).
+- Vitals 02:xx: BUILD done, VERIFY in flight. `analysis/` implemented
+  (11 modules incl. test-only `support`): `css()` + traced-JSX walks,
+  shared object/block walkers, conditions/values/structured/const/gate/
+  imports helpers. `AnalysisInput::for_compile` (borrowed parse + host
+  surface + consts + system, panicked filtered, zero re-parse) wired
+  into `compile()` post-`hosts::resolve`; session drops unrendered.
+  Cargo: 394/0 (356 S1 + 38 S2). `agentrs q`: ALL 15 FILES PASS, zero
+  warnings. Clippy: zero hits in S2 files. Parity probe (`/tmp/
+  s2-parity/check.mjs` vs real neo `serializeLookupKey`): 13/13 byte-
+  equal (nested whens, responsive array/object, important x2, aliases,
+  unknown-condition exact, holes-adjacent zero). Semantic cross-read of
+  neo `css.test.ts`: all overlapping shapes agree (multi-arg/merge,
+  whens, all 5 important spellings, holes incl. scalar args, numbers,
+  miss-nesting); `r`-lowering confirmed as the ONE conservative gap
+  (DynamicSlot(UnknownWhen), silence-valid). Engine/runtime divergence
+  found (doom fodder, NOT S2's to fix): engine strips `!` recursively
+  in arrays/nested objects, runtime only at top level — `padding:
+  ['1!']` mints an unreachable plan. Next: full atomic Vitest suite
+  (zero-drift proof), then evidence + return.
+- Vitals 03:xx: VERIFY done — S2 COMPLETE, return filed.
+  - Full `v atomic`: **275 passed / 8 failed (283)** — byte-identical
+    totals to the O3-V1 record; the 8 red are exactly 07–14, each for
+    its recorded reason (07: 12 on default; 08: compilerDiags undef @
+    hinge :38, pins pass; 09: message must name color @ hinge-2 :42,
+    location pins pass; 10: dynamic+harvest on default; 11: 8 on
+    default @ E8 guard :36, stays red per E8; 12/14: compiler
+    Diagnostics undef @ hinges :53/:64, pins pass; 13: cssIsValid
+    gauge `Unexpected input`, spec passes). 08/12/14 pins green as
+    the regression net; 04/06 (+01/02/03/05) green.
+  - Zero drift proof: suite run wrote zero files (diffstat before/
+    after identical modulo this log); output path untouched by
+    construction (analysis borrows, session drops).
+  - Self-inflicted incident + repair: `pnpm agentrs f` (cargo fmt +
+    prettier --write, newer toolchain) reformatted 330 files at
+    01:46, breaking goldens repo-wide. Detected via 234-failure
+    triage, all 330 reverted (mtime-window + normalized-compare;
+    only pre-existing `docs/*.md` dirt kept). Lesson: never run bare
+    `agentrs f` in this voyage — check-only or scoped formatting.
+  - Cargo 394/0 (38 new S2 tests). `agentrs q` whole `diagnostics/`:
+    ALL 28 FILES PASS, zero warnings. Clippy: zero hits in S2 files.
+  - Touched (16 + log): `analysis/{mod,block,object,css,jsx,
+    jsx_attrs,gate,imports,conditions,values,structured,
+    const_values,support}.rs` (7 new: block/gate/imports/jsx_attrs/
+    structured/const_values/support... +object — 8 new, 5 rewritten),
+    `diagnostics/facts.rs` (`lookup_key`), `lib.rs` (wiring).
+    Untouched per orders: hosts/entries.rs, css.ts, wire, producers.
+  - Handoff notes for S4/S5: facts carry `SourceId` = source index +
+    real spans; use-site spans on const facts; `Site` bundles
+    span/prop/when. Known gaps (all silence-valid): `r` lowering,
+    computed keys, template-with-holes, call/binary/conditional
+    folding, member blocks, multi-leaf consts, re-export-traced
+    imports, nested-const-object values, exotic-number formatting.
+
+### S2-G1 rework
+
+_(G1 rework crew, landed 2026-09-20 — single crew inline, no helpers.
+Fixes O4-G1: const/unary-folded holes predicted Exact where runtime
+queries nothing. No commits.)_
+
+**Fix** (4 files, all `diagnostics/analysis/`):
+- `const_values.rs`: new `atom_to_class` — the single hole mapping for
+  every const leaf path. `Bool(false)`/`Null` → `Hole` (runtime `isHole`
+  skips them, no query); `true` stays `Exact` (queried, resolve R7
+  drops it → genuine miss); everything else converts like a literal.
+  `atom_to_json` untouched — compound positions must keep `false` raw
+  (runtime `cleanResponsiveObject` passes it through).
+- `values.rs`: `const_class` delegates to `atom_to_class` (covers
+  identifier + member paths); new `leaf_unary` maps folded `Exact{false}`
+  (`!true`) → `Hole` at the leaf call site. Deliberate deviation from
+  the brief's suggested `unary_not` location: `classify_unary` is shared
+  with `structured_fold`, which must keep baking folded `false` raw in
+  compounds — hole-mapping inside `unary_not` would have predicted
+  `null` where runtime queries `false`. `!false` → `Exact{true}`.
+- `block.rs`: `const_leaf_value` now returns `ValueClass` (was
+  `Option<(Value, bool)>` — `None` meant dynamic, which would have been
+  wrong for holes); `walk_const_flat_object` uses `atom_to_class`; new
+  shared `walk_leaf_class` lowering (`Exact`→expect, `Hole`→no fact,
+  `Unknown`→dynamic) used by all three const-entry sites.
+- `jsx_attrs.rs`: the three `const_leaf_value` call sites (css/r/
+  condition/style bag entries) use `walk_leaf_class`, preserving
+  `UnknownWhen` for `r`.
+
+**Pins** (3 new tests, 1 updated — cargo 394→397):
+- `const_holes_emit_no_fact_and_true_stays_exact` (`const_values.rs`):
+  `const C = false` → Hole, `const N = null` → Hole, `t.v = false`
+  member → Hole, `const T = true` → Exact (regression).
+- `unary_folds_literals_only` (`values.rs`, updated — the old `!true`→
+  Exact assertion pinned the bug): `!true` → Hole, `!false` →
+  Exact{true} (regression).
+- `const_hole_entries_emit_no_fact_and_true_stays_exact` (`block.rs`):
+  `{color: false}` / `{_hover: false}` / merge-flat `[{color: false}]`
+  → zero facts; `{color: true}` → 1 exact; `{color: null}` → 0 exact +
+  1 dynamic (see finding F-G1a).
+- `const_bag_hole_entries_emit_no_fact_and_true_stays_exact`
+  (`jsx_attrs.rs`, new tests module, walker-level): bag `mt: false` →
+  zero facts, `mt: true` → 1 exact (see finding F-G1b for why not
+  end-to-end; bag-null-dynamic rides on the shared `const_leaf_value`
+  pin in `block.rs`).
+
+**Re-verify** (`pnpm agentrs` only): `c atomic` **397 passed / 0
+failed**; `v atomic` **275 passed / 8 failed (283)** — the 8 red are
+exactly `ATM-DIAG-07–14`, each for its O4-V3 reason (07: 12 on
+default; 08: `compilerDiags` undef; 09: message must name color; 10:
+dynamic+harvest on default; 11: 8 on default, E8 intact; 12/14:
+`compilerDiagnostics` undef; 13: `cssIsValid` gauge `Unexpected
+input`); `q` on all 4 touched files: **0 violations, 0 warnings**.
+
+**Findings for oracle/S4 (not gaps, out of rework scope):**
+- F-G1a. Null leaves in const *objects* stay dynamic, not Hole: the
+  const recorder (`extract/constants/entries.rs::literal_leaf`) records
+  String/Number/Bool but no Null, so `{color: null}` records an empty
+  entry indistinguishable from dynamic. Silence-valid (only Exact
+  joins warn in S4); fixing the recorder is extraction-scope, untouched.
+  Scalar `const N = null` records Null fine → Hole (pinned).
+- F-G1b. End-to-end const resolution never fires at top level (both
+  surfaces, pre-existing S2): the visitors record every declarator as a
+  shadow after walking it, so `const C = 'red'; css({v: C})` yields
+  DynamicSlot end-to-end (probed firsthand) while walker-level tests
+  with empty shadows resolve fine. Silence-valid (dynamic, never wrong
+  Exact), but S4 should know no const-driven Exact fact can arise
+  end-to-end until the visitor shadowing is fixed. Visitor-scope fix,
+  not G1.
+- F-G1c. `walk_leaf_class` keeps the `r`-entry `UnknownWhen` vs
+  elsewhere `UnknownValue` shape split intact.
+
+**Scope audit**: touched ONLY `analysis/{values,const_values,block,
+jsx_attrs}.rs` + this section. No station/input/spec/golden touches
+(`git status`: no `tests/cases` modifications from my runs), no
+producer/adapter/policy files, no wire fields, no `css.ts`, peer files
+(`operation-seize.md`, missions README, `ATOMIC.md`) untouched.
+
+### S3 producers
+
+_(slice3 crew lead, live 2026-09-20 — single crew; nested workers over
+harvest / resolve / hosts only, policy + 13 with the lead. Phase: DESIGN
+locked, building shared API first.)_
+
+- Design locked (firsthand inventory of all 4 families): narrow-but-real
+  scope per O4 parentheticals — extract migrates the `warn_dynamic`
+  funnel + its 12 call sites (D1,D3-D7,D9,D10,D13,D15,D17,D19);
+  ObjectWalk/ExtractContext/plain-warn sites stay direct (all
+  compiler-per-ledger, ride with S5's channel move — documented
+  handoff, not a gap). Harvest (M1), resolve (R1-R11, E passthrough
+  untouched), hosts (H1) migrate fully. Static/global (S/G) out of
+  scope per dispatch.
+- Render model: inline (fact → session side-channel + policy-rendered
+  line pushed at the same site) — the only order-safe shape while
+  unmigrated families still push direct. `Policy::classify` stays
+  uniform Userspace (S5 moves channels); per-family total render fns
+  (no unwrap). Re-resolve echoes report no facts (`sink: None`,
+  `is_duplicate` untouched) — the 13 warns-once regression pins it.
+- Facts carry `DiagnosticLocation` (the honest position each phase
+  holds), not fabricated `SourceId`s — no catalog exists (E5 still
+  open); analysis keeps `SourceSite`. `ExistingError` →
+  `ExistingDiagnostic` (F3, contained in diagnostics/).
+- Q5b DECIDED: exclusion — spread-position call refusals are not
+  mintable value positions (no prop in scope; `sinks.rs` header already
+  states spreads are never sinks; inventing a prop would mint onto a
+  wrong position = semantic drift). Codify + repair `walk/mod.rs`
+  invariant comment + snippet pin. Q5a preserved structurally
+  (`is_sink_code` gate) + fact records `sink_recorded: false` + pin.
+- F6 carried as (code, value) match structure in policy's R7 render +
+  value-carrying resolve facts + ledger E9 (lead owns, landing with
+  the API).
+- Vitals: lead building facts/policy/session API; workers spawn when
+  it lands (harvest/resolve/hosts need the shapes to compile against).
 
 ## Architect rulings
 
@@ -877,5 +1331,13 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-20 watch: S0 CLEAR on oracle O2 word (4 green + 10 red-for-reason; ledger 5/91/0/0; witness UnknownCondition → ATM-DIAG-09, blind re-run OK). Committed S0 checkpoint. Dispatched single Slice-1 crew (module skeleton, 04/06 green, E7 fix). Next: oracle review of S1 landing → Slice 2.
 - 2026-09-20 00:40 tick: S1 alive and building (diagnostics split files 00:33–00:35, 04/06 output/ dirs appearing, resolve + stylesheet/global + system_layers touched; prior vitals ping moot, no re-ping). 8/9 crews terminal, no deadlock. Watch item for oracle review: tests/css-quarantine.ts also modified — confirm in-scope or drift. Next: S1 landing → oracle review → Slice 2.
 - 2026-09-20 watch: S1 CLEAR on oracle O3 word (04/06 green; full suite 275/8, red exactly 07–14; cargo 356/0; q clean; drift audit 22 files/36 locations, zero semantic drift; quarantine ruled in-scope; E8 shell erratum → S5 owns guard correction; O1 S2 criteria amended per E8). Kept undeclared docs/ATOMIC.md in a separate commit; process drift logged (F1 — crews must declare all touched files). Committed S1 checkpoint. Dispatched single Slice-2 crew (independent AST expectations, zero-drift, parity tests). Next: oracle review of S2 landing → Slice 3.
+- 2026-09-20 01:01 tick: S2 crew ~12 min, zero writes (tree clean, analysis/ mtimes predate dispatch, placeholder untouched), vitals ping outstanding unanswered. Not yet ruled deadlocked (implementor briefs require landing notes only; S2 is read-first) — but threshold set: if still silent at next tick, captain interrupts + rebriefs. 10/11 crews terminal. Next: S2 landing/reply or unstick → oracle review → Slice 3.
+- 2026-09-20 watch: S2 crew DIED to infra (model-stream idle timeout mid-turn, was actively reasoning; zero repo writes). No deadlock, no rebrief of the dead — replaced with a fresh S2 crew carrying an interim-writes requirement. Next: oracle review of S2 landing → Slice 3.
+- 2026-09-20 01:08 watch: peer session denim-markab is LIVE in this tree (operation-seize.md + missions README + ATOMIC.md line, 01:04) — not S2 drift. Captain's rule: hands off peer files; all voyage commits stay named-file-only; courtesy notification attempted (receipt unverified — protection rule stands regardless). S2 replacement quiet at ~8 min, vitals ping queued with interim-write nudge. Next: S2 signs of life or unstick → oracle review → Slice 3.
+- 2026-09-20 01:20 tick: S2 replacement ALIVE (interim note posted: READ→BUILD, design locked, single-crew-inline by choice; values.rs/conditions.rs/facts.rs writing fresh 01:17–01:20). Unstick deadline lifted. Peer files untouched (still their 3). 11/12 crews terminal, no deadlock. Next: S2 landing → oracle review → Slice 3.
+- 2026-09-20 01:40 tick: S2 replacement BUILDING (all analysis files fresh 01:35–01:39, 6 new files, lib.rs wired, interim notes growing). Peer files untouched. 11/12 terminal, no deadlock. Next: S2 landing → oracle review → Slice 3.
+- 2026-09-20 02:00 tick: S2 review oracle ~15 min, no O4, ping outstanding — holding (matches O3's silent-then-deliver profile); threshold: still silent at next tick → unstick. S2 landing closed with 2 more files (gate.rs, imports.rs — in oracle's diff). Peer active (seize 01:49), boundary holding. 12/13 terminal, no deadlock. Next: O4 verdict → commit S2 → Slice 3.
+- 2026-09-20 watch: O4 GAPS — G1 blocking (const/unary-folded false/null predict Exact where runtime queries nothing; true stays Exact). V1–V8 pass; F6 → S3 policy carry-forward (R7 true/false split); E9 ledger erratum → S3 owns; F5 → Obj-3 doom fodder filed. Parallelizing per O4 blessing (disjoint write-sets): fresh G1 rework crew + fresh S3 crew; commit order rework-first. Next: G1 verify → commit S2+G1 → S3 review → Slice 4.
+- 2026-09-20 02:20 tick: O5 G1 CLEAR (hole mapping complete, 5 pins, 275/8 + q re-verified) — S2 clears with G1 folded in. Committed S2+G1 checkpoint (ledger E9 excluded — S3's, landed 02:20; peer files excluded). S3 alive (design locked, building shared API first). 15/16 terminal, no deadlock. Next: S3 landing → oracle review → Slice 4.
 
 ## Useful
