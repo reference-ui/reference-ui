@@ -4683,3 +4683,214 @@ target chunk carries member `local`, not `b`); disjoint star names
 both resolve; diamond same-id resolves; zero diagnostics throughout.
 Captain: commit the (q) write-set (11 tasty paths + report + log
 sections); `dist/` is untracked build output, nothing to commit there.
+
+### Wave 6, find (r) — fortify landing
+**Status: LANDED.** Ruling followed exactly: TS-side strip of
+upstream-sourced `_private` at merge time in
+`packages/reference-neo/src/fragments/base/`, gated on membership in
+the upstream-name set (literal fallback kept as a member — never
+literal equality alone). No other tree touched: no Rust, no
+reference-core (shapes copied, never imported across), no lib, no css
+runtime, no contract/format changes. Finder report untouched. No
+commits (captain commits on chain-review VERIFIED).
+
+**Fix (ruling boundary only).** `merge.ts`: new `PRIVATE_TOKEN_KEY`
+plus `stripPrivateTokensDeep` (fresh tree, `_private` dropped at any
+depth incl. a top-level category, input never mutated — mirrors Rust
+`strip_private_tokens` and core's `stripPrivateTokensDeep`).
+`index.ts`: new exported `UPSTREAM_FRAGMENT_SOURCE`
+(`'upstream system fragment'`, hoisted from the inline fallback in
+`createEvaluationScript`) plus exported `scopeUpstreamTokenFragment`
+— strips when the fragment's non-enumerable source tag is a member of
+the upstream names or the fallback literal, passes everything else
+through by reference, and re-attaches the source tag on the stripped
+copy so provenance still cites the upstream. `evaluatePreparedFragments`
+threads `getUpstreamFragmentNames(config.extends)` into
+`mergeCollectedSpec`, which maps the tokens bucket through the gate —
+merge AND `tokenProvenance` both consume scoped fragments, so the
+stripped keys vanish from `keys` too. Transitivity composes per the
+ruling (each downstream strips at its own merge; portable bundle
+untouched). Sweep honored: keyframes/fonts/globalCss/patterns paths,
+`mergeFragmentObjects`, and `buildFontWeightTokens` verified
+untouched in the diff (fix hunks only); `_private` scoping is
+tokens-only.
+
+**Pins.** Unit (10 new, all in `fragments/base`): `merge.test.ts`
+`stripPrivateTokensDeep` — nested-at-depth + sibling preservation,
+top-level `_private` category, light/dark leaf passthrough,
+no-mutation; `index.test.ts` `scopeUpstreamTokenFragment` — two
+distinct upstream names strip (the trap: a verbatim core gate would
+miss both), the fallback literal strips with names present,
+local-source passthrough by reference (`toBe`), untagged/non-object
+passthrough, stripped copy keeps the non-enumerable tag. Case
+**NEO-SYNC-17** (`sync/NEO-SYNC-17`, next free after NEO-SYNC-16 per
+`agentneo list`; `sync: true`; registered in `sync/TESTS.md` + README
+search terms extends/private/encapsulation/upstream strip):
+two-system world, named upstream `upstream-lib` (public `up` +
+`colors._private.upstreamSecret` + top-level `_private.vault`),
+downstream own `colors._private.ownSecret`; spec asserts (a) merged
+tokens (deepEqual: public + own kept, no upstream `_private` at any
+depth, no top-level `_private`), (b) provenance (upstream entry keys
+exactly `['colors.up']`; no `upstreamSecret`/`_private.vault` path
+anywhere; local entry keeps `colors._private.ownSecret`), (c)/(d)
+both probes paint (`#up-probe` white, `#own-probe` magenta), (e)
+`.d.ts` lacks `upstreamSecret` but keeps `'_private.ownSecret'`.
+
+**Fail-without-fix / pass-with-fix (firsthand).** Doom repro
+`/tmp/doom-wave6-r-private-leak.mts` (unmodified, repo tsx): exit 1
+BREAK pre-fix → exit 0 HOLD post-fix (public adopted, leak false).
+NEO-SYNC-17 pre-fix: FAIL at (a) (`+ upstreamSecret` in the diff),
+(c)/(d) paint legs green; (b)/(e) red attested firsthand from the same
+pre-fix sync (upstream provenance keys
+`[colors.up, colors._private.upstreamSecret, _private.vault]`; d.ts
+`'_private.upstreamSecret'` present). Post-fix: case PASS; artifacts
+attested — tokens `{up, own, _private:{ownSecret}}`, upstream
+provenance `['colors.up']`, d.ts
+`'_private.ownSecret' | 'own' | 'up'`, sheet carries only the
+own-secret var + rule. New unit pins were written against the fixed
+helper (case + repro carry the red-then-green proof; pins guard the
+gate legs the case cannot reach, incl. the literal fallback).
+
+**Suites + guardrails (repo runners, this session).**
+`pnpm agent vitest reference-neo` 31 files / 235 tests green (baseline
+225 + 10 new, zero drift). `pnpm agentneo run NEO-SYNC-10` PASS and
+`pnpm agentneo run NEO-TOKEN-09` PASS post-fix (pins unmoved —
+SYNC-10 spec/artifacts untouched; TOKEN-09 owner passthrough intact).
+`pnpm agentneo q`: 0 errors; 10 warnings vs 8 at baseline — the 2 new
+ones are both soft line/length warns on the touched runner
+(`index.ts` 401 lines vs the 365 soft line; `mergeCollectedSpec`
+5 params vs the 4 soft line), gate passes, splitting the walker to
+dodge them would be scope creep (W1a precedent). Full
+`pnpm agentneo run`: 169/170 PASS — the single failure is NEO-SITE-11
+(`sheet carries the Chart padding utility`; sheet carries zero Chart
+utilities), which FAILS IDENTICALLY with my fix stashed (clean base
+tree, firsthand): pre-existing, engine-side (host discovery/utility
+emission), no extends/`_private` in its world, outside the ruling
+boundary — routed to the captain, not absorbed. Golden attestation:
+neo cases carry no goldens; no `--update-goldens` run, no existing
+test touched except additive pins, none weakened.
+
+**Files (mine only, 5 tracked + 1 new dir + this section).**
+`src/fragments/base/merge.ts` (strip), `src/fragments/base/index.ts`
+(gate + wiring), `src/fragments/base/merge.test.ts` + `index.test.ts`
+(pins), `tests/cases/sync/TESTS.md` (SYNC-17 row),
+`tests/cases/sync/NEO-SYNC-17/` (`case.json`, `README.md`,
+`specs/extends-private.spec.ts`, `world/` ×5). Ownership verified via
+`git status` before and after: peer paths (VOYAGE-LOG-3.md shared,
+docs/*, virtualrs, tasty, doom logs) never touched.
+
+### Wave 6, find (r) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (r) files only —
+write-set audited via `git status` paths before judging any diff:
+exactly `fragments/base/{merge.ts,index.ts,merge.test.ts,index.test.ts}`
+modified + `sync/TESTS.md` +1 row + new `sync/NEO-SYNC-17/` (8
+committable files; runner `node_modules` symlinks + `.reference-ui`
+ignored) = the landing's list. Peer paths (`docs/ATOMIC.md`,
+`docs/missions/README.md` — jettison/reaper mission-doc rows, 0
+extends/`_private` mentions; jettison/reaper docs; (p)/(q) reports) are
+read-only, never adjudicated. Css runtime untouched (zero paths outside
+`fragments/base` + TESTS.md + case).
+
+**1. Finder repro** (`/tmp/doom-wave6-r-private-leak.mts`, unmodified,
+repo tsx): exit 0 HOLD — downstream `spec.tokens.colors` is
+`{publicUp, brand}` with no `_private`, provenance carries
+`colors.publicUp` only under `upstream-lib`, public token adopted.
+Provenance clean. The pre-fix run in the swap window (below) byte-matches
+the finder's report, so this is the same break, now closed.
+
+**2. Suites** (repo runners, this session): new unit pins
+`src/fragments/base/{merge,index}.test.ts` 21/21 green (7+4 / 4+6 —
+exactly the 10 new pins, all additive); `pnpm agentneo run NEO-SYNC-17`
+PASS; guardrails `NEO-TOKEN-09` PASS (owner `_private` passthrough
+intact) + `NEO-SYNC-10` PASS (extends baseline unmoved — its spec and
+world are untouched in `git status`, so the ruling's must-NOT-move pins
+hold); full `pnpm agent vitest reference-neo` 31 files / 235 green
+(225 baseline + 10 new, zero drift); `pnpm agentneo q` 0 errors, 10
+warnings — the 2 over the 8-warning baseline are exactly the touched
+runner's soft warns (`index.ts` 401 lines vs 365 soft, `mergeCollectedSpec`
+5 params vs 4 soft; baseline `q` shows 0 `fragments/base/index.ts`
+mentions), gate passes, splitting to dodge them would be scope creep
+(W1a precedent). Full `pnpm agentneo run`: 169/170 — the single red is
+**NEO-SITE-11, itemized separately, NOT absorbed**: FAIL
+`chart.spec.ts: sheet carries the Chart padding utility`, identical
+pre-fix (proven in the swap window) and orthogonal by construction (its
+authored world has no config `extends` — the one `grep` hit is a prose
+comment — and no `_private`; with empty upstream names the fix path
+passes everything through by reference).
+
+**3. Fail-without-fix / pass-with-fix (firsthand, announced swap).**
+Fix+pins stashed (sha256-recorded, restored OK ×4 after): repro exit 1
+BREAK with `_private.upstreamSecret` verbatim in `spec.tokens.colors`
+and `colors._private.upstreamSecret` advertised in provenance;
+NEO-SYNC-17 FAIL at leg (a) (`+ upstreamSecret` in the diff, paint legs
+(c)/(d) green — the failure lands past them); legs (b)/(e) attested red
+from the same pre-fix sync (upstream provenance keys
+`[colors.up, colors._private.upstreamSecret, _private.vault]`,
+top-level `_private` present in tokens, d.ts carries
+`'_private.upstreamSecret'`); SITE-11 identically red; `q` 8 warnings.
+Phase 2 (sources stashed, pins kept): exactly the 10 new pins FAIL
+(`scopeUpstreamTokenFragment`/`stripPrivateTokensDeep` absent — as the
+landing discloses, behavioral red-then-green is carried by repro + case).
+Post-restore: repro exit 0, SYNC-17 PASS, all sha256 OK.
+
+**4. Diff review (line-by-line, (r) write-set):** `merge.ts` —
+`PRIVATE_TOKEN_KEY` + `stripPrivateTokensDeep`: drops `_private` at any
+depth incl. a top-level category, fresh tree, input never mutated
+(Object.entries walk; arrays pass through, matching `mergeFragmentObjects`
+wholesale-replace semantics — no mutation path downstream). `index.ts` —
+`UPSTREAM_FRAGMENT_SOURCE` hoists the byte-identical fallback literal
+from `createEvaluationScript` (behavior-neutral rename);
+`scopeUpstreamTokenFragment` gates on **membership**
+(`source !== literal && !upstreamNames.includes(source)` → pass-through),
+never literal equality alone — the ruling's gate trap, closed;
+non-object/untagged/local pass by reference (`toBe`-pinned); the
+stripped copy re-attaches the non-enumerable source tag so provenance
+still cites the upstream. `evaluatePreparedFragments` threads
+`getUpstreamFragmentNames(config.extends)` (same filter/order as
+`getUpstreamFragments`, index-aligned — pre-existing) into
+`mergeCollectedSpec`, which maps the tokens bucket through the gate; merge
+AND `tokenProvenance` both consume the scoped array, so stripped keys
+vanish from `keys` too. Tokens bucket only — keyframes/fonts/globalCss/
+patterns hunks absent, `mergeFragmentObjects` and `buildFontWeightTokens`
+untouched in the diff (tokens-only scoping per contract). Signature
+change safe: `mergeCollectedSpec` has no callers outside `index.ts`
+(grep-verified); new symbols referenced only in the 4 base files; no
+core/lib import (q import-boundary green). No test weakened: test diffs
+are pure additions (10 pins) plus import + header-comment lines; HEAD
+counts 7/4 → 11/10. Golden movement: none — neo cases carry no goldens,
+`.reference-ui` ignored, no `--update-goldens` run, zero existing tests
+touched. Case numbering: NEO-SYNC-16 exists, SYNC-17 is max+1, `sync:
+true`, TESTS.md row + README search terms present. Inside the ruling
+boundary: TS `fragments/base` + case only; Rust, core, contracts,
+portable bundle format, typegen, sync publish, css runtime untouched.
+
+**5. Contracts hold.** `tokens.ts:31-34` header rule ("stripped from any
+downstream consumer that pulls in the package via `extends`") +
+BAS-EXTEND-03 intent now hold on the TS path: post-fix artifacts
+attested — tokens `{up, own, _private:{ownSecret}}`, upstream provenance
+`['colors.up']`, local keeps `colors._private.ownSecret`, d.ts
+`'_private.ownSecret' | 'own' | 'up'`, sheet carries the own-secret var
+(3 hits) and zero upstream-secret bytes. Negative controls, firsthand:
+downstream's OWN `_private` still works (SYNC-17 leg (d) `#own-probe`
+magenta + TOKEN-09 PASS) and non-private upstream tokens still flow
+(leg (c) `#up-probe` white + repro `publicAdopted`). Named-upstream trap
+leg covered end-to-end (`upstream-lib` named in repro + case) and at
+unit level (two distinct names + literal fallback). Transitivity needs
+no second fix per the ruling (portable bundle keeps raw code, each
+downstream strips at its own merge) — composition verified by reading,
+not re-proved. Captain: commit the (r) write-set (4 base files + TESTS.md
+row + 8 new case files + report + log sections); `dist/` untracked,
+nothing to commit there.
+
+### Wave 6 close — captain (VOYAGE PARKED per HQ)
+All three finds VERIFIED and committed: (p) virtualrs dual-binding
+drop, (q) tasty star-ambiguity first-wins, (r) neo extends-private
+leak. Captain firsthand per arc: suites + quality gates re-run green
+(warn-only, non-failing; virtualrs 10-fail `;` drift and NEO-SITE-11
+both pre-existing, itemized, never absorbed). Cycles banked: 18.
+HQ ordered wave 6 last ("after these finish we stop") — NO wave 7
+dispatched. Objective 3 remains IN PROGRESS (paused, not satisfied):
+resume with wave 7 finders (3 finders, different compiler modules,
+no lib) whenever HQ returns.
