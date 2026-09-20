@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'shade' encountered for prop 'color'",
-    "file": "input/src/App.tsx",
-    "line": 6,
-    "column": 33
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "color under [_hover]: 2 harvested values minted",
-    "file": "input/src/App.tsx",
-    "line": 6,
-    "column": 33
-  }
-]
+[]

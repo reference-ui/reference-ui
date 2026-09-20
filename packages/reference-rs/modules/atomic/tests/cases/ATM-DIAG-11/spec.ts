@@ -1,6 +1,6 @@
 /**
  * Unknown-values station (ATM-DIAG-11, Operation Error Correct, Slice 5).
- * RED: identifiers, members, `${n}px` / `${color}` templates, calls, `a+b`
+ * Identifiers, members, `${n}px` / `${color}` templates, calls, `a+b`
  * binaries, and spreads never become userspace warnings — refusal without
  * an exact expected lookup proves no runtime miss. Those refusals ride the
  * opt-in `compilerDiagnostics` channel (`logs: ['compiler']`); the default

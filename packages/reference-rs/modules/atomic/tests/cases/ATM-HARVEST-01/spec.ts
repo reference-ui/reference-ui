@@ -6,11 +6,11 @@
  * the color sink (kind gate).
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-01',
-  verify(result) {
+  async verify(result) {
     // The site mints padding; harvest mints the refused color.
     expect(hasWant(result, 'padding', '4px')).toBe(true)
     expect(hasWant(result, 'color', 'red')).toBe(true)
@@ -30,8 +30,15 @@ const spec: AtomicCaseSpec = {
       plans.some(p => p.prop === 'color' && p.value === 'red' && p.when.length === 0)
     ).toBe(true)
 
-    // The site still warns (it is dynamic); the sink infos its count.
-    expect(result.diagnostics).toEqual([
+    // The site is dynamic but proves no exact miss, so the default is
+    // silent (S6 E8-class re-point); the warn + sink info ride opt-in.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-HARVEST-01', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-DYNAMIC-IDENTIFIER',

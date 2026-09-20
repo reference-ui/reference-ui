@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-SPREAD",
-    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/Badge.tsx",
-    "line": 10,
-    "column": 20
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-SPREAD",
-    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/Card.tsx",
-    "line": 14,
-    "column": 19
-  }
-]
+[]

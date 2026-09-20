@@ -6,6 +6,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -15,7 +16,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-80',
-  verify(result) {
+  async verify(result) {
     // Scalar init: the folded use paints exactly like the direct call.
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'margin', '13r')).toBe(true)
@@ -46,7 +47,15 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('margin: calc(13 * var(--spacing-root));')
     expect(sheet).toContain('margin-top: 4px;')
 
-    expect(result.diagnostics).toEqual([
+    // Refusal + sink info ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-80', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-DYNAMIC-IDENTIFIER',

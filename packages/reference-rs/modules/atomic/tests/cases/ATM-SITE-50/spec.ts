@@ -6,7 +6,7 @@
  * its position and keeps sibling args.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 interface ExpectedDiagnostic {
   file: string
@@ -149,7 +149,7 @@ const EXPECTED_WANTS: Array<{ prop: string; value: string; when?: string[] }> = 
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-50',
-  verify(result) {
+  async verify(result) {
     for (const { prop, value, when } of EXPECTED_WANTS) {
       expect(hasWant(result, prop, value, when ?? [])).toBe(true)
     }
@@ -173,8 +173,15 @@ const spec: AtomicCaseSpec = {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
-    // Fifteen positioned refusals plus the mutated-arg write-naming warning.
-    const diagnostics = result.diagnostics ?? []
+    // Fifteen positioned refusals plus the mutated-arg write-naming
+    // warning — on the opt-in channel now (S6 E8-class re-point); the
+    // default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-50', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.severity === 'warning'
+    )
     expect(diagnostics).toHaveLength(EXPECTED_DIAGNOSTICS.length + 1)
     for (const expected of EXPECTED_DIAGNOSTICS) {
       const match = diagnostics.find(

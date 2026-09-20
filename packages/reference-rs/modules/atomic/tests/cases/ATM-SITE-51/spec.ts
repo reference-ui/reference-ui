@@ -7,7 +7,7 @@
  * part while static siblings extract.
  */
 import { expect } from 'vitest'
-import { harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean }> = [
   { prop: 'width', value: '4px' },
@@ -65,11 +65,11 @@ const PART_REFUSALS: Array<{
 ]
 // The color and borderColor part refusals (refuse.ts 4/5/10/16, fanout.ts 8)
 // are covered incidentally — every offered value is a static plan, zero
-// net-new — and stay silent.
+// net-new — and stay silent on the default (visible opt-in with the rest).
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-51',
-  verify(result) {
+  async verify(result) {
     // Every fold emits its wants: 38 across the five inputs. The mt sink
     // harvests six net-new lengths (1px/2px twin the site's marginTop
     // atoms); the width sink harvests seven (4px twins the site); the
@@ -99,8 +99,12 @@ const spec: AtomicCaseSpec = {
     expect(importantPlan, 'joined important plan').toBeDefined()
 
     // Three part refusals: zero wants from those templates, one located
-    // `ATM-W-DYNAMIC-TEMPLATE` diagnostic each, naming the part.
-    const diagnostics = result.diagnostics ?? []
+    // `ATM-W-DYNAMIC-TEMPLATE` diagnostic each, naming the part — on the
+    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-51', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = opted.compilerDiagnostics ?? []
     for (const { file, line, column, part, detail, prop } of PART_REFUSALS) {
       const match = diagnostics.find(
         d =>
@@ -116,15 +120,23 @@ const spec: AtomicCaseSpec = {
       expect(match!.severity).toBe('warning')
     }
 
-    // The over-cap fan-out stays silent when its sink is covered
-    // incidentally: no partial strings, no diagnostic at the template,
-    // the margin sibling kept.
+    // The over-cap fan-out stays silent on the default when its sink is
+    // covered incidentally: no partial strings, no diagnostic at the
+    // template, the margin sibling kept. (Its facts ARE visible opt-in —
+    // the absence pin reads the default only.)
     expect(
-      diagnostics.some(
+      (result.diagnostics ?? []).some(
         d => d.file?.endsWith('fanout.ts') && d.line === 19,
       ),
-      'covered over-cap template stays silent',
+      'covered over-cap template stays silent on the default',
     ).toBe(false)
+    expect(
+      diagnostics.some(
+        d => d.file?.endsWith('fanout.ts') && d.line === 19 &&
+          d.code === 'ATM-W-DYNAMIC-TEMPLATE'
+      ),
+      'covered over-cap refusal visible opt-in'
+    ).toBe(true)
     expect(hasWant(result, 'margin', '4px')).toBe(true)
 
     // A folded template under unary refuses the operator without leaking
@@ -138,10 +150,13 @@ const spec: AtomicCaseSpec = {
     )
     expect(unary, 'unary refusal over a folded template').toBeDefined()
 
+    // Channel totals include the six covered template refusals (refuse
+    // 4/5/10/16, fanout 8/19) and their two covered sink infos beside the
+    // four uncovered warnings and three uncovered sinks.
     const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(4)
-    expect(infos).toHaveLength(3)
+    const infos = diagnostics.filter(d => d.code === 'ATM-I-HARVEST-SINK')
+    expect(warnings).toHaveLength(10)
+    expect(infos).toHaveLength(5)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }

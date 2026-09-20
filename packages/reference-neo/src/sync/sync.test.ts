@@ -386,7 +386,7 @@ describe('sync diagnostics', () => {
     expect(existsSync(outFile(dir))).toBe(false)
   })
 
-  it('succeeds through unlocated warnings such as display:true', async () => {
+  it('succeeds through located warnings such as display:true', async () => {
     const dir = await writeProject({
       'ui.config.ts': configFile(''),
       'theme/tokens.ts': TOKENS_FILE,

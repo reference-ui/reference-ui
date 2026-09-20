@@ -8,6 +8,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -25,7 +26,7 @@ function tokenWant(result: unknown, prop: string, path: string): boolean {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-45',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', '{colors.red.500}')).toBe(true)
     expect(hasWant(result, 'color', '{colors.gray.800}')).toBe(true)
     expect(hasWant(result, 'color', '{colors.nope.996}')).toBe(true)
@@ -52,35 +53,46 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: #111;')
     expect(sheet).not.toContain('nope.996')
 
-    const diagnostics = result.diagnostics ?? []
-    const warnsAndErrors = diagnostics.filter(d => d.severity !== 'info')
-    const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnsAndErrors).toHaveLength(16)
-    expect(infos).toHaveLength(1)
-    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
-    const codes = warnsAndErrors.map(d => d.code).sort()
-    expect(codes).toEqual([
+    // Call refusals + sink info ride the opt-in channel now (S6 E8-class
+    // re-point); the fatal token error + three warn-and-paint passthroughs
+    // stay default (fatals never move; R9 per O8 R3).
+    const defaults = result.diagnostics ?? []
+    const defaultWarnsAndErrors = defaults.filter(d => d.severity !== 'info')
+    expect(defaultWarnsAndErrors).toHaveLength(4)
+    expect(defaultWarnsAndErrors.map(d => d.code).sort()).toEqual([
       'ATM-E-UNKNOWN-TOKEN',
-      'ATM-W-DYNAMIC-EXPRESSION',
-      'ATM-W-DYNAMIC-EXPRESSION',
-      'ATM-W-DYNAMIC-EXPRESSION',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
-      'ATM-W-TOKEN-CALL-REFUSED',
       'ATM-W-UNKNOWN-TOKEN-PATH',
       'ATM-W-UNKNOWN-TOKEN-PATH',
       'ATM-W-UNKNOWN-TOKEN-PATH',
     ])
-    const errors = diagnostics.filter(d => d.severity === 'error')
+    const errors = defaults.filter(d => d.severity === 'error')
     expect(errors).toHaveLength(1)
     expect(errors[0]?.message ?? '').toMatch(/colors\.nope\.996/)
-    const refused = diagnostics
+
+    const opted = await compileCase('ATM-SITE-45', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
+    expect(warnings).toHaveLength(12)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    const codes = warnings.map(d => d.code).sort()
+    expect(codes).toEqual([
+      'ATM-W-DYNAMIC-EXPRESSION',
+      'ATM-W-DYNAMIC-EXPRESSION',
+      'ATM-W-DYNAMIC-EXPRESSION',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+      'ATM-W-TOKEN-CALL-REFUSED',
+    ])
+    const refused = warnings
       .filter(d => d.code === 'ATM-W-TOKEN-CALL-REFUSED')
       .map(d => d.message)
       .join('\n')

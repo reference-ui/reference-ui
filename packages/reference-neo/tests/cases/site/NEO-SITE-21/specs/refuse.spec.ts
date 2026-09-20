@@ -13,12 +13,16 @@ import type { SpecPage } from '../../../../shared/page.ts';
 // structurally instead of importing the atomic types.
 interface AtomicDiagnostic {
   severity: 'error' | 'warning' | 'info';
+  code: string;
   message: string;
   file?: string;
 }
 
 interface AtomicModule {
-  compile(request: unknown): Promise<{ diagnostics: AtomicDiagnostic[] }>;
+  compile(request: unknown): Promise<{
+    diagnostics: AtomicDiagnostic[]
+    compilerDiagnostics?: AtomicDiagnostic[]
+  }>;
 }
 
 interface SpecInput {
@@ -76,9 +80,14 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const diagnostics = result.diagnostics ?? [];
+  // S6 E8-class re-point: refusals prove no exact runtime miss, so the
+  // default is silent; the same lines ride the opt-in channel.
+  assert.equal((result.diagnostics ?? []).length, 0, `default is silent, got ${JSON.stringify(result.diagnostics)}`);
+  const opted = await atomic.compile({ ...request, logs: ['compiler'] });
+  assert.ok(opted.compilerDiagnostics, 'opt-in channel populates compilerDiagnostics');
+  const diagnostics = opted.compilerDiagnostics ?? [];
   const warnings = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning');
-  const infos = diagnostics.filter((diagnostic) => diagnostic.severity === 'info');
+  const infos = diagnostics.filter((diagnostic) => diagnostic.code === 'ATM-I-HARVEST-SINK');
   assert.equal(warnings.length, 2, `two refusal warnings, got ${JSON.stringify(diagnostics)}`);
   for (const diagnostic of warnings) {
     assert.match(diagnostic.message, /Dynamic non-literal/);

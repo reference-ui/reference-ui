@@ -7,6 +7,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   harvestWants,
   hasWant,
   siteWants,
@@ -15,7 +16,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-27',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'white', ['base'])).toBe(true)
     expect(hasWant(result, 'color', 'black', ['base'])).toBe(true)
     const siteColor = siteWants(result).filter(w => w.prop === 'color')
@@ -62,8 +63,14 @@ const spec: AtomicCaseSpec = {
       p => p.prop === 'color' && p.value === 'white' && p.when.length === 0,
     )).toBe(true)
 
-    const warnings = (result.diagnostics ?? []).filter(d => d.severity === 'warning')
-    const infos = (result.diagnostics ?? []).filter(d => d.severity === 'info')
+    // Warns + sink info ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-27', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(2)
     for (const diagnostic of warnings) {
       expect(diagnostic.message).toMatch(/Dynamic non-literal expression/)

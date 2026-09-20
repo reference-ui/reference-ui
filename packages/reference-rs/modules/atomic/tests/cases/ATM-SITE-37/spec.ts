@@ -6,11 +6,11 @@
  * diagnostic, siblings kept and arity honest.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-37',
-  verify(result) {
+  async verify(result) {
     // Flattened value arrays land every slot at its own breakpoint.
     expect(hasWant(result, 'margin', '1px', ['base'])).toBe(true)
     expect(hasWant(result, 'margin', '2px', ['sm'])).toBe(true)
@@ -59,8 +59,14 @@ const spec: AtomicCaseSpec = {
       ),
     ).toBe(true)
 
-    // Five spreads, five located diagnostics, three codes.
-    const diagnostics = result.diagnostics ?? []
+    // Five spreads, five located diagnostics, three codes — on the
+    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-37', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.severity === 'warning'
+    )
     expect(diagnostics).toHaveLength(5)
     const responsive = diagnostics.filter(d => d.code === 'ATM-W-RESPONSIVE-ARRAY-SPREAD')
     const merge = diagnostics.filter(d => d.code === 'ATM-W-NON-OBJECT-CSS-ARG')

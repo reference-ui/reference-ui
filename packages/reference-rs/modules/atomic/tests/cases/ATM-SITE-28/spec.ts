@@ -4,7 +4,7 @@
  * (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53) resolve like `const`.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'blue.600' },
@@ -57,7 +57,7 @@ const DELETED: Array<{ name: string; site: string }> = [
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-28',
-  verify(result) {
+  async verify(result) {
     for (const { prop, value } of EXPECTED) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
@@ -99,8 +99,14 @@ const spec: AtomicCaseSpec = {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
     }
 
-    // Every mutated use warns once and names its write site.
-    const diagnostics = result.diagnostics ?? []
+    // Every mutated use warns once and names its write site — on the
+    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-28', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-W-MUTATED-BINDING'
+    )
     expect(diagnostics).toHaveLength(MUTATED.length + DELETED.length)
     for (const { name, site } of MUTATED) {
       const match = diagnostics.find(d =>

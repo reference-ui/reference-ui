@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'unknownToken' encountered for prop 'borderBottomColor'",
-    "file": "input/src/dynamic.tsx",
-    "line": 4,
-    "column": 42
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "borderBottomColor under []: 0 harvested values minted",
-    "file": "input/src/dynamic.tsx",
-    "line": 4,
-    "column": 42
-  }
-]
+[]

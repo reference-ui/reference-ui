@@ -4,20 +4,26 @@
  * Nested forms and undefined omission live in ATM-LEAF-02 and ATM-LEAF-03.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-01',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'bg', 'n300')).toBe(true)
     expect(hasWant(result, 'bg', 'n100')).toBe(true)
     expect(hasWant(result, 'color', 'white')).toBe(true)
     expect(hasWant(result, 'color', 'black')).toBe(false)
-    const diagnostics = result.diagnostics ?? []
-    expect(diagnostics).toHaveLength(1)
-    expect(diagnostics[0]!.severity).toBe('info')
-    expect(diagnostics[0]!.code).toBe('ATM-I-DEAD-BRANCH')
-    expect(diagnostics[0]!.message).toContain("dead branch 'black'")
+    // The dead-branch info rides the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-LEAF-01', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const deads = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-I-DEAD-BRANCH'
+    )
+    expect(deads).toHaveLength(1)
+    expect(deads[0]!.severity).toBe('info')
+    expect(deads[0]!.message).toContain("dead branch 'black'")
   },
 }
 

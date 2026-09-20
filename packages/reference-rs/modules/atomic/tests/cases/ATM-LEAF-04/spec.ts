@@ -5,6 +5,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -14,7 +15,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-04',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'border', '1px solid')).toBe(true)
     expect(hasWant(result, 'borderColor', 'red')).toBe(false)
     expect(hasWant(result, 'borderColor', 0)).toBe(true)
@@ -31,15 +32,24 @@ const spec: AtomicCaseSpec = {
     // plus color green (twins of site atoms skip).
     expect(harvestWants(result)).toHaveLength(3)
     expect(result.wants ?? []).toHaveLength(10)
-    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
-    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    // Refusals + sink infos ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-LEAF-04', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     // The margin sink is covered incidentally (every offered value is a
-    // static plan, zero net-new), so its refusal and info stay silent.
-    expect(warnings).toHaveLength(2)
-    expect(infos).toHaveLength(2)
+    // static plan, zero net-new): silent on the default, but its refusal
+    // and info facts are visible opt-in beside the two uncovered pairs.
+    expect(warnings).toHaveLength(3)
+    expect(infos).toHaveLength(3)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }
+    const margin = warnings.find(d => d.message.includes("'customMargin'"))
+    expect(margin, 'covered margin refusal visible opt-in').toBeDefined()
   },
 }
 

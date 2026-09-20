@@ -4,16 +4,22 @@
  * while the neighbouring object call still extracts.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-12',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'mt', '2r')).toBe(true)
     expect(result.wants ?? []).toHaveLength(1)
 
-    // Both live `css` tags diagnose; the `styled.div` tag stays silent.
-    const diagnostics = result.diagnostics ?? []
+    // Both live `css` tags diagnose on the opt-in channel; the
+    // `styled.div` tag stays silent. (S6 E8-class re-point; default silent.)
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-12', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-W-TAGGED-TEMPLATE-SITE'
+    )
     expect(diagnostics).toHaveLength(2)
     for (const diag of diagnostics) {
       expect(diag.severity).toBe('warning')

@@ -20,7 +20,10 @@ interface AtomicDiagnostic {
 }
 
 interface AtomicModule {
-  compile(request: unknown): Promise<{ diagnostics: AtomicDiagnostic[] }>;
+  compile(request: unknown): Promise<{
+    diagnostics: AtomicDiagnostic[]
+    compilerDiagnostics?: AtomicDiagnostic[]
+  }>;
 }
 
 interface SpecInput {
@@ -95,9 +98,15 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const warnings = (result.diagnostics ?? []).filter((entry) => entry.severity === 'warning');
-  const infos = (result.diagnostics ?? []).filter((entry) => entry.severity === 'info');
-  assert.equal(warnings.length, 2, `two dynamic-site warnings, got ${JSON.stringify(result.diagnostics)}`);
+  // S6 E8-class re-point: dynamic refusals prove no exact runtime miss, so
+  // the default is silent; the same lines ride the opt-in channel.
+  assert.equal((result.diagnostics ?? []).length, 0, `default is silent, got ${JSON.stringify(result.diagnostics)}`);
+  const opted = await atomic.compile({ ...request, logs: ['compiler'] });
+  assert.ok(opted.compilerDiagnostics, 'opt-in channel populates compilerDiagnostics');
+  const channel = opted.compilerDiagnostics ?? [];
+  const warnings = channel.filter((entry) => entry.severity === 'warning');
+  const infos = channel.filter((entry) => entry.code === 'ATM-I-HARVEST-SINK');
+  assert.equal(warnings.length, 2, `two dynamic-site warnings, got ${JSON.stringify(channel)}`);
   assert.equal(warnings[0]?.code, 'ATM-W-DYNAMIC-MEMBER');
   assert.equal(warnings[1]?.code, 'ATM-W-DYNAMIC-IDENTIFIER');
   for (const warning of warnings) {
@@ -106,7 +115,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
       `warning is located at the world app.ts, got ${warning?.file}`,
     );
   }
-  assert.equal(infos.length, 1, `one sink info, got ${JSON.stringify(result.diagnostics)}`);
+  assert.equal(infos.length, 1, `one sink info, got ${JSON.stringify(channel)}`);
   assert.equal(infos[0]?.code, 'ATM-I-HARVEST-SINK');
   assert.equal(infos[0]?.message, 'color under []: 3 harvested values minted');
 }

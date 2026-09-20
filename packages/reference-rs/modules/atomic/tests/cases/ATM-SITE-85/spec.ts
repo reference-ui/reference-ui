@@ -6,11 +6,11 @@
  * still extracts.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-85',
-  verify(result) {
+  async verify(result) {
     // Button's `size` is the component's variant prop: no want, no warning.
     expect(getWantsForProp(result, 'size')).toHaveLength(1)
     expect(hasWant(result, 'size', '2r')).toBe(true)
@@ -28,9 +28,16 @@ const spec: AtomicCaseSpec = {
     expect(sheet).not.toContain('width: sm;')
     expect(sheet).not.toContain('height: sm;')
 
-    // The only diagnostic is Button's own honest rest-spread: owned
-    // shadowing itself warns nothing, and spreads stay host-blind.
-    expect(result.diagnostics).toEqual([
+    // Button's own honest rest-spread rides the opt-in channel: owned
+    // shadowing itself warns nothing, spreads stay host-blind, and the
+    // default is silent (S6 E8-class re-point).
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-85', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-UNFOLDABLE-SPREAD',

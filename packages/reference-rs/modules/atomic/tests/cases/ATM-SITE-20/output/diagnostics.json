@@ -2,30 +2,6 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown style property \"fooBar\"",
-    "file": "input/src/App.tsx",
-    "line": 3,
-    "column": 24
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown style property \"divideX\"",
-    "file": "input/src/App.tsx",
-    "line": 3,
-    "column": 37
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown style property \"frobnicate\"",
-    "file": "input/src/App.tsx",
-    "line": 7,
-    "column": 27
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNKNOWN-PROPERTY",
     "message": "Unknown style property in global CSS: \"divideX\"",
     "file": "n12",
     "line": 1,

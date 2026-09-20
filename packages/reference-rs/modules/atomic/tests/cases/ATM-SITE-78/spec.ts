@@ -6,11 +6,11 @@
  * mid-chase still folds on later direct use (cycle refusals never memoize).
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-78',
-  verify(result) {
+  async verify(result) {
     // The §1 three-file fold: base rides into button beside its sibling.
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'padding', '4px')).toBe(true)
@@ -32,9 +32,16 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('margin: 2px;')
     expect(sheet).toContain('color: chartreuse;')
 
-    // The only diagnostic is the cycle arm's residue marker, located at
-    // the use site and naming the origin spread and the cycle.
-    expect(result.diagnostics).toEqual([
+    // The cycle arm's residue marker — located at the use site, naming
+    // the origin spread and the cycle — rides the opt-in channel now (S6
+    // E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-78', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-UNFOLDABLE-SPREAD',

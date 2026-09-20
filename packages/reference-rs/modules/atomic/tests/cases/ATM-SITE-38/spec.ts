@@ -7,6 +7,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -40,7 +41,7 @@ const UNARY_REFUSALS: Array<{ file: string; line: number; op: string; detail: st
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-38',
-  verify(result) {
+  async verify(result) {
     // Every fold emits its wants: 15 across the four inputs. The marginTop
     // sink harvests 2r/4px/auto; `auto` is invalid on `order`, so that sink
     // infos a zero count.
@@ -87,8 +88,11 @@ const spec: AtomicCaseSpec = {
     expect(result.css?.classes?.['padding:4px']).not.toContain('!')
 
     // Eight unary refusals: zero wants from those positions, one located
-    // `ATM-W-DYNAMIC-UNARY` diagnostic each, naming the operator.
-    const diagnostics = result.diagnostics ?? []
+    // `ATM-W-DYNAMIC-UNARY` diagnostic each, naming the operator — on the
+    // opt-in channel now (S6 E8-class re-point).
+    const opted = await compileCase('ATM-SITE-38', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = opted.compilerDiagnostics ?? []
     for (const { file, line, op, detail } of UNARY_REFUSALS) {
       const match = diagnostics.find(
         d =>
@@ -106,19 +110,35 @@ const spec: AtomicCaseSpec = {
     // Dynamic operands keep their existing vocabulary.
     const ident = diagnostics.find(d => d.message.includes("'unknownIdent'"))
     expect(ident?.code).toBe('ATM-W-DYNAMIC-IDENTIFIER')
-    const member = diagnostics.find(d => d.file?.endsWith('unfoldable.ts') && d.line === 9)
+    const member = diagnostics.find(
+      d =>
+        d.file?.endsWith('unfoldable.ts') &&
+        d.line === 9 &&
+        d.code !== 'ATM-I-DYNAMIC-SLOT' &&
+        d.code !== 'ATM-I-EXPECTED-LOOKUP'
+    )
     expect(member?.code).toBe('ATM-W-DYNAMIC-MEMBER')
     const mutated = diagnostics.find(d => d.message.includes("'shade'"))
     expect(mutated?.code).toBe('ATM-W-MUTATED-BINDING')
     expect(mutated?.message).toContain('reassigned at')
 
-    // The three folded bools fail CSS validation at resolve, like bare bools.
+    // The three folded bools fail CSS validation at resolve, like bare
+    // bools — split by value (F6): the `true` is a genuine runtime miss
+    // (runtime queries `true`) and stays default; the two `false` ride the
+    // channel (runtime `isHole` skips them).
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(1)
+    expect(defaults[0]!.code).toBe('ATM-W-INVALID-CSS-VALUE')
+    expect(defaults[0]!.message).toContain('`true` is not valid CSS')
     const invalid = diagnostics.filter(d => d.code === 'ATM-W-INVALID-CSS-VALUE')
-    expect(invalid).toHaveLength(3)
+    expect(invalid).toHaveLength(2)
+    for (const d of invalid) {
+      expect(d.message).toContain('`false` is not valid CSS')
+    }
 
     const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(14)
+    const infos = diagnostics.filter(d => d.code === 'ATM-I-HARVEST-SINK')
+    expect(warnings).toHaveLength(13)
     expect(infos).toHaveLength(2)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')

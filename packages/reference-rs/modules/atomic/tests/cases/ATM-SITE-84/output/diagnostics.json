@@ -1,10 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-MUTATED-BINDING",
-    "message": "Dynamic mutated binding 'glow' encountered for prop 'color' (reassigned at input/src/unrelated.ts:4:1; declared value is stale)",
-    "file": "input/src/unrelated.ts",
-    "line": 6,
-    "column": 35
-  }
-]
+[]

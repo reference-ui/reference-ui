@@ -4,11 +4,11 @@
  * plan, and warns exactly once on the dynamic arm, in both arm positions.
  */
 import { expect } from 'vitest'
-import { harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-63',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'black')).toBe(true)
     expect(hasWant(result, 'backgroundColor', 'white')).toBe(true)
     // The two dynamic arms harvest the cross pairs (color white,
@@ -26,9 +26,14 @@ const spec: AtomicCaseSpec = {
       plans.find(p => p.prop === 'backgroundColor' && p.value === 'black'),
     ).toBeDefined()
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Arm refusals ride the opt-in channel now (S6 E8-class re-point);
+    // the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-63', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(2)
     for (const diagnostic of warnings) {
       expect(diagnostic.message).toMatch(/Dynamic non-literal/)

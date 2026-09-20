@@ -5,11 +5,11 @@
  * is a partial and mints nothing — no length was written wholesale.
  */
 import { expect } from 'vitest'
-import { harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-05',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'width', 'red')).toBe(false)
     expect(result.wants ?? []).toHaveLength(1)
@@ -20,7 +20,13 @@ const spec: AtomicCaseSpec = {
     expect(classes['width:red']).toBeUndefined()
     expect(Object.keys(classes).some(key => key.startsWith('width:'))).toBe(false)
 
-    const infos = (result.diagnostics ?? []).filter(d => d.severity === 'info')
+    // Warns + sink infos ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-HARVEST-05', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(infos).toEqual([
       expect.objectContaining({
         code: 'ATM-I-HARVEST-SINK',
@@ -32,7 +38,7 @@ const spec: AtomicCaseSpec = {
       }),
     ])
 
-    const warnings = (result.diagnostics ?? []).filter(d => d.severity === 'warning')
+    const warnings = channel.filter(d => d.severity === 'warning')
     expect(warnings).toHaveLength(2)
     expect(warnings.every(d => d.code === 'ATM-W-DYNAMIC-TEMPLATE')).toBe(true)
   },

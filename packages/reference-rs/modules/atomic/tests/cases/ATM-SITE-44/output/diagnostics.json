@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'missing' encountered for prop 'backgroundColor'",
-    "file": "input/src/params.ts",
-    "line": 58,
-    "column": 40
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "backgroundColor under []: 2 harvested values minted",
-    "file": "input/src/params.ts",
-    "line": 58,
-    "column": 40
-  }
-]
+[]

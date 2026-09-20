@@ -5,6 +5,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -14,7 +15,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-31',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'width', '4px')).toBe(true)
     expect(hasWant(result, 'color', 'purple.500')).toBe(true)
@@ -77,9 +78,14 @@ const spec: AtomicCaseSpec = {
     // reuse site plans.
     expect(result.runtime.stylePlans).toHaveLength(45)
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Fence refusals ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-31', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(13)
     expect(infos).toHaveLength(1)
     expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
