@@ -93,6 +93,27 @@ fn traces_body_destructured_rest_forwarding() {
 }
 
 #[test]
+fn traces_pipeline_object_and_array_literal_args() {
+    let fixture = workspace_scratch_dir("pipeline-literal-args");
+    fixture.write(
+        "input/index.tsx",
+        "import { css } from '@reference-ui/styled/css'\nimport type { StyleProps } from '@reference-ui/react'\n\nexport type CardProps = StyleProps & {\n  title?: string\n}\n\nexport function IdentCard({ color }: CardProps) {\n  return <div className={css(color)} />\n}\n\nexport function ObjCard({ color }: CardProps) {\n  return <div className={css({ color })} />\n}\n\nexport function MemberObjCard(props: CardProps) {\n  return <div className={css({ color: props.color })} />\n}\n\nexport function ArrCard({ color }: CardProps) {\n  return <div className={css([color])} />\n}\n\nexport function IndirectCard({ color }: CardProps) {\n  const obj = { color }\n  return <div className={css(obj)} />\n}\n",
+    );
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected pipeline literal-arg case to trace");
+
+    assert_eq!(
+        names,
+        vec![
+            "ArrCard".to_string(),
+            "IdentCard".to_string(),
+            "MemberObjCard".to_string(),
+            "ObjCard".to_string(),
+        ]
+    );
+}
+
+#[test]
 fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
     let fixture = create_node_builtin_helper_fixture();
     let names =
