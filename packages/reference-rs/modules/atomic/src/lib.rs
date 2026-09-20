@@ -90,6 +90,10 @@ pub struct CompileResult {
     #[serde(default)]
     pub portable_stylesheet: String,
     pub runtime: NativeRuntimeArtifact,
+    /// Compile-internal plans: the same rows the artifact carries, surfaced
+    /// for proof, stations, and the differential gate. Stays when the
+    /// artifact copy ships no more per-atom rows.
+    pub style_plans: Vec<runtime::RuntimeStylePlan>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub css: Option<CssRuntime>,
     pub diagnostics: Vec<Diagnostic>,
