@@ -113,3 +113,21 @@ reopen it.
   Replacement lead (recon-1b) dispatched on the same tree/branch
   with resume brief: reproduce A/B evidence firsthand, complete
   bundle leg, file `fasthull-recon-1.md` + perf-log entry.
+- Recon-1b COMPLETE: all 7 suspects LIVE with fresh firsthand
+  evidence, zero product edits. Map + perf-log entry landed on
+  main (commits `1142ee39`, `4b393c69`); `reports/latest/`
+  churn excluded from the landing per bench policy.
+- FLAG: uncommitted `docs/missions/{README,operation-fasthull}.md`
+  edits on main (mtime 22:57:25Z, both files same second) —
+  provenance NOT mine, NOT any crew's (no edit/write/bash call
+  in any crew log or my own). Content aligns with HQ's all-three
+  guidance, but authorship unproven: LEFT UNTOUCHED and
+  uncommitted per git skill + never-touch-another-session rule.
+  Wave trees cut WITHOUT them. HQ to ratify or revert.
+- Wave 1 perf wave cut from `4b393c69`, 5 trees/crews: (a) cold
+  payload A1+A2, (b) dead-file fast path A3+A4+A5+A8 (harvest
+  fence), (c) recipe sheet A6b+A9 (A6a rides W2), (d) recipe
+  tables A7, (e) deepsee burndown/attribution tooling (HQ lane,
+  new files only). Guardrail: no lane regresses the other two
+  beyond noise (brief rendezvous rule); crews briefed from HQ's
+  chat guidance, not the mystery edits.
