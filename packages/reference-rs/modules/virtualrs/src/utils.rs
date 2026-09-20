@@ -13,7 +13,7 @@ pub struct RewritePlan {
     pub start: usize,
     pub end: usize,
     pub replacement: String,
-    pub local_binding_to_normalize: Option<String>,
+    pub local_bindings_to_normalize: Vec<String>,
     pub canonical_call_name: Option<&'static str>,
 }
 
@@ -29,7 +29,7 @@ pub enum ImportCollection {
 pub struct ImportParts {
     pub default_name: Option<String>,
     pub remaining_parts: Vec<String>,
-    pub local_binding_to_normalize: Option<String>,
+    pub local_bindings_to_normalize: Vec<String>,
 }
 
 pub fn apply_rewrite(source_code: &str, plan: RewritePlan) -> String {
@@ -40,10 +40,10 @@ pub fn apply_rewrite(source_code: &str, plan: RewritePlan) -> String {
         &source_code[plan.end..]
     );
 
-    if let (Some(local_binding), Some(canonical_call_name)) =
-        (plan.local_binding_to_normalize, plan.canonical_call_name)
-    {
-        rewritten = normalize_bound_calls(&rewritten, &local_binding, canonical_call_name);
+    if let Some(canonical_call_name) = plan.canonical_call_name {
+        for local_binding in &plan.local_bindings_to_normalize {
+            rewritten = normalize_bound_calls(&rewritten, local_binding, canonical_call_name);
+        }
     }
 
     rewritten
@@ -56,7 +56,7 @@ pub fn is_core_runtime_import(source_code: &str, import: &ImportDeclaration<'_>)
 
 struct ImportCollectionState {
     matched: bool,
-    local_binding_to_normalize: Option<String>,
+    local_bindings_to_normalize: Vec<String>,
     remaining_parts: Vec<String>,
 }
 
@@ -72,7 +72,7 @@ where
     let mut default_name = None;
     let mut state = ImportCollectionState {
         matched: false,
-        local_binding_to_normalize: None,
+        local_bindings_to_normalize: Vec::new(),
         remaining_parts: Vec::new(),
     };
 
@@ -102,7 +102,7 @@ where
     Some(ImportParts {
         default_name,
         remaining_parts: state.remaining_parts,
-        local_binding_to_normalize: state.local_binding_to_normalize,
+        local_bindings_to_normalize: state.local_bindings_to_normalize,
     })
 }
 
@@ -122,8 +122,8 @@ fn process_import_specifier<F>(
             local_binding_to_normalize: local_binding,
         } => {
             state.matched = true;
-            if state.local_binding_to_normalize.is_none() {
-                state.local_binding_to_normalize = local_binding;
+            if let Some(local_binding) = local_binding {
+                state.local_bindings_to_normalize.push(local_binding);
             }
         }
         ImportCollection::Keep { part } => state.remaining_parts.push(part),
