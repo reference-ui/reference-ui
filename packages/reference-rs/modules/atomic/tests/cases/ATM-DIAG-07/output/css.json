@@ -1,0 +1,20 @@
+{
+  "borderColor:white": "@reference-ui/lib__bd-c_white",
+  "color:black": "@reference-ui/lib__c_black",
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:white": "@reference-ui/lib__c_white",
+  "height:10px": "@reference-ui/lib__h_10px",
+  "height:1r": "@reference-ui/lib__h_1r",
+  "height:2r": "@reference-ui/lib__h_2r",
+  "margin:10px": "@reference-ui/lib__m_10px",
+  "margin:1r": "@reference-ui/lib__m_1r",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "padding:10px": "@reference-ui/lib__p_10px",
+  "padding:1r": "@reference-ui/lib__p_1r",
+  "padding:2r": "@reference-ui/lib__p_2r",
+  "width:10px": "@reference-ui/lib__w_10px",
+  "width:1r": "@reference-ui/lib__w_1r",
+  "width:2r": "@reference-ui/lib__w_2r"
+}

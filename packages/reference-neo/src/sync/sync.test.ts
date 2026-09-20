@@ -57,6 +57,48 @@ function outFile(dir: string, ...parts: string[]): string {
   return join(dir, '.reference-ui', ...parts)
 }
 
+const BACKCHANNEL_FILE = [
+  "import { css } from '@reference-ui/react'",
+  '',
+  "const palette = ['red', 'blue']",
+  '',
+  'export function paint(i: number): string {',
+  '  return css({ color: palette[i] })',
+  '}',
+  '',
+  'export function tint(themeColor: string): string {',
+  '  return css({ color: themeColor })',
+  '}',
+  '',
+  'export function spreadIt(overrides: Record<string, string>): string {',
+  "  return css({ color: 'brand', ...overrides })",
+  '}',
+  '',
+  'const alwaysOn = true',
+  '',
+  "export const branched = css({ borderColor: alwaysOn ? 'white' : 'black' })",
+  '',
+  'export const probe = paint(0)',
+  '',
+].join('\n')
+
+// Mirror of the ATM-DIAG-07 channel-family predicate: true facts that
+// prove no exact runtime miss ride the compiler channel only.
+function hasChannelCode(output: string): boolean {
+  return /ATM-W-DYNAMIC-|ATM-W-UNFOLDABLE-SPREAD|ATM-I-HARVEST-SINK|ATM-I-DEAD-BRANCH/.test(output)
+}
+
+async function syncWithWarnCapture(dir: string): Promise<string[]> {
+  const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    await sync(dir)
+    // Capture before restore: mockRestore clears the call history.
+    return spy.mock.calls.map((args) => String(args[0]))
+  } finally {
+    spy.mockRestore()
+  }
+}
+
 function snapshotFolder(outDir: string): string[] {
   const files: string[] = []
   const walk = (dir: string): void => {
@@ -399,5 +441,50 @@ describe('sync diagnostics', () => {
     }
 
     expect(calls).toBe(0)
+  })
+})
+
+describe('sync compiler backchannel', () => {
+  it('prints compiler diagnostics on the opt-in channel without leaking them into userspace warnings', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile("  logs: ['compiler'],"),
+      'theme/tokens.ts': TOKENS_FILE,
+      'theme/dynamic.ts': BACKCHANNEL_FILE,
+    })
+
+    const calls = await syncWithWarnCapture(dir)
+
+    const compiler = calls.filter((call) => call.includes('[neo] compiler'))
+    expect(compiler).toHaveLength(1)
+    expect(compiler[0]).toMatch(/ATM-W-DYNAMIC-[A-Z0-9-]+/)
+    expect(compiler[0]).toContain('ATM-W-UNFOLDABLE-SPREAD')
+    expect(compiler[0]).toContain('ATM-I-HARVEST-SINK')
+
+    const userspace = calls.filter((call) => call.includes('[neo] sync warning')).join('\n')
+    expect(hasChannelCode(userspace)).toBe(false)
+
+    const request = JSON.parse(
+      readFileSync(outFile(dir, 'system/compile-request.json'), 'utf-8')
+    ) as { logs?: string[] }
+    expect(request.logs).toEqual(['compiler'])
+    expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
+  })
+
+  it('prints no compiler output for the same world without the opt-in', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile(''),
+      'theme/tokens.ts': TOKENS_FILE,
+      'theme/dynamic.ts': BACKCHANNEL_FILE,
+    })
+
+    const calls = await syncWithWarnCapture(dir)
+
+    expect(calls.join('\n')).not.toContain('[neo] compiler')
+
+    const request = JSON.parse(
+      readFileSync(outFile(dir, 'system/compile-request.json'), 'utf-8')
+    ) as Record<string, unknown>
+    expect('logs' in request).toBe(false)
+    expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 })

@@ -63,6 +63,15 @@ function validateConfigJsxElements(cfg: ConfigRecord): void {
   }
 }
 
+function validateLogs(cfg: ConfigRecord): void {
+  const logs = cfg.logs
+  if (logs == null) return
+
+  if (!Array.isArray(logs) || logs.some((entry) => entry !== 'compiler')) {
+    throw ConfigValidationError.invalidConfig('logs', "'logs' must be an array of log channels ('compiler').")
+  }
+}
+
 function validateStaticCss(cfg: ConfigRecord): void {
   const staticCss = cfg.staticCss
   if (staticCss == null) return
@@ -182,6 +191,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateInclude(cfg)
   validateName(cfg)
   validateConfigJsxElements(cfg)
+  validateLogs(cfg)
   validateStaticCss(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })

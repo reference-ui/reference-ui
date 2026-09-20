@@ -45,6 +45,38 @@ pub struct SourceSite {
     pub when: Vec<Box<str>>,
 }
 
+/// Index from analysis [`SourceId`] back to path and text, so the
+/// compiler channel can locate analysis facts that proof left unplaced.
+/// Positions resolve against the compile's collected sources in `SourceId`
+/// order; the catalog borrows them and outlives nothing.
+pub struct SourceCatalog<'a> {
+    sources: Vec<(&'a str, &'a str)>,
+}
+
+impl<'a> SourceCatalog<'a> {
+    /// One `(path, content)` pair per [`SourceId`] index, in compile order.
+    pub fn new(sources: Vec<(&'a str, &'a str)>) -> Self {
+        Self { sources }
+    }
+
+    /// The file position of one analysis span: file plus 1-based line/column
+    /// of the span start. Unknown ids and unresolvable offsets fall back to
+    /// an honest unlocated position; the line is never skipped.
+    pub fn locate(&self, source: SourceId, span: Span) -> DiagnosticLocation {
+        let Some((path, content)) = self.sources.get(source.0 as usize) else {
+            return DiagnosticLocation::default();
+        };
+        let Some((line, column)) = line_col(content, span.start) else {
+            return DiagnosticLocation::default();
+        };
+        DiagnosticLocation {
+            file: Some((*path).to_string()),
+            line: Some(line),
+            column: Some(column),
+        }
+    }
+}
+
 /// File/line/column carried from extract to resolve for located diagnostics.
 /// Extract populates it from literal spans; resolve attaches it to warnings
 /// and errors. Empty when the want was synthesized rather than authored in
@@ -163,6 +195,41 @@ mod tests {
         let diagnostic = DiagnosticLocation::default().error(DiagnosticCode::ParseError, "boom");
         assert_eq!(diagnostic.file, None);
         assert_eq!(diagnostic.line, None);
+    }
+
+    #[test]
+    fn catalog_locates_span_starts_by_source_index() {
+        let catalog = SourceCatalog::new(vec![("a.ts", "ab\ncd"), ("b.ts", "xy")]);
+        let located = catalog.locate(SourceId(0), Span::new(3, 4));
+        assert_eq!(located.file.as_deref(), Some("a.ts"));
+        assert_eq!(located.line, Some(2));
+        assert_eq!(located.column, Some(1));
+        let second = catalog.locate(SourceId(1), Span::new(1, 2));
+        assert_eq!(second.file.as_deref(), Some("b.ts"));
+        assert_eq!(second.line, Some(1));
+        assert_eq!(second.column, Some(2));
+    }
+
+    #[test]
+    fn catalog_columns_count_emoji_in_utf16_units() {
+        let catalog = SourceCatalog::new(vec![("e.ts", "a😀b")]);
+        let located = catalog.locate(SourceId(0), Span::new(5, 6));
+        assert_eq!(located.file.as_deref(), Some("e.ts"));
+        assert_eq!(located.line, Some(1));
+        assert_eq!(located.column, Some(4));
+    }
+
+    #[test]
+    fn catalog_falls_back_honestly_instead_of_skipping() {
+        let catalog = SourceCatalog::new(vec![("a.ts", "ab")]);
+        assert_eq!(
+            catalog.locate(SourceId(7), Span::new(0, 1)),
+            DiagnosticLocation::default()
+        );
+        assert_eq!(
+            catalog.locate(SourceId(0), Span::new(99, 100)),
+            DiagnosticLocation::default()
+        );
     }
 
     #[test]

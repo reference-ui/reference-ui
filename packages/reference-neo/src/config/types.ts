@@ -16,6 +16,13 @@ export interface BaseSystem {
   jsxElements?: string[]
 }
 
+/**
+ * Opt-in diagnostic channel names for the compiler backchannel.
+ * `'compiler'` carries dynamic refusals, spreads, harvest activity, and
+ * dead branches; the future runtime channel may extend this union.
+ */
+export type LogChannel = 'compiler'
+
 export interface ReferenceUIConfig {
   /**
    * Glob patterns for files to scan for fragment collection and atomic input.
@@ -63,6 +70,15 @@ export interface ReferenceUIConfig {
    * @default false
    */
   debug?: boolean
+
+  /**
+   * Opt-in diagnostic channels for the compiler backchannel.
+   * Omit or pass `[]` for userspace diagnostics only; `['compiler']`
+   * returns compiler telemetry in `compilerDiagnostics` and prints it
+   * as `[neo] compiler` lines. Unrelated to `debug`, which stays the
+   * JS infrastructure logger and never implies this channel.
+   */
+  logs?: LogChannel[]
 }
 
 /**

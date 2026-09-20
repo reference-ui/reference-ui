@@ -23,7 +23,11 @@ use oxc_span::{GetSpan, Span};
 use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticsSession};
+use crate::diagnostics::adapters::extract::extract_note;
+use crate::diagnostics::{
+    line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
+    DiagnosticsSession,
+};
 use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
@@ -82,16 +86,31 @@ impl<'a> ObjectWalk<'a> {
 
     /// Report a diagnostic warning at the offending node's span.
     pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self.span_position(Some(span)).unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
         self.diagnostics
-            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
+            .push(location.warning(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
     }
 
     /// Report an info diagnostic at the offending node's span.
     pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self.span_position(Some(span)).unzip();
-        self.diagnostics
-            .push(Diagnostic::info(code, message.into()).with_location(self.file, line, column));
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
+        self.diagnostics.push(location.info(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Info, code, message));
     }
 
     /// 1-based line/column for a span, or None without source text.

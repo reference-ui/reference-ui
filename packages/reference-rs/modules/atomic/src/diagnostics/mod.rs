@@ -27,7 +27,9 @@ pub use facts::{
 pub use policy::{Audience, Policy};
 pub use render::render;
 pub use session::DiagnosticsSession;
-pub use site::{line_col, DiagnosticLocation, SourceId, SourceSite, StyleSurfaceKind};
+pub use site::{
+    line_col, DiagnosticLocation, SourceCatalog, SourceId, SourceSite, StyleSurfaceKind,
+};
 
 use serde::{Deserialize, Serialize};
 

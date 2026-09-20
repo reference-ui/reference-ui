@@ -1311,6 +1311,186 @@ landing firsthand (07 green + Neo case + channel-isolation
 suite re-run + diff review), then sequences Slice 6 (audit +
 census + Splitter silence proof).
 
+### Oracle O8 — Slice-5 review verdict (2026-09-20)
+
+_(review oracle: 2 nested workers on disjoint runners — vitest +
+cargo/quality/neo — plus lead-inline re-runs of every gate via
+repo runners only, full line-by-line diff review vs 160a2ed62,
+drift-audit re-run + independent spot probes, E-census and
+false-gate reads. Peer files ignored per orders. Written in two
+sequential edits so partial progress survives another death.)_
+
+**Verdict: S5 CLEAR.** No gaps. All O7 done-criteria met:
+07 green, NEO-SYNC-16 + sync/validate units green, 08/12 hinges
+flip as-written, E8 corrected, 14-pin re-pointed, S3c migrated
+as one, 09/10/13 stay green, q/c green, drift report
+machine-verified. Two rulings (R1 corrections, R2 new codes)
++ one scoping rule (R3) + five findings (all S6 hygiene).
+
+**V1. Criteria stations — VERIFIED (lead, `pnpm agentrs v
+cases.test.ts -t`, fresh 04:46 binary).** 07/08/09/10/11/12/
+13/14 ALL PASS, each 1 passed / 235 skipped. 08/12 pass with
+NO spec change (S2-facts hinges, untouched specs — no
+weakening possible); 09/10/13 specs also untouched.
+
+**V2. Full suite — VERIFIED (lead + worker).** `pnpm agentrs
+v atomic`: **227 passed / 56 failed (283)**. Red set extracted
+from the log == the crew audit's 56-station list EXACTLY
+(empty symmetric difference, script-checked). Proof output
+untouched: 09 + all 6 S4-replacement stations
+(COND-12/13/21, GHOST-04, SITE-18, UNIT-02) + both causeless
+(SITE-47, TOKEN-12) absent from the red list.
+
+**V3. Cargo — VERIFIED (lead + worker).** `pnpm agentrs c
+atomic`: **454 passed / 0 failed**, zero rustc warnings.
+
+**V4. Quality — VERIFIED (lead + worker).** `pnpm agentrs q`
+smart: exit 0, 0 violations, 3 warnings — all pre-existing
+instances grown, none created: `walk_fallback` cog-27 (S5
+touches only warn/info in that file), `extract/mod.rs`
+493→512, `extract/tests.rs` 546→574 (both over-365 at
+baseline; counts verified at 160a2ed62). `q
+…/src/diagnostics`: **ALL 39 FILES PASS**, zero
+length/complexity/clippy-allow findings.
+
+**V5. Neo — VERIFIED (lead + worker).** `pnpm agentneo run
+NEO-SYNC-16`: **PASS** (threading + one collapsed `[neo]
+compiler` call with DYNAMIC/SPREAD/HARVEST/DEAD-BRANCH codes
++ both isolation halves). `sync.test.ts`: **18/18** via `pnpm
+agent vitest reference-neo` (opt-in/isolation units +
+pre-existing collapse golden intact — E4 holds).
+`validate.test.ts`: **16/16**. `pnpm agentneo q` over all 9
+authored S5 files: **0 errors**, 1 pre-existing-kind warning
+(sync.test.ts 491 lines, over-365 at HEAD). Whole-dir 17 errors are gitignored `world/.reference-ui`
+build dirt (`.gitignore:50`, correctly outside default scope).
+
+**V6. Drift audit — VERIFIED (crew script re-run + oracle
+probes).** `/tmp/s5-audit.mts` re-runs **AUDIT CLEAN** on all
+56: styles.css + css.json byte-identical everywhere; default
+== golden minus moved lines only (order-preserved, zero new
+lines); every removed line round-trips to the requested
+channel; field absent unrequested; no foreign codes on the
+channel. Ambig probe re-run: all 7 UNKNOWN-PROPERTY props
+(DIAG-05, SITE-20×3, SITE-49×2, SITE-83) show 0 wants + 0
+plans ⇒ extract-site, cannot be R1 resolve drops —
+adjudication HOLDS. Oracle spot probes (`/tmp/s5-oracle-spot.
+mts`, `/tmp/s5-site20.mts`, `/tmp/s5-covered.mts`):
+SITE-38 default == exactly the 1 `true` line, both `false`
+lines on the channel, opt-default == default; SITE-20
+default == exactly the 1 global-surface line (my first probe
+used the wrong base system — audit's baseSystem.json parity
+confirmed right); SITE-34/42 (S4-covered, green) carry
+funnel+harvest facts on the channel with silent defaults.
+
+**V7. Line-by-line — VERIFIED (lead, vs 160a2ed62).**
+Plumbing: frozen-TS `LogChannel`/`logs?`/
+`compilerDiagnostics?` additive-optional, no schema bump
+(`schemaVersion` gate untouched); napi single-word `logs`
+(`include` precedent, no alias needed); inner
+`wants_compiler_logs` forgiving; result `Option` +
+`skip_serializing None` (absent unrequested — probed).
+Partition runs post-proof in `compile()` scope; SourceCatalog
+built from `&analysis.sources` (no assembly threading —
+assembly diff is the `None` literal only); `traced.clone()`
+sound + commented (analysis borrows resolved_hosts). Policy
+table == landing claim; R7-false gate airtight
+(`InvalidValue` constructed ONLY in the `Bool(b)` arm,
+`resolve/unit.rs:192-207` — no string-"false" collision
+possible); G7 message shape differs + locations differ (no
+sweep collision). S3c: 6 helpers byte-identical push
+(`location.warning/info` == old `Diagnostic::*.with_location`
+— file always Some, gate never triggers) + verbatim note;
+`warn_dynamic` funnels direct (no double-report); E-census:
+all 8 E codes push direct with no note (recipes
+`located_error`, `report_missing_graph`, token E, parse/dup,
+N-API) — zero `ATM-E-*` exposure. Analysis renders are
+f(key/prop/shape) only (no surface — 12 parity) via catalog
+(12/14 positioned; UTF-16 + fallback pinned).
+
+**V8. Neo drift leg — VERIFIED (lead).** `pnpm agentneo run
+NEO-CSS-14` FAILs exactly at `two dynamic-site warnings, got
+[]` — the intended S5 drift, S6 re-points.
+
+**R1. Correction-vs-weakening — RULED: all corrections,
+equal-or-stricter, inputs untouched.** 07's guard re-point
+(E8-class, pre-authorized shape): same `isChannelItem`
+predicate + same leak/absence/opt-clean assertions, guard
+moved to the only channel that may carry the items — the S0
+shell was unsatisfiable-as-written exactly like 11's E8.
+11's E8 correction per O3 orders (static-sibling pin + leak
+hinge byte-identical). 14's R2 re-point per O7 orders
+(col-54/themeColor/parse/mode assertions identical, pin
+reads the channel). 9 Rust re-pins: opt-in compile +
+added default-emptiness assertion + identical message pins
+(3 strictly STRICTER: loose `!is_empty` → exact channel
+counts). Station inputs untouched everywhere (tests diff =
+3 spec.ts + 5 new output/ dirs only); 08/12/09/10/13 specs
+untouched.
+
+**R2. Two new info codes — RULED doc-consistent.**
+`ATM-I-EXPECTED-LOOKUP` + `ATM-I-DYNAMIC-SLOT`: appended at
+table end both directions (43→45, enum order == table
+order, pin test extended), info severity matching telemetry
+nature, channel-only (never default). The doc's "appended
+only for genuinely new failure classes" intends to block
+renamed/duplicate failure codes; these are genuinely new
+observation classes with no existing wire equivalent, and
+reusing a refusal code would be the harder violation (a code
+allowlist lie). S4 `MissingStylePlan` precedent applies.
+
+**R3. Default-staying lines — RULED in-scope for S5, S6
+adjudicates.** R8–R11 passthroughs, R3 advisory, H1 host,
+static/global lines stay default. No O7 S5 criterion moves
+them (Slice-5 bullet lists dynamic/refusal/spread/harvest/
+dead-branch — passthroughs paint, advisories aggregate);
+13's golden PINS R9 default, so moving it would break a
+stay-green criterion. S6's "every default warning names an
+exact proof" audit adjudicates each family (move vs
+proof-back), not S5.
+
+**R4. Must-not-touch — CLEAN SWEEP.** No `ATM-E-*` change
+(E-census + TOKEN-12/14 pins green); no wire renames
+(append-only codes); no semantic drift (56-station CSS/JSON
+net + 227 greens byte-identical); no `hosts/entries.rs`;
+no re-parse (zero parse in added lines); no `css.ts`; no
+`debug` alias (zero validate.ts hits — still declared-only);
+no blanket goldens (5 new output/ dirs only, each a
+greening station).
+
+**Findings (not gaps, all S6 hygiene):** F-S5a. 11 spec
+header still says "RED:" (now green — one-word stale).
+F-S5b. `is_false_refusal` duplicated (policy + render,
+differing signatures, identical semantics — both pinned;
+consider one `pub(crate)` helper). F-S5c. R3/R8–R11/H1/S-G
+default standing per R3. F-S5d. `sync.test.ts` stale test
+name (O3 F4, still open). F-S5e. SPEC `Cargo #[test] 356`
+line still stale (now 454; F-S3a standing).
+
+**SEQUENCE — Slice 6 (audit + census).** No ruling gates S6.
+Single implementor crew (one coupled audit; may fan nested
+workers over disjoint station batches ONLY for the
+mechanical golden rewrites — census + SPEC/README + Splitter
+proof stay with the lead). Scope per doc Slice 6 + map §C:
+(1) intentional golden rewrites for exactly the 56 audited
+reds (V6 report — no blanket update; each rewrite == golden
+minus moved lines, verified per-station); (2) warning census
+split Book/story scaffolding vs shipped component source;
+(3) Splitter default-silence + opt-in `[neo] compiler` return
+(the motivating defect, closed); (4) SPEC rows + diagnostics
+README current (incl. F-S3a/F-S5e cargo counts, F-S5a/F-S5d
+names); (5) F-S4a end-to-end const-dynamic pin; (6) R3-family
+adjudication (every default warning names an exact proof or
+moves with a station re-point). Done-criteria (checkable):
+full `v atomic` green (283/283); every default warning
+proof-backed; compiler-only facts absent by default;
+CSS/runtime artifacts unchanged; full `pnpm agentrs t` +
+targeted `pnpm agentneo run` (NEO-SYNC-16 + re-pointed
+NEO-CSS-14/SITE/COND cases) green. Must-not-touch (map §D):
+`ATM-E-*`, stable wire codes, engine semantics, no second
+parse, no `css.ts` (Q1 DEFER), no `debug` alias, no blanket
+updates, no weakened tests. Oracle reviews firsthand, then
+calls Objective 2.
+
 ## Landings
 
 _(implementors, per slice)_
@@ -1824,7 +2004,28 @@ one coupled proof join; coherence over fan-out. Phase: READ→DESIGN.)_
 
 ### S5 backchannel
 
-_(placeholder — slice5 crew)_
+_(slice5 crew, live 2026-09-20 — single crew; nested workers over disjoint pieces ONLY (Rust plumbing vs Neo printer vs station wiring — policy partition + 07 stay with the lead). Phase: READ.)_
+
+- O7-R5 ledger move APPLIED first (mechanical, oracle-ordered): R6 row moved to userspace after R5 with the exact O7 text; counts userspace 5→6 / compiler 91→90 / C3 (6)→(5); userspace intro "All five"→"All six" (both); §Notes R6 line gains "(S4: moved to userspace — O7 R5)". C3 header's "none is a miss" now holds for all 5. Touched: `docs/missions/error-correct-ledger.md` only.
+- READ done; DESIGN LOCKED (lead). Mechanism = end-of-compile partition in `compile()` AFTER proof (facts intact): every Compiler-classified fact removes its re-derived legacy line from default (covered-sink removals no-op — proof already took them) and, only when `logs` requests it, renders onto `compilerDiagnostics`. No push-time routing, zero threading through phases. Channel renders: Exact/Dynamic (NEW positioned telemetry via a `SourceCatalog` built from `analysis.sources` in `compile()` scope — no assembly threading), Extract/Harvest (policy re-render, byte-identical incl. covered sinks), R7-false resolve (policy re-render). Default removals are 1:1 fact-identified (S4 `remove_line` pattern) + one location-aware R7-false echo sweep (SITE-38 shows a `false` echo dupe with no fact — verified in goldens).
+- Policy table (lead owns, LANDED in `policy/mod.rs` + S5 pin tests): Compiler = Exact/Dynamic/ExtractOutcome/ExtractNote/Harvest/R7-false-reject; Userspace = ExistingDiagnostic/other-resolve/Host. SCOPING (for oracle): R8–R11 passthroughs, R3 advisory, H1, S/G stay default — deferred token-passthrough/host policy (S1 quarantine precedent) + 13 pins R9 default + no S5 station re-points them. Unproven non-false rejects stay (S4 conservative). R7-false moves (F6/E9 design executes here; G7 message shape differs so no sweep collision — verified).
+- S3c migration collapses to 6 helper edits (ExpressionWalk/ObjectWalk/ExtractContext × warn/info — all ~60 sites flow through them; all three carry `session` already): report `DiagnosticFact::ExtractNote{location,severity,code,message}` alongside the unchanged push. Carried-message (not structured details): these 60 bespoke sentences are compiler-verbatim transcript; restructuring risks byte drift for zero behavioral gain — logged as deliberate.
+- New codes: `ATM-I-EXPECTED-LOOKUP` + `ATM-I-DYNAMIC-SLOT` (info; new observation classes need wire codes — reuse would break the harder rule; S4 MissingStylePlan precedent). Exact message spells `` `prop:value` `` bare-string (08 wants `color:red`) + five-tuple; Dynamic names prop + shape. Render messages are f(key/prop/shape) ONLY (no surface — 12 parity), positioned via catalog (12/14).
+- End-state contract: S5 greens 07/08/11/12/14 + NEO-SYNC-16 + keeps 09/10/13 green; all other reds are intended channel-move drift (removal-only of channel lines) owned by S6's audit rewrite (doc Slice 6 bullet 1) — S5 files a machine-verified drift report, NOT 46 golden rewrites. S5's O7 criteria conspicuously omit a suite-total clause; the brief orders a drift report. 07's guard got the E8-class correction (re-point at opt-in; same unsatisfiable-as-written shape as 11). NEO-CSS-14 + neo SITE/COND cases pinning default diagnostics (SITE-06/21/23/24/25/26/27, COND-16, CSS-14) will drift — S6 re-points, S5 does not touch (out of dispatch).
+- Plumbing: frozen-TS `LogChannel` + `logs?`/`compilerDiagnostics?` → napi `logs: Option<Vec<String>>` (single word, `include` precedent — no alias) → inner `CompileRequest.logs` + forgiving `wants_compiler_logs()` (unknown channels ignored = Q2 additive evolution) → `CompileResult.compiler_diagnostics: Option` (skip_serializing None). Neo: config `logs?` + strict validator + structural seam types (dist-trails-source `include` precedent) + `[neo] compiler` printer (own `console.warn`, userspace collapse untouched) + NEO-SYNC-16 + sync.test.ts unit. `debug` untouched.
+- Fan-out: worker R (Rust plumbing) + worker N (neo) spawned in parallel; worker S (08/11/12/14 + outputs) after R lands; lead keeps policy + 07 + integration + drift report.
+- Worker N LANDED (READY-PENDING-BINARY): all 7 items — config `LogChannel`+`logs?`, strict validator + tests (16/16 green), structural seam types, `logs` threading + `[neo] compiler` one-call printer (userspace collapse byte-identical), sync.test.ts opt-in/isolation units, NEW NEO-SYNC-16 (threading/printer/isolation spec). `agentneo q` 0 errors, tsc clean. sync.test.ts 17/18 + NEO-SYNC-16 red ONLY on zero compiler calls (S4 binary still in place — R mid-landing); threading verified on disk (`logs:['compiler']` 7th key); SYNC-04/11 no-regression PASS. Deviations: dead-branch fixture via const (Biome noConstantCondition; same DeadArm), q over authored files only (gate walks world/.reference-ui), no third probe. Lead re-verifies after R's binary.
+- Worker R LANDED: all 11 items — frozen-TS/js/napi/inner plumbing, 2 codes (table 45), ExtractNote, SourceCatalog, 6 S3c helpers, policy/analysis renders, channels/mod+render partition + echo sweep, 9 E8-class Rust re-pins. `c atomic` 453/453, 09/10 green on fresh binding, full suite 175/61 all-diagnostics-drift (red list recorded). Deviations: assembly +1 (exhaustive literal), mod.rs re-export, channels/ split (365 gate), `traced.clone()` (single-lifetime unify — lead reviewed, sound + minimal). Handoff: `v` does not rebuild stale addon — `b` first.
+- Lead review of R's diff (line-by-line): SOUND, matches design. Two findings: (1) R's "compile 81 before/now" claim was wrong — S5 took `compile` 79→87, a NEW q warning. FIXED by lead: pass `&analysis.sources` into `partition_channels` (catalog built inside) + 1-line clone comment + 2 genuinely-stale S2/S3 comments fixed → 80, q clean. (2) `Diagnostic` import scare in walk/object helpers — false alarm (used in `Vec<Diagnostic>` fields). Lead re-ran `c atomic` firsthand: 453/453, zero warnings. Spawned worker S (08/11/12/14 + SPEC).
+- Worker S LANDED: 08/12 green with NO spec change (hinges pass as-is); 11 E8 rewrite + 14 R2 re-point (pure re-points, identical assertions); outputs for all 4 via targeted per-station `--update-goldens` (zero collateral); 09/10/13 green untouched. SPEC: firsthand recount found the table stale (true pre-state 215/7 DIAG 9/5, not 212/9 7/7 — S3/S4 flipped without count updates) → wrote true 219/3 DIAG 14|13|1 (lead verified: 219 `[x]` + 3 `[ ]` by grep). Full suite at S-landing: 226/57.
+- Lead landed 07: golden-missing-only baseline → targeted output/ write (default `[]`, zero collateral) → 07 GREEN. SPEC 07 flip → 220/2, DIAG 14|14|0, 0 red shells. Re-verified N firsthand on the fresh binary: sync.test.ts 18/18, NEO-SYNC-16 PASS (+ lead-added positive ATM-I-DEAD-BRANCH pin — PASS), SYNC-04/11 no-regression PASS, `agentneo q` 0 errors (1 pre-existing length warn on sync.test.ts).
+- Drift audit (lead, `/tmp/s5-audit.mts` — throwaway, harness-parity path normalization): all 56 red stations CLEAN — styles.css + css.json byte-identical everywhere (zero semantic drift); default == golden minus moved lines only (order-preserved, no new lines); every removed line round-trips to the requested channel; channel carries no foreign codes; field absent unrequested. 4 UNKNOWN-PROPERTY stations adjudicated extract-site by wants-absence probe (0 wants + 0 plans for all 7 props). Final suite: 227/56, red set == audited set exactly. Neo leg: NEO-CSS-14 FAILs exactly at `two dynamic-site warnings, got []` (intended drift, S6 re-points; SITE/COND cases same standing, untouched).
+- Lead q-fix #2: S5's helper delta pushed walk/mod.rs 341→364 — investigated, the flag is pre-existing walk_fallback cog-27 (untouched by S5), NOT length; still, lead collapsed the 6 report literals into `adapters::extract::extract_note` (4-arg ctor + pin test) to minimize growth (walk 356, extract/mod 512 — both warnings pre-existing instances: HEAD 493-length / walk_fallback-cog). Final: `c atomic` 454/454 zero warnings; q 0 violations (2 pre-existing warns); 8/8 criteria stations green in one run (07/08/09/10/11/12/13/14).
+- **S5 LANDING COMPLETE (lead integrated + verified firsthand).** Done-criteria: 07 GREEN (silence + opt-in + isolation, `[]` default); NEO-SYNC-16 PASS + sync.test.ts 18/18 + validate 16/16; 08/12 hinges green as-written; E8 corrected (11); 14-pin re-pointed (themeColor 3:54 on channel); S3c migrated as one (6 helpers + ExtractNote); 09/10/13 green; q/c green. Proof output untouched (09's warning, 6 replacements, 2 causeless — all userspace; audit proves zero kept-line drift). Touched-file census: lead 5 (ledger, policy/mod, 07 spec+output, log) + R 17 + N 13 + S 8 + SPEC — full list in the crew return. Untracked NEO-SYNC-16 world/.reference-ui is gitignored build dirt. Probes at /tmp/s5-audit.mts, /tmp/s5-ambig.mts, /tmp/s5-debug.mts (lead's; R's at /tmp/s5-probe.test.ts).
+
+### S6 audit
+
+_(placeholder — slice6 crew)_
 
 ## Architect rulings
 
@@ -1858,6 +2059,10 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-20 03:20 tick: S4 ALIVE (interim note: READ→DESIGN, single-inline by choice; proof/plans.rs + proof/render + policy/proof + harvest adapters writing). Threshold lifted. Peer files untouched. 17/18 terminal, no deadlock. Next: S4 landing → oracle review → Slice 5.
 - 2026-09-20 03:40 tick: S4 BUILDING (proof module growing: plans/lines/rejects/render/sinks + policy/proof; session rendering in assembly::finish; interim notes detailed). Peer files untouched. 17/18 terminal, no deadlock. Watch items for oracle review: 5 existing diagnostics.json goldens modified (COND-12/13, GHOST-04, LEAF-07, UNIT-02) + codes.rs (new warning code?) — intended proof output vs drift to adjudicate. Next: S4 landing → oracle review → Slice 5.
 - 2026-09-20 watch: S4 CLEAR on oracle O7 word (09/10 green; 08-open hinge-only per O6 caveat; 14-pin E8-class → S5 re-points; 278/5; cargo 439/0; q clean; 16 goldens audited intended; R6 RULED userspace — applied via S5 crew first step per captain role; F-G1b sound, F-S4a pin → S6). Committed S4 checkpoint (peer files excluded). Dispatched single Slice-5 crew (compiler backchannel, 07 green + NEO-SYNC-* + E8/14-pin corrections). Next: oracle review of S5 landing → Slice 6.
+- 2026-09-20 04:05 tick: S5 ALIVE (interim note posted; O7-R5 R6 ledger move applied first, ledger dirty = S5's). Peer files untouched. 20/21 terminal, no deadlock. Next: S5 landing → oracle review → Slice 6.
+- 2026-09-20 04:20 tick: S5 BUILDING (design locked: end-of-compile partition post-proof; policy table landed; Rust+NAPI+contracts+Neo printer files dirty; interim notes detailed). Peer files untouched. 20/21 terminal, no deadlock. Watch items for oracle review: ATM-DIAG-07/spec.ts modified (correction vs weakening?) + 2 new info codes (ATM-I-EXPECTED-LOOKUP/DYNAMIC-SLOT — table both directions + doc blessing?). Next: S5 landing → oracle review → Slice 6.
+- 2026-09-20 04:40 tick: S5 INTEGRATING (workers N+R landed, lead reviewed R line-by-line + fixed 1 q warning itself, worker S on 08/11/12/14+SPEC; 40 paths, all in scope; transient 175/61 all-diagnostics drift expected mid-channel-move, S6 owns rewrites). Peer files untouched. 20/21 terminal, no deadlock. Next: S5 landing → oracle review → Slice 6.
+- 2026-09-20 watch: S5 CLEAR on oracle O8 word (8/8 criteria stations green; 227/56 with red == audited 56 exactly; cargo 454/0; q clean; neo NEO-SYNC-16 + 18/18 + 16/16 green; corrections ruled equal-or-stricter; 2 info codes doc-consistent; R3 families stay default pending S6 adjudication). Committed S5 checkpoint (peer files excluded). Dispatched single Slice-6 crew (audit + census + Splitter proof — the final slice). Next: oracle review of S6 landing → Objective 2 COMPLETE.
 - 2026-09-20 watch: S4 review oracle DIED while writing O7 (verification complete per final vitals — treat as UNVERIFIED priors: 09/10 green, 08 hinge-only red, 278/5, cargo 439/0, q clean, S4-CLEAR-with-08-open, R6→userspace). Replacement oracle dispatched with incremental-write orders (verdict+evidence, then rulings, then S5 spec — separate edits). Next: O7 lands → commit S4 → Slice 5.
 
 ## Useful

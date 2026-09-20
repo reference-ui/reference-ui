@@ -5,10 +5,11 @@
  */
 import type {
   EvaluatedSystemSpec,
+  LogChannel,
   NativeCompileRequest,
 } from '../../../contracts/types.js'
 
-export type { EvaluatedSystemSpec, NativeCompileRequest }
+export type { EvaluatedSystemSpec, LogChannel, NativeCompileRequest }
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'
 
@@ -52,6 +53,12 @@ export interface CompileRequest {
    * empty preserves the legacy scan-all behavior.
    */
   include?: string[]
+  /**
+   * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
+   * 'compiler', the result also carries `compilerDiagnostics`. Unknown
+   * channels are ignored so channels evolve additively.
+   */
+  logs?: LogChannel[]
 }
 
 /** Either wire shape `compile()` accepts: legacy `{ baseSystem, ... }` or frozen `{ schemaVersion: 1, spec, ... }`. */
@@ -122,4 +129,6 @@ export interface CompileResult {
   atomCount?: number
   /** Component names StyleTrace discovered in this compile (ATM-SEAM-05). */
   tracedJsxHosts?: string[]
+  /** Opt-in compiler backchannel (S5): present only when requested via `logs`. */
+  compilerDiagnostics?: Diagnostic[]
 }

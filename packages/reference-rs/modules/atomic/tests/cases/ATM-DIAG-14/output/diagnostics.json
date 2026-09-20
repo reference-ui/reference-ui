@@ -1,0 +1,16 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-TRACE-SKIPPED",
+    "message": "StyleTrace: failed to parse input/src/modes/broken.jsx: 1 parse error(s)",
+    "file": "input/src/modes/broken.jsx"
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-PARSE",
+    "message": "Unexpected token",
+    "file": "input/src/modes/broken.jsx",
+    "line": 4,
+    "column": 1
+  }
+]

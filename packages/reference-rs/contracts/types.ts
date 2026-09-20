@@ -89,6 +89,8 @@ export interface Diagnostic {
   source?: string
 }
 
+export type LogChannel = 'compiler'
+
 export interface CompileResult {
   stylesheet: string
   portableStylesheet: string
@@ -97,6 +99,7 @@ export interface CompileResult {
   wants?: unknown[]
   atomCount?: number
   tracedJsxHosts?: string[]
+  compilerDiagnostics?: Diagnostic[]
 }
 
 export interface PortableCssChunk {
@@ -131,6 +134,12 @@ export interface NativeCompileRequest {
    * empty preserves the legacy scan-all behavior.
    */
   include?: string[]
+  /**
+   * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
+   * 'compiler', the result also carries `compilerDiagnostics`. Unknown
+   * channels are ignored so channels evolve additively.
+   */
+  logs?: LogChannel[]
 }
 
 export interface OutputInventory {

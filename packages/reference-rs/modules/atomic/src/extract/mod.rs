@@ -43,7 +43,11 @@ use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use crate::atom::Want;
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticsSession};
+use crate::diagnostics::adapters::extract::extract_note;
+use crate::diagnostics::{
+    line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
+    DiagnosticsSession,
+};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 use expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
@@ -153,22 +157,37 @@ impl<'a> ExtractContext<'a> {
 
     /// Report a diagnostic warning at the offending node's span.
     pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self
             .source
             .and_then(|source| line_col(source, span.start))
             .unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
         self.diagnostics
-            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
+            .push(location.warning(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
     }
 
     /// Report an info diagnostic at the offending node's span.
     pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self
             .source
             .and_then(|source| line_col(source, span.start))
             .unzip();
-        self.diagnostics
-            .push(Diagnostic::info(code, message.into()).with_location(self.file, line, column));
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
+        self.diagnostics.push(location.info(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Info, code, message));
     }
 
     /// Record the missing-graph error once per file. With no hosts

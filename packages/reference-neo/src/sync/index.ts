@@ -55,6 +55,17 @@ function reportWarningDiagnostics(diagnostics: NativeDiagnostic[]): void {
   console.warn(lines.join('\n'))
 }
 
+// The compiler backchannel prints on its own console.warn call: every entry
+// the engine returned (warnings AND infos — the channel is mostly info),
+// one line each, so userspace keeps its single collapsed call untouched.
+function reportCompilerDiagnostics(entries: NativeDiagnostic[] | undefined): void {
+  if (!entries || entries.length === 0) return
+  const lines = entries.map(
+    entry => `[neo] compiler${diagnosticCodeSuffix(entry)}: ${entry.message}${diagnosticLocation(entry)}`
+  )
+  console.warn(lines.join('\n'))
+}
+
 function uniqueSorted(names: readonly string[]): string[] {
   return [...new Set(names)].sort()
 }
@@ -92,9 +103,11 @@ export async function sync(cwd: string): Promise<SyncResult> {
       sourceRoot: cwd,
       declarationRoot: cwd,
       include: config.include,
+      logs: config.logs,
     }
     const result = await compileNative(request)
     reportWarningDiagnostics(result.diagnostics)
+    reportCompilerDiagnostics(result.compilerDiagnostics)
     throwOnErrorDiagnostics(result.diagnostics)
 
     // Publish carries configured ∪ traced: hosts the engine discovered

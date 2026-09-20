@@ -109,6 +109,7 @@ impl AssembleCtx {
             recipes: recipe_tables,
             atom_count,
             traced_jsx_hosts: traced,
+            compiler_diagnostics: None,
         }
     }
 }

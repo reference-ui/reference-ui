@@ -2,18 +2,21 @@
 //!
 //! Userspace hears existing fatals plus proof-backed absent-key warnings;
 //! the compiler backchannel hears everything useful that cannot clear that
-//! bar. Today every phase pushes straight onto the default channel, so the
-//! table pins that uniform behavior; Slices 4 and 5 refine it per proof.
-//! Wording lives here too: per-family `render_*` functions own every
-//! sentence template, byte-identical to the legacy call-site strings.
+//! bar. Slice 4 joined proof over the pushed lines; Slice 5 partitions the
+//! rest behind the opt-in channel per this table. Wording lives here too:
+//! per-family `render_*` functions own every sentence template,
+//! byte-identical to the legacy call-site strings.
 
+pub(crate) mod analysis;
 mod extract;
 mod harvest;
 mod hosts;
 mod proof;
 mod resolve;
 
-use super::DiagnosticFact;
+use super::{
+    DeclarationDetail, DiagnosticFact, ResolveDetail, ResolveOutcome, ValueDetail,
+};
 
 /// The two diagnostic audiences. Severity is never used as an audience proxy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,15 +27,39 @@ pub enum Audience {
     Compiler,
 }
 
-/// Today's verdict table: every fact lands on the default channel. Slice 4
-/// keeps only proof-backed warnings here; Slice 5 moves the rest behind
-/// the opt-in compiler channel.
+/// The Slice-5 verdict table: proof-backed resolve lines stay userspace;
+/// analysis observations, extract refusals and notes, harvest telemetry,
+/// and hole-valued (`false`) resolve refusals ride the opt-in compiler
+/// channel. Resolve passthroughs/advisories, host skips, and static/global
+/// lines stay default pending the deferred token-passthrough/host policy.
 pub struct Policy;
 
 impl Policy {
-    /// The audience for one fact under the current (pre-proof) table.
-    pub fn classify(_fact: &DiagnosticFact) -> Audience {
-        Audience::Userspace
+    /// The audience for one fact under the Slice-5 table.
+    pub fn classify(fact: &DiagnosticFact) -> Audience {
+        match fact {
+            DiagnosticFact::ExistingDiagnostic(_) => Audience::Userspace,
+            DiagnosticFact::ExactLookupExpected { .. }
+            | DiagnosticFact::DynamicSlot { .. }
+            | DiagnosticFact::ExtractOutcome { .. }
+            | DiagnosticFact::ExtractNote { .. }
+            | DiagnosticFact::HarvestOutcome { .. } => Audience::Compiler,
+            DiagnosticFact::ResolveOutcome { outcome, .. } => Self::resolve_audience(outcome),
+            DiagnosticFact::HostOutcome { .. } => Audience::Userspace,
+        }
+    }
+
+    /// Resolve lines stay userspace except hole-valued `false` refusals:
+    /// runtime skips holes without querying, so they can never be a
+    /// userspace miss (ledger E9 / F6 — the (code, value) split executes
+    /// here; proof's join gate asks its own question separately).
+    fn resolve_audience(outcome: &ResolveOutcome) -> Audience {
+        match outcome {
+            ResolveOutcome::Rejected { detail, .. } if is_false_refusal(detail) => {
+                Audience::Compiler
+            }
+            _ => Audience::Userspace,
+        }
     }
 
     /// Render one extract refusal report to its final warning line.
@@ -75,13 +102,46 @@ impl Policy {
     pub fn render_causeless(key: &super::OwnedLookupKey) -> super::Diagnostic {
         proof::render_causeless(key)
     }
+
+    /// Render one expected exact lookup as compiler-channel telemetry.
+    pub fn render_expected(
+        key: &super::OwnedLookupKey,
+        location: &super::DiagnosticLocation,
+    ) -> super::Diagnostic {
+        analysis::render_expected(key, location)
+    }
+
+    /// Render one dynamic slot as compiler-channel telemetry.
+    pub fn render_dynamic(
+        prop: &str,
+        shape: super::DynamicShape,
+        location: &super::DiagnosticLocation,
+    ) -> super::Diagnostic {
+        analysis::render_dynamic(prop, shape, location)
+    }
+}
+
+/// True for a refusal of the hole value `false`: runtime skips it without
+/// querying. Only `AtomValue::Bool` builds this spelling, so `false` here
+/// is exactly the unqueryable hole (mirrors proof's join gate, which asks
+/// its own question — the two must agree that false never warns userspace).
+fn is_false_refusal(detail: &ResolveDetail) -> bool {
+    matches!(
+        detail,
+        ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::InvalidValue {
+            value,
+            ..
+        })) if value.as_ref() == "false"
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::diagnostics::{
-        Diagnostic, DiagnosticCode, DynamicShape, SourceId, SourceSite, StyleSurfaceKind,
+        Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DynamicShape,
+        ExtractDetail, ExtractOutcome, LeafDetail, NameDetail, ResolveOutcome, SourceId,
+        SourceSite, StyleSurfaceKind, TokenDetail,
     };
     use oxc_span::Span;
 
@@ -95,27 +155,110 @@ mod tests {
         }
     }
 
+    fn key() -> crate::diagnostics::OwnedLookupKey {
+        crate::diagnostics::OwnedLookupKey {
+            system: "lib".into(),
+            when: Vec::new(),
+            prop: "color".into(),
+            value: serde_json::json!("red"),
+            important: false,
+        }
+    }
+
+    fn invalid_reject(value: &str) -> ResolveOutcome {
+        ResolveOutcome::Rejected {
+            code: DiagnosticCode::InvalidCssValue,
+            detail: ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::InvalidValue {
+                prop: "display".into(),
+                value: value.into(),
+            })),
+        }
+    }
+
     #[test]
-    fn every_fact_is_default_channel_until_proof_lands() {
+    fn fatals_and_proof_backed_lines_stay_userspace() {
         let facts = [
             DiagnosticFact::ExistingDiagnostic(Diagnostic::error(
                 DiagnosticCode::ParseError,
                 "x",
             )),
+            DiagnosticFact::ResolveOutcome {
+                location: DiagnosticLocation::default(),
+                key: Some(key()),
+                outcome: invalid_reject("true"),
+            },
+            DiagnosticFact::ResolveOutcome {
+                location: DiagnosticLocation::default(),
+                key: Some(key()),
+                outcome: ResolveOutcome::Passthrough {
+                    code: DiagnosticCode::UnknownTokenPath,
+                    detail: ResolveDetail::Token(TokenDetail::UnknownTokenPath {
+                        path: "ui.ghost".into(),
+                    }),
+                },
+            },
+            DiagnosticFact::ResolveOutcome {
+                location: DiagnosticLocation::default(),
+                key: None,
+                outcome: ResolveOutcome::Advisory {
+                    code: DiagnosticCode::UnknownCondition,
+                    detail: ResolveDetail::Declaration(DeclarationDetail::Name(
+                        NameDetail::Condition { name: "_x".into() },
+                    )),
+                },
+            },
+            DiagnosticFact::HostOutcome {
+                file: None,
+                message: "trace skipped".into(),
+            },
+        ];
+        for fact in &facts {
+            assert_eq!(Policy::classify(fact), Audience::Userspace);
+        }
+    }
+
+    #[test]
+    fn observations_refusals_and_false_rejects_ride_the_compiler_channel() {
+        let facts = [
+            DiagnosticFact::ExactLookupExpected {
+                site: site(),
+                key: key(),
+            },
             DiagnosticFact::DynamicSlot {
                 site: site(),
                 shape: DynamicShape::UnknownValue,
             },
+            DiagnosticFact::ExtractOutcome {
+                location: DiagnosticLocation::default(),
+                prop: "color".into(),
+                when: Vec::new(),
+                outcome: ExtractOutcome::Refused {
+                    code: DiagnosticCode::DynamicIdentifier,
+                    detail: ExtractDetail::Leaf(LeafDetail::Generic),
+                    sink_recorded: true,
+                },
+            },
+            DiagnosticFact::ExtractNote {
+                location: DiagnosticLocation::default(),
+                severity: DiagnosticSeverity::Warning,
+                code: DiagnosticCode::UnfoldableSpread,
+                message: "spread".into(),
+            },
             DiagnosticFact::HarvestOutcome {
-                location: crate::diagnostics::DiagnosticLocation::default(),
+                location: DiagnosticLocation::default(),
                 prop: "color".into(),
                 when: Vec::new(),
                 minted: 2,
                 offered: Vec::new(),
             },
+            DiagnosticFact::ResolveOutcome {
+                location: DiagnosticLocation::default(),
+                key: Some(key()),
+                outcome: invalid_reject("false"),
+            },
         ];
         for fact in &facts {
-            assert_eq!(Policy::classify(fact), Audience::Userspace);
+            assert_eq!(Policy::classify(fact), Audience::Compiler);
         }
     }
 }
