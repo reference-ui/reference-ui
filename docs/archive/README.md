@@ -15,3 +15,7 @@ Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/
 | [TEST_MIGRATION.md](./TEST_MIGRATION.md) | Old unit/e2e → matrix package split. Matrix coverage lives under `matrix/`. |
 | [STYLED-SYSTEM-MIGRATION.md](./STYLED-SYSTEM-MIGRATION.md) | Core `styled/` → CLI/fragments move. Historical. |
 | [css-in-js-extraction.md](./css-in-js-extraction.md) | Panda vs WyW extraction research. |
+| [VOYAGE-INTO-ABYSS.md](./VOYAGE-INTO-ABYSS.md) | Star-captain standing orders for the 2026-09-19 overnight voyage. Superseded by tonight's brief. |
+| [VOYAGE-LOG-1.md](./VOYAGE-LOG-1.md) | Voyage log, Objective 1 (token errors). Complete. |
+| [VOYAGE-LOG-2.md](./VOYAGE-LOG-2.md) | Voyage log, Objective 2 (Operation Error Correct). Complete. |
+| [VOYAGE-LOG-3.md](./VOYAGE-LOG-3.md) | Voyage log, Objective 3 (overnight doom cycle). In progress when archived. |
