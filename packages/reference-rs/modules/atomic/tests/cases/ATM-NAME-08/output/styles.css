@@ -586,6 +586,10 @@
   .\@reference-ui\/lib__c_\İnk { color: İnk; }
   .\@reference-ui\/lib__content_\"a\d b\" { content: "a\d b"; }
   .\@reference-ui\/lib__w_1r { width: var(--spacing-root); }
+  [data-two] .\@reference-ui\/lib__2\:c_blue { color: blue; }
+  [data-two] .\@reference-ui\/lib__2\:c_green { color: green; }
+  [data-ten] .\@reference-ui\/lib__10\:c_red { color: red; }
+  [data-ten] .\@reference-ui\/lib__10\:c_yellow { color: yellow; }
   @container (min-width: 768px) {
     .\@reference-ui\/lib__md\:w_2r { width: calc(2 * var(--spacing-root)); }
   }

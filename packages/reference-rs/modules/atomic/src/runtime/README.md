@@ -187,7 +187,7 @@ compiled case per divergence (`ATM-NAME-08`).
 | `str::trim` (every pre-trim site) | `String#trim()` | same two code points | L2 (= trim with L1) |
 | `sanitize_class_value` 3-char map (`escape.rs`) | `.replace(/\s/g, '_')` | `\r` and NBSP survive in Rust, notably inside quotes | L6 three-character map |
 | `to_ascii_lowercase` / `eq_ignore_ascii_case` | `.toLowerCase()` | non-ASCII (`İ`, `ẞ`, final sigma) | L5 ASCII-only fold |
-| `serde_json::Map` iteration (`builder.rs`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in `atomic/Cargo.toml` | insertion order both sides |
+| `serde_json::Map` iteration (`builder.rs`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in `atomic/Cargo.toml` — and never for 2+ integer-like keys in non-ascending author order: V8 `[[OwnPropertyKeys]]` ascends them at object creation, before any namer code runs (doom-5 substrate limit) | insertion order both sides; the differential carves integer-keyed members as sets, order-pinned within (witness `ATM-NAME-08` intOrder) |
 | `IndexMap` (`font/family.rs` extras) | object spread / key order | agrees only via ordered pairs + insert-ordered map with overwrite-keeps-position | `fonts[].css` pairs; interpreter uses `Map` |
 | quote machines ×2 | one shared "quote-aware" helper | collapse is alternation-only with **no escapes**; `has_parent_reference` has backslash escapes + independent quote flags — different inputs, different outputs | **do not unify**: two goldens |
 
@@ -200,4 +200,8 @@ carves exactly refusal-shaped-plus-absent extras: a namer-side surplus
 is allowed only when its stem is a token-refusal shape — a braced
 (`{…}`) pair or a braceless brace-refusal tail matching the oracle's
 starts-with-`{`-and-ends-with-`}` refusal predicate (doom-4 T1, R4/D4)
-— and its class is absent from the emitted sheet.
+— and its class is absent from the emitted sheet. Author order for 2+
+integer-like per-prop keys is likewise not inherited: V8 destroys it at
+object creation, so the namer correctly emits the received (V8) order
+and the differential compares those members as sets (doom-5 key-order
+report, `.agents/doom/logs/`, 2026-09-20).

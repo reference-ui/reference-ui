@@ -18,7 +18,7 @@ use crate::resolve::font::{family, weight};
 use crate::resolve::shorthands::{border, parser};
 
 /// Rules version both namers pin: bump whenever a naming rule changes a class.
-pub const NAMER_RULES_VERSION: u32 = 5;
+pub const NAMER_RULES_VERSION: u32 = 6;
 
 /// The closed, O(props + conditions + fonts) data both namers read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

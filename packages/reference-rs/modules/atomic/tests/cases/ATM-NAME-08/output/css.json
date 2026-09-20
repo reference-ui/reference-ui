@@ -1,4 +1,8 @@
 {
+  "10:color:red": "@reference-ui/lib__10:c_red",
+  "10:color:yellow": "@reference-ui/lib__10:c_yellow",
+  "2:color:blue": "@reference-ui/lib__2:c_blue",
+  "2:color:green": "@reference-ui/lib__2:c_green",
   "borderTopColor:red": "@reference-ui/lib__bd-t-c_red",
   "borderTopStyle:solid": "@reference-ui/lib__bd-t-s_solid",
   "borderTopWidth:3px": "@reference-ui/lib__bd-t-w_3px",

@@ -1,6 +1,6 @@
 {
   "function": "asciiLower",
-  "rulesVersion": 5,
+  "rulesVersion": 6,
   "cases": [
     {
       "input": "SOLID",
