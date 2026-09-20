@@ -1,4 +1,6 @@
 {
   "_dark:_hover:bg:n300": "condition-prefix__dark:hover:bg_n300",
-  "_hover:bg:n300": "condition-prefix__hover:bg_n300"
+  "_hover:bg:n300": "condition-prefix__hover:bg_n300",
+  "_x:color:n300": "condition-prefix__x:c_n300",
+  "md:color:n300": "condition-prefix__md:c_n300"
 }

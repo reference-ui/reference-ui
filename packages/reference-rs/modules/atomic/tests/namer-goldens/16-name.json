@@ -1,6 +1,6 @@
 {
   "function": "name",
-  "rulesVersion": 3,
+  "rulesVersion": 4,
   "cases": [
     {
       "input": {
@@ -960,6 +960,147 @@
       "input": {
         "when": [
           "tabletDown"
+        ],
+        "prop": "color",
+        "value": "red",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "_x": "red",
+          "md": "blue"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "x:color",
+          "className": "@reference-ui/lib__x:c_red"
+        },
+        {
+          "slot": "color@md",
+          "className": "@reference-ui/lib__md:c_blue"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [
+          "_x"
+        ],
+        "prop": "color",
+        "value": "red",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "x:color",
+          "className": "@reference-ui/lib__x:c_red"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "outline",
+        "value": {
+          "$token": {
+            "path": "none",
+            "value": "#000"
+          }
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "outline",
+          "className": "@reference-ui/lib__outline_none"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "outline",
+        "value": {
+          "$token": {
+            "path": "colors.red.500",
+            "value": "#000"
+          }
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "outline",
+          "className": "@reference-ui/lib__outline_colors.red.500"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": {
+          "$token": {
+            "path": "0",
+            "value": "#000"
+          }
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "border",
+          "className": "@reference-ui/lib__bd_0"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": {
+          "$token": {
+            "path": "inherit",
+            "value": "#000"
+          }
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "border",
+          "className": "@reference-ui/lib__bd_inherit"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "aToxDown": "red",
+          "md": "blue"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "color@md",
+          "className": "@reference-ui/lib__md:c_blue"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [
+          "aToxDown"
         ],
         "prop": "color",
         "value": "red",

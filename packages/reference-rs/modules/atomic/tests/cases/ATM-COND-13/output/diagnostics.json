@@ -22,5 +22,13 @@
     "file": "input/src/App.tsx",
     "line": 12,
     "column": 30
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "Unknown condition \"aToxDown\"",
+    "file": "input/src/App.tsx",
+    "line": 15,
+    "column": 31
   }
 ]

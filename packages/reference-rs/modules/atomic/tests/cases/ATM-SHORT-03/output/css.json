@@ -2,5 +2,7 @@
   "border:borders.card": "@reference-ui/lib__bd_borders.card",
   "border:inherit": "@reference-ui/lib__bd_inherit",
   "border:none": "@reference-ui/lib__bd_none",
-  "borderWidth:0px": "@reference-ui/lib__bd-w_0px"
+  "borderWidth:0px": "@reference-ui/lib__bd-w_0px",
+  "outline:colors.red.500": "@reference-ui/lib__outline_colors.red.500",
+  "outline:none": "@reference-ui/lib__outline_none"
 }

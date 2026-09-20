@@ -44,6 +44,23 @@ const spec: AtomicCaseSpec = {
         d => d.severity === 'warning' && d.message.includes('smTotablet')
       )
     ).toBe(true)
+    // Range dispatch: the `aToxDown` member drops with no between
+    // fallthrough while the plan survives carrying the full object
+    // value, so the runtime namer must drop it too (NEO-NAMER-01).
+    const dispatchPlan = result.stylePlans.find(
+      p =>
+        p.prop === 'outlineColor' &&
+        (p.value as Record<string, string>)?.lg === 'blue.500'
+    )
+    expect(dispatchPlan?.value).toEqual({ aToxDown: 'red.500', lg: 'blue.500' })
+    expect(dispatchPlan?.declarations).toHaveLength(1)
+    expect(dispatchPlan?.declarations[0]?.slot).toBe('outlineColor@lg')
+    expect(sheet).not.toContain('aToxDown')
+    expect(
+      result.diagnostics.some(
+        d => d.severity === 'warning' && d.message.includes('aToxDown')
+      )
+    ).toBe(true)
   },
 }
 

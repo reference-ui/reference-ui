@@ -6,6 +6,8 @@
 //! macro emits, runtime-owned drops) and read every literal from the same
 //! constants the expansion passes consult, so the table cannot drift from
 //! the code. Guards evaluate on the rendered value; first match runs.
+//! Steps behind the `extract_raw_val` gate carry `scalar`, so token, bool,
+//! and null values fall through exactly like the oracle's `?`.
 
 use serde::{Deserialize, Serialize};
 
@@ -23,6 +25,11 @@ fn trimmed_by_default() -> bool {
 /// Skip the trim flag on the wire when it holds the default.
 fn is_trimmed(trimmed: &bool) -> bool {
     *trimmed
+}
+
+/// Skip the scalar flag on the wire when the step is kind-open.
+fn is_kind_open(scalar: &bool) -> bool {
+    !scalar
 }
 
 /// Longhand shape a step fans out to.
@@ -93,6 +100,9 @@ pub enum LowerStep {
         /// Guard evaluated on the rendered value, if any.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         on: Option<Guard>,
+        /// String/number values only; absent means every kind runs.
+        #[serde(default, skip_serializing_if = "is_kind_open")]
+        scalar: bool,
         /// Prop plus literal-or-`$` pairs in emit order.
         emit: Vec<(String, String)>,
     },
@@ -110,6 +120,9 @@ pub enum LowerStep {
         /// Guard evaluated on the rendered value, if any.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         on: Option<Guard>,
+        /// String/number values only; absent means every kind runs.
+        #[serde(default, skip_serializing_if = "is_kind_open")]
+        scalar: bool,
         /// Always true on the wire.
         keep: bool,
     },
@@ -242,6 +255,7 @@ fn trio_steps(canon: &str, longhands: &[&str]) -> Vec<LowerStep> {
 fn bool_true_macro_step() -> LowerStep {
     LowerStep::Emit {
         on: Some(Guard::Named(NamedGuard::BoolTrue)),
+        scalar: false,
         emit: BORDER_TRUE_MACRO
             .iter()
             .map(|(prop, value)| ((*prop).to_string(), (*value).to_string()))
@@ -255,6 +269,8 @@ fn zero_emit_step(width_prop: &str) -> LowerStep {
         on: Some(Guard::In {
             set: "zeroBorder".to_string(),
         }),
+        // Behind `extract_raw_val`: token, bool, and null never emit here.
+        scalar: true,
         emit: vec![(
             width_prop.to_string(),
             border::ZERO_BORDER_WIDTH.to_string(),
@@ -269,6 +285,8 @@ fn outline_none_step(canon: &str) -> LowerStep {
             eq: "none".to_string(),
             trimmed: true,
         }),
+        // Behind `extract_raw_val`: a token rendering `none` passes through.
+        scalar: true,
         emit: vec![
             (canon.to_string(), border::OUTLINE_NONE_VALUE.to_string()),
             (
@@ -283,6 +301,8 @@ fn outline_none_step(canon: &str) -> LowerStep {
 fn whole_keep_step() -> LowerStep {
     LowerStep::Keep {
         on: Some(Guard::Named(NamedGuard::Whole)),
+        // Behind `extract_raw_val` with the guarded emits above.
+        scalar: true,
         keep: true,
     }
 }
@@ -314,6 +334,7 @@ fn insert_macro_steps(lowerings: &mut std::collections::BTreeMap<String, Vec<Low
         "size".to_string(),
         vec![LowerStep::Emit {
             on: None,
+            scalar: false,
             emit: size::EMIT_PROPS
                 .iter()
                 .map(|prop| ((*prop).to_string(), RENDERED_VALUE.to_string()))
@@ -325,6 +346,7 @@ fn insert_macro_steps(lowerings: &mut std::collections::BTreeMap<String, Vec<Low
         "textGradient".to_string(),
         vec![LowerStep::Emit {
             on: None,
+            scalar: false,
             emit: vec![
                 (gradient::IMAGE_PROP.to_string(), RENDERED_VALUE.to_string()),
                 (
@@ -362,10 +384,14 @@ fn container_steps() -> Vec<LowerStep> {
     vec![
         LowerStep::Emit {
             on: Some(Guard::Named(NamedGuard::BoolTrue)),
+            // Kind-open: `container::lower` reads every value kind.
+            scalar: false,
             emit: bare.clone(),
         },
         LowerStep::Emit {
             on: Some(Guard::Named(NamedGuard::Empty)),
+            // Kind-open: the empty test runs on every rendering.
+            scalar: false,
             emit: bare.clone(),
         },
         LowerStep::Emit {
@@ -374,10 +400,13 @@ fn container_steps() -> Vec<LowerStep> {
                 // Untrimmed: `container::lower` compares the raw rendering.
                 trimmed: false,
             }),
+            // Kind-open: `false`, `null`, and tokens test `true` too.
+            scalar: false,
             emit: bare,
         },
         LowerStep::Emit {
             on: None,
+            scalar: false,
             emit: named,
         },
     ]

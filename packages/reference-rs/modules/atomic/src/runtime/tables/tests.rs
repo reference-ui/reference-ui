@@ -9,9 +9,9 @@ use super::*;
 
 #[test]
 fn rules_version_matches_js_pin() {
-    assert_eq!(NAMER_RULES_VERSION, 3);
+    assert_eq!(NAMER_RULES_VERSION, 4);
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.rules_version, 3);
+    assert_eq!(tables.rules_version, 4);
 }
 
 #[test]
@@ -135,10 +135,13 @@ fn breakpoint_widths_ship_declared_only() {
 #[test]
 fn conditions_union_system_and_presets() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+    // Authored keys verbatim plus their twins, both preset spellings.
+    assert!(tables.conditions.contains(&"_hover".to_string()));
     assert!(tables.conditions.contains(&"hover".to_string()));
+    assert!(tables.conditions.contains(&"_osDark".to_string()));
     assert!(tables.conditions.contains(&"osDark".to_string()));
+    assert!(tables.conditions.contains(&"_dark".to_string()));
     assert!(tables.conditions.contains(&"dark".to_string()));
-    assert!(!tables.conditions.iter().any(|name| name.starts_with('_')));
     let mut sorted = tables.conditions.clone();
     sorted.sort();
     assert_eq!(tables.conditions, sorted);

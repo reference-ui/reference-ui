@@ -1672,6 +1672,8 @@
     "padded": "640 ",
     "hex": "0x280",
     "pxname": "640px",
+    "a": "auto",
+    "xDown": "200",
     "empty": ""
   }
 }

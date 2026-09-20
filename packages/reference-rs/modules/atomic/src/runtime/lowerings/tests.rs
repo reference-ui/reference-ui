@@ -77,8 +77,8 @@ fn border_steps_carry_macro_first_and_border_style() {
         value,
         serde_json::json!([
             {"on": "bool:true", "emit": [["borderWidth", "1px"], ["borderStyle", "solid"]]},
-            {"on": {"in": "zeroBorder"}, "emit": [["borderWidth", "0px"]]},
-            {"on": "whole", "keep": true},
+            {"on": {"in": "zeroBorder"}, "scalar": true, "emit": [["borderWidth", "0px"]]},
+            {"on": "whole", "scalar": true, "keep": true},
             {"longhands": ["borderWidth", "borderStyle", "borderColor"], "shape": "trio", "style": "border"},
         ])
     );
@@ -91,9 +91,9 @@ fn outline_steps_carry_ring_and_outline_style() {
     assert_eq!(
         value,
         serde_json::json!([
-            {"on": {"in": "zeroBorder"}, "emit": [["outlineWidth", "0px"]]},
-            {"on": {"eq": "none"}, "emit": [["outline", "2px solid transparent"], ["outlineOffset", "2px"]]},
-            {"on": "whole", "keep": true},
+            {"on": {"in": "zeroBorder"}, "scalar": true, "emit": [["outlineWidth", "0px"]]},
+            {"on": {"eq": "none"}, "scalar": true, "emit": [["outline", "2px solid transparent"], ["outlineOffset", "2px"]]},
+            {"on": "whole", "scalar": true, "keep": true},
             {"longhands": ["outlineWidth", "outlineStyle", "outlineColor"], "shape": "trio", "style": "outline"},
         ])
     );
@@ -111,6 +111,41 @@ fn container_steps_follow_guard_order_with_rendered_default() {
             {"emit": [["containerType", "inline-size"], ["containerName", "$"]]},
         ])
     );
+}
+
+/// Canon names carrying at least one scalar-gated step, sorted.
+fn scalar_marked_canons(lowerings: &std::collections::BTreeMap<String, Vec<LowerStep>>) -> Vec<String> {
+    let mut marked: Vec<String> = lowerings
+        .iter()
+        .filter(|(_, steps)| steps.iter().any(is_scalar_step))
+        .map(|(canon, _)| canon.clone())
+        .collect();
+    marked.sort();
+    marked
+}
+
+/// True for an emit or keep step gated to string/number values.
+fn is_scalar_step(step: &LowerStep) -> bool {
+    matches!(
+        step,
+        LowerStep::Emit { scalar: true, .. } | LowerStep::Keep { scalar: true, .. }
+    )
+}
+
+#[test]
+fn scalar_marks_only_the_extract_gated_border_steps() {
+    let lowerings = build_lowerings();
+    // Twelve trio lowerings (eleven border-family plus outline); the macro
+    // and kind-open emits (container, size, textGradient) stay unmarked.
+    let marked = scalar_marked_canons(&lowerings);
+    assert_eq!(marked.len(), 12);
+    assert!(!marked.contains(&"container".to_string()));
+    assert!(!marked.contains(&"size".to_string()));
+    assert!(marked.contains(&"border".to_string()));
+    assert!(marked.contains(&"outline".to_string()));
+    let border_marks = lowerings["border"].iter().filter(|step| is_scalar_step(step)).count();
+    // Zero and whole-keep; the bool:true macro stays kind-open.
+    assert_eq!(border_marks, 2);
 }
 
 #[test]

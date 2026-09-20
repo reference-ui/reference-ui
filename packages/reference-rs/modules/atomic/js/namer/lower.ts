@@ -1,7 +1,8 @@
 /**
  * Lowering interpreter over `NamerTables.lowerings`, per the ask-8 normative
  * semantics: canonicalize, run the ordered steps with guards on the rendered
- * value, first match runs. Mirrors `resolve/mod.rs::lower_macro` plus
+ * value, first match runs. `scalar` steps run for string/number values
+ * alone, mirroring the `extract_raw_val` gate. Mirrors `resolve/mod.rs::lower_macro` plus
  * `resolve/shorthands::expand_shorthand` (macro, then pair, flex, border,
  * dimensional) with the `unrealizable` fall-through when no lowering claims
  * the prop. `pair`/`emit`/`macro`/`keep`/`drop` apply to all value kinds;
@@ -73,16 +74,32 @@ export function interpretLowering(
   return [[origProp, value]]
 }
 
-/** Run one step: guard miss yields undefined, a hit runs to pairs. */
+/** Run one step: a blocked step yields undefined, a hit runs to pairs. */
 function runStep(step: LowerStep, ctx: LowerContext): LoweredPair[] | undefined {
   if ('drop' in step) return []
-  if (!guardPasses(step.on, ctx)) return undefined
+  if (stepBlocked(step, ctx)) return undefined
   if ('keep' in step) return keepPairs(ctx)
   if ('macro' in step) return macroPairs(step.macro, ctx)
   if ('emit' in step) return emitPairs(step.emit, ctx)
   if ('rewrite' in step) return rewritePairs(step.rewrite, ctx)
   if ('shape' in step) return shapePairs(step, ctx)
   return [[ctx.orig, ctx.value]]
+}
+
+/** True when the step's kind gate or value guard refuses this value. */
+function stepBlocked(step: LowerStep, ctx: LowerContext): boolean {
+  if (isScalarOnly(step) && !isScalarValue(ctx.value)) return true
+  return 'on' in step && !guardPasses(step.on, ctx)
+}
+
+/** True for `scalar` steps, which run for string/number values alone. */
+function isScalarOnly(step: LowerStep): boolean {
+  return 'scalar' in step && step.scalar === true
+}
+
+/** True for string/number values, the `extract_raw_val` kinds. */
+function isScalarValue(value: NamerValue): boolean {
+  return value.kind === 'string' || value.kind === 'number'
 }
 
 /** Guards evaluate on the rendered value, trimmed unless the step opts out; absent guard passes. */

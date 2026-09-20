@@ -75,6 +75,11 @@ export interface RecipeRuntimeTable {
   combinations: Record<string, string>
 }
 
+/**
+ * One lowering step. `scalar: true` (emit/keep only) runs the step for
+ * string/number values alone, mirroring the oracle's `extract_raw_val`
+ * gate; absent means the step reads every value kind.
+ */
 export type LowerStep =
   | { on?: NamerGuard; longhands: [string, string, string, string]; shape: 'trbl' }
   | {
@@ -85,9 +90,9 @@ export type LowerStep =
     }
   | { on?: NamerGuard; longhands: [string, string]; shape: 'pair' }
   | { on?: NamerGuard; rewrite: Record<string, string> }
-  | { on?: NamerGuard; emit: Array<[string, string]> }
+  | { on?: NamerGuard; scalar?: boolean; emit: Array<[string, string]> }
   | { on?: NamerGuard; macro: 'font' | 'weight' }
-  | { on?: NamerGuard; keep: true }
+  | { on?: NamerGuard; scalar?: boolean; keep: true }
   | { drop: true }
 
 export type NamerGuard =
@@ -119,6 +124,11 @@ export interface NamerTables {
    * `*To*` consult width parses the class never carries.
    */
   breakpointWidths: Record<string, string>
+  /**
+   * Known `_` keys verbatim: authored keys plus their underscore twins,
+   * unioned with both preset spellings. The request tests membership
+   * exactly; the class segment still strips one `_`.
+   */
   conditions: string[]
   fonts: Record<string, NamerFontTable>
 }
