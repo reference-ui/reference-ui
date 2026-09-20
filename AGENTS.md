@@ -17,6 +17,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
+| Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
 
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
 

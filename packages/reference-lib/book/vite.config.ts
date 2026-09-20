@@ -23,6 +23,7 @@ export default defineConfig({
   root: __dirname,
   server: {
     port: 5000,
+    // `pnpm dev:lib` / `pnpm book` reclaim this via book/ensure-port.mjs first.
     strictPort: true,
     host: true,
   },
