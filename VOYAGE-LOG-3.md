@@ -4894,3 +4894,11 @@ HQ ordered wave 6 last ("after these finish we stop") — NO wave 7
 dispatched. Objective 3 remains IN PROGRESS (paused, not satisfied):
 resume with wave 7 finders (3 finders, different compiler modules,
 no lib) whenever HQ returns.
+
+### Captain tick — parked, no action
+Tick received during HQ-ordered park: Obj-1/2 COMPLETE, Obj-3 IN
+PROGRESS (paused). Zero live crews, tree fully clean (peer session
+has since committed Jettison/Reaper docs at HEAD). No VERIFIED arcs
+pending, nothing to commit. HQ's "wave 6 is last / stop" order
+overrides the tick's keep-turning step — no wave 7 dispatched.
+Standing by for HQ.
