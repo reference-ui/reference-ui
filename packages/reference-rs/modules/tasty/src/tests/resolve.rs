@@ -123,7 +123,13 @@ fn local_export_type_reexport_keeps_only_canonical_symbol() {
 }
 
 #[test]
-fn resolves_cross_library_external_import_reference() {
+fn leaves_cross_library_external_import_reference_without_target() {
+    // Contract restoration (Objective 3 wave 1 find c): the scan boundary in
+    // the scanner README is same-package-only from library files, so the
+    // `react` package is never scanned and the cross-library reference keeps
+    // its name but resolves to no target. Formerly
+    // `resolves_cross_library_external_import_reference`, which pinned the
+    // depth-2 cross-package allowance at the resolve layer.
     let root = TempDir::new("tasty-resolve-cross-library-external-import");
     root.write(
         "src/index.ts",
@@ -169,6 +175,12 @@ fn resolves_cross_library_external_import_reference() {
     };
 
     assert_eq!(name, "ComponentPropsWithoutRef");
-    let expected = symbol_id("node_modules/react/index.d.ts", "ComponentPropsWithoutRef");
-    assert_eq!(target_id.as_deref(), Some(expected.as_str()));
+    assert_eq!(target_id.as_deref(), None);
+    assert!(
+        graph
+            .symbols
+            .values()
+            .all(|s| s.file_id != "node_modules/react/index.d.ts"),
+        "cross-library package must not enter the graph"
+    );
 }

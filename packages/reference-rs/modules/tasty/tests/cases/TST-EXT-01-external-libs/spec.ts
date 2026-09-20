@@ -53,6 +53,23 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(buttonSchemaRaw.description).toBe(
       'JSON Schema extension for button component configuration.'
     )
+
+    // Scan boundary pin (Objective 3 wave 1 find c): `internal-only.ts`
+    // plain-imports `css-tree` without re-exporting it, so the user-owned
+    // `InternalUsage` documents while no `css-tree` symbol may reach the
+    // manifest — unlike the bridged `csstype` / `json-schema` packages above.
+    const internalUsage = await api.loadSymbolByName('InternalUsage')
+    expect(internalUsage.getName()).toBe('InternalUsage')
+
+    const manifest = await api.loadManifest()
+    expect(manifest.symbolsByName['CssNode']).toBeUndefined()
+    expect(await api.findSymbolsByName('CssNode')).toEqual([])
+    await expect(api.loadSymbolByName('CssNode')).rejects.toThrow(
+      'Symbol not found: CssNode'
+    )
+    await expect(api.loadSymbolByScopedName('css-tree', 'CssNode')).rejects.toThrow(
+      'Symbol not found for library "css-tree": CssNode'
+    )
   },
 }
 

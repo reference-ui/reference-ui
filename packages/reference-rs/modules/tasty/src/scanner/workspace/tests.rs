@@ -36,7 +36,14 @@ fn scan_workspace_follows_user_reexports_of_external_modules() {
 }
 
 #[test]
-fn scan_workspace_includes_user_external_imports_for_reference_docs() {
+fn scan_workspace_skips_user_external_imports_without_reexport_bridge() {
+    // Contract restoration (Objective 3 wave 1 find c): the scan boundary in
+    // the scanner README states a user file that only `import`s from a library
+    // does not cause that library to be scanned. Formerly
+    // `scan_workspace_includes_user_external_imports_for_reference_docs`, which
+    // pinned the loosened behavior; the bridge test above
+    // (`scan_workspace_follows_user_reexports_of_external_modules`) pins the
+    // positive half of the same boundary.
     let root = TempDir::new("scanner-workspace-import-only");
     root.write(
         "src/index.ts",
@@ -54,11 +61,11 @@ fn scan_workspace_includes_user_external_imports_for_reference_docs() {
     let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
         .expect("workspace scan should succeed");
 
-    // With the new policy, external types are included for reference documentation
-    assert_eq!(workspace.files.len(), 2);
+    // No re-export bridge: the external library stays out of the scan graph.
+    assert_eq!(workspace.files.len(), 1);
     let file_ids: Vec<&str> = workspace.files.iter().map(|f| f.file_id.as_str()).collect();
     assert!(file_ids.contains(&"src/index.ts"));
-    assert!(file_ids.contains(&"node_modules/external-lib/index.d.ts"));
+    assert!(!file_ids.contains(&"node_modules/external-lib/index.d.ts"));
 }
 
 #[test]
@@ -95,7 +102,12 @@ fn scan_workspace_follows_same_library_relative_imports_for_external_modules() {
 }
 
 #[test]
-fn scan_workspace_follows_cross_library_external_imports_from_external_modules() {
+fn scan_workspace_rejects_cross_library_external_imports_from_external_modules() {
+    // Contract restoration (Objective 3 wave 1 find c): the scan boundary in
+    // the scanner README states that from a library file we only follow
+    // imports staying within the same package. Formerly
+    // `scan_workspace_follows_cross_library_external_imports_from_external_modules`,
+    // which pinned the depth-2 cross-package allowance.
     let root = TempDir::new("scanner-workspace-external-cross-library");
     root.write(
         "src/index.ts",
@@ -125,14 +137,19 @@ fn scan_workspace_follows_cross_library_external_imports_from_external_modules()
         .files
         .iter()
         .any(|file| file.file_id == "node_modules/@reference-ui/react/react.d.mts"));
-    assert!(workspace
+    assert!(!workspace
         .files
         .iter()
         .any(|file| file.file_id == "node_modules/react/index.d.ts"));
 }
 
 #[test]
-fn scan_workspace_limits_transitive_cross_library_external_imports() {
+fn scan_workspace_rejects_transitive_cross_library_external_imports() {
+    // Contract restoration (Objective 3 wave 1 find c): same-package-only
+    // from library files, so the very first cross-library hop already ends
+    // the walk — even when the hop is itself a re-export. Formerly
+    // `scan_workspace_limits_transitive_cross_library_external_imports`, which
+    // pinned the depth-2 cross-package allowance.
     let root = TempDir::new("scanner-workspace-external-cross-library-depth-limit");
     root.write("src/index.ts", "export type { A } from 'alpha-lib';\n");
     root.write(
@@ -167,7 +184,7 @@ fn scan_workspace_limits_transitive_cross_library_external_imports() {
         .files
         .iter()
         .any(|file| file.file_id == "node_modules/alpha-lib/index.d.ts"));
-    assert!(workspace
+    assert!(!workspace
         .files
         .iter()
         .any(|file| file.file_id == "node_modules/beta-lib/index.d.ts"));
@@ -208,10 +225,16 @@ fn scan_workspace_follows_external_reexports_when_node_modules_is_above_root() {
 
 #[test]
 fn scan_workspace_does_not_treat_globbed_node_modules_files_as_user_entry_points() {
+    // Contract restoration (Objective 3 wave 1 find c): this test previously
+    // relied on the loosened policy (plain user imports followed) to bring
+    // the external file into the graph. Under the README boundary the
+    // external file enters via the re-export bridge instead; the pin — that a
+    // `**/*.ts` glob never promotes a node_modules file to a user entry
+    // point — is unchanged.
     let root = TempDir::new("scanner-workspace-skip-globbed-node-modules");
     root.write(
         "src/index.ts",
-        "import type { ButtonProps } from 'external-lib';\nexport interface Local {}\n",
+        "export type { ButtonProps } from 'external-lib';\nexport interface Local {}\n",
     );
     root.write(
         "node_modules/external-lib/package.json",

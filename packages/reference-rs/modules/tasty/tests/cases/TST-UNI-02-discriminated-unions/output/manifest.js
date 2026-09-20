@@ -1,153 +1,189 @@
 export const manifest = {
-  version: '2',
-  warnings: [],
-  symbolsByName: {
-    Action: ['_d841cbda5c635f19'],
-    ActionHandler: ['_1b71076b4a879112'],
-    ApiResponse: ['_c9e5ef3eae834e60'],
-    ConnectedState: ['_16f60f41675e8b53'],
-    ConnectingState: ['_9674940f092cd66c'],
-    DisconnectedState: ['_156a1d4d4888db41'],
-    DiscriminatedUnion: ['_0bca6ed8f6cc64f6'],
-    ErrorResponse: ['_5a9d43c21c608b72'],
-    ExhaustiveSwitch: ['_7f23c78d7a81dcfb'],
-    LoadingResponse: ['_47a14fbbe2247a08'],
-    NetworkReducer: ['_3e4a9370e7722f72'],
-    NetworkState: ['_7ddb889c02a4e6de'],
-    ResponseProcessor: ['_7253f71811b1c8a7'],
-    SuccessResponse: ['_af07d51c78e87049'],
-    SystemAction: ['_1c8d70581b986116'],
-    UnionExtractor: ['_86bbe85c8c7490bf'],
-    UnionOfInterfaces: ['_bfab056a3bfd13bf'],
-    UserAction: ['_0d4a9466bc0d52e4'],
+  "version": "2",
+  "warnings": [],
+  "symbolsByName": {
+    "Action": [
+      "_d841cbda5c635f19"
+    ],
+    "ActionHandler": [
+      "_1b71076b4a879112"
+    ],
+    "ApiResponse": [
+      "_c9e5ef3eae834e60"
+    ],
+    "ConnectedState": [
+      "_16f60f41675e8b53"
+    ],
+    "ConnectingState": [
+      "_9674940f092cd66c"
+    ],
+    "DisconnectedState": [
+      "_156a1d4d4888db41"
+    ],
+    "DiscriminatedUnion": [
+      "_0bca6ed8f6cc64f6"
+    ],
+    "ErrorResponse": [
+      "_5a9d43c21c608b72"
+    ],
+    "ExhaustiveSwitch": [
+      "_7f23c78d7a81dcfb"
+    ],
+    "LoadingResponse": [
+      "_47a14fbbe2247a08"
+    ],
+    "NetworkReducer": [
+      "_3e4a9370e7722f72"
+    ],
+    "NetworkState": [
+      "_7ddb889c02a4e6de"
+    ],
+    "ResponseProcessor": [
+      "_7253f71811b1c8a7"
+    ],
+    "SuccessResponse": [
+      "_af07d51c78e87049"
+    ],
+    "SystemAction": [
+      "_1c8d70581b986116"
+    ],
+    "UnionExtractor": [
+      "_86bbe85c8c7490bf"
+    ],
+    "UnionOfInterfaces": [
+      "_bfab056a3bfd13bf"
+    ],
+    "UserAction": [
+      "_0d4a9466bc0d52e4"
+    ]
   },
-  symbolsById: {
-    _0bca6ed8f6cc64f6: {
-      id: '_0bca6ed8f6cc64f6',
-      name: 'DiscriminatedUnion',
-      kind: 'typeAlias',
-      chunk: './chunks/_0bca6ed8f6cc64f6.js',
-      library: 'user',
+  "symbolsById": {
+    "_0bca6ed8f6cc64f6": {
+      "id": "_0bca6ed8f6cc64f6",
+      "name": "DiscriminatedUnion",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_0bca6ed8f6cc64f6.js",
+      "library": "user"
     },
-    _0d4a9466bc0d52e4: {
-      id: '_0d4a9466bc0d52e4',
-      name: 'UserAction',
-      kind: 'interface',
-      chunk: './chunks/_0d4a9466bc0d52e4.js',
-      library: 'user',
+    "_0d4a9466bc0d52e4": {
+      "id": "_0d4a9466bc0d52e4",
+      "name": "UserAction",
+      "kind": "interface",
+      "chunk": "./chunks/_0d4a9466bc0d52e4.js",
+      "library": "user"
     },
-    _156a1d4d4888db41: {
-      id: '_156a1d4d4888db41',
-      name: 'DisconnectedState',
-      kind: 'interface',
-      chunk: './chunks/_156a1d4d4888db41.js',
-      library: 'user',
+    "_156a1d4d4888db41": {
+      "id": "_156a1d4d4888db41",
+      "name": "DisconnectedState",
+      "kind": "interface",
+      "chunk": "./chunks/_156a1d4d4888db41.js",
+      "library": "user"
     },
-    _16f60f41675e8b53: {
-      id: '_16f60f41675e8b53',
-      name: 'ConnectedState',
-      kind: 'interface',
-      chunk: './chunks/_16f60f41675e8b53.js',
-      library: 'user',
+    "_16f60f41675e8b53": {
+      "id": "_16f60f41675e8b53",
+      "name": "ConnectedState",
+      "kind": "interface",
+      "chunk": "./chunks/_16f60f41675e8b53.js",
+      "library": "user"
     },
-    _1b71076b4a879112: {
-      id: '_1b71076b4a879112',
-      name: 'ActionHandler',
-      kind: 'typeAlias',
-      chunk: './chunks/_1b71076b4a879112.js',
-      library: 'user',
+    "_1b71076b4a879112": {
+      "id": "_1b71076b4a879112",
+      "name": "ActionHandler",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_1b71076b4a879112.js",
+      "library": "user"
     },
-    _1c8d70581b986116: {
-      id: '_1c8d70581b986116',
-      name: 'SystemAction',
-      kind: 'interface',
-      chunk: './chunks/_1c8d70581b986116.js',
-      library: 'user',
+    "_1c8d70581b986116": {
+      "id": "_1c8d70581b986116",
+      "name": "SystemAction",
+      "kind": "interface",
+      "chunk": "./chunks/_1c8d70581b986116.js",
+      "library": "user"
     },
-    _3e4a9370e7722f72: {
-      id: '_3e4a9370e7722f72',
-      name: 'NetworkReducer',
-      kind: 'typeAlias',
-      chunk: './chunks/_3e4a9370e7722f72.js',
-      library: 'user',
+    "_3e4a9370e7722f72": {
+      "id": "_3e4a9370e7722f72",
+      "name": "NetworkReducer",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_3e4a9370e7722f72.js",
+      "library": "user"
     },
-    _47a14fbbe2247a08: {
-      id: '_47a14fbbe2247a08',
-      name: 'LoadingResponse',
-      kind: 'interface',
-      chunk: './chunks/_47a14fbbe2247a08.js',
-      library: 'user',
+    "_47a14fbbe2247a08": {
+      "id": "_47a14fbbe2247a08",
+      "name": "LoadingResponse",
+      "kind": "interface",
+      "chunk": "./chunks/_47a14fbbe2247a08.js",
+      "library": "user"
     },
-    _5a9d43c21c608b72: {
-      id: '_5a9d43c21c608b72',
-      name: 'ErrorResponse',
-      kind: 'interface',
-      chunk: './chunks/_5a9d43c21c608b72.js',
-      library: 'user',
+    "_5a9d43c21c608b72": {
+      "id": "_5a9d43c21c608b72",
+      "name": "ErrorResponse",
+      "kind": "interface",
+      "chunk": "./chunks/_5a9d43c21c608b72.js",
+      "library": "user"
     },
-    _7253f71811b1c8a7: {
-      id: '_7253f71811b1c8a7',
-      name: 'ResponseProcessor',
-      kind: 'typeAlias',
-      chunk: './chunks/_7253f71811b1c8a7.js',
-      library: 'user',
+    "_7253f71811b1c8a7": {
+      "id": "_7253f71811b1c8a7",
+      "name": "ResponseProcessor",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_7253f71811b1c8a7.js",
+      "library": "user"
     },
-    _7ddb889c02a4e6de: {
-      id: '_7ddb889c02a4e6de',
-      name: 'NetworkState',
-      kind: 'typeAlias',
-      chunk: './chunks/_7ddb889c02a4e6de.js',
-      library: 'user',
+    "_7ddb889c02a4e6de": {
+      "id": "_7ddb889c02a4e6de",
+      "name": "NetworkState",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_7ddb889c02a4e6de.js",
+      "library": "user"
     },
-    _7f23c78d7a81dcfb: {
-      id: '_7f23c78d7a81dcfb',
-      name: 'ExhaustiveSwitch',
-      kind: 'typeAlias',
-      chunk: './chunks/_7f23c78d7a81dcfb.js',
-      library: 'user',
+    "_7f23c78d7a81dcfb": {
+      "id": "_7f23c78d7a81dcfb",
+      "name": "ExhaustiveSwitch",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_7f23c78d7a81dcfb.js",
+      "library": "user"
     },
-    _86bbe85c8c7490bf: {
-      id: '_86bbe85c8c7490bf',
-      name: 'UnionExtractor',
-      kind: 'typeAlias',
-      chunk: './chunks/_86bbe85c8c7490bf.js',
-      library: 'user',
+    "_86bbe85c8c7490bf": {
+      "id": "_86bbe85c8c7490bf",
+      "name": "UnionExtractor",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_86bbe85c8c7490bf.js",
+      "library": "user"
     },
-    _9674940f092cd66c: {
-      id: '_9674940f092cd66c',
-      name: 'ConnectingState',
-      kind: 'interface',
-      chunk: './chunks/_9674940f092cd66c.js',
-      library: 'user',
+    "_9674940f092cd66c": {
+      "id": "_9674940f092cd66c",
+      "name": "ConnectingState",
+      "kind": "interface",
+      "chunk": "./chunks/_9674940f092cd66c.js",
+      "library": "user"
     },
-    _af07d51c78e87049: {
-      id: '_af07d51c78e87049',
-      name: 'SuccessResponse',
-      kind: 'interface',
-      chunk: './chunks/_af07d51c78e87049.js',
-      library: 'user',
+    "_af07d51c78e87049": {
+      "id": "_af07d51c78e87049",
+      "name": "SuccessResponse",
+      "kind": "interface",
+      "chunk": "./chunks/_af07d51c78e87049.js",
+      "library": "user"
     },
-    _bfab056a3bfd13bf: {
-      id: '_bfab056a3bfd13bf',
-      name: 'UnionOfInterfaces',
-      kind: 'interface',
-      chunk: './chunks/_bfab056a3bfd13bf.js',
-      library: 'user',
+    "_bfab056a3bfd13bf": {
+      "id": "_bfab056a3bfd13bf",
+      "name": "UnionOfInterfaces",
+      "kind": "interface",
+      "chunk": "./chunks/_bfab056a3bfd13bf.js",
+      "library": "user"
     },
-    _c9e5ef3eae834e60: {
-      id: '_c9e5ef3eae834e60',
-      name: 'ApiResponse',
-      kind: 'typeAlias',
-      chunk: './chunks/_c9e5ef3eae834e60.js',
-      library: 'user',
+    "_c9e5ef3eae834e60": {
+      "id": "_c9e5ef3eae834e60",
+      "name": "ApiResponse",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_c9e5ef3eae834e60.js",
+      "library": "user"
     },
-    _d841cbda5c635f19: {
-      id: '_d841cbda5c635f19',
-      name: 'Action',
-      kind: 'typeAlias',
-      chunk: './chunks/_d841cbda5c635f19.js',
-      library: 'user',
-    },
-  },
-}
-export default manifest
+    "_d841cbda5c635f19": {
+      "id": "_d841cbda5c635f19",
+      "name": "Action",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_d841cbda5c635f19.js",
+      "library": "user"
+    }
+  }
+};
+export default manifest;
