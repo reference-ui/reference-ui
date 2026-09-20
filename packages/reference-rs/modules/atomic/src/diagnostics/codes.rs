@@ -119,12 +119,20 @@ pub enum DiagnosticCode {
     /// `diagnostics/policy/analysis`: a dynamic slot observation,
     /// compiler-channel telemetry (Error Correct Slice 5).
     DynamicSlot,
+    /// `extract/expressions/responsive`: a `!` marker on a responsive-object
+    /// leaf, refused at the extraction boundary (ATM-LEAF-11). Plans carry
+    /// one important flag per object, so the marker can never be served;
+    /// the diagnostic names prop + leaf and rides default so the author
+    /// sees silent-wrong-paint refusal without opting into the compiler
+    /// channel. The refused leaf pushes no want; the plan still serves
+    /// the stripped value as a diagnosed non-important fallback.
+    ResponsiveLeafImportant,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 45] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 46] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -215,6 +223,10 @@ const CODE_TABLE: [(DiagnosticCode, &str); 45] = [
     (DiagnosticCode::MissingStylePlan, "ATM-W-MISSING-STYLE-PLAN"),
     (DiagnosticCode::ExpectedLookup, "ATM-I-EXPECTED-LOOKUP"),
     (DiagnosticCode::DynamicSlot, "ATM-I-DYNAMIC-SLOT"),
+    (
+        DiagnosticCode::ResponsiveLeafImportant,
+        "ATM-W-RESPONSIVE-LEAF-IMPORTANT",
+    ),
 ];
 
 impl DiagnosticCode {
@@ -341,6 +353,7 @@ mod tests {
             DiagnosticCode::MissingStylePlan,
             DiagnosticCode::ExpectedLookup,
             DiagnosticCode::DynamicSlot,
+            DiagnosticCode::ResponsiveLeafImportant,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

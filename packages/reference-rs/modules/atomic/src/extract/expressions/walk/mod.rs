@@ -105,6 +105,22 @@ impl<'a> ExpressionWalk<'a> {
             .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
     }
 
+    /// Report a userspace-visible warning at the offending node's span.
+    /// Unlike `warn`, this pushes the line directly with no session fact,
+    /// so the partition keeps it on default (the static/global pattern).
+    /// Reserved for static refusals whose author must act without opting
+    /// into the compiler channel; dynamic value positions keep the funnel.
+    pub fn warn_default(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
+        let (line, column) = self.span_position(Some(span)).unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
+        self.diagnostics.push(location.warning(code, message));
+    }
+
     /// Report an info diagnostic at the offending node's span.
     pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
         let message: String = message.into();
