@@ -1,0 +1,220 @@
+{
+  "function": "expandBorder",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "prop": "border",
+        "value": "0"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderWidth",
+            "0px"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "0px"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderWidth",
+            "0px"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "0rem"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderWidth",
+            "0px"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "0%"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderWidth",
+            "0px"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "0r"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderWidth",
+            "0r"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "none"
+      },
+      "output": {
+        "pairs": [
+          [
+            "border",
+            "none"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "None"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderStyle",
+            "none"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "outline",
+        "value": "none"
+      },
+      "output": {
+        "pairs": [
+          [
+            "outline",
+            "2px solid transparent"
+          ],
+          [
+            "outlineOffset",
+            "2px"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "outline",
+        "value": "None"
+      },
+      "output": {
+        "pairs": [
+          [
+            "outlineStyle",
+            "none"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "inherit"
+      },
+      "output": {
+        "pairs": [
+          [
+            "border",
+            "inherit"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "var(--bd)"
+      },
+      "output": {
+        "pairs": [
+          [
+            "border",
+            "var(--bd)"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "Var(--bd)"
+      },
+      "output": {
+        "pairs": [
+          [
+            "border",
+            "Var(--bd)"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "borders.subtle"
+      },
+      "output": {
+        "pairs": [
+          [
+            "border",
+            "borders.subtle"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": "solid"
+      },
+      "output": {
+        "pairs": [
+          [
+            "borderStyle",
+            "solid"
+          ]
+        ]
+      }
+    },
+    {
+      "input": {
+        "prop": "border",
+        "value": ""
+      },
+      "output": null
+    },
+    {
+      "input": {
+        "prop": "flex",
+        "value": "1"
+      },
+      "output": null
+    }
+  ]
+}

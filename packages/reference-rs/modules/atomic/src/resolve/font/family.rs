@@ -35,7 +35,8 @@ fn insert_preset(pairs: &mut IndexMap<String, AtomValue>, def: &FontDefinition) 
     }
 }
 
-fn default_weight(def: &FontDefinition) -> &str {
+/// Default weight chain: `css.fontWeight`, then `weights.normal`, then `400`.
+pub(crate) fn default_weight(def: &FontDefinition) -> &str {
     // css: { fontWeight: 'normal' }  /  weights: { normal: '400' }  /  else 400
     def.css
         .get("fontWeight")

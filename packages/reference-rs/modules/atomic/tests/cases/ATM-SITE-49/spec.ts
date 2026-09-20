@@ -50,7 +50,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, '-4', 'red')).toBe(false)
     expect(result.wants).toHaveLength(16)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     // Plans dedupe by leaf: the quadrupled `color: red` want shares one
     // plan; only the refused concat's `padding: 12px` sibling mints new.
     expect(plans).toHaveLength(10)
@@ -100,7 +100,7 @@ const spec: AtomicCaseSpec = {
     // The entry-40 helper key mints a real group-selector rule.
     expect(result.stylesheet).toContain('[data-group="cool"] { color: red; }')
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { prop, value, className } of EXPECTED) {
       expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(
         className

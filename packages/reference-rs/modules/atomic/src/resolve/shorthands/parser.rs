@@ -2,6 +2,32 @@
 //! Decomposes space-separated shorthand declarations into distinct semantic tokens while respecting parenthesized sub-expressions.
 //! Classifies tokens into width, style, color, and global keyword categories to guide atomic expansion passes.
 
+use crate::resolve::lexical;
+
+/// Border-style keywords consulted by the trio classifier.
+pub(crate) const BORDER_STYLES: &[&str] = &[
+    "none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
+];
+
+/// The one outline-only style keyword (CSS UI 4 `auto`).
+pub(crate) const OUTLINE_STYLE_EXTRA: &str = "auto";
+
+/// Line-width keywords that classify as border widths.
+pub(crate) const LINE_WIDTH_KEYWORDS: &[&str] = &["thin", "medium", "thick"];
+
+/// Length units whose numeric prefixes classify as border widths.
+pub(crate) const LENGTH_UNITS: &[&str] = &[
+    "px", "rem", "em", "r", "%", "vh", "vw", "ch", "vmin", "vmax", "cqw", "cqh", "pt", "pc", "ex",
+    "dvh", "lvh", "svh",
+];
+
+/// Math functions whose calls classify as border widths.
+pub(crate) const MATH_FUNCTIONS: &[&str] = &["calc", "min", "max", "clamp"];
+
+/// CSS-wide cascade keywords that keep shorthand values whole.
+pub(crate) const CSS_WIDE_KEYWORDS: &[&str] =
+    &["inherit", "initial", "unset", "revert", "revert-layer"];
+
 /// Parsed constituent components extracted from a composite shorthand declaration.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ParsedShorthand {
@@ -18,7 +44,7 @@ impl ParsedShorthand {
         if is_style_token(token, is_outline) {
             // solid / dashed / none  (+ outline: auto)
             if self.style.is_none() {
-                self.style = Some(token.to_ascii_lowercase());
+                self.style = Some(lexical::ascii_lower(token));
             }
             return;
         }
@@ -115,45 +141,32 @@ pub fn split_tokens(val: &str) -> Vec<String> {
 /// Check if string matches a standard CSS border-style keyword.
 pub fn is_border_style(val: &str) -> bool {
     // solid / dashed / none
-    matches!(
-        val.trim().to_ascii_lowercase().as_str(),
-        "none"
-            | "hidden"
-            | "dotted"
-            | "dashed"
-            | "solid"
-            | "double"
-            | "groove"
-            | "ridge"
-            | "inset"
-            | "outset"
-    )
+    let lower = lexical::ascii_lower(lexical::trim_structural(val));
+    BORDER_STYLES.contains(&lower.as_str())
 }
 
 /// Check if string matches an outline-style keyword, including CSS UI 4 'auto'.
 pub fn is_outline_style(val: &str) -> bool {
     // outline: 'auto'  /  outline: 'solid'
-    let lower = val.trim().to_ascii_lowercase();
-    lower == "auto" || is_border_style(&lower)
+    let lower = lexical::ascii_lower(lexical::trim_structural(val));
+    lower == OUTLINE_STYLE_EXTRA || is_border_style(&lower)
 }
 
 /// Check if string matches a CSS global cascade keyword.
 pub fn is_global_keyword(val: &str) -> bool {
     // padding: 'inherit'
-    matches!(
-        val.trim().to_ascii_lowercase().as_str(),
-        "inherit" | "initial" | "unset" | "revert" | "revert-layer"
-    )
+    let lower = lexical::ascii_lower(lexical::trim_structural(val));
+    CSS_WIDE_KEYWORDS.contains(&lower.as_str())
 }
 
 /// Check if string matches a CSS length, line-width keyword, or math function.
 pub fn is_length_width(val: &str) -> bool {
     // 3px / 1r / thin / calc(1r + 2px) / 1/3r
-    let s = val.trim().to_ascii_lowercase();
+    let s = lexical::ascii_lower(lexical::trim_structural(val));
     if s == "r" || s == "+r" || s == "-r" {
         return true;
     }
-    if matches!(s.as_str(), "thin" | "medium" | "thick") {
+    if LINE_WIDTH_KEYWORDS.contains(&s.as_str()) {
         return true;
     }
     if is_math_function(&s) {
@@ -167,21 +180,16 @@ pub fn is_length_width(val: &str) -> bool {
 
 fn is_math_function(s: &str) -> bool {
     // calc(1r + 2px) / min(1r, 10px)
-    (s.starts_with("calc(")
-        || s.starts_with("min(")
-        || s.starts_with("max(")
-        || s.starts_with("clamp("))
-        && s.ends_with(')')
+    s.ends_with(')')
+        && MATH_FUNCTIONS.iter().any(|name| {
+            s.strip_prefix(name)
+                .is_some_and(|rest| rest.starts_with('('))
+        })
 }
 
 fn is_number_or_dimension(s: &str) -> bool {
     // 3px / 2r / 10% / 1.5
-    let units = [
-        "px", "rem", "em", "r", "%", "vh", "vw", "ch", "vmin", "vmax", "cqw", "cqh", "pt", "pc",
-        "ex", "dvh", "lvh", "svh",
-    ];
-
-    for unit in units {
+    for unit in LENGTH_UNITS {
         if let Some(prefix) = s.strip_suffix(unit) {
             if is_valid_numeric_str(prefix) {
                 return true;
@@ -202,7 +210,8 @@ fn is_valid_numeric_str(s: &str) -> bool {
     if rest.is_empty() {
         return false;
     }
-    rest.parse::<f64>().is_ok()
+    // Ungated entry: non-finite parses classify as widths here.
+    lexical::parse_decimal(rest).is_some()
 }
 
 fn is_rhythm_fraction(s: &str) -> bool {

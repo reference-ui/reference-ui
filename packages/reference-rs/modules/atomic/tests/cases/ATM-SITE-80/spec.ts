@@ -40,7 +40,7 @@ const spec: AtomicCaseSpec = {
 
     // Plans dedupe by value: red ×3, teal.600 ×2, navy ×2, and 13r ×2 each
     // share one plan.
-    expect(result.runtime.stylePlans).toHaveLength(10)
+    expect(result.stylePlans).toHaveLength(10)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('color: red;')

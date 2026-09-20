@@ -29,13 +29,13 @@ const spec: AtomicCaseSpec = {
     )
 
     // Plans must carry empty when
-    const plans = result.runtime.stylePlans.filter(p => p.prop === 'margin')
+    const plans = result.stylePlans.filter(p => p.prop === 'margin')
     expect(plans.length).toBeGreaterThanOrEqual(2)
     for (const plan of plans) {
       expect(plan.when).toEqual([])
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     const merged = mergeStylePlans(index, [
       { system: '@reference-ui/lib', prop: 'margin', value: '1r' },
       { system: '@reference-ui/lib', prop: 'margin', value: '3r' },

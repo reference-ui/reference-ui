@@ -6,8 +6,6 @@
   "content:\"a\rb\"": "@reference-ui/lib__content_\"a\rb\"",
   "md:width:2r": "@reference-ui/lib__md:w_2r",
   "padding:0": "@reference-ui/lib__p_0",
-  "padding:0.0000001": "@reference-ui/lib__p_0.0000001",
-  "padding:1000000000000000000000": "@reference-ui/lib__p_1000000000000000000000",
   "padding:a b": "@reference-ui/lib__p_a_b",
   "padding:a﻿b": "@reference-ui/lib__p_a﻿b",
   "width:1r": "@reference-ui/lib__w_1r"

@@ -11,3 +11,4 @@
 # packages/reference-rs/.prettierignore because `agentrs f` runs prettier
 # with cwd packages/reference-rs, where this file never applies.
 /packages/reference-rs/modules/*/tests/cases/**/output/
+/packages/reference-rs/modules/*/tests/namer-goldens/

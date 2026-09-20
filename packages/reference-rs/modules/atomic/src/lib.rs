@@ -6,6 +6,8 @@ mod assembly;
 pub mod atom;
 pub mod diagnostics;
 pub mod extract;
+#[cfg(test)]
+mod goldens;
 pub mod hosts;
 pub mod includes;
 pub mod recipes;
@@ -18,6 +20,7 @@ mod static_css;
 pub mod stylesheet;
 #[cfg(test)]
 mod tests;
+mod types;
 
 #[doc(hidden)]
 pub use styletrace as __styletrace;
@@ -27,90 +30,20 @@ pub use base_system::{BaseSystem, BreakpointScale, FontDefinition, FontScale};
 pub use diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity};
 pub use recipes::{RecipeMatch, RecipeTable};
 pub use runtime::{
-    get_style_prop_names, CssRuntime, NativeRuntimeArtifact, RecipeRuntimeTable,
-    RuntimeDeclaration, RuntimeStylePlan,
+    get_style_prop_names, CssRuntime, FontTable, NamerTables, NativeRuntimeArtifact,
+    RecipeRuntimeTable, RuntimeDeclaration, RuntimeStylePlan, NAMER_RULES_VERSION,
 };
 pub use stylesheet::StylesheetOutput;
+pub use types::{CompileRequest, CompileResult, VirtualSource};
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use diagnostics::DiagnosticSink;
-
-/// In-memory source file to compile.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VirtualSource {
-    pub path: String,
-    pub content: String,
-}
-
-/// Request to compile project or virtual sources into atomic CSS.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompileRequest {
-    #[serde(default, alias = "root_dir")]
-    pub root_dir: Option<String>,
-    #[serde(default)]
-    pub files: Option<Vec<VirtualSource>>,
-    pub base_system: BaseSystem,
-    #[serde(default)]
-    pub jsx_hosts: Option<Vec<String>>,
-    #[serde(default)]
-    pub declaration_root: Option<String>,
-    /// Glob scope (RS-10): only matching sources compile; absent or empty scans all.
-    #[serde(default)]
-    pub include: Option<Vec<String>>,
-    /// Opt-in diagnostic channels (S5 backchannel): `compiler` renders
-    /// `compiler_diagnostics`. Unknown channels are ignored.
-    #[serde(default)]
-    pub logs: Option<Vec<String>>,
-}
-
-impl CompileRequest {
-    /// True when the caller requested the opt-in compiler backchannel.
-    /// Unknown channel names are ignored so channels evolve additively.
-    pub fn wants_compiler_logs(&self) -> bool {
-        self.logs
-            .as_ref()
-            .is_some_and(|logs| logs.iter().any(|name| name == "compiler"))
-    }
-}
-
-/// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompileResult {
-    pub stylesheet: String,
-    #[serde(default)]
-    pub portable_stylesheet: String,
-    pub runtime: NativeRuntimeArtifact,
-    /// Compile-internal plans: the same rows the artifact carries, surfaced
-    /// for proof, stations, and the differential gate. Stays when the
-    /// artifact copy ships no more per-atom rows.
-    pub style_plans: Vec<runtime::RuntimeStylePlan>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub css: Option<CssRuntime>,
-    pub diagnostics: Vec<Diagnostic>,
-    #[serde(default)]
-    pub wants: Vec<Want>,
-    #[serde(default)]
-    pub recipes: Vec<RecipeTable>,
-    #[serde(default)]
-    pub atom_count: usize,
-    /// Component names StyleTrace discovered in this compile (sorted,
-    /// unique). Neo publishes configured ∪ traced downstream.
-    #[serde(default)]
-    pub traced_jsx_hosts: Vec<String>,
-    /// Opt-in compiler backchannel (S5): present only when requested.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub compiler_diagnostics: Option<Vec<Diagnostic>>,
-}
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
@@ -204,7 +137,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         traced: resolved_hosts.traced.clone(),
     };
     assembly.append_static(system);
-    let mut result = assembly.finish(system, &mut diag_session);
+    let mut result = assembly.finish(system, &mut diag_session, request.keeps_style_plans());
     partition_channels(&mut result, diag_session.facts(), &analysis.sources, request.wants_compiler_logs());
     Ok(result)
 }

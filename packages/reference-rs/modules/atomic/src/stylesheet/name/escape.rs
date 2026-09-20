@@ -9,14 +9,7 @@ use std::fmt::Write;
 
 /// Sanitize value string for inclusion in HTML class names (converts whitespace to underscores).
 pub fn sanitize_class_value(val: &str) -> String {
-    let mut out = String::with_capacity(val.len());
-    for ch in val.chars() {
-        match ch {
-            ' ' | '\t' | '\n' => out.push('_'),
-            _ => out.push(ch),
-        }
-    }
-    out
+    crate::resolve::lexical::sanitize_value(val)
 }
 
 /// Escapes a runtime class name for use as a CSS identifier in a selector.
@@ -30,6 +23,12 @@ pub fn escape_css_selector(val: &str) -> String {
 
 fn append_escaped(out: &mut String, ch: char, index: usize) {
     if index == 0 && (ch.is_ascii_digit() || ch == '-') {
+        push_hex_escape(out, ch);
+        return;
+    }
+    if ch.is_control() {
+        // Control chars have no `\X` escape: a backslash before CR is a line
+        // continuation, and the raw byte breaks selector parsers. Hex-escape.
         push_hex_escape(out, ch);
         return;
     }
@@ -70,6 +69,14 @@ mod tests {
     #[test]
     fn test_escape_leading_digit_hex_with_space() {
         assert_eq!(escape_css_selector("2xl:p_6r"), "\\32 xl\\:p_6r");
+    }
+
+    #[test]
+    fn test_escape_control_chars_hex() {
+        assert_eq!(
+            escape_css_selector("content_\"a\rb\""),
+            "content_\\\"a\\d b\\\""
+        );
     }
 
     #[test]

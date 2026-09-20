@@ -4,7 +4,8 @@
 //! apply `&` to a class selector — that is `pseudoselectors`. `sm` / `300` are
 //! not in this catalog; `r/` already stamped `@container` onto `when`.
 
-const PRESETS: &[(&str, &str)] = &[
+/// Fallback pseudo-prop catalog keyed by stripped name (`hover`, not `_hover`).
+pub(crate) const PRESETS: &[(&str, &str)] = &[
     // `_hover` `{ color: 'red' }`  →  `&:is(:hover, [data-hover])`
     ("active", "&:is(:active, [data-active])"),
     (

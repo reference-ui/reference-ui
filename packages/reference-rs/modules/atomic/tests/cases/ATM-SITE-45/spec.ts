@@ -41,7 +41,7 @@ const spec: AtomicCaseSpec = {
     expect(harvestWants(result)).toHaveLength(3)
     expect(result.wants ?? []).toHaveLength(32)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(22)
 
     const sheet = result.stylesheet

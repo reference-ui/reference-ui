@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
 
     // The exact key exists at runtime: another source contributes color:red
     // (the harvest pool agrees), so the lookup paints.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     expect(
       plans.some(p => p.prop === 'color' && p.value === 'red' && p.when.length === 0),
       'exact key color:red contributed despite the refused site'

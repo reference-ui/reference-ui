@@ -15,22 +15,64 @@
     }
   ],
   "runtime": {
-    "schemaVersion": 1,
-    "stylePlans": [
-      {
-        "system": "lib-test-system",
-        "when": [],
-        "prop": "color",
-        "value": "blue.500",
-        "important": false,
-        "declarations": [
+    "schemaVersion": 2,
+    "namer": {
+      "rulesVersion": 1,
+      "aliases": {
+        "p": "padding"
+      },
+      "prefixes": {
+        "marginTop": "mt"
+      },
+      "lowerings": {
+        "flex": [
           {
-            "slot": "color",
-            "className": "lib-test-system__c_blue-500"
+            "rewrite": {
+              "1": "1 1 0%"
+            }
           }
         ]
+      },
+      "keywords": {
+        "cssWide": [
+          "inherit",
+          "initial",
+          "revert",
+          "revert-layer",
+          "unset"
+        ]
+      },
+      "weightKeywords": [
+        [
+          "bold",
+          "700"
+        ]
+      ],
+      "colorProps": [
+        "color"
+      ],
+      "breakpoints": [
+        "base",
+        "sm"
+      ],
+      "conditions": [
+        "hover"
+      ],
+      "fonts": {
+        "sans": {
+          "weight": "normal",
+          "weights": {
+            "normal": "400"
+          },
+          "css": [
+            [
+              "fontWeight",
+              "normal"
+            ]
+          ]
+        }
       }
-    ],
+    },
     "recipes": {},
     "stylePropNames": [
       "color"

@@ -17,7 +17,7 @@ const spec: AtomicCaseSpec = {
 
     // The object form mints one whole-object plan with per-breakpoint
     // declarations — the plan the runtime query side now issues.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     const whole = plans.filter(
       p =>
         p.prop === '--x' &&

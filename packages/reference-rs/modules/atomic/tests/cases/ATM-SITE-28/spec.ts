@@ -84,7 +84,7 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'order')).toHaveLength(0)
 
     // One runtime plan per unique leaf (the two `padding: 4px` wants share one).
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(4 + OBJECTS.length + CROSS.length + DELETE_WANTS.length)
     for (const { prop, value } of EXPECTED) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)

@@ -41,6 +41,10 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // of the refused identifier; the verbatim string policy keeps it as-is
   // (cf. ATM-LEAF-10, where the author includes their own quotes).
   'ATM-DIAG-06': ['content: 😀'],
+
+  // Intentional lexical pins (permanent): absurd-but-stable values mint
+  // classes for the browser to drop; the namer never refuses them.
+  'ATM-NAME-08': ['padding: a b', 'padding: a\uFEFFb', 'color: İnk'],
 }
 
 export function quarantineFor(stationId: string): readonly string[] {

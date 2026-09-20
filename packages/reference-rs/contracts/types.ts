@@ -75,11 +75,61 @@ export interface RecipeRuntimeTable {
   combinations: Record<string, string>
 }
 
+export type LowerStep =
+  | { on?: NamerGuard; longhands: [string, string, string, string]; shape: 'trbl' }
+  | {
+      on?: NamerGuard
+      longhands: [string, string, string]
+      shape: 'trio'
+      style: 'border' | 'outline'
+    }
+  | { on?: NamerGuard; longhands: [string, string]; shape: 'pair' }
+  | { on?: NamerGuard; rewrite: Record<string, string> }
+  | { on?: NamerGuard; emit: Array<[string, string]> }
+  | { on?: NamerGuard; macro: 'font' | 'weight' }
+  | { on?: NamerGuard; keep: true }
+  | { drop: true }
+
+export type NamerGuard = 'bool:true' | 'empty' | 'whole' | { eq: string } | { in: string }
+
+export interface NamerFontTable {
+  weight: string
+  weights: Record<string, string>
+  css: Array<[string, string]>
+}
+
+export interface NamerTables {
+  rulesVersion: number
+  aliases: Record<string, string>
+  prefixes: Record<string, string>
+  lowerings: Record<string, LowerStep[]>
+  keywords: Record<string, string[]>
+  weightKeywords: Array<[string, string]>
+  colorProps: string[]
+  breakpoints: string[]
+  conditions: string[]
+  fonts: Record<string, NamerFontTable>
+}
+
 export interface NativeRuntimeArtifact {
-  schemaVersion: 1
-  stylePlans: RuntimeStylePlan[]
+  /**
+   * TEMPORARY transition (narrowed next slice): the compiler ships 2 while
+   * hand-built readers still pin 1.
+   */
+  schemaVersion: 1 | 2
+  /**
+   * TEMPORARY optional (required next slice): the closed namer tables. Hand
+   * readers built before the tables omit it; every compiler artifact carries it.
+   */
+  namer?: NamerTables
   recipes: Record<string, RecipeRuntimeTable>
   stylePropNames: string[]
+  /**
+   * TEMPORARY passthrough (deleted next slice): the per-atom rows for readers
+   * that still index them. Required on the type so existing readers keep
+   * typechecking; absent at runtime when the compile disables the passthrough.
+   */
+  stylePlans: RuntimeStylePlan[]
 }
 
 export interface Diagnostic {

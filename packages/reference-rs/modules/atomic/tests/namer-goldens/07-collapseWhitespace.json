@@ -1,0 +1,46 @@
+{
+  "function": "collapseWhitespace",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "1px  solid   red",
+      "output": "1px solid red"
+    },
+    {
+      "input": "a\tb\nc",
+      "output": "a b c"
+    },
+    {
+      "input": "\"a  b\"",
+      "output": "\"a  b\""
+    },
+    {
+      "input": "'Fira  Code', monospace",
+      "output": "'Fira  Code', monospace"
+    },
+    {
+      "input": "a\rb",
+      "output": "a b"
+    },
+    {
+      "input": "\"a\rb\"",
+      "output": "\"a\rb\""
+    },
+    {
+      "input": "ab",
+      "output": "a b"
+    },
+    {
+      "input": "a﻿b",
+      "output": "a﻿b"
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": "red",
+      "output": "red"
+    }
+  ]
+}

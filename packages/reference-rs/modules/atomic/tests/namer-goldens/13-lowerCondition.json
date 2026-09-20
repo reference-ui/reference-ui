@@ -1,0 +1,142 @@
+{
+  "function": "lowerCondition",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "base",
+      "output": {
+        "status": "skip"
+      }
+    },
+    {
+      "input": "_hover",
+      "output": {
+        "status": "known",
+        "segment": "hover",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "_osDark",
+      "output": {
+        "status": "known",
+        "segment": "osDark",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "_wat",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "md",
+      "output": {
+        "status": "known",
+        "segment": "md",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "mdDown",
+      "output": {
+        "status": "known",
+        "segment": "mdDown",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "mdOnly",
+      "output": {
+        "status": "known",
+        "segment": "mdOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smToLg",
+      "output": {
+        "status": "known",
+        "segment": "smToLg",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smTolg",
+      "output": {
+        "status": "known",
+        "segment": "smTolg",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "SMTOLG",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "@media (min-width: 1px)",
+      "output": {
+        "status": "known",
+        "segment": "[@media_(min-width:_1px)]",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "@supports",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "@supports (display: grid)",
+      "output": {
+        "status": "known",
+        "segment": "[@supports_(display:_grid)]",
+        "kind": "supports"
+      }
+    },
+    {
+      "input": "@mediafoo",
+      "output": {
+        "status": "known",
+        "segment": "[@mediafoo]",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "@container (min-width: 300px)",
+      "output": {
+        "status": "known",
+        "segment": "[@container_(min-width:_300px)]",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "&:hover",
+      "output": {
+        "status": "known",
+        "segment": "[&:hover]",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "&[data-x]",
+      "output": {
+        "status": "known",
+        "segment": "[&[data-x]]",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "@layer utilities",
+      "output": {
+        "status": "known",
+        "segment": "[@layer_utilities]",
+        "kind": "selector"
+      }
+    }
+  ]
+}

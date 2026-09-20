@@ -21,7 +21,7 @@ const spec: AtomicCaseSpec = {
       expect(want.when).toEqual([])
     }
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(6)
 
     expect(result.diagnostics ?? []).toHaveLength(0)

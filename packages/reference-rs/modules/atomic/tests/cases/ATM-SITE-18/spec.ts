@@ -24,14 +24,14 @@ const spec: AtomicCaseSpec = {
       'borderWidth:1px': WIDTH,
     })
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(1)
     expect(plans[0]).toMatchObject({ prop: 'border', value: true })
     expect(plans[0]!.declarations.map(d => d.className).sort()).toEqual(
       [STYLE, WIDTH].sort(),
     )
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(
       mergeStylePlans(index, [{ system: SYSTEM, when: [], prop: 'border', value: true }]),
     ).toBe([WIDTH, STYLE].sort().join(' '))

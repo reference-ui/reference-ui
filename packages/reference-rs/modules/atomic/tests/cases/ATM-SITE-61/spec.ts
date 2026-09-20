@@ -43,7 +43,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).not.toContain('!important')
 
     // Plans agree with wants on every arm; `!` is transparent, not important.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     expect(plans.length).toBeGreaterThanOrEqual(6)
     for (const plan of plans) {
       expect(plan.important).toBe(false)

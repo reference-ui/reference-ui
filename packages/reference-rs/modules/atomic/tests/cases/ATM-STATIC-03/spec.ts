@@ -15,8 +15,8 @@ const spec: AtomicCaseSpec = {
     )
     expect(result.stylesheet).toContain('.static-wildcard__rounded_sm')
     expect(result.stylesheet).toContain('.static-wildcard__rounded_md')
-    expect(result.runtime.stylePlans.some(p => p.prop === 'borderRadius')).toBe(true)
-    expect(result.runtime.stylePlans.some(p => p.prop === 'color')).toBe(true)
+    expect(result.stylePlans.some(p => p.prop === 'borderRadius')).toBe(true)
+    expect(result.stylePlans.some(p => p.prop === 'color')).toBe(true)
     expect(
       result.diagnostics.some(
         d => d.severity === 'warning' && d.message.includes('unknownProp')

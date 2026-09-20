@@ -36,7 +36,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(34)
 
     // One runtime plan per unique leaf, plus the base-conditioned red.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(EXPECTED_WANTS.length + 1)
     for (const { prop, value } of EXPECTED_WANTS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)

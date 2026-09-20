@@ -15,7 +15,7 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain('@reference-ui/lib__m_1r')
     expect(utilities).toContain('@reference-ui/lib__m_3r')
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     const merged = mergeStylePlans(index, [
       { system: '@reference-ui/lib', prop: 'margin', value: '1r' },
       { system: '@reference-ui/lib', prop: 'margin', value: '3r' },

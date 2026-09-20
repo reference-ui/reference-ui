@@ -19,7 +19,7 @@ const spec: AtomicCaseSpec = {
     expect(result.portableStylesheet?.startsWith(LAYER_PREAMBLE)).toBe(true)
     expect(result.atomCount).toBe(0)
     expect(result.css?.classes ?? {}).toEqual({})
-    expect(result.runtime.stylePlans).toEqual([])
+    expect(result.stylePlans).toEqual([])
     expect(result.stylesheet).not.toContain('data-panda-theme')
     expect(result.stylesheet).not.toContain('[data-theme=')
     expect(result.portableStylesheet ?? '').not.toContain('data-panda-theme')

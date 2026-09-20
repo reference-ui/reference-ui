@@ -13,16 +13,16 @@ import {
   serializeCanonicalJson,
   serializeLookupKey,
 } from '../js/index.js'
-import type { EvaluatedSystemSpec, NativeRuntimeArtifact } from '../js/types.js'
+import type { EvaluatedSystemSpec, RuntimeStylePlan } from '../js/types.js'
 import { layerClassNames, LIB_SYSTEM_SPEC } from './helpers.js'
-import nativeRuntimeArtifactJson from '../../../contracts/fixtures/native-runtime-artifact.json'
+import runtimeStylePlansJson from '../../../contracts/fixtures/runtime-style-plans.json'
 import compileResultJson from '../../../contracts/fixtures/compile-result.json'
 import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 
 describe('ATM-SEAM-01 atomic runtime style plans', () => {
-  const artifact = nativeRuntimeArtifactJson as NativeRuntimeArtifact
+  const plans = runtimeStylePlansJson as RuntimeStylePlan[]
 
   it('serializes canonical JSON with sorted keys matching Rust serializer', () => {
     const val = { b: 1, a: { z: 9, y: 8 } }
@@ -59,8 +59,8 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
   })
 
   it('creates style plan index from NativeRuntimeArtifact fixture', () => {
-    const index = createStylePlanIndex(artifact)
-    expect(index.size).toBe(artifact.stylePlans.length)
+    const index = createStylePlanIndex(plans)
+    expect(index.size).toBe(plans.length)
 
     // Lookup color: blue.500
     const colorKey = serializeLookupKey('lib-test-system', [], 'color', 'blue.500', false)
@@ -84,7 +84,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
   })
 
   it('ATM-MERGE-01: multi-argument calls resolve last value per property in runtime', () => {
-    const index = createStylePlanIndex(artifact)
+    const index = createStylePlanIndex(plans)
     // Query color: blue.500 then color: red.500 (both address slot "color")
     const merged = mergeStylePlans(index, [
       { system: 'lib-test-system', prop: 'color', value: 'blue.500' },
@@ -95,7 +95,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
   })
 
   it('ATM-MERGE-02: aliases and shorthands collapse to last-authored slot', () => {
-    const index = createStylePlanIndex(artifact)
+    const index = createStylePlanIndex(plans)
     // Four-side shorthand p: 2 expands to 4 slots (paddingTop, paddingRight, paddingBottom, paddingLeft)
     // An explicit paddingTop override after p should replace only paddingTop
     const decls = [
@@ -111,7 +111,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
   })
 
   it('preserves system namespace isolation on identical authored props', () => {
-    const index = createStylePlanIndex(artifact)
+    const index = createStylePlanIndex(plans)
     // Both systems author font: "sans", but keys and classes differ
     const key1 = serializeLookupKey('lib-test-system', [], 'font', 'sans', false)
     const key2 = serializeLookupKey('other-system', [], 'font', 'sans', false)
@@ -147,15 +147,15 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
 
     // NativeRuntimeArtifact checks
     expect(result.runtime).toBeDefined()
-    expect(result.runtime.schemaVersion).toBe(1)
-    expect(result.runtime.stylePlans.length).toBeGreaterThan(0)
+    expect(result.runtime.schemaVersion).toBe(2)
+    expect(result.stylePlans.length).toBeGreaterThan(0)
     expect(result.runtime.stylePropNames).toContain('color')
     expect(result.runtime.stylePropNames).toContain('p')
     expect(result.runtime.stylePropNames).not.toContain('variant')
     expect(result.runtime.stylePropNames).not.toContain('colorMode')
 
     // Find style plan for color: blue.500
-    const colorPlan = result.runtime.stylePlans.find(
+    const colorPlan = result.stylePlans.find(
       p => p.prop === 'color' && p.value === 'blue.500'
     )
     expect(colorPlan).toBeDefined()
@@ -163,7 +163,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     expect(colorPlan!.declarations[0].slot).toBe('color')
 
     // Find style plan for hover color
-    const hoverPlan = result.runtime.stylePlans.find(
+    const hoverPlan = result.stylePlans.find(
       p => p.prop === 'color' && p.value === 'red.500' && p.when.includes('_hover')
     )
     expect(hoverPlan).toBeDefined()
@@ -192,7 +192,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
 
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
 
-    const tokenPlan = result.runtime.stylePlans.find(
+    const tokenPlan = result.stylePlans.find(
       p => p.prop === 'color' && p.value === 'blue.600'
     )
     expect(tokenPlan).toBeDefined()
@@ -201,7 +201,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     expect(tokenPlan!.declarations[0].className.startsWith('color-mode__')).toBe(true)
 
     const utilities = layerClassNames(result.stylesheet, 'utilities')
-    const planClasses = result.runtime.stylePlans.flatMap(plan =>
+    const planClasses = result.stylePlans.flatMap(plan =>
       plan.declarations.map(decl => decl.className)
     )
     expect(planClasses.length).toBeGreaterThan(0)

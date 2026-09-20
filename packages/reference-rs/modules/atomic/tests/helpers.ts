@@ -164,7 +164,7 @@ export function noGhostClasses(result: CompileResult, context: StationContext): 
     `ATM-GHOST-01 ${context.caseId}: runtime class(es) missing from @layer utilities: ${missing.join(', ')}`
   ).toEqual([])
   assertExemptionsFresh(emitted, utilities, context.caseId)
-  const planClasses = (result.runtime?.stylePlans ?? []).flatMap(plan =>
+  const planClasses = (result.stylePlans ?? []).flatMap(plan =>
     plan.declarations.map(decl => decl.className)
   )
   const planMissing = planClasses.filter(

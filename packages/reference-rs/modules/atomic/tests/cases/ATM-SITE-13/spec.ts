@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(result.wants ?? []).toHaveLength(0)
     expect(result.css?.classes ?? {}).toEqual({})
-    expect(result.runtime.stylePlans).toHaveLength(0)
+    expect(result.stylePlans).toHaveLength(0)
 
     expect(result.diagnostics).toHaveLength(1)
     const [diag] = result.diagnostics

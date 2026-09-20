@@ -25,7 +25,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: red;')
 
     // The runtime plan is the floor: the dynamic lookup hits precomputed data.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     expect(
       plans.some(p => p.prop === 'color' && p.value === 'red' && p.when.length === 0)
     ).toBe(true)

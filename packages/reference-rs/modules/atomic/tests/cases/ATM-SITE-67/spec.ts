@@ -19,7 +19,7 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain(`${SYSTEM}__c_red`)
     expect(utilities).toContain(`${SYSTEM}__c_blue`)
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     const merged = mergeStylePlans(index, [
       { system: SYSTEM, prop: 'color', value: 'red' },
       { system: SYSTEM, prop: 'color', value: 'blue' },

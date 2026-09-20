@@ -28,7 +28,7 @@ const spec: AtomicCaseSpec = {
     expect(result.css?.classes?.['padding:2r']).toBe('@reference-ui/lib__p_2r!')
     expect(result.css?.classes?.['padding:3r']).toBe('@reference-ui/lib__p_3r')
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     for (const [prop, value] of [
       ['color', 'red'],
       ['margin', '4px'],

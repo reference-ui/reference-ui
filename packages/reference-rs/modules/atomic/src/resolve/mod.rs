@@ -8,6 +8,7 @@ pub mod conditions;
 pub mod container;
 pub mod font;
 pub mod gradient;
+pub mod lexical;
 pub mod normalize;
 pub mod r;
 pub mod rhythm;
@@ -84,9 +85,10 @@ pub(crate) fn want_key(
     prop: &str,
     value: serde_json::Value,
 ) -> Option<OwnedLookupKey> {
-    session.want.as_ref().map(|want| {
-        authored_key(&session.system.name, prop, value, want)
-    })
+    session
+        .want
+        .as_ref()
+        .map(|want| authored_key(&session.system.name, prop, value, want))
 }
 
 /// One authored value back to its JSON plan shape: strings and numbers keep
@@ -197,6 +199,10 @@ fn refuse_unrealizable_extension(want: &Want, session: &mut ResolveSession<'_>) 
     true
 }
 
+/// Props and values the `border: true` macro stamps, in emit order.
+pub(crate) const BORDER_TRUE_MACRO: [(&str, &str); 2] =
+    [("borderWidth", "1px"), ("borderStyle", "solid")];
+
 fn lower_macro(want: &Want, system: &BaseSystem) -> Option<Vec<(Box<str>, AtomValue)>> {
     let prop = want.prop.as_ref();
     if is_runtime_owned(prop) {
@@ -220,16 +226,21 @@ fn lower_macro(want: &Want, system: &BaseSystem) -> Option<Vec<(Box<str>, AtomVa
     }
     if prop == "border" && matches!(want.value, AtomValue::Bool(true)) {
         // <Div border /> → border-width: 1px; border-style: solid.
-        return Some(vec![
-            ("borderWidth".into(), AtomValue::String("1px".into())),
-            ("borderStyle".into(), AtomValue::String("solid".into())),
-        ]);
+        return Some(
+            BORDER_TRUE_MACRO
+                .iter()
+                .map(|(prop, value)| ((*prop).into(), AtomValue::String((*value).into())))
+                .collect(),
+        );
     }
     None
 }
 
+/// Props the runtime owns: any value lowers to zero declarations.
+pub(crate) const RUNTIME_OWNED_PROPS: &[&str] = &["variant", "colorMode"];
+
 fn is_runtime_owned(prop: &str) -> bool {
-    matches!(prop, "variant" | "colorMode")
+    RUNTIME_OWNED_PROPS.contains(&prop)
 }
 
 fn lower_conditions(

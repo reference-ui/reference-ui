@@ -23,7 +23,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'purple')).toBe(true)
     expect(result.wants ?? []).toHaveLength(9)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(9)
     expect(plans.some(p => p.prop === 'margin' && p.value === -4)).toBe(true)
     expect(plans.some(p => p.prop === 'opacity' && p.value === -0.5)).toBe(true)

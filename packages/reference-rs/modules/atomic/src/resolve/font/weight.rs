@@ -5,7 +5,8 @@
 use crate::atom::AtomValue;
 use base_system::FontScale;
 
-const CSS_WEIGHT_KEYWORDS: &[(&str, &str)] = &[
+/// CSS weight keywords consulted when no scoped scale entry matches.
+pub(crate) const CSS_WEIGHT_KEYWORDS: &[(&str, &str)] = &[
     ("thin", "100"),
     ("light", "300"),
     ("normal", "400"),

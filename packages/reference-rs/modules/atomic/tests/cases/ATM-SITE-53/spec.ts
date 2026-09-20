@@ -33,7 +33,7 @@ const spec: AtomicCaseSpec = {
     // Innermost wins, nothing unions: exactly the four wants above.
     expect(result.wants).toHaveLength(EXPECTED.length)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(EXPECTED.length)
     const emitted = new Set(Object.values(result.css?.classes ?? {}))
     for (const { prop, value, classNames } of EXPECTED) {
@@ -58,7 +58,7 @@ const spec: AtomicCaseSpec = {
     }
     expect(utilities).not.toContain(`${SYSTEM}__c_amber.500`)
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { prop, value, classNames } of EXPECTED) {
       const merged = mergeStylePlans(index, [{ system: SYSTEM, prop, value }])
       for (const className of classNames) {

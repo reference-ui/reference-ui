@@ -337,3 +337,24 @@ fn authored_key_carries_the_five_tuple() {
         r#"["test",["_hover"],"color","red",true]"#
     );
 }
+
+/// Props matched on the authored spelling (`lower_macro`, `is_runtime_owned`,
+/// the `font`/`fontFamily` bare-number exemption) rather than canonical.
+const AUTHORED_MATCH_PROPS: &[&str] = &[
+    "font", "weight", "container", "size", "textGradient", "border", "variant", "colorMode",
+    "fontFamily",
+];
+
+#[test]
+fn test_no_alias_targets_authored_match_prop() {
+    // A future alias onto a macro prop would skip the macro here while a
+    // canonical-keyed lowering table would apply it. Pin the gap shut.
+    for alias in canon::ALIASES {
+        assert!(
+            !AUTHORED_MATCH_PROPS.contains(&alias.canonical),
+            "alias {} targets authored-match prop {}",
+            alias.alias,
+            alias.canonical
+        );
+    }
+}

@@ -11,7 +11,7 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(
-      result.runtime.stylePlans.find(p => p.prop === 'color' && p.value === 'red'),
+      result.stylePlans.find(p => p.prop === 'color' && p.value === 'red'),
     ).toBeDefined()
     expect(result.css?.classes?.['color:red']).toBe('@reference-ui/lib__c_red')
 

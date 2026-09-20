@@ -1,0 +1,204 @@
+{
+  "function": "canonNumeric",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "prop": "padding",
+        "value": "1e3"
+      },
+      "output": {
+        "stem": "1000"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": ".5"
+      },
+      "output": {
+        "stem": "0.5"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "01"
+      },
+      "output": {
+        "stem": "1"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "-0"
+      },
+      "output": {
+        "stem": "0"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "0"
+      },
+      "output": {
+        "stem": "0"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "1e21"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "1e-7"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "top",
+        "value": "0x10"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "margin",
+        "value": ""
+      },
+      "output": {
+        "refused": "ATM-W-INVALID-CSS-VALUE"
+      }
+    },
+    {
+      "input": {
+        "prop": "margin",
+        "value": "  "
+      },
+      "output": {
+        "refused": "ATM-W-INVALID-CSS-VALUE"
+      }
+    },
+    {
+      "input": {
+        "prop": "color",
+        "value": ".5"
+      },
+      "output": {
+        "stem": ".5"
+      }
+    },
+    {
+      "input": {
+        "prop": "color",
+        "value": "-0"
+      },
+      "output": {
+        "stem": "-0"
+      }
+    },
+    {
+      "input": {
+        "prop": "color",
+        "value": "01"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "color",
+        "value": "0x10"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "color",
+        "value": "Infinity"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "inf"
+      },
+      "output": {
+        "stem": "inf"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "INF"
+      },
+      "output": {
+        "stem": "INF"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "Infinity"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "NaN"
+      },
+      "output": {
+        "refused": "ATM-W-NON-CANONICAL-NUMERIC"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": "nan"
+      },
+      "output": {
+        "stem": "nan"
+      }
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "value": " 0x10"
+      },
+      "output": {
+        "stem": " 0x10"
+      }
+    },
+    {
+      "input": {
+        "prop": "fontFamily",
+        "value": "1e3"
+      },
+      "output": {
+        "stem": "1e3"
+      }
+    }
+  ]
+}

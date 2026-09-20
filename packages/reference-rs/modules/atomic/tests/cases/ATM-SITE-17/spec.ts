@@ -25,7 +25,7 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, prop, value)).toBe(true)
     }
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(EXPECTED.length)
     const emitted = new Set(Object.values(result.css?.classes ?? {}))
     for (const { prop, value, className } of EXPECTED) {
@@ -46,7 +46,7 @@ const spec: AtomicCaseSpec = {
       expect(utilities).toContain(className)
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { prop, value, className } of EXPECTED) {
       expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toBe(
         className,

@@ -11,7 +11,9 @@ base_system.workspace = true
 module_graph.workspace = true
 styletrace.workspace = true
 serde = { workspace = true }
-serde_json = { workspace = true }
+# Pinned explicitly: per-prop object declaration order follows author order
+# only with `preserve_order` (see the reverse-alpha test in runtime/tests.rs).
+serde_json = { workspace = true, features = ["preserve_order"] }
 smallvec = { version = "1", features = ["serde"] }
 rustc-hash = "2"
 oxc_parser = { workspace = true }

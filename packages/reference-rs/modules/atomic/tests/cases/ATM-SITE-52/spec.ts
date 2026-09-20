@@ -19,7 +19,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'mt', '2r')).toBe(true)
     expect(result.wants).toHaveLength(1)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(1)
     const plan = plans[0]!
     expect(plan.prop).toBe('mt')
@@ -36,7 +36,7 @@ const spec: AtomicCaseSpec = {
     const utilities = layerClassNames(result.stylesheet, 'utilities')
     expect(utilities).toContain(MT_CLASS)
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(mergeStylePlans(index, [{ system: SYSTEM, prop: 'mt', value: '2r' }])).toContain(
       MT_CLASS
     )

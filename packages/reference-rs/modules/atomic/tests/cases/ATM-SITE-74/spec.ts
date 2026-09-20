@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'foo')).toBe(false)
     expect(hasWant(result, 'padding', '4px')).toBe(true)
     expect(
-      result.runtime.stylePlans.find(p => p.prop === 'padding' && p.value === '4px'),
+      result.stylePlans.find(p => p.prop === 'padding' && p.value === '4px'),
     ).toBeDefined()
 
     // The chain refusal rides the opt-in channel now (S6 E8-class

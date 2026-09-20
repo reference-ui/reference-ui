@@ -46,7 +46,7 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'padding')).toHaveLength(6)
     expect(getWantsForProp(result, 'margin')).toHaveLength(3)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(22)
 
     // Member refusals + sink infos ride the opt-in channel now (S6

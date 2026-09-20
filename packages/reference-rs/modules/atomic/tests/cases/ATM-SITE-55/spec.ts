@@ -37,7 +37,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants).toHaveLength(10)
 
     // Plans dedupe by leaf: two `color: red` wants share one plan.
-    expect(result.runtime.stylePlans).toHaveLength(9)
+    expect(result.stylePlans).toHaveLength(9)
 
     // Both recipes extract through the wrapper: namespace and named.
     const names = (result.recipes ?? []).map(r => r.className).sort()
@@ -52,7 +52,7 @@ const spec: AtomicCaseSpec = {
       expect(utilities.has(name)).toBe(true)
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(
       mergeStylePlans(index, [{ system: SYSTEM, prop: 'color', value: 'red' }])
     ).toContain(`${SYSTEM}__c_red`)

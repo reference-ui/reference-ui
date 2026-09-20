@@ -6,10 +6,22 @@
 import type {
   EvaluatedSystemSpec,
   LogChannel,
+  LowerStep,
+  NamerFontTable,
+  NamerGuard,
+  NamerTables,
   NativeCompileRequest,
 } from '../../../contracts/types.js'
 
-export type { EvaluatedSystemSpec, LogChannel, NativeCompileRequest }
+export type {
+  EvaluatedSystemSpec,
+  LogChannel,
+  LowerStep,
+  NamerFontTable,
+  NamerGuard,
+  NamerTables,
+  NativeCompileRequest,
+}
 
 export type DiagnosticSeverity = 'error' | 'warning' | 'info'
 
@@ -59,6 +71,12 @@ export interface CompileRequest {
    * channels are ignored so channels evolve additively.
    */
   logs?: LogChannel[]
+  /**
+   * TEMPORARY passthrough (deleted next slice): include the per-atom
+   * `stylePlans` rows in `runtime` for readers that still index them.
+   * Absent or true keeps the rows; false ships schema 2 without them.
+   */
+  stylePlansPassthrough?: boolean
 }
 
 /** Either wire shape `compile()` accepts: legacy `{ baseSystem, ... }` or frozen `{ schemaVersion: 1, spec, ... }`. */
@@ -111,10 +129,24 @@ export interface RecipeRuntimeTable {
 }
 
 export interface NativeRuntimeArtifact {
-  schemaVersion: 1
-  stylePlans: RuntimeStylePlan[]
+  /**
+   * TEMPORARY transition (narrowed next slice): the compiler ships 2 while
+   * hand-built readers still pin 1.
+   */
+  schemaVersion: 1 | 2
+  /**
+   * TEMPORARY optional (required next slice): the closed namer tables. Hand
+   * readers built before the tables omit it; every compiler artifact carries it.
+   */
+  namer?: NamerTables
   recipes: Record<string, RecipeRuntimeTable>
   stylePropNames: string[]
+  /**
+   * TEMPORARY passthrough (deleted next slice): the per-atom rows for readers
+   * that still index them. Required on the type so existing readers keep
+   * typechecking; absent at runtime when the compile disables the passthrough.
+   */
+  stylePlans: RuntimeStylePlan[]
 }
 
 export interface CompileResult {

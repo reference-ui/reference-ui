@@ -46,7 +46,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
     expect(result.stylesheet.startsWith(LAYER_PREAMBLE)).toBe(true)
     expect(result.atomCount).toBe(0)
     expect(result.css?.classes ?? {}).toEqual({})
-    expect(result.runtime.stylePlans).toEqual([])
+    expect(result.stylePlans).toEqual([])
   })
 
   it('rejects legacy flat dumps that predate the evaluated spec', () => {
@@ -68,7 +68,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
     expect(result.diagnostics).toHaveLength(1)
     expect(result.diagnostics[0]!.severity).toBe('error')
     expect(result.diagnostics[0]!.message).toContain('baseSystem')
-    expect(result.runtime.stylePlans).toEqual([])
+    expect(result.stylePlans).toEqual([])
   })
 
   it('rejects specs missing required collections', () => {
@@ -142,15 +142,15 @@ describe('ATM-TOKEN-10 spec rejection', () => {
     // The fixture spec carries a button recipe whose `opacity: "1"` passes
     // through silently, exactly as TSX `css({ opacity: '1' })` does (§11).
     expect(result.diagnostics).toEqual([])
-    expect(result.runtime.stylePlans.length).toBeGreaterThan(0)
+    expect(result.stylePlans.length).toBeGreaterThan(0)
     expect(Object.keys(result.runtime.recipes)).toContain('lib-test-system__button')
   })
 
   it('keeps non-empty plan systems and zero data-panda-theme on valid specs', () => {
     const result = compileSync({ baseSystem: specSystem, files: SOURCES })
 
-    expect(result.runtime.stylePlans.length).toBeGreaterThan(0)
-    for (const plan of result.runtime.stylePlans) {
+    expect(result.stylePlans.length).toBeGreaterThan(0)
+    for (const plan of result.stylePlans) {
       expect(plan.system).toBe('lib-test-system')
     }
     expect(result.stylesheet).toContain('[data-color-mode=dark]')

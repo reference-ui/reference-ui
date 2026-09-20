@@ -21,7 +21,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'borderColor', 'black')).toBe(true)
     expect(hasWant(result, 'opacity', '0.5')).toBe(true)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     for (const [prop, value] of [
       ['color', 'red'],
       ['fontWeight', 'bold'],
@@ -37,7 +37,7 @@ const spec: AtomicCaseSpec = {
       ).toBeDefined()
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(
       mergeStylePlans(index, [{ system: SYSTEM, prop: 'opacity', value: '0.5' }]),
     ).toBe(`${SYSTEM}__op_0.5`)

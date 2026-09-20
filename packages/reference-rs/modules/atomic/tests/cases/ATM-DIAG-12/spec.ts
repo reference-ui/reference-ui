@@ -28,7 +28,7 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     // Both runtime surfaces collapse to one runtime key for `mt: 2r`.
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    const mtPlans = result.runtime.stylePlans.filter(
+    const mtPlans = result.stylePlans.filter(
       p => p.prop === 'mt' && p.value === '2r' && p.when.length === 0
     )
     expect(mtPlans).toHaveLength(1)
@@ -41,7 +41,7 @@ const spec: AtomicCaseSpec = {
       )
     ).toBe(false)
     expect(
-      result.runtime.stylePlans.some(p => p.prop === 'padding' && p.value === '99px')
+      result.stylePlans.some(p => p.prop === 'padding' && p.value === '99px')
     ).toBe(false)
 
     // RED HINGE: expected-key facts per surface on the opt-in channel.

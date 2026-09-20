@@ -39,7 +39,7 @@ const spec: AtomicCaseSpec = {
       '&:hover:webkitBackgroundClip:text': HOVER_CLIP,
     })
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(2)
     const base = plans.find(p => p.when.length === 0)
     expect(base?.declarations.map(d => d.className).sort()).toEqual(

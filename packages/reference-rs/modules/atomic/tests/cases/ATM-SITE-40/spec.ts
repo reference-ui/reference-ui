@@ -39,7 +39,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants).toHaveLength(9)
 
     // One runtime plan per unique leaf.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(8)
     for (const [prop, value] of [
       ['color', 'red'],
@@ -64,7 +64,7 @@ const spec: AtomicCaseSpec = {
     const utilities = layerClassNames(result.stylesheet, 'utilities')
     expect(utilities).toContain(RED_CLASS)
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(
       mergeStylePlans(index, [{ system: SYSTEM, prop: 'color', value: 'red' }]),
     ).toContain(RED_CLASS)

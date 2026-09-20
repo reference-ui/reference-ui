@@ -1,0 +1,53 @@
+{
+  "function": "splitTokens",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "3px solid red",
+      "output": [
+        "3px",
+        "solid",
+        "red"
+      ]
+    },
+    {
+      "input": "calc(1px + 1px) solid",
+      "output": [
+        "calc(1px + 1px)",
+        "solid"
+      ]
+    },
+    {
+      "input": "1r  2r",
+      "output": [
+        "1r",
+        "2r"
+      ]
+    },
+    {
+      "input": "a\tb\nc",
+      "output": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "input": "",
+      "output": []
+    },
+    {
+      "input": "calc(min(1px,2px)) x",
+      "output": [
+        "calc(min(1px,2px))",
+        "x"
+      ]
+    },
+    {
+      "input": "  padded  ",
+      "output": [
+        "padded"
+      ]
+    }
+  ]
+}

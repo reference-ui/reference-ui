@@ -51,7 +51,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(24)
 
     // Plans dedupe by leaf: the six (color, red) wants share one plan.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(18)
 
     // Refusals + sink infos ride the opt-in channel now (S6 E8-class

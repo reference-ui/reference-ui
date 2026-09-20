@@ -1,154 +1,62 @@
 {
-  "schemaVersion": 1,
-  "stylePlans": [
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "color",
-      "value": "blue.500",
-      "important": false,
-      "declarations": [
+  "schemaVersion": 2,
+  "namer": {
+    "rulesVersion": 1,
+    "aliases": {
+      "p": "padding"
+    },
+    "prefixes": {
+      "marginTop": "mt"
+    },
+    "lowerings": {
+      "flex": [
         {
-          "slot": "color",
-          "className": "lib-test-system__c_blue-500"
+          "rewrite": {
+            "1": "1 1 0%"
+          }
         }
       ]
     },
-    {
-      "system": "lib-test-system",
-      "when": [
-        "_hover"
-      ],
-      "prop": "color",
-      "value": "red.500",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "hover:color",
-          "className": "lib-test-system__hover_c_red-500"
-        }
+    "keywords": {
+      "cssWide": [
+        "inherit",
+        "initial",
+        "revert",
+        "revert-layer",
+        "unset"
       ]
     },
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "padding",
-      "value": [
-        "1",
-        null,
-        "4"
-      ],
-      "important": false,
-      "declarations": [
-        {
-          "slot": "padding@base",
-          "className": "lib-test-system__p_1"
+    "weightKeywords": [
+      [
+        "bold",
+        "700"
+      ]
+    ],
+    "colorProps": [
+      "color"
+    ],
+    "breakpoints": [
+      "base",
+      "sm"
+    ],
+    "conditions": [
+      "hover"
+    ],
+    "fonts": {
+      "sans": {
+        "weight": "normal",
+        "weights": {
+          "normal": "400"
         },
-        {
-          "slot": "padding@lg",
-          "className": "lib-test-system__lg_p_4"
-        }
-      ]
-    },
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "p",
-      "value": "2",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "paddingTop",
-          "className": "lib-test-system__pt_2"
-        },
-        {
-          "slot": "paddingRight",
-          "className": "lib-test-system__pr_2"
-        },
-        {
-          "slot": "paddingBottom",
-          "className": "lib-test-system__pb_2"
-        },
-        {
-          "slot": "paddingLeft",
-          "className": "lib-test-system__pl_2"
-        }
-      ]
-    },
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "font",
-      "value": "sans",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "fontFamily",
-          "className": "lib-test-system__ff_sans"
-        },
-        {
-          "slot": "fontWeight",
-          "className": "lib-test-system__fw_sans"
-        }
-      ]
-    },
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "marginTop",
-      "value": {
-        "$r": 2
-      },
-      "important": false,
-      "declarations": [
-        {
-          "slot": "marginTop",
-          "className": "lib-test-system__mt_r2"
-        }
-      ]
-    },
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "color",
-      "value": "red.500",
-      "important": true,
-      "declarations": [
-        {
-          "slot": "color",
-          "className": "lib-test-system__c_red-500_i"
-        }
-      ]
-    },
-    {
-      "system": "other-system",
-      "when": [],
-      "prop": "font",
-      "value": "sans",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "fontFamily",
-          "className": "other-system__ff_sans"
-        }
-      ]
-    },
-    {
-      "system": "other-system",
-      "when": [
-        "sm"
-      ],
-      "prop": "padding",
-      "value": "2",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "sm:padding",
-          "className": "other-system__sm_p_2"
-        }
-      ]
+        "css": [
+          [
+            "fontWeight",
+            "normal"
+          ]
+        ]
+      }
     }
-  ],
+  },
   "recipes": {
     "lib-test-system__button": {
       "qualifiedName": "lib-test-system__button",

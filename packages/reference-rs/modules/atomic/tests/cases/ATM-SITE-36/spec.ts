@@ -35,7 +35,7 @@ const spec: AtomicCaseSpec = {
     expect(harvestWants(result)).toHaveLength(3)
     expect(result.wants ?? []).toHaveLength(10)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(10)
 
     // Callee refusals ride the opt-in channel now (S6 E8-class

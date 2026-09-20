@@ -578,15 +578,13 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__p_0 { padding: 0; }
-  .\@reference-ui\/lib__p_0\.0000001 { padding: 0.0000001px; }
-  .\@reference-ui\/lib__p_1000000000000000000000 { padding: 1000000000000000000000px; }
   .\@reference-ui\/lib__p_a_b { padding: a b; }
   .\@reference-ui\/lib__p_a\﻿b { padding: a﻿b; }
   .\@reference-ui\/lib__bd-t-c_red { border-top-color: red; }
   .\@reference-ui\/lib__bd-t-s_solid { border-top-style: solid; }
   .\@reference-ui\/lib__bd-t-w_3px { border-top-width: 3px; }
   .\@reference-ui\/lib__c_\İnk { color: İnk; }
-  .\@reference-ui\/lib__content_\"a\b\" { content: "ab"; }
+  .\@reference-ui\/lib__content_\"a\d b\" { content: "a\d b"; }
   .\@reference-ui\/lib__w_1r { width: var(--spacing-root); }
   @container (min-width: 768px) {
     .\@reference-ui\/lib__md\:w_2r { width: calc(2 * var(--spacing-root)); }

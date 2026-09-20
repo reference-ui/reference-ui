@@ -1,0 +1,38 @@
+{
+  "function": "asciiLower",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "SOLID",
+      "output": "solid"
+    },
+    {
+      "input": "İ",
+      "output": "İ"
+    },
+    {
+      "input": "ß",
+      "output": "ß"
+    },
+    {
+      "input": "Σς",
+      "output": "Σς"
+    },
+    {
+      "input": "None",
+      "output": "none"
+    },
+    {
+      "input": "AUTO",
+      "output": "auto"
+    },
+    {
+      "input": "Red",
+      "output": "red"
+    },
+    {
+      "input": "solid",
+      "output": "solid"
+    }
+  ]
+}

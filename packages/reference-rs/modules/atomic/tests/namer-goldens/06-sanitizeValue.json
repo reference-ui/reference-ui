@@ -1,0 +1,38 @@
+{
+  "function": "sanitizeValue",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "a b",
+      "output": "a_b"
+    },
+    {
+      "input": "a\tb\nc",
+      "output": "a_b_c"
+    },
+    {
+      "input": "a\rb",
+      "output": "a\rb"
+    },
+    {
+      "input": "a b",
+      "output": "a b"
+    },
+    {
+      "input": "ab",
+      "output": "ab"
+    },
+    {
+      "input": "\"a\rb\"",
+      "output": "\"a\rb\""
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": "10px 20px",
+      "output": "10px_20px"
+    }
+  ]
+}

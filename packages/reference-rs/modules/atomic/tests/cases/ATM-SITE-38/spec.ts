@@ -67,7 +67,7 @@ const spec: AtomicCaseSpec = {
     // wants share, and the folded bools are planless exactly like bare bools
     // (ATM-SITE-18: `color={true}` warns and mints nothing, no plan either).
     // The three harvested pairs plan beside the nine site plans.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(12)
     for (const { prop, value } of FOLDS) {
       if (typeof value === 'boolean') {

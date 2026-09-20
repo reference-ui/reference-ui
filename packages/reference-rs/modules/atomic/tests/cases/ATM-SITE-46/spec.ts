@@ -26,7 +26,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(14)
 
     // `spin` and its alias chain share one runtime plan by lookup key.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(13)
 
     const sheet = result.stylesheet

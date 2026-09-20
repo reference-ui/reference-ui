@@ -16,6 +16,7 @@ import nativeCompileRequestLayersNegativeJson from '../fixtures/native-compile-r
 import nativeCompileRequestJson from '../fixtures/native-compile-request.json' with { type: 'json' }
 import nativeRuntimeArtifactJson from '../fixtures/native-runtime-artifact.json' with { type: 'json' }
 import portableBaseSystemJson from '../fixtures/portable-base-system.json' with { type: 'json' }
+import runtimeStylePlansJson from '../fixtures/runtime-style-plans.json' with { type: 'json' }
 
 import type {
   CompileResult,
@@ -24,6 +25,7 @@ import type {
   NativeRuntimeArtifact,
   OutputInventory,
   PortableBaseSystem,
+  RuntimeStylePlan,
 } from '../types'
 
 describe('F0: Frozen wire contract fixtures', () => {
@@ -75,11 +77,29 @@ describe('F0: Frozen wire contract fixtures', () => {
 
   it('NativeRuntimeArtifact fixture satisfies interface and enforces system on plans', () => {
     const runtime = nativeRuntimeArtifactJson satisfies NativeRuntimeArtifact
-    expect(runtime.schemaVersion).toBe(1)
-    expect(runtime.stylePlans.length).toBeGreaterThan(0)
+    expect(runtime.schemaVersion).toBe(2)
+    expect('stylePlans' in runtime).toBe(false)
+
+    // Namer tables: the closed data both namers read.
+    expect(typeof runtime.namer?.rulesVersion).toBe('number')
+    for (const table of [
+      'aliases',
+      'prefixes',
+      'lowerings',
+      'keywords',
+      'fonts',
+    ] as const) {
+      expect(typeof runtime.namer?.[table]).toBe('object')
+    }
+    expect(Array.isArray(runtime.namer?.weightKeywords)).toBe(true)
+    for (const table of ['colorProps', 'breakpoints', 'conditions'] as const) {
+      expect(Array.isArray(runtime.namer?.[table])).toBe(true)
+    }
 
     // Every plan must carry an explicit system identity
-    for (const plan of runtime.stylePlans) {
+    const plans = runtimeStylePlansJson satisfies RuntimeStylePlan[]
+    expect(plans.length).toBeGreaterThan(0)
+    for (const plan of plans) {
       expect(typeof plan.system).toBe('string')
       expect(plan.system.length).toBeGreaterThan(0)
       expect(Array.isArray(plan.when)).toBe(true)
@@ -88,14 +108,16 @@ describe('F0: Frozen wire contract fixtures', () => {
     }
 
     // Must include plans from two distinct systems (lib-test-system and other-system)
-    const systems = new Set(runtime.stylePlans.map((p) => p.system))
+    const systems = new Set(plans.map(p => p.system))
     expect(systems.has('lib-test-system')).toBe(true)
     expect(systems.has('other-system')).toBe(true)
 
     // Recipe runtime table has qualified identity ${system}__${className}
     expect(runtime.recipes['lib-test-system__button']).toBeDefined()
     expect(runtime.recipes['lib-test-system__button'].className).toBe('button')
-    expect(runtime.recipes['lib-test-system__button'].qualifiedName).toBe('lib-test-system__button')
+    expect(runtime.recipes['lib-test-system__button'].qualifiedName).toBe(
+      'lib-test-system__button'
+    )
 
     // stylePropNames excludes variant and colorMode
     expect(runtime.stylePropNames).not.toContain('variant')
@@ -108,7 +130,7 @@ describe('F0: Frozen wire contract fixtures', () => {
     const result = compileResultJson satisfies CompileResult
     expect(result.stylesheet).toContain('@layer')
     expect(result.portableStylesheet).toContain('[data-layer="lib-test-system"]')
-    expect(result.runtime.schemaVersion).toBe(1)
+    expect(result.runtime.schemaVersion).toBe(2)
   })
 
   it('CompileResult fixture pins discovered host names', () => {
@@ -116,10 +138,10 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(result.tracedJsxHosts).toEqual(['Card'])
   })
 
-  it('CompileResult fixture surfaces the artifact plans at top level', () => {
+  it('CompileResult fixture surfaces the compiler plans at top level, not in the artifact', () => {
     const result = compileResultJson satisfies CompileResult
     expect(result.stylePlans.length).toBeGreaterThan(0)
-    expect(result.stylePlans).toEqual(result.runtime.stylePlans)
+    expect('stylePlans' in result.runtime).toBe(false)
   })
 
   it('PortableBaseSystem fixture satisfies interface with hashed cssChunks', () => {
@@ -129,7 +151,8 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(portable.cssChunks.length).toBeGreaterThan(0)
     expect(portable.cssChunks[0].system).toBe('lib-test-system')
     expect(portable.cssChunks[0].hash).toBeDefined()
-    expect(portable.runtime.schemaVersion).toBe(1)
+    expect(portable.runtime.schemaVersion).toBe(2)
+    expect(typeof portable.runtime.namer?.rulesVersion).toBe('number')
     expect(portable.jsxElements).toContain('Box')
   })
 

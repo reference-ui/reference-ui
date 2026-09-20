@@ -38,7 +38,7 @@ const spec: AtomicCaseSpec = {
     expect(result.atomCount).toBe(4)
 
     // Twin plans (keyed by raw spelling) resolve to one class.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(7)
     const firaPlans = plans.filter(
       p => p.prop === 'fontFamily' && String(p.value).replace(/\s+/g, ' ') === 'Fira Sans'

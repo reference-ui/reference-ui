@@ -28,6 +28,8 @@ struct NativeCompileRequest {
     include: Option<Vec<String>>,
     #[serde(default)]
     logs: Option<Vec<String>>,
+    #[serde(default, alias = "style_plans_passthrough")]
+    style_plans_passthrough: Option<bool>,
     #[serde(default)]
     base_system: Option<serde_json::Value>,
     #[serde(default)]
@@ -58,6 +60,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
         declaration_root: req.declaration_root,
         include: req.include,
         logs: req.logs,
+        style_plans_passthrough: req.style_plans_passthrough,
     };
     let result = ::atomic::compile(&compile_req).map_err(napi::Error::from_reason)?;
     serialize(&result)

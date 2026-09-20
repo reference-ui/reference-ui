@@ -4,11 +4,14 @@
 
 use crate::atom::{AtomValue, Want};
 
+/// Props `size` stamps with the cloned value, in emit order.
+pub(crate) const EMIT_PROPS: [&str; 2] = ["width", "height"];
+
 /// Expand `size` into equal width and height atoms.
 pub fn lower(want: &Want) -> Vec<(Box<str>, AtomValue)> {
     // size="20px"  /  size="2r"
     vec![
-        ("width".into(), want.value.clone()),
-        ("height".into(), want.value.clone()),
+        (EMIT_PROPS[0].into(), want.value.clone()),
+        (EMIT_PROPS[1].into(), want.value.clone()),
     ]
 }

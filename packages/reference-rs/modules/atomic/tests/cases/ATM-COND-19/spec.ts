@@ -29,7 +29,7 @@ const spec: AtomicCaseSpec = {
       [`${WHEN}:sm:&:hover:color:red.500`]: cls,
     })
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(1)
     expect(plans[0]!.when).toEqual([WHEN, 'sm', '&:hover'])
     expect(plans[0]!.declarations.map(d => d.className)).toContain(cls)

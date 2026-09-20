@@ -39,14 +39,15 @@ const spec: AtomicCaseSpec = {
     expect(width[0]!.declarations.map(d => d.slot)).toEqual(['width@md', 'width@base'])
 
     // Red pins: magnitudes outside the canonical range refuse instead of
-    // minting, and the next-line mark is not structural whitespace.
+    // minting, and the next-line mark collapses as structural whitespace.
     expect(utilities.has(`${SYSTEM}__p_1000000000000000000000`)).toBe(false)
     expect(refusalFor(result.diagnostics, '1e21').code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
     expect(utilities.has(`${SYSTEM}__p_0.0000001`)).toBe(false)
     expect(refusalFor(result.diagnostics, '1e-7').code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
-    // Slice 1 settles the structural set against the lexical inventory; the
-    // pin below holds the brief's reading until then.
-    expect(utilities.has(`${SYSTEM}__p_a\u0085b`)).toBe(true)
+    // Settled against the lexical inventory: U+0085 is structural, so it
+    // collapses to a space exactly like the other structural marks.
+    expect(utilities.has(`${SYSTEM}__p_a\u0085b`)).toBe(false)
+    expect(utilities.has(`${SYSTEM}__p_a_b`)).toBe(true)
   },
 }
 

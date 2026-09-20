@@ -50,7 +50,9 @@ mod tests {
 
         let runtime_val: serde_json::Value =
             serde_json::from_str(NATIVE_RUNTIME_ARTIFACT_JSON).expect("valid runtime JSON");
-        assert_eq!(runtime_val["schemaVersion"], 1);
+        assert_eq!(runtime_val["schemaVersion"], 2);
+        assert!(runtime_val.get("namer").is_some());
+        assert!(runtime_val.get("stylePlans").is_none());
 
         let compile_val: serde_json::Value =
             serde_json::from_str(COMPILE_RESULT_JSON).expect("valid compile result JSON");

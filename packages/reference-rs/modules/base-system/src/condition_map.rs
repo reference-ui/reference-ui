@@ -75,6 +75,11 @@ impl ConditionMap {
             .map(|(_, wrap)| wrap.as_str())
     }
 
+    /// Authored keys in declaration order, for namer table emission.
+    pub fn keys(&self) -> impl Iterator<Item = &str> {
+        self.inner.authored.keys().map(String::as_str)
+    }
+
     fn from_authored(authored: IndexMap<String, String>) -> Self {
         let mut store = ConditionStore {
             authored: IndexMap::with_capacity_and_hasher(authored.len(), FxBuildHasher),
