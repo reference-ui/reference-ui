@@ -1,7 +1,9 @@
 export const manifest = {
   "version": "2",
   "warnings": [
+    "cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts: export * ambiguity: \"StarWidget\" in \"cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts\" is provided by both \"cases/TST-RXP-02-reexport-edges/input/star-ambiguity-a.ts\" and \"cases/TST-RXP-02-reexport-edges/input/star-ambiguity-b.ts\"; excluding from barrel exports",
     "Duplicate symbol name \"NSType\" matched 2 entries: _e6d501ddf7d22889 (user), _45f08cb8c10e7e77 (user). Use symbol id or scoped lookup to disambiguate.",
+    "Duplicate symbol name \"StarWidget\" matched 2 entries: _6fe5ab8f90e7b714 (user), _529f5b3ebcfda767 (user). Use symbol id or scoped lookup to disambiguate.",
     "Duplicate symbol name \"TypeA\" matched 2 entries: _e0b5072be48655db (user), _85adc4e320b7f6b0 (user). Use symbol id or scoped lookup to disambiguate.",
     "Duplicate symbol name \"TypeB\" matched 2 entries: _e0b5072be48655d8 (user), _85adc4e320b7f6b3 (user). Use symbol id or scoped lookup to disambiguate."
   ],
@@ -31,8 +33,15 @@ export const manifest = {
     "ReexportTypeOnly": [
       "_b94c60c04ce4c2ae"
     ],
+    "StarAmbiguityUse": [
+      "_56d1acdc1816fdc3"
+    ],
     "StarSourceItem": [
       "_4240eb08ea24aa06"
+    ],
+    "StarWidget": [
+      "_6fe5ab8f90e7b714",
+      "_529f5b3ebcfda767"
     ],
     "TypeA": [
       "_e0b5072be48655db",
@@ -70,6 +79,27 @@ export const manifest = {
       "name": "NSType",
       "kind": "interface",
       "chunk": "./chunks/_45f08cb8c10e7e77.js",
+      "library": "user"
+    },
+    "_529f5b3ebcfda767": {
+      "id": "_529f5b3ebcfda767",
+      "name": "StarWidget",
+      "kind": "interface",
+      "chunk": "./chunks/_529f5b3ebcfda767.js",
+      "library": "user"
+    },
+    "_56d1acdc1816fdc3": {
+      "id": "_56d1acdc1816fdc3",
+      "name": "StarAmbiguityUse",
+      "kind": "interface",
+      "chunk": "./chunks/_56d1acdc1816fdc3.js",
+      "library": "user"
+    },
+    "_6fe5ab8f90e7b714": {
+      "id": "_6fe5ab8f90e7b714",
+      "name": "StarWidget",
+      "kind": "interface",
+      "chunk": "./chunks/_6fe5ab8f90e7b714.js",
       "library": "user"
     },
     "_7962065f1a764505": {

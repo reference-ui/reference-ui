@@ -12,6 +12,9 @@ into the final `ResolvedTypeScriptGraph`.
   all-Interface groups merge with unioned members; nominal member
   collisions keep first + diagnostic; alias/mixed collisions keep last
   + diagnostic)
+- exclude star-ambiguous names from the barrel map with one diagnostic
+  (two `export *` targets, different ids — ESM absence; diamond
+  same-id and explicit seeds still resolve)
 - build symbol and export lookup indexes
 - resolve imported references through export maps
 - resolve local symbol references within a file
