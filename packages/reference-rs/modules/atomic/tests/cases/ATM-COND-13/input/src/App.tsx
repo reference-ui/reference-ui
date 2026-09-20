@@ -10,6 +10,9 @@ export function App() {
     // while the plans survive, so the differential pins the width gate.
     color: { tabletDown: 'red.500', md: 'blue.500' },
     marginTop: { smTotablet: '1r', lg: '2r' },
+    // Range dispatch (baseSystem.json `a`/`xDown`): the suffixed member
+    // drops with no between fallthrough while the plan survives.
+    outlineColor: { aToxDown: 'red.500', lg: 'blue.500' },
   })
   return <div className={c} />
 }

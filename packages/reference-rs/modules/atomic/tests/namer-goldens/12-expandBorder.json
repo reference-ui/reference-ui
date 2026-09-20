@@ -1,6 +1,6 @@
 {
   "function": "expandBorder",
-  "rulesVersion": 3,
+  "rulesVersion": 4,
   "cases": [
     {
       "input": {

@@ -27,7 +27,7 @@ const TABLES: NamerTables = {
   colorProps: ['backgroundColor', 'color', 'outlineColor'],
   breakpoints: ['base', 'sm', 'md'],
   breakpointWidths: { sm: '640', md: '768' },
-  conditions: ['dark', 'hover'],
+  conditions: ['_dark', '_hover', 'dark', 'hover'],
   fonts: {},
 }
 

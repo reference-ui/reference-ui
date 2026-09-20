@@ -1,6 +1,6 @@
 {
   "function": "lowerCondition",
-  "rulesVersion": 3,
+  "rulesVersion": 4,
   "cases": [
     {
       "input": "base",
@@ -26,6 +26,42 @@
     },
     {
       "input": "_wat",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "_x",
+      "output": {
+        "status": "known",
+        "segment": "x",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "__x",
+      "output": {
+        "status": "known",
+        "segment": "_x",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "x",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hover",
+      "output": {
+        "status": "known",
+        "segment": "hover",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "",
       "output": {
         "status": "unknown"
       }
@@ -162,6 +198,32 @@
         "status": "known",
         "segment": "pxnameDown",
         "kind": "container"
+      }
+    },
+    {
+      "input": "aToxDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "xDownDown",
+      "output": {
+        "status": "known",
+        "segment": "xDownDown",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "xDownOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "aDown",
+      "output": {
+        "status": "unknown"
       }
     },
     {

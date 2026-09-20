@@ -41,10 +41,10 @@ export function lowerCondition(raw: string, tables: NamerTables): LoweredConditi
   return { status: 'unknown' }
 }
 
-/** Catalog hit: strip one `_`, test membership, segment the stripped name. */
+/** Catalog hit: the request tests membership verbatim, segment strips one `_`. */
 function namedCondition(raw: string, tables: NamerTables): LoweredCondition | undefined {
+  if (!tables.conditions.includes(raw)) return undefined
   const stripped = stripOneUnderscore(raw)
-  if (!tables.conditions.includes(stripped)) return undefined
   return {
     status: 'known',
     segment: stripped,
@@ -57,11 +57,11 @@ function stripOneUnderscore(raw: string): string {
   return raw.startsWith('_') ? raw.slice(1) : raw
 }
 
-/** True for a valid `*Down`, `*Only`, or `*To*` range over the scale. Ranges consult widths the plain names never parse: each arm gates on the exact width its oracle call site parses. */
+/** True for a valid `*Down`, `*Only`, or `*To*` range over the scale. Suffixed keys run their one arm with no fallthrough, mirroring `breakpoint_range`; ranges consult widths the plain names never parse, each arm gating on the exact width its oracle call site parses. */
 function isKnownRange(raw: string, tables: NamerTables): boolean {
-  return (
-    isDownRange(raw, tables) || isOnlyRange(raw, tables) || isBetweenRange(raw, tables)
-  )
+  if (raw.endsWith('Down')) return isDownRange(raw, tables)
+  if (raw.endsWith('Only')) return isOnlyRange(raw, tables)
+  return isBetweenRange(raw, tables)
 }
 
 /** True for `bpDown` with a non-base scale member whose own width parses. */

@@ -87,7 +87,7 @@ gate alone — the class never contains them.
 | 5 | `{ $r: 2 }` | `2r`; near-integers collapse under a 1e-6 epsilon, the `i64` cast saturates, non-JSON-number `$r` renders JSON-encoded (quotes included) | `values.rs::r_object_to_atom_value`, `lexical.rs::collapse_r_number` |
 | 6 | `'…!'` / `'… !important'` | marker stripped from the stem, `!` appended after sanitize; a bang inside quotes never marks importance | `css.ts::splitImportant`, `name/mod.rs` |
 | 7 | `padding` / `margin` / `inset` with 2–4 space tokens (paren-depth aware) | four longhands `pt_ pr_ pb_ pl_`; the gate is the three-prop allowlist plus the 2–4 window — 0, 1, and 5+ tokens stay the shorthand class, as do CSS-wide keywords and props like `borderWidth` outside the allowlist | `shorthands/mod.rs` (`is_dimensional_trbl`), `shorthands/dimensional.rs`, `parser.rs::split_tokens` |
-| 8 | `borderBottom: '3px solid red'`, `outline: '…'` | width / style / color longhands by token class: style keywords first (stored **lowercased**), then length-width incl. `thin`/`medium`/`thick`/math fns/`Nr`/`1/3r`, else color (width and color stored **raw**); first of each kind wins, extras dropped never re-fallthrough; `'none'` is case-sensitive (`'None'` classifies as a style); the zero gate is exactly `0`, `0px`, `0rem`, `0em`, `0%` → width `0px`; `outline` is `canon == "outline"` only (style set per prop); the whole-test lowercases but stores the original; `border: 0` → `bd-w_0px`; `border: 'none'`/`inherit`/`var()`/`borders.*` stays whole; **`outline: 'none'` → `outline: '2px solid transparent'` + `outlineOffset: 2px`** | `shorthands/border.rs`, `parser.rs` |
+| 8 | `borderBottom: '3px solid red'`, `outline: '…'` | width / style / color longhands by token class: style keywords first (stored **lowercased**), then length-width incl. `thin`/`medium`/`thick`/math fns/`Nr`/`1/3r`, else color (width and color stored **raw**); first of each kind wins, extras dropped never re-fallthrough; `'none'` is case-sensitive (`'None'` classifies as a style); the zero gate is exactly `0`, `0px`, `0rem`, `0em`, `0%` → width `0px`; `outline` is `canon == "outline"` only (style set per prop); the whole-test lowercases but stores the original; `border: 0` → `bd-w_0px`; `border: 'none'`/`inherit`/`var()`/`borders.*` stays whole; **`outline: 'none'` → `outline: '2px solid transparent'` + `outlineOffset: 2px`**; the zero/ring/whole gates read strings and numbers only — token, bool, and null values pass through whole (the `scalar` table control) | `shorthands/border.rs`, `parser.rs`, `shorthands/mod.rs::extract_raw_val` |
 | 9 | six radius pairs `borderTopRadius` … | two corner longhands, same value | `shorthands/pair.rs` |
 | 10 | `flex: '1'` / `'auto'` / `'initial'` / `'none'` | **value rewritten**: `flex_1_1_0%`, `flex_1_1_auto`, `flex_0_1_auto`, `flex_none`; exact, case-sensitive, trim-tolerant; JSON number `1` rewrites too | `shorthands/flex.rs` |
 | 11 | `size` | `width` + `height` | `resolve/size.rs` |
@@ -123,14 +123,15 @@ keeps `containerType` while the name refuses.
 `resolve/conditions/mod.rs::lower_when` in order; the runtime namer
 mirrors the order, the prefix-match at-rules (`@mediafoo` is known), the
 case-sensitive everything except range-name matching, the
-spaces-only bracket join, and the per-arm width gate on ranges.
+spaces-only bracket join, the per-arm width gate on ranges, the exact
+twin-inclusive catalog known-set, and the no-fallthrough range dispatch.
 
 | Authored `when` entry | Segment | Known-set needed? |
 |---|---|---|
 | `base` | skipped | no |
-| `_hover`, `_osDark`, system condition key | key without `_` | **yes** — unknown keys drop the whole want; the runtime namer refuses identically |
+| `_hover`, `_osDark`, system condition key | key without one `_` | **yes** — the table carries authored keys plus their underscore twins and both preset spellings; the request tests membership verbatim (a twin request mints, its shorter sibling refuses); unknown keys drop the whole want; the runtime namer refuses identically |
 | scale name `md` | the raw name | **yes** — scale names; widths never parsed, plain names mint verbatim |
-| ranges `mdDown`, `mdOnly`, `smToLg` | the raw name | **yes** — names plus the width gate: `Down` parses its own width, `Only` the next (last mints), `To` the to-width; unparseable widths refuse |
+| ranges `mdDown`, `mdOnly`, `smToLg` | the raw name | **yes** — names plus the width gate: `Down` parses its own width, `Only` the next (last mints), `To` the to-width; unparseable widths refuse; suffixed keys run their one arm with no fallthrough (`aToxDown` refuses even when the between arm would mint) |
 | `@media …` / `@container …` / `@supports …` | `[` + trimmed query with spaces → `_` + `]`; bare `@supports` refused on both sides | no |
 | `&…`, other `@…`, or a `&`-bearing selector | same bracket form (tabs/newlines survive byte-exact) | no |
 

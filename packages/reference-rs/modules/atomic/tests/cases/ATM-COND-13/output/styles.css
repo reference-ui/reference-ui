@@ -588,6 +588,7 @@
   }
   @container (min-width: 1024px) {
     .\@reference-ui\/lib__lg\:mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+    .\@reference-ui\/lib__lg\:outline-c_blue\.500 { outline-color: var(--colors-blue-500); }
   }
   @container (max-width: 767.98px) {
     .\@reference-ui\/lib__mdDown\:d_none { display: none; }

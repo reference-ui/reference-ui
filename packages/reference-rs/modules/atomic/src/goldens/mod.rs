@@ -76,9 +76,10 @@ fn all() -> Vec<Suite> {
 }
 
 /// The system the case harness compiles with, for table-identical goldens:
-/// the lib spec plus authored non-bare breakpoint widths. Order is
-/// load-bearing (tablet, padded, hex, pxname, then empty last);
-/// ATM-SEAM-08 carries the identical `baseSystem.json`.
+/// the lib spec plus authored non-bare breakpoint widths and the twin
+/// condition. Order is load-bearing (tablet, padded, hex, pxname, then
+/// `a` and `xDown`, then empty last); ATM-SEAM-08 carries the identical
+/// `baseSystem.json`.
 fn spec_system() -> base_system::BaseSystem {
     let path = format!(
         "{}/tests/fixtures/lib-system-spec.json",
@@ -86,12 +87,20 @@ fn spec_system() -> base_system::BaseSystem {
     );
     let text = std::fs::read_to_string(&path).expect("spec fixture reads");
     let mut spec: Value = serde_json::from_str(&text).expect("spec fixture parses");
+    // `a` is unparseable by design: it sits right after `pxname`, so
+    // `pxnameOnly` keeps refusing on its next width, and the from width
+    // never parses so the dispatch pins stay exact.
     spec["breakpoints"] = json!({
         "tablet": "48rem",
         "padded": "640 ",
         "hex": "0x280",
         "pxname": "640px",
+        "a": "auto",
+        "xDown": "200",
         "empty": "",
+    });
+    spec["conditions"] = json!({
+        "__x": "[data-x] &",
     });
     let text = serde_json::to_string(&spec).expect("range spec serializes");
     base_system::BaseSystem::from_json(&text).expect("range system parses")

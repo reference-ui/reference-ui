@@ -5,7 +5,7 @@
 //! (aliases, prefixes, keyword sets, fonts) sort their keys; lowerings,
 //! breakpoints, conditions unions, and font extras keep the orders the
 //! interpreter and the expansion passes rely on. The rules version sits
-//! at 3 and bumps whenever a naming rule changes a class.
+//! at 4 and bumps whenever a naming rule changes a class.
 
 use std::collections::BTreeMap;
 
@@ -18,7 +18,7 @@ use crate::resolve::font::{family, weight};
 use crate::resolve::shorthands::{border, parser};
 
 /// Rules version both namers pin: bump whenever a naming rule changes a class.
-pub const NAMER_RULES_VERSION: u32 = 3;
+pub const NAMER_RULES_VERSION: u32 = 4;
 
 /// The closed, O(props + conditions + fonts) data both namers read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -45,7 +45,9 @@ pub struct NamerTables {
     /// `*Down`/`*Only`/`*To*` consult `width_px` parses the class never
     /// carries, so names alone cannot mirror membership.
     pub breakpoint_widths: BTreeMap<String, String>,
-    /// Known `_` keys without the underscore, unioned with presets.
+    /// Known `_` keys verbatim: authored keys plus their underscore
+    /// twins, unioned with both preset spellings. The request tests
+    /// membership exactly; the segment still strips one `_`.
     pub conditions: Vec<String>,
     /// Family to default weight, scoped weights, and ordered extras.
     pub fonts: BTreeMap<String, FontTable>,
@@ -166,17 +168,29 @@ fn build_breakpoint_widths(system: &BaseSystem) -> BTreeMap<String, String> {
         .collect()
 }
 
-/// System condition keys with at most one `_` stripped, unioned with the
-/// preset names and sorted. Mirrors the dual-key lookup's known set.
+/// Authored condition keys plus their underscore twins, unioned with
+/// both preset spellings and sorted. Mirrors the dual-key lookup's known
+/// set verbatim, so the runtime tests the request exactly.
 fn build_conditions(system: &BaseSystem) -> Vec<String> {
     let mut names = std::collections::BTreeSet::new();
     for key in system.conditions.keys() {
-        names.insert(key.strip_prefix('_').unwrap_or(key).to_string());
+        names.insert(key.to_string());
+        names.insert(twin_key(key));
     }
     for (name, _) in PRESETS {
         names.insert((*name).to_string());
+        names.insert(format!("_{name}"));
     }
     names.into_iter().collect()
+}
+
+/// The underscore twin `ConditionMap::get` answers: strip one leading
+/// `_` when present, else prepend one. Mirrors `insert_twin`.
+fn twin_key(key: &str) -> String {
+    if let Some(stripped) = key.strip_prefix('_') {
+        return stripped.to_string();
+    }
+    format!("_{key}")
 }
 
 /// Font rows with the precomputed default weight and ordered extras.

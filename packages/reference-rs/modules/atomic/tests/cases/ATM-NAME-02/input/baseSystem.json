@@ -13,7 +13,8 @@
   "fonts": {},
   "conditions": {
     "_hover": "&:is(:hover, [data-hover])",
-    "_dark": "[data-color-mode=dark] &"
+    "_dark": "[data-color-mode=dark] &",
+    "__x": "[data-x] &"
   },
   "globalCss": [],
   "keyframes": {},

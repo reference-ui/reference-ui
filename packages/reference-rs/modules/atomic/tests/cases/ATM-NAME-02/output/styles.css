@@ -11,5 +11,9 @@
 @layer utilities {
   .condition-prefix__hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
   [data-color-mode=dark] .condition-prefix__dark\:hover\:bg_n300:is(:hover, [data-hover]) { background: var(--colors-n300); }
+  [data-x] .condition-prefix__x\:c_n300 { color: var(--colors-n300); }
+  @container (min-width: 768px) {
+    .condition-prefix__md\:c_n300 { color: var(--colors-n300); }
+  }
 }
 }

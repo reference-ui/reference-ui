@@ -1,5 +1,6 @@
 {
   "lg:marginTop:2r": "@reference-ui/lib__lg:mt_2r",
+  "lg:outlineColor:blue.500": "@reference-ui/lib__lg:outline-c_blue.500",
   "md:color:blue.500": "@reference-ui/lib__md:c_blue.500",
   "mdDown:display:none": "@reference-ui/lib__mdDown:d_none",
   "mdOnly:px:2r": "@reference-ui/lib__mdOnly:px_2r",

@@ -581,5 +581,7 @@
   .\@reference-ui\/lib__bd_inherit { border: inherit; }
   .\@reference-ui\/lib__bd_none { border: none; }
   .\@reference-ui\/lib__bd-w_0px { border-width: 0px; }
+  .\@reference-ui\/lib__outline_none { outline: #000; }
+  .\@reference-ui\/lib__outline_colors\.red\.500 { outline: var(--colors-red-500); }
 }
 }

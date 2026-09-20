@@ -5,7 +5,9 @@
 //! (ATM-SEAM-08) compiles with the identical `baseSystem.json`, so the
 //! writer's tables and the runner's tables match by construction. Slots
 //! need no system but travel with the composed file to keep every module
-//! small.
+//! small; the probe lists live in `probes` for the same reason.
+
+mod probes;
 
 use serde_json::{json, Value};
 
@@ -14,6 +16,10 @@ use crate::atom::{AtomSet, WhenKind};
 use crate::resolve::conditions::lower_when;
 use crate::runtime::{derive_slot, AuthoredDeclaration, PlanBuilder};
 use base_system::BaseSystem;
+use probes::{
+    container_probes, decl, dispatch_probes, range_probes, scalar_probes, token_probes,
+    twin_probes,
+};
 
 pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
     let raws = [
@@ -21,6 +27,15 @@ pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
         "_hover",
         "_osDark",
         "_wat",
+        // Twin catalog: authored `__x` answers `_x` (segment `x`) and
+        // `__x` (segment `_x`); bare `x` stays unknown, `hover` mints
+        // through the twin of authored `_hover`, and the empty key
+        // refuses on both sides.
+        "_x",
+        "__x",
+        "x",
+        "hover",
+        "",
         "md",
         "mdDown",
         "mdOnly",
@@ -47,6 +62,15 @@ pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
         "smTotablet",
         "tabletTopxname",
         "pxnameDown",
+        // Range dispatch: suffixed keys run their one arm with no
+        // fallthrough, so aToxDown refuses (its Down arm finds no `aTox`)
+        // even though the between arm would mint; xDownDown mints
+        // through the Down arm, xDownOnly refuses on the empty next
+        // width, and aDown refuses on its unparseable own width.
+        "aToxDown",
+        "xDownDown",
+        "xDownOnly",
+        "aDown",
         "@media (min-width: 1px)",
         "@supports",
         "@supports (display: grid)",
@@ -183,84 +207,9 @@ fn build_output(system: &BaseSystem, name: &str, decl: &AuthoredDeclaration) -> 
     json!(declarations)
 }
 
-/// `container` bare/named probes: bools, the empty, exact and padded
-/// `"true"` (the oracle compares untrimmed), a name, and falsy kinds.
-fn container_probes() -> Vec<AuthoredDeclaration> {
-    vec![
-        decl(&[], "container", json!(true), false),
-        decl(&[], "container", json!(""), false),
-        decl(&[], "container", json!("true"), false),
-        decl(&[], "container", json!("true "), false),
-        decl(&[], "container", json!(" true"), false),
-        decl(&[], "container", json!("\ttrue"), false),
-        decl(&[], "container", json!(" \t true \n "), false),
-        decl(&[], "container", json!("sidebar"), false),
-        decl(&[], "container", json!(false), false),
-        decl(&[], "container", json!(null), false),
-        decl(&[], "container", json!(0), false),
-    ]
-}
-
-/// Non-bare custom widths at composed scale: the Down and Between
-/// members drop while the plan survives, the last-bp Only mints,
-/// and a bad scalar `when` drops the whole want.
-fn range_probes() -> Vec<AuthoredDeclaration> {
-    vec![
-        decl(&[], "color", json!({"tabletDown": "red", "md": "blue"}), false),
-        decl(
-            &[],
-            "color",
-            json!({"smTotablet": "red", "md": "blue"}),
-            false,
-        ),
-        decl(
-            &[],
-            "color",
-            json!({"emptyOnly": "red", "md": "blue"}),
-            false,
-        ),
-        decl(&["tabletDown"], "color", json!("red"), false),
-    ]
-}
-
-/// One authored declaration from parts.
-fn decl(when: &[&str], prop: &str, value: Value, important: bool) -> AuthoredDeclaration {
-    AuthoredDeclaration {
-        when: when.iter().map(|entry| (*entry).to_string()).collect(),
-        prop: prop.to_string(),
-        value,
-        important,
-    }
-}
-
 /// Composed divergence probes: one declaration in, plan declarations out.
 pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
-    let mut decls = vec![
-        decl(&[], "padding", json!("1e21"), false),
-        decl(&[], "padding", json!("1e-7"), false),
-        decl(&[], "padding", json!("1e20"), false),
-        decl(&[], "padding", json!("1e-6"), false),
-        decl(&[], "padding", json!("0.5"), false),
-        decl(&[], "padding", json!("-0"), false),
-        decl(&[], "top", json!("0x10"), false),
-        decl(&[], "margin", json!(""), false),
-        decl(&[], "margin", json!("  "), false),
-        decl(&[], "padding", json!("inf"), false),
-        decl(&[], "padding", json!("Infinity"), false),
-        decl(&[], "padding", json!("nan"), false),
-        decl(&[], "padding", json!(" 0x10"), false),
-        decl(&[], "padding", json!(0.0), false),
-        decl(&[], "padding", json!(1e21), false),
-        decl(&[], "marginTop", json!({"$r": 2}), false),
-        decl(&[], "marginTop", json!({"$r": 1e21}), false),
-        decl(&[], "marginTop", json!({"$r": 2.0000005}), false),
-        decl(&[], "padding", json!("a\u{85}b"), false),
-        decl(&[], "padding", json!("a\u{feff}b"), false),
-        decl(&[], "content", json!("\"a\rb\""), false),
-        decl(&[], "color", json!("İnk"), false),
-        decl(&[], "borderTop", json!("SOLID 3px red"), false),
-        decl(&[], "width", json!({"md": "2r", "base": "1r"}), false),
-    ];
+    let mut decls = scalar_probes();
     decls.extend(container_probes());
     decls.extend([
         decl(&[], "flex", json!(1), false),
@@ -293,6 +242,9 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
         decl(&["_wat"], "color", json!("red"), false),
     ]);
     decls.extend(range_probes());
+    decls.extend(twin_probes());
+    decls.extend(token_probes());
+    decls.extend(dispatch_probes());
     Suite {
         file: "16-name.json",
         function: "name",

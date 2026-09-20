@@ -1,6 +1,6 @@
 {
   "function": "splitTokens",
-  "rulesVersion": 3,
+  "rulesVersion": 4,
   "cases": [
     {
       "input": "3px solid red",
