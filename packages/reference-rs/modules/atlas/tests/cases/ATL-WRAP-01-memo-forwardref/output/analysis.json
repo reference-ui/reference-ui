@@ -3,6 +3,72 @@
   "analyses": {
     "default": [
       {
+        "name": "DirectForwardRef",
+        "interface": {
+          "name": "DirectForwardRefProps",
+          "source": "./components/DirectForwardRef.tsx"
+        },
+        "source": "./components/DirectForwardRef.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "size",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "md": "very common",
+              "sm": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<DirectRefBox size=\"sm\">",
+          "<DirectRefBox size=\"md\">"
+        ],
+        "usedWith": {
+          "DirectMemo": "very common"
+        }
+      },
+      {
+        "name": "DirectMemo",
+        "interface": {
+          "name": "DirectMemoProps",
+          "source": "./components/DirectMemo.tsx"
+        },
+        "source": "./components/DirectMemo.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "tone",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "loud": "very common",
+              "quiet": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<DirectMemo tone=\"loud\">",
+          "<DirectMemo tone=\"quiet\">"
+        ],
+        "usedWith": {
+          "DirectForwardRef": "very common"
+        }
+      },
+      {
         "name": "FancyButton",
         "interface": {
           "name": "FancyButtonProps",
@@ -34,7 +100,7 @@
             }
           }
         ],
-        "usage": "very common",
+        "usage": "common",
         "examples": [
           "<CTAButton variant=\"solid\">",
           "<CTAButton variant=\"ghost\" disabled>"
@@ -67,7 +133,7 @@
             }
           }
         ],
-        "usage": "very common",
+        "usage": "common",
         "examples": ["<SearchBox size=\"sm\">", "<SearchBox size=\"md\">"],
         "usedWith": {
           "FancyButton": "very common"

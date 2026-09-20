@@ -1,7 +1,8 @@
 /**
  * Station specification for ATL-WRAP-01-memo-forwardref.
  * Validates component discovery, call-site counting, and interface mapping
- * for components wrapped in React.memo and React.forwardRef.
+ * for components wrapped in React.memo and React.forwardRef, including
+ * direct default-exported wrapper calls (`export default memo(...)`).
  * Proves primary SPEC anchor ATL-WRAP-01.
  */
 import { expect } from 'vitest'
@@ -21,6 +22,20 @@ const spec: AtlasCaseSpec = {
     expect(searchInput.count).toBe(2)
     expect(searchInput.interface?.name).toBe('SearchInputProps')
     expect(searchInput.examples[0]).toMatch(/<SearchBox/)
+
+    const directMemo = result.components.find(c => c.name === 'DirectMemo')!
+    expect(directMemo).toBeDefined()
+    expect(directMemo.count).toBe(2)
+    expect(directMemo.interface?.name).toBe('DirectMemoProps')
+    expect(directMemo.examples[0]).toMatch(/<DirectMemo/)
+
+    const directForwardRef = result.components.find(
+      c => c.name === 'DirectForwardRef'
+    )!
+    expect(directForwardRef).toBeDefined()
+    expect(directForwardRef.count).toBe(2)
+    expect(directForwardRef.interface?.name).toBe('DirectForwardRefProps')
+    expect(directForwardRef.examples[0]).toMatch(/<DirectRefBox/)
   },
 }
 

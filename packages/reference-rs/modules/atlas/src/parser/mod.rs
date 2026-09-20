@@ -19,8 +19,8 @@ mod types;
 mod utils;
 
 use components::{
-    collect_variable_components, component_from_arrow, component_from_function_declaration,
-    component_from_function_like,
+    collect_variable_components, component_from_arrow, component_from_expression,
+    component_from_function_declaration, component_from_function_like,
 };
 use types::{type_expr_from_interface, type_expr_from_type};
 use utils::{
@@ -401,6 +401,29 @@ fn collect_default_export(
                 &component_name,
                 function.params.items.first(),
                 function.body.as_ref().map(|body| &body.statements),
+                file_path,
+                display_source,
+                app_relative_path,
+                source,
+            ) {
+                state
+                    .local_components
+                    .insert(component.name.clone(), component.clone());
+                state
+                    .exported_components
+                    .insert(component.name.clone(), component.clone());
+                state.default_component = Some(component.name);
+            }
+        }
+        ExportDefaultDeclarationKind::CallExpression(_) => {
+            // Direct `export default memo(...)`: route through the shared
+            // wrapper-unwrap with the file-derived name; the inner id is incidental.
+            let Some(expression) = export_default.declaration.as_expression() else {
+                return;
+            };
+            if let Some(component) = component_from_expression(
+                default_name,
+                expression,
                 file_path,
                 display_source,
                 app_relative_path,
