@@ -3997,3 +3997,189 @@ Captain: safe to commit the (m) write-set as one cycle
 commit (10 styletrace paths + log); keep the concurrent
 atlas-drop fortify and Jettison/Reaper docs rows on
 their own owners' commits, not this one.
+
+### Wave 5, find (atlas-drop) — fortify landing
+
+**Status: LANDED.** Cited by slug per the ruling (the find section's
+`(m)` collides with the styletrace find). Ruling followed exactly:
+one new arm in `collect_default_export`, station ATL-WRAP-01
+extended (no new case id), goldens via `--update-goldens` CLI flag
+only, per-pair attestation, fail-without-fix proven firsthand both
+ways. No commits (captain commits on chain-review VERIFIED).
+
+**Fix (one arm + one import, atlas only).**
+`packages/reference-rs/modules/atlas/src/parser/mod.rs`:
+`ExportDefaultDeclarationKind::CallExpression` arm in
+`collect_default_export`, routing through the existing
+wrapper-unwrap via `declaration.as_expression()` (oxc 0.115
+`inherit_variants!` provides the zero-cost `&Expression` view, so
+the declarator path's `component_from_expression` is reused with
+zero duplication and zero edits to `components.rs`) and
+registering `local_components` + `exported_components` +
+`default_component` exactly like the FunctionExpression arm.
+Naming rule honored: `default_name` (file-derived) is passed, the
+inner function id is incidental. Diff is 27 lines: 1 import
+(`component_from_expression`), 1 arm, 1 terse why-comment.
+
+**Pins / station (ATL-WRAP-01).** New fixtures
+`components/DirectMemo.tsx` (`export default React.memo(function
+DirectMemoInner ...)` — inner id deliberately differs from the
+file stem, pinning file-derived naming) and
+`components/DirectForwardRef.tsx` (`export default
+React.forwardRef<HTMLInputElement, DirectForwardRefProps>(function
+DirectForwardRefInner ...)`), consumed from a NEW page
+`pages/DirectWrappedPage.tsx` (2 call sites each, one via aliased
+default import `DirectRefBox`, pinning alias attribution for the
+direct-default form). Separate page keeps existing `usedWith`
+untouched. `spec.ts` pins name/count/interface/examples for both
+new components.
+
+**Fail-without-fix / pass-with-fix (firsthand).** `/tmp` repro:
+exit 1 pre-fix (both probes `not tracked at all`,
+`diagnostics: []`, both controls green) → exit 0 post-rebuild
+(all four `count=1`, interfaces mapped, `diagnostics: []`).
+Extended WRAP-01 spec: RED on pre-fix binding (exactly 1 failure,
+`expected undefined to be defined` at the DirectMemo pin, 59/60
+pass — proving the rest of the suite was already green) → GREEN
+after (60/60).
+
+**Sweep attestation (per-pair, no blanket updates).**
+`analysis.json`: FancyButton and SearchInput verified
+programmatically identical except `usage` `very common`→`common`
+— the unavoidable denominator call-site effect (ratio-scored
+against global total: 2/4=0.5 → 2/8=0.25 vs the 0.5 threshold;
+counts, props, values, examples, interfaces, `usedWith` all
+byte-identical). Only additive entries: `DirectForwardRef` and
+`DirectMemo` (`count=2`, interfaces mapped, file-derived names,
+`<DirectRefBox ...>` alias examples, `usedWith` each other).
+`diagnostics.json` untouched (empty-equivalent);
+`VALID_DIAGNOSTIC_CODES` unchanged (helpers.ts untouched). Two
+drift findings, both corrected in-tree: (1) the regen writer
+reflowed `examples` arrays in 11 uninvolved stations (pure
+whitespace; those stations passed pre-regen) — all 11 reverted,
+`git status` confirms WRAP-01 is the only golden pair touched;
+(2) the same reflow hit SearchInput's `examples` hunk — restored
+to committed single-line formatting, verified by deep-equal
+against saved writer output (`/tmp/atlas-drop-writer-analysis.json`).
+
+**Suites (repo runners, this session).** `pnpm agentrs v atlas`
+60/60 (5 files, incl. standing gauges); `pnpm agentrs c atlas`
+16/16; `pnpm agentrs b` rebuilt fresh before the flip proof;
+`pnpm agentrs q` on all 8 touched atlas paths — 0 violations, 12
+warnings, all 12 pre-existing on `mod.rs` (file 421→444 lines,
+fn 86→109 lines, cyclomatic 12→14, cognitive 33→40 — every metric
+inside its hard limit; no new warning categories, no clippy
+allows). Fixture/spec/golden files contribute 0 warnings.
+
+**Boundary honored.** Changed: `atlas/src/parser/mod.rs` (arm +
+import) + WRAP-01 station (3 new fixture files, `spec.ts`,
+`analysis.json`) + this section. Untouched: `_ => {}` (every
+other variant still drops), `parse_wrapper_type_arguments`
+`nth(1)`, the declarator path (textually unedited),
+`default_export_name`, unspent fodder (a)-(d), station README
+(already claims the form), all other stations' goldens,
+everything outside `modules/atlas/`. Other crews' rows
+(docs/ATOMIC.md, docs/missions/*, Jettison/Reaper) not touched.
+
+**Files (mine only).**
+`packages/reference-rs/modules/atlas/src/parser/mod.rs`,
+`tests/cases/ATL-WRAP-01-memo-forwardref/{spec.ts,output/analysis.json,input/app/src/components/{DirectMemo,DirectForwardRef}.tsx,input/app/src/pages/DirectWrappedPage.tsx}`
++ this section.
+
+### Wave 5, find (atlas-drop) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. Cited by slug
+per the ruling (letter `(m)` collides with the styletrace find).
+Atlas files only — sibling crews' files (`docs/ATOMIC.md`,
+`docs/missions/*`, Jettison/Reaper) never touched or adjudicated
+(write-set audited via `git status --porcelain` paths before judging
+any diff: exactly 3 modified + 3 new under `modules/atlas/`, all
+unstaged, nothing staged).
+
+**1. Finder repro** (`/tmp/doom-wave5-atlas-direct-default-call.mjs`,
+unmodified, x86_64 box, fresh `dist/native` darwin-x64 binding):
+CONTRACT HOLDS, exit 0 — all four components `count=1` with
+interfaces mapped (`DirectDefault`, `DirectRefDefault`,
+`IdentDefault`, `NamedTwin`), `diagnostics: []`. The direct
+`export default memo(...)/forwardRef(...)` probes are tracked, call
+sites attributed, zero vanish.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs v atlas`
+60/60 green (5 files, incl. standing gauges + extended WRAP-01);
+`pnpm agentrs c atlas` 16/16 green; `pnpm agentrs q` on all 5
+touched source files — 0 violations, 12 warnings, all on `mod.rs`.
+Baseline check firsthand: pre-fix HEAD `mod.rs` carries the SAME 12
+warnings (same categories; `collect_default_export` 12→14
+cyclomatic, 33→40 cognitive, fn 86→109 lines, file 421→444) — every
+metric inside its hard limit, zero new warning categories, zero
+clippy allows. Fixture/spec files contribute 0 warnings.
+
+**3. Fail-without-fix / pass-with-fix** (SWAP WINDOW 1, announced):
+pre-fix `mod.rs` (HEAD bytes, 0 `CallExpression` mentions) swapped
+into the tree, binding rebuilt — repro flips to exit 1 with the
+EXACT filed failure mode (both probes `not tracked at all`,
+controls green, `diagnostics: []`), and `pnpm agentrs v atlas`
+shows exactly 1 failure: WRAP-01 `expected undefined to be defined`
+at `spec.ts:27` (DirectMemo pin), 59/60 pass, all 15 other stations
++ all unit files green. Window closed: fix bytes restored
+(sha256 `47cd2220…f372` before = after), binding rebuilt, repro
+back to exit 0, suite back to 60/60. Index untouched throughout
+(no add/checkout); `dist/` untracked build output.
+
+**4. Diff review (line-by-line):** `mod.rs` — ONE new
+`ExportDefaultDeclarationKind::CallExpression` arm + ONE import
+(`component_from_expression`) + one terse why-comment. The arm
+routes via `declaration.as_expression()` into the EXISTING
+declarator-path `component_from_expression` (the
+`CallExpression` recursion at `components.rs:199-215`) — zero
+duplicated unwrap logic, `components.rs` textually unmodified.
+Registration mirrors the FunctionExpression arm exactly
+(`local_components` + `exported_components` + `default_component`);
+naming passes file-derived `default_name`, inner id incidental, per
+the ruling's naming rule. Inside the ruling boundary:
+`_ => {}` keeps every other variant (no TSAs/paren/non-null arms —
+`export default (memo(...))` still drops, per ruling §5, fodder at
+most); `parse_wrapper_type_arguments` `nth(1)` untouched; fodder
+(a)-(d) untouched; station README untouched; nothing outside
+`modules/atlas/`. Spec diff purely additive (2 new pin blocks +
+doc line); FancyButton/SearchInput pins byte-identical — no
+weakened tests. Goldens attested per pair by parsing HEAD vs
+worktree as data (`/tmp/atlas-drop-chainrev-goldens.mjs`, all
+PASS): exactly 2 additive entries (`DirectMemo`, `DirectForwardRef`,
+`count=2`, interfaces mapped, file-derived names, `<DirectRefBox>`
+alias examples), zero removals, no `*Inner` leakage;
+FancyButton/SearchInput deep-identical except the `usage`
+`very common`→`common` denominator effect (2/4→2/8 vs the 0.5
+threshold — counts, props, values, examples, interfaces, `usedWith`
+all byte-identical); `diagnostics.json` byte-identical to HEAD and
+empty-equivalent; `helpers.ts` (`VALID_DIAGNOSTIC_CODES`)
+unmodified; WRAP-01 `analysis.json` the only golden touched (the 11
+reflowed stations the landing reported are confirmed reverted —
+absent from status).
+
+**5. Contracts hold.** (a) ATL-WRAP-01 README "both named and
+default-exported wrapped component forms" — the direct form now
+tracked for both `memo` and `forwardRef`, pinned by name/count/
+interface/examples assertions. (b) Diagnostics-over-silence — the
+silence is gone because the data is now present; per ruling §4 no
+new diagnostic kind is owed and none was added. (c) Trustworthy
+identity — file-derived naming (`DirectMemo`, not `DirectMemoInner`)
+plus alias attribution (`DirectRefBox`) pinned in goldens.
+Negative controls firsthand (`/tmp/atlas-drop-chainrev-negatives.mjs`,
+NEGATIVES HOLD): `export default (() => 42)()` and
+`export default makeConfig()` mint nothing, crash nothing, and the
+healthy `Plain` control tracks `count=1`.
+
+Captain: commit the 6 atlas paths (3 modified + 3 new fixtures) +
+finder report + ruling/landing/review log sections; keep
+concurrent docs/Jettison/Reaper rows on their owners' commits.
+
+### Wave 5 close — captain
+All three finds VERIFIED and committed: (m) styletrace fallback
+signal miss, (o) shared slice multibyte panic, (atlas-drop)
+direct-default wrapper-call discovery drop. Captain firsthand per arc:
+suites + quality gates re-run green (warn-only, non-failing).
+Note: two sections share the (m) label (styletrace + atlas find);
+slug disambiguates. Cycles banked: 15. Wave 6 finders dispatched
+next (virtualrs, tasty, neo-fragments — different modules, no lib).
