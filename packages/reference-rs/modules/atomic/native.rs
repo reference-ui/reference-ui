@@ -98,6 +98,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
         stylesheet: preamble.clone(),
         portable_stylesheet: preamble,
         runtime: ::atomic::NativeRuntimeArtifact::default(),
+        style_plans: Vec::new(),
         css: Some(::atomic::CssRuntime::new()),
         diagnostics: vec![::atomic::Diagnostic::error(
             ::atomic::DiagnosticCode::InvalidBaseSystem,

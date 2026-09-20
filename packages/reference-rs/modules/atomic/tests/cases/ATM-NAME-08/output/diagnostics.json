@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
+    "message": "`top: 0x10` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"0x10\" on `top`",
+    "file": "input/src/numerics.ts",
+    "line": 6,
+    "column": 31
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`margin: ` has no compiled style plan; this lookup will emit no class. Empty string value on `margin`",
+    "file": "input/src/numerics.ts",
+    "line": 7,
+    "column": 36
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "Empty string value on `margin`",
+    "file": "input/src/numerics.ts",
+    "line": 8,
+    "column": 36
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-COLOR",
+    "message": "`İnk` is neither a color token nor a CSS color",
+    "file": "input/src/text.ts",
+    "line": 6,
+    "column": 43
+  }
+]

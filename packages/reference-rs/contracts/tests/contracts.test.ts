@@ -116,6 +116,12 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(result.tracedJsxHosts).toEqual(['Card'])
   })
 
+  it('CompileResult fixture surfaces the artifact plans at top level', () => {
+    const result = compileResultJson satisfies CompileResult
+    expect(result.stylePlans.length).toBeGreaterThan(0)
+    expect(result.stylePlans).toEqual(result.runtime.stylePlans)
+  })
+
   it('PortableBaseSystem fixture satisfies interface with hashed cssChunks', () => {
     const portable = portableBaseSystemJson satisfies PortableBaseSystem
     expect(portable.schemaVersion).toBe(1)

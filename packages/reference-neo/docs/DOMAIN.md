@@ -67,6 +67,30 @@ this file in the same pass.
   project, from the code — never declared. (styletrace)
 - **configured** — from `jsxElements`: the escape hatch for shapes
   static tracing cannot infer. (styletrace)
+- **compiler namer** — the Rust request-to-class function, run at
+  compile time over extracted wants. The oracle behind every naming
+  gate. (namer)
+- **runtime namer** — the JavaScript mirror `css()` runs over style
+  props. One algorithm with the compiler namer, held equal by the
+  differential gate. (namer)
+- **namer tables** — the closed data both namers read, written by the
+  compiler and never by hand. (namer)
+- **lowering** — one table-shaped step a canonical prop runs before
+  naming: longhand shape, value rewrite, emit, drop. (namer)
+- **naming rules** — the closed list of every place the class is not
+  `prefix_sanitize(authored)`. (namer)
+- **rules version** — the integer bumped whenever a naming rule
+  changes a class; tables and runtime namer must carry the same one.
+  (namer)
+- **namer golden** — a Rust-generated `input → output` file for one
+  procedure or lexical function. The runtime namer reproduces it.
+  (namer; an rs golden, not a Neo proof)
+- **differential** — the end-to-end gate: the runtime namer over every
+  authored declaration of a compile equals the compiled plans, slot
+  and className. (namer)
+- **miss class** — the class `css()` constructs for a request the
+  compiler never saw. It paints nothing and warns once in browser
+  dev. Not a ghost: ghosts stay forbidden. (namer)
 
 ## Retired (do not revive)
 

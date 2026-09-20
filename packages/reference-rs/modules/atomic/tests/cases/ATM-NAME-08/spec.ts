@@ -1,0 +1,53 @@
+/**
+ * Lexical-function station (ATM-NAME-08). The class stem passes only through
+ * explicit lexical functions -- never a host default. Every builtin divergence
+ * carries a compiled input and a pinned outcome: radix and blank spellings
+ * refuse with no class, -0 folds to 0, magnitudes outside the canonical range
+ * refuse, a quoted carriage return survives the sanitize, marks outside the
+ * structural set survive byte-identical, the fold is ASCII-only, and per-prop
+ * object declarations follow the author's key order.
+ */
+import { expect } from 'vitest'
+import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+
+const SYSTEM = '@reference-ui/lib'
+
+function refusalFor(messages: Array<{ code: string; message: string }>, spelling: string) {
+  const match = messages.find(d => d.message.includes(spelling))
+  expect(match, `missing refusal for '${spelling}'`).toBeDefined()
+  return match!
+}
+
+const spec: AtomicCaseSpec = {
+  id: 'ATM-NAME-08',
+  verify(result) {
+    const utilities = layerClassNames(result.stylesheet, 'utilities')
+    const classes = Object.values(result.css?.classes ?? {})
+
+    // Green pins: refusals mint no class, -0 folds, quotes and marks survive.
+    expect(utilities.has(`${SYSTEM}__top_0x10`)).toBe(false)
+    expect(refusalFor(result.diagnostics, '0x10').code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
+    expect(result.stylesheet).not.toContain('margin: ;')
+    expect(refusalFor(result.diagnostics, 'Empty string').code).toBe('ATM-W-INVALID-CSS-VALUE')
+    expect(utilities.has(`${SYSTEM}__p_0`)).toBe(true)
+    expect(classes.some(name => name.includes('\r'))).toBe(true)
+    expect(utilities.has(`${SYSTEM}__p_a\uFEFFb`)).toBe(true)
+    expect(utilities.has(`${SYSTEM}__c_\u0130nk`)).toBe(true)
+    expect(utilities.has(`${SYSTEM}__bd-t-s_solid`)).toBe(true)
+    const width = result.stylePlans.filter(plan => plan.prop === 'width')
+    expect(width).toHaveLength(1)
+    expect(width[0]!.declarations.map(d => d.slot)).toEqual(['width@md', 'width@base'])
+
+    // Red pins: magnitudes outside the canonical range refuse instead of
+    // minting, and the next-line mark is not structural whitespace.
+    expect(utilities.has(`${SYSTEM}__p_1000000000000000000000`)).toBe(false)
+    expect(refusalFor(result.diagnostics, '1e21').code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
+    expect(utilities.has(`${SYSTEM}__p_0.0000001`)).toBe(false)
+    expect(refusalFor(result.diagnostics, '1e-7').code).toBe('ATM-W-NON-CANONICAL-NUMERIC')
+    // Slice 1 settles the structural set against the lexical inventory; the
+    // pin below holds the brief's reading until then.
+    expect(utilities.has(`${SYSTEM}__p_a\u0085b`)).toBe(true)
+  },
+}
+
+export default spec

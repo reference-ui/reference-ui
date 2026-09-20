@@ -121,6 +121,8 @@ export interface CompileResult {
   stylesheet: string
   portableStylesheet?: string
   runtime: NativeRuntimeArtifact
+  /** Compile-internal plans: the rows the artifact carries, surfaced for proof. */
+  stylePlans: RuntimeStylePlan[]
   css?: CssRuntime
   diagnostics: Diagnostic[]
   wants?: Want[]

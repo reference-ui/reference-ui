@@ -63,7 +63,7 @@ impl AssembleCtx {
         let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
         let runtime = NativeRuntimeArtifact {
             schema_version: 1,
-            style_plans,
+            style_plans: style_plans.clone(),
             recipes: runtime_recipes,
             style_prop_names: runtime::get_style_prop_names(),
         };
@@ -103,6 +103,7 @@ impl AssembleCtx {
             stylesheet,
             portable_stylesheet,
             runtime,
+            style_plans,
             css: Some(css),
             diagnostics,
             wants,
