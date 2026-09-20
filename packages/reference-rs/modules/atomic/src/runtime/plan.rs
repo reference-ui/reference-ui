@@ -7,6 +7,8 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+use super::tables::NamerTables;
+
 /// Cascade slot and compiled class name for one lowered atomic declaration.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -62,18 +64,23 @@ pub struct RecipeRuntimeTable {
 #[serde(rename_all = "camelCase")]
 pub struct NativeRuntimeArtifact {
     pub schema_version: u32,
-    pub style_plans: Vec<RuntimeStylePlan>,
+    pub namer: NamerTables,
     pub recipes: BTreeMap<String, RecipeRuntimeTable>,
     pub style_prop_names: Vec<String>,
+    /// TEMPORARY passthrough (deleted next slice): the per-atom rows for
+    /// readers that still index them. Absent from the bytes when `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub style_plans: Option<Vec<RuntimeStylePlan>>,
 }
 
 impl Default for NativeRuntimeArtifact {
     fn default() -> Self {
         Self {
-            schema_version: 1,
-            style_plans: Vec::new(),
+            schema_version: 2,
+            namer: NamerTables::default(),
             recipes: BTreeMap::new(),
             style_prop_names: get_style_prop_names(),
+            style_plans: Some(Vec::new()),
         }
     }
 }

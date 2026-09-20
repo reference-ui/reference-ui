@@ -32,7 +32,7 @@ const spec: AtomicCaseSpec = {
     for (const [, color] of MODE_VALUES) {
       expect(hasWant(result, 'color', color)).toBe(true)
       expect(
-        result.runtime.stylePlans.some(p => p.prop === 'color' && p.value === color)
+        result.stylePlans.some(p => p.prop === 'color' && p.value === color)
       ).toBe(true)
     }
 

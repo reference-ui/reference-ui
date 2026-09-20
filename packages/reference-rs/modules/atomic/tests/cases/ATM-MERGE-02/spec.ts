@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain('@reference-ui/lib__c_blue.500')
     expect(utilities).toContain('@reference-ui/lib__p_1r')
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
 
     // Pair 1: bg: 'n100' and background: 'n200' collapse to background slot
     const merged1 = mergeStylePlans(index, [

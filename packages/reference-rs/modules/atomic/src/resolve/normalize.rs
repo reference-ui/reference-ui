@@ -56,7 +56,7 @@ impl Collapse {
 
     /// Push one unquoted char: text verbatim, one space per whitespace run.
     fn push_bare(&mut self, ch: char) {
-        if !ch.is_whitespace() {
+        if !super::lexical::is_structural_whitespace(ch) {
             self.out.push(ch);
         } else if !self.out.ends_with(' ') {
             self.out.push(' ');

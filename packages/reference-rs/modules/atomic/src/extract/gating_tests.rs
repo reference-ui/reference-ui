@@ -97,7 +97,7 @@ fn test_hostless_styles_emit_missing_graph_error() {
         "#,
     );
     assert!(res.wants.is_empty());
-    assert!(res.runtime.style_plans.is_empty());
+    assert!(res.style_plans.is_empty());
     assert_eq!(res.diagnostics.len(), 1);
     let diag = &res.diagnostics[0];
     assert_eq!(diag.severity, crate::diagnostics::DiagnosticSeverity::Error);

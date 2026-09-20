@@ -29,7 +29,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('@container (min-width: 768px)')
     expect(result.stylesheet).not.toContain('61px')
 
-    const widthPlan = result.runtime.stylePlans.find(
+    const widthPlan = result.stylePlans.find(
       p => p.prop === 'width' && (p.value as Record<string, string>)?.md === '60px'
     )
     expect(widthPlan).toBeDefined()
@@ -39,7 +39,7 @@ const spec: AtomicCaseSpec = {
       { slot: 'width@base', className: '@reference-ui/lib__w_50px' },
       { slot: 'width@md', className: '@reference-ui/lib__md:w_60px' },
     ])
-    const wPlan = result.runtime.stylePlans.find(
+    const wPlan = result.stylePlans.find(
       p => p.prop === 'w' && p.value === '70px'
     )
     expect(wPlan).toBeDefined()
@@ -47,7 +47,7 @@ const spec: AtomicCaseSpec = {
       { slot: 'width', className: '@reference-ui/lib__w_70px' },
     ])
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     const evicted = mergeStylePlans(index, [
       { system: SYSTEM, prop: 'width', value: { base: '50px', md: '60px' } },
       { system: SYSTEM, prop: 'w', value: '70px' },

@@ -18,15 +18,15 @@ const spec: AtomicCaseSpec = {
 
     // 2. Runtime metadata
     expect(result.runtime).toBeDefined()
-    expect(result.runtime.schemaVersion).toBe(1)
-    expect(result.runtime.stylePlans.length).toBeGreaterThan(0)
+    expect(result.runtime.schemaVersion).toBe(2)
+    expect(result.stylePlans.length).toBeGreaterThan(0)
     expect(result.runtime.stylePropNames).toContain('color')
     expect(result.runtime.stylePropNames).toContain('padding')
     expect(result.runtime.stylePropNames).not.toContain('variant')
     expect(result.runtime.stylePropNames).not.toContain('colorMode')
 
     // 3. Style plan resolution & last-wins merge
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     const merged = mergeStylePlans(index, [
       { system: '@reference-ui/lib', prop: 'color', value: 'blue.500' },
       { system: '@reference-ui/lib', prop: 'padding', value: '1r' },
@@ -36,7 +36,7 @@ const spec: AtomicCaseSpec = {
 
     // 4. Ghost classes check: every plan class name has a matching utility in @layer utilities
     const utilities = layerClassNames(result.stylesheet, 'utilities')
-    for (const plan of result.runtime.stylePlans) {
+    for (const plan of result.stylePlans) {
       for (const decl of plan.declarations) {
         expect(decl.className.startsWith('@reference-ui/lib__')).toBe(true)
         expect(utilities).toContain(decl.className)

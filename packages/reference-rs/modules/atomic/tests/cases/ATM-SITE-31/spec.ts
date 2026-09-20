@@ -76,7 +76,7 @@ const spec: AtomicCaseSpec = {
     // walk arms mint 9: 8 fresh values plus backgroundColor yellow.700
     // beside the color plan). Harvest adds 8: black, coral, red, and white
     // reuse site plans.
-    expect(result.runtime.stylePlans).toHaveLength(45)
+    expect(result.stylePlans).toHaveLength(45)
 
     // Fence refusals ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

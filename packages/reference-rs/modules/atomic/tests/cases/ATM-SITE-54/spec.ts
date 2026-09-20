@@ -56,7 +56,7 @@ const spec: AtomicCaseSpec = {
     expect(JSON.stringify(pagePadding[0]!.value)).toContain('4px')
 
     // One runtime plan per unique leaf, each naming an emitted class.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(EXPECTED.length)
     const emitted = new Set(Object.values(result.css?.classes ?? {}))
     for (const { prop, value, className } of EXPECTED) {
@@ -80,7 +80,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('color: purple;')
 
     // The runtime index resolves every leaf to its class.
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { prop, value, className } of EXPECTED) {
       const merged = mergeStylePlans(index, [{ system: SYSTEM, prop, value }])
       expect(merged).toContain(className)

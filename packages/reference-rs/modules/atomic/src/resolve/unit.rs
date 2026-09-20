@@ -6,28 +6,54 @@
 //! `Infinity`, and `NaN` spellings refuse with diagnostics.
 //! Refusals report typed value facts through the session and render byte-identical lines via policy.
 
+use super::lexical;
 use super::{want_key, ResolveSession};
 use crate::atom::{AtomValue, CssValue};
 use crate::diagnostics::{
     DeclarationDetail, DiagnosticCode, ResolveDetail, ResolveOutcome, ValueDetail,
 };
 
+/// Verdict of the canonical-number attempt shared by the string and bare paths.
+enum CanonicalNumber {
+    /// Not a finite decimal: the legacy path or verbatim stem decides.
+    NotNumeric,
+    /// Finite but outside the canonical magnitude: refuse upstream.
+    FencedOut,
+    /// Finite and in range: the canonical stem.
+    Canonical(String),
+}
+
+/// Parse, gate, and render one numeric spelling through the lexical fence:
+/// structural trim, explicit decimal grammar, finite-only, zero folds to
+/// `"0"`, magnitudes outside `[1e-6, 1e21)` refuse, else canonical render.
+fn canonical_number(text: &str) -> CanonicalNumber {
+    let trimmed = lexical::trim_structural(text);
+    if trimmed.is_empty() {
+        return CanonicalNumber::NotNumeric;
+    }
+    let Some(value) = lexical::parse_decimal(trimmed).and_then(|d| d.finite()) else {
+        return CanonicalNumber::NotNumeric;
+    };
+    if value == 0.0 {
+        return CanonicalNumber::Canonical("0".to_string());
+    }
+    if !lexical::in_canonical_magnitude(value) {
+        return CanonicalNumber::FencedOut;
+    }
+    CanonicalNumber::Canonical(lexical::render_decimal(value))
+}
+
 /// Canonicalize a finite numeric spelling to the bare-number form (`'1e3'`
 /// → `"1000"`, `'.5'` → `"0.5"`, `'01'` → `"1"`), or None when the string
-/// is not a finite number. Rust `f64` parsing is the fence: hex, binary,
-/// octal, empty, and unit-suffixed strings never parse, exactly like v2's
-/// `trimmed.parse::<f64>()`; non-finite results refuse. Rendering matches
-/// the bare-literal path (`to_string`), so dedupe is structural.
+/// is not a finite number or falls outside the canonical magnitude. The
+/// explicit decimal grammar is the fence: hex, binary, octal, empty, and
+/// unit-suffixed strings never parse; non-finite results are not numeric.
+/// Rendering matches the bare-literal path, so dedupe is structural.
 pub fn canonical_numeric_string(s: &str) -> Option<String> {
-    let trimmed = s.trim();
-    if trimmed.is_empty() {
-        return None;
+    match canonical_number(s) {
+        CanonicalNumber::Canonical(stem) => Some(stem),
+        CanonicalNumber::NotNumeric | CanonicalNumber::FencedOut => None,
     }
-    let parsed: f64 = trimmed.parse().ok()?;
-    if !parsed.is_finite() {
-        return None;
-    }
-    Some(parsed.to_string())
 }
 
 /// Check if a string represents an illegal non-canonical numeric format.
@@ -92,24 +118,43 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
     }
 }
 
+/// Refuse one non-canonical numeric spelling with its want key attached.
+fn refuse_non_canonical_number(prop: &str, spelling: Box<str>, session: &mut ResolveSession<'_>) {
+    let key = want_key(
+        session,
+        prop,
+        serde_json::Value::String(spelling.to_string()),
+    );
+    session.emit(
+        key,
+        ResolveOutcome::Rejected {
+            code: DiagnosticCode::NonCanonicalNumeric,
+            detail: ResolveDetail::Declaration(DeclarationDetail::Value(
+                ValueDetail::NonCanonicalNumber {
+                    prop: prop.into(),
+                    spelling,
+                },
+            )),
+        },
+    );
+}
+
 fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
-        let key = want_key(session, prop, serde_json::Value::String(n.to_string()));
-        session.emit(
-            key,
-            ResolveOutcome::Rejected {
-                code: DiagnosticCode::NonCanonicalNumeric,
-                detail: ResolveDetail::Declaration(DeclarationDetail::Value(
-                    ValueDetail::NonCanonicalNumber {
-                        prop: prop.into(),
-                        spelling: n.clone(),
-                    },
-                )),
-            },
-        );
+        refuse_non_canonical_number(prop, n, session);
         return None;
     }
-    Some(resolve_numeric_value(prop, &n))
+    // Bare entry spellings re-render through the canonical fence, so the
+    // plan-JSON renderer agrees with the string path (`0.0` → `0`, `1e21`
+    // refuses). Non-finite parses keep the verbatim stem.
+    match canonical_number(&n) {
+        CanonicalNumber::Canonical(stem) => Some(resolve_numeric_value(prop, &stem)),
+        CanonicalNumber::FencedOut => {
+            refuse_non_canonical_number(prop, n, session);
+            None
+        }
+        CanonicalNumber::NotNumeric => Some(resolve_numeric_value(prop, &n)),
+    }
 }
 
 fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
@@ -117,12 +162,21 @@ fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Opt
     // string, so spaced twins share one numeric parse and one atom.
     let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
     // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
-    if let Some(canonical) = canonical_numeric_string(&collapsed) {
-        if accepts_bare_number(prop) {
-            return Some(resolve_numeric_value(prop, &canonical));
+    // The magnitude fence bites only where canonicalization applies: color
+    // props keep their string passthrough for out-of-range spellings.
+    match canonical_number(&collapsed) {
+        CanonicalNumber::Canonical(stem) if accepts_bare_number(prop) => {
+            Some(resolve_numeric_value(prop, &stem))
         }
+        CanonicalNumber::FencedOut if accepts_bare_number(prop) => {
+            let spelling = lexical::trim_structural(&collapsed)
+                .to_string()
+                .into_boxed_str();
+            refuse_non_canonical_number(prop, spelling, session);
+            None
+        }
+        _ => legacy_string_value(prop, collapsed, session),
     }
-    legacy_string_value(prop, collapsed, session)
 }
 
 /// True when a bare number is a valid value: every prop except colors, where
@@ -140,7 +194,7 @@ fn legacy_string_value(
 ) -> Option<CssValue> {
     // Empty-after-trim strings are never CSS (`margin: ;` is invalid);
     // refuse with a diagnostic instead of emitting the empty declaration.
-    if s.trim().is_empty() {
+    if lexical::trim_structural(&s).is_empty() {
         let key = want_key(session, prop, serde_json::Value::String(s.to_string()));
         session.emit(
             key,
@@ -154,19 +208,7 @@ fn legacy_string_value(
         return None;
     }
     if is_non_canonical_numeric(&s) {
-        let key = want_key(session, prop, serde_json::Value::String(s.to_string()));
-        session.emit(
-            key,
-            ResolveOutcome::Rejected {
-                code: DiagnosticCode::NonCanonicalNumeric,
-                detail: ResolveDetail::Declaration(DeclarationDetail::Value(
-                    ValueDetail::NonCanonicalNumber {
-                        prop: prop.into(),
-                        spelling: s.clone(),
-                    },
-                )),
-            },
-        );
+        refuse_non_canonical_number(prop, s.clone(), session);
         return None;
     }
     if let Some(num) = parse_canonical_number(&s) {

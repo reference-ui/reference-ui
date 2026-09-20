@@ -1,0 +1,171 @@
+{
+  "function": "classifyBorder",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "tokens": [
+          "3px",
+          "solid",
+          "red"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "3px",
+        "style": "solid",
+        "color": "red"
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "3px",
+          "4px",
+          "solid"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "3px",
+        "style": "solid",
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "SOLID",
+          "3PX",
+          "RED"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "3PX",
+        "style": "solid",
+        "color": "RED"
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "None"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": null,
+        "style": "none",
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "auto"
+        ],
+        "outline": true
+      },
+      "output": {
+        "width": null,
+        "style": "auto",
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "auto"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": null,
+        "style": null,
+        "color": "auto"
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "inf",
+          "solid",
+          "red"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "inf",
+        "style": "solid",
+        "color": "red"
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "thin"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "thin",
+        "style": null,
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "calc(1r + 2px)"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "calc(1r + 2px)",
+        "style": null,
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "1/3r"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "1/3r",
+        "style": null,
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "0r"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": "0r",
+        "style": null,
+        "color": null
+      }
+    },
+    {
+      "input": {
+        "tokens": [
+          "red",
+          "blue"
+        ],
+        "outline": false
+      },
+      "output": {
+        "width": null,
+        "style": null,
+        "color": "red"
+      }
+    }
+  ]
+}

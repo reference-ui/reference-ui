@@ -1,0 +1,79 @@
+{
+  "function": "deriveSlot",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "prop": "color",
+        "when": [],
+        "bp": null
+      },
+      "output": "color"
+    },
+    {
+      "input": {
+        "prop": "pt",
+        "when": [],
+        "bp": null
+      },
+      "output": "paddingTop"
+    },
+    {
+      "input": {
+        "prop": "color",
+        "when": [
+          "_hover"
+        ],
+        "bp": null
+      },
+      "output": "hover:color"
+    },
+    {
+      "input": {
+        "prop": "color",
+        "when": [
+          "_dark",
+          "_hover"
+        ],
+        "bp": null
+      },
+      "output": "dark:hover:color"
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "when": [],
+        "bp": "base"
+      },
+      "output": "padding@base"
+    },
+    {
+      "input": {
+        "prop": "padding",
+        "when": [],
+        "bp": "lg"
+      },
+      "output": "padding@lg"
+    },
+    {
+      "input": {
+        "prop": "p",
+        "when": [
+          "@container (min-width: 300px)"
+        ],
+        "bp": null
+      },
+      "output": "@container (min-width: 300px):padding"
+    },
+    {
+      "input": {
+        "prop": "width",
+        "when": [
+          "md"
+        ],
+        "bp": "md"
+      },
+      "output": "md:width@md"
+    }
+  ]
+}

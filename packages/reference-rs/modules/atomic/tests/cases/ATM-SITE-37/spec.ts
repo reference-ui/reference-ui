@@ -48,7 +48,7 @@ const spec: AtomicCaseSpec = {
 
     // Each flattened array plans once as an array value; each merge color
     // plans once; refused arrays plan nothing — wants and plans agree.
-    const plans = result.runtime.stylePlans ?? []
+    const plans = result.stylePlans ?? []
     expect(plans).toHaveLength(15)
     expect(
       plans.some(p => p.prop === 'margin' && JSON.stringify(p.value) === '["1px","2px","3px","4px"]'),

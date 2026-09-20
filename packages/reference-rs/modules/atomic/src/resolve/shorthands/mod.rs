@@ -21,10 +21,15 @@ fn extract_raw_val(value: &AtomValue) -> Option<&str> {
     }
 }
 
+/// True for the three canonicals whose 2–4 token values split TRBL.
+pub(crate) fn is_dimensional_trbl(canon_name: &str) -> bool {
+    matches!(canon_name, "padding" | "margin" | "inset")
+}
+
 fn expand_dimensional(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
     // padding: '1r 2r'  /  margin: '1px 2px 3px 4px'  /  inset: '0 auto'
     let canon_name = canon::resolve_canonical_prop(prop);
-    if !matches!(canon_name, "padding" | "margin" | "inset") {
+    if !is_dimensional_trbl(canon_name) {
         return None;
     }
     let tokens = parser::split_tokens(raw_val.trim());

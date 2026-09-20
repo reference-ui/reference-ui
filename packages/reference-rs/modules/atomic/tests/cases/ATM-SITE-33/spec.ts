@@ -97,7 +97,7 @@ const spec: AtomicCaseSpec = {
 
     // One runtime plan per unique plannable leaf: folded bools are
     // planless exactly like bare bools, duplicates share.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     for (const { prop, value, when } of FOLDS) {
       if (typeof value === 'boolean') {
         expect(plans.some(p => p.prop === prop && p.value === value)).toBe(false)

@@ -38,7 +38,7 @@ const spec: AtomicCaseSpec = {
     expect(hoverColors).toBeGreaterThanOrEqual(2)
 
     // One runtime plan per unique leaf, conditions carried.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(14)
     for (const { prop, value, when } of READS) {
       expect(

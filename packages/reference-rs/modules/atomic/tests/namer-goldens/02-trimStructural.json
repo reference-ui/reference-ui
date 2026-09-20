@@ -1,0 +1,38 @@
+{
+  "function": "trimStructural",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": " 1e21 ",
+      "output": "1e21"
+    },
+    {
+      "input": " x ",
+      "output": "x"
+    },
+    {
+      "input": "﻿x﻿",
+      "output": "﻿x﻿"
+    },
+    {
+      "input": "\ta\n",
+      "output": "a"
+    },
+    {
+      "input": "",
+      "output": ""
+    },
+    {
+      "input": "1",
+      "output": "1"
+    },
+    {
+      "input": "   ",
+      "output": ""
+    },
+    {
+      "input": "x  y",
+      "output": "x  y"
+    }
+  ]
+}

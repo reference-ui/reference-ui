@@ -63,7 +63,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'typo')).toBe(false)
 
     // Plans dedupe by leaf: one plan per distinct (prop, value, when).
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(25)
     for (const { prop, value, className } of EXPECTED) {
       const matches = plans.filter(
@@ -81,7 +81,7 @@ const spec: AtomicCaseSpec = {
       expect(utilities).toContain(className)
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { prop, value, className } of EXPECTED) {
       expect(mergeStylePlans(index, [{ system: SYSTEM, prop, value }])).toContain(
         className

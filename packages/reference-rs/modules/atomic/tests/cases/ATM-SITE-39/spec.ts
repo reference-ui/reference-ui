@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'red', ['_hover'])).toBe(true)
     expect(result.wants ?? []).toHaveLength(3)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(3)
 
     expect(result.diagnostics ?? []).toHaveLength(0)

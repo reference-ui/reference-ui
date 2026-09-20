@@ -11,6 +11,7 @@ use serde_json::Value;
 
 use super::plan::{RecipeRuntimeTable, RuntimeDeclaration, RuntimeStylePlan};
 use super::serializer::{serialize_lookup_key, LookupKey};
+use super::values::{is_duplicate, json_to_atom_value, RefusalSite, RefuseR};
 use crate::atom::{AtomSet, AtomValue, Want};
 use crate::diagnostics::{Diagnostic, DiagnosticLocation};
 use crate::resolve::{resolve_want_with, ResolveSession};
@@ -60,62 +61,6 @@ pub fn derive_slot(prop: &str, when: &[String], breakpoint: Option<&str>) -> Str
     }
 }
 
-/// A `$token` plan object back to its path-plus-fallback value, or None when
-/// the shape is not exactly `{"$token": {"path": str, "value": str}}`.
-fn t_object_to_atom_value(map: &serde_json::Map<String, Value>) -> Option<AtomValue> {
-    let inner = map.get("$token")?.as_object()?;
-    let path = inner.get("path")?.as_str()?;
-    let value = inner.get("value")?.as_str()?;
-    Some(AtomValue::Token {
-        path: path.into(),
-        value: value.into(),
-    })
-}
-
-fn r_object_to_atom_value(map: &serde_json::Map<String, Value>) -> Option<AtomValue> {
-    let r_val = map.get("$r")?;
-    let multiplier = if let Some(f) = r_val.as_f64() {
-        if (f - f.round()).abs() < 1e-6 {
-            format!("{}", f as i64)
-        } else {
-            format!("{f}")
-        }
-    } else {
-        r_val.to_string()
-    };
-    Some(AtomValue::String(format!("{multiplier}r").into_boxed_str()))
-}
-
-fn scalar_to_atom_value(val: &Value) -> Option<AtomValue> {
-    if let Some(s) = val.as_str() {
-        return Some(AtomValue::String(s.into()));
-    }
-    if let Some(b) = val.as_bool() {
-        return Some(AtomValue::Bool(b));
-    }
-    if val.is_null() {
-        return Some(AtomValue::Null);
-    }
-    if let Some(n) = val.as_number() {
-        return Some(AtomValue::Number(n.to_string().into_boxed_str()));
-    }
-    None
-}
-
-/// Convert a JSON value into an AtomValue representation for resolve passes.
-fn json_to_atom_value(val: &Value) -> Option<AtomValue> {
-    if let Some(scalar) = scalar_to_atom_value(val) {
-        return Some(scalar);
-    }
-    if let Some(map) = val.as_object() {
-        if map.contains_key("$token") {
-            return t_object_to_atom_value(map);
-        }
-        return r_object_to_atom_value(map);
-    }
-    None
-}
-
 fn resolve_with_unique_diagnostics(
     want: &Want,
     base_system: &BaseSystem,
@@ -140,15 +85,6 @@ fn resolve_with_unique_diagnostics(
     atoms
 }
 
-/// True when a diagnostic with the same severity and message is already recorded.
-/// Rebuilt wants carry no source position, so the re-resolve pass must dedup
-/// on text rather than on full location equality.
-fn is_duplicate(diagnostics: &[Diagnostic], candidate: &Diagnostic) -> bool {
-    diagnostics.iter().any(|existing| {
-        existing.severity == candidate.severity && existing.message == candidate.message
-    })
-}
-
 /// Context for resolving authored declarations into style plans and atoms.
 pub struct PlanBuilder<'a> {
     pub system: &'a str,
@@ -170,6 +106,27 @@ impl<'a> PlanBuilder<'a> {
             atom_set,
             diagnostics,
         }
+    }
+
+    /// Convert one plan-JSON value, refusing fenced `$r` multipliers in place.
+    fn convert_value(
+        &mut self,
+        val: &Value,
+        prop: &str,
+        when: &[String],
+        important: bool,
+    ) -> Option<AtomValue> {
+        let site = RefusalSite {
+            prop,
+            when,
+            important,
+            value: val,
+        };
+        let mut refuse = RefuseR {
+            system: self.system,
+            diagnostics: self.diagnostics,
+        };
+        json_to_atom_value(val, site, &mut refuse)
     }
 
     /// Build runtime style plans from authored declarations, deduplicating keys.
@@ -209,7 +166,9 @@ impl<'a> PlanBuilder<'a> {
             }
         }
 
-        let Some(atom_val) = json_to_atom_value(&decl.value) else {
+        let Some(atom_val) =
+            self.convert_value(&decl.value, &decl.prop, &decl.when, decl.important)
+        else {
             return Vec::new();
         };
 
@@ -250,12 +209,12 @@ impl<'a> PlanBuilder<'a> {
             let Some(bp) = bp_scale.breakpoint_for_index(idx) else {
                 continue;
             };
-            let Some(atom_val) = json_to_atom_value(elem) else {
-                continue;
-            };
-
             let mut step_when = decl.when.clone();
             step_when.push(bp.to_string());
+            let Some(atom_val) = self.convert_value(elem, &decl.prop, &step_when, decl.important)
+            else {
+                continue;
+            };
             let when_boxed: smallvec::SmallVec<[Box<str>; 2]> = step_when
                 .iter()
                 .map(|w| w.clone().into_boxed_str())
@@ -289,12 +248,12 @@ impl<'a> PlanBuilder<'a> {
             if elem.is_null() {
                 continue;
             }
-            let Some(atom_val) = json_to_atom_value(elem) else {
-                continue;
-            };
-
             let mut step_when = decl.when.clone();
             step_when.push(key.clone());
+            let Some(atom_val) = self.convert_value(elem, &decl.prop, &step_when, decl.important)
+            else {
+                continue;
+            };
             let when_boxed: smallvec::SmallVec<[Box<str>; 2]> = step_when
                 .iter()
                 .map(|w| w.clone().into_boxed_str())

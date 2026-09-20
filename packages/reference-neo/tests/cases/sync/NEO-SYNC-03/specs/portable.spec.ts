@@ -80,7 +80,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const portableSheet = fs.readFileSync(path.join(outDir, 'styled', 'styles.css'), 'utf8');
   assert.ok(portableSheet.includes('--colors-brand: #7c3aed'), 'styled sheet carries the token var');
 
-  assert.equal(base.runtime.schemaVersion, 1, 'runtime carries schemaVersion 1');
+  assert.equal(base.runtime.schemaVersion, 2, 'runtime carries schemaVersion 2');
   assert.ok(Array.isArray(base.runtime.stylePlans), 'runtime carries stylePlans');
   assert.ok(base.runtime.stylePlans.length >= 1, 'runtime carries the compiled plan');
   assert.ok(

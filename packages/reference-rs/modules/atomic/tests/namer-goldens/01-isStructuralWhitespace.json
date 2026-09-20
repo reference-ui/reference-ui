@@ -1,0 +1,74 @@
+{
+  "function": "isStructuralWhitespace",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": "\t",
+      "output": true
+    },
+    {
+      "input": "\n",
+      "output": true
+    },
+    {
+      "input": "\r",
+      "output": true
+    },
+    {
+      "input": "",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": "﻿",
+      "output": false
+    },
+    {
+      "input": "​",
+      "output": false
+    },
+    {
+      "input": "᠎",
+      "output": false
+    },
+    {
+      "input": "a",
+      "output": false
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": "　",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    },
+    {
+      "input": " ",
+      "output": true
+    }
+  ]
+}

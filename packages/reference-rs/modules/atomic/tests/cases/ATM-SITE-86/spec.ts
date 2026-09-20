@@ -23,7 +23,7 @@ const spec: AtomicCaseSpec = {
 
     // One runtime plan per unique leaf: two borders, two cursors, two
     // opacities, and the three shared color blocks.
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(9)
     for (const [prop, value] of [
       ['borderBottom', '3px solid'],

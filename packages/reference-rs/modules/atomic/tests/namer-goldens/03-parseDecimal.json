@@ -1,0 +1,152 @@
+{
+  "function": "parseDecimal",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "1e3",
+      "output": {
+        "result": "finite",
+        "value": 1000.0
+      }
+    },
+    {
+      "input": ".5",
+      "output": {
+        "result": "finite",
+        "value": 0.5
+      }
+    },
+    {
+      "input": "01",
+      "output": {
+        "result": "finite",
+        "value": 1.0
+      }
+    },
+    {
+      "input": "5.",
+      "output": {
+        "result": "finite",
+        "value": 5.0
+      }
+    },
+    {
+      "input": "1_0",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "0x10",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "  ",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "inf",
+      "output": {
+        "result": "infinite",
+        "sign": 1
+      }
+    },
+    {
+      "input": "INF",
+      "output": {
+        "result": "infinite",
+        "sign": 1
+      }
+    },
+    {
+      "input": "-inf",
+      "output": {
+        "result": "infinite",
+        "sign": -1
+      }
+    },
+    {
+      "input": "nan",
+      "output": {
+        "result": "nan"
+      }
+    },
+    {
+      "input": "1e",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "e5",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "+",
+      "output": {
+        "result": "reject"
+      }
+    },
+    {
+      "input": "1e999",
+      "output": {
+        "result": "infinite",
+        "sign": 1
+      }
+    },
+    {
+      "input": "4e-324",
+      "output": {
+        "result": "finite",
+        "value": 5e-324
+      }
+    },
+    {
+      "input": "1e-999",
+      "output": {
+        "result": "finite",
+        "value": 0.0
+      }
+    },
+    {
+      "input": "0",
+      "output": {
+        "result": "finite",
+        "value": 0.0
+      }
+    },
+    {
+      "input": "-0",
+      "output": {
+        "result": "finite",
+        "value": -0.0
+      }
+    },
+    {
+      "input": "100",
+      "output": {
+        "result": "finite",
+        "value": 100.0
+      }
+    },
+    {
+      "input": "1E+5",
+      "output": {
+        "result": "finite",
+        "value": 100000.0
+      }
+    }
+  ]
+}

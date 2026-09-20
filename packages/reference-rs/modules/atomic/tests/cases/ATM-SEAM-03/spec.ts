@@ -26,10 +26,10 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, prop, value), `want (${prop}, ${value})`).toBe(true)
     }
 
-    const system = result.runtime.stylePlans[0]?.system ?? '@reference-ui/lib'
-    const index = createStylePlanIndex(result.runtime)
+    const system = result.stylePlans[0]?.system ?? '@reference-ui/lib'
+    const index = createStylePlanIndex(result.stylePlans)
     for (const [prop, value] of EXPECTED) {
-      const plan = result.runtime.stylePlans.find(
+      const plan = result.stylePlans.find(
         p => p.prop === prop && p.value === value && p.when.length === 0
       )
       expect(plan, `plan (${prop}, ${value})`).toBeDefined()

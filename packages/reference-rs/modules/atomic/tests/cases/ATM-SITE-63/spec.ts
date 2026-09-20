@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
     expect(harvestWants(result)).toHaveLength(2)
     expect(result.wants ?? []).toHaveLength(4)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans.find(p => p.prop === 'color' && p.value === 'black')).toBeDefined()
     expect(
       plans.find(p => p.prop === 'backgroundColor' && p.value === 'white'),

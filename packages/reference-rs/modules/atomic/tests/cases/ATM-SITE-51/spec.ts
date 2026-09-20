@@ -84,7 +84,7 @@ const spec: AtomicCaseSpec = {
     // One runtime plan per unique resolvable leaf: the doubled color-red,
     // margin-4px, borderColor-red, and fontFamily-null wants share one plan
     // each (SITE-38 precedent: plans dedupe by prop+value+when).
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(44)
     for (const { prop, value } of FOLDS) {
       expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)

@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     expect(hasWant(result, 'paddingInline', '0', [WHEN])).toBe(true)
     expect(result.wants ?? []).toHaveLength(1)
-    expect(result.runtime.stylePlans).toHaveLength(1)
+    expect(result.stylePlans).toHaveLength(1)
 
     const sheet = result.stylesheet
     expect(sheet).toContain(

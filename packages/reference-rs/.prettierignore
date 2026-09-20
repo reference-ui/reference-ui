@@ -5,3 +5,4 @@
 # the suites (the 2026-09-20 formatter war). Goldens are compared
 # exactly; only the compiler regen (per-pair attested) may change them.
 modules/*/tests/cases/**/output/
+modules/*/tests/namer-goldens/

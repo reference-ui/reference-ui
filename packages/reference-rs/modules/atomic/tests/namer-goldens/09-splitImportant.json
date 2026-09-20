@@ -1,0 +1,76 @@
+{
+  "function": "splitImportant",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": "2r!",
+      "output": {
+        "clean": "2r",
+        "important": true
+      }
+    },
+    {
+      "input": "1r!important",
+      "output": {
+        "clean": "1r",
+        "important": true
+      }
+    },
+    {
+      "input": "0 !important",
+      "output": {
+        "clean": "0",
+        "important": true
+      }
+    },
+    {
+      "input": "red!IMPORTANT",
+      "output": {
+        "clean": "red",
+        "important": true
+      }
+    },
+    {
+      "input": "!",
+      "output": {
+        "clean": "!",
+        "important": false
+      }
+    },
+    {
+      "input": "a",
+      "output": {
+        "clean": "a",
+        "important": false
+      }
+    },
+    {
+      "input": "2r",
+      "output": {
+        "clean": "2r",
+        "important": false
+      }
+    },
+    {
+      "input": "x!y",
+      "output": {
+        "clean": "x!y",
+        "important": false
+      }
+    },
+    {
+      "input": "",
+      "output": {
+        "clean": "",
+        "important": false
+      }
+    },
+    {
+      "input": "1r !IMPORTANT ",
+      "output": {
+        "clean": "1r !IMPORTANT ",
+        "important": false
+      }
+    }
+  ]
+}

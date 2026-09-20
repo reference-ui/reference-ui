@@ -12,7 +12,7 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-08',
   async verify(result) {
     // Presence half (green today): the static declaration lands in stylePlans.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     const exact = plans.find(
       p => p.prop === 'color' && p.value === 'red' && p.when.length === 0 && !p.important
     )

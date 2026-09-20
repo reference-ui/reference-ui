@@ -30,7 +30,7 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'margin')).toHaveLength(1)
     expect(result.wants).toHaveLength(5)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     // Plans dedupe by leaf: three `color: red` wants share one plan.
     expect(plans).toHaveLength(3)
     expect(plans.filter(p => p.prop === 'color' && p.value === 'red')).toHaveLength(1)
@@ -51,7 +51,7 @@ const spec: AtomicCaseSpec = {
     expect(utilities).toContain(PAD_CLASS)
     expect(utilities).toContain(MARGIN_CLASS)
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     expect(
       mergeStylePlans(index, [{ system: SYSTEM, prop: 'color', value: 'red' }]),
     ).toContain(RED_CLASS)

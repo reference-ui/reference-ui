@@ -8,15 +8,20 @@
 use crate::atom::AtomValue;
 
 /// Panda's `flex` utility values table: the four single keywords that rewrite.
+pub(crate) const FLEX_KEYWORD_TRIPLES: &[(&str, &str)] = &[
+    ("1", "1 1 0%"),
+    ("auto", "1 1 auto"),
+    ("initial", "0 1 auto"),
+    ("none", "none"),
+];
+
+/// Look up one trimmed `flex` value in the keyword table above.
 fn flex_keyword_triple(trimmed: &str) -> Option<&'static str> {
     // '1' → '1 1 0%'  /  'auto' → '1 1 auto'  /  'initial' → '0 1 auto'
-    match trimmed {
-        "1" => Some("1 1 0%"),
-        "auto" => Some("1 1 auto"),
-        "initial" => Some("0 1 auto"),
-        "none" => Some("none"),
-        _ => None,
-    }
+    FLEX_KEYWORD_TRIPLES
+        .iter()
+        .find(|(keyword, _)| *keyword == trimmed)
+        .map(|(_, triple)| *triple)
 }
 
 /// Resolve a `flex` shorthand value to its emitted declaration.

@@ -5,15 +5,21 @@
 
 use crate::atom::{AtomValue, Want};
 
+/// Prop that carries the cloned gradient value.
+pub(crate) const IMAGE_PROP: &str = "backgroundImage";
+/// Clip prop and its literal value.
+pub(crate) const CLIP_PROP: &str = "webkitBackgroundClip";
+pub(crate) const CLIP_VALUE: &str = "text";
+/// Ink prop and its literal value.
+pub(crate) const INK_PROP: &str = "color";
+pub(crate) const INK_VALUE: &str = "transparent";
+
 /// Expand `textGradient` into the background-clip trio atoms.
 pub fn lower(want: &Want) -> Vec<(Box<str>, AtomValue)> {
     // textGradient: 'linear-gradient({colors.red.200}, {colors.blue.300})'
     vec![
-        ("backgroundImage".into(), want.value.clone()),
-        (
-            "webkitBackgroundClip".into(),
-            AtomValue::String("text".into()),
-        ),
-        ("color".into(), AtomValue::String("transparent".into())),
+        (IMAGE_PROP.into(), want.value.clone()),
+        (CLIP_PROP.into(), AtomValue::String(CLIP_VALUE.into())),
+        (INK_PROP.into(), AtomValue::String(INK_VALUE.into())),
     ]
 }

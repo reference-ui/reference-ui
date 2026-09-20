@@ -31,8 +31,7 @@ fn assert_unknown_colors(res: &crate::CompileResult, count: usize) {
 }
 
 fn plan_values(res: &crate::CompileResult, prop: &str) -> Vec<String> {
-    res.runtime
-        .style_plans
+    res.style_plans
         .iter()
         .filter(|plan| plan.prop == prop)
         .filter_map(|plan| plan.value.as_str().map(str::to_string))
@@ -46,12 +45,7 @@ fn assert_plans_point_at_sheet(res: &crate::CompileResult, prop: &str) {
         .flat_map(|css| css.classes.values().map(String::as_str))
         .collect();
     let mut seen = 0;
-    for plan in res
-        .runtime
-        .style_plans
-        .iter()
-        .filter(|plan| plan.prop == prop)
-    {
+    for plan in res.style_plans.iter().filter(|plan| plan.prop == prop) {
         assert!(
             !plan.declarations.is_empty(),
             "plan ({prop}, {}) carries declarations",
@@ -216,10 +210,7 @@ fn test_tabs_selected_guard_keeps_both_indicator_arms() {
     plans.sort();
     assert_eq!(
         plans,
-        vec![
-            "3px solid".to_string(),
-            "3px solid transparent".to_string()
-        ]
+        vec!["3px solid".to_string(), "3px solid transparent".to_string()]
     );
     assert_plans_point_at_sheet(&res, "borderBottom");
 }
@@ -289,10 +280,7 @@ fn test_partial_guard_gates_css_object_arms() {
     plans.sort();
     assert_eq!(
         plans,
-        vec![
-            "3px solid".to_string(),
-            "3px solid transparent".to_string()
-        ]
+        vec!["3px solid".to_string(), "3px solid transparent".to_string()]
     );
     assert_plans_point_at_sheet(&res, "borderBottom");
 }

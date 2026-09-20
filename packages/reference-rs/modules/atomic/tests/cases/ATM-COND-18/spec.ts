@@ -28,7 +28,7 @@ const spec: AtomicCaseSpec = {
       `.${ESC}__checked\\:c_green\\.500:is(:checked, [data-checked], [aria-checked=true], [data-state="checked"])`,
     )
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(3)
     for (const [when, cls] of [
       ['_placeholder', `${SYSTEM}__placeholder:c_red.500`],

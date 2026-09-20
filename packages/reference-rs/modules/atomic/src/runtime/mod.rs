@@ -3,8 +3,11 @@
 //! Delivers the compact JSON payloads required by runtime styling helpers and client-side style injection.
 
 pub mod builder;
+pub mod lowerings;
 pub mod plan;
 pub mod serializer;
+pub mod tables;
+pub(crate) mod values;
 
 pub use builder::{
     build_recipe_runtime_tables, build_runtime_style_plans, derive_slot, AuthoredDeclaration,
@@ -15,6 +18,7 @@ pub use plan::{
     RuntimeDeclaration, RuntimeStylePlan,
 };
 pub use serializer::{canonical_json_value, serialize_lookup_key, serialize_value};
+pub use tables::{FontTable, NamerTables, NAMER_RULES_VERSION};
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

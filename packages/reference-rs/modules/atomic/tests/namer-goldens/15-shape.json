@@ -1,0 +1,254 @@
+{
+  "function": "shape",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": [
+          "1r",
+          null,
+          "3r"
+        ],
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width@base",
+          "className": "@reference-ui/lib__w_1r"
+        },
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_3r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": {
+          "md": "2r",
+          "base": "1r"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_2r"
+        },
+        {
+          "slot": "width@base",
+          "className": "@reference-ui/lib__w_1r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": {
+          "_hover": "2r"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "hover:width",
+          "className": "@reference-ui/lib__hover:w_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": {
+          "md": "2r"
+        },
+        "important": true
+      },
+      "output": [
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_2r!"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "$token": {
+            "path": "n300",
+            "value": "#abc"
+          }
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "color",
+          "className": "@reference-ui/lib__c_n300"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "$token": {
+            "path": "n300"
+          }
+        },
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 2
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 2.5
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_2.5r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 2.0000005
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": "2"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_\"2\"r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 1e+21
+        },
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 5e-7
+        },
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": [
+          "1r",
+          "2r",
+          "3r",
+          "4r",
+          "5r",
+          "6r",
+          "7r"
+        ],
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width@base",
+          "className": "@reference-ui/lib__w_1r"
+        },
+        {
+          "slot": "width@sm",
+          "className": "@reference-ui/lib__sm:w_2r"
+        },
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_3r"
+        },
+        {
+          "slot": "width@lg",
+          "className": "@reference-ui/lib__lg:w_4r"
+        },
+        {
+          "slot": "width@xl",
+          "className": "@reference-ui/lib__xl:w_5r"
+        },
+        {
+          "slot": "width@2xl",
+          "className": "@reference-ui/lib__2xl:w_6r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": [
+          {
+            "nested": true
+          }
+        ],
+        "important": false
+      },
+      "output": []
+    }
+  ]
+}

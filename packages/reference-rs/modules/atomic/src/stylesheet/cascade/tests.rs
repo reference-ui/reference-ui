@@ -149,6 +149,12 @@ fn supports_sorts_before_container_across_atoms() {
 }
 
 #[test]
+fn control_chars_in_values_hex_escape() {
+    let css = sheet(&[atom("content", "\"a\rb\"", &[])]);
+    assert!(css.contains("content: \"a\\d b\";"), "{css}");
+}
+
+#[test]
 fn dual_at_rules_nest_in_author_order() {
     let css = sheet(&[lib_atom("color", "red", &["_osDark", "sm"])]);
     let media = "@media (prefers-color-scheme: dark)";

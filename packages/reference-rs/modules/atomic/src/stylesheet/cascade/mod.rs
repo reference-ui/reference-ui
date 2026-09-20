@@ -75,12 +75,32 @@ fn at_wrap(cond: &When) -> Option<&str> {
 
 pub(crate) fn format_declaration(atom: &Atom) -> String {
     let css_prop = to_css_declaration_property(atom.prop());
-    let css_val = atom.value().css_value_str();
+    let css_val = escape_css_value(atom.value().css_value_str());
     if atom.important() {
         format!("{css_prop}: {css_val} !important;")
     } else {
         format!("{css_prop}: {css_val};")
     }
+}
+
+/// Escape control chars in a declaration value for CSS serialization: a raw
+/// newline inside a string ends the declaration and breaks selector parsers
+/// downstream, so CR/LF and friends become hex escapes (`\d `). Values
+/// without control chars pass through untouched.
+fn escape_css_value(value: &str) -> String {
+    if !value.chars().any(|ch| ch.is_control()) {
+        return value.to_string();
+    }
+    let mut out = String::with_capacity(value.len() + 8);
+    for ch in value.chars() {
+        if ch.is_control() {
+            use std::fmt::Write as _;
+            let _ = write!(out, "\\{:x} ", u32::from(ch));
+        } else {
+            out.push(ch);
+        }
+    }
+    out
 }
 
 /// Sort utilities by `CascadeKey` and emit, grouping shared at-rule wrappers.

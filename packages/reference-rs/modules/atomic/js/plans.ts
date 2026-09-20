@@ -4,7 +4,7 @@
  * Indexes NativeRuntimeArtifact style plans by five-tuple lookup keys: (system, when, prop, value, important).
  * Resolves authored style declarations and evaluates last-wins cascades across aliases, shorthands, and conditions.
  */
-import type { NativeRuntimeArtifact, RuntimeDeclaration } from './types.js'
+import type { RuntimeDeclaration, RuntimeStylePlan } from './types.js'
 
 export interface StylePlanQuery {
   system: string
@@ -68,13 +68,14 @@ export function serializeLookupKey(
 }
 
 /**
- * Build a lookup index mapping serialized five-tuple keys to resolved runtime declarations.
+ * Build a lookup index mapping serialized five-tuple keys to resolved runtime
+ * declarations. Test-only: takes the compile-internal plans, never the artifact.
  */
 export function createStylePlanIndex(
-  artifact: NativeRuntimeArtifact
+  plans: RuntimeStylePlan[]
 ): Map<string, RuntimeDeclaration[]> {
   const index = new Map<string, RuntimeDeclaration[]>()
-  for (const plan of artifact.stylePlans) {
+  for (const plan of plans) {
     const key = serializeLookupKey(
       plan.system,
       plan.when,

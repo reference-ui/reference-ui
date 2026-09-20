@@ -1,0 +1,819 @@
+{
+  "function": "name",
+  "rulesVersion": 1,
+  "cases": [
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1e21",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1e-7",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1e20",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_100000000000000000000"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1e-6",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_0.000001"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "0.5",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_0.5"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "-0",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_0"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "top",
+        "value": "0x10",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "margin",
+        "value": "",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "margin",
+        "value": "  ",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "inf",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_inf"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "Infinity",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "nan",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_nan"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": " 0x10",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p__0x10"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": 0.0,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_0"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": 1e+21,
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 2
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 1e+21
+        },
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "marginTop",
+        "value": {
+          "$r": 2.0000005
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "ab",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_a_b"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "a﻿b",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_a﻿b"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "content",
+        "value": "\"a\rb\"",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "content",
+          "className": "@reference-ui/lib__content_\"a\rb\""
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": "İnk",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "color",
+          "className": "@reference-ui/lib__c_İnk"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "borderTop",
+        "value": "SOLID 3px red",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderTopWidth",
+          "className": "@reference-ui/lib__bd-t-w_3px"
+        },
+        {
+          "slot": "borderTopStyle",
+          "className": "@reference-ui/lib__bd-t-s_solid"
+        },
+        {
+          "slot": "borderTopColor",
+          "className": "@reference-ui/lib__bd-t-c_red"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": {
+          "md": "2r",
+          "base": "1r"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_2r"
+        },
+        {
+          "slot": "width@base",
+          "className": "@reference-ui/lib__w_1r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": true,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": "",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": "sidebar",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n_sidebar"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": false,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n_false"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": null,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n_null"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": 0,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n_0"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "flex",
+        "value": 1,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "flex",
+          "className": "@reference-ui/lib__flex_1_1_0%"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "flex",
+        "value": "auto",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "flex",
+          "className": "@reference-ui/lib__flex_1_1_auto"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "flex",
+        "value": "2",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "flex",
+          "className": "@reference-ui/lib__flex_2"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": "3px 4px solid",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderWidth",
+          "className": "@reference-ui/lib__bd-w_3px"
+        },
+        {
+          "slot": "borderStyle",
+          "className": "@reference-ui/lib__border-style_solid"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": "None",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderStyle",
+          "className": "@reference-ui/lib__border-style_none"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": "none",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "border",
+          "className": "@reference-ui/lib__bd_none"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "outline",
+        "value": "none",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "outline",
+          "className": "@reference-ui/lib__outline_2px_solid_transparent"
+        },
+        {
+          "slot": "outlineOffset",
+          "className": "@reference-ui/lib__outline-offset_2px"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1r 2r",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "paddingTop",
+          "className": "@reference-ui/lib__pt_1r"
+        },
+        {
+          "slot": "paddingRight",
+          "className": "@reference-ui/lib__pr_2r"
+        },
+        {
+          "slot": "paddingBottom",
+          "className": "@reference-ui/lib__pb_1r"
+        },
+        {
+          "slot": "paddingLeft",
+          "className": "@reference-ui/lib__pl_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "margin",
+        "value": "1px 2px 3px",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "marginTop",
+          "className": "@reference-ui/lib__mt_1px"
+        },
+        {
+          "slot": "marginRight",
+          "className": "@reference-ui/lib__mr_2px"
+        },
+        {
+          "slot": "marginBottom",
+          "className": "@reference-ui/lib__mb_3px"
+        },
+        {
+          "slot": "marginLeft",
+          "className": "@reference-ui/lib__ml_2px"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "inset",
+        "value": "1px 2px 3px 4px",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "top",
+          "className": "@reference-ui/lib__top_1px"
+        },
+        {
+          "slot": "right",
+          "className": "@reference-ui/lib__right_2px"
+        },
+        {
+          "slot": "bottom",
+          "className": "@reference-ui/lib__bottom_3px"
+        },
+        {
+          "slot": "left",
+          "className": "@reference-ui/lib__left_4px"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "padding",
+        "value": "1r",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "padding",
+          "className": "@reference-ui/lib__p_1r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "borderWidth",
+        "value": "1px 2px",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderWidth",
+          "className": "@reference-ui/lib__bd-w_1px_2px"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "borderTopRadius",
+        "value": "2r",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderTopLeftRadius",
+          "className": "@reference-ui/lib__rounded-tl_2r"
+        },
+        {
+          "slot": "borderTopRightRadius",
+          "className": "@reference-ui/lib__rounded-tr_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "size",
+        "value": "2r",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width",
+          "className": "@reference-ui/lib__w_2r"
+        },
+        {
+          "slot": "height",
+          "className": "@reference-ui/lib__h_2r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "textGradient",
+        "value": "linear-gradient(red, blue)",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "backgroundImage",
+          "className": "@reference-ui/lib__background-image_linear-gradient(red,_blue)"
+        },
+        {
+          "slot": "webkitBackgroundClip",
+          "className": "@reference-ui/lib__-webkit-background-clip_text"
+        },
+        {
+          "slot": "color",
+          "className": "@reference-ui/lib__c_transparent"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "border",
+        "value": true,
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "borderWidth",
+          "className": "@reference-ui/lib__bd-w_1px"
+        },
+        {
+          "slot": "borderStyle",
+          "className": "@reference-ui/lib__border-style_solid"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "font",
+        "value": "sans",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "fontFamily",
+          "className": "@reference-ui/lib__font-family_sans"
+        },
+        {
+          "slot": "fontWeight",
+          "className": "@reference-ui/lib__font-weight_normal"
+        },
+        {
+          "slot": "letterSpacing",
+          "className": "@reference-ui/lib__tracking_-0.01em"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "weight",
+        "value": "bold",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "fontWeight",
+          "className": "@reference-ui/lib__font-weight_700"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "variant",
+        "value": "x",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "width",
+        "value": [
+          "1r",
+          null,
+          "3r"
+        ],
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "width@base",
+          "className": "@reference-ui/lib__w_1r"
+        },
+        {
+          "slot": "width@md",
+          "className": "@reference-ui/lib__md:w_3r"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": "red",
+        "important": true
+      },
+      "output": [
+        {
+          "slot": "color",
+          "className": "@reference-ui/lib__c_red!"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [
+          "_hover"
+        ],
+        "prop": "color",
+        "value": "red",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "hover:color",
+          "className": "@reference-ui/lib__hover:c_red"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [
+          "_wat"
+        ],
+        "prop": "color",
+        "value": "red",
+        "important": false
+      },
+      "output": []
+    }
+  ]
+}

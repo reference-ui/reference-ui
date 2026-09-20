@@ -40,7 +40,12 @@ impl AssembleCtx {
     }
 
     /// Build the atom set, plans, sheets, and runtime map into the result.
-    pub(crate) fn finish(self, system: &BaseSystem, sink: &mut DiagnosticsSession) -> CompileResult {
+    pub(crate) fn finish(
+        self,
+        system: &BaseSystem,
+        sink: &mut DiagnosticsSession,
+        keep_style_plans: bool,
+    ) -> CompileResult {
         let Self {
             wants,
             extracted_recipes,
@@ -55,17 +60,22 @@ impl AssembleCtx {
             &mut diagnostics,
             Some(&mut *sink),
         );
-        let compiled_recipes =
-            compile_recipes(&extracted_recipes, system, &mut diagnostics, Some(&mut *sink));
+        let compiled_recipes = compile_recipes(
+            &extracted_recipes,
+            system,
+            &mut diagnostics,
+            Some(&mut *sink),
+        );
         let mut plan_builder =
             runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
         let style_plans = plan_builder.build(&authored);
         let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
         let runtime = NativeRuntimeArtifact {
-            schema_version: 1,
-            style_plans: style_plans.clone(),
+            schema_version: 2,
+            namer: runtime::NamerTables::for_system(system),
             recipes: runtime_recipes,
             style_prop_names: runtime::get_style_prop_names(),
+            style_plans: keep_style_plans.then(|| style_plans.clone()),
         };
 
         let atom_count = atom_set.len();
@@ -94,7 +104,7 @@ impl AssembleCtx {
         // against the emitted plans and render the verdicts in place.
         crate::diagnostics::proof::render::render_session(
             sink.facts(),
-            &runtime.style_plans,
+            &style_plans,
             &system.name,
             &mut diagnostics,
         );

@@ -1,0 +1,356 @@
+//! Namer tables: the closed data both namers read, written once by Rust.
+//!
+//! Built from canon plus the `BaseSystem` plus the atomic constants at
+//! compile time and shipped in the artifact as `runtime.namer`. Lookups
+//! (aliases, prefixes, keyword sets, fonts) sort their keys; lowerings,
+//! breakpoints, conditions unions, and font extras keep the orders the
+//! interpreter and the expansion passes rely on. The rules version starts
+//! at 1 and bumps whenever a naming rule changes a class.
+
+use std::collections::BTreeMap;
+
+use base_system::BaseSystem;
+use serde::{Deserialize, Serialize};
+
+use super::lowerings::{build_lowerings, LowerStep};
+use crate::resolve::conditions::pseudoprops::PRESETS;
+use crate::resolve::font::{family, weight};
+use crate::resolve::shorthands::{border, parser};
+
+/// Rules version both namers pin: bump whenever a naming rule changes a class.
+pub const NAMER_RULES_VERSION: u32 = 1;
+
+/// The closed, O(props + conditions + fonts) data both namers read.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NamerTables {
+    /// Naming-rules version; artifact and runtime namer must agree.
+    pub rules_version: u32,
+    /// Alias to canonical, sorted keys.
+    pub aliases: BTreeMap<String, String>,
+    /// Canonical to class prefix, only where the prefix is not the kebab name.
+    pub prefixes: BTreeMap<String, String>,
+    /// Canonical to ordered lowering steps; absent means identity.
+    pub lowerings: BTreeMap<String, Vec<LowerStep>>,
+    /// Keyword sets the procedures consult.
+    pub keywords: BTreeMap<String, Vec<String>>,
+    /// Weight keyword pairs in table order.
+    pub weight_keywords: Vec<(String, String)>,
+    /// Props exempt from bare-number canonicalization.
+    pub color_props: Vec<String>,
+    /// Breakpoint scale names verbatim, leading `base` included.
+    pub breakpoints: Vec<String>,
+    /// Known `_` keys without the underscore, unioned with presets.
+    pub conditions: Vec<String>,
+    /// Family to default weight, scoped weights, and ordered extras.
+    pub fonts: BTreeMap<String, FontTable>,
+}
+
+/// One font family's namer row: precomputed default plus lookup data.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FontTable {
+    /// Precomputed default weight (`css.fontWeight`, `weights.normal`, `400`).
+    pub weight: String,
+    /// Scoped weight map for `family.weight` lookups.
+    pub weights: BTreeMap<String, String>,
+    /// Ordered `css` extras as pairs; declaration order is load-bearing.
+    pub css: Vec<(String, String)>,
+}
+
+impl NamerTables {
+    /// Build the closed tables for one system from canon, the system, and
+    /// the atomic constants. Atom-independent by construction.
+    pub fn for_system(system: &BaseSystem) -> Self {
+        Self {
+            rules_version: NAMER_RULES_VERSION,
+            aliases: build_aliases(),
+            prefixes: build_prefixes(),
+            lowerings: build_lowerings(),
+            keywords: build_keywords(),
+            weight_keywords: build_weight_keywords(),
+            color_props: canon::COLOR_PROPERTIES
+                .iter()
+                .map(|name| (*name).to_string())
+                .collect(),
+            breakpoints: system.breakpoints().names().to_vec(),
+            conditions: build_conditions(system),
+            fonts: build_fonts(system),
+        }
+    }
+}
+
+impl Default for NamerTables {
+    /// Tables for the empty system: canon lookups with no scale data.
+    fn default() -> Self {
+        Self::for_system(&BaseSystem::default())
+    }
+}
+
+/// Alias to canonical over the full dialect, sorted keys.
+fn build_aliases() -> BTreeMap<String, String> {
+    canon::ALIASES
+        .iter()
+        .map(|alias| (alias.alias.to_string(), alias.canonical.to_string()))
+        .collect()
+}
+
+/// Canonical to class prefix, only where the prefix is not the kebab name.
+/// The fallback order is table hit, then `--*` verbatim, then kebab.
+fn build_prefixes() -> BTreeMap<String, String> {
+    canon::CANONICAL_PROPERTIES
+        .iter()
+        .filter(|prop| prop.class_prefix != kebab_case(prop.name))
+        .map(|prop| (prop.name.to_string(), prop.class_prefix.to_string()))
+        .collect()
+}
+
+/// Keyword sets the procedures consult, sorted for stable bytes.
+fn build_keywords() -> BTreeMap<String, Vec<String>> {
+    let mut keywords = BTreeMap::new();
+    keywords.insert("borderStyle".to_string(), sorted_set(parser::BORDER_STYLES));
+    let mut outline = vec![parser::OUTLINE_STYLE_EXTRA];
+    outline.extend(parser::BORDER_STYLES.iter());
+    keywords.insert("outlineStyle".to_string(), sorted_set(&outline));
+    keywords.insert(
+        "lineWidth".to_string(),
+        sorted_set(parser::LINE_WIDTH_KEYWORDS),
+    );
+    keywords.insert("lengthUnits".to_string(), sorted_set(parser::LENGTH_UNITS));
+    keywords.insert("mathFns".to_string(), sorted_set(parser::MATH_FUNCTIONS));
+    keywords.insert("cssWide".to_string(), sorted_set(parser::CSS_WIDE_KEYWORDS));
+    keywords.insert(
+        "zeroBorder".to_string(),
+        sorted_set(border::ZERO_BORDER_VALUES),
+    );
+    keywords.insert(
+        "unrealizable".to_string(),
+        sorted_set(canon::UNREALIZABLE_EXTENSIONS),
+    );
+    keywords
+}
+
+/// Sorted copy of one keyword source set.
+fn sorted_set(set: &[&str]) -> Vec<String> {
+    let mut out: Vec<String> = set.iter().map(|name| (*name).to_string()).collect();
+    out.sort();
+    out
+}
+
+/// Weight keyword pairs in source order.
+fn build_weight_keywords() -> Vec<(String, String)> {
+    weight::CSS_WEIGHT_KEYWORDS
+        .iter()
+        .map(|(name, value)| ((*name).to_string(), (*value).to_string()))
+        .collect()
+}
+
+/// System condition keys with at most one `_` stripped, unioned with the
+/// preset names and sorted. Mirrors the dual-key lookup's known set.
+fn build_conditions(system: &BaseSystem) -> Vec<String> {
+    let mut names = std::collections::BTreeSet::new();
+    for key in system.conditions.keys() {
+        names.insert(key.strip_prefix('_').unwrap_or(key).to_string());
+    }
+    for (name, _) in PRESETS {
+        names.insert((*name).to_string());
+    }
+    names.into_iter().collect()
+}
+
+/// Font rows with the precomputed default weight and ordered extras.
+fn build_fonts(system: &BaseSystem) -> BTreeMap<String, FontTable> {
+    system
+        .fonts()
+        .iter()
+        .map(|(name, def)| {
+            let table = FontTable {
+                weight: family::default_weight(def).to_string(),
+                weights: def
+                    .weights
+                    .iter()
+                    .map(|(key, value)| (key.clone(), value.clone()))
+                    .collect(),
+                css: def
+                    .css
+                    .iter()
+                    .map(|(key, value)| (key.clone(), value.clone()))
+                    .collect(),
+            };
+            (name.clone(), table)
+        })
+        .collect()
+}
+
+/// Vendor prefixes that take a leading dash in the kebab fallback.
+const VENDOR_PREFIXES: &[&str] = &["moz", "webkit", "ms", "o"];
+
+/// camelCase to kebab with a leading dash for vendor-prefixed names.
+fn kebab_case(name: &str) -> String {
+    let mut out = String::with_capacity(name.len() + 4);
+    if is_vendor_prefixed(name) {
+        out.push('-');
+    }
+    for (index, ch) in name.chars().enumerate() {
+        if ch.is_ascii_uppercase() {
+            if index > 0 {
+                out.push('-');
+            }
+            out.push(ch.to_ascii_lowercase());
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// True when the name opens with a vendor prefix plus an uppercase letter.
+fn is_vendor_prefixed(name: &str) -> bool {
+    VENDOR_PREFIXES.iter().any(|prefix| {
+        name.len() > prefix.len()
+            && name.starts_with(prefix)
+            && name[prefix.len()..].starts_with(|c: char| c.is_ascii_uppercase())
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rules_version_starts_at_one() {
+        assert_eq!(NAMER_RULES_VERSION, 1);
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        assert_eq!(tables.rules_version, 1);
+    }
+
+    #[test]
+    fn aliases_cover_the_dialect() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        assert_eq!(tables.aliases.len(), 315);
+        assert_eq!(tables.aliases["p"], "padding");
+        assert_eq!(tables.aliases["MozAnimation"], "mozAnimation");
+    }
+
+    #[test]
+    fn prefixes_hold_non_kebab_only() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        assert_eq!(tables.prefixes.len(), 198);
+        assert_eq!(
+            tables.prefixes["msScrollLimitXMax"],
+            "-ms-scroll-limit-xmax"
+        );
+        assert_eq!(
+            tables.prefixes["msScrollbar3dlightColor"],
+            "-ms-scrollbar-3dlight-color"
+        );
+        assert!(!tables.prefixes.contains_key("mozAnimation"));
+        assert!(!tables.prefixes.contains_key("top"));
+        assert_eq!(tables.prefixes["marginTop"], "mt");
+    }
+
+    #[test]
+    fn every_canon_prefix_resolves_through_table_or_kebab() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        for prop in canon::CANONICAL_PROPERTIES {
+            let resolved = tables
+                .prefixes
+                .get(prop.name)
+                .cloned()
+                .unwrap_or_else(|| kebab_case(prop.name));
+            assert_eq!(resolved, prop.class_prefix, "{}", prop.name);
+        }
+    }
+
+    #[test]
+    fn color_props_match_canon_sorted() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        assert_eq!(tables.color_props.len(), 71);
+        let mut sorted = tables.color_props.clone();
+        sorted.sort();
+        assert_eq!(tables.color_props, sorted);
+    }
+
+    #[test]
+    fn keyword_sets_come_from_gate_consts_sorted() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        let keywords = &tables.keywords;
+        assert_eq!(
+            keywords.keys().collect::<Vec<_>>(),
+            [
+                "borderStyle",
+                "cssWide",
+                "lengthUnits",
+                "lineWidth",
+                "mathFns",
+                "outlineStyle",
+                "unrealizable",
+                "zeroBorder",
+            ]
+        );
+        assert_eq!(keywords["borderStyle"].len(), 10);
+        assert_eq!(keywords["outlineStyle"].len(), 11);
+        assert!(keywords["outlineStyle"].contains(&"auto".to_string()));
+        assert_eq!(keywords["lineWidth"], vec!["medium", "thick", "thin"]);
+        assert_eq!(
+            keywords["zeroBorder"],
+            vec!["0", "0%", "0em", "0px", "0rem"]
+        );
+        assert_eq!(keywords["unrealizable"].len(), 27);
+        for set in keywords.values() {
+            let mut sorted = set.clone();
+            sorted.sort();
+            assert_eq!(set, &sorted);
+        }
+    }
+
+    #[test]
+    fn weight_keywords_keep_table_pairs() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        let pairs: Vec<(&str, &str)> = tables
+            .weight_keywords
+            .iter()
+            .map(|(name, value)| (name.as_str(), value.as_str()))
+            .collect();
+        assert_eq!(
+            pairs,
+            [
+                ("thin", "100"),
+                ("light", "300"),
+                ("normal", "400"),
+                ("semibold", "600"),
+                ("bold", "700"),
+                ("black", "900"),
+            ]
+        );
+    }
+
+    #[test]
+    fn breakpoints_ship_verbatim_with_base() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        let names: Vec<&str> = tables.breakpoints.iter().map(String::as_str).collect();
+        assert_eq!(names, ["base", "sm", "md", "lg", "xl", "2xl"]);
+    }
+
+    #[test]
+    fn conditions_union_system_and_presets() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        assert!(tables.conditions.contains(&"hover".to_string()));
+        assert!(tables.conditions.contains(&"osDark".to_string()));
+        assert!(tables.conditions.contains(&"dark".to_string()));
+        assert!(!tables.conditions.iter().any(|name| name.starts_with('_')));
+        let mut sorted = tables.conditions.clone();
+        sorted.sort();
+        assert_eq!(tables.conditions, sorted);
+    }
+
+    #[test]
+    fn fonts_carry_default_weight_and_ordered_extras() {
+        let tables = NamerTables::for_system(BaseSystem::lib_fixture());
+        let sans = &tables.fonts["sans"];
+        assert_eq!(sans.weight, "normal");
+        assert!(sans.weights.contains_key("normal"));
+        let keys: Vec<&str> = sans.css.iter().map(|(key, _)| key.as_str()).collect();
+        assert!(keys.contains(&"fontWeight"));
+    }
+}

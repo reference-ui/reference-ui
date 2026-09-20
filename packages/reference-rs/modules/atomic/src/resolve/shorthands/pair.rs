@@ -23,7 +23,8 @@ pub fn expand_pair_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<s
     ])
 }
 
-fn is_radius_pair(canon_name: &str) -> bool {
+/// True for the six side-radius shorthands that split into corner pairs.
+pub(crate) fn is_radius_pair(canon_name: &str) -> bool {
     matches!(
         canon_name,
         "borderTopRadius"

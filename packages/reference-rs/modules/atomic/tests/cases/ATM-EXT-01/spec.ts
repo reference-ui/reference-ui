@@ -69,7 +69,7 @@ const spec: AtomicCaseSpec = {
         `no class key for ${prop}`
       ).toBe(false)
     }
-    const planProps = (result.runtime?.stylePlans ?? []).map(p => p.prop)
+    const planProps = (result.stylePlans).map(p => p.prop)
     for (const { prop } of REFUSED) {
       expect(planProps, `no plan for ${prop}`).not.toContain(prop)
     }

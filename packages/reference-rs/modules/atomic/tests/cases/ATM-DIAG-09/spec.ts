@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'blue.500')).toBe(true)
 
     // The final plan omits the predicted key: no plan, no class, no CSS.
-    const plans = result.runtime?.stylePlans ?? []
+    const plans = result.stylePlans
     const predicted = plans.filter(
       p => p.prop === 'color' && p.when.includes('_hovr')
     )

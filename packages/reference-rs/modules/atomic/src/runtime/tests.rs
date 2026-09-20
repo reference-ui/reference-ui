@@ -213,3 +213,30 @@ fn test_style_prop_names_excludes_metadata() {
     assert!(!names.contains(&"variant".to_string()));
     assert!(!names.contains(&"colorMode".to_string()));
 }
+
+#[test]
+fn test_resolve_object_keeps_author_order_reverse_alpha() {
+    // Reverse-alpha fixture: `md` before `base` in the authored object must
+    // emit `md` first. Sorted iteration would silently flip them.
+    let system = BaseSystem::lib_fixture();
+    let decls = vec![AuthoredDeclaration {
+        when: vec![],
+        prop: "width".to_string(),
+        value: json!({"md": "2r", "base": "1r"}),
+        important: false,
+    }];
+
+    let mut atom_set = crate::atom::AtomSet::new();
+    let mut diagnostics = Vec::new();
+
+    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let plans = builder.build(&decls);
+
+    assert_eq!(plans.len(), 1);
+    let slots: Vec<&str> = plans[0]
+        .declarations
+        .iter()
+        .map(|decl| decl.slot.as_str())
+        .collect();
+    assert_eq!(slots, ["width@md", "width@base"]);
+}

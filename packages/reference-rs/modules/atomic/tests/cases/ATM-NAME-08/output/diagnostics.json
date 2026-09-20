@@ -2,6 +2,22 @@
   {
     "severity": "warning",
     "code": "ATM-W-NON-CANONICAL-NUMERIC",
+    "message": "`padding: 1e21` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"1e21\" on `padding`",
+    "file": "input/src/numerics.ts",
+    "line": 4,
+    "column": 36
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
+    "message": "`padding: 1e-7` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"1e-7\" on `padding`",
+    "file": "input/src/numerics.ts",
+    "line": 5,
+    "column": 36
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-NON-CANONICAL-NUMERIC",
     "message": "`top: 0x10` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"0x10\" on `top`",
     "file": "input/src/numerics.ts",
     "line": 6,

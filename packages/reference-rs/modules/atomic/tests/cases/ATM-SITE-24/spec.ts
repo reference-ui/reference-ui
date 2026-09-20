@@ -15,7 +15,7 @@ const spec: AtomicCaseSpec = {
     }
     expect(result.wants ?? []).toHaveLength(6)
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(6)
     for (const value of ['0', '1', '2', '3', '4', '5']) {
       expect(plans.some(p => p.prop === 'padding' && p.value === value)).toBe(true)

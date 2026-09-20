@@ -5,10 +5,20 @@
 use super::parser::{is_global_keyword, parse_shorthand_tokens, split_tokens, ParsedShorthand};
 use crate::atom::AtomValue;
 
+/// Closed zero-value spellings that emit a `0px` width, in gate order.
+pub(crate) const ZERO_BORDER_VALUES: &[&str] = &["0", "0px", "0rem", "0em", "0%"];
+
+/// Width the zero gate emits.
+pub(crate) const ZERO_BORDER_WIDTH: &str = "0px";
+
+/// `outline: 'none'` ring value, offset value, and offset prop.
+pub(crate) const OUTLINE_NONE_VALUE: &str = "2px solid transparent";
+pub(crate) const OUTLINE_NONE_OFFSET: &str = "2px";
+pub(crate) const OUTLINE_OFFSET_PROP: &str = "outlineOffset";
+
 fn is_zero_value(raw: &str) -> bool {
     // border: 0  /  border: '0px'
-    let trimmed = raw.trim();
-    trimmed == "0" || trimmed == "0px" || trimmed == "0rem" || trimmed == "0em" || trimmed == "0%"
+    ZERO_BORDER_VALUES.contains(&raw.trim())
 }
 
 fn is_whole_value(raw: &str) -> bool {
@@ -21,13 +31,19 @@ fn is_whole_value(raw: &str) -> bool {
 }
 
 /// True only for width/style/color trios (border, outline, column/row rules).
-fn is_border_family(longhands: &[&str]) -> bool {
+pub(crate) fn is_border_family(longhands: &[&str]) -> bool {
     // Gate on family, not on count: flex, columns, lineClamp and friends are
     // len-3 trios of other families and must never classify as border (RS-39).
     let [width, style, color] = longhands else {
         return false;
     };
     width.ends_with("Width") && style.ends_with("Style") && color.ends_with("Color")
+}
+
+/// True only for the `outline` canonical: the sole trio with the ring step
+/// and the `auto` style keyword.
+pub(crate) fn is_outline_prop(canon_name: &str) -> bool {
+    canon_name == "outline"
 }
 
 /// Decompose composite border or outline declaration into atomic longhands.
@@ -41,13 +57,16 @@ pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str
     let width_prop = longhands[0];
     let style_prop = longhands[1];
     let color_prop = longhands[2];
-    let is_outline = canon_name == "outline";
+    let is_outline = is_outline_prop(canon_name);
 
     let trimmed = raw_val.trim();
 
     if is_zero_value(trimmed) {
         // border: 0  →  borderWidth: 0px
-        return Some(vec![(width_prop.into(), AtomValue::String("0px".into()))]);
+        return Some(vec![(
+            width_prop.into(),
+            AtomValue::String(ZERO_BORDER_WIDTH.into()),
+        )]);
     }
 
     if trimmed == "none" && is_outline {
@@ -56,9 +75,12 @@ pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str
         return Some(vec![
             (
                 canon_name.into(),
-                AtomValue::String("2px solid transparent".into()),
+                AtomValue::String(OUTLINE_NONE_VALUE.into()),
             ),
-            ("outlineOffset".into(), AtomValue::String("2px".into())),
+            (
+                OUTLINE_OFFSET_PROP.into(),
+                AtomValue::String(OUTLINE_NONE_OFFSET.into()),
+            ),
         ]);
     }
 

@@ -33,7 +33,7 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, 'color', value, [when])).toBe(true)
     }
 
-    const plans = result.runtime.stylePlans
+    const plans = result.stylePlans
     expect(plans).toHaveLength(EXPECTED.length)
     for (const { when, value, className } of EXPECTED) {
       const plan = plans.find(p => p.prop === 'color' && p.value === value)
@@ -46,7 +46,7 @@ const spec: AtomicCaseSpec = {
       expect(result.stylesheet).toContain(rule)
     }
 
-    const index = createStylePlanIndex(result.runtime)
+    const index = createStylePlanIndex(result.stylePlans)
     for (const { when, value, className } of EXPECTED) {
       expect(
         mergeStylePlans(index, [{ system: SYSTEM, when: [when], prop: 'color', value }]),
