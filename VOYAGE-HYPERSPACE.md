@@ -3,183 +3,266 @@
 Standing orders for the star captain. Read this first, every wave.
 HQ's word amends it; nothing else does.
 
+**HQ amendment 2026-09-20 ~23:49.** The red/perf flip-flop is cancelled.
+Objective 1 (Reaper) is already COMPLETE on this tree (D1 DECLINE).
+Tonight from this HEAD forward is **performance only**: recon, then
+parallel Fasthull crews, rendezvous, log, fresh recon, next wave.
+No red team. No doom hunts. No Jettison acceptance. No harvest
+rewrite. Do not reopen Reaper.
+
 **You are fully autonomous now.** HQ has given the word and gone to
-sleep. Do not ask permission. Do not pause between objectives. Do not
-ping HQ for a ruling, a commit, a spawn, or a "should I continue."
-Decide, dispatch, verify, commit, log, keep moving. Morning is when HQ
-reads the logs — not when the voyage waits. The one thing you never do
+sleep. Do not ask permission. Do not pause between waves. Do not ping
+HQ for a ruling, a commit, a spawn, or a "should I continue." Decide,
+dispatch, verify, commit, log, keep moving. Morning is when HQ reads
+the logs — not when the voyage waits. The one thing you never do
 unasked: push. Everything commits locally; HQ pushes in the morning.
 
-Two objectives, in order. Then the loop runs until HQ wakes.
+One standing objective until HQ wakes: scrape compile time, peak RSS,
+and bundle size at the frozen enterprise load, using the Panda v2
+marks as the **goalpost**, not the architecture.
 
 ---
 
 ## First act (before any crew launches)
 
-1. Take the conn aloud, per the star-captain skill: name the
-   objectives, state what you own and what you will not do yourself.
-2. Commit the voyage base on `reference-system`: this brief, the perf
-   log stub, the voyage log stub, the Fasthull update, the missions
-   README row. Wave worktrees cut from this HEAD — nothing uncommitted
-   may be load-bearing.
-3. Confirm the runners answer: `pnpm agent --help`-class smoke is
-   enough (agentrs queue, agentneo CLI, bench list). A dead runner at
-   02:00 is a dead wave; find out now.
+1. Take the conn aloud, per the star-captain skill: name the single
+   standing objective, state what you own and what you will not do
+   yourself. You do not recon, profile, implement, or review — crews
+   do. You dispatch, sequence the box, re-run gates, commit, log.
+2. Commit this amended brief on `reference-system` (plus the log
+   header updates in the same arc if they are still dirty). Wave
+   worktrees cut from this HEAD — nothing uncommitted may be
+   load-bearing.
+3. Confirm the runners answer: `pnpm agent` / `pnpm agentrs` /
+   `pnpm agentneo` / `pnpm bench:neo --list`. A dead runner at 02:00
+   is a dead wave; find out now.
+4. Read the Panda goalpost once, firsthand, before dispatching recon:
+   `/Users/ryn/Developer/panda-bench/reports/latest/report.md` and
+   `reports/notes.md`. Neo baseline pin:
+   `packages/reference-neo/benchmark/reports/5eda2c60b7e5/`.
 
-## Objective 1 — Operation Reaper (main tree, one crew, sequential)
+---
 
-Reaper first. It is the only sequenced work tonight: size the harvest
-sheet on a real compile, then decide the pool. Verification is bundle
-shrinkage, measured by the bench.
+## The goalpost (Panda v2, same seed-7 app load)
 
-1. **Jettison check.** Reaper sequences after Jettison (the shipped
-   map must be gone). Verify the state of the tree firsthand: is the
-   map gone on this checkout, and does Jettison acceptance still pend?
-   Answer Reaper ask 7 first — it bounds what Slice 1 needs from
-   Jettison. If Jettison blocks the sheet numbers (not just the
-   `react.mjs` cell), say so in the voyage log and run what can run;
-   do not re-litigate Jettison itself.
-2. **READY asks, read-only.** Answer Reaper asks 1–7 into
-   `packages/reference-neo/docs/evidence/`. Then flip Reaper line 1
-   to `OPERATION: GO` — this brief is HQ's hand on that switch.
-3. **Slice 1.** Fixture, real compile, census: classes, `styles.css`
-   raw/gzip/brotli, `react.mjs` raw/gzip, sink census, pool census
-   split leaf-only vs unbound, CSSOM parse times. Output
-   `reaper-01-real-compile.md` beside the M-bounds. Commit the
-   evidence as one arc.
-4. **D1 overnight.** The pool question goes to architect consult
-   against the Slice 1 numbers: material size win AND no authored
-   pattern breakage beyond named cases signs it; anything else
-   declines with written reasons. Either answer completes D1 —
-   decline is a finished outcome, not a failure. Record the ruling
-   and its reasons; HQ ratifies in the morning (Slice 2 is one
-   revertible commit either way).
-5. **Slice 2 only if D1 signs.** Walk-owned literals out of the pool,
-   `ATM-HARVEST-06` green, harvest suites unchanged, gates green.
-6. **Bench verification.** Pin the default suite immediately before
-   Slice 2 changes land (baseline) and immediately after (candidate).
-   The win is smaller bundle bytes at the same load, raw and gzip,
-   with no sync/RSS blowup. Compare pin to pin, scale by scale, and
-   put the deltas in the voyage log. Commit the post-slice pin as the
-   new log head only if it wins or holds; a regression parks the
-   slice, not the voyage.
+Same generator physics, 7,527 `css()` calls at enterprise. Panda v2
+beta.18, in-process extract + cssgen. Neo numbers are pin
+`5eda2c60b7e5`.
 
-Reaper's own requirements (R1–R6) and slices are the contract; this
-brief only sequences and verifies. Captain re-runs the decisive
-suites firsthand before every Reaper commit.
+| scale | sync Neo → Panda | peak RSS Neo → Panda | styles.css Neo → Panda |
+| --- | --- | --- | --- |
+| small (171) | 150ms → 18ms | 122 MiB → 116 MiB | 538 KiB → 130 KiB |
+| medium (635) | 461ms → 68ms | 208 MiB → 132 MiB | 2.4 MiB → 479 KiB |
+| enterprise (7,527) | 3.51s → 645ms | 796 MiB → 261 MiB | 14.3 MiB → 2.7 MiB |
 
-## Objective 2 — flip-flop waves (standing; runs until HQ wakes)
+Enterprise Panda JS runtime is **71 KiB**; Neo `runtime-data.mjs` is
+**3.9 MiB**. `cssCalls` matched exactly. Panda `@layer recipes` is
+empty: recipe `styleObject`s folded into the shared atomic pool.
+Probes say this is not an extract miss.
 
-After Reaper, the night is an infinite loop: one red team and one
-performance team per wave, in worktrees, merged at wave end, then the
-next wave. Red hunts breaks; perf hunts speed. Neither waits for HQ.
+Closing the gap entirely is not the night's pass/fail. Moving Neo
+toward those three numbers **without copying Panda's architecture**
+is. Steal *skipped work* (cargo we serialize and throw away, parses
+we keep, recipe matrices we print). Do not adopt their `css()`
+runtime, their harvest-less holes, or their config/codegen split as
+a product rewrite.
+
+---
+
+## What is out of bounds
+
+- **Harvest as a kill or a pool rewrite.** D1 already DECLINED.
+  Harvest is `pool × sinks`. This bench load is almost all static
+  literals; HARVEST-04: no sinks ⇒ static sheet byte-identical with
+  harvest off. Reaper's own messy fixture is 341 KiB, not 14 MiB.
+  The 14.3 → 2.7 delta is not harvest. A recon note may still name
+  harvest's *walk cost* (extra AST visit on 15k files) as a
+  compile-time scrape. Do not mint less to fake Panda's sheet.
+- **Weakening the load.** No scale, generator, or sampler edits.
+  Faster by shrinking files/calls/uniques fails review on sight.
+- **Copying Panda's architecture.** No "just emit what they emit"
+  by deleting recipes, namer tables, or the dual stylesheet as a
+  product. Emission *skips* that keep paint and stations are in
+  bounds when the hypothesis names them.
+- **Red team, doom, Jettison acceptance, Reaper Slice 2.**
+- **Push.**
+
+---
+
+## The loop (standing; runs until HQ wakes)
+
+Every wave is the same shape. Parallel by default after recon.
+
+```
+recon map → disjoint Fasthull crews (one hypothesis each, own
+worktree, own bench) → rendezvous → captain merge + pin →
+fresh oracle/recon → wave N+1
+```
 
 ### Cutting a wave
 
-From `reference-system` HEAD, wave N gets two branches and two
-sibling worktrees (never nested inside the checkout):
+From `reference-system` HEAD:
 
 ```bash
-git worktree add ../reference-ui-red -b voyage/hyperspace-red-N
-git worktree add ../reference-ui-perf -b voyage/hyperspace-perf-N
+git worktree add ../reference-ui-recon-N -b voyage/hyperspace-recon-N
 ```
 
-(Replace N per wave; remove finished worktrees with
-`git worktree remove --force` before re-cutting a path.)
+After recon files the map, cut one perf worktree per **disjoint**
+avenue (typically 2–4; captain decides from the map, never one
+giant crew):
 
-### Red crew (red tree) — five seats, all filled
+```bash
+git worktree add ../reference-ui-perf-N-a -b voyage/hyperspace-perf-N-a
+git worktree add ../reference-ui-perf-N-b -b voyage/hyperspace-perf-N-b
+# …
+```
 
-A proper adversarial team, not one agent. Red-team cycles per the
-red-team skill, doom-agent physics for compiler briefs:
+Never nest worktrees inside the checkout. Remove finished trees
+with `git worktree remove --force` before re-cutting a path.
 
-1. **Hunter** — one brief, up to 3 theories, ships the blind repro
-   (in `/tmp`, runnable via the repo's own runners) or reports a
-   clean hunt. Finds only.
-2. **Reproducer** — a separate crew that replays the repro blind.
-   Unreproducible finds die here.
-3. **Architect** — onboard all wave. Rules BREAK vs CURIO with
-   severity honesty, draws the exact fortify boundary (what may
-   change, what moves together, sweep obligations, what stays
-   untouched), and takes consults on anything needing shape changes.
-4. **Fortify engineer** — closes ruled BREAKs inside the boundary,
-   with pins plus a regression station/case. No weakened tests, no
-   blanket repins.
-5. **Chain-review oracle** — re-verifies the whole arc firsthand
-   (repro, pins, suites, diff against the ruling) to VERIFIED or
-   GAPS with particulars.
+### 1. Recon (read-only map; no product edits)
 
-Reports go to the doom log (`.agents/doom/logs/`, one atomic report
-per hunt) **on the red branch** — the merge carries them home, and the
-next wave inherits them. Consult the log before hunting; thin coverage
-is scheduling signal. Satisfaction is HQ's word only — until then,
-keep cycling.
+One recon crew, the recon tree. They do not implement. They
+profile, read, and write a map into
+`packages/reference-neo/docs/evidence/fasthull-recon-N.md` **and**
+a one-line summary into `VOYAGE-HYPERSPACE-PERF.md`.
 
-### Perf crew (perf tree) — four seats, all filled
+The map names **several avenues**, each:
 
-A proper optimisation team mirroring red's discipline. Performance
-cycles per Operation Fasthull:
+- what work we do that Panda (or a tight engine) appears to skip
+- why it would move **sync wall**, **peak RSS**, and/or **bundle
+  bytes** (`styles.css` and/or `runtime-data.mjs`)
+- evidence: profile, allocation shape, or a counted artifact
+  (JSON payload fields, live allocator count, recipe rule count)
+- disjointness: can this share a wave with which other avenues?
+- out-of-bounds check: not harvest-kill, not load-weaken, not a
+  Panda architecture clone
 
-1. **Profiler** — finds the slow spot and writes the hypothesis with
-   profile evidence. One hypothesis per cycle.
-2. **Architect** — onboard all wave. Concurs with the hypothesis
-   before implementation starts (a killed hypothesis is logged in one
-   line, not mourned), consults on risky changes, and rules when
-   reviewer and implementer disagree.
-3. **Implementer** — builds the change inside the hypothesis boundary
-   and measures it: bench at locked load against the wave-start pin
-   plus the stability check.
-4. **Reviewer** — a different agent from finder and implementer.
-   Re-verifies firsthand (bench comparison, stability claim, diff
-   against the boundary) to VERIFIED or GAPS with particulars.
+Wave-1 recon starts from these suspects (confirm or kill with
+evidence; add others; do not treat the list as the backlog):
+
+1. **N-API JSON of the whole `CompileResult`.** Production `sync()`
+   uses stylesheet, portable stylesheet, `runtime`, hosts,
+   diagnostics. The bridge still serde's `css.classes` (the
+   per-atom map Jettison stopped shipping), `wants`, `style_plans`,
+   and two full sheets. Time and RSS.
+2. **Two full utility sheets.** `build_stylesheet_with` and
+   `build_portable_stylesheet_with` both print the utilities
+   layer. Token selectors differ; 14 MiB of atoms should not.
+3. **15k Oxc allocators live until the end.** Dead files
+   (`FACTOR_n`) do not need their AST after constants are copied
+   out.
+4. **Extra AST walks on the dead majority.** Diagnostics analysis
+   and harvest pool collection visit every parse. Cheap skip when
+   the source cannot contain `css(` / `recipe(` is a walk scrape,
+   not a harvest-doctrine change.
+5. **Disk scan reads, then glob-filters.**
+6. **Recipe closed classes vs shared atomics.** Panda's 2.7 MiB
+   vs our 14.3 MiB. Hypothesis must say how paint and recipe
+   stations still hold. This is the bundle-size lever. It is not
+   "delete recipes."
+7. **`runtime-data.mjs` at 3.9 MiB vs Panda's 71 KiB JS.** Recipe
+   tables scaling with 440 exports, not namer physics. Size lever
+   if tables are duplicating sheet information.
+
+Spent avenues live in the perf log. Recon does not re-propose a
+killed or landed hypothesis without new evidence.
+
+### 2. Perf crews (Fasthull; parallel; one hypothesis each)
+
+Each crew is a full Fasthull team on its own tree
+([operation-fasthull.md](docs/missions/operation-fasthull.md)):
+
+1. **Profiler** — owns this crew's one hypothesis, with profile
+   evidence against the locked load.
+2. **Architect** — concurs before implementation; kills are one
+   line in the perf log, not a funeral.
+3. **Implementer** — one change inside the boundary; benches in
+   **this worktree** (`pnpm bench:neo`; dirty pin is
+   `reports/latest/`, dies with the tree).
+4. **Reviewer** — different agent from profiler and implementer.
+   VERIFIED or GAPS firsthand: bench deltas, stability, diff vs
+   boundary.
+
+Stability tonight: `pnpm agentrs` on the touched crates (atomic
+loop at minimum) and `pnpm agentneo` on the neo cases. Churn
+guardrail: `--scale churn` unregressed beyond noise if the change
+can touch namer/harvest/atoms; skip only when the architect
+writes why churn cannot see the change. Pre-existing red
+(virtualrs goldens, etc.) is named and shown unrelated — never
+absorbed.
+
+Bytes: identical, **or** the hypothesis explained why they moved
+(emission skip, not a quieter load). Paint and stations still
+hold.
 
 A disproven hypothesis is a complete cycle — log it and move on.
-Entries append to `VOYAGE-HYPERSPACE-PERF.md` **on the perf
-branch** — the merge carries them home. The load stays frozen all
-night: no scale, generator, or sampler edits while optimising. Faster
-by weakening the load fails review on sight.
 
-### Measuring inside waves
+### 3. Rendezvous
 
-- Crews measure in-tree and commit nothing measured: worktree benches
-  pin `reports/latest/` (untracked, dies with the worktree). Hash pins
-  from a wave branch are meaningless for the log — only the captain
-  commits pins, and only on the main line at arc boundaries.
-- The box is shared between the two crews. Timed bench runs need
-  relative quiet: the captain sequences compute — perf owns the box
-  during its timed runs, red yields heavy suites on the captain's
-  signal. Perf reports medians across the default runs; a win must
-  clear the measured run-to-run spread, not just beat one sample.
-- RS work anywhere coordinates through `/tmp/reference-ui-cpu-gate`
-  per standing rule.
+Crews do not merge. They report VERIFIED / GAPS / died into
+`VOYAGE-HYPERSPACE-PERF.md` on their branch. Captain, on the main
+line:
 
-### Closing a wave
+1. Wait until every live perf crew has written a terminal entry
+   (or failed the deadlock test and been replaced/killed).
+2. Merge VERIFIED arcs one at a time, independent files first.
+   Same-hunk conflicts: pick one, send the other to wave N+1.
+   Never smash two emission-model changes in one merge.
+3. After each merge: firsthand `pnpm agentrs` / `pnpm agentneo`
+   as scoped above, then `pnpm bench:neo` on the main line.
+   Hash-pin only on a clean main tree, reports ignored by the pin
+   rule. If the merge regresses sync, RSS, *or* bundle against
+   the pre-merge pin, revert, log, ride forward.
+4. Commit named files only, one verified arc per commit. Crews
+   never commit.
+5. Close the wave in `VOYAGE-HYPERSPACE-LOG.md`: what merged,
+   bench deltas vs `5eda2c60b7e5` and vs Panda, what rode, what
+   died.
 
-1. Crews report VERIFIED arcs only. Anything GAPS, unreviewed, or
-   unverified stays on its branch and rides the next wave — it never
-   merges.
-2. Captain merges red first (correctness lands before speed),
-   re-running the decisive suites firsthand; then perf, re-running
-   bench (same load) plus acceptance firsthand.
-3. Same-hunk conflicts resolve for red; perf re-proposes next wave.
-   If a perf merge regresses the bench against the pre-merge pin, the
-   perf merge is reverted and the revert is recorded in the perf log.
-4. Record the wave close in `VOYAGE-HYPERSPACE-LOG.md`: what merged,
-   bench deltas, what rode forward, what died.
-5. Remove the worktrees, cut wave N+1. The loop has no last wave —
-   HQ's morning is the only exit.
+### 4. Fresh oracle / recon
 
-### Never interrupt working crews
+A **new** recon/oracle crew (not the implementers) reads: the
+wave close, the new pin, the remaining Panda gap, the perf log.
+They write `fasthull-recon-(N+1).md`: what is still thick, what
+is spent, the next disjoint set. Then cut wave N+1. The loop has
+no last wave — HQ's morning is the only exit.
+
+If recon says the remaining gap is architectural copy or harvest
+kill, they log that as a morning question and pick the next
+*in-bounds* scrape instead of stalling.
+
+---
+
+## Measuring
+
+- Locked load: Neo default suite, seed 7. Enterprise is the
+  optimisation target. Small and medium are the shape check.
+- Locked comparison, every pin: **median sync wall**, **peak RSS**,
+  **`styles.css` bytes** (raw + gzip), **`runtime-data.mjs` bytes**
+  (raw + gzip). Report all four vs the wave-start pin and vs Panda.
+- Worktree benches write `reports/latest/` (untracked). Hash pins
+  are the captain's, main line only, at arc boundaries.
+- Timed runs need quiet. Parallel crews may generate and compile
+  in their own trees; the captain sequences **main-line** timed
+  pins so two `bench:neo` enterprise runs do not share the box.
+  RS work coordinates through `/tmp/reference-ui-cpu-gate`.
+- A win must clear the measured run-to-run spread, not beat one
+  sample.
+
+## Never interrupt working crews
 
 Read-only liveness only: log writes plus work products. No vitals
-pings — the ping-exit pattern killed five crews in one voyage. Talk
-to stuck crews (silent, circling, waiting on itself), never to moving
-ones. This binds the captain and every observer all night.
+pings. Talk to stuck crews (silent, circling, waiting on itself),
+never to moving ones. This binds the captain and every observer
+all night.
 
 ## The morning
 
-When HQ wakes (or orders park): finish in-flight arcs, never strand a
-half-verified merge; close the wave in the log; commit; dispatch
-nothing further. The resume checklist names what is COMPLETE, what
-rode forward, and the exact next cut. HQ reads, in order: the voyage
-log, the perf log, the doom log, the Reaper evidence and D1 ruling —
-then ratifies, pushes, and says satisfied or not.
+When HQ wakes (or orders park): finish in-flight arcs, never
+strand a half-verified merge; close the wave in the log; commit;
+dispatch nothing further. Resume checklist: what is COMPLETE,
+what rode, the exact next recon dispatch. HQ reads, in order: the
+voyage log, the perf log, the latest recon note, the latest hash
+pin next to Panda's `report.md` — then ratifies, pushes, and says
+satisfied or not.
