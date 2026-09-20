@@ -106,16 +106,25 @@
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`order` value `false` is not valid CSS"
+    "message": "`order` value `false` is not valid CSS",
+    "file": "input/src/fold.ts",
+    "line": 13,
+    "column": 31
   },
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`order` value `false` is not valid CSS"
+    "message": "`order` value `false` is not valid CSS",
+    "file": "input/src/literal.ts",
+    "line": 3,
+    "column": 31
   },
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`order` value `true` is not valid CSS"
+    "message": "`order` value `true` is not valid CSS",
+    "file": "input/src/literal.ts",
+    "line": 5,
+    "column": 31
   }
 ]

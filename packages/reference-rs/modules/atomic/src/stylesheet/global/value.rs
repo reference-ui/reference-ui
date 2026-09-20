@@ -13,6 +13,7 @@ use crate::resolve::{font, rhythm, tokens, unit, ResolveSession};
 pub struct ValueSession<'a> {
     pub system: &'a BaseSystem,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub location: DiagnosticLocation,
 }
 
 /// Lowers one authored global property and declaration value into CSS property-value pairs.
@@ -34,10 +35,11 @@ pub fn lower_declaration(
         return lower_weight_macro(val, session.system);
     }
     if !prop.starts_with("--") && !canon::is_known_style_prop(prop) {
-        session.diagnostics.push(Diagnostic::warning(
+        let diagnostic = session.location.warning(
             DiagnosticCode::UnknownProperty,
             format!("Unknown style property in global CSS: \"{prop}\""),
-        ));
+        );
+        session.diagnostics.push(diagnostic);
         return Vec::new();
     }
     lower_standard_property(prop, val, session)
@@ -129,10 +131,11 @@ fn lower_standard_property(
         }
         GlobalDeclarationValue::Number(n) => vec![(css_prop, lower_number_value(prop, n))],
         GlobalDeclarationValue::Boolean(_) => {
-            session.diagnostics.push(Diagnostic::warning(
+            let diagnostic = session.location.warning(
                 DiagnosticCode::InvalidCssValue,
                 format!("Boolean value is not allowed on standard property \"{prop}\""),
-            ));
+            );
+            session.diagnostics.push(diagnostic);
             Vec::new()
         }
         _ => Vec::new(),
@@ -156,7 +159,7 @@ fn resolve_string_val(prop: &str, s: &str, session: &mut ValueSession<'_>) -> Op
         let mut resolve_session = ResolveSession {
             system: session.system,
             diagnostics: &mut *session.diagnostics,
-            location: DiagnosticLocation::default(),
+            location: session.location.clone(),
         };
         tokens::resolve_token_value(prop, &rhythm_val, &mut resolve_session).map(|resolved| {
             if resolved.as_ref() != stem {

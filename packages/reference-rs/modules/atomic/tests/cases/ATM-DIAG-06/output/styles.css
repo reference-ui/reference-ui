@@ -1,0 +1,10 @@
+@layer diag-unicode {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  .日本語-café { color: red }
+}
+@layer utilities {
+  .diag-unicode__content_\😀 { content: 😀; }
+  .diag-unicode__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}
+}

@@ -29,7 +29,7 @@ pub fn append_reset_css(
     let mut walker = GlobalWalker::new(system, diagnostics);
     for fragment in &system.global_css {
         if is_reset_fragment(&fragment.source) {
-            walker.walk_rules(&fragment.rules);
+            walker.walk_rules(&fragment.source, &fragment.rules);
         }
     }
     if walker.rules.is_empty() {
@@ -49,7 +49,7 @@ pub fn append_global_fragment_rules(
     let mut walker = GlobalWalker::new(system, diagnostics);
     for fragment in &system.global_css {
         if !is_reset_fragment(&fragment.source) {
-            walker.walk_rules(&fragment.rules);
+            walker.walk_rules(&fragment.source, &fragment.rules);
         }
     }
     format_global_rules(&walker.rules, out);

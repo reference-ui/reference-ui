@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"watDown\""
+    "message": "Unknown condition \"watDown\"",
+    "file": "input/src/App.tsx",
+    "line": 8,
+    "column": 23
   }
 ]

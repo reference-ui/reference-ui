@@ -23,10 +23,10 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
 | Total contract cases | 222 |
-| Named `[x]` proven | 210 |
-| Remaining `[ ]` | 12 (`ATM-DIAG-04`, `ATM-DIAG-06`–`ATM-DIAG-14`, `ATM-GHOST-04`, `ATM-PERF-01`) |
-| Cargo `#[test]` | 251 (internal; not ticks) |
-| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 10 red Error Correct shells) |
+| Named `[x]` proven | 212 |
+| Remaining `[ ]` | 10 (`ATM-DIAG-07`–`ATM-DIAG-14`, `ATM-GHOST-04`, `ATM-PERF-01`) |
+| Cargo `#[test]` | 356 (internal; not ticks) |
+| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 8 red Error Correct shells) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -80,7 +80,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 7 | 7 | 0 |
-| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 4 | 10 |
+| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 6 | 8 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
 | `ORDER` | Cascade rule ordering, determinism, & idempotence (P0) | 6 | 6 | 0 |
 | `VALID` | Emitted CSS must parse and mean something (P0) | 3 | 3 | 0 |
@@ -88,7 +88,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **198** | **184** | **14** |
+| **Total** | | **198** | **186** | **12** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -815,15 +815,15 @@ compiler contract.
 - [x] `ATM-DIAG-03` `[reference]` `[seam]` —
   **AST parsing syntax errors must be recorded as error diagnostics without crashing the process.**
   Station `ATM-DIAG-03`. Malformed source yields `severity: error` and a `CompileResult` (no panic).
-- [ ] `ATM-DIAG-04` `[reference]` `[seam]` —
+- [x] `ATM-DIAG-04` `[reference]` `[seam]` — **[Error Correct S1]**
   **Every diagnostic must carry a file path, a line, and a column.**
-  Compile a file with a dynamic expression on a known line and assert the diagnostic reports that line and column, not just the path. Assert token-resolution warnings also carry a location. Extract call sites locate through `warn(span, …)` since `ATM-DIAG-05`; token and other resolve warnings still carry no position at all, so `ATM-DIAG-02` asserts the only thing that is populated. A compiler warning without a position is not actionable in an editor. `ATM-TOKEN-12` is the first located token diagnostic (missing-`{ref}` errors); the general claim stays open.
+  Station `ATM-DIAG-04`. A dynamic identifier pins 4:11; the `ATM-W-UNKNOWN-TOKEN-PATH` resolve warning pins its own line and column; the blanket claim asserts every diagnostic in the run carries a file, line, and column. Resolve warnings attach the want's location via `DiagnosticLocation::warning` (`diagnostics/site.rs`); global-surface warnings carry their fragment source at 1:1. `ATM-TOKEN-12` was the first located token diagnostic (missing-`{ref}` errors); static-CSS warnings stay unlocated (the `BaseSystem` carries no source identity — no station pins them). Messages, codes, counts, and order are unchanged; goldens move only by gaining `file`/`line`/`column`.
 - [x] `ATM-DIAG-05` `[reference]` `[seam]` — **[SPEC-V2-77, Overmatch Ph1]**
   **Every diagnostic the extractor emits must carry `file:line:col` of the offending node and a stable machine-readable code.**
-  Station `ATM-DIAG-05` (Overmatch Ph1; template row refined by SPEC-V2-67 in Ph3). `ExpressionWalk::warn` and `ObjectWalk::warn` take the offending `Span` and resolve it through `line_col`, so every extract refusal — dynamic identifiers, members, templates, spreads, computed keys, unknown props, mutated bindings — reports the sub-expression's position, not just the file. Since `ATM-SITE-51` the template refusal names the `${…}` part (`Dynamic non-literal template part N (kind)`) at the part's span instead of the whole template. `Diagnostic` gains `code: DiagnosticCode` (`diagnostics/codes.rs`), an enum with stable `ATM-W-…` / `ATM-E-…` / `ATM-I-…` strings serialized on every diagnostic, unique per failure class so the same authored mistake always reports the same code; `diagnostics/render.rs` provides the `{file}:{line}:{col} {code} {message}` format shared by CLI, Neo, and tests. Messages and warn-vs-silent behavior are unchanged; goldens move only by gaining `line`/`column`/`code`. The DIAG-04 general claim (token-resolution and other non-extract positions) stays open. Panda: byte spans on every diagnostic (`imports.rs:518`, `:527`; `calls.rs:749`); kinds like `panda_call_unextractable`, no published code table.
-- [ ] `ATM-DIAG-06` `[reference]` `[seam]` —
+  Station `ATM-DIAG-05` (Overmatch Ph1; template row refined by SPEC-V2-67 in Ph3). `ExpressionWalk::warn` and `ObjectWalk::warn` take the offending `Span` and resolve it through `line_col`, so every extract refusal — dynamic identifiers, members, templates, spreads, computed keys, unknown props, mutated bindings — reports the sub-expression's position, not just the file. Since `ATM-SITE-51` the template refusal names the `${…}` part (`Dynamic non-literal template part N (kind)`) at the part's span instead of the whole template. `Diagnostic` gains `code: DiagnosticCode` (`diagnostics/codes.rs`), an enum with stable `ATM-W-…` / `ATM-E-…` / `ATM-I-…` strings serialized on every diagnostic, unique per failure class so the same authored mistake always reports the same code; `diagnostics/render.rs` provides the `{file}:{line}:{col} {code} {message}` format shared by CLI, Neo, and tests. Messages and warn-vs-silent behavior are unchanged; goldens move only by gaining `line`/`column`/`code`. The DIAG-04 general claim (token-resolution and other non-extract positions) closed in Error Correct Slice 1. Panda: byte spans on every diagnostic (`imports.rs:518`, `:527`; `calls.rs:749`); kinds like `panda_call_unextractable`, no published code table.
+- [x] `ATM-DIAG-06` `[reference]` `[seam]` — **[Error Correct S1]**
   **Non-ASCII source and selectors must compile without panic, and columns must be counted in UTF-16 code units.**
-  Compile a source containing an emoji before a style prop and a global selector with CJK and accented characters. Assert no panic, correct extraction, and that the reported column matches what an editor shows (UTF-16 units, so an emoji counts as two). Rust byte offsets and editor columns disagree for any non-ASCII file, which makes every diagnostic position wrong past the first multibyte character.
+  Station `ATM-DIAG-06`. An emoji before a style prop pins the refusal at 3:61 (UTF-16 61, scalar 60, bytes 63); the CJK/accented global selector paints; the unknown `_bogus` global condition carries its fragment source (`input/baseSystem.json:1:1`). `line_col` (`diagnostics/site.rs`) counts UTF-16 units with unit tests; the global walker threads the fragment source since this slice. Rust byte offsets and editor columns disagree for any non-ASCII file, which would make every diagnostic position wrong past the first multibyte character.
 - [ ] `ATM-DIAG-07` `[reference]` `[seam]` — **[Error Correct S5]**
   **Default compile must contain no dynamic, spread, harvest, or dead-branch diagnostics; opting into `'compiler'` returns them only in `compilerDiagnostics`.**
   Station `ATM-DIAG-07`. Input mixes dynamic refusals, an unfoldable spread, harvest-sink positions, and a dead branch. The default `diagnostics` array carries none of them; `compile()` with `logs: ['compiler']` returns them in the separate `compilerDiagnostics` array while `diagnostics` stays clean. Wire shape per architect Q2 (`VOYAGE-LOG-2.md`): additive-optional extension of the frozen contracts, no schema bump — `logs?` threaded through the request, `compilerDiagnostics?` populated only when requested, default bytes identical. `debug: true` does not enable this channel. Greens in Slice 5.
@@ -1093,7 +1093,9 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-DIAG-01` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-01/` |
 | `ATM-DIAG-02` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-02/` |
 | `ATM-DIAG-03` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-03/` |
+| `ATM-DIAG-04` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-04/` |
 | `ATM-DIAG-05` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-05/` |
+| `ATM-DIAG-06` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-06/` |
 | `ATM-FORBID-01` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-01/` |
 | `ATM-FORBID-02` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-02/` |
 | `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` |

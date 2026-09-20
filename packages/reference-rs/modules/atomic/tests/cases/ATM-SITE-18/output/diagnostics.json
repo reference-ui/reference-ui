@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`color` value `true` is not valid CSS"
+    "message": "`color` value `true` is not valid CSS",
+    "file": "input/src/App.tsx",
+    "line": 7,
+    "column": 19
   }
 ]

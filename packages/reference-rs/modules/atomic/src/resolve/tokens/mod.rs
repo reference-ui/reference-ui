@@ -9,7 +9,7 @@ use std::borrow::Cow;
 
 use base_system::{BaseSystem, TokenEntry};
 
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::DiagnosticCode;
 use crate::resolve::ResolveSession;
 
 mod interpolate;
@@ -75,10 +75,11 @@ fn resolve_pathed_value<'a>(
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
     if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
-        session.diagnostics.push(Diagnostic::warning(
+        let diagnostic = session.location.warning(
             DiagnosticCode::MalformedOpacity,
             format!("malformed opacity modifier `{unbraced}`"),
-        ));
+        );
+        session.diagnostics.push(diagnostic);
         return Some(Cow::Borrowed(raw_val));
     }
     if let Some(entry) = lookup_entry(prop, path, session.system) {
@@ -135,10 +136,11 @@ fn is_whole_css_value(trimmed: &str) -> bool {
 /// retired, since the author typed a scale the theme does not have.
 fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
     if looks_like_token_path(unbraced) {
-        session.diagnostics.push(Diagnostic::warning(
+        let diagnostic = session.location.warning(
             DiagnosticCode::UnknownTokenPath,
             format!("unknown token path `{unbraced}`"),
-        ));
+        );
+        session.diagnostics.push(diagnostic);
         return;
     }
     warn_unknown_color(prop, unbraced, session);
@@ -154,10 +156,11 @@ fn warn_unknown_color(prop: &str, unbraced: &str, session: &mut ResolveSession<'
     if path.is_empty() || canon::classify_css_value(path).is_some() {
         return;
     }
-    session.diagnostics.push(Diagnostic::warning(
+    let diagnostic = session.location.warning(
         DiagnosticCode::UnknownColor,
         format!("`{unbraced}` is neither a color token nor a CSS color"),
-    ));
+    );
+    session.diagnostics.push(diagnostic);
 }
 
 fn is_braced(trimmed: &str) -> bool {

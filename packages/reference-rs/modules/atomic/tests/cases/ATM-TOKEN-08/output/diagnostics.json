@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNTERMINATED-BRACE",
-    "message": "unterminated `{` in value `\"{oops\"`"
+    "message": "unterminated `{` in value `\"{oops\"`",
+    "file": "input/src/unterminated.tsx",
+    "line": 3,
+    "column": 35
   }
 ]

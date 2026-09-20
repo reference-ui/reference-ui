@@ -237,8 +237,9 @@ a different subsystem's codes, not `ATM-*` — out of scope.
   (`AuthoredDeclaration::lookup_key`, `runtime/builder.rs:31-39`) and runtime
   (neo `collectEntries`, `runtime/css/css.ts`) — and plan minting is gated on
   resolve success (`build` `:182-183` pushes a plan only when `resolve_entry`
-  returns declarations; `resolve_entry` `:218-222` rebuilds the want with raw
-  whens). A dropped unknown-condition want is therefore an absent exact key;
+  returns declarations; `resolve_entry` `runtime/builder.rs:198`, want-rebuild
+  `:212-220`, rebuilds the want with raw whens). A dropped unknown-condition
+  want is therefore an absent exact key;
   witness-hunt confirms live-query reachability.
 - Silent exact-key-knowable drops found during the resolve sweep (no emitter —
   informational, not rows; witness-hunt input): `resolve/unit.rs:161`

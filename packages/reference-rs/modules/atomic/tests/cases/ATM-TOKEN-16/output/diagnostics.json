@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-COLOR",
-    "message": "`md` is neither a color token nor a CSS color"
+    "message": "`md` is neither a color token nor a CSS color",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 10
   }
 ]

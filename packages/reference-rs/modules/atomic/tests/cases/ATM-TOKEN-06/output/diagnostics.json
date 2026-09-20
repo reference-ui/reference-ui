@@ -2,11 +2,17 @@
   {
     "severity": "warning",
     "code": "ATM-W-MALFORMED-OPACITY",
-    "message": "malformed opacity modifier `red.500/`"
+    "message": "malformed opacity modifier `red.500/`",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 10
   },
   {
     "severity": "warning",
     "code": "ATM-W-MALFORMED-OPACITY",
-    "message": "malformed opacity modifier `/40`"
+    "message": "malformed opacity modifier `/40`",
+    "file": "input/src/App.tsx",
+    "line": 6,
+    "column": 16
   }
 ]

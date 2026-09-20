@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-TOKEN-PATH",
-    "message": "unknown token path `blue.600`"
+    "message": "unknown token path `blue.600`",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 39
   }
 ]

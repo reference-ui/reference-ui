@@ -26,6 +26,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown style property in global CSS: \"divideX\""
+    "message": "Unknown style property in global CSS: \"divideX\"",
+    "file": "n12",
+    "line": 1,
+    "column": 1
   }
 ]

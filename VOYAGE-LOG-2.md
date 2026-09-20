@@ -545,6 +545,142 @@ parse, no `css.ts` runtime work (Q1 DEFER stands). Oracle reviews the
 landing firsthand (suite re-run + diff review), then sequences Slice
 2 (needs Q3 ruling before touching analysis-input wiring).
 
+### Oracle O3 — Slice-1 review verdict + Slice 2 dispatch (2026-09-20)
+
+Review oracle re-ran every Slice-1 claim firsthand (2 nested workers on
+disjoint runners + lead inline diff review, golden audit, quarantine
+adjudication). **Verdict: S1 CLEAR.** All O1/O2 done-rules met. Four
+findings (F1–F4, none blocking) + one S0-shell erratum (E8, owned by
+S5) recorded below. No rework crew.
+
+**V1. Stations — VERIFIED (nested worker, `pnpm agentrs` only).**
+`v cases.test.ts -t ATM-DIAG-04` PASS (1 passed/235 skipped);
+`-t ATM-DIAG-06` PASS; full `v cases.test.ts` **228 passed / 8
+failed**; full `v atomic` **275 passed / 8 failed (283)**. The 8 red
+are exactly `ATM-DIAG-07–14`, each for its O2/S1-landing reason: 07
+12 channel items on default; 08 `compilerDiags` undefined; 09
+`miss.message` must name `color`/`red.500` (location pins now pass);
+10 dynamic+harvest on default; 11 8 unknown-values on default; 12/14
+`compilerDiagnostics` undefined; 13 spec fully passes, fails only the
+`cssIsValid` gauge (passthrough `background: ui.missing.path` +
+`Unexpected input` — S3 owns it, deliberately NOT quarantined).
+
+**V2. Cargo + quality — VERIFIED (nested worker + lead).** `pnpm
+agentrs c atomic`: **356 passed / 0 failed**, no warnings. `pnpm
+agentrs q` (smart, 15 files): exit 0, clean. Lead additionally ran
+`pnpm agentrs q …/src/diagnostics` firsthand: all 20 files pass
+(closes the untracked-file coverage question).
+
+**V3. Golden drift — VERIFIED (lead audit script, not eyeball).** 22
+changed files under `tests/cases/`, ALL `output/diagnostics.json`;
+severity/code/message/count/order byte-identical; no pre-existing
+location value altered; 36 diagnostics gained `file` (+line/column).
+Zero `styles.css`/`css.json` bytes changed (plus 2 NEW 04/06
+`output/` dirs). Matches the landing's 22/36 claim exactly.
+
+**V4. Split review — VERIFIED (line-by-line).** `mod.rs` is the seam
+(`Diagnostic` struct untouched, new serde-shape pin test);
+`DiagnosticLocation::{error,warning,info}` share one
+`with_severity` identical to the old `error` (file-gated attach);
+`line_col` moved to `site.rs` byte-verbatim; `codes.rs`/`render.rs`
+untouched (git status + mtime); the 3 pre-existing `location.error`
+call sites (`tokens/mod.rs:114`, `interpolate.rs:96`, `lib.rs:309`)
+keep exact semantics — no `ATM-E-*` change. Resolve/token/unit
+warnings attach the want's location; global walker threads the
+fragment source (file at 1:1, honest for span-less JSON); keyframe
+caller passes default into a discarded sink. New
+site/facts/session/policy/channels + analysis/adapters/proof match
+the doc's responsibilities; `analyze()` chains the four empty S2
+seams; `missing_keys` has incidental-coverage tests. No
+`hosts/entries.rs` touch, no second parse, no `css.ts` (Q1/Q3
+honored). All external importers use root re-exports (unchanged
+paths).
+
+**V5. Quarantine — RULED IN-SCOPE (captain's 00:40 watch item).**
+Both entries are intended 04/06 fallout, not drift. Evidence: (a) 04
+entry is byte-identical to `ATM-TOKEN-14`'s committed line-25 entry
+for the same `caret-color: ui.missing.path` passthrough text, which
+is present in 04's emitted utilities layer (warn-and-paint engine
+behavior); (b) 06 entry pins the exact emitted `content: 😀` from
+the committed S0 probe input (`content: '😀'` unquoted, verbatim
+string policy); (c) S1 touched NO station input/spec (only new
+`output/` dirs) — the gauge need comes from S0 inputs, not S1
+weakening; (d) the meta-test passes (04/06 green in full suite).
+
+**V6. E7 + SPEC — VERIFIED.** Ledger pointer now
+`runtime/builder.rs:198` + `:212-220`; lead confirmed
+`resolve_entry` at `:198` and the want rebuild at `:212-220`. SPEC:
+04/06 `[x]` + matrix rows, counts DIAG `14/6/8`, Total `198/186/12`,
+remaining 10, stations 219/8-red, cargo 356; DIAG-05 "stays open"
+line closed.
+
+**V7. Neo exposure — SAFE by inspection.** `sync.test.ts` diagnostics
+assertions are `toContain` on code/message (location-insensitive);
+the printer (`sync/index.ts:28-31`) handles all location combos; no
+snapshots, no `toEqual` on diagnostics, no file-undefined assertions
+found. Neo suite stays S6's gate.
+
+**Findings (not gaps):** F1. `docs/ATOMIC.md` (+111/−27, harvest
+walkthrough + domain glossary + worked-example-3 rewrite) is
+UNDECLARED — outside the S1 dispatch files-in-play and landed
+mid-review (mtime 00:46:34, after this oracle's first stat).
+Docs-only, zero behavioral effect; content spot-checked accurate
+(`p_`/`c_` abbreviations pinned by `name/mod.rs` tests, six sink
+codes, warn-still-warns). Recommend captain KEEP (optionally as a
+separate commit) but log the process drift. F2. "26 new Rust tests"
+counts 5 moved tests as new; genuinely-new = 22 (33 − 11
+pre-existing). Cargo 356 total verified; log-only erratum. F3 (S3
+watch). `HostReport`(warning) converts into
+`DiagnosticFact::ExistingError` — severity preserved, behavior
+identical, but the variant name is stretched; S3 policy work should
+confirm the vocabulary. F4 (endorse landing carry-forward).
+`sync.test.ts` "unlocated warnings such as display:true" test NAME is
+now stale (R7 located; test passes) — S6 hygiene.
+
+**E8 — S0-shell erratum (new, oracle-found): `ATM-DIAG-11`'s guard
+contradicts its hinge.** `spec.ts` asserts `diagnostics.some(
+isUnknownValue)` is `true` (guard) AND the same filter
+`toHaveLength(0)` (hinge) on the same default array — logically
+unsatisfiable as written: today the hinge fails (8 leaked), after
+any S5 channel move the guard fails instead. The guard's intent
+(non-vacuity) is valid but it must read the opt-in compiler channel
+once S5 lands it. S5 owns the correction (re-point guard at
+`compilerDiagnostics`), NOT a weakening — recorded here so no crew
+"fixes" it early. Related: 08/12/14 hinges assert on
+`compilerDiagnostics` (S5's Q2 wire), so they cannot flip green
+until S5 exposes S2's facts — the O1 "S2 greens 08/11/12/14" line is
+amended below. The O1 S2 *unit/parity* criteria stand.
+
+**SEQUENCE — Slice 2 (independent AST expectations).** No ruling
+gates S2 (Q3 GRANDFATHERED already in log — honored as: no touching
+`hosts/entries.rs`, no re-parse, StyleTrace parse stays a
+dependency-boundary parse). Single implementor crew (one coupled
+analysis; may fan nested workers over disjoint surfaces
+css/jsx/conditions/values + parity tests only). Scope per doc Slice
+2 + map §C: construct `AnalysisInput` from borrowed `&parsed` + host
+surface after `hosts::resolve` (`lib.rs:129`); implement `css()` +
+traced-JSX analysis emitting `ExactLookupExpected` (every key
+component statically known) vs `DynamicSlot` (+ conditions/values
+helpers); share ONLY `canonical_json_value` /
+`serialize_lookup_key` / canon prop / `lower_when` (+ const
+values) — never extraction wants/success. Done-criteria (AMENDED
+per E8): cargo unit tests pin exact/unknown classification +
+key-parity (Rust key bytes == neo `serializeLookupKey` bytes on
+fixtures incl. nested conditions, responsive array/object,
+important, aliases); no source reparsed; FULL atomic suite shows
+ZERO golden drift (analysis runs, renders nothing yet — 04/06 stay
+green, 07–14 red for the same V1 reasons); `agentrs q` clean; the
+08/12/14 pins stay green as the regression net while their hinges
+flip in S5 (when the channel exposes S2's facts), and 11 flips in
+S5 with the E8 guard correction. Must-not-touch (map §D + Q3):
+`hosts/entries.rs`, no re-parse, no wire fields (`logs` /
+`compilerDiagnostics` threading stays S5-owned per Q2), no producer
+migration (S3), no `css.ts` (Q1 DEFER), no default-output change.
+Oracle reviews the landing firsthand (unit tests + zero-drift
+suite re-run + diff review), then sequences Slice 3 (needs Q5b
+spread-site rule — already in log: funnel iff mintable value
+position, else codify exclusion + pin).
+
 ## Landings
 
 _(implementors, per slice)_
@@ -631,7 +767,97 @@ greens on UnknownCondition or the proof engine lands warning-free.
 
 ### S1 skeleton
 
-_(placeholder — slice1 crew)_
+_(landed 2026-09-20 — slice1 crew, single crew inline, no nested workers.
+Module split + 04/06 green + SPEC flips + ledger E7. No commits.)_
+
+**Module shape** (`diagnostics/`, per doc Slice 1): `mod.rs` is the seam
+(`Diagnostic`, `DiagnosticSeverity`, re-exports, serde-shape pin test);
+`site.rs` (`SourceId`, `StyleSurfaceKind`, `SourceSite`, owned
+`DiagnosticLocation` + new `warning`/`info` constructors, moved `line_col`
+with its UTF-16 tests); `facts.rs` (`OwnedLookupKey`, `DynamicShape`,
+`ExtractOutcome`, `ResolveOutcome`, `DiagnosticFact`, `DiagnosticSink` +
+`Vec` impl); `session.rs` (`DiagnosticsSession`); `policy.rs`
+(`Audience`, `Policy::classify` pinning today's uniform default channel);
+`channels.rs` (`DiagnosticChannels`); `analysis/` (`AnalysisInput` +
+`analyze` chaining `css`/`jsx`/`conditions`/`values` empty-until-S2
+seams); `adapters/` (`Extract`/`Harvest`/`Resolve`/`Host` report structs
+with `From`→`DiagnosticFact`, incl. file-only host conversion mirroring
+`hosts/diagnostics.rs`); `proof/plans.rs` (real `missing_keys` set join
+with incidental-coverage semantics, tested). `codes.rs`/`render.rs`
+untouched; serialization byte-compatible (new pin test). 26 new Rust
+unit tests, all colocated.
+
+**04 mechanism**: every resolve warning attaches the want's location —
+`resolve/mod.rs` R1/R2, `tokens/mod.rs` R8/R9/R10, `interpolate.rs` R11,
+`unit.rs` R4/R5/R6/R7 (new `location` param; keyframe caller passes
+default). Located first emission wins via the existing
+`(severity,message)` plan-rebuild dedup. R3 (`MissingContainerRoot`)
+stays unlocated: aggregate advisory, no single site, no station pins it.
+Static-CSS warnings (S1/S2) stay unlocated: `BaseSystem` carries no
+source identity and frozen contracts are S5's business — no station
+pins them either.
+
+**06 mechanism**: `GlobalWalker::walk_rules` takes the fragment source;
+walker + `ValueSession` (G1–G7) locate at `<source>:1:1` (fragments are
+deserialized JSON without spans — file origin is the honest position);
+global-surface token resolve inherits the fragment location. UTF-16 was
+already green (`line_col` + unit test); 06's hinge was global
+file-lessness only.
+
+**04/06 GREEN evidence** (`pnpm agentrs v`, native rebuilt via
+`ensure-native` first): 04 golden pins resolve `5:15` (value position)
++ extract `4:11` + blanket; 06 golden pins extract `3:61` (UTF-16) +
+`_bogus` at `input/baseSystem.json:1:1` + blanket. Both pass spec,
+gauges, and goldens in isolation and in full suite.
+
+**Quarantine (captain's 00:40 watch item — in-scope, not drift):**
+`tests/css-quarantine.ts` +2 entries, both assert-fresh under the
+meta-test (which passes): 04 mirrors `ATM-TOKEN-14`'s existing entry
+for the same `caret-color: ui.missing.path` passthrough (deferred
+token-passthrough policy); 06 pins the probe input's unquoted
+`content: 😀` (verbatim string policy keeps author text as-is, cf.
+`ATM-LEAF-10` where the author includes quotes — validity of content
+quoting is out of scope for a diagnostics station). No input/spec
+changes, no weakening.
+
+**Drift report**: full atomic suite `228 passed / 8 failed` — failures
+are exactly `ATM-DIAG-07–14`. 22 green stations gained locations (36
+diagnostics, audit: 144+/36−, every hunk = `file`+`line`+`column`
+gain on an unchanged message; zero `styles.css`/`css.json` bytes
+changed; zero count/order/code/severity changes):
+COND-12/13/17/21, GHOST-04, LAYER-12/13, SHORT-03, SITE-18/20/33/38/43/45,
+TOKEN-02/05/06/08/14/16, UNIT-02, VALID-03. Goldens rewritten only via
+targeted per-station `--update-goldens` (two batches, no blanket run).
+Full atomic vitest: 275 passed, same 8 red. Cargo: 356 passed, 0
+failed, 0 warnings.
+
+**Red-shell hinge progressions (still red, S-owned)**: 09 now passes
+its location pins and fails on the S4 message-content assertion
+(`miss.message` must name `color`/`red.500`) — intended. 13's spec now
+fully passes (S1 site identity satisfies hinge-1: `_hover`/`_focus`
+lines distinct) and it fails only on the standing CSS-validity gauge
+(incidental passthrough CSS) — stays red, NOT quarantined (S3 owns it).
+07/08/10/11/12/14 fail for their O2-documented reasons unchanged.
+
+**Docs**: SPEC 04/06 rows `[x]` (+matrix rows, counts: DIAG `14/6/8`,
+Total `198/186/12`, remaining 10, stations 219/8-red, cargo 356 —
+prior 251 was stale pre-S1); DIAG-05 "stays open" line closed. Ledger
+E7 fixed (`resolve_entry` `runtime/builder.rs:198`, want-rebuild
+`:212-220`).
+
+**Must-not-touch audit**: no `ATM-E-*`/wire-code/semantics/hosts
+changes (`rustc` + drift net confirm); no second parse; no `css.ts`
+(Q1 DEFER honored); no blanket golden update; no weakened tests.
+Neo exposure swept: zero snapshots, zero `toEqual` on diagnostics,
+zero file-undefined assertions; neo pins messages/counts/codes only —
+all preserved. Carry-forwards: (1) matrix suites not run (out of S1
+scope per O2 — S6/oracle downstream); (2) neo `sync.test.ts`
+"unlocated warnings such as display:true" test NAME now stale
+(R7 located; test still passes — S6 hygiene, untouched).
+
+### S2 expectations
+
+_(placeholder — slice2 crew)_
 
 ## Architect rulings
 
@@ -649,5 +875,7 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-19 watch: oracle O1 verified map 10/10, order confirmed S0→S6; architect ruled Q1 DEFER, Q2 EXTEND-additive, Q3 GRANDFATHERED, Q4 hunt-first (UnknownCondition prime), Q5 split (MutatedBinding intentional, spread = S3 fix). Captain accepts Q1 DEFER (companion doc is idea-status with open params, needs S5 channel first; follow-up operation after S5). Dispatched 3 Slice-0 crews in parallel (ledger, red-shells, witness-hunt); architect finalizing, substance logged. Next: oracle convergence → Slice 1.
 - 2026-09-20 00:24 tick: S0 2/3 landed (ledger 5 userspace/91 compiler/0 unclassified; witness CONFIRMED UnknownCondition → ATM-DIAG-09, repros /tmp/s0witness, repo untouched); shells alive (10 station dirs + SPEC edits on disk, vitals ping queued, landing pending); architect closed, 6/7 crews terminal, no deadlock. Next: convergence oracle on shells landing → Slice 1.
 - 2026-09-20 watch: S0 CLEAR on oracle O2 word (4 green + 10 red-for-reason; ledger 5/91/0/0; witness UnknownCondition → ATM-DIAG-09, blind re-run OK). Committed S0 checkpoint. Dispatched single Slice-1 crew (module skeleton, 04/06 green, E7 fix). Next: oracle review of S1 landing → Slice 2.
+- 2026-09-20 00:40 tick: S1 alive and building (diagnostics split files 00:33–00:35, 04/06 output/ dirs appearing, resolve + stylesheet/global + system_layers touched; prior vitals ping moot, no re-ping). 8/9 crews terminal, no deadlock. Watch item for oracle review: tests/css-quarantine.ts also modified — confirm in-scope or drift. Next: S1 landing → oracle review → Slice 2.
+- 2026-09-20 watch: S1 CLEAR on oracle O3 word (04/06 green; full suite 275/8, red exactly 07–14; cargo 356/0; q clean; drift audit 22 files/36 locations, zero semantic drift; quarantine ruled in-scope; E8 shell erratum → S5 owns guard correction; O1 S2 criteria amended per E8). Kept undeclared docs/ATOMIC.md in a separate commit; process drift logged (F1 — crews must declare all touched files). Committed S1 checkpoint. Dispatched single Slice-2 crew (independent AST expectations, zero-drift, parity tests). Next: oracle review of S2 landing → Slice 3.
 
 ## Useful

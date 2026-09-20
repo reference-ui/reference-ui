@@ -10,7 +10,7 @@ use canon::is_known_style_prop;
 use indexmap::IndexMap;
 
 use super::value::{lower_declaration, ValueSession};
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::resolve::conditions::{breakpoint_media_query, is_bare_query_rule, pseudoselectors};
 
 struct ListItemContext<'a> {
@@ -24,6 +24,7 @@ pub struct GlobalWalker<'a> {
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub rules: IndexMap<(Vec<String>, String), Vec<(String, String)>>,
     wraps: Vec<String>,
+    source: Option<String>,
 }
 
 impl<'a> GlobalWalker<'a> {
@@ -33,10 +34,32 @@ impl<'a> GlobalWalker<'a> {
             diagnostics,
             rules: IndexMap::new(),
             wraps: Vec::new(),
+            source: None,
         }
     }
 
-    pub fn walk_rules(&mut self, rules: &IndexMap<String, GlobalStyleNode>) {
+    /// Location for system-surface diagnostics: the fragment's source file at
+    /// 1:1. Fragments carry no spans (deserialized JSON), so the file origin
+    /// is the honest position.
+    fn location(&self) -> DiagnosticLocation {
+        match &self.source {
+            Some(source) => DiagnosticLocation {
+                file: Some(source.clone()),
+                line: Some(1),
+                column: Some(1),
+            },
+            None => DiagnosticLocation::default(),
+        }
+    }
+
+    /// Warn with the current fragment's location attached.
+    fn warn(&mut self, code: DiagnosticCode, message: impl Into<String>) {
+        let diagnostic = self.location().warning(code, message);
+        self.diagnostics.push(diagnostic);
+    }
+
+    pub fn walk_rules(&mut self, source: &str, rules: &IndexMap<String, GlobalStyleNode>) {
+        self.source = Some(source.to_string());
         for (selector, node) in rules {
             if selector.starts_with('@') {
                 self.walk_top_at_rule(selector, node);
@@ -51,10 +74,10 @@ impl<'a> GlobalWalker<'a> {
     fn walk_top_at_rule(&mut self, at_key: &str, node: &GlobalStyleNode) {
         // '@media (min-width: 640px)': { body: {...} }
         if is_bare_query_rule(at_key) {
-            self.diagnostics.push(Diagnostic::warning(
+            self.warn(
                 DiagnosticCode::EmptyAtRule,
                 format!("Empty at-rule query in global CSS: \"{at_key}\""),
-            ));
+            );
             return;
         }
         for (key, val) in node {
@@ -151,10 +174,10 @@ impl<'a> GlobalWalker<'a> {
             val,
             GlobalDeclarationValue::List(_) | GlobalDeclarationValue::Nested(_)
         ) {
-            self.diagnostics.push(Diagnostic::warning(
+            self.warn(
                 DiagnosticCode::UnsupportedGlobalValue,
                 format!("Unsupported conditional value for \"{prop}.{sub}\" in global CSS"),
-            ));
+            );
             return;
         }
         if sub == "base" {
@@ -171,10 +194,10 @@ impl<'a> GlobalWalker<'a> {
             self.handle_cond_condition(selector, prop, sub, val);
             return;
         }
-        self.diagnostics.push(Diagnostic::warning(
+        self.warn(
             DiagnosticCode::UnknownCondition,
             format!("Unknown conditional key \"{sub}\" for \"{prop}\" in global CSS"),
-        ));
+        );
     }
 
     /// Scope one conditional member through `_` condition lowering.
@@ -192,10 +215,10 @@ impl<'a> GlobalWalker<'a> {
 
     fn handle_at_rule(&mut self, selector: &str, at_key: &str, children: &GlobalStyleNode) {
         if is_bare_query_rule(at_key) {
-            self.diagnostics.push(Diagnostic::warning(
+            self.warn(
                 DiagnosticCode::EmptyAtRule,
                 format!("Empty at-rule query in global CSS: \"{at_key}\""),
-            ));
+            );
             return;
         }
         self.wraps.push(at_key.to_string());
@@ -223,10 +246,10 @@ impl<'a> GlobalWalker<'a> {
                 self.walk_node(&scoped, children);
             }
         } else {
-            self.diagnostics.push(Diagnostic::warning(
+            self.warn(
                 DiagnosticCode::UnknownCondition,
                 format!("Unknown condition in global CSS: \"{cond}\""),
-            ));
+            );
         }
     }
 
@@ -273,9 +296,11 @@ impl<'a> GlobalWalker<'a> {
     }
 
     fn handle_declaration(&mut self, selector: &str, key: &str, val: &GlobalDeclarationValue) {
+        let location = self.location();
         let mut session = ValueSession {
             system: self.system,
             diagnostics: self.diagnostics,
+            location,
         };
         let decls = lower_declaration(key, val, &mut session);
         if decls.is_empty() {

@@ -194,7 +194,9 @@ fn write_declarations(out: &mut String, decls: &StyleMap, system: &BaseSystem) {
 /// runs on a discarded sink: successes print resolved, misses keep verbatim.
 fn resolve_keyframe_value(prop: &str, value: &str, system: &BaseSystem) -> String {
     let mut sink = Vec::new();
-    let Some(css) = css_value_from_authored(prop, AtomValue::String(value.into()), &mut sink)
+    let location = DiagnosticLocation::default();
+    let Some(css) =
+        css_value_from_authored(prop, AtomValue::String(value.into()), &location, &mut sink)
     else {
         return value.to_string();
     };

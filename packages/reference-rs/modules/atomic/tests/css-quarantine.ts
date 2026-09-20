@@ -17,6 +17,7 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-RHYTHM-04': ['background-position: 10px auto'],
 
   // Token-passthrough policy. Deferred, testing.md §5 step 8.
+  'ATM-DIAG-04': ['Unexpected input', 'caret-color: ui.missing.path'],
   'ATM-SHORT-03': ['Unexpected input', 'border: borders.card'],
   'ATM-TOKEN-02': ['margin-top: blue .600'],
   'ATM-TOKEN-05': ['background: blue .600'],
@@ -33,6 +34,12 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // `.<cls>(:focus)` (v2 `nested_selector_parity.rs:532` prints the same
   // shape). The author wrote an invalid selector; both engines keep it.
   'ATM-COND-27': ['Identifier is expected'],
+
+  // Non-ASCII probe input (diagnostics station, not a content-emit pin):
+  // the author wrote an unquoted `content` string to place the emoji ahead
+  // of the refused identifier; the verbatim string policy keeps it as-is
+  // (cf. ATM-LEAF-10, where the author includes their own quotes).
+  'ATM-DIAG-06': ['content: 😀'],
 }
 
 export function quarantineFor(stationId: string): readonly string[] {
