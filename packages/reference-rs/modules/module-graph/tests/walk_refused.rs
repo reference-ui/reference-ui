@@ -199,6 +199,46 @@ fn resolved_files_without_records_refuse_as_unresolved() {
 }
 
 #[test]
+fn star_lookup_surfaces_the_nested_unresolvable_hop() {
+    let refused = walk(
+        &[
+            ("/p/src/app.ts", "import { x } from './barrel';"),
+            ("/p/src/barrel.ts", "export * from './lib';"),
+            ("/p/src/lib.ts", "export { x } from './typo';"),
+        ],
+        "/p/src/app.ts",
+        "x",
+    )
+    .expect_err("barreled lookup refuses");
+    match refused {
+        Refused::Unresolved { from, specifier } => {
+            assert_eq!(from.as_str(), "/p/src/lib.ts");
+            assert_eq!(specifier, "./typo");
+        }
+        other => panic!("expected Unresolved(lib, ./typo), got {other:?}"),
+    }
+}
+
+#[test]
+fn one_winner_beats_a_pending_star_unresolved() {
+    let hit = walk(
+        &[
+            ("/p/src/app.ts", "import { x } from './barrel';"),
+            (
+                "/p/src/barrel.ts",
+                "export * from './lib';\nexport * from './twin';",
+            ),
+            ("/p/src/lib.ts", "export { x } from './typo';"),
+            ("/p/src/twin.ts", "export const x = 1;"),
+        ],
+        "/p/src/app.ts",
+        "x",
+    )
+    .expect("winner wins");
+    assert_eq!(hit.file.as_str(), "/p/src/twin.ts");
+}
+
+#[test]
 fn one_winner_beats_a_pending_star_error() {
     let hit = walk(
         &[
