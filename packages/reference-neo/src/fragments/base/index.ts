@@ -21,11 +21,22 @@ import { createFontCollector } from '../api/font.ts'
 import { createGlobalCssCollector } from '../api/globalCss.ts'
 import { createBoxPatternCollector } from '../api/patterns.ts'
 import { getFragmentBootstrapImportMap } from './bootstrap-import-map.ts'
-import { isPlainObject, mergeFragmentObjects, tokenLeafPaths } from './merge.ts'
+import {
+  isPlainObject,
+  mergeFragmentObjects,
+  stripPrivateTokensDeep,
+  tokenLeafPaths,
+} from './merge.ts'
 
 // Fragment bundles are plain IIFEs. This global tells collector calls which
 // source file is currently executing so diagnostics can point back to filenames.
 const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
+
+// Source tag for upstream bundles when the extends entry carries no name.
+// Neo tags named upstreams with their system names instead, so the private
+// gate below matches membership in the upstream name set — never this
+// literal alone, or every named upstream would leak through.
+export const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
 
 type SpecProvenance = EvaluatedSystemSpec['provenance']
 
@@ -141,13 +152,10 @@ export async function evaluatePreparedFragments(
   prepared: PreparedFragments
 ): Promise<EvaluatedSystemSpec> {
   const collectors = getFragmentCollectors()
-  const script = createEvaluationScript(
-    collectors,
-    prepared,
-    getUpstreamFragmentNames(config.extends)
-  )
+  const upstreamNames = getUpstreamFragmentNames(config.extends)
+  const script = createEvaluationScript(collectors, prepared, upstreamNames)
   const collected = await executeEvaluationScript(cwd, collectors, script)
-  return mergeCollectedSpec(config.name, cwd, collected, config.staticCss ?? {})
+  return mergeCollectedSpec(config.name, cwd, collected, config.staticCss ?? {}, upstreamNames)
 }
 
 function isGlobalCssCollector(functionName: string | undefined, name: string): boolean {
@@ -185,7 +193,7 @@ function createEvaluationScript(
     // Upstream systems already include global CSS in their portable CSS output.
     disableCollectorScript(globalCssCollector),
     ...prepared.upstreamFragments.map((bundle, index) =>
-      wrapBundleWithSource(bundle, upstreamNames[index] ?? 'upstream system fragment')
+      wrapBundleWithSource(bundle, upstreamNames[index] ?? UPSTREAM_FRAGMENT_SOURCE)
     ),
     restoreCollectorScript(globalCssCollector),
     ...prepared.localFragmentBundles.map(({ file, bundle }) =>
@@ -233,13 +241,41 @@ function wrapBundleWithSource(bundle: string, source: string): string {
   ].join('\n')
 }
 
+/**
+ * Strip `_private` from one collected token fragment when its source tag
+ * names an upstream system. The gate is membership in the upstream name set
+ * plus the unnamed-upstream fallback literal — local fragments pass through
+ * untouched by reference. The stripped copy keeps the non-enumerable source
+ * tag so provenance still cites the upstream. Mirrors the Rust
+ * multi-spec boundary, which this single-script path never reaches.
+ */
+export function scopeUpstreamTokenFragment(
+  fragment: unknown,
+  upstreamNames: readonly string[]
+): unknown {
+  if (!isPlainObject(fragment)) return fragment
+  const source = fragment[CONFIG_FRAGMENT_SOURCE_PROPERTY]
+  if (typeof source !== 'string') return fragment
+  if (source !== UPSTREAM_FRAGMENT_SOURCE && !upstreamNames.includes(source)) return fragment
+  const stripped = stripPrivateTokensDeep(fragment)
+  Object.defineProperty(stripped, CONFIG_FRAGMENT_SOURCE_PROPERTY, {
+    configurable: true,
+    enumerable: false,
+    value: source,
+  })
+  return stripped
+}
+
 function mergeCollectedSpec(
   name: string,
   cwd: string,
   collected: CollectedBucket[],
-  staticCss: Record<string, string[]>
+  staticCss: Record<string, string[]>,
+  upstreamNames: readonly string[]
 ): EvaluatedSystemSpec {
-  const tokens = bucketByName(collected, 'tokens')
+  const tokens = bucketByName(collected, 'tokens').map(fragment =>
+    scopeUpstreamTokenFragment(fragment, upstreamNames)
+  )
   const keyframes = bucketByName(collected, 'keyframes')
   const fonts = bucketByName(collected, 'font')
   const css = bucketByName(collected, 'globalCss')

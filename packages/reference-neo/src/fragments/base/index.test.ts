@@ -1,9 +1,12 @@
 // Unit tests for the Neo fragment prepare flow over mocked scan and bundle.
-// They take fake file lists and assert upstream filtering plus prepare output.
+// They take fake file lists and assert upstream filtering, prepare output,
+// plus merge-time private scoping over source-tagged token fragments.
 // This file adapts the core base fragments tests minus config templating.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
+import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../lib/types.ts'
+import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './index.ts'
 
 async function importFragmentsModule(options?: {
   scannedFiles?: string[]
@@ -34,6 +37,71 @@ afterEach(() => {
   vi.resetModules()
   vi.doUnmock('../lib/index.ts')
   vi.restoreAllMocks()
+})
+
+function tagSource(fragment: Record<string, unknown>, source: string): Record<string, unknown> {
+  Object.defineProperty(fragment, CONFIG_FRAGMENT_SOURCE_PROPERTY, {
+    configurable: true,
+    enumerable: false,
+    value: source,
+  })
+  return fragment
+}
+
+function upstreamTokens(): Record<string, unknown> {
+  return {
+    colors: {
+      up: { value: '#ffffff' },
+      _private: { upstreamSecret: { value: '#999999' } },
+    },
+    _private: { vault: { value: '#123456' } },
+  }
+}
+
+describe('scopeUpstreamTokenFragment', () => {
+  const names = ['upstream-one', 'upstream-two']
+
+  it.each([['upstream-one'], ['upstream-two']])(
+    'strips _private from fragments tagged with the upstream name %s',
+    source => {
+      expect(scopeUpstreamTokenFragment(tagSource(upstreamTokens(), source), names)).toEqual({
+        colors: { up: { value: '#ffffff' } },
+      })
+    }
+  )
+
+  it('strips fragments tagged with the unnamed-upstream fallback literal', () => {
+    expect(
+      scopeUpstreamTokenFragment(tagSource(upstreamTokens(), UPSTREAM_FRAGMENT_SOURCE), names)
+    ).toEqual({ colors: { up: { value: '#ffffff' } } })
+  })
+
+  it('passes local fragments through untouched by reference', () => {
+    const local = tagSource(
+      { colors: { own: { value: '#222222' }, _private: { ownSecret: { value: '#ff00ff' } } } },
+      'theme/tokens.ts'
+    )
+
+    expect(scopeUpstreamTokenFragment(local, names)).toBe(local)
+  })
+
+  it('passes untagged and non-object fragments through', () => {
+    const untagged = { colors: { up: { value: '#ffffff' } } }
+
+    expect(scopeUpstreamTokenFragment(untagged, names)).toBe(untagged)
+    expect(scopeUpstreamTokenFragment('tokens()', names)).toBe('tokens()')
+    expect(scopeUpstreamTokenFragment(undefined, names)).toBe(undefined)
+  })
+
+  it('keeps the non-enumerable source tag on the stripped copy', () => {
+    const stripped = scopeUpstreamTokenFragment(
+      tagSource(upstreamTokens(), 'upstream-one'),
+      names
+    ) as Record<string, unknown>
+
+    expect(stripped[CONFIG_FRAGMENT_SOURCE_PROPERTY]).toBe('upstream-one')
+    expect(Object.keys(stripped)).not.toContain(CONFIG_FRAGMENT_SOURCE_PROPERTY)
+  })
 })
 
 describe('fragments prepare flow', () => {

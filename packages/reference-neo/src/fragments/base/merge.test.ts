@@ -1,9 +1,10 @@
 // Unit tests for the Neo fragment merge helper and leaf paths.
-// They take fragment trees and assert merged output plus provenance keys.
+// They take fragment trees and assert merged output, private stripping,
+// plus provenance keys.
 // Merge conflicts resolve later-wins while the inputs stay untouched.
 
 import { describe, expect, it } from 'vitest'
-import { mergeFragmentObjects, tokenLeafPaths } from './merge.ts'
+import { mergeFragmentObjects, stripPrivateTokensDeep, tokenLeafPaths } from './merge.ts'
 
 describe('mergeFragmentObjects', () => {
   it('merges sibling token trees key by key', () => {
@@ -46,6 +47,56 @@ describe('mergeFragmentObjects', () => {
 
     expect(base).toEqual({ colors: { red: { value: '#ff0000' } } })
     expect(override).toEqual({ colors: { blue: { value: '#0000ff' } } })
+  })
+})
+
+describe('stripPrivateTokensDeep', () => {
+  it('drops nested _private subtrees at any depth while keeping siblings', () => {
+    expect(
+      stripPrivateTokensDeep({
+        colors: {
+          up: { value: '#ffffff' },
+          _private: { upstreamSecret: { value: '#999999' } },
+          nested: { deep: { _private: { buried: { value: '#000000' } } } },
+        },
+        spacing: { sm: { value: '0.5rem' } },
+      })
+    ).toEqual({
+      colors: {
+        up: { value: '#ffffff' },
+        nested: { deep: {} },
+      },
+      spacing: { sm: { value: '0.5rem' } },
+    })
+  })
+
+  it('drops a top-level _private category', () => {
+    expect(
+      stripPrivateTokensDeep({
+        colors: { up: { value: '#ffffff' } },
+        _private: { vault: { value: '#123456' } },
+      })
+    ).toEqual({ colors: { up: { value: '#ffffff' } } })
+  })
+
+  it('keeps light and dark leaves that carry no private key', () => {
+    const leaf = { light: '#222222', dark: '#f5f5f5' }
+
+    expect(stripPrivateTokensDeep({ colors: { icon: leaf } })).toEqual({
+      colors: { icon: { light: '#222222', dark: '#f5f5f5' } },
+    })
+  })
+
+  it('never mutates its input', () => {
+    const node = {
+      colors: { up: { value: '#ffffff' }, _private: { upstreamSecret: { value: '#999999' } } },
+    }
+
+    stripPrivateTokensDeep(node)
+
+    expect(node).toEqual({
+      colors: { up: { value: '#ffffff' }, _private: { upstreamSecret: { value: '#999999' } } },
+    })
   })
 })
 

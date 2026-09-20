@@ -1,6 +1,8 @@
 // Deep merge plus token leaf paths for building the evaluated spec.
 // It takes collected fragment objects and emits merged trees and provenance keys.
 // Later fragments win on scalar conflicts while plain objects merge recursively.
+// Upstream `_private` subtrees strip at merge time so the owning package keeps
+// its internals while downstream extenders never see them.
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -33,7 +35,24 @@ export function mergeFragmentObjects(
   return merged
 }
 
+export const PRIVATE_TOKEN_KEY = '_private'
+
 const TOKEN_LEAF_KEYS = ['value', 'light', 'dark']
+
+/**
+ * Drop `_private` subtrees at any depth, returning a fresh tree. The key
+ * falls off wherever it sits — nested under a category or as a top-level
+ * category — while every sibling keeps its shape. Neither the input nor its
+ * nested objects are mutated. Mirrors Rust `strip_private_tokens`.
+ */
+export function stripPrivateTokensDeep(node: Record<string, unknown>): Record<string, unknown> {
+  const stripped: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(node)) {
+    if (key === PRIVATE_TOKEN_KEY) continue
+    stripped[key] = isPlainObject(value) ? stripPrivateTokensDeep(value) : value
+  }
+  return stripped
+}
 
 function isTokenLeaf(node: Record<string, unknown>): boolean {
   return TOKEN_LEAF_KEYS.some((key) => key in node)
