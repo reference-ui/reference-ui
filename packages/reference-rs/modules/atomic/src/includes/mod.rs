@@ -4,6 +4,7 @@
 //! `**` crosses directories, `*` and `?` stay inside a segment, `{a,b}` braces
 //! expand, `[...]` classes match one character, and a leading `!` negates.
 //! An absent or empty include list leaves the scope open, preserving scan-all.
+//! A negation-only list scopes to scan-all-minus-negatives (never open).
 
 mod braces;
 mod glob;
@@ -36,9 +37,9 @@ impl IncludeScope {
         }
     }
 
-    /// True when no positive pattern exists, so every file stays in scope.
+    /// True when no pattern of either sign exists, so every file stays in scope.
     pub fn is_open(&self) -> bool {
-        self.positives.is_empty()
+        self.positives.is_empty() && self.negatives.is_empty()
     }
 
     /// Match one normalized candidate path against the whole scope.
@@ -46,7 +47,8 @@ impl IncludeScope {
         if self.is_open() {
             return true;
         }
-        self.matches_positive(candidate) && !self.matches_negative(candidate)
+        (self.positives.is_empty() || self.matches_positive(candidate))
+            && !self.matches_negative(candidate)
     }
 
     /// Match a source file, trying its root-relative form before the raw path.
@@ -55,9 +57,10 @@ impl IncludeScope {
             return true;
         }
         let candidates = file_candidates(root, path);
-        candidates
-            .iter()
-            .any(|candidate| self.matches_positive(candidate))
+        (self.positives.is_empty()
+            || candidates
+                .iter()
+                .any(|candidate| self.matches_positive(candidate)))
             && !candidates
                 .iter()
                 .any(|candidate| self.matches_negative(candidate))
@@ -155,6 +158,16 @@ mod tests {
         let scoped = scope(&["**/*.ts", "!outside/**"]);
         assert!(scoped.matches("theme/in.ts"));
         assert!(!scoped.matches("outside/out.ts"));
+    }
+
+    #[test]
+    fn negation_only_excludes() {
+        let scoped = scope(&["!outside/**"]);
+        assert!(!scoped.is_open());
+        assert!(scoped.matches("theme/in.ts"));
+        assert!(!scoped.matches("outside/out.ts"));
+        assert!(scoped.matches_file(Some("/root"), "/root/theme/in.ts"));
+        assert!(!scoped.matches_file(Some("/root"), "/root/outside/out.ts"));
     }
 
     #[test]

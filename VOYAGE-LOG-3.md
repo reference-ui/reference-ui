@@ -27,7 +27,12 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 2: (d) IN-BOUNDS, NAME-only join → fortify on join.ts + join.test.ts; (e) IN-BOUNDS, body-destructure extension → fortify on parser/types.rs + tracing.rs + 2 cases; (f) module-graph still hunting. Cycles banked: 3/6. Next: landings → chain reviews → commits → wave 3.
 - 2026-09-20 06:42 tick: W2d COMMITTED (6aeb9c062 — canon NAME-only VERIFIED). W2e fortify building (parser/types.rs + tracing.rs + component.rs in tree); W2f BREAK-FOUND (barreled lookup swallows nested unresolvable hop) → architect dispatched. Cycles banked: 4/6. Live: 2 (+1 spawned). Next: (e) landing → chain → commit; (f) ruling → fortify → chain → commit; then wave 3.
 - 2026-09-20 watch: W2e COMMITTED (5b527a0e6 — styletrace body-destructure VERIFIED). W2f ruling IN-BOUNDS (surface nested hop, walk_refused.rs pins) → fortify dispatched. Cycles banked: 5/6. Next: (f) landing → chain → commit (floor hit) → wave 3.
+- 2026-09-20 watch: wave 3: (h) IN-BOUNDS, calc-wrap negation → fortify on resolve_negated_token + ATM-TOKEN-17; (g) BREAK-FOUND (negation-only include still extracts) → architect ruling; (i) canon-emit still hunting. Cycles banked: 6/6 (floor held, cycle continues). Next: (h) landing → chain → commit; (g) ruling → fortify → chain → commit; (i) verdict → arc → wave 4.
+- 2026-09-20 watch: wave 3 all three broke: (h) calc-wrap → fortify building; (g) IN-BOUNDS scan-all-minus-negatives → fortify on IncludeScope + SCAN-01; (i) BREAK-FOUND (~26 fictional canon css forms served dead) → architect dispatched. Cycles banked: 6/6. Next: landings → chains → commits → wave 4.
+- 2026-09-20 watch: wave 3: (h) landed → chain reviewing; (g) landed → chain reviewing; (i) IN-BOUNDS refuse+SKIP over generated set → fortify on resolve fall-through + ATM-EXT-01. Live: 3. Next: chain verdicts → commits → wave 4.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
+- 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
+- 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
 
 ## Waves
 
@@ -1274,6 +1279,580 @@ the name) is now satisfied — barreled lookup returns
 Captain: commit the 2 module-graph paths + finder report + log
 sections (floor hit: 6/6); keep the operation-seize docs + peer
 paths out.
+
+### Wave 3, find (h) — architecture ruling
+
+Find: `mt: '-{spacing.4}'` silently mints
+`margin-top: -var(--spacing-4)` — invalid CSS, dropped by every
+browser — with zero diagnostics, a live plan, and the broken
+class served with no runtime miss warning. Root cause per
+report: `resolve_negated_token` (`resolve/tokens/mod.rs:262-270`)
+strips `-`, looks up the still-braced `{spacing.4}` against the
+dictionary, misses, and falls through to brace interpolation,
+which pastes the literal `-` in front of the expansion. Finder
+report:
+`.agents/doom/logs/2026-09-20-wave3-negated-brace-token-invalid-css.md`;
+repro `/tmp/doom-wave3-neg-brace-repro.mts` (replayed by
+architect read-only: `mints -var(...): true`, `diagnostics: []`,
+served `spacing-scale__mt_-{spacing.4}` with zero runtime warns,
+both half-spelling controls green — failure mode confirmed).
+
+1. **IN-BOUNDS.** Fully static authorship: a complete string
+   literal in a TS compile input, named-import `css()` dialect.
+   Touches nothing on the will-never-work list (no
+   interpolation, no computed/runtime-only values, no external
+   config, no spread, no namespace/default value imports).
+   Falls squarely under the skill's misdiagnosis clause — the
+   refusal must be right, not just present — and here there is
+   neither correct paint nor any refusal at all. Both
+   half-spellings are pinned green: ATM-TOKEN-07 (`-4` →
+   `calc(-1 * var(--spacing-4))`) and braced-ref resolution
+   (`{spacing.4}` → `var(--spacing-4)`), so the composition is
+   the natural conjunction of two pinned behaviors, not a
+   will-never-work shape. Violated contracts: ATM-TOKEN-07
+   composed with braced-ref resolution; the tokens README
+   Must-not ("Fail closed: diagnostic + `Raw` / passthrough
+   only when the author wrote a raw CSS value" — the author
+   wrote neither `-var()` nor raw CSS; braced refs are
+   explicit token lookups fenced out of the CSS fence per
+   `is_whole_css_value`, and the engine fabricated invalid
+   CSS instead of resolving or refusing); ATM-TOKEN-12's
+   fail-closed principle (bad refs error + drop so the sheet
+   stays valid CSS — here the sheet carries invalid CSS
+   silently). User-facing: silent missing paint, visible only
+   in DevTools.
+
+2. **FIX DIRECTION (binding): calc-wrap the negation —
+   negation distributes over explicit token lookup.** A
+   leading `-` on a braced ref must emit
+   `calc(-1 * <expansion>)` with zero diagnostics:
+   `-{spacing.4}` → `calc(-1 * var(--spacing-4))`, and both
+   opacity positions compose (`-{path/opacity}` and
+   `-{path}/opacity` → `calc(-1 * color-mix(...))`, mirroring
+   bare `-path/opacity` which `split_opacity` already handles).
+   The alternative (refuse `-{...}` with a new diagnostic) is
+   REJECTED. Weighed:
+   (a) ATM-TOKEN-07's contract is "a leading `-` on a scale
+   token" — `-{spacing.4}` IS that, braced spelling; the
+   station's letter already covers it and the code
+   under-implements it.
+   (b) Braces are explicit token lookups (module header,
+   `is_whole_css_value` fence, ATM-TOKEN-08/12). The token
+   resolves, so refusal would be a false refusal on success —
+   fail-closed governs unresolvable/ambiguous input, not
+   resolvable tokens.
+   (c) Author intent is unambiguous; there is no alternative
+   reading of `-{spacing.4}` under which refusal is the right
+   answer. Refusing would make the explicit spelling strictly
+   weaker than the bare spelling — a surprising, undocumented
+   asymmetry punishing authors who write `-{spacing.4}` for
+   clarity over `-4`.
+   (d) Blast radius is one function (`resolve_negated_token`
+   + its existing fallthrough): no new diagnostic codes, no
+   new modules, no runtime change (the plan follows compile;
+   the served class heals when the sheet heals).
+   SCOPE (binding): the calc-wrap triggers ONLY when the
+   post-`-` remainder is exactly one braced ref plus optional
+   opacity in either position. Composite literals keep current
+   behavior (`-1px solid {colors.x}` → literal preserved,
+   inner expands, no calc-wrap) — fortify pins a control.
+   `-{unknown.path}` must NOT calc-wrap and must NOT paste
+   raw: it falls through to the existing Missing path →
+   `UnknownTokenReference` error + dropped declaration
+   (ATM-TOKEN-12 parity). This is the fail-closed half of the
+   ruling. OUT: new diagnostic codes for this shape; namer
+   redesign (class key follows the existing minus/escape
+   convention — fortify pins actual, chain review
+   sanity-checks a valid selector); the finder's free-research
+   `color: 4` → `4px` observation (warned, not silent —
+   future doom fodder, do not expand).
+
+3. **TEST PLACEMENT: new token station `ATM-TOKEN-17` —
+   `packages/reference-rs/modules/atomic/tests/cases/ATM-TOKEN-17/`
+   primary, no neo case, unit optional.** A seam case, not a
+   Rust unit and not a neo case: the break spans sheet +
+   diagnostics + plan, and the station harness asserts all
+   three (sheet `calc(-1 * var(--spacing-4))`, zero
+   diagnostics on valid arms, classes-map entry covering the
+   served-class half). The station asserts: `-{spacing.4}`
+   calc-wraps silently; both opacity positions calc-wrap with
+   `color-mix`; `-{unknown.path}` errors `UnknownTokenReference`
+   and drops the declaration with siblings intact; composite
+   `-1px solid {colors…}` control unchanged. Fortify adds the
+   `ATM-TOKEN-17` row to the SPEC station table (14/15/16
+   precedent: table row, no prose bullet) and may add a
+   `resolve/tokens/tests.rs` guard beside the fix, but the
+   station is the pin chain review verifies. No neo case (no
+   runtime code changes; plan-follows-compile), no
+   ATM-TOKEN-07 edit (that station pins the bare path; the
+   composition gets its own number).
+
+### Wave 3, find (g) — architecture ruling
+
+Find: under negation-only `include: ['!outside/**']`, an
+explicitly excluded source's want is STILL extracted — the
+negation is silently dropped and the full scan compiles.
+Root cause per report: `IncludeScope::is_open()`
+(`includes/mod.rs:40-43`) returns true whenever no positive
+pattern exists, so `matches`/`matches_file` early-return true
+and the negative check never runs. Finder report:
+`.agents/doom/logs/2026-09-20-wave3-sync-negation-only-open-scope.md`;
+repro `/tmp/doom-wave3-sync-negation-only.mjs` (replayed by
+architect read-only: both controls PASS, probe FAILs, exit 1 —
+failure mode confirmed).
+
+1. **IN-BOUNDS.** Pure config-level source scoping: which
+   static TS compile inputs the engine scans. Touches nothing
+   on the will-never-work list (no interpolation, no
+   computed/runtime-only values, no external config, no
+   spread, no namespace/default value imports) and none of
+   the physics boundaries (language, wholesale, seam, style
+   surface, one-namer all untouched — this is about the
+   scan set, not the dialect). Falls under the skill's
+   misdiagnosis-adjacent ground: a silent wrong-scope
+   compile, zero signal that the exclusion was dropped.
+   Violated contracts: the frozen wire format
+   (`contracts/types.ts`: "only matching sources compile
+   and the rest are skipped silently. Absent or empty
+   preserves the legacy scan-all behavior" — a
+   negation-only list is neither absent nor empty, yet the
+   scope is open) and the module header
+   (`includes/mod.rs:3-6`: "`!` negates… absent or empty…
+   open"). User-facing: junk atoms — or error diagnostics
+   (build failure) — from explicitly excluded files, plus
+   sync incoherence (watch matcher over the SAME config
+   field excludes `outside/**`, so excluded styles bake
+   into the bundle at baseline sync but never trigger a
+   rebuild).
+
+2. **FIX DIRECTION (binding): honor negation-only includes
+   as exclude-from-scan-all (scan-all-minus-negatives).**
+   A non-empty include list with zero positives must scope
+   to everything-minus-negatives: `['!outside/**']`
+   compiles `theme/**` and skips `outside/**` silently.
+   The two alternatives are REJECTED. Weighed:
+   (a) Frozen wire contract: a negation-only list is
+   non-empty, so the scope is not open; "matching" is
+   matcher semantics over the engine's candidate set.
+   Both readings satisfy the letter, but only
+   scan-all-minus-negatives satisfies author intent — no
+   author writes `include` to compile nothing.
+   (b) fast-glob semantics, correctly scoped:
+   `fast-glob(['!outside/**'])` returns `[]` (re-verified
+   firsthand in-session), but that is a traversal-base
+   artifact — the listing function has no positive base
+   to walk. `IncludeScope` is a MATCHER over an
+   already-enumerated candidate set (the engine walks
+   `sourceRoot` itself / takes virtual files), so the
+   faithful analog inside fast-glob flavor is matcher
+   semantics, not the listing function.
+   (c) Matcher parity is unanimous for
+   scan-all-minus-negatives, all re-verified firsthand:
+   `picomatch(['!outside/**'])` → theme true / outside
+   false; `minimatch(path, '!outside/**')` → same;
+   `micromatch.isMatch(path, ['!outside/**'])` → same.
+   (d) Watch coherence decides it: `sync/watch.ts:288`
+   builds `picomatch(config.include)` over the SAME
+   field. Scan-all-minus-negatives makes baseline sync
+   and watch agree exactly — the reported incoherence
+   heals. Empty-scope would merely invert the
+   incoherence (watch fires on `theme/**` changes the
+   engine compiles nothing from).
+   (e) Refusing the shape (new diagnostic / reject
+   negation-only) is REJECTED: it needs a new diagnostic
+   code plus a wire-contract amendment, punishes a
+   meaningful author shape ("everything except
+   generated/vendored trees"), and contradicts the
+   module's own "`!` negates" promise.
+   (f) Blast radius is one struct: `IncludeScope` has
+   exactly one consumer (`sources.rs`, both disk-scan
+   and virtual-files paths via `matches_file`), and
+   `is_open` is used only inside `includes/mod.rs`
+   itself. The fix is the open-test plus the two match
+   functions (open ⟺ positives AND negatives both
+   empty; match ⟺ (no positives OR positive hit) AND
+   no negative hit). All existing legs are unaffected:
+   positives-only, pos+neg, absent/empty, and the
+   `['nowhere/**']` missed leg (positives present, no
+   hit → still empty). SCOPE (binding): no new
+   diagnostic codes, no wire-format change, no watch
+   change (watch already implements the ruled
+   semantics — that is the point), no ATM-SCAN-02
+   change (discovery entry set follows the same scope
+   and heals with it).
+
+3. **TEST PLACEMENT: extend station `ATM-SCAN-01` —
+   `packages/reference-rs/modules/atomic/tests/cases/ATM-SCAN-01/spec.ts`
+   is the binding pin, no neo case, unit optional.**
+   The break lives in the engine's matcher, and
+   ATM-SCAN-01 already drives the frozen request over
+   BOTH paths (`sourceRoot` disk scan + legacy virtual
+   `files`) with the exact `theme/` vs `outside/` world
+   and `expectRedOnly` helper the negation-only legs
+   need — beside the existing `negated` and `missed`
+   legs. Fortify adds: frozen `['!outside/**']` →
+   red-only with no errors (this pins the ruled
+   direction INCLUDING the theme-in half the repro
+   deliberately left unasserted); virtual-files
+   `['!outside/**']` leg likewise. Fortify may add
+   `includes/mod.rs` unit guards beside the fix
+   (`negation_only_excludes`), but the station is the
+   pin chain review verifies. No neo sync case:
+   `sync/index.ts:105` forwards `config.include`
+   verbatim onto the frozen request and NEO-SYNC-09
+   already pins that forwarding — semantics live in the
+   engine, and a neo case would re-prove forwarding.
+   No new station number (this is ATM-SCAN-01's own
+   contract completing its third shape, not a new
+   behavior — contrast find (h)'s composition station);
+   fortify adds one sentence naming negation-only =
+   scan-all-minus-negatives to the ATM-SCAN-01 SPEC row
+   and case README, and one clause to the
+   `includes/mod.rs` header comment so the next reader
+   does not re-open the scope.
+
+### Wave 3, find (g) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: negation-only includes
+honor scan-all-minus-negatives; `['!outside/**']` compiles `theme/**`
+and skips `outside/**` silently. No new diagnostic codes, no
+wire-format change, no watch change, no ATM-SCAN-02 change, no neo
+case, no new station.
+
+**Fix (`includes/mod.rs`, matcher only).** `is_open` is now
+positives-AND-negatives both empty; `matches`/`matches_file` are
+(no positives OR positive hit) AND no negative hit. Single consumer
+confirmed firsthand (`sources.rs` disk-scan + virtual-files paths
+via `matches_file`; `is_open` used only inside `includes/mod.rs`).
+All existing legs unaffected by construction: positives-only,
+pos+neg, absent/empty, and the `['nowhere/**']` missed leg
+(positives present, no hit → still empty). Header clause added
+("negation-only … never open") plus the `is_open` doc update.
+
+**Pins.** (1) STATION (binding): `ATM-SCAN-01/spec.ts` gains two legs
+beside the existing `negated`/`missed` legs — frozen
+`['!outside/**']` → red-only with no errors (pins BOTH halves,
+theme-in + outside-out, including the theme-in half the repro left
+unasserted), and the legacy virtual-files `['!outside/**']` leg
+likewise; contract-line sentence names negation-only =
+scan-all-minus-negatives. (2) Unit guard `negation_only_excludes`
+beside the fix (`!is_open`, theme-in/outside-out via both
+`matches` and `matches_file`). (3) One sentence each in the
+ATM-SCAN-01 SPEC row and case README.
+
+**Evidence.** Repro `/tmp/doom-wave3-sync-negation-only.mjs` flips
+red→green on the fresh post-fix binding (exit 0; controls PASS,
+probe PASS, `theme compiles under negation-only: true`).
+Fail-without-fix: new guard FAILS on surgically reverted matcher
+logic (old `is_open` + old match arms, test kept), passes with the
+fix; file restored byte-identical (`diff` clean) and includes tests
+re-run 8/8. Station-path fail-without-fix is the architect's
+read-only pre-fix replay (probe FAIL, exit 1) on the same frozen
+request shape the station drives. Suites (all `pnpm agentrs`, this
+session): cargo atomic 459/459 (458 + new guard, green by name);
+vitest atomic 284/284 (11 files, 237 stations incl. extended
+SCAN-01) on the rebuilt darwin binding. Quality: `agentrs q` on
+both touched code files PASS (0 over-length, 0 complex, 0 clippy
+allows). Goldens: zero movement (no `output/` paths in status,
+`--update-goldens` never run) — the station golden is the
+unscoped legacy compile, untouched.
+
+**Must-NOTs honored:** no weakened tests (station legs + unit guard
+strictly additive), no blanket goldens, no lib touch, no watch
+touch, no SCAN-02 touch, no neo case, finder report untouched,
+sibling (h) files (`resolve/tokens/*`) and peer docs/logs observed
+in tree, never touched.
+
+**Files (mine only, 4 + this section).**
+`src/includes/mod.rs` (fix + header clause + guard),
+`tests/cases/ATM-SCAN-01/spec.ts` (2 legs + contract sentence),
+`tests/cases/ATM-SCAN-01/README.md` (1 sentence), `SPEC.md`
+(SCAN-01 row sentence only — sole hunk in file). Captain: SPEC.md
++ VOYAGE-LOG-3.md are shared with crew (h); commit per hunk/section.
+
+### Wave 3, find (i) — architecture ruling
+
+Find: canon-blessed extension props (`translateX`/`boxSize`/`spaceX`
+probed, ~26 in family) carry `css` forms absent from `@webref/css`
+(`translate-x`, `box-size`, `space-x`, ...) served straight through
+`to_css_declaration_property` (`emit/lib.ts:60-69`) into minted
+classes + sheet rules no browser honors, with `diagnostics: []`.
+Finder report:
+`.agents/doom/logs/2026-09-20-wave3-canon-emit-dead-declarations.md`;
+repro `/tmp/doom-wave3-canon-emit-dead-decl.mjs` (replayed by
+architect read-only: exit 1, 3/3 RED, `diagnostics: []`, controls
+green — `translate` real, `borderStartRadius` expands).
+
+1. **IN-BOUNDS.** Complete static literals on the pinned `css()`
+   surface; no will-never-work shape (no interpolation, no
+   runtime-only values, no external config, no spread, no namespace
+   imports). Falls under the skill's misdiagnosis clause: silence
+   where a diagnostic is owed. Violated contract: canon SPEC §1
+   (canon emits `to_css_declaration_property` as language truth;
+   platform truth is living `@webref/css`) + `CAN-PROP-03`
+   (promises a "CSS declaration property name" / "standard
+   kebab-case declaration") — fictional strings are neither.
+   `CAN-JOIN-02` blesses NAMES only (wave-2d ruling: NAME is the
+   joined identity, `css` is an emission form, not an identity
+   witness) — nothing authorizes fictional `css` forms. Wave-2d
+   explicitly carried "legit name + hallucinated css" as doom
+   fodder per Law 2 (no repro, no break); this find IS that gap
+   with a repro — the deferral is discharged, not relitigated.
+   Severity, honestly: user-facing silent wrong paint, broad (26
+   props); tempered — zero in-repo consumers measured firsthand
+   (no lib style-prop usage, no atomic station inputs, no neo
+   cases; prior grep hits were `translateX()` *values* in
+   keyframes), so current blast is external authors. Still a
+   break, not curiosity: anyone authoring these blessed props
+   gets dead paint silently.
+
+2. **FIX DIRECTION (binding): REFUSE with a default-visible
+   diagnostic + SKIP the want — at the RESOLVE fall-through over
+   a GENERATED unrealizable set in canon. Table correction is
+   ruled OUT.** Weighed:
+   - SPEC §1 authority: the defect is at the serving layer, not
+     the join. The join gate stays NAME-only per wave-2d — an
+     AND-check there would abort clean regen (the rows are
+     allowlisted by design) and is still rejected. `CAN-PROP-03`
+     promises every *served* `css` form is real; refusal stops
+     the serving.
+   - Table correction ruled out: the single-`css`-string row
+     cannot express what these props need — `boxSize` 2 decls,
+     `truncate` 3, `srOnly` ~8, `spaceX/Y` a child combinator,
+     `hideFrom/Below` media queries, `textStyle` token lookup,
+     `gradient*` composition; value-dependent ones cannot be
+     name-mapped at all (`translateX`→`translate` would clobber
+     y/z atomically; `scrollSnapStrictness` composes into a
+     value). Any table edit is a fiction swap. Even the
+     closest-to-mappable (`animationState`) stays refused for
+     uniformity — unverified, and uniformity beats one clever
+     rename.
+   - Full expansion ruled out for this cycle: 26 per-prop
+     lowering designs is a feature build, not a fortify. Each
+     future expansion adds a resolve arm above the refusal with
+     its own red test + station per Law 2 (each un-refusal
+     carries proof).
+   - Layer: RESOLVE fall-through (end of the
+     `expand_or_passthrough`/`lower_macro` funnel), NOT
+     extraction. Decisive: resolve is where realization happens
+     and the exemptions already live *by order* — the
+     `textGradient` arm runs first (working, must keep working),
+     the shorthand/longhands arm covers
+     `borderStart/EndRadius`, platform shadowing covers
+     `webkitTextFillColor`. Refusal as the fall-through is
+     exemption-free and self-maintaining; extraction placement
+     would refuse `textGradient` before resolve sees it unless
+     given a split-brain exemption list (or wrong-direction
+     generator knowledge of atomic interception) — both
+     forbidden by SPEC §1's no-secondary-lists rule. Deliberate
+     difference from wave-1a's extraction placement (1a's defect
+     was plan capture; this one is realization); the SHAPE
+     follows 1a: default-visible, boring-but-clear,
+     warn-and-SKIP. Resolve is also downstream of all extract
+     paths, so one rule covers `css()` + JSX + conditions.
+   - The set MUST be generated into canon (table + lookup fn,
+     names TBD by fortify): computed at build from webref truth
+     — extension rows with `css` ∉ webref, no longhands, not
+     platform-shadowed. A hardcoded 26-name list in atomic is a
+     secondary property list — forbidden by SPEC §1 /
+     `CAN-PROP-01`–`02` crosswalk. Scope: `EXTENSIONS` only;
+     `VENDOR` rows explicitly out of scope (vendor `css` may be
+     real-but-absent-from-webref; separate brief if doubted).
+   - Warn-and-SKIP bound (not keep): keep would still mint the
+     dead rules — the exact break — only diagnosed. The violated
+     contract is the emission itself. Zero consumers measured,
+     so skip removes output nobody reads; injectivity-safe
+     (fewer classes, quarantine can only hold).
+   - Diagnostic: DEFAULT-visible (direct push; wave-1a lesson +
+     wave-1b channel-only-is-silent lesson), naming the prop.
+     Located if want spans reach resolve; if unlocatable, still
+     default naming the prop (chain adjudicates). New
+     `DiagnosticCode` on the `ATM-W-*` precedent.
+   - Fortify-bounded: table/fn/code names + wording; enumerate
+     all 26 against live webref firsthand — any member that IS
+     in webref is excluded with evidence; runtime plan behavior
+     pinned either way (a served class key for a dropped atom
+     is an acceptable diagnosed fallback per 1a, silence is
+     not — decide, write down, pin).
+
+3. **TEST PLACEMENT: PRIMARY new atomic seam station
+   `ATM-EXT-01` (new EXT family: dialect-extension realization —
+   refused until expanded; future expansions land as EXT-02+).**
+   Lower than the finder's /tmp probe, user-facing: input
+   `css({ translateX / boxSize / spaceX / ... })` asserting the
+   refusal diagnostic fires default-visible naming each probed
+   prop, zero dead rules in the sheet (no `translate-x`,
+   `box-size`, `space-x`, ... declarations), sibling platform
+   props still extract; one JSX leg if cheap (same funnel).
+   SECONDARY (required): extend `CAN-JOIN-02`'s existing `it` in
+   `canon/tests/join.test.ts` — assert the generated
+   unrealizable set equals the webref-recomputed expectation
+   (live oracle; the TS side can query `@webref/css`). One
+   sentence added to the `CAN-JOIN-02` SPEC row; no new case ID
+   (wave-2d precedent), no count change. Explicitly NOT a canon
+   Rust unit as the pin — static tables cannot observe webref
+   truth, and a membership unit test would pin a hardcoded list
+   (secondary-list smell); a Rust guard is allowed but is not
+   proof. SPEC: atomic SPEC gains the EXT family section +
+   registry + counts; canon SPEC `JOIN-02` row extended. Guards
+   staying green: `textGradient` expansion stations,
+   `borderStart/EndRadius` longhand stations, webkit platform
+   tests, full atomic suite + census (expect ZERO other golden
+   moves — zero usage measured, any drift is attribution or
+   scope creep), canon regen determinism (new table byte-stable;
+   existing `src/` diff attested additive-only). Chain re-runs
+   the repro expecting exit 0 via the diagnosed arm, controls
+   still green.
+
+### Wave 3, find (h) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: calc-wrap the negation in
+`resolve_negated_token`; no new diagnostic codes, no runtime change, no
+TOKEN-07 edit, class keys pinned actual, `color:4` observation untouched.
+
+**Fix (`resolve/tokens/mod.rs`, one function + two helpers).** A `-`
+remainder starting with `{` routes to `resolve_negated_braced`: inner is
+trimmed (the `expand_open` convention), the tail must be empty or exactly
+`/opacity` (`negated_brace_tail`), inner splits via the same
+`split_opacity` the bare path uses, lookup is `lookup_entry` (the same
+lookup the non-negated braced twin performs), and the hit emits
+`calc(-1 * <expansion>)` silently. Everything else returns None into the
+existing fallthrough, so behavior changes ONLY on the ruling's arms:
+`-{spacing.4}` → `calc(-1 * var(--spacing-4))`; `-{path/50}` and
+`-{path}/50` → `calc(-1 * color-mix(...))`; `-{unknown.path}` → None →
+the existing Missing path → `ATM-E-UNKNOWN-TOKEN` error + dropped
+declaration (verified firsthand this already failed closed pre-fix, and
+still does); composites (`-1px solid {…}`, shorthand-expanded before
+resolve) byte-identical. Decisions inside the ruling's scope: (a) inner
+trim closes the `-{ spacing.4 }` silent-`-var()` hole too (pre-fix probe:
+negated-spaced minted `-var()` silently while non-negated spaced
+errored — the non-negated whole-value trim quirk is pre-existing and
+untouched); (b) `lookup_entry` (not interpolate's full-path-only
+`system.token`) flips `-{4}` from error to calc-wrap — parity with `{4}`
+which already resolves, per the ruling's anti-asymmetry clause (c);
+(c) opacity in BOTH positions at once falls through unpinned-by-station
+(no calc-wrap, asserted once in the unit guard) — outside "optional
+opacity (either position)", current behavior preserved; (d) the
+non-negated `{p}/50` → `var()/50` wart is untouched (OUT of scope).
+
+**Station `ATM-TOKEN-17`** (seam case: sheet + diagnostics + classes-map
+over the ruling's 4 arms). Input: `spacing.4` + `colors.blue.600` dump,
+one `App.tsx` (`mt`/`color`/`backgroundColor`/`border` valid,
+`ml: '-{unknown.path}'`). Spec asserts the three calc-wraps, no `-var(`
+/ `-color-mix(` anywhere, the composite expansion (`border-color` var,
+`border-style` solid, `border-width` `-1px`), the dropped `margin-left`,
+`atomCount` 6, exactly 2 diagnostics (error `ATM-E-UNKNOWN-TOKEN` naming
+`{unknown.path}` at `App.tsx:8:7` + the `ATM-W-MISSING-STYLE-PLAN`
+proven-miss warning — TOKEN-12 parity, proving the valid arms silent),
+and all 6 classes-map entries pinned actual
+(`negated-brace__mt_-{spacing.4}` etc. — braces ride the class key per
+the existing minus convention; selectors escape cleanly and the ghost
+gauge passes). Goldens generated scoped (`-t TOKEN-17 --update-goldens`)
+and attested per pair: styles.css 6 utility rules exactly as predicted,
+css.json 6 entries, diagnostics.json the 2 predicted items. Rust unit
+guard beside the fix (`tests.rs`: calc-wrap table incl. `-{4}`, unknown
+error+drop, composite interpolation, double-opacity no-calc boundary).
+SPEC: station-table row only (14/15/16 precedent).
+
+**Evidence.** Finder repro flips red→green firsthand (exit 0: no
+`-var()`, `diagnostics []`, served class, no runtime warns); pre-fix
+probes documented all 8 baseline shapes on the old binding. Suites:
+`pnpm agentrs c atomic` 462/462 (458 + 3 mine + 1 peer crew (g)
+in-flight `negation_only_excludes` — read-only attributed, not mine);
+`pnpm agentrs v atomic` 285/285 (11 files; 284 + TOKEN-17). Quality:
+`agentrs q` on both touched `.rs` files — 0 violations, 1 soft warning
+(mod.rs 372 vs 365 soft file-length limit from this change; gate passes,
+same accepted category as wave-1 walk/channels/codes and wave-2
+types.rs — splitting mid-fortify is scope creep). `rustfmt --check`
+clean. Zero other goldens moved (`git status`: no other `output/`
+paths); `agentrs f` never run.
+
+**Must-NOTs honored:** no weakened tests (all pins additive or new), no
+blanket goldens (3 new files, attested), no lib touch, no TOKEN-07 edit,
+no diagnostic codes added, finder report untouched, peer files
+(`includes/mod.rs`, SCAN-01, docs, operation-seize) never touched.
+
+**Files (mine only, 8 + this section).**
+`resolve/tokens/mod.rs` (fix), `resolve/tokens/tests.rs` (guard),
+`SPEC.md` (1 table row), `tests/cases/ATM-TOKEN-17/` (baseSystem.json,
+`input/src/App.tsx`, spec.ts, README.md, `output/` × 3).
+
+### Wave 3, find (g) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (g) files only —
+write-set audited via `git status` paths: exactly
+`src/includes/mod.rs` + `ATM-SCAN-01/spec.ts` + `ATM-SCAN-01/README.md`
++ the SCAN-01 SPEC sentence under atomic; sibling (h)'s
+`resolve/tokens/*` + `ATM-TOKEN-17/` + SPEC TOKEN-17 row and all peer
+docs/logs were never touched or adjudicated (read-only for
+attribution; SPEC.md shared — commit per hunk).
+
+**1. Finder repro** (`/tmp/doom-wave3-sync-negation-only.mjs`,
+unmodified): exit 0 firsthand on the 07:16 post-fix darwin-x64 binding
+— all 3 checks PASS (pos+neg controls + negation-only probe), and
+`theme compiles under negation-only: true`, pinning the ruled
+scan-all-minus-negatives direction including the half the repro left
+unasserted. Report untouched.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c atomic`
+462/462 green (458 baseline + (g) `negation_only_excludes` green by
+name + 3 in-flight sibling-(h) tests, read-only attributed);
+`pnpm agentrs v atomic -t "SCAN-01"` 1 passed / 284 skipped;
+FULL `pnpm agentrs v atomic` 285/285 (11 files — 284 + sibling (h)
+TOKEN-17, green, attributed). Quality: `agentrs q` on
+`includes/mod.rs` PASS (0 over-length, 0 complex, 0 clippy allows).
+Zero failures anywhere — nothing to attribute, nothing absorbed.
+
+**3. Fail-without-fix / pass-with-fix:** (a) Rust guard — surgically
+reverted matcher (old `is_open` + old match arms, test kept): exactly
+`negation_only_excludes` FAILS, other 15 includes tests pass; fix
+restored byte-identical (`cmp` clean), 16/16 green post-restore.
+(b) Station/frozen-request path — equivalent firsthand proof: old
+`is_open()` returns true for any negation-only list (the guard's
+first assert is what bites), and `is_open → matches_file`
+early-returns true for every file through the single consumer
+`sources.rs` (both paths audited), so `outside/**` compiles —
+deterministically the architect's logged pre-fix replay (probe FAIL,
+exit 1) on the same frozen shape the station drives. A Sep-16
+`dist/npm` x64 binding was probed as a stale-code oracle but predates
+the frozen `spec` request shape (`missing required baseSystem`) and
+cannot drive it — discarded, not counted. Post-fix the station pins
+both halves (theme-in via `expectRedOnly`, outside-out) on frozen +
+virtual legs.
+
+**4. Existing legs unaffected (all in the green station run):**
+positives-only (`theme/**` frozen + virtual), pos+neg (`negated`
+leg), absent/empty (open + empty legs), and the `['nowhere/**']`
+missed leg still empty (`wants []`, `classes {}` — positives
+present, no hit → still empty per the new match formula). Units
+`negation_carves_holes`, `open_include_keeps_legacy_files`,
+`include_scopes_virtual_files/disk_scan` all green.
+
+**5. Diff review (line-by-line, (g) write-set):** `is_open` now
+positives-AND-negatives both empty; `matches`/`matches_file` now (no
+positives OR hit) AND no negative hit — exactly the ruling's formula.
+Header clause + `is_open` doc updated; unit guard asserts `!is_open`
++ theme-in/outside-out via both `matches` and `matches_file`.
+`spec.ts` is pure addition (14 `+`, zero `-`: 2 legs + contract
+sentence); README + SPEC one sentence each (SCAN-01 row only — the
+TOKEN-17 SPEC row hunk is sibling (h)'s, not adjudicated). Untouched
+as ordered: `codes.rs` (no new codes), `contracts/types.ts` (no wire
+change), `sync/watch.ts` + `sync/index.ts` (no watch change —
+forwarding verbatim + `picomatch(config.include)` confirmed by read),
+ATM-SCAN-02, neo (no case), lib, finder report. No existing test
+touched, none weakened; zero goldens moved (no `output/` paths in
+status, `--update-goldens` never run) — the golden is the unscoped
+legacy compile, untouched by design.
+
+**6. Contracts hold.** Frozen wire (`types.ts:131-135`: only matching
+sources compile; absent-or-empty scans all) now holds for the
+non-empty negation-only list; module header ("`!` negates… absent or
+empty… open") holds with the never-open clause; watch coherence
+holds — verified firsthand `picomatch(['!outside/**'])` → theme true
+/ outside false, exactly the engine's new behavior, so baseline sync
+and watch agree. Captain: commit the 4 (g) paths + finder report +
+log sections per hunk with (h); keep peer docs + (h)/(i) files out.
 
 ## Useful
 
