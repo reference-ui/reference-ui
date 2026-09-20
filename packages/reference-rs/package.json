@@ -47,6 +47,10 @@
       "types": "./dist/atomic.d.ts",
       "import": "./dist/atomic.mjs"
     },
+    "./namer": {
+      "types": "./dist/namer.d.ts",
+      "import": "./dist/namer.mjs"
+    },
     "./system": {
       "types": "./dist/system.d.ts",
       "import": "./dist/system.mjs"
@@ -68,6 +72,8 @@
     "dist/index.d.ts",
     "dist/index.mjs",
     "dist/modules",
+    "dist/namer.d.ts",
+    "dist/namer.mjs",
     "dist/native",
     "dist/styletrace.d.ts",
     "dist/styletrace.mjs",

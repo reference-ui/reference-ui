@@ -21,7 +21,7 @@ interface NamerGolden {
   cases: Array<{ input: unknown; output: unknown }>
 }
 
-type NamerFn = (input: unknown, tables: unknown) => unknown
+type NamerFn = (input: unknown, tables: unknown, system?: string) => unknown
 
 function readGoldens(): NamerGolden[] {
   expect(
@@ -45,16 +45,17 @@ const spec: AtomicCaseSpec = {
     expect(result.stylePlans.length).toBeGreaterThan(0)
 
     // Golden half (red until the runtime namer lands beside the compiler):
-    // every file reproduces exactly as fn(input, tables).
+    // every file reproduces exactly as fn(input, tables, system).
     const goldens = readGoldens()
     const entry = pathToFileURL(path.resolve(HERE, '..', '..', '..', 'js', 'namer', 'index.js')).href
     const namer = (await import(entry)) as unknown as Record<string, NamerFn>
     const tables = result.runtime.namer
+    const system = result.stylePlans[0]?.system ?? ''
     for (const golden of goldens) {
       const fn = namer[golden.function]
       expect(typeof fn, `runtime namer exports ${golden.function}`).toBe('function')
       for (const [index, probe] of golden.cases.entries()) {
-        expect(fn(probe.input, tables), `${golden.function} case ${index}`).toEqual(probe.output)
+        expect(fn(probe.input, tables, system), `${golden.function} case ${index}`).toEqual(probe.output)
       }
     }
     expect(result.diagnostics).toEqual([])
