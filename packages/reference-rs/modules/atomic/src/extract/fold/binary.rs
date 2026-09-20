@@ -52,14 +52,6 @@ pub enum BinaryRefusal {
 }
 
 impl BinaryRefusal {
-    /// The diagnostic text for a refusal at one style prop.
-    pub fn message(&self, prop: &str) -> String {
-        format!(
-            "Dynamic binary expression encountered for prop '{prop}' ({})",
-            self.detail()
-        )
-    }
-
     /// Short reason text, reused wherever a pair refusal is surfaced.
     pub fn detail(&self) -> String {
         match self {

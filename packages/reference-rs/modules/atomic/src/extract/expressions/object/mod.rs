@@ -23,7 +23,7 @@ use oxc_span::{GetSpan, Span};
 use smallvec::SmallVec;
 
 use super::walk::{walk_expression, ExpressionWalk};
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode};
+use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticsSession};
 use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
@@ -57,6 +57,9 @@ pub struct ObjectWalk<'a> {
     pub authored: Option<&'a mut Vec<crate::runtime::AuthoredDeclaration>>,
     pub bag: BagSemantics,
     pub sinks: &'a mut Vec<Sink>,
+    /// Lent to child expression walks for fact reporting; object-level
+    /// warns stay direct until Slice 5 moves the compiler block as one.
+    pub session: &'a mut DiagnosticsSession,
 }
 
 impl<'a> ObjectWalk<'a> {
@@ -73,6 +76,7 @@ impl<'a> ObjectWalk<'a> {
             wants: self.wants,
             diagnostics: self.diagnostics,
             sinks: self.sinks,
+            session: self.session,
         }
     }
 

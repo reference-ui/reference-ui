@@ -3,12 +3,14 @@
 //! produced atoms, preserving reason and location; it never decides whether
 //! that reason is a userspace warning. Existing `ATM-E-*` pass through.
 
-use super::super::{DiagnosticFact, OwnedLookupKey, ResolveOutcome, SourceSite};
+use super::super::{DiagnosticFact, DiagnosticLocation, OwnedLookupKey, ResolveOutcome};
 
-/// What resolve did with one authored declaration, ready to report.
+/// What resolve did with one authored declaration, ready to report. The key
+/// travels when a want context is in hand; the outcome always does, carrying
+/// its own render parts so policy never unwraps the key.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResolveReport {
-    pub site: SourceSite,
+    pub location: DiagnosticLocation,
     pub key: Option<OwnedLookupKey>,
     pub outcome: ResolveOutcome,
 }
@@ -16,7 +18,7 @@ pub struct ResolveReport {
 impl From<ResolveReport> for DiagnosticFact {
     fn from(report: ResolveReport) -> Self {
         DiagnosticFact::ResolveOutcome {
-            site: report.site,
+            location: report.location,
             key: report.key,
             outcome: report.outcome,
         }
@@ -26,22 +28,20 @@ impl From<ResolveReport> for DiagnosticFact {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::diagnostics::{DiagnosticCode, SourceId, StyleSurfaceKind};
-    use oxc_span::Span;
+    use crate::diagnostics::{DeclarationDetail, DiagnosticCode, ResolveDetail};
 
     #[test]
     fn resolve_report_converts_to_fact() {
         let report = ResolveReport {
-            site: SourceSite {
-                source: SourceId(5),
-                span: Span::new(0, 8),
-                surface: StyleSurfaceKind::JsxStyle,
-                prop: "color".into(),
-                when: Vec::new(),
-            },
+            location: DiagnosticLocation::default(),
             key: None,
             outcome: ResolveOutcome::Rejected {
                 code: DiagnosticCode::UnknownCondition,
+                detail: ResolveDetail::Declaration(DeclarationDetail::Name(
+                    crate::diagnostics::NameDetail::Condition {
+                        name: "_nope".into(),
+                    },
+                )),
             },
         };
         let fact = DiagnosticFact::from(report);

@@ -9,7 +9,7 @@ use smallvec::SmallVec;
 
 use super::walk::{DynamicRefusal, ExpressionWalk};
 use crate::atom::AtomValue;
-use crate::diagnostics::DiagnosticCode;
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, FoldDetail};
 
 /// Extract string literal value, honoring inline important flags.
 pub fn push_string_want(
@@ -104,10 +104,14 @@ pub fn extract_template_literal(
     }
     for refusal in &fold.refusals {
         // `2${n}r` over a dynamic `n` — the part, not the template, is named
+        let (part, detail) = refusal.parts();
         ctx.warn_dynamic(DynamicRefusal {
             span: refusal.span(),
             code: DiagnosticCode::DynamicTemplate,
-            message: refusal.message(ctx.prop),
+            detail: ExtractDetail::Fold(FoldDetail::Template {
+                part,
+                detail: detail.into(),
+            }),
             when,
         });
     }

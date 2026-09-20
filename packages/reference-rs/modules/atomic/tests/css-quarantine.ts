@@ -18,6 +18,7 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
 
   // Token-passthrough policy. Deferred, testing.md §5 step 8.
   'ATM-DIAG-04': ['Unexpected input', 'caret-color: ui.missing.path'],
+  'ATM-DIAG-13': ['Unexpected input', 'background: ui.missing.path'],
   'ATM-SHORT-03': ['Unexpected input', 'border: borders.card'],
   'ATM-TOKEN-02': ['margin-top: blue .600'],
   'ATM-TOKEN-05': ['background: blue .600'],

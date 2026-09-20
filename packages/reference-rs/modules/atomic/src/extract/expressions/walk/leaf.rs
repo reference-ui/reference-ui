@@ -13,7 +13,7 @@ use super::{
     branch::{emit_dead_arms, push_folded_want},
     walk_expression, DynamicRefusal, ExpressionWalk,
 };
-use crate::diagnostics::DiagnosticCode;
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, FoldDetail, LeafDetail};
 
 pub(crate) fn handle_identifier_fallback(
     ctx: &mut ExpressionWalk<'_>,
@@ -50,11 +50,10 @@ fn handle_identifier(
         return;
     }
     // mt={space}  when `space` is not a file-top const
-    let prop = ctx.prop;
     ctx.warn_dynamic(DynamicRefusal {
         span,
         code: DiagnosticCode::DynamicIdentifier,
-        message: format!("Dynamic non-literal identifier '{name}' encountered for prop '{prop}'"),
+        detail: ExtractDetail::Leaf(LeafDetail::Identifier { name: name.into() }),
         when,
     });
 }
@@ -97,20 +96,24 @@ pub(crate) fn handle_unary(
         ctx.push_want(val.clone(), when.clone(), false, Some(unary.span));
     }
     for refusal in &fold.refusals {
-        let prop = ctx.prop;
         ctx.warn_dynamic(DynamicRefusal {
             span: unary.span,
             code: DiagnosticCode::DynamicUnary,
-            message: refusal.message(prop),
+            detail: ExtractDetail::Fold(FoldDetail::Unary {
+                detail: refusal.detail().into(),
+            }),
             when,
         });
     }
     for refusal in &fold.template_refusals {
-        let prop = ctx.prop;
+        let (part, detail) = refusal.parts();
         ctx.warn_dynamic(DynamicRefusal {
             span: refusal.span(),
             code: DiagnosticCode::DynamicTemplate,
-            message: refusal.message(prop),
+            detail: ExtractDetail::Fold(FoldDetail::Template {
+                part,
+                detail: detail.into(),
+            }),
             when,
         });
     }
@@ -133,29 +136,34 @@ pub(crate) fn handle_binary(
         push_folded_want(ctx, val, when, binary.span);
     }
     for refusal in &fold.refusals {
-        let prop = ctx.prop;
         ctx.warn_dynamic(DynamicRefusal {
             span: binary.span,
             code: DiagnosticCode::DynamicBinary,
-            message: refusal.message(prop),
+            detail: ExtractDetail::Fold(FoldDetail::Binary {
+                detail: refusal.detail().into(),
+            }),
             when,
         });
     }
     for refusal in &fold.unary_refusals {
-        let prop = ctx.prop;
         ctx.warn_dynamic(DynamicRefusal {
             span: binary.span,
             code: DiagnosticCode::DynamicUnary,
-            message: refusal.message(prop),
+            detail: ExtractDetail::Fold(FoldDetail::Unary {
+                detail: refusal.detail().into(),
+            }),
             when,
         });
     }
     for refusal in &fold.template_refusals {
-        let prop = ctx.prop;
+        let (part, detail) = refusal.parts();
         ctx.warn_dynamic(DynamicRefusal {
             span: binary.span,
             code: DiagnosticCode::DynamicTemplate,
-            message: refusal.message(prop),
+            detail: ExtractDetail::Fold(FoldDetail::Template {
+                part,
+                detail: detail.into(),
+            }),
             when,
         });
     }

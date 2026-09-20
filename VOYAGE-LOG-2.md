@@ -936,6 +936,158 @@ Pre-existing oddity (S2, untouched by G1, log-only): BigInt leaves
 predict `Exact{Null}` (`values.rs:127-130`) — S4's problem, not
 this rework's.
 
+### Oracle O6 — Slice-3 review verdict + Slice 4 dispatch (2026-09-20)
+
+Review oracle reproduced every Slice-3 claim firsthand (2 nested
+workers on disjoint runners — vitest + cargo/quality — lead inline
+for the full line-by-line diff review against the 04e0c2779 baseline,
+byte-equivalence audit, and scope audit; peer files ignored per
+orders). **Verdict: S3 CLEAR.** No gaps. All O4 done-criteria met.
+
+**V1. Stations — VERIFIED (nested worker, `pnpm agentrs` only).**
+`v cases.test.ts -t ATM-DIAG-13` PASS (1 passed / 235 skipped).
+Full `v atomic`: **276 passed / 7 failed (283)** — 13 flips green,
+07–12/14 red each for its recorded reason (07: 12 channel items on
+default; 08/12/14: `compilerDiagnostics` undefined @ hinges
+:38/:53/:64; 09: `miss.message` must name color; 10: dynamic+harvest
+on default; 11: 8 on default @ E8-guard :36, spec untouched — E8
+stands). 13's golden pins the Obj-1 ×2 regression closed: two
+`ATM-W-UNKNOWN-TOKEN-PATH` lines, same message, distinct sites
+(`hover.ts:4:17` `_hover` vs `5:17` `_focus`) — the unknown token
+under `_hover` warns exactly once.
+
+**V2. Cargo + quality — VERIFIED (nested worker).** `pnpm agentrs c
+atomic`: **415 passed / 0 failed** (397 + 18 S3), zero warnings.
+`pnpm agentrs q` smart: exit 0, 0 violations; the 15 warnings are
+all grandfathered pre-existing complexity/file-length in old
+`extract/*` files, none in S3-authored code. `q` on
+`diagnostics/`: **ALL 32 FILES PASS**, zero warnings, zero
+complexity/file violations, zero clippy allows.
+
+**V3. Extract funnel — VERIFIED.** `warn_dynamic` is sink+fact
+first: sink hook identical (`is_sink_code` untouched —
+`harvest/sinks.rs` not in the diff), then `ExtractReport` →
+session fact + `Policy::render_extract` line pushed at the same
+site (order-safe while unmigrated families push direct). All 12
+production call sites migrated (member 3, leaf 6, call 2, literal
+1 — firsthand census); `DynamicRefusal.message` is gone, callers
+pass `ExtractDetail` data only. Byte-equivalence: every policy
+template matches its removed builder verbatim (unary/binary/
+template-part/whole, call-argument, all 5 element arms,
+generic/identifier leaves — compared string-by-string against the
+deleted `message()` fns); location construction is identical
+(`with_severity` file-gated attach = old `warn`'s unconditional
+file attach, file always present). Session threading complete:
+`ExtractSinks`/`ExtractContext`/`ExtractVisitor` + `ObjectWalk`
+passthrough + visitor merge-back in source order.
+
+**V4. Harvest/resolve/hosts — VERIFIED.** Harvest: `harvest_info`
+moved verbatim into `policy/harvest.rs` (same join/noun/format/
+location); unlowerable-`when` sinks still skip silently with no
+fact; M1 pin asserts fact + legacy line. Resolve: R1/R2/R4/R5/R7
+Rejected, R3 Advisory, R8–R11 Passthrough, each with structured
+detail + exact key when a want context is in hand; all 10
+sentences match legacy strings (Bool `{val}` Display == new
+`b.to_string()` — verified at `atom/value.rs:89`); re-resolve
+echoes report no facts (`sink: None`, `is_duplicate` untouched —
+the 13 warns-once regression pins it); keyframe/global callers
+threaded with `sink: None`. Hosts: `render_trace_diagnostic` →
+`convert_trace_diagnostic` + `Policy::render_host`, byte-identical
+file-only wrap; `hosts::resolve` takes the compile session (only
+caller: `lib.rs:132`); `collect_hosts` uses a throwaway session.
+
+**V5. ATM-E-* passthrough — VERIFIED (all 8 codes).** `native.rs`,
+`extract/recipes/*`, `recipes/spec.rs`, `hosts/entries.rs`:
+untouched (zero diff). Token E×2 (`tokens/mod.rs:124/128`,
+`interpolate.rs:111/115`): outside all diff hunks, byte-identical.
+`extract/mod.rs` E: diff is plumbing-only (zero `DiagnosticCode`
+lines). `DuplicateRecipe` + `build_atom_set` + `build_css_runtime`:
+moved `lib.rs`→`assembly.rs` verbatim (only `+sink` params and the
+`HashSet` import fold). `report_parse_errors`: untouched.
+
+**V6. Q5b/Q5a/F6/E9 — VERIFIED, all PINNED.** Q5b EXCLUSION:
+codified (`spread.rs` comment + repaired sink-hook invariant in
+`walk/mod.rs:107-115`) + integration pin
+(`test_spread_call_refusal_warns_without_sink` — O4 message
+present, folded entries lower, sinks empty). Q5a preserved:
+`is_sink_code` gate + `sink_recorded: false` fact + direct funnel
+pin (`mutated_binding_warns_without_sink_and_records_no_sink`).
+F6: resolve facts carry value spellings; policy R7 render matches
+(code, value) with the S4 split comment;
+`bool_refusals_report_distinct_spellings_with_keys` pins
+true/false distinctly with keys. E9: ledger R7 row now reads
+"`true` → userspace, `false` → compiler-at-most". No gaps.
+
+**V7. Zero drift + must-not-touch — VERIFIED.** No golden file
+modified (only NEW `13/output/` + 1-line quarantine entry, same
+passthrough-policy shape as DIAG-04; 13 spec/input committed and
+untouched — no weakened tests). No `styles.css`/`css.json` drift
+(full suite greens byte-identical). Forbidden-touch sweep: zero
+`hosts/entries.rs` / `css.ts` / wire / `compilerDiagnostics` /
+`logs` hits in the src diff; the 2 `Parser::new` hits are both
+`#[cfg(test)]` pins (no re-parse); `ExistingError`→
+`ExistingDiagnostic` rename contained in `diagnostics/` (F3
+closed). Resolve has zero remaining direct pushes outside
+`emit`/advisory/E paths; extract's remaining directs are exactly
+the documented deferral (plain-warn/info compiler sites + E
+sites) — in-scope per the O4 dispatch parenthetical, S5 handoff
+below.
+
+**Findings (not gaps):** F-S3a (S6 hygiene). SPEC `Cargo #[test]
+356` + `Named [x] proven 212` lines not bumped (cargo now 415,
+total now 187) — pre-existing maintenance pattern (S2 also left
+the cargo line), S6 audit owns it. F-S3b (S4 ruling queued,
+endorse landing). R6 CORRECTION HOLDS: old code verified
+`return None` at S0 baseline — R6 always dropped, no R4/R6
+asymmetry ever existed; fact honestly Rejected; ledger corrected.
+Drop-with-key ⇒ R6 is userspace-shaped like R4 (ATM-DIAG-09
+witness by R4's logic) — S4 oracle rules whether the ledger R6
+row moves to userspace; S3 correctly keeps the compiler cell
+pending that ruling. (The O2 "R6–R11 paint" line needs the same
+R6 asterisk.) F-S3c (S5 handoff). ObjectWalk/ExtractContext +
+plain-warn extract sites stay direct (all compiler-per-ledger);
+S5 migrates that block as one when it moves channels — S5 must
+not re-audit them as S3 scope escape.
+
+**SEQUENCE — Slice 4 (final-plan proof).** No ruling gates S4
+(except F-S3b's R6 verdict, which the S4 oracle rules — S4
+implementation proceeds regardless: facts stay honest either
+way). Single implementor crew (one coupled proof join; may fan
+nested workers over disjoint pieces ONLY: key-type/serializer
+authority vs proof-join vs station wiring — policy + 08/09/10
+stay with the lead). Scope per doc Slice 4 + map §C: expose one
+owned runtime lookup-key type + one serializer authority (reuse
+`serialize_lookup_key`/`canonical_json_value` — no second
+canonicalizer); build the final emitted-key set from
+`RuntimeStylePlan` after assembly; join G1-closed analysis
+expectations (Exact vs DynamicSlot/Hole) against that set; emit
+one located non-fatal userspace warning ONLY for an absent exact
+key (names the exact declaration; actionable reason iff a
+resolver fact proves the cause — never syntax guesses);
+incidental-coverage rule (exact key from any file/site/harvest
+counts as present). Join inputs = S2 analysis facts + S3
+producer facts from the compile-long session (currently dropped
+at end of `compile()` — S4 owns session rendering). Done-criteria
+(checkable): `ATM-DIAG-08/09/10` GREEN (present/absent/
+incidental); R7 true/false policy split honored (`false` never
+userspace); zero non-diagnostic drift on existing goldens (full
+`v atomic` still 276-pass with 07/11/12/14 red for the same
+reasons — 08/09/10 flip green); `agentrs q` clean; `agentrs c
+atomic` green. Must-not-touch (map §D): `ATM-E-*` behavior,
+stable wire codes, extraction/harvest/resolve/stylesheet
+semantics (goldens are the drift net), `hosts/entries.rs`, no
+second parse, no `logs`/`compilerDiagnostics` threading (S5 owns
+per Q2 — 08's hinge reads the opt-in channel, so if S4's proof
+renders userspace-only, 08's compiler-channel hinge stays red
+until S5 exposes it; oracle will adjudicate), no `css.ts` (Q1
+DEFER), no blanket golden updates, no weakened tests. Carry
+F-G1b (no const-driven Exact end-to-end until visitor shadowing
+fixed — S4 decides: fix visitor or document the silence gap),
+BigInt-`Exact{Null}` oddity, and F-S3b (R6 ruling). Oracle
+reviews the landing firsthand (08/09/10 green + drift-net suite
+re-run + diff review), then sequences Slice 5 (needs Q2 EXTEND
+shape — already in log: additive-optional, no schema bump).
+
 ## Landings
 
 _(implementors, per slice)_
@@ -1312,6 +1464,71 @@ locked, building shared API first.)_
   the API).
 - Vitals: lead building facts/policy/session API; workers spawn when
   it lands (harvest/resolve/hosts need the shapes to compile against).
+- Vitals 2: shared API LANDED + q-clean (facts vocabulary with nested
+  Leaf/Fold + Name/Value details, policy/extract|harvest|resolve|hosts
+  render arms with byte-pin tests, 4 adapters, session.extend_facts,
+  ExistingError→ExistingDiagnostic). 3 workers spawned over disjoint
+  families (harvest/hosts/resolve). Lead's extract family done:
+  warn_dynamic funnel (sink+fact+policy render), all 12 call sites,
+  fold message() removals + detail/parts accessors, session threading
+  (ExtractSinks/Context/Visitor+merge, ObjectWalk passthrough),
+  Q5b exclusion comment + repaired sink-hook invariant, Q5a direct
+  funnel pin. lib.rs/assembly.rs threaded (moved 3 assembly-step fns
+  to assembly.rs to hold the 365/80 gates). E9 ledger fix in.
+  Harvest + hosts workers LANDED (results filed, diffs in review);
+  resolve worker still running. Tree transiently red until resolve
+  lands (expected — lead integrates + verifies then).
+- **S3 CLEAR 2026-09-20 (lead integrated + verified firsthand):**
+  all 3 workers landed, lead reviewed every diff line, fixed 1 worker
+  bug-class item (R6 disposition — see below) + 1 five-arg warning.
+  - 13 GREEN: quarantine entry (passthrough-policy block, same shape
+    as DIAG-04) + new output/ goldens (2 located R9 lines, 4:17/5:17,
+    same message, zero dupes, stable codes — the contract). Spec +
+    gauges + goldens all pass; quarantine meta-test green (entry live).
+  - Drift: ZERO. Full `v atomic` 276/7 — 13 flips, 07–12/14 red for
+    the same spec reasons (channel leaks / undefined compiler side —
+    S4/S5 work). Only tree adds under tests/: 13/output/ + 1-line
+    quarantine. `c atomic` 415/0 zero warnings (394 + 21 S3 tests).
+  - q: clean on every S3-authored file. Grandfathered pre-existing
+    warnings in old engine files (extract/mod, fold/*, walk_fallback,
+    tests length) untouched by design — lead added zero new warnings
+    (lib.rs/assembly.rs refactor held 365/80; authored_key bundled to
+    4 args; nested Leaf/Fold + Name/Value details hold cog).
+  - R6 CORRECTION (S3-found ledger erratum, behavior-level): R6
+    (NonCanonicalNumeric String) DROPS (`return None`, verified S0–
+    HEAD) — the S0 "passthrough, no return None" read was wrong, so
+    no R4/R6 asymmetry exists. Fact records Rejected (lead fixed the
+    worker's Passthrough); ledger R6 row + §C note corrected in
+    passing. FLAG for S4 oracle: drop-with-key ⇒ R6 is userspace-
+    shaped like R4 (ATM-DIAG-09 witness by R4's logic) — S3 keeps the
+    compiler cell pending that ruling, facts stay honest either way.
+    (The O2 "R6–R11 paint" line needs the same asterisk for R6.)
+  - Q5b: EXCLUSION codified (spread.rs comment + repaired sink-hook
+    invariant) + integration pin
+    (test_spread_call_refusal_warns_without_sink — O4 message present,
+    folded entries lower, sinks empty; no station covers O4, probe in
+    /tmp/s3-q5b). Q5a: direct funnel pin
+    (mutated_binding_warns_without_sink_and_records_no_sink).
+  - F6 carried: resolve facts carry value spellings; policy's R7
+    render matches (code, value) with the S4 split comment;
+    bool_refusals test pins true/false distinctly. E9 ledger fix in.
+  - Handoff to S4: compile-long session carries analysis + producer
+    facts (dropped at end of compile); re-resolve echoes report no
+    facts (is_duplicate untouched); ObjectWalk/ExtractContext +
+    plain-warn sites stay direct (documented S5 compiler-block
+    migration); S4 owns session rendering + R6 verdict ruling.
+  - 47 paths (lead + 3 workers, disjoint): diagnostics/* (facts,
+    policy/×5 new, adapters×4, session, mod), extract (walk×4,
+    literal, object×2, fold×5, mod, harvest/mint, tests), resolve×8,
+    hosts×3, lib, assembly, builder (1 hunk), stylesheet×2 (plumbing),
+    recipes tests (2 lines), ledger (E9+R6), SPEC (13 flip), quarantine,
+    13/output/, this log. Untouched per orders: analysis/* (G1 crew),
+    hosts/entries.rs, E sites (byte-identical), static/global pushes,
+    css.ts, default pipe, peer files.
+
+### S4 proof
+
+_(placeholder — slice4 crew)_
 
 ## Architect rulings
 
@@ -1339,5 +1556,7 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-20 02:00 tick: S2 review oracle ~15 min, no O4, ping outstanding — holding (matches O3's silent-then-deliver profile); threshold: still silent at next tick → unstick. S2 landing closed with 2 more files (gate.rs, imports.rs — in oracle's diff). Peer active (seize 01:49), boundary holding. 12/13 terminal, no deadlock. Next: O4 verdict → commit S2 → Slice 3.
 - 2026-09-20 watch: O4 GAPS — G1 blocking (const/unary-folded false/null predict Exact where runtime queries nothing; true stays Exact). V1–V8 pass; F6 → S3 policy carry-forward (R7 true/false split); E9 ledger erratum → S3 owns; F5 → Obj-3 doom fodder filed. Parallelizing per O4 blessing (disjoint write-sets): fresh G1 rework crew + fresh S3 crew; commit order rework-first. Next: G1 verify → commit S2+G1 → S3 review → Slice 4.
 - 2026-09-20 02:20 tick: O5 G1 CLEAR (hole mapping complete, 5 pins, 275/8 + q re-verified) — S2 clears with G1 folded in. Committed S2+G1 checkpoint (ledger E9 excluded — S3's, landed 02:20; peer files excluded). S3 alive (design locked, building shared API first). 15/16 terminal, no deadlock. Next: S3 landing → oracle review → Slice 4.
+- 2026-09-20 02:40 tick: S3 BUILDING all 4 families (extract funnel + call sites, harvest, resolve, hosts→typed fact; policy.rs→policy/ split; adapters; interim notes flowing). Peer files untouched. 15/16 terminal, no deadlock. Next: S3 landing → oracle review → Slice 4.
+- 2026-09-20 watch: S3 CLEAR on oracle O6 word (13 green incl. x2 regression closed; full suite 276/7; cargo 415/0; q clean; funnel + 3 families migrated, ATM-E-* byte-unchanged, Q5b exclusion pinned, F6/E9 in; F-S3b R6 ruling queued for S4 oracle; F-G1b + BigInt-Null carried). Committed S3 checkpoint (peer files excluded). Dispatched single Slice-4 crew (final-plan proof, 08/09/10). Next: oracle review of S4 landing → Slice 5.
 
 ## Useful

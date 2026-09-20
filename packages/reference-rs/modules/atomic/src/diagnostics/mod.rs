@@ -20,7 +20,9 @@ mod site;
 pub use channels::DiagnosticChannels;
 pub use codes::DiagnosticCode;
 pub use facts::{
-    DiagnosticFact, DiagnosticSink, DynamicShape, ExtractOutcome, OwnedLookupKey, ResolveOutcome,
+    DeclarationDetail, DiagnosticFact, DiagnosticSink, DynamicShape, ExtractDetail, ExtractOutcome,
+    FoldDetail, LeafDetail, NameDetail, OwnedLookupKey, ResolveDetail, ResolveOutcome, TokenDetail,
+    ValueDetail,
 };
 pub use policy::{Audience, Policy};
 pub use render::render;

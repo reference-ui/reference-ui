@@ -9,7 +9,7 @@ use oxc_span::Span;
 use smallvec::SmallVec;
 
 use super::{leaf::mutated_warn, util::unwrap_wrapper_target, DynamicRefusal, ExpressionWalk};
-use crate::diagnostics::DiagnosticCode;
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, LeafDetail};
 
 /// Fold one call: a `token()` value pushes its want, a refused shape warns
 /// against the surface, and any other call tries the pure-helper fence.
@@ -46,11 +46,12 @@ fn handle_pure_call(
     let fold = crate::extract::fold::fold_pure_call(call, ctx.scopes);
     if let Some(value) = fold.value {
         for refusal in &fold.refusals {
-            let prop = ctx.prop;
             ctx.warn_dynamic(DynamicRefusal {
                 span: refusal.span(),
                 code: DiagnosticCode::DynamicExpression,
-                message: refusal.message_for_value(prop),
+                detail: ExtractDetail::Leaf(LeafDetail::CallArgument {
+                    detail: refusal.detail().into(),
+                }),
                 when,
             });
         }
@@ -83,11 +84,10 @@ pub(crate) fn warn_dynamic_expression(
     span: Span,
     when: &SmallVec<[Box<str>; 2]>,
 ) {
-    let prop = ctx.prop;
     ctx.warn_dynamic(DynamicRefusal {
         span,
         code: DiagnosticCode::DynamicExpression,
-        message: format!("Dynamic non-literal expression encountered for prop '{prop}'"),
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
         when,
     });
 }

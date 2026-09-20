@@ -44,14 +44,6 @@ pub enum UnaryRefusal {
 }
 
 impl UnaryRefusal {
-    /// The diagnostic text for a refusal at one style prop.
-    pub fn message(&self, prop: &str) -> String {
-        format!(
-            "Dynamic unary expression encountered for prop '{prop}' ({})",
-            self.detail()
-        )
-    }
-
     /// Short reason text, reused inside template-part diagnostics.
     pub fn detail(&self) -> String {
         match self {

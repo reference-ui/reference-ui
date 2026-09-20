@@ -490,10 +490,57 @@ fn test_bare_extract_collects_file_mutations() {
         diagnostics: &mut diagnostics,
         authored: &mut authored,
         sinks: &mut Vec::new(),
+        session: &mut crate::diagnostics::DiagnosticsSession::new(),
     };
     crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks);
 
     assert!(wants.is_empty());
     assert_eq!(diagnostics.len(), 1);
     assert!(diagnostics[0].message.contains("deleted at"));
+}
+
+#[test]
+fn test_spread_call_refusal_warns_without_sink() {
+    // Slice 3 Q5b exclusion pin: a folded-object spread warns its refused
+    // call fragments without recording a harvest sink — the fragment is
+    // interior to the call's arguments with no prop in scope, so it is not
+    // a mintable value position. The folded entries still lower.
+    use oxc_allocator::Allocator;
+    use oxc_parser::Parser;
+    use oxc_span::SourceType;
+
+    let code = r#"import { css } from '@reference-ui/react';
+        const pick = (o) => o;
+        export const a = css({ ...pick({ color: 'red', bg: dyn }) });"#;
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(std::path::Path::new("t.ts"))
+        .unwrap_or_default()
+        .with_typescript(true);
+    let parsed = Parser::new(&allocator, code, source_type).parse();
+    assert!(!parsed.panicked);
+
+    let system = crate::BaseSystem::lib_fixture().clone();
+    let mut wants = Vec::new();
+    let mut recipes = Vec::new();
+    let mut diagnostics = Vec::new();
+    let mut authored = Vec::new();
+    let mut sinks = Vec::new();
+    let sinks_to = crate::extract::ExtractSinks {
+        wants: &mut wants,
+        recipes: &mut recipes,
+        diagnostics: &mut diagnostics,
+        authored: &mut authored,
+        sinks: &mut sinks,
+        session: &mut crate::diagnostics::DiagnosticsSession::new(),
+    };
+    crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks_to);
+
+    assert!(wants.iter().any(|w| &*w.prop == "color"));
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(
+        diagnostics[0].code,
+        crate::diagnostics::DiagnosticCode::DynamicExpression
+    );
+    assert!(diagnostics[0].message.contains("keeping sibling properties"));
+    assert!(sinks.is_empty(), "spread refusals record no sink");
 }

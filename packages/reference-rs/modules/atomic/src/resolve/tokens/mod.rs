@@ -4,13 +4,14 @@
 //! base-system. Unknown dotted paths pass through as raw CSS and emit a warning.
 //! Explicit `{path}` references that name no token are errors with source locations.
 //! Heuristic category lists are gone; lookup is the fixture.
+//! Warn-and-paint refusals report typed token facts through the session.
 
 use std::borrow::Cow;
 
 use base_system::{BaseSystem, TokenEntry};
 
-use crate::diagnostics::DiagnosticCode;
-use crate::resolve::ResolveSession;
+use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
+use crate::resolve::{want_key, ResolveSession};
 
 mod interpolate;
 mod scale;
@@ -75,11 +76,20 @@ fn resolve_pathed_value<'a>(
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
     if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
-        let diagnostic = session.location.warning(
-            DiagnosticCode::MalformedOpacity,
-            format!("malformed opacity modifier `{unbraced}`"),
+        let key = want_key(
+            session,
+            prop,
+            serde_json::Value::String(raw_val.to_string()),
         );
-        session.diagnostics.push(diagnostic);
+        session.emit(
+            key,
+            ResolveOutcome::Passthrough {
+                code: DiagnosticCode::MalformedOpacity,
+                detail: ResolveDetail::Token(TokenDetail::MalformedOpacity {
+                    text: unbraced.into(),
+                }),
+            },
+        );
         return Some(Cow::Borrowed(raw_val));
     }
     if let Some(entry) = lookup_entry(prop, path, session.system) {
@@ -95,7 +105,7 @@ fn interpolate_or_fallback<'a>(
     session: &mut ResolveSession<'_>,
 ) -> Option<Cow<'a, str>> {
     let unbraced = strip_braces(raw_val.trim());
-    match expand_brace_segments(unbraced, session) {
+    match expand_brace_segments(unbraced, prop, session) {
         BraceExpansion::Expanded(expanded) => Some(Cow::Owned(expanded)),
         BraceExpansion::Missing => None,
         BraceExpansion::Absent => unbraced_fallback(prop, raw_val, session),
@@ -136,11 +146,20 @@ fn is_whole_css_value(trimmed: &str) -> bool {
 /// retired, since the author typed a scale the theme does not have.
 fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
     if looks_like_token_path(unbraced) {
-        let diagnostic = session.location.warning(
-            DiagnosticCode::UnknownTokenPath,
-            format!("unknown token path `{unbraced}`"),
+        let key = want_key(
+            session,
+            prop,
+            serde_json::Value::String(unbraced.to_string()),
         );
-        session.diagnostics.push(diagnostic);
+        session.emit(
+            key,
+            ResolveOutcome::Passthrough {
+                code: DiagnosticCode::UnknownTokenPath,
+                detail: ResolveDetail::Token(TokenDetail::UnknownTokenPath {
+                    path: unbraced.into(),
+                }),
+            },
+        );
         return;
     }
     warn_unknown_color(prop, unbraced, session);
@@ -156,11 +175,20 @@ fn warn_unknown_color(prop: &str, unbraced: &str, session: &mut ResolveSession<'
     if path.is_empty() || canon::classify_css_value(path).is_some() {
         return;
     }
-    let diagnostic = session.location.warning(
-        DiagnosticCode::UnknownColor,
-        format!("`{unbraced}` is neither a color token nor a CSS color"),
+    let key = want_key(
+        session,
+        prop,
+        serde_json::Value::String(unbraced.to_string()),
     );
-    session.diagnostics.push(diagnostic);
+    session.emit(
+        key,
+        ResolveOutcome::Passthrough {
+            code: DiagnosticCode::UnknownColor,
+            detail: ResolveDetail::Token(TokenDetail::UnknownColor {
+                text: unbraced.into(),
+            }),
+        },
+    );
 }
 
 fn is_braced(trimmed: &str) -> bool {

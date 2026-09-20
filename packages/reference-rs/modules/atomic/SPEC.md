@@ -24,9 +24,9 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
 | Total contract cases | 222 |
 | Named `[x]` proven | 212 |
-| Remaining `[ ]` | 10 (`ATM-DIAG-07`–`ATM-DIAG-14`, `ATM-GHOST-04`, `ATM-PERF-01`) |
+| Remaining `[ ]` | 9 (`ATM-DIAG-07`–`ATM-DIAG-12`, `ATM-DIAG-14`, `ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 356 (internal; not ticks) |
-| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 8 red Error Correct shells) |
+| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 7 red Error Correct shells) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -80,7 +80,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 7 | 7 | 0 |
-| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 6 | 8 |
+| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 7 | 7 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
 | `ORDER` | Cascade rule ordering, determinism, & idempotence (P0) | 6 | 6 | 0 |
 | `VALID` | Emitted CSS must parse and mean something (P0) | 3 | 3 | 0 |
@@ -88,7 +88,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **198** | **186** | **12** |
+| **Total** | | **198** | **187** | **11** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -842,7 +842,7 @@ compiler contract.
 - [ ] `ATM-DIAG-12` `[reference]` `[seam]` — **[Error Correct S2]**
   **Imported `css()` and traced JSX must produce the same expected key for equivalent declarations; native `style` and `globalCss` must produce none.**
   Station `ATM-DIAG-12`. Equivalent declarations on the two runtime style-query surfaces predict byte-identical expected keys; surfaces that do not use the runtime style-plan lookup (`style`, `globalCss`, static CSS config, recipe tables) emit no expected-key facts. Existing fatal diagnostics on those surfaces continue through their current paths. Greens in Slice 2.
-- [ ] `ATM-DIAG-13` `[reference]` `[seam]` — **[Error Correct S3]**
+- [x] `ATM-DIAG-13` `[reference]` `[seam]` — **[Error Correct S3]**
   **Extract, harvest, resolve, and host facts must retain one site identity, deterministic ordering, stable codes, and no duplicate final line.**
   Station `ATM-DIAG-13`. One authored site yields one site identity across phases; final output is deterministically ordered with stable `ATM-*` codes and no duplicate lines. Regression net for the Objective 1 carry-forward (hover usages emitting exactly 2 file-less warnings each) and the Obj-1 ×2 double-emit formatting bug. Zero non-diagnostic artifact drift on existing station goldens. Greens in Slice 3.
 - [ ] `ATM-DIAG-14` `[reference]` `[seam]` — **[Error Correct S2]**

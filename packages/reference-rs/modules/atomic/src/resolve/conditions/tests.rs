@@ -150,6 +150,8 @@ fn unknown_condition_drops_atom_with_diagnostic() {
         system: &system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let atoms = resolve_want_with(&want, &mut session);
     assert!(atoms.is_empty());
@@ -168,6 +170,8 @@ fn unknown_condition_keeps_sibling_and_does_not_wrap_nope() {
         system: &system,
         diagnostics: &mut diagnostics,
         location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
     };
     let mut atoms = resolve_want_with(&nope, &mut session);
     atoms.extend(resolve_want_with(&sibling, &mut session));

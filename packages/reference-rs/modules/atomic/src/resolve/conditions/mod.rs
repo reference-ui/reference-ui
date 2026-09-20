@@ -9,6 +9,11 @@ pub mod pseudoprops;
 pub mod pseudoselectors;
 
 use crate::atom::When;
+use crate::diagnostics::adapters::resolve::ResolveReport;
+use crate::diagnostics::{
+    DeclarationDetail, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSink,
+    DiagnosticsSession, Policy, ResolveDetail, ResolveOutcome,
+};
 use base_system::BaseSystem;
 
 /// Result of parsing one authored condition string.
@@ -47,6 +52,7 @@ pub fn check_container_root(
     system: &BaseSystem,
     atom_set: &crate::atom::AtomSet,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+    sink: Option<&mut DiagnosticsSession>,
 ) {
     let has_cq = atom_set.iter().any(|atom| {
         atom.conditions
@@ -54,10 +60,19 @@ pub fn check_container_root(
             .any(|w| matches!(w.wrap(), crate::atom::WhenKind::Container(_)))
     });
     if has_cq && !system.global_css.is_empty() && !has_container_root(system) {
-        diagnostics.push(crate::diagnostics::Diagnostic::warning(
-            crate::diagnostics::DiagnosticCode::MissingContainerRoot,
-            "@container condition emitted but no container root (container-type) is defined in globalCss",
-        ));
+        let report = ResolveReport {
+            location: DiagnosticLocation::default(),
+            key: None,
+            outcome: ResolveOutcome::Advisory {
+                code: DiagnosticCode::MissingContainerRoot,
+                detail: ResolveDetail::Declaration(DeclarationDetail::ContainerRoot),
+            },
+        };
+        let diagnostic = Policy::render_resolve(&report);
+        if let Some(sink) = sink {
+            sink.report(DiagnosticFact::from(report));
+        }
+        diagnostics.push(diagnostic);
     }
 }
 

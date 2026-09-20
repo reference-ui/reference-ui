@@ -261,6 +261,8 @@ mod tests {
             system,
             diagnostics: &mut diagnostics,
             location: DiagnosticLocation::default(),
+            sink: None,
+            want: None,
         };
         let recipe = Recipe {
             class_name: "card".to_string(),
@@ -292,6 +294,8 @@ mod tests {
             system,
             diagnostics: &mut diagnostics,
             location: DiagnosticLocation::default(),
+            sink: None,
+            want: None,
         };
         let mut axis = IndexMap::new();
         axis.insert(

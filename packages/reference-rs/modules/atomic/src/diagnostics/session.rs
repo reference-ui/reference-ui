@@ -29,6 +29,12 @@ impl DiagnosticsSession {
     pub fn take_facts(&mut self) -> Vec<DiagnosticFact> {
         std::mem::take(&mut self.facts)
     }
+
+    /// Append facts reported into a child session (per-file visitors merge
+    /// back into the compile session in source order).
+    pub fn extend_facts(&mut self, facts: Vec<DiagnosticFact>) {
+        self.facts.extend(facts);
+    }
 }
 
 impl DiagnosticSink for DiagnosticsSession {
@@ -63,7 +69,7 @@ mod tests {
             site: site(),
             shape: DynamicShape::Spread,
         });
-        session.report(DiagnosticFact::ExistingError(Diagnostic::error(
+        session.report(DiagnosticFact::ExistingDiagnostic(Diagnostic::error(
             DiagnosticCode::ParseError,
             "boom",
         )));

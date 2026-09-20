@@ -20,7 +20,10 @@ use base_system::BaseSystem;
 use super::literals::{HarvestPool, KIND_ORDER};
 use super::sinks::Sink;
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::adapters::harvest::HarvestReport;
+use crate::diagnostics::{
+    Diagnostic, DiagnosticFact, DiagnosticLocation, DiagnosticSink, DiagnosticsSession, Policy,
+};
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 use crate::runtime::AuthoredDeclaration;
 use twins::{twin_key_for, TwinKey};
@@ -38,6 +41,7 @@ pub struct MintCtx<'a> {
     pub wants: &'a mut Vec<Want>,
     pub authored: &'a mut Vec<AuthoredDeclaration>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
+    pub sink: &'a mut DiagnosticsSession,
 }
 
 /// The mutable mint state threaded through sinks.
@@ -62,6 +66,7 @@ pub fn mint(ctx: MintCtx<'_>) {
         wants,
         authored,
         diagnostics,
+        sink: session,
     } = ctx;
     let mut state = MintState {
         seen: wants.iter().map(twin_key_for).collect(),
@@ -73,7 +78,19 @@ pub fn mint(ctx: MintCtx<'_>) {
             continue;
         }
         let minted = mint_sink(pool, sink, &mut state);
-        diagnostics.push(harvest_info(sink, minted));
+        let report = HarvestReport {
+            location: DiagnosticLocation {
+                file: Some(sink.file.to_string()),
+                line: sink.line,
+                column: sink.column,
+            },
+            prop: sink.prop.clone(),
+            when: sink.when.iter().cloned().collect(),
+            minted,
+        };
+        let diagnostic = Policy::render_harvest(&report);
+        session.report(DiagnosticFact::from(report));
+        diagnostics.push(diagnostic);
     }
 }
 
@@ -139,26 +156,6 @@ fn when_lowers(when: &[Box<str>], system: &BaseSystem) -> bool {
         .all(|entry| !matches!(lower_when(entry, system), LoweredWhen::Unknown))
 }
 
-/// One info per sink: the prop, its `when`, and the minted count.
-/// `color under [_hover]: 9 harvested values minted`.
-fn harvest_info(sink: &Sink, minted: usize) -> Diagnostic {
-    let when = sink
-        .when
-        .iter()
-        .map(AsRef::as_ref)
-        .collect::<Vec<&str>>()
-        .join(", ");
-    let noun = if minted == 1 { "value" } else { "values" };
-    Diagnostic::info(
-        DiagnosticCode::HarvestSink,
-        format!(
-            "{} under [{}]: {} harvested {} minted",
-            sink.prop, when, minted, noun
-        ),
-    )
-    .with_location(sink.file.as_ref(), sink.line, sink.column)
-}
-
 #[cfg(test)]
 mod tests {
     use smallvec::SmallVec;
@@ -222,5 +219,36 @@ mod tests {
         let color = sink_for("color");
         let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
         assert_eq!(mint_count(&["red"], &color, &mut wants), 0);
+    }
+
+    #[test]
+    fn mint_reports_fact_and_legacy_info() {
+        let mut pool = HarvestPool::default();
+        pool.insert("red");
+        let sink = sink_for("color");
+        let system = BaseSystem::default();
+        let mut wants = Vec::new();
+        let mut authored = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut session = DiagnosticsSession::new();
+        mint(MintCtx {
+            pool: &pool,
+            sinks: std::slice::from_ref(&sink),
+            system: &system,
+            wants: &mut wants,
+            authored: &mut authored,
+            diagnostics: &mut diagnostics,
+            sink: &mut session,
+        });
+        assert!(matches!(
+            session.facts(),
+            [DiagnosticFact::HarvestOutcome { minted: 1, .. }]
+        ));
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics[0].message,
+            "color under []: 1 harvested value minted"
+        );
+        assert_eq!(diagnostics[0].file.as_deref(), Some("t.ts"));
     }
 }

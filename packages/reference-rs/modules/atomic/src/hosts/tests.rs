@@ -45,3 +45,19 @@ fn test_empty_hosts_match_legacy_fields() {
     assert_eq!(empty.wants, legacy.wants);
     assert_eq!(empty.diagnostics, legacy.diagnostics);
 }
+
+#[test]
+fn test_trace_skip_converts_to_host_report() {
+    let located = super::diagnostics::convert_trace_diagnostic(styletrace::TraceDiagnostic {
+        file: Some(std::path::PathBuf::from("entry.ts")),
+        message: "trace skipped: unparsable".to_string(),
+    });
+    assert_eq!(located.file.as_deref(), Some("entry.ts"));
+    assert_eq!(located.message, "trace skipped: unparsable");
+    let bare = super::diagnostics::convert_trace_diagnostic(styletrace::TraceDiagnostic {
+        file: None,
+        message: "trace skipped".to_string(),
+    });
+    assert_eq!(bare.file, None);
+    assert_eq!(bare.message, "trace skipped");
+}
