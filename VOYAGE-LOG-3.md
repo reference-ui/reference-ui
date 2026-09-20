@@ -33,6 +33,10 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 07:22 tick: W3g COMMITTED (negation-only VERIFIED; SPEC excluded — shared with (h)+(i), rides last with all-verified hunks). Chain (h) reviewing; fortify (i) building. Peer active (2 new mission docs: jettison, reaper — hands off). Cycles banked: 7/6. Next: chain (h) verdict → commit (h); (i) landing → chain → commit + SPEC → wave 4.
 - 2026-09-20 watch: W3h COMMITTED (4c776b7c2 — negated-brace calc-wrap VERIFIED; SPEC still held). Fortify (i) building (resolve fall-through + canon set in tree). Cycles banked: 8/6. Next: (i) landing → chain → commit + SPEC → wave 4.
 - 2026-09-20 07:40 tick: chain (i) reviewing (~15 min, only live crew, no verdict — normal length for webref + full-suite + diff arc). Tree stable (25 paths). No deadlock, no pings sent. Next: chain (i) verdict → commit + SPEC → wave 4.
+- 2026-09-20 watch: WAVE 3 COMPLETE — 3/3 breaks fortified + verified + committed (W3g negation-only 305cf4f66; W3h negated-brace 4c776b7c2; W3i unrealizable-refusal 5075ca94f). Cycles banked: 9/6. Wave 4 hunting: 3 finders × 3 theories — (j) tasty emit, (k) styletrace pipeline/JSX, (l) diagnostics proof/adapters. Tree holds peer files only. Next: wave-4 verdicts → arcs → commits → wave 5.
+- 2026-09-20 watch: wave 4: (j) BREAK-FOUND (tasty merge drops alpha member) → architect dispatched; (k) BREAK-FOUND (styletrace pipeline misses object form) → architect dispatched; (l) diagnostics proof/adapters still hunting. Cycles banked: 9/6. Next: rulings → fortify → chains → commits → wave 5.
+- 2026-09-20 watch: wave 4: (j) IN-BOUNDS, resolve-layer MERGE M1–M3 → fortify on pre-resolution fold + resolve.rs pins + TST-INT-04; (k) IN-BOUNDS, shared-predicate recursion → fortify on util.rs + tracing.rs + direct_style_pipeline; (l) diagnostics proof/adapters still hunting. Cycles banked: 9/6. Next: landings → chains → commits → wave 5.
+- 2026-09-20 watch: wave 4: (j) fortify building (MERGE fold + TST-INT-04); (k) landed → chain reviewing; (l) BREAK-FOUND (custom-prop object silent miss) → architect dispatched. Cycles banked: 9/6. Next: verdicts → commits → wave 5.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 - 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
@@ -2231,6 +2235,270 @@ Captain: commit the 19 (i) paths + finder report + log sections
 per the hunk-split plan with (h)'s SPEC row; keep the 4 peer doc
 paths out. `dist/` is untracked build output, nothing to commit.
 
+### Wave 4, find (k) — architecture ruling
+
+Find: styletrace pipeline detector traces the bare-arg control
+(`IdentCard`, `css(color)`) but misses both object-arg twins
+(`ObjCard`, `css({ color })`; `MemberObjCard`,
+`css({ color: props.color })`) — identical boundary
+(`CardProps = StyleProps & { title?: string }`), identical sink
+(`css()` into `className` on a lowercase host, so no JSX edge can
+rescue the verdict). Finder report:
+`.agents/doom/logs/2026-09-20-styletrace-pipeline-object-arg-miss.md`;
+repro `/tmp/doom-wave4-styletrace-pipeline` (replayed by architect
+read-only: `cargo test --offline` → 1 red, traced `["IdentCard"]`,
+`ObjCard` + `MemberObjCard` missing — failure mode confirmed).
+Root cause per report: `expression_reads_style_signal`
+(`parser/pipeline/util.rs:81-119`) recognizes bare identifiers,
+member reads, and transparent wrappers only — object/array
+literals fall into the `_ => false` arm, so the `walk_call` arg
+test (`parser/pipeline/expr.rs:42-48`) never fires on them.
+
+1. **IN-BOUNDS.** Complete static TSX compile input on the pinned
+   `css()` surface, named imports; touches nothing on the
+   will-never-work list (no interpolation, no runtime-only values,
+   no external config, no spread-staying-dynamic, no
+   namespace/default value imports). Falls squarely under the
+   skill's misdiagnosis clause: same boundary, same flow,
+   different verdict — an inconsistent refusal, not a designed
+   one. Corroborated inside the codebase: the detector walks INTO
+   object literals for nested calls (`walk_object`,
+   `expr.rs:84-95`) yet refuses to see a signal sitting directly
+   in one. Severity, honestly user-facing and worse than the
+   usual miss: the missed shape (object literal) is the DOMINANT
+   `css()` authoring form while the traced shape (bare string
+   into a style-object call) is the odd one — atomic gates JSX
+   extraction on the traced host set (ATM-SITE-08), so
+   `<ObjCard color="red" />` extracts nothing: silent missing
+   paint on mainstream code.
+
+2. **FIX DIRECTION (binding): extend pipeline detection to the
+   object form — do NOT narrow the README.** Weighed:
+   (a) README authority: the violated sentences are the module's
+   key rule (:84-86, "whether style props exposed at that
+   component boundary actually flow into the Reference
+   primitive/style pipeline") plus :76 ("direct style-pipeline
+   usage such as `splitCssProps`, `box`, and `css`"). Narrowing
+   to "bare-identifier args only" would demote the central
+   promise to a syntactic accident and bless silent missing paint
+   on the mainstream form.
+   (b) Precision/recall: recurse the shared signal predicate into
+   object property values (+ spread args) and array elements (+
+   spreads). Recall is restored while precision holds —
+   recursion only follows values already recognized as signals
+   (boundary-bound identifiers, member reads, transparent
+   wrappers), still gated on the StyleProps boundary check and
+   the pipeline sink check; `css({ color: "red" })` with no
+   signal inside still traces nothing. Precision guard (inside
+   the extension, not instead of it): object KEYS never count as
+   signals (a key is the property being set, not flow from the
+   boundary); no computed-key chasing; fortify stops at
+   rebinding/shadowing rather than chasing it.
+   (c) Placement inside the fix: extend the SHARED predicate
+   (`expression_reads_style_signal`, `util.rs`) so `walk_call`
+   (`expr.rs:42-48`), `call_has_style_signal_arg`, and
+   `record_pipeline_binding` all gain the recursion consistently
+   — a `walk_call`-only patch is forbidden (it would leave the
+   className-binding/record paths disagreeing with the sink
+   test, the same multi-path disagreement class as wave-1(a)).
+   Whether object recursion also belongs in
+   `expression_directly_derives_from_style_signal` is left to
+   fortify + chain, with guidance: keep the two predicates'
+   contract split intact — decide, write it down, pin it.
+   (d) Blast radius is contained and additive: the arg test only
+   gains true verdicts, sink checks are unchanged, so
+   previously-traced hosts stay traced by construction;
+   newly-traced hosts are the intended recall gain. Fortify runs
+   the full styletrace suites (cargo + vitest) plus the
+   downstream ripple check (atomic depends on styletrace: cargo
+   atomic + vitest atomic, per the wave-2(e) precedent) and
+   attests any golden movement per pair — traced-to-silent flips
+   are regressions, silent-to-traced flips on object-arg shapes
+   are intended. SCOPE: object-literal args (shorthand +
+   member-value — the finder's two red twins) and array-literal
+   args if they share the one-line recursion (same
+   `_ => false` root cause); deeper indirection is out of this
+   fortify — future doom fodder. Explicitly OUT: the two unspent
+   research-note observations (zero-arg `splitCssProps()` in an
+   array pattern panicking the tracer at `util.rs:76`; pipeline
+   use inside a nested `function` declaration missed while the
+   arrow twin traces) — seen in research, no red test written,
+   per Law 2 not breaks; carry as doom fodder, not fortify
+   scope.
+
+3. **TEST PLACEMENT: Rust unit primary, existing case secondary —
+   no new case, no new station.** Primary pin at the Rust
+   semantic level per the module's design rules ("prefer Rust
+   tests for semantic coverage"):
+   `modules/styletrace/src/tests/tracing.rs` — add a
+   pipeline-object-arg test mirroring the finder's twins
+   (`IdentCard` control + `ObjCard` + `MemberObjCard`) via
+   `workspace_scratch_dir`, lower than the finder's /tmp cargo
+   probe, no native binding needed. Secondary: extend the
+   EXISTING `tests/cases/direct_style_pipeline/` (the family
+   that owns pipeline shapes) input with an object-arg `css()`
+   component + trace assertion — the station's `Panel` shape
+   stays, the expected list grows additively. No README
+   amendment, no lib touch.
+
+### Wave 4, find (k) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: extended the SHARED
+predicate (`expression_reads_style_signal`, `util.rs`) to the object
+form; no README amendment, no `walk_call`-only patch, no new
+case/station, no lib touch, finder report untouched.
+
+**Fix (shared predicate, `parser/pipeline/util.rs`).**
+`expression_reads_style_signal` gains two arms — `ObjectExpression`
+(recurse property VALUES + spread args) and `ArrayExpression`
+(recurse elements + spreads) — via two small helpers
+(`object_reads_style_signal`, `array_reads_style_signal`) so the
+function stays near its baseline complexity. Precision guards as
+ruled: object KEYS never count (a key is the property being set),
+no computed-key chasing, functions in values hit `_ => false` so
+rebinding/shadowing stops the walk. Because the extension lives in
+the shared predicate, `walk_call` (`expr.rs:42-48`),
+`call_has_style_signal_arg`, and `record_pipeline_binding` gain it
+consistently by construction — verified by caller audit (those three
+are the only consumers; `derives` delegates to `reads` only for its
+listed alias variants).
+
+**Predicate-split decision (written down + pinned): object recursion
+does NOT belong in `expression_directly_derives_from_style_signal`.**
+Contract split kept intact: `reads` = signal flow through an
+expression into a sink (use-site flow, now structural);
+`derives` = direct aliasing that mints a new style signal
+(`const x = <init>`). An object literal is a container, not an
+alias — extending `derives` would bless `const obj = { color };
+css(obj)`, which is the deeper indirection the ruling puts OUT of
+scope. `derives` is untouched (object/array arms stay in its
+`_ => false`); the decision is documented in a code comment above
+`derives` and pinned by the `IndirectCard` negative control below.
+
+**Pins.** (1) PRIMARY `src/tests/tracing.rs::
+traces_pipeline_object_and_array_literal_args` via
+`workspace_scratch_dir`, mirroring the finder's twins:
+`IdentCard` control + `ObjCard` + `MemberObjCard`, plus `ArrCard`
+(`css([color])`, array arm) and `IndirectCard`
+(`const obj = { color }; css(obj)`) asserting ABSENT — expected
+`["ArrCard","IdentCard","MemberObjCard","ObjCard"]`, exact equality
+so the silence is pinned too. (2) SECONDARY: existing
+`tests/cases/direct_style_pipeline/` extended — `ObjPanel`
+(`css({ color })` on a `StyleProps` boundary) added to input,
+`Panel` shape untouched, spec `['Panel']` → `['ObjPanel','Panel']`,
+golden `components.json` additively `["Panel"]` →
+`["ObjPanel","Panel"]` (scoped `-t` regen, hand-compacted to the
+sibling golden dialect; suite re-greened after).
+
+**Evidence.** Finder repro `/tmp/doom-wave4-styletrace-pipeline`
+replayed read-only: red → green (`cargo test --offline`, 1 passed).
+Suites via `pnpm agentrs`: cargo styletrace 35/35 (incl. new pin,
+also green in isolation `-t`), vitest styletrace all pass (28
+tests, 2 files); drift census pre-regen showed exactly the one
+intended golden move (spec passed on the fresh binding, golden
+compare failed — no other case drifted). Ripple: cargo atomic
+464/464, vitest atomic all green — zero downstream golden
+movement, zero traced-to-silent flips. Quality: `agentrs q` on
+touched files 0 violations, 6 warnings — identical warning count
+to the HEAD baseline (same functions; the two new arms add +2
+cyclomatic to an already-warned matcher, held down via helpers).
+Stale-binary note for chain: the first vitest run missed `ObjPanel`
+because `dist/native/darwin-x64` (07:38) predated the fix (07:50);
+`pnpm agentrs v` does not rebuild — `pnpm agentrs build` first,
+then green. OUT as ruled: zero-arg `splitCssProps` panic and
+nested-`function` pipeline miss (doom fodder, no red test).
+
+**Files (mine only).**
+`modules/styletrace/src/analysis/parser/pipeline/util.rs` (shared
+predicate + 2 helpers + derives comment),
+`modules/styletrace/src/tests/tracing.rs` (primary pin),
+`tests/cases/direct_style_pipeline/` input + spec + golden
+(secondary pin). Untouched as ordered: README, lib, finder report,
+sibling files (`docs/*`, other doom logs).
+
+### Wave 4, find (k) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (k) files only —
+sibling (j) tasty files, mission-docs peers (`docs/ATOMIC.md`,
+`docs/missions/README.md` jettison/reaper rows), and other doom logs
+never touched or adjudicated (write-set audited via `git status` paths:
+exactly the 5 styletrace paths from the landing — `util.rs`,
+`tracing.rs`, `direct_style_pipeline` input + spec + golden).
+
+**1. Finder repro** (`/tmp/doom-wave4-styletrace-pipeline`, unmodified,
+`cargo test --offline`): GREEN post-fix, 1 passed. Assertion read
+firsthand — non-vacuous exact equality
+`["IdentCard","MemberObjCard","ObjCard"]`, so both red twins now trace
+alongside the control.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c styletrace`
+35/35 green; new pin green in isolation (1 passed / 34 filtered);
+`pnpm agentrs v styletrace` 28/28 (2 files; `direct_style_pipeline`
+1 passed / 27 skipped in isolation) on the fresh 07:55 darwin-x64
+binding, which postdates the fix — no stale-binary shadow. Ripple:
+`pnpm agentrs c atomic` 464/464, `pnpm agentrs v atomic` 286/286.
+Golden movement attested per pair: exactly ONE golden moved in the
+tree — `direct_style_pipeline/output/components.json`
+`["Panel"]` → `["ObjPanel","Panel"]`, a silent-to-traced flip on the
+object-arg shape = intended. Zero traced-to-silent flips: the case
+runner diffs committed `components.json` for every case
+(`cases.test.ts` + `helpers.ts`), all 17 green, and `git status`
+shows no other golden touched. Quality: `agentrs q` on both touched
+`.rs` files — 0 violations, 6 warnings, and the HEAD-baseline worktree
+run shows the identical 6 warnings / 0 violations, so the count is
+unchanged (same flagged matchers; helpers held the added arms down).
+
+**3. Fail-without-fix / pass-with-fix, firsthand.** HEAD worktree
+(5075ca94f) + new `tracing.rs` only (fix absent): pin FAILS with
+`left: ["IdentCard"]`, `right: ["ArrCard","IdentCard","MemberObjCard",
+"ObjCard"]` — the exact finder failure mode, plus ArrCard proving the
+array arm is also recall gain. Repro copy re-pointed at the worktree
+(`/tmp/chaink-repro`, worktree since removed per precedent):
+red, `left: ["IdentCard"]`. In-tree (fix): repro green, pin green,
+case green. Secondary-pin equivalence stated: ObjPanel's input shape
+(`css({ color })` on a StyleProps boundary) is identical to the
+ObjCard twin proven red-old/green-new above through the same shared
+predicate, and the case asserts exact `['ObjPanel','Panel']` plus the
+golden diff — a stale-binding re-probe would re-prove the same arm.
+Worktree removed after the run; `/tmp` probes kept.
+
+**4. Diff review (line-by-line, (k) write-set).** `util.rs`: two new
+arms on the SHARED `expression_reads_style_signal` — Object recurses
+property VALUES + spread args, Array recurses elements + spreads, via
+two helpers. Caller audit by grep: the only consumers are `walk_call`
+(`expr.rs:42-48`), `call_has_style_signal_arg`, and
+`record_pipeline_binding` (2 sites) — all gain the recursion
+consistently; no `walk_call`-only patch. Precision guards verified in
+code AND by probe (`/tmp/chaink-guards`, green firsthand):
+`css({color:"red"})` silent (LitCard absent); computed keys never
+chased (`css({[color]:"red"})` silent); functions in values hit
+`_ => false` so rebinding stops the walk (`() => color` silent);
+spread-signal (`css({...{color}})`) and nested-object
+(`css({outer:{color}})`) trace. `derives` decision (object recursion
+does NOT belong — container, not alias; `css(obj)` stays untraced):
+SOUND as chain — extending it would bless the deeper indirection the
+ruling puts OUT of scope; it is written in the code comment above
+`derives` and pinned by the IndirectCard negative control inside an
+exact-equality assert (absent on old code too, as required).
+`tracing.rs`: purely additive (+21, one `#[test]`, existing helpers
+only) — no test touched, none weakened. `direct_style_pipeline`:
+input gains only the import + ObjPanel (Panel untouched), spec
+strengthened `['Panel']` → `['ObjPanel','Panel']`, golden additive.
+Untouched as ordered: styletrace README (key-rule sentences verified
+in place, :76 + :84-86), `util.rs:76` `.expect` (OUT-scope panic
+still present), nested-`function` walker (`expr.rs` zero diff), lib,
+core, finder report, sibling files. No blanket goldens.
+
+**5. Contract holds.** The violated README key rule — "whether style
+props exposed at that component boundary actually flow into the
+Reference primitive/style pipeline" (:84-86) over "direct
+style-pipeline usage such as `splitCssProps`, `box`, and `css`" (:76)
+— now holds for the dominant `css()` authoring form: all three
+boundary-identical probes trace. Captain: commit the (k) write-set
+(2 `.rs` + input + spec + golden + finder report + log sections);
+`dist/` untracked, nothing to commit there.
+
 ## Useful
 
 ### Wave 1, find (c) — fortify landing
@@ -2344,3 +2612,295 @@ asserts), 38x output/manifest.js + 38x output/chunks.json (attested
 regen: 37 dialect-only + EXT-01 +InternalUsage). Untouched as
 ordered: lib, finder report, README contract, sibling files
 (docs/*, atomic/*, atlas/*, other doom logs).
+
+### Wave 4, find (j) — architecture ruling
+
+Find: same-file `interface Widget { alpha }` + `interface Widget { beta }`
+(legal TS declaration merging) emits one Widget chunk with members
+`["beta"]` only — `alpha` silently dropped, `warnings []`,
+`diagnostics []`. Finder report:
+`.agents/doom/logs/2026-09-20-wave4-tasty-merge-member-loss.md`;
+repro `/tmp/doom-tasty-merge-repro.mjs` (replayed by architect
+read-only: `members=["beta"]`, both channels empty, exit 1 — failure
+mode confirmed). Mechanism confirmed firsthand: `symbol_id` =
+`sym:{file_id}#{name}` with no span
+(`scanner/paths/mod.rs:16-18`), so both shells share one id; then
+`resolve_ast` folds them through `symbols.extend(id -> symbol)`
+(`ast/resolve/index.rs:36-40`) and `build_symbol_index`'s
+`.collect()` — last-wins at every fold, no diagnostic. Note: the id
+itself is CORRECT for merged declarations (the two blocks ARE one
+type) — the bug is the fold, not the id. That fact decides the fix.
+
+1. **IN-BOUNDS.** Complete static TS in compile inputs; declaration
+   merging is legal idiomatic TS (tsc accepts; the stdlib and real
+   libraries use split interfaces and augmentation). Touches nothing
+   on the will-never-work list (no interpolation, no runtime-only
+   values, no external config, no spread, no namespace value
+   imports). Falls under the skill's misdiagnosis clause in its
+   stronger form: not just silence-where-signal-is-owed, but
+   wrong-data-served-as-whole — a half-interface presented as the
+   complete type, violating the cited fidelity contract (emitted
+   manifest/chunk must faithfully represent authored declarations).
+   Internal inconsistency proves non-designed: the cross-file
+   same-name path preserves all entries + warns duplicate
+   (`generator/bundle/modules/manifest.rs`,
+   `duplicate_symbol_name_warnings`) + throws ambiguous at bare-name
+   lookup (`js/internal/symbol-resolver.ts`,
+   `createAmbiguousSymbolNameError`). The system knows collisions
+   need loud handling; the same-file collision escapes it.
+   User-facing: reference docs and every member consumer (display,
+   flatten, projection) inherit the loss.
+
+2. **FIX DIRECTION (binding): MERGE at the resolve layer — do NOT
+   split ids, do NOT refuse the legal shape.** Three rules, one
+   layer:
+   - **M1 (honor):** same-file same-name shells that are ALL
+     `TsSymbolKind::Interface` fold into ONE `TsSymbol` with unioned
+     members in declaration order. The kind model has only
+     Interface/TypeAlias, so the merge predicate is exact — no tsc
+     reimplementation, no scope creep into namespaces/classes.
+   - **M2 (member collision):** same member name in two merged blocks
+     (tsc demands identical types; the emitter doesn't typecheck) —
+     keep FIRST + emit a diagnostic naming file/symbol/member.
+     First-wins matches the `or_insert` binding precedent; the
+     diagnostic is owed because the merge is then faithful to
+     neither declaration. This prevents reproducing the bug one
+     level down as silent member last-wins.
+   - **M3 (non-mergeable collision):** alias+alias or mixed kinds —
+     shapes tsc itself rejects (duplicate identifier). Do NOT merge:
+     keep the current survivor (last — zero change to served
+     content) + emit a diagnostic naming file/symbol/kinds.
+     Determinism + loudness is all that's owed for a tsc-error
+     shape.
+   Placement: pre-resolution fold over `parsed.exports` in the
+   resolve layer (merge shells BEFORE `resolve_symbol_references`,
+   so member TypeRefs resolve once against the indices). The
+   diagnostic channel already exists end-to-end
+   (`ParsedTypeScriptAst.diagnostics` → graph → bundle →
+   manifest warnings + `out.diagnostics` — the exact two channels
+   the repro asserts). Emit, manifest, and lookup layers stay
+   untouched: one id → one chunk already, so downstream consumers
+   inherit the correct whole automatically. Blast radius: resolve
+   layer + tests.
+   Rejected: (a) per-declaration chunks (span-suffixed ids) —
+   semantically wrong (manufactures ambiguity tsc doesn't see;
+   would make bare-name lookup throw for legal code) + maximal
+   blast radius (id-scheme change re-pins every golden, breaks
+   id-keyed consumers). (b) refuse-with-diagnostic as primary —
+   refusal is for impossible-by-grammar shapes (W1a five-tuple);
+   merging is a bounded fold with no structural blocker, and
+   refusing idiomatic TS that real libraries use would be a
+   capability gap leaving the fidelity contract still violated,
+   just loudly. REQUIRED SWEEP: fortify censuses tasty fixtures +
+   station inputs for same-file same-name shells; no existing
+   golden moves except intended (diagnostic-carrying cases attested
+   per pair). A sweep surprise is a re-consult, never a silent
+   carve-out.
+
+3. **TEST PLACEMENT: Rust unit primary, NEW emit station
+   secondary.** Primary pin in `src/tests/resolve.rs` (lower than
+   the finder's N-API probe; in-memory workspace via `extract_ast`,
+   no binding needed): (a) merge → one symbol, members
+   `[alpha, beta]`, diagnostics empty; (b) member collision →
+   diagnostic + first-wins; (c) alias/mixed collision → diagnostic
+   + deterministic survivor. Secondary: NEW station TST-INT-04
+   (INT is the interface family, INT-01..03 taken; DUP-01's
+   preserve-all + ambiguous + warn contract is the semantic
+   opposite of merge-fold-to-one-silent, so no extension) — Widget
+   input per the repro, spec asserts one manifest entry, chunk
+   carries both members, warnings `[]` + diagnostics `[]` (a clean
+   merge of legal TS is silent). No `js/` lookup changes. SPEC:
+   document M1–M3 in the tasty SPEC interface section.
+
+### Wave 4, find (j) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: MERGE at the resolve
+layer per M1–M3; no id split, no refusal of the legal shape, emit /
+manifest / lookup untouched.
+
+**Fix (pre-resolution fold, new `resolve/merge.rs` + 5-line
+`index.rs` hook).** `resolve_ast` now folds each file's
+`parsed.exports` before any index is built or
+`resolve_symbol_references` runs, preserving first-occurrence order;
+groups of one pass through untouched. M1: all-Interface shells fold
+into ONE shell — members unioned in declaration order,
+`extends`/`references` concatenated, docs first-Some, type params
+first's, `exported` OR-ed, silent. M2: same nominal (property/method)
+member in two blocks keeps FIRST + diagnostic naming
+symbol/member (`interface "Widget" declares member "alpha" more than
+once; keeping the first`). Call/construct/index signatures
+(`[call]`/`[new]`/`[index]`) are tsc overloads, not collisions —
+they union additively with no diagnostic (else two call signatures
+would false-collide). M3: alias+alias or mixed kinds keep the LAST
+shell byte-identical (zero change to served content) + diagnostic
+naming symbol/kinds (`duplicate declaration of "Dup" (TypeAlias +
+TypeAlias); keeping the last`). File rides `diagnostic.file_id` per
+the existing channel convention, so manifest warnings render
+`file: message`. Diagnostics flow through the untouched end-to-end
+channel (`ParsedTypeScriptAst.diagnostics` → graph → bundle →
+manifest warnings + `out.diagnostics`).
+
+**REQUIRED SWEEP (first, clean, no re-consult).** 87 station input
+files censused (`/tmp/doom-wave4j-sweep.mjs`): 1 regex hit, RXP-02
+`AmbientModule`, attested FALSE POSITIVE (nested inside `declare
+module`, never a top-level shell — extract walks `program.body`
+only). Rust inline fixtures (extract/resolve/error_paths/type_ref)
+hold no same-file same-name declarations; scanner-test
+`ButtonProps` repeats are separate single-declaration workspaces
+that never reach resolve; js unit tests don't drive the Rust
+pipeline. Zero existing golden moves (suite-green proves it).
+
+**Pins.** PRIMARY `src/tests/resolve.rs`, in-memory workspace via
+`extract_ast`, no binding: (a)
+`merges_same_file_interface_declarations` — one symbol, members
+`[alpha, beta]`, diagnostics empty; (b)
+`merged_interface_member_collision_keeps_first_with_diagnostic` —
+first-wins (`alpha: string`, not `number`) + 1 diagnostic naming
+Widget/alpha; (c)
+`non_mergeable_same_file_collision_keeps_last_with_diagnostic` —
+alias+alias survivor `number` + mixed survivor kind TypeAlias + 2
+diagnostics naming Dup/Mix with `TypeAlias + TypeAlias` /
+`Interface + TypeAlias`. SECONDARY new station
+`TST-INT-04-interface-merging` (Widget input per repro): one
+manifest entry, chunk members `[alpha, beta]`, warnings `[]` +
+diagnostics `[]`. Repro `/tmp/doom-tasty-merge-repro.mjs` flips
+red→green (exit 0, MERGE COMPLETE); M2/M3 channel proved end to end
+by `/tmp/doom-wave4j-fortify-verify.mjs` (exit 0: both warnings +
+both `out.diagnostics`). Finder report untouched.
+
+**SPEC note (flag, not drift).** No central tasty SPEC.md exists
+(TST anchors live in case READMEs) — M1–M3 are documented in the
+TST-INT-04 README (interface-family spec section, incl. the DUP-01
+semantic-opposite note) + the resolve README (responsibilities +
+shape). Nothing else to amend.
+
+**Suites (all `pnpm agentrs`, fresh binding, this session).**
+cargo tasty 65/65 (62 + 3 new pins); vitest tasty 82/82 across 5
+files (42 unit + 40 stations incl. new INT-04); `agentrs q` on
+touched files: merge.rs fully clean after refactor (a
+cognitive-19 warning was refactored into the `InterfaceMerge`
+accumulator before landing), index.rs shows only 2 pre-existing
+5-arg warnings on functions this change didn't touch. INT-04
+goldens generated scoped (`-t TST-INT-04 --update-goldens`) and
+attested (one Widget entry, warnings `[]`, one chunk). Never ran
+`agentrs f`.
+
+**Must-NOTs honored:** no id split, no refusal, no weakened tests
+(all pins additive; zero existing tests or goldens touched), no
+blanket goldens, no lib/js-lookup touch, finder report untouched,
+sibling (k) styletrace + docs paths untouched.
+
+**Files (mine only, 6 + this section).**
+`ast/resolve/merge.rs` (new fold), `ast/resolve/index.rs` (hook),
+`ast/resolve/mod.rs` (wiring), `ast/resolve/README.md` (M1–M3),
+`src/tests/resolve.rs` (3 pins), `tests/cases/
+TST-INT-04-interface-merging/` (input + spec + README + 2 goldens).
+
+### Wave 4, find (l) — architecture ruling
+
+Find: `css({ '--x': { base: '1', md: '2' } })` mints a whole-object
+`--x` plan nothing can query, while the runtime genuinely misses
+both nested queries, with zero default signal. Three layers read
+one shape three ways: extraction (`canon::is_known_style_prop`,
+any `--*`) mints a whole-object plan with real per-breakpoint
+declarations (`--x@base`, `--x@md` — classes exist in the sheet);
+analysis (`walk_nested_object` → `is_style_value_position`,
+`conditions.rs:51-52`) recurses `--x` as a condition and predicts
+nested exacts `base`/`md` under `['--x']` (visible as
+`ATM-I-EXPECTED-LOOKUP` on the channel); runtime (`collectEntries`,
+`css.ts:157`) mirrors analysis and misses both queries
+(`class=""` + 2 dev warnings with unactionable "Add a static call
+site" advice). Proof F2 (`render_causeless`, `render.rs:118-132`)
+skips the nested exacts (`!is_known_style_prop` on `base`/`md`)
+on the premise extract warned at the gate — false here, extraction
+warned nowhere. Finder report:
+`.agents/doom/logs/2026-09-20-wave4-custom-prop-object-unqueryable-plan.md`;
+repro `/tmp/doom-wave4-custom-prop-object/run.mts` (replayed by
+architect read-only: 2 channel exacts, ghost `--x` plan, both
+controls paint — scalar `@reference-ui/lib__--x_1`, array
+`--x_1 + sm:--x_2` — object `""` + 2 runtime misses, 0 default
+lines — failure mode confirmed).
+
+1. **IN-BOUNDS.** Complete static literal in a TS compile input on
+   the pinned `css()` surface, named import; touches nothing on
+   the will-never-work list (no interpolation, no runtime-only
+   values, no external config, no spread-staying-dynamic, no
+   namespace/default value imports). Falls squarely under the
+   skill's misdiagnosis clause: silence where a diagnostic is
+   owed, plus an affirmative ghost plan for the shape. The
+   controls prove the family supported: scalar AND responsively
+   expanded array custom props paint — the object form is the
+   explicit-key spelling of the same responsive semantic, not a
+   will-never-work shape. Not wave-1 ground (no gate warning at
+   any level, not a partition-hidden one) and not the carried
+   fodder (those warn channel-only; this warns nowhere).
+
+2. **FIX DIRECTION (binding): expand the query side to the
+   custom-prop object form — treat `--*` as style-value positions
+   in BOTH mirrored predicates, so runtime queries match the
+   plans extraction already mints.** Extraction is already right
+   (whole-object plan + per-breakpoint declarations = exactly the
+   responsive-prop plan shape); the defect is the query side
+   recursing `--x` as a condition. Concretely: `collectEntries`
+   (`css.ts:157`) and `is_style_value_position`
+   (`conditions.rs:51-52`) each gain the `--` prefix rule for the
+   object-value arm, mirroring canon's own open-ended `--*`
+   authority (`canon/src/lib.rs:27-30`). Both predicates stay
+   mirrored — a one-side patch is forbidden (same multi-path
+   disagreement class as wave-1(a): runtime-only would paint but
+   leave analysis predicting phantom nested exacts → false
+   causeless warnings; analysis-only would silence the channel
+   but leave the runtime miss). Post-fix the object form paints
+   through the standard responsive path like every other
+   responsive prop, and DIAG-09 is satisfied vacuously: no absent
+   exacts, no warning owed (warning on working code would be a
+   false positive). Extraction untouched, proof untouched — F2's
+   premise is never engaged once the readers agree.
+   Weighed and rejected: (a) refuse/warn at extraction — rejects
+   a shape whose array sibling paints and whose static semantics
+   are unambiguous; manufactures a capability gap and deletes
+   behavior extraction already gets right. Refusal is for
+   impossible-by-grammar shapes, not for a supported family with
+   one spelling behind. (b) narrow F2's premise (warn
+   unknown-prop/condition keys lacking a gate warning) — treats
+   the symptom, leaves the ghost plan unservable and the style
+   unpainted, and widens the warning net against O2/O20's
+   deliberate jurisdiction split with double-warn risk across
+   every unknown-prop/condition case. Whether F2 deserves a
+   defense-in-depth guard is future doom fodder, not this
+   fortify. Blast radius: two predicate arms + tests. Fortify
+   confirms `lowerResponsiveStyles` passes `--*` objects through
+   to `collectEntries` unmangled, confirms `split.ts` needs no
+   change (key-level split, values opaque — out of scope on that
+   showing), and runs the REQUIRED SWEEP: census atomic stations
+   + neo cases for `--*` inputs (known: ATM-ATOM-05 scalar,
+   ATM-TOKEN-01/07/13, ATM-UNIT-01/03, ATM-LAYER-03) — scalar and
+   array custom-prop behavior must not move; any golden movement
+   attested per pair, and a sweep surprise is a re-consult, never
+   a silent carve-out. Full suites: neo runtime vitest + atomic
+   cargo/vitest + downstream ripple per wave-2(e) precedent.
+
+3. **TEST PLACEMENT: two unit pins (primary, one per predicate) +
+   one NEW ATOM station (secondary) — no proof unit, no neo
+   case.** (a) Neo runtime unit in
+   `src/runtime/css/css.test.ts`: register an artifact carrying
+   the compiled whole-object `--x` plan (per-breakpoint
+   declarations as compiled) and assert `css({ '--x': { base:
+   '1', md: '2' } })` resolves to the compiled classes with zero
+   misses — red pre-fix (recurses → miss), green post-fix. (b)
+   Atomic analysis unit in `diagnostics/analysis` (`object.rs`
+   tests via `walk_first_object`): the object custom-prop input
+   predicts ONE whole-object exact under `[]` and ZERO nested
+   exacts under `['--x']` — red pre-fix (2 nested exacts), green
+   post-fix. (c) NEW station ATM-ATOM-06 (ATOM-01..05 taken;
+   ATOM family, not DIAG — post-fix nothing warns, so this pins
+   a compile shape, not a warning): fixture with scalar + array
+   + object custom props; spec asserts the whole-object `--x`
+   plan with per-breakpoint declarations, the channel carrying
+   the whole-object EXPECTED-LOOKUP (not nested `base`/`md`
+   exacts), and default diagnostics empty (it paints → silent).
+   No proof unit: proof is untouched by this ruling — a proof
+   test would pin unchanged behavior. No neo Playwright case:
+   disproportionate for query resolution the runtime unit pins
+   directly; chain review replays the finder repro end-to-end
+   (compile + runtime) as the e2e proof.

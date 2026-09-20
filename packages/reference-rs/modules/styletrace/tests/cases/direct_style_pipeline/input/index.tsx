@@ -8,6 +8,7 @@ import * as React from 'react'
 import { css } from '@reference-ui/styled/css'
 import { splitCssProps } from '@reference-ui/styled/jsx'
 import { box } from '@reference-ui/styled/patterns/box'
+import type { StyleProps } from '@reference-ui/react'
 
 type PanelProps = React.HTMLAttributes<HTMLDivElement> & {
   color?: string
@@ -31,4 +32,12 @@ export function Panel(props: PanelProps) {
   )
 
   return <div className={classes} {...elementProps} />
+}
+
+export type ObjPanelProps = StyleProps & {
+  title?: string
+}
+
+export function ObjPanel({ color }: ObjPanelProps) {
+  return <div className={css({ color })} />
 }

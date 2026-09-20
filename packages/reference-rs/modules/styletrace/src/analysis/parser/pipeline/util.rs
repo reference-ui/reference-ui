@@ -114,10 +114,52 @@ pub fn expression_reads_style_signal(
         Expression::TSNonNullExpression(asserted) => {
             expression_reads_style_signal(&asserted.expression, bindings, state)
         }
+        Expression::ObjectExpression(object) => {
+            object_reads_style_signal(object, bindings, state)
+        }
+        Expression::ArrayExpression(array) => {
+            array_reads_style_signal(array, bindings, state)
+        }
         _ => false,
     }
 }
 
+// Object keys never count as signals: a key names the property being set,
+// not flow from the boundary. No computed-key chasing; functions inside
+// values fall into the `_ => false` arm, so rebinding stops the walk.
+fn object_reads_style_signal(
+    object: &oxc_ast::ast::ObjectExpression<'_>,
+    bindings: &PropBindings,
+    state: &PipelineState,
+) -> bool {
+    object.properties.iter().any(|property| match property {
+        oxc_ast::ast::ObjectPropertyKind::ObjectProperty(prop) => {
+            expression_reads_style_signal(&prop.value, bindings, state)
+        }
+        oxc_ast::ast::ObjectPropertyKind::SpreadProperty(spread) => {
+            expression_reads_style_signal(&spread.argument, bindings, state)
+        }
+    })
+}
+
+fn array_reads_style_signal(
+    array: &oxc_ast::ast::ArrayExpression<'_>,
+    bindings: &PropBindings,
+    state: &PipelineState,
+) -> bool {
+    array.elements.iter().any(|element| match element {
+        oxc_ast::ast::ArrayExpressionElement::SpreadElement(spread) => {
+            expression_reads_style_signal(&spread.argument, bindings, state)
+        }
+        oxc_ast::ast::ArrayExpressionElement::Elision(_) => false,
+        _ => expression_reads_style_signal(element.to_expression(), bindings, state),
+    })
+}
+
+// Object/array literals recurse in `expression_reads_style_signal` (signal
+// flow into a sink) but stay out of this predicate: an object literal is a
+// container, not a direct alias, so `const obj = { color }` must not mint a
+// new style signal. Container indirection (`css(obj)`) stays untraced.
 pub fn expression_directly_derives_from_style_signal(
     expression: &Expression<'_>,
     bindings: &PropBindings,
