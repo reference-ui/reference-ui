@@ -1,6 +1,6 @@
 {
   "function": "canonNumeric",
-  "rulesVersion": 4,
+  "rulesVersion": 5,
   "cases": [
     {
       "input": {
@@ -198,6 +198,24 @@
       },
       "output": {
         "stem": "1e3"
+      }
+    },
+    {
+      "input": {
+        "prop": "width",
+        "value": "752396555469991.2"
+      },
+      "output": {
+        "stem": "752396555469991.3"
+      }
+    },
+    {
+      "input": {
+        "prop": "width",
+        "value": "-1773218474086427.2"
+      },
+      "output": {
+        "stem": "-1773218474086427.3"
       }
     }
   ]

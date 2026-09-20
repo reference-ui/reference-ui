@@ -474,6 +474,7 @@
     --fonts-sans: "Inter", ui-sans-serif, sans-serif;
     --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
+    --fonts-test: Test, sans-serif;
   }
   [data-color-mode=dark] {
     --colors-text-primary: var(--colors-gray-50);

@@ -6,7 +6,8 @@
  * bare number. Contrast arm (S20): padded spellings (' 1', '1 ') numerify
  * where v2 keeps them as strings (no trim), and the unparseable spellings
  * (Infinity, NaN, 0x10) refuse with a coded warning where v2 emits
- * invalid CSS.
+ * invalid CSS. Shortest-tie arm (doom-4 T2): exact ties render the larger
+ * magnitude (the oracle breaks away), silently canonical like any number.
  */
 import { expect } from 'vitest'
 import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
@@ -32,6 +33,18 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('margin: 1px;')
     expect(utilities).toContain('@reference-ui/lib__op_0.5')
     expect(result.stylesheet).toContain('opacity: 0.5;')
+
+    // Shortest ties (doom-4 T2): the class carries the larger magnitude —
+    // the witness, its negative, the low-edge tie, and a `{7,8}` tie both
+    // sides spell `8`. All four canonicalize silently (diagnostics stay 4).
+    expect(utilities).toContain('@reference-ui/lib__w_752396555469991.3')
+    expect(result.stylesheet).toContain('width: 752396555469991.3px;')
+    expect(utilities).toContain('@reference-ui/lib__top_-1773218474086427.3')
+    expect(result.stylesheet).toContain('top: -1773218474086427.3px;')
+    expect(utilities).toContain('@reference-ui/lib__top_-595433053192.7813')
+    expect(result.stylesheet).toContain('top: -595433053192.7813px;')
+    expect(utilities).toContain('@reference-ui/lib__w_1674911018215997.8')
+    expect(result.stylesheet).toContain('width: 1674911018215997.8px;')
 
     // S20 contrast, numerify half: v2's `canonical_number` returns None
     // for '01' (leading-zero guard) and ' 1' (no trim), keeping them as

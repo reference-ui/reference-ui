@@ -1678,17 +1678,5 @@
       "source": "packages/reference-lib",
       "kind": "fragment"
     }
-  ],
-  "breakpoints": {
-    "tablet": "48rem",
-    "padded": "640 ",
-    "hex": "0x280",
-    "pxname": "640px",
-    "a": "auto",
-    "xDown": "200",
-    "empty": ""
-  },
-  "conditions": {
-    "__x": "[data-x] &"
-  }
+  ]
 }

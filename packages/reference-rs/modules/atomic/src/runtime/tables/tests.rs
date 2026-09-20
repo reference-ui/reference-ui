@@ -9,9 +9,9 @@ use super::*;
 
 #[test]
 fn rules_version_matches_js_pin() {
-    assert_eq!(NAMER_RULES_VERSION, 4);
+    assert_eq!(NAMER_RULES_VERSION, 5);
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.rules_version, 4);
+    assert_eq!(tables.rules_version, 5);
 }
 
 #[test]
@@ -23,9 +23,9 @@ fn aliases_cover_the_dialect() {
 }
 
 #[test]
-fn prefixes_hold_non_kebab_only() {
+fn prefixes_hold_non_verbatim_only() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.prefixes.len(), 198);
+    assert_eq!(tables.prefixes.len(), 1017);
     assert_eq!(
         tables.prefixes["msScrollLimitXMax"],
         "-ms-scroll-limit-xmax"
@@ -34,20 +34,21 @@ fn prefixes_hold_non_kebab_only() {
         tables.prefixes["msScrollbar3dlightColor"],
         "-ms-scrollbar-3dlight-color"
     );
-    assert!(!tables.prefixes.contains_key("mozAnimation"));
+    assert_eq!(tables.prefixes["mozAnimation"], "-moz-animation");
+    assert_eq!(tables.prefixes["fontWeight"], "font-weight");
     assert!(!tables.prefixes.contains_key("top"));
     assert_eq!(tables.prefixes["marginTop"], "mt");
 }
 
 #[test]
-fn every_canon_prefix_resolves_through_table_or_kebab() {
+fn every_canon_prefix_resolves_through_table_or_verbatim() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
     for prop in canon::CANONICAL_PROPERTIES {
         let resolved = tables
             .prefixes
             .get(prop.name)
             .cloned()
-            .unwrap_or_else(|| kebab_case(prop.name));
+            .unwrap_or_else(|| prop.name.to_string());
         assert_eq!(resolved, prop.class_prefix, "{}", prop.name);
     }
 }

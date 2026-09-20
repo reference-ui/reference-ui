@@ -1,6 +1,6 @@
 {
   "function": "name",
-  "rulesVersion": 4,
+  "rulesVersion": 5,
   "cases": [
     {
       "input": {
@@ -1107,6 +1107,40 @@
         "important": false
       },
       "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "font",
+        "value": "test",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "fontFamily",
+          "className": "@reference-ui/lib__font-family_test"
+        },
+        {
+          "slot": "fontWeight",
+          "className": "@reference-ui/lib__font-weight_500"
+        },
+        {
+          "slot": "MyProp",
+          "className": "@reference-ui/lib__MyProp_2px"
+        },
+        {
+          "slot": "myProp",
+          "className": "@reference-ui/lib__myProp_2px"
+        },
+        {
+          "slot": "--brandX",
+          "className": "@reference-ui/lib__--brandX_2px"
+        },
+        {
+          "slot": "mozFoo",
+          "className": "@reference-ui/lib__mozFoo_2px"
+        }
+      ]
     }
   ]
 }

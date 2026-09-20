@@ -8,6 +8,7 @@
  * default: no `Number()` without the grammar, no `String#trim`, no
  * `toLowerCase`, no whitespace regex anywhere in this file.
  */
+import { breakShortestTie } from './ties.js'
 
 /** Smallest magnitude that keeps its plain spelling. */
 const MIN_CANONICAL_MAGNITUDE = 1e-6
@@ -176,13 +177,17 @@ export function inCanonicalMagnitude(value: number): boolean {
 }
 
 /**
- * L4: shortest round-trip, never exponent, `-0` folds to `0`. Callers fence
- * first; rendering itself is total so goldens stay a pure function.
+ * L4: shortest round-trip, never exponent, `-0` folds to `0`, exact ties
+ * break away from zero (larger magnitude) like Rust `Display` — V8 breaks
+ * them even, so the tie module re-breaks every exact tie the oracle way.
+ * Callers fence first; rendering itself is total so goldens stay a pure
+ * function.
  */
 export function renderDecimal(value: number): string {
   if (value === 0) return '0'
   const plain = String(value)
-  return plain.includes('e') || plain.includes('E') ? expandExponent(plain) : plain
+  const expanded = plain.includes('e') || plain.includes('E') ? expandExponent(plain) : plain
+  return breakShortestTie(value, expanded)
 }
 
 /** Expand one shortest-round-trip exponent spelling to plain decimal. */

@@ -28,9 +28,6 @@ export interface NamerDeclaration {
   className: string
 }
 
-/** Vendor prefixes that take a leading dash in the kebab fallback. */
-const VENDOR_PREFIXES = ['moz', 'webkit', 'ms', 'o']
-
 /** Pass state for one declaration build. */
 interface BuildContext {
   tables: NamerTables
@@ -216,36 +213,7 @@ function classNameWithSystem(
   return ctx.system === '' ? stemmed : ctx.system + '__' + stemmed
 }
 
-/** Class prefix: table hit, then `--*` verbatim, then the kebab fallback. */
+/** Class prefix: table hit, else the canonical verbatim — the oracle never kebabs on a miss. */
 function classPrefix(canon: string, tables: NamerTables): string {
-  return tables.prefixes[canon] ?? (canon.startsWith('--') ? canon : kebabCase(canon))
-}
-
-/** camelCase to kebab with a leading dash for vendor-prefixed names. */
-function kebabCase(name: string): string {
-  let out = isVendorPrefixed(name) ? '-' : ''
-  for (let index = 0; index < name.length; index += 1) {
-    const code = name.charCodeAt(index)
-    if (code >= 0x41 && code <= 0x5a) {
-      out += (index > 0 ? '-' : '') + String.fromCharCode(code + 0x20)
-    } else {
-      out += name[index]
-    }
-  }
-  return out
-}
-
-/** True when the name opens with a vendor prefix plus an uppercase letter. */
-function isVendorPrefixed(name: string): boolean {
-  return VENDOR_PREFIXES.some(
-    prefix =>
-      name.length > prefix.length &&
-      name.startsWith(prefix) &&
-      isAsciiUpper(name.charCodeAt(prefix.length))
-  )
-}
-
-/** True for ASCII `A`-`Z`. */
-function isAsciiUpper(code: number): boolean {
-  return code >= 0x41 && code <= 0x5a
+  return tables.prefixes[canon] ?? canon
 }
