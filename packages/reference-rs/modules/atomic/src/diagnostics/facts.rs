@@ -8,6 +8,7 @@
 
 use super::{Diagnostic, DiagnosticCode};
 use crate::diagnostics::SourceSite;
+use crate::runtime::serializer::{serialize_lookup_key, LookupKey};
 
 /// An exact runtime style lookup key, owned. The serializer authority stays
 /// with the runtime plan builder; this type only carries the five-tuple.
@@ -18,6 +19,21 @@ pub struct OwnedLookupKey {
     pub prop: Box<str>,
     pub value: serde_json::Value,
     pub important: bool,
+}
+
+impl OwnedLookupKey {
+    /// Serialize this expectation with the one runtime-key authority, so
+    /// analysis bytes equal plan bytes and neo `serializeLookupKey` bytes.
+    pub fn lookup_key(&self) -> String {
+        let when: Vec<String> = self.when.iter().map(|part| part.to_string()).collect();
+        serialize_lookup_key(&LookupKey {
+            system: &self.system,
+            when: &when,
+            prop: &self.prop,
+            value: &self.value,
+            important: self.important,
+        })
+    }
 }
 
 /// Which part of a runtime lookup key is statically unknown. A dynamic slot
@@ -139,6 +155,34 @@ mod tests {
             sink[1],
             DiagnosticFact::ExactLookupExpected { .. }
         ));
+    }
+
+    #[test]
+    fn lookup_key_serializes_the_five_tuple() {
+        let key = key();
+        assert_eq!(key.lookup_key(), r#"["test",[],"color","red",false]"#);
+    }
+
+    #[test]
+    fn lookup_key_sorts_object_values_canonically() {
+        let mut key = key();
+        key.prop = "width".into();
+        key.value = serde_json::json!({"md": "60px", "base": "50px"});
+        assert_eq!(
+            key.lookup_key(),
+            r#"["test",[],"width",{"base":"50px","md":"60px"},false]"#
+        );
+    }
+
+    #[test]
+    fn lookup_key_keeps_nested_whens_and_important() {
+        let mut key = key();
+        key.when = vec!["_hover".into(), "_focus".into()];
+        key.important = true;
+        assert_eq!(
+            key.lookup_key(),
+            r#"["test",["_hover","_focus"],"color","red",true]"#
+        );
     }
 
     #[test]

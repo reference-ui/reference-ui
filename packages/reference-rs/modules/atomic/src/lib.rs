@@ -2,8 +2,8 @@
 //! Orchestrates AST extraction, condition resolution, atomic class naming, and stylesheet assembly across virtual and disk sources.
 //! Exposes the primary compilation pipeline and public data structures consumed by build tooling and runtime environments.
 
-pub mod atom;
 mod assembly;
+pub mod atom;
 pub mod diagnostics;
 pub mod extract;
 pub mod hosts;
@@ -41,6 +41,7 @@ use std::path::Path;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::atom::AtomSet;
+use diagnostics::DiagnosticSink;
 
 /// In-memory source file to compile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,6 +128,22 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let (resolved_hosts, host_diagnostics) = hosts::resolve(request);
     let traced_jsx = resolved_hosts.hosts();
     diagnostics.extend(host_diagnostics);
+    // Independent diagnostics analysis over the borrowed parse (S2): runs,
+    // renders nothing yet. The session drops here; Slice 4/5 render it.
+    let parse = diagnostics::analysis::CompileParse {
+        sources: &sources,
+        parsed: &parsed,
+    };
+    let analysis = diagnostics::analysis::AnalysisInput::for_compile(
+        &parse,
+        &resolved_hosts,
+        &project_constants,
+        &request.base_system.name,
+    );
+    let mut session = diagnostics::DiagnosticsSession::new();
+    for fact in diagnostics::analysis::analyze(&analysis) {
+        session.report(fact);
+    }
     report_parse_errors(&sources, &parsed, &mut diagnostics);
     let system = &request.base_system;
 
