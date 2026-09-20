@@ -60,6 +60,8 @@ export function buildMicroBundleOptions(
     mainFields: resolvedOptions.mainFields,
     conditions: resolvedOptions.conditions,
     metafile: resolvedOptions.metafile,
+    sourcemap: resolvedOptions.sourcemap,
+    outfile: resolvedOptions.outfile,
     tsconfigRaw: resolvedOptions.tsconfigRaw,
   }
 }

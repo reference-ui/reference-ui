@@ -71,3 +71,32 @@ Against a 30,000-byte gzip bound instead, minified passes with
 drivers, in order, are the bundled namer text (~44k), the inlined
 `stylePropNames` (~27k, cf. the D5 revisit), the inlined namer
 tables (~27k), and the primitives/css/recipe runtime (~70k).
+
+## Addendum 2026-09-20 — minify wired into sync (Slice 3b)
+
+Method: `publishReactBundle` now bundles with esbuild `minify:
+true`, `keepNames: false`, `sourcemap: 'linked'` (external
+`react.mjs.map`; the bundle carries only the trailing
+`sourceMappingURL` comment). Measured with `wc -c` and `gzip -6
+-c | wc -c` over `packages/reference-lib/.reference-ui/` after
+`pnpm sync` in `packages/reference-lib` (`dist/namer.mjs` already
+built 15:05 the same day, rs untouched, no rebuild needed).
+
+| Artifact | Raw (B) | gzip-6 (B) | Against as-written R10 |
+|---|---|---:|---|
+| `react/react.mjs` | 115,672 | 24,615 | raw under by 44,328; gzip under by 1,385 |
+| `react/react.mjs.map` (new, devtools only) | 283,110 | — | — |
+
+Byte-stability: two consecutive lib syncs produce byte-identical
+`react.mjs` (sha256 `c9190930f3f83f1a…` both runs) and
+byte-identical maps. Build-time minify beats the offline trial
+(120,519 / 25,680) by 4,847 raw / 1,065 gzip — one esbuild pass
+minifies across module boundaries where the trial's
+transform-over-bundle could not. Behavior: 13/13 probe calls
+return the expected classes from the synced bundle (hits, a
+constructing miss, `!`, responsive array and object, `_hover`,
+multi-arg last-wins, `border: true`, `size`, `flex: '1'`, `r`
+sugar, holes); the map parses (version 3, 10 sources,
+`sourcesContent` embedded). Known accepted degradation: the miss
+call-site regex loses function-name matching under minified names
+and keeps the `react.mjs` file marker (the designed fallback).

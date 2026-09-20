@@ -90,6 +90,16 @@ describe('buildMicroBundleOptions overrides', () => {
     expect(result.format).toBe('iife')
   })
 
+  it('forwards sourcemap and outfile for external maps', () => {
+    const result = buildMicroBundleOptions(ENTRY_PATH, {
+      sourcemap: 'linked',
+      outfile: '/Users/reference-ui/tests/entry.js',
+    })
+
+    expect(result.sourcemap).toBe('linked')
+    expect(result.outfile).toBe('/Users/reference-ui/tests/entry.js')
+  })
+
   it('forwards tsconfigRaw overrides', () => {
     const result = buildMicroBundleOptions(ENTRY_PATH, {
       tsconfigRaw: {
