@@ -85,6 +85,22 @@ this file in the same pass.
 - **namer golden** — a Rust-generated `input → output` file for one
   procedure or lexical function. The runtime namer reproduces it.
   (namer; an rs golden, not a Neo proof)
+- **benchmark** — the synthetic-load harness (`benchmark/`): seeded
+  repos at named scales, one pinned report per revision with peak RSS,
+  sync time, and bundle size. Never a case, never in a suite. (bench)
+- **scale** — one named bench load (`small`, `medium`, `enterprise`,
+  `churn`): a generator plus locked numeric knobs. Same seed, same
+  bytes. (bench)
+- **generator** — a bench repo assembler (`app`, `churn`): which
+  templates, how many, which shard layout. `app` is product-shaped;
+  `churn` is a uniqueness stress. (bench)
+- **template** — one bench file-kind writer: tokens, config, component,
+  recipe, dead util. Takes rng plus plan, emits static literals only.
+  (bench)
+- **pin** — the report folder one bench run resolves to, decided before
+  generation from the tree ignoring `reports/`. (bench)
+- **latest** — the dirty-tree pin (`reports/latest/`): the overwrite
+  scratch pad for the refine loop, never a log entry. (bench)
 - **differential** — the end-to-end gate: the runtime namer over every
   authored declaration of a compile equals the compiled plans, slot
   and className. (namer)

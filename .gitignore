@@ -44,6 +44,8 @@ pnpm-debug.log*
 packages/reference-icons/src/generated/
 .complexity-temp
 reports/
+# Bench pins are the committed log, not scratch (see benchmark/README.md).
+!packages/reference-neo/benchmark/reports/
 .eslint-result.txt
 .reference
 packages/.sandbox
