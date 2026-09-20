@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"@supports\"",
+    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"@supports\"",
     "file": "input/src/App.tsx",
     "line": 3,
     "column": 50
@@ -10,7 +10,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"@media\"",
+    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"@media\"",
     "file": "input/src/App.tsx",
     "line": 4,
     "column": 51

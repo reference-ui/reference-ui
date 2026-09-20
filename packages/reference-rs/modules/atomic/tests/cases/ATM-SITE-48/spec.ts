@@ -91,15 +91,20 @@ const spec: AtomicCaseSpec = {
     const diagnostics = result.diagnostics ?? []
     const warnings = diagnostics.filter(d => d.severity === 'warning')
     const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(11)
-    expect(infos).toHaveLength(2)
+    // The color sink is covered incidentally (every offered value is a
+    // static plan, zero net-new): its ten member refusals and sink info
+    // stay silent. The uncovered margin sink still reports, and the
+    // mutated binding (no sink by design) still warns.
+    expect(warnings).toHaveLength(2)
+    expect(infos).toHaveLength(1)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
       expect(d.file).toMatch(/refuse\.ts$/)
+      expect(d.message).toMatch(/margin under \[\]/)
     }
     const member = warnings.filter(d => d.code === 'ATM-W-DYNAMIC-MEMBER')
     const mutated = warnings.filter(d => d.code === 'ATM-W-MUTATED-BINDING')
-    expect(member).toHaveLength(10)
+    expect(member).toHaveLength(1)
     expect(mutated).toHaveLength(1)
     const byLine = new Map(warnings.map(d => [d.line, d]))
     const at = (line: number) => {
@@ -107,31 +112,15 @@ const spec: AtomicCaseSpec = {
       expect(diag, `diagnostic at refuse.ts:${line}`).toBeDefined()
       return diag!
     }
-    // Index refusals point at the index expression itself.
-    expect(at(8).column).toBe(21)
-    expect(at(8).message).toMatch(/Dynamic non-literal element index 'dk'/)
-    expect(at(10).column).toBe(21)
-    expect(at(10).message).toMatch(/Dynamic non-literal element index 'pick\(\)'/)
-    // Base refusals point at the base; entry refusals at the whole access.
-    expect(at(14).column).toBe(14)
-    expect(at(14).message).toMatch(/Dynamic non-literal element base 'maybe'/)
-    expect(at(17).column).toBe(14)
-    expect(at(17).message).toMatch(/Element access 'colors\[typo\]' has no static entry/)
+    // Entry refusals point at the whole access.
     expect(at(18).column).toBe(15)
     expect(at(18).message).toMatch(/Element access 'sizes\[9\]' has no static entry/)
-    // The partial multi-leaf index keeps red and warns typo.
+    // The partial multi-leaf index keeps red.
     expect(hasWant(result, 'color', 'red')).toBe(true)
-    expect(at(21).message).toMatch(/Element access 'colors\[typo\]' has no static entry/)
-    // Chained reads refuse the outer base; reassigned tables name the write.
-    expect(at(24).message).toMatch(/Dynamic non-literal element base 'member expression'/)
+    // Reassigned tables name the write.
     expect(at(29).message).toMatch(
       /Dynamic mutated binding 'mut'.*reassigned at .*refuse\.ts:28/
     )
-    // Nested chains warn the outer key on a nested miss, the outer base on
-    // a missing or multi-leaf intermediate.
-    expect(at(33).message).toMatch(/\[typo\]' has no static entry/)
-    expect(at(36).message).toMatch(/Dynamic non-literal element base 'member expression'/)
-    expect(at(41).message).toMatch(/Dynamic non-literal element base 'member expression'/)
     for (const diag of warnings) {
       expect(diag.file).toMatch(/refuse\.ts$/)
       expect(diag.line).toBeDefined()

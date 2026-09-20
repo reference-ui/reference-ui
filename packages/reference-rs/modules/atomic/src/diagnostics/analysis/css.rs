@@ -173,6 +173,26 @@ mod tests {
     }
 
     #[test]
+    fn destructured_params_shadow_same_named_consts() {
+        // SITE-53's SPEC-V2-75 ghost: the param shadows the cross-file
+        // const, so the use is dynamic, never the const's exact key.
+        for params in [
+            "{ color }",
+            "{ primary: color }",
+            "{ color = 'red' }",
+            "[color]",
+            "{ ...color }",
+        ] {
+            let facts = analyze_source(&format!(
+                "{IMPORT} const color = 'amber.500'; \
+                 function Card({params}) {{ return css({{ color }}); }}"
+            ));
+            assert!(exact_keys(&facts).is_empty(), "params: {params}");
+            assert_eq!(dynamic_count(&facts), 1, "params: {params}");
+        }
+    }
+
+    #[test]
     fn unknown_and_shadowed_css_are_not_sites() {
         let facts = analyze_source("css({ color: 'red' })");
         assert!(facts.is_empty());

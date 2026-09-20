@@ -217,12 +217,14 @@ pub enum DiagnosticFact {
         when: Vec<Box<str>>,
         outcome: ExtractOutcome,
     },
-    /// How many net-new pairs harvest minted onto one located sink.
+    /// How many net-new pairs harvest minted onto one located sink, plus
+    /// every kind-accepted pool value (pre-twin-skip) for coverage proof.
     HarvestOutcome {
         location: DiagnosticLocation,
         prop: Box<str>,
         when: Vec<Box<str>>,
         minted: usize,
+        offered: Vec<Box<str>>,
     },
     /// What resolve did with one authored declaration: the exact key when a
     /// want context is in hand, the outcome always.

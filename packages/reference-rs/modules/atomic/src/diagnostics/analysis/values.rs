@@ -112,7 +112,9 @@ fn classify_literal(expr: &Expression<'_>) -> Option<ValueClass> {
     plain_literal(expr)
 }
 
-/// Classify one non-string literal: numbers, booleans, holes, bigints.
+/// Classify one non-string literal: numbers and booleans go exact, nulls
+/// are holes, and bigints stay unknown: a BigInt value is not JSON-shaped,
+/// so no exact runtime lookup key is knowable for it.
 fn plain_literal(expr: &Expression<'_>) -> Option<ValueClass> {
     match expr {
         Expression::NumericLiteral(lit) => Some(ValueClass::Exact {
@@ -124,10 +126,7 @@ fn plain_literal(expr: &Expression<'_>) -> Option<ValueClass> {
             important: false,
         }),
         Expression::NullLiteral(_) => Some(ValueClass::Hole),
-        Expression::BigIntLiteral(_) => Some(ValueClass::Exact {
-            value: Value::Null,
-            important: false,
-        }),
+        Expression::BigIntLiteral(_) => Some(ValueClass::Unknown),
         _ => None,
     }
 }
@@ -325,6 +324,11 @@ mod tests {
         assert_eq!(classify("maybe()"), ValueClass::Unknown);
         assert_eq!(classify("a + b"), ValueClass::Unknown);
         assert_eq!(classify("ok ? 'a' : 'b'"), ValueClass::Unknown);
+    }
+
+    #[test]
+    fn bigint_leaves_stay_unknown() {
+        assert_eq!(classify("10n"), ValueClass::Unknown);
     }
 
     #[test]

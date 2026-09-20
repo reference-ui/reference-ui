@@ -37,7 +37,9 @@ const spec: AtomicCaseSpec = {
     ).toBe([WIDTH, STYLE].sort().join(' '))
 
     const warnings = result.diagnostics.map(d => d.message)
-    expect(warnings).toEqual(['`color` value `true` is not valid CSS'])
+    expect(warnings).toEqual([
+      '`color: true` has no compiled style plan; this lookup will emit no class. `color` value `true` is not valid CSS',
+    ])
     expect(
       Object.values(result.css?.classes ?? {}).some(c => String(c).includes('color')),
     ).toBe(false)

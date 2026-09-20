@@ -120,24 +120,71 @@ pub fn is_shadowed(shadows: &[HashSet<String>], name: &str) -> bool {
     shadows.iter().any(|scope| scope.contains(name))
 }
 
-/// Record identifier params as shadows in the innermost scope. Destructured
-/// params bind nothing here, exactly like the extraction walk.
+/// Record param-bound names as shadows in the innermost scope. Every
+/// identifier a pattern binds shadows the project bag — plain, renamed,
+/// defaulted, nested, and rest elements alike — exactly like extraction's
+/// scope table, which binds destructured params as params (scope/collect).
+/// Missing a binding lets a param resolve to a cross-file same-named const,
+/// a false exact (SITE-53's SPEC-V2-75 ghost).
 pub fn record_param_shadows(
     shadows: &mut [HashSet<String>],
     params: &oxc_ast::ast::FormalParameters<'_>,
 ) {
-    use oxc_ast::ast::BindingPattern;
     let Some(scope) = shadows.last_mut() else {
         return;
     };
     for param in &params.items {
-        if let BindingPattern::BindingIdentifier(id) = &param.pattern {
+        bind_pattern_names(&param.pattern, scope);
+    }
+}
+
+/// Every identifier one binding pattern declares, however nested.
+fn bind_pattern_names(pattern: &oxc_ast::ast::BindingPattern<'_>, scope: &mut HashSet<String>) {
+    use oxc_ast::ast::BindingPattern;
+    match pattern {
+        BindingPattern::BindingIdentifier(id) => {
             scope.insert(id.name.to_string());
         }
+        BindingPattern::ObjectPattern(obj) => bind_object_pattern_names(obj, scope),
+        BindingPattern::ArrayPattern(arr) => bind_array_pattern_names(arr, scope),
+        BindingPattern::AssignmentPattern(assign) => bind_pattern_names(&assign.left, scope),
+    }
+}
+
+/// Every identifier an object pattern declares: listed values plus rest.
+fn bind_object_pattern_names(
+    obj: &oxc_ast::ast::ObjectPattern<'_>,
+    scope: &mut HashSet<String>,
+) {
+    for prop in &obj.properties {
+        bind_pattern_names(&prop.value, scope);
+    }
+    if let Some(rest) = &obj.rest {
+        bind_pattern_names(&rest.argument, scope);
+    }
+}
+
+/// Every identifier an array pattern declares: elements plus rest.
+fn bind_array_pattern_names(
+    arr: &oxc_ast::ast::ArrayPattern<'_>,
+    scope: &mut HashSet<String>,
+) {
+    for element in arr.elements.iter().flatten() {
+        bind_pattern_names(element, scope);
+    }
+    if let Some(rest) = &arr.rest {
+        bind_pattern_names(&rest.argument, scope);
     }
 }
 
 /// Record an identifier declarator as a shadow in the innermost scope.
+/// Silence gap (F-G1b, kept deliberately): the const's own declaration
+/// self-shadows, so no const-driven exact arises end-to-end — uses stay
+/// dynamic, never wrong. Skipping bag-member names would be unsound: the
+/// bag is scope-flattened, so an inner `let`/unrecorded-`const` redeclare
+/// of the same name would falsely resolve to the outer const. The sound
+/// fix needs declaration provenance per bag entry; until then legacy
+/// resolve lines still warn const-driven drops, just unnamed by proof.
 pub fn record_declarator_shadow(
     shadows: &mut [HashSet<String>],
     decl: &oxc_ast::ast::VariableDeclarator<'_>,

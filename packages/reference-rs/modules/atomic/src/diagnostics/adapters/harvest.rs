@@ -12,6 +12,9 @@ pub struct HarvestReport {
     pub prop: Box<str>,
     pub when: Vec<Box<str>>,
     pub minted: usize,
+    /// Every kind-accepted pool value (pre-twin-skip), in acceptance order.
+    /// Proof joins these against final plans; wording never reads them.
+    pub offered: Vec<Box<str>>,
 }
 
 impl From<HarvestReport> for DiagnosticFact {
@@ -21,6 +24,7 @@ impl From<HarvestReport> for DiagnosticFact {
             prop: report.prop,
             when: report.when,
             minted: report.minted,
+            offered: report.offered,
         }
     }
 }
@@ -40,11 +44,16 @@ mod tests {
             prop: "color".into(),
             when: vec!["_hover".into()],
             minted: 3,
+            offered: vec!["red".into(), "blue".into()],
         };
         let fact = DiagnosticFact::from(report);
         assert!(matches!(
             fact,
             DiagnosticFact::HarvestOutcome { minted: 3, .. }
         ));
+        let DiagnosticFact::HarvestOutcome { offered, .. } = fact else {
+            panic!("harvest reports convert to harvest outcomes");
+        };
+        assert_eq!(offered, vec![Box::<str>::from("red"), "blue".into()]);
     }
 }

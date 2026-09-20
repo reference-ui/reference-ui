@@ -61,7 +61,15 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('content: "x  y";')
     expect(result.stylesheet).toContain("font-family: 'Fira  Code', monospace;")
 
-    expect(result.diagnostics ?? []).toHaveLength(0)
+    // The multiline backtick grid misses at runtime: extraction trims
+    // the template's leading whitespace into the plan key, but runtime
+    // queries the raw cooked bytes, so the exact raw key has no plan.
+    const diagnostics = result.diagnostics ?? []
+    expect(diagnostics).toHaveLength(1)
+    expect(diagnostics[0]!.severity).toBe('warning')
+    expect(diagnostics[0]!.code).toBe('ATM-W-MISSING-STYLE-PLAN')
+    expect(diagnostics[0]!.message).toContain('gridTemplateAreas')
+    expect(diagnostics[0]!.message).toContain('has no compiled style plan')
   },
 }
 

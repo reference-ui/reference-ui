@@ -33,8 +33,10 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(10)
     const warnings = result.diagnostics.filter(d => d.severity === 'warning')
     const infos = result.diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(3)
-    expect(infos).toHaveLength(3)
+    // The margin sink is covered incidentally (every offered value is a
+    // static plan, zero net-new), so its refusal and info stay silent.
+    expect(warnings).toHaveLength(2)
+    expect(infos).toHaveLength(2)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }

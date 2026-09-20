@@ -107,12 +107,12 @@ fn structured_literal(expr: &Expression<'_>, split: bool) -> Option<Value> {
 }
 
 /// One non-string compound literal: numbers, booleans, baked holes.
+/// Bigints refuse the whole compound: no exact key is knowable for them.
 fn plain_structured_literal(expr: &Expression<'_>) -> Option<Value> {
     match expr {
         Expression::NumericLiteral(lit) => Some(number_to_json(lit.value)),
         Expression::BooleanLiteral(lit) => Some(Value::Bool(lit.value)),
         Expression::NullLiteral(_) => Some(Value::Null),
-        Expression::BigIntLiteral(_) => Some(Value::Null),
         _ => None,
     }
 }
@@ -274,6 +274,11 @@ mod tests {
         assert_eq!(responsive("{ ...rest }"), None);
         assert_eq!(responsive("{ [k]: 'x' }"), None);
         assert_eq!(responsive("{ base: maybe() }"), None);
+    }
+
+    #[test]
+    fn bigint_leaves_refuse_the_compound() {
+        assert_eq!(responsive("{ base: 10n }"), None);
     }
 
     #[test]

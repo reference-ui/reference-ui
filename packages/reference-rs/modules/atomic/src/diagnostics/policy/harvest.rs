@@ -39,6 +39,7 @@ mod tests {
             prop: prop.into(),
             when: when.iter().map(|part| (*part).into()).collect(),
             minted,
+            offered: Vec::new(),
         }
     }
 
@@ -55,5 +56,15 @@ mod tests {
         assert_eq!(singular.message, "color under []: 1 harvested value minted");
         let zero = Policy::render_harvest(&report("mt", &["md"], 0));
         assert_eq!(zero.message, "mt under [md]: 0 harvested values minted");
+    }
+
+    #[test]
+    fn wording_ignores_the_offering() {
+        let mut offered = report("color", &[], 0);
+        offered.offered = vec!["red".into()];
+        assert_eq!(
+            Policy::render_harvest(&offered),
+            Policy::render_harvest(&report("color", &[], 0))
+        );
     }
 }

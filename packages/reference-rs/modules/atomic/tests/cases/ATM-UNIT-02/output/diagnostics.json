@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "Empty string value on `margin`",
+    "message": "`margin: ` has no compiled style plan; this lookup will emit no class. Empty string value on `margin`",
     "file": "input/src/contrast.ts",
     "line": 10,
     "column": 32
@@ -10,7 +10,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-NON-CANONICAL-NUMERIC",
-    "message": "Non-canonical numeric value \"Infinity\" on `width`",
+    "message": "`width: Infinity` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"Infinity\" on `width`",
     "file": "input/src/invalid.ts",
     "line": 4,
     "column": 10
@@ -18,7 +18,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-NON-CANONICAL-NUMERIC",
-    "message": "Non-canonical numeric value \"NaN\" on `height`",
+    "message": "`height: NaN` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"NaN\" on `height`",
     "file": "input/src/invalid.ts",
     "line": 5,
     "column": 11
@@ -26,7 +26,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-NON-CANONICAL-NUMERIC",
-    "message": "Non-canonical numeric value \"0x10\" on `top`",
+    "message": "`top: 0x10` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"0x10\" on `top`",
     "file": "input/src/invalid.ts",
     "line": 6,
     "column": 8

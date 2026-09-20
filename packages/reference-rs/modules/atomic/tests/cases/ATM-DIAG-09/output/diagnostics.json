@@ -3,8 +3,8 @@
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
     "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"_hovr\"",
-    "file": "input/src/unknown.ts",
-    "line": 3,
-    "column": 23
+    "file": "input/src/absent.ts",
+    "line": 4,
+    "column": 19
   }
 ]

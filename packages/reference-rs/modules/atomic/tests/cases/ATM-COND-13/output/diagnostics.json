@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"watDown\"",
+    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"watDown\"",
     "file": "input/src/App.tsx",
     "line": 8,
     "column": 23

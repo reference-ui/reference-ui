@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
-    "message": "`color` value `true` is not valid CSS",
+    "message": "`color: true` has no compiled style plan; this lookup will emit no class. `color` value `true` is not valid CSS",
     "file": "input/src/App.tsx",
     "line": 7,
     "column": 19
