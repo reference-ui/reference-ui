@@ -334,4 +334,16 @@ mod tests {
         assert!(exact_keys(&facts).is_empty());
         assert_eq!(dynamic_count(&facts), 1);
     }
+
+    #[test]
+    fn custom_prop_objects_predict_one_whole_object_exact() {
+        // `--x` is absent from the style set on purpose: the `--` prefix
+        // rule alone must route the object to one whole-object exact.
+        let facts = walk_source("css({ '--x': { base: '1', md: '2' } })");
+        assert_eq!(
+            exact_keys(&facts),
+            vec![r#"["test",[],"--x",{"base":"1","md":"2"},false]"#.to_string()]
+        );
+        assert_eq!(dynamic_count(&facts), 0);
+    }
 }

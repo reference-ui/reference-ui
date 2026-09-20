@@ -154,7 +154,9 @@ function collectEntries(obj: Record<string, unknown>, ctx: CollectContext, when:
   const { system, styleProps, queries } = ctx
   for (const [prop, value] of Object.entries(obj)) {
     if (isObject(value)) {
-      if (prop !== 'r' && styleProps.has(prop)) {
+      // Custom props are open-ended style positions (canon `--*`
+      // authority), never conditions — mirrored in analysis.
+      if (prop !== 'r' && (styleProps.has(prop) || prop.startsWith('--'))) {
         queries.push({ system, when, prop, value: cleanResponsiveObject(value), important: false })
         continue
       }

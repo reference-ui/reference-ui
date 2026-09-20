@@ -47,9 +47,10 @@ fn uncomputed_key(key: &PropertyKey<'_>) -> KeyClass {
 
 /// True when an object value under `prop` is one responsive query instead of
 /// a nested condition. Mirrors neo `collectEntries` exactly: every other key
-/// shape recurses into the `when` stack.
+/// shape recurses into the `when` stack. Custom props are open-ended style
+/// positions (canon `--*` authority), never conditions.
 pub fn is_style_value_position(prop: &str, style_props: &HashSet<String>) -> bool {
-    prop != "r" && style_props.contains(prop)
+    prop != "r" && (style_props.contains(prop) || prop.starts_with("--"))
 }
 
 #[cfg(test)]
@@ -107,5 +108,7 @@ mod tests {
         assert!(!is_style_value_position("r", &set));
         assert!(!is_style_value_position("_hover", &set));
         assert!(!is_style_value_position("variant", &set));
+        assert!(is_style_value_position("--x", &set));
+        assert!(is_style_value_position("--x", &style_set(&[])));
     }
 }
