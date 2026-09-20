@@ -64,6 +64,35 @@ fn traces_export_star_package_barrels() {
 }
 
 #[test]
+fn traces_body_destructured_direct_forwarding() {
+    let fixture = workspace_scratch_dir("body-destructure-direct");
+    fixture.write(
+        "input/index.tsx",
+        "import { Div, type StyleProps } from '@reference-ui/react'\n\nexport type CardProps = StyleProps & {\n  title?: string\n}\n\nexport function ParamCard({ color }: CardProps) {\n  return <Div color={color} />\n}\n\nexport function BodyCard(props: CardProps) {\n  const { color } = props\n  return <Div color={color} />\n}\n",
+    );
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected body-destructure direct case to trace");
+
+    assert_eq!(names, vec!["BodyCard".to_string(), "ParamCard".to_string()]);
+}
+
+#[test]
+fn traces_body_destructured_rest_forwarding() {
+    let fixture = workspace_scratch_dir("body-destructure-rest");
+    fixture.write(
+        "input/index.tsx",
+        "import { Div, type StyleProps } from '@reference-ui/react'\n\nexport type CardProps = StyleProps & {\n  title?: string\n}\n\nexport function ParamCard({ color }: CardProps) {\n  return <Div color={color} />\n}\n\nexport function BodyRestCard(props: CardProps) {\n  const { title, ...rest } = props\n  return <Div {...rest}>{title}</Div>\n}\n",
+    );
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected body-destructure rest case to trace");
+
+    assert_eq!(
+        names,
+        vec!["BodyRestCard".to_string(), "ParamCard".to_string()]
+    );
+}
+
+#[test]
 fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
     let fixture = create_node_builtin_helper_fixture();
     let names =

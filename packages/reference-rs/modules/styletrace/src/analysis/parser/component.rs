@@ -200,8 +200,12 @@ pub fn component_from_function_like(
         return Ok(None);
     };
 
-    let bindings =
-        parse_prop_bindings(fl_ctx.first_param, ctx, fl_ctx.wrapper_style_props.clone())?;
+    let bindings = parse_prop_bindings(
+        fl_ctx.first_param,
+        fl_ctx.body_statements,
+        ctx,
+        fl_ctx.wrapper_style_props.clone(),
+    )?;
     let mut edges = Vec::<ComponentEdge>::new();
     for statement in body_statements {
         collect_edges_from_statement(

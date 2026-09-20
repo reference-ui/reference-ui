@@ -13,3 +13,8 @@ type CardProps = StyleProps & {
 export function Card({ id, ...styleProps }: CardProps) {
   return <Div data-id={id} {...styleProps} />
 }
+
+export function BodyRestCard(props: CardProps) {
+  const { id, ...rest } = props
+  return <Div data-id={id} {...rest} />
+}
