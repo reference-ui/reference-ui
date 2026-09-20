@@ -38,6 +38,7 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 4: (j) IN-BOUNDS, resolve-layer MERGE M1–M3 → fortify on pre-resolution fold + resolve.rs pins + TST-INT-04; (k) IN-BOUNDS, shared-predicate recursion → fortify on util.rs + tracing.rs + direct_style_pipeline; (l) diagnostics proof/adapters still hunting. Cycles banked: 9/6. Next: landings → chains → commits → wave 5.
 - 2026-09-20 watch: wave 4: (j) fortify building (MERGE fold + TST-INT-04); (k) landed → chain reviewing; (l) BREAK-FOUND (custom-prop object silent miss) → architect dispatched. Cycles banked: 9/6. Next: verdicts → commits → wave 5.
 - 2026-09-20 watch: wave 4: (k) COMMITTED (936a0e961 — pipeline object-arg VERIFIED); (j) landed → chain reviewing; (l) IN-BOUNDS, query-side expansion → fortify on collectEntries + is_style_value_position + ATOM-06. Cycles banked: 10/6. Next: chain (j) verdict → commit; (l) landing → chain → commit → wave 5.
+- 2026-09-20 08:01 tick: W4j COMMITTED (tasty MERGE VERIFIED). Fortify (l) the only live crew, building (query-side arms + ATOM-06 in tree). Cycles banked: 11/6. Next: (l) landing → chain → commit → wave 5.
 - 2026-09-20 07:01 tick: chain (f) reviewing (~10 min, only live crew, no verdict yet — normal review length). Tree: walk_refused.rs + report + log + peer files. Curiosity for the record: star.rs shows unmodified — chain (f) adjudicates firsthand (fix present vs clobbered vs misattributed). No pings sent. Next: chain (f) verdict → commit (floor) → wave 3.
 - 2026-09-20 watch: W2f COMMITTED (95a91a4a3 — star nested-hop VERIFIED). DOOM FLOOR HIT: 6/6 cycles banked, all verified + committed. Cycle continues until HQ wakes (LOG-3 stays IN PROGRESS). Wave 3 hunting: 3 finders × 3 theories — (g) reference-core sync, (h) atomic resolve+plans, (i) canon emit. Tree holds peer files only. Next: wave-3 verdicts → arcs → commits → wave 4.
 - 2026-09-20 watch: wave 3: (h) BREAK-FOUND (negation-brace '-{spacing.4}' silently mints invalid CSS) → architect dispatched; (g) sync + (i) canon-emit still hunting. HQ asked about a prettier formatter war — answered: one 06:11 306-file sweep seen, self-reverted, no ongoing churn in watch checks; offered a crew on HQ's word. Next: (h) ruling → fortify → chain → commit; other verdicts → arcs → wave 4.
@@ -3001,3 +3002,211 @@ tsc-error shapes stay loud with a deterministic survivor. Captain:
 commit the (j) write-set (4 modified `.rs`/README + new `merge.rs` +
 new INT-04 dir + finder report + this log section); `dist/` is
 untracked build output, nothing to commit there.
+
+### Wave 4, find (l) — fortify landing
+
+Ruling followed exactly: expand the query side, both mirrored
+predicates, extraction + proof untouched.
+
+**1. Fix (2 predicate arms + terse comments, no other prod lines).**
+`packages/reference-neo/src/runtime/css/css.ts:159`
+(`collectEntries`): the object-value arm now routes `prop !== 'r'
+&& (styleProps.has(prop) || prop.startsWith('--'))` to one
+responsive query. `diagnostics/analysis/conditions.rs:53`
+(`is_style_value_position`): same `--` prefix rule, mirroring
+canon's open-ended `--*` authority (`canon/src/lib.rs:27-30`).
+`--x` is deliberately NOT added to any style-prop set on either
+side — the prefix rule alone carries it, which is the point of an
+open-ended family. No one-side patch: both changed in the same
+landing, verified mirrored by the pins below.
+
+**2. Confirmations (no-change showings).** `lowerResponsiveStyles`
+(`lowerResponsiveStyles.ts:28-56`): only the key `r` is rewritten;
+every other key passes through verbatim (values recursed,
+keys preserved) — `--*` objects reach `collectEntries` unmangled.
+`split.ts` (`primitives/runtime/split.ts:60-63`): key-level split,
+values opaque (`resolved[key] = value` verbatim) — the find is the
+`css()` query predicate, not the primitive splitter; out of scope
+on that showing, untouched. Extraction untouched (whole-object
+plan was already right), proof untouched (F2's premise never
+engaged once the readers agree), lib untouched, finder report
+untouched, F2 not narrowed, no test weakened.
+
+**3. REQUIRED SWEEP (before the fix; no surprise, no re-consult).**
+Census of authored `--*` in style positions: atomic inputs hold
+exactly 3, all scalar — ATM-ATOM-05 (`'--brand-x': 'red.500'`),
+ATM-NAME-06 (`'--brand-x': 'red'`), ATM-UNIT-01 (`'--foo': 42`);
+zero `--*` object values in any atomic input (`'--*': {` grep
+empty). ATM-TOKEN-01/07/13, ATM-UNIT-03, ATM-LAYER-03 mentions are
+theme-token CSS vars in baseSystems/sheet assertions, not authored
+style objects. Neo worlds: all authored `--*` scalar (globalCss
+`:root` vars, NEO-CSS-04 `'--foo': 42`, NEO-LAYER-01
+`'--colors-brand'` scalar). Rust units: no assertions on `--*`
+query shapes. Scalar/array arms untouched by construction (leaf
+and `isObject`-false paths identical), so scalar/array behavior
+cannot move — confirmed by suites: full atomic vitest 287/287
+green with zero golden movement (no `--update-goldens`), neo
+units 225/225 green, ripple case NEO-CSS-04 PASS.
+
+**4. PRIMARY pins (both red-then-green, firsthand).** (a) Neo
+runtime unit (`css.test.ts`): artifact gains the compiled
+whole-object `--x` plan (`value {base:'1',md:'2'}`, declarations
+`--x@base`/`--x@md`, `--x` absent from `stylePropNames`);
+`css({'--x':{base:'1',md:'2'}})` resolves to `test__--x_1
+test__md:--x_2` with zero warnings. Red pre-fix (recurse → miss,
+1 failed / 23 skipped), green post-fix (24/24). (b) Atomic
+analysis unit (`object.rs` tests via `walk_first_object`):
+`css({ '--x': { base: '1', md: '2' } })` predicts ONE exact
+`["test",[],"--x",{"base":"1","md":"2"},false]` and ZERO dynamics
+(`--x` absent from the style set). Red pre-fix (FAILED on the
+exact-keys assertion), green post-fix (7/7 object tests). Plus 2
+lines in the `conditions.rs` unit pinning `--x` as a style
+position incl. under an empty set.
+
+**5. SECONDARY station ATM-ATOM-06 (ATOM family, new dir).**
+Fixture mirrors the finder repro (scalar + array + object `--x`).
+Spec asserts: sibling wants minted; exactly ONE whole-object plan
+with slots `['--x@base','--x@md']`; no plans under a `--x` when;
+sheet carries `--x: 1;`/`--x: 2;` (ghost `md:--x_2` class now
+served); default diagnostics `[]`; channel carries the
+whole-object `EXPECTED-LOOKUP` and ZERO nested exacts under
+`["--x"]`. Goldens generated scoped (`-t ATM-ATOM-06
+--update-goldens`, `git status` confirms only the new dir):
+`styles.css` utilities layer shows `--x_1` + `sm:--x_2` +
+`md:--x_2`. Note: the first scoped run exposed a stale N-API
+binary (channel still nested); `pnpm agentrs b` rebuilt it and
+the channel flipped to whole-object — seam staleness, not a code
+issue.
+
+**6. Suites (repo runners, this session).** `pnpm agentrs c atomic`
+465/465; `pnpm agentrs v atomic` 287/287 (11 files, incl. new
+ATOM-06; zero golden movement); neo vitest 225/225 (31 files);
+`pnpm agentneo run NEO-CSS-04` PASS (scalar custom-prop ripple);
+`pnpm agentrs q` on both `.rs` files clean; `pnpm agentneo q` on
+both neo files 0 errors + 1 non-failing warn (`css.test.ts` 372
+lines vs the 365 warn line — tipped over by this pin, warn-only
+per the skill, no split churn). Post-fix e2e probe
+(`/tmp/doom-wave4-custom-prop-object/probe-postfix.mts`, exit 0):
+real compile + real runtime over the finder fixture → object
+class `@reference-ui/lib__--x_1 @reference-ui/lib__md:--x_2`
+(the finder's exact ghost classes, now served), 0 runtime
+warnings, 0 defaults, channel whole-object only.
+
+**7. Write-set (captain: commit as the (l) unit).** Modified:
+`packages/reference-neo/src/runtime/css/css.ts`,
+`css.test.ts`, `diagnostics/analysis/conditions.rs`,
+`diagnostics/analysis/object.rs`. New: `tests/cases/ATM-ATOM-06/`
+(input + spec + README + 3 goldens). Plus finder report (not
+mine, do not attribute) + this section. `dist/` untracked build
+output. Open: F2 defense-in-depth stays future doom fodder per
+the ruling, not this fortify.
+
+### Captain tick — 2026-09-20 (post-fortify-l)
+Fortify (l) landed: `--` rule in both `collectEntries` and
+`is_style_value_position`, pins (css.test.ts, object.rs), ATM-ATOM-06
+station (3 goldens). Chain review (l) dispatched, running. On its
+VERIFIED: commit (l) named files only + wave-4 close, then wave 5
+finders.
+
+### Wave 4, find (l) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (l) files only —
+write-set audited via `git status` paths: exactly the landing's 4
+modified (`css.ts`, `css.test.ts`, `conditions.rs`, `object.rs`) + new
+`ATM-ATOM-06/` + finder report + log; peer paths (`docs/ATOMIC.md`,
+`docs/missions/README.md`, untracked `operation-jettison/reaper.md`)
+were never touched or adjudicated. Swap windows announced here (all
+restored byte-identical, shas match): css.ts 08:08:59–08:09:09 BST,
+conditions.rs full 08:09:13–08:09:31, predicate-only 08:09:36–08:09:47,
+conditions.rs + rebuild 08:10:00–08:10:19. Binding discipline:
+darwin-x64.node postdates all sources on this x86_64 box; old-code
+rebuild md5 `4ef30801…`, restored md5 back to the exact pre-swap
+`2eadd191…`.
+
+**1. Finder repro** (`/tmp/doom-wave4-custom-prop-object/run.mts`,
+unmodified): no longer reproduces — `default []`, `channel nested
+exacts: []`, dies at line 50 (`0 !== 2`). The ghost-plan shape is still
+minted, but it is no longer a ghost: independent e2e
+(`/tmp/chainl-e2e.mts`, exit 0, real compile + real runtime over the
+finder fixture) resolves the object form to exactly
+`@reference-ui/lib__--x_1 @reference-ui/lib__md:--x_2` — the finder's
+ghost classes, now served — with 0 runtime warns, 0 defaults, channel
+whole-object only, exactly 1 whole-object plan, no nested plans, and
+both decls in the sheet. Scalar/array controls byte-identical to the
+architect's pre-fix log (`__--x_1`, `__--x_1 + sm:--x_2`).
+
+**2. Suites** (repo runners, this session, post-restore): neo pin
+isolation 1 passed / 224 skipped; cargo pins green by name
+(`custom_prop_objects_predict_one_whole_object_exact`,
+`style_position_follows_the_runtime_set_minus_r`, plus pre-existing
+`test_custom_property_resolves_unique_token`); ATOM-06 isolation 1
+passed / 286 skipped; `pnpm agentrs c atomic` 465/465; `pnpm agentrs v
+atomic` 287/287 (11 files); `pnpm agent vitest reference-neo` 225/225
+(31 files). Ripple: `pnpm agentneo run NEO-CSS-04` PASS (scalar),
+NEO-CSS-11 PASS (casing), NEO-LAYER-01 PASS. Quality: `agentneo q` on
+both neo files 0 errors + 1 warn-only (`css.test.ts` 372 vs the 365
+*warn* line, non-failing per the skill — tipped over by this pin, no
+split churn); `agentrs q` on both `.rs` files clean PASS. Zero failures
+anywhere — nothing to attribute, nothing absorbed.
+
+**3. Fail-without-fix / pass-with-fix (all firsthand):** css.ts
+reverted → neo pin FAILS with the exact finder symptom (`expected '' to
+be 'test__--x_1 test__md:--x_2'`); conditions.rs reverted → object pin
+FAILS with the 2 nested exacts as `left`
+(`["test",["--x"],"base","1",false]`, `… "md" …`) vs the whole-object
+`right`; predicate-only revert → conditions pin FAILS at :111; old
+binding → ATOM-06 FAILS (`channel carries the whole-object lookup:
+expected false to be true`). In-tree: all green. Sweep re-run
+firsthand: exactly 3 authored `--*` in atomic inputs, all scalar
+(ATOM-05 `--brand-x`, UNIT-01 `--foo`, NAME-06 `--brand-x` — inline
+scalar leaves, arms untouched by construction since `isObject`
+excludes arrays and the fix sits only in the object-value arms); zero
+`'--*': {` in any atomic input or neo world; TOKEN-07/UNIT-03 hits are
+baseSystem theme vars, TOKEN-01/13/LAYER-03 mentions are sheet
+assertions. Zero golden movement (no modified `output/` path in
+status); the 3 new goldens attested per pair (css.json 3 entries,
+diagnostics `[]`, utilities exactly `--x_1 + sm:--x_2 + md:--x_2`).
+
+**4. Diff review (line-by-line, (l) write-set):** BOTH predicates gained
+the `--` rule — css.ts:159
+(`styleProps.has(prop) || prop.startsWith('--')`) and
+conditions.rs:53 (identical) — no one-side patch; canon authority
+verified verbatim (`is_known_style_prop` returns true on the `--`
+prefix). `lowerResponsiveStyles` read: only key `r` is rewritten, every
+other key passes `[key, nextValue]` — `--*` reaches `collectEntries`
+unmangled. `split.ts` zero diff; key-level split with values opaque
+(line 61) — the out-of-scope justification holds. Extraction, policy,
+channels, proof, runtime, canon, primitives, lib: zero diff. F2's
+premise never engaged: zero nested exacts predicted (channel-verified),
+the whole-object exact is present in plans and served — proof untouched
+is correct. Second call-site audit: `is_style_value_position` also
+serves block.rs:194 (const objects) — scalar leaves route to the
+identical `walk_leaf_class` call either way (behavior-identical),
+nested const maps go phantom-nested → honest-dynamic per the documented
+S2 rule ("recorded responsive objects stay dynamic"); zero such inputs
+in tree, so no prediction moves. No third mirror (neo: only css.ts:159;
+atomic: only conditions.rs:53 plus a test-harness coverage assert).
+`--x` sits in no style-prop set (`['color','p']` unchanged,
+`walk_source` set unchanged) — the prefix rule alone carries it, as
+ruled. Test diffs pure addition (3 minus-lines total: 2 predicate lines
++ 1 doc line); no weakened tests; no blanket goldens.
+
+**5. Contracts hold.** DIAG-09 satisfied vacuously: no absent exacts
+(the whole-object exact is planned and served), no warning owed and
+NONE emitted (`defaults []`, 0 runtime warns); warning on this working
+shape would be the false positive the ruling forbids. Scalar, array,
+and object custom props all paint silently through one responsive path.
+Captain: commit the (l) write-set (4 modified + new `ATM-ATOM-06/` +
+finder report + log sections); `dist/` is untracked build output,
+nothing to commit there.
+
+### Wave 4 close — captain
+All three finds VERIFIED and committed: (k) leaf-object query parity,
+(j) same-file interface merge member loss, (l) custom-prop object
+unqueryable plan. Captain firsthand: full neo run 168 ok + NEO-SITE-11
+FAIL proven pre-existing (fails with the full (l) write-set stashed;
+world has zero custom-prop usage; sheet-content assertion orthogonal
+to the query-predicate fix) — logged, not absorbed, not (l)'s to fix;
+atomic cargo + vitest PASS; neo + rs quality gates clean (1 warn-only
+line count). Cycles banked: 12. Wave 5 finders dispatched next.

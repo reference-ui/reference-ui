@@ -175,6 +175,17 @@ const ARTIFACT: NativeRuntimeArtifact = {
       important: false,
       declarations: [{ slot: 'outlineColor', className: 'test__c_brand' }],
     },
+    {
+      system: 'test',
+      when: [],
+      prop: '--x',
+      value: { base: '1', md: '2' },
+      important: false,
+      declarations: [
+        { slot: '--x@base', className: 'test__--x_1' },
+        { slot: '--x@md', className: 'test__md:--x_2' },
+      ],
+    },
   ],
   recipes: {},
   stylePropNames: ['color', 'p'],
@@ -249,6 +260,13 @@ describe('css() resolution', () => {
     expect(css({ width: 42, opacity: 1, zIndex: 0, '--foo': 42 })).toBe(
       'test__w_42 test__op_1 test__z_0 test__--foo_42'
     )
+  })
+
+  it('resolves custom-prop objects as one responsive query, never a condition', () => {
+    // `--x` is absent from stylePropNames on purpose: the `--` prefix
+    // rule alone must route the object to the whole-object plan.
+    expect(css({ '--x': { base: '1', md: '2' } })).toBe('test__--x_1 test__md:--x_2')
+    expect(warnedMessages()).toHaveLength(0)
   })
 
   it('resolves composite token-ref strings by authored spelling', () => {

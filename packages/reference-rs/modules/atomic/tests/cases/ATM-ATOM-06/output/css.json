@@ -1,0 +1,5 @@
+{
+  "--x:1": "@reference-ui/lib__--x_1",
+  "md:--x:2": "@reference-ui/lib__md:--x_2",
+  "sm:--x:2": "@reference-ui/lib__sm:--x_2"
+}
