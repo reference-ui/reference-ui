@@ -74,33 +74,17 @@ const spec: AtomicCaseSpec = {
     const diagnostics = result.diagnostics ?? []
     const warnings = diagnostics.filter(d => d.severity === 'warning')
     const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(4)
-    expect(infos).toHaveLength(1)
-    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    // The color sink is covered incidentally (every offered value is a
+    // static plan, zero net-new): the three identifier refusals and the
+    // sink info stay silent, and only the spread refusal still warns.
+    expect(warnings).toHaveLength(1)
+    expect(infos).toHaveLength(0)
     for (const expected of [
-      {
-        file: 'missing.ts',
-        line: 6,
-        code: 'ATM-W-DYNAMIC-IDENTIFIER',
-        message: "Dynamic non-literal identifier 'nah'",
-      },
       {
         file: 'cycled.ts',
         line: 7,
         code: 'ATM-W-UNFOLDABLE-SPREAD',
         message: 'Dynamic object spread',
-      },
-      {
-        file: 'v2cycled.ts',
-        line: 7,
-        code: 'ATM-W-DYNAMIC-IDENTIFIER',
-        message: "Dynamic non-literal identifier 'whirl'",
-      },
-      {
-        file: 'selfed.ts',
-        line: 6,
-        code: 'ATM-W-DYNAMIC-IDENTIFIER',
-        message: "Dynamic non-literal identifier 'spin'",
       },
     ]) {
       const match = warnings.find(

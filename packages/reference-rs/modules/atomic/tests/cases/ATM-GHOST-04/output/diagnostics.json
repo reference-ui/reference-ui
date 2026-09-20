@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-CONDITION",
-    "message": "Unknown condition \"_nope\"",
+    "message": "`color: red` has no compiled style plan; this lookup will emit no class. Unknown condition \"_nope\"",
     "file": "input/src/nope.ts",
     "line": 3,
     "column": 23

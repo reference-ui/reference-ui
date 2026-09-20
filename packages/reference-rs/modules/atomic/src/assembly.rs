@@ -90,6 +90,15 @@ impl AssembleCtx {
             .map(|recipe| recipe.table)
             .collect();
 
+        // Final-plan proof (S4): join the session's analysis expectations
+        // against the emitted plans and render the verdicts in place.
+        crate::diagnostics::proof::render::render_session(
+            sink.facts(),
+            &runtime.style_plans,
+            &system.name,
+            &mut diagnostics,
+        );
+
         CompileResult {
             stylesheet,
             portable_stylesheet,

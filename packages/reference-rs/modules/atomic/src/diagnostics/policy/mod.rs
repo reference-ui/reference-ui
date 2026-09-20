@@ -10,6 +10,7 @@
 mod extract;
 mod harvest;
 mod hosts;
+mod proof;
 mod resolve;
 
 use super::DiagnosticFact;
@@ -59,6 +60,21 @@ impl Policy {
     pub fn render_host(report: &super::adapters::hosts::HostReport) -> super::Diagnostic {
         hosts::render(report)
     }
+
+    /// Render one proven miss with its resolver cause.
+    pub fn render_proof(
+        key: &super::OwnedLookupKey,
+        location: &super::DiagnosticLocation,
+        code: super::DiagnosticCode,
+        reason: &str,
+    ) -> super::Diagnostic {
+        proof::render_proof(key, location, code, reason)
+    }
+
+    /// Render one proven miss with no resolver cause.
+    pub fn render_causeless(key: &super::OwnedLookupKey) -> super::Diagnostic {
+        proof::render_causeless(key)
+    }
 }
 
 #[cfg(test)]
@@ -95,6 +111,7 @@ mod tests {
                 prop: "color".into(),
                 when: Vec::new(),
                 minted: 2,
+                offered: Vec::new(),
             },
         ];
         for fact in &facts {

@@ -830,10 +830,10 @@ compiler contract.
 - [ ] `ATM-DIAG-08` `[reference]` `[seam]` — **[Error Correct S2/S4]**
   **A static runtime query predicted from source and present in final `stylePlans` must keep userspace silent.**
   Station `ATM-DIAG-08`. Diagnostics independently predicts the exact lookup key for a static `css()` declaration; the same key is present in the final runtime style plans; no userspace diagnostic is emitted. The prediction is observable on the opt-in compiler channel. Presence anywhere — another file, another site, harvest — counts (see `ATM-DIAG-10`). Greens in Slices 2 (expectations) and 4 (proof).
-- [ ] `ATM-DIAG-09` `[reference]` `[seam]` — **[Error Correct S4]**
+- [x] `ATM-DIAG-09` `[reference]` `[seam]` — **[Error Correct S4]**
   **A static runtime query predicted from source but absent from final `stylePlans` must emit one located non-fatal warning naming that exact declaration.**
   Station `ATM-DIAG-09`. The warning carries `file:line:col` of the source site and names the exact `prop: value` lookup that will emit no class, plus the actionable resolve reason when a resolver fact proves one. The Slice 0 witness hunt names the first proven witness (prime suspect: `ATM-W-UNKNOWN-CONDITION`, which warns and drops the whole want); if the hunt closes with zero witnesses, the proof engine still lands with unit tests and userspace gains no new warning yet. Greens in Slice 4.
-- [ ] `ATM-DIAG-10` `[reference]` `[seam]` — **[Error Correct S4]**
+- [x] `ATM-DIAG-10` `[reference]` `[seam]` — **[Error Correct S4]**
   **A diagnosed site that contributes no plan must stay silent when another source or harvest contributes the exact key.**
   Station `ATM-DIAG-10`. The site's own value is refused (dynamic), but the exact lookup key it implies is present in final plans via another file, site, or harvest mint — runtime paints, so userspace hears nothing (incidental-coverage rule). The coverage join is observable on the opt-in compiler channel. Greens in Slice 4.
 - [ ] `ATM-DIAG-11` `[reference]` `[seam]` — **[Error Correct S2/S5]**

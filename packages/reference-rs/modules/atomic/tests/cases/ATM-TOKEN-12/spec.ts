@@ -12,18 +12,29 @@ import { type AtomicCaseSpec } from '../../helpers.js'
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-12',
   verify(result) {
-    expect(result.diagnostics).toHaveLength(2)
+    expect(result.diagnostics).toHaveLength(3)
     const lines: number[] = []
     for (const diagnostic of result.diagnostics) {
-      expect(diagnostic.severity).toBe('error')
-      expect(diagnostic.message).toContain('unknown token reference')
-      expect(diagnostic.message).toContain('{colors.nope}')
-      expect(diagnostic.file).toMatch(/missing-ref\.tsx$/)
-      expect(diagnostic.line).toBeGreaterThan(0)
-      expect(diagnostic.column).toBeGreaterThan(0)
-      lines.push(diagnostic.line!)
+      if (diagnostic.severity === 'error') {
+        expect(diagnostic.message).toContain('unknown token reference')
+        expect(diagnostic.message).toContain('{colors.nope}')
+        expect(diagnostic.file).toMatch(/missing-ref\.tsx$/)
+        expect(diagnostic.line).toBeGreaterThan(0)
+        expect(diagnostic.column).toBeGreaterThan(0)
+        lines.push(diagnostic.line!)
+      }
     }
     expect(lines.sort()).toEqual([4, 5])
+    // The fatal drops the declaration, and proof names the proven miss
+    // beside it: the exact runtime lookup has no compiled style plan.
+    const miss = result.diagnostics.find(
+      d => d.code === 'ATM-W-MISSING-STYLE-PLAN'
+    )
+    expect(miss, 'proven-miss warning beside the fatal').toBeDefined()
+    expect(miss!.severity).toBe('warning')
+    expect(miss!.message).toContain('color')
+    expect(miss!.message).toContain('{colors.nope}')
+    expect(miss!.message).toContain('has no compiled style plan')
     expect(result.stylesheet).not.toContain('{colors.nope}')
     expect(result.stylesheet).not.toContain(': colors\\.nope')
     expect(result.stylesheet).not.toContain('var(--colors-nope)')

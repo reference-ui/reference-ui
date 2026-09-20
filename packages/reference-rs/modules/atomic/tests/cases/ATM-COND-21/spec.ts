@@ -24,8 +24,8 @@ const spec: AtomicCaseSpec = {
     })
 
     expect(result.diagnostics.map(d => d.message).sort()).toEqual([
-      'Unknown condition "@media"',
-      'Unknown condition "@supports"',
+      '`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition "@media"',
+      '`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition "@supports"',
     ])
   },
 }

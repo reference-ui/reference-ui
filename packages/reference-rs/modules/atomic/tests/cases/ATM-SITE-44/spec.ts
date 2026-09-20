@@ -56,22 +56,15 @@ const spec: AtomicCaseSpec = {
     const diagnostics = result.diagnostics ?? []
     const warnings = diagnostics.filter(d => d.severity === 'warning')
     const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(6)
-    expect(infos).toHaveLength(2)
-    for (const d of infos) {
-      expect(d.code).toBe('ATM-I-HARVEST-SINK')
-    }
-    const codes = warnings.map(d => d.code).sort()
-    expect(codes).toEqual([
-      'ATM-W-DYNAMIC-IDENTIFIER',
-      'ATM-W-DYNAMIC-IDENTIFIER',
-      'ATM-W-DYNAMIC-MEMBER',
-      'ATM-W-DYNAMIC-MEMBER',
-      'ATM-W-DYNAMIC-MEMBER',
-      'ATM-W-DYNAMIC-MEMBER',
-    ])
-    const messages = warnings.map(d => d.message).join('\n')
-    expect(messages).toMatch(/'color'.*'color'/)
+    // The color sink is covered incidentally (every offered value is a
+    // static plan, zero net-new): only the uncovered backgroundColor
+    // refusal and its minting sink still report.
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.code).toBe('ATM-W-DYNAMIC-IDENTIFIER')
+    expect(warnings[0]!.message).toMatch(/'missing'.*'backgroundColor'/)
+    expect(infos).toHaveLength(1)
+    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    expect(infos[0]!.message).toMatch(/backgroundColor under \[\]/)
   },
 }
 

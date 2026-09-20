@@ -110,12 +110,15 @@ pub enum DiagnosticCode {
     /// `harvest/mint`: one info per harvest sink, naming the prop, its
     /// `when`, and the minted count (Forge Slice 4, `ATM-HARVEST-01..04`).
     HarvestSink,
+    /// `diagnostics/proof`: an exact runtime lookup the final plan omits
+    /// with no resolver fact proving the cause (Error Correct Slice 4).
+    MissingStylePlan,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 42] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 43] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -203,6 +206,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 42] = [
     (DiagnosticCode::TokenCallRefused, "ATM-W-TOKEN-CALL-REFUSED"),
     (DiagnosticCode::UnknownColor, "ATM-W-UNKNOWN-COLOR"),
     (DiagnosticCode::HarvestSink, "ATM-I-HARVEST-SINK"),
+    (DiagnosticCode::MissingStylePlan, "ATM-W-MISSING-STYLE-PLAN"),
 ];
 
 impl DiagnosticCode {
@@ -326,6 +330,7 @@ mod tests {
             DiagnosticCode::TokenCallRefused,
             DiagnosticCode::UnknownColor,
             DiagnosticCode::HarvestSink,
+            DiagnosticCode::MissingStylePlan,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

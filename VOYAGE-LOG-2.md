@@ -1088,6 +1088,229 @@ reviews the landing firsthand (08/09/10 green + drift-net suite
 re-run + diff review), then sequences Slice 5 (needs Q2 EXTEND
 shape — already in log: additive-optional, no schema bump).
 
+### Oracle O7 — Slice-4 review verdict + Slice 5 dispatch (2026-09-20)
+
+_(replacement oracle: the prior run died writing O7, so every prior
+below was reproduced firsthand — 2 nested workers on disjoint
+runners for vitest + cargo/quality plus lead-inline re-runs of all
+four gates via `pnpm agentrs` only, full line-by-line diff review
+vs 993a7cb24, golden audit of every touched station, ledger +
+engine reads. Peer files ignored per orders. Written in three
+sequential edits so partial progress survives another death.)_
+
+**Verdict: S4 CLEAR with 08-open (hinge-only red per the O6
+caveat) + 14-pin-open (E8-class, S5 re-points).** No gaps. All O6
+done-criteria met except 08's S5-wire hinge, which S4 must not
+thread (adjudicated below). One non-blocking finding (F-S4a: F-G1b
+wants an end-to-end pin in S6).
+
+**V1. Stations 08/09/10 — VERIFIED (lead re-runs, `pnpm agentrs
+v cases.test.ts -t`).** 09 PASS (1 passed / 235 skipped): golden
+is 1 located `ATM-W-UNKNOWN-CONDITION` at `absent.ts:4:19` naming
+`` `color: red.500` `` + legacy reason — located + named +
+reasoned per contract. 10 PASS (1/235): golden `[]`, silent. 08
+FAIL hinge-only: pins pass (presence :19, silence :22 —
+execution reaches the hinge), fails exactly at `:38`
+`compiler channel records the exact expected lookup: expected
+undefined to be defined`. Untouched specs (09/10 spec.ts not in
+the diff — no weakening possible).
+
+**V2. Full suite — VERIFIED (lead).** `pnpm agentrs v atomic`:
+**278 passed / 5 failed (283)** — 09/10 flip green, zero other
+drift. The 5 red: 07 (12 channel items, same reason), 08
+(compiler hinge :38, same), 11 (8 items @ E8-guard, spec
+untouched — E8 stands), 12 (compiler hinge :53, same), 14 (NOW
+at the themeColor pin :44 `dynamic identifier past the emoji is
+located` instead of the hinge :64 — covered-sink early-arrival,
+disclosed by the landing, adjudicated in (ii)). 07's 12 + 11's
+8 prove vacuous/uncovered/minting sinks keep everything.
+
+**V3. Cargo — VERIFIED (worker + lead).** `pnpm agentrs c
+atomic`: **439 passed / 0 failed** (415 + 24 S4), zero
+warnings. S4 pins re-run by name, all ok: 19
+`diagnostics::proof` join/render tests, 2 BigInt pins, R7
+true/false both arms, covered/vacuous/minting sink pins,
+param-shadow pin, harvest-wording + mint-offering pins.
+
+**V4. Quality — VERIFIED (lead).** `pnpm agentrs q` smart: exit
+0, 29 files, zero violations. `q …/src/diagnostics/`: **ALL 37
+FILES PASS** (closes untracked-file coverage), zero complexity
+/ file / clippy-allow findings. New proof/policy files carry
+2–6-sentence headers; no `#[allow]`.
+
+**R1. 08 adjudication — S4 CLEARS WITH 08 OPEN.** Rule: 08's
+hinge asserts S5's wire (`compilerDiagnostics` via Q2 EXTEND),
+which is S5-owned per Q2 and explicitly in S4's must-not-touch
+(O6). A green 08 in S4 would require violating S5's ownership;
+08-open is therefore the CORRECT S4 end state, pre-authorized
+by the O6 caveat. Reasons: (a) 08's S4-contract pins pass
+(presence + userspace silence — the proof half); (b) zero
+`compilerDiagnostics`/`logs` added lines in the src diff (wire
+untouched, verified by grep); (c) S4 renders userspace-only as
+dispatched. 08 flips green in S5 when the channel exposes S2's
+facts. Same standing for 12's hinge.
+
+**R2. 14-pin — E8-CLASS, S5 re-points (not drift, not a gap).**
+14's `unicode.ts` color sink meets exactly the criteria 10's
+rule requires: refused site (`themeColor` unbound → dynamic +
+sink), pool offers color-kind values, minted 0 (mode pins
+`:32-37` pass — every mode extracts, so all offered values are
+already site wants), every offered value planned (plan pins
+pass). Monotonicity verified: any principled 10-rule fires
+here — the pin breaks BECAUSE the rule is principled, not from
+overreach. Same category as E8 (S0 shell asserting
+default-channel presence of a line proof/channel work
+legitimately moves). S5 re-points the pin at
+`compilerDiagnostics` (facts stay in the session — proof only
+rewrites pushed lines — so S5 can render them). NOT a
+weakening; recorded here so no crew "fixes" it early.
+
+**R3. Golden audit — all 16 intended proof output, zero drift.**
+(a) 6 proof replacements, 1:1 same code+site, proof sentence +
+legacy reason: COND-12/13 (R2), COND-21 (2× R2), GHOST-04
+(R2), SITE-18 (R7-true — the `true` arm proves), UNIT-02 (R5 +
+R6×3 — F-S3b live). Each is exact-match + absent + keyed
+reject — the join's bar. (b) 8 covered-sink removals
+(LEAF-04/07, SITE-34/40/42/44/48/51): funnel (Dynamic*) + M1
+lines at covered (prop,when) only. The KEEP side proves
+selectivity, not a sweep: SITE-40's spread, SITE-44's
+backgroundColor refusal + minting sink, SITE-48's margin sink
++ `sizes[9]` + mutated-binding (no sink by design), SITE-51's
+width/order/mt refusals, LEAF-04/07 first lines all kept. (c)
+2 true causeless (`ATM-W-MISSING-STYLE-PLAN`, honestly
+unlocated — no catalog yet): SITE-47 (template-trim
+divergence — engine `fold_template :142-146` trims joins,
+runtime queries raw — a TRUE miss, first blood for the new
+code) and TOKEN-12 (fatal drops the decl; proof names the
+exact miss beside the byte-identical errors). (d) codes.rs:
+one appended code for a genuinely new failure class, via the
+table both directions (43 rows) — doc-blessed. (e) 11 spec
+rewrites: inputs untouched everywhere; exact counts/messages;
+silence assertions ADDED (SITE-51 over-cap absence,
+SITE-44/SITE-48 survivor pins) — equal-or-stricter, no
+loosening. Unchanged specs (COND-12/13, GHOST-04, UNIT-02,
+LEAF-07) still pin counts/codes/reason-substrings; goldens pin
+the rest byte-exact. No styles.css/css.json/input drift (test
+diff is diagnostics.json + spec.ts + 2 new output/ dirs only).
+
+**R4. Line-by-line — contract holds.** Owned key type +
+single serializer (`From<&RuntimeStylePlan>`,
+`emitted_keys` via `lookup_key()` — no second canonicalizer);
+emitted set built post-assembly (`assembly.rs:95-100`, plans
+in hand, before `CompileResult`); G1-closed join (const/unary
+hole paths untouched; rejects = Rejected-with-key minus
+false-refusals; hole-valued + unknown-prop causeless
+excluded); one located non-fatal warning only for absent
+exacts with resolver-proven reasons (reject-replace keeps
+code+site; causeless `MissingStylePlan` only when absent +
+unexplained + known-prop + non-hole, warn-once per key);
+incidental coverage both arms (present-exact drops legacy
+line; covered sink drops funnel+M1); R7 false-never-userspace
+(triple-excluded: G1 no-Exact + `rejects.rs` spelling gate +
+`is_hole_value`; SITE-33/38/43 folded-false/binary/enum
+untouched in the diff — stay legacy). Surgery is
+identity-matched (code+location+message), in-place order
+preserving; causeless appends carry no position they cannot
+prove. F1 parity verified (`scope/collect/params.rs`
+binds destructured names as Param shadows — analysis mirrors
+it; SITE-53 green end-to-end + unit pin). F2 deferral
+load-bearing (`walk_leaf` gates no prop — unknown-prop
+exacts reach the join; extract's located gate keeps
+jurisdiction; pinned by unit test).
+
+**R5. F-S3b — RULED: R6 MOVES TO USERSPACE.** R6 meets R4's
+bar exactly, now with live proof: S3-corrected behavior
+(warns then `return None`, same `?`-drop path), S4 join fires
+on it (UNIT-02 ×3 replacements, same code+site, proof
+sentence naming prop+value), refused strings are non-hole so
+runtime genuinely queries-and-misses. No R4/R6 asymmetry
+remains. Captain applies (S4 correctly kept the compiler cell
+pending this ruling): move the row to the userspace table
+after R5 (keeps `unit.rs` line order), counts userspace 5→6 /
+compiler 91→90 / C3 (6)→(5), userspace intro "All five"→"All
+six", C3 header drops the R6 wart (its "none is a miss" then
+holds for all 5), §Notes R6 line gains "(S4: moved to
+userspace — O7 R5)". Exact replacement row text:
+
+`| R6 | \`resolve/unit.rs:139\` | NonCanonicalNumeric, String (W, unlocated) | pair dropped (\`return None\`, same \`?\` path as R4/R5; S3 correction: S0 misread it as passthrough) | YES — via upstream authored decl/want (prop post-expansion, value/when/important upstream), same as R4 | \`ATM-DIAG-09\` (+ \`04\`); proven live by S4 (ATM-UNIT-02 ×3 proof replacements) |`
+
+(The O2 "R6–R11 paint" line takes the same R6 asterisk.)
+
+**R6. F-G1b — SOUND + DOCUMENTED; pin-gap carried as F-S4a
+(non-blocking).** The decision holds: the const bag is
+scope-flattened, so skip-by-membership has inner-redeclare
+holes; provenance-per-entry is the sound fix; until then
+const-driven uses stay dynamic (never wrong — silence-safe
+completeness gap, legacy resolve lines still warn unnamed).
+Recorded in the `record_declarator_shadow` doc comment
+(firsthand). Coverage: walker-level pins (O5) + shadow
+machinery pinned end-to-end (SITE-53 green + param-shadow
+unit test). Gap: no dedicated end-to-end pin asserting a
+top-level const use stays dynamic — S6 adds the one-liner;
+its absence cannot produce a false Exact (the dangerous
+direction needs an unsound "fix," which S6 audit gates).
+
+**R7. BigInt — SOUND + PINNED.** A BigInt value is not
+JSON-shaped, so no exact runtime key is knowable: leaf →
+Unknown, compound → refuse whole. Silence-valid either way
+(runtime would never match a JSON-serialized plan key).
+Pinned by `bigint_leaves_stay_unknown` +
+`bigint_leaves_refuse_the_compound`, both re-run ok.
+
+**R8. Must-not-touch — CLEAN SWEEP.** `hosts/entries.rs` +
+`css.ts` untouched; no `ATM-E-*` change (no E token in added
+lines; TOKEN-12 errors byte-identical); no renames (one
+append-only code); no extraction/harvest/resolve/stylesheet
+semantics change (goldens drift-net holds — non-diagnostic
+bytes identical); no re-parse (no `Parser` in added lines);
+no wire threading; no blanket goldens (16 intentional + 2 new,
+each audited above); no weakened tests (inputs untouched,
+specs equal-or-stricter).
+
+**SEQUENCE — Slice 5 (compiler backchannel).** No ruling gates
+S5 (Q2 EXTEND already in log: additive-optional, no schema
+bump). Single implementor crew (one coupled channel; may fan
+nested workers over disjoint pieces ONLY: Rust plumbing vs
+Neo printer vs station wiring — policy partition + 07 stay
+with the lead). Scope per doc Slice 5 + map §C: typed
+`logs?: Array<'compiler'>` config + validator + frozen-TS
+(`contracts/types.ts`) → napi (`native.rs`, snake_case alias
+per house style) → inner `CompileRequest` plumbing;
+`compilerDiagnostics?` populated by Rust ONLY when requested
+(default bytes identical for direct callers); move
+dynamic/refusal/spread/harvest/dead-branch candidates off the
+default result onto the channel; distinct `[neo] compiler`
+printer that PRESERVES the userspace one-`console.warn`
+collapse (E4); `debug?: boolean` untouched (stays
+declared-only infra flag). Session facts are the channel
+source (S4 borrows them — still intact after proof
+rendering): S5 renders Exact/Dynamic/Extract/Harvest/Resolve
+facts onto `compilerDiagnostics`, INCLUDING covered-sink
+funnel+harvest facts (proof silenced their default lines;
+the channel must still show them — 14's re-pointed pin needs
+the themeColor line). Proof output stays userspace: 09's
+warning, all 6 replacements, both causeless
+`MissingStylePlan` lines never move. Done-criteria
+(checkable): `ATM-DIAG-07` GREEN (default silence + opt-in
+visibility + array isolation); new `NEO-SYNC-*` case green
+(config threading, distinct printer, isolation) +
+`sync.test.ts` unit; 08/12 hinges flip green (channel
+records S2's expected-key facts); E8 guard correction (11's
+guard re-points at `compilerDiagnostics` — correction, NOT
+weakening); 14-pin re-point (themeColor UTF-16 col-54
+asserted on the channel; R2 14-pin ruling); S3c direct-warn
+block migrates AS ONE (ObjectWalk/ExtractContext +
+plain-warn extract sites — all compiler-per-ledger; S5 must
+not re-audit them as S3 scope escape); 09/10 stay green;
+`agentrs q` + `c atomic` green. Must-not-touch (map §D):
+`ATM-E-*` behavior, stable wire codes, extraction/harvest/
+resolve/stylesheet semantics, `hosts/entries.rs`, no second
+parse, no `css.ts` (Q1 DEFER), no `debug` alias, no blanket
+golden updates, no weakened tests. Oracle reviews the
+landing firsthand (07 green + Neo case + channel-isolation
+suite re-run + diff review), then sequences Slice 6 (audit +
+census + Splitter silence proof).
+
 ## Landings
 
 _(implementors, per slice)_
@@ -1528,7 +1751,80 @@ locked, building shared API first.)_
 
 ### S4 proof
 
-_(placeholder — slice4 crew)_
+_(slice4 crew, live 2026-09-20 — single crew inline, no nested workers:
+one coupled proof join; coherence over fan-out. Phase: READ→DESIGN.)_
+
+- Read: O6 dispatch + S3 handoff (session dropped at end of `compile()`,
+  re-resolve echoes fact-free), doc Slice-4, ledger userspace rows, 07–14
+  specs/inputs. Tree clean (only peer files dirty — hands off).
+- Design locked (pending probe verification): end-of-compile session
+  rendering in `assembly::finish` (plans + session + system in hand).
+  Owned key type exists (`OwnedLookupKey` + `lookup_key()` reusing
+  `serialize_lookup_key`); S4 adds `From<&RuntimeStylePlan>` + join +
+  render. Mechanics = replace/remove-in-place via policy re-derivation
+  (legacy sentence re-rendered from fact, matched by code+location+
+  message): zero order drift; drift set = exactly proof-fired stations.
+  - Absent exact + matching resolve-Rejected-with-key → replace legacy
+    line with proof warning (same code; names prop+value; legacy
+    sentence as the actionable reason). R7-false structurally excluded
+    (G1 Hole ⇒ no Exact ⇒ no match); R6 uniform (oracle rules the row).
+  - Matched + present → remove legacy line (incidental coverage;
+    expect ~zero triggers; audit verifies).
+  - Covered sink (offered≠∅, minted==0, every offered value planned) →
+    remove its funnel lines + M1 (10's mechanism; vacuous/uncovered
+    sinks keep everything — 02/05/07/11 preserved by construction).
+  - Causeless absent exact → push proof warning (arm exists per
+    dispatch; code decided if triggered; expect ~zero).
+  - 08 hinge reads S5's wire → stays red; oracle adjudicates per brief.
+- Open probes: mint kind-acceptance for 10's pool, resolve-key shapes
+  (post-expansion props?), BigInt-Exact{Null} firsthand, F-G1b visitor
+  shadowing firsthand, green blast radius via suite run.
+- Vitals: BUILD done, AUDIT done. Proof live: 09 = 1 located
+  UnknownCondition naming color+red.500; 10 = silent. Cargo 439/0.
+  Suite 260/23: 09/10 fail only on missing output/ (specs pass);
+  07/08/11/12 red for the recorded reasons (07: 12 items, 11: 8 items,
+  08/12: compiler hinge); 16 green-drift stations hand-verified:
+  6 replacements (COND-12/13/21, GHOST-04, SITE-18 R7-true, UNIT-02
+  R5+R6x3 — F-S3b live, ledger untouched), 8 covered-sink removals
+  (LEAF-04/07, SITE-34/40/42/44/48/51), 2 true causeless (SITE-47
+  template-trim divergence, TOKEN-12 policy-plus error+warning).
+  Audit forced 3 fixes, all landed+pinned+q-clean: BigInt→Unknown
+  (leaf+compound), (F1) destructured params shadow (SITE-53 false
+  positive — analysis comment was wrong, extraction binds), (F2)
+  causeless defers to O2 jurisdiction (unknown props incl. `_hover`).
+  F-G1b DECIDED: document (code comment in) — bag is scope-flattened
+  so skip-by-membership has inner-redeclare holes; needs provenance.
+  14-pin handoff: covered-sink early-arrival breaks the themeColor
+  UTF-16 pin (E8-class; S5 re-points at the compiler channel — any
+  principled 10-rule breaks it, shown by monotonicity). Next: goldens
+  (09/10 new + 16 diagnostics.json rewrites, verified non-diagnostic
+  clean), SPEC flips, full verify.
+- LANDED 2026-09-20. Suite 278/5 (was 276/7): 09/10 GREEN with new
+  output/ goldens; 07/08/11/12 red for the recorded reasons (07: 12
+  items hinge, 11: 8 items hinge, 08/12: compiler hinge); 14 red at
+  the UTF-16 pin instead of the hinge (covered-sink early-arrival —
+  S5 handoff, see above). 16 green stations rewritten (diagnostics.json
+  ONLY, zero other-file drift — verified via git status: 29 paths, all
+  diagnostics.json/spec.ts/new-output): 6 proof replacements (1:1, same
+  code+site), 8 covered-sink removals, 2 true causeless (SITE-47,
+  TOKEN-12); 11 specs rewritten to proof-correct contracts with equal
+  strictness (exact counts/messages, never loosened). SPEC.md: 09/10
+  rows flipped (08 stays open for S5's hinge). Cargo 439/0 (+24 S4
+  pins); q clean, 39 files, zero warnings; R7 split honored (SITE-18
+  literal-true proves; SITE-33/38/43 folded-false/binary/enum stay
+  legacy; unit pins both arms). R6 behaves exactly like R4-userspace
+  (UNIT-02 ×3) — fact stayed Rejected, ledger row NOT moved, S4 oracle
+  rules it. Engine findings for the log (not S4's to fix): extraction
+  trims template leading whitespace that runtime queries raw (SITE-47
+  true miss), twin-skipped harvest values can hide runtime misses at
+  alias-twin positions (conservative keep). Residual under-shadow gaps
+  (proven-safe to skip: nothing manifests in-suite): function-decl
+  names, catch params, import bindings (gating interaction), TDZ-order
+  const uses. F-G1b: documented, not fixed (see code comment).
+
+### S5 backchannel
+
+_(placeholder — slice5 crew)_
 
 ## Architect rulings
 
@@ -1558,5 +1854,10 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-20 02:20 tick: O5 G1 CLEAR (hole mapping complete, 5 pins, 275/8 + q re-verified) — S2 clears with G1 folded in. Committed S2+G1 checkpoint (ledger E9 excluded — S3's, landed 02:20; peer files excluded). S3 alive (design locked, building shared API first). 15/16 terminal, no deadlock. Next: S3 landing → oracle review → Slice 4.
 - 2026-09-20 02:40 tick: S3 BUILDING all 4 families (extract funnel + call sites, harvest, resolve, hosts→typed fact; policy.rs→policy/ split; adapters; interim notes flowing). Peer files untouched. 15/16 terminal, no deadlock. Next: S3 landing → oracle review → Slice 4.
 - 2026-09-20 watch: S3 CLEAR on oracle O6 word (13 green incl. x2 regression closed; full suite 276/7; cargo 415/0; q clean; funnel + 3 families migrated, ATM-E-* byte-unchanged, Q5b exclusion pinned, F6/E9 in; F-S3b R6 ruling queued for S4 oracle; F-G1b + BigInt-Null carried). Committed S3 checkpoint (peer files excluded). Dispatched single Slice-4 crew (final-plan proof, 08/09/10). Next: oracle review of S4 landing → Slice 5.
+- 2026-09-20 03:05 tick: S4 crew ~10 min, zero writes (tree holds peer files only, placeholder untouched) — vitals ping queued with interim-write nudge; threshold: still silent at next tick → unstick. Peer files untouched. 17/18 terminal. Next: S4 signs of life or unstick → oracle review → Slice 5.
+- 2026-09-20 03:20 tick: S4 ALIVE (interim note: READ→DESIGN, single-inline by choice; proof/plans.rs + proof/render + policy/proof + harvest adapters writing). Threshold lifted. Peer files untouched. 17/18 terminal, no deadlock. Next: S4 landing → oracle review → Slice 5.
+- 2026-09-20 03:40 tick: S4 BUILDING (proof module growing: plans/lines/rejects/render/sinks + policy/proof; session rendering in assembly::finish; interim notes detailed). Peer files untouched. 17/18 terminal, no deadlock. Watch items for oracle review: 5 existing diagnostics.json goldens modified (COND-12/13, GHOST-04, LEAF-07, UNIT-02) + codes.rs (new warning code?) — intended proof output vs drift to adjudicate. Next: S4 landing → oracle review → Slice 5.
+- 2026-09-20 watch: S4 CLEAR on oracle O7 word (09/10 green; 08-open hinge-only per O6 caveat; 14-pin E8-class → S5 re-points; 278/5; cargo 439/0; q clean; 16 goldens audited intended; R6 RULED userspace — applied via S5 crew first step per captain role; F-G1b sound, F-S4a pin → S6). Committed S4 checkpoint (peer files excluded). Dispatched single Slice-5 crew (compiler backchannel, 07 green + NEO-SYNC-* + E8/14-pin corrections). Next: oracle review of S5 landing → Slice 6.
+- 2026-09-20 watch: S4 review oracle DIED while writing O7 (verification complete per final vitals — treat as UNVERIFIED priors: 09/10 green, 08 hinge-only red, 278/5, cargo 439/0, q clean, S4-CLEAR-with-08-open, R6→userspace). Replacement oracle dispatched with incremental-write orders (verdict+evidence, then rulings, then S5 spec — separate edits). Next: O7 lands → commit S4 → Slice 5.
 
 ## Useful

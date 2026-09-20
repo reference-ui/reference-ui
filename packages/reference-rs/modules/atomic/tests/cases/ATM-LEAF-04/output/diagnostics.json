@@ -10,14 +10,6 @@
   {
     "severity": "warning",
     "code": "ATM-W-DYNAMIC-IDENTIFIER",
-    "message": "Dynamic non-literal identifier 'customMargin' encountered for prop 'margin'",
-    "file": "input/src/css-fallback.ts",
-    "line": 4,
-    "column": 15
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-IDENTIFIER",
     "message": "Dynamic non-literal identifier 'dynamicColor' encountered for prop 'bg'",
     "file": "input/src/or-nullish.tsx",
     "line": 4,
@@ -38,13 +30,5 @@
     "file": "input/src/css-fallback.ts",
     "line": 3,
     "column": 14
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "margin under []: 0 harvested values minted",
-    "file": "input/src/css-fallback.ts",
-    "line": 4,
-    "column": 15
   }
 ]

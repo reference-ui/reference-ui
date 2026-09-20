@@ -56,10 +56,10 @@ const spec: AtomicCaseSpec = {
     const diagnostics = result.diagnostics ?? []
     const warnings = diagnostics.filter(d => d.severity === 'warning')
     const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(1)
-    expect(warnings[0]!.message).toMatch(/Dynamic non-literal identifier 'ghost'/)
-    expect(infos).toHaveLength(1)
-    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
+    // The color sink is covered incidentally (every offered value is a
+    // static plan, zero net-new), so the ghost refusal stays silent.
+    expect(warnings).toHaveLength(0)
+    expect(infos).toHaveLength(0)
     expect(hasWant(result, 'color', 'ghost')).toBe(false)
 
     expect(result.stylesheet).toContain('color: red;')

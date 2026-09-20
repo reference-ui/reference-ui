@@ -60,14 +60,12 @@ const PART_REFUSALS: Array<{
   prop: string
 }> = [
   { file: 'refuse.ts', line: 3, column: 34, part: 'part 1', detail: "member 'props.w'", prop: 'width' },
-  { file: 'refuse.ts', line: 4, column: 34, part: 'part 1', detail: "identifier 'missing'", prop: 'color' },
-  { file: 'refuse.ts', line: 5, column: 34, part: 'part 1', detail: 'call expression', prop: 'color' },
-  { file: 'refuse.ts', line: 10, column: 34, part: 'part 1', detail: "mutated binding 'shade'", prop: 'color' },
   { file: 'refuse.ts', line: 14, column: 35, part: 'part 1', detail: "identifier 'dyn'", prop: 'order' },
-  { file: 'refuse.ts', line: 16, column: 34, part: 'part 1', detail: 'void expression', prop: 'color' },
-  { file: 'fanout.ts', line: 8, column: 55, part: 'part 1', detail: 'call expression', prop: 'borderColor' },
   { file: 'App.tsx', line: 5, column: 30, part: 'part 1', detail: "identifier 'dyn'", prop: 'mt' },
 ]
+// The color and borderColor part refusals (refuse.ts 4/5/10/16, fanout.ts 8)
+// are covered incidentally — every offered value is a static plan, zero
+// net-new — and stay silent.
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-51',
@@ -100,7 +98,7 @@ const spec: AtomicCaseSpec = {
     const importantPlan = plans.find(p => p.prop === 'padding' && p.value === '8px' && p.important)
     expect(importantPlan, 'joined important plan').toBeDefined()
 
-    // Eight part refusals: zero wants from those templates, one located
+    // Three part refusals: zero wants from those templates, one located
     // `ATM-W-DYNAMIC-TEMPLATE` diagnostic each, naming the part.
     const diagnostics = result.diagnostics ?? []
     for (const { file, line, column, part, detail, prop } of PART_REFUSALS) {
@@ -118,17 +116,15 @@ const spec: AtomicCaseSpec = {
       expect(match!.severity).toBe('warning')
     }
 
-    // The over-cap fan-out refuses whole: no partial strings, one
-    // diagnostic at the template, the margin sibling kept.
-    const capped = diagnostics.find(
-      d =>
-        d.code === 'ATM-W-DYNAMIC-TEMPLATE' &&
-        d.file?.endsWith('fanout.ts') &&
-        d.line === 19 &&
-        d.column === 31 &&
-        d.message.includes('16 combinations exceed the 8-combination fan-out limit'),
-    )
-    expect(capped, 'over-cap whole-template refusal').toBeDefined()
+    // The over-cap fan-out stays silent when its sink is covered
+    // incidentally: no partial strings, no diagnostic at the template,
+    // the margin sibling kept.
+    expect(
+      diagnostics.some(
+        d => d.file?.endsWith('fanout.ts') && d.line === 19,
+      ),
+      'covered over-cap template stays silent',
+    ).toBe(false)
     expect(hasWant(result, 'margin', '4px')).toBe(true)
 
     // A folded template under unary refuses the operator without leaking
@@ -144,8 +140,8 @@ const spec: AtomicCaseSpec = {
 
     const warnings = diagnostics.filter(d => d.severity === 'warning')
     const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(10)
-    expect(infos).toHaveLength(5)
+    expect(warnings).toHaveLength(4)
+    expect(infos).toHaveLength(3)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
     }

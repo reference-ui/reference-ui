@@ -86,7 +86,8 @@ pub fn mint(ctx: MintCtx<'_>) {
             },
             prop: sink.prop.clone(),
             when: sink.when.iter().cloned().collect(),
-            minted,
+            minted: minted.count,
+            offered: minted.offered,
         };
         let diagnostic = Policy::render_harvest(&report);
         session.report(DiagnosticFact::from(report));
@@ -105,10 +106,25 @@ fn ordered_unique(sinks: &[Sink]) -> Vec<&Sink> {
     ordered
 }
 
-/// Mint one sink's compatible pool values; the net-new count.
-fn mint_sink(pool: &HarvestPool, sink: &Sink, state: &mut MintState<'_>) -> usize {
+/// What one sink accepted from the pool: the net-new minted count plus
+/// every kind-accepted value (pre-twin-skip), so proof can tell a covered
+/// sink (all offered values already planned) from a vacuous one (the pool
+/// offered nothing). Acceptance order is deterministic: kind order, then
+/// pool order within each kind.
+struct SinkMint {
+    count: usize,
+    offered: Vec<Box<str>>,
+}
+
+/// Mint one sink's compatible pool values; the net-new count plus the
+/// kind-accepted offering. Twin-skipped values stay in the offering: they
+/// are what the pool contributed, even when a site want already held them.
+fn mint_sink(pool: &HarvestPool, sink: &Sink, state: &mut MintState<'_>) -> SinkMint {
     let canonical = canon::resolve_canonical_prop(&sink.prop);
-    let mut minted = 0;
+    let mut minted = SinkMint {
+        count: 0,
+        offered: Vec::new(),
+    };
     for kind in KIND_ORDER {
         let Some(values) = pool.values(kind) else {
             continue;
@@ -117,12 +133,13 @@ fn mint_sink(pool: &HarvestPool, sink: &Sink, state: &mut MintState<'_>) -> usiz
             if !harvest_accepts(&sink.prop, canonical, kind, value) {
                 continue;
             }
+            minted.offered.push(value.clone());
             let twin = (canonical.into(), value.clone(), sink.when.clone(), false);
             if !state.seen.insert(twin) {
                 continue;
             }
             push_harvested(state.wants, state.authored, sink, value);
-            minted += 1;
+            minted.count += 1;
         }
     }
     minted
@@ -187,7 +204,7 @@ mod tests {
             wants,
             authored: &mut authored,
         };
-        mint_sink(&pool, sink, &mut state)
+        mint_sink(&pool, sink, &mut state).count
     }
 
     #[test]
@@ -209,6 +226,34 @@ mod tests {
         let mut wants = Vec::new();
         assert_eq!(mint_count(&["inherit"], &order, &mut wants), 1);
         assert_eq!(mint_count(&["var(--x)"], &order, &mut wants), 1);
+    }
+
+    /// Mint the pool values onto one sink; the kind-accepted offering.
+    fn mint_offered(pool_values: &[&str], sink: &Sink, wants: &mut Vec<Want>) -> Vec<Box<str>> {
+        let mut pool = HarvestPool::default();
+        for value in pool_values {
+            pool.insert(value);
+        }
+        let mut authored = Vec::new();
+        let mut state = MintState {
+            seen: wants.iter().map(twin_key_for).collect(),
+            wants,
+            authored: &mut authored,
+        };
+        mint_sink(&pool, sink, &mut state).offered
+    }
+
+    #[test]
+    fn offering_keeps_twin_skipped_values() {
+        let color = sink_for("color");
+        let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
+        assert_eq!(mint_offered(&["red"], &color, &mut wants), vec!["red".into()]);
+        assert_eq!(
+            mint_offered(&["red"], &color, &mut Vec::new()),
+            vec!["red".into()]
+        );
+        let width = sink_for("width");
+        assert!(mint_offered(&["red"], &width, &mut Vec::new()).is_empty());
     }
 
     #[test]

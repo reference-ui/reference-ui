@@ -10,49 +10,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template part 1 (call expression) encountered for prop 'borderColor'",
-    "file": "input/src/fanout.ts",
-    "line": 8,
-    "column": 55
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template expression for prop 'color' (16 combinations exceed the 8-combination fan-out limit)",
-    "file": "input/src/fanout.ts",
-    "line": 19,
-    "column": 31
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
     "message": "Dynamic non-literal template part 1 (member 'props.w') encountered for prop 'width'",
     "file": "input/src/refuse.ts",
     "line": 3,
-    "column": 34
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template part 1 (identifier 'missing') encountered for prop 'color'",
-    "file": "input/src/refuse.ts",
-    "line": 4,
-    "column": 34
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template part 1 (call expression) encountered for prop 'color'",
-    "file": "input/src/refuse.ts",
-    "line": 5,
-    "column": 34
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template part 1 (mutated binding 'shade' (reassigned at input/src/refuse.ts:9:1)) encountered for prop 'color'",
-    "file": "input/src/refuse.ts",
-    "line": 10,
     "column": 34
   },
   {
@@ -70,30 +30,6 @@
     "file": "input/src/refuse.ts",
     "line": 14,
     "column": 35
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-TEMPLATE",
-    "message": "Dynamic non-literal template part 1 (void expression) encountered for prop 'color'",
-    "file": "input/src/refuse.ts",
-    "line": 16,
-    "column": 34
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "borderColor under []: 0 harvested values minted",
-    "file": "input/src/fanout.ts",
-    "line": 8,
-    "column": 55
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "color under []: 0 harvested values minted",
-    "file": "input/src/fanout.ts",
-    "line": 19,
-    "column": 31
   },
   {
     "severity": "info",
