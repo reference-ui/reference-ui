@@ -4932,3 +4932,8 @@ pending. Stop order still in force — no wave 7. Standing by.
 Seventh tick during HQ-ordered park: unchanged. Obj-1/2 COMPLETE,
 Obj-3 IN PROGRESS (paused). Zero live crews, tree clean, nothing
 pending. Stop order still in force — no wave 7. Standing by.
+
+### Captain tick — still parked, no action (8)
+Eighth tick during HQ-ordered park: unchanged. Obj-1/2 COMPLETE,
+Obj-3 IN PROGRESS (paused). Zero live crews, tree clean, nothing
+pending. Stop order still in force — no wave 7. Standing by.
