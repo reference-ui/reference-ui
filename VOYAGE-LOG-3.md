@@ -4902,3 +4902,8 @@ has since committed Jettison/Reaper docs at HEAD). No VERIFIED arcs
 pending, nothing to commit. HQ's "wave 6 is last / stop" order
 overrides the tick's keep-turning step — no wave 7 dispatched.
 Standing by for HQ.
+
+### Captain tick — still parked, no action
+Second tick during HQ-ordered park: unchanged. Obj-1/2 COMPLETE,
+Obj-3 IN PROGRESS (paused). Zero live crews, tree clean, nothing
+pending. Stop order still in force — no wave 7. Standing by.
