@@ -1,4 +1,4 @@
-OPERATION: READY
+OPERATION: GO
 
 # Mission: Operation Jettison — drop the shipped per-atom map
 
