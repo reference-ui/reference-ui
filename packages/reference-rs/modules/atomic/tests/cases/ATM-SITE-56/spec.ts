@@ -6,6 +6,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   hasWant,
   type AtomicCaseSpec,
@@ -13,16 +14,22 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-56',
-  verify(result) {
+  async verify(result) {
     expect(result.tracedJsxHosts ?? []).toEqual(['Card'])
     expect(hasWant(result, 'mt', '4r')).toBe(true)
     expect(result.wants ?? []).toHaveLength(1)
     expect(getWantsForProp(result, 'color')).toHaveLength(0)
     expect(result.stylesheet).toContain('mt_4r')
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
-    // Discovery itself is silent here; the one warning is extraction's
-    // rest-spread note for Card's `{...styleProps}` forwarder.
-    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
+    // Discovery itself is silent here; extraction's rest-spread note for
+    // Card's `{...styleProps}` forwarder rides the opt-in channel (S6
+    // E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-56', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const warnings = (opted.compilerDiagnostics ?? []).filter(
+      d => d.severity === 'warning'
+    )
     expect(warnings).toHaveLength(1)
     expect(warnings[0]!.message).toContain('spread')
     expect(Object.keys(result.css?.classes ?? {})).toHaveLength(1)

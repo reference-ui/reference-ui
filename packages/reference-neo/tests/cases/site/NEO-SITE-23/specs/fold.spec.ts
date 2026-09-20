@@ -14,12 +14,16 @@ import type { SpecPage } from '../../../../shared/page.ts';
 // structurally instead of importing the atomic types.
 interface AtomicDiagnostic {
   severity: 'error' | 'warning' | 'info';
+  code: string;
   message: string;
   file?: string;
 }
 
 interface AtomicModule {
-  compile(request: unknown): Promise<{ diagnostics: AtomicDiagnostic[] }>;
+  compile(request: unknown): Promise<{
+    diagnostics: AtomicDiagnostic[]
+    compilerDiagnostics?: AtomicDiagnostic[]
+  }>;
 }
 
 interface SpecInput {
@@ -167,10 +171,19 @@ async function assertWarning(c: NeoCase): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const warnings = (result.diagnostics ?? []).filter(
+  // S6 E8-class re-point: the refusal proves no exact runtime miss, so it
+  // rides the opt-in channel; the default carries only the aggregate
+  // container-root advisory (R3, stays default per the S6 adjudication).
+  const defaults = result.diagnostics ?? [];
+  assert.equal(defaults.length, 1, `default carries only the advisory, got ${JSON.stringify(defaults)}`);
+  assert.equal(defaults[0].code, 'ATM-W-MISSING-CONTAINER-ROOT');
+  const opted = await atomic.compile({ ...request, logs: ['compiler'] });
+  assert.ok(opted.compilerDiagnostics, 'opt-in channel populates compilerDiagnostics');
+  const channel = opted.compilerDiagnostics ?? [];
+  const warnings = channel.filter(
     (entry: AtomicDiagnostic) => entry.severity === 'warning' && entry.message.includes("'dk'"),
   );
-  assert.equal(warnings.length, 1, `one located dk warning, got ${JSON.stringify(result.diagnostics)}`);
+  assert.equal(warnings.length, 1, `one located dk warning, got ${JSON.stringify(channel)}`);
   assert.ok(
     warnings[0].file?.endsWith(path.join('src', 'app.ts')),
     `warning is located at the world app.ts, got ${warnings[0].file}`,

@@ -5,6 +5,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -14,7 +15,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-69',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'padding', '4px', ['base'])).toBe(true)
     // Each refused slot sinks under its own breakpoint scope.
     expect(siteWants(result).filter(w => w.prop === 'padding')).toHaveLength(1)
@@ -25,9 +26,14 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'color')).toHaveLength(2)
     expect(harvestWants(result)).toHaveLength(2)
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Slot refusals ride the opt-in channel now (S6 E8-class re-point);
+    // the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-69', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(2)
     expect(warnings[0]!.message).toMatch(/Dynamic non-literal/)
     expect(infos).toHaveLength(2)

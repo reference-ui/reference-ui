@@ -3,21 +3,29 @@
  * become a want. Static sibling properties still extract.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-06',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'mt', '10px')).toBe(false)
-    expect(result.diagnostics.length).toBeGreaterThanOrEqual(1)
-    expect(result.diagnostics.some(d => d.severity === 'warning')).toBe(true)
+
+    // The computed-key refusal rides the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-LEAF-06', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const keys = channel.filter(d => d.code === 'ATM-W-UNFOLDABLE-KEY')
+    expect(keys.length).toBeGreaterThanOrEqual(1)
+    expect(keys.some(d => d.severity === 'warning')).toBe(true)
     expect(
-      result.diagnostics.some(d =>
+      keys.some(d =>
         d.message.includes('Dynamic computed property key encountered in style object')
       )
     ).toBe(true)
-    expect(result.diagnostics[0]?.file).toBeTruthy()
+    expect(keys[0]?.file).toBeTruthy()
   },
 }
 

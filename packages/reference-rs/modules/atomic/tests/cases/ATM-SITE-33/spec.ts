@@ -6,7 +6,7 @@
  * info. Refusals diagnose with a code and keep every static sibling.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean; when?: string[] }> =
   [
@@ -79,7 +79,7 @@ const DEAD_ARMS: Array<{ file: string; line: number; arm: string; test: string }
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-33',
-  verify(result) {
+  async verify(result) {
     // Every fold emits its wants: 51 across the six inputs (48 + the
     // <= / !== / ident-operand tail in compare.ts).
     for (const { prop, value, when } of FOLDS) {
@@ -114,8 +114,11 @@ const spec: AtomicCaseSpec = {
     }
 
     // Four binary refusals: zero wants from those positions, one located
-    // `ATM-W-DYNAMIC-BINARY` diagnostic each, naming the operator.
-    const diagnostics = result.diagnostics ?? []
+    // `ATM-W-DYNAMIC-BINARY` diagnostic each, naming the operator — on the
+    // opt-in channel now (S6 E8-class re-point).
+    const opted = await compileCase('ATM-SITE-33', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = opted.compilerDiagnostics ?? []
     for (const { file, line, op, detail } of BINARY_REFUSALS) {
       const match = diagnostics.find(
         d =>
@@ -130,8 +133,15 @@ const spec: AtomicCaseSpec = {
       expect(match!.column).toBeGreaterThan(0)
     }
 
-    // The dynamic operand keeps its existing vocabulary.
-    const dynamic = diagnostics.find(d => d.file?.endsWith('refuse.ts') && d.line === 9)
+    // The dynamic operand keeps its existing vocabulary (analysis
+    // telemetry at the same site excluded — it shares file+line).
+    const dynamic = diagnostics.find(
+      d =>
+        d.file?.endsWith('refuse.ts') &&
+        d.line === 9 &&
+        d.code !== 'ATM-I-DYNAMIC-SLOT' &&
+        d.code !== 'ATM-I-EXPECTED-LOOKUP'
+    )
     expect(dynamic?.code).toBe('ATM-W-DYNAMIC-EXPRESSION')
 
     // Fifteen dead arms: one located `ATM-I-DEAD-BRANCH` info each,
@@ -149,6 +159,21 @@ const spec: AtomicCaseSpec = {
       expect(match!.severity).toBe('info')
       expect(match!.column).toBeGreaterThan(0)
     }
+
+    // R7 true/false split (F6): the four folded-`true` zIndex refusals are
+    // genuine runtime misses (runtime queries `true`) and stay default;
+    // the `false` refusal rides the channel (runtime `isHole` skips it).
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(4)
+    for (const d of defaults) {
+      expect(d.code).toBe('ATM-W-INVALID-CSS-VALUE')
+      expect(d.message).toContain('`true` is not valid CSS')
+    }
+    const channelFalse = diagnostics.filter(
+      d => d.code === 'ATM-W-INVALID-CSS-VALUE'
+    )
+    expect(channelFalse).toHaveLength(1)
+    expect(channelFalse[0]!.message).toContain('`false` is not valid CSS')
 
     expect(result.stylesheet).toContain('order: 5;')
     expect(result.stylesheet).toContain('order: 10;')

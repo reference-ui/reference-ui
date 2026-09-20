@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-SPREAD",
-    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/App.tsx",
-    "line": 31,
-    "column": 34
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-MUTATED-BINDING",
-    "message": "Dynamic mutated binding 'live' spread in style object (reassigned at input/src/App.tsx:30:1; keeping sibling properties)",
-    "file": "input/src/App.tsx",
-    "line": 32,
-    "column": 40
-  }
-]
+[]

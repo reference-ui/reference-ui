@@ -1,38 +1,6 @@
 [
   {
     "severity": "warning",
-    "code": "ATM-W-DYNAMIC-MEMBER",
-    "message": "Dynamic non-literal expression encountered for prop 'padding'",
-    "file": "input/src/enums.ts",
-    "line": 56,
-    "column": 12
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-MEMBER",
-    "message": "Dynamic non-literal expression encountered for prop 'width'",
-    "file": "input/src/enums.ts",
-    "line": 57,
-    "column": 10
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "padding under []: 3 harvested values minted",
-    "file": "input/src/enums.ts",
-    "line": 56,
-    "column": 12
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "width under []: 4 harvested values minted",
-    "file": "input/src/enums.ts",
-    "line": 57,
-    "column": 10
-  },
-  {
-    "severity": "warning",
     "code": "ATM-W-INVALID-CSS-VALUE",
     "message": "`flexGrow` value `true` is not valid CSS",
     "file": "input/src/enums.ts",

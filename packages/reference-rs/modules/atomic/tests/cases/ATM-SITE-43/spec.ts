@@ -8,6 +8,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -17,7 +18,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-43',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'padding', '4px')).toBe(true)
     expect(hasWant(result, 'padding', '2px')).toBe(true)
     expect(hasWant(result, 'margin', '8px')).toBe(true)
@@ -48,10 +49,21 @@ const spec: AtomicCaseSpec = {
     const plans = result.runtime.stylePlans
     expect(plans).toHaveLength(22)
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
-    expect(warnings).toHaveLength(4)
+    // Member refusals + sink infos ride the opt-in channel now (S6
+    // E8-class re-point); the two `true` flexGrow refusals are genuine
+    // runtime misses (runtime queries `true`) and stay default.
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(2)
+    for (const d of defaults) {
+      expect(d.code).toBe('ATM-W-INVALID-CSS-VALUE')
+      expect(d.message).toContain('`true` is not valid CSS')
+    }
+    const opted = await compileCase('ATM-SITE-43', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
+    expect(warnings).toHaveLength(2)
     expect(infos).toHaveLength(2)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
@@ -60,8 +72,6 @@ const spec: AtomicCaseSpec = {
     expect(codes).toEqual([
       'ATM-W-DYNAMIC-MEMBER',
       'ATM-W-DYNAMIC-MEMBER',
-      'ATM-W-INVALID-CSS-VALUE',
-      'ATM-W-INVALID-CSS-VALUE',
     ])
   },
 }

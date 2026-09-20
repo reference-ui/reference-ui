@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-DYNAMIC-MEMBER",
-    "message": "Dynamic non-literal expression encountered for prop 'width'",
-    "file": "input/src/card.ts",
-    "line": 5,
-    "column": 10
-  },
-  {
-    "severity": "info",
-    "code": "ATM-I-HARVEST-SINK",
-    "message": "width under []: 1 harvested value minted",
-    "file": "input/src/card.ts",
-    "line": 5,
-    "column": 10
-  }
-]
+[]

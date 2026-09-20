@@ -1,10 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-KEY",
-    "message": "Dynamic computed property key encountered in style object",
-    "file": "input/src/computed.ts",
-    "line": 4,
-    "column": 30
-  }
-]
+[]

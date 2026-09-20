@@ -6,11 +6,11 @@
  * the fold stands).
  */
 import { expect } from 'vitest'
-import { harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-79',
-  verify(result) {
+  async verify(result) {
     // Neither twin folds at the site; the spread's static sibling survives.
     const site = siteWants(result)
     expect(site.some(w => w.prop === 'color' &&
@@ -23,7 +23,15 @@ const spec: AtomicCaseSpec = {
     expect(harvestWants(result)).toHaveLength(2)
     expect(result.wants ?? []).toHaveLength(3)
 
-    expect(result.diagnostics).toEqual([
+    // Refusal + spread + sink info ride the opt-in channel now (S6
+    // E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-79', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-DYNAMIC-IDENTIFIER',

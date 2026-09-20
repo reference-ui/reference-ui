@@ -20,7 +20,10 @@ interface AtomicDiagnostic {
 }
 
 interface AtomicModule {
-  compile(request: unknown): Promise<{ diagnostics: AtomicDiagnostic[] }>;
+  compile(request: unknown): Promise<{
+    diagnostics: AtomicDiagnostic[]
+    compilerDiagnostics?: AtomicDiagnostic[]
+  }>;
 }
 
 interface SpecInput {
@@ -71,7 +74,12 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const warnings = result.diagnostics ?? [];
+  // S6 E8-class re-point: refusals prove no exact runtime miss, so the
+  // default is silent; the same lines ride the opt-in channel.
+  assert.equal((result.diagnostics ?? []).length, 0, `default is silent, got ${JSON.stringify(result.diagnostics)}`);
+  const opted = await atomic.compile({ ...request, logs: ['compiler'] });
+  assert.ok(opted.compilerDiagnostics, 'opt-in channel populates compilerDiagnostics');
+  const warnings = (opted.compilerDiagnostics ?? []).filter((entry) => entry.severity === 'warning');
   assert.equal(warnings.length, 2, `two refusal warnings, got ${JSON.stringify(warnings)}`);
   for (const expected of EXPECTED_WARNINGS) {
     const match = warnings.find(

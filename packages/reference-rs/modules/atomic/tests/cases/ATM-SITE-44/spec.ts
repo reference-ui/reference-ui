@@ -10,6 +10,7 @@
  */
 import { expect } from 'vitest'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -19,7 +20,7 @@ import {
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-44',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'color', 'blue')).toBe(true)
     expect(hasWant(result, 'fontSize', 4)).toBe(true)
@@ -53,18 +54,37 @@ const spec: AtomicCaseSpec = {
     const plans = result.runtime.stylePlans
     expect(plans).toHaveLength(18)
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Refusals + sink infos ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-44', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     // The color sink is covered incidentally (every offered value is a
-    // static plan, zero net-new): only the uncovered backgroundColor
-    // refusal and its minting sink still report.
-    expect(warnings).toHaveLength(1)
-    expect(warnings[0]!.code).toBe('ATM-W-DYNAMIC-IDENTIFIER')
-    expect(warnings[0]!.message).toMatch(/'missing'.*'backgroundColor'/)
-    expect(infos).toHaveLength(1)
-    expect(infos[0]!.code).toBe('ATM-I-HARVEST-SINK')
-    expect(infos[0]!.message).toMatch(/backgroundColor under \[\]/)
+    // static plan, zero net-new): silent on the default, but its four
+    // member refusals, one identifier refusal, and sink info are visible
+    // opt-in beside the uncovered backgroundColor pair.
+    expect(warnings).toHaveLength(6)
+    const codes = warnings.map(d => d.code).sort()
+    expect(codes).toEqual([
+      'ATM-W-DYNAMIC-IDENTIFIER',
+      'ATM-W-DYNAMIC-IDENTIFIER',
+      'ATM-W-DYNAMIC-MEMBER',
+      'ATM-W-DYNAMIC-MEMBER',
+      'ATM-W-DYNAMIC-MEMBER',
+      'ATM-W-DYNAMIC-MEMBER',
+    ])
+    const uncovered = warnings.find(d => d.message.match(/'missing'.*'backgroundColor'/))
+    expect(uncovered, 'uncovered backgroundColor refusal visible opt-in').toBeDefined()
+    expect(uncovered!.code).toBe('ATM-W-DYNAMIC-IDENTIFIER')
+    expect(infos).toHaveLength(2)
+    for (const d of infos) {
+      expect(d.code).toBe('ATM-I-HARVEST-SINK')
+    }
+    expect(infos.some(d => d.message.match(/backgroundColor under \[\]/))).toBe(true)
+    expect(infos.some(d => d.message.match(/color under \[\]/))).toBe(true)
   },
 }
 

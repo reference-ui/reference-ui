@@ -18,7 +18,10 @@ interface AtomicDiagnostic {
 }
 
 interface AtomicModule {
-  compile(request: unknown): Promise<{ diagnostics: AtomicDiagnostic[] }>;
+  compile(request: unknown): Promise<{
+    diagnostics: AtomicDiagnostic[]
+    compilerDiagnostics?: AtomicDiagnostic[]
+  }>;
 }
 
 interface SpecInput {
@@ -30,7 +33,8 @@ interface SpecInput {
 // (the case runs at all), the sheet carries the ocean background utility
 // plus the two harvested hex floors with no cherry ghost, the node paints
 // the ocean background while keeping its default text color, and the frozen
-// request still reports the located color warning.
+// request still reports the located color warning on the opt-in channel
+// (the default is silent since Error Correct Slice 5).
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -55,10 +59,16 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  const warnings = (result.diagnostics ?? []).filter(
+  // S6 E8-class re-point: the refusal proves no exact runtime miss, so the
+  // default is silent; the same line rides the opt-in channel.
+  assert.equal((result.diagnostics ?? []).length, 0, `default is silent, got ${JSON.stringify(result.diagnostics)}`);
+  const opted = await atomic.compile({ ...request, logs: ['compiler'] });
+  assert.ok(opted.compilerDiagnostics, 'opt-in channel populates compilerDiagnostics');
+  const channel = opted.compilerDiagnostics ?? [];
+  const warnings = channel.filter(
     (entry: AtomicDiagnostic) => entry.severity === 'warning' && entry.message.includes("'color'"),
   );
-  assert.equal(warnings.length, 1, `one located color warning, got ${JSON.stringify(result.diagnostics)}`);
+  assert.equal(warnings.length, 1, `one located color warning, got ${JSON.stringify(channel)}`);
   assert.ok(
     warnings[0].file?.endsWith(path.join('src', 'app.ts')),
     `warning is located at the world app.ts, got ${warnings[0].file}`,

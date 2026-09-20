@@ -6,7 +6,7 @@
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
-import { hasWant, layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 
@@ -40,7 +40,7 @@ const EXPECTED: Array<{ prop: string; value: string; classNames: string[] }> = [
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-23',
-  verify(result) {
+  async verify(result) {
     for (const { prop, value } of EXPECTED) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
@@ -92,9 +92,14 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('border-bottom-color: var(--colors-gray-700);')
 
     // The fully dynamic identifier warns and mints nothing at the site;
-    // its sink infos a zero count (the pool holds no compatible value).
-    const warnings = result.diagnostics.filter(d => d.severity === 'warning')
-    const infos = result.diagnostics.filter(d => d.severity === 'info')
+    // its sink infos a zero count (the pool holds no compatible value) —
+    // both on the opt-in channel now (S6 E8-class re-point); default silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-23', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(1)
     expect(warnings[0]!.message).toMatch(/unknownToken/)
     expect(infos).toHaveLength(1)

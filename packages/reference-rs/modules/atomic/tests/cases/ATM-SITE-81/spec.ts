@@ -6,11 +6,11 @@
  * the alias with a located diagnostic instead of resolving stale.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-81',
-  verify(result) {
+  async verify(result) {
     // Alias as a JSX condition block: identical to the inline spelling.
     expect(hasWant(result, 'outline', '2px solid')).toBe(true)
     expect(hasWant(result, 'outlineColor', 'ui.focus.ring')).toBe(true)
@@ -36,8 +36,15 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: var(--colors-blue-700);')
 
     // The alias drops as an unfoldable spread (existing alias vocabulary);
-    // the member spread names the write to the root.
-    expect(result.diagnostics).toEqual([
+    // the member spread names the write to the root — both on the opt-in
+    // channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-81', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-UNFOLDABLE-SPREAD',

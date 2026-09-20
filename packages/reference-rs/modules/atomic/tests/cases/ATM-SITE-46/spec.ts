@@ -7,11 +7,11 @@
  * their clones too.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-46',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'animationName', 'spin')).toBe(true)
     expect(hasWant(result, 'animationName', 'aliased')).toBe(true)
     expect(hasWant(result, 'positionTryFallbacks', 'none')).toBe(true)
@@ -36,9 +36,14 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('animation-name: local;')
     expect(sheet).toContain('position-try-fallbacks: none;')
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Factory refusals ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-46', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     expect(warnings).toHaveLength(6)
     // The refused animationName position sinks with nothing compatible in
     // the pool: one zero-count info, no new wants or plans.

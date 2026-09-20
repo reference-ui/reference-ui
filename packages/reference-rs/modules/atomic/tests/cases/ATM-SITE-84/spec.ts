@@ -5,24 +5,31 @@
  * still diagnose the write.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-84',
-  verify(result) {
+  async verify(result) {
     // The import folds the origin's raw value despite the same-named write.
     expect(hasWant(result, 'color', '#f59e0b')).toBe(true)
     expect(result.wants ?? []).toHaveLength(1)
 
-    // The only diagnostic is the written file's own use naming its write.
-    expect(result.diagnostics).toHaveLength(1)
-    expect(result.diagnostics).toEqual([
+    // The written file's own use names its write on the opt-in channel
+    // (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-84', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toHaveLength(1)
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-MUTATED-BINDING',
       }),
     ])
-    expect(result.diagnostics?.[0]?.message).toContain(
+    expect(moved?.[0]?.message).toContain(
       "Dynamic mutated binding 'glow' encountered for prop 'color'",
     )
   },

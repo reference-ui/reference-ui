@@ -2,9 +2,11 @@
  * Diagnostic-precision station (ATM-DIAG-05, Overmatch Ph1, SPEC-V2-77).
  * Every extract refusal carries file:line:col of the offending node plus a
  * stable code; the same authored mistake always reports the same code.
+ * (S6 E8-class re-point: all eleven refusals + five sink infos ride the
+ * opt-in compiler channel with positions intact; the default is silent.)
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const EXPECTED: Array<{
   line: number
@@ -84,16 +86,24 @@ const EXPECTED: Array<{
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-05',
-  verify(result) {
+  async verify(result) {
     // The static sibling still extracts beside eleven refusals.
     expect(hasWant(result, 'mt', '2r')).toBe(true)
     expect(result.stylesheet).toContain('margin-top:')
 
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // The refusals prove no exact runtime miss, so the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+
+    // Opt-in: the same eleven refusals + five sink infos, positioned.
+    const opted = await compileCase('ATM-DIAG-05', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    const warnings = moved.filter(d => d.severity === 'warning')
+    const infos = moved.filter(d => d.severity === 'info')
     expect(warnings).toHaveLength(EXPECTED.length)
-    for (const d of diagnostics) {
+    for (const d of moved) {
       expect(d.file ?? '').toContain('precise.ts')
       expect(d.line).toBeGreaterThan(0)
       expect(d.column).toBeGreaterThan(0)

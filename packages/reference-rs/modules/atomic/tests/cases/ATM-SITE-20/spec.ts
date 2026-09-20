@@ -5,13 +5,13 @@
  * hyphenated dead properties.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const SYSTEM = 'site-unknown-prop-policy'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-20',
-  verify(result) {
+  async verify(result) {
     expect(hasWant(result, 'fooBar', 'x')).toBe(false)
     expect(hasWant(result, 'frobnicate', 'x')).toBe(false)
     expect(hasWant(result, 'color', 'red')).toBe(true)
@@ -29,11 +29,21 @@ const spec: AtomicCaseSpec = {
       'color:green': `${SYSTEM}__c_green`,
     })
 
-    expect(result.diagnostics.map(d => d.message).sort()).toEqual([
+    // One policy, two channels (S6 E8-class re-point): the global-CSS
+    // line stays default per O8 R3; the three extract refusals ride opt-in.
+    expect((result.diagnostics ?? []).map(d => d.message).sort()).toEqual([
+      'Unknown style property in global CSS: "divideX"',
+    ])
+    const opted = await compileCase('ATM-SITE-20', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const extract = (opted.compilerDiagnostics ?? [])
+      .filter(d => d.code === 'ATM-W-UNKNOWN-PROPERTY')
+      .map(d => d.message)
+      .sort()
+    expect(extract).toEqual([
       'Unknown style property "divideX"',
       'Unknown style property "fooBar"',
       'Unknown style property "frobnicate"',
-      'Unknown style property in global CSS: "divideX"',
     ])
   },
 }

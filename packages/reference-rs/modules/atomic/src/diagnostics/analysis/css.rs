@@ -256,6 +256,17 @@ mod tests {
     }
 
     #[test]
+    fn top_level_const_use_stays_dynamic_end_to_end() {
+        // F-S4a (O7 R6): the const bag is scope-flattened, so the visitor
+        // shadows every declarator and a top-level const use stays dynamic
+        // end to end — never a wrong Exact, only a silence-safe
+        // completeness gap until provenance-per-entry lands.
+        let facts = analyze_source(&format!("{IMPORT} const C = 'red'; css({{ color: C }})"));
+        assert!(exact_keys(&facts).is_empty());
+        assert_eq!(dynamic_count(&facts), 1);
+    }
+
+    #[test]
     fn unknowns_fixture_classifies_seven_dynamic_plus_static() {
         let facts = analyze_source(&format!(
             "{IMPORT} css({{ color: themeColor, width: props.w, height: `${{n}}px`, \

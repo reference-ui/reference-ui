@@ -8,6 +8,7 @@ import path from 'node:path'
 import { expect } from 'vitest'
 import { compile } from '../../../js/index.js'
 import {
+  compileCase,
   getCaseInputDir,
   hasWant,
   LIB_SYSTEM_SPEC,
@@ -24,8 +25,17 @@ const spec: AtomicCaseSpec = {
     expect(traceWarnings).toHaveLength(1)
     expect(traceWarnings[0]!.message).toContain('Broken.tsx')
     expect(traceWarnings[0]!.file).toMatch(/input\/src\/Broken\.tsx$/)
-    // The second warning is extraction's rest-spread note for Card.
-    expect(warnings).toHaveLength(2)
+    // The host warning stays default (H1 per O8 R3); extraction's
+    // rest-spread note for Card rides the opt-in channel (S6 E8-class
+    // re-point).
+    expect(warnings).toHaveLength(1)
+    const opted = await compileCase('ATM-SITE-57', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const spreads = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-W-UNFOLDABLE-SPREAD'
+    )
+    expect(spreads).toHaveLength(1)
+    expect(spreads[0]!.file).toMatch(/Card\.tsx$/)
     expect(result.tracedJsxHosts ?? []).toEqual(['Card'])
     expect(hasWant(result, 'mt', '4r')).toBe(true)
     expect(hasWant(result, 'mt', '2r')).toBe(false)

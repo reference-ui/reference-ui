@@ -8,6 +8,7 @@
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -21,7 +22,7 @@ const RED_CLASS = `${SYSTEM}__c_red`
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-40',
-  verify(result) {
+  async verify(result) {
     // Aliased scalar, object (spread + member), and array-index reads.
     // Red/blue twin site atoms, so the sink infos a zero count.
     expect(hasWant(result, 'color', 'red')).toBe(true)
@@ -70,15 +71,22 @@ const spec: AtomicCaseSpec = {
 
     // The missing export and the three cycles each warn once, located,
     // with siblings kept. Cycle names are declared nowhere, so the
-    // merge-bag fallback genuinely misses and the guard stays observable.
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // merge-bag fallback genuinely misses and the guard stays observable —
+    // all on the opt-in channel now (S6 E8-class re-point); default silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-40', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     // The color sink is covered incidentally (every offered value is a
     // static plan, zero net-new): the three identifier refusals and the
-    // sink info stay silent, and only the spread refusal still warns.
-    expect(warnings).toHaveLength(1)
-    expect(infos).toHaveLength(0)
+    // sink info stay silent on the default, but their facts are visible
+    // opt-in beside the spread refusal.
+    expect(warnings).toHaveLength(4)
+    expect(infos).toHaveLength(1)
+    const covered = warnings.filter(d => d.code === 'ATM-W-DYNAMIC-IDENTIFIER')
+    expect(covered).toHaveLength(3)
     for (const expected of [
       {
         file: 'cycled.ts',

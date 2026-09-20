@@ -9,7 +9,8 @@ through a live `` css`…` `` tag. The spec asserts the sibling paints
 ocean, the twin paints cherry, and the logical node paints plum while
 the tagged node paints nothing; the sheet carries exactly the three
 surviving utilities, and the frozen-request recompile carries exactly
-the two positioned refusal warnings.
+the two positioned refusal warnings on the opt-in compiler channel (the
+default is silent since Error Correct Slice 5).
 
 Evidence: `[atm]` ATM-SITE-50 (whole-object / member args);
 `[overmatch]` SPEC-V2-65 Ph3, SPEC-V2-38; `[panda-v2]`

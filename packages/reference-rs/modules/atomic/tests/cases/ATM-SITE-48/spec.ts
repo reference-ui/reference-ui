@@ -11,6 +11,7 @@
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import {
+  compileCase,
   getWantsForProp,
   harvestWants,
   hasWant,
@@ -41,7 +42,7 @@ const EXPECTED: Array<{ prop: string; value: string; className: string }> = [
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-48',
-  verify(result) {
+  async verify(result) {
     // Every folded read lands its leaf: literal, identifier, multi-leaf,
     // member, nested, inline, and optional-chain indices alike.
     for (const { prop, value } of EXPECTED) {
@@ -87,24 +88,29 @@ const spec: AtomicCaseSpec = {
       )
     }
 
-    // Eleven refusals, each located at the failing side with the key named.
-    const diagnostics = result.diagnostics ?? []
-    const warnings = diagnostics.filter(d => d.severity === 'warning')
-    const infos = diagnostics.filter(d => d.severity === 'info')
+    // Eleven refusals, each located at the failing side with the key named —
+    // on the opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-48', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const warnings = channel.filter(d => d.severity === 'warning')
+    const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
     // The color sink is covered incidentally (every offered value is a
-    // static plan, zero net-new): its ten member refusals and sink info
-    // stay silent. The uncovered margin sink still reports, and the
-    // mutated binding (no sink by design) still warns.
-    expect(warnings).toHaveLength(2)
-    expect(infos).toHaveLength(1)
+    // static plan, zero net-new): silent on the default, but its nine
+    // member refusals and sink info are visible opt-in beside the
+    // uncovered margin pair and the mutated binding (no sink by design).
+    expect(warnings).toHaveLength(11)
+    expect(infos).toHaveLength(2)
     for (const d of infos) {
       expect(d.code).toBe('ATM-I-HARVEST-SINK')
       expect(d.file).toMatch(/refuse\.ts$/)
-      expect(d.message).toMatch(/margin under \[\]/)
     }
+    expect(infos.some(d => d.message.match(/margin under \[\]/))).toBe(true)
+    expect(infos.some(d => d.message.match(/color under \[\]/))).toBe(true)
     const member = warnings.filter(d => d.code === 'ATM-W-DYNAMIC-MEMBER')
     const mutated = warnings.filter(d => d.code === 'ATM-W-MUTATED-BINDING')
-    expect(member).toHaveLength(1)
+    expect(member).toHaveLength(10)
     expect(mutated).toHaveLength(1)
     const byLine = new Map(warnings.map(d => [d.line, d]))
     const at = (line: number) => {

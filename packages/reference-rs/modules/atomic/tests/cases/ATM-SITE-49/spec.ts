@@ -9,6 +9,7 @@
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
 import {
+  compileCase,
   getWantsForProp,
   hasWant,
   layerClassNames,
@@ -29,7 +30,7 @@ const EXPECTED: Array<{ prop: string; value: string; className: string }> = [
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-49',
-  verify(result) {
+  async verify(result) {
     for (const { prop, value } of EXPECTED) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
@@ -107,10 +108,18 @@ const spec: AtomicCaseSpec = {
     }
 
     // `[42]` folds to its spelling, then rides the ordinary unknown-property
-    // path — never UnfoldableKey. Each dynamic key warns once, located.
-    expect(result.diagnostics).toHaveLength(7)
-    const keysDiags = (result.diagnostics ?? []).filter(d => d.file?.match(/keys\.ts$/))
-    const foldedDiags = (result.diagnostics ?? []).filter(d =>
+    // path — never UnfoldableKey. Each dynamic key warns once, located — on
+    // the opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-49', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const channel = opted.compilerDiagnostics ?? []
+    const moved = channel.filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toHaveLength(7)
+    const keysDiags = moved.filter(d => d.file?.match(/keys\.ts$/))
+    const foldedDiags = moved.filter(d =>
       d.file?.match(/folded\.ts$/)
     )
     expect(keysDiags).toHaveLength(3)

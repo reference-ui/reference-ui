@@ -4,11 +4,11 @@
  * `when`, and no unconditioned twins leak into the map.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-03',
-  verify(result) {
+  async verify(result) {
     // Both pool colors mint under the sink's `_hover` scope.
     expect(hasWant(result, 'color', 'red', ['_hover'])).toBe(true)
     expect(hasWant(result, 'color', '#0af', ['_hover'])).toBe(true)
@@ -25,7 +25,15 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: red;')
     expect(sheet).toContain('color: #0af;')
 
-    expect(result.diagnostics).toEqual([
+    // Warn + sink info ride the opt-in channel now (S6 E8-class
+    // re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-HARVEST-03', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-DYNAMIC-IDENTIFIER',

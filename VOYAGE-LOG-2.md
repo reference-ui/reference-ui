@@ -1,4 +1,4 @@
-IN PROGRESS
+COMPLETE
 
 # Voyage log — Objective 2: Operation Error Correct
 
@@ -2025,7 +2025,121 @@ _(slice5 crew, live 2026-09-20 — single crew; nested workers over disjoint pie
 
 ### S6 audit
 
-_(placeholder — slice6 crew)_
+_(slice6 crew lead, live 2026-09-20 — single crew, no nested workers yet;
+discovery first, fan-out for golden batches after spec triage.)_
+
+- Vitals 1 (READ): baseline `v atomic` **227/56** re-verified; red list
+  extracted (56 IDs in `/tmp/s6-reds.txt` — COND-07, DIAG-02/04/05/06,
+  FORBID-02, HARVEST-01/02/03/05, LEAF-01/04/06/07, SCAN-02, SEAM-05,
+  38 SITE-*, STATIC-01/03). Policy + channels + proof-join code read
+  firsthand (`Policy::classify`, `DiagnosticChannels::partition`,
+  `proof::render` — S4-conservative unmatched-reject keep confirmed).
+- SCOPING FIND (lead): the 56 are NOT golden-only. Failure census shows
+  ~40 spec-assertion failures (`toHaveLength(N)` got 0, `missing * refusal`
+  pins, `>= 1` guards) — specs asserting moved lines on default. Those
+  need E8-class re-points (same predicate onto opt-in `compilerDiagnostics`
+  + default-silence, inputs untouched) before goldens, else verify runs
+  before the golden diff and stays red. Per-station spec-vs-golden
+  attribution in flight (`/tmp/s6-full.log` captured). No spec edits yet.
+- Blocked on nothing. Next: attribution table → E8-pattern spec re-points
+  (lead) → golden batches (nested workers, disjoint) → census + Splitter
+  + SPEC/README + F-S4a + R3 adjudication (lead).
+
+_(slice6 replacement crew, live 2026-09-20 — single crew inline; no nested
+workers: spec re-points are lead judgment work and golden rewrites ride
+targeted per-station `--update-goldens` with per-station diff audit, so
+fan-out buys nothing. STAY-ALIVE acknowledged: vitals pings get a reply
+and work continues to the full landing.)_
+- Vitals 1 (READ + ATTRIBUTION, verified firsthand): baseline `v atomic`
+  **227 passed / 56 failed (283)** re-verified; red set == O8 V6 56-list
+  exactly (COND-07, DIAG-02/04/05/06, FORBID-02, HARVEST-01/02/03/05,
+  LEAF-01/04/06/07, SCAN-02, SEAM-05, 38 SITE-*, STATIC-01/03).
+  Prior crew's "~40 spec-first" UNDERCOUNTS: stack-frame attribution over
+  `/tmp/s6-full.log` shows **52 spec-first** (`spec.ts` frame @ runner:95)
+  + **4 golden-only** (SCAN-02, SEAM-05, STATIC-01/03 @ goldens.ts:96).
+  E8-class spec re-points come before golden rewrites — confirmed.
+- Per-station dump built (`/tmp/s6-dump.mts` → `/tmp/s6-dump.txt`, 56
+  stations × golden/default-now/compiler-now): every default-now ⊆ golden
+  modulo harness path normalization (spot-verified; the 2 "new-line" flags
+  are absolute-vs-relative path artifacts of the dump, not new lines —
+  V6's audit already proved default == golden minus moved). Channel is a
+  SUPERSET (moved lines 1:1 + new ATM-I-EXPECTED-LOOKUP/DYNAMIC-SLOT
+  analysis renders), so re-points assert moved-family predicates on the
+  channel, never total channel counts; channel `file` fields are absolute
+  → specs use `endsWith`, never exact equality (DIAG-14 precedent).
+- Next: 52 spec re-points (lead, E8 pattern: same predicate → channel +
+  default-silence, inputs untouched, equal-or-stricter) → 56 targeted
+  golden rewrites with per-station diff audit → census + Splitter +
+  SPEC/README + F-S4a + R3 adjudication → `agentrs t` + `agentneo`.
+- Vitals 2 (RE-POINTS + GOLDENS, verified firsthand): all **52 specs
+  re-pointed** (E8 pattern: same predicate → opt-in `compilerDiagnostics`
+  + default-silence, inputs untouched, equal-or-stricter — 5 mixed
+  stations keep default pins for staying lines: DIAG-04 R9, DIAG-06 G5,
+  SITE-20 G6, SITE-45 3×R9+1×E, SITE-57 H1+E; 3 R7-split stations pin
+  true-default/false-channel: SITE-33/38/43 + covered-fact pins on the
+  channel for LEAF-04/SITE-40/44/48/51 per the DIAG-14 precedent).
+  Two `.find()` collisions with same-site analysis telemetry fixed by
+  code-exclusion (SITE-33 dynamic, SITE-38 member). F-S5a fixed (DIAG-11
+  header no longer says RED). All **56 goldens rewritten** via explicit
+  enumerated `--update-goldens` batches (6 batches, no blanket run);
+  machine audit: every rewrite is removal-only + order-preserved (new ⊆
+  old as subsequence — zero new lines), station set == 56 reds exactly,
+  zero styles.css/css.json/input/spec collateral. Full `v atomic`:
+  **283 passed / 0 failed (283)**.
+- Next: census (Book/story vs shipped) + Splitter proof + SPEC/README +
+  F-S4a pin + R3 adjudication → `agentrs t` + `agentneo`.
+- Vitals 3 (CENSUS + SPLITTER + DOCS + F-S4a + R3, verified firsthand):
+  - Census (`/tmp/s6-census.mts`, real lib compile via sync's own
+    request path): DEFAULT **0 diagnostics** over the whole lib (was 96
+    at Obj-1 close) — `compilerDiagnostics` absent unrequested.
+    Opt-in channel: **4100** entries (3743 EXPECTED-LOOKUP + 252
+    DYNAMIC-SLOT telemetry + 105 legacy refusal facts), split
+    **book/ 253 vs src/ 3847** (book: 207 telemetry + 6 refusals; src:
+    3748 telemetry + 99 refusals; other 0 — clean partition).
+  - Splitter (motivating defect, CLOSED with proof): real-lib default
+    sync prints zero warnings; opt-in returns **74
+    UNFOLDABLE-SPREAD** (all src/, 0 book/) + 0 on default; the `[neo]
+    compiler` printer return is proved end-to-end by NEO-SYNC-16 (one
+    collapsed call naming SPREAD + DYNAMIC + HARVEST + DEAD-BRANCH).
+  - SPEC: cargo 356→455 (F-S3a/F-S5e), seam stations 219→235/0-red,
+    DIAG-02/04/05/06 rows carry S6 channel notes; diagnostics README
+    rewritten from the pre-op stub to the real architecture/invariants/
+    audiences/channel-contract/module-map (39 files). F-S5d fixed
+    (sync.test.ts "unlocated warnings" → "located warnings").
+  - F-S4a: `top_level_const_use_stays_dynamic_end_to_end` pin landed in
+    `analysis/css.rs` (const use → 0 Exact + 1 DynamicSlot via
+    `analyze_source`); cargo **455/0**; `q` clean on the file.
+  - R3 adjudication (full 235-golden census: 46 warnings + 13 fatals):
+    proof sentences STAY (exact absent key); 7 R7-folded-`true`
+    legacy keeps STAY (genuine full misses, resolve-site exact key —
+    runtime queries `true`, no plan; proof-sentence gap = analysis
+    doesn't fold, completeness only); COND-17 R2-responsive-object
+    STAYS (probed firsthand: whole-object plan EXISTS with base-only
+    declarations — dropped `wat` sub-key inside a hit plan, so S4
+    correctly withholds the proof sentence; moving it would silence a
+    real actionable typo); R8–R11 passthroughs STAY (warn-and-paint —
+    raw keys minted in goldens, DIAG-04 `caretColor:ui.missing.path` +
+    SITE-45 `nope.999` verified; no miss possible; DIAG-13 pins R9
+    default); R3 advisory STAYS (aggregate, drops nothing); H1 STAYS
+    (host fact, no lookup); static/global STAYS (no runtime plans on
+    those surfaces); fatals never move. Zero moves, zero re-points.
+- Next: neo-side re-points (NEO-CSS-14/SITE/COND per S5 handoff) →
+  `agentrs t` + targeted `agentneo` → land.
+- Vitals 4 / LANDING (NEO + GATES, verified firsthand): 8 neo specs
+  E8-re-pointed (CSS-14 + SITE-06/21/23/24/25/26/27, incl. SITE-23's
+  exact R3-advisory default pin + 2 README channel notes); COND-16's
+  zero-assertion held (no change); all 16 diagnostics-touching neo
+  cases green (8 re-pointed + COND-16 + SITE-14/18/19/20/28/29 +
+  SYNC-16); neo unit 224/224 (incl. renamed F-S5d test); `q` 54/54
+  clean; neo `q` 0 errors (1 pre-existing length warning).
+  `agentrs t` full-workspace: build ✓, atomic cargo 455/0 ✓, atomic
+  vitest 283/283 ✓ — but workspace cargo/vitest stay red on
+  PRE-EXISTING peer drift (typegen 8, tasty 38, virtualrs 10 — all
+  formatting-only semicolon drift, zero files in this crew's diff,
+  typegen 32/8 reproduced identically at clean-HEAD worktree; S6 does
+  not touch peer modules). No compiler telemetry on any default
+  golden; zero styles.css/css.json/input collateral.
+  **S6 COMPLETE. Objective 2 ready for oracle clearance.**
 
 ## Architect rulings
 
@@ -2063,6 +2177,195 @@ _(architect crew, 2026-09-19 — firsthand reads: `docs/missions/operation-error
 - 2026-09-20 04:20 tick: S5 BUILDING (design locked: end-of-compile partition post-proof; policy table landed; Rust+NAPI+contracts+Neo printer files dirty; interim notes detailed). Peer files untouched. 20/21 terminal, no deadlock. Watch items for oracle review: ATM-DIAG-07/spec.ts modified (correction vs weakening?) + 2 new info codes (ATM-I-EXPECTED-LOOKUP/DYNAMIC-SLOT — table both directions + doc blessing?). Next: S5 landing → oracle review → Slice 6.
 - 2026-09-20 04:40 tick: S5 INTEGRATING (workers N+R landed, lead reviewed R line-by-line + fixed 1 q warning itself, worker S on 08/11/12/14+SPEC; 40 paths, all in scope; transient 175/61 all-diagnostics drift expected mid-channel-move, S6 owns rewrites). Peer files untouched. 20/21 terminal, no deadlock. Next: S5 landing → oracle review → Slice 6.
 - 2026-09-20 watch: S5 CLEAR on oracle O8 word (8/8 criteria stations green; 227/56 with red == audited 56 exactly; cargo 454/0; q clean; neo NEO-SYNC-16 + 18/18 + 16/16 green; corrections ruled equal-or-stricter; 2 info codes doc-consistent; R3 families stay default pending S6 adjudication). Committed S5 checkpoint (peer files excluded). Dispatched single Slice-6 crew (audit + census + Splitter proof — the final slice). Next: oracle review of S6 landing → Objective 2 COMPLETE.
+- 2026-09-20 05:02 tick: S6 crew ~10 min, zero writes (tree holds peer files only, placeholder untouched) — vitals ping queued with interim-write nudge; threshold: still silent at next tick → unstick. Peer files untouched. 22/23 terminal. Next: S6 signs of life or unstick → oracle review → Objective 2 COMPLETE.
+- 2026-09-20 watch: S6 crew EXITED on the vitals ping (interim note + finding preserved: ~40/56 fail on spec assertions, E8-class re-points before goldens). Replaced with a fresh S6 crew carrying stay-alive orders. Next: S6 landing → oracle review → Objective 2 COMPLETE.
+- 2026-09-20 watch: S6 review oracle EXITED on the vitals ping with no O9 (verification done per vitals — UNVERIFIED priors: 283/283, cargo 455/0, q 54/54, F-S4a ok, census default-0/channel-4100/book-253/src-3847, Splitter 74-on-channel/0-default, 46 warnings + 13 fatals adjudicated, 56 goldens removal-only, 8 specs equal-or-stricter, SITE-48 cleared). PATTERN: crews exit answering pings — stay-alive orders now standard in all briefs. Replacement oracle dispatched. Next: O9 lands → commit S6 → Objective 2 COMPLETE.
+- 2026-09-20 05:42 tick: replacement oracle ALIVE (O9-INTERIM posted, stay-alive acknowledged, 3 nested workers verifying; no ping sent — log proves liveness). 127 S6 paths + log in tree. Peer files untouched. 25/26 terminal, no deadlock. Next: O9 lands → commit S6 → Objective 2 COMPLETE.
+- 2026-09-20 watch: OBJECTIVE 2 COMPLETE on oracle O9 word (S6 CLEAR: 283/283, cargo 455/0, q 54/54, agentrs t S6-scope + agentneo 16/16 + 224/224 green; 52 re-points equal-or-stricter; census default-0/channel-4100; Splitter 74-on-channel/0-default; R3 adjudicated; lib census 96→0). Committed S6 checkpoint (peer files excluded). Objective 3 OPEN: doom cycle on the atomic style engine until HQ wakes. Doom fodder carried: F-O9a channel-dedup (195×2 EXPECTED-LOOKUP dup groups), O4-F5 nested-! unreachable plans, O9-R3 staying families.
+- 2026-09-20 05:20 tick: S6 replacement AUDITING (52 specs re-pointed equal-or-stricter, goldens rewriting, 114 paths, vitals flowing, stay-alive acknowledged). Peer files untouched. 23/24 terminal, no deadlock. Next: S6 landing → oracle review → Objective 2 COMPLETE.
 - 2026-09-20 watch: S4 review oracle DIED while writing O7 (verification complete per final vitals — treat as UNVERIFIED priors: 09/10 green, 08 hinge-only red, 278/5, cargo 439/0, q clean, S4-CLEAR-with-08-open, R6→userspace). Replacement oracle dispatched with incremental-write orders (verdict+evidence, then rulings, then S5 spec — separate edits). Next: O7 lands → commit S4 → Slice 5.
+
+### Oracle O9 — Slice-6 review verdict (2026-09-20)
+
+_(replacement oracle: the prior run verified everything but exited answering
+a vitals ping with nothing logged, so every prior below was reproduced
+firsthand — 3 nested workers on disjoint verifications (gates / specs /
+census) + lead-inline re-runs of every headline claim via repo runners
+only, full diff review vs 0c1076410, and independent hand-audits. Peer
+files ignored per orders. Written in two sequential edits so partial
+progress survives another death.)_
+
+**Verdict: S6 CLEAR.** No gaps. All O8 done-criteria met: full `v
+atomic` green, every default warning proof-backed, compiler-only facts
+absent by default, CSS/runtime artifacts unchanged, full `agentrs t`
+(S6 scope) + targeted `agentneo` green. One scope-noise note (DIAG-11
+comment, R1), one log-only arithmetic erratum (W1), two carried
+observations (W2, O1) — none blocking.
+
+**V1. Atomic gates — VERIFIED (worker + lead re-runs).** `pnpm
+agentrs v atomic`: **283 passed / 0 failed (283)** (lead re-ran
+firsthand, 11 files, 3.27s). `pnpm agentrs c atomic`: **455 passed /
+0 failed** (lead re-ran). `pnpm agentrs q` smart: **ALL 54 FILES
+PASS**, zero violations/warnings (lead re-ran). `pnpm agentrs t`:
+build ✓, atomic cargo 455/0 ✓, atomic vitest 283/283 ✓ — workspace
+cargo/vitest stay red ONLY on pre-existing peer drift: typegen 32/8,
+tasty 38, virtualrs 10, all golden-formatting-only (`'sans'` vs
+`sans:`, `version: '2'` vs `"version": "2"`, quote/semicolon/wrap),
+all throwing at `assertGoldens` after compile+gauges passed.
+Attribution HOLDS: 0 S6-diff files under
+typegen/tasty/virtualrs/atlas/styletrace, typegen has no atomic dep
+(its own `typ_forbid_06_does_not_depend_on_atomic` passes inside the
+failing run), tasty/virtualrs src+tests never reference atomic.
+
+**V2. Neo — VERIFIED (worker + lead).** Targeted `pnpm agentneo
+run`: **16/16 PASS** (exit 0 + explicit PASS each) — NEO-SYNC-16,
+NEO-CSS-14, SITE-06/21/23/24/25/26/27, COND-16 (zero-assertion hold,
+no change needed), SITE-14/18/19/20/28/29 (all six confirmed
+diagnostics-touching). Lead re-ran SYNC-16: PASS. Neo units via `pnpm
+agent vt reference-neo`: **224/224** (31 files). `pnpm agentneo q`
+on the 9 touched neo files: **0 errors, 1 warning** (`sync.test.ts`
+491 lines — pre-existing: 490 at base, S6 adds one word).
+
+**V3. Correction-vs-weakening — VERIFIED (worker machine audit over
+ALL stations + 12 worker / 4 lead hand-audits).** 52 re-pointed
+specs: every one carries `compileCase` + `logs: ['compiler']` +
+`compilerDiagnostics` + `toBeDefined` opt-in assertion AND a
+`result.diagnostics` default assertion (full `toHaveLength(0)` or
+exact mixed/split pin); zero diagnostic codes present in a base spec
+missing from its rewrite (rewrites only ADD code pins + telemetry
+exclusions). 4 golden-only specs (SCAN-02, SEAM-05, STATIC-01/03)
+byte-identical to base. Inputs untouched 57/57 (zero `input/` files
+in diff; every file under each station `input/` byte-vs-base,
+incl. baseSystem.json). Goldens 56/56 removal-only + order-preserved
+(new JSON ⊆ old as subsequence, zero new entries; 47 emptied to
+exactly `[]`, 9 non-empty strict line-subsequences). Hand-audits all
+equal-or-stricter: worker 12 (DIAG-02/04/05, COND-07, HARVEST-01,
+LEAF-04 covered, SITE-20 mixed, SITE-33 R7-split, SITE-45 mixed+E,
+SITE-57 H1+E, STATIC-03 + SCAN-02 golden-only — several STRICTER:
+new exact counts, new code pins, covered-fact pins); lead 4
+(SITE-48 exact 11/2 channel pins, DIAG-04 blanket extended over both
+channels, SITE-38 13+1 = 14 conserved with per-value spellings,
+NEO-CSS-14 same predicates + default-silence).
+
+**V4. Census — VERIFIED (worker + lead re-run of `/tmp/s6-census.mts`
+via repo tsx, real lib compile through sync's own request path).**
+DEFAULT **0 diagnostics** (was 96 at Obj-1 close),
+`compilerDiagnostics` key absent unrequested. Opt-in: default stays
+0, channel **4100** = 3743 EXPECTED-LOOKUP + 252 DYNAMIC-SLOT + 105
+legacy (74 spread + 13 member + 9 harvest + 5 ident + 3 template + 1
+jsx-style). Split **book 253 / src 3847 / other 0** (book = 207 + 40
++ 6; src = 3536 + 212 + 99); rule = rel-path prefix matching the
+include globs, all 4100 carry the libRoot prefix, 0 `*.d.ts` /
+node_modules / `.reference-ui` leaks, 88 distinct files (3 book, 85
+src) — partition SOUND, no double-count/drop. Zero default warnings
+makes the per-warning proof requirement vacuous on lib; compiler-only
+facts absent by default on both halves.
+
+**V5. Splitter (motivating defect) — CLOSED with proof.** Real-lib
+default sync on a /tmp lib copy: **0 `console.warn` calls**, green,
+`styles.css` emitted. UNFOLDABLE-SPREAD: **74 on channel, all src/
+(book 0, other 0), 0 on default** (lead re-ran). The `[neo]
+compiler` printer return proved end-to-end by NEO-SYNC-16 (one
+collapsed call, 10 lines, naming DYNAMIC + SPREAD + HARVEST +
+DEAD-BRANCH; userspace 0 calls; no-logs twin silent and green) +
+`sync.test.ts` 18/18 unit pins.
+
+**V6. R3 adjudication — SOUND, all 59 staying lines (worker
+per-station recompile proof + lead golden census: 46 warnings + 13
+errors + 0 infos across 38 stations).** Proof 13 (COND-12/13/21×2,
+DIAG-09, GHOST-04, SITE-18, UNIT-02×4, SITE-47, TOKEN-12 — each names
+its exact absent key, confirmed absent from final plans);
+R7-folded-`true` 7 (SITE-33×4, SITE-38, SITE-43×2 — genuine full
+misses, 0 plans per refused key; `false` twins ride the channel);
+COND-17 (whole-object plan EXISTS, 51px paints — moving would silence
+a real typo); R8–R11 passthroughs 15 (all warn-and-paint, incl.
+SITE-45 fallback-carry trio); R3 advisory ×2 (drops nothing); H1
+host ×3; static/global ×5 (fragment-located or honestly unlocated);
+fatals ×13 (preserved, located except N-API-boundary TOKEN-10).
+Zero moves, zero re-points — every staying line proof-backed or
+adjudicated.
+
+**V7. SPEC/README/findings — CLOSED (worker + lead).** SPEC: cargo
+356→**455** (`:28`, 455 `#[test]` by grep, 455 passed), seam
+stations 219→**235/0-red** (235 case dirs, 283/283), DIAG-02/04/05/06
+rows carry S6 channel notes. Diagnostics README rewritten from the
+pre-op stub to real architecture/invariants/audiences/
+channel-contract/module-map. F-S4a pin re-run by name: PASS (0 Exact
++ 1 DynamicSlot). F-S5a (DIAG-11 header) + F-S5d (`sync.test.ts`
+"located warnings" rename, suite green) fixed. F-S3a/F-S5e cargo
+counts closed by the SPEC 455. F-S5b `is_false_refusal` duplication
+still present (3 defs) — was phrased "consider", so carried as a
+note, not a gap.
+
+**V8. Scope + must-not-touch — CLEAN (worker + lead).** Station set
+in diff = the 56 audited reds + DIAG-11 spec-comment-only (R1).
+Zero `styles.css` / `css.json` / `input/` / baseSystem collateral
+(all 109 case files are `spec.ts` or `diagnostics.json` only). Rust
+diff = ONE file (`analysis/css.rs`), ONE test-only hunk (F-S4a pin,
+no production change). No `ATM-E-*` move/rename (SITE-45 E stays
+default-pinned, SITE-57 E stays), no wire-code change (`codes.rs`
+untouched), no re-parse, no `css.ts`, no `debug` alias (both hits
+are doc prohibitions), no blanket update (enumerated per-station
+batches, per-station removal-only proof).
+
+**R1. DIAG-11 extra station — RULED in-scope (not a gap).** The 57th
+touched station is `ATM-DIAG-11/spec.ts:3`, a one-word header-comment
+fix (`RED: identifiers…` → `Identifiers…`) — the F-S5a hygiene item
+the O8 dispatch explicitly assigned to S6. No predicate, count, or
+golden change; spec was already E8 from S5. Scope noise only.
+
+**R2. W1 book-arithmetic slip — RULED log-only erratum (not a gap).**
+The S6 landing prose "book = 207 telemetry + 6" sums to 213, not
+253 — it dropped the DYNAMIC-SLOT term. Actual (reproduced
+firsthand): book = 207 EXPECTED + 40 DYNAMIC + 6 refusals = 253;
+src = 3536 + 212 + 99 = 3847. All totals were correct; only the
+prose decomposition was short one term. Corrected here; no code,
+spec, or census change.
+
+**R3. R3 staying families — RULED SOUND, zero moves.** The worker's
+per-station recompile proof (plan presence/absence + opt-in channel
+expectation per staying line) closes the O8 R3 adjudication S6
+owned: every one of the 46 default warnings either names an exact
+absent key (proof 13), is a genuine full miss the analysis cannot
+yet fold (R7-`true` 7 — completeness gap, silence would be wrong),
+names a real actionable typo inside a hit plan (COND-17), or belongs
+to a family that paints / drops nothing / has no lookup (R8–R11, R3,
+H1, static/global). The 13 fatals are preserved. No staying line
+lacks proof-or-adjudication; none should have moved.
+
+**R4. SITE-48 count-change — CLEARED.** Golden `[]`; spec pins 0
+default + 11 channel warnings (10 member + 1 mutated) + 2 sink infos
+(margin/color), `sizes[9]` at refuse.ts:18:15, `mut` write at :28.
+The old "ten member refusals" comment was loose (never asserted);
+the new exact counts (9 color + 1 margin = 10 member) pass and pin
+the behavior. Targeted + full runs green.
+
+**Findings (not gaps, carried forward):** F-O9a (W2, engine
+telemetry). 195 identical ×2 `EXPECTED-LOOKUP` dup groups on the
+channel (3905 distinct / 4100 lines, 4.8% duplicate telemetry, all in
+4 book files at 23 member-spread positions). `ATM-DIAG-13` dedups
+the default channel only, so no contract breaks — but a principled
+channel-side dedup (or fact-level join) is follow-up work, prime
+Obj-3 doom fodder. F-O9b (O1, minor). Causeless `MISSING-STYLE-PLAN`
+(SITE-47, TOKEN-12) is unlocated though the expected site is known
+(`render_causeless` takes only the key, `policy/mod.rs:102-104`) —
+S4-adjudicated honest, future slice may thread the site. F-O9c.
+F-S5b `is_false_refusal` ×3 stands (was "consider one helper").
+
+**CALL — OBJECTIVE 2: COMPLETE.** Slice 6 clears (V1–V8, R1–R4).
+The objective's clearance bar is met on both halves: (1) stations
+prove grouped, actionable miss output — `ATM-DIAG-09` (exact
+absent-key warning naming prop+value+reason) + `ATM-DIAG-13`
+(one-site identity, deterministic order, warns-once) + 6 proof
+replacements + 2 causeless true misses, with the userspace
+one-`console.warn` collapse preserved (E4) and the distinct `[neo]
+compiler` printer proved (NEO-SYNC-16); (2) the Objective-1 census
+errors have proper signals instead of silence — the lib-wide default
+census went 96 → **0** with `compilerDiagnostics` absent
+unrequested, every one of the 46 staying default warnings
+proof-backed or family-adjudicated (V6/R3), and the 4100 opt-in
+facts riding only the requested channel. Captain may commit S6
+(named files only, peer files excluded) and flip this log's first
+line to `COMPLETE`.
 
 ## Useful

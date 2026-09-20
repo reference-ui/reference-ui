@@ -6,7 +6,8 @@ and a static sibling (`background: 'ocean'`).
 The spec asserts the sheet carries exactly the sibling utility, the node
 paints the ocean background while keeping its default text color, and a
 fresh compile of the frozen request reports the `color` warning located
-at the world's `app.ts` — sync itself succeeds.
+at the world's `app.ts` on the opt-in compiler channel (the default is
+silent since Error Correct Slice 5) — sync itself succeeds.
 
 Evidence: `[atm]` ATM-LEAF-07 (a dynamic key never erases static
 siblings) and ATM-FORBID-02 (calls are not executed); `[panda-v1]`

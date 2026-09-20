@@ -6,13 +6,13 @@
  * style-object semantics, so `css: 1` still warns there.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const MD = '@container (min-width: 768px)'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-83',
-  verify(result) {
+  async verify(result) {
     // Recorded bag: style keys, the condition block, and the css prop all paint.
     expect(hasWant(result, 'color', 'blue.700')).toBe(true)
     expect(hasWant(result, 'borderBottomColor', 'gray.700')).toBe(true)
@@ -36,8 +36,15 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('padding-inline: 0.5rem;')
     expect(sheet).toContain('background-color: transparent;')
 
-    // The only diagnostic in the station is the css() control: no bag warns.
-    expect(result.diagnostics).toEqual([
+    // The css() control diagnoses on the opt-in channel: no bag warns,
+    // and the default is silent (S6 E8-class re-point).
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-83', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const moved = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
+    )
+    expect(moved).toEqual([
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-UNKNOWN-PROPERTY',

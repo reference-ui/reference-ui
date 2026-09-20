@@ -5,7 +5,7 @@
  * value diagnose with the prop named.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
 
 const EXPECTED_WANTS: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'red' },
@@ -21,7 +21,7 @@ const EXPECTED_WANTS: Array<{ prop: string; value: string }> = [
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-77',
-  verify(result) {
+  async verify(result) {
     for (const { prop, value } of EXPECTED_WANTS) {
       expect(hasWant(result, prop, value)).toBe(true)
     }
@@ -43,8 +43,14 @@ const spec: AtomicCaseSpec = {
     }
 
     // The dynamic prop and the both-dynamic prop diagnose; static
-    // siblings and the partial white arm survive.
-    const diagnostics = result.diagnostics ?? []
+    // siblings and the partial white arm survive — all on the opt-in
+    // channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-77', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.severity === 'warning'
+    )
     expect(diagnostics).toHaveLength(19)
     for (const expected of [
       { line: 21, message: "property 'color' of 'dyn' has no static style value" },

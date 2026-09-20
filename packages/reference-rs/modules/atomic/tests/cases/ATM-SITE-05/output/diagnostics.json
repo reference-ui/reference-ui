@@ -1,18 +1,1 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-SPREAD",
-    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/spreads.ts",
-    "line": 8,
-    "column": 25
-  },
-  {
-    "severity": "warning",
-    "code": "ATM-W-UNFOLDABLE-SPREAD",
-    "message": "Dynamic object spread encountered in style object; keeping sibling properties",
-    "file": "input/src/spreads.ts",
-    "line": 9,
-    "column": 25
-  }
-]
+[]
