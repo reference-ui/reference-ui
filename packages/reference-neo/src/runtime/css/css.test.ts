@@ -26,6 +26,7 @@ const TABLES: NamerTables = {
   weightKeywords: [],
   colorProps: ['backgroundColor', 'color', 'outlineColor'],
   breakpoints: ['base', 'sm', 'md'],
+  breakpointWidths: { sm: '640', md: '768' },
   conditions: ['dark', 'hover'],
   fonts: {},
 }

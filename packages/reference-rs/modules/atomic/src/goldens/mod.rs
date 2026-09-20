@@ -75,14 +75,26 @@ fn all() -> Vec<Suite> {
     ]
 }
 
-/// The system the case harness compiles with, for table-identical goldens.
+/// The system the case harness compiles with, for table-identical goldens:
+/// the lib spec plus authored non-bare breakpoint widths. Order is
+/// load-bearing (tablet, padded, hex, pxname, then empty last);
+/// ATM-SEAM-08 carries the identical `baseSystem.json`.
 fn spec_system() -> base_system::BaseSystem {
     let path = format!(
         "{}/tests/fixtures/lib-system-spec.json",
         env!("CARGO_MANIFEST_DIR")
     );
     let text = std::fs::read_to_string(&path).expect("spec fixture reads");
-    base_system::BaseSystem::from_json(&text).expect("spec fixture parses")
+    let mut spec: Value = serde_json::from_str(&text).expect("spec fixture parses");
+    spec["breakpoints"] = json!({
+        "tablet": "48rem",
+        "padded": "640 ",
+        "hex": "0x280",
+        "pxname": "640px",
+        "empty": "",
+    });
+    let text = serde_json::to_string(&spec).expect("range spec serializes");
+    base_system::BaseSystem::from_json(&text).expect("range system parses")
 }
 
 /// Regenerate every golden in memory and diff against the committed files.

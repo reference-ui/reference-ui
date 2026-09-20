@@ -9,7 +9,7 @@
  * carries the segment alone.
  */
 import type { NamerTables } from '../../../../contracts/types.js'
-import { asciiLower, trimStructural } from './lexical.js'
+import { asciiLower, isDecimalSpelling, trimStructural } from './lexical.js'
 
 /** Lowered condition: skip, unknown, or the known segment plus wrap kind. */
 export type LoweredCondition =
@@ -57,28 +57,41 @@ function stripOneUnderscore(raw: string): string {
   return raw.startsWith('_') ? raw.slice(1) : raw
 }
 
-/** True for a valid `*Down`, `*Only`, or `*To*` range over the scale. Widths ride along: every corpus scale pairs names with widths. */
+/** True for a valid `*Down`, `*Only`, or `*To*` range over the scale. Ranges consult widths the plain names never parse: each arm gates on the exact width its oracle call site parses. */
 function isKnownRange(raw: string, tables: NamerTables): boolean {
   return (
     isDownRange(raw, tables) || isOnlyRange(raw, tables) || isBetweenRange(raw, tables)
   )
 }
 
-/** True for `bpDown` with a non-base scale member. */
+/** True for `bpDown` with a non-base scale member whose own width parses. */
 function isDownRange(raw: string, tables: NamerTables): boolean {
   if (!raw.endsWith('Down')) return false
   const bp = raw.slice(0, raw.length - 4)
-  return bp !== 'base' && tables.breakpoints.includes(bp)
+  if (bp === 'base' || !tables.breakpoints.includes(bp)) return false
+  return hasBareFloatWidth(tables, bp)
 }
 
-/** True for `bpOnly` with a non-base scale member. */
+/**
+ * True for `bpOnly` with a non-base scale member. The oracle parses the
+ * NEXT width, never the member's own — and the last member parses nothing.
+ */
 function isOnlyRange(raw: string, tables: NamerTables): boolean {
   if (!raw.endsWith('Only')) return false
   const bp = raw.slice(0, raw.length - 4)
-  return bp !== 'base' && tables.breakpoints.includes(bp)
+  if (bp === 'base') return false
+  const idx = tables.breakpoints.indexOf(bp)
+  if (idx < 0) return false
+  const next = tables.breakpoints[idx + 1]
+  if (next === undefined) return true
+  return hasBareFloatWidth(tables, next)
 }
 
-/** True for `fromTo` with ordered non-base scale members, matched ASCII-insensitively. */
+/**
+ * True for `fromTo` with ordered non-base scale members, matched
+ * ASCII-insensitively. The oracle parses the TO width (canonical name),
+ * never the from width.
+ */
 function isBetweenRange(raw: string, tables: NamerTables): boolean {
   const at = raw.indexOf('To')
   if (at < 0) return false
@@ -87,7 +100,20 @@ function isBetweenRange(raw: string, tables: NamerTables): boolean {
   if (from === 'base' || to === 'base') return false
   const fromIdx = indexOfAsciiFold(tables.breakpoints, from)
   const toIdx = indexOfAsciiFold(tables.breakpoints, to)
-  return fromIdx >= 0 && toIdx >= 0 && fromIdx < toIdx
+  if (fromIdx < 0 || toIdx < 0 || fromIdx >= toIdx) return false
+  const toName = tables.breakpoints[toIdx]
+  if (toName === undefined) return false
+  return hasBareFloatWidth(tables, toName)
+}
+
+/**
+ * True when the scale declares a width for the name and it parses as a
+ * bare float — the L3 ungated entry, exactly `str::parse::<f64>`
+ * acceptance (inf/nan spellings pass; hex, units, padding, empty fail).
+ */
+function hasBareFloatWidth(tables: NamerTables, name: string): boolean {
+  const width = tables.breakpointWidths[name]
+  return width !== undefined && isDecimalSpelling(width)
 }
 
 /** First index ASCII-equal to the needle, or -1. */

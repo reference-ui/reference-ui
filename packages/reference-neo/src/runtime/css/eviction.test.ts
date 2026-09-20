@@ -193,6 +193,7 @@ const EVICTION_TABLES: NamerTables = {
   weightKeywords: [],
   colorProps: ['color'],
   breakpoints: ['base', 'sm', 'md'],
+  breakpointWidths: { sm: '640', md: '768' },
   conditions: ['hover'],
   fonts: {},
 }

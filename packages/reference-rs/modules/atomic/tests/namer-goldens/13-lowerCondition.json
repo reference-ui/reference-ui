@@ -1,6 +1,6 @@
 {
   "function": "lowerCondition",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": "base",
@@ -74,6 +74,94 @@
       "input": "SMTOLG",
       "output": {
         "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "paddedDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hexDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "emptyDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "paddedOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hexOnly",
+      "output": {
+        "status": "known",
+        "segment": "hexOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "pxnameOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "emptyOnly",
+      "output": {
+        "status": "known",
+        "segment": "emptyOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "tablet",
+      "output": {
+        "status": "known",
+        "segment": "tablet",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smTotablet",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletTopxname",
+      "output": {
+        "status": "known",
+        "segment": "tabletTopxname",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "pxnameDown",
+      "output": {
+        "status": "known",
+        "segment": "pxnameDown",
+        "kind": "container"
       }
     },
     {

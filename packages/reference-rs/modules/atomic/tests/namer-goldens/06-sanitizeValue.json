@@ -1,6 +1,6 @@
 {
   "function": "sanitizeValue",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": "a b",

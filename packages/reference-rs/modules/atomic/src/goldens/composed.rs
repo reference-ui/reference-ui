@@ -1,8 +1,11 @@
 //! System-backed golden suites: conditions, slots, shaping, composed probes.
 //!
 //! Conditions, shaping, and the composed `name` rows run against the case
-//! harness system so the runner's tables match the writer's. Slots need no
-//! system but travel with the composed file to keep every module small.
+//! harness system (lib spec plus authored non-bare widths). The runner
+//! (ATM-SEAM-08) compiles with the identical `baseSystem.json`, so the
+//! writer's tables and the runner's tables match by construction. Slots
+//! need no system but travel with the composed file to keep every module
+//! small.
 
 use serde_json::{json, Value};
 
@@ -24,6 +27,26 @@ pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
         "smToLg",
         "smTolg",
         "SMTOLG",
+        // Non-bare custom widths: every Down refuses its own width.
+        "tabletDown",
+        "paddedDown",
+        "hexDown",
+        "emptyDown",
+        // Only parses the NEXT width: tablet/padded/pxname refuse, hexOnly
+        // mints (next parses; self never does), last-bp emptyOnly mints.
+        "tabletOnly",
+        "paddedOnly",
+        "hexOnly",
+        "pxnameOnly",
+        "emptyOnly",
+        // Plain custom names never parse: known with the verbatim width.
+        "tablet",
+        // Between parses TO only: smTotablet refuses, tabletTopxname
+        // mints (from never parses), and pxnameDown mints through
+        // into_px ("640px" -> "640").
+        "smTotablet",
+        "tabletTopxname",
+        "pxnameDown",
         "@media (min-width: 1px)",
         "@supports",
         "@supports (display: grid)",
@@ -178,6 +201,28 @@ fn container_probes() -> Vec<AuthoredDeclaration> {
     ]
 }
 
+/// Non-bare custom widths at composed scale: the Down and Between
+/// members drop while the plan survives, the last-bp Only mints,
+/// and a bad scalar `when` drops the whole want.
+fn range_probes() -> Vec<AuthoredDeclaration> {
+    vec![
+        decl(&[], "color", json!({"tabletDown": "red", "md": "blue"}), false),
+        decl(
+            &[],
+            "color",
+            json!({"smTotablet": "red", "md": "blue"}),
+            false,
+        ),
+        decl(
+            &[],
+            "color",
+            json!({"emptyOnly": "red", "md": "blue"}),
+            false,
+        ),
+        decl(&["tabletDown"], "color", json!("red"), false),
+    ]
+}
+
 /// One authored declaration from parts.
 fn decl(when: &[&str], prop: &str, value: Value, important: bool) -> AuthoredDeclaration {
     AuthoredDeclaration {
@@ -247,6 +292,7 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
         decl(&["_hover"], "color", json!("red"), false),
         decl(&["_wat"], "color", json!("red"), false),
     ]);
+    decls.extend(range_probes());
     Suite {
         file: "16-name.json",
         function: "name",

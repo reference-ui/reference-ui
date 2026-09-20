@@ -6,5 +6,21 @@
     "file": "input/src/App.tsx",
     "line": 8,
     "column": 23
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "Unknown condition \"tabletDown\"",
+    "file": "input/src/App.tsx",
+    "line": 11,
+    "column": 26
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "Unknown condition \"smTotablet\"",
+    "file": "input/src/App.tsx",
+    "line": 12,
+    "column": 30
   }
 ]

@@ -74,7 +74,9 @@ Permanent home. Each rule names the Rust site the runtime namer mirrors.
 Table-shaped rules travel as lowerings or keyword sets; the rest are
 procedures with one golden each. Counts at landing (2026-09-20, lib):
 aliases 315 · prefixes 198 · color props 71 · unrealizable 27 ·
-lowerings 29 props · breakpoints verbatim with `base` first.
+lowerings 29 props · breakpoints verbatim with `base` first, widths
+alongside (name → post-`into_px` width, `base` absent) for the range
+gate alone — the class never contains them.
 
 | # | Authored | What the class becomes | Rust site |
 |---|---|---|---|
@@ -120,14 +122,15 @@ keeps `containerType` while the name refuses.
 
 `resolve/conditions/mod.rs::lower_when` in order; the runtime namer
 mirrors the order, the prefix-match at-rules (`@mediafoo` is known), the
-case-sensitive everything except range-name matching, and the
-spaces-only bracket join.
+case-sensitive everything except range-name matching, the
+spaces-only bracket join, and the per-arm width gate on ranges.
 
 | Authored `when` entry | Segment | Known-set needed? |
 |---|---|---|
 | `base` | skipped | no |
 | `_hover`, `_osDark`, system condition key | key without `_` | **yes** — unknown keys drop the whole want; the runtime namer refuses identically |
-| scale name `md`; ranges `mdDown`, `mdOnly`, `smToLg` | the raw name | **yes** — scale names |
+| scale name `md` | the raw name | **yes** — scale names; widths never parsed, plain names mint verbatim |
+| ranges `mdDown`, `mdOnly`, `smToLg` | the raw name | **yes** — names plus the width gate: `Down` parses its own width, `Only` the next (last mints), `To` the to-width; unparseable widths refuse |
 | `@media …` / `@container …` / `@supports …` | `[` + trimmed query with spaces → `_` + `]`; bare `@supports` refused on both sides | no |
 | `&…`, other `@…`, or a `&`-bearing selector | same bracket form (tabs/newlines survive byte-exact) | no |
 

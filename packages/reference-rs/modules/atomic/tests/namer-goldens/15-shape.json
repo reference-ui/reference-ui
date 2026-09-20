@@ -1,6 +1,6 @@
 {
   "function": "shape",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": {
@@ -234,6 +234,10 @@
         {
           "slot": "width@2xl",
           "className": "@reference-ui/lib__2xl:w_6r"
+        },
+        {
+          "slot": "width@tablet",
+          "className": "@reference-ui/lib__tablet:w_7r"
         }
       ]
     },

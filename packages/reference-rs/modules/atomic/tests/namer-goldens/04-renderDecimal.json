@@ -1,6 +1,6 @@
 {
   "function": "renderDecimal",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": 0.0,

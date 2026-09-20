@@ -580,8 +580,14 @@
   @container (min-width: 640px) and (max-width: 1023.98px) {
     .\@reference-ui\/lib__smToLg\:max-w_80ch { max-width: 80ch; }
   }
+  @container (min-width: 768px) {
+    .\@reference-ui\/lib__md\:c_blue\.500 { color: var(--colors-blue-500); }
+  }
   @container (min-width: 768px) and (max-width: 1023.98px) {
     .\@reference-ui\/lib__mdOnly\:px_2r { padding-inline: calc(2 * var(--spacing-root)); }
+  }
+  @container (min-width: 1024px) {
+    .\@reference-ui\/lib__lg\:mt_2r { margin-top: calc(2 * var(--spacing-root)); }
   }
   @container (max-width: 767.98px) {
     .\@reference-ui\/lib__mdDown\:d_none { display: none; }
