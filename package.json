@@ -10,7 +10,7 @@
   "scripts": {
     "setup:local": "bash ./pipeline/setup/local.sh",
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
-    "dev": "pnpm dev:docs",
+    "dev": "node scripts/dev.mjs",
     "dev:docs": "pnpm --filter @reference-ui/reference-docs run dev",
     "dev:lib": "pnpm --filter @reference-ui/lib run dev",
     "dev:lib:native": "REF_SYSTEM_ENGINE=native pnpm dev:lib",
