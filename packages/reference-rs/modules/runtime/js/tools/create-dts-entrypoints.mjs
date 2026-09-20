@@ -18,6 +18,7 @@ const entrypoints = [
   { file: 'atlas.d.ts', target: './modules/atlas/js/index' },
   { file: 'styletrace.d.ts', target: './modules/styletrace/js/index' },
   { file: 'atomic.d.ts', target: './modules/atomic/js/index' },
+  { file: 'namer.d.ts', target: './modules/atomic/js/namer/index' },
   { file: 'system.d.ts', target: './modules/atomic/js/index' },
   { file: 'typegen.d.ts', target: './modules/typegen/js/index' },
 ]
