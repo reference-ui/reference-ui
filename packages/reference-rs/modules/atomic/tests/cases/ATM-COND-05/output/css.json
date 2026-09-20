@@ -1,5 +1,6 @@
 {
   "containerName:sidebar": "@reference-ui/lib__cq-n_sidebar",
+  "containerName:true ": "@reference-ui/lib__cq-n_true_",
   "containerType:inline-size": "@reference-ui/lib__cq-t_inline-size",
   "fontFamily:sans": "@reference-ui/lib__font-family_sans",
   "fontWeight:700": "@reference-ui/lib__font-weight_700",

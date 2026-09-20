@@ -578,6 +578,7 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__cq-n_sidebar { container-name: sidebar; }
+  .\@reference-ui\/lib__cq-n_true_ { container-name: true ; }
   .\@reference-ui\/lib__cq-t_inline-size { container-type: inline-size; }
   .\@reference-ui\/lib__font-family_sans { font-family: var(--fonts-sans); }
   .\@reference-ui\/lib__font-weight_700 { font-weight: 700; }

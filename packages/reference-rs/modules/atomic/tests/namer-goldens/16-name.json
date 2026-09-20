@@ -1,6 +1,6 @@
 {
   "function": "name",
-  "rulesVersion": 1,
+  "rulesVersion": 2,
   "cases": [
     {
       "input": {
@@ -344,6 +344,92 @@
         {
           "slot": "containerType",
           "className": "@reference-ui/lib__cq-t_inline-size"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": "true",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": "true ",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n_true_"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": " true",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n__true"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": "\ttrue",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n__true"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "container",
+        "value": " \t true \n ",
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "containerType",
+          "className": "@reference-ui/lib__cq-t_inline-size"
+        },
+        {
+          "slot": "containerName",
+          "className": "@reference-ui/lib__cq-n__true_"
         }
       ]
     },

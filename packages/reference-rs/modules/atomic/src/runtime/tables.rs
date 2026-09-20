@@ -4,8 +4,8 @@
 //! compile time and shipped in the artifact as `runtime.namer`. Lookups
 //! (aliases, prefixes, keyword sets, fonts) sort their keys; lowerings,
 //! breakpoints, conditions unions, and font extras keep the orders the
-//! interpreter and the expansion passes rely on. The rules version starts
-//! at 1 and bumps whenever a naming rule changes a class.
+//! interpreter and the expansion passes rely on. The rules version sits
+//! at 2 and bumps whenever a naming rule changes a class.
 
 use std::collections::BTreeMap;
 
@@ -18,7 +18,7 @@ use crate::resolve::font::{family, weight};
 use crate::resolve::shorthands::{border, parser};
 
 /// Rules version both namers pin: bump whenever a naming rule changes a class.
-pub const NAMER_RULES_VERSION: u32 = 1;
+pub const NAMER_RULES_VERSION: u32 = 2;
 
 /// The closed, O(props + conditions + fonts) data both namers read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -218,10 +218,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rules_version_starts_at_one() {
-        assert_eq!(NAMER_RULES_VERSION, 1);
+    fn rules_version_matches_js_pin() {
+        assert_eq!(NAMER_RULES_VERSION, 2);
         let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-        assert_eq!(tables.rules_version, 1);
+        assert_eq!(tables.rules_version, 2);
     }
 
     #[test]

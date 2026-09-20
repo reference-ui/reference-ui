@@ -160,6 +160,24 @@ fn build_output(system: &BaseSystem, name: &str, decl: &AuthoredDeclaration) -> 
     json!(declarations)
 }
 
+/// `container` bare/named probes: bools, the empty, exact and padded
+/// `"true"` (the oracle compares untrimmed), a name, and falsy kinds.
+fn container_probes() -> Vec<AuthoredDeclaration> {
+    vec![
+        decl(&[], "container", json!(true), false),
+        decl(&[], "container", json!(""), false),
+        decl(&[], "container", json!("true"), false),
+        decl(&[], "container", json!("true "), false),
+        decl(&[], "container", json!(" true"), false),
+        decl(&[], "container", json!("\ttrue"), false),
+        decl(&[], "container", json!(" \t true \n "), false),
+        decl(&[], "container", json!("sidebar"), false),
+        decl(&[], "container", json!(false), false),
+        decl(&[], "container", json!(null), false),
+        decl(&[], "container", json!(0), false),
+    ]
+}
+
 /// One authored declaration from parts.
 fn decl(when: &[&str], prop: &str, value: Value, important: bool) -> AuthoredDeclaration {
     AuthoredDeclaration {
@@ -172,7 +190,7 @@ fn decl(when: &[&str], prop: &str, value: Value, important: bool) -> AuthoredDec
 
 /// Composed divergence probes: one declaration in, plan declarations out.
 pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
-    let decls = [
+    let mut decls = vec![
         decl(&[], "padding", json!("1e21"), false),
         decl(&[], "padding", json!("1e-7"), false),
         decl(&[], "padding", json!("1e20"), false),
@@ -197,12 +215,9 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
         decl(&[], "color", json!("İnk"), false),
         decl(&[], "borderTop", json!("SOLID 3px red"), false),
         decl(&[], "width", json!({"md": "2r", "base": "1r"}), false),
-        decl(&[], "container", json!(true), false),
-        decl(&[], "container", json!(""), false),
-        decl(&[], "container", json!("sidebar"), false),
-        decl(&[], "container", json!(false), false),
-        decl(&[], "container", json!(null), false),
-        decl(&[], "container", json!(0), false),
+    ];
+    decls.extend(container_probes());
+    decls.extend([
         decl(&[], "flex", json!(1), false),
         decl(&[], "flex", json!("auto"), false),
         decl(&[], "flex", json!("2"), false),
@@ -231,7 +246,7 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
         decl(&[], "color", json!("red"), true),
         decl(&["_hover"], "color", json!("red"), false),
         decl(&["_wat"], "color", json!("red"), false),
-    ];
+    ]);
     Suite {
         file: "16-name.json",
         function: "name",

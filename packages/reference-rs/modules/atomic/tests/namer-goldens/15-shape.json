@@ -1,6 +1,6 @@
 {
   "function": "shape",
-  "rulesVersion": 1,
+  "rulesVersion": 2,
   "cases": [
     {
       "input": {

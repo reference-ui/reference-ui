@@ -4,6 +4,10 @@ export function Containers() {
   return <Div container="sidebar" />
 }
 
+export function PaddedContainer() {
+  return <Div container="true " />
+}
+
 export function Fonts() {
   return <Div font="sans" />
 }
