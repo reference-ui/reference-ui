@@ -16,6 +16,7 @@ import {
   emitCssLonghandsRs,
   emitCssModRs,
   emitCssPropertiesRs,
+  emitCssUnrealizableRs,
   emitDialectRs,
   emitHtmlRs,
   emitLibRs,
@@ -68,6 +69,7 @@ function emitAllModules(dialect: DialectData, targetDir: string): void {
   fs.writeFileSync(path.join(targetDir, 'css/longhands.rs'), emitCssLonghandsRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'css/color.rs'), emitCssColorRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'css/properties.rs'), emitCssPropertiesRs(dialect), 'utf-8');
+  fs.writeFileSync(path.join(targetDir, 'css/unrealizable.rs'), emitCssUnrealizableRs(dialect), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'lib.rs'), emitLibRs(), 'utf-8');
   fs.writeFileSync(path.join(targetDir, 'tests.rs'), emitTestsRs(), 'utf-8');
 }

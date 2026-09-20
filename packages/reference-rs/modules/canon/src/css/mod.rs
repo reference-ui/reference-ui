@@ -8,10 +8,12 @@
 pub mod color;
 pub mod longhands;
 pub mod properties;
+pub mod unrealizable;
 pub mod values;
 
 pub use color::COLOR_PROPERTIES;
 pub use properties::CANONICAL_PROPERTIES;
+pub use unrealizable::{is_unrealizable_extension, UNREALIZABLE_EXTENSIONS};
 pub use values::{classify_css_value, prop_accepts, ValueKind};
 
 /// Canonical property specification in the compiler canon.

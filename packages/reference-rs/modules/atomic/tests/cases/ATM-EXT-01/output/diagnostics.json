@@ -1,0 +1,82 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`translateY: 10px` has no compiled style plan; this lookup will emit no class. `translateY` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 44
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`translateX: 10px` has no compiled style plan; this lookup will emit no class. `translateX` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 4,
+    "column": 15
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`boxSize: 10px` has no compiled style plan; this lookup will emit no class. `boxSize` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 5,
+    "column": 12
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`spaceX: 10px` has no compiled style plan; this lookup will emit no class. `spaceX` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 6,
+    "column": 11
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`truncate: ellipsis` has no compiled style plan; this lookup will emit no class. `truncate` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 7,
+    "column": 13
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`hideFrom: md` has no compiled style plan; this lookup will emit no class. `hideFrom` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 8,
+    "column": 13
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`gradientFrom: red` has no compiled style plan; this lookup will emit no class. `gradientFrom` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 9,
+    "column": 17
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`textStyle: body` has no compiled style plan; this lookup will emit no class. `textStyle` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 10,
+    "column": 14
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`scrollSnapStrictness: proximity` has no compiled style plan; this lookup will emit no class. `scrollSnapStrictness` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 11,
+    "column": 25
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`spaceY: 4px` has no compiled style plan; this lookup will emit no class. `spaceY` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 12,
+    "column": 24
+  }
+]

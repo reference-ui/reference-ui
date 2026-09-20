@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 222 |
-| Named `[x]` proven | 220 |
+| Total contract cases | 223 |
+| Named `[x]` proven | 221 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Vitest seam stations | 235 (`tests/cases/<ATM-*>`; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Vitest seam stations | 236 (`tests/cases/<ATM-*>`; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -74,6 +74,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 9 | 9 | 0 |
+| `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
 | `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
@@ -88,7 +89,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **198** | **187** | **11** |
+| **Total** | | **199** | **188** | **11** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -553,6 +554,12 @@ compiler contract.
   **The six radius pair shorthands must expand to corner longhands with one value on both corners.**
   Station `ATM-SHORT-09` (RS-25). Compile all six pairs with `'2r'`. Assert eight corner utilities (four physical, four logical), no dead `border-*-radius` pair property, and zero diagnostics. Real properties (`borderRadius`, corner longhands) pass through; emitted names equal `canon::native_longhands_for_prop` (cargo tripwire).
 
+### Dialect Extension Realization
+
+- [x] `ATM-EXT-01` `[reference]` `[seam]` —
+  **Dialect extensions with no CSS lowering must refuse at the resolve fall-through instead of minting dead rules.**
+  Station `ATM-EXT-01`. Compile `translateX`, `boxSize`, `spaceX`, `truncate`, `hideFrom`, `gradientFrom`, `textStyle`, `scrollSnapStrictness` (plus a `&:hover` arm and a JSX leg). Assert one default-visible `ATM-W-UNREALIZABLE-EXTENSION` warning per prop naming the prop, zero fictional declarations in the sheet, no classes minted, and no runtime plans served for refused props — there is no atom to serve, so a served-class fallback would be a ghost class; the compile warning plus the standard dev miss path keep the refusal loud. Sibling platform props still extract, and the lowering arms above the refusal keep working (`textGradient` trio, radius-pair longhands, platform rows). The refused set is generated into canon from live webref truth (`EXTENSIONS` rows with `css` absent from webref, no longhands, no platform shadow — 27 members), never a secondary list in atomic; each future per-prop expansion adds a resolve arm above the refusal with its own red test as `EXT-02+`. `srOnly` stays in the set but is unprobable here: extraction claims every `*Only` key as a breakpoint range before the known-prop check (pre-existing, separate gap).
+
 ### Condition Scoping & Dialect Patterns
 
 - [x] `ATM-COND-01` `[reference]` `[seam]` —
@@ -889,7 +896,7 @@ compiler contract.
   Station `ATM-SEAM-03` (RS-14, unblocks NEO-SITE-01/02/03). `css({ color: flag ? 'cherry' : 'ocean' })` emits one plan per arm; `css({ color: theme.primary })` emits the member plan; `css({ bg: 'amber', ...rest })` emits the spread plan beside its literal sibling. Authored capture (`ast_to_json_values`) mirrors `walk_expression` leaf-for-leaf, and identifier-spread unpack pushes authored entries alongside wants, so `css()` and JSX resolve every leaf through the plan index (`createStylePlanIndex` + `mergeStylePlans` returns each leaf's `css.classes` entry, never `''`). `null`, `undefined`, and `void` leaves stay omitted on both sides. Whole-object `css(styles)` is out of scope: it yields no wants at all, a separate gap.
 - [x] `ATM-SCAN-01` `[reference]` `[seam]` —
   **The frozen request's `include` globs must scope both the `sourceRoot` scan and the legacy virtual `files` list.**
-  Station `ATM-SCAN-01` (RS-10, unblocks NEO-SYNC-09). Under `include: ['theme/**']` the `css()` in `outside/` yields no utility and no diagnostics; an absent or empty include preserves scan-all. One `IncludeScope` (`src/includes/`) serves both paths with fast-glob flavor: `**` crosses directories, `*`/`?` stay in a segment, `{a,b}` expands, `[...]` matches one character, leading `!` negates. The legacy shape accepts `include` too; the station golden is the unscoped legacy compile.
+  Station `ATM-SCAN-01` (RS-10, unblocks NEO-SYNC-09). Under `include: ['theme/**']` the `css()` in `outside/` yields no utility and no diagnostics; an absent or empty include preserves scan-all. A negation-only include (e.g. `['!outside/**']`) scopes to scan-all-minus-negatives. One `IncludeScope` (`src/includes/`) serves both paths with fast-glob flavor: `**` crosses directories, `*`/`?` stay in a segment, `{a,b}` expands, `[...]` matches one character, leading `!` negates. The legacy shape accepts `include` too; the station golden is the unscoped legacy compile.
 - [ ] `ATM-PERF-01` `[reference]` `[seam]` —
   **Compiling a large source tree must stay within a declared time and memory budget, and `AtomSet` size must equal the unique atom count.**
   Compile a generated tree of a few thousand files, assert the wall time is under a recorded bound, and assert the atom count equals the number of distinct `(prop, value, when, important)` tuples. Every file is currently parsed twice — once for constants (`lib.rs:180-196`) and once for extract (`lib.rs:198-214`) — and there is no timing anywhere in the crate, so the first real `ref sync` on an app-sized tree is where that gets discovered. A budget makes the double parse visible before a user finds it.
@@ -1061,6 +1068,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-14` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-14/` |
 | `ATM-TOKEN-15` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-15/` |
 | `ATM-TOKEN-16` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-16/` |
+| `ATM-TOKEN-17` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-17/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |
@@ -1130,6 +1138,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-HARVEST-03` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-03/` |
 | `ATM-HARVEST-04` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-04/` |
 | `ATM-HARVEST-05` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-05/` |
+| `ATM-EXT-01` | `[x]` | `[seam]` | `tests/cases/ATM-EXT-01/` |
 
 ---
 

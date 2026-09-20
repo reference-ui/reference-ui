@@ -14,9 +14,9 @@ mod tests;
 
 pub use conditions::{is_condition, CONDITIONS, NAMED_CONDITIONS};
 pub use css::{
-    classify_css_value, find_property, is_color_prop, is_unitless_prop, native_longhands_for_prop,
-    prop_accepts, property_cascade_rank, Property, ValueKind, CANONICAL_PROPERTIES,
-    COLOR_PROPERTIES, UNITLESS_PROPERTIES,
+    classify_css_value, find_property, is_color_prop, is_unitless_prop, is_unrealizable_extension,
+    native_longhands_for_prop, prop_accepts, property_cascade_rank, Property, ValueKind,
+    CANONICAL_PROPERTIES, COLOR_PROPERTIES, UNITLESS_PROPERTIES, UNREALIZABLE_EXTENSIONS,
 };
 pub use dialect::{is_reference_prop, resolve_alias, Alias, ALIASES, REFERENCE_PROPS};
 pub use html::{
