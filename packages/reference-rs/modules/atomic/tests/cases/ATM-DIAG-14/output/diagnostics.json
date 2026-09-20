@@ -12,5 +12,13 @@
     "file": "input/src/modes/broken.jsx",
     "line": 4,
     "column": 1
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"frobnicate\"",
+    "file": "input/src/modes/unicode.ts",
+    "line": 3,
+    "column": 29
   }
 ]

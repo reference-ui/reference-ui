@@ -308,6 +308,24 @@ mod tests {
     }
 
     #[test]
+    fn unknown_prop_notes_keep_the_default_line() {
+        let fact = DiagnosticFact::ExtractNote {
+            location: located(),
+            severity: DiagnosticSeverity::Warning,
+            code: DiagnosticCode::UnknownProperty,
+            message: "Unknown style property \"frobnicate\"".into(),
+        };
+        let line = located().warning(
+            DiagnosticCode::UnknownProperty,
+            "Unknown style property \"frobnicate\"",
+        );
+        let channels =
+            DiagnosticChannels::partition(&[fact], vec![line.clone()], &catalog(), true);
+        assert_eq!(channels.userspace, vec![line]);
+        assert!(channels.compiler.is_empty());
+    }
+
+    #[test]
     fn unrequested_channel_still_strips_default() {
         let (funnel_fact, funnel_line) = funnel_pair();
         let (note_fact, note_line) = note_pair();

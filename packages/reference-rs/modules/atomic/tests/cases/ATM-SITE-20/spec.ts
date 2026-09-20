@@ -29,22 +29,36 @@ const spec: AtomicCaseSpec = {
       'color:green': `${SYSTEM}__c_green`,
     })
 
-    // One policy, two channels (S6 E8-class re-point): the global-CSS
-    // line stays default per O8 R3; the three extract refusals ride opt-in.
-    expect((result.diagnostics ?? []).map(d => d.message).sort()).toEqual([
-      'Unknown style property in global CSS: "divideX"',
-    ])
+    // One policy, one channel (Wave-1b carve-out restores the S6 E8-class
+    // re-point): adjudicated per line — the global-CSS line stays default
+    // per O8 R3, and the three css-surface extract refusals (two literals
+    // via object/mod.rs, one const spread via lower.rs) return to default.
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(4)
+    for (const [suffix, line, column, message] of [
+      ['App.tsx', 3, 24, 'Unknown style property "fooBar"'],
+      ['App.tsx', 3, 37, 'Unknown style property "divideX"'],
+      ['App.tsx', 7, 27, 'Unknown style property "frobnicate"'],
+      ['n12', 1, 1, 'Unknown style property in global CSS: "divideX"'],
+    ] as const) {
+      const diag = defaults.find(
+        d =>
+          (d.file ?? '').endsWith(suffix) &&
+          d.line === line &&
+          d.column === column
+      )
+      expect(diag, `default diagnostic at ${suffix}:${line}`).toBeDefined()
+      expect(diag!.severity).toBe('warning')
+      expect(diag!.code).toBe('ATM-W-UNKNOWN-PROPERTY')
+      expect(diag!.message).toBe(message)
+      expect(diag!.column).toBe(column)
+    }
     const opted = await compileCase('ATM-SITE-20', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
-    const extract = (opted.compilerDiagnostics ?? [])
-      .filter(d => d.code === 'ATM-W-UNKNOWN-PROPERTY')
-      .map(d => d.message)
-      .sort()
-    expect(extract).toEqual([
-      'Unknown style property "divideX"',
-      'Unknown style property "fooBar"',
-      'Unknown style property "frobnicate"',
-    ])
+    const extract = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-W-UNKNOWN-PROPERTY'
+    )
+    expect(extract).toHaveLength(0)
   },
 }
 

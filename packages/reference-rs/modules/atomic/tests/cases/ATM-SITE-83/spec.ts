@@ -36,21 +36,25 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('padding-inline: 0.5rem;')
     expect(sheet).toContain('background-color: transparent;')
 
-    // The css() control diagnoses on the opt-in channel: no bag warns,
-    // and the default is silent (S6 E8-class re-point).
-    expect(result.diagnostics ?? []).toHaveLength(0)
+    // The css() control diagnoses on the default channel: no bag warns,
+    // and the unknown-prop line stays default (Wave-1b carve-out; S6
+    // E8-class re-point moved it opt-in, the carve-out restores it).
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(1)
+    expect(defaults[0]).toMatchObject({
+      severity: 'warning',
+      code: 'ATM-W-UNKNOWN-PROPERTY',
+      message: 'Unknown style property "css"',
+      line: 42,
+      column: 30,
+    })
+    expect(defaults[0]!.file ?? '').toContain('App.tsx')
     const opted = await compileCase('ATM-SITE-83', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
     const moved = (opted.compilerDiagnostics ?? []).filter(
       d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
     )
-    expect(moved).toEqual([
-      expect.objectContaining({
-        severity: 'warning',
-        code: 'ATM-W-UNKNOWN-PROPERTY',
-        message: 'Unknown style property "css"',
-      }),
-    ])
+    expect(moved).toHaveLength(0)
   },
 }
 

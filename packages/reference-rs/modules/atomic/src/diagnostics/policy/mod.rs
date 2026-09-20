@@ -15,7 +15,8 @@ mod proof;
 mod resolve;
 
 use super::{
-    DeclarationDetail, DiagnosticFact, ResolveDetail, ResolveOutcome, ValueDetail,
+    DeclarationDetail, DiagnosticCode, DiagnosticFact, ExtractOutcome, ResolveDetail,
+    ResolveOutcome, ValueDetail,
 };
 
 /// The two diagnostic audiences. Severity is never used as an audience proxy.
@@ -32,6 +33,9 @@ pub enum Audience {
 /// and hole-valued (`false`) resolve refusals ride the opt-in compiler
 /// channel. Resolve passthroughs/advisories, host skips, and static/global
 /// lines stay default pending the deferred token-passthrough/host policy.
+/// Wave-1b carve-out: extract facts carrying `UnknownProperty` stay
+/// userspace — the located gate warning restores proof F2's visibility
+/// premise (the exact key is queried-and-missed at runtime).
 pub struct Policy;
 
 impl Policy {
@@ -41,11 +45,24 @@ impl Policy {
             DiagnosticFact::ExistingDiagnostic(_) => Audience::Userspace,
             DiagnosticFact::ExactLookupExpected { .. }
             | DiagnosticFact::DynamicSlot { .. }
-            | DiagnosticFact::ExtractOutcome { .. }
-            | DiagnosticFact::ExtractNote { .. }
             | DiagnosticFact::HarvestOutcome { .. } => Audience::Compiler,
+            DiagnosticFact::ExtractOutcome { .. } | DiagnosticFact::ExtractNote { .. } => {
+                Self::extract_audience(fact)
+            }
             DiagnosticFact::ResolveOutcome { outcome, .. } => Self::resolve_audience(outcome),
             DiagnosticFact::HostOutcome { .. } => Audience::Userspace,
+        }
+    }
+
+    /// Extract facts ride the compiler channel — except unknown-prop gate
+    /// warnings, which stay userspace (Wave-1b carve-out: the located gate
+    /// sentence restores proof F2's visibility premise for the exact
+    /// queried-and-missed key).
+    fn extract_audience(fact: &DiagnosticFact) -> Audience {
+        if is_unknown_prop_extract(fact) {
+            Audience::Userspace
+        } else {
+            Audience::Compiler
         }
     }
 
@@ -118,6 +135,23 @@ impl Policy {
         location: &super::DiagnosticLocation,
     ) -> super::Diagnostic {
         analysis::render_dynamic(prop, shape, location)
+    }
+}
+
+/// True when an extract fact carries the unknown-prop code, on either the
+/// funnel arm or the note arm (all three gates warn through notes today;
+/// the funnel arm is the same code, same verdict).
+fn is_unknown_prop_extract(fact: &DiagnosticFact) -> bool {
+    match fact {
+        DiagnosticFact::ExtractOutcome { outcome, .. } => matches!(
+            outcome,
+            ExtractOutcome::Refused {
+                code: DiagnosticCode::UnknownProperty,
+                ..
+            }
+        ),
+        DiagnosticFact::ExtractNote { code, .. } => *code == DiagnosticCode::UnknownProperty,
+        _ => false,
     }
 }
 

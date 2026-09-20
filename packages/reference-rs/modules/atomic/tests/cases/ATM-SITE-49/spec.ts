@@ -108,28 +108,39 @@ const spec: AtomicCaseSpec = {
     }
 
     // `[42]` folds to its spelling, then rides the ordinary unknown-property
-    // path — never UnfoldableKey. Each dynamic key warns once, located — on
-    // the opt-in channel now (S6 E8-class re-point); the default is silent.
-    expect(result.diagnostics ?? []).toHaveLength(0)
+    // path — never UnfoldableKey. Each dynamic key warns once, located. The
+    // three unknown-prop lines stay default (Wave-1b carve-out); the four
+    // unfoldable-key lines ride the opt-in channel (S6 E8-class re-point).
+    const defaults = result.diagnostics ?? []
+    expect(defaults).toHaveLength(3)
+    for (const [suffix, line, message] of [
+      ['keys.ts', 10, 'Unknown style property "42"'],
+      ['folded.ts', 17, 'Unknown style property "42"'],
+      ['folded.ts', 19, 'Unknown style property "-4"'],
+    ] as const) {
+      const diag = defaults.find(
+        d => (d.file ?? '').endsWith(suffix) && d.line === line
+      )
+      expect(diag, `default diagnostic at ${suffix}:${line}`).toBeDefined()
+      expect(diag!.severity).toBe('warning')
+      expect(diag!.code).toBe('ATM-W-UNKNOWN-PROPERTY')
+      expect(diag!.message).toBe(message)
+      expect(diag!.column).toBe(8)
+    }
     const opted = await compileCase('ATM-SITE-49', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
     const channel = opted.compilerDiagnostics ?? []
     const moved = channel.filter(
       d => d.code !== 'ATM-I-EXPECTED-LOOKUP' && d.code !== 'ATM-I-DYNAMIC-SLOT'
     )
-    expect(moved).toHaveLength(7)
+    expect(moved).toHaveLength(4)
     const keysDiags = moved.filter(d => d.file?.match(/keys\.ts$/))
     const foldedDiags = moved.filter(d =>
       d.file?.match(/folded\.ts$/)
     )
-    expect(keysDiags).toHaveLength(3)
-    expect(foldedDiags).toHaveLength(4)
-    const [numeric, ident, call] = keysDiags
-    expect(numeric!.severity).toBe('warning')
-    expect(numeric!.code).toBe('ATM-W-UNKNOWN-PROPERTY')
-    expect(numeric!.message).toMatch(/Unknown style property "42"/)
-    expect(numeric!.file).toMatch(/keys\.ts$/)
-    expect(numeric!.line).toBe(10)
+    expect(keysDiags).toHaveLength(2)
+    expect(foldedDiags).toHaveLength(2)
+    const [ident, call] = keysDiags
     for (const [diag, line] of [
       [ident, 14],
       [call, 17],
@@ -141,13 +152,10 @@ const spec: AtomicCaseSpec = {
       expect(diag!.line).toBe(line)
       expect(diag!.column).toBe(8)
     }
-    // Folded numerics ride the unknown-property path; the multi-leaf key
-    // refuses with siblings kept. The entry-40 helper key folds (pinned
-    // above) instead of refusing.
+    // The multi-leaf key refuses with siblings kept. The entry-40 helper
+    // key folds (pinned above) instead of refusing.
     const foldedByLine = new Map(foldedDiags.map(d => [d.line, d]))
     for (const [line, code, pattern] of [
-      [17, 'ATM-W-UNKNOWN-PROPERTY', /Unknown style property "42"/],
-      [19, 'ATM-W-UNKNOWN-PROPERTY', /Unknown style property "-4"/],
       [24, 'ATM-W-UNFOLDABLE-KEY', /Dynamic computed property key/],
       [34, 'ATM-W-UNFOLDABLE-KEY', /Dynamic computed property key/],
     ] as const) {
