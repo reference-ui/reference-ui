@@ -41,18 +41,9 @@ pub struct CompileRequest {
     /// `compiler_diagnostics`. Unknown channels are ignored.
     #[serde(default)]
     pub logs: Option<Vec<String>>,
-    /// TEMPORARY passthrough (deleted next slice): absent or true keeps the
-    /// per-atom `stylePlans` rows in `runtime`; false ships schema 2 bare.
-    #[serde(default)]
-    pub style_plans_passthrough: Option<bool>,
 }
 
 impl CompileRequest {
-    /// True when the artifact keeps the temporary per-atom rows.
-    pub fn keeps_style_plans(&self) -> bool {
-        self.style_plans_passthrough.unwrap_or(true)
-    }
-
     /// True when the caller requested the opt-in compiler backchannel.
     /// Unknown channel names are ignored so channels evolve additively.
     pub fn wants_compiler_logs(&self) -> bool {
@@ -70,9 +61,9 @@ pub struct CompileResult {
     #[serde(default)]
     pub portable_stylesheet: String,
     pub runtime: NativeRuntimeArtifact,
-    /// Compile-internal plans: the same rows the artifact carries, surfaced
-    /// for proof, stations, and the differential gate. Stays when the
-    /// artifact copy ships no more per-atom rows.
+    /// Compile-internal plans: the compiler rows, surfaced for proof,
+    /// stations, and the differential gate. The artifact carries no
+    /// per-atom rows.
     pub style_plans: Vec<RuntimeStylePlan>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub css: Option<CssRuntime>,

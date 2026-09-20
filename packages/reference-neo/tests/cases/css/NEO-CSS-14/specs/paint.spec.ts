@@ -37,8 +37,16 @@ interface HarvestWindow {
 }
 
 // A dynamic-site color from a palette array no static site reads paints
-// through harvested plans; an unwritten color paints nothing with exactly
-// one dev console diagnostic. Both published bundles carry the floor.
+// through the harvested sheet; an unwritten color constructs its miss
+// class, paints nothing, and reports exactly one dev console diagnostic.
+// Neither published bundle carries a per-atom row.
+async function setMissClass(page: SpecPage): Promise<void> {
+  const miss = page.locator('#miss');
+  await miss.evaluate((el) => {
+    const win = el.ownerDocument.defaultView as unknown as HarvestWindow;
+    el.setAttribute('class', win.__cssProbe('hotpink'));
+  });
+}
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
@@ -74,9 +82,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const missCls = await probe.evaluate(
     (el) => (el.ownerDocument.defaultView as unknown as HarvestWindow).__cssProbe('hotpink'),
   );
-  assert.equal(missCls, '', `unwritten shade resolves to no class, got ${missCls}`);
+  assert.equal(missCls, 'neo-css14__c_hotpink', `unwritten shade constructs its miss class, got ${missCls}`);
+  await setMissClass(page);
   const miss = page.locator('#miss');
-  await miss.evaluate((el) => el.setAttribute('class', ''));
   const missColor = await miss.evaluate((el) => getComputedStyle(el).color);
   assert.equal(missColor, 'rgb(17, 17, 17)', `miss rests on inherited ink, got ${missColor}`);
   const missDiags = await miss.evaluate(
@@ -87,11 +95,11 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(missDiags[0]?.includes('hotpink'), `diagnostic names the value, got ${missDiags[0]}`);
 
   const styledData = fs.readFileSync(path.join(outDir, 'styled/runtime-data.mjs'), 'utf8');
-  assert.ok(styledData.includes('neo-css14__c_red'), 'styled bundle carries the red plan');
-  assert.ok(styledData.includes('neo-css14__c_blue'), 'styled bundle carries the blue plan');
+  assert.ok(!styledData.includes('neo-css14__c_red'), 'styled bundle carries no red row');
+  assert.ok(!styledData.includes('neo-css14__c_blue'), 'styled bundle carries no blue row');
   const reactBundle = fs.readFileSync(path.join(outDir, 'react/react.mjs'), 'utf8');
-  assert.ok(reactBundle.includes('neo-css14__c_red'), 'react bundle carries the red plan');
-  assert.ok(reactBundle.includes('neo-css14__c_blue'), 'react bundle carries the blue plan');
+  assert.ok(!reactBundle.includes('neo-css14__c_red'), 'react bundle carries no red row');
+  assert.ok(!reactBundle.includes('neo-css14__c_blue'), 'react bundle carries no blue row');
 
   const request = JSON.parse(
     fs.readFileSync(path.join(outDir, 'system/compile-request.json'), 'utf8'),

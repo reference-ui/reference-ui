@@ -45,8 +45,8 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.equal(typeof mod.css, 'function', 'react entry exports css');
   assert.equal(typeof mod.recipe, 'function', 'react entry exports recipe');
 
-  assert.equal(mod.css({ color: 'brand' }), `${prefix}c_brand`, 'css() resolves the compiled plan');
-  assert.equal(mod.css({ color: 'missing' }), '', 'css() misses resolve to nothing');
+  assert.equal(mod.css({ color: 'brand' }), `${prefix}c_brand`, 'css() constructs the compiled class');
+  assert.equal(mod.css({ color: 'missing' }), `${prefix}c_missing`, 'css() misses construct silently');
 
   const chip = mod.recipe({ className: 'chip' })({ tone: 'accent', size: 'lg' });
   assert.ok(chip.includes(prefix), `recipe class carries the system prefix, got ${chip}`);

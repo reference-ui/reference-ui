@@ -28,7 +28,12 @@ interface PortableCssChunk {
 
 interface RuntimeArtifact {
   schemaVersion: number;
-  stylePlans: Array<{ system: string; prop: string; declarations: Array<{ className: string }> }>;
+  namer: {
+    rulesVersion: number;
+    aliases: Record<string, string>;
+    breakpoints: string[];
+    conditions: string[];
+  };
   recipes: Record<string, unknown>;
   stylePropNames: string[];
 }
@@ -81,11 +86,16 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.ok(portableSheet.includes('--colors-brand: #7c3aed'), 'styled sheet carries the token var');
 
   assert.equal(base.runtime.schemaVersion, 2, 'runtime carries schemaVersion 2');
-  assert.ok(Array.isArray(base.runtime.stylePlans), 'runtime carries stylePlans');
-  assert.ok(base.runtime.stylePlans.length >= 1, 'runtime carries the compiled plan');
+  assert.ok(!('stylePlans' in base.runtime), 'runtime carries no per-atom row');
+  assert.ok(base.runtime.namer, 'runtime carries the namer tables');
+  assert.equal(typeof base.runtime.namer.rulesVersion, 'number', 'namer tables carry a rules version');
   assert.ok(
-    base.runtime.stylePlans.some((plan) => plan.prop === 'color'),
-    'runtime plan covers the color want',
+    base.runtime.namer.breakpoints.includes('base'),
+    'namer tables carry the breakpoint scale',
+  );
+  assert.ok(
+    base.runtime.namer.conditions.length > 0,
+    'namer tables carry the known conditions',
   );
   assert.ok(
     base.runtime.stylePropNames.includes('color'),

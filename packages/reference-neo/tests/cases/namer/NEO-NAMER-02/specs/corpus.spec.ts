@@ -4,7 +4,6 @@
 // element whose class list left the golden, the unpainted probe, or the
 // missing runtime namer on failure.
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 
@@ -13,7 +12,6 @@ interface SpecInput {
   case: NeoCase;
 }
 
-const require = createRequire(import.meta.url);
 const NAMER_SPECIFIER = '@reference-ui/rust/namer';
 const SYSTEM = 'neo-namer-02';
 
@@ -95,10 +93,10 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     `font paints its family, got ${font.fontFamily}`,
   );
 
-  // Red half: the runtime namer reproduces the same lists. The export is
-  // missing until the namer lands beside the engine it mirrors.
+  // Red half: the runtime namer reproduces the same lists. The export
+  // resolves via ESM (require.resolve cannot see import-only subpaths).
   try {
-    require.resolve(NAMER_SPECIFIER);
+    await import(NAMER_SPECIFIER);
   } catch {
     assert.fail(`the runtime namer is missing: ${NAMER_SPECIFIER} does not resolve`);
   }

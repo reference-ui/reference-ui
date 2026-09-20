@@ -112,24 +112,11 @@ export interface NamerTables {
 }
 
 export interface NativeRuntimeArtifact {
-  /**
-   * TEMPORARY transition (narrowed next slice): the compiler ships 2 while
-   * hand-built readers still pin 1.
-   */
-  schemaVersion: 1 | 2
-  /**
-   * TEMPORARY optional (required next slice): the closed namer tables. Hand
-   * readers built before the tables omit it; every compiler artifact carries it.
-   */
-  namer?: NamerTables
+  schemaVersion: 2
+  /** The closed namer tables both namers read; version-pinned at registration. */
+  namer: NamerTables
   recipes: Record<string, RecipeRuntimeTable>
   stylePropNames: string[]
-  /**
-   * TEMPORARY passthrough (deleted next slice): the per-atom rows for readers
-   * that still index them. Required on the type so existing readers keep
-   * typechecking; absent at runtime when the compile disables the passthrough.
-   */
-  stylePlans: RuntimeStylePlan[]
 }
 
 export interface Diagnostic {
@@ -145,7 +132,7 @@ export interface CompileResult {
   stylesheet: string
   portableStylesheet: string
   runtime: NativeRuntimeArtifact
-  /** Compile-internal plans: the rows the artifact carries, surfaced for proof. */
+  /** Compile-internal plans: the compiler rows, surfaced for proof and the differential. */
   stylePlans: RuntimeStylePlan[]
   diagnostics: Diagnostic[]
   wants?: unknown[]

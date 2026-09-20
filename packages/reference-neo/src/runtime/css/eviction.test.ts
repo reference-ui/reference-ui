@@ -1,15 +1,16 @@
-// Unit tests for the Neo alias-eviction mirror over hand-built artifacts.
+// Unit tests for the Neo alias-eviction mirror over constructed declarations.
 // They take responsive-object plus alias queries and assert slot parsing,
 // merge eviction, conditioned-family isolation, and important interplay.
 // Slot grammar and declaration merge match the engine merge note exactly.
 import { beforeAll, describe, expect, it } from 'vitest'
-import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
+import type { NamerTables, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
+import { NAMER_RULES_VERSION } from '@reference-ui/rust/namer'
 import { css, registerRuntimeData } from './css.ts'
 import {
-  createStylePlanIndex,
   mergeDeclarations,
   mergeStylePlans,
   splitSlot,
+  type ScoredDeclaration,
 } from './plans.ts'
 
 describe('splitSlot', () => {
@@ -89,175 +90,119 @@ describe('mergeDeclarations eviction', () => {
   })
 })
 
-const EVICTION_ARTIFACT: NativeRuntimeArtifact = {
-  schemaVersion: 1,
-  stylePlans: [
-    {
-      system: 'test',
-      when: [],
-      prop: 'width',
-      value: { base: '50px', md: '60px' },
-      important: false,
-      declarations: [
-        { slot: 'width@base', className: 'test__w_50px' },
-        { slot: 'width@md', className: 'test__md:w_60px' },
-      ],
-    },
-    {
-      system: 'test',
-      when: [],
-      prop: 'w',
-      value: '70px',
-      important: false,
-      declarations: [{ slot: 'width', className: 'test__w_70px' }],
-    },
-    {
-      system: 'test',
-      when: ['_hover'],
-      prop: 'width',
-      value: { base: '50px', md: '60px' },
-      important: false,
-      declarations: [
-        { slot: 'hover:width@base', className: 'test__hover:w_50px' },
-        { slot: 'hover:width@md', className: 'test__hover:md:w_60px' },
-      ],
-    },
-    {
-      system: 'test',
-      when: ['_hover'],
-      prop: 'color',
-      value: 'brand',
-      important: false,
-      declarations: [{ slot: 'hover:color', className: 'test__hover:c_brand' }],
-    },
-    {
-      system: 'test',
-      when: [],
-      prop: 'color',
-      value: 'ink',
-      important: false,
-      declarations: [{ slot: 'color', className: 'test__c_ink' }],
-    },
-  ],
-  recipes: {},
-  stylePropNames: ['width', 'w', 'color'],
+/** One constructed declaration scored plain, the merge's common case. */
+function plain(slot: string, className: string): ScoredDeclaration {
+  return { decl: { slot, className }, important: false }
+}
+
+/** One constructed declaration scored important. */
+function loud(slot: string, className: string): ScoredDeclaration {
+  return { decl: { slot, className }, important: true }
 }
 
 describe('alias eviction merge', () => {
   it('lets a later bare alias evict the earlier responsive expansion', () => {
-    const index = createStylePlanIndex(EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', prop: 'width', value: { base: '50px', md: '60px' } },
-        { system: 'test', prop: 'w', value: '70px' },
+      mergeStylePlans([
+        plain('width@base', 'test__w_50px'),
+        plain('width@md', 'test__md:w_60px'),
+        plain('width', 'test__w_70px'),
       ])
     ).toBe('test__w_70px')
   })
 
   it('lets a later responsive expansion evict the earlier bare alias', () => {
-    const index = createStylePlanIndex(EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', prop: 'w', value: '70px' },
-        { system: 'test', prop: 'width', value: { base: '50px', md: '60px' } },
+      mergeStylePlans([
+        plain('width', 'test__w_70px'),
+        plain('width@base', 'test__w_50px'),
+        plain('width@md', 'test__md:w_60px'),
       ])
     ).toBe('test__w_50px test__md:w_60px')
   })
 
   it('keeps conditioned families isolated from bare eviction', () => {
-    const index = createStylePlanIndex(EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', when: ['_hover'], prop: 'color', value: 'brand' },
-        { system: 'test', prop: 'color', value: 'ink' },
+      mergeStylePlans([
+        plain('hover:color', 'test__hover:c_brand'),
+        plain('color', 'test__c_ink'),
       ])
     ).toBe('test__hover:c_brand test__c_ink')
   })
-})
 
-const IMPORTANT_EVICTION_ARTIFACT: NativeRuntimeArtifact = {
-  schemaVersion: 1,
-  stylePlans: [
-    {
-      system: 'test',
-      when: [],
-      prop: 'width',
-      value: { base: '50px', md: '60px' },
-      important: false,
-      declarations: [
-        { slot: 'width@base', className: 'test__w_50px' },
-        { slot: 'width@md', className: 'test__md:w_60px' },
-      ],
-    },
-    {
-      system: 'test',
-      when: [],
-      prop: 'w',
-      value: '70px',
-      important: false,
-      declarations: [{ slot: 'width', className: 'test__w_70px' }],
-    },
-    {
-      system: 'test',
-      when: [],
-      prop: 'w',
-      value: '70px',
-      important: true,
-      declarations: [{ slot: 'width', className: 'test__w_70px!' }],
-    },
-    {
-      system: 'test',
-      when: [],
-      prop: 'width',
-      value: { base: '51px', md: '61px' },
-      important: true,
-      declarations: [
-        { slot: 'width@base', className: 'test__w_51px!' },
-        { slot: 'width@md', className: 'test__md:w_61px!' },
-      ],
-    },
-  ],
-  recipes: {},
-  stylePropNames: ['width', 'w'],
-}
+  it('prints a class shared across slots once', () => {
+    expect(
+      mergeStylePlans([
+        plain('color', 'test__c_brand'),
+        plain('outlineColor', 'test__c_brand'),
+      ])
+    ).toBe('test__c_brand')
+  })
+})
 
 describe('important eviction', () => {
   it('lets a later important bare alias evict the earlier plain expansion', () => {
-    const index = createStylePlanIndex(IMPORTANT_EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', prop: 'width', value: { base: '50px', md: '60px' } },
-        { system: 'test', prop: 'w', value: '70px', important: true },
+      mergeStylePlans([
+        plain('width@base', 'test__w_50px'),
+        plain('width@md', 'test__md:w_60px'),
+        loud('width', 'test__w_70px!'),
       ])
     ).toBe('test__w_70px!')
   })
 
   it('drops a later plain expansion fully covered by an important bare alias', () => {
-    const index = createStylePlanIndex(IMPORTANT_EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', prop: 'w', value: '70px', important: true },
-        { system: 'test', prop: 'width', value: { base: '50px', md: '60px' } },
+      mergeStylePlans([
+        loud('width', 'test__w_70px!'),
+        plain('width@base', 'test__w_50px'),
+        plain('width@md', 'test__md:w_60px'),
       ])
     ).toBe('test__w_70px!')
   })
 
   it('keeps important members beside a later plain bare alias that paints their gaps', () => {
-    const index = createStylePlanIndex(IMPORTANT_EVICTION_ARTIFACT)
-
     expect(
-      mergeStylePlans(index, [
-        { system: 'test', prop: 'width', value: { base: '51px', md: '61px' }, important: true },
-        { system: 'test', prop: 'w', value: '70px' },
+      mergeStylePlans([
+        loud('width@base', 'test__w_51px!'),
+        loud('width@md', 'test__md:w_61px!'),
+        plain('width', 'test__w_70px'),
       ])
     ).toBe('test__w_51px! test__md:w_61px! test__w_70px')
   })
+
+  it('lets an earlier important atom beat a later plain atom', () => {
+    expect(
+      mergeStylePlans([loud('color', 'test__c_ember!'), plain('color', 'test__c_ocean')])
+    ).toBe('test__c_ember!')
+  })
+
+  it('collapses two important atoms last-wins', () => {
+    expect(
+      mergeStylePlans([loud('color', 'test__c_ember!'), loud('color', 'test__c_ink!')])
+    ).toBe('test__c_ink!')
+  })
 })
+
+const EVICTION_TABLES: NamerTables = {
+  rulesVersion: NAMER_RULES_VERSION,
+  aliases: { w: 'width' },
+  prefixes: { color: 'c', width: 'w' },
+  lowerings: {},
+  keywords: {},
+  weightKeywords: [],
+  colorProps: ['color'],
+  breakpoints: ['base', 'sm', 'md'],
+  conditions: ['hover'],
+  fonts: {},
+}
+
+const EVICTION_ARTIFACT: NativeRuntimeArtifact = {
+  schemaVersion: 2,
+  namer: EVICTION_TABLES,
+  recipes: {},
+  stylePropNames: ['width', 'w', 'color'],
+}
 
 describe('css() responsive objects', () => {
   beforeAll(() => {
@@ -280,7 +225,7 @@ describe('css() responsive objects', () => {
     )
   })
 
-  it('strips leaf important markers when looking up a responsive object', () => {
+  it('strips leaf important markers when naming a responsive object', () => {
     expect(css({ width: { base: '50px!', md: '60px' } })).toBe('test__w_50px test__md:w_60px')
   })
 })

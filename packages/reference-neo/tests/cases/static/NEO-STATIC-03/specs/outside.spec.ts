@@ -29,10 +29,11 @@ interface DiagnosticWindow {
 
 // One static atom, one runtime hit, one set-miss, one failing sibling: the
 // sheet carries the ember utility plus the three harvested hex floors, the
-// hit probe paints ember while the unwritten-gold probe stays classless on
-// inherited ink with exactly one page diagnostic, the node-side calls agree,
-// and the bad sibling's unsatisfiable staticCss request rejects sync naming
-// the ref with no folder left behind.
+// hit probe paints ember while the unwritten-gold probe carries its miss
+// class on inherited ink with exactly one page diagnostic, the node-side
+// calls construct the same miss class silently, and the bad sibling's
+// unsatisfiable staticCss request rejects sync naming the ref with no
+// folder left behind.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
@@ -54,7 +55,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const miss = page.locator('#miss');
   await miss.waitFor();
   const missCls = await miss.evaluate((el) => el.getAttribute('class'));
-  assert.equal(missCls, '', `miss resolves to no class, got ${missCls}`);
+  assert.equal(missCls, 'neo-static-03__c_gold', `miss carries its miss class, got ${missCls}`);
   const missColor = await miss.evaluate((el) => getComputedStyle(el).color);
   assert.equal(missColor, 'rgb(17, 17, 17)', `miss rests on inherited ink, got ${missColor}`);
   const pageDiags = await miss.evaluate(
@@ -75,16 +76,13 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   };
   try {
     const missed = css({ color: 'gold' });
-    assert.equal(missed, '', `node-side miss resolves to no class, got ${missed}`);
+    assert.equal(missed, 'neo-static-03__c_gold', `node-side miss constructs its class, got ${missed}`);
     const lived = css({ color: 'ember' });
     assert.equal(lived, 'neo-static-03__c_ember', `node-side hit resolves, got ${lived}`);
   } finally {
     console.warn = original;
   }
-  assert.equal(seen.length, 1, `node-side reports exactly one diagnostic, got ${seen.length}`);
-  assert.ok(seen[0]?.includes('color'), `diagnostic names the prop, got ${seen[0]}`);
-  assert.ok(seen[0]?.includes('gold'), `diagnostic names the value, got ${seen[0]}`);
-  assert.ok(seen[0]?.includes('outside.spec.ts'), `diagnostic names the call site, got ${seen[0]}`);
+  assert.equal(seen.length, 0, `node-side stays silent, got ${seen.length}`);
 
   const failure: unknown = await sync(path.join(c.worldDir, 'bad')).then(
     () => null,

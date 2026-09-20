@@ -1,17 +1,14 @@
-// Runtime style plan indexing plus slot-based merge evaluation.
-// It takes a native runtime artifact and emits classes for style queries.
-// Key serialization is an exact copy of the atomic plans index; the merge
-// itself is Neo behavior (important beats plain, duplicates print once,
-// later same-family declarations evict earlier responsive members).
+// Slot-based merge evaluation over constructed declarations plus the
+// canonical serializer the miss diagnostic formats values with. It takes
+// named {slot, className} pairs and emits the merged class string:
+// important beats plain, duplicates print once, and later same-family
+// declarations evict earlier responsive members.
+import type { RuntimeDeclaration } from '@reference-ui/rust/contracts'
 
-import type { NativeRuntimeArtifact, RuntimeDeclaration } from '@reference-ui/rust/contracts'
-
-export interface StylePlanQuery {
-  system: string
-  when?: string[]
-  prop: string
-  value: unknown
-  important?: boolean
+/** One constructed declaration plus the importance of the query that named it. */
+export interface ScoredDeclaration {
+  decl: RuntimeDeclaration
+  important: boolean
 }
 
 function serializeScalar(val: unknown): string | null {
@@ -46,107 +43,6 @@ export function serializeCanonicalJson(val: unknown): string {
     return serializeObject(val as Record<string, unknown>)
   }
   return 'null'
-}
-
-/**
- * Serialize an authored style lookup target into a deterministic lookup key string.
- * Emits the five-tuple `[system, when, prop, canonicalValue, important]` as compact JSON.
- */
-export function serializeLookupKey(
-  system: string,
-  when: string[],
-  prop: string,
-  value: unknown,
-  important: boolean = false
-): string {
-  const parts = [
-    JSON.stringify(system),
-    '[' + when.map(w => JSON.stringify(w)).join(',') + ']',
-    JSON.stringify(prop),
-    serializeCanonicalJson(value),
-    important ? 'true' : 'false',
-  ]
-  return '[' + parts.join(',') + ']'
-}
-
-/**
- * Build a lookup index mapping serialized five-tuple keys to resolved runtime declarations.
- */
-export function createStylePlanIndex(
-  artifact: NativeRuntimeArtifact
-): Map<string, RuntimeDeclaration[]> {
-  const index = new Map<string, RuntimeDeclaration[]>()
-  for (const plan of artifact.stylePlans) {
-    const key = serializeLookupKey(
-      plan.system,
-      plan.when,
-      plan.prop,
-      plan.value,
-      plan.important
-    )
-    index.set(key, plan.declarations)
-  }
-  return index
-}
-
-/** One resolved declaration plus the importance of the query that matched it. */
-interface ScoredDeclaration {
-  decl: RuntimeDeclaration
-  important: boolean
-}
-
-function resolveScoredDeclarations(
-  index: Map<string, RuntimeDeclaration[]>,
-  queries: StylePlanQuery[]
-): ScoredDeclaration[] {
-  const scored: ScoredDeclaration[] = []
-  for (const query of queries) {
-    const key = serializeLookupKey(
-      query.system,
-      query.when ?? [],
-      query.prop,
-      query.value,
-      query.important ?? false
-    )
-    const matched = index.get(key)
-    if (matched) {
-      for (const decl of matched) {
-        scored.push({ decl, important: query.important ?? false })
-      }
-    }
-  }
-  return scored
-}
-
-/**
- * Resolve runtime declarations for a list of style plan queries using the indexed plans.
- * Missing plans are omitted; no runtime fallback or hashing is performed.
- */
-export function resolveStyleDeclarations(
-  index: Map<string, RuntimeDeclaration[]>,
-  queries: StylePlanQuery[]
-): RuntimeDeclaration[] {
-  return resolveScoredDeclarations(index, queries).map(scored => scored.decl)
-}
-
-/**
- * Find the queries no plan matches. css() reports these as dev diagnostics;
- * they resolve to nothing, never to a guessed or hashed class.
- */
-export function findStylePlanMisses(
-  index: Map<string, RuntimeDeclaration[]>,
-  queries: StylePlanQuery[]
-): StylePlanQuery[] {
-  return queries.filter(query => {
-    const key = serializeLookupKey(
-      query.system,
-      query.when ?? [],
-      query.prop,
-      query.value,
-      query.important ?? false
-    )
-    return !index.has(key)
-  })
 }
 
 /**
@@ -257,7 +153,7 @@ function isCoveredByImportant(
 }
 
 /**
- * Resolve and merge style plan queries in author order. Each cascade slot
+ * Merge constructed declarations in author order. Each cascade slot
  * keeps one class: an important declaration beats a plain one regardless of
  * order, equal importance collapses last-wins, and a class shared across
  * slots prints once. A later declaration also evicts earlier same-family
@@ -267,12 +163,9 @@ function isCoveredByImportant(
  * order, so base, container, and theme classes follow the author's order
  * deterministically.
  */
-export function mergeStylePlans(
-  index: Map<string, RuntimeDeclaration[]>,
-  queries: StylePlanQuery[]
-): string {
+export function mergeStylePlans(scored: ScoredDeclaration[]): string {
   const slots = new Map<string, ScoredDeclaration>()
-  for (const current of resolveScoredDeclarations(index, queries)) {
+  for (const current of scored) {
     evictFamilyLosers(slots, current)
     if (isCoveredByImportant(slots, current)) {
       continue
