@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"frobnicate\"",
+    "file": "input/src/channel.ts",
+    "line": 10,
+    "column": 3
+  }
+]

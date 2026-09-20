@@ -26,22 +26,25 @@ token line read in this session; the mapper's `/tmp/obj2-map-A.md` was not used.
 
 | verdict | rows |
 |---|---|
-| userspace | 6 |
-| compiler | 90 |
+| userspace | 9 |
+| compiler | 87 |
 | drop | 0 |
 | unclassified | 0 |
 | **total W/I rows** | **96** |
 
-## Userspace (6) — every row names its witness
+## Userspace (9) — every row names its witness
 
-All six are resolve-phase DROPs with the exact authored key in hand. All six
+Six are resolve-phase DROPs with the exact authored key in hand. All six
 are unlocated today, so each witness pairs `ATM-DIAG-09` (exact absent-key
 proof) with `ATM-DIAG-04` (located resolve). Runtime-key parity evidence: the
 plan key is built from RAW authored `when` strings (`runtime/builder.rs:31-39`
 `lookup_key` over `decl.when`), and runtime queries raw `when` strings too
 (`collectEntries` pushes `[...when, prop]` verbatim, neo
 `runtime/css/css.ts`); a dropped authored declaration is therefore an exact
-absent key, including unknown-condition drops (see R2 note).
+absent key, including unknown-condition drops (see R2 note). Three are
+extract-phase unknown-prop DROPs (O2, O34, O47), moved here by the Objective 3
+wave-1b partition carve-out: located gate warnings for queried-and-missed
+exact keys, restoring proof F2's visibility premise.
 
 | id | site | code | behavior | exact key? | witness |
 |---|---|---|---|---|---|
@@ -51,8 +54,11 @@ absent key, including unknown-condition drops (see R2 note).
 | R5 | `resolve/unit.rs:132` | InvalidCssValue, empty string (W, unlocated) | pair dropped (`return None` `:135`, same `?` path) | YES — via upstream authored decl/want | `ATM-DIAG-09` (+ `04`) |
 | R6 | `resolve/unit.rs:139` | NonCanonicalNumeric, String (W, unlocated) | pair dropped (`return None`, same `?` path as R4/R5; S3 correction: S0 misread it as passthrough) | YES — via upstream authored decl/want (prop post-expansion, value/when/important upstream), same as R4 | `ATM-DIAG-09` (+ `04`); proven live by S4 (ATM-UNIT-02 ×3 proof replacements) |
 | R7 | `resolve/unit.rs:164` | InvalidCssValue, Bool (W, unlocated) | pair dropped (`return None` `:167`, same `?` path; `border=true` intercepted earlier at `resolve/mod.rs:103`) | SPLIT by value (E9, O4-F6): `true` → YES, userspace-provable (runtime queries it, resolve drops it → genuine miss); `false` → compiler-at-most (runtime `isHole` skips, no query exists — never userspace). S3 adapters carry the value so policy splits by (code, value). | `ATM-DIAG-09` (+ `04`) for `true`; compiler channel for `false` |
+| O2 | `extract/expressions/object/mod.rs:185` | UnknownProperty (W, located) | item dropped, no want/plan; silent under JsxAttributes | YES — complete static literal; runtime queries the verbatim authored key and misses (S0 "no valid runtime key" read overturned firsthand by the wave-1b doom repro: `class=""` + dev miss on `frobnicate:red`) | `ATM-DIAG-05` (frobnicate row back on default) + doom wave-1b repro/report |
+| O34 | `extract/expressions/object/lower.rs:110` | UnknownProperty (W, located) | unknown spread keys skipped by lower loops, known kept; silent under JsxAttributes | YES for const-object spreads — keys statically known, dropped key names the verbatim runtime query (SITE-20 `frobnicate` via `...extras`) | `ATM-DIAG-05` + `ATM-SITE-20` (spread line back on default) |
+| O47 | `extract/fold/call_lower.rs:119` | UnknownProperty (W, located) | this folded entry dropped, siblings kept; no plan call | moved with the one-code carve-out (entry key known; folded value multi-shape) — same code, same verdict, no separate station | `ATM-DIAG-05` (code-level carve-out pin) |
 
-## Compiler (90)
+## Compiler (87)
 
 ### C1. Extract dynamic refusals — `extract/expressions/walk/*`, `literal.rs`, `responsive.rs` (24)
 
@@ -93,7 +99,7 @@ Payload builders that emit nothing (not rows): `fold/element.rs:79-80`
 (code map, consumed D10), `fold/token.rs:63` (code map, consumed D14),
 `fold/call.rs` (message/span builders, consumed D15).
 
-### C2. Extract object/css/jsx/fold structure — `extract/expressions/object/*`, `css`, `jsx`, `fold/call_lower` (50)
+### C2. Extract object/css/jsx/fold structure — `extract/expressions/object/*`, `css`, `jsx`, `fold/call_lower` (47; O2, O34, O47 moved to userspace by the wave-1b carve-out)
 
 All located via `ObjectWalk::warn/info` (`object/mod.rs:83-90`) or
 `ExtractContext::warn/info` (`extract/mod.rs:152-168`). No `warn_dynamic` in
@@ -106,7 +112,6 @@ CO=`object/condition.rs`, CS=`css/mod.rs`, JX=`jsx/mod.rs`, CL=`fold/call_lower.
 | id | site | code | behavior | exact key? |
 |---|---|---|---|---|
 | O1 | `extract/expressions/object/mod.rs:130` | UnfoldableKey (W) | this prop dropped (`return`), siblings kept | NO — key dynamic, prop+value unknown |
-| O2 | `extract/expressions/object/mod.rs:162` | UnknownProperty (W) | item dropped, no want/plan; silent under JsxAttributes | NO — value never folded, no valid runtime key |
 | O3 | `extract/expressions/object/spread.rs:39` | UnfoldableSpread (W) | whole spread dropped, siblings kept | NO — spread shape unknown by definition |
 | O4 | `extract/expressions/object/spread.rs:92` | DynamicExpression (W, `ctx.warn` — bypasses `warn_dynamic`, no sink; architect Q5b Slice-3 adapter fix) | refused fragments dropped, folded entries lower, siblings kept | NO — refusal fragment only |
 | O5 | `extract/expressions/object/spread.rs:104` | UnfoldableSpread (W) | non-object fold dropped, siblings kept | NO — keys unknown |
@@ -138,7 +143,6 @@ CO=`object/condition.rs`, CS=`css/mod.rs`, JX=`jsx/mod.rs`, CL=`fold/call_lower.
 | O31 | `extract/expressions/object/attrs.rs:136` | MutatedBinding (W) | whole `css` value/spread dropped, sibling keys kept | NO |
 | O32 | `extract/expressions/object/attrs.rs:150` | NonObjectJsxStyle (W) | this bag `css`/`r` value dropped, siblings kept; silent values skip | NO — block shape unknown |
 | O33 | `extract/expressions/object/attrs.rs:208` | NonObjectJsxStyle (W) | this merge-list spread dropped, sibling elements kept | NO |
-| O34 | `extract/expressions/object/lower.rs:110` | UnknownProperty (W) | unknown spread keys skipped by lower loops, known kept; silent under JsxAttributes | NO — site ignores the value, no single leaf; no plan minted |
 | O35 | `extract/expressions/object/condition.rs:68` | NonObjectCondition (W) | scalar condition value dropped, siblings kept | NO — structural |
 | O36 | `extract/expressions/object/condition.rs:103` | DeadBranch (I) | dead arm skipped, live lowered | N/A — branch notice (compiler per doc seed + `ATM-DIAG-07`) |
 | O37 | `extract/css/mod.rs:61` | NonObjectCssArg (W) | `css(...args)` spread arg dropped, sibling args kept | NO |
@@ -151,7 +155,6 @@ CO=`object/condition.rs`, CS=`css/mod.rs`, JX=`jsx/mod.rs`, CL=`fold/call_lower.
 | O44 | `extract/jsx/mod.rs:325` | MutatedBinding (W) | this style-block value/spread dropped, sibling attrs kept | NO |
 | O45 | `extract/jsx/mod.rs:351` | NonObjectJsxStyle (W) | this `css`/`r`/condition value dropped, siblings kept (silent-gated) | NO |
 | O46 | `extract/jsx/mod.rs:414` | NonObjectJsxStyle (W) | this merge spread dropped, siblings kept | NO |
-| O47 | `extract/fold/call_lower.rs:119` | UnknownProperty (W) | this folded entry dropped, siblings kept; no plan call | NO — `FenceValue` multi-shape, no single runtime key |
 | O48 | `extract/fold/call_lower.rs:143` | UnknownBreakpoint (W) | this folded `r` sub dropped (`continue`) | NO — entry never lowered |
 | O49 | `extract/fold/call_lower.rs:166` | NonObjectCondition (W) | non-object folded condition dropped | NO — structural |
 | O50 | `extract/mod.rs:377` | TaggedTemplateSite (W) | whole `` css`…` `` ignored, siblings kept; non-`css` tags silent | NO — template not parsed as styles |
@@ -225,8 +228,9 @@ a different subsystem's codes, not `ATM-*` — out of scope.
 ## Notes for Slice 1–6
 
 - One legacy code, two verdicts (doc's policy audit predicts this):
-  UnknownProperty is userspace at resolve (R1) but compiler at extract
-  (O2, O34, O47) and on static/global surfaces (S1, G6); UnknownCondition is
+  UnknownProperty is userspace at resolve (R1) and, since the Objective 3
+  wave-1b partition carve-out, at extract (O2, O34, O47 moved to userspace),
+  but compiler on static/global surfaces (S1, G6); UnknownCondition is
   userspace at resolve (R2) but compiler on the global surface (G3, G5);
   InvalidCssValue is userspace at resolve (R5, R7) but compiler on the global
   surface (G7); NonCanonicalNumeric drops at R4 and at R6 (S3 correction:
