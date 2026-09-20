@@ -2,8 +2,9 @@
 //!
 //! Each helper returns the authored declarations for one divergence topic
 //! the `16-name` suite pins. Scalar edges came first; every fortify arc
-//! appends its own helper (container, range, twin, token, dispatch) so
-//! `name_suite` stays a short concatenation that never crosses a line.
+//! appends its own helper (container, range, twin, token, dispatch,
+//! prefix) so `name_suite` stays a short concatenation that never crosses
+//! a line.
 
 use serde_json::{json, Value};
 
@@ -146,4 +147,10 @@ pub(crate) fn dispatch_probes() -> Vec<AuthoredDeclaration> {
         decl(&[], "color", json!({"aToxDown": "red", "md": "blue"}), false),
         decl(&["aToxDown"], "color", json!("red"), false),
     ]
+}
+
+/// Prefix table-miss at composed scale: the probe font's extras all miss
+/// the alias and prefix tables, so every class spells its key verbatim.
+pub(crate) fn prefix_probes() -> Vec<AuthoredDeclaration> {
+    vec![decl(&[], "font", json!("test"), false)]
 }

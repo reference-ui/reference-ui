@@ -17,8 +17,8 @@ use crate::resolve::conditions::lower_when;
 use crate::runtime::{derive_slot, AuthoredDeclaration, PlanBuilder};
 use base_system::BaseSystem;
 use probes::{
-    container_probes, decl, dispatch_probes, range_probes, scalar_probes, token_probes,
-    twin_probes,
+    container_probes, decl, dispatch_probes, prefix_probes, range_probes, scalar_probes,
+    token_probes, twin_probes,
 };
 
 pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
@@ -245,6 +245,7 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
     decls.extend(twin_probes());
     decls.extend(token_probes());
     decls.extend(dispatch_probes());
+    decls.extend(prefix_probes());
     Suite {
         file: "16-name.json",
         function: "name",

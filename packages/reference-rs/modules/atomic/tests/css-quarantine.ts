@@ -45,6 +45,13 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // Intentional lexical pins (permanent): absurd-but-stable values mint
   // classes for the browser to drop; the namer never refuses them.
   'ATM-NAME-08': ['padding: a b', 'padding: a\uFEFFb', 'color: İnk'],
+
+  // Non-canon font extras (permanent, doom-4 T3): authored system data the
+  // oracle emits verbatim (unknown props bypass the style-prop gate only
+  // through extras); the browser drops the unknown declarations while both
+  // namers spell the verbatim classes. `--brandX` needs no entry: custom
+  // properties validate.
+  'ATM-COND-05': ['MyProp: 2px', 'myProp: 2px', 'mozFoo: 2px'],
 }
 
 export function quarantineFor(stationId: string): readonly string[] {

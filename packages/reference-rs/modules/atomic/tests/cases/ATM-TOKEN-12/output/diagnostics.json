@@ -2,6 +2,14 @@
   {
     "severity": "error",
     "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{}}`",
+    "file": "input/src/braceless.tsx",
+    "line": 9,
+    "column": 38
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
     "message": "unknown token reference `{colors.nope}`",
     "file": "input/src/missing-ref.tsx",
     "line": 4,

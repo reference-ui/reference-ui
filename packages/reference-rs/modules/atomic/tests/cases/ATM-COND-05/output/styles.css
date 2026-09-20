@@ -474,6 +474,7 @@
     --fonts-sans: "Inter", ui-sans-serif, sans-serif;
     --fonts-serif: "Literata", ui-serif, serif;
     --fonts-mono: "JetBrains Mono", ui-monospace, monospace;
+    --fonts-test: Test, sans-serif;
   }
   [data-color-mode=dark] {
     --colors-text-primary: var(--colors-gray-50);
@@ -577,14 +578,20 @@
   }
 }
 @layer utilities {
+  .\@reference-ui\/lib__--brandX_2px { --brandX: 2px; }
+  .\@reference-ui\/lib__MyProp_2px { MyProp: 2px; }
   .\@reference-ui\/lib__cq-n_sidebar { container-name: sidebar; }
   .\@reference-ui\/lib__cq-n_true_ { container-name: true ; }
   .\@reference-ui\/lib__cq-t_inline-size { container-type: inline-size; }
   .\@reference-ui\/lib__font-family_sans { font-family: var(--fonts-sans); }
+  .\@reference-ui\/lib__font-family_test { font-family: var(--fonts-test); }
+  .\@reference-ui\/lib__font-weight_500 { font-weight: 500; }
   .\@reference-ui\/lib__font-weight_700 { font-weight: 700; }
   .\@reference-ui\/lib__font-weight_normal { font-weight: normal; }
   .\@reference-ui\/lib__h_20px { height: 20px; }
   .\@reference-ui\/lib__tracking_-0\.01em { letter-spacing: -0.01em; }
+  .\@reference-ui\/lib__mozFoo_2px { mozFoo: 2px; }
+  .\@reference-ui\/lib__myProp_2px { myProp: 2px; }
   .\@reference-ui\/lib__w_20px { width: 20px; }
 }
 }

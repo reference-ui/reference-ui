@@ -73,7 +73,7 @@ intentional rule change carries the bump; the freshness guard
 Permanent home. Each rule names the Rust site the runtime namer mirrors.
 Table-shaped rules travel as lowerings or keyword sets; the rest are
 procedures with one golden each. Counts at landing (2026-09-20, lib):
-aliases 315 · prefixes 198 · color props 71 · unrealizable 27 ·
+aliases 315 · prefixes 1017 · color props 71 · unrealizable 27 ·
 lowerings 29 props · breakpoints verbatim with `base` first, widths
 alongside (name → post-`into_px` width, `base` absent) for the range
 gate alone — the class never contains them.
@@ -100,13 +100,16 @@ gate alone — the class never contains them.
 | 18 | responsive array `['1r', null, '3r']` | index → breakpoint name pushed on `when`; `null` skips; beyond-scale skips silently; slot gets `@bp` (`base` member included) | `builder.rs::resolve_array`, `BreakpointScale::breakpoint_for_index` |
 | 19 | per-prop object `width: { base, md, _hover }` | breakpoint keys → `@bp` slot + condition; other keys → nested `when` in the slot; whole object carries one `important` | `builder.rs::resolve_object`, `css.ts::cleanResponsiveObject` |
 | 20 | `r: { 300: {…} }` | anonymous numeric keys are lowered in JS to `@container (min-width: …)` keys before lookup; named forms (`card/md`, `md@card`) drop through the generic path with no class | `lowerResponsiveStyles.ts` (anonymous numeric only), `resolve/r/query.rs` |
-| 21 | `--*` custom props | prefix = the prop **verbatim** (never kebabized: `--brandX` stays `--brandX`); unitless; bare numbers canonicalize; token unique-name lookup is sheet-side only | `canon::class_prefix_for_prop` fallback, `canon::is_unitless_prop` |
+| 21 | table-miss prefixes (font `css` extras, custom props) | prefix = the canonical **verbatim** — the oracle never kebabs on a miss (`MyProp` stays `MyProp`, `mozFoo` stays `mozFoo`, `--brandX` stays `--brandX`); extras are the only unknown-prop path into the namer (every other path is style-prop-gated); unitless; bare numbers canonicalize; token unique-name lookup is sheet-side only | `canon::class_prefix_for_prop` fallback, `canon::is_unitless_prop` |
 
-Prefix fallback order: table hit → `--*` verbatim → `kebab(canonical)`.
-The table holds exactly `prefix ≠ kebab(canonical)` (198 entries,
-including five `ms-` props that break kebab-purity); the fallback is
-camelCase→kebab with a leading dash for vendor-prefixed names
-(`tables.rs::kebab_case`, pinned by `every_canon_prefix_resolves_through_table_or_kebab`).
+Prefix fallback order: table hit → canonical verbatim.
+The table holds exactly `prefix ≠ canonical` (1017 entries, including
+every kebab-pure multiword prop such as `font-weight`); misses —
+reachable only through font `css` extras and `--*` custom props —
+spell the key byte-identical (pinned by
+`every_canon_prefix_resolves_through_table_or_verbatim`). There is no
+kebab arm: doom-4 T3 killed it when the derivation showed the oracle
+never kebabs on a table miss.
 
 The 27 unrealizable extensions (`truncate`, `spaceX`, `translateX`,
 …) ship as `keywords.unrealizable` and refuse; the interpreter checks
@@ -161,10 +164,13 @@ compiled case per divergence (`ATM-NAME-08`).
   entries**: the ungated parse (border-width classifier: `inf`
   classifies) and `.finite()` (unit site: non-finite refuses).
 - **L4 `render_decimal`** — shortest round-trip, never exponent, `-0`
-  → `0`. Callers fence first with `in_canonical_magnitude` (zero
-  mints; `1e-6 <= |v| < 1e21` renders; else refuses upstream), and
-  `$r` renders through the `collapse_r_number` wrapper (1e-6
-  near-integer collapse, saturating `i64`, fenced).
+  → `0`, exact ties break away from zero (larger magnitude) like Rust
+  `Display` — V8 breaks them even, so the mirror re-breaks every exact
+  tie the oracle way (doom-4 T2). Callers fence first with
+  `in_canonical_magnitude` (zero mints; `1e-6 <= |v| < 1e21` renders;
+  else refuses upstream), and `$r` renders through the
+  `collapse_r_number` wrapper (1e-6 near-integer collapse, saturating
+  `i64`, fenced).
 - **L5 `ascii_lower`** — ASCII-only fold. Non-ASCII passes through
   unfolded; one site (border style) stores the fold.
 - **L6 `sanitize_value`** — map exactly space, tab, newline to `_`;
@@ -174,7 +180,7 @@ compiled case per divergence (`ATM-NAME-08`).
 |---|---|---|---|
 | `str::parse::<f64>` + finite gate (`unit.rs`) | `Number(s)` | JS takes `0x10`/`0b1`/`0o7`/`""`/`"  "`; Rust takes any-case `inf`/`nan`, rejects hex/empty/underscores/untrimmed | L3 `parse_decimal` + `.finite()`; never bare `Number()` |
 | `is_valid_numeric_str` (`parser.rs`, no finite gate) | same `Number()` or reusing L3 | `inf`/`nan` classify as border *widths* here but refuse at the unit site — two behaviors, two golden entries | L3 ungated entry |
-| `f64::to_string` (`unit.rs`, `$r`) | `String(n)` | exponent form at `|n| ≥ 1e21` and `0 < |n| < 1e-6`; `-0` renders `"-0"` vs `"0"` | L4 fence + `render_decimal` on both sides |
+| `f64::to_string` (`unit.rs`, `$r`) | `String(n)` | exponent form at `|n| ≥ 1e21` and `0 < |n| < 1e-6`; `-0` renders `"-0"` vs `"0"`; exact shortest-ties break away (Rust) vs even (V8) | L4 fence + `render_decimal` on both sides, ties re-broken the oracle way |
 | `serde_json::Number::to_string` (plan-JSON path) | `String(n)` on the JS number | same exponent gap via the scalar path; bare stems re-render, never verbatim | L4 covers this row too |
 | `f as i64` (`$r` collapse) | `Math.round`/`Math.trunc` | saturating cast (`1e21` → `i64::MAX`); JS has no saturating op | L4 wrapper clamps explicitly |
 | `char::is_whitespace` (`normalize.rs`) | `/\s/` | sets differ on exactly U+0085 (Rust yes) and U+FEFF (JS yes) | L1 explicit set |
@@ -190,6 +196,8 @@ resolution, wraps, and selector escaping are not inherited by the
 namer. Resolution is sheet-side — but **refusal is
 membership-affecting**: an unknown token path drops its declaration
 (`ATM-TOKEN-12`, `ATM-E-UNKNOWN-TOKEN`), so the differential gate
-carves exactly braced-plus-absent extras: a namer-side surplus is
-allowed only when its stem is braced (`{…}`) and its class is absent
-from the emitted sheet.
+carves exactly refusal-shaped-plus-absent extras: a namer-side surplus
+is allowed only when its stem is a token-refusal shape — a braced
+(`{…}`) pair or a braceless brace-refusal tail matching the oracle's
+starts-with-`{`-and-ends-with-`}` refusal predicate (doom-4 T1, R4/D4)
+— and its class is absent from the emitted sheet.

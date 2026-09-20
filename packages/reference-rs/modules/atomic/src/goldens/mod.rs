@@ -76,10 +76,10 @@ fn all() -> Vec<Suite> {
 }
 
 /// The system the case harness compiles with, for table-identical goldens:
-/// the lib spec plus authored non-bare breakpoint widths and the twin
-/// condition. Order is load-bearing (tablet, padded, hex, pxname, then
-/// `a` and `xDown`, then empty last); ATM-SEAM-08 carries the identical
-/// `baseSystem.json`.
+/// the lib spec plus authored non-bare breakpoint widths, the twin
+/// condition, and the prefix-probe font. Order is load-bearing (tablet,
+/// padded, hex, pxname, then `a` and `xDown`, then empty last);
+/// ATM-SEAM-08 carries the identical `baseSystem.json`.
 fn spec_system() -> base_system::BaseSystem {
     let path = format!(
         "{}/tests/fixtures/lib-system-spec.json",
@@ -101,6 +101,15 @@ fn spec_system() -> base_system::BaseSystem {
     });
     spec["conditions"] = json!({
         "__x": "[data-x] &",
+    });
+    // Prefix-probe font (doom-4 T3): every extra misses the alias and
+    // prefix tables, so the oracle spells each verbatim. `MyProp` is the
+    // filed break, `myProp` kills the generic kebab arm, `--brandX`
+    // subsumes the custom-prop arm, and `mozFoo` kills vendor-dashing.
+    spec["fonts"]["test"] = json!({
+        "value": "Test, sans-serif",
+        "weights": {"normal": "500"},
+        "css": {"MyProp": "2px", "myProp": "2px", "--brandX": "2px", "mozFoo": "2px"},
     });
     let text = serde_json::to_string(&spec).expect("range spec serializes");
     base_system::BaseSystem::from_json(&text).expect("range system parses")

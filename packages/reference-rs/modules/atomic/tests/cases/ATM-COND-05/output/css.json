@@ -1,11 +1,17 @@
 {
+  "--brandX:2px": "@reference-ui/lib__--brandX_2px",
+  "MyProp:2px": "@reference-ui/lib__MyProp_2px",
   "containerName:sidebar": "@reference-ui/lib__cq-n_sidebar",
   "containerName:true ": "@reference-ui/lib__cq-n_true_",
   "containerType:inline-size": "@reference-ui/lib__cq-t_inline-size",
   "fontFamily:sans": "@reference-ui/lib__font-family_sans",
+  "fontFamily:test": "@reference-ui/lib__font-family_test",
+  "fontWeight:500": "@reference-ui/lib__font-weight_500",
   "fontWeight:700": "@reference-ui/lib__font-weight_700",
   "fontWeight:normal": "@reference-ui/lib__font-weight_normal",
   "height:20px": "@reference-ui/lib__h_20px",
   "letterSpacing:-0.01em": "@reference-ui/lib__tracking_-0.01em",
+  "mozFoo:2px": "@reference-ui/lib__mozFoo_2px",
+  "myProp:2px": "@reference-ui/lib__myProp_2px",
   "width:20px": "@reference-ui/lib__w_20px"
 }

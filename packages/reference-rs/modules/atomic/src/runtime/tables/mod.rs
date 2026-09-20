@@ -5,7 +5,7 @@
 //! (aliases, prefixes, keyword sets, fonts) sort their keys; lowerings,
 //! breakpoints, conditions unions, and font extras keep the orders the
 //! interpreter and the expansion passes rely on. The rules version sits
-//! at 4 and bumps whenever a naming rule changes a class.
+//! at 5 and bumps whenever a naming rule changes a class.
 
 use std::collections::BTreeMap;
 
@@ -18,7 +18,7 @@ use crate::resolve::font::{family, weight};
 use crate::resolve::shorthands::{border, parser};
 
 /// Rules version both namers pin: bump whenever a naming rule changes a class.
-pub const NAMER_RULES_VERSION: u32 = 4;
+pub const NAMER_RULES_VERSION: u32 = 5;
 
 /// The closed, O(props + conditions + fonts) data both namers read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -28,7 +28,9 @@ pub struct NamerTables {
     pub rules_version: u32,
     /// Alias to canonical, sorted keys.
     pub aliases: BTreeMap<String, String>,
-    /// Canonical to class prefix, only where the prefix is not the kebab name.
+    /// Canonical to class prefix, only where the prefix is not the verbatim
+    /// name. Misses fall back to the canonical verbatim, exactly like
+    /// `canon::class_prefix_for_prop`, which never kebabs on a miss.
     pub prefixes: BTreeMap<String, String>,
     /// Canonical to ordered lowering steps; absent means identity.
     pub lowerings: BTreeMap<String, Vec<LowerStep>>,
@@ -103,12 +105,13 @@ fn build_aliases() -> BTreeMap<String, String> {
         .collect()
 }
 
-/// Canonical to class prefix, only where the prefix is not the kebab name.
-/// The fallback order is table hit, then `--*` verbatim, then kebab.
+/// Canonical to class prefix, only where the prefix is not the verbatim
+/// name. The fallback order is table hit, then the canonical verbatim
+/// (`canon::class_prefix_for_prop` never kebabs on a miss).
 fn build_prefixes() -> BTreeMap<String, String> {
     canon::CANONICAL_PROPERTIES
         .iter()
-        .filter(|prop| prop.class_prefix != kebab_case(prop.name))
+        .filter(|prop| prop.class_prefix != prop.name)
         .map(|prop| (prop.name.to_string(), prop.class_prefix.to_string()))
         .collect()
 }
@@ -215,37 +218,6 @@ fn build_fonts(system: &BaseSystem) -> BTreeMap<String, FontTable> {
             (name.clone(), table)
         })
         .collect()
-}
-
-/// Vendor prefixes that take a leading dash in the kebab fallback.
-const VENDOR_PREFIXES: &[&str] = &["moz", "webkit", "ms", "o"];
-
-/// camelCase to kebab with a leading dash for vendor-prefixed names.
-fn kebab_case(name: &str) -> String {
-    let mut out = String::with_capacity(name.len() + 4);
-    if is_vendor_prefixed(name) {
-        out.push('-');
-    }
-    for (index, ch) in name.chars().enumerate() {
-        if ch.is_ascii_uppercase() {
-            if index > 0 {
-                out.push('-');
-            }
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push(ch);
-        }
-    }
-    out
-}
-
-/// True when the name opens with a vendor prefix plus an uppercase letter.
-fn is_vendor_prefixed(name: &str) -> bool {
-    VENDOR_PREFIXES.iter().any(|prefix| {
-        name.len() > prefix.len()
-            && name.starts_with(prefix)
-            && name[prefix.len()..].starts_with(|c: char| c.is_ascii_uppercase())
-    })
 }
 
 #[cfg(test)]
