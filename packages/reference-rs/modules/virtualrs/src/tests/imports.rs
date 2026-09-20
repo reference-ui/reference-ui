@@ -83,6 +83,42 @@ fn leaves_unrelated_imports_unchanged_for_cva_rewrite() {
 }
 
 #[test]
+fn normalizes_both_bindings_of_a_dual_cva_import() {
+    let source = "import { cva, recipe } from '@reference-ui/react';\nconst a = cva({});\nconst b = recipe({});\n";
+
+    let rewritten = rewrite_cva_imports(source, VIRTUAL_PATH);
+
+    assert_eq!(
+        rewritten,
+        "import { cva } from 'src/system/css';\n\nconst a = cva({});\nconst b = cva({});\n"
+    );
+}
+
+#[test]
+fn normalizes_both_bindings_of_an_aliased_dual_cva_import() {
+    let source = "import { cva as c1, recipe as r1 } from '@reference-ui/react';\nconst a = c1({});\nconst b = r1({});\n";
+
+    let rewritten = rewrite_cva_imports(source, VIRTUAL_PATH);
+
+    assert_eq!(
+        rewritten,
+        "import { cva } from 'src/system/css';\n\nconst a = cva({});\nconst b = cva({});\n"
+    );
+}
+
+#[test]
+fn normalizes_both_locals_of_a_dual_css_import() {
+    let source = "import { css, css as x } from '@reference-ui/react';\nconst a = css({});\nconst b = x({});\n";
+
+    let rewritten = rewrite_css_imports(source, VIRTUAL_PATH);
+
+    assert_eq!(
+        rewritten,
+        "import { css } from 'src/system/runtime';\n\nconst a = css({});\nconst b = css({});\n"
+    );
+}
+
+#[test]
 fn rewrites_only_the_first_matching_runtime_import() {
     let source = concat!(
         "import { recipe as cardRecipe } from '@reference-ui/react';\n",

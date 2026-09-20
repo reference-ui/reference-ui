@@ -52,9 +52,11 @@ pub fn rewrite_cva_imports(source_code: &str, relative_path: &str) -> String {
                     &import_parts.default_name,
                     &import_parts.remaining_parts,
                 ),
-                local_binding_to_normalize: import_parts
-                    .local_binding_to_normalize
-                    .filter(|local| local != "cva"),
+                local_bindings_to_normalize: import_parts
+                    .local_bindings_to_normalize
+                    .into_iter()
+                    .filter(|local| local != "cva")
+                    .collect(),
                 canonical_call_name: Some("cva"),
             },
         );

@@ -4183,3 +4183,341 @@ suites + quality gates re-run green (warn-only, non-failing).
 Note: two sections share the (m) label (styletrace + atlas find);
 slug disambiguates. Cycles banked: 15. Wave 6 finders dispatched
 next (virtualrs, tasty, neo-fragments — different modules, no lib).
+
+### Wave 6, find (r) — wave6-extends-private-leak
+BREAK-FOUND in neo fragments/extends, 1 theory spent. Upstream `_private` tokens leak verbatim across the extends boundary into the downstream `EvaluatedSystemSpec`: neo evaluates upstream fragment bundles in the same script and merges into one spec for a single-spec `compile()`, so the Rust `BAS-EXTEND-03` strip boundary never exists and nothing in TS strips instead. Violates the `tokens.ts` header contract ("stripped from any downstream consumer that pulls in the package via extends"). Repro `/tmp/doom-wave6-r-private-leak.mts` (repo tsx, exit 1): downstream `spec.tokens.colors` contains `_private.upstreamSecret`, provenance advertises it. User-facing: leaks into published `evaluated-system.json`, downstream typegen/autocomplete, and transitively via the portable fragment bundle. Report: `.agents/doom/logs/2026-09-20-wave6-extends-private-leak.md`. Untried theories banked in report (font-weights-vs-tokens precedence; `tokenLeafPaths` under-reporting). No fixes, no commits; repro + report + this section complete.
+
+### Wave 6, find (r) — architecture ruling
+Verdict: **BREAK**. Firsthand reproduction: the blind repro
+`/tmp/doom-wave6-r-private-leak.mts` run under the repo tsx binary exits
+1 — downstream `spec.tokens.colors` contains
+`_private.upstreamSecret` verbatim and provenance advertises
+`colors._private.upstreamSecret` under the upstream source. Controls
+green via the repo runner: `pnpm agentneo run NEO-TOKEN-09` PASS
+(owner `_private` resolves in the owning system — the fortify must not
+break this) and `pnpm agentneo run NEO-SYNC-10` PASS (extends adoption
+baseline). Scope check: all judged files are neo-owned
+(`packages/reference-neo/src/fragments/**`, `src/sync/**`); the css
+runtime is untouched ground per brief, and no finding here depends on
+it.
+
+Why BREAK, not CURIO. The `tokens()` header rule ("`_private`
+subtrees ... are stripped from any downstream consumer that pulls in
+the package via `extends`" —
+`packages/reference-neo/src/fragments/api/tokens.ts:31-34`) plus
+BAS-EXTEND-03 intent is genuinely violated by TS-side merging ahead of
+the strip boundary. Three legs: (1) Rust implements the strip at the
+multi-spec boundary (`BaseSystem::from_specs`,
+`strip_private_tokens`, proven by `bas_extend_03_*` and
+`bas_extend_05_*` in
+`packages/reference-rs/modules/base-system/src/extends/tests.rs`) —
+but neo's `evaluatePreparedFragments` evaluates upstream + local
+bundles in ONE script and `mergeCollectedSpec`
+(`packages/reference-neo/src/fragments/base/index.ts:236-266`) merges
+them into ONE `EvaluatedSystemSpec` for a single-spec `compileNative`
+(`src/sync/index.ts:87-108`), so the Rust boundary never sees two
+specs and nothing in TS strips instead. (2) The core mirror refutes
+working-as-designed: core's TS path strips upstream `_private`
+per-fragment, source-gated (`applyPrivateScope` in
+`resolveColorModeTokens.ts`, `stripPrivate = isUpstreamFragment` in
+`tokens/load.ts`) — neo copied the fragments flow ("Neo-owned copy")
+and dropped the strip. (3) User-facing: the leak lands in published
+`evaluated-system.json`, in typegen `.d.ts` via
+`emitDtsSync({ baseSystem: spec })` (autocomplete), and transitively
+via the portable fragment bundle (raw upstream code re-evaluated
+downstream-of-downstream). Not physics: no will-never-work entry
+covers documented `_private` scoping, and two reference
+implementations (Rust + core TS) honor it.
+
+Fortify boundary. TS side ONLY — the change lives in
+`packages/reference-neo/src/fragments/base/` (strip upstream-sourced
+`_private` at merge time, in or beside `mergeCollectedSpec`, plus
+`tokenProvenance` must drop the stripped keys — it currently
+advertises the leak). Strip shape mirrors Rust `strip_private_tokens`
+(drop the `_private` key at any depth, including a top-level category)
+and core's `stripPrivateTokensDeep`. Gate trap (exact): core gates on
+the literal `source === 'upstream system fragment'` because core tags
+ALL upstream bundles with that literal — but neo's
+`wrapBundleWithSource` tags upstream bundles with per-system NAMES
+(`upstreamNames[index] ?? 'upstream system fragment'`). A verbatim
+copy of core's gate re-opens the hole for every named upstream. The
+fortify MUST gate on membership in the upstream-names set (keep the
+literal as the fallback member), never on literal equality alone. The
+non-enumerable `CONFIG_FRAGMENT_SOURCE_PROPERTY` tag survives
+single-script evaluation and does not leak through
+`mergeFragmentObjects` (entry-based) — the boundary information is
+present; use it. Transitivity needs no second fix: the portable bundle
+keeps raw upstream code and each downstream strips at its own merge
+(BAS-EXTEND-05 semantics), so the merge-time strip composes down the
+chain. Sweep: tokens merge + token provenance only (`_private`
+scoping is tokens-only per contract; keyframes/fonts paths and
+`buildFontWeightTokens` need no action — verify, don't touch).
+Golden-movement attestation: any moved golden allowlisted per-file
+with before/after diff in the log; NEO-SYNC-10's pins
+(`evaluated-system.json` merged tokens, `jsx-elements.json`) must NOT
+move (its world has no `_private` — movement means over-strip);
+NEO-TOKEN-09 stays green (owner passthrough); no new goldens to paper
+red stations. Untouched surfaces: Rust base-system (no `agent-rs`),
+all of reference-core (already correct — copy the ~15-line shape,
+never import across; the gate forbids it), `EvaluatedSystemSpec`
+contracts (frozen), portable bundle format/schema, typegen, sync
+publish legs, css runtime.
+
+Pins + station/case. New case under `sync/` as **NEO-SYNC-17**
+(next free — NEO-SYNC-16 folder exists; confirm max+1 via the CLI at
+cook time; do NOT number into the token group — NEO-TOKEN-15..19 are
+reserved by the corpus plan): two-system world, upstream defines a
+public token plus `colors._private.upstreamSecret` (and a top-level
+`_private` category leg), downstream defines its own `_private`;
+assert (a) `evaluated-system.json` tokens contain no upstream
+`_private` at any depth, (b) provenance carries no upstream
+`_private` paths, (c) upstream public token adopted and paints,
+(d) downstream's OWN `_private` kept and paints (boundary-direction
+regression leg), (e) generated `.d.ts` lacks the upstream private
+path. Unit pin in `fragments/base` (`merge.test.ts` or
+`index.test.ts`, whichever owns the helper): strip helper incl.
+top-level `_private` category, named-upstream gating (two distinct
+upstream names + the literal fallback — the trap above), and
+local-source passthrough. Register the case in `sync/TESTS.md` (+
+README search terms: extends, private, encapsulation, upstream strip).
+
+Fail-without-fix bar: on current code the new case's (a)/(b)/(e)
+assertions MUST fail red (the leak is the red), (c)/(d) pass; after
+the fortify the case passes whole, the doom repro flips exit 1 to 0,
+and NEO-TOKEN-09 + NEO-SYNC-10 stay green (guardrails against
+over-strip and merge-shape drift). No implementation in this ruling;
+no fixes, no commits.
+
+### Wave 6, find (p) — virtualrs-cva-dual-binding-drop
+BREAK-FOUND in virtualrs/cva import rewrite, 1 theory spent. A single `import { cva, recipe } from '@reference-ui/react'` carrying BOTH canonical CVA bindings comes out with the `recipe` specifier deleted but its call sites untouched — `const b = recipe({})` survives with no binding, so the compiler silently emits code that throws `ReferenceError` at runtime. Aliased variant (`cva as c1, recipe as r1`) breaks identically (only the first binding's calls normalize). Violates the virtualrs README CVA contract ("rewriting both the import declarations and the call sites to ensure canonical `cva` usage") and the VRT-CVA-03 pin (`recipe` call sites become `cva(`). Root cause (read, not fixed): `utils.rs::process_import_specifier` keeps only the first `Matched` local binding while swallowing the second specifier, so one canonical `cva` import is emitted and at most one binding's calls are renamed. VRT-CVA-02 does not cover this — it pins leaving a second *declaration* intact (valid output). Repro `/tmp/doom-wave6-virtualrs-t1-dual-binding.mjs` (plain `node`, exit 1, current x64 binding). User-facing, silent, no diagnostic. Baseline note: `pnpm agentrs v virtualrs` is red at baseline (10/16 fail on a `;` golden drift), pre-existing and unrelated. Thin-log signal: no prior virtualrs hunt in the doom log. Untried gaps banked in report (unbounded `normalize_bound_calls` regex; `f64` breakpoint-width acceptance). No fixes, no commits; repro + report + this section complete.
+
+### Wave 6, find (p) — architecture ruling
+**Verdict: BREAK.** Ruled firsthand 2026-09-20; no implementation, no fixes, no commits.
+
+**1. Blind reproduction (firsthand).** Ran `/tmp/doom-wave6-virtualrs-t1-dual-binding.mjs` (plain `node`, current `dist/native/virtual-native.darwin-x64.node`) — exit 1, output exactly as finder reported: `import { cva } from 'src/system/css';` emitted while `const b = recipe({})` survives with no binding. `emits canonical cva import` PASS; `no dangling recipe( call` FAIL; `both call sites use cva(` FAIL. Confirmed: the compiler silently emits code that throws `ReferenceError` at runtime, with no diagnostic.
+
+**2. Baseline (established firsthand, working tree clean of virtualrs edits).** `pnpm agentrs v virtualrs`: RED at baseline, 10 failed / 16 — failures are exactly the 10 transform cases (VRT-CSS-01/02, VRT-CVA-01/02/03, VRT-FN-01/02, VRT-RESP-01/02/05); green are the 5 no-op cases (CSS-03, CVA-04, FN-03, RESP-03/04) + the station-discovery meta-test. Drift anatomy verified: `render_rewritten_imports` emits `;`-terminated imports and the Rust tests assert that shape, while committed Vitest goldens lack `;` (checked VRT-CVA-03 `output/expected.tsx` vs live output). At least one responsive golden shows additional formatting drift — uncharacterized, and explicitly not this fortify's to fix. `pnpm agentrs c virtualrs`: GREEN at baseline, 26 passed / 0 failed. The finder's "10/16 red, pre-existing" warning is accurate; the break reproduces through the same binding the green Rust suite uses, so nothing is attributable to the drift.
+
+**3. Adjudication — BREAK, not curio.** (a) In-bounds CVA physics: plain named imports, complete static literals, no interpolation, no runtime-shaped data — nothing on the will-never-work floor. (b) Violated contracts: virtualrs README §CVA Transformation ("rewriting both the import declarations and the call sites to ensure canonical `cva` usage in the emitted output") — the second binding's call sites are neither rewritten nor preserved; VRT-CVA-03 pin semantics (`recipe` call sites become `cva(`) — violated when `recipe` shares its declaration with `cva`; compiler self-consistency — a transform must never delete an import specifier while leaving references to it. (c) VRT-CVA-02 does not cover this: it pins the second *declaration* left intact (valid output); this deletes within one declaration (invalid output). (d) User-facing and silent: dead-at-runtime output, no signal. All four BREAK bars clear.
+
+**4. File ownership.** Defect sits in virtualrs-owned code: `modules/virtualrs/src/utils.rs::process_import_specifier` (keeps only the first `Matched` local binding via `local_binding_to_normalize: Option<String>`; the second specifier classifies `Matched` so it is swallowed, not kept) + `apply_rewrite`/`normalize_bound_calls` (renames at most one binding's calls). Scope is virtualrs-only; the fortify stays inside `modules/virtualrs/`.
+
+**5. Fortify boundary (allowed change).** `utils.rs` + its two consumers `cva.rs` / `css.rs` only. The fix must make EVERY matched binding's call sites resolve to the emitted canonical import (normalize all matched locals, skipping the already-canonical one) — never delete a specifier whose references survive. Internal shape changes (`ImportParts`/`RewritePlan`/`ImportCollection`, e.g. single `Option<String>` → collection of bindings) are allowed; they are module-internal. Implementation shape is the implementor's choice, constrained by `pnpm agentrs q`.
+
+**6. Mirrors that must move together.** `css.rs` consumes the same `collect_import_parts` → `apply_rewrite` path. Single `CSS_BINDING` does not exempt it: `import { css, css as x }` is legal ESM (distinct locals) and hits the identical drop shape. Any shared-utils signature change must keep `css.rs` compiling and behavior-preserving, with a mirror pin (see §10).
+
+**7. Sweep obligations — none, and a prohibition.** No golden sweeps. The 10 baseline-red Vitest cases must show byte-identical failure sets pre/post fortify (same cases, same diffs) — proven by running `pnpm agentrs v virtualrs` before and after. The Rust suite must stay green throughout (26/26 + new pins).
+
+**8. Golden-movement attestation.** The ONLY golden the fortify may add is its own new pin's `output/expected.tsx`, written fresh to match post-fix code (which emits `;` — the new golden carries `;`, consistent with the Rust assertions). The fortify must NOT run `--update-goldens`, must NOT touch any of the 10 drifted goldens, and must NOT absorb or "fix" the pre-existing `;`/formatting drift as a drive-by. That drift stays red for its owner.
+
+**9. Untouched surfaces.** `responsive/`, `replace_function_name.rs`, `constants.rs` (`CVA_BINDINGS` already correct), `native.rs` N-API boundary (thin/stable per README), N-API dist artifacts, everything outside virtualrs (tasty, atomic, atlas, core, lib, neo). The finder's banked gaps — (a) `normalize_bound_calls` substring-regex without word boundary, (b) `f64` breakpoint-width acceptance — are separate briefs, not this fortify; the fortify must not widen them (per-binding normalization reuses the existing helper as-is).
+
+**10. Pins + stations the fortify must add.** (i) Rust unit tests in `src/tests/imports.rs` — PRIMARY station per README ("The Rust test suite should be the primary place to validate rewrite semantics"): dual-binding `import { cva, recipe }` with both call sites → both `cva(`; aliased dual `import { cva as c1, recipe as r1 }` → both `cva(`; css mirror `import { css, css as x }` → both `css(`. (ii) One Vitest case `VRT-CVA-05-dual-binding` (next free CVA id): `input/`, fresh `output/expected.tsx`, `spec.ts` gauges asserting the canonical import is present, both call sites are `cva(`, and `recipe(` is absent.
+
+**11. Fail-without-fix bar.** New Rust pins + new VRT case must be RED on current code (red-then-green proof required; the blind repro already proves the shape) and GREEN after. `pnpm agentrs c virtualrs` green; `pnpm agentrs v virtualrs` shows the same 10 baseline failures byte-identical plus the new pin green; `pnpm agentrs q` clean on all touched files; blind repro `/tmp/doom-wave6-virtualrs-t1-dual-binding.mjs` exits 0 post-fix. Captain: dispatch a fortify crew disjoint from the finder; one commit on oracle word.
+
+### Captain tick — 2026-09-20 (wave 6 two-found)
+Wave 6 finds (r) extends-private-leak and (p) virtualrs dual-binding
+drop both landed BREAK-FOUND, 1 theory each; rulings dispatched for
+both, running. Finder (q) tasty still hunting. Deadlock test: all
+crews producing (2 reports + 2 sections this window) — no interrupts.
+Baseline flag from (p): virtualrs vitest red at baseline (10/16 `;`
+golden drift, pre-existing) — ruling ordered to baseline first and
+fortify must not absorb it. No commits this tick (nothing VERIFIED);
+peer files untouched.
+
+### Wave 6, find (q) — tasty-star-ambiguity-first-wins
+BREAK-FOUND in tasty/resolve/exports, 1 theory spent. A name provided by two `export *` targets (ambiguous — tsc TS2308, barrel exports nothing) still resolves through the barrel: `collect_file_exports` (ast/resolve/index.rs) folds star targets first-wins, so `import { Widget } from './barrel'` gets a hard local target_id to one arbitrary source, order-dependent (flipping star order flips the bound id `_ef8d…` ↔ `_abb2…`). Violates ESM export semantics and tasty's first-class-symbol identity invariant; `diagnostics` is `[]`, only a generic duplicate-name manifest warning. Repro `/tmp/doom-wave6-tasty-star-ambiguity.mjs` (plain `node`, exit 1, fresh dist/native binding, order-flip control included). User-facing: doc links/display follow a fabricated binding. Report: `.agents/doom/logs/2026-09-20-wave6-tasty-star-ambiguity-first-wins.md`. Untried gaps banked in report (multi-hop reexport drop; star re-exporting default; cross-file typeof; enum/namespace silence). No fixes, no commits; repro + report + this section complete.
+
+### Wave 6, find (p) — fortify landing
+**Status: LANDED.** Ruling followed exactly: every matched binding's call sites now resolve to the emitted canonical import; no specifier is deleted while its references survive. Boundary held — `utils.rs` + `cva.rs` / `css.rs` + pins only; `responsive/`, `replace_function_name.rs`, `constants.rs`, `native.rs`, and everything outside virtualrs untouched; banked gaps (a)/(b) not widened (`normalize_bound_calls` reused as-is).
+
+**Fix (module-internal shape change, allowed by §5).** `utils.rs`: `local_binding_to_normalize: Option<String>` → `local_bindings_to_normalize: Vec<String>` on `RewritePlan` / `ImportParts` / `ImportCollectionState`; `process_import_specifier` pushes EVERY matched binding (was: keep-first, swallow-rest); `apply_rewrite` normalizes each binding in turn via the existing helper. `cva.rs` / `css.rs`: `Option::filter` → `into_iter().filter().collect()` skipping the already-canonical local (`cva` / `CSS_BINDING`), so single-binding behavior is byte-identical. `ImportCollection::Matched` per-specifier payload unchanged. Consumer audit: only `cva.rs` / `css.rs` use this path (grep-verified).
+
+**Pins (§10).** (i) Rust `src/tests/imports.rs`: `normalizes_both_bindings_of_a_dual_cva_import` (`{ cva, recipe }` → both `cva(`), `normalizes_both_bindings_of_an_aliased_dual_cva_import` (`{ cva as c1, recipe as r1 }` → both `cva(`), `normalizes_both_locals_of_a_dual_css_import` (`{ css, css as x }` → both `css(`). (ii) Vitest `VRT-CVA-05-dual-binding` (next free CVA id): `case.json` + `input/input.tsx` + fresh `output/expected.tsx` (carries `;`, matching post-fix emitter + Rust assertions) + `spec.ts` gauges (canonical import present, exactly 2 `cva(`, `recipe(` absent) + `README.md`.
+
+**Fail-without-fix / pass-with-fix (firsthand).** Blind repro `/tmp/doom-wave6-virtualrs-t1-dual-binding.mjs`: exit 1 pre-fix (2 FAIL) → exit 0 post-fix (3 PASS, fresh binding). 3 Rust pins: FAILED pre-fix (`0 passed; 3 failed; 26 filtered`) → ok post-fix. VRT-CVA-05: FAILED pre-fix (`1 failed | 16 skipped`) → passed post-fix (`1 passed | 16 skipped`). Aliased + css-mirror probes through the live N-API binding: both GREEN.
+
+**Baseline arithmetic (no drift absorbed).** Baseline established firsthand on a virtualrs-clean tree: `pnpm agentrs c virtualrs` 26/26 GREEN; `pnpm agentrs v virtualrs` RED 10 failed / 16 — failures exactly VRT-CSS-01/02, VRT-CVA-01/02/03, VRT-FN-01/02, VRT-RESP-01/02/05 (matches ruling §2). Post-fix: cargo 29/29 GREEN (26 + 3 pins); vitest 10 failed / 7 passed (17) — same 10 cases, and the normalized full-output diff vs baseline is EMPTY (byte-identical failure sets modulo timings + the new green case). `--update-goldens` never run; zero existing goldens touched; only added golden is the new pin's own `expected.tsx`. 2 cargo warnings are pre-existing unused imports in `responsive/mod.rs` (untouched surface). `pnpm agentrs q`: 0 violations on all touched files + new station; 1 `collect_import_parts` cognitive-17 warning proven pre-existing (identical on HEAD copy).
+
+**Files (mine only, 9 + this section).** `modules/virtualrs/src/utils.rs` (collect-all + normalize-all), `src/cva.rs` + `src/css.rs` (filter-collect), `src/tests/imports.rs` (3 pins), `tests/cases/VRT-CVA-05-dual-binding/` (case.json, input/input.tsx, output/expected.tsx, spec.ts, README.md). No commits (captain commits on chain-review VERIFIED); finder report untouched.
+
+### Wave 6, find (q) — architecture ruling
+
+**Verdict: BREAK (in-bounds).** Tasty scope only — every file judged below
+is `packages/reference-rs/modules/tasty/`-owned (ownership verified
+firsthand; no other module adjudicated).
+
+**Failure mode, reproduced blind by this architect.** Ran the finder's
+`/tmp/doom-wave6-tasty-star-ambiguity.mjs` unmodified: exit 1.
+`Use.w` emits `{"id":"_ef8d2136fd30c930","name":"Widget","library":"user"}`
+— a hard local binding — where ESM says the barrel exports nothing;
+flipping the star order flips the id to `_abb29de16163f27f` (first-wins
+order dependence, confirmed); `bundle diagnostics` is `[]`; the only
+signal is the manifest's generic duplicate-name warning (about global
+name lookup — names no barrel, no export map, no reference).
+Independent cross-check, same fixture, repo tsc: `error TS2308: Module
+'./a' has already exported a member named 'Widget'` on the barrel, exit
+1. Code read confirms the mechanism: `collect_file_exports`
+(`ast/resolve/index.rs:196-206`) folds star targets with
+`entry().or_insert()`; the folded map feeds `resolve_import_target_id`
+(`resolver/resolve.rs:36-48`); the emitter hardens any `target_id` into
+a local descriptor (`generator/symbols.rs:247-261`, id `_<16hex>`),
+while the unresolved path (`external_reference_descriptor`, id echoes
+name) already exists and is the correct shape for an absent binding.
+
+**Violated contracts (stated, not inferred):** (1) tasty README line 3 —
+"ESM chunk artifact generation engine": ESM star-ambiguity means the
+name is absent from the barrel, yet tasty binds the consumer's import
+to one arbitrary source. (2) First-Class Symbols invariant (README:17)
+— "identity, module boundaries, and stable canonical IDs": the emitted
+`target_id` is fabricated identity, nondeterministic across author
+order. CURIO rejected: first-wins is undocumented (no comment at the
+fold), unpinned (no test asserts it), and contradicts both contracts;
+the generic warning does not cover the barrel/map/reference; modeling
+ESM export maps is tasty's core physics, not a type-checker luxury.
+In-bounds: complete static TS, no will-never-work shape, idiomatic
+index-barrel authorship, user-facing (doc links, display members,
+projections all follow the fabricated binding).
+
+**Fix direction (binding): EXCLUDE + DIAGNOSE (refuse-with-diagnostic).**
+Keep-first-plus-diagnostic is ruled OUT — any kept binding still serves
+a reference ESM says does not exist, preserving the identity violation.
+In `collect_file_exports`: track star-provided names per file; when two
+star targets provide DIFFERENT symbol ids for the same name, drop the
+name from that file's export map (ESM absence — the consumer import
+then stays unresolved via the existing external descriptor) and push
+one `ScannerDiagnostic` (`{ file_id, message }`, `model.rs:247`) naming
+the barrel file, the ambiguous name, and the competing sources. Three
+edge rules: (a) same symbol id through multiple stars (diamond
+re-export) is NOT a conflict — ESM same-binding rule, must keep
+resolving; (b) explicit local and named-re-export bindings (seeded
+before the star fold today) keep shadowing stars — seeding order
+preserved; (c) single-append — the fold runs twice per file
+(`build_export_index` cache + `build_file_exports` cache), so dedupe
+keyed by (barrel file_id, export name); exactly one diagnostic lands.
+The diagnostic rides `ParsedTypeScriptAst.diagnostics` end to end
+(graph → bundle → manifest warnings + `out.diagnostics`), the same
+channel as the M1–M3 precedent — no new plumbing. Mirrors: NONE — the
+single fold feeds both `export_index` (reference resolution) and
+per-file `file_exports` (graph exports); one fix covers both; fortify
+must not split the paths.
+
+**Pins + station the fortify must add.** Primary: Rust unit pins in
+`src/tests/resolve.rs` (the `workspace()` + `extract_ast` +
+`resolve_ast` harness, mirroring the M2/M3 pins): (a) ambiguous star
+name absent from the barrel's `graph.exports`, consumer member
+`target_id == None`, exactly-1 diagnostic naming barrel + `"Widget"` +
+both sources; (b) diamond same-id negative — resolves, zero
+diagnostics; (c) explicit-local-shadows-star negative — resolves, zero
+diagnostics. Secondary: extend the EXISTING `TST-RXP-02-reexport-edges`
+station (its README owns barrels + re-export edges) — add the
+ambiguous-barrel + consumer input, assert the unresolved external
+descriptor (id == name) via API, barrel-export absence, and the
+surfaced diagnostic. No new case. Docs: one line in
+`ast/resolve/README.md` Responsibilities recording the star-ambiguity
+rule (same style as the M1–M3 line).
+
+**Fail-without-fix bar.** New Rust pins + extended station assertions
+must FAIL on current code (name present in the export map; consumer
+bound to a local `_<hex>` id; diagnostics empty) and pass after; the
+blind repro must flip exit 1 → 0 with non-empty diagnostics as the loud
+signal. Chain review re-runs the unmodified repro + both suites.
+
+**Sweep + golden-movement rules.** Baselines green this session:
+`pnpm agentrs c tasty` 65/65, `pnpm agentrs v tasty` 82/82 (5 files).
+Fortify re-runs both + `pnpm agentrs q` on touched files. Golden
+movement: none expected — grep shows zero bare `export * from`
+fixtures in any station input (RXP-02 carries only `export * as`,
+a named-export path that never enters the star fold) — but the full
+suites are still mandatory since the fold feeds every file's map. Any
+moved golden attested per pair (intended symbol/diagnostic only, zero
+removals); no blanket `--update-goldens`.
+
+**Untouched surfaces.** Scanner/discovery; generator emission shapes;
+JS runtime API; the global duplicate-name manifest warning;
+`export * as` path; the resolve README boundary lines. The four banked
+gaps (multi-hop reexport drop; star re-exporting `default` — note: ESM
+star never re-exports default, explicitly OUT of this fortify;
+cross-file typeof; enum/namespace silence) each need their own red test
+per "no repro, no break" — not absorbed. No implementation by this
+oracle; no fixes, no commits; repo runners only.
+
+### Wave 6, find (p) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (p) files only —
+write-set audited via `git status` paths: exactly `utils.rs`, `cva.rs`,
+`css.rs`, `tests/imports.rs` modified + new `VRT-CVA-05-dual-binding/`
+(all `modules/virtualrs/`-owned, matching the landing's 9-file list);
+`docs/ATOMIC.md`, `docs/missions/README.md`, the (q)/(r) doom reports,
+and `operation-jettison/reaper.md` are peer-owned (0 `virtualrs`
+mentions in the peer doc diffs) — read-only, never adjudicated.
+
+**1. Finder repro** (`/tmp/doom-wave6-virtualrs-t1-dual-binding.mjs`,
+unmodified): exit 0, 3/3 PASS on the post-fix binding (`const b =
+cva({})`, no dangling `recipe(`) — both bindings' call sites
+normalized. Fail-without-fix proven in the swap window below (exit 1,
+output byte-identical to the finder's report).
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c virtualrs`
+29/29 green (26 + 3 new pins); `pnpm agentrs v virtualrs` 17 tests, 10
+failed / 7 passed — failures exactly the ruling-§2 baseline set
+(VRT-CSS-01/02, VRT-CVA-01/02/03, VRT-FN-01/02, VRT-RESP-01/02/05),
+green are the 5 no-op cases + meta + new VRT-CVA-05 (also green in
+isolation: 1 passed / 16 skipped). `pnpm agentrs q` on all touched
+files + new station: 0 violations, 1 warning (`collect_import_parts`
+cognitive-17) proven pre-existing — byte-identical warning on the
+stashed-HEAD copy during the swap window. The 2 cargo warnings are the
+landing's noted pre-existing `responsive/mod.rs` unused imports
+(untouched surface).
+
+**3. Baseline discipline (established myself, nothing absorbed).**
+Swap window announced, fix-only stash (`utils.rs`+`cva.rs`+`css.rs`,
+pins+station kept), binding rebuilt per side via `ensure-native`,
+bytes restored after (sha256 prefix==restored on all 4 tracked
+files): baseline cargo 26 passed + exactly the 3 new pins FAILED;
+baseline repro exit 1 with the original dangling `recipe({})`;
+baseline vitest 11 failed = the same 10 + VRT-CVA-05 red at its own
+gauge (`expected [ 'cva(' ] to have a length of 2 but got 1`). All 10
+pre-existing failure bodies are byte-identical baseline-vs-postfix
+(normalized only timings + the `[N/11]`-vs-`[N/10]` counter artifact);
+every one fails at `assertGoldens` (`;`/formatting drift, gauges
+pass). The drift stays red for its owner: zero existing goldens
+touched (`git status` clean under `tests/` except the new station),
+`--update-goldens` effects absent.
+
+**4. Diff review (line-by-line, (p) write-set):** `utils.rs` —
+`Option<String>` → `Vec<String>` on `RewritePlan`/`ImportParts`/
+`ImportCollectionState`, `process_import_specifier` pushes EVERY
+matched binding (was keep-first/swallow-rest), `apply_rewrite` loops
+the existing `normalize_bound_calls` per binding; `cva.rs`/`css.rs` —
+`Option::filter` → `into_iter().filter().collect()` skipping the
+already-canonical local (`cva`/`CSS_BINDING`), so single-binding
+behavior is byte-identical (all 26 old Rust pins green, incl.
+`rewrites_only_the_first_matching_runtime_import` = VRT-CVA-02
+second-declaration semantics intact). Consumer audit: only
+`cva.rs`/`css.rs` touch this path (grep); `ImportCollection::Matched`
+payload unchanged; `normalize_bound_calls` byte-untouched (no diff
+hunk — banked gap (a) not widened, gap (b) untouched);
+`responsive/`, `replace_function_name.rs`, `constants.rs`,
+`native.rs`, and everything outside virtualrs untouched — inside the
+ruling-§5 boundary. No test weakened: `imports.rs` is a pure +36
+addition, no existing spec/golden modified. Golden movement: exactly
+one ADDED golden (VRT-CVA-05 `output/expected.tsx`, carries `;`
+matching the emitter + Rust assertions, passes golden comparison) —
+attested, not swept.
+
+**5. Contracts hold.** README §CVA Transformation ("rewriting both the
+import declarations and the call sites to ensure canonical `cva`
+usage") now holds for dual bindings; VRT-CVA-03 semantics
+(`recipe`→`cva(`) hold when `recipe` shares its declaration (live
+single-recipe control green); compiler self-consistency restored — no
+specifier deleted while references survive. Controls
+(`/tmp/chainrev-p-controls.mjs`, 9/9 green on the live binding):
+aliased-dual (`c1`/`r1` → both `cva(`, single canonical import),
+css-mirror (`css`+`css as x` → both `css(`), single-`cva` stability,
+single-recipe normalization, unrelated-import byte-unchanged
+(VRT-CVA-04 semantics), type-only unchanged. Captain: commit the (p)
+write-set (4 `.rs` + new VRT-CVA-05 dir + report + log sections);
+`dist/` is untracked build output, nothing to commit there.
