@@ -88,3 +88,21 @@ reopen it.
   re-measure tripwire. Missions README row updated to match.
 
 ## Objective 1 — COMPLETE (R1 + Slice 1 + D1-DECLINE, all committed)
+
+## Wave 1 — recon dispatched (captain's record)
+
+- Recon tree `../reference-ui-recon-1` cut from `9be177371`
+  (branch `voyage/hyperspace-recon-1`); recon lead crew dispatched,
+  read-only contract, map → `fasthull-recon-1.md` + perf-log entry.
+- Liveness 00:12Z: lead + 3 nested workers writing; enterprise
+  bench re-run byte-identical to pin; firsthand counts already
+  filed (recipes 83% of css, recipe tables 98% of runtime-data).
+  No deadlock. Captain holding conn on read-only evidence.
+- HQ guidance (~00:15Z): targets are RSS + bundle + sync wall;
+  crews are authorized to build deeper visibility (burndown of
+  the Rust native compile, time/RSS attribution tooling) alongside
+  recon-led bundle work. Captain's ruling: an observability/tooling
+  lane rides the Wave 1 perf wave as an extra disjoint lane (new
+  harness files only) — held until recon files so its timed runs
+  keep a quiet box. Benchmark skill baselines already pinned to
+  `5eda2c60b7e5` firsthand.
