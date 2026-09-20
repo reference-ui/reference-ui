@@ -10,6 +10,7 @@ import type {
   PortableBaseSystem,
   PortableFragment,
 } from '@reference-ui/rust/contracts'
+import { NAMER_RULES_VERSION } from '@reference-ui/rust/namer'
 import { createHash } from 'node:crypto'
 import { BASE_SYSTEM_HEADER, GENERATED_VERSION, type PublishInput } from './types.ts'
 
@@ -30,7 +31,23 @@ function portableFragments(input: PublishInput): PortableFragment[] {
 }
 
 function emptyRuntime(): NativeRuntimeArtifact {
-  return { schemaVersion: 1, stylePlans: [], recipes: {}, stylePropNames: [] }
+  return {
+    schemaVersion: 2,
+    namer: {
+      rulesVersion: NAMER_RULES_VERSION,
+      aliases: {},
+      prefixes: {},
+      lowerings: {},
+      keywords: {},
+      weightKeywords: [],
+      colorProps: [],
+      breakpoints: [],
+      conditions: [],
+      fonts: {},
+    },
+    recipes: {},
+    stylePropNames: [],
+  }
 }
 
 function portableBaseSystem(input: PublishInput): PortableBaseSystem {
@@ -83,9 +100,36 @@ function portableTypesSource(): string {
     '  compoundVariants: Array<Record<string, unknown>>',
     '  combinations: Record<string, string>',
     '}',
+    'export type NamerGuard = \'bool:true\' | \'empty\' | \'whole\' | { eq: string } | { in: string }',
+    'export type LowerStep =',
+    '  | { on?: NamerGuard; longhands: [string, string, string, string]; shape: \'trbl\' }',
+    '  | { on?: NamerGuard; longhands: [string, string, string]; shape: \'trio\'; style: \'border\' | \'outline\' }',
+    '  | { on?: NamerGuard; longhands: [string, string]; shape: \'pair\' }',
+    '  | { on?: NamerGuard; rewrite: Record<string, string> }',
+    '  | { on?: NamerGuard; emit: Array<[string, string]> }',
+    '  | { on?: NamerGuard; macro: \'font\' | \'weight\' }',
+    '  | { on?: NamerGuard; keep: true }',
+    '  | { drop: true }',
+    'export interface NamerFontTable {',
+    '  weight: string',
+    '  weights: Record<string, string>',
+    '  css: Array<[string, string]>',
+    '}',
+    'export interface NamerTables {',
+    '  rulesVersion: number',
+    '  aliases: Record<string, string>',
+    '  prefixes: Record<string, string>',
+    '  lowerings: Record<string, LowerStep[]>',
+    '  keywords: Record<string, string[]>',
+    '  weightKeywords: Array<[string, string]>',
+    '  colorProps: string[]',
+    '  breakpoints: string[]',
+    '  conditions: string[]',
+    '  fonts: Record<string, NamerFontTable>',
+    '}',
     'export interface NativeRuntimeArtifact {',
-    '  schemaVersion: 1',
-    '  stylePlans: RuntimeStylePlan[]',
+    '  schemaVersion: 2',
+    '  namer: NamerTables',
     '  recipes: Record<string, RecipeRuntimeTable>',
     '  stylePropNames: string[]',
     '}',

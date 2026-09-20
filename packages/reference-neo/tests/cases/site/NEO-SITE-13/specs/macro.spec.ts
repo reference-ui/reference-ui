@@ -1,13 +1,14 @@
 // macro.spec.ts — spec for NEO-SITE-13, the boolean-macro case. Takes
 // { page, case } from the runner with the world freshly synced and the page
 // already navigated to it. Emits nothing on success; throws naming the
-// missing macro utility, the missing style plan, or the unpainted border.
+// missing macro utility, the misnamed macro class, or the unpainted border.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts';
+import { css, registerRuntimeData } from '@reference-ui/neo/runtime';
 
 interface SpecInput {
   page: SpecPage;
@@ -19,9 +20,9 @@ interface RuntimeDataModule {
   runtimeData: NativeRuntimeArtifact;
 }
 
-// The valueless attr lowers to the width + style utilities with one style
-// plan carrying both declarations; the probe carries both classes and
-// paints the 1px solid border while the plain control stays borderless.
+// The valueless attr lowers to the width + style utilities with the namer
+// spelling both declarations; the probe carries both classes and paints
+// the 1px solid border while the plain control stays borderless.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
@@ -36,12 +37,14 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
 
   const dataUrl = new URL('file://' + path.join(outDir, 'styled/runtime-data.mjs')).href;
   const data = (await import(dataUrl)) as RuntimeDataModule;
-  const plans = data.runtimeData.stylePlans.filter(
-    (plan) => plan.prop === 'border' && plan.value === true,
+  assert.ok(!('stylePlans' in data.runtimeData), 'runtime data carries no per-atom row');
+  registerRuntimeData(data.systemName, data.runtimeData);
+  const macro = css({ border: true });
+  assert.equal(
+    macro,
+    'neo-site13__bd-w_1px neo-site13__border-style_solid',
+    `border:true names both macro classes, got ${macro}`,
   );
-  assert.equal(plans.length, 1, `runtime carries one border:true plan, got ${plans.length}`);
-  const slots = plans[0]?.declarations.map((decl) => decl.slot).sort() ?? [];
-  assert.deepEqual(slots, ['borderStyle', 'borderWidth'], 'the plan carries both slots');
 
   const probe = page.locator('#probe');
   await probe.waitFor();

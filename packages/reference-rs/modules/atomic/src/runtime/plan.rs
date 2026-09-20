@@ -67,10 +67,6 @@ pub struct NativeRuntimeArtifact {
     pub namer: NamerTables,
     pub recipes: BTreeMap<String, RecipeRuntimeTable>,
     pub style_prop_names: Vec<String>,
-    /// TEMPORARY passthrough (deleted next slice): the per-atom rows for
-    /// readers that still index them. Absent from the bytes when `None`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub style_plans: Option<Vec<RuntimeStylePlan>>,
 }
 
 impl Default for NativeRuntimeArtifact {
@@ -80,7 +76,6 @@ impl Default for NativeRuntimeArtifact {
             namer: NamerTables::default(),
             recipes: BTreeMap::new(),
             style_prop_names: get_style_prop_names(),
-            style_plans: Some(Vec::new()),
         }
     }
 }

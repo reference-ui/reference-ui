@@ -247,7 +247,7 @@ describe('sync extends adoption', () => {
 })
 
 describe('sync runtime leg', () => {
-  it('emits plans for source wants with a pre-registered css bundle', async () => {
+  it('emits namer tables for source wants with a pre-registered css bundle', async () => {
     const dir = await writeProject({
       'ui.config.ts': configFile(''),
       'theme/tokens.ts': TOKENS_FILE,
@@ -269,7 +269,7 @@ describe('sync runtime leg', () => {
     }
     expect(typeof mod.css).toBe('function')
     expect(mod.css({ color: 'brand' })).toBe('sync-test__c_brand')
-    expect(mod.css({ color: 'missing' })).toBe('')
+    expect(mod.css({ color: 'missing' })).toBe('sync-test__c_missing')
   })
 })
 

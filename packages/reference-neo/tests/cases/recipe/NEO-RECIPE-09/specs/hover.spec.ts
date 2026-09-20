@@ -40,7 +40,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
 
   const dataUrl = pathToFileURL(path.join(outDir, 'styled/runtime-data.mjs')).href;
   const data = (await import(dataUrl)) as RuntimeDataModule;
-  assert.deepEqual(data.runtimeData.stylePlans, [], 'runtime data carries no style plans');
+  assert.ok(!('stylePlans' in data.runtimeData), 'runtime data carries no per-atom row');
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
   const loud = table.variantMap['tone']?.['loud'];

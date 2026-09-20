@@ -23,6 +23,8 @@ export { interpretLowering } from './lower.js'
 export type { LoweredPair } from './lower.js'
 export { shape } from './shape.js'
 export type { NamerDeclaration, NamerRequest } from './shape.js'
+export { reportMissCandidates } from './miss.js'
+export type { MissCandidate } from './miss.js'
 
 /** Naming-rules version both namers pin; bump whenever a rule changes a class. */
 export const NAMER_RULES_VERSION = 1

@@ -27,9 +27,9 @@ interface DiagnosticWindow {
 
 // One live atom, one dynamic miss: the sheet carries the live utility
 // plus the two harvested floor utilities (the global ink and the ember
-// hex the world wrote), the miss probe stays classless on inherited ink,
-// and both the page and a node-side call report exactly one diagnostic
-// each.
+// hex the world wrote), the miss probe carries its miss class on
+// inherited ink, the page reports exactly one diagnostic, and the
+// node-side call constructs the same miss class silently.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
@@ -50,7 +50,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const miss = page.locator('#miss');
   await miss.waitFor();
   const missCls = await miss.evaluate((el) => el.getAttribute('class'));
-  assert.equal(missCls, '', `miss resolves to no class, got ${missCls}`);
+  assert.equal(missCls, 'neo-merge-06__c_rust-500', `miss carries its miss class, got ${missCls}`);
   const missColor = await miss.evaluate((el) => getComputedStyle(el).color);
   assert.equal(missColor, 'rgb(17, 17, 17)', `miss rests on inherited ink, got ${missColor}`);
   const pageDiags = await miss.evaluate(
@@ -71,7 +71,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   };
   try {
     const missed = css({ color: 'rust-500' });
-    assert.equal(missed, '', `node-side miss resolves to no class, got ${missed}`);
+    assert.equal(missed, 'neo-merge-06__c_rust-500', `node-side miss constructs its class, got ${missed}`);
     const lived = css({ color: 'ember' });
     assert.equal(lived, 'neo-merge-06__c_ember', `node-side hit resolves, got ${lived}`);
     const holed = css({ color: null, outlineColor: undefined });
@@ -79,8 +79,5 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   } finally {
     console.warn = original;
   }
-  assert.equal(seen.length, 1, `node-side reports exactly one diagnostic, got ${seen.length}`);
-  assert.ok(seen[0]?.includes('color'), `diagnostic names the prop, got ${seen[0]}`);
-  assert.ok(seen[0]?.includes('rust-500'), `diagnostic names the value, got ${seen[0]}`);
-  assert.ok(seen[0]?.includes('miss.spec.ts'), `diagnostic names the call site, got ${seen[0]}`);
+  assert.equal(seen.length, 0, `node-side stays silent, got ${seen.length}`);
 }

@@ -24,7 +24,7 @@ interface AtomicModule {
   compile(request: unknown): Promise<{
     diagnostics: AtomicDiagnostic[];
     wants: unknown[];
-    runtime: { stylePlans: unknown[] };
+    runtime: Record<string, unknown>;
   }>;
 }
 
@@ -64,5 +64,5 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.equal(errors[0].line, 13, `the failure points at the Foo tag, got ${errors[0].line}`);
   assert.equal(typeof errors[0].column, 'number', 'the failure carries a column');
   assert.equal(result.wants.length, 0, 'the closed failure extracts zero wants');
-  assert.equal(result.runtime.stylePlans.length, 0, 'the closed failure plans zero styles');
+  assert.ok(!('stylePlans' in result.runtime), 'the closed failure ships no per-atom row');
 }

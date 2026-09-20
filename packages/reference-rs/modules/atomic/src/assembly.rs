@@ -44,7 +44,6 @@ impl AssembleCtx {
         self,
         system: &BaseSystem,
         sink: &mut DiagnosticsSession,
-        keep_style_plans: bool,
     ) -> CompileResult {
         let Self {
             wants,
@@ -75,7 +74,6 @@ impl AssembleCtx {
             namer: runtime::NamerTables::for_system(system),
             recipes: runtime_recipes,
             style_prop_names: runtime::get_style_prop_names(),
-            style_plans: keep_style_plans.then(|| style_plans.clone()),
         };
 
         let atom_count = atom_set.len();

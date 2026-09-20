@@ -1,16 +1,21 @@
-// Authored css() over natively compiled style plans.
-// It takes style objects and emits the resolved utility class string.
-// Conditions nest verbatim into lookup whens while misses resolve to nothing.
-// A miss also warns once in dev, naming the value, the prop, and the call site.
+// Authored css() over the runtime namer.
+// It takes style objects and emits the constructed utility class string.
+// Conditions nest verbatim into whens while misses still construct a class.
+// A miss class with no rule paints nothing and warns once in dev, naming the value, the prop, and the call site.
 
-import type { NativeRuntimeArtifact, RuntimeDeclaration } from '@reference-ui/rust/contracts'
+import type { NamerTables, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
+import {
+  name,
+  NAMER_RULES_VERSION,
+  reportMissCandidates,
+  type MissCandidate,
+  type NamerRequest,
+} from '@reference-ui/rust/namer'
 import { lowerResponsiveStyles } from './lowerResponsiveStyles.ts'
 import {
-  createStylePlanIndex,
-  findStylePlanMisses,
   mergeStylePlans,
   serializeCanonicalJson,
-  type StylePlanQuery,
+  type ScoredDeclaration,
 } from './plans.ts'
 
 /** Author style object: flat declarations plus nested conditions. */
@@ -21,7 +26,7 @@ export type CssStyles = SystemStyleObject | undefined | null | false
 
 interface ActiveRuntime {
   system: string
-  index: Map<string, RuntimeDeclaration[]>
+  tables: NamerTables
   styleProps: Set<string>
 }
 
@@ -58,45 +63,60 @@ function captureMissSite(): string {
   return '(unknown call site)'
 }
 
-function formatMissTarget(query: StylePlanQuery): string {
+function formatMissTarget(query: NamerRequest): string {
   const leaf = `${query.prop}: ${serializeCanonicalJson(query.value)}`
-  const when = query.when ?? []
-  return when.length > 0 ? `${when.join(' > ')} > ${leaf}` : leaf
+  return query.when.length > 0 ? `${query.when.join(' > ')} > ${leaf}` : leaf
 }
 
 /**
- * Warn once per missed declaration in dev. Holes and conditional skips never
- * reach here (collect drops them), so every miss is a value with no compiled
- * atom: a dynamic value, a typo, or a missing staticCss entry.
+ * Queue one dev diagnostic per constructed class the sheet may not back.
+ * Holes and conditional skips never reach here (collect drops them), and
+ * refused queries name nothing to check, so every candidate is a class the
+ * probe confirms against `@layer utilities`: a dynamic value, a typo, or a
+ * missing staticCss entry. Node stays silent (no document); the probe warns.
  */
-function reportStyleMisses(queries: StylePlanQuery[]): void {
-  if (isProductionBuild() || !active) {
+function reportStyleMisses(named: Array<{ query: NamerRequest; classes: string[] }>): void {
+  if (isProductionBuild()) {
     return
   }
-  const misses = findStylePlanMisses(active.index, queries)
-  if (misses.length === 0) {
-    return
-  }
-  const site = captureMissSite()
-  for (const miss of misses) {
-    const message =
-      `[reference-ui] css(): no compiled class for \`${formatMissTarget(miss)}\` ` +
-      `(called at ${site}). Add a static call site or staticCss entry; no class emitted.`
-    if (reportedMissDiagnostics.has(message)) {
-      continue
+  const candidates: MissCandidate[] = []
+  let site: string | undefined
+  for (const { query, classes } of named) {
+    for (const className of classes) {
+      site ??= captureMissSite()
+      const message =
+        `[reference-ui] css(): no compiled class for \`${formatMissTarget(query)}\` ` +
+        `(called at ${site}). Add a static call site or staticCss entry; no class emitted.`
+      if (reportedMissDiagnostics.has(message)) {
+        continue
+      }
+      reportedMissDiagnostics.add(message)
+      candidates.push({ className, message })
     }
-    reportedMissDiagnostics.add(message)
-    console.warn(message)
   }
+  reportMissCandidates(candidates)
 }
 
 /**
- * Register the compiled plans css() resolves against. Sync calls this once
- * per generated bundle with the compiling system's name and artifact; later
- * registrations replace earlier ones (single-system runtime for now).
+ * Register the namer tables css() constructs classes with. Sync calls this
+ * once per generated bundle with the compiling system's name and artifact;
+ * later registrations replace earlier ones (single-system runtime for now).
+ * The system name threads into every name() call below, and the artifact's
+ * rules version must equal the runtime namer's or registration throws.
  */
 export function registerRuntimeData(system: string, artifact: NativeRuntimeArtifact): void {
-  active = { system, index: createStylePlanIndex(artifact), styleProps: new Set(artifact.stylePropNames) }
+  if (artifact.schemaVersion !== 2) {
+    throw new Error(
+      `registerRuntimeData: schemaVersion ${artifact.schemaVersion} is not 2 — sync the project first`
+    )
+  }
+  if (artifact.namer.rulesVersion !== NAMER_RULES_VERSION) {
+    throw new Error(
+      `registerRuntimeData: namer rulesVersion ${artifact.namer.rulesVersion} does not match ` +
+        `the runtime namer's ${NAMER_RULES_VERSION} — sync with the matching @reference-ui/rust`
+    )
+  }
+  active = { system, tables: artifact.namer, styleProps: new Set(artifact.stylePropNames) }
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -131,9 +151,9 @@ function isHole(value: unknown): boolean {
 }
 
 /**
- * Clean a per-prop responsive object (`width: { base, md }`) into its plan
- * lookup value. Mirrors the engine authored value: leaf `!` markers strip
- * and the object itself is never important, so the query below always runs
+ * Clean a per-prop responsive object (`width: { base, md }`) into its namer
+ * value. Mirrors the engine authored value: leaf `!` markers strip and the
+ * object itself is never important, so the request below always runs
  * non-important.
  */
 function cleanResponsiveObject(obj: Record<string, unknown>): Record<string, unknown> {
@@ -145,19 +165,18 @@ function cleanResponsiveObject(obj: Record<string, unknown>): Record<string, unk
 }
 
 interface CollectContext {
-  system: string
   styleProps: Set<string>
-  queries: StylePlanQuery[]
+  queries: NamerRequest[]
 }
 
 function collectEntries(obj: Record<string, unknown>, ctx: CollectContext, when: string[]): void {
-  const { system, styleProps, queries } = ctx
+  const { styleProps, queries } = ctx
   for (const [prop, value] of Object.entries(obj)) {
     if (isObject(value)) {
       // Custom props are open-ended style positions (canon `--*`
       // authority), never conditions — mirrored in analysis.
       if (prop !== 'r' && (styleProps.has(prop) || prop.startsWith('--'))) {
-        queries.push({ system, when, prop, value: cleanResponsiveObject(value), important: false })
+        queries.push({ when, prop, value: cleanResponsiveObject(value), important: false })
         continue
       }
       collectEntries(value, ctx, [...when, prop])
@@ -167,38 +186,47 @@ function collectEntries(obj: Record<string, unknown>, ctx: CollectContext, when:
       continue
     }
     const { clean, important } = splitImportant(value)
-    queries.push({ system, when, prop, value: clean, important })
+    queries.push({ when, prop, value: clean, important })
   }
 }
 
 function collectStyle(
   style: CssStyles | CssStyles[],
-  system: string,
   styleProps: Set<string>,
-  queries: StylePlanQuery[]
+  queries: NamerRequest[]
 ): void {
   if (Array.isArray(style)) {
-    for (const item of style) collectStyle(item, system, styleProps, queries)
+    for (const item of style) collectStyle(item, styleProps, queries)
     return
   }
   if (!isObject(style)) return
-  collectEntries(lowerResponsiveStyles(style), { system, styleProps, queries }, [])
+  collectEntries(lowerResponsiveStyles(style), { styleProps, queries }, [])
 }
 
 /**
- * Resolve style objects to utility classes from the registered plans.
- * Accepts objects, lists, and conditional skips; unknown declarations
- * resolve to nothing (plus one dev diagnostic each), per-prop responsive
- * objects resolve as one value, and shared slots collapse
- * important-beats-plain then last-wins with same-family eviction.
+ * Resolve style objects to constructed utility classes from the registered
+ * namer tables. Accepts objects, lists, and conditional skips; refused
+ * declarations name nothing (plus no diagnostic — there is no class to
+ * probe), per-prop responsive objects name as one value, and shared slots
+ * collapse important-beats-plain then last-wins with same-family eviction.
  */
 export function css(...styles: Array<CssStyles | CssStyles[]>): string {
   if (!active) {
     throw new Error('css() called before registerRuntimeData: sync the project first')
   }
-  const queries: StylePlanQuery[] = []
-  for (const style of styles) collectStyle(style, active.system, active.styleProps, queries)
-  const classes = mergeStylePlans(active.index, queries)
-  reportStyleMisses(queries)
+  const queries: NamerRequest[] = []
+  for (const style of styles) collectStyle(style, active.styleProps, queries)
+  const scored: ScoredDeclaration[] = []
+  const named: Array<{ query: NamerRequest; classes: string[] }> = []
+  for (const query of queries) {
+    const classes: string[] = []
+    for (const decl of name(query, active.tables, active.system)) {
+      scored.push({ decl, important: query.important })
+      classes.push(decl.className)
+    }
+    named.push({ query, classes })
+  }
+  const classes = mergeStylePlans(scored)
+  reportStyleMisses(named)
   return classes
 }

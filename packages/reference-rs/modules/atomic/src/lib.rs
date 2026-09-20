@@ -137,7 +137,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         traced: resolved_hosts.traced.clone(),
     };
     assembly.append_static(system);
-    let mut result = assembly.finish(system, &mut diag_session, request.keeps_style_plans());
+    let mut result = assembly.finish(system, &mut diag_session);
     partition_channels(&mut result, diag_session.facts(), &analysis.sources, request.wants_compiler_logs());
     Ok(result)
 }

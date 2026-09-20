@@ -18,7 +18,10 @@ const entrypoints = [
   { file: 'atlas.d.ts', target: './modules/atlas/js/index' },
   { file: 'styletrace.d.ts', target: './modules/styletrace/js/index' },
   { file: 'atomic.d.ts', target: './modules/atomic/js/index' },
-  { file: 'namer.d.ts', target: './modules/atomic/js/namer/index' },
+  // Explicit `.js`: NodeNext/Node16 refuse the extensionless target the
+  // legacy stubs keep for node10 resolvers. The namer is new, so no
+  // node10 consumer exists to preserve; its importers resolve NodeNext.
+  { file: 'namer.d.ts', target: './modules/atomic/js/namer/index.js' },
   { file: 'system.d.ts', target: './modules/atomic/js/index' },
   { file: 'typegen.d.ts', target: './modules/typegen/js/index' },
 ]

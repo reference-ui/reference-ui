@@ -3,9 +3,7 @@
  * no per-atom row: schema 2, no stylePlans key, and the namer tables — the
  * closed data both namers read — in its place. The compile-internal stylePlans
  * on the result still carry the compiler rows, so the compiler namer stays
- * the oracle behind the differential gate. The shipped assertions compile
- * with the temporary passthrough disabled; the default compile keeps the
- * rows until the runtime stops indexing them.
+ * the oracle behind the differential gate.
  */
 import { expect } from 'vitest'
 import { compileCase, type AtomicCaseSpec } from '../../helpers.js'
@@ -20,9 +18,8 @@ const spec: AtomicCaseSpec = {
     // Oracle half (green): the surfaced plans are the compiler rows.
     expect(result.stylePlans.length).toBeGreaterThan(0)
 
-    // Shipped half: schema 2 without the passthrough carries no per-atom key,
-    // and the plans are identical with the rows on or off.
-    const shipped = await compileCase(context.caseName, { stylePlansPassthrough: false })
+    // Shipped half: schema 2 carries no per-atom key by construction.
+    const shipped = await compileCase(context.caseName)
     expect(shipped.stylePlans).toEqual(result.stylePlans)
     expect(shipped.runtime.schemaVersion).toBe(2)
     expect('stylePlans' in shipped.runtime).toBe(false)

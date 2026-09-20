@@ -33,8 +33,9 @@ interface SpecInput {
 // Every folded shape paints; dead arms and the refused position paint
 // nothing. Sync succeeds (the case runs at all), the sheet carries exactly
 // the fourteen folded utilities, each probe node paints its folded
-// declarations, the refused node paints only its sibling, and the frozen
-// request still reports the located pipe warning.
+// declarations, the refused node carries its sibling class plus the
+// refused position's unpainted miss class, and the frozen request still
+// reports the located pipe warning.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assertSheet(c);
   await assertArith(page);
@@ -168,10 +169,12 @@ async function assertMember(page: SpecPage): Promise<void> {
   assert.equal(got.order, '2', 'one-hop read paints');
 }
 
-// The refused node carries only its sibling class: the bitwise position
-// paints nothing while the margin sibling paints.
+// The refused node carries its sibling class plus the refused position's
+// miss class: the browser evaluates `5 | 3` to a value the compiler never
+// saw, so the call constructs a class with no rule, paints nothing, while
+// the margin sibling paints.
 async function assertRefused(page: SpecPage): Promise<void> {
-  await assertClasses(page, 'refused', ['neo-site-25__m_6px']);
+  await assertClasses(page, 'refused', ['neo-site-25__m_6px', 'neo-site-25__order_7']);
   const node = page.locator('#refused');
   const got = await node.evaluate((el) => {
     const style = getComputedStyle(el as HTMLElement);
