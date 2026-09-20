@@ -1,6 +1,6 @@
 {
   "function": "name",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": {
@@ -894,6 +894,72 @@
       "input": {
         "when": [
           "_wat"
+        ],
+        "prop": "color",
+        "value": "red",
+        "important": false
+      },
+      "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "tabletDown": "red",
+          "md": "blue"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "color@md",
+          "className": "@reference-ui/lib__md:c_blue"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "smTotablet": "red",
+          "md": "blue"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "color@md",
+          "className": "@reference-ui/lib__md:c_blue"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "emptyOnly": "red",
+          "md": "blue"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "emptyOnly:color",
+          "className": "@reference-ui/lib__emptyOnly:c_red"
+        },
+        {
+          "slot": "color@md",
+          "className": "@reference-ui/lib__md:c_blue"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [
+          "tabletDown"
         ],
         "prop": "color",
         "value": "red",

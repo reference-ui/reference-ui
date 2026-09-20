@@ -42,6 +42,7 @@ function emptyRuntime(): NativeRuntimeArtifact {
       weightKeywords: [],
       colorProps: [],
       breakpoints: [],
+      breakpointWidths: {},
       conditions: [],
       fonts: {},
     },

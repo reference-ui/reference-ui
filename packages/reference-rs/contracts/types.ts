@@ -113,6 +113,12 @@ export interface NamerTables {
   weightKeywords: Array<[string, string]>
   colorProps: string[]
   breakpoints: string[]
+  /**
+   * Breakpoint name to post-`into_px` width, only where the scale declares
+   * one (`base` never present). The range gate reads it: `*Down` / `*Only` /
+   * `*To*` consult width parses the class never carries.
+   */
+  breakpointWidths: Record<string, string>
   conditions: string[]
   fonts: Record<string, NamerFontTable>
 }

@@ -27,7 +27,7 @@ export { reportMissCandidates } from './miss.js'
 export type { MissCandidate } from './miss.js'
 
 /** Naming-rules version both namers pin; bump whenever a rule changes a class. */
-export const NAMER_RULES_VERSION = 2
+export const NAMER_RULES_VERSION = 3
 
 /**
  * Spell one authored declaration to slot/className pairs: shaping, lowering,

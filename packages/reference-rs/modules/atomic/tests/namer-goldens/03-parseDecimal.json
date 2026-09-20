@@ -1,6 +1,6 @@
 {
   "function": "parseDecimal",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": "1e3",

@@ -1,4 +1,6 @@
 {
+  "lg:marginTop:2r": "@reference-ui/lib__lg:mt_2r",
+  "md:color:blue.500": "@reference-ui/lib__md:c_blue.500",
   "mdDown:display:none": "@reference-ui/lib__mdDown:d_none",
   "mdOnly:px:2r": "@reference-ui/lib__mdOnly:px_2r",
   "smToLg:maxWidth:80ch": "@reference-ui/lib__smToLg:max-w_80ch"

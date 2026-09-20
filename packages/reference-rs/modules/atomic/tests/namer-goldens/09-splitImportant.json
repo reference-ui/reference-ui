@@ -1,6 +1,6 @@
 {
   "function": "splitImportant",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "cases": [
     {
       "input": "2r!",
