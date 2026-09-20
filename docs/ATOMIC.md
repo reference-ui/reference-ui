@@ -343,5 +343,7 @@ A fully static program harvests nothing. A program with dynamic holes harvests o
 | Crate pipeline, what it refuses | [`modules/atomic/README.md`](../packages/reference-rs/modules/atomic/README.md) |
 | Stations (ATM-\*) | [`modules/atomic/SPEC.md`](../packages/reference-rs/modules/atomic/SPEC.md) |
 | Harvest alphabet, sinks, authorship | this file (`#00aeff` walkthrough, then Harvest domain); [operation-forge.md](./missions/completed/operation-forge.md) Part I |
+| Shipped per-atom map, namer as a function | [operation-jettison.md](./missions/operation-jettison.md) |
+| Harvest sheet size, pool doctrine | [operation-reaper.md](./missions/operation-reaper.md) |
 | `css()` as composition | [FEATURES/CSS_COMPOSITION.md](./FEATURES/CSS_COMPOSITION.md) |
 | Six-layer cascade | [LAYERS.md](./LAYERS.md) (portable `/ layers:` story; engine layers are the crate README) |
