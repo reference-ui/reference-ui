@@ -4,6 +4,10 @@
 /.nx/cache
 /.nx/workspace-data
 
-# Tasty manifest goldens are pretty-printed JSON object literals from the
-# compiler. Prettier would rewrite them into a different JS dialect.
-/packages/reference-rs/modules/tasty/tests/cases/**/output/manifest.js
+# Compiler-emitted golden outputs are compared exactly by the suites and
+# are NOT prettier-dialect (serde JSON layout, JS object literals, raw
+# CSS/TSX). Prettier would rewrite them and redden every module suite —
+# the 2026-09-20 formatter war. Mirrored in
+# packages/reference-rs/.prettierignore because `agentrs f` runs prettier
+# with cwd packages/reference-rs, where this file never applies.
+/packages/reference-rs/modules/*/tests/cases/**/output/

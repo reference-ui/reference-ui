@@ -1,0 +1,7 @@
+# Mirror of the golden-output guard in the root .prettierignore, relative
+# to this directory. `agentrs f` runs prettier with cwd here, where the
+# root ignore never applies — without this file every format pass
+# rewrites compiler-emitted goldens into prettier dialect and reddens
+# the suites (the 2026-09-20 formatter war). Goldens are compared
+# exactly; only the compiler regen (per-pair attested) may change them.
+modules/*/tests/cases/**/output/
