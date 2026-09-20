@@ -150,6 +150,16 @@ impl PropBindings {
             Expression::TSNonNullExpression(asserted) => {
                 self.expression_reads_style_prop(&asserted.expression)
             }
+            Expression::LogicalExpression(logical) => {
+                self.expression_reads_style_prop(&logical.left)
+                    || self.expression_reads_style_prop(&logical.right)
+            }
+            Expression::ConditionalExpression(conditional) => {
+                // Value positions only: the test gates the branch taken but
+                // its value never reaches the sink, so it must not count.
+                self.expression_reads_style_prop(&conditional.consequent)
+                    || self.expression_reads_style_prop(&conditional.alternate)
+            }
             _ => false,
         }
     }

@@ -19,6 +19,10 @@ export function BodyCard(props: CardProps) {
   return <Div color={color} />
 }
 
+export function FallbackCard({ color }: CardProps) {
+  return <Div color={color ?? "red"} />
+}
+
 export function PlainTitle({ title }: { title: string }) {
   return <div>{title}</div>
 }

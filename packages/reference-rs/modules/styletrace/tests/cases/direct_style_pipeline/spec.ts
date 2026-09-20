@@ -2,6 +2,7 @@
  * Station specification for direct_style_pipeline.
  * Asserts the styled css/box pipeline traces Panel without a primitive wrapper.
  * The object-arg twin (ObjPanel: `css({ color })`) traces additively.
+ * The fallback twin (FallbackPanel: `css({ color: color ?? "red" })`) traces too.
  * The helper joinClassName is not a component export.
  */
 import { expect } from 'vitest'
@@ -10,7 +11,7 @@ import type { StyletraceCaseSpec } from '../../helpers.js'
 const spec: StyletraceCaseSpec = {
   id: 'direct_style_pipeline',
   verify(result) {
-    expect(result).toEqual(['ObjPanel', 'Panel'])
+    expect(result).toEqual(['FallbackPanel', 'ObjPanel', 'Panel'])
   },
 }
 

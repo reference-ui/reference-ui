@@ -41,3 +41,7 @@ export type ObjPanelProps = StyleProps & {
 export function ObjPanel({ color }: ObjPanelProps) {
   return <div className={css({ color })} />
 }
+
+export function FallbackPanel({ color }: ObjPanelProps) {
+  return <div className={css({ color: color ?? "red" })} />
+}

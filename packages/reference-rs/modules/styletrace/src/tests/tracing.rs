@@ -114,6 +114,46 @@ fn traces_pipeline_object_and_array_literal_args() {
 }
 
 #[test]
+fn traces_jsx_fallback_forwarding_but_not_test_only_reads() {
+    let fixture = workspace_scratch_dir("jsx-fallback-forwarding");
+    fixture.write(
+        "input/index.tsx",
+        "import { Div, type StyleProps } from '@reference-ui/react'\n\nexport type CardProps = StyleProps & {\n  title?: string\n}\n\nexport function DirectCard({ color }: CardProps) {\n  return <Div color={color} />\n}\n\nexport function NullishCard({ color }: CardProps) {\n  return <Div color={color ?? \"red\"} />\n}\n\nexport function TernaryCard({ color, title }: CardProps) {\n  return <Div color={title ? color : \"red\"} />\n}\n\nexport function TestOnlyCard({ color }: CardProps) {\n  return <Div color={color ? \"blue\" : \"red\"} />\n}\n",
+    );
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected jsx fallback-forwarding case to trace");
+
+    assert_eq!(
+        names,
+        vec![
+            "DirectCard".to_string(),
+            "NullishCard".to_string(),
+            "TernaryCard".to_string(),
+        ]
+    );
+}
+
+#[test]
+fn traces_pipeline_fallback_args_but_not_rebound_fallbacks() {
+    let fixture = workspace_scratch_dir("pipeline-fallback-args");
+    fixture.write(
+        "input/index.tsx",
+        "import { css } from '@reference-ui/styled/css'\nimport type { StyleProps } from '@reference-ui/react'\n\nexport type CardProps = StyleProps & {\n  title?: string\n}\n\nexport function PipeObjCard({ color }: CardProps) {\n  return <div className={css({ color })} />\n}\n\nexport function PipeNullishCard({ color }: CardProps) {\n  return <div className={css({ color: color ?? \"red\" })} />\n}\n\nexport function PipeTernaryCard({ color, title }: CardProps) {\n  return <div className={css({ color: title ? color : \"red\" })} />\n}\n\nexport function PipeTestOnlyCard({ color }: CardProps) {\n  return <div className={css({ color: color ? \"blue\" : \"red\" })} />\n}\n\nexport function RebindCard({ color }: CardProps) {\n  const rebound = color ?? \"red\"\n  return <div className={css(rebound)} />\n}\n",
+    );
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected pipeline fallback-arg case to trace");
+
+    assert_eq!(
+        names,
+        vec![
+            "PipeNullishCard".to_string(),
+            "PipeObjCard".to_string(),
+            "PipeTernaryCard".to_string(),
+        ]
+    );
+}
+
+#[test]
 fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
     let fixture = create_node_builtin_helper_fixture();
     let names =
