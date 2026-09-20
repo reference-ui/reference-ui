@@ -643,13 +643,18 @@ without bumping it (the guard under `ATM-SEAM-08`).
 - **R8** `CompileResult.stylePlans` equals the pre-cutover
   `runtime.stylePlans` for every ATM golden (no plan-builder drift).
 - **R9** Error Correct proof output (`ATM-DIAG-*`) unchanged.
-- **R10** Lib `react.mjs` ≤ 160 KB raw / ≤ 26 KB gzip (from 527 / 47);
-  `runtime-data.mjs` ≤ 60 KB raw. Estimates (527 − 420 plans + ~15–20 KB
-  tables + ~10 KB namer); READY ask 5 sets the final bound from data.
-  R2 is the invariant, R10 the sanity bound. [Slice-4 correction 2026-09-20:
-  R10 **HOLDS as-written** via build-time minify — `react/react.mjs`
-  115,672 raw / 24,615 gzip-6, `runtime-data.mjs` 53,166 raw; see
-  `jettison-03-sizes.md` including the Slice 3b addendum.]
+- **R10** Lib artifact sizes are RECORDED per slice in evidence
+  (`jettison-00-baseline.md`, `jettison-03-sizes.md`) as informational
+  data — raw and gzip-6 with the method noted; NO absolute bound is
+  asserted in tests. The ENFORCEABLE property is R2 / `ATM-SEAM-07`
+  atom-independence (bytes constant across atom counts). [HQ ruling
+  2026-09-20: pinning sizes in tests is brittle. The 160 KB raw /
+  26 KB gzip / 60 KB raw figures were estimates (527 − 420 plans +
+  ~15–20 KB tables + ~10 KB namer; READY ask 5 set them from data),
+  never pins, and the Slice-4 HOLDS-as-written note is retired.
+  Informational datum 2026-09-20 (firsthand lib-sync re-measure):
+  `react.mjs` 150,291 raw / 32,893 gzip-6 minified; `runtime-data.mjs`
+  87,365 raw.]
 - **R11** Quality gates: `pnpm agentrs q` on every touched Rust file
   (≤365 lines, complexity limits, no clippy allows); `pnpm agentneo q` on
   every touched TS file.
@@ -777,7 +782,7 @@ after Slice 4.
 ## Acceptance
 
 Done when R1–R15 hold, `pnpm agentrs t` and `pnpm agentneo run` are
-green, lib `pnpm sync` produces a `react.mjs` under the R10 bound, and
+green, lib `pnpm sync` produces the R10 size record for the slice, and
 the Doom seed above has run one brief without a differential break.
 Reaper's acceptance is its own.
 
@@ -802,9 +807,9 @@ Reaper's acceptance is its own.
    `.agents/` reading `runtime.stylePlans` or `baseSystem.runtime`?
 5. **Namer tables size.** Emit the v2 tables for lib once and record raw
    / gzip, the per-table breakdown, and how the numbers were produced in
-   the ask's evidence file, so R10 is set from data, not the estimate in
-   §3 (~15–20 KB raw incl. `stylePropNames` overlap). The prototype code
-   is disposable; the evidence file must let someone redo it.
+   the ask's evidence file, so the recorded sizes come from data, not the
+   estimate in §3 (~15–20 KB raw incl. `stylePropNames` overlap). The
+   prototype code is disposable; the evidence file must let someone redo it.
 6. **CSSOM probe feasibility.** In the Neo world harness, confirm
    `document.styleSheets` exposes `@layer utilities` rules for the linked
    `styles.css` (same-origin) and that a lazy `Set` build over 2.2k and
@@ -848,8 +853,8 @@ namer is one algorithm in two implementations — every table-shaped rule
 written once by Rust as namer tables, the nine procedures and six
 lexical functions [Slice-4 correction 2026-09-20: five→six] mirrored beside the Rust they mirror and held equal by
 namer goldens (`ATM-SEAM-08`, `ATM-NAME-08`) and the differential
-(`NEO-NAMER-01`) — and `react.mjs` for lib is under the R10 bound. The
-sheet's size, the census, and the pool lever are
+(`NEO-NAMER-01`) — and the lib `react.mjs` size is on record for the
+slice (R10). The sheet's size, the census, and the pool lever are
 [Reaper](operation-reaper.md)'s DONE line, not this one. Until then this
 operation is: drop the catalog because the namer is ours; harvest stays;
 a miss is a miss class, not a ghost.
