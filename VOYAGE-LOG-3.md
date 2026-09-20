@@ -4521,3 +4521,165 @@ single-recipe normalization, unrelated-import byte-unchanged
 (VRT-CVA-04 semantics), type-only unchanged. Captain: commit the (p)
 write-set (4 `.rs` + new VRT-CVA-05 dir + report + log sections);
 `dist/` is untracked build output, nothing to commit there.
+
+### Wave 6, find (q) — fortify landing
+**Status: LANDED.** Ruling followed exactly: EXCLUDE + DIAGNOSE in
+tasty export-map resolution only (no other module judged or touched —
+write-set audited via `git status`: 11 tasty paths + this section;
+peer NEO-SYNC-17, jettison/reaper docs, ATOMIC/README mission docs
+untouched). Keep-first-plus-diagnostic ruled out per the ruling — any
+kept binding still serves a reference ESM says does not exist.
+
+**Fix** (`ast/resolve/index.rs`, the single fold — no mirrors: the one
+`collect` feeds both `export_index` and per-file `file_exports`, paths
+not split). `ExportFold` context struct carries the lookup tables,
+per-pass cache, visit set, and a shared `StarAmbiguitySink`; per-barrel
+`StarFold` attributes star-provided names to their targets. When two
+star targets provide DIFFERENT symbol ids for one name, the name is
+dropped from the barrel's map (ESM absence — the consumer import then
+stays unresolved via the existing external descriptor, id == name) and
+one `ScannerDiagnostic` lands naming barrel + name + both sources:
+`export * ambiguity: "Widget" in "<barrel>" is provided by both
+"<a>" and "<b>"; excluding from barrel exports`. Edge rules: (a)
+diamond same-id re-exports keep resolving, no diagnostic; (b) explicit
+local/named seeds (seeded before the fold, order preserved) keep
+shadowing stars; (c) single-append — the fold runs once per pass
+(index + per-file caches), dedupe keyed by (barrel file_id, export
+name), exactly one diagnostic. Rides `ParsedTypeScriptAst.diagnostics`
+end to end (graph → bundle → manifest warnings + `out.diagnostics`),
+the M1–M3 channel — no new plumbing. `build_file_exports` inlined into
+`resolve_file` (its only caller); `resolve_ast` signature unchanged,
+all `pub(crate)`-internal. Banked gaps NOT absorbed (multi-hop
+reexport, star-`default`, cross-file `typeof`, enum/namespace
+silence — each needs its own red test). Untouched per ruling:
+scanner/discovery, generator shapes, JS API, duplicate-name warning,
+`export * as` path, resolve README boundary lines.
+
+**Pins.** (a) Rust `src/tests/resolve.rs` (+3, in-place per ruling):
+`star_ambiguous_name_excluded_from_barrel_with_diagnostic` (barrel map
+absent `Widget`, consumer `target_id == None`, exactly-1 diagnostic
+naming barrel + `"Widget"` + both sources); diamond negative
+(resolves to shared id, zero diagnostics); explicit-shadow negative
+(resolves to barrel-local id, zero diagnostics). (b) Extended EXISTING
+`TST-RXP-02-reexport-edges` (no new case): 4 input files
+(`star-ambiguity-a/b/barrel/consumer.ts`), spec asserts unresolved
+external descriptor via API (`w` id == name == `StarWidget`),
+exactly-1 diagnostic (barrel file + name + both sources), and the
+manifest-warnings leg. Docs: one Responsibilities bullet in
+`ast/resolve/README.md` (M1–M3 style) + station README note.
+
+**Fail-without-fix / pass-with-fix (firsthand).** Rust pin (a) RED on
+old code (FAILED at the barrel-absence assert), green after `(b)`/`(c)`
+negatives green throughout by design. Station RED on the pre-fix
+binding (`expected '_6fe5ab8f90e7b714' to be 'StarWidget'` — the
+fabricated binding), green after `pnpm agentrs b`. Blind repro
+`/tmp/doom-wave6-tasty-star-ambiguity.mjs` unmodified: exit 1 pre-fix
+(`_ef8d…`, order-flip to `_abb2…`, diagnostics `[]`) → exit 0 post-fix
+(`{"id":"Widget","name":"Widget"}`, flip-stable `Widget`/`Widget`,
+non-empty diagnostics as the loud signal).
+
+**Sweep + golden attestation.** Full suites green: `pnpm agentrs c
+tasty` 68/68 (65 baseline + 3 pins); `pnpm agentrs v tasty` 82/82 (5
+files — no other station moved, as expected: zero bare `export * from`
+fixtures anywhere, RXP-02 carried only `export * as`); downstream
+`pnpm agentrs c styletrace` 37/37 + `pnpm agentrs v styletrace` 28/28
+(tasty's `pub(crate)` dependents; native rebuild also proves workspace
+compilation). Goldens: scoped `-t RXP-02 --update-goldens` ONLY — the
+2 RXP-02 goldens moved, pure-addition (33 insertions, 0 deletions):
+chunks.json +3 chunk modules (2× StarWidget + StarAmbiguityUse);
+manifest.js +1 ambiguity warning +1 generic StarWidget duplicate
+warning (pre-existing global-lookup behavior) +2 symbolsByName +3
+symbolsById entries; every pre-existing line byte-identical. No
+blanket update, no weakened tests. `pnpm agentrs q`: index.rs fully
+clean (CLOSED its own cognitive-17 soft warn via `is_explicit_seed` /
+`record_star_source` / `exclude_ambiguous` helpers); 1 remaining soft
+warning is tests/resolve.rs at 446 lines vs the 365 soft limit — the
+ruling mandates that placement, so it stays (gate passes, 0
+violations).
+
+**Files (mine only, 11 + this section).**
+`src/ast/resolve/index.rs` (fix), `src/tests/resolve.rs` (3 pins),
+`src/ast/resolve/README.md` (1 bullet), RXP-02 `spec.ts` + station
+`README.md` + 2 goldens + 4 new input files. No commits (captain
+commits on chain-review VERIFIED); repo runners only. Captain: commit
+the (q) write-set + report + log sections; `dist/` untracked.
+
+### Wave 6, find (q) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (q) files only —
+write-set audited via `git status` paths: exactly 7 tracked tasty paths
+(`ast/resolve/index.rs`, `ast/resolve/README.md`, `tests/resolve.rs`,
+RXP-02 `spec.ts` + station `README.md` + 2 goldens) + 4 new RXP-02 input
+files = the landing's 11, all `modules/tasty/`-owned. Peer paths
+(`docs/ATOMIC.md`, `docs/missions/README.md`, jettison/reaper,
+NEO-SYNC-17, the extends-private-leak report, and
+`reference-neo/src/fragments/base/*` which a peer touched mid-review)
+are read-only, never adjudicated.
+
+**1. Finder repro** (`/tmp/doom-wave6-tasty-star-ambiguity.mjs`,
+unmodified): exit 0. `Use.w` emits
+`{"id":"Widget","name":"Widget","library":"./barrel"}` — the pre-existing
+external descriptor (`symbols.rs:263-274`, id echoes name, library is
+the import's source module — honest unresolved shape, not fabricated
+identity); order-flip stable (`Widget`/`Widget`); bundle diagnostics
+carry exactly the ambiguity diagnostic naming barrel + `"Widget"` +
+both sources; the generic duplicate-name manifest warning is preserved
+alongside (untouched surface, still emitted).
+
+**2. Suites** (repo runners, this session, post-fix binding):
+`pnpm agentrs c tasty` 68/68 (65 + 3 pins); `pnpm agentrs v tasty`
+82/82 (5 files, incl. extended RXP-02); `pnpm agentrs q` on both
+touched `.rs` files: 0 violations, 1 soft warning (`tests/resolve.rs`
+446 lines vs the 365 soft limit — the ruling mandates that placement,
+gate passes); downstream `pnpm agentrs c styletrace` 37/37 +
+`pnpm agentrs v styletrace` 28/28 (native rebuild also proves
+workspace compilation; `resolve_ast` signature unchanged).
+
+**3. Fail-without-fix / pass-with-fix (firsthand, announced swap).**
+Fix-only stash (`index.rs` → HEAD, pins + station kept), binding
+rebuilt per side, bytes restored after (`sha256sum -c` OK on all 3
+files): pre-fix Rust pin (a) FAILED at the barrel-absence assert
+(`resolve.rs:329`), negatives green by design; pre-fix repro exit 1
+with `_ef8d2136fd30c930` → flip `_abb29de16163f27f` + diagnostics `[]`
+— byte-matching the finder's report; pre-fix station RED at its own
+gauge (`expected '_6fe5ab8f90e7b714' to be 'StarWidget'` — the
+fabricated binding). Post-restore: repro exit 0, cargo 68/68, vitest
+82/82. Every new assertion fails-old/passes-new.
+
+**4. Diff review (line-by-line, (q) write-set):** EXCLUDE + DIAGNOSE
+exactly per the ruling — keep-first-plus-diagnostic absent (no kept
+binding anywhere). `StarFold::merge`: explicit seeds shadow
+(`is_explicit_seed`, seeding order preserved), diamond same-id stays,
+second id excludes + returns the conflict; `ambiguous` set keeps
+3-way conflicts excluded; `StarAmbiguitySink` dedupes by (barrel,
+name) across both passes so exactly one diagnostic lands. One fold
+feeds both `export_index` and per-file `file_exports` — paths not
+split; the 93 deletions are exactly the old `collect_file_exports` +
+`build_file_exports` (inlined into `resolve_file`, its only caller).
+Edge rules (a)/(b)/(c) all implemented and each pinned. No weakened
+tests: `resolve.rs` pure +140/0; `spec.ts` 35/2 where the 2 deletions
+are the import reformat + `verify({ api, emitted })` signature only —
+all pre-existing asserts byte-untouched. Goldens pure-addition 33/0,
+attested per pair: chunks.json +3 symbol chunks; manifest.js +1
+ambiguity warning +1 generic StarWidget duplicate warning (pre-existing
+global-lookup behavior) +2 symbolsByName +3 symbolsById — every
+pre-existing line byte-identical; scoped update only, zero other bare
+`export * from` fixtures anywhere (grep-verified). Inside the ruling
+boundary: tasty resolve + pins + station only; banked gaps (multi-hop,
+star-`default`, cross-file `typeof`, enum/namespace) not absorbed;
+scanner, generator shapes, JS API, duplicate-name warning,
+`export * as` path, and resolve README boundary lines untouched.
+
+**5. Contracts hold.** ESM ambiguity-absence: barrel map absent, consumer
+import unresolved via the existing external path. tsc TS2308 parity:
+repo `tsc --noEmit` on the finder fixture errors
+`TS2308: Module './a' has already exported a member named 'Widget'`
+on the barrel while tasty excludes + diagnoses the same barrel/name.
+Negative controls (`/tmp/chainrev-q-controls.mjs`, 11/11 green on the
+live binding): single-provider star resolves to a local `_<hex>` with
+zero diagnostics; explicit-local shadows star (attribution verified —
+target chunk carries member `local`, not `b`); disjoint star names
+both resolve; diamond same-id resolves; zero diagnostics throughout.
+Captain: commit the (q) write-set (11 tasty paths + report + log
+sections); `dist/` is untracked build output, nothing to commit there.
