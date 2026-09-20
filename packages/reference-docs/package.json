@@ -12,25 +12,25 @@
   "dependencies": {
     "@reference-ui/core": "workspace:*",
     "@reference-ui/lib": "workspace:*",
-    "@tanstack/react-router": "1.163.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@tanstack/react-router": "1.170.38",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@content-collections/cli": "^0.1.9",
-    "@content-collections/core": "^0.15.0",
+    "@content-collections/core": "^0.15.2",
     "@content-collections/vite": "^0.3.0",
     "@mdx-js/react": "^3.1.0",
     "@mdx-js/rollup": "^3.1.0",
-    "@types/mdx": "^2.0.13",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "concurrently": "^9.1.0",
+    "@types/mdx": "^2.0.14",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "typescript": "~7.0.2",
-    "vite": "^7.3.5",
-    "zod": "^4.3.6"
+    "vite": "^8.3.0",
+    "zod": "^4.6.5"
   }
 }

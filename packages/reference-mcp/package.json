@@ -44,21 +44,21 @@
     "access": "public"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@reference-ui/core": "workspace:*",
     "@reference-ui/icons": "0.0.43",
     "@reference-ui/lib": "workspace:*",
     "@reference-ui/rust": "workspace:*",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "fast-glob": "^3.3.2",
     "minisearch": "^7.2.0",
     "picocolors": "^1.1.0",
-    "zod": "^4.3.6"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
     "tsup": "^8.4.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.0"
+    "vitest": "^5.0.1"
   }
 }
