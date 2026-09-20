@@ -3810,3 +3810,190 @@ boundary spans slice normally. Captain: commit `M
 packages/reference-rs/modules/shared/src/lib.rs` + the (o)
 finder report + the (o) log sections; `dist/` untracked,
 nothing to commit there.
+
+### Wave 5, find (m) — fortify landing
+
+Slug: styletrace-fallback-signal-miss (the true find (m); the
+atlas section above is captain-noted as mislabeled, slug
+disambiguates).
+
+**Status: LANDED.** Ruling followed exactly: recurse the two
+shared signal predicates into fallback value positions; no
+README narrowing; all sink-test consumers gain the arms by
+construction (zero per-call-site patches); walkers untouched;
+`expression_uses_class_name_binding` untouched; deeper
+indirection and the `walk_pipeline_statement`
+FunctionDeclaration gap untouched (no red test; doom fodder).
+
+**Fix (two predicates, same arms).**
+`expression_reads_style_prop` (`src/analysis/model.rs:153-165`)
+and `expression_reads_style_signal`
+(`src/analysis/parser/pipeline/util.rs:117-126`, recursing
+into itself so minted `style_signals` inside fallback
+branches count): `LogicalExpression` recurses left-OR-right;
+`ConditionalExpression` recurses consequent-OR-alternate
+ONLY — the test is control, not flow, and must not count.
+Additive by construction: predicates only gain true
+verdicts; sink/boundary checks unchanged.
+
+**Derives decision (ruling §2d, written down + pinned).**
+`expression_directly_derives_from_style_signal` UNTOUCHED
+(the ruling's default expectation): reads = flow-into-sink,
+derives = alias-minting, and the rebinding shape
+(`const c = color ?? "red"`) has no red test. Documented in
+a code comment (`util.rs:169-174`, as (k) did) and pinned as
+an absent-card negative control (`RebindCard` below).
+
+**Pins (Rust primary, `src/tests/tracing.rs`, exact-equality
+so absences pin too).** (i)
+`traces_jsx_fallback_forwarding_but_not_test_only_reads`:
+`DirectCard` control + `NullishCard` + `TernaryCard` trace,
+`TestOnlyCard` (`color={color ? "blue" : "red"}`) ABSENT.
+(ii)
+`traces_pipeline_fallback_args_but_not_rebound_fallbacks`:
+`PipeObjCard` control + `PipeNullishCard` +
+`PipeTernaryCard` trace, `PipeTestOnlyCard` ABSENT
+(test-exclusion mirrored on the pipeline predicate),
+`RebindCard` ABSENT (the (iii) derives-decision control).
+Secondary: extended EXISTING `direct_wrapper`
+(`FallbackCard`, spec `['BodyCard','Card','FallbackCard']`)
+and EXISTING `direct_style_pipeline` (`FallbackPanel`,
+spec `['FallbackPanel','ObjPanel','Panel']`); Panel/ObjPanel
+shapes untouched; `direct_wrapper` README enumeration
+updated. No new case, no new station.
+
+**Fail-without-fix / pass-with-fix (firsthand).**
+Pre-fix: finder's `/tmp/doom-wave5-styletrace-fallback.mjs`
+`traced: ["DirectCard"]` exit 1; architect's
+`/tmp/doom-wave5-m-pipeline-probe.mjs`
+`traced: ["PipeObjCard"]` exit 1. Post-fix on the rebuilt
+binding: both exit 0 with all twins traced. Both new Rust
+pins FAIL on stashed fix files (2 failed / 35 filtered)
+and PASS in-tree — per-pin proven, stash popped, fix
+verified restored.
+
+**Sweep attestation (ruling-ordered, repo runners only).**
+`pnpm agentrs c styletrace` 37/37 (35 baseline + 2 new);
+`pnpm agentrs v styletrace` 28/28 (pre-regen drift was
+exactly the 2 extended stations, golden-diff only, specs
+already green — no other station moved); downstream ripple
+per (k): `pnpm agentrs c atomic` 465/465,
+`pnpm agentrs v atomic` 287/287 (11 files), zero atomic
+paths modified — verification-only. `pnpm agentrs build`
+ran BEFORE vitest (stale-binary hazard). `pnpm agentrs q`
+on all 3 touched `.rs` files: 0 violations, 8 warnings —
+byte-identical warning SET to the pre-fortify baseline
+(same 4 functions; complexity values rose inside
+already-warning matchers, no new warning). No helper
+extraction: the matchers were already tipped at baseline
+and (k) left the same warnings standing; the two-line OR
+arms add no new warning, so extraction would be churn.
+Golden census: scoped `--update-goldens` CLI-flag regen on
+the 2 extended stations only (never the env var); per-pair
+attested — `direct_wrapper` `["BodyCard","Card"]` →
+`+FallbackCard`, `direct_style_pipeline`
+`["ObjPanel","Panel"]` → `+FallbackPanel`; zero removals,
+zero traced-to-silent flips, zero other goldens touched
+(writer-canonical pretty format, precedented in-tree by
+`entry_scope`/`parse_failure_isolated`). No weakened tests.
+
+**Boundary honored.** Changed: 10 styletrace paths only
+(2 fix files + 1 Rust test file + 2 station
+input/spec/golden pairs + 1 README line) + this section.
+Untouched: extraction, policy, channels, proof, runtime,
+canon, primitives, walkers, README, lib, neo, core,
+`shared/` (peer (o) live scope — hands off), docs, finder
+report, sibling files. No commits (captain commits on
+chain-review VERIFIED).
+
+### Wave 5, find (m) — chain review
+
+Slug: styletrace-fallback-signal-miss (the true find (m); the
+atlas section above is captain-noted as mislabeled, slug
+disambiguates).
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified
+firsthand by this oracle; no implementation, no fixes, no
+commits. (m) files ONLY — write-set audited via `git status`
+paths before judging any diff: exactly the 10 styletrace
+paths (2 fix + 1 Rust pins + 2 station input/spec/golden
+pairs + 1 README line) + log sections. Excluded from
+judgment, verified other-crew: `docs/ATOMIC.md` +
+`docs/missions/README.md` (Jettison/Reaper mission-table
+rows) and the atlas-drop fortify
+(`atlas/src/parser/mod.rs`, ATL-WRAP-01 spec/fixtures)
+that landed concurrently mid-review — hands off, disjoint
+scope. Stash-list remnants (`sim-quarantine-pipeline`,
+`Agent Playwright CT`) are pre-existing, untouched.
+
+1. **Blind repros GREEN post-fix (firsthand).** Finder's
+   `/tmp/doom-wave5-styletrace-fallback.mjs`: `traced:
+   ["DirectCard","NullishCard","TernaryCard"]`, exit 0
+   (exact set — no extras, no over-trace). Architect's
+   `/tmp/doom-wave5-m-pipeline-probe.mjs`: `traced:
+   ["PipeNullishCard","PipeObjCard","PipeTernaryCard"]`,
+   exit 0. Binding freshness: `pnpm agentrs build`
+   confirms the 08:26 `darwin-x64` binary ready; sources
+   mtime 08:27 is fortify's stash-pop retouch (content
+   proven current by the passing repros, not mtimes).
+2. **Suites green via repo runners (firsthand).** `pnpm
+   agentrs c styletrace` 37/37 (35 baseline + 2 new);
+   `pnpm agentrs v styletrace` 28/28 (2 files);
+   downstream ripple per (k): `pnpm agentrs c atomic`
+   465/465, `pnpm agentrs v atomic` 287/287 (11 files),
+   zero atomic paths modified (verification-only). `pnpm
+   agentrs q` on all 3 touched `.rs` files: 0
+   violations, 8 warnings — warning SET byte-identical
+   to the pre-fix baseline I re-ran myself in a second
+   swap window (same 5 functions, same kinds; values
+   rose only inside already-warning matchers:
+   14→18/34→42 and 16→20/40→48, all under gate fail
+   thresholds; no-helper call stands per (k) precedent
+   and the ruling's bar).
+3. **Fail-without-fix / pass-with-fix firsthand.**
+   Swap window 1 (announced): stashed ONLY the 2 fix
+   files, pins in-tree → both new pins FAILED (`0
+   passed; 2 failed; 35 filtered out`, assertion at the
+   exact-equality lines). Popped → both pins pass
+   in-tree (2/2 filtered). Bytes restored: md5
+   `93bf7881…` (model.rs) and `c87404ed…` (util.rs)
+   identical pre/post across both swap windows; my WIP
+   stash dropped, tree scope unchanged after each pop.
+4. **Line-by-line diff review.** BOTH predicates gained
+   BOTH arms — no one-side gap: `model.rs`
+   `expression_reads_style_prop` (Logical left-OR-right;
+   Conditional consequent-OR-alternate) and
+   `pipeline/util.rs` `expression_reads_style_signal`
+   (same arms, recursing into ITSELF so minted signals
+   in branches count). Conditional TEST correctly
+   excluded on both sides with value-position comments.
+   `derives` untouched except the ruling-§2d comment
+   (rebinding stays out, pinned absent via `RebindCard`)
+   — the (k) contract split intact. Fix inside the
+   ruling boundary: no walker/per-call-site patches, no
+   README narrowing, FunctionDeclaration gap and deeper
+   indirection untouched. No weakened tests — pins and
+   specs purely additive, nothing loosened or removed.
+   Goldens per-pair attested: `direct_wrapper`
+   `["BodyCard","Card"] → +FallbackCard`,
+   `direct_style_pipeline` `["ObjPanel","Panel"] →
+   +FallbackPanel`; zero removals, zero
+   traced-to-silent flips, zero other goldens touched;
+   pretty-format rewrite is writer-canonical,
+   precedented in-tree (`entry_scope`,
+   `parse_failure_isolated` — read firsthand).
+5. **Violated contract now holds.** README key rule
+   (:84-86, flow-into-sink) + :69 forwarding: fallback
+   twins trace on BOTH the JSX edge and the pipeline
+   mirror — the wave-1(a)/(k)
+   same-shape-different-verdict divergence is closed.
+   Negative controls green in-tree via exact-equality:
+   `TestOnlyCard` (`color={color ? "blue" : "red"}`)
+   ABSENT, `PipeTestOnlyCard` ABSENT, `RebindCard`
+   ABSENT — non-flowing shapes still silent, no dead
+   classes minted for discarded test values.
+
+Captain: safe to commit the (m) write-set as one cycle
+commit (10 styletrace paths + log); keep the concurrent
+atlas-drop fortify and Jettison/Reaper docs rows on
+their own owners' commits, not this one.

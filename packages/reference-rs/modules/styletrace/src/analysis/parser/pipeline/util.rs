@@ -114,6 +114,15 @@ pub fn expression_reads_style_signal(
         Expression::TSNonNullExpression(asserted) => {
             expression_reads_style_signal(&asserted.expression, bindings, state)
         }
+        Expression::LogicalExpression(logical) => {
+            expression_reads_style_signal(&logical.left, bindings, state)
+                || expression_reads_style_signal(&logical.right, bindings, state)
+        }
+        Expression::ConditionalExpression(conditional) => {
+            // Value positions only: the test is control, not flow.
+            expression_reads_style_signal(&conditional.consequent, bindings, state)
+                || expression_reads_style_signal(&conditional.alternate, bindings, state)
+        }
         Expression::ObjectExpression(object) => {
             object_reads_style_signal(object, bindings, state)
         }
@@ -160,6 +169,9 @@ fn array_reads_style_signal(
 // flow into a sink) but stay out of this predicate: an object literal is a
 // container, not a direct alias, so `const obj = { color }` must not mint a
 // new style signal. Container indirection (`css(obj)`) stays untraced.
+// Fallback rebinding (`const c = color ?? "red"`) stays out too: reads =
+// flow-into-sink, derives = alias-minting, and no red test covers the
+// rebinding shape, so it keeps the (k) contract split. Pinned absent.
 pub fn expression_directly_derives_from_style_signal(
     expression: &Expression<'_>,
     bindings: &PropBindings,
