@@ -1,0 +1,23 @@
+@layer negated-brace {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.25rem }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --spacing-4: 1rem;
+    --colors-blue-600: #2563eb;
+  }
+  [data-color-mode=dark] {
+    --colors-blue-600: #3b82f6;
+  }
+}
+@layer utilities {
+  .negated-brace__bd-c_\{colors\.blue\.600\} { border-color: var(--colors-blue-600); }
+  .negated-brace__border-style_solid { border-style: solid; }
+  .negated-brace__bd-w_-1px { border-width: -1px; }
+  .negated-brace__bg-c_-\{colors\.blue\.600\}\/50 { background-color: calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent)); }
+  .negated-brace__c_-\{colors\.blue\.600\/50\} { color: calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent)); }
+  .negated-brace__mt_-\{spacing\.4\} { margin-top: calc(-1 * var(--spacing-4)); }
+}
+}

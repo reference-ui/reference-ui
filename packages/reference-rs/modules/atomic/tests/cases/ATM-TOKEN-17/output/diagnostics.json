@@ -1,0 +1,15 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{unknown.path}`",
+    "file": "input/src/App.tsx",
+    "line": 8,
+    "column": 7
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`ml: -{unknown.path}` has no compiled style plan; this lookup will emit no class"
+  }
+]
