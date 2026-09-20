@@ -28,9 +28,14 @@ export async function microBundleWithResult(
 ): Promise<MicroBundleResult> {
   const buildOpts = buildMicroBundleOptions(entryPath, options)
   const result = await esbuild.build(buildOpts)
-  const output = result.outputFiles?.[0]
+  const files = result.outputFiles ?? []
+  // Esbuild does not promise js-first ordering, so both outputs match by
+  // extension: the map carries `.map`, the bundle is the other file.
+  const codeFile = files.find(file => !file.path.endsWith('.map')) ?? files[0]
+  const mapFile = files.find(file => file.path.endsWith('.map'))
   return {
-    code: output?.text ?? '',
+    code: codeFile?.text ?? '',
+    map: mapFile?.text,
     metafile: result.metafile,
   }
 }

@@ -86,7 +86,7 @@ function reportStyleMisses(named: Array<{ query: NamerRequest; classes: string[]
       site ??= captureMissSite()
       const message =
         `[reference-ui] css(): no compiled class for \`${formatMissTarget(query)}\` ` +
-        `(called at ${site}). Add a static call site or staticCss entry; no class emitted.`
+        `(called at ${site}). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.`
       if (reportedMissDiagnostics.has(message)) {
         continue
       }

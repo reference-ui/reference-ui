@@ -6,6 +6,8 @@ import type * as esbuild from 'esbuild'
 
 export interface MicroBundleResult {
   code: string
+  /** Sourcemap text when `sourcemap` requested an external/linked map. */
+  map?: string
   metafile?: esbuild.Metafile
 }
 
@@ -26,6 +28,10 @@ export interface MicroBundleOptions {
   conditions?: string[]
   tsconfigRaw?: esbuild.TsconfigRaw
   metafile?: boolean
+  /** Sourcemap shape. External/linked maps need `outfile` so esbuild can name the .map file. */
+  sourcemap?: esbuild.BuildOptions['sourcemap']
+  /** Output path naming the bundle; in-memory builds still honor it for map naming. */
+  outfile?: string
   /** Additional esbuild plugins. */
   plugins?: esbuild.Plugin[]
 }

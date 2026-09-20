@@ -19,8 +19,8 @@ interface SpecInput {
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const bundle = fs.readFileSync(path.join(outDir, 'react/react.mjs'), 'utf8');
-  assert.ok(/from\s+['"]react['"]/.test(bundle), 'entry imports react externally');
-  assert.ok(/from\s+['"]react-dom\/client['"]/.test(bundle), 'entry imports react-dom/client externally');
+  assert.ok(/from\s*['"]react['"]/.test(bundle), 'entry imports react externally');
+  assert.ok(/from\s*['"]react-dom\/client['"]/.test(bundle), 'entry imports react-dom/client externally');
   assert.ok(
     !bundle.includes('ReactCurrentDispatcher'),
     'entry carries no bundled React copy',

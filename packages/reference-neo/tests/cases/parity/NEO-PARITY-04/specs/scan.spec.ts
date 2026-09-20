@@ -41,6 +41,8 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
       !/^panda\.config\./.test(path.basename(file)),
       `no panda.config.* in the generated folder, found ${rel}`,
     );
+    // The debug map embeds tool sources verbatim; the sweep targets shipped bytes.
+    if (file.endsWith('.map')) continue;
     const text = fs.readFileSync(file, 'utf8');
     for (const needle of FORBIDDEN) {
       assert.ok(!text.includes(needle), `no ${needle} in the generated folder, found in ${rel}`);

@@ -20,7 +20,7 @@ describe('microBundle', () => {
 
   it('returns the first output file text', async () => {
     buildMock.mockResolvedValue({
-      outputFiles: [{ text: 'export const x = 1' }],
+      outputFiles: [{ path: '/Users/reference-ui/tests/entry.js', text: 'export const x = 1' }],
     })
 
     await expect(microBundle(ENTRY_PATH)).resolves.toBe('export const x = 1')
@@ -43,13 +43,42 @@ describe('microBundle', () => {
   it('returns metafile data when requested via microBundleWithResult', async () => {
     buildMock.mockResolvedValue({
       metafile: { inputs: { 'entry.ts': { bytes: 1, imports: [] } }, outputs: {} },
-      outputFiles: [{ text: 'export const x = 1' }],
+      outputFiles: [{ path: '/Users/reference-ui/tests/entry.js', text: 'export const x = 1' }],
     })
 
     const { microBundleWithResult } = await import('./microbundle.ts')
     await expect(microBundleWithResult(ENTRY_PATH, { metafile: true })).resolves.toEqual({
       code: 'export const x = 1',
       metafile: { inputs: { 'entry.ts': { bytes: 1, imports: [] } }, outputs: {} },
+    })
+  })
+
+  it('returns the map file text when esbuild emits one', async () => {
+    buildMock.mockResolvedValue({
+      outputFiles: [
+        { path: '/Users/reference-ui/tests/entry.js', text: 'export const x = 1' },
+        { path: '/Users/reference-ui/tests/entry.js.map', text: '{"version":3}' },
+      ],
+    })
+
+    const { microBundleWithResult } = await import('./microbundle.ts')
+    await expect(
+      microBundleWithResult(ENTRY_PATH, { sourcemap: 'linked', outfile: '/out/entry.js' })
+    ).resolves.toEqual({ code: 'export const x = 1', map: '{"version":3}' })
+  })
+
+  it('finds the bundle by extension when the map comes first', async () => {
+    buildMock.mockResolvedValue({
+      outputFiles: [
+        { path: '/Users/reference-ui/tests/entry.js.map', text: '{"version":3}' },
+        { path: '/Users/reference-ui/tests/entry.js', text: 'export const x = 1' },
+      ],
+    })
+
+    const { microBundleWithResult } = await import('./microbundle.ts')
+    await expect(microBundleWithResult(ENTRY_PATH, { sourcemap: 'linked' })).resolves.toEqual({
+      code: 'export const x = 1',
+      map: '{"version":3}',
     })
   })
 })

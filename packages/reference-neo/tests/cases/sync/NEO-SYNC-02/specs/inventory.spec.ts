@@ -64,6 +64,18 @@ function walkFiles(dir: string, out: string[]): void {
   }
 }
 
+// Every shipped byte carries none of the retired needles. The debug map
+// embeds tool sources verbatim, so the sweep skips it.
+function assertNoNeedles(outDir: string, files: string[]): void {
+  for (const file of files) {
+    if (file.endsWith('.map')) continue;
+    const text = fs.readFileSync(file, 'utf8');
+    for (const needle of FORBIDDEN_NEEDLES) {
+      assert.ok(!text.includes(needle), `${path.relative(outDir, file)} carries no ${needle}`);
+    }
+  }
+}
+
 // The runner synced this world before serving: the folder shape matches the
 // §4.1 inventory on disk, checked node-side without touching the browser.
 export default async function run({ case: c }: SpecInput): Promise<void> {
@@ -104,10 +116,5 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const files = [] as string[];
   walkFiles(outDir, files);
   assert.ok(files.length >= EXPECTED_FILES.length, `folder holds the inventory, got ${files.length} files`);
-  for (const file of files) {
-    const text = fs.readFileSync(file, 'utf8');
-    for (const needle of FORBIDDEN_NEEDLES) {
-      assert.ok(!text.includes(needle), `${path.relative(outDir, file)} carries no ${needle}`);
-    }
-  }
+  assertNoNeedles(outDir, files);
 }
