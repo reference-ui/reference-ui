@@ -3210,3 +3210,603 @@ world has zero custom-prop usage; sheet-content assertion orthogonal
 to the query-predicate fix) — logged, not absorbed, not (l)'s to fix;
 atomic cargo + vitest PASS; neo + rs quality gates clean (1 warn-only
 line count). Cycles banked: 12. Wave 5 finders dispatched next.
+
+### Wave 5, find (m) — styletrace-fallback-signal-miss
+
+Finder (styletrace): `break-found`, 1 theory spent. `NullishCard`
+(`<Div color={color ?? "red"} />`) and `TernaryCard` (`<Div color={title
+? color : "red"} />`) do NOT trace while the bare twin `DirectCard`
+(`<Div color={color} />`) does — the JSX-edge signal predicate
+(`expression_reads_style_prop`, model.rs) falls through
+logical/conditional into `_ => false`. Repro:
+`/tmp/doom-wave5-styletrace-fallback.mjs` (exit 1, firsthand;
+canary-verified against the current built binding). Report:
+`.agents/doom/logs/2026-09-20-wave5-styletrace-fallback-signal-miss.md`.
+Contract: styletrace README key rule (boundary style props flowing
+into a primitive via direct forwarding); severity user-facing (silent
+missing paint at use sites via ATM-SITE-08 gating). Scheduling hints
+in the report (unprobed, unspent): sibling pipeline predicate shares
+the `_ => false` arm (`css({ color: color ?? "red" })`); pipeline
+statement walker still lacks the `FunctionDeclaration` arm the JSX
+walker has.
+
+### Wave 5, find (o) — wave5-shared-slice-multibyte-panic
+
+**Verdict: BREAK-FOUND (finder report, needs architect ruling).** Scope: SHARED
+module only (`packages/reference-rs/modules/shared`). Theories spent: 1 of 3.
+
+**The break:** `shared::slice_span` (lib.rs:11-19) panics on mid-char spans
+instead of clamping per its contract. `slice_span("héllo", Span::new(0, 2))`
+→ `panicked at modules/shared/src/lib.rs:15:16: byte index 2 is not a char
+boundary`. Violated contract: "safely clamped to bounds" (lib.rs:9) + README
+"bounds-checked ... to safely extract raw syntax fragments". In-bounds physics:
+non-ASCII TS inputs are ordinary compiler food; Oxc spans are byte offsets.
+
+**Repro:** `/tmp/doom-wave5-shared-slice-panic.sh` (blind-runnable, repo runner
+only: stages temp integration test → `pnpm agentrs c shared -t doom_wave5_slice_span`
+→ trap-removes temp test; tree left clean, verified via git status).
+
+**Severity honesty:** latent crash, NOT currently user-facing — research found
+zero production callers of `shared::slice_span`/`unquote` (every domain crate
+vendors its own copy; only `shared::testing::*` is imported). Styletrace's copy
+is already panic-free (`.get().unwrap_or_default()`); atlas/tasty/virtualrs
+copies index raw and share the flaw but are out of this brief's scope. Review
+may rule curiosity-vs-fortify; the shared contract is explicit either way.
+
+**Map for scheduling:** first-ever hunt on the shared module (thin log prior).
+Unspent gaps left for future briefs: `ScratchWorkspace::write` swallows all IO
+errors (silent fixture loss); `write("../..")` escapes the sandbox and survives
+`Drop` ("cleans up all written artifacts" claim). Report:
+`.agents/doom/logs/2026-09-20-wave5-shared-slice-multibyte-panic.md`.
+
+### Wave 5, find (o) — architecture ruling
+
+**Verdict: BREAK (small, honest, cheap).** Finder report:
+`.agents/doom/logs/2026-09-20-wave5-shared-slice-multibyte-panic.md`;
+repro `/tmp/doom-wave5-shared-slice-panic.sh` (replayed by architect
+read-only firsthand: red — `panicked at modules/shared/src/lib.rs:15:16:
+byte index 2 is not a char boundary; it is inside 'é' (bytes 1..3)`,
+temp test removed by trap, `git status` on `modules/shared/` clean
+after the run).
+
+1. **IN-BOUNDS, and zero callers does not demote it to curiosity.**
+   Contract-vs-code inside the module's own stated physics: doc
+   "safely clamped to bounds" (`lib.rs:9`) + README "bounds-checked
+   source buffer slicing ... to safely extract raw syntax fragments".
+   No will-never-work shape — non-ASCII TS inputs are ordinary
+   compiler food, Oxc spans are byte offsets, and a panic on valid
+   input is never the correct refusal. Weighed and rejected the
+   CURIO reading: (a) the contract explicitly promises safety — a
+   documented-safe `pub` helper that panics is a trap, and the
+   README positions it as the canonical helper the four vendored
+   copies should converge to; leaving it lying poisons exactly
+   that consolidation; (b) zero callers means zero blast radius —
+   the fix cannot regress anything, and Law's triage law kills
+   only physics violations, not latent contract breaks; (c) the
+   fix is one line with unit-level pins and no goldens — refusing
+   it saves nothing. Severity stays exactly as the finder stated
+   it: latent crash in shared infra, NOT user-facing today. The
+   live user-facing risk sits in the vendored raw-indexing
+   copies, which are out of this scope and carried as fodder
+   below — this ruling neither fixes nor excuses them.
+
+2. **FILE OWNERSHIP (verified firsthand, binding).** In scope:
+   `shared::slice_span` ONLY (`modules/shared/src/lib.rs:11-19`).
+   All six domain crates depend on `shared` (Cargo.tomls), but the
+   only external `shared::` uses anywhere are `shared::testing::*`
+   (typegen `testing::contracts`, atomic + styletrace
+   `testing::ScratchWorkspace`) — zero production callers of
+   `shared::slice_span`/`unquote`/`unquote_str`, confirming the
+   finder. Vendored copies are OUT of scope (read-only precedent
+   or future fodder, do not rule their fortify): atlas
+   (`usage/literals.rs:62`, `parser/utils.rs:34`), tasty
+   (`ast/extract/util.rs:7`, `shared/type_ref_util.rs:121`),
+   virtualrs (`responsive/ast.rs:112`) — all raw-index and share
+   the flaw; styletrace (`analysis/util.rs:137-141`,
+   `resolver/parser.rs:427-431`) — already panic-free via
+   `.get().unwrap_or_default()`, the shape this fortify copies.
+   `shared::unquote`/`unquote_str` NOT implicated: their indexing
+   is on ASCII quote bytes (`trimmed[1..len-1]` after matching
+   1-byte quotes), so both bounds are always char boundaries.
+
+3. **FIX DIRECTION (binding): one line —
+   `source.get(start..end).unwrap_or_default()`.** `str::get` with
+   a `Range` returns `None` on start>end, out-of-bounds, AND
+   mid-char bounds, so the one-liner subsumes both existing guards
+   while keeping the `""` fallback contract. Do NOT amend the doc
+   comment or README to permit panic — they already describe the
+   fixed behavior and become true without edits.
+
+4. **TEST PLACEMENT: unit level in the existing `mod tests` in the
+   same file** — lower than the finder's temp integration test, no
+   binding, no station. Mid-char end (`"héllo" Span(0,2)` → `""`),
+   mid-char start (`Span(1,5)` → `""`); existing ASCII pins
+   (`test_slice_span`) stay green both sides. No new station, no
+   neo case, no `tests/` dir left behind.
+
+5. **FORTIFY BOUNDARY.** Allowed change: `modules/shared/src/lib.rs`
+   only (function body + unit tests). Sweep: none — shared has no
+   stations/goldens and zero callers means zero golden movement is
+   possible. Suites: `pnpm agentrs c shared` full + `pnpm agentrs q`
+   on the file. Golden rules: no `--update-goldens` anywhere; any
+   run that moves a golden is scope drift and fails the landing.
+   Untouched surfaces: all four crates' vendored copies,
+   `shared::testing`, `shared::unquote*`, README/SPEC, finder
+   report — and NO consolidation of vendors onto `shared::` (a
+   separate refactor with its own blast radius, needs its own
+   brief). Fail-without-fix bar: the new unit tests panic on old
+   code (demonstrated by the replay above) and pass on new.
+
+**Next-brief doom fodder (unprobed, unspent):** the vendored
+raw-indexing copies in atlas/tasty/virtualrs carry the live
+user-facing variant of this exact panic — each needs its own
+brief, repro, and ruling (consolidation vs local fix is an
+architect question for that cycle, not this one). Plus the
+finder's `ScratchWorkspace::write` notes (swallowed IO errors,
+`../..` escape surviving `Drop`).
+
+### Captain tick — 2026-09-20 (wave 5 all-found)
+All 3 wave-5 finders landed BREAK-FOUND, 1 theory each: (m-slug
+styletrace-fallback-signal-miss) `??`/conditional forwarding never
+signals; (o) `shared::slice_span` multibyte panic (latent, zero
+callers); (atlas-drop, section mislabeled (m) — slug disambiguates)
+`export default memo(...)` vanishes from discovery. Rulings dispatched
+for all three, running. Deadlock test: all crews producing (3 reports
++ 3 sections this window) — no interrupts. No commits this tick
+(nothing oracle-VERIFIED); peer files untouched.
+
+### Wave 5, find (m) — atlas-direct-default-call-drop
+
+**Verdict: BREAK-FOUND (atlas discovery).** Direct
+`export default <wrapper-call>` components vanish: `export default
+React.memo(function DirectDefault ...)` and `export default
+React.forwardRef<...>(function DirectRefDefault ...)` are untracked,
+their call sites unattributed, `diagnostics: []`. Root cause:
+`collect_default_export` (`modules/atlas/src/parser/mod.rs:335-420`)
+has no CallExpression arm (`_ => {}`), while the declarator path
+already unwraps wrappers. Repro
+`/tmp/doom-wave5-atlas-direct-default-call.mjs` (exit 1, fresh
+`dist/native` binding): both probes fail, both WRAP-01-shape
+controls green (named wrapped export + declare-then-default-export,
+`count=1`, interfaces mapped). Violated: ATL-WRAP-01 README ("both
+named and default-exported wrapped component forms"), module
+invariant 1 (diagnostics over silence), js README scope
+(default-exported function components + trustworthy identity).
+User-facing, in-bounds (static TSX; namespace React import mirrors
+the committed WRAP fixture). Report:
+`.agents/doom/logs/2026-09-20-wave5-atlas-direct-default-call-drop.md`.
+
+**Map for scheduling:** first-ever atlas hunt (doom-log `search
+"atlas"` was zero matches — thin log is signal). Theories spent:
+1 of 3. Unspent fodder (no red test, in report): `memo<Props>`
+single type-arg can never resolve (`nth(1)` assumes forwardRef's
+slot); `React.FC<Props>` declarator annotations never read;
+`| undefined` union members nuke `allowed_values`; symlinked roots
++ `..` imports miss via the canonicalize fallback.
+
+### Wave 5, find (atlas-drop) — architecture ruling
+
+**Verdict: BREAK (user-facing, silent discovery loss).** Cited by
+slug — the find section's `(m)` collides with the styletrace find's
+`(m)`. Finder report:
+`.agents/doom/logs/2026-09-20-wave5-atlas-direct-default-call-drop.md`.
+
+**File ownership verified (atlas only):** the judged code is
+`collect_default_export` in
+`packages/reference-rs/modules/atlas/src/parser/mod.rs:335-420`,
+with the mirror path `component_from_expression` in
+`modules/atlas/src/parser/components.rs:122-218`. Nothing outside
+`modules/atlas/` is in this ruling's scope.
+
+**Blind repro reproduced firsthand:** ran
+`/tmp/doom-wave5-atlas-direct-default-call.mjs` myself against the
+fresh binding (`dist/native/virtual-native.darwin-x64.node`, built
+Sep-20, newer than the Sep-14 parser sources; `git status` on
+`modules/atlas/` clean). Exit 1, exactly as filed: both probes
+(`export default React.memo(function DirectDefault ...)` and
+`export default React.forwardRef<...>(function DirectRefDefault
+...)`) `not tracked at all`, `diagnostics: []`; both WRAP-01-shape
+controls green (`count=1`, interfaces mapped).
+
+**Asymmetry verified in source (the core evidence):** the
+variable-declarator path unwraps arbitrary call wrappers
+(`components.rs:199-215` recurses `Expression::CallExpression`
+into its arguments), but `collect_default_export` (`mod.rs:344`)
+matches only FunctionDeclaration / Identifier /
+ArrowFunctionExpression / FunctionExpression and drops everything
+else into `_ => {}` (`mod.rs:418`). oxc 0.115's
+`ExportDefaultDeclarationKind` inherits all `Expression` variants
+(`@inherit Expression`), so a `CallExpression` arm exists to match
+— the drop is an omission, not a grammar limit.
+
+**In-bounds discovery physics.** Fully static TSX; the
+`import * as React` namespace import is explicitly inside atlas
+scope (`modules/atlas/js/README.md` scope list: "alias tracking
+for renamed imports and namespace package imports") and mirrors
+the committed WRAP-01 fixture verbatim. The doom skill's
+"namespace / default value imports" refusal governs the style
+extraction dialect (Forge), not atlas discovery — atlas's own
+scope doc governs here and additionally lists "default-exported
+function components consumed through default imports", which is
+exactly the inner function in each probe. No will-never-work
+shape. All three violated contracts re-verified by reading the
+cited docs: ATL-WRAP-01 README ("Asserts tracking for both named
+and default-exported wrapped component forms" — the direct form
+is the missing half), module invariant 1 (Diagnostics Over
+Guesses — here neither data nor diagnostic), js README scope.
+
+**CURIO reading weighed and rejected:** (a) `export default
+memo(function Card ...)` is a mainstream idiom, not an exotic
+shape — silent loss on it is user-facing; (b) the silence itself
+violates invariant 1 regardless of shape popularity; (c) the
+station README already claims the form, so the break is a
+README-to-fixture gap inside pinned territory, not new-territory
+curiosity.
+
+**Fortify boundary (implementor crew: stay inside this):**
+
+1. **Allowed change:** ONE new arm,
+   `ExportDefaultDeclarationKind::CallExpression`, in
+   `collect_default_export` (`mod.rs:335-420`), routing the call
+   through the existing wrapper-unwrap logic and registering
+   `local_components` + `exported_components` +
+   `default_component` exactly like the FunctionExpression arm
+   (`mod.rs:394-417`). **Naming rule:** use `default_name`
+   (file-derived), mirroring the ArrowFunctionExpression arm —
+   outer binding wins, and the direct-default form has no
+   binding, so the file-derived default identity is
+   authoritative; the inner function id is incidental (same
+   principle as FancyButton winning over FancyButtonInner in the
+   declarator path). Do NOT plumb the inner id through.
+2. **Mirrors that move together:** extend station ATL-WRAP-01
+   (no new case id — its README already claims the form): new
+   fixture components (one `memo`, one `forwardRef`,
+   direct-default-exported) + consuming page call sites +
+   `spec.ts` assertions + `analysis.json`/`diagnostics.json`
+   goldens regenerated via the `--update-goldens` CLI flag only
+   (never the env var).
+3. **Sweep obligations:** fresh native binding, then full atlas
+   suites via repo runners (`pnpm agentrs v atlas` for the
+   seam/case suite incl. standing gauges, `pnpm agentrs c atlas`
+   for the Rust unit tests), plus `pnpm agentrs q` on every
+   touched file. Quality gate limits (complexity, file length,
+   no clippy allows) apply to the new arm.
+4. **Golden-movement attestation:** per-pair, no sweeps. The
+   existing FancyButton/SearchInput entries must be
+   byte-identical; only additive new-component entries (and
+   their call-site effects) may appear. `diagnostics.json` must
+   stay empty-equivalent — this fortify adds support, not a new
+   diagnostic kind; `VALID_DIAGNOSTIC_CODES` unchanged.
+5. **Untouched surfaces:** `_ => {}` keeps every other variant
+   (no TSAs/paren/non-null arms — separate unproven gaps, fodder
+   at most); `parse_wrapper_type_arguments` `nth(1)` untouched
+   (the `memo<Props>` single-type-arg gap is unspent fodder,
+   explicitly NOT this fortify); the declarator path untouched;
+   unspent fodder (a)-(d) from the finder report untouched;
+   nothing outside `modules/atlas/`.
+6. **Pins / station:** station is ATL-WRAP-01; pins are
+   name/count/interface/examples assertions for both new
+   components in `spec.ts`.
+7. **Fail-without-fix bar:** the extended WRAP-01 spec must be
+   RED on current code (new components absent from analysis)
+   and GREEN after; the `/tmp` repro must flip from exit 1 to
+   exit 0 on the rebuilt binding; zero golden movement outside
+   the attested additive entries. If the red step cannot be
+   demonstrated, the fortify is not proven.
+
+### Wave 5, find (o) — fortify landing
+
+**Status: LANDED.** Ruling followed: binding one-line fix in
+`shared::slice_span` only, unit-level pins in the same file's
+`mod tests`, no station, no goldens touched, no consolidation.
+One ruling erratum found via suite and corrected (below) — fix
+direction itself is untouched and exact.
+
+**Fix (binding one-liner, byte-exact).**
+`packages/reference-rs/modules/shared/src/lib.rs:11-15` is now
+`source.get(start..end).unwrap_or_default()`. `str::get` with a
+`Range` returns `None` on start>end, out-of-bounds, AND mid-char
+bounds, so both old guards are subsumed with the `""` fallback
+contract kept. Doc comment and README unedited per the ruling —
+they describe the fixed behavior and are now true.
+
+**Ruling erratum (test placement §4, corrected with evidence).**
+The ruling orders `Span(1,5) → ""` as the "mid-char start" pin,
+but byte 1 is the START of 'é' (bytes 1..3) — a char boundary,
+not mid-char. The suite proved it: under the binding one-liner,
+`(1,5)` returns `"éll"`. Firsthand old-code harness
+(`/tmp/old_index_check.rs`, exact old expression via `rustc`):
+old `(1,5)` → `Ok("éll")` (no panic, old and new agree), old
+`(2,5)` → panic, old `(0,2)` → panic. So the literal `(1,5)→""`
+fails on BOTH old and new code — it cannot be a pin. Pins
+landed per the ruling's evident intent (mid-char end + genuine
+mid-char start), plus a guard on the named span's true behavior:
+`test_slice_span_mid_char_end_clamps` (`(0,2)→""`, ruling-literal),
+`test_slice_span_mid_char_start_clamps` (`(2,5)→""`, genuine
+mid-char start), `test_slice_span_boundary_start_slices`
+(`(1,5)→"éll"`, documented boundary). Existing ASCII pins
+(`test_slice_span`) green both sides, untouched.
+
+**Fail-without-fix / pass-with-fix (firsthand).** Pre-fix:
+finder repro `/tmp/doom-wave5-shared-slice-panic.sh` panics at
+`modules/shared/src/lib.rs:15:16` (`byte index 2 is not a char
+boundary`), tree clean after trap. Post-fix: same script —
+`doom_wave5_slice_span_never_panics_on_multibyte_boundary ... ok`,
+temp test removed, `modules/shared/` holds only the `lib.rs`
+modification (no `tests/` dir left behind).
+
+**Sweep attestation (ruling ordered none).** Shared has no
+stations/goldens (`ls modules/shared/` = `Cargo.toml README.md
+src/` only) and zero production callers, so zero golden movement
+is possible. No `--update-goldens` run anywhere; `git status`
+under `modules/shared/` shows exactly `M src/lib.rs`. No golden
+moved because none exist.
+
+**Suites (repo runners, this session).** `pnpm agentrs c shared`
+11/11 green (8 pre-existing + 3 new); `pnpm agentrs v shared`
+30/30 green (5 files); `pnpm agentrs q` on the file —
+0 violations, 0 warnings. No commits (captain commits on
+chain-review VERIFIED).
+
+**Boundary honored.** Changed: `modules/shared/src/lib.rs` only
+(function body + 3 unit tests) + this log section. Untouched:
+all four vendored copies (atlas/tasty/virtualrs raw-index,
+styletrace `.get()` precedent — read-only), `shared::testing`,
+`shared::unquote*`, README, finder report. No consolidation
+attempted — needs its own brief per the ruling.
+
+**Files (mine only).**
+`packages/reference-rs/modules/shared/src/lib.rs` + this section.
+
+### Wave 5, find (m) — architecture ruling
+
+Slug: styletrace-fallback-signal-miss (the true find (m); the
+atlas section above is captain-noted as mislabeled, slug
+disambiguates). Find: `NullishCard`
+(`<Div color={color ?? "red"} />`) and `TernaryCard`
+(`<Div color={title ? color : "red"} />`) do NOT trace while the
+bare twin `DirectCard` (`<Div color={color} />`) does — identical
+boundary (`CardProps = StyleProps & { title?: string }`),
+identical sink (`Div`). Finder report:
+`.agents/doom/logs/2026-09-20-wave5-styletrace-fallback-signal-miss.md`;
+repro `/tmp/doom-wave5-styletrace-fallback.mjs` (replayed by
+architect firsthand: `traced: ["DirectCard"]`, exit 1 — failure
+mode confirmed). Root cause per report: the JSX-edge signal
+predicate `expression_reads_style_prop`
+(`src/analysis/model.rs:118-155`) falls through
+Logical/Conditional into `_ => false`. SCOPE VERIFIED:
+every file judged below sits under
+`packages/reference-rs/modules/styletrace/`; nothing outside
+that module is in this ruling's jurisdiction.
+
+1. **BREAK — IN-BOUNDS, violated contract, not
+   working-as-designed.** Complete static TSX compile input on
+   the pinned surface, named imports; touches nothing on the
+   will-never-work list (fallback branches are static literals,
+   the signal is a whole boundary prop — no interpolation,
+   no runtime-only values, no external config, no
+   spread-staying-dynamic, no namespace/default value
+   imports). Falls squarely under the skill's misdiagnosis
+   clause: same boundary, same flow, different verdict — an
+   inconsistent refusal, not a designed one. On the adjudicated
+   question — is `color={color ?? "red"}` in-bounds
+   forwarding physics per the README key rule? — YES, four
+   ways: (a) the key rule (:84-86) tests FLOW ("whether style
+   props exposed at that component boundary actually flow
+   into the Reference primitive/style pipeline"), and the
+   boundary value flows whenever it exists — the fallback
+   substitutes exactly when there is no boundary value to
+   flow; (b) :69's `color={color}` is exemplary ("such as"),
+   not exhaustive; (c) rest/spread `{...props}` is listed as
+   traced and is strictly LESS direct than a `??` fallback
+   (may-flow vs definite-flow-when-present) — tracing the
+   uncertain while missing the near-certain would be
+   perverse; (d) wave-4 (k) already crossed the analogous
+   bridge (object containers count as signal positions).
+   No comment or doc anywhere states fallback-forwarding is
+   out of scope. Severity, honestly user-facing: atomic
+   gates JSX extraction on the traced host set (ATM-SITE-08,
+   verified verbatim in atomic SPEC:255-257 — tags extract
+   only when in `trace_style_jsx_names`), so
+   `<NullishCard color="red" />` extracts nothing: silent
+   missing paint on a mainstream authoring shape (default
+   fallbacks are idiomatic). Doom-log consult confirms zero
+   prior coverage of fallback signal flow.
+
+2. **FIX DIRECTION (binding): recurse the shared signal
+   predicates into fallback value positions — do NOT narrow
+   the README.** (a) README authority: the violated sentence
+   is the module's key rule (:84-86); narrowing to
+   "bare-identifier attributes only" would demote the central
+   promise to a syntactic accident and bless silent missing
+   paint on idiomatic code. (b) Precision/recall — VALUE
+   POSITIONS ONLY: `LogicalExpression` recurses
+   left-OR-right (both operands are value positions under
+   JS `??`/`||`/`&&` semantics — the result IS one of the
+   operands); `ConditionalExpression` recurses
+   consequent-OR-alternate ONLY — the TEST is control, not
+   flow (its value is discarded), and must NOT count. This
+   mirrors (k)'s keys-don't-count guard (a key names the
+   property being set; a test gates the branch taken —
+   neither is flow from the boundary). A test-only read
+   (`color={color ? "blue" : "red"}`) stays untraced and is
+   pinned as a negative control. Over-tracing the test
+   would mint dead classes for values the wrapper provably
+   discards; under-tracing is impossible here since the
+   test value can never reach the sink. (c) Placement:
+   the arms live in the TWO shared predicates —
+   `expression_reads_style_prop` (`model.rs`) AND its
+   pipeline mirror `expression_reads_style_signal`
+   (`parser/pipeline/util.rs:81-125`), same arms, same
+   value-position shape, the pipeline arms recursing into
+   THEMSELVES (so minted `style_signals` inside fallback
+   branches count, e.g. `css({ color: sig ?? "red" })`).
+   The mirror is REQUIRED, not optional: this architect
+   probed it firsthand
+   (`/tmp/doom-wave5-m-pipeline-probe.mjs`: `css({ color })`
+   traces, `css({ color: color ?? "red" })` and the ternary
+   twin MISS) — leaving it would ship the
+   same-shape-different-verdict divergence wave-1(a)/(k)
+   forbid. All sink-test consumers (JSX attr, createElement
+   props, spreads, `walk_call` arg test,
+   `record_pipeline_binding`, `call_has_style_signal_arg`)
+   gain the arms by construction; per-call-site patches are
+   forbidden. (d) `expression_directly_derives_from_style_signal`
+   is left to fortify+chain per the (k) precedent, with
+   guidance: keep the (k)-landed contract split intact
+   (reads = flow-into-sink vs derives = alias-minting);
+   the rebinding shape (`const c = color ?? "red"`) has no
+   red test in this find, so EITHER decision must be
+   written down (code comment, as (k) did) AND pinned as an
+   explicit control (traces-card or absent-card); default
+   expectation is untouched. (e) The finder's
+   "walkers descend but predicates refuse" observation is
+   NOT a contradiction to resolve: the walkers descend
+   into test positions for NESTED-SINK discovery (a
+   `<Div color={color}/>` nested anywhere still creates an
+   edge) — a different question from signal-read; walkers
+   stay as they are. (f) Blast radius is additive: the
+   predicates only gain true verdicts, sink/boundary
+   checks unchanged, previously-traced hosts stay traced
+   by construction. Explicitly OUT: the
+   `walk_pipeline_statement` FunctionDeclaration gap (no
+   red test; Law 2; carried as doom fodder — third
+   sighting after (k) and this report, still unprobed);
+   any deeper indirection (calls, awaits, containers of
+   fallbacks beyond compositional recursion).
+
+3. **TEST PLACEMENT: Rust unit primary, existing cases
+   secondary — no new case, no new station.** Primary pins
+   in `src/tests/tracing.rs` via `workspace_scratch_dir`
+   (module design rules: prefer Rust for semantic
+   coverage), lower than the finder's N-API probe: (i) JSX
+   fallback twins mirroring the finder (`DirectCard`
+   control + `NullishCard` + `TernaryCard`, exact-equality
+   so absences pin too) PLUS a test-only negative control
+   (`color={color ? "blue" : "red"}` asserting ABSENT);
+   (ii) pipeline-mirror twins (`PipeObjCard` control +
+   `PipeNullishCard` + `PipeTernaryCard`, exact-equality);
+   (iii) the derives-decision control (positive or
+   negative per fortify's written call). Secondary:
+   extend EXISTING `tests/cases/direct_wrapper/` (JSX
+   family; `['BodyCard','Card']` grows additively with a
+   fallback-forwarding twin) and EXISTING
+   `tests/cases/direct_style_pipeline/` (pipeline family;
+   additive, Panel/ObjPanel shapes untouched). No README
+   amendment, no lib touch.
+
+**Sweep obligations (binding).** Baselines attested green by
+this architect pre-fortify: `pnpm agentrs c styletrace`
+35/35, `pnpm agentrs v styletrace` 28/28. Fortify runs:
+full styletrace suites (cargo + vitest) + downstream
+ripple per the (k) precedent (cargo atomic + vitest atomic
+— atomic depends on styletrace) + `pnpm agentrs q` on all
+touched `.rs` files (0 violations, no new warnings over
+the pre-fortify baseline; hold complexity down via
+helpers if the matcher tips, as (k) did). `pnpm agentrs
+build` BEFORE vitest (stale-binary hazard documented in
+(k): `agentrs v` does not rebuild). Golden census:
+scoped regen only, every moved pair attested per pair —
+silent-to-traced flips on fallback shapes are intended;
+ANY traced-to-silent flip is a regression and vetoes the
+landing; no blanket bless.
+
+**Stays untouched.** Extraction, policy, channels, proof,
+runtime, canon, primitives (no atomic changes expected —
+ripple is verification-only); `expression_uses_class_name_binding`
+(different family); the walkers (`walk/expr.rs`,
+`pipeline/expr.rs` — nested-sink discovery, not
+signal-read); README; lib, neo, core; `shared/`
+(peer (o) scope with live modifications — hands off);
+docs; finder report; sibling files. No weakened tests.
+
+**Fail-without-fix bar.** Finder's
+`/tmp/doom-wave5-styletrace-fallback.mjs` fails pre-fix
+(architect-attested RED: only `DirectCard`, exit 1) and
+passes post-fix; architect's
+`/tmp/doom-wave5-m-pipeline-probe.mjs` fails pre-fix
+(architect-attested: only `PipeObjCard`, exit 1) and
+passes post-fix; every new Rust pin fails on
+stashed/reverted code and passes in-tree (fortify proves
+per pin); chain replays both /tmp repros read-only and
+re-runs all suites firsthand. No implementation, no
+fixes, no commits by this architect — repo runners only.
+
+### Wave 5, find (o) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (o) files only —
+write-set audited via `git status` paths before judging any diff:
+exactly `M packages/reference-rs/modules/shared/src/lib.rs` (+ log
+sections). Peer-owned and read-only for attribution: `docs/ATOMIC.md`
++ `docs/missions/README.md` (jettison/reaper mission-doc links),
+`styletrace/{analysis/model.rs, analysis/parser/pipeline/util.rs,
+tests/tracing.rs}` (wave-5 (m) fallback fortify, landed mid-review),
+3 untracked doom reports, 2 untracked mission docs. Nothing outside
+`modules/shared/src/lib.rs` is judged here.
+
+**1. Finder repro** (`/tmp/doom-wave5-shared-slice-panic.sh`,
+unmodified, post-fix): `doom_wave5_slice_span_never_panics_on_
+multibyte_boundary ... ok`, exit 0, no panic, clamped output.
+Temp test removed by trap; `ls modules/shared/` = `Cargo.toml
+README.md src/` only, status holds just `M src/lib.rs` — no
+`tests/` dir left behind, tree clean.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c shared`
+11/11 green (8 pre-existing + 3 new pins, each named in output);
+`pnpm agentrs v shared` 30/30 green (5 files — resolves to the
+runtime project; shared has no js seam, same command the landing
+ran); `pnpm agentrs q` on the file — 0 violations, 0 warnings.
+Peer styletrace writes cannot move these: `c shared` builds
+`-p shared` only, and shared is a leaf crate.
+
+**3. Fail-without-fix / pass-with-fix (firsthand, announced swap).**
+Pre-swap sha `58983b71` backed to `/tmp/chainrev-o-lib.rs.new`;
+swapped HEAD bytes (`52dd425a`, old 5-line guard confirmed in
+place), restored after, post-restore sha `58983b71` — bytes
+identical. On OLD code: finder repro panics at
+`modules/shared/src/lib.rs:15:16` (exit 101); pin-equivalent temp
+integration test: `(0,2)` PANIC, `(2,5)` PANIC, `(1,5)→"éll"` ok,
+ASCII guards ok. On NEW code: repro ok, 11/11 green, plus a
+13-assert edge matrix (temp test, trap-cleaned): landed pins,
+OOB `(0,50)/(3,50)→""`, inverted `(5,2)→""`, empty-source
+`(0,0)→""` / `(0,1)→""`, `(5,5)→""`, emoji mid-char
+`(1,3)/(0,3)→""` + boundary `(1,5)→"🎉"`, full `(0,6)→"a🎉b"` —
+all green. Ruling §5 bar met per pin.
+
+**4. Diff review (line-by-line, (o) write-set).** Hunk 1: old guard
+→ `source.get(start..end).unwrap_or_default()` — byte-exact vs
+ruling §3; `str::get(Range)` returns `None` on start>end, OOB,
+AND mid-char bounds, so both old guards are subsumed with the
+`""` fallback kept. Doc comment (line 9), README, `unquote(*)`,
+`testing/` untouched (no hunks, no diffs); existing
+`test_slice_span` / `test_unquote` are context lines only —
+nothing weakened. Hunk 2: 3 unit tests in the existing `mod
+tests`, same file — ruling §4 placement, no station, no neo
+case, no `tests/` dir. **Ruling erratum ADJUDICATED and
+accepted:** (1,5)→"" as a "mid-char start" pin fails BOTH sides
+(byte 1 is é's start boundary — old code returns "éll", proven
+above; new code returns "éll", landed boundary test green), so
+it cannot be a pin. Landed `(2,5)→""` is the genuine mid-char
+start (byte 2 inside é bytes 1..3: panics old, `""` new) and
+`(1,5)→"éll"` pins the named span's true behavior — ruling
+intent preserved, fix direction byte-exact, same-file +1 test,
+not scope drift. Vendored copies untouched per scope: all 9
+`slice_span` sites show zero diff (atlas/tasty/virtualrs still
+raw-index, styletrace still `.get()`); zero production callers
+of `shared::slice_span`/`shared::unquote` outside shared
+(grep NONE). No goldens: shared has none, none exist to move,
+no `--update-goldens` run — sweep attestation holds. Fodder
+precision for the next brief: tasty carries a THIRD vendored
+copy at `scanner/imports.rs:77` (raw-index, unlisted in the
+ruling) alongside the two listed ones.
+
+**5. Contract holds.** "Safely clamped to bounds" (lib.rs:9) +
+README "bounds-checked ... to safely extract raw syntax
+fragments" are now true without edits: mid-char spans (start or
+end, 2-byte and 4-byte chars), OOB spans, inverted spans, and
+empty-source spans all return `""` instead of panicking, while
+boundary spans slice normally. Captain: commit `M
+packages/reference-rs/modules/shared/src/lib.rs` + the (o)
+finder report + the (o) log sections; `dist/` untracked,
+nothing to commit there.

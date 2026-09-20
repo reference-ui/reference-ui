@@ -11,11 +11,7 @@ pub mod testing;
 pub fn slice_span(source: &str, span: Span) -> &str {
     let start = span.start as usize;
     let end = span.end as usize;
-    if start <= end && end <= source.len() {
-        &source[start..end]
-    } else {
-        ""
-    }
+    source.get(start..end).unwrap_or_default()
 }
 
 /// Unquote single or double quoted strings, returning the inner string.
@@ -63,6 +59,25 @@ mod tests {
         assert_eq!(slice_span(text, Span::new(0, 5)), "hello");
         assert_eq!(slice_span(text, Span::new(6, 11)), "world");
         assert_eq!(slice_span(text, Span::new(0, 50)), "");
+    }
+
+    #[test]
+    fn test_slice_span_mid_char_end_clamps() {
+        // 'é' is bytes 1..3; byte 2 splits it.
+        assert_eq!(slice_span("héllo", Span::new(0, 2)), "");
+    }
+
+    #[test]
+    fn test_slice_span_mid_char_start_clamps() {
+        // Byte 2 is inside 'é' (bytes 1..3), so start 2 is mid-char.
+        assert_eq!(slice_span("héllo", Span::new(2, 5)), "");
+    }
+
+    #[test]
+    fn test_slice_span_boundary_start_slices() {
+        // Byte 1 is the START of 'é' (a char boundary), not mid-char,
+        // so (1,5) slices normally on both old and new code.
+        assert_eq!(slice_span("héllo", Span::new(1, 5)), "éll");
     }
 
     #[test]
