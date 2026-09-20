@@ -5,7 +5,7 @@
 This group proves what `css()` does when declarations collide: later wins
 per cascade slot, the sheet keeps every atom, and values with no compiled
 atom never mint ghost classes. Engine stations prove strings and plan keys;
-these cases prove paint (computed style) and the absent-class negative.
+these cases prove paint (computed style) and the paints-nothing negative.
 
 ## 2. Dialect the author writes
 
@@ -14,8 +14,8 @@ array); alias vs longhand (`bg`/`background`, `flexDir`/`flexDirection`);
 shorthand then longhand (`padding`/`paddingTop`, `borderBottom`/`borderColor`);
 trailing-`!` important; conditional object args (`{ _hover: … }`) merged with
 a base arg; `undefined`/`null`/`false` leaves dropped. Runtime-only values
-(call results, strings with no static atom) are D11 values: diagnostic, no
-class — never guessed, never hashed.
+(call results, strings with no static atom) are D11 values: miss class plus
+diagnostic — never guessed, never hashed.
 
 ## 3. Engine stations leaned on
 
@@ -33,10 +33,11 @@ All confirmed present (`ls` + README read 2026-09-17):
 | ATM-GHOST-02 | Runtime class-map spellings match sheet selectors | NEO-MERGE-06 |
 | ATM-LEAF-05/07/10 | `null` holes, dynamic-leaf keep, `!` spellings incl. quoted exclusion | NEO-MERGE-08 (slot `*`) |
 
-Host: `src/runtime/css/plans.ts` (slot index + last-wins `mergeDeclarations`,
-unit-pinned by `plans.test.ts`) and `css.ts` (arg/condition lowering, miss →
-nothing). MERGE-06's one-dev-diagnostic and MERGE-07's ` !important` spelling
-are host R2 work, not engine gaps: no RS rows.
+Host: `src/runtime/css/plans.ts` (merge-only last-wins `mergeDeclarations` /
+`mergeStylePlans`, unit-pinned with `css.ts` by `css.test.ts` / `eviction.test.ts`) and `css.ts`
+(arg/condition lowering, miss →
+miss class, constructed but unbacked). MERGE-06's one-dev-diagnostic and
+MERGE-07's ` !important` spelling are host R2 work, not engine gaps: no RS rows.
 
 ## 4. Decisions
 

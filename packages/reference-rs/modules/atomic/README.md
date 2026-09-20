@@ -1,6 +1,6 @@
 # Atomic
 
-Extract → atoms → stylesheet + class map. One namer. Does not own `Div`.
+Extract → atoms → stylesheet + class map. One namer algorithm. Does not own `Div`.
 Does not emit `StyleProps`.
 
 Authors write StyleProps / `css()` / `recipe()`. They never write class names.
@@ -24,7 +24,7 @@ whether `mt` is a style prop. Do not fork either inside this crate.
 
 ## What it emits
 
-Two artefacts, same namer:
+Two artefacts, one namer algorithm in two implementations, one differential gate:
 
 | Name | What | Disk after cutover |
 | :--- | :--- | :--- |

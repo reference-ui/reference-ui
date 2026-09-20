@@ -13,24 +13,27 @@ runtime: this element's (prop, value)*      →  concat    (what this instance n
 
 Hashed whole-object classes cannot name `{ ...base, ...override }` or `css({ color })` where `color` is a prop. One class per leaf can. Ten call sites writing `mt="2r"` become ten wants and **one** atom.
 
-A miss at runtime paints nothing. In dev it warns once, naming the value and the prop. That is the seam: a value the program never wrote never paints.
+A miss at runtime constructs a class no rule backs: it paints nothing. In dev it warns once, naming the value and the prop. That is the seam: a value the program never wrote never paints.
 
-## Two artefacts, one namer
+## One namer, two implementations, one gate
 
 ```mermaid
 flowchart LR
   sources[TS / TSX sources] --> compile[compile]
   system[BaseSystem] --> compile
   compile --> sheet[styles.css]
-  compile --> map["css map"]
+  compile --> tables["namer tables"]
+  tables --> css[css]
+  css --> dom[class string]
 ```
 
 | Artefact | Job | Example |
 |---|---|---|
 | `styles.css` | Six layers, utilities last | `.@reference-ui/lib__c_red { color: red; }` |
-| class map | `(when:)prop:value` → class | `"color:red"` → `@reference-ui/lib__c_red` |
+| namer tables | The closed data both namers read: prefixes, aliases, lowerings, keyword sets, breakpoints, conditions, fonts | `prefixes: { marginTop: "mt" }` |
+| class map + plans | Compile-internal oracle rows behind the differential gate, never shipped | `stylePlans[i].declarations` |
 
-Ghost class (runtime asks for a name the sheet never printed) is a P0. Both outputs share `stylesheet/name`. There is no second namer.
+Ghost class (runtime asks for a name the sheet never printed) is a P0 for compiler outputs. The compiler namer is the oracle; the runtime namer is its second implementation, and the differential gate holds the two byte-equal on every declaration the compile produced. A miss constructs a class with no rule — that is a miss class, not a ghost. Recipes and `stylePropNames` ride the artifact alongside the tables, unchanged.
 
 ## Harvest — define `#00aeff`, then take it away
 
@@ -315,12 +318,12 @@ Named CSS colors (`red`, `rebeccapurple`) are alphabet, not token paths. `gray.8
 
 ## Runtime
 
-Neo `css()` looks up the **authored** five-tuple `(system, when, prop, value, important)` in the map and concatenates class names. It never hashes, never injects, never resolves tokens or rhythm in the browser.
+Neo `css()` runs the runtime namer over the **authored** five-tuple `(system, when, prop, value, important)` and concatenates class names. It never hashes, never injects, never resolves tokens or rhythm in the browser.
 
 ```ts
-css({ color: 'red' })           // map hit → "@reference-ui/lib__c_red"
-css({ color })                  // looks up whatever string `color` is this render
-css({ color: 'not-in-source' }) // miss → "" + dev warn
+css({ color: 'red' })           // hit → "@reference-ui/lib__c_red"
+css({ color })                  // constructs whatever string `color` is this render
+css({ color: 'not-in-source' }) // miss → "@reference-ui/lib__c_not-in-source", no paint + dev warn
 ```
 
 The runtime cannot tell who minted the atom. Site walk, harvest, and `staticCss` are compile-time sensors. After `AtomSet`, there is only the class.

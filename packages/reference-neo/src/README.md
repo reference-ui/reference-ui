@@ -18,7 +18,7 @@ into the project. Nothing here lowers styles; the wire format lives in
 
 The other half faces the browser. `runtime/` holds the authored `css()`
 and `recipe()` resolvers over the natively compiled plans — the runtime
-picks classes, never mints them, and warns once in dev on a miss.
+picks classes, constructs the miss class on a miss, and warns once in dev.
 `primitives/` holds the native tags: the factory that splits style props
 from DOM props and stamps the layer, color-mode, and variant attributes,
 plus the generator that writes the `react` entry (its stable surface

@@ -8,7 +8,7 @@ Harness / Runner: `pnpm agentrs c atomic` (Cargo unit tests) | `pnpm agentrs v a
 
 ## 1. Job of the Crate
 
-The `atomic` style engine compiles authored StyleProps, `css()` calls, and component recipes into a deterministic atomic stylesheet and a runtime class map using a single shared namer. It takes input sources (TSX, JSX, TS, JS) and, upon contract completion, a design system definition (`BaseSystem`); it emits two synchronized artifacts—a package-scoped six-layer stylesheet (`styles.css` nesting `@layer reset, global, base, tokens, recipes, utilities;` inside `@layer <system>`) and a runtime lookup map (`css` mapping `[when:]prop:value` to compiled utility class names)—accompanied by compiler diagnostics. It must not evaluate author JavaScript at compile time, must not emit hashed whole-object class names, must not maintain a second namer between the stylesheet and runtime, must not generate executable `css.js` code files, must not collect `tokens()` (owned by JavaScript fragments), must not emit `StyleProps` TypeScript interfaces (owned by typegen), and must not own React DOM primitives such as `Div` or `Button`.
+The `atomic` style engine compiles authored StyleProps, `css()` calls, and component recipes into a deterministic atomic stylesheet and a runtime class map using a single shared namer. It takes input sources (TSX, JSX, TS, JS) and, upon contract completion, a design system definition (`BaseSystem`); it emits two synchronized artifacts—a package-scoped six-layer stylesheet (`styles.css` nesting `@layer reset, global, base, tokens, recipes, utilities;` inside `@layer <system>`) and a runtime lookup map (`css` mapping `[when:]prop:value` to compiled utility class names)—accompanied by compiler diagnostics. It must not evaluate author JavaScript at compile time, must not emit hashed whole-object class names, must hold its two namer implementations to one algorithm (`ATM-FORBID-03`), must not generate executable `css.js` code files, must not collect `tokens()` (owned by JavaScript fragments), must not emit `StyleProps` TypeScript interfaces (owned by typegen), and must not own React DOM primitives such as `Div` or `Button`.
 
 ## 2. Legend & Status
 
@@ -80,16 +80,16 @@ Two structural causes, both of which the new areas are designed to close:
 | `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
-| `NAME` | Deterministic class naming & selector escaping | 7 | 7 | 0 |
+| `NAME` | Deterministic class naming & selector escaping | 8 | 8 | 0 |
 | `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 14 | 0 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
 | `ORDER` | Cascade rule ordering, determinism, & idempotence (P0) | 6 | 6 | 0 |
 | `VALID` | Emitted CSS must parse and mean something (P0) | 3 | 3 | 0 |
 | `MERGE` | Last-wins semantics across arguments, aliases, & duplicate keys | 3 | 3 | 0 |
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
-| `SEAM` | Rust ⇄ N-API artifact parity | 3 | 3 | 0 |
+| `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **199** | **188** | **11** |
+| **Total** | | **203** | **192** | **11** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -102,7 +102,7 @@ wins; `VALID` proves a browser accepts it.
 
 This crate is one compiler. Authors write StyleProps, `css()`, and `recipe()`
 from `@reference-ui/react`. Compile emits a six-layer stylesheet and a class
-map. One namer. No generated `css.js`.
+map. One namer in two implementations, held by one gate. No generated `css.js`.
 
 | Pass | Home | Job |
 | :--- | :--- | :--- |
@@ -142,10 +142,10 @@ Their names are examples. Our author API is `css()` and `recipe()`.
 
 - [x] `ATM-GHOST-01` `[reference]` `[seam]` —
   **Every runtime class generated must exist with an identical selector in the emitted stylesheet.**
-  Compile arbitrary sources containing StyleProps, `css()` calls, pseudo-conditions, and shorthands. Assert that for every class name present in the runtime `css.classes` map, an exact matching CSS selector exists in the emitted stylesheet under `@layer utilities`. The compiler uses one authoritative namer (`stylesheet::name::class_name`) for both outputs, completely eliminating ghost classes.
+  Compile arbitrary sources containing StyleProps, `css()` calls, pseudo-conditions, and shorthands. Assert that for every class name present in the runtime `css.classes` map, an exact matching CSS selector exists in the emitted stylesheet under `@layer utilities`. The compiler uses one authoritative namer (`stylesheet::name::class_name`) for both outputs, completely eliminating ghost classes. A miss class is not a ghost: the runtime namer constructs a class for requests the compiler never saw, which paints nothing by design. This pin covers compiler outputs (`css.classes`, `stylePlans`) only.
 - [x] `ATM-GHOST-02` `[reference]` `[seam]` —
-  **Runtime dictionary must provide bijective key lookup matching authored property and condition intentions.**
-  Inspect the emitted `css.classes` dictionary generated from unconditioned, responsive, and pseudo-conditioned declarations. Assert that keys are deterministically indexed as `prop:val` or `when:prop:val` (e.g. `mt:2r` → `mt_2r`, `_hover:color:red.500` → `hover:c_red.500`). Assert that querying the runtime dictionary with authored properties returns the exact class name printed in the stylesheet without transformation skew.
+  **Constructed names must be deterministic and equal the plan declarations.**
+  Station `ATM-GHOST-02` still pins the compile-internal dictionary (`css.classes` keys → the selectors printed in the stylesheet). The runtime namer's constructions are held byte-equal to the plan declarations, slot and className in order, by the differential gate (`NEO-NAMER-01`), whose one carve-out is the token-refusal rule: a namer-side surplus is allowed only when its stem is braced (`{…}`) and its class is absent from the emitted sheet (witness `ATM-TOKEN-12`).
 - [x] `ATM-GHOST-03` `[reference]` `[seam]` —
   **Empty baseline input must emit pure layer preambles with an empty runtime class dictionary.**
   Compile an empty project or virtual source containing no style declarations. Assert that the generated stylesheet contains exactly the six-layer preamble (`@layer reset, global, base, tokens, recipes, utilities;\n`) with no utility rules. Assert that `css.classes` is an empty dictionary and `diagnostics` is empty, proving baseline purity.
@@ -813,6 +813,9 @@ compiler contract.
 - [x] `ATM-NAME-07` `[reference]` `[seam]` —
   **Selector escaping must be an allowlist: every character outside `[A-Za-z0-9_-]` is escaped.**
   Station `ATM-NAME-07`. Values containing `*`, `$`, `^`, `|`, `\`, `;`, `?`, `<`, backtick, and `é`, plus `'& > *'`, emit selectors that parse. `escape_css_selector` allowlists `[A-Za-z0-9_-]` (with the NAME-06 leading hex exceptions) and backslash-escapes everything else, including `*` from the child-selector wrap.
+- [x] `ATM-NAME-08` `[reference]` `[seam]` —
+  **The class stem must pass only through explicit lexical functions.**
+  Station `ATM-NAME-08`. Every builtin divergence carries a compiled input and a pinned outcome: `'0x10'` and `''` refuse with no class (`ATM-W-NON-CANONICAL-NUMERIC`, `ATM-W-INVALID-CSS-VALUE`); `-0` folds to `0`; `1e21` and `1e-7` refuse as non-canonical; `\r` inside quotes survives the sanitize; U+FEFF survives byte-identical while U+0085 collapses as structural whitespace; `İ` is not case-folded while a border style folds to lowercase; per-prop object declarations follow the author's key order (`width@md` before `width@base`).
 
 ### Compiler Diagnostics & Fail-Closed Semantics
 
@@ -868,8 +871,8 @@ compiler contract.
   **Runtime JavaScript evaluation during compilation is strictly forbidden.**
   Station `ATM-FORBID-02`. Dynamic calls are not evaluated; siblings still extract.
 - [x] `ATM-FORBID-03` `[forbidden]` `[seam]` —
-  **Maintaining a second class namer outside of `stylesheet::name` is strictly forbidden.**
-  Station `ATM-FORBID-03`. Every `css.classes` value equals `stylesheet::name::class_name` for that atom (ghost gauge plus dedicated assertion).
+  **One algorithm, two implementations, one gate: the runtime namer must spell every class exactly as the compiler namer did.**
+  Station `ATM-FORBID-03` keeps its existing assertion: every `css.classes` value is a utilities selector, so the compiler side has no second spelling. The compiler namer (`stylesheet::name` + `PlanBuilder`) is the oracle; the runtime namer (`js/namer/`, shipped as `@reference-ui/rust/namer`) must agree byte-for-byte on every `RuntimeStylePlan` the compile produced, slot and className, held by the namer goldens (`ATM-SEAM-08`) and the differential gate (`NEO-NAMER-01`). Split-brain — two algorithms that disagree — stays forbidden; a second implementation of one algorithm, held equal by a gate, is not the thing forbidden.
 - [x] `ATM-FORBID-04` `[forbidden]` `[seam]` —
   **Dynamic code generation of `css.js` or runtime JavaScript files is strictly forbidden.**
   Station `ATM-FORBID-04`. `CompileResult` is data; the compiler does not write `.js`.
@@ -894,6 +897,17 @@ compiler contract.
 - [x] `ATM-SEAM-03` `[reference]` `[seam]` —
   **Every want must emit a runtime style plan, including wants that arrive through ternary arms, member access, and identifier spreads.**
   Station `ATM-SEAM-03` (RS-14, unblocks NEO-SITE-01/02/03). `css({ color: flag ? 'cherry' : 'ocean' })` emits one plan per arm; `css({ color: theme.primary })` emits the member plan; `css({ bg: 'amber', ...rest })` emits the spread plan beside its literal sibling. Authored capture (`ast_to_json_values`) mirrors `walk_expression` leaf-for-leaf, and identifier-spread unpack pushes authored entries alongside wants, so `css()` and JSX resolve every leaf through the plan index (`createStylePlanIndex` + `mergeStylePlans` returns each leaf's `css.classes` entry, never `''`). `null`, `undefined`, and `void` leaves stay omitted on both sides. Whole-object `css(styles)` is out of scope: it yields no wants at all, a separate gap.
+- [x] `ATM-SEAM-06` `[reference]` `[seam]` —
+  **The shipped runtime artifact must carry no per-atom row.**
+  Station `ATM-SEAM-06`. `runtime.schemaVersion` is 2 with no `stylePlans` key; the `namer` tables are present (`aliases`, `prefixes`, `lowerings`, `keywords`, `fonts` objects; `weightKeywords`, `colorProps`, `breakpoints`, `conditions` arrays). Lookup keys sort (`aliases`, `prefixes`, `lowerings`, `conditions`, every keyword set); `breakpoints[0]` is `base`. The compile-internal `stylePlans` on the result still equal the compiler rows.
+- [x] `ATM-SEAM-07` `[reference]` `[seam]` —
+  **Artifact bytes must be independent of atom count.**
+  Station `ATM-SEAM-07`. Compiling the fixture plus a file of 500 distinct harvestable hexes and one color hole grows the sheet by 500 rules (asserted first, so a vacuous plus-compile fails loud) while `JSON.stringify(runtime)` is byte-identical and the plan count grows by exactly 500.
+- [x] `ATM-SEAM-08` `[reference]` `[seam]` —
+  **The runtime namer must reproduce every namer golden.**
+  Station `ATM-SEAM-08`. One block per committed `tests/namer-goldens/*.json` — six lexical functions, nine procedures, then the composed `name()` cases — each run as `fn(input, tables, system)` against the compiled tables, so a drift names the exact function. Beneath it the Cargo guard `namer_goldens_are_fresh` (`src/goldens/`) regenerates every file in memory and diffs; `NAMER_UPDATE_GOLDENS=1` is the only rewrite path, and a re-bless after an intentional naming-rule change carries a `NAMER_RULES_VERSION` bump. Per the SPEC legend the guard is not a tick; the tick is this Vitest case.
+
+`ATM-SEAM-04` is reserved and undefined: no case folder, no SPEC prose. The ID is cited as Overmatch's (`docs/missions/completed/styletrace.md`), which defines nothing under it — do not go hunting, and do not reuse the number. `ATM-SEAM-05` (StyleTrace's: the result carries `tracedJsxHosts`) exists as a case folder only, with no SPEC prose row.
 - [x] `ATM-SCAN-01` `[reference]` `[seam]` —
   **The frozen request's `include` globs must scope both the `sourceRoot` scan and the legacy virtual `files` list.**
   Station `ATM-SCAN-01` (RS-10, unblocks NEO-SYNC-09). Under `include: ['theme/**']` the `css()` in `outside/` yields no utility and no diagnostics; an absent or empty include preserves scan-all. A negation-only include (e.g. `['!outside/**']`) scopes to scan-all-minus-negatives. One `IncludeScope` (`src/includes/`) serves both paths with fast-glob flavor: `**` crosses directories, `*`/`?` stay in a segment, `{a,b}` expands, `[...]` matches one character, leading `!` negates. The legacy shape accepts `include` too; the station golden is the unscoped legacy compile.
@@ -912,7 +926,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | Contract ID | Status | Harness | Proof Source |
 | :--- | :--- | :--- | :--- |
 | `ATM-GHOST-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (css-tree `@layer utilities`) |
-| `ATM-GHOST-02` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-02/` |
+| `ATM-GHOST-02` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-02/` + differential `NEO-NAMER-01` |
 | `ATM-GHOST-03` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-03/` |
 | `ATM-GHOST-05` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-05/` |
 | `ATM-SITE-01` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-01/` |
@@ -1102,6 +1116,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-NAME-05` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-05/` |
 | `ATM-NAME-06` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-06/` + `ATM-COND-01` |
 | `ATM-NAME-07` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-07/` |
+| `ATM-NAME-08` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-08/` |
 | `ATM-DIAG-01` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-01/` |
 | `ATM-DIAG-02` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-02/` |
 | `ATM-DIAG-03` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-03/` |
@@ -1110,7 +1125,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-DIAG-06` | `[x]` | `[seam]` | `tests/cases/ATM-DIAG-06/` |
 | `ATM-FORBID-01` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-01/` |
 | `ATM-FORBID-02` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-02/` |
-| `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` |
+| `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` + differential `NEO-NAMER-01` |
 | `ATM-FORBID-04` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-04/` |
 | `ATM-FORBID-05` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-05/` |
 | `ATM-FORBID-06` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (`classSelector` deleted) |
@@ -1132,6 +1147,9 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SEAM-01` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-01/` + `tests/seam.test.ts` |
 | `ATM-SEAM-02` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-02/` |
 | `ATM-SEAM-03` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-03/` |
+| `ATM-SEAM-06` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-06/` |
+| `ATM-SEAM-07` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-07/` |
+| `ATM-SEAM-08` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-08/` + `tests/namer-goldens/` |
 | `ATM-SCAN-01` | `[x]` | `[seam]` | `tests/cases/ATM-SCAN-01/` |
 | `ATM-HARVEST-01` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-01/` |
 | `ATM-HARVEST-02` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-02/` |
@@ -1225,8 +1243,8 @@ The following architectural constraints are strictly enforced across the `atomic
 
 1. **DO NOT interpret author JavaScript (`ATM-FORBID-02`)**:
    Never embed or invoke a JavaScript runtime, interpreter (QuickJS, V8, Boa), or AST evaluator (`ts-evaluator`) to run control flow, effects, or unknown calls. The enumerated fold table (`extract/fold/`, one node per form, fail-closed outside it) is constant folding, not evaluation — and anything it refuses diagnoses instead of executing. (Amended by Operation Overmatch Ph3: folding is not evaluating.)
-2. **DO NOT invent a second class namer (`ATM-FORBID-03`, `ATM-GHOST-01`)**:
-   Never generate or transform class names outside of `stylesheet::name::class_name`. Runtime `css()` map generation and stylesheet rule emission must call the exact same Rust function. Do not synthesize class names in TypeScript or post-process them with PostCSS.
+2. **DO NOT let a second namer implementation disagree (`ATM-FORBID-03`, `ATM-GHOST-01`)**:
+   Never generate or transform class names outside the one naming algorithm. The compiler namer (`stylesheet::name`) is the oracle; the runtime namer (`js/namer/`) is its second implementation, held byte-equal by the namer goldens and the differential gate. Do not synthesize class names anywhere else in TypeScript or post-process them with PostCSS.
 3. **DO NOT emit hashed whole-object class names (`ATM-FORBID-01`)**:
    Never hash a style object into a single class name (e.g. `.css-1a2b3c`). Runtime `css()` is an open composition API requiring atomic utility classes (`.mt_2r`, `.bg_n300`) to concatenate overrides dynamically.
 4. **DO NOT generate `css.js` or executable runtime code (`ATM-FORBID-04`)**:
