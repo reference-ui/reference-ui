@@ -103,10 +103,9 @@ export function validateDialectExtJoin(
   extensions: readonly ExtensionProp[] = EXTENSION_ALLOWLIST
 ): string[] {
   const errors: string[] = [];
+  // NAME is the joined identity; the css emission form must not vouch for the row.
   const unverifiedProps = dialect.canonicalProperties.filter(
-    (p) =>
-      !isPlatformOrExtension(p.name, platformCss, extensions) &&
-      !isPlatformOrExtension(p.css, platformCss, extensions)
+    (p) => !isPlatformOrExtension(p.name, platformCss, extensions)
   );
   if (unverifiedProps.length > 0) {
     errors.push(

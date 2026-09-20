@@ -22,6 +22,9 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: W1c COMMITTED (c361dd7c2, 83 files — tasty tighten VERIFIED). Shared-tree incident self-resolved (306 sweep gone, walk/mod.rs holds (a)'s fix). Chain (a) reviewing; fortify (b) building. Watch item for chain (b): ledger userspace 6→9 shift — confirm it matches ruling (b)'s C1-note authorization vs scope drift. Next: chain (a) verdict → commit (a); (b) landing → chain → commit; then wave 2.
 - 2026-09-20 06:20 tick: chain (a) reviewing, fortify (b) building (carve-out + DIAG-05 + SITE re-points + ledger in tree, 24 paths); no verdicts/landings yet, both running, no deadlock, no pings sent. Peer files untouched. Next: chain (a) verdict → commit (a); (b) landing → chain → commit; then wave 2.
 - 2026-09-20 watch: chain (a) VERIFIED (refusal fires, LEAF-11 green, orphan decision pinned). Commit ORDER ruling: SPEC.md mixes (a)+(b) hunks, so (a)'s commit holds until (b) chain-verifies — then (a) lands (code+station+report+log, no SPEC) immediately followed by (b) (files+SPEC carrying both verified hunks+report+log), messages cross-referenced. No file surgery, no captain implementation. Next: (b) landing → chain (b) → commits (a),(b) → wave 2.
+- 2026-09-20 watch: WAVE 1 COMPLETE — 3/3 breaks fortified + verified + committed (W1c tasty tighten c361dd7c2; W1a responsive-! refuse da2232587; W1b unknown-prop carve-out 72268f795). Cycles banked: 3/6 toward the floor. Wave 2 hunting: 3 finders × 3 theories — (d) canon, (e) styletrace, (f) module-graph. Tree holds peer files only. Next: wave-2 verdicts → arcs → commits → wave 3.
+- 2026-09-20 watch: wave 2: (d) BREAK-FOUND (canon join OR-bypass) → architect dispatched; (e) BREAK-FOUND (styletrace body-destructure gap) → architect dispatched; (f) module-graph still hunting. Cycles banked: 3/6. Next: rulings → fortify → chain reviews → commits → wave 3.
+- 2026-09-20 watch: wave 2: (d) IN-BOUNDS, NAME-only join → fortify on join.ts + join.test.ts; (e) IN-BOUNDS, body-destructure extension → fortify on parser/types.rs + tracing.rs + 2 cases; (f) module-graph still hunting. Cycles banked: 3/6. Next: landings → chain reviews → commits → wave 3.
 
 ## Waves
 
@@ -570,6 +573,324 @@ missed exact key warns on default, located, while F2 jurisdiction
 the 13 (b) paths + this log section per the commit-ORDER ruling
 ((a) first without SPEC, then (b) carrying SPEC with both verified
 hunks); keep the operation-seize docs + doom reports out of both.
+
+### Wave 2, find (e) — architecture ruling
+
+Find: styletrace traces the param-destructured wrapper (`ParamCard`,
+`({ color })` + `color={color}`) but misses both body-destructured
+twins (`BodyCard`, `const { color } = props` + `color={color}`;
+`BodyRestCard`, `const { title, ...rest } = props` + `{...rest}`) —
+identical boundary (`CardProps extends StyleProps`), identical flow
+into `<Div>`. Finder report:
+`.agents/doom/logs/2026-09-20-styletrace-body-destructure-miss.md`;
+repro `/tmp/doom-styletrace-body-destructure.mjs` (replayed by
+architect read-only: `traced: ["ParamCard"]`, exit 1 — failure mode
+confirmed). Root cause per report: `parse_prop_bindings`
+(`modules/styletrace/src/analysis/parser/types.rs`) reads the first
+parameter pattern only, so body-bound names never enter the wrapper
+graph.
+
+1. **IN-BOUNDS.** Complete static TSX compile input on the pinned
+   surface (style props into `<Div>`, a Reference primitive); touches
+   nothing on the will-never-work list — no interpolation, no
+   runtime-only values, no external config, no namespace/default value
+   imports. The rest-spread bullet ("rest-spreads staying dynamic,
+   warned, kept, by design") does not apply: `BodyRestCard`'s
+   `{...rest}` is static forwarding of boundary props, the exact shape
+   the README claims as traced. This is the skill's misdiagnosis
+   clause in substance: same boundary, same flow, different verdict —
+   an inconsistent refusal, not a designed one. Corroborated inside
+   the codebase: the sibling pipeline detector DOES propagate
+   body-destructured signals (`record_pipeline_binding`,
+   `parser/pipeline/util.rs`), so the JSX edge path contradicts the
+   module's own convention. User-facing: atomic gates JSX extraction
+   on the traced host set (ATM-SITE-08), so `<BodyCard color="red" />`
+   extracts nothing — silent missing paint on a mainstream authoring
+   shape (`const { x } = props` is ordinary code, not an exotic).
+
+2. **FIX DIRECTION (binding): extend the wrapper analysis to body
+   destructuring — do NOT narrow the README.** Weighed:
+   (a) README authority: the violated sentence is the module's key
+   rule ("whether style props exposed at that component boundary
+   actually flow into the Reference primitive/style pipeline"), with
+   both `color={color}` and `{...rest}` named as traced shapes.
+   Narrowing to "param-destructured only" would demote the central
+   promise to a syntactic accident and bless silent missing paint.
+   (b) Precision/recall: collecting one-hop body bindings (`const
+   { x } = props`, `const { a, ...rest } = props`) from the already-
+   parsed Oxc AST restores recall while precision holds — names are
+   still bound from the props identifier, still gated on the
+   StyleProps boundary check and the primitive/pipeline sink check.
+   Precision guard (inside the extension, not instead of it): only
+   destructures whose source is the props parameter identifier count;
+   fortify stops at rebinding/shadowing rather than chasing it.
+   (c) Precedent: the pipeline detector already does body-pattern
+   propagation — the extension aligns the JSX edge path with existing
+   convention; reuse/share the pattern-binding parsing if clean,
+   without mandating a refactor. (d) Blast radius is contained and
+   additive: binding collection only gains names, sink checks are
+   unchanged, so previously-traced hosts stay traced; newly-traced
+   hosts are the intended recall gain. Fortify runs the full
+   styletrace suites (cargo + vitest) and attests any golden movement
+   per pair — traced-to-silent flips are regressions, silent-to-
+   traced flips on body-destructure shapes are intended. SCOPE:
+   one-hop body destructure from the props identifier (direct AND
+   rest — one root cause, one rule, since the README names both);
+   deeper indirection (`const p = props` chains, conditional
+   destructures) is out of this fortify — future doom fodder.
+
+3. **TEST PLACEMENT: Rust unit primary, existing cases secondary — no
+   new case, no new station.** Primary pin at the Rust semantic level
+   per the module's design rules ("prefer Rust tests for semantic
+   coverage"): `modules/styletrace/src/tests/tracing.rs` — add
+   body-destructure direct + body-destructure rest tests mirroring
+   the finder's twins (lower than the finder's N-API /tmp probe, no
+   native binding needed). Secondary: extend the EXISTING
+   `tests/cases/direct_wrapper/` (BodyCard twin) and
+   `tests/cases/rest_spread_wrapper/` (BodyRestCard twin) inputs with
+   body-destructured variants + trace assertions — those families
+   already own these shapes. No README amendment, no lib touch.
+
+### Wave 2, find (d) — architecture ruling
+
+Find: `validateDialectExtJoin`
+(`packages/reference-rs/modules/canon/generate/join.ts:106-110`)
+passes a canonical property when EITHER its name OR its css is
+platform-or-extension, so `{ name: 'foobarProp', css: 'color' }` —
+a hallucinated name riding a borrowed legit css form — clears the
+gate with zero diagnostics, where the README fail-closed join
+("a dialect CSS extension is missing from `EXTENSIONS`" → abort)
+and SPEC `CAN-JOIN-02` ("any emitted property not defined in W3C
+standards is explicitly registered in the `EXTENSIONS` table")
+demand abort. Finder report:
+`.agents/doom/logs/2026-09-20-wave2-canon-join-css-or-bypass.md`;
+repro `/tmp/doom-wave2-canon-join-or-bypass.mts` (replayed by
+architect read-only: baseline 0 errors, poison name
+platform-or-extension false, poison css true, poison errors `[]`,
+exit 1 — failure mode confirmed).
+
+1. **IN-BOUNDS.** The dispute sits entirely inside the build-time
+   generator (webref ingest + overlay + join validator) — no
+   will-never-work shape is involved (no interpolation, no
+   runtime-only values, no external config, no spread, no
+   namespace imports). It is a contract-vs-code dispute of the
+   exact shape wave-1(c) ruled IN-BOUNDS, and it falls under the
+   skill's misdiagnosis clause: silence where a diagnostic is
+   owed. Severity, honestly: a latent build-gate hole, not
+   currently shipping bad output (`loadDialect` cannot mint such
+   a row today) — but the validator is the ONLY gate between a
+   bad overlay row / webref drift and the shipped dictionary,
+   and emit consumes both fields of a passed row
+   (`Property::new(name, css, ...)` at `emit/css.ts:187`;
+   `to_css_declaration_property` returns `p.css` at
+   `emit/lib.ts:66`), so an emitted hallucination would make
+   `is_known_style_prop` bless author typos and mis-emit them as
+   `color`. Real hole, latent user-facing.
+
+2. **FIX DIRECTION (binding): narrow the filter to a NAME-only
+   check — remove the css-side OR arm in
+   `validateDialectExtJoin`; do NOT amend the contract.**
+   Weighed:
+   - Contract authority: README + CAN-JOIN-02 pin the NAME as
+     the joined identity. The emitted `CANONICAL_PROPERTIES`
+     table is keyed by name and every downstream lookup
+     (`is_known_style_prop`, `resolve_canonical_prop`,
+     `class_prefix_for_prop`) keys on it. The `css` field is an
+     emission form, not an identity witness — a borrowed css
+     string proves nothing about the name. The OR lets the
+     wrong field vouch for the row.
+   - Fail-closed philosophy: the join exists to abort on
+     anything unverified; disjunctive verification across two
+     fields of the same row defeats it.
+   - Zero blast radius, measured firsthand: architect probe
+     `/tmp/doom-wave2d-arch-probe.mts` shows all 1073
+     authoritative rows pass via BOTH arms
+     (both=1073, cssOnly=0, nameOnly=0) — no legit row needs
+     the css arm, so removing it cannot redden CAN-JOIN-02 on
+     clean data. Fortify re-verifies.
+   - Generator consumers: the sole consumer of the validator is
+     `validateJoin` → the orchestrator abort
+     (`generate.ts:83-88`); emit consumes dialect rows, not the
+     validator. Narrowing only makes the gate stricter —
+     emitted output on clean data is byte-identical.
+   - Rejected: (a) amending the contract to bless the OR —
+     would ratify hallucinated names riding borrowed css,
+     contradicting the fail-closed README and CAN-FAIL-05's
+     evident intent; (b) an AND-check (name AND css must both
+     verify) — unneeded strictness: extension css forms are
+     author-chosen emission strings registered in the same
+     allowlist row (e.g. `boxSize`/`box-size`), so the css arm
+     vouches for nothing independent, and it would conflate
+     two failure modes in one diagnostic. The mirror gap
+     (legit name + hallucinated css) has no repro — per Law 2
+     it is not a break; carry as doom fodder, not fortify
+     scope. The diagnostic keeps naming the property (the
+     existing `p.name` join already does).
+
+3. **TEST PLACEMENT: extend the EXISTING join station —
+   `packages/reference-rs/modules/canon/tests/join.test.ts`,
+   no new station, no Rust unit.** The bug lives in the TS
+   generator validator; the Rust side only consumes emitted
+   tables and has no gate to pin, so a Rust unit test cannot
+   observe it. Exact placement: inside the existing CAN-FAIL-05
+   `it` (same case, preserving the SPEC's 1:1 case-to-ID
+   alignment), add a second poison block with the borrowed-css
+   shape (`{ name: 'foobarProp', css: 'color', ... }`)
+   asserting abort naming `foobarProp`, alongside the current
+   name+css-together poison. SPEC: extend the CAN-FAIL-05 row
+   text with the borrowed-css poison shape (one sentence); no
+   new case ID. Guards staying green: CAN-JOIN-02
+   (authoritative pass-through), the full `join.test.ts`
+   suite, and `pnpm --filter @reference-ui/rust run canon`
+   regen byte-stability — emitted `src/` must be unchanged
+   (fortify verifies via diff), proving the narrowing only
+   bites poison.
+
+### Wave 2, find (d) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly, inside the brief's
+SCOPE (OR removal + join-station test only): NAME-only
+`validateDialectExtJoin`, no contract amendment, no new station,
+no Rust unit. Mirror gap (legit name + hallucinated css) untouched
+per ruling Law-2 note — still doom fodder, no repro.
+
+**Fix (one arm removed, `canon/generate/join.ts:106-110`).** The
+filter is now `!isPlatformOrExtension(p.name, ...)` — the css-side
+OR arm is gone, with a one-line why-comment (NAME is the joined
+identity; the css emission form must not vouch for the row).
+Diagnostic keeps naming the property via the existing `p.name`
+join (post-fix repro shows
+`FAIL: Canonical properties not in webref or dialect allowlist:
+foobarProp`). Pre-fix break re-confirmed firsthand (repro exit 1,
+`poison errors: []`); post-fix the repro flips red→green
+(exit 0, gate aborts naming `foobarProp`).
+
+**Pin (existing station only).** Inside the existing CAN-FAIL-05
+`it` in `canon/tests/join.test.ts` — same case, SPEC 1:1
+alignment preserved — a second poison block pushes
+`{ name: 'foobarProp', css: 'color', classPrefix: 'fb' }` and
+asserts abort naming `foobarProp`, alongside the untouched
+name+css-together poison. Fail-without-fix: the extended
+CAN-FAIL-05 goes red on the HEAD validator (vitest exit 1);
+pass-with-fix: full join station 15/15 green.
+
+**Zero-blast-radius re-verified firsthand.** (1) Architect probe
+`/tmp/doom-wave2d-arch-probe.mts` re-run: total 1073, both=1073,
+nameOnly=0, cssOnly=0, neither=0 — no legit row needs the css
+arm. (2) CAN-JOIN-02 green on clean data (baseline 0 errors,
+join station + repro agree). (3) Emission byte-identity via A/B
+regen (`pnpm --filter @reference-ui/rust run canon` under HEAD
+join.ts vs fixed join.ts): sha256 of all 10 emitted
+`src/**/*.rs` files IDENTICAL (`/tmp/doom-wave2d-emit-HEAD.sums`
+vs `/tmp/doom-wave2d-emit-fixed.sums`, diff clean) — the
+narrowing only bites poison. NOTE for chain/captain: regen vs
+*committed* `src/` drifts heavily (properties.rs ±4708 lines,
+lib.rs reflow) under BOTH validators — a pre-existing stale
+committed snapshot vs live webref, independent of this change.
+`src/` was restored to HEAD; the drift is flagged, not swept in.
+
+**Suites (repo runners, this session).** `pnpm agentrs c canon`
+53/53 green; `pnpm agentrs v canon` 15/15 green (join station,
+incl. extended CAN-FAIL-05); `pnpm agentrs q` on both touched
+files PASS (0 over-length, 0 complex, 0 clippy allows).
+
+**SPEC note (flag, not drift).** Ruling item 3 ordered a
+one-sentence CAN-FAIL-05 SPEC row extension; the fortify brief's
+explicit SCOPE ("OR removal + join-station test only") and
+Must-NOT ("amend the README/SPEC contract") forbid touching
+SPEC — skipped, for captain/chain to dispatch if wanted.
+
+**Must-NOTs honored:** no README/SPEC edit, no weakened tests
+(new pin is strictly additive inside an existing `it`), no
+golden updates (canon has none; regen output restored), no lib
+touch, finder report untouched.
+
+**Files (mine only, 2 + this section).**
+`modules/canon/generate/join.ts` (OR removal + why-comment),
+`modules/canon/tests/join.test.ts` (CAN-FAIL-05 borrowed-css
+poison block). Final tree: exactly these 2 paths modified.
+
+### Wave 2, find (e) — fortify landing
+
+**Status: BUILDING (interim note, crew on conn).** Ruling + finder report + repro ingested. Plan: extend `parse_prop_bindings` (`types.rs`) with a top-level one-hop body scan (direct + rest, props-identifier-sourced only, rebinding/shadow guard halts the scan, strictly additive — no drops, no sink changes); signature gains `body_statements`, single caller in `component.rs`. Primary pins in `tracing.rs` (BodyCard + BodyRestCard twins); secondary extends existing `direct_wrapper` + `rest_spread_wrapper` inputs/specs/goldens. Full cargo + vitest styletrace suites + per-pair golden attestation before landing. Sibling crew (d) files untouched.
+
+### Wave 2, find (d) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (d) files only —
+write-set audited via `git status` paths: exactly
+`modules/canon/generate/join.ts` + `modules/canon/tests/join.test.ts`
+under canon; sibling (e)'s styletrace paths (live in tree, still
+building) were never touched or adjudicated. Peer paths
+(`docs/ATOMIC.md`, `docs/missions/README.md`, untracked
+`operation-seize.md`, 3 untracked doom reports) belong to neither arc.
+
+**1. Finder repro** (`/tmp/doom-wave2-canon-join-or-bypass.mts`,
+unmodified, mtime 06:33): exit 0 firsthand — baseline 0 errors on the
+authoritative dialect, poison name platform-or-extension false /
+poison css true (the borrowed-css shape is genuinely exercised),
+poison errors
+`["FAIL: Canonical properties not in webref or dialect allowlist:
+foobarProp"]`, HOLDS. The gate aborts and names the property.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c canon`
+53/53 green; `pnpm agentrs v canon` 15/15 green (join station incl.
+the extended CAN-FAIL-05); `pnpm agentrs q` on both touched files
+PASS (0 over-length, 0 complex, 0 clippy allows). Post-review tree
+re-run: 15/15 green — my read-only swaps left no residue
+(restores verified byte-identical via `cmp` both times).
+
+**3. Fail-without-fix / pass-with-fix:** HEAD validator + extended
+station: exactly CAN-FAIL-05 FAILS (named firsthand: `× CAN-FAIL-05`,
+14 pass) — the new borrowed-css block pins the gate; fixed
+validator: 15/15. The pin fails-old/passes-new, nothing else moves.
+
+**4. Zero blast radius, re-verified firsthand:** (a) arch probe
+re-run: total 1073, both=1073, nameOnly=0, cssOnly=0, neither=0 —
+no legit row needs the css arm. (b) CAN-JOIN-02 green on clean
+data (baseline 0 errors; join station + repro agree). (c) A/B
+regen (`pnpm --filter @reference-ui/rust run canon` under HEAD
+vs fixed join.ts): sha256 of all 14 emitted `src/**/*.rs` files
+IDENTICAL (`diff` clean) — the narrowing only bites poison.
+Committed-vs-regen drift confirmed pre-existing and
+validator-independent (8 `src/` files rewrite under BOTH
+validators); `src/` restored to HEAD via checkout, final canon
+status is exactly the 2 fortify files.
+
+**5. Diff review (line-by-line):** `join.ts` — css-side OR arm gone,
+filter now `!isPlatformOrExtension(p.name, ...)` exactly per ruling,
+one-line why-comment (NAME is the joined identity); diagnostic keeps
+naming the property via the existing `p.name` join. `join.test.ts` —
+one hunk: second poison block inside the existing CAN-FAIL-05 `it`
+(`{ name: 'foobarProp', css: 'color', classPrefix: 'fb' }`, abort +
+naming asserts), original name+css-together poison untouched above
+it; SPEC 1:1 case-to-ID alignment preserved, no new station, no Rust
+unit (correct per ruling — Rust only consumes emitted tables).
+Consumer audit: `validateDialectExtJoin` is called only from
+`validateJoin` → orchestrator abort (`generate.ts:83-88`); emit
+consumes dialect rows, not the validator. Untouched as ordered:
+README, SPEC, lib, finder report; no existing test touched (new pin
+strictly additive — no weakening); no goldens (canon has none, no
+snapshots); mirror gap (legit name + hallucinated css) verified
+still passing with `[]` firsthand (`/tmp/chainrev-d-mirror.mts`) —
+untouched per the ruling's Law-2 scope note, still doom fodder.
+
+**6. SPEC flag — adjudicated, not a gap.** The ruling ordered a
+one-sentence CAN-FAIL-05 SPEC extension; the fortify brief's SCOPE
+forbade SPEC touch. Read the row firsthand (`SPEC.md:161-162`):
+"Build abort on unverified canonical properties ... with an
+injected unverified property name (`foobarProp`)" — the
+borrowed-css poison IS still an injected unverified property name,
+so the row remains accurate, only less specific. No false statement
+left behind; the sentence is a carried doc nit for the captain, not
+a correctness gap and not a reason to hold the commit.
+
+**7. Contract holds.** The finder's violated pair (README fail-closed
+join + `CAN-JOIN-02`) is now enforced: any emitted property name
+not in W3C standards or `EXTENSIONS` aborts the build naming the
+property, regardless of what css form it borrows. Captain: commit
+the 2 canon paths + finder report + log sections; keep the
+operation-seize docs + peer doom reports out.
 
 ## Useful
 
