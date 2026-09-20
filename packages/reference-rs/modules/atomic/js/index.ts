@@ -14,6 +14,7 @@ export type {
   Diagnostic,
   DiagnosticSeverity,
   EvaluatedSystemSpec,
+  LogChannel,
   NativeCompileRequest,
   NativeRuntimeArtifact,
   RecipeMatch,

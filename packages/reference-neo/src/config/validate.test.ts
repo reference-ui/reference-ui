@@ -106,6 +106,43 @@ describe('validateConfig jsxElements', () => {
   })
 })
 
+describe('validateConfig logs', () => {
+  it('accepts the compiler channel and an absent field', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      logs: ['compiler'],
+    })
+
+    expect(config.logs).toEqual(['compiler'])
+
+    const absent = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+    })
+
+    expect(absent.logs).toBeUndefined()
+  })
+
+  it('rejects unknown channels and non-array shapes', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        logs: ['bogus'] as never,
+      })
+    ).toThrowError(/'logs' must be an array of log channels/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        logs: 'compiler' as never,
+      })
+    ).toThrowError(/'logs' must be an array of log channels/i)
+  })
+})
+
 describe('validateConfig staticCss', () => {
   it('accepts property-to-values maps with wildcards and condition prefixes', () => {
     const config = validateConfig({

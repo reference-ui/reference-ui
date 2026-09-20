@@ -23,10 +23,10 @@ use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::adapters::extract::ExtractReport;
+use crate::diagnostics::adapters::extract::{extract_note, ExtractReport};
 use crate::diagnostics::{
-    line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSink,
-    DiagnosticsSession, ExtractDetail, Policy,
+    line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSeverity,
+    DiagnosticSink, DiagnosticsSession, ExtractDetail, Policy,
 };
 use crate::extract::harvest::{is_sink_code, Sink, SinkSite};
 use crate::extract::scope::Scoped;
@@ -92,16 +92,31 @@ impl<'a> ExpressionWalk<'a> {
 
     /// Report a diagnostic warning at the offending node's span.
     pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self.span_position(Some(span)).unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
         self.diagnostics
-            .push(Diagnostic::warning(code, message.into()).with_location(self.file, line, column));
+            .push(location.warning(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
     }
 
     /// Report an info diagnostic at the offending node's span.
     pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
+        let message: String = message.into();
         let (line, column) = self.span_position(Some(span)).unzip();
-        self.diagnostics
-            .push(Diagnostic::info(code, message.into()).with_location(self.file, line, column));
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+        };
+        self.diagnostics.push(location.info(code, message.clone()));
+        self.session
+            .report(extract_note(location, DiagnosticSeverity::Info, code, message));
     }
 
     /// Warn a dynamic refusal in value position, recording its harvest sink.

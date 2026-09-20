@@ -66,6 +66,20 @@ pub struct CompileRequest {
     /// Glob scope (RS-10): only matching sources compile; absent or empty scans all.
     #[serde(default)]
     pub include: Option<Vec<String>>,
+    /// Opt-in diagnostic channels (S5 backchannel): `compiler` renders
+    /// `compiler_diagnostics`. Unknown channels are ignored.
+    #[serde(default)]
+    pub logs: Option<Vec<String>>,
+}
+
+impl CompileRequest {
+    /// True when the caller requested the opt-in compiler backchannel.
+    /// Unknown channel names are ignored so channels evolve additively.
+    pub fn wants_compiler_logs(&self) -> bool {
+        self.logs
+            .as_ref()
+            .is_some_and(|logs| logs.iter().any(|name| name == "compiler"))
+    }
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.
@@ -89,6 +103,9 @@ pub struct CompileResult {
     /// unique). Neo publishes configured ∪ traced downstream.
     #[serde(default)]
     pub traced_jsx_hosts: Vec<String>,
+    /// Opt-in compiler backchannel (S5): present only when requested.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compiler_diagnostics: Option<Vec<Diagnostic>>,
 }
 
 struct ParseSession<'a> {
@@ -126,14 +143,12 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut graph = extract::resolver::ValueGraph::new(&sources, &parsed, &project_constants);
     let identity = extract::identity::IdentityGraph::new(&sources);
     // One compile-long diagnostics session (S3): analysis reports first,
-    // then producers report beside their rendered lines through assembly.
-    // Nothing renders the session yet; Slice 4 joins proof from it.
+    // then producers; proof and the S5 partition render from it at the end.
     let mut diag_session = diagnostics::DiagnosticsSession::new();
     let (resolved_hosts, host_diagnostics) = hosts::resolve(request, &mut diag_session);
     let traced_jsx = resolved_hosts.hosts();
     diagnostics.extend(host_diagnostics);
-    // Independent diagnostics analysis over the borrowed parse (S2): runs,
-    // renders nothing yet.
+    // Independent diagnostics analysis over the borrowed parse (S2).
     let parse = diagnostics::analysis::CompileParse { sources: &sources, parsed: &parsed };
     let analysis = diagnostics::analysis::AnalysisInput::for_compile(
         &parse,
@@ -181,10 +196,42 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         extracted_recipes,
         diagnostics,
         authored,
-        traced: resolved_hosts.traced,
+        // Cloned: the partition catalog below shares the hosts borrow.
+        traced: resolved_hosts.traced.clone(),
     };
     assembly.append_static(system);
-    Ok(assembly.finish(system, &mut diag_session))
+    let mut result = assembly.finish(system, &mut diag_session);
+    partition_channels(&mut result, diag_session.facts(), &analysis.sources, request.wants_compiler_logs());
+    Ok(result)
+}
+
+/// Slice 5 end-of-compile channel partition. Proof already borrowed the
+/// facts and rendered its verdicts; facts are intact, so partition strips
+/// every compiler-classified line from default and renders the backchannel
+/// only when requested.
+fn partition_channels(
+    result: &mut CompileResult,
+    facts: &[diagnostics::DiagnosticFact],
+    analyzed: &[diagnostics::analysis::AnalyzedSource<'_>],
+    render_compiler: bool,
+) {
+    let catalog_sources = analyzed
+        .iter()
+        .map(|source| (source.path, source.content))
+        .collect();
+    let catalog = diagnostics::SourceCatalog::new(catalog_sources);
+    let channels = diagnostics::DiagnosticChannels::partition(
+        facts,
+        std::mem::take(&mut result.diagnostics),
+        &catalog,
+        render_compiler,
+    );
+    result.diagnostics = channels.userspace;
+    result.compiler_diagnostics = if render_compiler {
+        Some(channels.compiler)
+    } else {
+        None
+    };
 }
 
 /// Extract every unpanicked source through the shared session.

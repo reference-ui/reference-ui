@@ -113,12 +113,18 @@ pub enum DiagnosticCode {
     /// `diagnostics/proof`: an exact runtime lookup the final plan omits
     /// with no resolver fact proving the cause (Error Correct Slice 4).
     MissingStylePlan,
+    /// `diagnostics/policy/analysis`: an exact runtime lookup expectation,
+    /// compiler-channel telemetry (Error Correct Slice 5).
+    ExpectedLookup,
+    /// `diagnostics/policy/analysis`: a dynamic slot observation,
+    /// compiler-channel telemetry (Error Correct Slice 5).
+    DynamicSlot,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 43] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 45] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -207,6 +213,8 @@ const CODE_TABLE: [(DiagnosticCode, &str); 43] = [
     (DiagnosticCode::UnknownColor, "ATM-W-UNKNOWN-COLOR"),
     (DiagnosticCode::HarvestSink, "ATM-I-HARVEST-SINK"),
     (DiagnosticCode::MissingStylePlan, "ATM-W-MISSING-STYLE-PLAN"),
+    (DiagnosticCode::ExpectedLookup, "ATM-I-EXPECTED-LOOKUP"),
+    (DiagnosticCode::DynamicSlot, "ATM-I-DYNAMIC-SLOT"),
 ];
 
 impl DiagnosticCode {
@@ -331,6 +339,8 @@ mod tests {
             DiagnosticCode::UnknownColor,
             DiagnosticCode::HarvestSink,
             DiagnosticCode::MissingStylePlan,
+            DiagnosticCode::ExpectedLookup,
+            DiagnosticCode::DynamicSlot,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

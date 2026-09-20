@@ -10,7 +10,7 @@
 //! file paths back to `SourceId`s. Slice 3 migrates the four producer
 //! families onto this protocol; Slice 4 renders session facts into proof.
 
-use super::{Diagnostic, DiagnosticCode, DiagnosticLocation};
+use super::{Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity};
 use crate::diagnostics::SourceSite;
 use crate::extract::fold::ElementRefusal;
 use crate::runtime::serializer::{serialize_lookup_key, LookupKey};
@@ -217,6 +217,16 @@ pub enum DiagnosticFact {
         when: Vec<Box<str>>,
         outcome: ExtractOutcome,
     },
+    /// A compiler-only extract note: a structure/refusal line that predates
+    /// the structured-detail vocabulary. Slice 5 carries the legacy sentence
+    /// verbatim — sixty bespoke call-site sentences; restructuring them
+    /// risks byte drift for zero behavioral gain.
+    ExtractNote {
+        location: DiagnosticLocation,
+        severity: DiagnosticSeverity,
+        code: DiagnosticCode,
+        message: Box<str>,
+    },
     /// How many net-new pairs harvest minted onto one located sink, plus
     /// every kind-accepted pool value (pre-twin-skip) for coverage proof.
     HarvestOutcome {
@@ -290,10 +300,7 @@ mod tests {
         });
         assert_eq!(sink.len(), 2);
         assert!(matches!(sink[0], DiagnosticFact::DynamicSlot { .. }));
-        assert!(matches!(
-            sink[1],
-            DiagnosticFact::ExactLookupExpected { .. }
-        ));
+        assert!(matches!(sink[1], DiagnosticFact::ExactLookupExpected { .. }));
     }
 
     #[test]
@@ -318,10 +325,7 @@ mod tests {
         let mut key = key();
         key.when = vec!["_hover".into(), "_focus".into()];
         key.important = true;
-        assert_eq!(
-            key.lookup_key(),
-            r#"["test",["_hover","_focus"],"color","red",true]"#
-        );
+        assert_eq!(key.lookup_key(), r#"["test",["_hover","_focus"],"color","red",true]"#);
     }
 
     #[test]

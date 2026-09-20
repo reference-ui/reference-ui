@@ -23,10 +23,10 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
 | Total contract cases | 222 |
-| Named `[x]` proven | 212 |
-| Remaining `[ ]` | 9 (`ATM-DIAG-07`–`ATM-DIAG-12`, `ATM-DIAG-14`, `ATM-GHOST-04`, `ATM-PERF-01`) |
+| Named `[x]` proven | 220 |
+| Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 356 (internal; not ticks) |
-| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 7 red Error Correct shells) |
+| Vitest seam stations | 219 (`tests/cases/<ATM-*>`; 0 red Error Correct shells + 56 channel-drift reds pending S6 audit) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -80,7 +80,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 7 | 7 | 0 |
-| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 7 | 7 |
+| `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 14 | 0 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
 | `ORDER` | Cascade rule ordering, determinism, & idempotence (P0) | 6 | 6 | 0 |
 | `VALID` | Emitted CSS must parse and mean something (P0) | 3 | 3 | 0 |
@@ -824,30 +824,30 @@ compiler contract.
 - [x] `ATM-DIAG-06` `[reference]` `[seam]` — **[Error Correct S1]**
   **Non-ASCII source and selectors must compile without panic, and columns must be counted in UTF-16 code units.**
   Station `ATM-DIAG-06`. An emoji before a style prop pins the refusal at 3:61 (UTF-16 61, scalar 60, bytes 63); the CJK/accented global selector paints; the unknown `_bogus` global condition carries its fragment source (`input/baseSystem.json:1:1`). `line_col` (`diagnostics/site.rs`) counts UTF-16 units with unit tests; the global walker threads the fragment source since this slice. Rust byte offsets and editor columns disagree for any non-ASCII file, which would make every diagnostic position wrong past the first multibyte character.
-- [ ] `ATM-DIAG-07` `[reference]` `[seam]` — **[Error Correct S5]**
+- [x] `ATM-DIAG-07` `[reference]` `[seam]` — **[Error Correct S5]**
   **Default compile must contain no dynamic, spread, harvest, or dead-branch diagnostics; opting into `'compiler'` returns them only in `compilerDiagnostics`.**
   Station `ATM-DIAG-07`. Input mixes dynamic refusals, an unfoldable spread, harvest-sink positions, and a dead branch. The default `diagnostics` array carries none of them; `compile()` with `logs: ['compiler']` returns them in the separate `compilerDiagnostics` array while `diagnostics` stays clean. Wire shape per architect Q2 (`VOYAGE-LOG-2.md`): additive-optional extension of the frozen contracts, no schema bump — `logs?` threaded through the request, `compilerDiagnostics?` populated only when requested, default bytes identical. `debug: true` does not enable this channel. Greens in Slice 5.
-- [ ] `ATM-DIAG-08` `[reference]` `[seam]` — **[Error Correct S2/S4]**
+- [x] `ATM-DIAG-08` `[reference]` `[seam]` — **[Error Correct S2/S4]**
   **A static runtime query predicted from source and present in final `stylePlans` must keep userspace silent.**
-  Station `ATM-DIAG-08`. Diagnostics independently predicts the exact lookup key for a static `css()` declaration; the same key is present in the final runtime style plans; no userspace diagnostic is emitted. The prediction is observable on the opt-in compiler channel. Presence anywhere — another file, another site, harvest — counts (see `ATM-DIAG-10`). Greens in Slices 2 (expectations) and 4 (proof).
+  Station `ATM-DIAG-08`. Diagnostics independently predicts the exact lookup key for a static `css()` declaration; the same key is present in the final runtime style plans; no userspace diagnostic is emitted. The prediction is observable on the opt-in compiler channel. Presence anywhere — another file, another site, harvest — counts (see `ATM-DIAG-10`). Greens in Slices 2 (expectations), 4 (proof), and 5 (channel).
 - [x] `ATM-DIAG-09` `[reference]` `[seam]` — **[Error Correct S4]**
   **A static runtime query predicted from source but absent from final `stylePlans` must emit one located non-fatal warning naming that exact declaration.**
   Station `ATM-DIAG-09`. The warning carries `file:line:col` of the source site and names the exact `prop: value` lookup that will emit no class, plus the actionable resolve reason when a resolver fact proves one. The Slice 0 witness hunt names the first proven witness (prime suspect: `ATM-W-UNKNOWN-CONDITION`, which warns and drops the whole want); if the hunt closes with zero witnesses, the proof engine still lands with unit tests and userspace gains no new warning yet. Greens in Slice 4.
 - [x] `ATM-DIAG-10` `[reference]` `[seam]` — **[Error Correct S4]**
   **A diagnosed site that contributes no plan must stay silent when another source or harvest contributes the exact key.**
   Station `ATM-DIAG-10`. The site's own value is refused (dynamic), but the exact lookup key it implies is present in final plans via another file, site, or harvest mint — runtime paints, so userspace hears nothing (incidental-coverage rule). The coverage join is observable on the opt-in compiler channel. Greens in Slice 4.
-- [ ] `ATM-DIAG-11` `[reference]` `[seam]` — **[Error Correct S2/S5]**
+- [x] `ATM-DIAG-11` `[reference]` `[seam]` — **[Error Correct S2/S5]**
   **Unknown values must never become userspace warnings.**
   Station `ATM-DIAG-11`. Identifiers, members, `` `${n}px` ``, `` `${color}` ``, calls, `a + b`, and spreads are compiler-channel facts (dynamic-shape records), never default-channel warnings — runtime looks up the evaluated value, not the syntax, so no exact absent key can be proved. Greens in Slices 2 (classification) and 5 (channel move).
-- [ ] `ATM-DIAG-12` `[reference]` `[seam]` — **[Error Correct S2]**
+- [x] `ATM-DIAG-12` `[reference]` `[seam]` — **[Error Correct S2]**
   **Imported `css()` and traced JSX must produce the same expected key for equivalent declarations; native `style` and `globalCss` must produce none.**
-  Station `ATM-DIAG-12`. Equivalent declarations on the two runtime style-query surfaces predict byte-identical expected keys; surfaces that do not use the runtime style-plan lookup (`style`, `globalCss`, static CSS config, recipe tables) emit no expected-key facts. Existing fatal diagnostics on those surfaces continue through their current paths. Greens in Slice 2.
+  Station `ATM-DIAG-12`. Equivalent declarations on the two runtime style-query surfaces predict byte-identical expected keys; surfaces that do not use the runtime style-plan lookup (`style`, `globalCss`, static CSS config, recipe tables) emit no expected-key facts. Existing fatal diagnostics on those surfaces continue through their current paths. Greens in Slice 2 and 5 (channel).
 - [x] `ATM-DIAG-13` `[reference]` `[seam]` — **[Error Correct S3]**
   **Extract, harvest, resolve, and host facts must retain one site identity, deterministic ordering, stable codes, and no duplicate final line.**
   Station `ATM-DIAG-13`. One authored site yields one site identity across phases; final output is deterministically ordered with stable `ATM-*` codes and no duplicate lines. Regression net for the Objective 1 carry-forward (hover usages emitting exactly 2 file-less warnings each) and the Obj-1 ×2 double-emit formatting bug. Zero non-diagnostic artifact drift on existing station goldens. Greens in Slice 3.
-- [ ] `ATM-DIAG-14` `[reference]` `[seam]` — **[Error Correct S2]**
+- [x] `ATM-DIAG-14` `[reference]` `[seam]` — **[Error Correct S2]**
   **`.ts`, `.tsx`, `.js`, and `.jsx` must use the one compiler parse; JSX mode, parse errors, and UTF-16 locations must not drift between extraction and diagnostics.**
-  Station `ATM-DIAG-14`. The same declaration across all four source modes yields identical extraction and identical diagnostics expectations; diagnostics borrows the compiler's parsed programs and adds no parse of its own (architect Q3: the single-parse rule binds the Atomic Oxc pipeline plus the new analysis; the StyleTrace dependency-boundary parse is grandfathered). Greens in Slice 2.
+  Station `ATM-DIAG-14`. The same declaration across all four source modes yields identical extraction and identical diagnostics expectations; diagnostics borrows the compiler's parsed programs and adds no parse of its own (architect Q3: the single-parse rule binds the Atomic Oxc pipeline plus the new analysis; the StyleTrace dependency-boundary parse is grandfathered). Greens in Slice 2 and 5 (channel).
 
 ### Forbidden Architectural Patterns
 

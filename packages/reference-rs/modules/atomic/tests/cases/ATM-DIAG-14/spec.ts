@@ -1,10 +1,10 @@
 /**
- * Source-modes station (ATM-DIAG-14, Error Correct Slice 2, red shell).
+ * Source-modes station (ATM-DIAG-14, Error Correct Slice 2 + 5 channel).
  * .ts/.tsx/.js/.jsx use the one compiler parse; JSX mode, parse errors,
  * and UTF-16 locations do not drift between extraction and diagnostics.
- * RED: diagnostics has no independent analysis over the shared parse yet,
- * so per-mode expectation agreement is unobservable — the opt-in channel
- * assertions fail until Slice 2 lands the analysis.
+ * The opt-in `compilerDiagnostics` channel (`logs: ['compiler']`) records
+ * per-mode expected-key facts; the themeColor position pin reads that
+ * channel (R2 re-point — dynamic refusals ride opt-in, not default).
  */
 import { expect } from 'vitest'
 import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -36,8 +36,16 @@ const spec: AtomicCaseSpec = {
       ).toBe(true)
     }
 
+    // Opt-in first: the compiler channel records per-mode expectations.
+    const optIn = await compileCase('ATM-DIAG-14', {
+      logs: ['compiler'],
+    } as unknown as Parameters<typeof compileCase>[1])
+    const channel = (optIn as unknown as { compilerDiagnostics?: ChannelDiagnostic[] })
+      .compilerDiagnostics
+    expect(channel, 'opt-in compiler channel records per-mode expectations').toBeDefined()
+
     // UTF-16 extract position past the emoji (byte-based would read 56).
-    const warnings = (result.diagnostics ?? []).filter(d => d.severity === 'warning')
+    const warnings = (channel ?? []).filter(d => d.severity === 'warning')
     const theme = warnings.find(
       d => d.message.includes("'themeColor'") && (d.file ?? '').endsWith('unicode.ts')
     )
@@ -55,13 +63,7 @@ const spec: AtomicCaseSpec = {
     expect(parseError!.line).toBeGreaterThan(0)
     expect(parseError!.column).toBeGreaterThan(0)
 
-    // RED HINGE: per-mode expectation agreement on the opt-in channel.
-    const optIn = await compileCase('ATM-DIAG-14', {
-      logs: ['compiler'],
-    } as unknown as Parameters<typeof compileCase>[1])
-    const channel = (optIn as unknown as { compilerDiagnostics?: ChannelDiagnostic[] })
-      .compilerDiagnostics
-    expect(channel, 'opt-in compiler channel records per-mode expectations').toBeDefined()
+    // Per-mode expectation agreement on the opt-in channel.
     for (const [file] of MODE_VALUES) {
       const facts = channel!.filter(d => (d.file ?? '').endsWith(file))
       expect(facts.length, `expected-key facts for ${file}`).toBeGreaterThan(0)

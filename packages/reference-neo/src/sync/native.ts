@@ -7,6 +7,7 @@ import type {
   NativeCompileRequest,
   NativeRuntimeArtifact,
 } from '@reference-ui/rust/contracts'
+import type { LogChannel } from '../config/types.ts'
 
 // Kept for compile-files.ts, which still collects include-scoped sources;
 // the frozen request carries roots plus include globs instead of files.
@@ -22,6 +23,11 @@ export interface NativeSourceFile {
  */
 export interface ScopedCompileRequest extends NativeCompileRequest {
   include: string[]
+  /**
+   * Opt-in diagnostic channels (S5 backchannel). Carried structurally like
+   * `include`: undefined drops from the serialized request when unset.
+   */
+  logs?: LogChannel[]
 }
 
 export interface NativeDiagnostic {
@@ -46,6 +52,13 @@ export interface NativeCompileResult {
    * treats a missing field as no traced hosts.
    */
   tracedJsxHosts?: string[]
+  /**
+   * Compiler-channel diagnostics, present only when `logs` requested them.
+   * The engine omits this field for userspace-only compiles; sync prints
+   * its entries as `[neo] compiler` lines without touching the userspace
+   * warning collapse.
+   */
+  compilerDiagnostics?: NativeDiagnostic[]
 }
 
 interface AtomicModule {

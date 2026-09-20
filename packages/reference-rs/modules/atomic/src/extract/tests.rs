@@ -5,15 +5,36 @@
 use crate::{compile, CompileRequest, VirtualSource};
 
 fn compile_code(code: &str) -> crate::CompileResult {
+    compile_code_inner(code, None)
+}
+
+fn compile_code_logs(code: &str) -> crate::CompileResult {
+    compile_code_inner(code, Some(vec!["compiler".to_string()]))
+}
+
+fn compile_code_inner(code: &str, logs: Option<Vec<String>>) -> crate::CompileResult {
     let req = CompileRequest {
         files: Some(vec![VirtualSource {
             path: "test.tsx".to_string(),
             content: code.to_string(),
         }]),
         base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs,
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
+}
+
+/// Channel lines carrying this code. The backchannel also carries analysis
+/// telemetry, so moved-line assertions filter by code.
+fn channel_for(res: &crate::CompileResult, code: crate::DiagnosticCode) -> Vec<crate::Diagnostic> {
+    res.compiler_diagnostics
+        .as_deref()
+        .expect("compiler channel requested")
+        .iter()
+        .filter(|diag| diag.code == code)
+        .cloned()
+        .collect()
 }
 
 /// True when the want was minted by harvest (the §2 floor), not the site walk.
@@ -145,7 +166,7 @@ fn test_nested_conditions() {
 
 #[test]
 fn test_dynamic_properties_keep_siblings() {
-    let res = compile_code(
+    let res = compile_code_logs(
         r#"
         import { css } from '@reference-ui/styled';
         const styles = css({
@@ -159,18 +180,16 @@ fn test_dynamic_properties_keep_siblings() {
     assert_eq!(res.wants[0].value.to_string(), "red");
     // The refused width is a sink, but the pool holds only `red`, which the
     // kind gate refuses onto a length prop: one warning, one zero-count info.
-    assert_eq!(res.diagnostics.len(), 2);
-    assert_eq!(
-        res.diagnostics[0].code,
-        crate::DiagnosticCode::DynamicMember
-    );
-    assert_eq!(res.diagnostics[1].code, crate::DiagnosticCode::HarvestSink);
+    // Both ride the compiler channel now; userspace stays silent.
+    assert!(res.diagnostics.is_empty());
+    let members = channel_for(&res, crate::DiagnosticCode::DynamicMember);
+    assert_eq!(members.len(), 1);
+    let harvests = channel_for(&res, crate::DiagnosticCode::HarvestSink);
+    assert_eq!(harvests.len(), 1);
     assert!(
-        res.diagnostics[1]
-            .message
-            .contains("width under []: 0 harvested values minted"),
+        harvests[0].message.contains("width under []: 0 harvested values minted"),
         "{}",
-        res.diagnostics[1].message
+        harvests[0].message
     );
 }
 
@@ -393,7 +412,7 @@ fn test_baked_object_entry_never_resolves_stale() {
     // ghosting. Harvest still mints the program's literals onto the refused
     // sink (Forge §2/§3: both colors harvest; which is live is a write
     // question) — those wants carry the harvest origin, never the site's.
-    let res = compile_code(
+    let res = compile_code_logs(
         r#"import { css } from '@reference-ui/react';
         let red = 'red';
         const theme = { primary: red };
@@ -413,7 +432,11 @@ fn test_baked_object_entry_never_resolves_stale() {
         .wants
         .iter()
         .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
-    assert!(!res.diagnostics.is_empty());
+    assert!(res.diagnostics.is_empty());
+    let members = channel_for(&res, crate::DiagnosticCode::DynamicMember);
+    assert_eq!(members.len(), 1);
+    let harvests = channel_for(&res, crate::DiagnosticCode::HarvestSink);
+    assert_eq!(harvests.len(), 1);
 }
 
 #[test]
@@ -422,7 +445,7 @@ fn test_destructured_name_never_resolves_stale() {
     // from a written object strip with it — the stale leaf never resolves
     // at the site. Harvest still mints the program's literals onto the
     // refused sink (Forge §2/§3) under the harvest origin, never the site's.
-    let res = compile_code(
+    let res = compile_code_logs(
         r#"import { css } from '@reference-ui/react';
         let theme = { primary: 'red' };
         const { primary } = theme;
@@ -442,22 +465,27 @@ fn test_destructured_name_never_resolves_stale() {
         .wants
         .iter()
         .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
-    assert!(!res.diagnostics.is_empty());
+    assert!(res.diagnostics.is_empty());
+    let idents = channel_for(&res, crate::DiagnosticCode::DynamicIdentifier);
+    assert_eq!(idents.len(), 1);
+    assert!(idents[0].message.contains("'primary'"), "{}", idents[0].message);
 }
 
 #[test]
 fn test_delete_poison_never_resolves_stale() {
     // Soundness net for `delete` as a write (SPEC-V2-81): the deleted init
     // drops exactly like an assignment, with a diagnostic naming the delete.
-    let res = compile_code(
+    let res = compile_code_logs(
         r#"import { css } from '@reference-ui/react';
         const o = { color: 'red' };
         delete o.color;
         export const a = css({ color: o.color });"#,
     );
     assert!(res.wants.is_empty());
-    assert_eq!(res.diagnostics.len(), 1);
-    assert!(res.diagnostics[0].message.contains("deleted at"));
+    assert!(res.diagnostics.is_empty());
+    let poisoned = channel_for(&res, crate::DiagnosticCode::MutatedBinding);
+    assert_eq!(poisoned.len(), 1);
+    assert!(poisoned[0].message.contains("deleted at"));
 }
 
 #[test]

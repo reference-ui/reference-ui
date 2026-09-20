@@ -1,0 +1,8 @@
+{
+  "borderWidth:2r": "@reference-ui/lib__bd-w_2r",
+  "height:2r": "@reference-ui/lib__h_2r",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "padding:2r": "@reference-ui/lib__p_2r",
+  "width:2r": "@reference-ui/lib__w_2r"
+}

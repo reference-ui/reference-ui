@@ -27,6 +27,8 @@ struct NativeCompileRequest {
     #[serde(default)]
     include: Option<Vec<String>>,
     #[serde(default)]
+    logs: Option<Vec<String>>,
+    #[serde(default)]
     base_system: Option<serde_json::Value>,
     #[serde(default)]
     spec: Option<serde_json::Value>,
@@ -55,6 +57,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
         jsx_hosts: req.jsx_hosts,
         declaration_root: req.declaration_root,
         include: req.include,
+        logs: req.logs,
     };
     let result = ::atomic::compile(&compile_req).map_err(napi::Error::from_reason)?;
     serialize(&result)
@@ -104,6 +107,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
         recipes: Vec::new(),
         atom_count: 0,
         traced_jsx_hosts: Vec::new(),
+        compiler_diagnostics: None,
     }
 }
 
