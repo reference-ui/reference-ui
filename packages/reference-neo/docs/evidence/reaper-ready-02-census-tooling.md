@@ -46,7 +46,7 @@ The per-sink `offered` lists (kind-accepted values, pre-twin-skip) exist only in
 
 Recommended Slice 1 reader for pool-by-kind + offered/gross: a `#[cfg(test)]` helper
 that calls `collect_pool` + `classify_harvest_value` over the **committed fixture files**
-(read from `tests/fixtures/reaper-enterprise/`, not inlined — no duplication, R3
+(read from `tests/fixtures/harvest-enterprise/`, not inlined — no duplication, R3
 reproducible) and prints/asserts the kind table. Runs under `pnpm agentrs c atomic`.
 No API change, no compile option, no new fact.
 
@@ -59,7 +59,7 @@ the classifier.
 
 | Need | Form | Touches prod code? |
 |---|---|---|
-| Sink census + net-new | Test-only TS reader over `CompileResult` (`tests/reaper-census.test.ts`, ask 1) | No |
+| Sink census + net-new | Test-only TS reader over `CompileResult` (`tests/harvest-census.test.ts`, ask 1) | No |
 | Pool by kind + gross/offered | Test-only Rust reader over the fixture dir (`#[cfg(test)]`) | No |
 | Leaf-only vs unbound bound | Join of the two (ask 3) | No |
 

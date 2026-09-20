@@ -67,9 +67,9 @@ today"; the fixture answers "what does harvest cost a messy app".
 
 ## Proposed folder
 
-- Fixture sources: `packages/reference-rs/modules/atomic/tests/fixtures/reaper-enterprise/src/`
+- Fixture sources: `packages/reference-rs/modules/atomic/tests/fixtures/harvest-enterprise/src/`
   (`tests/fixtures/` exists today for JSON; a source subdir is new but consistent).
-- Committed reader: `packages/reference-rs/modules/atomic/tests/reaper-census.test.ts`
+- Committed reader: `packages/reference-rs/modules/atomic/tests/harvest-census.test.ts`
   (fits `vitest.config.ts` include `tests/**/*.test.ts`; precedent: `seam.test.ts`,
   `merge-eviction.test.ts` at the same level).
 - Rejected: a `tests/cases/` folder — cases are stations and Slice 1 mints none; and a
