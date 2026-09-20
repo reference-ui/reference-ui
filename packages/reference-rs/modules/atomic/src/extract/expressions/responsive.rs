@@ -6,7 +6,9 @@
 //! Both forms recurse through `walk_expression`, so ternaries, constants,
 //! and null holes behave exactly as they do on scalar props.
 
-use oxc_ast::ast::{ArrayExpression, ArrayExpressionElement, ObjectExpression, ObjectPropertyKind};
+use oxc_ast::ast::{
+    ArrayExpression, ArrayExpressionElement, Expression, ObjectExpression, ObjectPropertyKind,
+};
 use oxc_span::GetSpan;
 use smallvec::SmallVec;
 
@@ -145,8 +147,112 @@ pub fn walk_object(
                 format!("property '{path}' drops a dynamic arm with no static style value"),
             );
         }
+        if refuse_leaf_important(ctx, &key, &prop.value) {
+            // Diagnosed above; the refused leaf pushes no want (ATM-LEAF-11)
+            continue;
+        }
         let mut entry_when = when.clone();
         entry_when.push(key.into());
         walk_expression(ctx, &prop.value, &entry_when);
+    }
+}
+
+/// Refuse a `!` marker on one responsive-object leaf. The whole-object plan
+/// carries a single important flag, so a per-leaf marker could never be
+/// served and used to paint plain in silence. True when refused: the call
+/// site skips the leaf, so no want pushes and no orphan `!` class mints.
+/// Detection mirrors plan capture (`ast_to_json_value`): it fires exactly
+/// where the capture would drop the flag — string and template leaves plus
+/// transparent wrappers — while branching and dynamic leaves keep their own
+/// proof-level diagnosis. Default-visible, naming prop + leaf key.
+fn refuse_leaf_important(
+    ctx: &mut ExpressionWalk<'_>,
+    key: &str,
+    value: &Expression<'_>,
+) -> bool {
+    if ctx.important {
+        return false;
+    }
+    let flagged = super::ast_value::ast_to_json_value(value, ctx.scopes)
+        .is_some_and(|(_, important)| important);
+    if !flagged {
+        return false;
+    }
+    let prop = ctx.prop;
+    ctx.warn_default(
+        value.span(),
+        DiagnosticCode::ResponsiveLeafImportant,
+        format!(
+            "`!` on leaf '{key}' of prop '{prop}' is not honored: responsive style plans carry one important flag per object, so this serves the non-important class; remove the `!` or move it to a scalar prop"
+        ),
+    );
+    true
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_code(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A `!` responsive leaf warns on default naming prop + leaf, pushes no
+    /// want, and leaves sibling leaves extracting (ATM-LEAF-11).
+    #[test]
+    fn responsive_leaf_important_refuses_with_diagnostic_and_skips_want() {
+        let res = compile_code(
+            "import { css } from '@reference-ui/styled';\
+             export const cls = css({ width: { base: '50px!', md: '60px' }, color: 'red' });",
+        );
+        let hits: Vec<_> = res
+            .diagnostics
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::ResponsiveLeafImportant)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert!(hits[0].message.contains("'width'"), "names prop: {}", hits[0].message);
+        assert!(hits[0].message.contains("'base'"), "names leaf: {}", hits[0].message);
+        assert!(
+            res.wants.iter().all(|w| !(&*w.prop == "width" && w.important)),
+            "refused leaf pushes no important want: {:?}",
+            res.wants
+        );
+        assert!(
+            res.wants.iter().any(|w| &*w.prop == "width"
+                && w.value.to_string() == "60px"
+                && w.when.as_slice() == &["md".into()]),
+            "sibling leaf still extracts: {:?}",
+            res.wants
+        );
+        assert!(
+            res.wants.iter().any(|w| &*w.prop == "color"),
+            "sibling prop still extracts: {:?}",
+            res.wants
+        );
+        assert!(
+            !res.stylesheet.contains("50px !important"),
+            "no orphan `!` class mints"
+        );
+    }
+
+    /// Plain responsive leaves stay silent: the refusal fires on `!` only.
+    #[test]
+    fn responsive_object_without_important_stays_silent() {
+        let res = compile_code(
+            "import { css } from '@reference-ui/styled';\
+             export const cls = css({ width: { base: '50px', md: '60px' } });",
+        );
+        assert!(
+            res.diagnostics.iter().all(|d| d.code
+                != crate::diagnostics::DiagnosticCode::ResponsiveLeafImportant),
+            "unexpected refusal: {:?}",
+            res.diagnostics
+        );
     }
 }

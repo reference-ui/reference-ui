@@ -19,6 +19,9 @@ Do not mark `COMPLETE` because a wave finished.
 - 2026-09-20 watch: wave 1 now 3 finds: (a) IN-BOUNDS, refuse-with-diagnostic → fortify crew on ATM-LEAF-11; (c) IN-BOUNDS, tighten-policy → fortify crew on policy.rs + TST-EXT-01; (b) BREAK-FOUND (unknown-prop typo silently missed) → architect ruling. Next: fortify landings → chain reviews → commits → wave 2.
 - 2026-09-20 06:03 tick: Obj-1/2 COMPLETE; wave 1: (a) ruling IN-BOUNDS/refuse → fortify quiet ~15 min, zero writes, ping outstanding (threshold: silent next tick → unstick); (c) ruling IN-BOUNDS/tighten → fortify writing (policy.rs + tests + TST-EXT-01); (b) ruling IN-BOUNDS/carve-out → fortify dispatched. 3 doom reports filed. Live crews: 2 (+1 just spawned). Next: landings → chain reviews → 3 commits → wave 2.
 - 2026-09-20 watch: both wave-1 fortify crews EXITED answering vitals pings (ping-exit pattern now systemic — 4th/5th cases). STANDING ADAPTATION: no more vitals pings to working crews; liveness via log writes + work products only (substance of the deadlock test preserved). Replaced both (a: clean restart; c: continues from partial tree state, all priors re-verified). Fortify (b) still on first crew. Next: landings → chain reviews → 3 commits → wave 2.
+- 2026-09-20 watch: W1c COMMITTED (c361dd7c2, 83 files — tasty tighten VERIFIED). Shared-tree incident self-resolved (306 sweep gone, walk/mod.rs holds (a)'s fix). Chain (a) reviewing; fortify (b) building. Watch item for chain (b): ledger userspace 6→9 shift — confirm it matches ruling (b)'s C1-note authorization vs scope drift. Next: chain (a) verdict → commit (a); (b) landing → chain → commit; then wave 2.
+- 2026-09-20 06:20 tick: chain (a) reviewing, fortify (b) building (carve-out + DIAG-05 + SITE re-points + ledger in tree, 24 paths); no verdicts/landings yet, both running, no deadlock, no pings sent. Peer files untouched. Next: chain (a) verdict → commit (a); (b) landing → chain → commit; then wave 2.
+- 2026-09-20 watch: chain (a) VERIFIED (refusal fires, LEAF-11 green, orphan decision pinned). Commit ORDER ruling: SPEC.md mixes (a)+(b) hunks, so (a)'s commit holds until (b) chain-verifies — then (a) lands (code+station+report+log, no SPEC) immediately followed by (b) (files+SPEC carrying both verified hunks+report+log), messages cross-referenced. No file surgery, no captain implementation. Next: (b) landing → chain (b) → commits (a),(b) → wave 2.
 
 ## Waves
 
@@ -312,6 +315,261 @@ enforced — plain user imports stay local unless re-export-bridged,
 library hops are same-package-only. Captain: commit the 81 tasty paths;
 re-check for `agentrs f` formatter collateral at commit time (absent
 now); `dist/` is untracked build output, nothing to commit there.
+
+### Wave 1, find (a) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole arc re-verified firsthand by
+this oracle; no implementation, no fixes, no commits. (a) files only —
+sibling (b)/(c) files never touched or adjudicated (write-set audited
+via `git status` paths + content grep: the 6 `ResponsiveLeafImportant`
+touchpoints are exactly the fortify landing's list; `policy/mod.rs`,
+`channels/mod.rs`, DIAG-05/SITE-20/49/83, all of `tasty/`, and the
+DIAG-05 SPEC hunk are sibling-owned and were read-only for attribution).
+
+**1. Finder repro** (`/tmp/doom-wave1-resp-important-repro.mts`,
+unmodified, fresh 06:16 `dist/native` darwin-x64 binding on this x86_64
+box): no longer silent and no longer BREAK — compile now emits exactly
+one default `ATM-W-RESPONSIVE-LEAF-IMPORTANT` naming `width`+`base`,
+located `src/probe.ts:2:39` (the leaf span), served plain
+`@reference-ui/lib__w_50px` as the diagnosed fallback. Exit 1 survives
+ONLY on the two setup premises (important want exists, `!` rule
+minted) — pre-fix keep-physics the ruling explicitly left open and the
+landing decided as skip. Post-fix contract proved instead by
+`/tmp/doom-wave1a-fortify-verify.mts` (exit 0 firsthand: 1 default
+diagnostic, 0 width wants, no orphan, plain fallback served).
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c atomic`
+458/458 green (incl. the 2 new refusal unit tests);
+`pnpm agentrs v atomic -t "LEAF-11"` 1 passed / 283 skipped;
+FULL `pnpm agentrs v atomic` 284/284 green (11 files, incl. LEAF-09 keep
++ injectivity-quarantine 4/4 + all 237 stations). Zero peer drift at
+review time — the 5 (b)-migration failures the landing saw are gone
+((b)'s specs+goldens have since landed in-tree); nothing to attribute,
+nothing absorbed. Scope probe re-run post-fix: A/B/D still loud at
+runtime (correctly untouched), C array precedent (`ATM-W-MISSING-STYLE-PLAN`)
+intact, E template leaf now refuses with the new diagnostic + plain
+fallback served. Quality: `agentrs q` on the 3 touched `.rs` files —
+0 violations, 3 soft warnings (walk_fallback cognitive pre-existing;
+codes.rs 368 table-by-design; walk/mod.rs 373 — the +16 helper pushed it
+8 over the 365 *soft* limit, gate still passes; splitting the walker
+for a soft warning would be scope creep, noted not gap).
+
+**3. Orphan-mint decision: warn-and-SKIP, matches the ruling's
+guidance, written down, pinned.** Ruling preferred exception-free
+LEAF-09 "unless skipping is clearly cleaner" — fortify measured
+warn-and-keep colliding under the single `width:50px` css.classes key
+(injectivity gauge) and chose skip. Written in SPEC (LEAF-09 narrow
+exception + LEAF-11 rule + registry + 10→11), in code docs
+(`responsive.rs`, `codes.rs` variant doc), and pinned three ways:
+station spec (no `__w_50px!`, no `50px !important`, plain fallback
+served), cargo unit test (no important width want, siblings extract),
+goldens (css.json 3 plain classes incl. single `width:50px`→plain key;
+diagnostics.json exactly-1 located refusal at 4:18 = the leaf span;
+styles.css plain `width: 50px`, zero `!important`) — each attested
+firsthand above, not trusted from the landing.
+
+**4. Diff review (line-by-line, (a) write-set):** `responsive.rs` —
+one call-site `if refuse_leaf_important { continue }` in `walk_object`
+(the sole funnel: only caller is `walk/branch.rs:38`, so css()+JSX+
+conditions share the rule; arrays route through `walk_array`, untouched
+per the ruling) + 23-line helper + 2 tests. Detection is
+mirror-by-construction: it calls the identical `ast_to_json_value`
+whose `convert_object` drops nested flags (`(v, _)`, `false`) — refusal
+fires definitionally exactly on the silent set, pure/read-only call, no
+side effects. `ctx.important` guard verified correct-and-vacuous: all
+production constructors pass `false`, and a site-level-important plan
+would carry `important=true` anyway (leaf `!` honored, no refusal
+owed). Ternary-leaf bypass verified sound: branching leaves route via
+`ast_to_json_values` per-arm flags (the ATM-SITE-64 honor path), so no
+refusal is owed there either. `codes.rs` — enum variant + doc,
+CODE_TABLE 45→46 appended row (both-directions table, no drift),
+round-trip test extended. `walk/mod.rs` — `warn_default` only caller is
+the new rule; direct-push keeps default without a session fact, so
+`policy/mod.rs` stays untouched (zero (b) collision — confirmed by
+grep). SPEC (a) hunks only (LEAF count/exception/rule/registry); the
+DIAG-05 hunk in the same file is (b)'s, not adjudicated. Untouched as
+ordered: neo, lib, core (zero paths in status), `ast_value.rs`,
+`runtime/`, S2 `structured.rs` (`nested_shapes_stay_raw` — eviction pin
+still valid), finder report. No existing test touched by (a), none
+weakened; no existing golden moved by (a) (only new LEAF-11 outputs) —
+no blanket bless.
+
+**5. Contract holds in refused form.** The finder's violated pair
+(ATM-LEAF-09 `!`→`Want.important` + per-leaf importance silently
+resolving to weaker CSS) is now: per-leaf `!` on responsive objects is
+impossible-by-grammar (five-tuple one-bool, stated in SPEC), refused
+loudly on default naming prop + leaf, leaf skipped, plain served as a
+diagnosed fallback. Silence is gone at the layer that owed the signal.
+Captain: commit the (a) write-set (3 `.rs` + SPEC (a) hunks + new
+ATM-LEAF-11 dir) — SPEC.md is shared with (b), commit jointly or split
+by hunk; `dist/` untracked, nothing to commit there.
+
+### Wave 1, find (b) — fortify landing
+
+**Status: LANDED.** Ruling followed exactly: partition carve-out in
+`Policy::classify` (extract facts carrying `DiagnosticCode::UnknownProperty`
+→ Userspace); proof's F2 exclusion untouched (`proof/render.rs` zero diff);
+no sites threaded into causeless; sibling rows (scalar conditions, unknown
+`r` breakpoints) untouched — still channel-only, still doom fodder.
+
+**Fix (one code, one verdict path).** All three unknown-prop gates
+(`object/mod.rs:185`, `lower.rs:110`, `call_lower.rs:119`) warn through
+plain `ctx.warn` → `ExtractNote` (verified: no funnel arm emits this code
+today); the carve-out covers note AND funnel arms anyway per the ruling.
+Shape note: instead of a nested OR-pattern (which tripped the q cognitive
+advisory at 16), the table routes extract facts through
+`extract_audience` + `is_unknown_prop_extract`, mirroring the existing
+`resolve_audience` + `is_false_refusal` split — same one-code verdict,
+baseline q complexity preserved. The restored signal is the pushed
+located legacy sentence kept on default (never re-rendered), so
+byte-identity to pre-S5 holds by construction (SITE-20 golden diffed
+byte-identical to `0eab0bdde`; DIAG-05/49/83 goldens are its
+UNKNOWN-PROPERTY elements in pre-S5 order).
+
+**Pins.** (1) ATM-DIAG-05 extended, no new station: default length exactly
+1 (frobnicate `ATM-W-UNKNOWN-PROPERTY` + message + `precise.ts:10:3`),
+other ten refusals channel-only (length 10 + zero-UnknownProperty assert
++ per-row position loop), five sink infos unchanged, line-94 rationale
+rewritten. (2) Rust unit `channels::tests::unknown_prop_notes_keep_the_
+default_line` (default kept + channel empty). (3) Re-points attested per
+pair: SITE-49 (3 unknown-prop → default, 4 unfoldable-key stay channel),
+SITE-83 (`css` → default, channel empty), SITE-20 adjudicated per line
+(two literals via O2 + one const spread via O34 return, global G6 stays —
+default 4, channel 0). (4) Ledger: O2/O34/O47 moved compiler→userspace
+(counts 6/90 → 9/87, C2 50→47, §Notes sentence updated) + SPEC DIAG-05
+channel note. FLAG: ruling said "Ledger C1" but the rows live in C2 —
+recorded the move there; oracle to confirm the label.
+
+**Ruling-list gap found via suite (not relitigation):** the named four
+stations were incomplete — ATM-DIAG-07 (`channel.ts:10:3` frobnicate) and
+ATM-DIAG-14 (`unicode.ts:3:29` frobnicate) also drift +1 default line.
+Both specs hold AS-WRITTEN (07's `isChannelItem` never covered this code;
+14's pins read channel-errors/parse-errors only), so golden-only
+restoration, attested per pair. Suite-wide drift census: exactly these 6
+stations; all other goldens (styles.css/css.json included) byte-stable.
+
+**Evidence.** Repro `/tmp/doom-t1-unknown-prop/run.mts` flips red→green
+(exit 0; default exactly 1 located line, gate warning off-channel,
+EXPECTED-LOOKUP stays channel, no double-warn). Census `/tmp/s6-census.mts`
+matches S6 exactly: default-0, channel 4100 (3743/252/105), book 253 /
+src 3847 / other 0, zero UnknownProperty on channel. Suites: `pnpm agentrs
+c atomic` 458/0 (incl. new pin + `unknown_props_defer_to_extracts_
+jurisdiction` guard green); `pnpm agentrs v atomic` 284/284 (11 files;
+incl. find-a's in-flight LEAF-11, green). Guards: NEO-SYNC-16 PASS,
+`pnpm agent vitest reference-neo` 224/224 (sync.test.ts 18/18 + staticCss
+pin green); neo fixtures grep-clean of unknown props. `agentrs q`: 0
+violations on all touched files; 1 advisory remains (channels/mod.rs 378
+lines vs 365 soft limit — the mandated test placement; any test there
+trips it, file was 359).
+
+**Must-NOTs honored:** no F2 lift, no causeless threading, no weakened
+tests (all re-points equal-or-stricter), no blanket goldens (6 targeted
+files, each line attested), no lib touch, finder report untouched.
+
+**Files (mine only, 13 + this section).** `diagnostics/policy/mod.rs`
+(carve-out), `diagnostics/channels/mod.rs` (1 unit test), DIAG-05
+spec+golden, SITE-49/83/20 spec+golden, DIAG-07/14 golden-only,
+`modules/atomic/SPEC.md` (DIAG-05 row), `docs/missions/error-correct-
+ledger.md` (O2/O34/O47 move + counts + note).
+
+**Incidents owned.** (1) `pnpm agentrs f` at ~06:11 exploded to 377
+modified files (prettier ran with DEFAULT config — double quotes —
+ignoring `.prettierrc`, plus aggressive rustfmt reflow; 234 css goldens
+hit). Fully reverted same-session (366 files), verified clean; chain
+review independently confirms generated dirs clean. Never run again —
+captain: the runner's fmt wiring needs a config fix before anyone uses
+it. (2) That bulk revert raced find-a's live `walk/mod.rs` edit and
+clobbered their just-added `warn_default` (~06:14, broke compile); they
+re-applied identical and the tree has been green since. Mine to own —
+sorry, crew (a). Future bulk operations on shared files: announce or
+scope-check first.
+
+### Wave 1, find (b) — chain review
+
+**Verdict: VERIFIED (commit-ready).** Whole (b) arc re-verified
+firsthand by this oracle (3 nested evidence workers + direct reruns of
+every claim); no implementation, no fixes, no commits. (b) files only —
+the (a) arc (responsive.rs, walk/mod.rs, codes.rs new row, ATM-LEAF-11
+dir, SPEC LEAF hunks) was never touched or re-adjudicated; SPEC.md
+hunks attributed per arc below. Peer-unrelated paths in the tree
+(`docs/ATOMIC.md`, `docs/missions/README.md`, untracked
+`docs/missions/operation-seize.md`, 2 untracked doom reports) belong to
+neither arc — captain commits them separately, not with (b).
+
+**1. Finder repro** (`/tmp/doom-t1-unknown-prop/run.mts`, unmodified,
+3606 bytes, mtime 05:56): exit 0 firsthand — default carries exactly 1
+located `ATM-W-UNKNOWN-PROPERTY` naming `frobnicate`
+(`typo.ts:4:3`), gate warning off-channel, `ATM-I-EXPECTED-LOOKUP`
+stays channel-only, `class=""` + 1 runtime dev warning (separate
+runtime layer, expected). Silence closed; no compile-side double-warn.
+
+**2. Suites** (repo runners, this session): `pnpm agentrs c atomic`
+458/458; `pnpm agentrs v atomic` 284/284 (11 files, 237 stations);
+`DIAG-05 -t` filter 1 passed / 283 skipped. Guard
+`unknown_props_defer_to_extracts_jurisdiction` green by name;
+channels pin `unknown_prop_notes_keep_the_default_line` green by name.
+`pnpm agentneo run NEO-SYNC-16` PASS; `pnpm agent vitest
+reference-neo` 224/224 (sync.test.ts incl. staticCss pin). Quality:
+`agentrs q` on policy+channels — 0 violations, 1 soft warning
+(channels 378 vs 365 soft limit from the mandated test placement;
+file was 359, gate passes). Zero failures anywhere — nothing to
+attribute, nothing absorbed.
+
+**3. Pins.** DIAG-05: default length exactly 1 (frobnicate code +
+message + 10:3 + file), other ten channel-only (length 10 +
+zero-UnknownProperty assert + per-row position loop over all ten —
+NON-OBJECT-CONDITION + UNKNOWN-BREAKPOINT sibling rows pinned
+channel-only, still doom fodder per ruling), five sink infos
+unchanged, line-94 rationale rewritten. SITE-49: default 0→3 per-line
+(file/line/severity/code/message/col 8), channel 7→4 with the four
+unfoldable-key asserts intact. SITE-83: default 0→1 matchObject
+(42:30), channel moved→0. SITE-20 adjudicated per line: global G6 line
+stays, three css-surface lines return (default 4, channel
+UNKNOWN-PROPERTY 0). All re-points equal-or-stricter; inputs
+untouched (zero `input/` paths in status).
+
+**4. Census** (`/tmp/s6-census.mts` firsthand): default-0, channel
+4100 (3743/252/105 with the 105 = 74+13+9+5+3+1), book 253 / src 3847
+/ other 0, zero UnknownProperty on channel — matches S6 exactly.
+
+**5. Ledger watch item — AUTHORIZED, not drift.** Every changed row
+examined: counts 6/90→9/87 (total 96), userspace header+prose (six
+resolve DROPs + three extract DROPs O2/O34/O47 with witnesses),
+3 added O-rows, compiler 90→87, C2 50→47 with move note, 3 removed
+C2 O-rows, "one legacy code" notes sentence (extract now userspace,
+static/global S1/G6 stay compiler — both rows confirmed unmoved).
+The ruling's "Ledger C1" label was a slip: C1 is walk/literal/
+responsive dynamic refusals (24, untouched in diff), the O-rows live
+in C2 where fortify recorded them. Substance matches the C1-note
+authorization exactly; label corrected, no gap.
+
+**6. Diff review.** policy/mod.rs: one code, one route
+(`ExtractOutcome|ExtractNote → extract_audience` +
+`is_unknown_prop_extract` covering note AND funnel arms; table shape
+mirrors the existing resolve split, q complexity preserved). All
+three gates warn via the note path (object/mod.rs:185 ctx.warn,
+lower.rs:108-112, call_lower.rs:117-121 walk.warn); full-grep audit:
+funnel (`warn_dynamic`, 14 sites) emits Dynamic*/MutatedBinding/
+TokenCallRefused/PartialObjectProp only — zero UnknownProperty, so
+the funnel arm is defensive-but-correct per the ruling. sinks.rs:143
+is a test asserting non-sink, not a gate. Zero diff: proof/render.rs
+(F2 stands), reference-neo, analysis, resolve/static/global emitters,
+channels/render.rs (restored signal is the pushed located sentence,
+never re-rendered). DIAG-07/14 golden-only justified as-written:
+07's `isChannelItem` never covered this code, 14's pins read errors
+only. SITE-20 golden verified byte-identical (order included) to
+pre-S5 `0eab0bdde`. No weakened tests, no blanket goldens (6
+targeted files), no lib touch, finder report untouched, generated
+dirs clean. SPEC.md: 5 hunks — 4×(a) (LEAF count, LEAF-09 exception,
+LEAF-11 bullet, registry row), 1×(b) (DIAG-05 carve-out sentence).
+
+**7. Contract holds.** DIAG-09 (exact absent keys warn userspace) +
+COND-17 precedent now satisfied for unknown props: the queried-and-
+missed exact key warns on default, located, while F2 jurisdiction
+(extract owns unknown props) stands un-overturned. Captain: commit
+the 13 (b) paths + this log section per the commit-ORDER ruling
+((a) first without SPEC, then (b) carrying SPEC with both verified
+hunks); keep the operation-seize docs + doom reports out of both.
 
 ## Useful
 

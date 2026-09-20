@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-RESPONSIVE-LEAF-IMPORTANT",
+    "message": "`!` on leaf 'base' of prop 'width' is not honored: responsive style plans carry one important flag per object, so this serves the non-important class; remove the `!` or move it to a scalar prop",
+    "file": "input/src/css.ts",
+    "line": 4,
+    "column": 18
+  }
+]
