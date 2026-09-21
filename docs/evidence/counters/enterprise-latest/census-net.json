@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "calls": {
+    "open": {
+      "count": 15407,
+      "totalNs": 239352838
+    },
+    "openat": {
+      "count": 27,
+      "totalNs": 127584
+    },
+    "close": {
+      "count": 15405,
+      "totalNs": 11615333
+    },
+    "read": {
+      "count": 30529,
+      "totalNs": 25721990,
+      "bytes": 5885471
+    },
+    "pread": {
+      "count": 439,
+      "totalNs": 465044,
+      "bytes": 2940999
+    },
+    "readv": {
+      "count": 0,
+      "totalNs": 0,
+      "bytes": 0
+    },
+    "write": {
+      "count": 389,
+      "totalNs": 3829665,
+      "bytes": 10577084
+    },
+    "pwrite": {
+      "count": 0,
+      "totalNs": 0,
+      "bytes": 0
+    },
+    "writev": {
+      "count": 0,
+      "totalNs": 0,
+      "bytes": 0
+    },
+    "stat": {
+      "count": 3882,
+      "totalNs": 9542808
+    },
+    "lstat": {
+      "count": 324,
+      "totalNs": 723986
+    },
+    "fstat": {
+      "count": 70,
+      "totalNs": 64548
+    },
+    "lseek": {
+      "count": 0,
+      "totalNs": 0
+    },
+    "mmap": {
+      "count": 336,
+      "totalNs": 919835,
+      "bytes": 8795586560
+    },
+    "munmap": {
+      "count": 651,
+      "totalNs": 4561077
+    }
+  }
+}

@@ -1,12 +1,14 @@
 /**
- * Native artifact handling for `pnpm agentrs alloc`.
+ * Native artifact handling for `pnpm agentrs alloc` and `pnpm agentrs counters`.
  *
  * It takes the reference-rs checkout and emits descriptors for both binaries
- * the capture needs: the shipped release `.node` (via ensure-native, owned by
- * run.mjs) and the release+alloc-trace instrument build, compiled by napi into
- * a hash-keyed directory under dist/native-trace/. The trace cache keys on
- * the same Cargo inputs hash as ensure-native, so it rebuilds exactly when
- * the Rust sources drift, and dist/native is never touched.
+ * each capture needs: the shipped release `.node` (via ensure-native, owned by
+ * run.mjs) and the feature-gated instrument build, compiled by napi into a
+ * hash-keyed directory under dist/native-trace/. The alloc trace keeps the
+ * bare hash directory; the counters build takes a `-counters` suffix so the
+ * two features never collide. The cache keys on the same Cargo inputs hash as
+ * ensure-native, so it rebuilds exactly when the Rust sources drift, and
+ * dist/native is never touched.
  */
 
 import { spawnSync } from 'node:child_process'
@@ -17,6 +19,7 @@ import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
 
 const TRACE_FEATURE = 'alloc-trace'
+const COUNTERS_FEATURE = 'counters-trace'
 const NATIVE_PATH_ENV = 'REFERENCE_UI_NATIVE_PATH'
 
 function napiTriple() {
@@ -28,12 +31,28 @@ function shippedBinaryPath(rsDir) {
   return path.join(rsDir, 'dist', 'native', `virtual-native.${napiTriple()}.node`)
 }
 
+function instrumentBuildDir(rsDir, inputsHash, suffix) {
+  return path.join(rsDir, 'dist', 'native-trace', `${inputsHash.slice(0, 12)}${suffix}`)
+}
+
+function instrumentBinaryPath(rsDir, inputsHash, suffix) {
+  return path.join(instrumentBuildDir(rsDir, inputsHash, suffix), `virtual-native.${napiTriple()}.node`)
+}
+
 function traceBuildDir(rsDir, inputsHash) {
-  return path.join(rsDir, 'dist', 'native-trace', inputsHash.slice(0, 12))
+  return instrumentBuildDir(rsDir, inputsHash, '')
 }
 
 function traceBinaryPath(rsDir, inputsHash) {
-  return path.join(traceBuildDir(rsDir, inputsHash), `virtual-native.${napiTriple()}.node`)
+  return instrumentBinaryPath(rsDir, inputsHash, '')
+}
+
+function countersBuildDir(rsDir, inputsHash) {
+  return instrumentBuildDir(rsDir, inputsHash, '-counters')
+}
+
+function countersBinaryPath(rsDir, inputsHash) {
+  return instrumentBinaryPath(rsDir, inputsHash, '-counters')
 }
 
 function sha256File(filePath) {
@@ -52,11 +71,19 @@ export function describeShippedNative(rsDir, skippedBuild) {
 }
 
 export function describeTraceNative(rsDir, binaryPath, inputsHash) {
+  return describeInstrumentNative(rsDir, binaryPath, inputsHash, TRACE_FEATURE)
+}
+
+export function describeCountersNative(rsDir, binaryPath, inputsHash) {
+  return describeInstrumentNative(rsDir, binaryPath, inputsHash, COUNTERS_FEATURE)
+}
+
+function describeInstrumentNative(rsDir, binaryPath, inputsHash, feature) {
   return {
     path: path.relative(process.cwd(), binaryPath) || binaryPath,
     sha256: sha256File(binaryPath),
-    profile: 'release+alloc-trace',
-    builtVia: `napi build --release --features ${TRACE_FEATURE}`,
+    profile: `release+${feature}`,
+    builtVia: `napi build --release --features ${feature}`,
     inputsHash,
     bytes: statSync(binaryPath).size,
   }
@@ -87,9 +114,13 @@ function traceBuildFresh(traceDir, binaryPath, inputsHash) {
 }
 
 async function buildTraceNative(rsDir, traceDir, inputsHash) {
-  const binaryPath = traceBinaryPath(rsDir, inputsHash)
+  return buildInstrumentNative(rsDir, traceDir, inputsHash, TRACE_FEATURE, 'alloc')
+}
+
+async function buildInstrumentNative(rsDir, traceDir, inputsHash, feature, tag) {
+  const binaryPath = path.join(traceDir, `virtual-native.${napiTriple()}.node`)
   if (traceBuildFresh(traceDir, binaryPath, inputsHash)) {
-    console.log(`[agent-rs] alloc: reusing trace binary for inputs ${inputsHash.slice(0, 12)}`)
+    console.log(`[agent-rs] ${tag}: reusing ${feature} binary for inputs ${inputsHash.slice(0, 12)}`)
     return binaryPath
   }
   mkdirSync(traceDir, { recursive: true })
@@ -97,14 +128,14 @@ async function buildTraceNative(rsDir, traceDir, inputsHash) {
     'exec', 'napi', 'build',
     '--package', 'reference-virtual-native',
     '--platform', '--release',
-    '--features', TRACE_FEATURE,
+    '--features', feature,
     '--output-dir', traceDir,
     '--no-js',
   ]
-  console.log(`[agent-rs] alloc: napi build --release --features ${TRACE_FEATURE}`)
+  console.log(`[agent-rs] ${tag}: napi build --release --features ${feature}`)
   const result = spawnSync('pnpm', args, { cwd: rsDir, stdio: 'inherit' })
-  if (result.status !== 0) throw new Error(`trace native build failed (code ${result.status ?? '?'})`)
-  if (!existsSync(binaryPath)) throw new Error(`trace native build produced no binary at ${binaryPath}`)
+  if (result.status !== 0) throw new Error(`${tag} native build failed (code ${result.status ?? '?'})`)
+  if (!existsSync(binaryPath)) throw new Error(`${tag} native build produced no binary at ${binaryPath}`)
   writeFileSync(path.join(traceDir, 'inputs.sha256'), `${inputsHash}\n`)
   return binaryPath
 }
@@ -122,6 +153,23 @@ export async function ensureTraceNative(ctx) {
   }
   const built = await withCpuGate('rs:build', `agentrs alloc build ${ctx.options.scale}`, () =>
     buildTraceNative(ctx.rsDir, traceDir, inputsHash),
+  )
+  return { binaryPath: built, inputsHash }
+}
+
+export async function ensureCountersNative(ctx) {
+  distLoaderPreflight(ctx.rsDir)
+  const inputsHash = await traceInputsHash(ctx.rsDir)
+  const traceDir = countersBuildDir(ctx.rsDir, inputsHash)
+  const binaryPath = countersBinaryPath(ctx.rsDir, inputsHash)
+  if (ctx.options.noBuild) {
+    if (!traceBuildFresh(traceDir, binaryPath, inputsHash)) {
+      throw new Error(`no fresh counters binary for inputs ${inputsHash.slice(0, 12)} — rebuild without --no-build`)
+    }
+    return { binaryPath, inputsHash }
+  }
+  const built = await withCpuGate('rs:build', `agentrs counters build ${ctx.options.scale}`, () =>
+    buildInstrumentNative(ctx.rsDir, traceDir, inputsHash, COUNTERS_FEATURE, 'counters'),
   )
   return { binaryPath: built, inputsHash }
 }

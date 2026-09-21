@@ -11,6 +11,9 @@ crate-type = ["cdylib"]
 # Instrument build for `pnpm agentrs alloc`: counting global allocator plus a
 # per-compile span dump. Never enabled in the shipped `.node`.
 alloc-trace = []
+# Instrument build for `pnpm agentrs counters`: Mach/rusage counter span at
+# compile entry/exit. Never enabled in the shipped `.node`.
+counters-trace = []
 
 [dependencies]
 napi = { workspace = true }

@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url'
 import { withCpuGate, readLocks } from '../../test-core/scripts/cpu-gate.mjs'
 import { runFlameCommand } from './flame.mjs'
 import { runAllocCommand } from './alloc.mjs'
+import { runCountersCommand } from './counters.mjs'
 import {
   findSourceFiles,
   inspectFiles,
@@ -547,6 +548,7 @@ function printHelp() {
   \x1b[32mbuild, ensure-native\x1b[0m       Build or ensure native .node binary with exclusive queue lock
   \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to docs/evidence/flamegraph/)
   \x1b[32malloc\x1b[0m                     File an allocation report of the real sync path (evidence to docs/evidence/alloc/)
+  \x1b[32mcounters\x1b[0m                  File a hardware-counters pass of the real sync path (evidence to docs/evidence/counters/)
   \x1b[32mfmt\x1b[0m                        Format Rust (cargo fmt) and JS/TS (prettier)
   \x1b[32mstatus\x1b[0m                     Display toolchain versions, native binary state, and CPU gate locks
   \x1b[32mhelp, --help\x1b[0m               Show this help message
@@ -582,6 +584,13 @@ function printHelp() {
   \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/alloc/<scale>-<pin>/)
   \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
   \x1b[33m--no-build\x1b[0m                Skip ensure-native and the trace build; both binaries must exist
+  \x1b[33m--list\x1b[0m                    List frozen scales
+
+\x1b[1mOPTIONS FOR 'counters':\x1b[0m
+  \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
+  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/counters/<scale>-<pin>/)
+  \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
+  \x1b[33m--no-build\x1b[0m                Skip ensure-native and the counters build; both binaries must exist
   \x1b[33m--list\x1b[0m                    List frozen scales
 
 \x1b[1mOPTIONS FOR 'vitest':\x1b[0m
@@ -667,6 +676,16 @@ async function main() {
       if (buildCode !== 0) process.exit(buildCode)
     }
     const code = await runAllocCommand(allocArgs, repoRoot, rsDir)
+    process.exit(code)
+  }
+
+  if (command === 'counters') {
+    const countersArgs = args.slice(1)
+    if (!countersArgs.includes('--no-build') && !countersArgs.includes('--list') && !countersArgs.includes('--help')) {
+      const buildCode = await runEnsureNative(rsDir)
+      if (buildCode !== 0) process.exit(buildCode)
+    }
+    const code = await runCountersCommand(countersArgs, repoRoot, rsDir)
     process.exit(code)
   }
 
