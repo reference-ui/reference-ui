@@ -426,3 +426,12 @@ reopen it.
 - Claim: ~34-60ms ent sync (reviewer −34 / implementer −60, separated matched pairs). Bundle raw+gzip exact all scales + churn; RSS held; 244-sweep zero-delta ×3.
 - Captain gate: full diff reviewed firsthand — legacy build() intact, proof path legacy-identical, carried-keys==emitted_keys chain pinned by test, diet/full atom-set equivalence pinned. agentrs q 0 violations (3 warns: 2 file-length soft + finish 100 lines, pre-existing kind 89→100, fail>120).
 - Sweep test copied to main UNTRACKED for post-merge re-run per header procedure, then delete. Full re-proof (build + cargo + neo + sweep + bench) rides the wave-close gate — box now quiet, all crews reported.
+
+## Wave 4 CLOSE — 4 merged, 1 honorable death (09:15 UTC, quiet box)
+- Merged: A (fef84ee34, line index ~29ms) + C (97744dfd6, d_type ~40ms) + B (8eaec5907, plan diet ~34-60ms) + D (555b6dfa4, staging census ~13ms, GAPS closed by captain re-proof). Hunter R DIED (chunked handoff disproven — 0 mark-compacts; RSS definitively home).
+- Wave-close gate on main (all crews done, quiet box): cargo atomic 567/567 (548+2+3+1+13 exact) + module_graph 105/105; 244-sweep 243/244 zero-delta (1 = SITE-54 env: main has input/node_modules, B tree lacks it — mechanism confirmed by inspection; raw cmp also needed tree-prefix normalization); neo 173/173; vitest atomic 301/301 (SITE-54 green on main); q 0 violations everywhere; no lane-introduced rustc warnings. Sweep temp test deleted per procedure.
+- WAVE 4 NUMBERS (enterprise, 3x tight): sync 1.19s (1188.8/1185.7/1186.5), RSS peak med 348.7 MiB (354.7/348.7/336.4), bundle 2867925/214466 EXACT. Churn: 2.75s/635MiB/8.0MiB exact — holds.
+- Wave 3 → Wave 4: 1.31s → 1.19s (−120ms, −9%; lane claims summed 116-142ms — landed on the sum). RSS 344.5 → 348.7 med (noise inside the S1 band). Bundle exact throughout.
+- vs Panda: sync 1.19s vs 645ms (1.84x remaining); RSS/bundle home.
+- Watch items: resolver/mod.rs at 485 lines (soft warn, fail>500); main tree still carries pre-existing unstaged dirt (docs/missions + reports/latest).
+- Evidence preserved: lane trees ../reference-ui-perf-4-{a,b,c,d,r} + ../reference-ui-recon-4; /tmp lane evidence; branch voyage/hyperspace-perf-4-r holds R's disproven diff.
