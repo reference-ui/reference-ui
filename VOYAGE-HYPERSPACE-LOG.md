@@ -388,3 +388,12 @@ reopen it.
   boundary files (target ≤10), heartbeat the repair, resume.
   (Note: `interrupt:true` rejected by the message tool —
   rebrief queued without interrupt; crews poll between steps.)
+
+## Wave 4 dispatch — 5 crews (11:0x UTC)
+- Map landed: c84dd4d7a. Trees: ../reference-ui-perf-4-{a,b,c,d,r}, branches voyage/hyperspace-perf-4-{a,b,c,d,r}.
+- perf-4-a (D1 want locations, lazy line index, ~35ms, mechanical) → agent 22
+- perf-4-b (D2 plan verdicts, TIERED A-always/B-gated + 243-sweep, ~50-110ms) → agent 23
+- perf-4-c (D3 union trust, files_complete (a) / file_type (c) fallback) → agent 24
+- perf-4-d (D4 resolver unstage gated, kill-fast <60%) → agent 25
+- hunter-4-r (R1 chunked napi handoff, standing-method, ≥10MB) → agent 26
+- Merge order: a → d → c → b → r. Zero bundle lanes per HQ decree.
