@@ -195,3 +195,9 @@ Wave 3, lane d: GAPS — second resolve proven redundant (ent −26ms 8/8, bytes
 - Outcome: died — leg (i) KILLED (reachable 3x below bar, garbage needs GC = gaming); leg (ii) KILLED as a lane (-24 mechanism proven but unverifiable inside ±36 spread; feeds morning allocator-strategy Q1 with the new bound that only ~24 of ~150-190 dead-resident MiB respond to zone pressure).
 
 Wave 3, spike s1: died — V8 end-state unattainable (GC-only) and allocator relief unverifiable inside run spread; attribution filed.
+## Wave 4, recon — wall is five rooms: want line/col ~40ms, plan verdicts ~50-110 tiered, union re-stat ~40-90 gated, resolver staging ~30-40 gated; RSS hunter is chunked handoff ~10-12MB
+- Avenues: D1 lazy line index (sync ~35, lane a); D2 plan-verdict diet A-always/B-gated (sync ~50-110, lane b, subsumes C4-pairing); D3 trust-staged union/file_type-fallback (sync ~40-90, lane c); D4 unstage unimported (sync ~30-40, lane d, gated); R1 chunked handoff (RSS ~10-12MB structural, hunter r). Flags: sync/index.ts (D3+R1), lib.rs (D4+R1), render.rs (D1+D2-steps). All lanes: RSS unregressed-or-claimed, bundle exact, churn RUNS.
+- Killed: prepare-reads floor (~283 syscall, parallelism twice-negative); fg-micro (weak evidence, W5); parse/emit/hosts/walk physics; render-standalone folded into D2; map-Vec (~5-10, piggyback); pool fusion (coupling, W5); C4-pairing subsumed by D2 (diff preserved); B3-gating stays dead (D2 is a new shape); GC-timing unavailable (S1); bundle: ZERO lanes (home, defend exact).
+- Next crews: perf-4-a (D1); perf-4-b (D2 — architect rules emptiness+subset day-0, 243-sweep gate); perf-4-c (D3 — architect rules enumeration, fallback if unprovable); perf-4-d (D4 — architect rules External soundness, 60% kill-fast); hunter-4-r (R1 — standing-method proof). Merge: a → d → c → b → r.
+
+Wave 4 recon: COMPLETE — map filed, 4 avenues + 1 hunter, next crews: perf-4-a (D1), perf-4-b (D2), perf-4-c (D3), perf-4-d (D4), hunter-4-r (R1)
