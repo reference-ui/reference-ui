@@ -1,0 +1,17 @@
+[65572:0x7fc5c8008000]       52 ms: Scavenge 9.0 (10.0) -> 8.5 (11.0) MB, pooled: 0 MB, 0.68 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[65572:0x7fc5c8008000]       57 ms: Scavenge 9.1 (11.0) -> 8.8 (13.5) MB, pooled: 0 MB, 0.36 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[65572:0x7fc5c8008000]       75 ms: Scavenge 11.1 (14.0) -> 9.8 (14.2) MB, pooled: 0 MB, 0.24 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[65572:0x7fc5c8008000]       90 ms: Scavenge 11.9 (14.5) -> 10.9 (15.0) MB, pooled: 0 MB, 0.32 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[65572:0x7fc5c8008000]      113 ms: Scavenge 12.3 (15.5) -> 11.5 (20.0) MB, pooled: 0 MB, 0.36 / 0.00 ms  (average mu = 1.000, current mu = 1.000) task; 
+[65572:0x7fc5c8008000]      114 ms: Mark-Compact 11.5 (20.0) -> 10.8 (20.2) MB, pooled: 0 MB, 0.57 / 0.00 ms  (+ 0.5 ms in 22 steps since start of marking, biggest step 0.1 ms, walltime since start of marking 2 ms) (average mu = 0.991, current mu = 0.991) finalize incremental marking via task; GC in old space requested
+[65572:0x7fc5c8008000]      130 ms: Scavenge 15.2 (20.2) -> 13.1 (20.2) MB, pooled: 0 MB, 0.47 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      133 ms: Scavenge 15.4 (20.5) -> 14.3 (29.5) MB, pooled: 0 MB, 0.71 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      140 ms: Scavenge 21.5 (30.1) -> 15.0 (31.1) MB, pooled: 0 MB, 0.43 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      144 ms: Scavenge 22.2 (31.1) -> 15.5 (31.6) MB, pooled: 0 MB, 0.47 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      148 ms: Scavenge 22.9 (31.6) -> 16.1 (32.1) MB, pooled: 0 MB, 0.38 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      326 ms: Scavenge 23.5 (32.3) -> 20.2 (48.8) MB, pooled: 0 MB, 0.89 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      444 ms: Scavenge 32.2 (49.1) -> 21.4 (53.6) MB, pooled: 0 MB, 1.26 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]      457 ms: Scavenge 36.4 (53.6) -> 21.7 (54.8) MB, pooled: 0 MB, 0.51 / 0.00 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]     1430 ms: Scavenge 45.1 (69.9) -> 36.9 (101.9) MB, pooled: 0 MB, 0.87 / 0.02 ms  (average mu = 0.991, current mu = 0.991) allocation failure; 
+[65572:0x7fc5c8008000]     1460 ms: Mark-Compact 51.6 (115.1) -> 17.8 (88.0) MB, pooled: 3 MB, 1.82 / 0.03 ms  (+ 0.9 ms in 49 steps since start of marking, biggest step 0.1 ms, walltime since start of marking 3 ms) (average mu = 0.997, current mu = 0.998) finalize incremental marking via task; GC in old space requested
+{"syncMs":1386.283355,"rssBefore":98463744,"rssPeak":373207040,"rssAfter":350089216}

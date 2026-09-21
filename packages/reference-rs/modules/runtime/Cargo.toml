@@ -7,6 +7,11 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+# Instrument build for `pnpm agentrs alloc`: counting global allocator plus a
+# per-compile span dump. Never enabled in the shipped `.node`.
+alloc-trace = []
+
 [dependencies]
 napi = { workspace = true }
 napi-derive = { workspace = true }

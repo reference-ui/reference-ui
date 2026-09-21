@@ -1,0 +1,199 @@
+{
+  "procedure": "agentrs-alloc/1",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "647e40b4aa6b",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-fn26ET",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "gcLeg": {
+    "sample": {
+      "syncMs": 1386.283355,
+      "rssBefore": 98463744,
+      "rssPeak": 373207040,
+      "rssAfter": 350089216
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-fn26ET",
+      "10"
+    ],
+    "gc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 52,
+      "lastGcMs": 1460,
+      "maxHeapBeforeMb": 51.6,
+      "maxHeapAfterMb": 36.9
+    }
+  },
+  "traceLeg": {
+    "sample": {
+      "syncMs": 1652.7861770000002,
+      "rssBefore": 110579712,
+      "rssPeak": 347774976,
+      "rssAfter": 324558848
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-fn26ET",
+      "10"
+    ],
+    "env": {
+      "REFERENCE_UI_NATIVE_PATH": "/Users/ryn/Developer/reference-ui/packages/reference-rs/dist/native-trace/94d7a9b7177a/virtual-native.darwin-x64.node",
+      "ALLOC_TRACE_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/alloc/enterprise-latest/rust-alloc.json"
+    },
+    "traceGc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 57,
+      "lastGcMs": 1734,
+      "maxHeapBeforeMb": 51.6,
+      "maxHeapAfterMb": 36.9
+    },
+    "window": {
+      "startUnixMs": 1789981639723,
+      "endUnixMs": 1789981640723,
+      "spawnEpochMs": 1789981639009,
+      "spawnLatencyBoundMs": 60,
+      "inWindowFull": 0,
+      "headFull": 1,
+      "tailFull": 1,
+      "edgeFull": 0,
+      "placements": [
+        {
+          "tMs": 122,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "head"
+        },
+        {
+          "tMs": 1734,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "tail"
+        }
+      ]
+    },
+    "rustSpan": {
+      "wallMs": 999.359424,
+      "startUnixMs": 1789981639723,
+      "endUnixMs": 1789981640723,
+      "allocBytes": 992618628,
+      "allocBlocks": 8259538,
+      "freeBytes": 984175525,
+      "freeBlocks": 8258147,
+      "liveAtEnter": 6155360,
+      "liveAtExit": 14598463,
+      "netGrowth": 8443103,
+      "peakLive": 159569554,
+      "reallocs": 1117428,
+      "requestJsonBytes": 6153775,
+      "fileCount": 15122,
+      "filesContentBytes": 4358806,
+      "filesPathBytes": 1303532,
+      "zoneAtEnter": {
+        "sizeAllocated": 152616960,
+        "sizeInUse": 23029488,
+        "slack": 129587472
+      },
+      "zoneAtExit": {
+        "sizeAllocated": 170573824,
+        "sizeInUse": 31922096,
+        "slack": 138651728
+      }
+    },
+    "rustProcess": {
+      "spans": 1,
+      "allocBytes": 998776166,
+      "allocBlocks": 8259558,
+      "freeBytes": 984177703,
+      "freeBlocks": 8258161,
+      "liveBytes": 14598463,
+      "peakLiveBytes": 165724914
+    }
+  },
+  "node": {
+    "version": "v24.16.0"
+  },
+  "nativeShipped": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "nativeTrace": {
+    "path": "packages/reference-rs/dist/native-trace/94d7a9b7177a/virtual-native.darwin-x64.node",
+    "sha256": "92deddbdaca30d2bf29e4b1b718fc6bfaf41705293d7fdb041f8c780d3de8f89",
+    "profile": "release+alloc-trace",
+    "builtVia": "napi build --release --features alloc-trace",
+    "inputsHash": "94d7a9b7177afaf30f8f8bb32a7983dd36796264ed6a1c196cc80c289bcdcf7b",
+    "bytes": 8989800
+  },
+  "platform": "darwin-x64",
+  "createdAt": "2026-09-21T09:07:20.809Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-logs/obj2-alloc.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    " M packages/reference-rs/modules/atomic/native.rs",
+    " M packages/reference-rs/modules/runtime/Cargo.toml",
+    " M packages/reference-rs/modules/runtime/js/loader.test.ts",
+    " M packages/reference-rs/modules/runtime/js/loader.ts",
+    " M packages/reference-rs/modules/runtime/src/lib.rs",
+    "?? .agents/skills/agent-rs/scripts/alloc-build.mjs",
+    "?? .agents/skills/agent-rs/scripts/alloc-evidence.mjs",
+    "?? .agents/skills/agent-rs/scripts/alloc-gc.mjs",
+    "?? .agents/skills/agent-rs/scripts/alloc.mjs",
+    "?? docs/evidence/alloc/",
+    "?? packages/reference-rs/modules/runtime/src/alloc_trace.rs"
+  ]
+}
