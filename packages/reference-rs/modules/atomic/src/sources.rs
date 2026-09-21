@@ -30,6 +30,41 @@ pub(crate) fn collect(request: &CompileRequest) -> Vec<(String, String)> {
     sources
 }
 
+/// One walk entry: the readdir type plus the path it was read for.
+struct WalkEntry {
+    file_type: Option<std::fs::FileType>,
+    path: std::path::PathBuf,
+}
+
+/// `(d_type, path)` pairs of one directory, sorted by path for determinism.
+/// The type rides free with the readdir on typed filesystems; `None` keeps
+/// the stat fallback for entries the OS refused to type.
+fn sorted_entries(dir: &Path) -> Vec<WalkEntry> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut listed: Vec<WalkEntry> = entries
+        .flatten()
+        .map(|entry| WalkEntry {
+            file_type: entry.file_type().ok(),
+            path: entry.path(),
+        })
+        .collect();
+    listed.sort_by(|a, b| a.path.cmp(&b.path));
+    listed
+}
+
+/// True when the entry is a directory: the free d_type decides for plain
+/// files and dirs; symlinks, unknown types, and refused stats fall through
+/// to `is_dir()`, so every verdict matches the old stat-everything walk.
+fn entry_is_dir(file_type: Option<&std::fs::FileType>, path: &Path) -> bool {
+    match file_type {
+        Some(known) if known.is_dir() => true,
+        Some(known) if known.is_file() => false,
+        _ => path.is_dir(),
+    }
+}
+
 /// Provided `files` union-filled from disk when present, otherwise the
 /// filtered `root_dir` scan. An empty list scans: absence and emptiness
 /// both mean "the caller handed nothing over".
@@ -105,24 +140,20 @@ fn collect_candidate_paths(
     root: Option<&str>,
     acc: &mut Vec<String>,
 ) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
-    paths.sort();
-    for path in paths {
-        handle_candidate_entry(&path, scope, root, acc);
+    for entry in sorted_entries(dir) {
+        handle_candidate_entry(&entry, scope, root, acc);
     }
 }
 
 /// Descend into kept directories, collect supported in-scope path strings.
 fn handle_candidate_entry(
-    path: &Path,
+    entry: &WalkEntry,
     scope: &IncludeScope,
     root: Option<&str>,
     acc: &mut Vec<String>,
 ) {
-    if path.is_dir() {
+    let path = &entry.path;
+    if entry_is_dir(entry.file_type.as_ref(), path) {
         if is_kept_dir(path) {
             collect_candidate_paths(path, scope, root, acc);
         }
@@ -141,24 +172,20 @@ fn handle_candidate_entry(
 /// The include scope is a pure path predicate, so it runs before the read:
 /// out-of-scope files cost a match, never I/O.
 fn scan_dir(dir: &Path, scope: &IncludeScope, root: Option<&str>, acc: &mut Vec<(String, String)>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
-    paths.sort();
-    for path in paths {
-        handle_dir_entry(&path, scope, root, acc);
+    for entry in sorted_entries(dir) {
+        handle_dir_entry(&entry, scope, root, acc);
     }
 }
 
 /// Descend into kept directories, read supported in-scope source files.
 fn handle_dir_entry(
-    path: &Path,
+    entry: &WalkEntry,
     scope: &IncludeScope,
     root: Option<&str>,
     acc: &mut Vec<(String, String)>,
 ) {
-    if path.is_dir() {
+    let path = &entry.path;
+    if entry_is_dir(entry.file_type.as_ref(), path) {
         if is_kept_dir(path) {
             scan_dir(path, scope, root, acc);
         }
@@ -277,6 +304,67 @@ mod tests {
             ..Default::default()
         }));
         assert_eq!(full, scanned);
+        let subset = sorted(gather(&CompileRequest {
+            root_dir: Some(root_str.clone()),
+            files: Some(all[..1].to_vec()),
+            ..Default::default()
+        }));
+        assert_eq!(subset, scanned);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    /// Symlink tree: a real dir plus a linked dir, a linked file carrying
+    /// the target's bytes, and a dangling link. Unix-only: links need
+    /// symlink privileges the portable suite cannot assume.
+    #[cfg(unix)]
+    fn write_symlink_tree(name: &str) -> (std::path::PathBuf, String) {
+        let root = temp_root(name);
+        std::fs::create_dir_all(root.join("src/real")).unwrap();
+        std::fs::write(root.join("src/real/a.ts"), "export const a = 1;\n").unwrap();
+        std::os::unix::fs::symlink(root.join("src/real"), root.join("src/linkdir")).unwrap();
+        std::os::unix::fs::symlink(root.join("src/real/a.ts"), root.join("src/linkfile.ts"))
+            .unwrap();
+        std::os::unix::fs::symlink(root.join("src/missing.ts"), root.join("src/dangling.ts"))
+            .unwrap();
+        let root_str = root.to_string_lossy().to_string();
+        (root, root_str)
+    }
+
+    /// Links keep stat-everything verdicts on both walks: linked dirs
+    /// descend, linked files carry target bytes, dangling links drop, and
+    /// the union backfill completes a provided subset to the same set.
+    #[cfg(unix)]
+    #[test]
+    fn symlinks_keep_stat_verdicts_on_both_walks() {
+        let (root, root_str) = write_symlink_tree("symlinks");
+        let scanned = sorted(gather(&CompileRequest {
+            root_dir: Some(root_str.clone()),
+            ..Default::default()
+        }));
+        let paths: Vec<String> = scanned
+            .iter()
+            .map(|(path, _)| path.clone())
+            .collect();
+        assert_eq!(
+            paths,
+            [
+                format!("{root_str}/src/linkdir/a.ts"),
+                format!("{root_str}/src/linkfile.ts"),
+                format!("{root_str}/src/real/a.ts"),
+            ]
+        );
+        let linked = scanned
+            .iter()
+            .find(|(path, _)| path.ends_with("linkfile.ts"))
+            .unwrap();
+        assert_eq!(linked.1, "export const a = 1;\n");
+        let all = scanned
+            .iter()
+            .map(|(path, content)| VirtualSource {
+                path: path.clone(),
+                content: content.clone(),
+            })
+            .collect::<Vec<_>>();
         let subset = sorted(gather(&CompileRequest {
             root_dir: Some(root_str.clone()),
             files: Some(all[..1].to_vec()),
