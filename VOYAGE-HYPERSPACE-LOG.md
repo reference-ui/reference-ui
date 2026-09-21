@@ -420,3 +420,9 @@ reopen it.
 - VOYAGE FINDING: R1 was the only structural ≥10MB scored lever on the map — now disproven. Remaining RSS gap is GC-timing/allocator-resident, out of reach by standing rules. RSS is definitively home; do not send another RSS hunter without a new instrument reading.
 - Diff preserved on voyage/hyperspace-perf-4-r as evidence. Nothing merged.
 - Still in flight: perf-4-b, perf-4-d.
+
+## Wave 4, lane b MERGED — 8eaec5907
+- Landed: 4 RS files (builder.rs build_diet/build_with_keys + insert_diet_atoms + object_slot extract, assembly.rs build_plans gate, proof/plans.rs pin tests, proof/render.rs carried-keys render + fact memo) + 3 evidence docs. Tier B killed day-0; insert-skip killed by sweep (ATM-LEAF-11, inserts restored).
+- Claim: ~34-60ms ent sync (reviewer −34 / implementer −60, separated matched pairs). Bundle raw+gzip exact all scales + churn; RSS held; 244-sweep zero-delta ×3.
+- Captain gate: full diff reviewed firsthand — legacy build() intact, proof path legacy-identical, carried-keys==emitted_keys chain pinned by test, diet/full atom-set equivalence pinned. agentrs q 0 violations (3 warns: 2 file-length soft + finish 100 lines, pre-existing kind 89→100, fail>120).
+- Sweep test copied to main UNTRACKED for post-merge re-run per header procedure, then delete. Full re-proof (build + cargo + neo + sweep + bench) rides the wave-close gate — box now quiet, all crews reported.
