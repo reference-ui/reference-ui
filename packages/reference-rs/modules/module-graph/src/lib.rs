@@ -19,6 +19,6 @@ mod walk;
 pub use fs::{DiskFs, FileSystem, MemoryFs};
 pub use graph::{Loader, ModuleGraph};
 pub use key::ModuleKey;
-pub use ladder::{ExtensionPolicy, SpecifierLadder, TsconfigPolicy, Unresolved};
+pub use ladder::{ExtensionPolicy, ProbeMemo, SpecifierLadder, TsconfigPolicy, Unresolved};
 pub use record::{DefaultExport, ExportShape, ExportTable, ImportEdge, Imported, ModuleRecord};
 pub use walk::{BindingOrigin, BindingWalk, Refused};

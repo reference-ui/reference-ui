@@ -13,7 +13,7 @@ use crate::resolver::StyleTraceError;
 use super::model::{
     EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule, TracedBinding,
 };
-use super::module_resolution::resolve_imported_module;
+use super::module_resolution::ModuleResolver;
 use super::parser::parse_trace_module;
 use super::source_files::format_relative_module;
 use super::surface::{StyleSurface, TraceDiagnostic};
@@ -23,6 +23,7 @@ pub(super) struct StyleTraceAnalyzer<'s> {
     surface: StyleSurface,
     sync_root: PathBuf,
     staged: &'s HashMap<PathBuf, &'s str>,
+    resolver: ModuleResolver<'s>,
     component_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     factory_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     export_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
@@ -42,6 +43,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
             surface,
             sync_root,
             staged,
+            resolver: ModuleResolver::new(staged),
             component_cache: HashMap::new(),
             factory_cache: HashMap::new(),
             export_cache: HashMap::new(),
@@ -80,8 +82,14 @@ impl<'s> StyleTraceAnalyzer<'s> {
     ) -> Result<Vec<TracedBinding>, StyleTraceError> {
         let mut bindings = BTreeSet::new();
         let module_paths = self.modules.keys().cloned().collect::<Vec<_>>();
+        let source_root_is_file = source_root.is_file();
         for module_path in module_paths {
-            self.collect_module_bindings(&module_path, source_root, &mut bindings)?;
+            self.collect_module_bindings(
+                &module_path,
+                source_root,
+                source_root_is_file,
+                &mut bindings,
+            )?;
         }
         Ok(bindings.into_iter().collect())
     }
@@ -90,12 +98,13 @@ impl<'s> StyleTraceAnalyzer<'s> {
         &mut self,
         module_path: &Path,
         source_root: &Path,
+        source_root_is_file: bool,
         bindings: &mut BTreeSet<TracedBinding>,
     ) -> Result<(), StyleTraceError> {
         let Some(module) = self.modules.get(module_path).cloned() else {
             return Ok(());
         };
-        let rel_module = format_relative_module(module_path, source_root);
+        let rel_module = format_relative_module(module_path, source_root, source_root_is_file);
 
         for export_name in module.exports.keys() {
             if let Some(owned) = self.export_is_traced(module_path, export_name, &mut Vec::new())? {
@@ -105,7 +114,8 @@ impl<'s> StyleTraceAnalyzer<'s> {
         }
 
         for source in &module.export_all_sources {
-            let Some(target) = resolve_imported_module(module_path, source, &self.sync_root)?
+            let Some(target) =
+                self.resolver.resolve_imported_module(module_path, source, &self.sync_root)?
             else {
                 continue;
             };
@@ -274,7 +284,11 @@ impl<'s> StyleTraceAnalyzer<'s> {
                 source,
                 imported_name,
             } => {
-                let Some(resolved) = resolve_imported_module(module_path, source, &self.sync_root)?
+                let Some(resolved) = self.resolver.resolve_imported_module(
+                    module_path,
+                    source,
+                    &self.sync_root,
+                )?
                 else {
                     return Ok(None);
                 };
@@ -334,7 +348,11 @@ impl<'s> StyleTraceAnalyzer<'s> {
                 .then(BTreeSet::new));
         }
 
-        let Some(resolved_module) = resolve_imported_module(module_path, source, &self.sync_root)?
+        let Some(resolved_module) = self.resolver.resolve_imported_module(
+            module_path,
+            source,
+            &self.sync_root,
+        )?
         else {
             return Ok(None);
         };

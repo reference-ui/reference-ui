@@ -10,9 +10,12 @@
 //! declarations (tasty's tables verbatim). Absolute specifiers miss in
 //! every policy, as they do in all three legacy ladders.
 
+mod memo;
 mod package;
 mod probe;
 mod tsconfig;
+
+pub use memo::ProbeMemo;
 
 use crate::key::{ancestors, join_relative, join_under};
 use crate::{FileSystem, ModuleKey};

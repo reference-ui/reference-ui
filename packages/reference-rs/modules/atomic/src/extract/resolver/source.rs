@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord};
+use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord, ProbeMemo};
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -23,6 +23,7 @@ pub struct AtomicFs<'s> {
     sources: &'s [(String, String)],
     index: HashMap<String, usize>,
     disk: DiskFs,
+    memo: ProbeMemo,
 }
 
 impl<'s> AtomicFs<'s> {
@@ -38,6 +39,7 @@ impl<'s> AtomicFs<'s> {
             sources,
             index,
             disk: DiskFs,
+            memo: ProbeMemo::new(),
         }
     }
 
@@ -60,16 +62,20 @@ impl FileSystem for AtomicFs<'_> {
         if let Some(staged) = self.staged(path) {
             return Some(staged.to_string());
         }
-        self.disk.read_to_string(path)
+        self.memo
+            .read_to_string(path, |probed| self.disk.read_to_string(probed))
     }
 
     fn is_file(&self, path: &str) -> bool {
         let key = ModuleKey::new(path);
-        self.index.contains_key(key.as_str()) || self.disk.is_file(path)
+        if self.index.contains_key(key.as_str()) {
+            return true;
+        }
+        self.memo.is_file(path, |probed| self.disk.is_file(probed))
     }
 
     fn is_dir(&self, path: &str) -> bool {
-        self.disk.is_dir(path)
+        self.memo.is_dir(path, |probed| self.disk.is_dir(probed))
     }
 
     fn read_dir(&self, path: &str) -> Vec<String> {
@@ -83,7 +89,8 @@ impl FileSystem for AtomicFs<'_> {
         if self.index.contains_key(key.as_str()) {
             return Some(key.as_str().to_string());
         }
-        self.disk.canonicalize(path)
+        self.memo
+            .canonicalize(path, |probed| self.disk.canonicalize(probed))
     }
 }
 
