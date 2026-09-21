@@ -131,3 +131,45 @@ reopen it.
   new files only). Guardrail: no lane regresses the other two
   beyond noise (brief rendezvous rule); crews briefed from HQ's
   chat guidance, not the mystery edits.
+
+## Wave 1 — CLOSED (4 landed, 1 killed, all committed)
+
+- Rendezvous order (independent first): e → b → a → d, then c
+  log-only. All terminal lines verified in-tree before merging.
+  Merge conflicts: none materialized — D's 5 overlapping files
+  3-way-merged clean (exit 0, no markers; both arcs verified
+  present in merged types). One merge-time fix: reviewer's
+  wart-note, `stylePlans` → optional in `atomic/js/types.ts`
+  (matches comment + contracts + proof-channel siblings;
+  typechecks, zero behavior).
+- Firsthand gates per merge on main (all green): cargo atomic
+  (509→510→511 as arcs stacked), vitest atomic 299–300/300,
+  styletrace 28/28, contracts 13/13, agentneo 173/173,
+  `agentrs q` 11 files clean, full `bench:neo` + `--scale churn`
+  with a pristine-tree base comparison. ATM-SITE-54, claimed
+  "pre-existing" by three lanes, never reproduced on main
+  (shared-box flake in lane trees; not chased).
+- Enterprise progression (main line, locked load): pin
+  3.51s/796MiB → post-E 3.46/822 (noise, tooling) → post-B
+  2.86/744.6 → post-A 2.57/695.1 → post-D 2.46/670.9.
+  Final vs pin `5eda2c60b7e5`: sync −30%, RSS −16%,
+  css 14.3 MiB IDENTICAL (825.0 KiB gzip), data 3.9 MiB →
+  518.2 KiB (−87%, 42.6 KiB gzip). Small: 150→126ms,
+  121.8→118.4 MiB, data −59%. Medium: 461→352ms,
+  207.6→192.0 MiB, data −79%. Churn: 5.12→4.19s,
+  987.1→611.6 MiB, css identical, data 386.3→143.2 KiB.
+- Vs Panda goalpost (enterprise): sync 2.46s vs 645ms (3.8x),
+  RSS 671 vs 261 MiB (2.6x), css 14.3 vs 2.7 MiB (5.3x —
+  the A6a observed-use gating still open), data 518 KiB
+  (internal −87%; Panda 71 KiB JS not comparable per notes).
+- Spent: A1, A2, A3, A4, A5, A7, A8, A9. Died: A6(b)
+  grouping (0 order-safe sites, gzip-positive — three-agent
+  agreement, no diff). Rode to W2: A6(a) observed-use gating
+  (extract signal now unblocked by lane b), A10 (morning
+  question at best).
+- NO hash-pin commits this wave: main tree cannot be clean
+  while the mystery `docs/missions` edits sit uncommitted
+  (still untouched, still unproven — HQ to ratify/revert).
+  All numbers above are firsthand main-line medians recorded
+  here instead. Deepsee (`benchmark/deepsee/`, one command)
+  is now the standing burndown tool for W2 recon.
