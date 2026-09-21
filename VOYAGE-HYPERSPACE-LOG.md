@@ -67,3 +67,21 @@ line, never in a worktree.
   golden failures red on this tree, module untouched by Reaper.
   Needs a ruling in the waves (repin vs break) — not Reaper's.
 - Handoff: D1 consult rules against reaper-01 numbers next.
+
+### D1 ruling (architect consult) — DECLINE, VERIFIED, committed
+- D1: DECLINE. (a) FAILS: forensics collapse the prize to the
+  180-class floor (3.6% / ~12KB raw / ~1.5KB gzip / ~0.4ms) —
+  123/133 ambiguous values provably unbound, only the 10 px
+  truly leaf-only; fixture engineered to contain leaf-only and
+  still yields 3.6%, real pools run smaller, planning numbers
+  don't move. (b) HOLDS narrowly (breakage confined to the named
+  #00aeff rule + twin-key axes). Both-prong rule → DECLINE.
+- Verified firsthand: px isolated to components/, shared hexes
+  unbound-occurring, all four doctrine wordings verbatim,
+  arithmetic holds, nothing authorized, Slice 2 undispatched.
+- Decline is a finished outcome. No Slice 2, no bench pins (the
+  pin-to-pin verification was Slice 2's). HQ ratifies in the
+  morning; override inherits the mission boundary + 180-class
+  re-measure tripwire. Missions README row updated to match.
+
+## Objective 1 — COMPLETE (R1 + Slice 1 + D1-DECLINE, all committed)
