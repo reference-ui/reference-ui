@@ -21,8 +21,10 @@ import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
 import { describeShippedNative, describeTraceNative, ensureTraceNative } from './alloc-build.mjs'
 import { parseGcLog } from './alloc-gc.mjs'
 import { buildAllocMeta, resolveAllocEvidenceDir, writeAllocEvidence } from './alloc-evidence.mjs'
+import { PHASES_OUT_ENV, phasesEnvFor, readPhases } from './phases.mjs'
 
-const ALLOC_PROCEDURE = 'agentrs-alloc/1'
+const ALLOC_PROCEDURE = 'agentrs-alloc/2'
+const ALLOC_PROCEDURE_NOTE = 'same-run phase boundaries on GC + trace legs; span read against the trace run\'s own compile phase (v1 had post-import syncMs plus another run\'s span)'
 const DEFAULT_SCALE = 'enterprise'
 const WORKER_SAMPLE_MS = 10
 const TRACE_OUT_ENV = 'ALLOC_TRACE_OUT'
@@ -130,6 +132,7 @@ function cleanEnv() {
   const env = { ...process.env }
   delete env[NATIVE_PATH_ENV]
   delete env[TRACE_OUT_ENV]
+  delete env[PHASES_OUT_ENV]
   return env
 }
 
@@ -138,11 +141,12 @@ function workerInvocation(benchDir, repoDir) {
   return { workerPath, args: [workerPath, repoDir, String(WORKER_SAMPLE_MS)] }
 }
 
-async function runGcLeg(ctx, repo) {
+async function runGcLeg(ctx, repo, evidenceDir) {
   const { workerPath, args } = workerInvocation(ctx.benchDir, repo.dir)
+  const phasesEnv = phasesEnvFor(evidenceDir, 'gc-phases.json')
   const nodeArgs = ['--trace-gc']
   console.log('[agent-rs] alloc GC leg: node --trace-gc <bench worker> (shipped .node)')
-  const result = await spawnCapture(process.execPath, [...nodeArgs, ...args], ctx.repoRoot, cleanEnv())
+  const result = await spawnCapture(process.execPath, [...nodeArgs, ...args], ctx.repoRoot, { ...cleanEnv(), ...phasesEnv })
   if (result.code !== 0) throw new Error(`GC leg failed (code ${result.code})${result.error ? `: ${result.error}` : ''}`)
   const sample = parseWorkerSample(result.stdout, 'GC')
   // V8 prints --trace-gc lines to stdout, interleaved with the sample JSON.
@@ -155,18 +159,21 @@ async function runGcLeg(ctx, repo) {
     gcSummary: summary,
     rawLog: result.stdout,
     workerPath,
+    phases: readPhases(phasesEnv[PHASES_OUT_ENV], 'gc'),
   }
 }
 
 async function runTraceLeg(ctx, repo, evidenceDir, traceBinary) {
   mkdirSync(evidenceDir, { recursive: true })
   const rustAllocPath = path.join(evidenceDir, 'rust-alloc.json')
+  const phasesEnv = phasesEnvFor(evidenceDir, 'trace-phases.json')
   const { args } = workerInvocation(ctx.benchDir, repo.dir)
   const nodeArgs = ['--trace-gc']
   const env = {
     ...cleanEnv(),
     [NATIVE_PATH_ENV]: traceBinary,
     [TRACE_OUT_ENV]: rustAllocPath,
+    ...phasesEnv,
   }
   console.log('[agent-rs] alloc trace leg: node --trace-gc <bench worker> (release+alloc-trace .node)')
   const spawnEpochMs = Date.now()
@@ -188,8 +195,9 @@ async function runTraceLeg(ctx, repo, evidenceDir, traceBinary) {
     sample,
     nodeArgs,
     command: [process.execPath, ...nodeArgs, ...args],
-    env: { [NATIVE_PATH_ENV]: traceBinary, [TRACE_OUT_ENV]: rustAllocPath },
+    env: { [NATIVE_PATH_ENV]: traceBinary, [TRACE_OUT_ENV]: rustAllocPath, ...phasesEnv },
     rust,
+    phases: readPhases(phasesEnv[PHASES_OUT_ENV], 'trace'),
     spawnEpochMs,
     traceGcEvents: events,
     traceGcSummary: summary,
@@ -213,6 +221,9 @@ function printAllocReport(evidenceDir, meta) {
   console.log(`  gc leg: ${meta.gcLeg.sample.syncMs.toFixed(1)} ms, rss peak ${(meta.gcLeg.sample.rssPeak / 1048576).toFixed(0)} MiB`)
   console.log(`  shipped census: ${gc.scavenges} scavenges, ${gc.fullGcs} full GCs (${gc.events} events)`)
   console.log(`  trace leg: span ${span.wallMs.toFixed(1)} ms, alloc ${(span.allocBytes / 1048576).toFixed(1)} MiB, live at exit ${(span.liveAtExit / 1048576).toFixed(1)} MiB`)
+  if (meta.tracePhases?.reconcile) {
+    console.log(`  phases: compile ${meta.tracePhases.phases.compile.toFixed(1)} ms vs span ${span.wallMs.toFixed(1)} ms (${meta.tracePhases.reconcile.ok ? 'RECONCILED' : 'UNRECONCILED'})`)
+  }
   console.log(`  window: ${window.inWindowFull} in-window full GCs (${window.headFull} head, ${window.tailFull} tail, ${window.edgeFull} edge)`)
   if (window.edgeFull > 0) console.log('  R1 verdict: AMBIGUOUS — edge-straddling full GCs, re-run\n')
   else if (window.inWindowFull === 0) console.log('  R1 verdict: PASS — zero in-window mark-sweep/mark-compact\n')
@@ -222,10 +233,10 @@ function printAllocReport(evidenceDir, meta) {
 async function captureAlloc(ctx, evidenceDir, natives) {
   const repo = await generateAllocRepo(ctx)
   try {
-    const gcLeg = await runGcLeg(ctx, repo)
+    const gcLeg = await runGcLeg(ctx, repo, evidenceDir)
     const traceLeg = await runTraceLeg(ctx, repo, evidenceDir, natives.traceBinary)
     const legs = { gc: gcLeg, trace: traceLeg }
-    const meta = buildAllocMeta({ ...ctx, procedure: ALLOC_PROCEDURE }, repo, legs, {
+    const meta = buildAllocMeta({ ...ctx, procedure: ALLOC_PROCEDURE, procedureNote: ALLOC_PROCEDURE_NOTE }, repo, legs, {
       shipped: natives.shipped,
       trace: describeTraceNative(ctx.rsDir, natives.traceBinary, natives.inputsHash),
     })

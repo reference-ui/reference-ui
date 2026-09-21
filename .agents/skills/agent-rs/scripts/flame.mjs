@@ -17,10 +17,11 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
-import { buildFlameMeta, resolveEvidenceDir, runResummarize, writeFlameEvidence } from './flame-evidence.mjs'
+import { attachPhaseBuckets, buildFlameMeta, resolveEvidenceDir, runResummarize, writeFlameEvidence } from './flame-evidence.mjs'
+import { phasesEnvFor } from './phases.mjs'
 
-const FLAME_PROCEDURE = 'agentrs-flame/2'
-const FLAME_PROCEDURE_NOTE = 'merge same-function addresses by symbolized name; honor sample weights; publish self + inclusive costs (v1 keyed resource:address:func and counted +1 per sample)'
+const FLAME_PROCEDURE = 'agentrs-flame/3'
+const FLAME_PROCEDURE_NOTE = 'same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)'
 const DEFAULT_SCALE = 'enterprise'
 const DEFAULT_RATE_HZ = 1000
 const WORKER_SAMPLE_MS = 10
@@ -141,9 +142,9 @@ function benchModuleUrl(benchDir, rel) {
   return pathToFileURL(path.join(benchDir, rel)).href
 }
 
-function spawnCapture(command, args, cwd) {
+function spawnCapture(command, args, cwd, env) {
   return new Promise((resolve) => {
-    const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'inherit'] })
+    const child = spawn(command, args, { cwd, env, stdio: ['ignore', 'pipe', 'inherit'] })
     let stdout = ''
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString('utf-8')
@@ -221,8 +222,9 @@ async function recordFlameProfile(ctx, repo, evidenceDir) {
     '--', process.execPath, ...nodeArgs,
   ]
   const before = listPerfMaps()
+  const phasesEnv = phasesEnvFor(evidenceDir, 'phases.json')
   console.log(`[agent-rs] samply record -r ${ctx.options.rate} -- node --perf-basic-prof <bench worker>`)
-  const result = await spawnCapture('samply', command, runDir)
+  const result = await spawnCapture('samply', command, runDir, { ...process.env, ...phasesEnv })
   removeNewPerfMaps(before)
   rmSync(runDir, { recursive: true, force: true })
   if (result.code !== 0) throw new Error(`samply record failed (code ${result.code})${result.error ? `: ${result.error}` : ''}`)
@@ -235,7 +237,7 @@ async function recordFlameProfile(ctx, repo, evidenceDir) {
   } catch {
     console.log('[agent-rs] flame: no presymbolicated sidecar emitted; summary will be skipped')
   }
-  return { profilePath, sidecarPath: sidecar, sample, nodeArgs: v8Flags, command: ['samply', ...command] }
+  return { profilePath, sidecarPath: sidecar, phasesPath: phasesEnv.REFERENCE_UI_PHASES_OUT, sample, nodeArgs: v8Flags, command: ['samply', ...command] }
 }
 
 function cleanupRepo(repo, keep) {
@@ -256,13 +258,16 @@ function printFlameReport(evidenceDir, meta, summary) {
       console.log(`    ${frame.samples}x self / ${frame.inclusive}x incl ${frame.name.slice(0, 90)}`)
     }
   }
+  if (meta.phases?.reconcile) {
+    console.log(`  phases: compile ${meta.phases.phases.compile.toFixed(1)} ms of ${meta.phases.phases.syncTotal.toFixed(1)} ms sync (${meta.phases.reconcile.ok ? 'RECONCILED' : 'UNRECONCILED'})`)
+  }
   console.log('  view: samply load profile.json.gz\n')
 }
 
 async function captureFlame(ctx, evidenceDir) {
   const repo = await generateFlameRepo(ctx)
   try {
-    const record = await recordFlameProfile(ctx, repo, evidenceDir)
+    const record = attachPhaseBuckets(await recordFlameProfile(ctx, repo, evidenceDir), 'flame')
     const meta = buildFlameMeta({ ...ctx, procedure: FLAME_PROCEDURE, procedureNote: FLAME_PROCEDURE_NOTE }, repo, record, ctx.native)
     const summary = writeFlameEvidence(evidenceDir, record, meta)
     printFlameReport(evidenceDir, meta, summary)

@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { subtractCensus } from './counters-census.mjs'
+import { checkReconciled } from './phases.mjs'
 
 // Conservative sustained issue width for the IPC stall bound (see summary).
 export const STALL_WIDTH = 4
@@ -177,10 +178,37 @@ function legMeta(leg) {
   return { sample: leg.sample, nodeArgs: leg.nodeArgs, command: leg.command, env: leg.env }
 }
 
+function spanPhasesMeta(spanLeg) {
+  const compile = spanLeg.phases.phases.compile
+  const wallMs = spanLeg.span.span.wallMs
+  return {
+    file: 'span-phases.json',
+    phases: spanLeg.phases.phases,
+    reconcile: checkReconciled(spanLeg.phases.phases),
+    compileVsSpanMs: {
+      compile,
+      span: wallMs,
+      delta: typeof compile === 'number' ? compile - wallMs : null,
+    },
+  }
+}
+
+function censusPhasesMeta(censusLeg) {
+  return {
+    file: 'census-phases.json',
+    phases: censusLeg.phases.phases,
+    reconcile: checkReconciled(censusLeg.phases.phases),
+    events: censusLeg.events,
+    byPhase: censusLeg.bucketed.phases,
+    unplaced: censusLeg.bucketed.unplaced,
+  }
+}
+
 export function buildCountersMeta(ctx, repo, legs, natives) {
   const censusNet = subtractCensus(legs.census.census, legs.startup.census)
   return {
     procedure: ctx.procedure,
+    procedureNote: ctx.procedureNote ?? null,
     scale: ctx.options.scale,
     pin: ctx.pin,
     plan: repo.plan,
@@ -188,6 +216,8 @@ export function buildCountersMeta(ctx, repo, legs, natives) {
     spanLeg: { ...legMeta(legs.span), spanWallMs: legs.span.span.span.wallMs, spans: legs.span.span.spans },
     censusLeg: legMeta(legs.census),
     startupLeg: { command: [process.execPath, '-e', ''] },
+    spanPhases: spanPhasesMeta(legs.span),
+    censusPhases: censusPhasesMeta(legs.census),
     censusNet,
     derived: deriveSpan(legs.span.span.span, legs.span.span.spans ?? null),
     node: { version: process.version },

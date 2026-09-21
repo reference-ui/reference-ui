@@ -12,6 +12,8 @@
 import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { allocPhasesLines } from './alloc-phases.mjs'
+import { checkReconciled } from './phases.mjs'
 
 export function resolveAllocEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
@@ -70,14 +72,40 @@ function classifyWindow(events, span, spawnEpochMs) {
   }
 }
 
+function gcPhasesMeta(gcLeg) {
+  return {
+    file: 'gc-phases.json',
+    phases: gcLeg.phases.phases,
+    reconcile: checkReconciled(gcLeg.phases.phases),
+  }
+}
+
+function tracePhasesMeta(traceLeg) {
+  const compile = traceLeg.phases.phases.compile
+  const wallMs = traceLeg.rust.span.wallMs
+  return {
+    file: 'trace-phases.json',
+    phases: traceLeg.phases.phases,
+    reconcile: checkReconciled(traceLeg.phases.phases),
+    compileVsSpanMs: {
+      compile,
+      span: wallMs,
+      delta: typeof compile === 'number' ? compile - wallMs : null,
+    },
+  }
+}
+
 export function buildAllocMeta(ctx, repo, legs, natives) {
   return {
     procedure: ctx.procedure,
+    procedureNote: ctx.procedureNote ?? null,
     scale: ctx.options.scale,
     pin: ctx.pin,
     plan: repo.plan,
     generated: repo.generated,
     gcLeg: { ...legMeta(legs.gc), gc: legs.gc.gcSummary },
+    gcPhases: gcPhasesMeta(legs.gc),
+    tracePhases: tracePhasesMeta(legs.trace),
     traceLeg: {
       ...legMeta(legs.trace),
       env: legs.trace.env,
@@ -124,7 +152,7 @@ function loadLines(meta) {
     '',
     `Load: ${generated.styleFiles} style files + ${generated.deadFiles} dead, ${generated.cssCalls} css() calls,`,
     `${generated.recipes} recipes, seed ${plan.seed} (frozen ${plan.generator} plan, no overrides).`,
-    `Procedure: \`${meta.procedure}\`. GC leg profiles the shipped release \`.node\`;`,
+    `Procedure: \`${meta.procedure}\`${meta.procedureNote ? ` — ${meta.procedureNote}` : ''}. GC leg profiles the shipped release \`.node\`;`,
     'the trace leg profiles the release+alloc-trace instrument build. Worker verbatim both legs.',
     '',
     '## Worker samples per leg',
@@ -287,6 +315,7 @@ function artifactLines(meta) {
 export function renderAllocSummary(meta, gc, rust) {
   return [
     ...loadLines(meta),
+    ...allocPhasesLines(meta),
     ...gcLines(gc),
     ...windowLines(meta.traceLeg.window, meta.traceLeg.rustSpan),
     ...rustLines(rust),

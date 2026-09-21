@@ -17,6 +17,7 @@ import { resolveJsxElements } from './jsx-elements.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { linkGeneratedPackages, publishRuntimeBundle, publishSyncFolder, publishTypesBundle } from './publish.ts'
+import { markPhase } from './phases.ts'
 import { publishReactBundle } from './react.ts'
 
 export interface SyncResult {
@@ -78,12 +79,16 @@ function uniqueSorted(names: readonly string[]): string[] {
  * so a failed sync never leaves a half-written folder behind (SYNC-11).
  */
 export async function sync(cwd: string): Promise<SyncResult> {
+  markPhase('syncStart')
   const config = await loadUserConfig(cwd)
+  markPhase('configEnd')
   const outDir = getOutDirPath(cwd)
   rmSync(outDir, { recursive: true, force: true })
 
   try {
+    markPhase('scanStart')
     const prepared = await prepareFragments(cwd, config)
+    markPhase('scanEnd')
     const spec = await evaluatePreparedFragments(cwd, config, prepared)
     // LAYER-04: the reset fragment rides the spec only when normalizeCss is
     // not false; the engine prints reset-sourced fragments into @layer reset.
@@ -110,7 +115,10 @@ export async function sync(cwd: string): Promise<SyncResult> {
       logs: config.logs,
       ...(prepared.scannedSources.length > 0 ? { files: prepared.scannedSources } : {}),
     }
+    markPhase('evalEnd')
+    markPhase('compileStart')
     const result = await compileNative(request)
+    markPhase('compileEnd')
     // RSS relief: scanned bytes are unreachable after compile; drop the refs
     // before publish so a mid-publish GC can reclaim the headroom.
     prepared.scannedSources = []
@@ -147,10 +155,13 @@ export async function sync(cwd: string): Promise<SyncResult> {
     })
     await publishTypesBundle(outDir, spec)
     linkGeneratedPackages(cwd, outDir)
+    markPhase('publishEnd')
 
     return { outDir, spec }
   } catch (error) {
     rmSync(outDir, { recursive: true, force: true })
     throw error
+  } finally {
+    markPhase('syncEnd')
   }
 }

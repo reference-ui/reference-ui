@@ -15,7 +15,8 @@ import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { indexSidecar, loadProfile, renderSummaryMarkdown, summarizeProfile } from './flame-summary.mjs'
+import { indexSidecar, loadProfile, profileTotals, renderSummaryMarkdown, summarizePhaseBuckets, summarizeProfile } from './flame-summary.mjs'
+import { readPhases } from './phases.mjs'
 
 export function resolveEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
@@ -45,6 +46,22 @@ function profileMeta(record, rate) {
   }
 }
 
+function phasesMeta(record) {
+  const { phases, buckets, totals } = record
+  if (!phases || !buckets || !totals) return null
+  return {
+    file: 'phases.json',
+    phases: phases.phases,
+    reconcile: buckets.reconcile,
+    processStartDeltaMs: buckets.processStartDeltaMs,
+    preMainWeight: buckets.preMain,
+    postWorkerWeight: buckets.postWorker,
+    sampleCount: totals.sampleCount,
+    weightSum: totals.weightSum,
+    buckets: buckets.rows,
+  }
+}
+
 export function buildFlameMeta(ctx, repo, record, native) {
   return {
     procedure: ctx.procedure,
@@ -54,6 +71,7 @@ export function buildFlameMeta(ctx, repo, record, native) {
     plan: repo.plan,
     generated: repo.generated,
     worker: record.sample,
+    phases: phasesMeta(record),
     profile: profileMeta(record, ctx.options.rate),
     node: { version: process.version, args: record.nodeArgs },
     native,
@@ -65,10 +83,23 @@ export function buildFlameMeta(ctx, repo, record, native) {
   }
 }
 
+// Buckets are derived before the meta is built so the filed meta carries the
+// same verdicts the summary renders; bundles without a phases file (pre-/3)
+// pass through untouched and render no phases section.
+export function attachPhaseBuckets(record, leg) {
+  if (!record.phasesPath || !record.sidecarPath) return record
+  const phases = readPhases(record.phasesPath, leg)
+  const profile = loadProfile(record.profilePath)
+  const index = indexSidecar(JSON.parse(readFileSync(record.sidecarPath, 'utf-8')))
+  const buckets = summarizePhaseBuckets(profile, index, phases)
+  return { ...record, phases, buckets, totals: profileTotals(profile) }
+}
+
 function writeSummary(evidenceDir, record, meta) {
   if (!record.sidecarPath) return null
   const sidecar = JSON.parse(readFileSync(record.sidecarPath, 'utf-8'))
   const summary = summarizeProfile(loadProfile(record.profilePath), indexSidecar(sidecar))
+  if (record.buckets) summary.buckets = record.buckets
   const markdown = renderSummaryMarkdown(summary, {
     scale: meta.scale,
     pinName: meta.pin.name,
@@ -113,7 +144,7 @@ function defaultResummaryDir(src, procedure) {
   return `${src}-flame${version}`
 }
 
-function buildResummaryMeta(request, srcMeta, src, out) {
+function buildResummaryMeta(request, srcMeta, src, out, record) {
   const profileCopy = path.join(out, 'profile.json.gz')
   const sidecarCopy = path.join(out, 'profile.json.syms.json')
   return {
@@ -124,6 +155,7 @@ function buildResummaryMeta(request, srcMeta, src, out) {
     plan: srcMeta.plan,
     generated: srcMeta.generated,
     worker: srcMeta.worker,
+    phases: phasesMeta(record),
     profile: {
       file: 'profile.json.gz',
       bytes: statSync(profileCopy).size,
@@ -170,11 +202,19 @@ export function runResummarize(request) {
   mkdirSync(out, { recursive: true })
   copyFileSync(profilePath, path.join(out, 'profile.json.gz'))
   copyFileSync(sidecarPath, path.join(out, 'profile.json.syms.json'))
-  const meta = buildResummaryMeta(request, srcMeta, src, out)
-  const summary = writeFlameEvidence(out, {
+  let phasesPath = null
+  try {
+    statSync(path.join(src, 'phases.json'))
+    copyFileSync(path.join(src, 'phases.json'), path.join(out, 'phases.json'))
+    phasesPath = path.join(out, 'phases.json')
+  } catch {}
+  const record = attachPhaseBuckets({
     profilePath: path.join(out, 'profile.json.gz'),
     sidecarPath: path.join(out, 'profile.json.syms.json'),
-  }, meta)
+    phasesPath,
+  }, 'flame')
+  const meta = buildResummaryMeta(request, srcMeta, src, out, record)
+  const summary = writeFlameEvidence(out, record, meta)
   printResummaryReport(out, meta, summary)
   return { outDir: out, meta, summary }
 }

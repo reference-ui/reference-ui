@@ -1,0 +1,89 @@
+{
+  "procedure": "agentrs-phases/1",
+  "procedureNote": "reconciled same-run decomposition joining flame/3 + counters/2 + alloc/2 bundles; filed numbers re-derived from bundle raws before joining",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "3b7bc58391a3",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pbFlMJ",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "sources": {
+    "flame": {
+      "procedure": "agentrs-flame/3",
+      "createdAt": "2026-09-21T11:40:40.366Z",
+      "dir": "docs/evidence/flamegraph/enterprise-flame3"
+    },
+    "counters": {
+      "procedure": "agentrs-counters/2",
+      "createdAt": "2026-09-21T11:40:53.739Z",
+      "dir": "docs/evidence/counters/enterprise-counters2"
+    },
+    "alloc": {
+      "procedure": "agentrs-alloc/2",
+      "createdAt": "2026-09-21T11:41:03.275Z",
+      "dir": "docs/evidence/alloc/enterprise-alloc2"
+    }
+  },
+  "workerSamples": {
+    "flame": 1230.203027,
+    "span": 1193.903677,
+    "census": 1197.895207,
+    "gc": 1194.722008,
+    "trace": 1450.642635
+  },
+  "checks": {
+    "loadMatch": "scale enterprise, seed 7, 7527 css() calls identical across all three bundles",
+    "reconcile": "5/5 legs RECONCILED (worst phase-sum delta 0.000 ms)",
+    "flameBuckets": "8 rows + pre/post weights exact vs filed meta; weights sum to weightSum 1349",
+    "censusBuckets": "67601 events across 7 phases exact vs filed meta; 0 dropped",
+    "censusProof": "event sums equal schema-1 census.json on all 15 calls (count/ns/bytes)",
+    "allocPhases": "gc + trace phase tables exact vs filed meta"
+  },
+  "createdAt": "2026-09-21T11:41:17.157Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/alloc-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/alloc.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-census.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-interpose.c",
+    " M .agents/skills/agent-rs/scripts/counters-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/counters.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/flame.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj2-phases.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/measure/worker.ts",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    " M packages/reference-neo/src/sync/index.ts",
+    "?? .agents/skills/agent-rs/scripts/alloc-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/decompose-render.mjs"
+  ]
+}

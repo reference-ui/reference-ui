@@ -5,6 +5,7 @@
 
 import { performance } from 'node:perf_hooks'
 import { sync } from '../../src/sync/index.ts'
+import { markPhase, markPhaseAt, writePhasesFile } from '../../src/sync/phases.ts'
 
 interface WorkerArgs {
   dir: string
@@ -23,6 +24,11 @@ function parseArgs(argv: string[]): WorkerArgs {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv)
+  // Phase anchors for same-run attribution (agentrs-phases/1): processStart
+  // is the V8 origin so module load folds into the measured startup phase.
+  // All three calls no-op unless REFERENCE_UI_PHASES_OUT is set.
+  markPhaseAt('processStart', performance.timeOrigin, 0)
+  markPhase('workerMain')
   const rssBefore = process.memoryUsage().rss
   let rssPeak = rssBefore
   const sampler = setInterval(() => {
@@ -34,11 +40,14 @@ async function main(): Promise<void> {
   try {
     await sync(args.dir)
   } finally {
+    markPhase('workerEnd')
     clearInterval(sampler)
   }
   const syncMs = performance.now() - started
   const rssAfter = process.memoryUsage().rss
   if (rssAfter > rssPeak) rssPeak = rssAfter
+  // After the sample is sealed so the file write cannot perturb syncMs.
+  writePhasesFile()
   console.log(JSON.stringify({ syncMs, rssBefore, rssPeak, rssAfter }))
 }
 

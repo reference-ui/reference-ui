@@ -1,0 +1,184 @@
+{
+  "procedure": "agentrs-flame/3",
+  "procedureNote": "same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "3b7bc58391a3",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pbFlMJ",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "worker": {
+    "syncMs": 1230.203027,
+    "rssBefore": 102019072,
+    "rssPeak": 367800320,
+    "rssAfter": 344461312
+  },
+  "phases": {
+    "file": "phases.json",
+    "phases": {
+      "startup": 118.055389,
+      "config": 30.55807399999999,
+      "scan": 364.33507799999995,
+      "evaluate": 6.206033000000048,
+      "compile": 780.2648810000001,
+      "publish": 48.70403299999998,
+      "syncTotal": 1230.1133929999999,
+      "workerTotal": 1348.171717,
+      "workerTail": 0.002934999999979482,
+      "syncResidual": 0.04529399999978523
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "processStartDeltaMs": 138.68701171875,
+    "preMainWeight": 0,
+    "postWorkerWeight": 8,
+    "sampleCount": 1329,
+    "weightSum": 1349,
+    "buckets": [
+      {
+        "name": "startup",
+        "ms": 118.055389,
+        "weight": 118,
+        "topLib": "node",
+        "topLibWeight": 75
+      },
+      {
+        "name": "config",
+        "ms": 30.55807399999999,
+        "weight": 25,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 14
+      },
+      {
+        "name": "scan",
+        "ms": 364.33507799999995,
+        "weight": 365,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 295
+      },
+      {
+        "name": "evaluate",
+        "ms": 6.206033000000048,
+        "weight": 6,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 5
+      },
+      {
+        "name": "compile",
+        "ms": 780.2648810000001,
+        "weight": 778,
+        "topLib": "virtual-native.darwin-x64.node",
+        "topLibWeight": 336
+      },
+      {
+        "name": "publish",
+        "ms": 48.70403299999998,
+        "weight": 49,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 27
+      },
+      {
+        "name": "syncResidual",
+        "ms": 0.04529399999978523,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      },
+      {
+        "name": "workerTail",
+        "ms": 0.002934999999979482,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      }
+    ]
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 110348,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-FgIToK/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "samply",
+    "record",
+    "--save-only",
+    "--unstable-presymbolicate",
+    "-o",
+    "/Users/ryn/Developer/reference-ui/docs/evidence/flamegraph/enterprise-flame3/profile.json.gz",
+    "-r",
+    "1000",
+    "--",
+    "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+    "--perf-basic-prof",
+    "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-FgIToK/v8.log",
+    "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+    "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pbFlMJ",
+    "10"
+  ],
+  "createdAt": "2026-09-21T11:40:40.366Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/alloc-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/alloc.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-census.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-interpose.c",
+    " M .agents/skills/agent-rs/scripts/counters-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/counters.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/flame.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj2-phases.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/measure/worker.ts",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    " M packages/reference-neo/src/sync/index.ts",
+    "?? .agents/skills/agent-rs/scripts/alloc-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/decompose-render.mjs"
+  ]
+}
