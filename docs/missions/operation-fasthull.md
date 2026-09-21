@@ -7,6 +7,13 @@ rules every cycle obeys. Orchestration (waves, worktrees, merges,
 sequencing) belongs to the voyage brief currently running it
 (`VOYAGE-HYPERSPACE.md`); this file owns the cycle.
 
+HQ 23:49: the voyage is **performance-only** (no red team). The
+locked *comparison* tonight includes bundle bytes (`styles.css` +
+`runtime-data.mjs`) against the Panda v2 goalpost in the brief.
+The cycle is unchanged: one hypothesis, stability, review. Bytes
+move only when the hypothesis names an emission skip. Do not copy
+Panda's architecture. Harvest is not the kill target.
+
 Predecessor: the bench S1–S4 pass
 ([PLAN.md](../../packages/reference-neo/benchmark/PLAN.md)), committed as
 `5eda2c60b` with the first log pin at
@@ -79,8 +86,9 @@ engine or it does not come.
 Median sync wall time plus peak RSS at fixed enterprise load, deltas
 in percent against the wave-start pin; medium and small as the shape
 check (an enterprise-only win that warps the curve is suspect, not
-victory). The voyage brief may narrow this further; it may not widen
-it mid-night.
+victory). Tonight HQ also scores `styles.css` and `runtime-data.mjs`
+against the Panda v2 goalpost in `VOYAGE-HYPERSPACE.md`. The voyage
+brief owns that comparison; this file still owns the cycle.
 
 ## Evidence
 

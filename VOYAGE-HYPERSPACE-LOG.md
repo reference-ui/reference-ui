@@ -1,9 +1,12 @@
 # Voyage log — Hyperspace Run
 
 The captain's wave record: merges, bench deltas, decisions, what rode
-forward, what died. Crews write in the doom log (red) and the perf log
-(perf); this file is the captain's alone and lives only on the main
-line, never in a worktree.
+forward, what died. Crews write in the perf log; this file is the
+captain's alone and lives only on the main line, never in a worktree.
+
+HQ 2026-09-20 ~23:49: red team cancelled. Performance-only waves from
+the amended brief. Objective 1 (Reaper) stays COMPLETE below; do not
+reopen it.
 
 ## Wave 0 — voyage base
 
