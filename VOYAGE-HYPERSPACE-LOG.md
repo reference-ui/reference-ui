@@ -397,3 +397,11 @@ reopen it.
 - perf-4-d (D4 resolver unstage gated, kill-fast <60%) → agent 25
 - hunter-4-r (R1 chunked napi handoff, standing-method, ≥10MB) → agent 26
 - Merge order: a → d → c → b → r. Zero bundle lanes per HQ decree.
+
+## Wave 4, lane c MERGED — 97744dfd6 (out of order: files disjoint from a/d)
+- Landed: sources.rs (c) file_type fallback ONLY; (a) files_complete dead on firsthand extglob counterexample (flag would set, union would empty — native-hit ⊆ TS-retention false) + races. No TS touched → R1 sync/index.ts flag EVAPORATED; merge flags none.
+- Claim: ~40ms typical enterprise sync (pooled med −60ms, 8/9 same-sign, both orders). Bytes exact every leg, RSS held (overlapping bands), churn holds.
+- Captain gate: diff reviewed firsthand (d_type + is_dir fallback both walks + unix symlink pin test, in-boundary); md5 identical to lane tree (ee7d5ee9); agentrs q 0 violations (1 soft file-length notice, 405 lines).
+- DEFERRED to wave-close gate (box shared w/ 4 benching sibs): cargo + agentneo + bench re-proof on main.
+- Note: main tree carries pre-existing unstaged dirt (docs/missions/README.md, operation-fasthull.md, reports/latest/*) — not captain's, left untouched.
+- Still in flight: perf-4-a, perf-4-b, perf-4-d, hunter-4-r.
