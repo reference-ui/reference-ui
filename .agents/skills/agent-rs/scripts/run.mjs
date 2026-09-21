@@ -15,6 +15,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { withCpuGate, readLocks } from '../../test-core/scripts/cpu-gate.mjs'
+import { runFlameCommand } from './flame.mjs'
 import {
   findSourceFiles,
   inspectFiles,
@@ -476,6 +477,7 @@ function printHelp() {
   \x1b[32mvitest, vt\x1b[0m                 Run seam Vitest tests against N-API and TS wrappers
   \x1b[32mquality, check, lint\x1b[0m       Code quality, file length (<365 / <500), and cyclomatic complexity
   \x1b[32mbuild, ensure-native\x1b[0m       Build or ensure native .node binary with exclusive queue lock
+  \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to docs/evidence/flamegraph/)
   \x1b[32mfmt\x1b[0m                        Format Rust (cargo fmt) and JS/TS (prettier)
   \x1b[32mstatus\x1b[0m                     Display toolchain versions, native binary state, and CPU gate locks
   \x1b[32mhelp, --help\x1b[0m               Show this help message
@@ -491,6 +493,14 @@ function printHelp() {
   \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic, --crate virtualrs)
   \x1b[33m-t <filter>\x1b[0m                Target specific test name substring
   \x1b[33m--release\x1b[0m                  Run tests in release profile
+
+\x1b[1mOPTIONS FOR 'flame':\x1b[0m
+  \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
+  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/flamegraph/<scale>-<pin>/)
+  \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
+  \x1b[33m--rate <hz>\x1b[0m               Samply sampling rate, 10..10000 (default: 1000)
+  \x1b[33m--no-build\x1b[0m                Skip ensure-native; profile the prebuilt .node as-is
+  \x1b[33m--list\x1b[0m                    List frozen scales
 
 \x1b[1mOPTIONS FOR 'vitest':\x1b[0m
   \x1b[33m<pattern>\x1b[0m                  Target a specific test file
@@ -545,6 +555,16 @@ async function main() {
 
   if (command === 'build' || command === 'b' || command === 'ensure-native') {
     const code = await runEnsureNative(rsDir)
+    process.exit(code)
+  }
+
+  if (command === 'flame') {
+    const flameArgs = args.slice(1)
+    if (!flameArgs.includes('--no-build') && !flameArgs.includes('--list') && !flameArgs.includes('--help')) {
+      const buildCode = await runEnsureNative(rsDir)
+      if (buildCode !== 0) process.exit(buildCode)
+    }
+    const code = await runFlameCommand(flameArgs, repoRoot, rsDir)
     process.exit(code)
   }
 

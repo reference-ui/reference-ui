@@ -1,0 +1,89 @@
+{
+  "procedure": "agentrs-flame/1",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "68b020b2f6a1",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pTaHpS",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "worker": {
+    "syncMs": 1242.5886870000002,
+    "rssBefore": 111280128,
+    "rssPeak": 360747008,
+    "rssAfter": 337506304
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 108260,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-Q5WmGH/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "samply",
+    "record",
+    "--save-only",
+    "--unstable-presymbolicate",
+    "-o",
+    "/Users/ryn/Developer/reference-ui/docs/evidence/flamegraph/enterprise-latest/profile.json.gz",
+    "-r",
+    "1000",
+    "--",
+    "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+    "--perf-basic-prof",
+    "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-Q5WmGH/v8.log",
+    "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+    "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pTaHpS",
+    "10"
+  ],
+  "createdAt": "2026-09-21T08:32:39.039Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-logs/obj1-flame.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    "?? .agents/skills/agent-rs/scripts/flame-evidence.mjs",
+    "?? .agents/skills/agent-rs/scripts/flame-summary.mjs",
+    "?? .agents/skills/agent-rs/scripts/flame.mjs",
+    "?? docs/evidence/flamegraph/"
+  ]
+}
