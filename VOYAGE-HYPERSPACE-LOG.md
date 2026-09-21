@@ -282,6 +282,14 @@ reopen it.
   (+ spike memo). Churn: all 5 lanes RUN. Standing cautions
   in every brief: no `agentrs f`, no bare stash, no
   SITE-54 stash-proving, css defended.
+- Lane B rotation 1 DEAD (unresponsive, not a crash): 23+ min
+  silence, heartbeat order ignored, reviewer's GAPS verdict
+  (checks 1/2/3/5 PASS, check 4 FAILS: missing post artifacts
+  + medium bytes contradiction) delivered but never processed;
+  task terminal with no terminal line filed. Tree verified
+  intact (exactly the 9 allowed paths). Recovery rotation
+  briefed and ready — spawn REJECTED (root 8/8 full); retry
+  when a lane completes and frees a slot.
 - INCIDENT (~02:39): stash race across worktrees. Lane B
   implementer's SITE-54 stash-prove `pop` grabbed lane C's
   stash entry (034f04: burndown.ts + 4 publish files) into
