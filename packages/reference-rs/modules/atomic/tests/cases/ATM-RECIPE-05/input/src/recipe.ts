@@ -19,4 +19,4 @@ export const button = recipe({
     },
   ],
 })
-void button
+button({ size: 'lg', tone: 'danger' })

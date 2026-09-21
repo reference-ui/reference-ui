@@ -58,6 +58,9 @@ struct ParseSession<'a> {
     authored: &'a mut Vec<runtime::AuthoredDeclaration>,
     sinks: &'a mut Vec<extract::harvest::Sink>,
     session: &'a mut diagnostics::DiagnosticsSession,
+    tentative: &'a mut Vec<extract::recipes::selection::TentativeSelection>,
+    recipe_bindings: &'a mut Vec<extract::recipes::selection::RecipeBinding>,
+    selections: &'a mut Vec<extract::recipes::selection::RecipeSelection>,
 }
 
 /// Mutable sinks the parse phase fills; assembly consumes them after the
@@ -69,6 +72,9 @@ struct CompileSinks<'a> {
     authored: &'a mut Vec<runtime::AuthoredDeclaration>,
     sinks: &'a mut Vec<extract::harvest::Sink>,
     session: &'a mut diagnostics::DiagnosticsSession,
+    tentative: &'a mut Vec<extract::recipes::selection::TentativeSelection>,
+    recipe_bindings: &'a mut Vec<extract::recipes::selection::RecipeBinding>,
+    selections: &'a mut Vec<extract::recipes::selection::RecipeSelection>,
 }
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
@@ -80,6 +86,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
     let mut harvest_sinks = Vec::new();
+    let mut tentative = Vec::new();
+    let mut recipe_bindings = Vec::new();
+    let mut selections = Vec::new();
     // One compile-long diagnostics session (S3): analysis reports first,
     // then producers; proof and the S5 partition render from it at the end.
     let mut diag_session = diagnostics::DiagnosticsSession::new();
@@ -94,6 +103,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         authored: &mut authored,
         sinks: &mut harvest_sinks,
         session: &mut diag_session,
+        tentative: &mut tentative,
+        recipe_bindings: &mut recipe_bindings,
+        selections: &mut selections,
     };
     let (unpanicked, resolved_hosts) = run_parse_phase(request, &sources, sinks);
 
@@ -104,6 +116,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         authored,
         traced: resolved_hosts.traced,
         proof: request.wants_proof(),
+        selections,
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);
@@ -137,6 +150,9 @@ fn run_parse_phase(
         authored,
         sinks,
         session,
+        tentative,
+        recipe_bindings,
+        selections,
     } = sinks;
     // One parse per source: allocators and programs live for this phase,
     // so constants, the value graph, and extraction share them.
@@ -182,8 +198,12 @@ fn run_parse_phase(
             authored,
             sinks,
             session,
+            tentative,
+            recipe_bindings,
+            selections,
         };
         extract_all_sources(&mut extract_session, sources, &parsed);
+        resolve_recipe_selections(&mut extract_session);
     }
 
     // Harvest rides the same parse: the pool crosses the refused sinks into
@@ -229,6 +249,18 @@ fn partition_channels(
     } else {
         None
     };
+}
+
+/// Resolve tentative recipe selections against every file's bindings.
+/// Runs inside the extract block so the identity graph is still alive;
+/// the resolved selections cross into assembly with the other sinks.
+fn resolve_recipe_selections(session: &mut ParseSession<'_>) {
+    let resolved = extract::recipes::selection::resolve_all(
+        session.tentative,
+        session.recipe_bindings,
+        &session.identity,
+    );
+    session.selections.extend(resolved);
 }
 
 /// Extract every unpanicked source through the shared session.
@@ -364,6 +396,8 @@ fn extract_parsed_program(
         authored: session.authored,
         sinks: session.sinks,
         session: session.session,
+        recipe_bindings: session.recipe_bindings,
+        tentative: session.tentative,
     };
     let mut ctx = extract::ExtractContext::new(path, Some(content), config, sinks);
     extract::extract_with_context(program, &mut ctx);

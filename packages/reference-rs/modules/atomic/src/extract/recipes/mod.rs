@@ -13,6 +13,7 @@ use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticLocatio
 use crate::extract::ExtractContext;
 use crate::recipes::Recipe;
 
+pub(crate) mod selection;
 mod walk;
 
 /// Collect a live Reference `recipe(...)` call into `ctx.recipes`.
@@ -52,6 +53,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
         return;
     };
     let draft = walk::walk_recipe_object(obj, origin.as_str(), ctx);
+    record_result_binding(ctx, &class_name);
     ctx.recipes.push(Recipe {
         class_name,
         base: draft.base,
@@ -60,6 +62,34 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
         compounds: draft.compounds,
         location: call_location(ctx, call.span),
     });
+}
+
+/// Record the result binding a later call resolves through: the enclosing
+/// declarator, or the `default` pseudo-binding for `export default recipe()`.
+/// Unbound definitions record nothing and can only be called as an IIFE.
+fn record_result_binding(ctx: &mut ExtractContext<'_>, class_name: &str) {
+    let Some((local, span)) = result_binding_name(ctx) else {
+        return;
+    };
+    ctx.recipe_bindings.push(selection::RecipeBinding {
+        file: ctx.file.to_string(),
+        local,
+        class_name: class_name.to_string(),
+        span,
+        top_level: ctx.scope == crate::extract::scope::ROOT_SCOPE,
+    });
+}
+
+/// The binding name and identifier span for this definition, if it has one.
+fn result_binding_name(ctx: &ExtractContext<'_>) -> Option<(String, oxc_span::Span)> {
+    if let Some(binding) = ctx.recipe_binding {
+        let span = ctx.recipe_binding_span?;
+        return Some((binding.to_string(), span));
+    }
+    if ctx.default_recipe_export {
+        return Some(("default".to_string(), oxc_span::Span::default()));
+    }
+    None
 }
 
 /// Error diagnostic at a span's file/line/column, like the wants from this pass.

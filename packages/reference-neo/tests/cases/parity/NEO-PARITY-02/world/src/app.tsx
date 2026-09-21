@@ -104,7 +104,7 @@ const nestedItem = recipe({
   },
   defaultVariants: { size: 'sm' },
 })
-const nestedCls = nestedItem({ size: { base: 'sm', md: 'lg' } })
+const nestedCls = nestedItem({ size: { base: 'sm', md: 'lg', '2xl': 'lg' } })
 
 export function SiteButtons() {
   return (

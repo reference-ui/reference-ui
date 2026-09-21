@@ -1,6 +1,6 @@
 import { recipe, Button, Div } from '@reference-ui/react'
 
-recipe({
+const button = recipe({
   className: 'button',
   base: { display: 'inline-flex' },
   variants: {
@@ -13,3 +13,5 @@ recipe({
 export function App() {
   return <Button variant="primary" mt="2r" bg="red.500" />
 }
+
+button({ variant: 'primary' })

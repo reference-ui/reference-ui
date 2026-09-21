@@ -59,6 +59,7 @@ fn test_const_aliased_recipe_still_extracts() {
             className: 'neutralized',
             base: { fontWeight: 'bold' },
         });
+        button();
         "#,
     );
     assert!(res.diagnostics.is_empty());

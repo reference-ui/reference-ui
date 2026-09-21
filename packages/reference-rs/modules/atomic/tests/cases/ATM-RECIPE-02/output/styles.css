@@ -581,35 +581,5 @@
   .\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
   .\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
   .\@reference-ui\/lib__button_c_solid { opacity: 0.9; }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_v_solid { background: blue; color: white; }
-  }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_v_outline { border-style: solid; border-width: 1px; }
-  }
 }
 }

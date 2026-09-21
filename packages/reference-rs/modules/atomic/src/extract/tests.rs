@@ -209,6 +209,7 @@ fn test_css_and_recipe_call_sites() {
                 },
             },
         });
+        button({ size: 'sm' });
         "#,
     );
     assert!(res
@@ -521,6 +522,8 @@ fn test_bare_extract_collects_file_mutations() {
         authored: &mut authored,
         sinks: &mut Vec::new(),
         session: &mut crate::diagnostics::DiagnosticsSession::new(),
+        recipe_bindings: &mut Vec::new(),
+        tentative: &mut Vec::new(),
     };
     crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks);
 
@@ -562,6 +565,8 @@ fn test_spread_call_refusal_warns_without_sink() {
         authored: &mut authored,
         sinks: &mut sinks,
         session: &mut crate::diagnostics::DiagnosticsSession::new(),
+        recipe_bindings: &mut Vec::new(),
+        tentative: &mut Vec::new(),
     };
     crate::extract::extract(&parsed.program, "t.ts", system.breakpoints(), sinks_to);
 

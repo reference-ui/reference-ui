@@ -11,4 +11,4 @@ const badge = recipe({
   },
   compoundVariants: [{ variant: 'solid', css: { opacity: '0.9' } }],
 })
-void badge
+badge({ variant: 'solid' })

@@ -11,4 +11,4 @@ const button = recipe({
   },
   compoundVariants: [{ variant: 'solid', css: { opacity: '0.9' } }],
 })
-void button
+button({ variant: 'solid' })

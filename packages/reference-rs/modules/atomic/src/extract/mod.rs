@@ -26,6 +26,8 @@ mod gating_tests;
 #[cfg(test)]
 mod identity_tests;
 #[cfg(test)]
+mod selection_tests;
+#[cfg(test)]
 mod site_plan_tests;
 #[cfg(test)]
 mod tests;
@@ -34,8 +36,8 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use oxc_ast::ast::{
-    BindingPattern, CallExpression, FormalParameters, JSXOpeningElement, Program,
-    TaggedTemplateExpression, VariableDeclarator,
+    BindingPattern, CallExpression, ExportDefaultDeclaration, FormalParameters, JSXOpeningElement,
+    Program, TaggedTemplateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
@@ -51,6 +53,7 @@ use crate::diagnostics::{
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 use expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
+use recipes::selection::{RecipeBinding, TentativeSelection};
 use scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
 pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
@@ -73,6 +76,8 @@ pub struct ExtractSinks<'a> {
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
     pub session: &'a mut DiagnosticsSession,
+    pub recipe_bindings: &'a mut Vec<RecipeBinding>,
+    pub tentative: &'a mut Vec<TentativeSelection>,
 }
 
 /// Context for extracting style declarations across an AST file.
@@ -87,12 +92,16 @@ pub struct ExtractContext<'a> {
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub shadowed: &'a [HashSet<String>],
     pub recipe_binding: Option<&'a str>,
+    pub recipe_binding_span: Option<Span>,
+    pub default_recipe_export: bool,
     pub wants: &'a mut Vec<Want>,
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
     pub session: &'a mut DiagnosticsSession,
+    pub recipe_bindings: &'a mut Vec<RecipeBinding>,
+    pub tentative: &'a mut Vec<TentativeSelection>,
     missing_graph_reported: bool,
 }
 
@@ -114,12 +123,16 @@ impl<'a> ExtractContext<'a> {
             owned_props: config.owned_props,
             shadowed: config.shadowed,
             recipe_binding: None,
+            recipe_binding_span: None,
+            default_recipe_export: false,
             wants: sinks.wants,
             recipes: sinks.recipes,
             diagnostics: sinks.diagnostics,
             authored: sinks.authored,
             sinks: sinks.sinks,
             session: sinks.session,
+            recipe_bindings: sinks.recipe_bindings,
+            tentative: sinks.tentative,
             missing_graph_reported: false,
         }
     }
@@ -293,12 +306,16 @@ pub struct ExtractVisitor<'a> {
     pub scope_stack: Vec<ScopeId>,
     next_scope: ScopeId,
     pub recipe_binding: Option<String>,
+    pub recipe_binding_span: Option<Span>,
+    pub default_recipe_export: bool,
     pub wants: Vec<Want>,
     pub recipes: Vec<Recipe>,
     pub diagnostics: Vec<Diagnostic>,
     pub authored: Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: Vec<harvest::Sink>,
     pub session: DiagnosticsSession,
+    pub recipe_bindings: Vec<RecipeBinding>,
+    pub tentative: Vec<TentativeSelection>,
     missing_graph_reported: bool,
 }
 
@@ -316,12 +333,16 @@ impl<'a> ExtractVisitor<'a> {
             scope_stack: Vec::new(),
             next_scope: ROOT_SCOPE,
             recipe_binding: None,
+            recipe_binding_span: None,
+            default_recipe_export: false,
             wants: Vec::new(),
             recipes: Vec::new(),
             diagnostics: Vec::new(),
             authored: Vec::new(),
             sinks: Vec::new(),
             session: DiagnosticsSession::new(),
+            recipe_bindings: Vec::new(),
+            tentative: Vec::new(),
             missing_graph_reported: false,
         }
     }
@@ -349,10 +370,20 @@ impl<'a> Visit<'a> for ExtractVisitor<'a> {
 
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
         let prev = self.recipe_binding.take();
+        let prev_span = self.recipe_binding_span.take();
         self.recipe_binding = binding_ident_name(&decl.id);
+        self.recipe_binding_span = binding_ident_span(&decl.id);
         walk::walk_variable_declarator(self, decl);
         self.recipe_binding = prev;
+        self.recipe_binding_span = prev_span;
         add_declarator_shadow(&mut self.shadows, decl);
+    }
+
+    fn visit_export_default_declaration(&mut self, decl: &ExportDefaultDeclaration<'a>) {
+        let prev = self.default_recipe_export;
+        self.default_recipe_export = true;
+        walk::walk_export_default_declaration(self, decl);
+        self.default_recipe_export = prev;
     }
 
     fn visit_jsx_opening_element(&mut self, elem: &JSXOpeningElement<'a>) {
@@ -387,6 +418,7 @@ fn extract_call(visitor: &mut ExtractVisitor<'_>, call: &CallExpression<'_>) {
     let mut ctx = visitor_context(visitor);
     css::extract(call, &mut ctx);
     recipes::extract(call, &mut ctx);
+    recipes::selection::extract_call(call, &mut ctx);
 }
 
 /// Diagnose a tagged template on a live `css` binding. The tag is never a
@@ -408,6 +440,8 @@ fn extract_tagged_template(visitor: &mut ExtractVisitor<'_>, expr: &TaggedTempla
 
 fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractContext<'a> {
     let binding = visitor.recipe_binding.as_deref();
+    let binding_span = visitor.recipe_binding_span;
+    let default_export = visitor.default_recipe_export;
     let scope = visitor.scope_stack.last().copied().unwrap_or(ROOT_SCOPE);
     let config = ExtractConfig {
         chain: visitor.chain,
@@ -424,9 +458,13 @@ fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractCo
         authored: &mut visitor.authored,
         sinks: &mut visitor.sinks,
         session: &mut visitor.session,
+        recipe_bindings: &mut visitor.recipe_bindings,
+        tentative: &mut visitor.tentative,
     };
     let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
     ctx.recipe_binding = binding;
+    ctx.recipe_binding_span = binding_span;
+    ctx.default_recipe_export = default_export;
     ctx.scope = scope;
     ctx
 }
@@ -459,6 +497,13 @@ fn binding_ident_name(pattern: &BindingPattern<'_>) -> Option<String> {
     }
 }
 
+fn binding_ident_span(pattern: &BindingPattern<'_>) -> Option<Span> {
+    match pattern {
+        BindingPattern::BindingIdentifier(id) => Some(id.span),
+        _ => None,
+    }
+}
+
 /// Extract all style wants and diagnostics from a parsed AST program with provided context.
 pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>) {
     let config = ExtractConfig {
@@ -476,6 +521,8 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
     ctx.diagnostics.extend(visitor.diagnostics);
     ctx.authored.extend(visitor.authored);
     ctx.sinks.extend(visitor.sinks);
+    ctx.recipe_bindings.extend(visitor.recipe_bindings);
+    ctx.tentative.extend(visitor.tentative);
     let facts = visitor.session.take_facts();
     ctx.session.extend_facts(facts);
 }

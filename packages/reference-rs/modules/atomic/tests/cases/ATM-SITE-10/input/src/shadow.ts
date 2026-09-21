@@ -2,7 +2,8 @@ import { css, recipe } from '@reference-ui/react'
 
 css({ color: 'blue' })
 css.object({ display: 'flex' })
-recipe({ className: 'button', base: { fontWeight: 'bold' } })
+const button = recipe({ className: 'button', base: { fontWeight: 'bold' } })
+button()
 
 function f(css: (styles: object) => object) {
   css({ color: 'red' })

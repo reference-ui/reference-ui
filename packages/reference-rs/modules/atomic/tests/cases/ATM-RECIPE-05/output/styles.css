@@ -581,35 +581,5 @@
   .\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
   .\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
   .\@reference-ui\/lib__button_c_lg_danger { border-color: darkred; padding: 25px; }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_s_lg { font-size: 20px; padding: 20px; }
-  }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_t_danger { color: red; padding: 15px; }
-  }
 }
 }
