@@ -44,3 +44,11 @@ No entries yet.
 - Next crews: perf-1-a cold payload (A1+A2); perf-1-b dead-file fast path (A3+A4+A5, architect holds harvest fence); perf-1-c recipe sheet grouping (A6b now, A6a wave 2); perf-1-d recipe tables (A7).
 
 Wave 1 recon: COMPLETE — map filed, 7 avenues, next crews: perf-1-a (A1+A2), perf-1-b (A3+A4+A5), perf-1-c (A6b), perf-1-d (A7)
+## Wave 1, lane e — deepsee observability tooling (burndown + RSS + bundle accounting)
+- Tried: new deepsee/ tooling only (cli, worker-phases, sample-parse, burndown, rss, bundle-css, bundle-data, bundle, README) + evidence note fasthull-burndown-1.md; zero engine/bench/load edits
+- Bench (tooling moves no numbers by design; reconciliation instead): enterprise burndown serde 23.6% / assembly 19.0% / emit 11.0% of sync; RSS worker 806.7 / parent 801.5 vs pin 796.0 MiB; bundle byte-identical to pin (15007762/4090907 raw AND gzip)
+- Stability: no engine file touched (git status: log + 2 new paths only) so no agentrs smoke owed; sync deterministic (cmp-clean); agentneo q 0 errors
+- Review: VERIFIED (independent agent, firsthand on small/medium + ent-2 artifact match: cross-check straddle ±, parent≈worker, residuals 0/0, raw=pin, tree clean, note matches)
+- Outcome: landed — one command (`deepsee all --scale enterprise`) gives the full burndown; lanes a–d have their quantified targets
+
+Wave 1, lane e: VERIFIED — deepsee tooling complete, enterprise burndown + byte-exact bundle accounting filed, review passed.
