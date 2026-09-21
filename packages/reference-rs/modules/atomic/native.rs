@@ -37,6 +37,8 @@ struct NativeCompileRequest {
 
 #[napi]
 pub fn compile_system(request_json: String) -> Result<String> {
+    #[cfg(feature = "alloc-trace")]
+    let mut _span = crate::alloc_trace::CompileSpan::enter(request_json.len());
     let req: NativeCompileRequest = serde_json::from_str(&request_json)
         .map_err(|err| napi::Error::from_reason(format!("Invalid compile request JSON: {err}")))?;
     let proof = wants_proof(&req);
@@ -52,6 +54,8 @@ pub fn compile_system(request_json: String) -> Result<String> {
         Ok(system) => system,
         Err(message) => return serialize(&rejection(&message), proof),
     };
+    #[cfg(feature = "alloc-trace")]
+    _span.note_files(req.files.as_ref());
     let compile_req = ::atomic::CompileRequest {
         root_dir: req.source_root.or(req.root_dir),
         files: req.files,

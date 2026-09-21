@@ -49,8 +49,9 @@ of ad-hoc invocations will rot; a runner subcommand gets used.
       to evidence dir) + one enterprise flamegraph filed as the Wave 5
       baseline. (landed 2026-09-21, verified firsthand, evidence at
       docs/evidence/flamegraph/enterprise-latest/)
-- [ ] Allocation report on the enterprise compile reproducing the R1
-      findings by measurement.
+- [x] Allocation report on the enterprise compile reproducing the R1
+      findings by measurement. (landed 2026-09-21, verified firsthand,
+      evidence at docs/evidence/alloc/enterprise-latest/)
 - [ ] Criterion benches for ≥5 hot functions, green in CI-adjacent
       runs (`pnpm agentrs c` family).
 - [ ] Counters pass answering floor-vs-waste per top room.

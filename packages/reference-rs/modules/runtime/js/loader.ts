@@ -4,6 +4,8 @@
  *
  * Falls back to null if the native addon is unavailable (e.g. wrong platform,
  * not built, or load error). Callers should use JS fallback when native is null.
+ * REFERENCE_UI_NATIVE_PATH overrides the candidate with one explicit file so
+ * instrument builds (e.g. `pnpm agentrs alloc`) can load without touching dist.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -20,6 +22,7 @@ import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from './shared/native-contract.js'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
+const NATIVE_PATH_ENV = 'REFERENCE_UI_NATIVE_PATH'
 type RequireFn = ReturnType<typeof createRequire>
 
 export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
@@ -111,6 +114,8 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
 }
 
 export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
+  const override = process.env[NATIVE_PATH_ENV]
+  if (override && override.length > 0) return [override]
   return [join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)]
 }
 

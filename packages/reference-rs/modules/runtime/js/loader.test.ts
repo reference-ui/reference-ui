@@ -113,6 +113,36 @@ describe('loader', () => {
     ])
   })
 
+  it('honors REFERENCE_UI_NATIVE_PATH as the only candidate', async () => {
+    const { getVirtualNativeCandidates } = await importLoaderModule()
+    const previous = process.env.REFERENCE_UI_NATIVE_PATH
+    process.env.REFERENCE_UI_NATIVE_PATH = '/tmp/trace/virtual-native.darwin-x64.node'
+    try {
+      expect(
+        getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
+      ).toEqual(['/tmp/trace/virtual-native.darwin-x64.node'])
+    } finally {
+      if (previous === undefined) delete process.env.REFERENCE_UI_NATIVE_PATH
+      else process.env.REFERENCE_UI_NATIVE_PATH = previous
+    }
+  })
+
+  it('ignores an empty REFERENCE_UI_NATIVE_PATH', async () => {
+    const { getVirtualNativeCandidates } = await importLoaderModule()
+    const previous = process.env.REFERENCE_UI_NATIVE_PATH
+    process.env.REFERENCE_UI_NATIVE_PATH = ''
+    try {
+      expect(
+        getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
+      ).toEqual([
+        '/workspace/packages/reference-rs/dist/native/virtual-native.darwin-x64.node',
+      ])
+    } finally {
+      if (previous === undefined) delete process.env.REFERENCE_UI_NATIVE_PATH
+      else process.env.REFERENCE_UI_NATIVE_PATH = previous
+    }
+  })
+
   it('also resolves binaries from the installed platform package when present', async () => {
     const { resolveVirtualNativeBinaryPath } = await importLoaderModule({
       requireResolveImpl: (path: string) => {
