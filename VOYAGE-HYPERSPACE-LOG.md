@@ -251,6 +251,37 @@ reopen it.
 - NO hash-pin commits (mystery docs/missions edits still
   uncommitted + untouched — HQ to ratify/revert). Numbers
   above are firsthand quiet-box medians.
+
+## Wave 3 — recon COMPLETE, perf wave dispatched
+
+- Fresh oracle crew filed `fasthull-recon-3.md` (5 avenues +
+  spike) + perf-log entry, zero product edits. Headline:
+  burndown buckets lied in two places (serde≈file IO ~294ms,
+  assembly⊃resolver ladder ~90ms — both firsthand-verified);
+  corrected frontier: native re-read (~294ms), prepare
+  serial reads (~100-150 of 341), trace path (B4 + keep-alive
+  ruling, −130 proven), ladder probes (~109ms), assembly
+  second-resolve (≤~100, prove-first). Codec spent (~15ms
+  true — ex-morning-Q1 ship-one-sheet RETIRED). CSS defended
+  DONE (gate exact, slack 0). Scored RSS (308) = end-state +
+  allocator-resident, not the 397 true peak — last mile is a
+  time-boxed spike, else a morning question (allocator
+  strategy is product architecture).
+- Captain's rulings: 6 crews cut (spike is time-boxed, won't
+  pace the wave); deepsee attribution fix rides lane d as
+  fenced step-0 (W2c precedent — captain doesn't implement);
+  any css regrowth fails its arc on sight.
+- Wave cut from `d1b0e0549`: (a) single read C3 (architect
+  rules 4 homework BEFORE steps 2-3); (b) trace wall C1
+  (GAPS diff seeded + keep-alive + SourceType align);
+  (c) ladder memo C2 (quantify in-lane, no double-claim);
+  (d) assembly resolve C4 (timers first, ≥30ms gate else
+  fast kill); (e) data reshape C5 (E2E recompute proof);
+  (s1) end-state retention spike (kill-fast ≤10MB scored,
+  memo always lands). Rendezvous order: c → b → a → d → e
+  (+ spike memo). Churn: all 5 lanes RUN. Standing cautions
+  in every brief: no `agentrs f`, no bare stash, no
+  SITE-54 stash-proving, css defended.
 - INCIDENT (~02:39): stash race across worktrees. Lane B
   implementer's SITE-54 stash-prove `pop` grabbed lane C's
   stash entry (034f04: burndown.ts + 4 publish files) into
