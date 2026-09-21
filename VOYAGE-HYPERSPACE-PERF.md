@@ -76,3 +76,11 @@ Wave 1, lane a: VERIFIED — cold payload wins sync+RSS at every scale with byte
 - Outcome: VERIFIED — ready for captain merge. Merge flags: spec-recipes.test.ts:35-44 + SITE-15:20-21 share hunks with lane a; harvest-census EXPECTED_BYTES shares hunk with lane c; contracts/js types + fixture are disjoint-section shares with lane a.
 
 Wave 1, lane d: VERIFIED — recipe tables derived at runtime, data -59%/-79%/-87%, css identical, paint holds.
+## Wave 1, lane c — group byte-identical recipe blocks under one comma selector (A6b + A9)
+- Tried: nothing — killed pre-implementation. Census (3 agents, firsthand, own kept repos): small 3,021 rules → 32 within-wrap dup pairs, ALL cross-block-instance, 0 adjacent; medium 14,501 → 422 groups, 0 adjacent. Merge-everything sim: −1.5 KB raw / gzip +71 B small, −15 KB raw / +1,382 B medium. A9 CSS exact-dupes: 0 both scales.
+- Bench (locked load, medians): baseline only (own tree, box shared — wall/RSS conditions-affected, bytes pin-identical): small 472ms/128.9 MiB css 538.0 KiB, medium 452ms/217.8 MiB css 2.4 MiB. No implementation bench — no change.
+- Stability: n/a (no diff). Tree holds only log + reports/latest scratch; zero product edits.
+- Review: architect (≠ profiler) KILL-concurs firsthand: cross-block merge moves selectors across co-matching classes (composeClasses stacks base+variant+compound; order stations ATM-RECIPE-05/NEO-RECIPE-08), only safe variant (adjacent) has 0 sites, move (a) needs lane b's extract signal (Wave 2).
+- Outcome: died — A6(b) grouping KILLED: 0 order-safe groupable sites at both scales and merge-everything is gzip-positive; the duplication is the 6× responsive fan-out, which only observed-use gating (Wave 2, move (a)) can touch.
+
+[2026-09-21T00:25Z lane-c] Terminal: architect ruled KILL, three-agent count agreement (profiler/lead/architect all 3,021/32/0/0 small). No implementer dispatched (nothing safe to implement), no reviewer needed (no diff). Tree has zero product edits. Wave 2: gate (value,bp) on observed call-site responsive objects via lane b's signal; re-census grouping after fan-out collapses.
