@@ -41,7 +41,8 @@ The pin resolves before generation from the tree ignoring `reports/` itself. Has
 
 The big three per scale, always medians across runs unless you say otherwise:
 
-- **peak RSS** — max resident set sampled inside the child around `sync()` alone
+- **peak RSS** — max resident set sampled inside the child around `sync()` alone (v1 in-loop sampler, history-comparable)
+- **peak HW** — OS high-water (`getrusage maxrss`) from the same child, scorer `bench-worker/2`; a new series, never compared against old RSS
 - **sync time** — wall time around `sync()`, generation excluded
 - **bundle** — `styles.css` + `runtime-data.mjs` bytes, raw and gzip
 

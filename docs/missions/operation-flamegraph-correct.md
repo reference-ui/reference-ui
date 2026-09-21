@@ -75,7 +75,9 @@ checks. Triage by the captain confirmed the code mechanics of issues
       birth/death handled). (landed 2026-09-21, verified firsthand,
       procedure agentrs-counters/3, republished at
       docs/evidence/counters/enterprise-counters3/)
-- [ ] Independent RSS sampler behind a versioned bench procedure.
+- [x] Independent RSS sampler behind a versioned bench procedure.
+      (landed 2026-09-21, verified firsthand: scorer bench-worker/2
+      dual-reporting v1 RSS + OS high-water)
 - [ ] Alloc counts by compiler phase.
 - [ ] Regenerated enterprise evidence + recon v2 (revised bars,
       withdrawn ceilings, corrected numbers).
