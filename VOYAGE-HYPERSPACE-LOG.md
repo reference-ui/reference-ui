@@ -196,6 +196,61 @@ reopen it.
   ride-along); (d) trace gate B4 (fully disjoint).
   Rendezvous order: d → c → b → a. Churn: a + b run;
   c/d skip only with architect rationale.
+
+## Wave 2 — CLOSED (3 landed, 1 GAPS riding W3, all committed)
+
+- Rendezvous order: c → b → a (d GAPS, no merge). Lanes c/b/a
+  all VERIFIED with terminal lines checked in-tree. Merge
+  conflicts: system.ts (c-logic + b-mirror) 3-way clean;
+  A's 5 overlaps 3-way clean except assembly.rs + lib.rs,
+  whose 3 conflicts were adjacent-additions (proof + selections
+  fields) — kept both sides, mechanical, verified by build.
+  Two merge-integration fixes (captain, both arcs' intent
+  preserved): selection_tests.rs requests `logs: proof`
+  (B3 gates top-level tables A's tests read); RECIPE-09 spec
+  reads `qualifiedName` (B5 dropped `className`).
+- Firsthand gates per merge on main (all green): cargo atomic
+  511→533, vitest atomic 300-301/301, styletrace 28/28 (c),
+  contracts 13/13, agentneo 173/173 (closes A's
+  pre-refactor-binary review debt), agentrs q 0 violations,
+  agentneo q 0 errors (2 pre-existing burndown warns),
+  full bench:neo + churn with base comparisons. SITE-54
+  "pre-existing" claims (5 lanes over 2 waves) have NEVER
+  reproduced on main — shared-box flake; W3 briefs ban
+  stash-proving it (both stash races came from those cycles).
+- Enterprise progression: W2-start 2.46s/670.9MiB →
+  post-C 2.34/564.8 (bytes identical) → post-B 2.27/570.3
+  (data −40%) → post-A 1.66/308.3 (css →2.7MiB). Final vs
+  pin `5eda2c60b7e5`: sync −53%, RSS −61%, css 14.3→2.7 MiB
+  (−81%, 825.0→264.2 KiB gzip), data 3.9MiB→311.2 KiB (−92%,
+  42.6→26.6 gzip). Small: 150→97ms, 121.8→108.5MiB, css
+  538.0→90.5KiB. Medium: 461→209ms, 207.6→130.6MiB, css
+  2.4MiB→340.6KiB. Churn: 5.12→3.98s, 987.1→526.8MiB, css
+  8.3→7.9MiB (responsive vanishes per strict hypothesis),
+  data 386.3→110.3KiB.
+- Vs Panda goalpost (enterprise): sync 1.66s vs 645ms (2.6x),
+  RSS 308 vs 261 MiB (1.18x), css 2.7 MiB AT PARITY raw
+  (gzip 264.2 vs 278.8 KiB — SMALLER). Data 311 KiB
+  (internal −92%; Panda JS not comparable).
+- Spent: B1, B2, B3 (REDUCED — plan-gating tripwire-killed,
+  12/243 render_session deltas; css/recipes/wants gating
+  landed), B5. Rides W3: B4 (GAPS — perf proven −130ms
+  no-overlap, selection sound; SITE-57 parse-failure
+  isolation station needs out-of-boundary plumbing or
+  renegotiation; diff preserved on voyage/hyperspace-perf-2-d
+  as GAPS-PRESERVED, log entry on main).
+- INCIDENT #2 (~02:36, pre-broadcast): C reviewer's stash pop
+  consumed D's stash. D recovered byte-identical from
+  dangling 0566fae4 (verified by cmp); zero loss. Both races
+  predate the no-stash order; no bare stash since.
+- INTERVENTION (~02:55): A tree formatter-blasted (211 files,
+  cause: lead ran `pnpm agentrs f` = whole-workspace format).
+  Rebrief queued; crew repaired to 25 in-boundary files,
+  VERIFIED after. Standing caution for W3 briefs: never run
+  `agentrs f` (or any repo-wide formatter) in a lane tree.
+- NO hash-pin commits (mystery docs/missions edits still
+  uncommitted + untouched — HQ to ratify/revert). Numbers
+  above are firsthand quiet-box medians.
 - INCIDENT (~02:39): stash race across worktrees. Lane B
   implementer's SITE-54 stash-prove `pop` grabbed lane C's
   stash entry (034f04: burndown.ts + 4 publish files) into
