@@ -47,17 +47,23 @@ impl ResolvedHosts {
 pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
     let mut session = DiagnosticsSession::new();
     let sources = crate::sources::collect(request);
-    resolve(request, &sources, &mut session).0.hosts()
+    // No parse runs on this path, so no failure signal exists: every
+    // source counts as parsed-clean and the trace gate applies fully.
+    let failed = vec![false; sources.len()];
+    resolve(request, &sources, &failed, &mut session).0.hosts()
 }
 
 /// Trace the include-scoped entry set against the engine surface.
 /// Returns traced and configured names plus trace warnings for the
 /// compile diagnostics, reporting one host fact per skip into the
 /// session. Empty entry sets trace nothing, silently. Takes the
-/// compile's collected sources; the caller collects once.
+/// compile's collected sources; the caller collects once. `failed`
+/// marks main-phase parse failures by source index so their entries
+/// survive the trace gate and keep their located warnings (C1).
 pub fn resolve(
     request: &CompileRequest,
     sources: &[(String, String)],
+    failed: &[bool],
     sink: &mut DiagnosticsSession,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
@@ -74,7 +80,7 @@ pub fn resolve(
     let Some(root_dir) = request.root_dir.as_ref() else {
         return vacant();
     };
-    let entries = entry_paths(sources);
+    let entries = entry_paths(sources, failed);
     if entries.is_empty() {
         return vacant();
     }

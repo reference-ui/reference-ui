@@ -166,7 +166,15 @@ fn run_parse_phase(
     let project_constants = collect_project_constants(sources, &parsed);
     let mut graph = extract::resolver::ValueGraph::new(sources, &parsed, &project_constants);
     let identity = extract::identity::IdentityGraph::new(sources);
-    let (hosts, host_diagnostics) = hosts::resolve(request, sources, session);
+    // Parse-failure keep-alive (C1): failed sources keep their trace
+    // entry, so the re-parse fails identically and the located warning
+    // survives. The bench load reports zero parse errors, so the gate
+    // still skips every dead file.
+    let failed: Vec<bool> = parsed
+        .iter()
+        .map(|ret| ret.panicked || !ret.errors.is_empty())
+        .collect();
+    let (hosts, host_diagnostics) = hosts::resolve(request, sources, &failed, session);
     let traced_jsx = hosts.hosts();
     diagnostics.extend(host_diagnostics);
     // Independent diagnostics analysis over the borrowed parse (S2).
