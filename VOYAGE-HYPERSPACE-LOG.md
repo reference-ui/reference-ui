@@ -413,3 +413,10 @@ reopen it.
 - Captain gate: full diff reviewed firsthand (binary-search line math + fuzz pin verified by read); md5 identical; agentrs q 0 violations (3 warns, pre-existing kinds per lane).
 - DEFERRED to wave-close gate: cargo + agentneo + bench re-proof on main (shared box).
 - Still in flight: perf-4-b, perf-4-d, hunter-4-r.
+
+## Wave 4, hunter r DIED — chunked handoff disproven (do-not-merge)
+- Built the FULL lane (staged napi compile_init/add_files/finish/abort + id-map, chunk orchestration, 1000-file chunks; lib.rs untouched → D4 flag zero). Implementation verified: chunked==single-shot deep-equal, wall +0.4ms noise, bytes exact, 6/6 new tests, cargo 549/549, neo 173/173, quality clean.
+- Mechanism kill (deterministic): --trace-gc at enterprise shows ZERO mark-compacts in the handoff window under BOTH paths (12sc/0mc each, reviewer-reproduced firsthand) — nulled old-space garbage stays resident through the scored peak. The ~17MB reachable-live delta is real but UNSCORED; any scored movement would be S1-lottery. No in-lane escape (forcing banned, prepare OOB, Rust holds the identical Vec either way). Reviewer: CONCUR-DIED.
+- VOYAGE FINDING: R1 was the only structural ≥10MB scored lever on the map — now disproven. Remaining RSS gap is GC-timing/allocator-resident, out of reach by standing rules. RSS is definitively home; do not send another RSS hunter without a new instrument reading.
+- Diff preserved on voyage/hyperspace-perf-4-r as evidence. Nothing merged.
+- Still in flight: perf-4-b, perf-4-d.
