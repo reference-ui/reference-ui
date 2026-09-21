@@ -216,7 +216,7 @@ describe('enterprise harvest census', () => {
     result = await compile({
       files: collectFixture(FIXTURE_SRC),
       baseSystem: LIB_SYSTEM_SPEC,
-      logs: ['compiler'],
+      logs: ['compiler', 'proof'],
     })
     siteValues = new Set(
       (result.wants ?? [])

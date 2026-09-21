@@ -60,3 +60,11 @@ Wave 1, lane e: VERIFIED — deepsee tooling complete, enterprise burndown + byt
 - Outcome: landed pending captain merge; no commits (crews never commit).
 
 Wave 1, lane b: VERIFIED — dead-file fast path, enterprise sync -17.9% byte-identical, churn unregressed.
+## Wave 1, lane a — cold payload: slim N-API result (proof channel) + print the utility sheet once
+- Tried: native.rs serializes slim view (6 live fields) by default, full on logs:'proof'; new build_stylesheets_with shares one recipes+utilities suffix (existing builders untouched); contracts slimmed; stations re-pointed via proof flags (compileCase choke + 15 direct calls); new seam slim-pin + emitter equivalence tests. 25 files, all in-boundary; types.rs/system_layers/grouping-fns untouched.
+- Bench (locked load, medians, box shared; reviewer reproduced all): small 181→142ms sync, RSS no-signal (126.6→126.1 in spread); medium 497→423ms / 208.5→199.3MiB; enterprise 3.47→3.18s / 799→~700MiB (7 post samples all < pre); churn 5.66→4.4s / 1070→~645MiB. Bundle bytes EXACT-equal base-vs-final (css+data raw+gzip, all scales + churn). Asterisk: 2 gzip values differ pin-vs-base ±1B pre-existing (identical base/final).
+- Stability: v atomic 299/300 (ATM-SITE-54 pre-existing — stash-proven + reviewer causal check, bare theme-pkg rung, no fixture node_modules), v contracts 13/13, c atomic 499 green, agentneo 173/173 ok, q clean (rs 5 + neo 2). Churn RUN as guardrail: unregressed, big win.
+- Review: VERIFIED (disjoint reviewer, firsthand bench + stability + diff; wart-note: wrapper stylePlans still required vs contracts optional — suggest aligning at merge).
+- Outcome: VERIFIED, ready for captain merge.
+
+Wave 1, lane a: VERIFIED — cold payload wins sync+RSS at every scale with byte-identical bundles.

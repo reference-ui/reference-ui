@@ -144,3 +144,44 @@ fn test_every_plan_class_name_matches_a_stylesheet_selector() {
         }
     }
 }
+
+#[test]
+fn test_dual_build_matches_paired_single_builds() {
+    let mut set = AtomSet::new();
+    set.insert(Atom::new(
+        "color".into(),
+        CssValue::String("blue.600".into()),
+        smallvec![],
+        false,
+    ));
+    set.insert(Atom::new(
+        "color".into(),
+        CssValue::String("red.500".into()),
+        smallvec![when("_hover")],
+        false,
+    ));
+    let system = BaseSystem::lib_fixture();
+    let mut primary = Vec::new();
+    let mut portable_sink = Vec::new();
+    let (sheet, portable) = build_stylesheets_with(
+        &set,
+        system,
+        &[],
+        StylesheetSinks {
+            primary: &mut primary,
+            portable: &mut portable_sink,
+        },
+    );
+    let mut single_primary = Vec::new();
+    let mut single_portable = Vec::new();
+    assert_eq!(
+        sheet,
+        build_stylesheet_with(&set, system, &[], &mut single_primary)
+    );
+    assert_eq!(
+        portable,
+        build_portable_stylesheet_with(&set, system, &[], &mut single_portable)
+    );
+    assert_eq!(primary, single_primary);
+    assert_eq!(portable_sink, single_portable);
+}

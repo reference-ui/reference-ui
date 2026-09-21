@@ -123,7 +123,9 @@ export async function compileCase(
   const rootDir = path.resolve(getCaseInputDir(caseName))
   const baseSystem =
     extras.baseSystem ?? readOptionalBaseSystem(rootDir) ?? LIB_SYSTEM_SPEC
-  return compile({ rootDir, ...extras, baseSystem })
+  // Stations read the compile-internal rows, so the harness always requests
+  // the proof channel; an explicit extras.logs still wins for slim-path tests.
+  return compile({ logs: ['proof'], rootDir, ...extras, baseSystem })
 }
 
 function readOptionalBaseSystem(rootDir: string): EvaluatedSystemSpec | undefined {

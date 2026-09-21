@@ -127,6 +127,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
 
   it('ATM-SEAM-01: compileSync produces complete NativeRuntimeArtifact and valid stylesheets', () => {
     const result = compileSync({
+      logs: ['proof'],
       baseSystem: specSystem,
       files: [
         {
@@ -177,6 +178,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     // plan classes; the fixed engine must keep every plan class in the sheet.
     const spec = { ...LIB_SYSTEM_SPEC, name: 'color-mode' }
     const result = compileSync({
+      logs: ['proof'],
       baseSystem: spec as EvaluatedSystemSpec,
       files: [
         {
@@ -236,5 +238,33 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     expect(messages.some(m => m.includes('0x10'))).toBe(true)
     expect(messages.some(m => m.includes('Infinity'))).toBe(true)
     expect(messages.some(m => m.includes('NaN'))).toBe(true)
+  })
+
+  it('slims proof rows by default and restores them on the proof channel', () => {
+    const files = [
+      {
+        path: 'src/index.tsx',
+        content: `
+          import { css } from '@reference-ui/react';
+          export const c = css({ color: 'blue.500', p: '2' });
+        `,
+      },
+    ]
+    const slim = compileSync({ baseSystem: specSystem, files })
+    expect(slim.stylesheet).toContain('@layer utilities')
+    expect(slim.portableStylesheet).toContain('@layer utilities')
+    expect(slim.runtime.schemaVersion).toBe(2)
+    expect('stylePlans' in slim).toBe(false)
+    expect('wants' in slim).toBe(false)
+    expect('css' in slim).toBe(false)
+    expect('recipes' in slim).toBe(false)
+    expect('atomCount' in slim).toBe(false)
+
+    const full = compileSync({ baseSystem: specSystem, files, logs: ['proof'] })
+    expect(full.stylesheet).toBe(slim.stylesheet)
+    expect(full.portableStylesheet).toBe(slim.portableStylesheet)
+    expect(full.stylePlans.length).toBeGreaterThan(0)
+    expect(full.wants!.length).toBeGreaterThan(0)
+    expect(Object.keys(full.css!.classes ?? {})).toHaveLength(full.atomCount!)
   })
 })

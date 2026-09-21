@@ -23,6 +23,7 @@ function frozenBase(sourceRoot: string): NativeCompileRequest {
     jsxHosts: [],
     sourceRoot,
     declarationRoot: sourceRoot,
+    logs: ['proof'],
   }
 }
 

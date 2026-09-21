@@ -30,6 +30,7 @@ const spec: AtomicCaseSpec = {
       jsxHosts: [] as string[],
       sourceRoot,
       declarationRoot: sourceRoot,
+      logs: ['proof'],
     }
     const frozen = await compile(frozenBase)
     expect(frozen.stylesheet).toBe(result.stylesheet)

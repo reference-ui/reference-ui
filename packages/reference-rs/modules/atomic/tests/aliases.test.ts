@@ -15,6 +15,7 @@ const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 describe('canon locked alias consumption', () => {
   it('extracts locked authoring aliases into style wants', async () => {
     const result = await compile({
+      logs: ['proof'],
       baseSystem: specSystem,
       files: [
         {
@@ -44,6 +45,7 @@ describe('canon locked alias consumption', () => {
 
   it('refuses non-canonical shortcuts from extracting as style props', async () => {
     const result = await compile({
+      logs: ['proof'],
       baseSystem: { ...specSystem, staticCss: {} },
       files: [
         {
@@ -80,6 +82,7 @@ describe('canon locked alias consumption', () => {
 
   it('maps array slots onto the profile scale with authored names appended', async () => {
     const result = await compile({
+      logs: ['proof'],
       baseSystem: {
         ...specSystem,
         name: 'custom-scale',
@@ -101,6 +104,7 @@ describe('canon locked alias consumption', () => {
 
   it('maps array slots onto profile widths with authored widths appended', async () => {
     const result = await compile({
+      logs: ['proof'],
       baseSystem: {
         ...specSystem,
         name: 'custom-widths',

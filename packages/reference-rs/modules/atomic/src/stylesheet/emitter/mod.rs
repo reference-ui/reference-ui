@@ -57,6 +57,46 @@ pub fn build_portable_stylesheet_with(
     wrap_package_layer(&system.name, &inner)
 }
 
+/// Paired diagnostic sinks for the dual-sheet build. The primary sink is kept;
+/// the portable sink is dropped by the caller so global warnings surface once.
+pub struct StylesheetSinks<'a> {
+    pub primary: &'a mut Vec<crate::diagnostics::Diagnostic>,
+    pub portable: &'a mut Vec<crate::diagnostics::Diagnostic>,
+}
+
+/// Build both sheets sharing one recipes+utilities suffix. Only the system
+/// layers differ (token selectors), so the suffix sorts and prints once and
+/// both sheets stay byte-identical to the paired single builds.
+pub fn build_stylesheets_with(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    recipes: &[CompiledRecipe],
+    sinks: StylesheetSinks<'_>,
+) -> (String, String) {
+    let shared = shared_layers(atom_set, system, recipes);
+    let mut inner = LAYER_PREAMBLE.to_string();
+    append_system_layers(&mut inner, system, sinks.primary);
+    inner.push_str(&shared);
+    let stylesheet = wrap_package_layer(&system.name, &inner);
+    let mut portable_inner = LAYER_PREAMBLE.to_string();
+    append_portable_system_layers(&mut portable_inner, system, sinks.portable);
+    portable_inner.push_str(&shared);
+    let portable_stylesheet = wrap_package_layer(&system.name, &portable_inner);
+    (stylesheet, portable_stylesheet)
+}
+
+/// Recipes + utilities layers, identical in both sheets; sorted and printed once.
+fn shared_layers(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    recipes: &[CompiledRecipe],
+) -> String {
+    let mut shared = String::new();
+    append_recipes_layer(&mut shared, recipes);
+    append_utilities_layer(&mut shared, atom_set, &system.name);
+    shared
+}
+
 fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {
     if atom_set.is_empty() {
         return;

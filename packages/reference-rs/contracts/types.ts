@@ -148,14 +148,18 @@ export interface Diagnostic {
   source?: string
 }
 
-export type LogChannel = 'compiler'
+export type LogChannel = 'compiler' | 'proof'
 
 export interface CompileResult {
   stylesheet: string
   portableStylesheet: string
   runtime: NativeRuntimeArtifact
-  /** Compile-internal plans: the compiler rows, surfaced for proof and the differential. */
-  stylePlans: RuntimeStylePlan[]
+  /**
+   * Compile-internal plans: the compiler rows, surfaced for proof and the
+   * differential. Present only when the request's `logs` includes 'proof';
+   * the default slim result omits it (with wants, css, recipes, atomCount).
+   */
+  stylePlans?: RuntimeStylePlan[]
   diagnostics: Diagnostic[]
   wants?: unknown[]
   atomCount?: number
@@ -197,8 +201,11 @@ export interface NativeCompileRequest {
   include?: string[]
   /**
    * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
-   * 'compiler', the result also carries `compilerDiagnostics`. Unknown
-   * channels are ignored so channels evolve additively.
+   * 'compiler', the result also carries `compilerDiagnostics`; when it
+   * contains 'proof', the result also carries the compile-internal rows
+   * (stylePlans, wants, css, recipes, atomCount) stations read. Unknown
+   * channels are ignored so channels evolve additively. User configs only
+   * accept 'compiler'; 'proof' is a test-observability channel.
    */
   logs?: LogChannel[]
 }

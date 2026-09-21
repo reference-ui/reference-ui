@@ -30,6 +30,7 @@ const SOURCES = [
 describe('ATM-TOKEN-10 spec rejection', () => {
   it('rejects core portable shape with a diagnostic naming the foreign field', () => {
     const result = compileSync({
+      logs: ['proof'],
       baseSystem: {
         name: 'core-portable-system',
         fragment: 'packages/reference-core/src/system/base/fragments/index.ts',
@@ -51,6 +52,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
 
   it('rejects legacy flat dumps that predate the evaluated spec', () => {
     const result = compileSync({
+      logs: ['proof'],
       baseSystem: {
         name: 'flat-dump',
         tokens: {
@@ -135,6 +137,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
    */
   it('accepts string-serialized specs like typegen', () => {
     const result = compileSync({
+      logs: ['proof'],
       baseSystem: JSON.stringify(specSystem) as unknown as EvaluatedSystemSpec,
       files: SOURCES,
     })
@@ -147,7 +150,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
   })
 
   it('keeps non-empty plan systems and zero data-panda-theme on valid specs', () => {
-    const result = compileSync({ baseSystem: specSystem, files: SOURCES })
+    const result = compileSync({ baseSystem: specSystem, files: SOURCES, logs: ['proof'] })
 
     expect(result.stylePlans.length).toBeGreaterThan(0)
     for (const plan of result.stylePlans) {

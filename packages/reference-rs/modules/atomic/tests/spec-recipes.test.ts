@@ -15,7 +15,7 @@ const STEM = 'lib-test-system__button'
 
 describe('spec recipe lowering', () => {
   it('lowers populated spec.recipes into qualified runtime recipe tables', () => {
-    const result = compileSync({ baseSystem: specSystem, files: [] })
+    const result = compileSync({ baseSystem: specSystem, files: [], logs: ['proof'] })
 
     expect(Object.keys(result.runtime.recipes)).toContain(STEM)
     const table = result.runtime.recipes[STEM]!
@@ -52,6 +52,7 @@ describe('spec recipe lowering', () => {
     const result = compileSync({
       baseSystem: { ...specSystem, recipes: {} },
       files: [],
+      logs: ['proof'],
     })
 
     expect(result.runtime.recipes).toEqual({})
