@@ -61,7 +61,10 @@ pub(super) fn parse_trace_module(
     let source = module_source(path, staged)?;
 
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::tsx());
+    // Same options as the main-phase parse (atomic `parse_source`): TS on
+    // for every extension, so a file the main phase accepts never fails
+    // the trace re-parse (C1 keep-alive soundness).
+    let source_type = SourceType::from_path(path).unwrap_or_default().with_typescript(true);
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     if !parsed.errors.is_empty() {
         return Err(StyleTraceError::new(format!(
