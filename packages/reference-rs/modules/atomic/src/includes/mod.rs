@@ -198,6 +198,7 @@ mod tests {
             ]),
             base_system: crate::BaseSystem::lib_fixture().clone(),
             include,
+            logs: Some(vec!["proof".to_string()]),
             ..crate::CompileRequest::default()
         }
     }
@@ -248,6 +249,7 @@ mod tests {
             root_dir: Some(root.to_string_lossy().to_string()),
             base_system: crate::BaseSystem::lib_fixture().clone(),
             include: Some(vec!["theme/**".to_string()]),
+            logs: Some(vec!["proof".to_string()]),
             ..crate::CompileRequest::default()
         };
         let scoped = crate::compile(&request).expect("compile succeeds");

@@ -5,11 +5,11 @@
 use crate::{compile, CompileRequest, VirtualSource};
 
 fn compile_code(code: &str) -> crate::CompileResult {
-    compile_code_inner(code, None)
+    compile_code_inner(code, Some(vec!["proof".to_string()]))
 }
 
 fn compile_code_logs(code: &str) -> crate::CompileResult {
-    compile_code_inner(code, Some(vec!["compiler".to_string()]))
+    compile_code_inner(code, Some(vec!["compiler".to_string(), "proof".to_string()]))
 }
 
 fn compile_code_inner(code: &str, logs: Option<Vec<String>>) -> crate::CompileResult {
@@ -288,6 +288,7 @@ fn test_custom_breakpoint_scale() {
                 .to_string(),
         }]),
         base_system: system,
+        logs: Some(vec!["proof".to_string()]),
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");
@@ -316,6 +317,7 @@ fn test_tokens_breakpoints_scale() {
                 .to_string(),
         }]),
         base_system: system,
+        logs: Some(vec!["proof".to_string()]),
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");

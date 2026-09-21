@@ -16,6 +16,7 @@ fn host_request(jsx_hosts: Option<Vec<String>>) -> CompileRequest {
         }]),
         base_system: BaseSystem::lib_fixture().clone(),
         jsx_hosts,
+        logs: Some(vec!["proof".to_string()]),
         ..CompileRequest::default()
     }
 }

@@ -114,7 +114,10 @@ describe('F0: Frozen wire contract fixtures', () => {
 
     // Recipe runtime table has qualified identity ${system}__${className}
     expect(runtime.recipes['lib-test-system__button']).toBeDefined()
-    expect(runtime.recipes['lib-test-system__button'].className).toBe('button')
+    expect(runtime.recipes['lib-test-system__button'].variantMap).toEqual({
+      variant: ['solid', 'outline'],
+      disabled: ['true', 'false'],
+    })
     expect(runtime.recipes['lib-test-system__button'].qualifiedName).toBe(
       'lib-test-system__button'
     )

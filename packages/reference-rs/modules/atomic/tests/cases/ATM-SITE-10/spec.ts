@@ -20,7 +20,7 @@ const spec: AtomicCaseSpec = {
     expect(recipes).toContain('font-weight: bold')
     expect(recipes).not.toContain('padding')
     expect(result.recipes).toHaveLength(1)
-    expect(result.recipes?.[0]?.className).toBe('button')
+    expect(result.recipes?.[0]?.qualifiedName).toBe('@reference-ui/lib__button')
     expect(result.diagnostics).toEqual([])
   },
 }

@@ -329,6 +329,7 @@ mod tests {
         let req = CompileRequest {
             files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
             base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["proof".to_string()]),
             ..Default::default()
         };
         compile(&req).expect("compile succeeds")

@@ -20,18 +20,18 @@ const spec: AtomicCaseSpec = {
     expect(recipes).toContain('opacity: 0.5')
     expect(recipes).toContain('opacity: 1')
 
-    const table = (result.recipes ?? []).find(r => r.className === 'button')
+    const table = (result.recipes ?? []).find(r => r.qualifiedName === '@reference-ui/lib__button')
     expect(table).toBeTruthy()
     expect(table?.defaultVariants).toEqual({
       size: 'md',
       muted: 'false',
     })
-    expect(table?.variantMap.muted?.true).toBe('@reference-ui/lib__button_m_true')
-    expect(table?.variantMap.muted?.false).toBe('@reference-ui/lib__button_m_false')
+    expect(table?.variantMap.size).toEqual(['sm', 'md'])
+    expect(table?.variantMap.muted).toEqual(['true', 'false'])
 
     // Selections compose from base plus variant classes; nothing ships pre-composed.
     expect(table?.combinations).toBeUndefined()
-    const defaultCombo = `${table?.base} ${table?.variantMap.size?.md} ${table?.variantMap.muted?.false}`
+    const defaultCombo = '@reference-ui/lib__button__base @reference-ui/lib__button_s_md @reference-ui/lib__button_m_false'
     expect(defaultCombo).toContain('@reference-ui/lib__button__base')
     expect(defaultCombo).toContain('@reference-ui/lib__button_s_md')
     expect(defaultCombo).toContain('@reference-ui/lib__button_m_false')

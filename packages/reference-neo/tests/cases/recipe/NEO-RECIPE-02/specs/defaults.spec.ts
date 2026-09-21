@@ -40,9 +40,13 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     { size: 'lg', tone: 'muted' },
     'table carries the authored defaults',
   );
+  assert.deepEqual(table.variantMap, { size: ['sm', 'lg'], tone: ['accent', 'muted'] }, 'table ships per-axis value names');
   const recipeClasses = [
-    table.base,
-    ...Object.values(table.variantMap).flatMap((axis) => Object.values(axis)),
+    `${STEM}__base`,
+    `${STEM}_s_sm`,
+    `${STEM}_s_lg`,
+    `${STEM}_t_accent`,
+    `${STEM}_t_muted`,
   ];
   for (const cls of recipeClasses) {
     assert.ok(styles.includes(`.${cls}`), `sheet carries .${cls}`);
@@ -52,18 +56,16 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
 
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   assert.deepEqual(table.variantKeys, ['size', 'tone'], 'table orders the axes');
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const card = recipe({ className: 'card' });
-  const size = table.variantMap['size'];
-  const tone = table.variantMap['tone'];
   assert.equal(
     card(),
-    `${table.base} ${size?.['lg']} ${tone?.['muted']}`,
+    `${STEM}__base ${STEM}_s_lg ${STEM}_t_muted`,
     'bare call fills every axis from defaults',
   );
   assert.equal(
     card({ tone: 'accent' }),
-    `${table.base} ${size?.['lg']} ${tone?.['accent']}`,
+    `${STEM}__base ${STEM}_s_lg ${STEM}_t_accent`,
     'partial call defaults the omitted size axis',
   );
 

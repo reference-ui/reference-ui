@@ -45,9 +45,13 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.equal(table.compoundVariants.length, 1, 'table carries the one compound');
   const compound = table.compoundVariants[0]?.className;
   assert.ok(compound, 'compound carries its closed class');
+  assert.deepEqual(table.variantMap, { tone: ['accent', 'muted'], size: ['sm', 'lg'] }, 'table ships per-axis value names');
   const simpleClasses = [
-    table.base,
-    ...Object.values(table.variantMap).flatMap((axis) => Object.values(axis)),
+    `${STEM}__base`,
+    `${STEM}_t_accent`,
+    `${STEM}_t_muted`,
+    `${STEM}_s_sm`,
+    `${STEM}_s_lg`,
   ];
   for (const cls of [...simpleClasses, compound]) {
     assert.ok(styles.includes(`.${cls}`), `sheet carries .${cls}`);
@@ -66,7 +70,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('[data-color-mode=dark]'), 'sheet wraps the compound dark arm');
 
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const banner = recipe({ className: 'banner' });
   assert.ok(
     banner({ tone: 'accent', size: 'lg' }).includes(compound),

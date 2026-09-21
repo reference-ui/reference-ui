@@ -32,7 +32,7 @@ function runtimeHeaderSource(dataPath: string): string {
     `import { css, recipe, registerRecipeData, registerRuntimeData } from ${JSON.stringify(runtimeModulePath('runtime', 'index.ts'))}`,
     `import { runtimeData, systemName } from ${JSON.stringify(dataPath)}`,
     'registerRuntimeData(systemName, runtimeData)',
-    'registerRecipeData(systemName, runtimeData.recipes)',
+    'registerRecipeData(systemName, runtimeData.recipes, runtimeData.responsiveBreakpoints)',
     'export { css, recipe }',
     '',
   ].join('\n')

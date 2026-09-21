@@ -1,7 +1,8 @@
 //! Variant lookup table construction for runtime `recipe()`.
 //! Computes the Cartesian product of declared variant axes and matches compound selectors.
-//! Builds the canonical in-memory maps (combinations plus per-breakpoint classes) while the
-//! serialized table ships the derivation inputs only; the runtime re-derives both maps exactly.
+//! Builds the full canonical in-memory maps for unit tests while the shipped
+//! table skips them and serializes the derivation inputs only; the runtime
+//! re-derives every class string exactly from stem plus value names.
 //! Multi-value compound predicates expand to discrete selection entries sharing class names.
 
 use base_system::BreakpointScale;
@@ -19,6 +20,30 @@ pub struct RecipeTableInput<'a> {
     pub default_variants: &'a IndexMap<String, String>,
     pub compounds: &'a [CompiledCompound],
     pub breakpoints: &'a BreakpointScale,
+}
+
+/// Assemble the shipped runtime recipe table from compiled variants.
+/// Skips the canonical in-memory maps (`combinations`,
+/// `responsive_variant_map`) the serializer never emits; unit tests keep
+/// `build()` for the full canonical derivation.
+pub fn build_shipped(input: &RecipeTableInput<'_>) -> RecipeRuntimeTable {
+    let base = name::base_class(input.qualified_name);
+    let variant_keys: Vec<String> = input.variant_map.keys().cloned().collect();
+    let compound_variants = build_compound_variants(input.compounds);
+    let responsive_breakpoints = container_breakpoints(input.breakpoints);
+
+    RecipeRuntimeTable {
+        qualified_name: input.qualified_name.to_string(),
+        class_name: input.class_name.to_string(),
+        base,
+        variant_keys,
+        variant_map: input.variant_map.clone(),
+        default_variants: input.default_variants.clone(),
+        compound_variants,
+        combinations: IndexMap::new(),
+        responsive_variant_map: IndexMap::new(),
+        responsive_breakpoints,
+    }
 }
 
 /// Assemble the runtime recipe table from compiled variants and compounds.
@@ -358,7 +383,9 @@ mod tests {
         let json = serde_json::to_value(&table).expect("table serializes");
         assert!(json.get("combinations").is_none());
         assert!(json.get("responsiveVariantMap").is_none());
-        let bps = Some(&serde_json::json!(["sm", "md", "lg", "xl", "2xl"]));
-        assert_eq!(json.get("responsiveBreakpoints"), bps);
+        assert!(json.get("responsiveBreakpoints").is_none());
+        assert_eq!(json.get("variantMap"), Some(&serde_json::json!({"variant": ["solid"]})));
+        assert!(json.get("base").is_none());
+        assert!(json.get("className").is_none());
     }
 }

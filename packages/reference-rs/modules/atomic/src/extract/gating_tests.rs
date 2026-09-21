@@ -12,6 +12,7 @@ fn compile_code(code: &str) -> crate::CompileResult {
             content: code.to_string(),
         }]),
         base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs: Some(vec!["proof".to_string()]),
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
@@ -116,6 +117,7 @@ fn test_hostless_styles_emit_missing_graph_error() {
 fn test_empty_project_compiles_clean() {
     let req = CompileRequest {
         base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs: Some(vec!["proof".to_string()]),
         ..Default::default()
     };
     let res = compile(&req).expect("compile succeeds");

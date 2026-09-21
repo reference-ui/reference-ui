@@ -43,10 +43,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(!('stylePlans' in data.runtimeData), 'runtime data carries no per-atom row');
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
-  const loud = table.variantMap['tone']?.['loud'];
-  const quiet = table.variantMap['tone']?.['quiet'];
-  assert.ok(loud, 'table carries the loud class');
-  assert.ok(quiet, 'table carries the quiet class');
+  assert.deepEqual(table.variantMap, { tone: ['loud', 'quiet'] }, 'table ships the value names');
+  const loud = `${STEM}_t_loud`;
+  const quiet = `${STEM}_t_quiet`;
   assert.ok(
     styles.includes(`.${loud}:is(:hover, [data-hover])`),
     'hover arm hangs off the loud variant class',
@@ -57,16 +56,16 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
 
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const chip = recipe({ className: 'chip' });
   assert.equal(
     chip({ tone: 'loud' }),
-    `${table.base} ${loud}`,
+    `${STEM}__base ${loud}`,
     'loud resolves through its composed classes',
   );
   assert.equal(
     chip({ tone: 'quiet' }),
-    `${table.base} ${quiet}`,
+    `${STEM}__base ${quiet}`,
     'quiet resolves through its composed classes',
   );
   assert.notEqual(chip({ tone: 'loud' }), chip({ tone: 'quiet' }), 'tones resolve distinctly');

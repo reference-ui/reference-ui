@@ -40,6 +40,7 @@ fn spec_recipe_system() -> BaseSystem {
 fn test_compile_lowers_spec_recipes_into_runtime_tables() {
     let req = CompileRequest {
         base_system: spec_recipe_system(),
+        logs: Some(vec!["proof".to_string()]),
         ..CompileRequest::default()
     };
     let res = compile(&req).expect("compile spec recipes");
@@ -52,8 +53,15 @@ fn test_compile_lowers_spec_recipes_into_runtime_tables() {
     assert_eq!(table.class_name, "button");
     assert_eq!(table.base, "spec-recipe-system__button__base");
     assert_eq!(table.variant_keys, vec!["variant"]);
-    assert!(table.combinations.contains_key("solid"));
-    assert!(table.combinations.contains_key("outline"));
+    assert_eq!(
+        table.variant_map["variant"]["solid"],
+        "spec-recipe-system__button_v_solid"
+    );
+    assert_eq!(
+        table.variant_map["variant"]["outline"],
+        "spec-recipe-system__button_v_outline"
+    );
+    assert!(table.combinations.is_empty());
     assert_eq!(table.compound_variants.len(), 1);
     assert_eq!(res.recipes.len(), 1);
     assert!(res.stylesheet.contains("@layer recipes {"));

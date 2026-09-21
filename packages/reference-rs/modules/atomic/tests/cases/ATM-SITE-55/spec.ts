@@ -40,8 +40,8 @@ const spec: AtomicCaseSpec = {
     expect(result.stylePlans).toHaveLength(9)
 
     // Both recipes extract through the wrapper: namespace and named.
-    const names = (result.recipes ?? []).map(r => r.className).sort()
-    expect(names).toEqual(['site55named', 'site55ns'])
+    const names = (result.recipes ?? []).map(r => r.qualifiedName).sort()
+    expect(names).toEqual(['@reference-ui/lib__site55named', '@reference-ui/lib__site55ns'])
     expect(result.stylesheet).toContain('@layer recipes')
 
     // Every runtime class resolves and lands in the utilities layer.

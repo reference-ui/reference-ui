@@ -42,23 +42,22 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(table, `runtime data carries the ${STEM} table`);
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   assert.equal(table.responsiveVariantMap, undefined, 'table ships no per-breakpoint map');
+  assert.equal(table.responsiveBreakpoints, undefined, 'table ships no per-table breakpoint list');
   assert.deepEqual(
-    table.responsiveBreakpoints,
+    data.runtimeData.responsiveBreakpoints,
     ['sm', 'md', 'lg', 'xl', '2xl'],
-    'table carries the width breakpoint list',
+    'artifact hoists the width breakpoint list',
   );
-  const mdOutline = `md:${table.variantMap['variant']?.['outline']}`;
-  const mdSolid = `md:${table.variantMap['variant']?.['solid']}`;
-  assert.equal(mdOutline, `md:${STEM}_v_outline`, 'derived md outline class');
-  assert.equal(mdSolid, `md:${STEM}_v_solid`, 'derived md solid class');
-  const baseCombination = `${table.base} ${table.variantMap['variant']?.['solid']}`;
+  assert.deepEqual(table.variantMap, { variant: ['solid', 'outline'] }, 'table ships the value names');
+  const mdOutline = `md:${STEM}_v_outline`;
+  const baseCombination = `${STEM}__base ${STEM}_v_solid`;
 
   for (const cls of baseCombination.split(' ')) {
     assert.ok(styles.includes(`.${cls}`), `sheet carries .${cls}`);
   }
   const mdSelector = `.${mdOutline.replace(':', '\\:')}`;
   assert.ok(styles.includes(mdSelector), `sheet carries ${mdSelector}`);
-  const solidIdx = styles.indexOf(`.${table.variantMap['variant']?.['solid']} `);
+  const solidIdx = styles.indexOf(`.${STEM}_v_solid `);
   assert.ok(
     solidIdx > -1 && solidIdx < styles.indexOf(MD_QUERY),
     'plain solid rule prints before the md query',
@@ -66,7 +65,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const mdRule = styles.slice(styles.indexOf(mdSelector), styles.indexOf('}', styles.indexOf(mdSelector)));
   assert.ok(mdRule.includes('var(--colors-paper)'), 'md outline rule paints the paper background');
 
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const swatch = recipe({ className: 'swatch' });
   assert.equal(
     swatch({ variant: { base: 'solid', md: 'outline' } }),

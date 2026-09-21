@@ -52,6 +52,7 @@ export interface RecipeRuntimeFn {
 interface ActiveRecipes {
   system: string
   tables: Record<string, RecipeRuntimeTable>
+  responsiveBreakpoints?: string[]
 }
 
 let active: ActiveRecipes | undefined
@@ -59,13 +60,15 @@ let active: ActiveRecipes | undefined
 /**
  * Register the compiled recipe tables recipe() resolves against. Sync calls
  * this once per generated bundle; later registrations replace earlier ones
- * (single-system runtime for now).
+ * (single-system runtime for now). The optional hoisted breakpoint list
+ * backs tables that no longer carry their own (table-level wins).
  */
 export function registerRecipeData(
   system: string,
-  tables: Record<string, RecipeRuntimeTable>
+  tables: Record<string, RecipeRuntimeTable>,
+  responsiveBreakpoints?: string[]
 ): void {
-  active = { system, tables }
+  active = { system, tables, responsiveBreakpoints }
 }
 
 function qualifiedName(system: string, className: string): string {
@@ -137,9 +140,17 @@ function splitResponsiveProps(props: RecipeProps): {
   return { plain, responsive }
 }
 
+/** Port of the compiler's variant_class: `${stem}_${axis[0]}_${value}`. */
+function variantClass(stem: string, axis: string, value: string): string {
+  const first = axis === '' ? 'v' : String.fromCodePoint(axis.codePointAt(0) as number)
+  return `${stem}_${first}_${value}`
+}
+
 /** Per-axis inputs for one responsive class derivation. */
 interface ResponsiveDerivation {
-  values: Record<string, string> | undefined
+  stem: string
+  axis: string
+  values: string[] | undefined
   allowed: Set<string>
   legacy: Record<string, Record<string, string>> | undefined
 }
@@ -149,8 +160,9 @@ function deriveResponsiveClass(
   breakpoint: string,
   value: string
 ): string | undefined {
+  const known = ctx.values !== undefined && ctx.values.includes(value)
   const derived =
-    ctx.values !== undefined && ctx.allowed.has(breakpoint) ? ctx.values[value] : undefined
+    known && ctx.allowed.has(breakpoint) ? variantClass(ctx.stem, ctx.axis, value) : undefined
   if (derived !== undefined) return `${breakpoint}:${derived}`
   return ctx.legacy?.[breakpoint]?.[value]
 }
@@ -159,11 +171,17 @@ function resolveResponsiveClasses(
   table: RecipeRuntimeTable,
   responsive: Record<string, Record<string, string>>
 ): string[] {
-  const allowed = new Set(table.responsiveBreakpoints ?? [])
+  const allowed = new Set(table.responsiveBreakpoints ?? active?.responsiveBreakpoints ?? [])
   const legacy = table.responsiveVariantMap ?? {}
   const classes: string[] = []
   for (const [axis, entries] of Object.entries(responsive)) {
-    const ctx: ResponsiveDerivation = { values: table.variantMap[axis], allowed, legacy: legacy[axis] }
+    const ctx: ResponsiveDerivation = {
+      stem: table.qualifiedName,
+      axis,
+      values: table.variantMap[axis],
+      allowed,
+      legacy: legacy[axis],
+    }
     for (const [breakpoint, value] of Object.entries(entries)) {
       if (breakpoint === 'base') continue
       const className = deriveResponsiveClass(ctx, breakpoint, value)
@@ -200,11 +218,13 @@ function composeClasses(
   table: RecipeRuntimeTable,
   selection: Record<string, string>
 ): string {
-  const classes = [table.base]
+  const stem = table.qualifiedName
+  const classes = [`${stem}__base`]
   for (const axis of table.variantKeys) {
     const value = selection[axis]
-    const className = value === undefined ? undefined : table.variantMap[axis]?.[value]
-    if (className !== undefined) classes.push(className)
+    if (value === undefined) continue
+    if (!table.variantMap[axis]?.includes(value)) continue
+    classes.push(variantClass(stem, axis, value))
   }
   for (const compound of table.compoundVariants) {
     if (compound.className !== undefined && matchesPredicates(compound.selection, selection)) {

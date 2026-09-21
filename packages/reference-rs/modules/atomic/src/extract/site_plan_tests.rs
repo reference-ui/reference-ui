@@ -15,6 +15,7 @@ fn compile_code(code: &str) -> crate::CompileResult {
             content: code.to_string(),
         }]),
         base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs: Some(vec!["proof".to_string()]),
         ..Default::default()
     };
     compile(&req).expect("compile succeeds")
