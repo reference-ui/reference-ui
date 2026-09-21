@@ -105,6 +105,7 @@ async function main(): Promise<void> {
     declarationRoot: args.dir,
     include: config.include,
     logs: config.logs,
+    ...(prepared.scannedSources.length > 0 ? { files: prepared.scannedSources } : {}),
   }
   const nativeAt = performance.now()
   const result = await compileNative(request)
@@ -121,7 +122,7 @@ async function main(): Promise<void> {
     portableStylesheet: result.portableStylesheet ?? '',
     jsx,
   })
-  writeFileSync(join(outDir, 'system', 'compile-request.json'), `${JSON.stringify(request, null, 2)}\n`, 'utf-8')
+  writeFileSync(join(outDir, 'system', 'compile-request.json'), `${JSON.stringify({ ...request, files: undefined }, null, 2)}\n`, 'utf-8')
   await publishRuntimeBundle(outDir, spec.name, result.runtime)
   await publishReactBundle({
     outDir,

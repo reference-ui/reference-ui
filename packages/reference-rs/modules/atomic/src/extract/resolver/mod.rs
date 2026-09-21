@@ -23,8 +23,8 @@ use module_graph::{
     BindingOrigin, BindingWalk, ExtensionPolicy, ModuleGraph, ModuleKey, ModuleRecord,
     SpecifierLadder, TsconfigPolicy,
 };
+use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::ParserReturn;
 
 use super::constants::{collect_local_constants, LocalConstants, MutatedBinding};
 use super::scope::{self, BindingInit, ImportRef};
@@ -69,6 +69,32 @@ enum RefineState {
     Cycling,
 }
 
+/// One retained file's shared parse: path, bytes, and borrowed program.
+pub(crate) struct RetainedSource<'s> {
+    pub(crate) path: &'s str,
+    pub(crate) content: &'s str,
+    pub(crate) program: &'s Program<'s>,
+}
+
+/// One streamed file's carried staging: module record plus literal bag,
+/// both owned; the program never stages and refines by re-parse on demand.
+pub(crate) struct StreamedSource {
+    pub(crate) key: ModuleKey,
+    pub(crate) record: ModuleRecord,
+    pub(crate) bag: LocalConstants,
+}
+
+impl StreamedSource {
+    /// Stage one streamed file from its transient program: record plus bag.
+    pub(crate) fn collect(program: &Program<'_>, path: &str, content: &str) -> Self {
+        Self {
+            key: ModuleKey::new(path),
+            record: ModuleRecord::collect(program),
+            bag: collect_local_constants(program, path, Some(content)),
+        }
+    }
+}
+
 /// The upfront value graph: the shared module graph behind demand-driven
 /// origin values. Built once per compile over the single parse; each file's
 /// imports resolve against it before extraction walks the file.
@@ -76,6 +102,7 @@ pub struct ValueGraph<'s> {
     fs: Rc<AtomicFs<'s>>,
     graph: ModuleGraph<AtomicLoader<'s>>,
     programs: HashMap<ModuleKey, &'s Program<'s>>,
+    streamed: HashSet<ModuleKey>,
     project: &'s LocalConstants,
     origins: HashMap<OriginQuery, OriginOutcome>,
     refined: HashMap<ModuleKey, RefinedFile>,
@@ -85,27 +112,30 @@ pub struct ValueGraph<'s> {
 }
 
 impl<'s> ValueGraph<'s> {
-    /// Build the graph over one parse per source. Records and literal bags
-    /// stage eagerly; scope tables refine on demand when something imports
-    /// the file. Unparseable sources stay out, so imports targeting them
-    /// refuse like any unresolvable specifier.
+    /// Build the graph over retained programs plus staged streamed files.
+    /// Records and literal bags stage eagerly for both; scope tables refine
+    /// on demand when something imports the file, re-parsing streamed bytes
+    /// through the identical path. Unparseable sources stay out, so imports
+    /// targeting them refuse like any unresolvable specifier.
     pub fn new(
         sources: &'s [(String, String)],
-        parsed: &'s [ParserReturn<'s>],
+        retained: &[RetainedSource<'s>],
+        streamed: Vec<StreamedSource>,
         project: &'s LocalConstants,
     ) -> Self {
-        debug_assert_eq!(sources.len(), parsed.len());
         let mut staged = HashMap::new();
         let mut programs = HashMap::new();
-        for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
-            if ret.panicked {
-                continue;
-            }
-            let key = ModuleKey::new(path);
-            let record = ModuleRecord::collect(&ret.program);
-            let bag = collect_local_constants(&ret.program, path, Some(content));
+        for source in retained {
+            let key = ModuleKey::new(source.path);
+            let record = ModuleRecord::collect(source.program);
+            let bag = collect_local_constants(source.program, source.path, Some(source.content));
             staged.insert(key.clone(), (record, bag));
-            programs.insert(key, &ret.program);
+            programs.insert(key, source.program);
+        }
+        let mut streamed_keys = HashSet::new();
+        for source in streamed {
+            streamed_keys.insert(source.key.clone());
+            staged.insert(source.key, (source.record, source.bag));
         }
         let fs = Rc::new(AtomicFs::new(sources));
         let graph = ModuleGraph::new(AtomicLoader::new(Rc::clone(&fs), staged));
@@ -113,6 +143,7 @@ impl<'s> ValueGraph<'s> {
             fs,
             graph,
             programs,
+            streamed: streamed_keys,
             project,
             origins: HashMap::new(),
             refined: HashMap::new(),
@@ -217,13 +248,17 @@ impl<'s> ValueGraph<'s> {
 
     /// Refine one origin file on first use: sources collect against their
     /// own resolved imports, externals keep literal bags, and a file
-    /// mid-refinement up-stack reports the chase as cycling.
+    /// mid-refinement up-stack reports the chase as cycling. Streamed files
+    /// re-parse transiently; their programs never staged.
     fn refined_file(&mut self, file: &ModuleKey) -> RefineState {
         if self.refined.contains_key(file) {
             return RefineState::Ready;
         }
         if self.refining.contains(file) {
             return RefineState::Cycling;
+        }
+        if self.streamed.contains(file) {
+            return self.refine_streamed(file);
         }
         let (Some(program), Some(content)) =
             (self.programs.get(file).copied(), self.fs.content(file))
@@ -232,6 +267,28 @@ impl<'s> ValueGraph<'s> {
         };
         self.refining.insert(file.clone());
         let refined = self.collect_origin(file, program, content);
+        self.refining.remove(file);
+        self.refined.insert(file.clone(), refined);
+        RefineState::Ready
+    }
+
+    /// Refine one streamed file by transient re-parse of its staged bytes
+    /// through the identical on-demand path retained files use. Imported
+    /// streamed files are rare (dead utils have no importers), so the
+    /// re-parse costs nothing in practice; unimported ones never re-parse.
+    /// Bytes parsed clean at staging and parsing is deterministic, so a
+    /// panicked re-parse is unreachable; it reads as external regardless.
+    fn refine_streamed(&mut self, file: &ModuleKey) -> RefineState {
+        let Some(content) = self.fs.content(file) else {
+            return RefineState::External;
+        };
+        let allocator = Allocator::default();
+        let ret = crate::parse_source(file.as_str(), content, &allocator);
+        if ret.panicked {
+            return RefineState::External;
+        }
+        self.refining.insert(file.clone());
+        let refined = self.collect_origin(file, &ret.program, content);
         self.refining.remove(file);
         self.refined.insert(file.clone(), refined);
         RefineState::Ready

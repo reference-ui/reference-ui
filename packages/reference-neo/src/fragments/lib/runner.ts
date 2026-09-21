@@ -100,7 +100,7 @@ async function runPlanner(
   const { collectors, include, importFrom, tempDir, cwd } = options
   mkdirSync(tempDir, { recursive: true })
 
-  const files = scanForFragments({
+  const files = await scanForFragments({
     include,
     ...(importFrom
       ? { importFrom }

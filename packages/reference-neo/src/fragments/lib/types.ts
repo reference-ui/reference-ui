@@ -41,7 +41,7 @@ export interface ScanOptions {
   functionNames?: string[]
   /** Module ids to detect in import statements (e.g. '@reference-ui/neo'). Preferred discovery mode. */
   importFrom?: string | string[]
-  /** Glob patterns to exclude node_modules and declaration files. Defaults to node_modules and .d.ts globs. */
+  /** Glob patterns to exclude. Defaults to node_modules-only; the d.ts match exclusion is emulated. */
   exclude?: string[]
   /** Working directory for glob resolution. Default: process.cwd() */
   cwd?: string

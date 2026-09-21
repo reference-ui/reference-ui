@@ -96,6 +96,10 @@ export async function sync(cwd: string): Promise<SyncResult> {
     // records what the author asked for: discovery reaches the publish below,
     // never this list.
     const requested = resolveJsxElements(config)
+    // C3 single read: the fragment scan already holds every in-scope source,
+    // so the engine skips its own scan+read and union-fills from disk only
+    // what the list misses. Empty retention omits `files` (defense in depth:
+    // native falls back to the disk scan).
     const request: ScopedCompileRequest = {
       schemaVersion: 1,
       spec,
@@ -104,8 +108,13 @@ export async function sync(cwd: string): Promise<SyncResult> {
       declarationRoot: cwd,
       include: config.include,
       logs: config.logs,
+      ...(prepared.scannedSources.length > 0 ? { files: prepared.scannedSources } : {}),
     }
     const result = await compileNative(request)
+    // RSS relief: scanned bytes are unreachable after compile; drop the refs
+    // before publish so a mid-publish GC can reclaim the headroom.
+    prepared.scannedSources = []
+    request.files = undefined
     reportWarningDiagnostics(result.diagnostics)
     reportCompilerDiagnostics(result.compilerDiagnostics)
     throwOnErrorDiagnostics(result.diagnostics)
@@ -123,9 +132,11 @@ export async function sync(cwd: string): Promise<SyncResult> {
       portableStylesheet: result.portableStylesheet ?? '',
       jsx,
     })
+    // Logical request artifact: `files` (megabytes of bytes) stays out of
+    // the published JSON — undefined drops from serialization.
     writeFileSync(
       join(outDir, 'system', 'compile-request.json'),
-      `${JSON.stringify(request, null, 2)}\n`,
+      `${JSON.stringify({ ...request, files: undefined }, null, 2)}\n`,
       'utf-8'
     )
     await publishRuntimeBundle(outDir, spec.name, result.runtime)

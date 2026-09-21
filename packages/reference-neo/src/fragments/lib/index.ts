@@ -3,7 +3,8 @@
 // Config templating helpers deliberately do not come across.
 
 export { createFragmentCollector, createFragmentFunction } from './collector.ts'
-export { scanForFragments } from './scanner.ts'
+export { scanForFragments, scanFragmentSources } from './scanner.ts'
+export type { FragmentScan, ScannedSource } from './scanner.ts'
 export { bundleFragments, collectFragments } from './runner.ts'
 export { CONFIG_FRAGMENT_SOURCE_PROPERTY } from './types.ts'
 export type {
