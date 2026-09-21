@@ -7,6 +7,7 @@
  * straight through the N-API boundary. Evidence lands under
  * docs/evidence/flamegraph/ as profile, presymbolicated sidecar, meta, summary.
  * The load stays locked: scale names only, no seed or size overrides, ever.
+ * A filed bundle can be reprocessed without re-recording via --resummarize.
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -16,15 +17,17 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
-import { buildFlameMeta, resolveEvidenceDir, writeFlameEvidence } from './flame-evidence.mjs'
+import { buildFlameMeta, resolveEvidenceDir, runResummarize, writeFlameEvidence } from './flame-evidence.mjs'
 
-const FLAME_PROCEDURE = 'agentrs-flame/1'
+const FLAME_PROCEDURE = 'agentrs-flame/2'
+const FLAME_PROCEDURE_NOTE = 'merge same-function addresses by symbolized name; honor sample weights; publish self + inclusive costs (v1 keyed resource:address:func and counted +1 per sample)'
 const DEFAULT_SCALE = 'enterprise'
 const DEFAULT_RATE_HZ = 1000
 const WORKER_SAMPLE_MS = 10
 
 const USAGE = [
   'usage: pnpm agentrs flame [-- scale] [--out dir] [--keep] [--rate hz] [--no-build]',
+  '       pnpm agentrs flame --resummarize <srcDir> [--out dir]   (reprocess a filed bundle, no re-record)',
   '       pnpm agentrs flame --list   (frozen bench scales; enterprise is the default)',
   'example: pnpm agentrs flame -- enterprise',
 ].join('\n')
@@ -81,9 +84,28 @@ function checkEarlyExit(options, words) {
 }
 
 export function parseFlameArgs(argv) {
-  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, rate: DEFAULT_RATE_HZ, noBuild: false }
+  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, rate: DEFAULT_RATE_HZ, noBuild: false, resummarize: null }
   const words = argv.filter((arg) => arg !== '--')
-  return checkEarlyExit(options, words) ?? consumeFlameWords(options, words)
+  const early = checkEarlyExit(options, words)
+  if (early) return early
+  if (words.includes('--resummarize')) return parseResummarizeArgs(options, words)
+  return consumeFlameWords(options, words)
+}
+
+function parseResummarizeArgs(options, words) {
+  for (let i = 0; i < words.length; i += 1) {
+    const arg = words[i]
+    if (arg !== '--resummarize' && arg !== '--out') {
+      throw usageError(`--resummarize takes only --out, got: ${arg}`)
+    }
+    const value = words[i + 1]
+    if (!value || value.startsWith('-')) throw usageError(`${arg} needs a value`)
+    if (arg === '--resummarize') options.resummarize = value
+    else options.outDir = value
+    i += 1
+  }
+  if (!options.resummarize) throw usageError('--resummarize needs a source evidence dir')
+  return options
 }
 
 function parseRate(value) {
@@ -231,7 +253,7 @@ function printFlameReport(evidenceDir, meta, summary) {
   if (summary) {
     console.log('  top native frames:')
     for (const frame of summary.nativeTop.slice(0, 5)) {
-      console.log(`    ${frame.samples}x ${frame.name.slice(0, 100)}`)
+      console.log(`    ${frame.samples}x self / ${frame.inclusive}x incl ${frame.name.slice(0, 90)}`)
     }
   }
   console.log('  view: samply load profile.json.gz\n')
@@ -241,7 +263,7 @@ async function captureFlame(ctx, evidenceDir) {
   const repo = await generateFlameRepo(ctx)
   try {
     const record = await recordFlameProfile(ctx, repo, evidenceDir)
-    const meta = buildFlameMeta({ ...ctx, procedure: FLAME_PROCEDURE }, repo, record, ctx.native)
+    const meta = buildFlameMeta({ ...ctx, procedure: FLAME_PROCEDURE, procedureNote: FLAME_PROCEDURE_NOTE }, repo, record, ctx.native)
     const summary = writeFlameEvidence(evidenceDir, record, meta)
     printFlameReport(evidenceDir, meta, summary)
   } finally {
@@ -286,6 +308,22 @@ export async function runFlameCommand(args, repoRoot, rsDir) {
   }
   if (options.list) {
     await listFlameScales(benchDir)
+    return 0
+  }
+  if (options.resummarize) {
+    try {
+      runResummarize({
+        srcDir: options.resummarize,
+        outDir: options.outDir,
+        repoRoot,
+        procedure: FLAME_PROCEDURE,
+        procedureNote: FLAME_PROCEDURE_NOTE,
+        command: ['pnpm', 'agentrs', 'flame', ...args],
+      })
+    } catch (err) {
+      console.error(`[agent-rs] flame resummarize failed: ${err instanceof Error ? err.message : String(err)}`)
+      return 1
+    }
     return 0
   }
   let samplyVersion

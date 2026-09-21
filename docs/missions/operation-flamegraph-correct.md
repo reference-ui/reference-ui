@@ -63,8 +63,10 @@ checks. Triage by the captain confirmed the code mechanics of issues
 
 ## Deliverables
 
-- [ ] Corrected flame aggregation (self + inclusive, weighted) with
-      republished summaries from the preserved raw profile.
+- [x] Corrected flame aggregation (self + inclusive, weighted) with
+      republished summaries from the preserved raw profile. (landed
+      2026-09-21, verified firsthand, procedure agentrs-flame/2,
+      republished at docs/evidence/flamegraph/enterprise-flame2/)
 - [ ] Same-run phase boundaries across all legs; reconciled
       decomposition replacing recon §2.
 - [ ] Corrected counters derivations (stall withdrawn, thread
