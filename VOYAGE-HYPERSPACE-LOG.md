@@ -106,3 +106,10 @@ reopen it.
   harness files only) — held until recon files so its timed runs
   keep a quiet box. Benchmark skill baselines already pinned to
   `5eda2c60b7e5` firsthand.
+- Recon rotation 1 DIED (~00:3xZ): provider net-timeout on the
+  model stream (runtime terminal `failed`, non-crew cause).
+  Surviving work: 3 perf-log entries (lead bench + recipe counts,
+  workers A/B terse LIVE verdicts S1–S5); worker C + map unwritten.
+  Replacement lead (recon-1b) dispatched on the same tree/branch
+  with resume brief: reproduce A/B evidence firsthand, complete
+  bundle leg, file `fasthull-recon-1.md` + perf-log entry.
