@@ -20,9 +20,6 @@ mod typegen;
 #[path = "../../virtualrs/native.rs"]
 mod virtualrs;
 
-#[cfg(feature = "alloc-trace")]
-mod alloc_trace;
-
 #[cfg(feature = "counters-trace")]
 mod counters_abi;
 #[cfg(feature = "counters-trace")]
@@ -30,7 +27,7 @@ mod counters_trace;
 
 #[cfg(feature = "alloc-trace")]
 #[global_allocator]
-static ALLOC: alloc_trace::TraceAlloc = alloc_trace::TraceAlloc;
+static ALLOC: ::atomic::alloc_counters::TraceAlloc = ::atomic::alloc_counters::TraceAlloc;
 
 #[napi]
 pub fn get_native_capabilities() -> Result<String> {
@@ -41,5 +38,5 @@ pub fn get_native_capabilities() -> Result<String> {
 #[cfg(feature = "alloc-trace")]
 #[napi]
 pub fn get_alloc_trace() -> String {
-    alloc_trace::snapshot_json()
+    ::atomic::alloc_trace::snapshot_json()
 }

@@ -2,6 +2,10 @@
 //! Orchestrates AST extraction, condition resolution, atomic class naming, and stylesheet assembly across virtual and disk sources.
 //! Exposes the primary compilation pipeline and public data structures consumed by build tooling and runtime environments.
 
+#[cfg(feature = "alloc-trace")]
+pub mod alloc_counters;
+#[cfg(feature = "alloc-trace")]
+pub mod alloc_trace;
 mod assembly;
 pub mod atom;
 pub mod diagnostics;
@@ -80,7 +84,11 @@ struct CompileSinks<'a> {
 
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
+    #[cfg(feature = "alloc-trace")]
+    let _collect = crate::alloc_trace::PhaseGuard::enter("collect");
     let sources = sources::collect(request);
+    #[cfg(feature = "alloc-trace")]
+    drop(_collect);
     let system = &request.base_system;
     let mut wants = Vec::new();
     let mut extracted_recipes = Vec::new();
@@ -110,6 +118,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     };
     let (unpanicked, resolved_hosts) = run_parse_phase(request, &sources, sinks);
 
+    #[cfg(feature = "alloc-trace")]
+    let _assembly = crate::alloc_trace::PhaseGuard::enter("assembly");
     let mut assembly = assembly::AssembleCtx {
         wants,
         extracted_recipes,
@@ -121,6 +131,10 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);
+    #[cfg(feature = "alloc-trace")]
+    drop(_assembly);
+    #[cfg(feature = "alloc-trace")]
+    let _partition = crate::alloc_trace::PhaseGuard::enter("partition");
     // The partition catalog is the unpanicked sources in input order: exactly
     // the entries analysis held, rebuilt from the retained texts and index.
     let catalog: Vec<(&str, &str)> = unpanicked
@@ -133,6 +147,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         catalog,
         request.wants_compiler_logs(),
     );
+    #[cfg(feature = "alloc-trace")]
+    drop(_partition);
     Ok(result)
 }
 
@@ -158,6 +174,8 @@ fn run_parse_phase(
     // Retained parses live for this phase; streamed files parse transiently
     // in the constants pass and keep only errors, constants, and staged
     // records+bags. Programs are never co-resident for streamed files.
+    #[cfg(feature = "alloc-trace")]
+    let _parse = crate::alloc_trace::PhaseGuard::enter("parse");
     let mut slots: Vec<stream::SourceSlot> = sources
         .iter()
         .map(|(_, content)| stream::SourceSlot::new(streaming_candidate(content)))
@@ -173,28 +191,44 @@ fn run_parse_phase(
         slots[i].parsed = Some(position);
         slots[i].panicked = parsed[position].panicked;
     }
+    #[cfg(feature = "alloc-trace")]
+    drop(_parse);
+    #[cfg(feature = "alloc-trace")]
+    let _constants = crate::alloc_trace::PhaseGuard::enter("constants");
     let mut project_constants = extract::constants::LocalConstants::new();
     let transient = stream::merge_constants_ordered(sources, &parsed, &mut slots, &mut project_constants);
+    #[cfg(feature = "alloc-trace")]
+    drop(_constants);
+    #[cfg(feature = "alloc-trace")]
+    let _graphs = crate::alloc_trace::PhaseGuard::enter("graphs");
     let unpanicked = stream::unpanicked_index(&slots);
     let live = stream::live_retained_sources(sources, &parsed, &retained, &slots);
     let mut graph =
         extract::resolver::ValueGraph::new(sources, &live, transient.staged, &project_constants);
     let identity = extract::identity::IdentityGraph::new(sources);
+    #[cfg(feature = "alloc-trace")]
+    drop(_graphs);
     // Parse-failure keep-alive (C1): failed sources keep their trace
     // entry, so the re-parse fails identically and the located warning
     // survives. The bench load reports zero parse errors, so the gate
     // still skips every dead file. Per-source via slots+transient (C3
     // streams: `parsed` holds retained files only, so indexing it here
     // would misalign and blind the keep-alive to streamed failures).
+    #[cfg(feature = "alloc-trace")]
+    let _hosts = crate::alloc_trace::PhaseGuard::enter("hosts");
     let failed: Vec<bool> = (0..sources.len())
         .map(|i| slots[i].panicked || !transient.errors[i].is_empty())
         .collect();
     let (hosts, host_diagnostics) = hosts::resolve(request, sources, &failed, session);
     let traced_jsx = hosts.hosts();
     diagnostics.extend(host_diagnostics);
+    #[cfg(feature = "alloc-trace")]
+    drop(_hosts);
     // Independent diagnostics analysis (S2): same slots for_compile builds,
     // with streamed programs shared from one empty parse the content gate
     // provably skips before reading.
+    #[cfg(feature = "alloc-trace")]
+    let _analysis = crate::alloc_trace::PhaseGuard::enter("analysis");
     let dummy_allocator = Allocator::default();
     let dummy = parse_source("streamed.ts", "", &dummy_allocator);
     let analyzed: Vec<diagnostics::analysis::AnalyzedSource<'_>> = sources
@@ -221,8 +255,12 @@ fn run_parse_phase(
     };
     report_analysis_expectations(&analysis, session);
     stream::report_parse_errors(sources, &transient.errors, diagnostics);
+    #[cfg(feature = "alloc-trace")]
+    drop(_analysis);
     let system = &request.base_system;
 
+    #[cfg(feature = "alloc-trace")]
+    let _extract = crate::alloc_trace::PhaseGuard::enter("extract");
     {
         let mut extract_session = ParseSession {
             constants: &project_constants,
@@ -244,10 +282,14 @@ fn run_parse_phase(
         extract_all_sources(&mut extract_session, sources, &parsed, &slots);
         resolve_recipe_selections(&mut extract_session);
     }
+    #[cfg(feature = "alloc-trace")]
+    drop(_extract);
 
     // Harvest rides the retained parse: streamed files hold no string
     // delimiters, so their absence merges the identity element, exactly as
     // the mask does today. The mask stays aligned with the retained parse.
+    #[cfg(feature = "alloc-trace")]
+    let _harvest = crate::alloc_trace::PhaseGuard::enter("harvest");
     let skip_harvest: Vec<bool> = retained
         .iter()
         .map(|&i| string_skip(&sources[i].1))
@@ -262,6 +304,8 @@ fn run_parse_phase(
         diagnostics,
         sink: session,
     });
+    #[cfg(feature = "alloc-trace")]
+    drop(_harvest);
     (unpanicked, hosts)
 }
 

@@ -9,8 +9,9 @@ crate-type = ["cdylib"]
 
 [features]
 # Instrument build for `pnpm agentrs alloc`: counting global allocator plus a
-# per-compile span dump. Never enabled in the shipped `.node`.
-alloc-trace = []
+# per-compile span dump, with the counters living in the atomic crate so the
+# compile phases can mark themselves. Never enabled in the shipped `.node`.
+alloc-trace = ["atomic/alloc-trace"]
 # Instrument build for `pnpm agentrs counters`: Mach/rusage counter span at
 # compile entry/exit. Never enabled in the shipped `.node`.
 counters-trace = []

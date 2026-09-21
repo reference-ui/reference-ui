@@ -1,127 +1,89 @@
-//! Counting allocator and compile-span tracer for the `alloc-trace` instrument build.
-//! It wraps the system allocator with atomic counters (bytes, blocks, live, peak,
-//! size-class split) and snapshots one span per blocking compile call, adding the
-//! request byte accounting plus the macOS allocator zone slack at span end. When
-//! `ALLOC_TRACE_OUT` names a file, the span guard dumps one JSON report on drop;
-//! without the env var it counts silently. This module only exists with the
-//! feature enabled, so the shipped `.node` never pays for the counters.
+//! Compile-span tracer and per-phase allocation ledger for `alloc-trace`.
+//! It snapshots the counting allocator around one blocking compile call and,
+//! when `ALLOC_TRACE_OUT` names a file, dumps one JSON report on drop holding
+//! the span totals, the process census, and one row per compiler phase. Phase
+//! guards mark the pipeline stages from the inside; each row carries the bytes
+//! and blocks allocated and freed inside the phase plus live at its edges, so
+//! the reserve/arena work can see which phase allocates what and what it
+//! retains. Without the env var the span counts silently. This module only
+//! exists with the feature enabled, so the shipped `.node` never pays for it.
 
-use std::alloc::{GlobalAlloc, Layout, System};
+use std::cell::RefCell;
 use std::ffi::c_void;
 use std::fs;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Instant;
 
+use super::alloc_counters::{bucket_rows, capture, Counters};
+
 /// Env var naming the JSON file the span guard dumps at compile end.
 pub const TRACE_OUT_ENV: &str = "ALLOC_TRACE_OUT";
 
-/// Inclusive upper bounds of the eight allocation size classes.
-const BUCKET_LIMITS: [usize; 8] = [32, 128, 512, 2048, 8192, 32768, 131072, usize::MAX];
-
-static ALLOC_BYTES: AtomicU64 = AtomicU64::new(0);
-static ALLOC_BLOCKS: AtomicU64 = AtomicU64::new(0);
-static FREE_BYTES: AtomicU64 = AtomicU64::new(0);
-static FREE_BLOCKS: AtomicU64 = AtomicU64::new(0);
-static LIVE_BYTES: AtomicU64 = AtomicU64::new(0);
-static PEAK_LIVE: AtomicU64 = AtomicU64::new(0);
-static REALLOCS: AtomicU64 = AtomicU64::new(0);
 static SPAN_CALLS: AtomicU64 = AtomicU64::new(0);
 static SPAN_ACTIVE: AtomicBool = AtomicBool::new(false);
-static BUCKET_ALLOC_BYTES: [AtomicU64; 8] = bucket_zeros();
-static BUCKET_ALLOC_BLOCKS: [AtomicU64; 8] = bucket_zeros();
-static BUCKET_LIVE_BYTES: [AtomicU64; 8] = bucket_zeros();
 
-const fn bucket_zeros() -> [AtomicU64; 8] {
-    [
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-        AtomicU64::new(0),
-    ]
-}
-
-/// Global allocator counting every Rust-side allocation; Node's own malloc
-/// traffic bypasses it, so the counters isolate the `.node` exactly.
-pub struct TraceAlloc;
-
-fn bucket(size: usize) -> usize {
-    let mut index = 0;
-    while index + 1 < BUCKET_LIMITS.len() && size > BUCKET_LIMITS[index] {
-        index += 1;
-    }
-    index
-}
-
-fn note_alloc_bytes(size: usize) {
-    let bytes = size as u64;
-    ALLOC_BYTES.fetch_add(bytes, Ordering::Relaxed);
-    ALLOC_BLOCKS.fetch_add(1, Ordering::Relaxed);
-    let live = LIVE_BYTES.fetch_add(bytes, Ordering::Relaxed) + bytes;
-    PEAK_LIVE.fetch_max(live, Ordering::Relaxed);
-    let class = bucket(size);
-    BUCKET_ALLOC_BYTES[class].fetch_add(bytes, Ordering::Relaxed);
-    BUCKET_ALLOC_BLOCKS[class].fetch_add(1, Ordering::Relaxed);
-    BUCKET_LIVE_BYTES[class].fetch_add(bytes, Ordering::Relaxed);
-}
-
-fn note_free_bytes(size: usize) {
-    let bytes = size as u64;
-    FREE_BYTES.fetch_add(bytes, Ordering::Relaxed);
-    FREE_BLOCKS.fetch_add(1, Ordering::Relaxed);
-    LIVE_BYTES.fetch_sub(bytes, Ordering::Relaxed);
-    BUCKET_LIVE_BYTES[bucket(size)].fetch_sub(bytes, Ordering::Relaxed);
-}
-
-unsafe impl GlobalAlloc for TraceAlloc {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let ptr = unsafe { System.alloc(layout) };
-        if !ptr.is_null() {
-            note_alloc_bytes(layout.size());
-        }
-        ptr
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        unsafe { System.dealloc(ptr, layout) };
-        note_free_bytes(layout.size());
-    }
-
-    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        let out = unsafe { System.realloc(ptr, layout, new_size) };
-        if !out.is_null() {
-            REALLOCS.fetch_add(1, Ordering::Relaxed);
-            note_free_bytes(layout.size());
-            note_alloc_bytes(new_size);
-        }
-        out
-    }
-}
-
-#[derive(Clone, Copy, Default)]
-struct Counters {
+/// One compiler-phase ledger row: counter deltas across the guard plus live
+/// at both edges. Net growth is alloc minus free; the span-global peak is
+/// never attributed per phase.
+struct PhaseRow {
+    name: &'static str,
+    wall_ms: f64,
     alloc_bytes: u64,
     alloc_blocks: u64,
     free_bytes: u64,
     free_blocks: u64,
-    live: u64,
-    peak: u64,
-    reallocs: u64,
+    live_enter: u64,
+    live_exit: u64,
 }
 
-fn capture() -> Counters {
-    Counters {
-        alloc_bytes: ALLOC_BYTES.load(Ordering::Relaxed),
-        alloc_blocks: ALLOC_BLOCKS.load(Ordering::Relaxed),
-        free_bytes: FREE_BYTES.load(Ordering::Relaxed),
-        free_blocks: FREE_BLOCKS.load(Ordering::Relaxed),
-        live: LIVE_BYTES.load(Ordering::Relaxed),
-        peak: PEAK_LIVE.load(Ordering::Relaxed),
-        reallocs: REALLOCS.load(Ordering::Relaxed),
+thread_local! {
+    static PHASE_ROWS: RefCell<Vec<PhaseRow>> = const { RefCell::new(Vec::new()) };
+}
+
+/// RAII mark around one compiler phase. Snapshots the counters on enter and
+/// pushes the delta row on drop; the span drains the rows at compile end.
+/// The landed phases run strictly sequential, so each row slices the span.
+pub struct PhaseGuard {
+    name: &'static str,
+    started: Instant,
+    before: Counters,
+}
+
+impl PhaseGuard {
+    pub fn enter(name: &'static str) -> Self {
+        Self {
+            name,
+            started: Instant::now(),
+            before: capture(),
+        }
     }
+}
+
+impl Drop for PhaseGuard {
+    fn drop(&mut self) {
+        let after = capture();
+        let row = PhaseRow {
+            name: self.name,
+            wall_ms: self.started.elapsed().as_secs_f64() * 1000.0,
+            alloc_bytes: after.alloc_bytes - self.before.alloc_bytes,
+            alloc_blocks: after.alloc_blocks - self.before.alloc_blocks,
+            free_bytes: after.free_bytes - self.before.free_bytes,
+            free_blocks: after.free_blocks - self.before.free_blocks,
+            live_enter: self.before.live,
+            live_exit: after.live,
+        };
+        PHASE_ROWS.with(|rows| rows.borrow_mut().push(row));
+    }
+}
+
+/// Drop rows left by span-less compiles (feature-on tests, other entries),
+/// so each span files exactly its own phases.
+fn clear_phase_rows() {
+    PHASE_ROWS.with(|rows| rows.borrow_mut().clear());
+}
+
+fn drain_phase_rows() -> Vec<PhaseRow> {
+    PHASE_ROWS.with(|rows| std::mem::take(&mut *rows.borrow_mut()))
 }
 
 /// RAII span around one blocking compile call. Nested enters degrade to no-ops
@@ -153,6 +115,7 @@ impl CompileSpan {
         let active = !SPAN_ACTIVE.swap(true, Ordering::Relaxed);
         if active {
             SPAN_CALLS.fetch_add(1, Ordering::Relaxed);
+            clear_phase_rows();
         }
         Self {
             started: Instant::now(),
@@ -169,7 +132,7 @@ impl CompileSpan {
 
     /// Byte accounting of the handed-off sources, mirroring R1's deterministic
     /// reachable-live ledger (contents + paths + the request JSON string).
-    pub fn note_files(&mut self, files: Option<&Vec<::atomic::VirtualSource>>) {
+    pub fn note_files(&mut self, files: Option<&Vec<crate::VirtualSource>>) {
         let Some(sources) = files else { return };
         self.file_count = sources.len();
         for source in sources {
@@ -235,21 +198,6 @@ fn zone_value(raw: Option<(usize, usize)>) -> serde_json::Value {
     }
 }
 
-fn bucket_rows() -> Vec<serde_json::Value> {
-    BUCKET_LIMITS
-        .iter()
-        .enumerate()
-        .map(|(index, limit)| {
-            serde_json::json!({
-                "maxSize": limit,
-                "allocBytes": BUCKET_ALLOC_BYTES[index].load(Ordering::Relaxed),
-                "allocBlocks": BUCKET_ALLOC_BLOCKS[index].load(Ordering::Relaxed),
-                "liveBytes": BUCKET_LIVE_BYTES[index].load(Ordering::Relaxed),
-            })
-        })
-        .collect()
-}
-
 fn span_value(span: &CompileSpan, after: &Counters, end_unix_ms: u64) -> serde_json::Value {
     serde_json::json!({
         "wallMs": span.started.elapsed().as_secs_f64() * 1000.0,
@@ -286,6 +234,23 @@ fn process_value(after: &Counters) -> serde_json::Value {
     })
 }
 
+fn phase_rows_value(rows: &[PhaseRow]) -> Vec<serde_json::Value> {
+    rows.iter()
+        .map(|row| {
+            serde_json::json!({
+                "name": row.name,
+                "wallMs": row.wall_ms,
+                "allocBytes": row.alloc_bytes,
+                "allocBlocks": row.alloc_blocks,
+                "freeBytes": row.free_bytes,
+                "freeBlocks": row.free_blocks,
+                "liveAtEnter": row.live_enter,
+                "liveAtExit": row.live_exit,
+            })
+        })
+        .collect()
+}
+
 fn trace_out_path() -> Option<String> {
     match std::env::var(TRACE_OUT_ENV) {
         Ok(path) if !path.is_empty() => Some(path),
@@ -313,6 +278,7 @@ fn finish_span(span: &CompileSpan) {
         "schema": 1,
         "span": span_value(span, &after, end_unix_ms),
         "process": process_value(&after),
+        "phases": phase_rows_value(&drain_phase_rows()),
     });
     if let Some(path) = trace_out_path() {
         write_report(&path, &report);
@@ -334,4 +300,39 @@ pub fn snapshot_json() -> String {
         "buckets": bucket_rows(),
     })
     .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{drain_phase_rows, CompileSpan, PhaseGuard};
+
+    /// Guard mechanics: rows land in enter order and the span files exactly
+    /// its own phases. Deltas read zero here — unit tests link the default
+    /// allocator, not TraceAlloc — so this pins shape, and the instrumented
+    /// `.node` E2E proves live counts.
+    #[test]
+    fn phase_rows_drain_in_enter_order() {
+        drain_phase_rows();
+        {
+            let _first = PhaseGuard::enter("first");
+        }
+        {
+            let _second = PhaseGuard::enter("second");
+        }
+        let rows = drain_phase_rows();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].name, "first");
+        assert_eq!(rows[1].name, "second");
+        assert!(drain_phase_rows().is_empty());
+    }
+
+    #[test]
+    fn span_enter_clears_stale_rows() {
+        {
+            let _stale = PhaseGuard::enter("stale");
+        }
+        let span = CompileSpan::enter(0);
+        assert!(drain_phase_rows().is_empty());
+        drop(span);
+    }
 }

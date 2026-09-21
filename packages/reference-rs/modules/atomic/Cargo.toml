@@ -5,6 +5,12 @@ edition.workspace = true
 publish = false
 description = "Native atomic CSS compiler for Reference UI"
 
+[features]
+# Instrument build for `pnpm agentrs alloc`: counting global allocator plus
+# per-compile span and per-phase dumps. Enabled only through the runtime
+# `alloc-trace` feature; never enabled in the shipped `.node`.
+alloc-trace = []
+
 [dependencies]
 canon.workspace = true
 base_system.workspace = true

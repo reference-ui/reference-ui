@@ -23,8 +23,8 @@ import { parseGcLog } from './alloc-gc.mjs'
 import { buildAllocMeta, resolveAllocEvidenceDir, writeAllocEvidence } from './alloc-evidence.mjs'
 import { PHASES_OUT_ENV, phasesEnvFor, readPhases } from './phases.mjs'
 
-const ALLOC_PROCEDURE = 'agentrs-alloc/2'
-const ALLOC_PROCEDURE_NOTE = 'same-run phase boundaries on GC + trace legs; span read against the trace run\'s own compile phase (v1 had post-import syncMs plus another run\'s span)'
+const ALLOC_PROCEDURE = 'agentrs-alloc/3'
+const ALLOC_PROCEDURE_NOTE = 'per-compiler-phase alloc rows from the instrument span (v2 had span totals + size classes only)'
 const DEFAULT_SCALE = 'enterprise'
 const WORKER_SAMPLE_MS = 10
 const TRACE_OUT_ENV = 'ALLOC_TRACE_OUT'

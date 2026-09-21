@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "span": {
+    "wallMs": 995.655881,
+    "startUnixMs": 1789994224998,
+    "endUnixMs": 1789994225993,
+    "allocBytes": 992620644,
+    "allocBlocks": 8259541,
+    "freeBytes": 984176389,
+    "freeBlocks": 8258149,
+    "liveAtEnter": 6155360,
+    "liveAtExit": 14599615,
+    "netGrowth": 8444255,
+    "peakLive": 159570130,
+    "reallocs": 1117430,
+    "requestJsonBytes": 6153775,
+    "fileCount": 15122,
+    "filesContentBytes": 4358806,
+    "filesPathBytes": 1303532,
+    "zoneAtEnter": {
+      "sizeAllocated": 77971456,
+      "sizeInUse": 23023984,
+      "slack": 54947472
+    },
+    "zoneAtExit": {
+      "sizeAllocated": 87457792,
+      "sizeInUse": 32069168,
+      "slack": 55388624
+    }
+  },
+  "process": {
+    "spans": 1,
+    "allocBytes": 998778182,
+    "allocBlocks": 8259561,
+    "freeBytes": 984178567,
+    "freeBlocks": 8258163,
+    "liveBytes": 14599615,
+    "peakLiveBytes": 165725490,
+    "buckets": [
+      {
+        "maxSize": 32,
+        "allocBytes": 49708152,
+        "allocBlocks": 5421025,
+        "liveBytes": 21470
+      },
+      {
+        "maxSize": 128,
+        "allocBytes": 164866321,
+        "allocBlocks": 2189014,
+        "liveBytes": 536
+      },
+      {
+        "maxSize": 512,
+        "allocBytes": 101784607,
+        "allocBlocks": 501117,
+        "liveBytes": 1860
+      },
+      {
+        "maxSize": 2048,
+        "allocBytes": 100644758,
+        "allocBlocks": 115821,
+        "liveBytes": 7696
+      },
+      {
+        "maxSize": 8192,
+        "allocBytes": 46139054,
+        "allocBlocks": 13075,
+        "liveBytes": 0
+      },
+      {
+        "maxSize": 32768,
+        "allocBytes": 316308872,
+        "allocBlocks": 19036,
+        "liveBytes": 0
+      },
+      {
+        "maxSize": 131072,
+        "allocBytes": 29807224,
+        "allocBlocks": 451,
+        "liveBytes": 33336
+      },
+      {
+        "maxSize": 18446744073709551615,
+        "allocBytes": 189535646,
+        "allocBlocks": 128,
+        "liveBytes": 14542384
+      }
+    ]
+  },
+  "phases": [
+    {
+      "name": "request",
+      "wallMs": 5.745093,
+      "allocBytes": 8683947,
+      "allocBlocks": 42416,
+      "freeBytes": 1829467,
+      "freeBlocks": 7128,
+      "liveAtEnter": 6155360,
+      "liveAtExit": 13009840
+    },
+    {
+      "name": "collect",
+      "wallMs": 51.011981999999996,
+      "allocBytes": 38755208,
+      "allocBlocks": 423895,
+      "freeBytes": 32306438,
+      "freeBlocks": 393650,
+      "liveAtEnter": 13010128,
+      "liveAtExit": 19458898
+    },
+    {
+      "name": "parse",
+      "wallMs": 27.38713,
+      "allocBytes": 65673480,
+      "allocBlocks": 9701,
+      "freeBytes": 756264,
+      "freeBlocks": 6332,
+      "liveAtEnter": 19458898,
+      "liveAtExit": 84376114
+    },
+    {
+      "name": "constants",
+      "wallMs": 48.033303,
+      "allocBytes": 248677136,
+      "allocBlocks": 386014,
+      "freeBytes": 216890790,
+      "freeBlocks": 192012,
+      "liveAtEnter": 84376114,
+      "liveAtExit": 116162460
+    },
+    {
+      "name": "graphs",
+      "wallMs": 39.672850000000004,
+      "allocBytes": 33245089,
+      "allocBlocks": 272837,
+      "freeBytes": 48597383,
+      "freeBlocks": 348576,
+      "liveAtEnter": 116162460,
+      "liveAtExit": 100810166
+    },
+    {
+      "name": "hosts",
+      "wallMs": 50.598645999999995,
+      "allocBytes": 80648111,
+      "allocBlocks": 207775,
+      "freeBytes": 80572004,
+      "freeBlocks": 206180,
+      "liveAtEnter": 100810454,
+      "liveAtExit": 100886561
+    },
+    {
+      "name": "analysis",
+      "wallMs": 35.210786,
+      "allocBytes": 79892636,
+      "allocBlocks": 351845,
+      "freeBytes": 58963566,
+      "freeBlocks": 126600,
+      "liveAtEnter": 100886561,
+      "liveAtExit": 121815631
+    },
+    {
+      "name": "extract",
+      "wallMs": 199.163066,
+      "allocBytes": 183683933,
+      "allocBlocks": 2155031,
+      "freeBytes": 145771285,
+      "freeBlocks": 1588746,
+      "liveAtEnter": 121815631,
+      "liveAtExit": 159728279
+    },
+    {
+      "name": "harvest",
+      "wallMs": 55.073631,
+      "allocBytes": 10349514,
+      "allocBlocks": 524000,
+      "freeBytes": 10322763,
+      "freeBlocks": 523248,
+      "liveAtEnter": 159728279,
+      "liveAtExit": 159755030
+    },
+    {
+      "name": "assembly",
+      "wallMs": 409.88768,
+      "allocBytes": 189449590,
+      "allocBlocks": 3506821,
+      "freeBytes": 207125068,
+      "freeBlocks": 3891085,
+      "liveAtEnter": 76607465,
+      "liveAtExit": 58931987
+    },
+    {
+      "name": "partition",
+      "wallMs": 33.359938,
+      "allocBytes": 36684336,
+      "allocBlocks": 377646,
+      "freeBytes": 36684336,
+      "freeBlocks": 377646,
+      "liveAtEnter": 58931987,
+      "liveAtExit": 58931987
+    },
+    {
+      "name": "serialize",
+      "wallMs": 5.2609639999999995,
+      "allocBytes": 16875648,
+      "allocBlocks": 1557,
+      "freeBytes": 8487040,
+      "freeBlocks": 1556,
+      "liveAtEnter": 31746065,
+      "liveAtExit": 40134673
+    }
+  ]
+}

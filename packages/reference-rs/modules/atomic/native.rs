@@ -38,7 +38,9 @@ struct NativeCompileRequest {
 #[napi]
 pub fn compile_system(request_json: String) -> Result<String> {
     #[cfg(feature = "alloc-trace")]
-    let mut _span = crate::alloc_trace::CompileSpan::enter(request_json.len());
+    let mut _span = ::atomic::alloc_trace::CompileSpan::enter(request_json.len());
+    #[cfg(feature = "alloc-trace")]
+    let _request = ::atomic::alloc_trace::PhaseGuard::enter("request");
     #[cfg(feature = "counters-trace")]
     let _cspan = crate::counters_trace::CountersSpan::enter();
     let req: NativeCompileRequest = serde_json::from_str(&request_json)
@@ -67,6 +69,8 @@ pub fn compile_system(request_json: String) -> Result<String> {
         include: req.include,
         logs: req.logs,
     };
+    #[cfg(feature = "alloc-trace")]
+    drop(_request);
     let result = ::atomic::compile(&compile_req).map_err(napi::Error::from_reason)?;
     serialize(&result, proof)
 }
@@ -159,6 +163,8 @@ impl<'a> SlimCompileResult<'a> {
 }
 
 fn serialize(result: &::atomic::CompileResult, proof: bool) -> Result<String> {
+    #[cfg(feature = "alloc-trace")]
+    let _phase = ::atomic::alloc_trace::PhaseGuard::enter("serialize");
     let text = if proof {
         serde_json::to_string(result)
     } else {
