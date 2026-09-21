@@ -1,4 +1,4 @@
-OPERATION: READY
+OPERATION: GO
 
 # Mission: Operation Reaper — size the harvest sheet, then decide the pool
 
