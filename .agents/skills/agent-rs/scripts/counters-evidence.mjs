@@ -6,24 +6,24 @@
  * and emits meta.json with the pinned procedure plus derived before/after
  * deltas and ratios. Rendering lives in counters-summary.mjs. The pin follows
  * the bench convention (clean tree hashes, dirty trees overwrite `latest`),
- * and a dirty capture files its git status excerpt.
+ * and a dirty capture files its git status excerpt. Filed bundles can also be
+ * reprocessed without re-recording (see counters-resummarize.mjs): the raw
+ * dumps are copied aside untouched and every derivation re-runs under the
+ * current procedure, with the source bundle named in resummarizedFrom.
  */
 
 import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { subtractCensus } from './counters-census.mjs'
-import { checkReconciled } from './phases.mjs'
-
-// Conservative sustained issue width for the IPC stall bound (see summary).
-export const STALL_WIDTH = 4
+import { censusPhasesMeta, spanPhasesMeta } from './counters-phases.mjs'
 
 export function resolveCountersEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
   return path.join(repoRoot, 'docs', 'evidence', 'counters', `${options.scale}-${pin.name}`)
 }
 
-function gitStatusExcerpt(repoRoot) {
+export function gitStatusExcerpt(repoRoot) {
   try {
     const probe = spawnSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf-8' })
     if (probe.status !== 0 || !probe.stdout) return []
@@ -83,18 +83,51 @@ function matchedDelta(enter, row) {
   }
 }
 
-function windowThreadDeltas(before, after) {
-  const enter = threadById(before)
-  const deltas = []
-  for (const row of threadRows(after)) {
-    if (typeof row.threadId !== 'number' || !enter.has(row.threadId)) continue
-    deltas.push(matchedDelta(enter, row))
-  }
-  return deltas
+function bornDelta(row) {
+  // A thread absent from the enter snapshot was born inside the window, so
+  // its whole lifetime (the exit row as-is) is window CPU — exact, not a bound.
+  return { userUsec: orZero(row.userUsec), sysUsec: orZero(row.sysUsec) }
 }
 
-function windowTopShare(before, after) {
-  const deltas = windowThreadDeltas(before, after)
+function collectExitDeltas(enter, after) {
+  const seen = new Set()
+  const deltas = []
+  let bornCount = 0
+  let bornUsec = 0
+  for (const row of threadRows(after)) {
+    if (typeof row.threadId !== 'number') continue
+    seen.add(row.threadId)
+    const born = !enter.has(row.threadId)
+    const delta = born ? bornDelta(row) : matchedDelta(enter, row)
+    if (born) {
+      bornCount += 1
+      bornUsec += delta.userUsec + delta.sysUsec
+    }
+    deltas.push(delta)
+  }
+  return { deltas, seen, bornCount, bornUsec }
+}
+
+function windowThreadDeltas(before, after) {
+  const enter = threadById(before)
+  const collected = collectExitDeltas(enter, after)
+  let diedCount = 0
+  for (const id of enter.keys()) {
+    if (!collected.seen.has(id)) diedCount += 1
+  }
+  return { ...collected, diedCount }
+}
+
+function sumDeltas(deltas) {
+  const sums = { userUsec: 0, sysUsec: 0 }
+  for (const delta of deltas) {
+    sums.userUsec += delta.userUsec
+    sums.sysUsec += delta.sysUsec
+  }
+  return sums
+}
+
+function topShareOf(deltas) {
   let total = 0
   let top = 0
   for (const delta of deltas) {
@@ -106,32 +139,40 @@ function windowTopShare(before, after) {
   return top / total
 }
 
-function deriveThreads(before, after) {
+function rusageWindowUsec(rusage) {
+  if (!rusage) return 0
+  return orZero(rusage.userUsec) + orZero(rusage.systemUsec)
+}
+
+function deriveThreads(before, after, rusage) {
   const enter = threadSums(before)
   const exit = threadSums(after)
   if (!enter || !exit) return null
+  const window = windowThreadDeltas(before, after)
+  const attributed = sumDeltas(window.deltas)
+  // Died threads leave no exit row, but the process-level rusage delta still
+  // counts their window CPU — so the unattributed remainder bounds them.
+  const rusageUsec = rusageWindowUsec(rusage)
+  const attributedUsec = attributed.userUsec + attributed.sysUsec
+  const unattributedUsec = Math.max(0, rusageUsec - attributedUsec)
   return {
     enterCount: enter.count,
     exitCount: exit.count,
-    userUsecDelta: exit.userUsec - enter.userUsec,
-    sysUsecDelta: exit.sysUsec - enter.sysUsec,
-    windowTopShare: windowTopShare(before, after),
+    bornCount: window.bornCount,
+    diedCount: window.diedCount,
+    userUsecDelta: attributed.userUsec,
+    sysUsecDelta: attributed.sysUsec,
+    bornUsec: window.bornUsec,
+    attributedUsec,
+    unattributedUsec,
+    unattributedShare: rusageUsec > 0 ? unattributedUsec / rusageUsec : null,
+    windowTopShare: topShareOf(window.deltas),
   }
 }
 
 function ipcOf(instructions, cycles) {
   if (instructions === null || !cycles) return null
   return instructions / cycles
-}
-
-function stallOf(instructions, cycles) {
-  if (instructions === null || !cycles) return null
-  return Math.max(0, cycles - instructions / STALL_WIDTH)
-}
-
-function shareOf(part, whole) {
-  if (part === null || !whole) return null
-  return part / whole
 }
 
 // High-water marks are monotonic: their enter/exit difference is meaningless,
@@ -153,10 +194,9 @@ export function deriveSpan(span, spans = null) {
   const info = deltaPair(span.before.rusageInfo, span.after.rusageInfo)
   const rusage = deltaPair(span.before.rusage, span.after.rusage)
   scrubWaters(info, rusage)
-  const threads = deriveThreads(span.before.threads, span.after.threads)
+  const threads = deriveThreads(span.before.threads, span.after.threads, rusage)
   const instructions = numOf(info, 'instructions')
   const cycles = numOf(info, 'cycles')
-  const stallCycles = stallOf(instructions, cycles)
   return {
     wallMs: span.wallMs,
     spans,
@@ -168,40 +208,11 @@ export function deriveSpan(span, spans = null) {
     instructions,
     cycles,
     ipc: ipcOf(instructions, cycles),
-    stallWidth: STALL_WIDTH,
-    stallCycles,
-    stallShare: shareOf(stallCycles, cycles),
   }
 }
 
 function legMeta(leg) {
   return { sample: leg.sample, nodeArgs: leg.nodeArgs, command: leg.command, env: leg.env }
-}
-
-function spanPhasesMeta(spanLeg) {
-  const compile = spanLeg.phases.phases.compile
-  const wallMs = spanLeg.span.span.wallMs
-  return {
-    file: 'span-phases.json',
-    phases: spanLeg.phases.phases,
-    reconcile: checkReconciled(spanLeg.phases.phases),
-    compileVsSpanMs: {
-      compile,
-      span: wallMs,
-      delta: typeof compile === 'number' ? compile - wallMs : null,
-    },
-  }
-}
-
-function censusPhasesMeta(censusLeg) {
-  return {
-    file: 'census-phases.json',
-    phases: censusLeg.phases.phases,
-    reconcile: checkReconciled(censusLeg.phases.phases),
-    events: censusLeg.events,
-    byPhase: censusLeg.bucketed.phases,
-    unplaced: censusLeg.bucketed.unplaced,
-  }
 }
 
 export function buildCountersMeta(ctx, repo, legs, natives) {

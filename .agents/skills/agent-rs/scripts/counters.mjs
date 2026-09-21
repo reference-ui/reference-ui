@@ -8,6 +8,7 @@
  * libc file calls, with a bare-node startup baseline for subtraction). The
  * bench generator and worker run verbatim on every leg; evidence lands under
  * docs/evidence/counters/ as meta, raw dumps, the net census, and summary.
+ * A filed bundle can be reprocessed without re-recording via --resummarize.
  */
 
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -18,11 +19,12 @@ import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
 import { describeShippedNative, ensureCountersNative, describeCountersNative } from './alloc-build.mjs'
 import { CENSUS_EVENTS_OUT_ENV, CENSUS_OUT_ENV, bucketCensusEvents, buildCountersShim, checkEventsAgainstCensus, readCensus, readCensusEvents, runShimmed, subtractCensus } from './counters-census.mjs'
 import { buildCountersMeta, resolveCountersEvidenceDir } from './counters-evidence.mjs'
+import { runCountersResummarize } from './counters-resummarize.mjs'
 import { writeCountersEvidence } from './counters-summary.mjs'
 import { PHASES_OUT_ENV, phaseWindows, phasesEnvFor, readPhases } from './phases.mjs'
 
-const COUNTERS_PROCEDURE = 'agentrs-counters/2'
-const COUNTERS_PROCEDURE_NOTE = 'same-run phase boundaries on span + census legs; timestamped libc event log bucketed into phases (v1 had whole-worker census minus a bare-node baseline, span from another run)'
+const COUNTERS_PROCEDURE = 'agentrs-counters/3'
+const COUNTERS_PROCEDURE_NOTE = 'width-assumption stall bound withdrawn (no ceiling claimed); in-window thread births attributed at their exit rows with died-thread counts and a rusage-bounded unattributed share (v2 skipped threads absent from the enter snapshot)'
 const DEFAULT_SCALE = 'enterprise'
 const WORKER_SAMPLE_MS = 10
 const TRACE_OUT_ENV = 'COUNTERS_TRACE_OUT'
@@ -31,6 +33,7 @@ const SHIM_ENV = 'DYLD_INSERT_LIBRARIES'
 
 const USAGE = [
   'usage: pnpm agentrs counters [-- scale] [--out dir] [--keep] [--no-build]',
+  '       pnpm agentrs counters --resummarize <srcDir> [--out dir]   (reprocess a filed bundle, no re-record)',
   '       pnpm agentrs counters --list   (frozen bench scales; enterprise is the default)',
   'example: pnpm agentrs counters -- enterprise',
 ].join('\n')
@@ -66,11 +69,28 @@ function consumeCountersWord(options, words, index, positional) {
   return { next: index + 1, positional: arg }
 }
 
+function parseCountersResummarizeArgs(options, words) {
+  for (let i = 0; i < words.length; i += 1) {
+    const arg = words[i]
+    if (arg !== '--resummarize' && arg !== '--out') {
+      throw usageError(`--resummarize takes only --out, got: ${arg}`)
+    }
+    const value = words[i + 1]
+    if (!value || value.startsWith('-')) throw usageError(`${arg} needs a value`)
+    if (arg === '--resummarize') options.resummarize = value
+    else options.outDir = value
+    i += 1
+  }
+  if (!options.resummarize) throw usageError('--resummarize needs a source evidence dir')
+  return options
+}
+
 export function parseCountersArgs(argv) {
-  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, noBuild: false }
+  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, noBuild: false, resummarize: null }
   const words = argv.filter((arg) => arg !== '--')
   if (words.includes('--list')) return { ...options, list: true }
   if (words.includes('--help') || words.includes('-h')) return { ...options, help: true }
+  if (words.includes('--resummarize')) return parseCountersResummarizeArgs(options, words)
   let positional = null
   let index = 0
   while (index < words.length) {
@@ -243,6 +263,13 @@ function printCountersReport(evidenceDir, meta) {
   console.log('')
 }
 
+function printCountersResummaryReport(outDir, meta) {
+  const threads = meta.derived.threads ?? {}
+  console.log(`\n[agent-rs] counters resummary: ${outDir}`)
+  console.log(`  from: ${meta.resummarizedFrom.dir} (${meta.resummarizedFrom.procedure})`)
+  console.log(`  span: ${reportCell(meta.derived.instructions)} instr, IPC ${reportCell(meta.derived.ipc)}, threads ${threads.enterCount}/${threads.exitCount} (${threads.bornCount} born / ${threads.diedCount} died)`)
+}
+
 async function captureCounters(ctx, evidenceDir, natives) {
   const repo = await generateCountersRepo(ctx)
   try {
@@ -289,6 +316,21 @@ export async function runCountersCommand(args, repoRoot, rsDir) {
   }
   if (options.list) {
     await listCountersScales(benchDir)
+    return 0
+  }
+  if (options.resummarize) {
+    try {
+      const resummary = runCountersResummarize({
+        srcDir: options.resummarize, outDir: options.outDir,
+        repoRoot, procedure: COUNTERS_PROCEDURE, procedureNote: COUNTERS_PROCEDURE_NOTE,
+        command: ['pnpm', 'agentrs', 'counters', ...args],
+      })
+      writeCountersEvidence(resummary.outDir, resummary.meta)
+      printCountersResummaryReport(resummary.outDir, resummary.meta)
+    } catch (err) {
+      console.error(`[agent-rs] counters resummarize failed: ${err instanceof Error ? err.message : String(err)}`)
+      return 1
+    }
     return 0
   }
   const pinModule = await import(benchModuleUrl(benchDir, 'report/pin.ts'))

@@ -11,7 +11,7 @@
 
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { STALL_WIDTH, numOf, orZero, writeCountersMeta } from './counters-evidence.mjs'
+import { numOf, orZero, writeCountersMeta } from './counters-evidence.mjs'
 import { countersPhasesLines } from './counters-phases.mjs'
 
 function fmtInt(value) {
@@ -88,6 +88,16 @@ function threadCountCell(threads) {
   return `${countCell(numOf(threads, 'enterCount'))} / ${countCell(numOf(threads, 'exitCount'))}`
 }
 
+function birthDeathCell(threads) {
+  return `${countCell(numOf(threads, 'bornCount'))} born / ${countCell(numOf(threads, 'diedCount'))} died`
+}
+
+function unattributedCell(threads) {
+  const usec = numOf(threads, 'unattributedUsec')
+  if (usec === null) return 'n/a'
+  return `${fmtFixed(usec / 1000, 1)} ms (${pctCell(numOf(threads, 'unattributedShare'))})`
+}
+
 function spanLines(derived) {
   const info = derived.info ?? {}
   const events = derived.events ?? {}
@@ -101,7 +111,6 @@ function spanLines(derived) {
     spanRow('instructions', fmtInt(derived.instructions)),
     spanRow('cycles', fmtInt(derived.cycles)),
     spanRow('IPC (instr/cycle)', fmtFixed(derived.ipc, 2)),
-    spanRow(`stall cycles (width-${STALL_WIDTH} bound)`, `${fmtInt(derived.stallCycles)} (${pctCell(derived.stallShare)})`),
     spanRow('user CPU (rusage)', `${fmtFixed(cpu.userMs)} ms`),
     spanRow('sys CPU (rusage)', `${fmtFixed(cpu.sysMs)} ms`),
     spanRow('unix syscalls', fmtInt(events.syscallsUnix)),
@@ -118,7 +127,9 @@ function spanLines(derived) {
     spanRow('disk read/written', `${mib(info.diskioBytesRead)} / ${mib(info.diskioBytesWritten)}`),
     spanRow('phys footprint delta', mib(info.physFootprint)),
     spanRow('threads enter/exit', threadCountCell(derived.threads)),
-    spanRow('window top-thread share', pctCell(numOf(derived.threads, 'windowTopShare'))),
+    spanRow('threads born/died in-window', birthDeathCell(derived.threads)),
+    spanRow('window top-thread share (matched + born)', pctCell(numOf(derived.threads, 'windowTopShare'))),
+    spanRow('window CPU unattributed (died-thread bound)', unattributedCell(derived.threads)),
     '',
   ]
 }
@@ -220,10 +231,10 @@ function verdictSyscalls(meta) {
 
 function ipcVerdict(ipc) {
   if (ipc === null) return 'n/a'
-  if (ipc >= 3) return 'near the issue-width ceiling — compute-bound floor'
-  if (ipc >= 1.5) return 'healthy — some headroom in stalls'
-  if (ipc >= 0.8) return 'middling — stalls rival retirement'
-  return 'stall-bound — backend (cache/memory) dominates retirement'
+  if (ipc >= 3) return 'very high'
+  if (ipc >= 1.5) return 'healthy'
+  if (ipc >= 0.8) return 'middling'
+  return 'low'
 }
 
 function threadVerdict(share) {
@@ -233,12 +244,21 @@ function threadVerdict(share) {
   return 'already parallel — the window spreads across threads'
 }
 
+function threadCaveat(threads) {
+  // The span table always carries the exact remainder; the verdict only calls
+  // out shares big enough to move the top-share reading (deliberately coarse).
+  const share = numOf(threads, 'unattributedShare')
+  if (typeof share !== 'number' || share < 0.01) return ''
+  return `; ${pctCell(share)} of window CPU unattributed (died-thread bound)`
+}
+
 function verdictCompute(meta) {
   const derived = meta.derived
-  const share = numOf(derived.threads, 'windowTopShare')
+  const threads = derived.threads ?? {}
+  const share = numOf(threads, 'windowTopShare')
   return [
-    `IPC ${fmtFixed(derived.ipc, 2)} → ${ipcVerdict(derived.ipc)}; stall share ${pctCell(derived.stallShare)} against a width-${STALL_WIDTH} bound.`,
-    `Window top-thread share ${pctCell(share)} (${threadCountCell(derived.threads)} threads) → ${threadVerdict(share)}.`,
+    `IPC ${fmtFixed(derived.ipc, 2)} → ${ipcVerdict(derived.ipc)}.`,
+    `Window top-thread share ${pctCell(share)} (${threadCountCell(threads)} threads, ${birthDeathCell(threads)}) → ${threadVerdict(share)}${threadCaveat(threads)}.`,
   ]
 }
 
@@ -267,11 +287,14 @@ function readingLines(meta) {
     ...verdictCompute(meta).map((line) => `- Compute room: ${line}`),
     ...verdictMemory(meta).map((line) => `- Memory room: ${line}`),
     '',
-    'Bounds used: one open per file is the floor; IPC is read against a',
-    `conservative sustained width of ${STALL_WIDTH} (this box: Intel Raptor Cove, 6-wide`,
-    'decode — a stricter width only raises the stall share). Stall cycles =',
-    'cycles − instructions/width. LLC misses are not countable rootless on macOS;',
-    'IPC + stalls + faults are the honest proxies.',
+    'Bounds used: one open per file is the floor. No width assumption is made:',
+    'instructions and cycles are measured (rusage_info_v4) and read as IPC,',
+    'with faults, pageins, and disk IO beside them. LLC misses are not',
+    'countable rootless on macOS; IPC + faults are the honest proxies, and',
+    'they explain results — no ceiling on possible savings is claimed here.',
+    'Thread births inside the window count at their exit rows (exact); any',
+    'remainder of window CPU past the exit-visible threads is reported as',
+    'unattributed, bounding what died threads could have carried.',
     '',
   ]
 }
