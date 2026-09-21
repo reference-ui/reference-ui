@@ -29,6 +29,26 @@ interface HoverPage {
 
 const STEM = 'neo-recipe__banner';
 
+type RecipeTable = NativeRuntimeArtifact['recipes'][string];
+
+// The wire ships unexpanded predicates and no closed class; the runtime
+// derives the spelling below, so every later assert resolves through it.
+function assertCompoundWireShape(table: RecipeTable): string {
+  assert.equal(table.compoundVariants.length, 1, 'table carries the one compound');
+  assert.deepEqual(
+    table.compoundVariants[0]?.predicates,
+    { tone: ['accent'], size: ['lg'] },
+    'compound ships unexpanded predicates',
+  );
+  assert.deepEqual(
+    Object.keys(table.compoundVariants[0]?.predicates ?? {}),
+    ['tone', 'size'],
+    'predicates keep authored order for the derived class',
+  );
+  assert.equal(table.compoundVariants[0]?.className, undefined, 'compound ships no closed class');
+  return `${STEM}_c_accent_lg`;
+}
+
 // Extraction compiled the banner recipe into closed classes with the compound
 // rule after every simple rule, so source order lets the compound win. The
 // predicate matrix paints only when every predicate holds, and the compound's
@@ -42,9 +62,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const data = (await import(dataUrl)) as RuntimeDataModule;
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
-  assert.equal(table.compoundVariants.length, 1, 'table carries the one compound');
-  const compound = table.compoundVariants[0]?.className;
-  assert.ok(compound, 'compound carries its closed class');
+  const compound = assertCompoundWireShape(table);
   assert.deepEqual(table.variantMap, { tone: ['accent', 'muted'], size: ['sm', 'lg'] }, 'table ships per-axis value names');
   const simpleClasses = [
     `${STEM}__base`,

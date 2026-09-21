@@ -59,11 +59,6 @@
   },
   "recipes": {
     "lib-test-system__button": {
-      "qualifiedName": "lib-test-system__button",
-      "variantKeys": [
-        "variant",
-        "disabled"
-      ],
       "variantMap": {
         "variant": [
           "solid",
@@ -75,16 +70,19 @@
         ]
       },
       "defaultVariants": {
-        "variant": "solid",
-        "disabled": "false"
+        "variant": 0,
+        "disabled": 1
       },
       "compoundVariants": [
         {
-          "selection": {
-            "variant": "solid",
-            "disabled": "true"
-          },
-          "className": "lib-test-system__button_c_solid_disabled"
+          "predicates": {
+            "variant": [
+              "solid"
+            ],
+            "disabled": [
+              "true"
+            ]
+          }
         }
       ],
       "combinations": {

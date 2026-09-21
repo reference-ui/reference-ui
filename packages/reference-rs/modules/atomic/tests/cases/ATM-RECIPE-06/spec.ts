@@ -33,7 +33,8 @@ const spec: AtomicCaseSpec = {
     // Exactly one valid recipe made it to the table
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
-    expect(tables[0]?.qualifiedName).toBe('@reference-ui/lib__duplicateBadge')
+    expect(tables[0]?.qualifiedName).toBeUndefined()
+    expect(Object.keys(result.runtime.recipes)).toEqual(['@reference-ui/lib__duplicateBadge'])
 
     // RS-18: every refusal carries file/line/column at the offending call
     expect(result.diagnostics).toHaveLength(3)

@@ -105,12 +105,17 @@ export interface RuntimeStylePlan {
 }
 
 export interface RecipeRuntimeTable {
-  qualifiedName: string
-  variantKeys: string[]
+  /** Table stem. Legacy artifacts ship it; new artifacts omit it and the runtime uses the registry key (always identical). */
+  qualifiedName?: string
+  /** Axis order. Legacy artifacts ship it; new artifacts omit it and the runtime reads `Object.keys(variantMap)` (always identical, same order). */
+  variantKeys?: string[]
   /** Per-axis value names. New artifacts ship names only; the runtime derives each class as `{stem}_{axis[0]}_{value}` plus `{stem}__base`. */
   variantMap: Record<string, string[]>
-  defaultVariants: Record<string, string>
+  /** Authored defaults: axis to its index in the value list (new), or to the value itself (legacy, or unresolvable). */
+  defaultVariants: Record<string, number | string>
   compoundVariants: Array<{
+    /** Unexpanded predicates (new); the runtime derives the closed class. Absent on legacy records. */
+    predicates?: Record<string, string[]>
     selection?: Record<string, string>
     variant?: string
     disabled?: string

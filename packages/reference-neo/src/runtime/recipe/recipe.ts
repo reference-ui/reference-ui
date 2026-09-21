@@ -4,7 +4,8 @@
 // registered tables while the lowering wrapper keeps r sugar on the same
 // container-query shape the compiler extracted. Per-axis responsive objects
 // compose base the same way and append one derived per-breakpoint class each
-// (ATM-RECIPE-07).
+// (ATM-RECIPE-07). Tables ship derivation inputs only: key stem, map-key
+// axes, index defaults, unexpanded predicates.
 
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import type { SystemStyleObject } from '../css/css.ts'
@@ -114,6 +115,21 @@ function resolveSelection(
   return selection
 }
 
+/** Resolve a table's defaults to value names: indices dereference the axis list, strings pass through. */
+function tableDefaults(table: RecipeRuntimeTable): Record<string, string> {
+  const defaults: Record<string, string> = {}
+  for (const [axis, def] of Object.entries(table.defaultVariants)) {
+    const value = typeof def === 'number' ? table.variantMap[axis]?.[def] : def
+    if (value !== undefined) defaults[axis] = value
+  }
+  return defaults
+}
+
+/** Axis order: legacy tables ship it, new tables derive it from the variant map keys. */
+function tableAxes(table: RecipeRuntimeTable): string[] {
+  return table.variantKeys ?? Object.keys(table.variantMap)
+}
+
 function isResponsiveValue(value: unknown): value is ResponsiveRecipeValue {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -146,6 +162,27 @@ function variantClass(stem: string, axis: string, value: string): string {
   return `${stem}_${first}_${value}`
 }
 
+/** Port of the compiler's compound_class: `${stem}_c_${segments}` (a lone `["true"]` collapses to the axis key). */
+function compoundClass(stem: string, predicates: Record<string, string[]>): string {
+  const segments: string[] = []
+  for (const [axis, values] of Object.entries(predicates)) {
+    if (values.length === 1 && values[0] === 'true') segments.push(axis)
+    else segments.push(values.join('_'))
+  }
+  return segments.length === 0 ? `${stem}_c` : `${stem}_c_${segments.join('_')}`
+}
+
+/** Port of the compiler's compound_matches: every axis selection must be an allowed value. */
+function matchesPredicateLists(
+  predicates: Record<string, string[]>,
+  selection: Record<string, string>
+): boolean {
+  return Object.entries(predicates).every(([axis, allowed]) => {
+    const value = selection[axis]
+    return value !== undefined && allowed.includes(value)
+  })
+}
+
 /** Per-axis inputs for one responsive class derivation. */
 interface ResponsiveDerivation {
   stem: string
@@ -169,14 +206,15 @@ function deriveResponsiveClass(
 
 function resolveResponsiveClasses(
   table: RecipeRuntimeTable,
-  responsive: Record<string, Record<string, string>>
+  responsive: Record<string, Record<string, string>>,
+  stem: string
 ): string[] {
   const allowed = new Set(table.responsiveBreakpoints ?? active?.responsiveBreakpoints ?? [])
   const legacy = table.responsiveVariantMap ?? {}
   const classes: string[] = []
   for (const [axis, entries] of Object.entries(responsive)) {
     const ctx: ResponsiveDerivation = {
-      stem: table.qualifiedName,
+      stem,
       axis,
       values: table.variantMap[axis],
       allowed,
@@ -196,7 +234,7 @@ function lookupCombination(
   selection: Record<string, string>
 ): string | undefined {
   const values: string[] = []
-  for (const axis of table.variantKeys) {
+  for (const axis of tableAxes(table)) {
     const value = selection[axis]
     if (value === undefined) return undefined
     values.push(value)
@@ -214,22 +252,38 @@ function matchesPredicates(
   return Object.entries(predicates).every(([axis, wanted]) => selection[axis] === wanted)
 }
 
+/** Resolve one compound record to its class: derived from predicates (new) or shipped (legacy). */
+function compoundClassForSelection(
+  compound: RecipeRuntimeTable['compoundVariants'][number],
+  selection: Record<string, string>,
+  stem: string
+): string | undefined {
+  if (compound.predicates !== undefined) {
+    return matchesPredicateLists(compound.predicates, selection)
+      ? compoundClass(stem, compound.predicates)
+      : undefined
+  }
+  if (compound.className !== undefined && matchesPredicates(compound.selection, selection)) {
+    return compound.className
+  }
+  return undefined
+}
+
 function composeClasses(
   table: RecipeRuntimeTable,
-  selection: Record<string, string>
+  selection: Record<string, string>,
+  stem: string
 ): string {
-  const stem = table.qualifiedName
   const classes = [`${stem}__base`]
-  for (const axis of table.variantKeys) {
+  for (const axis of tableAxes(table)) {
     const value = selection[axis]
     if (value === undefined) continue
     if (!table.variantMap[axis]?.includes(value)) continue
     classes.push(variantClass(stem, axis, value))
   }
   for (const compound of table.compoundVariants) {
-    if (compound.className !== undefined && matchesPredicates(compound.selection, selection)) {
-      classes.push(compound.className)
-    }
+    const className = compoundClassForSelection(compound, selection, stem)
+    if (className !== undefined) classes.push(className)
   }
   return classes.join(' ')
 }
@@ -279,13 +333,15 @@ export function recipe(config: RecipeConfig): RecipeRuntimeFn {
     if (!active) {
       throw new Error('recipe() called before registerRecipeData: sync the project first')
     }
-    const table: RecipeRuntimeTable | undefined =
-      active.tables[qualifiedName(active.system, lowered.className)]
+    const key = qualifiedName(active.system, lowered.className)
+    const table: RecipeRuntimeTable | undefined = active.tables[key]
     if (!table) return ''
+    const stem = table.qualifiedName ?? key
     const { plain, responsive } = splitResponsiveProps(props)
-    const selection = resolveSelection(table.defaultVariants, plain)
-    const baseClasses = lookupCombination(table, selection) ?? composeClasses(table, selection)
-    const extra = resolveResponsiveClasses(table, responsive)
+    const selection = resolveSelection(tableDefaults(table), plain)
+    const baseClasses =
+      lookupCombination(table, selection) ?? composeClasses(table, selection, stem)
+    const extra = resolveResponsiveClasses(table, responsive, stem)
     return [baseClasses, ...extra].filter(part => part !== '').join(' ')
   }) as RecipeRuntimeFn
   runtimeFn.raw = (props: RecipeProps = {}) => {

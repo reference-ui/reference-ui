@@ -3,7 +3,8 @@
 //! Builds the full canonical in-memory maps for unit tests while the shipped
 //! table skips them and serializes the derivation inputs only; the runtime
 //! re-derives every class string exactly from stem plus value names.
-//! Multi-value compound predicates expand to discrete selection entries sharing class names.
+//! Compound predicates ship unexpanded (one record per authored compound,
+//! exact duplicates collapsed); the runtime derives each closed class.
 
 use base_system::BreakpointScale;
 use indexmap::IndexMap;
@@ -110,11 +111,11 @@ pub fn container_breakpoints(scale: &BreakpointScale) -> Vec<String> {
 
 fn build_compound_variants(compounds: &[CompiledCompound]) -> Vec<RecipeCompoundRecord> {
     let mut out = Vec::new();
+    let mut seen = std::collections::HashSet::new();
     for compound in compounds {
-        let selections = expand_predicates(&compound.predicates);
-        for selection in selections {
+        if seen.insert(predicates_key(&compound.predicates)) {
             out.push(RecipeCompoundRecord {
-                selection,
+                predicates: compound.predicates.clone(),
                 class_name: compound.class_name.clone(),
             });
         }
@@ -122,20 +123,12 @@ fn build_compound_variants(compounds: &[CompiledCompound]) -> Vec<RecipeCompound
     out
 }
 
-fn expand_predicates(predicates: &IndexMap<String, Vec<String>>) -> Vec<IndexMap<String, String>> {
-    let mut acc = vec![IndexMap::new()];
-    for (key, values) in predicates {
-        let mut next = Vec::new();
-        for prefix in acc {
-            for val in values {
-                let mut row = prefix.clone();
-                row.insert(key.clone(), val.clone());
-                next.push(row);
-            }
-        }
-        acc = next;
-    }
-    acc
+/// Order-sensitive identity for one compound's predicates: same axes in
+/// the same order with the same values match identically and derive the
+/// same class, so later copies ship nothing new. Reordered predicates
+/// derive different classes and are never collapsed.
+fn predicates_key(predicates: &IndexMap<String, Vec<String>>) -> String {
+    format!("{predicates:?}")
 }
 
 struct CombinationCtx<'a> {
@@ -270,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn multi_value_compound_expands_to_shared_class_name() {
+    fn multi_value_compound_ships_unexpanded_with_derivable_class() {
         let stem = "lib-test-system__button";
         let mut variant_map = IndexMap::new();
         let mut size_map = IndexMap::new();
@@ -295,19 +288,47 @@ mod tests {
             breakpoints: &scale,
         };
         let table = build(&input);
-        assert_eq!(table.compound_variants.len(), 2);
+        assert_eq!(table.compound_variants.len(), 1);
+        let record = &table.compound_variants[0];
         assert_eq!(
-            table.compound_variants[0].class_name,
-            table.compound_variants[1].class_name
+            record.predicates.get("size"),
+            Some(&vec!["sm".to_string(), "md".to_string()])
         );
+        assert_eq!(record.class_name, format!("{stem}_c_sm_md"));
+        let json = serde_json::to_value(&table).expect("table serializes");
         assert_eq!(
-            table.compound_variants[0].selection.get("size"),
-            Some(&"sm".to_string())
+            json.get("compoundVariants"),
+            Some(&serde_json::json!([{ "predicates": { "size": ["sm", "md"] } }]))
         );
-        assert_eq!(
-            table.compound_variants[1].selection.get("size"),
-            Some(&"md".to_string())
-        );
+    }
+
+    #[test]
+    fn exact_duplicate_compounds_collapse_keeping_first() {
+        let stem = "lib-test-system__button";
+        let mut variant_map = IndexMap::new();
+        let mut size_map = IndexMap::new();
+        size_map.insert("sm".into(), format!("{stem}_s_sm"));
+        variant_map.insert("size".into(), size_map);
+
+        let mut predicates = IndexMap::new();
+        predicates.insert("size".into(), vec!["sm".into()]);
+        let compound = CompiledCompound {
+            predicates,
+            class_name: format!("{stem}_c_sm"),
+        };
+        let scale = BreakpointScale::from_names(Vec::<String>::new());
+
+        let input = RecipeTableInput {
+            qualified_name: stem,
+            class_name: "button",
+            variant_map: &variant_map,
+            default_variants: &IndexMap::new(),
+            compounds: &[compound.clone(), compound],
+            breakpoints: &scale,
+        };
+        let table = build(&input);
+        assert_eq!(table.compound_variants.len(), 1);
+        assert_eq!(table.compound_variants[0].class_name, format!("{stem}_c_sm"));
     }
 
     #[test]
@@ -368,13 +389,16 @@ mod tests {
         let stem = "lib-test-system__button";
         let mut outline_map = IndexMap::new();
         outline_map.insert("solid".into(), format!("{stem}_v_solid"));
+        outline_map.insert("outline".into(), format!("{stem}_v_outline"));
         let mut variant_map = IndexMap::new();
         variant_map.insert("variant".into(), outline_map);
+        let mut defaults = IndexMap::new();
+        defaults.insert("variant".into(), "outline".into());
         let input = RecipeTableInput {
             qualified_name: stem,
             class_name: "button",
             variant_map: &variant_map,
-            default_variants: &IndexMap::new(),
+            default_variants: &defaults,
             compounds: &[],
             breakpoints: &BreakpointScale::standard(),
         };
@@ -384,8 +408,40 @@ mod tests {
         assert!(json.get("combinations").is_none());
         assert!(json.get("responsiveVariantMap").is_none());
         assert!(json.get("responsiveBreakpoints").is_none());
-        assert_eq!(json.get("variantMap"), Some(&serde_json::json!({"variant": ["solid"]})));
+        assert_eq!(
+            json.get("variantMap"),
+            Some(&serde_json::json!({"variant": ["solid", "outline"]}))
+        );
+        assert_eq!(json.get("defaultVariants"), Some(&serde_json::json!({"variant": 1})));
+        assert_eq!(json.get("compoundVariants"), Some(&serde_json::json!([])));
         assert!(json.get("base").is_none());
         assert!(json.get("className").is_none());
+        assert!(json.get("qualifiedName").is_none());
+        assert!(json.get("variantKeys").is_none());
+    }
+
+    #[test]
+    fn unresolvable_default_ships_verbatim_not_index() {
+        let stem = "lib-test-system__button";
+        let mut outline_map = IndexMap::new();
+        outline_map.insert("solid".into(), format!("{stem}_v_solid"));
+        let mut variant_map = IndexMap::new();
+        variant_map.insert("variant".into(), outline_map);
+        let mut defaults = IndexMap::new();
+        defaults.insert("variant".into(), "ghost".into());
+        let input = RecipeTableInput {
+            qualified_name: stem,
+            class_name: "button",
+            variant_map: &variant_map,
+            default_variants: &defaults,
+            compounds: &[],
+            breakpoints: &BreakpointScale::standard(),
+        };
+        let table = build(&input);
+        let json = serde_json::to_value(&table).expect("table serializes");
+        assert_eq!(
+            json.get("defaultVariants"),
+            Some(&serde_json::json!({"variant": "ghost"}))
+        );
     }
 }

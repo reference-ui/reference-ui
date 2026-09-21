@@ -29,63 +29,119 @@ pub struct RuntimeStylePlan {
     pub declarations: Vec<RuntimeDeclaration>,
 }
 
-/// One compiled compound variant mapping its selection predicate to a class name.
+/// One compiled compound variant: unexpanded axis predicates plus its closed class.
+/// The wire ships the predicates only; the runtime derives the class with the
+/// same spelling as `compound_class` (a lone `["true"]` collapses to the axis
+/// key). The class stays in memory as the canonical derivation (unit-tested).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecipeCompoundRecord {
-    pub selection: IndexMap<String, String>,
+    pub predicates: IndexMap<String, Vec<String>>,
+    #[serde(skip_serializing)]
     pub class_name: String,
 }
 
 /// Runtime recipe table carrying the inputs a `recipe()` call resolves from.
 ///
-/// Ships derivation inputs only: the qualified stem, per-axis value-name
-/// lists, defaults, and compounds. The runtime derives `base`
-/// (`{stem}__base`) and every value class
-/// (`{stem}_{axis[0]}_{value}`, first-char axis prefix) exactly, so the
-/// wire omits them; the width breakpoint list rides hoisted on the
-/// artifact instead of per table. `class_name`, `base`, and the full
-/// class strings stay in memory as the canonical derivation
-/// (unit-tested); Deserialize still reads the pre-reshape JSON, but only
-/// the serializer's view ships.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// Ships derivation inputs only: per-axis value-name lists, defaults as
+/// indices into those lists, and unexpanded compound predicates. The
+/// runtime derives the stem from the artifact map key, the axis order
+/// from the variant map keys, every value class
+/// (`{stem}_{axis[0]}_{value}`), every compound class (same spelling as
+/// `compound_class`), and every default from its index — so the wire
+/// omits stems, keys, classes, and value strings; the width breakpoint
+/// list rides hoisted on the artifact instead of per table. The stem,
+/// keys, and full class strings stay in memory as the canonical
+/// derivation (unit-tested); Deserialize reads that canonical shape,
+/// only the serializer's 3-field view ships.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecipeRuntimeTable {
     pub qualified_name: String,
-    #[serde(skip_serializing)]
     pub class_name: String,
-    #[serde(skip_serializing)]
     pub base: String,
     pub variant_keys: Vec<String>,
-    #[serde(serialize_with = "serialize_variant_values")]
     pub variant_map: IndexMap<String, IndexMap<String, String>>,
     pub default_variants: IndexMap<String, String>,
     pub compound_variants: Vec<RecipeCompoundRecord>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub combinations: IndexMap<String, String>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub responsive_variant_map: IndexMap<String, IndexMap<String, IndexMap<String, String>>>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub responsive_breakpoints: Vec<String>,
 }
 
-/// Serialize the variant map as per-axis value-name lists: the class
-/// strings are a pure function of stem + axis + value, so the wire
-/// carries the names only and the runtime re-derives each class.
-fn serialize_variant_values<S>(
-    map: &IndexMap<String, IndexMap<String, String>>,
-    serializer: S,
-) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    use serde::ser::SerializeMap;
-    let mut out = serializer.serialize_map(Some(map.len()))?;
-    for (axis, values) in map {
-        let names: Vec<&str> = values.keys().map(String::as_str).collect();
-        out.serialize_entry(axis, &names)?;
+impl Serialize for RecipeRuntimeTable {
+    /// Serialize the wire view: value-name lists, index defaults, and
+    /// unexpanded predicates. Map orders are authored orders (IndexMap
+    /// iteration), so the runtime's `Object.keys` derivation matches the
+    /// omitted `variant_keys` exactly. A default whose value is absent
+    /// from its axis ships as the value string (same data, no loss).
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("RecipeRuntimeTable", 3)?;
+        state.serialize_field("variantMap", &VariantNames(&self.variant_map))?;
+        state.serialize_field(
+            "defaultVariants",
+            &DefaultIndices {
+                defaults: &self.default_variants,
+                variants: &self.variant_map,
+            },
+        )?;
+        state.serialize_field("compoundVariants", &self.compound_variants)?;
+        state.end()
     }
-    out.end()
+}
+
+/// Per-axis value-name lists in authored order: the class strings are a
+/// pure function of stem + axis + value, so the wire carries names only.
+struct VariantNames<'a>(&'a IndexMap<String, IndexMap<String, String>>);
+
+impl Serialize for VariantNames<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut out = serializer.serialize_map(Some(self.0.len()))?;
+        for (axis, values) in self.0 {
+            let names: Vec<&str> = values.keys().map(String::as_str).collect();
+            out.serialize_entry(axis, &names)?;
+        }
+        out.end()
+    }
+}
+
+/// Defaults as indices into their axis value list (authored
+/// which-is-default, re-encoded). Unresolvable values ship verbatim.
+struct DefaultIndices<'a> {
+    defaults: &'a IndexMap<String, String>,
+    variants: &'a IndexMap<String, IndexMap<String, String>>,
+}
+
+impl Serialize for DefaultIndices<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let mut out = serializer.serialize_map(Some(self.defaults.len()))?;
+        for (axis, value) in self.defaults {
+            let index = self
+                .variants
+                .get(axis)
+                .and_then(|options| options.keys().position(|name| name == value));
+            match index {
+                Some(position) => out.serialize_entry(axis, &position)?,
+                None => out.serialize_entry(axis, value)?,
+            }
+        }
+        out.end()
+    }
 }
 
 /// Versioned NativeRuntimeArtifact returned to host build tools and runtime loaders.
@@ -137,8 +193,14 @@ impl Default for NativeRuntimeArtifact {
 }
 
 /// Returns the complete canon plus Reference dialect style property names.
-/// Excludes primitive metadata keys `variant` and `colorMode`.
+/// Excludes primitive metadata keys `variant` and `colorMode`. The set is
+/// constant per binary, so it builds once and clones on later calls.
 pub fn get_style_prop_names() -> Vec<String> {
+    static NAMES: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    NAMES.get_or_init(build_style_prop_names).clone()
+}
+
+fn build_style_prop_names() -> Vec<String> {
     let mut names = std::collections::BTreeSet::new();
     for prop in canon::CANONICAL_PROPERTIES {
         names.insert(prop.name.to_string());

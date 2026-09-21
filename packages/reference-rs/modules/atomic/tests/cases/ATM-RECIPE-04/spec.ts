@@ -20,11 +20,12 @@ const spec: AtomicCaseSpec = {
     expect(recipes).toContain('opacity: 0.5')
     expect(recipes).toContain('opacity: 1')
 
-    const table = (result.recipes ?? []).find(r => r.qualifiedName === '@reference-ui/lib__button')
+    const table = result.runtime.recipes['@reference-ui/lib__button']
     expect(table).toBeTruthy()
+    expect(table?.qualifiedName).toBeUndefined()
     expect(table?.defaultVariants).toEqual({
-      size: 'md',
-      muted: 'false',
+      size: 1,
+      muted: 1,
     })
     expect(table?.variantMap.size).toEqual(['sm', 'md'])
     expect(table?.variantMap.muted).toEqual(['true', 'false'])

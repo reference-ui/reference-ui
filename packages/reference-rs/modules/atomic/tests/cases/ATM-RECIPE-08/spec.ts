@@ -16,11 +16,12 @@ const spec: AtomicCaseSpec = {
     // Inferred table: same shape an explicit `className: 'chip'` would emit.
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
-    const table = tables[0]!
-    expect(table.qualifiedName).toBe(STEM)
+    expect(Object.keys(result.runtime.recipes)).toEqual([STEM])
+    const table = result.runtime.recipes[STEM]!
+    expect(table.qualifiedName).toBeUndefined()
     expect(table.variantMap.tone).toEqual(['soft', 'accent'])
     expect(table.variantMap.radius).toEqual(['pill', 'rounded'])
-    expect(table.defaultVariants).toEqual({ tone: 'soft', radius: 'rounded' })
+    expect(table.defaultVariants).toEqual({ tone: 0, radius: 1 })
 
     // Both refusal arms fire with file/line/column at the object literal.
     expect(result.diagnostics).toHaveLength(2)

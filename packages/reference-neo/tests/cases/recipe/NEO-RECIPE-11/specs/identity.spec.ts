@@ -40,9 +40,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(!('stylePlans' in data.runtimeData), 'runtime data carries no per-atom row');
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the inferred ${STEM} table`);
-  assert.equal(table.qualifiedName, STEM, 'table stem is the binding minus Recipe');
+  assert.equal(table.qualifiedName, undefined, 'table omits the stem (registry key carries it)');
   assert.deepEqual(table.variantMap, { tone: ['loud', 'quiet'] }, 'table ships the value names');
-  assert.deepEqual(table.defaultVariants, { tone: 'quiet' }, 'table carries the default');
+  assert.deepEqual(table.defaultVariants, { tone: 1 }, 'table carries the default index');
 
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);

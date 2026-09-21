@@ -26,12 +26,16 @@ const spec: AtomicCaseSpec = {
     expect(recipes).toContain('opacity: 0.9')
     expect(layerBody(result.stylesheet, 'utilities')).toBe('')
 
-    const table = (result.recipes ?? []).find(r => r.qualifiedName === '@reference-ui/lib__badge')
+    const table = result.runtime.recipes['@reference-ui/lib__badge']
     expect(table).toBeTruthy()
     expect(table?.variantMap.variant).toEqual(['solid', 'outline'])
     expect(table?.combinations).toBeUndefined()
-    const solidRecord = table?.compoundVariants.find(record => record.selection?.variant === 'solid')
-    const solid = `@reference-ui/lib__badge__base @reference-ui/lib__badge_v_solid ${solidRecord?.className}`
+    const solidRecord = table?.compoundVariants.find(record =>
+      record.predicates?.variant?.includes('solid')
+    )
+    expect(solidRecord?.predicates).toEqual({ variant: ['solid'] })
+    const solid =
+      '@reference-ui/lib__badge__base @reference-ui/lib__badge_v_solid @reference-ui/lib__badge_c_solid'
     expect(solid).toContain('@reference-ui/lib__badge_v_solid')
     expect(solid).toContain('@reference-ui/lib__badge_c_solid')
     expect(solid).toContain('@reference-ui/lib__badge__base')

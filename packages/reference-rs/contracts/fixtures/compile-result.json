@@ -62,17 +62,13 @@
     },
     "recipes": {
       "lib-test-system__button": {
-        "qualifiedName": "lib-test-system__button",
-        "variantKeys": [
-          "variant"
-        ],
         "variantMap": {
           "variant": [
             "solid"
           ]
         },
         "defaultVariants": {
-          "variant": "solid"
+          "variant": 0
         },
         "compoundVariants": []
       }

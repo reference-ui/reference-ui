@@ -112,15 +112,19 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(systems.has('lib-test-system')).toBe(true)
     expect(systems.has('other-system')).toBe(true)
 
-    // Recipe runtime table has qualified identity ${system}__${className}
-    expect(runtime.recipes['lib-test-system__button']).toBeDefined()
-    expect(runtime.recipes['lib-test-system__button'].variantMap).toEqual({
+    // Recipe runtime table ships derivation inputs under its qualified-identity key
+    const button = runtime.recipes['lib-test-system__button']
+    expect(button).toBeDefined()
+    expect(button.variantMap).toEqual({
       variant: ['solid', 'outline'],
       disabled: ['true', 'false'],
     })
-    expect(runtime.recipes['lib-test-system__button'].qualifiedName).toBe(
-      'lib-test-system__button'
-    )
+    expect(button.qualifiedName).toBeUndefined()
+    expect(button.variantKeys).toBeUndefined()
+    expect(button.defaultVariants).toEqual({ variant: 0, disabled: 1 })
+    expect(button.compoundVariants).toEqual([
+      { predicates: { variant: ['solid'], disabled: ['true'] } },
+    ])
 
     // stylePropNames excludes variant and colorMode
     expect(runtime.stylePropNames).not.toContain('variant')

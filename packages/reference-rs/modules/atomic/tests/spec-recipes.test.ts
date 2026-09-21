@@ -1,10 +1,11 @@
 /**
  * Seam proof that evaluated-spec theme recipes lower into runtime recipe tables.
  * A populated spec.recipes (button with variant/disabled axes, defaults, and one
- * compound) must emit a qualified `${system}__button` table with qualified
- * derivation inputs (stem, value-name lists, compounds, breakpoint list), and
- * `@layer recipes` rules. An empty spec.recipes emits nothing. This is the
- * M0-fix14-A probe: populated spec in, non-empty tables out.
+ * compound) must emit a qualified `${system}__button` table with derivation
+ * inputs (value-name lists, index defaults, unexpanded predicates,
+ * breakpoint list), and `@layer recipes` rules. An empty spec.recipes emits
+ * nothing. This is the M0-fix14-A probe: populated spec in, non-empty
+ * tables out.
  */
 import { describe, expect, it } from 'vitest'
 import { compileSync } from '../js/index.js'
@@ -20,18 +21,25 @@ describe('spec recipe lowering', () => {
 
     expect(Object.keys(result.runtime.recipes)).toContain(STEM)
     const table = result.runtime.recipes[STEM]!
-    expect(table.qualifiedName).toBe(STEM)
-    expect(table.variantKeys).toEqual(['variant', 'disabled'])
+    expect(table.qualifiedName).toBeUndefined()
+    expect(table.variantKeys).toBeUndefined()
     expect(table.variantMap['variant']).toEqual(['solid', 'outline'])
     expect(table.variantMap['disabled']).toEqual(['true', 'false'])
-    expect(table.defaultVariants).toEqual({ variant: 'solid', disabled: 'false' })
+    expect(table.defaultVariants).toEqual({ variant: 0, disabled: 1 })
     expect(table.responsiveBreakpoints).toBeUndefined()
     expect(result.runtime.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
     expect(table.combinations).toBeUndefined()
     expect(table.responsiveVariantMap).toBeUndefined()
     expect(table.compoundVariants).toHaveLength(1)
-    expect(table.compoundVariants[0]?.selection).toEqual({ variant: 'solid', disabled: 'true' })
-    expect(table.compoundVariants[0]?.className).toBe(`${STEM}_c_solid_disabled`)
+    expect(table.compoundVariants[0]?.predicates).toEqual({
+      variant: ['solid'],
+      disabled: ['true'],
+    })
+    expect(Object.keys(table.compoundVariants[0]?.predicates ?? {})).toEqual([
+      'variant',
+      'disabled',
+    ])
+    expect(table.compoundVariants[0]?.className).toBeUndefined()
     expect(result.recipes).toHaveLength(1)
     expect(result.stylesheet).toContain('@layer recipes')
     expect(result.stylesheet).toContain(`${STEM}__base`)
