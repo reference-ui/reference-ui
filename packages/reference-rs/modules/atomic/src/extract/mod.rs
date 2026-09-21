@@ -86,7 +86,7 @@ pub struct ExtractContext<'a> {
     pub jsx_hosts: &'a HashSet<String>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub shadowed: &'a [HashSet<String>],
-    pub recipe_binding: Option<String>,
+    pub recipe_binding: Option<&'a str>,
     pub wants: &'a mut Vec<Want>,
     pub recipes: &'a mut Vec<Recipe>,
     pub diagnostics: &'a mut Vec<Diagnostic>,
@@ -286,9 +286,9 @@ pub struct ExtractVisitor<'a> {
     pub source: Option<&'a str>,
     pub chain: ScopeChain<'a>,
     pub breakpoints: &'a BreakpointScale,
-    pub bindings: ExtractBindings,
-    pub jsx_hosts: HashSet<String>,
-    pub owned_props: BTreeMap<String, BTreeSet<String>>,
+    pub bindings: &'a ExtractBindings,
+    pub jsx_hosts: &'a HashSet<String>,
+    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub shadows: Vec<HashSet<String>>,
     pub scope_stack: Vec<ScopeId>,
     next_scope: ScopeId,
@@ -309,9 +309,9 @@ impl<'a> ExtractVisitor<'a> {
             source,
             chain: config.chain,
             breakpoints: config.breakpoints,
-            bindings: config.bindings.clone(),
-            jsx_hosts: config.jsx_hosts.clone(),
-            owned_props: config.owned_props.clone(),
+            bindings: config.bindings,
+            jsx_hosts: config.jsx_hosts,
+            owned_props: config.owned_props,
             shadows: Vec::new(),
             scope_stack: Vec::new(),
             next_scope: ROOT_SCOPE,
@@ -406,15 +406,15 @@ fn extract_tagged_template(visitor: &mut ExtractVisitor<'_>, expr: &TaggedTempla
     );
 }
 
-fn visitor_context<'a>(visitor: &'a mut ExtractVisitor<'_>) -> ExtractContext<'a> {
-    let binding = visitor.recipe_binding.clone();
+fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractContext<'a> {
+    let binding = visitor.recipe_binding.as_deref();
     let scope = visitor.scope_stack.last().copied().unwrap_or(ROOT_SCOPE);
     let config = ExtractConfig {
         chain: visitor.chain,
         breakpoints: visitor.breakpoints,
-        bindings: &visitor.bindings,
-        jsx_hosts: &visitor.jsx_hosts,
-        owned_props: &visitor.owned_props,
+        bindings: visitor.bindings,
+        jsx_hosts: visitor.jsx_hosts,
+        owned_props: visitor.owned_props,
         shadowed: &visitor.shadows,
     };
     let sinks = ExtractSinks {

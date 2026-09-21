@@ -28,12 +28,14 @@ fn gather(request: &CompileRequest) -> Vec<(String, String)> {
 
     let mut sources = Vec::new();
     if let Some(root_dir) = &request.root_dir {
-        scan_dir(Path::new(root_dir), &mut sources);
+        scan_dir(
+            Path::new(root_dir),
+            &scope,
+            request.root_dir.as_deref(),
+            &mut sources,
+        );
     }
     sources
-        .into_iter()
-        .filter(|(path, _)| scope.matches_file(request.root_dir.as_deref(), path))
-        .collect()
 }
 
 /// Virtual sources inside the include scope; an open scope keeps every file.
@@ -50,19 +52,26 @@ fn filter_virtual_sources(
 }
 
 /// Recursively collect supported sources under `dir`, skipping fixed ignores.
-fn scan_dir(dir: &Path, acc: &mut Vec<(String, String)>) {
+/// The include scope is a pure path predicate, so it runs before the read:
+/// out-of-scope files cost a match, never I/O.
+fn scan_dir(dir: &Path, scope: &IncludeScope, root: Option<&str>, acc: &mut Vec<(String, String)>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
     let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
     paths.sort();
     for path in paths {
-        handle_dir_entry(&path, acc);
+        handle_dir_entry(&path, scope, root, acc);
     }
 }
 
-/// Descend into kept directories, read supported source files.
-fn handle_dir_entry(path: &Path, acc: &mut Vec<(String, String)>) {
+/// Descend into kept directories, read supported in-scope source files.
+fn handle_dir_entry(
+    path: &Path,
+    scope: &IncludeScope,
+    root: Option<&str>,
+    acc: &mut Vec<(String, String)>,
+) {
     if path.is_dir() {
         let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         const IGNORE: &[&str] = &[
@@ -77,11 +86,14 @@ fn handle_dir_entry(path: &Path, acc: &mut Vec<(String, String)>) {
             ".pipeline",
         ];
         if !IGNORE.contains(&name) {
-            scan_dir(path, acc);
+            scan_dir(path, scope, root, acc);
         }
     } else if is_supported_extension(path) {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            acc.push((path.to_string_lossy().to_string(), content));
+        let path_str = path.to_string_lossy();
+        if scope.matches_file(root, &path_str) {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                acc.push((path_str.to_string(), content));
+            }
         }
     }
 }

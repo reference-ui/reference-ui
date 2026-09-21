@@ -3,5 +3,6 @@
 //! reference-lib sync root as a canary. Scratch workspaces clean up on drop;
 //! canary tests return early when the gitignored sync output is absent.
 
+mod gates;
 mod seed;
 mod surface;

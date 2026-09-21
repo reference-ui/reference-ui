@@ -113,7 +113,7 @@ fn extract_class_name(obj: &ObjectExpression<'_>, ctx: &mut ExtractContext<'_>) 
     if let Some(prop) = find_class_name_prop(obj) {
         return extract_literal_class_name(prop, ctx);
     }
-    if let Some(derived) = infer_binding_class_name(ctx.recipe_binding.as_deref()) {
+    if let Some(derived) = infer_binding_class_name(ctx.recipe_binding) {
         return Some(derived);
     }
     ctx.diagnostics.push(located_error(

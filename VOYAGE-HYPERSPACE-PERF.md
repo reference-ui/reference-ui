@@ -52,3 +52,11 @@ Wave 1 recon: COMPLETE — map filed, 7 avenues, next crews: perf-1-a (A1+A2), p
 - Outcome: landed — one command (`deepsee all --scale enterprise`) gives the full burndown; lanes a–d have their quantified targets
 
 Wave 1, lane e: VERIFIED — deepsee tooling complete, enterprise burndown + byte-exact bundle accounting filed, review passed.
+## Wave 1, lane b — dead-file fast path: files that cannot contain styling cost no read, parse, walk, or retain
+- Tried: two byte gates (STYLING_SKIP skips W3/W4/W6/W7+resolve/bindings/host-union; STRING_SKIP skips W5 only; parse/W1/W2/records/identity/errors never skip) + A8 visitor borrows + A5a scope-before-read + A5b single-collect + A5d styletrace staged-content + A5e scanner pre-gate + A3 phase-drop. Dropped A5c (walk-memo needs module-graph interior mutability; measured target ~nil). 16 files + tests/gates.rs; module-graph untouched; harvest fence held.
+- Bench (locked load, medians, box shared): small 140/121 vs 192/123.9; medium 411-421/~197 vs 460/204.0; enterprise 2873ms/~770MiB vs 3495/773.7 (-17.9% sync, ~620ms, clears 65ms spread ~10x; RSS within spread, no claim). Churn 4.84-4.96s vs 5.04s HEAD. Bytes cmp-identical all scales + churn (ent css 15007762/data 4090907 = pin). Vs Panda goalpost: ent sync 2.87s vs 645ms, RSS 770 vs 261 MiB — gap narrowed, still large.
+- Stability: agentrs c atomic green (509 incl. 12 new gates); v atomic 298/299 lane AND HEAD (ATM-SITE-54 pre-existing, shown identical); styletrace failure set byte-identical to HEAD (+1 new staged pass); agentneo 173/173; quality 0 violations.
+- Review: VERIFIED ([2026-09-21T00:35Z perf-1-b-reviewer], fresh agent, firsthand: 2x full suite + ent 3x + same-session HEAD stash comparison + 3 own adversarial fixtures byte-identical).
+- Outcome: landed pending captain merge; no commits (crews never commit).
+
+Wave 1, lane b: VERIFIED — dead-file fast path, enterprise sync -17.9% byte-identical, churn unregressed.

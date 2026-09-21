@@ -5,8 +5,8 @@
 //! include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets.
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::path::Path;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 use styletrace::trace_style_bindings_with_surface;
 
@@ -46,15 +46,18 @@ impl ResolvedHosts {
 /// Caller hosts plus traced names for one compile.
 pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
     let mut session = DiagnosticsSession::new();
-    resolve(request, &mut session).0.hosts()
+    let sources = crate::sources::collect(request);
+    resolve(request, &sources, &mut session).0.hosts()
 }
 
 /// Trace the include-scoped entry set against the engine surface.
 /// Returns traced and configured names plus trace warnings for the
 /// compile diagnostics, reporting one host fact per skip into the
-/// session. Empty entry sets trace nothing, silently.
+/// session. Empty entry sets trace nothing, silently. Takes the
+/// compile's collected sources; the caller collects once.
 pub fn resolve(
     request: &CompileRequest,
+    sources: &[(String, String)],
     sink: &mut DiagnosticsSession,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
@@ -71,17 +74,24 @@ pub fn resolve(
     let Some(root_dir) = request.root_dir.as_ref() else {
         return vacant();
     };
-    let entries = entry_paths(request);
+    let entries = entry_paths(sources);
     if entries.is_empty() {
         return vacant();
     }
     let package_root = request.declaration_root.as_deref().unwrap_or(root_dir);
     let surface = engine_surface(&request.base_system);
+    // Staged bytes keyed exactly as the entries: the trace parses what
+    // extraction parsed, with disk fallback for paths outside the compile.
+    let staged: HashMap<PathBuf, &str> = sources
+        .iter()
+        .map(|(path, content)| (PathBuf::from(path), content.as_str()))
+        .collect();
     let outcome = trace_style_bindings_with_surface(
         &entries,
         Path::new(root_dir),
         Path::new(package_root),
         &surface,
+        &staged,
     );
     let traced = outcome
         .bindings

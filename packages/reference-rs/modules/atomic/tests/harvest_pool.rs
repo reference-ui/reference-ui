@@ -190,7 +190,7 @@ fn pool_for_sources(sources: &[(String, String)]) -> atomic::extract::harvest::H
         .zip(allocators.iter())
         .map(|((path, content), allocator)| parse_source(path, content, allocator))
         .collect();
-    collect_pool(&parsed)
+    collect_pool(&parsed, &vec![false; parsed.len()])
 }
 
 /// One source parsed exactly as `compile()` parses it: JSX follows the
