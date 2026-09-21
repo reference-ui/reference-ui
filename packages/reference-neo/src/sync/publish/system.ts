@@ -1,6 +1,8 @@
 // System leg of the Neo generated folder.
-// It takes the publish input and emits system/baseSystem plus the authoring
-// entry, the evaluated spec, the jsx artifact, and the package manifest.
+// It takes the publish input and emits the authoring entry, the evaluated
+// spec, the jsx artifact, and the package manifest, plus it stages the
+// portable base system for the runtime leg: baseSystem.mjs is written once,
+// with the real runtime, when publishRuntimeBundle finalizes the stage.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -219,15 +221,29 @@ function systemTypesSource(): string {
   ].join('\n')
 }
 
+export function baseSystemMjsSource(baseSystem: PortableBaseSystem): string {
+  return `${BASE_SYSTEM_HEADER}\nexport const baseSystem = ${JSON.stringify(baseSystem, null, 2)}\n`
+}
+
+// The staged base system, keyed by outDir: writeSystemDir builds it, and
+// publishRuntimeBundle sets the real runtime and writes it once. Both legs
+// always run paired (sync + deepsee worker); a stage is consumed on write.
+const stagedBaseSystems = new Map<string, PortableBaseSystem>()
+
+export function stageBaseSystem(outDir: string, baseSystem: PortableBaseSystem): void {
+  stagedBaseSystems.set(outDir, baseSystem)
+}
+
+export function takeStagedBaseSystem(outDir: string): PortableBaseSystem | undefined {
+  const staged = stagedBaseSystems.get(outDir)
+  stagedBaseSystems.delete(outDir)
+  return staged
+}
+
 export function writeSystemDir(input: PublishInput): void {
   const dir = join(input.outDir, 'system')
   mkdirSync(dir, { recursive: true })
-  const baseSystem = portableBaseSystem(input)
-  writeFileSync(
-    join(dir, 'baseSystem.mjs'),
-    `${BASE_SYSTEM_HEADER}\nexport const baseSystem = ${JSON.stringify(baseSystem, null, 2)}\n`,
-    'utf-8'
-  )
+  stageBaseSystem(input.outDir, portableBaseSystem(input))
   writeFileSync(join(dir, 'baseSystem.d.mts'), baseSystemTypesSource(), 'utf-8')
   writeFileSync(join(dir, 'system.mjs'), systemEntrySource(), 'utf-8')
   writeFileSync(join(dir, 'system.d.mts'), systemTypesSource(), 'utf-8')

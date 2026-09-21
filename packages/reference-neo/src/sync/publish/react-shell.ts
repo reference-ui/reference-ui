@@ -3,15 +3,18 @@
 // stylesheet copy. The react bundler rewrites the manifest once the entry
 // bundle lands, keeping this shell free of bundle concerns.
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { GENERATED_VERSION, type PublishInput } from './types.ts'
 
+// The stylesheet copy lands here (D5) as a filesystem copy of the styled
+// leg's file, so the 14 MiB sheet is encoded once. Requires the styled leg
+// to run first — publishSyncFolder orders the legs.
 export function writeReactDir(input: PublishInput): void {
   const dir = join(input.outDir, 'react')
   mkdirSync(dir, { recursive: true })
   // react.ts rewrites this placeholder package.json with the D5 exports map
-  // once the entry bundles; the stylesheet copy lands here (D5).
+  // once the entry bundles.
   writeFileSync(
     join(dir, 'package.json'),
     `${JSON.stringify(
@@ -26,5 +29,5 @@ export function writeReactDir(input: PublishInput): void {
     )}\n`,
     'utf-8'
   )
-  writeFileSync(join(dir, 'styles.css'), input.stylesheet, 'utf-8')
+  copyFileSync(join(input.outDir, 'styled', 'styles.css'), join(dir, 'styles.css'))
 }

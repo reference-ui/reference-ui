@@ -1,11 +1,12 @@
 // Styled leg of the Neo generated folder.
 // It takes the publish input and emits the stylesheet plus the package
-// manifest, then backfills the runtime data and the portable base system.
+// manifest, then the runtime data beside it and the staged base system once.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { NativeRuntimeArtifact, PortableBaseSystem } from '@reference-ui/rust/contracts'
+import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
 import { BASE_SYSTEM_HEADER, GENERATED_VERSION, type PublishInput } from './types.ts'
+import { baseSystemMjsSource, takeStagedBaseSystem } from './system.ts'
 
 export function writeStyledDir(input: PublishInput): void {
   const dir = join(input.outDir, 'styled')
@@ -37,25 +38,13 @@ export function writeStyledDir(input: PublishInput): void {
   )
 }
 
-function patchBaseSystemRuntime(outDir: string, runtime: NativeRuntimeArtifact): void {
-  const baseSystemPath = join(outDir, 'system', 'baseSystem.mjs')
-  if (!existsSync(baseSystemPath)) return
-  const raw = readFileSync(baseSystemPath, 'utf-8')
-  const parsed = JSON.parse(raw.slice(raw.indexOf('{'))) as PortableBaseSystem
-  parsed.runtime = runtime
-  writeFileSync(
-    baseSystemPath,
-    `${BASE_SYSTEM_HEADER}\nexport const baseSystem = ${JSON.stringify(parsed, null, 2)}\n`,
-    'utf-8'
-  )
-}
-
 /**
  * Publish the styled runtime data beside the stylesheet: the compiled plans
  * as pure data. Styled is data-only (D4): no executable css module lives
  * here — the bound css()/recipe() bundle into the react entry, which worlds
  * import through an import map while the compiler extracts the same calls.
- * Also backfills the portable base system runtime written one step earlier.
+ * Also finalizes the staged portable base system with the real runtime, so
+ * baseSystem.mjs is serialized and written exactly once.
  */
 export function publishRuntimeBundle(
   outDir: string,
@@ -70,5 +59,8 @@ export function publishRuntimeBundle(
     `${BASE_SYSTEM_HEADER}\nexport const systemName = ${JSON.stringify(systemName)}\nexport const runtimeData = ${JSON.stringify(runtime)}\n`,
     'utf-8'
   )
-  patchBaseSystemRuntime(outDir, runtime)
+  const staged = takeStagedBaseSystem(outDir)
+  if (staged === undefined) return
+  staged.runtime = runtime
+  writeFileSync(join(outDir, 'system', 'baseSystem.mjs'), baseSystemMjsSource(staged), 'utf-8')
 }
