@@ -405,3 +405,11 @@ reopen it.
 - DEFERRED to wave-close gate (box shared w/ 4 benching sibs): cargo + agentneo + bench re-proof on main.
 - Note: main tree carries pre-existing unstaged dirt (docs/missions/README.md, operation-fasthull.md, reports/latest/*) — not captain's, left untouched.
 - Still in flight: perf-4-a, perf-4-b, perf-4-d, hunter-4-r.
+
+## Wave 4, lane a MERGED — fef84ee34
+- Landed: 5 RS files (diagnostics/mod.rs, diagnostics/site.rs LineIndex + fuzz, object/mod.rs, walk/mod.rs, extract/mod.rs ensure_line_index). Architect correction to recon: index owned by ExtractContext (per-file), not ExpressionWalk (per-property rebuild).
+- Piggyback discipline: render-path catalog built, measured (+9 RSS, retained HashMap in peak window), DROPPED. render.rs untouched → D2 merge flag never existed.
+- Claim: ~29ms typical ent sync (pooled 11/13, med −29ms, independent reviewer round incl.). Bytes exact 26+ runs all scales + churn; RSS medians identical (355/356); churn −30ms/−11MiB.
+- Captain gate: full diff reviewed firsthand (binary-search line math + fuzz pin verified by read); md5 identical; agentrs q 0 violations (3 warns, pre-existing kinds per lane).
+- DEFERRED to wave-close gate: cargo + agentneo + bench re-proof on main (shared box).
+- Still in flight: perf-4-b, perf-4-d, hunter-4-r.
