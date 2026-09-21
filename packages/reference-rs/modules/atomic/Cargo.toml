@@ -28,3 +28,24 @@ indexmap = { workspace = true, features = ["serde"] }
 [dev-dependencies]
 shared.workspace = true
 typegen.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "resolve"
+harness = false
+test = true
+
+[[bench]]
+name = "plan_build"
+harness = false
+test = true
+
+[[bench]]
+name = "census"
+harness = false
+test = true
+
+[[bench]]
+name = "line_index"
+harness = false
+test = true

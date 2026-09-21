@@ -4,3 +4,21 @@ version.workspace = true
 edition.workspace = true
 publish = false
 description = "Platform + dialect dictionary for the Reference UI style engine"
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "alias"
+harness = false
+test = true
+
+[[bench]]
+name = "property"
+harness = false
+test = true
+
+[[bench]]
+name = "classify"
+harness = false
+test = true

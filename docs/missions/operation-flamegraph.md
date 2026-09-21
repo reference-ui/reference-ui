@@ -52,8 +52,10 @@ of ad-hoc invocations will rot; a runner subcommand gets used.
 - [x] Allocation report on the enterprise compile reproducing the R1
       findings by measurement. (landed 2026-09-21, verified firsthand,
       evidence at docs/evidence/alloc/enterprise-latest/)
-- [ ] Criterion benches for ≥5 hot functions, green in CI-adjacent
-      runs (`pnpm agentrs c` family).
+- [x] Criterion benches for ≥5 hot functions, green in CI-adjacent
+      runs (`pnpm agentrs c` family). (landed 2026-09-21: 8 targets /
+      46 cases / 9 functions, verified firsthand, plus `pnpm agentrs
+      bench` gated invocation)
 - [ ] Counters pass answering floor-vs-waste per top room.
 - [ ] Recon-quality report: ranked rooms with numbers, kill-fast
       bars, and an explicit Wave 5 recommendation (skirmish lanes vs.
