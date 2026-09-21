@@ -213,3 +213,13 @@ reopen it.
   (Marker caveat, verified: `wants_proof` occurs 2x in
   committed `native.rs` — W1 lane A's proof channel, part of
   the wave base — and in no uncommitted diff outside B.)
+- INTERVENTION (~02:55): lane A tree found with 211 modified
+  files (formatter reflow blast across namer/diagnostics/
+  atlas/typegen) vs its 7-file B1 boundary, after 14 min of
+  log silence. Real B1 work verified intact (selection.rs +
+  assembly.rs RecipeInputs join). Genuine-intervention
+  rebrief queued to the lead: find/kill the formatter cause,
+  revert all non-boundary files, keep B1-hunks-only in
+  boundary files (target ≤10), heartbeat the repair, resume.
+  (Note: `interrupt:true` rejected by the message tool —
+  rebrief queued without interrupt; crews poll between steps.)
