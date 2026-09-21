@@ -50,16 +50,20 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const recipeCount = styles.match(/\.neo-recipe__card/g)?.length ?? 0;
   assert.equal(recipeCount, 5, `sheet carries exactly the recipe classes, got ${recipeCount}`);
 
+  assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
+  assert.deepEqual(table.variantKeys, ['size', 'tone'], 'table orders the axes');
   registerRecipeData(data.systemName, data.runtimeData.recipes);
   const card = recipe({ className: 'card' });
+  const size = table.variantMap['size'];
+  const tone = table.variantMap['tone'];
   assert.equal(
     card(),
-    table.combinations['lg|muted'],
+    `${table.base} ${size?.['lg']} ${tone?.['muted']}`,
     'bare call fills every axis from defaults',
   );
   assert.equal(
     card({ tone: 'accent' }),
-    table.combinations['lg|accent'],
+    `${table.base} ${size?.['lg']} ${tone?.['accent']}`,
     'partial call defaults the omitted size axis',
   );
 

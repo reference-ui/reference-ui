@@ -1,6 +1,7 @@
 /**
- * Variant table station. CompileResult.recipes maps variant prop
- * combinations (and compounds) to closed recipe class names.
+ * Variant table station. CompileResult.recipes carries the derivation inputs
+ * (base, variant map, compounds, breakpoint list) the runtime composes into
+ * closed recipe class names; nothing ships pre-composed.
  */
 import { expect } from 'vitest'
 import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
@@ -20,12 +21,18 @@ const spec: AtomicCaseSpec = {
     expect(table.compoundVariants[0]?.selection).toEqual({ variant: 'solid' })
     expect(table.compoundVariants[0]?.className).toBe('@reference-ui/lib__button_c_solid')
 
-    expect(table.combinations['solid']?.split(' ')).toEqual([
+    expect(table.combinations).toBeUndefined()
+    expect(table.responsiveVariantMap).toBeUndefined()
+    expect(table.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
+
+    const solid = [table.base, table.variantMap.variant?.solid, table.compoundVariants[0]?.className]
+    expect(solid).toEqual([
       '@reference-ui/lib__button__base',
       '@reference-ui/lib__button_v_solid',
       '@reference-ui/lib__button_c_solid',
     ])
-    expect(table.combinations['outline']?.split(' ')).toEqual([
+    const outline = [table.base, table.variantMap.variant?.outline]
+    expect(outline).toEqual([
       '@reference-ui/lib__button__base',
       '@reference-ui/lib__button_v_outline',
     ])

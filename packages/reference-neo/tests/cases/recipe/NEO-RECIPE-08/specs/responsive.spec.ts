@@ -22,12 +22,6 @@ interface RuntimeDataModule {
   runtimeData: NativeRuntimeArtifact;
 }
 
-// The contracts view of the recipe table predates RS-8; the compiled table
-// carries the per-breakpoint map, which this interface names structurally.
-interface ResponsiveTable {
-  responsiveVariantMap?: Record<string, Record<string, Record<string, string>>>;
-}
-
 const STEM = 'neo-recipe__swatch';
 const MD_QUERY = '@container (min-width: 768px)';
 
@@ -46,14 +40,18 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const data = (await import(dataUrl)) as RuntimeDataModule;
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
-  const responsive = (table as unknown as ResponsiveTable).responsiveVariantMap;
-  assert.ok(responsive, 'table carries the responsive variant map');
-  const mdOutline = responsive?.variant?.md?.outline;
-  const mdSolid = responsive?.variant?.md?.solid;
-  assert.ok(mdOutline, 'map carries the md outline class');
-  assert.ok(mdSolid, 'map carries the md solid class');
-  const baseCombination = table.combinations['solid'];
-  assert.ok(baseCombination, 'table carries the solid combination');
+  assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
+  assert.equal(table.responsiveVariantMap, undefined, 'table ships no per-breakpoint map');
+  assert.deepEqual(
+    table.responsiveBreakpoints,
+    ['sm', 'md', 'lg', 'xl', '2xl'],
+    'table carries the width breakpoint list',
+  );
+  const mdOutline = `md:${table.variantMap['variant']?.['outline']}`;
+  const mdSolid = `md:${table.variantMap['variant']?.['solid']}`;
+  assert.equal(mdOutline, `md:${STEM}_v_outline`, 'derived md outline class');
+  assert.equal(mdSolid, `md:${STEM}_v_solid`, 'derived md solid class');
+  const baseCombination = `${table.base} ${table.variantMap['variant']?.['solid']}`;
 
   for (const cls of baseCombination.split(' ')) {
     assert.ok(styles.includes(`.${cls}`), `sheet carries .${cls}`);

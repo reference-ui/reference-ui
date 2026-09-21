@@ -8,6 +8,7 @@ import { recipe, registerRecipeData, type RecipeConfig } from './recipe.ts'
 
 const STEM = 'test__button'
 
+// New-contract table: derivation inputs only, no pre-composed maps.
 const TABLE: RecipeRuntimeTable = {
   qualifiedName: STEM,
   className: 'button',
@@ -24,13 +25,12 @@ const TABLE: RecipeRuntimeTable = {
       className: `${STEM}_c_accent_lg`,
     },
   ],
-  combinations: {
-    'muted|sm': `${STEM}__base ${STEM}_t_muted ${STEM}_s_sm`,
-    'accent|sm': `${STEM}__base ${STEM}_t_accent ${STEM}_s_sm`,
-    'muted|lg': `${STEM}__base ${STEM}_t_muted ${STEM}_s_lg`,
-    'accent|lg': `${STEM}__base ${STEM}_t_accent ${STEM}_s_lg ${STEM}_c_accent_lg`,
-  },
+  responsiveBreakpoints: ['md', 'lg'],
 }
+
+const MUTED_SM = `${STEM}__base ${STEM}_t_muted ${STEM}_s_sm`
+const ACCENT_SM = `${STEM}__base ${STEM}_t_accent ${STEM}_s_sm`
+const ACCENT_LG = `${STEM}__base ${STEM}_t_accent ${STEM}_s_lg ${STEM}_c_accent_lg`
 
 const CONFIG: RecipeConfig = {
   className: 'button',
@@ -48,17 +48,17 @@ beforeAll(() => {
 })
 
 describe('recipe() resolution', () => {
-  it('resolves full selections through the pre-composed combinations', () => {
+  it('composes base plus variants for full selections', () => {
     const button = recipe(CONFIG)
-    expect(button({ tone: 'accent', size: 'lg' })).toBe(TABLE.combinations['accent|lg'])
-    expect(button({ tone: 'muted', size: 'sm' })).toBe(TABLE.combinations['muted|sm'])
+    expect(button({ tone: 'accent', size: 'lg' })).toBe(ACCENT_LG)
+    expect(button({ tone: 'muted', size: 'sm' })).toBe(MUTED_SM)
   })
 
   it('fills gaps from default variants', () => {
     const button = recipe(CONFIG)
-    expect(button()).toBe(TABLE.combinations['muted|sm'])
-    expect(button({ tone: 'accent' })).toBe(TABLE.combinations['accent|sm'])
-    expect(button({ tone: undefined, size: null })).toBe(TABLE.combinations['muted|sm'])
+    expect(button()).toBe(MUTED_SM)
+    expect(button({ tone: 'accent' })).toBe(ACCENT_SM)
+    expect(button({ tone: undefined, size: null })).toBe(MUTED_SM)
   })
 
   it('fires compounds only when every predicate holds', () => {
@@ -79,10 +79,6 @@ describe('recipe() resolution', () => {
         variantMap: { disabled: { true: `${stem}_d_true`, false: `${stem}_d_false` } },
         defaultVariants: { disabled: 'false' },
         compoundVariants: [],
-        combinations: {
-          true: `${stem}__base ${stem}_d_true`,
-          false: `${stem}__base ${stem}_d_false`,
-        },
       },
     })
     const toggle = recipe({ className: 'toggle' })
@@ -97,73 +93,74 @@ describe('recipe() resolution', () => {
     expect(ghost({ tone: 'accent' })).toBe('')
   })
 
-  it('composes base plus variants when no combination covers the selection', () => {
+  it('prefers a legacy shipped combinations map on hit', () => {
     registerRecipeData('test', {
-      [STEM]: { ...TABLE, combinations: {} },
+      [STEM]: { ...TABLE, combinations: { 'accent|lg': 'LEGACY_COMBO' } },
     })
     const button = recipe(CONFIG)
-    expect(button({ tone: 'accent', size: 'lg' })).toBe(
-      `${STEM}__base ${STEM}_t_accent ${STEM}_s_lg ${STEM}_c_accent_lg`
-    )
-    expect(button({ tone: 'accent', size: 'sm' })).toBe(
-      `${STEM}__base ${STEM}_t_accent ${STEM}_s_sm`
-    )
+    expect(button({ tone: 'accent', size: 'lg' })).toBe('LEGACY_COMBO')
+    expect(button({ tone: 'muted', size: 'sm' })).toBe(MUTED_SM)
     registerRecipeData('test', { [STEM]: TABLE })
   })
 })
 
 describe('recipe() responsive selections', () => {
-  const RESPONSIVE_TABLE = {
-    ...TABLE,
-    responsiveVariantMap: {
-      tone: {
-        md: { accent: `md:${STEM}_t_accent`, muted: `md:${STEM}_t_muted` },
-        lg: { accent: `lg:${STEM}_t_accent`, muted: `lg:${STEM}_t_muted` },
-      },
-      size: {
-        md: { sm: `md:${STEM}_s_sm`, lg: `md:${STEM}_s_lg` },
-      },
-    },
-  }
-
-  it('emits the base combination plus one class per breakpoint', () => {
-    registerRecipeData('test', { [STEM]: RESPONSIVE_TABLE })
+  it('emits the base composition plus one derived class per breakpoint', () => {
+    registerRecipeData('test', { [STEM]: TABLE })
     const button = recipe(CONFIG)
     expect(button({ tone: { base: 'muted', md: 'accent' }, size: 'sm' })).toBe(
-      `${TABLE.combinations['muted|sm']} md:${STEM}_t_accent`
+      `${MUTED_SM} md:${STEM}_t_accent`
     )
     expect(button({ tone: { base: 'muted', md: 'accent', lg: 'muted' }, size: 'sm' })).toBe(
-      `${TABLE.combinations['muted|sm']} md:${STEM}_t_accent lg:${STEM}_t_muted`
+      `${MUTED_SM} md:${STEM}_t_accent lg:${STEM}_t_muted`
     )
   })
 
   it('falls back to the default when the responsive object omits base', () => {
-    registerRecipeData('test', { [STEM]: RESPONSIVE_TABLE })
+    registerRecipeData('test', { [STEM]: TABLE })
     const button = recipe(CONFIG)
     expect(button({ tone: { md: 'accent' }, size: 'sm' })).toBe(
-      `${TABLE.combinations['muted|sm']} md:${STEM}_t_accent`
+      `${MUTED_SM} md:${STEM}_t_accent`
     )
   })
 
   it('drops skips and unknown breakpoints or values without failing', () => {
-    registerRecipeData('test', { [STEM]: RESPONSIVE_TABLE })
-    const button = recipe(CONFIG)
-    const base = TABLE.combinations['muted|sm']
-    expect(button({ tone: { base: 'muted', md: undefined, lg: null }, size: 'sm' })).toBe(base)
-    expect(button({ tone: { base: 'muted', xxl: 'accent' }, size: 'sm' })).toBe(base)
-    expect(button({ tone: { base: 'muted', md: 'nope' }, size: 'sm' })).toBe(base)
-  })
-
-  it('degrades to base classes when the table carries no responsive map', () => {
     registerRecipeData('test', { [STEM]: TABLE })
     const button = recipe(CONFIG)
-    expect(button({ tone: { base: 'accent', md: 'muted' }, size: 'lg' })).toBe(
-      TABLE.combinations['accent|lg']
+    expect(button({ tone: { base: 'muted', md: undefined, lg: null }, size: 'sm' })).toBe(MUTED_SM)
+    expect(button({ tone: { base: 'muted', xxl: 'accent' }, size: 'sm' })).toBe(MUTED_SM)
+    expect(button({ tone: { base: 'muted', md: 'nope' }, size: 'sm' })).toBe(MUTED_SM)
+  })
+
+  it('degrades to base classes when the table carries no breakpoint list', () => {
+    const bare: RecipeRuntimeTable = { ...TABLE }
+    delete bare.responsiveBreakpoints
+    registerRecipeData('test', { [STEM]: bare })
+    const button = recipe(CONFIG)
+    expect(button({ tone: { base: 'accent', md: 'muted' }, size: 'lg' })).toBe(ACCENT_LG)
+    registerRecipeData('test', { [STEM]: TABLE })
+  })
+
+  it('reads a legacy shipped responsive map when no breakpoint list exists', () => {
+    const bare: RecipeRuntimeTable = { ...TABLE }
+    delete bare.responsiveBreakpoints
+    registerRecipeData('test', {
+      [STEM]: {
+        ...bare,
+        responsiveVariantMap: {
+          tone: { md: { accent: `md:${STEM}_t_accent` } },
+        },
+      },
+    })
+    const button = recipe(CONFIG)
+    expect(button({ tone: { base: 'muted', md: 'accent' }, size: 'sm' })).toBe(
+      `${MUTED_SM} md:${STEM}_t_accent`
     )
+    registerRecipeData('test', { [STEM]: TABLE })
   })
 
   it('resolves raw styles through the responsive base value', () => {
-    registerRecipeData('test', { [STEM]: RESPONSIVE_TABLE })
+    registerRecipeData('test', { [STEM]: TABLE })
     const button = recipe(CONFIG)
     expect(button.raw({ tone: { base: 'accent', md: 'muted' }, size: 'lg' })).toEqual({
       display: 'inline-flex',

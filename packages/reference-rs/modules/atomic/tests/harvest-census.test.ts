@@ -98,8 +98,8 @@ const EXPECTED_BYTES = {
   cssBrotli: 21057,
   stylePlans: 4938,
   harvestWants: EXPECTED_NET_NEW,
-  reactRaw: 148379,
-  reactGzip: 32543,
+  reactRaw: 148601,
+  reactGzip: 32633,
   fixtureRules: 4941,
   m500Rules: 33806,
 }

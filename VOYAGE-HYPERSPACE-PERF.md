@@ -68,3 +68,11 @@ Wave 1, lane b: VERIFIED — dead-file fast path, enterprise sync -17.9% byte-id
 - Outcome: VERIFIED, ready for captain merge.
 
 Wave 1, lane a: VERIFIED — cold payload wins sync+RSS at every scale with byte-identical bundles.
+## Wave 1, lane d — derive recipe tables at runtime (COMPLETE)
+- Tried: serde-skip combinations+responsiveVariantMap (plan.rs), ship per-table responsiveBreakpoints (table.rs; in-memory build kept, mod.rs untouched), compose-on-read + bp-gated responsive derivation in recipe.ts with legacy fallbacks; renegotiated 5 NEO specs + 7 engine stations + fixture + census react pins + 6 doc lines to literal expectations. 26 files, no forbidden touches (reviewer-confirmed).
+- Bench (locked load, medians; box shared w/ 4 siblings): small sync 150→147ms, RSS 121.8→121.4MiB, css 538.0KiB IDENTICAL, data 249.8→102.5KiB (-59%); medium 461→432ms, 207.6→198.3MiB, css 2.4MiB IDENTICAL, data 789.7→164.3KiB (-79%); enterprise (1 run) 3.51→3.35s, 796→728.7MiB, css 14.3MiB IDENTICAL, data 3.9MiB→518.2KiB (-87%). E2E: 2376/2376 combos + 3960/3960 responsive re-derived from new inputs at medium; css cmp-clean.
+- Stability: cargo atomic 498 pass; atomic vitest 298/299 (SITE-54 pre-existing, proven red on stashed HEAD, wants/specifier station); neo vitest 229/229; contracts 13/13; agentneo 173/173 ok; neo gate 0 errors. Churn HOLDS: data 386.3→143.2KiB, css identical, sync/RSS delta inside run spread. RS in-memory build retained deliberately (lane c owns mod.rs; deletion = wave-2 cleanup, zero byte delta).
+- Review: VERIFIED (distinct nested agent, firsthand; memo fasthull-1d-review.md). Contract renegotiation SIGNED: paint assertions byte-untouched, literals stronger than self-referential pins, legacy fallbacks tested. Caveats: bp list 52B/table (not ~35B); baseSystem co-shrink code-verified only.
+- Outcome: VERIFIED — ready for captain merge. Merge flags: spec-recipes.test.ts:35-44 + SITE-15:20-21 share hunks with lane a; harvest-census EXPECTED_BYTES shares hunk with lane c; contracts/js types + fixture are disjoint-section shares with lane a.
+
+Wave 1, lane d: VERIFIED — recipe tables derived at runtime, data -59%/-79%/-87%, css identical, paint holds.

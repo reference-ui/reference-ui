@@ -2,8 +2,9 @@
  * Seam proof that evaluated-spec theme recipes lower into runtime recipe tables.
  * A populated spec.recipes (button with variant/disabled axes, defaults, and one
  * compound) must emit a qualified `${system}__button` table with explicit className,
- * cartesian combinations, and `@layer recipes` rules. An empty spec.recipes emits
- * nothing. This is the M0-fix14-A probe: populated spec in, non-empty tables out.
+ * derivation inputs (base, variant map, compounds, breakpoint list), and
+ * `@layer recipes` rules. An empty spec.recipes emits nothing. This is the
+ * M0-fix14-A probe: populated spec in, non-empty tables out.
  */
 import { describe, expect, it } from 'vitest'
 import { compileSync } from '../js/index.js'
@@ -32,15 +33,12 @@ describe('spec recipe lowering', () => {
       false: `${STEM}_d_false`,
     })
     expect(table.defaultVariants).toEqual({ variant: 'solid', disabled: 'false' })
-    expect(Object.keys(table.combinations).sort()).toEqual([
-      'outline|false',
-      'outline|true',
-      'solid|false',
-      'solid|true',
-    ])
-    expect(table.combinations['solid|true']).toContain(`${STEM}_c_solid_disabled`)
-    expect(table.combinations['outline|false']).not.toContain('_c_')
+    expect(table.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
+    expect(table.combinations).toBeUndefined()
+    expect(table.responsiveVariantMap).toBeUndefined()
     expect(table.compoundVariants).toHaveLength(1)
+    expect(table.compoundVariants[0]?.selection).toEqual({ variant: 'solid', disabled: 'true' })
+    expect(table.compoundVariants[0]?.className).toBe(`${STEM}_c_solid_disabled`)
     expect(result.recipes).toHaveLength(1)
     expect(result.stylesheet).toContain('@layer recipes')
     expect(result.stylesheet).toContain(`${STEM}__base`)

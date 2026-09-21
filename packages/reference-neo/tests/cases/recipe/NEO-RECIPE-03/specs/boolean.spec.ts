@@ -53,11 +53,14 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const recipeCount = styles.match(/\.neo-recipe__toggle/g)?.length ?? 0;
   assert.equal(recipeCount, 3, `sheet carries exactly the recipe classes, got ${recipeCount}`);
 
+  assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   registerRecipeData(data.systemName, data.runtimeData.recipes);
   const toggle = recipe({ className: 'toggle' });
-  assert.equal(toggle({ active: true }), table.combinations['true'], 'true resolves its arm');
-  assert.equal(toggle({ active: false }), table.combinations['false'], 'false resolves its arm');
-  assert.equal(toggle(), table.combinations['false'], 'bare call falls back to the false default');
+  const onClasses = `${table.base} ${arms['true']}`;
+  const offClasses = `${table.base} ${arms['false']}`;
+  assert.equal(toggle({ active: true }), onClasses, 'true resolves its arm');
+  assert.equal(toggle({ active: false }), offClasses, 'false resolves its arm');
+  assert.equal(toggle(), offClasses, 'bare call falls back to the false default');
   assert.notEqual(toggle({ active: true }), toggle({ active: false }), 'arms resolve distinctly');
 
   const on = page.locator('#on');
