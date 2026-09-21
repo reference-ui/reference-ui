@@ -1,0 +1,243 @@
+{
+  "scale": "enterprise",
+  "load": {
+    "plan": {
+      "scale": "enterprise",
+      "generator": "app",
+      "optIn": false,
+      "seed": 7,
+      "defaultRuns": 1,
+      "files": 3000,
+      "deadFiles": 12000,
+      "minCalls": 1,
+      "maxCalls": 4,
+      "tokenColors": 300,
+      "tokenSpacing": 64,
+      "recipes": 120,
+      "uniqueRatio": 0.35,
+      "conditionRatio": 0.35,
+      "responsiveRatio": 0.3
+    },
+    "generated": {
+      "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pbFlMJ",
+      "styleFiles": 3000,
+      "deadFiles": 12000,
+      "cssCalls": 7527,
+      "recipes": 120
+    }
+  },
+  "canonical": "flame",
+  "sources": {
+    "flame": {
+      "procedure": "agentrs-flame/3",
+      "createdAt": "2026-09-21T11:40:40.366Z",
+      "dir": "docs/evidence/flamegraph/enterprise-flame3"
+    },
+    "counters": {
+      "procedure": "agentrs-counters/3",
+      "createdAt": "2026-09-21T11:53:31.012Z",
+      "dir": "docs/evidence/counters/enterprise-counters3"
+    },
+    "alloc": {
+      "procedure": "agentrs-alloc/3",
+      "createdAt": "2026-09-21T12:37:06.079Z",
+      "dir": "docs/evidence/alloc/enterprise-alloc3"
+    }
+  },
+  "phases": {
+    "startup": {
+      "runs": {
+        "flame": 118.055389,
+        "span": 84.080043,
+        "census": 83.945252,
+        "gc": 105.449148,
+        "trace": 100.247335
+      },
+      "spread": 34.11013700000001,
+      "flameWeight": 118,
+      "topLib": "node",
+      "topLibWeight": 75,
+      "censusCalls": 1551,
+      "censusMs": 5.905717,
+      "topCall": "open"
+    },
+    "config": {
+      "runs": {
+        "flame": 30.55807399999999,
+        "span": 18.912661999999997,
+        "census": 21.328349000000003,
+        "gc": 19.395553000000007,
+        "trace": 18.505861999999993
+      },
+      "spread": 12.052211999999997,
+      "flameWeight": 25,
+      "topLib": "libsystem_kernel.dylib",
+      "topLibWeight": 14,
+      "censusCalls": 132,
+      "censusMs": 0.600031,
+      "topCall": "open"
+    },
+    "scan": {
+      "runs": {
+        "flame": 364.33507799999995,
+        "span": 353.187227,
+        "census": 360.217819,
+        "gc": 356.904141,
+        "trace": 355.69656599999996
+      },
+      "spread": 11.147850999999946,
+      "flameWeight": 365,
+      "topLib": "libsystem_kernel.dylib",
+      "topLibWeight": 295,
+      "censusCalls": 60858,
+      "censusMs": 269.057797,
+      "topCall": "open"
+    },
+    "evaluate": {
+      "runs": {
+        "flame": 6.206033000000048,
+        "span": 5.720510000000047,
+        "census": 5.641850999999974,
+        "gc": 2.3764730000000327,
+        "trace": 5.608271000000002
+      },
+      "spread": 3.829560000000015,
+      "flameWeight": 6,
+      "topLib": "libsystem_kernel.dylib",
+      "topLibWeight": 5,
+      "censusCalls": 12,
+      "censusMs": 3.489233,
+      "topCall": "read"
+    },
+    "compile": {
+      "runs": {
+        "flame": 780.2648810000001,
+        "span": 768.4428220000001,
+        "census": 759.151627,
+        "gc": 758.447989,
+        "trace": 1024.5020279999999
+      },
+      "spread": 266.0540389999999,
+      "flameWeight": 778,
+      "topLib": "virtual-native.darwin-x64.node",
+      "topLibWeight": 336,
+      "censusCalls": 3758,
+      "censusMs": 9.017719,
+      "topCall": "stat"
+    },
+    "publish": {
+      "runs": {
+        "flame": 48.70403299999998,
+        "span": 47.51792799999998,
+        "census": 49.61700999999994,
+        "gc": 48.52606100000003,
+        "trace": 48.23760800000014
+      },
+      "spread": 2.099081999999953,
+      "flameWeight": 49,
+      "topLib": "libsystem_kernel.dylib",
+      "topLibWeight": 27,
+      "censusCalls": 898,
+      "censusMs": 10.412087,
+      "topCall": "write"
+    },
+    "syncResidual": {
+      "runs": {
+        "flame": 0.04529399999978523,
+        "span": 0.04394499999989421,
+        "census": 1.8599990000002435,
+        "gc": 0.04732100000001083,
+        "trace": 2.102293000000145
+      },
+      "spread": 2.058348000000251,
+      "flameWeight": 0,
+      "topLib": "—",
+      "topLibWeight": 0,
+      "censusCalls": 19,
+      "censusMs": 0.059758,
+      "topCall": "openat"
+    },
+    "workerTail": {
+      "runs": {
+        "flame": 0.002934999999979482,
+        "span": 0.0034140000000206783,
+        "census": 0.0033559999999397405,
+        "gc": 0.0030339999998432177,
+        "trace": 0.0036569999999755964
+      },
+      "spread": 0.0007219999999961146,
+      "flameWeight": 0,
+      "topLib": "—",
+      "topLibWeight": 0,
+      "censusCalls": 0,
+      "censusMs": 0,
+      "topCall": "—"
+    },
+    "syncTotal": {
+      "runs": {
+        "flame": 1230.1133929999999,
+        "span": 1193.825094,
+        "census": 1197.816655,
+        "gc": 1185.6975380000001,
+        "trace": 1454.652628
+      },
+      "spread": 268.9550899999999,
+      "flameWeight": 0,
+      "topLib": "—",
+      "topLibWeight": 0,
+      "censusCalls": 0,
+      "censusMs": 0,
+      "topCall": "—"
+    },
+    "workerTotal": {
+      "runs": {
+        "flame": 1348.171717,
+        "span": 1277.908551,
+        "census": 1281.765263,
+        "gc": 1291.14972,
+        "trace": 1554.90362
+      },
+      "spread": 276.99506900000006,
+      "flameWeight": 0,
+      "topLib": "—",
+      "topLibWeight": 0,
+      "censusCalls": 0,
+      "censusMs": 0,
+      "topCall": "—"
+    }
+  },
+  "unplaced": {
+    "flamePreMain": 0,
+    "flamePostWorker": 8,
+    "censusPreMain": 7,
+    "censusPreMainMs": 0.017411,
+    "censusPostWorker": 366,
+    "censusPostWorkerMs": 3.475807
+  },
+  "compile": {
+    "compileMsCanonical": 780.2648810000001,
+    "spanWallMs": 739.977145,
+    "allocWallMs": 995.655881,
+    "marshalDeltaSpan": 28.46567700000014,
+    "marshalDeltaAlloc": 28.84614699999986,
+    "instructions": 9538524032,
+    "ipc": 2.35819655026369,
+    "allocBytes": 992620644,
+    "reallocs": 1117430,
+    "peakLive": 159570130,
+    "gcVerdict": "PASS — 0 in-window full GCs (1 head, 1 tail, 0 edge)"
+  },
+  "checks": {
+    "loadMatch": "scale enterprise, seed 7, 7527 css() calls identical across all three bundles",
+    "reconcile": "5/5 legs RECONCILED (worst phase-sum delta 0.000 ms)",
+    "flameBuckets": "8 rows + pre/post weights exact vs filed meta; weights sum to weightSum 1349",
+    "censusBuckets": "67601 events across 7 phases exact vs filed meta; 0 dropped",
+    "censusProof": "event sums equal schema-1 census.json on all 15 calls (count/ns/bytes)",
+    "allocPhases": "gc + trace phase tables exact vs filed meta"
+  },
+  "pin": {
+    "name": "latest",
+    "hash": "42fc8712b145",
+    "dirty": true
+  }
+}
