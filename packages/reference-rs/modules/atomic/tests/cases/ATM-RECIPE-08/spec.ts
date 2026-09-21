@@ -17,13 +17,9 @@ const spec: AtomicCaseSpec = {
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
     const table = tables[0]!
-    expect(table.className).toBe('chip')
     expect(table.qualifiedName).toBe(STEM)
-    expect(table.base).toBe(`${STEM}__base`)
-    expect(table.variantMap.tone?.soft).toBe(`${STEM}_t_soft`)
-    expect(table.variantMap.tone?.accent).toBe(`${STEM}_t_accent`)
-    expect(table.variantMap.radius?.pill).toBe(`${STEM}_r_pill`)
-    expect(table.variantMap.radius?.rounded).toBe(`${STEM}_r_rounded`)
+    expect(table.variantMap.tone).toEqual(['soft', 'accent'])
+    expect(table.variantMap.radius).toEqual(['pill', 'rounded'])
     expect(table.defaultVariants).toEqual({ tone: 'soft', radius: 'rounded' })
 
     // Both refusal arms fire with file/line/column at the object literal.

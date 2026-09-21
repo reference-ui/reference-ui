@@ -25,18 +25,16 @@ const spec: AtomicCaseSpec = {
     expect(tables).toHaveLength(1)
     const table = tables[0]!
     expect(table.qualifiedName).toBe(STEM)
-    expect(table.variantMap.variant?.solid).toBe(`${STEM}_v_solid`)
-    expect(table.variantMap.variant?.outline).toBe(`${STEM}_v_outline`)
+    expect(table.variantMap.variant).toEqual(['solid', 'outline'])
     expect(table.defaultVariants).toEqual({ variant: 'solid' })
 
     expect(table.combinations).toBeUndefined()
     expect(table.responsiveVariantMap).toBeUndefined()
-    expect(table.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
-    expect(table.responsiveBreakpoints).not.toContain('base')
-    const mdSolid = `md:${table.variantMap.variant?.solid}`
-    const mdOutline = `md:${table.variantMap.variant?.outline}`
-    expect(mdSolid).toBe(`md:${STEM}_v_solid`)
-    expect(mdOutline).toBe(`md:${STEM}_v_outline`)
+    expect(table.responsiveBreakpoints).toBeUndefined()
+    expect(result.runtime.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
+    expect(result.runtime.responsiveBreakpoints).not.toContain('base')
+    const mdSolid = `md:${STEM}_v_solid`
+    const mdOutline = `md:${STEM}_v_outline`
 
     const recipes = layerBody(result.stylesheet, 'recipes')
     expect(recipes).toContain(PLAIN_SOLID_RULE)
@@ -53,10 +51,10 @@ const spec: AtomicCaseSpec = {
     expect(mdOutlineBlock).toContain('data-disabled')
 
     const names = layerClassNames(result.stylesheet, 'recipes')
-    for (const breakpoint of table.responsiveBreakpoints ?? []) {
-      for (const axis of Object.values(table.variantMap)) {
-        for (const className of Object.values(axis)) {
-          expect(names.has(`${breakpoint}:${className}`)).toBe(true)
+    for (const breakpoint of result.runtime.responsiveBreakpoints ?? []) {
+      for (const [axis, values] of Object.entries(table.variantMap)) {
+        for (const value of values) {
+          expect(names.has(`${breakpoint}:${STEM}_${axis[0]}_${value}`)).toBe(true)
         }
       }
     }

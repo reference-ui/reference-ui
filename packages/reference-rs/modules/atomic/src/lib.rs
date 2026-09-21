@@ -103,6 +103,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         diagnostics,
         authored,
         traced: resolved_hosts.traced,
+        proof: request.wants_proof(),
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);

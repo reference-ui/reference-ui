@@ -11,7 +11,7 @@ fn test_compile_seed_contract() {
     assert!(res
         .stylesheet
         .starts_with("@layer reset, global, base, tokens, recipes, utilities;"));
-    assert!(res.css.as_ref().is_some_and(|c| c.is_empty()));
+    assert!(res.css.is_none());
     assert!(res.style_plans.is_empty());
     assert!(res.diagnostics.is_empty());
     assert!(!res.stylesheet.contains("--colors-"));

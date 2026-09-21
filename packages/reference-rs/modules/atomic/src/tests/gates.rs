@@ -33,6 +33,7 @@ fn request_for(files: Vec<VirtualSource>) -> CompileRequest {
     CompileRequest {
         files: Some(files),
         base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs: Some(vec!["proof".to_string()]),
         ..CompileRequest::default()
     }
 }

@@ -43,21 +43,20 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const data = (await import(dataUrl)) as RuntimeDataModule;
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
-  const arms = table.variantMap['active'];
-  assert.ok(arms?.['true'], 'table carries the true arm');
-  assert.ok(arms?.['false'], 'table carries the false arm');
-  assert.notEqual(arms['true'], arms['false'], 'boolean arms map to distinct classes');
-  for (const cls of [table.base, arms['true'], arms['false']]) {
+  assert.deepEqual(table.variantMap['active'], ['true', 'false'], 'table ships the boolean value names');
+  const arms = { true: `${STEM}_a_true`, false: `${STEM}_a_false` };
+  assert.notEqual(arms.true, arms.false, 'boolean arms map to distinct classes');
+  for (const cls of [`${STEM}__base`, arms.true, arms.false]) {
     assert.ok(styles.includes(`.${cls}`), `sheet carries .${cls}`);
   }
   const recipeCount = styles.match(/\.neo-recipe__toggle/g)?.length ?? 0;
   assert.equal(recipeCount, 3, `sheet carries exactly the recipe classes, got ${recipeCount}`);
 
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const toggle = recipe({ className: 'toggle' });
-  const onClasses = `${table.base} ${arms['true']}`;
-  const offClasses = `${table.base} ${arms['false']}`;
+  const onClasses = `${STEM}__base ${arms.true}`;
+  const offClasses = `${STEM}__base ${arms.false}`;
   assert.equal(toggle({ active: true }), onClasses, 'true resolves its arm');
   assert.equal(toggle({ active: false }), offClasses, 'false resolves its arm');
   assert.equal(toggle(), offClasses, 'bare call falls back to the false default');

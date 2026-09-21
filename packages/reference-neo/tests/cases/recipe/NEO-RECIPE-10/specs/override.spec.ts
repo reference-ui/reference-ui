@@ -39,10 +39,10 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const data = (await import(dataUrl)) as RuntimeDataModule;
   const table = data.runtimeData.recipes[STEM];
   assert.ok(table, `runtime data carries the ${STEM} table`);
-  const accent = table.variantMap['tone']?.['accent'];
-  assert.ok(accent, 'table carries the accent class');
+  assert.deepEqual(table.variantMap, { tone: ['accent', 'muted'] }, 'table ships the value names');
+  const accent = `${STEM}_t_accent`;
 
-  registerRecipeData(data.systemName, data.runtimeData.recipes);
+  registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   registerRuntimeData(data.systemName, data.runtimeData);
   const flag = recipe({ className: 'flag' });
   const recipeClasses = flag({ tone: 'accent' });

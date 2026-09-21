@@ -63,32 +63,30 @@
     "recipes": {
       "lib-test-system__button": {
         "qualifiedName": "lib-test-system__button",
-        "className": "button",
-        "base": "lib-test-system__button__base",
         "variantKeys": [
           "variant"
         ],
         "variantMap": {
-          "variant": {
-            "solid": "lib-test-system__button_v_solid"
-          }
+          "variant": [
+            "solid"
+          ]
         },
         "defaultVariants": {
           "variant": "solid"
         },
-        "compoundVariants": [],
-        "responsiveBreakpoints": [
-          "sm",
-          "md",
-          "lg",
-          "xl",
-          "2xl"
-        ]
+        "compoundVariants": []
       }
     },
     "stylePropNames": [
       "color",
       "padding"
+    ],
+    "responsiveBreakpoints": [
+      "sm",
+      "md",
+      "lg",
+      "xl",
+      "2xl"
     ]
   },
   "diagnostics": [],

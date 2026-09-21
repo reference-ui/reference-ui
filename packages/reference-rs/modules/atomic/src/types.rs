@@ -51,6 +51,15 @@ impl CompileRequest {
             .as_ref()
             .is_some_and(|logs| logs.iter().any(|name| name == "compiler"))
     }
+
+    /// True when the caller requested the proof backchannel: `logs`
+    /// containing `proof` materializes the compile-internal rows the slim
+    /// default omits. Unknown channel names are ignored.
+    pub fn wants_proof(&self) -> bool {
+        self.logs
+            .as_ref()
+            .is_some_and(|logs| logs.iter().any(|name| name == "proof"))
+    }
 }
 
 /// Compilation artifact bundle containing stylesheet, runtime metadata, and diagnostics.

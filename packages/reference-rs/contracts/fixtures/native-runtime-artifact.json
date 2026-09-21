@@ -60,21 +60,19 @@
   "recipes": {
     "lib-test-system__button": {
       "qualifiedName": "lib-test-system__button",
-      "className": "button",
-      "base": "lib-test-system__button__base",
       "variantKeys": [
         "variant",
         "disabled"
       ],
       "variantMap": {
-        "variant": {
-          "solid": "lib-test-system__button_v_solid",
-          "outline": "lib-test-system__button_v_outline"
-        },
-        "disabled": {
-          "true": "lib-test-system__button_d_true",
-          "false": "lib-test-system__button_d_false"
-        }
+        "variant": [
+          "solid",
+          "outline"
+        ],
+        "disabled": [
+          "true",
+          "false"
+        ]
       },
       "defaultVariants": {
         "variant": "solid",

@@ -11,8 +11,9 @@ qualified class (`${system}__${className}__base`, `${system}__${className}_...`,
 `${system}__${className}_c_...`), plus one `{breakpoint}:`-prefixed class per
 width breakpoint for each variant value, wrapped in that breakpoint's
 `@container` query. Runtime `recipe()` (authored TypeScript)
-composes `base` plus variant and compound classes from `RecipeRuntimeTable`
-(`base` selections read `variantMap`, other breakpoints derive
+derives `base` plus variant and compound classes from the qualified stem
+and the per-axis value-name lists (`{stem}__base`,
+`{stem}_{axis[0]}_{value}`), with other breakpoints deriving
 `{breakpoint}:`-prefixed classes gated on `responsiveBreakpoints`).
 It does not re-walk style objects and it does not evaluate author JS at runtime.
 

@@ -106,10 +106,9 @@ export interface RuntimeStylePlan {
 
 export interface RecipeRuntimeTable {
   qualifiedName: string
-  className: string
-  base: string
   variantKeys: string[]
-  variantMap: Record<string, Record<string, string>>
+  /** Per-axis value names. New artifacts ship names only; the runtime derives each class as `{stem}_{axis[0]}_{value}` plus `{stem}__base`. */
+  variantMap: Record<string, string[]>
   defaultVariants: Record<string, string>
   compoundVariants: Array<{
     selection?: Record<string, string>
@@ -120,7 +119,7 @@ export interface RecipeRuntimeTable {
   }>
   /** Legacy pre-composed selection → classes. New artifacts omit it; the runtime composes from base, variantMap, and compounds. */
   combinations?: Record<string, string>
-  /** Width breakpoints with matching `@container` rules, in scale order. The responsive derivation gate. */
+  /** Width breakpoints with matching `@container` rules, in scale order. The responsive derivation gate. Hoisted to the artifact in new artifacts; table-level wins when present. */
   responsiveBreakpoints?: string[]
   /** Legacy per-breakpoint map: axis → breakpoint → value → class. New artifacts omit it; the runtime derives `{bp}:{variantMap[axis][value]}`. */
   responsiveVariantMap?: Record<string, Record<string, Record<string, string>>>
@@ -132,6 +131,8 @@ export interface NativeRuntimeArtifact {
   namer: NamerTables
   recipes: Record<string, RecipeRuntimeTable>
   stylePropNames: string[]
+  /** Hoisted width-breakpoint list shared by every table; the responsive derivation gate. */
+  responsiveBreakpoints?: string[]
 }
 
 export interface CompileResult {

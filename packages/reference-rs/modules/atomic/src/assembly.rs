@@ -25,6 +25,10 @@ pub(crate) struct AssembleCtx {
     pub(crate) authored: Vec<runtime::AuthoredDeclaration>,
     /// Component names StyleTrace discovered (sorted, unique).
     pub(crate) traced: Vec<String>,
+    /// True when the proof channel is requested: materialize the
+    /// compile-internal rows (plans, css map, wants, top-level tables)
+    /// the slim serde drops on the default path.
+    pub(crate) proof: bool,
 }
 
 impl AssembleCtx {
@@ -51,6 +55,7 @@ impl AssembleCtx {
             mut diagnostics,
             authored,
             traced,
+            proof,
         } = self;
         let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
         resolve::conditions::check_container_root(
@@ -65,6 +70,9 @@ impl AssembleCtx {
             &mut diagnostics,
             Some(&mut *sink),
         );
+        // Plans stay unconditional: the S4 render joins verdicts against
+        // them, and the diagnostics sweep killed proof-gating here (the
+        // "no compiled style plan" prefix rides render_session output).
         let mut plan_builder =
             runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
         let style_plans = plan_builder.build(&authored);
@@ -77,7 +85,7 @@ impl AssembleCtx {
         };
 
         let atom_count = atom_set.len();
-        let css = build_css_runtime(&atom_set, &system.name);
+        let css = proof.then(|| build_css_runtime(&atom_set, &system.name));
         // Dual-sheet build shares one recipes+utilities suffix; the portable
         // diagnostics sink here so global warnings surface once, as before.
         let mut portable_sink = Vec::new();
@@ -90,10 +98,16 @@ impl AssembleCtx {
                 portable: &mut portable_sink,
             },
         );
-        let recipe_tables = compiled_recipes
-            .into_iter()
-            .map(|recipe| recipe.table)
-            .collect();
+        // The top-level tables duplicate the shipped runtime map; slim drops
+        // them, so the default path drops the second in-memory copy too.
+        let recipe_tables: Vec<recipes::RecipeTable> = if proof {
+            compiled_recipes
+                .into_iter()
+                .map(|recipe| recipe.table)
+                .collect()
+        } else {
+            Vec::new()
+        };
 
         // Final-plan proof (S4): join the session's analysis expectations
         // against the emitted plans and render the verdicts in place.
@@ -109,9 +123,9 @@ impl AssembleCtx {
             portable_stylesheet,
             runtime,
             style_plans,
-            css: Some(css),
+            css,
             diagnostics,
-            wants,
+            wants: if proof { wants } else { Vec::new() },
             recipes: recipe_tables,
             atom_count,
             traced_jsx_hosts: traced,

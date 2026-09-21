@@ -95,7 +95,7 @@ fn compile_one(
     };
 
     CompiledRecipe {
-        table: table::build(&input),
+        table: table::build_shipped(&input),
         rules,
     }
 }
@@ -344,9 +344,6 @@ mod tests {
                 "hover descendant missing: {atom:?}"
             );
         }
-        assert_eq!(
-            compiled[0].table.responsive_variant_map["variant"]["md"]["outline"],
-            "md:test-system__buttonStyle_v_outline"
-        );
+        assert!(compiled[0].table.responsive_variant_map.is_empty());
     }
 }

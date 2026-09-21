@@ -8,12 +8,12 @@ use crate::{compile, CompileRequest, VirtualSource};
 
 /// Compile virtual sources, asserting the request succeeds.
 fn compile_files(files: &[(&str, &str)]) -> crate::CompileResult {
-    compile_files_inner(files, None)
+    compile_files_inner(files, Some(vec!["proof".to_string()]))
 }
 
 /// Compile virtual sources with the compiler backchannel requested.
 fn compile_files_logs(files: &[(&str, &str)]) -> crate::CompileResult {
-    compile_files_inner(files, Some(vec!["compiler".to_string()]))
+    compile_files_inner(files, Some(vec!["compiler".to_string(), "proof".to_string()]))
 }
 
 fn compile_files_inner(files: &[(&str, &str)], logs: Option<Vec<String>>) -> crate::CompileResult {
