@@ -288,8 +288,9 @@ reopen it.
   + medium bytes contradiction) delivered but never processed;
   task terminal with no terminal line filed. Tree verified
   intact (exactly the 9 allowed paths). Recovery rotation
-  briefed and ready — spawn REJECTED (root 8/8 full); retry
-  when a lane completes and frees a slot.
+  briefed — first spawn REJECTED (root 8/8 full); lane E's
+  completion freed a slot and rotation b2 dispatched with
+  adjudication brief (reviewer GAPS check-4 firsthand).
 - INCIDENT (~02:39): stash race across worktrees. Lane B
   implementer's SITE-54 stash-prove `pop` grabbed lane C's
   stash entry (034f04: burndown.ts + 4 publish files) into
