@@ -26,7 +26,7 @@ use crate::atom::{AtomValue, Want};
 use crate::diagnostics::adapters::extract::{extract_note, ExtractReport};
 use crate::diagnostics::{
     line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSeverity,
-    DiagnosticSink, DiagnosticsSession, ExtractDetail, Policy,
+    DiagnosticSink, DiagnosticsSession, ExtractDetail, LineIndex, Policy,
 };
 use crate::extract::harvest::{is_sink_code, Sink, SinkSite};
 use crate::extract::scope::Scoped;
@@ -39,6 +39,7 @@ pub struct ExpressionWalk<'a> {
     pub important: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
+    pub line_index: Option<&'a LineIndex>,
     pub scopes: Scoped<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<Want>,
@@ -87,7 +88,11 @@ impl<'a> ExpressionWalk<'a> {
     /// 1-based line/column for a literal span, or None without source text.
     fn span_position(&self, span: Option<Span>) -> Option<(u32, u32)> {
         let source = self.source?;
-        line_col(source, span?.start)
+        let start = span?.start;
+        match self.line_index {
+            Some(index) => index.line_col(source, start),
+            None => line_col(source, start),
+        }
     }
 
     /// Report a diagnostic warning at the offending node's span.
@@ -321,6 +326,7 @@ mod tests {
                 important: false,
                 file: "t.ts",
                 source: Some(code),
+                line_index: None,
                 scopes: chain.at(crate::extract::scope::ROOT_SCOPE),
                 breakpoints: &breakpoints,
                 wants: &mut wants,
