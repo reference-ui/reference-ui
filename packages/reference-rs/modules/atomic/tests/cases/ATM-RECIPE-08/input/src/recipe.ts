@@ -26,6 +26,6 @@ const plain = recipe({
   base: { color: 'green' },
 })
 
-void chipRecipe
+chipRecipe({ tone: 'soft', radius: 'rounded' })
 void Recipe
 void plain

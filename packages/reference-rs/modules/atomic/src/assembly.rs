@@ -29,6 +29,8 @@ pub(crate) struct AssembleCtx {
     /// compile-internal rows (plans, css map, wants, top-level tables)
     /// the slim serde drops on the default path.
     pub(crate) proof: bool,
+    /// Resolved recipe call-site selections gating responsive emission.
+    pub(crate) selections: Vec<crate::extract::recipes::selection::RecipeSelection>,
 }
 
 impl AssembleCtx {
@@ -56,6 +58,7 @@ impl AssembleCtx {
             authored,
             traced,
             proof,
+            selections,
         } = self;
         let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
         resolve::conditions::check_container_root(
@@ -65,7 +68,7 @@ impl AssembleCtx {
             Some(&mut *sink),
         );
         let compiled_recipes = compile_recipes(
-            &extracted_recipes,
+            &RecipeInputs::new(&extracted_recipes, &selections),
             system,
             &mut diagnostics,
             Some(&mut *sink),
@@ -157,9 +160,28 @@ fn build_atom_set(
     atom_set
 }
 
+/// Recipe definitions plus the observed selections gating their emission.
+struct RecipeInputs<'a> {
+    extracted: &'a [recipes::Recipe],
+    selections: &'a [crate::extract::recipes::selection::RecipeSelection],
+}
+
+impl<'a> RecipeInputs<'a> {
+    fn new(
+        extracted: &'a [recipes::Recipe],
+        selections: &'a [crate::extract::recipes::selection::RecipeSelection],
+    ) -> Self {
+        Self {
+            extracted,
+            selections,
+        }
+    }
+}
+
 /// Deduplicate spec and extracted recipes, then compile them to rules.
+/// Selections join by className; spec recipes stay open by construction.
 fn compile_recipes(
-    extracted: &[recipes::Recipe],
+    inputs: &RecipeInputs<'_>,
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     sink: Option<&mut DiagnosticsSession>,
@@ -167,7 +189,7 @@ fn compile_recipes(
     let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
     let mut seen = HashSet::new();
     let mut valid = Vec::new();
-    for recipe in spec_recipes.iter().chain(extracted.iter()) {
+    for recipe in spec_recipes.iter().chain(inputs.extracted.iter()) {
         if !seen.insert(&recipe.class_name) {
             diagnostics.push(recipe.location.error(
                 DiagnosticCode::DuplicateRecipe,
@@ -187,7 +209,9 @@ fn compile_recipes(
         sink,
         want: None,
     };
-    recipes::compile(&valid, &system.name, &mut session)
+    let index =
+        crate::extract::recipes::selection::SelectionIndex::new(inputs.selections, &spec_recipes);
+    recipes::compile(&valid, &system.name, &mut session, &index)
 }
 
 /// Index the atom set's class names by their runtime lookup shape.

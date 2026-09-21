@@ -242,3 +242,93 @@ fn parent_and_nested_relatives_resolve() {
         Some("css".to_string())
     );
 }
+
+#[test]
+fn binding_terminal_direct_export_names_local() {
+    let graph = graph(&[("src/r.ts", "export const button = recipe({})\n")]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./r", "button"),
+        Some(("src/r.ts".to_string(), "button".to_string()))
+    );
+}
+
+#[test]
+fn binding_terminal_local_alias_unwraps() {
+    let graph = graph(&[("src/r.ts", "const d = recipe({})\nexport { d as dlg }\n")]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./r", "dlg"),
+        Some(("src/r.ts".to_string(), "d".to_string()))
+    );
+}
+
+#[test]
+fn binding_terminal_barrel_chain_follows() {
+    let graph = graph(&[
+        ("src/r.ts", "export const button = recipe({})\n"),
+        ("src/barrel.ts", "export { button } from './r'\n"),
+    ]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./barrel", "button"),
+        Some(("src/r.ts".to_string(), "button".to_string()))
+    );
+}
+
+#[test]
+fn binding_terminal_default_expr_answers_default() {
+    let graph = graph(&[("src/r.ts", "export default recipe({})\n")]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./r", "default"),
+        Some(("src/r.ts".to_string(), "default".to_string()))
+    );
+}
+
+#[test]
+fn binding_terminal_reference_answers_none() {
+    let graph = graph(&[("src/ui.ts", "export * from '@reference-ui/react'\n")]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "@reference-ui/react", "css"),
+        None
+    );
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./ui", "css"),
+        None
+    );
+}
+
+#[test]
+fn binding_terminal_star_follows() {
+    let graph = graph(&[
+        ("src/r.ts", "export const button = recipe({})\n"),
+        ("src/barrel.ts", "export * from './r'\n"),
+    ]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./barrel", "button"),
+        Some(("src/r.ts".to_string(), "button".to_string()))
+    );
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./barrel", "default"),
+        None
+    );
+}
+
+#[test]
+fn binding_terminal_cycle_answers_none() {
+    let graph = graph(&[
+        ("src/a.ts", "export { x } from './b'\n"),
+        ("src/b.ts", "export { x } from './a'\n"),
+    ]);
+    assert_eq!(graph.trace_binding_terminal("src/app.ts", "./a", "x"), None);
+}
+
+#[test]
+fn binding_terminal_unknown_answers_none() {
+    let graph = graph(&[("src/r.ts", "export const button = recipe({})\n")]);
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "./r", "missing"),
+        None
+    );
+    assert_eq!(
+        graph.trace_binding_terminal("src/app.ts", "@/r", "button"),
+        None
+    );
+}

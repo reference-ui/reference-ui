@@ -22,4 +22,5 @@ export const buttonStyle = recipe({
   },
   defaultVariants: { variant: 'solid' },
 })
-void buttonStyle
+buttonStyle({ variant: { sm: 'solid', md: 'solid', lg: 'solid', xl: 'solid', '2xl': 'solid' } })
+buttonStyle({ variant: { sm: 'outline', md: 'outline', lg: 'outline', xl: 'outline', '2xl': 'outline' } })

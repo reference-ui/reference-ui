@@ -576,4 +576,45 @@
     --colors-reference-border: var(--colors-gray-800);
   }
 }
+@layer recipes {
+  .\@reference-ui\/lib__observed__base { display: inline-flex; }
+  .\@reference-ui\/lib__observed_t_loud { color: white; }
+  .\@reference-ui\/lib__observed_t_quiet { color: black; }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__observed_t_loud { color: white; }
+  }
+  .\@reference-ui\/lib__dynamic__base { display: grid; }
+  .\@reference-ui\/lib__dynamic_s_light { color: white; }
+  .\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__dynamic_s_light { color: white; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__dynamic_s_light { color: white; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__dynamic_s_light { color: white; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__dynamic_s_light { color: white; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__dynamic_s_light { color: white; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__dynamic_s_dark { color: black; }
+  }
+}
 }

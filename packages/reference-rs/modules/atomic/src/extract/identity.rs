@@ -75,6 +75,111 @@ impl<'s> IdentityGraph<'s> {
         self.trace(&query, &mut Vec::new())
     }
 
+    /// The defining file and local name one import resolves to, if traceable.
+    /// Follows the same hops as the Reference walk; a consumer declaration
+    /// ends the walk and names its local (`export const b` answers `b`,
+    /// `export default <expr>` answers the `default` pseudo-binding the
+    /// selection pass records). Reference terminals answer `None`: recipe
+    /// results never come from Reference packages.
+    pub(crate) fn trace_binding_terminal(
+        &self,
+        from_file: &str,
+        specifier: &str,
+        imported: &str,
+    ) -> Option<(String, String)> {
+        if is_reference_package(specifier) {
+            return None;
+        }
+        let target = self.resolve(specifier, from_file)?;
+        let query = Query {
+            file: &target,
+            name: imported,
+        };
+        self.trace_terminal(&query, &mut Vec::new())
+    }
+
+    /// Follow named exports, then star re-exports, with `stack` as the cycle guard.
+    fn trace_terminal(
+        &self,
+        query: &Query,
+        stack: &mut Vec<(String, String)>,
+    ) -> Option<(String, String)> {
+        let key = (query.file.to_string(), query.name.to_string());
+        if stack.contains(&key) {
+            return None;
+        }
+        stack.push(key);
+        let found = self.trace_terminal_inner(query, stack);
+        stack.pop();
+        found
+    }
+
+    /// One terminal step: hops follow, declarations name their local, unknown
+    /// names try the stars. The caller's binding index decides whether the
+    /// terminal local is a recipe binding.
+    fn trace_terminal_inner(
+        &self,
+        query: &Query,
+        stack: &mut Vec<(String, String)>,
+    ) -> Option<(String, String)> {
+        let map = self.export_map(query.file)?;
+        if let Some(hop) = named_hop(&map, query.name) {
+            return self.follow_terminal_hop(query.file, &hop, stack);
+        }
+        match map.named_target(query.name) {
+            Some(NamedTarget::Local(local)) => Some((query.file.to_string(), local.to_string())),
+            Some(NamedTarget::Opaque) => Some((query.file.to_string(), query.name.to_string())),
+            _ => self.follow_terminal_stars(query, &map, stack),
+        }
+    }
+
+    /// Resolve one terminal hop: a Reference source ends the walk with
+    /// nothing, a project file recurses.
+    fn follow_terminal_hop(
+        &self,
+        from: &str,
+        hop: &Hop,
+        stack: &mut Vec<(String, String)>,
+    ) -> Option<(String, String)> {
+        if is_reference_package(hop.specifier) {
+            return None;
+        }
+        let target = self.resolve(hop.specifier, from)?;
+        self.trace_terminal(
+            &Query {
+                file: &target,
+                name: hop.imported,
+            },
+            stack,
+        )
+    }
+
+    /// Star re-exports in order, first hit wins; a star never carries
+    /// `default`, and a Reference star carries no recipe binding.
+    fn follow_terminal_stars(
+        &self,
+        query: &Query,
+        map: &ExportMap,
+        stack: &mut Vec<(String, String)>,
+    ) -> Option<(String, String)> {
+        if query.name == "default" {
+            return None;
+        }
+        for star in map.stars() {
+            if is_reference_package(star) {
+                continue;
+            }
+            let hop = Hop {
+                specifier: star,
+                imported: query.name,
+            };
+            if let Some(found) = self.follow_terminal_hop(query.file, &hop, stack) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
     /// Follow named exports, then star re-exports, with `stack` as the cycle guard.
     fn trace(&self, query: &Query, stack: &mut Vec<(String, String)>) -> Option<String> {
         let key = (query.file.to_string(), query.name.to_string());

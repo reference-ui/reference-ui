@@ -579,21 +579,6 @@
 @layer recipes {
   .\@reference-ui\/lib__button__base { display: inline-flex; }
   .\@reference-ui\/lib__button_v_primary { color: white; }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__button_v_primary { color: white; }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__button_v_primary { color: white; }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__button_v_primary { color: white; }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__button_v_primary { color: white; }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__button_v_primary { color: white; }
-  }
 }
 @layer utilities {
   .\@reference-ui\/lib__bg_red\.500 { background: var(--colors-red-500); }

@@ -6,3 +6,5 @@ export const card = ui.recipe({
   className: 'site55ns',
   base: { fontWeight: 'bold' },
 })
+
+card()

@@ -9,9 +9,11 @@ mod table;
 
 use indexmap::IndexMap;
 use std::cmp::Ordering;
+use std::collections::HashSet;
 
 use crate::atom::{Atom, Want, When, WhenKind};
 use crate::diagnostics::DiagnosticLocation;
+use crate::extract::recipes::selection::{Gate, ResponsiveTriple, SelectionIndex};
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::runtime::RecipeRuntimeTable;
 
@@ -60,14 +62,16 @@ pub struct RecipeRule {
 }
 
 /// Resolve every recipe into closed classes and a RecipeRuntimeTable.
+/// Selections gate responsive rules per recipe; tables always build whole.
 pub fn compile(
     recipes: &[Recipe],
     system_name: &str,
     session: &mut ResolveSession<'_>,
+    selections: &SelectionIndex,
 ) -> Vec<CompiledRecipe> {
     recipes
         .iter()
-        .map(|recipe| compile_one(recipe, system_name, session))
+        .map(|recipe| compile_one(recipe, system_name, session, selections))
         .collect()
 }
 
@@ -75,15 +79,31 @@ fn compile_one(
     recipe: &Recipe,
     system_name: &str,
     session: &mut ResolveSession<'_>,
+    selections: &SelectionIndex,
 ) -> CompiledRecipe {
     let qualified_name = name::qualified_stem(system_name, &recipe.class_name);
     let base_class = name::base_class(&qualified_name);
     let mut rules = Vec::new();
 
-    push_rule(&mut rules, &base_class, &recipe.base, session);
-    let variant_map = compile_variants(&mut rules, &qualified_name, &recipe.variants, session);
-    let compounds = compile_compounds(&mut rules, &qualified_name, &recipe.compounds, session);
-    compile_responsive_variants(&mut rules, &qualified_name, &recipe.variants, session);
+    // Open and dynamic recipes print the full matrix; observed recipes print
+    // plain rules plus exactly the observed responsive triples; unobserved
+    // recipes print nothing while their runtime table still builds below.
+    let (variant_map, compounds) =
+        match ResponsiveFilter::for_gate(&qualified_name, selections.get(&recipe.class_name)) {
+            None => (
+                variant_class_map(&qualified_name, &recipe.variants),
+                compound_names(&qualified_name, &recipe.compounds),
+            ),
+            Some(filter) => {
+                push_rule(&mut rules, &base_class, &recipe.base, session);
+                let variant_map =
+                    compile_variants(&mut rules, &qualified_name, &recipe.variants, session);
+                let compounds =
+                    compile_compounds(&mut rules, &qualified_name, &recipe.compounds, session);
+                compile_responsive_variants(&mut rules, &recipe.variants, session, &filter);
+                (variant_map, compounds)
+            }
+        };
 
     let input = table::RecipeTableInput {
         qualified_name: &qualified_name,
@@ -119,6 +139,48 @@ fn compile_variants(
     variant_map
 }
 
+/// Responsive emission filter: naming stem plus the observed triples.
+/// `None` prints the full matrix (open and dynamic recipes); `Some` prints
+/// only observed `(axis, value, breakpoint)` triples, in the same order.
+struct ResponsiveFilter<'a> {
+    stem: &'a str,
+    observed: Option<&'a HashSet<ResponsiveTriple>>,
+}
+
+impl<'a> ResponsiveFilter<'a> {
+    /// Filter for one recipe's gate: unobserved recipes print nothing.
+    fn for_gate(stem: &'a str, gate: Gate<'a>) -> Option<Self> {
+        match gate {
+            Gate::Unobserved => None,
+            Gate::Open => Some(Self {
+                stem,
+                observed: None,
+            }),
+            Gate::Observed(gate) if gate.dynamic => Some(Self {
+                stem,
+                observed: None,
+            }),
+            Gate::Observed(gate) => Some(Self {
+                stem,
+                observed: Some(&gate.responsive),
+            }),
+        }
+    }
+
+    /// True when this `(axis, value, breakpoint)` triple prints a rule.
+    fn allows(&self, axis: &str, value: &str, breakpoint: &str) -> bool {
+        match self.observed {
+            None => true,
+            Some(triples) => {
+                if triples.is_empty() {
+                    return false;
+                }
+                triples.contains(&(axis.to_string(), value.to_string(), breakpoint.to_string()))
+            }
+        }
+    }
+}
+
 /// Emit one `{breakpoint}:{variant_class}` rule per width breakpoint.
 ///
 /// Rules print after every plain variant and compound rule so a runtime
@@ -127,20 +189,51 @@ fn compile_variants(
 /// `_disabled`) keep their descendants inside the `@container` block.
 fn compile_responsive_variants(
     rules: &mut Vec<RecipeRule>,
-    stem: &str,
     variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
     session: &mut ResolveSession<'_>,
+    filter: &ResponsiveFilter<'_>,
 ) {
     let breakpoints = table::container_breakpoints(session.system.breakpoints());
     for (key, items) in variants {
         for (value, wants) in items {
             for breakpoint in &breakpoints {
-                let class_name = name::responsive_variant_class(breakpoint, stem, key, value);
+                if !filter.allows(key, value, breakpoint) {
+                    continue;
+                }
+                let class_name =
+                    name::responsive_variant_class(breakpoint, filter.stem, key, value);
                 let scoped = scope_wants_to_breakpoint(wants, breakpoint);
                 push_rule(rules, &class_name, &scoped, session);
             }
         }
     }
+}
+
+/// Variant value class names without resolving any wants, for shaken tables.
+fn variant_class_map(
+    stem: &str,
+    variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
+) -> IndexMap<String, IndexMap<String, String>> {
+    let mut variant_map = IndexMap::new();
+    for (key, items) in variants {
+        let mut group_map = IndexMap::new();
+        for value in items.keys() {
+            group_map.insert(value.clone(), name::variant_class(stem, key, value));
+        }
+        variant_map.insert(key.clone(), group_map);
+    }
+    variant_map
+}
+
+/// Compound class names without resolving any wants, for shaken tables.
+fn compound_names(stem: &str, compounds: &[RecipeCompound]) -> Vec<CompiledCompound> {
+    compounds
+        .iter()
+        .map(|compound| CompiledCompound {
+            predicates: compound.predicates.clone(),
+            class_name: name::compound_class(stem, &compound.predicates),
+        })
+        .collect()
 }
 
 /// Clone wants with a breakpoint condition prepended to each `when` chain.
@@ -275,7 +368,13 @@ mod tests {
             compounds: vec![],
             location: DiagnosticLocation::default(),
         };
-        let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
+        let open = SelectionIndex::open();
+        let compiled = compile(
+            std::slice::from_ref(&recipe),
+            "test-system",
+            &mut session,
+            &open,
+        );
         assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");
         let atoms = &compiled[0].rules[0].atoms;
         assert_eq!(atoms.len(), 2);
@@ -316,7 +415,13 @@ mod tests {
             compounds: vec![],
             location: DiagnosticLocation::default(),
         };
-        let compiled = compile(std::slice::from_ref(&recipe), "test-system", &mut session);
+        let open = SelectionIndex::open();
+        let compiled = compile(
+            std::slice::from_ref(&recipe),
+            "test-system",
+            &mut session,
+            &open,
+        );
         assert!(diagnostics.is_empty(), "unexpected: {diagnostics:?}");
         let rules = &compiled[0].rules;
         let plain = rules

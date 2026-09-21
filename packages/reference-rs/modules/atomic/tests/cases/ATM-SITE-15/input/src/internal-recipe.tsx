@@ -8,3 +8,5 @@ export const badge = __reference_ui_recipe({
     },
   },
 })
+
+badge({ size: 'md' })

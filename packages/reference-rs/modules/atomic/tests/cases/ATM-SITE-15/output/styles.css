@@ -580,36 +580,6 @@
   .\@reference-ui\/lib__site15badge__base { font-weight: bold; }
   .\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
   .\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
-  }
-  @container (min-width: 640px) {
-    .sm\:\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  }
-  @container (min-width: 768px) {
-    .md\:\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  }
-  @container (min-width: 1024px) {
-    .lg\:\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  }
-  @container (min-width: 1280px) {
-    .xl\:\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  }
-  @container (min-width: 1536px) {
-    .\32 xl\:\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
-  }
 }
 @layer utilities {
   .\@reference-ui\/lib__px_4r { padding-inline: calc(4 * var(--spacing-root)); }

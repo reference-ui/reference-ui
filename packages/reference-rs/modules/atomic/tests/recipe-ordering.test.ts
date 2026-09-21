@@ -28,7 +28,7 @@ export const card = recipe({
   className: 'card',
   base: { color: 'red.500', sm: { color: 'blue.600' } },
 })
-void card
+card()
 `
     )
     const wrap = body.indexOf('@container (min-width: 640px)')
@@ -43,7 +43,7 @@ export const card = recipe({
   className: 'card',
   base: { color: 'red.500', '@media (min-height: 800px)': { color: 'blue.600' } },
 })
-void card
+card()
 `
     )
     const wrap = body.indexOf('@media (min-height: 800px)')
@@ -63,7 +63,7 @@ export const card = recipe({
     md: { color: 'yellow.500' },
   },
 })
-void card
+card()
 `
     )
     const base = body.indexOf('card__base')

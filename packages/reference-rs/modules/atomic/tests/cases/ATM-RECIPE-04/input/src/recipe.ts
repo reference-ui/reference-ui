@@ -18,4 +18,4 @@ export const button = recipe({
     muted: 'false',
   },
 })
-void button
+button({ size: 'sm', muted: true })
