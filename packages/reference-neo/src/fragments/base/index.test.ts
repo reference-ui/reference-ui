@@ -10,17 +10,20 @@ import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './index.ts
 
 async function importFragmentsModule(options?: {
   scannedFiles?: string[]
+  scannedSources?: Array<{ path: string; content: string }>
   bundledFragments?: Array<{ file: string; bundle: string }>
 }) {
   vi.resetModules()
 
-  const scanForFragments = vi.fn(() => options?.scannedFiles ?? ['/workspace/app/src/theme.ts'])
+  const matches = options?.scannedFiles ?? ['/workspace/app/src/theme.ts']
+  const scannedSources = options?.scannedSources ?? []
+  const scanFragmentSources = vi.fn(async () => ({ matches, scannedSources }))
   const bundleFragments = vi.fn(async () =>
     options?.bundledFragments ?? [{ file: '/workspace/app/src/theme.ts', bundle: 'localOne()' }]
   )
 
   vi.doMock('../lib/index.ts', () => ({
-    scanForFragments,
+    scanFragmentSources,
     bundleFragments,
     CONFIG_FRAGMENT_SOURCE_PROPERTY: '__refConfigFragmentSource',
   }))
@@ -28,7 +31,7 @@ async function importFragmentsModule(options?: {
   const mod = await import('./index.ts')
   return {
     ...mod,
-    scanForFragments,
+    scanFragmentSources,
     bundleFragments,
   }
 }
@@ -137,12 +140,17 @@ describe('fragments prepare flow', () => {
 
 describe('fragments prepare output', () => {
   it('prepares fragments from scanned files and bundled local fragments', async () => {
+    const scannedSources = [
+      { path: '/workspace/app/src/theme.ts', content: 'tokens()' },
+      { path: '/workspace/app/src/recipes.ts', content: 'recipe()' },
+    ]
     const {
       prepareFragments,
-      scanForFragments,
+      scanFragmentSources,
       bundleFragments,
     } = await importFragmentsModule({
       scannedFiles: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
+      scannedSources,
       bundledFragments: [
         { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
@@ -159,7 +167,7 @@ describe('fragments prepare output', () => {
       ],
     })
 
-    expect(scanForFragments).toHaveBeenCalledWith({
+    expect(scanFragmentSources).toHaveBeenCalledWith({
       include: ['src/**/*.{ts,tsx}'],
       importFrom: [
         '@reference-ui/neo',
@@ -180,6 +188,7 @@ describe('fragments prepare output', () => {
         { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
       ],
+      scannedSources,
     })
   })
 
@@ -193,6 +202,7 @@ describe('fragments prepare output', () => {
           { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
           { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
         ],
+        scannedSources: [],
       })
     ).toBe(';upstreamOne()\n;upstreamTwo()\n;localOne()\n;localTwo()')
   })

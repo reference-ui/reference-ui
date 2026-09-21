@@ -10,9 +10,11 @@ import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/co
 import type { BaseSystem, ReferenceUIConfig } from '../../config/types.ts'
 import {
   bundleFragments,
-  scanForFragments,
+  scanFragmentSources,
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
   type FragmentBundle,
+  type FragmentScan,
+  type ScannedSource,
 } from '../lib/index.ts'
 import { getOutDirPath } from '../../lib/paths/index.ts'
 import { createKeyframesCollector } from '../api/keyframes.ts'
@@ -52,6 +54,12 @@ interface EvaluateCollector {
 export interface PreparedFragments {
   upstreamFragments: string[]
   localFragmentBundles: FragmentBundle[]
+  /**
+   * Retained compile set from the fragment scan (C3 single read): every
+   * in-scope source with its bytes, for the native request's `files`.
+   * Held until compileNative resolves, then dropped with `prepared`.
+   */
+  scannedSources: ScannedSource[]
 }
 
 interface CollectedBucket {
@@ -77,8 +85,11 @@ function getUpstreamFragmentNames(systems: BaseSystem[] | undefined): string[] {
     .map(system => system.name)
 }
 
-export function scanFragmentFiles(cwd: string, config: ReferenceUIConfig): string[] {
-  return scanForFragments({
+export async function scanFragmentFiles(
+  cwd: string,
+  config: ReferenceUIConfig
+): Promise<FragmentScan> {
+  return scanFragmentSources({
     include: config.include,
     importFrom: [
       '@reference-ui/neo',
@@ -105,7 +116,7 @@ export async function prepareFragments(
   cwd: string,
   config: ReferenceUIConfig
 ): Promise<PreparedFragments> {
-  const fragmentFiles = scanFragmentFiles(cwd, config)
+  const { matches: fragmentFiles, scannedSources } = await scanFragmentFiles(cwd, config)
   const localFragmentBundles = await bundleFragments({
     files: fragmentFiles,
     alias: getFragmentBootstrapImportMap(),
@@ -114,6 +125,7 @@ export async function prepareFragments(
   return {
     upstreamFragments: getUpstreamFragments(config.extends),
     localFragmentBundles,
+    scannedSources,
   }
 }
 

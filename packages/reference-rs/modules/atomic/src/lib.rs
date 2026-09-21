@@ -17,6 +17,7 @@ pub(crate) mod sources;
 #[cfg(test)]
 mod spec_recipe_tests;
 mod static_css;
+pub(crate) mod stream;
 pub mod stylesheet;
 #[cfg(test)]
 mod tests;
@@ -154,42 +155,72 @@ fn run_parse_phase(
         recipe_bindings,
         selections,
     } = sinks;
-    // One parse per source: allocators and programs live for this phase,
-    // so constants, the value graph, and extraction share them.
-    let allocators: Vec<Allocator> = sources.iter().map(|_| Allocator::default()).collect();
-    let parsed: Vec<_> = sources
+    // Retained parses live for this phase; streamed files parse transiently
+    // in the constants pass and keep only errors, constants, and staged
+    // records+bags. Programs are never co-resident for streamed files.
+    let mut slots: Vec<stream::SourceSlot> = sources
+        .iter()
+        .map(|(_, content)| stream::SourceSlot::new(streaming_candidate(content)))
+        .collect();
+    let retained: Vec<usize> = (0..sources.len()).filter(|&i| !slots[i].streamed).collect();
+    let allocators: Vec<Allocator> = retained.iter().map(|_| Allocator::default()).collect();
+    let parsed: Vec<_> = retained
         .iter()
         .zip(allocators.iter())
-        .map(|((path, content), allocator)| parse_source(path, content, allocator))
+        .map(|(&i, allocator)| parse_source(&sources[i].0, &sources[i].1, allocator))
         .collect();
-    let unpanicked = unpanicked_index(&parsed);
-    let project_constants = collect_project_constants(sources, &parsed);
-    let mut graph = extract::resolver::ValueGraph::new(sources, &parsed, &project_constants);
+    for (position, &i) in retained.iter().enumerate() {
+        slots[i].parsed = Some(position);
+        slots[i].panicked = parsed[position].panicked;
+    }
+    let mut project_constants = extract::constants::LocalConstants::new();
+    let transient = stream::merge_constants_ordered(sources, &parsed, &mut slots, &mut project_constants);
+    let unpanicked = stream::unpanicked_index(&slots);
+    let live = stream::live_retained_sources(sources, &parsed, &retained, &slots);
+    let mut graph =
+        extract::resolver::ValueGraph::new(sources, &live, transient.staged, &project_constants);
     let identity = extract::identity::IdentityGraph::new(sources);
     // Parse-failure keep-alive (C1): failed sources keep their trace
     // entry, so the re-parse fails identically and the located warning
     // survives. The bench load reports zero parse errors, so the gate
-    // still skips every dead file.
-    let failed: Vec<bool> = parsed
-        .iter()
-        .map(|ret| ret.panicked || !ret.errors.is_empty())
+    // still skips every dead file. Per-source via slots+transient (C3
+    // streams: `parsed` holds retained files only, so indexing it here
+    // would misalign and blind the keep-alive to streamed failures).
+    let failed: Vec<bool> = (0..sources.len())
+        .map(|i| slots[i].panicked || !transient.errors[i].is_empty())
         .collect();
     let (hosts, host_diagnostics) = hosts::resolve(request, sources, &failed, session);
     let traced_jsx = hosts.hosts();
     diagnostics.extend(host_diagnostics);
-    // Independent diagnostics analysis over the borrowed parse (S2).
-    let parse = diagnostics::analysis::CompileParse {
-        sources,
-        parsed: &parsed,
+    // Independent diagnostics analysis (S2): same slots for_compile builds,
+    // with streamed programs shared from one empty parse the content gate
+    // provably skips before reading.
+    let dummy_allocator = Allocator::default();
+    let dummy = parse_source("streamed.ts", "", &dummy_allocator);
+    let analyzed: Vec<diagnostics::analysis::AnalyzedSource<'_>> = sources
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !slots[*i].panicked)
+        .map(|(i, (path, content))| {
+            let program = match slots[i].parsed {
+                Some(position) if !slots[i].streamed => &parsed[position].program,
+                _ => &dummy.program,
+            };
+            diagnostics::analysis::AnalyzedSource {
+                path,
+                content,
+                program,
+            }
+        })
+        .collect();
+    let analysis = diagnostics::analysis::AnalysisInput {
+        sources: analyzed,
+        hosts: &hosts,
+        constants: &project_constants,
+        system: &request.base_system.name,
     };
-    let analysis = diagnostics::analysis::AnalysisInput::for_compile(
-        &parse,
-        &hosts,
-        &project_constants,
-        &request.base_system.name,
-    );
     report_analysis_expectations(&analysis, session);
-    report_parse_errors(sources, &parsed, diagnostics);
+    stream::report_parse_errors(sources, &transient.errors, diagnostics);
     let system = &request.base_system;
 
     {
@@ -210,16 +241,16 @@ fn run_parse_phase(
             recipe_bindings,
             selections,
         };
-        extract_all_sources(&mut extract_session, sources, &parsed);
+        extract_all_sources(&mut extract_session, sources, &parsed, &slots);
         resolve_recipe_selections(&mut extract_session);
     }
 
-    // Harvest rides the same parse: the pool crosses the refused sinks into
-    // the wants and authored declarations the site walk filled. Quote-free
-    // files hold no literals, so their pool walk skips by mask.
-    let skip_harvest: Vec<bool> = sources
+    // Harvest rides the retained parse: streamed files hold no string
+    // delimiters, so their absence merges the identity element, exactly as
+    // the mask does today. The mask stays aligned with the retained parse.
+    let skip_harvest: Vec<bool> = retained
         .iter()
-        .map(|(_, content)| string_skip(content))
+        .map(|&i| string_skip(&sources[i].1))
         .collect();
     let pool = extract::harvest::collect_pool(&parsed, &skip_harvest);
     extract::harvest::mint(extract::harvest::MintCtx {
@@ -271,17 +302,25 @@ fn resolve_recipe_selections(session: &mut ParseSession<'_>) {
     session.selections.extend(resolved);
 }
 
-/// Extract every unpanicked source through the shared session.
+/// Extract every unpanicked retained source through the shared session.
 /// Styling-free files skip the scope, extract, and per-file resolve walks:
-/// with no import, css/recipe, or JSX bytes they hold no site.
+/// with no import, css/recipe, or JSX bytes they hold no site. Streamed
+/// files skip outright; the gate proves them styling-free, so the skip
+/// matches the content check exactly.
 fn extract_all_sources(
     session: &mut ParseSession<'_>,
     sources: &[(String, String)],
     parsed: &[oxc_parser::ParserReturn<'_>],
+    slots: &[stream::SourceSlot],
 ) {
-    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
-        if !ret.panicked && !styling_skip(content) {
-            extract_parsed_program(session, path, content, &ret.program);
+    for (index, (path, content)) in sources.iter().enumerate() {
+        if slots[index].panicked || slots[index].streamed {
+            continue;
+        }
+        if let Some(position) = slots[index].parsed {
+            if !styling_skip(content) {
+                extract_parsed_program(session, path, content, &parsed[position].program);
+            }
         }
     }
 }
@@ -303,20 +342,19 @@ pub(crate) fn string_skip(content: &str) -> bool {
     !content.contains('\'') && !content.contains('"') && !content.contains('`')
 }
 
-/// Source indexes that parsed, in input order: the partition catalog and
-/// the analysis entry order agree on exactly this sequence.
-fn unpanicked_index(parsed: &[oxc_parser::ParserReturn<'_>]) -> Vec<usize> {
-    parsed
-        .iter()
-        .enumerate()
-        .filter(|(_, ret)| !ret.panicked)
-        .map(|(index, _)| index)
-        .collect()
+/// True when a file streams: no styling signal (the extract, scope, and
+/// analysis gates) and no string delimiter (the harvest mask). Retained
+/// files parse co-resident exactly as today; streamed files parse
+/// transiently and drop program+allocator after staging.
+pub(crate) fn streaming_candidate(content: &str) -> bool {
+    styling_skip(content) && string_skip(content)
 }
 
 /// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),
 /// so `.ts`-only `<T>` assertions parse only when JSX is off (SPEC-V2-07).
-fn parse_source<'a>(
+/// Shared with the resolver's streamed refinement, which re-parses the same
+/// bytes the staging pass already screened.
+pub(crate) fn parse_source<'a>(
     path: &str,
     content: &'a str,
     allocator: &'a Allocator,
@@ -325,48 +363,6 @@ fn parse_source<'a>(
         .unwrap_or_default()
         .with_typescript(true);
     Parser::new(allocator, content, source_type).parse()
-}
-
-/// Report every source's parse errors, in source order.
-fn report_parse_errors(
-    sources: &[(String, String)],
-    parsed: &[oxc_parser::ParserReturn<'_>],
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
-        for err in &ret.errors {
-            let offset = err
-                .labels
-                .as_ref()
-                .and_then(|labels| labels.first())
-                .map(|label| label.offset() as u32);
-            let (line, column) = offset
-                .and_then(|start| crate::diagnostics::line_col(content, start))
-                .unzip();
-            diagnostics.push(
-                Diagnostic::error(DiagnosticCode::ParseError, err.to_string())
-                    .with_location(path, line, column),
-            );
-        }
-    }
-}
-
-fn collect_project_constants(
-    sources: &[(String, String)],
-    parsed: &[oxc_parser::ParserReturn<'_>],
-) -> extract::constants::LocalConstants {
-    let mut project_constants = extract::constants::LocalConstants::new();
-    for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
-        if !ret.panicked {
-            let file_constants = extract::constants::collect_local_constants(
-                &ret.program,
-                path,
-                Some(content.as_str()),
-            );
-            project_constants.merge(&file_constants);
-        }
-    }
-    project_constants
 }
 
 fn extract_parsed_program(

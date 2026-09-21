@@ -37,3 +37,4 @@ export {
   type PreparedFragments,
 } from './base/index.ts'
 export { getFragmentBootstrapImportMap } from './base/bootstrap-import-map.ts'
+export type { FragmentScan, ScannedSource } from './lib/index.ts'

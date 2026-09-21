@@ -9,8 +9,9 @@ import type {
 } from '@reference-ui/rust/contracts'
 import type { LogChannel } from '../config/types.ts'
 
-// Kept for compile-files.ts, which still collects include-scoped sources;
-// the frozen request carries roots plus include globs instead of files.
+// Structural mirror of the frozen VirtualSource (C3 single read): the shape
+// sync hands to the engine when it already holds the bytes. Also kept for
+// compile-files.ts, which still collects include-scoped sources.
 export interface NativeSourceFile {
   path: string
   content: string
@@ -28,6 +29,12 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    * `include`: undefined drops from the serialized request when unset.
    */
   logs?: LogChannel[]
+  /**
+   * In-memory sources (C3 single read). Carried structurally like `include`:
+   * the dist contracts types trail the frozen source, so the seam describes
+   * the field here until the RS-owned dist refresh lands.
+   */
+  files?: NativeSourceFile[]
 }
 
 export interface NativeDiagnostic {

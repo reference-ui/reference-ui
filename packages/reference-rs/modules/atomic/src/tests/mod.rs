@@ -5,4 +5,5 @@
 
 mod gates;
 mod seed;
+mod stream;
 mod surface;

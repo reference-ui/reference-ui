@@ -193,6 +193,16 @@ export interface PortableBaseSystem {
   jsxElements: string[]
 }
 
+/**
+ * One in-memory source file: the absolute path plus the bytes to compile.
+ * Carried by `NativeCompileRequest.files` (C3 single read) and the legacy
+ * `CompileRequest.files`; both lower to the same native union-fill.
+ */
+export interface VirtualSource {
+  path: string
+  content: string
+}
+
 export interface NativeCompileRequest {
   schemaVersion: 1
   spec: EvaluatedSystemSpec
@@ -205,6 +215,14 @@ export interface NativeCompileRequest {
    * empty preserves the legacy scan-all behavior.
    */
   include?: string[]
+  /**
+   * In-memory sources (C3 single read): the caller hands over the bytes it
+   * already holds so the engine skips its own scan+read, union-filling any
+   * scope-hit disk paths the list misses. Absent or empty preserves the
+   * legacy disk-scan behavior. Published artifacts stay logical: sync
+   * suppresses this field when serializing compile-request.json.
+   */
+  files?: VirtualSource[]
   /**
    * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
    * 'compiler', the result also carries `compilerDiagnostics`; when it
