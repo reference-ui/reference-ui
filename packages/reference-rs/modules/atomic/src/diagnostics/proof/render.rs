@@ -27,7 +27,32 @@ pub fn render_session(
     system: &str,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    let proof = Proof::collect(facts, plans);
+    render_with(
+        Proof::collect(facts, emitted_keys(plans)),
+        facts,
+        system,
+        diagnostics,
+    );
+}
+
+/// Render with a carried emitted-key set instead of re-serializing plans.
+/// The keys must equal `emitted_keys(plans)` (pinned in `plans` tests).
+pub fn render_session_with_keys(
+    facts: &[DiagnosticFact],
+    emitted: BTreeSet<String>,
+    system: &str,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    render_with(Proof::collect(facts, emitted), facts, system, diagnostics);
+}
+
+/// Run the partitioned join inputs against the covered-sink render.
+fn render_with(
+    proof: Proof<'_>,
+    facts: &[DiagnosticFact],
+    system: &str,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
     let sinks = Sinks::collect(facts);
     proof.render_rejects(diagnostics);
     proof.render_causeless(diagnostics);
@@ -37,16 +62,16 @@ pub fn render_session(
 /// The partitioned join inputs: expectations and keyed rejections.
 struct Proof<'a> {
     emitted: BTreeSet<String>,
-    exacts: Vec<&'a OwnedLookupKey>,
+    exacts: Vec<(&'a OwnedLookupKey, String)>,
     exact_set: HashSet<String>,
     rejects: Vec<Reject<'a>>,
 }
 
 impl<'a> Proof<'a> {
     /// Partition the session facts into join inputs over the emitted set.
-    fn collect(facts: &'a [DiagnosticFact], plans: &[RuntimeStylePlan]) -> Self {
+    fn collect(facts: &'a [DiagnosticFact], emitted: BTreeSet<String>) -> Self {
         let mut proof = Self {
-            emitted: emitted_keys(plans),
+            emitted,
             exacts: Vec::new(),
             exact_set: HashSet::new(),
             rejects: Vec::new(),
@@ -65,10 +90,12 @@ impl<'a> Proof<'a> {
         proof
     }
 
-    /// Collect one expected lookup under its serialized key.
+    /// Collect one expected lookup under its serialized key, memoized for
+    /// the causeless render so each exact serializes once per session.
     fn collect_exact(&mut self, key: &'a OwnedLookupKey) {
-        self.exact_set.insert(key.lookup_key());
-        self.exacts.push(key);
+        let key_string = key.lookup_key();
+        self.exact_set.insert(key_string.clone());
+        self.exacts.push((key, key_string));
     }
 
     /// Join rejections against expectations: an expected key that is absent
@@ -117,15 +144,14 @@ impl<'a> Proof<'a> {
     /// their scalar misuse already warns located (O20).
     fn render_causeless(&self, diagnostics: &mut Vec<Diagnostic>) {
         let mut warned: HashSet<String> = HashSet::new();
-        for key in &self.exacts {
+        for (key, key_string) in &self.exacts {
             if is_hole_value(&key.value) || !is_known_style_prop(&key.prop) {
                 continue;
             }
-            let key_string = key.lookup_key();
-            if self.emitted.contains(&key_string) || self.is_explained(key, &key_string) {
+            if self.emitted.contains(key_string) || self.is_explained(key, key_string) {
                 continue;
             }
-            if warned.insert(key_string) {
+            if warned.insert(key_string.clone()) {
                 diagnostics.push(Policy::render_causeless(key));
             }
         }

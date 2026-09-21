@@ -4,7 +4,7 @@
 //! plans, stylesheets, and runtime map. The portable sheet shares the printed
 //! suffix and sinks its own system-layer diagnostics so warnings surface once.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use crate::{
     atom::{AtomSet, When},
@@ -76,9 +76,12 @@ impl AssembleCtx {
         // Plans stay unconditional: the S4 render joins verdicts against
         // them, and the diagnostics sweep killed proof-gating here (the
         // "no compiled style plan" prefix rides render_session output).
+        // On `!proof` the diet path carries placeholder declarations (slim
+        // drops plans) plus the canonical keys, skipping render's second
+        // serialization; proof restores full plans and the legacy join.
         let mut plan_builder =
             runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
-        let style_plans = plan_builder.build(&authored);
+        let (style_plans, carried_keys) = build_plans(&mut plan_builder, &authored, proof);
         let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
         let runtime = NativeRuntimeArtifact {
             schema_version: 2,
@@ -114,12 +117,20 @@ impl AssembleCtx {
 
         // Final-plan proof (S4): join the session's analysis expectations
         // against the emitted plans and render the verdicts in place.
-        crate::diagnostics::proof::render::render_session(
-            sink.facts(),
-            &style_plans,
-            &system.name,
-            &mut diagnostics,
-        );
+        match carried_keys {
+            Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
+                sink.facts(),
+                emitted,
+                &system.name,
+                &mut diagnostics,
+            ),
+            None => crate::diagnostics::proof::render::render_session(
+                sink.facts(),
+                &style_plans,
+                &system.name,
+                &mut diagnostics,
+            ),
+        };
 
         CompileResult {
             stylesheet,
@@ -134,6 +145,23 @@ impl AssembleCtx {
             traced_jsx_hosts: traced,
             compiler_diagnostics: None,
         }
+    }
+}
+
+/// Build plans plus the carried emitted-key set. Proof builds full plans
+/// and no keys (render re-serializes as today); `!proof` builds diet plans
+/// whose carried keys become the render join set, serialization-free.
+fn build_plans(
+    builder: &mut runtime::PlanBuilder<'_>,
+    authored: &[runtime::AuthoredDeclaration],
+    proof: bool,
+) -> (Vec<runtime::RuntimeStylePlan>, Option<BTreeSet<String>>) {
+    if proof {
+        (builder.build(authored), None)
+    } else {
+        let (plans, keys) = builder.build_diet(authored);
+        let emitted: BTreeSet<String> = keys.into_iter().collect();
+        (plans, Some(emitted))
     }
 }
 
