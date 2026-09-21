@@ -48,7 +48,7 @@ use crate::atom::Want;
 use crate::diagnostics::adapters::extract::extract_note;
 use crate::diagnostics::{
     line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
-    DiagnosticsSession,
+    DiagnosticsSession, LineIndex,
 };
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
@@ -84,6 +84,7 @@ pub struct ExtractSinks<'a> {
 pub struct ExtractContext<'a> {
     pub file: &'a str,
     pub source: Option<&'a str>,
+    line_index: Option<LineIndex>,
     pub chain: ScopeChain<'a>,
     pub scope: ScopeId,
     pub breakpoints: &'a BreakpointScale,
@@ -115,6 +116,7 @@ impl<'a> ExtractContext<'a> {
         Self {
             file,
             source,
+            line_index: None,
             chain: config.chain,
             scope: ROOT_SCOPE,
             breakpoints: config.breakpoints,
@@ -226,17 +228,27 @@ impl<'a> ExtractContext<'a> {
         self.chain.at(self.scope)
     }
 
+    /// Build this file's line-start table on first walk construction.
+    /// Files that never construct a walk never pay for the scan.
+    fn ensure_line_index(&mut self) {
+        if self.line_index.is_none() {
+            self.line_index = self.source.map(LineIndex::for_source);
+        }
+    }
+
     /// Create an ObjectWalk context for traversing a style object.
     pub fn object_walk<'b>(
         &'b mut self,
         origin: Option<&'b str>,
         important: bool,
     ) -> ObjectWalk<'b> {
+        self.ensure_line_index();
         ObjectWalk {
             origin,
             important,
             file: self.file,
             source: self.source,
+            line_index: self.line_index.as_ref(),
             scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants: self.wants,
@@ -254,11 +266,13 @@ impl<'a> ExtractContext<'a> {
         origin: Option<&'b str>,
         wants: &'b mut Vec<Want>,
     ) -> ObjectWalk<'b> {
+        self.ensure_line_index();
         ObjectWalk {
             origin,
             important: false,
             file: self.file,
             source: self.source,
+            line_index: self.line_index.as_ref(),
             scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants,
@@ -277,12 +291,14 @@ impl<'a> ExtractContext<'a> {
         origin: Option<&'b str>,
         important: bool,
     ) -> ExpressionWalk<'b> {
+        self.ensure_line_index();
         ExpressionWalk {
             prop,
             origin,
             important,
             file: self.file,
             source: self.source,
+            line_index: self.line_index.as_ref(),
             scopes: self.scoped(),
             breakpoints: self.breakpoints,
             wants: self.wants,

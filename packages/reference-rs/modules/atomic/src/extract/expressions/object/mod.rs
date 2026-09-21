@@ -26,7 +26,7 @@ use super::walk::{walk_expression, ExpressionWalk};
 use crate::diagnostics::adapters::extract::extract_note;
 use crate::diagnostics::{
     line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
-    DiagnosticsSession,
+    DiagnosticsSession, LineIndex,
 };
 use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
@@ -54,6 +54,7 @@ pub struct ObjectWalk<'a> {
     pub important: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
+    pub line_index: Option<&'a LineIndex>,
     pub scopes: Scoped<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub wants: &'a mut Vec<crate::atom::Want>,
@@ -75,6 +76,7 @@ impl<'a> ObjectWalk<'a> {
             important: self.important,
             file: self.file,
             source: self.source,
+            line_index: self.line_index,
             scopes: self.scopes,
             breakpoints: self.breakpoints,
             wants: self.wants,
@@ -116,7 +118,11 @@ impl<'a> ObjectWalk<'a> {
     /// 1-based line/column for a span, or None without source text.
     fn span_position(&self, span: Option<Span>) -> Option<(u32, u32)> {
         let source = self.source?;
-        line_col(source, span?.start)
+        let start = span?.start;
+        match self.line_index {
+            Some(index) => index.line_col(source, start),
+            None => line_col(source, start),
+        }
     }
 }
 

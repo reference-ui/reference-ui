@@ -125,6 +125,43 @@ pub fn line_col(source: &str, offset: u32) -> Option<(u32, u32)> {
     Some((line, column))
 }
 
+/// Line-start table for one file: the byte offset where each line begins.
+/// One O(file) build replaces one O(offset) scan per lookup, so per-want
+/// positions drop to a binary search plus the UTF-16 tail walk. Results
+/// are identical to [`line_col`]; the fuzz below pins offset-for-offset
+/// equivalence, including past-end and mid-character offsets.
+#[derive(Debug, Clone)]
+pub struct LineIndex {
+    starts: Vec<u32>,
+}
+
+impl LineIndex {
+    /// Record the byte after every newline in a single pass.
+    pub fn for_source(source: &str) -> Self {
+        let mut starts = vec![0u32];
+        for (index, byte) in source.bytes().enumerate() {
+            if byte == b'\n' {
+                starts.push(index as u32 + 1);
+            }
+        }
+        Self { starts }
+    }
+
+    /// 1-based (line, column) for a byte offset, or None past the end.
+    /// The binary search finds the line; the tail walk counts UTF-16
+    /// units exactly as [`line_col`]; non-boundary offsets reject.
+    pub fn line_col(&self, source: &str, offset: u32) -> Option<(u32, u32)> {
+        let end = offset as usize;
+        if end > source.len() || !source.is_char_boundary(end) {
+            return None;
+        }
+        let line = self.starts.partition_point(|start| *start <= offset);
+        let tail = source.get(self.starts[line - 1] as usize..end)?;
+        let column = tail.chars().map(|ch| ch.len_utf16() as u32).sum::<u32>() + 1;
+        Some((line as u32, column))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -145,6 +182,48 @@ mod tests {
     #[test]
     fn line_col_rejects_offsets_past_the_end() {
         assert_eq!(line_col("ab", 3), None);
+    }
+
+    fn assert_index_matches_scan(source: &str) {
+        let index = LineIndex::for_source(source);
+        for offset in 0..=source.len() as u32 + 1 {
+            assert_eq!(
+                index.line_col(source, offset),
+                line_col(source, offset),
+                "offset {offset} of {source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn line_index_matches_scan_on_edge_shapes() {
+        for source in [
+            "",
+            "ab",
+            "ab\ncd",
+            "\n",
+            "\n\n\n",
+            "trailing\n",
+            "\r\nmixed\nendings\r\n",
+            "a😀b\n😀😀\nend",
+            "line one\nline two is longer\nx",
+        ] {
+            assert_index_matches_scan(source);
+        }
+    }
+
+    #[test]
+    fn line_index_matches_scan_on_generated_text() {
+        let alphabet = ["a", "bb", "\n", "😀", "\r\n", "z", "\n\n", "é"];
+        let mut seed = 0x1234_5678u64;
+        let mut text = String::new();
+        for _ in 0..400 {
+            seed = seed
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            text.push_str(alphabet[(seed >> 33) as usize % alphabet.len()]);
+        }
+        assert_index_matches_scan(&text);
     }
 
     #[test]
