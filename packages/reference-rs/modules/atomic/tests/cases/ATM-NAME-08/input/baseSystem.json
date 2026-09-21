@@ -1350,19 +1350,11 @@
         "letterSpacing": "-0.04em",
         "fontWeight": "normal"
       }
-    },
-    "test": {
-      "value": "Test, sans-serif",
-      "weights": {
-        "normal": "500"
-      },
-      "css": {
-        "MyProp": "2px",
-        "myProp": "2px",
-        "--brandX": "2px",
-        "mozFoo": "2px"
-      }
     }
+  },
+  "conditions": {
+    "10": "[data-ten] &",
+    "2": "[data-two] &"
   },
   "globalCss": [
     {
@@ -1678,19 +1670,5 @@
       "source": "packages/reference-lib",
       "kind": "fragment"
     }
-  ],
-  "breakpoints": {
-    "tablet": "48rem",
-    "padded": "640 ",
-    "hex": "0x280",
-    "pxname": "640px",
-    "a": "auto",
-    "xDown": "200",
-    "empty": ""
-  },
-  "conditions": {
-    "__x": "[data-x] &",
-    "10": "[data-ten] &",
-    "2": "[data-two] &"
-  }
+  ]
 }

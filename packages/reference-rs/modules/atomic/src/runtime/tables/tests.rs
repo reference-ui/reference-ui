@@ -9,9 +9,9 @@ use super::*;
 
 #[test]
 fn rules_version_matches_js_pin() {
-    assert_eq!(NAMER_RULES_VERSION, 5);
+    assert_eq!(NAMER_RULES_VERSION, 6);
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.rules_version, 5);
+    assert_eq!(tables.rules_version, 6);
 }
 
 #[test]

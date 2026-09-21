@@ -154,3 +154,59 @@ pub(crate) fn dispatch_probes() -> Vec<AuthoredDeclaration> {
 pub(crate) fn prefix_probes() -> Vec<AuthoredDeclaration> {
     vec![decl(&[], "font", json!("test"), false)]
 }
+
+/// Canonical numeric index value, mirroring the gate's isIntegerLikeKey:
+/// digits, no leading zero unless "0" itself, below 2^32-1.
+pub(crate) fn integer_key_value(key: &str) -> Option<u32> {
+    if key.is_empty() || (key.len() > 1 && key.starts_with('0')) {
+        return None;
+    }
+    if !key.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    let num: u64 = key.parse().ok()?;
+    if num >= 4_294_967_295 {
+        return None;
+    }
+    u32::try_from(num).ok()
+}
+
+/// V8 `[[OwnPropertyKeys]]` order for per-prop keys: canonical numeric
+/// indices ascending first, every other key stable after.
+pub(crate) fn v8_observed_order(pairs: &[(String, Value)]) -> Vec<(String, Value)> {
+    let mut numeric: Vec<(u32, String, Value)> = Vec::new();
+    let mut rest: Vec<(String, Value)> = Vec::new();
+    for (key, value) in pairs {
+        match integer_key_value(key) {
+            Some(num) => numeric.push((num, key.clone(), value.clone())),
+            None => rest.push((key.clone(), value.clone())),
+        }
+    }
+    numeric.sort_by_key(|(num, _, _)| *num);
+    numeric
+        .into_iter()
+        .map(|(_, key, value)| (key, value))
+        .chain(rest)
+        .collect()
+}
+
+/// Per-prop value in V8-observed order: the object the JS mirror receives
+/// for integer-key rows, hence the order the expected output runs in.
+pub(crate) fn v8_ordered_value(pairs: &[(String, Value)]) -> Value {
+    let mut map = serde_json::Map::new();
+    for (key, value) in v8_observed_order(pairs) {
+        map.insert(key, value);
+    }
+    Value::Object(map)
+}
+
+/// Integer-key witness at composed scale: authored `{10, 2}` arrives
+/// V8-ordered, so the row carries the observed object, which survives JSON
+/// transport as-is (15-shape pins the authored pairs instead).
+pub(crate) fn integer_probes() -> Vec<AuthoredDeclaration> {
+    let pairs = [
+        ("10".to_string(), json!("red")),
+        ("2".to_string(), json!("blue")),
+    ];
+    vec![decl(&[], "color", v8_ordered_value(&pairs), false)]
+}

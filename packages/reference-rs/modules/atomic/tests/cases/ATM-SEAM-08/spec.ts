@@ -23,6 +23,30 @@ interface NamerGolden {
 
 type NamerFn = (input: unknown, tables: unknown, system?: string) => unknown
 
+/**
+ * `$pairs` decode: integer-keyed per-prop golden inputs travel as
+ * `{ $pairs: [[key, value], ...] }` in authored order, because JSON.parse
+ * would destroy non-V8 order the same way the substrate does (doom-5).
+ * Rebuilt here into the V8-ordered object the substrate delivers, so the
+ * golden pins the algorithm with order given. Sole-key plus pair-array
+ * shape required: anything else passes through untouched.
+ */
+function decodeValue(value: unknown): unknown {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return value
+  const obj = value as Record<string, unknown>
+  const keys = Object.keys(obj)
+  if (keys.length !== 1 || keys[0] !== '$pairs' || !Array.isArray(obj['$pairs'])) return value
+  return Object.fromEntries(obj['$pairs'] as Array<[string, unknown]>)
+}
+
+/** Decode a golden probe input's per-prop value before the mirror runs. */
+function decodeInput(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) return input
+  const rec = input as Record<string, unknown>
+  if (!('value' in rec)) return input
+  return { ...rec, value: decodeValue(rec['value']) }
+}
+
 function readGoldens(): NamerGolden[] {
   expect(
     fs.existsSync(GOLDEN_DIR),
@@ -55,7 +79,7 @@ const spec: AtomicCaseSpec = {
       const fn = namer[golden.function]
       expect(typeof fn, `runtime namer exports ${golden.function}`).toBe('function')
       for (const [index, probe] of golden.cases.entries()) {
-        expect(fn(probe.input, tables, system), `${golden.function} case ${index}`).toEqual(probe.output)
+        expect(fn(decodeInput(probe.input), tables, system), `${golden.function} case ${index}`).toEqual(probe.output)
       }
     }
     expect(result.diagnostics).toEqual([])

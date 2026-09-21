@@ -1,6 +1,6 @@
 {
   "function": "shape",
-  "rulesVersion": 5,
+  "rulesVersion": 6,
   "cases": [
     {
       "input": {
@@ -253,6 +253,109 @@
         "important": false
       },
       "output": []
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "$pairs": [
+            [
+              "10",
+              "red"
+            ],
+            [
+              "2",
+              "blue"
+            ]
+          ]
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "2:color",
+          "className": "@reference-ui/lib__2:c_blue"
+        },
+        {
+          "slot": "10:color",
+          "className": "@reference-ui/lib__10:c_red"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "$pairs": [
+            [
+              "2",
+              "blue"
+            ],
+            [
+              "10",
+              "red"
+            ]
+          ]
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "2:color",
+          "className": "@reference-ui/lib__2:c_blue"
+        },
+        {
+          "slot": "10:color",
+          "className": "@reference-ui/lib__10:c_red"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "$pairs": [
+            [
+              "_hover",
+              "red"
+            ],
+            [
+              "10",
+              "green"
+            ],
+            [
+              "_osDark",
+              "blue"
+            ],
+            [
+              "2",
+              "yellow"
+            ]
+          ]
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "2:color",
+          "className": "@reference-ui/lib__2:c_yellow"
+        },
+        {
+          "slot": "10:color",
+          "className": "@reference-ui/lib__10:c_green"
+        },
+        {
+          "slot": "hover:color",
+          "className": "@reference-ui/lib__hover:c_red"
+        },
+        {
+          "slot": "osDark:color",
+          "className": "@reference-ui/lib__osDark:c_blue"
+        }
+      ]
     }
   ]
 }

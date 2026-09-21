@@ -17,8 +17,8 @@ use crate::resolve::conditions::lower_when;
 use crate::runtime::{derive_slot, AuthoredDeclaration, PlanBuilder};
 use base_system::BaseSystem;
 use probes::{
-    container_probes, decl, dispatch_probes, prefix_probes, range_probes, scalar_probes,
-    token_probes, twin_probes,
+    container_probes, decl, dispatch_probes, integer_probes, prefix_probes, range_probes,
+    scalar_probes, token_probes, twin_probes, v8_ordered_value,
 };
 
 pub(crate) fn condition_suite(system: &BaseSystem) -> Suite {
@@ -173,24 +173,66 @@ pub(crate) fn shape_suite(system: &BaseSystem, name: &str) -> Suite {
         ),
         decl(&[], "width", json!([{"nested": true}]), false),
     ];
+    let mut cases: Vec<(Value, Value)> = decls
+        .iter()
+        .map(|decl| {
+            (
+                json!({
+                    "when": decl.when,
+                    "prop": decl.prop,
+                    "value": decl.value,
+                    "important": decl.important,
+                }),
+                build_output(system, name, decl),
+            )
+        })
+        .collect();
+    cases.extend(integer_shape_rows(system, name));
     Suite {
         file: "15-shape.json",
         function: "shape",
-        cases: decls
-            .iter()
-            .map(|decl| {
-                (
-                    json!({
-                        "when": decl.when,
-                        "prop": decl.prop,
-                        "value": decl.value,
-                        "important": decl.important,
-                    }),
-                    build_output(system, name, decl),
-                )
-            })
-            .collect(),
+        cases,
     }
+}
+
+/// Integer-keyed per-prop rows: non-ascending, ascending, and mixed. The
+/// file input carries authored-order pairs (`$pairs`); the expected output
+/// runs the builder on the V8-observed order the substrate delivers to JS.
+fn integer_shape_rows(system: &BaseSystem, name: &str) -> Vec<(Value, Value)> {
+    let rows: &[(&str, &[(&str, &str)])] = &[
+        ("color", &[("10", "red"), ("2", "blue")]),
+        ("color", &[("2", "blue"), ("10", "red")]),
+        (
+            "color",
+            &[("_hover", "red"), ("10", "green"), ("_osDark", "blue"), ("2", "yellow")],
+        ),
+    ];
+    rows.iter()
+        .map(|(prop, authored)| integer_case(system, name, prop, authored))
+        .collect()
+}
+
+/// One integer-key golden case: authored pairs in, V8-observed order out.
+/// The pairs tag survives JSON transport (plain objects would not); the
+/// builder runs the observed order, pinning the algorithm with order given.
+fn integer_case(
+    system: &BaseSystem,
+    name: &str,
+    prop: &str,
+    authored: &[(&str, &str)],
+) -> (Value, Value) {
+    let pairs: Vec<(String, Value)> = authored
+        .iter()
+        .map(|(key, value)| ((*key).to_string(), json!(value)))
+        .collect();
+    let input = json!({
+        "when": [],
+        "prop": prop,
+        "value": { "$pairs": pairs.iter().map(|(key, value)| json!([key, value])).collect::<Vec<Value>>() },
+        "important": false,
+    });
+    let decl = decl(&[], prop, v8_ordered_value(&pairs), false);
+    (input, build_output(system, name, &decl))
 }
 
 /// Shaping and composed verdicts: the plan declarations a decl lowers to.
@@ -246,6 +288,7 @@ pub(crate) fn name_suite(system: &BaseSystem, name: &str) -> Suite {
     decls.extend(token_probes());
     decls.extend(dispatch_probes());
     decls.extend(prefix_probes());
+    decls.extend(integer_probes());
     Suite {
         file: "16-name.json",
         function: "name",

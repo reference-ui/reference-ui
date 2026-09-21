@@ -1,6 +1,6 @@
 {
   "function": "name",
-  "rulesVersion": 5,
+  "rulesVersion": 6,
   "cases": [
     {
       "input": {
@@ -1139,6 +1139,27 @@
         {
           "slot": "mozFoo",
           "className": "@reference-ui/lib__mozFoo_2px"
+        }
+      ]
+    },
+    {
+      "input": {
+        "when": [],
+        "prop": "color",
+        "value": {
+          "2": "blue",
+          "10": "red"
+        },
+        "important": false
+      },
+      "output": [
+        {
+          "slot": "2:color",
+          "className": "@reference-ui/lib__2:c_blue"
+        },
+        {
+          "slot": "10:color",
+          "className": "@reference-ui/lib__10:c_red"
         }
       ]
     }
