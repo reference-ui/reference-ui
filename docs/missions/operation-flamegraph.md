@@ -1,6 +1,6 @@
 # Mission: Operation Flamegraph — stop flying blind on the Rust side
 
-Status: `idea` (HQ 2026-09-21). The voyage's speed crews have been
+Status: `active` (captain on conn 2026-09-21, Obj 1 crew dispatched). The voyage's speed crews have been
 reasoning about Rust performance from the outside: wall-time deltas,
 code reading, and deepsee measuring from the TS side. Twice in Wave 4
 a hypothesis died expensively late (R1's chunked handoff, B's
