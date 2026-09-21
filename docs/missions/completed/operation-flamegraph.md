@@ -1,6 +1,6 @@
 # Mission: Operation Flamegraph — stop flying blind on the Rust side
 
-Status: `active` (captain on conn 2026-09-21, Obj 1 crew dispatched). The voyage's speed crews have been
+Status: `done` (all 5 objectives verified firsthand + committed 2026-09-21; recon at operation-flamegraph-recon.md). The voyage's speed crews have been
 reasoning about Rust performance from the outside: wall-time deltas,
 code reading, and deepsee measuring from the TS side. Twice in Wave 4
 a hypothesis died expensively late (R1's chunked handoff, B's
@@ -59,9 +59,11 @@ of ad-hoc invocations will rot; a runner subcommand gets used.
 - [x] Counters pass answering floor-vs-waste per top room. (landed
       2026-09-21, verified firsthand, evidence at
       docs/evidence/counters/enterprise-latest/)
-- [ ] Recon-quality report: ranked rooms with numbers, kill-fast
+- [x] Recon-quality report: ranked rooms with numbers, kill-fast
       bars, and an explicit Wave 5 recommendation (skirmish lanes vs.
-      architectural bet).
+      architectural bet). (filed 2026-09-21 at
+      operation-flamegraph-recon.md, verified firsthand against all
+      four evidence bundles)
 
 ## Rules
 
