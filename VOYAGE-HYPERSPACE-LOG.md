@@ -303,6 +303,64 @@ reopen it.
   briefed — first spawn REJECTED (root 8/8 full); lane E's
   completion freed a slot and rotation b2 dispatched with
   adjudication brief (reviewer GAPS check-4 firsthand).
+
+## Wave 3 — CLOSED (4 landed + tooling, 1 GAPS riding W4, spike died, all committed)
+
+- Rendezvous order: c → b → a → e (+ d log-only, spike memo,
+  d ride-along tooling). C/B merged BEFORE A filed (captain's
+  error — early rendezvous; no harm: A independent, merged
+  later via clean 3-way; rule re-asserted: no merge without
+  a terminal line, no close until all filed).
+- Lane A: VERIFIED with scored-RSS flag (+25~45MB). Adjudicated
+  LAND on quiet-box evidence: base-tree enterprise ×3 RSS
+  328.9/357.5/335.2 (med 335.2, spread 29) vs merged
+  340.1/363.1/367.5 (med 363.1) — overlapping bands; code
+  read proves the retained bytes UNREACHABLE post-compile
+  (explicit `scannedSources = []` + `files = undefined`,
+  "RSS relief" comment) → GC-timing class per spike S1,
+  ungameable by design; small/med RSS flat. Sync −210ms
+  tight (1.30×3). Bundle identical. Verdict: +28 of garbage
+  for −13% wall = within HQ's "more or less the same".
+  W4 RSS lead owns the follow-up (request.files streaming
+  to avoid the retained array — structural, not gaming).
+- Merge-integration fix (1): lib.rs keep-alive `failed` vec
+  derived from retained-only `parsed` but indexed per-source
+  (A×B composition) → SITE-57's 0 warnings. Fixed per-source
+  via slots+transient.errors (provably same semantics,
+  extended to streamed). 301/301 + 173/173 after.
+- Firsthand gates per merge (all green): cargo atomic
+  533→548, styletrace 42→48, vitest atomic 301/301, neo unit
+  236/236, agentneo 173/173, contracts 13/13, q 0 violations
+  (RS warns + neo clean), full bench + churn with base-tree
+  comparisons. Barrel-test 1-in-8 transient: CONFIRMED
+  pre-existing ScratchWorkspace nanos-collision + Drop-rmdir
+  race (test harness, not product; fix = atomic counter —
+  morning note, out of voyage bounds).
+- Enterprise progression (quiet medians): W3-start 2.46/670.9
+  → post-C 1.55/333.3 → post-B 1.51/325.9 → post-A 1.30/363.1
+  → final 1.31/344.5. Final vs pin `5eda2c60b7e5`: sync
+  −63%, RSS −57%, css 14.3→2.7 MiB (gzip 825.0→264.2),
+  data 3.9MiB→209.4 KiB (−95%, gzip 42.6→21.6). Small:
+  150→92ms, 121.8→106.9MiB, css 538.0→90.5KiB. Medium:
+  461→182ms, 207.6→128.5MiB, css 2.4MiB→340.6KiB. Churn:
+  5.12→2.96s, RSS 527-604 band (GC noise), css identical,
+  data 386.3→101.3KiB.
+- Vs Panda goalpost: small sync 5.1x (RSS BETTER than Panda),
+  medium 2.7x (RSS better), enterprise sync 2.0x (1.31 vs
+  .645), RSS 1.32x (344.5 vs 261.2), css raw PARITY (gzip
+  smaller), total bundle 2.9 vs 2.8 MiB.
+- Spent: C1, C2, C3, C5. GAPS→W4: C4 (hypothesis TRUE, −26ms
+  8/8, but memo churn-breaches +106ms/+65MiB structural;
+  diff on voyage/hyperspace-perf-3-d; sample-parse ride-along
+  VERIFIED-separable and LANDED). Died: S1 (V8 end-state
+  GC-only, allocator unverifiable in spread; memo landed).
+  B-r1 postscript: woke 2.5h later (runtime scheduling gap,
+  not crew failure), withdrew stale GAPS, re-confirmed bytes
+  12/12 — b2's VERIFIED doubly-held. Replacement was correct.
+- W3 RSS adjudication method (standing): base-tree ×3 vs
+  merged ×3 on quiet box + mechanism read
+  (reachable-vs-unreachable). Single-sample RSS deltas are
+  not evidence (3 GC-outlier scares this wave: 308, 527, 552).
 - INCIDENT (~02:39): stash race across worktrees. Lane B
   implementer's SITE-54 stash-prove `pop` grabbed lane C's
   stash entry (034f04: burndown.ts + 4 publish files) into
