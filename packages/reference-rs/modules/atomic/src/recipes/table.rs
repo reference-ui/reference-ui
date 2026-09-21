@@ -1,6 +1,7 @@
 //! Variant lookup table construction for runtime `recipe()`.
 //! Computes the Cartesian product of declared variant axes and matches compound selectors.
-//! Emits an authoritative combination map where each key addresses pre-composed class strings.
+//! Builds the canonical in-memory maps (combinations plus per-breakpoint classes) while the
+//! serialized table ships the derivation inputs only; the runtime re-derives both maps exactly.
 //! Multi-value compound predicates expand to discrete selection entries sharing class names.
 
 use base_system::BreakpointScale;
@@ -28,6 +29,7 @@ pub fn build(input: &RecipeTableInput<'_>) -> RecipeRuntimeTable {
     let combinations = build_combinations(&base, &variant_keys, input.variant_map, input.compounds);
     let responsive_variant_map =
         build_responsive_map(input.qualified_name, input.variant_map, input.breakpoints);
+    let responsive_breakpoints = container_breakpoints(input.breakpoints);
 
     RecipeRuntimeTable {
         qualified_name: input.qualified_name.to_string(),
@@ -39,6 +41,7 @@ pub fn build(input: &RecipeTableInput<'_>) -> RecipeRuntimeTable {
         compound_variants,
         combinations,
         responsive_variant_map,
+        responsive_breakpoints,
     }
 }
 
@@ -333,5 +336,29 @@ mod tests {
         };
         let table = build(&input);
         assert!(table.responsive_variant_map["variant"].is_empty());
+    }
+
+    #[test]
+    fn serialized_table_ships_breakpoint_names_not_derived_maps() {
+        let stem = "lib-test-system__button";
+        let mut outline_map = IndexMap::new();
+        outline_map.insert("solid".into(), format!("{stem}_v_solid"));
+        let mut variant_map = IndexMap::new();
+        variant_map.insert("variant".into(), outline_map);
+        let input = RecipeTableInput {
+            qualified_name: stem,
+            class_name: "button",
+            variant_map: &variant_map,
+            default_variants: &IndexMap::new(),
+            compounds: &[],
+            breakpoints: &BreakpointScale::standard(),
+        };
+        let table = build(&input);
+        assert_eq!(table.responsive_breakpoints, vec!["sm", "md", "lg", "xl", "2xl"]);
+        let json = serde_json::to_value(&table).expect("table serializes");
+        assert!(json.get("combinations").is_none());
+        assert!(json.get("responsiveVariantMap").is_none());
+        let bps = Some(&serde_json::json!(["sm", "md", "lg", "xl", "2xl"]));
+        assert_eq!(json.get("responsiveBreakpoints"), bps);
     }
 }

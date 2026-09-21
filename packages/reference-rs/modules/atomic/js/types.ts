@@ -118,9 +118,12 @@ export interface RecipeRuntimeTable {
     css?: Record<string, unknown>
     className?: string
   }>
-  combinations: Record<string, string>
-  /** Per-breakpoint variant classes: axis → breakpoint → value → class. `base` reads `variantMap`. */
-  responsiveVariantMap: Record<string, Record<string, Record<string, string>>>
+  /** Legacy pre-composed selection → classes. New artifacts omit it; the runtime composes from base, variantMap, and compounds. */
+  combinations?: Record<string, string>
+  /** Width breakpoints with matching `@container` rules, in scale order. The responsive derivation gate. */
+  responsiveBreakpoints?: string[]
+  /** Legacy per-breakpoint map: axis → breakpoint → value → class. New artifacts omit it; the runtime derives `{bp}:{variantMap[axis][value]}`. */
+  responsiveVariantMap?: Record<string, Record<string, Record<string, string>>>
 }
 
 export interface NativeRuntimeArtifact {

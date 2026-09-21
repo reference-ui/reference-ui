@@ -29,11 +29,14 @@ const spec: AtomicCaseSpec = {
     expect(table.variantMap.variant?.outline).toBe(`${STEM}_v_outline`)
     expect(table.defaultVariants).toEqual({ variant: 'solid' })
 
-    const responsive = table.responsiveVariantMap.variant ?? {}
-    expect(Object.keys(responsive).sort()).toEqual(['2xl', 'lg', 'md', 'sm', 'xl'])
-    expect(responsive.md?.solid).toBe(`md:${STEM}_v_solid`)
-    expect(responsive.md?.outline).toBe(`md:${STEM}_v_outline`)
-    expect(responsive.base).toBeUndefined()
+    expect(table.combinations).toBeUndefined()
+    expect(table.responsiveVariantMap).toBeUndefined()
+    expect(table.responsiveBreakpoints).toEqual(['sm', 'md', 'lg', 'xl', '2xl'])
+    expect(table.responsiveBreakpoints).not.toContain('base')
+    const mdSolid = `md:${table.variantMap.variant?.solid}`
+    const mdOutline = `md:${table.variantMap.variant?.outline}`
+    expect(mdSolid).toBe(`md:${STEM}_v_solid`)
+    expect(mdOutline).toBe(`md:${STEM}_v_outline`)
 
     const recipes = layerBody(result.stylesheet, 'recipes')
     expect(recipes).toContain(PLAIN_SOLID_RULE)
@@ -50,9 +53,11 @@ const spec: AtomicCaseSpec = {
     expect(mdOutlineBlock).toContain('data-disabled')
 
     const names = layerClassNames(result.stylesheet, 'recipes')
-    for (const breakpoint of Object.keys(responsive)) {
-      for (const className of Object.values(responsive[breakpoint]!)) {
-        expect(names.has(className)).toBe(true)
+    for (const breakpoint of table.responsiveBreakpoints ?? []) {
+      for (const axis of Object.values(table.variantMap)) {
+        for (const className of Object.values(axis)) {
+          expect(names.has(`${breakpoint}:${className}`)).toBe(true)
+        }
       }
     }
 

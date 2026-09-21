@@ -37,13 +37,16 @@ pub struct RecipeCompoundRecord {
     pub class_name: String,
 }
 
-/// Runtime recipe table mapping variant combinations to compiled class strings.
+/// Runtime recipe table carrying the inputs a `recipe()` call resolves from.
 ///
-/// `responsive_variant_map` carries the per-breakpoint classes (`axis` →
-/// breakpoint → value → class) so a runtime `{ base: 'solid', md: 'outline' }`
-/// selection resolves without re-walking styles: `base` reads `variant_map`,
-/// every other breakpoint reads this map. Each class has a matching rule in
-/// `@layer recipes` wrapped in that breakpoint's `@container` query.
+/// `combinations` and `responsive_variant_map` stay fully built in memory as
+/// the canonical derivation (unit-tested), but are never serialized: both are
+/// mechanical re-derivations of `base` + `variant_map` + `compound_variants`,
+/// so the bridge and the artifacts ship the inputs only. The runtime composes
+/// plain selections from those inputs and derives each responsive class as
+/// `{breakpoint}:{variant_map[axis][value]}`, gated on
+/// `responsive_breakpoints` (the width breakpoints with matching `@container`
+/// rules in `@layer recipes`). `base` selections read `variant_map` directly.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RecipeRuntimeTable {
@@ -54,9 +57,12 @@ pub struct RecipeRuntimeTable {
     pub variant_map: IndexMap<String, IndexMap<String, String>>,
     pub default_variants: IndexMap<String, String>,
     pub compound_variants: Vec<RecipeCompoundRecord>,
+    #[serde(skip_serializing, default)]
     pub combinations: IndexMap<String, String>,
-    #[serde(default)]
+    #[serde(skip_serializing, default)]
     pub responsive_variant_map: IndexMap<String, IndexMap<String, IndexMap<String, String>>>,
+    #[serde(default)]
+    pub responsive_breakpoints: Vec<String>,
 }
 
 /// Versioned NativeRuntimeArtifact returned to host build tools and runtime loaders.

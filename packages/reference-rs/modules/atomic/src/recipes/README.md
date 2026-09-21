@@ -11,8 +11,9 @@ qualified class (`${system}__${className}__base`, `${system}__${className}_...`,
 `${system}__${className}_c_...`), plus one `{breakpoint}:`-prefixed class per
 width breakpoint for each variant value, wrapped in that breakpoint's
 `@container` query. Runtime `recipe()` (authored TypeScript)
-looks up the pre-composed combinations in `RecipeRuntimeTable` (`base`
-selections read `variantMap`, other breakpoints read `responsiveVariantMap`).
+composes `base` plus variant and compound classes from `RecipeRuntimeTable`
+(`base` selections read `variantMap`, other breakpoints derive
+`{breakpoint}:`-prefixed classes gated on `responsiveBreakpoints`).
 It does not re-walk style objects and it does not evaluate author JS at runtime.
 
 Host StyleProps on `<Button mt="2r" />` never enter these classes. They

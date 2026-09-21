@@ -56,17 +56,18 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     'quiet variant carries no hover arm',
   );
 
+  assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   registerRecipeData(data.systemName, data.runtimeData.recipes);
   const chip = recipe({ className: 'chip' });
   assert.equal(
     chip({ tone: 'loud' }),
-    table.combinations['loud'],
-    'loud resolves through its combination',
+    `${table.base} ${loud}`,
+    'loud resolves through its composed classes',
   );
   assert.equal(
     chip({ tone: 'quiet' }),
-    table.combinations['quiet'],
-    'quiet resolves through its combination',
+    `${table.base} ${quiet}`,
+    'quiet resolves through its composed classes',
   );
   assert.notEqual(chip({ tone: 'loud' }), chip({ tone: 'quiet' }), 'tones resolve distinctly');
 

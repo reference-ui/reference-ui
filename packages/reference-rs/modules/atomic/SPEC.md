@@ -709,7 +709,7 @@ compiler contract.
   Compile component recipe declarations authored via `recipe()`. Assert that each declared variant permutation compiles into a single deterministic class name emitted inside `@layer recipes`. Assert that recipe classes do not pollute `@layer utilities`.
 - [x] `ATM-RECIPE-02` `[reference]` `[seam]` —
   **Compiler must emit an authoritative variant lookup table for the runtime `recipe()` helper.**
-  Compile a recipe with multiple variants and compound variants. Assert that `CompileResult` outputs a JSON variant table mapping variant prop combinations to compiled recipe class names. Assert that the runtime helper consumes this table directly without re-evaluating styles.
+  Compile a recipe with multiple variants and compound variants. Assert that `CompileResult` outputs a JSON variant table carrying the derivation inputs (base, variant map, compounds, breakpoint list) the runtime helper composes into class names directly without re-evaluating styles; nothing ships pre-composed.
 - [x] `ATM-RECIPE-03` `[reference]` `[seam]` —
   **StyleProps authored on a recipe host component must remain atomic utilities that override recipe styles.**
   Compile a component that applies a recipe and specifies additional StyleProps (e.g. `<Button variant="primary" mt="2r" bg="red.500" />`). Assert that `mt` and `bg` are emitted as utility atoms in `@layer utilities`. Because `@layer utilities` follows `@layer recipes`, assert that atomic StyleProps win naturally by CSS cascade precedence.
@@ -724,7 +724,7 @@ compiler contract.
   Compile `recipe()` call sites with missing `className`, dynamic arguments, and duplicate recipe class names within the same system. Assert that the compiler rejects each invalid construct with descriptive error diagnostics and only admits valid explicit identities. Every refusal carries `file`/`line`/`column` at the offending call (RS-18).
 - [x] `ATM-RECIPE-07` `[reference]` `[seam]` —
   **Responsive variant values must lower to `@container`-wrapped per-breakpoint classes with runtime table entries.**
-  Compile `recipe({ className: 'buttonStyle', variants: { variant: { solid, outline } } })` where each value carries `_hover`/`_disabled` leaves. Assert each value also emits `{breakpoint}:`-prefixed classes (one per width breakpoint, after all plain rules) wrapped in that breakpoint's `@container (min-width: …)` query inside `@layer recipes`, with the hover/disabled descendants inside the query block. Assert `RecipeRuntimeTable.responsiveVariantMap` maps axis → breakpoint → value → class so a runtime `{ base: 'solid', md: 'outline' }` selection emits both classes. Never `@media screen` (D8).
+  Compile `recipe({ className: 'buttonStyle', variants: { variant: { solid, outline } } })` where each value carries `_hover`/`_disabled` leaves. Assert each value also emits `{breakpoint}:`-prefixed classes (one per width breakpoint, after all plain rules) wrapped in that breakpoint's `@container (min-width: …)` query inside `@layer recipes`, with the hover/disabled descendants inside the query block. Assert `RecipeRuntimeTable.responsiveBreakpoints` names the width breakpoints so a runtime `{ base: 'solid', md: 'outline' }` selection derives `md:`-prefixed classes from `variantMap` and emits both classes. Never `@media screen` (D8).
 
 - [x] `ATM-RECIPE-08` `[reference]` `[seam]` —
   **A missing `className` prop must resolve from a `<Name>Recipe` binding, and explicit props must win.**

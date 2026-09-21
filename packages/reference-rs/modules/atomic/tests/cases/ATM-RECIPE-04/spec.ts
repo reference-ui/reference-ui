@@ -29,8 +29,9 @@ const spec: AtomicCaseSpec = {
     expect(table?.variantMap.muted?.true).toBe('@reference-ui/lib__button_m_true')
     expect(table?.variantMap.muted?.false).toBe('@reference-ui/lib__button_m_false')
 
-    // Check combinations lookup
-    const defaultCombo = table?.combinations['md|false']
+    // Selections compose from base plus variant classes; nothing ships pre-composed.
+    expect(table?.combinations).toBeUndefined()
+    const defaultCombo = `${table?.base} ${table?.variantMap.size?.md} ${table?.variantMap.muted?.false}`
     expect(defaultCombo).toContain('@reference-ui/lib__button__base')
     expect(defaultCombo).toContain('@reference-ui/lib__button_s_md')
     expect(defaultCombo).toContain('@reference-ui/lib__button_m_false')

@@ -1,9 +1,10 @@
 // Native recipe runtime over compiled recipe tables.
 // It takes authored recipe configs and emits closed-class resolver functions.
-// Selections resolve through the registered tables while the lowering wrapper
-// keeps r sugar on the same container-query shape the compiler extracted.
-// Per-axis responsive objects resolve base through the combinations and append
-// one compiled per-breakpoint class each (ATM-RECIPE-07).
+// Selections compose base plus variant and compound classes from the
+// registered tables while the lowering wrapper keeps r sugar on the same
+// container-query shape the compiler extracted. Per-axis responsive objects
+// compose base the same way and append one derived per-breakpoint class each
+// (ATM-RECIPE-07).
 
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import type { SystemStyleObject } from '../css/css.ts'
@@ -23,11 +24,6 @@ export type RecipeProps = Record<
 
 /** Author selection with responsive objects already reduced to their base values. */
 export type PlainRecipeProps = Record<string, RecipePropValue | undefined | null>
-
-/** Compiled table plus the per-breakpoint map (absent on pre-RS-8 artifacts). */
-interface ResponsiveRecipeTable extends RecipeRuntimeTable {
-  responsiveVariantMap?: Record<string, Record<string, Record<string, string>>>
-}
 
 /** One compound rule: axis predicates plus the styles applied when all match. */
 export interface RecipeCompoundConfig {
@@ -141,16 +137,36 @@ function splitResponsiveProps(props: RecipeProps): {
   return { plain, responsive }
 }
 
+/** Per-axis inputs for one responsive class derivation. */
+interface ResponsiveDerivation {
+  values: Record<string, string> | undefined
+  allowed: Set<string>
+  legacy: Record<string, Record<string, string>> | undefined
+}
+
+function deriveResponsiveClass(
+  ctx: ResponsiveDerivation,
+  breakpoint: string,
+  value: string
+): string | undefined {
+  const derived =
+    ctx.values !== undefined && ctx.allowed.has(breakpoint) ? ctx.values[value] : undefined
+  if (derived !== undefined) return `${breakpoint}:${derived}`
+  return ctx.legacy?.[breakpoint]?.[value]
+}
+
 function resolveResponsiveClasses(
-  table: ResponsiveRecipeTable,
+  table: RecipeRuntimeTable,
   responsive: Record<string, Record<string, string>>
 ): string[] {
-  const map = table.responsiveVariantMap ?? {}
+  const allowed = new Set(table.responsiveBreakpoints ?? [])
+  const legacy = table.responsiveVariantMap ?? {}
   const classes: string[] = []
   for (const [axis, entries] of Object.entries(responsive)) {
+    const ctx: ResponsiveDerivation = { values: table.variantMap[axis], allowed, legacy: legacy[axis] }
     for (const [breakpoint, value] of Object.entries(entries)) {
       if (breakpoint === 'base') continue
-      const className = map[axis]?.[breakpoint]?.[value]
+      const className = deriveResponsiveClass(ctx, breakpoint, value)
       if (className !== undefined) classes.push(className)
     }
   }
@@ -167,9 +183,9 @@ function lookupCombination(
     if (value === undefined) return undefined
     values.push(value)
   }
-  if (values.length === 0) return table.combinations['']
+  if (values.length === 0) return table.combinations?.['']
   const key = values.length === 1 ? String(values[0]) : values.join('|')
-  return table.combinations[key]
+  return table.combinations?.[key]
 }
 
 function matchesPredicates(
@@ -231,10 +247,10 @@ function mergeRawStyles(
 /**
  * Build a resolver for one extracted recipe. Lowers r sugar across the
  * definition (same wrapper the compiler extracted through), then resolves
- * each call against the registered table: defaults fill gaps, the
- * pre-composed combination wins when the selection covers every axis,
- * responsive objects append one compiled class per breakpoint, and unknown
- * recipes resolve to nothing.
+ * each call against the registered table: defaults fill gaps, base plus
+ * variant and compound classes compose for the selection (a legacy shipped
+ * combinations map still wins on hit), responsive objects append one derived
+ * class per breakpoint, and unknown recipes resolve to nothing.
  */
 export function recipe(config: RecipeConfig): RecipeRuntimeFn {
   const lowered = lowerRecipeDefinition(config)
@@ -243,7 +259,7 @@ export function recipe(config: RecipeConfig): RecipeRuntimeFn {
     if (!active) {
       throw new Error('recipe() called before registerRecipeData: sync the project first')
     }
-    const table: ResponsiveRecipeTable | undefined =
+    const table: RecipeRuntimeTable | undefined =
       active.tables[qualifiedName(active.system, lowered.className)]
     if (!table) return ''
     const { plain, responsive } = splitResponsiveProps(props)

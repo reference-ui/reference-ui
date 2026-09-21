@@ -77,9 +77,13 @@
           "variant": "solid"
         },
         "compoundVariants": [],
-        "combinations": {
-          "solid": "lib-test-system__button__base lib-test-system__button_v_solid"
-        }
+        "responsiveBreakpoints": [
+          "sm",
+          "md",
+          "lg",
+          "xl",
+          "2xl"
+        ]
       }
     },
     "stylePropNames": [

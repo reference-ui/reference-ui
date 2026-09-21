@@ -46,11 +46,14 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.equal(table.variantMap['tone']?.['quiet'], `${STEM}_t_quiet`, 'table carries quiet');
   assert.deepEqual(table.defaultVariants, { tone: 'quiet' }, 'table carries the default');
 
+  assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
   registerRecipeData(data.systemName, data.runtimeData.recipes);
   const chip = recipe({ className: 'chip' });
-  assert.equal(chip({ tone: 'loud' }), table.combinations['loud'], 'loud resolves');
-  assert.equal(chip({ tone: 'quiet' }), table.combinations['quiet'], 'quiet resolves');
-  assert.equal(chip({}), table.combinations['quiet'], 'default selects quiet');
+  const loud = `${STEM}__base ${STEM}_t_loud`;
+  const quiet = `${STEM}__base ${STEM}_t_quiet`;
+  assert.equal(chip({ tone: 'loud' }), loud, 'loud resolves');
+  assert.equal(chip({ tone: 'quiet' }), quiet, 'quiet resolves');
+  assert.equal(chip({}), quiet, 'default selects quiet');
   assert.notEqual(chip({ tone: 'loud' }), chip({ tone: 'quiet' }), 'tones resolve distinctly');
 
   async function style(id: string): Promise<{ background: string; color: string }> {

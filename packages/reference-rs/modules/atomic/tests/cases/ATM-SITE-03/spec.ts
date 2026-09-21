@@ -31,7 +31,9 @@ const spec: AtomicCaseSpec = {
     expect(table?.base).toBe('@reference-ui/lib__badge__base')
     expect(table?.variantMap.variant?.solid).toBe('@reference-ui/lib__badge_v_solid')
     expect(table?.variantMap.variant?.outline).toBe('@reference-ui/lib__badge_v_outline')
-    const solid = table?.combinations['solid']
+    expect(table?.combinations).toBeUndefined()
+    const solidRecord = table?.compoundVariants.find(record => record.selection?.variant === 'solid')
+    const solid = `${table?.base} ${table?.variantMap.variant?.solid} ${solidRecord?.className}`
     expect(solid).toContain('@reference-ui/lib__badge_v_solid')
     expect(solid).toContain('@reference-ui/lib__badge_c_solid')
     expect(solid).toContain('@reference-ui/lib__badge__base')

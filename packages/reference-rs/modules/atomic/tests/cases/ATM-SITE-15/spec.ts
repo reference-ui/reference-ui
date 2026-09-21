@@ -18,7 +18,8 @@ const spec: AtomicCaseSpec = {
     expect(classes['px:4r']).toBe('@reference-ui/lib__px_4r')
     expect(Object.keys(classes)).toHaveLength(2)
     const badge = (result.recipes ?? []).find(r => r.className === 'site15badge')
-    expect(Object.keys(badge?.combinations ?? {}).length).toBeGreaterThan(0)
+    expect(badge).toBeTruthy()
+    expect(badge?.variantKeys.length).toBeGreaterThan(0)
     expect(result.stylesheet).toContain('@layer recipes')
   },
 }
