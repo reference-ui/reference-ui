@@ -45,9 +45,10 @@ of ad-hoc invocations will rot; a runner subcommand gets used.
 
 ## Deliverables
 
-- [ ] `pnpm agentrs flame` (samply harness, pinned procedure, output
+- [x] `pnpm agentrs flame` (samply harness, pinned procedure, output
       to evidence dir) + one enterprise flamegraph filed as the Wave 5
-      baseline.
+      baseline. (landed 2026-09-21, verified firsthand, evidence at
+      docs/evidence/flamegraph/enterprise-latest/)
 - [ ] Allocation report on the enterprise compile reproducing the R1
       findings by measurement.
 - [ ] Criterion benches for ≥5 hot functions, green in CI-adjacent
