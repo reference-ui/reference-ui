@@ -14,3 +14,9 @@ oxc_parser.workspace = true
 oxc_allocator.workspace = true
 oxc_span.workspace = true
 proptest.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "ladder"
+harness = false
+test = true

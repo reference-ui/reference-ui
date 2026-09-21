@@ -7,6 +7,7 @@
  * - Darwin QoS elevation (taskpolicy -a PRI 46)
  * - Shared CPU gate concurrency queue (/tmp/reference-ui-cpu-gate)
  * - Pure Rust tests (cargo test) & JS seam tests (Vitest)
+ * - Criterion micro-benches (cargo bench) for the flame-filed hot functions
  * - Code quality, file length limits (<365 / <500), cyclomatic complexity, and banned Clippy allows
  */
 
@@ -335,6 +336,71 @@ async function runCargoTests(args, rsDir) {
   })
 }
 
+async function runBenchCommand(args, rsDir) {
+  const cargoArgs = ['bench']
+  const knownCrates = new Set(['atomic', 'canon', 'module_graph', 'module-graph', 'base_system', 'base-system', 'system', 'typegen', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'runtime', 'reference-virtual-native'])
+
+  const crateIdx = args.indexOf('--crate')
+  let targetedCrate = null
+  if (crateIdx !== -1 && args[crateIdx + 1]) {
+    targetedCrate = args[crateIdx + 1]
+  } else {
+    const firstPos = args.find((a) => !a.startsWith('-'))
+    if (firstPos && knownCrates.has(firstPos)) {
+      targetedCrate = firstPos
+    }
+  }
+
+  const requestedCrate = targetedCrate
+  const crateAliases = {
+    napi: 'reference-virtual-native',
+    runtime: 'reference-virtual-native',
+    system: 'atomic',
+    'base-system': 'base_system',
+    'module-graph': 'module_graph',
+  }
+  if (targetedCrate && crateAliases[targetedCrate]) {
+    targetedCrate = crateAliases[targetedCrate]
+  }
+
+  if (targetedCrate) {
+    cargoArgs.push('-p', targetedCrate)
+  }
+
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === '--crate') {
+      i++
+      continue
+    }
+    if (a === '--bench') {
+      if (args[i + 1]) cargoArgs.push('--bench', args[i + 1])
+      i++
+      continue
+    }
+    if (a === targetedCrate || a === requestedCrate) continue
+    if (a === '--') {
+      cargoArgs.push(...args.slice(i))
+      break
+    }
+    if (!a.startsWith('-')) {
+      cargoArgs.push('--', ...args.slice(i).filter((x) => x !== '--'))
+      break
+    }
+  }
+
+  console.log(`\n\x1b[1;36m[agent-rs] Running benches: cargo ${cargoArgs.join(' ')}\x1b[0m\n`)
+  return withCpuGate('rs', 'agentrs bench', async () => {
+    const code = await runChild('cargo', cargoArgs, rsDir)
+    if (code === 0) {
+      console.log('\n\x1b[1;32m✔ [agent-rs] Benches PASSED!\x1b[0m\n')
+    } else {
+      console.log(`\n\x1b[1;31m✖ [agent-rs] Benches FAILED (code ${code})\x1b[0m\n`)
+    }
+    return code
+  })
+}
+
 async function runVitestTests(args, rsDir) {
   const hasUpdateGoldens = args.includes('--update-goldens')
   const nonFlagArgs = args.filter((a) => !a.startsWith('-'))
@@ -475,6 +541,7 @@ function printHelp() {
 \x1b[1mCOMMANDS:\x1b[0m
   \x1b[32mtest, all\x1b[0m                  Full 4-step dev loop: ensure-native → cargo test → vitest → quality
   \x1b[32mcargo, rust, ct\x1b[0m            Run Rust workspace unit/integration tests (cargo test)
+  \x1b[32mbench, criterion\x1b[0m           Run criterion micro-benches (cargo bench), cpu-gate aware
   \x1b[32mvitest, vt\x1b[0m                 Run seam Vitest tests against N-API and TS wrappers
   \x1b[32mquality, check, lint\x1b[0m       Code quality, file length (<365 / <500), and cyclomatic complexity
   \x1b[32mbuild, ensure-native\x1b[0m       Build or ensure native .node binary with exclusive queue lock
@@ -495,6 +562,12 @@ function printHelp() {
   \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic, --crate virtualrs)
   \x1b[33m-t <filter>\x1b[0m                Target specific test name substring
   \x1b[33m--release\x1b[0m                  Run tests in release profile
+
+\x1b[1mOPTIONS FOR 'bench':\x1b[0m
+  \x1b[33m<crate>\x1b[0m                    Target a specific crate (e.g. bench atomic, bench module-graph)
+  \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic)
+  \x1b[33m--bench <name>\x1b[0m             Run one bench target (e.g. --bench resolve)
+  \x1b[33m[filter]\x1b[0m                   Bare words pass through as the criterion filter (e.g. bench canon alias)
 
 \x1b[1mOPTIONS FOR 'flame':\x1b[0m
   \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
@@ -559,6 +632,16 @@ async function main() {
 
   if (command === 'vitest' || command === 'vt' || command === 'v') {
     const code = await runVitestTests(args.slice(1), rsDir)
+    process.exit(code)
+  }
+
+  if (command === 'bench' || command === 'benchmark' || command === 'criterion') {
+    const benchArgs = args.slice(1)
+    if (benchArgs.includes('--help') || benchArgs.includes('-h')) {
+      printHelp()
+      process.exit(0)
+    }
+    const code = await runBenchCommand(benchArgs, rsDir)
     process.exit(code)
   }
 
