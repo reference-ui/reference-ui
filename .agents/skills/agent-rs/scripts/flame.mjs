@@ -17,11 +17,10 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
-import { attachPhaseBuckets, buildFlameMeta, resolveEvidenceDir, runResummarize, writeFlameEvidence } from './flame-evidence.mjs'
+import { ANALYZE_FLAGS, ANALYZE_USAGE, parseAnalyzeArgs, runAnalyzeCommand } from './flame-analyze.mjs'
+import { FLAME_PROCEDURE, FLAME_PROCEDURE_NOTE, attachPhaseBuckets, buildFlameMeta, resolveEvidenceDir, runResummarizeCommand, writeFlameEvidence } from './flame-evidence.mjs'
 import { phasesEnvFor } from './phases.mjs'
 
-const FLAME_PROCEDURE = 'agentrs-flame/3'
-const FLAME_PROCEDURE_NOTE = 'same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)'
 const DEFAULT_SCALE = 'enterprise'
 const DEFAULT_RATE_HZ = 1000
 const WORKER_SAMPLE_MS = 10
@@ -29,6 +28,7 @@ const WORKER_SAMPLE_MS = 10
 const USAGE = [
   'usage: pnpm agentrs flame [-- scale] [--out dir] [--keep] [--rate hz] [--no-build]',
   '       pnpm agentrs flame --resummarize <srcDir> [--out dir]   (reprocess a filed bundle, no re-record)',
+  ...ANALYZE_USAGE,
   '       pnpm agentrs flame --list   (frozen bench scales; enterprise is the default)',
   'example: pnpm agentrs flame -- enterprise',
 ].join('\n')
@@ -85,11 +85,13 @@ function checkEarlyExit(options, words) {
 }
 
 export function parseFlameArgs(argv) {
-  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, rate: DEFAULT_RATE_HZ, noBuild: false, resummarize: null }
+  const options = { scale: DEFAULT_SCALE, outDir: null, keep: false, rate: DEFAULT_RATE_HZ, noBuild: false, resummarize: null, analyze: null }
   const words = argv.filter((arg) => arg !== '--')
   const early = checkEarlyExit(options, words)
   if (early) return early
   if (words.includes('--resummarize')) return parseResummarizeArgs(options, words)
+  const flag = words.find((word) => ANALYZE_FLAGS[word])
+  if (flag) return parseAnalyzeArgs(options, words, flag)
   return consumeFlameWords(options, words)
 }
 
@@ -316,20 +318,10 @@ export async function runFlameCommand(args, repoRoot, rsDir) {
     return 0
   }
   if (options.resummarize) {
-    try {
-      runResummarize({
-        srcDir: options.resummarize,
-        outDir: options.outDir,
-        repoRoot,
-        procedure: FLAME_PROCEDURE,
-        procedureNote: FLAME_PROCEDURE_NOTE,
-        command: ['pnpm', 'agentrs', 'flame', ...args],
-      })
-    } catch (err) {
-      console.error(`[agent-rs] flame resummarize failed: ${err instanceof Error ? err.message : String(err)}`)
-      return 1
-    }
-    return 0
+    return runResummarizeCommand(options, args, repoRoot)
+  }
+  if (options.analyze) {
+    return runAnalyzeCommand(options, args, repoRoot)
   }
   let samplyVersion
   try {
