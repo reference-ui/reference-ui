@@ -9,7 +9,7 @@ use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
 use super::types::parse_prop_bindings;
 use crate::analysis::model::{
-    ComponentEdge, FactoryTarget, TraceComponent, TraceFactory, TraceImport,
+    ComponentEdge, FactoryTarget, PropBindings, TraceComponent, TraceFactory, TraceImport,
 };
 use crate::analysis::util::is_component_name;
 use crate::analysis::walk::{collect_edges_from_statement, WalkContext};
@@ -230,8 +230,19 @@ pub fn component_from_function_like(
         exposes_style_props: bindings.exposes_style_props(),
         uses_style_pipeline,
         edges,
-        owned_props: bindings.owned_props.clone(),
+        owned_props: shadowed_owned_props(&bindings),
     }))
+}
+
+/// Declared-owned names that survive the forward: only props the component
+/// pulls out of the props object shadow StyleProps. Names riding the
+/// props/rest spread into the primitive keep extracting at call sites.
+fn shadowed_owned_props(bindings: &PropBindings) -> BTreeSet<String> {
+    bindings
+        .owned_props
+        .intersection(&bindings.destructured_prop_names)
+        .cloned()
+        .collect()
 }
 
 pub fn factory_target_from_expression(
