@@ -68,8 +68,12 @@ fn is_traceable_source_file(path: &Path, file_name: &str) -> bool {
         && !file_name.ends_with(".d.mts")
 }
 
-pub(super) fn format_relative_module(module_path: &Path, source_root: &Path) -> String {
-    let base = if source_root.is_file() {
+pub(super) fn format_relative_module(
+    module_path: &Path,
+    source_root: &Path,
+    source_root_is_file: bool,
+) -> String {
+    let base = if source_root_is_file {
         source_root.parent().unwrap_or(source_root)
     } else {
         source_root
