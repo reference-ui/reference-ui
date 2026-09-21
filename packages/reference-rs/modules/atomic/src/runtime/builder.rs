@@ -140,7 +140,7 @@ impl<'a> PlanBuilder<'a> {
                 continue;
             }
 
-            let declarations = self.resolve_entry(decl);
+            let declarations = self.resolve_entry(decl, false);
             if !declarations.is_empty() {
                 plans.push(RuntimeStylePlan {
                     system: self.system.to_string(),
@@ -156,13 +156,68 @@ impl<'a> PlanBuilder<'a> {
         plans
     }
 
-    fn resolve_entry(&mut self, decl: &AuthoredDeclaration) -> Vec<RuntimeDeclaration> {
+    /// Build full plans plus the carried canonical keys, deduped in plan order.
+    /// The keys are the same dedupe strings `build` computes, so they equal
+    /// the render-side emitted set without a second serialization (pinned).
+    pub fn build_with_keys(
+        &mut self,
+        decls: &[AuthoredDeclaration],
+    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+        self.build_keyed(decls, false)
+    }
+
+    /// Build diet plans plus the carried canonical keys for the `!proof` path.
+    /// Resolve, the emptiness gate, and the atom-set inserts run exactly as
+    /// in `build`; only the per-atom slot/class strings are replaced by one
+    /// zero-alloc placeholder per plan (insert-skip died on the LEAF-11 hole).
+    pub fn build_diet(
+        &mut self,
+        decls: &[AuthoredDeclaration],
+    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+        self.build_keyed(decls, true)
+    }
+
+    /// Keyed build shared by the full and diet paths. Keys ride alongside
+    /// pushed plans only, so `keys.len() == plans.len()` in plan order.
+    fn build_keyed(
+        &mut self,
+        decls: &[AuthoredDeclaration],
+        diet: bool,
+    ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+        let mut plans = Vec::new();
+        let mut keys = Vec::new();
+        let mut seen_keys = HashSet::new();
+
+        for decl in decls {
+            let lookup_key = decl.lookup_key(self.system);
+            if !seen_keys.insert(lookup_key.clone()) {
+                continue;
+            }
+
+            let declarations = self.resolve_entry(decl, diet);
+            if !declarations.is_empty() {
+                keys.push(lookup_key);
+                plans.push(RuntimeStylePlan {
+                    system: self.system.to_string(),
+                    when: decl.when.clone(),
+                    prop: decl.prop.clone(),
+                    value: decl.value.clone(),
+                    important: decl.important,
+                    declarations,
+                });
+            }
+        }
+
+        (plans, keys)
+    }
+
+    fn resolve_entry(&mut self, decl: &AuthoredDeclaration, diet: bool) -> Vec<RuntimeDeclaration> {
         if let Value::Array(arr) = &decl.value {
-            return self.resolve_array(decl, arr);
+            return self.resolve_array(decl, arr, diet);
         }
         if let Value::Object(map) = &decl.value {
             if !map.contains_key("$r") && !map.contains_key("$token") {
-                return self.resolve_object(decl, map);
+                return self.resolve_object(decl, map, diet);
             }
         }
 
@@ -184,6 +239,9 @@ impl<'a> PlanBuilder<'a> {
 
         let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
 
+        if diet {
+            return diet_declarations(insert_diet_atoms(&mut *self.atom_set, atoms));
+        }
         let mut out = Vec::with_capacity(atoms.len());
         for atom in atoms {
             let slot = derive_slot(&atom.prop, &decl.when, None);
@@ -198,8 +256,10 @@ impl<'a> PlanBuilder<'a> {
         &mut self,
         decl: &AuthoredDeclaration,
         arr: &[Value],
+        diet: bool,
     ) -> Vec<RuntimeDeclaration> {
         let mut out = Vec::new();
+        let mut diet_any = false;
         let bp_scale = self.base_system.breakpoints();
 
         for (idx, elem) in arr.iter().enumerate() {
@@ -226,12 +286,19 @@ impl<'a> PlanBuilder<'a> {
 
             let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
 
+            if diet {
+                diet_any |= insert_diet_atoms(&mut *self.atom_set, atoms);
+                continue;
+            }
             for atom in atoms {
                 let slot = derive_slot(&atom.prop, &decl.when, Some(bp));
                 let class_name = class_name_with_system(&atom, self.system);
                 self.atom_set.insert(atom);
                 out.push(RuntimeDeclaration { slot, class_name });
             }
+        }
+        if diet {
+            return diet_declarations(diet_any);
         }
         out
     }
@@ -240,8 +307,10 @@ impl<'a> PlanBuilder<'a> {
         &mut self,
         decl: &AuthoredDeclaration,
         map: &serde_json::Map<String, Value>,
+        diet: bool,
     ) -> Vec<RuntimeDeclaration> {
         let mut out = Vec::new();
+        let mut diet_any = false;
         let bp_scale = self.base_system.breakpoints();
 
         for (key, elem) in map {
@@ -264,23 +333,71 @@ impl<'a> PlanBuilder<'a> {
                 .with_important(decl.important);
 
             let atoms = resolve_with_unique_diagnostics(&want, self.base_system, self.diagnostics);
+
+            if diet {
+                diet_any |= insert_diet_atoms(&mut *self.atom_set, atoms);
+                continue;
+            }
             let responsive = key == "base" || bp_scale.names().iter().any(|n| n == key);
 
             for atom in atoms {
-                // Breakpoints join the `@` responsive family; other conditions
-                // read as nested `when` parts so `_hover` keys merge with
-                // `_hover: { … }` blocks instead of bare props.
-                let slot = if responsive {
-                    derive_slot(&atom.prop, &decl.when, Some(key))
-                } else {
-                    derive_slot(&atom.prop, &step_when, None)
-                };
+                let slot = object_slot(
+                    &atom.prop,
+                    &decl.when,
+                    &step_when,
+                    responsive.then_some(key.as_str()),
+                );
                 let class_name = class_name_with_system(&atom, self.system);
                 self.atom_set.insert(atom);
                 out.push(RuntimeDeclaration { slot, class_name });
             }
         }
+        if diet {
+            return diet_declarations(diet_any);
+        }
         out
+    }
+}
+
+/// Object slot: a breakpoint key joins the `@` responsive family; any other
+/// key reads as nested `when` parts so `_hover` keys merge with `_hover:
+/// { … }` blocks instead of bare props.
+fn object_slot(
+    prop: &str,
+    decl_when: &[String],
+    step_when: &[String],
+    bp: Option<&str>,
+) -> String {
+    if let Some(bp) = bp {
+        derive_slot(prop, decl_when, Some(bp))
+    } else {
+        derive_slot(prop, step_when, None)
+    }
+}
+
+/// Insert diet-path atoms, reporting whether any resolved. Slot/class
+/// materialization stays skipped; the inserts are load-bearing (the subset
+/// proof holed on leaf-`!` responsive objects, ATM-LEAF-11, where the plan
+/// pass resolves object-level important atoms no pass-1 want produces).
+fn insert_diet_atoms(atom_set: &mut AtomSet, atoms: Vec<crate::atom::Atom>) -> bool {
+    let nonempty = !atoms.is_empty();
+    for atom in atoms {
+        atom_set.insert(atom);
+    }
+    nonempty
+}
+
+/// Diet verdicts: one zero-alloc placeholder iff any atom resolved, else empty.
+/// Length is unread on `!proof` (slim drops plans, render reads carried keys),
+/// so minimal length keeps the pushed ⟺ nonempty invariant only.
+fn diet_declarations(nonempty: bool) -> Vec<RuntimeDeclaration> {
+    if nonempty {
+        vec![RuntimeDeclaration {
+            slot: String::new(),
+            class_name: String::new(),
+        }]
+    } else {
+        Vec::new()
     }
 }
 
