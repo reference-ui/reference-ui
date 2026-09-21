@@ -200,6 +200,18 @@ fn string_literal_export_names_read_through() {
     );
 }
 
+#[test]
+fn hop_specifiers_borrows_named_hops_only() {
+    let record = common::collect(
+        "export const x = 1;\nexport { a } from './a';\nexport { b as c } from './b';\nexport * from './s';\nexport { x as y };\nimport { i } from './i';",
+    );
+    let mut hops = record.exports.hop_specifiers();
+    hops.sort();
+    assert_eq!(hops, ["./a", "./b"]);
+    let plain = common::collect("export const x = 1;\nimport { i } from './i';");
+    assert!(plain.exports.hop_specifiers().is_empty());
+}
+
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(128))]
 

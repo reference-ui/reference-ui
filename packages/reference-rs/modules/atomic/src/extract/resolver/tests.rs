@@ -219,6 +219,30 @@ fn mutated_origin_names_its_own_write() {
 }
 
 #[test]
+fn unimported_dead_file_leaves_folds_identical() {
+    // The skip path end to end: the dead exporter unstages (no edges, no
+    // importers) while the live chain folds through staged files.
+    let res = compile_files(&[
+        (
+            "/v/src/dead.ts",
+            "export const FACTOR_1 = 8\nexport function combine1(left: number, right: number): number {\n  return (left + right) * FACTOR_1\n}",
+        ),
+        ("/v/src/base.ts", "export const base = { color: 'red' }"),
+        (
+            "/v/src/tokens.ts",
+            "import { base } from './base'\nexport const button = { ...base, padding: '4px' }",
+        ),
+        (
+            "/v/src/app.ts",
+            "import { css } from '@reference-ui/react'\nimport { button } from './tokens'\nexport const x = css(button)",
+        ),
+    ]);
+    assert!(has_want(&res, "color", "red"));
+    assert!(has_want(&res, "padding", "4px"));
+    assert!(messages_for(&res, crate::DiagnosticCode::UnfoldableSpread).is_empty());
+}
+
+#[test]
 fn default_and_namespace_edges_refuse_values() {
     let res = compile_files_logs(&[
         (

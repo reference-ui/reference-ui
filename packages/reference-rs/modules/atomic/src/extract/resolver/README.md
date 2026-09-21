@@ -7,10 +7,12 @@ and a same-named write in another file never poisons an import that
 resolves to an unmutated export.
 
 The shared crate owns the ladder, the module records, and the origin walk;
-this layer owns values only. Records and literal bags stage eagerly from
-the compile's single parse; an origin file's scope table refines on demand
-when something first imports it, baking against its own resolved imports
-instead of the merged bag. Nested import spreads merge origin objects
+this layer owns values only. Records stage for the census, but literal bags
+and loader entries stage only for files that carry outgoing edges or that
+edges reach; unreached files unstage, and the loader's miss path serves them
+bit-identically on the rare reach. An origin file's scope table refines on
+demand when something first imports it, baking against its own resolved
+imports instead of the merged bag. Nested import spreads merge origin objects
 transitively, helper captures resolve through the graph, and refused
 spreads record residue markers that the importing file's use sites
 diagnose — so no dropped spread is ever silent.
