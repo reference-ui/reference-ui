@@ -7,7 +7,7 @@
 //! never fails its siblings. The root-based wrappers keep the historical
 //! disk path for the N-API names seam and the round-trip canaries.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use crate::resolver::{
@@ -140,11 +140,13 @@ pub fn trace_style_bindings_with_hint(
 
     let surface = StyleSurface::from_declaration_root(&resolved_decl_root)?;
     let entries = discover_source_files(&normalized_source)?;
+    let staged = HashMap::new();
     let outcome = trace_style_bindings_with_surface(
         &entries,
         &normalized_source,
         &resolved_decl_root,
         &surface,
+        &staged,
     );
     // The names seam has no diagnostics channel; per-file skips stay silent
     // here by shape. compile() is the diagnosed path (ATM-SITE-57).
@@ -154,17 +156,20 @@ pub fn trace_style_bindings_with_hint(
 /// Trace explicit entries against a prebuilt surface. Entries that fail to
 /// parse yield one diagnostic each and contribute no hosts; edge targets
 /// that fail to parse are recorded by the walker; siblings still trace.
-/// `package_root` anchors import resolution.
+/// `package_root` anchors import resolution. `staged` carries the caller's
+/// file bytes by entry path; absent paths read from disk.
 pub fn trace_style_bindings_with_surface(
     entries: &[PathBuf],
     source_root: &Path,
     package_root: &Path,
     surface: &StyleSurface,
+    staged: &HashMap<PathBuf, &str>,
 ) -> TraceOutcome {
     SurfaceTraceSession {
         source_root,
         package_root,
         surface,
+        staged,
     }
     .trace(entries)
 }
@@ -174,6 +179,7 @@ struct SurfaceTraceSession<'a> {
     source_root: &'a Path,
     package_root: &'a Path,
     surface: &'a StyleSurface,
+    staged: &'a HashMap<PathBuf, &'a str>,
 }
 
 impl SurfaceTraceSession<'_> {
@@ -202,7 +208,7 @@ impl SurfaceTraceSession<'_> {
     ) -> BTreeMap<PathBuf, TraceModule> {
         let mut modules = BTreeMap::new();
         for entry in entries {
-            match parse_trace_module(entry, self.package_root, self.surface) {
+            match parse_trace_module(entry, self.package_root, self.surface, self.staged) {
                 Ok(module) => {
                     modules.insert(entry.clone(), module);
                 }
@@ -224,6 +230,7 @@ impl SurfaceTraceSession<'_> {
             modules,
             self.surface.clone(),
             self.package_root.to_path_buf(),
+            self.staged,
         );
         // Resolution is infallible in practice; a residual walker error
         // becomes one diagnostic rather than failing resolved siblings.

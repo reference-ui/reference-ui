@@ -9,7 +9,7 @@ pub mod types;
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
@@ -56,10 +56,9 @@ pub(super) fn parse_trace_module(
     path: &Path,
     workspace_root: &Path,
     surface: &StyleSurface,
+    staged: &HashMap<PathBuf, &str>,
 ) -> Result<TraceModule, StyleTraceError> {
-    let source = fs::read_to_string(path).map_err(|error| {
-        StyleTraceError::new(format!("failed to read {}: {error}", path.display()))
-    })?;
+    let source = module_source(path, staged)?;
 
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::tsx());
@@ -100,6 +99,20 @@ pub(super) fn parse_trace_module(
         exports: state.exports,
         export_all_sources: state.export_all_sources,
     })
+}
+
+/// One module's bytes: the staged compile content when present, else a
+/// disk read for edge targets beyond the entries.
+fn module_source<'a>(
+    path: &Path,
+    staged: &'a HashMap<PathBuf, &'a str>,
+) -> Result<std::borrow::Cow<'a, str>, StyleTraceError> {
+    if let Some(content) = staged.get(path) {
+        return Ok(std::borrow::Cow::Borrowed(content));
+    }
+    fs::read_to_string(path)
+        .map(std::borrow::Cow::Owned)
+        .map_err(|error| StyleTraceError::new(format!("failed to read {}: {error}", path.display())))
 }
 
 fn collect_imports(

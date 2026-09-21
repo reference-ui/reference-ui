@@ -4,7 +4,8 @@
 //! plus a hand-built surface keep the test hermetic: no fixture tree,
 //! no declaration root.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::path::PathBuf;
 
 use crate::analysis::{trace_style_bindings_with_surface, StyleSurface};
 
@@ -46,7 +47,8 @@ fn trace_scratch(
         scratch.write(rel, content);
     }
     let entries = vec![scratch.root().join(entry)];
-    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), surface)
+    let staged = std::collections::HashMap::new();
+    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), surface, &staged)
 }
 
 #[test]
@@ -194,4 +196,35 @@ fn input_seeds_union_with_traced_owned() {
             .unwrap_or_default(),
         BTreeSet::from(["size".to_string(), "variant".to_string()])
     );
+}
+
+#[test]
+fn staged_content_matches_disk_trace() {
+    let surface = test_surface();
+    let files = [("types.ts", TYPES_TS), ("Button.tsx", BUTTON_TSX)];
+    let scratch = workspace_scratch_dir("owned-props-staged");
+    for (rel, content) in files {
+        scratch.write(rel, content);
+    }
+    let entries = vec![scratch.root().join("Button.tsx")];
+    let empty = HashMap::new();
+    let from_disk = trace_style_bindings_with_surface(
+        &entries,
+        scratch.root(),
+        scratch.root(),
+        &surface,
+        &empty,
+    );
+    let staged: HashMap<PathBuf, &str> = files
+        .iter()
+        .map(|(rel, content)| (scratch.root().join(rel), *content))
+        .collect();
+    let from_staged = trace_style_bindings_with_surface(
+        &entries,
+        scratch.root(),
+        scratch.root(),
+        &surface,
+        &staged,
+    );
+    assert_eq!(from_disk, from_staged);
 }

@@ -19,14 +19,27 @@ function toArray(value?: string | string[]): string[] {
   return Array.isArray(value) ? value : [value]
 }
 
-function createImportPatterns(importFrom?: string | string[]): RegExp[] {
-  return toArray(importFrom).map((moduleId) =>
-    new RegExp(`\\bfrom\\s*['"]${escapeRegex(moduleId)}['"]|\\bimport\\s*['"]${escapeRegex(moduleId)}['"]`, 'm')
-  )
+interface DiscoveryPattern {
+  pattern: RegExp
+  /** Literal bytes every match contains; the includes pre-gate. */
+  needle: string
 }
 
-function createFunctionPatterns(functionNames?: string[]): RegExp[] {
-  return (functionNames ?? []).map((name) => new RegExp(`\\b${name}\\s*\\(`))
+function createImportPatterns(importFrom?: string | string[]): DiscoveryPattern[] {
+  return toArray(importFrom).map((moduleId) => ({
+    pattern: new RegExp(
+      `\\bfrom\\s*['"]${escapeRegex(moduleId)}['"]|\\bimport\\s*['"]${escapeRegex(moduleId)}['"]`,
+      'm',
+    ),
+    needle: moduleId,
+  }))
+}
+
+function createFunctionPatterns(functionNames?: string[]): DiscoveryPattern[] {
+  return (functionNames ?? []).map((name) => ({
+    pattern: new RegExp(`\\b${name}\\s*\\(`),
+    needle: name,
+  }))
 }
 
 function readFileOrSkip(file: string): string | null {
@@ -37,8 +50,10 @@ function readFileOrSkip(file: string): string | null {
   }
 }
 
-function matchesAnyPattern(content: string, patterns: RegExp[]): boolean {
-  return patterns.some((pattern) => pattern.test(content))
+function matchesAnyPattern(content: string, patterns: DiscoveryPattern[]): boolean {
+  // A regex match implies the needle bytes, so needle-absent files skip
+  // the regex with identical selection.
+  return patterns.some(({ pattern, needle }) => content.includes(needle) && pattern.test(content))
 }
 
 /**

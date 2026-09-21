@@ -63,11 +63,13 @@ impl HarvestPool {
 
 /// Collect the harvest pool over every successfully parsed compile input.
 /// Panicked programs have no AST and contribute nothing, exactly as the
-/// site walk skips them.
-pub fn collect_pool(parsed: &[ParserReturn<'_>]) -> HarvestPool {
+/// site walk skips them. Masked files hold no string delimiters, so their
+/// walk would visit zero literals; skipping merges the identity element.
+pub fn collect_pool(parsed: &[ParserReturn<'_>], skip: &[bool]) -> HarvestPool {
+    debug_assert_eq!(parsed.len(), skip.len());
     let mut pool = HarvestPool::default();
-    for ret in parsed.iter() {
-        if ret.panicked {
+    for (ret, skip_file) in parsed.iter().zip(skip.iter()) {
+        if ret.panicked || *skip_file {
             continue;
         }
         pool.merge(pool_for_program(&ret.program));

@@ -5,13 +5,12 @@
 
 use std::path::PathBuf;
 
-use crate::CompileRequest;
-
 /// Include-scoped entries that exist on disk, in extraction order.
 /// Virtual-only sources carry no import graph and are skipped silently.
-pub(crate) fn entry_paths(request: &CompileRequest) -> Vec<PathBuf> {
-    crate::sources::collect(request)
-        .into_iter()
+/// Takes the compile's collected sources: no second scan, no second read.
+pub(crate) fn entry_paths(sources: &[(String, String)]) -> Vec<PathBuf> {
+    sources
+        .iter()
         .map(|(path, _)| PathBuf::from(path))
         // Trace walks the disk import graph, so virtual-only sources skip here, silently.
         .filter(|path| path.is_file())

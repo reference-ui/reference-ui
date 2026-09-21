@@ -60,86 +60,149 @@ struct ParseSession<'a> {
     session: &'a mut diagnostics::DiagnosticsSession,
 }
 
+/// Mutable sinks the parse phase fills; assembly consumes them after the
+/// allocators, programs, constants, and graphs drop at phase end.
+struct CompileSinks<'a> {
+    wants: &'a mut Vec<Want>,
+    recipes: &'a mut Vec<recipes::Recipe>,
+    diagnostics: &'a mut Vec<Diagnostic>,
+    authored: &'a mut Vec<runtime::AuthoredDeclaration>,
+    sinks: &'a mut Vec<extract::harvest::Sink>,
+    session: &'a mut diagnostics::DiagnosticsSession,
+}
+
 /// Compile authored StyleProps into an atomic stylesheet and runtime lookup map.
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let sources = sources::collect(request);
-    // One parse per source: allocators and programs live for the whole
-    // compile, so constants, the value graph, and extraction share them.
-    let allocators: Vec<Allocator> = sources.iter().map(|_| Allocator::default()).collect();
-    let parsed: Vec<_> = sources
-        .iter()
-        .zip(allocators.iter())
-        .map(|((path, content), allocator)| parse_source(path, content, allocator))
-        .collect();
+    let system = &request.base_system;
     let mut wants = Vec::new();
     let mut extracted_recipes = Vec::new();
     let mut diagnostics = Vec::new();
     let mut authored = Vec::new();
     let mut harvest_sinks = Vec::new();
-    let project_constants = collect_project_constants(&sources, &parsed);
-    let mut graph = extract::resolver::ValueGraph::new(&sources, &parsed, &project_constants);
-    let identity = extract::identity::IdentityGraph::new(&sources);
     // One compile-long diagnostics session (S3): analysis reports first,
     // then producers; proof and the S5 partition render from it at the end.
     let mut diag_session = diagnostics::DiagnosticsSession::new();
-    let (resolved_hosts, host_diagnostics) = hosts::resolve(request, &mut diag_session);
-    let traced_jsx = resolved_hosts.hosts();
-    diagnostics.extend(host_diagnostics);
-    // Independent diagnostics analysis over the borrowed parse (S2).
-    let parse = diagnostics::analysis::CompileParse { sources: &sources, parsed: &parsed };
-    let analysis = diagnostics::analysis::AnalysisInput::for_compile(
-        &parse,
-        &resolved_hosts,
-        &project_constants,
-        &request.base_system.name,
-    );
-    report_analysis_expectations(&analysis, &mut diag_session);
-    report_parse_errors(&sources, &parsed, &mut diagnostics);
-    let system = &request.base_system;
-
-    {
-        let mut session = ParseSession {
-            constants: &project_constants,
-            resolver: &mut graph,
-            identity,
-            breakpoints: system.breakpoints(),
-            traced_jsx: &traced_jsx,
-            owned_props: &resolved_hosts.owned_props,
-            wants: &mut wants,
-            recipes: &mut extracted_recipes,
-            diagnostics: &mut diagnostics,
-            authored: &mut authored,
-            sinks: &mut harvest_sinks,
-            session: &mut diag_session,
-        };
-        extract_all_sources(&mut session, &sources, &parsed);
-    }
-
-    // Harvest rides the same parse: the pool crosses the refused sinks into
-    // the wants and authored declarations the site walk filled.
-    let pool = extract::harvest::collect_pool(&parsed);
-    extract::harvest::mint(extract::harvest::MintCtx {
-        pool: &pool,
-        sinks: &harvest_sinks,
-        system,
+    // Parse phase: allocators, programs, constants, graphs, and the
+    // analysis input borrow the sources and die inside. Only the filled
+    // sinks plus the resolved hosts and the catalog index cross into
+    // assembly, so each peak holds one phase at a time.
+    let sinks = CompileSinks {
         wants: &mut wants,
-        authored: &mut authored,
+        recipes: &mut extracted_recipes,
         diagnostics: &mut diagnostics,
-        sink: &mut diag_session,
-    });
+        authored: &mut authored,
+        sinks: &mut harvest_sinks,
+        session: &mut diag_session,
+    };
+    let (unpanicked, resolved_hosts) = run_parse_phase(request, &sources, sinks);
 
     let mut assembly = assembly::AssembleCtx {
         wants,
         extracted_recipes,
         diagnostics,
         authored,
-        // Cloned: the partition catalog below shares the hosts borrow.
-        traced: resolved_hosts.traced.clone(),
+        traced: resolved_hosts.traced,
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);
-    partition_channels(&mut result, diag_session.facts(), &analysis.sources, request.wants_compiler_logs());
+    // The partition catalog is the unpanicked sources in input order: exactly
+    // the entries analysis held, rebuilt from the retained texts and index.
+    let catalog: Vec<(&str, &str)> = unpanicked
+        .iter()
+        .map(|&i| (sources[i].0.as_str(), sources[i].1.as_str()))
+        .collect();
+    partition_channels(
+        &mut result,
+        diag_session.facts(),
+        catalog,
+        request.wants_compiler_logs(),
+    );
     Ok(result)
+}
+
+/// Parse, analyze, extract, and harvest one compile into the sinks.
+/// Returns the unpanicked source index in input order (the partition
+/// catalog) plus the resolved hosts assembly names as traced.
+fn run_parse_phase(
+    request: &CompileRequest,
+    sources: &[(String, String)],
+    sinks: CompileSinks<'_>,
+) -> (Vec<usize>, hosts::ResolvedHosts) {
+    let CompileSinks {
+        wants,
+        recipes,
+        diagnostics,
+        authored,
+        sinks,
+        session,
+    } = sinks;
+    // One parse per source: allocators and programs live for this phase,
+    // so constants, the value graph, and extraction share them.
+    let allocators: Vec<Allocator> = sources.iter().map(|_| Allocator::default()).collect();
+    let parsed: Vec<_> = sources
+        .iter()
+        .zip(allocators.iter())
+        .map(|((path, content), allocator)| parse_source(path, content, allocator))
+        .collect();
+    let unpanicked = unpanicked_index(&parsed);
+    let project_constants = collect_project_constants(sources, &parsed);
+    let mut graph = extract::resolver::ValueGraph::new(sources, &parsed, &project_constants);
+    let identity = extract::identity::IdentityGraph::new(sources);
+    let (hosts, host_diagnostics) = hosts::resolve(request, sources, session);
+    let traced_jsx = hosts.hosts();
+    diagnostics.extend(host_diagnostics);
+    // Independent diagnostics analysis over the borrowed parse (S2).
+    let parse = diagnostics::analysis::CompileParse {
+        sources,
+        parsed: &parsed,
+    };
+    let analysis = diagnostics::analysis::AnalysisInput::for_compile(
+        &parse,
+        &hosts,
+        &project_constants,
+        &request.base_system.name,
+    );
+    report_analysis_expectations(&analysis, session);
+    report_parse_errors(sources, &parsed, diagnostics);
+    let system = &request.base_system;
+
+    {
+        let mut extract_session = ParseSession {
+            constants: &project_constants,
+            resolver: &mut graph,
+            identity,
+            breakpoints: system.breakpoints(),
+            traced_jsx: &traced_jsx,
+            owned_props: &hosts.owned_props,
+            wants,
+            recipes,
+            diagnostics,
+            authored,
+            sinks,
+            session,
+        };
+        extract_all_sources(&mut extract_session, sources, &parsed);
+    }
+
+    // Harvest rides the same parse: the pool crosses the refused sinks into
+    // the wants and authored declarations the site walk filled. Quote-free
+    // files hold no literals, so their pool walk skips by mask.
+    let skip_harvest: Vec<bool> = sources
+        .iter()
+        .map(|(_, content)| string_skip(content))
+        .collect();
+    let pool = extract::harvest::collect_pool(&parsed, &skip_harvest);
+    extract::harvest::mint(extract::harvest::MintCtx {
+        pool: &pool,
+        sinks,
+        system,
+        wants,
+        authored,
+        diagnostics,
+        sink: session,
+    });
+    (unpanicked, hosts)
 }
 
 /// Slice 5 end-of-compile channel partition. Proof already borrowed the
@@ -149,13 +212,9 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
 fn partition_channels(
     result: &mut CompileResult,
     facts: &[diagnostics::DiagnosticFact],
-    analyzed: &[diagnostics::analysis::AnalyzedSource<'_>],
+    catalog_sources: Vec<(&str, &str)>,
     render_compiler: bool,
 ) {
-    let catalog_sources = analyzed
-        .iter()
-        .map(|source| (source.path, source.content))
-        .collect();
     let catalog = diagnostics::SourceCatalog::new(catalog_sources);
     let channels = diagnostics::DiagnosticChannels::partition(
         facts,
@@ -172,16 +231,46 @@ fn partition_channels(
 }
 
 /// Extract every unpanicked source through the shared session.
+/// Styling-free files skip the scope, extract, and per-file resolve walks:
+/// with no import, css/recipe, or JSX bytes they hold no site.
 fn extract_all_sources(
     session: &mut ParseSession<'_>,
     sources: &[(String, String)],
     parsed: &[oxc_parser::ParserReturn<'_>],
 ) {
     for ((path, content), ret) in sources.iter().zip(parsed.iter()) {
-        if !ret.panicked {
+        if !ret.panicked && !styling_skip(content) {
             extract_parsed_program(session, path, content, &ret.program);
         }
     }
+}
+
+/// True when a file's bytes cannot feed the styling walks (scope, extract,
+/// diagnostics analysis): live css/recipe bindings need an import or the
+/// reserved alias, member forms need their prop bytes, and every JSX path
+/// needs `<`. Conservative: any needle present runs the full walks.
+pub(crate) fn styling_skip(content: &str) -> bool {
+    !content.contains("import")
+        && !content.contains("css")
+        && !content.contains("recipe")
+        && !content.contains('<')
+}
+
+/// True when a file's bytes hold no string literal for the harvest pool:
+/// every StringLiteral needs a quote, every TemplateLiteral a backtick.
+pub(crate) fn string_skip(content: &str) -> bool {
+    !content.contains('\'') && !content.contains('"') && !content.contains('`')
+}
+
+/// Source indexes that parsed, in input order: the partition catalog and
+/// the analysis entry order agree on exactly this sequence.
+fn unpanicked_index(parsed: &[oxc_parser::ParserReturn<'_>]) -> Vec<usize> {
+    parsed
+        .iter()
+        .enumerate()
+        .filter(|(_, ret)| !ret.panicked)
+        .map(|(index, _)| index)
+        .collect()
 }
 
 /// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),

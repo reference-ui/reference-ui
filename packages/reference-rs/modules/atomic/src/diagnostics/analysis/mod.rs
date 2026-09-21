@@ -108,6 +108,11 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
     let mut facts = Vec::new();
     for (index, source) in input.sources.iter().enumerate() {
         let source_id = SourceId(index as u32);
+        // Entries keep their slots (SourceId is positional): only the per-file
+        // walks skip, never the vec. A styling-free file predicts no facts.
+        if crate::styling_skip(source.content) {
+            continue;
+        }
         facts.extend(css::expectations(&ctx, source_id, source));
         facts.extend(jsx::expectations(&ctx, source_id, source));
     }
@@ -225,16 +230,12 @@ mod tests {
     #[test]
     fn sources_keep_input_order_as_source_ids() {
         let allocator = oxc_allocator::Allocator::default();
-        let first = parse_for_test(
-            &allocator,
-            "import { css } from '@reference-ui/react'; css({ color: 'red' })",
-        );
-        let second = parse_for_test(
-            &allocator,
-            "import { css } from '@reference-ui/react'; css({ color: 'blue' })",
-        );
+        let first_src = "import { css } from '@reference-ui/react'; css({ color: 'red' })";
+        let second_src = "import { css } from '@reference-ui/react'; css({ color: 'blue' })";
+        let first = parse_for_test(&allocator, first_src);
+        let second = parse_for_test(&allocator, second_src);
         let constants =
-            crate::extract::constants::collect_local_constants(&first, "a.ts", Some("a"));
+            crate::extract::constants::collect_local_constants(&first, "a.ts", Some(first_src));
         let hosts = ResolvedHosts {
             traced: Vec::new(),
             configured: Vec::new(),
@@ -244,12 +245,12 @@ mod tests {
             sources: vec![
                 AnalyzedSource {
                     path: "a.ts",
-                    content: "a",
+                    content: first_src,
                     program: &first,
                 },
                 AnalyzedSource {
                     path: "b.ts",
-                    content: "b",
+                    content: second_src,
                     program: &second,
                 },
             ],
