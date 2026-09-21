@@ -252,6 +252,18 @@ reopen it.
   uncommitted + untouched — HQ to ratify/revert). Numbers
   above are firsthand quiet-box medians.
 
+## HQ amendment (morning, Wave 3 rendezvous in flight)
+
+- HQ: RSS and bundle ARE home. From here: speed (sync wall)
+  is the frontier; RSS/bundle are held "more or less the
+  same" — guardrails, not targets. Standing orders updated:
+  (1) lane A's +25~45MB scored-RSS flag gets a quiet-box
+  firsthand verdict before landing — a real regression of
+  that size fails the merge under the new rule; GC-noise
+  (spike-proven ±) does not block; (2) Wave 4 recon briefs
+  sync-only lanes with RSS/bundle defended (no-growth);
+  (3) rendezvous revert rule unchanged, now HQ-backed.
+
 ## Wave 3 — recon COMPLETE, perf wave dispatched
 
 - Fresh oracle crew filed `fasthull-recon-3.md` (5 avenues +
