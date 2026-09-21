@@ -173,3 +173,26 @@ reopen it.
   All numbers above are firsthand main-line medians recorded
   here instead. Deepsee (`benchmark/deepsee/`, one command)
   is now the standing burndown tool for W2 recon.
+
+## Wave 2 — recon COMPLETE, perf wave dispatched
+
+- Fresh oracle crew filed `fasthull-recon-2.md` (5 avenues) +
+  perf-log entry, zero product edits. Headline: css gap fully
+  explained in-bounds (B1 observed-use gating + dead shake →
+  ~2.5-2.7 MiB, ≈ Panda); no architectural-copy morning
+  question. Post-W1 burndown firsthand: assembly 612ms
+  (fattest native phase), publish 242ms, slim codec ~390ms
+  (self-shrinks under B1), 511 MiB arena-physics floor stands.
+  Killed/deferred with floor bounds: utilities 2.18 MiB
+  (deduped floor), prepare 345ms (parallelism-only), codec
+  (ship-one-sheet OOB), constants/ValueGraph gating (needs
+  soundness ruling — W3/spike). Morning Q4 (deepsee waitReady
+  hang) attached to lane c as a fenced ride-along.
+- Wave cut from `59e6836dd`, 4 trees/crews: (a) observed
+  recipe emission B1 (architect rules strict-vs-closed +
+  fixture call-sites BEFORE impl — determinative 3.4 vs
+  11.3 MiB); (b) dead product B3→B5 (fence-proof first,
+  then reshape); (c) publish once B2 (+ deepsee wart
+  ride-along); (d) trace gate B4 (fully disjoint).
+  Rendezvous order: d → c → b → a. Churn: a + b run;
+  c/d skip only with architect rationale.
