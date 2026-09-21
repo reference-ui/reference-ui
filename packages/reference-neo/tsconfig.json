@@ -20,5 +20,5 @@
       "@reference-ui/system": ["./src/author/system-surface.d.ts"]
     }
   },
-  "include": ["src", "tests", "tools", "playground", "bin"]
+  "include": ["src", "tests", "tools", "playground", "bin", "benchmark"]
 }
