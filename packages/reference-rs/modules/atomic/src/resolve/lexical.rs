@@ -192,12 +192,17 @@ pub fn ascii_lower(text: &str) -> String {
 pub fn sanitize_value(val: &str) -> String {
     let mut out = String::with_capacity(val.len());
     for ch in val.chars() {
-        match ch {
-            ' ' | '\t' | '\n' => out.push('_'),
-            _ => out.push(ch),
-        }
+        out.push(sanitize_char(ch));
     }
     out
+}
+
+/// One char through the L6 rule. Single owner; the escaped emitter shares it.
+pub fn sanitize_char(ch: char) -> char {
+    match ch {
+        ' ' | '\t' | '\n' => '_',
+        _ => ch,
+    }
 }
 
 #[cfg(test)]

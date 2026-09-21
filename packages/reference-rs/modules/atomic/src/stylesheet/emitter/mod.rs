@@ -3,7 +3,9 @@
 //! Utility rules are sorted and grouped by `cascade`; this file prints the layer shells
 //! and closed recipe classes. Recipe at-rules nest the same wrap sequence as utilities.
 
-use super::cascade::{at_rule_wraps, close_wraps, format_declaration, open_wraps, write_utilities};
+use super::cascade::{
+    at_rule_wraps, close_wraps, format_declaration, open_wraps, push_indent, write_utilities,
+};
 use super::layers::{wrap_package_layer, LAYER_PREAMBLE};
 use super::name;
 use super::system_layers::{append_portable_system_layers, append_system_layers};
@@ -76,10 +78,12 @@ pub fn build_stylesheets_with(
     let shared = shared_layers(atom_set, system, recipes);
     let mut inner = LAYER_PREAMBLE.to_string();
     append_system_layers(&mut inner, system, sinks.primary);
+    inner.reserve(shared.len());
     inner.push_str(&shared);
     let stylesheet = wrap_package_layer(&system.name, &inner);
     let mut portable_inner = LAYER_PREAMBLE.to_string();
     append_portable_system_layers(&mut portable_inner, system, sinks.portable);
+    portable_inner.reserve(shared.len());
     portable_inner.push_str(&shared);
     let portable_stylesheet = wrap_package_layer(&system.name, &portable_inner);
     (stylesheet, portable_stylesheet)
@@ -91,10 +95,17 @@ fn shared_layers(
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
 ) -> String {
-    let mut shared = String::new();
+    let mut shared = String::with_capacity(shared_capacity(atom_set));
     append_recipes_layer(&mut shared, recipes);
     append_utilities_layer(&mut shared, atom_set, &system.name);
     shared
+}
+
+/// Pre-size the shared layers buffer: ~128 bytes per utility rule covers the
+/// selector, declaration, indent, and wrap lines with room to spare, so the
+/// per-atom pushes below never regrow. Overshoot is one transient allocation.
+fn shared_capacity(atom_set: &AtomSet) -> usize {
+    atom_set.len().saturating_mul(128).saturating_add(1024)
 }
 
 fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {
@@ -255,10 +266,14 @@ fn write_recipe_block(out: &mut String, groups: &[RecipeGroup]) {
     };
     let wraps: Vec<&str> = first.at_rules.iter().map(String::as_str).collect();
     open_wraps(out, &wraps);
-    let indent = "  ".repeat(wraps.len() + 1);
+    let depth = wraps.len() + 1;
     for group in groups {
         let decls = group.declarations.join(" ");
-        out.push_str(&format!("{indent}{} {{ {decls} }}\n", group.selector));
+        push_indent(out, depth);
+        out.push_str(&group.selector);
+        out.push_str(" { ");
+        out.push_str(&decls);
+        out.push_str(" }\n");
     }
     close_wraps(out, wraps.len());
 }

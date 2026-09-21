@@ -8,7 +8,7 @@ pub mod escape;
 use crate::atom::{Atom, When, WhenKind};
 use crate::resolve::conditions::nest_selector_condition;
 use canon::class_prefix_for_prop;
-use escape::{escape_css_selector, sanitize_class_value};
+use escape::{sanitize_class_value, EscapeCursor};
 
 /// Generate canonical atomic class name for an atom (runtime/HTML unescaped string).
 pub fn class_name(atom: &Atom) -> String {
@@ -52,17 +52,70 @@ pub fn selector(atom: &Atom) -> String {
 /// decoded class selector equals the plan `class_name` byte for byte. An empty
 /// system keeps the bare stem for unit-isolated naming tests.
 pub fn selector_with_system(atom: &Atom, system: &str) -> String {
-    let c_name = class_name_with_system(atom, system);
-    let escaped = escape_css_selector(&c_name);
-    let mut current_sel = format!(".{escaped}");
+    let mut out = String::new();
+    push_selector_with_system(&mut out, atom, system);
+    out
+}
 
+/// Push the system-qualified selector directly into `out`.
+///
+/// Atoms without selector conditions escape straight into the buffer. Selector
+/// conditions still nest through temporaries; only those atoms pay for them.
+pub fn push_selector_with_system(out: &mut String, atom: &Atom, system: &str) {
+    if has_selector_condition(atom) {
+        push_nested_selector(out, atom, system);
+        return;
+    }
+    push_selector_base(out, atom, system);
+}
+
+/// Push `.` plus the escaped `{system}__{stem}` identifier. No temporary.
+fn push_selector_base(out: &mut String, atom: &Atom, system: &str) {
+    out.push('.');
+    let mut cursor = EscapeCursor::new();
+    if !system.is_empty() {
+        cursor.push(out, system);
+        cursor.push(out, "__");
+    }
+    push_cond_segments(&mut cursor, out, atom);
+    cursor.push(out, class_prefix_for_prop(&atom.prop));
+    cursor.push(out, "_");
+    cursor.push_sanitized(out, atom.value.class_name_str());
+    if atom.important {
+        cursor.push(out, "!");
+    }
+}
+
+/// Push `seg:seg:` condition prefixes, or nothing when unconditioned.
+fn push_cond_segments(cursor: &mut EscapeCursor, out: &mut String, atom: &Atom) {
+    for (index, cond) in atom.conditions.iter().enumerate() {
+        if index > 0 {
+            cursor.push(out, ":");
+        }
+        cursor.push(out, cond.class_segment());
+    }
+    if !atom.conditions.is_empty() {
+        cursor.push(out, ":");
+    }
+}
+
+fn has_selector_condition(atom: &Atom) -> bool {
+    atom.conditions
+        .iter()
+        .any(|cond| matches!(cond.wrap(), WhenKind::Selector(_)))
+}
+
+/// Selector-conditioned atoms: escape the base once, then nest as before.
+fn push_nested_selector(out: &mut String, atom: &Atom, system: &str) {
+    let mut base = String::new();
+    push_selector_base(&mut base, atom, system);
+    let mut current = base;
     for cond in &atom.conditions {
         if let WhenKind::Selector(template) = cond.wrap() {
-            current_sel = nest_selector_condition(&current_sel, template);
+            current = nest_selector_condition(&current, template);
         }
     }
-
-    current_sel
+    out.push_str(&current);
 }
 
 #[cfg(test)]

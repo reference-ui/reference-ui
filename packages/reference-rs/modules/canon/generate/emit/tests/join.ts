@@ -75,6 +75,26 @@ fn unrealizable_extensions_table_contract() {
 }`;
 }
 
+export function emitAliasPrefilterContract(): string {
+  return `#[test]
+fn alias_prefilter_table_contract() {
+    for a in ALIASES {
+        assert!(
+            crate::dialect::maybe_alias(a.alias),
+            "alias '{}' must pass the resolve_alias pre-filter",
+            a.alias
+        );
+    }
+    assert!(!crate::dialect::maybe_alias(""));
+    for miss in ["margin", "marginTop", "color", "display", "border", "--token", "OTransform"] {
+        assert_eq!(resolve_alias(miss), None, "'{}' must not resolve as an alias", miss);
+    }
+    assert_eq!(resolve_alias("mt"), Some("marginTop"));
+    assert_eq!(resolve_alias("bg"), Some("background"));
+    assert_eq!(resolve_alias("padding"), None);
+}`;
+}
+
 export function emitJoinTests(): string {
-  return [emitCanJoin04(), emitCanJoin08(), emitUnrealizableGuard()].join('\n\n');
+  return [emitCanJoin04(), emitCanJoin08(), emitUnrealizableGuard(), emitAliasPrefilterContract()].join('\n\n');
 }

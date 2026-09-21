@@ -7,7 +7,7 @@
 //! siblings of its stem first and the literal last, so compiled specifiers
 //! remap to sources without shadowing a real runtime file.
 
-use super::ExtensionPolicy;
+use super::{concat2, join_with, ExtensionPolicy};
 use crate::FileSystem;
 
 /// Source spellings: atomic's probe order first, then module and declaration
@@ -81,7 +81,7 @@ pub(crate) fn has_runtime_ext(path: &str) -> bool {
 /// The stem when `path` ends in `.js`, `.mjs`, or `.cjs`.
 fn strip_runtime_ext(path: &str) -> Option<String> {
     for ext in RUNTIME_EXTS {
-        if let Some(stem) = path.strip_suffix(&format!(".{ext}")) {
+        if let Some(stem) = path.strip_suffix(&concat2(".", ext)) {
             if !stem.is_empty() && !stem.ends_with('/') {
                 return Some(stem.to_string());
             }
@@ -98,7 +98,7 @@ fn probe_literal<F: FileSystem>(fs: &F, path: &str) -> Option<String> {
 /// First `base.suffix` hit in table order.
 fn probe_suffixed<F: FileSystem>(fs: &F, base: &str, suffixes: &[&str]) -> Option<String> {
     suffixes.iter().find_map(|suffix| {
-        let candidate = format!("{base}.{suffix}");
+        let candidate = join_with(base, '.', suffix);
         probe_literal(fs, &candidate)
     })
 }
@@ -106,7 +106,7 @@ fn probe_suffixed<F: FileSystem>(fs: &F, base: &str, suffixes: &[&str]) -> Optio
 /// First `base/name` hit in table order.
 fn probe_index<F: FileSystem>(fs: &F, base: &str, names: &[&str]) -> Option<String> {
     names.iter().find_map(|name| {
-        let candidate = format!("{base}/{name}");
+        let candidate = join_with(base, '/', name);
         probe_literal(fs, &candidate)
     })
 }

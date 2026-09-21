@@ -357,10 +357,26 @@ pub const REFERENCE_PROPS: &[&str] = &["colorMode", "r", "size", "variant", "wei
 
 /// Resolves a dialect alias or shorthand to its canonical property name.
 pub fn resolve_alias(alias: &str) -> Option<&'static str> {
+    if !maybe_alias(alias) {
+        return None;
+    }
     ALIASES
         .binary_search_by_key(&alias, |a| a.alias)
         .ok()
         .map(|idx| ALIASES[idx].canonical)
+}
+
+/// Rejection pre-filter over alias initials, derived from ALIASES at codegen.
+/// Vendor aliases start with a capital; lowercase aliases are short shorthands
+/// of fixed lengths. Misses skip the binary search; members always fall through.
+pub(crate) fn maybe_alias(name: &str) -> bool {
+    let bytes = name.as_bytes();
+    match bytes.first() {
+        Some(b'M') | Some(b'W') => true,
+        // Lowercase aliases are short shorthands; anything longer cannot be a member.
+        Some(b'b') | Some(b'f') | Some(b'h') | Some(b'm') | Some(b'p') | Some(b'w') => matches!(bytes.len(), 1 | 2 | 4 | 7),
+        _ => false,
+    }
 }
 
 /// Returns true if the given name is a Reference-only macro prop.

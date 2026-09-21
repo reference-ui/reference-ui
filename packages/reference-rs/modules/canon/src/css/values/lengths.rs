@@ -14,16 +14,32 @@ const LENGTH_UNITS: &[&str] = &[
 
 /// True when `value` is a CSS length: unitless zero or a finite number plus unit.
 pub fn is_length(value: &str) -> bool {
-    let text = value.trim().to_ascii_lowercase();
+    // No lowercase: the f64 grammar is ASCII case-insensitive (E/inf/nan),
+    // so parsing the raw slice decides identically; units fold per suffix.
+    let text = value.trim();
     if text.is_empty() {
         return false;
     }
-    if is_zero_number(&text) {
+    if is_zero_number(text) {
         return true;
     }
     LENGTH_UNITS
         .iter()
-        .any(|unit| text.strip_suffix(unit).is_some_and(is_plain_number))
+        .any(|unit| strip_unit_suffix(text, unit).is_some_and(is_plain_number))
+}
+
+/// Strips an ASCII unit suffix case-insensitively, without allocating.
+/// `get` refuses non-boundary splits, so non-ASCII tails miss, never panic.
+fn strip_unit_suffix<'a>(text: &'a str, unit: &str) -> Option<&'a str> {
+    let prefix_len = text.len().checked_sub(unit.len())?;
+    if text
+        .get(prefix_len..)
+        .is_some_and(|tail| tail.eq_ignore_ascii_case(unit))
+    {
+        text.get(..prefix_len)
+    } else {
+        None
+    }
 }
 
 /// True when the whole string is a finite number equal to zero.

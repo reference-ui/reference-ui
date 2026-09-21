@@ -15,10 +15,48 @@ pub fn sanitize_class_value(val: &str) -> String {
 /// Escapes a runtime class name for use as a CSS identifier in a selector.
 pub fn escape_css_selector(val: &str) -> String {
     let mut out = String::with_capacity(val.len() + 8);
-    for (index, ch) in val.chars().enumerate() {
-        append_escaped(&mut out, ch, index);
-    }
+    push_escaped_selector(&mut out, val);
     out
+}
+
+/// Escape `val` as a fresh identifier directly into `out`. No temporary.
+pub fn push_escaped_selector(out: &mut String, val: &str) {
+    EscapeCursor::new().push(out, val);
+}
+
+/// Positional escaper for identifiers pushed piece by piece.
+///
+/// The leading-char rule keys off the first char of the whole identifier, so
+/// separately pushed segments share one cursor instead of joining a temporary.
+#[derive(Default)]
+pub struct EscapeCursor {
+    index: usize,
+}
+
+impl EscapeCursor {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Push `val` escaped, advancing past its chars.
+    pub fn push(&mut self, out: &mut String, val: &str) {
+        for ch in val.chars() {
+            self.push_char(out, ch);
+        }
+    }
+
+    /// Push one char escaped at the current position.
+    pub fn push_char(&mut self, out: &mut String, ch: char) {
+        append_escaped(out, ch, self.index);
+        self.index += 1;
+    }
+
+    /// Push `val` through the L6 sanitize rule, escaped per char.
+    pub fn push_sanitized(&mut self, out: &mut String, val: &str) {
+        for ch in val.chars() {
+            self.push_char(out, crate::resolve::lexical::sanitize_char(ch));
+        }
+    }
 }
 
 fn append_escaped(out: &mut String, ch: char, index: usize) {
