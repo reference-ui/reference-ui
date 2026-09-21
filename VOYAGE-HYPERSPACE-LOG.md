@@ -196,3 +196,20 @@ reopen it.
   ride-along); (d) trace gate B4 (fully disjoint).
   Rendezvous order: d → c → b → a. Churn: a + b run;
   c/d skip only with architect rationale.
+- INCIDENT (~02:39): stash race across worktrees. Lane B
+  implementer's SITE-54 stash-prove `pop` grabbed lane C's
+  stash entry (034f04: burndown.ts + 4 publish files) into
+  B's tree and dropped C's ref — stash refs are repo-shared
+  across worktrees. B self-repaired same-entry: C files
+  reverted from B's tree (byte-verified), C's entry restored
+  via `stash store`, B's own 14 B3 files recovered byte-exact
+  from dangling bad081eb. Captain verified firsthand: C tree
+  holds all 5 files modified (work intact), B tree holds B3
+  files only, stash list back to 2 pre-voyage entries.
+  Standing order broadcast to all W2 leads: no bare `git
+  stash push/pop` tonight — /tmp captures or scratch
+  branches for pre/post proof. Rendezvous addition: captain
+  greps each lane tree for sibling markers before merging.
+  (Marker caveat, verified: `wants_proof` occurs 2x in
+  committed `native.rs` — W1 lane A's proof channel, part of
+  the wave base — and in no uncommitted diff outside B.)
