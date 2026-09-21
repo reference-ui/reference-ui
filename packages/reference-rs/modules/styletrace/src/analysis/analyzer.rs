@@ -16,13 +16,13 @@ use super::model::{
 use super::module_resolution::ModuleResolver;
 use super::parser::parse_trace_module;
 use super::source_files::format_relative_module;
-use super::surface::{StyleSurface, TraceDiagnostic};
+use super::surface::{StyleSurface, TraceDiagnostic, TraceSources};
 
 pub(super) struct StyleTraceAnalyzer<'s> {
     modules: BTreeMap<PathBuf, TraceModule>,
     surface: StyleSurface,
     sync_root: PathBuf,
-    staged: &'s HashMap<PathBuf, &'s str>,
+    sources: &'s TraceSources<'s>,
     resolver: ModuleResolver<'s>,
     component_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     factory_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
@@ -36,14 +36,14 @@ impl<'s> StyleTraceAnalyzer<'s> {
         modules: BTreeMap<PathBuf, TraceModule>,
         surface: StyleSurface,
         sync_root: PathBuf,
-        staged: &'s HashMap<PathBuf, &'s str>,
+        sources: &'s TraceSources<'s>,
     ) -> Self {
         Self {
             modules,
             surface,
             sync_root,
-            staged,
-            resolver: ModuleResolver::new(staged),
+            sources,
+            resolver: ModuleResolver::new(sources.staged),
             component_cache: HashMap::new(),
             factory_cache: HashMap::new(),
             export_cache: HashMap::new(),
@@ -365,7 +365,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
             return Ok(());
         }
 
-        match parse_trace_module(module_path, &self.sync_root, &self.surface, self.staged) {
+        match parse_trace_module(module_path, &self.sync_root, &self.surface, self.sources) {
             Ok(module) => {
                 self.modules.insert(module_path.to_path_buf(), module);
             }

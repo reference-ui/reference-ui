@@ -52,6 +52,9 @@ impl DiagnosticChannels {
     /// requested, render it onto the backchannel. Analysis facts render
     /// fresh (never pushed, nothing to strip); covered-sink removals no-op
     /// harmlessly. A final echo sweep reaps unfacted re-resolve dupes.
+    /// Dead renders are skipped, never weakened: an unrequested backchannel
+    /// drops every analysis line (no strip, no echo reads it), and an empty
+    /// default channel makes every strip and sweep vacuous.
     pub fn partition(
         facts: &[DiagnosticFact],
         diagnostics: Vec<Diagnostic>,
@@ -62,26 +65,47 @@ impl DiagnosticChannels {
             userspace: diagnostics,
             compiler: Vec::new(),
         };
+        if !render_compiler && channels.userspace.is_empty() {
+            return channels;
+        }
         let mut false_echoes: Vec<EchoTriple> = Vec::new();
         for fact in facts {
             if Policy::classify(fact) != Audience::Compiler {
                 continue;
             }
-            let Some(line) = render_fact(fact, catalog) else {
-                continue;
-            };
-            if is_pushed_fact(fact) {
-                remove_rendered(&mut channels.userspace, &line);
-            }
-            if is_false_fact(fact) {
-                false_echoes.push(EchoTriple::from_line(&line));
-            }
-            if render_compiler {
-                channels.compiler.push(line);
-            }
+            channels.partition_fact(fact, catalog, render_compiler, &mut false_echoes);
         }
         sweep_false_echoes(&mut channels.userspace, &false_echoes);
         channels
+    }
+
+    /// Render one compiler-classified fact onto its channel: strip its
+    /// re-derived line from default, collect its echo identity, and push
+    /// it to the backchannel when requested. Analysis facts skip the
+    /// render when the backchannel is off: no strip or echo reads a line
+    /// that was never pushed.
+    fn partition_fact(
+        &mut self,
+        fact: &DiagnosticFact,
+        catalog: &SourceCatalog,
+        render_compiler: bool,
+        false_echoes: &mut Vec<EchoTriple>,
+    ) {
+        if !render_compiler && !is_pushed_fact(fact) {
+            return;
+        }
+        let Some(line) = render_fact(fact, catalog) else {
+            return;
+        };
+        if is_pushed_fact(fact) {
+            remove_rendered(&mut self.userspace, &line);
+        }
+        if is_false_fact(fact) {
+            false_echoes.push(EchoTriple::from_line(&line));
+        }
+        if render_compiler {
+            self.compiler.push(line);
+        }
     }
 }
 
@@ -373,5 +397,27 @@ mod tests {
         assert_eq!(channels.compiler[0].file.as_deref(), Some("a.ts"));
         assert_eq!(channels.compiler[1].code, DiagnosticCode::DynamicSlot);
         assert_eq!(channels.compiler[1].line, Some(1));
+    }
+
+    #[test]
+    fn unrequested_backchannel_leaves_default_untouched_by_analysis() {
+        let exact = DiagnosticFact::ExactLookupExpected { site: site(), key: key() };
+        let dynamic = DiagnosticFact::DynamicSlot { site: site(), shape: DynamicShape::UnknownValue };
+        let kept = warning("stays");
+        let channels =
+            DiagnosticChannels::partition(&[exact, dynamic], vec![kept.clone()], &catalog(), false);
+        assert_eq!(channels.userspace, vec![kept]);
+        assert!(channels.compiler.is_empty());
+    }
+
+    #[test]
+    fn empty_default_and_unrequested_backchannel_render_nothing() {
+        let (funnel_fact, _) = funnel_pair();
+        let (false_fact, _) = invalid_pair("false");
+        let exact = DiagnosticFact::ExactLookupExpected { site: site(), key: key() };
+        let facts = vec![funnel_fact, false_fact, exact];
+        let channels = DiagnosticChannels::partition(&facts, Vec::new(), &catalog(), false);
+        assert!(channels.userspace.is_empty());
+        assert!(channels.compiler.is_empty());
     }
 }

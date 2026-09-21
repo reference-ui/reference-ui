@@ -14,7 +14,7 @@ pub use analysis::{
     trace_style_bindings, trace_style_bindings_with_hint,
     trace_style_bindings_with_surface, trace_style_jsx_names,
     trace_style_jsx_names_with_hint, StyleSurface, TraceDiagnostic, TraceOutcome,
-    TracedBinding,
+    TraceSources, TracedBinding,
 };
 pub use resolver::{
     collect_declared_prop_names, collect_reference_style_prop_names, collect_style_prop_names,

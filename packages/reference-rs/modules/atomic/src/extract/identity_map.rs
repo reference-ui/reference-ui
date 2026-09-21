@@ -86,7 +86,8 @@ pub(crate) fn parse_export_map(content: &str, path: &str) -> Option<ExportMap> {
 }
 
 /// Fold a program's top level into its export surface.
-fn collect_map(program: &Program<'_>) -> ExportMap {
+/// Shared by the fresh-parse path and the retained-program reuse path.
+pub(crate) fn collect_map(program: &Program<'_>) -> ExportMap {
     let mut map = ExportMap::default();
     for stmt in &program.body {
         collect_statement(&mut map, stmt);

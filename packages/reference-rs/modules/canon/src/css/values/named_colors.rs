@@ -2,8 +2,9 @@
 //!
 //! Seeded from reference-core's `CSS_COLOR_KEYWORDS` set; this table is now the
 //! source of truth and the TS set is a future consumer. Entries are lowercase and
-//! lexicographically sorted for binary search; lookup lowercases once, so `Red`
-//! and `RED` match. The five CSS-wide keywords that shared the TS set
+//! lexicographically sorted for binary search; lookup folds case during the
+//! search without allocating, so `Red` and `RED` match. The five CSS-wide
+//! keywords that shared the TS set
 //! (`inherit`, `initial`, `revert`, `revert-layer`, `unset`) live in
 //! `classify.rs` instead: they are keywords, not colors.
 
@@ -164,7 +165,7 @@ pub const NAMED_COLORS: &[&str] = &[
 /// True when `value` is a CSS named color, case-insensitively.
 pub fn is_named_color(value: &str) -> bool {
     NAMED_COLORS
-        .binary_search(&value.to_ascii_lowercase().as_str())
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, value))
         .is_ok()
 }
 
@@ -190,6 +191,14 @@ mod tests {
         assert!(is_named_color("RebeccaPurple"));
         assert!(is_named_color("TRANSPARENT"));
         assert!(is_named_color("currentColor"));
+    }
+
+    #[test]
+    fn every_member_matches_in_any_ascii_case() {
+        for color in NAMED_COLORS {
+            assert!(is_named_color(color), "{color}");
+            assert!(is_named_color(&color.to_ascii_uppercase()), "{color}");
+        }
     }
 
     #[test]

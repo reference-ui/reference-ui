@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclarationSpecifier,
-    ImportOrExportKind, Statement,
+    ImportOrExportKind, Program, Statement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
@@ -22,7 +22,7 @@ use oxc_span::{GetSpan, SourceType};
 use crate::analysis::model::{
     ExportTarget, FactoryTarget, TraceComponent, TraceFactory, TraceImport, TraceModule,
 };
-use crate::analysis::surface::StyleSurface;
+use crate::analysis::surface::{StyleSurface, TraceSources};
 use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
@@ -56,9 +56,12 @@ pub(super) fn parse_trace_module(
     path: &Path,
     workspace_root: &Path,
     surface: &StyleSurface,
-    staged: &HashMap<PathBuf, &str>,
+    sources: &TraceSources,
 ) -> Result<TraceModule, StyleTraceError> {
-    let source = module_source(path, staged)?;
+    let source = module_source(path, sources.staged)?;
+    if let Some(program) = sources.programs.get(path) {
+        return trace_program(path, workspace_root, &source, program, surface);
+    }
 
     let allocator = Allocator::default();
     // Same options as the main-phase parse (atomic `parse_source`): TS on
@@ -74,24 +77,38 @@ pub(super) fn parse_trace_module(
         )));
     }
 
+    trace_program(path, workspace_root, &source, &parsed.program, surface)
+}
+
+/// Fold one program's top level into its trace module. Shared by the
+/// fresh-parse path and the retained-program reuse path: a reused program
+/// comes from the same bytes with identical options, so the walk observes
+/// exactly what a fresh parse of `source` would produce.
+fn trace_program(
+    path: &Path,
+    workspace_root: &Path,
+    source: &str,
+    program: &Program<'_>,
+    surface: &StyleSurface,
+) -> Result<TraceModule, StyleTraceError> {
     let mut imports = HashMap::new();
     let mut state = ParseState::default();
 
-    for statement in &parsed.program.body {
+    for statement in &program.body {
         if let Statement::ImportDeclaration(import_decl) = statement {
-            collect_imports(&source, import_decl, &mut imports);
+            collect_imports(source, import_decl, &mut imports);
         }
     }
 
     let ctx = ParserContext {
         path,
         workspace_root,
-        source: &source,
+        source,
         surface,
         imports: &imports,
     };
 
-    for statement in &parsed.program.body {
+    for statement in &program.body {
         collect_statement(statement, &ctx, &mut state)?;
     }
 

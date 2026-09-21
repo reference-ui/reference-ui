@@ -69,7 +69,7 @@ const OPAQUE_FUNCTIONS: &[&str] = &["env", "var"];
 /// The function family when `value` is one complete known call, else None.
 pub fn classify_function(value: &str) -> Option<FunctionKind> {
     let (name, body) = split_call(value.trim())?;
-    let kind = function_kind(&name.to_ascii_lowercase())?;
+    let kind = function_kind(name)?;
     if single_balanced_call(body) {
         Some(kind)
     } else {
@@ -92,21 +92,37 @@ fn is_name_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_'
 }
 
-/// The family of a lowercase function name, or None when unknown.
-fn function_kind(lower_name: &str) -> Option<FunctionKind> {
-    if COLOR_FUNCTIONS.binary_search(&lower_name).is_ok() {
+/// The family of a function name, matched case-insensitively without
+/// allocating: tables stay lowercase-sorted, the probe folds on the fly.
+fn function_kind(name: &str) -> Option<FunctionKind> {
+    if COLOR_FUNCTIONS
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, name))
+        .is_ok()
+    {
         return Some(FunctionKind::Color);
     }
-    if MATH_FUNCTIONS.binary_search(&lower_name).is_ok() {
+    if MATH_FUNCTIONS
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, name))
+        .is_ok()
+    {
         return Some(FunctionKind::Math);
     }
-    if TRANSFORM_FUNCTIONS.binary_search(&lower_name).is_ok() {
+    if TRANSFORM_FUNCTIONS
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, name))
+        .is_ok()
+    {
         return Some(FunctionKind::Transform);
     }
-    if URL_FUNCTIONS.binary_search(&lower_name).is_ok() {
+    if URL_FUNCTIONS
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, name))
+        .is_ok()
+    {
         return Some(FunctionKind::Url);
     }
-    if OPAQUE_FUNCTIONS.binary_search(&lower_name).is_ok() {
+    if OPAQUE_FUNCTIONS
+        .binary_search_by(|probe| super::cmp_lower_probe(probe, name))
+        .is_ok()
+    {
         return Some(FunctionKind::Opaque);
     }
     None
@@ -207,6 +223,27 @@ mod tests {
             classify_function("TranslateX(2px)"),
             Some(FunctionKind::Transform)
         );
+    }
+
+    #[test]
+    fn every_table_member_matches_in_any_ascii_case() {
+        use FunctionKind::{Color, Math, Opaque, Transform, Url};
+        for (table, kind) in [
+            (COLOR_FUNCTIONS, Color),
+            (MATH_FUNCTIONS, Math),
+            (TRANSFORM_FUNCTIONS, Transform),
+            (URL_FUNCTIONS, Url),
+            (OPAQUE_FUNCTIONS, Opaque),
+        ] {
+            for name in table {
+                assert_eq!(function_kind(name), Some(kind), "{name}");
+                assert_eq!(
+                    function_kind(&name.to_ascii_uppercase()),
+                    Some(kind),
+                    "{name}"
+                );
+            }
+        }
     }
 
     #[test]

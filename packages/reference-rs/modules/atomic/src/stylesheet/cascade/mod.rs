@@ -11,6 +11,7 @@ use std::cmp::Ordering;
 
 use crate::atom::{Atom, AtomSet, When, WhenKind};
 use canon::{property_cascade_rank, to_css_declaration_property};
+use rustc_hash::FxHashMap;
 
 use super::name;
 
@@ -54,12 +55,8 @@ struct WidthKey {
     milli: i32,
 }
 
-/// First at-rule wrap. CascadeKey sorts by this; emit walks every wrap.
-pub(crate) fn first_at_rule(atom: &Atom) -> Option<&str> {
-    at_rule_wraps(atom).next()
-}
-
 /// Media, container, and supports wraps in author order. Selector conditions are skipped.
+/// CascadeKey sorts by the first wrap; emit walks every wrap.
 pub(crate) fn at_rule_wraps(atom: &Atom) -> impl Iterator<Item = &str> {
     atom.conditions().iter().filter_map(at_wrap)
 }
@@ -116,30 +113,76 @@ fn push_escaped_value(out: &mut String, value: &str) {
 /// `{system}__{stem}` segment as runtime plan class names so every plan
 /// declaration matches a stylesheet rule.
 pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str) {
+    let mut ranks: FxHashMap<&str, u8> = FxHashMap::default();
     let mut ranked: Vec<(&Atom, CascadeKey<'_>)> = atom_set
         .iter()
-        .map(|atom| (atom, CascadeKey::from_atom(atom)))
+        .map(|atom| (atom, CascadeKey::from_atom_cached(atom, &mut ranks)))
         .collect();
     ranked.sort_by(|a, b| {
         a.1.cmp(&b.1)
-            .then(cmp_whens(a.0.conditions(), b.0.conditions()))
+            .then_with(|| cmp_whens(a.0.conditions(), b.0.conditions()))
     });
     write_groups(out, &ranked, system);
 }
 
 impl<'a> CascadeKey<'a> {
-    fn from_atom(atom: &'a Atom) -> Self {
-        let at = first_at_rule(atom).unwrap_or("");
+    fn from_atom_cached(atom: &'a Atom, ranks: &mut FxHashMap<&'a str, u8>) -> Self {
+        let scan = scan_conditions(atom);
+        let prop = atom.prop();
+        let property = *ranks
+            .entry(prop)
+            .or_insert_with(|| property_cascade_rank(prop));
         Self {
-            bucket: bucket(atom),
-            at_kind: classify_at_rule(at),
-            width: parse_width_key(at),
-            at_text: at,
-            selector: selector_rank(atom),
-            property: property_cascade_rank(atom.prop()),
-            prop: atom.prop(),
+            bucket: scan.bucket,
+            at_kind: classify_at_rule(scan.first_at),
+            width: parse_width_key(scan.first_at),
+            at_text: scan.first_at,
+            selector: scan.selector,
+            property,
+            prop,
             value: atom.value().css_value_str(),
         }
+    }
+}
+
+/// Bucket, first at-rule wrap, and selector rank from one condition pass.
+struct CondScan<'a> {
+    bucket: u8,
+    first_at: &'a str,
+    selector: u8,
+}
+
+fn scan_conditions(atom: &Atom) -> CondScan<'_> {
+    let mut has_at = false;
+    let mut has_sel = false;
+    let mut first_at = "";
+    let mut found_at = false;
+    let mut selector = 0u8;
+    for cond in atom.conditions() {
+        match cond.wrap() {
+            WhenKind::Media(query) | WhenKind::Container(query) | WhenKind::Supports(query) => {
+                has_at = true;
+                if !found_at {
+                    first_at = query;
+                    found_at = true;
+                }
+            }
+            WhenKind::Selector(_) => {
+                has_sel = true;
+                selector = selector.max(pseudo_rank(cond.class_segment()));
+            }
+        }
+    }
+    CondScan {
+        bucket: if has_at {
+            BUCKET_AT
+        } else if has_sel {
+            BUCKET_SELECTOR
+        } else {
+            BUCKET_BASE
+        },
+        first_at,
+        selector,
     }
 }
 
@@ -204,24 +247,6 @@ fn write_rule(out: &mut String, atom: &Atom, depth: usize, system: &str) {
     out.push_str(" }\n");
 }
 
-fn bucket(atom: &Atom) -> u8 {
-    let mut has_at = false;
-    let mut has_sel = false;
-    for cond in atom.conditions() {
-        match cond.wrap() {
-            WhenKind::Media(_) | WhenKind::Container(_) | WhenKind::Supports(_) => has_at = true,
-            WhenKind::Selector(_) => has_sel = true,
-        }
-    }
-    if has_at {
-        BUCKET_AT
-    } else if has_sel {
-        BUCKET_SELECTOR
-    } else {
-        BUCKET_BASE
-    }
-}
-
 fn classify_at_rule(query: &str) -> u8 {
     if query.is_empty() {
         return AT_NONE;
@@ -253,16 +278,6 @@ fn is_print_query(query: &str) -> bool {
     let rest = rest.trim_start();
     let rest = rest.strip_prefix("only ").unwrap_or(rest);
     rest == "print" || rest.starts_with("print ") || rest.starts_with("print,")
-}
-
-fn selector_rank(atom: &Atom) -> u8 {
-    let mut rank = 0u8;
-    for cond in atom.conditions() {
-        if matches!(cond.wrap(), WhenKind::Selector(_)) {
-            rank = rank.max(pseudo_rank(cond.class_segment()));
-        }
-    }
-    rank
 }
 
 fn pseudo_rank(segment: &str) -> u8 {

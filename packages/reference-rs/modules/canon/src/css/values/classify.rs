@@ -174,9 +174,12 @@ fn is_hex_color(text: &str) -> bool {
 
 /// True for a CSS-wide keyword, case-insensitively.
 fn is_css_keyword(text: &str) -> bool {
+    // Seven short entries: fold per comparison instead of lowering per call.
+    // `eq_ignore_ascii_case` against lowercase entries decides exactly like
+    // the old lowercase-then-search, minus the per-call `String`.
     CSS_KEYWORDS
-        .binary_search(&text.to_ascii_lowercase().as_str())
-        .is_ok()
+        .iter()
+        .any(|keyword| text.eq_ignore_ascii_case(keyword))
 }
 
 /// True for a canonical length-bearing property.
@@ -256,6 +259,25 @@ mod tests {
             "auto",
         ] {
             assert_eq!(classify_css_value(keyword), Some(Keyword), "{keyword}");
+        }
+    }
+
+    #[test]
+    fn keywords_match_in_any_ascii_case() {
+        for keyword in [
+            "AUTO",
+            "None",
+            "UNSET",
+            "Inherit",
+            "INITIAL",
+            "Revert",
+            "REVERT-LAYER",
+        ] {
+            assert_eq!(
+                classify_css_value(keyword),
+                Some(ValueKind::Keyword),
+                "{keyword}"
+            );
         }
     }
 

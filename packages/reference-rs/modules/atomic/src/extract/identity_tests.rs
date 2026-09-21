@@ -6,6 +6,13 @@
 //! walker's edges: hops, aliases, chains, stars, defaults, cycles, and the
 //! relative-only probing fence.
 
+use std::collections::HashMap;
+use std::path::Path;
+
+use oxc_allocator::Allocator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
+
 use super::identity::IdentityGraph;
 
 fn graph(sources: &[(&str, &str)]) -> IdentityGraph<'static> {
@@ -331,4 +338,65 @@ fn binding_terminal_unknown_answers_none() {
         graph.trace_binding_terminal("src/app.ts", "@/r", "button"),
         None
     );
+}
+
+#[test]
+fn reused_programs_answer_like_fresh_parses() {
+    let owned: Vec<(String, String)> = [
+        ("src/ui.ts", "export { css } from '@reference-ui/react'\n"),
+        ("src/chain.ts", "export { css } from './ui'\n"),
+        ("src/r.ts", "export const button = recipe({})\n"),
+        ("src/broken.ts", "export function Broken( {\n"),
+    ]
+    .iter()
+    .map(|(path, content)| ((*path).to_string(), (*content).to_string()))
+    .collect();
+    // Main-phase options (crate `parse_source`): TS on for every extension.
+    let allocators: Vec<Allocator> = owned.iter().map(|_| Allocator::default()).collect();
+    let parsed: Vec<_> = owned
+        .iter()
+        .zip(allocators.iter())
+        .map(|((path, content), allocator)| {
+            let source_type = SourceType::from_path(Path::new(path))
+                .unwrap_or_default()
+                .with_typescript(true);
+            Parser::new(allocator, content, source_type).parse()
+        })
+        .collect();
+    // Every unpanicked position reuses its program; the broken file stays
+    // unmapped so the fallback re-parse answers (identically) from bytes.
+    let mut programs = HashMap::new();
+    for (position, ret) in parsed.iter().enumerate() {
+        if !ret.panicked {
+            programs.insert(position, &ret.program);
+        }
+    }
+    let fresh = IdentityGraph::new(&owned);
+    let reused = IdentityGraph::with_programs(&owned, &programs);
+    let reference_queries = [
+        ("src/app.tsx", "./ui", "css"),
+        ("src/app.tsx", "./chain", "css"),
+        ("src/app.tsx", "./r", "button"),
+        ("src/app.tsx", "./broken", "css"),
+        ("src/app.tsx", "./absent", "css"),
+    ];
+    for (from, specifier, name) in reference_queries {
+        assert_eq!(
+            reused.trace_reference_export(from, specifier, name),
+            fresh.trace_reference_export(from, specifier, name),
+            "reference query {specifier}#{name}",
+        );
+    }
+    let terminal_queries = [
+        ("src/app.ts", "./r", "button"),
+        ("src/app.ts", "./chain", "css"),
+        ("src/app.ts", "./broken", "css"),
+    ];
+    for (from, specifier, name) in terminal_queries {
+        assert_eq!(
+            reused.trace_binding_terminal(from, specifier, name),
+            fresh.trace_binding_terminal(from, specifier, name),
+            "terminal query {specifier}#{name}",
+        );
+    }
 }
