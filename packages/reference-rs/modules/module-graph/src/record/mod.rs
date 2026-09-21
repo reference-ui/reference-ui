@@ -91,6 +91,19 @@ impl ExportTable {
         &self.stars
     }
 
+    /// Every `export { … } from` hop specifier, borrowed. Zero-alloc for
+    /// hop-free tables: the staging census reads targets without cloning
+    /// export names. Order is table order; membership is all callers need.
+    pub fn hop_specifiers(&self) -> Vec<&str> {
+        self.entries
+            .values()
+            .filter_map(|shape| match shape {
+                ExportShape::Hop { specifier, .. } => Some(specifier.as_str()),
+                ExportShape::Local(_) => None,
+            })
+            .collect()
+    }
+
     /// The default export, if this file has one.
     pub fn default_export(&self) -> Option<&DefaultExport> {
         self.default.as_ref()

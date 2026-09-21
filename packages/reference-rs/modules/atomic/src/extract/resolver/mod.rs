@@ -11,7 +11,10 @@
 //! default, and namespace imports stay out of the map, and the scope chain
 //! falls back to nothing for them — imports never consult the name-wide bag.
 
+#[cfg(test)]
+mod differential;
 mod source;
+mod staging;
 #[cfg(test)]
 mod tests;
 mod values;
@@ -29,6 +32,8 @@ use oxc_ast::ast::Program;
 use super::constants::{collect_local_constants, LocalConstants, MutatedBinding};
 use super::scope::{self, BindingInit, ImportRef};
 use source::{AtomicFs, AtomicLoader};
+use staging::StagingPlan;
+pub(crate) use staging::{RetainedSource, StreamedSource};
 use values::{bag_export, keep_outcome, valued, valued_scalars};
 
 pub(crate) use values::{reason_text, RefusalCtx, ValueRefused};
@@ -69,30 +74,16 @@ enum RefineState {
     Cycling,
 }
 
-/// One retained file's shared parse: path, bytes, and borrowed program.
-pub(crate) struct RetainedSource<'s> {
-    pub(crate) path: &'s str,
-    pub(crate) content: &'s str,
-    pub(crate) program: &'s Program<'s>,
-}
-
-/// One streamed file's carried staging: module record plus literal bag,
-/// both owned; the program never stages and refines by re-parse on demand.
-pub(crate) struct StreamedSource {
-    pub(crate) key: ModuleKey,
-    pub(crate) record: ModuleRecord,
-    pub(crate) bag: LocalConstants,
-}
-
-impl StreamedSource {
-    /// Stage one streamed file from its transient program: record plus bag.
-    pub(crate) fn collect(program: &Program<'_>, path: &str, content: &str) -> Self {
-        Self {
-            key: ModuleKey::new(path),
-            record: ModuleRecord::collect(program),
-            bag: collect_local_constants(program, path, Some(content)),
-        }
-    }
+/// One graph assembly: compile inputs plus the staging plan deciding
+/// which records and bags the loader stages. A struct (not loose args)
+/// so the arg-count gate never sees the seven inputs at once.
+struct Assembly<'s, 'r> {
+    retained: &'r [RetainedSource<'s>],
+    pairs: Vec<(ModuleKey, ModuleRecord)>,
+    streamed: Vec<StreamedSource>,
+    project: &'s LocalConstants,
+    fs: Rc<AtomicFs<'s>>,
+    plan: StagingPlan,
 }
 
 /// The upfront value graph: the shared module graph behind demand-driven
@@ -113,31 +104,103 @@ pub struct ValueGraph<'s> {
 
 impl<'s> ValueGraph<'s> {
     /// Build the graph over retained programs plus staged streamed files.
-    /// Records and literal bags stage eagerly for both; scope tables refine
-    /// on demand when something imports the file, re-parsing streamed bytes
-    /// through the identical path. Unparseable sources stay out, so imports
-    /// targeting them refuse like any unresolvable specifier.
+    /// Files carrying outgoing edges stage their record and literal bag, as
+    /// do the files edges reach; everything else unstages, and the loader's
+    /// miss path serves it bit-identically if a walk ever reaches it. Scope
+    /// tables refine on demand when something imports the file, re-parsing
+    /// streamed bytes through the identical path. Unparseable sources stay
+    /// out, so imports targeting them refuse like any unresolvable specifier.
     pub fn new(
         sources: &'s [(String, String)],
         retained: &[RetainedSource<'s>],
         streamed: Vec<StreamedSource>,
         project: &'s LocalConstants,
     ) -> Self {
+        let fs = Rc::new(AtomicFs::new(sources));
+        let pairs = Self::retained_pairs(retained);
+        let plan = StagingPlan::census(
+            pairs
+                .iter()
+                .map(|(key, record)| (key.clone(), record))
+                .chain(streamed.iter().map(|source| (source.key.clone(), &source.record))),
+            &|key| fs.content(key).is_some(),
+        );
+        Self::from_plan(Assembly {
+            retained,
+            pairs,
+            streamed,
+            project,
+            fs,
+            plan,
+        })
+    }
+
+    /// Test-only staging override for the force-unstage differential: the
+    /// given plan decides inserts, so tests can stage nothing or everything.
+    #[cfg(test)]
+    fn new_with_plan(
+        sources: &'s [(String, String)],
+        retained: &[RetainedSource<'s>],
+        streamed: Vec<StreamedSource>,
+        project: &'s LocalConstants,
+        plan: StagingPlan,
+    ) -> Self {
+        let fs = Rc::new(AtomicFs::new(sources));
+        let pairs = Self::retained_pairs(retained);
+        Self::from_plan(Assembly {
+            retained,
+            pairs,
+            streamed,
+            project,
+            fs,
+            plan,
+        })
+    }
+
+    /// One key plus record per retained file: the census input and the
+    /// staged-insert material, collected once up front.
+    fn retained_pairs(retained: &[RetainedSource<'_>]) -> Vec<(ModuleKey, ModuleRecord)> {
+        retained
+            .iter()
+            .map(|source| {
+                (
+                    ModuleKey::new(source.path),
+                    ModuleRecord::collect(source.program),
+                )
+            })
+            .collect()
+    }
+
+    /// Assemble over a staging plan: programs for every retained file, and
+    /// records plus literal bags only where the plan stages. Retained bags
+    /// collect after the census, so unstaged files never pay for them;
+    /// streamed bags arrive staged-or-dropped with their records.
+    fn from_plan(assembly: Assembly<'s, '_>) -> Self {
+        let Assembly {
+            retained,
+            pairs,
+            streamed,
+            project,
+            fs,
+            plan,
+        } = assembly;
         let mut staged = HashMap::new();
         let mut programs = HashMap::new();
-        for source in retained {
-            let key = ModuleKey::new(source.path);
-            let record = ModuleRecord::collect(source.program);
-            let bag = collect_local_constants(source.program, source.path, Some(source.content));
-            staged.insert(key.clone(), (record, bag));
-            programs.insert(key, source.program);
+        for (source, (key, record)) in retained.iter().zip(pairs) {
+            programs.insert(key.clone(), source.program);
+            if plan.stages(&key) {
+                let bag =
+                    collect_local_constants(source.program, source.path, Some(source.content));
+                staged.insert(key, (record, bag));
+            }
         }
         let mut streamed_keys = HashSet::new();
         for source in streamed {
             streamed_keys.insert(source.key.clone());
-            staged.insert(source.key, (source.record, source.bag));
+            if plan.stages(&source.key) {
+                staged.insert(source.key, (source.record, source.bag));
+            }
         }
-        let fs = Rc::new(AtomicFs::new(sources));
         let graph = ModuleGraph::new(AtomicLoader::new(Rc::clone(&fs), staged));
         Self {
             fs,
