@@ -37,8 +37,8 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(table, `runtime data carries the ${STEM} table`);
   assert.deepEqual(
     table.defaultVariants,
-    { size: 'lg', tone: 'muted' },
-    'table carries the authored defaults',
+    { size: 1, tone: 1 },
+    'table carries the authored default indices',
   );
   assert.deepEqual(table.variantMap, { size: ['sm', 'lg'], tone: ['accent', 'muted'] }, 'table ships per-axis value names');
   const recipeClasses = [
@@ -55,7 +55,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.equal(recipeCount, 5, `sheet carries exactly the recipe classes, got ${recipeCount}`);
 
   assert.equal(table.combinations, undefined, 'table ships no pre-composed map');
-  assert.deepEqual(table.variantKeys, ['size', 'tone'], 'table orders the axes');
+  assert.equal(table.qualifiedName, undefined, 'table omits the stem (registry key carries it)');
+  assert.equal(table.variantKeys, undefined, 'table omits the axis order');
+  assert.deepEqual(Object.keys(table.variantMap), ['size', 'tone'], 'variant map keys order the axes');
   registerRecipeData(data.systemName, data.runtimeData.recipes, data.runtimeData.responsiveBreakpoints);
   const card = recipe({ className: 'card' });
   assert.equal(

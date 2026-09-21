@@ -98,8 +98,10 @@ const EXPECTED_BYTES = {
   cssBrotli: 21057,
   stylePlans: 4938,
   harvestWants: EXPECTED_NET_NEW,
-  reactRaw: 148880,
-  reactGzip: 32718,
+  // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
+  // compound ports); the fixture ships 0 recipes so its data bytes are 0.
+  reactRaw: 149479,
+  reactGzip: 32889,
   fixtureRules: 4941,
   m500Rules: 33806,
 }

@@ -40,7 +40,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylePlans).toHaveLength(9)
 
     // Both recipes extract through the wrapper: namespace and named.
-    const names = (result.recipes ?? []).map(r => r.qualifiedName).sort()
+    const names = Object.keys(result.runtime.recipes).sort()
     expect(names).toEqual(['@reference-ui/lib__site55named', '@reference-ui/lib__site55ns'])
     expect(result.stylesheet).toContain('@layer recipes')
 

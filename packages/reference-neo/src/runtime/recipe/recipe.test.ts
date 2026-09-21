@@ -10,19 +10,12 @@ const STEM = 'test__button'
 
 // New-contract table: derivation inputs only, no pre-composed maps.
 const TABLE: RecipeRuntimeTable = {
-  qualifiedName: STEM,
-  variantKeys: ['tone', 'size'],
   variantMap: {
     tone: ['accent', 'muted'],
     size: ['sm', 'lg'],
   },
-  defaultVariants: { tone: 'muted', size: 'sm' },
-  compoundVariants: [
-    {
-      selection: { tone: 'accent', size: 'lg' },
-      className: `${STEM}_c_accent_lg`,
-    },
-  ],
+  defaultVariants: { tone: 1, size: 0 },
+  compoundVariants: [{ predicates: { tone: ['accent'], size: ['lg'] } }],
   responsiveBreakpoints: ['md', 'lg'],
 }
 
@@ -70,10 +63,8 @@ describe('recipe() resolution', () => {
     const stem = 'test__toggle'
     registerRecipeData('test', {
       [stem]: {
-        qualifiedName: stem,
-        variantKeys: ['disabled'],
         variantMap: { disabled: ['true', 'false'] },
-        defaultVariants: { disabled: 'false' },
+        defaultVariants: { disabled: 1 },
         compoundVariants: [],
       },
     })
@@ -93,8 +84,6 @@ describe('recipe() resolution', () => {
     const stem = 'test__collide'
     registerRecipeData('test', {
       [stem]: {
-        qualifiedName: stem,
-        variantKeys: ['tone', 'tint'],
         variantMap: { tone: ['muted'], tint: ['red'] },
         defaultVariants: {},
         compoundVariants: [],
@@ -114,6 +103,61 @@ describe('recipe() resolution', () => {
     const button = recipe(CONFIG)
     expect(button({ tone: 'accent', size: 'lg' })).toBe('LEGACY_COMBO')
     expect(button({ tone: 'muted', size: 'sm' })).toBe(MUTED_SM)
+    registerRecipeData('test', { [STEM]: TABLE })
+  })
+})
+
+describe('recipe() derivation inputs', () => {
+  it('matches multi-value predicates and derives the joined class', () => {
+    const stem = 'test__sizes'
+    registerRecipeData('test', {
+      [stem]: {
+        variantMap: { size: ['sm', 'md', 'lg'] },
+        defaultVariants: { size: 2 },
+        compoundVariants: [{ predicates: { size: ['sm', 'md'] } }],
+      },
+    })
+    const sizes = recipe({ className: 'sizes' })
+    expect(sizes({ size: 'sm' })).toBe(`${stem}__base ${stem}_s_sm ${stem}_c_sm_md`)
+    expect(sizes({ size: 'md' })).toBe(`${stem}__base ${stem}_s_md ${stem}_c_sm_md`)
+    expect(sizes({ size: 'lg' })).toBe(`${stem}__base ${stem}_s_lg`)
+    registerRecipeData('test', { [STEM]: TABLE })
+  })
+
+  it('collapses a lone ["true"] predicate to the axis key', () => {
+    const stem = 'test__muted'
+    registerRecipeData('test', {
+      [stem]: {
+        variantMap: { muted: ['true', 'false'] },
+        defaultVariants: { muted: 1 },
+        compoundVariants: [{ predicates: { muted: ['true'] } }],
+      },
+    })
+    const muted = recipe({ className: 'muted' })
+    expect(muted({ muted: true })).toBe(`${stem}__base ${stem}_m_true ${stem}_c_muted`)
+    expect(muted({ muted: false })).toBe(`${stem}__base ${stem}_m_false`)
+    registerRecipeData('test', { [STEM]: TABLE })
+  })
+
+  it('reads legacy stem, axes, string defaults, and selection records', () => {
+    registerRecipeData('test', {
+      [STEM]: {
+        qualifiedName: STEM,
+        variantKeys: ['tone', 'size'],
+        variantMap: { tone: ['accent', 'muted'], size: ['sm', 'lg'] },
+        defaultVariants: { tone: 'muted', size: 'sm' },
+        compoundVariants: [
+          {
+            selection: { tone: 'accent', size: 'lg' },
+            className: `${STEM}_c_accent_lg`,
+          },
+        ],
+      },
+    })
+    const button = recipe(CONFIG)
+    expect(button()).toBe(MUTED_SM)
+    expect(button({ tone: 'accent', size: 'lg' })).toBe(ACCENT_LG)
+    expect(button({ tone: 'accent', size: 'sm' })).toBe(ACCENT_SM)
     registerRecipeData('test', { [STEM]: TABLE })
   })
 })

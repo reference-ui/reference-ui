@@ -26,16 +26,18 @@ const spec: AtomicCaseSpec = {
     expect(recipes).toContain('padding: 25px')
     expect(recipes).toContain('border-color: darkred')
 
-    const table = (result.recipes ?? []).find(r => r.qualifiedName === '@reference-ui/lib__button')
+    const table = result.runtime.recipes['@reference-ui/lib__button']
     expect(table).toBeTruthy()
     expect(table?.compoundVariants).toHaveLength(1)
-    expect(table?.compoundVariants[0]?.selection).toEqual({
-      size: 'lg',
-      tone: 'danger',
+    expect(table?.compoundVariants[0]?.predicates).toEqual({
+      size: ['lg'],
+      tone: ['danger'],
     })
-    expect(table?.compoundVariants[0]?.className).toBe(
-      '@reference-ui/lib__button_c_lg_danger'
-    )
+    expect(Object.keys(table?.compoundVariants[0]?.predicates ?? {})).toEqual([
+      'size',
+      'tone',
+    ])
+    expect(table?.compoundVariants[0]?.className).toBeUndefined()
 
     expect(result.diagnostics).toHaveLength(0)
   },

@@ -17,8 +17,9 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-09',
   verify(result) {
     const tables = result.recipes ?? []
-    // B5 ships qualifiedName as the table identity (className dropped).
-    expect(tables.map(table => table.qualifiedName).sort()).toEqual([
+    expect(tables).toHaveLength(5)
+    // C5: the runtime-map key is the table identity (stem + keys dropped from the wire).
+    expect(Object.keys(result.runtime.recipes).sort()).toEqual([
       '@reference-ui/lib__bare',
       '@reference-ui/lib__dynamic',
       '@reference-ui/lib__ghost',

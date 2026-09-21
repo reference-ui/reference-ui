@@ -23,10 +23,12 @@ const spec: AtomicCaseSpec = {
   verify(result) {
     const tables = result.recipes ?? []
     expect(tables).toHaveLength(1)
-    const table = tables[0]!
-    expect(table.qualifiedName).toBe(STEM)
+    const table = result.runtime.recipes[STEM]!
+    expect(table).toBeDefined()
+    expect(table.qualifiedName).toBeUndefined()
+    expect(table.variantKeys).toBeUndefined()
     expect(table.variantMap.variant).toEqual(['solid', 'outline'])
-    expect(table.defaultVariants).toEqual({ variant: 'solid' })
+    expect(table.defaultVariants).toEqual({ variant: 0 })
 
     expect(table.combinations).toBeUndefined()
     expect(table.responsiveVariantMap).toBeUndefined()
