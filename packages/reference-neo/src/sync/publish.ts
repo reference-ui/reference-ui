@@ -17,6 +17,8 @@ export { publishTypesBundle } from './publish/types-bundle.ts'
 
 export function publishSyncFolder(input: PublishInput): void {
   mkdirSync(input.outDir, { recursive: true })
+  // Ordered: the system leg stages baseSystem.mjs for publishRuntimeBundle,
+  // and the react leg copies the styled leg's stylesheet.
   writeSystemDir(input)
   writeStyledDir(input)
   writeReactDir(input)

@@ -126,17 +126,29 @@ function spawnPhasedWorker(projectDir: string, goFile: string): PhasedWorker {
   })
   const waitReady = (): Promise<void> =>
     new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('phased worker never signaled READY')), 120000)
+      let poll: ReturnType<typeof setTimeout> | undefined
+      let settled = false
+      const fail = (err: Error): void => {
+        if (settled) return
+        settled = true
+        if (poll !== undefined) clearTimeout(poll)
+        clearTimeout(timer)
+        worker.kill()
+        reject(err)
+      }
+      const timer = setTimeout(() => fail(new Error('phased worker never signaled READY')), 120000)
       const check = (): void => {
+        if (settled) return
         if (!stderr.includes('READY')) {
-          setTimeout(check, 25)
+          poll = setTimeout(check, 25)
           return
         }
+        settled = true
         clearTimeout(timer)
         resolve()
       }
       check()
-      worker.on('error', reject)
+      worker.on('error', fail)
     })
   const waitDone = (): Promise<number> =>
     new Promise((resolve, reject) => {
