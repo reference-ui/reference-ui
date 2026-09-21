@@ -27,6 +27,7 @@ function frozenBase(sourceRoot: string): NativeCompileRequest {
     jsxHosts: [],
     sourceRoot,
     declarationRoot: sourceRoot,
+    logs: ['proof'],
   }
 }
 
@@ -74,6 +75,7 @@ const spec: AtomicCaseSpec = {
       rootDir: sourceRoot,
       include: ['theme/**'],
       files: virtualFiles(sourceRoot),
+      logs: ['proof'],
     })
     expectNoErrors(virtual)
     expectRedOnly(virtual)
@@ -97,6 +99,7 @@ const spec: AtomicCaseSpec = {
       rootDir: sourceRoot,
       include: ['!outside/**'],
       files: virtualFiles(sourceRoot),
+      logs: ['proof'],
     })
     expectNoErrors(negationOnlyVirtual)
     expectRedOnly(negationOnlyVirtual)

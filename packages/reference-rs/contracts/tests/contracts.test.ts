@@ -138,9 +138,11 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(result.tracedJsxHosts).toEqual(['Card'])
   })
 
-  it('CompileResult fixture surfaces the compiler plans at top level, not in the artifact', () => {
+  it('CompileResult fixture pins the slim default: proof rows ride the proof channel, not the wire', () => {
     const result = compileResultJson satisfies CompileResult
-    expect(result.stylePlans.length).toBeGreaterThan(0)
+    expect('stylePlans' in result).toBe(false)
+    expect('wants' in result).toBe(false)
+    expect('atomCount' in result).toBe(false)
     expect('stylePlans' in result.runtime).toBe(false)
   })
 

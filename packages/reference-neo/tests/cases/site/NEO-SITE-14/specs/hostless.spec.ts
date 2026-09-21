@@ -48,7 +48,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   ) as { jsxHosts: string[] };
   assert.ok(request.jsxHosts.length > 0, 'the frozen request carries the admitted hosts');
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
-  const result = await atomic.compile({ ...request, jsxHosts: [] });
+  const result = await atomic.compile({ ...request, jsxHosts: [], logs: ['proof'] });
   const errors = (result.diagnostics ?? []).filter(
     (entry: AtomicDiagnostic) => entry.severity === 'error',
   );

@@ -47,6 +47,7 @@ const spec: AtomicCaseSpec = {
       jsxHosts: ['ConfiguredHost'],
       sourceRoot,
       declarationRoot: sourceRoot,
+      logs: ['proof'],
     })
     expect(
       hosted.diagnostics.filter(d => d.severity === 'error')

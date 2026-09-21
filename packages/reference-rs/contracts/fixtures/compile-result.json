@@ -87,24 +87,7 @@
       "padding"
     ]
   },
-  "stylePlans": [
-    {
-      "system": "lib-test-system",
-      "when": [],
-      "prop": "color",
-      "value": "blue.500",
-      "important": false,
-      "declarations": [
-        {
-          "slot": "color",
-          "className": "lib-test-system__c_blue-500"
-        }
-      ]
-    }
-  ],
   "diagnostics": [],
-  "wants": [],
-  "atomCount": 3,
   "tracedJsxHosts": [
     "Card"
   ]

@@ -67,8 +67,9 @@ export interface CompileRequest {
   include?: string[]
   /**
    * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
-   * 'compiler', the result also carries `compilerDiagnostics`. Unknown
-   * channels are ignored so channels evolve additively.
+   * 'compiler', the result also carries `compilerDiagnostics`; when it
+   * contains 'proof', the result also carries the compile-internal rows
+   * stations read. Unknown channels are ignored so channels evolve additively.
    */
   logs?: LogChannel[]
 }
@@ -134,13 +135,21 @@ export interface CompileResult {
   stylesheet: string
   portableStylesheet?: string
   runtime: NativeRuntimeArtifact
-  /** Compile-internal plans: the compiler rows, surfaced for proof and the differential. */
-  stylePlans: RuntimeStylePlan[]
+  /**
+   * Compile-internal plans: the compiler rows, surfaced for proof and the
+   * differential. Present only when the request's `logs` includes 'proof';
+   * production reads the sheets, runtime, diagnostics, and hosts. The
+   * station harness always requests proof, so specs read this directly.
+   */
+  stylePlans?: RuntimeStylePlan[]
+  /** Per-atom class map. Proof channel only; stations pin css.json goldens off it. */
   css?: CssRuntime
   diagnostics: Diagnostic[]
+  /** Extraction rows with origin/file/line. Proof channel only. */
   wants?: Want[]
+  /** Top-level recipe tables (same tables as the runtime.recipes map). Proof channel only. */
   recipes?: RecipeRuntimeTable[]
-  /** Distinct AtomSet size. Test observability for ATM-GHOST-04. */
+  /** Distinct AtomSet size. Test observability for ATM-GHOST-04. Proof channel only. */
   atomCount?: number
   /** Component names StyleTrace discovered in this compile (ATM-SEAM-05). */
   tracedJsxHosts?: string[]

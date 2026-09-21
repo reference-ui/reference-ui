@@ -1,8 +1,8 @@
 //! Assembly of the compile's filled sinks into the artifact bundle.
 //! Takes the wants, recipes, diagnostics, and authored declarations that
 //! extraction filled, appends static CSS, then builds the atom set, runtime
-//! plans, stylesheets, and runtime map. The portable build re-walks the same
-//! fragments into its own diagnostic sink so global warnings surface once.
+//! plans, stylesheets, and runtime map. The portable sheet shares the printed
+//! suffix and sinks its own system-layer diagnostics so warnings surface once.
 
 use std::collections::HashSet;
 
@@ -78,20 +78,17 @@ impl AssembleCtx {
 
         let atom_count = atom_set.len();
         let css = build_css_runtime(&atom_set, &system.name);
-        let stylesheet = stylesheet::build_stylesheet_with(
-            &atom_set,
-            system,
-            &compiled_recipes,
-            &mut diagnostics,
-        );
-        // Portable build re-walks the same fragments; its diagnostics sink here
-        // so global warnings surface once from the primary build above.
+        // Dual-sheet build shares one recipes+utilities suffix; the portable
+        // diagnostics sink here so global warnings surface once, as before.
         let mut portable_sink = Vec::new();
-        let portable_stylesheet = stylesheet::build_portable_stylesheet_with(
+        let (stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
             &atom_set,
             system,
             &compiled_recipes,
-            &mut portable_sink,
+            stylesheet::StylesheetSinks {
+                primary: &mut diagnostics,
+                portable: &mut portable_sink,
+            },
         );
         let recipe_tables = compiled_recipes
             .into_iter()

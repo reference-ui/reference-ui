@@ -100,6 +100,7 @@ interface RuntimeNamer {
 interface CaseInput {
   rootDir: string;
   baseSystem: EvaluatedSystemSpec;
+  logs: string[];
 }
 
 function readJson(file: string): unknown {
@@ -111,7 +112,8 @@ function caseInput(caseDir: string): CaseInput {
   const baseSystem = (
     fs.existsSync(baseSystemPath) ? readJson(baseSystemPath) : readJson(LIB_SYSTEM_SPEC)
   ) as EvaluatedSystemSpec;
-  return { rootDir: path.join(caseDir, 'input'), baseSystem };
+  // The gate reads the compile-internal plans, so it requests the proof channel.
+  return { rootDir: path.join(caseDir, 'input'), baseSystem, logs: ['proof'] };
 }
 
 function toRequest(plan: RuntimeStylePlan): NamerRequest {

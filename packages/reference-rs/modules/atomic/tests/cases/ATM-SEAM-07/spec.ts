@@ -39,7 +39,7 @@ const spec: AtomicCaseSpec = {
         content: fs.readFileSync(path.join(srcDir, name), 'utf8'),
       }))
     files.push({ path: 'input/src/plus.ts', content: hexSource() })
-    const plus = await compile({ files, baseSystem: LIB_SYSTEM_SPEC })
+    const plus = await compile({ files, baseSystem: LIB_SYSTEM_SPEC, logs: ['proof'] })
 
     // Green half: the plus-compile really added 500 harvested hexes.
     const grown = hexRuleCount(plus.stylesheet) - hexRuleCount(result.stylesheet)
