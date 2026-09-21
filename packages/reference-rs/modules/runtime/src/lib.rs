@@ -23,6 +23,11 @@ mod virtualrs;
 #[cfg(feature = "alloc-trace")]
 mod alloc_trace;
 
+#[cfg(feature = "counters-trace")]
+mod counters_abi;
+#[cfg(feature = "counters-trace")]
+mod counters_trace;
+
 #[cfg(feature = "alloc-trace")]
 #[global_allocator]
 static ALLOC: alloc_trace::TraceAlloc = alloc_trace::TraceAlloc;

@@ -39,6 +39,8 @@ struct NativeCompileRequest {
 pub fn compile_system(request_json: String) -> Result<String> {
     #[cfg(feature = "alloc-trace")]
     let mut _span = crate::alloc_trace::CompileSpan::enter(request_json.len());
+    #[cfg(feature = "counters-trace")]
+    let _cspan = crate::counters_trace::CountersSpan::enter();
     let req: NativeCompileRequest = serde_json::from_str(&request_json)
         .map_err(|err| napi::Error::from_reason(format!("Invalid compile request JSON: {err}")))?;
     let proof = wants_proof(&req);

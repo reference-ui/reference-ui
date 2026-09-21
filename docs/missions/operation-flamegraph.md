@@ -56,7 +56,9 @@ of ad-hoc invocations will rot; a runner subcommand gets used.
       runs (`pnpm agentrs c` family). (landed 2026-09-21: 8 targets /
       46 cases / 9 functions, verified firsthand, plus `pnpm agentrs
       bench` gated invocation)
-- [ ] Counters pass answering floor-vs-waste per top room.
+- [x] Counters pass answering floor-vs-waste per top room. (landed
+      2026-09-21, verified firsthand, evidence at
+      docs/evidence/counters/enterprise-latest/)
 - [ ] Recon-quality report: ranked rooms with numbers, kill-fast
       bars, and an explicit Wave 5 recommendation (skirmish lanes vs.
       architectural bet).
