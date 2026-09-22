@@ -112,3 +112,6 @@ swarm worktrees kept pending cleanup.
   CUT +2). Roster zero, lock free, park holds (RS zero-touch, no new
   sync evidence). Clerk worktree released; 21 swarm worktrees kept
   pending cleanup. Slots 0/7, all held.
+- Tick parked: board EMPTY (roster zero, lock free, tip b7c7bee8e,
+  claims quiet since clerk FINISH, index 93). Park holds, RS
+  zero-touch, no new sync evidence. Nothing to dispatch.
