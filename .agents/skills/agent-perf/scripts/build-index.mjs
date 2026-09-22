@@ -75,7 +75,7 @@ const LANDED_IN = {
   'PERF-W2-ANALYSISB': 'set-4/e360915f7', 'PERF-W2-PROGRAMSFX': 'set-5/6c3909506',
   'PERF-W2-WANTCTX': 'set-5/6c3909506', 'PERF-W2-STAGEAUDIT': 'set-5/6c3909506',
   'PERF-W2-BAGDEFER': 'set-5/6c3909506', 'PERF-W2-HARVESTPHASE': 'set-5/6c3909506',
-  'PERF-W3-RAWINDEX': 'solo/uncommitted',
+  'PERF-W3-RAWINDEX': 'solo/b3181fa93',
 };
 
 const slugWords = (s) => s.replace(/-/g, ' ');

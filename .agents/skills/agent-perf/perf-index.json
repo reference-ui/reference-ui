@@ -1,5 +1,5 @@
 {
- "built": "2026-09-22T10:52:37.732Z",
+ "built": "2026-09-22T10:58:46.402Z",
  "root": "docs/perf/waves",
  "count": 85,
  "entries": [
@@ -1668,7 +1668,7 @@
    ],
    "report": "docs/perf/waves/wave-3/report-swarm-rawindex.md",
    "patch": null,
-   "landedIn": "solo/uncommitted",
+   "landedIn": "solo/b3181fa93",
    "summary": "MCP icons index imported as raw text (single parse) + loadJS branch for the parsed-import path; cold import −160.3 ms / −53.3%.",
    "log": null,
    "filler": false
