@@ -6,12 +6,12 @@
 //! walker's edges: hops, aliases, chains, stars, defaults, cycles, and the
 //! relative-only probing fence.
 
-use std::collections::HashMap;
 use std::path::Path;
 
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use rustc_hash::FxHashMap;
 
 use super::identity::IdentityGraph;
 
@@ -365,7 +365,7 @@ fn reused_programs_answer_like_fresh_parses() {
         .collect();
     // Every unpanicked position reuses its program; the broken file stays
     // unmapped so the fallback re-parse answers (identically) from bytes.
-    let mut programs = HashMap::new();
+    let mut programs = FxHashMap::default();
     for (position, ret) in parsed.iter().enumerate() {
         if !ret.panicked {
             programs.insert(position, &ret.program);

@@ -6,7 +6,7 @@
 //! fails loudly here instead of silently hollowing host discovery.
 
 use rustc_hash::FxHashMap;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 
 use super::fixtures::workspace_scratch_dir;
 use crate::{StyleSurface, TraceOutcome, trace_style_bindings_with_surface};
@@ -37,7 +37,7 @@ fn trace_outcome(files: &[(&str, &str)]) -> TraceOutcome {
         entries.push(fixture.root().join(path));
     }
     let staged = FxHashMap::default();
-    let programs = HashMap::new();
+    let programs = FxHashMap::default();
     let sources = crate::TraceSources {
         staged: &staged,
         programs: &programs,

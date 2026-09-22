@@ -48,10 +48,10 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 
 use diagnostics::DiagnosticSink;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
@@ -433,11 +433,11 @@ fn reuse_programs<'a>(
     slots: &[stream::SourceSlot],
     errors: &[Vec<(String, Option<u32>)>],
 ) -> (
-    HashMap<usize, &'a Program<'a>>,
-    HashMap<PathBuf, &'a Program<'a>>,
+    FxHashMap<usize, &'a Program<'a>>,
+    FxHashMap<PathBuf, &'a Program<'a>>,
 ) {
-    let mut identity = HashMap::new();
-    let mut trace = HashMap::new();
+    let mut identity = FxHashMap::default();
+    let mut trace = FxHashMap::default();
     for (position, &i) in retained.iter().enumerate() {
         if slots[i].panicked {
             continue;

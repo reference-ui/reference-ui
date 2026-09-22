@@ -4,7 +4,7 @@
 //! plus a hand-built surface keep the test hermetic: no fixture tree,
 //! no declaration root.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use oxc_allocator::Allocator;
@@ -53,7 +53,7 @@ fn trace_scratch(
     }
     let entries = vec![scratch.root().join(entry)];
     let staged = FxHashMap::default();
-    let programs = std::collections::HashMap::new();
+    let programs = FxHashMap::default();
     let sources = crate::TraceSources {
         staged: &staged,
         programs: &programs,
@@ -218,7 +218,7 @@ fn staged_content_matches_disk_trace() {
     }
     let entries = vec![scratch.root().join("Button.tsx")];
     let empty = FxHashMap::default();
-    let no_programs = HashMap::new();
+    let no_programs = FxHashMap::default();
     let from_disk = trace_style_bindings_with_surface(
         &entries,
         scratch.root(),
@@ -260,7 +260,7 @@ fn reused_programs_match_fresh_parse_trace() {
         .iter()
         .map(|(rel, content)| (scratch.root().join(rel), *content))
         .collect();
-    let no_programs = HashMap::new();
+    let no_programs = FxHashMap::default();
     let fresh = trace_style_bindings_with_surface(
         &entries,
         scratch.root(),
@@ -293,7 +293,7 @@ fn reused_programs_match_fresh_parse_trace() {
     .parse();
     assert!(button_parsed.errors.is_empty());
     assert!(types_parsed.errors.is_empty());
-    let programs: HashMap<PathBuf, &oxc_ast::ast::Program> = [
+    let programs: FxHashMap<PathBuf, &oxc_ast::ast::Program> = [
         (button, &button_parsed.program),
         (types_path, &types_parsed.program),
     ]

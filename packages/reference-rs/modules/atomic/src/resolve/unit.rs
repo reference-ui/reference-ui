@@ -124,7 +124,11 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
 }
 
 /// Refuse one non-canonical numeric spelling with its want key attached.
-fn refuse_non_canonical_number(prop: &str, spelling: Box<str>, session: &mut ResolveSession<'_>) {
+fn refuse_non_canonical_number(
+    prop: &str,
+    spelling: Box<str>,
+    session: &mut ResolveSession<'_, '_>,
+) {
     let key = want_key(
         session,
         prop,
@@ -144,7 +148,7 @@ fn refuse_non_canonical_number(prop: &str, spelling: Box<str>, session: &mut Res
     );
 }
 
-fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
+fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_, '_>) -> Option<CssValue> {
     if is_non_canonical_numeric(&n) {
         refuse_non_canonical_number(prop, n, session);
         return None;
@@ -162,7 +166,7 @@ fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Opt
     }
 }
 
-fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
+fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_, '_>) -> Option<CssValue> {
     // SPEC-V2-14: structural runs collapse before anything else reads the
     // string, so spaced twins share one numeric parse and one atom.
     let collapsed: Box<str> = super::normalize::collapse_boxed(s);
@@ -195,7 +199,7 @@ fn accepts_bare_number(prop: &str) -> bool {
 fn legacy_string_value(
     prop: &str,
     s: Box<str>,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<CssValue> {
     // Empty-after-trim strings are never CSS (`margin: ;` is invalid);
     // refuse with a diagnostic instead of emitting the empty declaration.
@@ -229,7 +233,7 @@ fn legacy_string_value(
 pub fn css_value_from_authored(
     prop: &str,
     val: AtomValue,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<CssValue> {
     match val {
         // A null leaf (`const n = null`) is a hole, not CSS: strip it

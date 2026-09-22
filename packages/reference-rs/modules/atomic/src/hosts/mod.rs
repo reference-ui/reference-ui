@@ -5,7 +5,7 @@
 //! include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
@@ -52,7 +52,7 @@ pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     // No parse runs on this path, so no failure signal exists: every
     // source counts as parsed-clean and the trace gate applies fully.
     let failed = vec![false; sources.len()];
-    let programs = HashMap::new();
+    let programs = FxHashMap::default();
     resolve(request, &sources, &failed, &mut session, &programs)
         .0
         .hosts()
@@ -72,7 +72,7 @@ pub fn resolve(
     sources: &[(String, String)],
     failed: &[bool],
     sink: &mut DiagnosticsSession,
-    programs: &HashMap<PathBuf, &Program<'_>>,
+    programs: &FxHashMap<PathBuf, &Program<'_>>,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
     let vacant = || {

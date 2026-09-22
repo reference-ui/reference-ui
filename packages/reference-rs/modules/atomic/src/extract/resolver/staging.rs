@@ -30,10 +30,21 @@ pub(crate) struct StreamedSource {
 impl StreamedSource {
     /// Stage one streamed file from its transient program: record plus bag.
     pub(crate) fn collect(program: &Program<'_>, path: &str, content: &str) -> Self {
+        Self::with_bag(
+            program,
+            path,
+            collect_local_constants(program, path, Some(content)),
+        )
+    }
+
+    /// Stage one streamed file around a pre-collected bag: the ordered walk
+    /// already collected these constants for the project merge, so the bag
+    /// moves in instead of being walked a second time.
+    pub(crate) fn with_bag(program: &Program<'_>, path: &str, bag: LocalConstants) -> Self {
         Self {
             key: ModuleKey::new(path),
             record: ModuleRecord::collect(program),
-            bag: collect_local_constants(program, path, Some(content)),
+            bag,
         }
     }
 }
