@@ -167,8 +167,13 @@ diets); scan voyage opens separately after closeout lands.
   (respawns when F1 files; fresh worktree auto-cleaned, nothing lost).
   Pipeline: design → accept → implement → integrate → land. VOYAGE.md
   updated (Design tracks).
+- Formula-1 merge (HQ order): F1 + F2 are ONE scope (single-thread
+  speed). Running F1 designer NOT disturbed (§4) — finishes current
+  brief; F2 folds in as a follow-on merger against the accepted F1
+  design (unified Formula-1 DESIGN.md). Standalone F2 respawn
+  SUPERSEDED. VOYAGE.md updated.
 - Slots: 2/7 (INT-T1 + F1 designer), 5 held — nothing else briefable
-  (F2 queued behind F1, N1 held) — this entry is the proof.
+  (F2 merged into Formula-1 line, N1 held) — this entry is the proof.
 
 ## Ticks (empty board)
 
