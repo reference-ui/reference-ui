@@ -105,9 +105,18 @@ fn has_selector_condition(atom: &Atom) -> bool {
         .any(|cond| matches!(cond.wrap(), WhenKind::Selector(_)))
 }
 
+/// Pre-size the nested base from its exact pieces plus escape slack.
+fn nested_base_hint(atom: &Atom, system: &str) -> usize {
+    let mut hint = 1 + system.len() + 2;
+    for cond in atom.conditions.iter() {
+        hint += cond.class_segment().len() + 1;
+    }
+    hint + atom.prop.len() + 1 + atom.value.class_name_str().len() + 2
+}
+
 /// Selector-conditioned atoms: escape the base once, then nest as before.
 fn push_nested_selector(out: &mut String, atom: &Atom, system: &str) {
-    let mut base = String::new();
+    let mut base = String::with_capacity(nested_base_hint(atom, system));
     push_selector_base(&mut base, atom, system);
     let mut current = base;
     for cond in &atom.conditions {

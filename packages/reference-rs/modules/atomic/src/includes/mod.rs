@@ -53,17 +53,17 @@ impl IncludeScope {
 
     /// Match a source file, trying its root-relative form before the raw path.
     pub fn matches_file(&self, root: Option<&str>, path: &str) -> bool {
-        if self.is_open() {
-            return true;
+        self.matcher(root).matches_file(path)
+    }
+
+    /// Bind this scope to one root for a file walk: the root normalizes
+    /// once here instead of once per file. Match verdicts equal calling
+    /// `matches_file` with the same root on every path.
+    pub fn matcher(&self, root: Option<&str>) -> FileMatcher<'_> {
+        FileMatcher {
+            scope: self,
+            root: root.map(normalize_candidate),
         }
-        let candidates = file_candidates(root, path);
-        (self.positives.is_empty()
-            || candidates
-                .iter()
-                .any(|candidate| self.matches_positive(candidate)))
-            && !candidates
-                .iter()
-                .any(|candidate| self.matches_negative(candidate))
     }
 
     fn matches_positive(&self, candidate: &str) -> bool {
@@ -87,27 +87,70 @@ fn split_negation(pattern: &str) -> (bool, &str) {
     }
 }
 
-/// Candidate forms for one file: root-relative first, then the path as given.
-fn file_candidates(root: Option<&str>, path: &str) -> Vec<String> {
-    let normalized = normalize_candidate(path);
-    let mut candidates = Vec::with_capacity(2);
-    if let Some(relative) = root.and_then(|root| strip_root(root, &normalized)) {
-        candidates.push(relative);
-    }
-    candidates.push(normalized);
-    candidates
+/// One scope bound to one pre-normalized root for a file walk.
+/// Paths borrow through matching: clean paths never allocate, and the
+/// root-relative form is a prefix strip, never a copy. Verdicts equal
+/// the legacy per-file `matches_file` on every input.
+pub struct FileMatcher<'a> {
+    scope: &'a IncludeScope,
+    root: Option<String>,
 }
 
-/// Root-relative remainder of a normalized path, if the path sits under root.
-fn strip_root(root: &str, path: &str) -> Option<String> {
-    let root = normalize_candidate(root);
-    if path == root {
-        return Some(String::new());
+impl FileMatcher<'_> {
+    /// Match a source file, trying its root-relative form before the raw path.
+    pub fn matches_file(&self, path: &str) -> bool {
+        if self.scope.is_open() {
+            return true;
+        }
+        let owned;
+        let normalized = match normalize_borrowed(path) {
+            Ok(borrowed) => borrowed,
+            Err(alloc) => {
+                owned = alloc;
+                owned.as_str()
+            }
+        };
+        let relative = self
+            .root
+            .as_deref()
+            .and_then(|root| strip_borrowed(root, normalized));
+        let positive_hit = self.scope.positives.is_empty()
+            || relative.is_some_and(|candidate| self.scope.matches_positive(candidate))
+            || self.scope.matches_positive(normalized);
+        positive_hit && !self.negative_hit(relative, normalized)
     }
-    let mut prefixed = String::with_capacity(root.len() + 1);
-    prefixed.push_str(&root);
-    prefixed.push('/');
-    path.strip_prefix(&prefixed).map(str::to_string)
+
+    /// True when either candidate form trips a negative alternative.
+    fn negative_hit(&self, relative: Option<&str>, normalized: &str) -> bool {
+        relative.is_some_and(|candidate| self.scope.matches_negative(candidate))
+            || self.scope.matches_negative(normalized)
+    }
+}
+
+/// The normalized path, borrowed when already clean, owned otherwise.
+/// The owned fallback runs the legacy normalization byte-for-byte.
+fn normalize_borrowed(path: &str) -> Result<&str, String> {
+    if is_normalized(path) {
+        Ok(path)
+    } else {
+        Err(normalize_candidate(path))
+    }
+}
+
+/// True when legacy normalization would return the input unchanged:
+/// no backslashes, no `./` prefix, no trailing slash worth trimming.
+fn is_normalized(path: &str) -> bool {
+    !path.contains('\\') && !path.starts_with("./") && (path.len() <= 1 || !path.ends_with('/'))
+}
+
+/// Root-relative remainder of a normalized path, borrowed from the path.
+/// A path equal to the root yields the empty form, exactly as before.
+fn strip_borrowed<'a>(root: &str, path: &'a str) -> Option<&'a str> {
+    if path == root {
+        return Some("");
+    }
+    let tail = path.strip_prefix(root)?;
+    tail.strip_prefix('/')
 }
 
 /// Normalize a candidate path: forward slashes, no `./` prefix or trailing `/`.
@@ -171,6 +214,16 @@ mod tests {
         assert!(!scoped.matches("outside/out.ts"));
         assert!(scoped.matches_file(Some("/root"), "/root/theme/in.ts"));
         assert!(!scoped.matches_file(Some("/root"), "/root/outside/out.ts"));
+    }
+
+    #[test]
+    fn backslash_and_ragged_roots_match_forward_slashes() {
+        let scoped = scope(&["src/**/*.ts"]);
+        assert!(scoped.matches_file(Some("C:\\root"), "C:\\root\\src\\a.ts"));
+        assert!(scoped.matches_file(Some("/root/"), "/root/src/a.ts"));
+        assert!(scoped.matches_file(Some("./root"), "./root/src/a.ts"));
+        assert!(!scoped.matches_file(Some("/root"), "/root/src/a.mjs"));
+        assert!(!scoped.matches_file(Some("/other"), "/root/src/a.ts"));
     }
 
     #[test]

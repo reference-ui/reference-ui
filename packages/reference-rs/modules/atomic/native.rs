@@ -137,11 +137,15 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
 /// diagnostics, traced hosts) plus the opt-in compiler backchannel when present.
 /// Style plans, wants, the css map, top-level recipes, and the atom count ride
 /// the proof channel only; they cost ~38% of the result string at enterprise.
+/// The portable sheet refolds against the primary sheet's shared suffix (head +
+/// tail length; the wrapper rebuilds the identical string), saving ~48% of the
+/// wire at enterprise. The observed `CompileResult` is unchanged.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SlimCompileResult<'a> {
     stylesheet: &'a str,
-    portable_stylesheet: &'a str,
+    portable_head: &'a str,
+    shared_tail_utf16: usize,
     runtime: &'a ::atomic::NativeRuntimeArtifact,
     diagnostics: &'a Vec<::atomic::Diagnostic>,
     traced_jsx_hosts: &'a Vec<String>,
@@ -151,9 +155,12 @@ struct SlimCompileResult<'a> {
 
 impl<'a> SlimCompileResult<'a> {
     fn of(result: &'a ::atomic::CompileResult) -> Self {
+        let refold =
+            ::atomic::wire::split_shared_suffix(&result.stylesheet, &result.portable_stylesheet);
         Self {
             stylesheet: &result.stylesheet,
-            portable_stylesheet: &result.portable_stylesheet,
+            portable_head: refold.head,
+            shared_tail_utf16: refold.tail_utf16,
             runtime: &result.runtime,
             diagnostics: &result.diagnostics,
             traced_jsx_hosts: &result.traced_jsx_hosts,

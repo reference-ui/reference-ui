@@ -7,6 +7,7 @@
 //! rewrites the pushed diagnostics in place from the join verdicts.
 
 pub mod lines;
+pub mod memo;
 pub mod plans;
 pub mod rejects;
 pub mod render;

@@ -30,6 +30,11 @@ pub fn expand_flex_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>,
     if canon::resolve_canonical_prop(prop) != "flex" {
         return None;
     }
+    expand_flex_value(raw_val)
+}
+
+/// Flex body off the keyword lookup alone (canon already matched).
+pub(crate) fn expand_flex_value(raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
     let mapped = flex_keyword_triple(raw_val.trim())?;
     Some(vec![("flex".into(), AtomValue::String(mapped.into()))])
 }

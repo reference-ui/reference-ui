@@ -20,25 +20,55 @@ use super::{member_needs_is_wrap, split_selector_list, Action, SelectorQuoteStat
 /// parent member, armoured with `:is()` when it carries a combinator and
 /// the member repeats `&`.
 pub fn nest(parent: &str, template: &str) -> String {
-    let parents = split_selector_list(parent);
-    let members = split_selector_list(template);
-    let mut out = Vec::with_capacity(parents.len() * members.len());
-    for parent_member in &parents {
-        for member in &members {
-            out.push(nest_member(parent_member, member));
-        }
+    if !parent.contains(',') && !template.contains(',') {
+        return nest_single(parent.trim(), template.trim());
     }
-    out.join(", ")
+    nest_list(parent, template)
 }
 
-fn nest_member(parent: &str, member: &str) -> String {
+/// Nest when neither side can hold a top-level comma: both sides are one
+/// trimmed member, so the cartesian product is one member, no join.
+fn nest_single(parent: &str, member: &str) -> String {
+    if parent.is_empty() || member.is_empty() {
+        return String::new();
+    }
+    let mut out = String::with_capacity(member.len() + parent.len() * 2 + 2);
+    nest_member_into(parent, member, &mut out);
+    out
+}
+
+/// Nest comma-carrying sides: split as before, push members directly.
+fn nest_list(parent: &str, template: &str) -> String {
+    let parents = split_selector_list(parent);
+    let members = split_selector_list(template);
+    let pairs = parents.len() * members.len();
+    if pairs == 0 {
+        return String::new();
+    }
+    let mut out = String::with_capacity((parent.len() + template.len()) * pairs + pairs * 2);
+    for (parent_idx, parent_member) in parents.iter().enumerate() {
+        for (member_idx, member) in members.iter().enumerate() {
+            if parent_idx > 0 || member_idx > 0 {
+                out.push_str(", ");
+            }
+            nest_member_into(parent_member, member, &mut out);
+        }
+    }
+    out
+}
+
+fn nest_member_into(parent: &str, member: &str, out: &mut String) {
     if !contains_code_ampersand(member) {
-        return format!("{parent} {member}");
+        out.push_str(parent);
+        out.push(' ');
+        out.push_str(member);
+        return;
     }
-    if let Some(reordered) = reorder_pseudo_element(parent, member) {
-        return reordered;
+    if reorder_pseudo_element_into(parent, member, out) {
+        return;
     }
-    substitute(member, &substitution_for(parent, member))
+    let wrapped = substitution_needs_wrap(parent, member);
+    substitute_into(member, parent, wrapped, out);
 }
 
 /// Reorder a pseudo-class appended under a pseudo-element parent.
@@ -50,19 +80,28 @@ fn nest_member(parent: &str, member: &str) -> String {
 /// parent base and the pseudo-element moves past it (`.c:focus::before`). A
 /// suffix starting at a combinator inserts at offset zero — the textual
 /// result — so descendant and sibling members keep their own compound.
-/// Anything else returns `None` and substitutes textually.
-fn reorder_pseudo_element(parent: &str, member: &str) -> Option<String> {
-    let (base, pseudo) = split_trailing_pseudo_element(parent)?;
-    let amp = single_code_ampersand(member)?;
+/// Anything else returns false and substitutes textually.
+///
+/// The `::` gate is a necessary condition: without those bytes the trailing
+/// scan cannot find a pair, so the slow check is skipped, never weakened.
+fn reorder_pseudo_element_into(parent: &str, member: &str, out: &mut String) -> bool {
+    if !parent.contains("::") {
+        return false;
+    }
+    let Some((base, pseudo)) = split_trailing_pseudo_element(parent) else {
+        return false;
+    };
+    let Some(amp) = single_code_ampersand(member) else {
+        return false;
+    };
     let suffix = &member[amp + 1..];
     let end = compound_end(suffix);
-    let mut out = String::with_capacity(member.len() + base.len() + pseudo.len());
     out.push_str(&member[..amp]);
     out.push_str(base);
     out.push_str(&suffix[..end]);
     out.push_str(pseudo);
     out.push_str(&suffix[end..]);
-    Some(out)
+    true
 }
 
 /// Split a trailing `::name` off a complex selector, if it ends in one.
@@ -147,12 +186,9 @@ fn compound_end(suffix: &str) -> usize {
     suffix.len()
 }
 
-fn substitution_for(parent: &str, member: &str) -> String {
-    if member_needs_is_wrap(parent) && has_multiple_code_ampersands(member) {
-        format!(":is({parent})")
-    } else {
-        parent.to_owned()
-    }
+/// True when the substitution arms the parent with `:is()`.
+fn substitution_needs_wrap(parent: &str, member: &str) -> bool {
+    has_multiple_code_ampersands(member) && member_needs_is_wrap(parent)
 }
 
 fn contains_code_ampersand(member: &str) -> bool {
@@ -176,21 +212,40 @@ fn has_multiple_code_ampersands(member: &str) -> bool {
     false
 }
 
-fn substitute(member: &str, replacement: &str) -> String {
-    let mut out = String::with_capacity(member.len() + replacement.len());
+fn substitute_into(member: &str, parent: &str, wrapped: bool, out: &mut String) {
     let mut state = SelectorQuoteState::default();
     for ch in member.chars() {
         match state.step(ch) {
             Action::Keep => out.push(ch),
-            Action::Substitute => out.push_str(replacement),
+            Action::Substitute => {
+                if wrapped {
+                    out.push_str(":is(");
+                    out.push_str(parent);
+                    out.push(')');
+                } else {
+                    out.push_str(parent);
+                }
+            }
         }
     }
-    out
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fast_and_slow_paths_agree_on_trims_and_empties() {
+        assert_eq!(nest("  .cls  ", "  &:hover  "), ".cls:hover");
+        assert_eq!(nest("", "&:hover"), "");
+        assert_eq!(nest(".cls", ""), "");
+        assert_eq!(nest("   ", "   "), "");
+        assert_eq!(nest(".a:is(.x, .y)", "&:hover"), ".a:is(.x, .y):hover");
+        assert_eq!(
+            nest(".cls", "&:is(:hover, [data-hover])"),
+            ".cls:is(:hover, [data-hover])"
+        );
+    }
 
     #[test]
     fn comma_member_without_ampersand_scopes_to_parent() {

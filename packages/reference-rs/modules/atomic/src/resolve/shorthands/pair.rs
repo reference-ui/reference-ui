@@ -9,11 +9,18 @@ use crate::atom::AtomValue;
 /// Real properties (`borderRadius`, `borderWidth`, …) never reach here.
 pub fn expand_pair_shorthand(prop: &str, value: &AtomValue) -> Option<Vec<(Box<str>, AtomValue)>> {
     // borderTopRadius: '2r'  /  borderStartRadius: '2r'
-    let canon_name = canon::resolve_canonical_prop(prop);
+    expand_pair_with_canon(canon::resolve_canonical_prop(prop), value)
+}
+
+/// Pair body off one resolved name (skips the wrapper's re-resolve).
+pub(crate) fn expand_pair_with_canon(
+    canon_name: &str,
+    value: &AtomValue,
+) -> Option<Vec<(Box<str>, AtomValue)>> {
     if !is_radius_pair(canon_name) {
         return None;
     }
-    let longhands = canon::native_longhands_for_prop(canon_name)?;
+    let longhands = super::longhands_for_canon(canon_name)?;
     if longhands.len() != 2 {
         return None;
     }

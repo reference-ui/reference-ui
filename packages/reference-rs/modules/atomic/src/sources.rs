@@ -8,7 +8,7 @@ use std::path::Path;
 
 use rustc_hash::FxHashSet;
 
-use crate::includes::IncludeScope;
+use crate::includes::{FileMatcher, IncludeScope};
 use crate::{CompileRequest, VirtualSource};
 
 /// Directories the disk walk never descends into (build + metadata).
@@ -39,7 +39,10 @@ struct WalkEntry {
 
 /// `(d_type, path)` pairs of one directory, sorted by path for determinism.
 /// The type rides free with the readdir on typed filesystems; `None` keeps
-/// the stat fallback for entries the OS refused to type.
+/// the stat fallback for entries the OS refused to type. Entries share one
+/// parent, so file-name order equals full-path order while comparing bytes
+/// instead of walking components; names are unique, so the unstable sort
+/// emits the same sequence the stable full-path sort did, minus its scratch.
 fn sorted_entries(dir: &Path) -> Vec<WalkEntry> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -51,7 +54,7 @@ fn sorted_entries(dir: &Path) -> Vec<WalkEntry> {
             path: entry.path(),
         })
         .collect();
-    listed.sort_by(|a, b| a.path.cmp(&b.path));
+    listed.sort_unstable_by(|a, b| a.path.file_name().cmp(&b.path.file_name()));
     listed
 }
 
@@ -72,33 +75,25 @@ fn entry_is_dir(file_type: Option<&std::fs::FileType>, path: &Path) -> bool {
 fn gather(request: &CompileRequest) -> Vec<(String, String)> {
     let patterns = request.include.as_deref().unwrap_or(&[]);
     let scope = IncludeScope::compile(patterns);
+    let matcher = scope.matcher(request.root_dir.as_deref());
     if let Some(files) = &request.files {
         if !files.is_empty() {
-            return union_sources(files, request.root_dir.as_deref(), &scope);
+            return union_sources(files, request.root_dir.as_deref(), &matcher);
         }
     }
 
     let mut sources = Vec::new();
     if let Some(root_dir) = &request.root_dir {
-        scan_dir(
-            Path::new(root_dir),
-            &scope,
-            request.root_dir.as_deref(),
-            &mut sources,
-        );
+        scan_dir(Path::new(root_dir), &matcher, &mut sources);
     }
     sources
 }
 
 /// Virtual sources inside the include scope; an open scope keeps every file.
-fn filter_virtual_sources(
-    files: &[VirtualSource],
-    root: Option<&str>,
-    scope: &IncludeScope,
-) -> Vec<(String, String)> {
+fn filter_virtual_sources(files: &[VirtualSource], matcher: &FileMatcher) -> Vec<(String, String)> {
     files
         .iter()
-        .filter(|file| scope.matches_file(root, &file.path))
+        .filter(|file| matcher.matches_file(&file.path))
         .map(|file| (file.path.clone(), file.content.clone()))
         .collect()
 }
@@ -108,55 +103,51 @@ fn filter_virtual_sources(
 /// equality holds by construction whatever glob engine built the list. With
 /// no root the walk has nowhere to go and this is exactly the legacy
 /// provided filter, so files-only callers keep byte-identical semantics.
+/// The known-check runs inside the walk, so already-listed paths cost a
+/// hash probe and never a transient path string; missing paths still read
+/// from disk in walk order exactly as the two-phase walk did.
 fn union_sources(
     files: &[VirtualSource],
     root: Option<&str>,
-    scope: &IncludeScope,
+    matcher: &FileMatcher,
 ) -> Vec<(String, String)> {
-    let mut provided = filter_virtual_sources(files, root, scope);
+    let mut provided = filter_virtual_sources(files, matcher);
     let Some(root_dir) = root else {
         return provided;
     };
     let mut known: FxHashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
-    let mut candidates = Vec::new();
-    collect_candidate_paths(Path::new(root_dir), scope, root, &mut candidates);
-    for path in candidates {
-        if known.contains(&path) {
-            continue;
-        }
-        if let Ok(content) = std::fs::read_to_string(&path) {
-            known.insert(path.clone());
-            provided.push((path, content));
-        }
-    }
+    let mut backfill = Backfill {
+        matcher,
+        known: &mut known,
+        acc: &mut provided,
+    };
+    backfill_dir(Path::new(root_dir), &mut backfill);
     provided
 }
 
-/// Scope-hit candidate PATHS under `dir` (no reads): the union-fill walk.
-/// Same traversal, IGNORE set, extension gate, and scope predicate as the
-/// collecting scan, so every path the scan would read is a candidate.
-fn collect_candidate_paths(
-    dir: &Path,
-    scope: &IncludeScope,
-    root: Option<&str>,
-    acc: &mut Vec<String>,
-) {
+/// Union-fill state: the scope matcher, the listed-path set, and the output.
+struct Backfill<'a> {
+    matcher: &'a FileMatcher<'a>,
+    known: &'a mut FxHashSet<String>,
+    acc: &'a mut Vec<(String, String)>,
+}
+
+/// Backfill walk over `dir`: same traversal, IGNORE set, extension gate,
+/// and scope predicate as the collecting scan, so every path the scan
+/// would read is visited, and only unlisted ones read from disk.
+fn backfill_dir(dir: &Path, backfill: &mut Backfill) {
     for entry in sorted_entries(dir) {
-        handle_candidate_entry(&entry, scope, root, acc);
+        handle_backfill_entry(&entry, backfill);
     }
 }
 
-/// Descend into kept directories, collect supported in-scope path strings.
-fn handle_candidate_entry(
-    entry: &WalkEntry,
-    scope: &IncludeScope,
-    root: Option<&str>,
-    acc: &mut Vec<String>,
-) {
+/// Descend into kept directories; read supported in-scope files the
+/// provided list misses, skipping listed paths before any string is built.
+fn handle_backfill_entry(entry: &WalkEntry, backfill: &mut Backfill) {
     let path = &entry.path;
     if entry_is_dir(entry.file_type.as_ref(), path) {
         if is_kept_dir(path) {
-            collect_candidate_paths(path, scope, root, acc);
+            backfill_dir(path, backfill);
         }
         return;
     }
@@ -164,35 +155,38 @@ fn handle_candidate_entry(
         return;
     }
     let path_str = path.to_string_lossy();
-    if scope.matches_file(root, &path_str) {
-        acc.push(path_str.to_string());
+    if !backfill.matcher.matches_file(&path_str) {
+        return;
+    }
+    let known_key: &str = &path_str;
+    if backfill.known.contains(known_key) {
+        return;
+    }
+    if let Ok(content) = std::fs::read_to_string(path) {
+        backfill.known.insert(path_str.to_string());
+        backfill.acc.push((path_str.to_string(), content));
     }
 }
 
 /// Recursively collect supported sources under `dir`, skipping fixed ignores.
 /// The include scope is a pure path predicate, so it runs before the read:
 /// out-of-scope files cost a match, never I/O.
-fn scan_dir(dir: &Path, scope: &IncludeScope, root: Option<&str>, acc: &mut Vec<(String, String)>) {
+fn scan_dir(dir: &Path, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
     for entry in sorted_entries(dir) {
-        handle_dir_entry(&entry, scope, root, acc);
+        handle_dir_entry(&entry, matcher, acc);
     }
 }
 
 /// Descend into kept directories, read supported in-scope source files.
-fn handle_dir_entry(
-    entry: &WalkEntry,
-    scope: &IncludeScope,
-    root: Option<&str>,
-    acc: &mut Vec<(String, String)>,
-) {
+fn handle_dir_entry(entry: &WalkEntry, matcher: &FileMatcher, acc: &mut Vec<(String, String)>) {
     let path = &entry.path;
     if entry_is_dir(entry.file_type.as_ref(), path) {
         if is_kept_dir(path) {
-            scan_dir(path, scope, root, acc);
+            scan_dir(path, matcher, acc);
         }
     } else if is_supported_extension(path) {
         let path_str = path.to_string_lossy();
-        if scope.matches_file(root, &path_str) {
+        if matcher.matches_file(&path_str) {
             if let Ok(content) = std::fs::read_to_string(path) {
                 acc.push((path_str.to_string(), content));
             }

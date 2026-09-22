@@ -12,7 +12,16 @@ pub fn expand_dimensional_shorthand(
 ) -> Option<Vec<(Box<str>, AtomValue)>> {
     // padding: '1r 2r'  /  margin: '1px 2px 3px 4px'
     let canon_name = canon::resolve_canonical_prop(prop);
-    let longhands = canon::native_longhands_for_prop(canon_name)?;
+    expand_dimensional_with_parts(canon_name, super::longhands_for_canon(canon_name), raw_val)
+}
+
+/// Dimensional body off one resolved name plus its fetched longhands.
+pub(crate) fn expand_dimensional_with_parts(
+    canon_name: &str,
+    longhands: Option<&[&str]>,
+    raw_val: &str,
+) -> Option<Vec<(Box<str>, AtomValue)>> {
+    let longhands = longhands?;
     if longhands.len() != 4 {
         return None;
     }
