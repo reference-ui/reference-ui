@@ -18,6 +18,7 @@ the READY-phase asks before GO), `active`, or `done` (done ones live in
 | Operation Reaper | D1 DECLINED 2026-09-20 (pool question answered no: prize collapses to the 180-class floor, 3.6%; HQ ratifies) — census stands as the sheet record, Slice 2 undispatched | [operation-reaper.md](operation-reaper.md) |
 | Operation Fasthull | active — tonight's only hyperspace work (HQ 23:49): recon then parallel perf crews; aiming at all three (sync, RSS, bundle) vs Panda goalpost; no red team | [operation-fasthull.md](operation-fasthull.md) |
 | Operation Flamegraph | done 2026-09-21 (5/5 objectives, instruments + recon report, no speedups) | [completed/operation-flamegraph.md](completed/operation-flamegraph.md) ([recon](completed/operation-flamegraph-recon.md)) |
+| Operation Flamegraph Correct | active — correction pass over the profiling foundation (5 measurement fixes + alloc phases + recon v2) before Wave 5 | [operation-flamegraph-correct.md](operation-flamegraph-correct.md) |
 | firstThatWorks | idea — out as a primitive; parity pass (prove `@supports` + two-rule fallbacks) | [first-that-works.md](first-that-works.md) |
 | Tooltip focus preset | idea | [tooltip-focus-preset.md](tooltip-focus-preset.md) |
 
