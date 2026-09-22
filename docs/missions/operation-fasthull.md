@@ -8,11 +8,11 @@ sequencing) belongs to the voyage brief currently running it
 (`VOYAGE-HYPERSPACE.md`); this file owns the cycle.
 
 HQ 23:49: the voyage is **performance-only** (no red team). The
-locked *comparison* tonight includes bundle bytes (`styles.css` +
-`runtime-data.mjs`) against the Panda v2 goalpost in the brief.
-The cycle is unchanged: one hypothesis, stability, review. Bytes
-move only when the hypothesis names an emission skip. Do not copy
-Panda's architecture. Harvest is not the kill target.
+locked target is **all three**: sync wall, peak RSS, and bundle
+bytes (`styles.css` + `runtime-data.mjs`), scored against the Neo
+pin and the Panda v2 goalpost in the brief. A cycle names one
+lever; it may not regress the other two. Do not copy Panda's
+architecture. Harvest is not the kill target.
 
 Predecessor: the bench S1–S4 pass
 ([PLAN.md](../../packages/reference-neo/benchmark/PLAN.md)), committed as
@@ -43,18 +43,21 @@ no optimisation may silently regress.
 One cycle, one hypothesis. The owner hypothesises, implements, and
 measures; a different agent reviews. No agent grades its own speed.
 
-1. **Hypothesise.** Name the slow spot and why, citing profile
-   evidence (per-phase breakdown, flamegraph, allocation shape —
-   never vibes). One hypothesis per cycle; the bench load from the
-   locked metric is the only load it may cite. The team's architect
-   concurs before implementation starts.
+1. **Hypothesise.** Name the thick spot and why: wall time, peak
+   RSS, or bundle bytes (`styles.css` / `runtime-data.mjs`). Cite
+   profile or artifact evidence (flamegraph, allocation shape, JSON
+   payload, recipe rule count — never vibes). One hypothesis per
+   cycle; the bench load from the locked metric is the only load it
+   may cite. The team's architect concurs before implementation
+   starts.
 2. **Implement.** One change, inside the hypothesis boundary. No
    scale, generator, or sampler edits — the load is frozen while
-   optimising. Output bytes identical unless the hypothesis says why
-   they moved.
+   optimising. Bytes are a target: they should fall or hold. Growth
+   is a fail unless the architect signed an explicit trade.
 3. **Measure.** Bench at locked load against the wave-start pin,
-   medians across the default runs, scale by scale. A win must clear
-   the measured run-to-run spread.
+   medians across the default runs, scale by scale. Report sync,
+   peak RSS, `styles.css`, and `runtime-data.mjs` (raw + gzip). A
+   win must clear the measured run-to-run spread.
 4. **Stability.** Acceptance green (reference-neo cases plus the
    reference-rs loop, generally) and churn unregressed beyond noise.
    Pre-existing failures, if any, are named and shown unrelated —
@@ -71,24 +74,33 @@ the log, never in silence.
 
 ## The arc rule (all three, or nothing lands)
 
-1. **A hypothesis exists**, written, citing profile evidence: what was
-   slow and why the change helps.
+1. **A hypothesis exists**, written, citing evidence: which of the
+   three it moves and why the change helps.
 2. **Stability holds**: acceptance green, churn unregressed.
-3. **The bench beats the baseline** on the locked metric at fixed
-   load: lower sync wall and/or peak RSS, same bytes.
+3. **The bench beats the baseline** on the named lever at fixed
+   load, and does **not regress** the other two: sync wall, peak
+   RSS, bundle bytes (`styles.css` + `runtime-data.mjs`, raw and
+   gzip). Small and medium are the shape check.
 
-The Goodhart guard, non-negotiable: faster by weakening the load or
-gaming the measurement fails review on sight. Speed comes from the
-engine or it does not come.
+The Goodhart guard, non-negotiable: faster or smaller by weakening
+the load, dropping extracted leaves, or gaming the measurement
+fails review on sight. Gains come from the engine or they do not
+come.
 
 ## The locked metric
 
-Median sync wall time plus peak RSS at fixed enterprise load, deltas
-in percent against the wave-start pin; medium and small as the shape
-check (an enterprise-only win that warps the curve is suspect, not
-victory). Tonight HQ also scores `styles.css` and `runtime-data.mjs`
-against the Panda v2 goalpost in `VOYAGE-HYPERSPACE.md`. The voyage
-brief owns that comparison; this file still owns the cycle.
+All three, at fixed enterprise load, deltas in percent against the
+wave-start pin and against the Panda v2 goalpost in
+`VOYAGE-HYPERSPACE.md`:
+
+1. median sync wall time
+2. peak RSS
+3. bundle bytes — `styles.css` and `runtime-data.mjs`, raw and gzip
+
+Medium and small are the shape check (an enterprise-only win that
+warps the curve is suspect, not victory). The night aims at all
+three. One cycle may move one lever; it may not spend the other
+two to get there.
 
 ## Evidence
 
@@ -104,14 +116,16 @@ evidence too — log them, do not bury them.
 - Not a bench retarget. Scales, generators, and samplers are frozen
   while optimising.
 - Not bench golf. See the Goodhart guard.
-- Not new features, new output, or new dialect. Bytes identical or
-  explained.
+- Not new features, new output, or new dialect. Bundle bytes are a
+  win condition, not a side effect.
 - Not churn's funeral. The stress rung stays as the guardrail.
 
 ## Done when (per cycle; the standing loop closes only on HQ's word)
 
-- The hypothesis names a slow spot with profile evidence.
-- The bench beats the baseline on the locked metric at fixed load.
+- The hypothesis names a thick spot (time, RSS, or bytes) with
+  evidence.
+- The bench beats the baseline on that lever and does not regress
+  the other two.
 - Stability holds and the review reads VERIFIED.
 - The log entry exists: tried, measured, held, outcome.
 - Or: the cycle disproves its hypothesis, logs why, and dies clean.
