@@ -227,10 +227,18 @@ fn handle_known_style_prop(
     when: &SmallVec<[Box<str>; 2]>,
 ) {
     if let Some(authored) = ctx.authored.as_mut() {
-        let when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
-        for (val, imp) in super::ast_value::ast_to_json_values(val_expr, ctx.scopes) {
+        let values = super::ast_value::ast_to_json_values(val_expr, ctx.scopes);
+        let mut when_strings: Vec<String> = when.iter().map(|w| w.to_string()).collect();
+        let last = values.len().saturating_sub(1);
+        for (i, (val, imp)) in values.into_iter().enumerate() {
+            // Last value moves the condition stack; earlier ones clone it.
+            let when = if i == last {
+                std::mem::take(&mut when_strings)
+            } else {
+                when_strings.clone()
+            };
             authored.push(crate::runtime::AuthoredDeclaration {
-                when: when_strings.clone(),
+                when,
                 prop: key.to_string(),
                 value: val,
                 important: ctx.important || imp,
