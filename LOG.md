@@ -351,6 +351,15 @@ diets); scan voyage opens separately after closeout lands.
 - Slots: 0/7 — BOARD EMPTY. Backlog EMPTY (diet), N1 held, build +
   closeout complete — this entry is the proof. Map ring-2 refresh
   follows on this data.
+- sync-perf.html RING-2 REFRESH (repro7 instrumented): full two-ring
+  re-map on the 924.5 denominator (compile 487/52.7% → Rust-direct
+  235/48.2% + gap 252; scan 350/37.8% → kernel 291/83.2% + userspace
+  59; publish 52.8 / config 30.0 / eval 4.6 full-height); 5-stat row
+  (+instrumented 924.5); sections + footer current (publish watch
+  dissolved, scan non-repro flagged, no fresh ceiling — N1 ~9 only
+  filed remainder). Validated: balanced tags, zero stale numbers.
+- Slots: 0/7 — BOARD EMPTY. Mission work complete; N1 held for HQ
+  word — this entry is the proof.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
