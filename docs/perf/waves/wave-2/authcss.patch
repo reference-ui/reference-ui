@@ -1,0 +1,216 @@
+diff --git a/packages/reference-rs/modules/atomic/src/resolve/mod.rs b/packages/reference-rs/modules/atomic/src/resolve/mod.rs
+index 9ab648a57..0f2a3452d 100644
+--- a/packages/reference-rs/modules/atomic/src/resolve/mod.rs
++++ b/packages/reference-rs/modules/atomic/src/resolve/mod.rs
+@@ -130,10 +130,12 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
+         when: want.when.clone(),
+         important: want.important,
+     });
+-    let key_for_want = want_key(session, &want.prop, atom_value_to_json(&want.value));
++    // The refusal key builds lazily at the emit sites below: wants that
++    // resolve never need it, and building it eagerly costs the happy path
++    // a key plus a JSON value per want.
+     if !canon::is_known_style_prop(&want.prop) {
+         session.emit(
+-            key_for_want,
++            want_key(session, &want.prop, atom_value_to_json(&want.value)),
+             ResolveOutcome::Rejected {
+                 code: DiagnosticCode::UnknownProperty,
+                 detail: ResolveDetail::Declaration(DeclarationDetail::Name(NameDetail::Property {
+@@ -143,7 +145,7 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
+         );
+         return Vec::new();
+     }
+-    let Some(clean_when) = lower_conditions(&want.when, &key_for_want, session) else {
++    let Some(clean_when) = lower_conditions(want, session) else {
+         return Vec::new();
+     };
+     let pairs = expand_or_passthrough(want, session);
+@@ -243,20 +245,16 @@ fn is_runtime_owned(prop: &str) -> bool {
+     RUNTIME_OWNED_PROPS.contains(&prop)
+ }
+ 
+-fn lower_conditions(
+-    when: &[Box<str>],
+-    key: &Option<OwnedLookupKey>,
+-    session: &mut ResolveSession<'_>,
+-) -> Option<SmallVec<[When; 2]>> {
++fn lower_conditions(want: &Want, session: &mut ResolveSession<'_>) -> Option<SmallVec<[When; 2]>> {
+     let mut out = SmallVec::new();
+     let mut known = true;
+-    for raw in when {
++    for raw in want.when.iter() {
+         match lower_when(raw, session.system) {
+             LoweredWhen::Skip => {}
+             LoweredWhen::Known(cond) => out.push(cond),
+             LoweredWhen::Unknown => {
+                 session.emit(
+-                    key.clone(),
++                    want_key(session, &want.prop, atom_value_to_json(&want.value)),
+                     ResolveOutcome::Rejected {
+                         code: DiagnosticCode::UnknownCondition,
+                         detail: ResolveDetail::Declaration(DeclarationDetail::Name(
+diff --git a/packages/reference-rs/modules/atomic/src/resolve/normalize.rs b/packages/reference-rs/modules/atomic/src/resolve/normalize.rs
+index 095bea47f..8bdc6f8d1 100644
+--- a/packages/reference-rs/modules/atomic/src/resolve/normalize.rs
++++ b/packages/reference-rs/modules/atomic/src/resolve/normalize.rs
+@@ -8,6 +8,37 @@
+ //! template joins trim first at the fold, so Panda's collapse-plus-trim rule
+ //! holds end to end. Numeric canonicalization stays in `unit`, beside this.
+ 
++/// True when `collapse_whitespace` could change `value`: any quote, any
++/// structural byte outside a lone space, or any byte that may be NEL/NBSP.
++/// False means collapse is identity, so callers may reuse the input as the
++/// collapsed form with no allocation. One byte scan, no UTF-8 decode: `0x85`
++/// / `0xA0` also match unrelated multibyte tails, which only costs the slow
++/// path, never correctness.
++pub fn needs_collapse(value: &str) -> bool {
++    let mut prev_space = false;
++    for &b in value.as_bytes() {
++        if is_collapse_trigger(b) {
++            return true;
++        }
++        if b != b' ' {
++            prev_space = false;
++        } else if prev_space {
++            return true;
++        } else {
++            prev_space = true;
++        }
++    }
++    false
++}
++
++/// True for a byte that always forces the slow path: quotes open preserved
++/// runs, structural bytes never render as themselves, and `0x85` / `0xA0`
++/// may be NEL/NBSP (a superset — unrelated multibyte tails only cost the
++/// slow path, never correctness).
++fn is_collapse_trigger(byte: u8) -> bool {
++    matches!(byte, b'"' | b'\'' | 0x09..=0x0D | 0x85 | 0xA0)
++}
++
+ /// Collapse each run of structural whitespace to one space, leaving quoted
+ /// substrings (`'...'` / `"..."`) byte-identical. Verbatim port of Panda's
+ /// `collapse_whitespace` (`literal.rs`), including its plain quote toggle:
+@@ -120,4 +151,69 @@ mod tests {
+         assert_eq!(collapse_whitespace(""), "");
+         assert_eq!(collapse_whitespace("red"), "red");
+     }
++
++    #[test]
++    fn needs_collapse_clears_only_identities() {
++        // Every string the gate clears must collapse to itself; every
++        // string collapse changes must trip the gate. Adversaries cover
++        // lone quotes, every structural byte, NEL/NBSP spellings, lone and
++        // doubled spaces, and multibyte tails sharing NEL/NBSP bytes.
++        let corpus = [
++            "",
++            "red",
++            "10px",
++            "solid",
++            "1px solid red",
++            " a",
++            "a ",
++            " a ",
++            "var(--x)",
++            "rgba(0,0,0,0.5)",
++            "1px  solid   red",
++            "  ",
++            "a  b",
++            "a\tb\nc",
++            "\ta",
++            "a\n",
++            "a\rb",
++            "a\u{b}b",
++            "a\u{c}b",
++            "\"a  b\"",
++            "'Fira  Code', monospace",
++            "\"",
++            "'",
++            "it's",
++            "say \"hi\"",
++            "\n    \"preview name delete\" \n    \"preview size delete\"",
++            "\u{a0}",
++            "\u{85}",
++            "a\u{a0}b",
++            "a\u{85}b",
++            "ạ",
++            "řetěz",
++            "日本語",
++            "1e3",
++            ".5",
++            "0.5px",
++            "-0",
++        ];
++        for raw in corpus {
++            if needs_collapse(raw) {
++                continue;
++            }
++            assert_eq!(
++                collapse_whitespace(raw),
++                raw,
++                "gate cleared a string collapse changes: {raw:?}"
++            );
++        }
++        for raw in corpus {
++            if collapse_whitespace(raw) != raw {
++                assert!(
++                    needs_collapse(raw),
++                    "collapse changes a string the gate cleared: {raw:?}"
++                );
++            }
++        }
++    }
+ }
+diff --git a/packages/reference-rs/modules/atomic/src/resolve/unit.rs b/packages/reference-rs/modules/atomic/src/resolve/unit.rs
+index ce6c0c89f..08e3ff3bc 100644
+--- a/packages/reference-rs/modules/atomic/src/resolve/unit.rs
++++ b/packages/reference-rs/modules/atomic/src/resolve/unit.rs
+@@ -111,9 +111,14 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
+     } else if canon::is_unitless_prop(prop) {
+         CssValue::Number(num_str.into())
+     } else {
++        // Exact-capacity suffix push (swarm-resolvefmt filler): the `px`
++        // unit string needs no format machinery.
++        let mut css_val = String::with_capacity(num_str.len() + 2);
++        css_val.push_str(num_str);
++        css_val.push_str("px");
+         CssValue::Dimension {
+             class_stem: num_str.into(),
+-            css_val: format!("{num_str}px").into_boxed_str(),
++            css_val: css_val.into_boxed_str(),
+         }
+     }
+ }
+@@ -159,11 +164,26 @@ fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Opt
+ 
+ fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
+     // SPEC-V2-14: structural runs collapse before anything else reads the
+-    // string, so spaced twins share one numeric parse and one atom.
+-    let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
+-    // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
+-    // The magnitude fence bites only where canonicalization applies: color
+-    // props keep their string passthrough for out-of-range spellings.
++    // string, so spaced twins share one numeric parse and one atom. Strings
++    // the gate clears are already collapsed, so the authored box doubles as
++    // the collapsed form with no copy.
++    if super::normalize::needs_collapse(&s) {
++        let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
++        from_collapsed(prop, collapsed, session)
++    } else {
++        from_collapsed(prop, s, session)
++    }
++}
++
++/// Lower one collapsed string: finite numeric spellings canonicalize to the
++/// numeric atom (SPEC-V2-79). The magnitude fence bites only where
++/// canonicalization applies: color props keep their string passthrough for
++/// out-of-range spellings.
++fn from_collapsed(
++    prop: &str,
++    collapsed: Box<str>,
++    session: &mut ResolveSession<'_>,
++) -> Option<CssValue> {
+     match canonical_number(&collapsed) {
+         CanonicalNumber::Canonical(stem) if accepts_bare_number(prop) => {
+             Some(resolve_numeric_value(prop, &stem))
