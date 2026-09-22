@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T13:35:13.495Z",
+ "built": "2026-09-22T14:03:02.000Z",
  "root": "docs/perf/waves",
- "count": 99,
+ "count": 100,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -401,6 +401,20 @@
    "report": "docs/perf/waves/wave-3/memo-mcp-sqfp.md",
    "patch": null,
    "summary": "gating regex proves the sentence/clause/regex pipeline is identity for single queries so extractDemands(q) returns [q] directly; diets + 63/63 identity pair preserved, counts/pairs/suites missing.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOSCANVERIFY",
+   "wave": "wave-4",
+   "topic": "memo scanverify",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-4/memo-scanverify.md",
+   "patch": null,
+   "summary": "Independent re-run of all four F1 rigs from `/tmp/scan-f1` sources against",
    "log": null,
    "filler": false
   },
@@ -1878,7 +1892,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `ff64ab75b594cfd81d0cb8488bd0ea86a0155b15` (verified `git rev-parse HEAD`",
-   "log": "- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1\n  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync\n  noise-bounded. Publish watch flagged.\n\n## Ticks (empty board)",
+   "log": "- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1\n  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync\n  noise-bounded. Publish watch flagged.",
    "filler": false
   },
   {

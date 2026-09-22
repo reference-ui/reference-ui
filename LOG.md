@@ -232,6 +232,19 @@ diets); scan voyage opens separately after closeout lands.
   confirm §§6.1-6.5 + resolve all §1 ids.
 - Slots: 1/7 (scan-verify), 6 held — diet backlog EMPTY, merger
   gated on a VERIFIED design, N1 held — this entry is the proof.
+- swarm-scanverify VERIFIED (shared, read-only, 8 lock holds / 16 claims
+  lines / 0 discards): M4 all-EXACT, M1 all-IDENTICAL (fresh shim +
+  rebuilds), M1e 9/9, M3 in-tol (+1.5/+2.4/+1.3%, 5/5), M2 bytes exact
+  with every median attained in-tol and the deletion floor holding
+  10/10 (≥5.19 vs 5.12 claimed); 7/7 §1 ids resolve; zero wave3.
+  Findings: (1) M2 rig under-warms (2 warmups; iters 1-3 slow-start;
+  implementers ≥5; deviations conservative); (2) cosmetic TAILFIX
+  residue line 372 (confirmed firsthand). Captain cross-checked every
+  claimed number against §§6.1-6.5 firsthand + spot-resolved an id +
+  confirmed finding 2. Filed `docs/perf/waves/wave-4/memo-scanverify.md`
+  (index 100, MEMO). Design eligible for HQ accept/decline again.
+- Slots: 0/7 — ALL HELD: diet backlog EMPTY, merger gated on HQ
+  accept of the verified design, N1 held — this entry is the proof.
 
 ## Ticks (empty board)
 
