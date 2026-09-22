@@ -38,9 +38,10 @@ pub(crate) fn parse(text: &str) -> Alternative {
 }
 
 /// Match a candidate against one alternative with star backtracking.
+/// Cursor positions are byte indices that always sit on char boundaries,
+/// so matching walks the candidate's chars with zero allocation.
 pub(crate) fn matches(alternative: &Alternative, candidate: &str) -> bool {
-    let chars: Vec<char> = candidate.chars().collect();
-    match_from(alternative, 0, &chars, 0)
+    match_from(alternative, 0, candidate, 0)
 }
 
 /// Push the token starting at `at`, returning the next unread index.
@@ -165,28 +166,40 @@ fn class_hit(token: &Token, hit: char) -> bool {
     }
 }
 
-/// Match tokens from `at` against characters from `from`.
-fn match_from(tokens: &[Token], at: usize, chars: &[char], from: usize) -> bool {
+/// Match tokens from `at` against the candidate from byte `from`.
+/// `from` always sits on a char boundary, so exhaustion is a length check.
+fn match_from(tokens: &[Token], at: usize, candidate: &str, from: usize) -> bool {
     let Some(token) = tokens.get(at) else {
-        return from == chars.len();
+        return from == candidate.len();
     };
     if *token == Token::AnySegments {
-        return StarSegments { tokens, chars, at }.run(from);
+        return StarSegments {
+            tokens,
+            candidate,
+            at,
+        }
+        .run(from);
     }
     if matches!(token, Token::AnyInSegment | Token::AnyAcross) {
         let across = *token == Token::AnyAcross;
         return StarStep {
             tokens,
-            chars,
+            candidate,
             at,
             across,
         }
         .run(from);
     }
-    let Some(&hit) = chars.get(from) else {
+    let Some((hit, next)) = decode_at(candidate, from) else {
         return false;
     };
-    single_hit(token, hit) && match_from(tokens, at + 1, chars, from + 1)
+    single_hit(token, hit) && match_from(tokens, at + 1, candidate, next)
+}
+
+/// One decoded char plus the byte index past it; `from` is a boundary.
+fn decode_at(candidate: &str, from: usize) -> Option<(char, usize)> {
+    let hit = candidate.get(from..)?.chars().next()?;
+    Some((hit, from + hit.len_utf8()))
 }
 
 /// One single-character token against one character.
@@ -202,7 +215,7 @@ fn single_hit(token: &Token, hit: char) -> bool {
 /// Cursor for growing one star match across a candidate.
 struct StarStep<'a> {
     tokens: &'a [Token],
-    chars: &'a [char],
+    candidate: &'a str,
     at: usize,
     across: bool,
 }
@@ -220,13 +233,14 @@ impl StarStep<'_> {
     }
 
     fn rest_matches(&self, end: usize) -> bool {
-        match_from(self.tokens, self.at + 1, self.chars, end)
+        match_from(self.tokens, self.at + 1, self.candidate, end)
     }
 
+    /// Swallow one char when the star may cross it; `/` stops in-segment.
     fn extend(&self, end: &mut usize) -> bool {
-        match self.chars.get(*end) {
-            Some(hit) if self.across || *hit != '/' => {
-                *end += 1;
+        match decode_at(self.candidate, *end) {
+            Some((hit, next)) if self.across || hit != '/' => {
+                *end = next;
                 true
             }
             _ => false,
@@ -237,7 +251,7 @@ impl StarStep<'_> {
 /// Cursor for matching zero or more whole `segment/` runs.
 struct StarSegments<'a> {
     tokens: &'a [Token],
-    chars: &'a [char],
+    candidate: &'a str,
     at: usize,
 }
 
@@ -248,7 +262,7 @@ impl StarSegments<'_> {
             return true;
         }
         let mut end = from;
-        while let Some(next) = next_segment_end(self.chars, end) {
+        while let Some(next) = next_segment_end(self.candidate, end) {
             end = next;
             if self.rest_matches(end) {
                 return true;
@@ -258,20 +272,15 @@ impl StarSegments<'_> {
     }
 
     fn rest_matches(&self, end: usize) -> bool {
-        match_from(self.tokens, self.at + 1, self.chars, end)
+        match_from(self.tokens, self.at + 1, self.candidate, end)
     }
 }
 
-/// Index just past the next `/` at or after `from`, if one remains.
-fn next_segment_end(chars: &[char], from: usize) -> Option<usize> {
-    let mut end = from;
-    while let Some(hit) = chars.get(end) {
-        end += 1;
-        if *hit == '/' {
-            return Some(end);
-        }
-    }
-    None
+/// Byte index just past the next `/` at or after `from`, if one remains.
+/// `/` is one byte, so the answer stays on a char boundary.
+fn next_segment_end(candidate: &str, from: usize) -> Option<usize> {
+    let tail = candidate.get(from..)?;
+    tail.find('/').map(|offset| from + offset + 1)
 }
 
 #[cfg(test)]
@@ -320,5 +329,17 @@ mod tests {
     fn escapes_quote_magic_characters() {
         assert!(matched("src/\\*.ts", "src/*.ts"));
         assert!(!matched("src/\\*.ts", "src/a.ts"));
+    }
+
+    #[test]
+    fn multibyte_chars_match_as_single_units() {
+        assert!(matched("src/?.ts", "src/é.ts"));
+        assert!(!matched("src/?.ts", "src/éü.ts"));
+        assert!(matched("src/[é-ü].ts", "src/ö.ts"));
+        assert!(!matched("src/[a-c].ts", "src/é.ts"));
+        assert!(matched("src/*.ts", "src/héllo.ts"));
+        assert!(matched("src/**/*.ts", "src/déeper/héllo.ts"));
+        assert!(!matched("src/*.ts", "src/déeper/héllo.ts"));
+        assert!(matched("**/héllo.ts", "src/déeper/héllo.ts"));
     }
 }

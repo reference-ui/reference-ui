@@ -46,14 +46,40 @@ pub(crate) fn is_outline_prop(canon_name: &str) -> bool {
     canon_name == "outline"
 }
 
+/// Rejection pre-filter over trio-owner name shapes, derived from the
+/// `CANONICAL_PROPERTIES` longhands (wave-1 `maybe_alias` method): the
+/// border and outline families pass by prefix, the two rule trios pass by
+/// exact name. Members always pass (pinned by
+/// `trio_prefilter_table_contract`); misses skip the `find_property` probe.
+pub(crate) fn maybe_border_family(canon_name: &str) -> bool {
+    // borderBottom / outline / columnRule pass; padding / color / flex reject.
+    match canon_name.as_bytes().first() {
+        Some(b'b') => canon_name.starts_with("border"),
+        Some(b'o') => canon_name.starts_with("outline"),
+        Some(b'c') => canon_name == "columnRule",
+        Some(b'r') => canon_name == "rowRule",
+        _ => false,
+    }
+}
+
 /// Decompose composite border or outline declaration into atomic longhands.
 pub fn expand_border_shorthand(prop: &str, raw_val: &str) -> Option<Vec<(Box<str>, AtomValue)>> {
     // borderBottom: '3px solid'  →  width + style  (no color)
     let canon_name = canon::resolve_canonical_prop(prop);
-    let longhands = canon::native_longhands_for_prop(canon_name)?;
+    let longhands = super::longhands_for_canon(canon_name)?;
     if !is_border_family(longhands) {
         return None;
     }
+    expand_border_with_parts(canon_name, longhands, raw_val)
+}
+
+/// Border body off one resolved name plus its fetched longhands.
+pub(crate) fn expand_border_with_parts(
+    canon_name: &str,
+    longhands: &[&str],
+    raw_val: &str,
+) -> Option<Vec<(Box<str>, AtomValue)>> {
+    // Callers pass trio-checked longhands (`is_border_family` first).
     let width_prop = longhands[0];
     let style_prop = longhands[1];
     let color_prop = longhands[2];

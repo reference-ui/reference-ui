@@ -307,3 +307,57 @@ fn test_border_zero_and_whole_values() {
     assert_eq!(whole[0].0.as_ref(), "border");
     assert_eq!(whole[0].1.class_name_str(), "none");
 }
+
+#[test]
+fn no_alias_chain_contract() {
+    // longhands_for_canon skips native_longhands_for_prop's re-resolve: sound
+    // only because resolve_alias is single-step. Fails loudly on regen drift.
+    for alias in canon::ALIASES {
+        assert!(
+            canon::resolve_alias(alias.canonical).is_none(),
+            "alias target '{}' must never itself be an alias",
+            alias.canonical
+        );
+    }
+}
+
+#[test]
+fn trio_prefilter_table_contract() {
+    // Every border-family trio owner must pass maybe_border_family; the
+    // count pins the table shape so regen drift fails loudly, never silently.
+    let mut owners = 0;
+    for prop in canon::CANONICAL_PROPERTIES {
+        if super::border::is_border_family(prop.longhands) {
+            owners += 1;
+            assert!(
+                super::border::maybe_border_family(prop.name),
+                "trio owner '{}' must pass the pre-filter",
+                prop.name
+            );
+        }
+    }
+    assert_eq!(owners, 12, "trio owner count drifted — re-derive the filter");
+}
+
+#[test]
+fn longhands_for_canon_matches_native_lookup() {
+    // The shared probe must agree with native_longhands_for_prop on every
+    // canonical name and every alias, or the hoist is unsound.
+    for prop in canon::CANONICAL_PROPERTIES {
+        assert_eq!(
+            super::longhands_for_canon(prop.name),
+            canon::native_longhands_for_prop(prop.name),
+            "probe mismatch for '{}'",
+            prop.name
+        );
+    }
+    for alias in canon::ALIASES {
+        let canon = canon::resolve_canonical_prop(alias.alias);
+        assert_eq!(
+            super::longhands_for_canon(canon),
+            canon::native_longhands_for_prop(alias.alias),
+            "probe mismatch for alias '{}'",
+            alias.alias
+        );
+    }
+}

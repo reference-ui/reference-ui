@@ -26,6 +26,7 @@ pub mod stylesheet;
 #[cfg(test)]
 mod tests;
 mod types;
+pub mod wire;
 
 #[doc(hidden)]
 pub use styletrace as __styletrace;

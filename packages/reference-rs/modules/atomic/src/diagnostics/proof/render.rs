@@ -20,6 +20,7 @@ use super::plans::emitted_keys;
 use super::rejects::{collect as collect_reject, Reject};
 use super::sinks::Sinks;
 use crate::runtime::RuntimeStylePlan;
+use super::memo::SerialMemo;
 
 /// Render the compile session's proof verdicts onto the default channel.
 /// Facts stay borrowed; only `diagnostics` mutates, in place.
@@ -61,6 +62,12 @@ fn render_with(
     sinks.render_covered(system, &proof.emitted, diagnostics);
 }
 
+/// The dictionary answer for one prop, memoized per session: the answer
+/// never varies within a session, and sessions repeat a few dozen props.
+fn memo_known<'a>(known: &mut rustc_hash::FxHashMap<&'a str, bool>, prop: &'a str) -> bool {
+    *known.entry(prop).or_insert_with(|| is_known_style_prop(prop))
+}
+
 /// The partitioned join inputs: expectations and keyed rejections.
 struct Proof<'a> {
     emitted: BTreeSet<String>,
@@ -71,6 +78,9 @@ struct Proof<'a> {
 
 impl<'a> Proof<'a> {
     /// Partition the session facts into join inputs over the emitted set.
+    /// The expectation set builds only when rejections exist to join
+    /// against it: with no rejections the join loop is vacuous and the set
+    /// is never consulted, so building it is pure waste.
     fn collect(facts: &'a [DiagnosticFact], emitted: BTreeSet<String>) -> Self {
         let mut proof = Self {
             emitted,
@@ -78,26 +88,56 @@ impl<'a> Proof<'a> {
             exact_set: FxHashSet::default(),
             rejects: Vec::new(),
         };
+        let mut memo = SerialMemo::new();
         for fact in facts {
-            match fact {
-                DiagnosticFact::ExactLookupExpected { key, .. } => proof.collect_exact(key),
-                DiagnosticFact::ResolveOutcome {
-                    location,
-                    key: Some(key),
-                    outcome,
-                } => collect_reject(&mut proof.rejects, location, key, outcome),
-                _ => {}
-            }
+            proof.collect_one(fact, &mut memo);
+        }
+        if !proof.rejects.is_empty() {
+            proof.build_exact_set();
         }
         proof
     }
 
-    /// Collect one expected lookup under its serialized key, memoized for
-    /// the causeless render so each exact serializes once per session.
-    fn collect_exact(&mut self, key: &'a OwnedLookupKey) {
-        let key_string = key.lookup_key();
-        self.exact_set.insert(key_string.clone());
-        self.exacts.push((key, key_string));
+    /// Sort one session fact into the join inputs it feeds: expectations
+    /// collect their serials, keyed resolve outcomes collect rejections,
+    /// every other fact family belongs to a different render.
+    fn collect_one(&mut self, fact: &'a DiagnosticFact, memo: &mut SerialMemo<'a>) {
+        match fact {
+            DiagnosticFact::ExactLookupExpected { key, .. } => self.collect_exact(key, memo),
+            DiagnosticFact::ResolveOutcome {
+                location,
+                key: Some(key),
+                outcome,
+            } => collect_reject(&mut self.rejects, location, key, outcome),
+            _ => {}
+        }
+    }
+
+    /// Fill the expectation set from the collected serials. Runs only when
+    /// rejections exist to join against it; the set then holds exactly the
+    /// serials the eager build would have inserted.
+    fn build_exact_set(&mut self) {
+        for (_, key_string) in &self.exacts {
+            self.exact_set.insert(key_string.clone());
+        }
+    }
+
+    /// Collect one expected lookup under its serialized key. Duplicate
+    /// expectations share the earlier duplicate's bytes (the memo hits only
+    /// on canonical equality, which implies byte-identical serialization),
+    /// so each distinct key serializes once per session.
+    fn collect_exact(&mut self, key: &'a OwnedLookupKey, memo: &mut SerialMemo<'a>) {
+        match memo.find(key) {
+            Some(slot) => {
+                let key_string = self.exacts[slot as usize].1.clone();
+                self.exacts.push((key, key_string));
+            }
+            None => {
+                memo.insert(key, self.exacts.len() as u32);
+                let key_string = key.lookup_key();
+                self.exacts.push((key, key_string));
+            }
+        }
     }
 
     /// Join rejections against expectations: an expected key that is absent
@@ -146,11 +186,25 @@ impl<'a> Proof<'a> {
     /// their scalar misuse already warns located (O20).
     fn render_causeless(&self, diagnostics: &mut Vec<Diagnostic>) {
         let mut warned: FxHashSet<String> = FxHashSet::default();
+        // Sessions touch dozens of distinct props across tens of thousands
+        // of expectations; the dictionary answer never varies per session.
+        let mut known: rustc_hash::FxHashMap<&str, bool> =
+            rustc_hash::FxHashMap::with_capacity_and_hasher(64, Default::default());
+        // Borrowed hash view over the emitted set: same membership answers
+        // as the tree, one hash per probe instead of a string-compare walk.
+        // (Fully qualified paths keep this diff off the import block the
+        // pending hasher conversion touches; see REPORT §Collision.)
+        let emitted_view: rustc_hash::FxHashSet<&str> =
+            self.emitted.iter().map(String::as_str).collect();
         for (key, key_string) in &self.exacts {
-            if is_hole_value(&key.value) || !is_known_style_prop(&key.prop) {
+            if is_hole_value(&key.value) {
                 continue;
             }
-            if self.emitted.contains(key_string) || self.is_explained(key, key_string) {
+            let prop: &str = &key.prop;
+            if !memo_known(&mut known, prop) {
+                continue;
+            }
+            if emitted_view.contains(key_string.as_str()) || self.is_explained(key, key_string) {
                 continue;
             }
             if warned.insert(key_string.clone()) {
@@ -300,6 +354,40 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code, DiagnosticCode::MissingStylePlan);
         assert!(diagnostics[0].message.contains("color"));
+    }
+
+    #[test]
+    fn duplicate_exact_with_reordered_object_keys_warns_once() {
+        let mut first_map = serde_json::Map::new();
+        first_map.insert("md".to_string(), serde_json::json!("60px"));
+        first_map.insert("base".to_string(), serde_json::json!("50px"));
+        let mut second_map = serde_json::Map::new();
+        second_map.insert("base".to_string(), serde_json::json!("50px"));
+        second_map.insert("md".to_string(), serde_json::json!("60px"));
+        let first = key("width", serde_json::Value::Object(first_map));
+        let second = key("width", serde_json::Value::Object(second_map));
+        assert_eq!(first.lookup_key(), second.lookup_key());
+        let mut diagnostics = Vec::new();
+        render_session(&[exact(first), exact(second)], &[], "lib", &mut diagnostics);
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].code, DiagnosticCode::MissingStylePlan);
+    }
+
+    #[test]
+    fn duplicate_expected_keys_still_join_rejections() {
+        let first = key("color", serde_json::json!("red.500"));
+        let second = key("color", serde_json::json!("red.500"));
+        let (fact, line) = condition_reject(first.clone());
+        let mut diagnostics = vec![line];
+        render_session(
+            &[exact(first), exact(second), fact],
+            &[],
+            "lib",
+            &mut diagnostics,
+        );
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownCondition);
+        assert!(diagnostics[0].message.contains("red.500"));
     }
 
     #[test]
