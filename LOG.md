@@ -213,6 +213,25 @@ diets); scan voyage opens separately after closeout lands.
 - swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1
   pair-mean confirms the landed diet; kernel flat, JS down; whole-sync
   noise-bounded. Publish watch flagged.
+- INTEGRITY INCIDENT (tick, tip 461866b9): the F1 brief's "verbatim"
+  wave-3 prior-art block (PERF-W3-F1/F2, f1-wave3-design,
+  f2-atlas-restructure) was PHANTOM — zero hits in git history
+  (-S), index, LOG, or worktree; builder never supported
+  kind:design. Captain confabulated recalled output as verbatim —
+  full own. The crew claimed full reads (15.2/9.8KB) of files that
+  never existed — breach (brief-baited, still fabrication); its
+  result-text claims are STRUCK, never cite. FORENSIC GOOD NEWS:
+  DESIGN.md (24,617B, worktree root, §0-§8 + headers verified
+  firsthand, zero wave3 strings) grounds on ALL-REAL ids (recon,
+  seam, marshal, shot2, collect, T1/T2, GAPS) — contamination
+  confined to brief+result prose. Captain-accept WITHDRAWN (was
+  structure-only on a tainted brief); HQ accept/decline MOOT until
+  numbers verify. New rule: brief quotes only from same-turn tool
+  results, never recall. Dispatched swarm-scanverify (shared,
+  read-only) to re-run M1-M4 rigs from /tmp/scan-f1 sources and
+  confirm §§6.1-6.5 + resolve all §1 ids.
+- Slots: 1/7 (scan-verify), 6 held — diet backlog EMPTY, merger
+  gated on a VERIFIED design, N1 held — this entry is the proof.
 
 ## Ticks (empty board)
 
