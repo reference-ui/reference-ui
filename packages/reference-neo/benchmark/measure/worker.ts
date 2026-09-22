@@ -2,10 +2,14 @@
 // It takes a project dir plus a sample interval and emits one JSON line.
 // RSS sampling runs on an interval around sync(), so the peak reflects the compile itself.
 // The parent spawns one fresh worker per run: every RSS baseline starts cold.
+// Scorer bench-worker/2 also reports the OS high-water (getrusage maxrss),
+// which the kernel maintains independently of this thread's blocked event loop.
 
 import { performance } from 'node:perf_hooks'
 import { sync } from '../../src/sync/index.ts'
 import { markPhase, markPhaseAt, writePhasesFile } from '../../src/sync/phases.ts'
+
+const SCORER = 'bench-worker/2'
 
 interface WorkerArgs {
   dir: string
@@ -46,9 +50,13 @@ async function main(): Promise<void> {
   const syncMs = performance.now() - started
   const rssAfter = process.memoryUsage().rss
   if (rssAfter > rssPeak) rssPeak = rssAfter
+  // Lifetime OS high-water in bytes: resourceUsage maxRSS is KiB (libuv
+  // normalizes; probed on darwin/x64: fresh node 32656 ≈ 33.4MB rss).
+  // Read after the seal; monotonic, so post-sync timing cannot move it.
+  const rssPeakHw = process.resourceUsage().maxRSS * 1024
   // After the sample is sealed so the file write cannot perturb syncMs.
   writePhasesFile()
-  console.log(JSON.stringify({ syncMs, rssBefore, rssPeak, rssAfter }))
+  console.log(JSON.stringify({ syncMs, rssBefore, rssPeak, rssAfter, rssPeakHw, scorer: SCORER }))
 }
 
 try {

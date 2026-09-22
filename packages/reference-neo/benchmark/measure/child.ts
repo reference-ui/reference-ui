@@ -13,6 +13,10 @@ export interface WorkerSample {
   rssBefore: number
   rssPeak: number
   rssAfter: number
+  // bench-worker/2: OS high-water peak (bytes) plus the scorer version the
+  // worker reported. rssPeak keeps its v1 in-loop semantics, untouched.
+  rssPeakHw: number
+  scorer: string
 }
 
 export interface BundleSizes {
@@ -35,6 +39,8 @@ function isWorkerSample(value: unknown): value is WorkerSample {
     && typeof value.rssBefore === 'number'
     && typeof value.rssPeak === 'number'
     && typeof value.rssAfter === 'number'
+    && typeof value.rssPeakHw === 'number'
+    && typeof value.scorer === 'string'
   )
 }
 

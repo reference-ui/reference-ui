@@ -28,6 +28,7 @@ export interface RunRecord {
   hash: string | null
   dirty: boolean
   createdAt: string
+  scorer: string
   machine: MachineInfo
   scales: ScaleResult[]
 }
@@ -40,21 +41,31 @@ export function medianPeakRss(scale: ScaleResult): number {
   return median(scale.samples.map((sample) => sample.rssPeak))
 }
 
+export function medianPeakHw(scale: ScaleResult): number {
+  return median(scale.samples.map((sample) => sample.rssPeakHw))
+}
+
 function summaryTable(record: RunRecord): string[] {
   const lines = [
     '## summary',
     '',
-    '| scale | files | css() calls | peak RSS | sync | bundle |',
-    '| --- | --- | --- | --- | --- | --- |',
+    '| scale | files | css() calls | peak RSS | peak HW | sync | bundle |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
   ]
   for (const scale of record.scales) {
     lines.push(
       `| ${scale.plan.scale} | ${formatCount(scale.generated.styleFiles)} `
         + `| ${formatCount(scale.generated.cssCalls)} | ${formatMiB(medianPeakRss(scale))} `
+        + `| ${formatMiB(medianPeakHw(scale))} `
         + `| ${formatMs(medianSyncMs(scale))} | ${formatKiB(scale.bundle.totalBytes)} |`,
     )
   }
-  lines.push('')
+  lines.push(
+    '',
+    `scorer ${record.scorer}: peak RSS is the v1 in-loop sampler (history-comparable); `
+      + 'peak HW is the OS high-water, a new series — never compare HW against old RSS.',
+    '',
+  )
   return lines
 }
 
@@ -66,6 +77,7 @@ function scaleSection(scale: ScaleResult): string[] {
     `seed ${scale.plan.seed} · ${scale.samples.length} run(s) · generated in ${formatMs(scale.genMs)}`,
     '',
     `- peak RSS: ${formatMiB(medianPeakRss(scale))}`,
+    `- peak HW: ${formatMiB(medianPeakHw(scale))} (OS high-water)`,
     `- sync time: ${formatMs(medianSyncMs(scale))}`,
     `- bundle: ${formatKiB(scale.bundle.totalBytes)} (${formatKiB(scale.bundle.totalGzip)} gzip)`,
     '',
@@ -79,11 +91,13 @@ function scaleSection(scale: ScaleResult): string[] {
     '',
     '### runs',
     '',
-    '| # | sync | peak RSS |',
-    '| - | --- | ------- |',
+    '| # | sync | peak RSS | peak HW |',
+    '| - | --- | ------- | ------ |',
   ]
   scale.samples.forEach((sample, index) => {
-    lines.push(`| ${index + 1} | ${formatMs(sample.syncMs)} | ${formatMiB(sample.rssPeak)} |`)
+    lines.push(
+      `| ${index + 1} | ${formatMs(sample.syncMs)} | ${formatMiB(sample.rssPeak)} | ${formatMiB(sample.rssPeakHw)} |`,
+    )
   })
   lines.push('', '### bundle', '')
   lines.push(`- styles.css: ${formatKiB(scale.bundle.cssBytes)} (${formatKiB(scale.bundle.cssGzip)} gzip)`)

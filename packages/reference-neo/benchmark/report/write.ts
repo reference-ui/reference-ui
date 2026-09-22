@@ -22,6 +22,12 @@ function currentMachine(): MachineInfo {
   }
 }
 
+// The record states the procedure its own samples report; a sample without
+// a scorer field is bench-worker/1 by definition (the four-field shape).
+function recordScorer(input: ReportInput): string {
+  return input.scales[0]?.samples[0]?.scorer ?? 'bench-worker/1'
+}
+
 export function writeReport(
   reportsRoot: string,
   pin: PinInfo,
@@ -33,6 +39,7 @@ export function writeReport(
     hash: pin.hash,
     dirty: pin.dirty,
     createdAt: new Date().toISOString(),
+    scorer: recordScorer(input),
     machine: currentMachine(),
     scales: input.scales,
   }
