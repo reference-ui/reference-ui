@@ -277,6 +277,17 @@ diets); scan voyage opens separately after closeout lands.
   on integrator + HQ scope decision per the closeout).
 - Slots: 1/7 (formula1-impl), 6 held — diet backlog EMPTY, MCP
   banks await scope ruling, N1 held — this entry is the proof.
+- HQ WIDENED scope to MCP ("if decent architecture, get them into
+  main"). Captain's architecture read (both reports firsthand): YES —
+  CATPOST (prebuilt category postings at load vs per-call MiniSearch
+  wildcard) and PRELOWER (lowercase-once-at-load vs per-candidate
+  lowering) are both genuine invariant-hoisting, one file,
+  +32/-15 and +12/-4. Dispatched swarm-intmcp (isolated, base
+  1b4effaba): rebase vs rawindex LAND, A-vs-B race adjudication each,
+  same-file merge, full 8-pair (prelower's banked x3/x2 is a
+  disclosed deviation), surface-denominator proof + sync 0-confirm.
+- Slots: 2/7 (formula1-impl, intmcp), 5 held — diet backlog EMPTY,
+  N1 held — this entry is the proof.
 
 ## Ticks (empty board)
 
