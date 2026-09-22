@@ -3,7 +3,7 @@
 // This module is a Neo-owned copy of the core fragment scanner.
 
 import { readFileSync } from 'node:fs'
-import { extname, relative, sep } from 'node:path'
+import { extname, relative, resolve, sep } from 'node:path'
 import fg from 'fast-glob'
 import type { ScanOptions } from './types.ts'
 
@@ -126,6 +126,133 @@ function isDeclarationFile(relativePath: string): boolean {
   return relativePath.endsWith('.d.ts')
 }
 
+// Suffix-walk decision flags: one fused pass reports both gates at once.
+const MATCHABLE_FLAG = 1
+const RETAINABLE_FLAG = 2
+// The stripped suffix is not a clean relative form (empty, `.`, `..`, or an
+// empty segment), so the absolute path was never normalized and the caller
+// falls back to the exact old relative()+helpers path instead of the strip.
+const SUFFIX_ANOMALY = -1
+
+// Segment-head classes for the fused walk: dot-leading, plain, anomalous.
+const SEGMENT_PLAIN = 0
+const SEGMENT_DOT = 1
+
+// Manual-compare table derived from the gate Set: the Set stays the single
+// source of truth; the fused walk reads this without allocating slices.
+const NATIVE_IGNORE_LIST: readonly string[] = [...NATIVE_IGNORE_DIRS]
+
+function segmentHeadOf(value: string, start: number, end: number): number {
+  const length = end - start
+  if (length === 0) {
+    return SUFFIX_ANOMALY
+  }
+  if (value[start] !== '.') {
+    return SEGMENT_PLAIN
+  }
+  if (length === 1) {
+    return SUFFIX_ANOMALY
+  }
+  if (length === 2 && value[start + 1] === '.') {
+    return SUFFIX_ANOMALY
+  }
+  return SEGMENT_DOT
+}
+
+// True when value[start:end] is an engine-ignored directory name (mirror).
+function isIgnoredSegment(value: string, start: number, end: number): boolean {
+  const length = end - start
+  for (const candidate of NATIVE_IGNORE_LIST) {
+    if (candidate.length !== length) {
+      continue
+    }
+    let match = true
+    for (let index = 0; index < length; index++) {
+      if (value[start + index] !== candidate[index]) {
+        match = false
+        break
+      }
+    }
+    if (match) {
+      return true
+    }
+  }
+  return false
+}
+
+// True when the final segment carries an engine-parsed extension: the last
+// dot strictly inside the segment decides, exactly like extname().slice(1).
+function hasSourceExtensionTail(value: string, start: number, end: number): boolean {
+  for (let index = end - 1; index >= start; index--) {
+    if (value[index] !== '.') {
+      continue
+    }
+    return index > start && SOURCE_EXTENSIONS.has(value.slice(index + 1, end))
+  }
+  return false
+}
+
+// True when the final segment ends with `.d.ts`: the rule holds no separator
+// and the suffix has no trailing one, so this equals endsWith on the form.
+function isDeclarationTail(value: string, start: number, end: number): boolean {
+  return end - start >= 5 && value.endsWith('.d.ts', end)
+}
+
+// One fused pass over absolutePath[start:]: dot/ignore gates plus the final
+// extension and declaration tail, or SUFFIX_ANOMALY for unclean suffixes.
+function classifyScanSuffix(absolutePath: string, start: number): number {
+  let hasDot = false
+  let hasIgnore = false
+  let hasExt = false
+  let isDts = false
+  const length = absolutePath.length
+  if (start >= length) {
+    return SUFFIX_ANOMALY
+  }
+  let segmentStart = start
+  for (;;) {
+    let index = absolutePath.indexOf(sep, segmentStart)
+    if (index === -1) {
+      index = length
+    }
+    const head = segmentHeadOf(absolutePath, segmentStart, index)
+    if (head === SUFFIX_ANOMALY) {
+      return SUFFIX_ANOMALY
+    }
+    if (head === SEGMENT_DOT) {
+      hasDot = true
+    }
+    if (index === length) {
+      hasExt = hasSourceExtensionTail(absolutePath, segmentStart, index)
+      isDts = isDeclarationTail(absolutePath, segmentStart, index)
+      break
+    }
+    if (isIgnoredSegment(absolutePath, segmentStart, index)) {
+      hasIgnore = true
+    }
+    segmentStart = index + 1
+  }
+  const matchable = !hasDot && !isDts
+  const retainable = !hasIgnore && hasExt
+  return (matchable ? MATCHABLE_FLAG : 0) | (retainable ? RETAINABLE_FLAG : 0)
+}
+
+// Exact old identity path for out-of-cwd hits and unnormalized spellings:
+// relative() plus the split/extname helpers, with identical selection.
+function fallbackScanFlags(cwd: string, candidate: string): number {
+  const rel = relative(cwd, candidate)
+  const matchable = !hasDotSegment(rel) && !isDeclarationFile(rel)
+  const retainable = !hasIgnoredDir(rel) && hasSourceExtension(rel)
+  return (matchable ? MATCHABLE_FLAG : 0) | (retainable ? RETAINABLE_FLAG : 0)
+}
+
+// The resolved `cwd + sep` prefix: candidates joined lexically under cwd
+// strip to their relative form by slicing it off (root keeps bare `/`).
+function scanPrefixFor(cwd: string): string {
+  const resolved = resolve(cwd)
+  return resolved === sep ? sep : resolved + sep
+}
+
 /**
  * Find files that either import a target module or call one of the given functions.
  * Import-based discovery is preferred because it aligns with the public system API.
@@ -188,18 +315,30 @@ function splitScan(
 ): FragmentScan {
   const matches: string[] = []
   const scannedSources: ScannedSource[] = []
+  // Prefix-strip fast path: fg joins candidates lexically under cwd, so the
+  // relative form is the absolute path minus one prefix — no resolve(), no
+  // normalize(), no splits, no rel string. Out-of-cwd hits and unnormalized
+  // spellings fall back to the exact old path with identical selection.
+  const prefix = scanPrefixFor(cwd)
   for (let index = 0; index < candidates.length; index++) {
     const content = contents[index]
     if (content === null) {
       continue
     }
-    const rel = relative(cwd, candidates[index])
-    const matchable = !hasDotSegment(rel) && !isDeclarationFile(rel)
+    const candidate = candidates[index]
+    const stripped = candidate.startsWith(prefix)
+      ? classifyScanSuffix(candidate, prefix.length)
+      : SUFFIX_ANOMALY
+    const flags = stripped === SUFFIX_ANOMALY
+      ? fallbackScanFlags(cwd, candidate)
+      : stripped
+    const matchable = (flags & MATCHABLE_FLAG) !== 0
+    const retainable = (flags & RETAINABLE_FLAG) !== 0
     if (matchable && matchesAnyPattern(content, discoveryPatterns)) {
-      matches.push(candidates[index])
+      matches.push(candidate)
     }
-    if (!hasIgnoredDir(rel) && hasSourceExtension(rel)) {
-      scannedSources.push({ path: candidates[index], content })
+    if (retainable) {
+      scannedSources.push({ path: candidate, content })
     }
   }
   return { matches, scannedSources }
