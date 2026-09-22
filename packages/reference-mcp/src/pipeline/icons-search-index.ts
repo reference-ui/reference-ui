@@ -73,9 +73,17 @@ function trimDescription(desc: string, maxLen = 220): string {
   return (lastSpace > 60 ? trimmed.slice(0, lastSpace) : trimmed) + '...'
 }
 
+interface StoredIconFields {
+  name?: string
+  description?: string
+  categories?: string[]
+}
+
 export class IconsSearchEngine {
   readonly miniSearch: MiniSearch
   readonly categories: string[]
+  readonly categoryPostings: Map<string, StoredIconFields[]>
+  readonly allPostings: StoredIconFields[]
 
   constructor(serializedIndex: unknown) {
     const options = {
@@ -91,22 +99,38 @@ export class IconsSearchEngine {
         ? MiniSearch.loadJSON(serializedIndex, options)
         : MiniSearch.loadJS(serializedIndex as AsPlainObject, options)
 
-    // Extract categories across stored documents
+    // Extract categories across stored documents, plus prebuilt
+    // category->entries postings (in index order) so category browse
+    // skips MiniSearch entirely.
     const catSet = new Set<string>()
-    const docs = (this.miniSearch as unknown as { _storedFields: Map<number, { categories?: string[] }> })
+    const postings = new Map<string, StoredIconFields[]>()
+    const all: StoredIconFields[] = []
+    const docs = (this.miniSearch as unknown as { _storedFields: Map<number, StoredIconFields> })
       ._storedFields
 
     if (docs && docs instanceof Map) {
       for (const entry of docs.values()) {
+        all.push(entry)
         if (Array.isArray(entry.categories)) {
-          for (const c of entry.categories) {
-            if (c) catSet.add(c)
+          for (let i = 0; i < entry.categories.length; i++) {
+            const c = entry.categories[i]
+            if (!c) continue
+            // Lower once at load: stored categories are then canonically
+            // lowercase, so per-candidate filters use plain === (no alloc).
+            const lower = c.toLowerCase()
+            if (lower !== c) entry.categories[i] = lower
+            catSet.add(lower)
+            const list = postings.get(lower)
+            if (list) list.push(entry)
+            else postings.set(lower, [entry])
           }
         }
       }
     }
 
     this.categories = Array.from(catSet).sort()
+    this.categoryPostings = postings
+    this.allPostings = all
   }
 
   get documentCount(): number {
@@ -173,8 +197,9 @@ export class IconsSearchEngine {
     if (category) {
       const catLower = category.toLowerCase()
       searchOptions.filter = result => {
+        // Stored categories are lowered once at load: plain ===, no alloc.
         const cats = (result.categories as string[]) || []
-        return cats.some(c => c.toLowerCase() === catLower)
+        return cats.some(c => c === catLower)
       }
     }
 
@@ -282,18 +307,14 @@ export class IconsSearchEngine {
       }
     }
 
-    // Category-only browse using MiniSearch.wildcard
-    const allResults = this.miniSearch.search(MiniSearch.wildcard, {
-      filter: result => {
-        const cats = (result.categories as string[]) || []
-        return !category || cats.some(c => c.toLowerCase() === category)
-      },
-    })
+    // Category-only browse via prebuilt postings (skips MiniSearch entirely;
+    // postings preserve index order, matching wildcard order exactly).
+    const matches = category ? (this.categoryPostings.get(category) ?? []) : this.allPostings
 
-    const sliced = allResults.slice(0, limit).map(r => {
-      const name = r.name as string
-      const description = (r.description as string) || ''
-      const categories = (r.categories as string[]) || ['general']
+    const sliced = matches.slice(0, limit).map(e => {
+      const name = e.name as string
+      const description = (e.description as string) || ''
+      const categories = (e.categories as string[]) || ['general']
 
       const readout: IconReadout = {
         name,
@@ -310,7 +331,7 @@ export class IconsSearchEngine {
     })
 
     return {
-      total: allResults.length,
+      total: matches.length,
       returned: sliced.length,
       icons: sliced,
     }
