@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use oxc_ast::ast::Program;
+use rustc_hash::FxHashMap;
 
 use super::bindings::is_reference_package;
 use super::identity_map::{collect_map, parse_export_map, ExportMap, FileImport, NamedTarget};
@@ -39,8 +40,8 @@ struct RelativeRef<'a> {
 /// Project file index plus memoized export maps: everything the identity walk reads.
 pub struct IdentityGraph<'s> {
     sources: &'s [(String, String)],
-    index: HashMap<String, usize>,
-    memo: RefCell<HashMap<String, Option<Rc<ExportMap>>>>,
+    index: FxHashMap<String, usize>,
+    memo: RefCell<FxHashMap<String, Option<Rc<ExportMap>>>>,
     /// Retained programs by source position; a hit reuses the main-phase
     /// parse instead of re-parsing bytes. Missing positions (streamed,
     /// panicked, or never parsed) fall back to a fresh parse.
@@ -67,14 +68,14 @@ impl<'s> IdentityGraph<'s> {
         sources: &'s [(String, String)],
         programs: Option<&'s HashMap<usize, &'s Program<'s>>>,
     ) -> Self {
-        let mut index = HashMap::new();
+        let mut index = FxHashMap::default();
         for (position, (path, _)) in sources.iter().enumerate() {
             index.entry(normalize_path(path)).or_insert(position);
         }
         Self {
             sources,
             index,
-            memo: RefCell::new(HashMap::new()),
+            memo: RefCell::new(FxHashMap::default()),
             programs,
         }
     }

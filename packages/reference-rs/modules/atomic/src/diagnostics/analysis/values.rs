@@ -7,9 +7,8 @@
 //! classifier never reads extraction wants or success, and anything not
 //! provably static is unknown — never a guessed key.
 
-use std::collections::HashSet;
-
 use oxc_ast::ast::{Expression, UnaryOperator};
+use rustc_hash::FxHashSet;
 use serde_json::{json, Value};
 
 use super::const_values::{atom_to_class, resolve_const_scalar, resolve_member_atom};
@@ -31,7 +30,7 @@ pub enum ValueClass {
 /// the walk's shadow stack. Shadowed names never resolve through the map.
 pub struct ValueScope<'a> {
     pub constants: &'a crate::extract::constants::LocalConstants,
-    pub shadows: &'a [HashSet<String>],
+    pub shadows: &'a [FxHashSet<String>],
 }
 
 impl ValueScope<'_> {
@@ -283,7 +282,7 @@ mod tests {
         let program = parse_for_test(&allocator, source);
         let constants =
             crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
-        let shadows: Vec<HashSet<String>> = Vec::new();
+        let shadows: Vec<FxHashSet<String>> = Vec::new();
         let scope = ValueScope {
             constants: &constants,
             shadows: &shadows,

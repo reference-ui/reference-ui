@@ -11,7 +11,7 @@
 //! refuses, so bindings — never the name bag — decide which helper folds.
 //! Unknown scope ids resolve as unbound.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use super::binding::{Binding, BindingInit, BindingKind, ImportRef};
 use super::table::{ScopeId, ScopeTable};
@@ -45,7 +45,7 @@ pub enum ImportLookup<'a> {
     /// Resolved imports by local name plus the unbound-name fallback.
     Binding {
         /// Resolved imports of this file, keyed by local name.
-        values: &'a HashMap<String, ResolvedExport>,
+        values: &'a FxHashMap<String, ResolvedExport>,
         /// Merge-era fallback for unbound names only, never imports.
         fallback: &'a LocalConstants,
     },

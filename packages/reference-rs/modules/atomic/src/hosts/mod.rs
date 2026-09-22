@@ -5,10 +5,11 @@
 //! include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
+use rustc_hash::{FxHashMap, FxHashSet};
 use styletrace::{trace_style_bindings_with_surface, TraceSources};
 
 use crate::{
@@ -36,8 +37,8 @@ pub struct ResolvedHosts {
 
 impl ResolvedHosts {
     /// Sorted union gating extraction.
-    pub fn hosts(&self) -> HashSet<String> {
-        let mut hosts = HashSet::new();
+    pub fn hosts(&self) -> FxHashSet<String> {
+        let mut hosts = FxHashSet::default();
         hosts.extend(self.traced.iter().cloned());
         hosts.extend(self.configured.iter().cloned());
         hosts
@@ -45,7 +46,7 @@ impl ResolvedHosts {
 }
 
 /// Caller hosts plus traced names for one compile.
-pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
+pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     let mut session = DiagnosticsSession::new();
     let sources = crate::sources::collect(request);
     // No parse runs on this path, so no failure signal exists: every
@@ -95,7 +96,7 @@ pub fn resolve(
     let surface = engine_surface(&request.base_system);
     // Staged bytes keyed exactly as the entries: the trace parses what
     // extraction parsed, with disk fallback for paths outside the compile.
-    let staged: HashMap<PathBuf, &str> = sources
+    let staged: FxHashMap<PathBuf, &str> = sources
         .iter()
         .map(|(path, content)| (PathBuf::from(path), content.as_str()))
         .collect();

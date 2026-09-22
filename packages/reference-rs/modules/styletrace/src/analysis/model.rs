@@ -6,6 +6,7 @@
 use std::collections::{BTreeSet, HashMap};
 
 use oxc_ast::ast::Expression;
+use rustc_hash::FxHashMap;
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
@@ -26,9 +27,9 @@ impl TracedBinding {
 
 #[derive(Clone)]
 pub(super) struct TraceModule {
-    pub(super) components: HashMap<String, TraceComponent>,
-    pub(super) component_factories: HashMap<String, FactoryTarget>,
-    pub(super) factories: HashMap<String, TraceFactory>,
+    pub(super) components: FxHashMap<String, TraceComponent>,
+    pub(super) component_factories: FxHashMap<String, FactoryTarget>,
+    pub(super) factories: FxHashMap<String, TraceFactory>,
     pub(super) exports: HashMap<String, ExportTarget>,
     pub(super) export_all_sources: Vec<String>,
 }
@@ -38,9 +39,9 @@ impl TraceModule {
     /// The failure is recorded as a diagnostic; the edge contributes nothing.
     pub(super) fn empty() -> Self {
         Self {
-            components: HashMap::new(),
-            component_factories: HashMap::new(),
-            factories: HashMap::new(),
+            components: FxHashMap::default(),
+            component_factories: FxHashMap::default(),
+            factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
         }

@@ -19,8 +19,9 @@ mod staging;
 mod tests;
 mod values;
 
-use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
+
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use module_graph::{
     BindingOrigin, BindingWalk, ExtensionPolicy, ModuleGraph, ModuleKey, ModuleRecord,
@@ -52,16 +53,16 @@ type ValueOutcome = Result<ResolvedExport, ValueRefused>;
 /// residue markers keyed by root name, and its literal bag for table gaps.
 struct RefinedFile {
     table: scope::ScopeTable,
-    markers: HashMap<String, Vec<UnfoldableSpread>>,
+    markers: FxHashMap<String, Vec<UnfoldableSpread>>,
     bag: LocalConstants,
 }
 
 /// One origin file's resolved and refused imports, filled together.
 struct OriginMaps {
     /// Resolved imports by local name, merged into the bake.
-    resolved: HashMap<String, ResolvedExport>,
+    resolved: FxHashMap<String, ResolvedExport>,
     /// Refused imports by local name, recorded as markers.
-    refused: HashMap<String, ValueRefused>,
+    refused: FxHashMap<String, ValueRefused>,
 }
 
 /// Whether an origin file refined, is external, or is mid-refinement.
@@ -92,13 +93,13 @@ struct Assembly<'s, 'r> {
 pub struct ValueGraph<'s> {
     fs: Rc<AtomicFs<'s>>,
     graph: ModuleGraph<AtomicLoader<'s>>,
-    programs: HashMap<ModuleKey, &'s Program<'s>>,
-    streamed: HashSet<ModuleKey>,
+    programs: FxHashMap<ModuleKey, &'s Program<'s>>,
+    streamed: FxHashSet<ModuleKey>,
     project: &'s LocalConstants,
-    origins: HashMap<OriginQuery, OriginOutcome>,
-    refined: HashMap<ModuleKey, RefinedFile>,
-    refining: HashSet<ModuleKey>,
-    valued: HashMap<BindingOrigin, ValueOutcome>,
+    origins: FxHashMap<OriginQuery, OriginOutcome>,
+    refined: FxHashMap<ModuleKey, RefinedFile>,
+    refining: FxHashSet<ModuleKey>,
+    valued: FxHashMap<BindingOrigin, ValueOutcome>,
     valuing: Vec<BindingOrigin>,
 }
 
@@ -184,8 +185,8 @@ impl<'s> ValueGraph<'s> {
             fs,
             plan,
         } = assembly;
-        let mut staged = HashMap::new();
-        let mut programs = HashMap::new();
+        let mut staged = FxHashMap::default();
+        let mut programs = FxHashMap::default();
         for (source, (key, record)) in retained.iter().zip(pairs) {
             programs.insert(key.clone(), source.program);
             if plan.stages(&key) {
@@ -194,7 +195,7 @@ impl<'s> ValueGraph<'s> {
                 staged.insert(key, (record, bag));
             }
         }
-        let mut streamed_keys = HashSet::new();
+        let mut streamed_keys = FxHashSet::default();
         for source in streamed {
             streamed_keys.insert(source.key.clone());
             if plan.stages(&source.key) {
@@ -208,10 +209,10 @@ impl<'s> ValueGraph<'s> {
             programs,
             streamed: streamed_keys,
             project,
-            origins: HashMap::new(),
-            refined: HashMap::new(),
-            refining: HashSet::new(),
-            valued: HashMap::new(),
+            origins: FxHashMap::default(),
+            refined: FxHashMap::default(),
+            refining: FxHashSet::default(),
+            valued: FxHashMap::default(),
             valuing: Vec::new(),
         }
     }
@@ -223,7 +224,7 @@ impl<'s> ValueGraph<'s> {
         &mut self,
         path: &str,
         imports: &[ImportRef],
-    ) -> HashMap<String, ResolvedExport> {
+    ) -> FxHashMap<String, ResolvedExport> {
         let from = ModuleKey::new(path);
         imports
             .iter()
@@ -388,12 +389,12 @@ impl<'s> ValueGraph<'s> {
         file: &ModuleKey,
         refs: &[ImportRef],
     ) -> (
-        HashMap<String, ResolvedExport>,
-        HashMap<String, ValueRefused>,
+        FxHashMap<String, ResolvedExport>,
+        FxHashMap<String, ValueRefused>,
     ) {
         let mut maps = OriginMaps {
-            resolved: HashMap::new(),
-            refused: HashMap::new(),
+            resolved: FxHashMap::default(),
+            refused: FxHashMap::default(),
         };
         for imp in refs {
             self.resolve_origin_ref(file, imp, &mut maps);
@@ -425,7 +426,7 @@ impl<'s> ValueGraph<'s> {
         table: scope::ScopeTable,
         residues: Vec<scope::SpreadResidue>,
     ) -> RefinedFile {
-        let mut markers: HashMap<String, Vec<UnfoldableSpread>> = HashMap::new();
+        let mut markers: FxHashMap<String, Vec<UnfoldableSpread>> = FxHashMap::default();
         for residue in residues {
             if residue.scope == scope::ROOT_SCOPE {
                 markers

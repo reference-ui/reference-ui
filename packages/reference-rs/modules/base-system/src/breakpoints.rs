@@ -5,9 +5,12 @@
 //! Profile canonical breakpoints merge with authored overrides deterministically.
 
 use indexmap::IndexMap;
+use rustc_hash::FxBuildHasher;
 use serde::{Deserialize, Serialize};
 
 use crate::spec::SpecBreakpointWidth;
+
+type FxIndexMap<K, V> = IndexMap<K, V, FxBuildHasher>;
 
 const STANDARD_WIDTHS: &[(&str, &str)] = &[
     ("sm", "640"),
@@ -24,7 +27,7 @@ pub struct BreakpointScale {
     #[serde(default, deserialize_with = "deserialize_names")]
     names: Vec<String>,
     #[serde(default)]
-    widths: IndexMap<String, String>,
+    widths: FxIndexMap<String, String>,
 }
 
 impl BreakpointScale {
@@ -46,7 +49,7 @@ impl BreakpointScale {
             "xl".to_string(),
             "2xl".to_string(),
         ];
-        let mut widths = IndexMap::new();
+        let mut widths = FxIndexMap::default();
         for (name, px) in STANDARD_WIDTHS {
             widths.insert((*name).to_string(), (*px).to_string());
         }
@@ -71,7 +74,7 @@ impl BreakpointScale {
         let raw: Vec<String> = names.into_iter().map(Into::into).collect();
         Self {
             names: with_leading_base(raw),
-            widths: IndexMap::new(),
+            widths: FxIndexMap::default(),
         }
     }
 
@@ -79,7 +82,7 @@ impl BreakpointScale {
     pub fn from_named_widths(
         pairs: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>,
     ) -> Self {
-        let mut widths = IndexMap::new();
+        let mut widths = FxIndexMap::default();
         let mut names = Vec::new();
         for (name, px) in pairs {
             let name = name.into();

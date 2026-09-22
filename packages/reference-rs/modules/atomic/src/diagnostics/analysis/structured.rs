@@ -240,7 +240,7 @@ fn spread_const_element(element: &ConstArrayElement) -> Option<Value> {
 mod tests {
     use super::super::support::{first_prop_value, parse_for_test};
     use super::*;
-    use std::collections::HashSet;
+    use rustc_hash::FxHashSet;
 
     fn responsive(source: &str) -> Option<Value> {
         let wrapped = format!("css({{ v: {source} }})");
@@ -248,7 +248,7 @@ mod tests {
         let program = parse_for_test(&allocator, &wrapped);
         let constants =
             crate::extract::constants::collect_local_constants(&program, "test.ts", Some(&wrapped));
-        let shadows: Vec<HashSet<String>> = Vec::new();
+        let shadows: Vec<FxHashSet<String>> = Vec::new();
         let scope = ValueScope {
             constants: &constants,
             shadows: &shadows,

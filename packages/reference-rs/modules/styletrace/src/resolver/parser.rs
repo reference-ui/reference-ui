@@ -4,8 +4,10 @@
 //! It extracts `TypeAliasDecl` and `InterfaceDecl` definitions, resolves their properties,
 //! and tracks re-exports across files to build the `ParsedModule`.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::path::Path;
+
+use rustc_hash::FxHashMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
@@ -24,9 +26,9 @@ use super::model::{
 
 struct ParseContext<'a> {
     source: &'a str,
-    imports: &'a mut HashMap<String, ImportBinding>,
-    declarations: &'a mut HashMap<String, TypeDeclaration>,
-    reexports: &'a mut HashMap<String, ImportBinding>,
+    imports: &'a mut FxHashMap<String, ImportBinding>,
+    declarations: &'a mut FxHashMap<String, TypeDeclaration>,
+    reexports: &'a mut FxHashMap<String, ImportBinding>,
     export_all_sources: &'a mut Vec<String>,
 }
 
@@ -43,9 +45,9 @@ pub(super) fn parse_module(path: &Path, source: &str) -> Result<ParsedModule, St
         )));
     }
 
-    let mut imports = HashMap::new();
-    let mut declarations = HashMap::new();
-    let mut reexports = HashMap::new();
+    let mut imports = FxHashMap::default();
+    let mut declarations = FxHashMap::default();
+    let mut reexports = FxHashMap::default();
     let mut export_all_sources = Vec::new();
 
     {

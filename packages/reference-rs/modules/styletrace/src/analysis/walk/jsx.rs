@@ -8,7 +8,8 @@ use oxc_ast::ast::{
     Argument, Expression, JSXAttributeItem, JSXAttributeValue, JSXChild, JSXElementName,
     JSXExpression,
 };
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 
 pub fn collect_edges_from_jsx_child(child: &JSXChild<'_>, ctx: &mut WalkContext<'_>) {
     match child {
@@ -91,7 +92,7 @@ fn walk_jsx_attribute(attribute: &JSXAttributeItem<'_>, ctx: &mut WalkContext<'_
 
 pub fn jsx_target(
     name: &JSXElementName<'_>,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
     primitive_names: &BTreeSet<String>,
 ) -> Option<EdgeTarget> {
     let name = jsx_name_to_string(name);
@@ -122,7 +123,7 @@ pub fn jsx_target(
 fn handle_namespace_target(
     namespace: &str,
     member: &str,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
     primitive_names: &BTreeSet<String>,
 ) -> Option<EdgeTarget> {
     if let Some(import_binding) = imports.get(namespace) {
@@ -142,7 +143,7 @@ fn handle_namespace_target(
 
 pub fn create_element_target(
     argument: &Argument<'_>,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
     primitive_names: &BTreeSet<String>,
 ) -> Option<EdgeTarget> {
     match argument {
@@ -155,7 +156,7 @@ pub fn create_element_target(
 
 fn identifier_target(
     name: &str,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
     primitive_names: &BTreeSet<String>,
 ) -> Option<EdgeTarget> {
     if !is_component_name(name) {

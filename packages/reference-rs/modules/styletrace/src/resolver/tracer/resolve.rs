@@ -3,8 +3,10 @@
 //! This module implements the main recursive resolution passes. It evaluates
 //! type expressions like unions, intersections, and mapped types.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::path::Path;
+
+use rustc_hash::FxHashMap;
 
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{BoundTypeExpr, TypeDeclaration, TypeExpr};
@@ -243,8 +245,8 @@ fn bind_type_params(
     params: &[String],
     args: &[TypeExpr],
     arg_module_path: &Path,
-    inherited_env: &HashMap<String, BoundTypeExpr>,
-) -> HashMap<String, BoundTypeExpr> {
+    inherited_env: &FxHashMap<String, BoundTypeExpr>,
+) -> FxHashMap<String, BoundTypeExpr> {
     let mut env = inherited_env.clone();
     for (index, param) in params.iter().enumerate() {
         env.insert(

@@ -14,6 +14,9 @@ use crate::recipes::CompiledRecipe;
 use crate::resolve::conditions::nest_selector_condition;
 use base_system::BaseSystem;
 use indexmap::IndexMap;
+use rustc_hash::FxBuildHasher;
+
+type FxIndexMap<K, V> = IndexMap<K, V, FxBuildHasher>;
 
 fn extract_at_rules(atom: &Atom) -> Vec<String> {
     at_rule_wraps(atom).map(str::to_string).collect()
@@ -150,7 +153,7 @@ struct RecipeGroup {
 }
 
 fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
-    let mut groups: IndexMap<(Vec<String>, String), Vec<String>> = IndexMap::new();
+    let mut groups: FxIndexMap<(Vec<String>, String), Vec<String>> = FxIndexMap::default();
     for atom in &rule.atoms {
         let at_rules = extract_at_rules(atom);
         let selector = recipe_selector(&rule.class_name, atom);

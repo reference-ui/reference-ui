@@ -6,14 +6,14 @@
 //! and `recipe` imports are neither. Re-export tracing stays an extraction
 //! job, so a site analysis misses is silence, never a phantom expectation.
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 /// File-local Reference import bindings for one program.
 #[derive(Debug, Default)]
 pub struct FileBindings {
-    pub css: HashSet<String>,
-    pub jsx: HashSet<String>,
-    pub namespaces: HashSet<String>,
+    pub css: FxHashSet<String>,
+    pub jsx: FxHashSet<String>,
+    pub namespaces: FxHashSet<String>,
 }
 
 /// Scan one program's direct Reference imports into file-local bindings.

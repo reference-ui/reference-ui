@@ -21,7 +21,9 @@ pub mod structured;
 pub(crate) mod support;
 pub mod values;
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
+
+use rustc_hash::FxHashSet;
 
 use crate::diagnostics::DiagnosticFact;
 use crate::diagnostics::SourceId;
@@ -85,17 +87,17 @@ pub struct AnalyzedSource<'a> {
 /// props, const values, the system name, and the exact runtime style-prop
 /// set that decides responsive-value vs condition positions.
 pub struct AnalysisCtx<'a> {
-    pub hosts: HashSet<String>,
+    pub hosts: FxHashSet<String>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
-    pub style_props: HashSet<String>,
+    pub style_props: FxHashSet<String>,
 }
 
 /// Predict exact expected lookups plus dynamic-shape facts for every source.
 /// Sources keep their input order and each becomes one [`SourceId`] by index.
 pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
-    let mut hosts = HashSet::new();
+    let mut hosts = FxHashSet::default();
     hosts.extend(input.hosts.traced.iter().cloned());
     hosts.extend(input.hosts.configured.iter().cloned());
     let ctx = AnalysisCtx {
@@ -121,7 +123,7 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
 
 /// True when any enclosing scope declares `name`. Both surface visitors
 /// share this shadow test so gating agrees everywhere.
-pub fn is_shadowed(shadows: &[HashSet<String>], name: &str) -> bool {
+pub fn is_shadowed(shadows: &[FxHashSet<String>], name: &str) -> bool {
     shadows.iter().any(|scope| scope.contains(name))
 }
 
@@ -132,7 +134,7 @@ pub fn is_shadowed(shadows: &[HashSet<String>], name: &str) -> bool {
 /// Missing a binding lets a param resolve to a cross-file same-named const,
 /// a false exact (SITE-53's SPEC-V2-75 ghost).
 pub fn record_param_shadows(
-    shadows: &mut [HashSet<String>],
+    shadows: &mut [FxHashSet<String>],
     params: &oxc_ast::ast::FormalParameters<'_>,
 ) {
     let Some(scope) = shadows.last_mut() else {
@@ -144,7 +146,7 @@ pub fn record_param_shadows(
 }
 
 /// Every identifier one binding pattern declares, however nested.
-fn bind_pattern_names(pattern: &oxc_ast::ast::BindingPattern<'_>, scope: &mut HashSet<String>) {
+fn bind_pattern_names(pattern: &oxc_ast::ast::BindingPattern<'_>, scope: &mut FxHashSet<String>) {
     use oxc_ast::ast::BindingPattern;
     match pattern {
         BindingPattern::BindingIdentifier(id) => {
@@ -159,7 +161,7 @@ fn bind_pattern_names(pattern: &oxc_ast::ast::BindingPattern<'_>, scope: &mut Ha
 /// Every identifier an object pattern declares: listed values plus rest.
 fn bind_object_pattern_names(
     obj: &oxc_ast::ast::ObjectPattern<'_>,
-    scope: &mut HashSet<String>,
+    scope: &mut FxHashSet<String>,
 ) {
     for prop in &obj.properties {
         bind_pattern_names(&prop.value, scope);
@@ -172,7 +174,7 @@ fn bind_object_pattern_names(
 /// Every identifier an array pattern declares: elements plus rest.
 fn bind_array_pattern_names(
     arr: &oxc_ast::ast::ArrayPattern<'_>,
-    scope: &mut HashSet<String>,
+    scope: &mut FxHashSet<String>,
 ) {
     for element in arr.elements.iter().flatten() {
         bind_pattern_names(element, scope);
@@ -191,7 +193,7 @@ fn bind_array_pattern_names(
 /// fix needs declaration provenance per bag entry; until then legacy
 /// resolve lines still warn const-driven drops, just unnamed by proof.
 pub fn record_declarator_shadow(
-    shadows: &mut [HashSet<String>],
+    shadows: &mut [FxHashSet<String>],
     decl: &oxc_ast::ast::VariableDeclarator<'_>,
 ) {
     use oxc_ast::ast::BindingPattern;

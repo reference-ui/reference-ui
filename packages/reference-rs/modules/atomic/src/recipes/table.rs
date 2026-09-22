@@ -8,6 +8,7 @@
 
 use base_system::BreakpointScale;
 use indexmap::IndexMap;
+use rustc_hash::FxHashSet;
 
 use super::name;
 use super::CompiledCompound;
@@ -111,7 +112,7 @@ pub fn container_breakpoints(scale: &BreakpointScale) -> Vec<String> {
 
 fn build_compound_variants(compounds: &[CompiledCompound]) -> Vec<RecipeCompoundRecord> {
     let mut out = Vec::new();
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = FxHashSet::default();
     for compound in compounds {
         if seen.insert(predicates_key(&compound.predicates)) {
             out.push(RecipeCompoundRecord {

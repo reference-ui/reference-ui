@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
+use rustc_hash::FxHashMap;
 
 use crate::resolver::{
     collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
@@ -113,7 +114,7 @@ pub struct TraceOutcome {
 /// from the same bytes with identical parser options, so the walk observes
 /// exactly what a fresh parse would produce.
 pub struct TraceSources<'a> {
-    pub staged: &'a HashMap<PathBuf, &'a str>,
+    pub staged: &'a FxHashMap<PathBuf, &'a str>,
     pub programs: &'a HashMap<PathBuf, &'a Program<'a>>,
 }
 
@@ -153,7 +154,7 @@ pub fn trace_style_bindings_with_hint(
 
     let surface = StyleSurface::from_declaration_root(&resolved_decl_root)?;
     let entries = discover_source_files(&normalized_source)?;
-    let staged = HashMap::new();
+    let staged = FxHashMap::default();
     let programs = HashMap::new();
     let sources = TraceSources {
         staged: &staged,

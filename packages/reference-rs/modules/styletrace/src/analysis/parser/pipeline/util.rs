@@ -6,7 +6,7 @@ use crate::analysis::util::{
     is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest,
 };
 use oxc_ast::ast::{Argument, Expression};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 pub fn record_pipeline_binding(
     pattern_source: &str,
@@ -234,7 +234,7 @@ pub fn call_has_style_signal_arg(
 
 pub fn is_direct_style_pipeline_call(
     call: &oxc_ast::ast::CallExpression<'_>,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
 ) -> bool {
     if is_split_css_props_call(call, imports) {
         return true;
@@ -261,7 +261,7 @@ pub fn is_direct_style_pipeline_call(
 
 pub fn is_split_css_props_call(
     call: &oxc_ast::ast::CallExpression<'_>,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
 ) -> bool {
     let Expression::Identifier(identifier) = &call.callee else {
         return false;

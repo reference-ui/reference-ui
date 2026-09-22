@@ -4,8 +4,9 @@
 //! metadata directories plus non-source extensions; the include scope then
 //! filters both paths to matching files, silently dropping the rest.
 
-use std::collections::HashSet;
 use std::path::Path;
+
+use rustc_hash::FxHashSet;
 
 use crate::includes::IncludeScope;
 use crate::{CompileRequest, VirtualSource};
@@ -116,7 +117,7 @@ fn union_sources(
     let Some(root_dir) = root else {
         return provided;
     };
-    let mut known: HashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
+    let mut known: FxHashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
     let mut candidates = Vec::new();
     collect_candidate_paths(Path::new(root_dir), scope, root, &mut candidates);
     for path in candidates {

@@ -10,7 +10,7 @@
 
 mod star;
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use crate::{
     DefaultExport, ExportShape, FileSystem, Imported, Loader, ModuleGraph, ModuleKey, ModuleRecord,
@@ -81,7 +81,7 @@ pub struct BindingWalk<'g, L: Loader, F: FileSystem> {
     graph: &'g mut ModuleGraph<L>,
     ladder: &'g SpecifierLadder<'g, F>,
     visited: Vec<(ModuleKey, String)>,
-    cache: HashMap<(ModuleKey, String), Outcome>,
+    cache: FxHashMap<(ModuleKey, String), Outcome>,
 }
 
 impl<'g, L: Loader, F: FileSystem> BindingWalk<'g, L, F> {
@@ -91,7 +91,7 @@ impl<'g, L: Loader, F: FileSystem> BindingWalk<'g, L, F> {
             graph,
             ladder,
             visited: Vec::new(),
-            cache: HashMap::new(),
+            cache: FxHashMap::default(),
         }
     }
 

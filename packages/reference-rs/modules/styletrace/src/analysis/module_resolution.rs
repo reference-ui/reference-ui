@@ -6,12 +6,12 @@
 //! probes first, disk answers the rest, and every disk probe memoizes for
 //! the session — edges repeat the same misses, so the ladder pays once.
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use module_graph::{
     DiskFs, ExtensionPolicy, FileSystem, ModuleKey, ProbeMemo, SpecifierLadder,
 };
+use rustc_hash::FxHashMap;
 
 use crate::resolver::{
     is_ignorable_module_specifier, prefer_sync_root_source_module, StyleTraceError,
@@ -22,7 +22,7 @@ use crate::resolver::{
 /// reaches disk, so resolutions (and misses) match an unmemoized ladder
 /// exactly — a file deleted after the scan still misses.
 pub(super) struct ModuleResolver<'s> {
-    staged: HashMap<String, &'s str>,
+    staged: FxHashMap<String, &'s str>,
     disk: DiskFs,
     memo: ProbeMemo,
 }
@@ -30,7 +30,7 @@ pub(super) struct ModuleResolver<'s> {
 impl<'s> ModuleResolver<'s> {
     /// A resolver over the session's staged bytes, keyed raw: probes
     /// hit the raw form and normalize only on miss.
-    pub(super) fn new(staged: &'s HashMap<PathBuf, &'s str>) -> Self {
+    pub(super) fn new(staged: &'s FxHashMap<PathBuf, &'s str>) -> Self {
         let staged = staged
             .iter()
             .map(|(path, content)| (path.to_string_lossy().to_string(), *content))
@@ -130,7 +130,7 @@ mod tests {
     /// Staged bytes answer probes; disk answers the rest, memoized.
     #[test]
     fn staged_first_disk_memoized() {
-        let staged = HashMap::from([(
+        let staged = FxHashMap::from_iter([(
             PathBuf::from("/p/src/app.ts"),
             "export const a = 1;",
         )]);
@@ -162,7 +162,7 @@ mod tests {
         std::fs::create_dir_all(&src).expect("expected fixture dir");
         std::fs::write(src.join("app.ts"), "import './b';\n").expect("expected app");
         std::fs::write(src.join("b.ts"), "export const b = 1;\n").expect("expected b");
-        let staged = HashMap::from([
+        let staged = FxHashMap::from_iter([
             (src.join("app.ts"), "import './b';"),
             (src.join("b.ts"), "export const b = 1;"),
         ]);

@@ -4,14 +4,16 @@
 //! It takes raw AST nodes from the parser and maps them to a simplified domain representation.
 //! Emits an isolated type graph that the tracer uses for recursive evaluation and property extraction.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
+
+use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ParsedModule {
-    pub imports: HashMap<String, ImportBinding>,
-    pub declarations: HashMap<String, TypeDeclaration>,
-    pub reexports: HashMap<String, ImportBinding>,
+    pub imports: FxHashMap<String, ImportBinding>,
+    pub declarations: FxHashMap<String, TypeDeclaration>,
+    pub reexports: FxHashMap<String, ImportBinding>,
     pub export_all_sources: Vec<String>,
 }
 

@@ -4,9 +4,8 @@
 //! (shipped) stages the middle — all three must resolve identical values,
 //! including the tsconfig-aliased true miss and the nested-import arm.
 
-use std::collections::HashMap;
-
 use module_graph::ModuleKey;
+use rustc_hash::FxHashMap;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -87,7 +86,7 @@ fn refs_for(path: &str) -> Vec<ImportRef> {
 
 /// Sorted debug snapshot of one resolved map (deterministic: ordered
 /// containers only, keys sorted because maps hash).
-fn snapshot(map: HashMap<String, ResolvedExport>) -> Vec<(String, String)> {
+fn snapshot(map: FxHashMap<String, ResolvedExport>) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = map
         .into_iter()
         .map(|(name, export)| (name, format!("{export:?}")))

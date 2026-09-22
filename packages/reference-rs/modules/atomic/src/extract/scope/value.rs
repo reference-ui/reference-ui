@@ -7,7 +7,7 @@
 //! drops entries whose source was written anywhere in the project, so a
 //! mutated source can never resolve stale through an object it fed.
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, PropertyKey};
 
@@ -262,7 +262,7 @@ pub(crate) fn single_scalar(
 /// Deps run in visit order: a dep's source is always an earlier declaration
 /// (resolution requires it), so one forward pass settles every chain.
 pub(crate) fn strip_stale(table: &mut ScopeTable, deps: &[Dep], project: &LocalConstants) {
-    let mut stripped: HashSet<(ScopeId, String, Option<DepKey>)> = HashSet::new();
+    let mut stripped: FxHashSet<(ScopeId, String, Option<DepKey>)> = FxHashSet::default();
     for dep in deps {
         if project.mutation(&dep.src_name).is_some()
             || stripped.contains(&(dep.src_scope, dep.src_name.clone(), dep.src_key.clone()))

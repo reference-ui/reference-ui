@@ -7,7 +7,8 @@ mod builtins;
 mod context;
 mod resolve;
 
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use crate::resolver::error::StyleTraceError;
@@ -119,7 +120,7 @@ pub fn collect_style_prop_names(
     let mut session = TraceSession::new(sync_root);
     session.unresolved_style_props = unresolved_style_props.cloned();
     let mut visited = BTreeSet::new();
-    let env = HashMap::new();
+    let env = FxHashMap::default();
     let mut ctx = TraceContext {
         session: &mut session,
         module_path: entry_path,
@@ -144,7 +145,7 @@ pub fn collect_declared_prop_names(
     let mut session = TraceSession::new(sync_root);
     session.prune_surface = true;
     let mut visited = BTreeSet::new();
-    let env = HashMap::new();
+    let env = FxHashMap::default();
     let mut ctx = TraceContext {
         session: &mut session,
         module_path: entry_path,

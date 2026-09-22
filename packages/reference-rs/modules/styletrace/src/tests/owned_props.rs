@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use rustc_hash::FxHashMap;
 
 use crate::analysis::{trace_style_bindings_with_surface, StyleSurface};
 
@@ -51,7 +52,7 @@ fn trace_scratch(
         scratch.write(rel, content);
     }
     let entries = vec![scratch.root().join(entry)];
-    let staged = std::collections::HashMap::new();
+    let staged = FxHashMap::default();
     let programs = std::collections::HashMap::new();
     let sources = crate::TraceSources {
         staged: &staged,
@@ -216,7 +217,7 @@ fn staged_content_matches_disk_trace() {
         scratch.write(rel, content);
     }
     let entries = vec![scratch.root().join("Button.tsx")];
-    let empty = HashMap::new();
+    let empty = FxHashMap::default();
     let no_programs = HashMap::new();
     let from_disk = trace_style_bindings_with_surface(
         &entries,
@@ -228,7 +229,7 @@ fn staged_content_matches_disk_trace() {
             programs: &no_programs,
         },
     );
-    let staged: HashMap<PathBuf, &str> = files
+    let staged: FxHashMap<PathBuf, &str> = files
         .iter()
         .map(|(rel, content)| (scratch.root().join(rel), *content))
         .collect();
@@ -255,7 +256,7 @@ fn reused_programs_match_fresh_parse_trace() {
     }
     let button = scratch.root().join("Button.tsx");
     let entries = vec![button.clone()];
-    let staged: HashMap<PathBuf, &str> = files
+    let staged: FxHashMap<PathBuf, &str> = files
         .iter()
         .map(|(rel, content)| (scratch.root().join(rel), *content))
         .collect();

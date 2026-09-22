@@ -4,7 +4,7 @@
 
 use crate::analysis::model::TraceImport;
 use crate::analysis::surface::StyleSurface;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::Path;
 
 /// Shared context for component and factory extraction
@@ -13,5 +13,5 @@ pub struct ParserContext<'a> {
     pub workspace_root: &'a Path,
     pub source: &'a str,
     pub surface: &'a StyleSurface,
-    pub imports: &'a HashMap<String, TraceImport>,
+    pub imports: &'a FxHashMap<String, TraceImport>,
 }

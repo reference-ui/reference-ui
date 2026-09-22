@@ -162,3 +162,38 @@ fn test_untraced_tag_is_skipped_when_a_host_is_known() {
     assert!(!res.wants.iter().any(|w| &*w.prop == "color"));
     assert!(res.diagnostics.is_empty());
 }
+
+#[test]
+fn test_jsx_host_union_matches_merged_set() {
+    // The borrowed host union answers exactly the merged set's queries:
+    // membership from either side, empty only when both sides are empty.
+    use crate::extract::JsxHosts;
+    use rustc_hash::FxHashSet;
+
+    let local: FxHashSet<String> = ["Div".to_string()].into_iter().collect();
+    let global: FxHashSet<String> = ["Box".to_string()].into_iter().collect();
+    let empty: FxHashSet<String> = FxHashSet::default();
+    let union = JsxHosts {
+        local: &local,
+        global: &global,
+    };
+    assert!(union.contains("Div"));
+    assert!(union.contains("Box"));
+    assert!(!union.contains("Foo"));
+    assert!(!union.is_empty());
+    assert!(JsxHosts {
+        local: &empty,
+        global: &empty,
+    }
+    .is_empty());
+    assert!(!JsxHosts {
+        local: &local,
+        global: &empty,
+    }
+    .is_empty());
+    assert!(!JsxHosts {
+        local: &empty,
+        global: &global,
+    }
+    .is_empty());
+}

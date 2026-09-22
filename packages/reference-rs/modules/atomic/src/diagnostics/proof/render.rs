@@ -8,7 +8,9 @@
 //! by re-derived legacy sentence (code, location, message), so untouched
 //! lines keep their bytes, order, and count.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
+
+use rustc_hash::FxHashSet;
 
 use super::super::{Diagnostic, DiagnosticFact, OwnedLookupKey, Policy};
 use super::lines::{find_line, remove_line};
@@ -63,7 +65,7 @@ fn render_with(
 struct Proof<'a> {
     emitted: BTreeSet<String>,
     exacts: Vec<(&'a OwnedLookupKey, String)>,
-    exact_set: HashSet<String>,
+    exact_set: FxHashSet<String>,
     rejects: Vec<Reject<'a>>,
 }
 
@@ -73,7 +75,7 @@ impl<'a> Proof<'a> {
         let mut proof = Self {
             emitted,
             exacts: Vec::new(),
-            exact_set: HashSet::new(),
+            exact_set: FxHashSet::default(),
             rejects: Vec::new(),
         };
         for fact in facts {
@@ -143,7 +145,7 @@ impl<'a> Proof<'a> {
     /// duplicate it. Conditions ride along: they are not style props, and
     /// their scalar misuse already warns located (O20).
     fn render_causeless(&self, diagnostics: &mut Vec<Diagnostic>) {
-        let mut warned: HashSet<String> = HashSet::new();
+        let mut warned: FxHashSet<String> = FxHashSet::default();
         for (key, key_string) in &self.exacts {
             if is_hole_value(&key.value) || !is_known_style_prop(&key.prop) {
                 continue;
