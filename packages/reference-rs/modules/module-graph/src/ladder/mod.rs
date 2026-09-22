@@ -51,6 +51,25 @@ pub struct Unresolved {
     pub specifier: String,
 }
 
+/// Join two segments with one separator, pre-sized to the exact length so
+/// the join allocates once. Hot: resolution formats per probe attempt.
+pub(crate) fn join_with(left: &str, sep: char, right: &str) -> String {
+    let mut out = String::with_capacity(left.len() + sep.len_utf8() + right.len());
+    out.push_str(left);
+    out.push(sep);
+    out.push_str(right);
+    out
+}
+
+/// Concatenate two strings, pre-sized to the exact length: one allocation.
+/// Hot: suffix needles and prefixes on the probe path.
+pub(crate) fn concat2(left: &str, right: &str) -> String {
+    let mut out = String::with_capacity(left.len() + right.len());
+    out.push_str(left);
+    out.push_str(right);
+    out
+}
+
 /// One ladder over a filesystem: resolve specifiers to canonical keys.
 pub struct SpecifierLadder<'f, F: FileSystem> {
     fs: &'f F,
@@ -133,7 +152,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         let (package, subpath) = package::split_bare(specifier)?;
         let request = NodeRequest { package, subpath };
         for dir in ancestors(&from.dir()) {
-            let roots = format!("{dir}/node_modules");
+            let roots = join_with(&dir, '/', "node_modules");
             if let Some(hit) = self.package_hit(&roots, &request) {
                 return Some(hit);
             }
@@ -153,11 +172,11 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
 
     /// Resolve one package dir: manifest entries, then the direct subpath.
     fn package_hit(&self, roots: &str, request: &NodeRequest) -> Option<String> {
-        let pkg_dir = format!("{roots}/{}", request.package);
+        let pkg_dir = join_with(roots, '/', &request.package);
         if !self.fs.is_dir(&pkg_dir) {
             return None;
         }
-        let manifest = self.fs.read_to_string(&format!("{pkg_dir}/package.json"));
+        let manifest = self.fs.read_to_string(&join_with(&pkg_dir, '/', "package.json"));
         self.manifest_hit(&pkg_dir, manifest.as_deref(), request)
             .or_else(|| self.direct_hit(&pkg_dir, &request.subpath))
     }
@@ -189,7 +208,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         let base = if subpath == "." {
             pkg_dir.to_string()
         } else {
-            format!("{pkg_dir}/{}", subpath.trim_start_matches("./"))
+            join_with(&pkg_dir, '/', subpath.trim_start_matches("./"))
         };
         self.probe_hit(&base)
     }
@@ -207,7 +226,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     /// Nearest `tsconfig.json` walking up: its text plus its home dir.
     fn find_tsconfig(&self, from_dir: &str) -> Option<(String, String)> {
         ancestors(from_dir).into_iter().find_map(|dir| {
-            let path = format!("{dir}/tsconfig.json");
+            let path = join_with(&dir, '/', "tsconfig.json");
             self.fs.read_to_string(&path).map(|text| (text, dir))
         })
     }

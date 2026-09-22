@@ -131,8 +131,9 @@ impl<'a> PlanBuilder<'a> {
 
     /// Build runtime style plans from authored declarations, deduplicating keys.
     pub fn build(&mut self, decls: &[AuthoredDeclaration]) -> Vec<RuntimeStylePlan> {
-        let mut plans = Vec::new();
-        let mut seen_keys = HashSet::new();
+        // Plans and seen keys are bounded by the decl count: reserve once.
+        let mut plans = Vec::with_capacity(decls.len());
+        let mut seen_keys = HashSet::with_capacity(decls.len());
 
         for decl in decls {
             let lookup_key = decl.lookup_key(self.system);
@@ -184,9 +185,10 @@ impl<'a> PlanBuilder<'a> {
         decls: &[AuthoredDeclaration],
         diet: bool,
     ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
-        let mut plans = Vec::new();
-        let mut keys = Vec::new();
-        let mut seen_keys = HashSet::new();
+        // Plans, keys, and seen keys are bounded by the decl count.
+        let mut plans = Vec::with_capacity(decls.len());
+        let mut keys = Vec::with_capacity(decls.len());
+        let mut seen_keys = HashSet::with_capacity(decls.len());
 
         for decl in decls {
             let lookup_key = decl.lookup_key(self.system);

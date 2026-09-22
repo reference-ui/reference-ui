@@ -104,7 +104,10 @@ fn strip_root(root: &str, path: &str) -> Option<String> {
     if path == root {
         return Some(String::new());
     }
-    path.strip_prefix(&format!("{root}/")).map(str::to_string)
+    let mut prefixed = String::with_capacity(root.len() + 1);
+    prefixed.push_str(&root);
+    prefixed.push('/');
+    path.strip_prefix(&prefixed).map(str::to_string)
 }
 
 /// Normalize a candidate path: forward slashes, no `./` prefix or trailing `/`.

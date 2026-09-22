@@ -10,6 +10,7 @@ import { formatChunks } from './format';
 export function emitDialectRs(dialect: DialectData): string {
   const aliasChunks = dialect.aliases.map((a) => `Alias::new("${a.alias}", "${a.canonical}")`);
   const refPropChunks = dialect.referenceProps.map((p) => `"${p}"`);
+  const prefilter = emitPrefilterMatch(dialect.aliases.map((a) => a.alias));
 
   return `//! Reference UI StyleProps dialect aliases and custom props.
 //!
@@ -43,10 +44,21 @@ ${formatChunks(refPropChunks, '    ', 3)}
 
 /// Resolves a dialect alias or shorthand to its canonical property name.
 pub fn resolve_alias(alias: &str) -> Option<&'static str> {
+    if !maybe_alias(alias) {
+        return None;
+    }
     ALIASES
         .binary_search_by_key(&alias, |a| a.alias)
         .ok()
         .map(|idx| ALIASES[idx].canonical)
+}
+
+/// Rejection pre-filter over alias initials, derived from ALIASES at codegen.
+/// Vendor aliases start with a capital; lowercase aliases are short shorthands
+/// of fixed lengths. Misses skip the binary search; members always fall through.
+pub(crate) fn maybe_alias(name: &str) -> bool {
+    let bytes = name.as_bytes();
+${prefilter}
 }
 
 /// Returns true if the given name is a Reference-only macro prop.
@@ -54,4 +66,38 @@ pub fn is_reference_prop(name: &str) -> bool {
     REFERENCE_PROPS.binary_search(&name).is_ok()
 }
 `;
+}
+
+/**
+ * Emits the `match` body of `maybe_alias` from the alias table itself, so regen
+ * stays sound when the table changes. Uppercase initials pass unconditionally;
+ * lowercase initials pass only at member lengths. Anything else fails closed.
+ */
+function emitPrefilterMatch(aliases: string[]): string {
+  const upper = new Set<string>();
+  const lower = new Set<string>();
+  const lowerLens = new Set<number>();
+  for (const alias of aliases) {
+    const initial = alias.slice(0, 1);
+    if (!/^[A-Za-z]$/.test(initial)) {
+      throw new Error(`alias pre-filter: unsupported initial ${JSON.stringify(alias)}`);
+    }
+    if (initial === initial.toUpperCase()) {
+      upper.add(initial);
+    } else {
+      lower.add(initial);
+      lowerLens.add(alias.length);
+    }
+  }
+  const upperArm = [...upper].sort().map((c) => `Some(b'${c}')`).join(' | ');
+  const lowerArm = [...lower].sort().map((c) => `Some(b'${c}')`).join(' | ');
+  const lens = [...lowerLens].sort((a, b) => a - b).join(' | ');
+  return [
+    '    match bytes.first() {',
+    `        ${upperArm} => true,`,
+    '        // Lowercase aliases are short shorthands; anything longer cannot be a member.',
+    `        ${lowerArm} => matches!(bytes.len(), ${lens}),`,
+    '        _ => false,',
+    '    }',
+  ].join('\n');
 }

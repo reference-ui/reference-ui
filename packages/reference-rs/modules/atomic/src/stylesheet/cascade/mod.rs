@@ -74,12 +74,20 @@ fn at_wrap(cond: &When) -> Option<&str> {
 }
 
 pub(crate) fn format_declaration(atom: &Atom) -> String {
-    let css_prop = to_css_declaration_property(atom.prop());
-    let css_val = escape_css_value(atom.value().css_value_str());
+    let mut out = String::new();
+    push_declaration(&mut out, atom);
+    out
+}
+
+/// Push `prop: value;` directly into `out`. No temporaries.
+pub(crate) fn push_declaration(out: &mut String, atom: &Atom) {
+    out.push_str(to_css_declaration_property(atom.prop()));
+    out.push_str(": ");
+    push_escaped_value(out, atom.value().css_value_str());
     if atom.important() {
-        format!("{css_prop}: {css_val} !important;")
+        out.push_str(" !important;");
     } else {
-        format!("{css_prop}: {css_val};")
+        out.push(';');
     }
 }
 
@@ -87,11 +95,11 @@ pub(crate) fn format_declaration(atom: &Atom) -> String {
 /// newline inside a string ends the declaration and breaks selector parsers
 /// downstream, so CR/LF and friends become hex escapes (`\d `). Values
 /// without control chars pass through untouched.
-fn escape_css_value(value: &str) -> String {
+fn push_escaped_value(out: &mut String, value: &str) {
     if !value.chars().any(|ch| ch.is_control()) {
-        return value.to_string();
+        out.push_str(value);
+        return;
     }
-    let mut out = String::with_capacity(value.len() + 8);
     for ch in value.chars() {
         if ch.is_control() {
             use std::fmt::Write as _;
@@ -100,7 +108,6 @@ fn escape_css_value(value: &str) -> String {
             out.push(ch);
         }
     }
-    out
 }
 
 /// Sort utilities by `CascadeKey` and emit, grouping shared at-rule wrappers.
@@ -160,31 +167,41 @@ fn same_wraps(atom: &Atom, wraps: &[&str]) -> bool {
 
 fn write_group(out: &mut String, wraps: &[&str], rules: &[(&Atom, CascadeKey<'_>)], system: &str) {
     open_wraps(out, wraps);
-    let indent = "  ".repeat(wraps.len() + 1);
+    let depth = wraps.len() + 1;
     for (atom, _) in rules {
-        write_rule(out, atom, &indent, system);
+        write_rule(out, atom, depth, system);
     }
     close_wraps(out, wraps.len());
 }
 
 pub(crate) fn open_wraps(out: &mut String, wraps: &[&str]) {
     for (i, wrap) in wraps.iter().enumerate() {
-        let indent = "  ".repeat(i + 1);
-        out.push_str(&format!("{indent}{wrap} {{\n"));
+        push_indent(out, i + 1);
+        out.push_str(wrap);
+        out.push_str(" {\n");
     }
 }
 
 pub(crate) fn close_wraps(out: &mut String, count: usize) {
     for i in (0..count).rev() {
-        let indent = "  ".repeat(i + 1);
-        out.push_str(&format!("{indent}}}\n"));
+        push_indent(out, i + 1);
+        out.push_str("}\n");
     }
 }
 
-fn write_rule(out: &mut String, atom: &Atom, indent: &str, system: &str) {
-    let selector = name::selector_with_system(atom, system);
-    let declaration = format_declaration(atom);
-    out.push_str(&format!("{indent}{selector} {{ {declaration} }}\n"));
+/// Push two spaces per depth. No repeat temporary.
+pub(crate) fn push_indent(out: &mut String, depth: usize) {
+    for _ in 0..depth {
+        out.push_str("  ");
+    }
+}
+
+fn write_rule(out: &mut String, atom: &Atom, depth: usize, system: &str) {
+    push_indent(out, depth);
+    name::push_selector_with_system(out, atom, system);
+    out.push_str(" { ");
+    push_declaration(out, atom);
+    out.push_str(" }\n");
 }
 
 fn bucket(atom: &Atom) -> u8 {

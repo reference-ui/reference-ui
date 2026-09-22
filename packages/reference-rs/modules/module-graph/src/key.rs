@@ -69,7 +69,9 @@ pub(crate) fn normalize_str(path: &str) -> String {
 
 /// Lexically normalize a path without touching the filesystem.
 fn normalize(path: &Path) -> PathBuf {
-    let mut out = PathBuf::new();
+    // Normalization only drops segments and separators, so the input byte
+    // length bounds the output: reserve once instead of growing per push.
+    let mut out = PathBuf::with_capacity(path.as_os_str().len());
     for component in path.components() {
         push_component(&mut out, component);
     }

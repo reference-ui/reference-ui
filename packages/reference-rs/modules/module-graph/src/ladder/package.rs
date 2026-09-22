@@ -23,7 +23,8 @@ pub(crate) fn split_bare(specifier: &str) -> Option<(String, String)> {
     let mut parts = specifier.split('/');
     let first = parts.next()?;
     let package = if first.starts_with('@') {
-        format!("{first}/{}", parts.next()?)
+        let second = parts.next()?;
+        super::join_with(first, '/', second)
     } else {
         first.to_string()
     };
@@ -31,7 +32,7 @@ pub(crate) fn split_bare(specifier: &str) -> Option<(String, String)> {
     let subpath = if rest.is_empty() {
         ".".to_string()
     } else {
-        format!("./{}", rest.join("/"))
+        super::concat2("./", &rest.join("/"))
     };
     Some((package, subpath))
 }
@@ -79,10 +80,18 @@ fn field_entries(manifest: &str, fields: &[&str]) -> Vec<String> {
 pub(crate) fn types_package_name(package: &str) -> String {
     match package.strip_prefix('@') {
         Some(rest) => match rest.split_once('/') {
-            Some((scope, name)) => format!("@types/{scope}__{name}"),
-            None => format!("@types/{rest}"),
+            Some((scope, name)) => {
+                let mut out =
+                    String::with_capacity("@types/".len() + scope.len() + "__".len() + name.len());
+                out.push_str("@types/");
+                out.push_str(scope);
+                out.push_str("__");
+                out.push_str(name);
+                out
+            }
+            None => super::concat2("@types/", rest),
         },
-        None => format!("@types/{package}"),
+        None => super::concat2("@types/", package),
     }
 }
 
