@@ -1,4 +1,4 @@
-import MiniSearch from 'minisearch'
+import MiniSearch, { type AsPlainObject } from 'minisearch'
 import rawIndex from '../data/icons-index.json' with { type: 'json' }
 
 export interface IconDocument {
@@ -78,16 +78,18 @@ export class IconsSearchEngine {
   readonly categories: string[]
 
   constructor(serializedIndex: unknown) {
-    const jsonString =
-      typeof serializedIndex === 'string'
-        ? serializedIndex
-        : JSON.stringify(serializedIndex)
-
-    this.miniSearch = MiniSearch.loadJSON(jsonString, {
+    const options = {
       fields: MINI_SEARCH_CONFIG.fields,
       storeFields: MINI_SEARCH_CONFIG.storeFields,
       searchOptions: MINI_SEARCH_CONFIG.searchOptions,
-    })
+    }
+
+    // The JSON import arrives already parsed: loadJS consumes the object
+    // directly, killing a full stringify + reparse of the 5.27MB payload.
+    this.miniSearch =
+      typeof serializedIndex === 'string'
+        ? MiniSearch.loadJSON(serializedIndex, options)
+        : MiniSearch.loadJS(serializedIndex as AsPlainObject, options)
 
     // Extract categories across stored documents
     const catSet = new Set<string>()
