@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T14:12:19.013Z",
+ "built": "2026-09-22T14:30:36.961Z",
  "root": "docs/perf/waves",
- "count": 101,
+ "count": 102,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -349,6 +349,26 @@
    "landing": null,
    "overruledBy": null,
    "summary": "Base pin verified FIRST: `git rev-parse HEAD` = `0939615d5c2730eb56bae5af47384d077266a78c` (match, proceed).",
+   "log": "- swarm-intbank4 CUT-WITH-CAUSE (land nothing) — ACCEPTED, integrator\n  COMMENDED. The briefed \"3 pending BANKs\" were all previously ruled\n  by certified closeout b8a75b0bd (verified firsthand: AUTHCSS\n  yielded-subsumed/race, RECIPEPATH HELD→CUT/lottery, SCALARJSON\n  superseded/landed; all three overruledBy mirrors confirmed).\n  Captain's bad dispatch — full own: briefed from `landedIn: None`\n  without checking overruledBy + closeout. Integrator refused the\n  re-litigation with full receipts (per-member evidence, file:line\n  collisions, what-was-not-done, zero timed runs, tree untouched,\n  fences honored). New rule: integrator briefs check overruledBy +\n  closeout rulings before dispatch — None ≠ pending. Filed\n  `docs/perf/waves/wave-4/integrate-intbank4.md` (index 101, CUT).\n  Confirm: sync-ground banked remainder is ZERO by receipt; the only\n  unlanded banks anywhere are CATPOST + PRELOWER (MCP, still gated\n  on integrator + HQ scope decision per the closeout).",
+   "filler": false
+  },
+  {
+   "id": "INT-W4-INTMCP",
+   "wave": "wave-4",
+   "topic": "integrate intmcp",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": 210.27,
+    "pct": -99.8,
+    "pairs": "8/8"
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-4/integrate-intmcp.md",
+   "patch": null,
+   "landing": "11e821a1a",
+   "overruledBy": null,
+   "summary": "Integrator for the 2 HQ scope-widened off-scope MCP BANKs. Judge and prove — no new diets.",
    "log": null,
    "filler": false
   },

@@ -288,6 +288,22 @@ diets); scan voyage opens separately after closeout lands.
   disclosed deviation), surface-denominator proof + sync 0-confirm.
 - Slots: 2/7 (formula1-impl, intmcp), 5 held — diet backlog EMPTY,
   N1 held — this entry is the proof.
+- swarm-intmcp BANK×2-CONFIRMED → LANDED `11e821a1a` (captain
+  sign-off: surface totals µs, absolute bar incommensurable; HQ
+  ordered main). Races: both B variants YIELD on count evidence
+  (dedupe covers 0 docs; fallback 3857 invocations/call). Proof:
+  3× 8-pair surface sets (browse −359.2µs −99.9%, demand −28.4µs
+  −1.9%, all 8/8), 79/79 identity, 12/12 suites, sync 0-confirm
+  (−3.22 noise, 4/8, bytes exact ×16). Captain firsthand: diff
+  reviewed, patch check-clean, byte-identical apply, icons-catalog
+  12/12, typecheck 0 errors (tip-clean, better than brief's 7
+  pre-existing). Filed `docs/perf/waves/wave-4/integrate-intmcp.md`
+  (index 102, LAND). SCOREBOARD (MCP surface): browse 359.7→0.5µs,
+  demand 1473.3→1444.9µs; sync 919.8→916.6 noise-0. No bench:neo
+  (sync untouched by importer-graph + 0-confirm; full bench rides
+  the F1 landing per HQ's closeout order).
+- Slots: 1/7 (formula1-impl), 6 held — diet backlog EMPTY, N1
+  held — this entry is the proof.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
