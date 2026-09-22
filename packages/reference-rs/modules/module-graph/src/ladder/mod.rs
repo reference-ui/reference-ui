@@ -17,7 +17,7 @@ mod tsconfig;
 
 pub use memo::ProbeMemo;
 
-use crate::key::{ancestors, join_relative, join_under};
+use crate::key::{ancestors_iter, join_relative, join_under};
 use crate::{FileSystem, ModuleKey};
 
 /// Which extension tables the ladder probes: sources or declarations.
@@ -139,7 +139,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
 
     /// First `tsconfig`-mapped base that probes to a file, if any.
     fn tsconfig_hit(&self, from: &ModuleKey, specifier: &str) -> Option<String> {
-        let (text, dir) = self.find_tsconfig(&from.dir())?;
+        let (text, dir) = self.find_tsconfig(from.dir_str())?;
         let tsconfig = tsconfig::parse_text(&text, &dir)?;
         tsconfig
             .candidates(specifier)
@@ -148,21 +148,31 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     }
 
     /// First ancestor `node_modules` package that resolves, nearest first.
+    /// The `@types` fallback request is loop-invariant, so it builds once;
+    /// the `roots` and package-dir scratch buffers regrow per level instead
+    /// of allocating per probe. Same levels, same probes, same order.
     fn node_hit(&self, from: &ModuleKey, specifier: &str) -> Option<String> {
         let (package, subpath) = package::split_bare(specifier)?;
         let request = NodeRequest { package, subpath };
-        for dir in ancestors(&from.dir()) {
-            let roots = join_with(&dir, '/', "node_modules");
-            if let Some(hit) = self.package_hit(&roots, &request) {
+        let fallback = if request.subpath == "." {
+            Some(NodeRequest {
+                package: package::types_package_name(&request.package),
+                subpath: ".".to_string(),
+            })
+        } else {
+            None
+        };
+        let mut roots = String::new();
+        let mut pkg_dir = String::new();
+        for dir in ancestors_iter(from.dir_str()) {
+            roots.clear();
+            roots.push_str(dir);
+            roots.push_str("/node_modules");
+            if let Some(hit) = self.package_hit(&roots, &request, &mut pkg_dir) {
                 return Some(hit);
             }
-            if request.subpath == "." {
-                let types = package::types_package_name(&request.package);
-                let fallback = NodeRequest {
-                    package: types,
-                    subpath: ".".to_string(),
-                };
-                if let Some(hit) = self.package_hit(&roots, &fallback) {
+            if let Some(shadow) = fallback.as_ref() {
+                if let Some(hit) = self.package_hit(&roots, shadow, &mut pkg_dir) {
                     return Some(hit);
                 }
             }
@@ -171,14 +181,26 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     }
 
     /// Resolve one package dir: manifest entries, then the direct subpath.
-    fn package_hit(&self, roots: &str, request: &NodeRequest) -> Option<String> {
-        let pkg_dir = join_with(roots, '/', &request.package);
-        if !self.fs.is_dir(&pkg_dir) {
+    /// The package dir assembles in the caller's scratch buffer; every
+    /// return owns its string, so reuse across levels is sound.
+    fn package_hit(
+        &self,
+        roots: &str,
+        request: &NodeRequest,
+        pkg_dir: &mut String,
+    ) -> Option<String> {
+        pkg_dir.clear();
+        pkg_dir.push_str(roots);
+        pkg_dir.push('/');
+        pkg_dir.push_str(&request.package);
+        if !self.fs.is_dir(pkg_dir) {
             return None;
         }
-        let manifest = self.fs.read_to_string(&join_with(&pkg_dir, '/', "package.json"));
-        self.manifest_hit(&pkg_dir, manifest.as_deref(), request)
-            .or_else(|| self.direct_hit(&pkg_dir, &request.subpath))
+        let manifest = self
+            .fs
+            .read_to_string(&join_with(pkg_dir, '/', "package.json"));
+        self.manifest_hit(pkg_dir, manifest.as_deref(), request)
+            .or_else(|| self.direct_hit(pkg_dir, &request.subpath))
     }
 
     /// First manifest entry that probes to a file: fields and `exports`.
@@ -224,10 +246,16 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     }
 
     /// Nearest `tsconfig.json` walking up: its text plus its home dir.
+    /// The candidate path reuses one scratch buffer across levels.
     fn find_tsconfig(&self, from_dir: &str) -> Option<(String, String)> {
-        ancestors(from_dir).into_iter().find_map(|dir| {
-            let path = join_with(&dir, '/', "tsconfig.json");
-            self.fs.read_to_string(&path).map(|text| (text, dir))
+        let mut path = String::new();
+        ancestors_iter(from_dir).find_map(|dir| {
+            path.clear();
+            path.push_str(dir);
+            path.push_str("/tsconfig.json");
+            self.fs
+                .read_to_string(&path)
+                .map(|text| (text, dir.to_string()))
         })
     }
 

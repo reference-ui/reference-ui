@@ -13,7 +13,7 @@ use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use super::block::walk_block;
-use super::imports::{scan_imports, FileBindings};
+use super::imports::FileBindings;
 use super::object::{Site, WalkCtx};
 use super::{
     is_shadowed, record_declarator_shadow, record_param_shadows, AnalysisCtx, AnalyzedSource,
@@ -21,11 +21,13 @@ use super::{
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
 
-/// Expectations for the `css()` surface: one walk per source.
+/// Expectations for the `css()` surface: one walk per source. The import
+/// bindings arrive scanned: both surfaces share one scan per source.
 pub fn expectations(
     ctx: &AnalysisCtx<'_>,
     source_id: SourceId,
     source: &AnalyzedSource<'_>,
+    bindings: &FileBindings,
 ) -> Vec<DiagnosticFact> {
     let mut visitor = CssVisitor {
         facts: Vec::new(),
@@ -34,7 +36,7 @@ pub fn expectations(
         style_props: &ctx.style_props,
         constants: ctx.constants,
         shadows: Vec::new(),
-        bindings: scan_imports(source.program),
+        bindings,
     };
     visitor.visit_program(source.program);
     visitor.facts
@@ -42,17 +44,17 @@ pub fn expectations(
 
 /// One source's `css()` walk: bindings gate the calls, shadows disqualify
 /// them, and the shared walker lowers the arguments.
-struct CssVisitor<'a> {
+struct CssVisitor<'a, 'b> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
     style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
     shadows: Vec<FxHashSet<String>>,
-    bindings: FileBindings,
+    bindings: &'b FileBindings,
 }
 
-impl<'a> CssVisitor<'a> {
+impl<'a, 'b> CssVisitor<'a, 'b> {
     /// The shared walk context over this visitor's facts and name truth.
     fn walk_ctx(&mut self) -> WalkCtx<'_> {
         WalkCtx {
@@ -131,7 +133,7 @@ impl<'a> CssVisitor<'a> {
     }
 }
 
-impl<'a> Visit<'a> for CssVisitor<'a> {
+impl<'a, 'b> Visit<'a> for CssVisitor<'a, 'b> {
     fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
         self.shadows.push(FxHashSet::default());
     }

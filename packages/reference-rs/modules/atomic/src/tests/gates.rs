@@ -12,6 +12,7 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 
 use crate::diagnostics::analysis::{AnalysisInput, CompileParse};
+use crate::diagnostics::analysis::{css_walk_skip, jsx_walk_skip};
 use crate::diagnostics::{DiagnosticCode, DiagnosticFact, SourceId};
 use crate::hosts::ResolvedHosts;
 use crate::{compile, string_skip, styling_skip, CompileRequest, VirtualSource};
@@ -251,4 +252,101 @@ fn panicked_files_filter_before_source_id_indexing() {
     let live = live_css_file();
     let facts = analyze_with_panic(&[&dead, "export const = ;;\n", &live], Some(1));
     assert_eq!(exact_sources(&facts), vec![SourceId(1)]);
+}
+
+#[test]
+fn css_walk_gate_needs_css_bytes() {
+    for content in [
+        "import { css } from '@reference-ui/react';\nexport const c = css({});\n",
+        "export const x = __reference_ui_css({});\n",
+        "import * as ns from '@reference-ui/react';\nns.css({});\n",
+        "import { css as c } from '@reference-ui/react';\nc.object({});\n",
+        // Spaced calls and member spellings keep the walk (conservative).
+        "import { css } from '@reference-ui/react';\nexport const c = css ({});\n",
+        "export const c = css\n  ({});\n",
+    ] {
+        assert!(!css_walk_skip(content), "should run css walk: {content:?}");
+    }
+    for content in [
+        "import { Div } from '@reference-ui/react';\nconst el = 'x';\n",
+        "import { recipe } from '@reference-ui/react';\nexport const r = recipe({});\n",
+        "export const CSS = 1;\n",
+        "const el = '<not jsx>';\n",
+    ] {
+        assert!(css_walk_skip(content), "should skip css walk: {content:?}");
+    }
+}
+
+#[test]
+fn jsx_walk_gate_needs_lt_bytes() {
+    for content in [
+        "import { Div } from '@reference-ui/react';\nconst el = <Div mt=\"2r\" />;\n",
+        // Comparisons, generics, and assertions keep the walk (conservative).
+        "export const t = a < b;\n",
+        "export const xs: Array<string> = [];\n",
+        "const el = '<not jsx>';\n",
+    ] {
+        assert!(!jsx_walk_skip(content), "should run jsx walk: {content:?}");
+    }
+    for content in [
+        "import { css } from '@reference-ui/react';\nexport const c = css({});\n",
+        "import { recipe } from '@reference-ui/react';\nexport const r = recipe({});\n",
+        "export const CSS = 1;\n",
+    ] {
+        assert!(jsx_walk_skip(content), "should skip jsx walk: {content:?}");
+    }
+}
+
+#[test]
+fn lt_free_css_files_keep_their_exact_keys() {
+    // The css walk runs (has `css`), the JSX walk skips (no `<`): the exact
+    // still predicts, including through a canonical numeric key (owned Cow).
+    let css = "import { css } from '@reference-ui/react';\n\
+         export const a = css({ color: 'red' });\n\
+         export const b = css({ 300: 'x' });\n";
+    let facts = analyze_with_panic(&[css], None);
+    let keys: Vec<String> = facts
+        .iter()
+        .filter_map(|fact| match fact {
+            DiagnosticFact::ExactLookupExpected { key, .. } => Some(key.lookup_key()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        keys,
+        vec![
+            r#"["test",[],"color","red",false]"#.to_string(),
+            r#"["test",[],"300","x",false]"#.to_string(),
+        ]
+    );
+}
+
+#[test]
+fn recipe_only_files_predict_nothing_through_either_gate() {
+    // Passes `styling_skip` via `recipe`, skips both surface walks: zero
+    // facts, exactly as the unskipped walks found.
+    let recipe = "import { recipe } from '@reference-ui/react';\n\
+         export const r = recipe({ base: { color: 'red' } });\n";
+    assert!(!crate::styling_skip(recipe));
+    assert!(css_walk_skip(recipe));
+    assert!(jsx_walk_skip(recipe));
+    assert!(analyze_with_panic(&[recipe], None).is_empty());
+}
+
+#[test]
+fn css_free_jsx_files_predict_through_the_gate() {
+    // The css walk skips (no `css` bytes), the JSX walk runs: the attr exact
+    // still predicts.
+    let jsx = "import { Div } from '@reference-ui/react';\nconst el = <Div mt=\"2r\" />;\n";
+    assert!(css_walk_skip(jsx));
+    assert!(!jsx_walk_skip(jsx));
+    let facts = crate::diagnostics::analysis::support::analyze_source(jsx);
+    let keys: Vec<String> = facts
+        .iter()
+        .filter_map(|fact| match fact {
+            DiagnosticFact::ExactLookupExpected { key, .. } => Some(key.lookup_key()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(keys, vec![r#"["test",[],"mt","2r",false]"#.to_string()]);
 }

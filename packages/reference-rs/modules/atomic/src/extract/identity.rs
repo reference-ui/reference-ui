@@ -413,7 +413,13 @@ fn dir_of(path: &str) -> &str {
 
 /// Lexical path normalization: both separators to `/`, `.` dropped, `..` popped.
 fn normalize_path(path: &str) -> String {
-    let mut parts: Vec<&str> = Vec::new();
+    // Pieces never exceed separators plus one, and each piece pushes at
+    // most once, so the separator count bounds the parts vec exactly.
+    let separators = path
+        .bytes()
+        .filter(|byte| *byte == b'/' || *byte == b'\\')
+        .count();
+    let mut parts: Vec<&str> = Vec::with_capacity(separators + 1);
     for part in path.split(['/', '\\']) {
         match part {
             "" | "." => {}

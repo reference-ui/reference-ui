@@ -20,7 +20,7 @@ use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use super::gate::{is_style_attr, AttrGate};
-use super::imports::{scan_imports, FileBindings};
+use super::imports::FileBindings;
 use super::jsx_attrs::{
     format_attribute_name, format_element_name, walk_attr_input, walk_bag_object, walk_const_attrs,
     AttrInput,
@@ -32,11 +32,13 @@ use super::{
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
 
-/// Expectations for the traced JSX surface: one walk per source.
+/// Expectations for the traced JSX surface: one walk per source. The import
+/// bindings arrive scanned: both surfaces share one scan per source.
 pub fn expectations(
     ctx: &AnalysisCtx<'_>,
     source_id: SourceId,
     source: &AnalyzedSource<'_>,
+    bindings: &FileBindings,
 ) -> Vec<DiagnosticFact> {
     let mut visitor = JsxVisitor {
         facts: Vec::new(),
@@ -47,7 +49,7 @@ pub fn expectations(
         hosts: &ctx.hosts,
         owned: ctx.owned_props,
         shadows: Vec::new(),
-        bindings: scan_imports(source.program),
+        bindings,
     };
     visitor.visit_program(source.program);
     visitor.facts
@@ -55,7 +57,7 @@ pub fn expectations(
 
 /// One source's JSX walk: file-local imports plus traced and configured
 /// hosts gate the tags, and the shared attr walker lowers the attributes.
-struct JsxVisitor<'a> {
+struct JsxVisitor<'a, 'b> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
@@ -64,10 +66,10 @@ struct JsxVisitor<'a> {
     hosts: &'a FxHashSet<String>,
     owned: &'a BTreeMap<String, BTreeSet<String>>,
     shadows: Vec<FxHashSet<String>>,
-    bindings: FileBindings,
+    bindings: &'b FileBindings,
 }
 
-impl<'a> JsxVisitor<'a> {
+impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// The shared walk context over this visitor's facts and name truth.
     fn walk_ctx(&mut self) -> WalkCtx<'_> {
         WalkCtx {
@@ -91,9 +93,11 @@ impl<'a> JsxVisitor<'a> {
         if self.bindings.jsx.contains(tag) || self.hosts.contains(tag) {
             return true;
         }
-        tag.contains('.')
-            && (self.bindings.jsx.contains(&tag.replace('.', ""))
-                || self.hosts.contains(&tag.replace('.', "")))
+        if !tag.contains('.') {
+            return false;
+        }
+        let flat = tag.replace('.', "");
+        self.bindings.jsx.contains(&flat) || self.hosts.contains(&flat)
     }
 
     /// Lower one opening element's attributes when the tag is a host.
@@ -189,7 +193,7 @@ impl<'a> JsxVisitor<'a> {
     }
 }
 
-impl<'a> Visit<'a> for JsxVisitor<'a> {
+impl<'a, 'b> Visit<'a> for JsxVisitor<'a, 'b> {
     fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
         self.shadows.push(FxHashSet::default());
     }

@@ -60,7 +60,7 @@ fn record_specifier(
             record_named(
                 bindings,
                 named.local.name.as_str(),
-                imported_name(&named.imported).as_str(),
+                imported_name(&named.imported),
             );
         }
         ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
@@ -84,12 +84,13 @@ fn record_named(bindings: &mut FileBindings, local: &str, imported: &str) {
     }
 }
 
-/// The imported spelling of one named import specifier.
-fn imported_name(name: &oxc_ast::ast::ModuleExportName<'_>) -> String {
+/// The imported spelling of one named import specifier, borrowed: every
+/// arm names an AST atom, so matching never allocates.
+fn imported_name<'a>(name: &oxc_ast::ast::ModuleExportName<'a>) -> &'a str {
     match name {
-        oxc_ast::ast::ModuleExportName::IdentifierName(id) => id.name.to_string(),
-        oxc_ast::ast::ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        oxc_ast::ast::ModuleExportName::StringLiteral(lit) => lit.value.to_string(),
+        oxc_ast::ast::ModuleExportName::IdentifierName(id) => id.name.as_str(),
+        oxc_ast::ast::ModuleExportName::IdentifierReference(id) => id.name.as_str(),
+        oxc_ast::ast::ModuleExportName::StringLiteral(lit) => lit.value.as_str(),
     }
 }
 

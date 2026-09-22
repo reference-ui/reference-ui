@@ -170,9 +170,10 @@ fn walk_entry(walk: &mut WalkCtx<'_>, prop: &oxc_ast::ast::ObjectProperty<'_>, w
         walk.dynamic(Site::bare(prop.key.span(), when), DynamicShape::UnknownProp);
         return;
     };
+    let key: &str = &key;
     let site = Site {
         span: prop.value.span(),
-        prop: &key,
+        prop: key,
         when,
     };
     if key == "r" {
