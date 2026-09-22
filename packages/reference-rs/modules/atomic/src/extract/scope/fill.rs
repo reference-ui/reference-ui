@@ -5,7 +5,7 @@
 //! unmutated and bags never change — while refused spreads record residue
 //! markers the importing file's use sites diagnose.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use super::binding::BindingKind;
 use super::table::{ScopeId, ScopeTable};
@@ -24,9 +24,9 @@ pub struct OriginFill<'v> {
     /// The origin file's content, for marker line numbers.
     pub content: &'v str,
     /// Resolved imports by local name, merged into the bake.
-    pub resolved: &'v HashMap<String, ResolvedExport>,
+    pub resolved: &'v FxHashMap<String, ResolvedExport>,
     /// Refused imports by local name, recorded as markers.
-    pub refused: &'v HashMap<String, ValueRefused>,
+    pub refused: &'v FxHashMap<String, ValueRefused>,
 }
 
 /// One nested spread the bake could not unfold, tagged with its dependent.

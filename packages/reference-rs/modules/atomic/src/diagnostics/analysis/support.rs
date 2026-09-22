@@ -144,14 +144,14 @@ pub(crate) fn walk_first_object(
 ) -> Vec<DiagnosticFact> {
     use super::object::{walk_object, WalkCtx};
     use crate::diagnostics::SourceId;
-    use std::collections::HashSet;
+    use rustc_hash::FxHashSet;
     let allocator = oxc_allocator::Allocator::default();
     let program = parse_for_test(&allocator, source);
     let constants =
         crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
     let obj = first_style_object(&program);
-    let style: HashSet<String> = props.iter().map(|name| name.to_string()).collect();
-    let shadows: Vec<HashSet<String>> = Vec::new();
+    let style: FxHashSet<String> = props.iter().map(|name| name.to_string()).collect();
+    let shadows: Vec<FxHashSet<String>> = Vec::new();
     let mut facts = Vec::new();
     let mut walk = WalkCtx {
         facts: &mut facts,

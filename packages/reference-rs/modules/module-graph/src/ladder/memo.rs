@@ -11,15 +11,16 @@
 //! skips the store rather than blocking.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+
+use rustc_hash::FxHashMap;
 
 /// Memoized filesystem probes for one compile: path to outcome.
 #[derive(Debug, Default)]
 pub struct ProbeMemo {
-    is_file: RefCell<HashMap<String, bool>>,
-    is_dir: RefCell<HashMap<String, bool>>,
-    text: RefCell<HashMap<String, Option<String>>>,
-    canon: RefCell<HashMap<String, Option<String>>>,
+    is_file: RefCell<FxHashMap<String, bool>>,
+    is_dir: RefCell<FxHashMap<String, bool>>,
+    text: RefCell<FxHashMap<String, Option<String>>>,
+    canon: RefCell<FxHashMap<String, Option<String>>>,
 }
 
 impl ProbeMemo {
@@ -60,7 +61,7 @@ impl ProbeMemo {
 /// One memo cell: the stored outcome, or the probe computed and stored.
 /// An unreadable or contended cell computes through without storing.
 fn cached<T: Clone>(
-    cell: &RefCell<HashMap<String, T>>,
+    cell: &RefCell<FxHashMap<String, T>>,
     path: &str,
     probe: impl FnOnce(&str) -> T,
 ) -> T {

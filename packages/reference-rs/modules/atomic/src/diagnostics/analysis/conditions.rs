@@ -9,9 +9,8 @@
 //! R2, witness P1a). `lower_when` is deliberately unused here: it lowers
 //! wraps for codegen, never key bytes.
 
-use std::collections::HashSet;
-
 use oxc_ast::ast::PropertyKey;
+use rustc_hash::FxHashSet;
 
 use crate::extract::constants::canonical_numeric_key;
 
@@ -49,7 +48,7 @@ fn uncomputed_key(key: &PropertyKey<'_>) -> KeyClass {
 /// a nested condition. Mirrors neo `collectEntries` exactly: every other key
 /// shape recurses into the `when` stack. Custom props are open-ended style
 /// positions (canon `--*` authority), never conditions.
-pub fn is_style_value_position(prop: &str, style_props: &HashSet<String>) -> bool {
+pub fn is_style_value_position(prop: &str, style_props: &FxHashSet<String>) -> bool {
     prop != "r" && (style_props.contains(prop) || prop.starts_with("--"))
 }
 
@@ -65,7 +64,7 @@ mod tests {
         static_key(key.0, key.1)
     }
 
-    fn style_set(names: &[&str]) -> HashSet<String> {
+    fn style_set(names: &[&str]) -> FxHashSet<String> {
         names.iter().map(|name| name.to_string()).collect()
     }
 

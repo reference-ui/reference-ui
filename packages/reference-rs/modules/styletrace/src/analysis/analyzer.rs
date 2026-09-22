@@ -5,8 +5,10 @@
 //! parsing and surface acquisition live in `surface.rs`; this file stays
 //! the walker.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashMap;
 
 use crate::resolver::StyleTraceError;
 
@@ -24,9 +26,9 @@ pub(super) struct StyleTraceAnalyzer<'s> {
     sync_root: PathBuf,
     sources: &'s TraceSources<'s>,
     resolver: ModuleResolver<'s>,
-    component_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
-    factory_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
-    export_cache: HashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    component_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    factory_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    export_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     owned_props: BTreeMap<String, BTreeSet<String>>,
     diagnostics: Vec<TraceDiagnostic>,
 }
@@ -44,9 +46,9 @@ impl<'s> StyleTraceAnalyzer<'s> {
             sync_root,
             sources,
             resolver: ModuleResolver::new(sources.staged),
-            component_cache: HashMap::new(),
-            factory_cache: HashMap::new(),
-            export_cache: HashMap::new(),
+            component_cache: FxHashMap::default(),
+            factory_cache: FxHashMap::default(),
+            export_cache: FxHashMap::default(),
             owned_props: BTreeMap::new(),
             diagnostics: Vec::new(),
         }

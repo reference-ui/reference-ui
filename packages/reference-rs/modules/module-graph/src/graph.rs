@@ -7,7 +7,7 @@
 //! attaches whatever consumer-side values it wants elsewhere — the graph
 //! holds records only, never ASTs or values.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use crate::{ModuleKey, ModuleRecord};
 
@@ -22,7 +22,7 @@ pub trait Loader {
 /// Memoized records over a [`Loader`]: demand-driven, one load per key.
 pub struct ModuleGraph<L> {
     loader: L,
-    records: HashMap<ModuleKey, ModuleRecord>,
+    records: FxHashMap<ModuleKey, ModuleRecord>,
 }
 
 impl<L: Loader> ModuleGraph<L> {
@@ -30,7 +30,7 @@ impl<L: Loader> ModuleGraph<L> {
     pub fn new(loader: L) -> Self {
         Self {
             loader,
-            records: HashMap::new(),
+            records: FxHashMap::default(),
         }
     }
 

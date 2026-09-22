@@ -325,7 +325,8 @@ mod tests {
     use super::super::support::{dynamic_count, exact_keys, parse_for_test};
     use super::*;
     use crate::diagnostics::{DiagnosticFact, SourceId, StyleSurfaceKind};
-    use std::collections::{BTreeMap, BTreeSet, HashSet};
+    use rustc_hash::FxHashSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
     // Walker-level: visitors shadow top-level declarators end to end.
     fn walk_bag_const(source: &str) -> Vec<DiagnosticFact> {
@@ -334,8 +335,8 @@ mod tests {
         let constants =
             crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
         let bag = constants.get_object("bag").expect("const bag");
-        let style_props: HashSet<String> = ["mt"].into_iter().map(str::to_string).collect();
-        let shadows: Vec<HashSet<String>> = Vec::new();
+        let style_props: FxHashSet<String> = ["mt"].into_iter().map(str::to_string).collect();
+        let shadows: Vec<FxHashSet<String>> = Vec::new();
         let owned: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         let gate = AttrGate { tag: "Div", owned: &owned };
         let mut facts = Vec::new();

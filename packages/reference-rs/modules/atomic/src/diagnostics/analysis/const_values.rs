@@ -153,14 +153,14 @@ mod tests {
     use super::super::support::{first_prop_value, parse_for_test};
     use super::super::values::{classify_value, ValueClass, ValueScope};
     use super::*;
-    use std::collections::HashSet;
+    use rustc_hash::FxHashSet;
 
     fn classify_with_consts(source: &str) -> ValueClass {
         let allocator = oxc_allocator::Allocator::default();
         let program = parse_for_test(&allocator, source);
         let constants =
             crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
-        let shadows: Vec<HashSet<String>> = Vec::new();
+        let shadows: Vec<FxHashSet<String>> = Vec::new();
         let scope = ValueScope {
             constants: &constants,
             shadows: &shadows,

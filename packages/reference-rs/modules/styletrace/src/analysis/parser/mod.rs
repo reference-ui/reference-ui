@@ -11,6 +11,8 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use rustc_hash::FxHashMap;
+
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclarationSpecifier,
@@ -33,9 +35,9 @@ use self::component::{
 use self::context::ParserContext;
 
 pub struct ParseState {
-    pub components: HashMap<String, TraceComponent>,
-    pub component_factories: HashMap<String, FactoryTarget>,
-    pub factories: HashMap<String, TraceFactory>,
+    pub components: FxHashMap<String, TraceComponent>,
+    pub component_factories: FxHashMap<String, FactoryTarget>,
+    pub factories: FxHashMap<String, TraceFactory>,
     pub exports: HashMap<String, ExportTarget>,
     pub export_all_sources: Vec<String>,
 }
@@ -43,9 +45,9 @@ pub struct ParseState {
 impl Default for ParseState {
     fn default() -> Self {
         Self {
-            components: HashMap::new(),
-            component_factories: HashMap::new(),
-            factories: HashMap::new(),
+            components: FxHashMap::default(),
+            component_factories: FxHashMap::default(),
+            factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
         }
@@ -91,7 +93,7 @@ fn trace_program(
     program: &Program<'_>,
     surface: &StyleSurface,
 ) -> Result<TraceModule, StyleTraceError> {
-    let mut imports = HashMap::new();
+    let mut imports = FxHashMap::default();
     let mut state = ParseState::default();
 
     for statement in &program.body {
@@ -125,7 +127,7 @@ fn trace_program(
 /// disk read for edge targets beyond the entries.
 fn module_source<'a>(
     path: &Path,
-    staged: &'a HashMap<PathBuf, &'a str>,
+    staged: &'a FxHashMap<PathBuf, &'a str>,
 ) -> Result<std::borrow::Cow<'a, str>, StyleTraceError> {
     if let Some(content) = staged.get(path) {
         return Ok(std::borrow::Cow::Borrowed(content));
@@ -138,7 +140,7 @@ fn module_source<'a>(
 fn collect_imports(
     source: &str,
     import_decl: &oxc_ast::ast::ImportDeclaration<'_>,
-    imports: &mut HashMap<String, TraceImport>,
+    imports: &mut FxHashMap<String, TraceImport>,
 ) {
     let source_module = module_source_literal(source, import_decl.source.span());
     let Some(specifiers) = &import_decl.specifiers else {
@@ -395,8 +397,8 @@ fn collect_export_named_declaration_body(
 pub fn collect_variable_symbols<'a, I>(
     declarators: I,
     ctx: &ParserContext,
-    components: &mut HashMap<String, TraceComponent>,
-    component_factories: &mut HashMap<String, FactoryTarget>,
+    components: &mut FxHashMap<String, TraceComponent>,
+    component_factories: &mut FxHashMap<String, FactoryTarget>,
 ) -> Result<(), StyleTraceError>
 where
     I: IntoIterator<Item = &'a oxc_ast::ast::VariableDeclarator<'a>>,

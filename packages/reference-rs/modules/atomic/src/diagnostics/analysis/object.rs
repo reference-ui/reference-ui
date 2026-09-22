@@ -8,9 +8,8 @@
 //! the blocks. Unknown keys, `r` objects, and dynamic spreads become
 //! dynamic-shape facts, never guessed keys.
 
-use std::collections::HashSet;
-
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
+use rustc_hash::FxHashSet;
 use oxc_span::{GetSpan, Span};
 
 use super::block::walk_const_object;
@@ -32,9 +31,9 @@ pub struct WalkCtx<'a> {
     pub source: SourceId,
     pub surface: StyleSurfaceKind,
     pub system: &'a str,
-    pub style_props: &'a HashSet<String>,
+    pub style_props: &'a FxHashSet<String>,
     pub constants: &'a LocalConstants,
-    pub shadows: &'a [HashSet<String>],
+    pub shadows: &'a [FxHashSet<String>],
 }
 
 /// One fact site: the span the prediction points at, the authored prop,

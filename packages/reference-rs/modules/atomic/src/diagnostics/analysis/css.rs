@@ -5,9 +5,9 @@
 //! not a site, and scalar arguments are not blocks — runtime drops them.
 
 use std::cell::Cell;
-use std::collections::HashSet;
 
 use oxc_ast::ast::{Argument, CallExpression, Expression, FormalParameters, VariableDeclarator};
+use rustc_hash::FxHashSet;
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
@@ -46,9 +46,9 @@ struct CssVisitor<'a> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
-    style_props: &'a HashSet<String>,
+    style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
-    shadows: Vec<HashSet<String>>,
+    shadows: Vec<FxHashSet<String>>,
     bindings: FileBindings,
 }
 
@@ -133,7 +133,7 @@ impl<'a> CssVisitor<'a> {
 
 impl<'a> Visit<'a> for CssVisitor<'a> {
     fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
-        self.shadows.push(HashSet::new());
+        self.shadows.push(FxHashSet::default());
     }
 
     fn leave_scope(&mut self) {

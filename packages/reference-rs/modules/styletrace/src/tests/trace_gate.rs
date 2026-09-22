@@ -5,6 +5,7 @@
 //! relies on, so a future parser change that makes needle-free bytes traceable
 //! fails loudly here instead of silently hollowing host discovery.
 
+use rustc_hash::FxHashMap;
 use std::collections::{BTreeSet, HashMap};
 
 use super::fixtures::workspace_scratch_dir;
@@ -35,7 +36,7 @@ fn trace_outcome(files: &[(&str, &str)]) -> TraceOutcome {
         fixture.write(&path, content);
         entries.push(fixture.root().join(path));
     }
-    let staged = HashMap::new();
+    let staged = FxHashMap::default();
     let programs = HashMap::new();
     let sources = crate::TraceSources {
         staged: &staged,

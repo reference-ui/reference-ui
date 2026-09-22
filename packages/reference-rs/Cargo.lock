@@ -672,6 +672,7 @@ dependencies = [
  "oxc_parser",
  "oxc_span",
  "proptest",
+ "rustc-hash",
  "serde_json",
 ]
 
@@ -1481,6 +1482,7 @@ dependencies = [
  "oxc_parser",
  "oxc_span",
  "regex",
+ "rustc-hash",
  "serde",
  "serde_json",
  "shared",

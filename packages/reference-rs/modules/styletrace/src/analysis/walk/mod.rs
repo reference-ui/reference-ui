@@ -7,10 +7,11 @@ pub mod jsx;
 
 use crate::analysis::model::{ComponentEdge, PropBindings, TraceImport};
 use oxc_ast::ast::{Declaration, Statement};
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 
 pub struct WalkContext<'a> {
-    pub imports: &'a HashMap<String, TraceImport>,
+    pub imports: &'a FxHashMap<String, TraceImport>,
     pub primitive_names: &'a BTreeSet<String>,
     pub bindings: &'a PropBindings,
     pub edges: &'a mut Vec<ComponentEdge>,

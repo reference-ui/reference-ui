@@ -5,8 +5,9 @@
 //! externally resolved targets parse into values-only entries with literal
 //! bags and no descriptors, exactly as the old externals sweep did.
 
-use std::collections::HashMap;
 use std::rc::Rc;
+
+use rustc_hash::FxHashMap;
 
 use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord, ProbeMemo};
 use oxc_allocator::Allocator;
@@ -21,7 +22,7 @@ use super::super::constants::{collect_local_constants, LocalConstants};
 #[derive(Debug)]
 pub struct AtomicFs<'s> {
     sources: &'s [(String, String)],
-    index: HashMap<String, usize>,
+    index: FxHashMap<String, usize>,
     disk: DiskFs,
     memo: ProbeMemo,
 }
@@ -29,7 +30,7 @@ pub struct AtomicFs<'s> {
 impl<'s> AtomicFs<'s> {
     /// An fs over the compile sources, indexed by normalized key.
     pub fn new(sources: &'s [(String, String)]) -> Self {
-        let mut index = HashMap::new();
+        let mut index = FxHashMap::default();
         for (position, (path, _)) in sources.iter().enumerate() {
             index
                 .entry(ModuleKey::new(path).as_str().to_string())
@@ -99,20 +100,20 @@ impl FileSystem for AtomicFs<'_> {
 /// served record's literal bag stays in `values` for precise per-file reads.
 pub struct AtomicLoader<'s> {
     fs: Rc<AtomicFs<'s>>,
-    staged: HashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
-    values: HashMap<ModuleKey, LocalConstants>,
+    staged: FxHashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
+    values: FxHashMap<ModuleKey, LocalConstants>,
 }
 
 impl<'s> AtomicLoader<'s> {
     /// A loader over `fs` serving `staged` source records without parsing.
     pub fn new(
         fs: Rc<AtomicFs<'s>>,
-        staged: HashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
+        staged: FxHashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
     ) -> Self {
         Self {
             fs,
             staged,
-            values: HashMap::new(),
+            values: FxHashMap::default(),
         }
     }
 
@@ -202,7 +203,7 @@ mod tests {
         let ret = Parser::new(&allocator, "export const b = 'red';", SourceType::ts()).parse();
         let record = ModuleRecord::collect(&ret.program);
         let bag = collect_local_constants(&ret.program, "/p/src/b.ts", None);
-        let staged = HashMap::from([(key.clone(), (record, bag))]);
+        let staged = FxHashMap::from_iter([(key.clone(), (record, bag))]);
         let mut loader = AtomicLoader::new(fs, staged);
         let served = loader.load(&key).expect("staged record serves");
         assert!(served.exports.get("b").is_some());

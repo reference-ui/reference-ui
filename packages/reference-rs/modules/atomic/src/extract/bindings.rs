@@ -9,22 +9,21 @@
 //! JSX hosts are the component names from the same packages; unknown `css`
 //! is not an extract site.
 
-use std::collections::HashSet;
-
 use oxc_ast::ast::{
     Expression, ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
     ModuleExportName, Program, Statement, StaticMemberExpression,
 };
+use rustc_hash::FxHashSet;
 
 /// Local names bound to Reference `css`, `recipe`, JSX hosts, and namespaces.
 #[derive(Debug, Default, Clone)]
 pub struct ExtractBindings {
-    css: HashSet<String>,
-    recipe: HashSet<String>,
-    jsx: HashSet<String>,
-    namespaces: HashSet<String>,
-    reexport_css_ns: HashSet<String>,
-    reexport_recipe_ns: HashSet<String>,
+    css: FxHashSet<String>,
+    recipe: FxHashSet<String>,
+    jsx: FxHashSet<String>,
+    namespaces: FxHashSet<String>,
+    reexport_css_ns: FxHashSet<String>,
+    reexport_recipe_ns: FxHashSet<String>,
 }
 
 /// Where an identity walk starts: the importing file plus the project graph.
@@ -51,16 +50,18 @@ impl ExtractBindings {
 }
 
 impl ExtractBindings {
-    /// Component names imported from Reference packages.
-    pub fn jsx_hosts(&self) -> HashSet<String> {
-        self.jsx.clone()
+    /// Borrow the component names imported from Reference packages. The
+    /// extract context unions this with the compile-global hosts by
+    /// reference, so per-file setup never clones either set.
+    pub fn jsx_hosts_ref(&self) -> &FxHashSet<String> {
+        &self.jsx
     }
 
     /// Origin string when `callee` is a live Reference `css` binding.
     pub fn css_origin(
         &self,
         callee: &Expression<'_>,
-        shadowed: &[HashSet<String>],
+        shadowed: &[FxHashSet<String>],
     ) -> Option<String> {
         match callee {
             Expression::Identifier(ident) => live_css_name(self, ident.name.as_str(), shadowed),
@@ -73,7 +74,7 @@ impl ExtractBindings {
     pub fn recipe_origin(
         &self,
         callee: &Expression<'_>,
-        shadowed: &[HashSet<String>],
+        shadowed: &[FxHashSet<String>],
     ) -> Option<String> {
         match callee {
             Expression::Identifier(ident) => live_recipe_name(self, ident.name.as_str(), shadowed),
@@ -188,7 +189,7 @@ fn extend_namespace(
     }
 }
 
-pub(crate) fn is_shadowed(shadowed: &[HashSet<String>], name: &str) -> bool {
+pub(crate) fn is_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
     shadowed.iter().any(|scope| scope.contains(name))
 }
 
@@ -255,7 +256,7 @@ pub(crate) fn is_reference_package(source: &str) -> bool {
 fn live_css_name(
     bindings: &ExtractBindings,
     name: &str,
-    shadowed: &[HashSet<String>],
+    shadowed: &[FxHashSet<String>],
 ) -> Option<String> {
     if name == "__reference_ui_css" {
         return Some(name.to_string());
@@ -272,7 +273,7 @@ fn live_css_name(
 fn live_recipe_name(
     bindings: &ExtractBindings,
     name: &str,
-    shadowed: &[HashSet<String>],
+    shadowed: &[FxHashSet<String>],
 ) -> Option<String> {
     if name == "__reference_ui_recipe" {
         return Some(name.to_string());
@@ -289,7 +290,7 @@ fn live_recipe_name(
 fn css_member_origin(
     bindings: &ExtractBindings,
     member: &StaticMemberExpression<'_>,
-    shadowed: &[HashSet<String>],
+    shadowed: &[FxHashSet<String>],
 ) -> Option<String> {
     let object_name = identifier_name(&member.object)?;
     if is_shadowed(shadowed, object_name) {
@@ -320,7 +321,7 @@ fn css_object_origin(bindings: &ExtractBindings, object_name: &str) -> Option<St
 fn recipe_member_origin(
     bindings: &ExtractBindings,
     member: &StaticMemberExpression<'_>,
-    shadowed: &[HashSet<String>],
+    shadowed: &[FxHashSet<String>],
 ) -> Option<String> {
     let object_name = identifier_name(&member.object)?;
     if is_shadowed(shadowed, object_name) {

@@ -8,7 +8,8 @@ use crate::analysis::model::{PropBindings, TraceImport};
 use crate::analysis::util::slice_span;
 use oxc_ast::ast::Statement;
 use oxc_span::GetSpan;
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 
 #[derive(Default)]
 pub struct PipelineState {
@@ -19,7 +20,7 @@ pub struct PipelineState {
 
 pub struct PipelineContext<'a, 'b> {
     pub source: &'a str,
-    pub imports: &'a HashMap<String, TraceImport>,
+    pub imports: &'a FxHashMap<String, TraceImport>,
     pub bindings: &'a PropBindings,
     pub state: &'b mut PipelineState,
 }
@@ -27,7 +28,7 @@ pub struct PipelineContext<'a, 'b> {
 pub fn component_uses_style_pipeline(
     body_statements: &oxc_allocator::Vec<'_, Statement<'_>>,
     source: &str,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
     bindings: &PropBindings,
 ) -> bool {
     let mut state = PipelineState {

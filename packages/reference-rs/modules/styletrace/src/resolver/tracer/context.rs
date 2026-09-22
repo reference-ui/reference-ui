@@ -4,9 +4,11 @@
 //! The `TraceContext` provides scoped state for deep recursive type walks,
 //! avoiding argument soup and keeping track of visited nodes.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use rustc_hash::FxHashMap;
 
 use crate::resolver::error::StyleTraceError;
 use crate::resolver::model::{
@@ -20,7 +22,7 @@ use crate::resolver::path::{
 
 pub struct TraceSession {
     pub sync_root: PathBuf,
-    pub module_cache: HashMap<PathBuf, ParsedModule>,
+    pub module_cache: FxHashMap<PathBuf, ParsedModule>,
     /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
     /// surface-type import denotes. `None` keeps disk resolution strict.
     pub unresolved_style_props: Option<BTreeSet<String>>,
@@ -33,7 +35,7 @@ impl TraceSession {
     pub fn new(sync_root: &Path) -> Self {
         Self {
             sync_root: sync_root.to_path_buf(),
-            module_cache: HashMap::new(),
+            module_cache: FxHashMap::default(),
             unresolved_style_props: None,
             prune_surface: false,
         }
@@ -43,7 +45,7 @@ impl TraceSession {
 pub struct TraceContext<'a> {
     pub session: &'a mut TraceSession,
     pub module_path: &'a Path,
-    pub env: &'a HashMap<String, BoundTypeExpr>,
+    pub env: &'a FxHashMap<String, BoundTypeExpr>,
     pub visited: &'a mut BTreeSet<String>,
 }
 
@@ -51,7 +53,7 @@ impl<'a> TraceContext<'a> {
     pub fn branch<'b>(
         &'b mut self,
         module_path: &'b Path,
-        env: &'b HashMap<String, BoundTypeExpr>,
+        env: &'b FxHashMap<String, BoundTypeExpr>,
     ) -> TraceContext<'b> {
         TraceContext {
             session: self.session,

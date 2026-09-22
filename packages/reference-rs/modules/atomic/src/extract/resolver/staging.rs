@@ -6,9 +6,8 @@
 //! bare, aliased, and exotic edges conservatively miss into the loader's
 //! existing fallback, which serves them bit-identically on demand.
 
-use std::collections::HashSet;
-
 use module_graph::{DefaultExport, ModuleKey, ModuleRecord};
+use rustc_hash::FxHashSet;
 use oxc_ast::ast::Program;
 
 use crate::extract::constants::{collect_local_constants, LocalConstants};
@@ -136,8 +135,8 @@ fn outgoing_specifiers(record: &ModuleRecord) -> Vec<&str> {
 /// reach it (a walk target); everything else unstages and the loader's
 /// existing miss path serves it bit-identically on the rare reach.
 pub(crate) struct StagingPlan {
-    outgoing: HashSet<ModuleKey>,
-    imported: HashSet<ModuleKey>,
+    outgoing: FxHashSet<ModuleKey>,
+    imported: FxHashSet<ModuleKey>,
 }
 
 impl StagingPlan {
@@ -147,8 +146,8 @@ impl StagingPlan {
         is_source: &dyn Fn(&ModuleKey) -> bool,
     ) -> Self {
         let mut plan = Self {
-            outgoing: HashSet::new(),
-            imported: HashSet::new(),
+            outgoing: FxHashSet::default(),
+            imported: FxHashSet::default(),
         };
         for (key, record) in pairs {
             let specs = outgoing_specifiers(record);
@@ -176,8 +175,8 @@ impl StagingPlan {
     /// A plan staging nothing: the force-unstage differential arm.
     pub(crate) fn empty() -> Self {
         Self {
-            outgoing: HashSet::new(),
-            imported: HashSet::new(),
+            outgoing: FxHashSet::default(),
+            imported: FxHashSet::default(),
         }
     }
 
@@ -185,7 +184,7 @@ impl StagingPlan {
     pub(crate) fn full(keys: impl Iterator<Item = ModuleKey>) -> Self {
         Self {
             outgoing: keys.collect(),
-            imported: HashSet::new(),
+            imported: FxHashSet::default(),
         }
     }
 }
@@ -208,7 +207,7 @@ mod tests {
     /// Census one edged file over the given source keys.
     fn census_over(from: &str, content: &str, keys: &[&str]) -> StagingPlan {
         let record = record_of(content);
-        let set: HashSet<ModuleKey> = keys.iter().map(|key| ModuleKey::new(key)).collect();
+        let set: FxHashSet<ModuleKey> = keys.iter().map(|key| ModuleKey::new(key)).collect();
         StagingPlan::census(
             [(ModuleKey::new(from), &record)].into_iter(),
             &|key| set.contains(key),

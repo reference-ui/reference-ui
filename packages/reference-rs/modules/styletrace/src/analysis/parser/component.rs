@@ -3,7 +3,8 @@
 //! Populates the intermediate trace representation.
 
 use oxc_ast::ast::{Expression, FormalParameter, Statement};
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 
 use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
@@ -54,7 +55,7 @@ pub fn factory_from_function_declaration(
         return Ok(None);
     };
 
-    let mut local_components = HashMap::new();
+    let mut local_components = FxHashMap::default();
     super::collect_variable_symbols(
         body.statements
             .iter()
@@ -67,7 +68,7 @@ pub fn factory_from_function_declaration(
             .flatten(),
         ctx,
         &mut local_components,
-        &mut HashMap::new(),
+        &mut FxHashMap::default(),
     )?;
 
     for statement in &body.statements {
@@ -84,7 +85,7 @@ pub fn factory_from_function_declaration(
 fn extract_factory_from_statement(
     statement: &Statement<'_>,
     id_name: &str,
-    local_components: &HashMap<String, TraceComponent>,
+    local_components: &FxHashMap<String, TraceComponent>,
     ctx: &ParserContext,
 ) -> Result<Option<(String, TraceFactory)>, StyleTraceError> {
     let Statement::ReturnStatement(return_statement) = statement else {
@@ -247,7 +248,7 @@ fn shadowed_owned_props(bindings: &PropBindings) -> BTreeSet<String> {
 
 pub fn factory_target_from_expression(
     expression: &Expression<'_>,
-    imports: &HashMap<String, TraceImport>,
+    imports: &FxHashMap<String, TraceImport>,
 ) -> Option<FactoryTarget> {
     match expression {
         Expression::CallExpression(call) => match &call.callee {

@@ -47,16 +47,17 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use diagnostics::DiagnosticSink;
+use rustc_hash::FxHashSet;
 
 struct ParseSession<'a> {
     constants: &'a extract::constants::LocalConstants,
     resolver: &'a mut extract::resolver::ValueGraph<'a>,
     identity: extract::identity::IdentityGraph<'a>,
     breakpoints: &'a BreakpointScale,
-    traced_jsx: &'a HashSet<String>,
+    traced_jsx: &'a FxHashSet<String>,
     owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
@@ -466,13 +467,15 @@ fn extract_parsed_program(
     };
     let chain = extract::scope::ScopeChain::new(&table, lookup);
     let bindings = extract::collect_bindings_with_identity(program, path, &session.identity);
-    let mut jsx_hosts = bindings.jsx_hosts();
-    jsx_hosts.extend(session.traced_jsx.iter().cloned());
+    let jsx_hosts = extract::JsxHosts {
+        local: bindings.jsx_hosts_ref(),
+        global: session.traced_jsx,
+    };
     let config = extract::ExtractConfig {
         chain,
         breakpoints: session.breakpoints,
         bindings: &bindings,
-        jsx_hosts: &jsx_hosts,
+        jsx_hosts,
         owned_props: session.owned_props,
         shadowed: &[],
     };

@@ -7,9 +7,8 @@
 //! export. Non-literal selections mark their recipe dynamic (fail-closed);
 //! unresolvable callees stay silent and are never selections.
 
-use std::collections::{HashMap, HashSet};
-
 use oxc_ast::ast::{CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
+use rustc_hash::{FxHashMap, FxHashSet};
 use oxc_span::Span;
 
 use super::super::bindings::{is_reference_package, is_shadowed};
@@ -48,7 +47,7 @@ pub(crate) enum SelectionTarget {
 pub(crate) struct TentativeSelection {
     pub file: String,
     pub target: SelectionTarget,
-    pub responsive: HashSet<ResponsiveTriple>,
+    pub responsive: FxHashSet<ResponsiveTriple>,
     pub dynamic: bool,
 }
 
@@ -56,14 +55,14 @@ pub(crate) struct TentativeSelection {
 #[derive(Debug, Clone)]
 pub(crate) struct RecipeSelection {
     pub class_name: String,
-    pub responsive: HashSet<ResponsiveTriple>,
+    pub responsive: FxHashSet<ResponsiveTriple>,
     pub dynamic: bool,
 }
 
 /// Gate input for one observed recipe: the triples plus the dynamic flag.
 #[derive(Debug)]
 pub(crate) struct ObservedGate {
-    pub responsive: HashSet<ResponsiveTriple>,
+    pub responsive: FxHashSet<ResponsiveTriple>,
     pub dynamic: bool,
 }
 
@@ -79,15 +78,15 @@ pub(crate) enum Gate<'a> {
 
 /// Assembly-side index answering the gate for each recipe className.
 pub(crate) struct SelectionIndex {
-    observed: HashMap<String, ObservedGate>,
-    open: HashSet<String>,
+    observed: FxHashMap<String, ObservedGate>,
+    open: FxHashSet<String>,
     open_all: bool,
 }
 
 impl SelectionIndex {
     /// Index resolved selections; spec recipes stay unconditionally open.
     pub(crate) fn new(selections: &[RecipeSelection], spec: &[Recipe]) -> Self {
-        let mut observed = HashMap::new();
+        let mut observed = FxHashMap::default();
         for selection in selections {
             observed.insert(
                 selection.class_name.clone(),
@@ -123,8 +122,8 @@ impl SelectionIndex {
     #[cfg(test)]
     pub(crate) fn open() -> Self {
         Self {
-            observed: HashMap::new(),
-            open: HashSet::new(),
+            observed: FxHashMap::default(),
+            open: FxHashSet::default(),
             open_all: true,
         }
     }
@@ -154,13 +153,13 @@ pub(crate) fn resolve_all(
     bindings: &[RecipeBinding],
     identity: &IdentityGraph<'_>,
 ) -> Vec<RecipeSelection> {
-    let mut index: HashMap<(&str, &str), &str> = HashMap::new();
+    let mut index: FxHashMap<(&str, &str), &str> = FxHashMap::default();
     for binding in bindings.iter().filter(|binding| binding.top_level) {
         index
             .entry((binding.file.as_str(), binding.local.as_str()))
             .or_insert(binding.class_name.as_str());
     }
-    let mut merged: HashMap<String, RecipeSelection> = HashMap::new();
+    let mut merged: FxHashMap<String, RecipeSelection> = FxHashMap::default();
     for selection in tentative {
         let Some(class) = selection.resolve_class(&index, identity) else {
             continue;
@@ -194,7 +193,7 @@ impl TentativeSelection {
     /// defining export. Reference and untraceable targets resolve away.
     fn resolve_class(
         &self,
-        index: &HashMap<(&str, &str), &str>,
+        index: &FxHashMap<(&str, &str), &str>,
         identity: &IdentityGraph<'_>,
     ) -> Option<String> {
         match &self.target {
@@ -321,7 +320,7 @@ fn literal_class_name(obj: &ObjectExpression<'_>) -> Option<String> {
 
 /// One selection's observations: responsive triples plus the dynamic flag.
 struct ObservedCall {
-    responsive: HashSet<ResponsiveTriple>,
+    responsive: FxHashSet<ResponsiveTriple>,
     dynamic: bool,
 }
 
@@ -353,14 +352,14 @@ enum LeafOutcome {
 
 /// Accumulating walk over one selection object: triples plus one flag.
 struct SelectionWalk {
-    responsive: HashSet<ResponsiveTriple>,
+    responsive: FxHashSet<ResponsiveTriple>,
     dynamic: bool,
 }
 
 impl SelectionWalk {
     fn new() -> Self {
         Self {
-            responsive: HashSet::new(),
+            responsive: FxHashSet::default(),
             dynamic: false,
         }
     }
@@ -377,7 +376,7 @@ impl SelectionWalk {
     }
 
     /// Observe every axis of a selection object; spreads and methods flag.
-    fn observe_object(&mut self, obj: &ObjectExpression<'_>, shadowed: &[HashSet<String>]) {
+    fn observe_object(&mut self, obj: &ObjectExpression<'_>, shadowed: &[FxHashSet<String>]) {
         for prop in &obj.properties {
             let ObjectPropertyKind::ObjectProperty(prop) = prop else {
                 self.flag_dynamic();
@@ -397,7 +396,7 @@ impl SelectionWalk {
         &mut self,
         axis: &str,
         value: &Expression<'_>,
-        shadowed: &[HashSet<String>],
+        shadowed: &[FxHashSet<String>],
     ) {
         if let Expression::ObjectExpression(obj) = unwrap_expression(value) {
             self.observe_responsive_object(axis, obj, shadowed);
@@ -414,7 +413,7 @@ impl SelectionWalk {
         &mut self,
         axis: &str,
         obj: &ObjectExpression<'_>,
-        shadowed: &[HashSet<String>],
+        shadowed: &[FxHashSet<String>],
     ) {
         for prop in &obj.properties {
             self.observe_breakpoint_prop(axis, prop, shadowed);
@@ -426,7 +425,7 @@ impl SelectionWalk {
         &mut self,
         axis: &str,
         prop: &ObjectPropertyKind<'_>,
-        shadowed: &[HashSet<String>],
+        shadowed: &[FxHashSet<String>],
     ) {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             self.flag_dynamic();
@@ -453,7 +452,7 @@ impl SelectionWalk {
 /// Classify one selection leaf under runtime `String()` semantics: strings
 /// and booleans map exactly, null and unshadowed undefined skip like the
 /// runtime, and everything else (numbers, arrays, identifiers) is dynamic.
-fn leaf_outcome(value: &Expression<'_>, shadowed: &[HashSet<String>]) -> LeafOutcome {
+fn leaf_outcome(value: &Expression<'_>, shadowed: &[FxHashSet<String>]) -> LeafOutcome {
     match unwrap_expression(value) {
         Expression::StringLiteral(lit) => LeafOutcome::Text(lit.value.to_string()),
         Expression::BooleanLiteral(lit) => LeafOutcome::Text(boolean_str(lit.value)),
@@ -465,7 +464,7 @@ fn leaf_outcome(value: &Expression<'_>, shadowed: &[HashSet<String>]) -> LeafOut
 
 /// Classify an identifier leaf: unshadowed `undefined` skips like the
 /// runtime, anything else (a variable) is dynamic.
-fn undefined_outcome(name: &str, shadowed: &[HashSet<String>]) -> LeafOutcome {
+fn undefined_outcome(name: &str, shadowed: &[FxHashSet<String>]) -> LeafOutcome {
     if name != "undefined" {
         return LeafOutcome::Dynamic;
     }

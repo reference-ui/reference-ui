@@ -33,7 +33,7 @@ mod site_plan_tests;
 mod tests;
 
 use std::cell::Cell;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use oxc_ast::ast::{
     BindingPattern, CallExpression, ExportDefaultDeclaration, FormalParameters, JSXOpeningElement,
@@ -43,6 +43,7 @@ use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::scope::ScopeId as OxcScopeId;
+use rustc_hash::FxHashSet;
 
 use crate::atom::Want;
 use crate::diagnostics::adapters::extract::extract_note;
@@ -58,14 +59,40 @@ use scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
 pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
 
+/// Borrowed union of the file-local and compile-global JSX host sets.
+///
+/// Per-file setup used to merge both sets into a fresh `HashSet`, cloning
+/// every global host (the ~101 primitive names plus traced/configured
+/// hosts) only to answer membership queries. The union view answers the
+/// same queries — `contains` for tag gating, `is_empty` for the
+/// missing-graph report — over the two borrowed sets, so host setup
+/// allocates nothing per file.
+#[derive(Clone, Copy)]
+pub struct JsxHosts<'a> {
+    pub local: &'a FxHashSet<String>,
+    pub global: &'a FxHashSet<String>,
+}
+
+impl JsxHosts<'_> {
+    /// True when either set admits the tag name.
+    pub fn contains(&self, name: &str) -> bool {
+        self.local.contains(name) || self.global.contains(name)
+    }
+
+    /// True when no hosts are resolvable at all (missing-graph gate).
+    pub fn is_empty(&self) -> bool {
+        self.local.is_empty() && self.global.is_empty()
+    }
+}
+
 /// Configuration references passed into style extraction contexts.
 pub struct ExtractConfig<'a> {
     pub chain: ScopeChain<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
-    pub jsx_hosts: &'a HashSet<String>,
+    pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
-    pub shadowed: &'a [HashSet<String>],
+    pub shadowed: &'a [FxHashSet<String>],
 }
 
 /// Mutable collections the extract walk writes into.
@@ -89,9 +116,9 @@ pub struct ExtractContext<'a> {
     pub scope: ScopeId,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
-    pub jsx_hosts: &'a HashSet<String>,
+    pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
-    pub shadowed: &'a [HashSet<String>],
+    pub shadowed: &'a [FxHashSet<String>],
     pub recipe_binding: Option<&'a str>,
     pub recipe_binding_span: Option<Span>,
     pub default_recipe_export: bool,
@@ -316,9 +343,9 @@ pub struct ExtractVisitor<'a> {
     pub chain: ScopeChain<'a>,
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
-    pub jsx_hosts: &'a HashSet<String>,
+    pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
-    pub shadows: Vec<HashSet<String>>,
+    pub shadows: Vec<FxHashSet<String>>,
     pub scope_stack: Vec<ScopeId>,
     next_scope: ScopeId,
     pub recipe_binding: Option<String>,
@@ -366,7 +393,7 @@ impl<'a> ExtractVisitor<'a> {
 
 impl<'a> Visit<'a> for ExtractVisitor<'a> {
     fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
-        self.shadows.push(HashSet::new());
+        self.shadows.push(FxHashSet::default());
         // One id per enter_scope in walk order, mirroring the collector, so
         // the use-site scope here is the binding scope there.
         let id = self.next_scope;
@@ -485,7 +512,7 @@ fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractCo
     ctx
 }
 
-fn add_param_shadows(shadows: &mut [HashSet<String>], params: &FormalParameters<'_>) {
+fn add_param_shadows(shadows: &mut [FxHashSet<String>], params: &FormalParameters<'_>) {
     let Some(scope) = shadows.last_mut() else {
         return;
     };
@@ -496,7 +523,7 @@ fn add_param_shadows(shadows: &mut [HashSet<String>], params: &FormalParameters<
     }
 }
 
-fn add_declarator_shadow(shadows: &mut [HashSet<String>], decl: &VariableDeclarator<'_>) {
+fn add_declarator_shadow(shadows: &mut [FxHashSet<String>], decl: &VariableDeclarator<'_>) {
     let Some(scope) = shadows.last_mut() else {
         return;
     };
@@ -560,13 +587,17 @@ pub fn extract(
     let stub = scope::ImportLookup::ProjectBag(&bag);
     let chain = scope::ScopeChain::new(&table, stub);
     let bindings = collect_bindings(program);
-    let jsx_hosts = bindings.jsx_hosts();
+    let no_global = FxHashSet::default();
+    let jsx_hosts = JsxHosts {
+        local: bindings.jsx_hosts_ref(),
+        global: &no_global,
+    };
     let owned_props = BTreeMap::new();
     let config = ExtractConfig {
         chain,
         breakpoints,
         bindings: &bindings,
-        jsx_hosts: &jsx_hosts,
+        jsx_hosts,
         owned_props: &owned_props,
         shadowed: &[],
     };

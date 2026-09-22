@@ -3,9 +3,10 @@
 //! Computes opaque cascade slots for property-condition pairings and applies system segments to class names.
 //! Deduplicates identical authored intentions and collects resulting atomic utilities into the AtomSet.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use base_system::BaseSystem;
+use rustc_hash::{FxBuildHasher, FxHashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -133,7 +134,7 @@ impl<'a> PlanBuilder<'a> {
     pub fn build(&mut self, decls: &[AuthoredDeclaration]) -> Vec<RuntimeStylePlan> {
         // Plans and seen keys are bounded by the decl count: reserve once.
         let mut plans = Vec::with_capacity(decls.len());
-        let mut seen_keys = HashSet::with_capacity(decls.len());
+        let mut seen_keys = FxHashSet::with_capacity_and_hasher(decls.len(), FxBuildHasher);
 
         for decl in decls {
             let lookup_key = decl.lookup_key(self.system);
@@ -188,7 +189,7 @@ impl<'a> PlanBuilder<'a> {
         // Plans, keys, and seen keys are bounded by the decl count.
         let mut plans = Vec::with_capacity(decls.len());
         let mut keys = Vec::with_capacity(decls.len());
-        let mut seen_keys = HashSet::with_capacity(decls.len());
+        let mut seen_keys = FxHashSet::with_capacity_and_hasher(decls.len(), FxBuildHasher);
 
         for decl in decls {
             let lookup_key = decl.lookup_key(self.system);

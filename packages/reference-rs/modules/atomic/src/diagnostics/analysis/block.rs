@@ -271,7 +271,7 @@ mod tests {
     use super::super::support::{css_call_args, dynamic_count, exact_keys, parse_for_test};
     use super::*;
     use crate::diagnostics::{DiagnosticFact, SourceId, StyleSurfaceKind};
-    use std::collections::HashSet;
+    use rustc_hash::FxHashSet;
 
     fn walk_blocks(source: &str) -> Vec<DiagnosticFact> {
         let allocator = oxc_allocator::Allocator::default();
@@ -279,9 +279,9 @@ mod tests {
         let constants =
             crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
         let blocks = css_call_args(&program);
-        let style_props: HashSet<String> =
+        let style_props: FxHashSet<String> =
             ["color", "mt"].into_iter().map(str::to_string).collect();
-        let shadows: Vec<HashSet<String>> = Vec::new();
+        let shadows: Vec<FxHashSet<String>> = Vec::new();
         let mut facts = Vec::new();
         let mut walk = WalkCtx {
             facts: &mut facts,

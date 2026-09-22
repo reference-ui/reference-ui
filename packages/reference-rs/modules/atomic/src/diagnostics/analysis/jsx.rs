@@ -6,7 +6,9 @@
 //! lookup. Unknown tags and DOM attributes emit nothing.
 
 use std::cell::Cell;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
+
+use rustc_hash::FxHashSet;
 
 use oxc_ast::ast::{
     Expression, FormalParameters, JSXAttributeItem, JSXAttributeValue, JSXOpeningElement,
@@ -57,11 +59,11 @@ struct JsxVisitor<'a> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
-    style_props: &'a HashSet<String>,
+    style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
-    hosts: &'a HashSet<String>,
+    hosts: &'a FxHashSet<String>,
     owned: &'a BTreeMap<String, BTreeSet<String>>,
-    shadows: Vec<HashSet<String>>,
+    shadows: Vec<FxHashSet<String>>,
     bindings: FileBindings,
 }
 
@@ -189,7 +191,7 @@ impl<'a> JsxVisitor<'a> {
 
 impl<'a> Visit<'a> for JsxVisitor<'a> {
     fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
-        self.shadows.push(HashSet::new());
+        self.shadows.push(FxHashSet::default());
     }
 
     fn leave_scope(&mut self) {

@@ -13,9 +13,8 @@
 mod twins;
 mod validity;
 
-use std::collections::HashSet;
-
 use base_system::BaseSystem;
+use rustc_hash::FxHashSet;
 
 use super::literals::{HarvestPool, KIND_ORDER};
 use super::sinks::Sink;
@@ -46,7 +45,7 @@ pub struct MintCtx<'a> {
 
 /// The mutable mint state threaded through sinks.
 struct MintState<'a> {
-    seen: HashSet<TwinKey>,
+    seen: FxHashSet<TwinKey>,
     wants: &'a mut Vec<Want>,
     authored: &'a mut Vec<AuthoredDeclaration>,
 }
@@ -97,7 +96,7 @@ pub fn mint(ctx: MintCtx<'_>) {
 
 /// Deduped sinks in deterministic `(prop, when)` order, first site kept.
 fn ordered_unique(sinks: &[Sink]) -> Vec<&Sink> {
-    let mut seen = HashSet::new();
+    let mut seen = FxHashSet::default();
     let mut ordered: Vec<&Sink> = sinks
         .iter()
         .filter(|sink| seen.insert((sink.prop.clone(), sink.when.clone())))

@@ -8,7 +8,9 @@
 //! simply do not declare the name, and one winner beats a pending error
 //! from a star that cycled.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
+
+use rustc_hash::FxHashSet;
 
 use super::{BindingOrigin, BindingWalk, Refused};
 use crate::{FileSystem, Loader, ModuleKey};
@@ -25,7 +27,7 @@ struct StarPoll {
 struct StarCollect {
     names: BTreeSet<String>,
     refused: Vec<Refused>,
-    seen: HashSet<ModuleKey>,
+    seen: FxHashSet<ModuleKey>,
     stack: Vec<(ModuleKey, String)>,
 }
 
@@ -44,7 +46,7 @@ impl<'g, L: Loader, F: FileSystem> BindingWalk<'g, L, F> {
         let mut collect = StarCollect {
             names,
             refused: Vec::new(),
-            seen: HashSet::new(),
+            seen: FxHashSet::default(),
             stack: self
                 .stars_of(file)
                 .into_iter()

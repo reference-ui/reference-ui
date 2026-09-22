@@ -6,9 +6,10 @@
 //! are never harvested (A4). Compile inputs only: the caller feeds the same
 //! parsed programs the site walk reads, never `node_modules`.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 
 use canon::ValueKind;
+use rustc_hash::FxHashMap;
 use oxc_ast::ast::{Program, StringLiteral, TemplateLiteral};
 use oxc_ast_visit::{walk, Visit};
 use oxc_parser::ParserReturn;
@@ -30,7 +31,7 @@ pub const KIND_ORDER: [ValueKind; 6] = [
 /// Distinct harvested values by kind: the program's CSS-shaped information.
 #[derive(Debug, Default)]
 pub struct HarvestPool {
-    kinds: HashMap<ValueKind, BTreeSet<Box<str>>>,
+    kinds: FxHashMap<ValueKind, BTreeSet<Box<str>>>,
 }
 
 impl HarvestPool {

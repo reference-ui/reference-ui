@@ -4,7 +4,9 @@
 //! plans, stylesheets, and runtime map. The portable sheet shares the printed
 //! suffix and sinks its own system-layer diagnostics so warnings surface once.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
+
+use rustc_hash::FxHashSet;
 
 use crate::{
     atom::{AtomSet, When},
@@ -215,7 +217,7 @@ fn compile_recipes(
     sink: Option<&mut DiagnosticsSession>,
 ) -> Vec<recipes::CompiledRecipe> {
     let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
-    let mut seen = HashSet::new();
+    let mut seen = FxHashSet::default();
     let mut valid = Vec::new();
     for recipe in spec_recipes.iter().chain(inputs.extracted.iter()) {
         if !seen.insert(&recipe.class_name) {

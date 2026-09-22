@@ -8,8 +8,8 @@ mod spec;
 mod table;
 
 use indexmap::IndexMap;
+use rustc_hash::FxHashSet;
 use std::cmp::Ordering;
-use std::collections::HashSet;
 
 use crate::atom::{Atom, Want, When, WhenKind};
 use crate::diagnostics::DiagnosticLocation;
@@ -144,7 +144,7 @@ fn compile_variants(
 /// only observed `(axis, value, breakpoint)` triples, in the same order.
 struct ResponsiveFilter<'a> {
     stem: &'a str,
-    observed: Option<&'a HashSet<ResponsiveTriple>>,
+    observed: Option<&'a FxHashSet<ResponsiveTriple>>,
 }
 
 impl<'a> ResponsiveFilter<'a> {
