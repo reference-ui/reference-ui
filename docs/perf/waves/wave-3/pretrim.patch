@@ -1,0 +1,80 @@
+diff --git a/packages/reference-mcp/scripts/build-icons-index.mjs b/packages/reference-mcp/scripts/build-icons-index.mjs
+index ed9b61034..d7676e83a 100644
+--- a/packages/reference-mcp/scripts/build-icons-index.mjs
++++ b/packages/reference-mcp/scripts/build-icons-index.mjs
+@@ -40,6 +40,22 @@ export const MINI_SEARCH_CONFIG = {
+   },
+ }
+ 
++// Pre-trim stored descriptions once at build so the query path performs
++// zero string surgery. MUST stay in sync with the readout contract:
++// searchDemand previously applied this exact trim per result.
++// Applied to _storedFields AFTER addAll so the inverted index (and hence
++// ranking) is built from full text and stays byte-identical.
++function trimDescription(desc, maxLen = 220) {
++  if (!desc || desc.length <= maxLen) return desc
++  const periodIdx = desc.indexOf('. ', 80)
++  if (periodIdx !== -1 && periodIdx <= maxLen) {
++    return desc.slice(0, periodIdx + 1)
++  }
++  const trimmed = desc.slice(0, maxLen)
++  const lastSpace = trimmed.lastIndexOf(' ')
++  return (lastSpace > 60 ? trimmed.slice(0, lastSpace) : trimmed) + '...'
++}
++
+ async function main() {
+   const t0 = performance.now()
+   console.log(`[build-icons-index] Reading icon metadata from ${metadataPath}...`)
+@@ -81,6 +97,19 @@ async function main() {
+ 
+   ms.addAll(docs)
+ 
++  // Trim the STORED field only; the inverted index keeps full text.
++  let trimmedCount = 0
++  for (const entry of ms._storedFields.values()) {
++    if (entry && typeof entry.description === 'string') {
++      const t = trimDescription(entry.description)
++      if (t !== entry.description) {
++        entry.description = t
++        trimmedCount++
++      }
++    }
++  }
++  console.log(`[build-icons-index] Pre-trimmed ${trimmedCount}/${docs.length} stored descriptions.`)
++
+   // Serialize MiniSearch index
+   const serialized = JSON.stringify(ms)
+   await writeFile(targetIndexPath, serialized, 'utf8')
+diff --git a/packages/reference-mcp/src/pipeline/icons-search-index.ts b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+index afcaba7d5..a15ff4f7a 100644
+--- a/packages/reference-mcp/src/pipeline/icons-search-index.ts
++++ b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+@@ -62,16 +62,9 @@ export const MINI_SEARCH_CONFIG = {
+   },
+ }
+ 
+-function trimDescription(desc: string, maxLen = 220): string {
+-  if (!desc || desc.length <= maxLen) return desc
+-  const periodIdx = desc.indexOf('. ', 80)
+-  if (periodIdx !== -1 && periodIdx <= maxLen) {
+-    return desc.slice(0, periodIdx + 1)
+-  }
+-  const trimmed = desc.slice(0, maxLen)
+-  const lastSpace = trimmed.lastIndexOf(' ')
+-  return (lastSpace > 60 ? trimmed.slice(0, lastSpace) : trimmed) + '...'
+-}
++// NOTE: descriptions arrive pre-trimmed from the build (see
++// scripts/build-icons-index.mjs). The query path must not add string
++// surgery here — read the stored field as-is.
+ 
+ export class IconsSearchEngine {
+   readonly miniSearch: MiniSearch
+@@ -180,7 +173,7 @@ export class IconsSearchEngine {
+ 
+     const sliced = results.slice(0, limit).map(r => {
+       const name = r.name as string
+-      const description = trimDescription((r.description as string) || '')
++      const description = (r.description as string) || ''
+       const categories = (r.categories as string[]) || ['general']
+ 
+       const readout: IconReadout = {

@@ -1,0 +1,102 @@
+diff --git a/packages/reference-mcp/src/pipeline/icons-search-index.ts b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+index afcaba7d5..6bbecf50a 100644
+--- a/packages/reference-mcp/src/pipeline/icons-search-index.ts
++++ b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+@@ -73,9 +73,16 @@ function trimDescription(desc: string, maxLen = 220): string {
+   return (lastSpace > 60 ? trimmed.slice(0, lastSpace) : trimmed) + '...'
+ }
+ 
++interface StoredIconFields {
++  name: string
++  description: string
++  categories?: string[]
++}
++
+ export class IconsSearchEngine {
+   readonly miniSearch: MiniSearch
+   readonly categories: string[]
++  readonly categoryIndex: Map<string, StoredIconFields[]>
+ 
+   constructor(serializedIndex: unknown) {
+     const jsonString =
+@@ -89,22 +96,34 @@ export class IconsSearchEngine {
+       searchOptions: MINI_SEARCH_CONFIG.searchOptions,
+     })
+ 
+-    // Extract categories across stored documents
++    // Extract categories across stored documents + prebuilt category->docs postings
+     const catSet = new Set<string>()
+-    const docs = (this.miniSearch as unknown as { _storedFields: Map<number, { categories?: string[] }> })
++    const catIndex = new Map<string, StoredIconFields[]>()
++    const docs = (this.miniSearch as unknown as { _storedFields: Map<number, StoredIconFields> })
+       ._storedFields
+ 
+     if (docs && docs instanceof Map) {
+       for (const entry of docs.values()) {
+-        if (Array.isArray(entry.categories)) {
+-          for (const c of entry.categories) {
+-            if (c) catSet.add(c)
++        if (!Array.isArray(entry.categories)) continue
++        const keys = new Set<string>()
++        for (const c of entry.categories) {
++          if (!c) continue
++          catSet.add(c)
++          keys.add(c.toLowerCase())
++        }
++        for (const key of keys) {
++          let bucket = catIndex.get(key)
++          if (!bucket) {
++            bucket = []
++            catIndex.set(key, bucket)
+           }
++          bucket.push(entry)
+         }
+       }
+     }
+ 
+     this.categories = Array.from(catSet).sort()
++    this.categoryIndex = catIndex
+   }
+ 
+   get documentCount(): number {
+@@ -280,13 +299,33 @@ export class IconsSearchEngine {
+       }
+     }
+ 
+-    // Category-only browse using MiniSearch.wildcard
+-    const allResults = this.miniSearch.search(MiniSearch.wildcard, {
+-      filter: result => {
+-        const cats = (result.categories as string[]) || []
+-        return !category || cats.some(c => c.toLowerCase() === category)
+-      },
+-    })
++    // Category-only browse via prebuilt postings (skips MiniSearch entirely)
++    if (category) {
++      const bucket = this.categoryIndex.get(category) ?? []
++      const sliced = bucket.slice(0, limit).map(entry => {
++        const readout: IconReadout = {
++          name: entry.name,
++          description: entry.description || '',
++        }
++
++        if (verbose) {
++          readout.import = `import { ${entry.name} } from '@reference-ui/icons'`
++          readout.example = `<${entry.name} size="md" color="text" />`
++          readout.category = entry.categories?.[0] || 'general'
++        }
++
++        return readout
++      })
++
++      return {
++        total: bucket.length,
++        returned: sliced.length,
++        icons: sliced,
++      }
++    }
++
++    // No category (blank-demands edge): legacy full-index wildcard
++    const allResults = this.miniSearch.search(MiniSearch.wildcard)
+ 
+     const sliced = allResults.slice(0, limit).map(r => {
+       const name = r.name as string

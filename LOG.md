@@ -44,6 +44,42 @@ otherwise.
 - Status: PARKED for HQ — roster zero, lock free, all slots held,
   tick disarmed. No wave 4 without new filed evidence (see archive).
 
+## Bankfile (off-scope MCP filings, clerk-bankfile verdicts)
+
+Clerk-bankfile inventoried the six unfiled off-scope BANKs from the
+post-park 14-lever MCP icons-search swarm (21 dead worktrees at
+1e1ad31d9 + claims + /tmp asides; REPORT archived as
+report-clerk-bankfile.md). Verdict 2-FILED-READY 4-PARTIAL 0-LOST.
+Captain adjudication: the six are accepted as the filing set (clerk
+inference — no source names them; substitutes weaker: verbose-cache
+has zero outputs, desc-drop is identity-suspect, dedupe-indexed-fields
+and exact-first are identity-barred). Filed as 2 BANK + 4 MEMO, plus
+the 2 posted CUTs; remainder examined-not-filed with reasons in the
+clerk REPORT. Captain spot-verified firsthand: all 8 diet diffs in
+place, both sha1 identity pairs exact, catpost baseline 42 keys
+(793761 B as read; clerk byte figure differed, keys exact). All diet
+patches are vs 1e1ad31d9 — rebase needed against the tip rawindex
+LAND (same file). Evidence archived under evidence/ (4.0M); the 21
+swarm worktrees kept pending cleanup.
+
+- swarm-catpost BANK (off-scope MCP search({category}) browse):
+  prebuilt category postings skip the MiniSearch wildcard; browse
+  0.374 ms -> 0.002 ms (-99.5%) 8/8 agree, identity 42/42, suites
+  12/12 as filed in claims (crew parked mid-flight, no surviving
+  REPORT). A-variant patch canonical, B unadjudicated. Landing needs
+  integrator re-proof + captain firsthand.
+- swarm-prelower BANK (off-scope MCP icons filter path): lowercase
+  stored categories once at load, hot filters go alloc-free; lowers
+  4978/549 -> 1/4, browse 0.41 ms -> 0.36 ms, before-x3 + after-x2
+  (NOT 8-pair — deviation disclosed in the report). Landing needs
+  full 8-pair + integrator re-proof.
+- swarm-reusesearchopts CUT (lottery): options-object reuse, no
+  stable win under interleaved A/B x2 + lottery control; identity
+  sha match. Closed.
+- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves
+  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.
+  Closed.
+
 ## Ticks (empty board)
 
 - Tick 09:20: board EMPTY (roster zero, lock free, tip 6c39095, claims quiet). Nothing to dispatch.
@@ -70,3 +106,9 @@ otherwise.
   untested; slots held on proven empty backlog). Dispatched clerk-bankfile
   (paper only) for the six unfiled off-scope BANKs; tick re-armed 11,41.
   Slots 1/7, 6 held.
+- Tick bankfile: clerk-bankfile verdict FILED (2 FILED-READY 4 PARTIAL
+  0-LOST, REPORT consumed) — landed this commit: 8 reports/memos +
+  8 patches + evidence 4.0M + LOG + index 85->93 (BANK +2, MEMO +4,
+  CUT +2). Roster zero, lock free, park holds (RS zero-touch, no new
+  sync evidence). Clerk worktree released; 21 swarm worktrees kept
+  pending cleanup. Slots 0/7, all held.

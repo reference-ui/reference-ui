@@ -1,0 +1,54 @@
+diff --git a/packages/reference-mcp/src/pipeline/icons-catalog.test.ts b/packages/reference-mcp/src/pipeline/icons-catalog.test.ts
+index cb2ae35a7..0a5275740 100644
+--- a/packages/reference-mcp/src/pipeline/icons-catalog.test.ts
++++ b/packages/reference-mcp/src/pipeline/icons-catalog.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest'
+-import { searchIcons, ICON_CATEGORIES } from './icons-catalog'
++import { searchIcons } from './icons-catalog'
+ 
+ describe('icons-catalog', () => {
+   it('returns instructional guidance and 0 icons when called without a query or category', () => {
+diff --git a/packages/reference-mcp/src/pipeline/icons-catalog.ts b/packages/reference-mcp/src/pipeline/icons-catalog.ts
+index 353169382..07ed90256 100644
+--- a/packages/reference-mcp/src/pipeline/icons-catalog.ts
++++ b/packages/reference-mcp/src/pipeline/icons-catalog.ts
+@@ -1,5 +1,5 @@
+ import {
+-  searchEngine,
++  getSearchEngine,
+   type IconDocument,
+   type IconReadout,
+   type SearchIconsOptions,
+@@ -15,8 +15,10 @@ export type {
+   DemandMatch,
+ }
+ 
+-export const ICON_CATEGORIES: string[] = searchEngine.categories
++export function getIconCategories(): string[] {
++  return getSearchEngine().categories
++}
+ 
+ export function searchIcons(options?: SearchIconsOptions): SearchIconsResult {
+-  return searchEngine.search(options)
++  return getSearchEngine().search(options)
+ }
+diff --git a/packages/reference-mcp/src/pipeline/icons-search-index.ts b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+index afcaba7d5..b7170d5e7 100644
+--- a/packages/reference-mcp/src/pipeline/icons-search-index.ts
++++ b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+@@ -315,5 +315,12 @@ export class IconsSearchEngine {
+   }
+ }
+ 
+-// Singleton search engine instance powered by battle-tested MiniSearch
+-export const searchEngine = new IconsSearchEngine(rawIndex)
++// Lazily-constructed singleton search engine powered by battle-tested MiniSearch.
++// Index inflate (stringify + loadJSON, ~100 ms) runs on first search() so
++// non-search tool imports pay zero inflate.
++let cachedEngine: IconsSearchEngine | null = null
++
++export function getSearchEngine(): IconsSearchEngine {
++  if (!cachedEngine) cachedEngine = new IconsSearchEngine(rawIndex)
++  return cachedEngine
++}
