@@ -137,11 +137,11 @@ impl ConstantsWalk<'_> {
         if ret.panicked {
             return;
         }
-        let file_constants =
+        let bag =
             constants::collect_local_constants(&ret.program, path, Some(content.as_str()));
-        self.project.merge(&file_constants);
+        self.project.merge(&bag);
         self.staged
-            .push(StreamedSource::collect(&ret.program, path, content));
+            .push(StreamedSource::with_bag(&ret.program, path, bag));
     }
 }
 

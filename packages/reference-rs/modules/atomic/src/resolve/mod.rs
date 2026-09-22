@@ -30,22 +30,24 @@ use crate::diagnostics::{
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 
 /// Pass state for one want → atom lowering.
-pub struct ResolveSession<'a> {
+pub struct ResolveSession<'a, 'w> {
     pub system: &'a BaseSystem,
     pub diagnostics: &'a mut Vec<Diagnostic>,
     pub location: DiagnosticLocation,
     pub sink: Option<&'a mut DiagnosticsSession>,
-    pub want: Option<WantContext>,
+    pub want: Option<WantContext<'w>>,
 }
 
 /// The authored want behind the current lowering: condition stack and
 /// importance, carried so refusals can name the exact runtime lookup key.
-pub struct WantContext {
-    pub when: SmallVec<[Box<str>; 2]>,
+/// The stack is borrowed from the live want: it cannot change mid-resolve,
+/// so every read sees the same bytes the old per-want clone carried.
+pub struct WantContext<'w> {
+    pub when: &'w [Box<str>],
     pub important: bool,
 }
 
-impl<'a> ResolveSession<'a> {
+impl<'a, 'w> ResolveSession<'a, 'w> {
     /// Report one typed resolve outcome and push its rendered line. The fact
     /// lands in the session sink when one is wired; the line always lands.
     pub fn emit(&mut self, key: Option<OwnedLookupKey>, outcome: ResolveOutcome) {
@@ -81,7 +83,7 @@ pub fn authored_key(
 
 /// The exact key for the current want when a want context is in hand.
 pub(crate) fn want_key(
-    session: &ResolveSession<'_>,
+    session: &ResolveSession<'_, '_>,
     prop: &str,
     value: serde_json::Value,
 ) -> Option<OwnedLookupKey> {
@@ -124,12 +126,24 @@ pub fn resolve_want(want: &Want) -> Vec<Atom> {
 }
 
 /// Resolve a want against an ingested base system.
-pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<Atom> {
-    session.location = want.location();
-    session.want = Some(WantContext {
-        when: want.when.clone(),
-        important: want.important,
-    });
+pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_, '_>) -> Vec<Atom> {
+    // Per-want-short inner session: the condition stack borrows the live
+    // want, which is immutable mid-resolve, so every read sees the same
+    // bytes the old per-want deep clone carried. Diagnostics and sink are
+    // reborrows, so all reports land in the outer session as before; the
+    // outer location is written back on every return below.
+    let outer = session;
+    let mut inner = ResolveSession {
+        system: outer.system,
+        diagnostics: &mut *outer.diagnostics,
+        location: want.location(),
+        sink: outer.sink.as_mut().map(|slot| &mut **slot),
+        want: Some(WantContext {
+            when: want.when.as_slice(),
+            important: want.important,
+        }),
+    };
+    let session = &mut inner;
     if !canon::is_known_style_prop(&want.prop) {
         let key_for_want = want_key(session, &want.prop, atom_value_to_json(&want.value));
         session.emit(
@@ -141,14 +155,18 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
                 })),
             },
         );
+        outer.location = std::mem::take(&mut inner.location);
         return Vec::new();
     }
     let Some(clean_when) = lower_conditions(want, session) else {
+        outer.location = std::mem::take(&mut inner.location);
         return Vec::new();
     };
     let pairs = expand_or_passthrough(want, session);
 
-    push_resolved_atoms(pairs, clean_when, want.important, session)
+    let atoms = push_resolved_atoms(pairs, clean_when, want.important, session);
+    outer.location = std::mem::take(&mut inner.location);
+    atoms
 }
 
 /// Push one atom per successful pair. The first success moves the lowered
@@ -158,7 +176,7 @@ fn push_resolved_atoms(
     pairs: Vec<(Box<str>, AtomValue)>,
     clean_when: SmallVec<[When; 2]>,
     important: bool,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Vec<Atom> {
     let mut atoms: Vec<Atom> = Vec::with_capacity(pairs.len());
     let mut carried = Some(clean_when);
@@ -176,7 +194,7 @@ fn push_resolved_atoms(
 
 fn expand_or_passthrough(
     want: &Want,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Vec<(Box<str>, AtomValue)> {
     if let Some(expanded) = lower_macro(want, session.system) {
         return expanded;
@@ -192,7 +210,7 @@ fn expand_or_passthrough(
 
 /// Refuse a dialect extension with no CSS realization: default-visible
 /// diagnostic naming the prop, no atoms. True when the prop refused.
-fn refuse_unrealizable_extension(want: &Want, session: &mut ResolveSession<'_>) -> bool {
+fn refuse_unrealizable_extension(want: &Want, session: &mut ResolveSession<'_, '_>) -> bool {
     let canonical = canon::resolve_canonical_prop(&want.prop);
     if !canon::is_unrealizable_extension(canonical) {
         return false;
@@ -255,7 +273,10 @@ fn is_runtime_owned(prop: &str) -> bool {
     RUNTIME_OWNED_PROPS.contains(&prop)
 }
 
-fn lower_conditions(want: &Want, session: &mut ResolveSession<'_>) -> Option<SmallVec<[When; 2]>> {
+fn lower_conditions(
+    want: &Want,
+    session: &mut ResolveSession<'_, '_>,
+) -> Option<SmallVec<[When; 2]>> {
     let mut out = SmallVec::new();
     let mut known = true;
     for raw in want.when.iter() {
@@ -289,7 +310,7 @@ fn lower_conditions(want: &Want, session: &mut ResolveSession<'_>) -> Option<Sma
 fn resolve_atom_value(
     prop: &str,
     val: AtomValue,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<CssValue> {
     let css = unit::css_value_from_authored(prop, val, session)?;
     apply_rhythm_and_tokens(prop, css, session)
@@ -298,7 +319,7 @@ fn resolve_atom_value(
 fn apply_rhythm_and_tokens(
     prop: &str,
     css: CssValue,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<CssValue> {
     let val_str = css.class_name_str();
     let rhythm_resolved = rhythm::resolve_rhythm(val_str);

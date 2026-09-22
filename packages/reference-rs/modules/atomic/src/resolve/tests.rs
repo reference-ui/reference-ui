@@ -315,10 +315,10 @@ fn unrealizable_fall_through_keeps_lowering_arms_working() {
 
 #[test]
 fn authored_key_carries_the_five_tuple() {
-    let mut when = smallvec::SmallVec::new();
+    let mut when: smallvec::SmallVec<[Box<str>; 2]> = smallvec::SmallVec::new();
     when.push("_hover".into());
     let context = WantContext {
-        when,
+        when: when.as_slice(),
         important: true,
     };
     let key = authored_key(

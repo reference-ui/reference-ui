@@ -91,7 +91,7 @@ fn refuse_r_multiplier(site: RefusalSite<'_>, spelling: &str, refuse: &mut Refus
         .map(|w| w.clone().into_boxed_str())
         .collect();
     let context = WantContext {
-        when,
+        when: when.as_slice(),
         important: site.important,
     };
     let report = ResolveReport {

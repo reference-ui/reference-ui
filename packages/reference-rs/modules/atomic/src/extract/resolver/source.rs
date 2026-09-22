@@ -11,6 +11,7 @@ use rustc_hash::FxHashMap;
 
 use module_graph::{DiskFs, FileSystem, Loader, ModuleKey, ModuleRecord, ProbeMemo};
 use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
@@ -95,12 +96,46 @@ impl FileSystem for AtomicFs<'_> {
     }
 }
 
+/// One staged literal bag: collected now, or on first read. Walk starts
+/// load records but never read bags, so retained files defer the collect
+/// and unread ones skip it entirely.
+pub enum StagedBag<'s> {
+    /// Collected at staging; moves to values on load.
+    Ready(LocalConstants),
+    /// Collects from the retained program on first bag read.
+    Lazy(LazyBag<'s>),
+}
+
+impl<'s> StagedBag<'s> {
+    /// A staged-streamed bag, already collected.
+    pub fn ready(bag: LocalConstants) -> Self {
+        Self::Ready(bag)
+    }
+
+    /// A retained bag deferred to first read.
+    pub fn deferred(program: &'s Program<'s>, path: &'s str, content: &'s str) -> Self {
+        Self::Lazy(LazyBag {
+            program,
+            path,
+            content,
+        })
+    }
+}
+
+/// One retained file's uncollected bag: the collect inputs, borrowed.
+pub struct LazyBag<'s> {
+    program: &'s Program<'s>,
+    path: &'s str,
+    content: &'s str,
+}
+
 /// Loads records for the graph: staged sources replay without parsing, and
 /// externally resolved targets parse once into values-only entries. Every
 /// served record's literal bag stays in `values` for precise per-file reads.
 pub struct AtomicLoader<'s> {
     fs: Rc<AtomicFs<'s>>,
-    staged: FxHashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
+    staged: FxHashMap<ModuleKey, (ModuleRecord, StagedBag<'s>)>,
+    pending: FxHashMap<ModuleKey, LazyBag<'s>>,
     values: FxHashMap<ModuleKey, LocalConstants>,
 }
 
@@ -108,17 +143,25 @@ impl<'s> AtomicLoader<'s> {
     /// A loader over `fs` serving `staged` source records without parsing.
     pub fn new(
         fs: Rc<AtomicFs<'s>>,
-        staged: FxHashMap<ModuleKey, (ModuleRecord, LocalConstants)>,
+        staged: FxHashMap<ModuleKey, (ModuleRecord, StagedBag<'s>)>,
     ) -> Self {
         Self {
             fs,
             staged,
+            pending: FxHashMap::default(),
             values: FxHashMap::default(),
         }
     }
 
-    /// One file's literal bag, once its record has served.
-    pub fn bag(&self, key: &ModuleKey) -> Option<&LocalConstants> {
+    /// One file's literal bag, collecting retained lazies on first read.
+    /// The collect sees the exact inputs the upfront collect saw, so the
+    /// memoized bag reads bit-identically from here on.
+    pub fn bag_mut(&mut self, key: &ModuleKey) -> Option<&LocalConstants> {
+        if !self.values.contains_key(key) {
+            let lazy = self.pending.remove(key)?;
+            let bag = collect_local_constants(lazy.program, lazy.path, Some(lazy.content));
+            self.values.insert(key.clone(), bag);
+        }
         self.values.get(key)
     }
 }
@@ -126,7 +169,14 @@ impl<'s> AtomicLoader<'s> {
 impl Loader for AtomicLoader<'_> {
     fn load(&mut self, key: &ModuleKey) -> Option<ModuleRecord> {
         if let Some((record, bag)) = self.staged.remove(key) {
-            self.values.insert(key.clone(), bag);
+            match bag {
+                StagedBag::Ready(bag) => {
+                    self.values.insert(key.clone(), bag);
+                }
+                StagedBag::Lazy(lazy) => {
+                    self.pending.insert(key.clone(), lazy);
+                }
+            }
             return Some(record);
         }
         let content = self.fs.read_to_string(key.as_str())?;
@@ -203,11 +253,31 @@ mod tests {
         let ret = Parser::new(&allocator, "export const b = 'red';", SourceType::ts()).parse();
         let record = ModuleRecord::collect(&ret.program);
         let bag = collect_local_constants(&ret.program, "/p/src/b.ts", None);
-        let staged = FxHashMap::from_iter([(key.clone(), (record, bag))]);
+        let staged = FxHashMap::from_iter([(key.clone(), (record, StagedBag::ready(bag)))]);
         let mut loader = AtomicLoader::new(fs, staged);
         let served = loader.load(&key).expect("staged record serves");
         assert!(served.exports.get("b").is_some());
-        assert!(loader.bag(&key).is_some());
+        assert!(loader.bag_mut(&key).is_some());
         assert!(loader.load(&ModuleKey::new("/p/src/missing.ts")).is_none());
+    }
+
+    #[test]
+    fn lazy_bags_collect_on_first_read() {
+        let fs = Rc::new(fs());
+        let key = ModuleKey::new("/p/src/b.ts");
+        let content = "export const b = 'red';";
+        let allocator = Allocator::default();
+        let ret = Parser::new(&allocator, content, SourceType::ts()).parse();
+        let record = ModuleRecord::collect(&ret.program);
+        let lazy = StagedBag::deferred(&ret.program, "/p/src/b.ts", content);
+        let staged = FxHashMap::from_iter([(key.clone(), (record, lazy))]);
+        let mut loader = AtomicLoader::new(fs, staged);
+        loader.load(&key).expect("staged record serves");
+        assert!(!loader.values.contains_key(&key));
+        assert!(loader.pending.contains_key(&key));
+        let bag = loader.bag_mut(&key).expect("first read collects");
+        assert!(bag.declares("b"));
+        assert!(loader.pending.is_empty());
+        assert!(loader.bag_mut(&key).is_some());
     }
 }

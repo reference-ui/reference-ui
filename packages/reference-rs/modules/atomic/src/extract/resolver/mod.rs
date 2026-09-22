@@ -30,9 +30,9 @@ use module_graph::{
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
 
-use super::constants::{collect_local_constants, LocalConstants, MutatedBinding};
+use super::constants::{LocalConstants, MutatedBinding};
 use super::scope::{self, BindingInit, ImportRef};
-use source::{AtomicFs, AtomicLoader};
+use source::{AtomicFs, AtomicLoader, StagedBag};
 use staging::StagingPlan;
 pub(crate) use staging::{RetainedSource, StreamedSource};
 use values::{bag_export, keep_outcome, valued, valued_scalars};
@@ -191,7 +191,7 @@ impl<'s> ValueGraph<'s> {
             programs.insert(key.clone(), source.program);
             if plan.stages(&key) {
                 let bag =
-                    collect_local_constants(source.program, source.path, Some(source.content));
+                    StagedBag::deferred(source.program, source.path, source.content);
                 staged.insert(key, (record, bag));
             }
         }
@@ -199,7 +199,7 @@ impl<'s> ValueGraph<'s> {
         for source in streamed {
             streamed_keys.insert(source.key.clone());
             if plan.stages(&source.key) {
-                staged.insert(source.key, (source.record, source.bag));
+                staged.insert(source.key, (source.record, StagedBag::ready(source.bag)));
             }
         }
         let graph = ModuleGraph::new(AtomicLoader::new(Rc::clone(&fs), staged));
@@ -306,8 +306,12 @@ impl<'s> ValueGraph<'s> {
     }
 
     /// The origin file's write to a binding, for precise poison.
-    fn origin_mutation(&self, file: &ModuleKey, name: &str) -> Option<MutatedBinding> {
-        self.graph.loader().bag(file)?.mutation(name).cloned()
+    fn origin_mutation(&mut self, file: &ModuleKey, name: &str) -> Option<MutatedBinding> {
+        self.graph
+            .loader_mut()
+            .bag_mut(file)?
+            .mutation(name)
+            .cloned()
     }
 
     /// Refine one origin file on first use: sources collect against their
@@ -421,7 +425,7 @@ impl<'s> ValueGraph<'s> {
 
     /// Store one origin file's table with its root markers and literal bag.
     fn finish_origin(
-        &self,
+        &mut self,
         file: &ModuleKey,
         table: scope::ScopeTable,
         residues: Vec<scope::SpreadResidue>,
@@ -435,7 +439,12 @@ impl<'s> ValueGraph<'s> {
                     .push(residue.marker);
             }
         }
-        let bag = self.graph.loader().bag(file).cloned().unwrap_or_default();
+        let bag = self
+            .graph
+            .loader_mut()
+            .bag_mut(file)
+            .cloned()
+            .unwrap_or_default();
         RefinedFile {
             table,
             markers,
@@ -445,7 +454,7 @@ impl<'s> ValueGraph<'s> {
 
     /// Read one refined origin: the table's root init, its descriptor, or
     /// its own literal bag, with the root's markers riding along.
-    fn table_value(&self, origin: &BindingOrigin) -> ResolvedExport {
+    fn table_value(&mut self, origin: &BindingOrigin) -> ResolvedExport {
         let Some(refined) = self.refined.get(&origin.file) else {
             return self.bag_value(&origin.file, &origin.name);
         };
@@ -476,8 +485,8 @@ impl<'s> ValueGraph<'s> {
     }
 
     /// Read one external origin's literal value, without descriptors.
-    fn bag_value(&self, file: &ModuleKey, name: &str) -> ResolvedExport {
-        match self.graph.loader().bag(file) {
+    fn bag_value(&mut self, file: &ModuleKey, name: &str) -> ResolvedExport {
+        match self.graph.loader_mut().bag_mut(file) {
             Some(bag) => bag_export(bag, name),
             None => ResolvedExport::default(),
         }

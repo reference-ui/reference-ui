@@ -25,7 +25,7 @@ pub enum BraceExpansion {
 pub fn expand_brace_segments(
     unbraced: &str,
     prop: &str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> BraceExpansion {
     if !unbraced.contains('{') {
         return BraceExpansion::Absent;
@@ -52,14 +52,14 @@ pub fn expand_brace_segments(
 }
 
 /// Session for one brace-expansion pass over a composite value.
-struct SegmentExpander<'a, 's> {
+struct SegmentExpander<'a, 's, 'w> {
     out: &'a mut String,
     source: &'a str,
     prop: &'a str,
-    session: &'a mut ResolveSession<'s>,
+    session: &'a mut ResolveSession<'s, 'w>,
 }
 
-impl<'a, 's> SegmentExpander<'a, 's> {
+impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
     fn push_literal(&mut self, literal: &str) {
         self.out.push_str(literal);
     }

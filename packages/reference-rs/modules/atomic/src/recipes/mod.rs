@@ -66,7 +66,7 @@ pub struct RecipeRule {
 pub fn compile(
     recipes: &[Recipe],
     system_name: &str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
     selections: &SelectionIndex,
 ) -> Vec<CompiledRecipe> {
     recipes
@@ -78,7 +78,7 @@ pub fn compile(
 fn compile_one(
     recipe: &Recipe,
     system_name: &str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
     selections: &SelectionIndex,
 ) -> CompiledRecipe {
     let qualified_name = name::qualified_stem(system_name, &recipe.class_name);
@@ -124,7 +124,7 @@ fn compile_variants(
     rules: &mut Vec<RecipeRule>,
     stem: &str,
     variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> IndexMap<String, IndexMap<String, String>> {
     let mut variant_map = IndexMap::new();
     for (key, items) in variants {
@@ -190,7 +190,7 @@ impl<'a> ResponsiveFilter<'a> {
 fn compile_responsive_variants(
     rules: &mut Vec<RecipeRule>,
     variants: &IndexMap<String, IndexMap<String, Vec<Want>>>,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
     filter: &ResponsiveFilter<'_>,
 ) {
     let breakpoints = table::container_breakpoints(session.system.breakpoints());
@@ -252,7 +252,7 @@ fn compile_compounds(
     rules: &mut Vec<RecipeRule>,
     stem: &str,
     compounds: &[RecipeCompound],
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Vec<CompiledCompound> {
     let mut out = Vec::new();
     for compound in compounds {
@@ -270,7 +270,7 @@ fn push_rule(
     rules: &mut Vec<RecipeRule>,
     class_name: &str,
     wants: &[Want],
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) {
     let mut atoms = resolve_wants(wants, session);
     if atoms.is_empty() {
@@ -289,7 +289,7 @@ fn push_rule(
     });
 }
 
-fn resolve_wants(wants: &[Want], session: &mut ResolveSession<'_>) -> Vec<Atom> {
+fn resolve_wants(wants: &[Want], session: &mut ResolveSession<'_, '_>) -> Vec<Atom> {
     let mut atoms = Vec::new();
     for want in wants {
         atoms.extend(resolve_want_with(want, session));

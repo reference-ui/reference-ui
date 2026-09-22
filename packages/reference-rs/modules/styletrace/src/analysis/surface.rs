@@ -7,7 +7,7 @@
 //! never fails its siblings. The root-based wrappers keep the historical
 //! disk path for the N-API names seam and the round-trip canaries.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
@@ -115,7 +115,7 @@ pub struct TraceOutcome {
 /// exactly what a fresh parse would produce.
 pub struct TraceSources<'a> {
     pub staged: &'a FxHashMap<PathBuf, &'a str>,
-    pub programs: &'a HashMap<PathBuf, &'a Program<'a>>,
+    pub programs: &'a FxHashMap<PathBuf, &'a Program<'a>>,
 }
 
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
@@ -155,7 +155,7 @@ pub fn trace_style_bindings_with_hint(
     let surface = StyleSurface::from_declaration_root(&resolved_decl_root)?;
     let entries = discover_source_files(&normalized_source)?;
     let staged = FxHashMap::default();
-    let programs = HashMap::new();
+    let programs = FxHashMap::default();
     let sources = TraceSources {
         staged: &staged,
         programs: &programs,

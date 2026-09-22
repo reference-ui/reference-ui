@@ -10,7 +10,6 @@
 //! the Ph4 resolver (ATM-SITE-54) subsumes it when it lands.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use oxc_ast::ast::Program;
@@ -45,7 +44,7 @@ pub struct IdentityGraph<'s> {
     /// Retained programs by source position; a hit reuses the main-phase
     /// parse instead of re-parsing bytes. Missing positions (streamed,
     /// panicked, or never parsed) fall back to a fresh parse.
-    programs: Option<&'s HashMap<usize, &'s Program<'s>>>,
+    programs: Option<&'s FxHashMap<usize, &'s Program<'s>>>,
 }
 
 impl<'s> IdentityGraph<'s> {
@@ -58,7 +57,7 @@ impl<'s> IdentityGraph<'s> {
     /// fold the main-phase program; every other position parses bytes.
     pub fn with_programs(
         sources: &'s [(String, String)],
-        programs: &'s HashMap<usize, &'s Program<'s>>,
+        programs: &'s FxHashMap<usize, &'s Program<'s>>,
     ) -> Self {
         Self::build(sources, Some(programs))
     }
@@ -66,7 +65,7 @@ impl<'s> IdentityGraph<'s> {
     /// Index project sources by normalized path with an optional program map.
     fn build(
         sources: &'s [(String, String)],
-        programs: Option<&'s HashMap<usize, &'s Program<'s>>>,
+        programs: Option<&'s FxHashMap<usize, &'s Program<'s>>>,
     ) -> Self {
         let mut index = FxHashMap::default();
         for (position, (path, _)) in sources.iter().enumerate() {

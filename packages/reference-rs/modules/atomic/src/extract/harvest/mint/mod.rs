@@ -67,6 +67,12 @@ pub fn mint(ctx: MintCtx<'_>) {
         diagnostics,
         sink: session,
     } = ctx;
+    // Empty sinks means the loop below runs zero iterations, so the seed
+    // set would be built and dropped with zero observable effects: skip it.
+    // (Pool-empty + sinks>0 still runs: zero-offer reports are bytes.)
+    if sinks.is_empty() {
+        return;
+    }
     let mut state = MintState {
         seen: wants.iter().map(twin_key_for).collect(),
         wants,
@@ -263,6 +269,29 @@ mod tests {
         let color = sink_for("color");
         let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
         assert_eq!(mint_count(&["red"], &color, &mut wants), 0);
+    }
+
+    #[test]
+    fn empty_sinks_skip_seed_without_effects() {
+        let pool = HarvestPool::default();
+        let system = BaseSystem::default();
+        let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
+        let mut authored = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut session = DiagnosticsSession::new();
+        mint(MintCtx {
+            pool: &pool,
+            sinks: &[],
+            system: &system,
+            wants: &mut wants,
+            authored: &mut authored,
+            diagnostics: &mut diagnostics,
+            sink: &mut session,
+        });
+        assert_eq!(wants.len(), 1);
+        assert!(authored.is_empty());
+        assert!(diagnostics.is_empty());
+        assert!(session.facts().is_empty());
     }
 
     #[test]

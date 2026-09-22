@@ -30,7 +30,7 @@ pub fn is_color_prop(prop: &str) -> bool {
 pub fn resolve_token_value<'a>(
     prop: &str,
     raw_val: &'a str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
     let trimmed = raw_val.trim();
     if trimmed.is_empty() || trimmed.starts_with("var(") {
@@ -71,7 +71,7 @@ fn resolve_special_value<'a>(
 fn resolve_pathed_value<'a>(
     prop: &str,
     raw_val: &'a str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
@@ -102,7 +102,7 @@ fn resolve_pathed_value<'a>(
 fn interpolate_or_fallback<'a>(
     prop: &str,
     raw_val: &'a str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
     let unbraced = strip_braces(raw_val.trim());
     match expand_brace_segments(unbraced, prop, session) {
@@ -116,7 +116,7 @@ fn interpolate_or_fallback<'a>(
 fn unbraced_fallback<'a>(
     prop: &str,
     raw_val: &'a str,
-    session: &mut ResolveSession<'_>,
+    session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
     let trimmed = raw_val.trim();
     let unbraced = strip_braces(trimmed);
@@ -144,7 +144,7 @@ fn is_whole_css_value(trimmed: &str) -> bool {
 /// bare value on a color prop that is neither a token nor CSS. Bare values
 /// elsewhere pass through silently; cross-category unique-name stories are
 /// retired, since the author typed a scale the theme does not have.
-fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
+fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_, '_>) {
     if looks_like_token_path(unbraced) {
         let key = want_key(
             session,
@@ -167,7 +167,7 @@ fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSessio
 
 /// Warn when a bare value on a color prop is neither a token nor CSS color.
 /// The color grammar is closed, so this is the one true bare-value diagnostic.
-fn warn_unknown_color(prop: &str, unbraced: &str, session: &mut ResolveSession<'_>) {
+fn warn_unknown_color(prop: &str, unbraced: &str, session: &mut ResolveSession<'_, '_>) {
     if !is_color_prop(prop) {
         return;
     }
