@@ -195,14 +195,16 @@ arithmetic instead of reaching for banned tracks. Background:
 ## Design tracks (HQ-commissioned, wave 4)
 
 Filler graduates to active design ONLY on HQ order — never on crew
-initiative. Commissioned: F1 single-read native path + F2 two-walk
-merger (wave-4 recon §7; HQ call, design crews dispatched wave 4).
-Pipeline per track: design crew (paper DESIGN.md + grounding
-measurements, NO production-code changes, isolated worktree) →
-captain + HQ acceptance (design must satisfy the recon's bank
-conditions: proof obligations, mechanism sketch, cost accounting) →
-implementer crew (one mechanism, full voyage proof) → integrator
-(review + re-proof) → land. F1 borders seam ground (marshal-neutral
+initiative. Commissioned as one vehicle, FORMULA-1 (single-thread speed):
+F1 single-read native path + F2 two-walk merger, unified scope
+(wave-4 recon §7; HQ call — F1 designer dispatched wave 4, F2
+standalone respawn SUPERSEDED by the merge).
+Pipeline: F1 designer (paper DESIGN.md + grounding measurements,
+NO production-code changes, isolated worktree) → F2 scope merges in
+as a follow-on against the ACCEPTED F1 design (unified Formula-1
+DESIGN.md) → captain + HQ acceptance (proof obligations, mechanism
+sketch, cost accounting) → implementer crew (full voyage proof) →
+integrator (review + re-proof) → land. F1 borders seam ground (marshal-neutral
 or fully costed vs PERF-W4-SEAMSCOUT); F2 must preserve C1 keep-alive
 + union-walk guarantees (shot2-KILL still bans all skip logic).
 Uncommissioned filler stays unbriefable no matter how large its
