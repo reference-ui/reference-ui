@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T08:22:13.295Z",
+ "built": "2026-09-22T08:55:03.378Z",
  "root": "docs/perf/waves",
- "count": 82,
+ "count": 83,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -1648,6 +1648,25 @@
    "landedIn": "set-5/6c3909506",
    "summary": "threaded a borrow lifetime through `WantContext`/`ResolveSession` so the per-want condition stack is borrowed from the live want instead of deep-cloned (79,431 Box clones + 3,154 spill allocs per sync → zero), via a per-want-short inner session that composes underneath cloneplasma's landed R1 emit sites untouched.",
    "log": "- swarm-wantctx BANK (verdict-gated sequencing vindicated,\n  joins set-5): WantContext borrow diet — `WantContext<'w>`\n  borrows the live want's condition stack through a\n  per-want-short inner session (the naive long-session\n  borrow was ATTEMPTED and provably fails borrowck on the\n  recipes scoped-local path — E0597 filed; inner session\n  is the sound fix, same borrow, correctly scoped slot).\n  7 files +69/−44 (crew fast-forwarded its own tree to the\n  landed ddce131e7 and diffed against it — verified by\n  captain: worktree HEAD == tip, patch CHECK-PASS vs tip).\n  Filed `docs/perf/waves/wave-2/report-swarm-wantctx.md` +\n  `wantctx.patch`. Census ×3 identical (79,431 Box steps\n  exact match to filed count); 8-pair −5.39/−0.52% (6/8,\n  ex1 −5.46, pairmed −4.92 — all inside the counted 5–7ms\n  band, sub-bar → correct BANK); identity 4/4 full-sha;\n  determinism 2/2; 595+1 green (delta 0 — borrow-correctness\n  compiler-proven); vitest same-red; styletrace 31/18\n  identical; q 0v/2 pre-existing; warnings 2/18==2/18.\n  R1 emit sites byte-untouched underneath. Second slot\n  HELD (5 crews live) — backlog still exhausted; set-5\n  integrator stages when stageaudit/harvestphase/bagdefer/\n  modmap verdicts land.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W3-REPRO3",
+   "wave": "wave-3",
+   "topic": "repro3",
+   "kind": "diet",
+   "verdict": "UNKNOWN",
+   "effect": {
+    "pct": 3.8,
+    "pairs": "8/8"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-3/report-swarm-repro3.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `6f4cf1ba392f4f7a3880b61096ccfb7004559ca7` (verified `git rev-parse HEAD`",
+   "log": null,
    "filler": false
   }
  ]
