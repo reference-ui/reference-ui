@@ -124,6 +124,25 @@ diets); scan voyage opens separately after closeout lands.
   crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt
   fenced/floor; filler = binary-protocol surgery with bank conditions.
   Closed — do not re-litigate without new filed evidence.
+- Stream 1 verdict: scan-recon4 ACCEPTED (base-pin exact, lock clean,
+  contention set discarded whole, poisoned-shim failures disclosed).
+  Flames 5a/b RECONCILED (961.2/974.1, FLAT vs repro4 — zero RS/neo
+  delta); census A/B/C bit-identical (15,120 opens exactly-once,
+  15.87µs floor stands; bytes exact; dir-opens + getdirentries newly
+  counted); budget closed (kernel 292–299 + userspace 66–72, no
+  unattributed room). Backlog: T1 scan-identity (20–23/10–15,
+  LAND-possible) + T2 bundle (11/5–8, BANK) BRIEFED; F1/F2 filler
+  (soundness-gated, no crew); N1 compile-neighbor lead FENCED-HELD
+  (compile closed — needs HQ word, not briefed). Ceiling 919/932
+  supersedes 917/935; 700 unreachable by ≈230+. Viz corrected
+  (scan userspace + collect-in-compile) from recon §4.
+- Slots: 2/7 (T1 + T2 diet crews), 5 held — backlog exhausted past
+  T1/T2 (this entry is the proof). Recon worktree retained until
+  T1/T2 file (grounding source — release then, not now).
+
+- swarm-scanrecon4 REPROFILE (wave-4 opening): fresh flames 5a/b flat,
+  exact scan census ×3, 2-topic backlog (T1 identity, T2 bundle),
+  dry rooms named, ceiling 919/932. Landed with bundles + census dir.
 
 ## Ticks (empty board)
 

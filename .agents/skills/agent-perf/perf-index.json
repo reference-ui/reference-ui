@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T12:21:59.810Z",
+ "built": "2026-09-22T12:53:07.168Z",
  "root": "docs/perf/waves",
- "count": 94,
+ "count": 95,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -1847,6 +1847,25 @@
    "filler": false
   },
   {
+   "id": "PERF-W4-SCANRECON4",
+   "wave": "wave-4",
+   "topic": "scanrecon4",
+   "kind": "repro",
+   "verdict": "REPROFILE",
+   "effect": {
+    "ms": 13.4,
+    "pairs": "7/8"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-4/report-swarm-scanrecon4.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `b8a75b0bd74c72a72a2c6fe338ca8026088b5afe` (verified `git rev-parse HEAD`",
+   "log": "- swarm-scanrecon4 REPROFILE (wave-4 opening): fresh flames 5a/b flat,\n  exact scan census ×3, 2-topic backlog (T1 identity, T2 bundle),\n  dry rooms named, ceiling 919/932. Landed with bundles + census dir.\n\n## Ticks (empty board)",
+   "filler": false
+  },
+  {
    "id": "PERF-W4-SEAMSCOUT",
    "wave": "wave-4",
    "topic": "seamscout",
@@ -1862,7 +1881,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `c593829d3a2b6382d7150410a05a470159f40616` (`git rev-parse HEAD` verified first act; match, proceed).",
-   "log": "- swarm-seamscout CUT (compile-window N-API census): exactly 1\n  crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt\n  fenced/floor; filler = binary-protocol surgery with bank conditions.\n  Closed — do not re-litigate without new filed evidence.\n\n## Ticks (empty board)",
+   "log": "- swarm-seamscout CUT (compile-window N-API census): exactly 1\n  crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt\n  fenced/floor; filler = binary-protocol surgery with bank conditions.\n  Closed — do not re-litigate without new filed evidence.",
    "filler": false
   }
  ]

@@ -99,7 +99,10 @@ function verdictOf(lines, isIntegrate) {
     || head.match(new RegExp(`verdict[:\\s]+\\*?${VWORDS}\\b`, 'i'))
     || (/no candidate was built/i.test(sec) ? { 1: 'CUT' } : null)
     || (/CUT (before the timed bench|trigger)/i.test(text) ? { 1: 'CUT' } : null);
-  if (!m) return isIntegrate ? 'LAND' : 'UNKNOWN';
+  if (!m) {
+    if (/RECON-VERDICT:/.test(text)) return 'REPROFILE';
+    return isIntegrate ? 'LAND' : 'UNKNOWN';
+  }
   const v = (m[1] || m[0]).toUpperCase().replace(/^\*+/, '');
   if (v.startsWith('LAND-SUBSET')) return 'LAND-SUBSET';
   if (v === 'REPROFILE-COMPLETE') return 'REPROFILE';

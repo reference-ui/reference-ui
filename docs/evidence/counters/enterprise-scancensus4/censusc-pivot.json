@@ -1,0 +1,770 @@
+[
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "dead",
+  "n": 12000,
+  "ms": 189.984,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "style",
+  "n": 3000,
+  "ms": 46.817,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "dead",
+  "n": 24000,
+  "ms": 16.566,
+  "bytes": 1669350
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "style",
+  "n": 3060,
+  "ms": 7.542,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "dead",
+  "n": 12000,
+  "ms": 7.342,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "write",
+  "cls": "other",
+  "n": 376,
+  "ms": 7.165,
+  "bytes": 10544070
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "style",
+  "n": 6000,
+  "ms": 4.152,
+  "bytes": 1770077
+ },
+ {
+  "phase": "startup",
+  "call": "open",
+  "cls": "other",
+  "n": 207,
+  "ms": 2.992,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "munmap",
+  "cls": "other",
+  "n": 213,
+  "ms": 2.768,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "close",
+  "cls": "other",
+  "n": 30,
+  "ms": 2.079,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "recipe",
+  "n": 120,
+  "ms": 2,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "open",
+  "cls": "other",
+  "n": 30,
+  "ms": 1.823,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "style",
+  "n": 3000,
+  "ms": 1.795,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "stat",
+  "cls": "other",
+  "n": 427,
+  "ms": 1.69,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "read",
+  "cls": "other",
+  "n": 2,
+  "ms": 1.584,
+  "bytes": 43388
+ },
+ {
+  "phase": "publish",
+  "call": "munmap",
+  "cls": "other",
+  "n": 21,
+  "ms": 0.856,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "recipe",
+  "n": 243,
+  "ms": 0.837,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "lstat",
+  "cls": "other",
+  "n": 282,
+  "ms": 0.676,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 34,
+  "ms": 0.645,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 35,
+  "ms": 0.476,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "pread",
+  "cls": "other",
+  "n": 351,
+  "ms": 0.381,
+  "bytes": 2867925
+ },
+ {
+  "phase": "scan",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 140,
+  "ms": 0.349,
+  "bytes": 72843264
+ },
+ {
+  "phase": "startup",
+  "call": "read",
+  "cls": "other",
+  "n": 203,
+  "ms": 0.287,
+  "bytes": 469074
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "recipe",
+  "n": 281,
+  "ms": 0.285,
+  "bytes": 905428
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "style",
+  "n": 30,
+  "ms": 0.269,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "munmap",
+  "cls": "other",
+  "n": 141,
+  "ms": 0.177,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "other",
+  "n": 104,
+  "ms": 0.177,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "close",
+  "cls": "other",
+  "n": 169,
+  "ms": 0.168,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 68,
+  "ms": 0.147,
+  "bytes": 9567842304
+ },
+ {
+  "phase": "publish",
+  "call": "read",
+  "cls": "unknown",
+  "n": 14,
+  "ms": 0.138,
+  "bytes": 895407
+ },
+ {
+  "phase": "config",
+  "call": "open",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.128,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "stat",
+  "cls": "other",
+  "n": 61,
+  "ms": 0.114,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "other",
+  "n": 15,
+  "ms": 0.095,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "lstat",
+  "cls": "other",
+  "n": 41,
+  "ms": 0.089,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 8,
+  "ms": 0.089,
+  "bytes": 17059840
+ },
+ {
+  "phase": "startup",
+  "call": "open$NOCANCEL",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.085,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.084,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "recipe",
+  "n": 120,
+  "ms": 0.074,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "pread",
+  "cls": "other",
+  "n": 83,
+  "ms": 0.071,
+  "bytes": 68588
+ },
+ {
+  "phase": "scan",
+  "call": "write",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.067,
+  "bytes": 26762
+ },
+ {
+  "phase": "config",
+  "call": "write",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.066,
+  "bytes": 4759
+ },
+ {
+  "phase": "startup",
+  "call": "munmap",
+  "cls": "other",
+  "n": 57,
+  "ms": 0.06,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "fstat",
+  "cls": "other",
+  "n": 56,
+  "ms": 0.052,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "stat",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.044,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "stat",
+  "cls": "other",
+  "n": 12,
+  "ms": 0.043,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.04,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "open",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.04,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "recipe",
+  "n": 1,
+  "ms": 0.032,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 20,
+  "ms": 0.029,
+  "bytes": 10403840
+ },
+ {
+  "phase": "compile",
+  "call": "close",
+  "cls": "dir",
+  "n": 35,
+  "ms": 0.028,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "lstat",
+  "cls": "other",
+  "n": 7,
+  "ms": 0.028,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "munmap",
+  "cls": "other",
+  "n": 22,
+  "ms": 0.027,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "close",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.025,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 1,
+  "ms": 0.024,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "dir",
+  "n": 34,
+  "ms": 0.024,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 3,
+  "ms": 0.024,
+  "bytes": 13037568
+ },
+ {
+  "phase": "evaluate",
+  "call": "lstat",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.022,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "read",
+  "cls": "other",
+  "n": 12,
+  "ms": 0.021,
+  "bytes": 78955
+ },
+ {
+  "phase": "postWorker",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 5,
+  "ms": 0.021,
+  "bytes": 327680
+ },
+ {
+  "phase": "scan",
+  "call": "write",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.019,
+  "bytes": 2902
+ },
+ {
+  "phase": "evaluate",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.017,
+  "bytes": 520192
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.015,
+  "bytes": 25366
+ },
+ {
+  "phase": "postWorker",
+  "call": "close",
+  "cls": "unknown",
+  "n": 5,
+  "ms": 0.013,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "open",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.011,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "lstat",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.011,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 8,
+  "ms": 0.011,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "write",
+  "cls": "unknown",
+  "n": 3,
+  "ms": 0.01,
+  "bytes": 1524
+ },
+ {
+  "phase": "config",
+  "call": "read",
+  "cls": "unknown",
+  "n": 4,
+  "ms": 0.009,
+  "bytes": 12387
+ },
+ {
+  "phase": "postWorker",
+  "call": "close",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.009,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.007,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.006,
+  "bytes": 13951
+ },
+ {
+  "phase": "publish",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.005,
+  "bytes": 836
+ },
+ {
+  "phase": "postWorker",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.005,
+  "bytes": 140
+ },
+ {
+  "phase": "compile",
+  "call": "read",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.004,
+  "bytes": 4112
+ },
+ {
+  "phase": "preMain",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.003,
+  "bytes": 24576
+ },
+ {
+  "phase": "startup",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.003,
+  "bytes": 1
+ },
+ {
+  "phase": "config",
+  "call": "pread",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.003,
+  "bytes": 374
+ },
+ {
+  "phase": "config",
+  "call": "read",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.003,
+  "bytes": 4759
+ },
+ {
+  "phase": "compile",
+  "call": "munmap",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.003,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "close",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.003,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "fstat",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.003,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "close",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.002,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 2,
+  "ms": 0.002,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "fstat",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.002,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "pread",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.002,
+  "bytes": 4112
+ },
+ {
+  "phase": "publish",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.002,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "close",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "close",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "unknown",
+  "n": 2,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "dir",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "munmap",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ }
+]

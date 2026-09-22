@@ -136,7 +136,7 @@
   <text x="499" y="558" text-anchor="middle" fill="#333" font-size="10" class="svg-lbl">malloc &middot; memmove &middot; kernel &middot; node &middot; seam</text>
   <text x="187" y="380" text-anchor="middle" fill="#1a1a1a" font-size="15" font-weight="700" class="svg-lbl">scan 368 ms</text>
   <text x="187" y="398" text-anchor="middle" fill="#1a1a1a" font-size="13" class="svg-lbl">37.8%</text>
-  <text x="90" y="381" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">open+walk floor ~348</text>
+  <text x="90" y="381" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">kernel ~295 · userspace ~70</text>
   <text x="90" y="396" text-anchor="middle" fill="#333" font-size="10.5" class="svg-lbl">by subtraction</text>
   <text x="566" y="316" text-anchor="middle" fill="#1a1a1a" font-size="11" font-weight="700" class="svg-lbl" transform="rotate(-11.4 566 312)">SEAM</text>
   <!-- leader lines -->
@@ -151,12 +151,12 @@
   <text x="366" y="48" text-anchor="start" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">evaluate 4.3 ms &middot; 0.4%</text>
   <line x1="251" y1="635" x2="244" y2="670" stroke="#1a1a1a" stroke-width="1"></line>
   <circle cx="251" cy="635" r="2.5" fill="#1a1a1a"></circle>
-  <text x="244" y="689" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">collect ~20 &middot; 5% of scan</text>
+  <text x="244" y="689" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">collect ~20 (runs in compile)</text>
 </svg>
 <figcaption>
   Areas proportional to ms (means of 4a/4b). Phase stopwatches: compile 520.0/520.1, scan 371.0/365.8, publish 52.6/52.5, config 28.2/28.1, evaluate 2.7/6.0 (noise swap).
   Instrumented A/B sit <strong>+3.8% over the &asymp;938 scoreboard</strong> (same overhead ratio as repro2&rsquo;s +3.2%).
-  Rust-direct = <code>.node</code> self-weight (205/220). The scan floor (~348) is phase stopwatch minus attributed collect, by subtraction.
+  Rust-direct = <code>.node</code> self-weight (205/220). Scan splits per wave-4 recon §4: kernel-in-scan 292–299 + userspace 66–72 (split/identity ~29, glob-JS ~15, bundle ~11, GC ~10); the old ~348 floor understated userspace. Collect ~20 runs in compile — size comparison only.
   The hatched SEAM wedge is <strong>schematic width, not measured</strong>: seam-crossing cost was never isolated (see seam strip).
 </figcaption>
 </figure>
@@ -194,7 +194,7 @@
 <h2>Scan <span class="ms">368 ms &middot; 37.8% of sync &middot; wall flat 365&rarr;368 across the voyage</span></h2>
 <ul class="tight">
 <li>File walk over ~15k entries: 3,000 live + <strong>12,000 dead</strong> needle-free files that must still be opened, read, and parsed-failure-checked.</li>
-<li>Attributed: sources::collect ~20 (backfill syscall ~15, sorted_entries ~12, matches_file ~4). Remainder ~348 is kernel + open floor, by subtraction.</li>
+<li>Attributed: sources::collect ~20 (backfill syscall ~15, sorted_entries ~12, matches_file ~4 — runs in COMPILE, wave-4 recon §4). Scan proper: kernel 292–299 (opens/reads/enumeration) + userspace 66–72 (split/identity, glob-JS, bundle — T1/T2 addressable).</li>
 </ul>
 <div class="looked">
 <h3>Where we&rsquo;ve looked &mdash; scan</h3>

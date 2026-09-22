@@ -1,0 +1,778 @@
+[
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "dead",
+  "n": 12000,
+  "ms": 194.32,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "style",
+  "n": 3000,
+  "ms": 46.095,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "dead",
+  "n": 24000,
+  "ms": 16.34,
+  "bytes": 1669350
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "dead",
+  "n": 12000,
+  "ms": 7.575,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "style",
+  "n": 3060,
+  "ms": 7.284,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "write",
+  "cls": "other",
+  "n": 375,
+  "ms": 3.992,
+  "bytes": 10542641
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "style",
+  "n": 6000,
+  "ms": 3.839,
+  "bytes": 1770077
+ },
+ {
+  "phase": "config",
+  "call": "read",
+  "cls": "other",
+  "n": 1,
+  "ms": 3.194,
+  "bytes": 4759
+ },
+ {
+  "phase": "startup",
+  "call": "open",
+  "cls": "other",
+  "n": 207,
+  "ms": 3.008,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "munmap",
+  "cls": "other",
+  "n": 213,
+  "ms": 2.791,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "recipe",
+  "n": 120,
+  "ms": 1.939,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "style",
+  "n": 3000,
+  "ms": 1.802,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "open",
+  "cls": "other",
+  "n": 29,
+  "ms": 1.764,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "stat",
+  "cls": "other",
+  "n": 429,
+  "ms": 1.637,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "close",
+  "cls": "other",
+  "n": 29,
+  "ms": 1.43,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "recipe",
+  "n": 243,
+  "ms": 0.919,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "munmap",
+  "cls": "other",
+  "n": 21,
+  "ms": 0.876,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 34,
+  "ms": 0.723,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "lstat",
+  "cls": "other",
+  "n": 282,
+  "ms": 0.644,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 35,
+  "ms": 0.614,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 139,
+  "ms": 0.427,
+  "bytes": 72323072
+ },
+ {
+  "phase": "publish",
+  "call": "pread",
+  "cls": "other",
+  "n": 351,
+  "ms": 0.381,
+  "bytes": 2867925
+ },
+ {
+  "phase": "startup",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 68,
+  "ms": 0.364,
+  "bytes": 9567842304
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "style",
+  "n": 30,
+  "ms": 0.321,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "read",
+  "cls": "unknown",
+  "n": 14,
+  "ms": 0.321,
+  "bytes": 895407
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "recipe",
+  "n": 281,
+  "ms": 0.31,
+  "bytes": 905428
+ },
+ {
+  "phase": "startup",
+  "call": "read",
+  "cls": "other",
+  "n": 203,
+  "ms": 0.292,
+  "bytes": 469074
+ },
+ {
+  "phase": "scan",
+  "call": "munmap",
+  "cls": "other",
+  "n": 139,
+  "ms": 0.207,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "stat",
+  "cls": "other",
+  "n": 106,
+  "ms": 0.191,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "close",
+  "cls": "other",
+  "n": 169,
+  "ms": 0.16,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "open",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.145,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "other",
+  "n": 16,
+  "ms": 0.124,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "stat",
+  "cls": "other",
+  "n": 60,
+  "ms": 0.107,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "lstat",
+  "cls": "other",
+  "n": 41,
+  "ms": 0.095,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "open$NOCANCEL",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.09,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "pread",
+  "cls": "other",
+  "n": 83,
+  "ms": 0.085,
+  "bytes": 68588
+ },
+ {
+  "phase": "scan",
+  "call": "open",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.084,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "close",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.081,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "recipe",
+  "n": 120,
+  "ms": 0.072,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "write",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.065,
+  "bytes": 4759
+ },
+ {
+  "phase": "startup",
+  "call": "munmap",
+  "cls": "other",
+  "n": 56,
+  "ms": 0.062,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "open",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.061,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "fstat",
+  "cls": "other",
+  "n": 56,
+  "ms": 0.054,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 4,
+  "ms": 0.052,
+  "bytes": 13557760
+ },
+ {
+  "phase": "publish",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 8,
+  "ms": 0.051,
+  "bytes": 17059840
+ },
+ {
+  "phase": "scan",
+  "call": "write",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.05,
+  "bytes": 26762
+ },
+ {
+  "phase": "config",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 21,
+  "ms": 0.038,
+  "bytes": 10924032
+ },
+ {
+  "phase": "evaluate",
+  "call": "stat",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.034,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.033,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "open",
+  "cls": "recipe",
+  "n": 1,
+  "ms": 0.033,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "munmap",
+  "cls": "other",
+  "n": 23,
+  "ms": 0.03,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "stat",
+  "cls": "other",
+  "n": 10,
+  "ms": 0.029,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "dir",
+  "n": 34,
+  "ms": 0.029,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "close",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.028,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "lstat",
+  "cls": "other",
+  "n": 7,
+  "ms": 0.026,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "open$NOCANCEL",
+  "cls": "dir",
+  "n": 1,
+  "ms": 0.025,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "write",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.025,
+  "bytes": 1416
+ },
+ {
+  "phase": "compile",
+  "call": "close",
+  "cls": "dir",
+  "n": 35,
+  "ms": 0.023,
+  "bytes": 0
+ },
+ {
+  "phase": "postWorker",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 5,
+  "ms": 0.022,
+  "bytes": 327680
+ },
+ {
+  "phase": "publish",
+  "call": "read",
+  "cls": "other",
+  "n": 12,
+  "ms": 0.021,
+  "bytes": 78955
+ },
+ {
+  "phase": "evaluate",
+  "call": "lstat",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.017,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "write",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.016,
+  "bytes": 2902
+ },
+ {
+  "phase": "evaluate",
+  "call": "open",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.016,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.013,
+  "bytes": 25366
+ },
+ {
+  "phase": "postWorker",
+  "call": "close",
+  "cls": "unknown",
+  "n": 5,
+  "ms": 0.013,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "write",
+  "cls": "unknown",
+  "n": 3,
+  "ms": 0.011,
+  "bytes": 1524
+ },
+ {
+  "phase": "config",
+  "call": "read",
+  "cls": "unknown",
+  "n": 4,
+  "ms": 0.011,
+  "bytes": 12387
+ },
+ {
+  "phase": "postWorker",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 8,
+  "ms": 0.01,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "open",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.009,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "lstat",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.009,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "read",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.008,
+  "bytes": 26762
+ },
+ {
+  "phase": "compile",
+  "call": "read",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.008,
+  "bytes": 20738
+ },
+ {
+  "phase": "startup",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 6,
+  "ms": 0.007,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "read",
+  "cls": "other",
+  "n": 5,
+  "ms": 0.006,
+  "bytes": 13951
+ },
+ {
+  "phase": "compile",
+  "call": "munmap",
+  "cls": "other",
+  "n": 4,
+  "ms": 0.005,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "close",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.005,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.005,
+  "bytes": 836
+ },
+ {
+  "phase": "postWorker",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.005,
+  "bytes": 132
+ },
+ {
+  "phase": "preMain",
+  "call": "mmap",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.003,
+  "bytes": 24576
+ },
+ {
+  "phase": "config",
+  "call": "pread",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.003,
+  "bytes": 374
+ },
+ {
+  "phase": "publish",
+  "call": "fstat",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.003,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "write",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.002,
+  "bytes": 1
+ },
+ {
+  "phase": "scan",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 2,
+  "ms": 0.002,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "pread",
+  "cls": "other",
+  "n": 3,
+  "ms": 0.002,
+  "bytes": 4112
+ },
+ {
+  "phase": "preMain",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "close",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "preMain",
+  "call": "close",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "startup",
+  "call": "close",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "unknown",
+  "n": 2,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "config",
+  "call": "close",
+  "cls": "dir",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "scan",
+  "call": "close",
+  "cls": "other",
+  "n": 2,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "evaluate",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "compile",
+  "call": "fstat",
+  "cls": "other",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ },
+ {
+  "phase": "publish",
+  "call": "fstat",
+  "cls": "unknown",
+  "n": 1,
+  "ms": 0.001,
+  "bytes": 0
+ }
+]
