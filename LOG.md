@@ -304,6 +304,25 @@ diets); scan voyage opens separately after closeout lands.
   the F1 landing per HQ's closeout order).
 - Slots: 1/7 (formula1-impl), 6 held — diet backlog EMPTY, N1
   held — this entry is the proof.
+- Formula-1 LAND `36953b4d4` (28 files +3921/−73, solo): B'' native
+  single-read + C3-in-reverse retention, whole-document implement.
+  COUNT exact M1 shape (1202/1198, 0 fstat, backfill 0, 2 crossings);
+  IDENTITY zero drift (4-scale goldens bit-exact + 24-test battery);
+  CAPTURE −52.38/−5.68% 8/8, ex-run-1 −50.61/−5.49% (scan −26.8,
+  compile −25.3, eval/publish flat) — 3× the 17-realistic projection.
+  Claims corroborated (swarm-f1impl 2 lines, two-step, numbers exact).
+  Captain firsthand: byte-identical apply, c-atomic 620/620, neo
+  99/99, v-atomic 301/301 (ATM-SITE-54 does NOT reproduce here —
+  crew's 300/301 disclosure was honest for its tree), q 0v/5w==tip
+  (all pre-existing, over-365s predate the diet), agentneo q 0e
+  (2 warns in untouched T1 function). Filed
+  `docs/perf/waves/wave-4/report-swarm-formula1.md` (index 103, LAND).
+  SCOREBOARD (enterprise warm 8-pair): 922.42→870.03. Follow-ups
+  filed: planner rewire (runPlanner still TS scan), DX (agentrs b +
+  build:js, rustfmt pin).
+- Slots: 0/7 — BOARD EMPTY. Backlog: diet EMPTY, N1 held, MCP done,
+  F1 landed — this entry is the proof. Closeout (bench:neo +
+  sync-perf.html per HQ standing order) follows on this tip.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
