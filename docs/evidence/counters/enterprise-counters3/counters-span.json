@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "supported": true,
+  "spans": 1,
+  "span": {
+    "wallMs": 739.977145,
+    "startUnixMs": 1789990851193,
+    "endUnixMs": 1789990851933,
+    "before": {
+      "taskEvents": {
+        "faults": 40700,
+        "pageins": 223,
+        "cowFaults": 329,
+        "messagesSent": 44,
+        "messagesReceived": 20,
+        "syscallsMach": 212,
+        "syscallsUnix": 64750,
+        "csw": 538
+      },
+      "rusageInfo": {
+        "userNs": 278922109,
+        "systemNs": 303509168,
+        "interruptWkups": 24,
+        "pageins": 223,
+        "residentSize": 164442112,
+        "physFootprint": 91885568,
+        "diskioBytesRead": 0,
+        "diskioBytesWritten": 36864,
+        "lifetimeMaxPhysFootprint": 97329152,
+        "instructions": 8211273098,
+        "cycles": 3198379707,
+        "runnableNs": 574454925
+      },
+      "rusage": {
+        "userUsec": 278919,
+        "systemUsec": 303511,
+        "maxRss": 164442112,
+        "minorFaults": 40477,
+        "majorFaults": 223,
+        "inBlock": 0,
+        "outBlock": 0,
+        "voluntaryCsw": 0,
+        "involuntaryCsw": 538
+      },
+      "threads": {
+        "count": 11,
+        "rows": [
+          {
+            "threadId": 49683167,
+            "userUsec": 174068,
+            "sysUsec": 291472
+          },
+          {
+            "threadId": 49683169,
+            "userUsec": 30288,
+            "sysUsec": 3641
+          },
+          {
+            "threadId": 49683171,
+            "userUsec": 28958,
+            "sysUsec": 2608
+          },
+          {
+            "threadId": 49683172,
+            "userUsec": 26523,
+            "sysUsec": 3203
+          },
+          {
+            "threadId": 49683170,
+            "userUsec": 19020,
+            "sysUsec": 1784
+          },
+          {
+            "threadId": 49683196,
+            "userUsec": 11,
+            "sysUsec": 290
+          },
+          {
+            "threadId": 49683197,
+            "userUsec": 12,
+            "sysUsec": 201
+          },
+          {
+            "threadId": 49683195,
+            "userUsec": 10,
+            "sysUsec": 149
+          },
+          {
+            "threadId": 49683198,
+            "userUsec": 12,
+            "sysUsec": 139
+          },
+          {
+            "threadId": 49683168,
+            "userUsec": 15,
+            "sysUsec": 29
+          },
+          {
+            "threadId": 49683173,
+            "userUsec": 3,
+            "sysUsec": 7
+          }
+        ]
+      }
+    },
+    "after": {
+      "taskEvents": {
+        "faults": 96308,
+        "pageins": 223,
+        "cowFaults": 329,
+        "messagesSent": 104,
+        "messagesReceived": 50,
+        "syscallsMach": 326,
+        "syscallsUnix": 79500,
+        "csw": 572
+      },
+      "rusageInfo": {
+        "userNs": 926687529,
+        "systemNs": 395543405,
+        "interruptWkups": 24,
+        "pageins": 223,
+        "residentSize": 333389824,
+        "physFootprint": 110026752,
+        "diskioBytesRead": 0,
+        "diskioBytesWritten": 36864,
+        "lifetimeMaxPhysFootprint": 213020672,
+        "instructions": 17749797130,
+        "cycles": 7243218137,
+        "runnableNs": 1321043443
+      },
+      "rusage": {
+        "userUsec": 926684,
+        "systemUsec": 395544,
+        "maxRss": 364318720,
+        "minorFaults": 96085,
+        "majorFaults": 223,
+        "inBlock": 0,
+        "outBlock": 0,
+        "voluntaryCsw": 0,
+        "involuntaryCsw": 572
+      },
+      "threads": {
+        "count": 11,
+        "rows": [
+          {
+            "threadId": 49683167,
+            "userUsec": 821833,
+            "sysUsec": 383504
+          },
+          {
+            "threadId": 49683169,
+            "userUsec": 30288,
+            "sysUsec": 3641
+          },
+          {
+            "threadId": 49683171,
+            "userUsec": 28958,
+            "sysUsec": 2608
+          },
+          {
+            "threadId": 49683172,
+            "userUsec": 26523,
+            "sysUsec": 3203
+          },
+          {
+            "threadId": 49683170,
+            "userUsec": 19020,
+            "sysUsec": 1784
+          },
+          {
+            "threadId": 49683196,
+            "userUsec": 11,
+            "sysUsec": 290
+          },
+          {
+            "threadId": 49683197,
+            "userUsec": 12,
+            "sysUsec": 201
+          },
+          {
+            "threadId": 49683195,
+            "userUsec": 10,
+            "sysUsec": 149
+          },
+          {
+            "threadId": 49683198,
+            "userUsec": 12,
+            "sysUsec": 139
+          },
+          {
+            "threadId": 49683168,
+            "userUsec": 15,
+            "sysUsec": 29
+          },
+          {
+            "threadId": 49683173,
+            "userUsec": 3,
+            "sysUsec": 7
+          }
+        ]
+      }
+    }
+  }
+}

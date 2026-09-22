@@ -8,7 +8,33 @@
  * rule: each libc event counts fully in the phase containing its start time.
  */
 
-import { SYNC_PARTS, renderReconcileLine } from './phases.mjs'
+import { SYNC_PARTS, checkReconciled, renderReconcileLine } from './phases.mjs'
+
+export function spanPhasesMeta(spanLeg) {
+  const compile = spanLeg.phases.phases.compile
+  const wallMs = spanLeg.span.span.wallMs
+  return {
+    file: 'span-phases.json',
+    phases: spanLeg.phases.phases,
+    reconcile: checkReconciled(spanLeg.phases.phases),
+    compileVsSpanMs: {
+      compile,
+      span: wallMs,
+      delta: typeof compile === 'number' ? compile - wallMs : null,
+    },
+  }
+}
+
+export function censusPhasesMeta(censusLeg) {
+  return {
+    file: 'census-phases.json',
+    phases: censusLeg.phases.phases,
+    reconcile: checkReconciled(censusLeg.phases.phases),
+    events: censusLeg.events,
+    byPhase: censusLeg.bucketed.phases,
+    unplaced: censusLeg.bucketed.unplaced,
+  }
+}
 
 function fmtInt(value) {
   if (value === null || value === undefined) return 'n/a'
@@ -49,6 +75,7 @@ function unplacedIoRow(name, census) {
 export function countersPhasesLines(meta) {
   const span = meta.spanPhases
   const census = meta.censusPhases
+  if (!span || !census) return []
   const names = ['startup', ...SYNC_PARTS, 'workerTail']
   return [
     '## Same-run phases (agentrs-phases/1)',

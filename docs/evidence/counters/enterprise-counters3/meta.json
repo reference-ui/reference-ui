@@ -1,0 +1,724 @@
+{
+  "procedure": "agentrs-counters/3",
+  "procedureNote": "width-assumption stall bound withdrawn (no ceiling claimed); in-window thread births attributed at their exit rows with died-thread counts and a rusage-bounded unattributed share (v2 skipped threads absent from the enter snapshot)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "3b7bc58391a3",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-KalP6k",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "spanLeg": {
+    "sample": {
+      "syncMs": 1193.903677,
+      "rssBefore": 96755712,
+      "rssPeak": 360357888,
+      "rssAfter": 337244160
+    },
+    "nodeArgs": [],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-KalP6k",
+      "10"
+    ],
+    "env": {
+      "REFERENCE_UI_NATIVE_PATH": "/Users/ryn/Developer/reference-ui/packages/reference-rs/dist/native-trace/a33f89c47dea-counters/virtual-native.darwin-x64.node",
+      "COUNTERS_TRACE_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-counters2/counters-span.json",
+      "REFERENCE_UI_PHASES_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-counters2/span-phases.json"
+    },
+    "spanWallMs": 739.977145,
+    "spans": 1
+  },
+  "censusLeg": {
+    "sample": {
+      "syncMs": 1197.895207,
+      "rssBefore": 93945856,
+      "rssPeak": 366084096,
+      "rssAfter": 342736896
+    },
+    "nodeArgs": [],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-KalP6k",
+      "10"
+    ],
+    "env": {
+      "DYLD_INSERT_LIBRARIES": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-shim-R1NWLf/libcounters-interpose.dylib",
+      "COUNTERS_CENSUS_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-counters2/census.json",
+      "COUNTERS_CENSUS_EVENTS_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-counters2/census-events.json",
+      "REFERENCE_UI_PHASES_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-counters2/census-phases.json"
+    }
+  },
+  "startupLeg": {
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "-e",
+      ""
+    ]
+  },
+  "spanPhases": {
+    "file": "span-phases.json",
+    "phases": {
+      "startup": 84.080043,
+      "config": 18.912661999999997,
+      "scan": 353.187227,
+      "evaluate": 5.720510000000047,
+      "compile": 768.4428220000001,
+      "publish": 47.51792799999998,
+      "syncTotal": 1193.825094,
+      "workerTotal": 1277.908551,
+      "workerTail": 0.0034140000000206783,
+      "syncResidual": 0.04394499999989421
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "compileVsSpanMs": {
+      "compile": 768.4428220000001,
+      "span": 739.977145,
+      "delta": 28.46567700000014
+    }
+  },
+  "censusPhases": {
+    "file": "census-phases.json",
+    "phases": {
+      "startup": 83.945252,
+      "config": 21.328349000000003,
+      "scan": 360.217819,
+      "evaluate": 5.641850999999974,
+      "compile": 759.151627,
+      "publish": 49.61700999999994,
+      "syncTotal": 1197.816655,
+      "workerTotal": 1281.765263,
+      "workerTail": 0.0033559999999397405,
+      "syncResidual": 1.8599990000002435
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "events": {
+      "file": "census-events.json",
+      "count": 67601,
+      "dropped": 0
+    },
+    "byPhase": {
+      "startup": {
+        "count": 1551,
+        "totalNs": 5905717,
+        "bytes": 9567347281,
+        "byCall": {
+          "fstat": {
+            "count": 62,
+            "totalNs": 59374,
+            "bytes": 0
+          },
+          "close": {
+            "count": 170,
+            "totalNs": 159923,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 67,
+            "totalNs": 312629,
+            "bytes": 9566810112
+          },
+          "write": {
+            "count": 1,
+            "totalNs": 1174,
+            "bytes": 1
+          },
+          "open": {
+            "count": 207,
+            "totalNs": 2828570,
+            "bytes": 0
+          },
+          "munmap": {
+            "count": 55,
+            "totalNs": 56822,
+            "bytes": 0
+          },
+          "stat": {
+            "count": 427,
+            "totalNs": 1495579,
+            "bytes": 0
+          },
+          "lstat": {
+            "count": 276,
+            "totalNs": 601092,
+            "bytes": 0
+          },
+          "pread": {
+            "count": 83,
+            "totalNs": 72948,
+            "bytes": 68588
+          },
+          "read": {
+            "count": 203,
+            "totalNs": 317606,
+            "bytes": 468580
+          }
+        }
+      },
+      "config": {
+        "count": 132,
+        "totalNs": 600031,
+        "bytes": 11987934,
+        "byCall": {
+          "stat": {
+            "count": 13,
+            "totalNs": 49384,
+            "bytes": 0
+          },
+          "open": {
+            "count": 5,
+            "totalNs": 163065,
+            "bytes": 0
+          },
+          "pread": {
+            "count": 2,
+            "totalNs": 2924,
+            "bytes": 374
+          },
+          "close": {
+            "count": 7,
+            "totalNs": 38546,
+            "bytes": 0
+          },
+          "lstat": {
+            "count": 33,
+            "totalNs": 82128,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 5,
+            "totalNs": 3788,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 23,
+            "totalNs": 45781,
+            "bytes": 11964416
+          },
+          "munmap": {
+            "count": 26,
+            "totalNs": 32857,
+            "bytes": 0
+          },
+          "write": {
+            "count": 4,
+            "totalNs": 101390,
+            "bytes": 6064
+          },
+          "read": {
+            "count": 5,
+            "totalNs": 14584,
+            "bytes": 17080
+          },
+          "openat": {
+            "count": 9,
+            "totalNs": 65584,
+            "bytes": 0
+          }
+        }
+      },
+      "syncResidual": {
+        "count": 19,
+        "totalNs": 59758,
+        "bytes": 0,
+        "byCall": {
+          "openat": {
+            "count": 15,
+            "totalNs": 53661,
+            "bytes": 0
+          },
+          "close": {
+            "count": 2,
+            "totalNs": 4641,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 2,
+            "totalNs": 1456,
+            "bytes": 0
+          }
+        }
+      },
+      "scan": {
+        "count": 60858,
+        "totalNs": 269057797,
+        "bytes": 76189504,
+        "byCall": {
+          "openat": {
+            "count": 3,
+            "totalNs": 4093,
+            "bytes": 0
+          },
+          "close": {
+            "count": 15158,
+            "totalNs": 9020361,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 138,
+            "totalNs": 442425,
+            "bytes": 71802880
+          },
+          "munmap": {
+            "count": 138,
+            "totalNs": 186775,
+            "bytes": 0
+          },
+          "open": {
+            "count": 15122,
+            "totalNs": 239420746,
+            "bytes": 0
+          },
+          "read": {
+            "count": 30291,
+            "totalNs": 19965290,
+            "bytes": 4384136
+          },
+          "fstat": {
+            "count": 2,
+            "totalNs": 2362,
+            "bytes": 0
+          },
+          "write": {
+            "count": 6,
+            "totalNs": 15745,
+            "bytes": 2488
+          }
+        }
+      },
+      "evaluate": {
+        "count": 12,
+        "totalNs": 3489233,
+        "bytes": 53464,
+        "byCall": {
+          "open": {
+            "count": 2,
+            "totalNs": 68741,
+            "bytes": 0
+          },
+          "write": {
+            "count": 1,
+            "totalNs": 32109,
+            "bytes": 26732
+          },
+          "close": {
+            "count": 2,
+            "totalNs": 29750,
+            "bytes": 0
+          },
+          "stat": {
+            "count": 1,
+            "totalNs": 5024,
+            "bytes": 0
+          },
+          "lstat": {
+            "count": 4,
+            "totalNs": 16906,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 1,
+            "totalNs": 833,
+            "bytes": 0
+          },
+          "read": {
+            "count": 1,
+            "totalNs": 3335870,
+            "bytes": 26732
+          }
+        }
+      },
+      "compile": {
+        "count": 3758,
+        "totalNs": 9017719,
+        "bytes": 85659504,
+        "byCall": {
+          "stat": {
+            "count": 3397,
+            "totalNs": 8289018,
+            "bytes": 0
+          },
+          "lstat": {
+            "count": 5,
+            "totalNs": 8706,
+            "bytes": 0
+          },
+          "open": {
+            "count": 46,
+            "totalNs": 327762,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 1,
+            "totalNs": 920,
+            "bytes": 0
+          },
+          "read": {
+            "count": 3,
+            "totalNs": 9502,
+            "bytes": 20320
+          },
+          "close": {
+            "count": 38,
+            "totalNs": 24304,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 132,
+            "totalNs": 250241,
+            "bytes": 85635072
+          },
+          "munmap": {
+            "count": 133,
+            "totalNs": 104873,
+            "bytes": 0
+          },
+          "pread": {
+            "count": 3,
+            "totalNs": 2393,
+            "bytes": 4112
+          }
+        }
+      },
+      "publish": {
+        "count": 898,
+        "totalNs": 10412087,
+        "bytes": 28313285,
+        "byCall": {
+          "stat": {
+            "count": 48,
+            "totalNs": 97273,
+            "bytes": 0
+          },
+          "open": {
+            "count": 29,
+            "totalNs": 1702091,
+            "bytes": 0
+          },
+          "write": {
+            "count": 377,
+            "totalNs": 3499298,
+            "bytes": 10541708
+          },
+          "close": {
+            "count": 29,
+            "totalNs": 3445648,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 4,
+            "totalNs": 4597,
+            "bytes": 0
+          },
+          "pread": {
+            "count": 351,
+            "totalNs": 397999,
+            "bytes": 2867925
+          },
+          "mmap": {
+            "count": 7,
+            "totalNs": 93887,
+            "bytes": 13930496
+          },
+          "munmap": {
+            "count": 19,
+            "totalNs": 965016,
+            "bytes": 0
+          },
+          "read": {
+            "count": 27,
+            "totalNs": 167183,
+            "bytes": 973156
+          },
+          "lstat": {
+            "count": 7,
+            "totalNs": 39095,
+            "bytes": 0
+          }
+        }
+      }
+    },
+    "unplaced": {
+      "preMain": {
+        "count": 7,
+        "totalNs": 17411,
+        "bytes": 24576,
+        "byCall": {
+          "fstat": {
+            "count": 2,
+            "totalNs": 2266,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 1,
+            "totalNs": 2567,
+            "bytes": 24576
+          },
+          "close": {
+            "count": 2,
+            "totalNs": 2136,
+            "bytes": 0
+          },
+          "open": {
+            "count": 2,
+            "totalNs": 10442,
+            "bytes": 0
+          }
+        }
+      },
+      "postWorker": {
+        "count": 366,
+        "totalNs": 3475807,
+        "bytes": 329183,
+        "byCall": {
+          "open": {
+            "count": 1,
+            "totalNs": 57546,
+            "bytes": 0
+          },
+          "write": {
+            "count": 2,
+            "totalNs": 34244,
+            "bytes": 1503
+          },
+          "close": {
+            "count": 10,
+            "totalNs": 35237,
+            "bytes": 0
+          },
+          "fstat": {
+            "count": 8,
+            "totalNs": 9091,
+            "bytes": 0
+          },
+          "munmap": {
+            "count": 340,
+            "totalNs": 3317423,
+            "bytes": 0
+          },
+          "mmap": {
+            "count": 5,
+            "totalNs": 22266,
+            "bytes": 327680
+          }
+        }
+      }
+    }
+  },
+  "censusNet": {
+    "schema": 1,
+    "calls": {
+      "open": {
+        "count": 15409,
+        "totalNs": 244540407
+      },
+      "openat": {
+        "count": 27,
+        "totalNs": 123338
+      },
+      "close": {
+        "count": 15407,
+        "totalNs": 12744127
+      },
+      "read": {
+        "count": 30530,
+        "totalNs": 23810035,
+        "bytes": 5890004
+      },
+      "pread": {
+        "count": 439,
+        "totalNs": 476264,
+        "bytes": 2940999
+      },
+      "readv": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "write": {
+        "count": 390,
+        "totalNs": 3682280,
+        "bytes": 10578495
+      },
+      "pwrite": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "writev": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "stat": {
+        "count": 3884,
+        "totalNs": 9924252
+      },
+      "lstat": {
+        "count": 325,
+        "totalNs": 747927
+      },
+      "fstat": {
+        "count": 71,
+        "totalNs": 57429
+      },
+      "lseek": {
+        "count": 0,
+        "totalNs": 0
+      },
+      "mmap": {
+        "count": 337,
+        "totalNs": 1124695,
+        "bytes": 8796110848
+      },
+      "munmap": {
+        "count": 651,
+        "totalNs": 4478156
+      }
+    }
+  },
+  "derived": {
+    "wallMs": 739.977145,
+    "spans": 1,
+    "events": {
+      "faults": 55608,
+      "pageins": 0,
+      "cowFaults": 0,
+      "messagesSent": 60,
+      "messagesReceived": 30,
+      "syscallsMach": 114,
+      "syscallsUnix": 14750,
+      "csw": 34
+    },
+    "info": {
+      "userNs": 647765420,
+      "systemNs": 92034237,
+      "interruptWkups": 0,
+      "pageins": 0,
+      "residentSize": 168947712,
+      "physFootprint": 18141184,
+      "diskioBytesRead": 0,
+      "diskioBytesWritten": 0,
+      "instructions": 9538524032,
+      "cycles": 4044838430,
+      "runnableNs": 746588518
+    },
+    "rusage": {
+      "userUsec": 647765,
+      "systemUsec": 92033,
+      "minorFaults": 55608,
+      "majorFaults": 0,
+      "inBlock": 0,
+      "outBlock": 0,
+      "voluntaryCsw": 0,
+      "involuntaryCsw": 34
+    },
+    "threads": {
+      "enterCount": 11,
+      "exitCount": 11,
+      "bornCount": 0,
+      "diedCount": 0,
+      "userUsecDelta": 647765,
+      "sysUsecDelta": 92032,
+      "bornUsec": 0,
+      "attributedUsec": 739797,
+      "unattributedUsec": 1,
+      "unattributedShare": 0.0000013517203344696795,
+      "windowTopShare": 1
+    },
+    "exitWaters": {
+      "lifetimeMaxPhysFootprint": 213020672,
+      "maxRss": 364318720
+    },
+    "instructions": 9538524032,
+    "cycles": 4044838430,
+    "ipc": 2.35819655026369
+  },
+  "node": {
+    "version": "v24.16.0"
+  },
+  "nativeShipped": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "nativeCounters": {
+    "path": "packages/reference-rs/dist/native-trace/a33f89c47dea-counters/virtual-native.darwin-x64.node",
+    "sha256": "d54c6b3d6ca548debc05f591a6199594c9d10fd5586a6311eaabf951f007cae6",
+    "profile": "release+counters-trace",
+    "builtVia": "napi build --release --features counters-trace",
+    "inputsHash": "a33f89c47deac87ad7009765e170b3e020993563478e75b14b6a74d4fd17463e",
+    "bytes": 8909532
+  },
+  "shim": {
+    "source": ".agents/skills/agent-rs/scripts/counters-interpose.c",
+    "sourceSha256": "d9e5130fcf5432f1f48ea3e1754ecdd9544fb476c5c7af272c4ecd35f2e1cc8e",
+    "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)"
+  },
+  "platform": "darwin-x64",
+  "command": [
+    "pnpm",
+    "agentrs",
+    "counters",
+    "--resummarize",
+    "docs/evidence/counters/enterprise-counters2",
+    "--out",
+    "docs/evidence/counters/enterprise-counters3"
+  ],
+  "resummarizedFrom": {
+    "dir": "docs/evidence/counters/enterprise-counters2",
+    "procedure": "agentrs-counters/2",
+    "createdAt": "2026-09-21T11:40:53.739Z",
+    "spanSha256": "e8e4b43ffd6308456aba3d48f6fa4611669f8d59a3fda611a4862762ded34165",
+    "censusSha256": "058ef4530926c07aaba90345a9f7b324392ac55d78374487870574178735419c",
+    "startupSha256": "77a5db58563801250c1e50760d6712bc10bc4dfa1eea6b7599cef1d5306e782e"
+  },
+  "createdAt": "2026-09-21T11:53:31.012Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/counters-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-phases.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/counters.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj3-derivations.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    "?? .agents/skills/agent-rs/scripts/counters-resummarize.mjs",
+    "?? docs/evidence/counters/enterprise-counters3/"
+  ]
+}

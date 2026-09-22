@@ -594,6 +594,7 @@ function printHelp() {
   \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/counters/<scale>-<pin>/)
   \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
   \x1b[33m--no-build\x1b[0m                Skip ensure-native and the counters build; both binaries must exist
+  \x1b[33m--resummarize <dir>\x1b[0m         Reprocess a filed bundle's raw dumps (no rebuild, no re-record)
   \x1b[33m--list\x1b[0m                    List frozen scales
 
 \x1b[1mOPTIONS FOR 'vitest':\x1b[0m
@@ -684,7 +685,7 @@ async function main() {
 
   if (command === 'counters') {
     const countersArgs = args.slice(1)
-    if (!countersArgs.includes('--no-build') && !countersArgs.includes('--list') && !countersArgs.includes('--help')) {
+    if (!countersArgs.includes('--no-build') && !countersArgs.includes('--list') && !countersArgs.includes('--help') && !countersArgs.includes('--resummarize')) {
       const buildCode = await runEnsureNative(rsDir)
       if (buildCode !== 0) process.exit(buildCode)
     }

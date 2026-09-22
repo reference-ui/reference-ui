@@ -71,8 +71,10 @@ checks. Triage by the captain confirmed the code mechanics of issues
       decomposition replacing recon §2. (landed 2026-09-21, verified
       firsthand: flame/3 + counters/2 + alloc/2 + phases/1, filed at
       docs/evidence/phases/enterprise-phases1/)
-- [ ] Corrected counters derivations (stall withdrawn, thread
-      birth/death handled).
+- [x] Corrected counters derivations (stall withdrawn, thread
+      birth/death handled). (landed 2026-09-21, verified firsthand,
+      procedure agentrs-counters/3, republished at
+      docs/evidence/counters/enterprise-counters3/)
 - [ ] Independent RSS sampler behind a versioned bench procedure.
 - [ ] Alloc counts by compiler phase.
 - [ ] Regenerated enterprise evidence + recon v2 (revised bars,
