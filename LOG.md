@@ -95,6 +95,24 @@ the table in banked compile work: 0 ms by receipt. Seam scout
 dispatched as the last unscouted compile room (counts-first, no
 diets); scan voyage opens separately after closeout lands.
 
+## Wave 4 — IN PROGRESS (scan frontier, HQ-ordered)
+
+- HQ order: close compile (done — see Compile closeout), then scan as
+  a separate voyage; scan + seam-gap streams in parallel until further
+  notice, one hypothesis per crew, same tools, independent measurements.
+- Scope correction: wave-3 "backlog EMPTY / nothing pending" verdicts
+  were COMPILE-ground only. Scan (~368 ms, ~38% of sync) has zero
+  diets, zero ranked rooms — never scouted. History stands; this entry
+  scopes it. Nothing "done" claims scan.
+- Base-pin: b8a75b0bd (full b8a75b0bd74c72a72a2c6fe338ca8026088b5afe).
+  Target sketch per HQ: ~30% off — denominator unnamed; the 700 ms
+  voyage BAR is UNCHANGED until HQ names a number.
+- Stream 1 (scan): scan-recon4 dispatched (isolated) — fresh flames on
+  tip + exact scan census + ranked backlog. No diets until backlog files.
+- Stream 2 (seam gap): seam-scout running (closeout dispatch).
+- Slots: 2/7, 5 held — backlog empty pending recon verdicts (this entry
+  is the proof). Full complement on ranked backlog per Model.
+
 ## Ticks (empty board)
 
 - Tick 09:20: board EMPTY (roster zero, lock free, tip 6c39095, claims quiet). Nothing to dispatch.
