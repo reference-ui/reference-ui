@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T13:29:53.459Z",
+ "built": "2026-09-22T13:35:13.495Z",
  "root": "docs/perf/waves",
- "count": 98,
+ "count": 99,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -1860,6 +1860,25 @@
    "landedIn": null,
    "summary": "MCP searchDemand options-object reuse showed no stable win under interleaved A/B with lottery control; CUT as filed.",
    "log": "- swarm-reusesearchopts CUT (lottery): options-object reuse, no\n  stable win under interleaved A/B x2 + lottery control; identity\n  sha match. Closed.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W4-REFLAME6",
+   "wave": "wave-4",
+   "topic": "reflame6",
+   "kind": "repro",
+   "verdict": "REPROFILE",
+   "effect": {
+    "ms": -16.84,
+    "pct": -1.96
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-4/report-swarm-reflame6.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `ff64ab75b594cfd81d0cb8488bd0ea86a0155b15` (verified `git rev-parse HEAD`",
+   "log": "- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1\n  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync\n  noise-bounded. Publish watch flagged.\n\n## Ticks (empty board)",
    "filler": false
   },
   {
