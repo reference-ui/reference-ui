@@ -101,7 +101,7 @@
 </div>
 
 <figure class="hero">
-<svg viewBox="0 0 660 700" role="img" aria-label="Sunburst of enterprise sync time: compile 520 ms, scan 368 ms, publish 52.5 ms, config 28.2 ms, evaluate 4.3 ms. Inside compile: Rust-direct 213 ms, unattributed gap 307 ms, unscouted N-API seam.">
+<svg viewBox="0 0 660 700" role="img" aria-label="Sunburst of enterprise sync time: compile 520 ms, scan 368 ms, publish 52.5 ms, config 28.2 ms, evaluate 4.3 ms. Inside compile: Rust-direct 213 ms, triaged gap 307 ms (seam CUT-closed, N1 held).">
   <defs>
     <pattern id="seamHatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
       <rect width="7" height="7" fill="#ffffff"></rect>
@@ -131,9 +131,9 @@
   <text x="474" y="390" text-anchor="middle" fill="#fff" font-size="13" class="svg-lbl">53.4%</text>
   <text x="483" y="170" text-anchor="middle" fill="#fff" font-size="13" font-weight="700" class="svg-lbl">Rust-direct ~213</text>
   <text x="483" y="186" text-anchor="middle" fill="#fff" font-size="11.5" class="svg-lbl">41% of compile</text>
-  <text x="499" y="528" text-anchor="middle" fill="#1a1a1a" font-size="13" font-weight="700" class="svg-lbl">unattributed gap ~307</text>
+  <text x="499" y="528" text-anchor="middle" fill="#1a1a1a" font-size="13" font-weight="700" class="svg-lbl">triaged gap ~307</text>
   <text x="499" y="544" text-anchor="middle" fill="#1a1a1a" font-size="11.5" class="svg-lbl">59% of compile</text>
-  <text x="499" y="558" text-anchor="middle" fill="#333" font-size="10" class="svg-lbl">malloc &middot; memmove &middot; kernel &middot; node &middot; seam</text>
+  <text x="499" y="558" text-anchor="middle" fill="#333" font-size="10" class="svg-lbl">Rust children + codec · seam CUT · N1 held</text>
   <text x="187" y="380" text-anchor="middle" fill="#1a1a1a" font-size="15" font-weight="700" class="svg-lbl">scan 368 ms</text>
   <text x="187" y="398" text-anchor="middle" fill="#1a1a1a" font-size="13" class="svg-lbl">37.8%</text>
   <text x="90" y="381" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">kernel ~295 · userspace ~70</text>
@@ -181,11 +181,11 @@
 </div>
 </section>
 
-<section class="seamstrip" id="seam" aria-label="N-API seam: never scouted">
+<section class="seamstrip" id="seam" aria-label="N-API seam: CUT-closed, no dark matter">
 <div class="bar"></div>
 <div class="body">
-<h2>The seam (N-API crossings) &mdash; NEVER SCOUTED, zero entries</h2>
-<p>In scope per the VOYAGE ground fence and explicitly unexamined, not assumed fine. napi frames read &le;6 and publish is flat, but per-call crossing cost was never isolated &mdash; no census, no diet, no CUT. The marshal diet (<code>PERF-W2-MARSHAL</code>) cut wire <em>bytes</em> (&minus;2.93&nbsp;MB/&minus;48.2%), not crossings. The seam lives inside the ~307&nbsp;ms unattributed gap and is the only compile-adjacent ground with no verdict at all.</p>
+<h2>The seam (N-API crossings) &mdash; CUT, no dark matter (<code>PERF-W4-SEAMSCOUT</code>)</h2>
+<p>CUT-closed by <code>PERF-W4-SEAMSCOUT</code> (wave 4): exactly 1 crossing per sync (optimal floor) at ≈0 ms fixed cost; the full 42/43 ms codec stack is load-inherent bytes, already-harvested <code>PERF-W2-MARSHAL</code> work, or memcpy-floor copies. No dark matter — the gap remainder is Rust-attributed children (malloc/memmove/kernel) plus the fenced-held N1 entry-stats lead (~9 ms, needs HQ word).</p>
 </div>
 <div class="bar"></div>
 </section>
