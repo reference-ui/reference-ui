@@ -1,6 +1,6 @@
 # Mission: Operation Flamegraph Correct — correction pass before Wave 5
 
-Status: `active` (captain on conn 2026-09-21, Obj 1 crew dispatched; GO from HQ).
+Status: `done` (all 6 objectives verified firsthand + committed 2026-09-21; recon v2 at operation-flamegraph-recon-v2.md).
 
 A review of the closed Operation Flamegraph (all 5 objectives verified
 2026-09-21) found its foundation solid — frozen workload, real N-API
@@ -81,8 +81,10 @@ checks. Triage by the captain confirmed the code mechanics of issues
 - [x] Alloc counts by compiler phase. (landed 2026-09-21, verified
       firsthand: procedure agentrs-alloc/3, 12 phase rows filed at
       docs/evidence/alloc/enterprise-alloc3/)
-- [ ] Regenerated enterprise evidence + recon v2 (revised bars,
-      withdrawn ceilings, corrected numbers).
+- [x] Regenerated enterprise evidence + recon v2 (revised bars,
+      withdrawn ceilings, corrected numbers). (filed 2026-09-21 at
+      completed/operation-flamegraph-recon-v2.md, verified firsthand;
+      fresh join at docs/evidence/phases/enterprise-phases1b/)
 
 ## Rules
 
