@@ -1,0 +1,370 @@
+{
+  "procedure": "agentrs-alloc/3",
+  "procedureNote": "per-compiler-phase alloc rows from the instrument span (v2 had span totals + size classes only)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "9f59af0cc24d",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-ec0CZs",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "gcLeg": {
+    "sample": {
+      "syncMs": 1185.778183,
+      "rssBefore": 110522368,
+      "rssPeak": 357404672,
+      "rssAfter": 334512128,
+      "rssPeakHw": 357478400,
+      "scorer": "bench-worker/2"
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-ec0CZs",
+      "10"
+    ],
+    "gc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 53,
+      "lastGcMs": 1265,
+      "maxHeapBeforeMb": 51.7,
+      "maxHeapAfterMb": 37
+    }
+  },
+  "gcPhases": {
+    "file": "gc-phases.json",
+    "phases": {
+      "startup": 105.449148,
+      "config": 19.395553000000007,
+      "scan": 356.904141,
+      "evaluate": 2.3764730000000327,
+      "compile": 758.447989,
+      "publish": 48.52606100000003,
+      "syncTotal": 1185.6975380000001,
+      "workerTotal": 1291.14972,
+      "workerTail": 0.0030339999998432177,
+      "syncResidual": 0.04732100000001083
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    }
+  },
+  "tracePhases": {
+    "file": "trace-phases.json",
+    "phases": {
+      "startup": 100.247335,
+      "config": 18.505861999999993,
+      "scan": 355.69656599999996,
+      "evaluate": 5.608271000000002,
+      "compile": 1024.5020279999999,
+      "publish": 48.23760800000014,
+      "syncTotal": 1454.652628,
+      "workerTotal": 1554.90362,
+      "workerTail": 0.0036569999999755964,
+      "syncResidual": 2.102293000000145
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "compileVsSpanMs": {
+      "compile": 1024.5020279999999,
+      "span": 995.655881,
+      "delta": 28.84614699999986
+    }
+  },
+  "traceLeg": {
+    "sample": {
+      "syncMs": 1454.740336,
+      "rssBefore": 101310464,
+      "rssPeak": 350105600,
+      "rssAfter": 326975488,
+      "rssPeakHw": 350351360,
+      "scorer": "bench-worker/2"
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-ec0CZs",
+      "10"
+    ],
+    "env": {
+      "REFERENCE_UI_NATIVE_PATH": "/Users/ryn/Developer/reference-ui/packages/reference-rs/dist/native-trace/bf8177f88c81/virtual-native.darwin-x64.node",
+      "ALLOC_TRACE_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/alloc/enterprise-alloc3/rust-alloc.json",
+      "REFERENCE_UI_PHASES_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/alloc/enterprise-alloc3/trace-phases.json"
+    },
+    "traceGc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 52,
+      "lastGcMs": 1527,
+      "maxHeapBeforeMb": 51.7,
+      "maxHeapAfterMb": 37
+    },
+    "window": {
+      "startUnixMs": 1789994224998,
+      "endUnixMs": 1789994225993,
+      "spawnEpochMs": 1789994224486,
+      "spawnLatencyBoundMs": 60,
+      "inWindowFull": 0,
+      "headFull": 1,
+      "tailFull": 1,
+      "edgeFull": 0,
+      "placements": [
+        {
+          "tMs": 100,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "head"
+        },
+        {
+          "tMs": 1527,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "tail"
+        }
+      ]
+    },
+    "rustSpan": {
+      "wallMs": 995.655881,
+      "startUnixMs": 1789994224998,
+      "endUnixMs": 1789994225993,
+      "allocBytes": 992620644,
+      "allocBlocks": 8259541,
+      "freeBytes": 984176389,
+      "freeBlocks": 8258149,
+      "liveAtEnter": 6155360,
+      "liveAtExit": 14599615,
+      "netGrowth": 8444255,
+      "peakLive": 159570130,
+      "reallocs": 1117430,
+      "requestJsonBytes": 6153775,
+      "fileCount": 15122,
+      "filesContentBytes": 4358806,
+      "filesPathBytes": 1303532,
+      "zoneAtEnter": {
+        "sizeAllocated": 77971456,
+        "sizeInUse": 23023984,
+        "slack": 54947472
+      },
+      "zoneAtExit": {
+        "sizeAllocated": 87457792,
+        "sizeInUse": 32069168,
+        "slack": 55388624
+      }
+    },
+    "rustPhases": [
+      {
+        "name": "request",
+        "wallMs": 5.745093,
+        "allocBytes": 8683947,
+        "allocBlocks": 42416,
+        "freeBytes": 1829467,
+        "freeBlocks": 7128,
+        "liveAtEnter": 6155360,
+        "liveAtExit": 13009840
+      },
+      {
+        "name": "collect",
+        "wallMs": 51.011981999999996,
+        "allocBytes": 38755208,
+        "allocBlocks": 423895,
+        "freeBytes": 32306438,
+        "freeBlocks": 393650,
+        "liveAtEnter": 13010128,
+        "liveAtExit": 19458898
+      },
+      {
+        "name": "parse",
+        "wallMs": 27.38713,
+        "allocBytes": 65673480,
+        "allocBlocks": 9701,
+        "freeBytes": 756264,
+        "freeBlocks": 6332,
+        "liveAtEnter": 19458898,
+        "liveAtExit": 84376114
+      },
+      {
+        "name": "constants",
+        "wallMs": 48.033303,
+        "allocBytes": 248677136,
+        "allocBlocks": 386014,
+        "freeBytes": 216890790,
+        "freeBlocks": 192012,
+        "liveAtEnter": 84376114,
+        "liveAtExit": 116162460
+      },
+      {
+        "name": "graphs",
+        "wallMs": 39.672850000000004,
+        "allocBytes": 33245089,
+        "allocBlocks": 272837,
+        "freeBytes": 48597383,
+        "freeBlocks": 348576,
+        "liveAtEnter": 116162460,
+        "liveAtExit": 100810166
+      },
+      {
+        "name": "hosts",
+        "wallMs": 50.598645999999995,
+        "allocBytes": 80648111,
+        "allocBlocks": 207775,
+        "freeBytes": 80572004,
+        "freeBlocks": 206180,
+        "liveAtEnter": 100810454,
+        "liveAtExit": 100886561
+      },
+      {
+        "name": "analysis",
+        "wallMs": 35.210786,
+        "allocBytes": 79892636,
+        "allocBlocks": 351845,
+        "freeBytes": 58963566,
+        "freeBlocks": 126600,
+        "liveAtEnter": 100886561,
+        "liveAtExit": 121815631
+      },
+      {
+        "name": "extract",
+        "wallMs": 199.163066,
+        "allocBytes": 183683933,
+        "allocBlocks": 2155031,
+        "freeBytes": 145771285,
+        "freeBlocks": 1588746,
+        "liveAtEnter": 121815631,
+        "liveAtExit": 159728279
+      },
+      {
+        "name": "harvest",
+        "wallMs": 55.073631,
+        "allocBytes": 10349514,
+        "allocBlocks": 524000,
+        "freeBytes": 10322763,
+        "freeBlocks": 523248,
+        "liveAtEnter": 159728279,
+        "liveAtExit": 159755030
+      },
+      {
+        "name": "assembly",
+        "wallMs": 409.88768,
+        "allocBytes": 189449590,
+        "allocBlocks": 3506821,
+        "freeBytes": 207125068,
+        "freeBlocks": 3891085,
+        "liveAtEnter": 76607465,
+        "liveAtExit": 58931987
+      },
+      {
+        "name": "partition",
+        "wallMs": 33.359938,
+        "allocBytes": 36684336,
+        "allocBlocks": 377646,
+        "freeBytes": 36684336,
+        "freeBlocks": 377646,
+        "liveAtEnter": 58931987,
+        "liveAtExit": 58931987
+      },
+      {
+        "name": "serialize",
+        "wallMs": 5.2609639999999995,
+        "allocBytes": 16875648,
+        "allocBlocks": 1557,
+        "freeBytes": 8487040,
+        "freeBlocks": 1556,
+        "liveAtEnter": 31746065,
+        "liveAtExit": 40134673
+      }
+    ],
+    "rustProcess": {
+      "spans": 1,
+      "allocBytes": 998778182,
+      "allocBlocks": 8259561,
+      "freeBytes": 984178567,
+      "freeBlocks": 8258163,
+      "liveBytes": 14599615,
+      "peakLiveBytes": 165725490
+    }
+  },
+  "node": {
+    "version": "v24.16.0"
+  },
+  "nativeShipped": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "393afb0aa3ff48f65d16d49d34f490c82e38c1389465dbd22221f7c01742e6ba",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "nativeTrace": {
+    "path": "packages/reference-rs/dist/native-trace/bf8177f88c81/virtual-native.darwin-x64.node",
+    "sha256": "6af0ef6cb20f19e39b30b443d2ab26d36ba98844d8aeaceed62b14ce20e6259b",
+    "profile": "release+alloc-trace",
+    "builtVia": "napi build --release --features alloc-trace",
+    "inputsHash": "bf8177f88c818b222a1f8fba70038298fba1a6250ffc31b94a69b650776703c6",
+    "bytes": 8907392
+  },
+  "platform": "darwin-x64",
+  "createdAt": "2026-09-21T12:37:06.079Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/alloc-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/alloc.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj5-allocphases.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-rs/modules/atomic/Cargo.toml",
+    " M packages/reference-rs/modules/atomic/native.rs",
+    " M packages/reference-rs/modules/atomic/src/lib.rs",
+    " M packages/reference-rs/modules/runtime/Cargo.toml",
+    " D packages/reference-rs/modules/runtime/src/alloc_trace.rs",
+    " M packages/reference-rs/modules/runtime/src/lib.rs",
+    "?? .agents/skills/agent-rs/scripts/alloc-compiler-phases.mjs",
+    "?? docs/evidence/alloc/enterprise-alloc3/",
+    "?? packages/reference-rs/modules/atomic/src/alloc_counters.rs",
+    "?? packages/reference-rs/modules/atomic/src/alloc_trace.rs"
+  ]
+}

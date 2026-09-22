@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { allocPhasesLines } from './alloc-phases.mjs'
+import { compilerPhaseLines } from './alloc-compiler-phases.mjs'
 import { checkReconciled } from './phases.mjs'
 
 export function resolveAllocEvidenceDir(repoRoot, options, pin) {
@@ -112,6 +113,7 @@ export function buildAllocMeta(ctx, repo, legs, natives) {
       traceGc: legs.trace.traceGcSummary,
       window: classifyWindow(legs.trace.traceGcEvents, legs.trace.rust.span, legs.trace.spawnEpochMs),
       rustSpan: legs.trace.rust.span,
+      rustPhases: legs.trace.rust.phases ?? null,
       rustProcess: {
         spans: legs.trace.rust.process.spans,
         allocBytes: legs.trace.rust.process.allocBytes,
@@ -319,6 +321,7 @@ export function renderAllocSummary(meta, gc, rust) {
     ...gcLines(gc),
     ...windowLines(meta.traceLeg.window, meta.traceLeg.rustSpan),
     ...rustLines(rust),
+    ...compilerPhaseLines(rust),
     ...rssLines(meta, gc, rust, meta.traceLeg.window),
     ...artifactLines(meta),
   ].join('\n')

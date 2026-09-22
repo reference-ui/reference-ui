@@ -78,7 +78,9 @@ checks. Triage by the captain confirmed the code mechanics of issues
 - [x] Independent RSS sampler behind a versioned bench procedure.
       (landed 2026-09-21, verified firsthand: scorer bench-worker/2
       dual-reporting v1 RSS + OS high-water)
-- [ ] Alloc counts by compiler phase.
+- [x] Alloc counts by compiler phase. (landed 2026-09-21, verified
+      firsthand: procedure agentrs-alloc/3, 12 phase rows filed at
+      docs/evidence/alloc/enterprise-alloc3/)
 - [ ] Regenerated enterprise evidence + recon v2 (revised bars,
       withdrawn ceilings, corrected numbers).
 
