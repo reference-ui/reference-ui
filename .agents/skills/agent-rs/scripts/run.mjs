@@ -578,6 +578,7 @@ function printHelp() {
   \x1b[33m--rate <hz>\x1b[0m               Samply sampling rate, 10..10000 (default: 1000)
   \x1b[33m--no-build\x1b[0m                Skip ensure-native; profile the prebuilt .node as-is
   \x1b[33m--list\x1b[0m                    List frozen scales
+  \x1b[33m--resummarize <dir>\x1b[0m         Reprocess a filed bundle's raw profile (no rebuild, no re-record)
 
 \x1b[1mOPTIONS FOR 'alloc':\x1b[0m
   \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
@@ -661,7 +662,7 @@ async function main() {
 
   if (command === 'flame') {
     const flameArgs = args.slice(1)
-    if (!flameArgs.includes('--no-build') && !flameArgs.includes('--list') && !flameArgs.includes('--help')) {
+    if (!flameArgs.includes('--no-build') && !flameArgs.includes('--list') && !flameArgs.includes('--help') && !flameArgs.includes('--resummarize')) {
       const buildCode = await runEnsureNative(rsDir)
       if (buildCode !== 0) process.exit(buildCode)
     }
