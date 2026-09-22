@@ -63,3 +63,10 @@ otherwise.
 - Tick park: wave-3 CLOSED (archive + stub). Roster zero, lock free,
   all slots held, tick disarmed. Mission PARKED for HQ — no wave 4
   without new filed evidence. Resume checklist in the park report.
+- Tick conn: new captain took conn (tip 4720da9, +3 since park: closeout
+  + raw-index LAND + bench pin; RS + neo runtime zero-touch, pushstring
+  still CUT-only, index 85). No new filed evidence — wave 4 NOT opened,
+  park holds, voyage-swarm.mjs NOT launched (runner changed post-park,
+  untested; slots held on proven empty backlog). Dispatched clerk-bankfile
+  (paper only) for the six unfiled off-scope BANKs; tick re-armed 11,41.
+  Slots 1/7, 6 held.
