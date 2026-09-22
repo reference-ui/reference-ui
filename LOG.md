@@ -174,6 +174,20 @@ diets); scan voyage opens separately after closeout lands.
   SUPERSEDED. VOYAGE.md updated.
 - Slots: 2/7 (INT-T1 + F1 designer), 5 held — nothing else briefable
   (F2 merged into Formula-1 line, N1 held) — this entry is the proof.
+- T1 LANDED (solo, scan identity): prefix-strip + fused checks, member
+  −16.84/−1.96% + integrator confirmatory −15.05/−1.76% (4 clears
+  total, 8/8 ×4, ex-run-1 stands; thin 0.05 margin disclosed on one).
+  Captain firsthand on exact tree: vitest 242/242, tsc clean, q
+  0v/2w-nonfailing; Playwright 17/17 stands on member (byte-identical
+  diet). Repro byte-identical, collisions clean, soundness 15,837/0
+  re-proven. Filed report + INTEGRATE; bench report + flame refresh
+  follow per chain. T1 + INT worktrees released.
+- Slots: 1/7 (F1 designer), 6 held — diet backlog exhausted (Formula-1
+  in design, N1 held) — this entry is the proof.
+
+- swarm-scanidentity LAND (solo, prefix-strip + fused splitScan):
+  −16.84 ms / −1.96%, 8/8 agree, identity 4/4, integrator-confirmed
+  −15.05/−1.76%. Landed with this arc; bench report follows.
 
 ## Ticks (empty board)
 
