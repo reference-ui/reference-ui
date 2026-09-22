@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Where sync() time goes — VOYAGE enterprise sync map</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #333;
+    --line: #cfd4d9;
+    --panel: #f2f4f6;
+    --blue: #0072b2;
+    --orange: #e69f00;
+    --orange-lt: #f0c75e;
+    --green: #009e73;
+    --sky: #56b4e9;
+    --yellow: #f0e442;
+    --gap: #d8d8d8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 920px;
+    padding: 28px 20px 60px;
+    background: #ffffff;
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+  .dateline { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lede { font-size: 15.5px; margin: 0 0 18px; max-width: 70ch; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 8px; }
+  .stat { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+  .stat b { display: block; font-size: 22px; line-height: 1.2; }
+  .stat span { font-size: 12px; color: var(--ink-soft); }
+  figure.hero { margin: 18px 0 6px; border: 1px solid var(--line); border-radius: 6px; padding: 10px 6px 4px; }
+  figure.hero svg { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 12.5px; color: var(--ink-soft); padding: 8px 12px 12px; max-width: 78ch; }
+  figcaption code { font-size: 12px; }
+  h2 { font-size: 19px; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--ink); }
+  h2 .ms { font-weight: 400; font-size: 14px; color: var(--ink-soft); }
+  h3 { font-size: 14px; margin: 14px 0 6px; }
+  .card { margin: 0 0 4px; }
+  .card > p, .card > ul { margin: 6px 0; max-width: 82ch; }
+  ul.tight { padding-left: 20px; }
+  ul.tight li { margin: 2px 0; }
+  .looked { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 10px 0 4px; }
+  .looked > h3 { margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 6px 0; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #e8ebee; font-size: 12px; }
+  td.room { font-weight: 700; white-space: nowrap; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; background: #e8ebee; padding: 0 3px; border-radius: 3px; }
+  .looked code { background: #dfe3e7; }
+  .chip { display: inline-block; font-size: 10.5px; font-weight: 700; color: #fff; border-radius: 3px; padding: 1px 6px; margin-right: 4px; white-space: nowrap; }
+  .c-land { background: #007a4d; }
+  .c-bank { background: #005f8a; }
+  .c-cut { background: #8a3b00; }
+  .c-kill { background: #a00020; }
+  .c-ban { background: #1a1a1a; }
+  .c-held { background: #7a5b00; }
+  .c-yield { background: #555; }
+  .seamstrip { border: 2px solid var(--ink); border-radius: 4px; margin: 18px 0 4px; overflow: hidden; }
+  .seamstrip .bar { height: 14px; background: repeating-linear-gradient(45deg, #fff 0 6px, #1a1a1a 6px 8px); }
+  .seamstrip .body { padding: 8px 12px 10px; }
+  .seamstrip h2 { border-bottom: none; margin: 2px 0 4px; padding: 0; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  footer { margin-top: 30px; border-top: 2px solid var(--ink); padding-top: 10px; }
+  footer h2 { border-bottom: none; padding: 0; }
+  footer ol { padding-left: 20px; max-width: 84ch; }
+  footer ol li { margin: 6px 0; font-size: 13.5px; }
+  .sources { font-size: 12.5px; color: var(--ink-soft); max-width: 84ch; }
+  .svg-lbl { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  @media (max-width: 700px) { .stats { grid-template-columns: 1fr 1fr; } .duo { grid-template-columns: 1fr; } }
+  @media print {
+    body { max-width: none; padding: 0; font-size: 12px; }
+    h1 { font-size: 24px; }
+    .card, .seamstrip, footer { break-inside: avoid-page; }
+    figure.hero { break-inside: avoid-page; }
+    .duo { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none; animation: none; } }
+</style>
+</head>
+<body>
+
+<p class="dateline">VOYAGE &middot; enterprise sync() map &middot; frozen seed-7 load (3,000 files + 12,000 dead, 7,527 css() calls) &middot; 2026-09-22 &middot; tip <code>6f4cf1b</code> (RS tree = set-5 <code>6c39095</code>)</p>
+<h1>Where sync() time goes</h1>
+<p class="lede">One page showing where enterprise serial <code>sync()</code> time goes after 24 landed diets (&minus;260&nbsp;ms, 1198&nbsp;&rarr;&nbsp;938), and where the voyage has looked. Every segment carries milliseconds and share. Instrumented flames: <code>enterprise-repro4a/b</code> (samply 1000&nbsp;Hz, reconciled &times;2).</p>
+
+<div class="stats" role="list">
+  <div class="stat" role="listitem"><b>&asymp;938 ms</b><span>scoreboard median (captain&rsquo;s intset5 sums)</span></div>
+  <div class="stat" role="listitem"><b>&asymp;973 ms</b><span>instrumented total (4a 974.6 / 4b 972.6)</span></div>
+  <div class="stat" role="listitem"><b>700 ms</b><span>target (Panda v2: 645 ms serial)</span></div>
+  <div class="stat" role="listitem"><b>~235+ ms</b><span>gap: unreachable serial &rarr; PARKED</span></div>
+</div>
+
+<figure class="hero">
+<svg viewBox="0 0 660 700" role="img" aria-label="Sunburst of enterprise sync time: compile 520 ms, scan 368 ms, publish 52.5 ms, config 28.2 ms, evaluate 4.3 ms. Inside compile: Rust-direct 213 ms, unattributed gap 307 ms, unscouted N-API seam.">
+  <defs>
+    <pattern id="seamHatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <rect width="7" height="7" fill="#ffffff"></rect>
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#1a1a1a" stroke-width="2"></line>
+    </pattern>
+  </defs>
+  <!-- ring 1: phases -->
+  <path d="M 330.0 260.0 L 330.0 170.0 A 190 190 0 1 1 289.6 545.7 L 308.7 457.7 A 100 100 0 1 0 330.0 260.0 Z" fill="#0072b2" stroke="#fff" stroke-width="2"></path>
+  <path d="M 308.7 457.7 L 289.6 545.7 A 190 190 0 0 1 230.7 198.0 L 277.7 274.7 A 100 100 0 0 0 308.7 457.7 Z" fill="#e69f00" stroke="#fff" stroke-width="2"></path>
+  <path d="M 277.7 274.7 L 180.5 116.2 A 286 286 0 0 1 270.1 80.3 L 309.1 262.2 A 100 100 0 0 0 277.7 274.7 Z" fill="#009e73" stroke="#fff" stroke-width="2"></path>
+  <path d="M 309.1 262.2 L 270.1 80.3 A 286 286 0 0 1 321.7 74.1 L 327.1 260.0 A 100 100 0 0 0 309.1 262.2 Z" fill="#56b4e9" stroke="#fff" stroke-width="2"></path>
+  <path d="M 327.1 260.0 L 321.7 74.1 A 286 286 0 0 1 329.7 74.0 L 329.9 260.0 A 100 100 0 0 0 327.1 260.0 Z" fill="#f0e442" stroke="#fff" stroke-width="2"></path>
+  <!-- ring 2: compile + scan breakdown -->
+  <path d="M 330.0 164.0 L 330.0 74.0 A 286 286 0 0 1 610.3 303.3 L 522.1 321.2 A 196 196 0 0 0 330.0 164.0 Z" fill="#0072b2" stroke="#fff" stroke-width="2"></path>
+  <path d="M 522.1 321.2 L 610.3 303.3 A 286 286 0 0 1 269.2 639.5 L 288.3 551.5 A 196 196 0 0 0 522.1 321.2 Z" fill="#d8d8d8" stroke="#fff" stroke-width="2"></path>
+  <path d="M 288.3 551.5 L 269.2 639.5 A 286 286 0 0 1 233.7 629.3 L 264.0 544.6 A 196 196 0 0 0 288.3 551.5 Z" fill="#e69f00" stroke="#fff" stroke-width="2"></path>
+  <path d="M 264.0 544.6 L 233.7 629.3 A 286 286 0 0 1 180.5 116.2 L 227.6 192.9 A 196 196 0 0 0 264.0 544.6 Z" fill="#f0c75e" stroke="#fff" stroke-width="2"></path>
+  <!-- seam wedge (schematic width) over the rust/gap boundary -->
+  <path d="M 519.8 311.2 L 607.0 288.7 A 286 286 0 0 1 612.9 318.1 L 523.9 331.3 A 196 196 0 0 0 519.8 311.2 Z" fill="url(#seamHatch)" stroke="#1a1a1a" stroke-width="1.5"></path>
+  <!-- center -->
+  <circle cx="330" cy="360" r="92" fill="#1b1b1b"></circle>
+  <text x="330" y="352" text-anchor="middle" fill="#fff" font-size="30" font-weight="700" class="svg-lbl">&asymp;973 ms</text>
+  <text x="330" y="372" text-anchor="middle" fill="#fff" font-size="12" class="svg-lbl">sync() total &middot; instrumented</text>
+  <text x="330" y="388" text-anchor="middle" fill="#ddd" font-size="11" class="svg-lbl">scoreboard &asymp;938</text>
+  <!-- inside labels -->
+  <text x="474" y="372" text-anchor="middle" fill="#fff" font-size="15" font-weight="700" class="svg-lbl">compile 520 ms</text>
+  <text x="474" y="390" text-anchor="middle" fill="#fff" font-size="13" class="svg-lbl">53.4%</text>
+  <text x="483" y="170" text-anchor="middle" fill="#fff" font-size="13" font-weight="700" class="svg-lbl">Rust-direct ~213</text>
+  <text x="483" y="186" text-anchor="middle" fill="#fff" font-size="11.5" class="svg-lbl">41% of compile</text>
+  <text x="499" y="528" text-anchor="middle" fill="#1a1a1a" font-size="13" font-weight="700" class="svg-lbl">unattributed gap ~307</text>
+  <text x="499" y="544" text-anchor="middle" fill="#1a1a1a" font-size="11.5" class="svg-lbl">59% of compile</text>
+  <text x="499" y="558" text-anchor="middle" fill="#333" font-size="10" class="svg-lbl">malloc &middot; memmove &middot; kernel &middot; node &middot; seam</text>
+  <text x="187" y="380" text-anchor="middle" fill="#1a1a1a" font-size="15" font-weight="700" class="svg-lbl">scan 368 ms</text>
+  <text x="187" y="398" text-anchor="middle" fill="#1a1a1a" font-size="13" class="svg-lbl">37.8%</text>
+  <text x="90" y="381" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">open+walk floor ~348</text>
+  <text x="90" y="396" text-anchor="middle" fill="#333" font-size="10.5" class="svg-lbl">by subtraction</text>
+  <text x="566" y="316" text-anchor="middle" fill="#1a1a1a" font-size="11" font-weight="700" class="svg-lbl" transform="rotate(-11.4 566 312)">SEAM</text>
+  <!-- leader lines -->
+  <line x1="224" y1="94" x2="200" y2="52" stroke="#1a1a1a" stroke-width="1"></line>
+  <circle cx="224" cy="94" r="2.5" fill="#1a1a1a"></circle>
+  <text x="200" y="44" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">publish 52.5 ms &middot; 5.4%</text>
+  <line x1="296" y1="76" x2="290" y2="32" stroke="#1a1a1a" stroke-width="1"></line>
+  <circle cx="296" cy="76" r="2.5" fill="#1a1a1a"></circle>
+  <text x="290" y="24" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">config 28.2 ms &middot; 2.9%</text>
+  <line x1="326" y1="74" x2="360" y2="44" stroke="#1a1a1a" stroke-width="1"></line>
+  <circle cx="326" cy="74" r="2.5" fill="#1a1a1a"></circle>
+  <text x="366" y="48" text-anchor="start" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">evaluate 4.3 ms &middot; 0.4%</text>
+  <line x1="251" y1="635" x2="244" y2="670" stroke="#1a1a1a" stroke-width="1"></line>
+  <circle cx="251" cy="635" r="2.5" fill="#1a1a1a"></circle>
+  <text x="244" y="689" text-anchor="middle" fill="#1a1a1a" font-size="12.5" font-weight="700" class="svg-lbl">collect ~20 &middot; 5% of scan</text>
+</svg>
+<figcaption>
+  Areas proportional to ms (means of 4a/4b). Phase stopwatches: compile 520.0/520.1, scan 371.0/365.8, publish 52.6/52.5, config 28.2/28.1, evaluate 2.7/6.0 (noise swap).
+  Instrumented A/B sit <strong>+3.8% over the &asymp;938 scoreboard</strong> (same overhead ratio as repro2&rsquo;s +3.2%).
+  Rust-direct = <code>.node</code> self-weight (205/220). The scan floor (~348) is phase stopwatch minus attributed collect, by subtraction.
+  The hatched SEAM wedge is <strong>schematic width, not measured</strong>: seam-crossing cost was never isolated (see seam strip).
+</figcaption>
+</figure>
+
+<section class="card" id="compile">
+<h2>Compile <span class="ms">520 ms &middot; 53.4% of sync &middot; carries the whole &minus;56/&minus;58 wave-2 win</span></h2>
+<p>Rust extract &rarr; resolve &rarr; emit over 7,527 css() calls via N-API. Native runs only under compile, so whole-profile <code>.node</code> weight is whole-sync compile work. Post-land room weights (wt&asymp;ms): resolve_want 75/68, build_keyed 56/55, extract ctx 60/56, walks ~95/98, parse 35/27, hosts 31, pool 18, serialize 12/14, Proof::collect 13/12, analyze 19/20.</p>
+<div class="looked">
+<h3>Where we&rsquo;ve looked &mdash; compile sub-rooms (all dry or fenced; T1 was the last topic, now CUT)</h3>
+<table>
+<tr><th>Sub-room</th><th>Landed (&Delta; + id + wave)</th><th>CUT / yielded / held (reason + id)</th></tr>
+<tr><td class="room">Canon dispatch</td><td><span class="chip c-land">LAND</span>canon &minus;39.6 <code>PERF-W1-CANON</code> w1 &middot; <span class="chip c-bank">BANK</span>islen &minus;16.0 <code>PERF-W1-ISLEN</code>&rarr;<code>INT-W1-BANK</code> w1 &middot; <span class="chip c-bank">BANK</span>canon2 ~&minus;14 <code>PERF-W2-CANON2</code>&rarr;<code>INT-W2-BANK</code> w2 &middot; <span class="chip c-bank">BANK</span>shorthand LOO &minus;8.5 <code>PERF-W2-SHORTHAND</code>&rarr;<code>INT-W2-SET3</code> w2</td><td><span class="chip c-cut">CUT</span>findprop (census 13.1 &lt; bar) <code>PERF-W2-FINDPROP</code> &middot; callermemo <code>PERF-W2-CALLERMEMO</code> &middot; nameset (0.35) <code>PERF-W2-NAMESET</code> &middot; btreeset (8.9, already unique) <code>PERF-W2-BTREESET</code> &middot; lowermemo (4.3/1.2) <code>PERF-W2-LOWERMEMO</code> &middot; trbl (0.2, all-mint) <code>PERF-W2-TRBL</code> &middot; rhythm (3.2/1.4) <code>PERF-W2-RHYTHM</code> &middot; resolvefmt (2.9; zeros are load facts) <code>PERF-W2-RESOLVEFMT</code></td></tr>
+<tr><td class="room">Resolve</td><td><span class="chip c-land">LAND</span>cloneplasma &minus;26.7 <code>PERF-W2-CLONEPLASMA</code>&rarr;<code>INT-W2-CLONEPLASMA</code> w2 &middot; <span class="chip c-bank">BANK</span>wantctx &minus;5.4 <code>PERF-W2-WANTCTX</code>&rarr;<code>INT-W2-SET5</code> w2</td><td><span class="chip c-yield">YIELD</span>authcss &minus;11.6 <code>PERF-W2-AUTHCSS</code>, all 6 hunks subsumed (hunk map in <code>INT-W2-CLONEPLASMA</code>) &middot; <span class="chip c-cut">CUT</span>tokenphase (whole-sync AND per-phase tried, 3.5/38.5%) <code>PERF-W2-TOKENPHASE</code></td></tr>
+<tr><td class="room">Builder / serializer</td><td><span class="chip c-bank">BANK</span>keys2 diet &minus;3.3 phase <code>PERF-W2-KEYS2</code>&rarr;<code>INT-W2-BANK</code> w2 &middot; <span class="chip c-bank">BANK</span>extend LOO &minus;15.4 <code>PERF-W2-EXTEND</code>&rarr;<code>INT-W2-SET4B</code> w2 &middot; <span class="chip c-bank">BANK</span>scalarreproof +0.2 null-as-filed <code>PERF-W2-SCALARREPROOF</code>&rarr;<code>INT-W2-SET4B</code> w2</td><td><span class="chip c-cut">CUT</span>keys-memo half (loses 5&ndash;15) &middot; keys w1 (19wt ceiling; revived per-phase) <code>PERF-W1-KEYS</code> &middot; modgraph (~11&ndash;12 ceiling) <code>PERF-W2-MODGRAPH</code> &middot; canonjson (16.1 fantasy) <code>PERF-W2-CANONJSON</code> &middot; posreuse (~5 + silent-corrupt) <code>PERF-W2-POSREUSE</code> &middot; modmap (measured ~0) <code>PERF-W2-MODMAP</code> &middot; <span class="chip c-held">HELD&rarr;superseded</span>scalarjson <code>PERF-W2-SCALARJSON</code> (generic-W; frame landed via scalarreproof)</td></tr>
+<tr><td class="room">Cascade / emission</td><td><span class="chip c-bank">BANK</span>emit &minus;24.6 <code>PERF-W1-EMIT</code>&rarr;<code>INT-W1-BANK</code> w1 &middot; <span class="chip c-bank">BANK</span>cascade ~3&ndash;5 <code>PERF-W2-CASCADE</code>&rarr;<code>INT-W2-BANK</code> w2 (captain override of crew CUT) &middot; <span class="chip c-bank">BANK</span>selpush straddle +1.8 LOO <code>PERF-W2-SELPUSH</code>&rarr;<code>INT-W2-SET3</code> w2 &middot; <span class="chip c-bank">BANK</span>sysprefix sub-noise <code>PERF-W2-SYSPREFIX</code>&rarr;<code>INT-W2-SET4B</code> w2</td><td><span class="chip c-held">HELD&rarr;CUT</span>recipepath &minus;13.05 <code>PERF-W2-RECIPEPATH</code> &rarr; contra +5.4/+7.8 <code>INT-W2-SET4</code> &rarr; lottery <code>PERF-W3-RECIPEPROOF</code> &middot; <span class="chip c-cut">CUT</span>sortshape (67/67 divergent ties bar shape) <code>PERF-W2-SORTSHAPE</code> &middot; atrules (~1, never sampled) <code>PERF-W2-ATRULES</code></td></tr>
+<tr><td class="room">Diagnostics / proof</td><td><span class="chip c-land">LAND</span>diag &minus;19.9 solo <code>PERF-W2-DIAG</code>&rarr;<code>INT-W2-DIAG</code>&rarr;<code>INT-W2-BANK</code> w2 &middot; <span class="chip c-bank">BANK</span>proof LOO &minus;13.9 <code>PERF-W2-PROOF</code>&rarr;<code>INT-W2-SET3</code> w2 &middot; <span class="chip c-bank">BANK</span>analysisb straddle &minus;1.5 <code>PERF-W2-ANALYSISB</code>&rarr;<code>INT-W2-SET4B</code> w2</td><td><span class="chip c-cut">CUT</span>asmfmt (0 ms, gate-dead) <code>PERF-W2-ASMFMT</code> &middot; manifest (0 ms, unreachable) <code>PERF-W2-MANIFEST</code></td></tr>
+<tr><td class="room">Parse / oxc</td><td><span class="chip c-bank">BANK</span>parse in-situ &asymp;20 <code>PERF-W2-PARSE</code>&rarr;<code>INT-W2-BANK</code> w2 (solo ~0 in noise) &middot; <span class="chip c-bank">BANK</span>programsfx straddle +2.3 <code>PERF-W2-PROGRAMSFX</code>&rarr;<code>INT-W2-SET5</code> w2</td><td><span class="chip c-cut">CUT</span>visitrec (2.1) <code>PERF-W2-VISITREC</code> &middot; recordcopy (0.54) <code>PERF-W2-RECORDCOPY</code></td></tr>
+<tr><td class="room">Extract / scope</td><td><span class="chip c-bank">BANK</span>extract LOO &minus;14.5 <code>PERF-W2-EXTRACT</code>&rarr;<code>INT-W2-SET2</code> w2 &middot; <span class="chip c-bank">BANK</span>lineindex LOO &minus;3.9 <code>PERF-W2-LINEINDEX</code>&rarr;<code>INT-W2-SET4B</code> w2 &middot; <span class="chip c-bank">BANK</span>stageaudit straddle +1.9 <code>PERF-W2-STAGEAUDIT</code>&rarr;<code>INT-W2-SET5</code> w2 &middot; <span class="chip c-bank">BANK</span>bagdefer LOO &minus;5.2 <code>PERF-W2-BAGDEFER</code>&rarr;<code>INT-W2-SET5</code> w2</td><td><span class="chip c-cut">CUT</span>pushstring (0.1&ndash;0.3; interning = filler, no design) <code>PERF-W2-PUSHSTRING</code> &middot; scoperec (0.9&ndash;1.5) <code>PERF-W2-SCOPEREC</code> &middot; recordaudit (6.4) <code>PERF-W2-RECORDAUDIT</code></td></tr>
+<tr><td class="room">Harvest</td><td><span class="chip c-bank">BANK</span>harvestphase D1 &minus;8.6 phase / 31.6% <code>PERF-W2-HARVESTPHASE</code>&rarr;<code>INT-W2-SET5</code> w2 (LOO &minus;6.7)</td><td><span class="chip c-cut">CUT</span>harvest (12.5/1.08%, counted, never built) <code>PERF-W2-HARVEST</code></td></tr>
+<tr><td class="room">Alloc / realloc</td><td><span class="chip c-bank">BANK</span>reserve (reallocs &minus;35.3%) <code>PERF-W1-RESERVE</code>&rarr;<code>INT-W1-BANK</code> w1 &middot; <span class="chip c-bank">BANK</span>hashers LOO &minus;14.5 <code>PERF-W2-HASHERS</code>&rarr;<code>INT-W2-SET2</code> w2 &middot; <span class="chip c-bank">BANK</span>realloc straddle &minus;1.2 <code>PERF-W2-REALLOC</code>&rarr;<code>INT-W2-SET4B</code> w2 (D1 yielded to collect)</td><td><span class="chip c-cut">CUT</span>memmove/memcmp standalone (effects die with parents) &middot; diffuse +8/+10 offset, no caller &gt;6 &mdash; not a room</td></tr>
+</table>
+</div>
+</section>
+
+<section class="seamstrip" id="seam" aria-label="N-API seam: never scouted">
+<div class="bar"></div>
+<div class="body">
+<h2>The seam (N-API crossings) &mdash; NEVER SCOUTED, zero entries</h2>
+<p>In scope per the VOYAGE ground fence and explicitly unexamined, not assumed fine. napi frames read &le;6 and publish is flat, but per-call crossing cost was never isolated &mdash; no census, no diet, no CUT. The marshal diet (<code>PERF-W2-MARSHAL</code>) cut wire <em>bytes</em> (&minus;2.93&nbsp;MB/&minus;48.2%), not crossings. The seam lives inside the ~307&nbsp;ms unattributed gap and is the only compile-adjacent ground with no verdict at all.</p>
+</div>
+<div class="bar"></div>
+</section>
+
+<section class="card" id="scan">
+<h2>Scan <span class="ms">368 ms &middot; 37.8% of sync &middot; wall flat 365&rarr;368 across the voyage</span></h2>
+<ul class="tight">
+<li>File walk over ~15k entries: 3,000 live + <strong>12,000 dead</strong> needle-free files that must still be opened, read, and parsed-failure-checked.</li>
+<li>Attributed: sources::collect ~20 (backfill syscall ~15, sorted_entries ~12, matches_file ~4). Remainder ~348 is kernel + open floor, by subtraction.</li>
+</ul>
+<div class="looked">
+<h3>Where we&rsquo;ve looked &mdash; scan</h3>
+<p><span class="chip c-bank">BANK</span>collect D1+D2+D4, LOO &minus;8.7 <code>PERF-W2-COLLECT</code>&rarr;<code>INT-W2-SET3</code> w2 (file_name dir-sort, proven same-sequence).</p>
+<p><span class="chip c-kill">KILLED</span>shot2 dead-file avoidance (~190 ms prize) <code>PERF-W2-SHOT2</code>: no sound pre-open signal &mdash; <code>streamed</code> is a content property undecidable pre-open, needle-free &ne; dead (C1 keep-alive pins a live parse failure); 17 candidates tried, all dead; resurrection criteria R1&ndash;R3 filed. <strong>This is scan&rsquo;s known room, with no sound door.</strong></p>
+<p><span class="chip c-cut">CUT</span>per-open optimization (15.87&nbsp;&micro;s is floor; only count matters) &middot; <span class="chip c-cut">CUT</span>parallel scan reads (async + 64-worker both regressed) &middot; <span class="chip c-ban">BANNED</span>parallel/multithreaded compile by HQ <code>PERF-W2-SLICE1B</code> (100&ndash;140 ms file-level stack moot; E0.1/E0.2 closed AST-on-workers regardless).</p>
+</div>
+</section>
+
+<div class="duo">
+<section class="card" id="publish">
+<h2>Publish <span class="ms">52.5 ms &middot; 5.4%</span></h2>
+<p>V8 JsonStringify + SlowFlatten leaves (small-n noisy; 3b missed them entirely). Slim-wire codec: portable sheet = 1,162&nbsp;B head + shared-tail length.</p>
+<div class="looked">
+<h3>Where we&rsquo;ve looked &mdash; publish</h3>
+<p><span class="chip c-bank">BANK</span>marshal, LOO &minus;6.7 <code>PERF-W2-MARSHAL</code>&rarr;<code>INT-W2-SET3</code> w2. Stopwatch flat (&minus;0.4/&minus;4.4, noise edge); napi frames &le;6; residual is inherent bytes.</p>
+</div>
+</section>
+<section class="card" id="config">
+<h2>Config &amp; evaluate <span class="ms">28.2 + 4.3 ms &middot; 3.3%</span></h2>
+<p>Config: loader/config, flat (+0.7/+0.6). Evaluate: A&harr;B noise swap (6.1/2.7 &rarr; 2.7/6.0) &mdash; pure noise, no signal.</p>
+<div class="looked">
+<h3>Where we&rsquo;ve looked &mdash; config / evaluate</h3>
+<p>Zero entries &mdash; untouched as designed, floor. (4b startup +45.6 node stall is outside sync: disclosed, unscored.)</p>
+</div>
+</section>
+</div>
+
+<section class="card" id="floors">
+<h2>Floors &amp; leaves <span class="ms">whole-profile self-weights (incl. startup; only .node is sync-scoped)</span></h2>
+<ul class="tight">
+<li>kernel 430/433 (floor, unmoved) &middot; malloc 164/142 self (down &minus;9/&minus;19) &middot; free down &minus;13/&minus;14 &middot; platform 103/103 (memmove offset) &middot; node 158/163 (startup noise) &middot; JS 23/31.</li>
+</ul>
+<div class="looked">
+<h3>Where we&rsquo;ve looked &mdash; floors</h3>
+<p><span class="chip c-cut">CUT</span>pure-JS micro-work (2.3% self) &middot; GC scheduling (zero in-window full GCs) &middot; single-function spikes (long-tail flat) &middot; RSS/bundle lanes (guardrails, never traded) &middot; warm second-sync, churn profiling, new infra as objectives &middot; ship-one-sheet, harvest kill/rewrite, B3 gating, insert-skip (rule-proven deaths). Wave-1 reserve + wave-2 hashers/realloc are the only alloc diets; the rest is floor.</p>
+</div>
+</section>
+
+<footer>
+<h2>Honest unknowns</h2>
+<ol>
+<li><strong>Diffuse memmove (+8/+10, no caller &gt;6wt)</strong> is a second-order allocator/layout effect of the set-5 diets, unresolvable at flame grain &mdash; it accounts for the flame-vs-stopwatch gap (&minus;56/&minus;58 flame vs &minus;63.3 expected). An offset, not a room; not seeded.</li>
+<li><strong>No Rust-inclusive total exists.</strong> No single frame carries all <code>.node</code> work (<code>AssembleCtx::finish</code> inlined away = code motion, not a win), so compile 520 vs <code>.node</code>-self ~213 leaves ~307 spread across malloc, memmove, kernel, node, and seam crossings &mdash; attributable only by subtraction.</li>
+<li><strong>Harness note (938/973).</strong> +3.8% instrument overhead; the &asymp;938 median is the captain&rsquo;s intset5 sums, not re-derived; no warm unscored anchor; n=2 captures (B is a stability cross-check, not protocol).</li>
+<li><strong>Ceiling + gap.</strong> Stack-everything ceiling 917 fantasy / 935 realistic (repro3, supersedes repro2&rsquo;s 910). Gap to 700 &asymp;235+, unreachable single-threaded. Backlog EMPTY; recipepath HELD&rarr;CUT closed the last topic; mission PARKED for HQ &mdash; no wave 4 without new filed evidence.</li>
+<li><strong>Off-scope fence (excluded from this map).</strong> The MCP icons-search swarm filed 1 LAND (<code>PERF-W3-RAWINDEX</code>, import &minus;160.3 / 0 sync ms), 2 BANK (<code>PERF-W3-CATPOST</code>, <code>PERF-W3-PRELOWER</code>), 4 MEMO, 2 CUT &mdash; all 0 sync ms by the ground fence.</li>
+<li><strong>Flagged, not seeded:</strong> resolve_token_value &minus;8/&minus;7 unattributed (no landed mechanism; 3a oversampled) &mdash; an unattributed delta is not a mechanism. Pushstring Want-interning sketch (5&ndash;8.5 ms fantasy) stays filler until a soundness design is filed.</li>
+</ol>
+<p class="sources">Sources: <code>docs/perf/waves/wave-3/report-swarm-repro3.md</code> (phase table, lib splits, memmove note) &middot; <code>VOYAGE.md</code> (ground fence, seam unexamined, ceiling, heavy-track bans) &middot; <code>LOG.md</code> + <code>docs/perf/waves/wave-2/log-archive-2026-09-22.md</code> + <code>docs/perf/waves/wave-3/log-archive-2026-09-22.md</code> (all verdicts) &middot; perf index, 93 entries (<code>pnpm agentperf list</code>) for every id cited &middot; flames <code>docs/evidence/flamegraph/enterprise-repro4a/b</code>. Palette: Okabe&ndash;Ito (color-blind-safe); no information is carried by color alone. Zero external dependencies: inline CSS + inline SVG, no scripts, renders over <code>file://</code>.</p>
+</footer>
+
+</body>
+</html>
