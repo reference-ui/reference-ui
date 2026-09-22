@@ -130,8 +130,9 @@ pub fn walk_bag_object(walk: &mut WalkCtx<'_>, gate: &AttrGate<'_>, obj: &Object
                     walk.dynamic(Site::bare(prop.key.span(), &[]), DynamicShape::UnknownProp);
                     continue;
                 };
-                if is_style_attr(gate, &key) {
-                    walk_attr_input(walk, &key, AttrInput::Expr(&prop.value), prop.value.span());
+                let key: &str = &key;
+                if is_style_attr(gate, key) {
+                    walk_attr_input(walk, key, AttrInput::Expr(&prop.value), prop.value.span());
                 }
             }
         }

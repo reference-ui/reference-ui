@@ -56,6 +56,17 @@ impl EscapeCursor {
         self.push_inner(out, val, true);
     }
 
+    /// Identifier chars consumed so far. Only index 0 takes the leading rule.
+    pub fn position(&self) -> usize {
+        self.index
+    }
+
+    /// Advance past `count` already-escaped identifier chars. The replayed
+    /// bytes must equal what pushing those chars would have emitted.
+    pub fn advance(&mut self, count: usize) {
+        self.index += count;
+    }
+
     /// Push `val`, scanning ident-body runs past the leading char.
     ///
     /// The leading-char rule keys off index 0 only, so the first char of a

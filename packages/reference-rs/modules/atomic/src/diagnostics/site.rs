@@ -150,16 +150,39 @@ impl LineIndex {
     /// 1-based (line, column) for a byte offset, or None past the end.
     /// The binary search finds the line; the tail walk counts UTF-16
     /// units exactly as [`line_col`]; non-boundary offsets reject.
+    /// ASCII tails skip the walk: every byte is one UTF-16 unit, so the
+    /// column is the tail length. The word scan is exact; anything with a
+    /// high bit falls through to the walk unchanged.
     pub fn line_col(&self, source: &str, offset: u32) -> Option<(u32, u32)> {
         let end = offset as usize;
         if end > source.len() || !source.is_char_boundary(end) {
             return None;
         }
         let line = self.starts.partition_point(|start| *start <= offset);
-        let tail = source.get(self.starts[line - 1] as usize..end)?;
+        let start = self.starts[line - 1] as usize;
+        if tail_is_ascii(&source.as_bytes()[start..end]) {
+            return Some((line as u32, (end - start) as u32 + 1));
+        }
+        let tail = source.get(start..end)?;
         let column = tail.chars().map(|ch| ch.len_utf16() as u32).sum::<u32>() + 1;
         Some((line as u32, column))
     }
+}
+
+/// True when no byte has the high bit: one AND per 8-byte word plus the
+/// scalar remainder. Early-exits on the first non-ASCII word; the copy
+/// keeps the word load alignment-safe and optimizes to one unaligned read.
+fn tail_is_ascii(tail: &[u8]) -> bool {
+    const HIGH_BITS: u64 = 0x8080_8080_8080_8080;
+    let mut chunks = tail.chunks_exact(8);
+    for chunk in &mut chunks {
+        let mut word = [0u8; 8];
+        word.copy_from_slice(chunk);
+        if u64::from_ne_bytes(word) & HIGH_BITS != 0 {
+            return false;
+        }
+    }
+    chunks.remainder().iter().all(|byte| *byte < 0x80)
 }
 
 #[cfg(test)]
@@ -209,6 +232,47 @@ mod tests {
             "line one\nline two is longer\nx",
         ] {
             assert_index_matches_scan(source);
+        }
+    }
+
+    #[test]
+    fn tail_is_ascii_checks_every_word_position() {
+        for len in 0..40 {
+            assert!(tail_is_ascii(&vec![b'a'; len]), "len {len}");
+        }
+        for pos in 0..24 {
+            let mut bytes = vec![b'a'; 24];
+            bytes[pos] = 0x80;
+            assert!(!tail_is_ascii(&bytes), "high bit at {pos}");
+            bytes[pos] = 0x7f;
+            assert!(tail_is_ascii(&bytes), "DEL at {pos}");
+        }
+        assert!(!tail_is_ascii("a\u{e9}b".as_bytes()));
+        assert!(tail_is_ascii(b""));
+    }
+
+    #[test]
+    fn line_index_ascii_tail_matches_scan() {
+        // ASCII edges through the arithmetic path, offset-for-offset vs the
+        // scan; the mixed tail falls through to the walk on the same queries.
+        for source in [
+            "",
+            "ab",
+            "ab\ncd",
+            "\n",
+            "\n\n\n",
+            "trailing\n",
+            "a\r\nb\r\n",
+            "prefix \u{1f600} tail\nsecond line here",
+        ] {
+            let index = LineIndex::for_source(source);
+            for offset in 0..=source.len() as u32 + 1 {
+                assert_eq!(
+                    index.line_col(source, offset),
+                    line_col(source, offset),
+                    "offset {offset} of {source:?}"
+                );
+            }
         }
     }
 

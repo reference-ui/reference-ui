@@ -23,7 +23,7 @@ pub enum KeyText {
 /// The static spelling of one object key, or unknown for computed keys.
 pub fn key_text(key: &PropertyKey<'_>, computed: bool) -> KeyText {
     match super::conditions::static_key(key, computed) {
-        super::conditions::KeyClass::Static(text) => KeyText::Known(text),
+        super::conditions::KeyClass::Static(text) => KeyText::Known(text.into_owned()),
         super::conditions::KeyClass::Unknown => KeyText::Unknown,
     }
 }

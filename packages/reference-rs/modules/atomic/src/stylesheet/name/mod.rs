@@ -57,26 +57,71 @@ pub fn selector_with_system(atom: &Atom, system: &str) -> String {
     out
 }
 
+/// Escaped `{system}__` prefix, formatted once and replayed per atom.
+///
+/// `system` is constant across every atom in a `write_utilities` call and the
+/// cursor always starts at 0 there, so the escaped prefix bytes are identical
+/// for every atom. Replaying them replaces per-atom char escapes with one
+/// `push_str` plus a cursor advance. An empty system stays the empty prefix:
+/// no `__`, no cursor movement, so the leading-char rule still keys off the
+/// first subsequent char exactly as before.
+#[derive(Default)]
+pub struct SelectorPrefix {
+    escaped: String,
+    chars: usize,
+}
+
+impl SelectorPrefix {
+    /// Escape `{system}__` once through a fresh cursor. Empty in, empty out.
+    pub fn for_system(system: &str) -> Self {
+        if system.is_empty() {
+            return Self::default();
+        }
+        let mut escaped = String::with_capacity(system.len() + 2);
+        let mut cursor = EscapeCursor::new();
+        cursor.push(&mut escaped, system);
+        cursor.push(&mut escaped, "__");
+        Self { escaped, chars: cursor.position() }
+    }
+
+    /// Replay the pre-escaped bytes and advance the cursor past them.
+    pub fn push(&self, cursor: &mut EscapeCursor, out: &mut String) {
+        out.push_str(&self.escaped);
+        cursor.advance(self.chars);
+    }
+
+    /// Escaped prefix bytes, for capacity hints downstream.
+    pub fn escaped_len(&self) -> usize {
+        self.escaped.len()
+    }
+}
+
 /// Push the system-qualified selector directly into `out`.
 ///
 /// Atoms without selector conditions escape straight into the buffer. Selector
 /// conditions still nest through temporaries; only those atoms pay for them.
 pub fn push_selector_with_system(out: &mut String, atom: &Atom, system: &str) {
+    let prefix = SelectorPrefix::for_system(system);
+    push_selector_with_prefix(out, atom, &prefix);
+}
+
+/// Push the system-qualified selector reusing a preformatted prefix.
+///
+/// Callers that emit many atoms for one system build the prefix once; output
+/// is byte-identical to `push_selector_with_system`.
+pub fn push_selector_with_prefix(out: &mut String, atom: &Atom, prefix: &SelectorPrefix) {
     if has_selector_condition(atom) {
-        push_nested_selector(out, atom, system);
+        push_nested_selector(out, atom, prefix);
         return;
     }
-    push_selector_base(out, atom, system);
+    push_selector_base(out, atom, prefix);
 }
 
 /// Push `.` plus the escaped `{system}__{stem}` identifier. No temporary.
-fn push_selector_base(out: &mut String, atom: &Atom, system: &str) {
+fn push_selector_base(out: &mut String, atom: &Atom, prefix: &SelectorPrefix) {
     out.push('.');
     let mut cursor = EscapeCursor::new();
-    if !system.is_empty() {
-        cursor.push(out, system);
-        cursor.push(out, "__");
-    }
+    prefix.push(&mut cursor, out);
     push_cond_segments(&mut cursor, out, atom);
     cursor.push(out, class_prefix_for_prop(&atom.prop));
     cursor.push(out, "_");
@@ -106,8 +151,8 @@ fn has_selector_condition(atom: &Atom) -> bool {
 }
 
 /// Pre-size the nested base from its exact pieces plus escape slack.
-fn nested_base_hint(atom: &Atom, system: &str) -> usize {
-    let mut hint = 1 + system.len() + 2;
+fn nested_base_hint(atom: &Atom, prefix: &SelectorPrefix) -> usize {
+    let mut hint = 1 + prefix.escaped_len() + 2;
     for cond in atom.conditions.iter() {
         hint += cond.class_segment().len() + 1;
     }
@@ -115,9 +160,9 @@ fn nested_base_hint(atom: &Atom, system: &str) -> usize {
 }
 
 /// Selector-conditioned atoms: escape the base once, then nest as before.
-fn push_nested_selector(out: &mut String, atom: &Atom, system: &str) {
-    let mut base = String::with_capacity(nested_base_hint(atom, system));
-    push_selector_base(&mut base, atom, system);
+fn push_nested_selector(out: &mut String, atom: &Atom, prefix: &SelectorPrefix) {
+    let mut base = String::with_capacity(nested_base_hint(atom, prefix));
+    push_selector_base(&mut base, atom, prefix);
     let mut current = base;
     for cond in &atom.conditions {
         if let WhenKind::Selector(template) = cond.wrap() {
@@ -206,6 +251,58 @@ mod tests {
         );
         assert_eq!(
             selector_with_system(&atom, "@reference-ui/lib"),
+            ".\\@reference-ui\\/lib__hover\\:mt_2r:is(:hover, [data-hover])"
+        );
+    }
+
+    #[test]
+    fn test_selector_prefix_agrees_with_inline_pushes() {
+        for system in ["", "bench-enterprise", "@reference-ui/lib", "2xl", "-lead", "sÿstem"] {
+            let prefix = SelectorPrefix::for_system(system);
+            let mut replayed = String::new();
+            let mut replay_cursor = escape::EscapeCursor::new();
+            prefix.push(&mut replay_cursor, &mut replayed);
+            let mut inline = String::new();
+            let mut inline_cursor = escape::EscapeCursor::new();
+            if !system.is_empty() {
+                inline_cursor.push(&mut inline, system);
+                inline_cursor.push(&mut inline, "__");
+            }
+            assert_eq!(replayed, inline, "system {system:?}");
+            assert_eq!(
+                replay_cursor.position(),
+                inline_cursor.position(),
+                "system {system:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_with_prefix_matches_system_path() {
+        let plain = Atom::new(
+            "marginTop".into(),
+            CssValue::String("2r".into()),
+            smallvec![],
+            false,
+        );
+        for system in ["", "bench-enterprise", "2xl"] {
+            let mut via_prefix = String::new();
+            let prefix = SelectorPrefix::for_system(system);
+            push_selector_with_prefix(&mut via_prefix, &plain, &prefix);
+            assert_eq!(via_prefix, selector_with_system(&plain, system));
+        }
+        assert_eq!(selector_with_system(&plain, "2xl"), ".\\32 xl__mt_2r");
+        let hover = Atom::new(
+            "marginTop".into(),
+            CssValue::String("2r".into()),
+            smallvec![when("_hover")],
+            false,
+        );
+        let mut via_prefix = String::new();
+        let prefix = SelectorPrefix::for_system("@reference-ui/lib");
+        push_selector_with_prefix(&mut via_prefix, &hover, &prefix);
+        assert_eq!(
+            via_prefix,
             ".\\@reference-ui\\/lib__hover\\:mt_2r:is(:hover, [data-hover])"
         );
     }

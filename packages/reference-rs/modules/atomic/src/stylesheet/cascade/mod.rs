@@ -122,7 +122,8 @@ pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str
         a.1.cmp(&b.1)
             .then_with(|| cmp_whens(a.0.conditions(), b.0.conditions()))
     });
-    write_groups(out, &ranked, system);
+    let prefix = name::SelectorPrefix::for_system(system);
+    write_groups(out, &ranked, &prefix);
 }
 
 impl<'a> CascadeKey<'a> {
@@ -186,12 +187,16 @@ fn scan_conditions(atom: &Atom) -> CondScan<'_> {
     }
 }
 
-fn write_groups(out: &mut String, ranked: &[(&Atom, CascadeKey<'_>)], system: &str) {
+fn write_groups(
+    out: &mut String,
+    ranked: &[(&Atom, CascadeKey<'_>)],
+    prefix: &name::SelectorPrefix,
+) {
     let mut start = 0;
     while start < ranked.len() {
         let wraps: Vec<&str> = at_rule_wraps(ranked[start].0).collect();
         let end = group_end(ranked, start, &wraps);
-        write_group(out, &wraps, &ranked[start..end], system);
+        write_group(out, &wraps, &ranked[start..end], prefix);
         start = end;
     }
 }
@@ -208,11 +213,16 @@ fn same_wraps(atom: &Atom, wraps: &[&str]) -> bool {
     at_rule_wraps(atom).eq(wraps.iter().copied())
 }
 
-fn write_group(out: &mut String, wraps: &[&str], rules: &[(&Atom, CascadeKey<'_>)], system: &str) {
+fn write_group(
+    out: &mut String,
+    wraps: &[&str],
+    rules: &[(&Atom, CascadeKey<'_>)],
+    prefix: &name::SelectorPrefix,
+) {
     open_wraps(out, wraps);
     let depth = wraps.len() + 1;
     for (atom, _) in rules {
-        write_rule(out, atom, depth, system);
+        write_rule(out, atom, depth, prefix);
     }
     close_wraps(out, wraps.len());
 }
@@ -239,9 +249,9 @@ pub(crate) fn push_indent(out: &mut String, depth: usize) {
     }
 }
 
-fn write_rule(out: &mut String, atom: &Atom, depth: usize, system: &str) {
+fn write_rule(out: &mut String, atom: &Atom, depth: usize, prefix: &name::SelectorPrefix) {
     push_indent(out, depth);
-    name::push_selector_with_system(out, atom, system);
+    name::push_selector_with_prefix(out, atom, prefix);
     out.push_str(" { ");
     push_declaration(out, atom);
     out.push_str(" }\n");

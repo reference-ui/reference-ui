@@ -115,10 +115,49 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
         if crate::styling_skip(source.content) {
             continue;
         }
-        facts.extend(css::expectations(&ctx, source_id, source));
-        facts.extend(jsx::expectations(&ctx, source_id, source));
+        facts.extend(source_facts(&ctx, source_id, source));
     }
     facts
+}
+
+/// The facts one unskipped source predicts: each surface runs only when
+/// its bytes are present, and the import scan runs once for both.
+fn source_facts(
+    ctx: &AnalysisCtx<'_>,
+    source_id: SourceId,
+    source: &AnalyzedSource<'_>,
+) -> Vec<DiagnosticFact> {
+    let mut facts = Vec::new();
+    let run_css = !css_walk_skip(source.content);
+    let run_jsx = !jsx_walk_skip(source.content);
+    if !run_css && !run_jsx {
+        return facts;
+    }
+    let bindings = imports::scan_imports(source.program);
+    if run_css {
+        facts.extend(css::expectations(ctx, source_id, source, &bindings));
+    }
+    if run_jsx {
+        facts.extend(jsx::expectations(ctx, source_id, source, &bindings));
+    }
+    facts
+}
+
+/// True when the `css()` walk can skip this file: every live `css` site
+/// needs `css` bytes in the content — the imported name (`css`,
+/// `__reference_ui_css`), the reserved alias, or a `.css` member — so
+/// `css`-free bytes hold no site. Aliased calls still carry the bytes in
+/// their import; shadows and the import scan itself emit no facts.
+pub(crate) fn css_walk_skip(content: &str) -> bool {
+    !content.contains("css")
+}
+
+/// True when the JSX walk can skip this file: every JSX element needs a
+/// `<` byte, so `<`-free bytes parse to no JSX nodes and the walk predicts
+/// nothing. Comparisons and generics keep the walk (conservative); the
+/// shadow stack and the import scan emit no facts on their own.
+pub(crate) fn jsx_walk_skip(content: &str) -> bool {
+    !content.contains('<')
 }
 
 /// True when any enclosing scope declares `name`. Both surface visitors

@@ -9,6 +9,8 @@
 //! R2, witness P1a). `lower_when` is deliberately unused here: it lowers
 //! wraps for codegen, never key bytes.
 
+use std::borrow::Cow;
+
 use oxc_ast::ast::PropertyKey;
 use rustc_hash::FxHashSet;
 
@@ -16,17 +18,18 @@ use crate::extract::constants::canonical_numeric_key;
 
 /// A style-object key as analysis sees it: a static string or unknown.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum KeyClass {
+pub enum KeyClass<'a> {
     /// The key string runtime will observe (identifiers, strings, numbers,
-    /// hole-free templates). Computed keys are never static here.
-    Static(String),
+    /// hole-free templates). Computed keys are never static here. Identifier
+    /// and string keys borrow the AST; only canonical numerics allocate.
+    Static(Cow<'a, str>),
     /// The key cannot be known without evaluating (computed, folded, exotic).
     Unknown,
 }
 
 /// Classify one object key. Computed keys are unknown even when their
 /// expression looks foldable: analysis never evaluates, it only reads.
-pub fn static_key(key: &PropertyKey<'_>, computed: bool) -> KeyClass {
+pub fn static_key<'a>(key: &PropertyKey<'a>, computed: bool) -> KeyClass<'a> {
     if computed {
         return KeyClass::Unknown;
     }
@@ -35,11 +38,13 @@ pub fn static_key(key: &PropertyKey<'_>, computed: bool) -> KeyClass {
 
 /// Classify one non-computed key by its literal spelling. Templates are
 /// absent: they only occur as computed keys, which are always unknown.
-fn uncomputed_key(key: &PropertyKey<'_>) -> KeyClass {
+fn uncomputed_key<'a>(key: &PropertyKey<'a>) -> KeyClass<'a> {
     match key {
-        PropertyKey::StaticIdentifier(id) => KeyClass::Static(id.name.to_string()),
-        PropertyKey::StringLiteral(lit) => KeyClass::Static(lit.value.to_string()),
-        PropertyKey::NumericLiteral(lit) => KeyClass::Static(canonical_numeric_key(lit.value)),
+        PropertyKey::StaticIdentifier(id) => KeyClass::Static(Cow::Borrowed(id.name.as_str())),
+        PropertyKey::StringLiteral(lit) => KeyClass::Static(Cow::Borrowed(lit.value.as_str())),
+        PropertyKey::NumericLiteral(lit) => {
+            KeyClass::Static(Cow::Owned(canonical_numeric_key(lit.value)))
+        }
         _ => KeyClass::Unknown,
     }
 }
@@ -57,11 +62,14 @@ mod tests {
     use super::super::support::{first_prop_key, parse_for_test};
     use super::*;
 
-    fn key_class(source: &str) -> KeyClass {
+    fn key_class(source: &str) -> Option<String> {
         let allocator = oxc_allocator::Allocator::default();
         let program = parse_for_test(&allocator, source);
         let key = first_prop_key(&program);
-        static_key(key.0, key.1)
+        match static_key(key.0, key.1) {
+            KeyClass::Static(text) => Some(text.into_owned()),
+            KeyClass::Unknown => None,
+        }
     }
 
     fn style_set(names: &[&str]) -> FxHashSet<String> {
@@ -72,32 +80,26 @@ mod tests {
     fn identifier_and_string_keys_are_static() {
         assert_eq!(
             key_class("css({ color: 'red' })"),
-            KeyClass::Static("color".to_string())
+            Some("color".to_string())
         );
         assert_eq!(
             key_class("css({ 'font-size': '12px' })"),
-            KeyClass::Static("font-size".to_string())
+            Some("font-size".to_string())
         );
     }
 
     #[test]
     fn numeric_keys_use_canonical_spelling() {
-        assert_eq!(
-            key_class("css({ 300: 'x' })"),
-            KeyClass::Static("300".to_string())
-        );
-        assert_eq!(
-            key_class("css({ 2.5: 'x' })"),
-            KeyClass::Static("2.5".to_string())
-        );
+        assert_eq!(key_class("css({ 300: 'x' })"), Some("300".to_string()));
+        assert_eq!(key_class("css({ 2.5: 'x' })"), Some("2.5".to_string()));
     }
 
     #[test]
     fn computed_keys_are_unknown() {
-        assert_eq!(key_class("css({ [k]: 'red' })"), KeyClass::Unknown);
-        assert_eq!(key_class("css({ ['a']: 'red' })"), KeyClass::Unknown);
-        assert_eq!(key_class("css({ [`a`]: 'red' })"), KeyClass::Unknown);
-        assert_eq!(key_class("css({ [`a${b}`]: 'red' })"), KeyClass::Unknown);
+        assert_eq!(key_class("css({ [k]: 'red' })"), None);
+        assert_eq!(key_class("css({ ['a']: 'red' })"), None);
+        assert_eq!(key_class("css({ [`a`]: 'red' })"), None);
+        assert_eq!(key_class("css({ [`a${b}`]: 'red' })"), None);
     }
 
     #[test]

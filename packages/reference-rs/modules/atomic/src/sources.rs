@@ -4,7 +4,7 @@
 //! metadata directories plus non-source extensions; the include scope then
 //! filters both paths to matching files, silently dropping the rest.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rustc_hash::FxHashSet;
 
@@ -47,11 +47,21 @@ fn sorted_entries(dir: &Path) -> Vec<WalkEntry> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
+    let dir_bytes = dir.as_os_str().len();
     let mut listed: Vec<WalkEntry> = entries
         .flatten()
-        .map(|entry| WalkEntry {
-            file_type: entry.file_type().ok(),
-            path: entry.path(),
+        .map(|entry| {
+            // entry.path() joins dir and name through a growing buffer
+            // (one realloc per entry); pushing both parts into an
+            // exactly-sized buffer joins the identical bytes with none.
+            let name = entry.file_name();
+            let mut path = PathBuf::with_capacity(dir_bytes + 1 + name.len());
+            path.push(dir);
+            path.push(&name);
+            WalkEntry {
+                file_type: entry.file_type().ok(),
+                path,
+            }
         })
         .collect();
     listed.sort_unstable_by(|a, b| a.path.file_name().cmp(&b.path.file_name()));
