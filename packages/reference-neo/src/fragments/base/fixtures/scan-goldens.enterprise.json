@@ -1,0 +1,56 @@
+{
+  "scale": "enterprise",
+  "seed": 7,
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "repoStats": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/f1-seal-enterprise-a-cM6aEI",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "matches": [
+    "theme/global.ts",
+    "theme/tokens.ts"
+  ],
+  "retainedCount": 15122,
+  "manifestSha": "76c749e978143bbb8e590a8ae1d300cc59622cc1d7f0a0584f8465d4c9b3ac63",
+  "manifestSample": [
+    [
+      "src/recipes/recipe0.ts",
+      "9015975af2900d67"
+    ],
+    [
+      "src/recipes/recipe1.ts",
+      "93582cca44afd764"
+    ],
+    [
+      "src/recipes/recipe10.ts",
+      "7e5eb1ead499fbfa"
+    ]
+  ],
+  "sourcesSha": "43381ab2da7c71e7609187fedd0b194e32b6e338dae189bacc7016a5063381e1",
+  "stylesheetSha": "7ec827fb0c0cf6856f12fe9557f977505ec745b57ef8d8a62ed46df05e10dcea",
+  "stylesheetBytes": 2867925,
+  "portableSha": "803e93c2a24080353b6068f82f2cd4f0ecb0e12a1c6087089a664e3f9c1ff39f",
+  "runtimeSha": "5ad4a3995433f33745d760b072b2e99340a55e9681709090c22ec42028d60ae1",
+  "tracedJsxHosts": [],
+  "diagnostics": [],
+  "diagnosticsSha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

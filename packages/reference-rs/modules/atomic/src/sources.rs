@@ -31,6 +31,70 @@ pub(crate) fn collect(request: &CompileRequest) -> Vec<(String, String)> {
     sources
 }
 
+/// Gather with the scan/compile contract enforced: exactly-one-of `files` vs
+/// `retentionToken` (an empty list counts as absent, the gather precedent),
+/// neither keeps the legacy disk scan, both rejects, and unknown or drained
+/// tokens fail loud (never a silent disk fallback).
+pub(crate) fn collect_checked(
+    request: &CompileRequest,
+) -> Result<Vec<(String, String)>, (crate::DiagnosticCode, String)> {
+    let Some(token) = request.retention_token else {
+        return Ok(collect(request));
+    };
+    if request.files.as_ref().is_some_and(|files| !files.is_empty()) {
+        return Err((
+            crate::DiagnosticCode::ConflictingScanInputs,
+            "request carries both `files` and `retentionToken`: \
+             the scan/compile contract is exactly-one-of"
+                .to_string(),
+        ));
+    }
+    match crate::scan::drain(token) {
+        Ok(drained) => Ok(collect_drained(request, drained)),
+        Err(crate::scan::TokenError::Unknown(inner)) => Err((
+            crate::DiagnosticCode::UnknownRetentionToken,
+            format!(
+                "unknown retention token {inner}: the scan retention is missing \
+                 (never minted or already released); refusing the silent disk fallback"
+            ),
+        )),
+        Err(crate::scan::TokenError::Drained(inner)) => Err((
+            crate::DiagnosticCode::DrainedRetentionToken,
+            format!(
+                "retention token {inner} was already drained: \
+                 retention moves once per scan"
+            ),
+        )),
+    }
+}
+
+/// Drained retention plus the unchanged union backfill walk: scope-hit
+/// retained pairs move in (no clone), listed paths cost a hash probe, and the
+/// kept walk reads only what the list misses (zero when retention is complete).
+fn collect_drained(
+    request: &CompileRequest,
+    drained: Vec<(String, String)>,
+) -> Vec<(String, String)> {
+    let patterns = request.include.as_deref().unwrap_or(&[]);
+    let scope = IncludeScope::compile(patterns);
+    let matcher = scope.matcher(request.root_dir.as_deref());
+    let mut provided: Vec<(String, String)> = drained
+        .into_iter()
+        .filter(|(path, _)| matcher.matches_file(path))
+        .collect();
+    if let Some(root_dir) = request.root_dir.as_deref() {
+        let mut known: FxHashSet<String> = provided.iter().map(|(path, _)| path.clone()).collect();
+        let mut backfill = Backfill {
+            matcher: &matcher,
+            known: &mut known,
+            acc: &mut provided,
+        };
+        backfill_dir(Path::new(root_dir), &mut backfill);
+    }
+    provided.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+    provided
+}
+
 /// One walk entry: the readdir type plus the path it was read for.
 struct WalkEntry {
     file_type: Option<std::fs::FileType>,
@@ -208,11 +272,17 @@ fn handle_dir_entry(entry: &WalkEntry, matcher: &FileMatcher, acc: &mut Vec<(Str
 /// the IGNORE set. The name check alone decides; no second stat.
 fn is_kept_dir(path: &Path) -> bool {
     let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    !IGNORE_DIRS.contains(&name)
+    !is_ignored_dir_name(name)
+}
+
+/// True when a directory name is engine-ignored; shared verbatim with the
+/// native scan gate so the set cannot drift between the two paths.
+pub(crate) fn is_ignored_dir_name(name: &str) -> bool {
+    IGNORE_DIRS.contains(&name)
 }
 
 /// True for the extensions the extractor parses.
-fn is_supported_extension(path: &Path) -> bool {
+pub(crate) fn is_supported_extension(path: &Path) -> bool {
     let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
         return false;
     };

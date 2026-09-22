@@ -29,6 +29,13 @@ pub struct CompileRequest {
     pub root_dir: Option<String>,
     #[serde(default)]
     pub files: Option<Vec<VirtualSource>>,
+    /// Native retention ref (C3-in-reverse): exactly-one-of with `files`.
+    /// `compile` drains the retained bytes (moves, never clones), then runs
+    /// the unchanged union backfill walk. Neither means the legacy disk scan;
+    /// both is a schema rejection; unknown or drained tokens fail loud, never
+    /// a silent disk fallback. Resolved by `sources::collect_checked` only.
+    #[serde(default, alias = "retention_token")]
+    pub retention_token: Option<u64>,
     pub base_system: BaseSystem,
     #[serde(default)]
     pub jsx_hosts: Option<Vec<String>>,

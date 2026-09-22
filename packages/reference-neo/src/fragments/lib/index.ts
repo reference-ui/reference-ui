@@ -5,6 +5,8 @@
 export { createFragmentCollector, createFragmentFunction } from './collector.ts'
 export { scanForFragments, scanFragmentSources } from './scanner.ts'
 export type { FragmentScan, ScannedSource } from './scanner.ts'
+export { scanForFragmentsNative, scanFragmentSourcesNative } from './scanner-native.ts'
+export type { FragmentScanNative, NativeScanRetention } from './scanner-native.ts'
 export { bundleFragments, collectFragments } from './runner.ts'
 export { CONFIG_FRAGMENT_SOURCE_PROPERTY } from './types.ts'
 export type {

@@ -11,19 +11,24 @@ import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './index.ts
 async function importFragmentsModule(options?: {
   scannedFiles?: string[]
   scannedSources?: Array<{ path: string; content: string }>
+  retentionToken?: number
   bundledFragments?: Array<{ file: string; bundle: string }>
 }) {
   vi.resetModules()
 
   const matches = options?.scannedFiles ?? ['/workspace/app/src/theme.ts']
   const scannedSources = options?.scannedSources ?? []
-  const scanFragmentSources = vi.fn(async () => ({ matches, scannedSources }))
+  const retention =
+    options?.retentionToken === undefined
+      ? { count: scannedSources.length, files: scannedSources }
+      : { token: options.retentionToken, count: scannedSources.length }
+  const scanFragmentSourcesNative = vi.fn(async () => ({ matches, retention }))
   const bundleFragments = vi.fn(async () =>
     options?.bundledFragments ?? [{ file: '/workspace/app/src/theme.ts', bundle: 'localOne()' }]
   )
 
   vi.doMock('../lib/index.ts', () => ({
-    scanFragmentSources,
+    scanFragmentSourcesNative,
     bundleFragments,
     CONFIG_FRAGMENT_SOURCE_PROPERTY: '__refConfigFragmentSource',
   }))
@@ -31,7 +36,7 @@ async function importFragmentsModule(options?: {
   const mod = await import('./index.ts')
   return {
     ...mod,
-    scanFragmentSources,
+    scanFragmentSourcesNative,
     bundleFragments,
   }
 }
@@ -138,19 +143,15 @@ describe('fragments prepare flow', () => {
 
 })
 
-describe('fragments prepare output', () => {
-  it('prepares fragments from scanned files and bundled local fragments', async () => {
-    const scannedSources = [
-      { path: '/workspace/app/src/theme.ts', content: 'tokens()' },
-      { path: '/workspace/app/src/recipes.ts', content: 'recipe()' },
-    ]
+describe('fragments prepare output: native token', () => {
+  it('prepares fragments from the native scan retention token', async () => {
     const {
       prepareFragments,
-      scanFragmentSources,
+      scanFragmentSourcesNative,
       bundleFragments,
     } = await importFragmentsModule({
       scannedFiles: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
-      scannedSources,
+      retentionToken: 7,
       bundledFragments: [
         { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
@@ -167,7 +168,7 @@ describe('fragments prepare output', () => {
       ],
     })
 
-    expect(scanFragmentSources).toHaveBeenCalledWith({
+    expect(scanFragmentSourcesNative).toHaveBeenCalledWith({
       include: ['src/**/*.{ts,tsx}'],
       importFrom: [
         '@reference-ui/neo',
@@ -188,8 +189,42 @@ describe('fragments prepare output', () => {
         { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
       ],
+      scannedSources: [],
+      retentionToken: 7,
+    })
+  })
+
+})
+
+describe('fragments prepare output: TS fallback', () => {
+  it('prepares fragments from TS-fallback bytes when retention has no token', async () => {
+    const scannedSources = [
+      { path: '/workspace/app/src/theme.ts', content: 'tokens()' },
+      { path: '/workspace/app/src/recipes.ts', content: 'recipe()' },
+    ]
+    const { prepareFragments } = await importFragmentsModule({
+      scannedFiles: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
+      scannedSources,
+      bundledFragments: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
+    })
+
+    const result = await prepareFragments('/workspace/app', {
+      name: 'app-system',
+      include: ['src/**/*.{ts,tsx}'],
+    })
+
+    expect(result).toEqual({
+      upstreamFragments: [],
+      localFragmentBundles: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
       scannedSources,
     })
+    expect(result.retentionToken).toBeUndefined()
   })
 
   it('creates a portable fragment bundle in stable upstream-then-local order', async () => {

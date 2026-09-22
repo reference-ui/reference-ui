@@ -5,7 +5,13 @@
 import { rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
-import { compileNative, type NativeDiagnostic, type ScopedCompileRequest } from './native.ts'
+import {
+  compileNative,
+  releaseRetention,
+  type NativeCompileResult,
+  type NativeDiagnostic,
+  type ScopedCompileRequest,
+} from './native.ts'
 import { loadUserConfig } from '../config/load.ts'
 import { getOutDirPath } from '../lib/paths/index.ts'
 import {
@@ -89,40 +95,62 @@ export async function sync(cwd: string): Promise<SyncResult> {
     markPhase('scanStart')
     const prepared = await prepareFragments(cwd, config)
     markPhase('scanEnd')
-    const spec = await evaluatePreparedFragments(cwd, config, prepared)
-    // LAYER-04: the reset fragment rides the spec only when normalizeCss is
-    // not false; the engine prints reset-sourced fragments into @layer reset.
-    applyNormalizeCss(spec, config.normalizeCss)
+    // Live retention between scan and compile-drain: the inner finally
+    // releases it when eval or compile throws. The happy path clears the
+    // local once the drain consumes it, so release never runs there.
+    let retentionToken = prepared.retentionToken
+    let spec: EvaluatedSystemSpec
+    let result: NativeCompileResult
+    let request: ScopedCompileRequest
+    try {
+      spec = await evaluatePreparedFragments(cwd, config, prepared)
+      // LAYER-04: the reset fragment rides the spec only when normalizeCss is
+      // not false; the engine prints reset-sourced fragments into @layer reset.
+      applyNormalizeCss(spec, config.normalizeCss)
 
-    // Frozen D12 request as evolved by RS-10: the engine scans sourceRoot
-    // itself (no virtual mirror, no staged declarations — both roots are the
-    // project), scoped to the config include globs, and admits the configured
-    // hosts plus every generated primitive without an import. The request
-    // records what the author asked for: discovery reaches the publish below,
-    // never this list.
-    const requested = resolveJsxElements(config)
-    // C3 single read: the fragment scan already holds every in-scope source,
-    // so the engine skips its own scan+read and union-fills from disk only
-    // what the list misses. Empty retention omits `files` (defense in depth:
-    // native falls back to the disk scan).
-    const request: ScopedCompileRequest = {
-      schemaVersion: 1,
-      spec,
-      jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
-      sourceRoot: cwd,
-      declarationRoot: cwd,
-      include: config.include,
-      logs: config.logs,
-      ...(prepared.scannedSources.length > 0 ? { files: prepared.scannedSources } : {}),
+      // Frozen D12 request as evolved by RS-10: the engine scans sourceRoot
+      // itself (no virtual mirror, no staged declarations — both roots are the
+      // project), scoped to the config include globs, and admits the configured
+      // hosts plus every generated primitive without an import. The request
+      // records what the author asked for: discovery reaches the publish below,
+      // never this list.
+      const requested = resolveJsxElements(config)
+      // C3-in-reverse: the token carries the retained bytes (the engine drains
+      // them, then union-fills from disk only what the list misses); the TS
+      // fallback carries `files`. Empty retention omits both (defense in
+      // depth: native falls back to the disk scan).
+      request = {
+        schemaVersion: 1,
+        spec,
+        jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
+        sourceRoot: cwd,
+        declarationRoot: cwd,
+        include: config.include,
+        logs: config.logs,
+      }
+      if (retentionToken !== undefined) request.retentionToken = retentionToken
+      else if (prepared.scannedSources.length > 0) request.files = prepared.scannedSources
+      markPhase('evalEnd')
+      markPhase('compileStart')
+      result = await compileNative(request)
+      markPhase('compileEnd')
+      // The drain consumed the retention: nothing left to release.
+      retentionToken = undefined
+      // RSS relief: scanned bytes are unreachable after compile; drop the refs
+      // before publish so a mid-publish GC can reclaim the headroom.
+      prepared.scannedSources = []
+      prepared.retentionToken = undefined
+      request.files = undefined
+      request.retentionToken = undefined
+    } finally {
+      if (retentionToken !== undefined) {
+        try {
+          await releaseRetention(retentionToken)
+        } catch {
+          // Best-effort: never mask the in-flight error.
+        }
+      }
     }
-    markPhase('evalEnd')
-    markPhase('compileStart')
-    const result = await compileNative(request)
-    markPhase('compileEnd')
-    // RSS relief: scanned bytes are unreachable after compile; drop the refs
-    // before publish so a mid-publish GC can reclaim the headroom.
-    prepared.scannedSources = []
-    request.files = undefined
     reportWarningDiagnostics(result.diagnostics)
     reportCompilerDiagnostics(result.compilerDiagnostics)
     throwOnErrorDiagnostics(result.diagnostics)
@@ -140,11 +168,12 @@ export async function sync(cwd: string): Promise<SyncResult> {
       portableStylesheet: result.portableStylesheet ?? '',
       jsx,
     })
-    // Logical request artifact: `files` (megabytes of bytes) stays out of
-    // the published JSON — undefined drops from serialization.
+    // Logical request artifact: `files` (megabytes of bytes) and the
+    // retention token (a live handle, never persisted) stay out of the
+    // published JSON — undefined drops from serialization.
     writeFileSync(
       join(outDir, 'system', 'compile-request.json'),
-      `${JSON.stringify({ ...request, files: undefined }, null, 2)}\n`,
+      `${JSON.stringify({ ...request, files: undefined, retentionToken: undefined }, null, 2)}\n`,
       'utf-8'
     )
     await publishRuntimeBundle(outDir, spec.name, result.runtime)

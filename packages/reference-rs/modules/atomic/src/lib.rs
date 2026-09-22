@@ -17,6 +17,7 @@ pub mod includes;
 pub mod recipes;
 pub mod resolve;
 pub mod runtime;
+pub mod scan;
 pub(crate) mod sources;
 #[cfg(test)]
 mod spec_recipe_tests;
@@ -89,7 +90,10 @@ struct CompileSinks<'a> {
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     #[cfg(feature = "alloc-trace")]
     let _collect = crate::alloc_trace::PhaseGuard::enter("collect");
-    let sources = sources::collect(request);
+    let sources = match sources::collect_checked(request) {
+        Ok(sources) => sources,
+        Err((code, message)) => return Ok(token_rejection(code, message)),
+    };
     #[cfg(feature = "alloc-trace")]
     drop(_collect);
     let system = &request.base_system;
@@ -153,6 +157,25 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     #[cfg(feature = "alloc-trace")]
     drop(_partition);
     Ok(result)
+}
+
+/// Preamble-only artifact carrying a scan/compile contract rejection (the
+/// exactly-one-of and token-lifecycle failures); mirrors the napi rejection.
+fn token_rejection(code: DiagnosticCode, message: String) -> CompileResult {
+    let preamble = stylesheet::layers::LAYER_PREAMBLE.to_string();
+    CompileResult {
+        stylesheet: preamble.clone(),
+        portable_stylesheet: preamble,
+        runtime: NativeRuntimeArtifact::default(),
+        style_plans: Vec::new(),
+        css: Some(CssRuntime::new()),
+        diagnostics: vec![Diagnostic::error(code, message)],
+        wants: Vec::new(),
+        recipes: Vec::new(),
+        atom_count: 0,
+        traced_jsx_hosts: Vec::new(),
+        compiler_diagnostics: None,
+    }
 }
 
 /// Parse, analyze, extract, and harvest one compile into the sinks.

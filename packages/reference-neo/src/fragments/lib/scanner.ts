@@ -10,7 +10,7 @@ import type { ScanOptions } from './types.ts'
 // Retention glob prunes only node_modules at traversal (the huge tree);
 // the remaining native IGNORE dirs filter explicitly below so the mirror
 // stays reviewable instead of trusting glob-pattern equivalence.
-const RETENTION_EXCLUDE = ['**/node_modules/**']
+export const RETENTION_EXCLUDE = ['**/node_modules/**']
 
 // Native IGNORE dirs mirrored from sources.rs handle_dir_entry: paths with
 // any relative DIRECTORY segment in this set never reach the engine.
@@ -53,13 +53,13 @@ function toArray(value?: string | string[]): string[] {
   return Array.isArray(value) ? value : [value]
 }
 
-interface DiscoveryPattern {
+export interface DiscoveryPattern {
   pattern: RegExp
   /** Literal bytes every match contains; the includes pre-gate. */
   needle: string
 }
 
-function createImportPatterns(importFrom?: string | string[]): DiscoveryPattern[] {
+export function createImportPatterns(importFrom?: string | string[]): DiscoveryPattern[] {
   return toArray(importFrom).map((moduleId) => ({
     pattern: new RegExp(
       `\\bfrom\\s*['"]${escapeRegex(moduleId)}['"]|\\bimport\\s*['"]${escapeRegex(moduleId)}['"]`,
@@ -69,7 +69,7 @@ function createImportPatterns(importFrom?: string | string[]): DiscoveryPattern[
   }))
 }
 
-function createFunctionPatterns(functionNames?: string[]): DiscoveryPattern[] {
+export function createFunctionPatterns(functionNames?: string[]): DiscoveryPattern[] {
   return (functionNames ?? []).map((name) => ({
     pattern: new RegExp(`\\b${name}\\s*\\(`),
     needle: name,
@@ -307,7 +307,7 @@ export async function scanFragmentSources(options: ScanOptions): Promise<Fragmen
 // unreadable files drop; matches cover every readable candidate (dot:false
 // + d.ts emulated, exact old semantics) while retention mirrors the native
 // IGNORE-dir + extension gates (sources.rs) on the cwd-relative form.
-function splitScan(
+export function splitScan(
   candidates: string[],
   contents: (string | null)[],
   cwd: string,
