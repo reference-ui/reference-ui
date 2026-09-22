@@ -1,5 +1,5 @@
 {
- "built": "2026-09-22T11:23:37.878Z",
+ "built": "2026-09-22T12:14:39.544Z",
  "root": "docs/perf/waves",
  "count": 93,
  "entries": [
@@ -584,7 +584,7 @@
    "effect": {
     "ms": -11.6
    },
-   "overruledBy": null,
+   "overruledBy": "INT-W2-CLONEPLASMA — crew BANK yielded, all 6 hunks subsumed by landed cloneplasma (race rule, count-probed)",
    "files": [
     "packages/reference-rs/modules/atomic/src/resolve/mod.rs",
     "packages/reference-rs/modules/atomic/src/resolve/normalize.rs",
@@ -1275,7 +1275,7 @@
     "pct": -1.3,
     "pairs": "7/8"
    },
-   "overruledBy": null,
+   "overruledBy": "PERF-W3-RECIPEPROOF — HELD→CUT (allocator lottery, three-tip sign flips vs ~1–3 ms mechanism ceiling)",
    "files": [
     "packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs",
     "packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs"
@@ -1405,7 +1405,7 @@
     "ms": -2.1,
     "pairs": "25/25"
    },
-   "overruledBy": null,
+   "overruledBy": "PERF-W2-SCALARREPROOF — superseded, re-proof landed set-4/e360915f7 (original −14.59 carried crew noise disclaimer; patch retained as record)",
    "files": [
     "packages/reference-rs/modules/atomic/src/runtime/serializer.rs",
     "packages/reference-rs/modules/atomic/tests/serializer_parity.rs"
@@ -1744,7 +1744,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "MCP ctor category walk+sort hoist saves 0.26 ms one-time against a ~73 ms ctor; below the 15 ms LAND bar and the 5 ms floor; CUT as filed.",
-   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Ticks (empty board)",
+   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Compile closeout (certified, base c593829d3 — HQ-ordered, pre-scan-voyage)\n\nBank reconciliation, all 25 bank-verdict entries, firsthand: 20 landed\nvia sets 1–5 + cloneplasma (every one a reference-rs compile path);\nAUTHCSS yielded-subsumed into landed cloneplasma (race rule);\nRECIPEPATH HELD→CUT (allocator lottery, PERF-W3-RECIPEPROOF);\nSCALARJSON superseded by landed SCALARREPROOF (set-4; original −14.59\ncarried crew noise disclaimer, patch retained as record); CATPOST +\nPRELOWER pending deliberately (off-scope MCP, 0 sync ms — landing\ngated on integrator + HQ scope decision). Unexplained-pending on sync\nground: ZERO. No integrator — member set empty. Improvement left on\nthe table in banked compile work: 0 ms by receipt. Seam scout\ndispatched as the last unscouted compile room (counts-first, no\ndiets); scan voyage opens separately after closeout lands.\n\n## Ticks (empty board)",
    "filler": false
   },
   {
