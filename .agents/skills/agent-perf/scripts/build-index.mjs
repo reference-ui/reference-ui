@@ -100,6 +100,8 @@ function verdictOf(lines, isIntegrate) {
     || (/no candidate was built/i.test(sec) ? { 1: 'CUT' } : null)
     || (/CUT (before the timed bench|trigger)/i.test(text) ? { 1: 'CUT' } : null);
   if (!m) {
+    const dv = text.match(/^DIET-VERDICT:\s*(LAND|BANK|CUT)\b/im);
+    if (dv) return dv[1];
     if (/RECON-VERDICT:/.test(text)) return 'REPROFILE';
     return isIntegrate ? 'LAND' : 'UNKNOWN';
   }

@@ -143,6 +143,21 @@ diets); scan voyage opens separately after closeout lands.
 - swarm-scanrecon4 REPROFILE (wave-4 opening): fresh flames 5a/b flat,
   exact scan census ×3, 2-topic backlog (T1 identity, T2 bundle),
   dry rooms named, ceiling 919/932. Landed with bundles + census dir.
+- T2 verdict: scanbundle CUT ACCEPTED (fuse 2 microBundle → 1: −3.12
+  median, 8/8 agree, ex-run-1 stands, identity 4/4 + edges, suites
+  delta-zero, q clean; best pair −3.75 = 75% of 5.00 bar — mechanism
+  real, sub-floor). Falsifier resolved (Go fixed cost ×2 overlapped,
+  not IPC wait). Captain arithmetic: upper-median convention, verdict
+  robust under any reading. Diet unpreserved (CUT); worktree path
+  …01a0c92b-e7dd… recorded for re-proof, worktree released. Process
+  note: crews spawned pre-landing couldn't resolve the recon index id
+  (~5 min workaround, inline brief covered) — land-then-spawn next wave.
+- Slots: 1/7 (T1 running), 6 held — freed T2 slot held, nothing
+  briefable (F1/F2 gated, N1 held) — this entry is the proof.
+
+- swarm-scanbundle CUT (fuse 2 esbuild builds → 1): −3.12 ms median,
+  8/8 agree, identity 4/4; real mechanism, below the 5 ms floor.
+  Closed — do not re-litigate without new filed evidence.
 
 ## Ticks (empty board)
 
