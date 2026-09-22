@@ -1,0 +1,1654 @@
+{
+ "built": "2026-09-22T08:22:13.295Z",
+ "root": "docs/perf/waves",
+ "count": 82,
+ "entries": [
+  {
+   "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
+   "wave": "log",
+   "topic": "GC scheduling / forced collection (zero in-window full GCs).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "GC scheduling / forced collection (zero in-window full GCs).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-KEYS-MEMO-AT-WHOLE-SYNC-BAR-19-WT-CEILI",
+   "wave": "log",
+   "topic": "Keys memo at whole-sync bar (19 wt ceiling; needs per-phase bar).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Keys memo at whole-sync bar (19 wt ceiling; needs per-phase bar).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-MEMMOVE-MEMCMP-STANDALONE-EFFECTS",
+   "wave": "log",
+   "topic": "`memmove`/`memcmp` standalone (effects, die with parents).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "`memmove`/`memcmp` standalone (effects, die with parents).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-PARALLEL-SCAN-READS-ASYNC-64-WORKER-B",
+   "wave": "log",
+   "topic": "Parallel scan reads (async + 64-worker both regressed).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Parallel scan reads (async + 64-worker both regressed).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-PER-OPEN-OPTIMIZATION-15-87-S-IS-FLOOR",
+   "wave": "log",
+   "topic": "Per-open optimization (15.87 µs is floor; only count matters).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Per-open optimization (15.87 µs is floor; only count matters).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-PURE-JS-MICRO-WORK-2-3-SELF",
+   "wave": "log",
+   "topic": "Pure-JS micro-work (2.3% self).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Pure-JS micro-work (2.3% self).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-RSS-HUNTERS-BUNDLE-LANES-GUARDRAILS",
+   "wave": "log",
+   "topic": "RSS hunters / bundle lanes (guardrails, not targets).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "RSS hunters / bundle lanes (guardrails, not targets).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-SHIP-ONE-SHEET-HARVEST-KILL-REWRITE-B3",
+   "wave": "log",
+   "topic": "Ship-one-sheet, harvest kill/rewrite, B3 plan gating, insert-skip",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Ship-one-sheet, harvest kill/rewrite, B3 plan gating, insert-skip",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-SINGLE-FUNCTION-SPIKES-AS-LANES-LONG-TA",
+   "wave": "log",
+   "topic": "Single-function spikes as lanes (long-tail flat).",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Single-function spikes as lanes (long-tail flat).",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "DEAD-WARM-SECOND-SYNC-CHURN-PROFILING-NEW-P",
+   "wave": "log",
+   "topic": "Warm second-sync, churn profiling, new profiling infra as objectives.",
+   "kind": "dead-end",
+   "verdict": "CUT",
+   "effect": {},
+   "files": [],
+   "report": "LOG.md",
+   "patch": null,
+   "summary": "Warm second-sync, churn profiling, new profiling infra as objectives.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "INT-W1-BANK",
+   "wave": "wave-1",
+   "topic": "integrate BANK",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-1/INTEGRATE.md",
+   "patch": null,
+   "landing": null,
+   "overruledBy": null,
+   "summary": "Base: `1a57b1e80daaa6b062a2a02e6ad4cc66e56d5402` (verified `git rev-parse HEAD` before",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "INT-W2-BANK",
+   "wave": "wave-2",
+   "topic": "integrate bank",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -3.3,
+    "pct": -1.68,
+    "pairs": "8/8"
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-bank.md",
+   "patch": null,
+   "landing": "810b8b5b4",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `5844b24a81a528ace14fab63e908793a6829a874`;",
+   "log": "- swarm-intbank LAND (whole 5-patch set, captain-read verified\n  306 lines): sum −62.64/−5.51%, 8/8 pairs, ex-run-1\n  −56.55/−4.99% — beats the 40–60 band. Filed\n  `docs/perf/waves/wave-2/integrate-bank.md`. Combination proof:\n  5 patches clean (20 files +556/−124), 5-way file disjointness\n  mechanical, 6 behavioral pairs independent (diag×keys2\n  sub-additivity predicted + confirmed). Parse sub-bisect\n  resolves the solo-zero honestly (≈20.3 in situ ≈ ceiling:\n  styletrace +11.96 4/4, identity +8.38 3/4); diag marginal\n  +13.20 5/6 in situ (sub-additive as predicted — thin solo\n  margin superseded). Attribution 53–59 vs 62.6 measured,\n  consistent. Suites re-run (atomic 570+1, canon 58, styletrace\n  31/18 byte-identical set, new tests explicit); q 0 violations\n  both arms (cascade-22 accepted with rationale); ATM-SITE-54\n  pre-existing ×3; sealed hashes 4-scale; determinism ×2.\n  FLAKE (not held): trace_gate barrel 2/~22 parallel runs —\n  coarse-clock scratch collision, environmental, serial green;\n  fix (atomic counter in `new_in`) is new work, filed as\n  follow-up. → LANDING SEQUENCE STARTED (captain's firsthand\n  gates, then commit).",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-CANON2",
+   "wave": "wave-2",
+   "topic": "integrate canon2",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "pct": -1.26
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-canon2.md",
+   "patch": null,
+   "landing": null,
+   "overruledBy": null,
+   "summary": "Integrator: swarm-intcanon2. Base pin `5844b24a81a528ace14fab63e908793a6829a874`",
+   "log": "- swarm-canon2 LAND CLAIM (−23.4 ms / −2.04%; ex-run-1 −20.3 /\n  −1.77%): no-alloc case-insensitive matching in value classify,\n  4 canon files +105/−13 (is_named_color binary_search_by +\n  cmp_lower_probe, is_css_keyword eq_ignore_ascii_case,\n  function_kind raw-name tables). Filed\n  `docs/perf/waves/wave-2/report-swarm-canon2.md` + `canon2.patch`.\n  Follow-up on wave-1 islen shape, cited + measured on new base.\n  Criterion −52% mixed, 756/756 differential zero-divergence,\n  allocs →0; 4-scale identical (sealed hashes); determinism ×2;\n  canon 58 + atomic 567+1 green; q green zero violations;\n  hand-written files (no regen question); bench byproducts\n  restored, tree = 4 files exactly. Caveats for integrator: base\n  arm noisier than cand (range 141 vs 22), pair 5 inverts (+18.5),\n  pair-1 outlier −140 — verdict stands ex-run-1 on both prongs;\n  one smoke run overlapped a sibling hold via ungated chain\n  (disclosed, not the verdict session). \"Runaway find\" delivery\n  note: no foreign kills in REPORT (crew disclosed lesser things)\n  — own-process cleanup, no incident. → swarm-intcanon2 dispatched\n  (single-patch integrate + 8-pair confirm).\n---\n- swarm-canon2 BANK (captain override of integrator LAND):\n  intcanon2's proof is exemplary (patch clean, 4-patch file sets\n  mechanically disjoint, order-equivalence re-proven from code, own\n  848-input differential 0 divergences incl. non-ASCII adversaries,\n  regen n/a confirmed, canon 58 + atomic 567+1 + q green re-run,\n  sealed hashes, determinism ×2) — but its independent 8-pair\n  confirm measures −15.34/−1.36% full, −12.80/−1.14% ex-run-1:\n  full clears only the ms prong, ex-run-1 clears NEITHER, so the\n  solo bar (≥15 ms AND ≥1.5%, standing ex-run-1) is missed.\n  OVERRIDE REASON: wave-1 islen (−16.0/−1.26%, ms✓/pct✗) banked on\n  exactly this shape; 8/8 pairs + mechanism counts + differential\n  prove a real ~13–15 ms effect that is proven-identical → BANK\n  into the combined set, sum-confirm decides. (Crew's −23.4 was\n  inflated by its −140 pair-1 base outlier; integrator's cleaner\n  number governs.) Filed\n  `docs/perf/waves/wave-2/integrate-canon2.md`. Combined set now:\n  canon2 + cascade + parse + keys2 (+ diag if intdiag confirms).\n  Freed slot → swarm-asmfmt.",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-CLONEPLASMA",
+   "wave": "wave-2",
+   "topic": "integrate cloneplasma",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -26.65,
+    "pct": -2.5
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-cloneplasma.md",
+   "patch": null,
+   "landing": "ddce131e7",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `3dd32a659715aeb17d5d04167d756fb7f5ce30c8`",
+   "log": "- swarm-cloneplasma LAND CLAIM (pre-set-3 base, pending\n  integrator): 6-site combined clone diet (R1 lazy key + R2\n  move-first + R3 unit_px + U1 collapse-Cow + B1\n  probe-then-decide + E1 move-last). 5 files +121/−32, 1\n  differential test. Filed\n  `docs/perf/waves/wave-2/report-swarm-cloneplasma.md` +\n  `cloneplasma.patch` (captain-verified: applies CLEAN to\n  tip 3dd32a6; set-3 disjoint confirmed). Census ×3\n  byte-identical (356k lines); 8-pair −23.07/−2.09% (6/8,\n  ex1 −24.85, pairmed −24.92 — clears BOTH prongs, all\n  estimators agree); Euclid proof predicts 20–30ms band,\n  measures inside it; identity 4/4; 29/29 determinism;\n  572+1 green; q 0v/1 pre-existing warning. Stream\n  subtlety disclosed (census on --seed-7 custom stream,\n  timing/identity on pin stream; counts transfer proven by\n  4-crew cross-validation). RACE FLAG: authcss's 3 banked\n  files are a STRICT SUBSET of these 5 (verified from\n  patch headers); cloneplasma asserts subsumption (same\n  R1/R3/U1 + adds R2/B1/E1, −23.07 vs −11.60) and claims\n  first-sound-LAND-wins. Authcss does NOT drop on assertion\n  — intclone adjudicates hunk-by-hunk (subsumed → authcss\n  YIELDS; distinct residuum → authcss rebases onto landed\n  cloneplasma or joins set-4). Follow-up filed: WantContext\n  borrow diet (~3–5ms, needs pub-API lifetime). Freed slot\n  → swarm-intclone (LAND-claim integrator).",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-DIAG",
+   "wave": "wave-2",
+   "topic": "integrate diag",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -35.2,
+    "pct": -3
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-diag.md",
+   "patch": null,
+   "landing": null,
+   "overruledBy": null,
+   "summary": "Claim: swarm-diag LAND (−35.2 ms / −3.00% enterprise median).",
+   "log": "- swarm-diag LAND CLAIM (−35.2 ms / −3.00%): partition dead-render\n  skip, `atomic/src/diagnostics/channels/mod.rs` +58/−12. Filed\n  `docs/perf/waves/wave-2/report-swarm-diag.md` + `diag.patch` (102\n  lines). 8-pair A/B, 2 warmups, ex-run-1 stands (−35.78/−3.05%);\n  4-scale byte-identical (enterprise hashes match wave-1 canon\n  prefixes — same seed-7 outputs); determinism ×2; 35,426 dead\n  renders census + flame cross-check; 2 new partition tests, quality\n  0 violations (1 pre-existing soft warning). Caveats for\n  integrator: `ATM-SITE-54` vitest failure reproduced on base too\n  (pre-existing claim to re-verify); pairs 1–2 noisy (modgraph's\n  disclosed overlap + sibling builds — median robust). → swarm-intdiag\n  dispatched (single-patch integrate + 8-pair confirm).\n---\n- swarm-diag LAND ACCEPTED (−19.9/−1.68%; ex-run-1 −18.3/−1.54%\n  clears BOTH prongs, pct margin 0.04pp): intdiag proof\n  thorough (patch clean; verbatim extraction + vacuity re-proven\n  with file:line traces; regen n/a; atomic green + 10/10\n  channels + q 0v/1pre-warn; ATM-SITE-54 re-proven pre-existing\n  on BOTH arms — caveat closed; sealed hashes; determinism ×2;\n  bisect honestly inconclusive with E≡cand path-equivalence\n  noise-floor analysis). Two independent sets both 6/8 same\n  direction, both stand ex-run-1; pure dead-work elimination\n  (cannot regress). Filed\n  `docs/perf/waves/wave-2/integrate-diag.md`. SEQUENCING (not an\n  override — wave-1 canon precedent): solo LAND accepted but\n  rides the COMBINED set for one landing + one re-profile; the\n  thin pct margin wants sum-confirm + bisect measuring diag's\n  contribution in situ. → swarm-intbank dispatched (5-patch\n  set: diag + canon2 + cascade + parse + keys2).",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-SET2",
+   "wave": "wave-2",
+   "topic": "integrate set2",
+   "kind": "integration",
+   "verdict": "LAND-SUBSET",
+   "effect": {
+    "ms": -27.4,
+    "pct": -2.42
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-set2.md",
+   "patch": null,
+   "landing": "0a5731681",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `810b8b5b47448b4b99b688d9c2fda94c3ec9658e`",
+   "log": "- swarm-intset2 DONE → LAND-SUBSET (hashers + extract) / HOLD\n  (scalarjson). Filed `docs/perf/waves/wave-2/integrate-set2.md`\n  (282 lines). Extract bit-exact via git apply (zero set-1\n  collisions); hashers 50 bulk byte-identical + 8 hand-rebased\n  vs LANDED parse (same 1–3-line swaps, shifted context; parse's\n  new `programs` maps deliberately left HashMap — new work,\n  future wave) + 2 within-set hand merges with extract\n  (forced Fx-typing of borrowed refs). Captain's catch\n  (hashers×keys2 facts.rs) discharged as false alarm three\n  ways. Scalarjson HELD: landed keys2 generalized\n  `LookupKey<'a, W: ?Sized>` with THREE live instantiations\n  (`Vec<String>` hot path — silently re-instantiated by deref\n  coercion — plus `[Box<str>]` in facts.rs, plus `[String]`\n  tests); banked writer is concrete over `[String]` and the\n  merge needs a newly designed step-iteration abstraction =\n  rewriting the change. serializer.rs zero diff verified.\n  Sum: FULL −27.41/−2.42% med (8/8, ex1 −29.16, paired-med\n  −30.16 — all three estimators agree); LOO bisect additive\n  (−14.53 extract-only 6/8 + −14.49 hashers-only 7/8 = −29.02\n  vs FULL −27.41, ~1.6 noise). Hashers re-measures stronger\n  than banked −6.3 (quieter box + new-base composition\n  candidates, cause unproven, sign solid). 2 sets discarded\n  pre-verdict (screensharingd 358% foreign spikes — observed,\n  never touched; box idled, probe clean). 4-scale byte-identity\n  vs sealed pins; determinism 60/60; atomic 571+1 (delta =\n  union test); styletrace failure sets byte-identical both\n  arms (18 pre-existing env); q 0v/63w (60+3 banked, zero new).\n  Captain firsthand: atomic 571+1 green in parent, q 0v/63w on\n  58 files, 61 files byte-identical to worktree. LANDED\n  `0a5731681` perf(rs): wave-2 set-2 diet (hashers+extract),\n  61 files +397/−283, named files only. Enterprise sync now\n  ≈1107 med (was 1135 pre-set-2, 1198 pre-set-1). Scalarjson\n  re-proof spec filed (native fast frame over all live W +\n  per-instantiation differential fuzz + phase-bench marginal;\n  expectation ≈ +0.3ms, unresolvable whole-sync). Freed slot →\n  swarm-cloneplasma.",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-SET3",
+   "wave": "wave-2",
+   "topic": "integrate set3",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -41.8,
+    "pct": -4.01
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-set3.md",
+   "patch": null,
+   "landing": "3dd32a659",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `0a5731681c2bca56578d80ed67934e3ea709593a`",
+   "log": "- swarm-intset3 DONE → LAND whole set (collect + proof +\n  selpush + shorthand + marshal). Filed\n  `docs/perf/waves/wave-2/integrate-set3.md` (313 lines).\n  selpush/shorthand/marshal bit-exact; collect + proof\n  hand-rebased mechanically onto LANDED set-2 Fx (same\n  change + retained Fx types; proof's briefed SAME-FILE\n  render.rs collision composed diet-onto-Fx exactly as the\n  crew specified). Sum: FULL −41.75/−4.01% (8/8, ex1\n  −48.45, pairmed −43.33, all estimators agree, no\n  outliers); LOO collect −8.69 (6/8) / proof −13.85 (7/8,\n  far above banked −1.8 — predicted fewer-ops × faster-ops\n  composition) / selpush +1.78 (3/8) / shorthand −8.48\n  (7/8) / marshal −6.71 (8/8, above banked); additivity\n  super-additive by ~5.8 (no interaction penalty). Selpush\n  judgment: two independent 8-pair sets straddle zero at\n  ±2ms vs ±8 spread (p≈0.36, not a regression signal);\n  wave-1 reserve precedent VERIFIED by captain\n  (reserve soloed +16.5, landed in wave-1 set) — sum clears\n  with headroom, member provably removes work, merge\n  bit-exact → LANDS with the set; dropping it would void\n  the measured sum. 0 discards; identity 4/4; 128/128\n  determinism; atomic 594+1 (delta exactly 23 new tests);\n  q 0v/7w (6 banked-shape + 1 tip-pre-existing, zero new);\n  styletrace 31/18 byte-identical both arms. Captain\n  firsthand: 594+1 green, q 0v/7w on 18 files, 19 files\n  byte-identical to worktree. LANDED `3dd32a6` perf(rs):\n  wave-2 set-3 diet, 19 files +1179/−184 (incl. new memo.rs\n  + wire.rs), named files only. Enterprise sync now ≈1000\n  med (was 1042 pre-set-3, 1135 pre-set-2, 1198 pre-set-1;\n  −198 total, 1.55× Panda). Freed slot → swarm-recipepath.",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-SET4",
+   "wave": "wave-2",
+   "topic": "integrate set4",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -14.1,
+    "pct": -1.43
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-set4.md",
+   "patch": null,
+   "landing": null,
+   "overruledBy": "INT-W2-SET4B — captain HELD recipepath (replicated contra), subset landed e360915f",
+   "summary": "Base pin verified: `git rev-parse HEAD` = `ddce131e7ab9a627500b5caa3d24bce81204dfe4`",
+   "log": "- swarm-intset4 DONE → captain rules SUBSET-CONFIRM (6),\n  recipepath HELD pending (OVERRULE on one member — read\n  carefully). Filed `docs/perf/waves/wave-2/integrate-set4.md`\n  (481 lines; exemplary honesty — every number disclosed).\n  Merge: extend/recipepath/scalarreproof/lineindex bit-exact;\n  realloc D7 + analysisb 4-file rebases mechanical (Fx\n  retained); sysprefix/selpush compose per crew spec (+1\n  trivial escaped_len accessor); realloc D1 YIELDS to landed\n  collect on the collect crew's own filed race note + static\n  zero-alloc audit + count agreement (ACCEPTED — nothing\n  lost, nothing double-claimed). Suites 607+1+5 (delta\n  exactly 21 named tests) + module_graph +4; q 0v/5w\n  (4 pre-existing/banked + 1 merge-tripped jsx_attrs\n  365→366 soft length — ACCEPTED, cohesive module, 1 line);\n  styletrace 31/18 identical; identity 4/4; 186/186\n  determinism. Sum: FULL −14.07/−1.43% (6/8, ex1 −13.16,\n  pairmed −26.92 — all agree SIGN, magnitudes spread\n  −13…−27). Bisect: extend −15.35 / sysprefix −5.96 /\n  lineindex −3.90 / realloc −1.18 (straddle) / analysisb\n  −1.54 (straddle) / scalarreproof +0.62 (disclaimed null)\n  / recipepath +5.42 (2/8) + REPLICATED +7.80 (1/8), all\n  estimators positive BOTH sets. THE RULING: the integrator\n  invoked the wave-1 reserve precedent for recipepath, but\n  its load-bearing condition (\"sum clears with headroom\")\n  FAILS (−14.07 clears neither prong), and recipepath is\n  NOT a straddle like selpush (±2, p≈0.36) — it is a\n  replicated directional contra (3/16 favor, p≈0.01) that\n  FAILED its own banked replication (−13.05 7/8 → twice\n  contra). It differs in KIND from the set's other weak\n  cells (realloc/analysisb straddle as banked;\n  scalarreproof's whole-sync null was disclaimed) — the\n  only member whose whole-sync effect failed to replicate.\n  Dropping it is not cherry-picking; landing it would\n  stretch the precedent past its justification and risk\n  baking ~+6 of harm into the tree. ADDITIVITY supports\n  the concern (LOO-sum −21.89 vs FULL −14.07, gap +7.8 ≈\n  recipepath's measured harm — diffuse-loss is the rival\n  hypothesis, unproven). DOCTRINE (stated, not stretched):\n  the 15ms filter governs SOLO claims and member-level\n  regression signals; bank SETS land on sign-resolved sums\n  + identity + suites — and a replicated-contra member\n  earns a subset-confirm, not a free ride. ACTION:\n  swarm-intset4b confirms FULL-minus-recipepath (fresh\n  8-pair + identity + determinism + suites); recipepath\n  HELD with re-proof spec (isolate the cloneplasma ×\n  allocator interaction; re-present with in-composition\n  evidence). If subset ≈ −14 too → diffuse-loss wins,\n  land subset anyway (cleaner, no red cells); if subset\n  ≈ −20+ → recipepath was harmful, subset lands bigger;\n  if subset disappoints → reassess with data. Nothing\n  landed yet. Freed slot → swarm-intset4b.",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-SET4B",
+   "wave": "wave-2",
+   "topic": "integrate set4b",
+   "kind": "integration",
+   "verdict": "LAND-SUBSET",
+   "effect": {
+    "ms": -19.3,
+    "pct": -1.97,
+    "pairs": "8/8"
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-set4b.md",
+   "patch": null,
+   "landing": "e360915f7",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `ddce131e7ab9a627500b5caa3d24bce81204dfe4`",
+   "log": "- swarm-intset4b DONE → LAND-SUBSET6 (the ≈−20 branch —\n  the overrule is VINDICATED). Filed\n  `docs/perf/waves/wave-2/integrate-set4b.md` (195 lines).\n  Subset reproduced independently per the filed record\n  (11 bit-exact + D7 + analysisb compose + sysprefix\n  compose), then byte-verified 19/19 IDENTICAL to intset4's\n  tree minus exactly recipepath's 2 files (one doc-comment\n  line converged post-compare, disclosed). Sum: −19.25/\n  −1.97% (8/8 UNANIMOUS, ex1 −21.76, pairmed −15.80 —\n  beats FULL −14.07 on median + ex1 with tighter spread;\n  recipepath WAS harmful in composition ≈ +5). Identity\n  4/4; 28/28 determinism; atomic 605+1+5 (delta exactly 19\n  named); module_graph +4; q 0v/same-5; styletrace\n  identical. Recipepath HELD with the specified re-proof\n  (in-composition evidence, not another member-alone LOO).\n  Captain firsthand: 605+1+5 green, q 0v/5w, 19 files\n  byte-identical. LANDED `e360915f` perf(rs): wave-2 set-4\n  subset, 19 files +1126/−128 (incl. new parity suite).\n  Enterprise sync now ≈955 med (was ≈974 pre-land, 1198\n  pre-wave-2; −243 total, 1.48× Panda). 19 diets landed\n  (12 + cloneplasma + 6). Sixth slot HELD (1 crew live:\n  harvestphase) — set-5 integrator (programsfx + wantctx +\n  stageaudit + bagdefer + harvestphase-verdict) stages on\n  harvestphase's verdict.",
+   "filler": false
+  },
+  {
+   "id": "INT-W2-SET5",
+   "wave": "wave-2",
+   "topic": "integrate set5",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -17.4,
+    "pct": -1.82,
+    "pairs": "8/8"
+   },
+   "files": [],
+   "report": "docs/perf/waves/wave-2/integrate-set5.md",
+   "patch": null,
+   "landing": "6c3909506",
+   "overruledBy": null,
+   "summary": "Base pin verified: `git rev-parse HEAD` = `e360915f70d9d9ab2cc3b60d59d423fc85a680e4`",
+   "log": "- swarm-intset5 DONE → LAND whole set (clean — doctrine\n  applied correctly). Filed\n  `docs/perf/waves/wave-2/integrate-set5.md` (328 lines).\n  All five bit-exact, zero rebases (19 files, exact union);\n  stageaudit×bagdefer composition traced line-by-line\n  (streamed collects exactly once, retained takes the\n  disjoint Lazy arm — prizes preserved verbatim both\n  ways); behavioral pairs grep-closed. Sum: −17.37/−1.82%\n  (8/8 UNANIMOUS, ex1 −18.58, pairmed −15.91 — tight\n  −15.9…−18.6 band, no spikes). Bisect: wantctx −2.34 /\n  bagdefer −5.22 (6/8, replicates bank) / harvestphase\n  −6.65 (8/8 — the per-phase bank resolves whole-sync in\n  composition, keys2 precedent vindicated again) /\n  programsfx +2.25 + stageaudit +1.88 straddles (paired-\n  medians +0.03/−0.13 — essentially exactly zero, 4/8,\n  single-set). Zero contra — the straddles differ in KIND\n  from recipepath (replicated directional) and ride the\n  reserve precedent with the full three-part justification;\n  no subset-confirm warranted (cascade precedent bars\n  second sets on sub-noise). Identity 4/4; 126/126\n  determinism; atomic 607+1+5 (delta exactly 2 pins by\n  name); module_graph identical; q 0v/same-11; styletrace\n  identical. Captain firsthand: 607+1+5 green, q 0v/11w,\n  19 files byte-identical. LANDED `6c3909506` perf(rs):\n  wave-2 set-5 diet, 19 files +234/−91. Enterprise sync\n  now ≈938 med (was ≈955 pre-land, 1198 pre-wave-2; −260\n  total, 1.45× Panda). 24 diets landed. Board EMPTY (all\n  crews delivered, backlog exhausted) — wave-2 COMPLETE\n  pending HQ's morning review; held: recipepath (HELD,\n  interaction re-proof spec filed), scalarjson-original\n  (superseded by scalarreproof's landed frame).",
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOSHOT3",
+   "wave": "wave-2",
+   "topic": "memo shot3",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-2/memo-shot3.md",
+   "patch": null,
+   "summary": "Crew: swarm-memo (captain's reserve, wave 2). Base pin verified:",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "MEMO-PANDAV2THREADING",
+   "wave": "wave-2",
+   "topic": "panda v2 threading",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-2/panda-v2-threading.md",
+   "patch": null,
+   "summary": "one-shot `compile()`, stateful `parseFiles()` ingestion, snapshot assembly,",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W1-CANON",
+   "wave": "wave-1",
+   "topic": "canon",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "pct": 98.9
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-1/report-swarm-canon.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "`canon::dialect::resolve_alias` ran a 315-entry binary search (~8–9 `memcmp`s) on",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W1-EMIT",
+   "wave": "wave-1",
+   "topic": "emit",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-1/report-swarm-emit.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "`LAND (delta>=15ms + >=1.5% + rules 1-3 green)` — with one warmup caveat, see §5.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W1-ISLEN",
+   "wave": "wave-1",
+   "topic": "islen",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 15.97,
+    "pct": -1.26
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-1/report-swarm-islen.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- commit: `1a57b1e80` (\"feat(agentrs): flame burndown query layer\"), verified via `git rev-parse HEAD`",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W1-KEYS",
+   "wave": "wave-1",
+   "topic": "keys",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-1/report-swarm-keys.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "duplication is real (5.54x) but the frame is too small — the whole `serialize_lookup_key` subtree is 19wt and the bar needs ≥15ms + ≥1.5% of ~1400ms sync.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W1-RESERVE",
+   "wave": "wave-1",
+   "topic": "reserve",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 16.5,
+    "pct": 1.31,
+    "pairs": "4/6"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-1/report-swarm-reserve.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Near-miss, fully quantified below so the captain can overrule on evidence: the",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-ANALYSISB",
+   "wave": "wave-2",
+   "topic": "analysisb",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -0.64,
+    "pct": -0.06
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/conditions.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/css.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/imports.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/jsx.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/jsx_attrs.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/mod.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/object.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/structured.rs",
+    "packages/reference-rs/modules/atomic/src/tests/gates.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-analysisb.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "- Base: `810b8b5b47448b4b99b688d9c2fda94c3ec9658e` (verified `git rev-parse HEAD` at start; tree clean).",
+   "log": "- swarm-analysisb BANK (pre-set-2 base, joins set-4 — the\n  4-hour crew delivers): D1–D5 expectations diet (content\n  gates kill all 3,122 JSX walks + 2 css walks; Cow static\n  keys; borrowed import spellings; shared import scan;\n  member-tag CSE). 9 files +200/−53, 5 gate pin tests.\n  Filed `docs/perf/waves/wave-2/report-swarm-analysisb.md` +\n  `analysisb.patch` (captain-verified: FAILS vs tip on 4\n  files — conditions/css/jsx/mod, hashers' landed Fx\n  conversions; crew pre-analyzed as orthogonal-line\n  mechanical compose; set-4 integrator rebases). ~52k\n  allocs + 3,122 walks + 3,122 scans removed (exact\n  census); 8-pair −0.64 (ex1 −2.75, ±16 noise — fantasy\n  model honestly corrected 8–11 → ~2–3 true); identity\n  4/4; determinism ×2; 42-fixture adversarial differential\n  DIFF-CLEAN (~40 looks + ~23 slots preserved); 575+1\n  green; q 14/14 clean 0v/0w. Correct BANK (cascade\n  precedent). Freed slot → swarm-stageaudit (T6).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-ASMFMT",
+   "wave": "wave-2",
+   "topic": "asmfmt",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-asmfmt.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "`assembly.rs:252,255` sit in proof-gated `build_css_runtime` (bench `proof` is unconditionally false — the bench config carries no `logs`, and `LogChannel` forbids `'proof'` on sync entirely); the plan/key `derive_slot` sites (`builder.rs:54,58`) are skipped on the diet path every `!proof` compile takes; the fifth site (duplicate-recipe diagnostic) is an aborting error that never fires on a comple",
+   "log": "- swarm-asmfmt CUT (zero builds, zero spawned runs of any kind,\n  lock never held — pure read-only chain proof): all 5\n  assembly/plan key-`format!` sites gate-dead on sync, 0.00 ms\n  fantasy. Filed `docs/perf/waves/wave-2/report-swarm-asmfmt.md`.\n  assembly.rs:252,255 live in proof-gated `build_css_runtime`\n  (bench `proof` unconditionally false — no `logs` key, and\n  `LogChannel` forbids 'proof' on sync entirely, so unreachable\n  on EVERY sync); builder.rs:54,58 skipped on the `!proof` diet\n  path; dup_recipe is an aborting error that never fires on a\n  completing load. Flame corroboration (key sites absent,\n  build_keyed live 83wt). CONFIRMATION: only LIVE key\n  construction on `!proof` is keys2's banked diet ground (19 wt)\n  — bank value re-verified. SEED-LOAD FACT (extends resolvefmt):\n  bench exercises `!proof` exclusively — proof-gated/non-diet\n  code never executes; future crews there must re-census.\n  Freed slot → swarm-marshal.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-ATRULES",
+   "wave": "wave-2",
+   "topic": "atrules",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": -13.05
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-atrules.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the 5ms per-phase floor — survives 3× cost-model error; exact filler + bank",
+   "log": "- swarm-atrules CUT (ceiling, zero builds, recipepath lead):\n  at-rules census ×4 (10,485 lines ×2 per binary): 9,057\n  atoms = 6,629 zero-alloc w0 + 2,428 w1 over 3 container\n  queries; 4,394 groups; 393 dietable w1-hits = 786 allocs\n  ≈1ms optimistic — bars the 5ms floor AND 15ms bar with\n  3× margin (lead's implied volume overstated 23×). Richer\n  borrowed-keys variant also barred (~3.5ms, invasive\n  lifetime refactor, order-bar risk). Exact filler filed\n  (borrowed-key linear probe + Equivalent alternative +\n  2 pin tests + bank conditions + recipepath-pending\n  composition note for intset4). Outputs 4/4 pins;\n  reverted tree 594+1 green. Filed\n  `docs/perf/waves/wave-2/report-swarm-atrules.md` (no\n  patch). Correct fast CUT. STARVATION OVER: programsfx\n  holds the lock for its census+verify block. Freed slot\n  → swarm-tokenphase (T8).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-AUTHCSS",
+   "wave": "wave-2",
+   "topic": "authcss",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -11.6
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/resolve/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/normalize.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/unit.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-authcss.md",
+   "patch": "docs/perf/waves/wave-2/authcss.patch",
+   "landedIn": null,
+   "summary": "`authored_key` (≈10wt) and `css_value_from_authored` (≈11wt) share one cause:",
+   "log": "- swarm-authcss BANK (pre-set-3 base, joins set-4): resolve\n  happy-path alloc diet — lazy refusal key (89,904 speculative\n  keys built, ZERO consumed → build at 2 emit sites) + collapse\n  gate (100% of 89,904 collapses no-op → needs_collapse byte\n  gate reuses authored box) + resolvefmt D-px filler. 3 files\n  +130/−16, no public signature changes, 1 contract test.\n  Filed `docs/perf/waves/wave-2/report-swarm-authcss.md` +\n  `authcss.patch` (captain-verified: applies CLEAN to tip\n  3dd32a6). Census ×2 byte-identical (429k lines); 8-pair\n  −11.60/−1.12% (ex1 −12.26, 8/8 unanimous — sub-bar both\n  prongs → correct BANK, biggest bank since collect);\n  identity 4/4; determinism 2/2; 572+1 green; q 0v/0w.\n  ~270k allocs/sync removed from cloneplasma's pool\n  (compose-don't-double-count flagged). Extend adjacency\n  noted (key_for_want/lower_conditions — mechanical\n  integrate order filed). Ceiling credit to resolvefmt for\n  D-px (~0.5–1ms). Freed slot → swarm-programsfx.",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-BAGDEFER",
+   "wave": "wave-2",
+   "topic": "bagdefer",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 7.21,
+    "pct": 0.74,
+    "pairs": "6/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/resolver/mod.rs",
+    "packages/reference-rs/modules/atomic/src/extract/resolver/source.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-bagdefer.md",
+   "patch": null,
+   "landedIn": "set-5/6c3909506",
+   "summary": "+2.61 — sub-bar both LAND prongs as expected for a ≈1.5ms-fantasy diet;",
+   "log": "- swarm-bagdefer BANK (verdict-gated on stageaudit, joins\n  set-5): retained-bag first-read deferral (stage lazies\n  in from_plan, bag_mut collects on first R-read +\n  memoizes; 3,003 unread bags skip collect AND drop). 2\n  files +97/−18, 1 pin test. Filed\n  `docs/perf/waves/wave-2/report-swarm-bagdefer.md` +\n  `bagdefer.patch` (base == tip, check-clean). Read census\n  ×3 order-identical (UNREAD 3,003 all-loaded; load-time\n  variant VOID, literal sketch UNSOUND — first-read shape\n  only); closed reader inventory (3 R-sites, general not\n  corpus-gated); 8-pair +7.21/+0.74% crew-sign (6/8, ex1\n  +5.63, pairmed +2.61 — honest: median 5× fantasy, paired\n  1.8×, allocator-or-drift disclosed; sub-bar → correct\n  BANK); identity 4/4; determinism 2/2; 596+1 (delta\n  exactly pin test) + module_graph 105 green; vitest\n  failsets 35==35 byte-identical (override artifact\n  reproduced both arms); q 0v/2 pre-existing. Stageaudit\n  outcome read fresh, clean-disjoint rebase. Fifth slot\n  HELD (2 crews live: harvestphase/intset4b).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-BTREESET",
+   "wave": "wave-2",
+   "topic": "btreeset",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 8.9,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-btreeset.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "`assembly.rs:163` is live on the `!proof` path (gate check passed — single `build_diet` per sync), but the input is already unique by construction (`seen_keys` first-wins gate), the consumers are membership-only (order provably unobserved), and the whole-compile `BTreeMap::insert` budget is 13wt shared across ≥6 user families — counted by filed profile + code proof, never built, no lock hold.",
+   "log": "- swarm-btreeset CUT (zero builds, zero spawned runs, lock never\n  held — filed profile + code proof): assembly keys collect\n  fantasy ~6–9 ms clears neither prong. Filed\n  `docs/perf/waves/wave-2/report-swarm-btreeset.md`. Gate check\n  PASSED (live on `!proof`, exactly once per sync) but input\n  unique by construction (seen_keys gate, 0% dups), zero data\n  reallocs (moved strings), consumers membership-only (order\n  unobserved; missing_keys test-only). Two independent bounds\n  agree (profile-share ~6, op-count ~8.9); realistic 30–60%\n  → ~2–5 ms. Even a type-changing HashSet diet nets ~1–3 ms\n  with a larger soundness surface. Closes wave-1 reserve's\n  one-shot-collect note with counts. Reseed: per-object-value\n  `canonical_json_value` BTreeMap rebuilds (thousands of inserts\n  across 15,699 objects — serializer ground, different\n  mechanism); plan.rs:204 names-set. Standing facts: one native\n  compile per sync (once-per-compile collects fire once);\n  `emitted` membership-only proof stands. Freed slot →\n  swarm-collect.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-CALLERMEMO",
+   "wave": "wave-2",
+   "topic": "callermemo",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "pct": 99.9
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-callermemo.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Memoize canon lookups AT THE CALLERS: per-site memo tables at the 16",
+   "log": "- swarm-callermemo CUT (exact census, counted never built, no\n  timed bench): caller-side canon memo fantasy 8.0 ms combined\n  vs ≈17.4 effective bar. Filed\n  `docs/perf/waves/wave-2/report-swarm-callermemo.md`. Census:\n  K 185,700 (163,070 find-leg + 22,630 alias, 0 custom/ref) /\n  C 589,514 (79,258 alias + 510,256 non-alias) over 12 live\n  sites (17 dead on this load); repeats 99.9% (~46 names/site)\n  — hit rate is NOT the constraint. K fantasy 6.83/0.59% (2×\n  margin); C memo NET-NEGATIVE by construction (−3.2 fantasy,\n  −6.2 realistic: 10 ns probe on a 1.4 ns path — the\n  reverse-keys2 asymmetry); prefilter-gating caps C at 1.19.\n  No memo shape survives (Fx/no-hash/small-vec/last-N all\n  dominated by the fantasy bound). Canon remainder now:\n  caller-fusion count filed for extend (449,520 calls ≈ 2.0\n  ms — sub-bar alone). Correct CUT. Freed slot →\n  swarm-analysis (re-seed #6, NEW base).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-CANON2",
+   "wave": "wave-2",
+   "topic": "canon2",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {},
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/canon/src/css/values/classify.rs",
+    "packages/reference-rs/modules/canon/src/css/values/functions.rs",
+    "packages/reference-rs/modules/canon/src/css/values/mod.rs",
+    "packages/reference-rs/modules/canon/src/css/values/named_colors.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-canon2.md",
+   "patch": null,
+   "landedIn": "set-1/810b8b5b4",
+   "summary": "`canon::css::values::classify_css_value` runs per declaration value (harvest",
+   "log": "- swarm-canon2 LAND CLAIM (−23.4 ms / −2.04%; ex-run-1 −20.3 /\n  −1.77%): no-alloc case-insensitive matching in value classify,\n  4 canon files +105/−13 (is_named_color binary_search_by +\n  cmp_lower_probe, is_css_keyword eq_ignore_ascii_case,\n  function_kind raw-name tables). Filed\n  `docs/perf/waves/wave-2/report-swarm-canon2.md` + `canon2.patch`.\n  Follow-up on wave-1 islen shape, cited + measured on new base.\n  Criterion −52% mixed, 756/756 differential zero-divergence,\n  allocs →0; 4-scale identical (sealed hashes); determinism ×2;\n  canon 58 + atomic 567+1 green; q green zero violations;\n  hand-written files (no regen question); bench byproducts\n  restored, tree = 4 files exactly. Caveats for integrator: base\n  arm noisier than cand (range 141 vs 22), pair 5 inverts (+18.5),\n  pair-1 outlier −140 — verdict stands ex-run-1 on both prongs;\n  one smoke run overlapped a sibling hold via ungated chain\n  (disclosed, not the verdict session). \"Runaway find\" delivery\n  note: no foreign kills in REPORT (crew disclosed lesser things)\n  — own-process cleanup, no incident. → swarm-intcanon2 dispatched\n  (single-patch integrate + 8-pair confirm).\n---\n- swarm-canon2 BANK (captain override of integrator LAND):\n  intcanon2's proof is exemplary (patch clean, 4-patch file sets\n  mechanically disjoint, order-equivalence re-proven from code, own\n  848-input differential 0 divergences incl. non-ASCII adversaries,\n  regen n/a confirmed, canon 58 + atomic 567+1 + q green re-run,\n  sealed hashes, determinism ×2) — but its independent 8-pair\n  confirm measures −15.34/−1.36% full, −12.80/−1.14% ex-run-1:\n  full clears only the ms prong, ex-run-1 clears NEITHER, so the\n  solo bar (≥15 ms AND ≥1.5%, standing ex-run-1) is missed.\n  OVERRIDE REASON: wave-1 islen (−16.0/−1.26%, ms✓/pct✗) banked on\n  exactly this shape; 8/8 pairs + mechanism counts + differential\n  prove a real ~13–15 ms effect that is proven-identical → BANK\n  into the combined set, sum-confirm decides. (Crew's −23.4 was\n  inflated by its −140 pair-1 base outlier; integrator's cleaner\n  number governs.) Filed\n  `docs/perf/waves/wave-2/integrate-canon2.md`. Combined set now:\n  canon2 + cascade + parse + keys2 (+ diag if intdiag confirms).\n  Freed slot → swarm-asmfmt.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-CANONJSON",
+   "wave": "wave-2",
+   "topic": "canonjson",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 16.1,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-canonjson.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the seed-7 enterprise load drives 10,466 flat 2-or-4-key objects",
+   "log": "- swarm-canonjson CUT (zero builds, zero spawned runs, no lock —\n  dump census + filed profile + code proof): per-object BTreeMap\n  diet fantasy ≈ 6 ms whole-function / ~9.4 absurd-generous\n  op-count, realistic ~1–2. Filed\n  `docs/perf/waves/wave-2/report-swarm-canonjson.md`. Census:\n  10,466 flat 2/4-key objects, 31,332 inserts (2–4 B keys, zero\n  nesting/numbers); whole `canonical_json_value` 6wt incl.\n  Presized-maps third VOID by API (`BTreeMap` has no capacity);\n  only shape is sortedness pre-check with ~1–2 ms realistic net.\n  Fails whole-sync bar AND per-phase floor (5 ms). FILLER with\n  exact code + full bank conditions filed (~1–2 ms, never solo).\n  Doctrine hygiene: BANK rule mints banks from implemented diets,\n  not sub-ceiling triage. Closes btreeset's reseed loop. Freed\n  slot → swarm-sysprefix (D2 lead, micro-BANK-track).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-CASCADE",
+   "wave": "wave-2",
+   "topic": "cascade",
+   "kind": "diet",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0.2,
+    "pct": 1.5
+   },
+   "overruledBy": "crew CUT overridden — LANDED in set-1/810b8b5b4 (reserve precedent: sub-bar proven-identical)",
+   "files": [
+    "packages/reference-rs/modules/atomic/src/stylesheet/cascade/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-cascade.md",
+   "patch": null,
+   "landedIn": "set-1/810b8b5b4",
+   "summary": "Wave-1 emit (`report-swarm-emit.md`) landed direct-push rule emission and",
+   "log": "- swarm-cascade BANK (captain override of crew CUT): cascade sort+keys\n  diet, `stylesheet/cascade/mod.rs` +59/−44. Filed\n  `docs/perf/waves/wave-2/report-swarm-cascade.md` + `cascade.patch`\n  (diet file only, 159 lines; bench-report byproducts excluded).\n  Fused `from_atom` 3-pass→1, rank memo 23,505→46 (511×), lazy\n  tiebreak 362,743→1,399 `cmp_whens` (259×); 4-scale identical\n  (sealed hashes), determinism 16/16, atomic 567+1 green, q 0\n  violations. 8-pair median +3.4 / ex-run-1 −0.6 vs ±20 noise —\n  effect ~3–5 ms unresolvable alone. OVERRIDE REASON: brief +\n  VOYAGE order BANK for sub-bar proven-identical diet, and wave-1\n  reserve (noisy +16.5 ±71) banked on mechanism exactly like this;\n  \"nothing to BANK\" contradicts the rule — the sum-confirm +\n  per-component bisect exists precisely to resolve it. Joins the\n  pending combined set (diag + canon2 if both land). BANK CONDITION\n  for integrator: `scan_conditions` carries a NEW cognitive-22\n  warning (q green, warning not violation) — confirm q exit +\n  assess a cheap split. Future-work note (crew §Verdict): remaining\n  sort cost is 362k compares + memcmps with no further redundancy;\n  a future LAND here needs a different sort shape (prefix bucketing\n  / unstable + tiebreaker), not a bigger memo.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-CLONEPLASMA",
+   "wave": "wave-2",
+   "topic": "cloneplasma",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -23.07,
+    "pct": -2.09,
+    "pairs": "6/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/expressions/object/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/normalize.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/unit.rs",
+    "packages/reference-rs/modules/atomic/src/runtime/builder.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-cloneplasma.md",
+   "patch": null,
+   "landedIn": "solo/ddce131e7",
+   "summary": "censused every live String/Box clone site (89,904 wants, key built 89,904× used 0×, collapse 100% plain, 16,239 dup key-clones), killed the dead plasma as one 6-site combined diet (5 files, +121/−32), and landed −23 ms whole-sync with 4-scale sealed-pin byte-identity.",
+   "log": "- swarm-cloneplasma LAND CLAIM (pre-set-3 base, pending\n  integrator): 6-site combined clone diet (R1 lazy key + R2\n  move-first + R3 unit_px + U1 collapse-Cow + B1\n  probe-then-decide + E1 move-last). 5 files +121/−32, 1\n  differential test. Filed\n  `docs/perf/waves/wave-2/report-swarm-cloneplasma.md` +\n  `cloneplasma.patch` (captain-verified: applies CLEAN to\n  tip 3dd32a6; set-3 disjoint confirmed). Census ×3\n  byte-identical (356k lines); 8-pair −23.07/−2.09% (6/8,\n  ex1 −24.85, pairmed −24.92 — clears BOTH prongs, all\n  estimators agree); Euclid proof predicts 20–30ms band,\n  measures inside it; identity 4/4; 29/29 determinism;\n  572+1 green; q 0v/1 pre-existing warning. Stream\n  subtlety disclosed (census on --seed-7 custom stream,\n  timing/identity on pin stream; counts transfer proven by\n  4-crew cross-validation). RACE FLAG: authcss's 3 banked\n  files are a STRICT SUBSET of these 5 (verified from\n  patch headers); cloneplasma asserts subsumption (same\n  R1/R3/U1 + adds R2/B1/E1, −23.07 vs −11.60) and claims\n  first-sound-LAND-wins. Authcss does NOT drop on assertion\n  — intclone adjudicates hunk-by-hunk (subsumed → authcss\n  YIELDS; distinct residuum → authcss rebases onto landed\n  cloneplasma or joins set-4). Follow-up filed: WantContext\n  borrow diet (~3–5ms, needs pub-API lifetime). Freed slot\n  → swarm-intclone (LAND-claim integrator).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-COLLECT",
+   "wave": "wave-2",
+   "topic": "collect",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -1.5
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/includes/glob.rs",
+    "packages/reference-rs/modules/atomic/src/includes/mod.rs",
+    "packages/reference-rs/modules/atomic/src/sources.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-collect.md",
+   "patch": null,
+   "landedIn": "set-3/3dd32a659",
+   "summary": "`Sources::collect` on the seed-7 enterprise load evaluates ~30k include-scope",
+   "log": "- swarm-collect BANK (first set-3 member): collect-path serial\n  diet D1+D2+D4, 3 files +180/−112 (sources.rs +\n  includes/{mod,glob}.rs). Filed\n  `docs/perf/waves/wave-2/report-swarm-collect.md` +\n  `collect.patch` (498 lines, applies to old base; set-1\n  untouched scan → clean rebase expected). D1 file_name\n  dir-sort + unstable (proven same-sequence: shared parent,\n  unique names — \"unstable\" flag retired with proof); D2\n  zero-alloc scope matching (root-bound FileMatcher, char-exact\n  glob + unicode pins); D4 fused union walk (no open skipped/\n  added/reordered — explicitly NOT Shot 2 territory). 8-pair\n  −14.45/−1.22% (ex-run-1 −17.02/−1.44%: ms✓/pct✗ — islen\n  shape, correct BANK), 6/8 pairs; 4-scale sealed hashes; 20/20\n  determinism; atomic 569+1 green; q 0 violations (file net\n  −5 lines). Census YIELDs respected (known→hashers,\n  content-clones→marshal lead filed). RACE with realloc on\n  glob/normalize allocs (D2 subsumes exact-capacity — first\n  LAND wins; realloc still running). No sub-bisect ran\n  (queued) — set-3 integrator may bisect D1/D2/D4. Measured\n  on OLD base — set-3 sum re-measures on new. Freed slot →\n  swarm-selpush (re-seed #2, NEW base).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-DIAG",
+   "wave": "wave-2",
+   "topic": "diag",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {},
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/diagnostics/channels/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-diag.md",
+   "patch": null,
+   "landedIn": "set-1/810b8b5b4",
+   "summary": "`DiagnosticChannels::partition` renders every compiler-classified fact via",
+   "log": "- swarm-diag LAND CLAIM (−35.2 ms / −3.00%): partition dead-render\n  skip, `atomic/src/diagnostics/channels/mod.rs` +58/−12. Filed\n  `docs/perf/waves/wave-2/report-swarm-diag.md` + `diag.patch` (102\n  lines). 8-pair A/B, 2 warmups, ex-run-1 stands (−35.78/−3.05%);\n  4-scale byte-identical (enterprise hashes match wave-1 canon\n  prefixes — same seed-7 outputs); determinism ×2; 35,426 dead\n  renders census + flame cross-check; 2 new partition tests, quality\n  0 violations (1 pre-existing soft warning). Caveats for\n  integrator: `ATM-SITE-54` vitest failure reproduced on base too\n  (pre-existing claim to re-verify); pairs 1–2 noisy (modgraph's\n  disclosed overlap + sibling builds — median robust). → swarm-intdiag\n  dispatched (single-patch integrate + 8-pair confirm).\n---\n- swarm-diag LAND ACCEPTED (−19.9/−1.68%; ex-run-1 −18.3/−1.54%\n  clears BOTH prongs, pct margin 0.04pp): intdiag proof\n  thorough (patch clean; verbatim extraction + vacuity re-proven\n  with file:line traces; regen n/a; atomic green + 10/10\n  channels + q 0v/1pre-warn; ATM-SITE-54 re-proven pre-existing\n  on BOTH arms — caveat closed; sealed hashes; determinism ×2;\n  bisect honestly inconclusive with E≡cand path-equivalence\n  noise-floor analysis). Two independent sets both 6/8 same\n  direction, both stand ex-run-1; pure dead-work elimination\n  (cannot regress). Filed\n  `docs/perf/waves/wave-2/integrate-diag.md`. SEQUENCING (not an\n  override — wave-1 canon precedent): solo LAND accepted but\n  rides the COMBINED set for one landing + one re-profile; the\n  thin pct margin wants sum-confirm + bisect measuring diag's\n  contribution in situ. → swarm-intbank dispatched (5-patch\n  set: diag + canon2 + cascade + parse + keys2).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-EXTEND",
+   "wave": "wave-2",
+   "topic": "extend",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "pct": 2.9
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/module-graph/src/key.rs",
+    "packages/reference-rs/modules/module-graph/src/ladder/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-extend.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "`ValueGraph::resolve_file_imports` (44 wt) is one `HashMap::collect` whose",
+   "log": "- swarm-extend BANK (old base, joins set-4): ladder-alloc\n  diet — ModuleKey::new fast path + zero-alloc ancestor\n  cursor (exact old sequence incl. root quirk + 32-cap,\n  table-tested) + ladder scratch buffers (roots/pkg-dir/\n  @types/tsconfig regrow). 2 files +232/−38, 4 new key\n  tests. Filed `docs/perf/waves/wave-2/report-swarm-extend.md`\n  + `extend.patch` (captain-verified: applies CLEAN to tip\n  3dd32a6 — hashers never touched key.rs/ladder/mod.rs).\n  ~290k alloc-ops + 67k path walks removed per sync (exact\n  census, 3,562 bare × 9 levels all-miss); 8-pair +8.63/\n  +0.73% crew-sign (ex1 +6.46, 6/8 — sub-bar → correct\n  BANK, robust to pair-8 cut); identity 4/4; 28/28\n  determinism; module_graph 16/16 + atomic 567 green;\n  q/clippy/fmt clean. 5 non-builds killed by exact counts\n  (incl. both CUT grounds reproduced). Memo/traversal/\n  refusal semantics untouched, differential corpus green.\n  (Captain's path typo created then deleted an empty\n  extend.patch — final patch verified 356 lines, check-clean.)\n  Freed slot → swarm-repro2 (post-set-3 re-profile).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-EXTRACT",
+   "wave": "wave-2",
+   "topic": "extract",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {},
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/bindings.rs",
+    "packages/reference-rs/modules/atomic/src/extract/gating_tests.rs",
+    "packages/reference-rs/modules/atomic/src/extract/mod.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-extract.md",
+   "patch": null,
+   "landedIn": "set-2/0a5731681",
+   "summary": "`extract_parsed_program` (`lib.rs`) merged the file-local and",
+   "log": "- swarm-extract BANK (third set-2 member): JSX-host merge →\n  borrowed union view, 4 files +80/−11. Filed\n  `docs/perf/waves/wave-2/report-swarm-extract.md` +\n  `extract.patch`. 315,423 dead clones + 3,123 set builds +\n  ~19k regrows eliminated, zero added work; 8-pair\n  −13.34/−1.12% (ex-run-1 −13.08/−1.10%), 6/8 pairs; 4-scale\n  sealed hashes; 19/19 determinism; atomic 568 green; q 0\n  violations. Measured on OLD base — set-2 sum re-measures on\n  new. Census YIELDs respected (wants→realloc, hashers,\n  fences). Freed slot → swarm-proof.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-FINDPROP",
+   "wave": "wave-2",
+   "topic": "findprop",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 17.4,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-findprop.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Future-work note from swarm-canon2's filed verdict: \"`find_property`",
+   "log": "- swarm-findprop CUT (counted, never built, no timed bench — lock\n  held once for count block + criterion): `find_property`\n  dispatch fantasy ≈ 13.1 ms total addressable < 15 ms ms-prong\n  at 100% elimination. Filed\n  `docs/perf/waves/wave-2/report-swarm-findprop.md`. Exact census\n  353,517 calls, 100% hits (structural — host gates + valid-props\n  load), 9.29 probes/call; criterion ~37 ns/call mixed. Three\n  ceiling legs all bar with ~2× margin (micro 13.1, flame\n  realistic 11–12, heroic 9.5). Per-call already near-floor\n  (first-byte-early-out compares, L2-resident table); hashing\n  trades 9 cheap compares for a full scan + verify. Correct CUT,\n  not BANK. Reseed: caller fusion (resolve_alias +\n  find_property at is_known_style_prop/class_prefix_for_prop) →\n  extend's resolve ground or canon2 caller-side-memo future,\n  with this census (353,517, all hits) as starting count. Freed\n  slot → swarm-nameset.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-HARVEST",
+   "wave": "wave-2",
+   "topic": "harvest",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 12.5,
+    "pct": 1.08
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-harvest.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "proven with mechanism counts, diet never built)**",
+   "log": "- swarm-harvest CUT (counts-only, ×3 identical, reverted clean,\n  lock held once for untimed count block): harvest-chain diet\n  fantasy ~12.5/1.08% bars both prongs. Filed\n  `docs/perf/waves/wave-2/report-swarm-harvest.md`. Census:\n  95,894 literals visited, 17,693 per-file values → 657 pool,\n  sinks 0/0 (static load — seeder emits static literals only,\n  proven), 48,566 seed wants built+ dropped unused, mint loop\n  vacuous. D1 (skip seed when sinks empty) 11.5 ms is the bulk;\n  D4 ~1.0; D2 0.00; mask-scan measured 0.07 (floor — removal\n  would REGRESS string-free inputs). Doctrine section files\n  D1/D2/D4 identity arguments for per-phase revival (D1 dies on\n  dynamic-heavy inputs). Correct CUT, not BANK (nothing built).\n  Leads: t_visit 23.3 split for parse/canon2 follow-ups;\n  is_css_keyword alloc \"still live in base\" = canon2's banked\n  (unlanded) ground, no action. Freed slot → swarm-callermemo.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-HARVESTPHASE",
+   "wave": "wave-2",
+   "topic": "harvestphase",
+   "kind": "diet",
+   "verdict": "PER-PHASE-BANK",
+   "effect": {
+    "ms": -8.6,
+    "pct": 31.6,
+    "pairs": "6/6"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/harvest/mint/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-harvestphase.md",
+   "patch": null,
+   "landedIn": "set-5/6c3909506",
+   "summary": "the static/dynamic SPLIT census killed the parent's",
+   "log": "- swarm-harvestphase PER-PHASE-BANK D1 (last verdict; joins\n  set-5): 6-line sinks-empty skip in mint (+23-line pin\n  test), 1 file +29. Static/dynamic SPLIT census ×9 killed\n  the dynamic-heavy death clause (sinks_raw = 0 ALL 4\n  scales); tip drift re-measured (t_seed/t_merge/t_visit\n  all shrank under landed diets — D1 survives, D4 doesn't).\n  Phase-bench 6 pairs: −8.60ms median, 31.6% share, 6/6,\n  every pair clears both prongs (D1 arm reads 0.000 ×8 —\n  total skip); D2 CUT at exactly 0.00; D4 CUT at ≤0.26\n  gross (+ churn-volume filler). Whole-sync directional\n  −7.33 (no-regression read, never the verdict basis).\n  REPORT FILE TRUNCATED mid-sentence (crew output cap —\n  proof sections missing from the file); proof CARRIED by\n  the VERIFY-COMPLETE + DONE claims lines (identity 4/4,\n  determinism 3/3, 596+1 green, q green, styletrace 31/18)\n  + captain's independent medians cross-check from the\n  filed pair table (−7.33 ✓ exact). Filed\n  `docs/perf/waves/wave-2/report-swarm-harvestphase.md`\n  (verbatim, truncated) + `harvestphase.patch`\n  (captain-verified: CLEAN vs new tip e360915f). Correct\n  per-phase BANK (keys2 precedent). Set-5 STAGED: all 5\n  members (programsfx/wantctx/stageaudit/bagdefer/\n  harvestphase-D1) check-clean vs e360915f — zero rebases.\n  Freed slot → swarm-intset5.",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-HASHERS",
+   "wave": "wave-2",
+   "topic": "hashers",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 0.15
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/Cargo.lock",
+    "packages/reference-rs/modules/atomic/src/assembly.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/block.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/conditions.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/const_values.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/css.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/imports.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/jsx.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/jsx_attrs.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/mod.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/object.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/structured.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/support.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/analysis/values.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/proof/render.rs",
+    "packages/reference-rs/modules/atomic/src/extract/bindings.rs",
+    "packages/reference-rs/modules/atomic/src/extract/harvest/literals.rs",
+    "packages/reference-rs/modules/atomic/src/extract/harvest/mint/mod.rs",
+    "packages/reference-rs/modules/atomic/src/extract/identity.rs",
+    "packages/reference-rs/modules/atomic/src/extract/mod.rs",
+    "packages/reference-rs/modules/atomic/src/extract/recipes/selection.rs",
+    "packages/reference-rs/modules/atomic/src/extract/resolver/differential.rs",
+    "packages/reference-rs/modules/atomic/src/extract/resolver/mod.rs",
+    "packages/reference-rs/modules/atomic/src/extract/resolver/source.rs",
+    "packages/reference-rs/modules/atomic/src/extract/resolver/staging.rs",
+    "packages/reference-rs/modules/atomic/src/extract/scope/fill.rs",
+    "packages/reference-rs/modules/atomic/src/extract/scope/lookup.rs",
+    "packages/reference-rs/modules/atomic/src/extract/scope/value.rs",
+    "packages/reference-rs/modules/atomic/src/hosts/mod.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs",
+    "packages/reference-rs/modules/atomic/src/recipes/mod.rs",
+    "packages/reference-rs/modules/atomic/src/recipes/table.rs",
+    "packages/reference-rs/modules/atomic/src/runtime/builder.rs",
+    "packages/reference-rs/modules/atomic/src/sources.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs",
+    "packages/reference-rs/modules/base-system/src/breakpoints.rs",
+    "packages/reference-rs/modules/module-graph/Cargo.toml",
+    "packages/reference-rs/modules/module-graph/src/graph.rs",
+    "packages/reference-rs/modules/module-graph/src/ladder/memo.rs",
+    "packages/reference-rs/modules/module-graph/src/walk/mod.rs",
+    "packages/reference-rs/modules/module-graph/src/walk/star.rs",
+    "packages/reference-rs/modules/styletrace/Cargo.toml",
+    "packages/reference-rs/modules/styletrace/src/analysis/analyzer.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/model.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/module_resolution.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/component.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/context.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/pipeline/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/pipeline/util.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/surface.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/walk/jsx.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/walk/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/resolver/model.rs",
+    "packages/reference-rs/modules/styletrace/src/resolver/parser.rs",
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/context.rs",
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/resolve.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/owned_props.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/trace_gate.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-hashers.md",
+   "patch": null,
+   "landedIn": "set-2/0a5731681",
+   "summary": "Default-hasher (`RandomState`/SipHash-1-3) `HashMap`/`HashSet`/`IndexMap`",
+   "log": "- swarm-hashers BANK (second set — overlaps parse.patch, so\n  sequenced AFTER set 1 lands + rebase): full-stack hasher diet,\n  60 files +330/−283 (SipHash→Fx, no memos added, iteration\n  audited per site). Filed\n  `docs/perf/waves/wave-2/report-swarm-hashers.md` +\n  `hashers.patch` (2,428 lines, `git apply --check` clean\n  against base). Static census ~400k ops, fantasy ~17.6 clears\n  bar (refused fast CUT, built + measured); 8-pair −6.34/−0.54%\n  full, −8.57/−0.73% ex-run-1, 6/8 pairs (below static ~12–14\n  est — cost model generous, disclosed); 4-scale sealed hashes;\n  determinism 20/20; atomic 567+1 + base_system 81 +\n  module_graph 16 green; styletrace 30/18 with ±1 scratch\n  collision (passes isolated both arms — set-2 integrator\n  re-verifies); q 0 violations. `model.exports` deliberately\n  excluded (diagnostics-order iteration — follow-ups must NOT\n  \"complete\" without a determinism audit). OVERLAP (crew-\n  disclosed + captain-verified): same files as parse.patch\n  (identity.rs, hosts/mod.rs, lib.rs, styletrace\n  analyzer/parser/surface + tests — crew lists 5, captain\n  counts ~8; small type-swap hunks, rebaseable) — set-2\n  integrator re-verifies mechanically post-landing and\n  re-measures in situ. No overlap with the other four set-1\n  patches. Freed slot → swarm-findprop.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-KEYS2",
+   "wave": "wave-2",
+   "topic": "keys2",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -3.3,
+    "pct": 63.9,
+    "pairs": "6/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/diagnostics/facts.rs",
+    "packages/reference-rs/modules/atomic/src/runtime/serializer.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-keys2.md",
+   "patch": null,
+   "landedIn": "set-1/810b8b5b4",
+   "summary": "the memo loses structurally (identity-verification ≈ serialization cost, misses +400 ns); the zero-overhead diet half (scalar canonical skip + borrowed `when`) saves a measured 3.31 ms on the phase with 106,278/106,278 byte-parity — too small for whole-sync resolution, clean for the bank.",
+   "log": "- swarm-keys2 SPLIT (memo CUT, diet BANK): keys memo under\n  per-phase bar. Filed `docs/perf/waves/wave-2/report-swarm-keys2.md`\n  + `keys2.patch` (diet files only; bench byproducts excluded).\n  MEMO (CUT, built + measured, fully reverted without residue):\n  unified cross-site KeyMemo (FxHash, bitwise numbers,\n  order-independent objects), byte-identical over all 106,278\n  tuples — LOSES 5–15 ms on phase (hit 101 ns vs serialize 159\n  ns; miss +400 ns; 82% max hits insufficient; even optimistic\n  nets +5.1). Per-phase bar defined/defended (≥5 ms + ≥25%,\n  method reproduces flame 19 wt within 6%). Keys-memo question\n  now CLOSED at both bars (wave-1 whole-sync CUT + wave-2\n  per-phase CUT with a losing build). DIET (BANK): scalar borrow\n  through serialize + borrowed `when` (`LookupKey<W>` generic),\n  −3.3 ms phase (3.29/3.37 two runs), byte-identical 4-scale\n  (sealed hashes), determinism 20/20, atomic 567+1 green, q\n  green. Whole-sync A/B explicitly NOT claimed (full-median −23.5\n  is 7× the mechanism — noise; ex-run-1 −14.65/−1.18% misses both\n  prongs; no-regression read only). Overlap: proof/render.rs\n  touched-then-reverted; shared `OwnedLookupKey::lookup_key` with\n  diag's subsystem (facts.rs 3-line hunk vs diag channels — files\n  disjoint, pipeline-adjacent; bisect resolves). Leads filed:\n  positional exact→decl reuse (needs producer cooperation, diag\n  territory); scalar fast-path JSON writer (~6 ms, needs fuzzing).\n  Freed slot → swarm-rhythm.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-LINEINDEX",
+   "wave": "wave-2",
+   "topic": "lineindex",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -2.9,
+    "pairs": "10/16"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/diagnostics/site.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-lineindex.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "censused 82,582 per-want `LineIndex::line_col` queries ×3 byte-identical (all-ASCII tails, mean 149.2 B, zero order violations), resolving the true weight at ≈5.3 ms inside the flame's 2..9 band; killed 83% of it with a word-scanned ASCII-tail fast path in one function, zero build change, zero order change.",
+   "log": "- swarm-lineindex BANK (pre-cloneplasma base, joins set-4):\n  ASCII-tail SWAR fast path in LineIndex::line_col (word\n  scan + arithmetic, slow path byte-identical). 1 file\n  +65/−1, 2 pin tests. Filed\n  `docs/perf/waves/wave-2/report-swarm-lineindex.md` +\n  `lineindex.patch` (captain-verified: applies CLEAN to tip\n  ddce131e7). Census ×3 identical (82,582 queries, all\n  push_want, 0 diagnostic-site; true wt 5.31ms — cleared\n  the 5ms bar, diet proceeded); lazy shape dead on audit,\n  ASCII-flag shape BUILT+MEASURED+KILLED (+74% build cost);\n  function-A/B predicts −4.42ms; pooled 16-pair −2.90 med\n  / −6.61 paired-med brackets prediction (sub-bar →\n  correct BANK); identity 4/4; 73/73 determinism; 596+1\n  green; q 0v/1 length warning (banked with rationale).\n  Set-1 disclosed non-verdict (taxed shape). Freed slot →\n  swarm-valgraph (T4).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-LOWERMEMO",
+   "wave": "wave-2",
+   "topic": "lowermemo",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 4.3,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-lowermemo.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the memo would \"work\" (≤10 distinct raws, ~99.99% hit rate) but",
+   "log": "- swarm-lowermemo CUT (counts-only, reused modgraph's 3×-identical\n  volume, never re-ran; didn't even run flame `--inspect` to spare\n  the sibling's bench CPU): `lower_when` memo fantasy ceiling ≈ 4.3\n  ms, realistic ≈ 1.2 ms — clears neither prong, survives 3×\n  cost-model error. Filed\n  `docs/perf/waves/wave-2/report-swarm-lowermemo.md`. The memo would\n  \"work\" (≤10 distinct raws from frozen generator vocab, ~99.99%\n  hit) but both firing arms are already lookup-cheap (borrow-only\n  FxHash probe) and every `Known` hit must still construct an owned\n  `When` (2–3 allocs, both bench callers take ownership) — alloc\n  floor unreachable without an `Atom` ownership redesign (others'\n  ground). std-HashMap memo would ADD SipHash per call, likely\n  net-negative. Correct CUT, not BANK (1.2 ms unresolvable, nothing\n  built). Re-examination bar: shared/interned `When` redesign only,\n  with cascade/emit/name collisions to clear. Reseed crumb:\n  `BreakpointScale.widths` is a SipHash `IndexMap` — FxHash-ing is\n  a ~0.4 ms diet on adjacent ground. Freed slot → swarm-realloc\n  (realloc remainder census + diet, memo §5 sizes ~15–25).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-MANIFEST",
+   "wave": "wave-2",
+   "topic": "manifest",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0,
+    "pct": 0
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-manifest.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the 3× parse exists in code but no manifest can ever reach it on the bench — staged paths are absolute under `$TMPDIR`, the generator writes no `node_modules`, and no ancestor dir up to `/` holds one, so `package_hit`'s `is_dir` gate fails on every level for every bare specifier.",
+   "log": "- swarm-manifest CUT (fastest yet — zero builds, zero tests, read-only\n  probes while cascade held the lock): `root_targets` 3× manifest\n  parse is real in code (`ladder/package.rs:59-64`, 3×\n  `serde_json::from_str` per root resolve) but structurally\n  unreachable on seed-7: 0 calls, ceiling 0.00 ms. Filed\n  `docs/perf/waves/wave-2/report-swarm-manifest.md`. Proof chain:\n  sole entry `manifest_hit` requires `package_hit`'s `is_dir`\n  gate; staged paths are absolute under `$TMPDIR`; generator writes\n  no `node_modules`; live probe of every `ancestors()` level to `/`\n  misses — gate fails everywhere for every bare specifier. Flame\n  corroboration (no serde parse frames on resolve path). REVIVAL\n  CONDITION: bench load gains `node_modules` or cwd-relative staged\n  paths — else dead code, not diet, do not re-crew for syncMs.\n  Real-repo caveat filed (`ProbeMemo` caches manifest text, never\n  parsed `Value`s — robustness win only, scores 0.00 on frozen\n  load). Correct CUT, not BANK (no diet exists). Worktree verified\n  clean, pin OK. Freed slot → swarm-resolvefmt.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-MARSHAL",
+   "wave": "wave-2",
+   "topic": "marshal",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 28.5,
+    "pct": 99.96
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/js/runtime.ts",
+    "packages/reference-rs/modules/atomic/native.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs",
+    "packages/reference-rs/modules/atomic/src/wire.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-marshal.md",
+   "patch": null,
+   "landedIn": "set-3/3dd32a659",
+   "summary": "The slim N-API result ships the primary AND portable stylesheets as two full",
+   "log": "- swarm-marshal BANK (old base, joins set-3/4 queue): slim-wire\n  sheet-suffix codec — portable sheet refolded as 1,162 B head\n  + shared-tail UTF-16 length (99.96% of 2.87 MB was a\n  byte-identical suffix of the primary). 3 files + new wire.rs\n  (113 lines, 6 tests). Filed\n  `docs/perf/waves/wave-2/report-swarm-marshal.md` +\n  `marshal.patch` (captain-verified: applies CLEAN to tip\n  0a57316, zero rebase needed — lib.rs 1-line `mod wire;`\n  additive in untouched region). Census exact (6.15 MB req =\n  load, spec 19 KB dropped at ~0.1ms ceiling, diet −2.93 MB /\n  −48.2% wire, parse −2.95ms measured); 8-pair −1.21/−0.10%\n  (ex1 +1.07, 4/8 — noise, V8-rope flattening mutes downstream\n  per filed mechanism note); 4-scale identity == wave-1 bytes;\n  determinism 22/22; cargo 573+1 (delta = 6 wire tests);\n  vitest 300/301 both arms same ATM-SITE-54 red; q 0v (2\n  pre-existing lib.rs warnings, untouched code). Correct BANK\n  (wave-1 reserve precedent: real positive mechanism, sum\n  resolves). Request-leg statically rejected (240ms disk cost\n  vs 28.5ms delta). Freed slot → swarm-authcss.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-MODGRAPH",
+   "wave": "wave-2",
+   "topic": "modgraph",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 17.5,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-modgraph.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the remainder is real but small — `format_entry` (45,326 calls / 8 wt) is the only site above noise, `class_name` is dead on the bench path (0 calls), `sorted_entries` cardinality is now measured (35 dirs, ~210 reallocs total), and everything else is ≤2 wt.",
+   "log": "- swarm-modgraph CUT (fast, keys-precedent): module-graph remainder\n  ceiling ≈ 11–12 ms at 100% fantasy capture clears neither prong\n  (15 ms + ~17.5 ms). Filed\n  `docs/perf/waves/wave-2/report-swarm-modgraph.md`. Counts\n  (enterprise seed-7, env-gated dump, reverted, 3× identical):\n  `format_entry` 45,326 (8 wt, only site above noise, ~7 ms ceiling);\n  `lower_when` 79,431 (breakpoint arm ~1.8 ms); `nest` 17,087;\n  `recipe_selector` 9,057; `sorted_entries` 35 dirs / 15,158 entries\n  (~210 reallocs ≈ 0.05 ms — wave-1 reserve's \"cardinality unknowable\"\n  now quantified negligible; the 8 wt driftsort is determinism, not\n  diet); `strip_runtime_ext` 906; `class_name` 0 calls — dead on the\n  `!proof` bench path (future emit crews: do not diet `class_name`\n  for sync). Worktree verified clean (`?? REPORT.md` only, pin OK,\n  diff empty). Bench never held. Process disclosure: untimed count\n  run 3 overlapped diag's 21:47 lock via an ungated chain (syncMs\n  discarded, counts reproduced exactly) — possible single-sample\n  contention on diag's set, absorbed by 8-pair + ex-run-1 rule.\n  Lesson for briefs: gate EVERY spawned run on the lock check, even\n  untimed ones.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-MODMAP",
+   "wave": "wave-2",
+   "topic": "modmap",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 9.74,
+    "pct": 0.14,
+    "pairs": "3/8"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-modmap.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "3,122 enterprise entries carry 3,122 B-tree inserts plus 4,442",
+   "log": "- swarm-modmap CUT (fantasy-cleared but measured-zero —\n  built, proven, killed): PathBuf modules-map census ×3\n  identical (3,122 inserts 86.7B/10-comp keys, 4,442 gets\n  ALL hit, 0 lazy) × criterion units → fantasy 9.74 ≥ 8ms\n  bar CLEARED, so the order-audit-passed diet (Fx + sort-\n  at-read, option-b killed unsound, dual bounded <5ms\n  floor) was BUILT, micro-predicted −6.1 — and measured\n  +1.48/3/8 whole-sync (stands ex1, dip-corrected −0.7).\n  Genuine non-confirmation (hashers −6.3/6/8 control rules\n  out bad luck; warm≈cold kills temperature theory; diet\n  binary verified live). Diet reverted, tree = REPORT\n  only. Revival recipe filed (in-process trace replay\n  discriminates misresolution vs in-situ penalty — do not\n  re-run 8-pair hoping). Identity 4/4; failset-identical;\n  q 0v. Filed `docs/perf/waves/wave-2/report-swarm-modmap.md`\n  (no patch). Correct honest CUT — the bar system working\n  at its best (counts said build, stopwatch said cut,\n  crew obeyed the stopwatch). Fourth slot HELD (3 crews\n  live: harvestphase/bagdefer/intset4b).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-NAMESET",
+   "wave": "wave-2",
+   "topic": "nameset",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0.35,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-nameset.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "`plan.rs:203-217` is live on the `!proof` path (gate check passed — unconditional in `finish`, `hosts::resolve`, and `analyze`), but the `BTreeSet` build fires exactly once per process behind `OnceLock` (1 build per sync sample), its inputs are already unique (0.144% dups by construction) and pre-sorted, and the wire consumer pins sorted order — counted by source census + code proof, never built, ",
+   "log": "- swarm-nameset CUT (zero builds, zero spawned runs, lock never\n  held — source census + code proof): names-set build fantasy\n  ~0.35 ms misses both prongs ~40–50×. Filed\n  `docs/perf/waves/wave-2/report-swarm-nameset.md`. Live on\n  `!proof` (3 unconditional call sites) but OnceLock'd to 1\n  build per sync; inputs pre-sorted + pre-unique (2 dups by\n  construction); wire array pins sorted order. Consumer-side\n  adjacent mechanisms also ceiling-barred (clones ~0.1,\n  surface rebuild ~0.35, whole-mechanism ~0.9). Correct CUT.\n  Standing facts: names output now 1389 (filed 873 stale);\n  canon ∩ alias = ∅, dups exactly {r, size}; wire order\n  load-bearing, downstream rebuilds membership-only. Freed\n  slot → swarm-extract.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-PARSE",
+   "wave": "wave-2",
+   "topic": "parse",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {},
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/identity.rs",
+    "packages/reference-rs/modules/atomic/src/extract/identity_map.rs",
+    "packages/reference-rs/modules/atomic/src/extract/identity_tests.rs",
+    "packages/reference-rs/modules/atomic/src/hosts/mod.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/analyzer.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/parser/mod.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/surface.rs",
+    "packages/reference-rs/modules/styletrace/src/lib.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/owned_props.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/trace_gate.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-parse.md",
+   "patch": null,
+   "landedIn": "set-1/810b8b5b4",
+   "summary": "Every retained file is parsed **three times**: once by the main phase",
+   "log": "- swarm-parse BANK (correct — ceiling ~21wt doesn't bar, stopwatch\n  does): retained-program reuse kills styletrace + identity\n  re-parses. 12 files +316/−41 (atomic identity/lib/hosts +\n  styletrace analysis/tests). Filed\n  `docs/perf/waves/wave-2/report-swarm-parse.md` + `parse.patch`.\n  Mechanism counts: −3,585,622 bytes (−45.1%), −3,242\n  `Parser::parse` calls, 0 fallbacks on load. 4-scale identical\n  (sealed hashes), determinism 39+6 runs, atomic 568 green (new\n  fallback-pinning test), styletrace 30 pass / 18 fail with\n  byte-identical failure set on pristine HEAD (gitignored fixture\n  absence — zero-new-reds claim for integrator to re-verify), q 0\n  violations. 8-pair +1.6 / ex1 +0.2 — zero under extreme box noise\n  (spread −65..+57, screensharingd 145%, browsers). BANK\n  CONDITIONS: (1) combined-set bisect mandatory per-component\n  (styletrace-reuse vs identity-reuse) — noisy zero with a 21wt\n  ceiling must resolve honestly; (2) re-confirm on a quieter box if\n  the sum disappoints; (3) COLLISION FLAG: bank touches\n  `run_parse_phase` in lib.rs — slice1b's parallel-region ground.\n  Same-function-twice expected; sequence bank-first, slice1 adapts\n  (its integrator fits to tip).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-POSREUSE",
+   "wave": "wave-2",
+   "topic": "posreuse",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 4.7,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-posreuse.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "keys2's `[D,D]` is not one doubled loop but two consumers each serializing D once (106,278 = 3 × 35,426 exactly) — so the reusable loop is 35,426 serializations (~5.7 ms phase, ~4.7 ms savable), and the decl↔exact positional lockstep it needs is provably false off-corpus (analysis stays dynamic where extraction resolves).",
+   "log": "- swarm-posreuse CUT (zero-diff, zero-build, no lock hold — pure\n  analysis): positional exact→decl reuse dead on prize AND\n  soundness. Filed\n  `docs/perf/waves/wave-2/report-swarm-posreuse.md`. STRUCTURAL\n  CORRECTION: 106,278 = 3×35,426 (decl + collect_exact +\n  partition→render_expected re-serializing every exact fact) —\n  corrects wave-1's \"render_expected does not run in bench\"\n  (lines dropped, work burns). Prize ~4.8 marginal / ~5.9\n  standalone — ceiling-barred 2.6–3.1×. Soundness: positional\n  lockstep is seed-coincidence, broken by construction (const\n  axis pinned by committed tests: 0 exacts vs 2 decls;\n  dynamic/mint axis code-level) with VERIFICATION-SILENT failure\n  mode (corrupts proof joins/diagnostics while css/data stay\n  green — cannot BANK). Specified differential probe filed for\n  the record. LEAD #1 (partition dead-render kill) = DIAG'S\n  MECHANISM, already won — diag got there first and is in\n  integration; no race (posreuse implemented nothing). Cross-\n  validation: posreuse independently attributes the partition\n  loop ~5.7 ms serialize + locate/format — consistent with\n  diag's −19.9 measured with allocator self. Freed slot →\n  swarm-extend.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-PROGRAMSFX",
+   "wave": "wave-2",
+   "topic": "programsfx",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 0.33
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/identity.rs",
+    "packages/reference-rs/modules/atomic/src/extract/identity_tests.rs",
+    "packages/reference-rs/modules/atomic/src/hosts/mod.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs",
+    "packages/reference-rs/modules/styletrace/src/analysis/surface.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/owned_props.rs",
+    "packages/reference-rs/modules/styletrace/src/tests/trace_gate.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-programsfx.md",
+   "patch": null,
+   "landedIn": "set-5/6c3909506",
+   "summary": "Parse (set-1 LANDED) built NEW `programs` maps keyed by source position",
+   "log": "- swarm-programsfx BANK (micro, first set-5 member): parse-new\n  programs maps std→Fx (7 files +24/−25, pure type swaps +\n  1 extra site from repo-wide grep; parser/mod.rs no-edit;\n  exports exclusion stands). Filed\n  `docs/perf/waves/wave-2/report-swarm-programsfx.md` +\n  `programsfx.patch` (captain-verified: applies CLEAN to tip\n  ddce131e7 — cloneplasma disjoint as crew claimed; intset4's\n  realloc D2 lines disjoint too). Census ×2 identical\n  (9,485 SipHash ops, 0 iters, fantasy 0.33ms); 8-pair\n  −2.48 (5/8, ex1 −0.18 — honest sub-noise); identity 8/8\n  byte-identical; 26/26 determinism; 594+1 green;\n  styletrace failset identical; q 0v. STASH INCIDENT (see\n  process lessons): recovered intset4's dropped stash from\n  the object store; captain verified intset4's merge alive\n  in-tree (20 files) + progressing post-incident — no\n  action, lesson filed. Correct micro-BANK. Freed slot →\n  swarm-recordcopy (recordaudit filler #3, off-backlog).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-PROOF",
+   "wave": "wave-2",
+   "topic": "proof",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {},
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/diagnostics/proof/mod.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/proof/render.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/proof/memo.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-proof.md",
+   "patch": null,
+   "landedIn": "set-3/3dd32a659",
+   "summary": "Diag's landed partition skip killed only DEAD renders (analysis facts rendered",
+   "log": "- swarm-proof BANK (set 3, NEW base): live proof-render diet —\n  conditional exact_set + distinct-key serialization memo (new\n  memo.rs) + per-prop dict memo (35,426→46) + borrowed hash\n  view. 2 tracked + 1 new file. Filed\n  `docs/perf/waves/wave-2/report-swarm-proof.md` +\n  `proof.patch` (563 lines, 3 hunks, applies to landed base).\n  Memo scrutiny PASSED: memo_eq ⟺ byte-equal pinned by 8\n  adversarial tests (+1 vs 1.0 over-equality caught in dev);\n  full-corpus arm-swapped differential 300/301 both arms (same\n  ATM-SITE-54 pre-existing, byte-identical assertion); single\n  code path; 4-scale sealed hashes; determinism ×2; atomic\n  580+1 green; q 0 violations. 8-pair −1.84/−0.16% (ex-run-1\n  +0.05 — no signal either way, below noise floor); provably\n  removed work (16,239 serializations, 35,426 inserts+clones,\n  35,380 lookups) → correct BANK. Hashers-composition\n  deliberate (off-import-block paths, HashSet kept). Collision:\n  SAME FILE as hashers' set-2 hunk (render.rs) — different\n  mechanisms, crew-specified composition (fewer ops × faster\n  ops); set-3 integrator sequences after set-2 lands. Freed\n  slot → swarm-canonjson.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-PUSHSTRING",
+   "wave": "wave-2",
+   "topic": "pushstring",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": -0.3
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-pushstring.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "site-tagged census of all 82,582 push_wants (×3 identical runs,",
+   "log": "- swarm-pushstring CUT (ceiling, zero builds, T2): site-tagged\n  census ×3 identical (82,582 push_wants, line_col excluded\n  by construction — T1/T2 split exact and disjoint). ALL\n  wants from the single literal.rs:23 string site (other 15\n  sites 0 calls); every non-positional box necessary under\n  Want's repr (proof-observable or resolve-read); growth =\n  realloc fenced ground; important-scans already minimal.\n  Diet-addressable SUM ≈0.1–0.3ms « 8ms bar « 5ms floor.\n  Filler filed: interned-Want repr (Rc<str>/IDs, 245k\n  mallocs ≈5–8.5 fantasy, realistic 3–5 after probe tax —\n  fenced vs wantctx LIVE, resolve readers, proof-mode).\n  Filed `docs/perf/waves/wave-2/report-swarm-pushstring.md`\n  (no patch — nothing built). Correct fast CUT per the\n  explicit falsification bar. Freed slot → swarm-scoperec (T5).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-REALLOC",
+   "wave": "wave-2",
+   "topic": "realloc",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -8,
+    "pct": -20.7
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/identity.rs",
+    "packages/reference-rs/modules/atomic/src/includes/glob.rs",
+    "packages/reference-rs/modules/atomic/src/sources.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-realloc.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "−20.7% with byte-identical output on all 4 scales; enterprise wall",
+   "log": "- swarm-realloc BANK (LAST old-base crew — old base empty):\n  reserve-once diet D1+D2+D7 (glob char-vec + normpath parts\n  + entry-path join). 3 files +25/−6. Filed\n  `docs/perf/waves/wave-2/report-swarm-realloc.md` +\n  `realloc.patch` (captain-verified: FAILS vs tip on\n  glob.rs + sources.rs — set-3 collect landed there;\n  identity.rs hunk clean. Set-4 integrator rebases; D1/D7\n  re-apply onto collect's landed matcher/walk as same-change\n  per wave-1 reserve method). −113,402 reallocs/−20.7%\n  (deterministic 4-round census, span Δ ≤14; D1 60.5k + D2\n  37.7k zeroed outright); wall −8.0/−0.70% over 16 pairs\n  (TWO full sets tabled — both drew proven Firefox/video\n  machine spikes on base arm, no selection, honestly\n  sub-noise); per-slice probes all win (no poison); identity\n  4/4; determinism ×16; 567+1 green; q 0v/2 pre-existing\n  warns. D-rbox + D6 killed by own probes (wall-negative /\n  no-op) before shipping. 5 CPU edge-overlaps disclosed\n  (9–30s hold-head races, none mid-set). YIELD map + 2\n  CPU-lane leads filed (line_col O(offset) index,\n  f64-Display dtoa). Freed slot → swarm-atrules.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-RECIPEPATH",
+   "wave": "wave-2",
+   "topic": "recipepath",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -13.05,
+    "pct": -1.3,
+    "pairs": "7/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-recipepath.md",
+   "patch": "docs/perf/waves/wave-2/recipepath.patch",
+   "landedIn": null,
+   "summary": "10,484 String allocs eliminated per sync; 8-pair median Δ −13.05 ms/−1.30%,",
+   "log": "- swarm-recipepath BANK (near-bar, on tip, joins set-4):\n  recipe class-name escape-once — `.{class_name}` escaped\n  once per rule (fresh cursor), cloned per atom through the\n  untouched nest loop, base reused for sort buckets. 2 files\n  +60/−5, 2 pin tests. Filed\n  `docs/perf/waves/wave-2/report-swarm-recipepath.md` +\n  `recipepath.patch` (base == tip, check-clean). 9,057\n  redundant escapes + 10,484 String allocs/sync eliminated\n  (census ×2 identical, closes 27,899 with sysprefix's\n  count); 8-pair −13.05/−1.30% (7/8, ex1 −13.38, pairmed\n  −11.39 — misses both prongs → correct BANK); identity\n  4/4; 20/20 determinism; 596+1 green (delta = 2 pins);\n  q 0v/0w. Effect exceeds scan-cost guess (allocator\n  second-order, honestly unproven split). Zero order\n  changes; disjoint from sysprefix pending (stacks) and\n  resolve grounds. LEAD filed: extract_at_rules per-atom\n  Vecs (9,057×/sync, needs borrowed-key grouping,\n  IndexMap order preserved). Freed slot → swarm-wantctx.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-RECORDAUDIT",
+   "wave": "wave-2",
+   "topic": "recordaudit",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 6.4
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-recordaudit.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "15,122 enterprise records carry 54,880 B-tree inserts into tiny",
+   "log": "- swarm-recordaudit CUT (ceiling, zero builds, T3): exact\n  insert census ×3 identical (15,122 collects, 54,880\n  inserts into ≤4-elem tables, 10.85 B keys, names 0\n  live) × criterion unit (466ns/4 = 116.5ns/insert,\n  allocs inside) → fantasy 6.4ms < 8ms bar. Order audit\n  PASSED-but-moot (membership-only live path — filed as\n  ground, not a build license); excluded families named\n  with evidence (PathBuf compares, serde rebuilds, test-only\n  star names); filler: double-clone value strings, dead Hop\n  machinery, record_copy clones. Flame upper readings\n  confirmed as 3a oversample + family-sharing. Filed\n  `docs/perf/waves/wave-2/report-swarm-recordaudit.md` (no\n  patch). Correct fast CUT. Freed slot → swarm-visitrec (T7).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-RECORDCOPY",
+   "wave": "wave-2",
+   "topic": "recordcopy",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0.54
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-recordcopy.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "all four `record_copy` wrappers fire exactly 906 times per",
+   "log": "- swarm-recordcopy CUT (ceiling, zero builds, recordaudit\n  filler #3): copy census ×3 identical (906 clones ALL\n  shape_of, 3.67 entries/1.0 imports per copy — copies\n  concentrate on popular targets vs 1.81 global mean) ×\n  criterion unit (596ns interpolated, drop-included,\n  overstated-conservative) → fantasy 0.54ms < 8ms bar\n  (15×) < 5ms floor (9×). Cross-checks exact vs\n  recordaudit/extend/valgraph counts. Order audit filed\n  (names_of order-path EXCLUDED with test-only readers\n  named). Filler: 4 borrowed-view one-liners + Forge\n  Slice-3 origin note + structural cap (1 copy/hit-walk;\n  needs 10× volume + bigger tables to threaten the floor)\n  + re-census recipe. Filed\n  `docs/perf/waves/wave-2/report-swarm-recordcopy.md` (no\n  patch). Correct fast CUT. Freed slot → swarm-harvestphase\n  (harvest per-phase revival, off-backlog).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-REPRO",
+   "wave": "wave-2",
+   "topic": "repro",
+   "kind": "repro",
+   "verdict": "REPROFILE",
+   "effect": {},
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-repro.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `810b8b5b47448b4b99b688d9c2fda94c3ec9658e` (verified `git rev-parse HEAD` at start; tree clean).",
+   "log": "- swarm-repro REPROFILE-COMPLETE (captain-read verified 278\n  lines): 2 flame captures on landed `810b8b5b4`\n  (procedure agentrs-flame/3, locked load, RECONCILED ×2,\n  dirty:false — cleaner than flame3). Filed\n  `docs/perf/waves/wave-2/report-swarm-repro.md` + bundles\n  `docs/evidence/flamegraph/enterprise-repro{1,2}/`. Sync\n  −130/−134 vs expected −128.5 (wave-1 + set-1) — reconciles;\n  all wins in compile; scan/publish flat. Mechanism-level\n  attribution per room (render_fact/render_expected GONE ×2,\n  re-parse callers 0, rank frame gone, serialize −3 to the\n  unit). Attribution caveat verified via nm\n  (merge_constants_ordered inlined into compile — streamed\n  residue re-attributed, still performed). Rooms rewritten +\n  backlog re-seeded from this burndown (7 topics, dry rooms\n  named). Honest arithmetic filed: gap 398 vs ranked diet\n  ceilings ~150wt fantasy (≈50–80 realistic); 700-vs-ban\n  contradiction flagged for HQ, not solved. Worktree clean,\n  pin NEW base ✓. Freed slot → swarm-intset2.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-REPRO2",
+   "wave": "wave-2",
+   "topic": "repro2",
+   "kind": "repro",
+   "verdict": "REPROFILE",
+   "effect": {
+    "pairs": "2/8"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-repro2.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `3dd32a659715aeb17d5d04167d756fb7f5ce30c8` (verified `git rev-parse HEAD` first act; tree clean).",
+   "log": "- swarm-repro2 DONE (REPROFILE-COMPLETE, no code): 2\n  reconciled flames on tip 3dd32a6 (1030.9/1031.1 sync,\n  579/576 compile; warm unscored 997.4/999.7 = ≈1000 tip\n  confirmed; sync delta −68.8/−65.0 vs −69.2 expected\n  reconciles). Filed `docs/perf/waves/wave-2/report-swarm-repro2.md`\n  (493 lines) + `docs/evidence/flamegraph/enterprise-repro3{a,b}/`.\n  Mechanism verdicts: selpush VINDICATED at flame grain\n  (−5..−7 real, stopwatches were sub-noise); SipHash EXTINCT\n  (zero samples ×2); proof tradeoff visible (serialize saved\n  vs memo-probe cost); marshal publish growth = disclosed\n  rope cost (+4 SlowFlatten new); collect/scan/shorthand/\n  extract all mechanism-verified. 8-topic re-seed T1–T8\n  filed with ceilings/fences/bars (backlog section above);\n  13 CUTs + dry rooms reaffirmed; count correction (12 not\n  13 landed) accepted. Honest arithmetic: ≈910 ceiling\n  stacking everything; 700 unreachable single-threaded by\n  ≈200+; contradiction flagged for HQ. Freed slot →\n  swarm-lineindex (T1).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-RESOLVEFMT",
+   "wave": "wave-2",
+   "topic": "resolvefmt",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 2.9,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-resolvefmt.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "rhythm `calc` (4 sites) and negated calc-wrap (2 sites) fire **0 times** on the seed-7 enterprise load — only unit `px` is live (16,276 tiny calls over 44 distinct 1–3-char spellings), and its 100%-capture ceiling is ~2.9 ms.",
+   "log": "- swarm-resolvefmt CUT (counts-only, 15 tags, bit-identical ×3,\n  reverted clean, lock never held, one count run self-aborted at a\n  freshly-taken gate): resolve-path `format!` ceiling ≈ 2.9 ms\n  fantasy / ~0.5–1.0 realistic. Filed\n  `docs/perf/waves/wave-2/report-swarm-resolvefmt.md`. Rhythm\n  `calc` ×4 + negated calc-wrap ×2 + font/pseudo/bp_media/r_query:\n  ALL 0 calls on seed-7. Only live site: `unit_px` 16,276 calls\n  over 44 distinct 1–3-char spellings (exact set filed). Correct\n  CUT, not BANK (nothing implemented; ceiling bars). FILLER (exact\n  code filed, ~0.5–1.0 ms, bank only in a sum): unit.rs:116 →\n  with_capacity(len+2) + 2 pushes. Reseed: `resolve_rhythm` scans\n  EVERY value containing 'r' (\"red\", \"border\"…) through fresh Vec\n  + FragmentScan with ZERO rhythm values in load (scan-elision,\n  not diet); assembly.rs:252,255 key `format!`s sit in the 296 wt\n  bulk (deliberately uncounted, not resolve path). SEED-LOAD\n  FACT: bench exercises no rhythm/negated/&-at-rule/font/r-keys\n  values — future crews on those paths must re-census (zeros are\n  load facts, not code facts). Freed slot → swarm-hashers.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-RHYTHM",
+   "wave": "wave-2",
+   "topic": "rhythm",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 3.2,
+    "pct": 1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-rhythm.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the scan is real but tiny — 18,368 elidable scans of ~8-byte",
+   "log": "- swarm-rhythm CUT (counts-only, bit-identical ×3, reverted clean,\n  lock held once for untimed count block only): rhythm-scan\n  elision fantasy ≈ 3.2 ms / realistic net ≈ 1.4 ms. Filed\n  `docs/perf/waves/wave-2/report-swarm-rhythm.md`. 89,944 calls,\n  20,736 scanned (23.1%), 18,368 elidable, 0 changed — confirms\n  resolvefmt's zero-rhythm-values finding on this base. Gate\n  designed + census-validated (proof sketch filed; adversarial\n  corpus deferred as verdict-irrelevant). Correct CUT, not BANK\n  (nothing implemented; ceiling bars). FILLER (exact predicate\n  filed, ~1.4 ms net, bank only in a sum AND only after the\n  adversarial differential proves 0 divergences). Collision-clean\n  (would have touched only resolve/rhythm/mod.rs). Freed slot →\n  panda-scout (HQ-directed research: Panda v2 compile threading;\n  swarm-marshal queued for next free slot).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SCALARJSON",
+   "wave": "wave-2",
+   "topic": "scalarjson",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -2.1,
+    "pairs": "25/25"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/runtime/serializer.rs",
+    "packages/reference-rs/modules/atomic/tests/serializer_parity.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-scalarjson.md",
+   "patch": "docs/perf/waves/wave-2/scalarjson.patch",
+   "landedIn": null,
+   "summary": "hand-rolled five-tuple framing for scalar values (78% of the",
+   "log": "- swarm-scalarjson BANK (second set — intbank's 5-patch set is\n  mid-flight without it): scalar fast-path JSON writer,\n  serializer.rs +230/−9 + new parity test (128 lines). Filed\n  `docs/perf/waves/wave-2/report-swarm-scalarjson.md` +\n  `scalarjson.patch` (389 lines, both hunks, `git apply --check`\n  clean against base).\n  Phase −2.1 vs legacy (25/25 ×2 runs + 6 replications),\n  +0.28 marginal vs diet-shape (7/8 runs, 13 SEs); prize smaller\n  than the ~6 est (serde already table-driven) with dead-end\n  filed (closure-monomorphized frame reverted). Fuzzing bar met:\n  106,278 corpus parity 8/8 + 2,048 byte-value + 25 adversarial\n  + 35,000 seeded = ~37.1k checks, 0 divergences. Whole-sync\n  −14.59/−1.21% (8/8) with explicit no-LAND disclaimer (7×\n  mechanism — noise); 4-scale sealed hashes; determinism 20/20;\n  atomic 569+1+2 green; q green zero warnings. STACKING (crew-\n  disclosed, exemplary): same serializer.rs region as keys2's\n  banked diet — merged shape = generic signature + fast frame\n  for scalars + keys2's borrowed-when tuple for containers;\n  ~1.8 ms double-claimed, stacking marginal +0.28, combined\n  expectation ≈1.9 ms NOT the sum — set-2 integrator bisects\n  per-component (crew's `diet_like` harness arm makes it\n  cheap). Freed slot → swarm-btreeset.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SCALARREPROOF",
+   "wave": "wave-2",
+   "topic": "scalarreproof",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 0.24
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/runtime/serializer.rs",
+    "packages/reference-rs/modules/atomic/tests/serializer_parity.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-scalarreproof.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "the `WhenSteps` step-iteration trait composes the banked five-tuple",
+   "log": "- swarm-scalarreproof BANK (HELD member RE-PROVEN, pre-set-3\n  base, joins set-4): WhenSteps step-iteration trait\n  composes the five-tuple fast frame with the generic\n  `LookupKey<'a, W>` (3 impls: [String]/Vec<String>/\n  [Box<str>]; landed diet body verbatim in fallback;\n  byte-helpers shared, banked monomorphization dead-end\n  structurally avoided). 1 file +228/−12 + new 247-line\n  parity suite (6 tests). Filed\n  `docs/perf/waves/wave-2/report-swarm-scalarreproof.md` +\n  `scalarreproof.patch` (captain-verified: applies CLEAN to\n  tip ddce131e7). Census re-verified on base (FINDING: exact\n  loop halved 70,852→35,426 by landed diag — live prize\n  ≈+0.16ms, filed not hidden); ≈1.09M differential checks\n  0 div (Box<str> escape edges now covered — the banked\n  gap closed); phase marginal +0.24ms mean (6/7 runs,\n  paired +0.25, wins both live W — abstraction costs\n  nothing vs banked concrete +0.25); base-tree control\n  files ±0.1 instrument floor; identity 4/4; 572+1+5\n  green; q 0v/0w. Whole-sync A/B not run per brief (phase\n  bar for ≈0.2ms effect). Correct BANK. Freed slot →\n  swarm-recordaudit (T3).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SCOPEREC",
+   "wave": "wave-2",
+   "topic": "scoperec",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": -1.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-scoperec.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "exact per-import/per-file string census (×3 order-identical runs,",
+   "log": "- swarm-scoperec CUT (ceiling, zero builds, T5 DRY): exact\n  string census ×3 order-identical (47,343 lines): 43,516\n  allocs SUM ≈0.9–1.5ms fantasy « 6ms bar (maximal bound\n  incl. walks-side + fenced ground 1.6–2.6ms still fails);\n  attach 0 pushes, clear 0 deps, 4,266 named / 0 other\n  imports. Flame remainder is BTree/compute, not strings.\n  Borrowed-keys soundness designed anyway (AST-borrow\n  unsound — local-Allocator dangle; content-borrow invasive\n  + specifier unborrowable). Filler honest: room dry,\n  revisit only on import-dense loads. Filed\n  `docs/perf/waves/wave-2/report-swarm-scoperec.md` (no\n  patch). Correct fast CUT. Freed slot → swarm-intset4\n  (set-4 bank integration — 7 members).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SELPUSH",
+   "wave": "wave-2",
+   "topic": "selpush",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -1.76,
+    "pct": -0.16
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/resolve/conditions/pseudoselectors/nesting.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/name/escape.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/name/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-selpush.md",
+   "patch": null,
+   "landedIn": "set-3/3dd32a659",
+   "summary": "- Base commit: `810b8b5b47448b4b99b688d9c2fda94c3ec9658e` (verified `git rev-parse HEAD` first command; wave-2 set-1 landing)",
+   "log": "- swarm-selpush BANK (set 3, NEW base): selector-push string\n  diet — EscapeCursor run scans + nest() comma-free fast path\n  + push-direct members + `::` reorder gate + nested pre-size.\n  3 files +202/−32. Filed\n  `docs/perf/waves/wave-2/report-swarm-selpush.md` +\n  `selpush.patch` (applies to landed base). Census exact\n  (23,505 atoms, all-1×1 nests, 1.21M chars); 12wt ceiling\n  bars LAND by construction; 8-pair −1.76/−0.16% (ex-run-1\n  −4.13/−0.39%, 3/8 — below noise, estimators disagree);\n  4-scale sealed hashes; 20/20 determinism; atomic 572+1\n  green (2 new pins); q 0 violations (1 file-length warning,\n  accepted rationale). Zero order changes (sortshape bar\n  honored); race respected (class_prefix untouched —\n  callermemo's ground); D2 lead filed (~0.7 ms system-prefix\n  format-once, needs SelectorPrefix threading). No file\n  overlap with set-1/set-2 patches (mechanical grep).\n  Correct BANK. Freed slot → swarm-shorthand.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SHORTHAND",
+   "wave": "wave-2",
+   "topic": "shorthand",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "pct": 98.7
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/border.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/dimensional.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/flex.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/pair.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/shorthands/tests.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-shorthand.md",
+   "patch": null,
+   "landedIn": "set-3/3dd32a659",
+   "summary": "`atomic::resolve::shorthands::expand_shorthand` runs per want (89,904 calls on",
+   "log": "- swarm-shorthand BANK (pre-set-2 base, joins set-3): single-\n  resolve hoist + trio-owner pre-filter inside `shorthands/*`\n  (6 files +175/−19, 3 permanent contract tests). Every one\n  of 89,904 calls/sync (100% miss) paid 5×resolve_alias +\n  1×find_property; diet kills 359,616 redundant resolves +\n  ~82k probes (91.4% static pre-filter rejection). Filed\n  `docs/perf/waves/wave-2/report-swarm-shorthand.md` +\n  `shorthand.patch` (captain-verified: applies CLEAN to tip\n  0a57316). 155,650-call differential 0 div (transcription\n  checked pre-diet, proof post); alloc-neutral 19,372=19,372;\n  8-pair −6.0/−0.57% (ex1 −6.5, 7/8, magnitude matches 7–10wt\n  cluster); identity 4/4; determinism 2/2; atomic 573 green;\n  q 0v/0w (interim cognitive-21 fixed by split). Timestamp\n  skew admitted (hand-estimated 02:05, real ~01:45 — timed\n  runs machine-stamped, unaffected). RACE respected (stayed\n  expansion-side of extend; re-resolve redundant-but-harmless\n  if extend threads canon down — follow-up lead). Freed slot\n  → swarm-intset3 (set-3 bank integration).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SHOT2",
+   "wave": "wave-2",
+   "topic": "shot2",
+   "kind": "diet",
+   "verdict": "KILL",
+   "effect": {
+    "ms": 239.42
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-shot2.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Crew: swarm-shot2 (wave-2 reserve probe). Base pin verified:",
+   "log": "- swarm-shot2 KILL (heavy track #1 dead): no sound pre-open deadness\n  signal exists under cold `sync(cwd)`. Filed\n  `docs/perf/waves/wave-2/report-swarm-shot2.md` (341 lines,\n  captain-read verified, `?? REPORT.md` only, lock never taken).\n  Core proof: seed dead = 12,000 needle-free `src/util/util{i}.ts`\n  = streaming candidates, and `streamed` is a CONTENT property\n  (needle absence) undecidable pre-open — live/dead share every\n  path/stat class; worse, needle-free ≠ dead (C1 keep-alive test\n  pins a needle-free parse failure that must keep its warning).\n  Nine liveness channels enumerated (parse-error diagnostics alone\n  kills every content-blind skip); 17 candidates tried, all KILLed\n  (sound-but-prizeless gate mirror 0/12,000; stat gate net-negative;\n  basename/ext/dir/seed-shape unsound or OOB; manifest/import-graph\n  unsound — scan-based engine has no entry concept, graph edges ARE\n  content; cache/incremental OOB; discovery-match falsified by seed\n  itself; d.ts/dotfile pinned live). Resurrection criteria R1–R3\n  filed (R1: zero-false-dead proof over all 9 channels + measured\n  count; standing falsifiers: `export function Broken( {` and the\n  69-byte live file). Replacement ms (heavy-track rule): parallel\n  file-level 100–140 + diag/proof room 76 = 176–216 ⊇ lost ~190,\n  canon/parse/serializer/emission as backstop — room sizes, not\n  promised captures. CONSEQUENCE: single-thread diet now carries\n  +190 more weight; parallel compile (slice1 in flight) is MANDATORY\n  to finish. Freed slot → swarm-manifest.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SLICE1B",
+   "wave": "wave-2",
+   "topic": "slice1b",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {},
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-slice1b.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "immediately.** Received mid-implementation, before any gated execution. No",
+   "log": "- swarm-slice1b CUT (ban close-out, honest): E0 findings filed as\n  evidence (registry-source proof, never measured — zero cargo/\n  pnpm/node commands all session, lock never taken). Filed\n  `docs/perf/waves/wave-2/report-swarm-slice1b.md`. E0.1:\n  `ParserReturn` !Send (arena Vec stores &Bump, Bump !Sync) —\n  kills retained-parse-in-workers; E0.2: `Program` !Sync\n  (pervasive Cell<NodeId>) — kills program-sharing-to-workers;\n  both directions closed, unsafe banned. E0.3/E0.4 PASS (owned\n  types Send+Sync, BTree-only iteration, R9 vacuous). E0.5\n  surviving scope designed-but-unproven (main-thread retained +\n  parallel streamed staging — moot under ban). Track\n  implication filed: any slice needing &AST on workers was dead\n  under E0.1/E0.2. WIP driver (~260 lines a1.rs + hookups)\n  reverted unbuilt; tree verified clean. Ban now total: zero\n  parallel crews remain. Freed slot → swarm-harvest (serial).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SORTSHAPE",
+   "wave": "wave-2",
+   "topic": "sortshape",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 17.8,
+    "pct": 1.18,
+    "pairs": "67/67"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-sortshape.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Future-work note from swarm-cascade's filed verdict: the remaining sort cost is",
+   "log": "- swarm-sortshape CUT (two independent triggers, one untimed count\n  run, no candidate built): sort-shape redesign dead. Filed\n  `docs/perf/waves/wave-2/report-swarm-sortshape.md`. Trigger #1:\n  100% sort elimination ≈ 14 ms clears neither prong (realistic\n  unstable ≈ 3–4 ms, bucketing ≈ 1–2 ms — largest of 84 groups\n  holds 4,496/23,505 atoms). Trigger #2: tie census (memo E4\n  method, replicates cascade's N/cmp/ties exactly) finds 67/67\n  full ties DIVERGE in selector bytes (Token{11,11px} vs\n  String(11px) — same css_value_str, different class_name_str),\n  so any order-changing sort shifts output unsalvageably. BONUS:\n  answers memo E4 for Shot 3 slice 5 (B4 keeps serial stable\n  sort, render-parallel only). Sort topic now CLOSED (diet\n  banked, redesign killed). Freed slot → swarm-scalarjson\n  (scalar fast-path JSON writer, ~6 ms BANK-track).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-STAGEAUDIT",
+   "wave": "wave-2",
+   "topic": "stageaudit",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -7.11,
+    "pct": -0.72,
+    "pairs": "5/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/extract/resolver/staging.rs",
+    "packages/reference-rs/modules/atomic/src/stream.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-stageaudit.md",
+   "patch": null,
+   "landedIn": "set-5/6c3909506",
+   "summary": "`ddce131e7ab9a627500b5caa3d24bce81204dfe4` (verified `git rev-parse HEAD` first act; post cloneplasma-LAND tip).",
+   "log": "- swarm-stageaudit BANK (T6 — RE-SEED FULLY CLOSED: T1+T6\n  BANK, T2/T3/T4/T5/T7/T8 CUT; joins set-5): streamed\n  double-collect fusion (collect once in stage_streamed,\n  merge by ref, move bag into staged source). 2 files\n  +15/−4, delta 0 tests (pure refactor). Filed\n  `docs/perf/waves/wave-2/report-swarm-stageaudit.md` +\n  `stageaudit.patch` (base == tip, check-clean). Work\n  census split gating 6.8 vs non-gating 8.64/8.72 (cleared\n  the 8ms bar → built); 8-pair −7.11/−0.72% (5/8, ex1\n  −6.51, pairmed −7.49 — all agree; p4b +370ms spike\n  disclosed, verdict robust ex-p4); identity 4/4;\n  determinism 26/26; 595+1+0 green; q 0v. Shot2 fence\n  honored (fusion, zero skip shape). Bagdefer's gate OPENS\n  (verdict posted — adjacent disjoint mechanisms per the\n  collision note; bagdefer reads claims itself, no ping).\n  Third slot HELD (4 crews live) — set-5 integrator stages\n  when harvestphase/bagdefer/modmap verdicts land.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-SYSPREFIX",
+   "wave": "wave-2",
+   "topic": "sysprefix",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 1.04,
+    "pct": -0.03
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/stylesheet/cascade/mod.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/name/escape.rs",
+    "packages/reference-rs/modules/atomic/src/stylesheet/name/mod.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-sysprefix.md",
+   "patch": null,
+   "landedIn": "set-4/e360915f7",
+   "summary": "eliminated, 1.04 ms/sync measured in release probe; 8-pair median Δ −0.31 ms/−0.03%",
+   "log": "- swarm-sysprefix BANK (micro-bank, pre-set-2 base, joins\n  set-4): system-prefix format-once — `{system}__` escaped\n  once per write_utilities via SelectorPrefix, replayed per\n  atom (push_str + cursor.advance). 3 files +129/−16, 2 pin\n  tests. Filed `docs/perf/waves/wave-2/report-swarm-sysprefix.md`\n  + `sysprefix.patch` (captain-verified: applies CLEAN to tip\n  0a57316). 423,090 char-escapes/sync eliminated, 1.04ms\n  release-probe-measured @2.46ns/char; 8-pair −0.31/−0.03%\n  (ex1 −2.03, 3/8, estimators disagree — honestly below\n  noise, more pairs rejected per cascade precedent); identity\n  4/4 == wave-1 bytes; 20/20 determinism; 572+1 green; q 0v\n  (1 pre-existing cascade warning, untouched code). Zero\n  order changes. OVERLAP with banked selpush (same 2 files,\n  certain textual conflict, mechanical fixes specified +\n  composition soundness verified from their patch) — flagged\n  for integration order; sysprefix sequences AFTER selpush\n  lands (set-4, not intset3's flight). Recipe whole-string\n  path lead filed (~4.4k selectors, stacks, no double-count).\n  Freed slot → swarm-scalarreproof.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-TOKENPHASE",
+   "wave": "wave-2",
+   "topic": "tokenphase",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": -3.52,
+    "pct": 38.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-tokenphase.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the phase is real and isolated cleanly (legacy 9.0–9.1 ms vs the",
+   "log": "- swarm-tokenphase CUT (per-phase, zero builds, T8 — re-seed\n  CLOSED: T1 BANK, T2/T3/T4/T5/T7/T8 CUT, T6 running):\n  isolated phase 9.0–9.1ms (reproduces 7–9wt band, keys2\n  method mirrored with fidelity proofs); census ×3\n  byte-identical (402k lines, FE split exactly modgraph's\n  43,870/1,456); two-mechanism stack MEASURED 3.49–3.52/\n  38.5% — share prong passes, absolute prong FAILS by\n  1.5ms/30% (F1 exact-push 3.39 + L1b dead-probe gate\n  0.36; third mechanism sketches to only ≈4.7 predicted —\n  slot-justification stacking refused). Bank-grade filler\n  (exact F1/L1b shapes, parity-proven over full corpus,\n  bank conditions + pin tests specified). Filed\n  `docs/perf/waves/wave-2/report-swarm-tokenphase.md` (no\n  patch). Correct measured CUT. Freed slot → swarm-modmap\n  (PathBuf modules-map recon, off-backlog).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-TRBL",
+   "wave": "wave-2",
+   "topic": "trbl",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0.2
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-trbl.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "the `expand_dimensional_arm` split site fires **3,964×/sync, ALL",
+   "log": "- swarm-trbl CUT (ceiling, zero builds, D3 micro): split-site\n  census ×3 byte-identical (3,964 reaches ALL 1-token, 0\n  gate passes — shorthand's lead reproduced byte-exact;\n  92% 1–4 chars, 0 parens, 104 distinct values) × criterion\n  unit (49.7ns weighted) → fantasy 0.20ms < 1ms micro-bar\n  (5×) < 5ms floor (25×). The split is already cheap\n  (~50ns floor, 1 short scan + 2 tiny allocs). Exact\n  paste-ready filler (count_tokens byte scan + gate\n  insertion + differential test + bank conditions N≥20k).\n  Scope closed (public wrapper 0 callers; border site dead,\n  fenced). Filed `docs/perf/waves/wave-2/report-swarm-trbl.md`\n  (no patch). Correct fast CUT. BACKLOG EXHAUSTED (T1–T8\n  closed, all leads dispatched or dead — remaining scraps\n  refused: SmallVec wash, FactoryWait barred, Cow→gate\n  dead, F3/F4/F5 sub-slot, f64 disproportionate): slot\n  HELD at 6 crews to cut lock contention for intset4b's\n  landing-confirm + wantctx/stageaudit verifies. Triggers\n  to refill: intset4b verdict (land + set-5 integrator),\n  wantctx/stageaudit verdicts (set-5 members). Standby\n  topic if HQ wants the board full: line_col free scans.",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-VALGRAPH",
+   "wave": "wave-2",
+   "topic": "valgraph",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 3.5
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-valgraph.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "vs the 8ms bundle bar: 2.3× margin. Bars the 5ms per-phase floor too.",
+   "log": "- swarm-valgraph CUT (ceiling, zero builds, T4): piece census\n  ×3 identical (15,122 pairs = 3,122 retained ALL staged +\n  12,000 streamed ALL dropped in from_plan; records tiny\n  both classes; Fs dupes 0) × criterion units (record-drop\n  s1 156ns ceiling, Fs-growth 249µs measured, set-growth\n  98µs) → bundle fantasy ≈3.5ms < 8ms bar (2.3× margin,\n  also under 5ms floor). Forget-delta design BUILT+\n  MEASURED+KILLED (2.3× slower — measures distress, not\n  cost). Fillers F1–F6 filed (F1 retained-bag deferral\n  ~1.3ms needs home outside T4 + sequence after stageaudit;\n  F6 arena revival condition ≥3× richer records). Flame\n  residual honestly reconciled (CUT doesn't depend on it).\n  Filed `docs/perf/waves/wave-2/report-swarm-valgraph.md`\n  (no patch). Correct fast CUT. Freed slot → swarm-trbl\n  (shorthand D3 lead, off-backlog micro).",
+   "filler": true
+  },
+  {
+   "id": "PERF-W2-VISITREC",
+   "wave": "wave-2",
+   "topic": "visitrec",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 2.1,
+    "pairs": "0/8"
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-2/report-swarm-visitrec.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "11,875 visit_call dispatches (8,875 ident + 3,000 member, ×3",
+   "log": "- swarm-visitrec CUT (ceiling, zero builds, T7 DRY): exact\n  dispatch census ×3 identical (11,875 dispatches, 31,437\n  slice allocs, ~70k probes, boundary-proven static) × 15\n  criterion units → fantasy 2.10ms < 8ms bar (3.8×) < 5ms\n  floor (2.4×). Extract crew's ≈2ms survey CONFIRMED exact\n  (their ~16k order now 19,564 counted); visit_call 46–48wt\n  is ~96% walks, dispatch slice was always ~2. Visit-less\n  revival designed-then-FENCED (call-presence + binding-\n  absence signals need a pre-walk ≈ the walk, or shot2-\n  barred pre-scan — CUT twice over). Filler honest: room\n  dry, revisit only on call-dense loads. Filed\n  `docs/perf/waves/wave-2/report-swarm-visitrec.md` (no\n  patch). Correct fast CUT. Freed slot → swarm-bagdefer\n  (valgraph F1, verdict-gated on stageaudit).",
+   "filler": false
+  },
+  {
+   "id": "PERF-W2-WANTCTX",
+   "wave": "wave-2",
+   "topic": "wantctx",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -5.39,
+    "pct": -0.52,
+    "pairs": "6/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/atomic/src/recipes/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/tests.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/tokens/interpolate.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/tokens/mod.rs",
+    "packages/reference-rs/modules/atomic/src/resolve/unit.rs",
+    "packages/reference-rs/modules/atomic/src/runtime/values.rs"
+   ],
+   "report": "docs/perf/waves/wave-2/report-swarm-wantctx.md",
+   "patch": null,
+   "landedIn": "set-5/6c3909506",
+   "summary": "threaded a borrow lifetime through `WantContext`/`ResolveSession` so the per-want condition stack is borrowed from the live want instead of deep-cloned (79,431 Box clones + 3,154 spill allocs per sync → zero), via a per-want-short inner session that composes underneath cloneplasma's landed R1 emit sites untouched.",
+   "log": "- swarm-wantctx BANK (verdict-gated sequencing vindicated,\n  joins set-5): WantContext borrow diet — `WantContext<'w>`\n  borrows the live want's condition stack through a\n  per-want-short inner session (the naive long-session\n  borrow was ATTEMPTED and provably fails borrowck on the\n  recipes scoped-local path — E0597 filed; inner session\n  is the sound fix, same borrow, correctly scoped slot).\n  7 files +69/−44 (crew fast-forwarded its own tree to the\n  landed ddce131e7 and diffed against it — verified by\n  captain: worktree HEAD == tip, patch CHECK-PASS vs tip).\n  Filed `docs/perf/waves/wave-2/report-swarm-wantctx.md` +\n  `wantctx.patch`. Census ×3 identical (79,431 Box steps\n  exact match to filed count); 8-pair −5.39/−0.52% (6/8,\n  ex1 −5.46, pairmed −4.92 — all inside the counted 5–7ms\n  band, sub-bar → correct BANK); identity 4/4 full-sha;\n  determinism 2/2; 595+1 green (delta 0 — borrow-correctness\n  compiler-proven); vitest same-red; styletrace 31/18\n  identical; q 0v/2 pre-existing; warnings 2/18==2/18.\n  R1 emit sites byte-untouched underneath. Second slot\n  HELD (5 crews live) — backlog still exhausted; set-5\n  integrator stages when stageaudit/harvestphase/bagdefer/\n  modmap verdicts land.",
+   "filler": false
+  }
+ ]
+}

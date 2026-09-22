@@ -1,0 +1,98 @@
+diff --git a/packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs b/packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs
+index d3a6e55c6..27d337ca9 100644
+--- a/packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs
++++ b/packages/reference-rs/modules/atomic/src/stylesheet/emitter/emitter_ordering_tests.rs
+@@ -143,3 +143,48 @@ fn container_groups_order_by_width_not_lexicographic() {
+         .expect("wide wrap");
+     assert!(narrow < wide, "ascending min-width:\n{css}");
+ }
++
++#[test]
++fn hoisted_base_matches_whole_string_path_on_system_prefixed_class() {
++    // System-style `__` class with plain + selector + at-rule atoms: pins the
++    // hoisted base end to end (base spelling, nesting, bucket order).
++    let rule = recipe_rule(
++        "bench-enterprise__tabs105__base",
++        vec![
++            conditioned_atom("color", "blue", "@media (min-width: 900px)"),
++            conditioned_atom("color", "green", "&:hover"),
++            plain_atom("color", "red"),
++            plain_atom("marginTop", "2r"),
++        ],
++    );
++    let css = emit_rule(&rule);
++    let base = css
++        .find(".bench-enterprise__tabs105__base { color: red; margin-top: 2r; }")
++        .expect("merged base rule");
++    let hover = css
++        .find(".bench-enterprise__tabs105__base:hover")
++        .expect("hover selector");
++    let media = css.find("@media (min-width: 900px)").expect("media wrap");
++    assert!(
++        base < hover && hover < media,
++        "base, selector, at-rule order:\n{css}"
++    );
++}
++
++#[test]
++fn escaped_base_pins_leading_digit_and_scope_chars() {
++    assert_eq!(
++        super::escaped_base_selector("2xl:card__base"),
++        ".\\32 xl\\:card__base"
++    );
++    assert_eq!(
++        super::escaped_base_selector("@scope/pkg__card"),
++        ".\\@scope\\/pkg__card"
++    );
++    // Unconditioned atoms return the base unchanged through the nest loop.
++    let atom = plain_atom("color", "red");
++    assert_eq!(
++        super::recipe_selector_from_base(".bench-enterprise__x", &atom),
++        ".bench-enterprise__x"
++    );
++}
+diff --git a/packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs b/packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs
+index 57c90f0c8..2dc5483ac 100644
+--- a/packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs
++++ b/packages/reference-rs/modules/atomic/src/stylesheet/emitter/mod.rs
+@@ -154,15 +154,18 @@ struct RecipeGroup {
+ 
+ fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
+     let mut groups: FxIndexMap<(Vec<String>, String), Vec<String>> = FxIndexMap::default();
++    // The class name is constant across every atom in this rule: escape it
++    // once here instead of once per atom below. The same value feeds the
++    // sort buckets, replacing the old second whole-string escape.
++    let base_selector = escaped_base_selector(&rule.class_name);
+     for atom in &rule.atoms {
+         let at_rules = extract_at_rules(atom);
+-        let selector = recipe_selector(&rule.class_name, atom);
++        let selector = recipe_selector_from_base(&base_selector, atom);
+         groups
+             .entry((at_rules, selector))
+             .or_default()
+             .push(format_declaration(atom));
+     }
+-    let base_selector = format!(".{}", name::escape::escape_css_selector(&rule.class_name));
+     let mut ordered: Vec<RecipeGroup> = groups
+         .into_iter()
+         .map(|((at_rules, selector), declarations)| RecipeGroup {
+@@ -247,9 +250,16 @@ fn milli_px(input: &str) -> i32 {
+     }
+ }
+ 
+-fn recipe_selector(class_name: &str, atom: &Atom) -> String {
+-    let escaped = name::escape::escape_css_selector(class_name);
+-    let mut current = format!(".{escaped}");
++/// `.` plus the escaped rule class name, built once per rule.
++fn escaped_base_selector(class_name: &str) -> String {
++    let mut base = String::with_capacity(class_name.len() + 9);
++    base.push('.');
++    name::escape::push_escaped_selector(&mut base, class_name);
++    base
++}
++
++fn recipe_selector_from_base(base_selector: &str, atom: &Atom) -> String {
++    let mut current = base_selector.to_string();
+     for cond in &atom.conditions {
+         if let WhenKind::Selector(template) = cond.wrap() {
+             current = nest_selector_condition(&current, template);
