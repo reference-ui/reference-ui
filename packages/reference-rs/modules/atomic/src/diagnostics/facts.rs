@@ -30,10 +30,9 @@ impl OwnedLookupKey {
     /// Serialize this expectation with the one runtime-key authority, so
     /// analysis bytes equal plan bytes and neo `serializeLookupKey` bytes.
     pub fn lookup_key(&self) -> String {
-        let when: Vec<String> = self.when.iter().map(|part| part.to_string()).collect();
         serialize_lookup_key(&LookupKey {
             system: &self.system,
-            when: &when,
+            when: self.when.as_slice(),
             prop: &self.prop,
             value: &self.value,
             important: self.important,

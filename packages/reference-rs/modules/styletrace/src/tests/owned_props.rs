@@ -7,6 +7,10 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 
+use oxc_allocator::Allocator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
+
 use crate::analysis::{trace_style_bindings_with_surface, StyleSurface};
 
 use super::fixtures::workspace_scratch_dir;
@@ -48,7 +52,12 @@ fn trace_scratch(
     }
     let entries = vec![scratch.root().join(entry)];
     let staged = std::collections::HashMap::new();
-    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), surface, &staged)
+    let programs = std::collections::HashMap::new();
+    let sources = crate::TraceSources {
+        staged: &staged,
+        programs: &programs,
+    };
+    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), surface, &sources)
 }
 
 #[test]
@@ -208,12 +217,16 @@ fn staged_content_matches_disk_trace() {
     }
     let entries = vec![scratch.root().join("Button.tsx")];
     let empty = HashMap::new();
+    let no_programs = HashMap::new();
     let from_disk = trace_style_bindings_with_surface(
         &entries,
         scratch.root(),
         scratch.root(),
         &surface,
-        &empty,
+        &crate::TraceSources {
+            staged: &empty,
+            programs: &no_programs,
+        },
     );
     let staged: HashMap<PathBuf, &str> = files
         .iter()
@@ -224,7 +237,76 @@ fn staged_content_matches_disk_trace() {
         scratch.root(),
         scratch.root(),
         &surface,
-        &staged,
+        &crate::TraceSources {
+            staged: &staged,
+            programs: &no_programs,
+        },
     );
     assert_eq!(from_disk, from_staged);
+}
+
+#[test]
+fn reused_programs_match_fresh_parse_trace() {
+    let surface = test_surface();
+    let files = [("types.ts", TYPES_TS), ("Button.tsx", BUTTON_TSX)];
+    let scratch = workspace_scratch_dir("owned-props-reuse");
+    for (rel, content) in files {
+        scratch.write(rel, content);
+    }
+    let button = scratch.root().join("Button.tsx");
+    let entries = vec![button.clone()];
+    let staged: HashMap<PathBuf, &str> = files
+        .iter()
+        .map(|(rel, content)| (scratch.root().join(rel), *content))
+        .collect();
+    let no_programs = HashMap::new();
+    let fresh = trace_style_bindings_with_surface(
+        &entries,
+        scratch.root(),
+        scratch.root(),
+        &surface,
+        &crate::TraceSources {
+            staged: &staged,
+            programs: &no_programs,
+        },
+    );
+    // Main-phase options (atomic `parse_source`): TS on for every extension.
+    let button_alloc = Allocator::default();
+    let button_parsed = Parser::new(
+        &button_alloc,
+        BUTTON_TSX,
+        SourceType::from_path(&button)
+            .unwrap_or_default()
+            .with_typescript(true),
+    )
+    .parse();
+    let types_path = scratch.root().join("types.ts");
+    let types_alloc = Allocator::default();
+    let types_parsed = Parser::new(
+        &types_alloc,
+        TYPES_TS,
+        SourceType::from_path(&types_path)
+            .unwrap_or_default()
+            .with_typescript(true),
+    )
+    .parse();
+    assert!(button_parsed.errors.is_empty());
+    assert!(types_parsed.errors.is_empty());
+    let programs: HashMap<PathBuf, &oxc_ast::ast::Program> = [
+        (button, &button_parsed.program),
+        (types_path, &types_parsed.program),
+    ]
+    .into_iter()
+    .collect();
+    let reused = trace_style_bindings_with_surface(
+        &entries,
+        scratch.root(),
+        scratch.root(),
+        &surface,
+        &crate::TraceSources {
+            staged: &staged,
+            programs: &programs,
+        },
+    );
+    assert_eq!(fresh, reused);
 }

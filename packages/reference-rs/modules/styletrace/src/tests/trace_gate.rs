@@ -36,12 +36,17 @@ fn trace_outcome(files: &[(&str, &str)]) -> TraceOutcome {
         entries.push(fixture.root().join(path));
     }
     let staged = HashMap::new();
+    let programs = HashMap::new();
+    let sources = crate::TraceSources {
+        staged: &staged,
+        programs: &programs,
+    };
     trace_style_bindings_with_surface(
         &entries,
         fixture.root(),
         fixture.root(),
         &gate_surface(),
-        &staged,
+        &sources,
     )
 }
 

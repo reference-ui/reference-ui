@@ -8,7 +8,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use styletrace::trace_style_bindings_with_surface;
+use oxc_ast::ast::Program;
+use styletrace::{trace_style_bindings_with_surface, TraceSources};
 
 use crate::{
     diagnostics::{DiagnosticFact, DiagnosticSink, DiagnosticsSession, Policy},
@@ -50,7 +51,10 @@ pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
     // No parse runs on this path, so no failure signal exists: every
     // source counts as parsed-clean and the trace gate applies fully.
     let failed = vec![false; sources.len()];
-    resolve(request, &sources, &failed, &mut session).0.hosts()
+    let programs = HashMap::new();
+    resolve(request, &sources, &failed, &mut session, &programs)
+        .0
+        .hosts()
 }
 
 /// Trace the include-scoped entry set against the engine surface.
@@ -60,11 +64,14 @@ pub fn collect_hosts(request: &CompileRequest) -> HashSet<String> {
 /// compile's collected sources; the caller collects once. `failed`
 /// marks main-phase parse failures by source index so their entries
 /// survive the trace gate and keep their located warnings (C1).
+/// `programs` reuses the main-phase parse by path; absent paths parse
+/// from staged bytes exactly as before.
 pub fn resolve(
     request: &CompileRequest,
     sources: &[(String, String)],
     failed: &[bool],
     sink: &mut DiagnosticsSession,
+    programs: &HashMap<PathBuf, &Program<'_>>,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
     let vacant = || {
@@ -92,12 +99,16 @@ pub fn resolve(
         .iter()
         .map(|(path, content)| (PathBuf::from(path), content.as_str()))
         .collect();
+    let inputs = TraceSources {
+        staged: &staged,
+        programs,
+    };
     let outcome = trace_style_bindings_with_surface(
         &entries,
         Path::new(root_dir),
         Path::new(package_root),
         &surface,
-        &staged,
+        &inputs,
     );
     let traced = outcome
         .bindings

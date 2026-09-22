@@ -30,11 +30,13 @@ pub fn serialize_value(value: &Value) -> String {
     serde_json::to_string(&canonical).unwrap_or_else(|_| "null".to_string())
 }
 
-/// Five-tuple describing an authored style lookup target.
+/// Five-tuple describing an authored style lookup target. The condition
+/// stack stays generic so owned keys borrow their boxed steps directly
+/// instead of cloning a `Vec<String>` per serialization.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LookupKey<'a> {
+pub struct LookupKey<'a, W: ?Sized = [String]> {
     pub system: &'a str,
-    pub when: &'a [String],
+    pub when: &'a W,
     pub prop: &'a str,
     pub value: &'a Value,
     pub important: bool,
@@ -59,15 +61,18 @@ impl<'a> LookupKey<'a> {
 
 /// Compute the stable lookup key string for an authored declaration.
 /// Formats the tuple `(system, when, prop, canonical_value, important)` into compact JSON.
-pub fn serialize_lookup_key(key: &LookupKey<'_>) -> String {
-    let canonical_val = canonical_json_value(key.value);
-    let tuple = (
-        key.system,
-        key.when,
-        key.prop,
-        &canonical_val,
-        key.important,
-    );
+/// Scalar values serialize directly: canonicalization is the identity on
+/// them, so borrowing skips a clone with provably identical bytes.
+pub fn serialize_lookup_key<W: serde::Serialize + ?Sized>(key: &LookupKey<'_, W>) -> String {
+    let canonical_val;
+    let value = match key.value {
+        Value::Object(_) | Value::Array(_) => {
+            canonical_val = canonical_json_value(key.value);
+            &canonical_val
+        }
+        scalar => scalar,
+    };
+    let tuple = (key.system, key.when, key.prop, value, key.important);
     serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
 }
 

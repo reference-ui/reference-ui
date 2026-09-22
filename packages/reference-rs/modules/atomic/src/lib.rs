@@ -42,11 +42,12 @@ pub use stylesheet::StylesheetOutput;
 pub use types::{CompileRequest, CompileResult, VirtualSource};
 
 use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use diagnostics::DiagnosticSink;
 
@@ -205,7 +206,15 @@ fn run_parse_phase(
     let live = stream::live_retained_sources(sources, &parsed, &retained, &slots);
     let mut graph =
         extract::resolver::ValueGraph::new(sources, &live, transient.staged, &project_constants);
-    let identity = extract::identity::IdentityGraph::new(sources);
+    let (identity_programs, trace_programs) = reuse_programs(
+        sources,
+        &parsed,
+        &retained,
+        &slots,
+        &transient.errors,
+    );
+    let identity =
+        extract::identity::IdentityGraph::with_programs(sources, &identity_programs);
     #[cfg(feature = "alloc-trace")]
     drop(_graphs);
     // Parse-failure keep-alive (C1): failed sources keep their trace
@@ -219,7 +228,8 @@ fn run_parse_phase(
     let failed: Vec<bool> = (0..sources.len())
         .map(|i| slots[i].panicked || !transient.errors[i].is_empty())
         .collect();
-    let (hosts, host_diagnostics) = hosts::resolve(request, sources, &failed, session);
+    let (hosts, host_diagnostics) =
+        hosts::resolve(request, sources, &failed, session, &trace_programs);
     let traced_jsx = hosts.hosts();
     diagnostics.extend(host_diagnostics);
     #[cfg(feature = "alloc-trace")]
@@ -407,6 +417,35 @@ pub(crate) fn parse_source<'a>(
         .unwrap_or_default()
         .with_typescript(true);
     Parser::new(allocator, content, source_type).parse()
+}
+
+/// Retained-program reuse maps: position-keyed programs for the identity
+/// walk, path-keyed programs for the styletrace re-parse. Panicked
+/// positions stay out of both (each falls back to bytes, preserving the
+/// failure); errored positions stay out of the trace map only, so the
+/// entry re-parse reproduces its diagnostic identically.
+fn reuse_programs<'a>(
+    sources: &'a [(String, String)],
+    parsed: &'a [oxc_parser::ParserReturn<'a>],
+    retained: &[usize],
+    slots: &[stream::SourceSlot],
+    errors: &[Vec<(String, Option<u32>)>],
+) -> (
+    HashMap<usize, &'a Program<'a>>,
+    HashMap<PathBuf, &'a Program<'a>>,
+) {
+    let mut identity = HashMap::new();
+    let mut trace = HashMap::new();
+    for (position, &i) in retained.iter().enumerate() {
+        if slots[i].panicked {
+            continue;
+        }
+        identity.insert(i, &parsed[position].program);
+        if errors[i].is_empty() {
+            trace.insert(PathBuf::from(&sources[i].0), &parsed[position].program);
+        }
+    }
+    (identity, trace)
 }
 
 fn extract_parsed_program(

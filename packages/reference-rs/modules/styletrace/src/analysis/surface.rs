@@ -10,6 +10,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+use oxc_ast::ast::Program;
+
 use crate::resolver::{
     collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
 };
@@ -104,6 +106,17 @@ pub struct TraceOutcome {
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
 }
 
+/// Caller-held module inputs for one entry-listed trace: staged bytes by
+/// path plus already-parsed programs by path. A path present in `programs`
+/// reuses its program instead of re-parsing; every other path parses from
+/// `staged` bytes (or disk) exactly as before. Reused programs must come
+/// from the same bytes with identical parser options, so the walk observes
+/// exactly what a fresh parse would produce.
+pub struct TraceSources<'a> {
+    pub staged: &'a HashMap<PathBuf, &'a str>,
+    pub programs: &'a HashMap<PathBuf, &'a Program<'a>>,
+}
+
 pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
     trace_style_jsx_names_with_hint(root_dir, None)
 }
@@ -141,12 +154,17 @@ pub fn trace_style_bindings_with_hint(
     let surface = StyleSurface::from_declaration_root(&resolved_decl_root)?;
     let entries = discover_source_files(&normalized_source)?;
     let staged = HashMap::new();
+    let programs = HashMap::new();
+    let sources = TraceSources {
+        staged: &staged,
+        programs: &programs,
+    };
     let outcome = trace_style_bindings_with_surface(
         &entries,
         &normalized_source,
         &resolved_decl_root,
         &surface,
-        &staged,
+        &sources,
     );
     // The names seam has no diagnostics channel; per-file skips stay silent
     // here by shape. compile() is the diagnosed path (ATM-SITE-57).
@@ -156,20 +174,21 @@ pub fn trace_style_bindings_with_hint(
 /// Trace explicit entries against a prebuilt surface. Entries that fail to
 /// parse yield one diagnostic each and contribute no hosts; edge targets
 /// that fail to parse are recorded by the walker; siblings still trace.
-/// `package_root` anchors import resolution. `staged` carries the caller's
-/// file bytes by entry path; absent paths read from disk.
+/// `package_root` anchors import resolution. `sources` carries the caller's
+/// file bytes plus already-parsed programs by path; absent paths parse
+/// from bytes (or disk) exactly as before.
 pub fn trace_style_bindings_with_surface(
     entries: &[PathBuf],
     source_root: &Path,
     package_root: &Path,
     surface: &StyleSurface,
-    staged: &HashMap<PathBuf, &str>,
+    sources: &TraceSources,
 ) -> TraceOutcome {
     SurfaceTraceSession {
         source_root,
         package_root,
         surface,
-        staged,
+        sources,
     }
     .trace(entries)
 }
@@ -179,7 +198,7 @@ struct SurfaceTraceSession<'a> {
     source_root: &'a Path,
     package_root: &'a Path,
     surface: &'a StyleSurface,
-    staged: &'a HashMap<PathBuf, &'a str>,
+    sources: &'a TraceSources<'a>,
 }
 
 impl SurfaceTraceSession<'_> {
@@ -208,7 +227,7 @@ impl SurfaceTraceSession<'_> {
     ) -> BTreeMap<PathBuf, TraceModule> {
         let mut modules = BTreeMap::new();
         for entry in entries {
-            match parse_trace_module(entry, self.package_root, self.surface, self.staged) {
+            match parse_trace_module(entry, self.package_root, self.surface, self.sources) {
                 Ok(module) => {
                     modules.insert(entry.clone(), module);
                 }
@@ -230,7 +249,7 @@ impl SurfaceTraceSession<'_> {
             modules,
             self.surface.clone(),
             self.package_root.to_path_buf(),
-            self.staged,
+            self.sources,
         );
         // Resolution is infallible in practice; a residual walker error
         // becomes one diagnostic rather than failing resolved siblings.

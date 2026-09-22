@@ -13,8 +13,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use oxc_ast::ast::Program;
+
 use super::bindings::is_reference_package;
-use super::identity_map::{parse_export_map, ExportMap, FileImport, NamedTarget};
+use super::identity_map::{collect_map, parse_export_map, ExportMap, FileImport, NamedTarget};
 
 /// One identity question: does `name` exported from `file` trace to Reference?
 struct Query<'a> {
@@ -39,11 +41,32 @@ pub struct IdentityGraph<'s> {
     sources: &'s [(String, String)],
     index: HashMap<String, usize>,
     memo: RefCell<HashMap<String, Option<Rc<ExportMap>>>>,
+    /// Retained programs by source position; a hit reuses the main-phase
+    /// parse instead of re-parsing bytes. Missing positions (streamed,
+    /// panicked, or never parsed) fall back to a fresh parse.
+    programs: Option<&'s HashMap<usize, &'s Program<'s>>>,
 }
 
 impl<'s> IdentityGraph<'s> {
     /// Index project sources by normalized path; export maps parse lazily.
     pub fn new(sources: &'s [(String, String)]) -> Self {
+        Self::build(sources, None)
+    }
+
+    /// Index with retained-program reuse: positions present in `programs`
+    /// fold the main-phase program; every other position parses bytes.
+    pub fn with_programs(
+        sources: &'s [(String, String)],
+        programs: &'s HashMap<usize, &'s Program<'s>>,
+    ) -> Self {
+        Self::build(sources, Some(programs))
+    }
+
+    /// Index project sources by normalized path with an optional program map.
+    fn build(
+        sources: &'s [(String, String)],
+        programs: Option<&'s HashMap<usize, &'s Program<'s>>>,
+    ) -> Self {
         let mut index = HashMap::new();
         for (position, (path, _)) in sources.iter().enumerate() {
             index.entry(normalize_path(path)).or_insert(position);
@@ -52,6 +75,7 @@ impl<'s> IdentityGraph<'s> {
             sources,
             index,
             memo: RefCell::new(HashMap::new()),
+            programs,
         }
     }
 
@@ -258,15 +282,24 @@ impl<'s> IdentityGraph<'s> {
         let parsed = self
             .index
             .get(&normalize_path(path))
-            .and_then(|position| {
-                let (file_path, content) = &self.sources[*position];
-                parse_export_map(content, file_path)
-            })
+            .and_then(|position| self.parse_position(*position))
             .map(Rc::new);
         self.memo
             .borrow_mut()
             .insert(path.to_string(), parsed.clone());
         parsed
+    }
+
+    /// One position's export surface: the retained program when mapped,
+    /// else a fresh parse of its bytes. The parser is deterministic and
+    /// both paths use identical options, so a mapped program folds exactly
+    /// what its re-parse would.
+    fn parse_position(&self, position: usize) -> Option<ExportMap> {
+        if let Some(program) = self.programs.and_then(|maps| maps.get(&position).copied()) {
+            return Some(collect_map(program));
+        }
+        let (file_path, content) = &self.sources[position];
+        parse_export_map(content, file_path)
     }
 
     /// Resolve a relative specifier against the project sources. Bare and

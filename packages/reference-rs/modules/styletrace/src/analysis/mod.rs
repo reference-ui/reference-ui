@@ -17,5 +17,5 @@ pub use model::TracedBinding;
 pub use surface::{
     trace_style_bindings, trace_style_bindings_with_hint,
     trace_style_bindings_with_surface, trace_style_jsx_names,
-    trace_style_jsx_names_with_hint, StyleSurface, TraceDiagnostic, TraceOutcome,
+    trace_style_jsx_names_with_hint, StyleSurface, TraceDiagnostic, TraceOutcome, TraceSources,
 };
