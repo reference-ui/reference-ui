@@ -80,6 +80,21 @@ swarm worktrees kept pending cleanup.
   0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.
   Closed.
 
+## Compile closeout (certified, base c593829d3 — HQ-ordered, pre-scan-voyage)
+
+Bank reconciliation, all 25 bank-verdict entries, firsthand: 20 landed
+via sets 1–5 + cloneplasma (every one a reference-rs compile path);
+AUTHCSS yielded-subsumed into landed cloneplasma (race rule);
+RECIPEPATH HELD→CUT (allocator lottery, PERF-W3-RECIPEPROOF);
+SCALARJSON superseded by landed SCALARREPROOF (set-4; original −14.59
+carried crew noise disclaimer, patch retained as record); CATPOST +
+PRELOWER pending deliberately (off-scope MCP, 0 sync ms — landing
+gated on integrator + HQ scope decision). Unexplained-pending on sync
+ground: ZERO. No integrator — member set empty. Improvement left on
+the table in banked compile work: 0 ms by receipt. Seam scout
+dispatched as the last unscouted compile room (counts-first, no
+diets); scan voyage opens separately after closeout lands.
+
 ## Ticks (empty board)
 
 - Tick 09:20: board EMPTY (roster zero, lock free, tip 6c39095, claims quiet). Nothing to dispatch.

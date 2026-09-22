@@ -31,6 +31,9 @@ const LANDINGS = {
 const OVERRULED = {
   'INT-W2-SET4': 'INT-W2-SET4B — captain HELD recipepath (replicated contra), subset landed e360915f',
   'PERF-W2-CASCADE': 'crew CUT overridden — LANDED in set-1/810b8b5b4 (reserve precedent: sub-bar proven-identical)',
+  'PERF-W2-AUTHCSS': 'INT-W2-CLONEPLASMA — crew BANK yielded, all 6 hunks subsumed by landed cloneplasma (race rule, count-probed)',
+  'PERF-W2-RECIPEPATH': 'PERF-W3-RECIPEPROOF — HELD→CUT (allocator lottery, three-tip sign flips vs ~1–3 ms mechanism ceiling)',
+  'PERF-W2-SCALARJSON': 'PERF-W2-SCALARREPROOF — superseded, re-proof landed set-4/e360915f7 (original −14.59 carried crew noise disclaimer; patch retained as record)',
 };
 const LANDED_FILES = {
 // File lists of landed diets (patches deleted after landing — this map is the record).
