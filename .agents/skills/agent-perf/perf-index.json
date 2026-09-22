@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T12:14:39.544Z",
+ "built": "2026-09-22T12:21:59.810Z",
  "root": "docs/perf/waves",
- "count": 93,
+ "count": 94,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -1744,7 +1744,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "MCP ctor category walk+sort hoist saves 0.26 ms one-time against a ~73 ms ctor; below the 15 ms LAND bar and the 5 ms floor; CUT as filed.",
-   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Compile closeout (certified, base c593829d3 — HQ-ordered, pre-scan-voyage)\n\nBank reconciliation, all 25 bank-verdict entries, firsthand: 20 landed\nvia sets 1–5 + cloneplasma (every one a reference-rs compile path);\nAUTHCSS yielded-subsumed into landed cloneplasma (race rule);\nRECIPEPATH HELD→CUT (allocator lottery, PERF-W3-RECIPEPROOF);\nSCALARJSON superseded by landed SCALARREPROOF (set-4; original −14.59\ncarried crew noise disclaimer, patch retained as record); CATPOST +\nPRELOWER pending deliberately (off-scope MCP, 0 sync ms — landing\ngated on integrator + HQ scope decision). Unexplained-pending on sync\nground: ZERO. No integrator — member set empty. Improvement left on\nthe table in banked compile work: 0 ms by receipt. Seam scout\ndispatched as the last unscouted compile room (counts-first, no\ndiets); scan voyage opens separately after closeout lands.\n\n## Ticks (empty board)",
+   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Compile closeout (certified, base c593829d3 — HQ-ordered, pre-scan-voyage)\n\nBank reconciliation, all 25 bank-verdict entries, firsthand: 20 landed\nvia sets 1–5 + cloneplasma (every one a reference-rs compile path);\nAUTHCSS yielded-subsumed into landed cloneplasma (race rule);\nRECIPEPATH HELD→CUT (allocator lottery, PERF-W3-RECIPEPROOF);\nSCALARJSON superseded by landed SCALARREPROOF (set-4; original −14.59\ncarried crew noise disclaimer, patch retained as record); CATPOST +\nPRELOWER pending deliberately (off-scope MCP, 0 sync ms — landing\ngated on integrator + HQ scope decision). Unexplained-pending on sync\nground: ZERO. No integrator — member set empty. Improvement left on\nthe table in banked compile work: 0 ms by receipt. Seam scout\ndispatched as the last unscouted compile room (counts-first, no\ndiets); scan voyage opens separately after closeout lands.\n\n## Wave 4 — IN PROGRESS (scan frontier, HQ-ordered)",
    "filler": false
   },
   {
@@ -1844,6 +1844,25 @@
    "landedIn": null,
    "summary": "MCP searchDemand options-object reuse showed no stable win under interleaved A/B with lottery control; CUT as filed.",
    "log": "- swarm-reusesearchopts CUT (lottery): options-object reuse, no\n  stable win under interleaved A/B x2 + lottery control; identity\n  sha match. Closed.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W4-SEAMSCOUT",
+   "wave": "wave-4",
+   "topic": "seamscout",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 28.5,
+    "pct": 99.96
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-4/report-swarm-seamscout.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "- Base: `c593829d3a2b6382d7150410a05a470159f40616` (`git rev-parse HEAD` verified first act; match, proceed).",
+   "log": "- swarm-seamscout CUT (compile-window N-API census): exactly 1\n  crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt\n  fenced/floor; filler = binary-protocol surgery with bank conditions.\n  Closed — do not re-litigate without new filed evidence.\n\n## Ticks (empty board)",
    "filler": false
   }
  ]

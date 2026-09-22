@@ -109,9 +109,21 @@ diets); scan voyage opens separately after closeout lands.
   voyage BAR is UNCHANGED until HQ names a number.
 - Stream 1 (scan): scan-recon4 dispatched (isolated) — fresh flames on
   tip + exact scan census + ranked backlog. No diets until backlog files.
-- Stream 2 (seam gap): seam-scout running (closeout dispatch).
-- Slots: 2/7, 5 held — backlog empty pending recon verdicts (this entry
-  is the proof). Full complement on ranked backlog per Model.
+- Stream 2 (seam gap): seam-scout CUT ACCEPTED (1 crossing/sync
+  exact, fixed ≈0 ms; codec 42/43wt all load-inherent/MARSHAL-fenced
+  or memcpy floor; glue 7/7 max-frame-4 fails share 1.4% vs 25%).
+  Filed report-swarm-seamscout.md + ledger. Blemishes disclosed, all
+  immaterial: in-napi subtotal off-by-1wt per capture (margins hold);
+  missing SEAM-VERDICT final line (verdict unambiguous in ## Verdict
+  + claims FINISH). Compile gap closed: no seam dark matter.
+- Slots: 1/7 (scan-recon4 running), 6 held — backlog still empty
+  pending recon verdict (this entry is the proof). Freed seam slot
+  held: nothing briefable until backlog files. Full complement then.
+
+- swarm-seamscout CUT (compile-window N-API census): exactly 1
+  crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt
+  fenced/floor; filler = binary-protocol surgery with bank conditions.
+  Closed — do not re-litigate without new filed evidence.
 
 ## Ticks (empty board)
 
