@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T15:01:49.623Z",
+ "built": "2026-09-22T15:14:35.324Z",
  "root": "docs/perf/waves",
- "count": 103,
+ "count": 104,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -1982,6 +1982,24 @@
    "landedIn": null,
    "summary": "- Base: `ff64ab75b594cfd81d0cb8488bd0ea86a0155b15` (verified `git rev-parse HEAD`",
    "log": "- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1\n  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync\n  noise-bounded. Publish watch flagged.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W4-REFLAME7",
+   "wave": "wave-4",
+   "topic": "reflame7",
+   "kind": "repro",
+   "verdict": "REPROFILE",
+   "effect": {
+    "pct": -0.35
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-4/report-swarm-reflame7.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "Counts and captures ONLY. No diets, no hypotheses, no implementation.",
+   "log": null,
    "filler": false
   },
   {
