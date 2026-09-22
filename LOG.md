@@ -187,7 +187,18 @@ diets); scan voyage opens separately after closeout lands.
 
 - swarm-scanidentity LAND (solo, prefix-strip + fused splitScan):
   −16.84 ms / −1.96%, 8/8 agree, identity 4/4, integrator-confirmed
-  −15.05/−1.76%. Landed with this arc; bench report follows.
+  −15.05/−1.76%. Landed with its arc; bench pinned with this entry.
+- T1 bench: report 1e4e3a0b5ab6 (full ×5 medians: small 89.4, medium
+  158.0, enterprise 1041.9; cssCalls/bytes exact, bundle gzip
+  identical). Enterprise vs prior single-sample pin 1071.4: below
+  range, supports ~15–25 improvement; single-vs-median caveat stands
+  (the four 8-pairs are the proof, pins are the record). Scoreboard
+  row (cold-child harness): enterprise 1041.9. The 938 figure is the
+  warm in-process harness — different instrument, never conflated;
+  reconciling harness levels is open measurement work, not this arc.
+  Process trap filed: single-scale bench:neo invocations REPLACE the
+  pin (small/medium clobbered once, restored via full-x5) — always
+  run the full suite for pins.
 
 ## Ticks (empty board)
 
