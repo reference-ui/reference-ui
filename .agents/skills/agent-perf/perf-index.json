@@ -1,5 +1,5 @@
 {
- "built": "2026-09-22T13:25:54.589Z",
+ "built": "2026-09-22T13:29:53.459Z",
  "root": "docs/perf/waves",
  "count": 98,
  "entries": [
@@ -342,7 +342,7 @@
    "files": [],
    "report": "docs/perf/waves/wave-4/integrate-scanT1.md",
    "patch": null,
-   "landing": null,
+   "landing": "1e4e3a0b5",
    "overruledBy": null,
    "summary": "- Integrator base pin: `1f71f3711e116ac0541fc0e5bac0f5a93f8d53c9` (verified",
    "log": null,
@@ -1898,7 +1898,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `0eade4ac14167a094fd0ac12e07378f3c343280d` (verified `git rev-parse HEAD`",
-   "log": "- swarm-scanidentity LAND (solo, prefix-strip + fused splitScan):\n  −16.84 ms / −1.96%, 8/8 agree, identity 4/4, integrator-confirmed\n  −15.05/−1.76%. Landed with this arc; bench report follows.\n\n## Ticks (empty board)",
+   "log": "- swarm-scanidentity LAND (solo, prefix-strip + fused splitScan):\n  −16.84 ms / −1.96%, 8/8 agree, identity 4/4, integrator-confirmed\n  −15.05/−1.76%. Landed with its arc; bench pinned with this entry.",
    "filler": false
   },
   {

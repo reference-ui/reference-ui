@@ -26,6 +26,7 @@ const LANDINGS = {
   'INT-W2-BANK': '810b8b5b4', 'INT-W2-SET2': '0a5731681', 'INT-W2-SET3': '3dd32a659',
   'INT-W2-CLONEPLASMA': 'ddce131e7', 'INT-W2-SET4': null, 'INT-W2-SET4B': 'e360915f7',
   'INT-W2-SET5': '6c3909506',
+  'INT-W4-SCANT1': '1e4e3a0b5',
 };
 // Captain overrules (filed verdict superseded — extend when it happens).
 const OVERRULED = {
