@@ -158,6 +158,17 @@ diets); scan voyage opens separately after closeout lands.
 - swarm-scanbundle CUT (fuse 2 esbuild builds → 1): −3.12 ms median,
   8/8 agree, identity 4/4; real mechanism, below the 5 ms floor.
   Closed — do not re-litigate without new filed evidence.
+- T1 LAND-claim: −16.84/−1.96% (bars clear full-8 + ex-run-1, proof
+  complete — full adjudication rides the landing). Integrator
+  scan-INT-T1 dispatched (isolated); T1 worktree retained as record.
+- Design tracks commissioned (HQ order): F1 + F2 graduate filler →
+  design. scan-F1-design dispatched (isolated, paper + measurements,
+  no prod code); scan-F2-design DEFERRED-SEQUENTIAL on HQ counter-order
+  (respawns when F1 files; fresh worktree auto-cleaned, nothing lost).
+  Pipeline: design → accept → implement → integrate → land. VOYAGE.md
+  updated (Design tracks).
+- Slots: 2/7 (INT-T1 + F1 designer), 5 held — nothing else briefable
+  (F2 queued behind F1, N1 held) — this entry is the proof.
 
 ## Ticks (empty board)
 
