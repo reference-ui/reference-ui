@@ -199,6 +199,20 @@ diets); scan voyage opens separately after closeout lands.
   Process trap filed: single-scale bench:neo invocations REPLACE the
   pin (small/medium clobbered once, restored via full-x5) — always
   run the full suite for pins.
+- Reflame6 CONFIRMED (−18.1 scan pair-mean, all four cross-deltas
+  negative; kernel-in-scan flat, JS self down — flame-side T1
+  mechanism; whole-sync −5.7 noise-dominated n=2, disclosed).
+  Publish +5.6 flagged WATCH (6b exceeds prior max by 3.0 on 8.8 band;
+  no mechanism + byte-identical inputs ⇒ noise; dissolves or confirms
+  on next captures). Protocol breach noted: crew timed + filed with
+  ZERO claims lines (lock held correctly, forensically invisible) —
+  claims discipline is not optional. Bundles repro6a/b landed.
+- Slots: 1/7 (F1 designer), 6 held — diet backlog EMPTY post-T1
+  (Formula-1 in design, N1 held) — this entry is the proof.
+
+- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1
+  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync
+  noise-bounded. Publish watch flagged.
 
 ## Ticks (empty board)
 

@@ -104,6 +104,7 @@ function verdictOf(lines, isIntegrate) {
     const dv = text.match(/^DIET-VERDICT:\s*(LAND|BANK|CUT)\b/im);
     if (dv) return dv[1];
     if (/RECON-VERDICT:/.test(text)) return 'REPROFILE';
+    if (/REFLAME-VERDICT:/.test(text)) return 'REPROFILE';
     return isIntegrate ? 'LAND' : 'UNKNOWN';
   }
   const v = (m[1] || m[0]).toUpperCase().replace(/^\*+/, '');
