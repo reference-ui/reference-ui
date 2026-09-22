@@ -11,6 +11,7 @@ use rustc_hash::FxHashSet;
 use crate::{
     atom::{AtomSet, When},
     diagnostics::DiagnosticsSession,
+    lanes::{Lanes, WorkKind},
     recipes, resolve, runtime, static_css, stylesheet, BaseSystem, CompileResult, Diagnostic,
     DiagnosticCode, DiagnosticLocation, NativeRuntimeArtifact,
 };
@@ -172,8 +173,11 @@ fn build_atom_set(
     wants: &[crate::atom::Want],
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
-    sink: Option<&mut DiagnosticsSession>,
+    mut sink: Option<&mut DiagnosticsSession>,
 ) -> AtomSet {
+    if let Some(pooled) = build_atom_set_pooled(wants, system, diagnostics, &mut sink) {
+        return pooled;
+    }
     let mut atom_set = AtomSet::new();
     let mut session = resolve::ResolveSession {
         system,
@@ -188,6 +192,28 @@ fn build_atom_set(
         }
     }
     atom_set
+}
+
+/// Resolve every want on the tail pool, committing atoms in input order.
+/// Returns `None` when the lane guard declines so the caller runs serial.
+fn build_atom_set_pooled(
+    wants: &[crate::atom::Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    sink: &mut Option<&mut DiagnosticsSession>,
+) -> Option<AtomSet> {
+    let guard = Lanes::Auto.guard(WorkKind::TailWants, wants.len())?;
+    let mut atom_set = AtomSet::new();
+    for item in crate::resolve_pool::resolve_wants(wants, system, &guard) {
+        if let Some(slot) = sink.as_deref_mut() {
+            slot.extend_facts(item.facts);
+        }
+        diagnostics.extend(item.diagnostics);
+        for atom in item.atoms {
+            atom_set.insert(atom);
+        }
+    }
+    Some(atom_set)
 }
 
 /// Recipe definitions plus the observed selections gating their emission.

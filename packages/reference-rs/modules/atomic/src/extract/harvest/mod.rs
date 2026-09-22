@@ -15,5 +15,6 @@ pub mod sinks;
 
 pub use classify::classify_harvest_value;
 pub use literals::{collect_pool, HarvestPool, KIND_ORDER};
+pub(crate) use literals::pool_for_program;
 pub use mint::{mint, MintCtx, HARVEST_ORIGIN};
 pub use sinks::{is_sink_code, Sink, SinkSite};

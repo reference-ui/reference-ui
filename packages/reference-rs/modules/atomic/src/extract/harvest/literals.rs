@@ -45,7 +45,7 @@ impl HarvestPool {
     }
 
     /// Merge another pool (one per compile input) into this one.
-    fn merge(&mut self, other: HarvestPool) {
+    pub(crate) fn merge(&mut self, other: HarvestPool) {
         for (kind, values) in other.kinds {
             self.kinds.entry(kind).or_default().extend(values);
         }
@@ -79,7 +79,7 @@ pub fn collect_pool(parsed: &[ParserReturn<'_>], skip: &[bool]) -> HarvestPool {
 }
 
 /// Collect one program's pool with a single visitor.
-fn pool_for_program(program: &Program<'_>) -> HarvestPool {
+pub(crate) fn pool_for_program(program: &Program<'_>) -> HarvestPool {
     let mut visitor = HarvestVisitor {
         pool: HarvestPool::default(),
     };

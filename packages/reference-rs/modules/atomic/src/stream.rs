@@ -70,7 +70,7 @@ pub(crate) fn merge_constants_ordered(
 
 /// One parse error as replay data: the rendered message plus the first
 /// label offset, the only inputs the reporter reads.
-fn replay_parse_error(err: &OxcDiagnostic) -> (String, Option<u32>) {
+pub(crate) fn replay_parse_error(err: &OxcDiagnostic) -> (String, Option<u32>) {
     let offset = err
         .labels
         .as_ref()

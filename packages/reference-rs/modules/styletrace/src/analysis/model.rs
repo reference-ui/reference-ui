@@ -26,7 +26,7 @@ impl TracedBinding {
 }
 
 #[derive(Clone)]
-pub(super) struct TraceModule {
+pub struct TraceModule {
     pub(super) components: FxHashMap<String, TraceComponent>,
     pub(super) component_factories: FxHashMap<String, FactoryTarget>,
     pub(super) factories: FxHashMap<String, TraceFactory>,

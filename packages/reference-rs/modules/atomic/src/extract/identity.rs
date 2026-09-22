@@ -10,7 +10,7 @@
 //! the Ph4 resolver (ATM-SITE-54) subsumes it when it lands.
 
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use oxc_ast::ast::Program;
 use rustc_hash::FxHashMap;
@@ -40,7 +40,7 @@ struct RelativeRef<'a> {
 pub struct IdentityGraph<'s> {
     sources: &'s [(String, String)],
     index: FxHashMap<String, usize>,
-    memo: RefCell<FxHashMap<String, Option<Rc<ExportMap>>>>,
+    memo: RefCell<FxHashMap<String, Option<Arc<ExportMap>>>>,
     /// Retained programs by source position; a hit reuses the main-phase
     /// parse instead of re-parsing bytes. Missing positions (streamed,
     /// panicked, or never parsed) fall back to a fresh parse.
@@ -60,6 +60,24 @@ impl<'s> IdentityGraph<'s> {
         programs: &'s FxHashMap<usize, &'s Program<'s>>,
     ) -> Self {
         Self::build(sources, Some(programs))
+    }
+
+    /// Index from export maps already folded on the parsing thread.
+    /// A present entry is the file's surface; `None` is a failed parse.
+    /// Missing paths still parse from bytes, so external hops are unchanged.
+    pub(crate) fn from_shared(
+        sources: &'s [(String, String)],
+        maps: &[Option<Arc<ExportMap>>],
+    ) -> Self {
+        let mut graph = Self::build(sources, None);
+        let mut memo = FxHashMap::default();
+        for (index, map) in maps.iter().enumerate() {
+            if let Some((path, _)) = sources.get(index) {
+                memo.insert(path.clone(), map.clone());
+            }
+        }
+        graph.memo = RefCell::new(memo);
+        graph
     }
 
     /// Index project sources by normalized path with an optional program map.
@@ -275,15 +293,15 @@ impl<'s> IdentityGraph<'s> {
     }
 
     /// Memoized export surface of one project file; unparseable files map to `None`.
-    fn export_map(&self, path: &str) -> Option<Rc<ExportMap>> {
-        if let Some(hit) = self.memo.borrow().get(path).cloned() {
-            return hit;
+    fn export_map(&self, path: &str) -> Option<Arc<ExportMap>> {
+        if let Some(hit) = self.memo.borrow().get(path) {
+            return hit.clone();
         }
         let parsed = self
             .index
             .get(&normalize_path(path))
             .and_then(|position| self.parse_position(*position))
-            .map(Rc::new);
+            .map(Arc::new);
         self.memo
             .borrow_mut()
             .insert(path.to_string(), parsed.clone());

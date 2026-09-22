@@ -11,10 +11,10 @@ mod resolver;
 mod tests;
 
 pub use analysis::{
-    trace_style_bindings, trace_style_bindings_with_hint,
-    trace_style_bindings_with_surface, trace_style_jsx_names,
-    trace_style_jsx_names_with_hint, StyleSurface, TraceDiagnostic, TraceOutcome,
-    TraceSources, TracedBinding,
+    fold_trace_module, trace_style_bindings, trace_style_bindings_with_hint,
+    trace_style_bindings_with_modules, trace_style_bindings_with_surface, trace_style_jsx_names,
+    trace_style_jsx_names_with_hint, ModulesTraceInputs, StyleSurface, TraceDiagnostic,
+    TraceModule, TraceOutcome, TraceSources, TracedBinding,
 };
 pub use resolver::{
     collect_declared_prop_names, collect_reference_style_prop_names, collect_style_prop_names,

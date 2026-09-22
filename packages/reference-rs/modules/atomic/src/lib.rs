@@ -10,12 +10,21 @@ mod assembly;
 pub mod atom;
 pub mod diagnostics;
 pub mod extract;
+mod extract_parallel;
 #[cfg(test)]
 mod goldens;
 pub mod hosts;
 pub mod includes;
+mod lanes;
+mod phase_commit;
+mod phase_gate;
+mod phase_lane;
+mod phase_merge;
+mod phase_parallel;
+mod phase_walk;
 pub mod recipes;
 pub mod resolve;
+mod resolve_pool;
 pub mod runtime;
 pub mod scan;
 pub(crate) mod sources;
@@ -52,6 +61,7 @@ use std::path::{Path, PathBuf};
 use std::collections::{BTreeMap, BTreeSet};
 
 use diagnostics::DiagnosticSink;
+use lanes::{Lanes, WorkKind};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 struct ParseSession<'a> {
@@ -123,7 +133,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         recipe_bindings: &mut recipe_bindings,
         selections: &mut selections,
     };
-    let (unpanicked, resolved_hosts) = run_parse_phase(request, &sources, sinks);
+    let (unpanicked, resolved_hosts) = run_parse_phase(request, &sources, sinks)?;
 
     #[cfg(feature = "alloc-trace")]
     let _assembly = crate::alloc_trace::PhaseGuard::enter("assembly");
@@ -182,6 +192,21 @@ fn token_rejection(code: DiagnosticCode, message: String) -> CompileResult {
 /// Returns the unpanicked source index in input order (the partition
 /// catalog) plus the resolved hosts assembly names as traced.
 fn run_parse_phase(
+    request: &CompileRequest,
+    sources: &[(String, String)],
+    sinks: CompileSinks<'_>,
+) -> Result<(Vec<usize>, hosts::ResolvedHosts), String> {
+    let styling = sources
+        .iter()
+        .filter(|(_, content)| !styling_skip(content))
+        .count();
+    if let Some(guard) = Lanes::Auto.guard(WorkKind::FrontFiles, styling) {
+        return phase_parallel::run(request, sources, sinks, &guard);
+    }
+    Ok(run_parse_serial(request, sources, sinks))
+}
+
+fn run_parse_serial(
     request: &CompileRequest,
     sources: &[(String, String)],
     sinks: CompileSinks<'_>,
@@ -314,7 +339,7 @@ fn run_parse_phase(
             recipe_bindings,
             selections,
         };
-        extract_all_sources(&mut extract_session, sources, &parsed, &slots);
+        extract_parallel::extract_all(&mut extract_session, sources, &parsed, &slots);
         resolve_recipe_selections(&mut extract_session);
     }
     #[cfg(feature = "alloc-trace")]
@@ -379,29 +404,6 @@ fn resolve_recipe_selections(session: &mut ParseSession<'_>) {
         &session.identity,
     );
     session.selections.extend(resolved);
-}
-
-/// Extract every unpanicked retained source through the shared session.
-/// Styling-free files skip the scope, extract, and per-file resolve walks:
-/// with no import, css/recipe, or JSX bytes they hold no site. Streamed
-/// files skip outright; the gate proves them styling-free, so the skip
-/// matches the content check exactly.
-fn extract_all_sources(
-    session: &mut ParseSession<'_>,
-    sources: &[(String, String)],
-    parsed: &[oxc_parser::ParserReturn<'_>],
-    slots: &[stream::SourceSlot],
-) {
-    for (index, (path, content)) in sources.iter().enumerate() {
-        if slots[index].panicked || slots[index].streamed {
-            continue;
-        }
-        if let Some(position) = slots[index].parsed {
-            if !styling_skip(content) {
-                extract_parsed_program(session, path, content, &parsed[position].program);
-            }
-        }
-    }
 }
 
 /// True when a file's bytes cannot feed the styling walks (scope, extract,
@@ -471,50 +473,6 @@ fn reuse_programs<'a>(
         }
     }
     (identity, trace)
-}
-
-fn extract_parsed_program(
-    session: &mut ParseSession<'_>,
-    path: &str,
-    content: &str,
-    program: &oxc_ast::ast::Program<'_>,
-) {
-    // Locals resolve through this file's scope table; imports answer from
-    // the resolver map only, with the bag behind for unbound names. Baked
-    // entries strip against the name-wide mutation set.
-    let table = extract::scope::collect(program, session.constants);
-    let imports = table.import_refs();
-    let values = session.resolver.resolve_file_imports(path, &imports);
-    let lookup = extract::scope::ImportLookup::Binding {
-        values: &values,
-        fallback: session.constants,
-    };
-    let chain = extract::scope::ScopeChain::new(&table, lookup);
-    let bindings = extract::collect_bindings_with_identity(program, path, &session.identity);
-    let jsx_hosts = extract::JsxHosts {
-        local: bindings.jsx_hosts_ref(),
-        global: session.traced_jsx,
-    };
-    let config = extract::ExtractConfig {
-        chain,
-        breakpoints: session.breakpoints,
-        bindings: &bindings,
-        jsx_hosts,
-        owned_props: session.owned_props,
-        shadowed: &[],
-    };
-    let sinks = extract::ExtractSinks {
-        wants: session.wants,
-        recipes: session.recipes,
-        diagnostics: session.diagnostics,
-        authored: session.authored,
-        sinks: session.sinks,
-        session: session.session,
-        recipe_bindings: session.recipe_bindings,
-        tentative: session.tentative,
-    };
-    let mut ctx = extract::ExtractContext::new(path, Some(content), config, sinks);
-    extract::extract_with_context(program, &mut ctx);
 }
 
 /// Report the independent diagnostics analysis expectations into the

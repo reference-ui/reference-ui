@@ -10,7 +10,10 @@ use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
-use styletrace::{trace_style_bindings_with_surface, TraceSources};
+use styletrace::{
+    trace_style_bindings_with_modules, trace_style_bindings_with_surface, ModulesTraceInputs,
+    StyleSurface, TraceModule, TraceOutcome, TraceSources,
+};
 
 use crate::{
     diagnostics::{DiagnosticFact, DiagnosticSink, DiagnosticsSession, Policy},
@@ -25,9 +28,11 @@ mod tests;
 
 use diagnostics::convert_trace_diagnostic;
 use entries::entry_paths;
+pub(crate) use entries::trace_skip;
 pub use surface::engine_surface;
 
 /// Traced vs caller-configured host names for one compile.
+#[derive(Clone)]
 pub struct ResolvedHosts {
     pub traced: Vec<String>,
     pub configured: Vec<String>,
@@ -75,42 +80,118 @@ pub fn resolve(
     programs: &FxHashMap<PathBuf, &Program<'_>>,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
     let configured = request.jsx_hosts.clone().unwrap_or_default();
-    let vacant = || {
-        (
-            ResolvedHosts {
-                traced: Vec::new(),
-                configured: configured.clone(),
-                owned_props: BTreeMap::new(),
-            },
-            Vec::new(),
-        )
+    let Some(opened) = open_trace(request, sources, failed) else {
+        return configured_only(configured);
     };
-    let Some(root_dir) = request.root_dir.as_ref() else {
-        return vacant();
-    };
-    let entries = entry_paths(sources, failed);
-    if entries.is_empty() {
-        return vacant();
-    }
-    let package_root = request.declaration_root.as_deref().unwrap_or(root_dir);
     let surface = engine_surface(&request.base_system);
-    // Staged bytes keyed exactly as the entries: the trace parses what
-    // extraction parsed, with disk fallback for paths outside the compile.
-    let staged: FxHashMap<PathBuf, &str> = sources
-        .iter()
-        .map(|(path, content)| (PathBuf::from(path), content.as_str()))
-        .collect();
     let inputs = TraceSources {
-        staged: &staged,
+        staged: &opened.staged,
         programs,
     };
     let outcome = trace_style_bindings_with_surface(
-        &entries,
-        Path::new(root_dir),
-        Path::new(package_root),
+        &opened.entries,
+        Path::new(opened.root),
+        Path::new(opened.package_root),
         &surface,
         &inputs,
     );
+    hosts_from(configured, outcome, sink)
+}
+
+/// Trace from modules workers already folded off the programs they hold.
+/// Missing entries still parse from staged bytes. The surface is the one
+/// the workers folded against, so the walk and the fold agree.
+pub(crate) fn resolve_prepared(
+    prepared: PreparedTrace<'_>,
+    sink: &mut DiagnosticsSession,
+) -> (ResolvedHosts, Vec<Diagnostic>) {
+    let configured = prepared.request.jsx_hosts.clone().unwrap_or_default();
+    let Some(opened) = open_trace(prepared.request, prepared.sources, prepared.failed) else {
+        return configured_only(configured);
+    };
+    let programs = FxHashMap::default();
+    let inputs = TraceSources {
+        staged: &opened.staged,
+        programs: &programs,
+    };
+    let outcome = trace_style_bindings_with_modules(ModulesTraceInputs {
+        entries: &opened.entries,
+        source_root: Path::new(opened.root),
+        package_root: Path::new(opened.package_root),
+        surface: prepared.surface,
+        modules: prepared.modules,
+        sources: &inputs,
+    });
+    hosts_from(configured, outcome, sink)
+}
+
+/// Folded modules plus the surface they were folded against.
+pub(crate) struct PreparedTrace<'a> {
+    pub request: &'a CompileRequest,
+    pub sources: &'a [(String, String)],
+    pub failed: &'a [bool],
+    pub surface: &'a StyleSurface,
+    pub modules: BTreeMap<PathBuf, TraceModule>,
+}
+
+/// Root, entries, and staged bytes for one trace, when the compile has any.
+struct TraceOpen<'a> {
+    root: &'a str,
+    package_root: &'a str,
+    entries: Vec<PathBuf>,
+    staged: FxHashMap<PathBuf, &'a str>,
+}
+
+/// Open the trace when a root and at least one entry exist.
+fn open_trace<'a>(
+    request: &'a CompileRequest,
+    sources: &'a [(String, String)],
+    failed: &[bool],
+) -> Option<TraceOpen<'a>> {
+    let root = request.root_dir.as_deref()?;
+    let entries = entry_paths(sources, failed);
+    if entries.is_empty() {
+        return None;
+    }
+    let package_root = request.declaration_root.as_deref().unwrap_or(root);
+    let staged = sources
+        .iter()
+        .map(|(path, content)| (PathBuf::from(path), content.as_str()))
+        .collect();
+    Some(TraceOpen {
+        root,
+        package_root,
+        entries,
+        staged,
+    })
+}
+
+/// Declaration root when the compile has one, else the source root.
+pub(crate) fn trace_root(request: &CompileRequest) -> Option<PathBuf> {
+    let root = request.root_dir.as_deref()?;
+    Some(PathBuf::from(
+        request.declaration_root.as_deref().unwrap_or(root),
+    ))
+}
+
+/// Configured names alone, when nothing is traced.
+fn configured_only(configured: Vec<String>) -> (ResolvedHosts, Vec<Diagnostic>) {
+    (
+        ResolvedHosts {
+            traced: Vec::new(),
+            configured,
+            owned_props: BTreeMap::new(),
+        },
+        Vec::new(),
+    )
+}
+
+/// Turn one trace outcome into hosts plus rendered warnings.
+fn hosts_from(
+    configured: Vec<String>,
+    outcome: TraceOutcome,
+    sink: &mut DiagnosticsSession,
+) -> (ResolvedHosts, Vec<Diagnostic>) {
     let traced = outcome
         .bindings
         .into_iter()
