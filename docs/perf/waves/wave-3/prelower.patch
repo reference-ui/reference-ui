@@ -1,0 +1,43 @@
+diff --git a/packages/reference-mcp/src/pipeline/icons-search-index.ts b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+index afcaba7d5..27c4b86f2 100644
+--- a/packages/reference-mcp/src/pipeline/icons-search-index.ts
++++ b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+@@ -97,8 +97,14 @@ export class IconsSearchEngine {
+     if (docs && docs instanceof Map) {
+       for (const entry of docs.values()) {
+         if (Array.isArray(entry.categories)) {
+-          for (const c of entry.categories) {
+-            if (c) catSet.add(c)
++          for (let i = 0; i < entry.categories.length; i++) {
++            const c = entry.categories[i]
++            if (!c) continue
++            // Lower once at load: stored categories are then canonically
++            // lowercase, so per-candidate filters use plain === (no alloc).
++            const lower = c.toLowerCase()
++            if (lower !== c) entry.categories[i] = lower
++            catSet.add(lower)
+           }
+         }
+       }
+@@ -171,8 +177,9 @@ export class IconsSearchEngine {
+     if (category) {
+       const catLower = category.toLowerCase()
+       searchOptions.filter = result => {
++        // Stored categories are lowered once at load: plain ===, no alloc.
+         const cats = (result.categories as string[]) || []
+-        return cats.some(c => c.toLowerCase() === catLower)
++        return cats.some(c => c === catLower)
+       }
+     }
+ 
+@@ -283,8 +290,9 @@ export class IconsSearchEngine {
+     // Category-only browse using MiniSearch.wildcard
+     const allResults = this.miniSearch.search(MiniSearch.wildcard, {
+       filter: result => {
++        // Stored categories are lowered once at load: plain ===, no alloc.
+         const cats = (result.categories as string[]) || []
+-        return !category || cats.some(c => c.toLowerCase() === category)
++        return !category || cats.some(c => c === category)
+       },
+     })
+ 

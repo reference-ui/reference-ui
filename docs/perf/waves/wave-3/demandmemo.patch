@@ -1,0 +1,51 @@
+diff --git a/packages/reference-mcp/src/pipeline/icons-search-index.ts b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+index afcaba7d5..ca4b02641 100644
+--- a/packages/reference-mcp/src/pipeline/icons-search-index.ts
++++ b/packages/reference-mcp/src/pipeline/icons-search-index.ts
+@@ -73,9 +73,12 @@ function trimDescription(desc: string, maxLen = 220): string {
+   return (lastSpace > 60 ? trimmed.slice(0, lastSpace) : trimmed) + '...'
+ }
+ 
++const DEMAND_CACHE_LIMIT = 64
++
+ export class IconsSearchEngine {
+   readonly miniSearch: MiniSearch
+   readonly categories: string[]
++  private readonly demandCache = new Map<string, { total: number; icons: IconReadout[] }>()
+ 
+   constructor(serializedIndex: unknown) {
+     const jsonString =
+@@ -164,6 +167,15 @@ export class IconsSearchEngine {
+     const dClean = demand.trim()
+     if (!dClean) return { total: 0, icons: [] }
+ 
++    const cacheKey = `${limit}|${category ?? ''}|${verbose ? 1 : 0}|${dClean}`
++    const cached = this.demandCache.get(cacheKey)
++    if (cached) {
++      // LRU refresh: re-insert to mark most-recently-used
++      this.demandCache.delete(cacheKey)
++      this.demandCache.set(cacheKey, cached)
++      return { total: cached.total, icons: [...cached.icons] }
++    }
++
+     const searchOptions: Parameters<MiniSearch['search']>[1] = {
+       ...MINI_SEARCH_CONFIG.searchOptions,
+     }
+@@ -197,10 +209,16 @@ export class IconsSearchEngine {
+       return readout
+     })
+ 
+-    return {
++    const out = {
+       total: results.length,
+       icons: sliced,
+     }
++    this.demandCache.set(cacheKey, out)
++    if (this.demandCache.size > DEMAND_CACHE_LIMIT) {
++      const oldest = this.demandCache.keys().next()
++      if (!oldest.done) this.demandCache.delete(oldest.value)
++    }
++    return { total: out.total, icons: [...out.icons] }
+   }
+ 
+   search(options?: SearchIconsOptions): SearchIconsResult {

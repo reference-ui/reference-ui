@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T10:58:46.402Z",
+ "built": "2026-09-22T11:23:37.878Z",
  "root": "docs/perf/waves",
- "count": 85,
+ "count": 93,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -330,6 +330,62 @@
    "overruledBy": null,
    "summary": "Base pin verified: `git rev-parse HEAD` = `e360915f70d9d9ab2cc3b60d59d423fc85a680e4`",
    "log": "- swarm-intset5 DONE → LAND whole set (clean — doctrine\n  applied correctly). Filed\n  `docs/perf/waves/wave-2/integrate-set5.md` (328 lines).\n  All five bit-exact, zero rebases (19 files, exact union);\n  stageaudit×bagdefer composition traced line-by-line\n  (streamed collects exactly once, retained takes the\n  disjoint Lazy arm — prizes preserved verbatim both\n  ways); behavioral pairs grep-closed. Sum: −17.37/−1.82%\n  (8/8 UNANIMOUS, ex1 −18.58, pairmed −15.91 — tight\n  −15.9…−18.6 band, no spikes). Bisect: wantctx −2.34 /\n  bagdefer −5.22 (6/8, replicates bank) / harvestphase\n  −6.65 (8/8 — the per-phase bank resolves whole-sync in\n  composition, keys2 precedent vindicated again) /\n  programsfx +2.25 + stageaudit +1.88 straddles (paired-\n  medians +0.03/−0.13 — essentially exactly zero, 4/8,\n  single-set). Zero contra — the straddles differ in KIND\n  from recipepath (replicated directional) and ride the\n  reserve precedent with the full three-part justification;\n  no subset-confirm warranted (cascade precedent bars\n  second sets on sub-noise). Identity 4/4; 126/126\n  determinism; atomic 607+1+5 (delta exactly 2 pins by\n  name); module_graph identical; q 0v/same-11; styletrace\n  identical. Captain firsthand: 607+1+5 green, q 0v/11w,\n  19 files byte-identical. LANDED `6c3909506` perf(rs):\n  wave-2 set-5 diet, 19 files +234/−91. Enterprise sync\n  now ≈938 med (was ≈955 pre-land, 1198 pre-wave-2; −260\n  total, 1.45× Panda). 24 diets landed. Board EMPTY (all\n  crews delivered, backlog exhausted) — wave-2 COMPLETE\n  pending HQ's morning review; held: recipepath (HELD,\n  interaction re-proof spec filed), scalarjson-original\n  (superseded by scalarreproof's landed frame).",
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOMCPDEMANDMEMO",
+   "wave": "wave-3",
+   "topic": "memo mcp demandmemo",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-3/memo-mcp-demandmemo.md",
+   "patch": null,
+   "summary": "64-entry LRU memo of searchDemand keyed on demand+limit+category+verbose; two diets + complete method rig preserved, zero filed outputs.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOMCPLAZYSINGLETON",
+   "wave": "wave-3",
+   "topic": "memo mcp lazysingleton",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-3/memo-mcp-lazysingleton.md",
+   "patch": null,
+   "summary": "lazily construct the icons search singleton so non-search tool imports pay zero index inflate (~5 MB / ~100 ms ctor); diets + byte-identical identity pair preserved, timing/suites missing.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOMCPPRETRIM",
+   "wave": "wave-3",
+   "topic": "memo mcp pretrim",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-3/memo-mcp-pretrim.md",
+   "patch": null,
+   "summary": "MCP icons build trims stored descriptions once so the query path reads the stored field as-is; diet + rig + snapshots preserved, but no timing/suite numbers were ever filed and 1 of 148 identity keys differs.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "MEMO-MEMOMCPSQFP",
+   "wave": "wave-3",
+   "topic": "memo mcp sqfp",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/wave-3/memo-mcp-sqfp.md",
+   "patch": null,
+   "summary": "gating regex proves the sentence/clause/regex pipeline is identity for single queries so extractDemands(q) returns [q] directly; diets + 63/63 identity pair preserved, counts/pairs/suites missing.",
+   "log": null,
    "filler": false
   },
   {
@@ -1651,6 +1707,68 @@
    "filler": false
   },
   {
+   "id": "PERF-W3-CATPOST",
+   "wave": "wave-3",
+   "topic": "catpost",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 0.374,
+    "pct": -99.5,
+    "pairs": "8/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-mcp/src/pipeline/icons-search-index.ts"
+   ],
+   "report": "docs/perf/waves/wave-3/report-swarm-catpost.md",
+   "patch": "docs/perf/waves/wave-3/catpost.patch",
+   "landedIn": null,
+   "summary": "MCP search({category}) browse serves prebuilt category-to-entries postings instead of a MiniSearch wildcard; browse median 0.374 ms -> 0.002 ms (-99.5%), 8/8 agree.",
+   "log": "- swarm-catpost BANK (off-scope MCP search({category}) browse):\n  prebuilt category postings skip the MiniSearch wildcard; browse\n  0.374 ms -> 0.002 ms (-99.5%) 8/8 agree, identity 42/42, suites\n  12/12 as filed in claims (crew parked mid-flight, no surviving\n  REPORT). A-variant patch canonical, B unadjudicated. Landing needs\n  integrator re-proof + captain firsthand.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W3-PREBUILTCATS",
+   "wave": "wave-3",
+   "topic": "prebuiltcats",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {
+    "ms": 0.26,
+    "pct": -97
+   },
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-3/report-swarm-prebuiltcats.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "MCP ctor category walk+sort hoist saves 0.26 ms one-time against a ~73 ms ctor; below the 15 ms LAND bar and the 5 ms floor; CUT as filed.",
+   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Ticks (empty board)",
+   "filler": false
+  },
+  {
+   "id": "PERF-W3-PRELOWER",
+   "wave": "wave-3",
+   "topic": "prelower",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": 0.41,
+    "pct": -99.9
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-mcp/src/pipeline/icons-search-index.ts"
+   ],
+   "report": "docs/perf/waves/wave-3/report-swarm-prelower.md",
+   "patch": "docs/perf/waves/wave-3/prelower.patch",
+   "landedIn": null,
+   "summary": "MCP icons index lowercases stored categories once at load so searchDemand/search filters use plain === with zero per-candidate allocs; lowers 4978/549 -> 1/4, browse 0.41 ms -> 0.36 ms.",
+   "log": "- swarm-prelower BANK (off-scope MCP icons filter path): lowercase\n  stored categories once at load, hot filters go alloc-free; lowers\n  4978/549 -> 1/4, browse 0.41 ms -> 0.36 ms, before-x3 + after-x2\n  (NOT 8-pair — deviation disclosed in the report). Landing needs\n  full 8-pair + integrator re-proof.",
+   "filler": false
+  },
+  {
    "id": "PERF-W3-RAWINDEX",
    "wave": "wave-3",
    "topic": "rawindex",
@@ -1710,6 +1828,22 @@
    "landedIn": null,
    "summary": "- Base: `6f4cf1ba392f4f7a3880b61096ccfb7004559ca7` (verified `git rev-parse HEAD`",
    "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-W3-REUSESEARCHOPTS",
+   "wave": "wave-3",
+   "topic": "reusesearchopts",
+   "kind": "recon",
+   "verdict": "CUT",
+   "effect": {},
+   "overruledBy": null,
+   "files": [],
+   "report": "docs/perf/waves/wave-3/report-swarm-reusesearchopts.md",
+   "patch": null,
+   "landedIn": null,
+   "summary": "MCP searchDemand options-object reuse showed no stable win under interleaved A/B with lottery control; CUT as filed.",
+   "log": "- swarm-reusesearchopts CUT (lottery): options-object reuse, no\n  stable win under interleaved A/B x2 + lottery control; identity\n  sha match. Closed.",
    "filler": false
   }
  ]
