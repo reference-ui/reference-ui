@@ -7,8 +7,8 @@ description: Self-contained workflow for Reference serial sync() performance (di
 
 Self-contained workflow for cutting enterprise `sync()` milliseconds with
 disconnected implementor crews, short-lived integrators, and a captain who
-lands verified arcs. Single-threaded only — multithreading is banned by HQ,
-never attempted, never briefed.
+lands verified arcs. This skill runs serial diets; parallel implementation
+follows CORES.md (unbanned 2026-09-22, stable-and-proven only).
 
 ## 1. Activate when
 

@@ -186,11 +186,12 @@ is never correct.
 
 Dead-file avoidance (shot2) is KILLED and stays killed — no pre-open
 signals, no skip logic, WORK diets only. Parallel/multithreaded compile
-is BANNED by HQ — never attempted, never briefed, never a fallback.
-Panda's 645 ms is a serial number; the race is serial efficiency. A
-wave that needs milliseconds it cannot find says so in honest
-arithmetic instead of reaching for banned tracks. Background:
-`docs/archive/VOYAGE-WARPDRIVE.md`.
+was UNBANNED by HQ on 2026-09-22 (CORES.md D1 adopted). Policy now:
+parallel proceeds ONLY under the CORES contract — stable first, every
+mechanism proven by tests, determinism gates P1–P10, measurement
+contract §5, no landing that wins at Auto and loses at Fixed(1).
+Parallel is easy to get wrong and is treated with respect; unproven
+concurrency never lands. Background: `docs/archive/VOYAGE-WARPDRIVE.md`.
 
 ## Design tracks (HQ-commissioned, wave 4)
 
