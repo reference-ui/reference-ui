@@ -1,5 +1,5 @@
 /**
- * Samply profile summarizer for `pnpm agentrs flame` (procedure agentrs-flame/2).
+ * Samply profile summarizer for `pnpm agentrs flame` (procedures agentrs-flame/2+).
  *
  * It takes a recorded Firefox Profiler JSON (.json.gz) plus the presymbolicated
  * sidecar samply emits, and joins raw addresses to symbol names without a
@@ -8,11 +8,14 @@
  * repo alone. Costs are sample weights grouped by symbolized (resource, name),
  * so same-function addresses merge; inclusive walks the prefix chain and
  * counts each sample once per function, attributing callees to callers.
- * Symbol lookup is closest-preceding RVA, the same rule profilers use.
+ * Symbol lookup is closest-preceding RVA, the same rule profilers use, and
+ * given the same-run phases file it buckets samples by timestamp into phases
+ * so per-phase wall carries its own sampled cross-check.
  */
 
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
+import { SYNC_PARTS, bucketize, checkFlameAlignment, checkReconciled, phaseWindows, renderReconcileLine, sampleWeightOf } from './phases.mjs'
 
 export function indexSidecar(sidecar) {
   for (const lib of sidecar.data) lib.symbol_table.sort((a, b) => a.rva - b.rva)
@@ -163,10 +166,20 @@ function mainThread(profile) {
   return profile.threads.find((entry) => entry.isMainThread) ?? profile.threads[0]
 }
 
-export function summarizeProfile(profile, index) {
+export function profileTotals(profile) {
+  const thread = mainThread(profile)
+  return { sampleCount: thread.samples.length, weightSum: sumWeights(thread) }
+}
+
+export function buildScan(profile, index) {
   const thread = mainThread(profile)
   const scan = { thread, libs: profile.libs, index }
-  const frames = scanFrames(scan)
+  return { thread, frames: scanFrames(scan) }
+}
+
+export function summarizeProfile(profile, index) {
+  const { thread, frames } = buildScan(profile, index)
+  const scan = { thread, libs: profile.libs, index }
   const costs = collectInclusiveCosts(scan, frames, collectSelfCosts(scan, frames))
   const bySelf = rankCosts(costs, (hit) => hit.samples)
   const byInclusive = rankCosts(costs, (hit) => hit.inclusive)
@@ -182,6 +195,103 @@ export function summarizeProfile(profile, index) {
     inclusiveTop: byInclusive.slice(0, 25),
     nativeInclusiveTop: native(byInclusive).slice(0, 20),
   }
+}
+
+function freshBucket() {
+  return { weight: 0, libs: new Map() }
+}
+
+function bucketOf(buckets, phase) {
+  let bucket = buckets.get(phase)
+  if (!bucket) {
+    bucket = freshBucket()
+    buckets.set(phase, bucket)
+  }
+  return bucket
+}
+
+function attributePhaseLeaf(bucket, thread, frames, sample) {
+  const stack = thread.samples.stack[sample]
+  if (stack === null || stack === undefined) return
+  const leaf = frames[thread.stackTable.frame[stack]]
+  bucket.libs.set(leaf.libName, (bucket.libs.get(leaf.libName) ?? 0) + sampleWeightOf(thread, sample))
+}
+
+function attributePhaseSample(ctx, sample) {
+  const phase = bucketize(ctx.times[sample], ctx.windows)
+  if (phase === 'preMain') {
+    ctx.preMain += sampleWeightOf(ctx.thread, sample)
+    return
+  }
+  if (phase === 'postWorker') {
+    ctx.postWorker += sampleWeightOf(ctx.thread, sample)
+    return
+  }
+  const bucket = bucketOf(ctx.buckets, phase)
+  bucket.weight += sampleWeightOf(ctx.thread, sample)
+  attributePhaseLeaf(bucket, ctx.thread, ctx.frames, sample)
+}
+
+function topLibOf(bucket) {
+  let top = { name: '—', weight: 0 }
+  for (const [name, weight] of bucket.libs) {
+    if (weight > top.weight) top = { name, weight }
+  }
+  return top
+}
+
+function bucketRows(buckets, phases) {
+  const rows = []
+  for (const name of ['startup', ...SYNC_PARTS, 'workerTail']) {
+    const bucket = buckets.get(name)
+    const top = bucket ? topLibOf(bucket) : { name: '—', weight: 0 }
+    rows.push({
+      name,
+      ms: phases[name] ?? null,
+      weight: bucket?.weight ?? 0,
+      topLib: top.name,
+      topLibWeight: top.weight,
+    })
+  }
+  return rows
+}
+
+// Per-phase sample buckets over the same-run phases file. Throws on clock
+// misalignment: bucketing unaligned samples would file confident garbage.
+export function summarizePhaseBuckets(profile, index, phases) {
+  const alignment = checkFlameAlignment(profile, phases)
+  if (!alignment.ok) throw new Error(`flame phases unaligned: ${alignment.reason}`)
+  const { thread, frames } = buildScan(profile, index)
+  const ctx = {
+    thread,
+    frames,
+    times: alignment.times,
+    windows: phaseWindows(phases),
+    buckets: new Map(),
+    preMain: 0,
+    postWorker: 0,
+  }
+  for (let i = 0; i < thread.samples.length; i += 1) attributePhaseSample(ctx, i)
+  return {
+    rows: bucketRows(ctx.buckets, phases.phases),
+    preMain: ctx.preMain,
+    postWorker: ctx.postWorker,
+    reconcile: checkReconciled(phases.phases),
+    processStartDeltaMs: alignment.processStartDeltaMs,
+  }
+}
+
+function phaseBucketRow(row) {
+  const ms = typeof row.ms === 'number' ? row.ms.toFixed(1) : 'n/a'
+  return `| ${row.name} | ${ms} | ${row.weight} | ${row.topLib} (${row.topLibWeight}) |`
+}
+
+function pushPhaseSection(lines, buckets) {
+  lines.push('', '## Same-run phases (agentrs-phases/1)', '', '| phase | ms | weight | top self lib (weight) |', '| --- | --- | --- | --- |')
+  for (const row of buckets.rows) lines.push(phaseBucketRow(row))
+  lines.push(`| preMain samples | — | ${buckets.preMain} | — |`)
+  lines.push(`| postWorker samples | — | ${buckets.postWorker} | — |`)
+  lines.push('', `${renderReconcileLine(buckets.reconcile)} Weight ≈ ms at the profile rate; each sample counts fully in the phase containing its timestamp.`, `Alignment: processStart ${buckets.processStartDeltaMs.toFixed(1)} ms after profile start.`, '')
 }
 
 function frameName(name) {
@@ -228,6 +338,7 @@ export function renderSummaryMarkdown(summary, meta) {
     '| --- | --- | --- |',
   )
   for (const lib of summary.libs) lines.push(libRow(lib, total))
+  if (summary.buckets) pushPhaseSection(lines, summary.buckets)
   pushFrameSection(lines, 'Top functions by self cost', summary.top, total)
   pushFrameSection(lines, 'Top self functions in the native addon', summary.nativeTop, total)
   pushFrameSection(lines, 'Top functions by inclusive cost', summary.inclusiveTop, total)

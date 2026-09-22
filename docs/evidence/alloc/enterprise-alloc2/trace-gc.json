@@ -1,0 +1,146 @@
+{
+  "summary": {
+    "events": 16,
+    "scavenges": 14,
+    "fullGcs": 2,
+    "others": 0,
+    "byKind": {
+      "Scavenge": 14,
+      "Mark-Compact": 2
+    },
+    "firstGcMs": 51,
+    "lastGcMs": 1523,
+    "maxHeapBeforeMb": 51.7,
+    "maxHeapAfterMb": 36.9
+  },
+  "events": [
+    {
+      "tMs": 51,
+      "kind": "Scavenge",
+      "heapBeforeMb": 9,
+      "heapAfterMb": 8.5,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 56,
+      "kind": "Scavenge",
+      "heapBeforeMb": 9.1,
+      "heapAfterMb": 8.9,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 74,
+      "kind": "Scavenge",
+      "heapBeforeMb": 11.1,
+      "heapAfterMb": 9.8,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 88,
+      "kind": "Scavenge",
+      "heapBeforeMb": 11.9,
+      "heapAfterMb": 10.8,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 97,
+      "kind": "Scavenge",
+      "heapBeforeMb": 12.2,
+      "heapAfterMb": 11.4,
+      "reason": "task;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 99,
+      "kind": "Mark-Compact",
+      "heapBeforeMb": 11.4,
+      "heapAfterMb": 10.7,
+      "reason": "finalize incremental marking via task; GC in old space requested",
+      "class": "full"
+    },
+    {
+      "tMs": 128,
+      "kind": "Scavenge",
+      "heapBeforeMb": 15.2,
+      "heapAfterMb": 13,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 131,
+      "kind": "Scavenge",
+      "heapBeforeMb": 15.4,
+      "heapAfterMb": 14.4,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 137,
+      "kind": "Scavenge",
+      "heapBeforeMb": 21.5,
+      "heapAfterMb": 15,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 142,
+      "kind": "Scavenge",
+      "heapBeforeMb": 22.2,
+      "heapAfterMb": 15.5,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 145,
+      "kind": "Scavenge",
+      "heapBeforeMb": 23,
+      "heapAfterMb": 16.1,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 317,
+      "kind": "Scavenge",
+      "heapBeforeMb": 23.6,
+      "heapAfterMb": 20.2,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 440,
+      "kind": "Scavenge",
+      "heapBeforeMb": 32.3,
+      "heapAfterMb": 21.5,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 452,
+      "kind": "Scavenge",
+      "heapBeforeMb": 36.5,
+      "heapAfterMb": 21.8,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 1494,
+      "kind": "Scavenge",
+      "heapBeforeMb": 45.2,
+      "heapAfterMb": 36.9,
+      "reason": "allocation failure;",
+      "class": "scavenge"
+    },
+    {
+      "tMs": 1523,
+      "kind": "Mark-Compact",
+      "heapBeforeMb": 51.7,
+      "heapAfterMb": 17.8,
+      "reason": "finalize incremental marking via task; GC in old space requested",
+      "class": "full"
+    }
+  ]
+}

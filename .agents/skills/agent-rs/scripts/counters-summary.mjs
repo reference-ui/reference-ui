@@ -12,6 +12,7 @@
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { STALL_WIDTH, numOf, orZero, writeCountersMeta } from './counters-evidence.mjs'
+import { countersPhasesLines } from './counters-phases.mjs'
 
 function fmtInt(value) {
   if (value === null || value === undefined) return 'n/a'
@@ -35,7 +36,7 @@ function loadLines(meta) {
     '',
     `Load: ${generated.styleFiles} style files + ${generated.deadFiles} dead, ${generated.cssCalls} css() calls,`,
     `${generated.recipes} recipes, seed ${plan.seed} (frozen ${plan.generator} plan, no overrides).`,
-    `Procedure: \`${meta.procedure}\`. Span leg profiles the release+counters-trace`,
+    `Procedure: \`${meta.procedure}\`${meta.procedureNote ? ` — ${meta.procedureNote}` : ''}. Span leg profiles the release+counters-trace`,
     'instrument build (exact compile window); the census leg profiles the shipped',
     'release `.node` under the interpose shim (whole worker, startup-subtracted).',
     'Worker verbatim every leg; wall time on instrument legs is unscored.',
@@ -297,6 +298,7 @@ export function renderCountersSummary(meta) {
     ...loadLines(meta),
     ...spanLines(meta.derived),
     ...censusLines(meta.censusNet),
+    ...countersPhasesLines(meta),
     ...readingLines(meta),
     ...artifactLines(meta),
   ].join('\n')

@@ -1,4 +1,4 @@
-// Census interpose shim for the Operation Flamegraph Obj 4 counters pass.
+// Census interpose shim for the Operation Flamegraph counters pass.
 // Loaded via DYLD_INSERT_LIBRARIES, it interposes 15 libc file/syscall-adjacent
 // calls (16 tuples: close plus its close$NOCANCEL twin, which is the spelling
 // libuv's uv__close_nocancel binds — node would otherwise close invisibly),
@@ -6,12 +6,20 @@
 // transferred where meaningful), and on process exit writes one JSON census to
 // the path in $COUNTERS_CENSUS_OUT (writing nothing when unset). It takes no
 // arguments and emits {"schema":1,"calls":{...}} via the real open/write/close.
+// When $COUNTERS_CENSUS_EVENTS_OUT names a second file, each call is also
+// appended to a fixed static ring (mach start tick, duration, bytes) and the
+// destructor writes the timestamped event log beside the census, so the
+// harness can bucket file IO into the same-run phase windows. Overflow past
+// the fixed buffer is counted, never silent. Recording itself is
+// unconditional (the constructor cannot gate what predates it); only the
+// destructor's file write checks the env var.
 // Because dyld applies interposition to dlsym results, any lookup that resolves
 // back to our own replacement is re-resolved through the loaded images' own
 // symbol tables, and re-entrant calls during resolution forward via a raw
 // syscall trap, so forwarding can never recurse into this file.
 
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/uio.h>
@@ -54,6 +62,27 @@ static _Atomic unsigned long long g_count[N_CALLS];
 static _Atomic unsigned long long g_total_ns[N_CALLS];
 static _Atomic unsigned long long g_bytes[N_CALLS];
 
+// Per-call event log (agentrs-phases/1): start tick, duration, bytes. The
+// buffer is fixed BSS — no malloc in the recording path — sized at 4x the
+// filed enterprise census; overflow increments g_event_dropped instead of
+// wrapping, so the harness fails loud rather than bucketing a partial log.
+#define CENSUS_EVENT_CAP 262144
+
+typedef struct {
+    uint64_t ticks;
+    uint64_t dur_ns;
+    uint64_t bytes;
+    uint8_t idx;
+    uint8_t _pad[7];
+} census_event_t;
+
+static census_event_t g_events[CENSUS_EVENT_CAP];
+static _Atomic unsigned long long g_event_count;
+static _Atomic unsigned long long g_event_dropped;
+static const char *g_events_out;
+static uint64_t g_anchor_ticks;
+static uint64_t g_anchor_unix_ms;
+
 static uint32_t g_tb_num = 0;
 static uint32_t g_tb_den = 0;
 
@@ -74,6 +103,25 @@ static uint64_t to_ns(uint64_t delta) {
 static void record_call(int idx, uint64_t t0, uint64_t t1) {
     atomic_fetch_add(&g_count[idx], 1ULL);
     atomic_fetch_add(&g_total_ns[idx], (unsigned long long)to_ns(t1 - t0));
+}
+
+// Timestamps one call into the event log. Recording is unconditional — the
+// env var gates only the destructor's file write — because interposition goes
+// live before this file's constructor runs, and any pre-constructor call
+// (dyld, other initializers) would otherwise count in the census without an
+// event. Ticks are absolute mach time, so pre-anchor events convert fine.
+// Fields stay full width (mmap lengths reach multi-GB reservations), so the
+// log sums equal the schema-1 census bit-exactly, always.
+static void record_event(int idx, uint64_t t0, uint64_t t1, unsigned long long bytes) {
+    unsigned long long slot = atomic_fetch_add(&g_event_count, 1ULL);
+    if (slot >= CENSUS_EVENT_CAP) {
+        atomic_fetch_add(&g_event_dropped, 1ULL);
+        return;
+    }
+    g_events[slot].ticks = t0;
+    g_events[slot].dur_ns = to_ns(t1 - t0);
+    g_events[slot].bytes = bytes;
+    g_events[slot].idx = (uint8_t)idx;
 }
 
 // Raw syscall trap used only while the real symbols are unavailable.
@@ -264,6 +312,16 @@ __attribute__((constructor)) static void census_init(void) {
         g_tb_num = info.numer;
         g_tb_den = info.denom;
     }
+    g_events_out = getenv("COUNTERS_CENSUS_EVENTS_OUT");
+    if (g_events_out != NULL && *g_events_out == '\0') {
+        g_events_out = NULL;
+    }
+    if (g_events_out != NULL) {
+        struct timeval tv = {0, 0};
+        gettimeofday(&tv, NULL);
+        g_anchor_unix_ms = (uint64_t)tv.tv_sec * 1000ULL + (uint64_t)(tv.tv_usec / 1000);
+        g_anchor_ticks = mach_absolute_time();
+    }
     resolve_all();
 }
 
@@ -287,7 +345,9 @@ int census_open(const char *path, int oflag, ...) {
     } else {
         rv = (int)raw_call(SYS_open, (long)path, oflag, (long)mode, 0, 0, 0);
     }
-    record_call(IDX_OPEN, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_OPEN, t0, t1);
+    record_event(IDX_OPEN, t0, t1, 0ULL);
     return rv;
 }
 
@@ -311,7 +371,9 @@ int census_openat(int fd, const char *path, int oflag, ...) {
     } else {
         rv = (int)raw_call(SYS_openat, fd, (long)path, oflag, (long)mode, 0, 0);
     }
-    record_call(IDX_OPENAT, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_OPENAT, t0, t1);
+    record_event(IDX_OPENAT, t0, t1, 0ULL);
     return rv;
 }
 
@@ -324,7 +386,9 @@ int census_close(int fd) {
     } else {
         rv = (int)raw_call(SYS_close, fd, 0, 0, 0, 0, 0);
     }
-    record_call(IDX_CLOSE, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_CLOSE, t0, t1);
+    record_event(IDX_CLOSE, t0, t1, 0ULL);
     return rv;
 }
 
@@ -341,7 +405,9 @@ int census_close_nocancel(int fd) {
     } else {
         rv = (int)raw_call(SYS_close, fd, 0, 0, 0, 0, 0);
     }
-    record_call(IDX_CLOSE, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_CLOSE, t0, t1);
+    record_event(IDX_CLOSE, t0, t1, 0ULL);
     return rv;
 }
 
@@ -354,10 +420,12 @@ ssize_t census_read(int fd, void *buf, size_t nbyte) {
     } else {
         rv = (ssize_t)raw_call(SYS_read, fd, (long)buf, (long)nbyte, 0, 0, 0);
     }
-    record_call(IDX_READ, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_READ, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_READ], (unsigned long long)rv);
     }
+    record_event(IDX_READ, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -371,10 +439,12 @@ ssize_t census_pread(int fd, void *buf, size_t nbyte, off_t offset) {
         rv = (ssize_t)raw_call(SYS_pread, fd, (long)buf, (long)nbyte,
                                (long)offset, 0, 0);
     }
-    record_call(IDX_PREAD, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_PREAD, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_PREAD], (unsigned long long)rv);
     }
+    record_event(IDX_PREAD, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -387,10 +457,12 @@ ssize_t census_readv(int fd, const struct iovec *iov, int iovcnt) {
     } else {
         rv = (ssize_t)raw_call(SYS_readv, fd, (long)iov, iovcnt, 0, 0, 0);
     }
-    record_call(IDX_READV, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_READV, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_READV], (unsigned long long)rv);
     }
+    record_event(IDX_READV, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -403,10 +475,12 @@ ssize_t census_write(int fd, const void *buf, size_t nbyte) {
     } else {
         rv = (ssize_t)raw_call(SYS_write, fd, (long)buf, (long)nbyte, 0, 0, 0);
     }
-    record_call(IDX_WRITE, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_WRITE, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_WRITE], (unsigned long long)rv);
     }
+    record_event(IDX_WRITE, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -420,10 +494,12 @@ ssize_t census_pwrite(int fd, const void *buf, size_t nbyte, off_t offset) {
         rv = (ssize_t)raw_call(SYS_pwrite, fd, (long)buf, (long)nbyte,
                                (long)offset, 0, 0);
     }
-    record_call(IDX_PWRITE, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_PWRITE, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_PWRITE], (unsigned long long)rv);
     }
+    record_event(IDX_PWRITE, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -436,10 +512,12 @@ ssize_t census_writev(int fd, const struct iovec *iov, int iovcnt) {
     } else {
         rv = (ssize_t)raw_call(SYS_writev, fd, (long)iov, iovcnt, 0, 0, 0);
     }
-    record_call(IDX_WRITEV, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_WRITEV, t0, t1);
     if (rv > 0) {
         atomic_fetch_add(&g_bytes[IDX_WRITEV], (unsigned long long)rv);
     }
+    record_event(IDX_WRITEV, t0, t1, rv > 0 ? (unsigned long long)rv : 0ULL);
     return rv;
 }
 
@@ -452,7 +530,9 @@ int census_stat(const char *path, struct stat *buf) {
     } else {
         rv = (int)raw_call(SYS_stat64, (long)path, (long)buf, 0, 0, 0, 0);
     }
-    record_call(IDX_STAT, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_STAT, t0, t1);
+    record_event(IDX_STAT, t0, t1, 0ULL);
     return rv;
 }
 
@@ -465,7 +545,9 @@ int census_lstat(const char *path, struct stat *buf) {
     } else {
         rv = (int)raw_call(SYS_lstat64, (long)path, (long)buf, 0, 0, 0, 0);
     }
-    record_call(IDX_LSTAT, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_LSTAT, t0, t1);
+    record_event(IDX_LSTAT, t0, t1, 0ULL);
     return rv;
 }
 
@@ -478,7 +560,9 @@ int census_fstat(int fd, struct stat *buf) {
     } else {
         rv = (int)raw_call(SYS_fstat64, fd, (long)buf, 0, 0, 0, 0);
     }
-    record_call(IDX_FSTAT, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_FSTAT, t0, t1);
+    record_event(IDX_FSTAT, t0, t1, 0ULL);
     return rv;
 }
 
@@ -491,7 +575,9 @@ off_t census_lseek(int fd, off_t offset, int whence) {
     } else {
         rv = (off_t)raw_call(SYS_lseek, fd, (long)offset, whence, 0, 0, 0);
     }
-    record_call(IDX_LSEEK, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_LSEEK, t0, t1);
+    record_event(IDX_LSEEK, t0, t1, 0ULL);
     return rv;
 }
 
@@ -506,10 +592,12 @@ void *census_mmap(void *addr, size_t len, int prot, int flags, int fd,
         rv = (void *)raw_call(SYS_mmap, (long)addr, (long)len, prot, flags, fd,
                               (long)offset);
     }
-    record_call(IDX_MMAP, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_MMAP, t0, t1);
     if (rv != MAP_FAILED) {
         atomic_fetch_add(&g_bytes[IDX_MMAP], (unsigned long long)len);
     }
+    record_event(IDX_MMAP, t0, t1, rv != MAP_FAILED ? (unsigned long long)len : 0ULL);
     return rv;
 }
 
@@ -522,7 +610,9 @@ int census_munmap(void *addr, size_t len) {
     } else {
         rv = (int)raw_call(SYS_munmap, (long)addr, (long)len, 0, 0, 0, 0);
     }
-    record_call(IDX_MUNMAP, t0, mach_absolute_time());
+    uint64_t t1 = mach_absolute_time();
+    record_call(IDX_MUNMAP, t0, t1);
+    record_event(IDX_MUNMAP, t0, t1, 0ULL);
     return rv;
 }
 
@@ -565,7 +655,93 @@ static int has_bytes(int idx) {
            idx == IDX_MMAP;
 }
 
+// Chunked event-log writer: the log runs to megabytes, far past the 8KB
+// census buffer, so rows format into a 64KB chunk that flushes via the real
+// write. Best effort like the census: on error the file stays partial and
+// the harness fails on the shape check, never silently.
+#define CENSUS_CHUNK 65536
+
+static char g_chunk[CENSUS_CHUNK];
+static size_t g_chunk_len;
+
+static void chunk_flush(int fd) {
+    size_t off = 0;
+    while (off < g_chunk_len) {
+        ssize_t w = real_write(fd, g_chunk + off, g_chunk_len - off);
+        if (w <= 0) {
+            break;
+        }
+        off += (size_t)w;
+    }
+    g_chunk_len = 0;
+}
+
+static void chunk_put(int fd, const char *text, size_t len) {
+    if (len >= CENSUS_CHUNK) {
+        return;
+    }
+    if (g_chunk_len + len > CENSUS_CHUNK) {
+        chunk_flush(fd);
+    }
+    for (size_t i = 0; i < len; i++) {
+        g_chunk[g_chunk_len + i] = text[i];
+    }
+    g_chunk_len += len;
+}
+
+static void chunk_printf(int fd, const char *fmt, ...) {
+    char tmp[128];
+    va_list ap;
+    va_start(ap, fmt);
+    int w = vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    va_end(ap);
+    if (w > 0 && w < (int)sizeof(tmp)) {
+        chunk_put(fd, tmp, (size_t)w);
+    }
+}
+
+static void write_events_header(int fd, unsigned long long count, unsigned long long dropped) {
+    chunk_printf(fd, "{\"schema\":1,\"calls\":[");
+    for (int i = 0; i < N_CALLS; i++) {
+        chunk_printf(fd, "%s\"%s\"", i == 0 ? "" : ",", k_names[i]);
+    }
+    chunk_printf(fd, "],\"anchor\":{\"startUnixMs\":%llu,\"startTicks\":%llu}",
+        (unsigned long long)g_anchor_unix_ms, (unsigned long long)g_anchor_ticks);
+    chunk_printf(fd, ",\"timebase\":{\"num\":%u,\"den\":%u},\"count\":%llu,\"dropped\":%llu,\"events\":[",
+        g_tb_num, g_tb_den, count, dropped);
+}
+
+static void write_events_log(void) {
+    if (g_events_out == NULL) {
+        return;
+    }
+    resolve_all();
+    if (real_open == NULL || real_write == NULL || real_close == NULL) {
+        return;
+    }
+    int fd = real_open(g_events_out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        return;
+    }
+    unsigned long long count = atomic_load(&g_event_count);
+    if (count > CENSUS_EVENT_CAP) {
+        count = CENSUS_EVENT_CAP;
+    }
+    g_chunk_len = 0;
+    write_events_header(fd, count, atomic_load(&g_event_dropped));
+    for (unsigned long long n = 0; n < count; n++) {
+        census_event_t *ev = &g_events[n];
+        chunk_printf(fd, "%s[%u,%llu,%llu,%llu]", n == 0 ? "" : ",",
+            (unsigned)ev->idx, (unsigned long long)ev->ticks,
+            (unsigned long long)ev->dur_ns, (unsigned long long)ev->bytes);
+    }
+    chunk_printf(fd, "]}\n");
+    chunk_flush(fd);
+    (void)real_close(fd);
+}
+
 __attribute__((destructor)) static void census_fini(void) {
+    write_events_log();
     const char *out = getenv("COUNTERS_CENSUS_OUT");
     if (out == NULL || *out == '\0') {
         return;

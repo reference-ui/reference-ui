@@ -16,11 +16,13 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
 import { describeShippedNative, ensureCountersNative, describeCountersNative } from './alloc-build.mjs'
-import { CENSUS_OUT_ENV, buildCountersShim, readCensus, runShimmed, subtractCensus } from './counters-census.mjs'
+import { CENSUS_EVENTS_OUT_ENV, CENSUS_OUT_ENV, bucketCensusEvents, buildCountersShim, checkEventsAgainstCensus, readCensus, readCensusEvents, runShimmed, subtractCensus } from './counters-census.mjs'
 import { buildCountersMeta, resolveCountersEvidenceDir } from './counters-evidence.mjs'
 import { writeCountersEvidence } from './counters-summary.mjs'
+import { PHASES_OUT_ENV, phaseWindows, phasesEnvFor, readPhases } from './phases.mjs'
 
-const COUNTERS_PROCEDURE = 'agentrs-counters/1'
+const COUNTERS_PROCEDURE = 'agentrs-counters/2'
+const COUNTERS_PROCEDURE_NOTE = 'same-run phase boundaries on span + census legs; timestamped libc event log bucketed into phases (v1 had whole-worker census minus a bare-node baseline, span from another run)'
 const DEFAULT_SCALE = 'enterprise'
 const WORKER_SAMPLE_MS = 10
 const TRACE_OUT_ENV = 'COUNTERS_TRACE_OUT'
@@ -115,6 +117,8 @@ function cleanEnv() {
   delete env[TRACE_OUT_ENV]
   delete env[SHIM_ENV]
   delete env[CENSUS_OUT_ENV]
+  delete env[CENSUS_EVENTS_OUT_ENV]
+  delete env[PHASES_OUT_ENV]
   return env
 }
 
@@ -139,8 +143,9 @@ function readSpanDump(spanPath) {
 async function runSpanLeg(ctx, repo, evidenceDir, countersBinary) {
   mkdirSync(evidenceDir, { recursive: true })
   const spanPath = path.join(evidenceDir, 'counters-span.json')
+  const phasesEnv = phasesEnvFor(evidenceDir, 'span-phases.json')
   const { args } = workerInvocation(ctx.benchDir, repo.dir)
-  const env = { ...cleanEnv(), [NATIVE_PATH_ENV]: countersBinary, [TRACE_OUT_ENV]: spanPath }
+  const env = { ...cleanEnv(), [NATIVE_PATH_ENV]: countersBinary, [TRACE_OUT_ENV]: spanPath, ...phasesEnv }
   console.log('[agent-rs] counters span leg: <bench worker> (release+counters-trace .node)')
   const result = await runShimmed(process.execPath, args, env)
   if (result.code !== 0) throw new Error(`span leg failed (code ${result.code})${result.error ? `: ${result.error}` : ''}`)
@@ -148,24 +153,40 @@ async function runSpanLeg(ctx, repo, evidenceDir, countersBinary) {
     sample: parseWorkerSample(result.stdout, 'span'),
     nodeArgs: [],
     command: [process.execPath, ...args],
-    env: { [NATIVE_PATH_ENV]: countersBinary, [TRACE_OUT_ENV]: spanPath },
+    env: { [NATIVE_PATH_ENV]: countersBinary, [TRACE_OUT_ENV]: spanPath, ...phasesEnv },
     span: readSpanDump(spanPath),
+    phases: readPhases(phasesEnv.REFERENCE_UI_PHASES_OUT, 'span'),
   }
+}
+
+function bucketCensusRun(censusPath, eventsPath, phases) {
+  const census = readCensus(censusPath, 'census')
+  const log = readCensusEvents(eventsPath, 'census')
+  const bucketed = bucketCensusEvents(log, phaseWindows(phases))
+  checkEventsAgainstCensus(log, bucketed, census)
+  return { census, events: { file: 'census-events.json', count: log.count, dropped: log.dropped ?? 0 }, bucketed }
 }
 
 async function runCensusLeg(ctx, repo, evidenceDir, shim) {
   const censusPath = path.join(evidenceDir, 'census.json')
+  const eventsPath = path.join(evidenceDir, 'census-events.json')
+  const phasesEnv = phasesEnvFor(evidenceDir, 'census-phases.json')
   const { args } = workerInvocation(ctx.benchDir, repo.dir)
-  const env = { ...cleanEnv(), [SHIM_ENV]: shim.dylib, [CENSUS_OUT_ENV]: censusPath }
+  const env = { ...cleanEnv(), [SHIM_ENV]: shim.dylib, [CENSUS_OUT_ENV]: censusPath, [CENSUS_EVENTS_OUT_ENV]: eventsPath, ...phasesEnv }
   console.log('[agent-rs] counters census leg: <bench worker> (shipped .node + interpose shim)')
   const result = await runShimmed(process.execPath, args, env)
   if (result.code !== 0) throw new Error(`census leg failed (code ${result.code})${result.error ? `: ${result.error}` : ''}`)
+  const phases = readPhases(phasesEnv.REFERENCE_UI_PHASES_OUT, 'census')
+  const bucketed = bucketCensusRun(censusPath, eventsPath, phases)
   return {
     sample: parseWorkerSample(result.stdout, 'census'),
     nodeArgs: [],
     command: [process.execPath, ...args],
-    env: { [SHIM_ENV]: shim.dylib, [CENSUS_OUT_ENV]: censusPath },
-    census: readCensus(censusPath, 'census'),
+    env: { [SHIM_ENV]: shim.dylib, [CENSUS_OUT_ENV]: censusPath, [CENSUS_EVENTS_OUT_ENV]: eventsPath, ...phasesEnv },
+    census: bucketed.census,
+    events: bucketed.events,
+    bucketed: bucketed.bucketed,
+    phases,
   }
 }
 
@@ -216,6 +237,9 @@ function printCountersReport(evidenceDir, meta) {
   console.log(`  net opens: ${opens}, net reads: ${reads} (${readBytes} bytes)`)
   const events = meta.derived.events ?? {}
   console.log(`  span: ${reportCell(meta.derived.instructions)} instr, IPC ${reportCell(meta.derived.ipc)}, ${reportCell(events.syscallsUnix)} unix syscalls`)
+  if (meta.spanPhases?.reconcile) {
+    console.log(`  phases: compile ${meta.spanPhases.phases.compile.toFixed(1)} ms vs span ${meta.spanLeg.spanWallMs.toFixed(1)} ms (${meta.spanPhases.reconcile.ok ? 'RECONCILED' : 'UNRECONCILED'})`)
+  }
   console.log('')
 }
 
@@ -228,7 +252,7 @@ async function captureCounters(ctx, evidenceDir, natives) {
       const censusLeg = await runCensusLeg(ctx, repo, evidenceDir, shim)
       const startup = await runStartupBaseline(evidenceDir, shim)
       const legs = { span: spanLeg, census: censusLeg, startup }
-      const meta = buildCountersMeta({ ...ctx, procedure: COUNTERS_PROCEDURE }, repo, legs, {
+      const meta = buildCountersMeta({ ...ctx, procedure: COUNTERS_PROCEDURE, procedureNote: COUNTERS_PROCEDURE_NOTE }, repo, legs, {
         shipped: natives.shipped,
         counters: describeCountersNative(ctx.rsDir, natives.countersBinary, natives.inputsHash),
         shim,

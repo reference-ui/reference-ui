@@ -1,0 +1,250 @@
+{
+  "procedure": "agentrs-alloc/2",
+  "procedureNote": "same-run phase boundaries on GC + trace legs; span read against the trace run's own compile phase (v1 had post-import syncMs plus another run's span)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "3b7bc58391a3",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-AQ9Lqr",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "gcLeg": {
+    "sample": {
+      "syncMs": 1194.722008,
+      "rssBefore": 100241408,
+      "rssPeak": 364449792,
+      "rssAfter": 341393408
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-AQ9Lqr",
+      "10"
+    ],
+    "gc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 51,
+      "lastGcMs": 1270,
+      "maxHeapBeforeMb": 51.7,
+      "maxHeapAfterMb": 37
+    }
+  },
+  "gcPhases": {
+    "file": "gc-phases.json",
+    "phases": {
+      "startup": 101.155038,
+      "config": 19.269520999999997,
+      "scan": 358.92292199999997,
+      "evaluate": 5.581761000000029,
+      "compile": 762.6045290000001,
+      "publish": 48.215566999999965,
+      "syncTotal": 1194.636939,
+      "workerTotal": 1295.794929,
+      "workerTail": 0.002951999999822874,
+      "syncResidual": 0.04263900000000831
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    }
+  },
+  "tracePhases": {
+    "file": "trace-phases.json",
+    "phases": {
+      "startup": 99.867385,
+      "config": 18.480173000000008,
+      "scan": 353.274495,
+      "evaluate": 5.621928999999966,
+      "compile": 1024.375505,
+      "publish": 46.839590000000044,
+      "syncTotal": 1450.567084,
+      "workerTotal": 1550.437812,
+      "workerTail": 0.0033429999998588755,
+      "syncResidual": 1.9753920000000562
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "compileVsSpanMs": {
+      "compile": 1024.375505,
+      "span": 994.1685249999999,
+      "delta": 30.206980000000044
+    }
+  },
+  "traceLeg": {
+    "sample": {
+      "syncMs": 1450.642635,
+      "rssBefore": 101310464,
+      "rssPeak": 356057088,
+      "rssAfter": 333025280
+    },
+    "nodeArgs": [
+      "--trace-gc"
+    ],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "--trace-gc",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-alloc-AQ9Lqr",
+      "10"
+    ],
+    "env": {
+      "REFERENCE_UI_NATIVE_PATH": "/Users/ryn/Developer/reference-ui/packages/reference-rs/dist/native-trace/a33f89c47dea/virtual-native.darwin-x64.node",
+      "ALLOC_TRACE_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/alloc/enterprise-alloc2/rust-alloc.json",
+      "REFERENCE_UI_PHASES_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/alloc/enterprise-alloc2/trace-phases.json"
+    },
+    "traceGc": {
+      "events": 16,
+      "scavenges": 14,
+      "fullGcs": 2,
+      "others": 0,
+      "byKind": {
+        "Scavenge": 14,
+        "Mark-Compact": 2
+      },
+      "firstGcMs": 51,
+      "lastGcMs": 1523,
+      "maxHeapBeforeMb": 51.7,
+      "maxHeapAfterMb": 36.9
+    },
+    "window": {
+      "startUnixMs": 1789990862197,
+      "endUnixMs": 1789990863191,
+      "spawnEpochMs": 1789990861686,
+      "spawnLatencyBoundMs": 60,
+      "inWindowFull": 0,
+      "headFull": 1,
+      "tailFull": 1,
+      "edgeFull": 0,
+      "placements": [
+        {
+          "tMs": 99,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "head"
+        },
+        {
+          "tMs": 1523,
+          "kind": "Mark-Compact",
+          "class": "full",
+          "placement": "tail"
+        }
+      ]
+    },
+    "rustSpan": {
+      "wallMs": 994.1685249999999,
+      "startUnixMs": 1789990862197,
+      "endUnixMs": 1789990863191,
+      "allocBytes": 992618628,
+      "allocBlocks": 8259538,
+      "freeBytes": 984175525,
+      "freeBlocks": 8258147,
+      "liveAtEnter": 6155360,
+      "liveAtExit": 14598463,
+      "netGrowth": 8443103,
+      "peakLive": 159569554,
+      "reallocs": 1117428,
+      "requestJsonBytes": 6153775,
+      "fileCount": 15122,
+      "filesContentBytes": 4358806,
+      "filesPathBytes": 1303532,
+      "zoneAtEnter": {
+        "sizeAllocated": 86376448,
+        "sizeInUse": 25034816,
+        "slack": 61341632
+      },
+      "zoneAtExit": {
+        "sizeAllocated": 95911936,
+        "sizeInUse": 40156416,
+        "slack": 55755520
+      }
+    },
+    "rustProcess": {
+      "spans": 1,
+      "allocBytes": 998776166,
+      "allocBlocks": 8259558,
+      "freeBytes": 984177703,
+      "freeBlocks": 8258161,
+      "liveBytes": 14598463,
+      "peakLiveBytes": 165724914
+    }
+  },
+  "node": {
+    "version": "v24.16.0"
+  },
+  "nativeShipped": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "nativeTrace": {
+    "path": "packages/reference-rs/dist/native-trace/a33f89c47dea/virtual-native.darwin-x64.node",
+    "sha256": "92deddbdaca30d2bf29e4b1b718fc6bfaf41705293d7fdb041f8c780d3de8f89",
+    "profile": "release+alloc-trace",
+    "builtVia": "napi build --release --features alloc-trace",
+    "inputsHash": "a33f89c47deac87ad7009765e170b3e020993563478e75b14b6a74d4fd17463e",
+    "bytes": 8989800
+  },
+  "platform": "darwin-x64",
+  "createdAt": "2026-09-21T11:41:03.275Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/alloc-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/alloc.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-census.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/counters-interpose.c",
+    " M .agents/skills/agent-rs/scripts/counters-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/counters.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/flame.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj2-phases.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/measure/worker.ts",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    " M packages/reference-neo/src/sync/index.ts",
+    "?? .agents/skills/agent-rs/scripts/alloc-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters-phases.mjs",
+    "?? .agents/skills/agent-rs/scripts/decompose-render.mjs"
+  ]
+}

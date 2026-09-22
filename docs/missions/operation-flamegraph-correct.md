@@ -67,8 +67,10 @@ checks. Triage by the captain confirmed the code mechanics of issues
       republished summaries from the preserved raw profile. (landed
       2026-09-21, verified firsthand, procedure agentrs-flame/2,
       republished at docs/evidence/flamegraph/enterprise-flame2/)
-- [ ] Same-run phase boundaries across all legs; reconciled
-      decomposition replacing recon §2.
+- [x] Same-run phase boundaries across all legs; reconciled
+      decomposition replacing recon §2. (landed 2026-09-21, verified
+      firsthand: flame/3 + counters/2 + alloc/2 + phases/1, filed at
+      docs/evidence/phases/enterprise-phases1/)
 - [ ] Corrected counters derivations (stall withdrawn, thread
       birth/death handled).
 - [ ] Independent RSS sampler behind a versioned bench procedure.

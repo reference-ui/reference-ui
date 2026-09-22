@@ -19,6 +19,7 @@ import { withCpuGate, readLocks } from '../../test-core/scripts/cpu-gate.mjs'
 import { runFlameCommand } from './flame.mjs'
 import { runAllocCommand } from './alloc.mjs'
 import { runCountersCommand } from './counters.mjs'
+import { runDecomposeCommand } from './decompose.mjs'
 import {
   findSourceFiles,
   inspectFiles,
@@ -549,6 +550,7 @@ function printHelp() {
   \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to docs/evidence/flamegraph/)
   \x1b[32malloc\x1b[0m                     File an allocation report of the real sync path (evidence to docs/evidence/alloc/)
   \x1b[32mcounters\x1b[0m                  File a hardware-counters pass of the real sync path (evidence to docs/evidence/counters/)
+  \x1b[32mdecompose\x1b[0m                 Join flame+counters+alloc bundles into the reconciled phase decomposition (docs/evidence/phases/)
   \x1b[32mfmt\x1b[0m                        Format Rust (cargo fmt) and JS/TS (prettier)
   \x1b[32mstatus\x1b[0m                     Display toolchain versions, native binary state, and CPU gate locks
   \x1b[32mhelp, --help\x1b[0m               Show this help message
@@ -687,6 +689,11 @@ async function main() {
       if (buildCode !== 0) process.exit(buildCode)
     }
     const code = await runCountersCommand(countersArgs, repoRoot, rsDir)
+    process.exit(code)
+  }
+
+  if (command === 'decompose') {
+    const code = await runDecomposeCommand(args.slice(1), repoRoot)
     process.exit(code)
   }
 
