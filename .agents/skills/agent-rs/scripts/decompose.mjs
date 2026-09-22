@@ -18,7 +18,6 @@ import { verifyAllocBundle, verifyCountersBundle, verifyFlameBundle } from './de
 import { SYNC_PARTS } from './phases.mjs'
 
 const DECOMPOSE_PROCEDURE = 'agentrs-phases/1'
-const DECOMPOSE_PROCEDURE_NOTE = 'reconciled same-run decomposition joining flame/3 + counters/2 + alloc/2 bundles; filed numbers re-derived from bundle raws before joining'
 const MIN_VERSIONS = { flame: 3, counters: 2, alloc: 2 }
 const PHASE_NAMES = ['startup', ...SYNC_PARTS, 'workerTail', 'syncTotal', 'workerTotal']
 
@@ -211,6 +210,17 @@ function joinDecomposition(metas, verified) {
   }
 }
 
+function shortProcedure(procedure) {
+  return String(procedure).replace(/^agentrs-/, '')
+}
+
+function decomposeProcedureNote(metas) {
+  const legs = [metas.flame.procedure, metas.counters.procedure, metas.alloc.procedure]
+    .map(shortProcedure)
+    .join(' + ')
+  return `reconciled same-run decomposition joining ${legs} bundles; filed numbers re-derived from bundle raws before joining`
+}
+
 function buildChecks(metas, verified, worstDelta) {
   const generated = metas.flame.generated
   const eventCount = metas.counters.censusPhases.events.count
@@ -253,7 +263,7 @@ function writeDecomposeEvidence(evidenceDir, repoRoot, options, metas, decomp) {
   }
   const meta = {
     procedure: DECOMPOSE_PROCEDURE,
-    procedureNote: DECOMPOSE_PROCEDURE_NOTE,
+    procedureNote: decomposeProcedureNote(metas),
     scale: decomp.scale,
     pin: decomp.pin,
     plan: decomp.load.plan,
