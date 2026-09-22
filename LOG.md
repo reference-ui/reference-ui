@@ -54,8 +54,19 @@ otherwise.
   SUPERSEDES repro2 ≈910. Gap to 700 ≈235+, unreachable
   single-threaded — no further serial re-seed can bridge it.
   Product/architecture decision flagged for HQ.
-- Slots: T1 (swarm-recipeproof) briefed for dispatch on this tip;
-  6 held (backlog exhausted past T1).
+- Slots: T1 dispatched (swarm-recipeproof, isolated worktree, base
+  `8543174`); 6 held (backlog exhausted past T1).
+- T1 recipeproof CUT (HELD→CUT): in-composition −12.67/−1.34% 6/8
+  (ex-run-1 −13.38 exact, pairmed −15.82) reproduces banked −13.05 —
+  but three-tip sign lottery (−13.05 → +5.42/+7.80 repl → −12.67)
+  vs ~1–3 ms mechanism ceiling + regime flips at every boundary =
+  allocator lottery, not a stable win. Full proof (identity 4/4
+  full-hash, 28/28 determinism, suites delta exactly 2 pins, q 0v/0w).
+  Filing: `docs/perf/waves/wave-3/report-swarm-recipeproof.md`.
+- Backlog EMPTY: T1 was the only topic; pushstring interning stays
+  filler (no soundness design filed). Ceiling 917/935 stands; gap
+  ~235+ unreachable serial. Wave-3 closeout next, then PARKED for HQ.
+- Slots: 0/7 — all held (repro + T1 crews done, roster zero).
 
 ## Ticks (empty board)
 
@@ -64,3 +75,9 @@ otherwise.
   claims quiet since intset5 LAND, index 82 entries). Opened wave 3,
   dispatched swarm-repro3 (isolated worktree) for fresh flames +
   burndown + re-seed; health tick armed 2x/hourly. Slots 1/7, 6 held.
+- Tick repro3-landed: RESEED verified (546-line report, reconciled
+  x2, lock clean) and landed as `8543174` (15 files, index 83).
+  Backlog = T1 ONLY; dispatched swarm-recipeproof, 6 slots held.
+  Ceiling 917/935 supersedes repro2 910; 700 unreachable serial
+  by ~235+ — flagged for HQ. (This tick + slots line ride the
+  next landing commit.)
