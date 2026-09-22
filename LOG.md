@@ -245,6 +245,21 @@ diets); scan voyage opens separately after closeout lands.
   (index 100, MEMO). Design eligible for HQ accept/decline again.
 - Slots: 0/7 — ALL HELD: diet backlog EMPTY, merger gated on HQ
   accept of the verified design, N1 held — this entry is the proof.
+- HQ ACCEPTED the verified F1 design ("let's build it — F1 + the scan
+  banks, get it all in"). CORRECTION filed back: no scan BANKs were
+  pending (T1 already landed) — the pending banks are compile-side.
+  Dispatched (2/7): formula1-impl (isolated, base 0939615d5) —
+  implement B'' whole-document (F2 cancelled/superseded, no artifact;
+  its scope lives in §§2–4), §6.7 bars, ≥5 warmups, §6.8 battery;
+  intbank4 (isolated, same base) — sum-confirm AUTHCSS + RECIPEPATH +
+  SCALARJSON (merged-shape requirement + HOLD fallback for scalarjson,
+  cloneplasma/sysprefix/keys2 stacking adjudications briefed).
+  Fences disjoint by file (native/scan/types/scanner.ts vs
+  resolve/emitter/serializer). CATPOST + PRELOWER NOT briefed: MCP
+  surface, off-scope for a sync voyage + same-file merge — needs HQ
+  scope ruling (asked, standing by).
+- Slots: 2/7 (formula1-impl, intbank4), 5 held — diet backlog EMPTY,
+  MCP banks await scope ruling, N1 held — this entry is the proof.
 
 ## Ticks (empty board)
 
