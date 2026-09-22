@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 mod store;
 
-pub use store::{drain, release};
+pub use store::{DrainedRetention, drain, release};
 
 /// One read covers every file under 64KB (the M4 census: 100% of enterprise).
 const SCAN_CHUNK: usize = 65536;
@@ -33,6 +33,16 @@ pub struct ScanRequest {
     /// True adds the retention manifest. Test-only; production omits it.
     #[serde(default)]
     pub manifest: bool,
+    /// True when the enumerator walked every in-scope path, so compile may
+    /// skip its union backfill walk. Set only by the agreed-subset glob gate
+    /// (same IGNORE set, extension gate, scope); a false claim silently drops
+    /// files the enumeration missed, so direct callers leave this false.
+    #[serde(default)]
+    pub walk_complete: bool,
+    /// Include scope the enumeration covered; compile skips its backfill only
+    /// when its own scope matches this list element-for-element.
+    #[serde(default)]
+    pub include: Vec<String>,
 }
 
 fn default_sep() -> String {
@@ -108,7 +118,7 @@ pub fn scan(request: &ScanRequest) -> ScanResponse {
     let ScanSinks { hits, retained } = sinks;
     let retained_count = retained.len();
     let manifest = request.manifest.then(|| manifest_of(&retained));
-    let retention_token = store::mint(request.retain, retained);
+    let retention_token = store::mint(request, retained);
     ScanResponse {
         hits,
         retention_token,

@@ -154,7 +154,7 @@ fn strip_borrowed<'a>(root: &str, path: &'a str) -> Option<&'a str> {
 }
 
 /// Normalize a candidate path: forward slashes, no `./` prefix or trailing `/`.
-fn normalize_candidate(text: &str) -> String {
+pub(crate) fn normalize_candidate(text: &str) -> String {
     trim_slashes(&text.replace('\\', "/"))
 }
 

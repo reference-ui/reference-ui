@@ -84,7 +84,7 @@ export interface TestCompileResult {
   stylesheet: string
   portableStylesheet?: string
   runtime: unknown
-  wants?: Array<{ prop: string; value: unknown }>
+  wants?: Array<{ prop: string; value: unknown; file?: string }>
   diagnostics: Array<{
     severity: string
     message: string
@@ -116,6 +116,8 @@ interface AtomicTestModule {
     sep: string
     retain?: boolean
     manifest?: boolean
+    walkComplete?: boolean
+    include?: string[]
   }): Promise<TestScanResponse>
   compile(request: TestCompileRequest): Promise<TestCompileResult>
   releaseScan(request: { retentionToken: number }): Promise<{ released: boolean }>

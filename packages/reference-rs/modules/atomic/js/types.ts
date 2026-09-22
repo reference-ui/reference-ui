@@ -75,6 +75,18 @@ export interface ScanRequest {
    * differential. Test-only: production omits it at zero hashing cost.
    */
   manifest?: boolean
+  /**
+   * True when the caller enumerated every in-scope path, so compile may skip
+   * its union backfill walk. Set only by the agreed-subset glob check (same
+   * IGNORE set, extension gate, scope); a false claim silently drops files.
+   * Defaults to false: direct callers keep the walk.
+   */
+  walkComplete?: boolean
+  /**
+   * Include scope the enumeration covered; compile skips its backfill only
+   * when its own scope matches this list element-for-element.
+   */
+  include?: string[]
 }
 
 /** One needle-hit: the verbatim path plus the bytes for the TS confirm. */
