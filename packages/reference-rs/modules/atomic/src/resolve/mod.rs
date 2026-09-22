@@ -130,8 +130,8 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
         when: want.when.clone(),
         important: want.important,
     });
-    let key_for_want = want_key(session, &want.prop, atom_value_to_json(&want.value));
     if !canon::is_known_style_prop(&want.prop) {
+        let key_for_want = want_key(session, &want.prop, atom_value_to_json(&want.value));
         session.emit(
             key_for_want,
             ResolveOutcome::Rejected {
@@ -143,20 +143,32 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_>) -> Vec<A
         );
         return Vec::new();
     }
-    let Some(clean_when) = lower_conditions(&want.when, &key_for_want, session) else {
+    let Some(clean_when) = lower_conditions(want, session) else {
         return Vec::new();
     };
     let pairs = expand_or_passthrough(want, session);
 
-    let mut atoms = Vec::with_capacity(pairs.len());
+    push_resolved_atoms(pairs, clean_when, want.important, session)
+}
+
+/// Push one atom per successful pair. The first success moves the lowered
+/// conditions; later ones clone the first atom's identical copy, saving
+/// one condition clone per want over cloning into every atom.
+fn push_resolved_atoms(
+    pairs: Vec<(Box<str>, AtomValue)>,
+    clean_when: SmallVec<[When; 2]>,
+    important: bool,
+    session: &mut ResolveSession<'_>,
+) -> Vec<Atom> {
+    let mut atoms: Vec<Atom> = Vec::with_capacity(pairs.len());
+    let mut carried = Some(clean_when);
     for (prop, val) in pairs {
         if let Some(final_val) = resolve_atom_value(&prop, val, session) {
-            atoms.push(Atom::new(
-                prop,
-                final_val,
-                clean_when.clone(),
-                want.important,
-            ));
+            let when = match carried.take() {
+                Some(w) => w,
+                None => atoms[0].conditions.clone(),
+            };
+            atoms.push(Atom::new(prop, final_val, when, important));
         }
     }
     atoms
@@ -243,20 +255,17 @@ fn is_runtime_owned(prop: &str) -> bool {
     RUNTIME_OWNED_PROPS.contains(&prop)
 }
 
-fn lower_conditions(
-    when: &[Box<str>],
-    key: &Option<OwnedLookupKey>,
-    session: &mut ResolveSession<'_>,
-) -> Option<SmallVec<[When; 2]>> {
+fn lower_conditions(want: &Want, session: &mut ResolveSession<'_>) -> Option<SmallVec<[When; 2]>> {
     let mut out = SmallVec::new();
     let mut known = true;
-    for raw in when {
+    for raw in want.when.iter() {
         match lower_when(raw, session.system) {
             LoweredWhen::Skip => {}
             LoweredWhen::Known(cond) => out.push(cond),
             LoweredWhen::Unknown => {
+                let key = want_key(session, &want.prop, atom_value_to_json(&want.value));
                 session.emit(
-                    key.clone(),
+                    key,
                     ResolveOutcome::Rejected {
                         code: DiagnosticCode::UnknownCondition,
                         detail: ResolveDetail::Declaration(DeclarationDetail::Name(

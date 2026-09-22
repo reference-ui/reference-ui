@@ -20,6 +20,30 @@ pub fn collapse_whitespace(value: &str) -> String {
     collapse.finish()
 }
 
+/// Borrowed fast path: without structural whitespace, quotes, or non-ASCII
+/// bytes the collapse is the identity, so borrow the input. Byte-exact:
+/// ASCII structural whitespace is only `0x09-0x0D` + space (lexical L1 —
+/// every other member is above U+7F, i.e. bytes `>= 0x80` in UTF-8).
+pub fn collapse_whitespace_cow(value: &str) -> std::borrow::Cow<'_, str> {
+    let plain = !value
+        .bytes()
+        .any(|b| b >= 0x80 || b == b'"' || b == b'\'' || matches!(b, 0x09..=0x0d | 0x20));
+    if plain {
+        std::borrow::Cow::Borrowed(value)
+    } else {
+        std::borrow::Cow::Owned(collapse_whitespace(value))
+    }
+}
+
+/// Collapse an owned box, reusing its buffer when the value is already
+/// plain. The hot string path calls this instead of copy-then-collapse.
+pub fn collapse_boxed(value: Box<str>) -> Box<str> {
+    match collapse_whitespace_cow(&value) {
+        std::borrow::Cow::Borrowed(_) => value,
+        std::borrow::Cow::Owned(o) => o.into_boxed_str(),
+    }
+}
+
 /// One collapse pass: the output plus the currently open quote, if any.
 struct Collapse {
     out: String,
@@ -119,5 +143,41 @@ mod tests {
     fn empty_and_plain_values_pass_through() {
         assert_eq!(collapse_whitespace(""), "");
         assert_eq!(collapse_whitespace("red"), "red");
+    }
+
+    #[test]
+    fn cow_fast_path_agrees_with_slow_path() {
+        let corpus = [
+            "",
+            "red",
+            "1px  solid   red",
+            "a\tb\nc",
+            "\"a  b\"",
+            "'Fira  Code', monospace",
+            "a\u{0b}b",
+            "a\u{85}b",
+            "a\u{a0}b",
+            "a\u{3000}b",
+            "pre  \"q  q\"  post",
+        ];
+        for raw in corpus {
+            assert_eq!(
+                collapse_whitespace_cow(raw).as_ref(),
+                collapse_whitespace(raw),
+                "{raw:?}"
+            );
+        }
+        assert!(matches!(
+            collapse_whitespace_cow("red"),
+            std::borrow::Cow::Borrowed(_)
+        ));
+        assert!(matches!(
+            collapse_whitespace_cow("a  b"),
+            std::borrow::Cow::Owned(_)
+        ));
+        assert!(matches!(
+            collapse_whitespace_cow("a\u{a0}b"),
+            std::borrow::Cow::Owned(_)
+        ));
     }
 }

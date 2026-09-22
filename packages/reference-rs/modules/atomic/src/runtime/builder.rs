@@ -193,22 +193,29 @@ impl<'a> PlanBuilder<'a> {
 
         for decl in decls {
             let lookup_key = decl.lookup_key(self.system);
-            if !seen_keys.insert(lookup_key.clone()) {
+            // Borrowed membership probe: duplicates skip with zero clone.
+            if seen_keys.contains(&lookup_key) {
                 continue;
             }
 
             let declarations = self.resolve_entry(decl, diet);
-            if !declarations.is_empty() {
-                keys.push(lookup_key);
-                plans.push(RuntimeStylePlan {
-                    system: self.system.to_string(),
-                    when: decl.when.clone(),
-                    prop: decl.prop.clone(),
-                    value: decl.value.clone(),
-                    important: decl.important,
-                    declarations,
-                });
+            if declarations.is_empty() {
+                // Failed decls still join the seen set (same skip-next
+                // behavior), moving the owned key: zero clone.
+                seen_keys.insert(lookup_key);
+                continue;
             }
+            // Success needs the key twice (set + carried keys): one clone.
+            seen_keys.insert(lookup_key.clone());
+            keys.push(lookup_key);
+            plans.push(RuntimeStylePlan {
+                system: self.system.to_string(),
+                when: decl.when.clone(),
+                prop: decl.prop.clone(),
+                value: decl.value.clone(),
+                important: decl.important,
+                declarations,
+            });
         }
 
         (plans, keys)

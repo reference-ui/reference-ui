@@ -113,7 +113,12 @@ pub fn resolve_numeric_value(prop: &str, num_str: &str) -> CssValue {
     } else {
         CssValue::Dimension {
             class_stem: num_str.into(),
-            css_val: format!("{num_str}px").into_boxed_str(),
+            css_val: {
+                let mut s = String::with_capacity(num_str.len() + 2);
+                s.push_str(num_str);
+                s.push_str("px");
+                s.into_boxed_str()
+            },
         }
     }
 }
@@ -160,7 +165,7 @@ fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_>) -> Opt
 fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_>) -> Option<CssValue> {
     // SPEC-V2-14: structural runs collapse before anything else reads the
     // string, so spaced twins share one numeric parse and one atom.
-    let collapsed: Box<str> = super::normalize::collapse_whitespace(&s).into_boxed_str();
+    let collapsed: Box<str> = super::normalize::collapse_boxed(s);
     // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
     // The magnitude fence bites only where canonicalization applies: color
     // props keep their string passthrough for out-of-range spellings.
