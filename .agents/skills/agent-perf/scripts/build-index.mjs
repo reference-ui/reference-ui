@@ -58,6 +58,7 @@ const LANDED_FILES = {
   'PERF-W2-STAGEAUDIT': ["packages/reference-rs/modules/atomic/src/extract/resolver/staging.rs","packages/reference-rs/modules/atomic/src/stream.rs"],
   'PERF-W2-BAGDEFER': ["packages/reference-rs/modules/atomic/src/extract/resolver/mod.rs","packages/reference-rs/modules/atomic/src/extract/resolver/source.rs"],
   'PERF-W2-HARVESTPHASE': ["packages/reference-rs/modules/atomic/src/extract/harvest/mint/mod.rs"],
+  'PERF-W3-RAWINDEX': ["packages/reference-mcp/src/pipeline/icons-search-index.ts","packages/reference-mcp/tsup.config.ts"],
 };
 // Crew verdict -> final disposition: these diets are IN THE TREE even when the
 // crew verdict says CUT (captain override, reserve precedent).
@@ -74,6 +75,7 @@ const LANDED_IN = {
   'PERF-W2-ANALYSISB': 'set-4/e360915f7', 'PERF-W2-PROGRAMSFX': 'set-5/6c3909506',
   'PERF-W2-WANTCTX': 'set-5/6c3909506', 'PERF-W2-STAGEAUDIT': 'set-5/6c3909506',
   'PERF-W2-BAGDEFER': 'set-5/6c3909506', 'PERF-W2-HARVESTPHASE': 'set-5/6c3909506',
+  'PERF-W3-RAWINDEX': 'solo/uncommitted',
 };
 
 const slugWords = (s) => s.replace(/-/g, ' ');
