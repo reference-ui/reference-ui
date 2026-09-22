@@ -260,6 +260,23 @@ diets); scan voyage opens separately after closeout lands.
   scope ruling (asked, standing by).
 - Slots: 2/7 (formula1-impl, intbank4), 5 held — diet backlog EMPTY,
   MCP banks await scope ruling, N1 held — this entry is the proof.
+- swarm-intbank4 CUT-WITH-CAUSE (land nothing) — ACCEPTED, integrator
+  COMMENDED. The briefed "3 pending BANKs" were all previously ruled
+  by certified closeout b8a75b0bd (verified firsthand: AUTHCSS
+  yielded-subsumed/race, RECIPEPATH HELD→CUT/lottery, SCALARJSON
+  superseded/landed; all three overruledBy mirrors confirmed).
+  Captain's bad dispatch — full own: briefed from `landedIn: None`
+  without checking overruledBy + closeout. Integrator refused the
+  re-litigation with full receipts (per-member evidence, file:line
+  collisions, what-was-not-done, zero timed runs, tree untouched,
+  fences honored). New rule: integrator briefs check overruledBy +
+  closeout rulings before dispatch — None ≠ pending. Filed
+  `docs/perf/waves/wave-4/integrate-intbank4.md` (index 101, CUT).
+  Confirm: sync-ground banked remainder is ZERO by receipt; the only
+  unlanded banks anywhere are CATPOST + PRELOWER (MCP, still gated
+  on integrator + HQ scope decision per the closeout).
+- Slots: 1/7 (formula1-impl), 6 held — diet backlog EMPTY, MCP
+  banks await scope ruling, N1 held — this entry is the proof.
 
 ## Ticks (empty board)
 
