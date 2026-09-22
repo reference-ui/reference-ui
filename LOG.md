@@ -35,10 +35,32 @@ otherwise.
 - **Filings**: `docs/perf/waves/wave-2/` (reports, patches, INTEGRATEs).
 - **Flames**: `docs/evidence/flamegraph/enterprise-repro*/`.
 
-## Wave 3 — NOT STARTED (opens with fresh flames on `6c3909506`)
+## Wave 3 — IN PROGRESS (opened 2026-09-22, tip `6f4cf1b`)
 
-(No entries yet. The next wave starts with a repro crew per VOYAGE.md.)
+- Base-pin: `6f4cf1ba3` (RS tree == wave-2 set-5 `6c39095`; +3 commits are
+  docs/skill/index/flame-evidence/bench-snapshot only, zero packages/ drift).
+- Repro LANDED: swarm-repro3 RESEED (4a sync 974.67/comp 520.03,
+  4b 972.65/520.09, reconciled x2; lock clean, sha unchanged).
+  Evidence: `docs/evidence/flamegraph/enterprise-repro4{a,b}/`;
+  filing: `docs/perf/waves/wave-3/report-swarm-repro3.md`.
+- Burndown: compile −59/−56 carries the wave-2 win (−63.3 expected,
+  −56/−58 flame; +8/+10 diffuse memmove offset, no caller >6);
+  scan/config flat. All 24 diets mechanism-verified or sub-noise
+  as filed; 26 CUTs stand; both heavy tracks dead.
+- Ranked backlog = ONE topic: T1 recipepath re-proof (HELD BANK,
+  room 12–17 intact; must reproduce banked −13.05 in-composition
+  AND explain the +5.42/+7.80 contras, else HELD→CUT).
+- Honest arithmetic: fresh ceiling ≈917 fantasy / ≈935 realistic
+  SUPERSEDES repro2 ≈910. Gap to 700 ≈235+, unreachable
+  single-threaded — no further serial re-seed can bridge it.
+  Product/architecture decision flagged for HQ.
+- Slots: T1 (swarm-recipeproof) briefed for dispatch on this tip;
+  6 held (backlog exhausted past T1).
 
 ## Ticks (empty board)
 
 - Tick 09:20: board EMPTY (roster zero, lock free, tip 6c39095, claims quiet). Nothing to dispatch.
+- Tick wave-3-open: board was EMPTY (roster zero, lock free, tip 6f4cf1b,
+  claims quiet since intset5 LAND, index 82 entries). Opened wave 3,
+  dispatched swarm-repro3 (isolated worktree) for fresh flames +
+  burndown + re-seed; health tick armed 2x/hourly. Slots 1/7, 6 held.
