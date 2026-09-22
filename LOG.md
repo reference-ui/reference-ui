@@ -288,6 +288,10 @@ diets); scan voyage opens separately after closeout lands.
   disclosed deviation), surface-denominator proof + sync 0-confirm.
 - Slots: 2/7 (formula1-impl, intmcp), 5 held — diet backlog EMPTY,
   N1 held — this entry is the proof.
+- HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
+  ("sync-map") with the most recent benchmark + run the report etc.
+  (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
+  landing arc — not before.
 
 ## Ticks (empty board)
 
