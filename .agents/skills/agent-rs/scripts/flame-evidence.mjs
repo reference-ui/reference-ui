@@ -18,6 +18,9 @@ import path from 'node:path'
 import { indexSidecar, loadProfile, profileTotals, renderSummaryMarkdown, summarizePhaseBuckets, summarizeProfile } from './flame-summary.mjs'
 import { readPhases } from './phases.mjs'
 
+export const FLAME_PROCEDURE = 'agentrs-flame/3'
+export const FLAME_PROCEDURE_NOTE = 'same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)'
+
 export function resolveEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
   return path.join(repoRoot, 'docs', 'evidence', 'flamegraph', `${options.scale}-${pin.name}`)
@@ -217,4 +220,21 @@ export function runResummarize(request) {
   const summary = writeFlameEvidence(out, record, meta)
   printResummaryReport(out, meta, summary)
   return { outDir: out, meta, summary }
+}
+
+export function runResummarizeCommand(options, args, repoRoot) {
+  try {
+    runResummarize({
+      srcDir: options.resummarize,
+      outDir: options.outDir,
+      repoRoot,
+      procedure: FLAME_PROCEDURE,
+      procedureNote: FLAME_PROCEDURE_NOTE,
+      command: ['pnpm', 'agentrs', 'flame', ...args],
+    })
+  } catch (err) {
+    console.error(`[agent-rs] flame resummarize failed: ${err instanceof Error ? err.message : String(err)}`)
+    return 1
+  }
+  return 0
 }
