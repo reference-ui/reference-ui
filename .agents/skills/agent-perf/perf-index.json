@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T14:30:36.961Z",
+ "built": "2026-09-22T15:01:49.623Z",
  "root": "docs/perf/waves",
- "count": 102,
+ "count": 103,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -369,7 +369,7 @@
    "landing": "11e821a1a",
    "overruledBy": null,
    "summary": "Integrator for the 2 HQ scope-widened off-scope MCP BANKs. Judge and prove — no new diets.",
-   "log": null,
+   "log": "- swarm-intmcp BANK×2-CONFIRMED → LANDED `11e821a1a` (captain\n  sign-off: surface totals µs, absolute bar incommensurable; HQ\n  ordered main). Races: both B variants YIELD on count evidence\n  (dedupe covers 0 docs; fallback 3857 invocations/call). Proof:\n  3× 8-pair surface sets (browse −359.2µs −99.9%, demand −28.4µs\n  −1.9%, all 8/8), 79/79 identity, 12/12 suites, sync 0-confirm\n  (−3.22 noise, 4/8, bytes exact ×16). Captain firsthand: diff\n  reviewed, patch check-clean, byte-identical apply, icons-catalog\n  12/12, typecheck 0 errors (tip-clean, better than brief's 7\n  pre-existing). Filed `docs/perf/waves/wave-4/integrate-intmcp.md`\n  (index 102, LAND). SCOREBOARD (MCP surface): browse 359.7→0.5µs,\n  demand 1473.3→1444.9µs; sync 919.8→916.6 noise-0. No bench:neo\n  (sync untouched by importer-graph + 0-confirm; full bench rides\n  the F1 landing per HQ's closeout order).",
    "filler": false
   },
   {
@@ -1914,6 +1914,55 @@
    "landedIn": null,
    "summary": "MCP searchDemand options-object reuse showed no stable win under interleaved A/B with lottery control; CUT as filed.",
    "log": "- swarm-reusesearchopts CUT (lottery): options-object reuse, no\n  stable win under interleaved A/B x2 + lottery control; identity\n  sha match. Closed.",
+   "filler": false
+  },
+  {
+   "id": "PERF-W4-FORMULA1",
+   "wave": "wave-4",
+   "topic": "formula1",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -52.38,
+    "pct": -5.68,
+    "pairs": "8/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-neo/src/fragments/base/fixtures/scan-goldens.churn.json",
+    "packages/reference-neo/src/fragments/base/fixtures/scan-goldens.enterprise.json",
+    "packages/reference-neo/src/fragments/base/fixtures/scan-goldens.medium.json",
+    "packages/reference-neo/src/fragments/base/fixtures/scan-goldens.small.json",
+    "packages/reference-neo/src/fragments/base/index.test.ts",
+    "packages/reference-neo/src/fragments/base/index.ts",
+    "packages/reference-neo/src/fragments/base/scan-crossings.test.ts",
+    "packages/reference-neo/src/fragments/base/scan-goldens.test.ts",
+    "packages/reference-neo/src/fragments/base/scan-native-helpers.ts",
+    "packages/reference-neo/src/fragments/base/scan-native-lifecycle.test.ts",
+    "packages/reference-neo/src/fragments/base/scan-native.test.ts",
+    "packages/reference-neo/src/fragments/index.ts",
+    "packages/reference-neo/src/fragments/lib/index.ts",
+    "packages/reference-neo/src/fragments/lib/scanner-native.ts",
+    "packages/reference-neo/src/fragments/lib/scanner.ts",
+    "packages/reference-neo/src/sync/index.ts",
+    "packages/reference-neo/src/sync/native.ts",
+    "packages/reference-rs/modules/atomic/js/index.ts",
+    "packages/reference-rs/modules/atomic/js/runtime.ts",
+    "packages/reference-rs/modules/atomic/js/types.ts",
+    "packages/reference-rs/modules/atomic/native.rs",
+    "packages/reference-rs/modules/atomic/src/diagnostics/codes.rs",
+    "packages/reference-rs/modules/atomic/src/lib.rs",
+    "packages/reference-rs/modules/atomic/src/scan/mod.rs",
+    "packages/reference-rs/modules/atomic/src/scan/store.rs",
+    "packages/reference-rs/modules/atomic/src/sources.rs",
+    "packages/reference-rs/modules/atomic/src/types.rs",
+    "packages/reference-rs/modules/atomic/tests/scan_retention.rs"
+   ],
+   "report": "docs/perf/waves/wave-4/report-swarm-formula1.md",
+   "patch": null,
+   "landedIn": "solo/36953b4d4",
+   "summary": "Base pin `0939615d5c2730eb56bae5af47384d077266a78c` verified first act; DESIGN.md",
+   "log": null,
    "filler": false
   },
   {

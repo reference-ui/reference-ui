@@ -64,6 +64,7 @@ const LANDED_FILES = {
   'PERF-W2-BAGDEFER': ["packages/reference-rs/modules/atomic/src/extract/resolver/mod.rs","packages/reference-rs/modules/atomic/src/extract/resolver/source.rs"],
   'PERF-W2-HARVESTPHASE': ["packages/reference-rs/modules/atomic/src/extract/harvest/mint/mod.rs"],
   'PERF-W3-RAWINDEX': ["packages/reference-mcp/src/pipeline/icons-search-index.ts","packages/reference-mcp/tsup.config.ts"],
+  'PERF-W4-FORMULA1': ["packages/reference-neo/src/fragments/base/fixtures/scan-goldens.churn.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.enterprise.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.medium.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.small.json","packages/reference-neo/src/fragments/base/index.test.ts","packages/reference-neo/src/fragments/base/index.ts","packages/reference-neo/src/fragments/base/scan-crossings.test.ts","packages/reference-neo/src/fragments/base/scan-goldens.test.ts","packages/reference-neo/src/fragments/base/scan-native-helpers.ts","packages/reference-neo/src/fragments/base/scan-native-lifecycle.test.ts","packages/reference-neo/src/fragments/base/scan-native.test.ts","packages/reference-neo/src/fragments/index.ts","packages/reference-neo/src/fragments/lib/index.ts","packages/reference-neo/src/fragments/lib/scanner-native.ts","packages/reference-neo/src/fragments/lib/scanner.ts","packages/reference-neo/src/sync/index.ts","packages/reference-neo/src/sync/native.ts","packages/reference-rs/modules/atomic/js/index.ts","packages/reference-rs/modules/atomic/js/runtime.ts","packages/reference-rs/modules/atomic/js/types.ts","packages/reference-rs/modules/atomic/native.rs","packages/reference-rs/modules/atomic/src/diagnostics/codes.rs","packages/reference-rs/modules/atomic/src/lib.rs","packages/reference-rs/modules/atomic/src/scan/mod.rs","packages/reference-rs/modules/atomic/src/scan/store.rs","packages/reference-rs/modules/atomic/src/sources.rs","packages/reference-rs/modules/atomic/src/types.rs","packages/reference-rs/modules/atomic/tests/scan_retention.rs"],
 };
 // Crew verdict -> final disposition: these diets are IN THE TREE even when the
 // crew verdict says CUT (captain override, reserve precedent).
@@ -81,6 +82,7 @@ const LANDED_IN = {
   'PERF-W2-WANTCTX': 'set-5/6c3909506', 'PERF-W2-STAGEAUDIT': 'set-5/6c3909506',
   'PERF-W2-BAGDEFER': 'set-5/6c3909506', 'PERF-W2-HARVESTPHASE': 'set-5/6c3909506',
   'PERF-W3-RAWINDEX': 'solo/b3181fa93',
+  'PERF-W4-FORMULA1': 'solo/36953b4d4',
 };
 
 const slugWords = (s) => s.replace(/-/g, ' ');
