@@ -11,8 +11,6 @@ import type { MatrixPackageConfig, MatrixRefSyncMode } from '../discovery/index.
 
 export interface MatrixRefSyncStrategy {
   mode: MatrixRefSyncMode
-  runTypecheck: boolean
-  waitFor: 'ready' | 'complete'
 }
 
 export type MatrixRefSyncWatchPhase = 'test:vitest' | 'test:playwright'
@@ -35,7 +33,6 @@ export interface MatrixRefSyncSupportScript {
 
 export const matrixRefSyncSupportDirectory = '.matrix-support/ref-sync'
 export const matrixRefSyncPhasesEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_PHASES_JSON'
-export const matrixRefSyncWaitForEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR'
 export const matrixRefSyncWaitReadyScriptRelativePath = `${matrixRefSyncSupportDirectory}/wait-ready.mjs`
 export const matrixRefSyncWatchSessionScriptRelativePath = `${matrixRefSyncSupportDirectory}/run-watch-session.mjs`
 
@@ -55,12 +52,10 @@ export const matrixRefSyncSupportScripts: readonly MatrixRefSyncSupportScript[] 
 ] as const
 
 export function resolveMatrixRefSyncStrategy(
-  config: Pick<MatrixPackageConfig, 'refSync' | 'runTypecheck'>,
+  config: Pick<MatrixPackageConfig, 'refSync'>,
 ): MatrixRefSyncStrategy {
   return {
     mode: config.refSync.mode,
-    runTypecheck: config.runTypecheck,
-    waitFor: config.refSync.mode === 'watch-full' ? 'complete' : 'ready',
   }
 }
 

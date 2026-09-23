@@ -212,18 +212,18 @@ function mergeFixtureIntoConsumerPackageJson(
   }
 
   if (fixture.scripts !== undefined) {
-    merged.scripts = rewriteRefBinInvocations(fixture.scripts)
+    merged.scripts = rewriteNeoBinInvocations(fixture.scripts)
   }
 
   return `${JSON.stringify(merged, null, 2)}\n`
 }
 
-/** Without workspace hoisting, bare `ref` is often missing from PATH under `sh`. */
-function rewriteRefBinInvocations(scripts: Record<string, string>): Record<string, string> {
+/** Without workspace hoisting, bare `neo` is often missing from PATH under `sh`. */
+function rewriteNeoBinInvocations(scripts: Record<string, string>): Record<string, string> {
   const next: Record<string, string> = {}
 
   for (const [name, cmd] of Object.entries(scripts)) {
-    next[name] = cmd.replace(/(?<!pnpm exec )\bref\s+/gu, 'pnpm exec ref ')
+    next[name] = cmd.replace(/(?<!pnpm exec )\bneo\s+/gu, 'pnpm exec neo ')
   }
 
   return next
@@ -365,7 +365,7 @@ export async function materializeRegistryBackedDevWorkspace(
 
   // Isolate this directory from the surrounding pnpm workspace. Without this,
   // pnpm walks up to the repo's pnpm-workspace.yaml, refuses to install into a
-  // non-member directory, and downstream `pnpm exec ref` resolves nothing.
+  // non-member directory, and downstream `pnpm exec neo` resolves nothing.
   await writeFile(join(workdir, 'pnpm-workspace.yaml'), workspaceYamlContents)
   await writeFile(join(workdir, '.npmrc'), npmrcContents)
 

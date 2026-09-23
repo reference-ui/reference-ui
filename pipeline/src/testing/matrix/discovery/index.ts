@@ -2,8 +2,8 @@
  * Discovery for matrix-enabled workspace packages.
  *
  * The inclusion contract is intentionally tiny: a package participates in the
- * pipeline matrix only when it has a `matrix.json` file inside the top-level
- * `matrix/` directory with a stable logical name and explicit refSync config.
+ * pipeline matrix only when it has a `matrix.json` file inside the
+ * `matrix/tests/` directory with a stable logical name and explicit refSync config.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -12,7 +12,7 @@ import { listWorkspacePackages } from '../../../build/workspace.js'
 import type { WorkspacePackage } from '../../../build/types.js'
 import { repoRoot } from '../../../build/workspace.js'
 
-export type MatrixRefSyncMode = 'full' | 'watch-ready' | 'watch-full'
+export type MatrixRefSyncMode = 'full' | 'watch-ready'
 
 const knownMatrixBundlerStrategies = ['vite7', 'webpack5'] as const
 export type MatrixBundlerStrategy = typeof knownMatrixBundlerStrategies[number]
@@ -30,7 +30,6 @@ export interface MatrixPackageConfig {
   bundlers: readonly MatrixBundlerStrategy[]
   react: MatrixReactRuntime
   reactVersions: readonly MatrixReactRuntime[]
-  runTypecheck: boolean
 }
 
 export interface MatrixPackageDefinition {
@@ -46,7 +45,7 @@ export interface MatrixWorkspacePackage {
   workspacePackage: WorkspacePackage
 }
 
-const matrixRootDir = resolve(repoRoot, 'matrix')
+const matrixRootDir = resolve(repoRoot, 'matrix', 'tests')
 
 function parseTrailingMajor(value: string): number {
   const match = value.match(/(\d+)$/)
@@ -188,7 +187,6 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     }
     bundlers?: unknown
     react?: unknown
-    runTypecheck?: unknown
   }
 
   if (typeof config.name !== 'string' || config.name.trim().length === 0) {
@@ -198,10 +196,9 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
   if (
     config.refSync?.mode !== 'full'
     && config.refSync?.mode !== 'watch-ready'
-    && config.refSync?.mode !== 'watch-full'
   ) {
     throw new Error(
-      `Expected ${configPath} to declare refSync.mode as "full", "watch-ready", or "watch-full".`,
+      `Expected ${configPath} to declare refSync.mode as "full" or "watch-ready".`,
     )
   }
 
@@ -220,10 +217,6 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
   const reactField = parseReactField(configPath, config.react)
   const bundlers = config.bundlers as MatrixBundlerStrategy[]
 
-  if (config.runTypecheck !== undefined && typeof config.runTypecheck !== 'boolean') {
-    throw new Error(`Expected ${configPath} to declare runTypecheck as a boolean when provided.`)
-  }
-
   return {
     name: config.name,
     refSync: {
@@ -232,7 +225,6 @@ export function readMatrixPackageConfig(packageDir: string): MatrixPackageConfig
     bundlers,
     react: reactField.react,
     reactVersions: reactField.reactVersions,
-    runTypecheck: config.runTypecheck ?? false,
   }
 }
 
@@ -254,23 +246,53 @@ export function listMatrixPackageDefinitions(packageNames?: readonly string[]): 
     }
   }
 
-  const definitions = readdirSync(matrixRootDir, { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .flatMap((entry) => {
-      const dir = resolve(matrixRootDir, entry.name)
-      const definition = collectDefinitions(dir)
+  // Filtered discovery pre-screens by declared name so an unselected suite
+  // with an invalid config never breaks a targeted run. Group containers
+  // (no matrix.json) and unreadable files always pass through to the full
+  // parse, which owns those errors.
+  const shouldParseDir = (dir: string): boolean => {
+    if (!selectedNames) {
+      return true
+    }
 
-      if (definition) {
-        return [definition]
+    const configPath = matrixConfigPath(dir)
+
+    if (!existsSync(configPath)) {
+      return true
+    }
+
+    let declaredName: unknown
+
+    try {
+      declaredName = (JSON.parse(readFileSync(configPath, 'utf8')) as { name?: unknown }).name
+    } catch {
+      return true
+    }
+
+    return typeof declaredName === 'string' && selectedNames.has(`@matrix/${declaredName}`)
+  }
+
+  // No matrix.json at this level — treat the directory as a group container
+  // and descend recursively (e.g. matrix/tests/chain/T2, matrix/tests/chain/T8).
+  const collectFromDir = (dir: string): MatrixPackageDefinition[] => {
+    if (existsSync(matrixConfigPath(dir))) {
+      if (!shouldParseDir(dir)) {
+        return []
       }
 
-      // No matrix.json at this level — treat the directory as a group container
-      // and scan one level deeper (e.g. matrix/chain/T1, matrix/chain/T2).
-      return readdirSync(dir, { withFileTypes: true })
-        .filter(subEntry => subEntry.isDirectory())
-        .map(subEntry => collectDefinitions(resolve(dir, subEntry.name)))
-        .filter((d): d is MatrixPackageDefinition => d !== null)
-    })
+      const definition = collectDefinitions(dir)
+
+      return definition ? [definition] : []
+    }
+
+    return readdirSync(dir, { withFileTypes: true })
+      .filter(subEntry => subEntry.isDirectory() && subEntry.name !== 'node_modules' && !subEntry.name.startsWith('.'))
+      .flatMap(subEntry => collectFromDir(resolve(dir, subEntry.name)))
+  }
+
+  const definitions = readdirSync(matrixRootDir, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .flatMap(entry => collectFromDir(resolve(matrixRootDir, entry.name)))
     .filter(definition => selectedNames ? selectedNames.has(definition.packageName) : true)
     .sort((left, right) => left.packageName.localeCompare(right.packageName))
 

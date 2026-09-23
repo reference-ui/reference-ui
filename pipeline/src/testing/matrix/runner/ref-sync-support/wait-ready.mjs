@@ -1,14 +1,15 @@
 /**
  * Runtime helper staged into generated matrix consumers.
  *
- * This script waits for `ref sync --watch` to reach either the runtime-ready
- * boundary or the first fully completed sync cycle, depending on
- * `REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR`. It fails fast when the watch session
- * reports a failed build instead of waiting for the full timeout.
+ * This script waits for `neo sync --watch` to publish consumable output:
+ * the generated system entry inside the out dir plus the scope links Neo
+ * junctions into node_modules as the last step of a sync. Neo emits no
+ * session sentinel, so readiness is the artifacts the tests consume.
+ * Watch-process death is reported by the session runner's exit race;
+ * this helper only polls, then fails loud on timeout.
  */
 
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 function readPositiveIntEnv(name, fallback) {
@@ -27,76 +28,42 @@ function readPositiveIntEnv(name, fallback) {
   return fallback
 }
 
-function isTransientManifestReadError(error) {
-  return error instanceof SyntaxError
-    || (typeof error === 'object'
-      && error !== null
-      && 'code' in error
-      && (error.code === 'ENOENT' || error.code === 'EISDIR'))
+// Neo publishes the sync folder first (system/system.mjs is the system
+// leg entry) and junctions the node_modules scope links last, after the
+// runtime/react/types/reference-types legs. Both present means a complete
+// sync published; existsSync follows junctions, so a dangling link reads
+// as missing.
+function missingReadyPaths(outDirPath, scopePath) {
+  const requiredPaths = [
+    resolve(outDirPath, 'system', 'system.mjs'),
+    resolve(scopePath, '@reference-ui', 'react'),
+  ]
+
+  return requiredPaths.filter(requiredPath => !existsSync(requiredPath))
 }
 
-function describeManifestFailure(sessionPath, manifestSource) {
-  return [
-    `ref sync watch failed before reaching ready at ${sessionPath}`,
-    'Last session manifest:',
-    manifestSource,
-  ].join('\n')
-}
-
-const sessionPath = resolve(
+const outDirPath = resolve(
   process.cwd(),
-  process.env.REFERENCE_UI_MATRIX_REF_SYNC_SESSION_PATH ?? '.reference-ui/tmp/session.json',
+  process.env.REFERENCE_UI_MATRIX_REF_SYNC_OUT_DIR ?? '.reference-ui',
 )
-const waitFor = process.env.REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR === 'complete' ? 'complete' : 'ready'
-// `ready` only requires the runtime-ready boundary (typically <30s). `complete`
-// must wait for the full sync cycle including the final TypeScript declaration
-// pass for `@reference-ui/types`, which can comfortably exceed 30s on cold
-// container caches; default the timeout higher so the helper does not race
-// healthy long sync runs.
-const defaultTimeoutMs = waitFor === 'complete' ? 120_000 : 30_000
-const timeoutMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_TIMEOUT_MS', defaultTimeoutMs)
+const scopePath = resolve(process.cwd(), 'node_modules')
+const timeoutMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_TIMEOUT_MS', 30_000)
 const pollMs = readPositiveIntEnv('REFERENCE_UI_MATRIX_REF_SYNC_READY_POLL_MS', 50)
 const startedAt = Date.now()
-let lastManifestSource = ''
+let lastMissingPaths = []
 
 while (Date.now() - startedAt <= timeoutMs) {
-  if (existsSync(sessionPath)) {
-    try {
-      const manifestSource = await readFile(sessionPath, 'utf8')
-      lastManifestSource = manifestSource
-      const manifest = JSON.parse(manifestSource)
+  lastMissingPaths = missingReadyPaths(outDirPath, scopePath)
 
-      if (!manifest || typeof manifest !== 'object') {
-        continue
-      }
-
-      if (waitFor === 'ready' && manifest.buildState === 'ready') {
-        process.exit(0)
-      }
-
-      if (waitFor === 'complete' && typeof manifest.completedAt === 'string' && manifest.completedAt.length > 0) {
-        process.exit(0)
-      }
-
-      if (manifest.buildState === 'failed' || manifest.state === 'failed') {
-        throw new Error(describeManifestFailure(sessionPath, manifestSource))
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith('ref sync watch failed before reaching ready')) {
-        throw error
-      }
-
-      if (!isTransientManifestReadError(error)) {
-        throw error
-      }
-    }
+  if (lastMissingPaths.length === 0) {
+    process.exit(0)
   }
 
   await new Promise(resolvePromise => setTimeout(resolvePromise, pollMs))
 }
 
-const details = lastManifestSource.length > 0
-  ? `\nLast session manifest:\n${lastManifestSource}`
+const details = lastMissingPaths.length > 0
+  ? `\nMissing neo sync output:\n${lastMissingPaths.join('\n')}`
   : ''
 
-throw new Error(`Timed out waiting for ref sync watch readiness at ${sessionPath}${details}`)
+throw new Error(`Timed out waiting for neo sync watch readiness at ${outDirPath}${details}`)

@@ -11,7 +11,7 @@ import {
 import { createManagedMatrixPackageJson, createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './index.js'
 
 const internalTarballSpecifiers = {
-  '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+  '@reference-ui/neo': 'file:.matrix-tarballs/reference-ui-neo-0.0.16-neohash.tgz',
   '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
 } as const
 
@@ -30,7 +30,7 @@ describe('createManagedMatrixPackageJson', () => {
           },
           exports: { '.': './src/index.ts' },
           scripts: {
-            sync: 'pnpm exec ref sync',
+            sync: 'pnpm exec neo sync',
             test: 'vitest run && tsc --noEmit',
           },
           version: '0.0.7',
@@ -50,7 +50,7 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.version, '0.0.7')
     assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp --sync')
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
-    assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
+    assert.equal(packageJson.scripts.sync, 'pnpm exec neo sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
     assert.equal(packageJson.dependencies.react, MANAGED_REACT_DEPENDENCIES.react19.react)
     assert.equal(packageJson.dependencies['react-dom'], MANAGED_REACT_DEPENDENCIES.react19['react-dom'])
@@ -131,7 +131,7 @@ describe('createMatrixConsumerPackageJson', () => {
   it('drops scripts for synthetic consumers and rewrites workspace dependencies to staged tarball specs', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
       dependencies: {
-        '@reference-ui/core': 'workspace:*',
+        '@reference-ui/neo': 'workspace:*',
         '@reference-ui/lib': 'workspace:*',
         react: '^19.2.0',
       },
@@ -145,7 +145,7 @@ describe('createMatrixConsumerPackageJson', () => {
       scripts: {
         setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
-        sync: 'pnpm exec ref sync',
+        sync: 'pnpm exec neo sync',
       },
       type: 'module',
     }
@@ -166,7 +166,7 @@ describe('createMatrixConsumerPackageJson', () => {
     }
 
     assert.deepEqual(packageJson.dependencies, {
-      '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+      '@reference-ui/neo': 'file:.matrix-tarballs/reference-ui-neo-0.0.16-neohash.tgz',
       '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
       react: '^19.2.0',
     })
@@ -200,7 +200,7 @@ describe('createMatrixConsumerPackageJson', () => {
       scripts: {
         setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
-        sync: 'pnpm exec ref sync',
+        sync: 'pnpm exec neo sync',
       },
       type: 'module',
     }

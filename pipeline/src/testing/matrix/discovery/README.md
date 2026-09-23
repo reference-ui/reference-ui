@@ -24,13 +24,9 @@ Keeping that logic separate makes it easier to evolve `matrix.json` over time wi
 Today a package participates in the matrix when its `matrix.json` declares:
 
 - `name: string`
-- `refSync.mode: "full" | "watch-ready" | "watch-full"`
+- `refSync.mode: "full" | "watch-ready"`
 - `bundlers: ("vite7" | "webpack5")[]`
 - `react: "react17" | "react18" | "react19"` or a non-empty array of those values
-
-It may also declare:
-
-- `runTypecheck: boolean`
 
 When `react` is an array, the first unique entry is the package default. Pipeline `--react` pins one declared runtime; `--full` expands every declared runtime.
 

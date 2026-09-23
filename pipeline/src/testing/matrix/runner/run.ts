@@ -109,11 +109,11 @@ export async function runMatrixBootstrapInDagger(
 
   const manifest = await readRegistryManifest()
   assertMatrixRustTargetAvailable(manifest)
-  const corePackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/core')
+  const neoPackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/neo')
   const libPackage = manifest.packages.find((pkg) => pkg.name === '@reference-ui/lib')
 
-  if (!corePackage) {
-    throw new Error('Expected @reference-ui/core to be present in the packed registry manifest.')
+  if (!neoPackage) {
+    throw new Error('Expected @reference-ui/neo to be present in the packed registry manifest.')
   }
 
   if (!libPackage) {
@@ -171,7 +171,7 @@ export async function runMatrixBootstrapInDagger(
   let failed = false
   const executionContext = {
     consumerWorkspace,
-    coreVersion: corePackage.version,
+    neoVersion: neoPackage.version,
     libVersion: libPackage.version,
     manifest,
     registry,

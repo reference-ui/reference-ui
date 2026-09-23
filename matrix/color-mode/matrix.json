@@ -1,8 +1,0 @@
-{
-  "name": "color-mode",
-  "refSync": {
-    "mode": "watch-ready"
-  },
-  "bundlers": ["vite7", "webpack5"],
-  "react": "react19"
-}

@@ -24,7 +24,7 @@ interface ReplaceWorkspaceProtocolVersionsOptions {
 
 interface MatrixNodeModulesCacheKeyOptions {
   containerImage?: string
-  coreVersion: string
+  neoVersion: string
   fixturePackageJson: MatrixFixturePackageJson
   internalPackages: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[]
   libVersion: string
@@ -58,7 +58,7 @@ function createMatrixInstallGraph(
   fixtureName: string | null,
 ): string {
   const versionOverrides = {
-    '@reference-ui/core': options.coreVersion,
+    '@reference-ui/neo': options.neoVersion,
     '@reference-ui/lib': options.libVersion,
   }
   const packageJson = withReactRuntimeDependencies(options.fixturePackageJson, options.reactRuntime)

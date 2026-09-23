@@ -1,7 +1,7 @@
 /**
  * Runtime helper staged into generated matrix consumers.
  *
- * This script owns exactly one `ref sync --watch` process while the matrix
+ * This script owns exactly one `neo sync --watch` process while the matrix
  * runner executes all watch-compatible test phases. It emits compact timing
  * markers on stdout so the parent runner can attribute runtime-ready setup time
  * and per-phase execution time without parsing Vitest or Playwright output.
@@ -13,10 +13,9 @@ import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 
 const matrixRefSyncPhasesEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_PHASES_JSON'
-const matrixRefSyncWaitForEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR'
 const waitReadyScriptPath = resolve(process.cwd(), '.matrix-support/ref-sync/wait-ready.mjs')
 const watchLogPath = resolve(process.cwd(), '.matrix-support/ref-sync/watch.log')
-const watchCommand = ['pnpm', 'exec', 'ref', 'sync', '--watch']
+const watchCommand = ['pnpm', 'exec', 'neo', 'sync', '--watch']
 
 function isRunning(processHandle) {
   return processHandle.exitCode === null && processHandle.signalCode === null
@@ -83,7 +82,7 @@ async function dumpWatchLog() {
       return
     }
 
-    process.stderr.write('\n[ref sync watch log]\n')
+    process.stderr.write('\n[neo sync watch log]\n')
     process.stderr.write(output)
     if (!output.endsWith('\n')) {
       process.stderr.write('\n')
@@ -136,12 +135,12 @@ async function waitForReady(watchProcess) {
     }
 
     await dumpWatchLog()
-    throw new Error(`ref sync watch exited before reaching runtime-ready output ${formatExitResult('', firstFinished.result).trim()}`)
+    throw new Error(`neo sync watch exited before reaching runtime-ready output ${formatExitResult('', firstFinished.result).trim()}`)
   }
 
   if (firstFinished.result.code !== 0 || firstFinished.result.signal !== null) {
     await dumpWatchLog()
-    throw new Error(`ref sync wait-ready helper failed ${formatExitResult('', firstFinished.result).trim()}`)
+    throw new Error(`neo sync wait-ready helper failed ${formatExitResult('', firstFinished.result).trim()}`)
   }
 
   console.log(`[matrix ref sync] wait-duration-ms=${Date.now() - readyStartedAt}`)
@@ -161,7 +160,7 @@ async function runPhaseWhileWatchAlive(phase, watchProcess) {
     }
 
     await dumpWatchLog()
-    throw new Error(`ref sync watch exited while running ${phase.phase} ${formatExitResult('', firstFinished.result).trim()}`)
+    throw new Error(`neo sync watch exited while running ${phase.phase} ${formatExitResult('', firstFinished.result).trim()}`)
   }
 
   if (firstFinished.result.code !== 0 || firstFinished.result.signal !== null) {

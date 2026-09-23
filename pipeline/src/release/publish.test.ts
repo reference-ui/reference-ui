@@ -23,6 +23,19 @@ describe('isReleaseManifestPackage', () => {
     assert.equal(
       isReleaseManifestPackage(
         manifestPackage({
+          name: '@reference-ui/lib',
+          sourceDir: 'packages/reference-lib',
+          tarballFileName: 'lib.tgz',
+          tarballPath: '.pipeline/registry/tarballs/lib.tgz',
+          version: '0.0.25',
+        }),
+      ),
+      true,
+    )
+
+    assert.equal(
+      isReleaseManifestPackage(
+        manifestPackage({
           name: '@reference-ui/core',
           sourceDir: 'packages/reference-core',
           tarballFileName: 'core.tgz',
@@ -30,7 +43,7 @@ describe('isReleaseManifestPackage', () => {
           version: '0.0.22',
         }),
       ),
-      true,
+      false,
     )
 
     assert.equal(
@@ -52,7 +65,7 @@ describe('isReleaseManifestPackage', () => {
       isReleaseManifestPackage(
         manifestPackage({
           name: '@fixtures/extend-library',
-          sourceDir: 'fixtures/extend-library',
+          sourceDir: 'matrix/fixtures/extend-library',
           tarballFileName: 'extend-library.tgz',
           tarballPath: '.pipeline/registry/tarballs/extend-library.tgz',
           version: '0.0.0',
@@ -112,10 +125,9 @@ describe('sortReleaseManifestPackages', () => {
       sorted.map((pkg) => pkg.name),
       [
         '@reference-ui/rust-darwin-arm64',
-        '@reference-ui/rust',
-        '@reference-ui/core',
         '@reference-ui/icons',
         '@reference-ui/lib',
+        '@reference-ui/rust',
       ],
     )
   })

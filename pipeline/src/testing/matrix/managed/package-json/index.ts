@@ -48,7 +48,7 @@ interface ManagedMatrixPackageJsonOptions {
 }
 
 const managedDependencies = {
-  '@reference-ui/core': 'workspace:*',
+  '@reference-ui/neo': 'workspace:*',
   '@reference-ui/lib': 'workspace:*',
 } as const
 
@@ -140,7 +140,7 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
     ?? (existingPackageJson.scripts?.setup && !isPipelineManagedScript(existingPackageJson.scripts.setup)
       ? existingPackageJson.scripts.setup
       : undefined)
-    ?? 'pnpm exec ref sync'
+    ?? 'pnpm exec neo sync'
 
   const pipelineRel = options.packageDir ? pipelineRelDir(options.packageDir) : '../../pipeline'
 
