@@ -140,8 +140,8 @@ sync rather than at build.
 
 Transport candidates, ranked:
 
-1. **Build-time injection transform (new option 5, the
-   serious candidate).** A bundler `transform` hook rewrites
+1. **Build-time injection transform — REJECTED by HQ
+   (2026-09-23).** A bundler `transform` hook would rewrite
    `const XRecipe = recipe({...})` → injects `className:
    'X'` when absent and inferable; in-situ/non-inferrable
    emits HQ's build warning. Type loosens to optional;
@@ -188,3 +188,45 @@ is must-support, option 1 needs the dev-loud miss as a
 companion or dies, and required stands; (b) sequence AFTER
 Objective 1 lands (transform work, if any, builds on the
 final extractor; don't overlap the RS resolution wave).
+
+## Extractor, not transform (HQ direction, 2026-09-23)
+
+HQ killed the bundler transform: no new machinery of that
+kind — the build-time extractor is the tool that sees
+names. Agreed and recorded (option 1 above now REJECTED).
+
+Straight talk on what the extractor can and can't do alone:
+it can trace every binding (inference exists, test-pinned),
+warn/fail on in-situ (diagnostic exists), and emit
+tables+CSS under traced stems. What it CANNOT do is deliver
+the stem to the generic runtime call — `recipe(config)`
+still needs the key in the object, and no extractor output
+reaches inside that call. Transport options, exhaustive:
+(a) the literal (status quo); (b) per-recipe codegen + API
+migration — Panda's answer (declared recipes, baked names);
+(c) content-addressed tables (runtime hashes config,
+extractor stamps qualifiedName — new RS↔JS canonical-hash
+contract, duplicate-content stem collisions, skew = silent
+miss; clever-fragile, not recommended); (d) stack
+inspection (not serious). The extractor closes knowledge +
+diagnostics + emission; only (b) or (c) close runtime, both
+heavy.
+
+Panda findings (HQ's memory, checked): default output is
+READABLE (`button button--size-small`, pattern
+`<recipe-className>--<variant>`); hashing is OPT-IN (`hash:
+true` → `.adfg5r`). And the kicker for our design: Panda's
+optional-className works because config-declared recipes
+carry identity (the config key) that codegen bakes into
+each generated function — the exact channel our inline
+authoring lacks. Our emitted CSS already shares Panda's
+readable posture (`summaryChip__base`, `summaryChip_t_soft`)
+— no hashes anywhere. "Instead of generated bollocks" is
+already our emit.
+
+Direction (HQ): variable-name tracing as shared tooling
+across recipe AND css extraction — one name authority:
+trace bindings, warn on untraceable (in-situ), check
+literal-vs-binding agreement, feed emission. No crew
+dispatched; the transport question above decides whether
+the literal can ever go.
