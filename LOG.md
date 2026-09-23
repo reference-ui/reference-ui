@@ -23,6 +23,7 @@ otherwise.
 | Wave 2 cloneplasma (`ddce131e7`) | ≈ 974 ms | ~1.51x |
 | Wave 2 set-4 subset (`e360915f7`) | ≈ 955 ms | ~1.48x |
 | Wave 2 set 5 (`6c3909506`) | ≈ 938 ms | ~1.45x |
+| Stable parallel (`b0c19724b`, pin `fc79ddfc35d3`) | 762 ms (bench:neo n=8) | 1.18x |
 | Target | ≈ 700 ms | ~1.1x |
 
 ## Where everything lives (wave-2 cleared 2026-09-22)
