@@ -4,6 +4,23 @@
 // project-side import ever points back at a consumer.
 
 /**
+ * Per-layer blocks of ONE system. Served `tokens` rides N-API
+ * only; published entries carry `tokensPortable`. Frozen wire
+ * truth lives in reference-rs contracts; keep field-identical.
+ */
+export interface SystemStreams {
+  name: string
+  preamble: string // verbatim inner prelude (~55 B, drift-proof)
+  reset?: string // separable chunk; downstream DROPS, never concats
+  global?: string
+  tokens?: string // :root-hoisted; N-API own-compile ONLY, never published
+  tokensPortable?: string // [data-layer]-scoped; the published variant
+  recipes?: string
+  utilities?: string
+  package?: string // wrap name; empty/absent stays flat
+}
+
+/**
  * Portable design-system artefact emitted by sync.
  * Neo-owned copy of the core BaseSystem shape (name plus fragment payload).
  */

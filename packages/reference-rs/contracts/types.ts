@@ -1,7 +1,7 @@
 /**
  * Frozen cross-package contract definitions for Reference RS cutover (PLAN.md §3).
  * Defines TypeScript interfaces for EvaluatedSystemSpec, NativeRuntimeArtifact,
- * CompileResult, PortableBaseSystem, and NativeCompileRequest.
+ * CompileResult, SystemStreams, PortableBaseSystem, and NativeCompileRequest.
  * Every N and C packet references these types and their committed JSON fixtures.
  * Serves as the single source of truth for serialization shapes across JS and Rust.
  */
@@ -161,9 +161,28 @@ export interface Diagnostic {
 
 export type LogChannel = 'compiler' | 'proof'
 
+/**
+ * Per-layer blocks of ONE system (D17 receive). Served `tokens`
+ * rides N-API only; published entries carry `tokensPortable`.
+ * Neo's system/base mirror stays field-identical to this.
+ */
+export interface SystemStreams {
+  name: string
+  preamble: string // verbatim inner prelude (~55 B, drift-proof)
+  reset?: string // separable chunk; downstream DROPS, never concats
+  global?: string
+  tokens?: string // :root-hoisted; N-API own-compile ONLY, never published
+  tokensPortable?: string // [data-layer]-scoped; the published variant
+  recipes?: string
+  utilities?: string
+  package?: string // wrap name; empty/absent stays flat
+}
+
 export interface CompileResult {
   stylesheet: string
   portableStylesheet: string
+  /** Own-system layer blocks with both token variants. Required: schema 2 guarantees presence. */
+  streams: SystemStreams
   runtime: NativeRuntimeArtifact
   /**
    * Compile-internal plans: the compiler rows, surfaced for proof and the

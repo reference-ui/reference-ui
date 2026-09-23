@@ -8,6 +8,7 @@ import type {
   NativeRuntimeArtifact,
 } from '@reference-ui/rust/contracts'
 import type { LogChannel } from '../config/types.ts'
+import type { SystemStreams } from '../system/base/types.ts'
 
 // Structural mirror of the frozen VirtualSource (C3 single read): the shape
 // sync hands to the engine when it already holds the bytes.
@@ -55,6 +56,8 @@ export interface NativeDiagnostic {
 export interface NativeCompileResult {
   stylesheet: string
   portableStylesheet?: string
+  /** Own-system layer blocks with both token variants. Required: schema 2 guarantees presence. */
+  streams: SystemStreams
   runtime: NativeRuntimeArtifact
   diagnostics: NativeDiagnostic[]
   /**
