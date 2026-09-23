@@ -339,10 +339,12 @@ permanently; the folder name.
   all wirings repointed, real `"."` export added. 337 units + q +
   chain 6/6 + T1 + FULL 197/197 re-proven firsthand on final bytes.
 
-### Overnight run (proposed — decision-free crews, morning-verified)
+### Overnight run (DISPATCHED 2026-09-23 ~21:00 — walk-away-proof)
 
-Ordered so nothing needs HQ mid-flight. Crews report, never land;
-captain verifies + lands in the morning.
+Five crews, zero HQ decisions needed mid-flight. NIGHT-1 is the only
+writer (fully-specified fixes); NIGHT-2..5 are read-only (survey/spec,
+LOG-2.md sections only). All report, never land; captain verifies +
+lands in the morning.
 
 1. **Packager follow-ups** (execution, small, fully specified): derive
    clean's link list from PACKAGES (fixes the `neo clean` types-link
