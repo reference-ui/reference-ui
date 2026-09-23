@@ -264,16 +264,18 @@ dead public surface: pure confusion, zero users. Worse, the id isn't
 even a real export — `package.json` has no `"."`; the id resolves via
 bundler alias + tsconfig paths pointed at `author/` by convention.
 
-Direction: the id must keep answering, but `author/` as drawn dies
-either way. Two forks: (A) slim `author/` to the true public set (5
-functions + types) and move the factories under `collect/` as
-internals; (B) delete `author/` and serve the id from a minimal root
-barrel with the same public set. Captain leans B — the name is the
-confusion, and `entry/` already means entries. Either way the alias
-wiring moves with it, and `"."` should probably become a real export.
-Open threads: A vs B; what `entry/`'s exact Neo roster is (react/types
-today — system?); where the public types live (HQ: with types —
-Neo has no top-level `types/` home yet).
+Direction (HQ decided: fork B): `author/` dies. The id keeps
+answering from a minimal root barrel with the true public set;
+factories stay defined in `collect/surface` files but leave the
+public id — that non-re-export IS the split. Wiring that moves with
+it: tsconfig paths (both ids), `config/bundle.ts` alias +
+`config/constants.ts`, vite/test-harness aliases by grep,
+`system-surface.d.ts` relocated. Folded into the COLLECT-REFACTOR
+wave (same crew, same motion-only rules, full-suite proof).
+Open threads: real `"."` export in package.json (crew assesses,
+freelance only if clean); what `entry/`'s exact Neo roster is
+(react/types today — system?); where the public types live (HQ: with
+types — Neo has no top-level `types/` home yet).
 
 ## Explicitly Not Yet
 
