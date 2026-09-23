@@ -54,3 +54,9 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 
 ## Tick — Obj2 gate RED (hermetic-only css() divergence), captain diagnosing firsthand
 - Obj1/Obj3 COMPLETE. Obj2: native chain proof holds (T1 7/0 now), hermetic diverges (T1 4/3) with merged sheet delivered but zero classes emitted in-container. Root-cause hunt in flight (react.mjs bundle + React 19.3.0 vs 19.2.4 + stylePropNames suspects). No commits this tick (diagnostic diffs only). LANDING still queued behind Obj2 close.
+
+## Tick — checkpoint landed, HERMDIV diagnosing
+- eeb062ae5 checkpoint committed, tree clean. HERMDIV crew running on the hermetic divergence (stylePropNames probe first). Obj1/Obj3 COMPLETE, Obj2 gated on diagnosis, LANDING queued.
+
+## VOYAGE PARKED (HQ order 2026-09-23) — next effort is reference-neo polish
+- RS proved its point (doom testing reserved for nights). Voyage paused: Obj1/Obj3 COMPLETE, Obj2 one gate out (HERMDIV interim filed in LOG-2.md). LANDING queued. Resume checklist in LOG-2.md.

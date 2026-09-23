@@ -11486,3 +11486,19 @@ set = D17-only, signatures intact; neo chain 6/6 green.
 - Ruled out: stale node_modules (fresh install reproduces), stale tarballs (purged + verified merge inside), watch-vs-oneshot (same sync()), cache-key staleness (key verified exact-fresh), fixture payloads (identical), configs (identical), browsers (same PW version).
 - Diagnostic diffs in tree, UNCOMMITTED and never to land as-is: pipeline install.ts MATRIX_BUST_INSTALL_CACHE gate, pipeline reporter FAIL-ROW printer. Temp zz-debug specs removed after each probe. pipeline targets.ts diff is NOT captain's — untouched.
 - No live crews (roster empty, no workflow runs, 6 foreign peers untouched). No dispatch — gate must go green before Obj2 close.
+
+## Tick (captain) — HERMDIV crew running, checkpoint landed
+- Checkpoint eeb062ae5 committed (107 files, tree clean): root→MISSIONS moves, milspec sweep, mission logs, hermetic ENOSPC+dist fixes. Diagnostic pipeline patches reverted before commit, not included.
+- HERMDIV diagnosis crew dispatched (main/hermdiv-diagnosis/75, running): stylePropNames probe first, then react.mjs bundle inputs. No log writes yet — freshly dispatched, not stuck; no intervention per §4.
+- No commits this tick (crew's wave in flight). No further dispatch — in-order law.
+
+## HERMDIV interim (crew, filed at cancel) — root cause native-proven, hermetic probe unrun
+- Packed extend/meta fixtures externalize @reference-ui/react but ship no bundle of their own (files = dist + baseSystem only, deps null).
+- Natively, vite dev resolves the fixture dist's css import to the fixture's OWN .reference-ui/react junction (system extend-library) → emits extend-library__* classes → sheet-backed paint. Byte-level proof filed by crew.
+- Hermetic half (unproven at cancel): container presumably resolves the same import to the CONSUMER's bundle (system chain-t1) → wrong-or-empty classes → triage-identical unstyled signatures despite merged sheet. Full evidence: subagent session log 01a0cf38-0ae5-7b53-8fb8-5212edf0ecc3 + tool-outputs 01a0cf40/01a0cf42.
+- Crew leftovers reverted by captain (reporter patch, zz-debug spec). Tree clean.
+
+## VOYAGE PARKED (HQ order) — RS proved, Neo polish is next
+- Obj1 COMPLETE, Obj3 COMPLETE. Obj2 paused one gate from close: merge landed + native green, hermetic divergence diagnosed-natively (see HERMDIV interim above), hermetic confirmation + fix + re-gate outstanding.
+- LANDING (Obj4/5) undispatched. Standing ticks: one-line entries, no action.
+- RESUME CHECKLIST: (1) re-run HERMDIV hermetic probe to confirm consumer-bundle resolution; (2) fix (fixture ships bundle? consumer adopts upstream runtime? — crew recommendation pending); (3) hermetic 11-tier re-gate; (4) landing sweep + Obj2 close; (5) dispatch LANDING.
