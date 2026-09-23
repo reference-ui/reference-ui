@@ -103,7 +103,7 @@ async function main(): Promise<void> {
 
   const requested = resolveJsxElements(config)
   const request: ScopedCompileRequest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spec,
     jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
     sourceRoot: args.dir,

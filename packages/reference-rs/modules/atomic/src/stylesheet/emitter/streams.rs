@@ -2,7 +2,10 @@
 //! Each field holds one contiguous chunk of the emitter's existing push sequence,
 //! and concatenation reproduces today's bytes exactly. The dual-sheet entry point
 //! builds these streams then joins them; the single-sheet builds stay sequential
-//! as the byte-identity oracle. No seam change: S2 carries these across N-API.
+//! as the byte-identity oracle. S2 carries these across N-API verbatim as the
+//! 9-key own object: the system name plus one string per layer block.
+
+use serde::{Deserialize, Serialize};
 
 use super::StylesheetSinks;
 use super::super::global::append_reset_css;
@@ -14,8 +17,14 @@ use base_system::BaseSystem;
 
 /// One captured chunk per layer block, plus the package name the wrap prints.
 /// Vocabulary A (PLAN §3.6, Final): names as data + one string per layer block
-/// + package name. Field order is the emitter's push order.
+/// + package name. Field order is the emitter's push order. Serde carries the
+/// 9-key N-API own object verbatim (snake→camel); empty blocks stay empty
+/// strings, never omitted, so the oracle channel needs no refold.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StylesheetStreams {
+    /// The system name: entry identity for statement dedupe (names-as-data).
+    pub name: String,
     /// The `@layer …;` preamble, verbatim.
     pub preamble: String,
     /// `@layer reset {…}`, empty when the system prints no reset.
@@ -35,6 +44,15 @@ pub struct StylesheetStreams {
 }
 
 impl StylesheetStreams {
+    /// Preamble-only streams for fail-closed artifacts: no system lowered,
+    /// so the name stays empty and both sheets reprint to the bare preamble.
+    pub fn preamble_only() -> Self {
+        Self {
+            preamble: LAYER_PREAMBLE.to_string(),
+            ..Self::default()
+        }
+    }
+
     /// Concatenate the served sheet exactly as the sequential build did.
     pub fn stylesheet(&self) -> String {
         wrap_package_layer(&self.package, &self.inner(&self.tokens))
@@ -95,6 +113,7 @@ pub fn build_stylesheet_streams(
     let mut tokens_portable = String::new();
     append_tokens(&mut tokens_portable, system, true);
     StylesheetStreams {
+        name: system.name.clone(),
         preamble: LAYER_PREAMBLE.to_string(),
         reset,
         global,

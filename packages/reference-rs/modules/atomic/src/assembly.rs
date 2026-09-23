@@ -98,7 +98,7 @@ impl AssembleCtx {
         // Dual-sheet build shares one recipes+utilities suffix; the portable
         // diagnostics sink here so global warnings surface once, as before.
         let mut portable_sink = Vec::new();
-        let (stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
+        let (streams, stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
             &atom_set,
             system,
             &compiled_recipes,
@@ -138,6 +138,7 @@ impl AssembleCtx {
         CompileResult {
             stylesheet,
             portable_stylesheet,
+            streams,
             runtime,
             style_plans,
             css,

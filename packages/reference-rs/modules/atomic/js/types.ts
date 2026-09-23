@@ -143,7 +143,7 @@ export interface CompileRequest {
   logs?: LogChannel[]
 }
 
-/** Either wire shape `compile()` accepts: legacy `{ baseSystem, ... }` or frozen `{ schemaVersion: 1, spec, ... }`. */
+/** Either wire shape `compile()` accepts: legacy `{ baseSystem, ... }` or frozen `{ schemaVersion: 2, spec, ... }`. */
 export type AnyCompileRequest = CompileRequest | NativeCompileRequest
 
 export interface RecipeMatch {
@@ -209,9 +209,38 @@ export interface NativeRuntimeArtifact {
   responsiveBreakpoints?: string[]
 }
 
+/**
+ * The own system's per-layer streams (S2 oracle channel): the 9-key object
+ * the engine ships verbatim beside the joined sheets, on both the slim and
+ * proof channels. Both token variants ride here; empty blocks stay empty
+ * strings, never omitted. Required on schema 2; fail-closed artifacts carry
+ * preamble-only streams with an empty name.
+ */
+export interface CompileStreams {
+  /** The system name: entry identity for statement dedupe (names-as-data). */
+  name: string
+  /** The `@layer …;` preamble, verbatim. */
+  preamble: string
+  /** `@layer reset {…}`, empty when the system prints no reset. */
+  reset: string
+  /** `@layer global {…}`, empty when nothing is printable. */
+  global: string
+  /** `@layer tokens {…}` with `:root` selectors (served sheet). */
+  tokens: string
+  /** `@layer tokens {…}` with `[data-layer]` selectors (portable sheet). */
+  tokensPortable: string
+  /** `@layer recipes {…}`, shared by both sheets. */
+  recipes: string
+  /** `@layer utilities {…}`, shared by both sheets. */
+  utilities: string
+  /** Package layer name; empty stays flat. */
+  package: string
+}
+
 export interface CompileResult {
   stylesheet: string
   portableStylesheet?: string
+  streams: CompileStreams
   runtime: NativeRuntimeArtifact
   /**
    * Compile-internal plans: the compiler rows, surfaced for proof and the

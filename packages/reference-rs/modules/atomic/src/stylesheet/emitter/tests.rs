@@ -205,7 +205,7 @@ fn test_dual_build_matches_paired_single_builds() {
     let system = BaseSystem::lib_fixture();
     let mut primary = Vec::new();
     let mut portable_sink = Vec::new();
-    let (sheet, portable) = build_stylesheets_with(
+    let (streams, sheet, portable) = build_stylesheets_with(
         &set,
         system,
         &[],
@@ -226,4 +226,66 @@ fn test_dual_build_matches_paired_single_builds() {
     );
     assert_eq!(primary, single_primary);
     assert_eq!(portable_sink, single_portable);
+    assert_eq!(streams.name, system.name);
+    assert_eq!(streams.stylesheet(), sheet);
+    assert_eq!(streams.portable_stylesheet(), portable);
+}
+
+#[test]
+fn test_streams_serialize_to_nine_wire_keys() {
+    let mut set = AtomSet::new();
+    set.insert(Atom::new(
+        "color".into(),
+        CssValue::String("blue.600".into()),
+        smallvec![],
+        false,
+    ));
+    let system = BaseSystem::lib_fixture();
+    let mut primary = Vec::new();
+    let mut portable_sink = Vec::new();
+    let streams = build_stylesheet_streams(
+        &set,
+        system,
+        &[],
+        StylesheetSinks {
+            primary: &mut primary,
+            portable: &mut portable_sink,
+        },
+    );
+    let value = serde_json::to_value(&streams).expect("streams serialize");
+    let keys: Vec<&str> = value
+        .as_object()
+        .expect("streams are one object")
+        .keys()
+        .map(String::as_str)
+        .collect();
+    assert_eq!(
+        keys,
+        [
+            "name",
+            "preamble",
+            "reset",
+            "global",
+            "tokens",
+            "tokensPortable",
+            "recipes",
+            "utilities",
+            "package"
+        ]
+    );
+    assert_eq!(value["name"], serde_json::json!(system.name));
+    assert!(value["tokens"].as_str().is_some_and(|s| s.contains(":root")));
+    assert!(
+        value["tokensPortable"]
+            .as_str()
+            .is_some_and(|s| s.contains("[data-layer="))
+    );
+}
+
+#[test]
+fn test_preamble_only_reprints_to_bare_preamble() {
+    let streams = StylesheetStreams::preamble_only();
+    assert!(streams.name.is_empty());
+    assert_eq!(streams.stylesheet(), LAYER_PREAMBLE);
+    assert_eq!(streams.portable_stylesheet(), LAYER_PREAMBLE);
 }

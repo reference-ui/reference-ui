@@ -17,6 +17,7 @@ export type {
   AnyCompileRequest,
   CompileRequest,
   CompileResult,
+  CompileStreams,
   CssRuntime,
   Diagnostic,
   DiagnosticSeverity,

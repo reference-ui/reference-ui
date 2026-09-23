@@ -51,6 +51,17 @@ describe('ghost gauge', () => {
   it('fails when a runtime class is missing from @layer utilities', () => {
     const result: CompileResult = {
       stylesheet: `${LAYER_PREAMBLE}\n@layer utilities {\n  .mt_2r { margin-top: 1px; }\n}\n`,
+      streams: {
+        name: 'probe',
+        preamble: LAYER_PREAMBLE,
+        reset: '',
+        global: '',
+        tokens: '',
+        tokensPortable: '',
+        recipes: '',
+        utilities: '',
+        package: 'probe',
+      },
       css: { classes: { 'mt:2r': 'mt_2r', 'color:red': 'c_red' } },
       diagnostics: [],
     }

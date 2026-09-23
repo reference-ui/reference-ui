@@ -1,7 +1,7 @@
 //! Node-API bindings for Reference UI atomic style system compilation.
 //! Ingests serialized compilation requests carrying virtual sources and an EvaluatedSystemSpec.
 //! Accepts the legacy `{ baseSystem, rootDir?, files? }` shape and the frozen
-//! `{ schemaVersion: 1, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape for one wave.
+//! `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape for one wave.
 //! Lowers the spec through base-system's public lowering path, mirroring typegen's seam.
 //! Foreign or malformed specs are rejected with path-bearing error diagnostics, never silently emptied.
 //! Emits the slim serialized result (sheets, runtime, diagnostics, hosts) by default; the
@@ -120,10 +120,12 @@ fn wants_proof(req: &NativeCompileRequest) -> bool {
 }
 
 /// Reject a frozen request whose version is not the one this bridge speaks.
+/// Schema 2 guarantees `streams` on the result; older versions fail loud so
+/// stale callers re-sync instead of misreading a streamless payload.
 fn check_schema_version(req: &NativeCompileRequest) -> Option<String> {
     match req.schema_version {
-        Some(1) | None => None,
-        Some(other) => Some(format!("unsupported schemaVersion {other}: expected 1")),
+        Some(2) | None => None,
+        Some(other) => Some(format!("unsupported schemaVersion {other}: expected 2")),
     }
 }
 
@@ -153,6 +155,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
     ::atomic::CompileResult {
         stylesheet: preamble.clone(),
         portable_stylesheet: preamble,
+        streams: ::atomic::stylesheet::StylesheetStreams::preamble_only(),
         runtime: ::atomic::NativeRuntimeArtifact::default(),
         style_plans: Vec::new(),
         css: Some(::atomic::CssRuntime::new()),
@@ -168,19 +171,22 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
     }
 }
 
-/// Slim N-API view: the fields production `sync()` consumes (sheets, runtime,
-/// diagnostics, traced hosts) plus the opt-in compiler backchannel when present.
-/// Style plans, wants, the css map, top-level recipes, and the atom count ride
-/// the proof channel only; they cost ~38% of the result string at enterprise.
-/// The portable sheet refolds against the primary sheet's shared suffix (head +
-/// tail length; the wrapper rebuilds the identical string), saving ~48% of the
-/// wire at enterprise. The observed `CompileResult` is unchanged.
+/// Slim N-API view: the fields production `sync()` consumes (sheets, streams,
+/// runtime, diagnostics, traced hosts) plus the opt-in compiler backchannel
+/// when present. Style plans, wants, the css map, top-level recipes, and the
+/// atom count ride the proof channel only; they cost ~38% of the result
+/// string at enterprise. The portable sheet refolds against the primary
+/// sheet's shared suffix (head + tail length; the wrapper rebuilds the
+/// identical string), saving ~48% of the wire at enterprise. The streams ride
+/// verbatim beside the sheets (no refold): the S2 oracle channel. The
+/// observed `CompileResult` is unchanged.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SlimCompileResult<'a> {
     stylesheet: &'a str,
     portable_head: &'a str,
     shared_tail_utf16: usize,
+    streams: &'a ::atomic::stylesheet::StylesheetStreams,
     runtime: &'a ::atomic::NativeRuntimeArtifact,
     diagnostics: &'a Vec<::atomic::Diagnostic>,
     traced_jsx_hosts: &'a Vec<String>,
@@ -196,6 +202,7 @@ impl<'a> SlimCompileResult<'a> {
             stylesheet: &result.stylesheet,
             portable_head: refold.head,
             shared_tail_utf16: refold.tail_utf16,
+            streams: &result.streams,
             runtime: &result.runtime,
             diagnostics: &result.diagnostics,
             traced_jsx_hosts: &result.traced_jsx_hosts,

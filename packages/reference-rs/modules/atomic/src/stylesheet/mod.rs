@@ -11,8 +11,8 @@ mod system_layers;
 
 use crate::diagnostics::Diagnostic;
 pub use emitter::{
-    StylesheetSinks, build_portable_stylesheet_with, build_stylesheet, build_stylesheet_with,
-    build_stylesheets_with,
+    StylesheetSinks, StylesheetStreams, build_portable_stylesheet_with, build_stylesheet,
+    build_stylesheet_with, build_stylesheets_with,
 };
 use serde::{Deserialize, Serialize};
 

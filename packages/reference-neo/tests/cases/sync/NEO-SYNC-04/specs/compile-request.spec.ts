@@ -60,7 +60,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     fs.readFileSync(path.join(outDir, 'system', 'evaluated-system.json'), 'utf8'),
   ) as unknown;
   const expected = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spec: evaluated,
     jsxHosts: expectedHosts,
     sourceRoot: c.worldDir,

@@ -176,6 +176,7 @@ fn token_rejection(code: DiagnosticCode, message: String) -> CompileResult {
     CompileResult {
         stylesheet: preamble.clone(),
         portable_stylesheet: preamble,
+        streams: stylesheet::StylesheetStreams::preamble_only(),
         runtime: NativeRuntimeArtifact::default(),
         style_plans: Vec::new(),
         css: Some(CssRuntime::new()),

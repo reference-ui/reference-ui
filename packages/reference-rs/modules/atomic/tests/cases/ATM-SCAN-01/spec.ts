@@ -22,7 +22,7 @@ const BLUE = 'blue.500'
 
 function frozenBase(sourceRoot: string): NativeCompileRequest {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spec: LIB_SYSTEM_SPEC,
     jsxHosts: [],
     sourceRoot,

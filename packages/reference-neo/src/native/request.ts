@@ -29,7 +29,7 @@ export interface CompileRequestInput {
 
 export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRequest {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     spec: input.spec,
     jsxHosts: uniqueSorted([...input.requested, ...input.primitiveNames]),
     sourceRoot: input.sourceRoot,

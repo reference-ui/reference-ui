@@ -209,7 +209,7 @@ export interface VirtualSource {
 }
 
 export interface NativeCompileRequest {
-  schemaVersion: 1
+  schemaVersion: 2
   spec: EvaluatedSystemSpec
   jsxHosts: string[]
   sourceRoot: string

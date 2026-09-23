@@ -25,7 +25,7 @@ const spec: AtomicCaseSpec = {
 
     const sourceRoot = path.resolve(getCaseInputDir(CASE))
     const frozenBase = {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       spec: LIB_SYSTEM_SPEC,
       jsxHosts: [] as string[],
       sourceRoot,
@@ -37,6 +37,7 @@ const spec: AtomicCaseSpec = {
     expect(frozen.css?.classes).toEqual(result.css?.classes ?? {})
     expect(frozen.diagnostics).toEqual(result.diagnostics)
     expect(frozen.atomCount).toBe(result.atomCount)
+    expect(frozen.streams).toEqual(result.streams)
 
     const hosted = await compile({ ...frozenBase, jsxHosts: ['ConfiguredHost'] })
     expect(hasWant(hosted, 'mt', '4r')).toBe(true)
@@ -45,13 +46,15 @@ const spec: AtomicCaseSpec = {
 
     const badVersion = await compile({
       ...frozenBase,
-      schemaVersion: 2,
+      schemaVersion: 1,
     } as unknown as NativeCompileRequest)
     expect(badVersion.diagnostics).toHaveLength(1)
     expect(badVersion.diagnostics[0]!.severity).toBe('error')
     expect(badVersion.diagnostics[0]!.message).toContain('schemaVersion')
     expect(badVersion.stylesheet.startsWith(LAYER_PREAMBLE)).toBe(true)
     expect(badVersion.atomCount).toBe(0)
+    expect(badVersion.streams.name).toBe('')
+    expect(badVersion.streams.preamble).toBe(`${LAYER_PREAMBLE}\n`)
   },
 }
 

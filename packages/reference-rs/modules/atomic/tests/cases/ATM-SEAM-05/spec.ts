@@ -23,7 +23,7 @@ const spec: AtomicCaseSpec = {
 
     const sourceRoot = path.resolve(getCaseInputDir(CASE))
     const frozen: NativeCompileRequest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       spec: LIB_SYSTEM_SPEC,
       jsxHosts: [],
       sourceRoot,

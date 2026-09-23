@@ -42,7 +42,7 @@ const spec: AtomicCaseSpec = {
 
     const sourceRoot = path.resolve(getCaseInputDir(CASE))
     const hosted = await compile({
-      schemaVersion: 1,
+      schemaVersion: 2,
       spec: LIB_SYSTEM_SPEC,
       jsxHosts: ['ConfiguredHost'],
       sourceRoot,

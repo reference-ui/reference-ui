@@ -254,6 +254,18 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     expect(slim.stylesheet).toContain('@layer utilities')
     expect(slim.portableStylesheet).toContain('@layer utilities')
     expect(slim.runtime.schemaVersion).toBe(2)
+    expect(Object.keys(slim.streams).sort()).toEqual([
+      'global',
+      'name',
+      'package',
+      'preamble',
+      'recipes',
+      'reset',
+      'tokens',
+      'tokensPortable',
+      'utilities',
+    ])
+    expect(slim.streams.name).toBe('lib-test-system')
     expect('stylePlans' in slim).toBe(false)
     expect('wants' in slim).toBe(false)
     expect('css' in slim).toBe(false)
@@ -263,6 +275,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
     const full = compileSync({ baseSystem: specSystem, files, logs: ['proof'] })
     expect(full.stylesheet).toBe(slim.stylesheet)
     expect(full.portableStylesheet).toBe(slim.portableStylesheet)
+    expect(full.streams).toEqual(slim.streams)
     expect(full.stylePlans.length).toBeGreaterThan(0)
     expect(full.wants!.length).toBeGreaterThan(0)
     expect(Object.keys(full.css!.classes ?? {})).toHaveLength(full.atomCount!)

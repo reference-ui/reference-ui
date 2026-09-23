@@ -75,15 +75,18 @@ pub struct StylesheetSinks<'a> {
 
 /// Build both sheets via captured per-layer streams, then concatenate. Only
 /// the token selectors differ, so recipes+utilities print once and both sheets
-/// stay byte-identical to the paired single builds.
+/// stay byte-identical to the paired single builds. Returns the streams first:
+/// S2 ships them verbatim alongside the joined sheets as the oracle channel.
 pub fn build_stylesheets_with(
     atom_set: &AtomSet,
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     sinks: StylesheetSinks<'_>,
-) -> (String, String) {
+) -> (StylesheetStreams, String, String) {
     let streams = build_stylesheet_streams(atom_set, system, recipes, sinks);
-    (streams.stylesheet(), streams.portable_stylesheet())
+    let sheet = streams.stylesheet();
+    let portable = streams.portable_stylesheet();
+    (streams, sheet, portable)
 }
 
 fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {

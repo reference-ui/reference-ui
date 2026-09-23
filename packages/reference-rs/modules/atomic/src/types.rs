@@ -12,6 +12,7 @@ use crate::atom::Want;
 use crate::diagnostics::Diagnostic;
 use crate::recipes::RecipeTable;
 use crate::runtime::{CssRuntime, NativeRuntimeArtifact, RuntimeStylePlan};
+use crate::stylesheet::StylesheetStreams;
 
 /// In-memory source file to compile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -76,6 +77,10 @@ pub struct CompileResult {
     pub stylesheet: String,
     #[serde(default)]
     pub portable_stylesheet: String,
+    /// The own system's per-layer streams (S2 oracle channel): the 9-key
+    /// object with both token variants, shipped verbatim next to the joined
+    /// sheets. Required on schema 2; fail-closed artifacts carry preamble-only.
+    pub streams: StylesheetStreams,
     pub runtime: NativeRuntimeArtifact,
     /// Compile-internal plans: the compiler rows, surfaced for proof,
     /// stations, and the differential gate. The artifact carries no
