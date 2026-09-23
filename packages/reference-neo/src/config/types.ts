@@ -10,7 +10,7 @@ export interface BaseSystem {
   name: string
   /** Bundled fragment IIFEs representing the full upstream config contribution. */
   fragment: string
-  /** Pre-compiled component CSS for layers mode, including any bundled upstream stylesheets. */
+  /** Merged portable CSS: extends stylesheets in declared order plus the own block; the publisher owns the reset. */
   css?: string
   /** Resolved non-primitive JSX elements contributed by this system and its upstream extends chain. */
   jsxElements?: string[]

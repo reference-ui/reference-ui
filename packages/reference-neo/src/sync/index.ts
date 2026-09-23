@@ -25,6 +25,7 @@ import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { cleanDir } from './clean.ts'
 import { linkGeneratedPackages, publishRuntimeBundle, publishSyncFolder, publishTypesBundle } from './publish.ts'
 import { markPhase } from './phases.ts'
+import { mergePackedStylesheets, type PackedUpstream } from './packed-css.ts'
 import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
 import type { ReferenceUIConfig } from '../config/types.ts'
@@ -114,6 +115,24 @@ function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIC
   )
 }
 
+// Packed-css merge (both assemblies, one function): the served sheet takes
+// upstream portable blocks plus the own :root-hoisted block; the published
+// portable takes upstream portable blocks plus the own self-scoped block.
+// Empty upstream css returns the own block byte-identical, so worlds without
+// extends merge nothing.
+function mergePublishedStylesheets(
+  extendsSystems: readonly PackedUpstream[] | undefined,
+  stylesheet: string,
+  portableStylesheet: string,
+  selfName: string
+): { stylesheet: string; portableStylesheet: string } {
+  const upstreams = extendsSystems ?? []
+  return {
+    stylesheet: mergePackedStylesheets(upstreams, stylesheet, selfName),
+    portableStylesheet: mergePackedStylesheets(upstreams, portableStylesheet, selfName),
+  }
+}
+
 /**
  * Regenerate the `.reference-ui/` folder for the project at cwd. Cleans the
  * stale folder first, evaluates fragments once, compiles the spec natively,
@@ -197,12 +216,13 @@ export async function sync(cwd: string): Promise<SyncResult> {
     // portable system, so downstream extends keep their fuel.
     const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
 
+    const merged = mergePublishedStylesheets(config.extends, result.stylesheet, result.portableStylesheet ?? '', spec.name)
     publishSyncFolder({
       outDir,
       spec,
       portableFragment: createPortableFragmentBundle(prepared),
-      stylesheet: result.stylesheet,
-      portableStylesheet: result.portableStylesheet ?? '',
+      stylesheet: merged.stylesheet,
+      portableStylesheet: merged.portableStylesheet,
       jsx,
     })
     // Logical request artifact: `files` (megabytes of bytes) and the
