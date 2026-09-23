@@ -91,6 +91,7 @@
     "agentrs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
     "rs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
     "canon": "pnpm exec tsx ./modules/canon/generate/generate.ts",
+    "primitives": "pnpm exec tsx ./modules/primitives/generate/generate.ts",
     "base-system": "pnpm exec tsx ./modules/base-system/generate/generate.ts",
     "artifacts": "pnpm exec napi artifacts --output-dir dist/artifacts --npm-dir dist/npm",
     "build": "pnpm run ensure-native && pnpm run build:js",
