@@ -310,6 +310,120 @@ exact artifact shapes (d.ts closure like tasty? JSON data?);
 whether per-system emission ever follows below the cut or stays Neo
 permanently; the folder name.
 
+### 3.10. jsx-elements artifact leaves sync for the tracer side (HQ: homeless join)
+
+The `JsxElementsArtifact` (`sync/jsx-elements.ts`, 35 lines) joins
+three name sources into `{ primitives, upstream, local, merged }`:
+upstream from `config.extends`, local from configured names plus
+engine-traced hosts, merged as the union. `primitives` is `[]` until
+the 3.9 roster lands a producer. User value: zero-config styled
+hosts (`<Card p="1r">` paints with no registration), the config
+escape hatch for names tracing can't infer (generated surfaces,
+member spellings), and extends chains carrying the roster downstream
+so layered systems keep compiling upstream components' styles.
+
+Why sync is wrong: `sync/index.ts` calls it twice, once per side of
+`compile()` — pre-compile configured-only into `request.jsxHosts`
+(frozen D12), post-compile configured ∪ traced into
+`system/jsx-elements.json` + `baseSystem.jsxElements` (NEO-SYNC-15
+pins the split). It is vocabulary both sides speak, not engine-block
+machinery; the dependency arrows already point away (collect's
+goldens battery and `packager/types.ts` import it).
+
+HQ decision (pre-night interview, Final): tracer-side, not packager.
+The artifact exists to carry discovery — configured names are the
+fallback, traced names are the point. Concretely beside the
+scan/discovery code under `src/collect/`, placed per collect's
+surface/lib + README law by the moving crew. NIGHT-3's "stays" (#11)
+is overridden. Forward: `native/generated/primitives` feeds the
+`primitives` field; sync passes the roster through and owns none of
+it.
+SUPERSEDED by §3.11: the chaining half is base-system assembly, so
+the join moves once to `system/base` (collect consumes, not hosts).
+The collect-vs-packager reasoning stands; the home gains a third
+option that fits better.
+
+### 3.11. `src/system/`: home for the portable-system domain only (HQ: serious kit, serious address)
+
+HQ: the base-system domain is homeless (type in `config/`, assembly
+in `publish/`, roster in `sync/`) and deserves a real home with
+serious tests — legacy precedent is real (`system/base`,
+`system/runtime`, `system/stylesheet`). Lean: `system/base` for the
+contract, possibly `system/collect` and `system/runtime` under it.
+
+Captain's judgment (HQ accepted): tight, not legacy-literal.
+`src/system/` owns the portable-system domain only — base assembly,
+the roster + extends-chaining, the `BaseSystem` contract types, with
+serious tests. `collect` and `runtime` stay top-level: collect is
+input-side (source→spec), base is output-side (spec→published
+system) — different directions, and theme-grouping ("all system
+stuff") rebuilds the drawer one level up. The 3.3 top-level ruling
+stands. The overloaded word (`BaseSystem`, `SystemSpec`,
+`@reference-ui/system`, generated `outDir/system/`) stays meaningful
+only if the folder's scope stays narrow.
+
+Relationships (the tension resolution — producers vs assemblers):
+- `collect` keeps one job: discover (fragments, hosts). Standalone.
+- `system/base` assembles portability from discovery + config. It
+  consumes collect's output; collect never imports system.
+- `packager` owns the act of publishing; `system/` owns what is
+  published. `publish/system.ts` splits: the pure build (roster
+  chain, base assembly) moves to `system/base` under heavy tests;
+  the thin write-to-disk stays a packager leg.
+- The 3.10 join is assembly, not discovery — one move to
+  `system/base`; collect's goldens battery imports it (healthy
+  consumer arrow). The traced half still leaves TS at seam time.
+Open threads: exact `system/base` file contents; the build/write
+split line in `publish/system.ts`; whether Neo's top-level
+`primitives/` docks under `system/` after 3.9 lands (aligned, not
+now); the `src/system` vs `out/system` naming collision watch.
+
+### 3.12. `src/cli/`: the user-facing command layer, thin by law (HQ: no logic in the binary)
+
+HQ: `src/cli/sync`, `src/cli/clean` — the CLI is the user-facing
+surface and nothing else. No actual/build/compile logic; that
+separation is what keeps module boundaries honest.
+
+Captain: the bin is guiltier than it looks. `bin/neo.ts` (134 lines)
+hosts three commands' worth of logic: the tasty-drain block in
+`cmdSync` (:28-38, with the REF-10 essay — reaches into
+`reference/bridge` internals), the link-removal loop in `cmdClean`
+(`removeScopeLinks` :47-56 + reporting), signal handling and the
+never-promise in `cmdWatch` (:96-104). The move: `src/cli/` owns
+one file per command plus argv/options; `bin/neo.ts` shrinks to a
+trampoline (argv → cli → exit code).
+
+The thinness law (what cli/ may and may not own):
+- OWNS: argv→options mapping, exit codes, human printing (`[neo]`
+  lines), process lifecycle (SIGINT/SIGTERM, the watch
+  never-promise). Errors name the cause and exit nonzero — here.
+- MUST NOT own: the link list (packager's PACKAGES — NIGHT-1's
+  derivation moves with `cmdClean`, still derived); the wipe
+  (`cmdClean` uses raw `rmSync` while `sync/clean.ts` has the
+  retrying `cleanDir` — unify on the primitive, cli calls it); the
+  tasty drain (becomes one subsystem call, or pushes into the sync
+  recipe — the REF-10 knowledge leaves the command); compile,
+  publish, link construction (subsystem calls, never inlined).
+Watch splits in two: cli/ owns the `--watch` flag routing
+unconditionally; the driver's home is WAVE1-WATCH's 11 AM verdict
+(stays vs splits) — this item does not preempt it.
+Framework target (HQ): Commander.js. Overkill for today's two
+verbs + one flag, correct as the declared target — hand-rolled
+parsing rots at the third command, which is when logic creeps back
+into the binary. Commander owns argv shape only; the thinness law
+above is unchanged.
+Output contract (HQ, verbatim shape): success emits ONE minimal
+line — `⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB` — glyph + command + stats,
+nicely coloured, separators in a darker muted tone (never bright).
+Errors are the exception: full cause, loud. Standard path stays
+whisper-quiet.
+Open threads: exact cli/ file layout (per-command files + shared
+argv/print helpers); whether the tasty drain pushes into the recipe
+or stays a named subsystem call; `clean` unifying on `cleanDir`
+(includes its retry semantics — verify against the tasty-writer
+overlap the retry exists for); the output contract says `ref` but
+the binary is `neo` — rename or shorthand?
+
 ## 4. Run log (updated as we talk — the plan tracks reality)
 
 ### Done (landed, verified, committed)

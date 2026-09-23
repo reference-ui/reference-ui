@@ -12813,3 +12813,2139 @@ factory-leak probe negative. Follow-up noted: `@reference-ui/neo/config`
 
 AUTHOR-KILL DONE: author/ gone + id answering + full suite green
 + T1 green. Report, don't land.
+
+## NIGHT-5 — primitives codegen spec (Tokyo 3.9 end-state)
+
+Read-only spec crew, 2026-09-23 overnight. Read Tokyo 3.9 fully
+(`packages/reference-neo/PLAN.md` §3.9 + §4 overnight item 5) plus
+every source below firsthand. Zero tree writes except this section.
+
+ASSUMPTION (flagged per brief): no NIGHT-4 home section exists in
+this log at filing time (`grep NIGHT` empty). Proceeding on the HQ
+lean — **RS emits, Neo proves** (PLAN.md §3.9 SHAPE, converging).
+If NIGHT-4 lands a different home, §4 waves re-sequence but §§1–3
+survive: the artifact shapes and station list are home-agnostic.
+
+### Evidence read (all firsthand, current tree)
+
+- Neo hand-mirrors (the three copies 3.9 names): `src/primitives/tags.ts`
+  (101 tags, HTML only), `src/primitives/generate/generate.ts`
+  (`generateReactEntrySource` / `generateReactTypesSource`, header admits
+  "mirrors the typegen shape until typegen wires in"),
+  `src/primitives/generate/react-surface.d.ts` (hand-mirrored stable
+  surface, `StylePropName = string` wide on purpose).
+- Neo runtime trio: `src/primitives/runtime/{factory,split,context}.ts`
+  (forwardRef factory, `ref-${tag}` marker, compiled-names splitter +
+  `_`/`&`/`@` condition arms, Symbol.for contexts, `data-layer` /
+  `data-color-mode` / `data-variant` stamps).
+- Neo per-system assembly: `src/sync/react.ts` (`publishReactBundle` —
+  react.mjs bundled, react external, no react-dom, css/recipe
+  pre-registered over runtime-data) + `src/sync/publish/types-bundle.ts`
+  (`publishTypesBundle` — live `import('@reference-ui/rust/typegen')`
+  `emitDtsSync`, react StyleProps wired onto the styled index, named
+  graph appended: `PrimitiveProps<T>`, `css`, `recipe`,
+  `RecipeVariantProps`).
+- RS sources of truth: canon `generate/overlay/primitives.ts` (101 HTML
+  + 24 SVG tags, SVG in React camelCase), generated `src/html.rs`
+  (`ELEMENTS` 125 entries, `Element{html,jsx}`, `PRIMITIVE_JSX`,
+  `is_reference_primitive`; **SVG spellings lowercased — see F1**),
+  `src/lib.rs` (`is_known_style_prop` = reference-prop || alias ||
+  property, plus `--*`), `src/dialect.rs` (`ALIASES`, `REFERENCE_PROPS`
+  = colorMode/r/size/variant/weight), `src/conditions.rs`
+  (`NAMED_CONDITIONS`), `src/css/{properties,color}.rs`
+  (`CANONICAL_PROPERTIES`, `COLOR_PROPERTIES`).
+- Typegen contract: `SPEC.md` (28/28 proven; `emit_dts` open-mode,
+  `emit_dts_with` strict; StyleProps = canon color props + `bg` +
+  p/mt aliases + canonicals + canon `*Radius` + dialect
+  container/recursive-`r` + FontProps; KNOWN GAPS: `gap` omitted,
+  STYLE-02 box-spacing only; `rounded*` refused; `js/index.ts`
+  `emitDtsSync` = JSON-over-napi, no fs).
+- Distribution precedents: (a) tasty d.ts = VENDORED committed copy
+  (`tools/vendor-rust-tasty-dts.mjs`, regen + `--check`, NodeNext
+  rewrite, closure from dist tops); (b) typegen emit = LIVE sync-time
+  `import('@reference-ui/rust/typegen')`. The spec below uses both,
+  split by consumer (typecheck-time → vendored; sync-time → live).
+- Station conventions: `tests/cases/{prim,type}/{SPEC,TESTS}.md`
+  (PRIM-01..15 + TYPE-01..08 all done; ids append-only, never renumber;
+  `case.json` = `{id, name, sync}`; type proofs = `tsc --noEmit` on
+  positive + negative worlds, negative pinned to a TS error code).
+
+### Findings that shape the spec (new, firsthand)
+
+- **F1 — canon dropped the React SVG spellings.** Overlay source has
+  `clipPath`, `linearGradient`, `radialGradient`, `foreignObject`;
+  generated `html.rs` stores `clippath`, `lineargradient`,
+  `radialgradient`, `foreignobject` (all 125 verified by grep). React
+  DOM requires the camelCase host spellings for SVG. The emission
+  vocabulary therefore needs a THIRD column (`dom`: React-correct host
+  tag) that canon's Rust tables cannot supply today — but the TS
+  overlay still holds it. The generator must capture it at
+  generate-time (TS side), not reconstruct it in Rust.
+- **F2 — the set grows 101 → 125 if canon rules.** Neo pins 101
+  (`tags.test.ts`, PRIM-09 census); canon `ELEMENTS` = 125 (101 HTML +
+  24 SVG: shapes path/circle/rect/line/polyline/polygon/ellipse,
+  text/tspan, use/g/defs/image/view/symbol/switch/marker/pattern,
+  clipPath/mask, linearGradient/radialGradient/stop,
+  foreignObject). Extract already treats them as primitives
+  (`is_reference_primitive`). Emitting all 125 adds public names
+  (`Path`, `Circle`, `G`, `Text`, `Switch`, `View`, `Image`, `Use`,
+  `Marker`, `Pattern`, `Symbol`, `ForeignObject`, …) — a public-surface
+  decision for the morning (default recommended: emit all 125; the
+  alternative — HTML-only with an SVG allowlist wave later — is W6).
+- **F3 — typegen's prop list is computable but not exported.** The
+  StyleProps key set (color props + aliases + radii + dialect keys +
+  conditions) is assembled inline by the style printer (`src/emit/
+  style.rs` over canon tables). No function returns the key list alone.
+  The "single source of truth" needs a refactor, not just a call:
+  build a `PropDefs` struct first, print `emit_dts` from it, expose the
+  names over napi beside `emitDtsNative`.
+- **F4 — per-system binding is three bakes.** `generateReactEntrySource`
+  bakes exactly (systemName → layerName, stylePropNames → splitter,
+  factory/split/context paths) and `publishReactBundle` prepends the
+  css/recipe pre-registration header. That is the complete list of what
+  MUST stay Neo-side (it needs sync-time inputs). Everything else in
+  the entry — the per-tag roster, the Props shapes, the unions — is
+  system-independent and can move below the cut.
+
+### (1) RS emission shapes
+
+**New home: `packages/reference-rs/modules/primitives/`** (one way to
+generate stuff; consumes canon + typegen as libraries, adds zero new
+authority). Layout:
+
+```text
+modules/primitives/
+├── README.md            purpose-first (3.9's SOURCE/GENERATOR/CONSUMERS)
+├── generate/
+│   └── generate.ts      ENTRY POINT — see below
+├── js/                  authored runtime home (moved verbatim, see E3)
+│   ├── factory.ts       from neo src/primitives/runtime/factory.ts
+│   ├── split.ts         from neo src/primitives/runtime/split.ts
+│   └── context.ts       from neo src/primitives/runtime/context.ts
+├── generated/           committed generator output (never hand-edited)
+│   ├── vocabulary.json  E1 — the machine contract
+│   ├── primitives.mjs   E2 — raw system-unbound component module
+│   └── primitives.d.ts  E4 — raw types (tasty-closure style)
+└── tests/               RS-side goldens (vocabulary snapshot)
+```
+
+**Entry point: `pnpm --filter @reference-ui/rust run primitives` →
+`modules/primitives/generate/generate.ts`** (canon-script precedent:
+`pnpm exec tsx ./modules/primitives/generate/generate.ts`). It takes
+canon overlay (TS — keeps F1 camelCase) + `primitives_vocabulary()`
+over napi (F3 — typegen's own key list) and emits E1/E2/E4 in one run.
+Deterministic bytes (sorted keys, fixed header); exits nonzero on any
+fail-closed violation (F1 spelling table incomplete, alias target
+unknown, jsx collision — e.g. `Text`/`Map` — unresolved).
+
+**E1 — `vocabulary.json` (data, not prose).** The single machine
+contract; Neo's per-system emitter and the station parity cases read
+this, never Rust tables directly:
+
+```jsonc
+{
+  "version": 1,
+  "elements": [
+    // 125 entries, sorted by jsx; dom = React-correct host spelling
+    { "dom": "div", "jsx": "Div", "family": "html-flow" },
+    { "dom": "clipPath", "jsx": "ClipPath", "family": "svg-container" }
+    // … Obj/Var escapes + single-letter (A/B/I/P/Q/S/U) preserved …
+  ],
+  "stylePropNames": ["--custom", "_dark", "..."], // EXACT typegen key set
+  "conditions": ["_dark", "_hover", "@sm", "..."], // NAMED_CONDITIONS + note
+  "aliases": { "bg": "backgroundColor", "mt": "marginTop" },
+  "reserved": ["className", "children", "colorMode", "variant", "css", "ref"],
+  "elementOverrides": { "caption": "HTMLTableCaptionElement", "menu": "HTMLMenuElement" }
+}
+```
+
+Notes: `stylePropNames` MUST equal the key set typegen's StyleProps
+printer emits (same `PropDefs`, mechanically — F3 refactor is what
+makes "the names typegen knows are the names emitted" true rather
+than aspirational). `conditions` documents the lexical rule the
+splitter implements (`_`/`&`/`@` prefixes, mirroring canon
+`is_condition`) plus the named list. Families (11): html-flow,
+html-text, html-form, html-table, html-media, html-interactive,
+svg-shapes, svg-text, svg-gradient, svg-container, special (Obj/Var,
+Map, caption/menu, single-letters, voids).
+
+**E2 — `primitives.mjs` (raw system-unbound components).** One module,
+125 named exports (`Div`, …, `ClipPath`, …), each a thin
+`createPrimitive({tag: dom, displayName: jsx, …})` call with the
+THREE sync-time binds left open via a single `configurePrimitives({
+layerName, stylePropNames, css })` seam (returns the bound roster; the
+unbound module never renders — same "unreachable by construction"
+contract as today's eval-safe barrel). Neo's `publishReactBundle`
+replaces its `generateReactEntrySource` string-building with: import
+E2 (live, see §3) + call `configurePrimitives` + existing css/recipe
+pre-registration header + bundle. No per-tag string building remains
+in Neo.
+
+**E3 — authored runtime moves, verbatim.** `factory.ts`/`split.ts`/
+`context.ts` relocate to `modules/primitives/js/` with behavior
+byte-identical (forwardRef, `ref-${tag}` marker, splitter + condition
+arms, Symbol.for contexts, attr stamping). Rust never prints React
+runtime — that would be the Liquid sin in a new coat (PLAN.md §3.4).
+RS-side vitest covers the trio (moved tests); Neo station behavior
+cases prove them through the bound roster.
+
+**E4 — `primitives.d.ts` (raw types, tasty-closure style).** Printed
+from the same run: `PrimitiveTag` (125 literals), `StylePropName`
+(EXACT union — replaces both the per-world baked union AND the wide
+`string`), per-tag `${Jsx}Props` + const decls (today's
+`generateReactTypesSource` shape, minus the bake), `PrimitiveElement`
++ caption/menu overrides, `PrimitiveProps<T>` generic, contexts +
+`useColorMode`. Typegen precision rides the SAME file: E4 imports the
+central typegen index for `StyleProps` narrowing (today's
+`stylePropsWiring` merge, but printed once in RS from `PropDefs`
+instead of string-spliced in Neo at publish time). `react-surface.d.ts`
+and the hand-mirrored per-world splice delete.
+
+**Explicit non-emits (tripwires):** no `Box`/`Flex`/`Grid` (map rule,
+fail-closed in the generator); no polymorphic `as`; no `styled()`/
+jsx-factory; no per-recipe modules; no atomic class names in d.ts;
+no `rounded*` (canon has none); no viewport keys as condition
+defaults (`@sm` only, D8); no `@pandacss/*`.
+
+### (2) Neo test-station case list
+
+**New group `pgen`** (`tests/cases/pgen/`, own SPEC.md/TESTS.md; owns
+the vendored vocabulary + the bound roster). New ids (append-only;
+PRIM/TYPE ledgers untouched — PRIM-09/PRIM-10/TYPE-01 get re-anchored
+assertions in W5, not renumbers). Behavior cases render through the
+RS-emitted bound roster; type cases `tsc --noEmit` positive + negative
+worlds against the vendored E4 with the negative pinned to a TS code.
+
+Behavior (do they render/emit/resolve) — one per family + cross-cuts:
+
+| id | name | claim |
+|---|---|---|
+| NEO-PGEN-01 | html-flow renders | flow probes (Div/Section/Main/…) render own tagName, paint a style prop + `css` prop, stamp `ref-*` marker + `data-layer` |
+| NEO-PGEN-02 | html-text renders | text/phrasing probes (P/Span/Em/Code/…) incl. single-letters (A/B/I/P/Q/S/U) render + resolve responsive arrays with `null` holes |
+| NEO-PGEN-03 | html-form renders | form probes (Input/Select/Textarea/Button/Label/…) keep native behavior (value entry, label association, submit) with style props applied, no key leakage as attributes |
+| NEO-PGEN-04 | html-table renders | table probes (Table/Thead/Tbody/Tr/Td/…) render inside a real `<table>` (no DOM-nesting repair) + `Caption` paints |
+| NEO-PGEN-05 | html-media renders | media probes (Img/Audio/Video/Source/Track/…) carry native attrs (`src`, `alt`, `controls`) through untouched + void elements (Br/Hr/Img/Input/…) render childless |
+| NEO-PGEN-06 | html-interactive renders | interactive probes (Details/Dialog/Form/Select/…) toggle/open natively; `_hover` + `_dark` arms paint through the roster |
+| NEO-PGEN-07 | svg-shapes render | shape probes (Path/Circle/Rect/Line/Polyline/Polygon/Ellipse) render correct camelCase tagNames inside `<Svg>` + take style props (fill/stroke via props, not attrs) |
+| NEO-PGEN-08 | svg-text renders | Text/Tspan render + paint; `text` collision probe: SVG Text vs HTML semantics stay distinct elements |
+| NEO-PGEN-09 | svg-gradients render | LinearGradient/RadialGradient/Stop render camelCase tagNames; `fill="url(#…)"` reference resolves and paints |
+| NEO-PGEN-10 | svg-containers render | container probes (G/Defs/Use/ClipPath/Mask/Pattern/Symbol/Switch/View/Marker/Image/ForeignObject) render camelCase tagNames — F1 regression net |
+| NEO-PGEN-11 | special-cased roster | Obj/Var render `object`/`var`; Map renders `map` without shadowing global `Map`; caption/menu refs land on the override elements; Box/Flex/Grid absent from the roster (map rule, runtime side) |
+| NEO-PGEN-12 | set parity with canon | roster jsx set == vendored vocabulary elements == live canon `PRIMITIVE_JSX` (125); any drift fails — the freshness gate at test time |
+| NEO-PGEN-13 | prop parity with typegen | bound splitter key set == vendored `stylePropNames` == live typegen `PropDefs` names; alias probe (`bg`/`mt`) resolves identically through roster and `css()` |
+| NEO-PGEN-14 | metadata + passthrough | `variant` stamps `data-variant` + recipe class; `colorMode` stamps `data-color-mode`; `id`/`aria-*`/`data-*`/handlers/`ref` reach the host; style keys never leak (roster-wide sweep, extends PRIM-06/08) |
+
+Type cases (validity AND invalidation) — positive file exit 0,
+negative file exit ≠ 0 with the pinned code:
+
+| id | name | must typecheck | must FAIL |
+|---|---|---|---|
+| NEO-PGEN-15 | style props valid everywhere | every family's probe with token props + `css` object/array + `_hover`/`@sm` arms | bogus key in `css={{…}}` → TS2353 (per TYPE-08 precedent) |
+| NEO-PGEN-16 | token unions real | known literal at `ColorToken` position; `colors.*` prefixed value where P-prim-1 allows | `color="nope"` at `ColorToken` position → TS2322 (open-hatch positions stay permissive per TYP-STRICT-04 — the case documents which positions are/aren't hatches) |
+| NEO-PGEN-17 | recipe variants | optional-axis selection object; compound row subset | wrong axis value → error (plain unions, not `ConditionalValue`, per TYP-RECIPE-01) |
+| NEO-PGEN-18 | conditions + responsive | `_hover`/`@sm` keys, `[null,'4r']` arrays; bare `sm` ABSENT from keys (re-anchors TYPE-04 on E4) | bare-`sm` keyed object → error |
+| NEO-PGEN-19 | refs + elements | `ref` per-tag host type incl. caption/menu overrides; `PrimitiveProps<T>` generic with argument | `PrimitiveProps` bare (no arg) → TS2314 (per TYPE-07); `ref` of the wrong host → error |
+| NEO-PGEN-20 | forbidden surface | — (pure invalidation) | `Box`/`Flex`/`Grid` import → error; `as` prop → error; `styled.div` → error; `slot` recipes → error; any `@pandacss/*` import in E4 → rg-clean (extends TYPE-06) |
+| NEO-PGEN-21 | svg props | SVG presentation props through style keys; `css` on SVG probes | HTML-only prop misuse on SVG host where React types forbid → error (documents the boundary; kept narrow — React's own SVG types are the oracle) |
+| NEO-PGEN-22 | per-system narrow | world importing the BOUND per-system entry: system token literal assigns, `StylePropName` is the exact union (not `string`, not `never`) | token from another system → error at the narrow position (proves the bake narrowed rather than widened) |
+
+Re-anchor (no new ids): PRIM-09 census flips 101 → 125 with the SVG
+families itemized (or holds 101 if W6 defers SVG — the case asserts
+whichever the vocabulary carries; the number lives in ONE place:
+E1); PRIM-10 import census runs against E4; TYPE-01 compiles against
+the bound entry; TYPE-02/03/04/07/08 keep passing unmodified (they
+prove the per-system surface, which is behavior-preserving).
+
+### (3) Seam contract — what crosses the cut
+
+| artifact | form | distribution | freshness rule |
+|---|---|---|---|
+| E1 `vocabulary.json` | JSON data (elements/props/conditions/aliases/reserved/overrides) | VENDORED committed copy: `src/vendor/rust-primitives/vocabulary.json` (tasty-style tool, see below) — read at sync runtime AND by station parity cases | regen + `--check`; PGEN-12/13 fail on drift (test-time gate) |
+| E2 `primitives.mjs` + E3 runtime | authored + generated TS/JS sources | LIVE workspace import `@reference-ui/rust/primitives` (typegen precedent — `publishTypesBundle` dynamic-imports; bundler resolves at sync time, no committed copy) | no vendor copy to drift; RS `dist` build is the dependency (same as typegen today) |
+| E4 `primitives.d.ts` | d.ts closure with explicit NodeNext specifiers | VENDORED committed copy: `src/vendor/rust-primitives/*.d.ts` (same tool run as E1 — one tool, one version stamp) — Neo typechecks without touching RS | regen + `--check` in the quality gate (see below) |
+| typegen `PropDefs` names | napi JSON (`primitives_vocabulary()`) | build-time only: consumed by `generate.ts` during the RS run, never crosses to Neo directly (Neo sees them via E1/E4) | generator run is atomic: E1+E2+E4 from one `PropDefs` — no skew |
+
+**Vendor tool: `packages/reference-neo/tools/vendor-rust-primitives.mjs`**
+(tasty-vendor contract, adapted): resolves linked `@reference-ui/rust`
+dist (must be built), copies E1 byte-exact + E4 closure with the same
+FROM/IMPORT NodeNext rewrite, stamps `@generated from
+@reference-ui/rust@<version>` + regen line, `--check` prints
+`missing:`/`stale:` lines + regen command and exits 1. Wired into
+`pnpm agentneo q` (same as the tasty check wiring — check how the
+tasty `--check` is invoked by `q` today and mirror it) so CI fails on
+stale vendor. Regen command (canonical, printed by the tool):
+`cd packages/reference-neo && node tools/vendor-rust-primitives.mjs`
+after `pnpm --filter @reference-ui/rust run primitives && pnpm
+--filter @reference-ui/rust build`.
+
+**Freshness layers (three, each with an owner):** (i) `--check` in `q`
+— fails fast on stale bytes, owned by whoever touched RS; (ii)
+PGEN-12/13 parity cases — fail on semantic drift (vendored vs live
+canon/typegen), owned by the station; (iii) RS golden snapshot of E1
+in `modules/primitives/tests/` — fails on unintended generator output
+change, owned by RS (`--update-goldens` refresh, canon-style, never
+silent).
+
+**`vendor/` rename:** rides with this item per 3.9 (captain leans
+`upstream/`; HQ decides). Explicitly NOT overnight — the tool + paths
+above use `vendor/` and rename mechanically when HQ names it. Flagged,
+not specified further.
+
+### (4) Sequenced implementation waves (morning)
+
+Each wave lands only on its proof gate; waves are ordered (later waves
+consume earlier artifacts). No wave starts until the Tokyo stability
+gate is green (PLAN.md §2 — this spec assumes it, does not declare it).
+
+- **W0 — PropDefs refactor (RS, typegen-internal).** Refactor
+  `src/emit/style.rs` to assemble a `PropDefs` struct (prop names,
+  value domains, condition keys, aliases, dialect keys) FIRST, print
+  `emit_dts`/`emit_dts_with` from it, expose `primitives_vocabulary()`
+  over napi returning the names as JSON. No output change: all 8
+  goldens byte-identical. PROOF: `pnpm agentrs c typegen` + `pnpm
+  agentrs v typegen` green, `git diff` on goldens empty, new napi fn
+  round-trips in a vitest.
+- **W1 — generator + E1/E4 (RS, new `modules/primitives/`).**
+  Author `generate/generate.ts` (overlay TS for F1 spellings + napi
+  PropDefs + canon ELEMENTS/PRIMITIVE_JSX) emitting E1 + E4 with the
+  fail-closed join (jsx collisions, alias targets, F1 table
+  completeness, map-rule refusal). Commit E1/E4 + golden snapshot.
+  PROOF: `pnpm run primitives` deterministic (run twice, `cmp` clean);
+  E1 element count 125 with all 24 SVG `dom` spellings camelCase;
+  `stylePropNames` diffed equal to typegen golden key extraction;
+  `agentrs q` on the module green.
+- **W2 — runtime move + E2 (RS).** Move factory/split/context (+
+  tests) verbatim to `modules/primitives/js/`; emit E2 bound-roster
+  module with the `configurePrimitives` seam. PROOF: moved vitest
+  green in RS; E2 imports clean under node with the seam unbound;
+  `agentrs t` (build→cargo→vitest→quality) green.
+- **W3 — vendor tool + `q` wiring (Neo).** Author
+  `tools/vendor-rust-primitives.mjs` (E1 byte-exact + E4 closure,
+  `--check`), wire `--check` into `pnpm agentneo q`. PROOF: fresh run
+  prints fresh; hand-corrupt one vendored byte → `--check` exits 1
+  with `stale:` line; `q` surfaces it.
+- **W4 — per-system assembly cutover (Neo).** `publishReactBundle`
+  binds E2 via `configurePrimitives` (systemName/stylePropNames/css)
+  instead of `generateReactEntrySource`; `publishTypesBundle` consumes
+  E4 instead of splicing. `generate.ts` + `tags.ts` +
+  `react-surface.d.ts` + eval-barrel `index.ts` delete (barrel becomes
+  a re-export of the bound E2 or deletes if the alias target moves —
+  decide at implementation; the alias in `config/bundle.ts` +
+  tsconfig paths repoints). PROOF: full `pnpm agentneo run` green
+  (existing PRIM/TYPE hold on the new plumbing — behavior-preserving);
+  byte-compare of one generated world before/after (modulo header
+  stamps); chain T1 green.
+- **W5 — the station (Neo, `tests/cases/pgen/`).** Author SPEC.md +
+  PGEN-01..22 worlds/specs; re-anchor PRIM-09 (125)/PRIM-10/TYPE-01.
+  PROOF: `pnpm agentneo run pgen` (or per-case runs) all `ok`; each
+  invalidation case observed RED-then-GREEN (negative world fails
+  `tsc` with the pinned code before the fix-position lands — record
+  the code per case); FULL run green.
+- **W6 — SVG surface decision (HQ, may fold into W1).** If HQ defers
+  the 24 SVG primitives: generator gains `--html-only` (E1/E4 carry
+  101 + a `deferred: [svg…]` list), PRIM-09 holds 101, PGEN-07..10
+  land as the SVG allowlist wave later. DEFAULT RECOMMENDED: no flag,
+  emit 125. PROOF: HQ sign-off recorded in PLAN.md §3.9 + this log.
+
+### Open threads for the morning (not decided here)
+
+1. NIGHT-4 alignment: re-read its home section if filed; this spec
+   assumes RS-emits/Neo-proves.
+2. Emit 125 vs 101+deferred (W6; default 125).
+3. `vendor/` → ? (HQ names; mechanical rename after).
+4. Whether per-system emission ever follows below the cut (3.9's
+   standing question — this spec keeps it Neo permanently; revisit
+   only with measured cause).
+5. Exact `configurePrimitives` signature (seam shape is specified,
+   identifier-level API is implementation detail).
+
+NIGHT-5 DONE: implementation-ready 3.9 spec filed (RS shapes + station
+list + seam contract + waves). No implementation, no edits beyond this
+section, no commits. Report only.
+
+## NIGHT-4 primitives home brief (crew, 2026-09-23) — DONE
+
+Scope (strict): READ-ONLY everywhere except this log.
+Tokyo PLAN.md §3.9 (`packages/reference-neo/PLAN.md:264-311`)
+read fully first. No edits, no commits, index untouched.
+Question: RS-side vs Neo-side home for the 3.9 generator +
+test station. Argued both ways below, then a ranked
+recommendation. NIGHT-5 specs shapes + station case list +
+seam contract — this brief decides only HOME.
+
+### Shared ground (both cases accept)
+
+- 3.9 SHAPE is converging (PLAN.md:294-303): RS generates
+  the raw files (primitives + types, names from typegen);
+  Neo holds the test station (behavior + type validity /
+  invalidation). Primitives strongly typed; rest is CSS.
+- The honest split is already drawn (PLAN.md:275-279):
+  vocabulary is RS-owned, *per-system emission* stays Neo
+  (needs system name + compiled style props at sync time).
+- Three hand-mirrors must die (PLAN.md:272-275): tags.ts
+  (copies canon), the style-prop union in generate.ts
+  (mirrors typegen), react-surface.d.ts (mirrors both).
+- The `vendor/` rename rides with this item, not
+  separately (PLAN.md:304-307; captain leans `upstream/`).
+
+### FINDING: the drift 3.9 predicts already exists (firsthand)
+
+- Canon `ELEMENTS` = **125** entries (`grep -c` over
+  `reference-rs/modules/canon/src/html.rs:22-148`): 101
+  HTML + 24 SVG children (source:
+  `canon/generate/overlay/primitives.ts:7-24`, SVG block
+  :19-23, mapped wholesale by `generate/dialect.ts:70-74`
+  into `emit/html.ts:10-71`).
+- Neo `TAGS` = **101** HTML-only
+  (`neo/src/primitives/tags.ts:6-108`, count pinned by
+  `tags.test.ts:13`), header admits it: "Copied tag set"
+  / "Neo-owned copy" (tags.ts:1-4).
+- NOTHING pins the HTML-only filter or canon parity:
+  tags.test.ts asserts count/shape/map-rule only. The SVG
+  drop is silent — no gate would fire if canon added or
+  removed a tag tomorrow. This is exactly the failure the
+  3.9 set-parity gate ("every canon tag has a primitive")
+  is specified to kill (PLAN.md:285-287). Note for
+  NIGHT-5: the filter is also a semantic question (are
+  SVG children primitives?), not just a mechanical move.
+
+### RS-side case (generator below the cut)
+
+1. **Sources are RS-native, consulted at compile time.**
+   Canon owns tags + JSX names (src/html.rs:22-303),
+   aliases + reference props (src/dialect.rs:360,
+   `REFERENCE_PROPS`; resolve_alias :362-371), conditions
+   (src/conditions.rs:9-98), properties (src/css/*), behind
+   one re-export surface (src/lib.rs:8-24) whose header
+   states the law: "the central dictionary consulted by
+   all compiler stages". Consult paths today:
+   typegen `emit/style.rs:101-176` (prop key set +
+   color/spacing/radius walks + condition keys from
+   `NAMED_CONDITIONS`), atomic
+   `runtime/plan.rs:203-217` (`build_style_prop_names`
+   from `CANONICAL_PROPERTIES` + `ALIASES` +
+   `REFERENCE_PROPS`), atomic resolve + stylesheet legs
+   (`resolve/mod.rs`, `shorthands/*`, `stylesheet/*`,
+   `static_css.rs` — all `canon::` consumers). A Neo-side
+   generator re-consults across NAPI or copies — the
+   hand-mirror disease 3.9 exists to kill.
+2. **One language source for names.** Typegen owns prop
+   defs/unions: `emit_dts`/`emit_dts_with`
+   (typegen/src/lib.rs:37-48) → `dts` assembly
+   (emit/mod.rs:22-34: tokens + recipes + fonts + style)
+   → `style_types` (emit/style.rs:43-60: `StyleProps`,
+   `StylePropValue`, `StyleConditionKey`, `FontProps`,
+   `SystemStyleObject`). Typegen already prints TS from
+   Rust; raw primitive files + types are the same skill,
+   tested by the same golden machinery
+   (tests/goldens/*.d.ts, 7 files). "Names typegen knows
+   = names emitted" is a *construction* only when the
+   emitter links typegen — across the cut it degrades to
+   a property somebody must test.
+3. **Distribution is a solved template, not a prototype.**
+   The tasty vendor tool
+   (neo/tools/vendor-rust-tasty-dts.mjs) closes over the
+   RS dist d.ts tree (TOPS :14, BFS :43-62), rewrites to
+   explicit NodeNext (:64-86), stamps provenance (:88-101),
+   and `--check`s freshness (:125-153); contract doc'd in
+   tools/README.md:27-58 ("mechanically copied…
+   regenerate after an RS rebuild"; `src/entry/types.d.mts`
+   imports handle names so renames "break loudly instead
+   of drifting silently", :42-46). Vocabulary/raw-file
+   artifacts ride the identical contract. The value/type
+   seam split already runs in production: tasty VALUES
+   resolve live to RS dist
+   (reference/bridge/tasty-build.ts:8-12,
+   reference/browser/Runtime.ts:16-17) while TYPES come
+   from `src/vendor/rust-tasty/` via tsconfig paths.
+4. **Freshness ownership is crisp.** RS owns
+   source→artifact: canon/typegen move ⇒ regen, gated by
+   cargo + goldens in RS CI (precedent: canon
+   src/tests.rs, typegen goldens + seam/surface tests).
+   Drift fails at generation, not consumption.
+
+### Neo-side case (generator above the cut)
+
+1. **Per-system emission inputs exist only inside sync.**
+   `ReactEntryInput` takes `systemName` + `stylePropNames`
+   + 3 runtime paths (generate.ts:8-14); the entry bakes
+   the layer name (:37), the splitter list (:36), one
+   factory component per tag (:40-45), and a caller-
+   provided `css` binding; the publisher prepends a
+   runtime header pre-registering css()/recipe() over
+   THIS system's runtime-data (sync/react.ts:32-41,
+   publish :49-76). Callers pass `spec.name`
+   (assembly.ts:30) and `runtime.stylePropNames`
+   (assembly.ts:31) — the latter is
+   `NativeRuntimeArtifact.style_prop_names`, RS-computed
+   per compile (plan.rs:190-201). RS has no sync, no
+   system name, no per-world evaluation: it cannot bake
+   what it cannot see.
+2. **The assembly is ordered and Neo-resident.**
+   assembleSystem (assembly.ts:20-37): styled leg →
+   react bundle (reads styled runtime-data) → types
+   bundle post-wires react.d.mts (types-bundle.ts:78-140:
+   swaps the wide StyleProps line for the typegen-
+   precision merge + named graph) → links. Splitting
+   emission across the cut ships half-baked artifacts in
+   both directions; keeping the generator Neo-side keeps
+   one ordered recipe.
+3. **Vendor tool + freshness wiring + loud-break design
+   already live Neo-side.** Tool, committed output
+   (~40 files under src/vendor/rust-tasty/, pinned
+   `@reference-ui/rust@0.0.42`), tsconfig path maps,
+   and the break-loudly import discipline are all Neo
+   files. Freshness failures are OBSERVED Neo-side (a
+   stale copy breaks the package typecheck). Whoever
+   owns the gate owns the home — the gate lives here.
+4. **Station cases + runner already live Neo-side.**
+   tests/cases/prim/ (15 cases, NEO-PRIM-01..15; SPEC
+   owns `src/primitives/**` + `src/sync/react.ts` and
+   proves the generated entry: 101 tag components,
+   css/recipe bindings, DOM contract) + tests/cases/type/
+   (8 cases; SPEC: post-sync tsc proofs over generated
+   .d.mts — validity AND rejection, "reject bad
+   literals") + generate.test.ts (emitted-shape asserts,
+   strict-tsc compile probe of emitted types :87-137,
+   surface-parity pins :144-178). agentneo + Playwright
+   worlds exist only Neo-side; RS stations are
+   golden/seam-level (atomic tests/cases "engine
+   stations" per the PRIM SPEC, canon emit tests,
+   typegen goldens). RS cannot run browser behavior
+   without duplicating the runner — forbidden by the
+   inner-loop law (PLAN.md §5).
+5. **Live RS consult already works at sync time.**
+   publishTypesBundle dynamically imports
+   `@reference-ui/rust/typegen` and calls `emitDtsSync`
+   mid-sync (types-bundle.ts:66-76); sync/native.ts
+   imports `@reference-ui/rust/atomic` the same way.
+   A Neo-side generator COULD consult canon/typegen over
+   NAPI with zero vendored copies — one authority, no
+   mirror.
+
+### Rebuttals (why the cases don't cancel)
+
+- Neo (1) is answered by the split both sides accept:
+   system-INDEPENDENT vocabulary/raw files go RS;
+   per-system baking (layer name, splitter, css binding)
+   stays Neo. The generator question is only the former.
+- Neo (5) trades determinism for adjacency: live NAPI
+   consult couples every sync to the native binary and
+   breaks the vendor contract's "fresh checkouts typecheck
+   with no extra step + hermetic byte-determinism" —
+   the reason tasty types are vendored, not imported.
+- Neo (4) is agreed, not contested: the STATION stays
+   Neo under every ranking below. A station argument is
+   not a generator argument.
+- RS-side inherits the open SVG question (see FINDING):
+   emit all 125, or a platform partition? NIGHT-5 specs
+   it; the home brief records that RS-side generation
+   answers a semantic question, not just a move.
+
+### Freshness hole found (home-independent, must close)
+
+`--check` is convention-only today: Neo package.json has
+NO vendor script (scripts: build/prepack/prepublishOnly),
+zero vendor/fresh hits in tools/quality + the agent-neo
+skill gate, zero hits across all 4 CI workflows. "Run it
+explicitly after an RS rebuild" (tool header :5,
+tools/README.md:48-54) is the entire enforcement. Any
+home that reuses the vendor contract must wire `--check`
+into `pnpm agentneo q` + CI, or the new artifacts drift
+exactly like tags.ts did.
+
+### RANKED recommendation (morning-ready)
+
+**1. SPLIT per 3.9 SHAPE (recommend).** RS generator
+(vocabulary/raw primitive files + types from canon +
+typegen, one language source) + Neo station (behavior
+cases per primitive family + type validity/invalidation
+cases, where agentneo/Playwright live) + vendored
+distribution (generalize the tasty-vendor contract).
+Freshness split BY THE SEAM: RS owns source→artifact
+(canon/typegen move ⇒ regen, failed by RS goldens/cargo
+in RS CI); Neo owns artifact→tree (vendor `--check`
+blocking in `agentneo q` + CI — closes the hole above),
+backstopped by loud-break handle imports (tasty
+precedent), surface-parity units (generate.test.ts
+pattern), and the new set-parity gate. Why: each half
+owns what it can observe; matches precedent on both
+sides (RS golden stations, Neo case stations, tasty
+vendor); kills all three hand-mirrors in one move
+(tags.ts + style-prop union + react-surface.d.ts
+delete; per-system assembly reads vendored vocabulary).
+
+**2. ALL-NEO fallback (viable).** RS emits a vocabulary
+DATA file (tags, JSX names, aliases, conditions, prop
+defs) as a build artifact; a Neo-side generator consumes
+it vendored (same `--check` contract) adjacent to
+per-system emission. Take iff RS emission schedule slips
+or HQ wants one fewer cross-cut codegen. Cost: the seam
+carries data instead of finished files, so "names
+typegen knows = names emitted" becomes a tested
+property, not a construction — and the tsc-printing
+skill gets built twice (typegen emit + Neo generator).
+
+**3. ALL-RS (reject).** Generator + station both below
+the cut. The station needs browser behavior proof; RS
+has no Playwright runner and must not grow one (PLAN §5
+inner-loop law). Reduces the station to string
+assertions or duplicates agentneo — the "seeing is not
+verifying" failure with extra steps.
+
+HQ call needed: confirm rank 1 (or pick 2), plus the
+`vendor/` rename (`upstream/` lean stands) and the SVG
+scoping answer for NIGHT-5's spec. Implement nothing —
+NIGHT-5 + morning waves sequence off this call.
+
+## NIGHT-4 DONE (crew, 2026-09-23)
+
+Home brief filed above: §3.9 read fully, RS-side and
+Neo-side argued with file:line evidence (canon consult
+paths, typegen emit paths, vendor tool contract,
+generate.ts, tags.ts, react-surface.d.ts), one live
+drift finding (101-vs-125 silent SVG drop, no parity
+gate), one freshness hole (vendor `--check` manual-only:
+no script, no q-gate, no CI), ranked recommendation
+(1 split per SHAPE, 2 all-Neo fallback, 3 all-RS
+reject) with seam-split freshness ownership. Read-only
+held (this log section the sole write); index untouched;
+nothing committed. Morning-ready for HQ's call.
+
+## Tick — voyage complete; 5 night crews running (fresh, no writes — not stuck), no action.
+
+## NIGHT-3 — sync enumeration: the cut list (crew, 2026-09-23) — DONE
+
+READ-ONLY census of `packages/reference-neo/src/sync/` for Tokyo
+PLAN 3.7 (sync as tight engine block). 41 responsibilities, one per
+line, each with file:line + proposed home + one line of why. No
+implementation, no edits (this section only), no commits.
+
+Base path below: `packages/reference-neo/src/sync/`.
+
+### Responsibility table
+
+| # | Responsibility (file:line) | Home | Why |
+|---|---|---|---|
+| 1 | `sync()` recipe orchestration, index.ts:141-248 | stays-in-sync | This IS the tight engine block; everything else hangs off it |
+| 2 | Config load + outDir resolution, index.ts:143-145 | stays-in-sync | Recipe inputs; config itself already lives in config/ |
+| 3 | Atomic-folder guarantee (pre-clean + catch-wipe, SYNC-11), index.ts:146,242-244 | stays-in-sync | The recipe's transactional wrapper; packager defers atomicity to sync (assembly.ts:18) |
+| 4 | Retention-token lifecycle (hold, drain-consume, finally-release, RSS relief), index.ts:155-157,185-207 | stays-in-sync | C3-in-reverse memory protocol with the native engine; engine-block machinery |
+| 5 | ScopedCompileRequest assembly (jsxHosts, roots, include, logs), index.ts:171-184 | stays-in-sync | The frozen RS-cut input contract is built at the call site |
+| 6 | Diagnostic discipline (throw/report/format, stable codes), index.ts:42-82,208-210 | stays-in-sync | Engine-block UX contract: loud never-throw warnings, censuses count by code |
+| 7 | mergePublishedStylesheets dual-assembly wrapper, index.ts:121-132,217 | css/3.2 | Pure stylesheet math (served + portable); moves with packed-css.ts |
+| 8 | compile-request.json diagnostic artifact, index.ts:227-235 | stays-in-sync | Self-declared "a sync diagnostic, not packaging" in its own comment |
+| 9 | scheduleReferenceTastyPhase / REF-04 re-arm, index.ts:99-114,239 | stays-in-sync | Sync-end fire-and-forget; the await-never shape is sync-lifecycle law |
+| 10 | Phase marks at milestones, index.ts:142,144,149,151,187-190,236,246 | stays-in-sync | Marks ARE the engine block's observable phase contract |
+| 11 | resolveJsxElements config+traced→artifact, jsx-elements.ts:21-34 | stays-in-sync | Request-shape join owned by the engine block (pre-compile request + post-compile publish); packager needs only the type |
+| 12 | compileNative dynamic-import seam, native.ts:84-87 | stays-in-sync | The engine block's single native call |
+| 13 | releaseRetention error-path-only release, native.ts:93-96 | stays-in-sync | The finally-branch of the retention protocol (#4) |
+| 14 | Scoped/Native request+result+diagnostic types, native.ts:15-74 | stays-in-sync | The RS-cut contract surface; narrow and sync-owned until the RS dist refresh lands |
+| 15 | applyNormalizeCss spec prepend + provenance, reset.ts:63-70 | css/3.2 | Stylesheet-content concern (reset fragment → @layer reset), mirrors core stylesheet/reset.ts |
+| 16 | createResetRules Andy Bell rules + RESET_FRAGMENT_SOURCE tag, reset.ts:9-57 | css/3.2 | CSS content + engine source-tag convention; travels with #15 |
+| 17 | shouldInjectReset flag semantics, reset.ts:14-16 | css/3.2 | normalizeCss policy; travels with #15 |
+| 18 | mergePackedStylesheets extends-chain merge, packed-css.ts:118-128 | css/3.2 | Pure CSS-string cascade assembly; zero sync lifecycle, sole caller is #7 |
+| 19 | stripResetLayer + brace matching + layer-name collection, packed-css.ts:30-107 | css/3.2 | CSS text machinery serving #18 |
+| 20 | markPhase/markPhaseAt + writePhasesFile + PHASE_EDGES, phases.ts:43-97 | stays-in-sync | Bench instrumentation of sync's own milestones; one disabled branch when unset |
+| 21 | cleanDir retrying recursive remove, clean.ts:31-41 | stays-in-sync | The atomic-wipe primitive whose retry exists for sync's own tasty-writer overlap |
+| 22 | collectCompileFiles include-scoped collection, compile-files.ts:21-34 | delete | Zero callers — dead since C3 single-read/retention (already flagged fasthull-recon-1.md:304); engine self-scans (RS-10). NativeSourceFile stays: ScopedCompileRequest.files still types the TS fallback |
+| 23 | publishReactBundle react.mjs + map + react.d.mts, react.ts:49-97 | packager/3.1 | Publish leg already called from packager/assembly.ts:28; pure move (assembly.ts:3 blesses it) |
+| 24 | publishReferenceTypesBundle types package, reference-types.ts:35-66 | packager/3.1 | Publish leg already called from assembly.ts:36; pure move |
+| 25 | watchSync baseline+resync driver, watch.ts:281-331 | stays-in-sync | The --watch mode entry; a caller of sync(), not a recipe step — beside the block, not in it |
+| 26 | createResyncScheduler debounce+serialize, watch.ts:186-235 | stays-in-sync | Watch-mode-only machinery; travels with #25 |
+| 27 | deriveWatchRoots/staticPrefix/collapseRoots, watch.ts:55-88 | stays-in-sync | Include→roots derivation; travels with #25 |
+| 28 | .gitignore→ignore-globs + ancestor walk, watch.ts:90-154 | stays-in-sync | Watcher filtering; travels with #25 |
+| 29 | Parcel handler + error/cooldown handler, watch.ts:240-271 | stays-in-sync | Backend glue; travels with #25 |
+| 30 | picomatch.d.ts typeless-module shim, picomatch.d.ts:4-6 | stays-in-sync | Exists solely for watch.ts:12's import; travels with #25 |
+| 31 | writeSystemDir system leg (baseSystem, entry sources, spec+json, jsx json), publish/system.ts:106-120 | packager/3.1 | Called from assembly.ts:24; pure move |
+| 32 | writeStyledDir styled leg (styles.css + manifest), publish/styled.ts:13-18 | packager/3.1 | Called from assembly.ts:25; pure move |
+| 33 | publishRuntimeBundle runtime-data.mjs, publish/styled.ts:26-39 | packager/3.1 | D4 data-only publish; called from assembly.ts:27; pure move |
+| 34 | writeReactDir react shell (manifest + styles.css copy), publish/react-shell.ts:15-20 | packager/3.1 | Called from assembly.ts:26; pure move |
+| 35 | publishTypesBundle typegen index + subpath decls + react wiring, publish/types-bundle.ts:66-140 | packager/3.1 | Declaration leg called from assembly.ts:33; pure move |
+| 36 | linkGeneratedPackages node_modules scope junctions, publish/links.ts:17-23 | packager/3.1 | Called from assembly.ts:37; pure move (junctions are publish-shape — HERMDIV/PUBLISH-SHAPE territory) |
+| 37 | sync.test.ts (recipe tests) | stays-in-sync | Tests the recipe #1 |
+| 38 | lib-barrel-negation.test.ts (scan→compile fingerprint) | stays-in-sync | Mirrors sync()'s full path; travels with the recipe |
+| 39 | packed-css.test.ts | css/3.2 | Travels with #18/#19 |
+| 40 | reset.test.ts | css/3.2 | Travels with #15-17 |
+| 41 | reference-types.test.ts | packager/3.1 | Travels with #24 |
+
+### Home tally
+
+- packager/3.1: 9 items — 7 source files (react.ts, reference-types.ts, publish/*.ts ×5) + 1 test. All already called from packager/assembly.ts; mechanical move, zero behavior risk.
+- css/3.2: 8 items — packed-css.ts, reset.ts, the index.ts:121-132 dual-assembly wrapper, + 2 tests. Pure content/math; sole sync caller is the recipe.
+- collect/3.3: 0 items — real finding, not an omission. No fragment-collection responsibility remains in sync/ (prepare/evaluate already live in collect/); nothing to cut this way.
+- stays-in-sync: 23 items — index.ts minus #7, jsx-elements.ts, native.ts, phases.ts, clean.ts, watch.ts, picomatch.d.ts, 2 tests. The engine block + its watch-mode driver.
+- delete: 1 item — compile-files.ts (#22), dead code with a prior witness.
+
+Post-cut sync/ shape: `index.ts` (recipe), `native.ts` (RS seam),
+`jsx-elements.ts` (request shape), `clean.ts` (wipe primitive),
+`phases.ts` (marks), `watch.ts` + `picomatch.d.ts` (watch driver), 2
+tests. Post-cut imports into the recipe resolve to three homes:
+collect (prepare/evaluate), css (reset/packed-merge), packager
+(assembleSystem) — the domain map made visible.
+
+Minor edge noted for the morning: packager/types.ts:6 imports the
+JsxElementsArtifact *type* from sync/jsx-elements.ts; when the legs
+move, either the type moves to packager/types.ts or the import stays
+— one line, no behavior.
+
+### Legacy comparison + proposed Neo recipe
+
+Legacy target shape (`packages/reference-legacy/src/sync/command.ts`,
+15-line body): bootstrap → a hub of 13 `init*` side-effect
+registrations over a shared payload/session (shutdown, failure
+boundary, logging, events, session, complete, watch, virtual,
+reference, config, panda, packager, ts-packager). Evented, long-lived,
+ambient.
+
+Neo must NOT copy that shape — its proposition is the opposite: a
+serial function, fragments → one native compile → publish, returning
+`{ outDir, spec }`. What the cut takes from legacy is only the
+*thin-hub* property: command.ts itself holds no logic, every leg is a
+named import. The Neo recipe's call list once emptied (same order as
+today's index.ts:141-248, homes annotated):
+
+```
+sync(cwd):
+  loadUserConfig                 (config — external, unchanged)
+  cleanDir                       (sync — wipe primitive #21)
+  prepareFragments               (collect — external, unchanged)
+  evaluatePreparedFragments      (collect — external, unchanged)
+  applyNormalizeCss              (css/3.2 — #15)
+  resolveJsxElements             (sync — request shape #11)
+  compileNative / releaseRetention (sync — RS seam #12/#13, retention protocol #4)
+  report+throw diagnostics       (sync — #6)
+  resolveJsxElements (+traced)   (sync — #11)
+  mergePublishedStylesheets      (css/3.2 — #7)
+  assembleSystem                 (packager/3.1 — legs #23/#24/#31-36)
+  write compile-request.json     (sync — #8)
+  scheduleReferenceTastyPhase    (sync — #9)
+```
+
+13 calls vs legacy's 13 inits — parity of thinness, opposite
+architecture: a function, not a hub. Watch (#25-30) stays a sibling
+entry (`bin/neo.ts` → watchSync → sync loop), never a recipe step.
+
+NIGHT-3 DONE: cut list filed, morning-ready. Report, don't land.
+
+## NIGHT-2 — PostCSS adoption survey (decision brief for Tokyo PLAN.md 3.2)
+
+Scope: READ-ONLY survey, no implementation. Delivers 3.2's decision
+brief for the morning. No source edits made; this section is the only
+write. Conventions: paths relative to repo root; `neo/` =
+`packages/reference-neo/src/`, `legacy/` =
+`packages/reference-legacy/src/`.
+
+### 1. Every CSS-text touchpoint in Neo today
+
+Technique legend: REGEX / BRACE (hand brace-match) / SPLIT (naive
+string split) / VERBATIM (byte passthrough, no parse) / OBJECT
+(operates on style objects, never CSS text) / SHAPE (validates config
+shape, not CSS) / ENGINE (Rust side — out of TS scope, noted for the
+seam).
+
+| # | File:line | What it does | Technique today |
+|---|-----------|--------------|-----------------|
+| T1 | neo/sync/packed-css.ts:21 | `LEADING_STATEMENT` — matches upstream's leading `@layer a, b;` | REGEX (`/^\s*@layer\s+([^;{]+);/`) |
+| T2 | neo/sync/packed-css.ts:24,47-54 | `RESET_OPEN` + `findResetBlock` — locates `@layer reset {` opener | REGEX for opener, BRACE (`matchCloseBrace`, :30-40) for close |
+| T3 | neo/sync/packed-css.ts:62-71 | `stripResetLayer` — removes every reset block + one trailing newline | BRACE scan loop (T2) |
+| T4 | neo/sync/packed-css.ts:79-87 | `contributedNames` — layer names from upstream statement | SPLIT on `,` (:83) + trim; no paren/comma-function awareness |
+| T5 | neo/sync/packed-css.ts:89-101 | `collectLayerNames` — dedup'd statement order, self last | Set-dedup over T4 output (string compare) |
+| T6 | neo/sync/packed-css.ts:118-128 | `mergePackedStylesheets` — statement + stripped upstreams + own block | String concat (`appendBlock`, :103-107); upstream blocks otherwise VERBATIM |
+| T7 | neo/sync/index.ts:121-132 | `mergePublishedStylesheets` — runs T6 twice (served + portable) | Delegates to T6; no CSS logic of its own |
+| T8 | neo/sync/index.ts:217 | Merge call site (`config.extends` + engine sheets) | Call site only |
+| T9 | neo/sync/reset.ts:24-57 | `createResetRules` — Andy Bell reset as `GlobalStyleNode` object map | OBJECT (never CSS text); engine prints it into `@layer reset` |
+| T10 | neo/sync/reset.ts:63-70 | `applyNormalizeCss` — unshifts reset fragment onto spec | OBJECT (array prepend) |
+| T11 | neo/sync/native.ts:56-58 | `NativeCompileResult.stylesheet` / `portableStylesheet` contract | ENGINE — both sheets (served `:root`-hoisted, published self-scoped) are printed by Rust; TS receives opaque strings |
+| T12 | neo/sync/publish/styled.ts:16 | Writes `styled/styles.css` | VERBATIM `writeFileSync` of merged sheet |
+| T13 | neo/sync/publish/system.ts:15-22 | `publishedBaseSystem` — `css: input.portableStylesheet` into baseSystem.mjs | VERBATIM (`JSON.stringify`, :103) |
+| T14 | neo/sync/publish/react-shell.ts:15-20 | Copies styled sheet into react leg | VERBATIM filesystem copy (packager/assets) |
+| T15 | neo/collect/lib/evaluate.ts:290-314 | `mergeCollectedSpec` — globalCss fragments → spec entries | OBJECT (fragment maps → `EvaluatedSystemSpec.globalCss`); upstream globalCss collection suppressed (:150-151, :207-215) because packed-css merge (T6) carries it |
+| T16 | neo/config/validate.ts:75-89,148-154 | `validateStaticCss` + extends-entry presence check (`sys.css` string non-empty) | SHAPE only — no CSS parse, no value validation |
+| T17 | neo/config/types.ts:13,37 | `BaseSystem.css` doc ("merged portable CSS") + `name` as layer identity | Type-level only |
+| T18 | neo/runtime/css/css.ts:126-147 | `stripImportantSuffix` / `splitImportant` — `!important` / trailing-`!` strip on authored values | SUFFIX match (`slice` + `toLowerCase` compare), not CSS parse |
+| T19 | neo/runtime/css/plans.ts:55-62 | `splitSlot` — cascade slot family vs `@bp` suffix | `lastIndexOf('@')` vs `lastIndexOf(':')` (string positions on slot keys, not CSS) |
+| T20 | neo/runtime/css/lowerResponsiveStyles.ts:74-76 | Emits `@container (min-width: ${width}px)` keys | OBJECT key construction; numeric-width guard (:83-91) |
+
+Negative results (verified by grep — these do NOT exist in Neo):
+- No CSS parser anywhere: zero `postcss`, `csstree`, `lightningcss`,
+  `stylis`, `CSS.parse`, `walkDecls/walkRules` in `src/` (non-test).
+  `postcss` is absent from `packages/reference-neo/package.json`.
+- No CSS validation: nothing checks that a sheet parses, that braces
+  balance, or that declarations are well-formed. T16 checks config
+  shape only.
+- No selector or value analysis in TS: layer/scope/hoist decisions
+  live in the engine (T11). The `[data-layer]` scoping and `:root`
+  hoisting named in PLAN 3.2's "selector pass owns layer/scope
+  questions" have no TS-side code to own them — that sentence
+  describes the desired module, not current code.
+- T6's only consumers: `sync/index.ts` (T7/T8) + its own 364-line
+  test (`packed-css.test.ts`). Nothing else imports it.
+
+Grandfathered violators for the 3.5 ban (exact lines): T1 (:21), T2
+(:24 + :30-54), T4 (:83). T3 composes T2. These are the "known
+violators" the ban tracks until migration.
+
+### 2. Legacy's exact PostCSS usage
+
+Pins (`packages/reference-legacy/package.json:88-90`):
+`postcss ^8.5.23`, `postcss-selector-parser ^7.1.1`,
+`postcss-value-parser ^4.2.0`. All three used; none vendored.
+
+**Stylesheet pipeline (uncontrolled input = Panda-emitted CSS):**
+
+| File:line | Package(s) | Transform |
+|-----------|-----------|-----------|
+| legacy/system/stylesheet/transform/dropUnresolvedPrivateTokenDeclarations.ts:1,28-52 | `postcss` (`parse`, `walkDecls`, `walkRules`, `walkAtRules`) | Drop decls whose value matches `UNRESOLVED_PRIVATE_TOKEN_PATTERN` (:9, `_private.*` token leak), then prune emptied rules/at-rules. Byte-identical return when unmutated (:38). |
+| legacy/system/stylesheet/transform/demotePandaGlobalCssLayer.ts:1,119-145 | `postcss` (`parse`, node find/clone, `params` rewrite) | Move Panda global.css base layer into a dedicated `global` layer; strict contract errors (`PandaCssContractError`) when Panda's emitted shape drifts. Note: layer-order list handled with plain `.split(',')` (:32-35, :48-51) — even legacy comma-splits *statement params*, which cannot contain functions. |
+| legacy/system/stylesheet/transform/createPortableStylesheetFromContent.ts:1-2,68-79,138-160 | `postcss` (parse, find/remove `@layer tokens`, stringify) + `postcss-selector-parser` (`astSync`, :68-71) | Portable sheet: extract `:where(:root…)` token decls (:32-34), rewrite theme selectors to `[data-layer="<name>"]` pairs (:73-79), wrap in `@layer <name>` via Liquid render. The selector-parser use is exactly comma-safe selector-list splitting — the function T4 lacks. |
+| legacy/system/stylesheet/postprocess/helpers.ts:42-73 | (orchestration, no direct import) | Order: demote → drop-unresolved → portable-ize; reset prepend (portable vs runtime spellings). |
+| legacy/system/stylesheet/postprocess/index.ts:19-47 | (orchestration) | `postprocessCss`: read artifacts → local sheets → assemble with upstreams via `renderAssembledStylesheet` (Liquid, render/stylesheet.ts:23-37 — statement + verbatim concat, the direct ancestor of T6). |
+| legacy/system/stylesheet/createPortableStylesheet.ts:10-20 | (file wrapper) | Read styles.css from disk → `createPortableStylesheetFromContent`. |
+
+**Panda config extensions (value-level, authored/config input):**
+
+| File:line | Package | Transform |
+|-----------|---------|-----------|
+| legacy/system/panda/config/extensions/api/font.ts:1,32-60 | `postcss-value-parser` | `parseFontFamilyName`: parse `font-family` value, take nodes before first top-level comma `div`, trim spaces, unquote single `string` node. |
+| legacy/system/panda/config/extensions/rhythm/helpers.ts:1,159-161 | `postcss-value-parser` | `resolveRhythm`: parse value, `transformNodes` rewrites rhythm units (`2r`, `1/5r`) to `calc(var(--spacing-root)…)` in place, `toString()`. Non-string / `r`-less fast path (:150-157). |
+| legacy/system/panda/config/extensions/shorthands/parser.ts:1,93-109 | `postcss-value-parser` | `splitShorthandTokens`: space-top-level token split that keeps `calc()`/`var()` groups intact (the value-side comma/function-safety Neo lacks). |
+
+**Deliberately NOT PostCSS in legacy (do not cargo-cult):**
+- `render/stylesheet.ts` (Liquid templates) — PLAN 3.4 already kills
+  Liquid; assembly becomes typed builders/AST.
+- `packager/postprocess/inject-layer-name.ts` — plain JS
+  placeholder `replaceAll`, not CSS.
+- `stylesheet/reset.ts` — static reset strings, no parse.
+- The `:32-35`/`:48-51` comma-splits in demote — safe only because
+  `@layer` statement params can't contain functions; NOT precedent
+  for splitting selectors or values.
+
+### 3. Proposed CSS module shape (options for HQ)
+
+**What the survey says about scope (3.6 seam applied):**
+- T6/T1–T5 (merge) operate on CSS we DO control (engine output +
+  our own published payloads) → dies by seam (structured streams /
+  structured `baseSystem` payloads), NOT by PostCSS rewrite. The
+  module must not enshrine a PostCSS-based merge of our own text.
+- T11 (emission, scoping, hoisting) is already engine-owned →
+  stays out; the module consumes engine strings, never re-derives
+  them.
+- T12–T14 (file write/copy) are packager legs, not CSS logic →
+  stays out (packager owns bytes on disk).
+- T9/T10/T15/T18–T20 are OBJECT-level → stays out (style objects,
+  slots, and values are pre-CSS; only T18's `!important` strip and
+  the value-parser's future `var()` work touch the same concepts,
+  at different layers).
+- What NEEDS PostCSS (CSS we do NOT control): boundary validation
+  of upstream `baseSystem.css` payloads at extends time (T16's
+  presence check grows teeth: does it parse? does it carry the
+  statement it claims?); selector-safe splitting if any future
+  merge/debug path must read foreign statements; `var()`/token-value
+  analysis per 3.2 HQ ("value parser owns `var()`/token-value
+  analysis"); hardening probes (braces-in-comments/strings,
+  comma-functions) as regression coverage, not production paths.
+
+**Home — argue both:**
+- (a) `src/css/` (top-level subsystem): CSS is a first-class
+  concern with its own parse/merge/scope/emit vocabulary (PLAN 3.2
+  says "CSS gets its own module"); matches the 3.3 ruling that
+  subsystems stay top-level (`collect` precedent — "fragments is
+  not a lib, it is a whole subsystem"); keeps the 3.5 ban's
+  grandfathered-violator tracking visible; room for `surface/` +
+  `lib/` + READMEs per the 3.3 README law.
+- (b) `src/lib/css/` (machinery): if the 3.6 split holds, the
+  module shrinks to parse/validate/analyze helpers consumed by
+  sync/packager — machinery, like `lib/paths` and `lib/symlink`;
+  avoids a top-level dir for what may be 2–3 small files plus
+  tests; the merge (the "subsystem-sized" half) is leaving for the
+  seam anyway.
+- Survey lean: **(a) `src/css/`**, on the 3.3 subsystem test — the
+  module owns a contract (the ban + boundary validation), not just
+  helpers, and (b) would bury that contract. If HQ expects the
+  post-seam remainder to stay tiny, (b) is the honest smaller
+  footprint; revisit at migration time.
+
+**Dependency shape:**
+- (A) Full trio as legacy pins (`postcss` + `postcss-selector-parser`
+  + `postcss-value-parser`): default candidate per 3.2; covers the
+  named HQ loads ("selector pass and value parser"); legacy
+  file:line above proves each earns its place (selector-list
+  split, font/rhythm/shorthand values); single version story.
+- (B) Narrower (`postcss` core only): suffices for boundary
+  parse/validate + statement/declaration walks (the drop/demote
+  class of transforms); defers companions until a concrete
+  selector/value transform lands. Risk: re-deriving comma-safety
+  by hand in the interim — exactly the banned regression.
+- (C) Narrowest (zero new deps, seam-only): merge dies by streams,
+  validation stays shape-level. Rejected by the survey — leaves
+  the uncontrolled boundary (foreign `baseSystem.css`, authored
+  values) with no parser, against HQ's "definite need."
+- Survey lean: **(A) full trio at legacy's pins** (or newer
+  patch-equivalents at install time). The three packages map 1:1
+  to the three named loads (parse / selector / value); (B) saves
+  kilobytes to re-incur the exact risk the ban exists for.
+
+**What migrates vs stays out:**
+
+| Migrates into the module | Stays out |
+|--------------------------|-----------|
+| T4's statement-name extraction → selector/statement-safe list split (the `splitSelectorList` analog; needed wherever foreign statements are read) | T6 merge logic → dies by seam (structured payloads), not rewritten on PostCSS |
+| Boundary validation of upstream `css` (parse check, statement/shape contract) at extends time — T16's successor | T11 emission/scoping/hoisting (engine-owned) |
+| `var()`/token-value analysis (new; HQ load) on value-parser | T12–T14 file write/copy (packager legs) |
+| Hardening probes: braces-in-comments/strings, comma-functions (tests, per legacy coverage) | T9/T10 reset OBJECT handling (feeds engine, never CSS text) |
+| T1/T2/T3 reset-strip → deleted at seam time; if any interim hardening is needed before streams land, a PostCSS `walkAtRules` strip replaces the brace matcher (short-lived, tracked) | T18/T19/T20 object/slot/key logic (pre-CSS layer) |
+
+**Migration timing (open thread for HQ):** (i) wholesale at
+stability-fix time — merge moves into the module on PostCSS even
+though the seam will later delete it (double work, single safe
+shape meanwhile); vs (ii) wait for the rearch slices — T1–T5 stay
+grandfathered under the 3.5 ban until streams replace them (no
+double work, longer regex lifetime). The survey notes T6's test
+(364 lines) makes (ii) cheap to hold and (i) cheap to verify —
+either is defensible; HQ picks.
+
+DONE: decision brief filed — touchpoint table (§1), legacy usage
+(§2), proposed shape with options (§3). Morning-ready for HQ to
+pick: home (a/b), deps (A/B), timing (i/ii).
+
+## NIGHT-1 — packager follow-ups (crew, 2026-09-23) — DONE
+
+Scope (strict): two specified unifications in
+`packages/reference-neo` only, nothing else. Governing skill
+`agent-neo` loaded first. Never commit, never touch the index.
+Report, don't land.
+
+### Fix 1 — `neo clean` link list derived from PACKAGES
+
+`bin/neo.ts` hardcoded `LINKED_PACKAGES =
+[system,styled,react]` while the links leg
+(`src/sync/publish/links.ts:11`) links all four PACKAGES incl.
+`types` — `neo clean` orphaned the types junction (LEGACY-SURVEY
+NIT-1; SYMLINK-ADOPT "Open for captain"). Now the bin imports
+the same source the leg links and derives identically:
+`PACKAGES.map((pkg) => getShortName(pkg.name))` (same two
+modules: `packager/packages.ts` + `packager/layout.ts`). One
+source; the next package lands in clean for free. `bin/neo.ts`
+only; the leg untouched.
+
+### Fix 2 — needle-list literals unified onto constants.ts
+
+`src/collect/lib/scan/helpers.ts` (`export const NEEDLES`) and
+`src/collect/lib/scan/identity.test.ts` (`const NEEDLES`) each
+carried a verbatim copy of the 5-id discovery list
+(COLLECT-REFACTOR smell §2). Both dupes deleted:
+`FRAGMENT_IMPORT_NEEDLES` in `src/collect/constants.ts` is the
+single source; helpers re-exports it as NEEDLES (its four
+battery consumers — native, nativeLifecycle, goldens,
+nativeCompleteness — untouched), identity.test.ts imports it
+aliased as NEEDLES (3 use-sites untouched). The bootstrap
+import-map (`collect/lib/bootstrap.ts`, `prepare.test.ts`
+expectations) and `config/constants.ts` CONFIG_EXTERNALS are
+different concepts/lists — deliberately left alone per the
+no-beyond-unification order.
+
+### Proof (all firsthand, this session)
+
+- Full Neo units (`vitest run`): **48 files / 337 passed**.
+- `pnpm agentneo q` (whole package): **0 errors, 17 warnings,
+  214 files** (warn count identical to the pre-fix tree).
+- Chain cases: NEO-CHAIN-01..06 **6/6 `ok`** in
+  `tests/.artifacts/last-run.json`.
+- Native T1 tier (`matrix/tests/chain/T1`): `neo sync` exit 0,
+  all four scope links land; `neo clean` now reports **4
+  links** and the types junction is gone (was 3, orphaned);
+  resync restored; `pnpm agent playwright --dir
+  matrix/tests/chain/T1 --no-build` → **7 passed (0 failed)**.
+- Hygiene: 3 files changed, all Neo (`bin/neo.ts`,
+  `scan/helpers.ts`, `scan/identity.test.ts`); no matrix/
+  fixture edits (T1 sync outputs gitignored, world resynced
+  to green); no commits; no diagnostic leftovers. The LOG.md
+  + other LOG-2.md deltas in tree are siblings', not mine.
+
+NIGHT-1 DONE: both fixes in tree + proof green, filed here.
+Report, don't land.
+
+## HQ direction — top-level `native/` + `native/generated/` (2026-09-23)
+
+HQ riff, filed verbatim in spirit: sync is a kitchen sink; the RS
+seam gets its own top-level folder called `native`. Inside it,
+`native/generated/` hosts compiler-emitted artifacts the seam draws
+from — the Rust contracts/vendor material, tasty bindings, and the
+primitives roster (`generated/tasty`, `generated/primitives`).
+
+Shape:
+- `src/native/` — the RS-cut contract + call + retention protocol
+  (ex-`sync/native.ts` grown into a subsystem; receives the 3.6
+  streams when they land).
+- `src/native/generated/` — generated artifacts drawn from Rust:
+  contracts, tasty, primitives.
+
+Morning notes: (a) this pre-answers NIGHT-4's home question on the
+consume side — wherever primitives are *built*, Neo *draws* them via
+`native/generated/primitives`; (b) CLOSED by HQ — they are
+technically generated things that happen to be committed in source;
+the name stands as honest.
+
+## HQ quiet period + overnight orders (2026-09-23 ~21:00 BST)
+
+- Quiet until **11:00 Thu Sep 24** — no questions to HQ before
+  then unless literally everything is on fire. One-shot cron set
+  (`7 11 24 9 4`) to lift the quiet and present the morning brief.
+- Commit posture: commit often on green builds. Layers stays red —
+  that never blocks commits on green tiers.
+- Red markers: dead/wrong code (compile-files et al) gets flagged
+  and, where proof is green, deleted — belongs-to-native noted.
+- Standing orders for night crews: blocked → file a brief, move to
+  the next task, never idle, never ping.
+
+## Pre-night decision interview (HQ, 2026-09-23 ~21:00 BST) — SETTLED
+
+Three blocking-before-midnight picks, HQ's words via structured
+prompt. Status: FINAL (explicit HQ selection on each).
+
+1. **Layers path: straight to seam.** No interim PostCSS rewrite
+   of packed-css; T1–T5 stay grandfathered under the 3.5 ban until
+   compiler-emitted streams replace them. Overnight crews scope
+   (not harden) the seam.
+2. **jsx-elements home: tracer-side.** `resolveJsxElements` leaves
+   sync for the collect/tracer side — it emits styletrace input;
+   publishing only carries the artifact. NIGHT-3's "stays" verdict
+   on #11 is overridden.
+3. **watch.ts: survey overnight, HQ picks at 11 AM.** A crew maps
+   what the 331-line driver owns; stays-vs-splits decided morning.
+
+Overnight scope authorized: land NIGHT-1; mechanical NIGHT-3 moves
+(packager legs, css touchpoints, dead compile-files deletion) with
+proof + stepped commits; native/ + native/generated/ restructure;
+D17 seam scoping; watch survey. Open threads queued for 11 AM, not
+worked around: NIGHT-2 home/deps picks, NIGHT-4 primitives build
+home, watch verdict, D17 vocabulary.
+
+## Overnight run — star-captain conn taken (2026-09-23 ~21:15 BST)
+
+Pattern (HQ): cartographers map → implementers build → verifiers
+think → captain re-proves firsthand and lands. Crews never commit;
+captain commits named files, one verified arc per commit. No pings
+to working crews, ever (ping-exit rule).
+
+Objectives in order: N-0 land NIGHT-1 (captain) → N-1 mechanical
+NIGHT-3 moves → N-2 native/ restructure → N-3 system/base build →
+N-4 cartography (D17 seam scope, watch survey) for the 11 AM brief.
+
+Wave 1 (dispatched): 3 cartographers (D17-SEAM, WATCH, SYSTEM-BASE
+contents — read-only briefs) + 1 implementer (PACKAGER-LEGS, map
+complete per NIGHT-3 #23,24,31-36). Verifiers follow each
+implementer. N-0 runs inline (captain verify + land).
+
+## WAVE1-WATCH — watch.ts survey for the 11 AM stays-vs-splits verdict (cartographer, 2026-09-23)
+
+Scope: `packages/reference-neo/src/sync/watch.ts` (331 lines) read
+firsthand + importer census by grep. READ-ONLY; this section is the
+only write. All `watch.ts:<line>` refs below are current-tree.
+
+### (1) Every responsibility in the file
+
+| # | Responsibility | Location | Lines |
+|---|---|---|---|
+| R1 | Public contract: `WatchEvent`/`WatchChange`/`WatchCallbacks`/`WatchHandle` types | watch.ts:16-32 | 17 |
+| R2 | Parcel→watch event map + timing/magic constants (`RESYNC_SETTLE_MS=60`, `ERROR_RESYNC_COOLDOWN_MS=5000`, `GLOB_MAGIC`, `STATIC_IGNORE`) | watch.ts:34-43 | 10 |
+| R3 | Watch-root derivation: `normalizePattern`, `staticPrefix` (static head of an include glob), `isUnder`, `collapseRoots` (shortest-first nested dedupe), exported `deriveWatchRoots` | watch.ts:49-88 | 40 |
+| R4 | `.gitignore`→watcher-ignore compiler: `isIgnorableLine`, `anchoredIgnoreTarget`, `basenameIgnoreGlobs`, `anchoredIgnoreGlobs`, `toIgnoreGlobs` (one line → globs), `readIgnoreFile`, `isWalkEnd`, `getIgnoreGlobs` (ancestor climb to repo/fs root) | watch.ts:90-154 | 65 |
+| R5 | Event matching: `WatchState`, `toWatchChange` (include-glob OR exact config-dep hit), `isDroppedEventsError` | watch.ts:156-174 | 19 |
+| R6 | Resync scheduler: `ResyncScheduler` iface + `createResyncScheduler` (trailing-edge debounce + drain-serialize: burst behind slow sync costs ≤1 extra pass; `settle()` cancels timer, drains in-flight) | watch.ts:176-235 | 60 |
+| R7 | Watcher error policy: `createWatcherErrorHandler` (dropped-buffer silent, else report + cooldown-gated immediate resync) | watch.ts:240-250 | 11 |
+| R8 | Parcel fan-in: `createParcelHandler` (one callback over all roots; matched events → onChange, one debounced resync per burst) | watch.ts:256-271 | 16 |
+| R9 | Driver `watchSync`: baseline `loadUserConfigWithDependencies` + `sync()`, build `WatchState`/roots, wire scheduler+handler, `subscribe()` per root, `stop()` (settle + best-effort unsubscribe) | watch.ts:281-331 | 51 |
+
+Largest blocks: R4 (65) + R6 (60) + R9 (51) + R3 (40) = 216/331
+(65%). R4 is a pure function cluster (fs reads only); R6 is pure
+control-flow (no fs, no parcel); R9 is the only impure orchestrator.
+
+### (2) Imports in / out
+
+**What watch.ts imports:**
+- From `sync/`: exactly one — `sync, SyncResult` from `./index.ts`
+  (watch.ts:14). Calls `sync(projectRoot)` twice (baseline :284,
+  resync :301). Imports NOTHING else from sync/ (no phases, clean,
+  native, publish, reset, packed-css, reference-types).
+- From elsewhere in Neo: `loadUserConfigWithDependencies` from
+  `../config/load.ts` (:13).
+- External: `node:fs` (`existsSync`, `readFileSync`), `node:path`,
+  `@parcel/watcher` (`subscribe`), `picomatch`.
+
+**What imports watch.ts** (grep census, current tree):
+- `bin/neo.ts:87` — `cmdWatch` lazy-imports `watchSync` (the only
+  production caller; `neo sync --watch`).
+- `tests/cases/sync/NEO-SYNC-14/specs/watch.spec.ts:12` — node-side
+  watch contract (add/change/delete, debounce, config-dep).
+- `tests/cases/watch/NEO-WATCH-01/specs/watch-loop.spec.ts:15` —
+  live-edit→paint loop.
+- Nothing under `src/` imports it — zero in-tree dependents. No
+  test imports `deriveWatchRoots` (exported but exercised only
+  through `watchSync`).
+
+Coupling summary: watch is a **leaf**. One sync entry-point in
+(`sync()`), one config loader in, one CLI caller out, two case
+specs. Moving it breaks no `src/` importer.
+
+### (3a) Case for STAYS (engine block's driver loop)
+
+1. **Single-responsibility reads as one thing**: "keep a project
+   directory converged via serial syncs" — R3/R4/R5 are input
+   shaping, R6/R7/R8 are delivery control, R9 wires them. Splitting
+   a 331-line leaf with zero in-tree dependents buys no
+   decoupling; it buys file-hopping.
+2. **The serial-sync invariant lives here**: R6's drain (syncing/
+   queued/cancelled, :193-204) plus R7's cooldown is the exact
+   machinery that makes "discovery, alignment, and deletion all
+   ride the same full resync" (header :4-5) true under bursts,
+   flapping backends, and teardown races. That invariant is the
+   engine block's; the driver loop is its natural home.
+3. **Only two seams touch sync/** (`sync()` in, nothing out) —
+   staying costs sync/ nothing: no phases/native/publish
+   entanglement to untangle, no circular-import risk.
+4. **Churn profile is driver-like**: future watch work (extra
+   roots, backend swap, settle semantics) edits R9+R6 together;
+   colocation keeps the diff in one file and the two case specs
+   green without cross-subsystem coordination.
+5. **Counter to the size argument**: 331 lines is the *median* RF
+   module, not an outlier, and 65 lines are the R4 ignore compiler
+   with zero shared callers — extracting a private helper nobody
+   reuses is ceremony.
+
+### (3b) Case for SPLITS (own subsystem)
+
+1. **R4 is a portable library hiding in a driver**: the
+   `.gitignore`→globs compiler (65 lines, pure + fs reads, no
+   parcel/sync/watch concepts) is independently testable and the
+   likeliest reuse candidate (any future walker/scan dedupe, e.g.
+   native-scan ignore parity). Home if split:
+   `sync/watch/ignore-globs.ts` (stays near its only caller) or
+   `infra/ignore/` if HQ wants cross-cutting reuse.
+2. **R3+R5 are a matcher subsystem**: root derivation + change
+   matching (59 lines combined) encode "what does this project
+   watch" — config-include semantics distinct from "how does the
+   loop run". Home: `sync/watch/roots.ts` + `sync/watch/match.ts`,
+   or one `sync/watch/scope.ts`.
+3. **R6 is a generic primitive**: the debounce+serialize scheduler
+   mentions neither files nor sync; it wraps `() =>
+   Promise<void>`. Home: `sync/watch/scheduler.ts`, or promoted to
+   `infra/`/`utils/` if any second consumer appears (none today —
+   split would be speculative).
+4. **Natural split shape** (if HQ picks splits): `sync/watch/`
+   with `index.ts` (R9 driver + R1 types + R8 handler, ~85 lines),
+   `scope.ts` (R3+R5), `ignore-globs.ts` (R4), `scheduler.ts`
+   (R6+R7) — four focused modules, each ≤90 lines, same package,
+   same two spec files, zero `src/` importer churn (only
+   `bin/neo.ts:87` re-points).
+5. **Cost of splitting is near-zero**: leaf module, one CLI
+   caller, two specs — the move is mechanical and provable in one
+   `agentneo run` of SYNC-14 + WATCH-01.
+
+### (4) Recommendation: STAYS (with a named future split trigger)
+
+**Keep `watch.ts` whole in `sync/`.** Reasons:
+
+- It is a leaf driver (one `sync()` in, zero `src/` dependents),
+  and its 331 lines implement exactly one invariant — *every
+  matched fs event converges through one serial debounced sync*.
+  R3–R8 are all private legs of that invariant with no second
+  caller; extracting them now creates four files and zero new
+  reuse.
+- The split axis will be obvious when it arrives: **the day a
+  second consumer wants R4 (ignore compiler) or R6 (scheduler),
+  split then** — R4 → shared ignore helper, R6 → infra primitive,
+  driver stays. Until that consumer exists, the split is
+  speculative structure.
+- If HQ prefers visible subsystem boundaries anyway, the
+  zero-regret middle path is a no-logic move to
+  `sync/watch/index.ts` (same file, subsystem-shaped path),
+  leaving R4/R6 extraction for the trigger above. Do NOT
+  pre-split into four files on day one.
+
+Proof for either verdict: `pnpm agentneo run NEO-SYNC-14` +
+`pnpm agentneo run NEO-WATCH-01` green, plus `bin/neo.ts:87`
+import path updated if moved. No other file in `src/` can break.
+
+## Captain's NIGHT-3 review (2026-09-23) — overrides for the waves
+
+Read firsthand. The 41-item census stands as the map; five rulings
+where later HQ decisions or the seam interact:
+
+1. #11 (jsx join stays) — SUPERSEDED by PLAN §3.10/3.11: one move
+   to system/base. N-3 crew owns it.
+2. #12-14 (native.ts stays) — SUPERSEDED by HQ native/ direction:
+   top-level native/ owns the seam. N-2 crew owns it.
+3. #31 (publish/system.ts pure move to packager) — REFINED by
+   §3.11: WAVE1 legs crew moves it whole (lands in packager, where
+   the write half lives permanently); N-3 crew then splits the
+   build half out to system/base. No rebrief needed.
+4. #18/#19 + #7 (packed-css + merge wrapper → css/) — HOLD. HQ
+   picked straight-to-seam: the merge dies by streams, and moving
+   code the seam deletes may be wasted motion. WAVE1-D17-SEAM
+   rules: move-then-delete vs delete-in-place. #15-17 (reset.ts →
+   css/) is seam-independent and proceeds in N-1 wave 2.
+5. #22 (compile-files.ts) — DELETE approved (HQ red marker), green
+   proof required. N-1 wave 2.
+6. #25-30 (watch stays) — OPEN per HQ: WAVE1-WATCH surveys, HQ
+   picks at 11 AM.
+7. Minor edge (packager/types.ts:6 type import) — resolved by
+   §3.11: the artifact type lives in system/base; packager/types
+   and collect import it. N-3 owns the line.
+
+## Captain's NIGHT-4/5 review (2026-09-23) — aligned, one collision
+
+Read firsthand. NIGHT-4 (home brief) and NIGHT-5 (3.9 spec) agree:
+RS-emits/Neo-proves SPLIT (N4 rank 1 = N5 assumption). N5 is
+implementation-ready (E1/E2/E3/E4 shapes, PGEN-01..22 station,
+seam table, W0-W6 waves). Findings banked: canon/Neo drift already
+real (125 vs 101, silent SVG drop), F1 camelCase third column,
+F3 PropDefs refactor, freshness hole (`--check` convention-only —
+must wire into `agentneo q` + CI under any home).
+
+COLLISION queued for 11 AM: N5 specs vendored paths under
+`src/vendor/rust-primitives/` with the `vendor/ → upstream/` rename
+still open — but HQ has since decreed `native/generated/` as the
+consume-side home (contracts, tasty, primitives). Captain's lean:
+the vendor contract migrates to `native/generated/`, the
+`upstream/` rename dies, N5's tool targets the new paths. HQ
+confirms in the morning; N5's shapes/waves are path-agnostic and
+survive either way.
+
+Other 11 AM picks from N4/N5: rank-1 confirm (or all-Neo fallback),
+emit 125 vs 101+deferred (spec default 125), SVG scoping.
+Sequencing: N5 waves are MORNING work (spec §4 gates on stability);
+nothing overnight on primitives. W4 (assembly cutover) sequences
+after N-1 lands (it rewrites the legs Wave 1 is moving).
+
+## WAVE1-SYSTEM-BASE (cartographer, 2026-09-23) — READ-ONLY spec
+
+Scope (strict): spec the exact contents of the new
+`packages/reference-neo/src/system/base/` per PLAN.md §3.11
+(portable-system domain only — base assembly, roster +
+extends-chaining, BaseSystem contract types, serious tests).
+READ-ONLY: this section is the sole write; no source edits,
+no commits, no index touch.
+
+TREE CAVEAT (firsthand): the WAVE1 legs crew moved
+`sync/publish/*` → `packager/*` mid-survey (git status:
+5 deletes + `sync/react.ts` + `sync/reference-types.*`
+deleted, 8 creates under `packager/`; `sync/publish/` no
+longer exists). This matches the logged N-3 sequencing
+(legs land in packager whole; N-3 splits the build half
+out) — so this section IS the N-3 split brief, and every
+`packager/system.ts` line below was re-verified AFTER the
+move (byte-identical to the old publish leg except
+import paths, `packager/system.ts:9-13`).
+
+### (1) Move-in inventory (every file:line, current tree)
+
+MOVE (7 sources → `system/base/`):
+
+1. `config/types.ts:9-17` — `BaseSystem` interface → `base/types.ts`.
+   (`ReferenceUIConfig` + `defineConfig` stay: author surface.)
+2. `config/validate.ts:10-13` (`BaseSystemField`,
+   `BaseSystemValidationOptions`) + `:15-28`
+   (`assertOptionalJsxElements`) + `:95-181`
+   (`validateBaseSystems`, `assertBaseSystemObject/Name`,
+   `assertRequiredFragment`, `validateBaseSystemEntry/Entries`)
+   → `base/validate.ts`. The call at `:196-197` stays in
+   `validateConfig` (config imports base — the healthy arrow).
+3. `config/errors.ts:57-60` — `invalidBaseSystem` factory →
+   `base/validate.ts` (sole consumer is the moving validator,
+   verified: hits only at `validate.ts:23/:104/:119/:132/:152`).
+   `config/errors.ts` keeps a re-export for compat.
+4. `sync/jsx-elements.ts:1-35` WHOLE — `JsxElementsArtifact` +
+   `uniqueSorted` + `resolveJsxElements` → `base/jsx.ts`. This
+   is the §3.10 join + the §3.11 roster: upstream from
+   `config.extends`, local from configured ∪ traced, merged
+   union, `primitives: []` until the 3.9 roster lands.
+5. `sync/packed-css.ts:1-128` WHOLE — `PackedUpstream`,
+   `stripResetLayer`, `mergePackedStylesheets` → `base/packed-css.ts`.
+   This is the css extends-chaining half. **SEAM-HOLD
+   CAVEAT**: WAVE1-D17-SEAM holds `#18/#19+#7` (packed-css →
+   css/) on "moving code the seam deletes may be wasted
+   motion" — the same logic touches this move. Implementer
+   checks the seam ruling first: merge survives → it moves
+   here; streams delete it → delete-in-place wins and base/
+   ships without this file. Everything else in this spec is
+   seam-independent.
+6. `collect/lib/evaluate.ts:137-146` — `createPortableFragmentBundle`
+   → `base/fragments.ts`. Output-side assembly (it builds
+   `baseSystem.fragment`); signature NARROWS to
+   `(upstream: string[], local: string[])` so base never
+   imports collect's `PreparedFragments`. Call site
+   `sync/index.ts:221` adapts; `collect/index.ts:31` barrel
+   DROPS the re-export (internal-only, verified: consumers
+   are `sync/index.ts:221` + `prepare.test.ts:234` only).
+7. `packager/system.ts:15-104` — ALL builders →
+   `base/sources.ts` + `base/assemble.ts` (split line in §2).
+
+STAY (explicitly not moving — the negative list is the spec):
+
+- `collect/lib/evaluate.ts:70-86` (`getUpstreamFragments`,
+  `getUpstreamFragmentNames`) STAYS in collect: it gathers
+  eval inputs (discovery-side). Moving it would make
+  collect import system — the exact arrow §3.11 forbids.
+- `collect/lib/evaluate.ts:202-222` (eval script assembly),
+  `:269-284` (`scopeUpstreamTokenFragment`), `:286-317`
+  (`mergeCollectedSpec`) STAY: evaluation + merge are
+  collect's input-side job.
+- `packager/system.ts:106-120` (`writeSystemDir`) STAYS: the
+  thin write-to-disk packager leg (§2).
+- `packager/types.ts:8-15` (`PublishInput`) STAYS:
+  packager-owned assembly contract; `:6` repoints its
+  `JsxElementsArtifact` import to the new home (the logged
+  "#25-30 minor edge" N-3 owns).
+- `packager/constants.ts:7` (`BASE_SYSTEM_HEADER`) STAYS:
+  packager-wide stamp (styled, types-bundle, reference-types
+  legs all use it too). `base/sources.ts` imports the leaf
+  const (`constants.ts` imports nothing — zero cycle risk);
+  alternative (leg threads it as an arg) noted, not
+  recommended.
+- `packager/packages.ts:18-28` (`SYSTEM_PACKAGE`) STAYS:
+  manifest owned by packager.
+- `sync/index.ts:121-132` (`mergePublishedStylesheets`
+  wrapper) STAYS: 3-line call-site glue, repoints its
+  `packed-css.ts` import. Call sites `:171`/`:215` stay;
+  `:22` import repoints.
+- `src/index.ts:5` (`BaseSystem` re-export) repoints to the
+  new home; `config/types.ts` keeps a `export type`
+  re-export so deep `config/types` importers don't break.
+- `src/system-surface.d.ts` untouched (world typings, names
+  not sources).
+
+REPOINT-ONLY (import line changes, zero logic moves):
+`packager/types.ts:6`, `sync/index.ts:18-22`,
+`collect/lib/scan/goldens.test.ts:22` (consumer at `:96-100`),
+`sync/lib-barrel-negation.test.ts:19` (consumer at `:65`).
+
+Legacy precedent (why "base" is the right word):
+`reference-legacy/src/system/base/{create.ts (122 lines),
+types.ts (12), fragments/, README}` — "Owns the portable
+`baseSystem` concept", writes `baseSystem.mjs`/`.d.mts`.
+Neo's `base/` mirrors it tight: NO scan (collect owns
+discovery), NO panda/collector bundle (retired) — assembly
+only.
+
+### (2) The build/write split line in `packager/system.ts`
+
+The line is `104/105`: everything pure moves, everything
+fs stays. Above the line — zero `node:fs`, all move:
+
+- `:15-22` `publishedBaseSystem` → `base/assemble.ts`, RENAMED
+  signature: takes `{ name, fragment, css?, jsxElements }`
+  instead of `PublishInput` (else base imports packager types
+  while the packager leg imports base — a cycle for nothing).
+  The leg adapts at the call.
+- `:24-34` `baseSystemInterfaceSource`, `:36-38`
+  `baseSystemTypesSource`, `:40-76` `systemEntrySource`,
+  `:78-100` `systemTypesSource`, `:102-104`
+  `baseSystemMjsSource` (already exported; no other callers —
+  verified) → `base/sources.ts` verbatim.
+
+Below the line — stays a packager leg permanently:
+
+- `:106-120` `writeSystemDir`: mkdir + 7 writes
+  (`baseSystem.mjs` ← assemble + mjs source;
+  `baseSystem.d.mts`, `system.mjs`, `system.d.mts` ← sources;
+  `evaluated-system.json` + `jsx-elements.json` ← inline
+  `JSON.stringify`, publish-inventory dumps, NOT assembly;
+  `package.json` ← `writePackageJson` + `SYSTEM_PACKAGE`).
+
+Out-of-leg confirmations: `compile-request.json` is written
+by `sync/index.ts:231-235`, which its own comment marks "a
+sync diagnostic, not packaging" — stays in sync, untouched
+by this move.
+
+### (3) Proposed layout (collect surface/lib + README law applied)
+
+Collect's law has two parts: the shape (surface/ + lib/)
+and the discipline (purpose-first READMEs, NOT-owns lists,
+2-6 sentence file headers, never directory tours). Base
+has ONE face — no author imports (generated `baseSystem.mjs`
+is data, not source) — so the shape does NOT split; the
+discipline applies in full. Flat, README-guarded:
+
+```text
+src/system/
+  README.md          # the portable-system domain thesis
+  base/
+    README.md        # the assembly story (below)
+    index.ts         # barrel: contract + assembly, nothing else
+    types.ts         # BaseSystem + BaseAssemblyInput + ExtendsCarrier (1–3)
+    validate.ts      # extends-entry validators + invalidBaseSystem (2–3)
+    jsx.ts           # JsxElementsArtifact + resolveJsxElements (4)
+    packed-css.ts    # merge + strip + PackedUpstream (5, seam-gated)
+    fragments.ts     # createPortableFragmentBundle, narrowed (6)
+    sources.ts       # emitted-source builders (7a)
+    assemble.ts      # published-system assembly root (7b)
+    *.test.ts        # colocated serious tests (§4)
+```
+
+`types.ts` also defines the two structural inputs that keep
+base a LEAF (imports nothing project-side): `ExtendsCarrier
+{ extends?; jsxElements? }` for `resolveJsxElements`
+(`ReferenceUIConfig` satisfies it structurally — no
+config↔base type cycle, no call-site change) and
+`BaseAssemblyInput` for the assembler (§2). Resulting
+arrows: config→base, packager-leg→base, sync→base,
+collect-goldens→base; base→nothing.
+
+README theses (implementer drafts, reviewer holds the law):
+`system/README.md` — "the portable-system domain: what a
+system IS once published" + NOT-owns (discovery/collect,
+compile, publish-act/packager, runtime). `base/README.md` —
+"assembles portability from discovery + config: upstream
+bundles + local IIFEs → fragment; upstream css + own block
+→ portable sheet; configured ∪ traced names → roster; all
+three + name → the published BaseSystem" + NOT-owns (eval,
+compile, writes-to-disk, jsx tracing itself).
+
+Naming-collision watch (§3.11 open thread): `src/system/`
+vs generated `outDir/system/` share a word, never a path —
+all imports relative, no id collision. If a future barrel
+id (`@reference-ui/system`) confuses, the generated package
+keeps the id (shipped contract) and src stays relative-only.
+
+### (4) Serious-test list
+
+RE-HOME with the code (move, don't rewrite):
+
+- `sync/packed-css.test.ts` WHOLE (364 lines, 15 tests:
+  `stripResetLayer` ×6, statement ×4, reset ×2, scoping ×1,
+  assemblies ×3) → `base/packed-css.test.ts` verbatim.
+- `config/validate.test.ts:182-244` (`validateConfig extends`,
+  4 tests) → `base/validate.test.ts`.
+- `collect/lib/prepare.test.ts:230`
+  (`creates a portable fragment bundle in stable
+  upstream-then-local order`) → `base/fragments.test.ts`,
+  adapted to the narrowed signature.
+- STAY PUT: `prepare.test.ts:114` (upstream filtering —
+  collect behavior), `evaluate.test.ts:127` + `:257`
+  (extends threading + provenance — eval behavior),
+  `sync/sync.test.ts:203-248` (`sync extends adoption`,
+  2 tests — pipeline integration, sync's contract),
+  `goldens.test.ts` + `lib-barrel-negation.test.ts`
+  (repoint imports only).
+
+NEW unit batteries (genuine gaps — nothing pins these today):
+
+- B1 emitted-source goldens: exact-string pins for the
+  interface, entry, and both `.d.mts` builders (today only
+  case specs touch these strings; SYNC-06 determinism would
+  catch drift but never names the culprit builder).
+- B2 assemble mapping: name/fragment/css/jsxElements from
+  the narrow input, incl. css-absent → field undefined.
+- B3 build→validate round-trip: `assemble` output passes
+  `validateBaseSystemEntries` — the extends chain's founding
+  invariant, currently unpinned anywhere.
+- B4 jsx-resolve battery: trim/dedupe/sort, upstream merge,
+  traced union, empty→`[]`, and the `primitives: []` pin
+  (MUST fail loudly the day 3.9 lands a producer — that
+  failure is the producer's first test).
+- B5 fragment-bundle order: multi-upstream declared order
+  preserved ahead of local (extends the single existing
+  order test).
+- B6 validation edges: non-object entry, whitespace-only
+  name (the 4 moved tests cover the main shapes; these two
+  branches have no pins).
+
+CASE-LEVEL (existing homes — ZERO new cases required):
+NEO-SYNC-10 (adoption baseline), NEO-SYNC-17 (strip) +
+NEO-TOKEN-09 (owner passthrough, per SYNC-17's README),
+NEO-LAYER-02 (nesting + portable-css injection),
+NEO-SYNC-15 (configured-only request vs published union),
+NEO-SYNC-04 (frozen `jsxHosts`), NEO-SYNC-06 (byte-identical
+re-sync pins every builder), NEO-SYNC-07 (stale cleanup pins
+the leg inventory). OPTIONAL (implementer's call, not a
+gate): a 3-level transitive chain world — units pin two
+levels (`packed-css.test.ts:296`), cases pin one hop
+(SYNC-10); a third level is defense-in-depth, not a gap.
+
+### (5) Ordered move slices for the implementer
+
+S0 types: `types.ts` (+ narrow inputs) + re-exports;
+repoint `index.ts:5`, `packager/system.ts:9`,
+`config/validate.ts:6`, `collect/lib/evaluate.ts:10`.
+Proof: `agentneo q` + full unit file green.
+
+S1 roster: `jsx.ts` verbatim (+ `ExtendsCarrier` narrowing);
+repoint §1 repoint-only list + `packager/types.ts:6`.
+Proof: units + `goldens.test.ts` + `lib-barrel-negation`.
+
+S2 css chain (SEAM-GATED): `packed-css.ts` + its test file
+verbatim; repoint `sync/index.ts:28` + wrapper `:121-132`.
+Skip-if-deleted per §1 caveat. Proof: packed-css suite +
+SYNC-10 + LAYER-02.
+
+S3 fragment bundle: `fragments.ts` (narrowed) + B5 test;
+adapt `sync/index.ts:221`; drop `collect/index.ts:31`.
+Proof: prepare suite + SYNC-10 + SYNC-17.
+
+S4 contract enforcement: `validate.ts` (+ factory) + moved
+extends tests + B6; `config/validate.ts:196-197` repoints;
+`config/errors.ts` re-exports. Proof: validate suite +
+evaluate suite + SYNC-10.
+
+S5 leg split: `sources.ts` + `assemble.ts` (+ B1/B2/B3/B4);
+`packager/system.ts` thins to imports + `writeSystemDir`;
+`publishedBaseSystem` dies at the adapted call. Proof: full
+units + SYNC-04/06/07/15 (the byte-shape quartet).
+
+S6 address: both READMEs + `base/index.ts` + file headers
+(2-6 sentences, README law); final proof = units + `q` +
+`agentneo run` SYNC-10/15/17 + LAYER-02. NO chain/T1: pure
+TS refactor, publish bytes unchanged (SYNC-06 is the proof).
+
+Concurrency note: NIGHT-1 (packager follow-ups) is writing
+`packager/` + needles concurrently — disjoint files from
+this spec except shared import lines; implementer
+re-verifies §1 line numbers at slice start, moves nothing
+NIGHT-1 owns.
+
+## WAVE1-D17-SEAM — layers-seam scope for the straight-to-seam decision (cartographer, 2026-09-23)
+
+Scope: `packages/reference-neo/PLAN.md` §3.6 (+ §3.10/3.11 homes),
+packed-css + merge + engine emission + publish legs, all read
+firsthand. READ-ONLY; this section is the only write. Decision
+recorded as **Final**: packed-css dies by seam, no interim PostCSS
+hardening of the merge path — PostCSS stays for CSS we do NOT
+control (3.2), streams for CSS we do.
+
+### (1) What packed-css.ts + mergePublishedStylesheets do today
+
+**`src/sync/packed-css.ts` (128 lines)** — `mergePackedStylesheets
+(upstreams, own, selfName)` (:118-128) assembles one cascade-correct
+sheet: a top-level `@layer a, b, …;` statement, then upstream blocks
+verbatim-but-reset-stripped, then the own block verbatim. Pieces:
+- `collectLayerNames` (:89-101) — statement names by first-occurrence
+  dedupe, self last. Upstream names come from *re-parsing our own
+  published text*: `contributedNames` (:79-87) reads the payload's
+  leading statement via `LEADING_STATEMENT` regex (:21) — transitive
+  induction (a merged publisher already lists its closure), else the
+  bare system name.
+- `stripResetLayer` (:62-71) — deletes every `@layer reset {…}` via
+  `findResetBlock` (:47-54) + hand-rolled `matchCloseBrace` (:30-40).
+  The consumer's own reset rides its block (so `normalizeCss: false`
+  opts the whole subtree out).
+- `appendBlock` (:103-107) newline join. No usable upstream css → own
+  block returns byte-identical (no statement, no join).
+
+**`mergePublishedStylesheets`** (`src/sync/index.ts:121-132`, called
+once at :217) runs that merge **twice**: served sheet (upstream
+portable blocks + own `:root`-hoisted block) and published portable
+(upstream portable blocks + own self-scoped block). Upstream payloads
+are `config.extends` `BaseSystem` entries structurally satisfying
+`PackedUpstream {name, css?}` (packed-css.ts:10-13).
+
+**Census (grep, current tree):** `BaseSystem.css` is produced only at
+`sync/publish/system.ts:19`, presence-checked at
+`config/validate.ts:148`, consumed only by the merge (:217).
+`packed-css` importers: `sync/index.ts:28` + `packed-css.test.ts`
+(364 lines, dies with it). Companion law: `collect/lib/
+evaluate.ts:151` — upstream globalCss is suppressed at eval because
+it ships via this merge (stays true under streams).
+
+### (2) What the engine emits + where streams attach
+
+**Result shape.** Rust `CompileResult`
+(`modules/atomic/src/types.rs:74-102`): `stylesheet` +
+`portable_stylesheet` (+ runtime, diagnostics, `traced_jsx_hosts`,
+…). TS mirrors: `sync/native.ts` `NativeCompileResult:56-74`
+(`portableStylesheet?` optional) and `contracts/types.ts:164-179`
+(required — minor drift to reconcile in the slice).
+
+**The single attach point** is `assembly.rs:101`
+(`build_stylesheets_with`). The emitter (`stylesheet/emitter/
+mod.rs:75-93`) already thinks in chunks, then concatenates before
+crossing: `shared_layers` (:96-105, recipes+utilities printed once,
+byte-identical in both sheets) + divergent system-layer heads
+(reset+global+tokens). The two sheets differ **only in token
+selectors** (`:root` vs `[data-layer]` —
+`system_layers/mod.rs:220-244`); reset+global print identically via
+`global::append_reset_css` (`global/mod.rs:21-41`,
+`is_reset_fragment` :59-62 name match) and `append_global`
+(system_layers:47-60). Package wrap: `wrap_package_layer`
+(`layers/mod.rs`, preamble `LAYER_PREAMBLE` = the 6-layer contract).
+
+**Wire precedent.** Slim N-API already ships structured-ish:
+`SlimCompileResult` (`native.rs:175-207`) refolds portable as
+head+shared-tail via `wire::split_shared_suffix` (`wire.rs:25-32`,
+content-agnostic string algebra); JS rebuilds in
+`modules/atomic/js/runtime.ts:53-68`. Streams extend this seam, and
+`tracedJsxHosts?` is the additive-optional precedent
+(`native.ts:66`, "absent on older engines").
+
+Net: the emitter's push sequence IS the stream vocabulary waiting to
+be captured — preamble / reset / global / tokens / tokens-portable /
+recipes / utilities / package-wrap. Nothing needs inventing on the
+RS side, only exposing.
+
+### (3) Stream vocabulary + recommendation
+
+Candidates:
+- **A. Per-layer streams** — statement names as `string[]` data + one
+  string per layer block (reset, global, tokens, tokensPortable,
+  recipes, utilities) + package name as data. Mirrors the emitter 1:1.
+- **B. Per-concern** — HQ's §3.6 hint "(the layout bit, everything
+  else)": e.g. `{layout, theme, content, reset}`. Coarser, but the
+  merge still needs per-system statement names → carries names
+  alongside anyway, so it saves nothing and re-lumps reset handling.
+- **C. Sheet object** — nested `{statement, blocks:{…}}`. Same content
+  as A with deeper nesting; no added expressive power.
+
+**Recommend A** (per-layer, B's naming discipline). The merge needs
+exactly three things, and A is the minimal vocabulary satisfying
+all three: (i) names as data (kills `LEADING_STATEMENT` regex),
+(ii) reset as a separable chunk (kills `matchCloseBrace` — strip
+becomes stream-drop), (iii) served-vs-portable token variants
+(already the sole sheet divergence). B fails (ii); C is A with
+indentation.
+
+**Do NOT resurrect `cssChunks[]`.** `contracts/types.ts:181-198`
+still declares `PortableCssChunk`/`PortableBaseSystem`, but the
+Pubshape crew jettisoned the plural shape deliberately (this log
+~:4372ff; NEO-SYNC-03 pins "no plural survivors"). Streams are
+*keyed layer fields on the compile result*, not a hashed chunk list;
+`BaseSystem.css` stays the published string (kept matrix T2/T8 tiers
+passthrough singular `css` — untouched). Structured *published*
+payloads are a D17-layers decision, not this seam.
+
+**Wire + cut shape:** extend `SlimCompileResult` with an optional
+streams object (small field count — ship verbatim, no refold
+cleverness; the 14 MiB sheet stays whole-string on the slim path).
+Recommend **hard cut behind a schema bump** over additive fallback
+(sync sends `schemaVersion: 1`, native.ts:176; fallback paths would
+double the merge code). Byte-identity constraint: stream assembly
+must reproduce today's exact bytes — LAYER-01/02 pins, chain specs,
+NEO-CHAIN-06 real-upstream — since each layer already prints as one
+contiguous push, streams = capture the pushes.
+
+### (4) TS receive side — dies / shrinks / lands
+
+**DIE:**
+- `src/sync/packed-css.ts` (128) + `packed-css.test.ts` (364).
+- `mergePublishedStylesheets` (`sync/index.ts:121-132` + :217 call)
+  → one stream-assembly call. First deletion proof of the 3.5
+  regex-ban law.
+
+**SHRINK (not die):**
+- `sync/index.ts` — merge site becomes the assembly call;
+  `PublishInput.stylesheet/portableStylesheet` stay strings
+  (assembly *output*, never surgery input again).
+- `sync/native.ts` — `NativeCompileResult` gains the streams field;
+  seam file stays until the `native/` home lands (below).
+- `config/validate.ts:147-157` — UNCHANGED (published `css` stays
+  string; the `fragment/css/jsxElements` presence rule survives).
+
+**LAND:**
+- Stream assembly → **`src/system/base/`** per §3.11 (does not exist
+  yet — N-3 owns the line per the 11 AM notes at this log's tail;
+  coordinate file layout): `mergeStreams(upstreams, own, selfName)`
+  pure + heavy unit tests ported from packed-css.test.ts (statement
+  dedupe, diamond identical bytes, reset-drop, empty passthrough).
+- Seam receive types → the native seam: `sync/native.ts` today, but
+  HQ has decreed `native/generated/` as the consume-side home (see
+  the NIGHT-4/5 review above) — the streams type should live with the
+  vendored contracts, not hand-mirrored in sync/.
+- `publish/system.ts` build/write split per §3.11: pure build (base
+  assembly incl. stream merge) → `system/base`; `writeSystemDir`
+  stays a packager leg.
+- **Untouched:** `reset.ts` (spec-side injection stays — the engine
+  still routes reset-named sources; only the TS *strip* side dies),
+  `styled.ts`/`react-shell.ts` (consume assembled strings),
+  `evaluate.ts:151` suppression, §3.10 jsx-elements join (already
+  structured via `tracedJsxHosts`; moves to `system/base` once,
+  orthogonal to streams).
+
+### (5) Ordered slices for the morning
+
+- **S1 (RS): capture.** Refactor `build_stylesheets_with` to build a
+  streams struct, then concat (byte-identical; existing emitter +
+  `cargo` tests prove). No seam change. (`agent-rs` loop + quality
+  gate.)
+- **S2 (RS): cross.** Extend `CompileResult` + slim N-API with the
+  streams object; schema bump; proof channel keeps full strings.
+- **S3 (TS seam): receive.** `sync/native.ts` += streams field;
+  `contracts/types.ts` mirror + fixture (reconcile the
+  optional/required drift noted in (2)).
+- **S4 (TS assembly):** new `system/base/` assembler, pure +
+  ported unit battery. (Needs N-3's file layout first.)
+- **S5 (cutover):** `sync/index.ts` swaps the call; DELETE
+  packed-css.ts + test. Prove: units + `agentneo q` + chain 6/6 +
+  LAYER-01/02 + SYNC-10/17 + NEO-CHAIN-06 + T1/T2 hermetic re-gate
+  (publish-shape touch → PLAN §2 gate rule).
+- **S6 (hygiene):** tell NIGHT-2's CSS-touchpoint map the merge is
+  resolved-by-seam (no PostCSS on the controlled path); file the
+  3.5 ban's first deletion.
+
+**Ordering/parallelism:** S1+S2 RS-serial; S3+S4 TS-side can run
+parallel to S1 once the 11 AM call freezes the vocabulary (rec: A)
++ hard-cut + `system/base` layout; S5 after both; hermetic re-gate
+on S5 only. **Watch-outs:** N-1 rewrites the publish legs Wave 1
+is moving — S4/S5 sequence after N-1 lands (same rule as N5-W4);
+kept T2/T8 tiers never see the seam (singular `css` preserved).
+
+## WAVE1-PACKAGER-LEGS — NIGHT-3 packager move (implementer, 2026-09-23) — DONE
+
+Mechanical N-1 move per the NIGHT-3 cut list (#23, #24, #31-36 +
+#41 test) and the Captain's NIGHT-3 review ruling 3 (system.ts
+moves whole; N-3 owns the later build/write split). Pure moves:
+every moved file differs from HEAD in import lines only
+(verified per file via `git show HEAD:<old> | diff - <new>`).
+Zero behavior change; no commits (report, don't land).
+
+### Files moved (8)
+
+Base: `packages/reference-neo/src/`. Flat into `packager/`,
+basenames preserved (no collisions with the existing
+assembly/assets/constants/externals/layout/manifest/packages/
+postprocess/types set):
+
+| # | From | To |
+|---|---|---|
+| 23 | `sync/react.ts` | `packager/react.ts` |
+| 24 | `sync/reference-types.ts` | `packager/reference-types.ts` |
+| 31 | `sync/publish/system.ts` | `packager/system.ts` |
+| 32+33 | `sync/publish/styled.ts` | `packager/styled.ts` |
+| 34 | `sync/publish/react-shell.ts` | `packager/react-shell.ts` |
+| 35 | `sync/publish/types-bundle.ts` | `packager/types-bundle.ts` |
+| 36 | `sync/publish/links.ts` | `packager/links.ts` |
+| 41 | `sync/reference-types.test.ts` | `packager/reference-types.test.ts` |
+
+`sync/publish/` removed (empty after the move). Post-move
+`sync/` matches the NIGHT-3 forecast minus the held/deferred
+items: index, native, jsx-elements, clean, phases, watch +
+picomatch.d.ts, packed-css + reset (+ tests), compile-files
+(deletion owned by N-1 wave 2).
+
+### Import sites updated (3, + the moved files' own imports)
+
+- `packager/assembly.ts` — 7 leg imports `../sync/...` → `./...`;
+  line-3 header comment updated (the "legs still live under
+  sync/" sentence is now false; assembly body untouched, call
+  order untouched).
+- `benchmark/deepsee/worker-phases.ts` — 6 leg imports
+  `../../src/sync/...` → `../../src/packager/...` (import-only).
+- `tools/build-bin.mjs` — `PATH_LITERAL_SOURCES` keys
+  `src/sync/react.ts` → `src/packager/react.ts`,
+  `src/sync/reference-types.ts` →
+  `src/packager/reference-types.ts` (path-string reference the
+  packed-bin build asserts; literals themselves unchanged).
+
+Inside the moved files: `../packager/*` → `./*`,
+`../../packager/*` → `./*`, `../../config/*` → `../config/*`,
+`../../lib/*` → `../lib/*`. `sync/index.ts` untouched (calls
+`assembleSystem` only — confirmed by import census before the
+move). `packager/types.ts:6` untouched per the Captain's ruling
+7 (artifact type home is N-3's line).
+
+Depth check (why zero-behavior holds for path computation):
+`react.ts`/`reference-types.ts` resolve `runtime/` + `entry/`
+via `import.meta.url` + `'..'` — same depth after the move
+(`src/sync/` → `src/packager/`), so every computed path is
+byte-identical. The five `publish/` legs use no
+`import.meta.url` resolution. The moved test's `HERE,'..',...`
+entry/decl/browser probes likewise resolve identically.
+
+### Proof output
+
+- Full Neo vitest: **48 files / 337 tests green**
+  (`pnpm vitest run` in `packages/reference-neo`, exit 0).
+- `pnpm agentneo q`: **0 errors, 17 warnings, 214 files** —
+  identical to the pre-move baseline taken this session (0
+  errors, 17 warnings, 214 files). Zero new errors.
+- Chain cases: **NEO-CHAIN-01..06 all PASS** (`transitive`,
+  `diamond`, `parallel`, `multi-extends`, `depth`,
+  `real-upstream`; each `agentneo run` also typechecks green —
+  the CLI refuses on red types).
+- Post-move grep: zero remaining code references to
+  `sync/publish`, `sync/react`, `sync/reference-types` outside
+  prose docs (see surprises).
+
+### Surprises
+
+1. One self-caught miss mid-proof: `types-bundle.ts:9` carries a
+   `../../packager/constants.ts` import I first read as
+   import-free; the first vitest run flagged it (`Cannot find
+   module`), fixed to `./constants.ts`, full suite green on
+   re-run. Nothing else hid.
+2. Prose pointers now stale (deliberately untouched — docs are
+   not import sites, and `docs/evidence/` is read-only):
+   `tests/cases/{prim,sync,type}/TESTS.md` + `SPEC.md` +
+   `NEO-TYPE-07/README.md` cite `sync/react.ts` /
+   `sync/publish/*.ts` as implementation homes, as do ~15
+   evidence reports. Non-behavioral; suggest a doc sweep when
+   N-1 lands, not inside this move.
+3. `benchmark/deepsee/worker-phases.ts` was the only importer
+   outside `src/` + the packed-bin map — a second caller chain
+   beside `assembleSystem`, worth knowing for N5-W4 (assembly
+   cutover rewrites the legs; the benchmark mirrors the call
+   order and will need the same rewrite).
+
+## WAVE1-NATIVE — top-level native/ restructure map (cartographer, 2026-09-23)
+
+Scope: READ-ONLY; this section is the only write. HQ native/
+direction + pre-night picks + captain's NIGHT-3/NIGHT-4/5 reviews +
+NIGHT-3 cut list + NIGHT-4/5 + WAVE1-D17-SEAM + WAVE1-PACKAGER-LEGS
+(all this log) read first. Every file:line verified firsthand in
+the current tree (post-PACKAGER-LEGS: legs already in packager/,
+sync/publish/ gone). Base below: `packages/reference-neo/src/`.
+
+Settled law this map builds on: HQ shape (native/ = RS-cut
+contract + call + retention protocol; native/generated/ =
+committed codegen from Rust: contracts, tasty, primitives —
+committed-but-generated name CLOSED); captain NIGHT-3 #2 (#12-14
+stays SUPERSEDED, N-2 owns); HQ pre-night #2 (resolveJsxElements
+→ collect/tracer); compile-files delete approved (captain NIGHT-3
+#5 — zero importers reconfirmed: the only "compile-files" hit is
+native.ts's own comment); NIGHT-5 waves are MORNING work (nothing
+overnight on primitives); vendor/→upstream/ rename dead-lean, HQ
+confirms AM (captain NIGHT-4/5 review) — ASSUMED below; if HQ
+revives upstream/, slice 4 re-targets. D17-SEAM: streams receive
+type lands with the native seam, never hand-mirrored in sync/.
+
+### (1) Move-in table — every file:line, argued
+
+| # | What (current file:line) | Verdict | Why |
+|---|---|---|---|
+| M1 | `sync/native.ts` whole, :1-96 | MOVE to native/ (split per §3) | It IS the seam; HQ names it the subsystem seed. 96 lines: types :15-74 + calls :84-96. |
+| M2 | Retention lifecycle, `sync/index.ts:155-207` (NIGHT-3 #4) | MOVE the protocol, KEEP the recipe shape | #4's "engine-block machinery" rationale is answered by HQ: native/ owns the retention protocol. Move as 3 helpers in `native/retention.ts` — `attachScanRetention` (exactly-one-of token/files/neither, :185-186 + native.ts:39-42 invariant), `dropScanRetention` (post-drain clear + RSS relief, :192-198), `releaseScanRetention` (best-effort never-throw finally, :199-207) — plus `releaseRetention` moved from native.ts:93-96. Recipe keeps the try/finally with 3 one-line calls. REJECTED: a `withRetention` wrapper — it would hide the eval→compile order the recipe exists to show. Production side STAYS in collect: `PreparedFragments` (`collect/lib/evaluate.ts:47-66`) + `prepareFragments` wiring (:119-135) is the scan product, not the compile protocol. |
+| M3 | Request assembly, `sync/index.ts:171-184` + `uniqueSorted` :84-86 (NIGHT-3 #5) | MOVE as `native/request.ts` builder | "Built at the call site" died by triplication: recipe :176-186 + `collect/lib/scan/goldens.test.ts` dietCompile :90-107 + `sync/lib-barrel-negation.test.ts` assembly :66-76 all hand-build the six frozen keys. One builder (`buildCompileRequest`, single object param — the gate fails >5 params) gives SYNC-04's pin one home and all three call sites collapse onto it. Builder takes `primitiveNames` as a PARAM (roster still lives in `primitives/tags.ts` until NIGHT-5 — no fake generated import) and plain `requested: string[]`, so it is decoupled from both the tracer move (HQ #2) and the system/base join (§3.10). `uniqueSorted` moves with it (single use :179; barrel test dedupes to the import). |
+| M4 | Request/result/diagnostic types, `native.ts:15-74` (NIGHT-3 #14) | MOVE to `native/contract.ts` (part of M1) | The RS-cut contract surface, verbatim incl. the structural-carry comments (dist trails frozen source). `NativeSourceFile` keeps its only live user (`files` fallback — the `REFERENCE_UI_SCAN_NATIVE=0`/no-addon path in `collect/lib/scan/native.ts:191-198` is live); implementer drops the compile-files mention (:12-14) when N-1 wave 2 deletes it. D17-reported `portableStylesheet?` optional/required drift vs `contracts/types.ts` stays S3's reconcile, not this move's. |
+| M5 | Diagnostic discipline, `sync/index.ts:42-82` (NIGHT-3 #6) | MOVE to `native/diagnostics.ts` | Private fns speaking ONLY `NativeDiagnostic`; zero sync-lifecycle touch (no phases/outDir/publish). Result-handling completes "the call". Recipe keeps 3 identical call lines (:208-210). Judgment, low-stakes either way — mover wins because the next native consumer (streams, S3) reuses it. |
+| M6 | `collect/lib/scan/native.ts`, 239 lines | STAYS in collect | Fragment-discovery orchestration (fg enum :184-189, needle derivation, verbatim splitScan confirm :212-217, walk-completeness gate `isCompleteWalkInclude` :168-177) that calls native `scan()`. Only the consume side (drain/release) is native/'s protocol. Splitting its 3 structural ifaces out = two files, one caller. Mirrors stay triplicated (seam + scan + `scan/helpers.ts:117` + 15 case specs) by documented NodeNext necessity — consolidation is RS-dist-refresh work, explicitly not move work. |
+| M7 | typegen call (`packager/types-bundle.ts:67`), tasty runtime imports (`reference/bridge/tasty-build.ts:8-12`, browser-model ×5) | STAY | native/ is the atomic scan/compile/retention cut, not every `@reference-ui/rust/*` import — else it becomes the new kitchen sink. `reference/tasty/api.ts` (Neo-authored wrapper, not generated) likewise stays. |
+| M8 | `src/vendor/rust-tasty/` (sole child of vendor/) | REAL git mv → `native/generated/tasty/` | Committed mechanical copy of the RS dist tasty d.ts closure (`@generated` stamps, regen tool `tools/vendor-rust-tasty-dts.mjs`, tsconfig paths map `@reference-ui/rust/tasty*` → vendor). Move = mv + `VENDOR_DIR` retarget + re-stamp via the tool + tsconfig paths + `tools/README.md` + `packager/reference-types.test.ts:158` pin string (`'vendor/rust-tasty'`). `src/vendor/` dies. `src/entry/types.d.mts:20` untouched (mapped import, no path literal). |
+| M9 | `native/generated/contracts/` | README placeholder (real vendoring is morning work) | Today contracts resolve live via node_modules, types-only, in 16 files — typecheck passes with zero vendoring. Vendoring now without `--check` wiring repeats the tags.ts drift NIGHT-4 flagged must-close (hole still open: zero gate/CI hits reconfirmed). D17-S3's need ("streams type with the vendored contracts, not hand-mirrored in sync/") is satisfied by `native/contract.ts` — "not in sync/" is the operative clause. README specs the future shape (source `dist/contracts/types.d.ts`, second tool TOPS set, tsconfig mapping, --check wiring prerequisite). |
+| M10 | `native/generated/primitives/` | README placeholder (no RS emitter exists) | Honest: canon `ELEMENTS`=125 (`reference-rs/modules/canon`) is the future source per NIGHT-4/5, but NIGHT-5 E-waves are morning-gated on 11 AM picks (rank-1, 125-vs-101, SVG scoping). `primitives/tags.ts` (101, hand copy) stays authoritative; per-system emission (`primitives/generate/generate.ts`, `react-surface.d.ts`) untouched. README says exactly this + cites NIGHT-5. No re-export shim — that would fake generatedness. |
+
+### (2) What the recipe keeps (call sites + minimal glue)
+
+sync() keeps: config load, outDir, cleanDir/atomicity (:146,242-244),
+prepare/evaluate calls, phase marks, `buildCompileRequest` +
+`attachScanRetention` + `compileNative` + `drop`/`release` calls,
+3 diagnostic calls, merge call (→css under N-1), assembleSystem,
+compile-request.json write (:227-235 — operates on the built
+request; strip-list stays), tasty-phase schedule. Keeps
+(temporarily) the `PRIMITIVE_JSX_NAMES` import (`index.ts:24`) as
+the builder's `primitiveNames` arg — migrates to
+`./generated/primitives` at the NIGHT-5 cutover.
+
+Blast radius is 5 real importers of the seam: `sync/index.ts:8-14`,
+`sync/lib-barrel-negation.test.ts:20-24`,
+`collect/lib/scan/goldens.test.ts:23`,
+`benchmark/deepsee/worker-phases.ts:13` (its leg imports already
+re-pointed by PACKAGER-LEGS; :13 remains), and dying
+`sync/compile-files.ts:9`. Non-breakers: 15 case specs import
+`@reference-ui/rust/atomic` directly (structural mirrors; comments
+cite `src/sync/native.ts` → slice 5); `sync/watch.ts` (leaf, calls
+`sync()` only); `bin/neo.ts`; `tools/build-bin.mjs` (no native
+refs — no PATH_LITERAL entry); playground/ (zero refs).
+Depth check (PACKAGER-LEGS precedent): `src/sync/` → `src/native/`
+is same-depth, and no moved line uses `import.meta.url` — every
+computed path is byte-identical.
+
+### (3) Proposed layout
+
+```
+src/native/
+  README.md            subsystem contract (seam table; no filename tables — gate)
+  contract.ts          M4 types verbatim (~60 lines + header)
+  compile.ts           compileNative + AtomicModule iface (~15)
+  retention.ts         releaseRetention + attach/drop/release helpers (~45)
+  request.ts           buildCompileRequest + uniqueSorted (~40)
+  diagnostics.ts       M5 helpers, same private names (~45)
+  generated/
+    tasty/             M8 real mv (stamps re-run via the tool)
+    contracts/README.md  M9 placeholder (future shape + --check prerequisite)
+    primitives/README.md M10 placeholder (NIGHT-5 pointer + 11 AM picks)
+```
+
+No `index.ts` barrel (deep imports; revisit when D17 streams
+land). Every new .ts file carries a 2-6 sentence header (gate);
+new fns stay inside fail lines (12/20/5/120/500/4 — the builder's
+object param is mandatory, not style). D17 handoff: S3 adds the
+optional streams field to `native/contract.ts`
+(`tracedJsxHosts?` additive precedent) + `contracts/types.ts`
+mirror + fixture; `mergeStreams` still lands in `system/base`
+per D17 §4 (N-3 owns the layout).
+
+### (4) Serious-test list
+
+Commands (all verified this session by PACKAGER-LEGS):
+`pnpm vitest run` in `packages/reference-neo` (baseline 48 files /
+337 green), `pnpm agentneo q` (baseline 0 errors / 17 warnings /
+214 files), `pnpm agentneo run <id>` (refuses on red types — every
+case run is the typecheck), `node tools/vendor-rust-tasty-dts.mjs
+--check` from the package dir.
+
+- Slice proofs: `q` over touched files after EVERY slice (headers,
+  no-`any`, no suppressions); unit scope = `sync/sync.test.ts`,
+  `sync/lib-barrel-negation.test.ts`, scan suite (`scan/native*`,
+  `goldens`, `retention`, `crossings`), `packager/
+  reference-types.test.ts` (pin update), primitives generate/tags
+  + `bin/neo.test.ts` as untouched regression.
+- Case proofs: NEO-SYNC-04 (frozen six request keys — THE move
+  proof), NEO-SYNC-15 (traced hosts), NEO-SYNC-01/06/07/14
+  (shape/resync/watch-adjacent), NEO-CLI-01 (spawned-binary
+  end-to-end), NEO-CHAIN-01..06 (multi-package regression, per
+  PACKAGER-LEGS precedent), one SITE recompile smoke (SITE-28 —
+  comment-only, proves mirrors still describe the seam),
+  NEO-REF-01 (post-tasty-move smoke).
+- Byte-identity: `goldens.test.ts` shas must not move (builder
+  dedupe is behavior-identical by construction); `q` warning
+  count must not rise above 17.
+- Grep-zero (post-slice-5): `sync/native` outside `docs/evidence/`
+  (historical, untouched per PACKAGER-LEGS precedent) and zero
+  `vendor/` refs outside it.
+
+### (5) Ordered move slices for the implementer
+
+- Precondition: N-1 wave 2 owns `index.ts` too (#7 merge wrapper,
+  #15-17 reset, #22 delete). Slices 1/3/4 touch disjoint files and
+  may run parallel to N-1; slice 2 sequences AFTER N-1 wave 2
+  lands (or the captain interleaves — one owner of `index.ts` at
+  a time either way).
+- Slice 1 — seam landing: create `native/{contract,compile,
+  retention,request,diagnostics}.ts` + `README.md` in final shape
+  (cut/paste + M2/M3/M5 helper extraction), delete `sync/
+  native.ts`, re-point the 4 living importers, update the 3 scan
+  comments (`scan/native.ts:35`, `scan/helpers.ts:67`,
+  `retention.test.ts:15`). Proof: `q` + vitest scan/sync scope +
+  SYNC-04.
+- Slice 2 — recipe surgery: `index.ts` takes the builder +
+  attach/drop/release + moved-diagnostic calls; delete the moved
+  helpers + `uniqueSorted`. Proof: `sync.test.ts` + barrel +
+  SYNC-04/15 + CLI-01.
+- Slice 3 — tasty vendor mv (M8 list). Proof: `--check` +
+  typecheck-via-run + reference-types tests + REF-01.
+- Slice 4 — generated/ README placeholders (M9/M10). Proof: `q`.
+- Slice 5 — prose: 15 case-spec comments (`(see|mirrors)
+  src/sync/native.ts` → `src/native/contract.ts`), deepsee
+  comment if any. `tests/cases/sync/TESTS.md` SYNC-04/15 rows +
+  SPEC cites DEFER to the N-1-landing doc sweep (PACKAGER-LEGS
+  surprise-2 precedent — ledgers, not import sites).
+  `docs/evidence/` never touched. Proof: the §4 greps.
+- Implementer checks `docs/DOMAIN.md` before landing the five
+  file names (nomenclature authority — not re-read on this map).
+  No-panda pass on new/changed lines per skill §7.
+
+## WAVE1-LEGS-VERIFY — adversarial review of the packager-legs move (verifier, 2026-09-23) — HOLD
+
+Thinking hat, no source edits, nothing committed. Skill
+`agent-neo` loaded first. Scope: the `## WAVE1-PACKAGER-LEGS`
+report (8 files `src/sync/` → `src/packager/`).
+
+### (1) Per-file drift check — PASS
+
+`git show HEAD:<old> | diff - <new>` for all 8 pairs. Every
+diff is a single hunk of `c`-only changes (no add/delete, line
+counts identical), and every changed line is an `import` line:
+
+- `react.ts`: 1 import (`../packager/externals` → `./externals`)
+- `reference-types.ts`: 5 imports (`../packager/*` → `./*`)
+- `system.ts`: 5 imports (`../../config` → `../config`,
+  `../../packager/*` → `./*`)
+- `styled.ts`: 4 imports (`../../packager/*` → `./*`)
+- `react-shell.ts`: 4 imports (`../../packager/*` → `./*`)
+- `types-bundle.ts`: 1 import (`../../packager/constants` →
+  `./constants` — the surprise-1 fix is in)
+- `links.ts`: 3 imports (`../../lib/symlink` → `../lib/symlink`,
+  `../../packager/*` → `./*`)
+- `reference-types.test.ts`: 3 imports (incl. `./publish/links`
+  → `./links`)
+
+Zero logic drift. The report's import-rewrite table is exact.
+
+### (2) Stragglers — FAIL (one cross-package importer missed)
+
+Passing parts: all 4 old paths dead (`sync/publish/`,
+`sync/react.ts`, `sync/reference-types.ts`,
+`sync/reference-types.test.ts`); zero code refs to
+`sync/publish`, `sync/react`, `sync/reference-types`, or
+`publish/<leg>` anywhere under neo `src bin benchmark tools
+tests`; `sync/index.ts` and `packager/types.ts` untouched
+(`git status` clean); the 3 import-site diffs match the report
+exactly (assembly 7 imports + line-3 comment, worker-phases 6
+imports, build-bin 2 map keys, all import/key-only); all 8
+symbols assembly imports resolve to exports in the moved files;
+assembly call order intact (L24–37).
+
+Failing part: the implementer's post-move grep was scoped to
+the neo package. A repo-wide sweep finds one live straggler
+outside it:
+
+- `packages/reference-rs/modules/atomic/tests/harvest-census.test.ts:22-23`
+  still imports `../../../../reference-neo/src/sync/publish/styled.ts`
+  (`publishRuntimeBundle`) and `../../../../reference-neo/src/sync/react.ts`
+  (`publishReactBundle`) — both paths now dead.
+
+The file is clean at HEAD (no other crew touched it), so the
+breakage is purely move-caused. `PLAN.md:370/:377`
+`publish/system.ts` hits are prose, not imports — not stragglers.
+
+### (3) NIGHT-1's 3 files — PASS
+
+`bin/neo.ts`, `src/collect/lib/scan/helpers.ts`,
+`src/collect/lib/scan/identity.test.ts` all present in tree.
+Their working-tree diffs vs HEAD are NIGHT-1's own work (needle
+dedup to `FRAGMENT_IMPORT_NEEDLES`, `LINKED_PACKAGES` →
+`PACKAGES.map`) — none of the three imported a moved leg at
+HEAD, so the move correctly left them alone. (`bin/neo.ts`
+does newly import `../src/packager/layout.ts` +
+`../src/packager/packages.ts`, but those modules predate the
+move — not move retargets.)
+
+### (4) Re-run proof — neo green, RS red
+
+All re-run firsthand this session, exact outputs:
+
+- Full Neo vitest (`pnpm vitest run` in
+  `packages/reference-neo`): **48 files / 337 tests passed**,
+  exit 0 — matches the report.
+- `pnpm agentneo q`: **0 errors, 17 warnings, 214 files in
+  794ms** — matches the report byte for byte.
+- Chain cases (`pnpm agentneo run NEO-CHAIN-0[1-6]`, each
+  typechecks first): **all 6 PASS, exit 0**
+  (`transitive`, `diamond`, `parallel`, `multi-extends`,
+  `depth`, `real-upstream`). CHAIN-06 prints two
+  `ATM-W-UNKNOWN-COLOR` sync warnings (world content, not a
+  fault).
+- Straggler confirmation (`pnpm agentrs v
+  modules/atomic/tests/harvest-census.test.ts`): **FAIL at
+  collection** — `Error: Cannot find module
+  '../../../../reference-neo/src/sync/publish/styled.ts'
+  imported from .../harvest-census.test.ts`, exit 1.
+  (First attempt with a repo-relative path exited 1 with "No
+  test files found" — filter must be RS-root-relative; not a
+  result.)
+
+### Verdict: HOLD
+
+One reason: the move breaks `harvest-census.test.ts`, a live
+file in the atomic RS suite (`tests/**/*.test.ts` include —
+no skip), via 2 dead imports. Check (2)'s "zero remaining
+imports" bar explicitly fails, and the report's "zero remaining
+code references" claim is wrong repo-wide (its grep never left
+the neo package).
+
+Fix is a clean 2-line retarget (both targets exist and export
+the needed symbols — verified in §(2) above):
+
+- `:22` `.../src/sync/publish/styled.ts` →
+  `.../src/packager/styled.ts`
+- `:23` `.../src/sync/react.ts` → `.../src/packager/react.ts`
+
+Re-proof to clear the HOLD: re-run the straggler file green
+via `pnpm agentrs v modules/atomic/tests/harvest-census.test.ts`
+(preconditions per its header: fresh `pool-census.json`, built
+`dist/namer.mjs` — if the body then fails on preconditions,
+that is RS-crew territory, but collection must go green), plus
+one more full Neo vitest to confirm nothing else shifted.
+Everything else in the move verified clean — no re-review of
+(1)/(3) needed. Report, don't land: nothing committed.
+
+## Wave law (2026-09-23) — repo-wide sweeps on every move
+
+WAVE1-LEGS-VERIFY caught it: the implementer's post-move grep never
+left the neo package, and a live cross-package importer broke
+(`reference-rs/.../harvest-census.test.ts` → old leg paths).
+Standing law for all move crews from here on: the straggler sweep
+is repo-wide (`packages/`, every extension that can import TS) or
+the proof is void. Verifiers re-sweep; captain spot-checks.
+
+## Tick — Wave 1 nearly home, legs on HOLD pending fix, no commits (2026-09-23)
+
+- Objectives: VOYAGE Obj 1-3 COMPLETE (LOG-1/2/3); Obj 4/5 moved
+  to LANDING.md (IN PROGRESS, lib hardening — untouched this
+  tick). Active mission is the overnight run N-0..N-4.
+- Wave 1: 5/6 crews home (watch/seam/system-base/native maps
+  filed; legs implementer done). Verifier returned HOLD on one
+  cross-package straggler (harvest-census.test.ts → old leg
+  paths); wave law filed (repo-wide sweeps or proof void).
+- Live: 1 crew (wave1-legs-fix/93, running). Liveness from
+  substance: its fix is already visible in tree
+  (harvest-census.test.ts modified). No ping sent. Deadlock test:
+  negative — crew minutes old and producing.
+- Advance: nothing verified → nothing committed (HOLD stands
+  until fix crew reports). No dispatch this tick; Wave 2 (N-1
+  wave 2, N-2/N-3 implementers + verifiers) sequences off the fix
+  report + captain's firsthand re-proof. HQ present and planning;
+  no park ordered.
+
+## WAVE1-LEGS-FIX — repair the packager-legs HOLD (fix crew, 2026-09-23) — DONE
+
+Skills `agent-neo` + `agent-rs` loaded first. Scope: the
+`## WAVE1-LEGS-VERIFY` HOLD only (2 dead import lines + repo-wide
+re-sweep + proof). Nothing committed. Report, don't land.
+
+### Fix (2 lines, the only source edit)
+
+`packages/reference-rs/modules/atomic/tests/harvest-census.test.ts:22-23`
+(`git status` confirms my sole source write — all other worktree
+changes are sibling crews'):
+
+- `:22` `.../reference-neo/src/sync/publish/styled.ts` →
+  `.../reference-neo/src/packager/styled.ts` (`publishRuntimeBundle`)
+- `:23` `.../reference-neo/src/sync/react.ts` →
+  `.../reference-neo/src/packager/react.ts` (`publishReactBundle`)
+
+Both targets export the needed symbols (verifier §(2) confirmed;
+the green run below re-proves it).
+
+### Straggler sweep (repo-wide, per the wave law)
+
+Three sweeps over `packages/`, every TS-importing extension
+(`ts/tsx/mts/cts/js/mjs/cjs/jsx`, plus `rs/json/sh` on the
+string-literal pass), covering all 8 moves (`sync/react.ts`,
+`sync/reference-types.ts`, `sync/publish/{system,styled,
+react-shell,types-bundle,links}.ts`,
+`sync/reference-types.test.ts`) as import paths AND
+`src/sync/...` string literals (the `tools/build-bin.mjs`
+`PATH_LITERAL` shape):
+
+- Code hits: **zero** — no other live importer exists.
+- Prose hits only: `tests/cases/{prim,sync,type}/TESTS.md` +
+  `SPEC.md` + `NEO-TYPE-07/README.md` + ~15 `docs/evidence/`
+  reports cite the old homes. Deliberately untouched per the
+  PACKAGER-LEGS surprise-2 precedent (docs are not import
+  sites; `docs/evidence/` is read-only; a doc sweep rides the
+  N-1 landing, not this fix).
+
+### Proof (all firsthand this session)
+
+- Straggler file (`pnpm agentrs v
+  modules/atomic/tests/harvest-census.test.ts`): **4/4 passed**
+  (exit 0) — collection green AND body green (M-cells,
+  sink census, react.mjs publish via the retargeted legs,
+  css-tree timings). No precondition failure.
+- Full Neo vitest (`pnpm vitest run` in
+  `packages/reference-neo`): **48 files / 337 tests passed**,
+  exit 0 — matches the move report and the verifier.
+- `pnpm agentneo q`: **0 errors, 17 warnings, 214 files** —
+  byte-identical to the pre-move baseline. Zero new errors.
+- Chain cases (`pnpm agentneo run NEO-CHAIN-0[1-6]`, each
+  typechecks first): **all 6 PASS** (`transitive`,
+  `diamond`, `parallel`, `multi-extends`, `depth`,
+  `real-upstream`).
+- `pnpm agentrs q` over the touched file: **passed**
+  (zero violations).
+
+### Verdict: HOLD CLEARED (fix-crew recommendation)
+
+The HOLD's single reason — 2 dead imports breaking a live RS
+suite file — is repaired; the repo-wide re-sweep finds nothing
+else live; every proof bar in the brief is green. The move's
+(1)/(3) checks needed no re-review per the verifier. Captain's
+firsthand re-proof + Wave 2 sequencing are the next step.
+
+## HQ sign-off guidance (2026-09-23) — refine Neo, legacy as reference
+
+HQ: the night's job is refining reference-neo. Consult legacy
+wherever a solved problem exists — but the needed cleverness is
+believed mostly extracted already (symlink, packager/micro-bundle
+paths approved). Default to Neo-native solutions; raid legacy on
+encounter, not on principle.

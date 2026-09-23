@@ -68,3 +68,7 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 ## Tick — Obj2 COMPLETE (chain gate + core retirement). Voyage: Obj1/Obj2/Obj3 done. LANDING queued, undispatched per park.
 
 ## Tick — voyage complete; author-kill live, collect art-direction delta with captain, no action.
+
+## Tick — night run live, all 5 crews running, no action.
+
+## Tick — wave 1 nearly home, legs HOLD pending fix crew, no commits.
