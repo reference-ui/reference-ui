@@ -12,15 +12,13 @@ First line of each is its status.
   NEO-REF green, perf holds (929 vs 902.4 same-night HEAD),
   REF-10 met, seam explicit, no dead plan or duplication.
 - [Objective 2 — matrix chain gate + core retirement](LOG-2.md):
-  map filed (19 suites, fixtures, pipeline, core-removal,
-  phases); implementation held for Obj 1's landing.
-  Lands one commit.
-- [Objective 3 — lib sync ~650ms](LOG-3.md): probe returned, open
-  investigation. Lands one commit.
-- [Objective 4 — tooltip focus preset](LOG-4.md): briefed, executes
-  blind from its doc. Lands one commit.
-- [Objective 5 — reference lib productization](LOG-5.md): recon
-  returned, blocked on Objective 4. One commit per component.
+  all migrations + typegen squad landed; gate-3 hermetic re-run in
+  flight; landing sweep + stepped commits follow (HQ override:
+  stepped checkpoints, not one commit).
+- [Objective 3 — lib sync ~650ms](LOG-3.md): probe returned, research
+  crew dispatched. Lands one commit.
+- Objectives 4–5: MOVED to [LANDING.md](./LANDING.md) 2026-09-23
+  (landing voyage; logs LOG-4/LOG-5 adopted).
 
 ## Scoreboard
 

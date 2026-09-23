@@ -1,4 +1,4 @@
-IN PROGRESS
+IN PROGRESS — moved to LANDING.md 2026-09-23
 
 # LOG-4 — Objective 4: tooltip focus preset
 

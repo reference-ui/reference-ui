@@ -1,9 +1,11 @@
 # VOYAGE — Final Descent
 
 We've arrived at the engine. This voyage closes the last gaps between
-reference-core and reference-neo, retires core as legacy, and climbs
-the stack to a component set that creates release pressure. The VOYAGE
-is the mission; the five units below are objectives.
+reference-core and reference-neo, retires core as legacy, and signs off
+reference-rs and reference-neo as production-grade. The VOYAGE is the
+mission; Objectives 1–3 below are its units. Lib hardening (tooltip
+preset, component productionization) split to [LANDING.md](./LANDING.md)
+2026-09-23 — hardening is a landing sequence, not exploration.
 
 Prior perf voyage archived at [docs/archive/VOYAGE-PERF-SWARM.md](./docs/archive/VOYAGE-PERF-SWARM.md).
 
@@ -30,7 +32,7 @@ crews determine root causes independently.
 
 ## Command (star-captain, fully autonomous)
 
-One star-captain flies the whole voyage, all five objectives, in
+One star-captain flies the whole voyage, all its objectives, in
 order — start to finish, no HQ in the loop overnight. There are no
 start-gates: the captain clears one objective, then the next, on
 oracle word plus firsthand verification. Captain holds whole-voyage
@@ -50,15 +52,22 @@ crews are never pinged.
 
 Each objective keeps its own root log, first line always the status
 (`IN PROGRESS` / `COMPLETE`): [LOG-1.md](./LOG-1.md),
-[LOG-2.md](./LOG-2.md), [LOG-3.md](./LOG-3.md), [LOG-4.md](./LOG-4.md),
-[LOG-5.md](./LOG-5.md). [LOG.md](./LOG.md) is the master index and
-scoreboard.
+[LOG-2.md](./LOG-2.md), [LOG-3.md](./LOG-3.md).
+[LOG-4.md](./LOG-4.md) and [LOG-5.md](./LOG-5.md) moved with their
+objectives to [LANDING.md](./LANDING.md). [LOG.md](./LOG.md) is the
+master index and scoreboard.
 
 ## Landing law
 
-Objectives 1–4 land as exactly one commit each — larger commits, but
-nowhere near last week's monsters. Objective 5 lands one commit per
-component, each component worked by its own crew. Every landing
+HQ OVERRIDE 2026-09-23 (supersedes the one-commit-per-objective rule
+below for Objective 2): the captain lands Objective 2 as stepped
+checkpoint commits, one clear arc per commit, so the voyage record
+stays reviewable. Verification gates still hold — hermetic re-run,
+landing sweep, and firsthand re-runs gate the FINAL steps, and any
+red found after a checkpoint lands as a further step, never silently.
+
+Original law (Objectives 1, 3): land as exactly one commit each —
+larger commits, but nowhere near last week's monsters. Every landing
 commit must be green on its objective's proofs before it lands.
 Standing order (HQ 2026-09-22, recorded here as the crews'
 authorization): the captain commits landing work without asking;
@@ -182,72 +191,18 @@ skill first.
 
 Done when: root cause proven with a breakdown, sync output identical,
 and the number down with same-box medians to show it.
+## Objectives 4–5 — moved to [LANDING.md](./LANDING.md)
 
-## Objective 4 — tooltip focus preset (interaction contract)
+Lib hardening (tooltip focus preset, component productionization)
+split out 2026-09-23: hardening is a landing sequence. Briefs, logs
+(LOG-4/LOG-5), and landing law for that work live in the landing
+voyage now.
 
-Objective: land the tooltip focus-preset conformance fix — and only
-that. The baselines this objective used to own are frozen by the
-2026-09-22 suite-wide repin instead; this objective is the one known
-interaction contract, executed blind from its doc.
+## Continuing voyage — signing off RS + Neo
 
-Work: [docs/missions/tooltip-focus-preset.md](./docs/missions/tooltip-focus-preset.md)
-— gate Tooltip focus-open on focus-visible, migrate the 4 CT tests
-from programmatic `.focus()` to real Tab, add the TT-FOCUS-03
-regression test (mouse-opened dialog must not pop the tip), mark
-TT-FOCUS-01/03 proven in SPEC. Touch nothing else: no FocusLock, no
-Overlay, no new props, no snapshot re-pins (visuals must not move —
-the repinned baselines are the proof).
-
-Swarm shape: single small crew — implementers land the checklist,
-reviewers verify via `test-component` (`pnpm agentct Tooltip`).
-Every agent loads its governing skill first.
-
-Done when: the checklist is complete, Tooltip CT is green on
-unmodified baselines, and the regression test pins the mouse-open
-behavior.
-
-## Objective 5 — reference lib productization (final)
-
-Objective: ship the productionized reference lib — every component
-tested, hardened, and landed as clean, engine-grade source. The
-quarantine corpus (`components-quarantine`, recon filed) is the
-primary raw material: tests and hardening patterns to re-target, not
-to copy. The frozen repin baselines are the oracle, but the two gates
-differ:
-
-- **Visuals: frozen.** Components must match the frozen snapshot
-  baselines. Any paint/motion/chrome drift fails — no exceptions.
-- **Interactions: reviewable.** Productionization may have enhanced
-  interactions (especially accessibility). Each change goes to the
-  `ux-designer` skill, which weighs it: genuine enhancement →
-  approved with rationale; behavior loss → fail.
-
-The `ux-designer` skill is the sign-off authority, briefed per
-component with this objective's frozen-visuals constraint. It spins
-components up through `view-story`, watches CT videos, reads snapshot
-diffs, plays with the component, and rules per component. A component
-lands only on UX sign-off plus green tests. Snapshot re-pins still
-need the human yes per `test-component` rules — UX recommends, the
-human confirms.
-
-Shape bar: the output must read like an engine. Files stay small
-(150 LOC max, aim 80), concerns separated, big container components
-composing neatly abstracted parts. No automated lib quality CLI exists
-(verified 2026-09-22 — RS and Neo have gates, lib has typecheck +
-tests only), so reviewer crews enforce the bar by hand; standing up a
-lib gate is flagged follow-up, not tonight's machinery.
-
-Depends on: quarantine recon report (filed at
-[docs/missions/quarantine-recon.md](./docs/missions/quarantine-recon.md))
-+ frozen repin baselines and Objective 4 (tooltip preset). Per component: apply, run the frozen
-baseline suite, diff snapshots/videos/interactions, pass UX review,
-then land.
-
-Execution: one shared tree, no worktrees. Each crew owns its
-component's files strictly and lands **one commit per component**.
-Order root-first: Overlay first (everything builds on it), then widen
-parallelism wave by wave as components become independent. The captain
-sequences the waves.
-
-Done when: quarantine productionization applied across lib, every
-component UX-signed, baselines green, one commit each.
+Past Objective 3, the voyage continues as Neo-finishing groundwork:
+language polish (diagnostics, tightening what seems weak), engine
+sign-off, and the final touch on reference-rs + reference-neo. New
+objectives get briefed as the ground clarifies — the voyage ends when
+RS and Neo are signed off as production-grade, and then the landing
+begins.
