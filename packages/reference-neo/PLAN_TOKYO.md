@@ -112,22 +112,26 @@ candidate); module home (`src/css/` vs `src/lib/css/` — see item 3);
 whether the merge migrates into it wholesale at stability-fix time or
 the migration waits for the rearch slices.
 
-### 3. Layout: lib as the machinery home (HQ: fragments belong in lib)
+### 3. Layout: lib as the machinery home, subsystems stay top-level (HQ, REVISED)
 
-HQ: think about layout; fragments should live in lib.
+HQ (revised — supersedes "fragments in lib"): fragments is not a lib,
+it is a whole subsystem and stays top-level. The name itself is wrong:
+it is a collection system — `collect` is the leading candidate. The
+`base/` + `lib/` split inside annoys (grab-bag base, duplicated scan
+concepts, meaningless boundary); constants should come out to a root
+`constants.ts`; it needs a serious README. Barrel export and the `api/`
+shape are liked and stay.
 
-Captain: the layouts support it. Legacy puts machinery under `lib/`
-(fragments with collector/runner/scanner alongside fs/log/paths);
-Neo's `lib/` is nearly empty while `fragments/` sits top-level with its
-own nested `lib/` — the structure is already asking to be normalized.
-Proposed direction (comment, not decision): `lib/` becomes the home for
-machinery modules (fragments, css, packager), top level keeps the
-pipeline spine (config, sync, entry, runtime, primitives). Open
-threads: full move-list (what joins fragments under lib, what stays
-top); whether the move happens as pure file motion before any logic
-change (recommended: motion-only commits, behavior diffs separate);
-naming inside `lib/css/` vs `lib/packager/` vs current `sync/`
-residents.
+Captain: the listing supports every clause — `api/` is clean
+(font/globalCss/keyframes/tokens + barrel), `base/` mixes evaluate +
+merge + scan + bootstrap + goldens, `lib/` re-hosts scanner concepts.
+Refactor crew dispatched (motion + naming only, zero logic change):
+restructure inside, `collect` rename, constants, README, full-suite
+proof. `lib/` remains the machinery home for true libs (symlink,
+microbundle, paths); subsystems (collect, packager, sync-spine) stay
+top-level. Open threads: remaining move-list (css module home — item
+2 — plus stragglers); whether other top-level dirs want the same
+subsystem-vs-lib test applied.
 
 ### 4. Liquid: gone and staying gone (HQ: it was a Panda-era constraint)
 
