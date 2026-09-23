@@ -44,7 +44,8 @@ pub fn append_portable_system_layers(
     append_tokens(out, system, true);
 }
 
-fn append_global(
+/// Append `@layer global {…}` when fragments, fonts, or keyframes print.
+pub fn append_global(
     out: &mut String,
     system: &BaseSystem,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
@@ -217,7 +218,8 @@ fn push_css_property(out: &mut String, prop: &str) {
     out.push_str(canon::to_css_declaration_property(prop));
 }
 
-fn append_tokens(out: &mut String, system: &BaseSystem, portable: bool) {
+/// Append `@layer tokens {…}`; portable selects `[data-layer]` over `:root`.
+pub fn append_tokens(out: &mut String, system: &BaseSystem, portable: bool) {
     if system.tokens.is_empty() {
         return;
     }

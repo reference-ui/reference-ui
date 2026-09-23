@@ -146,6 +146,48 @@ fn test_every_plan_class_name_matches_a_stylesheet_selector() {
 }
 
 #[test]
+fn test_streams_concatenate_to_paired_single_builds() {
+    let mut set = AtomSet::new();
+    set.insert(Atom::new(
+        "color".into(),
+        CssValue::String("blue.600".into()),
+        smallvec![],
+        false,
+    ));
+    let system = BaseSystem::lib_fixture();
+    let mut primary = Vec::new();
+    let mut portable_sink = Vec::new();
+    let streams = build_stylesheet_streams(
+        &set,
+        system,
+        &[],
+        StylesheetSinks {
+            primary: &mut primary,
+            portable: &mut portable_sink,
+        },
+    );
+    let mut single_primary = Vec::new();
+    let mut single_portable = Vec::new();
+    assert_eq!(
+        streams.stylesheet(),
+        build_stylesheet_with(&set, system, &[], &mut single_primary)
+    );
+    assert_eq!(
+        streams.portable_stylesheet(),
+        build_portable_stylesheet_with(&set, system, &[], &mut single_portable)
+    );
+    assert_eq!(primary, single_primary);
+    assert_eq!(portable_sink, single_portable);
+    assert_eq!(streams.preamble, LAYER_PREAMBLE);
+    assert_eq!(streams.package, system.name);
+    assert!(streams.global.contains("@layer global {"));
+    assert!(streams.tokens.contains(":root"));
+    assert!(streams.tokens_portable.contains("[data-layer="));
+    assert!(streams.recipes.is_empty());
+    assert!(streams.utilities.contains("@layer utilities {"));
+}
+
+#[test]
 fn test_dual_build_matches_paired_single_builds() {
     let mut set = AtomSet::new();
     set.insert(Atom::new(

@@ -7,6 +7,10 @@ use super::cascade::{
     at_rule_wraps, close_wraps, format_declaration, open_wraps, push_indent, write_utilities,
 };
 use super::layers::{wrap_package_layer, LAYER_PREAMBLE};
+
+mod streams;
+
+pub use streams::{StylesheetStreams, build_stylesheet_streams};
 use super::name;
 use super::system_layers::{append_portable_system_layers, append_system_layers};
 use crate::atom::{Atom, AtomSet, WhenKind};
@@ -69,46 +73,17 @@ pub struct StylesheetSinks<'a> {
     pub portable: &'a mut Vec<crate::diagnostics::Diagnostic>,
 }
 
-/// Build both sheets sharing one recipes+utilities suffix. Only the system
-/// layers differ (token selectors), so the suffix sorts and prints once and
-/// both sheets stay byte-identical to the paired single builds.
+/// Build both sheets via captured per-layer streams, then concatenate. Only
+/// the token selectors differ, so recipes+utilities print once and both sheets
+/// stay byte-identical to the paired single builds.
 pub fn build_stylesheets_with(
     atom_set: &AtomSet,
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     sinks: StylesheetSinks<'_>,
 ) -> (String, String) {
-    let shared = shared_layers(atom_set, system, recipes);
-    let mut inner = LAYER_PREAMBLE.to_string();
-    append_system_layers(&mut inner, system, sinks.primary);
-    inner.reserve(shared.len());
-    inner.push_str(&shared);
-    let stylesheet = wrap_package_layer(&system.name, &inner);
-    let mut portable_inner = LAYER_PREAMBLE.to_string();
-    append_portable_system_layers(&mut portable_inner, system, sinks.portable);
-    portable_inner.reserve(shared.len());
-    portable_inner.push_str(&shared);
-    let portable_stylesheet = wrap_package_layer(&system.name, &portable_inner);
-    (stylesheet, portable_stylesheet)
-}
-
-/// Recipes + utilities layers, identical in both sheets; sorted and printed once.
-fn shared_layers(
-    atom_set: &AtomSet,
-    system: &BaseSystem,
-    recipes: &[CompiledRecipe],
-) -> String {
-    let mut shared = String::with_capacity(shared_capacity(atom_set));
-    append_recipes_layer(&mut shared, recipes);
-    append_utilities_layer(&mut shared, atom_set, &system.name);
-    shared
-}
-
-/// Pre-size the shared layers buffer: ~128 bytes per utility rule covers the
-/// selector, declaration, indent, and wrap lines with room to spare, so the
-/// per-atom pushes below never regrow. Overshoot is one transient allocation.
-fn shared_capacity(atom_set: &AtomSet) -> usize {
-    atom_set.len().saturating_mul(128).saturating_add(1024)
+    let streams = build_stylesheet_streams(atom_set, system, recipes, sinks);
+    (streams.stylesheet(), streams.portable_stylesheet())
 }
 
 fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {
