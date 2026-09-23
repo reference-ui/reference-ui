@@ -330,13 +330,13 @@ permanently; the folder name.
 
 ### In flight (right now)
 
-- COLLECT-REFACTOR (crew DONE, reported): fragments→collect motion
-  complete, 337 units + 197/197 cases + T1 proven — but aimed at the
-  pre-art-direction layout. Captain is applying the surface/lib delta
-  + README split on top, then re-proving and landing.
+- COLLECT-REFACTOR LANDED (e091c008a): fragments→collect with
+  surface/ + lib/ + constants + 3 READMEs; 337 units + q + chain 6/6
+  + T1 re-proven firsthand on final bytes. (Crew aimed pre-art;
+  captain applied the delta.)
 - AUTHOR-KILL (crew running): `author/` deletion + root barrel +
-  wiring repoint, against the decided `collect/surface/*` paths.
-  Lands after the delta (captain verifies firsthand).
+  wiring repoint. Decided paths now exist on disk — wait condition
+  cleared. Lands on crew DONE + captain firsthand verify.
 
 ### Overnight run (proposed — decision-free crews, morning-verified)
 
