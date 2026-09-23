@@ -1,8 +1,10 @@
 # Packager
 
-The packager turns compile output plus the evaluated spec into the
-generated packages a project resolves: `@reference-ui/system`,
-`@reference-ui/styled`, `@reference-ui/react`, `@reference-ui/types`.
+The packager is part of the build system: it takes compile output plus
+the evaluated spec and actually packages it properly — creating the
+real packages inside the `.reference-ui` folder that a project
+resolves: `@reference-ui/system`, `@reference-ui/styled`,
+`@reference-ui/react`, `@reference-ui/types`.
 It owns the package set as declarative definitions, the manifests
 written from them, the externals policies every bundler obeys, the
 assembly order, and the named postprocess passes. Sync calls one

@@ -32,12 +32,12 @@
     "@reference-ui/rust": "workspace:*",
     "esbuild": "^0.28.1",
     "fast-glob": "^3.3.2",
-    "picomatch": "^4.0.4"
+    "picomatch": "^4.0.4",
+    "symlink-dir": "^9.0.0"
   },
   "devDependencies": {
-    "@reference-ui/neo": "workspace:*",
-    "vite": "^7.3.5",
     "@biomejs/biome": "^2.5.14",
+    "@reference-ui/neo": "workspace:*",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -48,6 +48,7 @@
     "react-dom": "19.2.4",
     "scheduler": "0.27.0",
     "typescript": "~7.0.2",
+    "vite": "^7.3.5",
     "vitest": "^4.1.0"
   }
 }
