@@ -19,8 +19,8 @@ import { compile } from '../js/index.js'
 import type { CompileResult, Want } from '../js/types.js'
 import { LIB_SYSTEM_SPEC } from './helpers.js'
 import { buildModel, type ModelWhen } from './harvest-model.js'
-import { publishRuntimeBundle } from '../../../../reference-neo/src/sync/publish/styled.ts'
-import { publishReactBundle } from '../../../../reference-neo/src/sync/react.ts'
+import { publishRuntimeBundle } from '../../../../reference-neo/src/packager/styled.ts'
+import { publishReactBundle } from '../../../../reference-neo/src/packager/react.ts'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURE_SRC = path.join(HERE, 'fixtures', 'harvest-enterprise', 'src')
