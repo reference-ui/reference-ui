@@ -337,6 +337,20 @@ diets); scan voyage opens separately after closeout lands.
   ring-data table per §2.5 closeout.
 - Slots: 1/7 (reflame7), 6 held — build complete, backlog EMPTY,
   N1 held — this entry is the proof.
+- swarm-reflame7 REPROFILE (post-F1 flames 7a 925.13 / 7b 924.06,
+  Δ1.07 tightest pair, both RECONCILED 0.000, pin clean, sha 4/4):
+  compile −36.2 reproduces+exceeds F1's −25.33; scan +3.0 does NOT
+  reproduce −26.76 under instrumentation — overhead +6.0% concentrates
+  wholly in scan (+29.8; F1 mechanism confirmed on-stack: issuer flip
+  to File::open, TS loop off-stack, atomic::scan 291/292). LAND basis
+  (warm 8-pair) stands; instrumented view flagged, not hidden. Publish
+  watch DISSOLVED (7a/7b 52.4/53.2 = low cluster; 6b 59.9 was noise).
+  Config 7b-only 31.6 edge unwitnessed, not seeded. Claims 4 lines,
+  staging-miss disclosed, two-step clean. Filed evidence repro7a/b +
+  `docs/perf/waves/wave-4/report-swarm-reflame7.md` (index 104).
+- Slots: 0/7 — BOARD EMPTY. Backlog EMPTY (diet), N1 held, build +
+  closeout complete — this entry is the proof. Map ring-2 refresh
+  follows on this data.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
