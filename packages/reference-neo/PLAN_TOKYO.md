@@ -211,6 +211,27 @@ argv); adopt commander or keep hand-rolled and tight? Whether
 What (if anything) replaces the event bus for cross-subsystem signals
 (HQ: not event bus — so: direct calls? a tiny typed emitter? nothing?).
 
+### 8. author/ vs entry/ + public/private split (HQ: confusing as drawn)
+
+HQ: `entry/` plus `author/` is confusing — and `author/` mixes public
+API (`defineConfig`, `tokens()`) with internals no one should touch
+(`createTokensCollector`, `createKeyframesCollector`, ...). Legacy had
+`entry/` but never `author/`.
+
+Captain: legacy's shape is the clarifier — `public.ts` ("Public
+authoring surface... Keep this separate from the executable CLI
+entry") vs `entry/` (react/system/types: the generated-consumer
+entries) vs `index.ts` (the CLI). Neo's `author/` ≈ legacy's
+`public.ts` and Neo's `entry/` ≈ legacy's `entry/` — the two doors
+are right, but `author/` leaks internals where legacy's `public.ts`
+exports only public things. Direction: split the barrel — public
+surface (what authors import) vs internal factories (what the
+collector/sync import), with the internal side unimportable from the
+public id. Open threads: whether the internal factories move under
+`collect/` (they serve collection) with `author/` keeping pure
+re-exports; what `entry/`'s exact Neo roster is (react/types today —
+system?); whether `author/` keeps its name once split.
+
 ## Explicitly Not Yet
 
 - Step order, owners, estimates, commit/PR splits.
