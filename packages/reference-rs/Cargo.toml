@@ -2,6 +2,9 @@
 members = [
   "modules/*",
 ]
+# TS-only module (generator + authored runtime + committed artifacts): no Rust
+# crate lives here, so the modules/* glob must not claim it as a member.
+exclude = ["modules/primitives"]
 resolver = "2"
 
 [workspace.package]
