@@ -14949,3 +14949,607 @@ wherever a solved problem exists — but the needed cleverness is
 believed mostly extracted already (symlink, packager/micro-bundle
 paths approved). Default to Neo-native solutions; raid legacy on
 encounter, not on principle.
+
+## Captain's seam ruling + Wave 2 dispatch (2026-09-23)
+
+READ: WAVE1-D17-SEAM + WAVE1-SYSTEM-BASE firsthand. Ruling on the
+packed-css tension: **delete-in-place wins, N-3 S2 SKIPPED.**
+packed-css.ts + packed-css.test.ts stay in sync/ untouched until
+morning S5 deletes both. Reasons: (1) HQ Final straight-to-seam —
+moving code the morning deletes is wasted motion plus a second
+proof cycle on a corpse; (2) the seam builds a NEW mergeStreams
+assembler in system/base (S4), not the moved file — base/ never
+needs the resident; (3) keeps the 3.5-ban violators visible in one
+place until the ban's first deletion. N-3 runs S0/S1/S3/S4/S5/S6;
+the #7 wrapper stays with no repoint. reset.ts (#15-17) HELD for
+the 11 AM home pick (a/b undecided — no move to a vetoable home).
+#22 delete proceeds (home-independent).
+
+Sequencing: N-3 and N-2 share exactly one file (sync/index.ts) —
+**one owner at a time, N-3 first, N-2 after it lands.** (N-2 slice
+1's :8-14 repoint collides with N-3's :18-22; same-file concurrent
+edits clobber. Safety over speed overnight.)
+CLI rulings (§3.12 open threads, captain's calls): tasty drain
+stays one flushReferenceBuild call, essay relocates to
+reference/bridge; clean unifies on cleanDir with retry semantics
+verified, HOLD-the-substep if uncertain (never guess); watch
+driver untouched, flag routing only.
+
+Wave 2 (dispatched, file-disjoint): deleter (#22 compile-files),
+N-3 system-base implementer (S0/S1/S3/S4/S5/S6), cli implementer
+(§3.12 + rulings). Verifiers follow each on report. N-2 native
+implementer waits for N-3's landing.
+
+## WAVE2-DELETE
+
+Deleter report: dead `packages/reference-neo/src/sync/compile-files.ts`
+(NIGHT-3 #22, HQ red marker) removed. REPORT ONLY — not landed, not
+committed.
+
+Pre-delete importer sweep (repo-wide): zero live importers. Only hits
+are the definition itself, the known `sync/native.ts:12-14` comment
+(untouched — another crew owns native.ts; its implementer drops the
+mention), and docs/evidence/mission-log prose. No barrel re-export in
+`sync/index.ts`; no `collectCompileFiles` call site anywhere in code.
+
+Change: `D packages/reference-neo/src/sync/compile-files.ts` (35 lines).
+Nothing else touched.
+
+Proof (this session, post-delete):
+- `pnpm agent vt packages/reference-neo`: 48 files / 337 tests, all PASS.
+- `pnpm agentneo q`: 0 errors, 17 warnings — at cap, did not rise.
+- `pnpm agentneo run NEO-SYNC-04`: PASS (compile-request.spec.ts).
+- `pnpm agentneo run NEO-SYNC-06`: PASS (deterministic.spec.ts).
+- `pnpm agentneo run NEO-SYNC-10`: PASS (extends.spec.ts).
+- Case runs typecheck first and refuse on red — types green by pass.
+
+## WAVE2-CLI (implementer, 2026-09-23)
+
+Scope: `src/cli/` per PLAN.md §3.12 + the captain's CLI rulings
+(Wave 2 dispatch). Governing skill `agent-neo` loaded first. Touch
+list held: `bin/neo.ts`, `src/cli/*`, `package.json` + lockfile,
+`reference/bridge` docs. `sync/clean.ts` UNTOUCHED — no export was
+needed (`cleanDir` already exported). Never commit; report, don't
+land.
+
+### Layout (proposed + built)
+
+`src/cli/` — one file per command plus shared helpers, Commander
+owns argv shape only (`commander@^14.0.3`, matching mcp/legacy;
+store-hit, lockfile +5/−2, commander-scoped):
+
+- `index.ts` — `runCli(argv): Promise<number>`: program wiring,
+  `command:*` unknown-verb usage error, per-command registration.
+- `sync.ts` — `sync [dir] [--watch]`: one-shot run + `--watch`
+  routing to the watch runner.
+- `clean.ts` — `clean [dir]`: PACKAGES-derived link list, wipe via
+  `cleanDir`, scope-link pruning, reporting. `--watch` declared
+  hidden and rejected with the pinned `clean takes no --watch`.
+- `watch.ts` — resident runner: boot lines, change/resync/error
+  prints, signal shutdown, the never-promise. Flag routing only —
+  the `watchSync` driver is imported, untouched.
+- `output.ts` — USAGE block, `messageOf`, `printUsageError`.
+- `README.md` — purpose-first, thinness law, no filename table.
+
+`bin/neo.ts` is a 7-line trampoline (shebang + header + import +
+run + exit). Lazy dynamic imports for sync/watch/bridge preserved,
+so `--help`/`clean` never load the sync world.
+
+### Rulings, as executed
+
+- Tasty drain: ONE `flushReferenceBuild` call in `runSyncCommand`,
+  bare — the REF-10 essay relocated to `flushReferenceBuild`'s
+  JSDoc in `reference/bridge/init.ts` (failure consequence:
+  types.mjs keeps its `./tasty/runtime.js` edge while
+  types/tasty/ never lands → bundlers resolving
+  `@reference-ui/types` fail).
+- Clean unifies on `cleanDir` — NO HOLD. Verified firsthand, not
+  guessed: the retry targets ENOTEMPTY/EBUSY/EPERM only, 6
+  attempts, ≤105ms total backoff, then throws loud. The overlap
+  it exists for is sync's pre-wipe racing the never-awaited
+  background tasty phase on warm re-syncs; CLI clean meets that
+  same class only from a concurrent watch/sync on the same dir
+  (file landings vs recursive remove — structurally identical,
+  retry converges). Uncontended, first attempt ≡ today's `rmSync
+  recursive force` (`force` suppresses ENOENT in both; the only
+  delta is sync/async on an already-async path). New:
+  wipe/link failures print `[neo] clean failed: <cause>` exit 1
+  (was an uncaught throw → stack + exit 1; same class, named
+  cause per the law).
+- LINKED_PACKAGES moves with `cmdClean`, still
+  `PACKAGES.map(getShortName)` — T1 clean reports 4 links, the
+  types junction gone.
+- Watch driver untouched (flag routing only — 11 AM verdict owns
+  the driver).
+
+### Output contract (§3.12 open threads)
+
+Every pinned string kept byte-identical: USAGE block, all
+`[neo]` success/failure lines, `unknown command:`, `clean takes
+no --watch`, watch boot/resync/change lines. Rationale:
+NEO-CLI-02 pins `[neo] sync ` / `watching <dir>` / `resync` /
+`change <path>` as substrings and the bin tests pin the usage
+block — any glyph/color restyle breaks the pins. Full one-line
+contract (glyph + command + stats, dim separators) is morning
+polish against those pins, not this arc. Commander-native deltas
+on UNPINNED paths only: extra positionals →
+`error: too many arguments` (stderr, exit 1, replaces
+`unexpected argument:`); `sync --help` now prints help exit 0
+(was: treated as a dir, failed); bare `neo` prints help exit 1.
+`neo` vs `ref` naming untouched (open thread stands).
+
+### Proof (all firsthand this session)
+
+- Full units: **53 files / 354 passed**, exit 0 on final bytes.
+  (One mid-session run showed 4 failures at 49 files while a
+  sibling crew was mid-write — tree-shift artifact, not this
+  change: the rerun plus two confirmatory runs are fully green,
+  and unit-side CLI coverage is only `bin/neo.test.ts` at 7/7.)
+- `bin/neo.test.ts`: **7/7** (untouched file — routing contract
+  holds through Commander).
+- `tsc --noEmit`: clean. Dist build
+  (`node tools/build-bin.mjs`): **green, 369 files** — one
+  self-caught fix during the arc (trampoline dropped the
+  shebang, build's assertion caught it, restored).
+- `pnpm agentneo q`: whole-package **0 errors, 18 warnings, 225
+  files**; scoped to my 7 files **0/0**. The 18th warning is the
+  sibling's new `src/system/base/validate.test.ts` (N-3's file,
+  pre-existing to me) — my contribution is zero warnings.
+  No-panda pass over `src/cli` + bin: clean.
+- `pnpm agentneo run NEO-CLI-01` → **PASS** (lifecycle.spec.ts).
+- `pnpm agentneo run NEO-CLI-02` → **PASS** (watch-flag.spec.ts)
+  — the moved `--watch` routing proven end to end (extra,
+  beyond the brief's bar, because the flag path moved).
+- T1 tier (`matrix/tests/chain/T1`, dist bin): `neo sync` exit
+  0, 4 scope links land (lib+neo real links untouched);
+  `neo clean` reports **4 links**, generated 4 gone; resync
+  restores; `pnpm agent playwright --dir matrix/tests/chain/T1
+  --no-build` → **7 passed (0 failed)**.
+- Repo-wide sweep (moved symbols as imports + literals):
+  **zero live stragglers** — only the new `src/cli/clean.ts`
+  home, the pre-existing `packager/links.ts` publisher side,
+  and CLI-01's own spec-local constant. Prose staleness
+  (CLI-02 README's `bin/neo.ts:86-111` line ref, PLAN.md §3.12's
+  pre-move description) rides the landing per the
+  PACKAGER-LEGS precedent — docs are not import sites, and
+  both files are outside my touch list.
+
+### Footprint + notes for the captain
+
+Footprint: M `bin/neo.ts` (134→7), M `package.json` (+1),
+M `pnpm-lock.yaml` (+5/−2), M `bridge/init.ts` (JSDoc +3),
+new `src/cli/` (5 `.ts` + README). Index untouched, nothing
+committed. DOMAIN.md deliberately NOT touched (outside the
+touch list — the `cli` name comes from §3.12, not from me; a
+one-line entry disambiguating the `neo` user CLI from the
+`agentneo` harness verbs is yours to add if wanted).
+
+WAVE2-CLI DONE: §3.12 implemented under the thinness law —
+trampoline bin, Commander argv, one-call tasty drain with the
+essay at the bridge, clean unified on verified `cleanDir`,
+watch routing without driver contact. Report, don't land.
+
+## WAVE2-SYSTEM-BASE (implementer, 2026-09-23) — DONE
+
+Slices S0/S1/S3/S4/S5/S6 per `## WAVE1-SYSTEM-BASE`;
+S2 SKIPPED per the captain's seam ruling (packed-css.ts +
+packed-css.test.ts stay in sync/ untouched; the #7 wrapper
+stays with no repoint — neither touched). Skill `agent-neo`
+loaded first. Every spec file:line re-verified at slice
+start against the post-legs, post-NIGHT-1 tree — all held
+verbatim except `sync/index.ts:18-22`, which is `:17-22` in
+the current tree (import block one line up; substance
+identical). Report, don't land: nothing committed.
+
+### Files (13 new, 15 modified, 1 deleted)
+
+New `src/system/base/`: `index.ts` (barrel: contract +
+assembly, nothing else), `types.ts` (BaseSystem moved
+verbatim + ExtendsCarrier + BaseAssemblyInput), `jsx.ts`
+(roster join, ReferenceUIConfig narrowed to
+ExtendsCarrier), `fragments.ts` (createPortableFragmentBundle
+narrowed to `(upstream: string[], local: string[])`),
+`validate.ts` (extends validators + invalidBaseSystem
+factory), `assemble.ts` (assembleBaseSystem over
+BaseAssemblyInput — the renamed publishedBaseSystem),
+`sources.ts` (5 emitted-source builders, verbatim),
+`fragments/validate/sources/assemble/jsx.test.ts` (moved
+tests + B1-B6), `base/README.md`; new `src/system/README.md`
+(domain thesis; both READMEs carry NOT-owns, no filename
+tables). Modified: `config/types.ts` (interface moved out,
+compat `export type` kept), `config/validate.ts` (thinned
+to config-side checks + the base call), `config/errors.ts`
+(static removed, module re-export kept), `config/
+validate.test.ts` (moved block + its two consts out),
+`collect/index.ts` (bundle re-export dropped),
+`collect/lib/evaluate.ts` (bundle fn out, STAY ranges
+untouched), `collect/lib/prepare.test.ts` (moved test out),
+`collect/lib/scan/goldens.test.ts:22` (repoint),
+`packager/system.ts` (thinned to imports + writeSystemDir),
+`packager/types.ts:6` (repoint), `src/index.ts:5` (BaseSystem
+re-homed), `sync/index.ts` (import repoints + :221 adapt
+ONLY — diff-verified), `sync/lib-barrel-negation.test.ts:19`
+(repoint). Deleted: `sync/jsx-elements.ts`. Wave-law catch
+(spec-missed live consumer, same class as the legs HOLD):
+`benchmark/deepsee/worker-phases.ts` (:20-21 repoints +
+:124 narrowed adapt — tsconfig includes benchmark/, so the
+S3 signature change would have red the package typecheck
+without it). Untouched per spec: packed-css pair, #7
+wrapper + merge call sites, reset.ts, compile-request.json
+writer, system-surface.d.ts, packager constants/packages,
+collect STAY ranges, sibling `src/cli/` + `reference/
+bridge/init.ts` + lockfile. DOMAIN.md deliberately NOT
+touched (outside the touch list; `base`/assembly language
+is PLAN §3.11's, not mine — same call as WAVE2-CLI).
+
+### Judgment calls (2, both flagged for the reviewer)
+
+1. invalidBaseSystem's thrown TYPE narrows
+ConfigValidationError → Error (message byte-identical).
+The class ctor is private and base must stay a leaf, so
+the moved factory cannot construct it; no instanceof or
+class-name pin exists anywhere (verified: only message
+regexes in tests, zero case-spec pins). validateConfig's
+@throws doc updated honestly. Re-widen via a base-owned
+subclass if the type matters — one follow-up, no test
+churn (messages don't move).
+2. Cross-subsystem imports are DEEP (`../system/base/
+jsx.ts`, not the barrel): the slices land bottom-up with
+the barrel last (S6), so deep is the zero-churn reading,
+and it matches 8/9 existing sync/index.ts imports. The
+barrel stands as the subsystem address for D17
+mergeStreams importers. (The BASE_SYSTEM_HEADER import in
+sources.ts is the spec's own sanctioned exception to the
+leaf rule — acyclic, constants imports nothing.)
+
+### Proof (all firsthand this session)
+
+- Units: 53 files / 354 tests green (baseline 48/337;
+337 + 22 new − 5 moved = 354 exact). Per-slice: S0
+validate 16/16; S1 goldens + barrel-negation 2/2 (sealed
+SHAs unmoved); S3 prepare + fragments 14/14; S4 validate
++ evaluate 26/26; S5 full suite; base batteries 22/22
+(B1 goldens first-run green against the lib neo-built
+oracle — banner-verified neo bytes, independently read).
+- Gate: 0 errors, 17 warnings = baseline (one self-caused
+warn mid-slice — validate.test.ts describe at 83 lines —
+split into two describes, back to 17). No `any`, no
+suppressions, headers on all 12 new `.ts` files,
+no-panda clean, no-DOMAIN.
+- Cases (each typechecks first — green 11×): SYNC-04/06/
+07/10/15/17 + LAYER-02 per the S3/S4/S5/S6 proof bars,
+PLUS SYNC-01/02/03/05 as publish-shape neighbors (S5
+touches the singular-shape assembly) — all PASS.
+SYNC-06 determinism is the byte-identity proof.
+- Move fidelity: jsx.ts diff = 3 narrowing lines only;
+all 5 builders awk-extracted IDENTICAL; sync/index.ts
+diff = imports + :221 only.
+- Straggler sweep (repo-wide, wave law): zero live refs
+to `sync/jsx-elements`, `publishedBaseSystem`,
+`ConfigValidationError.invalidBaseSystem`, or
+BaseSystem-from-`config/types`; all bundle/validate/
+assemble refs home in base. `dist/` hits are gitignored
+stale build output (predates the legs move). New prose
+staleness: `tests/cases/site/SPEC.md:9` cites the old
+roster home — left for the N-1-landing doc sweep per the
+legs precedent (docs are not import sites).
+- Mid-slice note (no action): case proofs paused while a
+sibling's in-flight `src/cli/` red the package typecheck
+(commander); the CLI crew landed the fix mid-slice and
+all 11 runs went green after — zero of my lines changed
+in between.
+
+WAVE2-SYSTEM-BASE DONE: `src/system/base/` built to spec
+(S0/S1/S3/S4/S5/S6), B1-B6 + re-homes landed, units + q +
+11 cases green, repo-wide sweep clean, S2 + wrapper + all
+STAY ranges untouched. N-2 owns sync/index.ts next.
+
+## WAVE2-BASE-VERIFY (verifier, 2026-09-23) — LAND
+
+Thinking hat, zero source edits, nothing committed. Adversarial
+review of the WAVE2-SYSTEM-BASE arc against the WAVE1-SYSTEM-BASE
+spec (S0/S1/S3/S4/S5/S6; S2 SKIPPED per the seam ruling). Every
+claim below is firsthand on the current tree (base + CLI arcs
+both present, uncommitted; compile-files.ts delete already
+landed as 5e049ef05). CLI scope untouched; all gates green so
+no attribution split was needed.
+
+(1) S2 SKIPPED honored. `sync/packed-css.ts` +
+`sync/packed-css.test.ts` absent from git status (last touch
+22ed06156, pre-arc). `sync/index.ts` diff = import repoints +
+`:221` adapt ONLY (2 hunks); the #7 wrapper, both merge call
+sites, and the packed-css import line are byte-identical to
+HEAD. Zero repoints toward base/ from the css chain.
+
+(2) Inventory matches §1 exactly. Modified: config/types.ts
+(MOVE 1, compat `export type` kept), config/validate.ts (MOVE
+2, thinned to config checks + the base call), config/errors.ts
+(MOVE 3, static→re-export), sync/jsx-elements.ts DELETED (MOVE
+4), collect/lib/evaluate.ts (MOVE 6, bundle fn out + BaseSystem
+import re-homed), packager/system.ts (MOVE 7, thinned to leg),
+plus the spec'd re-homes (config/validate.test.ts block + its
+2 consts out; prepare.test.ts 1 test out), repoint-onlys
+(packager/types.ts:6, sync/index.ts imports, goldens.test.ts:22,
+lib-barrel-negation.test.ts:19), barrel drop
+(collect/index.ts), and src/index.ts:5 re-home. New:
+src/system/{README,base/*} only. STAY ranges diff-verified
+untouched: evaluate STAY blocks, packager constants/packages,
+wrapper, reset.ts, compile-request writer (no hunk),
+system-surface.d.ts. ONE out-of-spec file, implementer-flagged:
+benchmark/deepsee/worker-phases.ts — exact mirror of the
+sync/index.ts S3 adapt (same 2 hunks), required because
+tsconfig includes benchmark/. Same-class wave-law catch as the
+legs HOLD; ACCEPTED, not a finding.
+
+(3) base/ is a LEAF. Non-test imports: internal `./types.ts`
+only (4 type-only) + the spec-sanctioned BASE_SYSTEM_HEADER
+from constants.ts, which itself imports nothing (verified).
+No base→config/collect/sync/packager arrow exists. Narrowing
+proven, not asserted: goldens.test.ts passes `world.config`
+(ReferenceUIConfig) unadapted into `resolveJsxElements`
+(ExtendsCarrier) and the package typechecks (every case run
+typechecks first). Arrows are config→base, packager-leg→base,
+sync→base, index→base only. (validate.test.ts imports config —
+test-only, and it is the spec'd re-home testing through
+validateConfig; not shipped code.)
+
+(4) Split line holds at 104/105. packager/system.ts is now
+imports + `writeSystemDir` (mkdir + 7 writes, adapted
+assembleBaseSystem call the only logic delta). All 5 builders
+awk-extracted IDENTICAL to HEAD modulo the added `export`
+keyword; baseSystemMjsSource byte-identical. jsx.ts diff = the
+3 narrowing lines only.
+
+(5) B1-B6 genuine, run green (5 files / 22 tests). B1: 4
+exact-string goldens (interface, entry, both .d.mts — the
+spec'd four). B2: mapping + css-absent→undefined. B3:
+assemble→validateBaseSystemEntries round-trip. B4: 5 tests
+(trim/dedupe/sort, cross-system merge, traced union,
+empty→[], primitives pin). B4's pin fails loudly BY
+CONSTRUCTION: the implementation hardcodes `primitives: []`,
+so the day 3.9 lands a producer the test reds with no silent
+pass path. B5: order test (moved, adapted) + declared-order +
+2 extra edges. B6: non-object + whitespace-only name. Count
+reconciles exactly: 337 + 22 (new-file tests) − 5 (re-homed
+out) = 354.
+
+(6) README law held. Both READMEs purpose-first with NOT-owns
+(system: discovery/collect, compile, publish-act, runtime;
+base: eval, compile, writes-to-disk, jsx tracing) and no
+filename tables. All 12 new .ts headers are 4 sentences
+(inside 2-6), takes/emits disciplined.
+
+(7) Legacy-precedent claim sane. Zero `panda`/`scan` hits in
+base/ non-test sources; no collector bundle, no discovery —
+assembly only, mirroring legacy's base/ word without its
+retired machinery.
+
+Gates (firsthand, this session): units 53 files / 354 tests
+PASS; `agentneo q` 0 errors / 17 warnings (at cap), scoped to
+src/system 0/0 — the arc contributes zero warnings; NEO-SYNC-10
+(extends), NEO-SYNC-15 (discovery), NEO-SYNC-17
+(extends-private), NEO-LAYER-02 (packages) all PASS.
+Repo-wide straggler sweep (bounded, excl. node_modules/dist):
+zero live refs to `sync/jsx-elements`, `publishedBaseSystem`,
+or `ConfigValidationError.invalidBaseSystem` — only the
+self-reported tests/cases/site/SPEC.md:9 prose line, which
+rides the landing per precedent.
+
+Judgment calls reviewed, both ACCEPTED: (1) Error-narrowing on
+invalidBaseSystem — message byte-identical, @throws doc honest,
+and zero instanceof/class-identity pins anywhere in src/tests/
+cases (swept: instanceof, toThrow(class), constructor.name —
+all clean), so no catcher can miss; the base-owned-subclass
+follow-up stays optional. (2) deep cross-subsystem imports —
+matches 8/9 existing sync/index.ts convention, zero-churn with
+the S6 barrel landing last; barrel stands for D17.
+
+WAVE2-BASE-VERIFY: LAND. No HOLD reasons found; no findings
+against cli/ scope from this review (out of scope, not
+examined beyond shared-tree gate attribution, which is clean).
+
+## WAVE2-CLI-VERIFY (verifier, 2026-09-23) — VERDICT: LAND
+
+Adversarial review of the WAVE2-CLI arc (report at `## WAVE2-CLI`
+above; PLAN.md §3.12 as the contract). Thinking hat only: zero
+source edits, nothing committed. The system-base crew's files are
+out of scope and untouched; its DONE section above corroborates
+two of my readings (q at 17, mid-slice CLI/typecheck history).
+
+### (1) Thinness law — HOLDS, no crept logic
+
+Read all 5 `src/cli/` files + the 8-line `bin/neo.ts` firsthand
+against PLAN §3.12's OWNS / MUST-NOT-own lists:
+
+- `index.ts`: Commander wiring + `command:*` usage error + exit
+  code plumbing. Pure argv/exit. Clean.
+- `sync.ts`: `resolve(dir ?? cwd)` (argv→options), lazy subsystem
+  imports, one `sync()`, one bare `flushReferenceBuild()`, prints,
+  exit codes. The `build?.status === 'failed'` branch interprets
+  a subsystem result into a named cause + exit 1 — that IS the
+  law's "errors name the cause and exit nonzero — here", not
+  compile logic. Clean.
+- `clean.ts`: `getOutDirPath` + `existsSync` + `cleanDir` + the
+  link-prune loop over the derived list via subsystem
+  `removeGeneratedLink`. The loop moved verbatim with `cmdClean`
+  exactly as §3.12 sanctions ("the link list ... moves with
+  `cmdClean`, still derived"). No wipe logic inlined, no link
+  construction. Clean.
+- `watch.ts`: boot lines, change/resync/error prints, SIGINT/
+  SIGTERM shutdown, the never-promise. Lifecycle + print only.
+  Clean.
+- `output.ts`: USAGE + `messageOf` + `printUsageError`. Clean.
+- Bin: 134→8 lines, shebang + header + import + run + exit.
+  Zero remaining command logic; the old `cmdSync`/`cmdClean`/
+  `cmdWatch`/`removeScopeLinks`/`routeCommand`/`isVerb`/
+  `printHelp` bodies are gone, not forked.
+
+Flag check for stayed-or-crept compile/publish/link logic:
+**none found**. Every subsystem seam is a call, never inlined.
+
+### (2) Commander wiring — correct + minimal
+
+- `commander@^14.0.3` in `packages/reference-neo/package.json`,
+  matching `packages/reference-mcp/package.json:51` verbatim
+  (dedupe/store-hit holds: the `commander@14.0.3` snapshot
+  pre-existed in the lockfile — the diff adds only the importer
+  spec row, no new snapshot).
+- Wiring surface: `name`/`description`/`addHelpText` +
+  `command:*` + two register fns + one hidden `--watch` option
+  on clean. No plugins, no exitOverride, no custom parsers.
+  Lazy dynamic imports preserved (`sync`/`watchSync`/bridge load
+  only on their paths — `--help`/`clean` never touch the sync
+  world; verified by reading the import sites).
+- Lockfile `+5/−2`: the +3 commander rows plus two vitest peer-
+  suffix lines flipping `esbuild@0.27.3`↔`0.28.2`. That flip is
+  regen churn (commander has no deps; nothing in this arc
+  resolves esbuild), almost certainly a concurrent-install
+  artifact — zero new packages either way. The report's
+  "commander-scoped" is true in substance (no new dep besides
+  commander), imprecise on those two lines. NIT, no action.
+- "Matching mcp/legacy": mcp verified; `reference-core` carries
+  no commander dep, so the legacy half is vacuous. NIT, no
+  action.
+
+### (3) Tasty drain — one bare call, essay MOVED not duplicated
+
+- `src/cli/sync.ts`: exactly one `flushReferenceBuild(cwd)`
+  call, bare — the 6-line REF-10 essay comment from old
+  `bin/neo.ts:28-38` is gone from the command path. The sync.ts
+  file header carries one summary line ("drains the
+  session-owned tasty phase with a single subsystem call") —
+  a header description of what the file does, not the REF-10
+  failure-consequence knowledge. Acceptable, not duplication.
+- `reference/bridge/init.ts` diff is ONLY the `+3/−1` JSDoc
+  hunk on `flushReferenceBuild` (failure consequence:
+  `types.mjs` keeps its `./tasty/runtime.js` edge while
+  `types/tasty/` never lands → bundlers resolving
+  `@reference-ui/types` fail, REF-10 cited). No sibling overlap
+  on that file — the hunk is the whole diff.
+- Repo grep for the essay's distinctive strings finds them only
+  in the bridge JSDoc. Moved, not duplicated. No HOLD.
+
+### (4) clean-on-cleanDir — retry semantics reproduced, no HOLD needed
+
+Re-derived firsthand from `src/sync/clean.ts` (untouched file):
+
+- Retry targets `ENOTEMPTY`/`EBUSY`/`EPERM` only, 6 attempts,
+  then throws loud. Sleep schedule `5ms×(attempt+1)` after
+  attempts 0–4 totals **75ms max** — the report's "≤105ms" is a
+  true bound (75 ≤ 105) but the exact figure is 75ms. NIT.
+- The overlap it exists for: sync's pre-wipe racing the
+  never-awaited background tasty phase's atomic-rename landings
+  (clean.ts header + `cleanDir` JSDoc say exactly this — "the
+  two overlap by design"). The report's
+  "pre-wipe racing the background tasty phase on warm re-syncs"
+  reproduces the documented rationale correctly.
+- CLI-clean meets the same race class only via a concurrent
+  watch/sync on the same dir (file landings vs recursive
+  remove → ENOTEMPTY → backoff converges; a stuck writer fails
+  loud after 6 — identical to sync's contract). Structurally
+  sound; and `cleanDir`'s own JSDoc already blesses
+  non-sync callers ("both sync wipes and test teardown"),
+  so CLI adoption is inside the primitive's established
+  contract, not a stretch.
+- Uncontended equivalence is exact: `rm(dir, {recursive: true,
+  force: true})` — the same options the old `rmSync` used;
+  `force` suppresses ENOENT in both; sync/async differs on an
+  already-async path only.
+- New error surface (`[neo] clean failed: <cause>` exit 1 vs
+  the old uncaught throw → stack + exit 1) is the same exit
+  class with a named cause — the thinness law's error rule,
+  on an unpinned path. Disclosed in the report.
+
+**Confirmed: no HOLD was needed, and none was skipped.** The
+reasoning verifies against the primitive's documented design.
+
+### (5) LINKED_PACKAGES still PACKAGES-derived — YES
+
+`src/cli/clean.ts:18` is `PACKAGES.map((pkg) =>
+getShortName(pkg.name))` — byte-equivalent to the old bin line,
+moved verbatim. The T1 "4 links" claim is consistent (the 4th
+junction is the previously-orphaned `types` link NIGHT-1
+re-derived). No mirrored list anywhere.
+
+### (6) Watch driver untouched — YES, routing only
+
+`git status` shows `src/sync/watch.ts` unmodified; `watch.ts`
+imports `watchSync` and owns only flag routing + prints +
+signals + the never-promise. The 11 AM verdict's driver
+ownership is undisturbed. Clean.
+
+### (7) Output contract — assessed HONESTLY
+
+- Pinned strings kept byte-identical: verified firsthand
+  (`frobnicate` → stdout usage + `unknown command:`,
+  exit 1; `bin/neo.test.ts` 7/7 green inside the full unit
+  run; CLI-02's substring pins untouched in code).
+- Commander-native deltas confined to UNPINNED paths and all
+  disclosed — each re-verified by direct bin probe: bare `neo`
+  → help + exit 1 (Commander-native, to stderr); extra
+  positionals → `error: too many arguments for 'sync'...`
+  (stderr, exit 1); `sync --help` → help, exit 0.
+- The full §3.12 one-line contract (glyph + command + stats)
+  is explicitly NOT claimed — deferred to morning polish
+  against the pins. The report refuses to restyle under pinned
+  assertions. That is the honest call; concur.
+
+### Gates (all firsthand, this session) — ALL GREEN, no attribution needed
+
+- Units (`pnpm vitest run` in `packages/reference-neo`):
+  **53 files / 354 tests passed**, exit 0 — exact match to the
+  report's final-bytes figure. Includes `bin/neo.test.ts` 7/7
+  (untouched file, routing contract holds through Commander).
+- `pnpm agentneo q` (whole package): **0 errors, 17 warnings,
+  229 files**. Zero warnings in CLI-scope files (`src/cli/*`,
+  `bin/neo.ts`, `bridge/init.ts`) — all 17 sit in
+  sibling/pre-existing files (collect, symlink test, reference,
+  recipe, sync, shared, quality tools). The report's "18th
+  warning = sibling validate.test.ts" is already stale in the
+  expected direction: that file is gone from the tree (the
+  system-base DONE above confirms the mid-slice split back to
+  17) and the count is back at baseline. CLI contribution:
+  zero warnings. No red, nothing to attribute.
+- `pnpm agentneo run NEO-CLI-01` → **PASS**
+  (lifecycle.spec.ts). The moved one-shot path is proven end
+  to end on final bytes.
+- Case runs typecheck first and refuse on red — types green by
+  pass. (Also corroborated by the sibling's note that the
+  mid-slice commander typecheck red was fixed by the CLI crew
+  before either arc's proofs.)
+
+### Footprint check
+
+`M bin/neo.ts` (134→8), `M package.json` (+1), `M
+pnpm-lock.yaml` (+5/−2), `M bridge/init.ts` (JSDoc hunk only),
+new `src/cli/` (5 `.ts` + README). Every other modified file in
+the tree belongs to sibling crews (system-base et al.). Index
+untouched by me; nothing committed.
+
+### Nits (all non-blocking, no action required)
+
+- N1: lockfile "commander-scoped" — two vitest peer-suffix
+  lines carry unrelated esbuild-version churn (concurrent
+  regen noise, zero new packages).
+- N2: "matching mcp/legacy" — mcp match verified; core has no
+  commander dep, so the legacy half is vacuous.
+- N3: backoff bound "≤105ms" — exact max is 75ms (5 sleeps;
+  none after the final attempt). Bound holds.
+
+WAVE2-CLI-VERIFY DONE: LAND. The thinness law holds with zero
+crept logic, Commander is minimal and correctly wired, the
+essay moved (not duplicated), cleanDir unification is verified
+(no HOLD needed or skipped), PACKAGES derivation and the watch
+driver are intact, and the output-contract deferral is honest.
+Gates green on final bytes (units 53/354, q 0/17-with-zero-CLI,
+NEO-CLI-01 PASS). Report, don't land.
+
+## Captain's hold note (2026-09-23) — CLI LAND waits for base verdict
+
+WAVE2-CLI-VERIFY returned clean LAND (thinness holds, Commander
+minimal, essay moved, cleanDir verified, honest output deferral).
+Captain's firsthand gates + landing HELD until WAVE2-BASE-VERIFY
+reports: the base verifier is running gates in the shared tree now,
+and concurrent Playwright runs risk mutual evidence corruption.
+Then: one gate run, two stepped landings (CLI, then base), N-2
+native implementer dispatches on the base landing.

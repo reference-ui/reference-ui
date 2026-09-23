@@ -384,14 +384,12 @@ HQ: `src/cli/sync`, `src/cli/clean` — the CLI is the user-facing
 surface and nothing else. No actual/build/compile logic; that
 separation is what keeps module boundaries honest.
 
-Captain: the bin is guiltier than it looks. `bin/neo.ts` (134 lines)
-hosts three commands' worth of logic: the tasty-drain block in
-`cmdSync` (:28-38, with the REF-10 essay — reaches into
-`reference/bridge` internals), the link-removal loop in `cmdClean`
-(`removeScopeLinks` :47-56 + reporting), signal handling and the
-never-promise in `cmdWatch` (:96-104). The move: `src/cli/` owns
-one file per command plus argv/options; `bin/neo.ts` shrinks to a
-trampoline (argv → cli → exit code).
+Captain: the bin was guiltier than it looked. `bin/neo.ts` (134
+lines) hosted three commands' worth of logic — LANDED overnight
+(W2-CLI): `src/cli/` owns one file per command plus shared
+helpers under Commander, `bin/neo.ts` is a trampoline. The
+tasty-drain essay relocated to `reference/bridge`, clean unifies
+on `cleanDir`, the watch driver stayed put.
 
 The thinness law (what cli/ may and may not own):
 - OWNS: argv→options mapping, exit codes, human printing (`[neo]`
