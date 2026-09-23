@@ -2,7 +2,8 @@
 // They take target dirs plus link paths and emit working junctions on
 // Windows and POSIX alike, replacing whatever sat there before. All
 // platform sharp edges (Windows' target-must-exist rule, stale-link
-// pruning) live here so publishers never hand-roll fs calls.
+// pruning, generated-link cleanup) live here so publishers and clean
+// never hand-roll fs calls.
 import {
   existsSync,
   lstatSync,
@@ -13,8 +14,8 @@ import {
   unlinkSync,
   type Stats,
 } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import symlinkDir from 'symlink-dir'
+import { dirname, join, resolve, sep } from 'node:path'
+import { symlinkDirSync } from 'symlink-dir'
 import { prepareLinkPathForSymlink } from './prepare.ts'
 
 /** Remove a symlink or directory at path. Ignores ENOENT. */
@@ -44,7 +45,30 @@ export function createSymlink(targetDir: string, linkPath: string): void {
 
   if (!prepareLinkPathForSymlink(linkPath, targetDir)) return
 
-  symlinkDir.sync(targetDir, linkPath)
+  symlinkDirSync(targetDir, linkPath)
+}
+
+/**
+ * Remove a generated scope link: only when `linkPath` is a symlink pointing
+ * at or inside `outDir`, so a hand-placed file or directory under the scope
+ * is never touched. Missing paths, real files, real dirs, and links
+ * pointing outside stay put. Returns true when a link was removed.
+ *
+ * The target check is lexical (no existence probe): clean removes the
+ * output folder first, so generated links dangle by the time this runs.
+ */
+export function removeGeneratedLink(linkPath: string, outDir: string): boolean {
+  let stat: Stats | undefined
+  try {
+    stat = lstatSync(linkPath)
+  } catch {
+    return false
+  }
+  if (!stat.isSymbolicLink()) return false
+  const target = resolve(dirname(linkPath), readlinkSync(linkPath))
+  if (target !== outDir && !target.startsWith(outDir + sep)) return false
+  unlinkSync(linkPath)
+  return true
 }
 
 /**

@@ -6,9 +6,10 @@
 // add/change/unlink until SIGINT. Clean removes the generated folder plus
 // the scope links sync made. Anything else prints usage; failures name the
 // cause and exit nonzero.
-import { existsSync, lstatSync, readlinkSync, rmSync, unlinkSync } from 'node:fs';
-import { dirname, join, resolve, sep } from 'node:path';
+import { existsSync, rmSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { getOutDirPath } from '../src/lib/paths/out-dir.ts';
+import { removeGeneratedLink } from '../src/lib/symlink/index.ts';
 
 const LINKED_PACKAGES = ['system', 'styled', 'react'];
 const USAGE = 'usage: neo <sync|clean> [dir]\n       neo sync --watch [dir]';
@@ -41,26 +42,11 @@ async function cmdSync(dir: string): Promise<number> {
   }
 }
 
-// True only when linkPath is a symlink pointing inside outDir, so a
-// hand-placed directory under the scope is never unlinked by clean.
-function isGeneratedLink(linkPath: string, outDir: string): boolean {
-  let linked = false;
-  try {
-    linked = lstatSync(linkPath).isSymbolicLink();
-  } catch {
-    return false;
-  }
-  if (!linked) return false;
-  const target = resolve(dirname(linkPath), readlinkSync(linkPath));
-  return target === outDir || target.startsWith(outDir + sep);
-}
-
 function removeScopeLinks(dir: string, outDir: string): number {
   let removed = 0;
   for (const name of LINKED_PACKAGES) {
     const linkPath = join(dir, 'node_modules', '@reference-ui', name);
-    if (isGeneratedLink(linkPath, outDir)) {
-      unlinkSync(linkPath);
+    if (removeGeneratedLink(linkPath, outDir)) {
       removed += 1;
     }
   }

@@ -12502,3 +12502,89 @@ land. Open for captain: landing spelling
 - Path: typegen widen → PACKED merge (22ed06156, 8fcb16b51) → HERMDIV diagnosis (fixture runtime externalization) → NEO-PACKAGER concept from legacy (1395abd8d) fixing it through owned externals policy.
 - Core retirement: packages/reference-core removed, moved-from paths cleared (b833ed235), museum preserved at packages/reference-legacy.
 - Landing sweep: tree clean, zero diagnostic leftovers (no FAIL-ROW/bust/zz-spec), museum untouched. Voyage park still holds for new work: LANDING NOT dispatched — HQ's call.
+
+## SYMLINK-ADOPT (crew, 2026-09-23) — all link handling onto src/lib/symlink/
+
+### Hunt (whole neo tree, tests excluded)
+Grep for `symlinkSync|unlinkSync|readlink|isSymbolicLink|junction|
+symlink-dir` over `packages/reference-neo/{src,bin,tests}` plus a
+`node_modules`-scope sweep found exactly two product ad-hoc sites —
+`sync/clean.ts` carries no link code (retry-rm only, untouched):
+- `src/sync/publish/links.ts` — `replaceLink` hand-rolled junction
+  replace (lstat/unlink-or-rm + `symlinkSync(..., 'junction')`).
+- `bin/neo.ts` — `isGeneratedLink` (lstat/readlink guard: symlink
+  pointing inside outDir) + raw `unlinkSync` in `removeScopeLinks`.
+- Fixture/assertion uses left alone per brief: `scan-native.test.ts`
+  + `bin/neo.test.ts` plant links, `sync.test.ts` /
+  `reference-types.test.ts` / case specs assert `isSymbolicLink`.
+
+### Pre-existing break found in the module (fixed, not worked around)
+The port landed red: `import symlinkDir from 'symlink-dir'` +
+`symlinkDir.sync(...)` is the v9 API (legacy pins ^9.0.0); Neo
+depends on ^10.0.3, whose surface is named `symlinkDirSync` only.
+`createSymlink` was dead code (README: "Nobody yet") that could
+never run — q failed TS2613 on it at HEAD (verified via stash),
+and `agentneo run`'s typecheck gate would refuse every case. Now
+`import { symlinkDirSync } from 'symlink-dir'`; v10 overwrites by
+default and absorbs the dangling-link case `prepare()` misses
+(`existsSync` follows links). No logic change otherwise.
+
+### Module extension (genuine gap, with tests + README)
+Legacy's clean removes scope entries unconditionally
+(`removeSymlinkOrDir`); Neo's clean keeps hand-placed dirs — a
+guard the module did not offer. Added `removeGeneratedLink(
+linkPath, outDir): boolean` to `src/lib/symlink/index.ts`: true +
+unlinked only when a symlink points at-or-inside outDir (lexical
+check, no existence probe — clean wipes the folder first so
+generated links dangle by then); missing paths, files, real dirs,
+and outside links stay put. README owns-list + Consumers updated.
+
+### Migration per site (ad-hoc copies deleted, no dead helpers)
+- `links.ts`: `replaceLink` deleted; leg calls `createSymlink` per
+  package. Precondition verified at every caller: assembly creates
+  all four target dirs before the links leg; benchmark
+  `worker-phases.ts` likewise (untouched). `reference-types.test.ts`
+  fixture created only styled/react/types — added the missing
+  `mkdirSync(outDir/system)` (it tests the ad-hoc code's caller).
+  Behavior notes: already-correct links are now a no-op instead of
+  unlink+recreate; missing targets fail loud (Windows-required)
+  instead of silently dangling.
+- `bin/neo.ts`: `isGeneratedLink` deleted; `removeScopeLinks` calls
+  `removeGeneratedLink`. Behavior identical (same guard, same
+  count); `neo clean` artifacts still covered by `bin/neo.test.ts`
+  + NEO-CLI-01.
+- Final grep: raw `symlink/unlink/readlink/isSymbolicLink` in
+  product code lives only in `src/lib/symlink/{index,prepare}.ts`.
+
+### Proof (all firsthand, this session)
+- `pnpm agentneo q` (whole package): 0 errors, 17 warnings
+  (non-failing; 1 is the new describe block over the 80-line warn
+  line, rest pre-existing). Touched-paths gate run after every
+  generation step, per skill.
+- Full Neo unit suite (`pnpm exec vitest run` in
+  `packages/reference-neo`): 48 files / 337 passed (323 Obj-2
+  baseline + 4 port tests + 10 new for `createSymlink` /
+  `removeGeneratedLink` incl. sibling-prefix trap + dangling-link).
+- Chain cases (links leg touches every sync): NEO-CHAIN-01..06 all
+  PASS (transitive, diamond, parallel, multi-extends, depth,
+  real-upstream). Plus NEO-CLI-01 PASS (clean lifecycle incl.
+  `neo clean` scope-link removal — the `removeGeneratedLink` proof).
+- Native matrix tier T1: `neo sync` in `matrix/tests/chain/T1`
+  exit 0, all four scope links land and resolve
+  (`@reference-ui/{system,styled,react,types}`); `pnpm agent
+  playwright --dir matrix/tests/chain/T1 --no-build` → 7 passed
+  (0 failed) + PASS banner.
+- Hygiene: 6 files changed, all Neo (`bin/neo.ts`, links leg,
+  symlink module + tests + README, one fixture line); no
+  matrix/fixture edits (T1 sync outputs gitignored); no commits;
+  no diagnostic leftovers.
+
+### Open for captain (flagged, not freelanced)
+- `bin/neo.ts` hardcodes `LINKED_PACKAGES = [system,styled,react]`
+  while the leg links all four PACKAGES incl. `types`: `neo clean`
+  leaves the types link dangling. Legacy's clean iterates
+  PACKAGES. One-line unification available; withheld as a behavior
+  change beyond this brief.
+
+SYMLINK-ADOPT DONE: every link call-site routes through
+lib/symlink + suite/cases/T1 green. Report, don't land.
