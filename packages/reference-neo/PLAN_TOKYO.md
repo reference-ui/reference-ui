@@ -129,8 +129,40 @@ Refactor crew dispatched (motion + naming only, zero logic change):
 restructure inside, `collect` rename, constants, README, full-suite
 proof. `lib/` remains the machinery home for true libs (symlink,
 microbundle, paths); subsystems (collect, packager, sync-spine) stay
-top-level. Open threads: remaining move-list (css module home — item
-2 — plus stragglers); whether other top-level dirs want the same
+top-level.
+
+Decided layout (HQ art direction — relayed to the refactor crew):
+
+```text
+src/collect/
+├── index.ts          barrel (re-export surface + lib as today)
+├── constants.ts      extracted constants (was: buried)
+├── README.md         the serious one — what collection is
+├── surface/          was api/ — the collector calls authors touch
+│   ├── README.md     surface contract: what's public, what's not
+│   ├── index.ts      barrel
+│   ├── font.ts       (+ .test)
+│   ├── globalCss.ts  (+ .test)
+│   ├── keyframes.ts  (+ .test)
+│   └── tokens.ts     (+ .test)
+└── lib/              everything else — the machinery
+    ├── README.md     machinery map: scan→evaluate→merge→collect
+    ├── bootstrap.ts  (+ .test)
+    ├── collector.ts
+    ├── evaluate.ts   (+ .test)
+    ├── merge.ts      (+ .test)
+    ├── runner.ts
+    ├── types.ts
+    └── scan/         crossings, goldens, helpers, identity,
+                      native, nativeWalk, retention (+ fixtures)
+```
+
+Rationale (HQ): "collect itself has an API" so `api/` misnames it —
+`surface/` says what it is. `lib/` holds the rest honest. READMEs at
+all three levels because this is serious kit.
+
+Open threads: remaining move-list (css module home — item 2 — plus
+stragglers); whether other top-level dirs want the same
 subsystem-vs-lib test applied.
 
 ### 4. Liquid: gone and staying gone (HQ: it was a Panda-era constraint)
