@@ -254,15 +254,26 @@ Captain: legacy's shape is the clarifier — `public.ts` ("Public
 authoring surface... Keep this separate from the executable CLI
 entry") vs `entry/` (react/system/types: the generated-consumer
 entries) vs `index.ts` (the CLI). Neo's `author/` ≈ legacy's
-`public.ts` and Neo's `entry/` ≈ legacy's `entry/` — the two doors
-are right, but `author/` leaks internals where legacy's `public.ts`
-exports only public things. Direction: split the barrel — public
-surface (what authors import) vs internal factories (what the
-collector/sync import), with the internal side unimportable from the
-public id. Open threads: whether the internal factories move under
-`collect/` (they serve collection) with `author/` keeping pure
-re-exports; what `entry/`'s exact Neo roster is (react/types today —
-system?); whether `author/` keeps its name once split.
+`public.ts` and Neo's `entry/` ≈ legacy's `entry/`.
+
+Census (2026-09-23, every importer in-tree): from `@reference-ui/neo`
+anyone imports exactly `defineConfig` (217), `tokens` (155),
+`globalCss` (50), `font` (11), `keyframes` (8) — plus types. NOBODY
+imports any `create*Collector` factory, anywhere. The factories are
+dead public surface: pure confusion, zero users. Worse, the id isn't
+even a real export — `package.json` has no `"."`; the id resolves via
+bundler alias + tsconfig paths pointed at `author/` by convention.
+
+Direction: the id must keep answering, but `author/` as drawn dies
+either way. Two forks: (A) slim `author/` to the true public set (5
+functions + types) and move the factories under `collect/` as
+internals; (B) delete `author/` and serve the id from a minimal root
+barrel with the same public set. Captain leans B — the name is the
+confusion, and `entry/` already means entries. Either way the alias
+wiring moves with it, and `"."` should probably become a real export.
+Open threads: A vs B; what `entry/`'s exact Neo roster is (react/types
+today — system?); where the public types live (HQ: with types —
+Neo has no top-level `types/` home yet).
 
 ## Explicitly Not Yet
 
