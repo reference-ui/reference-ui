@@ -1,4 +1,4 @@
-IN PROGRESS
+COMPLETE
 
 # LOG-2 — Objective 2: matrix chain gate + core retirement
 
@@ -12496,3 +12496,9 @@ count-identical to native, D17-only reds). HERMDIV
 closed: T1 hermetic was 4/3, now 7/0. Report, don't
 land. Open for captain: landing spelling
 (literal-vs-import) + D17/H4 land ruling.
+
+## OBJECTIVE 2 COMPLETE (captain, 2026-09-23) — chain gate green, core retired
+- Chain gate: T1-T13 green native AND hermetic, verified FIRSTHAND by captain on final bytes (native 7/2/6/5/5/4/3/2/3/2/3 passed; hermetic identical incl. T1 7/0 flip from 4/3). 8 staying reds are the triaged D17 parks (rows 4/8/20/21/22/24/28/31), failing-set identity by elimination. Neo units 323/323, q 0 errors, chain cases 6/6, all firsthand.
+- Path: typegen widen → PACKED merge (22ed06156, 8fcb16b51) → HERMDIV diagnosis (fixture runtime externalization) → NEO-PACKAGER concept from legacy (1395abd8d) fixing it through owned externals policy.
+- Core retirement: packages/reference-core removed, moved-from paths cleared (b833ed235), museum preserved at packages/reference-legacy.
+- Landing sweep: tree clean, zero diagnostic leftovers (no FAIL-ROW/bust/zz-spec), museum untouched. Voyage park still holds for new work: LANDING NOT dispatched — HQ's call.
