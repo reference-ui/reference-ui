@@ -23,11 +23,9 @@ import { resolveJsxElements } from './jsx-elements.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { cleanDir } from './clean.ts'
-import { linkGeneratedPackages, publishRuntimeBundle, publishSyncFolder, publishTypesBundle } from './publish.ts'
+import { assembleSystem } from '../packager/assembly.ts'
 import { markPhase } from './phases.ts'
 import { mergePackedStylesheets, type PackedUpstream } from './packed-css.ts'
-import { publishReactBundle } from './react.ts'
-import { publishReferenceTypesBundle } from './reference-types.ts'
 import type { ReferenceUIConfig } from '../config/types.ts'
 import {
   getReferenceManifestPath,
@@ -217,33 +215,24 @@ export async function sync(cwd: string): Promise<SyncResult> {
     const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
 
     const merged = mergePublishedStylesheets(config.extends, result.stylesheet, result.portableStylesheet ?? '', spec.name)
-    publishSyncFolder({
+    await assembleSystem(cwd, {
       outDir,
       spec,
       portableFragment: createPortableFragmentBundle(prepared),
       stylesheet: merged.stylesheet,
       portableStylesheet: merged.portableStylesheet,
       jsx,
+      runtime: result.runtime,
     })
     // Logical request artifact: `files` (megabytes of bytes) and the
     // retention token (a live handle, never persisted) stay out of the
-    // published JSON — undefined drops from serialization.
+    // published JSON — undefined drops from serialization. A sync
+    // diagnostic, not packaging: it lands beside the assembled system.
     writeFileSync(
       join(outDir, 'system', 'compile-request.json'),
       `${JSON.stringify({ ...request, files: undefined, retentionToken: undefined }, null, 2)}\n`,
       'utf-8'
     )
-    await publishRuntimeBundle(outDir, spec.name, result.runtime)
-    await publishReactBundle({
-      outDir,
-      systemName: spec.name,
-      stylePropNames: result.runtime.stylePropNames,
-    })
-    await publishTypesBundle(outDir, spec)
-    // After the react leg (its bundle is the alias target) and before the
-    // links leg (the junction lands on a complete package).
-    await publishReferenceTypesBundle({ outDir })
-    linkGeneratedPackages(cwd, outDir)
     markPhase('publishEnd')
 
     // Sync END only: schedule the background tasty phase, never await it.

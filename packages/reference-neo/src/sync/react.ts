@@ -17,7 +17,7 @@ import {
   generateReactEntrySource,
   generateReactTypesSource,
 } from '../primitives/generate/generate.ts'
-import { GENERATED_VERSION } from './publish.ts'
+import { REACT_BUNDLE_EXTERNALS } from '../packager/externals.ts'
 
 export interface ReactPublishInput {
   outDir: string
@@ -43,32 +43,12 @@ function runtimeHeaderSource(dataPath: string): string {
 /**
  * Publish the generated react package: bundle the native entry (primitives
  * plus React, with css()/recipe() pre-registered over this system's data)
- * and write the standalone types. Rewrites the placeholder package.json sync
- * published with the folder; the styles.css copy already sits beside it.
+ * and write the standalone types. The shell already wrote the final
+ * manifest plus the styles.css copy; this leg only adds the bundle.
  */
 export async function publishReactBundle(input: ReactPublishInput): Promise<void> {
   const dir = join(input.outDir, 'react')
   mkdirSync(dir, { recursive: true })
-  writeFileSync(
-    join(dir, 'package.json'),
-    `${JSON.stringify(
-      {
-        name: '@reference-ui/react',
-        version: GENERATED_VERSION,
-        description: 'Neo generated React entry',
-        type: 'module',
-        main: './react.mjs',
-        types: './react.d.mts',
-        exports: {
-          '.': { types: './react.d.mts', import: './react.mjs' },
-          './styles.css': './styles.css',
-        },
-      },
-      null,
-      2
-    )}\n`,
-    'utf-8'
-  )
   writeFileSync(
     join(dir, 'react.d.mts'),
     generateReactTypesSource({ stylePropNames: input.stylePropNames }),
@@ -98,7 +78,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
       format: 'esm',
       platform: 'browser',
       // React rides with the consumer (see header): external, never bundled.
-      external: ['react'],
+      external: REACT_BUNDLE_EXTERNALS,
       // Minified with an external map: the shipped bundle holds its size
       // bound while the map keeps it debuggable. Names mangle, so the miss
       // call-site probe keeps only the react.mjs file marker (by design).

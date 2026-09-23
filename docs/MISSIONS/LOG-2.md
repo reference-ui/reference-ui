@@ -11502,3 +11502,997 @@ set = D17-only, signatures intact; neo chain 6/6 green.
 - Obj1 COMPLETE, Obj3 COMPLETE. Obj2 paused one gate from close: merge landed + native green, hermetic divergence diagnosed-natively (see HERMDIV interim above), hermetic confirmation + fix + re-gate outstanding.
 - LANDING (Obj4/5) undispatched. Standing ticks: one-line entries, no action.
 - RESUME CHECKLIST: (1) re-run HERMDIV hermetic probe to confirm consumer-bundle resolution; (2) fix (fixture ships bundle? consumer adopts upstream runtime? — crew recommendation pending); (3) hermetic 11-tier re-gate; (4) landing sweep + Obj2 close; (5) dispatch LANDING.
+
+## Tick — parked; PKG-STABILITY wave running (no writes yet, fresh — not stuck), no action.
+
+## NEO-PACKAGER (concept crew, 2026-09-23) — WORKING
+
+Scope: packager concept + HERMDIV fix + proof. Neo
+`src/packager/` (new) + leg consumption edits + 5 fixture
+tsup externals + 2 SPEC ownership lines. No PostCSS, no
+motion beyond the packager's home, no sync slimming, no
+other Tokyo items. Never commit. Governing skills
+`agent-neo` (cases + q after every generation step) and
+`test-core` (matrix proof via `pnpm agent` only) loaded
+first. PLAN_TOKYO.md items 1+7 + HERMDIV interim read.
+Legacy is a museum: every path below is READ-ONLY, cited
+file:line, never edited or imported.
+
+### 1. Study — legacy's solved packager (evidence)
+
+Shape (`packages/reference-legacy/src/packager/`, all
+line cites firsthand): `packages.ts` holds declarative
+defs (`SYSTEM_PACKAGE` :29, `REACT_PACKAGE` :49,
+`STYLED_PACKAGE` :68, `TYPES_PACKAGE` :95, `PACKAGES`
+:127; two install phases `RUNTIME_PACKAGES` :117 /
+`FINAL_PACKAGES` :123); `package/` holds the
+`PackageDefinition` type (`type.ts:19`: name, version,
+entry, bundle flag, main, types, exports, `copyFrom`,
+`postprocess`) plus `createBundleExports` (`exports.ts:4`)
+and `getShortName` (`name.ts:2`); `layout.ts` resolves
+dirs/entries (`getPackageDir` :7, `getEntryBasename` :12,
+`getDeclarationBasename` :17, `getRuntimeEntryPath` :22);
+`bundler/` executes a def (`index.ts:10`: entry then
+assets then package.json); `install/` places + publishes
+(`install/index.ts:52`: bundle → postprocess →
+install-mode publish; `installPackages` :76 loops defs,
+prunes broken scope links :96); `postprocess/` runs small
+named ordered passes (`index.ts:22` registry:
+`injectLayerName`, `rewriteTypesRuntimeImport`).
+
+Externals policy — the HERMDIV answer
+(`bundler/esbuild.ts:6-23`): the generated bundles
+externalize `react`, `react-dom`, `react/jsx-runtime`,
+`@reference-ui/styled(+/*)`, `@reference-ui/types(+/*)`,
+node builtins, `fast-glob`, `esbuild` — and NOTABLY never
+`@reference-ui/react` or `@reference-ui/system`: each
+generated react/system bundle is SELF-CONTAINED for its
+system. Legacy's answer to "who provides
+`@reference-ui/react` for a packed fixture" is the
+install modes (`install/build.ts:4` copy for
+build/test flows vs `install/dev.ts:4` symlink for dev,
+selected by `init.ts:16`): every project provides its
+OWN generated packages into its OWN node_modules. That
+worked hermetically because legacy `css()` was
+system-agnostic (Panda serializer: same input, same
+class string, whichever copy served it) — the provider
+never mattered. Neo broke that property by binding
+runtime data into the bundle (`sync/react.ts:32-41`
+`registerRuntimeData(systemName, ...)`; `runtime/css/
+css.ts:223` `name(query, tables, active.system)` prefixes
+classes per system; single-system runtime, css.ts:103).
+
+HERMDIV restated through the policy: extend/meta
+fixture tsup configs externalize `@reference-ui/react`
+(5 files, identical 4-line block) and ship only
+dist + baseSystem (`files`, fixture package.json:18-23
+— byte-identical shape pre/post migration, verified
+`b833ed235^`). Natively the fixture dist resolves to
+the fixture's OWN junction (own system → own classes →
+paint); packed, the tarball carries no provider, so it
+resolves to the CONSUMER's bundle (consumer system →
+wrong classes → triage-identical unstyled signatures
+despite the merged sheet). The in-tree precedent for
+the fix fork already exists: layer fixtures' tsup
+configs carry NO `@reference-ui/*` externals, so layer
+dist bundles its own runtime (verified: layer dist
+imports only `react`; 364KB self-contained). "Fixture
+ships its own runtime bundle" is therefore not an
+invention — it is the layer fixtures' shipped shape,
+extended to extend/meta. "Consumer adopts the upstream
+runtime" is REFUSED: `css()` cannot attribute a call to
+a system, so adoption would need union emission (wrong
+classes natively, miss-diagnostic spam) — dishonest.
+
+Left behind, by name: `worker.ts`/`run.ts`/`init.ts`
+(event-bus + thread-pool worker lifecycle),
+`ts/` (dts fan-out — Neo's typegen + single
+`types-bundle` leg cover it), `injectLayerName`
+(Neo bakes `systemName` at generation,
+`generateReactEntrySource({systemName})` — no
+placeholder exists), build/copy install mode (no
+consumer: no `neo build` verb; icons verified over
+junctions per Phase 0 row 15), `writeIfChanged`
+(`bundler/files.ts:52` — Neo rm-wipes outDir first,
+so change-gating is dead code), dir-copy + TS-transform
+assets (`bundler/files.ts:69-98` — Neo has one file
+copy: the react styles.css), broken-symlink pruning
+(unrequested behavior; F2 stays flagged).
+
+### 2. Design — the Neo packager concept
+
+Home: new top-level `src/packager/` (Tokyo item 3 may
+later relocate it under `lib/` as motion-only; no
+motion now beyond this home). Legs stay in
+`sync/publish/` + `sync/react.ts` +
+`sync/reference-types.ts` (no file motion — blame and
+prose cites intact); the packager OWNS the defs, order,
+manifests, externals, and passes, and the legs consume
+them. One deliberate transitional edge: the assembly
+imports not-yet-moved legs (documented in-file,
+item-3-owned).
+
+Module (new files): `packages.ts` (4 declarative defs
+`SYSTEM/STYLED/REACT/TYPES_PACKAGE` + `PACKAGES`,
+version stamp kept `0.0.0-neo`); `package/` (port of
+legacy `type.ts`/`exports.ts`/`name.ts` verbatim —
+already de-panda'd); `constants.ts`
+(`GENERATED_VERSION`, `BASE_SYSTEM_HEADER`, moved from
+`sync/publish/types.ts`); `types.ts` (`PublishInput`,
+moved, + `AssemblyInput` with the runtime artifact);
+`externals.ts` (THREE owned policies, zero-import leaf:
+`REACT_BUNDLE_EXTERNALS` = `['react']`,
+`TYPES_BUNDLE_EXTERNALS` = legacy's list owned,
+`SHIPPABLE_UNIT_EXTERNALS` = `['react',
+'react/jsx-runtime']` — the HERMDIV fix as code: NO
+`@reference-ui/*` entry, so shippable units inline the
+system-bound runtime); `layout.ts` (port of legacy
+helpers); `manifest.ts` (`writePackageJson`, port of
+legacy `package-json.ts`, unconditional write — see
+study); `assets.ts` (narrowed `copyFrom` executor:
+file-from-outDir only — the react styles.css);
+`postprocess/` (registry + `rewriteTypesRuntimeImport`,
+moved from `sync/reference-types.ts` with triple-guard
+semantics intact — the ONE surviving pass);
+`assembly.ts` (`assembleSystem`: the 8-step order —
+system → styled → react-shell → runtime-data → react
+bundle → types-decls → reference-types → links — moved
+out of `sync()`'s call sequence; `compile-request.json`
+stays a sync diagnostic, not packaging); `README.md`
+(architecture, no filename tables).
+
+Fudge migrated (each a named current sin): 4 scattered
+manifest literals → defs; react-shell placeholder +
+react.ts rewrite (`react-shell.ts:16-17` admits the
+two-step) → shell writes the FINAL manifest from the
+def, react.ts drops its write; unowned externals
+literals (`sync/react.ts:101`,
+`sync/reference-types.ts:25` "Core's externals")
+→ `externals.ts`; order-in-comments ("after the react
+leg… before the links leg") → `assembleSystem`;
+free-floating `rewriteTypesRuntimeImport` → named
+registry pass; `LINKED_PACKAGES` mirror (`links.ts:8`)
+→ derived from `PACKAGES`. `sync/publish.ts` (barrel)
+and `sync/publish/types.ts` delete; `sync()` keeps its
+recipe and calls one packager entry. Output is
+byte-identical by construction (same key order, same
+values, same bytes) — proven by pre/post `diff -r`
+over snapshotted `.reference-ui` trees, not by review.
+
+Shippable system unit (ship-list): `dist/` (SELF-
+CONTAINED: runtime inlined, only `react`,
+`react/jsx-runtime`, `@fixtures/*` external) +
+`baseSystem.mjs/.d.mts` pair + README. `files` arrays
+already match — zero change there. Fix application:
+5 fixture tsup configs (extend×2, meta×3) drop the 4
+`@reference-ui/*` external lines and import
+`SHIPPABLE_UNIT_EXTERNALS` from the packager (relative
+import, precedent: `bootstrap-runtime.mjs` reaches
+into `packages/` the same way); meta `@fixtures/*`
+lines stay (package edges, not runtime); layer×2
+untouched (already compliant — verified by dist
+inspection). Prose: 2 SPEC ownership lines
+(type/SPEC.md, layer/SPEC.md) repoint to the packager;
+TESTS.md ledger rows stay verbatim (they record past
+change sites, not current ownership).
+
+No workers, no thread pool, no ts fan-out: natives
+compile fast and serial (`sync()` already is); the
+assembly is an ordered `await` chain like legacy's
+`installPackages` loop (`install/index.ts:85`), minus
+the event bus (Tokyo item 7: direct calls).
+
+DOMAIN.md gains `packager` + `ship-list` in the same
+pass (skill §7: language evolves with the code).
+
+### 3. Implementation (as filed in §2, one convergence below)
+
+New `src/packager/`: `constants.ts` (stamps, moved),
+`package/` (type + exports + name + barrel, legacy
+port), `externals.ts` (three policies, zero-import
+leaf), `layout.ts` (port), `manifest.ts`, `assets.ts`
+(narrowed), `types.ts` (`PublishInput` moved +
+`AssemblyInput`), `packages.ts` (4 defs + `PACKAGES`),
+`postprocess/` (registry + surviving pass),
+`assembly.ts` (`assembleSystem`, 8 steps),
+`README.md` (architecture, no filename tables).
+Legs consume defs/manifests/externals/passes; the
+react-shell placeholder dance is dead (shell writes
+the final manifest; `react.ts` drops its write);
+`sync()` calls one packager entry;
+`sync/publish.ts` + `sync/publish/types.ts` deleted.
+`benchmark/deepsee/worker-phases.ts` re-imports legs
+directly (its measured step set preserved exactly —
+no reference-types leg, as before). 2 SPEC
+ownership lines repoint; TESTS.md ledgers verbatim
+(history, not ownership); DOMAIN.md gains the two
+entries. No file motion, no workers, no ts fan-out.
+
+CONVERGENCE (captain, read): the PKG-STABILITY wave
+landed the identical externals fix in the same 5
+tsup configs mid-flight (literals + comments, dists
+rebuilt 19:02-19:03) while this crew was
+implementing the packager. Independent diagnosis,
+same fork — the fix shape is doubly arrived-at.
+This crew's delta on their files: the literals now
+import `SHIPPABLE_UNIT_EXTERNALS` from the packager
+(single owner per §2; values identical), all 5
+rebuilt green. Their comments kept, ownership lines
+added. If the waves land separately, either shape
+proves the gate (same values); the import is the
+drift-proof landing shape.
+
+### 4. Proof (all firsthand, final bytes)
+
+- Gate: `agentneo q` over packager + touched sync +
+  benchmark → 0 errors (4 warns, all pre-existing
+  band; `sync()` 117→108 lines). No-panda clean
+  (DOMAIN hits are pre-existing retirement text).
+- Units: `pnpm agent vt packages/reference-neo/src`
+  → 44 files, 311 passed.
+- Full Neo suite: `pnpm agentneo run` → 197/197 ok
+  (last-run.json), chain 6/6.
+- Byte-identity: pre-change `.reference-ui`
+  snapshots (fixture + T1) vs post-change re-sync →
+  `diff -rq` EMPTY both trees. Notes: esbuild
+  stamps CWD-relative module comments into
+  types.mjs, so the comparison syncs from the same
+  CWD the snapshot used (tier dir); settle 2s
+  before diffing (background tasty phase).
+- Fixture dists (5 rebuilt): import only `react`
+  (+ CSS-string false positives); zero
+  `@reference-ui/*` edges. Layer×2 untouched
+  (already compliant).
+- Native chain (`neo sync` per dir + `pnpm agent
+  playwright --dir matrix/tests/chain/T<N>
+  --no-build`): T1 7/0, T2 2/1, T3 6/1, T6 5/0,
+  T7 5/0, T8 4/0, T9 3/3, T10 2/1, T11 3/0,
+  T12 2/1, T13 3/1 — PACKED-C table matched
+  exactly with runtime-inlined dists.
+- Hermetic 11-tier (`pnpm agent test
+  --packages=@matrix/chain-t*,…`; fail-fast runner,
+  so T6/T7/T8 batched + T2/T3/T9/T13 solo after
+  the first batch parked): T1 7/0, T2 2/1, T3 6/1,
+  T6 5/0, T7 5/0, T8 4/0, T9 3/3, T10 2/1,
+  T11 3/0, T12 2/1, T13 3/1 — hermetic == native
+  on all 11. D17 parks only (8 rows: 4/8/20/21/
+  22/24/28/31); failing-set identity follows from
+  equal counts + D17-unflippable (the layers
+  feature exists in neither env — no diagnostic
+  patch needed, none made). HERMDIV closed:
+  T1 hermetic was 4/3, now 7/0.
+
+Footprint: `src/packager/` (new) + 11 Neo edits +
+2 deletions + benchmark import fix + DOMAIN + 2
+SPEC lines + 5 tsup wirings + this log. No
+diagnostic edits made, none to revert; no commits;
+index untouched. Sibling dirt at start (reporter
+patch, zz-debug spec) was reverted by its owner
+mid-flight, not by this crew.
+
+## NEO-PACKAGER DONE (concept crew, 2026-09-23)
+
+Concept installed + HERMDIV fixed through it +
+chain green native and hermetic with D17 parks
+only. Gates: q 0 errors, units 311/311, Neo suite
+197/197, byte-identity diffs empty, native 11/11
+PACKED-C-identical, hermetic 11/11 == native.
+Report, don't land.
+
+## LEGACY-SURVEY (research crew, 2026-09-23) — FILED
+
+Scope: READ-ONLY survey of `packages/reference-legacy/`
+(frozen main-core; museum law read first — zero tree
+writes; this log section is the only write). Context
+read: `packages/reference-neo/PLAN_TOKYO.md` (map),
+`docs/MISSIONS/OPERATION_TOKYO.md` §4 (red-flag
+catalogue), NEO-PACKAGER § filed above. Every path
+below is cited file:line firsthand on BOTH sides; no
+vibes. Sibling NEO-PACKAGER owns packager/ — skimmed
+only (§13), no duplication.
+
+Verdict scale: STEAL = port the shape; STUDY = cite
+as CORE-BONES evidence (with steal-trigger where one
+exists); SKIP = panda-era/dead-constraint/already-
+ported, with the reason. Splits name the part each.
+
+### 1. session/ — HQ's seed question, answered
+
+Problem: core's pipeline was multi-threaded,
+long-lived (watch), and consumed across processes.
+Vite/Webpack plugins run in the USER's bundler
+process, not core's — nothing inside legacy src
+imports them (verified: no consumers outside
+session/vite/webpack/bundlers/public). They needed
+a cross-process "logical build complete" signal so
+HMR would not fire mid-pipeline on half-written
+generated files. session/ is that protocol:
+`session.json` manifest
+(`SessionManifest{pid,mode,state,buildState,...}`,
+types.ts:8) written atomically (tmp+rename,
+files.ts:33) into outDir/tmp; `session.lock`
+(O_EXCL acquire with stale-pid reclaim,
+files.ts:87, EPERM-means-alive files.ts:120) so
+exactly one `ref sync --watch` owns an outDir
+(watch-lock.ts:10; one-shots DELIBERATELY skip the
+lock, state.ts:19-21, so a config-applying one-shot
+may run beside watch); `getSyncSession({cwd})`
+(public.ts:58) walks up to find the outDir
+(findOutDir :17), watches the DIRECTORY not the
+file (inode-safe vs atomic renames, watch.ts:66),
+self-promotes when outDir appears (watch.ts:90),
+reconciles trailing-edge (watch.ts:58), dedupes
+ready edges by `pid:updatedAt` signature
+(public.ts:64), and isolates handler throws
+(public.ts:86-90). Why core needed one: workers +
+threads + external bundler processes = no shared
+memory for readiness; the filesystem was the only
+bus all three could see.
+
+Neo: NO session concept at all (grep over
+neo/src for session/HMR/onRefresh/RefreshEvent:
+zero hits). `watchSync` (sync/watch.ts:281) resyncs
+and reports via callbacks but publishes no
+manifest; tmp helpers exist (lib/paths/tmp-dir.ts)
+but serve only config/evaluate.ts temp eval, never
+a manifest. SYNC-02 folds tmp/ absence by design;
+matrix session suite was verdict DROP (retired
+sidecar). Consequence: two `neo sync --watch` on
+one outDir both rm-wipe + publish with no owner
+guard — live interleave hazard (clean.ts retry
+covers only Neo's own tasty writer, not a second
+sync). Neo does not have the problem TODAY (no
+bundler plugin to consume readiness) but WILL grow
+it with its first plugin or editor integration.
+
+Verdict: STEAL the watch lock (files.ts:87-110 +
+watch-lock.ts:10 — tiny, prevents real corruption
+today) / STUDY the manifest protocol (state.ts,
+public.ts:58-96, watch.ts — CORE-BONES evidence;
+steal-trigger: Neo's first bundler plugin, which
+needs it as the flush signal; see §5 dependency).
+
+### 2. watch/
+
+Problem: stable tool-agnostic change detection over
+@parcel/watcher: minimal roots derived per include
+glob (static-prefix extraction roots.ts:10, nested
+collapse roots.ts:42, deriveWatchRoots :55);
+picomatch include filter PLUS exact config-
+dependency set (dependency hit →
+requiresFullResync, watcher.ts:38-62); .gitignore-
+aware ignores (anchored-vs-basename translation
+gitignore.ts:15, walked to repo root :74) + static
+ignores (node_modules, outDir glob, .git,
+gitignore.ts:5); FSEvents "Events were dropped"
+swallowed (watcher stays functional; resync would
+loop, worker.ts:28-34), other errors →
+cooldown-gated full resync with circuit breaker
+(max 3 consecutive, worker.ts:37-49).
+
+Neo: SOLVED (ported). sync/watch.ts mirrors it
+function-for-function: staticPrefix :55,
+collapseRoots :71, deriveWatchRoots :80,
+toIgnoreGlobs :115, getIgnoreGlobs :142,
+toWatchChange :165, isDroppedEventsError :172,
+createWatcherErrorHandler :240 — plus Neo-owned
+improvements (trailing-edge debounce + serializing
+scheduler :186-235, baseline-then-resync :281).
+Two deltas only: no circuit breaker (cooldown
+only, :240-249 — flapping backend resyncs
+forever, every 5s) and every change costs a full
+resync (no single-file path — correct at native
+speed).
+
+Verdict: SKIP (already stolen; the port IS the
+evidence). STUDY delta: the circuit breaker
+(worker.ts:43-49) as a one-line hardening note.
+
+### 3. virtual/
+
+Problem: Panda (the CSS compiler) needed to scan
+code resolving to the generated system runtime
+without mutating user source — so virtual/ built
+a transformed source mirror under outDir/virtual
+(README: "what Panda scans"): full snapshots
+staged in `virtual.next` then published by atomic-
+ish dir swap (staging.ts:42; publishStagedDir:
+live→.prev, staged→live, EXDEV copy fallback,
+restore-on-failure, lib/fs/publish-staged-dir.ts:
+66); single-file watch sync with STREAMING marker
+prefilter (transform only files containing
+`@reference-ui/react`, tail-window scan without
+reading whole files, fs/copy.ts:104-140);
+MDX→JSX, cva/css import rewrites, responsive
+lowering, style-call neutralization in fixed order
+(transforms/index.ts:86); fragment-vs-source
+classification (isFragmentFile: imports from
+system/config surface → `virtual:fragment:change`
+→ config/Panda rebuild WITHOUT reference
+rebuild, fragments/detect.ts:24, run.ts:81);
+breakpoint table memoized per root, invalidated
+on fragment change (breakpoints/resolve.ts:64-84);
+reserved `__reference__ui` style collection that
+Panda scans directly (microbundle-inline locals,
+transform, write, style/collection.ts:70).
+
+Neo: deliberately MIRRORLESS — engine scans
+sourceRoot directly ("no virtual mirror, no
+staged declarations — both roots are the
+project", sync/index.ts:167-172). SYNC-02
+forbids the mirror; matrix virtual suite DROPped
+as retired contract. The whole subsystem is
+Panda-shaped: Panda needed import-rewritten
+scannable input; natives do not.
+
+Verdict: SKIP the mirror/transforms/collection
+(dead Panda constraint). STUDY two atoms as
+CORE-BONES: (a) staging-swap publish
+(lib/fs/publish-staged-dir.ts:66) — legacy
+failures restore previous-good; Neo's catch-clean
+(sync/index.ts:253-255) deletes EVERYTHING, so a
+failed sync leaves no folder rather than the last
+good one (availability regression; natural home:
+NEO-PACKAGER's assembly); (b) the streaming
+marker prefilter (fs/copy.ts:104) as prior art
+for scan avoidance if native scan ever regresses.
+
+### 4. bundlers/ (shared plugin substrate)
+
+Problem: two bundler plugins, one refresh
+discipline — buffer generated-output writes,
+flush only on session ready edges. bundlers/ is
+the shared leaf: path classification vs
+GENERATED_OUTPUT_ROOTS (outputs.ts:10);
+@parcel/watcher subscription over outDir filtered
+to managed roots (output-subscription.ts:7);
+in-memory write buffer remember/flush/clear
+(managed-writes.ts:6); project path resolution
+(project-paths.ts:8); session-refresh wiring with
+stop/dispose (sync-session.ts:6); internals-
+injection seam for tests
+(ReferenceBundlerInternals, types.ts:16).
+
+Neo: no bundler plugins (grep for referenceVite/
+handleHotUpdate in neo: zero src hits); WILL
+grow it — any HMR story needs exactly this
+discipline. Informal mirror only:
+LINKED_PACKAGES (sync/publish/links.ts:8) vs
+GENERATED_PACKAGE_NAMES (legacy constants.ts:8).
+
+Verdict: STUDY now (CORE-BONES: buffer-until-
+ready + managed-roots classification + internals
+seam), STEAL on trigger: Neo's first bundler
+plugin lands WITH this substrate, not after.
+
+### 5. vite plugin
+
+Problem: Vite dev HMR must never serve
+half-written generated files or refresh the
+browser before CSS+runtime are safe. Plugin
+(vite/plugin.ts:47): optimizeDeps.exclude for
+managed packages (optimize.ts:5,
+MANAGED_PACKAGES constants.ts:11);
+handleHotUpdate DEFERS managed-output updates AND
+token/theme/system source updates (return [] to
+swallow, :113-134) while remembering them
+(policy: hot-update-policy.ts:21-27, project-
+source leg :41-61); session-ready edge flushes
+ONE batched native payload (invalidateModule +
+deduped js/css updates, single timestamp,
+hot-updates.ts:6-51); defensive posture
+throughout (shape-check dev server :73,
+warn-once :37, never break dev :99-106);
+teardown on httpServer close + closeBundle
+(:86-111).
+
+Neo: nothing — no plugin, no HMR contract. Neo's
+react package ships styles.css into
+node_modules via junctions (links.ts:25) with no
+invalidation story; consumers get full reloads at
+best. WILL GROW; this is Neo's biggest missing
+consumer-visible capability after the packager.
+
+Verdict: STEAL (defer-until-ready policy +
+single-flush payload builder are the load-bearing
+shapes; warn-never-break is CORE-BONES
+discipline). DEPENDS ON §1 manifest STEAL — the
+flush signal has to exist first. Ranked with §1
+as one program below.
+
+### 6. webpack plugin
+
+Problem: same refresh discipline for Webpack:
+resolve aliases pin react/react-dom/scheduler +
+all @reference-ui/* to project node_modules
+(defeats duplicate copies, plugin.ts:33-61);
+cache off, unsafeCache off, snapshot.managedPaths
+emptied (generated files never snapshotted as
+immutable, :62-69); watchOptions.ignored extended
+via function/RegExp/string/array-preserving merge
+to skip mcp+virtual churn (watch-options.ts:7-22);
+session-ready flush → watching.invalidate()
+(plugin.ts:121-127).
+
+Neo: no webpack target at all. Voyage R4 (this
+log, R4) recommends retiring every webpack5 axis
+with its suite; no Neo consumer exists or is
+planned.
+
+Verdict: SKIP (dead constraint — no webpack
+target). STUDY-only if resurrected: alias
+pinning + snapshot busting (plugin.ts:28-69) and
+the ignore-merge preserving user config shape
+(watch-options.ts:39-57) are the two tricks,
+cited here so nobody re-derives them.
+
+### 7. clean/
+
+Problem: `ref clean` removes outDir + every
+node_modules/@reference-ui scope link, main-
+thread only, exit 0 even when absent — with the
+packager def list (PACKAGES × getShortName) as
+the single source of "generated"
+(clean/command.ts:15-37).
+
+Neo: solved BETTER. bin/neo.ts cmdClean (:70-81)
+removes outDir + links but verifies each link
+target points inside outDir before unlinking
+(isGeneratedLink :46-56 — a hand-placed dir is
+never touched; legacy unlinks blindly). Two
+drift nits filed (survey findings, NOT fixed —
+read-only crew): NIT-1: bin/neo.ts:13
+LINKED_PACKAGES misses 'types' (sync links 4,
+publish/links.ts:8; clean removes 3) → `neo
+clean` orphans the types junction (NEO-PACKAGER's
+derive-from-PACKAGES plan fixes it). NIT-2: cmdClean
+uses raw rmSync, not the ENOTEMPTY/EBUSY-retrying
+cleanDir (sync/clean.ts:31) built for the
+background tasty writer it races.
+
+Verdict: SKIP (Neo's target-verified unlink is
+the better shape). STUDY note: single-source the
+link list from defs (already in NEO-PACKAGER §2).
+
+### 8. tokens/
+
+Problem: MCP/editor tooling needs a flat token
+inventory (path/category/value/light/dark/
+description, types.ts:1) built from the SAME
+fragment sources sync uses: bundle local token
+fragments + upstream fragments with stamped
+provenance (wrapBundleWithSource via
+`__refCurrentFragmentSource` global marker,
+load.ts:53-59), eval in a temp file under
+outDir/tmp/token-fragments (load.ts:99-138),
+collect via collector script, flatten with
+`_private` stripped ONLY for upstream fragments
+(local `_private` kept, flattenTokenFragments
+:86-97), last-write-wins by path, sorted.
+
+Neo: mechanism SUPERSEDED, semantics ported.
+`_private` strip lives in fragments/base/merge
+(merge.test.ts:54-98); collection is native-
+side; config bundle/evaluate (config/bundle.ts,
+evaluate.ts) replaced the temp-eval idiom with
+cleaner seams; S6 reference/api.ts owns the
+MCP-facing surface (Worker D reconfirmed).
+
+Verdict: SKIP (temp-bundle-eval is dead;
+natives evaluate). STUDY atom: the flat McpToken
+shape (tokens/types.ts:1) as the MCP contract
+reference if S6's surface drifts.
+
+### 9. events wiring (sync/events.ts + event-bus + thread-pool)
+
+Problem: a Piscina multi-threaded pipeline (one
+long-lived task per worker, bootstrap.ts:22-28,
+config via workerData :23) needed cross-thread
+orchestration: typed central registry (Events =
+per-module slices, events.ts:15); BroadcastChannel
+transport with envelope/parse helpers
+(lib/event-bus/channel, README); orchestration
+combinators — forWorker ready-gating,
+combineTrigger barrier-with-flush, emitOnAny
+fan-in, onReady, afterFirst (events.utils.ts:
+46/116/69/104/82); watch-burst batching (50ms
+settle so checkouts/large refactors rebuild
+against the SETTLED snapshot, events.ts:31-74,
+rationale comment :65-67); full-resync
+serialization (in-flight + pending coalescing,
+:122-154); config refresh on dependency change
+preserving debug (:13-29). Hard-won caveat
+documented: BroadcastChannel never self-delivers,
+so main-thread completion/failure must observe
+worker events directly (complete.ts:31-37).
+
+Neo: HQ-REFUSED. "No event bus" (PLAN_TOKYO item
+7); sync() is a serial await chain
+(sync/index.ts:143-258). The problem (cross-
+thread orchestration) does not exist: one
+process, serial, fast natives. Neo's watch
+scheduler (watch.ts:186-235: debounce +
+serialize + coalesce-behind-in-flight) already
+reimplements the burst/coalescing halves.
+
+Verdict: SKIP the bus, pool, workers, ready-
+gating (Tokyo item 7 refuses them outright).
+STUDY as CORE-BONES: (a) the dependency-edge
+documentation discipline — events.ts:76-95 phase
+list + per-edge comments is what Tokyo's "recipe"
+should read like (as direct calls); (b) the
+mixed-A/B-state comment (:65-67) — steal the
+COMMENT into Neo watch.ts schedule(); (c)
+EVENT_READY.md — exhibit of ready-gating leaking
+boot mechanics into orchestration (what-not-to-
+do); (d) union-of-slices registry shape
+(events.ts:15) — IF Neo ever needs cross-
+subsystem signals, this is the shape.
+
+### 10. shutdown / failure-boundary / completion
+
+Problem: orderly teardown of a multi-handle
+process + honest failure UX per mode. SIGINT/
+SIGTERM → terminate tracked children (SIGTERM,
+wait, SIGKILL), shutdown pool, close log relay +
+bus, FORCE-EXIT after 5s (shutdown.ts:96-144,
+force timer :106, terminateTrackedProcesses
+:66); child pids tracked via process:spawned/
+exit bus events; spawnMonitoredAsync
+(lib/child-process/index.ts:21) captures
+stdout/stderr and distinguishes signal-kills with
+a user-facing message (:77-90);
+uncaughtException/unhandledRejection → log + emit
+sync:failed (manifest goes failed) + exit 1
+(failure-boundary.ts:15-32); watch-vs-oneshot
+UX split (watch: warn + "waiting for next
+change" + `[ref sync] failed` stderr sentinel
+for harnesses, logging/index.ts:86-104; one-shot:
+error + exit 1, complete.ts:42-56); watch
+readiness = stylesheet-on-disk AND runtime-copy-
+complete with SEQUENCE GUARDS against stale-cycle
+ready (changeSeq/buildingSeq/cssSeq/packageSeq,
+watch-ready.ts:16-62); milestone timing lines
+(duration-since-previous, logging/index.ts:58).
+
+Neo: thin. bin/neo.ts cmdWatch wires SIGINT/
+SIGTERM → handle.stop() (:108-115) but with NO
+timeout/force-exit (a wedged native call wedges
+Ctrl-C — stop() awaits the in-flight sync,
+watch.ts:318-328, unbounded); NO failure net
+anywhere (grep for uncaughtException/
+unhandledRejection/SIGINT in neo/src: zero hits —
+only bin/neo.ts:114-115); no tracked children
+(Neo spawns nothing — no tsup/dts fan-out — so
+that half is moot); watch resync failure logs
+and keeps watching (watch.ts:299-306, stdout
+console.log bin/neo.ts:104 — greppable but
+unstamped, no stderr sentinel contract); no
+milestone timing (phases.ts is bench-only,
+env-gated :19).
+
+Verdict: STEAL two atoms — (a) the uncaught-
+failure boundary (failure-boundary.ts:15-32:
+log + mark-failed + exit 1; Neo's mark-failed =
+existing catch-clean, sync/index.ts:253 — the
+gap is throws OUTSIDE sync() dying raw); (b) the
+force-exit timeout (shutdown.ts:106-110: shutdown
+that cannot hang). STUDY two — (c) watch-ready
+sequence guards (watch-ready.ts:16-62: stale-
+cycle protection travels WITH the §1 manifest
+STEAL); (d) the `[ref sync] failed` stderr
+sentinel (logging/index.ts:7,101-103) as
+harness-contract precedent. SKIP the rest
+(child tracking — Neo spawns nothing; pool/bus
+teardown — no pool/bus).
+
+### 11. microbundle (+ alias plugin)
+
+Problem: in-memory esbuild bundling of config/
+fragment sources with module-id aliasing
+(aliasPlugin: exact-match onResolve to absolute
+paths, e.g. @reference-ui/system → CLI entry,
+plugins/alias.ts:8-17) plus shared option
+assembly (build-options.ts) and externals
+(externals.ts).
+
+Neo: PORTED AND IMPROVED. Neo lib/microbundle
+is self-described "Neo-owned copy" (file
+headers); diff-verified vs legacy: panda
+externals dropped (@pandacss/dev, tsup,
+unconfig…), react/react-dom externalized,
+sourcemap/outfile support added, js/map
+disambiguated by extension (not output order),
+plus Neo's own react-stub plugin
+(plugins/react-stub.ts — zero-runtime proxy).
+
+Verdict: SKIP (already stolen; Neo's deltas are
+its own hardening — nothing to take back).
+
+### 12. paths/ + global registry
+
+Problem: one home for path resolution — outDir,
+tmp (outDir/tmp + project tmp), virtual dir,
+ref-config discovery, core self-location for
+worker entries + bundled entry basenames
+(lib/paths/index.ts:1-14; virtual-dir.ts:5;
+core-dist, core-package-dir) — plus a GLOBAL
+cross-project registry
+(~/.reference-ui/registry.json: projectPath →
+{configPath, lastActive}): sanitized on read
+(:31-66), atomic tmp+rename writes (:88-98),
+corruption → .bak + fresh (:57-65),
+REF_REGISTRY_PATH override (:26), writes
+never-fatal (:95-97). Writers: core registers
+every project on config load (config/load.ts);
+readers: the MCP server (project
+discovery/switching — outside legacy src;
+matrix/mcp scope per Worker C).
+
+Neo: partially ported WITH INTENT. Neo
+lib/paths/index.ts:1-6 carries ref-config +
+out-dir + tmp and states "The virtual dir and
+the global registry deliberately do not come
+across." Both correct: no mirror (see §3), no
+MCP server yet (no registry reader exists).
+
+Verdict: SKIP virtual-dir (dead with the
+mirror) + SKIP core self-location (no workers/
+tsup fan-out to locate). STUDY the registry
+(global-registry.ts:31-98 — sanitize-on-read,
+atomic write, never-fail, test override) as
+CORE-BONES with steal-trigger: the day Neo
+grows MCP project switching, this file is the
+spec.
+
+### 13. packager/ skim (sibling-owned — no duplication)
+
+Skim-confirmed the NEO-PACKAGER study §1
+firsthand: PACKAGES/RUNTIME/FINAL split
+(packages.ts:117-130), PackageDefinition +
+createBundleExports + getShortName (package/),
+layout helpers (layout.ts), bundle→postprocess→
+publish order (install/index.ts:52), named
+postprocess registry (postprocess/index.ts:22:
+injectLayerName, rewriteTypesRuntimeImport),
+externals policy (bundler/esbuild.ts:6-23 —
+notably NEVER @reference-ui/react/system:
+self-contained bundles), install modes
+(build.ts:4 copy vs dev.ts:4 symlink). No
+disagreement with any direction they logged —
+their externals read (self-contained bundles as
+the HERMDIV answer) matches the files, and
+their leave-behind list (workers, ts/ fan-out,
+injectLayerName, copy-mode install,
+writeIfChanged, asset dir-copy) is sound. One
+cross-link for their assembly: the §3 staging-
+swap (publishStagedDir) belongs in their
+`assembleSystem` consideration set — failure
+atomicity is currently NOBODY's item (Neo
+catch-clean deletes; legacy restored).
+
+### 14. corroboration: the sync recipe (Tokyo item 7)
+
+Legacy sync/command.ts:19-34 is the ~15-line
+recipe Tokyo item 7 already crowns (bootstrap,
+then init* hub owning nothing); run.ts:5 wraps
+it via runCommand (lib/run/index.ts:14: catch →
+red ✗ + exit 1); index.ts re-exports the thin
+surface. Neo sync/index.ts:143 is the 100-line
+kitchen-sink counter-exhibit (Tokyo item 7's
+"2600+ lines across 19 entries" starts here).
+Nothing new — recorded so the survey covers the
+"session/…paths/registry" brief plus the recipe
+it orbits: STEAL, already adopted by the map.
+
+### Ranked STEAL list (top 5, by Tokyo leverage)
+
+1. Session ready-edge protocol (§1: state.ts,
+   files.ts:33-52, public.ts:58-96, watch.ts) —
+   the cross-process readiness contract; unlocks
+   the entire bundler/HMR story and any editor
+   integration. Prerequisite for #2.
+2. Vite defer-until-ready + single-flush payload
+   (§5: hot-update-policy.ts:21, hot-updates.ts:6,
+   plugin.ts:113-134) + bundlers/ substrate (§4)
+   — Neo's biggest missing consumer-visible
+   capability; lands as one program with #1.
+3. Watch-lock O_EXCL single-owner (§1:
+   files.ts:87-110, watch-lock.ts:10) — tiny,
+   prevents the live concurrent-watch corruption
+   hazard; stealable independently of #1.
+4. Staging-swap publish (§3:
+   lib/fs/publish-staged-dir.ts:66 via
+   staging.ts:42) — failed syncs should restore
+   previous-good, not delete (Neo
+   sync/index.ts:253-255); home: packager
+   assembly; CORE-BONES atomicity exhibit.
+5. Failure boundary + force-exit shutdown (§10:
+   failure-boundary.ts:15-32, shutdown.ts:106-110)
+   — resident watch must neither hang on Ctrl-C
+   (unbounded stop()) nor die raw on uncaught
+   throws; smallest STEAL on the list.
+
+Findings filed, not fixed (read-only crew):
+NIT-1 (bin/neo.ts:13 misses 'types' in
+LINKED_PACKAGES → orphaned junction after
+`neo clean`; NEO-PACKAGER derivation fixes it),
+NIT-2 (bin/neo.ts cmdClean bypasses cleanDir
+retry, sync/clean.ts:31), watch circuit-breaker
+delta (§2), mixed-A/B comment steal (§9b).
+
+## Tick — parked; NEO-PACKAGER alive (WORKING § filed, fixture tsup + tree products landing), LEGACY-SURVEY DONE filed, no action.
+
+## PKG-STABILITY (crew, 2026-09-23) — DONE
+
+Scope (strict): stability fix ONLY — hermetic HERMDIV
+confirmation + minimal package-shape fix + matrix chain
+re-gate. No PostCSS migration (packed-css.ts untouched),
+no layout moves, no sync slimming, no rearch. Skills
+`agent-neo` + `test-core` loaded first (`pnpm agent`
+only for matrix/playwright; no raw runners, no /tmp
+consumer repros). Read: LOG-2 HERMDIV interim + ticks,
+PLAN_TOKYO.md items 1+6. Crews never commit; report,
+don't land.
+
+### 1. CONFIRM — hermetic root cause, byte proof
+
+Technique (ordered, both reverted after): temp exfil
+spec `matrix/tests/chain/T1/tests/e2e/zz-debug.spec.ts`
+(deliberately-failing expect carrying a JSON payload:
+DOM class attributes, consumer-`css()` probe over the
+tier's own bundle URL, loaded `react.mjs` resource
+URLs, sheet stats + head, paint) + temporary FAIL-ROW
+printer in `pipeline/.../playwright-reporter.ts`
+`onTestEnd` (double-escaped `\\n`, 8000-char cap; full
+output surfaces — no truncation in reporting.ts).
+
+Native exfil (`pnpm agent playwright --dir
+matrix/tests/chain/T1 --no-build -g zz-debug`):
+DOM `extend-library__bg-c_fixtureDemoBg
+extend-library__c_fixtureDemoText ...` (7 classes);
+consumer probe `chain-t1__bg-c_fixtureDemoBg
+chain-t1__c_fixtureDemoText` (DIFFERS from DOM → two
+bundles); `reactUrls` TWO (`/.../T1/.reference-ui/
+react/react.mjs` + `/@fs/.../fixtures/extend-library/
+.reference-ui/react/react.mjs`); sheet 3660B, 27
+extend hits, head `@layer extend-library, chain-t1;`;
+paint `rgb(15, 23, 42)`.
+
+Hermetic exfil (`pnpm agent test
+--packages=@matrix/chain-t1`, FAIL-ROW output):
+DOM `chain-t1__bg-c_fixtureDemoBg
+chain-t1__c_fixtureDemoText ...` (same 7 slots,
+CONSUMER prefix); consumer probe byte-EQUAL to DOM
+(single bundle); `reactUrls` ONE (consumer's only);
+sheet 3660B / 27 / same head — BYTE-IDENTICAL to
+native; paint `rgba(0, 0, 0, 0)`.
+
+Root cause CONFIRMED hermetically: the packed
+fixture dist's `@reference-ui/react` import resolves
+to the CONSUMER's bundle in the container (no nested
+provider exists in the installed tarball) vs the
+fixture's OWN junction natively. Consumer-system
+`css()` emits `chain-t1__*` classes for fixture
+components; the merged sheet carries only
+`extend-library__*` rules → triage-identical unstyled
+paint despite a byte-identical sheet. HERMDIV
+interim's "presumably" is now measured fact.
+
+### 2. FIX — minimal ship-shape change (5 files)
+
+Fork analysis: (a) fixtures ship their own runtime
+bundle, (b) consumer adopts the upstream runtime,
+(c) minimal ship-list/externals change. (b) REFUSED
+(engine rearch: `css()` cannot attribute calls to a
+system — multi-system registry work, out of wave).
+Ship-list needs NOTHING (`files[]` already ships
+dist; bundling changes dist bytes only). So (a)==(c):
+drop the 4 `@reference-ui/*` lines from the 5
+extend/meta tsup `external` lists → fixtures inline
+their own system-bound runtime at build, like the
+layer fixtures ALREADY do (layer tsup has no such
+externals; layer dist imports only `react` —
+verified pre-fix). Kept external: `react`,
+`react/jsx-runtime` (host-provided, dispatcher-safe),
+meta `@fixtures/*` (declared deps, installed nested).
+
+Why the externals existed: Panda-era leftover. Panda
+classes are content-hashed and system-independent,
+so the provider never mattered; Neo classes are
+system-namespaced (`name(query, tables,
+active.system)`), so the provider IS the emitted
+prefix. A packed fixture must be self-providing.
+
+Files (only): `matrix/fixtures/{extend-library,
+extend-library-2,meta-extend-library,
+meta-extend-library-2,
+meta-extend-library-sibling}/tsup.config.ts`.
+No neo/src, no pipeline, no matrix-suite changes.
+
+CONVERGENCE (disclosed, not mine): sibling
+NEO-PACKAGER crew independently diagnosed the same
+fork mid-flight and refactored my 5 files' literals
+into `SHIPPABLE_UNIT_EXTERNALS` imports from their
+new `src/packager/externals.ts` (values identical:
+`['react', 'react/jsx-runtime']` + meta `@fixtures/*`;
+my comments kept + ownership lines). Current tree
+carries their spelling; my proofs below ran on
+values identical under both spellings (native T1 on
+my literals; hermetic re-gate across the rewrite
+window — externals values, hence dists, identical
+either way). Landing-shape choice (literal vs
+import) is the captain's; either proves the gate.
+
+### 3. PROVE — gates (all firsthand, commands verbatim)
+
+- Fixture builds (real path): `pnpm run build`
+  (sync + tsup + tsc + build-package asserts) exit 0
+  in all 5 changed fixtures. Dist sweep: all 7
+  `dist/index.mjs` carry ZERO `@reference-ui/*` and
+  ZERO `@fixtures/*` imports (only `react`);
+  `registerRuntimeData` bundled (4 hits, extend).
+  (One transient red mid-flight: source-shim sync
+  failed on sibling's half-written packager edit;
+  green on retry — sibling's tree, not this fix.)
+- Native T1 post-fix: `pnpm agent playwright --dir
+  matrix/tests/chain/T1 --no-build` → 7 passed (0
+  failed). Bundled dist paints identically.
+- Full Neo suite: `pnpm agentneo run` → 197/197 ok
+  (exit 0, last-run.json), incl. CHAIN-01..06,
+  CLI-01/02, WATCH-01, all REF. (No neo files
+  touched by this wave; suite is regression proof.)
+- Hermetic re-gate, per-package (fail-fast is
+  hard-coded; D17 reds expected): `pnpm agent test
+  --packages=@matrix/<pkg>` × 12:
+
+| Pkg | Hermetic | Native | Match |
+|---|---|---|---|
+| chain-t1 | unit 3/3; PW 7/0 | 7/0 | EXACT, was 4/3 |
+| chain-t2 | unit 3/3; PW 2/1 | 2/1 | EXACT (D17 row 4) |
+| chain-t3 | unit 3/3; PW 6/1 | 6/1 | EXACT (D17 row 8) |
+| chain-t6 | PW 5/0 | 5/0 | EXACT |
+| chain-t7 | PW 5/0 | 5/0 | EXACT |
+| chain-t8 | PW 4/0 | 4/0 | EXACT |
+| chain-t9 | PW 3/3 | 3/3 | EXACT (D17 rows 20/21/22) |
+| chain-t10 | PW 2/1 | 2/1 | EXACT (D17 row 24) |
+| chain-t11 | PW 3/0 | 3/0 | EXACT |
+| chain-t12 | PW 2/1 | 2/1 | EXACT (D17 row 28) |
+| chain-t13 | PW 3/1 | 3/1 | EXACT (D17 row 31) |
+| mcp | 18 files, 73/73 | — | GREEN (packed-fixture consumer) |
+
+- D17-only rigor: native line-reporter capture on
+  the 6 red tiers post-fix shows the failing titles
+  are exactly triage rows 4 (T2-L18), 8 (T3-L50),
+  20/21/22 (T9-L31/L38/L45-test=L65-assert),
+  24 (T10-L30), 28 (T12-L30), 31 (T13-L42) — all
+  layers legs. Hermetic counts equal native on all
+  12 → same transfer rule as triage (names follow
+  counts). Zero fix-now rows remain; the 8 reds are
+  the filed D17 deferral (+HQ land ruling pending).
+- Evidence: /tmp/pkgstab-{t1..t13,mcp}.log
+  (hermetic), /tmp/pkgstab-nat-{T2,T3,T9,T10,T12,
+  T13}.log (native titles). Full-run T1 exfil
+  payloads in §1 (native + hermetic runs).
+
+### Hygiene + DONE
+
+Diagnostics reverted BEFORE the fix landed in the
+gate: reporter patch restored byte-identical
+(`git diff` empty), zz-debug spec deleted,
+test-results removed. Final footprint: the 5 tsup
+configs (externals values; spelling now the
+sibling's import per CONVERGENCE) + this log.
+Everything else in the tree is other sessions'
+(LOGs, NEO-PACKAGER refactor). No commits, index
+untouched, no installs in-repo beyond the ordered
+builds (dists/.reference-ui gitignored).
+
+PKG-STABILITY DONE: hermetic confirmation with byte
+proof (consumer-bundle resolution) + minimal fix in
+tree (fixtures self-provide the system-bound
+runtime) + green gates (Neo 197/197, hermetic 12/12
+count-identical to native, D17-only reds). HERMDIV
+closed: T1 hermetic was 4/3, now 7/0. Report, don't
+land. Open for captain: landing spelling
+(literal-vs-import) + D17/H4 land ruling.

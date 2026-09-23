@@ -4,8 +4,10 @@
 
 import { lstatSync, mkdirSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { getShortName } from '../../packager/layout.ts'
+import { PACKAGES } from '../../packager/packages.ts'
 
-const LINKED_PACKAGES = ['system', 'styled', 'react', 'types'] as const
+const LINKED_PACKAGES = PACKAGES.map(pkg => getShortName(pkg.name))
 
 function replaceLink(targetDir: string, linkPath: string): void {
   try {

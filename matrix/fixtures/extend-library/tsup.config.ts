@@ -1,17 +1,17 @@
 import { defineConfig } from 'tsup'
+import { SHIPPABLE_UNIT_EXTERNALS } from '../../../packages/reference-neo/src/packager/externals.ts'
 
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
   },
-  external: [
-    'react',
-    'react/jsx-runtime',
-    '@reference-ui/react',
-    '@reference-ui/react/*',
-    '@reference-ui/system',
-    '@reference-ui/system/*',
-  ],
+  // Neo runtimes are system-namespaced: the fixture bundles its own
+  // @reference-ui/react + @reference-ui/system providers so packed
+  // consumers resolve identically to workspace consumers (PKG-STABILITY).
+  // Only react (host-provided, dispatcher-safe) stays external. The list
+  // is owned by the Neo packager (NEO-PACKAGER): fixtures import it, never
+  // mirror it, so the policy can only drift in one place.
+  external: SHIPPABLE_UNIT_EXTERNALS,
   format: ['esm'],
   dts: false,
   splitting: false,

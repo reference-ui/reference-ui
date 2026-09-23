@@ -1,0 +1,20 @@
+// Input shapes for the Neo packager assembly.
+// It takes nothing at runtime and emits the publish input sync fills from compile output plus the assembly input the packager runs on.
+// The assembly input is the packager's entire contract with sync: everything packaging needs, nothing it doesn't.
+
+import type { EvaluatedSystemSpec, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
+import type { JsxElementsArtifact } from '../sync/jsx-elements.ts'
+
+export interface PublishInput {
+  outDir: string
+  spec: EvaluatedSystemSpec
+  portableFragment: string
+  stylesheet: string
+  portableStylesheet: string
+  jsx: JsxElementsArtifact
+}
+
+/** Full assembly input: the publish input plus the compiled runtime artifact the bundle legs bind. */
+export interface AssemblyInput extends PublishInput {
+  runtime: NativeRuntimeArtifact
+}

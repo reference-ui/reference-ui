@@ -6,7 +6,7 @@
 // The go-file handshake lets the parent attach `sample` before timing starts;
 // the RSS timeline ticks around the whole sync. Emits one JSON line on stdout.
 
-import { existsSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
@@ -21,7 +21,11 @@ import {
 import { resolveJsxElements } from '../../src/sync/jsx-elements.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'
-import { linkGeneratedPackages, publishRuntimeBundle, publishSyncFolder, publishTypesBundle } from '../../src/sync/publish.ts'
+import { linkGeneratedPackages } from '../../src/sync/publish/links.ts'
+import { publishRuntimeBundle, writeStyledDir } from '../../src/sync/publish/styled.ts'
+import { writeSystemDir } from '../../src/sync/publish/system.ts'
+import { writeReactDir } from '../../src/sync/publish/react-shell.ts'
+import { publishTypesBundle } from '../../src/sync/publish/types-bundle.ts'
 import { publishReactBundle } from '../../src/sync/react.ts'
 
 interface WorkerArgs {
@@ -114,14 +118,18 @@ async function main(): Promise<void> {
 
   const publishAt = performance.now()
   const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
-  publishSyncFolder({
+  const publishInput = {
     outDir,
     spec,
     portableFragment: createPortableFragmentBundle(prepared),
     stylesheet: result.stylesheet,
     portableStylesheet: result.portableStylesheet ?? '',
     jsx,
-  })
+  }
+  mkdirSync(outDir, { recursive: true })
+  writeSystemDir(publishInput)
+  writeStyledDir(publishInput)
+  writeReactDir(publishInput)
   writeFileSync(join(outDir, 'system', 'compile-request.json'), `${JSON.stringify({ ...request, files: undefined }, null, 2)}\n`, 'utf-8')
   await publishRuntimeBundle(outDir, spec.name, result.runtime)
   await publishReactBundle({

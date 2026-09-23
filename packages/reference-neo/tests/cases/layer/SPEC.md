@@ -5,7 +5,7 @@ six-layer order statement, which bodies may be omitted, where reset,
 keyframes, font-faces, recipes, and utilities live, and how two systems nest
 without clobbering each other. Layer order — not specificity — decides who
 wins; every row here asserts a computed-style consequence of that order, never
-sheet text alone. This group owns `src/sync/publish.ts` (CSS assembly only).
+sheet text alone. This group owns `src/packager/assembly.ts` (CSS assembly only).
 
 ## Dialect
 

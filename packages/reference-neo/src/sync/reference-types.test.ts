@@ -12,9 +12,10 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { publishReactBundle } from './react.ts'
-import { publishReferenceTypesBundle, rewriteTypesRuntimeImport } from './reference-types.ts'
+import { publishReferenceTypesBundle } from './reference-types.ts'
+import { rewriteTypesRuntimeImport } from '../packager/postprocess/rewrite-types-runtime-import.ts'
 import { linkGeneratedPackages } from './publish/links.ts'
-import { BASE_SYSTEM_HEADER } from './publish/types.ts'
+import { BASE_SYSTEM_HEADER } from '../packager/constants.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ENTRY_SOURCE = join(HERE, '..', 'entry', 'types.tsx')

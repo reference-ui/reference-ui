@@ -30,6 +30,16 @@ this file in the same pass.
   Owned by `reference-rs/contracts`, never redefined.
 - **publish** — writing `.reference-ui/{system,styled,react}` from
   Rust's output.
+- **packager** — the subsystem (`src/packager/`) that owns the
+  generated package set as declarative definitions, the manifests,
+  the externals policies, the assembly order, and the named
+  postprocess passes. Sync calls one entry with the compile output;
+  the legs execute the definitions.
+- **ship-list** — what a packed system unit ships: its
+  self-contained dist (runtime inlined, only host React edges
+  external) plus the baseSystem pair. The fixture build configs
+  import the externals policy from the packager; they never mirror
+  it.
 - **Neo** — the code word for this runtime rebuild. Retires if
   promoted to core.
 - **author surface** — the one entry behind the `@reference-ui/neo`

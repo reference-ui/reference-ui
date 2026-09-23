@@ -5,36 +5,16 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
-import { BASE_SYSTEM_HEADER, GENERATED_VERSION, type PublishInput } from './types.ts'
+import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
+import { writePackageJson } from '../../packager/manifest.ts'
+import { STYLED_PACKAGE } from '../../packager/packages.ts'
+import type { PublishInput } from '../../packager/types.ts'
 
 export function writeStyledDir(input: PublishInput): void {
   const dir = join(input.outDir, 'styled')
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'styles.css'), input.stylesheet, 'utf-8')
-  writeFileSync(
-    join(dir, 'package.json'),
-    `${JSON.stringify(
-      {
-        name: '@reference-ui/styled',
-        version: GENERATED_VERSION,
-        description: 'Neo generated styled output',
-        type: 'module',
-        main: './runtime-data.mjs',
-        types: './index.d.ts',
-        exports: {
-          '.': { types: './index.d.ts', import: './runtime-data.mjs' },
-          './runtime-data': { import: './runtime-data.mjs' },
-          './styles.css': './styles.css',
-          './tokens': { types: './tokens.d.ts' },
-          './types': { types: './types/index.d.ts' },
-          './types/*': { types: './types/*.d.ts' },
-        },
-      },
-      null,
-      2
-    )}\n`,
-    'utf-8'
-  )
+  writePackageJson(dir, STYLED_PACKAGE)
 }
 
 /**

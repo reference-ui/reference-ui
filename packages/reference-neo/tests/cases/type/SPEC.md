@@ -4,7 +4,7 @@ After `sync()`, the generated declarations type real consumer code: a world
 importing primitives, `css`/`recipe`, and named types from `@reference-ui/react`
 compiles clean, token unions and recipe variants reject bad literals, and the
 system authoring surface typechecks in fragment files. This group owns
-`src/sync/publish.ts` (types publish only) and `tsconfig.json` `paths`.
+`src/packager/assembly.ts` (types publish only) and `tsconfig.json` `paths`.
 Existing: none — all six rows start `open`.
 
 ## Dialect

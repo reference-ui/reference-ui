@@ -7,7 +7,10 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { BaseSystem } from '../../config/types.ts'
-import { BASE_SYSTEM_HEADER, GENERATED_VERSION, type PublishInput } from './types.ts'
+import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
+import { writePackageJson } from '../../packager/manifest.ts'
+import { SYSTEM_PACKAGE } from '../../packager/packages.ts'
+import type { PublishInput } from '../../packager/types.ts'
 
 function publishedBaseSystem(input: PublishInput): BaseSystem {
   return {
@@ -113,24 +116,5 @@ export function writeSystemDir(input: PublishInput): void {
   writeFileSync(join(dir, 'system.d.mts'), systemTypesSource(), 'utf-8')
   writeFileSync(join(dir, 'evaluated-system.json'), `${JSON.stringify(input.spec, null, 2)}\n`, 'utf-8')
   writeFileSync(join(dir, 'jsx-elements.json'), `${JSON.stringify(input.jsx, null, 2)}\n`, 'utf-8')
-  writeFileSync(
-    join(dir, 'package.json'),
-    `${JSON.stringify(
-      {
-        name: '@reference-ui/system',
-        version: GENERATED_VERSION,
-        description: 'Neo generated design system',
-        type: 'module',
-        main: './system.mjs',
-        types: './system.d.mts',
-        exports: {
-          '.': { types: './system.d.mts', import: './system.mjs' },
-          './baseSystem': { types: './baseSystem.d.mts', import: './baseSystem.mjs' },
-        },
-      },
-      null,
-      2
-    )}\n`,
-    'utf-8'
-  )
+  writePackageJson(dir, SYSTEM_PACKAGE)
 }

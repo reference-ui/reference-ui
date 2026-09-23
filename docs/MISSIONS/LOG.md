@@ -60,3 +60,7 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 
 ## VOYAGE PARKED (HQ order 2026-09-23) — next effort is reference-neo polish
 - RS proved its point (doom testing reserved for nights). Voyage paused: Obj1/Obj3 COMPLETE, Obj2 one gate out (HERMDIV interim filed in LOG-2.md). LANDING queued. Resume checklist in LOG-2.md.
+
+## Tick — parked; PKG wave active per HQ post-park order, crew running, no action.
+
+## Tick — parked; packager crew live with work products, survey delivered top-5, no action.
