@@ -15,6 +15,7 @@ use super::serializer::{serialize_lookup_key, LookupKey};
 use super::values::{is_duplicate, json_to_atom_value, RefusalSite, RefuseR};
 use crate::atom::{AtomSet, AtomValue, Want};
 use crate::diagnostics::{Diagnostic, DiagnosticLocation};
+use crate::lanes::{Lanes, WorkKind};
 use crate::resolve::{resolve_want_with, ResolveSession};
 use crate::stylesheet::name::class_name_with_system;
 
@@ -186,6 +187,9 @@ impl<'a> PlanBuilder<'a> {
         decls: &[AuthoredDeclaration],
         diet: bool,
     ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
+        if let Some(guard) = Lanes::Auto.guard(WorkKind::TailWants, decls.len()) {
+            return super::plan_pool::build_keyed(self, decls, diet, &guard);
+        }
         // Plans, keys, and seen keys are bounded by the decl count.
         let mut plans = Vec::with_capacity(decls.len());
         let mut keys = Vec::with_capacity(decls.len());
@@ -367,6 +371,39 @@ impl<'a> PlanBuilder<'a> {
         }
         out
     }
+
+    /// Resolve one declaration on a private atom set and diagnostic list.
+    /// The caller inserts the atoms and dedupes the lines in decl order.
+    pub(crate) fn resolve_detached(
+        system: &str,
+        base_system: &BaseSystem,
+        decl: &AuthoredDeclaration,
+        diet: bool,
+    ) -> DetachedDecl {
+        let mut atoms = AtomSet::new();
+        let mut diagnostics = Vec::new();
+        let declarations = {
+            let mut builder = PlanBuilder {
+                system,
+                base_system,
+                atom_set: &mut atoms,
+                diagnostics: &mut diagnostics,
+            };
+            builder.resolve_entry(decl, diet)
+        };
+        DetachedDecl {
+            declarations,
+            atoms,
+            diagnostics,
+        }
+    }
+}
+
+/// One declaration resolved away from the shared atom set.
+pub(crate) struct DetachedDecl {
+    pub declarations: Vec<RuntimeDeclaration>,
+    pub atoms: AtomSet,
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 /// Object slot: a breakpoint key joins the `@` responsive family; any other

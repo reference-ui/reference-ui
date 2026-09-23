@@ -97,16 +97,7 @@ pub struct AnalysisCtx<'a> {
 /// Predict exact expected lookups plus dynamic-shape facts for every source.
 /// Sources keep their input order and each becomes one [`SourceId`] by index.
 pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
-    let mut hosts = FxHashSet::default();
-    hosts.extend(input.hosts.traced.iter().cloned());
-    hosts.extend(input.hosts.configured.iter().cloned());
-    let ctx = AnalysisCtx {
-        hosts,
-        owned_props: &input.hosts.owned_props,
-        constants: input.constants,
-        system: input.system,
-        style_props: crate::runtime::get_style_prop_names().into_iter().collect(),
-    };
+    let ctx = context(input.hosts, input.constants, input.system);
     let mut facts = Vec::new();
     for (index, source) in input.sources.iter().enumerate() {
         let source_id = SourceId(index as u32);
@@ -120,9 +111,27 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
     facts
 }
 
+/// Hosts, constants, and system name shared by every per-file analysis.
+pub(crate) fn context<'a>(
+    hosts: &'a ResolvedHosts,
+    constants: &'a LocalConstants,
+    system: &'a str,
+) -> AnalysisCtx<'a> {
+    let mut names = FxHashSet::default();
+    names.extend(hosts.traced.iter().cloned());
+    names.extend(hosts.configured.iter().cloned());
+    AnalysisCtx {
+        hosts: names,
+        owned_props: &hosts.owned_props,
+        constants,
+        system,
+        style_props: crate::runtime::get_style_prop_names().into_iter().collect(),
+    }
+}
+
 /// The facts one unskipped source predicts: each surface runs only when
 /// its bytes are present, and the import scan runs once for both.
-fn source_facts(
+pub(crate) fn source_facts(
     ctx: &AnalysisCtx<'_>,
     source_id: SourceId,
     source: &AnalyzedSource<'_>,

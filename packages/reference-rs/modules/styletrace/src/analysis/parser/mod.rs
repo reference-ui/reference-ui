@@ -62,7 +62,7 @@ pub(super) fn parse_trace_module(
 ) -> Result<TraceModule, StyleTraceError> {
     let source = module_source(path, sources.staged)?;
     if let Some(program) = sources.programs.get(path) {
-        return trace_program(path, workspace_root, &source, program, surface);
+        return fold_trace_module(path, workspace_root, &source, program, surface);
     }
 
     let allocator = Allocator::default();
@@ -79,14 +79,14 @@ pub(super) fn parse_trace_module(
         )));
     }
 
-    trace_program(path, workspace_root, &source, &parsed.program, surface)
+    fold_trace_module(path, workspace_root, &source, &parsed.program, surface)
 }
 
 /// Fold one program's top level into its trace module. Shared by the
 /// fresh-parse path and the retained-program reuse path: a reused program
 /// comes from the same bytes with identical options, so the walk observes
 /// exactly what a fresh parse of `source` would produce.
-fn trace_program(
+pub fn fold_trace_module(
     path: &Path,
     workspace_root: &Path,
     source: &str,

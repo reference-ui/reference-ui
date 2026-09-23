@@ -194,6 +194,30 @@ pub fn trace_style_bindings_with_surface(
     .trace(entries)
 }
 
+/// Entries plus the pre-folded modules they trace against. A path present
+/// in `modules` is not parsed again; every other entry and edge parses
+/// from `sources` exactly as before.
+pub struct ModulesTraceInputs<'a> {
+    pub entries: &'a [PathBuf],
+    pub source_root: &'a Path,
+    pub package_root: &'a Path,
+    pub surface: &'a StyleSurface,
+    pub modules: BTreeMap<PathBuf, TraceModule>,
+    pub sources: &'a TraceSources<'a>,
+}
+
+/// Trace explicit entries against modules already folded from programs the
+/// caller still holds.
+pub fn trace_style_bindings_with_modules(inputs: ModulesTraceInputs<'_>) -> TraceOutcome {
+    SurfaceTraceSession {
+        source_root: inputs.source_root,
+        package_root: inputs.package_root,
+        surface: inputs.surface,
+        sources: inputs.sources,
+    }
+    .trace_with(inputs.entries, inputs.modules)
+}
+
 /// Session threading surface sets through entry parsing and the walk.
 struct SurfaceTraceSession<'a> {
     source_root: &'a Path,
@@ -204,15 +228,19 @@ struct SurfaceTraceSession<'a> {
 
 impl SurfaceTraceSession<'_> {
     fn trace(&self, entries: &[PathBuf]) -> TraceOutcome {
+        self.trace_with(entries, BTreeMap::new())
+    }
+
+    /// Walk `modules` as already parsed, and parse only the entries they omit.
+    fn trace_with(
+        &self,
+        entries: &[PathBuf],
+        mut modules: BTreeMap<PathBuf, TraceModule>,
+    ) -> TraceOutcome {
         let mut diagnostics = Vec::new();
-        let modules = self.parse_entries(entries, &mut diagnostics);
+        self.parse_missing(entries, &mut modules, &mut diagnostics);
         let (bindings, mut owned_props) = self.walk(modules, &mut diagnostics);
-        for (host, names) in &self.surface.owned_props {
-            owned_props
-                .entry(host.clone())
-                .or_default()
-                .extend(names.iter().cloned());
-        }
+        union_surface_props(&self.surface.owned_props, &mut owned_props);
         TraceOutcome {
             bindings,
             diagnostics,
@@ -220,14 +248,17 @@ impl SurfaceTraceSession<'_> {
         }
     }
 
-    /// Parse entries, recording one diagnostic per unparsable file.
-    fn parse_entries(
+    /// Parse entries the caller did not fold, recording one diagnostic per failure.
+    fn parse_missing(
         &self,
         entries: &[PathBuf],
+        modules: &mut BTreeMap<PathBuf, TraceModule>,
         diagnostics: &mut Vec<TraceDiagnostic>,
-    ) -> BTreeMap<PathBuf, TraceModule> {
-        let mut modules = BTreeMap::new();
+    ) {
         for entry in entries {
+            if modules.contains_key(entry) {
+                continue;
+            }
             match parse_trace_module(entry, self.package_root, self.surface, self.sources) {
                 Ok(module) => {
                     modules.insert(entry.clone(), module);
@@ -237,7 +268,6 @@ impl SurfaceTraceSession<'_> {
                 }
             }
         }
-        modules
     }
 
     /// Walk parsed entries, folding edge diagnostics behind entry ones.
@@ -263,5 +293,18 @@ impl SurfaceTraceSession<'_> {
         };
         diagnostics.extend(analyzer.take_diagnostics());
         (bindings, analyzer.take_owned_props())
+    }
+}
+
+/// Union the surface's seeded owned props into the traced map.
+fn union_surface_props(
+    seeds: &BTreeMap<String, BTreeSet<String>>,
+    owned_props: &mut BTreeMap<String, BTreeSet<String>>,
+) {
+    for (host, names) in seeds {
+        owned_props
+            .entry(host.clone())
+            .or_default()
+            .extend(names.iter().cloned());
     }
 }

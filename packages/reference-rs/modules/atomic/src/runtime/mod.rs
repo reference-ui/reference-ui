@@ -3,6 +3,7 @@
 //! Delivers the compact JSON payloads required by runtime styling helpers and client-side style injection.
 
 pub mod builder;
+mod plan_pool;
 pub mod lowerings;
 pub mod plan;
 pub mod serializer;
