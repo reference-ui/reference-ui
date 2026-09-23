@@ -154,8 +154,9 @@ Options, ordered by user-facing improvement:
    for re-exported JSX elements declared in `jsxElements`. Requires a runtime
    contract change but eliminates the sharp edge entirely.
 3. **Documentation** — at minimum, add a "Layered adoption contract" section to
-   `docs/CORE.md` and `docs/LAYERS.md`. (Doc-only fix; lowest effort, lowest
-   reach.)
+   `docs/ARCHITECTURE.MD` (the ONE arch doc; the `docs/HIST_*` maps this item
+   named were deleted 2026-09-23 per docs milspec — history lives in git).
+   (Doc-only fix; lowest effort, lowest reach.)
 
 ### 4.2 Promote the chain matrix into a release gate (priority: high)
 

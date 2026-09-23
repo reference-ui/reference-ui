@@ -1,8 +1,8 @@
 {
   "revision": "latest",
-  "hash": "810b8b5b4744",
+  "hash": "c62838b329f4",
   "dirty": true,
-  "createdAt": "2026-09-21T23:13:59.934Z",
+  "createdAt": "2026-09-23T09:51:57.737Z",
   "scorer": "bench-worker/2",
   "machine": {
     "node": "v24.16.0",
@@ -13,7 +13,7 @@
   "scales": [
     {
       "plan": {
-        "scale": "enterprise",
+        "scale": "enterprise+custom",
         "generator": "app",
         "optIn": false,
         "seed": 7,
@@ -35,24 +35,24 @@
         "cssCalls": 7527,
         "recipes": 120
       },
-      "genMs": 1189.9542139999999,
+      "genMs": 1354.2871069999999,
       "samples": [
         {
-          "syncMs": 1048.463632,
-          "rssBefore": 95641600,
-          "rssPeak": 343687168,
-          "rssAfter": 320557056,
-          "rssPeakHw": 343846912,
+          "syncMs": 958.797087,
+          "rssBefore": 101814272,
+          "rssPeak": 310022144,
+          "rssAfter": 300179456,
+          "rssPeakHw": 351506432,
           "scorer": "bench-worker/2"
         }
       ],
       "bundle": {
-        "cssBytes": 2867925,
-        "dataBytes": 214466,
-        "totalBytes": 3082391,
-        "cssGzip": 270510,
-        "dataGzip": 22110,
-        "totalGzip": 292620
+        "cssBytes": 3091125,
+        "dataBytes": 217697,
+        "totalBytes": 3308822,
+        "cssGzip": 273286,
+        "dataGzip": 22179,
+        "totalGzip": 295465
       }
     }
   ]

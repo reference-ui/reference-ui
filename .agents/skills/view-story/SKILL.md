@@ -34,7 +34,7 @@ only; viewing goes through MCP).
 Moves, in order: navigate → snapshot (a11y tree + refs) → screenshot →
 evaluate (computed CSS, boxes) → click/type/hover → re-snapshot →
 console messages. Full crew manual:
-[docs/missions/mcp-book-seeing.md](../../../docs/missions/mcp-book-seeing.md).
+[docs/MISSIONS/MCP_BOOK_SEEING.md](../../../docs/MISSIONS/MCP_BOOK_SEEING.md).
 
 ## 3. Fallback: pnpm capture
 

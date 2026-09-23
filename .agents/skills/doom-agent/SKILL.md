@@ -16,10 +16,10 @@ the QA engineer works *within* them. It finds real breaks, proves
 them, and hardens the system. It never invents architecture and
 never grades its own finds.
 
-Mission record: `docs/missions/doom-agent.md`,
-`docs/missions/doom-agent-protocol.md` (seeds, cycle history, the
-satisfaction pin). This skill is the operable loop every cycle crew
-loads before touching anything.
+Mission record: `docs/MISSIONS/DOOM_AGENT.md` (record, seeds, cycle
+history, the satisfaction pin — the protocol below *is* the retired
+`doom-agent-protocol.md`). This skill is the operable loop every
+cycle crew loads before touching anything.
 
 ## 1. The fine line (HQ)
 
@@ -48,9 +48,9 @@ station, no credit, no argument:
 - **One-namer / one-map**: build reads source, runtime looks up a map.
   Nothing fills template holes or runs user code at runtime.
 
-Sources of truth: `docs/missions/operation-forge.md` Part I (the
+Sources of truth: `docs/MISSIONS/COMPLETED/OPERATION_FORGE.md` Part I (the
 information layer, "not wholesale" refusals) and
-`docs/missions/operation-error-correct.md` (failure modes, language
+`docs/MISSIONS/OPERATION_ERROR_CORRECT.md` (failure modes, language
 rule). This skill points at them; it never restates them. If they
 disagree with this file, they win.
 

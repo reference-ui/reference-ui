@@ -2,7 +2,7 @@
 
 Current freeze, cases, and proof. Design narrative: [README.md](./README.md).
 Sequencing: [PLAN.md](./PLAN.md) (stations) and [../../PLAN.md](../../PLAN.md) § Reference UI (host).
-Mandate and architecture: [REFERENCE_SYSTEM.md](../../../../docs/archive/REFERENCE_SYSTEM.md), [atomic.md](../../docs/atomic.md), and [PANDA.md](./PANDA.md) (vendor example / process map).
+Mandate and architecture: [REFERENCE_SYSTEM.md](../../../../docs/ARCHIVE/REFERENCE_SYSTEM.md), [atomic.md](../../docs/atomic.md), and [PANDA.md](./PANDA.md) (vendor example / process map).
 
 Harness / Runner: `pnpm agentrs c atomic` (Cargo unit tests) | `pnpm agentrs v atomic` (Vitest seam tests)
 
@@ -910,7 +910,7 @@ compiler contract.
   **The runtime namer must reproduce every namer golden.**
   Station `ATM-SEAM-08`. One block per committed `tests/namer-goldens/*.json` — six lexical functions, nine procedures, then the composed `name()` cases — each run as `fn(input, tables, system)` against the compiled tables, so a drift names the exact function. Beneath it the Cargo guard `namer_goldens_are_fresh` (`src/goldens/`) regenerates every file in memory and diffs; `NAMER_UPDATE_GOLDENS=1` is the only rewrite path, and a re-bless after an intentional naming-rule change carries a `NAMER_RULES_VERSION` bump. Per the SPEC legend the guard is not a tick; the tick is this Vitest case.
 
-`ATM-SEAM-04` is reserved and undefined: no case folder, no SPEC prose. The ID is cited as Overmatch's (`docs/missions/completed/styletrace.md`), which defines nothing under it — do not go hunting, and do not reuse the number. `ATM-SEAM-05` (StyleTrace's: the result carries `tracedJsxHosts`) exists as a case folder only, with no SPEC prose row.
+`ATM-SEAM-04` is reserved and undefined: no case folder, no SPEC prose. The ID is cited as Overmatch's (`docs/MISSIONS/COMPLETED/STYLETRACE.md`), which defines nothing under it — do not go hunting, and do not reuse the number. `ATM-SEAM-05` (StyleTrace's: the result carries `tracedJsxHosts`) exists as a case folder only, with no SPEC prose row.
 - [x] `ATM-SCAN-01` `[reference]` `[seam]` —
   **The frozen request's `include` globs must scope both the `sourceRoot` scan and the legacy virtual `files` list.**
   Station `ATM-SCAN-01` (RS-10, unblocks NEO-SYNC-09). Under `include: ['theme/**']` the `css()` in `outside/` yields no utility and no diagnostics; an absent or empty include preserves scan-all. A negation-only include (e.g. `['!outside/**']`) scopes to scan-all-minus-negatives. One `IncludeScope` (`src/includes/`) serves both paths with fast-glob flavor: `**` crosses directories, `*`/`?` stay in a segment, `{a,b}` expands, `[...]` matches one character, leading `!` negates. The legacy shape accepts `include` too; the station golden is the unscoped legacy compile.

@@ -10,7 +10,7 @@ Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/
 | [REFERENCE_RS_RESTRUCTURE.md](./REFERENCE_RS_RESTRUCTURE.md) | Layout plan for splitting `reference-rs`. The workspace already looks like this. |
 | [MCPV2.md](./MCPV2.md) | Workspace-aware MCP design. Implemented in `@reference-ui/mcp`. |
 | [MCP_RESTRUCTURE.md](./MCP_RESTRUCTURE.md) | Extract MCP from core. Package exists at `packages/reference-mcp`. |
-| [OVERLAY_THEME.md](./OVERLAY_THEME.md) | Overlay theme forensics. Protocol moved to [FEATURES/PORTAL_COLOR_MODE.md](../FEATURES/PORTAL_COLOR_MODE.md). |
+| [OVERLAY_THEME.md](./OVERLAY_THEME.md) | Overlay theme forensics. Protocol moved to [FEATURES/LIB_PORTAL_COLOR_MODE.md](../FEATURES/LIB_PORTAL_COLOR_MODE.md). |
 | [CSS_VALUE_PARSE.md](./CSS_VALUE_PARSE.md) | AST CSS-value parser RFC. We are not writing those Panda utilities by hand anymore. |
 | [TEST_MIGRATION.md](./TEST_MIGRATION.md) | Old unit/e2e → matrix package split. Matrix coverage lives under `matrix/`. |
 | [STYLED-SYSTEM-MIGRATION.md](./STYLED-SYSTEM-MIGRATION.md) | Core `styled/` → CLI/fragments move. Historical. |
@@ -26,3 +26,4 @@ Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/
 | [SWARM-LOG.md](./SWARM-LOG.md) | First swarm log (wave 1, one day). Absorbed into [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md). |
 | [VOYAGE-PERF-SWARM.md](./VOYAGE-PERF-SWARM.md) | Rolling perf-swarm brief (1198ms → 744ms, target 700). Campaign complete. |
 | [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md) | Perf-swarm record and scoreboard (744ms vs Panda 645ms = 1.15x). Complete. |
+| [REFERENCE_UI.md](./REFERENCE_UI.md) | Pre-cutover monorepo orientation (filed from root 2026-09-23 per docs milspec; engine internals map the retired core). |

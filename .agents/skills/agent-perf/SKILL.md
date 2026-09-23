@@ -26,7 +26,7 @@ reporting (`benchmark` — that skill *reads* numbers, this one *moves* them).
 
 1. **Fresh flames first.** Every wave opens with a repro crew on the
    current tip (2+ reconciled captures, filed under
-   `docs/evidence/flamegraph/enterprise-repro*/`). No wave starts on
+   `docs/EVIDENCE/flamegraph/enterprise-repro*/`). No wave starts on
    stale flames — landed diets move every room.
 2. **Ranked backlog from the burndown.** Topics carry: exact functions,
    flame weight, fantasy ceiling + realistic capture, fences vs
@@ -44,7 +44,7 @@ reporting (`benchmark` — that skill *reads* numbers, this one *moves* them).
    rotations that landing-confirms need).
 4. **Integrate banked sets.** 3–7 banks → one integrator (own worktree,
    INTEGRATE.md). Solo LAND claims → single-hypothesis integrator.
-   BANKs file patches under `docs/perf/waves/<wave>/*.patch` while
+   BANKs file patches under `docs/PERF/waves/<wave>/*.patch` while
    unlanded; landed patches are deleted, file lists snapshotted.
 5. **Captain lands, reports, re-profiles — per commit.** Firsthand
    suites + quality on the exact tree, then one verified arc per
@@ -169,7 +169,7 @@ Per wave:
 
 1. Land or HOLD every open member; integrators file INTEGRATE.md.
 2. `pnpm agentperf rebuild` — the index absorbs the wave.
-3. Archive the wave log to `docs/perf/waves/<wave>/` and clear the live
+3. Archive the wave log to `docs/PERF/waves/<wave>/` and clear the live
    LOG.md wave section to a stub (scoreboard + pointers). Nothing is
    lost: index entries carry the LOG text, the archive carries the rest.
    Scoreboard rows are never cleared — they are the voyage timeline.

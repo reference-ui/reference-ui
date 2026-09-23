@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig.json",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Compiled-bin emit (FIX-3): layout-preserving transpile of src + bin
+    // into dist/. Single-file bundling is architecturally wrong here — the
+    // esbuild alias entries resolve from import.meta.url at different depths
+    // (config/bundle.ts vs fragments/base/bootstrap-import-map.ts), and sync
+    // reads package-relative assets (entry/types.d.mts) — so dist mirrors
+    // the source tree and every runtime path computation keeps working.
+    "noEmit": false,
+    // Declarations ship beside the emit: the ./runtime export resolves here
+    // for types too, so specs keep strict inference (declaration-less .js
+    // would degrade the runtime surface to any and cascade implicit-any
+    // errors across importing specs).
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    // Paired with allowImportingTsExtensions (base): rewrites relative
+    // .ts/.tsx imports to their .js/.jsx emit names. Every packed byte
+    // loads under Node 24 with no type stripping.
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src", "bin"],
+  "exclude": [
+    "**/*.test.ts",
+    "**/__fixtures__/**",
+    "tests",
+    "tools",
+    "playground",
+    "benchmark",
+    "node_modules",
+    "dist"
+  ]
+}

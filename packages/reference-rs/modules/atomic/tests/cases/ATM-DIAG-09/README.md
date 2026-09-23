@@ -23,7 +23,7 @@ if the hunt finds no witness, this station's target release carries
 zero new userspace warnings instead. Related: `ATM-DIAG-08` (exact
 plan present), `ATM-DIAG-10` (incidental coverage), `ATM-DIAG-11`
 (unknown values stay compiler-only), `ATM-COND-12` (drop shape).
-Contract: `docs/missions/operation-error-correct.md` stations +
+Contract: `docs/MISSIONS/OPERATION_ERROR_CORRECT.md` stations +
 [atomic SPEC.md](../../../SPEC.md) (row pending sibling crew).
 Operation Error Correct Slice 0; observed red hinge: the warning is
 unlocated and names only `_hovr`, not the declaration.

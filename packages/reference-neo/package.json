@@ -13,11 +13,19 @@
     "node": ">=22.18.0"
   },
   "exports": {
-    "./runtime": "./src/runtime/index.ts",
+    "./runtime": "./dist/src/runtime/index.js",
     "./package.json": "./package.json"
   },
   "bin": {
-    "neo": "./bin/neo.ts"
+    "neo": "./dist/bin/neo.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node tools/build-bin.mjs",
+    "prepack": "node tools/build-bin.mjs",
+    "prepublishOnly": "node tools/build-bin.mjs"
   },
   "dependencies": {
     "@parcel/watcher": "^2.6.0",

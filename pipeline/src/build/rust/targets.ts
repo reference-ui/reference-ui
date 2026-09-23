@@ -83,6 +83,10 @@ interface RustTargetTarballPlan {
 
 const repoSourceExcludes = [
   '.git',
+  // Agent/session scratch (incl. foreign .muse/worktrees checkouts):
+  // never referenced by the container build; sinking it into the
+  // snapshot exhausts engine disk (HERMETIC-RED-2 ENOSPC).
+  '.muse',
   '**/node_modules',
   '**/.turbo',
   '**/.pnpm-store',

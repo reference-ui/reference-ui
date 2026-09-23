@@ -9,7 +9,7 @@ Interactive map: open `packages/reference-rs/modules/map.html` in a browser.
 Hover a function to see which module it rests on. tasty, atlas, virtualrs, and
 `modules/runtime` (the `.node` loader) are other products — not this engine.
 
-Mandate and user story (historical): [`REFERENCE_SYSTEM.md`](../../../docs/archive/REFERENCE_SYSTEM.md). Current campaign: [`PLAN.md`](../PLAN.md).
+Mandate and user story (historical): [`REFERENCE_SYSTEM.md`](../../../docs/ARCHIVE/REFERENCE_SYSTEM.md). Current campaign: [`PLAN.md`](../PLAN.md).
 Panda autopsy: [`modules/atomic/PANDA.md`](../modules/atomic/PANDA.md).
 
 ---

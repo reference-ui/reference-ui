@@ -172,3 +172,22 @@ product until the host has somewhere to live.
   case anatomy, artifacts, snapshots, quality gate.
 - [`docs/DOMAIN.md`](docs/DOMAIN.md) — the living domain language:
   the names that build the runtime, plus retired ones to never revive.
+
+## Building the bin (build-once)
+
+The shippable `neo` bin is compiled: `bin` and the `./runtime` export
+point at `dist/` (see [`tools/README.md`](tools/README.md)), because Node
+refuses to type-strip shipped `.ts` under `node_modules`. `dist/` is
+gitignored, so build it once per checkout (and rebuild after editing neo
+sources) before any installed-shim invocation:
+
+```sh
+cd packages/reference-neo && node tools/build-bin.mjs
+```
+
+Direct-source invocations (`node bin/neo.ts sync`, the `NEO-CLI-*` specs,
+`bin/neo.test.ts`) need no build. Installed shims (`.bin/neo`, `pnpm exec
+neo`) re-point at `dist/` on the next `pnpm install`, so build before
+using them. `prepack` and `prepublishOnly` build automatically for real
+publishes; the hermetic pipeline's build phase runs the `build` script
+too (hash-skipped when unchanged) before it packs with scripts ignored.

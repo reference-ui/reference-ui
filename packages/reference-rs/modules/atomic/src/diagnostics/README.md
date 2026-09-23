@@ -75,7 +75,7 @@ Positions: located diagnostics carry `file:line:col`; span-less global
 fragments honestly report their fragment source at 1:1; static-CSS
 warnings stay unlocated (the `BaseSystem` carries no source identity).
 Proof stations: `ATM-DIAG-01`–`14` (`tests/cases/`); emitter verdicts:
-`docs/missions/error-correct-ledger.md`.
+`docs/MISSIONS/ERROR_CORRECT_LEDGER.md`.
 
 ## Must not
 

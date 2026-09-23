@@ -33,7 +33,7 @@ message alone keys the final line. Related: `ATM-DIAG-04`
 (positions), `ATM-DIAG-05` (codes), `ATM-DIAG-07` (channel
 isolation), `ATM-SITE-43` (observed ×2 golden), `ATM-TOKEN-14`
 (passthrough trigger). Contract:
-`docs/missions/operation-error-correct.md` stations + [atomic
+`docs/MISSIONS/OPERATION_ERROR_CORRECT.md` stations + [atomic
 SPEC.md](../../../SPEC.md) (row pending sibling crew). Operation
 Error Correct Slice 0; observed red hinge: two byte-identical
 `ATM-W-UNKNOWN-TOKEN-PATH` lines fail no-dupes; the site-identity

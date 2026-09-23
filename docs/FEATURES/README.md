@@ -1,19 +1,19 @@
 # Features
 
-Capabilities Reference UI supports, or has decided to support. These are product contracts, not the published docs site. How those styles compile (Want → AtomSet, harvest, one namer) is [ATOMIC.md](../ATOMIC.md).
+Capabilities Reference UI supports, or has decided to support. These are product contracts, not the published docs site. How those styles compile (Want → AtomSet, harvest, one namer) is [RS_ATOMIC.md](./RS_ATOMIC.md).
 
-| Doc | What it covers |
-| --- | --- |
-| [TYPES.md](./TYPES.md) | Public types vs type-generation |
-| [STRICT_TOKENS.md](./STRICT_TOKENS.md) | Per-category token strictness |
-| [PRIVATE TOKENS.md](./PRIVATE%20TOKENS.md) | `_private` token subtrees |
-| [CSS_COMPOSITION.md](./CSS_COMPOSITION.md) | `css()` as a static fragment collector |
-| [RESPONSIVE.md](./RESPONSIVE.md) | `css({ r })` research and decision |
-| [RESPONSIVE_API.md](./RESPONSIVE_API.md) | `r` prop / container-query authoring API |
-| [CONTAINER_QUERIES.md](./CONTAINER_QUERIES.md) | Why containers, not viewports |
-| [BREAKPOINTS_PRESETS.md](./BREAKPOINTS_PRESETS.md) | Named breakpoint presets vs inline `r` |
-| [VARIANTS.md](./VARIANTS.md) | Universal `variant` / `data-variant` |
-| [VITE.md](./VITE.md) | `referenceVite()` / `referenceWebpack()` |
-| [PORTAL_COLOR_MODE.md](./PORTAL_COLOR_MODE.md) | Theme on portaled surfaces |
-| [DATA_THEME.md](./DATA_THEME.md) | Rename `data-panda-theme` → `data-theme` (still owed) |
-| [STUFF.md](./STUFF.md) | Fragments / composition notes |
+| Doc | Scope | What it covers |
+| --- | --- | --- |
+| [RS_TYPES.md](./RS_TYPES.md) | RS | Public types vs type-generation |
+| [RS_STRICT_TOKENS.md](./RS_STRICT_TOKENS.md) | RS | Per-category token strictness |
+| [NEO_PRIVATE_TOKENS.md](./NEO_PRIVATE_TOKENS.md) | NEO | `_private` token subtrees |
+| [NEO_CSS_COMPOSITION.md](./NEO_CSS_COMPOSITION.md) | NEO | `css()` as a static fragment collector |
+| [NEO_RESPONSIVE.md](./NEO_RESPONSIVE.md) | NEO | `css({ r })` research and decision |
+| [NEO_RESPONSIVE_API.md](./NEO_RESPONSIVE_API.md) | NEO | `r` prop / container-query authoring API |
+| [NEO_CONTAINER_QUERIES.md](./NEO_CONTAINER_QUERIES.md) | NEO | Why containers, not viewports |
+| [NEO_BREAKPOINTS_PRESETS.md](./NEO_BREAKPOINTS_PRESETS.md) | NEO | Named breakpoint presets vs inline `r` |
+| [LIB_VARIANTS.md](./LIB_VARIANTS.md) | LIB | Universal `variant` / `data-variant` |
+| [LIB_PORTAL_COLOR_MODE.md](./LIB_PORTAL_COLOR_MODE.md) | LIB | Theme on portaled surfaces |
+| [NEO_DATA_THEME.md](./NEO_DATA_THEME.md) | NEO | Color-mode attribute scrub — LANDED as `data-color-mode` (D1; `data-theme` plan superseded) |
+| [RS_ATOMIC.md](./RS_ATOMIC.md) | RS | Native compiler overview (extract, harvest, atoms) — filed from root 2026-09-23 |
+| [LIB_BOOK.md](./LIB_BOOK.md) | LIB | Book playground contract (`pnpm dev:lib`) — filed from root 2026-09-23 |

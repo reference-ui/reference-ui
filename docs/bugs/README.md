@@ -1,24 +1,29 @@
 # Bugs
 
-Open issues found in agent/MCP first-touch and leftover core debt. Split out of the old root dump so panda-era items are not mixed with Atlas/MCP ones.
+Open issues found in agent/MCP first-touch and Neo runtime work.
 
-Panda CSS is on the way out ([packages/reference-neo/PLAN.md](../../packages/reference-neo/PLAN.md)). Review [JANK.md](./JANK.md) when that swap lands. The MCP/Atlas bugs below are independent of the compiler.
+The engine swap has landed (`reference-core` retired): the panda-era
+core-debt audit (`JANK.md`) was deleted 2026-09-23 after verifying
+every row pointed at the removed tree with no carryover. The bugs
+below are independent of the compiler.
 
 ## MCP
 
-- [mcp-default-project.md](./mcp-default-project.md) — default active project has no artifacts
-- [mcp-select-project-schema.md](./mcp-select-project-schema.md) — `select_project` rejects `project`
+| File | Scope | Issue |
+| --- | --- | --- |
+| [MCP_DEFAULT_PROJECT.md](./MCP_DEFAULT_PROJECT.md) | MCP | Default active project has no artifacts |
+| [MCP_SELECT_PROJECT_SCHEMA.md](./MCP_SELECT_PROJECT_SCHEMA.md) | MCP | `select_project` rejects `project` |
 
 ## Atlas / inventory
 
-- [atlas-non-identifier-props.md](./atlas-non-identifier-props.md) — `}` leaked as a prop name
-- [atlas-disabled-styleprop.md](./atlas-disabled-styleprop.md) — `disabled` classified as a style prop
-- [atlas-usedwith-bloat.md](./atlas-usedwith-bloat.md) — `usedWith` HTML-tag noise and inverted frequencies
-
-## Core host (mostly panda-era)
-
-- [JANK.md](./JANK.md) — sync disk IPC, generated absolute paths, codegen side effects, DTS patching
+| File | Scope | Issue |
+| --- | --- | --- |
+| [ATLAS_NON_IDENTIFIER_PROPS.md](./ATLAS_NON_IDENTIFIER_PROPS.md) | RS Atlas via MCP | `}` leaked as a prop name |
+| [ATLAS_DISABLED_STYLEPROP.md](./ATLAS_DISABLED_STYLEPROP.md) | RS Atlas via MCP | `disabled` classified as a style prop |
+| [ATLAS_USEDWITH_BLOAT.md](./ATLAS_USEDWITH_BLOAT.md) | RS Atlas via MCP | `usedWith` HTML-tag noise and inverted frequencies |
 
 ## Neo recipe runtime
 
-- [recipe-classname-required.md](./recipe-classname-required.md) — should `RecipeConfig.className` be required? (open investigation)
+| File | Scope | Issue |
+| --- | --- | --- |
+| [RECIPE_CLASSNAME_REQUIRED.md](./RECIPE_CLASSNAME_REQUIRED.md) | NEO recipe + RS extractor | Should `RecipeConfig.className` be required? (open investigation) |

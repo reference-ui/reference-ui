@@ -53,12 +53,12 @@ Most package-level dev and test flows build on top of that sync pipeline.
 
 ## Documentation
 
-Engineering notes live in [`docs/`](./docs/). Start with [`docs/README.md`](./docs/README.md).
+Engineering notes live in [`docs/`](./docs/). Start with [`docs/README.MD`](./docs/README.MD).
 
-- [`docs/REFERENCE_UI.md`](./docs/REFERENCE_UI.md) — monorepo orientation
+- [`docs/ARCHIVE/REFERENCE_UI.md`](./docs/ARCHIVE/REFERENCE_UI.md) — monorepo orientation
 - [`docs/FEATURES/`](./docs/FEATURES/) — supported capabilities
-- [`docs/bugs/`](./docs/bugs/) — open MCP / Atlas / core issues
-- [`docs/archive/`](./docs/archive/) — retired specs and RFCs
+- [`docs/BUGS/`](./docs/BUGS/) — open MCP / Atlas / core issues
+- [`docs/ARCHIVE/`](./docs/ARCHIVE/) — retired specs and RFCs
 - [`packages/reference-neo/README.md`](./packages/reference-neo/README.md)
 - [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
 

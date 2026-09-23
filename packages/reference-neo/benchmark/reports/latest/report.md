@@ -1,23 +1,23 @@
 # bench — latest
 
-2026-09-21T23:13:59.934Z · darwin x64 · 64.0 GiB RAM · node v24.16.0
+2026-09-23T09:51:57.737Z · darwin x64 · 64.0 GiB RAM · node v24.16.0
 
 ## summary
 
 | scale | files | css() calls | peak RSS | peak HW | sync | bundle |
 | --- | --- | --- | --- | --- | --- | --- |
-| enterprise | 3,000 | 7,527 | 327.8 MiB | 327.9 MiB | 1.05s | 2.9 MiB |
+| enterprise+custom | 3,000 | 7,527 | 295.7 MiB | 335.2 MiB | 959ms | 3.2 MiB |
 
 scorer bench-worker/2: peak RSS is the v1 in-loop sampler (history-comparable); peak HW is the OS high-water, a new series — never compare HW against old RSS.
 
-## enterprise
+## enterprise+custom
 
-seed 7 · 1 run(s) · generated in 1.19s
+seed 7 · 1 run(s) · generated in 1.35s
 
-- peak RSS: 327.8 MiB
-- peak HW: 327.9 MiB (OS high-water)
-- sync time: 1.05s
-- bundle: 2.9 MiB (285.8 KiB gzip)
+- peak RSS: 295.7 MiB
+- peak HW: 335.2 MiB (OS high-water)
+- sync time: 959ms
+- bundle: 3.2 MiB (288.5 KiB gzip)
 
 ### load
 
@@ -31,10 +31,10 @@ seed 7 · 1 run(s) · generated in 1.19s
 
 | # | sync | peak RSS | peak HW |
 | - | --- | ------- | ------ |
-| 1 | 1.05s | 327.8 MiB | 327.9 MiB |
+| 1 | 959ms | 295.7 MiB | 335.2 MiB |
 
 ### bundle
 
-- styles.css: 2.7 MiB (264.2 KiB gzip)
-- runtime-data.mjs: 209.4 KiB (21.6 KiB gzip)
-- total: 2.9 MiB (285.8 KiB gzip)
+- styles.css: 2.9 MiB (266.9 KiB gzip)
+- runtime-data.mjs: 212.6 KiB (21.7 KiB gzip)
+- total: 3.2 MiB (288.5 KiB gzip)

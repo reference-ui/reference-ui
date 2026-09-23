@@ -166,7 +166,7 @@ export function createPortableFragmentBundle(
 /**
  * Evaluate fragments once in Node and merge the collected calls into the
  * frozen spec shape. Upstream bundles run first with the globalCss collector
- * suppressed (upstream global CSS already ships in upstream stylesheets).
+ * suppressed (upstream global CSS ships via the sync-time packed-css merge).
  */
 export async function evaluateFragments(
   cwd: string,

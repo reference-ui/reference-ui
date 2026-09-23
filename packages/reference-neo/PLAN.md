@@ -413,7 +413,7 @@ Known RS-lane slices at start (RS-1–RS-6 from the probes; RS-7 from the D1 hum
 | RS-5 | `ATM-SITE-13`: empty styletrace graph must not scan all tags (diagnostic). | `NEO-SITE-14` | done | RS liaison |
 | RS-6 | Docs: `atomic/SPEC.md` COND-03/08/LAYER-03 prose and `map.html` say `data-color-mode` + `@container`. | D1 hygiene (docs only) | done | RS liaison |
 
-| RS-7 | Engine retarget colour mode `data-theme` → `data-color-mode`: `_dark`/`_light` wraps, token islands, ~106 goldens, `contracts/fixtures`, `docs/FEATURES/DATA_THEME.md`. No dual-stamp. | `NEO-PRIM-07`, `NEO-COND-04`, `NEO-TOKEN-05` (P0) | done | RS liaison |
+| RS-7 | Engine retarget colour mode `data-theme` → `data-color-mode`: `_dark`/`_light` wraps, token islands, ~106 goldens, `contracts/fixtures`, `docs/FEATURES/NEO_DATA_THEME.md`. No dual-stamp. | `NEO-PRIM-07`, `NEO-COND-04`, `NEO-TOKEN-05` (P0) | done | RS liaison |
 | RS-8 | Responsive recipe variant values (`{ base, md }`) lower to `@container` per D8; station ATM-RECIPE-07 (ConditionalValue absent from typegen). Full input/expected-CSS/waiting-case text lives in `tests/cases/recipe/TESTS.md`. | `NEO-RECIPE-08` | done | RS liaison |
 | RS-9 | Per-prop responsive objects (`width: { base, md }`) + alias eviction at merge time; station ATM-COND-17 plus merge note. Full input/expected-CSS lives in `tests/cases/css/TESTS.md`. | `NEO-CSS-03` | done | RS liaison |
 | RS-10 | Frozen `NativeCompileRequest` carries no `include` scoping (`atomic::compile` scans all); add scoping so `include` globs limit scanning. Station ATM-SITE-17 or ATM-SCAN-01 at liaison's call. Full text in `tests/cases/sync/TESTS.md` RS lane. | `NEO-SYNC-09` (done; SITE rows need RS-14) | done | RS liaison |
