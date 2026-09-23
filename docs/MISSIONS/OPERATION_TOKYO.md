@@ -68,7 +68,9 @@ without HQ saying so out loud.
   currently inside `sync()` and its legs; propose the cut lines.
 - CORE-BONES: old-core practices worth stealing (PostCSS packaging,
   pass boundaries, diagnostics discipline) — one entry each, with the
-  file that proves core did it.
+  file that proves core did it. Evidence source:
+  `packages/reference-legacy/` (frozen `main` core, read-only law in
+  its README — cite file:line, never import).
 - PUBLISH-SHAPE: what publish emits vs what consumers resolve
   (HERMDIV fallout: junctions, externals, shipped bundles).
 - NATIVES-SEAM: what crosses the RS cut, and whether the seam is typed

@@ -7,6 +7,7 @@ packages:
   - matrix/fixtures/*
   - panda-playground
   - '!packages/old/**'
+  - '!packages/reference-legacy/**'
 
 ignoredBuiltDependencies:
   - '@parcel/watcher'

@@ -1,0 +1,375 @@
+import {
+  existsSync,
+  readdirSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const createdDirs: string[] = []
+
+function createTempDir(prefix: string): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix))
+  createdDirs.push(dir)
+  return dir
+}
+
+async function importPackagesModule(options: {
+  cliDir: string
+  outDir: string
+}) {
+  vi.resetModules()
+  let capturedTsconfigFiles: string[] = []
+  let capturedTsconfigContents: Record<string, unknown> | undefined
+  let capturedStyledAliasPath: string | undefined
+  let capturedStyledSnapshotCsstype: string | undefined
+
+  const emitDeclarationTree = (sourceDir: string, outDir: string): void => {
+    for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
+      const sourcePath = resolve(sourceDir, entry.name)
+
+      if (entry.isDirectory()) {
+        emitDeclarationTree(sourcePath, outDir)
+        continue
+      }
+
+      if (!entry.name.match(/\.[cm]?[jt]sx?$/) || entry.name.endsWith('.d.ts')) {
+        continue
+      }
+
+      const relativePath = sourcePath.slice(resolve(options.cliDir, 'src').length + 1)
+      const targetPath = resolve(
+        outDir,
+        relativePath.replace(/\.[cm]?[jt]sx?$/, '.d.ts')
+      )
+
+      mkdirSync(dirname(targetPath), { recursive: true })
+      writeFileSync(
+        targetPath,
+        `// emitted from ${relativePath}\n${readFileSync(sourcePath, 'utf-8')}`,
+        'utf-8'
+      )
+    }
+  }
+
+  const spawnMonitoredAsync = vi.fn(async (_command: string, args: string[]) => {
+    const projectIndex = args.indexOf('--project')
+    const outDirIndex = args.indexOf('--outDir')
+    if (projectIndex >= 0) {
+      const tsconfigPath = args[projectIndex + 1]
+      const tsconfig = JSON.parse(readFileSync(tsconfigPath, 'utf-8')) as {
+        files: string[]
+        compilerOptions?: {
+          paths?: Record<string, string[]>
+        }
+      } & Record<string, unknown>
+      capturedTsconfigFiles = tsconfig.files
+      capturedTsconfigContents = tsconfig
+
+      const styledAliasPath = tsconfig.compilerOptions?.paths?.['@reference-ui/styled']?.[0]
+      if (styledAliasPath) {
+        capturedStyledAliasPath = resolve(dirname(tsconfigPath), styledAliasPath)
+        const csstypePath = resolve(capturedStyledAliasPath, 'types/csstype.d.ts')
+        if (existsSync(csstypePath)) {
+          capturedStyledSnapshotCsstype = readFileSync(csstypePath, 'utf-8')
+        }
+      }
+    }
+    if (outDirIndex >= 0) {
+      emitDeclarationTree(resolve(options.cliDir, 'src'), args[outDirIndex + 1] ?? options.outDir)
+    }
+
+    return { code: 0, signal: null, stdout: '', stderr: '' }
+  })
+  const writeGeneratedSystemTypes = vi.fn(async () => {})
+  const writeGeneratedReactTypes = vi.fn(async () => {})
+
+  vi.doMock('../../../lib/child-process', () => ({
+    formatSpawnMonitoredFailure: vi.fn(() => 'spawn failed'),
+    spawnMonitoredAsync,
+  }))
+  vi.doMock('../../../lib/paths', () => ({
+    resolveCorePackageDir: vi.fn(() => options.cliDir),
+  }))
+  vi.doMock('../../../lib/paths/out-dir', () => ({
+    getOutDirPath: vi.fn(() => options.outDir),
+  }))
+  vi.doMock('../../../lib/profiler', () => ({
+    logProfilerSample: vi.fn(),
+  }))
+  vi.doMock('../../../types/generators/generate', () => ({
+    writeGeneratedSystemTypes,
+    writeGeneratedReactTypes,
+  }))
+
+  const mod = await import('./packages')
+  return {
+    ...mod,
+    getCapturedTsconfigFiles: () => capturedTsconfigFiles,
+    getCapturedTsconfigContents: () => capturedTsconfigContents,
+    getCapturedStyledAliasPath: () => capturedStyledAliasPath,
+    getCapturedStyledSnapshotCsstype: () => capturedStyledSnapshotCsstype,
+    spawnMonitoredAsync,
+    writeGeneratedSystemTypes,
+    writeGeneratedReactTypes,
+  }
+}
+
+afterEach(() => {
+  vi.resetModules()
+  vi.doUnmock('../../../lib/child-process')
+  vi.doUnmock('../../../lib/paths')
+  vi.doUnmock('../../../lib/paths/out-dir')
+  vi.doUnmock('../../../lib/profiler')
+  vi.doUnmock('../../../types/generators/generate')
+  vi.restoreAllMocks()
+
+  for (const dir of createdDirs.splice(0)) {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+function writeReactSupportFixture(cliDir: string): void {
+  mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+  writeFileSync(resolve(cliDir, 'src/entry/react.ts'), 'export {}\n', 'utf-8')
+
+  mkdirSync(resolve(cliDir, 'src/system/primitives/nested'), { recursive: true })
+  writeFileSync(
+    resolve(cliDir, 'src/system/primitives/index.tsx'),
+    "export { type Extra } from './nested/extra'\nexport const Div = 'div'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/system/primitives/nested/extra.ts'),
+    'export type Extra = true\n',
+    'utf-8'
+  )
+
+  mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
+  writeFileSync(
+    resolve(cliDir, 'src/types/index.ts'),
+    "export type * from './public'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/types/public/index.ts'),
+    "export type { DivProps } from './props'\n",
+    'utf-8'
+  )
+  writeFileSync(
+    resolve(cliDir, 'src/types/public/props.ts'),
+    'export type DivProps = { children?: string }\n',
+    'utf-8'
+  )
+
+  mkdirSync(resolve(cliDir, 'src/system/runtime'), { recursive: true })
+  writeFileSync(resolve(cliDir, 'src/system/runtime/index.ts'), 'export const css = {}\n', 'utf-8')
+}
+
+function expectCapturedReactSupportTsconfigFiles(files: string[]): void {
+  expect(files).toHaveLength(28)
+  expect(files.some((file) => file.endsWith('/src/entry/react.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/index.tsx'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/types.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/color-mode.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/layers.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/primitives/shared/split-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/system/runtime/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/variants.ts'))).toBe(true)
+}
+
+function expectGeneratedReactSupportFiles(outDir: string): void {
+  expect(readFileSync(resolve(outDir, 'react/react.d.mts'), 'utf-8')).toBe(
+    "export * from './entry/react'\n"
+  )
+  expect(readFileSync(resolve(outDir, 'react/system/primitives/index.d.ts'), 'utf-8')).toContain(
+    'Div'
+  )
+  expect(
+    readFileSync(resolve(outDir, 'react/system/primitives/nested/extra.d.ts'), 'utf-8')
+  ).toContain('Extra')
+  expect(readFileSync(resolve(outDir, 'react/types/index.d.ts'), 'utf-8')).toContain('./public')
+  expect(readFileSync(resolve(outDir, 'react/types/public/index.d.ts'), 'utf-8')).toContain('DivProps')
+  expect(readFileSync(resolve(outDir, 'react/types/public/props.d.ts'), 'utf-8')).toContain('DivProps')
+  expect(readFileSync(resolve(outDir, 'react/system/runtime/index.d.ts'), 'utf-8')).toContain('css')
+}
+
+function expectCapturedSystemSupportTsconfigFiles(files: string[]): void {
+  expect(files).toHaveLength(19)
+  expect(files.some((file) => file.endsWith('/src/entry/system.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/index.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-colors.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/strict-radii.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/style-props.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/system-style-object.ts'))).toBe(true)
+  expect(files.some((file) => file.endsWith('/src/types/public/variants.ts'))).toBe(true)
+}
+
+describe('packager/ts/install/packages', () => {
+  it('emits react support declaration files from source roots into the generated package', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+    writeReactSupportFixture(cliDir)
+
+    const {
+      getCapturedTsconfigFiles,
+      installPackagesTs,
+      spawnMonitoredAsync,
+      writeGeneratedReactTypes,
+      writeGeneratedSystemTypes,
+    } =
+      await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+    ])
+
+    expect(spawnMonitoredAsync).toHaveBeenCalledTimes(1)
+    expectCapturedReactSupportTsconfigFiles(getCapturedTsconfigFiles())
+    expectGeneratedReactSupportFiles(outDir)
+    expect(writeGeneratedReactTypes).toHaveBeenCalledWith(
+      cliDir,
+      resolve(outDir, 'react/react.d.mts')
+    )
+    expect(writeGeneratedSystemTypes).toHaveBeenCalledWith(
+      cliDir,
+      resolve(outDir, 'system/system.d.mts')
+    )
+  })
+
+  it('writes a synthetic tsconfig with an explicit catch-all path base for styled aliases', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+
+    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/entry/react.ts'), 'export {}\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/system/primitives'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/system/primitives/index.tsx'), 'export const Div = "div"\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/system/runtime'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/system/runtime/index.ts'), 'export const css = {}\n', 'utf-8')
+
+    mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/types/index.ts'), 'export type Example = true\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/index.ts'), 'export type Example = true\n', 'utf-8')
+
+    const { getCapturedTsconfigContents, installPackagesTs } = await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/react',
+        sourceEntry: 'src/entry/react.ts',
+        outFile: 'react.mjs',
+      },
+    ])
+
+    const tsconfig = getCapturedTsconfigContents() as {
+      compilerOptions?: {
+        paths?: Record<string, string[]>
+      }
+    }
+
+    expect(tsconfig).toBeTruthy()
+    expect(tsconfig.compilerOptions?.paths?.['*']).toBeUndefined()
+    expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled']).toHaveLength(1)
+    expect(tsconfig.compilerOptions?.paths?.['@reference-ui/styled/*']).toHaveLength(1)
+  })
+
+  it('snapshots the styled declaration tree into the tsgo temp workspace', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+
+    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/entry/system.ts'), 'export {}\n', 'utf-8')
+
+    mkdirSync(resolve(outDir, 'styled', 'types'), { recursive: true })
+    writeFileSync(
+      resolve(outDir, 'styled', 'types', 'csstype.d.ts'),
+      '/** styled snapshot */\nexport type StyledSnapshot = true\n',
+      'utf-8'
+    )
+
+    const {
+      getCapturedStyledAliasPath,
+      getCapturedStyledSnapshotCsstype,
+      installPackagesTs,
+    } = await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ])
+
+    expect(getCapturedStyledAliasPath()).toBeTruthy()
+    expect(getCapturedStyledAliasPath()).not.toBe(resolve(outDir, 'styled'))
+    expect(getCapturedStyledSnapshotCsstype()).toContain('StyledSnapshot = true')
+  })
+
+  it('seeds the system DTS compile with explicit authored type support files', async () => {
+    const cliDir = createTempDir('reference-ui-core-cli-')
+    const outDir = createTempDir('reference-ui-core-out-')
+
+    mkdirSync(resolve(cliDir, 'src/entry'), { recursive: true })
+    writeFileSync(
+      resolve(cliDir, 'src/entry/system.ts'),
+      "export type { SystemStyleObject } from '../types'\n",
+      'utf-8'
+    )
+
+    mkdirSync(resolve(cliDir, 'src/types/public'), { recursive: true })
+    writeFileSync(resolve(cliDir, 'src/types/index.ts'), "export type * from './public'\n", 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/index.ts'), "export type { SystemStyleObject } from './system-style-object'\n", 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/system-style-object.ts'), 'export type SystemStyleObject = { color?: string }\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/colors.ts'), 'export type StrictColorProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/radii.ts'), 'export type StrictRadiiProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/strict-colors.ts'), 'export type StrictColorProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/strict-radii.ts'), 'export type StrictRadiiProps<T> = T\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/style-props.ts'), 'export type StyleProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/BaseSystem.ts'), 'export type BaseSystem = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/conditions.ts'), 'export type StyleConditionKey = never\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/css.ts'), 'export type CssStyles = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/fontRegistry.ts'), 'export interface FontRegistry {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/fonts.ts'), 'export type FontName = never\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/primitives.ts'), 'export type PrimitiveProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/props.ts'), 'export type ColorModeProps = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/recipe.ts'), 'export type RecipeDefinition = {}\n', 'utf-8')
+    writeFileSync(resolve(cliDir, 'src/types/public/style-prop.ts'), 'export type StylePropValue<T> = T\n', 'utf-8')
+
+    const { getCapturedTsconfigFiles, installPackagesTs } = await importPackagesModule({ cliDir, outDir })
+
+    await installPackagesTs(cliDir, [
+      {
+        name: '@reference-ui/system',
+        sourceEntry: 'src/entry/system.ts',
+        outFile: 'system.mjs',
+      },
+    ])
+
+    expectCapturedSystemSupportTsconfigFiles(getCapturedTsconfigFiles())
+  })
+})
