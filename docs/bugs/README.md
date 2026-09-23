@@ -18,3 +18,7 @@ Panda CSS is on the way out ([packages/reference-neo/PLAN.md](../../packages/ref
 ## Core host (mostly panda-era)
 
 - [JANK.md](./JANK.md) — sync disk IPC, generated absolute paths, codegen side effects, DTS patching
+
+## Neo recipe runtime
+
+- [recipe-classname-required.md](./recipe-classname-required.md) — should `RecipeConfig.className` be required? (open investigation)
