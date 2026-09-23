@@ -300,7 +300,62 @@ exact artifact shapes (d.ts closure like tasty? JSON data?);
 whether per-system emission ever follows below the cut or stays Neo
 permanently; the folder name.
 
-## 4. Standing constraints (carried, not re-debated)
+## 4. Run log (updated as we talk — the plan tracks reality)
+
+### Done (landed, verified, committed)
+
+- Packager concept installed (`src/packager/`, 14 files) from legacy's
+  solved shape; HERMDIV fixed through its externals policy; chain
+  green native + hermetic (3.1's first proof — the concept pays rent).
+- `lib/symlink` ported from legacy (one-word names, README,
+  `symlink-dir` latest) and ADOPTED: every link call-site routes
+  through it; v10 API fix included.
+- Neo README rewritten mission-first ("the TypeScript portion of the
+  compiler"); README law set (purpose-first, never directory tours).
+- Map decisions: 3.3 collect layout (surface/ + lib/, 3 READMEs), 3.8
+  fork B (`author/` dies), 3.9 primitives spec + `vendor/` rename
+  queued. One-plan merge done (Tokyo folded into this file).
+- Voyage Obj1/Obj2/Obj3 COMPLETE — the stability gate's chain half is
+  green; full-gate sign-off is the morning call.
+
+### In flight (right now)
+
+- COLLECT-REFACTOR (crew DONE, reported): fragments→collect motion
+  complete, 337 units + 197/197 cases + T1 proven — but aimed at the
+  pre-art-direction layout. Captain is applying the surface/lib delta
+  + README split on top, then re-proving and landing.
+- AUTHOR-KILL (crew running): `author/` deletion + root barrel +
+  wiring repoint, against the decided `collect/surface/*` paths.
+  Lands after the delta (captain verifies firsthand).
+
+### Overnight run (proposed — decision-free crews, morning-verified)
+
+Ordered so nothing needs HQ mid-flight. Crews report, never land;
+captain verifies + lands in the morning.
+
+1. **Packager follow-ups** (execution, small, fully specified): derive
+   clean's link list from PACKAGES (fixes the `neo clean` types-link
+   orphan the symlink crew withheld); unify the needle-list copies
+   the collect crew logged as smells. Proof: units + q + chain + T1.
+2. **PostCSS adoption survey** (read-only): map every CSS-text
+   touchpoint in Neo (merge, scoping, emission, validation) +
+   legacy's exact PostCSS usage file:line + propose the CSS module
+   shape with dependency options. No implementation. Delivers 3.2's
+   decision brief for the morning.
+3. **Sync responsibility enumeration** (read-only): every
+   responsibility inside `sync/` today, one per line, with file:line
+   + proposed item home (packager/css/collect/stays). Delivers 3.7's
+   cut list for the morning.
+4. **Primitives home brief** (read-only): RS-side vs Neo-side for the
+   3.9 generator + test station, argued both ways with the tasty
+   vendor + canon consult paths as evidence. Delivers the home
+   decision for the morning.
+
+Explicitly NOT overnight: the `vendor/` rename (needs HQ's name),
+`author/`--adjacent judgment calls, anything touching the
+collect/author landing zone until both are green and committed.
+
+## 5. Standing constraints (carried, not re-debated)
 
 - Chain tests stay. Neo never imports core/lib/legacy paths. Cases +
   Playwright prove behavior; goldens prove strings. No matrix/Dagger in
@@ -311,7 +366,7 @@ permanently; the folder name.
 - Workflow: [agent-neo](../../.agents/skills/agent-neo/SKILL.md)
   (`pnpm agentneo`). Cases live in `tests/`; the index in READMEs.
 
-## 5. Open questions (think here)
+## 6. Open questions (think here)
 
 - What are sync's actual responsibilities today, one per line? Where
   are the cut lines — what becomes passes, packages, or deleted code?
