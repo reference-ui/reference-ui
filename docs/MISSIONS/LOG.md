@@ -72,3 +72,7 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 ## Tick — night run live, all 5 crews running, no action.
 
 ## Tick — wave 1 nearly home, legs HOLD pending fix crew, no commits.
+
+## Tick — 8 commits banked (legs, delete, cli, base), N-2 building, no action.
+
+## Tick — N-2 DONE filed, crew exiting, verifier next, no action.

@@ -15553,3 +15553,380 @@ reports: the base verifier is running gates in the shared tree now,
 and concurrent Playwright runs risk mutual evidence corruption.
 Then: one gate run, two stepped landings (CLI, then base), N-2
 native implementer dispatches on the base landing.
+
+## Tick — 8 commits banked, N-2 building, no action (2026-09-23)
+
+- Objectives: VOYAGE 1-3 COMPLETE; 4/5 in LANDING.md (IN
+  PROGRESS, untouched). Active: overnight run N-0..N-4.
+- Landed since last tick: delete (#22), cli/, system/base/ —
+  each firsthand-gated (units + q 0/17 + 197/197 + T1 7/7) and
+  stepped. 8 commits tonight, tree was clean at last landing.
+- Live: 1 crew (wave3-native/99, running). Liveness from
+  substance: native/ tree taking shape (generated/tasty
+  landing, scan files touched). No ping sent. Deadlock test:
+  negative — crew young and producing.
+- Advance: nothing to commit (crew mid-flight), nothing to
+  dispatch (N-2 verifier goes on its report). No park ordered;
+  HQ quiet till 11.
+- Hygiene note: WAVE2-BASE-VERIFY inserted mid-file (after its
+  implementer section) instead of appending — shifted later
+  line refs by +104. No data lost; sections are
+  content-addressed. Briefs already say append; reiterated.
+
+## WAVE3-NATIVE (implementer, 2026-09-23) — DONE
+
+Top-level `src/native/` per `## WAVE1-NATIVE` (slices 1-5, M1-M10).
+Skill `agent-neo` loaded first. Tree was post-legs, post-NIGHT-1,
+post-cli, post-system/base with N-3 landed and clean at session
+start; `sync/index.ts` solely owned, no sequencing wait needed.
+Every map file:line re-verified at slice start (below). Never
+commit; report, don't land. Index pristine at filing (0 staged);
+all work in the worktree.
+
+### Slice-start verification (all firsthand, pre-slice-1)
+
+Held verbatim: `sync/native.ts` :1-96 (types :15-74, calls
+:84-96; compile-files mention :12-14); `sync/index.ts` seam
+imports :8-14, diagnostics :42-82, `uniqueSorted` :84-86,
+retention attach :185-186 / drop :192-198 / finally :199-207,
+request :171-186, `PRIMITIVE_JSX_NAMES` import :24, diagnostic
+calls :208-210; barrel imports :20-24 + assembly :66-76 + local
+`uniqueSorted` :50-52 (also used :80/:85); goldens import :23 +
+dietCompile :90-107; deepsee import :13; scan comments
+`scan/native.ts:35`, `scan/helpers.ts:67`,
+`retention.test.ts:15`; 15 case specs; M8 surface (vendor sole
+child, `VENDOR_DIR` tool :13, drift strings :129-130, tsconfig 3
+paths, `tools/README.md` :31/:56, pin
+`reference-types.test.ts:158`, mapped `entry/types.d.mts`
+untouched); non-breakers (build-bin has `PATH_LITERAL_SOURCES`
+but zero native entries, playground zero refs, watch calls
+`sync()` only). Two drifts noted, both no-impact: the
+compile-request.json writer sits at :234-238 (map said
+:227-235 — base-landing shift, substance identical), and live
+contracts importers count 20 files (map said 16 — my own 3 new
+native importers plus scope; the M9 README pins no count).
+`compile-files.ts` confirmed dead (5e049ef05). DOMAIN check
+(§7): `contract`/`compile`/`retention`/`request`/`diagnostics`
+collide with nothing load-bearing; DOMAIN.md deliberately NOT
+touched (subsystem-internal names, WAVE2 precedent).
+Vendor→upstream rename dead-lean holds: the only `upstream/`
+hits in-tree are CHAIN-06 world fixture paths (chain
+vocabulary, unrelated) — no contradiction, nothing flagged.
+Baseline: `q` 0 errors / 17 warnings / 229 files.
+
+### Slice 1 — seam landing: DONE
+
+New `src/native/`: `contract.ts` (M4 verbatim, compile-files
+sentence dropped per order 1), `compile.ts` (compileNative +
+AtomicModule), `retention.ts` (releaseRetention verbatim +
+`ScanRetentionRefs` structural iface + attach/drop/release
+helpers), `request.ts` (`buildCompileRequest`, single object
+param, `primitiveNames` as param + `uniqueSorted`),
+`diagnostics.ts` (M5 verbatim, same names, 3 exported),
+`README.md` (seam table over RS surfaces, NOT-owns, no
+filename table). Deleted `sync/native.ts` (`git rm`); minimal
+re-point of the 4 living importers (deep imports, no barrel);
+3 scan comments → `mirrors native/contract.ts`. Proof: `q`
+0 errors / 4 warnings over touched scope, all 4 proven
+pre-existing by stash-baseline (new files zero); units
+10 files / 57 green; SYNC-04 PASS.
+
+### Slice 2 — recipe surgery: DONE
+
+`index.ts`: builder + attach/drop/release calls, moved helpers
++ `uniqueSorted` deleted, diagnostic calls identical lines via
+imports. Barrel + goldens collapsed onto builder+attach;
+barrel's local `uniqueSorted` deleted (imports the canonical
+one for its :74/:79 fingerprint uses). One red caught and
+fixed in-slice: `ScanRetentionRefs.retentionToken` declared
+required-`number|undefined` rejects optional `?: number`
+(TS2345 ×4) — field made optional, gate re-green. Proof: `q`
+0/1-pre-existing (`sync` fn-lines, 111→95, still above 80);
+units 20/20 incl. goldens (sealed shas unmoved —
+byte-identity holds); SYNC-04, SYNC-15, CLI-01 PASS.
+
+### Slice 3 — tasty vendor mv: DONE
+
+`git mv src/vendor/rust-tasty/ src/native/generated/tasty/`
++ `VENDOR_DIR` retarget + drift-string retarget + re-stamp via
+the tool + tsconfig 3 paths + `tools/README.md` 2 hunks +
+pin → `'native/generated/tasty'`. `src/vendor/` removed from
+disk. Re-stamp proven byte-identical: 38/38 sha256 match vs
+HEAD (rename pairs at commit by 100% similarity). `--check`
+fresh (38 files, `@0.0.42`). Proof: `q` 0/2-pre-existing
+(stash-baselined); reference-types 12/12; REF-01 PASS
+(typecheck-via-run proves the new tsconfig paths).
+
+### Slice 4 — generated placeholders: DONE
+
+`generated/contracts/README.md` (future shape: second tool
+TOPS set over `dist/contracts/types.d.ts`, tsconfig mapping,
+`--check` prerequisite; no vendoring without the check) and
+`generated/primitives/README.md` (canon ELEMENTS=125 vs
+tags=101 both counted firsthand, NIGHT-5 pointer + 11 AM
+picks, `primitiveNames`-param cutover note). README-only: no
+shims, no fake generatedness. Proof: `q` over `src/native`
+0/0 (43 files).
+
+### Slice 5 — prose: DONE
+
+15/15 case-spec comments → `src/native/contract.ts` (BSD-sed
+retry, counted both sides: 0 old remain, 15 new). Deepsee has
+no seam-path comment (only "one native compile" prose) — no
+touch. TESTS.md/SPEC ledgers + `docs/evidence/` untouched per
+orders. Proof: `q` 0/0 over the 15 specs; §4 greps repo-wide:
+zero live `sync/native` (only append-only mission/perf logs +
+the two deferred TESTS.md rows) and zero live `vendor/` refs
+(only LOG-1/LOG-2 history).
+
+### Final gates (this session, final bytes)
+
+- `q` whole package: **0 errors, 17 warnings, 233 files** —
+  at cap, baseline held.
+- Full units: **53 files / 354 tests green** — exact landed
+  baseline; goldens shas unmoved.
+- Cases: SYNC-01/04/06/07/14/15, CLI-01, CHAIN-01..06,
+  SITE-28, REF-01 — **all PASS** (each run typechecks first).
+- No-panda over every new/changed line: clean. No `index.ts`
+  barrel in `native/` (verified absent).
+- Wave-law straggler sweep: every `native` import lands on
+  `scan/native.ts` (M6 STAYS) or the new homes; zero
+  `sync/native` importers; `uniqueSorted` homes are
+  `native/request.ts` (canonical), `system/base/jsx.ts`
+  (private, N-3's, other signature), deepsee-local (below).
+
+### Judgment calls (3) + flags (2) for the captain/verifier
+
+1. `retentionToken = undefined` (old :192) stays inline in
+   the recipe with its comment — a helper cannot reassign
+   the caller's `let`; `dropScanRetention` moves the
+   request+prepared clearing (:193-198). The 3 one-line
+   calls hold; the local clear is glue, not protocol.
+2. Barrel/goldens take `attachScanRetention`, not just the
+   builder: both previously set `retentionToken`
+   unconditionally with no `files` fallback. In-env
+   (native present) this is byte-identical; on a no-addon
+   machine it aligns the tests WITH the recipe's
+   exactly-one-of (fidelity fix — both tests document
+   themselves as mirroring `sync()`).
+3. The recipe's C3-in-reverse + RSS comments moved with
+   their helpers' JSDocs (not duplicated); the Frozen-D12
+   comment stays above the builder call.
+4. FLAG (map undercount, out of scope): deepsee
+   `worker-phases.ts:104-113` is a FOURTH six-key
+   hand-builder with its own local `uniqueSorted` (:60) and
+   `throwOnErrorDiagnostics` (:64) plus a divergent
+   compile-request writer (:136 strips only `files`).
+   Repointed only, per §2 — collapsing it is a bench-crew
+   call (DOMAIN: bench is never a case/suite).
+5. FLAG (nit): `reference-types.test.ts` still says
+   "vendored decls" in prose + test name — true (the tree
+   is still a vendor copy, new home), only the path pin
+   moved. No action.
+
+### Footprint
+
+New: `src/native/` (5 `.ts` + README + 2 placeholder
+READMEs + 38 moved d.ts). Deleted: `sync/native.ts`,
+`src/vendor/` tree (pure move). Modified: `sync/index.ts`
+(-97/+net surgery), barrel test, goldens test, 3 scan
+comments, deepsee import, tool + tsconfig + tools/README +
+pin, 15 spec comments. Untouched: `docs/evidence/`,
+TESTS.md/SPEC ledgers, DOMAIN.md, `entry/types.d.mts`,
+packager legs, `system/base`, `src/cli`, all STAY ranges.
+Concurrent crew writes observed, not mine, not touched:
+LOG-2.md +19 / LOG.md +2 (captain ticks); 2 pre-existing
+stash entries left alone. Nothing committed.
+
+WAVE3-NATIVE DONE: the seam is a subsystem — contract,
+call, retention protocol, builder, and diagnostics each
+homed, the recipe showing the order; tasty vendored under
+`generated/`, contracts/primitives honestly shelved for
+morning. Report, don't land.
+
+## Tick — N-2 DONE filed, crew exiting, verifier next (2026-09-23)
+
+- Objectives: VOYAGE 1-3 COMPLETE; 4/5 in LANDING.md (IN
+  PROGRESS, untouched). Active: overnight run.
+- N-2 implementer filed `## WAVE3-NATIVE — DONE` (tree: seam
+  split, recipe surgery, tasty mv staged via git mv as specced,
+  placeholders); roster still shows running (exiting, not
+  stuck — DONE + full work products). No ping sent. Deadlock
+  test: negative.
+- Staged-index note (for landing): M8's real `git mv` staged
+  the tasty rename by design — not an index violation. At
+  landing, verify tree holds ONLY arc files + log, then land
+  the whole arc in one commit (staged mv rides as arc content).
+- Advance: no commits (unverified), no dispatches this tick —
+  N-2 verifier dispatches on the completion notice to avoid
+  concurrent-gate evidence corruption. No park ordered; HQ
+  quiet till 11.
+
+## Tick correction — N-2 index state vs claim (2026-09-23)
+
+Correction to the tick above: the tree does NOT show a clean
+staged `git mv`. Read-only evidence: new-path tasty files are
+STAGED adds (`A`), old-path vendor deletes + `sync/native.ts`
+delete are UNSTAGED (` D`), while the report claims "index
+pristine (0 staged)". Crew still running — likely mid final
+cleanup (filing before last steps) rather than stuck. NOT a
+deadlock, no intervention. Landing rule stands and sharpens:
+captain diffs index-vs-worktree explicitly before any commit;
+nothing rides that isn't named.
+
+## WAVE3-NATIVE-VERIFY (verifier, 2026-09-23) — VERDICT: LAND
+
+Thinking hat, no source edits, nothing committed. Skill
+`agent-neo` loaded first. Scope: the `## WAVE3-NATIVE` report
+(slices 1-5, M1-M10) against the WAVE1-NATIVE map and the
+current tree. Every check below is firsthand this session.
+
+### (1) Map compliance M1-M10 — PASS
+
+- M1: `sync/native.ts` deleted; seam split into
+  `native/{contract,compile,retention,request,diagnostics}.ts`
+  + README. M4 contract types verbatim vs HEAD (only the
+  ordered compile-files sentence dropped); compile-files
+  mention deletion confirmed.
+- M2: retention protocol moved as `attach/drop/releaseScan
+  Retention` + verbatim `releaseRetention`; recipe keeps the
+  try/finally with 3 one-line calls. No `withRetention`
+  wrapper. `PreparedFragments` stays in collect.
+- M3: `buildCompileRequest` single object param,
+  `primitiveNames` as param (roster still in tags.ts — no
+  fake generated import), `uniqueSorted` moved with it.
+- M5: diagnostics moved verbatim, same private names, 3
+  exported; recipe keeps 3 identical call lines.
+- M6: `collect/lib/scan/native.ts` STAYS — diff is exactly
+  1 comment line (`mirrors native/contract.ts`). Same for
+  `scan/helpers.ts:67`, `retention.test.ts:15`.
+- M7: typegen call + tasty runtime imports untouched
+  (empty diff on `packager/types-bundle.ts`, `src/
+  reference/`).
+- M8: see §2. M9/M10: `generated/contracts/`,
+  `generated/primitives/` contain ONLY `README.md` each —
+  no shims, no fake generatedness; READMEs spec the future
+  shape honestly (second tool TOPS + `--check`
+  prerequisite; ELEMENTS=125 vs tags=101 + NIGHT-5 pointer).
+- No `index.ts` barrel in `native/` (verified absent);
+  all re-points are deep imports.
+
+### (2) M8 tasty mv integrity — PASS, 38/38 bytes
+
+`git show HEAD:<vendor-path> | cmp` over all 38 files:
+checked=38 mismatched=0. Retargets complete: `VENDOR_DIR`,
+both drift strings, tsconfig 3 paths, `tools/README.md` 2
+hunks, pin → `'native/generated/tasty'`. `src/vendor/`
+gone from disk. `--check` fresh firsthand (38 files,
+`@0.0.42`). `entry/types.d.mts` untouched.
+
+### (3) Recipe surgery — PASS, SYNC-04 green FIRSTHAND
+
+`index.ts` diff is import-block + helper-deletion +
+builder/attach/drop/release calls only. Equivalence
+confirmed line by line: `attachScanRetention(request,
+prepared)` reads `prepared.retentionToken`, which equals
+the local at that point (`let retentionToken =
+prepared.retentionToken`, untouched between); drop covers
+local-inline + prepared + request exactly as the old 4
+clears; `releaseScanRetention(local)` carries the old
+guard + never-throw `finally` verbatim. Moved helpers +
+`uniqueSorted` deleted from the recipe. Frozen-D12
+comment intact above the builder call (:128-133).
+SYNC-04 PASS firsthand (frozen six keys — THE move
+proof), plus SYNC-15, CLI-01 in-slice scope.
+
+### (4) JUDGMENT CALL #2 under glass — fidelity FIX, correct
+
+Reproduced: old barrel/goldens set `retentionToken:
+prepared.retentionToken` unconditionally with NO `files`
+fallback. In-env (native present) the new
+builder+attach is byte-identical — proven by the sealed
+goldens shas (goldens.test.ts green in full units) and
+the barrel fingerprint test green. On a no-addon
+machine the request changes neither→`files` (in-memory
+sources instead of the disk scan) — a REAL behavior
+change, exactly as the report discloses.
+
+Ruled a fidelity fix, NOT scope creep: both tests
+document themselves as mirroring `sync()`; the old
+mirror exercised a neither-path the recipe never takes
+when scannedSources exist; preserving the unconditional
+assignment would deliberately keep an unfaithful mirror
+to dodge a shared helper. The neither-path keeps its
+coverage in the recipe itself (both-empty case). Minor
+nuance, no action: dietCompile gains a `logs:` key
+(present-undefined vs absent) — output-identical per
+the sealed shas.
+
+### (5) Judgment calls #1/#3 — sane
+
+#1: inline `retentionToken = undefined` is forced — a
+helper cannot reassign the caller's `let`. Glue, not
+protocol; the 3 one-line calls hold. #3: C3-in-reverse
++ RSS comments moved into the helpers' JSDocs, deleted
+from the recipe per the diff — moved, not duplicated.
+
+### (6) Flags #4/#5 — acknowledged, both correct
+
+#4: deepsee `worker-phases.ts` diff is import-only
+(3 lines); the fourth six-key builder (:104-113),
+local `uniqueSorted` (:60), local
+`throwOnErrorDiagnostics` (:64), and divergent writer
+(:136, strips only `files`) are all intact —
+repoint-only, no collapse attempted. Correct: bench is
+out of scope per map §2 (DOMAIN: bench is never a
+case/suite); collapsing is a bench-crew call.
+#5: "vendored decls" prose still true — the tree is
+still a vendor copy, only the home moved.
+
+### (7) STAY ranges + non-breakers — untouched, PASS
+
+Empty diffs verified: `docs/evidence/`, TESTS.md/SPEC
+ledgers (only the two map-deferred SYNC-04/15 rows
+cite the old path — ledgers, not import sites),
+DOMAIN.md, `entry/types.d.mts`, packager legs,
+`system/base`, `src/cli`, `sync/watch.ts`. Build-bin
+has no native entries; playground zero refs.
+
+### (8) INDEX AUDIT — report claim now TRUE, no reset needed
+
+Exact current state firsthand: `git diff --cached`
+EMPTY (0 staged, 0 lines); all arc content in the
+worktree — unstaged mods (index.ts, barrel, goldens,
+3 scan comments, deepsee import, tool + tsconfig +
+tools/README + pin, 15 spec comments), unstaged
+deletes (`sync/native.ts` + 38 vendor files),
+untracked `src/native/`. The captain's tick
+observation (staged adds + unstaged deletes) was
+mid-flight; the implementer's post-filing cleanup
+completed and the "index pristine" claim holds NOW.
+Landing needs NO index reset — there is nothing
+staged to reset. Land by adding NAMED arc paths only
+(`git add` + `git rm` pairs; rename similarity will
+read 100% at commit from the 38/38 byte-identity).
+Caution: LOG.md +2 (captain ticks) and LOG-2.md ride
+separately per normal log practice — no blind `add
+-A`.
+
+### (9) No-panda — clean
+
+133 added lines across the arc, zero `panda` hits;
+`src/native/*` + all three READMEs zero hits.
+
+### Proof runs (this session, final bytes)
+
+- `q`: 0 errors / 17 warnings / 233 files — at cap.
+- Full units: 53 files / 354 green (incl. goldens
+  sealed shas, barrel fingerprint, reference-types
+  12/12).
+- Cases, all PASS: SYNC-01/04/06/07/14/15, CLI-01,
+  CHAIN-01/02/03/04/05/06, SITE-28, REF-01.
+- Repo-wide straggler sweep (LEGS-VERIFY lesson):
+  zero live `sync/native` outside the deferred
+  TESTS.md rows + mission logs, zero `vendor/` refs,
+  zero cross-package importers of the moved paths.
+
+WAVE3-NATIVE-VERIFY: LAND. The seam is a subsystem,
+the bytes prove it, and the one behavior change is
+the tests telling the truth.
