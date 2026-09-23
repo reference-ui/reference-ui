@@ -26,7 +26,8 @@ fn write_file(root: &std::path::Path, rel: &str, bytes: &[u8]) -> String {
     full.to_string_lossy().to_string()
 }
 
-/// Scan one tree: every listed path, one needle, verbatim gates.
+/// Scan one tree: every listed path, one needle, verbatim gates. The
+/// completeness flag stays false here: these pins exercise the kept walk.
 fn scan_tree(root: &str, paths: &[String], needle: &str) -> scan::ScanResponse {
     scan::scan(&ScanRequest {
         paths: paths.to_vec(),
@@ -35,6 +36,8 @@ fn scan_tree(root: &str, paths: &[String], needle: &str) -> scan::ScanResponse {
         sep: "/".to_string(),
         retain: true,
         manifest: false,
+        walk_complete: false,
+        include: Vec::new(),
     })
 }
 
@@ -80,6 +83,8 @@ fn needle_gate_hits_only_needle_files() {
         sep: "/".to_string(),
         retain: true,
         manifest: false,
+        walk_complete: false,
+        include: Vec::new(),
     });
     assert!(empty.hits.is_empty());
     assert_eq!(empty.retained_count, 2);
@@ -106,7 +111,7 @@ fn short_rule_reads_every_size_class() {
     assert_eq!(response.retained_count, sizes.len());
     let retained = scan::drain(response.retention_token.unwrap()).unwrap();
     for (i, path) in paths.iter().enumerate() {
-        let found = retained.iter().find(|(p, _)| p == path).unwrap();
+        let found = retained.files.iter().find(|(p, _)| p == path).unwrap();
         assert_eq!(found.1, expected[i], "size class {i} mismatch");
     }
     std::fs::remove_dir_all(&root).unwrap();
@@ -137,7 +142,7 @@ fn lossy_utf8_pins_the_m1e_battery() {
     assert_eq!(response.retained_count, vectors.len());
     let retained = scan::drain(response.retention_token.unwrap()).unwrap();
     for (i, (name, _, text)) in vectors.iter().enumerate() {
-        assert_eq!(retained[i].1, *text, "vector {name} mismatch");
+        assert_eq!(retained.files[i].1, *text, "vector {name} mismatch");
     }
     std::fs::remove_dir_all(&root).unwrap();
 }
@@ -153,7 +158,11 @@ fn store_lifecycle_moves_once_and_fails_loud() {
     let response = scan_tree(&root_str, &[live.clone()], "needle");
     let token = response.retention_token.unwrap();
     let drained = scan::drain(token).unwrap();
-    assert_eq!(drained, vec![(live, "export const a = 1;\n".to_string())]);
+    assert_eq!(
+        drained.files,
+        vec![(live, "export const a = 1;\n".to_string())]
+    );
+    assert!(!drained.walk_complete);
     assert_eq!(scan::drain(token), Err(scan::TokenError::Drained(token)));
     assert!(!scan::release(token));
     assert_eq!(
@@ -179,6 +188,8 @@ fn store_lifecycle_moves_once_and_fails_loud() {
         sep: "/".to_string(),
         retain: false,
         manifest: false,
+        walk_complete: false,
+        include: Vec::new(),
     });
     assert_eq!(matches_only.retained_count, 0);
     assert_eq!(matches_only.retention_token, None);
@@ -248,6 +259,8 @@ fn scan_manifest(root: &str, paths: &[String], needle: &str) -> scan::ScanRespon
         sep: "/".to_string(),
         retain: true,
         manifest: true,
+        walk_complete: false,
+        include: Vec::new(),
     })
 }
 

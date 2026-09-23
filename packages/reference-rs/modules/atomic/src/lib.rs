@@ -100,8 +100,8 @@ struct CompileSinks<'a> {
 pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     #[cfg(feature = "alloc-trace")]
     let _collect = crate::alloc_trace::PhaseGuard::enter("collect");
-    let sources = match sources::collect_checked(request) {
-        Ok(sources) => sources,
+    let (sources, _backfill_outcome) = match sources::collect_checked(request) {
+        Ok(collected) => collected,
         Err((code, message)) => return Ok(token_rejection(code, message)),
     };
     #[cfg(feature = "alloc-trace")]

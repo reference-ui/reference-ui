@@ -41,6 +41,8 @@ interface NativeScanRequest {
   cwd: string
   sep: string
   retain: boolean
+  walkComplete: boolean
+  include: string[]
 }
 
 interface NativeScanResponse {
@@ -82,6 +84,98 @@ function discoveryPatternsOf(options: ScanOptions): DiscoveryPattern[] {
   return patterns
 }
 
+// Walk-completeness subset: the include shapes where fg enumeration provably
+// covers every file the native scope matches, so compile may skip its union
+// backfill walk. Anything outside the subset keeps the walk: rejection is
+// always correct, assertion is the claim the differential battery proves.
+function hasWalkableChars(body: string): boolean {
+  return (
+    !body.includes('(') &&
+    !body.includes(')') &&
+    !body.includes('|') &&
+    !body.includes('\\') &&
+    !body.includes('[:')
+  )
+}
+
+// Globstars agree only as whole segments (`**/`, `/**/`); adjacent or tripled
+// stars cross directories natively while fg reads them as plain stars.
+function hasWalkStarSegments(body: string): boolean {
+  if (body.includes('***')) return false
+  return body.split('/').every(segment => !segment.includes('**') || segment === '**')
+}
+
+// Brace ranges (`{1..3}`) expand in fg but stay literal natively, so `..`
+// inside braces rejects. Dot segments outside braces over-enumerate in fg,
+// which is the safe direction.
+function hasNoBraceRanges(body: string): boolean {
+  let depth = 0
+  for (let index = 0; index < body.length; index++) {
+    if (body[index] === '{') depth++
+    else if (body[index] === '}') depth = Math.max(0, depth - 1)
+    else if (body[index] === '.' && body[index + 1] === '.' && depth > 0) return false
+  }
+  return true
+}
+
+// A lone `{` matches literally natively but matches nothing in fg, so every
+// opener needs a later closer. A lone `}` stays literal on both sides.
+function hasClosedWalkBraces(body: string): boolean {
+  let seenClose = false
+  for (let index = body.length - 1; index >= 0; index--) {
+    if (body[index] === '}') seenClose = true
+    else if (body[index] === '{' && !seenClose) return false
+  }
+  return true
+}
+
+// One leading `!` negates on both sides; a second mark is double-negation in
+// fg but a literal mark natively. Returns null when negation disagrees.
+function stripWalkNegation(pattern: string): string | null {
+  if (!pattern.startsWith('!')) return pattern
+  const body = pattern.slice(1)
+  return body.startsWith('!') ? null : body
+}
+
+function isCompleteWalkPattern(pattern: string): boolean {
+  if (pattern.startsWith('/') || pattern.endsWith('/')) return false
+  const body = stripWalkNegation(pattern)
+  if (body === null) return false
+  return (
+    hasWalkableChars(body) &&
+    hasWalkStarSegments(body) &&
+    hasNoBraceRanges(body) &&
+    hasClosedWalkBraces(body)
+  )
+}
+
+// Traversal prunes agree only when nothing extra leaves: the default
+// node_modules prune (which the native walk skips too) or no prune at all.
+function isDefaultWalkExclude(exclude: string[]): boolean {
+  if (exclude.length === 0) return true
+  return (
+    exclude.length === RETENTION_EXCLUDE.length &&
+    exclude.every((pattern, index) => pattern === RETENTION_EXCLUDE[index])
+  )
+}
+
+/**
+ * True when this enumeration covered every in-scope path: at least one
+ * positive glob, every pattern inside the agreed subset, and no custom
+ * traversal prune. Compile trusts this to skip its backfill walk only when
+ * its own scope and root still match the scan's.
+ */
+export function isCompleteWalkInclude(include: string[], exclude: string[]): boolean {
+  if (include.length === 0) return false
+  if (!isDefaultWalkExclude(exclude)) return false
+  let positive = false
+  for (const pattern of include) {
+    if (!pattern.startsWith('!')) positive = true
+    if (!isCompleteWalkPattern(pattern)) return false
+  }
+  return positive
+}
+
 async function scanNative(options: ScanOptions, retain: boolean): Promise<FragmentScanNative> {
   const { include, exclude = RETENTION_EXCLUDE, cwd = process.cwd() } = options
   const patterns = discoveryPatternsOf(options)
@@ -109,6 +203,8 @@ async function scanNative(options: ScanOptions, retain: boolean): Promise<Fragme
     cwd,
     sep,
     retain,
+    walkComplete: isCompleteWalkInclude(include, exclude),
+    include,
   })
   // Hit-only confirm through the verbatim T1 splitScan: misses contribute no
   // matches (a regex match implies the needle bytes), and the scannedSources
