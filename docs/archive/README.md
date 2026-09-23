@@ -19,8 +19,10 @@ Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/
 | [VOYAGE-LOG-1.md](./VOYAGE-LOG-1.md) | Voyage log, Objective 1 (token errors). Complete. |
 | [VOYAGE-LOG-2.md](./VOYAGE-LOG-2.md) | Voyage log, Objective 2 (Operation Error Correct). Complete. |
 | [VOYAGE-LOG-3.md](./VOYAGE-LOG-3.md) | Voyage log, Objective 3 (overnight doom cycle). In progress when archived. |
-| [VOYAGE-HYPERSPACE.md](./VOYAGE-HYPERSPACE.md) | Hyperspace perf-voyage brief (3.51s → 1.19s). Superseded by [/VOYAGE.md](../../VOYAGE.md). |
-| [VOYAGE-HYPERSPACE-PERF.md](./VOYAGE-HYPERSPACE-PERF.md) | Hyperspace per-lane perf log. Scoreboard absorbed into [/LOG.md](../../LOG.md). |
-| [VOYAGE-HYPERSPACE-LOG.md](./VOYAGE-HYPERSPACE-LOG.md) | Hyperspace ops log (waves 1–4 close-outs). Superseded by [/LOG.md](../../LOG.md). |
-| [VOYAGE-WARPDRIVE.md](./VOYAGE-WARPDRIVE.md) | Warpdrive 3-shot brief (1000ms line). Never crewed; shots survive as heavy tracks in [/VOYAGE.md](../../VOYAGE.md); dead-ends list absorbed into [/LOG.md](../../LOG.md). |
-| [SWARM-LOG.md](./SWARM-LOG.md) | First swarm log (wave 1, one day). Absorbed into [/LOG.md](../../LOG.md). |
+| [VOYAGE-HYPERSPACE.md](./VOYAGE-HYPERSPACE.md) | Hyperspace perf-voyage brief (3.51s → 1.19s). Superseded by [VOYAGE-PERF-SWARM.md](./VOYAGE-PERF-SWARM.md). |
+| [VOYAGE-HYPERSPACE-PERF.md](./VOYAGE-HYPERSPACE-PERF.md) | Hyperspace per-lane perf log. Scoreboard absorbed into [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md). |
+| [VOYAGE-HYPERSPACE-LOG.md](./VOYAGE-HYPERSPACE-LOG.md) | Hyperspace ops log (waves 1–4 close-outs). Superseded by [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md). |
+| [VOYAGE-WARPDRIVE.md](./VOYAGE-WARPDRIVE.md) | Warpdrive 3-shot brief (1000ms line). Never crewed; shots survive as heavy tracks in [VOYAGE-PERF-SWARM.md](./VOYAGE-PERF-SWARM.md); dead-ends list absorbed into [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md). |
+| [SWARM-LOG.md](./SWARM-LOG.md) | First swarm log (wave 1, one day). Absorbed into [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md). |
+| [VOYAGE-PERF-SWARM.md](./VOYAGE-PERF-SWARM.md) | Rolling perf-swarm brief (1198ms → 744ms, target 700). Campaign complete. |
+| [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md) | Perf-swarm record and scoreboard (744ms vs Panda 645ms = 1.15x). Complete. |
