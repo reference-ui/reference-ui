@@ -8,15 +8,8 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
 import { scanFragmentSources } from './scanner.ts'
-
-const NEEDLES = [
-  '@reference-ui/neo',
-  '@reference-ui/neo/config',
-  '@reference-ui/system',
-  '@reference-ui/core/config',
-  '@reference-ui/cli/config',
-]
 
 const CSS = `import { css } from '@reference-ui/react'\nexport const a = css({ color: 'red' })\n`
 const NEO = `import '@reference-ui/neo'\n${CSS}`

@@ -10,8 +10,10 @@ import { existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { getOutDirPath } from '../src/lib/paths/out-dir.ts';
 import { removeGeneratedLink } from '../src/lib/symlink/index.ts';
+import { getShortName } from '../src/packager/layout.ts';
+import { PACKAGES } from '../src/packager/packages.ts';
 
-const LINKED_PACKAGES = ['system', 'styled', 'react'];
+const LINKED_PACKAGES = PACKAGES.map((pkg) => getShortName(pkg.name));
 const USAGE = 'usage: neo <sync|clean> [dir]\n       neo sync --watch [dir]';
 
 function messageOf(err: unknown): string {

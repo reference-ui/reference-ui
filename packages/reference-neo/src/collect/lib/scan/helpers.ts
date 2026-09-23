@@ -13,13 +13,7 @@ import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { RETENTION_EXCLUDE } from '../../constants.ts'
 import type { ScannedSource } from './scanner.ts'
 
-export const NEEDLES = [
-  '@reference-ui/neo',
-  '@reference-ui/neo/config',
-  '@reference-ui/system',
-  '@reference-ui/core/config',
-  '@reference-ui/cli/config',
-]
+export { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
 
 export const CSS_RED =
   "import { css } from '@reference-ui/react'\nexport const a = css({ color: 'red' })\n"
