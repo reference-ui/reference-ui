@@ -15,11 +15,11 @@ import {
 import { loadUserConfig } from '../config/load.ts'
 import { getOutDirPath } from '../lib/paths/index.ts'
 import {
-  createPortableFragmentBundle,
   evaluatePreparedFragments,
   prepareFragments,
 } from '../collect/index.ts'
-import { resolveJsxElements } from './jsx-elements.ts'
+import { createPortableFragmentBundle } from '../system/base/fragments.ts'
+import { resolveJsxElements } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { cleanDir } from './clean.ts'
@@ -218,7 +218,10 @@ export async function sync(cwd: string): Promise<SyncResult> {
     await assembleSystem(cwd, {
       outDir,
       spec,
-      portableFragment: createPortableFragmentBundle(prepared),
+      portableFragment: createPortableFragmentBundle(
+        prepared.upstreamFragments,
+        prepared.localFragmentBundles.map(({ bundle }) => bundle)
+      ),
       stylesheet: merged.stylesheet,
       portableStylesheet: merged.portableStylesheet,
       jsx,

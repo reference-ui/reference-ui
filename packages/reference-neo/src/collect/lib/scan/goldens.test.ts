@@ -19,7 +19,7 @@ import {
   scanFragmentFiles,
   scanFragmentFilesNative,
 } from '../evaluate.ts'
-import { resolveJsxElements } from '../../../sync/jsx-elements.ts'
+import { resolveJsxElements } from '../../../system/base/jsx.ts'
 import { compileNative, type ScopedCompileRequest } from '../../../sync/native.ts'
 import { applyNormalizeCss } from '../../../sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../../primitives/tags.ts'

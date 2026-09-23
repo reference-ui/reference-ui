@@ -7,8 +7,6 @@ import { validateConfig } from './validate.ts'
 
 const SYSTEM_NAME = 'my-system'
 const DEFAULT_INCLUDE = ['src/**/*.{ts,tsx}']
-const FRAGMENT_CODE = 'fragment-code'
-const LAYERS_CSS = '.root { color: red; }'
 
 describe('validateConfig base fields', () => {
   it('unwraps a default export object', () => {
@@ -176,69 +174,5 @@ describe('validateConfig staticCss', () => {
         staticCss: { color: ['brand', 7] } as never,
       })
     ).toThrowError(/entry 'color' must be an array of strings/i)
-  })
-})
-
-describe('validateConfig extends', () => {
-  it('requires extends to be an array of named systems with synced payloads', () => {
-    expect(() =>
-      validateConfig({
-        name: SYSTEM_NAME,
-        include: DEFAULT_INCLUDE,
-        extends: {} as never,
-      })
-    ).toThrowError(/field 'extends' is invalid/i)
-
-    expect(() =>
-      validateConfig({
-        name: SYSTEM_NAME,
-        include: DEFAULT_INCLUDE,
-        extends: [{} as never],
-      })
-    ).toThrowError(/must have a non-empty 'name'/i)
-
-    expect(() =>
-      validateConfig({
-        name: SYSTEM_NAME,
-        include: DEFAULT_INCLUDE,
-        extends: [{ name: 'upstream' } as never],
-      })
-    ).toThrowError(/must include synced system data/i)
-  })
-
-  it('accepts extends entries that only contribute css or jsx elements', () => {
-    const config = validateConfig({
-      name: SYSTEM_NAME,
-      include: DEFAULT_INCLUDE,
-      extends: [
-        { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
-        { name: 'tokens', fragment: '', css: LAYERS_CSS },
-      ],
-    })
-
-    expect(config.extends).toEqual([
-      { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
-      { name: 'tokens', fragment: '', css: LAYERS_CSS },
-    ])
-  })
-
-  it('accepts valid extends entries', () => {
-    const config = validateConfig({
-      name: SYSTEM_NAME,
-      include: DEFAULT_INCLUDE,
-      extends: [{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: ['IconShell'] }],
-    })
-
-    expect(config.extends).toEqual([{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: ['IconShell'] }])
-  })
-
-  it('rejects invalid base-system jsxElements shapes', () => {
-    expect(() =>
-      validateConfig({
-        name: SYSTEM_NAME,
-        include: DEFAULT_INCLUDE,
-        extends: [{ name: 'base', fragment: FRAGMENT_CODE, jsxElements: 'IconShell' } as never],
-      })
-    ).toThrowError(/jsxElements/i)
   })
 })

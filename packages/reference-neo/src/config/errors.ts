@@ -54,17 +54,12 @@ export class ConfigValidationError extends ConfigError {
     return new ConfigValidationError(`Config field '${field}' is invalid.\n${reason}`)
   }
 
-  static invalidBaseSystem(
-    field: 'extends',
-    reason: string
-  ): ConfigValidationError {
-    return new ConfigValidationError(`Config field '${field}' is invalid.\n${reason}`)
-  }
-
   private constructor(message: string) {
     super(message)
   }
 }
+
+export { invalidBaseSystem } from '../system/base/validate.ts'
 
 export class LoadConfigError extends ConfigError {
   readonly configPath: string

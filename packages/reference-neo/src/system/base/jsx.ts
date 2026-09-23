@@ -1,11 +1,11 @@
 // Resolved JSX element artifact for the generated system folder.
-// It takes the Neo config plus traced wrapper names and emits the
+// It takes an extends carrier plus traced wrapper names and emits the
 // styletrace input shape. Local is traced union configured, so config
 // stays the override: names the tracer misses still land. Primitives stay
 // empty: extraction recognizes hosts from file-local imports, so the
 // generator never feeds this artifact.
 
-import type { ReferenceUIConfig } from '../config/types.ts'
+import type { ExtendsCarrier } from './types.ts'
 
 export interface JsxElementsArtifact {
   primitives: string[]
@@ -19,7 +19,7 @@ function uniqueSorted(names: string[]): string[] {
 }
 
 export function resolveJsxElements(
-  config: ReferenceUIConfig,
+  config: ExtendsCarrier,
   traced: readonly string[] = []
 ): JsxElementsArtifact {
   const upstream = uniqueSorted(

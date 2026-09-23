@@ -2,19 +2,9 @@
 // It takes author options and emits the validated ReferenceUIConfig shape.
 // This module is a Neo-owned copy of the core config types trimmed to the surviving fields.
 
-/**
- * Portable design-system artefact emitted by sync.
- * Neo-owned copy of the core BaseSystem shape (name plus fragment payload).
- */
-export interface BaseSystem {
-  name: string
-  /** Bundled fragment IIFEs representing the full upstream config contribution. */
-  fragment: string
-  /** Merged portable CSS: extends stylesheets in declared order plus the own block; the publisher owns the reset. */
-  css?: string
-  /** Resolved non-primitive JSX elements contributed by this system and its upstream extends chain. */
-  jsxElements?: string[]
-}
+import type { BaseSystem } from '../system/base/types.ts'
+
+export type { BaseSystem }
 
 /**
  * Opt-in diagnostic channel names for the compiler backchannel.

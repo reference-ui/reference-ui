@@ -2,7 +2,8 @@
 // It takes nothing and re-exports the config plus the collector calls authors touch.
 // Bundlers alias the id here and tsconfig paths point typechecking at the
 // same file, so every resolver agrees on what authors can import.
-export { defineConfig, type BaseSystem, type ReferenceUIConfig } from './config/types.ts'
+export { defineConfig, type ReferenceUIConfig } from './config/types.ts'
+export { type BaseSystem } from './system/base/types.ts'
 export {
   tokens,
   type ReferenceTokenConfig,

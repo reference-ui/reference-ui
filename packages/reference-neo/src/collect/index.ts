@@ -28,7 +28,6 @@ export {
   scanFragmentFilesNative,
   getFragmentCollectors,
   prepareFragments,
-  createPortableFragmentBundle,
   evaluateFragments,
   evaluatePreparedFragments,
   type PreparedFragments,

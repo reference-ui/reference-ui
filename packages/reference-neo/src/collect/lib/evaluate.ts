@@ -7,7 +7,8 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
-import type { BaseSystem, ReferenceUIConfig } from '../../config/types.ts'
+import type { ReferenceUIConfig } from '../../config/types.ts'
+import type { BaseSystem } from '../../system/base/types.ts'
 import {
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
   CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY,
@@ -132,17 +133,6 @@ export async function prepareFragments(
     scannedSources: retention.files ?? [],
     retentionToken: retention.token,
   }
-}
-
-export function createPortableFragmentBundle(
-  prepared: PreparedFragments
-): string {
-  return [
-    ...prepared.upstreamFragments,
-    ...prepared.localFragmentBundles.map(({ bundle }) => bundle),
-  ]
-    .map(bundle => `;${bundle}`)
-    .join('\n')
 }
 
 /**

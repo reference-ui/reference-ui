@@ -14,11 +14,11 @@ import { compileNative, type NativeDiagnostic, type ScopedCompileRequest } from 
 import { loadUserConfig } from '../../src/config/load.ts'
 import { getOutDirPath } from '../../src/lib/paths/index.ts'
 import {
-  createPortableFragmentBundle,
   evaluatePreparedFragments,
   prepareFragments,
 } from '../../src/collect/index.ts'
-import { resolveJsxElements } from '../../src/sync/jsx-elements.ts'
+import { createPortableFragmentBundle } from '../../src/system/base/fragments.ts'
+import { resolveJsxElements } from '../../src/system/base/jsx.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'
 import { linkGeneratedPackages } from '../../src/packager/links.ts'
@@ -121,7 +121,10 @@ async function main(): Promise<void> {
   const publishInput = {
     outDir,
     spec,
-    portableFragment: createPortableFragmentBundle(prepared),
+    portableFragment: createPortableFragmentBundle(
+      prepared.upstreamFragments,
+      prepared.localFragmentBundles.map(({ bundle }) => bundle)
+    ),
     stylesheet: result.stylesheet,
     portableStylesheet: result.portableStylesheet ?? '',
     jsx,

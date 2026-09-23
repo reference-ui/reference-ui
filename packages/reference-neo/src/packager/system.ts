@@ -6,109 +6,30 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { BaseSystem } from '../config/types.ts'
-import { BASE_SYSTEM_HEADER } from './constants.ts'
+import { assembleBaseSystem } from '../system/base/assemble.ts'
+import {
+  baseSystemMjsSource,
+  baseSystemTypesSource,
+  systemEntrySource,
+  systemTypesSource,
+} from '../system/base/sources.ts'
 import { writePackageJson } from './manifest.ts'
 import { SYSTEM_PACKAGE } from './packages.ts'
 import type { PublishInput } from './types.ts'
-
-function publishedBaseSystem(input: PublishInput): BaseSystem {
-  return {
-    name: input.spec.name,
-    fragment: input.portableFragment,
-    css: input.portableStylesheet,
-    jsxElements: input.jsx.merged,
-  }
-}
-
-function baseSystemInterfaceSource(): string {
-  return [
-    'export interface BaseSystem {',
-    '  name: string',
-    '  fragment: string',
-    '  css?: string',
-    '  jsxElements?: string[]',
-    '}',
-    '',
-  ].join('\n')
-}
-
-function baseSystemTypesSource(): string {
-  return `${BASE_SYSTEM_HEADER}\n${baseSystemInterfaceSource()}export declare const baseSystem: BaseSystem\n`
-}
-
-function systemEntrySource(): string {
-  return [
-    BASE_SYSTEM_HEADER,
-    'export function defineConfig(config) {',
-    '  return config',
-    '}',
-    'function collect(key, fragment) {',
-    '  const bucket = globalThis[key]',
-    '  if (Array.isArray(bucket)) {',
-    '    bucket.push(fragment)',
-    '  }',
-    '}',
-    'export function tokens(config) {',
-    "  collect('__refTokensCollector', config)",
-    '}',
-    'export function keyframes(config) {',
-    "  collect('__refKeyframesCollector', config)",
-    '}',
-    'export function font(name, options) {',
-    "  collect('__refFontCollector', { name, ...options })",
-    '}',
-    'export function globalCss(config) {',
-    "  collect('__refGlobalCssCollector', config)",
-    '}',
-    'export function getRhythm(num, denom) {',
-    '  if (denom !== undefined) {',
-    '    return num === 1',
-    '      ? `calc(var(--spacing-root) / $' + '{denom})`',
-    '      : `calc($' + '{num} * var(--spacing-root) / $' + '{denom})`',
-    '  }',
-    "  if (num === 1) return 'var(--spacing-root)'",
-    '  return `calc($' + '{num} * var(--spacing-root))`',
-    '}',
-    "export { baseSystem } from './baseSystem.mjs'",
-    '',
-  ].join('\n')
-}
-
-function systemTypesSource(): string {
-  return [
-    BASE_SYSTEM_HEADER,
-    baseSystemInterfaceSource(),
-    'export interface ReferenceUIConfig {',
-    '  name: string',
-    '  include: string[]',
-    '  extends?: BaseSystem[]',
-    '  jsxElements?: string[]',
-    '  normalizeCss?: boolean',
-    '  debug?: boolean',
-    '}',
-    'export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig',
-    'export declare function tokens(config: Record<string, unknown>): void',
-    'export declare function keyframes(config: Record<string, unknown>): void',
-    'export declare function font(name: string, options: Record<string, unknown>): void',
-    'export declare function globalCss(config: Record<string, unknown>): void',
-    'export declare function getRhythm(n: number): string',
-    'export declare function getRhythm(num: number, denom: number): string',
-    'export declare const baseSystem: BaseSystem',
-    '',
-  ].join('\n')
-}
-
-export function baseSystemMjsSource(baseSystem: BaseSystem): string {
-  return `${BASE_SYSTEM_HEADER}\nexport const baseSystem = ${JSON.stringify(baseSystem, null, 2)}\n`
-}
 
 export function writeSystemDir(input: PublishInput): void {
   const dir = join(input.outDir, 'system')
   mkdirSync(dir, { recursive: true })
   writeFileSync(
     join(dir, 'baseSystem.mjs'),
-    baseSystemMjsSource(publishedBaseSystem(input)),
+    baseSystemMjsSource(
+      assembleBaseSystem({
+        name: input.spec.name,
+        fragment: input.portableFragment,
+        css: input.portableStylesheet,
+        jsxElements: input.jsx.merged,
+      })
+    ),
     'utf-8'
   )
   writeFileSync(join(dir, 'baseSystem.d.mts'), baseSystemTypesSource(), 'utf-8')

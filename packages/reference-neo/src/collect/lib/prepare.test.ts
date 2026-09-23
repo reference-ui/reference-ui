@@ -227,18 +227,4 @@ describe('fragments prepare output: TS fallback', () => {
     expect(result.retentionToken).toBeUndefined()
   })
 
-  it('creates a portable fragment bundle in stable upstream-then-local order', async () => {
-    const { createPortableFragmentBundle } = await importFragmentsModule()
-
-    expect(
-      createPortableFragmentBundle({
-        upstreamFragments: ['upstreamOne()', 'upstreamTwo()'],
-        localFragmentBundles: [
-          { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
-          { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
-        ],
-        scannedSources: [],
-      })
-    ).toBe(';upstreamOne()\n;upstreamTwo()\n;localOne()\n;localTwo()')
-  })
 })

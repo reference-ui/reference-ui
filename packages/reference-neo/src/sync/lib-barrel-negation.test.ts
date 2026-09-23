@@ -16,7 +16,7 @@ import {
   scanFragmentFilesNative,
 } from '../collect/lib/evaluate.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
-import { resolveJsxElements } from './jsx-elements.ts'
+import { resolveJsxElements } from '../system/base/jsx.ts'
 import {
   compileNative,
   releaseRetention,
