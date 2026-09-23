@@ -4,10 +4,10 @@
 
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { copyPackageAssets } from '../../packager/assets.ts'
-import { writePackageJson } from '../../packager/manifest.ts'
-import { REACT_PACKAGE } from '../../packager/packages.ts'
-import type { PublishInput } from '../../packager/types.ts'
+import { copyPackageAssets } from './assets.ts'
+import { writePackageJson } from './manifest.ts'
+import { REACT_PACKAGE } from './packages.ts'
+import type { PublishInput } from './types.ts'
 
 // The stylesheet copy lands here (D5) as a filesystem copy of the styled
 // leg's file, so the 14 MiB sheet is encoded once. Requires the styled leg

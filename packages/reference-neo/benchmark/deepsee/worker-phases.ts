@@ -21,12 +21,12 @@ import {
 import { resolveJsxElements } from '../../src/sync/jsx-elements.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'
-import { linkGeneratedPackages } from '../../src/sync/publish/links.ts'
-import { publishRuntimeBundle, writeStyledDir } from '../../src/sync/publish/styled.ts'
-import { writeSystemDir } from '../../src/sync/publish/system.ts'
-import { writeReactDir } from '../../src/sync/publish/react-shell.ts'
-import { publishTypesBundle } from '../../src/sync/publish/types-bundle.ts'
-import { publishReactBundle } from '../../src/sync/react.ts'
+import { linkGeneratedPackages } from '../../src/packager/links.ts'
+import { publishRuntimeBundle, writeStyledDir } from '../../src/packager/styled.ts'
+import { writeSystemDir } from '../../src/packager/system.ts'
+import { writeReactDir } from '../../src/packager/react-shell.ts'
+import { publishTypesBundle } from '../../src/packager/types-bundle.ts'
+import { publishReactBundle } from '../../src/packager/react.ts'
 
 interface WorkerArgs {
   dir: string

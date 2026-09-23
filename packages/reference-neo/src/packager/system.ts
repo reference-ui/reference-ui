@@ -6,11 +6,11 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { BaseSystem } from '../../config/types.ts'
-import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
-import { writePackageJson } from '../../packager/manifest.ts'
-import { SYSTEM_PACKAGE } from '../../packager/packages.ts'
-import type { PublishInput } from '../../packager/types.ts'
+import type { BaseSystem } from '../config/types.ts'
+import { BASE_SYSTEM_HEADER } from './constants.ts'
+import { writePackageJson } from './manifest.ts'
+import { SYSTEM_PACKAGE } from './packages.ts'
+import type { PublishInput } from './types.ts'
 
 function publishedBaseSystem(input: PublishInput): BaseSystem {
   return {

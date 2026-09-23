@@ -1,15 +1,15 @@
 // Assembly for Neo generated packages.
 // It takes the assembly input sync builds from compile output and emits the complete generated folder plus its project links, in dependency order.
-// The order is the contract: shells before the bundles that read them, bundles before the links that publish them. Legs still live under sync/ (their move here is Tokyo item-3-owned); the assembly already lives where they are headed.
+// The order is the contract: shells before the bundles that read them, bundles before the links that publish them. The legs live beside the assembly; sync calls this one entry with the compile output.
 
 import { mkdirSync } from 'node:fs'
-import { writeSystemDir } from '../sync/publish/system.ts'
-import { publishRuntimeBundle, writeStyledDir } from '../sync/publish/styled.ts'
-import { writeReactDir } from '../sync/publish/react-shell.ts'
-import { linkGeneratedPackages } from '../sync/publish/links.ts'
-import { publishTypesBundle } from '../sync/publish/types-bundle.ts'
-import { publishReactBundle } from '../sync/react.ts'
-import { publishReferenceTypesBundle } from '../sync/reference-types.ts'
+import { writeSystemDir } from './system.ts'
+import { publishRuntimeBundle, writeStyledDir } from './styled.ts'
+import { writeReactDir } from './react-shell.ts'
+import { linkGeneratedPackages } from './links.ts'
+import { publishTypesBundle } from './types-bundle.ts'
+import { publishReactBundle } from './react.ts'
+import { publishReferenceTypesBundle } from './reference-types.ts'
 import type { AssemblyInput } from './types.ts'
 
 /**

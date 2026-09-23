@@ -10,11 +10,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { microBundleWithResult } from '../lib/microbundle/index.ts'
-import { BASE_SYSTEM_HEADER } from '../packager/constants.ts'
-import { TYPES_BUNDLE_EXTERNALS } from '../packager/externals.ts'
-import { writePackageJson } from '../packager/manifest.ts'
-import { TYPES_PACKAGE } from '../packager/packages.ts'
-import { runPostprocess } from '../packager/postprocess/index.ts'
+import { BASE_SYSTEM_HEADER } from './constants.ts'
+import { TYPES_BUNDLE_EXTERNALS } from './externals.ts'
+import { writePackageJson } from './manifest.ts'
+import { TYPES_PACKAGE } from './packages.ts'
+import { runPostprocess } from './postprocess/index.ts'
 
 export interface ReferenceTypesPublishInput {
   outDir: string

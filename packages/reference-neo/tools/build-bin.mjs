@@ -23,8 +23,8 @@ const DIST = join(PKG, 'dist')
 const PATH_LITERAL_SOURCES = new Map([
   ['src/config/bundle.ts', ['index.ts']],
   ['src/collect/lib/bootstrap.ts', ['index.ts', 'react.ts']],
-  ['src/sync/react.ts', ['context.ts', 'factory.ts', 'index.ts', 'split.ts']],
-  ['src/sync/reference-types.ts', ['types.d.mts', 'types.tsx']],
+  ['src/packager/react.ts', ['context.ts', 'factory.ts', 'index.ts', 'split.ts']],
+  ['src/packager/reference-types.ts', ['types.d.mts', 'types.tsx']],
 ])
 
 // Twin copies: transpiled emit duplicated under the computed .ts/.tsx name

@@ -17,7 +17,7 @@ import {
   generateReactEntrySource,
   generateReactTypesSource,
 } from '../primitives/generate/generate.ts'
-import { REACT_BUNDLE_EXTERNALS } from '../packager/externals.ts'
+import { REACT_BUNDLE_EXTERNALS } from './externals.ts'
 
 export interface ReactPublishInput {
   outDir: string

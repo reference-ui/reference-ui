@@ -5,10 +5,10 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
-import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
-import { writePackageJson } from '../../packager/manifest.ts'
-import { STYLED_PACKAGE } from '../../packager/packages.ts'
-import type { PublishInput } from '../../packager/types.ts'
+import { BASE_SYSTEM_HEADER } from './constants.ts'
+import { writePackageJson } from './manifest.ts'
+import { STYLED_PACKAGE } from './packages.ts'
+import type { PublishInput } from './types.ts'
 
 export function writeStyledDir(input: PublishInput): void {
   const dir = join(input.outDir, 'styled')

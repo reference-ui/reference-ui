@@ -4,9 +4,9 @@
 
 import { mkdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { createSymlink } from '../../lib/symlink/index.ts'
-import { getShortName } from '../../packager/layout.ts'
-import { PACKAGES } from '../../packager/packages.ts'
+import { createSymlink } from '../lib/symlink/index.ts'
+import { getShortName } from './layout.ts'
+import { PACKAGES } from './packages.ts'
 
 const LINKED_PACKAGES = PACKAGES.map(pkg => getShortName(pkg.name))
 

@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
-import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
+import { BASE_SYSTEM_HEADER } from './constants.ts'
 
 /**
  * Publish the styled subpath declarations beside the central index: the root

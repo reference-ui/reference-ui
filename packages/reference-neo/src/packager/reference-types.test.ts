@@ -13,9 +13,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
-import { rewriteTypesRuntimeImport } from '../packager/postprocess/rewrite-types-runtime-import.ts'
-import { linkGeneratedPackages } from './publish/links.ts'
-import { BASE_SYSTEM_HEADER } from '../packager/constants.ts'
+import { rewriteTypesRuntimeImport } from './postprocess/rewrite-types-runtime-import.ts'
+import { linkGeneratedPackages } from './links.ts'
+import { BASE_SYSTEM_HEADER } from './constants.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ENTRY_SOURCE = join(HERE, '..', 'entry', 'types.tsx')
