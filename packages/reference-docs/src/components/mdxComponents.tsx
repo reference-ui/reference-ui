@@ -25,6 +25,9 @@ const linkClass = css({
   _hover: { color: 'docsAccent' },
 })
 
+/** MDX native props minus legacy string-refs, which neo primitives don't take. */
+type MdxProps<T extends keyof JSX.IntrinsicElements> = Omit<JSX.IntrinsicElements[T], 'ref'>
+
 function MdxLink({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) {
   if (!href || href.startsWith('http') || href.startsWith('mailto:')) {
     return (
@@ -63,7 +66,7 @@ function MdxLink({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorEle
 }
 
 export const mdxComponents = {
-  h1: props => (
+  h1: (props: MdxProps<'h1'>) => (
     <H1
       color="docsText"
       fontSize="8r"
@@ -74,7 +77,7 @@ export const mdxComponents = {
       {...props}
     />
   ),
-  h2: props => (
+  h2: (props: MdxProps<'h2'>) => (
     <H2
       color="docsText"
       fontSize="6r"
@@ -87,7 +90,7 @@ export const mdxComponents = {
       {...props}
     />
   ),
-  h3: props => (
+  h3: (props: MdxProps<'h3'>) => (
     <H3
       color="docsText"
       fontSize="5r"
@@ -97,7 +100,7 @@ export const mdxComponents = {
       {...props}
     />
   ),
-  p: props => (
+  p: (props: MdxProps<'p'>) => (
     <P
       color="docsText"
       fontSize="md"
@@ -108,16 +111,16 @@ export const mdxComponents = {
     />
   ),
   a: MdxLink,
-  ul: props => (
+  ul: (props: MdxProps<'ul'>) => (
     <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
   ),
-  ol: props => (
+  ol: (props: MdxProps<'ol'>) => (
     <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
   ),
-  li: props => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
-  strong: props => <Strong color="docsText" fontWeight="700" {...props} />,
-  hr: props => <Hr borderColor="docsPanelBorder" marginY="8r" {...props} />,
-  blockquote: props => (
+  li: (props: MdxProps<'li'>) => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
+  strong: (props: MdxProps<'strong'>) => <Strong color="docsText" fontWeight="700" {...props} />,
+  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsPanelBorder" marginY="8r" {...props} />,
+  blockquote: (props: MdxProps<'blockquote'>) => (
     <Blockquote
       borderLeft="4px solid"
       borderLeftColor="docsBlockquoteBorder"
@@ -128,7 +131,7 @@ export const mdxComponents = {
       {...props}
     />
   ),
-  code: ({ className, children, ...rest }) => {
+  code: ({ className, children, ...rest }: MdxProps<'code'>) => {
     const isBlock = typeof className === 'string' && className.includes('language-')
     if (isBlock) {
       return (

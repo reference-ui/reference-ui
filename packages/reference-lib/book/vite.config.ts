@@ -3,7 +3,6 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { referenceVite } from '@reference-ui/core'
 import { bookPerfPlugin } from './perf/plugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -27,7 +26,7 @@ export default defineConfig({
     strictPort: true,
     host: true,
   },
-  plugins: [referenceVite(), bookPerfPlugin(), react()],
+  plugins: [bookPerfPlugin(), react()],
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [

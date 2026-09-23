@@ -47,11 +47,10 @@
     "@material-symbols-svg/react": "^0.5.0"
   },
   "peerDependencies": {
-    "@reference-ui/core": "*",
     "react": ">=18"
   },
   "devDependencies": {
-    "@reference-ui/core": "workspace:*",
+    "@reference-ui/neo": "workspace:*",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",

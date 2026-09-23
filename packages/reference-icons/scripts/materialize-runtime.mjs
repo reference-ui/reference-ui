@@ -12,16 +12,11 @@ const packagedRuntimeDir = resolve(distDir, 'runtime/reference-ui')
 
 const runtimePackages = ['react', 'styled']
 
+// Neo's styled leg is data-only: no css/jsx/patterns modules exist.
+// The packaged react entry is self-contained JS; its .d.mts references
+// the bare styled id twice (import + export type *), both rewired here.
 const runtimeRewrites = [
-  ['@reference-ui/styled/css/cva', '../styled/css/cva.js'],
-  ['@reference-ui/styled/types/prop-type', '../styled/types/prop-type.d.ts'],
-  ['@reference-ui/styled/types/style-props', '../styled/types/style-props.d.ts'],
-  ['@reference-ui/styled/types/conditions', '../styled/types/conditions.d.ts'],
-  ['@reference-ui/styled/types/recipe', '../styled/types/recipe.d.ts'],
-  ['@reference-ui/styled/types', '../styled/types/index.d.ts'],
-  ['@reference-ui/styled/css', '../styled/css/index.js'],
-  ['@reference-ui/styled/jsx', '../styled/jsx/index.js'],
-  ['@reference-ui/styled/patterns/box', '../styled/patterns/box.js'],
+  ['@reference-ui/styled', '../styled/index.d.ts'],
 ]
 
 const bundleRewrites = [

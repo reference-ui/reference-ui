@@ -5,7 +5,7 @@
  * Uses reference-core as the live config/runtime pipeline.
  */
 
-import { defineConfig } from '@reference-ui/core'
+import { defineConfig } from '@reference-ui/neo'
 
 export default defineConfig({
   name: 'reference-ui',

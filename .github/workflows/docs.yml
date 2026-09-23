@@ -12,9 +12,9 @@ on:
       - .github/workflows/rust-compile.yml
       - package.json
       - pnpm-lock.yaml
-      - packages/reference-core/**
       - packages/reference-lib/**
       - packages/reference-docs/**
+      - packages/reference-neo/**
       - packages/reference-rs/**
   workflow_dispatch:
 

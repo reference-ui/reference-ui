@@ -1,6 +1,6 @@
 # @reference-ui/lib
 
-Foundational design system package built on `@reference-ui/core`.
+Foundational design system package built on `@reference-ui/neo`.
 
 ## Exports
 
@@ -10,7 +10,7 @@ Foundational design system package built on `@reference-ui/core`.
 ## Usage
 
 ```bash
-pnpm run sync   # Run ref sync once
+pnpm run sync   # Run neo sync once
 pnpm run dev    # Watch mode
 ```
 

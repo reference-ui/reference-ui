@@ -5,7 +5,7 @@ import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 
-export default defineConfig(async ({ command }) => {
+export default defineConfig(() => {
   const plugins: PluginOption[] = [
     {
       enforce: 'pre' as const,
@@ -17,11 +17,6 @@ export default defineConfig(async ({ command }) => {
     contentCollections(),
     react({ include: /\.(mdx|js|jsx|ts|tsx)$/ }),
   ]
-
-  if (command === 'serve') {
-    const { referenceVite } = await import('@reference-ui/core')
-    plugins.splice(2, 0, referenceVite())
-  }
 
   return {
     plugins,

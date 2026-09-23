@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/core'
+import { defineConfig } from '@reference-ui/neo'
 import { ICON_JSX_NAMES } from './src/jsx-names'
 
 export default defineConfig({
