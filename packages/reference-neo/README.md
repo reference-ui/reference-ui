@@ -54,8 +54,8 @@ somewhere to live.
 
 ## Working docs
 
-- [`PLAN.md`](PLAN.md) — the living plan and open questions.
-- [`PLAN_TOKYO.md`](PLAN_TOKYO.md) — the architecture rethink, item by item.
+- [`PLAN.md`](PLAN.md) — the one plan: status, thesis, sequencing,
+  the architecture map item by item, constraints, open questions.
 - [`docs/TESTING.md`](docs/TESTING.md) — cases, artifacts, snapshots, the gate.
 - [`docs/DOMAIN.md`](docs/DOMAIN.md) — the domain language: names that build
   the runtime, plus retired ones to never revive.
