@@ -1,1 +1,0 @@
-export { MyStyleComponent, type MyStyleComponentProps } from './MyStyleComponent'
