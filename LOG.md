@@ -4,9 +4,10 @@ Target: enterprise sync ≈ **700 ms**. Panda v2: 645 ms on the same
 seed-7 app load (3,000 files, 7,527 css() calls). Wave-2 closed at
 ≈938 ms from 1198 ms (−260, 24 diets, 6 arcs).
 
-Standing rules: single-threaded serial diets only — parallel and
-multithreaded compile are BANNED by HQ, never attempted. RSS and
-bundle are guardrails, never traded for sync. Honest arithmetic per
+Standing rules: parallel UNBANNED 2026-09-22 (CORES.md D1 adopted) —
+parallel lands ONLY stable and proven under the CORES contract (tests
+for every mechanism, P1–P10, §5 measurement). RSS and bundle are
+guardrails, never traded for sync. Honest arithmetic per
 wave: repro2's ≈910 stacking ceiling stands until fresh flames say
 otherwise.
 
