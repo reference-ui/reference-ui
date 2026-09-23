@@ -4,7 +4,7 @@ import {
   createReferenceDocument,
   createReferenceUiTastyApi,
   type ReferenceDocument,
-} from '@reference-ui/core/reference'
+} from '@reference-ui/neo/reference'
 
 export interface McpReferenceMemberData {
   name: string

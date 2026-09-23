@@ -3,7 +3,7 @@ import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { discoverProjects } from './workspace-discovery'
-import { GlobalProjectRegistry } from '@reference-ui/core/paths'
+import { GlobalProjectRegistry } from './project-registry'
 
 describe('discoverProjects', () => {
   let testDir: string

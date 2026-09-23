@@ -50,7 +50,7 @@ Reference UI projects configure their component and asset surface via boolean fl
 
 ## Running MCP
 
-Run `pnpm exec ref sync` once after installation or package updates before starting the MCP server:
+Run `neo sync` once after installation or package updates before starting the MCP server:
 
 ```shell
 # Stdio transport (for IDEs and AI agent configs):

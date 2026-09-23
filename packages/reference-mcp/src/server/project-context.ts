@@ -50,7 +50,7 @@ export async function executeWithProject(
         return toErrorResult(
           `Project at '${projectPath}' has not been synced yet.\n` +
             `Generated type artifacts are missing at '${projectPath}/.reference-ui/types/tasty/manifest.js'.\n` +
-            `Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.`
+            `Run 'neo sync' (or 'pnpm dev') to generate the model artifacts.`
         )
       }
       return toErrorResult(state.error.message)

@@ -297,4 +297,4 @@ When the MCP server runs in a directory or workspace where no `ui.config.ts` exi
    - Built-in `@reference-ui/react` layout and typography primitives (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`, etc.).
    - Standard `@reference-ui/lib` components.
    - The shared `get_style_props` reference.
-   - Informative notices guiding the developer to run `ref init` or `ref sync` to enable project-specific tokens and AST analysis.
+   - Informative notices guiding the developer to run `neo sync` to enable project-specific tokens and AST analysis.

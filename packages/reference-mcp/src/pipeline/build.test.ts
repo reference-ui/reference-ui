@@ -16,7 +16,7 @@ vi.mock('@reference-ui/rust/atlas', () => ({
   analyzeDetailed,
 }))
 
-vi.mock('@reference-ui/core/config', () => ({
+vi.mock('@reference-ui/neo/config/store', () => ({
   getConfig,
 }))
 
@@ -25,7 +25,7 @@ vi.mock('./reference', () => ({
   loadMcpReferenceData,
 }))
 
-vi.mock('@reference-ui/core/tokens', () => ({
+vi.mock('./tokens', () => ({
   loadMcpTokens,
 }))
 
@@ -120,7 +120,7 @@ describe('buildMcpArtifact', () => {
     existsSync.mockReturnValue(false)
 
     await expect(generateMcpArtifact({ cwd: '/workspace/app' })).rejects.toThrow(
-      'MCP build requires generated Reference UI artifacts at "/tmp/types/tasty/manifest.js". Run "pnpm exec ref sync" from the project root before starting the MCP server.'
+      'MCP build requires generated Reference UI artifacts at "/tmp/types/tasty/manifest.js". Run "neo sync" from the project root before starting the MCP server.'
     )
 
     expect(analyzeDetailed).not.toHaveBeenCalled()
