@@ -1141,6 +1141,12 @@ importers:
       '@types/json-schema':
         specifier: ^7.0.15
         version: 7.0.15
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
       '@webref/css':
         specifier: 8.7.4
         version: 8.7.4(css-tree@3.2.1)
@@ -1156,6 +1162,12 @@ importers:
       json-schema:
         specifier: ^0.4.0
         version: 0.4.0
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.18))(postcss@8.5.28)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.8.2)

@@ -33,17 +33,22 @@ pnpm --filter @reference-ui/rust run primitives
 ```
 
 The entry (`generate/generate.ts`, canon-script precedent) collects both
-sources, prints E1 + E4, scans tripwires, and writes the files. Bytes are
+sources, prints E1 + E2 + E4, scans tripwires, and writes the files. Bytes are
 deterministic — sorted keys, fixed header, no timestamps — so running twice
 and comparing with `cmp` must be silent. Any fail-closed violation (JSX
 collision, alias resolving outside the prop set, breakpoint key in the
 system-independent set, `Box`/`Flex`/`Grid` in the roster, forbidden surface
 in the output) exits nonzero with the offending source named.
 
-E2 (`primitives.mjs`, the raw system-unbound component module) is flagged for
-W2, not emitted here: it calls `createPrimitive` against the runtime trio that
-still lives Neo-side, so emitting it now would import across the cut or stub
-the runtime. W2 moves the runtime home (E3) and emits E2 against it.
+E2 (`primitives.mjs`, the raw system-unbound component module) prints the
+101-entry roster only: one thin `createPrimitive` call per tag plus the
+single `configurePrimitives({ layerName, stylePropNames, css })` seam that
+returns the bound roster. The generator never prints React runtime (PLAN
+§3.4) — the factory, splitter, and contexts are authored sources, moved
+verbatim from Neo's `primitives/runtime/` into the module's `js/` home (E3),
+with their suites beside them. The two homes meet only at E2's relative
+import of the trio; the unbound exports never render (empty splitter, blank
+layer, throwing css), so importing E2 is side-effect free by construction.
 
 ## Consumers
 
@@ -55,7 +60,11 @@ keys, and the caption/menu element overrides. `generated/primitives.d.ts`
 per-tag props + const declarations in today's react-types shape with the
 per-world bake removed, the `PrimitiveProps<T>` generic, contexts, and
 `useColorMode`. The `css`/`recipe` declarations stay Neo-appended at the W4
-cutover. Both files vendor to `native/generated/primitives/` (W3 tool); Neo's
-per-system emitter and the PGEN station read the vendored copies, never Rust
-tables directly. The committed outputs are their own goldens: the test suite
-rebuilds both artifacts in memory and fails on any byte drift.
+cutover. `generated/primitives.mjs` (E2) is the runnable roster: 101 unbound
+components plus the `configurePrimitives` seam, importing the authored trio
+from the `js/` home. E1 and E4 vendor to `native/generated/primitives/`
+(W3 tool); E2 and the trio travel as live sources (typegen precedent —
+bundled at sync time, never copied). Neo's per-system emitter calls the seam
+instead of string-building entries, and the PGEN station renders through the
+bound roster. The committed outputs are their own goldens: the test suite
+rebuilds all three artifacts in memory and fails on any byte drift.

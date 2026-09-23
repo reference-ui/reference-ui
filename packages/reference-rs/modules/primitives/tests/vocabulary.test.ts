@@ -1,13 +1,17 @@
 /**
- * Golden suite for the primitives generator (E1 vocabulary.json + E4 primitives.d.ts).
- * Rebuilds both artifacts in memory and pins the committed bytes, the 101-element
- * HTML roster, and the style-prop parity with the live napi and typegen goldens.
- * Refreshes only via the generator itself — hand edits to generated/ fail here.
+ * Golden suite for the primitives generator (E1 vocabulary.json + E2 primitives.mjs
+ * + E4 primitives.d.ts). Rebuilds all three artifacts in memory and pins the committed
+ * bytes, the 101-element HTML roster, the bound-roster seam, and the style-prop parity
+ * with the live napi and typegen goldens. Refreshes only via the generator itself —
+ * hand edits to generated/ fail here.
  */
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import * as roster from '../generated/primitives.mjs'
 import { buildArtifacts } from '../generate/generate.js'
 import { primitivesVocabulary } from '../../typegen/js/index.js'
 
@@ -61,10 +65,11 @@ const FAMILIES = [
 ]
 
 describe('primitives generator goldens', () => {
-  it('PRIMGEN-01 rebuilds byte-identical E1 and E4 from live sources', () => {
+  it('PRIMGEN-01 rebuilds byte-identical E1, E2, and E4 from live sources', () => {
     const fresh = buildArtifacts()
 
     expect(fresh.vocabularyJson).toBe(readCommitted('vocabulary.json'))
+    expect(fresh.primitivesMjs).toBe(readCommitted('primitives.mjs'))
     expect(fresh.primitivesDts).toBe(readCommitted('primitives.d.ts'))
   })
 
@@ -130,5 +135,41 @@ describe('primitives generator goldens', () => {
     expect(dts).not.toContain('rounded')
     expect(dts).not.toMatch(/"c_[0-9a-z]{5,}"/)
     expect(dts).not.toMatch(/pandacss/i)
+  })
+
+  it('PRIMGEN-05 bound-roster module carries 101 exports plus the configure seam', () => {
+    const vocabulary = readVocabulary()
+    const names = new Set(Object.keys(roster))
+    const seam = [
+      'configurePrimitives',
+      'Fragment',
+      'createElement',
+      'LayerScopeContext',
+      'ColorModeContext',
+      'DocumentContext',
+      'useColorMode',
+    ]
+
+    expect(names.size).toBe(101 + seam.length)
+    for (const row of vocabulary.elements) expect(names.has(row.jsx)).toBe(true)
+    for (const name of seam) expect(names.has(name)).toBe(true)
+    expect(roster.Div.displayName).toBe('Div')
+    expect(roster.Map.displayName).toBe('Map')
+
+    const bound = roster.configurePrimitives({
+      layerName: 'test-layer',
+      stylePropNames: ['color'],
+      css: () => 'mock-class',
+    })
+    expect(Object.keys(bound)).toHaveLength(101)
+    const html = renderToStaticMarkup(
+      createElement(bound.Div, { color: 'brand', className: 'extra', children: 'prim' })
+    )
+    expect(html).toContain('class="ref-div mock-class extra"')
+    expect(html).toContain('data-layer="test-layer"')
+
+    expect(() => renderToStaticMarkup(createElement(roster.Div, {}))).toThrow(
+      /configurePrimitives/
+    )
   })
 })
