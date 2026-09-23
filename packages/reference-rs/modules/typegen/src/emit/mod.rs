@@ -10,6 +10,7 @@
 //! Strict wrappers are printer options, not dump fields.
 
 mod fonts;
+mod props;
 mod recipes;
 mod strict;
 mod style;
@@ -18,6 +19,10 @@ mod ts;
 
 use crate::EmitOptions;
 use base_system::BaseSystem;
+
+pub(crate) fn vocabulary_json() -> Result<String, serde_json::Error> {
+    props::PropDefs::collect().vocabulary_json()
+}
 
 pub(crate) fn dts(system: &BaseSystem, options: &EmitOptions) -> String {
     let mut out = tokens::token_unions(system);

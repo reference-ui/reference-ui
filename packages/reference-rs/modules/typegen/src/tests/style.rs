@@ -10,6 +10,7 @@
 //! and the `variant`/`colorMode` exclusion. Catalog emit stays token-only.
 
 use super::{catalog_dts, style_dts};
+use crate::primitives_vocabulary_json;
 use std::collections::BTreeSet;
 
 const COLOR_VALUE: &str = "StylePropValue<ColorToken | (string & {})>";
@@ -178,6 +179,51 @@ fn typ_style_06_emits_open_keys_and_custom_property_index() {
             "TYP-STYLE-06: StyleProps must not declare primitive metadata {forbidden}:\n{fields}"
         );
     }
+}
+
+/// TYP-VOCAB-00 — the napi vocabulary reads the same PropDefs the printer prints.
+#[test]
+fn typ_vocab_00_vocabulary_matches_printed_style_props() {
+    let json = primitives_vocabulary_json().expect("vocabulary serializes");
+    let vocab: serde_json::Value =
+        serde_json::from_str(&json).expect("vocabulary is valid JSON");
+    let props = vocab["props"].as_array().expect("props is an array");
+    let names: BTreeSet<&str> = props
+        .iter()
+        .map(|name| name.as_str().expect("prop is a string"))
+        .collect();
+    for present in ["bg", "color", "container", "p", "r", "size"] {
+        assert!(
+            names.contains(present),
+            "TYP-VOCAB-00: vocabulary missing {present} in:\n{json}"
+        );
+    }
+    for absent in ["variant", "colorMode", "font", "weight"] {
+        assert!(
+            !names.contains(absent),
+            "TYP-VOCAB-00: vocabulary must not carry {absent} in:\n{json}"
+        );
+    }
+    assert_eq!(
+        vocab["domains"]["container"].as_str(),
+        Some("container"),
+        "TYP-VOCAB-00: container domain in:\n{json}"
+    );
+    assert_eq!(
+        vocab["domains"]["r"].as_str(),
+        Some("rhythm"),
+        "TYP-VOCAB-00: r domain in:\n{json}"
+    );
+    assert_eq!(
+        vocab["aliases"]["bg"].as_str(),
+        Some("background"),
+        "TYP-VOCAB-00: bg alias in:\n{json}"
+    );
+    let dts = style_dts();
+    assert!(
+        dts.contains("  container?: StylePropValue<string | boolean>;"),
+        "TYP-VOCAB-00: printer and vocabulary disagree on container in:\n{dts}"
+    );
 }
 
 fn style_props_fields(dts: &str) -> &str {

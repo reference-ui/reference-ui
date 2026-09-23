@@ -12,3 +12,13 @@ export interface EmitDtsOptions {
   baseSystem: EvaluatedSystemSpec
   strict?: string[]
 }
+
+export type PropValueDomain = 'color' | 'spacing' | 'radius' | 'container' | 'rhythm' | 'open'
+
+export interface PrimitivesVocabulary {
+  props: string[]
+  domains: Record<string, PropValueDomain>
+  conditions: string[]
+  aliases: Record<string, string>
+  dialect: string[]
+}

@@ -47,5 +47,16 @@ pub fn emit_dts_with(system: &BaseSystem, options: &EmitOptions) -> String {
     emit::dts(system, options)
 }
 
+/// Serialize typegen's system-independent StyleProps vocabulary as JSON.
+///
+/// Returns prop names with value domains plus condition keys, aliases, and
+/// dialect keys from the same `PropDefs` the style printer prints from, so
+/// downstream generators read the names typegen knows rather than a mirror.
+/// Breakpoint `@…` keys are system-specific and stay out; they join the
+/// condition union at print time.
+pub fn primitives_vocabulary_json() -> Result<String, serde_json::Error> {
+    emit::vocabulary_json()
+}
+
 #[cfg(test)]
 mod tests;

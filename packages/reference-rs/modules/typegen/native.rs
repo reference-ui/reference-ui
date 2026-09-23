@@ -2,6 +2,7 @@
 //! Accepts serialized emit requests containing an EvaluatedSystemSpec and strict options.
 //! Lowers the spec through base-system's public lowering path and calls emit_dts_with.
 //! Emits pure TypeScript declaration text directly without performing filesystem operations.
+//! Also exposes the system-independent StyleProps vocabulary as JSON for codegen.
 
 use napi::Result;
 use napi_derive::napi;
@@ -28,4 +29,15 @@ pub fn emit_dts_sync(request_json: String) -> Result<String> {
         .map_err(|err| napi::Error::from_reason(err.to_string()))?;
     let options = ::typegen::EmitOptions { strict: req.strict };
     Ok(::typegen::emit_dts_with(&system, &options))
+}
+
+/// Return typegen's system-independent StyleProps vocabulary as a JSON string.
+/// Same `PropDefs` the `.d.ts` style printer prints from: prop names, value
+/// domains, condition keys, aliases, and dialect keys. No system input; the
+/// vocabulary is constant per binary.
+#[napi]
+pub fn primitives_vocabulary() -> Result<String> {
+    ::typegen::primitives_vocabulary_json().map_err(|err| {
+        napi::Error::from_reason(format!("Failed to serialize typegen vocabulary: {err}"))
+    })
 }
