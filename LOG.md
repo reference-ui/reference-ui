@@ -323,6 +323,11 @@ diets); scan voyage opens separately after closeout lands.
 - Slots: 0/7 — BOARD EMPTY. Backlog: diet EMPTY, N1 held, MCP done,
   F1 landed — this entry is the proof. Closeout (bench:neo +
   sync-perf.html per HQ standing order) follows on this tip.
+- SCOREBOARD (bench:neo pin, seed-7 ×5, tip 7c3d39264): small
+  89→84ms, medium 158→140ms, enterprise 1041.9→872ms (−169.9 cold;
+  warm 8-pair −52.38/−5.68% — harness-comparable within suites).
+  Enterprise RSS 324.3→281.3MiB. Bundle unchanged (2.9MiB).
+  Report `benchmark/reports/7c3d392649f0/` filed with this entry.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
