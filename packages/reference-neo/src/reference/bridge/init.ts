@@ -50,7 +50,9 @@ export function initReference(
  * in-process sync path never calls this (background loop only, S5); the
  * one-shot CLI must (its process exits before the loop runs). Resolves
  * undefined when nothing is pending — either the build already landed in the
- * session cache or none was ever scheduled.
+ * session cache or none was ever scheduled. Without the drain, types.mjs
+ * keeps its ./tasty/runtime.js edge while types/tasty/ never lands, and any
+ * bundler resolving @reference-ui/types fails (REF-10).
  */
 export function flushReferenceBuild(
   sourceDir: string
