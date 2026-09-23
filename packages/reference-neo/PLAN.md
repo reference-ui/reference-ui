@@ -291,6 +291,16 @@ at sync time). Proposed module spec:
 - HOME: HQ leans RS (one generator, one language source). Counter to
   resolve: the vendor tool + station could live either side of the
   cut — decide by who owns freshness failures.
+- SHAPE (HQ, converging): RS generates the actual raw files —
+  primitives AND their types in one place, names from typegen's
+  single source of truth (seamless: the names typegen knows are the
+  names emitted). Neo holds the test station: behavior cases (do
+  these primitives actually work?) plus type cases (validity +
+  invalidation — what must typecheck, what must fail). Primitives
+  must be strongly typed; everything else is pretty much just CSS.
+  This is a big overnight brief (see §4): the night crew specs the
+  emission shapes + the station case list + the seam contract —
+  implementation waves sequence in the morning.
 Rename: `vendor/` → TBD. Candidates: `upstream/` (RS *is* upstream
 of Neo — accurate), `rs/` (terse), `generated/rs/` (mechanical
 truth). Captain leans `upstream/`; HQ decides. The rename rides with
@@ -350,6 +360,14 @@ captain verifies + lands in the morning.
    3.9 generator + test station, argued both ways with the tasty
    vendor + canon consult paths as evidence. Delivers the home
    decision for the morning.
+5. **Primitives codegen spec** (read-only, the big one): spec the 3.9
+   end-state — RS emission shapes (raw primitive files + types,
+   names from typegen, single source of truth), the Neo test-station
+   case list (behavior per primitive family + type-validity and
+   type-invalidation cases), and the seam contract (what crosses the
+   cut, in what form, freshness rule). No implementation. Delivers
+   the implementation-ready spec + sequenced wave list for the
+   morning.
 
 Explicitly NOT overnight: the `vendor/` rename (needs HQ's name),
 `author/`--adjacent judgment calls, anything touching the
