@@ -4,6 +4,8 @@ This document is a **long-form map** of what Reference UI is, how the major subs
 
 If you only need the short version, start with the root [README.md](../README.md) and the package READMEs linked at the end.
 
+> **Cutover note (VOYAGE Obj 2):** this document maps the retired `reference-core` engine. `@reference-ui/neo` is the live package and `neo sync` the live command; swept names below track that cutover, while file paths and mechanism detail still describe the pre-cutover tree.
+
 The **reference-core internals** are merged from two repo docs: **[docs/Architecture.md](./Architecture.md)** (**§23** — per-file tree, innovations, quick reference) and **[docs/STRUCTURE.md](./STRUCTURE.md)** (**§24** — three-layer build diagram, declarative API table, eval + microbundle **closure** example, design principles, contributor workflow). Both use historical `src/cli/` / `src/styled/` paths; **§23.1** / **§24** call out where those ideas live after refactors (`system/panda/config/`, `lib/fragments/`, `sync/`, `reference-lib` theme, etc.).
 
 **Native analysis and transforms** live in **[packages/reference-rs](../packages/reference-rs/)** (`@reference-ui/rust`, Rust crate **`reference-virtual-native`**)—see **§25** for the crate layout, N-API surface, Oxc-based modules (Atlas, Tasty, Styletrace, virtualrs), and how that package relates to the rest of this file (**§12–§16**).
@@ -12,7 +14,7 @@ The **reference-core internals** are merged from two repo docs: **[docs/Architec
 
 ## 1. What this project is (in one paragraph)
 
-**Reference UI** is a **chainable design system CLI** (`ref` in `@reference-ui/core`) that **compiles** a consumer’s `ui.config.ts` and source into **generated packages** (React, styled system, types, and more) under a configurable output directory (default **`.reference-ui`**). The same build produces **native-backed analysis** (`@reference-ui/rust`) and a **Model Context Protocol** server (`ref mcp`) that exposes **your project’s** real component inventory and types—not a hand-curated catalog from our docs.
+**Reference UI** is a **chainable design system CLI** (`neo` in `@reference-ui/neo`) that **compiles** a consumer’s `ui.config.ts` and source into **generated packages** (React, styled system, types, and more) under a configurable output directory (default **`.reference-ui`**). The same build produces **native-backed analysis** (`@reference-ui/rust`) and a **Model Context Protocol** server (`ref mcp`) that exposes **your project’s** real component inventory and types—not a hand-curated catalog from our docs.
 
 The “**AI era**” angle is not marketing fluff: the stack is designed so that **machines and humans read the same artifacts**—generated types, Tasty chunks, Atlas usage, and Styletrace rules all trace back to the same sources of truth the runtime uses.
 
@@ -22,13 +24,13 @@ The “**AI era**” angle is not marketing fluff: the stack is designed so that
 
 | Path | Role |
 | --- | --- |
-| `packages/reference-core` | `ref` CLI, `ref sync` orchestration, virtual FS, event bus, system workers, packager, Vite/Webpack integration, MCP implementation. |
+| `packages/reference-neo` | `neo` CLI, `neo sync` orchestration, fragment collection, generated system/runtime/types packages, reference API. |
 | `packages/reference-lib` | First-party design system built on the generated surface (dogfood for the product). |
 | `packages/reference-docs` | Vite docs site; often used as the `cwd` for MCP in this repo so `ui.config.ts` matches the site. |
 | `packages/reference-rs` | **`@reference-ui/rust`** — Rust crate `reference-virtual-native`, napi-rs `.node` binary `virtual-native`, Oxc-based **Atlas / Tasty / Styletrace / virtualrs**; see **§25** (and **§12–§16** for how core uses it). |
 | `packages/reference-icons` | Icon package (decoupled / release-focused; see its README). |
-| `fixtures/*` | Consumer-style fixtures, including `extend-library` and `layer-library` for composition tests. |
-| `matrix/*` | Matrix scenario packages (install/TypeScript stories) discovered by the pipeline. |
+| `matrix/fixtures/*` | Consumer-style fixtures, including `extend-library` and `layer-library` for composition tests. |
+| `matrix/tests/*` | Kept matrix suites (chain-t2, chain-t8, mcp) discovered by the pipeline. |
 | `pipeline/` | Dagger graph, **Verdaccio** staging, pack → load → test flows, **matrix** bootstrap. |
 | `docs/` | Engineering notes — [README.md](./README.md), [FEATURES/](./FEATURES/), [bugs/](./bugs/), [archive/](./archive/). Older core maps: [STRUCTURE.md](./STRUCTURE.md), [Architecture.md](./Architecture.md), [CORE.md](./CORE.md), [LAYERS.md](./LAYERS.md), [RELEASE.md](./RELEASE.md). **§23–§24** in this file fold Architecture/STRUCTURE in with current paths. |
 
@@ -50,8 +52,8 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 
 ## 4. The mental model: compiler + orchestrator, not a dev server
 
-- **`ref sync`** is the main build. It is **not** a long-lived design-server process; it **runs a dependency graph of workers and events** until `sync:complete` (or `sync:failed`).
-- **Watch mode** (`ref sync --watch`) reuses the same graph but keys incremental work off **virtual filesystem** change events, not raw file watches only.
+- **`neo sync`** is the main build. It is **not** a long-lived design-server process; it **runs a dependency graph of workers and events** until `sync:complete` (or `sync:failed`).
+- **Watch mode** (`neo sync --watch`) reuses the same graph but keys incremental work off **virtual filesystem** change events, not raw file watches only.
 - **Generated output** is written under `outDir` (default `.reference-ui`): virtual mirror, Panda output, packaged `@reference-ui/*` facsimiles, Tasty manifest and chunks, MCP model, etc.
 - **Bundlers** (Webpack plugin, Vite integration) can **watch** and **refresh** sync sessions so app dev servers stay aligned with generated files—see `packages/reference-core/src/vite/` and `src/webpack/`.
 
@@ -83,19 +85,19 @@ This is the “knowledge-first” story: the **same** tokens and types you impor
 
 ---
 
-## 6. `ref` commands (CLI surface)
+## 6. `neo` commands (CLI surface)
 
 | Command | Role |
 | --- | --- |
-| `ref` / `ref sync` (default) | Full sync: virtual tree → system config → Panda → packager → reference (Tasty) → final types package. Uses workers and the event bus. |
-| `ref clean` | Deletes the output directory (`.reference-ui`); **main thread only**; use before tests for a cold state. |
+| `neo` / `neo sync` (default) | Full sync: virtual tree → system config → Panda → packager → reference (Tasty) → final types package. Uses workers and the event bus. |
+| `neo clean` | Deletes the output directory (`.reference-ui`); **main thread only**; use before tests for a cold state. |
 | `ref mcp` | Starts the MCP server: **stdio** (editors) or **HTTP** (`--transport http`) for debugging. Runs in the **CLI process**; the heavy MCP artifact build can use a **child process** (see below). |
 
 Editor integration: prefer `node` + the built CLI path; do not assume `pnpm` exists on the host `PATH` for MCP spawns. Examples live in [packages/reference-core/README.md](../packages/reference-core/README.md).
 
 ---
 
-## 7. The `ref sync` pipeline: phases and why order matters
+## 7. The `neo sync` pipeline: phases and why order matters
 
 Orchestration is **declarative** in `packages/reference-core/src/sync/events.ts` (not buried inside workers). The comments in that file are the canonical story; the following is a merged summary.
 
@@ -112,7 +114,7 @@ Orchestration is **declarative** in `packages/reference-core/src/sync/events.ts`
 9. **Runtime TypeScript** — `packager:runtime:complete` → `packager-ts:runtime:requested`. **Critical:** the reference (Tasty) build must not run until **runtime `.d.mts` / declaration surfaces** exist, or re-exported symbols (e.g. `SystemStyleObject`) vanish from the generated manifest. The `sync/events.ts` comment block spells this out explicitly.
 10. **Reference / Tasty build** — Once `VIRTUAL_COMPLETE` and `packager-ts:runtime:complete`, emit `run:reference:build`.
 11. **Final `@reference-ui/types` pack** — After `reference:complete`, `run:packager:bundle` and the closing declaration pass; ends with `packager-ts:complete` → `sync:complete`.
-12. **MCP** — **Not** part of `ref sync`. `ref mcp` loads or builds the component model in **its own process** via `loadOrBuildMcpArtifact` / `createMcpModelState`.
+12. **MCP** — **Not** part of `neo sync`. `ref mcp` loads or builds the component model in **its own process** via `loadOrBuildMcpArtifact` / `createMcpModelState`.
 
 ### 7.2 Failure fan-in
 
@@ -281,7 +283,7 @@ So Styletrace is the **semantic “this wrapper is still a Reference-styled boun
 
 | Path | Content |
 | --- | --- |
-| `types/tasty/manifest.js` | **Required** for MCP build. If missing, `generateMcpArtifact` throws and tells you to run `ref sync` first. |
+| `types/tasty/manifest.js` | **Required** for MCP build. If missing, `generateMcpArtifact` throws and tells you to run `neo sync` first. |
 | `mcp/model.json` | Written artifact: **full** MCP build output (schema version, workspace root, manifest path, Atlas diagnostics, sorted components). |
 
 `getMcpModelPath` / `getMcpTypesManifestPath` live in `packages/reference-core/src/mcp/pipeline/paths.ts`.
@@ -325,7 +327,7 @@ Server version field is currently `0.0.3` in source; the description states Atla
 
 ### 16.6 Sync vs MCP
 
-`sync/events.ts` states it plainly: **MCP does not block `ref sync`**. They share generated inputs (you need **`ref sync`** to produce the types manifest) but **different lifecycles**.
+`sync/events.ts` states it plainly: **MCP does not block `neo sync`**. They share generated inputs (you need **`neo sync`** to produce the types manifest) but **different lifecycles**.
 
 ---
 
@@ -376,7 +378,7 @@ Full narrative: [pipeline/src/registry/README.md](../pipeline/src/registry/READM
 
 ---
 
-## 21. Dagger matrix bootstrap (containerized install + `ref sync` + tests)
+## 21. Dagger matrix bootstrap (containerized install + `neo sync` + tests)
 
 Implementation: [pipeline/src/testing/matrix/run.ts](../pipeline/src/testing/matrix/run.ts) (also summarized in [pipeline/src/testing/matrix/README.md](../pipeline/src/testing/matrix/README.md)).
 
@@ -387,7 +389,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](../pipeline/src/testing/mat
 3. **Read** the **shared** host Verdaccio manifest; fingerprint it for a **Dagger pnpm store cache** key so repeated runs reuse dependency downloads.
 4. **Node container** — e.g. `node:24-bookworm`, pnpm from Corepack, env vars for `CI`, registry URL inside the graph.
 5. **Service binding** — Verdaccio runs on the **host**; Dagger **forwards** it as a service (`dag.host().service(…)`) at `MANAGED_REGISTRY_HOST:MANAGED_REGISTRY_PORT` so the container uses **`npm_config_registry`** / `pnpm install --registry` consistently with the same manifest the host published.
-6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](../pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/core` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec ref sync`**; then **`pnpm test`**.
+6. For each matrix package: write `/consumer` (see `CONSUMER_DIR_IN_CONTAINER` in [pipeline/config.ts](../pipeline/config.ts)) `package.json` (synthesized from the fixture + pinned `@reference-ui/neo` and `@reference-ui/lib` versions), `tsconfig`, `ui.config.ts`, and fixture `src`/`tests` files; **`pnpm install` from the registry**; run **`pnpm exec neo sync`**; then **`pnpm test`**.
 7. **Logs** land under **`.pipeline/testing/matrix/`** with per-package, per-stage filenames (`-install.log`, `-ref-sync.log`, `-test.log`).
 
 **macOS:** if Docker uses Colima, `ensureContainerRuntime` can start the VM when needed (see the matrix README).
@@ -404,7 +406,7 @@ Implementation: [pipeline/src/testing/matrix/run.ts](../pipeline/src/testing/mat
 | `packages/reference-rs` (Rust + Vitest) | Parser and emitter semantics, Tasty case suites, Styletrace, Atlas. |
 | `matrix/*` (Vitest / Playwright in Dagger) | Browser and install-shaped regressions per `matrix.json` scenarios. |
 | Pipeline unit tests | `pnpm --dir pipeline run test:pipeline` for registry and graph helpers. |
-| Matrix (Dagger) | Packaged **install** + **`ref sync`** in clean Linux + project tests. |
+| Matrix (Dagger) | Packaged **install** + **`neo sync`** in clean Linux + project tests. |
 
 ---
 
@@ -544,7 +546,7 @@ Taken from Architecture.md’s **Styled System** section; these are the **author
 | **rhythm/** | Vertical rhythm, `r` prop utilities ( Architecture highlights **container-first** `r={{ 320: {...} }}` ) |
 | **props/** | Merged **box** pattern, `r`, `container`, `font` preset props |
 | **animations/** | Keyframe modules (fade, slide, scale, spin, bounce, attention) |
-| **api/** + **api/internal/** | `extendTokens`, `extendRecipe`, `extendPattern`, `extendUtilities`, `extendGlobalCss`, `extendStaticCss`, `extendGlobalFontface`, `extendKeyframes`, `extendFont` |
+| **api/** + **api/internal/** | `extendTokens`, `extendRecipe`, `extendUtilities`, `extendGlobalCss`, `extendStaticCss`, `extendGlobalFontface`, `extendKeyframes`, `extendFont` |
 | **api/runtime/** | `css()`, recipe helpers re-exported for components |
 
 **Global / static CSS:** `css.global.ts` (e.g. `:root`, body), `css.static.ts` (force specific utilities/recipes) — same concepts apply to generated global layers in the sync pipeline.
@@ -580,7 +582,7 @@ The upstream doc’s pipeline is **eval → microbundle → Panda → link**. Th
 ```
 User / library code (extend*, tokens, primitives, app JSX)
         ↓
-  ref sync (index.ts + sync/* + workers)
+  neo sync (index.ts + sync/* + workers)
         ↓
   Virtual mirror + system workers (config → Panda codegen/cssgen)
         ↓
@@ -635,7 +637,7 @@ The source doc lists **planned** microbundles (animation, theme switching, desig
 ### 23.14 Development workflow (from Architecture.md, updated)
 
 1. **Edit** design tokens or components (e.g. under `reference-lib` or your app using Reference).
-2. **`ref sync`** or **`ref sync --watch`** from the consumer package (with `cwd` set to the project with `ui.config.ts`).
+2. **`neo sync`** or **`neo sync --watch`** from the consumer package (with `cwd` set to the project with `ui.config.ts`).
 3. **Pipeline inside core**: virtual + config + Panda + packager + reference + types (§7).
 4. **Import** `@reference-ui/system/css`, `@reference-ui/react`, etc., from generated `node_modules` (or workspace links during dev).
 
@@ -664,11 +666,11 @@ For the **three-layer diagram**, **declarative API table**, **PRESETS / closure*
 2. **`@reference-ui/web`** — Web components (framework-agnostic)  
 3. **`@reference-ui/system`** — Panda-powered design system: `css()`, patterns, recipes, tokens, global styles / theme
 
-These are materialized into the consumer’s **`node_modules`** (or workspace links) after **`ref sync`**, not only as abstract package names.
+These are materialized into the consumer’s **`node_modules`** (or workspace links) after **`neo sync`**, not only as abstract package names.
 
 ### 24.3 The three-layer architecture (ASCII from STRUCTURE)
 
-This is the **intended** dataflow for the **Panda / styled** slice of the product. The **full** `ref sync` graph (virtual FS, workers, packager, Tasty, types) is still **§7** in this file—think of the diagram below as the **middle** of that larger pipeline.
+This is the **intended** dataflow for the **Panda / styled** slice of the product. The **full** `neo sync` graph (virtual FS, workers, packager, Tasty, types) is still **§7** in this file—think of the diagram below as the **middle** of that larger pipeline.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -794,7 +796,7 @@ STRUCTURE.md includes a **nested** tree with `src/cli/`, `src/styled/`, `src/com
 
 ### 24.11 Development workflow (from STRUCTURE, path-updated)
 
-**Users:** install `@reference-ui/core` → import base styles (`@reference-ui/system/styles.css`) → author tokens / components using the APIs in **§24.4** → **`ref sync`** (or watch) → import from `@reference-ui/*`.
+**Users:** use workspace `@reference-ui/neo` (private — no install step) → import base styles (`@reference-ui/system/styles.css`) → author tokens / components using the APIs in **§24.4** → **`neo sync`** (or watch) → import from `@reference-ui/*`.
 
 **Contributors:** change system definitions or `reference-lib` theme → `pnpm` build the relevant package → run tests → commit. Generated outputs may be **committed** where the package expects them; follow existing repo conventions and `packages/reference-core` scripts.
 
@@ -818,7 +820,7 @@ STRUCTURE’s bottom links point at paths like `src/styled/PLAN.md` and `src/cli
 
 ## 25. Appendix: `packages/reference-rs` (`@reference-ui/rust`)
 
-[packages/reference-rs](../packages/reference-rs/) is a **separate published package** from `@reference-ui/core`. It is the **native tier** of Reference UI: heavy parsing and analysis run in **Rust** (with **Oxc** for TypeScript/JSX), and selected entrypoints are exposed to Node through **Node-API** via [napi-rs](https://github.com/napi-rs/napi-rs). TypeScript in **`js/`** loads the **`.node`** binary and provides ergonomic APIs, bundled with **tsup** into **`dist/`**. High-level product behavior of Atlas, Tasty, and Styletrace in the user-facing story is also in **§12–§16** above; this section is the **package/crate** map.
+[packages/reference-rs](../packages/reference-rs/) is a **separate published package** from `@reference-ui/neo`. It is the **native tier** of Reference UI: heavy parsing and analysis run in **Rust** (with **Oxc** for TypeScript/JSX), and selected entrypoints are exposed to Node through **Node-API** via [napi-rs](https://github.com/napi-rs/napi-rs). TypeScript in **`js/`** loads the **`.node`** binary and provides ergonomic APIs, bundled with **tsup** into **`dist/`**. High-level product behavior of Atlas, Tasty, and Styletrace in the user-facing story is also in **§12–§16** above; this section is the **package/crate** map.
 
 ### 25.1 Package vs crate
 
@@ -881,7 +883,7 @@ These **`#[napi]`** functions are what Node actually calls (names are the Rust A
 
 ### 25.7 How the rest of the monorepo depends on this package
 
-- **`@reference-ui/core` MCP** — `analyzeDetailed` from `@reference-ui/rust/atlas` + Tasty manifest for enrichment (**§16**).  
+- **`@reference-ui/mcp`** — `analyzeDetailed` from `@reference-ui/rust/atlas` + Tasty manifest for enrichment (**§16**).  
 - **Panda / config** — Styletrace integration in `system/panda/config/styletrace.ts` (wiring, not a full re-list here).  
 - **Packager / types** — Tasty emit + **chunk** runtime in `@reference-ui/types` (§14, §18).  
 - **Browser `Reference` component** — Tasty browser runtime from `@reference-ui/rust/tasty/browser` (**§17**).

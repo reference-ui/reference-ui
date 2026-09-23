@@ -9,7 +9,7 @@
 On startup the MCP server defaults to an unsynced fixture:
 
 ```json
-"activeProject": "/.../fixtures/atlas-project",
+"activeProject": "/.../packages/reference-rs/modules/styletrace/tests/cases/plain_react_wrappers",
 "isDefault": true,
 "hasArtifacts": false
 ```
@@ -17,9 +17,9 @@ On startup the MCP server defaults to an unsynced fixture:
 Discovery tools then fail:
 
 ```text
-Project at '/.../fixtures/atlas-project' has not been synced yet.
-Generated type artifacts are missing at '/.../fixtures/atlas-project/.reference-ui/types/tasty/manifest.js'.
-Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.
+Project at '/.../packages/reference-rs/modules/styletrace/tests/cases/plain_react_wrappers' has not been synced yet.
+Generated type artifacts are missing at '/.../packages/reference-rs/modules/styletrace/tests/cases/plain_react_wrappers/.reference-ui/types/tasty/manifest.js'.
+Run 'neo sync' (or 'pnpm dev') to generate the model artifacts.
 ```
 
 An agent without shell access, or unaware it must switch projects, is stuck.

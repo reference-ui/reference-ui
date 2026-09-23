@@ -2,7 +2,7 @@
 
 **Severity:** Low (works as designed; design question, not breakage)
 **Area:** Neo recipe runtime + RS extractor (`recipe()`)
-**Status:** Open investigation — no crew dispatched, no decision taken.
+**Status:** Investigation crew dispatched 2026-09-23 (captain) — findings to LOG-2.md, no decision taken.
 **Not panda CSS** (shape mirrors Panda's; enforcement is ours).
 
 ## Observed

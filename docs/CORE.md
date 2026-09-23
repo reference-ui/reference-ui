@@ -197,7 +197,7 @@ This enables **pixel-perfect component composition** where each component can de
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  User Code Layer (Your App)                                  │
-│  • Call extendTokens(), extendRecipe(), extendPattern(), extendFont() anywhere       │
+│  • Call extendTokens(), extendRecipe(), extendFont() anywhere       │
 │  • Import primitives: Button, Link, Box, etc.                │
 │  • Use r={{}} prop for container-based responsive            │
 └──────────────────────────────────────────────────────────────┘
@@ -258,7 +258,6 @@ extendFont('sans', {
 // - extendTokens({ fonts: { sans: ... }, fontWeights: { 'sans.bold': ... } })
 // - extendGlobalFontface([{ family: 'Inter', ... }])
 // - extendRecipe({ variants: { font: { sans: { ... } } } })
-// - extendPattern({ font: { transform: ... } })
 ```
 
 All from one `extendFont()` call!
@@ -338,7 +337,6 @@ The primitive wraps Panda's `Box` but **strips the polymorphic API surface**, gi
 | `extendStaticCss()`      | ✅ Complete | Force-generate utilities/recipes |
 | `extendGlobalFontface()` | ✅ Complete | @font-face declarations          |
 | `extendKeyframes()`      | ✅ Complete | CSS animation keyframes          |
-| `extendPattern()`        | ✅ Complete | Box pattern extensions           |
 | `extendFont()`           | ✅ Complete | All-in-one font system           |
 
 ### Every API is discoverable via Eval()

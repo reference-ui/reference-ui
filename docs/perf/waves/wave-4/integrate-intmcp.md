@@ -128,7 +128,7 @@ construction (wildcard browse gone) — disclosed, not hidden.
 
 - Full MCP suite `pnpm --dir packages/reference-mcp exec vitest run`:
   tip = 47/51 pass (4 failed in `build.test.ts` + 7 files fail import on missing
-  `@reference-ui/core/*` dist — pre-existing environmental, enumerated from
+  `@reference-ui/neo/*` dist — pre-existing environmental, enumerated from
   `/tmp/intmcp-fails-tip.txt`); composed = **byte-identical FAIL/Error set**
   (`diff` of stripped outputs: no differences). `icons-catalog.test.ts` (touched area):
   **12/12 on tip, catpost-A, prelower-A, and composed**.

@@ -7,6 +7,11 @@ This file defines what those shapes are supposed to mean at the compiler boundar
 
 The goal is to be precise enough that, once the priority topologies are green, we can honestly say Reference UI behaves like a chainable design-system compiler.
 
+> **Cutover note (VOYAGE Obj 2):** the contract below stands and is
+> proven by the 11 live matrix tiers at `matrix/tests/chain/T*` —
+> see `TEST_COVERAGE.md` for the gate table. T8 policy content is
+> untouched per H4 (coded allow-and-document stands).
+
 ---
 
 ## Core model

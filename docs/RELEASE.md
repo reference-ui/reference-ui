@@ -35,7 +35,7 @@ Add a changeset when the branch changes something consumers would care about in 
 
 You usually do not need a changeset for private app-only or docs-only work.
 
-Never include fixture packages in changesets. Fixture libraries and apps under `fixtures/*` are internal test/support packages, not release targets.
+Never include fixture packages in changesets. Fixture libraries and apps under `matrix/fixtures/*` are internal test/support packages, not release targets.
 
 ### 2. Commit the changeset with the branch
 
@@ -86,19 +86,14 @@ If your branch changes a published package:
 
 Public packages in this repo:
 
-- `@reference-ui/core`
 - `@reference-ui/lib`
 - `@reference-ui/rust`
 - `@reference-ui/icons`
 
 These private packages are ignored by Changesets:
 
-- `@fixtures/atlas-project`
-- `@fixtures/demo-ui`
 - `@fixtures/extend-library`
 - `@fixtures/layer-library`
-- `@fixtures/styletrace-consumer`
-- `@fixtures/styletrace-library`
 - `@reference-ui/reference-docs`
 
 That ignore list comes from [.changeset/config.json](../.changeset/config.json).

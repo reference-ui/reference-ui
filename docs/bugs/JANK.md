@@ -1,6 +1,8 @@
 # Reference Core – Architectural Jank & Technical Debt Audit
 
-This document tracks technical debt, brittle patterns, verified bugs, and pragmatic battle-tested architectural trade-offs identified in `@reference-ui/core`.
+> **Cutover note (VOYAGE Obj 2):** this document maps the retired `reference-core` engine. `@reference-ui/neo` is the live package and `neo sync` the live command; swept names below track that cutover, while file paths and mechanism detail still describe the pre-cutover tree.
+
+This document tracks technical debt, brittle patterns, verified bugs, and pragmatic battle-tested architectural trade-offs identified in the retired `reference-core` engine (live engine: `@reference-ui/neo`).
 
 ---
 
@@ -52,8 +54,8 @@ This document tracks technical debt, brittle patterns, verified bugs, and pragma
   await writePandaExtensionsBundle(cliDir, cliStyledDir)
   mirrorPandaExtensionsBundle(cliStyledDir, outDir)
   ```
-  `writePandaExtensionsBundle` writes `index.mjs` directly into `@reference-ui/core`'s installed source tree (`cliDir/src/system/styled/extensions/index.mjs`).
-  If `@reference-ui/core` is installed in a read-only filesystem (Docker container, Nix store, pnpm content-addressable store, or strict CI), this fails with `EACCES` or `EROFS`.
+  `writePandaExtensionsBundle` writes `index.mjs` directly into the engine package's installed source tree (`cliDir/src/system/styled/extensions/index.mjs`).
+  If the engine package is installed in a read-only filesystem (Docker container, Nix store, pnpm content-addressable store, or strict CI), this fails with `EACCES` or `EROFS`.
 - **Remedy:** Bundle extensions directly into the consumer's output directory (`.reference-ui/styled/extensions/index.mjs`) instead of writing to the core package directory first.
 
 ---

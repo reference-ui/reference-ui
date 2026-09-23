@@ -399,7 +399,7 @@ Scope: `packages/reference-lib/ui.config.ts` only.
 ### Slice #6 — Tail (bounded, mostly handoff)
 
 - `matrix/primitives` `jsxElements: ['PrimitiveJsxMarker']` **stays**: the
-  package is core-synced (`defineConfig` from `@reference-ui/core`) and
+  package is core-synced (`defineConfig` from `@reference-ui/neo`) and
   the shape is an extractor binding question (gap #3 → Overmatch row).
   Its e2e pin (`primitives-contract.spec.ts:176-193`) is untouched by this
   mission.

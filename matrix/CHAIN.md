@@ -1,5 +1,13 @@
 # CHAIN — topology sketches
 
+> **Cutover note (VOYAGE Obj 2):** the topology semantics below stand.
+> All 11 tiers are live matrix provers at `matrix/tests/chain/T*`
+> (HQ reversal: chain stays in one place to test
+> between-packages / between-environments composition; the Neo
+> `NEO-CHAIN-01..05` tier ports were deleted as duplicates — one
+> home is matrix). T4/T5 still have no tiers. The execution-order
+> list at the end records the original build-out order.
+
 `extends` and `layers` are different compiler modes.
 
 - `extends` pulls an upstream `fragment` into config generation. Tokens, keyframes, fonts, global CSS, JSX elements, and TypeScript surface flow into the consumer.

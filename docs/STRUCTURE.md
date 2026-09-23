@@ -1,5 +1,7 @@
 # reference-core Architecture
 
+> **Cutover note (VOYAGE Obj 2):** this document maps the retired `reference-core` engine. `@reference-ui/neo` is the live package and `neo sync` the live command; swept names below track that cutover, while file paths and mechanism detail still describe the pre-cutover tree.
+
 ## Overview
 
 **reference-core** is a **composable, type-safe design system framework** that generates optimized component libraries and styling infrastructure at build time. It ships as source code that gets built on the user's machine, enabling dynamic design system generation tailored to each project.
@@ -67,11 +69,7 @@ The build system uses a **three-layer architecture**:
 
 ### Installation
 
-```bash
-npm install --save-dev @reference-ui/core
-# or
-pnpm add -D @reference-ui/core
-```
+Retired with the core engine — `@reference-ui/neo` is private and has no install surface.
 
 ### Setup
 
@@ -83,8 +81,8 @@ import '@reference-ui/system/styles.css'
 
 ### Commands
 
-- **Build:** `ref sync` - Builds the design system and component libraries
-- **Watch:** `ref sync --watch` - Watches for changes and rebuilds continuously
+- **Build:** `neo sync` - Builds the design system and component libraries
+- **Watch:** `neo sync --watch` - Watches for changes and rebuilds continuously
 - **Development:** Hot-reloads on config/style changes during development
 
 ### Using the Generated System
@@ -351,10 +349,10 @@ packages/reference-core/
 
 ### For Users
 
-1. Install `@reference-ui/core`
+1. Use the workspace `@reference-ui/neo` (private — no install step)
 2. Import base styles
 3. Define design tokens/styles using APIs
-4. Run `ref sync` to generate system
+4. Run `neo sync` to generate system
 5. Import and use components/CSS runtime
 
 ### For Contributors

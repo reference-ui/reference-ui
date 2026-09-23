@@ -2,7 +2,7 @@
 
 ## Core Configuration
 
-- [x] `import { defineConfig } from '@reference-ui/core'`
+- [x] `import { defineConfig } from '@reference-ui/neo'`
 
 ## Runtime APIs
 

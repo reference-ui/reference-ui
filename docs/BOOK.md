@@ -47,7 +47,7 @@ Book is a daily driver. The bar is the same as a well-tuned Vite + Fast Refresh 
 | First open (`pnpm dev:lib`) | Shell paints quickly; the **open** story loads; other stories stay unloaded | Compiling every story before anything appears |
 | Save a component file | The open canvas updates in place in ~100ms when CSS did not change | Blank flash, full reload, lost focus, closed overlay, “Story Rendering Error” that outlives the fix |
 | Save a `.book.tsx` | That story swaps in; sidebar labels update if names changed | Every other story remounts |
-| Save that needs `ref sync` (tokens / generated CSS) | A visible **Updating** state, then one coherent refresh | Silent stall, half-old CSS, or a red error that looks like the component broke |
+| Save that needs `neo sync` (tokens / generated CSS) | A visible **Updating** state, then one coherent refresh | Silent stall, half-old CSS, or a red error that looks like the component broke |
 | Switch story / theme / viewport | Instant; URL matches what you see | Chrome and canvas naming different stories |
 | Story throws | A Book error panel with the stack; **Recovered** as soon as the module updates | Red screen that stays after you fixed the file |
 | Capture (`pnpm capture`) | Same origin, `?chrome=0`, wait for `data-book-ready=live`, canvas locator | Cosmos, iframe, or a screenshot of the sidebar / Updating state |
@@ -61,7 +61,7 @@ If Book is waiting, buffering, or applying an update, it must **say so**, includ
 Book already runs. `pnpm dev:lib` is:
 
 ```
-ref sync && concurrently --kill-others-on-fail "ref sync --watch" "vite"
+neo sync && concurrently --kill-others-on-fail "neo sync --watch" "vite"
 ```
 
 Vite serves [`packages/reference-lib/index.html`](../packages/reference-lib/index.html) → [`src/main.tsx`](../packages/reference-lib/src/main.tsx) → [`BookRoot`](../packages/reference-lib/src/Book/BookRoot.tsx) on port 5000.
@@ -78,7 +78,7 @@ Book is **not** in the published package. [`tsup.config.ts`](../packages/referen
 | Decorator | [`decorator.tsx`](../packages/reference-lib/src/Book/decorator.tsx) | `ReferenceLibrary` + `colorMode` / `data-panda-theme` / `colorScheme`. Story vs shell layout. |
 | Registry | [`registry.ts`](../packages/reference-lib/src/Book/registry.ts) | `import.meta.glob(..., { eager: true })` of every `*.book.*` and leftover `*.fixture.*`. |
 
-There is **no** timing surface: no last-HMR ms, no transform breakdown, no split between `ref sync` and Vite, no story-import clock. Slow is anecdotal.
+There is **no** timing surface: no last-HMR ms, no transform breakdown, no split between `neo sync` and Vite, no story-import clock. Slow is anecdotal.
 
 ### 2.2 Stories
 
@@ -106,11 +106,11 @@ This is a Book + Vite problem. It is not evidence that the component under the c
 Edit component or *.book.tsx
         │
         ▼
-referenceVite.handleHotUpdate returns []
+referenceVite.handleHotUpdate returns [] (removed with core; Neo has no Vite plugin)
   (every project source module is deferred until sync ready)
         │
         ▼
-  wait on ref sync --watch / generated CSS   ← unmeasured
+  wait on neo sync --watch / generated CSS   ← unmeasured
         │
         ▼
   batched ws payload → parent window AND iframe
@@ -153,14 +153,14 @@ Consequences:
 
 ### 3.2 Performance: native Fast Refresh is swallowed, then faked
 
-[`referenceVite`](../packages/reference-core/src/vite/plugin.ts) `handleHotUpdate` returns `[]` whenever [`shouldDeferHotUpdate`](../packages/reference-core/src/vite/hot-update-policy.ts) is true. That is true for:
+`referenceVite` (removed with core; Neo has no Vite plugin) `handleHotUpdate` returns `[]` whenever `shouldDeferHotUpdate` is true. That is true for:
 
 1. Managed generated files under `.reference-ui/`
 2. **Any project source file that already has Vite modules**
 
 The second category exists so JS does not Fast Refresh before Panda CSS is rewritten. The cost is that **every** save of a component or book file is held until the sync session fires `onRefresh`, then flushed as a custom `update` payload.
 
-Meanwhile `dev` runs `ref sync --watch` next to Vite. A token or primitive change *should* wait. A one-line `console.log` in `Button.tsx` should not feel like a full codegen cycle — but today it shares the same deferral path, and **we do not print either duration**.
+Meanwhile `dev` runs `neo sync --watch` next to Vite. A token or primitive change *should* wait. A one-line `console.log` in `Button.tsx` should not feel like a full codegen cycle — but today it shares the same deferral path, and **we do not print either duration**.
 
 On the client, Book does not use Fast Refresh. Both shell and renderer listen to `vite:afterUpdate` and bump `hmrVersion`. The renderer then:
 
@@ -244,7 +244,7 @@ Drop the leftover `.fixture.` glob. One pattern: `../src/components/**/*.book.{t
 
 ### 4.4 Narrow HMR deferral — wait on CSS when CSS changed, not on every keystroke
 
-**Today:** [`shouldDeferHotUpdate`](../packages/reference-core/src/vite/hot-update-policy.ts) defers every in-project source module. Correct for generated `.reference-ui` outputs. Too wide for Book.
+**Today:** `shouldDeferHotUpdate` (removed with core) defers every in-project source module. Correct for generated `.reference-ui` outputs. Too wide for Book.
 
 **Target policy** (Book-aware, still safe for tokens):
 
@@ -256,13 +256,13 @@ Drop the leftover `.fixture.` glob. One pattern: `../src/components/**/*.book.{t
 | `*.book.tsx` | No — native Fast Refresh | Swap story module; keep shell |
 | `book/**` chrome | No | Refresh shell; do not remount the canvas unless the story module changed |
 
-Implementation sketch: `referenceVite` keeps buffering managed outputs. For project source, only defer if the sync session has a **pending generation** for that file (or a dirty stylesheet). Book subscribes to a small `BOOK_SYNC` event: `idle | buffering | applying`, with timestamps (see §6).
+Implementation sketch (moot — plugin removed with core): `referenceVite` kept buffering managed outputs. For project source, only defer if the sync session has a **pending generation** for that file (or a dirty stylesheet). Book subscribes to a small `BOOK_SYNC` event: `idle | buffering | applying`, with timestamps (see §6).
 
 **Win:** the common loop (tweak component JS/TSX, save) no longer waits on Panda. Token work still cannot flash unstyled/wrong CSS. The status bar shows *which* wait you are in.
 
 ### 4.5 Startup and Vite cache
 
-- One `optimizeDeps` graph. `optimizeDeps.exclude` stays aligned with [`referenceVite`](../packages/reference-core/src/vite/plugin.ts) (`@reference-ui/react`, `system`, `styled`, `types`).
+- One `optimizeDeps` graph. `optimizeDeps.exclude` stays aligned with the generated entries (`@reference-ui/react`, `system`, `styled`, `types`).
 - `server.warmup.clientFiles` for `book/main.tsx` (or current `src/main.tsx`) plus the **last opened** story path if we persist it — not every `*.book.tsx`.
 - Do not `eager` glob in `optimizeDeps.entries` — that would reintroduce “compile everything.”
 
@@ -307,7 +307,7 @@ If a hot update **does** leave a stuck `inert`, fix that in Overlay/FocusLock, n
 | Story error | Story threw | Fix the story/component; panel clears on next good render |
 | Book error | Shell/runtime threw | Book bug, not the component |
 
-Wire this to `referenceVite` / sync `onRefresh` over the Vite websocket so it cannot desync from the actual buffer. Always show the last **sync wait**, **Vite update**, and **story import** durations (see §6).
+Wire this to sync `onRefresh` over the Vite websocket so it cannot desync from the actual buffer. Always show the last **sync wait**, **Vite update**, and **story import** durations (see §6).
 
 ### 5.6 Stay current
 
@@ -323,13 +323,13 @@ Capture is a **layer on Book**, not part of the Book runtime. The contract Book 
 
 ## 6. Feedback loops — measure build-time and HMR so “fast” cannot rot
 
-We will not keep the feel contract by intuition. Book needs a **small, always-on instrumentation surface** plus optional deeper tools. The point is a loop: change Book or `referenceVite` → see numbers in the chrome and a local log → next save is faster or we know which clock moved.
+We will not keep the feel contract by intuition. Book needs a **small, always-on instrumentation surface** plus optional deeper tools. The point is a loop: change Book → see numbers in the chrome and a local log → next save is faster or we know which clock moved.
 
 Split every cycle into clocks that must not be summed into one mysterious “reload”:
 
 ```
 file change
-  ├─ syncMs          ref sync / Panda / generated CSS (0 if not deferred)
+  ├─ syncMs          neo sync / generated CSS (0 if not deferred)
   ├─ viteTransformMs modules transformed for this update
   ├─ viteHmrMs       handleHotUpdate → ws payload sent
   ├─ clientApplyMs   vite:afterUpdate → React commit (Fast Refresh)
@@ -413,7 +413,7 @@ Budgets to treat as **warnings in the status bar / report**, not hard CI fails u
 
 1. Land Priority 0 (one document, lazy glob, Fast Refresh).
 2. Open Book with the status chip visible. Save `Button.tsx` ten times. Note p95.
-3. Change Book or `referenceVite`. Repeat. If p95 went up, the change failed even if the UI “looks fine.”
+3. Change Book. Repeat. If p95 went up, the change failed even if the UI “looks fine.”
 4. If a session feels slow, open `?perf=1` or `node book/perf/report.mjs`: if `syncMs` dominates, do not “optimize React”; if `modules` is 80, the glob is eager again.
 
 This is the opposite of the current failure mode: Book gets slower, we blame components, we add another remount.
@@ -534,11 +534,11 @@ Unchanged policies: single Book instance only; never ad-hoc `node -e` Playwright
                     pnpm dev:lib
                            │
                            ▼
-              ref sync + ref sync --watch
+              neo sync + neo sync --watch
                            │
                            ▼
                     Vite (port 5000)
-                    referenceVite + bookPerfPlugin
+                    bookPerfPlugin
                            │
                            ▼
                     /  (single entry)
@@ -580,7 +580,7 @@ packages/reference-lib/book/
 `packages/reference-lib/src/` loses `Book/`, `main.tsx`, and the Cosmos decorator. Package-root `index.html` / `vite.config.ts` move into `book/`. Scripts:
 
 ```
-"dev": "ref sync && concurrently --kill-others-on-fail \"ref sync --watch\" \"vite --config book/vite.config.ts\""
+"dev": "neo sync && concurrently --kill-others-on-fail \"neo sync --watch\" \"vite --config book/vite.config.ts\""
 "book": "vite --config book/vite.config.ts"
 "book:build": "vite build --config book/vite.config.ts"
 ```
@@ -613,7 +613,7 @@ Implementation order. **Priority 0 can land in `src/Book` before the move.** Mov
 4. Error boundary reset on module update / story change.
 5. Status: Live / Updating / Story error **with ms**, mirrored onto `data-book-ready`.
 6. Book perf plugin + JSONL + status chip (even a first version that only logs to the terminal is enough to start the loop).
-7. Narrow `shouldDeferHotUpdate` so JS-only saves Fast Refresh; keep deferral for generated CSS and dirty stylesheets; **record `deferred` and `syncMs`**.
+7. (Moot — plugin removed with core; saves Fast Refresh natively.) Narrow `shouldDeferHotUpdate` so JS-only saves Fast Refresh; keep deferral for generated CSS and dirty stylesheets; **record `deferred` and `syncMs`**.
 8. Retarget capture in the **same** change: `chrome=0`, wait for `live`, `[data-book-canvas]`, `frame` compat alias, `captureReadyMs`. Update SKILL.md + AGENTS.md examples so agents stop using `frameLocator('iframe')`.
 
 **Exit:** save `Button.tsx` while Overlay is open → Button updates, overlay stays, no red panel, no story jump, status shows a JS-only HMR of tens of ms. Save a token → Updating with `syncMs`, then one coherent paint. `pnpm capture Overlay` waits for Live, snapshots the canvas (not sidebar/perf chip), and still includes portaled surfaces. There is no iframe to desync.

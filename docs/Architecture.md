@@ -3,6 +3,8 @@
 > **Complete file-by-file mapping of the reference-core design system framework**  
 > Zero-runtime CSS generation • Type-safe primitives • Container-first responsive • Microbundle extensibility
 
+> **Cutover note (VOYAGE Obj 2):** this document maps the retired `reference-core` engine. `@reference-ui/neo` is the live package and `neo sync` the live command; swept names below track that cutover, while file paths and mechanism detail still describe the pre-cutover tree.
+
 ---
 
 ## File Structure Map (Short Descriptions)
@@ -140,7 +142,6 @@ src/
                 extendGlobalCss.ts  - Register global CSS
                 extendGlobalFontface.ts - Register @font-face
                 extendKeyframes.ts  - Register keyframes
-                extendPattern.ts    - Register pattern props
                 extendRecipe.ts     - Register recipes
                 extendStaticCss.ts  - Register static CSS
                 extendTokens.ts     - Register tokens
@@ -275,7 +276,7 @@ src/
 
 | File             | Purpose                                                                   |
 | ---------------- | ------------------------------------------------------------------------- |
-| `sync.ts`        | Main `ref sync` command - runs eval system + Panda codegen + microbundles |
+| `sync.ts`        | Main `neo sync` command - runs eval system + Panda codegen + microbundles |
 | `link-system.ts` | Links generated `styled-system/` to `src/system/` for imports             |
 
 ---
@@ -401,7 +402,7 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 
 | File                      | Purpose                                        |
 | ------------------------- | ---------------------------------------------- |
-| `resolve-core.ts`         | Resolves `@reference-ui/core` package location |
+| `resolve-core.ts`         | Resolves  `@reference-ui/neo` package location |
 | `copy-to-node-modules.ts` | Copies generated system to `node_modules/`     |
 
 ---
@@ -462,7 +463,6 @@ Each microbundle follows the pattern: **collect → bundle → execute → gener
 | `index.ts`                | Exports all internal extension functions                   |
 | `extendTokens.ts`         | Extends Panda design tokens (colors, spacing, fonts, etc.) |
 | `extendRecipe.ts`         | Extends single-part recipes (Button, Badge variants)       |
-| `extendPattern.ts`        | Extends box pattern with custom props                      |
 | `extendUtilities.ts`      | Extends utility generators (custom CSS properties)         |
 | `extendGlobalCss.ts`      | Extends global CSS rules                                   |
 | `extendStaticCss.ts`      | Forces generation of specific utilities/recipes            |
@@ -655,7 +655,7 @@ codegen/src/
 └──────────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│  CLI: ref sync (cli/commands/sync.ts)                           │
+│  CLI: neo sync (cli/commands/sync.ts)                           │
 │  1. Eval system discovers config calls                          │
 │  2. Microbundles generate code                                  │
 │  3. Panda codegen creates runtime                               │
@@ -760,7 +760,6 @@ codegen/src/
 | ------------------------- | ------------------------------------------------------------ |
 | Add design tokens         | `styled/theme/` or `styled/api/internal/extendTokens.ts`     |
 | Create component variants | `styled/api/internal/extendRecipe.ts`                        |
-| Add custom box props      | `styled/props/` + `styled/api/internal/extendPattern.ts`     |
 | Add font family           | `styled/font/fonts.ts` using `extendFont()`                  |
 | Create animations         | `styled/animations/`                                         |
 | Modify CLI build          | `cli/commands/sync.ts`                                       |
@@ -784,8 +783,8 @@ extendTokens({ colors: { brand: { value: '#0066FF' } } })
 ### 2. **Run build:**
 
 ```bash
-ref sync         # Full build
-ref sync --watch # Watch mode
+neo sync         # Full build
+neo sync --watch # Watch mode
 ```
 
 ### 3. **CLI executes:**

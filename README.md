@@ -6,12 +6,12 @@ This repository is an active monorepo. It contains the Reference UI CLI, the fir
 
 ## What lives here
 
-- `packages/reference-core` - the `ref` CLI, sync pipeline, config/runtime generation, and MCP entrypoints
-- `packages/reference-lib` - the first-party React design system package built on `@reference-ui/core`
+- `packages/reference-neo` - the `neo` CLI, sync pipeline, config/runtime generation
+- `packages/reference-lib` - the first-party React design system package built on `@reference-ui/neo`
 - `packages/reference-docs` - the Vite-based documentation site driven by the same sync pipeline
 - `packages/reference-rs` - Rust/native bindings used by the platform
-- `fixtures/*` - consumer-style fixture projects used by unit and system tests
-- `matrix/` - scenario packages (Vitest, Playwright, install stories) exercised by the Dagger pipeline
+- `matrix/fixtures/*` - consumer-style fixture projects used by the chain matrix suites
+- `matrix/tests/` - kept matrix suites (Vitest, Playwright, install stories) exercised by the Dagger pipeline
 
 ## Stack
 
@@ -34,23 +34,20 @@ pnpm install
 Common root commands:
 
 ```bash
-pnpm dev           # core + docs
-pnpm dev:lib       # core sync watch + Book for the library
-pnpm build         # build all workspace packages
-pnpm test          # core build + full matrix (Dagger)
-pnpm test:lib      # core build + library tests
-pnpm test:core     # reference-core tests
-pnpm test:e2e      # matrix tests (default bundler slice)
-pnpm test:rust     # Rust/native tests
+pnpm dev           # docs site (or: pnpm dev lib)
+pnpm dev:lib       # neo sync watch + Book for the library
+pnpm test:lib      # library tests
+pnpm test:rs       # Rust/native tests
+pnpm pipeline test # matrix suites (Dagger)
 ```
 
 ## Core workflow
 
-The center of the repo is `ref`, exposed by `@reference-ui/core`.
+The center of the repo is `neo`, exposed by `@reference-ui/neo`.
 
-- `ref sync` builds and synchronizes generated design-system output
-- `ref sync --watch` keeps generated output current during development
-- `ref mcp` runs the Reference UI MCP server
+- `neo sync` builds and synchronizes generated design-system output
+- `neo sync --watch` keeps generated output current during development
+- `mcp` runs the Reference UI MCP server (`@reference-ui/mcp`)
 
 Most package-level dev and test flows build on top of that sync pipeline.
 
@@ -62,7 +59,7 @@ Engineering notes live in [`docs/`](./docs/). Start with [`docs/README.md`](./do
 - [`docs/FEATURES/`](./docs/FEATURES/) — supported capabilities
 - [`docs/bugs/`](./docs/bugs/) — open MCP / Atlas / core issues
 - [`docs/archive/`](./docs/archive/) — retired specs and RFCs
-- [`packages/reference-core/README.md`](./packages/reference-core/README.md)
+- [`packages/reference-neo/README.md`](./packages/reference-neo/README.md)
 - [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
 
 ## Status

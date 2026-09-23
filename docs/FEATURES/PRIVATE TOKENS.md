@@ -69,21 +69,19 @@ tokens({
 - Local fragments preserve `_private` keys so the owning package can resolve
   them through the normal Panda token flow.
 - Coverage:
-  - `packages/reference-core/src/system/panda/config/extensions/api/resolveColorModeTokens.test.ts`
+  - `packages/reference-neo/tests/cases/sync/NEO-SYNC-17`
     asserts that local `_private` is preserved and upstream `_private` is
     stripped (including nested categories).
-  - `packages/reference-core/src/mcp/pipeline/tokens.test.ts` asserts that
+  - `packages/reference-mcp/src/pipeline/tokens.test.ts` asserts that
     `_private` is dropped from the MCP projection for upstream fragments
     and preserved for local fragments.
-  - `matrix/mcp/tests/unit/get-tokens.test.ts` asserts the same against a
+  - `matrix/tests/mcp/tests/unit/get-tokens.test.ts` asserts the same against a
     real MCP server: the matrix consumer extends `@fixtures/extend-library`
     and never sees its `_private` subtree, while its own local `_private`
     token remains MCP-visible.
-  - `matrix/chain/T1` adds runtime assertions that:
-    1. The base library's component renders its private swatch with the
-       private color (the rule + `--colors-_private-brand` variable both
-       ship from the upstream library's portable CSS).
-    2. The downstream consumer's own attempt to author against
-       `_private.brand` does not receive a generated style — Panda has
-       no rule for the unknown token reference.
+  - `packages/reference-neo/tests/cases/sync/NEO-SYNC-17` pins the same
+    boundary at runtime: the upstream public token and the downstream's
+    own `_private` paint, while the upstream secret (nested plus
+    top-level vault) appears in neither merged tokens, provenance, nor
+    generated types.
 
