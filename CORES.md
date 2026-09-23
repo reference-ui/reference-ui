@@ -769,6 +769,8 @@ minimizes that max. Full table: `docs/perf/cores/overnight/REPORT-stride.md`.
 | S1.1 | SHARDS DONE (stride), ledger refactor still pending |
 | S0.5 | RUST SIDE DONE (`lanes.rs`); napi seam + TS request type pending |
 | S0.3 | P2/P3 evidence filed; P5 insertion-sequence test still open |
+| S2.3 | DONE 2026-09-22 — backfill skip-by-contract landed `2fdf14ec1` (−17.6ms/−2.12%, 8/8, packet `docs/perf/cores/backfill/`) |
+| sources.rs split | OWED — 871 lines after the diet (length warn pre-existing in kind; gate enforces 1500, docs say 500 — drift noted) |
 | §5 HW band | OPEN — 387 vs ~280; needs D2 answer with S0.4 attribution |
 | §5 CPU guard | UNMEASURED — needs S0.4 CPU series |
 | F1 / F4 | CARRIED — tail `resume_unwind` asymmetry; `lock_published` silent recovery (safe today) |
