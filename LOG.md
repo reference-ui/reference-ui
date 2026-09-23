@@ -328,6 +328,15 @@ diets); scan voyage opens separately after closeout lands.
   warm 8-pair −52.38/−5.68% — harness-comparable within suites).
   Enterprise RSS 324.3→281.3MiB. Bundle unchanged (2.9MiB).
   Report `benchmark/reports/7c3d392649f0/` filed with this entry.
+- sync-perf.html REFRESHED (HQ standing order): rings re-mapped on
+  warm 8-pair B-arm (compile 471/54.1%, scan 323/37.2%, other 75.6
+  residual), stats/lede/sections/footer current (26 diets, −326ms,
+  1198→872, gap ~172, old 917/935 ceiling busted); ring-2 removed
+  (pre-F1 splits stale — refresh on repro7). Dispatched
+  swarm-reflame7 (isolated) for post-F1 instrumented flames +
+  ring-data table per §2.5 closeout.
+- Slots: 1/7 (reflame7), 6 held — build complete, backlog EMPTY,
+  N1 held — this entry is the proof.
 - HQ STANDING ORDER (build closeout): at the end, update sync-perf.html
   ("sync-map") with the most recent benchmark + run the report etc.
   (rings re-map, scoreboard row, bench report). Bound to the F1/MCP
