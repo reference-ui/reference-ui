@@ -18,7 +18,7 @@ follows CORES.md (unbanned 2026-09-22, stable-and-proven only).
 - Someone asks what was tried before on perf ground — answer from the
   index (section 7), never from memory.
 
-Do NOT activate for component look/feel (`tweak-component`), component
+Do NOT activate for component look/feel (`view-story`), component
 tests (`test-component`), Neo runtime (`agent-neo`), or benchmark
 reporting (`benchmark` — that skill *reads* numbers, this one *moves* them).
 

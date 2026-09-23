@@ -5,7 +5,7 @@ description: Core and matrix verification runner for Reference UI (the pipeline 
 
 # Core / Matrix Test Runner (`test-core`)
 
-**This is not a skill.** `tweak-component` and `test-component` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
+**This is not a skill.** `view-story` and `test-component` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
 
 The docs live under `.agents/skills/test-core` only so agents can find the runner. Treat it as infrastructure, not a manufacturing loop.
 

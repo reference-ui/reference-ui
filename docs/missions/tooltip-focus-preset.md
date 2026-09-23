@@ -165,7 +165,7 @@ dialog; then Tab away and back → assert tooltip opens with
   `packages/reference-lib/src/components/Tooltip/SPEC.md` once proven; leave
   FocusLock/SPEC untouched.
 - [ ] 7. Verify with the component loop: `pnpm agentct` for Tooltip
-  (per `tweak-component`/`test-component` skills); no core/matrix changes, so
+  (per `view-story`/`test-component` skills); no core/matrix changes, so
   no `pnpm agent` needed.
 - [ ] 8. Do NOT touch `FocusLock.tsx`, `Overlay`, `focus-visible.ts`, or any
   other component. Do NOT add props.

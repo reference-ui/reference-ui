@@ -1,34 +1,45 @@
-# LOG — voyage record
+# LOG — voyage master log
 
 Prior record archived at [docs/archive/VOYAGE-PERF-SWARM-LOG.md](./docs/archive/VOYAGE-PERF-SWARM-LOG.md).
 
-## Mission One — reference + tasty bridge (copy landed)
+The voyage is the mission; detail lives in the per-objective logs.
+First line of each is its status.
 
-Step 0 done 2026-09-22: verbatim copy
-`packages/reference-core/src/reference/` →
-`packages/reference-neo/src/reference/` (71 files, stale PLAN.md left
-behind). Copy arrives red; cartography pending: inventory verify,
-duplication verdict on `browser/` vs `browser-component/`, dead-code
-list, seam design.
+## Objectives
 
-## Mission Two — lib sync ~650ms (briefed, probe out)
-
-Briefed as an open investigation — no cause stated, hunch deliberately
-withheld so the crew determines it independently. Probe crew
-(lib-sync-probe) dispatched; its report feeds mission kickoff.
-Scope: Neo sync scan, export/barrel tracking + params, scan root and
-excludes, engine path.
+- [Objective 1 — reference + tasty bridge](LOG-1.md): copy landed,
+  cartography pending. Lands one commit.
+- [Objective 2 — matrix chain gate + core retirement](LOG-2.md):
+  briefed, audit pending. Lands one commit.
+- [Objective 3 — lib sync ~650ms](LOG-3.md): probe returned, open
+  investigation. Lands one commit.
+- [Objective 4 — component baselines](LOG-4.md): briefed, crewed
+  after Objectives 1–3. Lands one commit.
+- [Objective 5 — reference lib productization](LOG-5.md): recon
+  returned, blocked on Objective 4. One commit per component.
 
 ## Scoreboard
 
-- Mission One guardrail: no enterprise seed-7 sync regression vs
+- Objective 1 guardrail: no enterprise seed-7 sync regression vs
   pre-voyage same-box median (committed pin 744ms; this box scratch
   787ms). Parity checklist TBD by cartographers.
-- Mission Two: lib sync ~650ms → TBD. Target set from the breakdown.
+- Objective 2: matrix audit TBD — chain suites kept, rest ported or
+  dropped; core removed, icons/docs migrated.
+- Objective 3: lib sync ~650ms → TBD. Target set from the breakdown.
+- Objective 4: components baselined 0 of N (N TBD).
+- Objective 5: UX-signed 0 of N, one commit each.
 
 ## Where everything lives
 
 - Brief: [VOYAGE.md](./VOYAGE.md)
-- Mission One source: `packages/reference-core/src/reference/` (72 files, frozen)
-- Mission One working copy: `packages/reference-neo/src/reference/` (71 files)
+- Objective logs: [LOG-1.md](./LOG-1.md) … [LOG-5.md](./LOG-5.md)
+- Objective 1 source: `packages/reference-core/src/reference/` (72 files, frozen)
+- Objective 1 working copy: `packages/reference-neo/src/reference/` (71 files)
+- Objective 2: `matrix/`, `fixtures/`, `pipeline/` (audit),
+  `packages/reference-core` (retire), `packages/reference-icons` +
+  `packages/reference-docs` (migrate)
 - Frontend (stays): `packages/reference-lib`
+
+## Overnight docs hygiene (standing)
+
+Docs cleanup runs overnight alongside objectives (user order 2026-09-22).

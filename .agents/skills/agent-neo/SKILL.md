@@ -89,14 +89,14 @@ Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
 | You need | Use | Touches |
 | --- | --- | --- |
 | Rust, N-API, system compiler, anything in `packages/reference-rs` | `agent-rs` skill (`pnpm agentrs`) | `packages/reference-rs` |
-| `@reference-ui/lib` look / feel / polish | `tweak-component` skill | `packages/reference-lib` |
+| `@reference-ui/lib` look / feel / polish | `view-story` skill | `packages/reference-lib` |
 | `@reference-ui/lib` component logic, CT, snapshots | `test-component` skill (`pnpm agentct`) | `packages/reference-lib` |
 | Core, matrix, pipeline, bundler contracts | **test-core** (`pnpm agent`) | `packages/reference-core`, `matrix/*`, `pipeline/*` |
 | Neo runtime work (this skill) | **agent-neo** (`pnpm agentneo`) | `packages/reference-neo` only |
 
 Neo **touches none of those trees**. If a Neo task implies a Rust change,
 hand that part to `agent-rs`. If it implies a lib change, hand it to
-`tweak-component` / `test-component`. If it implies core or matrix work,
+`view-story` / `test-component`. If it implies core or matrix work,
 hand it to **test-core**.
 
 ## 6. Quality Gate

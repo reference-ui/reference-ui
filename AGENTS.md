@@ -6,13 +6,13 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 ## Skills vs `test-core`
 
-`tweak-component` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
+`view-story` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
 
 **`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a manufacturing loop.
 
 | You changed | Use |
 | --- | --- |
-| `@reference-ui/lib` look/feel | `tweak-component` skill |
+| `@reference-ui/lib` look/feel | `view-story` skill |
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
@@ -24,16 +24,19 @@ If a lib-component task also modified `packages/reference-core`, finish `test-co
 
 ---
 
-## 0. Component Polishing & Tweaking Contract (`tweak-component`)
+## 0. Component Seeing Contract (`view-story`)
 
-Whenever a user prompt asks to fix, polish, style, improve, or adjust how any component in `@reference-ui/lib` feels or looks:
-- **Immediately activate the `tweak-component` skill** (`.agents/skills/tweak-component/SKILL.md`).
-- **Do NOT pause for speculative planning mode artifacts** (`implementation_plan.md`). Jump straight into the 5-step loop:
-  1. **Contract Ingestion**: Read `<Component>.md` and `SPEC.md` (driver). `TESTS.md` is the case catalog when SPEC points at it.
-  2. **Baseline Capture**: Run `pnpm capture <Component>` and embed the screenshot directly in chat.
-  3. **Implement & Tweak**: Apply changes in `packages/reference-lib/src/components/<Component>/`.
-  4. **Verification**: Follow the `test-component` skill (`pnpm agentct`). If `packages/reference-core` was also modified, switch to **test-core** (`pnpm agent`) — that is the pipeline runner, not a skill.
-  5. **Multi-State Visual Re-inspection**: Run `pnpm capture <Component> --states` and embed the markdown table into chat.
+Whenever an agent needs to SEE a component in `@reference-ui/lib`:
+- **Activate the `view-story` skill** (`.agents/skills/view-story/SKILL.md`).
+- Standard eyes are Playwright MCP against Book; `pnpm capture` is fallback.
+- Embed screenshots directly in chat. Seeing is not verifying — proof
+  belongs to `test-component` (`pnpm agentct`).
+
+When a user prompt asks to fix, polish, style, improve, or adjust a
+component: view it first (`view-story`), implement in
+`packages/reference-lib/src/components/<Component>/`, prove with
+`test-component` (`pnpm agentct`). If `packages/reference-core` was also
+modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 
 ---
 
@@ -56,6 +59,8 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
 > `playwright` is NOT a root dependency; doing this causes `Cannot find module 'playwright'` errors and wastes tokens.
 
 ### The Canonical Capture Command
+Standard viewing is Playwright MCP via the `view-story` skill; below is the fallback capture client.
+
 Use the built-in capture tool from the workspace root to script and snapshot any component scenario:
 
 ```bash
@@ -77,7 +82,7 @@ pnpm capture <Component> [Fixture] -s path/to/script.mjs
 pnpm capture <Component> [Fixture]
 
 # 5. Or use the programmatic API from any node script:
-# import { captureFixture } from './.agents/skills/tweak-component/scripts/capture.mjs'
+# import { captureFixture } from './.agents/skills/view-story/scripts/capture.mjs'
 ```
 
 In scripts, you receive: `{ page, canvas, root, target, interactive, capture, pressTab, inspectStyles, wait, frame }`.

@@ -18,7 +18,7 @@ Four commitments:
 2. **The Book runtime becomes its own app** at `packages/reference-lib/book/`. Shell, canvas, decorator, discovery, Vite config, and perf instrumentation live there. They are not published with `@reference-ui/lib`.
 3. **One canvas. No iframe mode.** One document, one React tree, one Vite module graph, one Fast Refresh channel. Viewport presets are a sized box in that document, not a nested browsing context.
 4. **Reload must feel fast, stay current, and never lie.** A save that updates the open story in place is success. A full remount, a lingering error overlay, or a wiped overlay stack is failure — even if the component under test is correct. If we cannot **measure** HMR, transform, sync, and story-load time, we cannot keep this bar.
-5. **Capture and the tweak-component skill sit on top of Book.** They are a Playwright client of Book’s public contract (URL, canvas hook, ready state). They are not a second renderer, not a Cosmos leftover, and they do not keep iframe mode alive “for agents.” Book owes them a stable hook; they owe Book not to spawn `pnpm dev:lib` or invent a private playground.
+5. **Capture and the view-story skill sit on top of Book.** They are a Playwright client of Book’s public contract (URL, canvas hook, ready state). They are not a second renderer, not a Cosmos leftover, and they do not keep iframe mode alive “for agents.” Book owes them a stable hook; they owe Book single-instance discipline (use :5000 if up, boot it if down) and never a private playground.
 
 Cosmos is retired. Capture, agents, and `pnpm dev:lib` already talk to Book on port 5000. The remaining Cosmos files, scripts, patches, and pipeline command are dead weight.
 
@@ -317,7 +317,7 @@ Wire this to `referenceVite` / sync `onRefresh` over the Vite websocket so it ca
 
 ### 5.7 Capture and agents
 
-Capture is a **layer on Book**, not part of the Book runtime. The contract Book owes that layer (URL, `[data-book-canvas]`, ready state) is §7. Implementation of [`capture.mjs`](.agents/skills/tweak-component/scripts/capture.mjs), the tweak-component skill, and [`AGENTS.md`](AGENTS.md) follows that contract; it does not keep an iframe “because Playwright.”
+Capture is a **layer on Book**, not part of the Book runtime. The contract Book owes that layer (URL, `[data-book-canvas]`, ready state) is §7. Implementation of [`capture.mjs`](.agents/skills/view-story/scripts/capture.mjs), the view-story skill, and [`AGENTS.md`](AGENTS.md) follows that contract; it does not keep an iframe “because Playwright.”
 
 ---
 
@@ -434,7 +434,7 @@ Book on :5000                        runtime (one document, lazy story, ready st
 capture.mjs  (`pnpm capture`)         Playwright client
         │
         ▼
-tweak-component skill + AGENTS.md    when/how agents use that client
+view-story skill + AGENTS.md    when/how agents use that client
 ```
 
 Book does not know about Playwright, Antigravity brain dirs, or markdown tables. Capture does not own a module graph, HMR, or a second canvas. If capture needs a behavior (chrome hidden, story mounted, overlays in the same document), **Book exposes it**; capture consumes it.
@@ -447,8 +447,8 @@ That is the whole point of deleting iframe: the agent layer was written against 
 | --- | --- | --- |
 | `*.book.tsx` | Story exports + `meta` | Know about capture or chrome |
 | Book | URL, in-tree canvas, decorator, HMR, `[data-book-ready]`, `?chrome=0` | Start Playwright, write screenshots, parse agent scripts |
-| [`capture.mjs`](.agents/skills/tweak-component/scripts/capture.mjs) | Port check, `page.goto`, locators, padded shots, `--states`, `--list` (disk), brain-dir sync, markdown table | Spawn `pnpm dev:lib`, keep `frameLocator('iframe')`, implement a private story runner |
-| [`tweak-component/SKILL.md`](.agents/skills/tweak-component/SKILL.md) + [`AGENTS.md`](AGENTS.md) | 5-step loop, “ask the human to run Book”, embed images, no ad-hoc Playwright | Treat Book HMR slowness as a component visual bug |
+| [`capture.mjs`](.agents/skills/view-story/scripts/capture.mjs) | Port check, `page.goto`, locators, padded shots, `--states`, `--list` (disk), brain-dir sync, markdown table | Spawn `pnpm dev:lib`, keep `frameLocator('iframe')`, implement a private story runner |
+| [`view-story/SKILL.md`](.agents/skills/view-story/SKILL.md) + [`AGENTS.md`](AGENTS.md) | ensure server, MCP-first viewing, embed images, no ad-hoc Playwright | Treat Book HMR slowness as a component visual bug |
 
 `--list` can stay **disk-side** in capture (scan `src/components/**/*.book.tsx`, `extractFixtureNames`). That does not require Book to be up. Story **names** must stay aligned with Book’s `normalizeStories` (same default-export / named-export rules). If those parsers drift, agents open a story Book does not have.
 
@@ -520,11 +520,11 @@ The skill’s baseline capture is only honest if Book is Live. A flake where cap
 
 Same change set as the capture client, or agents will keep writing `frame.locator` against a document that has no iframe:
 
-- [`.agents/skills/tweak-component/SKILL.md`](.agents/skills/tweak-component/SKILL.md) — examples, `--target` copy (“inside the fixture iframe”), `frame.evaluate`
+- [`.agents/skills/view-story/SKILL.md`](.agents/skills/view-story/SKILL.md) — examples, `--target` copy (“inside the fixture iframe”), `frame.evaluate`
 - [`AGENTS.md`](AGENTS.md) §2 — same `frame` examples
 - [`packages/reference-lib/AGENTS.md`](../packages/reference-lib/AGENTS.md) — Cosmos / port 5050 wording if any remains
 
-Unchanged policies: never background `pnpm dev:lib`; never ad-hoc `node -e` Playwright; `pnpm capture` is the only screenshot path.
+Unchanged policies: single Book instance only; never ad-hoc `node -e` Playwright; `pnpm capture` remains the fallback screenshot path.
 
 ---
 
