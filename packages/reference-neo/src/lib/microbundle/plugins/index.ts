@@ -5,12 +5,16 @@
 import type * as esbuild from 'esbuild'
 import type { MicroBundleOptions } from '../types.ts'
 import { aliasPlugin } from './alias.ts'
+import { reactStubPlugin } from './react-stub.ts'
 
 /**
  * Build the esbuild plugins array from microbundle options.
  */
 export function getPlugins(options: MicroBundleOptions): esbuild.Plugin[] {
   const plugins: esbuild.Plugin[] = []
+  if (options.reactStub) {
+    plugins.push(reactStubPlugin())
+  }
   if (options.alias && Object.keys(options.alias).length > 0) {
     plugins.push(aliasPlugin(options.alias))
   }

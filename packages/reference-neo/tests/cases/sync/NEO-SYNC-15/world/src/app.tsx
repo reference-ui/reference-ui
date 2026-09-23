@@ -1,7 +1,7 @@
 // Entry for the NEO-SYNC-15 world. It takes the traced Card host beside the
 // Random and Label negatives and emits the discovery trio: one site that
 // must extract beside two probes that must stay silent.
-import { createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
 import { Card } from './Card.js'
 import { Random } from './Random.js'
 import { Label } from './Label.js'

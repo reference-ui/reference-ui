@@ -1,7 +1,7 @@
 // World entry: it reads the requested symbol name from the query string and renders the reference page.
 // It mirrors the matrix consumer shell (root testid, heading, selected-name marker, Reference component).
 // The world build transpiles this to classic createElement calls; the importmap wires the generated bundles.
-import { createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
 import { Reference } from '@world/types'
 
 function getRequestedSymbolName(): string {

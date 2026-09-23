@@ -3,7 +3,8 @@
 // runtime-only flag, so the extractor must compile both arms while the
 // browser hovers exactly one. With no query string the flag is true and the
 // brand arm paints, on the twin without hovering and on the probe on hover.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 const params = new URLSearchParams(window.location.search)
 const loud = params.get('arm') !== 'quiet'

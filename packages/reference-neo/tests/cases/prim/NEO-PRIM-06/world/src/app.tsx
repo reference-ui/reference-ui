@@ -2,7 +2,8 @@
 // three style-free twins: a plain Div, a variant Div, and a colorMode Div.
 // Nothing here should mint a utility; the variant paints through the global
 // tag recipe alone.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function Prim() {
   return (

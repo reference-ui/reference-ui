@@ -2,7 +2,8 @@
 // a passthrough probe (DOM props, click handler, ref callback, both style
 // paths) plus a no-polymorphism probe carrying an as prop. The handler flips
 // a counter node; the ref callback marks the host it receives.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function Prim() {
   return (

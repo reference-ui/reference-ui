@@ -43,7 +43,7 @@ const TOKENS_FILE = [
 ].join('\n')
 
 const MORE_FILE = [
-  "import { tokens, keyframes, font, globalCss, extendPattern } from '@reference-ui/neo'",
+  "import { tokens, keyframes, font, globalCss } from '@reference-ui/neo'",
   '',
   'tokens({',
   '  spacing: {',
@@ -66,13 +66,6 @@ const MORE_FILE = [
   '',
   'globalCss({',
   "  ':root': { '--brand': '#0066cc' },",
-  '})',
-  '',
-  'extendPattern({',
-  '  properties: {',
-  "    highlight: { type: 'boolean' },",
-  '  },',
-  '  transform: (props) => (props.highlight ? { outline: \'2px solid red\' } : {}),',
   '})',
   '',
 ].join('\n')
@@ -241,7 +234,7 @@ describe('evaluateFragments provenance', () => {
 
     const spec = await evaluateFragments(dir, configWith())
 
-    expect(spec.provenance).toHaveLength(6)
+    expect(spec.provenance).toHaveLength(5)
     expect(spec.provenance).toContainEqual({
       source: 'theme/tokens.ts',
       kind: 'tokens',
@@ -259,7 +252,6 @@ describe('evaluateFragments provenance', () => {
       keys: ['fadeIn'],
     })
     expect(spec.provenance).toContainEqual({ source: 'theme/more.ts', kind: 'globalCss' })
-    expect(spec.provenance).toContainEqual({ source: 'theme/more.ts', kind: 'fragment' })
   })
 
   it('cites upstream system names for upstream fragments', async () => {

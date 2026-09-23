@@ -15,6 +15,7 @@
 | NEO-RECIPE-09 | `_hover` inside a variant paints on the variant class, not a separate atom | done | ATM-RECIPE-02 | — | hover computed; utility count unchanged | `[panda-v1]` `core/__tests__/recipe.test.ts:220` solid hover |
 | NEO-RECIPE-10 | Variant + `css()` utilities on the same node: utilities win via layer order | done | ATM-RECIPE-03, ATM-LAYER-04 | — | computed override | `[atm]` ATM-RECIPE-03, ATM-LAYER-04 (P2 #19) |
 | NEO-RECIPE-11 | ClassName-less `chipRecipe` emits paintable closed classes under the inferred `chip` stem | done | ATM-RECIPE-08 (RS-33) | — | inferred table resolves via the explicit-identity runtime path; both probes paint base + tone | `[atm]` ATM-RECIPE-08; `[lib]` `SummaryChip.tsx` |
+| NEO-RECIPE-12 | One recipe class paints its `@media` variant branch and `@container` base branch together | done | none (P2 census; no engine gap) | — | wide+980 paints all four declarations; narrow+980 paints viewport-only | `[matrix]` `system-contract.spec.ts` conjunction; P-recipe-opt |
 
 ## RS lane (added by this cartography)
 

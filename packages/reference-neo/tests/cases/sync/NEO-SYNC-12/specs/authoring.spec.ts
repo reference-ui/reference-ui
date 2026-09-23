@@ -20,9 +20,8 @@ interface SystemEntry {
   font: (name: string, options: unknown) => void;
   keyframes: (config: unknown) => void;
   globalCss: (config: unknown) => void;
-  extendPattern: (extension: unknown) => void;
   getRhythm: (num: number, denom?: number) => string;
-  baseSystem: { name: string; schemaVersion: number };
+  baseSystem: { name: string; fragment: string };
 }
 
 // The runner synced this world before serving: the system entry imports
@@ -44,7 +43,6 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     'font',
     'keyframes',
     'globalCss',
-    'extendPattern',
     'getRhythm',
   ] as const) {
     assert.equal(typeof mod[name], 'function', `system entry exports ${name}`);
@@ -92,7 +90,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   );
 
   const decl = fs.readFileSync(path.join(outDir, 'system', 'system.d.mts'), 'utf8');
-  for (const name of ['defineConfig', 'tokens', 'font', 'keyframes', 'globalCss', 'extendPattern', 'getRhythm', 'baseSystem']) {
+  for (const name of ['defineConfig', 'tokens', 'font', 'keyframes', 'globalCss', 'getRhythm', 'baseSystem']) {
     assert.ok(decl.includes(name), `system.d.mts declares ${name}`);
   }
 

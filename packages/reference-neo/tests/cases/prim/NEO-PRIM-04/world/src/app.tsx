@@ -2,7 +2,8 @@
 // array-p probes inside sized container wrappers: a two-step probe in narrow,
 // wide, and live containers, plus a holed probe in sm-range and md-range
 // containers. Wrappers are plain host divs, so only the probes extract.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 function Wrap({ id, width, children }: { id: string; width: string; children: unknown }) {
   return (

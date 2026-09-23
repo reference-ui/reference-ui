@@ -28,6 +28,8 @@ export interface MicroBundleOptions {
   conditions?: string[]
   tsconfigRaw?: esbuild.TsconfigRaw
   metafile?: boolean
+  /** Intercept react/react-dom and replace with zero-runtime proxy stub. */
+  reactStub?: boolean
   /** Sourcemap shape. External/linked maps need `outfile` so esbuild can name the .map file. */
   sourcemap?: esbuild.BuildOptions['sourcemap']
   /** Output path naming the bundle; in-memory builds still honor it for map naming. */

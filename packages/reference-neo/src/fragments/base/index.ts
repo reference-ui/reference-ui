@@ -23,7 +23,6 @@ import { createKeyframesCollector } from '../api/keyframes.ts'
 import { createTokensCollector } from '../api/tokens.ts'
 import { createFontCollector } from '../api/font.ts'
 import { createGlobalCssCollector } from '../api/globalCss.ts'
-import { createBoxPatternCollector } from '../api/patterns.ts'
 import { getFragmentBootstrapImportMap } from './bootstrap-import-map.ts'
 import {
   isPlainObject,
@@ -132,7 +131,6 @@ export function getFragmentCollectors(): EvaluateCollector[] {
     createKeyframesCollector(),
     createFontCollector(),
     createGlobalCssCollector(),
-    createBoxPatternCollector(),
   ]
 }
 
@@ -316,7 +314,6 @@ function mergeCollectedSpec(
   const keyframes = bucketByName(collected, 'keyframes')
   const fonts = bucketByName(collected, 'font')
   const css = bucketByName(collected, 'globalCss')
-  const patterns = bucketByName(collected, 'box-pattern')
   const mergedFonts = mergeFontRecord(fonts)
   return {
     schemaVersion: 1,
@@ -333,7 +330,6 @@ function mergeCollectedSpec(
       ...fontProvenance(fonts, cwd),
       ...keyframeProvenance(keyframes, cwd),
       ...globalCssProvenance(css, cwd),
-      ...patternProvenance(patterns, cwd),
     ],
   }
 }
@@ -426,12 +422,5 @@ function globalCssProvenance(css: unknown[], cwd: string): SpecProvenance {
   return css.map(fragment => ({
     source: sourceOfFragment(fragment, cwd),
     kind: 'globalCss' as const,
-  }))
-}
-
-function patternProvenance(patterns: unknown[], cwd: string): SpecProvenance {
-  return patterns.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'fragment' as const,
   }))
 }

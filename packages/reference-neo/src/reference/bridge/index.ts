@@ -3,7 +3,7 @@
 // No workers, no bus, no virtual copy — the buried core scaffolds stay buried.
 
 export { createReferenceBuildReport, formatReferenceBuildDiagnostic } from './build-report.ts'
-export { initReference } from './init.ts'
+export { flushReferenceBuild, initReference } from './init.ts'
 export {
   getReferenceManifestPath,
   getReferenceTastyDirPath,

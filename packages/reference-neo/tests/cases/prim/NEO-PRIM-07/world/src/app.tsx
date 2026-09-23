@@ -1,4 +1,5 @@
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 // Extraction source and browser entry in one: the compiler reads this file's
 // JSX attrs to emit the style plans (including the css-prop _dark override),

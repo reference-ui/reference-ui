@@ -1,7 +1,8 @@
 // Entry for the PRIM-10 world. It takes the generated Div primitive and emits
 // one styled probe so the sync loop mints runtime plans and the styled named
 // graph. The surface proof runs node-side in the spec, not in the browser.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function PrimSurface() {
   return (

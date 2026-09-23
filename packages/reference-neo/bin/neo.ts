@@ -22,6 +22,17 @@ async function cmdSync(dir: string): Promise<number> {
     const { sync } = await import('../src/sync/index.ts');
     const started = Date.now();
     const result = await sync(dir);
+    // One-shot completeness (the Obj-1 deferred bin/ scope): sync() schedules
+    // the session-owned tasty phase on the background loop, which a process
+    // that exits never runs — so drain it here. Without this, types.mjs keeps
+    // its ./tasty/runtime.js edge while types/tasty/ never lands, and any
+    // bundler resolving @reference-ui/types fails (lib tsup red since REF-10).
+    const { flushReferenceBuild } = await import('../src/reference/bridge/init.ts');
+    const build = await flushReferenceBuild(dir);
+    if (build?.status === 'failed') {
+      console.log(`[neo] sync failed: reference tasty build failed: ${build.message}`);
+      return 1;
+    }
     console.log(`[neo] sync ${Date.now() - started}ms → ${result.outDir}`);
     return 0;
   } catch (err) {

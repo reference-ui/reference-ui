@@ -37,8 +37,8 @@ describe('generateReactEntrySource', () => {
     expect(source).toContain('split: splitPrimitiveProps, css')
     expect(source).not.toContain('styled/')
     expect(source).toContain(`from 'react'`)
-    expect(source).toContain(`from 'react-dom/client'`)
-    expect(source).toContain('export { Fragment, createElement, createRoot }')
+    expect(source).not.toMatch(/react-dom|createRoot/)
+    expect(source).toContain('export { Fragment, createElement }')
   })
 
   it('emits one factory component per tag', () => {
@@ -64,7 +64,7 @@ describe('generateReactTypesSource', () => {
     )
     expect(source).toContain('export type DivProps = ')
     expect(source).toContain(`React.ComponentRef<"div">`)
-    expect(source).toContain(`export { createRoot } from 'react-dom/client'`)
+    expect(source).not.toMatch(/react-dom|createRoot/)
   })
 
   it('emits never for an empty prop list so the union still compiles', () => {
@@ -170,9 +170,9 @@ describe('react surface contract', () => {
       'export declare function useColorMode',
       `export { Fragment } from 'react'`,
       `export { createElement } from 'react'`,
-      `export { createRoot } from 'react-dom/client'`,
     ]) {
       expect(surface).toContain(line)
     }
+    expect(surface).not.toMatch(/react-dom|createRoot/)
   })
 })

@@ -15,12 +15,17 @@ interface SpecInput {
 
 // The generated entry imports react externally and carries no bundled copy,
 // so a consumer rendering through its own react-dom shares one dispatcher.
-// The foreign-rendered Div paints, stamps data-layer, and commits content.
+// The entry itself takes no react-dom edge at all, so packages built on it
+// import clean where react-dom is absent (core contract). The foreign-rendered
+// Div paints, stamps data-layer, and commits content.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const bundle = fs.readFileSync(path.join(outDir, 'react/react.mjs'), 'utf8');
   assert.ok(/from\s*['"]react['"]/.test(bundle), 'entry imports react externally');
-  assert.ok(/from\s*['"]react-dom\/client['"]/.test(bundle), 'entry imports react-dom/client externally');
+  assert.ok(
+    !bundle.includes('react-dom'),
+    'entry takes no react-dom edge (packages import clean without it)',
+  );
   assert.ok(
     !bundle.includes('ReactCurrentDispatcher'),
     'entry carries no bundled React copy',

@@ -1,7 +1,8 @@
 // Entry for the NEO-SITE-13 world. It takes the generated Div primitive
 // and emits one valueless border attr plus a plain control, so the macro
 // half paints on the probe while the control proves the default is bare.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function Site() {
   return (

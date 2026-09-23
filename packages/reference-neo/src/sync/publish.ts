@@ -1,8 +1,8 @@
 // Publishing for the minimal Neo generated folder.
 // It takes compile output plus the spec and emits system, styled, and react
-// through the per-leg publishers. The system leg writes the PortableBaseSystem
-// plus the authoring entry; the css, recipes, and types legs grow the styled
-// and react legs when they land.
+// through the per-leg publishers. The system leg writes the portable
+// BaseSystem plus the authoring entry; the css, recipes, and types legs grow
+// the styled and react legs when they land.
 
 import { mkdirSync } from 'node:fs'
 import type { PublishInput } from './publish/types.ts'

@@ -25,9 +25,3 @@ export {
   type GlobalCssConfig,
   type GlobalCssRule,
 } from '../fragments/api/index.ts'
-export {
-  extendPattern,
-  createBoxPatternCollector,
-  type BoxPatternExtension,
-  type BoxPatternProperty,
-} from '../fragments/api/index.ts'

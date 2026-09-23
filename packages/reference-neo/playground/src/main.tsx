@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { createRoot } from '@reference-ui/react';
+import { createRoot } from 'react-dom/client';
 
 interface PageModule {
   Page: () => React.JSX.Element;
@@ -33,9 +33,10 @@ const ACCENT = '#8b5cf6';
 const FONT = 'system-ui, -apple-system, sans-serif';
 const MONO = 'ui-monospace, monospace';
 
-// No hooks: the generated react entry exports createRoot but no useState, and
-// importing hooks from 'react' would mount a second React copy. Module state
-// plus an explicit render() is all a menu shell needs.
+// No hooks: the generated react entry carries primitives but no useState, and
+// importing hooks from 'react' would mount a second React copy. The root comes
+// from the shell's own react-dom; module state plus an explicit render() is
+// all a menu shell needs.
 type Theme = 'dark' | 'light';
 
 function defaultRoute(): string {

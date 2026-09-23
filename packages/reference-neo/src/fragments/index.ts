@@ -7,12 +7,10 @@ export {
   keyframes,
   font,
   globalCss,
-  extendPattern,
   createTokensCollector,
   createKeyframesCollector,
   createFontCollector,
   createGlobalCssCollector,
-  createBoxPatternCollector,
   type ReferenceTokenConfig,
   type ReferenceTokenLeaf,
   type TokenConfig,
@@ -23,8 +21,6 @@ export {
   type FontWeightName,
   type GlobalCssConfig,
   type GlobalCssRule,
-  type BoxPatternExtension,
-  type BoxPatternProperty,
 } from './api/index.ts'
 export {
   getUpstreamFragments,

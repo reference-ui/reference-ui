@@ -19,14 +19,12 @@ export interface ReferenceTypesPublishInput {
 const TYPES_RUNTIME_PLACEHOLDER = '__REFERENCE_UI_TYPES_RUNTIME__'
 const TYPES_RUNTIME_SPECIFIER = './tasty/runtime.js'
 
-// Core's externals for this package, plus `react-dom/client`: the generated
-// react entry imports it, and without the line esbuild would bundle a second
-// react-dom into types.mjs. `@reference-ui/react` stays bundled (aliased).
+// Core's externals for this package. `@reference-ui/react` stays bundled
+// (aliased): the generated entry is react-only, so no react-dom edge can
+// leak into types.mjs through it.
 const REFERENCE_TYPES_EXTERNALS = [
   '__REFERENCE_UI_TYPES_RUNTIME__',
   'react',
-  'react-dom',
-  'react-dom/client',
   'react/jsx-runtime',
   '@reference-ui/styled',
   '@reference-ui/styled/*',

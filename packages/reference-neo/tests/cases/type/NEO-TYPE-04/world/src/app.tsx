@@ -1,4 +1,5 @@
-import { Button, Div, createRoot, type DivProps, type StyleProps } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Button, Div, type DivProps, type StyleProps } from '@reference-ui/react'
 import { css, recipe } from '@reference-ui/react'
 
 // Extraction source and browser entry in one: the compiler reads this file's

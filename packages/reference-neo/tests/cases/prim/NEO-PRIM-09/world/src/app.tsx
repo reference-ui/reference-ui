@@ -1,7 +1,8 @@
 // Entry for the PRIM-09 world. It takes the generated tag primitives and emits
 // one self-closing probe per tag inside a plain census root. No style props:
 // the claim is element identity, so every probe carries only its tag id.
-import { A, Abbr, Address, Area, Article, Aside, Audio, B, Bdi, Bdo, Blockquote, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, H1, H2, H3, H4, H5, H6, Header, Hgroup, Hr, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, Main, Map, Mark, Menu, Meter, Nav, Obj, Ol, Optgroup, Option, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Search, Section, Select, Small, Source, Span, Strong, Sub, Summary, Sup, Svg, Table, Tbody, Td, Textarea, Tfoot, Th, Thead, Time, Tr, Track, U, Ul, Var, Video, Wbr, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { A, Abbr, Address, Area, Article, Aside, Audio, B, Bdi, Bdo, Blockquote, Br, Button, Canvas, Caption, Cite, Code, Col, Colgroup, Data, Datalist, Dd, Del, Details, Dfn, Dialog, Div, Dl, Dt, Em, Embed, Fieldset, Figcaption, Figure, Footer, Form, H1, H2, H3, H4, H5, H6, Header, Hgroup, Hr, I, Iframe, Img, Input, Ins, Kbd, Label, Legend, Li, Main, Map, Mark, Menu, Meter, Nav, Obj, Ol, Optgroup, Option, Output, P, Picture, Pre, Progress, Q, Rp, Rt, Ruby, S, Samp, Search, Section, Select, Small, Source, Span, Strong, Sub, Summary, Sup, Svg, Table, Tbody, Td, Textarea, Tfoot, Th, Thead, Time, Tr, Track, U, Ul, Var, Video, Wbr } from '@reference-ui/react'
 
 export function PrimCensus() {
   return (

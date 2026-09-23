@@ -2,7 +2,7 @@
 
 The runner syncs this world fresh, then the spec imports `system/system.mjs`
 node-side: `defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`,
-`extendPattern`, `getRhythm`, and `baseSystem` are all present, and
+`getRhythm`, and `baseSystem` are all present, and
 `getRhythm(4)` equals the `calc(4 * var(--spacing-root))` the engine emits for
 the world's `4r` padding want. The `font-registry.json` absence is approved:
 font data ships via `FontRegistry` types, not a JSON file.

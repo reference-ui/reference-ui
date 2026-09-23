@@ -2,7 +2,8 @@
 // a settled outer tree plus a second tree mounted on a nested host: separate
 // React trees share no scope context, so the inner tree stamps the layer
 // again the way a nested second system would across its own boundary.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function Prim() {
   return (

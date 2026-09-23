@@ -2,7 +2,8 @@
 // namespaced panels: NS.Panel matches the configured NSPanel host so its
 // style props compile, while Other.Panel has no host so its backdrop stays
 // uncompiled and the browser proves the gate by painting nothing.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 const NS = { Panel: Div }
 const Other = { Panel: Div }

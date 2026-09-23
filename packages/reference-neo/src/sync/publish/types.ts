@@ -2,11 +2,7 @@
 // It takes nothing at runtime and emits the PublishInput shape plus the
 // version stamp and banner every generated file carries.
 
-import type {
-  EvaluatedSystemSpec,
-  NativeRuntimeArtifact,
-  PortableFragment,
-} from '@reference-ui/rust/contracts'
+import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { JsxElementsArtifact } from '../jsx-elements.ts'
 
 export const GENERATED_VERSION = '0.0.0-neo'
@@ -20,6 +16,4 @@ export interface PublishInput {
   stylesheet: string
   portableStylesheet: string
   jsx: JsxElementsArtifact
-  runtime?: NativeRuntimeArtifact
-  fragments?: PortableFragment[]
 }

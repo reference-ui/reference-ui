@@ -1,6 +1,6 @@
 // Entry for the NEO-LAYER-02 world. It takes the three static probes and the
 // served portable base system, paints the mixed, recipe-only, and adopted
-// nodes synchronously, then fetches the portable chunk, injects it into a
+// nodes synchronously, then fetches the portable css, injects it into a
 // blank consumer frame, and creates the two data-layer probes inside — so
 // the frame's existence proves the injection it depends on already landed.
 import { css, recipe } from '@reference-ui/react'
@@ -17,12 +17,8 @@ el('mixed').className = `${card()} ${css({ color: 'ink' })}`
 el('recipeonly').className = card()
 el('up').className = css({ color: 'brass' })
 
-interface PortableChunk {
-  css: string
-}
-
 interface PortableSystem {
-  cssChunks: PortableChunk[]
+  css: string
 }
 
 async function injectPortable(): Promise<void> {
@@ -30,11 +26,12 @@ async function injectPortable(): Promise<void> {
   if (!response.ok) throw new Error(`portable fetch failed: HTTP ${response.status}`)
   const text = await response.text()
   const parsed = JSON.parse(text.slice(text.indexOf('{'))) as PortableSystem
-  const chunk = parsed.cssChunks[0]
-  if (!chunk) throw new Error('portable base system carries no css chunk')
+  const portableCss = parsed.css
+  if (typeof portableCss !== 'string' || portableCss.length === 0)
+    throw new Error('portable base system carries no css')
   // A blank same-origin frame stands in for the downstream layers-mode
-  // consumer: it carries the portable chunk alone, so any resolved var
-  // proves the chunk is self-sufficient and the scoping did the work —
+  // consumer: it carries the portable css alone, so any resolved var
+  // proves the css is self-sufficient and the scoping did the work —
   // the main document's :root tokens cannot leak in.
   const frame = document.createElement('iframe')
   frame.id = 'portable'
@@ -43,7 +40,7 @@ async function injectPortable(): Promise<void> {
   const inner = frame.contentDocument
   if (!inner) throw new Error('portable frame has no document')
   const style = inner.createElement('style')
-  style.textContent = chunk.css
+  style.textContent = portableCss
   inner.head.appendChild(style)
   const player = inner.createElement('div')
   player.id = 'iplayer'

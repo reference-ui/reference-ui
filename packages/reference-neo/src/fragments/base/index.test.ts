@@ -127,17 +127,19 @@ describe('fragments prepare flow', () => {
     expect(getUpstreamFragments(undefined)).toEqual([])
   })
 
-  it('maps bootstrap fragment imports back to the Neo author entry', async () => {
+  it('maps bootstrap fragment imports back to Neo source entries', async () => {
     await importFragmentsModule()
     const { getFragmentBootstrapImportMap } = await import('./bootstrap-import-map.ts')
 
     const authorEntry = join(import.meta.dirname, '..', '..', 'author', 'index.ts')
+    const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react.ts')
     expect(getFragmentBootstrapImportMap()).toEqual({
       '@reference-ui/neo': authorEntry,
       '@reference-ui/neo/config': authorEntry,
       '@reference-ui/system': authorEntry,
       '@reference-ui/core/config': authorEntry,
       '@reference-ui/cli/config': authorEntry,
+      '@reference-ui/react': reactEntry,
     })
   })
 

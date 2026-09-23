@@ -14,7 +14,7 @@ interface SpecInput {
 }
 
 interface PortableSystemFile {
-  cssChunks: { css: string }[];
+  css: string;
 }
 
 // The runner synced this two-system world before serving: the adopted
@@ -76,10 +76,10 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
 
   const baseSystemRaw = fs.readFileSync(path.join(outDir, 'system/baseSystem.mjs'), 'utf8');
   const baseSystem = JSON.parse(baseSystemRaw.slice(baseSystemRaw.indexOf('{'))) as PortableSystemFile;
-  const chunk = baseSystem.cssChunks[0]?.css ?? '';
+  const portableCss = baseSystem.css ?? '';
   assert.ok(
-    chunk.includes('[data-layer="neo-layer2"]'),
-    'portable chunk scopes tokens behind the system data-layer',
+    portableCss.includes('[data-layer="neo-layer2"]'),
+    'portable css scopes tokens behind the system data-layer',
   );
 
   const frame = page.locator('#portable');

@@ -285,18 +285,21 @@ describe('sync generated packages', () => {
 
     const mod = (await import(pathToFileURL(outFile(dir, 'system/baseSystem.mjs')).href)) as {
       baseSystem: {
-        schemaVersion: number
         name: string
-        fragments: Array<{ code: string }>
-        cssChunks: unknown[]
+        fragment: string
+        css: string
         jsxElements: string[]
-      }
+      } & Record<string, unknown>
     }
-    expect(mod.baseSystem.schemaVersion).toBe(1)
     expect(mod.baseSystem.name).toBe('sync-test')
-    expect(mod.baseSystem.fragments.some((fragment) => fragment.code.includes('brand'))).toBe(true)
-    expect(mod.baseSystem.cssChunks.length).toBe(1)
+    expect(typeof mod.baseSystem.fragment).toBe('string')
+    expect(mod.baseSystem.fragment).toContain('brand')
+    expect(typeof mod.baseSystem.css).toBe('string')
+    expect(mod.baseSystem.css).toContain('--colors-brand')
     expect(mod.baseSystem.jsxElements).toEqual([])
+    expect('fragments' in mod.baseSystem).toBe(false)
+    expect('cssChunks' in mod.baseSystem).toBe(false)
+    expect('runtime' in mod.baseSystem).toBe(false)
   })
 
   it('links the generated packages into project node_modules', async () => {

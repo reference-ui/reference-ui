@@ -1,7 +1,7 @@
 // World entry: it renders the reference shell in one of three modes selected by the view query param.
 // The default mode mirrors the matrix consumer shell; provider and no-provider exercise the context hook
 // with and without its runtime, and the error boundary surfaces the provider-required throw as page text.
-import { createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
 import { Component } from 'react'
 import type { ReactNode } from 'react'
 import {

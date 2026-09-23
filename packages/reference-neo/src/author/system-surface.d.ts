@@ -19,8 +19,5 @@ export declare function font(definition: FontDefinition): FontDefinition;
 export type GlobalCssConfig = Record<string, unknown>;
 export declare function globalCss(config: GlobalCssConfig): GlobalCssConfig;
 
-export type BoxPatternExtension = Record<string, unknown>;
-export declare function extendPattern(extension: BoxPatternExtension): BoxPatternExtension;
-
 export declare function getRhythm(step: number): string;
 export declare const baseSystem: BaseSystem;

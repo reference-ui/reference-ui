@@ -3,7 +3,9 @@
 // react package: a minified bundled react.mjs plus its external map and standalone react.d.mts. React
 // stays external (like core's entry): bundling it would fork the dispatcher
 // for any consumer rendering through its own react-dom, so the bundle
-// imports 'react' + 'react-dom/client' and the consumer provides the copy.
+// imports 'react' and the consumer provides the copy. No react-dom edge:
+// consumers bring their own copy, and packages built on the entry import
+// clean where react-dom is absent (core contract).
 // css()/recipe() bundle in pre-registered over this system's runtime-data
 // (D4: styled stays data-only).
 
@@ -96,7 +98,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
       format: 'esm',
       platform: 'browser',
       // React rides with the consumer (see header): external, never bundled.
-      external: ['react', 'react-dom/client'],
+      external: ['react'],
       // Minified with an external map: the shipped bundle holds its size
       // bound while the map keeps it debuggable. Names mangle, so the miss
       // call-site probe keeps only the react.mjs file marker (by design).

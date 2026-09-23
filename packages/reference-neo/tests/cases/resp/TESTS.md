@@ -1,7 +1,7 @@
 # RESP ledger
 
 `NEO-CSS-02` lives in `css/` per D18 and is listed here once as a done
-cross-reference; RESP owns rows NEO-RESP-01..09 (append-only, never
+cross-reference; RESP owns rows NEO-RESP-01..10 (append-only, never
 renumbered). All engine stations below were confirmed (`ls` + README) in
 `packages/reference-rs/modules/atomic/tests/cases/`; no row is
 `blocked-on-rs` and no `RS-n` was added.
@@ -18,6 +18,7 @@ renumbered). All engine stations below were confirmed (`ls` + README) in
 | NEO-RESP-07 | Without a container-type ancestor, container utilities do **not** apply; with `container: true` on the root they do | done | ATM-COND-15, ATM-COND-16 | — | two worlds or two subtrees | `[atm]` P0 #2; `[lib]` `body { container-type: inline-size }`; `[decision D8]` |
 | NEO-RESP-08 | Numeric custom key `r={{ 300: … }}` lowers to a concrete `@container (min-width: 300px)` | done | ATM-COND-07 | `lowerResponsiveStyles.ts` (no change; numeric lowering already shipped) | resize across 300px; computed width flips both ways; r sugar == direct form node-side | `[atm]` COND-07; `NEO-CSS-02` |
 | NEO-RESP-09 | `css()` at runtime and build time lower the same responsive sugar to the same class | done | ATM-COND-01 | `css.ts` (no change; verbatim nesting already shipped) | runtime call == extracted call == exact class string; DOM equality; resize paints per container | `NEO-CSS-02`; `[atm]` COND-01 |
+| NEO-RESP-10 | Viewport contract: css width @800px, recipe height @700px, mixed container+viewport on one class | done | none (P2 census; no engine gap) | — | all 8 oracle legs incl. the 4 mixed cells | `[matrix]` `viewport-contract.spec.ts` whole file; P-resp-1 |
 
 RS pointer: NEO-RESP-03 waits on RS-9 (per-prop `{ base, <bp> }` objects;
 full input/expected-CSS in `tests/cases/css/TESTS.md`). R1 2026-09-17:

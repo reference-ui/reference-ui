@@ -5,6 +5,7 @@
 // attr-hover, breadth, first-child, dark-mix, and vendor probes, plus the
 // F1 slash input. A second root renders the dark island as a body child.
 // Every style object is literal; P5/P14/P15 stay out (RS-15/22/23).
+import { createRoot } from 'react-dom/client'
 import {
   A,
   Button,
@@ -22,7 +23,6 @@ import {
   Thead,
   Tr,
   Ul,
-  createRoot,
   css,
   recipe,
 } from '@reference-ui/react'

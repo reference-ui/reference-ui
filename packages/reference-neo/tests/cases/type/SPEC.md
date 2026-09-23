@@ -37,7 +37,7 @@ never bare `sm` (TYP-STYLE-03, D8); recipe variants are plain unions, not
 ## Decisions
 
 D5 (TYPE-01 targets `react/react.d.mts` + `./styles.css` names). D6 (TYPE-05:
-`defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`, `extendPattern`,
+`defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`,
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
 root). D8/D10 (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
 Panda and typegen agree). D17 (`strict`/`layers` deferred; typegen `strict`

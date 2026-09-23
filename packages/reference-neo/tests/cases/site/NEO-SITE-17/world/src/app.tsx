@@ -3,7 +3,8 @@
 // component-body const ternary — the BookShell subtleBorder shape — so the
 // extractor must compile both color arms while the runtime paints exactly
 // one. With no query string the theme is dark and the ink arm paints.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 const params = new URLSearchParams(window.location.search)
 const isDark = params.get('theme') !== 'light'

@@ -2,7 +2,8 @@
 // and emits two probes for the same style object: one through the css
 // prop, one through a css() call. Extraction source and browser entry
 // stay one file, so the compiler and the page can never drift apart.
-import { Div, createRoot, css } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div, css } from '@reference-ui/react'
 
 const cls = css({ mt: '8px' })
 

@@ -2,7 +2,8 @@
 // two probes: one pairing sibling StyleProps with a css prop, one pitting the
 // css color against the sibling color. Extraction source and browser entry
 // stay one file, so the compiler and the page can never drift apart.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 export function Prim() {
   return (

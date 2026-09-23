@@ -330,7 +330,6 @@ export declare const DocumentContext: React.Context<Document | null>;
 export declare function useColorMode(): string | undefined;
 export { Fragment } from 'react';
 export { createElement } from 'react';
-export { createRoot } from 'react-dom/client';
 
 /** Bound style runtimes the react bundle carries (D4 moved them out of styled). */
 export type CssStyles = Record<string, unknown>;

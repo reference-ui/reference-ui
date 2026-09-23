@@ -5,7 +5,8 @@
 // while the runtime paints the ring arm on the selected tab and the
 // transparent arm on the plain tab. Context is a module const, so the
 // comparison arm is dynamic and the binding is partially static.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 
 const context = { value: 'tab1' }
 

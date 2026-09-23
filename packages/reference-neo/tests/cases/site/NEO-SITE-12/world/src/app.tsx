@@ -1,7 +1,8 @@
 // Entry for the NEO-SITE-12 world. It takes the unlisted Random component
 // plus one lowercase and one primitive div, and emits the anti-host trio:
 // two probes that must never extract beside the control that must.
-import { Div, createRoot } from '@reference-ui/react'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
 import { Random } from './Random.js'
 
 export function Site() {

@@ -6,6 +6,7 @@
 // vendor, gradient, array-css, and numeric/media/breakpoint probes, plus the
 // F1 slash input. A second root renders the dark island as a body child.
 // Every style object is literal.
+import { createRoot } from 'react-dom/client'
 import {
   A,
   Button,
@@ -23,7 +24,6 @@ import {
   Thead,
   Tr,
   Ul,
-  createRoot,
   css,
   recipe,
 } from '@reference-ui/react'
