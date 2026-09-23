@@ -41,7 +41,7 @@ describe('bundleConfig', () => {
     expect(bundled).toMatch(/from ['"]nonexistent-package['"]/)
   })
 
-  it('aliases Neo package ids to the local author entry', async () => {
+  it('aliases Neo package ids to the local root barrel', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-bundle-'))
     tempDirs.push(dir)
 

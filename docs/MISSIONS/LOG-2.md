@@ -12728,3 +12728,88 @@ folded into collect wave") noted as a followup wave — outside this
 crew's item-3 brief, not freelanced.
 
 ## Tick — all objectives COMPLETE; AUTHOR-KILL running (fresh, no writes yet — not stuck), collect surface/lib delta in captain's hands, no action.
+
+## AUTHOR-KILL (Tokyo item 8, fork B — 2026-09-23) — DONE
+
+Crew brief: delete `src/author/`, keep the `@reference-ui/neo` id
+answering from a minimal root barrel with the true public set only.
+Crews never commit; report, don't land.
+
+### Coordination (sibling COLLECT-REFACTOR)
+
+Arrived mid-rename (`collect/api/` live, `surface/` absent), so the
+barrel waited per the brief: poll read-only, wire against the DECIDED
+paths only, never freelance. The sibling converged `collect/surface/`
++ `collect/lib/` during the wait; the captain then landed it
+(`e091c008a`, `863960c65` "author unblocked"). All edits below went
+onto that converged tree. Two one-line repoints land in
+`collect/lib/` (`bootstrap.ts` alias target, `prepare.test.ts`
+expectation) — post-convergence wiring the wave requires, not
+mid-flight interference. No hot-file collision: the sibling's motion
+was committed before the first write.
+
+### Census re-verified (read-only, this session)
+
+- Value imports of the id in-tree: exactly `defineConfig`,
+  `tokens`, `globalCss`, `font`, `keyframes` (+ types). The lone
+  `baseSystem` hit is a generated-`.mjs` import, not the id.
+- `create*Collector` importers outside `collect/`: zero (only the
+  old `author/` re-export). Non-re-export IS the split.
+
+### The kill
+
+- NEW `src/index.ts`: root barrel, true public set only —
+  `defineConfig` (+`BaseSystem`, `ReferenceUIConfig`) from
+  `./config/types.ts`, the four collector calls (+ their types)
+  from `./collect/surface/index.ts`. Factories stay defined in
+  the surface files, not re-exported. Surface barrel imported
+  directly (not the collect barrel) so config bundles never drag
+  evaluate/scan machinery — same graph shape as the old entry.
+- MOVED `src/author/system-surface.d.ts` →
+  `src/system-surface.d.ts` (content untouched).
+- DELETED `src/author/` entirely. Zero `author/` path survivors in
+  code (grep over src/tests/tools/bin/playground/benchmark/tsconfig).
+- Repoints: root `tsconfig.json` (both ids), `config/bundle.ts`
+  alias target, `config/constants.ts` + `bundle.test.ts` prose,
+  `tools/build-bin.mjs` TWINS (`src/index.js`→`src/index.ts`),
+  13 world tsconfigs, `collect/lib/bootstrap.ts` (+ doc line),
+  `collect/lib/prepare.test.ts`, `docs/DOMAIN.md` author-surface
+  entry (`src/index.ts`, factories excluded).
+- No vite alias, no harness-server alias, no world-HTML id map
+  exists — verified by grep. All in-repo id imports are fixture
+  strings or world sources resolved by sync aliases / tsconfig
+  paths; nothing resolves the id through node_modules.
+
+### Real "." export — DONE (was: assess)
+
+Clean with the dist/bin story, so implemented, not logged:
+`".": "./dist/src/index.js"` beside `./runtime`. Rationale:
+tsc already emits `src/index.js` + `index.d.ts` (include: src,
+declaration: true), the twin is laid by the TWINS edit and
+asserted by the build registry, and no current resolver changes
+behavior (all alias/paths-driven). Node probe post-build:
+`import('@reference-ui/neo')` →
+`defineConfig,font,globalCss,keyframes,tokens` exactly;
+factory-leak probe negative. Follow-up noted: `@reference-ui/neo/config`
+(and the core/cli compat ids) stay alias-only by design — no
+`./config` subpath added, scope kept minimal.
+
+### Proof (all observed this session, converged tree)
+
+- `node tools/build-bin.mjs` → `dist ready: 333 files`
+  (registry + twin math green under the new layout).
+- `tsc --noEmit -p tsconfig.json` → clean.
+- Full Neo units (`vitest run`) → **48 files / 337 tests, all
+  green**.
+- `pnpm agentneo q` → `0 errors, 17 warnings, 214 files`
+  (warn count identical to the pre-wave proof).
+- FULL `pnpm agentneo run` → **197/197 `ok`** in
+  `tests/.artifacts/last-run.json`.
+- Native T1 chain tier: `neo sync` in `matrix/tests/chain/T1` →
+  116ms, exit 0; `playwright test` (via `pnpm agent run`) →
+  **7/7 passed**.
+- No-panda pass over new/changed sources: clean. No diagnostic
+  leftovers (no scratch files; dist + last-run.json gitignored).
+
+AUTHOR-KILL DONE: author/ gone + id answering + full suite green
++ T1 green. Report, don't land.

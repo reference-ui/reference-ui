@@ -11,7 +11,7 @@ import { dirname, resolve } from 'node:path'
  * At this point no generated package exists under `.reference-ui/` yet. We still
  * need to execute user fragment files so token, font, keyframe, and pattern
  * collectors can build the evaluated spec. This map points those imports back
- * at the Neo-owned author entry, and react imports at the Neo-owned react
+ * at the Neo-owned root barrel, and react imports at the Neo-owned react
  * source entry, so fragment execution can happen first.
  *
  * No styled ids: core aliases four because its generated primitives import
@@ -20,7 +20,7 @@ import { dirname, resolve } from 'node:path'
  */
 export function getFragmentBootstrapImportMap(): Record<string, string> {
   const baseDir = dirname(fileURLToPath(import.meta.url))
-  const authorEntry = resolve(baseDir, '..', '..', 'author', 'index.ts')
+  const authorEntry = resolve(baseDir, '..', '..', 'index.ts')
   const reactEntry = resolve(baseDir, '..', '..', 'entry', 'react.ts')
 
   return {

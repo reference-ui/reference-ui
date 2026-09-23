@@ -13,6 +13,7 @@
     "node": ">=22.18.0"
   },
   "exports": {
+    ".": "./dist/src/index.js",
     "./runtime": "./dist/src/runtime/index.js",
     "./package.json": "./package.json"
   },

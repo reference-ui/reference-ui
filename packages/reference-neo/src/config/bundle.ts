@@ -35,7 +35,7 @@ function normalizeConfigDependencyPaths(configPath: string, inputPaths: readonly
 
 function resolveDefineConfigEntry(): string {
   const currentFile = fileURLToPath(import.meta.url)
-  return resolve(dirname(currentFile), '..', 'author', 'index.ts')
+  return resolve(dirname(currentFile), '..', 'index.ts')
 }
 
 /**

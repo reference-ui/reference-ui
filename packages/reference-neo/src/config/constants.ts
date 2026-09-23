@@ -6,7 +6,7 @@ export { DEFAULT_OUT_DIR } from '../constants.ts'
 
 /**
  * Package ids that are (1) left external when bundling user config and
- * (2) aliased to the Neo author entry when bundling, so config can
+ * (2) aliased to the Neo root barrel when bundling, so config can
  * use defineConfig without pulling in a full host. Core ids stay so
  * author ui.config files keep working unchanged.
  */

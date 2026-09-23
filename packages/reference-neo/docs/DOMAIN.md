@@ -50,9 +50,10 @@ this file in the same pass.
 - **Neo** — the code word for this runtime rebuild. Retires if
   promoted to core.
 - **author surface** — the one entry behind the `@reference-ui/neo`
-  id (`src/author/`): config plus fragment collectors. Bundlers
-  alias the id here; tsconfig paths point typechecking at the same
-  file, so every resolver agrees on what authors can import.
+  id (`src/index.ts`): config plus the collector calls, factories
+  excluded. Bundlers alias the id here; tsconfig paths point
+  typechecking at the same file, so every resolver agrees on what
+  authors can import.
 - **dist** — per-world build output (`world/dist/`, gitignored):
   transpiled app sources. The harness rebuilds it clean on every
   run; pages reference it, never `src/`.

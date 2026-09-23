@@ -12,7 +12,7 @@
       "@reference-ui/react": ["./.reference-ui/react/react.d.mts"],
       "@reference-ui/system": ["./.reference-ui/system/system.d.mts"],
       "@reference-ui/styled": ["./.reference-ui/styled/types/index.d.ts"],
-      "@reference-ui/neo": ["../../../../src/author/index.ts"]
+      "@reference-ui/neo": ["../../../../src/index.ts"]
     }
   },
   "include": ["src", "ui.config.ts"]

@@ -31,7 +31,7 @@ const PATH_LITERAL_SOURCES = new Map([
 // so the alias entries resolve. Content is plain JS (esbuild parses it);
 // node never loads these paths — every node import points at .js/.jsx.
 const TWINS = [
-  ['src/author/index.js', 'src/author/index.ts'],
+  ['src/index.js', 'src/index.ts'],
   ['src/entry/react.js', 'src/entry/react.ts'],
   ['src/entry/types.js', 'src/entry/types.tsx'],
   ['src/runtime/index.js', 'src/runtime/index.ts'],
