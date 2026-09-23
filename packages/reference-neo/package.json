@@ -33,7 +33,7 @@
     "esbuild": "^0.28.1",
     "fast-glob": "^3.3.2",
     "picomatch": "^4.0.4",
-    "symlink-dir": "^9.0.0"
+    "symlink-dir": "^10.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
