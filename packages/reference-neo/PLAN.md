@@ -261,6 +261,45 @@ Open threads: real `"."` export in package.json; what `entry/`'s exact
 Neo roster is (react/types today — system?); where the public types
 live (HQ: with types — Neo has no top-level `types/` home yet).
 
+### 3.9. Primitives generation as its own spec'd module (HQ: probably lives in RS)
+
+HQ: the generator should be its own module with a test station
+verifying emitted primitives carry proper style props; it must take
+typegen into account; and it feels like it belongs in reference-rs —
+one way to generate stuff, distributed through the vendor mechanism.
+Also: `vendor/` is misnamed. We are the vendor.
+
+Captain: the duplication is catalogued — `tags.ts` hand-copies canon's
+tag set, the style-prop list hand-mirrors typegen's shape (the
+generator header admits it: "mirrors the typegen shape until typegen
+wires in"), `react-surface.d.ts` hand-mirrors both. The honest split:
+vocabulary is RS-owned (canon tags + typegen prop defs,
+vendored mechanically like tasty, freshness-gated); *per-system
+emission* stays Neo (it needs the system name + compiled style props
+at sync time). Proposed module spec:
+- SOURCE: canon (tags, aliases, conditions) + typegen (prop defs,
+  unions) — no new authority, wire the two that exist.
+- GENERATOR: emits the tag set + prop vocabulary as committed
+  artifacts (data, not prose); explicit regen command + `--check`
+  freshness, same contract as `vendor-rust-tasty-dts.mjs`.
+- TEST STATION: verifies the emitted surface — every canon tag has a
+  primitive, every primitive carries its proper style props, set
+  parity with canon fails the gate on drift.
+- CONSUMERS: Neo's per-system entry assembly reads the vendored
+  vocabulary instead of `tags.ts`; `tags.ts` and the hand-mirrored
+  surface types delete.
+- HOME: HQ leans RS (one generator, one language source). Counter to
+  resolve: the vendor tool + station could live either side of the
+  cut — decide by who owns freshness failures.
+Rename: `vendor/` → TBD. Candidates: `upstream/` (RS *is* upstream
+of Neo — accurate), `rs/` (terse), `generated/rs/` (mechanical
+truth). Captain leans `upstream/`; HQ decides. The rename rides with
+this item, not separately.
+Open threads: RS-side vs Neo-side home for generator + station;
+exact artifact shapes (d.ts closure like tasty? JSON data?);
+whether per-system emission ever follows below the cut or stays Neo
+permanently; the folder name.
+
 ## 4. Standing constraints (carried, not re-debated)
 
 - Chain tests stay. Neo never imports core/lib/legacy paths. Cases +
