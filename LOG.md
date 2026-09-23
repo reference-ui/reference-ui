@@ -13,8 +13,8 @@ First line of each is its status.
   briefed, audit pending. Lands one commit.
 - [Objective 3 — lib sync ~650ms](LOG-3.md): probe returned, open
   investigation. Lands one commit.
-- [Objective 4 — component baselines](LOG-4.md): briefed, crewed
-  after Objectives 1–3. Lands one commit.
+- [Objective 4 — tooltip focus preset](LOG-4.md): briefed, executes
+  blind from its doc. Lands one commit.
 - [Objective 5 — reference lib productization](LOG-5.md): recon
   returned, blocked on Objective 4. One commit per component.
 
@@ -26,7 +26,7 @@ First line of each is its status.
 - Objective 2: matrix audit TBD — chain suites kept, rest ported or
   dropped; core removed, icons/docs migrated.
 - Objective 3: lib sync ~650ms → TBD. Target set from the breakdown.
-- Objective 4: components baselined 0 of N (N TBD).
+- Objective 4: tooltip preset landed, 4 CT migrated + TT-FOCUS-03 proven.
 - Objective 5: UX-signed 0 of N, one commit each.
 
 ## Where everything lives

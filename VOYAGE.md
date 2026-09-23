@@ -183,37 +183,28 @@ skill first.
 Done when: root cause proven with a breakdown, sync output identical,
 and the number down with same-box medians to show it.
 
-## Objective 4 — component baselines + interaction contracts
+## Objective 4 — tooltip focus preset (interaction contract)
 
-Objective: go component by component through `@reference-ui/lib` and
-freeze what each one looks like, feels like, and does — BEFORE any
-productionization touches it. This is the objective the quarantine branch
-never had: snapshots first, look/feel/interaction captured, and only
-then is the component eligible for productionization.
+Objective: land the tooltip focus-preset conformance fix — and only
+that. The baselines this objective used to own are frozen by the
+2026-09-22 suite-wide repin instead; this objective is the one known
+interaction contract, executed blind from its doc.
 
-Per component, in order:
+Work: [docs/missions/tooltip-focus-preset.md](./docs/missions/tooltip-focus-preset.md)
+— gate Tooltip focus-open on focus-visible, migrate the 4 CT tests
+from programmatic `.focus()` to real Tab, add the TT-FOCUS-03
+regression test (mouse-opened dialog must not pop the tip), mark
+TT-FOCUS-01/03 proven in SPEC. Touch nothing else: no FocusLock, no
+Overlay, no new props, no snapshot re-pins (visuals must not move —
+the repinned baselines are the proof).
 
-1. Snapshot-first: update and verify visual snapshots, CT cases, and
-   interaction captures (video where motion matters) against the
-   CURRENT tree. The baseline is the truth; nothing here changes the
-   component.
-2. Interaction contracts: land known conformance fixes, starting with
-   the tooltip focus preset
-   ([doc](./docs/missions/tooltip-focus-preset.md)): gate Tooltip
-   focus-open on focus-visible, migrate the 4 CT tests to real Tab,
-   add the TT-FOCUS-03 regression test. Executable blind per the
-   doc's checklist.
-3. Record the frozen baseline (snapshots + CT + contract fixes) in the
-   log before the component is released to Objective 5.
+Swarm shape: single small crew — implementers land the checklist,
+reviewers verify via `test-component` (`pnpm agentct Tooltip`).
+Every agent loads its governing skill first.
 
-Swarm shape: one bureaucratic crew per component — baseline capturers,
-contract fixers, reviewers who verify zero drift. Scoped proofs via
-`test-component` (`pnpm agentct`); snapshot updates only on genuine
-change with human verification per skill rules.
-
-Done when: every lib component has a frozen, reviewed baseline and the
-known contract fixes are landed. Objective 5 may not start on a
-component whose baseline isn't frozen.
+Done when: the checklist is complete, Tooltip CT is green on
+unmodified baselines, and the regression test pins the mouse-open
+behavior.
 
 ## Objective 5 — reference lib productization (final)
 
@@ -221,7 +212,7 @@ Objective: ship the productionized reference lib — every component
 tested, hardened, and landed as clean, engine-grade source. The
 quarantine corpus (`components-quarantine`, recon filed) is the
 primary raw material: tests and hardening patterns to re-target, not
-to copy. The Objective 4 baselines are the oracle, but the two gates
+to copy. The frozen repin baselines are the oracle, but the two gates
 differ:
 
 - **Visuals: frozen.** Components must match the frozen snapshot
@@ -248,7 +239,7 @@ lib gate is flagged follow-up, not tonight's machinery.
 
 Depends on: quarantine recon report (filed at
 [docs/missions/quarantine-recon.md](./docs/missions/quarantine-recon.md))
-+ Objective 4 baselines. Per component: apply, run the frozen
++ frozen repin baselines and Objective 4 (tooltip preset). Per component: apply, run the frozen
 baseline suite, diff snapshots/videos/interactions, pass UX review,
 then land.
 

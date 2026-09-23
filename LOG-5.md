@@ -18,7 +18,7 @@ stripped, focus rings globally suppressed, probing scaffolding).
 Salvageable: matrix corpus with re-targeting, 2 colocated suites,
 helper extractions. Suspect: all 18 rewritten sources + theme edits.
 
-Blocked on Objective 4 baselines.
+Blocked on the frozen repin baselines + Objective 4 (tooltip preset).
 Gates: visuals frozen, interactions UX-reviewed (`ux-designer` skill,
 briefed per component with the frozen-visuals constraint).
 Execution: one shared tree, no worktrees, one commit per component
