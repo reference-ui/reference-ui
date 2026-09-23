@@ -41,13 +41,13 @@ export async function runCleanCommand(dir: string | undefined, watch: boolean): 
     await cleanDir(outDir)
     const links = removeScopeLinks(cwd, outDir)
     if (!hadFolder && links === 0) {
-      console.log(`[neo] clean: nothing to remove at ${outDir}`)
+      console.log(`[ref] clean: nothing to remove at ${outDir}`)
       return 0
     }
-    console.log(`[neo] clean removed ${outDir} (${links} links)`)
+    console.log(`[ref] clean removed ${outDir} (${links} links)`)
     return 0
   } catch (err) {
-    console.log(`[neo] clean failed: ${messageOf(err)}`)
+    console.log(`[ref] clean failed: ${messageOf(err)}`)
     return 1
   }
 }

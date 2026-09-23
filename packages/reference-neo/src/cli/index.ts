@@ -15,7 +15,7 @@ export async function runCli(argv: string[]): Promise<number> {
   }
   const program = new Command()
   program
-    .name('neo')
+    .name('ref')
     .description('the Neo host CLI for case worlds and consumer projects')
     .addHelpText('after', () => `\n${USAGE}\n`)
   program.on('command:*', (operands: string[]) => {

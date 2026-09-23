@@ -22,13 +22,13 @@ export async function runSyncCommand(dir: string | undefined, watch: boolean): P
     const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
     const build = await flushReferenceBuild(cwd)
     if (build?.status === 'failed') {
-      console.log(`[neo] sync failed: reference tasty build failed: ${build.message}`)
+      console.log(`[ref] sync failed: reference tasty build failed: ${build.message}`)
       return 1
     }
-    console.log(`[neo] sync ${Date.now() - started}ms → ${result.outDir}`)
+    console.log(`[ref] sync ${Date.now() - started}ms → ${result.outDir}`)
     return 0
   } catch (err) {
-    console.log(`[neo] sync failed: ${messageOf(err)}`)
+    console.log(`[ref] sync failed: ${messageOf(err)}`)
     return 1
   }
 }

@@ -1,5 +1,5 @@
-// Builds the compiled neo bin into dist/ (FIX-3: packed installs cannot
-// type-strip bin/neo.ts under node_modules). It runs tsc over the build
+// Builds the compiled ref bin into dist/ (FIX-3: packed installs cannot
+// type-strip bin/ref.ts under node_modules). It runs tsc over the build
 // tsconfig, asserts the alias-literal set is exactly the known one, then
 // lays the esbuild-entry twins plus the runtime-read declaration asset
 // beside the emit and makes the bin executable. Run from the Neo package
@@ -45,7 +45,7 @@ const TWINS = [
 const ASSETS = [['src/entry/types.d.mts', 'src/entry/types.d.mts']]
 
 function fail(message) {
-  console.error(`[neo build] ${message}`)
+  console.error(`[ref build] ${message}`)
   process.exit(1)
 }
 
@@ -105,10 +105,10 @@ function layTwinsAndAssets() {
 }
 
 function finishBin() {
-  const bin = join(DIST, 'bin', 'neo.js')
-  if (!existsSync(bin)) fail('missing dist/bin/neo.js after emit')
+  const bin = join(DIST, 'bin', 'ref.js')
+  if (!existsSync(bin)) fail('missing dist/bin/ref.js after emit')
   const firstLine = readFileSync(bin, 'utf8').split('\n')[0]
-  if (!firstLine.startsWith('#!')) fail('dist/bin/neo.js lost its shebang')
+  if (!firstLine.startsWith('#!')) fail('dist/bin/ref.js lost its shebang')
   chmodSync(bin, 0o755)
 }
 
@@ -125,4 +125,4 @@ runTsc()
 assertLiteralSet()
 layTwinsAndAssets()
 finishBin()
-console.log(`[neo build] dist ready: ${countFiles(DIST)} files, bin dist/bin/neo.js`)
+console.log(`[ref build] dist ready: ${countFiles(DIST)} files, bin dist/bin/ref.js`)

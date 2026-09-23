@@ -18,7 +18,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "neo": "./dist/bin/neo.js"
+    "ref": "./dist/bin/ref.js"
   },
   "files": [
     "dist"

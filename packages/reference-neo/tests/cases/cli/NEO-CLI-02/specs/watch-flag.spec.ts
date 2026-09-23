@@ -1,6 +1,6 @@
 // watch-flag.spec.ts — spec for NEO-CLI-02, the bin --watch flag-path proof.
 // Takes { case } with the world freshly synced and drives the real spawned
-// `neo sync --watch` binary through three legs: the watcher boots and names
+// `ref sync --watch` binary through three legs: the watcher boots and names
 // the world in its watching line, a token edit triggers a resync line plus
 // a changed sheet, and SIGTERM shuts the resident child down with exit 0.
 // Emits nothing on success; throws naming the leg and the failed expectation
@@ -18,7 +18,7 @@ interface SpecInput {
   case: NeoCase;
 }
 
-const BIN_PATH = fileURLToPath(new URL('../../../../../bin/neo.ts', import.meta.url));
+const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const BRAND_VALUE = '#7c3aed';
 const CHANGED_VALUE = '#0e5c3f';
 
@@ -94,7 +94,7 @@ async function waitForOutput(watch: WatchChild, cond: () => boolean, label: stri
 // are live — so no settle sleep is needed before the first mutation.
 async function proveBoot(watch: WatchChild, worldDir: string): Promise<void> {
   await waitForOutput(watch, () => watch.output().includes(`watching ${worldDir}`), 'the watching line');
-  assert.ok(watch.output().includes('[neo] sync '), 'watch boot prints the baseline sync line');
+  assert.ok(watch.output().includes('[ref] sync '), 'watch boot prints the baseline sync line');
 }
 
 // The resync leg: one token-value edit must surface as the bin's resync
@@ -153,7 +153,7 @@ async function reapQuietly(watch: WatchChild): Promise<void> {
     }
     if (!childDone(watch)) watch.child.kill('SIGKILL');
   } catch {
-    console.log('[NEO-CLI-02] warning: watch child reap failed; check for an orphaned neo process');
+    console.log('[NEO-CLI-02] warning: watch child reap failed; check for an orphaned ref process');
   }
 }
 

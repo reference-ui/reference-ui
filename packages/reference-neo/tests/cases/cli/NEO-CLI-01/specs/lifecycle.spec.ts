@@ -1,6 +1,6 @@
 // lifecycle.spec.ts — spec for NEO-CLI-01, the CLI lifecycle port of the
 // matrix distro core. Takes { case } with the world freshly synced and drives
-// the real spawned `neo` binary through four legs: an idempotent re-sync, a
+// the real spawned `ref` binary through four legs: an idempotent re-sync, a
 // stale-marker rewrite, a SIGTERM mid-publish with recovery, and a clean
 // round-trip. Emits nothing on success; throws naming the leg and the failed
 // expectation on failure.
@@ -17,7 +17,7 @@ interface SpecInput {
   case: NeoCase;
 }
 
-const BIN_PATH = fileURLToPath(new URL('../../../../../bin/neo.ts', import.meta.url));
+const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const SYSTEM_NAME = 'neo-cli';
 const KILL_ATTEMPTS = 10;
 
@@ -71,7 +71,7 @@ function execFailureText(command: string, args: string[], error: unknown): strin
   );
 }
 
-function runNeo(args: string[], worldDir: string): string {
+function runRef(args: string[], worldDir: string): string {
   return execOutput(process.execPath, [BIN_PATH, ...args], worldDir);
 }
 
@@ -103,12 +103,12 @@ interface KillResult {
   sawPublish: boolean;
 }
 
-// Cleans the world, spawns a one-shot `neo sync`, and SIGTERMs it the
+// Cleans the world, spawns a one-shot `ref sync`, and SIGTERMs it the
 // instant the first published file lands. The exit resolves from the live
 // handle when the child is already gone, so a sub-second sync cannot strand
 // the wait on an event that already fired.
 async function killAfterFirstPublish(worldDir: string): Promise<KillResult> {
-  runNeo(['clean', worldDir], worldDir);
+  runRef(['clean', worldDir], worldDir);
   const child = spawn(process.execPath, [BIN_PATH, 'sync', worldDir], { cwd: worldDir, stdio: 'ignore' });
   let sawPublish = false;
   const deadline = Date.now() + 30000;
@@ -153,7 +153,7 @@ function generatedShape(worldDir: string): void {
 function proveIdempotentResync(worldDir: string): void {
   const sheetPath = path.join(worldDir, '.reference-ui', 'styled', 'styles.css');
   const before = fs.readFileSync(sheetPath, 'utf8');
-  runNeo(['sync', worldDir], worldDir);
+  runRef(['sync', worldDir], worldDir);
   assert.equal(fs.readFileSync(sheetPath, 'utf8'), before, 'a second sync is byte-identical');
   assert.equal(runImportProbe(worldDir), 'ok', 'consumer imports work after the re-sync');
 }
@@ -166,7 +166,7 @@ function proveStaleRewrite(worldDir: string): void {
   fs.writeFileSync(reactPath, 'STALE_REACT_RUNTIME_MARKER');
   fs.writeFileSync(systemPath, 'STALE_SYSTEM_RUNTIME_MARKER');
   fs.writeFileSync(basePath, 'STALE_BASE_SYSTEM_MARKER');
-  runNeo(['sync', worldDir], worldDir);
+  runRef(['sync', worldDir], worldDir);
   const nextReact = fs.readFileSync(reactPath, 'utf8');
   const nextSystem = fs.readFileSync(systemPath, 'utf8');
   const nextBase = fs.readFileSync(basePath, 'utf8');
@@ -191,7 +191,7 @@ async function proveInterruptRecovery(worldDir: string): Promise<void> {
     caught = signal === 'SIGTERM' && sawPublish;
   }
   assert.ok(caught, `a sync dies by SIGTERM after first publish within ${KILL_ATTEMPTS} attempts, caught none`);
-  runNeo(['sync', worldDir], worldDir);
+  runRef(['sync', worldDir], worldDir);
   generatedShape(worldDir);
   assert.equal(runImportProbe(worldDir), 'ok', 'consumer imports work after interrupt recovery');
 }
@@ -202,7 +202,7 @@ function proveCleanRestore(worldDir: string): void {
   const basePath = path.join(outDir, 'system', 'baseSystem.mjs');
   assert.ok(fs.existsSync(reactPath), 'react runtime exists before clean');
   assert.ok(fs.existsSync(basePath), 'base system exists before clean');
-  runNeo(['clean', worldDir], worldDir);
+  runRef(['clean', worldDir], worldDir);
   assert.ok(!fs.existsSync(outDir), 'clean removes the generated folder');
   for (const name of LINKED_PACKAGES) {
     assert.ok(
@@ -210,7 +210,7 @@ function proveCleanRestore(worldDir: string): void {
       `clean removes the ${name} scope link`,
     );
   }
-  runNeo(['sync', worldDir], worldDir);
+  runRef(['sync', worldDir], worldDir);
   assert.ok(fs.existsSync(reactPath), 'sync restores the react runtime after clean');
   assert.ok(fs.existsSync(basePath), 'sync restores the base system after clean');
   assert.equal(runImportProbe(worldDir), 'ok', 'consumer imports work after the clean restore');
@@ -227,7 +227,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     proveCleanRestore(c.worldDir);
   } finally {
     try {
-      runNeo(['sync', c.worldDir], c.worldDir);
+      runRef(['sync', c.worldDir], c.worldDir);
     } catch {
       console.log('[NEO-CLI-01] warning: final heal sync failed; the runner re-syncs before the next serve');
     }

@@ -1,5 +1,5 @@
 // CLI watch runner: it takes a resolved project dir and emits the resident
-// watcher behind `neo sync --watch`. The runner owns the process half only —
+// watcher behind `ref sync --watch`. The runner owns the process half only —
 // boot lines, change/resync/error prints, signal shutdown, and the
 // never-promise that holds the process open. The watch driver itself
 // (watchSync) stays where WAVE1-WATCH's verdict put it; this file only
@@ -11,12 +11,12 @@ export async function runWatch(dir: string): Promise<number> {
     const { watchSync } = await import('../sync/watch.ts')
     const started = Date.now()
     const handle = await watchSync(dir, {
-      onChange: (change) => console.log(`[neo] ${change.event} ${change.relativePath}`),
-      onResync: (result) => console.log(`[neo] resync → ${result.outDir}`),
-      onError: (err) => console.log(`[neo] watch error: ${messageOf(err)}`),
+      onChange: (change) => console.log(`[ref] ${change.event} ${change.relativePath}`),
+      onResync: (result) => console.log(`[ref] resync → ${result.outDir}`),
+      onError: (err) => console.log(`[ref] watch error: ${messageOf(err)}`),
     })
-    console.log(`[neo] sync ${Date.now() - started}ms → ${dir}/.reference-ui`)
-    console.log(`[neo] watching ${dir} — Ctrl-C to stop`)
+    console.log(`[ref] sync ${Date.now() - started}ms → ${dir}/.reference-ui`)
+    console.log(`[ref] watching ${dir} — Ctrl-C to stop`)
     const shutdown = (): void => {
       void handle.stop().then(
         () => process.exit(0),
@@ -28,7 +28,7 @@ export async function runWatch(dir: string): Promise<number> {
     await new Promise<void>(() => {})
     return 0
   } catch (err) {
-    console.log(`[neo] watch failed: ${messageOf(err)}`)
+    console.log(`[ref] watch failed: ${messageOf(err)}`)
     return 1
   }
 }

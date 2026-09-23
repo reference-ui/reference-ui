@@ -1,4 +1,4 @@
-// Unit tests for the neo bin over temp projects plus arg handling.
+// Unit tests for the ref bin over temp projects plus arg handling.
 // They take temp dirs with fake generated output and assert clean removes
 // exactly that output. Sync itself is proven live in case worlds; the bin
 // only forwards to the sync the harness already covers.
@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-const BIN_PATH = fileURLToPath(new URL('./neo.ts', import.meta.url));
+const BIN_PATH = fileURLToPath(new URL('./ref.ts', import.meta.url));
 const tempDirs: string[] = [];
 
 afterEach(async () => {
@@ -31,7 +31,7 @@ function runBin(args: string[], cwd: string): Promise<BinRun> {
 }
 
 async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-bin-'));
+  const dir = await mkdtemp(join(tmpdir(), 'ref-bin-'));
   tempDirs.push(dir);
   return dir;
 }
@@ -47,19 +47,19 @@ function plantGeneratedOutput(dir: string): { outDir: string; scope: string } {
   return { outDir, scope };
 }
 
-describe('neo bin', () => {
+describe('ref bin', () => {
   it('prints usage and exits 0 on --help', async () => {
     const dir = await makeTempDir();
     const run = await runBin(['--help'], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('usage: neo <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
   });
 
   it('rejects an unknown command with usage and exit 1', async () => {
     const dir = await makeTempDir();
     const run = await runBin(['frobnicate'], dir);
     expect(run.code).toBe(1);
-    expect(run.stdout).toContain('usage: neo <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
     expect(run.stdout).toContain('unknown command: frobnicate');
   });
 
@@ -104,7 +104,7 @@ describe('neo bin', () => {
     const dir = await makeTempDir();
     const run = await runBin(['clean', '--watch', dir], dir);
     expect(run.code).toBe(1);
-    expect(run.stdout).toContain('usage: neo <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
     expect(run.stdout).toContain('clean takes no --watch');
   });
 });
