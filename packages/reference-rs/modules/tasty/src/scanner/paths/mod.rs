@@ -49,13 +49,26 @@ pub(crate) fn normalize_relative_path(path: &Path) -> PathBuf {
     for component in path.components() {
         match component {
             std::path::Component::CurDir => {}
-            std::path::Component::ParentDir => {
-                normalized.pop();
-            }
+            std::path::Component::ParentDir => push_parent_dir(&mut normalized),
             other => normalized.push(other.as_os_str()),
         }
     }
     normalized
+}
+
+// Preserve leading `..` (dot-dot file ids above the scan root): popping past
+// the root would swallow the escape and produce a bogus in-root candidate,
+// killing barrel hops from followed packages in outDir-layout scans.
+fn push_parent_dir(normalized: &mut PathBuf) {
+    let pops_normal = matches!(
+        normalized.components().next_back(),
+        Some(std::path::Component::Normal(_))
+    );
+    if pops_normal {
+        normalized.pop();
+    } else {
+        normalized.push("..");
+    }
 }
 
 pub(crate) fn is_external_file_id(file_id: &str) -> bool {

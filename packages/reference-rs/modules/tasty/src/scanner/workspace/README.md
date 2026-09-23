@@ -22,6 +22,8 @@ This is where the high-level discovery policy lives.
 
 ## Boundaries
 
-- user files only bridge into external libraries through re-exports
+- user files bridge external libraries into the name index through re-exports
+- user files also follow scoped plain imports for resolution (chunks without
+  name entries); unscoped plain imports stay local, dev-only never followed
 - once inside an external package, discovery stays within that same package
 - later AST and generator layers only see the scanned file set produced here

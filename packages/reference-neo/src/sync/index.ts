@@ -2,7 +2,7 @@
 // It takes a project root and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
-import { rmSync, writeFileSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import {
@@ -22,9 +22,18 @@ import {
 import { resolveJsxElements } from './jsx-elements.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
+import { cleanDir } from './clean.ts'
 import { linkGeneratedPackages, publishRuntimeBundle, publishSyncFolder, publishTypesBundle } from './publish.ts'
 import { markPhase } from './phases.ts'
 import { publishReactBundle } from './react.ts'
+import { publishReferenceTypesBundle } from './reference-types.ts'
+import type { ReferenceUIConfig } from '../config/types.ts'
+import {
+  getReferenceManifestPath,
+  getReferenceTastyBuild,
+  initReference,
+  rebuildReferenceTastyBuild,
+} from '../reference/bridge/index.ts'
 
 export interface SyncResult {
   outDir: string
@@ -77,6 +86,34 @@ function uniqueSorted(names: readonly string[]): string[] {
   return [...new Set(names)].sort()
 }
 
+// REF-04 trigger: every sync rm-wipes the output dir, so a warm-session
+// re-sync (watch, tests, playground) deletes the tasty artifacts the
+// once-guard believes are landed. When the session is warm but the manifest
+// is gone from disk, rebuild it on the background loop — never awaited,
+// so ref syncs keep running on their own. Failures report and clear, so a
+// later sync retries.
+// The cold-start tasty build schedules onto the next loop iteration while
+// sync completes unwatched. initReference returns void — nothing here
+// awaits it, so the perf law holds by signature — and the refresh only
+// re-arms a warm session whose artifacts this run's wipe deleted (REF-04),
+// also without awaiting.
+function scheduleReferenceTastyPhase(cwd: string, config: ReferenceUIConfig): void {
+  initReference({ sourceDir: cwd, config })
+  refreshStaleReferenceTastyBuild(cwd, config)
+}
+
+function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIConfig): void {
+  if (getReferenceTastyBuild(sourceDir) === undefined) return
+  if (existsSync(getReferenceManifestPath(sourceDir))) return
+  rebuildReferenceTastyBuild({ sourceDir, config }).then(
+    () => undefined,
+    (reason: unknown) => {
+      const detail = reason instanceof Error ? reason.message : String(reason)
+      console.error(`[neo] [ref] background tasty refresh failed: ${detail}`)
+    }
+  )
+}
+
 /**
  * Regenerate the `.reference-ui/` folder for the project at cwd. Cleans the
  * stale folder first, evaluates fragments once, compiles the spec natively,
@@ -89,7 +126,7 @@ export async function sync(cwd: string): Promise<SyncResult> {
   const config = await loadUserConfig(cwd)
   markPhase('configEnd')
   const outDir = getOutDirPath(cwd)
-  rmSync(outDir, { recursive: true, force: true })
+  await cleanDir(outDir)
 
   try {
     markPhase('scanStart')
@@ -183,12 +220,18 @@ export async function sync(cwd: string): Promise<SyncResult> {
       stylePropNames: result.runtime.stylePropNames,
     })
     await publishTypesBundle(outDir, spec)
+    // After the react leg (its bundle is the alias target) and before the
+    // links leg (the junction lands on a complete package).
+    await publishReferenceTypesBundle({ outDir })
     linkGeneratedPackages(cwd, outDir)
     markPhase('publishEnd')
 
+    // Sync END only: schedule the background tasty phase, never await it.
+    scheduleReferenceTastyPhase(cwd, config)
+
     return { outDir, spec }
   } catch (error) {
-    rmSync(outDir, { recursive: true, force: true })
+    await cleanDir(outDir)
     throw error
   } finally {
     markPhase('syncEnd')

@@ -25,6 +25,7 @@ fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
         root_dir,
         files: out,
         file_ids,
+        bridged_libraries: BTreeSet::new(),
     }
 }
 
@@ -50,6 +51,7 @@ fn single_library_file(
             source: source.to_string(),
         }],
         file_ids,
+        bridged_libraries: BTreeSet::new(),
     }
 }
 

@@ -45,14 +45,25 @@ function isWorkerSample(value: unknown): value is WorkerSample {
 }
 
 function parseSample(stdout: string): WorkerSample {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(stdout) as unknown
-  } catch {
-    throw new Error(`bench worker printed no JSON: ${stdout.slice(0, 200)}`)
+  // The worker contract is one JSON line, not a pristine stream: sync phases
+  // legitimately log to stdout (the background tasty completion rides
+  // console.info/debug) after the sample is sealed. Extract the sample line
+  // and ignore adjunct log lines in either order.
+  let sawJson = false
+  for (const line of stdout.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith('{')) continue
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(trimmed) as unknown
+    } catch {
+      continue
+    }
+    sawJson = true
+    if (isWorkerSample(parsed)) return parsed
   }
-  if (!isWorkerSample(parsed)) throw new Error('bench worker printed a foreign shape')
-  return parsed
+  if (sawJson) throw new Error('bench worker printed a foreign shape')
+  throw new Error(`bench worker printed no JSON: ${stdout.slice(0, 200)}`)
 }
 
 export function runChild(workerPath: string, projectDir: string, sampleMs: number): Promise<WorkerSample> {

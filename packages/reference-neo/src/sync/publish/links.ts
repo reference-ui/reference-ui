@@ -5,7 +5,7 @@
 import { lstatSync, mkdirSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-const LINKED_PACKAGES = ['system', 'styled', 'react'] as const
+const LINKED_PACKAGES = ['system', 'styled', 'react', 'types'] as const
 
 function replaceLink(targetDir: string, linkPath: string): void {
   try {

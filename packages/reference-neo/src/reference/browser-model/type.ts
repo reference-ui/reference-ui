@@ -1,3 +1,8 @@
+// Type shaper: it takes tasty type refs (handles or raw) and emits the
+// serializable `ReferenceType` union plus its formatters. Every tagged raw
+// kind maps through an exhaustive factory table, and every model kind maps
+// back to text through an exhaustive formatter table.
+
 import type {
   RawTastyFnParam,
   RawTastyMember,
@@ -16,7 +21,7 @@ import type {
   ReferenceTupleElement,
   ReferenceType,
   ReferenceTypeParameter,
-} from '../browser/types'
+} from '../browser/types.ts'
 
 type RawTaggedTastyTypeRef = Exclude<RawTastyTypeRef, RawTastyTypeReference>
 type RawTaggedTastyTypeKind = RawTaggedTastyTypeRef['kind']

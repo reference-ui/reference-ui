@@ -17,6 +17,8 @@ import { tipFor } from './tips.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 const NEO_DIR: string = path.dirname(path.dirname(HERE));
+// Gitignored generated lib mirror (provenance headers from the checked-in mirror tool); the gate never judges it.
+const MIRROR_DIR: string = path.join(NEO_DIR, 'src', 'reference', 'browser-component');
 const CONFIG: string = path.join(HERE, 'biome.json');
 const WARN_CONFIG: string = path.join(HERE, 'biome.warn.json');
 const COGNITIVE_RULE = 'lint/complexity/noExcessiveCognitiveComplexity';
@@ -120,6 +122,8 @@ async function resolveTargets(paths: string[]): Promise<string[]> {
 }
 
 async function walk(entry: string, code: Set<string>, readmes: Set<string>): Promise<void> {
+  const resolved = path.resolve(entry);
+  if (resolved === MIRROR_DIR || resolved.startsWith(MIRROR_DIR + path.sep)) return;
   let s: Stats;
   try {
     s = await stat(entry);

@@ -8,7 +8,7 @@ Its job is to answer a narrower question than the AST layer:
 - what stable `file_id` and `module_specifier` each file gets
 - how an import path maps to another file on disk
 
-**Scan boundary:** We only follow an **external** import (into node_modules) when the current file **re-exports** from that module (`export ... from 'module'`). So a user file that only `import`s from a library does not cause that library to be scanned; the user must re-export the types they want documented. From a **library** file we only follow imports that stay within the **same package** (same `node_modules/package`), so we do not pull in entire dependency trees.
+**Scan boundary:** A user file bridges an **external** library (into node_modules) into the name index by **re-exporting** from it (`export ... from 'module'`). A user file that only `import`s a **scoped** package (`@org/name`, except dev-only packages) is followed for resolution: the library is scanned so references resolve, but its symbols emit chunks without name entries (followed-without-indexing). A user file that only `import`s an **unscoped** library does not cause that library to be scanned at all. From a **library** file we only follow imports that stay within the **same package** (same `node_modules/package`), so we do not pull in entire dependency trees.
 
 It should not know how to interpret TypeScript declarations beyond the minimum
 needed to discover more files. Comment text is captured by the AST layer (raw

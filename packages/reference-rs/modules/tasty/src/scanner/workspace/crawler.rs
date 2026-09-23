@@ -8,7 +8,7 @@ use crate::constants::libraries::USER_LIBRARY_NAME;
 
 use super::policy::{resolve_import_for_discovery, DiscoveryContext};
 use crate::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
-use crate::scanner::model::{DiscoveredFile, ResolvedModule};
+use crate::scanner::model::{DiscoveredFile, Discovery, ResolvedModule};
 use crate::scanner::paths::module_specifier_for_file_id;
 
 pub(super) struct Crawler<'a> {
@@ -16,6 +16,7 @@ pub(super) struct Crawler<'a> {
     user_file_ids: BTreeSet<String>,
     discovered: BTreeMap<String, DiscoveredFile>,
     pending: VecDeque<String>,
+    bridged_libraries: BTreeSet<String>,
 }
 
 impl<'a> Crawler<'a> {
@@ -33,15 +34,19 @@ impl<'a> Crawler<'a> {
             user_file_ids,
             discovered,
             pending,
+            bridged_libraries: BTreeSet::new(),
         }
     }
 
-    pub(super) fn run(mut self) -> Result<BTreeMap<String, DiscoveredFile>, String> {
+    pub(super) fn run(mut self) -> Result<Discovery, String> {
         while let Some(file_id) = self.pending.pop_front() {
             self.crawl_file(&file_id)?;
         }
 
-        Ok(self.discovered)
+        Ok(Discovery {
+            files: self.discovered,
+            bridged_libraries: self.bridged_libraries,
+        })
     }
 
     fn enqueue_entry_point(
@@ -74,7 +79,10 @@ impl<'a> Crawler<'a> {
             reexport_specifiers: &reexport_specifiers,
         };
 
-        for resolved in self.resolve_imports(&ctx, &source) {
+        for (resolved, bridged) in self.resolve_imports(&ctx, &source) {
+            if bridged && resolved.library != USER_LIBRARY_NAME {
+                self.bridged_libraries.insert(resolved.library.clone());
+            }
             self.enqueue(resolved);
         }
 
@@ -95,10 +103,19 @@ impl<'a> Crawler<'a> {
         self.user_file_ids.contains(file_id)
     }
 
-    fn resolve_imports(&self, ctx: &DiscoveryContext<'_>, source: &str) -> Vec<ResolvedModule> {
+    fn resolve_imports(
+        &self,
+        ctx: &DiscoveryContext<'_>,
+        source: &str,
+    ) -> Vec<(ResolvedModule, bool)> {
         extract_module_specifiers(ctx.file_id, source)
             .into_iter()
-            .filter_map(|source_module| resolve_import_for_discovery(ctx, &source_module))
+            .filter_map(|source_module| {
+                let resolved = resolve_import_for_discovery(ctx, &source_module)?;
+                let bridged =
+                    ctx.is_user_file && ctx.reexport_specifiers.contains(&source_module);
+                Some((resolved, bridged))
+            })
             .collect()
     }
 

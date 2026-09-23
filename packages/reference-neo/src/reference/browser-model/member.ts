@@ -1,9 +1,14 @@
+// Member builder: it takes a tasty member plus a symbol lookup and origins and
+// emits one serializable `ReferenceMemberDocument` row for the API table. The
+// type line prefers the inline-union value-set label, falling back to the
+// formatted declared type.
+
 import { getTastyMemberSemanticKind } from '@reference-ui/rust/tasty'
 import type { TastyMember, TastySymbol } from '@reference-ui/rust/tasty'
-import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../browser/types'
-import { createReferenceMemberSummary, getInlineUnionValueSetTypeLabel } from './summary'
-import { getReferenceTypeLabel } from './typeLabel'
-import { createReferenceJsDoc, createReferenceType } from './type'
+import type { ReferenceMemberDocument, ReferenceSymbolRef } from '../browser/types.ts'
+import { createReferenceMemberSummary, getInlineUnionValueSetTypeLabel } from './summary.ts'
+import { getReferenceTypeLabel } from './typeLabel.ts'
+import { createReferenceJsDoc, createReferenceType } from './type.ts'
 
 export function createReferenceMemberDocument(
   member: TastyMember,

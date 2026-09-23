@@ -1,3 +1,6 @@
+// Reference build report: it takes tasty warnings plus diagnostics and emits
+// the counted report run.ts logs and returns. Pure tally — no I/O, no seams.
+
 import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 
 export interface ReferenceBuildReport {

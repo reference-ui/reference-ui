@@ -69,6 +69,93 @@ fn scan_workspace_skips_user_external_imports_without_reexport_bridge() {
 }
 
 #[test]
+fn scan_workspace_follows_scoped_plain_imports_without_bridging() {
+    // Resolution restoration (Objective 1 RS fix): a user file that only
+    // `import`s a scoped package pulls it into the scan graph so references
+    // resolve, but the library stays out of the bridge set — its symbols
+    // emit chunks without name entries (followed-without-indexing).
+    let root = TempDir::new("scanner-workspace-scoped-plain-import");
+    root.write(
+        "src/index.ts",
+        "import type { Widget } from '@scope/widgets';\nexport interface Local { widget?: Widget }\n",
+    );
+    root.write(
+        "node_modules/@scope/widgets/package.json",
+        r#"{ "name": "@scope/widgets", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/@scope/widgets/index.d.ts",
+        "export interface Widget { label: string }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/@scope/widgets/index.d.ts"));
+    assert!(!workspace.bridged_libraries.contains("@scope/widgets"));
+}
+
+#[test]
+fn scan_workspace_marks_reexported_scoped_libraries_as_bridged() {
+    // The bridge half of the boundary: a user re-export from a scoped
+    // package both follows it and marks it bridged, so its symbols enter
+    // the manifest name index.
+    let root = TempDir::new("scanner-workspace-scoped-reexport");
+    root.write(
+        "src/index.ts",
+        "export type { Widget } from '@scope/widgets';\n",
+    );
+    root.write(
+        "node_modules/@scope/widgets/package.json",
+        r#"{ "name": "@scope/widgets", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/@scope/widgets/index.d.ts",
+        "export interface Widget { label: string }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/@scope/widgets/index.d.ts"));
+    assert!(workspace.bridged_libraries.contains("@scope/widgets"));
+}
+
+#[test]
+fn scan_workspace_skips_scoped_dev_dependency_plain_imports() {
+    // Dev-only packages are never followed, even when scoped: `@types`
+    // imports stay local exactly like unscoped plain imports.
+    let root = TempDir::new("scanner-workspace-scoped-dev-import");
+    root.write(
+        "src/index.ts",
+        "import type { Process } from '@types/node';\nexport interface Local {}\n",
+    );
+    root.write(
+        "node_modules/@types/node/package.json",
+        r#"{ "name": "@types/node", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/@types/node/index.d.ts",
+        "export interface Process { pid: number }\n",
+    );
+
+    let workspace = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
+        .expect("workspace scan should succeed");
+
+    assert_eq!(workspace.files.len(), 1);
+    assert!(!workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "node_modules/@types/node/index.d.ts"));
+}
+
+#[test]
 fn scan_workspace_follows_same_library_relative_imports_for_external_modules() {
     let root = TempDir::new("scanner-workspace-external-relative");
     root.write(
@@ -221,6 +308,45 @@ fn scan_workspace_follows_external_reexports_when_node_modules_is_above_root() {
         .files
         .iter()
         .any(|file| file.file_id == "../../node_modules/external-lib/index.d.ts"));
+}
+
+#[test]
+fn scan_workspace_follows_barrel_hops_above_outdir_layout_roots() {
+    // Regression pin (Objective 1 RS fix): in outDir-layout scans the
+    // followed barrel's file id starts with `..`, and relative hops from it
+    // must resolve against that escape — not against a bogus in-root path.
+    let root = TempDir::new("scanner-workspace-outdir-barrel");
+    root.write(
+        ".reference-ui/virtual/src/index.ts",
+        "import type { Widget } from '@scope/pkg';\nexport interface Local { widget?: Widget }\n",
+    );
+    root.write(
+        "node_modules/@scope/pkg/package.json",
+        r#"{ "name": "@scope/pkg", "types": "./pkg.d.mts" }"#,
+    );
+    root.write(
+        "node_modules/@scope/pkg/pkg.d.mts",
+        "export * from './entry/thing';\n",
+    );
+    root.write(
+        "node_modules/@scope/pkg/entry/thing.d.ts",
+        "export interface Widget { label: string }\n",
+    );
+
+    let workspace = scan_workspace(
+        root.path().join(".reference-ui").as_path(),
+        &["virtual/src/**/*.ts".to_string()],
+    )
+    .expect("workspace scan should succeed");
+
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "../node_modules/@scope/pkg/pkg.d.mts"));
+    assert!(workspace
+        .files
+        .iter()
+        .any(|file| file.file_id == "../node_modules/@scope/pkg/entry/thing.d.ts"));
 }
 
 #[test]

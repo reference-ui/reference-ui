@@ -2,7 +2,7 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
@@ -15,6 +15,10 @@ pub struct TypeScriptBundle {
     pub symbols: BTreeMap<String, TsSymbol>,
     pub exports: BTreeMap<String, ExportMap>,
     pub diagnostics: Vec<ScannerDiagnostic>,
+    /// External libraries bridged by user re-exports. Only these (plus user
+    /// symbols) enter the manifest name index; other followed libraries emit
+    /// chunks without name entries (followed-without-indexing).
+    pub bridged_libraries: BTreeSet<String>,
 }
 
 pub type ExportMap = BTreeMap<String, String>;

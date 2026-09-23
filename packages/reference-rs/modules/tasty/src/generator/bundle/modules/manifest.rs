@@ -55,10 +55,17 @@ fn build_manifest_symbol_indices(
             .get(symbol_id)
             .expect("symbol export name should exist")
             .clone();
-        symbols_by_name
-            .entry(symbol.name.clone())
-            .or_insert_with(Vec::new)
-            .push(export_name.clone());
+        // Followed-without-indexing: plain-imported external targets stay
+        // resolvable by id (symbols_by_id + chunks) without polluting the
+        // name index; only user and bridged-library symbols are named.
+        if symbol.library == USER_LIBRARY_NAME
+            || bundle.bridged_libraries.contains(&symbol.library)
+        {
+            symbols_by_name
+                .entry(symbol.name.clone())
+                .or_insert_with(Vec::new)
+                .push(export_name.clone());
+        }
         symbols_by_id.insert(
             export_name.clone(),
             TastySymbolIndexEntry {
@@ -502,12 +509,12 @@ fn emitted_symbol_kind(kind: TsSymbolKind) -> TastySymbolKind {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
 
-    use super::should_warn_duplicate_symbol_name;
+    use super::{build_manifest_symbol_indices, should_warn_duplicate_symbol_name};
     use crate::constants::libraries::USER_LIBRARY_NAME;
     use crate::emitted::{TastySymbolIndexEntry, TastySymbolKind};
-    use crate::model::{TsSymbol, TsSymbolKind, TypeRef};
+    use crate::model::{TsSymbol, TsSymbolKind, TypeRef, TypeScriptBundle};
 
     fn entry(id: &str, name: &str, library: &str) -> TastySymbolIndexEntry {
         TastySymbolIndexEntry {
@@ -543,6 +550,53 @@ mod tests {
             .iter()
             .map(|(export_name, symbol_id)| ((*export_name).to_string(), (*symbol_id).to_string()))
             .collect()
+    }
+
+    #[test]
+    fn indexes_only_user_and_bridged_symbols_by_name() {
+        // Followed-without-indexing (Objective 1 RS fix): every symbol gets
+        // a symbols_by_id entry, but only user and bridged-library symbols
+        // enter symbols_by_name. Plain-imported external targets stay
+        // resolvable by id without polluting bare-name lookups.
+        let symbols = BTreeMap::from([
+            (
+                "user-symbol".to_string(),
+                symbol("user-symbol", "Local", USER_LIBRARY_NAME, None),
+            ),
+            (
+                "widget-symbol".to_string(),
+                symbol("widget-symbol", "Widget", "@scope/widgets", None),
+            ),
+            (
+                "helper-symbol".to_string(),
+                symbol("helper-symbol", "Helper", "@scope/other", None),
+            ),
+        ]);
+        let export_names = BTreeMap::from([
+            ("user-symbol".to_string(), "_u".to_string()),
+            ("widget-symbol".to_string(), "_w".to_string()),
+            ("helper-symbol".to_string(), "_h".to_string()),
+        ]);
+        let bundle = TypeScriptBundle {
+            version: 1,
+            root_dir: ".".to_string(),
+            entry_globs: Vec::new(),
+            files: BTreeMap::new(),
+            symbols,
+            exports: BTreeMap::new(),
+            diagnostics: Vec::new(),
+            bridged_libraries: BTreeSet::from(["@scope/widgets".to_string()]),
+        };
+
+        let (symbols_by_name, symbols_by_id) =
+            build_manifest_symbol_indices(&bundle, &export_names);
+
+        assert_eq!(symbols_by_name.len(), 2);
+        assert_eq!(symbols_by_name["Local"], vec!["_u".to_string()]);
+        assert_eq!(symbols_by_name["Widget"], vec!["_w".to_string()]);
+        assert!(!symbols_by_name.contains_key("Helper"));
+        assert_eq!(symbols_by_id.len(), 3);
+        assert!(symbols_by_id.contains_key("_h"));
     }
 
     #[test]

@@ -1,3 +1,8 @@
+// Reference tasty build: it takes the phase payload and emits the indexed tasty
+// state (manifest, API, diagnostics) for the project sources plus the neo
+// style-prop decls. One module-level session caches per source dir; the scan
+// root is the project itself because neo keeps no virtual mirror.
+
 import { existsSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
@@ -5,10 +10,10 @@ import {
   createTastyBuildSession,
   type TastyBuildDiagnostic,
 } from '@reference-ui/rust/tasty/build'
-import { getOutDirPath, getVirtualDirPath } from '../../lib/paths'
-import { createReferenceUiTastyApi } from '../tasty/api'
-import type { ReferenceWorkerPayload } from './worker-types'
-import { getReferenceTastyDirPath } from './paths'
+import { getOutDirPath } from '../../lib/paths/index.ts'
+import { createReferenceUiTastyApi } from '../tasty/api.ts'
+import type { ReferenceTastyPayload } from './types.ts'
+import { getReferenceTastyDirPath } from './paths.ts'
 
 /** Rust glob + include patterns use forward slashes. */
 function posixRelative(from: string, to: string): string {
@@ -17,13 +22,20 @@ function posixRelative(from: string, to: string): string {
 
 export interface ReferenceTastyBuildState {
   sourceDir: string
-  virtualDir: string
   outputDir: string
   manifestPath: string
   warnings: string[]
   diagnostics: TastyBuildDiagnostic[]
   api: TastyApi
 }
+
+export interface ReferenceTastyScanOptions {
+  rootDir: string
+  include: string[]
+}
+
+/** Prunes dependency trees from the follow-links Rust walker (see below). */
+const NODE_MODULES_EXCLUDE = '!node_modules/**'
 
 const tastyBuildSession = createTastyBuildSession()
 
@@ -37,61 +49,60 @@ export function getReferenceTastyBuild(
 }
 
 export async function rebuildReferenceTastyBuild(
-  payload: ReferenceWorkerPayload
+  payload: ReferenceTastyPayload
 ): Promise<ReferenceTastyBuildState> {
   const sourceDir = resolve(payload.sourceDir)
   const outputDir = getReferenceTastyDirPath(sourceDir)
   const builtTasty = await tastyBuildSession.rebuild(sourceDir, {
-    ...buildTastyScanOptions(sourceDir, payload.config.include),
+    ...buildReferenceTastyScanOptions(sourceDir, payload.config.include),
     outputDir,
   })
   return toReferenceTastyBuildState(sourceDir, builtTasty)
 }
 
 /**
- * Scan under `.reference-ui/` only (not the package root) so the Rust glob
- * walker does not traverse `node_modules` (`follow_links` can hit broken
- * symlinks there).
+ * Scan the project in place (neo keeps no virtual mirror) plus the one neo
+ * decl root the style-prop projection needs: `style-props.d.ts` alone.
+ * `index.d.ts` is deliberately NOT rooted — it declares a top-level
+ * `StyleProps` that would index a second entry — while the compiler follows
+ * its types through `style-props.d.ts`'s import without indexing them. The
+ * existsSync guard keeps a mid-publish outDir from failing the background
+ * phase.
  *
- * A small generated declaration set is added explicitly so the Reference UI
- * style-prop surface can be projected without scanning every generated type.
- * `styled/system-types` carries `SystemStyleObject` and `styled/style-props`
- * carries the large `SystemProperties` interface; the React files carry the
- * public `StyleProps` alias plus container/responsive additions.
+ * `node_modules` is pruned by negation: the Rust walker follows symlinks and
+ * a single dangling link fails the whole scan, while node_modules matches are
+ * dropped from the indexed set anyway — so the exclusion is semantically
+ * neutral and strictly safer. Re-export discovery resolves linked packages
+ * through node resolution, not the walker, and is unaffected.
  */
-function buildTastyScanOptions(
+export function buildReferenceTastyScanOptions(
   sourceDir: string,
   configInclude: string[]
-): {
-  rootDir: string
-  include: string[]
-} {
+): ReferenceTastyScanOptions {
   const root = resolve(sourceDir)
-  const virtualDir = getVirtualDirPath(root)
   const outDir = getOutDirPath(root)
-  const include = configInclude.map(pattern =>
-    posixRelative(outDir, join(virtualDir, pattern))
-  )
-  includeExistingTastyRoot(include, outDir, 'styled/types/style-props.d.ts')
-  includeExistingTastyRoot(include, outDir, 'styled/types/system-types.d.ts')
-  includeExistingTastyRoot(include, outDir, 'react/types/props.d.ts')
-  includeExistingTastyRoot(include, outDir, 'react/types/style-props.d.ts')
-  return { rootDir: outDir, include }
+  const include = [...configInclude]
+  if (!include.includes(NODE_MODULES_EXCLUDE)) {
+    include.push(NODE_MODULES_EXCLUDE)
+  }
+  includeExistingTastyRoot(include, root, outDir, 'styled/types/style-props.d.ts')
+  return { rootDir: root, include }
 }
 
 function includeExistingTastyRoot(
   include: string[],
+  rootDir: string,
   outDir: string,
   relativePath: string
 ): void {
   const filePath = join(outDir, relativePath)
   if (existsSync(filePath)) {
-    include.push(posixRelative(outDir, filePath))
+    include.push(posixRelative(rootDir, filePath))
   }
 }
 
 export async function loadReferenceSymbol(
-  payload: ReferenceWorkerPayload,
+  payload: ReferenceTastyPayload,
   name: string
 ): Promise<{ state: ReferenceTastyBuildState; symbol: TastySymbol }> {
   const state =
@@ -102,7 +113,7 @@ export async function loadReferenceSymbol(
 }
 
 async function maybeGetReadyTastyBuildState(
-  payload: ReferenceWorkerPayload
+  payload: ReferenceTastyPayload
 ): Promise<ReferenceTastyBuildState | undefined> {
   const sourceDir = resolve(payload.sourceDir)
   const built = await tastyBuildSession.ensureReady(sourceDir)
@@ -122,7 +133,6 @@ function toReferenceTastyBuildState(
 ): ReferenceTastyBuildState {
   return {
     sourceDir,
-    virtualDir: getVirtualDirPath(sourceDir),
     outputDir: builtTasty.outputDir,
     manifestPath: builtTasty.manifestPath,
     warnings: builtTasty.warnings,

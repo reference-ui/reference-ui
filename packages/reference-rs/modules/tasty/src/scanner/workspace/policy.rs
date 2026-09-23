@@ -7,6 +7,7 @@ use crate::scanner::model::ResolvedModule;
 use crate::scanner::packages::{resolve_external_import, resolve_relative_import, FileLookup};
 use crate::scanner::paths::{
     is_external_file_id, module_specifier_for_file_id, package_name_from_file_id,
+    split_package_specifier,
 };
 
 /// Everything known about the file currently being crawled.
@@ -30,8 +31,8 @@ pub(super) fn resolve_import_for_discovery(
         return resolve_relative_import_for_discovery(ctx, source_module);
     }
 
-    // User files only pull external libraries into the graph when the user
-    // re-exports them. Plain imports are not part of the public bridge.
+    // User files bridge external libraries via re-exports and follow scoped
+    // plain imports for resolution; other plain imports stay local.
     let should_skip_external_import =
         should_skip_user_external_import(ctx.is_user_file, ctx.reexport_specifiers, source_module);
     if should_skip_external_import {
@@ -99,8 +100,29 @@ fn should_skip_user_external_import(
     reexport_specifiers: &BTreeSet<String>,
     source_module: &str,
 ) -> bool {
-    // Scan boundary (scanner README): a user file pulls an external library
-    // into the scan graph only by re-exporting from it. Plain imports are
-    // not part of the public bridge, so they stay local.
-    is_user_file && !reexport_specifiers.contains(source_module)
+    // Library files are governed by the same-package rule in
+    // `next_external_depth`, not by this gate.
+    if !is_user_file {
+        return false;
+    }
+    // A user re-export bridges the library into the name index.
+    if reexport_specifiers.contains(source_module) {
+        return false;
+    }
+    // Scan boundary (scanner README): scoped plain imports are followed for
+    // resolution (targets emit chunks without name entries); unscoped plain
+    // imports stay local; dev-only packages are never followed.
+    !is_scoped_module_specifier(source_module) || is_dev_dependency_specifier(source_module)
+}
+
+fn is_scoped_module_specifier(source_module: &str) -> bool {
+    split_package_specifier(source_module)
+        .is_some_and(|(package_name, _)| package_name.starts_with('@'))
+}
+
+fn is_dev_dependency_specifier(source_module: &str) -> bool {
+    source_module.starts_with("@types/")
+        || source_module.starts_with("vitest")
+        || source_module.starts_with("@vitest")
+        || source_module.starts_with("test")
 }

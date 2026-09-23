@@ -4,18 +4,19 @@
 
 import { createHash } from 'node:crypto'
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ConfigNotFoundError } from '../config/errors.ts'
+import { cleanDir } from './clean.ts'
 import { sync } from './index.ts'
 
 const tempDirs: string[] = []
 
 afterEach(async () => {
-  await Promise.all(tempDirs.splice(0).map(dir => rm(dir, { recursive: true, force: true })))
+  await Promise.all(tempDirs.splice(0).map(dir => cleanDir(dir)))
 })
 
 async function writeProject(files: Record<string, string>): Promise<string> {

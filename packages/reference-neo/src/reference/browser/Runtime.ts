@@ -1,3 +1,9 @@
+// Browser data runtime: it takes a tasty browser runtime plus a symbol name and
+// emits loaded symbol graphs shaped into `ReferenceDocument` state. The
+// default runtime lazily imports the `__REFERENCE_UI_TYPES_RUNTIME__`
+// placeholder, which the types-bundle leg rewrites to `./tasty/runtime.js`
+// so app bundlers see the real edge for the lazy chunk graph.
+
 import * as React from 'react'
 import type {
   RawTastyMember,
@@ -9,9 +15,9 @@ import type {
   TastySymbol,
 } from '@reference-ui/rust/tasty'
 import { createTastyBrowserRuntime } from '@reference-ui/rust/tasty/browser'
-import { createReferenceDocument } from '../browser-model'
-import { getReferenceUiTastyBrowserApiOptions } from '../tasty/api'
-import type { ReferenceDocument } from './types'
+import { createReferenceDocument } from '../browser-model/index.ts'
+import { getReferenceUiTastyBrowserApiOptions } from '../tasty/api.ts'
+import type { ReferenceDocument } from './types.ts'
 
 export interface ReferenceRuntime {
   load(name: string): Promise<ReferenceRuntimeData>

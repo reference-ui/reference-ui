@@ -18,6 +18,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
     let ParsedTypeScriptAst {
         files: mut parsed_files,
         mut diagnostics,
+        bridged_libraries,
     } = parsed_ast;
     for parsed in parsed_files.iter_mut() {
         fold_same_file_merges(parsed, &mut diagnostics);
@@ -70,6 +71,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
         symbols,
         exports,
         diagnostics,
+        bridged_libraries,
     }
 }
 

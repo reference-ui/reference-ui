@@ -1,17 +1,41 @@
-import { describe, expect, it } from 'vitest'
+// Union label cases: they compile the vendored union-label fixtures with the
+// public tasty build and assert the API table's union type lines (`Union`,
+// widenings) plus literal value-set chips. Neo port of the core union
+// display-label suite; the model decides the labels, so the cases pin them
+// without rendering React.
 
-import { createTastyApi } from '@reference-ui/rust/tasty'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { createReferenceDocument } from './document'
+import type { TastyApi } from '@reference-ui/rust/tasty'
+import { buildTasty } from '@reference-ui/rust/tasty/build'
 
-const manifestPath = new URL(
-  '../../../../reference-rs/modules/tasty/tests/cases/jsdoc/output/manifest.js',
-  import.meta.url,
-).pathname
+import { createReferenceDocument } from './document.ts'
+
+const fixtureDir = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '__fixtures__',
+  'union-labels',
+)
+
+let api: TastyApi
+let outputDir: string
+
+beforeAll(async () => {
+  outputDir = mkdtempSync(join(tmpdir(), 'neo-union-labels-'))
+  const built = await buildTasty({ rootDir: fixtureDir, include: ['**/*.ts'], outputDir })
+  api = built.api
+}, 60000)
+
+afterAll(() => {
+  rmSync(outputDir, { recursive: true, force: true })
+})
 
 describe('union display type label', () => {
   it('uses Union for pure inline literal unions and keeps named alias names', async () => {
-    const api = createTastyApi({ manifestPath })
     const [buttonProps, buttonPropsNamedSize] = await Promise.all([
       api.loadSymbolByName('ButtonProps'),
       api.loadSymbolByName('ButtonPropsNamedSize'),
@@ -28,7 +52,6 @@ describe('union display type label', () => {
   })
 
   it('uses Union | string for literal ∪ string and lists literal chips only', async () => {
-    const api = createTastyApi({ manifestPath })
     const themeColorProp = await api.loadSymbolByName('ThemeColorProp')
     const themeMembers = await api.graph.getDisplayMembers(themeColorProp)
     const themeDoc = createReferenceDocument(themeColorProp, themeMembers)
@@ -46,7 +69,6 @@ describe('union display type label', () => {
   })
 
   it('uses Union | object for literal ∪ object', async () => {
-    const api = createTastyApi({ manifestPath })
     const slotOrObject = await api.loadSymbolByName('SlotOrObjectProp')
     const members = await api.graph.getDisplayMembers(slotOrObject)
     const doc = createReferenceDocument(slotOrObject, members)
@@ -60,7 +82,6 @@ describe('union display type label', () => {
   })
 
   it('uses Union | string | object when both widenings are present', async () => {
-    const api = createTastyApi({ manifestPath })
     const combo = await api.loadSymbolByName('WideningComboProp')
     const members = await api.graph.getDisplayMembers(combo)
     const doc = createReferenceDocument(combo, members)

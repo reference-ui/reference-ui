@@ -7,6 +7,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import { cleanDir } from '../../sync/clean.ts'
 
 const { scanMock, compileMock, releaseMock } = vi.hoisted(() => ({
   scanMock: vi.fn(),
@@ -69,8 +70,7 @@ describe('seam crossing census', () => {
     try {
       await sync(dir)
     } finally {
-      const { rmSync } = await import('node:fs')
-      rmSync(dir, { recursive: true, force: true })
+      await cleanDir(dir)
     }
     expect(scanMock).toHaveBeenCalledTimes(1)
     expect(compileMock).toHaveBeenCalledTimes(1)
@@ -92,8 +92,7 @@ describe('seam crossing census', () => {
     try {
       await expect(sync(dir)).rejects.toThrow('boom')
     } finally {
-      const { rmSync } = await import('node:fs')
-      rmSync(dir, { recursive: true, force: true })
+      await cleanDir(dir)
     }
     expect(scanMock).toHaveBeenCalledTimes(1)
     expect(compileMock).toHaveBeenCalledTimes(1)

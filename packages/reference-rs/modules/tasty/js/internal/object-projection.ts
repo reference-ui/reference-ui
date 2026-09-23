@@ -121,18 +121,44 @@ async function projectReferenceMembers(
   context: ProjectionContext
 ): Promise<TastyMember[] | undefined> {
   const symbol = await loadReferencedSymbol(api, reference)
-  if (symbol) {
-    const raw = symbol.getRaw()
-    if (isTypeAliasSymbol(raw)) {
-      const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
-      if (instantiated) {
-        return projectRawTypeMembers(api, instantiated, context)
-      }
-    }
-
-    return projectSymbolMembers(api, symbol, context)
+  if (!symbol) {
+    return projectUnresolvedReferenceMembers(api, reference, context)
   }
 
+  // Cycle-cut before following: the instantiated path below bypasses
+  // projectSymbolMembers (which marks visited itself), so an alias cycle
+  // would recurse forever without this guard.
+  if (context.visitedSymbolIds.has(symbol.getId())) return []
+  return projectLoadedReferenceMembers(api, symbol, reference, context)
+}
+
+async function projectLoadedReferenceMembers(
+  api: TastyApiRuntime,
+  symbol: TastySymbol,
+  reference: RawTastyTypeReference,
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
+  const raw = symbol.getRaw()
+  if (isTypeAliasSymbol(raw)) {
+    const instantiated = instantiateTypeAliasDefinition(raw, reference.typeArguments)
+    if (instantiated) {
+      return projectRawTypeMembers(api, instantiated, {
+        visitedSymbolIds: new Set(context.visitedSymbolIds).add(symbol.getId()),
+        depth: context.depth + 1,
+        projectTypeParameterMembers: context.projectTypeParameterMembers,
+        typeParameterNames: context.typeParameterNames,
+      })
+    }
+  }
+
+  return projectSymbolMembers(api, symbol, context)
+}
+
+async function projectUnresolvedReferenceMembers(
+  api: TastyApiRuntime,
+  reference: RawTastyTypeReference,
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
   const utilityProjection = await projectUtilityReferenceMembers(api, reference, context)
   if (utilityProjection) return utilityProjection
 

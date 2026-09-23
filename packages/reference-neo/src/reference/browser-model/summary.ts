@@ -1,3 +1,8 @@
+// Summary builder: it takes a tasty member plus its resolved type and emits
+// the structured summary column (call signature, value set, type expression,
+// or opaque fallback) plus parameter docs. Alias and indexed-access types
+// reduce through the symbol lookup so rows show useful expressions.
+
 import {
   formatTastyCallableSignature,
   getTastyResolvedType,
@@ -10,8 +15,8 @@ import type {
   ReferenceMemberTypeSummary,
   ReferenceParamDoc,
   ReferenceValueOption,
-} from '../browser/types'
-import { createReferenceType, formatReferenceType } from './type'
+} from '../browser/types.ts'
+import { createReferenceType, formatReferenceType } from './type.ts'
 
 export function createReferenceMemberSummary(
   member: TastyMember,

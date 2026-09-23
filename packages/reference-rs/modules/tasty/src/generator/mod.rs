@@ -24,5 +24,6 @@ pub(crate) fn build_typescript_bundle(
         symbols: resolved_graph.symbols,
         exports: resolved_graph.exports,
         diagnostics: resolved_graph.diagnostics,
+        bridged_libraries: resolved_graph.bridged_libraries,
     }
 }

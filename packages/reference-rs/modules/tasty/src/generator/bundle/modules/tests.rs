@@ -2,7 +2,7 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::export_names::build_symbol_export_names_with;
 use crate::constants::libraries::USER_LIBRARY_NAME;
@@ -58,6 +58,7 @@ fn build_symbol_export_names_rejects_hash_collisions() {
         symbols,
         exports: BTreeMap::new(),
         diagnostics: Vec::new(),
+        bridged_libraries: BTreeSet::new(),
     };
 
     let error = build_symbol_export_names_with(&bundle, |_symbol_id| 7)

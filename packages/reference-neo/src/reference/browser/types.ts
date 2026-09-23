@@ -1,3 +1,8 @@
+// Browser document types: they take tasty's raw symbol/type/member shapes and
+// emit the serializable `ReferenceDocument` model the API table renders. This
+// is the type half of the `@reference-ui/types` contract; the model builders
+// in `browser-model/` produce these values from tasty handles.
+
 import type {
   RawTastyMappedModifierKind,
   RawTastyMemberKind,

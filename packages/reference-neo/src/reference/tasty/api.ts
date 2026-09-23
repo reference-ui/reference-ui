@@ -1,3 +1,8 @@
+// Reference tasty options: they take caller-supplied tasty options and emit
+// the reference-flavored API (preferred external libraries plus the `P` →
+// `SystemProperties` member projection). Both the Node bridge and the
+// browser runtime build their tasty API through these getters.
+
 import {
   createTastyApi,
   type CreateTastyApiOptions,

@@ -17,7 +17,10 @@
       "@reference-ui/neo": ["./src/author/index.ts"],
       "@reference-ui/styled": ["./src/runtime/index.ts"],
       "@reference-ui/react": ["./src/primitives/generate/react-surface.d.ts"],
-      "@reference-ui/system": ["./src/author/system-surface.d.ts"]
+      "@reference-ui/system": ["./src/author/system-surface.d.ts"],
+      "@reference-ui/rust/tasty": ["./src/vendor/rust-tasty/tasty.d.ts"],
+      "@reference-ui/rust/tasty/build": ["./src/vendor/rust-tasty/tasty/build.d.ts"],
+      "@reference-ui/rust/tasty/browser": ["./src/vendor/rust-tasty/tasty/browser.d.ts"]
     }
   },
   "include": ["src", "tests", "tools", "playground", "bin", "benchmark"]

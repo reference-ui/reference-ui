@@ -1,27 +1,26 @@
+// Reference bridge result payloads: they take build outcomes and emit the
+// structured serial-phase results. Neo has no event bus, so onRunBuild returns
+// these instead of emitting `reference:complete` / `reference:failed`; the
+// shapes stay close to the old events for the consumers Crew C2 wires later.
+
 import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 
-export type ReferenceEvents = {
-  /** Emitted when the reference worker is ready to receive triggers. */
-  'reference:ready': Record<string, never>
-  /** Sync requests copying the reference component into `.reference-ui/virtual` for Panda scan. */
-  'run:reference:component:copy': { virtualDir: string }
-  /** Reference component copied into virtual; downstream virtual work may continue. */
-  'reference:component:copied': Record<string, never>
-  /** Reference component copy failed (e.g. missing source path). */
-  'reference:component:copy-failed': { message: string }
-  /** Run a full reference build from the virtual filesystem. */
-  'run:reference:build': { name?: string }
-  /** Emitted when a reference build completes. */
-  'reference:complete': {
-    name?: string
-    symbolId?: string
-    source: 'virtual'
-    manifestPath: string
-    outputDir: string
-    warningCount: number
-    diagnosticCount: number
-    diagnostics: readonly TastyBuildDiagnostic[]
-  }
-  /** Emitted when a reference build fails. */
-  'reference:failed': { message: string; name?: string }
+export interface ReferenceBuildComplete {
+  name?: string
+  symbolId?: string
+  source: 'project'
+  manifestPath: string
+  outputDir: string
+  warningCount: number
+  diagnosticCount: number
+  diagnostics: readonly TastyBuildDiagnostic[]
 }
+
+export interface ReferenceBuildFailed {
+  name?: string
+  message: string
+}
+
+export type ReferenceBuildResult =
+  | ({ status: 'complete' } & ReferenceBuildComplete)
+  | ({ status: 'failed' } & ReferenceBuildFailed)

@@ -12,7 +12,8 @@ pub(crate) fn extract_module_specifiers(file_id: &str, source: &str) -> Vec<Stri
 }
 
 /// Module specifiers that appear in re-exports only: `export ... from 'module'`.
-/// Used to decide when we follow external imports (only if the user re-exports that module).
+/// Used to decide which followed libraries bridge into the name index (only
+/// user re-exports bridge; scoped plain imports are followed without indexing).
 pub(super) fn extract_reexport_module_specifiers(file_id: &str, source: &str) -> Vec<String> {
     extract_module_specifiers_with(file_id, source, false)
 }

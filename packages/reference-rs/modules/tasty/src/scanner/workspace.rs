@@ -19,8 +19,8 @@ pub(crate) fn scan_workspace(
     include: &[String],
 ) -> Result<ScannedWorkspace, String> {
     let user_file_ids = discover_file_ids(root_dir, include)?;
-    let discovered_files = discover_reachable_files(root_dir, user_file_ids)?;
-    let file_id_set = discovered_files.keys().cloned().collect();
+    let discovery = discover_reachable_files(root_dir, user_file_ids)?;
+    let file_id_set = discovery.files.keys().cloned().collect();
     let mut files = Vec::new();
 
     for (
@@ -30,7 +30,7 @@ pub(crate) fn scan_workspace(
             library,
             ..
         },
-    ) in discovered_files
+    ) in discovery.files
     {
         let absolute_path = root_dir.join(&file_id);
         let source = fs::read_to_string(&absolute_path)
@@ -48,6 +48,7 @@ pub(crate) fn scan_workspace(
         root_dir: root_dir.to_path_buf(),
         files,
         file_ids: file_id_set,
+        bridged_libraries: discovery.bridged_libraries,
     })
 }
 
