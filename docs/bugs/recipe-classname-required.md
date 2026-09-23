@@ -123,3 +123,68 @@ dev-loud miss — throw/warn on table miss instead of silent
 required stands; (c) optionally remove the inference
 backstop so all three layers agree (touches `ATM-RECIPE-08`
 pins; behavior change for untyped call sites).
+
+## Design thinking (HQ push, 2026-09-23)
+
+HQ's push: the binding name is right there — trace it, and
+only warn on in-situ/anonymous calls. That reframes the
+problem correctly: the gap is TRANSPORT, not knowledge.
+The extractor already knows the stem (inference exists and
+is test-pinned); the runtime is the only layer that can't
+see it. HQ's proposal is complete except for one transport
+mechanism to carry the inferred stem into the runtime
+config. The in-situ half already exists as behavior: the
+`RecipeClassName` diagnostic sync-fails on uninferrable
+shapes — HQ's "warn them" is today's error, just raised at
+sync rather than at build.
+
+Transport candidates, ranked:
+
+1. **Build-time injection transform (new option 5, the
+   serious candidate).** A bundler `transform` hook rewrites
+   `const XRecipe = recipe({...})` → injects `className:
+   'X'` when absent and inferable; in-situ/non-inferrable
+   emits HQ's build warning. Type loosens to optional;
+   runtime untouched. Costs: genuinely new machinery —
+   `referenceVite()` today does HMR/watch orchestration +
+   optimizeDeps excludes, zero source transforms (verified
+   `core/src/vite/plugin.ts`), and the transform would
+   belong in the Neo plugin surface post-M-runner retarget,
+   not core's. Must run identically in dev serve + build or
+   behavior diverges; must agree EXACTLY with the RS
+   inference rule (two implementations, one rule — pin with
+   shared fixtures, e.g. `ATM-RECIPE-08` shapes). Bundler
+   coverage is kind: Neo has no webpack target (Obj-2 audit
+   R4), so vite-only suffices for Neo's world; legacy
+   webpack stays on required-literal. THE objection to beat:
+   every execution path that bypasses the transform reopens
+   the hole (plain-node SSR, tests importing raw source
+   without the vite plugin, exotic bundlers) — runtime miss
+   returns, silent unless the dev-loud miss ships with it.
+2. **Keep required (status quo).** Zero work. The honest
+   defense beyond architecture: the literal names the thing
+   that appears in CSS (`summaryChip__base`,
+   `summaryChip_t_soft`), and literal-vs-binding agreement
+   is already coherent (literal is single source of truth at
+   both layers — no silent disagreement state). Cost: the
+   usability tax HQ names stands, forever, on a public API.
+3. **Declared-recipes API migration (Panda's actual answer).**
+   Recipes move to config, generator emits bound functions.
+   Converges with Panda; churns the authoring API; biggest
+   change. In-repo surface is 1 call site, but external
+   authors pay the migration.
+4. **Runtime stack inspection.** Not serious (minification,
+   cost, fragility). Recorded closed.
+
+Usability stakes (HQ: "it's a language thing"): every
+recipe author hand-writes a stem the compiler already
+knows. That is pure tax in the conventional case, and the
+tax compounds the oddity that the compiler infers beside
+the literal anyway.
+
+Decision inputs still needed: (a) enumerate supported
+execution paths that bypass a vite transform — if that set
+is must-support, option 1 needs the dev-loud miss as a
+companion or dies, and required stands; (b) sequence AFTER
+Objective 1 lands (transform work, if any, builds on the
+final extractor; don't overlap the RS resolution wave).
