@@ -35,6 +35,11 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    * the field here until the RS-owned dist refresh lands.
    */
   files?: NativeSourceFile[]
+  /**
+   * Native retention ref (C3-in-reverse): exactly-one-of with `files`. The
+   * engine drains the retained bytes. Neither means the legacy disk scan.
+   */
+  retentionToken?: number
 }
 
 export interface NativeDiagnostic {
@@ -72,7 +77,20 @@ interface AtomicModule {
   compile(request: NativeCompileRequest): Promise<NativeCompileResult>
 }
 
+interface AtomicReleaseModule {
+  releaseScan(request: { retentionToken: number }): Promise<{ released: boolean }>
+}
+
 export async function compileNative(request: NativeCompileRequest): Promise<NativeCompileResult> {
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule
   return atomic.compile(request)
+}
+
+/**
+ * Release a live scan retention without draining. Error-path-only: the sync
+ * `finally` between scan and compile; never on the happy path.
+ */
+export async function releaseRetention(token: number): Promise<{ released: boolean }> {
+  const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicReleaseModule
+  return atomic.releaseScan({ retentionToken: token })
 }

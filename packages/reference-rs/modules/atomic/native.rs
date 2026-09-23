@@ -25,6 +25,8 @@ struct NativeCompileRequest {
     schema_version: Option<u32>,
     #[serde(default)]
     files: Option<Vec<::atomic::VirtualSource>>,
+    #[serde(default, alias = "retention_token")]
+    retention_token: Option<u64>,
     #[serde(default)]
     include: Option<Vec<String>>,
     #[serde(default)]
@@ -63,6 +65,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
     let compile_req = ::atomic::CompileRequest {
         root_dir: req.source_root.or(req.root_dir),
         files: req.files,
+        retention_token: req.retention_token,
         base_system: system,
         jsx_hosts: req.jsx_hosts,
         declaration_root: req.declaration_root,
@@ -73,6 +76,38 @@ pub fn compile_system(request_json: String) -> Result<String> {
     drop(_request);
     let result = ::atomic::compile(&compile_req).map_err(napi::Error::from_reason)?;
     serialize(&result, proof)
+}
+
+#[napi]
+pub fn scan_system(scan_request_json: String) -> Result<String> {
+    let req: ::atomic::scan::ScanRequest = serde_json::from_str(&scan_request_json)
+        .map_err(|err| napi::Error::from_reason(format!("Invalid scan request JSON: {err}")))?;
+    let response = ::atomic::scan::scan(&req);
+    serde_json::to_string(&response)
+        .map_err(|err| napi::Error::from_reason(format!("Failed to serialize scan response: {err}")))
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeReleaseRequest {
+    retention_token: u64,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeReleaseResponse {
+    released: bool,
+}
+
+#[napi]
+pub fn release_scan(token_json: String) -> Result<String> {
+    let req: NativeReleaseRequest = serde_json::from_str(&token_json)
+        .map_err(|err| napi::Error::from_reason(format!("Invalid release request JSON: {err}")))?;
+    let response = NativeReleaseResponse {
+        released: ::atomic::scan::release(req.retention_token),
+    };
+    serde_json::to_string(&response)
+        .map_err(|err| napi::Error::from_reason(format!("Failed to serialize release response: {err}")))
 }
 
 /// True when the caller requested the proof backchannel: `logs` containing

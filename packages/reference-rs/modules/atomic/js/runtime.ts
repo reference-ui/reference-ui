@@ -5,12 +5,14 @@
  * Deserializes compiler output containing generated stylesheets, runtime maps, and diagnostics.
  */
 import { callNativeJson } from '../../runtime/js/native'
-import type { CompileResult } from './types'
+import type { CompileResult, ReleaseScanResponse, ScanResponse } from './types'
 
-export const ATOMIC_NATIVE_EXPORTS = ['compileSystem'] as const
+export const ATOMIC_NATIVE_EXPORTS = ['compileSystem', 'scanSystem', 'releaseScan'] as const
 
 export interface AtomicNative {
   compileSystem(requestJson: string): string
+  scanSystem(requestJson: string): string
+  releaseScan(requestJson: string): string
 }
 
 /**
@@ -21,6 +23,29 @@ export interface AtomicNative {
 interface SlimWireRefold {
   portableHead: string
   sharedTailUtf16: number
+}
+
+/**
+ * Native single-read scan: the engine reads the enumerated paths once,
+ * needle-gates, and retains the compile set behind a token. Hits return for
+ * the TS match confirm; retention never crosses back until compile drains it.
+ */
+export function scanSystem(requestJson: string): ScanResponse {
+  return callNativeJson<ScanResponse, AtomicNative>(
+    'scan atomic',
+    native => native.scanSystem(requestJson)
+  )
+}
+
+/**
+ * Release a live scan retention without draining. Error-path-only: the sync
+ * `finally` between scan and compile; never on the happy path.
+ */
+export function releaseScan(requestJson: string): ReleaseScanResponse {
+  return callNativeJson<ReleaseScanResponse, AtomicNative>(
+    'release atomic scan',
+    native => native.releaseScan(requestJson)
+  )
 }
 
 export function compileSystem(requestJson: string): CompileResult {

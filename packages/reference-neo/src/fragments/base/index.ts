@@ -11,9 +11,11 @@ import type { BaseSystem, ReferenceUIConfig } from '../../config/types.ts'
 import {
   bundleFragments,
   scanFragmentSources,
+  scanFragmentSourcesNative,
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
   type FragmentBundle,
   type FragmentScan,
+  type FragmentScanNative,
   type ScannedSource,
 } from '../lib/index.ts'
 import { getOutDirPath } from '../../lib/paths/index.ts'
@@ -40,6 +42,16 @@ const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
 // literal alone, or every named upstream would leak through.
 export const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
 
+// Fragment discovery needles: the module ids whose imports mark a fragment
+// file. Shared by the TS and native scans so the union can never drift.
+const FRAGMENT_IMPORT_NEEDLES = [
+  '@reference-ui/neo',
+  '@reference-ui/neo/config',
+  '@reference-ui/system',
+  '@reference-ui/core/config',
+  '@reference-ui/cli/config',
+]
+
 type SpecProvenance = EvaluatedSystemSpec['provenance']
 
 interface EvaluateCollector {
@@ -55,11 +67,18 @@ export interface PreparedFragments {
   upstreamFragments: string[]
   localFragmentBundles: FragmentBundle[]
   /**
-   * Retained compile set from the fragment scan (C3 single read): every
-   * in-scope source with its bytes, for the native request's `files`.
-   * Held until compileNative resolves, then dropped with `prepared`.
+   * Retained compile set from the fragment scan. Native path (C3-in-reverse):
+   * bytes stay engine-side behind `retentionToken` and this stays empty. TS
+   * fallback (no addon): every in-scope source with its bytes, for the native
+   * request's `files`. Held until compileNative resolves, then dropped.
    */
   scannedSources: ScannedSource[]
+  /**
+   * Native retention ref (C3-in-reverse): the compile request carries this
+   * instead of `files`, and the engine drains the retained bytes. Absent on
+   * the TS fallback path and when retention is empty (negation-only).
+   */
+  retentionToken?: number
 }
 
 interface CollectedBucket {
@@ -91,13 +110,18 @@ export async function scanFragmentFiles(
 ): Promise<FragmentScan> {
   return scanFragmentSources({
     include: config.include,
-    importFrom: [
-      '@reference-ui/neo',
-      '@reference-ui/neo/config',
-      '@reference-ui/system',
-      '@reference-ui/core/config',
-      '@reference-ui/cli/config',
-    ],
+    importFrom: FRAGMENT_IMPORT_NEEDLES,
+    cwd,
+  })
+}
+
+export async function scanFragmentFilesNative(
+  cwd: string,
+  config: ReferenceUIConfig
+): Promise<FragmentScanNative> {
+  return scanFragmentSourcesNative({
+    include: config.include,
+    importFrom: FRAGMENT_IMPORT_NEEDLES,
     cwd,
   })
 }
@@ -116,7 +140,7 @@ export async function prepareFragments(
   cwd: string,
   config: ReferenceUIConfig
 ): Promise<PreparedFragments> {
-  const { matches: fragmentFiles, scannedSources } = await scanFragmentFiles(cwd, config)
+  const { matches: fragmentFiles, retention } = await scanFragmentFilesNative(cwd, config)
   const localFragmentBundles = await bundleFragments({
     files: fragmentFiles,
     alias: getFragmentBootstrapImportMap(),
@@ -125,7 +149,8 @@ export async function prepareFragments(
   return {
     upstreamFragments: getUpstreamFragments(config.extends),
     localFragmentBundles,
-    scannedSources,
+    scannedSources: retention.files ?? [],
+    retentionToken: retention.token,
   }
 }
 

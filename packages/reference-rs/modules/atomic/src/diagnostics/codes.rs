@@ -134,12 +134,21 @@ pub enum DiagnosticCode {
     /// rows) keep working, and each future expansion un-refuses its prop
     /// with its own red test plus station.
     UnrealizableExtension,
+    /// `sources`: a compile request carrying both `files` and a
+    /// `retentionToken` (the scan/compile contract is exactly-one-of).
+    ConflictingScanInputs,
+    /// `sources`: a `retentionToken` that names no live retention (never
+    /// minted or already released); never a silent disk fallback.
+    UnknownRetentionToken,
+    /// `sources`: a `retentionToken` drained by an earlier compile;
+    /// retention moves once, so reuse is a lifecycle bug, fail loud.
+    DrainedRetentionToken,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 47] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 50] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -237,6 +246,18 @@ const CODE_TABLE: [(DiagnosticCode, &str); 47] = [
     (
         DiagnosticCode::UnrealizableExtension,
         "ATM-W-UNREALIZABLE-EXTENSION",
+    ),
+    (
+        DiagnosticCode::ConflictingScanInputs,
+        "ATM-E-CONFLICTING-SCAN-INPUTS",
+    ),
+    (
+        DiagnosticCode::UnknownRetentionToken,
+        "ATM-E-UNKNOWN-RETENTION-TOKEN",
+    ),
+    (
+        DiagnosticCode::DrainedRetentionToken,
+        "ATM-E-DRAINED-RETENTION-TOKEN",
     ),
 ];
 
@@ -366,6 +387,9 @@ mod tests {
             DiagnosticCode::DynamicSlot,
             DiagnosticCode::ResponsiveLeafImportant,
             DiagnosticCode::UnrealizableExtension,
+            DiagnosticCode::ConflictingScanInputs,
+            DiagnosticCode::UnknownRetentionToken,
+            DiagnosticCode::DrainedRetentionToken,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

@@ -55,9 +55,66 @@ export interface VirtualSource {
   content: string
 }
 
+/**
+ * Native scan request (C3-in-reverse): verbatim enumerated paths, the needle
+ * union for the pre-gate, the cwd the retention gates relativize against, the
+ * caller platform separator, plus retain and test-only manifest flags.
+ */
+export interface ScanRequest {
+  paths: string[]
+  needles?: string[]
+  cwd: string
+  sep?: string
+  /**
+   * False keeps matches-only callers leak-free: reads plus gates run, hits
+   * return, nothing retains and no token mints. Defaults to true.
+   */
+  retain?: boolean
+  /**
+   * True adds the retention manifest (sorted path plus content hashes) for the
+   * differential. Test-only: production omits it at zero hashing cost.
+   */
+  manifest?: boolean
+}
+
+/** One needle-hit: the verbatim path plus the bytes for the TS confirm. */
+export interface ScanHit {
+  path: string
+  content: string
+}
+
+/** One retained entry's manifest row: gate-relative path plus FNV-1a hash. */
+export interface ScanManifestEntry {
+  path: string
+  hash: string
+}
+
+export interface ScanResponse {
+  hits: ScanHit[]
+  /** Retention ref for `compile()`; absent when retention is empty or `retain` is false. */
+  retentionToken?: number
+  retainedCount: number
+  manifest?: ScanManifestEntry[]
+}
+
+export interface ReleaseScanRequest {
+  retentionToken: number
+}
+
+export interface ReleaseScanResponse {
+  released: boolean
+}
+
 export interface CompileRequest {
   rootDir?: string
   files?: VirtualSource[]
+  /**
+   * Native retention ref (C3-in-reverse): exactly-one-of with `files`.
+   * `compile` drains the retained bytes (moves, never clones). Neither means
+   * the legacy disk scan; both is a schema rejection; unknown or drained
+   * tokens fail loud, never a silent disk fallback.
+   */
+  retentionToken?: number
   baseSystem: EvaluatedSystemSpec
   /**
    * Glob scope (RS-10, station ATM-SCAN-01) relative to `rootDir`: only

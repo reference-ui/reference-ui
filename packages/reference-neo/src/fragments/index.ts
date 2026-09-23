@@ -29,6 +29,7 @@ export {
 export {
   getUpstreamFragments,
   scanFragmentFiles,
+  scanFragmentFilesNative,
   getFragmentCollectors,
   prepareFragments,
   createPortableFragmentBundle,
