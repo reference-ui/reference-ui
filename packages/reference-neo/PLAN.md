@@ -334,9 +334,10 @@ permanently; the folder name.
   surface/ + lib/ + constants + 3 READMEs; 337 units + q + chain 6/6
   + T1 re-proven firsthand on final bytes. (Crew aimed pre-art;
   captain applied the delta.)
-- AUTHOR-KILL (crew running): `author/` deletion + root barrel +
-  wiring repoint. Decided paths now exist on disk — wait condition
-  cleared. Lands on crew DONE + captain firsthand verify.
+- AUTHOR-KILL LANDED (4386d9d9b): `author/` deleted, id answers
+  from root `src/index.ts` (5 fns + types, factories unexported),
+  all wirings repointed, real `"."` export added. 337 units + q +
+  chain 6/6 + T1 + FULL 197/197 re-proven firsthand on final bytes.
 
 ### Overnight run (proposed — decision-free crews, morning-verified)
 
