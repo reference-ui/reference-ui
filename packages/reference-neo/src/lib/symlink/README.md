@@ -27,14 +27,14 @@ hand-placed dirs, so the guard lives here instead of ad-hoc in the bin.
 
 ## What it does not own
 
-- where generated packages live (the packager's layout)
-- when links get created or torn down (assembly up, clean down)
+- where generated packages live
+- when links get created or torn down
 - recovery policy around failed installs
 
 ## Consumers
 
-- the packager's links leg (`sync/publish/links.ts`) via `createSymlink`
-- `neo clean` (`bin/neo.ts`) via `removeGeneratedLink`
+- the packager's links leg, via `createSymlink`
+- `neo clean`, via `removeGeneratedLink`
 
 Every link call-site in Neo routes through here; nothing outside this
 module touches `symlink`/`readlink`/`unlink` for generated links.
