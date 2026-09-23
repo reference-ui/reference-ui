@@ -116,11 +116,11 @@ call sites are examples of the job, not names we ship.
 ### StyleProps Shorthand Aliases (`ALIAS`)
 
 - [x] `CAN-ALIAS-01` `[reference]` `[unit]` —
-  **StyleProps concise shorthand alias recognition.** Pass the conservative spacing and size aliases (`mt`, `pt`, `p`, `m`, `px`, `mx`, `w`, `h`, `minW`, `maxW`, `bg`, `flexDir`) to `is_known_style_prop`. Assert all return `true` via `resolve_alias` binary search in `ALIASES`.
+  **StyleProps concise shorthand alias recognition.** Pass the conservative spacing and size aliases (`mt`, `pt`, `p`, `m`, `px`, `mx`, `w`, `h`, `minW`, `maxW`, `bg`, `flexDir`) plus the axis longhands (`marginX`, `marginY`, `paddingX`, `paddingY`) to `is_known_style_prop`. Assert all return `true` via `resolve_alias` binary search in `ALIASES`.
 - [x] `CAN-ALIAS-02` `[reference]` `[unit]` —
   **Shorthand alias resolution to canonical camelCase.** Call `resolve_canonical_prop` with concise authoring aliases (`mt`, `p`, `bg`). Assert values resolve to `marginTop`, `padding`, and `background` respectively.
 - [x] `CAN-ALIAS-03` `[reference]` `[unit]` —
-  **Spacing X/Y alias resolution.** Call `resolve_canonical_prop` with the spacing X/Y pair (`px` -> `paddingInline`, `py` -> `paddingBlock`, `mx` -> `marginInline`, `my` -> `marginBlock`). Assert each maps to its logical CSS property. Logical start/end (`ps`, `pe`, `ms`, `me`) are not aliases.
+  **Spacing X/Y alias resolution.** Call `resolve_canonical_prop` with the spacing X/Y pair (`px` -> `paddingInline`, `py` -> `paddingBlock`, `mx` -> `marginInline`, `my` -> `marginBlock`) plus the axis longhands (`paddingX` -> `paddingInline`, `paddingY` -> `paddingBlock`, `marginX` -> `marginInline`, `marginY` -> `marginBlock`). Assert each maps to its logical CSS property. Logical start/end (`ps`, `pe`, `ms`, `me`) are not aliases.
 - [x] `CAN-ALIAS-04` `[reference]` `[unit]` —
   **Ambiguous aliases are refused so authoring stays CSS-shaped.** Pass `c`, `rounded`, `roundedTop`, `pos`, `shadow`, `ps`, `pe`, `ms`, and `me` to `is_known_style_prop`. Assert all return `false`. Authors write `color`, `borderRadius`, `position`, `boxShadow`, and `paddingInlineStart`.
 - [x] `CAN-ALIAS-05` `[reference]` `[unit]` —

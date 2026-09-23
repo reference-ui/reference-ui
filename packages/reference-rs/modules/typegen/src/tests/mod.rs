@@ -143,6 +143,22 @@ fn style_strict_dts() -> String {
     style_dts_with(&["colors", "radii", "spacing"])
 }
 
+fn colors_only_style_system() -> BaseSystem {
+    parse_dump(
+        r##"{"tokens":{"colors":{"brand":{"value":"#2563eb"}}},"breakpoints":{"sm":"640px"}}"##,
+        "colors-only-style",
+    )
+}
+
+fn colors_only_dts_with(strict: &[&str]) -> String {
+    emit_dts_with(
+        &colors_only_style_system(),
+        &EmitOptions {
+            strict: strict.iter().map(|name| (*name).to_string()).collect(),
+        },
+    )
+}
+
 fn font_style_dump_json() -> String {
     let fonts = FONT_JSON
         .trim()

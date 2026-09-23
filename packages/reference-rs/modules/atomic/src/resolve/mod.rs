@@ -336,4 +336,6 @@ fn apply_rhythm_and_tokens(
 }
 
 #[cfg(test)]
+mod axis_tests;
+#[cfg(test)]
 mod tests;

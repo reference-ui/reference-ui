@@ -1,12 +1,13 @@
-//! TYP-STRICT-01–05: open hatch vs strict SystemStyleObject wrappers.
-//! `emit_dts` stays open-mode so goldens keep `Token | (string & {})`.
-//! `emit_dts_with` wraps `BaseSystemStyleObject` in declaration order.
-//! Unknown strict names are skipped; duplicates keep the first occurrence.
-//! Radius keys come from canon (`borderRadius` and *Radius properties), never
-//! Panda `rounded*`. Spacing strict is printed here even though core's spacing
-//! wrapper is null.
+//! TYP-STRICT-01–06: open hatch vs strict SystemStyleObject wrappers.
+//! `emit_dts` stays open-mode so goldens keep `Token | (string & {})`, while
+//! `emit_dts_with` wraps `BaseSystemStyleObject` in declaration order for
+//! token-present categories only. Unknown strict names are skipped;
+//! duplicates keep the first occurrence. Radius keys come from canon
+//! (`borderRadius` and *Radius properties), never Panda `rounded*`. Spacing
+//! strict is printed here even though core's spacing wrapper is null, and
+//! `gap` stays an open key outside the spacing family.
 
-use super::{style_dts, style_dts_with};
+use super::{colors_only_dts_with, style_dts, style_dts_with};
 use crate::{emit_dts, emit_dts_with, EmitOptions};
 
 const COLOR_HATCH: &str = "color?: StylePropValue<ColorToken | (string & {})>;";
@@ -107,10 +108,7 @@ fn typ_strict_03_restricts_spacing_to_tokens_and_keywords() {
         dts.contains(SPACING_HATCH),
         "TYP-STRICT-03: StyleProps stays open; wrap is on SystemStyleObject:\n{dts}"
     );
-    assert!(
-        !dts.contains("gap?:"),
-        "TYP-STRICT-03: StyleProps still omits gap (STYLE-02 box spacing only):\n{dts}"
-    );
+    assert_prop(&dts, "gap", "StylePropValue<string | number>");
 }
 
 /// TYP-STRICT-04 — emit_dts is open-mode; color, radius, and spacing keep the hatch.
@@ -164,6 +162,25 @@ fn typ_strict_05_composes_wrappers_in_declaration_order() {
     assert!(
         all.contains(ALL_WRAP),
         "TYP-STRICT-05: spacing joins in declaration order:\n{all}"
+    );
+}
+
+/// TYP-STRICT-06 — strict wrappers emit only for token-present categories.
+#[test]
+fn typ_strict_06_skips_wrappers_for_absent_categories() {
+    let open = colors_only_dts_with(&["spacing"]);
+    assert!(
+        !open.contains("StrictSpacingProps") && !open.contains("BaseSystemStyleObject"),
+        "TYP-STRICT-06: absent spacing must not wrap:\n{open}"
+    );
+    assert!(
+        open.contains("export type SystemStyleObject = StyleProps & {"),
+        "TYP-STRICT-06: absent strict stays open mode:\n{open}"
+    );
+    let wrapped = colors_only_dts_with(&["colors"]);
+    assert!(
+        wrapped.contains(COLOR_WRAP) && wrapped.contains(COLOR_WRAPPER),
+        "TYP-STRICT-06: present colors must still wrap:\n{wrapped}"
     );
 }
 

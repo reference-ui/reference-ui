@@ -3,7 +3,9 @@
  * tsconfig plus a styles.d.ts and consumer.ts, then runs `pnpm exec tsc`.
  * Production `emit_dts` still returns a string and does not write the
  * filesystem. Tests pass the printed (or golden) declaration text in; this
- * helper only typechecks it.
+ * helper only typechecks it. Shared expectTscOk and expectTscReject
+ * assertions keep the TS2589-blindness pin and failure-code pins uniform
+ * across consumer suites.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -11,6 +13,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { expect } from 'vitest'
 
 const testsDir = dirname(fileURLToPath(import.meta.url))
 const goldensDir = join(testsDir, 'goldens')
@@ -82,6 +85,17 @@ function tscFailure(error: unknown): TscResult {
     status: error.status ?? 1,
     output: `${error.stdout ?? ''}${error.stderr ?? ''}`,
   }
+}
+
+export function expectTscOk(result: TscResult): void {
+  expect(result.output, result.output).not.toContain('TS2589')
+  expect(result.status, result.output).toBe(0)
+}
+
+export function expectTscReject(result: TscResult, code: RegExp): void {
+  expect(result.status, result.output).not.toBe(0)
+  expect(result.output).not.toContain('TS2589')
+  expect(result.output).toMatch(code)
 }
 
 function isStatusError(

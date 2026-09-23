@@ -266,6 +266,10 @@ fn can_alias_01_known_shorthand_aliases() {
     assert!(is_known_style_prop("w"));
     assert!(is_known_style_prop("h"));
     assert!(is_known_style_prop("flexDir"));
+    assert!(is_known_style_prop("marginX"));
+    assert!(is_known_style_prop("marginY"));
+    assert!(is_known_style_prop("paddingX"));
+    assert!(is_known_style_prop("paddingY"));
 }
 
 #[test]
@@ -283,6 +287,10 @@ fn can_alias_03_directional_logical_alias_resolution() {
     assert_eq!(resolve_canonical_prop("py"), "paddingBlock");
     assert_eq!(resolve_canonical_prop("mx"), "marginInline");
     assert_eq!(resolve_canonical_prop("my"), "marginBlock");
+    assert_eq!(resolve_canonical_prop("paddingX"), "paddingInline");
+    assert_eq!(resolve_canonical_prop("paddingY"), "paddingBlock");
+    assert_eq!(resolve_canonical_prop("marginX"), "marginInline");
+    assert_eq!(resolve_canonical_prop("marginY"), "marginBlock");
 }
 
 #[test]
@@ -492,8 +500,21 @@ fn alias_prefilter_table_contract() {
         );
     }
     assert!(!crate::dialect::maybe_alias(""));
-    for miss in ["margin", "marginTop", "color", "display", "border", "--token", "OTransform"] {
-        assert_eq!(resolve_alias(miss), None, "'{}' must not resolve as an alias", miss);
+    for miss in [
+        "margin",
+        "marginTop",
+        "color",
+        "display",
+        "border",
+        "--token",
+        "OTransform",
+    ] {
+        assert_eq!(
+            resolve_alias(miss),
+            None,
+            "'{}' must not resolve as an alias",
+            miss
+        );
     }
     assert_eq!(resolve_alias("mt"), Some("marginTop"));
     assert_eq!(resolve_alias("bg"), Some("background"));

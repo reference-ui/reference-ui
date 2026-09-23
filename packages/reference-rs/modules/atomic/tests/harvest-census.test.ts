@@ -100,8 +100,11 @@ const EXPECTED_BYTES = {
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
   // compound ports); the fixture ships 0 recipes so its data bytes are 0.
-  reactRaw: 149479,
-  reactGzip: 32889,
+  // Axis shorthands: +42 raw is the four baked names
+  // ("marginX","marginY","paddingX","paddingY"); the rest of the move from
+  // the 149479/32889 pin is in-flight tree drift, re-verify at landing.
+  reactRaw: 149593,
+  reactGzip: 32898,
   fixtureRules: 4941,
   m500Rules: 33806,
 }

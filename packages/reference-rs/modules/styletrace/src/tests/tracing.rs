@@ -163,9 +163,10 @@ fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
 }
 
 #[test]
-fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
-    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/demo-ui/src"))
-        .expect("expected demo-ui fixture to trace");
+fn station_plain_react_library_has_no_style_bearing_exports() {
+    let fixture = materialize_station("plain_react_library");
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected plain-react library case to trace");
 
     assert!(names.is_empty());
 }
@@ -173,7 +174,7 @@ fn fixture_demo_ui_has_no_reference_style_bearing_exports() {
 #[test]
 fn fixture_extend_library_has_no_reference_style_bearing_exports() {
     let names = trace_with_sync_root(&workspace_fixture_dir(
-        "fixtures/extend-library/src/components",
+        "matrix/fixtures/extend-library/src/components",
     ))
     .expect("expected extend-library fixture to trace");
 
@@ -181,17 +182,19 @@ fn fixture_extend_library_has_no_reference_style_bearing_exports() {
 }
 
 #[test]
-fn fixture_styletrace_library_exports_wrapped_reference_components() {
-    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/styletrace-library/src"))
-        .expect("expected styletrace-library fixture to trace");
+fn station_named_barrel_exports_wrapped_reference_component() {
+    let fixture = materialize_station("named_barrel");
+    let names =
+        trace_with_sync_root(fixture.root()).expect("expected named-barrel case to trace");
 
     assert_eq!(names, vec!["MyStyleComponent".to_string()]);
 }
 
 #[test]
-fn fixture_styletrace_consumer_traces_imported_wrapped_reference_components() {
-    let names = trace_with_sync_root(&workspace_fixture_dir("fixtures/styletrace-consumer/src"))
-        .expect("expected styletrace-consumer fixture to trace");
+fn station_named_barrel_package_traces_reexported_and_wrapped_components() {
+    let fixture = materialize_station("named_barrel_package");
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected named-barrel package case to trace");
 
     assert_eq!(
         names,
@@ -203,11 +206,10 @@ fn fixture_styletrace_consumer_traces_imported_wrapped_reference_components() {
 }
 
 #[test]
-fn fixture_atlas_project_components_have_no_reference_style_bearing_exports() {
-    let names = trace_with_sync_root(&workspace_fixture_dir(
-        "fixtures/atlas-project/src/components",
-    ))
-    .expect("expected atlas-project fixture components to trace");
+fn station_plain_react_wrappers_have_no_style_bearing_exports() {
+    let fixture = materialize_station("plain_react_wrappers");
+    let names = trace_with_sync_root(fixture.root())
+        .expect("expected plain-react wrappers case to trace");
 
     assert!(names.is_empty());
 }

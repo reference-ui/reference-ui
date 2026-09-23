@@ -332,6 +332,8 @@ pub const ALIASES: &[Alias] = &[
     Alias::new("flexDir", "flexDirection"),
     Alias::new("h", "height"),
     Alias::new("m", "margin"),
+    Alias::new("marginX", "marginInline"),
+    Alias::new("marginY", "marginBlock"),
     Alias::new("maxH", "maxHeight"),
     Alias::new("maxW", "maxWidth"),
     Alias::new("mb", "marginBottom"),
@@ -343,6 +345,8 @@ pub const ALIASES: &[Alias] = &[
     Alias::new("mx", "marginInline"),
     Alias::new("my", "marginBlock"),
     Alias::new("p", "padding"),
+    Alias::new("paddingX", "paddingInline"),
+    Alias::new("paddingY", "paddingBlock"),
     Alias::new("pb", "paddingBottom"),
     Alias::new("pl", "paddingLeft"),
     Alias::new("pr", "paddingRight"),
@@ -374,7 +378,9 @@ pub(crate) fn maybe_alias(name: &str) -> bool {
     match bytes.first() {
         Some(b'M') | Some(b'W') => true,
         // Lowercase aliases are short shorthands; anything longer cannot be a member.
-        Some(b'b') | Some(b'f') | Some(b'h') | Some(b'm') | Some(b'p') | Some(b'w') => matches!(bytes.len(), 1 | 2 | 4 | 7),
+        Some(b'b') | Some(b'f') | Some(b'h') | Some(b'm') | Some(b'p') | Some(b'w') => {
+            matches!(bytes.len(), 1 | 2 | 4 | 7 | 8)
+        }
         _ => false,
     }
 }

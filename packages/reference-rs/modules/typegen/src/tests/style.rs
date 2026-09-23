@@ -1,12 +1,13 @@
-//! TYP-STYLE-02/03/04: StyleProps token narrowing, conditions, and dialect mix-in.
+//! TYP-STYLE-02/03/04/06: StyleProps narrowing, conditions, dialect mix-in, open keys.
 //! STYLE-02 inspects color and spacing keys on a dump that reuses catalog
 //! tokens plus `sm`/`md`/`lg` breakpoints. STYLE-03 asserts `StyleConditionKey`
 //! on that same emit: named conditions and `@${bp}`, never a bare viewport
-//! member. STYLE-04 omits raw CSS `font`/`weight`/`container`/`r`, replaces
+//! member (RadiusToken may still contain `'sm'`, so pins read the alias
+//! line). STYLE-04 omits raw CSS `font`/`weight`/`container`/`r`, replaces
 //! them with dialect `container`/`r`, and intersects `FontProps`. STYLE-05
 //! prints recursive SystemStyleObject on this dump; proof is tsc, not these
-//! string contains. RadiusToken may still contain `'sm'`; assertions read the
-//! condition alias line, not the whole file. Catalog emit stays token-only.
+//! string contains. STYLE-06 pins open keys plus the custom-property index
+//! and the `variant`/`colorMode` exclusion. Catalog emit stays token-only.
 
 use super::{catalog_dts, style_dts};
 use std::collections::BTreeSet;
@@ -15,12 +16,32 @@ const COLOR_VALUE: &str = "StylePropValue<ColorToken | (string & {})>";
 const SPACING_VALUE: &str = "StylePropValue<SpacingToken | (string & {})>";
 const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
+const OPEN_VALUE: &str = "StylePropValue<string | number>";
+const CUSTOM_PROPERTY_INDEX: &str = "  [K in `--${string}`]?: StylePropValue<string | number>;";
 const PROP_VALUE: &str =
     "export type StylePropValue<T> = T | Array<T | null> | { [K in StyleConditionKey]?: T };";
 const STYLE_PROPS_HEAD: &str = "export type StyleProps = FontProps & {";
 
 const COLOR_KEYS: &[&str] = &["bg", "background", "backgroundColor", "color"];
-const SPACING_KEYS: &[&str] = &["p", "padding", "mt", "marginTop"];
+const SPACING_KEYS: &[&str] = &[
+    "p",
+    "padding",
+    "mt",
+    "marginTop",
+    "marginX",
+    "marginY",
+    "paddingX",
+    "paddingY",
+];
+const OPEN_KEYS: &[&str] = &[
+    "display",
+    "flexDirection",
+    "gap",
+    "borderStyle",
+    "borderWidth",
+    "fontSize",
+    "size",
+];
 
 /// TYP-STYLE-02 — color and spacing StyleProps keep aliases and the open hatch.
 #[test]
@@ -137,6 +158,26 @@ fn typ_style_04_layers_dialect_props_and_omits_conflicting_css() {
             && !catalog.contains("SystemStyleObject"),
         "TYP-STYLE-04: token catalog must stay token-only:\n{catalog}"
     );
+}
+
+/// TYP-STYLE-06 — open keys take string-or-number; custom-property index; no primitive metadata.
+#[test]
+fn typ_style_06_emits_open_keys_and_custom_property_index() {
+    let dts = style_dts();
+    for name in OPEN_KEYS {
+        assert_prop(&dts, name, OPEN_VALUE);
+    }
+    assert!(
+        dts.contains(CUSTOM_PROPERTY_INDEX),
+        "TYP-STYLE-06: missing custom-property index in:\n{dts}"
+    );
+    let fields = style_props_fields(&dts);
+    for forbidden in ["variant?:", "colorMode?:"] {
+        assert!(
+            !fields.contains(forbidden),
+            "TYP-STYLE-06: StyleProps must not declare primitive metadata {forbidden}:\n{fields}"
+        );
+    }
 }
 
 fn style_props_fields(dts: &str) -> &str {

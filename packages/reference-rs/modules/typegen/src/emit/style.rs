@@ -1,12 +1,13 @@
 //! Prints StyleProps, StylePropValue, StyleConditionKey, FontProps mix-in,
-//! and recursive SystemStyleObject. Color keys are `canon::COLOR_PROPERTIES`
-//! plus dialect aliases whose `resolve_alias` target is a color prop (`bg` →
-//! `background`). Spacing keys are padding/margin aliases from `ALIASES`
-//! and those canonical names — not the full CSS table and not `gap`. Radius
-//! keys are canon names ending in `Radius` excluding `webkit*`, never Panda
-//! `rounded*`. Raw CSS `font`, `weight`, `container`, and `r` are omitted;
-//! dialect `container` / `r` plus `FontProps` replace them. Open values keep
-//! the `(string & {})` hatch; strict wrappers live in `strict.rs`.
+//! and recursive SystemStyleObject. The key set mirrors the runtime-accepted
+//! set from `build_style_prop_names` (every canonical name plus every alias
+//! plus reference props, minus `variant`/`colorMode`): keys follow the
+//! compiler, values follow the token spec. Color, spacing, and radius keys
+//! keep their token unions with the `(string & {})` hatch; every other key
+//! takes `StylePropValue<string | number>`, and a `` `--${string}` `` index
+//! covers custom properties. Raw CSS `font` and `weight` stay omitted
+//! (`FontProps` owns them); strict wrappers emit only for token-present
+//! categories, and the wrappers themselves live in `strict.rs`.
 
 use super::fonts;
 use super::strict::{self, StrictKeys};
@@ -20,6 +21,7 @@ const SPACING_VALUE: &str = "StylePropValue<SpacingToken | (string & {})>";
 const RADIUS_VALUE: &str = "StylePropValue<RadiusToken | (string & {})>";
 const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
+const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const PROP_VALUE: &str =
     "export type StylePropValue<T> = T | Array<T | null> | { [K in StyleConditionKey]?: T };\n";
 
@@ -30,6 +32,7 @@ enum PropKind {
     Radius,
     Container,
     Rhythm,
+    Open,
 }
 
 struct StyleSection {
@@ -42,7 +45,8 @@ pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String 
         return String::new();
     };
     let keys = strict_keys(&section.props);
-    let active = strict::normalize(&options.strict, &keys);
+    let present = present_strict(system, &options.strict);
+    let active = strict::normalize(&present, &keys);
     let mut out = String::new();
     push_condition_key(&mut out, &section.conditions);
     out.push('\n');
@@ -61,34 +65,53 @@ fn gather(system: &BaseSystem) -> Option<StyleSection> {
     }
     Some(StyleSection {
         conditions: condition_keys(system),
-        props: collect_props(
-            has_category(system, "colors"),
-            has_category(system, "spacing"),
-            has_category(system, "radii"),
-        ),
+        props: collect_props(),
     })
 }
 
-fn collect_props(color: bool, spacing: bool, radii: bool) -> BTreeMap<&'static str, PropKind> {
+fn present_strict(system: &BaseSystem, strict: &[String]) -> Vec<String> {
+    strict
+        .iter()
+        .filter(|name| has_category(system, name))
+        .cloned()
+        .collect()
+}
+
+fn collect_props() -> BTreeMap<&'static str, PropKind> {
     let mut props = BTreeMap::new();
-    if color {
-        for name in color_prop_names() {
-            insert_css_prop(&mut props, name, PropKind::Color);
-        }
+    for name in color_prop_names() {
+        insert_css_prop(&mut props, name, PropKind::Color);
     }
-    if spacing {
-        for name in spacing_prop_names() {
-            insert_css_prop(&mut props, name, PropKind::Spacing);
-        }
+    for name in spacing_prop_names() {
+        insert_css_prop(&mut props, name, PropKind::Spacing);
     }
-    if radii {
-        for name in radius_prop_names() {
-            insert_css_prop(&mut props, name, PropKind::Radius);
-        }
+    for name in radius_prop_names() {
+        insert_css_prop(&mut props, name, PropKind::Radius);
     }
     props.insert("container", PropKind::Container);
     props.insert("r", PropKind::Rhythm);
+    for name in open_prop_names() {
+        props.entry(name).or_insert(PropKind::Open);
+    }
     props
+}
+
+fn open_prop_names() -> BTreeSet<&'static str> {
+    let mut names = BTreeSet::new();
+    for prop in canon::CANONICAL_PROPERTIES {
+        names.insert(prop.name);
+    }
+    for alias in canon::ALIASES {
+        names.insert(alias.alias);
+    }
+    for ref_prop in canon::REFERENCE_PROPS {
+        if *ref_prop != "variant" && *ref_prop != "colorMode" {
+            names.insert(ref_prop);
+        }
+    }
+    names.remove("font");
+    names.remove("weight");
+    names
 }
 
 fn insert_css_prop(
@@ -193,6 +216,12 @@ fn push_condition_key(out: &mut String, keys: &BTreeSet<String>) {
 fn push_props_type(out: &mut String, props: &BTreeMap<&'static str, PropKind>) {
     out.push('\n');
     out.push_str("export type StyleProps = FontProps & {\n");
+    // A mapped member cannot share a literal with named keys (TS7061), so the
+    // custom-property index rides its own leading intersection member.
+    out.push_str("  [K in `--${string}`]?: ");
+    out.push_str(OPEN_VALUE);
+    out.push_str(";\n");
+    out.push_str("} & {\n");
     for (name, kind) in props {
         out.push_str("  ");
         push_prop_name(out, name);
@@ -210,5 +239,6 @@ fn value_for(kind: &PropKind) -> &'static str {
         PropKind::Radius => RADIUS_VALUE,
         PropKind::Container => CONTAINER_VALUE,
         PropKind::Rhythm => RHYTHM_VALUE,
+        PropKind::Open => OPEN_VALUE,
     }
 }

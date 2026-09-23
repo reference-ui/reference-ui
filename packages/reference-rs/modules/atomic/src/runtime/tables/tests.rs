@@ -17,9 +17,13 @@ fn rules_version_matches_js_pin() {
 #[test]
 fn aliases_cover_the_dialect() {
     let tables = NamerTables::for_system(BaseSystem::lib_fixture());
-    assert_eq!(tables.aliases.len(), 315);
+    assert_eq!(tables.aliases.len(), 319);
     assert_eq!(tables.aliases["p"], "padding");
     assert_eq!(tables.aliases["MozAnimation"], "mozAnimation");
+    assert_eq!(tables.aliases["marginX"], "marginInline");
+    assert_eq!(tables.aliases["marginY"], "marginBlock");
+    assert_eq!(tables.aliases["paddingX"], "paddingInline");
+    assert_eq!(tables.aliases["paddingY"], "paddingBlock");
 }
 
 #[test]

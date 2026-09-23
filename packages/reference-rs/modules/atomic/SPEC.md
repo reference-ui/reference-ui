@@ -73,7 +73,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
 | `RHYTHM` | Spatial rhythm formulas & multi-value pass-through | 5 | 5 | 0 |
-| `SHORT` | Shorthand decomposition without `currentColor` reset | 9 | 9 | 0 |
+| `SHORT` | Shorthand decomposition without `currentColor` reset | 10 | 10 | 0 |
 | `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
 | `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
@@ -553,6 +553,9 @@ compiler contract.
 - [x] `ATM-SHORT-09` `[reference]` `[seam]` —
   **The six radius pair shorthands must expand to corner longhands with one value on both corners.**
   Station `ATM-SHORT-09` (RS-25). Compile all six pairs with `'2r'`. Assert eight corner utilities (four physical, four logical), no dead `border-*-radius` pair property, and zero diagnostics. Real properties (`borderRadius`, corner longhands) pass through; emitted names equal `canon::native_longhands_for_prop` (cargo tripwire).
+- [x] `ATM-SHORT-12` `[reference]` `[seam]` —
+  **The four axis longhands must resolve to logical canonicals and compile to single-declaration twin classes.**
+  Station `ATM-SHORT-12`. Compile `<Div marginX="2r" marginY="8r" paddingX="1r" paddingY="0.5r" />`. Assert four wants on the authored spellings, four sheet rules (`margin-inline`, `margin-block`, `padding-inline`, `padding-block`), classes `mx_2r`/`my_8r`/`px_1r`/`py_0.5r`, no forked physical halves, and zero diagnostics. Twin convergence with `mx`/`my`/`px`/`py` is pinned in cargo (`resolve::axis_tests`), not in this station: co-compiling twins would trip the ATM-GHOST-04 injectivity gauge (cf. quarantined `ATM-LEAF-05`).
 
 ### Dialect Extension Realization
 
@@ -1036,6 +1039,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SHORT-06` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-06/` |
 | `ATM-SHORT-08` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-08/` |
 | `ATM-SHORT-09` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-09/` |
+| `ATM-SHORT-12` | `[x]` | `[seam]` | `tests/cases/ATM-SHORT-12/` |
 | `ATM-COND-01` | `[x]` | `[seam]` | `tests/cases/ATM-COND-01/` |
 | `ATM-COND-02` | `[x]` | `[seam]` | `tests/cases/ATM-COND-02/` |
 | `ATM-COND-03` | `[x]` | `[seam]` | `tests/cases/ATM-COND-03/` |

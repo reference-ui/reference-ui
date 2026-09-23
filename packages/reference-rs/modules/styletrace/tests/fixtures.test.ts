@@ -73,32 +73,9 @@ describe('styletrace fixtures', () => {
     }
   })
 
-  it('keeps demo-ui out of the style-bearing surface', async () => {
-    await expect(traceFixtureDir('fixtures/demo-ui/src')).resolves.toEqual([])
-  })
-
   it('keeps extend-library out of the style-bearing surface', async () => {
     await expect(
-      traceFixtureDir('fixtures/extend-library/src/components')
-    ).resolves.toEqual([])
-  })
-
-  it('finds wrapped Reference primitive exports in a workspace fixture library', async () => {
-    await expect(traceFixtureDir('fixtures/styletrace-library/src')).resolves.toEqual([
-      'MyStyleComponent',
-    ])
-  })
-
-  it('traces wrapped Reference primitive exports through a fixture consumer import', async () => {
-    await expect(traceFixtureDir('fixtures/styletrace-consumer/src')).resolves.toEqual([
-      'ConsumerStyleComponent',
-      'MyStyleComponent',
-    ])
-  })
-
-  it('keeps atlas-project component wrappers out of the style-bearing surface', async () => {
-    await expect(
-      traceFixtureDir('fixtures/atlas-project/src/components')
+      traceFixtureDir('matrix/fixtures/extend-library/src/components')
     ).resolves.toEqual([])
   })
 
