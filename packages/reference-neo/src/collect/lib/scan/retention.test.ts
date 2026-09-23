@@ -12,7 +12,7 @@ import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { ReferenceUIConfig } from '../../../config/types.ts'
 import { scanFragmentFiles } from '../evaluate.ts'
 
-// Structural compile boundary (mirrors sync/native.ts): the rs dist type
+// Structural compile boundary (mirrors native/contract.ts): the rs dist type
 // entries cannot resolve named exports under NodeNext, so the test
 // describes the call shape locally and imports the runtime dynamically.
 interface TestWant {

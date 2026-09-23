@@ -155,7 +155,7 @@ describe('reference-types bundle', () => {
   it('bundles tasty values from dist, never the vendored decls', () => {
     const code = readTypesFile('types.mjs')
     expect(code).toContain('createTastyBrowserRuntime')
-    expect(code).not.toContain('vendor/rust-tasty')
+    expect(code).not.toContain('native/generated/tasty')
   })
 })
 

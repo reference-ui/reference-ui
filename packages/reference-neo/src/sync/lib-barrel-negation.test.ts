@@ -17,11 +17,9 @@ import {
 } from '../collect/lib/evaluate.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
-import {
-  compileNative,
-  releaseRetention,
-  type ScopedCompileRequest,
-} from './native.ts'
+import { compileNative } from '../native/compile.ts'
+import { buildCompileRequest, uniqueSorted } from '../native/request.ts'
+import { attachScanRetention, releaseRetention } from '../native/retention.ts'
 import { applyNormalizeCss } from './reset.ts'
 
 // The lib tree is data, never a dependency: this test reads its config and
@@ -47,10 +45,6 @@ function sha12(text: string): string {
   return createHash('sha256').update(text).digest('hex').slice(0, 12)
 }
 
-function uniqueSorted(names: readonly string[]): string[] {
-  return [...new Set(names)].sort()
-}
-
 // One full scan→bundle→evaluate→compile leg for an include set, mirroring
 // sync(). The counting scan is spare (prepare rescans for the live token),
 // so its retention is released instead of drained.
@@ -63,16 +57,16 @@ async function fingerprintInclude(config: ReferenceUIConfig, include: string[]):
   const spec = await evaluatePreparedFragments(LIB_DIR, variant, prepared)
   applyNormalizeCss(spec, variant.normalizeCss)
   const requested = resolveJsxElements(variant)
-  const request: ScopedCompileRequest = {
-    schemaVersion: 1,
+  const request = buildCompileRequest({
     spec,
-    jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
+    requested: requested.merged,
+    primitiveNames: PRIMITIVE_JSX_NAMES,
     sourceRoot: LIB_DIR,
     declarationRoot: LIB_DIR,
     include,
     logs: variant.logs,
-    retentionToken: prepared.retentionToken,
-  }
+  })
+  attachScanRetention(request, prepared)
   const result = await compileNative(request)
 
   return {

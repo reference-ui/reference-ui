@@ -28,7 +28,7 @@ fills it is the checked-in artifact.
 
 The vendor script copies the reachable `@reference-ui/rust` tasty declaration
 closure out of the built RS dist and into the committed
-`src/vendor/rust-tasty/` tree. Only specifier strings move: every extensionless
+`src/native/generated/tasty/` tree. Only specifier strings move: every extensionless
 relative import becomes its explicit NodeNext form, so the vendored tree
 typechecks under neo's module resolution while the RS source tree stays
 untouched. Every copied file gains a provenance header pinning the RS version
@@ -53,7 +53,7 @@ cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs
 cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs --check
 ```
 
-The run wipes the vendor directory first and reports how many files it wrote
+The run wipes the generated tasty directory first and reports how many files it wrote
 and how many specifiers it rewrote. Both the tool and its output are
 checked in, so fresh checkouts typecheck with no extra step.
 

@@ -1,7 +1,7 @@
-// Native compile seam over the reference-rs atomic module.
-// It takes the frozen compile request and emits the compiled stylesheet bundle.
-// The rs dist type entries cannot resolve under NodeNext, so this seam
-// imports the runtime dynamically and describes the call boundary structurally.
+// Native contract: the RS-cut request/result/diagnostic types the recipe hands
+// to the engine. It takes the frozen contracts surface plus the structural
+// carries the dist types trail, and emits the compile call boundary every
+// native consumer shares. Nothing here executes; the calls live beside it.
 
 import type {
   NativeCompileRequest,
@@ -10,8 +10,7 @@ import type {
 import type { LogChannel } from '../config/types.ts'
 
 // Structural mirror of the frozen VirtualSource (C3 single read): the shape
-// sync hands to the engine when it already holds the bytes. Also kept for
-// compile-files.ts, which still collects include-scoped sources.
+// sync hands to the engine when it already holds the bytes.
 export interface NativeSourceFile {
   path: string
   content: string
@@ -71,26 +70,4 @@ export interface NativeCompileResult {
    * warning collapse.
    */
   compilerDiagnostics?: NativeDiagnostic[]
-}
-
-interface AtomicModule {
-  compile(request: NativeCompileRequest): Promise<NativeCompileResult>
-}
-
-interface AtomicReleaseModule {
-  releaseScan(request: { retentionToken: number }): Promise<{ released: boolean }>
-}
-
-export async function compileNative(request: NativeCompileRequest): Promise<NativeCompileResult> {
-  const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule
-  return atomic.compile(request)
-}
-
-/**
- * Release a live scan retention without draining. Error-path-only: the sync
- * `finally` between scan and compile; never on the happy path.
- */
-export async function releaseRetention(token: number): Promise<{ released: boolean }> {
-  const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicReleaseModule
-  return atomic.releaseScan({ retentionToken: token })
 }

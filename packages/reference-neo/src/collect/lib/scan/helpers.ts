@@ -64,7 +64,7 @@ export function asRelative(root: string, paths: string[]): string[] {
   return paths.map(path => relative(root, path)).sort(byteSort)
 }
 
-// Structural native boundary (mirrors sync/native.ts): the rs dist type
+// Structural native boundary (mirrors native/contract.ts): the rs dist type
 // entries cannot resolve named exports under NodeNext, so tests describe the
 // call shape locally and import the runtime dynamically.
 export interface TestScanResponse {

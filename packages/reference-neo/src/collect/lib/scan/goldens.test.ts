@@ -20,7 +20,9 @@ import {
   scanFragmentFilesNative,
 } from '../evaluate.ts'
 import { resolveJsxElements } from '../../../system/base/jsx.ts'
-import { compileNative, type ScopedCompileRequest } from '../../../sync/native.ts'
+import { compileNative } from '../../../native/compile.ts'
+import { buildCompileRequest } from '../../../native/request.ts'
+import { attachScanRetention } from '../../../native/retention.ts'
 import { applyNormalizeCss } from '../../../sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../../primitives/tags.ts'
 import type { ScannedSource } from './scanner.ts'
@@ -94,15 +96,16 @@ async function dietCompile(world: ScaleWorld) {
   const spec = await evaluatePreparedFragments(world.dir, world.config, prepared)
   applyNormalizeCss(spec, world.config.normalizeCss)
   const requested = resolveJsxElements(world.config)
-  const request: ScopedCompileRequest = {
-    schemaVersion: 1,
+  const request = buildCompileRequest({
     spec,
-    jsxHosts: [...new Set([...requested.merged, ...PRIMITIVE_JSX_NAMES])].sort(),
+    requested: requested.merged,
+    primitiveNames: PRIMITIVE_JSX_NAMES,
     sourceRoot: world.dir,
     declarationRoot: world.dir,
     include: world.config.include,
-    retentionToken: prepared.retentionToken,
-  }
+    logs: world.config.logs,
+  })
+  attachScanRetention(request, prepared)
   return compileNative(request)
 }
 

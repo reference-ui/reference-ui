@@ -9,7 +9,7 @@ import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 
 // The rs dist type entries cannot resolve under NodeNext (see
-// src/sync/native.ts), so the recompile below describes the call boundary
+// src/native/contract.ts), so the recompile below describes the call boundary
 // structurally instead of importing the atomic types.
 interface AtomicDiagnostic {
   severity: 'error' | 'warning' | 'info';

@@ -32,7 +32,7 @@ export interface FragmentScanNative {
   retention: NativeScanRetention
 }
 
-// Structural scan boundary (mirrors sync/native.ts): the rs dist type entries
+// Structural scan boundary (mirrors native/contract.ts): the rs dist type entries
 // cannot resolve named exports under NodeNext, so the seam describes the call
 // shape locally and imports the runtime dynamically.
 interface NativeScanRequest {

@@ -5,13 +5,22 @@
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
+import { compileNative } from '../native/compile.ts'
+import type {
+  NativeCompileResult,
+  ScopedCompileRequest,
+} from '../native/contract.ts'
 import {
-  compileNative,
-  releaseRetention,
-  type NativeCompileResult,
-  type NativeDiagnostic,
-  type ScopedCompileRequest,
-} from './native.ts'
+  reportCompilerDiagnostics,
+  reportWarningDiagnostics,
+  throwOnErrorDiagnostics,
+} from '../native/diagnostics.ts'
+import { buildCompileRequest } from '../native/request.ts'
+import {
+  attachScanRetention,
+  dropScanRetention,
+  releaseScanRetention,
+} from '../native/retention.ts'
 import { loadUserConfig } from '../config/load.ts'
 import { getOutDirPath } from '../lib/paths/index.ts'
 import {
@@ -37,52 +46,6 @@ import {
 export interface SyncResult {
   outDir: string
   spec: EvaluatedSystemSpec
-}
-
-function diagnosticLocation(entry: NativeDiagnostic): string {
-  if (!entry.file) return ''
-  if (entry.line === undefined) return ` (${entry.file})`
-  if (entry.column === undefined) return ` (${entry.file}:${entry.line})`
-  return ` (${entry.file}:${entry.line}:${entry.column})`
-}
-
-function throwOnErrorDiagnostics(diagnostics: NativeDiagnostic[]): void {
-  const errors = diagnostics.filter(entry => entry.severity === 'error')
-  if (errors.length === 0) return
-  const lines = errors.map(entry => `- ${entry.message}${diagnosticLocation(entry)}`)
-  throw new Error(`native compile failed:\n${lines.join('\n')}`)
-}
-
-// Warnings print LOUD on every sync and never throw: a drifting sync that
-// stays green must still show what the engine disliked, and a failing sync
-// must not take its warnings down with the throw. The stable code rides the
-// line so censuses count by `rg -c`, not by reading prose.
-function diagnosticCodeSuffix(entry: NativeDiagnostic): string {
-  return entry.code === undefined ? '' : ` ${entry.code}`
-}
-
-function reportWarningDiagnostics(diagnostics: NativeDiagnostic[]): void {
-  const warnings = diagnostics.filter(entry => entry.severity === 'warning')
-  if (warnings.length === 0) return
-  const lines = warnings.map(
-    entry => `[neo] sync warning${diagnosticCodeSuffix(entry)}: ${entry.message}${diagnosticLocation(entry)}`
-  )
-  console.warn(lines.join('\n'))
-}
-
-// The compiler backchannel prints on its own console.warn call: every entry
-// the engine returned (warnings AND infos — the channel is mostly info),
-// one line each, so userspace keeps its single collapsed call untouched.
-function reportCompilerDiagnostics(entries: NativeDiagnostic[] | undefined): void {
-  if (!entries || entries.length === 0) return
-  const lines = entries.map(
-    entry => `[neo] compiler${diagnosticCodeSuffix(entry)}: ${entry.message}${diagnosticLocation(entry)}`
-  )
-  console.warn(lines.join('\n'))
-}
-
-function uniqueSorted(names: readonly string[]): string[] {
-  return [...new Set(names)].sort()
 }
 
 // REF-04 trigger: every sync rm-wipes the output dir, so a warm-session
@@ -169,41 +132,25 @@ export async function sync(cwd: string): Promise<SyncResult> {
       // records what the author asked for: discovery reaches the publish below,
       // never this list.
       const requested = resolveJsxElements(config)
-      // C3-in-reverse: the token carries the retained bytes (the engine drains
-      // them, then union-fills from disk only what the list misses); the TS
-      // fallback carries `files`. Empty retention omits both (defense in
-      // depth: native falls back to the disk scan).
-      request = {
-        schemaVersion: 1,
+      request = buildCompileRequest({
         spec,
-        jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
+        requested: requested.merged,
+        primitiveNames: PRIMITIVE_JSX_NAMES,
         sourceRoot: cwd,
         declarationRoot: cwd,
         include: config.include,
         logs: config.logs,
-      }
-      if (retentionToken !== undefined) request.retentionToken = retentionToken
-      else if (prepared.scannedSources.length > 0) request.files = prepared.scannedSources
+      })
+      attachScanRetention(request, prepared)
       markPhase('evalEnd')
       markPhase('compileStart')
       result = await compileNative(request)
       markPhase('compileEnd')
       // The drain consumed the retention: nothing left to release.
       retentionToken = undefined
-      // RSS relief: scanned bytes are unreachable after compile; drop the refs
-      // before publish so a mid-publish GC can reclaim the headroom.
-      prepared.scannedSources = []
-      prepared.retentionToken = undefined
-      request.files = undefined
-      request.retentionToken = undefined
+      dropScanRetention(request, prepared)
     } finally {
-      if (retentionToken !== undefined) {
-        try {
-          await releaseRetention(retentionToken)
-        } catch {
-          // Best-effort: never mask the in-flight error.
-        }
-      }
+      await releaseScanRetention(retentionToken)
     }
     reportWarningDiagnostics(result.diagnostics)
     reportCompilerDiagnostics(result.compilerDiagnostics)

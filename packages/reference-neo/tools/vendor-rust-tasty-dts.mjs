@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const NEO_DIR = path.dirname(HERE);
-const VENDOR_DIR = path.join(NEO_DIR, 'src', 'vendor', 'rust-tasty');
+const VENDOR_DIR = path.join(NEO_DIR, 'src', 'native', 'generated', 'tasty');
 const TOPS = ['tasty.d.ts', path.join('tasty', 'build.d.ts'), path.join('tasty', 'browser.d.ts')];
 const FROM_RE = /from(\s+)(['"])([^'"]+)\2/g;
 const IMPORT_RE = /import(\s*\(\s*)(['"])([^'"]+)\2(\s*\))/g;
@@ -126,8 +126,8 @@ function checkVendor(files) {
   const drift = [];
   for (const [rel, content] of files) {
     const abs = path.join(VENDOR_DIR, rel);
-    if (!existsSync(abs)) drift.push(`missing: src/vendor/rust-tasty/${rel}`);
-    else if (readFileSync(abs, 'utf8') !== content) drift.push(`stale: src/vendor/rust-tasty/${rel}`);
+    if (!existsSync(abs)) drift.push(`missing: src/native/generated/tasty/${rel}`);
+    else if (readFileSync(abs, 'utf8') !== content) drift.push(`stale: src/native/generated/tasty/${rel}`);
   }
   return drift;
 }
