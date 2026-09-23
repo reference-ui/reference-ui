@@ -1,6 +1,6 @@
 # VOYAGE — <name TBD>
 
-New voyage. Prior perf voyage archived at [docs/archive/VOYAGE-PERF-SWARM.md](./docs/archive/VOYAGE-PERF-SWARM.md).
+
 
 ## Destination
 
