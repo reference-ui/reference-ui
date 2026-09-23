@@ -14,7 +14,7 @@ import {
   evaluatePreparedFragments,
   prepareFragments,
   scanFragmentFilesNative,
-} from '../fragments/base/index.ts'
+} from '../collect/lib/evaluate.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { resolveJsxElements } from './jsx-elements.ts'
 import {

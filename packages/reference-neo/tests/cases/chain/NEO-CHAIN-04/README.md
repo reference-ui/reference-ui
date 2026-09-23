@@ -5,7 +5,7 @@ plus the prelude-order extends half ONLY — the layers legs and cross-bucket
 order stay held for D17). Topology is the untouched T4 parallel-extends from
 `matrix/CHAIN.md`. Evidence: `[chain-t9]` `T9-contract.spec.ts` (both
 extends paint; `extends...` declared order), Neo
-`src/fragments/base/merge.ts` (later fragments win on scalars).
+`src/collect/lib/merge.ts` (later fragments win on scalars).
 
 The world extends two direct upstreams with no transitive middle. Neo emits
 no per-upstream `@layer` prelude — the build wraps in the single app package

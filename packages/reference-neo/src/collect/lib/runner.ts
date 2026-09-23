@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { microBundle, DEFAULT_EXTERNALS } from '../../lib/microbundle/index.ts'
-import { scanForFragments } from './scanner.ts'
+import { scanForFragments } from './scan/scanner.ts'
 import type {
   BundleFragmentsOptions,
   CollectOptions,

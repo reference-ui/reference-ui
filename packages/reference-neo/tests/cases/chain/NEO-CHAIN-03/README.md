@@ -3,7 +3,7 @@
 Matrix source: `matrix/chain/T11/tests/e2e/T11-contract.spec.ts` (also homes
 the T13 extends legs, an identical assertion set). Evidence: `[chain-t11]`
 `T11-contract.spec.ts` (both endpoints plus both inner bases), Neo
-`src/fragments/base/merge.ts` (disjoint subtrees union).
+`src/collect/lib/merge.ts` (disjoint subtrees union).
 
 The world extends two chain-endpoint stand-ins with fully disjoint leaves,
 so the merge is a pure union with nothing to arbitrate: each endpoint

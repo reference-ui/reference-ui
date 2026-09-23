@@ -5,8 +5,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
-import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../lib/types.ts'
-import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './index.ts'
+import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../constants.ts'
+import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './evaluate.ts'
 
 async function importFragmentsModule(options?: {
   scannedFiles?: string[]
@@ -27,13 +27,10 @@ async function importFragmentsModule(options?: {
     options?.bundledFragments ?? [{ file: '/workspace/app/src/theme.ts', bundle: 'localOne()' }]
   )
 
-  vi.doMock('../lib/index.ts', () => ({
-    scanFragmentSourcesNative,
-    bundleFragments,
-    CONFIG_FRAGMENT_SOURCE_PROPERTY: '__refConfigFragmentSource',
-  }))
+  vi.doMock('./scan/native.ts', () => ({ scanFragmentSourcesNative }))
+  vi.doMock('./runner.ts', () => ({ bundleFragments }))
 
-  const mod = await import('./index.ts')
+  const mod = await import('./evaluate.ts')
   return {
     ...mod,
     scanFragmentSourcesNative,
@@ -43,7 +40,8 @@ async function importFragmentsModule(options?: {
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('../lib/index.ts')
+  vi.doUnmock('./scan/native.ts')
+  vi.doUnmock('./runner.ts')
   vi.restoreAllMocks()
 })
 
@@ -129,7 +127,7 @@ describe('fragments prepare flow', () => {
 
   it('maps bootstrap fragment imports back to Neo source entries', async () => {
     await importFragmentsModule()
-    const { getFragmentBootstrapImportMap } = await import('./bootstrap-import-map.ts')
+    const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
 
     const authorEntry = join(import.meta.dirname, '..', '..', 'author', 'index.ts')
     const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react.ts')
@@ -159,7 +157,7 @@ describe('fragments prepare output: native token', () => {
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
       ],
     })
-    const { getFragmentBootstrapImportMap } = await import('./bootstrap-import-map.ts')
+    const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
 
     const result = await prepareFragments('/workspace/app', {
       name: 'app-system',

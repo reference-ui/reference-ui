@@ -3,7 +3,7 @@
 New coverage (P-chain-3): no matrix source — suggested by
 `matrix/CHAIN_REPORT.md` §4.3 ("deeper-than-2 chain ... to confirm fragment
 flattening at depth ≥ 3"), never built as a matrix tier. Evidence:
-`[chain-report]` §4.3, Neo `src/fragments/base/index.ts` (upstream bundles
+`[chain-report]` §4.3, Neo `src/collect/lib/evaluate.ts` (upstream bundles
 evaluate in order, then local).
 
 The world extends one apex stand-in whose fragment flattens two republished

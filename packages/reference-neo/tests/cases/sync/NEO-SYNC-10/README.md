@@ -1,6 +1,6 @@
 # NEO-SYNC-10 — extends adopts upstream tokens, recipes resolve, jsxElements merge, later fragment wins
 
-Evidence: `[panda-v1]` `config/__tests__/merge-config.test.ts` (contrast: Panda merges preset/config `theme.extend` trees; Neo evaluates upstream fragment bundles first and local bundles after, later-wins), Neo `src/fragments/base/merge.test.ts`, RS-4 BAS-EXTEND-01..05 (engine-side adoption semantics, 12/12 green).
+Evidence: `[panda-v1]` `config/__tests__/merge-config.test.ts` (contrast: Panda merges preset/config `theme.extend` trees; Neo evaluates upstream fragment bundles first and local bundles after, later-wins), Neo `src/collect/lib/merge.test.ts`, RS-4 BAS-EXTEND-01..05 (engine-side adoption semantics, 12/12 green).
 
 The runner syncs this two-system world fresh, then the spec asserts the
 merge paints: an upstream-only token colors one probe, a locally overridden

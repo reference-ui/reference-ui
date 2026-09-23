@@ -5,7 +5,7 @@ fonts, keyframes, animations) authored in fragments and emitted as CSS
 custom properties in `@layer tokens`. Utilities and recipes consume
 them by name, by `{path}` ref, or by rhythm sugar (`4r`, `0.5r`).
 Colour leaves carry `{ light, dark }` and print as `data-color-mode`
-islands. This group owns `src/fragments/api/{tokens,font,keyframes}.ts`.
+islands. This group owns `src/collect/surface/{tokens,font,keyframes}.ts`.
 Existing: `NEO-EDGE-02` (radii, done).
 
 ## Dialect

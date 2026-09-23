@@ -7,7 +7,7 @@ browser.
 
 The pipeline runs in one direction. `config/` loads and validates
 `ui.config` — discovery, esbuild bundling, evaluation, validation, plus
-the small in-memory store behind path resolution. `fragments/` finds the
+the small in-memory store behind path resolution. `collect/` finds the
 author calls (`tokens()`, `font()`, `keyframes()`, `globalCss()`, pattern
 extensions), evaluates each file once in Node, and merges the results
 into one `EvaluatedSystemSpec`. `sync/` drives the whole pass: prepare

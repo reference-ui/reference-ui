@@ -8,7 +8,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { scanFragmentSourcesNative } from '../lib/scanner-native.ts'
+import { scanFragmentSourcesNative } from './native.ts'
 import {
   CSS_RED,
   NEEDLES,
@@ -19,7 +19,7 @@ import {
   platformSep,
   withTree,
   type TestCompileResult,
-} from './scan-native-helpers.ts'
+} from './helpers.ts'
 
 const BLUE = CSS_RED.replace("'red'", "'blue'")
 

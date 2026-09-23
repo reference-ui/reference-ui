@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { ReferenceUIConfig } from '../../config/types.ts'
-import { evaluateFragments } from './index.ts'
+import { evaluateFragments } from './evaluate.ts'
 
 const tempDirs: string[] = []
 

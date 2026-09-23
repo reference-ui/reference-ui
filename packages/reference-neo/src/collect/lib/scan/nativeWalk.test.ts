@@ -10,13 +10,13 @@ import { join, relative } from 'node:path'
 import fg from 'fast-glob'
 import { describe, expect, it } from 'vitest'
 import { RETENTION_EXCLUDE } from './scanner.ts'
-import { isCompleteWalkInclude } from './scanner-native.ts'
+import { isCompleteWalkInclude } from './native.ts'
 import {
   TRICKY_TREE,
   atomic,
   libSystemSpec,
   withTree,
-} from '../base/scan-native-helpers.ts'
+} from './helpers.ts'
 
 const CSS = (id: string): string =>
   `import { css } from '@reference-ui/react'\nexport const v = css({ color: '${id}' })\n`

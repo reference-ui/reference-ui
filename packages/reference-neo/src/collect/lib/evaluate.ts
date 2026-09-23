@@ -9,47 +9,29 @@ import { pathToFileURL } from 'node:url'
 import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
 import type { BaseSystem, ReferenceUIConfig } from '../../config/types.ts'
 import {
-  bundleFragments,
-  scanFragmentSources,
-  scanFragmentSourcesNative,
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
-  type FragmentBundle,
-  type FragmentScan,
-  type FragmentScanNative,
-  type ScannedSource,
-} from '../lib/index.ts'
+  CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY,
+  FRAGMENT_IMPORT_NEEDLES,
+  UPSTREAM_FRAGMENT_SOURCE,
+} from '../constants.ts'
+import { bundleFragments } from './runner.ts'
+import { scanFragmentSources, type FragmentScan, type ScannedSource } from './scan/scanner.ts'
+import { scanFragmentSourcesNative, type FragmentScanNative } from './scan/native.ts'
+import type { FragmentBundle } from './types.ts'
 import { getOutDirPath } from '../../lib/paths/index.ts'
-import { createKeyframesCollector } from '../api/keyframes.ts'
-import { createTokensCollector } from '../api/tokens.ts'
-import { createFontCollector } from '../api/font.ts'
-import { createGlobalCssCollector } from '../api/globalCss.ts'
-import { getFragmentBootstrapImportMap } from './bootstrap-import-map.ts'
+import { createKeyframesCollector } from '../surface/keyframes.ts'
+import { createTokensCollector } from '../surface/tokens.ts'
+import { createFontCollector } from '../surface/font.ts'
+import { createGlobalCssCollector } from '../surface/globalCss.ts'
+import { getFragmentBootstrapImportMap } from './bootstrap.ts'
+
+export { UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
 import {
   isPlainObject,
   mergeFragmentObjects,
   stripPrivateTokensDeep,
   tokenLeafPaths,
 } from './merge.ts'
-
-// Fragment bundles are plain IIFEs. This global tells collector calls which
-// source file is currently executing so diagnostics can point back to filenames.
-const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
-
-// Source tag for upstream bundles when the extends entry carries no name.
-// Neo tags named upstreams with their system names instead, so the private
-// gate below matches membership in the upstream name set — never this
-// literal alone, or every named upstream would leak through.
-export const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'
-
-// Fragment discovery needles: the module ids whose imports mark a fragment
-// file. Shared by the TS and native scans so the union can never drift.
-const FRAGMENT_IMPORT_NEEDLES = [
-  '@reference-ui/neo',
-  '@reference-ui/neo/config',
-  '@reference-ui/system',
-  '@reference-ui/core/config',
-  '@reference-ui/cli/config',
-]
 
 type SpecProvenance = EvaluatedSystemSpec['provenance']
 

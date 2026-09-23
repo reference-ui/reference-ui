@@ -3,7 +3,7 @@
 Matrix source: `matrix/chain/T6/tests/e2e/T6-contract.spec.ts` (extends legs;
 also homes the T10 extends legs, a strict assertion-subset). Evidence:
 `[chain-t6]` `T6-contract.spec.ts` (outer-local bg/copy + transitive eyebrow
-oracles), Neo `src/fragments/base/merge.ts` (later fragments win), RS
+oracles), Neo `src/collect/lib/merge.ts` (later fragments win), RS
 BAS-EXTEND semantics (adoption through published fragments).
 
 The world extends one outer stand-in whose fragment republishes the inner

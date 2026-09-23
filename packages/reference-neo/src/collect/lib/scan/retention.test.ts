@@ -9,8 +9,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
-import type { ReferenceUIConfig } from '../../config/types.ts'
-import { scanFragmentFiles } from './index.ts'
+import type { ReferenceUIConfig } from '../../../config/types.ts'
+import { scanFragmentFiles } from '../evaluate.ts'
 
 // Structural compile boundary (mirrors sync/native.ts): the rs dist type
 // entries cannot resolve named exports under NodeNext, so the test
@@ -78,6 +78,7 @@ const FIXTURE_FILES: Array<[string, string]> = [
 function libSystemSpec(): EvaluatedSystemSpec {
   const specPath = join(
     import.meta.dirname,
+    '..',
     '..',
     '..',
     '..',

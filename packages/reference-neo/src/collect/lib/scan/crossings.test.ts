@@ -7,7 +7,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { cleanDir } from '../../sync/clean.ts'
+import { cleanDir } from '../../../sync/clean.ts'
 
 const { scanMock, compileMock, releaseMock } = vi.hoisted(() => ({
   scanMock: vi.fn(),
@@ -65,7 +65,7 @@ describe('seam crossing census', () => {
     compileMock.mockReset()
     releaseMock.mockReset()
     armHappy()
-    const { sync } = await import('../../sync/index.ts')
+    const { sync } = await import('../../../sync/index.ts')
     const dir = writeProject()
     try {
       await sync(dir)
@@ -87,7 +87,7 @@ describe('seam crossing census', () => {
     scanMock.mockResolvedValue({ hits: [], retainedCount: 1, retentionToken: 42 })
     compileMock.mockRejectedValue(new Error('boom'))
     releaseMock.mockResolvedValue({ released: true })
-    const { sync } = await import('../../sync/index.ts')
+    const { sync } = await import('../../../sync/index.ts')
     const dir = writeProject()
     try {
       await expect(sync(dir)).rejects.toThrow('boom')

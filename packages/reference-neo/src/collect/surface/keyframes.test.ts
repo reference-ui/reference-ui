@@ -6,8 +6,8 @@ import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { keyframes, createKeyframesCollector } from './keyframes.ts'
-import type { FragmentCollector } from '../lib/index.ts'
-import { collectFragments } from '../lib/index.ts'
+import type { FragmentCollector } from '../lib/types.ts'
+import { collectFragments } from '../lib/runner.ts'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__-keyframes')
 const tempDir = join(import.meta.dirname, '__temp__-keyframes')

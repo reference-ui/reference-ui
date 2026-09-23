@@ -22,7 +22,7 @@ const DIST = join(PKG, 'dist')
 // loudly — never ship a silent miss.
 const PATH_LITERAL_SOURCES = new Map([
   ['src/config/bundle.ts', ['index.ts']],
-  ['src/fragments/base/bootstrap-import-map.ts', ['index.ts', 'react.ts']],
+  ['src/collect/lib/bootstrap.ts', ['index.ts', 'react.ts']],
   ['src/sync/react.ts', ['context.ts', 'factory.ts', 'index.ts', 'split.ts']],
   ['src/sync/reference-types.ts', ['types.d.mts', 'types.tsx']],
 ])

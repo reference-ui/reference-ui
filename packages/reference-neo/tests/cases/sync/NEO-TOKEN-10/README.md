@@ -8,7 +8,7 @@ agrees — the macro probe paints the Inter stack at weight 400.
 
 Provenance note: this row belongs to the TOKEN group (TESTS.md
 `NEO-TOKEN-10`), but the remainder rung is SYNC-owned
-(`fragments/base/index.ts` merge via the Gap-1 easement), so the SYNC-mop
+(`collect/lib/evaluate.ts` merge via the Gap-1 easement), so the SYNC-mop
 slice proves it here under `sync/`; the captain may move the folder home to
 `token/` with no id change.
 

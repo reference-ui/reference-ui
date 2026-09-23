@@ -5,7 +5,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { collectFragments, type FragmentCollector } from '../lib/index.ts'
+import { collectFragments } from '../lib/runner.ts'
+import type { FragmentCollector } from '../lib/types.ts'
 import { createFontCollector, font } from './font.ts'
 
 const fixtureDir = join(import.meta.dirname, '__fixtures__-font')

@@ -1,4 +1,4 @@
-// Barrel for the Neo-owned fragments module.
+// Barrel for the Neo-owned collect subsystem.
 // It takes nothing and re-exports author calls plus scan, bundle, and evaluation.
 // Sync drives prepare and evaluate while fragment files import the author calls.
 
@@ -21,7 +21,7 @@ export {
   type FontWeightName,
   type GlobalCssConfig,
   type GlobalCssRule,
-} from './api/index.ts'
+} from './surface/index.ts'
 export {
   getUpstreamFragments,
   scanFragmentFiles,
@@ -32,6 +32,6 @@ export {
   evaluateFragments,
   evaluatePreparedFragments,
   type PreparedFragments,
-} from './base/index.ts'
-export { getFragmentBootstrapImportMap } from './base/bootstrap-import-map.ts'
-export type { FragmentScan, ScannedSource } from './lib/index.ts'
+} from './lib/evaluate.ts'
+export { getFragmentBootstrapImportMap } from './lib/bootstrap.ts'
+export type { FragmentScan, ScannedSource } from './lib/scan/scanner.ts'

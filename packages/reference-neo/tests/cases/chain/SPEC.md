@@ -14,7 +14,7 @@ Authors write `extends: [systems]` in `ui.config.ts`, where each entry is a
 `BaseSystem` — the shape a published package's `baseSystem.mjs` carries
 (`name`, bundled `fragment` IIFEs, `jsxElements`). Upstream fragments
 evaluate in extends order, then local bundles; later fragments win scalar
-conflicts (`src/fragments/base/merge.ts`), and upstream `_private` subtrees
+conflicts (`src/collect/lib/merge.ts`), and upstream `_private` subtrees
 strip at the boundary. Worlds stand in for installed packages with
 import-free `theme/*.ts` objects in exactly that shape — the config data,
 not fragments to scan. Transitive middles republish: the outer fragment

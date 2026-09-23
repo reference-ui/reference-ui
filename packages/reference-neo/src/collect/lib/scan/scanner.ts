@@ -5,30 +5,14 @@
 import { readFileSync } from 'node:fs'
 import { extname, relative, resolve, sep } from 'node:path'
 import fg from 'fast-glob'
-import type { ScanOptions } from './types.ts'
+import type { ScanOptions } from '../types.ts'
+import {
+  NATIVE_IGNORE_DIRS,
+  RETENTION_EXCLUDE,
+  SOURCE_EXTENSIONS,
+} from '../../constants.ts'
 
-// Retention glob prunes only node_modules at traversal (the huge tree);
-// the remaining native IGNORE dirs filter explicitly below so the mirror
-// stays reviewable instead of trusting glob-pattern equivalence.
-export const RETENTION_EXCLUDE = ['**/node_modules/**']
-
-// Native IGNORE dirs mirrored from sources.rs handle_dir_entry: paths with
-// any relative DIRECTORY segment in this set never reach the engine.
-const NATIVE_IGNORE_DIRS = new Set([
-  'node_modules',
-  '.git',
-  'dist',
-  'build',
-  '.turbo',
-  'target',
-  '.reference-ui',
-  '.reference',
-  '.pipeline',
-])
-
-// Engine-parsed extensions mirrored from sources.rs is_supported_extension:
-// the final extension decides, so foo.d.ts (ext ts) is a source.
-const SOURCE_EXTENSIONS = new Set(['tsx', 'ts', 'jsx', 'js'])
+export { RETENTION_EXCLUDE }
 
 /** One retained source: absolute path plus the bytes native compiles. */
 export interface ScannedSource {

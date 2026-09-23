@@ -4,9 +4,9 @@
 
 import {
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
-  type FragmentCollector,
-  type FragmentCollectorConfig,
-} from './types.ts'
+  CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY,
+} from '../constants.ts'
+import type { FragmentCollector, FragmentCollectorConfig } from './types.ts'
 
 /**
  * Create a fragment collector that can capture fragments from user code.
@@ -37,8 +37,6 @@ function defaultGlobalKey(name: string, targetFunction?: string): string {
   const cap = base.charAt(0).toUpperCase() + base.slice(1)
   return `__ref${cap}Collector`
 }
-
-const CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY = '__refCurrentFragmentSource'
 
 export function createFragmentCollector<TInput = unknown, TOutput = TInput>(
   config: FragmentCollectorConfig<TInput, TOutput>

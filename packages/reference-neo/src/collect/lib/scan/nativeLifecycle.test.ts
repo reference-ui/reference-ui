@@ -7,8 +7,8 @@
 import { rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { scanForFragments } from '../lib/scanner.ts'
-import { scanForFragmentsNative, scanFragmentSourcesNative } from '../lib/scanner-native.ts'
+import { scanForFragments } from './scanner.ts'
+import { scanForFragmentsNative, scanFragmentSourcesNative } from './native.ts'
 import {
   CSS_RED,
   NEEDLES,
@@ -17,7 +17,7 @@ import {
   libSystemSpec,
   platformSep,
   withTree,
-} from './scan-native-helpers.ts'
+} from './helpers.ts'
 
 // Beyond any minted token in a test process (monotonic from 1, JSON-safe).
 const NEVER_MINTED = Number.MAX_SAFE_INTEGER - 7
@@ -147,7 +147,7 @@ describe('native scan retain modes', () => {
         const native = await scanFragmentSourcesNative(options)
         expect(native.retention.token).toBeUndefined()
         expect(native.retention.files?.length).toBe(1)
-        const { scanFragmentSources } = await import('../lib/scanner.ts')
+        const { scanFragmentSources } = await import('./scanner.ts')
         expect(native.matches).toEqual((await scanFragmentSources(options)).matches)
       } finally {
         if (previous === undefined) delete process.env['REFERENCE_UI_SCAN_NATIVE']

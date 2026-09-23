@@ -12588,3 +12588,143 @@ and outside links stay put. README owns-list + Consumers updated.
 
 SYMLINK-ADOPT DONE: every link call-site routes through
 lib/symlink + suite/cases/T1 green. Report, don't land.
+
+## COLLECT-REFACTOR (Tokyo item 3 — motion + naming only, zero logic change)
+
+Crew brief: dissolve the `base/` + `lib/` split, rename
+`src/fragments/` → `src/collect/`, extract root `constants.ts`, write
+the serious README, prove behavior-identical. Crews never commit;
+report, don't land.
+
+### Layout rationale (one paragraph)
+
+The old boundary was honest about nothing: `base/` held the pipeline
+(prepare, evaluate, merge, bootstrap, goldens) while `lib/` held the
+machinery the pipeline is made of (scan, bundle, collect), so every
+real operation crossed it. The new layout is flat by stage with one
+real subdirectory: `api/` keeps its exact shape (HQ: liked, stays);
+`evaluate.ts` is the evaluate-once orchestration (prepare → evaluate →
+spec assembly, kept whole because splitting it would redraw function
+boundaries — a logic touch, not motion); `merge.ts` is the object-merge
+primitives it calls; `collector.ts` / `runner.ts` / `types.ts` are the
+collector seam, no longer pretending to be a library of something else;
+`bootstrap.ts` is the lone bootstrap module; `scan/` is the one true
+subdirectory because discovery is the one true sub-pipeline (TS
+scanner, native single-read twin, differential-battery helpers, scale
+goldens, and all eight scan suites colocated). The seven literals the
+stages shared — including `CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY`,
+duplicated verbatim in two files — now live once in root
+`constants.ts`. Kebab filenames de-kebabbed only where pure naming
+(`scanner-native.ts` → `scan/native.ts`, `bootstrap-import-map.ts` →
+`bootstrap.ts`, the `scan-*` test pile de-prefixed inside `scan/`);
+every exported identifier (`scanFragmentFiles`, `prepareFragments`,
+…) is byte-identical, so sync call-sites needed import-path-only
+edits and the sibling SYMLINK-ADOPT crew's hot zone stayed cold.
+
+### Rename map
+
+- `src/fragments/` → `src/collect/` (top-level subsystem, stays
+  top-level per HQ ruling).
+- `base/index.ts` → `evaluate.ts` (re-exports
+  `UPSTREAM_FRAGMENT_SOURCE` so its surface is unchanged).
+- `base/index.test.ts` → `prepare.test.ts` (it tests the prepare flow;
+  the vitest `doMock` of the dissolved barrel became two targeted
+  mocks of `./scan/native.ts` + `./runner.ts` — the suite never
+  touches the sync scan path, so the retarget is unobservable).
+- `base/merge.ts` → `merge.ts`; `base/evaluate.test.ts` →
+  `evaluate.test.ts`; `base/bootstrap-import-map.ts` → `bootstrap.ts`
+  (path math `'..','..'` → `'..'` — same resolved entries, pinned by
+  `bootstrap.test.ts` + the prepare bootstrap-map test, whose own
+  `'..','..'` → `'..'` expectation math moved with it).
+- `lib/collector.ts` → `collector.ts`; `lib/runner.ts` → `runner.ts`;
+  `lib/types.ts` → `types.ts` (minus the moved source-tag const).
+- `lib/index.ts` barrel DELETED (dissolved; every consumer rewired to
+  the real homes).
+- `lib/scanner.ts` → `scan/scanner.ts` (keeps re-exporting
+  `RETENTION_EXCLUDE` so its surface is unchanged);
+  `lib/scanner-native.ts` → `scan/native.ts`;
+  `base/scan-native-helpers.ts` → `scan/helpers.ts`;
+  `base/fixtures/` → `scan/fixtures/`.
+- Scan suites: `scan-crossings` → `crossings`, `scan-goldens` →
+  `goldens`, `scan-native-completeness` → `nativeCompleteness`,
+  `scan-native-lifecycle` → `nativeLifecycle`, `scan-native` →
+  `native`, `scan-retention` → `retention`, `scanner-identity` →
+  `identity`, `scanner-native` (walk-completeness battery) →
+  `nativeWalk` (avoids the `native.test.ts` collision).
+- NEW: `constants.ts` (7 extracted literals, comments moved with
+  them), `README.md` (what it collects, the
+  scan→bundle→prepare→evaluate→merge pipeline, module layout in
+  prose, what it does NOT own).
+- External import-path-only edits (5 files, no logic): `src/author/`
+  (4 lines), `src/sync/index.ts` (1 line), `src/sync/
+  lib-barrel-negation.test.ts` (1 line),
+  `benchmark/deepsee/worker-phases.ts` (1 line),
+  `tools/build-bin.mjs` (path-literal registry entry).
+- Docs: `docs/DOMAIN.md` records the decision (`collect` subsystem
+  entry; `above/below the cut` + `fragments`-as-units updated in the
+  same pass); `PLAN.md` subsystem enumeration; `src/README.md`
+  directory ref; `tsconfig.build.json` comment (depth rationale
+  reworded — see smells); 14 case-doc path cites incl. the
+  `mergeCollectedSpec` line cite (`:255` → `evaluate.ts:286`).
+- Deliberate NON-changes (zero behavior change): bench
+  `fragments.prepare` / `fragments.evaluate` phase labels (emitted
+  strings); test-local `NEEDLES` copies in `scan/helpers.ts` +
+  `identity.test.ts` (battery self-containment); the
+  `neo-scanner-identity-` tmpdir prefix; README pipeline prose
+  ("fragments in" = the units, still true); `docs/evidence/` +
+  `docs/archive/` (read-only/archived); `PLAN_TOKYO.md` item 3 (the
+  brief record itself — captain marks convergence);
+  `OPERATION_TOKYO.md` §domain line still says `fragments` —
+  flagged for the captain (mission files are HQ records, not
+  crew-editable).
+
+### Smells found, NOT fixed (mandate: log, don't fix)
+
+- `scan/helpers.ts` + `identity.test.ts` each carry a third and fourth
+  copy of the needle list. Unifying them with `constants.ts` is a
+  3-line change but touches battery self-containment; left for a
+  followup crew with a differential re-proof.
+- `evaluate.ts` (409 lines, was 426) and `mergeCollectedSpec`
+  (5 params) and `classifyScanSuffix` (cyclomatic 12) all sit on the
+  q-gate warn line — pre-existing shape, warn-only, non-failing.
+- `tsconfig.build.json` FIX-3 comment cited "different depths" as the
+  anti-bundling rationale; `collect/bootstrap.ts` now sits at the
+  same depth as `config/bundle.ts`, so the comment was reworded to
+  "per-module" (the mechanism — dist mirrors src — is unaffected and
+  the build proves it).
+
+### Proof (all observed this session, shared tree)
+
+- `tsc --noEmit -p tsconfig.json` → clean, zero errors.
+- `node tools/build-bin.mjs` → `dist ready: 302 files` (validates the
+  build registry edit + bootstrap path math under the dist layout).
+- `pnpm agentneo q` → `0 errors, 17 warnings, 214 files` (6 warns in
+  collect/, all pre-existing shape per pre-move line counts).
+- Full Neo unit suite (`vitest run`) → **48 files / 337 tests, all
+  green** (incl. retargeted `prepare.test.ts`, goldens bit-exact
+  reproduction, crossings census).
+- FULL `pnpm agentneo run` → **197/197 `ok`** in
+  `tests/.artifacts/last-run.json` (all cases, not just chain).
+- Native T1 sync-consumer smoke: `neo sync` in `matrix/tests/chain/T1`
+  → 122ms, exit 0; `playwright test` → **7/7 passed**.
+- No-panda pass over `src/collect/`: clean. Sibling note: no hot-file
+  collision — neither `src/sync/index.ts` nor
+  `lib-barrel-negation.test.ts` was touched by SYMLINK-ADOPT; my
+  sync edits are one import line each.
+
+COLLECT-REFACTOR DONE: collect subsystem in place + full suite green
++ T1 smoke green. Report, don't land.
+
+### Addendum — HEAD moved mid-run (no action, recorded)
+
+Three captain commits landed during this crew's proof window
+(`68521e9c3`, `5f42dd04e` item-8 census/decision, `b41eb42fb` README
+rewrite) and the index was reset, so the motion sits unstaged
+(`src/fragments/` deleted + `src/collect/` untracked in the worktree).
+All three commits touch `PLAN_TOKYO.md` / `README.md` only — zero code
+impact, all proofs above ran against this exact worktree, and the new
+README carries no `fragments` refs. Item 8 ("author dies, fork B,
+folded into collect wave") noted as a followup wave — outside this
+crew's item-3 brief, not freelanced.
+
+## Tick — all objectives COMPLETE; AUTHOR-KILL running (fresh, no writes yet — not stuck), collect surface/lib delta in captain's hands, no action.

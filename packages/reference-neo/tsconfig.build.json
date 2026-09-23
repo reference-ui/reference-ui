@@ -4,8 +4,8 @@
   "compilerOptions": {
     // Compiled-bin emit (FIX-3): layout-preserving transpile of src + bin
     // into dist/. Single-file bundling is architecturally wrong here — the
-    // esbuild alias entries resolve from import.meta.url at different depths
-    // (config/bundle.ts vs fragments/base/bootstrap-import-map.ts), and sync
+    // esbuild alias entries resolve from import.meta.url per-module
+    // (config/bundle.ts vs collect/bootstrap.ts), and sync
     // reads package-relative assets (entry/types.d.mts) — so dist mirrors
     // the source tree and every runtime path computation keeps working.
     "noEmit": false,

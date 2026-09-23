@@ -9,8 +9,8 @@ export {
   type ReferenceTokenConfig,
   type ReferenceTokenLeaf,
   type TokenConfig,
-} from '../fragments/api/index.ts'
-export { keyframes, createKeyframesCollector, type KeyframesConfig } from '../fragments/api/index.ts'
+} from '../collect/surface/index.ts'
+export { keyframes, createKeyframesCollector, type KeyframesConfig } from '../collect/surface/index.ts'
 export {
   font,
   createFontCollector,
@@ -18,10 +18,10 @@ export {
   type FontOptions,
   type FontFaceRule,
   type FontWeightName,
-} from '../fragments/api/index.ts'
+} from '../collect/surface/index.ts'
 export {
   globalCss,
   createGlobalCssCollector,
   type GlobalCssConfig,
   type GlobalCssRule,
-} from '../fragments/api/index.ts'
+} from '../collect/surface/index.ts'

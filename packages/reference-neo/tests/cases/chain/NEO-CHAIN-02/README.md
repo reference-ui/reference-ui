@@ -3,7 +3,7 @@
 Matrix source: `matrix/chain/T7/tests/e2e/T7-contract.spec.ts` (also homes
 the T12 extends legs, a strict assertion-subset). Evidence: `[chain-t7]`
 `T7-contract.spec.ts` (both branch backgrounds + shared-base eyebrows),
-Neo `src/fragments/base/merge.ts` (later fragments win; hosts merge
+Neo `src/collect/lib/merge.ts` (later fragments win; hosts merge
 unique-sorted).
 
 The world extends two branch stand-ins that both republish the same inner

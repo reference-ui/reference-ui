@@ -3,7 +3,7 @@
 // traps, unicode, spaces, deep nesting, a file named dist) and pins the exact
 // match and retention sets, the cwd-spelling invariance, and the out-of-cwd
 // fallback — the diet contract. Semantics come from the native differential
-// in scan-retention.test.ts; this file only locks the scanner to them.
+// in retention.test.ts; this file only locks the scanner to them.
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'

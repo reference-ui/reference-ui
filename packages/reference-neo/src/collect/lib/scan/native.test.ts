@@ -5,8 +5,8 @@
 import { chmodSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { scanFragmentSources } from '../lib/scanner.ts'
-import { scanFragmentSourcesNative } from '../lib/scanner-native.ts'
+import { scanFragmentSources } from './scanner.ts'
+import { scanFragmentSourcesNative } from './native.ts'
 import {
   CSS_RED,
   NEEDLES,
@@ -25,7 +25,7 @@ import {
   releaseToken,
   withTree,
   writeTree,
-} from './scan-native-helpers.ts'
+} from './helpers.ts'
 
 describe('native scan matches and manifest', () => {
   it('(1) matches parity on the tricky tree, order-sensitive', async () => {

@@ -10,8 +10,8 @@ import { dirname, join, relative } from 'node:path'
 import { sep } from 'node:path'
 import fg from 'fast-glob'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
-import { RETENTION_EXCLUDE } from '../lib/scanner.ts'
-import type { ScannedSource } from '../lib/scanner.ts'
+import { RETENTION_EXCLUDE } from '../../constants.ts'
+import type { ScannedSource } from './scanner.ts'
 
 export const NEEDLES = [
   '@reference-ui/neo',
@@ -229,6 +229,7 @@ export async function withTree<T>(
 export function libSystemSpec(): EvaluatedSystemSpec {
   const specPath = join(
     import.meta.dirname,
+    '..',
     '..',
     '..',
     '..',

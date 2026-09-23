@@ -21,11 +21,18 @@ this file in the same pass.
 - **gate** — the structural quality check (`agentneo q`). It fails.
 - **run / list / search / q / report** — the `agentneo` verbs: list
   the catalog, find cases, execute, gate, show tuning data.
-- **above / below the cut** — Neo is TypeScript above (fragments,
+- **above / below the cut** — Neo is TypeScript above (collect,
   publish, runtime); reference-rs is Rust below (atomic, typegen,
   styletrace).
+- **collect** — the collection subsystem (`src/collect/`): scan,
+  bundle, evaluate-once, merge. Renamed from `fragments` per Tokyo
+  item 3 (HQ 2026-09-23): fragments is not a lib, it is a whole
+  subsystem, and the name was wrong — it is a collection system.
+  The collected units keep the old name (below); only the
+  subsystem moved.
 - **fragments** — author call sites (`tokens()`, `font()`, …)
-  evaluated once in Node.
+  evaluated once in Node. The collected units; the subsystem that
+  collects them is **collect**.
 - **EvaluatedSystemSpec** — the frozen wire format crossing the cut.
   Owned by `reference-rs/contracts`, never redefined.
 - **publish** — writing `.reference-ui/{system,styled,react}` from

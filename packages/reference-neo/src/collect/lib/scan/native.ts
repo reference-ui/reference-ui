@@ -14,7 +14,7 @@ import {
   type DiscoveryPattern,
   type ScannedSource,
 } from './scanner.ts'
-import type { ScanOptions } from './types.ts'
+import type { ScanOptions } from '../types.ts'
 
 /**
  * Native retention ref: the compile token, or the TS-fallback bytes when the

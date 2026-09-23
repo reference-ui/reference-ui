@@ -27,7 +27,7 @@ created (PLAN §4.5: rows stay `open` until the proof rung is green):
 
 1. SYNC gap (SPEC §2 escalation): worlds cannot declare `staticCss` —
    `ReferenceUIConfig` (`src/config/types.ts`) has no such field, and
-   `mergeCollectedSpec` (`src/fragments/base/index.ts:255`) hardcodes
+   `mergeCollectedSpec` (`src/collect/lib/evaluate.ts:286`) hardcodes
    `staticCss: {}`. Probed: a world declaring `staticCss: { bg: ['n100'] }`
    syncs to `spec.staticCss = {}` and the sheet lacks the atom. Blocks 01–03.
 2. MERGE gap: the MERGE-06 one-dev-diagnostic does not exist yet

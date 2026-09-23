@@ -2,8 +2,6 @@
 // It takes nothing and emits the collector, scan, and bundle contracts.
 // This module is a Neo-owned copy of the core fragment types trimmed of config templating.
 
-export const CONFIG_FRAGMENT_SOURCE_PROPERTY = '__refConfigFragmentSource'
-
 export interface FragmentCollectorConfig<TInput = unknown, TOutput = TInput> {
   name: string
   targetFunction?: string

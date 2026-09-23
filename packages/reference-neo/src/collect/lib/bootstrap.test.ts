@@ -11,8 +11,8 @@ import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { bundleFragments } from '../lib/index.ts'
-import { getFragmentBootstrapImportMap } from './bootstrap-import-map.ts'
+import { bundleFragments } from './runner.ts'
+import { getFragmentBootstrapImportMap } from './bootstrap.ts'
 
 const PROBE_KEY = '__neoBootstrapAliasProbe'
 

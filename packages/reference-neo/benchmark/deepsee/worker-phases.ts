@@ -17,7 +17,7 @@ import {
   createPortableFragmentBundle,
   evaluatePreparedFragments,
   prepareFragments,
-} from '../../src/fragments/index.ts'
+} from '../../src/collect/index.ts'
 import { resolveJsxElements } from '../../src/sync/jsx-elements.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'

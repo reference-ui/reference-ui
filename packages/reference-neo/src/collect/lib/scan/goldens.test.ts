@@ -10,20 +10,20 @@ import { readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { resolvePlan } from '../../../benchmark/generate/plans.ts'
-import { generateRepo } from '../../../benchmark/generate/generators/index.ts'
-import { loadUserConfig } from '../../config/load.ts'
+import { resolvePlan } from '../../../../benchmark/generate/plans.ts'
+import { generateRepo } from '../../../../benchmark/generate/generators/index.ts'
+import { loadUserConfig } from '../../../config/load.ts'
 import {
   evaluatePreparedFragments,
   prepareFragments,
   scanFragmentFiles,
   scanFragmentFilesNative,
-} from './index.ts'
-import { resolveJsxElements } from '../../sync/jsx-elements.ts'
-import { compileNative, type ScopedCompileRequest } from '../../sync/native.ts'
-import { applyNormalizeCss } from '../../sync/reset.ts'
-import { PRIMITIVE_JSX_NAMES } from '../../primitives/tags.ts'
-import type { ScannedSource } from '../lib/scanner.ts'
+} from '../evaluate.ts'
+import { resolveJsxElements } from '../../../sync/jsx-elements.ts'
+import { compileNative, type ScopedCompileRequest } from '../../../sync/native.ts'
+import { applyNormalizeCss } from '../../../sync/reset.ts'
+import { PRIMITIVE_JSX_NAMES } from '../../../primitives/tags.ts'
+import type { ScannedSource } from './scanner.ts'
 import {
   NEEDLES,
   atomic,
@@ -33,7 +33,7 @@ import {
   manifestSha,
   platformSep,
   releaseToken,
-} from './scan-native-helpers.ts'
+} from './helpers.ts'
 
 interface ScaleFixture {
   scale: string

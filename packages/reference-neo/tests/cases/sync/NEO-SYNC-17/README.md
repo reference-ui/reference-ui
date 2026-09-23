@@ -1,6 +1,6 @@
 # NEO-SYNC-17 — extends strips upstream _private at merge; own _private still paints
 
-Evidence: `src/fragments/api/tokens.ts` header contract (`_private` "stripped
+Evidence: `src/collect/surface/tokens.ts` header contract (`_private` "stripped
 from any downstream consumer that pulls in the package via `extends`"),
 RS BAS-EXTEND-03/05 (engine-side strip at the multi-spec boundary),
 sibling NEO-SYNC-10 (extends adoption baseline — its pins must not move)
@@ -15,7 +15,7 @@ public token plus `colors._private.upstreamSecret` and a top-level
 token paints; (d) the downstream's own `_private` is kept and paints; (e)
 the generated `.d.ts` lacks the upstream private path but keeps the own
 one. Neo evaluates upstream bundles in the same script as local ones, so
-the strip happens TS-side at merge time in `fragments/base` — the Rust
+the strip happens TS-side at merge time in `collect/lib/evaluate.ts` — the Rust
 multi-spec boundary never sees two specs on this path.
 
 > Search terms: extends, private, encapsulation, upstream strip, _private, package-private, hidden, merge boundary, NEO-SYNC-10, NEO-TOKEN-09
