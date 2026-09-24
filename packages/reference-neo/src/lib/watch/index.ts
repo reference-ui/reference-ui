@@ -4,7 +4,8 @@
 // trailing-edge debounce into one serial sync(), so discovery, alignment,
 // and deletion all ride the same full resync. Scope is the config include
 // globs plus the config file's own dependencies; node_modules, the
-// generated folder, git internals, and gitignored paths never emit.
+// generated folder, git internals, and gitignored paths never emit. The
+// session holds the sync lock for its life; a SIGUSR2 poke resyncs now.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -12,6 +13,7 @@ import { subscribe, type AsyncSubscription, type Event as ParcelEvent } from '@p
 import picomatch from 'picomatch'
 import { loadUserConfigWithDependencies } from '../../config/load.ts'
 import { sync, type SyncResult } from '../../sync/index.ts'
+import { acquireSyncSession } from '../../sync/session.ts'
 
 export type WatchEvent = 'add' | 'change' | 'unlink'
 
@@ -270,62 +272,88 @@ function createParcelHandler(state: WatchState, schedule: () => void, reportErro
   }
 }
 
+export interface WatchSyncOptions {
+  breakLock?: boolean
+}
+
 /**
- * Watch the project at cwd: run one baseline sync, then resync on every
- * matched add/change/unlink until stop(). Resyncs debounce to a trailing
- * edge and serialize behind the in-flight sync, so a burst of saves costs
- * one rebuild; a failing resync reports through onError and keeps
- * watching. onResync fires only for watch-driven resyncs, never the
- * baseline. Resolves once the watcher subscriptions are attached.
+ * Watch the project at cwd: hold the sync session lock, run one baseline
+ * sync, then resync on every matched add/change/unlink until stop().
+ * Resyncs debounce to a trailing edge and serialize behind the in-flight
+ * sync, so a burst of saves costs one rebuild; a failing resync reports
+ * through onError and keeps watching. onResync fires only for watch-driven
+ * resyncs, never the baseline. A SIGUSR2 poke (a one-shot meeting the
+ * session) resyncs now. Resolves once the subscriptions are attached.
  */
-export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}): Promise<WatchHandle> {
+export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, options: WatchSyncOptions = {}): Promise<WatchHandle> {
   const projectRoot = resolve(cwd)
   const loaded = await loadUserConfigWithDependencies(projectRoot)
-  await sync(projectRoot)
-
-  const state: WatchState = {
-    projectRoot,
-    isMatch: picomatch(loaded.config.include),
-    dependencyFiles: new Set(loaded.dependencyPaths.map((entry) => resolve(entry))),
-    callbacks,
-  }
-  const roots = deriveWatchRoots(
-    projectRoot,
-    loaded.config.include,
-    [...state.dependencyFiles].map((file) => dirname(file)),
-  )
-
-  let stopped = false
-  const scheduler = createResyncScheduler(async () => {
-    try {
-      const result = await sync(projectRoot)
-      if (!stopped) callbacks.onResync?.(result)
-    } catch (error) {
-      if (!stopped) callbacks.onError?.(toError(error))
-    }
+  const session = await acquireSyncSession({
+    cwd: projectRoot,
+    kind: 'watch',
+    breakLock: options.breakLock ?? false,
   })
-  const reportError = createWatcherErrorHandler(
-    (error) => callbacks.onError?.(error),
-    () => scheduler.request(),
-  )
-  const onParcelEvent = createParcelHandler(state, () => scheduler.schedule(), reportError)
+  // A poke during the baseline queues instead of racing it: the early poke
+  // only records, and the live target drains the flag once attached.
+  let pokeRequested = false
+  let pokeTarget: () => void = () => { pokeRequested = true }
+  const onPoke = (): void => { pokeTarget() }
+  process.on('SIGUSR2', onPoke)
+  try {
+    await sync(projectRoot)
 
-  const subscriptions: AsyncSubscription[] = []
-  for (const root of roots) {
-    subscriptions.push(await subscribe(root, onParcelEvent, { ignore: getIgnoreGlobs(root) }))
-  }
+    const state: WatchState = {
+      projectRoot,
+      isMatch: picomatch(loaded.config.include),
+      dependencyFiles: new Set(loaded.dependencyPaths.map((entry) => resolve(entry))),
+      callbacks,
+    }
+    const roots = deriveWatchRoots(
+      projectRoot,
+      loaded.config.include,
+      [...state.dependencyFiles].map((file) => dirname(file)),
+    )
 
-  async function stop(): Promise<void> {
-    stopped = true
-    await scheduler.settle()
-    await Promise.all(subscriptions.map(async (subscription) => {
+    let stopped = false
+    const scheduler = createResyncScheduler(async () => {
       try {
-        await subscription.unsubscribe()
-      } catch {
-        // Teardown races the backend; a failed unsubscribe is already gone.
+        const result = await sync(projectRoot)
+        if (!stopped) callbacks.onResync?.(result)
+      } catch (error) {
+        if (!stopped) callbacks.onError?.(toError(error))
       }
-    }))
-  }
+    })
+    pokeTarget = () => { scheduler.request() }
+    const reportError = createWatcherErrorHandler(
+      (error) => callbacks.onError?.(error),
+      () => scheduler.request(),
+    )
+    const onParcelEvent = createParcelHandler(state, () => scheduler.schedule(), reportError)
 
-  return { stop }
+    const subscriptions: AsyncSubscription[] = []
+    for (const root of roots) {
+      subscriptions.push(await subscribe(root, onParcelEvent, { ignore: getIgnoreGlobs(root) }))
+    }
+    if (pokeRequested) scheduler.request()
+
+    async function stop(): Promise<void> {
+      stopped = true
+      await scheduler.settle()
+      await Promise.all(subscriptions.map(async (subscription) => {
+        try {
+          await subscription.unsubscribe()
+        } catch {
+          // Teardown races the backend; a failed unsubscribe is already gone.
+        }
+      }))
+      process.removeListener('SIGUSR2', onPoke)
+      session.release()
+    }
+
+    return { stop }
+  } catch (error) {
+    process.removeListener('SIGUSR2', onPoke)
+    session.release()
+    throw error
+  }
 }

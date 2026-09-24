@@ -31,7 +31,9 @@ import { createPortableFragmentBundle } from '../system/base/fragments.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
-import { cleanDir } from './clean.ts'
+import { cleanDir, removeDirIfEmpty } from './clean.ts'
+import { SYNC_LOCK_DIR_NAME, type SyncSessionKind } from './session-owner.ts'
+import { acquireSyncSession } from './session.ts'
 import { assembleSystem } from '../packager/assembly.ts'
 import { markPhase } from './phases.ts'
 import { mergeStreams } from '../system/base/streams.ts'
@@ -76,21 +78,36 @@ function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIC
   )
 }
 
+export interface SyncOptions {
+  sessionKind?: SyncSessionKind
+  breakLock?: boolean
+}
+
 /**
- * Regenerate the `.reference-ui/` folder for the project at cwd. Cleans the
- * stale folder first, evaluates fragments once, compiles the spec natively,
- * then publishes the minimal folder and links the generated packages. The
- * folder is atomic: any failure after the clean removes the output dir again,
- * so a failed sync never leaves a half-written folder behind (SYNC-11).
+ * Regenerate the `.reference-ui/` folder for the project at cwd. Acquires
+ * the session lock first (before the clean, so concurrent syncs never share
+ * the rm-window), cleans the stale folder, evaluates fragments once,
+ * compiles the spec natively, then publishes the minimal folder and links
+ * the generated packages. The folder is atomic: any failure after the clean
+ * wipes everything but the held lock, releases it, and drops the emptied
+ * root, so a failed sync never leaves a half-written folder behind
+ * (SYNC-11). A watch poke cover throws SyncCoveredByWatchError before any
+ * write. The lock releases in the finally, before syncEnd.
  */
-export async function sync(cwd: string): Promise<SyncResult> {
+export async function sync(cwd: string, options: SyncOptions = {}): Promise<SyncResult> {
   markPhase('syncStart')
   const config = await loadUserConfig(cwd)
   markPhase('configEnd')
   const outDir = getOutDirPath(cwd)
-  await cleanDir(outDir)
+  const session = await acquireSyncSession({
+    cwd,
+    kind: options.sessionKind ?? 'one-shot',
+    breakLock: options.breakLock ?? false,
+  })
+  let failed = false
 
   try {
+    await cleanDir(outDir, { preserve: [SYNC_LOCK_DIR_NAME] })
     markPhase('scanStart')
     const prepared = await prepareFragments(cwd, config)
     markPhase('scanEnd')
@@ -179,9 +196,12 @@ export async function sync(cwd: string): Promise<SyncResult> {
 
     return { outDir, spec }
   } catch (error) {
-    await cleanDir(outDir)
+    failed = true
+    await cleanDir(outDir, { preserve: [SYNC_LOCK_DIR_NAME] })
     throw error
   } finally {
+    session.release()
+    if (failed) await removeDirIfEmpty(outDir)
     markPhase('syncEnd')
   }
 }

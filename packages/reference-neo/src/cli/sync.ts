@@ -5,20 +5,22 @@
 // No build logic lives here — the command calls subsystems and reports.
 import type { Command } from 'commander'
 import { resolve } from 'node:path'
+import { SyncCoveredByWatchError } from '../sync/session-owner.ts'
 import { messageOf, printSyncLine } from './output.ts'
 import { runWatch } from './watch.ts'
 
 export interface SyncCommandOptions {
   watch?: boolean
+  breakLock?: boolean
 }
 
-export async function runSyncCommand(dir: string | undefined, watch: boolean): Promise<number> {
+export async function runSyncCommand(dir: string | undefined, watch: boolean, breakLock = false): Promise<number> {
   const cwd = resolve(dir ?? process.cwd())
-  if (watch) return runWatch(cwd)
+  if (watch) return runWatch(cwd, breakLock)
   try {
     const { sync } = await import('../sync/index.ts')
     const started = Date.now()
-    const result = await sync(cwd)
+    const result = await sync(cwd, { breakLock })
     const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
     const build = await flushReferenceBuild(cwd)
     if (build?.status === 'failed') {
@@ -28,6 +30,10 @@ export async function runSyncCommand(dir: string | undefined, watch: boolean): P
     printSyncLine(Date.now() - started, result.outDir)
     return 0
   } catch (err) {
+    if (err instanceof SyncCoveredByWatchError) {
+      console.log(err.message)
+      return 0
+    }
     console.log(`[ref] sync failed: ${messageOf(err)}`)
     return 1
   }
@@ -39,7 +45,8 @@ export function registerSyncCommand(program: Command, report: (code: number) => 
     .description('generate the .reference-ui folder; --watch stays resident and resyncs on change')
     .argument('[dir]', 'project dir (defaults to cwd)')
     .option('--watch', 'stay resident and resync on every matched change')
+    .option('--break-lock', 'take the sync session lock unconditionally')
     .action(async (dir: string | undefined, options: SyncCommandOptions) => {
-      report(await runSyncCommand(dir, options.watch ?? false))
+      report(await runSyncCommand(dir, options.watch ?? false, options.breakLock ?? false))
     })
 }

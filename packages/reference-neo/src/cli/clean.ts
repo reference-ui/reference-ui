@@ -1,9 +1,10 @@
-// CLI clean command: it takes the project dir and emits an empty out dir
-// plus pruned scope links. The link list stays derived from the packager's
-// PACKAGES, never mirrored; the folder wipe goes through the retrying
-// cleanDir primitive sync itself uses, so a concurrent writer's landing
-// converges instead of failing the remove. Reporting stays here; the
-// subsystems own the list, the wipe, and the link surgery.
+// CLI clean command: it takes the project dir and emits a removed out dir
+// plus pruned scope links. Clean is a writer-kind lock holder: it acquires
+// the session lock first (killing any live holder per the matrix), wipes via
+// the preserving cleanDir, releases, and drops the emptied root — so a clean
+// landing mid-sync can no longer replay the rm-window race. The link list
+// stays derived from the packager's PACKAGES, never mirrored. Reporting
+// stays here; the subsystems own the list, the wipe, and the link surgery.
 import { Option } from 'commander'
 import type { Command } from 'commander'
 import { existsSync } from 'node:fs'
@@ -12,7 +13,9 @@ import { getOutDirPath } from '../lib/paths/out-dir.ts'
 import { removeGeneratedLink } from '../lib/symlink/index.ts'
 import { getShortName } from '../packager/layout.ts'
 import { PACKAGES } from '../packager/packages.ts'
-import { cleanDir } from '../sync/clean.ts'
+import { cleanDir, removeDirIfEmpty } from '../sync/clean.ts'
+import { SYNC_LOCK_DIR_NAME } from '../sync/session-owner.ts'
+import { acquireSyncSession } from '../sync/session.ts'
 import { messageOf, printUsageError } from './output.ts'
 
 const LINKED_PACKAGES = PACKAGES.map((pkg) => getShortName(pkg.name))
@@ -37,9 +40,17 @@ export async function runCleanCommand(dir: string | undefined, watch: boolean): 
   const cwd = resolve(dir ?? process.cwd())
   const outDir = getOutDirPath(cwd)
   try {
+    // Read before the acquire mkdirs: the message reports the pre-clean state.
     const hadFolder = existsSync(outDir)
-    await cleanDir(outDir)
-    const links = removeScopeLinks(cwd, outDir)
+    const session = await acquireSyncSession({ cwd, kind: 'clean' })
+    let links = 0
+    try {
+      await cleanDir(outDir, { preserve: [SYNC_LOCK_DIR_NAME] })
+      links = removeScopeLinks(cwd, outDir)
+    } finally {
+      session.release()
+    }
+    await removeDirIfEmpty(outDir)
     if (!hadFolder && links === 0) {
       console.log(`[ref] clean: nothing to remove at ${outDir}`)
       return 0
