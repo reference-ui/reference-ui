@@ -19225,3 +19225,844 @@ T9 6/6, T10 3/3, T11 3/3, T12 3/3, T13 4/4, mcp 18 files /
   §7), each diffed `--cached` before commit; PLAN.md/LOGs
   excluded from both. Report only — nothing committed,
   index untouched by these hands.
+
+## Landings — enabler 651394493 + S5 0eace30cf + logs 0c81b9184 (captain, 2026-09-24)
+Double-LAND executed stepped enabler-first. ENABLER (27 files, 41+/41-): firsthand mechanical (all hunks neo→ref invocation/path/alias-only), zero functional survivors, ref resolves, template 8/8, mcp builds with exact barrel exports. S5 (24 files, +212/−758): firsthand units 55/383, tsc 0, q 0/18, cases 197/197, hermetic T1 3/3+7/7, hermetic T2 3/3+3/3 (the D17 flip), sweeps zero. Third missed companion found during landing (mcp vitest.config stale fragments aliases — pre-existing, filed with the tsconfig + materialize follow-ups for the rename/prose crew). Tree then held only logs (committed per precedent) + PLAN.md (HQ bytes, left uncommitted, not mine).
+
+## Dispatch — wave8-pgen-station/127 away (captain, 2026-09-24)
+PGEN station implementer briefed: survey-first (E2 live? bound roster? live RS tables readable? case scaffolding?), then build the provable subset (PGEN-12/13 parity with drift-injection negatives, PGEN-15..20 E4 type cases with pinned codes, PRIM-09/10 re-anchors) as tests/cases/pgen/ with SPEC.md carrying per-case LIVE-vs-BLOCKED status for morning W4 waves. PLAN.md read-only. Proof: pgen green + units green + q clean. Next after its report: verifier → landing → prose sweep (G4 + stragglers + PLAN §3.5?) → 11AM brief.
+
+## Tick — pgen/127 surveying, tree clean, no action
+Roster: only wave8-pgen-station/127 running (~5 min old, survey phase — no products yet, expected; deadlock bar N/A). No pgen report filed. Tree holds only my landing/dispatch log lines + HQ's PLAN.md. HEAD is my own log commit (5 min, complete, no active gates) — no mid-landing conflict. Nothing verified to land, nothing to dispatch until pgen's report. Next: pgen report → verifier → landing → prose sweep → 11AM brief.
+
+## Tick (health-check) — pgen/127 scaffolding fast, no action
+Roster: only wave8-pgen-station/127 running (~8 min old); first products already in tree (untracked tests/cases/pgen/ group dir) — surveying + scaffolding, moving, no ping. No pgen report yet. Peers unchanged (HQ's PLAN.md bytes still the only foreign ink, untouched). Obj1/2/3 COMPLETE, night waves banked (24 commits, latest logs 0c81b9184); Obj4/5 in LANDING.md undispatched (HQ morning call). No oracle word → no landings, no dispatches. Next: pgen report → verifier → landing → prose sweep → 11AM brief.
+
+## WAVE8-PGEN — primitives test station built, 8/8 green (crew, 2026-09-24)
+
+Scope: wave-8 implementer brief. Governing specs read first (PLAN.md §3.9 + NIGHT-5 station list + landed shelf + vendor tool); agent-neo + test-core skills loaded. PLAN.md untouched (HQ bytes, read-only). No commits. No RS changes. No other session's files touched.
+
+### Survey (recorded, not assumed)
+
+(a) E2 LIVE: `@reference-ui/rust/primitives` resolves from the Neo package with 108 exports = 101 JSX roster + 7 helpers (Fragment, createElement, 3 contexts, useColorMode, configurePrimitives). No SVG children (no Path), no Box. Components are unbound (empty splitter, throwing css). The runtime trio (factory/split/context) is NOT package-exported — reachable only through E2's components + seam. E2 dist types do NOT declare configurePrimitives, and the typegen entry's types do not expose primitivesVocabulary under package resolution: both specs import dynamically and narrow structurally.
+(b) NO bound per-system roster exists anywhere: zero configurePrimitives references in Neo src/tests; publishReactBundle still string-builds; tags + react-surface still the live path. W4's scope confirmed absent.
+(c) Live RS tables readable two ways. Canon has NO napi/dist export: read via Rust SOURCE import (html.rs ELEMENTS + PRIMITIVE_JSX block parse, conditions.rs NAMED_CONDITIONS, overlay partition parse — the generator's own discipline). Canon carries 125 rows, not 101: the 101/24 namespace split lives in the TS overlay partition, which the spec replays live (text parse + imported-array cross-check). Typegen PropDefs names read LIVE over napi: primitivesVocabulary() from the typegen entry returns {props[1391], domains, conditions[79], aliases[319], dialect[5]}.
+(d) tests/cases/ holds 19 groups, no pgen; copied the prim/type shape (case.json + README + specs + world). Worlds need index.html (preflighted 200); sync is opt-in per case.json; `agentneo run [id-or-prefix]` takes the NEO-PGEN group prefix; type cases follow the TYPE-02/08 + PRIM-10 temp-dir tsc pattern (world tsconfig paths rewritten absolute + react shims, nothing red committed).
+
+### Per-case status (SPEC.md carries the full 22-row checklist)
+
+LIVE tonight (8): PGEN-12 set parity (roster == E1 == canon HTML partition, pinned 101, retired-24 pinned vs live SVG partition, drift-injection trips); PGEN-13 prop parity (E1 == napi props == E4 union, conditions == napi == canon NAMED_CONDITIONS, alias map + bg/mt probes, E1 binds through configurePrimitives returning 101, drift-injection trips); PGEN-15 (TS2353 via props object; css-Record openness pinned exit-0 for W4); PGEN-16 (TS2322 via mistyped token value; nope-hatch documented per TYP-STRICT-04); PGEN-17 WEAK (selection assigns; wrong-axis assigns too — variant unknown until W4, openness probe ready to flip); PGEN-18 (TS2353 on bare sm; arms + null-hole arrays assign); PGEN-19 (TS2314 bare generic + TS2322 div-ref-into-input; probe direction pinned by lib.dom subtyping); PGEN-20 (TS2305 imports + TS2353 as-prop + E4 panda-clean). Re-anchors landed: PRIM-09 census vs E1 (101), PRIM-10 surface vs E4.
+BLOCKED-on-W4 (8): PGEN-01..06 + PGEN-11 + PGEN-14 (need bound-roster render), PGEN-22 + TYPE-01 (need bound per-system entry with narrowed unions). DROPPED by namespace law (5): PGEN-07..10 + PGEN-21. All negative vehicles verified firsthand with real tsc before authoring; the two NIGHT-5 vehicles that cannot fail on raw E4 (css-object TS2353, wrong-axis error) are documented with the exact W4 surface that flips them.
+
+### File list (exact)
+
+New group tests/cases/pgen/: SPEC.md, TESTS.md, shared/parity.ts, shared/typecheck.ts; NEO-PGEN-12 + NEO-PGEN-13 (case.json, README, specs/parity.spec.ts, world/index.html, no sync); NEO-PGEN-15..20 (case.json sync:true, README, specs/type.spec.ts, world with index.html + tsconfig.json mapping @pgen/primitives at the vendored E4 + ui.config.ts + src/tokens.ts + src/app.tsx). Edited: prim/NEO-PRIM-09/specs/census.spec.ts (+18 E1 anchor), prim/NEO-PRIM-10/specs/surface.spec.ts (+30/-2 E4 anchor). Shelf, vendor tool, PLAN.md, RS: untouched.
+
+### Proof numbers
+
+`pnpm agentneo run NEO-PGEN`: 8/8 PASS (12, 13, 15, 16, 17, 18, 19, 20). PRIM-09 + PRIM-10 with re-anchors: PASS. Neo units: 55 files / 383 tests PASS. `pnpm agentneo q` over the 24 authored files: 0 errors, 1 non-blocking warn (pre-existing PRIM-10 file length, was already near the line). Drift red-then-green: temp-dir drill shows clean→silent / Div-drop→missing:Div / Box-add→extra:Box / color-drop→missing:color; case-level injection (Div dropped from the live assert) fails `drift (101 expected, 100 actual): missing: Div`, restored file green. Worlds' .reference-ui/dist products are gitignored; tree holds only the pgen dir + two spec edits + this log section.
+
+### W4 handoff (missing surfaces, named)
+
+(1) Bound per-system roster: publishReactBundle binds E2 via configurePrimitives (systemName/stylePropNames/css) + world alias repoint — unblocks PGEN-01..06/11/14. (2) Bound per-system entry types: E4 consumed and narrowed per system (exact StylePropName union, variant recipe unions, css toward SystemStyleObject) — unblocks PGEN-22/TYPE-01 and flips the PGEN-15 css + PGEN-17 variant openness probes to negatives. (3) tags + string-entry + react-surface deletion after cutover. Prose/rename leftovers ride another crew. Report only.
+
+## Dispatch — wave8-pgen-verify/128 away (captain, 2026-09-24)
+PGEN implementer DONE (## WAVE8-PGEN: 8 live cases, PRIM-09/10 re-anchors, SPEC.md 22-row checklist, PGEN-17 filed WEAK + 2 vehicles documented un-failable-on-raw-E4, never committed). Report complete and self-flagging. Verifier briefed adversarial: 8/8 + re-anchors + units + q firsthand, drift red-then-green reproduced cleanly, survey spot-checks, WEAK ruling (landable pinned-openness or must-harden?), un-failable-doc verification (try to fail them), checklist accuracy, footprint exact. Zero edits, report only. Landing follows on LAND + captain firsthand gates; then prose sweep → 11AM brief.
+## WAVE8-PGEN-VERIFY — LAND (verifier, 2026-09-24)
+
+Adversarial read-mostly pass over ## WAVE8-PGEN. agent-neo skill loaded first. Zero source edits, nothing committed, no other session's files touched (drivers lived in /tmp/pgen-verify/). Every number below firsthand-observed this session.
+
+### 1. GREEN — all four gates reproduced
+- `pnpm agentneo run NEO-PGEN`: 8/8 ok, fresh timestamps (NEO-PGEN-12/13/15/16/17/18/19/20, last-run.json status ok). Exit 0.
+- `pnpm agentneo run NEO-PRIM-09` → PASS census.spec.ts; `NEO-PRIM-10` → PASS surface.spec.ts, both with re-anchors in place.
+- Neo units (`vitest run` in packages/reference-neo): 55 files / 383 tests, all passed.
+- `pnpm agentneo q` over the 28 pgen TS files + 2 PRIM specs (30 files, superset of the filed q-scope): 0 errors, 1 non-blocking warn — PRIM-10 surface.spec.ts file-lines 441 > 365. Pre-existing kind confirmed: HEAD Revision was already 414 lines, over the warn line before the +30/-2 anchor edit.
+
+### 2. DRIFT-INJECTION — red-then-green reproduced, tree untouched
+Temp-copy drill (/tmp/pgen-verify/drift.mjs) importing the REAL shared/parity.ts read-only: baseline green (no throw); Div-drop → `[pgen] drill: drift (101 expected, 100 actual): missing: Div`; Box-add → `drift (101 expected, 102 actual): extra: Box`; color-drop → `drift (1391 expected, 1390 actual): missing: color`; assertDetectsDrift trips on tampered copies and reports clean copies undetected; restore green. Message shape matches the filed case-level format exactly. Cases fail LOUD with exact missing:/extra: lines — no silent path.
+
+### 3. SURVEY SPOT-CHECKS — no falsehoods
+- E2: 108 exports = 101 roster + exactly the 7 pinned helpers; Box/Path absent, Svg (the host itself) present. Matches survey (a).
+- Bound roster absent: zero configurePrimitives in Neo src/ and pre-existing tests — the only two references are the new PGEN-12/13 specs' own seam probes. publishReactBundle (packager/react.ts) string-builds via generate+join+microbundle, no seam import. E2 dist throws "[primitives] unbound primitives never render", carries `css: unboundCss`, and its .d.ts declares configurePrimitives zero times. Matches survey (b).
+- Canon read is source-parse discipline: parity.ts/spec read html.rs + conditions.rs + overlay .ts via fs with pinned row shapes; no napi import for canon anywhere in the station. Napi primitivesVocabulary() returns props[1391], conditions[79], aliases[319], dialect[5] (+domains 1391) — matches survey (c) exactly.
+
+### 4. WEAK RULING — pinned-openness landable tonight, no hardening possible
+- Flip surface is exact: OPEN_CSS (PGEN-15) and OPEN_VARIANT (PGEN-17) consts plus their `assert.equal(code, 0)` blocks keyed "stays open until the W4 bake". When the W4 bake narrows the type, the pins turn red by themselves — that IS the signal. READMEs name the narrowing (css → system style object; variant → recipe unions, plain unions per TYP-RECIPE-01) and the flip (to a negative / the wrong-axis negative). A W4 reader knows exactly what turns them red and what to rewrite. LAND as WEAK + pinned-open.
+- Un-failable-doc verified by attack (/tmp/pgen-verify/vehicles.mjs, real typecheckFile + world tsconfigs): css bogus-key / css-array-bogus / css-deep-nesting / variant wrong-value / variant bogus-axis / variant-42 ALL exit 0 — I could not fail either vehicle. Controls in the same harness fail loud (props-object bogus → TS2353, css:42 → TS2322). Structural cause confirmed in E4 text: `PrimitiveCssProp = Record<string, unknown> | Array<Record<string, unknown>>`, `variant?: unknown`. Doc is right; no HOLD.
+
+### 5. CHECKLIST ACCURACY — 22 rows reconcile
+7 LIVE (12/13/15/16/18/19/20, all passing firsthand) + 1 WEAK (17, passing) + 9 BLOCKED (01..06/11/14 need bound-roster render; 22 needs the bound per-system entry) + 5 DROPPED (07..10/21) = 22. BLOCKED is genuine in every row: E2 throws unbound, no bound assembly or bound entry exists (shelf holds raw E4 + vocabulary.json only), and NIGHT-5 requires the RS-emitted bound roster — hand-binding with a stub css would prove a test fake, so nothing BLOCKED is buildable tonight. (PGEN-11's checkable fragment, roster absence of Box/Flex/Grid, is already covered transitively by PGEN-12's 101-equality + PGEN-20's TS2305; its render legs need W4 — finding, not a hold.) DROPPED is exactly the HQ namespace-law SVG set, confirmed against the PLAN §3.9 amendment diff. NIGHT-5 adaptations are honest and disclosed: PGEN-12's 125→101+24-tripwire follows the amendment; PGEN-13's bound-splitter leg becomes seam-bind (SPEC Approved absences); PGEN-16's `color="nope"→TS2322` becomes documented-hatch + `42→TS2322`, explicitly permitted by NIGHT-5's TYP-STRICT-04 parenthetical.
+
+### 6. FOOTPRINT — exact, with one count correction (finding, not hold)
+- Authored: 60 files, not 24 — `git add -n` dry-run lists exactly the 60 (8 case.json + 8 README + 2 parity.spec + 6 type.spec + 6 ui.config + 6 tokens + 6 app + 6 tsconfig + 8 index.html + SPEC + TESTS + 2 shared), zero under .reference-ui/ or dist/. The filed "24" counts only the type-case TS files (6 cases × 4); the filing's own file-list prose describes all 60. My gate covered the 28-TS superset: clean.
+- PRIM edits anchor-only: PRIM-09 +18 (header + imports + assertVocabularyAnchor + call), PRIM-10 +30/-2 (header + import + assertE4Anchor + call). Additive asserts only; no existing assertion touched.
+- src/ and RS: `git status` clean on both. PLAN.md dirt is HQ/captain bytes (Final rulings incl. the §3.9 namespace amendment, zero station content) — not the implementer's. LOG.md holds one tick line; LOG-2 holds captain entries + the WAVE8-PGEN section.
+
+VERDICT: LAND. Findings for the landing crew: (i) correct the filed "24 authored" to 60 in the landing note; (ii) PGEN-11's type-side absence already rides PGEN-12+20, no action. Report only.
+
+## Landing — pgen c4ea422c1 (captain, 2026-09-24)
+PGEN station landed (25th commit, 62 files +1900/−2): 8 live cases + SPEC/TESTS/shared + PRIM-09/10 anchors. Firsthand: pgen 8/8 (205 total), units 55/383, q 0 errors on exact authored list (PRIM-10's 1 warn pre-existing), footprint 60+2 with zero generated. Adopted verifier-firsthand: drift red-then-green + exact message shape, survey spot-checks, WEAK-landable ruling (flip surfaces exact), un-failable-doc attack, 22-row reconciliation. T1 skipped with reason (tests-only, zero src). Landing notes: (i) filed "24 authored" corrected to 60; (ii) scoped-q-on-directory descends into gitignored world products (1446 fake errors) — scope by explicit file list (git add -n) instead; (iii) git add -n paths come single-quoted, strip before reuse.
+
+## Dispatch — wave8-prose-sweep/129 away (captain, 2026-09-24)
+Prose sweep briefed in three parts: (1) G4 prose (user-lying `neo sync` strings first, NEEDLE survey-before-rename, before/after censuses); (2) three functional stragglers (mcp tsconfig + vitest.config mirrors, materialize 2-liner) each with red→green proof; (3) PLAN §3.5 ban filing APPEND-ONLY (zero HQ bytes touched, hunk-staging-clean). Out: behavior, RS, tests/cases. Proof: units + q + mcp build/typecheck + template 8/8. Then: verifier → landing → 11AM brief.
+
+## Tick — prose/129 surveying, tree clean, no action
+Roster: only wave8-prose-sweep/129 running (~5 min old, census phase — no products yet, expected; deadlock bar N/A). No prose report filed. Tree holds only log ink + HQ's PLAN.md. HEAD is my own pgen commit (5 min, complete, no active gates) — no mid-landing conflict. Nothing verified to land, nothing to dispatch until prose's report. Next: prose report → verifier → landing (incl. §3.5 hunk-stage) → 11AM brief.
+
+## WAVE8-PROSE — G4 prose dead + 3 stragglers closed + §3.5 filed (crew, 2026-09-24)
+
+Scope: wave-8 tail brief, three parts. agent-neo skill loaded first. Never committed. No other session's files touched (PLAN §3.5 pure-insertion, LOG pure-append; HQ/captain hunks byte-identical). No RS, no tests/cases, no matrix, no shelf/vendor, no behavior changes.
+
+### Per-file list (29 files + this log)
+
+PROSE (24): mcp `src/pipeline/build.ts:45`, `src/server/project-context.ts:53`, `src/pipeline/build.test.ts:123` (pin lockstep), `README.md:53`, `tools.md:300`; pipeline `testing/matrix/managed/tsconfig/index.ts:5`, `runner/package-runner.ts:206,209,221,253`, `runner/ref-sync-support/wait-ready.mjs:4,66,69`, `runner/ref-sync-support/run-watch-session.mjs:4,85,138,143,163`, `testing/matrix/setup/index.ts:157`, `testing/matrix/README.md:63`; banners `neo/src/packager/constants.ts:7`, `neo/src/primitives/generate/generate.ts:31,73`, `neo/src/system/base/sources.test.ts:14` (pin lockstep); fixtures `neo/src/collect/lib/scan/helpers.ts` (7 refs → `src/ref.ts`, `src/.hidden-ref.ts`, `src/t-ref.d.ts`), `neo/src/collect/lib/scan/identity.test.ts` (4 filename refs + 2 `ref-scanner-*` tmp prefixes); READMEs root `README.md:9,38,46,48,49`, `lib/README.md:13`, `neo/src/lib/watch/README.md:3` + `watch/index.ts:1`, `neo/README.md:65,75,76`, `neo/tools/README.md:94,96,103,108,115`, `neo/src/cli/README.md:3`, `neo/src/lib/symlink/README.md:37` (dead-binary refs: `neo sync`, `` `neo` `` CLI, `bin/neo.ts`, `bin/neo.test.ts`, `dist/bin/neo.js`, `.bin/neo`, `neo clean` — all verified dead against `bin/ref.ts`, `bin/ref.test.ts`, `dist/bin/ref.js`, sync/clean/watch verbs).
+STRAGGLERS (3): `mcp/tsconfig.json` (3 paths → `collect/lib/runner.ts`, `collect/lib/scan/scanner.ts`, `collect/surface/tokens.ts`, byte-mirror of tsup), `mcp/vitest.config.ts` (same 3), `pipeline/src/dev/materialize.ts:226,368` (`\bref\s+` + `pnpm exec ref `, lookbehind kept; comment retargeted).
+§3.5 (1): `neo/PLAN.md` — 20-line FILED block (S5 deletion inventory, the four-name + `css?: string` + `.css`-reader ban, S4-audited exempts, 3 provenance pointers, PGEN living proof).
+
+### Censuses (tracked files, before → after)
+
+- `neo sync`: mcp 7 → 2 (dual keepers), pipeline 15 → 0, root README 3 → 0, lib/watch/testing READMEs 3 → 0, watch index 1 → 0. Survivors elsewhere all keeps: docs/ (rename-commit "docs untouched" boundary, not READMEs), matrix/ + fixtures (tiers out), tests/cases (pgen landed, out), LOGs/ARCHIVE/doom-log (history), `packages/reference-docs/package.json:7-8` (FUNCTIONAL, 4th straggler — finding F1, not taken).
+- `pnpm exec neo`: 3 → 0 in code (materialize ×2 flipped); rest LOGs/archive history only.
+- Banners `Generated by @reference-ui/neo sync` → `Generated by ref sync` (4 flipped: const + 2 generate sites + pin; zero pins in tests/matrix/bench/playground/tools verified before flip). 3 evidence baselines kept (read-only probe reports).
+- Fixtures `src/neo.ts`/`hidden-neo`/`t-neo`/`neo-scanner` (+ `bin/neo*`): 0 outside keeps (PLAN HQ bytes :433,436,509 — append-only, untouchable).
+- `.store`: zero tracked files (gitignored Verdaccio state); 2 staged `readme` mirrors heal on re-pack (G2 precedent) once the flipped source READMEs repack.
+- `NEEDLE` consts + entries: UNCHANGED (decision below). `mcp: Neo author entry` message + `neo-author.mjs` + `resolveNeoAuthorEntry`/`getNeoAuthorImportMap` + `src/neo/` dir: UNCHANGED (live `@reference-ui/neo` package concept — renaming would lie; dist name is a resolution contract). `[neo] sync warning`/`[neo] compiler` output: UNCHANGED (contract pinned by out-of-scope NEO-SYNC-16 specs :60/:77/:87 — needs a case-riding crew). `[neo] [ref]` bridge badge: UNCHANGED (intentional identity, not `neo sync` prose). materialize fn name + `:221` rationale comment: UNCHANGED (brief's 2-line pin covers the two `pnpm exec neo` lines; rename is cosmetic follow-up).
+
+### NEEDLE decisions (survey-first, all keep)
+
+`MCP_FRAGMENT_NEEDLES` (mcp author-entry.ts:13) and `FRAGMENT_IMPORT_NEEDLES` (neo collect/constants.ts:8) carry identical entries incl. `@reference-ui/neo`, `@reference-ui/neo/config`. Both are MATCHING CONTRACTS, not cosmetic: mcp feeds them to esbuild `importFrom` (tokens.ts:129) + alias-map keys (tokens.ts:134), neo feeds them to evaluate `importFrom` (:95/:106) + the scan/engine byte-for-byte mirror (constants.ts:2-4, helpers/identity tests). The `@reference-ui/neo*` entries name the LIVE package — renaming would silently drop fragment detection. The const NAMES contain no `neo`. Verdict: document-and-keep, zero renames. Same for `NEO_IMPORT`/`NEO` consts + "neo importer(s)" comments + `@reference-ui/neo` fixture contents (named for the live package id under test; only the arbitrary fixture FILENAMES + tmp prefixes flipped).
+
+### Proof numbers (all firsthand this session)
+
+- (a) mcp typecheck: RED 6 errors (4×TS2307 on the 3 stale ids + 2×TS7031 knock-ons, tokens.ts) → GREEN exit 0.
+- (b) mcp vitest: 14/16 files (tokens.test + tokens-load dead on `fragments/tokens` resolution, 83 passed) → 16/16 files, 89/89 tests. Suite exercises the aliases — no probe needed.
+- (c) materialize: module test covers only patch helpers (6/6, unaffected) → temp probe `/tmp/prose-probe-materialize.mjs` through the REAL exported `materializeRegistryBackedDevWorkspace` (gitignored fixture under `.pipeline/`, removed after): BEFORE bare-`ref` untouched + bare-`neo`→`pnpm exec neo`; AFTER 5/5 PASS (bare ref fires, mid-string fires with flags preserved, pre-prefixed untouched, bare neo retired, unrelated untouched). Probe kept in /tmp, never committed.
+- Neo units: 55 files / 383 tests PASS (exact S5/PGEN counts; scan goldens seal green on renamed fixtures).
+- `pnpm agentneo q` over the 6 touched neo code files: 0 errors, 0 warnings.
+- mcp build: exit 0 (`neo-author.mjs` still emitted — live artifact, kept). Template test: 8/8 still. No `git mv`/staging touched — index as found.
+
+### §3.5 hunk location + findings
+
+Hunk: `@@ -178,6 +173,26 @@` in `packages/reference-neo/PLAN.md` (insert after §3.5 line 174 `stays CSS-scoped.`, before the blank + `### 3.6`): ZERO minus lines (verified), disjoint from HQ hunks (prior ends new-148, next starts new-213 — 25/15 lines clear). Stage it solo by hunk.
+F1 (functional, out of scope): `packages/reference-docs/package.json:7-8` still invokes bare `neo sync` ×3 (dev + build) against the dead binary — needs a captain call (4th straggler, beyond the named 3). F2 (docs): `docs/BUGS/MCP_DEFAULT_PROJECT.md:24` quotes the pre-flip `project-context` message — stale now, rides a docs crew. Report only.
+
+## Tick (health-check) — prose filed, verifier/130 away, no action
+Prose implementer DONE (## WAVE8-PROSE: 24 prose + 3 stragglers + §3.5 pure-insert, censuses + red→green proofs firsthand, F1/F2 findings). Report complete → dispatched wave8-prose-verify/130 (adversarial: census re-greps, keep-decision concurrence incl. SYNC-16-pin check, stragglers with own materialize probe, §3.5 one-hunk-zero-minus + HQ-untouched check, gates, 29-file diff-smell, F1/F2 concurrence). Roster: 129 winding down + 130 running; no pings. F1 (reference-docs dead-neo ×3) ruled morning-call, NOT folded into this arc (untouched + unproven). Obj1/2/3 COMPLETE, night waves banked (25 commits); Obj4/5 in LANDING.md undispatched (HQ morning call). No landings this tick (awaiting oracle word). Next: prose-verify LAND/HOLD → landing (incl. §3.5 hunk-stage) → 11AM brief.
+
+## WAVE8-PROSE-VERIFY — LAND (verifier, 2026-09-24)
+
+Adversarial read-mostly pass over ## WAVE8-PROSE. agent-neo skill loaded first. Zero source edits (this section only), nothing committed, no other session's files touched (probe + fixture lived in /tmp + gitignored .pipeline/, both removed; PLAN.md read-only). `git status` before == after (same 30 M, index empty, zero untracked) — no post-filing drift. Every number below firsthand-observed this session.
+
+### 1. PROSE CENSUSES — all decisive greps re-run green
+- `neo sync`: mcp exactly 2 (model-state.ts:48, child-process/entry.ts:73 — both dual `neo|ref` error-classifier arms, keepers); pipeline 0; all READMEs 0. HEAD before-counts confirm the filed deltas: mcp 7 (5 flipped + 2 keepers), pipeline 15, root README 3.
+- `pnpm exec neo`: 0 in code — sole survivor outside LOGs is docs/archive/REFERENCE_UI.md:400 (archive history, excepted). (Count note: filed "3 → 0 in code" is 2 in code [materialize ×2] + 1 archive; after-state as claimed.)
+- Banners: new `Generated by ref sync` at exactly 4 sites (constants.ts:7, generate.ts:31/:73, sources.test.ts:14 pin); old string survives ONLY in LOG-2 history + the 3 read-only evidence baselines — zero pins in tests/matrix/bench/playground/tools.
+- Fixtures: `src/neo.ts`/`hidden-neo`/`t-neo`/`neo-scanner`/`.bin/neo` zero anywhere tracked; `bin/neo*` survivors only in keep-list areas (docs/ boundary, PLAN HQ :433/:436, tests/cases READMEs). Bin reality: `bin/` = ref.ts/ref.test.ts only, `dist/bin/` = ref.js/ref.d.ts only.
+- `.store`: 0 tracked files. Index: `git diff --cached` empty.
+
+### 2. KEEP DECISIONS — concur on all six
+- NEEDLE consts: concur — mcp feeds `MCP_FRAGMENT_NEEDLES` (author-entry.ts:13, incl. `@reference-ui/neo` + `/config`) to esbuild scan `importFrom` (tokens.ts:129) and the alias map (tokens.ts:134 → getMcpFragmentImportMap); neo feeds identical `FRAGMENT_IMPORT_NEEDLES` (constants.ts:8) to evaluate `importFrom` (:95/:106) under the byte-for-byte scan-mirror contract (constants.ts:2-4). Rename would silently drop fragment detection. `NEO_IMPORT` contents kept, only arbitrary fixture filenames flipped.
+- neo-author.mjs + resolveNeoAuthorEntry + src/neo/: concur — live package concept; tsup.config.ts:58 emits the `neo-author` entry and author-entry.ts:29 resolves the dist sibling first (resolution contract; file freshly emitted by my build run).
+- `[neo] sync warning` / `[neo] compiler`: concur — NEO-SYNC-16 pins exist EXACTLY at specs/compiler.spec.ts:60/:77/:87, plus unit pins in sync.test.ts:430/465/471/490. Out-of-scope specs; needs a case-riding crew.
+- `[neo] [ref]` bridge badge: concur — logging.ts:1-4 header documents `[neo]`-prefix-as-house-convention; intentional dual identity, not `neo sync` prose.
+- materialize fn name + :221 comment: concur — brief-excluded cosmetic; the diff flips exactly the functional pair (:226 regex now `\bref\s+`→`pnpm exec ref ` with lookbehind kept, :368 comment retargeted), nothing else in the file.
+
+### 3. STRAGGLERS — red→green reproduced where after-state permits
+- mcp typecheck: exit 0. mcp vitest: 16/16 files, 89/89 tests — tokens.test (4) + tokens-load.test (2) green, the suites that exercise the re-pointed aliases.
+- materialize: MY OWN probe (/tmp/probe-verify-130.mts via pipeline tsx) through the REAL exported `materializeRegistryBackedDevWorkspace`, gitignored fixture (verified `git check-ignore`), 6/6 PASS: bare `ref` fires, ref+flags fires, pre-prefixed untouched, bare `neo` retired, mid-string fires, unrelated untouched. Fixture + workdir removed after; never committed.
+- Byte-mirror: tsconfig + vitest.config re-points identical to tsup.config.ts:21-23 (`collect/lib/runner.ts`, `collect/lib/scan/scanner.ts`, `collect/surface/tokens.ts`); all 3 targets exist.
+
+### 4. §3.5 HUNK — pure insertion, HQ untouched, content true
+- `@@ -178,6 +173,26 @@`: exactly ONE added hunk (+20 FILED lines, ZERO minus lines), inserted after §3.5 `stays CSS-scoped.` before `### 3.6`. Disjointness: prior hunk ends new-148, next starts new-213 (25/15 clear) — hunk-staging-clean. All other hunks HQ/captain-voiced Final rulings matching pre-sweep descriptions (PGEN-VERIFY cited the §3.9 amendment before prose existed); the additive hunk touches zero existing bytes.
+- Content accuracy vs landed reality: S5 commit 0eace30cf deleted packed-css.ts (128 lines: PackedUpstream/stripResetLayer/mergePackedStylesheets exports confirmed) + 364-line battery; `css?:` zero in system/base; packed names sweep = exactly the 3 marked provenance comments (streams.ts:6, streams.test.ts:4, streams-goldens.test.ts:4-5); `.css` hits in sync are `styles.css` output filenames (exempt kind); `css?: PrimitiveCssProp` in vendored primitives (never string); absence-pins real as `!('css' in baseSystem)` (LAYER-02:88, SYNC-03:51) + `.toBe(false)` (sync.test.ts:298) — the filed backtick quote elides `in baseSystem`, kind accurate; PGEN pointer true (tests/cases/pgen/ 8/8 landed c4ea422c1).
+
+### 5. GATES — all firsthand
+Neo units 55/383 PASS; `agentneo q` on the 6 touched neo code files 0 errors 0 warnings; mcp build exit 0 (`neo-author.mjs` emitted, fresh mtime); template test (managed/package-json) 8/8; materialize.test.ts 6/6 unaffected; matrix runner ref-sync+logs 8/8 (extra: guards the flipped runner strings).
+
+### 6. FOOTPRINT — 28 files, every one diff-smelled, zero behavior
+Count correction (finding, not hold): filed "29 files" but the enumeration sums 24+3+1 = 28, and the tree holds exactly those 28 + 2 log files (LOG-2 append-only with 0 minus lines incl. this section; LOG.md = 2 captain tick lines, foreign ink untouched). All 28: message/rename/comment/config-only — 5 mcp prose+pin, 6 pipeline prose, 4 banner sites, 7+6 fixture refs, 8 README/comment flips, 2 config mirrors, 2 materialize lines, 1 PLAN hunk. No RS, no tests/cases, no matrix/, no shelf/vendor. Index untouched.
+
+### 7. F1/F2 — concur both
+F1: reference-docs/package.json:7-8 invokes bare `neo` ×3 exactly as claimed (dev ×2 incl. --watch, build ×1) against the dead binary — real, functional, 4th straggler, out of scope by the named-3 brief; morning call, NOT folded here. F2: docs/BUGS/MCP_DEFAULT_PROJECT.md:24 still quotes pre-flip `Run 'neo sync'` while project-context.ts now emits `ref sync` — stale, rides a docs crew.
+
+VERDICT: LAND. Findings for the landing crew: (i) correct filed "29" → 28 in the landing note; (ii) stage the §3.5 hunk solo (`@@ -178,6 +173,26 @@`, zero minus); (iii) F1 stays open for the morning call. Report only.
+
+## Tick — PROSE LANDED c2da01c1f (26th), program complete, final re-gate running
+Prose verifier filed LAND (7/7 firsthand, no post-filing drift, 29→28 correction); captain landed firsthand after cases 205/205 (banner bytes safe — the gate neither crew ran), units 383, q 0/0, mcp typecheck green + vitest 16/16 89/89, censuses zero, risky hunks smelled, F1 confirmed real-but-out-of-scope. §3.5 staged solo via extracted patch (+20/−0 asserted): worktree PLAN now holds exactly the 8 HQ hunks, zero FILED bytes left — HQ untouched, proven. Night program COMPLETE: S5 cutover + enabler + pgen station + prose all banked (26 commits). Final full hermetic re-gate launched in background as the capstone for the 11AM brief (ticks: read-only alongside it, no heavy runs). F1 (reference-docs dead-neo) stays the morning call. Next: re-gate result → 11AM brief.
+
+## Capstone — final full hermetic re-gate GREEN (captain, 2026-09-24)
+`pnpm agent test` over the finished night tree: ALL 12 matrix packages PASSED. The banked arcs hold together: S5 cutover + enabler + pgen station (tests-only) + prose sweep, T1–T13 + mcp green on the final bytes. Night program CLOSED: 26 commits, every arc firsthand-verified. Open for the 11AM brief: F1 (reference-docs dead-neo ×3, 4th straggler), F2 (docs stale quote), W4 bound roster/entry (unblocks 9 PGEN behavior/type cases + tags cutover), G1/G2 pipeline-owned (fixture ordering, pack-cache blindness), G3 build-bin no-clean, PGEN-17/PGEN-15 pinned-open flips, NEEDLE/[neo]-output keeps needing case-riding crews. Tree: logs + HQ's PLAN (8 hunks) only.
+
+## Tick — night closed, all quiet, no action
+Roster empty (zero running crews — prose/129 and verifier/130 both terminal with final notices in). No unlanded reports: every filed arc banked (26 commits), capstone re-gate green on the final tree. No deadlock (no crews to test), no mid-landing (HEAD 17 min, no active gates). Tree holds only mission-log ink + HQ's PLAN (8 hunks, untouched). Nothing to dispatch; F1/W4/G1-G3 findings filed for the morning. Next: 11AM brief.
+
+## Tick (health-check) — night closed, roster empty, no action
+Roster: zero running (not_found); peers unchanged; no new reports; tree = mission-log ink + HQ's PLAN only. No deadlock (no crews), no landings (nothing unbanked — 26 commits, capstone green), no dispatches (program complete; Obj4/5 remain the HQ morning call). Quiet until the 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Tick — night closed, still quiet, no action
+Roster empty, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no mid-landing, nothing to dispatch. 26 commits banked, capstone green. Next: 11AM brief.
+
+## Tick (health-check) — night closed, still quiet, no action
+Roster empty, peers unchanged, no new reports, tree unchanged (log ink + HQ's PLAN). No deadlock, no landings, no dispatches. 26 commits, capstone green. Next: 11AM brief.
+
+## Dispatch — kink crews 131+132 away (captain, HQ morning order 2026-09-24)
+HQ: "iron out final kinks". Two disjoint implementers: kinks-docs-fix/131 (F1 reference-docs dead-neo ×3 flip + docs-gate proof, F2 stale quote → live string) and kinks-pipeline-fix/132 (G1 sorter devDeps/order, G2 pack-cache invalidation, G3 build-bin clean — minimal diffs, fresh-state full-matrix proof with zero hand-heals). Both report-only, verifiers + landings follow. W4 bound roster/entry NOT launched (full wave, needs HQ scoping briefing — staged). PGEN-15/17 pinned flips ride W4; NEEDLE/[neo] keeps need case-riding crews.
+
+## DOCS-KINKS (kinks-docs-fix/131, morning crew — REPORT ONLY, no commit)
+Closed both filed docs findings. test-core loaded first. No other sessions' files touched (PLAN.md read-only untouched; this log append-only).
+
+Per-file list:
+- F1 `packages/reference-docs/package.json:7-8` — flipped all three `neo sync` invocations to `ref` (dev ×2 incl `--watch`, build ×1). Invocation tokens only; git diff shows lines 7-8 and zero other bytes.
+- F2 `docs/BUGS/MCP_DEFAULT_PROJECT.md:24` — stale quote now reads exactly the live emitted string from `packages/reference-mcp/src/server/project-context.ts:53`: `Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.` One line changed, no paraphrase. MCP src untouched.
+
+Censuses (`neo sync` occurrences):
+- Before: `packages/reference-docs/package.json` = 3, `docs/BUGS/MCP_DEFAULT_PROJECT.md` = 1.
+- After: both files = 0 (grep exit 1, no matches). `ref sync` occurrences in package.json = 3.
+- `ref` resolves via `@reference-ui/neo` bin (`dist/bin/ref.js`, linked in docs `.bin`); stale `neo` shim left alone (out of scope).
+
+Proof numbers:
+- Docs gate survey: reference-docs has no tests/vitest/typecheck script — real gate is `build` (content-collections build && ref sync && vite build; nx `build` target wraps the same).
+- Docs gate pass 1: `pnpm agent run pnpm --filter @reference-ui/reference-docs run build` → exit 0 (`ref sync` 4400ms/2.9MB, vite 132 modules, built in 716ms).
+- Docs gate pass 2 (heavy gate, run twice): exit 0, deterministic — identical asset hashes (index-ChNcOdZJ.css, index-DgmSvY7u.js), built in 655ms.
+- Neo units (no-drift check, Neo/MCP src untouched — `git diff --stat` clean for both): `vitest run` in `@reference-ui/neo` → 55 files passed / 383 tests passed (55/383, exit 0).
+- Out of scope held: no other docs/ file, no NEEDLE/[neo] keeps, no W4, no pipeline.
+
+## Dispatch — kinks-docs-verify/133 away (captain, 2026-09-24)
+Docs implementer DONE (## DOCS-KINKS: F1 3 flips lines-only, F2 byte-exact quote, censuses 0, docs build exit 0 twice with identical hashes, units 383 no-drift). Report complete. Verifier briefed adversarial: diff purity, census re-greps, quote byte-diff vs live source, own docs build run, units mirror. Pipeline crew 132 still building (disjoint, read-only). Landing follows on LAND + captain gates.
+
+## Tick — 2 kink crews running, no action
+Roster: kinks-pipeline-fix/132 (building, no products yet — surveying) + kinks-docs-verify/133 (fresh). No new reports filed. Tree holds only the docs-kinks 2 files + log ink + HQ's PLAN. No deadlock (both crews fresh), no mid-landing (HEAD 5h). Nothing verified to land until the docs verifier files. Next: docs-verify LAND/HOLD → landing → pipeline report → verifier → landing.
+
+## DOCS-KINKS-VERIFY (kinks-docs-verify/133 — REPORT ONLY, no commit)
+Verdict: LAND. All four gates pass firsthand. test-core loaded first. Zero source edits, nothing committed, PLAN.md untouched (read-only), pipeline/ read-only (crew 132 still building, no products at re-confirm). Gates re-confirmed at session end — tree unmoved.
+
+1. DIFF PURITY — PASS. `git diff -U0`: package.json hunk `@@ -7,2 +7,2 @@` only (numstat 2/2); bugs hunk `@@ -24 +24 @@` only (numstat 1/1). Zero other bytes in either file; single hunk each. Note: git path is lowercase `docs/bugs/MCP_DEFAULT_PROJECT.md` (FS shows `BUGS`, case-insensitive macOS) — same file as filed `docs/BUGS/...:24`. `git status --porcelain` = exactly 5 files: LOG-2.md + LOG.md (log ink), the 2 kinks files, `packages/reference-neo/PLAN.md` (HQ-owned). Neo src (`packages/reference-neo/src`) empty, MCP src (`packages/reference-mcp`) empty, `pipeline/` empty, no toplevel `tests/` dir and no test/spec file in the 5. Docs crew owns zero of those.
+2. CENSUSES — PASS. `grep -c "neo sync"`: package.json = 0 (exit 1), bugs file = 0 (exit 1). `grep -o "ref sync" package.json | wc -l` = 3 (over 2 lines: dev ×2 incl `--watch`, build ×1); bugs file `ref sync` lines = 1. F2 BYTE-EXACT: `sed -n 24p` bugs vs `sed -n 53p` project-context.ts stripped of TS backtick+indent → `cmp` IDENTICAL, `diff -u` empty, sha256 `c56e668b33187ff1a825e30cb7a9399bb76a3810557aaf359cd7de1c6bbd1257` both, 64 bytes each (xxd compared, no eyeballing).
+3. DOCS GATE — PASS (own run). `pnpm agent run pnpm --filter @reference-ui/reference-docs run build` → exit 0. `ref sync` executes inside: log line `⎔ ref sync ⫶ 1785 ms ⫶ 2.9 MB` (+ `[neo] [ref] Built reference`). Vite: 132 modules, built in 658ms. Assets on disk: `dist/assets/index-ChNcOdZJ.css` (247888 B) + `dist/assets/index-DgmSvY7u.js` (381633 B) + `dist/index.html` — hashes MATCH filed deterministic pair (bonus hit).
+4. NO-DRIFT — PASS (own run). `pnpm agent run pnpm --filter @reference-ui/neo exec vitest run` → exit 0, Test Files 55 passed (55), Tests 383 passed (383). 55/383 confirmed.
+
+## Landing — docs-kinks 0020fb2d9 (captain, 2026-09-24)
+27th commit, 2 files +3/−3: F1 reference-docs scripts + F2 live-string quote. Firsthand: single-hunk diffs, censuses 0/0 + ref×3, F2 cmp-identical, docs build green with ref sync executing. Pipeline crew 132 still building (disjoint, no products at land time — status re-checked at stage). Next: pipeline report → verifier → landing.
+
+## Tick — pipeline/132 building with products, no action
+Roster: only kinks-pipeline-fix/132 running, tree products fresh (workspace.ts + pack.ts + build-bin.mjs modified, lock.ts/lock.test.ts/paths.test.ts new). No pipeline report filed yet. No deadlock (moving, in-scope paths); no ping. HEAD is my docs commit (19 min, complete, no active gates) — no mid-landing conflict. Nothing verified to land until 132's report. Next: pipeline report → verifier → landing.
+
+## Tick (health-check) — pipeline/132 in hermetic proof, no action
+Roster: only kinks-pipeline-fix/132 running. Writes stopped 07:28, Dagger session live since 07:34 — crew is in its fresh-state full-matrix proof run (writeless by nature). Working, not stuck; no ping. No report yet. Peers unchanged, no unattributed bytes. Obj1/2/3 COMPLETE, banked 27 commits; Obj4/5 in LANDING.md (HQ call). No landings (awaiting 132's report). Next: pipeline report → verifier → landing.
+
+## PIPELINE-KINKS (kinks-pipeline-fix/132, 2026-09-24) — G1+G2+G3 IMPLEMENTED, report only, never committed
+
+Morning crew. Three pipeline-owned findings fixed, minimal diffs (3 files, +55/−4), no refactors, no drive-bys. `test-core` loaded first. Scope note: G3's one file lives at packages/reference-neo/tools/build-bin.mjs (outside pipeline/) — the brief's explicit "rm -rf dist first line" instruction covers it; a pipeline-side pre-clean would have been broader, not smaller. All other edits in pipeline/ only.
+
+### G1 — sorter counts devDeps (pipeline/src/build/workspace.ts, +10/−1)
+
+Mechanism: `sortPackagesForInternalDependencyOrder` edged only on `dependencies`, while all 7 fixtures + icons carry `@reference-ui/neo` in `devDependencies` and consume neo's dist at build time (`ref sync`). Pre-fix order put neo DEAD LAST (fixtures/icons built first → synced against ambient stale dist). Surveyed both brief options: (a) "order neo first" is wrong as stated — neo depends on rust, so fronting neo breaks the rust→neo edge; any correct special-case is bigger than (b). Picked (b): devDeps join the edge set. One trap found in survey and handled: neo devDepends on ITSELF, a self-loop that would wedge the Kahn queue and force neo into the alpha-fallback — self-edges are deleted (a package cannot precede itself). Full edge survey over the registry set shows the augmented graph stays a DAG, so every pre-existing ordering guarantee is preserved (pure edge addition, no fallback). `packageInternalDependencies` (manifest publish-order field) deliberately untouched — release set has no internal devDeps, publish order byte-identical (probe: icons → lib → rust → mcp, unchanged pre/post).
+Post-fix order (probed + confirmed in both matrix build logs): rust → neo → 7 fixtures → icons → lib → mcp.
+
+### G2 — pack reuse key mixes declared-output bytes (pipeline/src/registry/pack.ts, +41/−2)
+
+Mechanism chain, verified end to end: `computePackageBuildHashes` fingerprints `git ls-files` only (gitignored dist invisible) → `canReuseExistingTarball` hit on source-identical rebuilds → stale tarball kept → `artifactHash` unchanged → `rebuildRegistryIfLoadedHashesChanged` sees no change, `canSkipRegistryPublishFromState` skips → css-era tarballs served. The tarball-contains-declared-paths check only guards presence, not freshness, so it waved the stale tarballs through. Fix: new exported `hashDeclaredPackagedOutputs` (sorted recursive walk over `collectDeclaredPackagedPaths`, path+bytes hashed, missing→stable marker) mixed with the source hash into the reuse key AND the stored manifest `hash`. All manifest-hash consumers audited identity-only (`artifactHash ?? hash` in load + node-modules cache key, hash-prefix staged tarball names in consumer): old manifests mismatch once → repack → self-heal, no version bump, no shape change. Build-step hashing (`computePackageBuildHashes`, build-state.json) deliberately untouched — mixing outputs there would feedback-loop (every build changes dist → perpetual rebuilds); pack never regenerates dist, so no churn. "Always repack" rejected: pnpm tarballs embed mtimes, so it would churn artifactHash every run → pointless registry rebuilds.
+Probe (/tmp, thrown away): stable across runs, flips on a dist-byte change, missing-outputs stable + distinct. E2E: fresh-state run repacked all 12 (every stored hash + artifactHash new vs the 01:29 manifest).
+
+### G3 — build-bin cleans dist first (packages/reference-neo/tools/build-bin.mjs, +4/−1: 1 import + 1 rmSync + 2 comment lines)
+
+Dist root verified live: `DIST = join(PKG, 'dist')`, PKG = packages/reference-neo. Added `rmSync(DIST, { force: true, recursive: true })` as the first executable line. Rebuild: `dist ready: 296 files` (was 369 — 73 dead files gone), named leftovers (`packed-css.js`, `fragments/*` paths, `neo.js`) absent from dist AND from the packed tarball (296 dist entries, zero packed-css; `dist/src/system/base/fragments.js` in the tarball is verified fresh emit — `src/system/base/fragments.ts` exists 1:1), shebang + `ref --help` good. Only behavior delta on failure: a failed tsc no longer leaves stale dist behind (fail-loud, intended).
+
+### Proof
+
+(1) Pipeline units: covering suites green — pack + cache + package-prep + load suites 13/13 via `tsx --test`. Sorter (`workspace.ts`) and build-bin have NO suites — none added per brief (report only). Full pipeline suite: 174/175; the 1 failure (`rust/compatibility.test.ts`, native-API marker drift vs reference-rs contract) imports only its own module — pre-existing, unrelated, untouched. Typecheck: zero errors in the 3 touched files; the 6 reported errors are pre-existing TS2835 import-extension style in untouched `packages/reference-rs/.../native-contract.ts`.
+(2) FRESH-STATE hermetic: deleted `.pipeline/registry/manifest.json` + all 7 fixture `dist/` + `.pipeline/build/package-state.json` ("rebuild from clean"; build-state MUST clear — with it intact the build step would skip source-identical fixtures, and the fixed pack would then correctly fail loud on missing outputs instead of serving stale tarballs; full `clean` skipped to avoid nuking shared Docker caches — content-keyed layers + DISABLE_DAGGER_CACHE make it equivalent). `pnpm agent test` → `[pipeline] All 12 matrix package tests PASSED`, exit 0, ZERO hand-heals. Build log shows the G1 order; all 12 packs + loads executed (no skips). Run 1 of the day hit a TRANSIENT lib-build ENOENT (`baseSystem.mjs` absent at `build-package.mjs:access`, file present seconds later): root-caused to a concurrent sync's `cleanDir` rm-window (sync cleans outDir at start; lib sync is source-invoked `node ../reference-neo/bin/ref.ts sync`, off all three diff paths) colliding with a foreign `pnpm dev:lib` watch session (started 07:26, protected, not mine, not stopped); standalone lib rebuild green immediately after, run 2 fully green. Night hand-heals obsolete: manifest-delete + dist-rebuild now self-invalidate through the G2 key.
+(3) NO EMIT MOVEMENT: Neo units 55 files / 383 tests green BEFORE and AFTER (identical); cases spot NEO-CLI-01 + NEO-CHAIN-01 PASS, warningCount 0, diagnosticCount 0. No repins, none needed.
+
+### Behavior-risk notes
+
+- G1: any FUTURE internal devDep cycle (A devDep B + B dep A) would push the pair into the alpha-fallback instead of erroring — same as pre-existing cycle behavior, no new failure mode. Consumer-visible order changes only where devDeps exist (fixtures/icons after neo — the fix).
+- G2: first pack after landing repacks everything once (hash-semantics change) → one registry rebuild + republish; steady state identical cost (one dist walk per package per pack). Packages with empty declared paths hash to a constant → reuse behavior exactly as before.
+- G3: `prepack`/`prepublishOnly` inherit the clean (same script) — packed output now always from-scratch; incremental-time cost ~600ms tsc, negligible.
+- Left for others (not taken): rust compatibility marker drift test, reference-rs TS2835 style errors, concurrent-sync clean-window race (repro: two `ref sync` in one project; SYNC-11 atomicity is per-process, no cross-process lock) — all pre-existing, out of scope.
+
+Files: M pipeline/src/build/workspace.ts, M pipeline/src/registry/pack.ts, M packages/reference-neo/tools/build-bin.mjs. Zero commits. Zero other-session files touched (their LOG/PLAN bytes intact; this filing is the only LOG-2 addition).
+
+## Dispatch — kinks-pipeline-verify/134 away (captain, 2026-09-24)
+Pipeline implementer DONE (## PIPELINE-KINKS: G1 devDeps edges + self-loop trap handled, G2 reuse-key output hashing, G3 dist clean, +55/−4, fresh-state 12/12 claimed with transient ENOENT root-caused to a protected foreign dev:lib watch, left-for-others filed). Report complete EXCEPT one flag: 3 untracked files (lock.ts/lock.test.ts/paths.test.ts) unmentioned in the filing — verifier opens with ?? triage (spike corpses → exclude+delete; wired-but-unreported → HOLD; foreign → hands off). Then: G1/G2/G3 diff-smell + mechanism concurrence, covering suites, pre-existing-failure attribution, FRESH-STATE full hermetic re-run (decisive), transient concurrence (dev:lib protected, never stop), no-emit mirror, footprint. Zero edits, report only. Landing follows on LAND + captain gates.
+
+## Tick — pipeline verifier/134 in re-proof, no action
+Roster: only kinks-pipeline-verify/134 running (~20 min old, likely in its fresh-state hermetic re-run — long pole, writeless by nature). No verify report filed. Tree unchanged (3 M + 3 ?? + logs + PLAN). No deadlock; no ping. HEAD is the docs commit (39 min, complete) — no mid-landing conflict. Nothing verified to land until 134 files. Next: pipeline-verify LAND/HOLD → landing (subjects the ?? triage ruling) → W4 briefing (HQ) / LANDING.
+
+## Dispatch — w4-survey/135 away + LANDING parked (captain, HQ order 2026-09-24)
+HQ: forget LANDING, Neo/systems day. LANDING Obj4/5 parked (no crews, no action). W4 survey crew dispatched read-only (E2 surface, publishReactBundle string-build, tags cutover inventory, per-system entry requirements, PGEN-15/17 flip lines, slice sequencing, HQ decision points) — safe alongside verifier 134's hermetic gates (no runs, reads only). Build wave stages on HQ's bake-shape call. Sync race fix queued as the parallelizable small arc.
+
+## SPEC — sync session lock, last-wins (HQ order 2026-09-24, crew briefed off this)
+
+Problem: concurrent `ref sync` in one project interleave (cleanDir rm-window) → ENOENT/mixed output. SYNC-11 atomicity is per-process only. No legacy implementation exists (searched reference-legacy + history — closest is an unbuilt pid-file sketch in pipeline/performance.md).
+
+Rule (HQ): the LATEST call wins. Newcomer gracefully kills the holder and takes over. Refusal is backwards.
+
+Mechanics:
+1. Lock = `.reference-ui/sync.lock/` dir (atomic mkdir, portable, no deps) holding `owner.json`: {pid, lockNonce, kind: "one-shot"|"watch", argv, startedAt}. Nonce (random per acquisition, re-read before signal) guards pid reuse — no /proc/ps parsing.
+2. Acquire is FIRST, before cleanDir. Order: try mkdir → won: write owner.json, proceed. Lost: read+validate owner.json (malformed → stale, take over with warning) → liveness: kill(pid,0) AND nonce match → dead/stale: take over with warning. Live: PREEMPT by the matrix below.
+3. Preempt matrix (HQ-recommended; uniform-kill flip = one line if HQ reverses): one-shot→one-shot KILL; watch→one-shot KILL; one-shot→watch POKE (SIGUSR2 → watch rebuilds now; newcomer exits 0 "covered by watch session pid N"); watch→watch KILL (second watch is user error, latest wins).
+4. Kill = SIGTERM → poll exit up to 5s → SIGKILL → take lock. Old sync's SIGTERM handler: stop promptly, best-effort lock release, exit 75 (EX_TEMPFAIL "superseded by sync pid M" — retryable-transient, distinct from failure). POSIX graceful; Windows terminate-and-takeover (safe: newcomer cleans first).
+5. Release: finally + SIGINT/SIGTERM/SIGHUP handlers. Watch holds for the session. `--break-lock` escape hatch takes unconditionally with warning.
+6. Out of scope: reader/writer atomic outDir swap (follow-up iff lib-build ENOENT recurs); queueing (banned by the rule); heartbeats (nonce+pid suffices).
+
+Proof bar: two-process repro (slow A + B → A exits 75 superseded, B completes, tree fresh); stale-lock takeover (dead pid → immediate proceed + warning); watch-holds (one-shot pokes, watch rebuilds, exits 0, watch alive); malformed-lock takeover; units 383 + q clean + full cases green (emit untouched — if any case moves, STOP, no repins). Files: new session module in src/sync/ + wiring in sync()/watch/CLI + tests. Zero behavior change to single-sync runs.
+
+## W4-SURVEY (w4-survey/135, 2026-09-24) — read-only recon, report only, never committed
+
+Survey crew. `agent-neo` loaded first. Zero source writes, zero runs, zero builds (verifier 134 hermetic-gating in pipeline/ — untouched; PLAN.md/LOG bytes of other sessions intact). All findings firsthand from the tree. W4 = bind the live E2 roster per system, cut over the tags.ts hand path, unblock 9 PGEN cases (01/02/03/04/05/06/11/14/22 per SPEC.md — all BLOCKED tonight) + TYPE-01.
+
+### (a) E2 LIVE SURFACE — `@reference-ui/rust/primitives`
+
+- Export map: `packages/reference-rs/package.json` `"./primitives"` → `./dist/primitives.mjs` + `./dist/primitives.d.ts`. **But dist is gitignored** (`git check-ignore` confirms; only `modules/primitives/generated/*` is tracked) — dist is a build artifact, never a W4 bundler input (freshness trap, G2-echo). Live legs that matter: committed source `modules/primitives/generated/primitives.mjs` (E2, emitted by `modules/primitives/generate/`, printer `emit.ts`), consumed live by PGEN-12/13 specs via the workspace package.
+- Census: **108 exports = 101 roster + 7 helpers** (counted from the dist export block; helpers pinned exactly by `NEO-PGEN-12/specs/parity.spec.ts:36-44`): `ColorModeContext, DocumentContext, Fragment, LayerScopeContext, configurePrimitives, createElement, useColorMode`. Roster = canon ELEMENTS HTML partition, sorted by dom tag; `Map` via `MapPrimitive` alias (mjs:81-82), `Obj`/`Var` renames intact.
+- `configurePrimitives` (mjs:129-139 seam doc + fn at :134; printer `emit.ts:58-64,160-166`): signature `configurePrimitives({ layerName, stylePropNames, css })` — **no `systemName` arg** (takes `layerName` directly), **no `css` module arg** (takes the bound `css()` fn). Behavior: `createPropSplitter(stylePropNames)` once, returns a FRESH 101-key object literal of `createPrimitive({ tag, displayName, layerName, split, css })` — unbound module exports untouched. PGEN-13 (`parity.spec.ts:61-78`) proves the seam binds today with a throwing stub css (never renders).
+- Unbound-throw mechanics (mjs:20-24; `emit.ts:49-56`): `unboundCss()` throws `'[primitives] unbound primitives never render — bind them with configurePrimitives({ layerName, stylePropNames, css })'`; `unboundSplit = createPropSplitter([])`; `layerName: ''`. ANY render throws (factory always calls `css(...)`), so the eval-safe barrel contract holds by construction.
+- dist bundle shape: tsup, inlines factory/split/context, **react external** (only bare imports are `react`: dist lines 5,8,160), single export block (line 374). dist types (`dist/primitives.d.ts`, 2 lines) re-export the E4 raw types.
+- RS trio vs Neo trio: `context.ts` byte-identical; `factory.ts`/`split.ts` differ ONLY in the type-only import home (`./css-types.ts` local vs `../../runtime/css/css.ts`) — behavior-identical, deletion-safe.
+- E1 `src/native/generated/primitives/vocabulary.json`: 101 elements, **1391 stylePropNames** (full typegen set), named conditions, alias map (`bg→background`, `mt→marginTop`, …), reserved 6 keys, caption/menu overrides. Compiled per-system list is ~46 names (fixture `contracts/fixtures/native-runtime-artifact.json`) — the bake narrows 1391 → ~46.
+
+### (b) `publishReactBundle` STRING-BUILD — exact change lines
+
+File `packages/reference-neo/src/packager/react.ts`: `runtimeHeaderSource` (:32-41, css/recipe registration prelude) + `publishReactBundle` (:49-97; tmp entry at `outDir/tmp/react-entry.mts`, SYNC-06-stable path, :62-76; bundle minified esm, react external via `REACT_BUNDLE_EXTERNALS` (`externals.ts:7`), linked map, :77-93). Entry text = header + `generateReactEntrySource` (`src/primitives/generate/generate.ts:29-53`): bakes `splitPrimitiveProps` from `input.stylePropNames` (:36), `layerName` from `systemName` (:37), 101 `createPrimitive` lines (:40-45), re-exports Fragment/createElement + contexts (:46-51). Types: `generateReactTypesSource` (:70-111) → `react.d.mts`, then `types-bundle.ts:66-139` replaces the wide-StyleProps anchor line (:79) with the styled wiring (:47-57) and appends the named graph (:85-134: `export type * from '@reference-ui/styled'`, `CssStyles`, `PrimitiveProps<T>`, `css`, `recipe` + full recipe graph).
+
+Must change: `react.ts:62-76` (entry assembly) + `:68-74` (trio path args go away) + `generate.ts` entry emitter (replaced by an E2-binding emitter; types emitter replaced by the E4-derived bake) + `types-bundle.ts:79` anchor (dies with the old types emitter — the bake must absorb the wiring + named graph, see (d)).
+
+Bound output sketch (same tmp path, same bundle flags): runtime header unchanged (register + `export { css, recipe }`), then `import { configurePrimitives, ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode } from '<E2>'` + `export const { A, Abbr, … } = configurePrimitives({ layerName: "<system>", stylePropNames: [<compiled>], css })` + re-export the 6 value helpers. `<E2>` = committed `modules/primitives/generated/primitives.mjs` resolved absolutely (its relative `../js/*.ts` + bare `react` resolve under esbuild; react stays external) — NOT dist (gitignored/stale risk).
+
+### (c) CUTOVER INVENTORY — every consumer, deletion order, early-delete breakage
+
+| Hand path | Consumers (file:line) |
+|---|---|
+| `primitives/tags.ts` (TAGS/toJsxName/PRIMITIVE_JSX_NAMES) | `generate/generate.ts:6`; `primitives/index.ts:13`; `sync/index.ts:33,120` (compile-request `jsxHosts`); `collect/lib/scan/goldens.test.ts:27,102`; `sync/lib-barrel-negation.test.ts:18,63`; `benchmark/deepsee/worker-phases.ts:25`; `tags.test.ts`; `generate.test.ts:10,50` |
+| `primitives/index.ts` (101 hand barrel) | `entry/react.ts:10` (`export *`) only |
+| `entry/react.ts` | `collect/lib/bootstrap.ts:24,32` (fragment-eval VALUE alias); `bootstrap.test.ts` pins basename (`:63`), stub-clean bundle (`:74-79`), eval surface (`:81-99`) |
+| runtime trio `primitives/runtime/*.ts` | `primitives/index.ts:8-12`; generated entry string (absolute trio paths); trio's own tests |
+| `generate/generate.ts` | `packager/react.ts:17-19,54,68`; `generate.test.ts`; `packager/reference-types.test.ts:14,39,146` |
+| `generate/react-surface.d.ts` | root `tsconfig.json:19` (**pre-run typecheck `@reference-ui/react` for every world + spec**); `generate.test.ts:140-178` (tag-set/union/surface pins); quality `biome.json:59` exemption |
+
+Runtime/bundler consumers of the GENERATED artifact (paths unchanged, bytes change): world `index.html` importmaps → `./.reference-ui/react/react.mjs`; harness `tests/shared/build.ts:60` banner (`createElement, Fragment` from `@reference-ui/react` — bound bundle MUST keep both); `tests/shared/server.ts:10,28` vendor map; `playground/vite.config.ts:19`; `reference-types.ts:47` alias (types bundle). NOTE: `reference/tasty/api.ts:14-25` carries the ids as tasty scope strings only (member projection), not imports — but the bound `react.d.mts` must keep every export name the current one has (mechanical export-set diff = W4 acceptance check).
+
+Deletion order: 1. land bound runtime + bound types (additive); 2. repoint bootstrap VALUE alias + root tsconfig TYPE alias; 3. delete `generate/` + `react-surface.d.ts` + their tests (update `reference-types.test.ts`, `biome.json`); 4. delete `primitives/index.ts` + `entry/react.ts` (or repurpose — see entry-home decision); 5. delete Neo trio + its tests; 6. delete `tags.ts` LAST (after `sync/index.ts:120`, goldens, negation, benchmark move to E1 `vocabulary.json`). Early-delete breakage: tags.ts first breaks sync compile requests + 3 suites + benchmark; surface first breaks the whole pre-run typecheck; trio first breaks the eval barrel + current packager; `entry/react.ts` first breaks ALL fragment eval (bootstrap alias dangles).
+
+### (d) PER-SYSTEM ENTRY requirements
+
+- PGEN-22: **no folder exists** (verified `ls` — SPEC.md/TESTS.md only). Needs the bound `react.d.mts`: `StylePropName` narrowed to the compiled per-system list (1391 → ~46), `StyleProps` composed with that world's `styled/types` narrow unions (foreign-system token → TS2322), `css` narrowed, `variant` narrowed. Case must be scaffolded W4 (world + tsconfig mapping `@reference-ui/react` at the bound `react.d.mts`, TYPE-01 pattern, + temp-dir positive/negative consumers).
+- TYPE-01: ledger says done (string-entry era) but PGEN SPEC.md re-anchors it onto the bound entry — the W4 proof is its CONSUMER (`NEO-TYPE-01/specs/type.spec.ts:27-80`) compiling UNCHANGED against the bound bake. Required surface: per-tag `XProps`, `StylePropName/StyleProps`, generic `PrimitiveProps<T>`, `CssStyles`, `SystemStyleObject`, `FontProps` (via `export type * from '@reference-ui/styled'`), `css`, `recipe` + `RecipeConfig/RecipeRuntimeFn/RecipeVariantProps` graph, 3 contexts + `useColorMode`, `Fragment/createElement`. (Today's bake already carries all of this via `types-bundle.ts:85-134` — the bound bake must not drop one.)
+- World alias mechanics (THREE aliases, not one): (i) VALUE — `bootstrap.ts:32` `@reference-ui/react` → `src/entry/react.ts` for fragment eval; repoint target = E2 unbound exports + `css`/`recipe` from `src/runtime` (eval never renders, unbound never renders — contract holds); (ii) TYPE — root `tsconfig.json:19` → `react-surface.d.ts` (pre-run) and per-world tsconfigs → `./.reference-ui/react/react.d.mts` (post-sync); repoint root at the E4 shelf d.ts (or bound d.ts — HQ pick), worlds unchanged; (iii) BROWSER — importmaps + playground alias → `react.mjs`; paths unchanged.
+- Entry home candidates: A. keep tmp-string entry (same SYNC-06 path, new text — minimal, string-build shrinks to ~10 lines); B. committed Neo bind module + thin generated shim (typechecked logic, but per-system values still need injection → shim remains); C. RS-side per-system emission (REJECT — PLAN §3.9 open thread leans stay-Neo; css lives Neo-side, would invert the cut); D. resolve E2 by `createRequire(...).resolve('@reference-ui/rust/primitives')` (REJECT as stated — resolves to gitignored dist). **Recommend A + committed-source import**: tmp path stays, text imports E2 from the TRACKED `modules/primitives/generated/primitives.mjs` via a package-root-relative resolution (no node_modules, no dist, parity-gated by PGEN-12/13).
+
+### (e) PGEN-15/17 FLIP SURFACES — exact pins
+
+- PGEN-15 `OPEN_CSS`: `tests/cases/pgen/NEO-PGEN-15/specs/type.spec.ts:47-51` (probe `{ css: { definitelyNotAProp: 'x' } }`), asserted exit-0 at :76-81 with the comment "W4's per-system bake narrows css … and flips this probe to a negative". Consumer imports `@pgen/primitives` = vendored E4 (`world/tsconfig.json:16`).
+- PGEN-17 `OPEN_VARIANT`: `tests/cases/pgen/NEO-PGEN-17/specs/type.spec.ts:33-37` (probe `{ variant: { tone: 'not-a-tone' } }`), asserted exit-0 at :56-61 ("flips this probe to the wrong-axis negative"). Same `@pgen/primitives` mapping (`world/tsconfig.json`, same line shape).
+- What turns each red (TWO changes, not one): (1) the bound bake narrows `PrimitiveCssProp: Record<string,unknown>→SystemStyleObject` (css flip, expect **TS2353** excess-prop) and `variant: unknown→` recipe-union (variant flip, expect **TS2322** bad-literal); (2) the specs repoint their consumers from vendored E4 at the bound entry and flip the assertion to non-zero + pinned code. The E4 shelf itself NEVER narrows (raw stays raw by design — SPEC.md "pinned as open"). PGEN-17 also needs its world extended with a real recipe declaring the `tone` axis (world is colors-only today; `accent` must assign, `not-a-tone` must not).
+
+### (f) SEQUENCING — slices (each independently verifiable, one arc per commit)
+
+1. **S1 — bound runtime entry.** Rewire `publishReactBundle` to the E2-binding entry (b); types leg untouched. Proof: all currently-green cases stay green, export-set diff empty (101+7+css+recipe), bundle flags unchanged. Unblocks: nothing alone — the foundation.
+2. **S2 — bootstrap repoint.** `bootstrap.ts:32` target → E2-unbound + runtime css/recipe; update `bootstrap.test.ts` pins. Proof: fragment-eval suites + goldens green. Independent of S1 (either order). Unblocks: nothing alone — deletes-enabler.
+3. **S3 — render cases.** Scaffold + prove PGEN-01/02/03/04/05/06/11/14 (8 cases) against the bound roster. Proof: 8 cases green. **Unblocks 8.**
+4. **S4 — bound types bake.** `react.d.mts` from E4 + per-system narrowing (StylePropName:=compiled list; css→SystemStyleObject; variant→recipe union) absorbing the `types-bundle.ts` wiring + named graph; scaffold + prove PGEN-22. Proof: TYPE-01 consumer UNCHANGED-green + PGEN-22 foreign-token-red. **Unblocks PGEN-22 + TYPE-01.**
+5. **S5 — flips.** Repoint PGEN-15/17 consumers at the bound entry; assert TS2353/TS2322 red legs (extend PGEN-17 world with a `tone` recipe). Proof: both cases green-with-red-legs. Unblocks: nothing new — converts 1 live + 1 weak to narrowed.
+6. **S6 — cutover deletes.** Order per (c): generate+surface → barrel+entry → trio → tags.ts last; move `sync/index.ts:120` + goldens + negation + benchmark to E1 vocabulary; root tsconfig paths → E4 shelf. Proof: full units + `q` + full cases green, zero `tags.ts`/`react-surface` references. Unblocks: nothing — closes the hand path.
+7. **S7 (parallelizable, any time after S1) — `jsx.ts:30` `primitives: []`**: PLAN §3.10 says E1 feeds it; code header says "never". Needs the HQ ruling in (g) first.
+
+### (g) DECISION POINTS FOR HQ (options + recommendation + wrong-pick cost)
+
+1. **Layer name.** Options: (a) `layerName = spec.name` (status quo, `generate.ts:37`); (b) new externally-passed layer id. Recommend (a) — `data-layer` scoping + `resolvePrimitiveContext` already key on it; (b) orphans every shipped sheet's scope with zero motivating case.
+2. **Splitter list.** Options: (a) compiled `runtime.stylePropNames` verbatim; (b) compiled + E1 aliases normalized; (c) full 1391 E1 set. Recommend (a) — aliases already resolve inside compiled names (PGEN-13 proves `bg/mt` in-set); (c) kills PGEN-22 narrowing; (b) adds a normalization step with no failing case behind it.
+3. **css binding.** Options: (a) shared registered `css()` via unchanged runtime header; (b) per-entry css closure. Recommend (a) — D4 data-only styled + `registerRuntimeData` single-system runtime (`css.ts:107-120`) assume it; (b) forks resolution state per import.
+4. **Entry home.** (a) tmp-string (b) committed bind module (c) RS-side (d) dist-resolve. **Recommend (a) + tracked-E2-source import** per (d). (d) is the trap: dist is gitignored, stale dist → stale entries with no gate to catch it.
+5. **`"."` export survey (PLAN §3.8/3.9).** Neo `package.json` NOW has `".": "./dist/src/index.js"` (the "no `.`" census is stale) plus `./runtime`; generated `@reference-ui/react` manifest keeps `"."` → `react.mjs`/`react.d.mts` (`packages.ts:52-58`). Recommend: NO new `"."` anywhere — W4 reuses existing ids and file names; a new export id would fork every world's tsconfig + importmap for no behavioral gain.
+6. **SVG `image` edge.** Overlay `primitives.ts:22` carries `image` in the SVG partition; namespace law (PLAN §3.9 FINAL) says styleable-but-native; PGEN-12 tripwire (`:49-74`) pins `Image` ABSENT. Recommend: no action, keep the tripwire — folding it in re-opens the retired SVG wave (PGEN-07..10/21) against an HQ Final.
+7. **StylePropName narrowing.** Options: (a) compiled list (b) full E1 union. Recommend (a) — it IS PGEN-22 ("token-per-system error"); (b) leaves uncompiled props assigning and the case unprovable.
+8. **variant narrowing shape.** Options: (a) union of typegen `{Stem}VariantProps` (`recipes.d.ts:1` golden proves the aliases exist in `styled/types`); (b) `Record<string, RecipePropValue>` (open — no flip); (c) per-recipe generic (no call-site recipe name — unworkable on plain primitives). Recommend (a); open sub-decision: zero-recipe worlds → `variant?: never` vs `unknown` (recommend `never`-via-empty-union with the probe asserting absence; `unknown` silently un-flips PGEN-17 for recipe-less systems).
+9. **css narrowing shape.** Options: (a) `SystemStyleObject` from `@reference-ui/styled` (b) keep `Record`. Recommend (a) — the documented PGEN-15 flip; (b) keeps bogus keys assigning.
+10. **`jsx.ts:30` primitives feed.** PLAN §3.10 says E1 feeds it; code header says never. Recommend: feed it (one line + test) — the "extraction reads file-local imports" rationale doesn't cover downstream `extends` consumers of `jsx-elements.json`, which is the artifact's stated purpose; leaving `[]` keeps W6-adjacent discovery dark. Either way it's one line — just rule it.
+11. **E4 `PrimitiveProps<T>` generic vs bake's copy.** `emit.ts:76-86` E4 already ships the generic `PrimitiveProps<T>` + styled wiring identical to `types-bundle.ts:47-57`. Recommend the bake IMPORTS/REUSES that text shape verbatim (no third spelling) — a divergent bake silently forks the surface TYPE-07 pins (`PrimitiveProps<T>` arity TS2314).
+
+Files: survey only — zero source touches. This filing is the only LOG-2 addition.
+
+## Dispatch — sync-lock-implement/136 away (captain, HQ order 2026-09-24)
+HQ: spec + crew the last-wins sync lock. Spec filed above (lock dir + nonce owner, preempt matrix with watch POKE, 75-superseded, break-lock hatch; uniform-kill flip left one line). Implementer briefed to the spec letter: session module + sync()/watch/CLI wiring + real-process repro suite + full proof (units, q, FULL cases with emit-untouched tripwire). Scope Neo-only, disjoint from 134's pipeline gates. Verifier + landing follow on its report.
+
+## AMENDMENT — sync lock spec v2 (HQ pointer 2026-09-24: legacy session found)
+Legacy: `reference-legacy/src/session/` — `watch-lock.ts` (contested → log + exit 1, REFUSE) + `files.ts tryAcquireLock` (O_EXCL file, stale(pid-dead)→unlink→retry-once, EPERM-means-alive). Scope was watch-vs-watch only. HQ's last-wins steer STANDS and now explicitly reverses legacy's refuse + extends the scheme to one-shots. Amendments (crew 136 rebriefed):
+(a) SHAPE+LOCATION: legacy O_EXCL FILE, not mkdir dir — but at `<cwd>/.ref-sync.lock` (per-REPO, OUTSIDE the cleaned tree). The v1 location (inside .reference-ui) was a hole: cleanDir would wipe the lock mid-hold. Payload {pid, startedAt, kind, argv, lockNonce}.
+(b) Adopt legacy stale flow verbatim (unlink + retry once) + the EPERM-means-alive rule in isProcessAlive.
+(c) Adopt legacy atomic tmp+rename for any lock-content rewrite.
+(d) Live holder → kill-takeover per the v1 matrix (HQ reversal of legacy refuse); stale path identical to legacy. All else in v1 stands.
+
+## AMENDMENT — sync lock spec v3 (HQ order: lock lives INSIDE .reference-ui)
+HQ vetoes a root-level lockfile (no new dotfiles). Lock returns inside: `.reference-ui/sync.lock` (O_EXCL file, legacy shape + kind + nonce). The v2 hole (cleanDir wiping the lock) is closed by RULE, not location:
+(a) cleanDir MUST preserve sync.lock: wipe children-except-lock (readdir + remove each except the lock file), never rm -rf the root. Guardrail test: cleanDir with a live lock present → lock survives byte-identical.
+(b) EVERY wholesale deleter of .reference-ui must hold the session lock first (survey all: cleanDir callers, ref clean, matrix/case-world setup rm-rfs, pipeline wipers). Fresh-world setup with no live holder: stale-takeover covers dead pids; live holder + setup wipe = setup acquires first, no exceptions.
+(c) `ref clean` participates as a writer-kind holder: acquires (preempts per matrix) before wiping, wipes via the preserving cleanDir, releases after. Post-clean state (empty/gone dir, no lock) = unlocked, next sync acquires fresh. Consistent.
+(d) Crash (-9) holder → stale lock survives inside .reference-ui by design; takeover breaks it. All else (matrix, 75-superseded, break-lock, stale flow, EPERM rule) stands from v1/v2. Crew 136 rebriefed (v1 inside-hole → v2 outside → v3 inside-with-preserve).
+
+## Tick (health-check) — W4 survey COMPLETE, 11 HQ calls queued, no action
+W4-survey/135 filed ## W4-SURVEY (read-only, zero source touches): E2 surface (108 = 101+7, configurePrimitives takes layerName + stylePropNames + css fn — no systemName), publishReactBundle exact change lines, full cutover inventory with deletion order (tags.ts LAST), per-system entry requirements, PGEN-15/17 flip lines, 7-slice sequencing, 11 HQ decisions with options + recommendations. Follower = HQ rulings → build wave (cannot dispatch until HQ calls). Also: sync-lock/136 v3 uptake now PROVEN by products (new session.ts + clean.ts + sync/index.ts in tree) — closes the consumption question. Pipeline verifier/134 still in fresh-state re-run. No deadlock, no pings, no landings. Peers unchanged.
+
+## W4 RULINGS (HQ 2026-09-24 — all 11 per survey recommendation, no further input needed)
+1 layer=spec.name. 2 splitter=compiled verbatim. 3 css=shared registered. 4 entry=tmp-string + tracked-E2-source import (never dist). 5 no new "." export. 6 SVG image: no action, tripwire stands. 7 StylePropName=compiled list. 8 variant=typegen unions; zero-recipe worlds get never. 9 css=SystemStyleObject. 10 jsx.ts fed from E1. 11 bake reuses E4 PrimitiveProps text verbatim. Build wave: S1+S2 implementers dispatched in parallel (disjoint files); S3→S6 sequence after; S7 after S1.
+
+## W4-S1 (bound runtime entry, 2026-09-24) — LANDED, report only, never committed
+
+Implementer. `agent-neo` + `test-core` loaded first. Runtime leg only: types emitter untouched (S4), no deletes (S6), PLAN.md/pipeline/sync/collect untouched (foreign sessions).
+
+Files: `packages/reference-neo/src/primitives/generate/generate.ts` (entry emitter → E2 bind; `ReactEntryInput` drops the trio paths for `primitivesPath`; types emitter byte-identical) + `packages/reference-neo/src/packager/react.ts` (entry assembly passes `primitivesPath: primitivesModulePath()` = package-root-relative `packages/reference-rs/modules/primitives/generated/primitives.mjs`, tracked, never dist; runtime header, bundle flags, SYNC-06 tmp path all unchanged) + `src/primitives/generate/generate.test.ts` (entry tests → bound shape; types/surface describes untouched).
+
+Entry-text sketch (same `outDir/tmp/react-entry.mts`): runtime header unchanged (register + `export { css, recipe }`), then `import { configurePrimitives, ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode } from '<tracked E2>'` + `export const { A, Abbr, …101 } = configurePrimitives({ layerName: spec.name, stylePropNames: <compiled verbatim>, css })` + `export { <6 value helpers> }`. No `Map` clash: E2's bound return carries plain `Map:` key (mjs:192); TAGS-derived destructure names match all 101 E2 keys.
+
+Proof (all firsthand): FULL cases 205/205 green after, per-case diff vs pre-change baseline 205/205 = zero moves (`/tmp/w4s1-last-run-before.json` vs new last-run log, moved `[]`); mechanical export-set diff old-vs-new `react.mjs` (NEO-TOKEN-01 world) EMPTY — 109 = 101 roster + 6 helpers + css + recipe both sides, E2 bound keys == roster leg both directions, bare-import sets identical; new bundle node-imported: 109/109 defined (Div/Map objects, css/recipe/useColorMode functions); full Neo units 57 files / 398 tests pass (baseline 399 — the 1 delta is crew 136's concurrent edit of untracked `sync/session-repro.test.ts`, mtime 08:24:28 inside my 08:24:22–35 baseline window; my files count-identical 10/10, 398 stable across 3 runs, zero fail/skip); `agentneo q` on the 3 files = 0 errors, 0 warnings. Note: bundle re-exports the 6 *value* helpers (configurePrimitives consumed internally) — identical to the old bundle's helper set, so the "7 helpers" census holds at the E2 module level, 6 at the bundle level.
+
+## SYNC-LOCK — last-wins session lock landed in tree, report only (crew, 2026-09-24)
+
+Scope: sync-lock-implement/136 brief to the SPEC letter. agent-neo +
+test-core skills loaded first. Never committed. PLAN.md untouched
+(HQ bytes, read-only); pipeline/ read-only (verifier 134's gates
+undisturbed — one read-only grep of run-watch-session, no runs);
+no other session's files touched (foreign Ms that appeared
+mid-session — LANDING.md, neo PLAN.md, packager/react.ts,
+primitives/generate.* — are another crew's, excluded here).
+
+### File list (9: 4 new, 5 wired)
+
+New: `packages/reference-neo/src/sync/session.ts` (359 lines, acquire
+engine + matrix + hold/signals), `src/sync/session-owner.ts` (123,
+owner doc model + validation + exit-path messages), `src/sync/
+session.test.ts` (126, 7 fast units), `src/sync/session-repro.test.ts`
+(277, 8 real-process repro legs). Wired: `src/sync/index.ts`
+(acquire-first + preserve-clean + finally-release + SyncOptions),
+`src/sync/clean.ts` (preserve option), `src/cli/sync.ts`
+(--break-lock + covered-exits-0), `src/cli/watch.ts` (breakLock
+passthrough), `src/lib/watch/index.ts` (session hold + SIGUSR2 poke
+target + stop-release).
+
+### Matrix implementation notes (where each leg lives)
+
+All in `session.ts` unless named. Won path: `tryClaimDir` (atomic
+mkdir) + `writeFreshOwner` + verify-read (`acquireSyncSession`).
+Malformed/missing owner: `acquireContendedLock` (missing settles
+100+500ms via `settleMissingOwner`, then takes as stale — a live
+writer lands in ms, only a corpse stays missing). Liveness:
+`pidAlive` (kill 0; EPERM counts alive) AND re-read nonce match
+(`contendForLock` — changed nonce retries). one-shot→one-shot,
+watch→one-shot, watch→watch KILL: `preemptLiveHolder` else-branch →
+`killHolder` (preempt.json marker with newcomer pid → SIGTERM → 5s
+poll → SIGKILL → 2s poll → take; ESRCH anywhere reads dead).
+one-shot→watch POKE: `preemptLiveHolder` if-branch →
+`pokeWatchHolder` (SIGUSR2, throws `SyncCoveredByWatchError`; ESRCH
+reads stale so the newcomer syncs; win32 skips the signal, still
+covered). Victim SIGTERM handler (`holdSession/onSigterm`): marker
+present → release + `superseded by sync pid M` + exit 75; absent +
+watch → return (CLI owns graceful 0, CLI-02 pinned); absent +
+one-shot → release + reraise (foreign listeners divide via
+`hasForeignListeners`). SIGINT/SIGHUP: `makeReraiseHandler`
+(release, foreign-first, else reraise). Release (`releaseSession`):
+unhold + unlisten always, rm only when owner nonce is ours (stolen
+locks survive; ENOENT is released). `--break-lock`:
+`acquireContendedLock` + CLI flag, takes unconditionally with warning,
+never signals. Watch hold + poke drain: `lib/watch/index.ts`
+(`watchSync` acquires kind watch before baseline; early-poke flag
+queues across the baseline so a poke never races it; stop removes the
+SIGUSR2 listener and releases). Re-entry: `heldSessions` map —
+watch baseline/resyncs under the session no-op instead of
+self-preempting. Two deliberate spec readings: (1) acquire sits after
+config load but before cleanDir — "FIRST" names the rm-window, and
+loading first keeps config-missing runs dir-creation-free
+(SYNC-11's no-folder pin holds); (2) the pre-wipe preserves
+`sync.lock` (`cleanDir` preserve option) so the holder never wipes
+its own mutex, while the failure wipe still takes everything
+(SYNC-11) and the finally release tolerates the gone dir.
+
+### Proof numbers (all firsthand, this session)
+
+- Repro suite: 8/8 green, 3 consecutive runs (control lone-sync
+  unchanged incl. no-lock-lines + lock gone; one-shot→one-shot kill
+  via STOP-gating — A exits 75 naming B's pid, B exits 0 naming A,
+  tree fresh; watch→watch kill — old 75, new watches, graceful 0 on
+  SIGTERM; stale takes with warning; torn takes with warning; poke —
+  newcomer 0 covered, watch resyncs + lives + releases; SIGINT —
+  next sync proceeds with zero stale warning; --break-lock takes
+  live with warning, holder survives). STOP-gating is event-driven
+  (owner-appear → STOP; preempt-marker → CONT), zero sleeps, with
+  fail-loud harness-miss detection; signal legs POSIX-only.
+- Fast units: 7/7 (owner validation incl. 14 malformed shapes,
+  acquire/release + listener hygiene, re-entry, steal-safe release,
+  in-process stale + torn takeover).
+- Full Neo units: 57 files / 398 green — delta reconciles EXACT vs
+  55/383 baseline (+2 files, +15 tests, all mine).
+- tsc exit 0. q: 0 errors on all 9 files; full-package 0 errors /
+  18 warns / 242 files — warn SET unchanged vs baseline (238 files
+  + my 4; the one touched warn is the pre-existing sync-fn length
+  102→108, same rule, +6 from the acquire/release wiring).
+- FULL cases: 205/205 ok, exit 0, fresh last-run log — emit
+  byte-untouched, zero repins, zero moves (targeted SYNC 17/17 +
+  CLI-01/02 + LAYER-02 confirmed inside the full run; CLI-02's
+  watch-SIGTERM→0 leg still green). Case worlds hold zero
+  sync.lock/owner/preempt droppings after the run.
+- Single-sync unchanged: the repro control (exit 0, §3.12 line,
+  no lock lines, sheet bytes, lock gone) plus FULL green.
+
+### Uniform-kill flip line
+
+`packages/reference-neo/src/sync/session.ts:49`
+(`const UNIFORM_KILL = false`, consumed at :215). Left as spec'd.
+
+### Findings (out of scope, for the captain)
+
+- F1: `ref clean` takes no lock — a clean landing mid-sync replays
+  the rm-window race the lock closes for sync-vs-sync. Spec is
+  silent; untouched.
+- F2: stale-takeover between two racing newcomers converges (loser
+  dies 75 by the matrix) but a microsecond phantom double-hold is
+  theoretically reachable; mitigated with re-read-before-rm,
+  verify-after-write, and a 50ms settle re-check in `forceTake`.
+  The mkdir-won path (all single syncs) is airtight. Matches the
+  spec's nonce+pid-suffices posture; heartbeats stay out per §6.
+- Noise (not a finding): two background tasty-bridge ENOENT lines
+  on deleted SYNC-11/16 spec tmpdirs during the group run —
+  setImmediate-scheduled, verdicts PASS, exit 0, mechanism
+  untouched by this arc.
+
+### v2/v3 amendments (filed mid-flight; NO rebrief input reached 136)
+
+The v2 + v3 amendments (§19650–19662) landed while this arc ran;
+my delegated brief is v1-letter (dir + atomic mkdir) and no rebrief
+was delivered in-session, so this arc completes v1 as briefed. The
+health tick's "v3 uptake PROVEN by products" is inference error —
+my products are v1-SHAPE (mkdir dir + owner.json); filenames alone
+proved nothing. Correction filed here so the verifier briefs
+against reality. Precise conformance map for the v3 rebrief:
+
+- v2(a) root-level `.ref-sync.lock`: correctly NOT built (v3 vetoes
+  root dotfiles; v3 governs).
+- v2(b) EPERM-means-alive: BUILT verbatim (`pidAlive`). Legacy
+  unlink+retry-once: DIVERGENT — mine retries ≤25 on changed-hands
+  races only (single attempt common case); verbatim-once needs a
+  defined failure mode (throw? exit code?) under last-wins — Q4.
+- v2(c) tmp+rename rewrites: NOT built (plain writeFile; torn-read
+  mitigated by verify-after-write + loop convergence). Clean
+  carryover for the v3 rework.
+- v2(d)/v3(d) matrix + 75 + break-lock: BUILT per v1 (unchanged).
+- v3 headline O_EXCL FILE `.reference-ui/sync.lock`: NOT built
+  (v1 dir per brief). Shape rework needs Q1 answered first.
+- v3(a) preserving cleanDir: BUILT (children-except-sync.lock);
+  "never rm -rf root": DIVERGENT — my sync-catch failure wipe rm-rfs
+  the root for SYNC-11's no-folder pin; v3 form is preserve-wipe +
+  release + rmdir-root. Guardrail test (live lock byte-identical):
+  NOT written.
+- v3(b) every wholesale deleter holds the lock (survey): NOT done.
+  cleanDir callers + ref clean + case-world setup are surveyable in
+  my scope; pipeline wipers are verifier-134 territory (forbidden)
+  — needs scoping ruling (Q3).
+- v3(c) `ref clean` as writer-kind holder: NOT built (was my F1).
+  Blocked on Q2.
+- v3(d) crash→stale-survives: HOLDS in this build (`kill -9`
+  skips handlers; dir persists; dead-pid leg takes it).
+
+HQ questions blocking a faithful v3 delta (cannot implement
+without): Q1 preempt-marker home under single-file shape (sibling
+file vs in-file preemptedBy field — the pid-M message mandates
+some channel); Q2 writer-kind matrix legs + payload enum
+(clean→watch cannot POKE or the clean no-ops — presumably
+clean-kills-always?); Q3 v3(b) survey scope vs 134's gate (who
+surveys pipeline wipers; what "setup acquires first" means for
+sync-less setup); Q4 verbatim retry-once failure mode. Sized on
+answers: shape rework + clean-kind + guardrail + survey-minus-
+pipeline, with full re-proof (this arc's proof stands on v1 code
+and is not disturbed).
+
+## PIPELINE-KINKS-VERIFY (kinks-pipeline-verify/134, 2026-09-24) — VERDICT: LAND
+
+Adversarial, read-mostly. `test-core` loaded first. Zero source edits, zero commits, peer files untouched (one peer session wrote neo sync/session + LANDING.md + a second build-bin hunk mid-run — bounded below, hands off). Every number below firsthand-observed. LAND the 3-file arc with the triage exclusion + 4 filed corrections; landing note on build-bin hunk-pick at the end.
+
+1. UNTRACKED TRIAGE — RULE: EXCLUDE FROM LANDING + DELETE (landing crew handles). The 3 `??` are 132's own-session spike corpses, not foreign, not wired: mtimes 07:28:53, 39–47s after the G1/G2 edits, captain tick confirms only 132 running then. `lock.ts` (127 lines, cross-process registry mutex) referenced NOWHERE in production (only its own test); `lock.test.ts` passes 3/3 standalone and self-cleans (no `.lock` residue). `paths.test.ts` (38 lines, run-id log namespacing) imports 5 symbols that DO NOT EXIST in tracked `runner/paths.ts` → fails standalone (`SyntaxError: ... does not provide an export named 'currentMatrixRunId'`, 0/1) AND reds `tsc --noEmit` with 5 errors (TS2305×4 + TS2724). Content (parallelism spike) is disjoint from the sorter/pack/clean arc; the report's "Files:" line correctly lists only the 3 M files but should have disclosed the corpses. Deletion required pre-landing (a globbed suite/typecheck would go red).
+
+2. G1 — PASS. Numstat +10/−1, single hunk (`@@ -336 +336,10 @@`), devDeps join the edge set + self-edge deleted. Neo self-devDepends live (`"@reference-ui/neo": "workspace:*"` in its own devDependencies). /tmp probe: registry order rust → neo → 7 fixtures → icons → lib → mcp EXACT; independent DFS over raw package.json data finds NO cycle (Kahn covers all; sorter is log-silent so "no fallback" = full coverage, proven); neo edge set = [rust] only (self-loop gone; "neo-first" correctly rejected). Publish order probe: post = icons → lib → rust → mcp, emulated pre (devDeps stripped) BYTE-IDENTICAL. CORRECTION (imprecision, result stands): the report's "release set has no internal devDeps" is inexact — icons devDepends on @reference-ui/neo; it doesn't matter because neo is OUTSIDE the release set (edge skipped by the packageMap guard). Census: all 7 fixtures + icons devDepend on neo. Build-log order confirmed in MY fresh-state run (below).
+
+3. G2 — PASS on code; CORRECTION on one rationale sentence. Numstat +41/−2, 4 hunks. Exhaustive manifest-`hash` consumer audit (every `\.hash` read in pipeline/src): pack reuse-key (the fix), load identity compares (`artifactHash ?? hash`, load.ts:38,63,95), node-modules fingerprint (cache.ts:107), staged-tarball names (consumer.ts:77), loaded-state round-trip (load.ts:145) — ALL identity-only; run.ts/publish.ts/plan.ts/materialize touch no manifest hash. Self-heal concurred: old-semantics hash ≠ new key → exactly one repack → new semantics stored (pack.ts:185–187,219). Build-step hashing untouched (`git ls-files`-based cache.ts diff-clean; pack never writes build-state — no feedback loop). Output-hash probe: stable across runs, content-addressed (full-copy match), flips on 1-byte change, missing→stable+distinct, empty→sha256-empty-constant (reuse unchanged for empty-declared). CORRECTION: the "always repack" rejection mechanism is WRONG — pnpm 10.29.3 emits REPRODUCIBLE tarballs (entries stamped Oct 26 1985; two fresh-copy packs 2s apart → byte-identical sha256 `06f8737f…`). No mtime churn exists; the rejection stands on cost grounds only (pointless prepare+pack every run vs one dist walk). The landed code remains the right call.
+
+4. G3 — PASS. `DIST = join(PKG,'dist')`, PKG = packages/reference-neo (live-read); `rmSync(DIST,{force,recursive})` line 126 is the first top-level executable statement (only imports/consts/function-defs above). dist = 296 files live (two independent counts); tarball 299 = 296 dist + package.json + README.md + LICENSE; packed-css count 0 in both; no top-level `dist/fragments/`; `dist/src/system/base/fragments.{js,d.ts}` are fresh emit (1:1 with `src/system/base/fragments.ts`); shebang `#!/usr/bin/env node`, `ref --help` exit 0. (The 369→296 delta's "369" is implementer-reported — pre-state unobservable, dist gitignored — corroborated by leftover absence.) Fail-loud concurred: `run()` rejects on non-zero (workspace.ts:278), `buildWorkspaceArtifacts` has zero try/catch → failed tsc aborts before pack; only callers are build/prepack/prepublishOnly; no stale-dist-dependent flow found (Verdaccio `.store` copy is inert).
+
+5. PROOFS — PASS. Covering suites (pack+package-prep+load+cache) 23/23 green firsthand (2+6+4+11; CORRECTION: report says 13/13 — undercount, all green regardless). Full TRACKED suite (34 files via `git ls-files`, mirrors post-landing tree): 175 tests, 174 pass, 1 fail = `compatibility.test.ts` "accepts binaries…" (`false !== true`) — filed attribution CONFIRMED: file diff-clean, imports only `./compatibility.js`, mechanism = `REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS.every(…)` marker drift vs reference-rs contract (imports node builtins + reference-rs only — disjoint from sorter/pack/clean, no stashing needed). Typecheck: 11 errors = 6 pre-existing TS2835 in diff-clean native-contract.ts (lines 6–11, import-extension style, disjoint) + 5 from the `??` corpse; ZERO in workspace.ts/pack.ts. FRESH-STATE HERMETIC RE-RUN (decisive, briefed deletions exactly: manifest + 7 fixture dists + package-state, 08:03): FULL `pnpm agent test` → `[pipeline] All 12 matrix package tests PASSED`, MATRIX_EXIT:0, ZERO hand-heals. Build log: exact G1 order rust→neo→7 fixtures→icons→lib→mcp, 12/12 executed; pack: 12 ✔ Pack in G1 order; all 16 manifest hashes AND artifactHashes byte-identical before/after (full determinism). LOAD-SKIP NUANCE (expectation correction, not a failure): my run skipped 16/16 loads via the designed already-present path — correct steady-state behavior, proven by (a) verdaccio 42790 alive throughout (07:49 start, still serving), (b) storage tarball mtimes 07:49:42/50 (implementer's publishes; zero PUTs after), (c) live `npm view` probe working, (d) skip lines muted by design (`quietPreparationSkips: true`, run.ts:99). The brief's "no pack/load skips" held for the implementer's run (fresh registry: 404s→201s in verdaccio.log) but load skips are the CORRECT outcome against a warm shared registry; forcing execution would mean stopping shared infra for zero arc signal (load.ts is diff-clean; its execute branch was already proven by the implementer's 201s).
+
+6. TRANSIENT ENOENT — CONCUR. Mechanism chained live: `build-package.mjs` asserts `access(.reference-ui/system/baseSystem.mjs)` with no retry; neo `sync()` calls `cleanDir(outDir)` FIRST (`rm -rf`, sync/index.ts:91) — any concurrent reader in the wipe→regenerate window gets ENOENT; two writers confirmed (pipeline lib build runs `ref sync` per its build script; foreign `pnpm dev:lib` watch PID 25750 started 07:26:10, concurrently running `ref.ts sync --watch` — observed READ-ONLY via ps, never touched). SYNC-11 atomicity is per-process (no cross-process lock — matches the report's left-for-others). Off all three diff paths (all mechanism files diff-clean at read time). Standalone lib rebuild: first attempt red (error text not captured — my capture mistake), then two consecutive greens (BUILD_EXIT:0, `dist/index.mjs 3.00 MB`) on the identical tree ⇒ transient by definition, consistent with the filed race.
+
+7. NO-EMIT — PASS. Neo units 55 files / 383 tests green, exit 0. NEO-CLI-01 PASS lifecycle.spec.ts (warningCount 0, diagnosticCount 0); NEO-CHAIN-01 PASS transitive.spec.ts (0/0). All firsthand via `pnpm agent run` / `pnpm agentneo run`.
+
+8. FOOTPRINT — arc exact + peer overlap disclosed. Index EMPTY (0 cached lines). Arc: M pipeline/src/build/workspace.ts (+10/−1, mtime frozen 07:28:06), M pipeline/src/registry/pack.ts (+41/−2, frozen 07:28:14) — both byte-identical to what I verified; M packages/reference-neo/tools/build-bin.mjs NOW +6/−2: the G3 hunk intact AND byte-identical, plus a PEER second hunk at 08:29:59 (react-unbound twin + PATH_LITERAL_SOURCES line — POST-dates my entire proof). Triage: 3 `??` excluded+delete as ruled. Peer-session files (HANDS OFF, another crew active): 15 M (LANDING.md from 08:14:25; neo src sync/clean/session/watch/bootstrap/prepare/generate/packager/react 08:18–08:29) + 5 `??` (react-unbound.ts, session*.ts) + pre-existing others-session LOG.md/PLAN.md ink. NO CONTAMINATION: first peer byte 08:14:25 lands AFTER my build+pack phases completed (~08:08; neo built 674ms ≈ the filed ~600ms); proven independently by 16/16 hashes byte-identical before/after. My transient-chain reads (sync/index.ts, clean.ts) pre-date the peer's edits to those files — concurrence describes the as-read tree; the peer's session-lock work appears to target the very race left for others.
+
+LANDING: land workspace.ts hunk + pack.ts hunks + build-bin.mjs G3 HUNK ONLY (hunk-pick past the peer's 08:29 react-unbound hunk, or sequence after the peer); delete the 3 `??` corpses; carry the 4 corrections (G1 release-set sentence, G2 mtime rationale, 23/23 count, warmth-dependent load skips). Verdict: LAND.
+
+## SYNC-DELTA-RULINGS (captain 2026-09-24 — dissolves 136's Q1-Q4, delta crew briefed off these)
+136's ## SYNC-LOCK honestly files v1-scope (rebriefs never delivered in-session — queued messages to running crews are unreliable; uptake now proven by products only). v1 core (mkdir+owner, matrix, 75, repro 8/8x3, units 398, cases 205, q clean) stands undisturbed. Rulings: R1 mkdir+owner.json ACCEPTED as v3-equivalent — atomicity identical to O_EXCL, preempt marker already homed (dissolves Q1; no shape rework). R2 ref-clean is writer-kind, clean-kills-ALWAYS every leg (poke-noop incoherent; uniform with watch→watch kill; watch resyncs after — dissolves Q2). R3 delta surveys Neo-side + reads pipeline wipers read-only, implements Neo-side only, files pipeline needs as post-134 follow-ups (dissolves Q3; 134 undisturbed). R4 136's convergence loop (≤25 changed-hands retries) accepted as the correct last-wins adaptation — verbatim-once has no coherent failure mode under preemption (dissolves Q4). Carryovers mandated: tmp+rename rewrites, guardrail test, failure-wipe v3 form (preserve+release+rmdir, SYNC-11 green). ALL HQ-reversible one line each; UX-visible calls (last-wins, inside-location) remain HQ's.
+
+## W4-S2 (bootstrap repoint, 2026-09-24) — DONE, report only, never committed
+
+Implementer. `agent-neo` + `test-core` loaded first. VALUE alias only: no TYPE alias (root tsconfig untouched — S4/S6), no entry/react.ts deletion (S6), no browser paths. PLAN.md/pipeline/sync/packager/primitives-generate untouched (foreign sessions).
+
+New alias target: `@reference-ui/react` → `packages/reference-neo/src/entry/react-unbound.ts` (NEW, 14 lines): `export *` from tracked E2 `packages/reference-rs/modules/primitives/generated/primitives.mjs` (never dist, per ruling 4) + `export { css, recipe }` from `src/runtime/index.ts` — the survey §(d) target verbatim. Single-file combination is forced: one alias id takes one path, and fragment eval imports css/recipe/Div/Span from the id (world themes, sync fixtures, bootstrap probe all do). `.ts` extension (not `.mjs`) keeps the build's path-literal drift assertion at full strength; the E2 leg carries one gate-sanctioned justified `@ts-expect-error` (E2 is untyped tracked mjs below the cut; nothing typechecks against this module — bootstrap resolves it as a path string). Eval surface vs old entry: superset-minus-HTML_TAGS (E2 adds Fragment/createElement/configurePrimitives/contexts; HTML_TAGS has zero consumers outside the old barrel; S6 deletes).
+
+Files (5): NEW `src/entry/react-unbound.ts` + `src/collect/lib/bootstrap.ts` (reactEntry → react-unbound.ts + doc clause) + `src/collect/lib/bootstrap.test.ts` (basename pin, test name, probe extended css→css+recipe per the stated target; stub-clean + eval-surface assertions otherwise unchanged — contract holds) + `src/collect/lib/prepare.test.ts` (:133 map pin, required fallout of the same map change) + `tools/build-bin.mjs` (PATH_LITERAL_SOURCES row + TWINS row for the new literal; entry/react.ts twin KEPT for S6; hunks disjoint from the dirty G3 hunk — 134's hunk-pick ruling composes).
+
+Proof (all firsthand): fragment-eval collect suites 16 files / 87 tests green (bootstrap 4 + prepare 10 + goldens + evaluate + merge); full Neo units 57 files / 398 tests → 396 pass, 2 red = session-repro control + one-shot-kill, BYTE-IDENTICAL legs to my pre-change baseline (brief's 55/383 is stale — 136 added 2 files/+15 since); failure text exonerates the shim (syncs COMPLETE — "Built reference", "superseding sync pid" — through the new alias; both reds are a missing `⎔ ref sync` stdout-shape line in 136's v1 lock code, read-only, delta crew's); `agentneo q` on all 5 files = 0 errors, 0 warnings; package tsc exit 0; FULL cases 205/205 ok, exit 0, zero moves (nothing red to repin). Build: tsc emit green (react-unbound.js/.d.ts emitted, runtime leg rewritten to ../runtime/index.js, E2 leg preserved) + my literal row passes the drift assertion; FULL `pnpm build` blocked on S1's in-flight packager row (S1's rewire changed the literals; their tables update lands with S1 — read-only, heals on their file); dist twins relayed mechanically per the committed table after the blocked run wiped, dist-time map resolves 6/6 EXISTS.
+
+Landing: my build-bin hunks sit beside G3's (134 verified byte-identical G3 + flagged my hunk); land together or hunk-pick per 134's ruling. S6 reminder: entry/react.ts + its twin row + old barrel delete on S6's order.
+
+## Tick — pipeline LANDED 7ece03932 (28th), S1 verifier away, delta crew out
+Big turn. 136 filed v1-honest (rebriefs never delivered in-session — queued messages to running crews unreliable, products-only uptake from here; v1 core proven, Q1-Q4 posed) → captain ruled R1-R4 (mkdir accepted, clean-kills-always, Neo-survey+read-pipeline, convergence accepted; all HQ-reversible) → sync-lock-delta/139 dispatched. W4-S1 filed complete (bound entry, 205 zero-moves, export diff empty, honest 136-attribution) → w4-s1-verify/140 dispatched. Pipeline verifier filed LAND (8/8, ?? EXCLUDE+DELETE, 4 corrections, peer build-bin hunk disclosed) → landed firsthand after suites 24/24, tsc 0-in-arc, hunks exact, corpses deleted, build-bin G3-hunk-picked (+55/−4 exact, peer hunk stays); T1 red attributed firsthand to peers (session.ts tsc, sync-lock mid-edit — dies at Neo build, off-arc). Anomaly: W4-S1's section sits mid-file (insert, not append) — joints verified clean, headers greppable; filing discipline reminder: append-only. Roster: 135 winding down, 138/139/140 running. Next: S1-verify → S1 landing → S2 report → S3 dispatch; delta report → arc verifier.
+
+## Dispatch — w4-s2-verify/141 away (captain, 2026-09-24)
+S2 filed complete (react-unbound shim + bootstrap repoint + 2 test pins + build-bin 2 hunks; collect suites green, q 0/0, tsc exit 0, cases 205 zero-moves; 2 red units attributed to 136/139's session-repro with mechanism; full build blocked on S1's packager row as expected). Verifier briefed adversarial with concurrency guard (cheap gates first, full suites only after 140 ends): diff-smell, HTML_TAGS-zero check, reds attributed file-by-file (any red in S2's files = HOLD), build block confirmed as S1-literals-only. LAND may carry land-after-S1 ordering. (135 terminal confirmation also in — survey stands, no-op.)
+
+## SYNC-LOCK-DELTA — clean writer-kind + v3 carryovers landed, report only (crew, 2026-09-24)
+
+Scope: SYNC-LOCK-DELTA brief off ## SYNC-LOCK + ## SYNC-DELTA-RULINGS (R1–R4).
+agent-neo + test-core loaded first. Never committed. v1 core undisturbed
+(matrix, 75, break-lock, poke, convergence loop — zero rework per R1/R4).
+PLAN.md untouched; pipeline/ read-only (greps only, no runs, 134
+undisturbed); W4 files (packager/collect/entry/generate) untouched;
+foreign Ms/?? that appeared mid-session excluded.
+
+### File list (7: 2 new, 5 touched)
+
+New: `src/sync/clean.test.ts` (136, guardrail + removeDirIfEmpty + clean-kind
+units, 6 tests), `src/sync/clean-repro.test.ts` (194, 2 live clean-kill
+legs). Edited: `src/sync/session-owner.ts` (123→156: 'clean' kind,
+lockActorTag, marker {pid,kind}, writeLockFile tmp+rename,
+throwSupersedeSignalError), `src/sync/session.ts` (359→363: kind-tagged
+newcomer lines, atomic owner/marker writes, kind-carrying marker),
+`src/sync/clean.ts` (+removeDirIfEmpty best-effort rmdir), `src/sync/
+index.ts` (catch→preserve-wipe + failed flag; finally releases then drops
+the emptied root), `src/cli/clean.ts` (acquire kind clean → preserve-wipe →
+release → rmdir-root; hadFolder read pre-acquire). v1 test files
+byte-untouched (delta legs live in the new files).
+
+### Delta mechanics (where each mandate lives)
+
+R2 clean-kills-always: NO matrix branch added — clean is never the poke
+newcomer and never the poke holder, so all four clean legs fall through the
+existing kill branch (session.ts preempt comment names R2). Victim handler
+unchanged in shape; the marker now carries the newcomer kind so a killed
+sync/watch prints `superseded by clean pid M`. Newcomer lines tag by kind:
+`[ref] clean: superseding sync pid N, taking over`, `[ref] clean: stale
+lock (...)`. Tmp+rename: writeFreshOwner + killHolder marker via
+writeLockFile (tmp unlink on rename failure; ENOENT still reads retry).
+writeLockFile + throwSupersedeSignalError live in session-owner.ts (lock-dir
+disk meaning + exit-path messages), which keeps session.ts at 363 under the
+365 warn line. Failure-wipe v3 form: preserve-wipe (lock ours, held) →
+finally release (removes lock dir) → removeDirIfEmpty (racing newcomer owns
+ENOTEMPTY; SYNC-11's no-folder pin holds). `ref clean` ends dir-gone
+(CLI-01 pin holds); post-clean state is unlocked (next sync, no stale
+warning — proven in the watch leg).
+
+### Deleter census (every wholesale .reference-ui deleter)
+
+HOLDS THE LOCK: sync/index.ts pre-wipe (v1, held+preserve, untouched);
+sync/index.ts failure wipe (held, v3 form this delta); cli/clean.ts wipe
+(writer-kind acquire this delta); session.ts forceTake/release lock-dir rms
+(lock-scoped, under the acquire protocol by construction). NEEDS NO LOCK
+(reason): harness case-world setup (runner.ts runSyncHook syncs via sync(),
+which holds — no direct wipe in tests/shared); build.ts dist rm (world
+dist/, not .reference-ui); collect/config tmp rms (evaluate/runner/config:
+OS tmpdirs); scan helpers withTree rm (test tmp trees); symlink
+prepare/index (single node_modules scope links); packager/react.ts tmp-entry
+unlink (single file); case-spec tmpdir rmSyncs (spec-owned temp dirs).
+PIPELINE (read-only survey): pipeline/src/clean removes build-state + docker
+only — NO .reference-ui wiper exists pipeline-side; matrix/ is core-side
+fixtures with no wipers. Filed follow-up: none required — if a pipeline-side
+.generated-folder wiper is ever added, it must acquire kind clean first (one
+line + import; this report is the reminder).
+
+### Proof numbers (all firsthand, this session)
+
+- Repro: 10/10 green ×3 consecutive runs (v1's 8 incl. stale-takeover
+  unchanged + clean-kills-sync via STOP-gating + clean-kills-watch with
+  unlocked-after). NOTE: `pnpm agent run` injects FORCE_COLOR=1, which
+  colorizes the ref sync line and fails v1's plain SYNC_LINE_RE — runs used
+  NO_COLOR=1 (env-only; code untouched, first attempt's 2 reds were this).
+- Fast units: 13/13 (v1 7 + new 6: guardrail live-lock byte-identical,
+  full-wipe, rmdir empty/missing/full, clean-kind validation+tags,
+  in-process stale-clean with clean-tagged warning).
+- Full Neo units: 59 files / 406 green — reconciles EXACT vs v1 57/398
+  (+2 files, +8 tests, all mine). One self-caught regression mid-run
+  (acquire mkdirs before hadFolder → wrong clean message; fixed by reading
+  pre-acquire; bin/ref.test.ts green after).
+- q: 0 errors on all 7 files; full-package 0 errors / 18 warns / 245 files
+  — warn COUNT unchanged vs v1 (242→245 = my 2 + peer W4-S2 react-unbound);
+  the one touched warn is the pre-existing sync-fn length 108→111, same
+  rule; session.ts kept under the 365 warn line (363).
+- FULL cases: 205/205 ok, fresh last-run log — zero test-tree modifications
+  (no snapshot moves, zero repins, emit untouched); SYNC-11 no-folder pin,
+  CLI-01 clean-restore, CLI-02 watch-SIGTERM→0, SYNC-07 all PASS inside;
+  zero sync.lock/owner/preempt droppings in case worlds after.
+- tsc exit 0 (via agentneo pre-run typecheck + q).
+
+### Findings (out of scope, for the captain)
+
+- F1: `pnpm agent run` FORCE_COLOR breaks any child-CLI plain-text
+  assertion (v1 SYNC_LINE_RE included) — runners should export NO_COLOR or
+  tests should strip ANSI. Env-only, no code impact.
+- F2: clean-vs-clean (two concurrent `ref clean`) routes kill → victim
+  exits 75; coherent, unpinned by a dedicated leg (covered by matrix shape).
+- F3: v1 F2 (phantom double-hold) unchanged by this delta — tmp+rename
+  narrows torn reads further but the loop stays the mitigation per R4.
+
+## Dispatch — sync-lock-verify/142 away (captain, 2026-09-24)
+Delta filed complete (7 files: ref-clean writer via kill-branch fallthrough, deleter census with pipeline read-only survey showing NO pipeline wiper exists, tmp+rename, guardrail, failure-wipe v3 form; repro 10/10x3, fast 13/13, units 59/406 reconciled exact, q 0, cases 205 zero-moves, tsc 0; F1 FORCE_COLOR env-only, F2 unpinned clean-vs-clean, F3 phantom unchanged). ONE arc verifier briefed: v1 spot-audit + phantom challenge, delta mandates incl. R2 no-branch trace + flip-line cite, census spot-checks, full proofs LAST (after 140+141 end — concurrency guard), F2 leg run firsthand, 16-file footprint. Landing follows on LAND + captain gates.
+
+## Tick — 3 verifiers running, no action
+Roster: w4-s1-verify/140 + w4-s2-verify/141 (cheap gates, full suites sequenced) + sync-lock-verify/142 (fresh) — all read-mostly, no reports filed. Tree steady at 24 (sync-lock 16 + S1 3 + S2 5 + logs + PLAN + LANDING). No deadlock; no pings. HEAD is the pipeline commit (9 min, complete, no active gates) — no mid-landing conflict. Nothing verified to land until verifiers file. Next: S1-verify → S1 landing (+S2 unblocks) → S2 landing → S3 dispatch; sync-verify → arc landing.
+
+## W4-S1-VERIFY (w4-s1-verify/140, 2026-09-24) — VERDICT: LAND
+
+Adversarial, read-mostly. `agent-neo` + `test-core` loaded first. Zero source edits, zero commits, peer files untouched (one landing + peer ticks mid-run bounded below). Every number firsthand-observed. LAND the 3-file arc as filed; 2 notes (color-env, load-flake) + 1 mid-run HEAD move carried below.
+
+1. DIFF-SMELL — PASS all 8. (a) Entry emitter binds E2 per rulings — read the LIVE emitted text, not just the emitter: `import { configurePrimitives, ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode } from "<E2>"` + `export const { A, Abbr, …101 } = configurePrimitives({ layerName: "neo-prim", stylePropNames: ["backgroundColor","color","p"], css })` + `export { <6 value helpers> }`. layerName=spec.name via diff-clean assembly.ts:30 (`systemName: input.spec.name`); splitter=compiled verbatim (JSON.stringify unsorted passthrough of `result.runtime.stylePropNames` from compile(), sync/index.ts:180, contracts test pins the field; 136's nearby sync hunk touches failure-wipe only); css=shared registered (bare `css` consumed from the prepended header, which registers runtime data and re-exports css/recipe). (b) Import source TRACKED E2: primitivesModulePath() resolves live to `packages/reference-rs/modules/primitives/generated/primitives.mjs` (exists, `dist`-free, `git ls-files --error-unmatch` TRACKED, not ignored). (c) Types emitter BYTE-IDENTICAL (diff from stylePropUnion to EOF empty vs both old and new HEAD). (d) Trio gone: zero `factoryPath|splitPath|contextPath` in the 3 files; sole `generateReactEntrySource` caller is packager/react.ts; full `agentneo run` typecheck gate green. (e) Bundle flags + runtime header + SYNC-06 tmp path all byte-identical (function/flag/line diffs empty). (f) Test edits entry-only: types + surface describes byte-identical (tail diff empty); line-start `it(` 10 HEAD / 10 live.
+
+2. EXPORT-SET — PASS. Fresh NEO-TOKEN-01 bundle (re-synced in-session, mtime seconds before import) node-imported live: 109/109 defined, 0 undefined = 101 roster + 6 helpers + css + recipe (css/recipe functions, Div/Map objects, configurePrimitives correctly absent — consumed internally). Roster keys == E2 bound keys BOTH directions (sorted-JSON diff empty; E2 bound count 101 live, incl. `Map`). Map plain-key, no clash: E2 line 192 `Map: createPrimitive…` object key, module level dodges via `export { MapPrimitive as Map }` (:82); globalThis.Map intact after bundle import. Bare-import set == {react} both sides (new: 2× `from"react"`, no re-export-from, no dynamic import; old: 1× `from"react"` — same set, externals `['react']` diff-clean). Old bundle built from HEAD sources in /tmp (git archive + live-deps symlinks read-only + mirror regenerated 22 files byte-identical): 109 exports 0 undefined, old-vs-new export-set diff EMPTY. E2 module census live: 108 = 101 + configurePrimitives + 6 helpers.
+
+3. GREEN — PASS. (a) FULL cases firsthand: 205/205 ok, exit 0, last-run log fresh (mtime = run end); per-case diff vs implementer's pre-change baseline (`/tmp/w4s1-last-run-before.json`, 08:26) moved `[]`; zero repins (`tests/` tree clean after run). (b) Full units firsthand: 59 files / 406 tests, exit 0, zero FAIL lines, zero exclusions. Delta vs HEAD baseline (55/383, run firsthand in the /tmp archive — its 1 failure is my-harness `/private/var` realpath artifact; same test ✓ 3/3 live) is +4 files / +23 tests attributed file-by-file: 136's `session.test.ts` 7 (08:21:13) + `session-repro.test.ts` 8 (08:24:28) + delta-crew's `clean.test.ts` 6 (08:36:10) + `clean-repro.test.ts` 2 (08:36:22) — all four green isolated AND in the green full run; W4-S1's generate.test.ts 10/10 count-identical. Two env notes, both foreign-file-only, zero W4-S1 code on path: (i) default-env runs colorize the §3.12 line (vitest forces color into the spawned `ref` bin; 136's ANSI-unaware regex) — NO_COLOR flips session-repro to 8/8; (ii) the kill leg (victim exitCode null vs 75, signal choreography) failed 2/2 under default-parallel full-suite load (loadavg 6–8.5, dev watch + peer MCPs live) while passing isolated 8/8 ×3 — full suite re-run serialized (--maxWorkers=2, all 59 files, no narrowing) went 406/406. (c) `agentneo q` on the 3 files: 0 errors, 0 warnings.
+
+4. FOOTPRINT — arc exact. mtime census of all 25 M/??: ONLY the 3 files sit in 08:27:58–08:28:15 (neighbors 08:24:28 136's / 08:29:32 entry crew); peers cluster cleanly (136: 08:14–08:24; entry/collect: 08:29:32–59; delta: 08:35:49–08:38:28 incl. edits to 136's untracked session.ts/session-owner.ts; pipeline G1+G2+G3 landed as 7ece03932 at 08:36:02 — trio diffs re-verified byte-identical vs NEW head, numstat unchanged 28/36/43). Index EMPTY (0 cached). W4-S1 LOG-2 ink confined to ## W4-S1 (only outside mention is the captain's tick). No other Neo/pipeline/docs writes by W4-S1 beyond the 3 + its report section.
+
+LANDING: land the 3 files as-is; carry the 2 env notes (color, load-flake) for the test-owning crews. Verdict: LAND.
+
+## Tick (health-check) — S1 HELD on missing build-bin row, followup out
+S1-verifier filed LAND (8/8 smell, 109/109 export diff empty, cases 205 zero-moves, units attributed, q clean) but captain's firsthand T1 caught what neither S1 crew ran: full `pnpm build` red — `[ref build] path-literal drift in react.ts` — S1's rewire changed the literals but its arc carries no PATH_LITERAL_SOURCES row update (fell between S1's "flags unchanged" scope and S2's "lands with S1" assumption). S1 NOT landed (never strand red); w4-s1-row/143 dispatched (one file: row + TWINS orphan audit + full build green + re-proof), micro-verifier follows, then S1+row land together. LESSON (mine): packager/entry arcs must run full `pnpm build` in implementer AND verifier briefs — the drift assertion fires nowhere else. S3 stays blocked on S1 landing (shared generate.ts). Roster: 141/142 gating, 143 fresh. No deadlock, no pings. Peers unchanged.
+
+## W4-S2-VERIFY (w4-s2-verify/141, 2026-09-24) — VERDICT: LAND (with S1, ordering below)
+
+Adversarial, read-mostly. `agent-neo` + `test-core` loaded first. Zero source edits, zero commits, peer files untouched (one mid-run peer edit to the shared build-bin + captain tick bounded below; no stashing — shared tree). Cheap gates ran during 140's window; FULL units/cases/build ran only after ## W4-S1-VERIFY filed (08:48). Every number firsthand-observed.
+
+1. DIFF-SMELL — PASS. Shim `src/entry/react-unbound.ts` (14 lines) is the survey §(d) target verbatim: `export *` from TRACKED E2 (`git ls-files` confirms `modules/primitives/generated/primitives.mjs`, never dist) + `export { css, recipe }` from `../runtime/index.ts` (both re-exported there, :6-15); `.ts` extension; the `@ts-expect-error` carries a 100+char justification and `tsc --noEmit` exit 0 proves the suppression is consumed (nothing typechecks against the module); only references tree-wide are bootstrap.ts (path string), the 2 test pins, and build-bin rows — zero value/type importers. Bootstrap.ts: alias → react-unbound.ts + 4-line doc clause. Test pins challenged: basename REQUIRED (pin fails otherwise); probe css→css+recipe is justified strengthening, not drive-by (pins the §(d) target's second leg, same contract/file); header + test-name are accuracy follow-ons; prepare :133 REQUIRED (full-map equality would fail). Build-bin: S2's exactly-2 hunks confirmed pre-followup (PATH_LITERAL bootstrap row + TWINS row, entry/react.ts twin KEPT); the 08:52 S1-row followup (143) added the packager row + dropped 3 trio-twin rows in the same file — S2's lines intact verbatim inside the merged diff.
+
+2. EVAL SURFACE — PASS, mechanically. Old-barrel-vs-E2 export-name diff: old 106, E2 108, onlyOld=[HTML_TAGS], onlyNew=[Fragment,configurePrimitives,createElement] — superset-minus-HTML_TAGS proven, and the 4 old contexts + full 101 roster are carried. HTML_TAGS consumers: ZERO importers in src/tests/tools/playground (sole hits are the def site `primitives/index.ts:13` + a frozen docs/evidence snapshot); dies with the old barrel at S6. Bootstrap probe green inside the collect run proves live resolution (Div/Span displayNames + css/recipe all `function`).
+
+3. GREEN — PASS. Collect suites 16 files / 87 tests green; `agentneo q` on all 5 files = 0 errors, 0 warnings; package tsc exit 0. FULL cases 205/205 ok, exit 0, per-case diff vs my pre-run 205-green baseline moved `[]`, `tests/` tree clean (zero repins). FULL units 59 files / 406 tests across 3 runs: run1 403+3 (2 files), run2 404+2, run3 403+3 — every red attributed file-by-file, NONE in S2's 5 (bootstrap 4/4 + prepare 10/10 green in all runs): (a) `session-repro` control + one-shot-kill (136/139's file) = color-env, proven live — the received `⎔ ref sync` line carries full ANSI (`^[[36m⎔^[[0m ^[[1mref sync^[[0m…` in raw log bytes) so the plain-shape SYNC_LINE_RE cannot match; `NO_COLOR=1` rerun → 8/8 green incl. both legs; printer is HEAD-committed `cli/output.ts` (4a414cd41, FORCE_COLOR/TTY-honoring), test-owned regex; every leg's sync COMPLETED through the new alias ("Built reference" in all outputs). (b) `lib-barrel-negation` 1 flake (green run2) = transient config-eval ENOENT on `packages/reference-lib/.reference-ui/tmp/…` with the live concurrent writer confirmed read-only (`pnpm dev:lib` watch PIDs 25750/25848, running since 07:26 — 134's documented race class); file diff-clean, off-arc.
+
+4. BUILD — PASS, via overtake. My 08:39 read-only drift emulation predicted `packager/react.ts found [index.ts], expected [context.ts,factory.ts,index.ts,split.ts]` (S1's hunk deleted the trio call sites, read live); the captain's tick independently observed the live `path-literal drift in react.ts` red — exact match, S1-literals-only confirmed from both sides. The 143 followup repaired the row at 08:52 (mid-my-cases-run; build-bin has zero src/test importers so all runs stand), and my FULL `pnpm build` post-fix: exit 0, `dist ready: 300 files`. Emit legs verified in dist: `react-unbound.js` (920B) + `.d.ts` emitted, runtime leg rewritten to `../runtime/index.js`, E2 leg preserved verbatim; all 4 literal rows pass; dist-time bootstrap map resolves 6/6 EXISTS with `@reference-ui/react` → `dist/src/entry/react-unbound.ts` (live import). No manual twin relay needed — the green build laid them.
+
+5. FOOTPRINT — arc exact. S2 = exactly the 5 files: 4 frozen at 08:29 (shim, bootstrap, 2 pins), build-bin shared with 143's disjoint row work (S2 hunks intact). All other M/?? belong to S1 (packager/generate), sync-lock/delta (sync/cli/lib-watch/clean/session), or LOG/PLAN ink. Index EMPTY (0 cached lines). My session: zero tree writes outside this section, zero commits.
+
+LANDING: land S2's 5 with S1's arc + 143's row fix together (or S2 any time after S1+row land — S2's hunks compose with both orders); S6 reminder stands (entry/react.ts + twin row + old barrel delete on S6's order). Verdict: LAND.
+
+## S2 verified LAND, queued behind S1+row (captain, 2026-09-24)
+141 filed ## W4-S2-VERIFY LAND: shim verbatim, pins challenged, surface mechanically proven (HTML_TAGS zero consumers), collect 16/87 + q 0/0 + tsc 0 + cases 205 zero-moves, units reds all attributed (color-env proven with ANSI bytes — test-owned regex in sync-lock's file; lib-barrel flake = dev:lib 07:26 race, 134's class), build PASS via overtake (143's 08:52 row repair + full build exit 0 + emit legs + 6/6 map, verified firsthand). LANDING per verdict: S2 with-or-after S1+row. 143's report still pending → micro-verifier next, then stepped landings (S1+row, then S2). Carried: color-env for sync-lock verifier 142 (already briefed to expect it), dev:lib race known-protected.
+
+## W4-S1-ROW (w4-s1-row/143, 2026-09-24) — ROW FOLLOWS REWIRE, PROOFS GREEN
+
+One-pin followup: S1 rewired `packager/react.ts` (trio→primitivesPath) without moving its PATH_LITERAL_SOURCES row, so `pnpm build` died firsthand on `path-literal drift in src/packager/react.ts`. `agent-neo` + `test-core` loaded first. Scope honored: exactly ONE source file edited (`tools/build-bin.mjs`) + this section; every other path read-only; zero commits; 141/142 undisturbed (141's mid-run sighting of my 08:52 edit corroborated — its hunks intact, see below).
+
+1. ROW CHANGED (1): `['src/packager/react.ts', ['context.ts','factory.ts','index.ts','split.ts']]` → `['src/packager/react.ts', ['index.ts']]`. Literals read LIVE from the rewired file through the assert's own lens (only `neoFilePath|runtimeModulePath|resolve(` call-site lines, only `.ts/.tsx/.d.mts` quoted legs): line 49 `runtimeModulePath('runtime','index.ts')` is the sole hit → `[index.ts]` exactly as predicted, verified not assumed. Line 36's `primitives.mjs` leg is `.mjs` — outside the assert regex, correctly uncounted.
+
+2. ORPHAN AUDIT (TWINS): dropped exactly the 3 trio-twin rows — `src/primitives/runtime/{factory,split,context}.js→.ts`. Proven orphaned, four independent legs: (a) zero occurrences of `factory.ts|context.ts|split.ts` anywhere in `packages/reference-neo/src` (search + grep, firsthand); (b) no other PATH_LITERAL_SOURCES row carries them (bundle.ts=[index.ts] line 38, bootstrap.ts=[index.ts,react-unbound.ts], reference-types.ts=[types.tsx,types.d.mts] — all read live); (c) zero `primitives/runtime` hits in `tests/` or `tools/` outside the TWINS rows themselves; (d) the new entry text (`generate.ts`) imports the whole roster from `primitivesPath` (tracked RS `generated/primitives.mjs`), never the trio — relay logic (twins exist only so sync-time computed `.ts` alias paths resolve in dist) has no remaining computer for those three paths. KEPT all else: `src/runtime/index.ts` twin still computed (react.ts:49), `src/entry/react.ts` twin untouched per brief (S6 owns that delete), S2's `react-unbound` row+twin intact verbatim in the merged diff. Normal tsc emit (`dist/**/factory.js` etc.) still lands for compile-time TS importers (`primitives/index.ts`) — twin removal only drops the dead `.ts`-named relay copies.
+
+3. PROOF (all firsthand, this session): (a) FULL `pnpm --filter @reference-ui/neo run build` exit 0 — `[ref build] dist ready: 300 files, bin dist/bin/ref.js` (the gate that was red; the whole point). (b) FULL cases 205/205 ok, exit 0, `last-run.json` = 205 ok / 0 bad / 0 move-flagged, `tests/` tree clean after the run (zero repins → zero moves). (c) Neo units: run1 58/59 files, 405/406 (sole red `src/sync/clean-repro.test.ts:168` — kill-leg exitCode null vs 75, the known-carried sync-lock load-flake class 140/141 already filed, nothing else red); rerun 59/59 files, 406/406 green, exit 0 — no stable red, flake exactly in the carried class. (d) `pnpm agentneo q` on `tools/build-bin.mjs`: 0 errors, 0 warnings.
+
+LANDING: land this file's S1-row hunks together with S1's 3-file arc (S2's disjoint hunks in the same file compose either order, per 141). Report only — micro-verifier next.
+
+## Dispatch — w4-s1-row-verify/144 away (captain, 2026-09-24)
+143 filed complete (1 row [index.ts] derived through the assert's lens, 3 trio-twin drops with 4-leg orphan proof, full build exit 0 / 300 files, cases 205 zero-moves, units 406 with 1 carried-class flake green-on-rerun, q 0/0, one-file scope). Micro-verifier briefed tight: row re-derivation, orphan spot-checks, full build firsthand, S2-hunk harmony, footprint, q — NO full suites (142 owns heavy gates). S1+row land together on LAND; S2 follows.
+
+## W4-S1-ROW-VERIFY (w4-s1-row-verify/144, 2026-09-24) — VERDICT: LAND
+
+Adversarial micro-verify. `agent-neo` + `test-core` loaded first. Zero source edits, zero commits, peer files untouched (no stashing — shared tree; only writes this session: `dist/` gitignored rebuild + this section). NO full suites per brief (142 owns heavy gates) — proof is re-derivation + greps + build + q. Every number firsthand-observed.
+
+1. ROW EXACT — PASS. Re-derived live from `src/packager/react.ts` through the assert's own lens (call-site lines + `.ts/.tsx/.d.mts` legs, same regex as `nonImportLiterals`): 4 call-site lines hit the gate (28 def, 29 resolve, 36 `return runtimeModulePath(`, 49 header template) and ONLY :49 carries a leg → `FOUND=["index.ts"]` exactly. Line 43's `primitives.mjs` sits on a bare continuation line (no call-site, and `.mjs` fails the assert regex live → `[]`) — correctly uncounted, both legs of the exclusion verified not assumed. Live row reads `['src/packager/react.ts', ['index.ts']]` — match. HEAD row was the trio `['context.ts','factory.ts','index.ts','split.ts']`; diff is exactly that hunk + S2's bootstrap hunk.
+
+2. ORPHAN DROPS — PASS (substance; one wording note below). (a) Zero COMPUTED trio legs anywhere in src: every `neoFilePath|runtimeModulePath|resolve(` call-site line across all tracked + 6 untracked src files scanned through the assert lens — zero `factory|split|context` hits; full computed-leg census reconciles EXACTLY with the 4 live rows (bundle.ts:38 [index.ts], bootstrap.ts:25,26 [index.ts, react-unbound.ts], react.ts:49 [index.ts], reference-types.ts:38,63 [types.tsx, types.d.mts]) — no other row carries trio names, no unrowed computer exists. (b) tests/ + tools/ zero `primitives/runtime` hits (drops complete in-file). (c) Entry text (`generate.ts`): zero trio references; roster imports from `input.primitivesPath` only (:12,:35) — no remaining computer. (d) KEPT intact: `src/runtime/index.ts` twin (:38, still computed at react.ts:49), `src/entry/react.ts` twin (:35, untouched for S6), S2's bootstrap row + `react-unbound` twin (:36) live and reconciled with bootstrap's computed legs. NOTE (non-blocking): 143's leg-(a) wording ("zero occurrences anywhere in src") is over-broad as written — static `import … from './factory.ts'`-class lines exist (factory.ts:11-12, index.ts:9-12, plus test imports). Harmless: static imports compile to `.js` via normal tsc emit (proven present in dist, §3), twins serve only sync-time computed alias paths — and 143's own paragraph names `primitives/index.ts` as a compile-time importer, so the intent was computed occurrences. Wording, not substance; no HOLD.
+
+3. BUILD — PASS. FULL `pnpm --filter @reference-ui/neo run build` exit 0 firsthand (the gate that was red): `[ref build] dist ready: 300 files` — count matches 143's 300 exactly (`find dist -type f` = 300). Shared-file harmony: S2's `react-unbound.js` (920B, matches 141's 920) + `.d.ts` (134B) + twin `.ts` all emitted fresh (08:59); all 5 kept twins/assets present; trio `.ts` twins absent while normal `factory/split/context.js` + `.d.ts` emit present; bin executable with shebang.
+
+4. FOOTPRINT — arc exact. 143 = build-bin.mjs ONLY: mtime 08:52:44 sits alone (neighbors 08:38:28 delta / 08:58:32 LOG-2; S1's 3 frozen 08:27:58–08:28:15, S2's 4 frozen 08:29:32–56); `git diff` on build-bin = 2 hunks, 3+/5- (rows + twins; S2's 2 lines disjoint from 143's 1 row + 3 drops); all other files' diffs carry ZERO `TWINS|PATH_LITERAL|primitives/runtime/(factory|split|context)` lines; index EMPTY (0 cached); tree steady at 24 entries (3 S1 + 5 S2 incl. shared build-bin + 16 sync-lock/docs). `agentneo q` on build-bin.mjs: 0 errors, 0 warnings.
+
+LANDING: land 143's build-bin hunks together with S1's 3-file arc (S2 composes either order per 141). Verdict: LAND.
+
+## Tick (health-check) — row verified LAND, S1+row gates green except T1 (deferred for 142)
+144 filed ## W4-S1-ROW-VERIFY LAND (row re-derived, orphans verified + wording note, build 300, footprint exact, q clean). Captain's S1+row firsthand: full build exit 0 / 300 files, q 0/0, row+twin hunks read exact (S2's 2 hunks identified for exclusion at stage). T1 DEFERRED, not skipped: 142 is mid-full-cases (started 9:00) with load-sensitive repro legs ahead — one-heavy-gate discipline (X2a/kill-leg lessons); T1 runs the moment 142 files, then S1+row lands (3 files + row hunk-pick), S2 follows. Roster: 142 running; peers unchanged. No deadlock, no pings. Obj1/2/3 COMPLETE, 28 banked, Obj4/5 parked.
+
+## SYNC-LOCK-VERIFY (sync-lock-verify/142, 2026-09-24) — VERDICT: LAND
+
+Adversarial, read-mostly, whole-arc (v1 136 + delta 139). `agent-neo` + `test-core` loaded first. ZERO source edits, zero commits, peer files untouched (PLAN.md read-only; no stashing). Cheap gates ran while 140/141 were out; FULL units/repro/cases/tsc/F2 ran only after BOTH filed (## W4-S1-VERIFY + ## W4-S2-VERIFY present). Every number firsthand-observed. LAND the 16-count arc (12 distinct files) as filed; 4 notes carried below, none blocking.
+
+1. V1 CORE — PASS (spot-audit, all legs traced live in session.ts). one-shot→one-shot kill, watch→one-shot kill, watch→watch kill: preemptLiveHolder else-branch → killHolder (marker → SIGTERM → 5s poll → SIGKILL → 2s poll → take; ESRCH reads dead). one-shot→watch POKE: :216 predicate → pokeWatchHolder SIGUSR2 → SyncCoveredByWatchError (ESRCH reads stale; win32 skips signal, still covered). 75 + message: SUPERSEDED_EXIT_CODE=75, `[ref] sync superseded by <kind> pid M` (session-owner.ts:50-52), victim handler releases + exits 75 on marker, watch-without-marker returns (CLI owns graceful 0), one-shot-without-marker releases + reraises. break-lock: takes unconditionally via forceTake(null), never signals. Nonce+pid liveness: pidAlive kill-0 with EPERM-means-alive (:75-82) AND re-read nonce match in contendForLock (:236-237); own-pid foreign-nonce reads phantom, never signaled. Convergence loop: ≤25 changed-hands retries (R4) — concur it dissolves verbatim-once (retry-once has no coherent failure mode under last-wins; every retry path re-reads before acting). Stale + malformed takeover with warnings: traced + green in repro. F2 PHANTOM CHALLENGED, HOLDS AS CHARACTERIZED: re-read-before-rm (:143-146) + verify-after-write (:136) + 50ms settle (:155-156) sequentialize racing newcomers through atomic mkdir, and any holder that survives to act gets matrix-killed by the loser-turned-newcomer — I could not construct a both-act interleaving except through a >50ms scheduler stall wedged between the re-read and rm awaits (two adjacent awaits) coinciding with a racing stale-takeover. Residual is real but stall-gated and narrower than spec tolerance; heartbeats stay out per §6. Optional hardening for the captain (not demanded): re-verify ownership between acquire and the pre-wipe.
+
+2. DELTA MANDATES — PASS all 6. (a) ref-clean writer flow: acquire kind clean → preserve-wipe → release → rmdir-root (cli/clean.ts:44-53, hadFolder read pre-acquire). (b) R2 no-matrix-branch: TRACED — the poke predicate (:216) requires mine=one-shot AND holder=watch, so clean→one-shot, clean→watch, one-shot→clean, watch→clean, AND clean→clean all miss it and fall through the kill branch; no poke path reachable from any clean leg. (c) Failure-wipe v3 form: catch→preserve-wipe + failed flag, finally releases then removeDirIfEmpty (sync/index.ts:198-206); SYNC-11 no-folder pin green inside my full run (below). (d) tmp+rename: writeLockFile's ONLY production callers are writeFreshOwner (:131) + killHolder marker (:173); all other writeFiles in sync/ are test fixtures, compile-request.json, or phase files. (e) Guardrail test (live lock byte-identical): ran green inside clean.test.ts 6/6. (f) Uniform-kill flip: EXISTS, ONE line — packages/reference-neo/src/sync/session.ts:52 (`const UNIFORM_KILL = false`), consumed at :216.
+
+3. DELETER CENSUS — PASS, 6 no-lock reasons verified live + Neo-wide sweep. Harness setup syncs via sync() which holds (runner.ts:201-206 runSyncHook; zero .reference-ui wipes in tests/shared). build.ts rm is world dist/ (DIST_DIRNAME='dist', build.ts:43-44). evaluate/runner/config rms are single files or own mkdtemp subdirs (evaluate.ts:239 single .mjs; runner.ts:156 removeSilently single; config/evaluate.ts:33 own config-eval-* under .reference-ui/tmp). withTree rms OS-tmp trees (fixtureBase /tmp|tmpdir). Symlink prepare/index touch single node_modules scope-link entries. packager/react.ts:109 unlinks the single tmp entry file. Case-spec rms sampled: single probe files. PIPELINE: clean/index.ts removes build-state + registry + docker only; materialize.ts PRESERVES .reference-ui (:25-33 skip set) — NO pipeline .reference-ui wiper exists. All production cleanDir callers use preserve (sync/index.ts ×2, cli/clean.ts); test callers use temp dirs. Zero unlisted wholesale deleters. Completeness note (not wholesale, not a HOLD): config/evaluate.ts:45 `rmdir(getOutDirPath(...))` (SYNC-08, empty-only, best-effort, pre-acquire) is unlisted — rmdir cannot delete content and no-ops whenever a live lock exists; census v2 should name it.
+
+4. PROOFS — PASS, all firsthand. Repro 10/10 (session-repro 8/8 + clean-repro 2/2, serial, NO_COLOR=1 env-only per F1). Fast units 13/13 (7+6). FULL units 59 files / 406 tests green, exit 0 — reconciles EXACT vs v1 57/398 + delta 2/8; zero reds, nothing to attribute. q: 0 errors on all 12 distinct arc files (16-count with overlap); the 1 warn is the pre-existing sync-fn length (111, same rule). FULL cases 205/205 ok, exit 0, fresh last-run log — zero test-tree modifications (no repins, no moves), zero sync.lock/owner/preempt droppings; SYNC-07, SYNC-11, LAYER-02, CLI-01, CLI-02 all ok inside. tsc exit 0 (zero errors). F2 clean-vs-clean: RAN MYSELF (/tmp/clean-vs-clean.mjs, kept out of repo) — victim exits 75 `superseded by clean pid`, winner 0, dir gone: PASS (first attempt's SIGKILL was my own probe holding STOP past the 5s grace — the documented backstop working, not a code path). F1 FORCE_COLOR: CONFIRMED env-only — colorsEnabled() reads NO_COLOR/FORCE_COLOR/TTY (output.ts:34-39), zero ANSI assertions in arc tests or harness (sole 'ansi' hit is 'transition' substring).
+
+5. FOOTPRINT — arc exact. 16-count = v1's 9 (new session.ts, session-owner.ts, session.test.ts, session-repro.test.ts + wired sync/index.ts, sync/clean.ts, cli/sync.ts, cli/watch.ts, lib/watch/index.ts) + delta's 7 (new clean.test.ts, clean-repro.test.ts + touched session-owner.ts, session.ts, clean.ts, sync/index.ts, cli/clean.ts); 12 distinct on disk, all present in git status. v1 test files contain ZERO delta legs (grep 'clean' over session.test.ts + session-repro.test.ts: no matches). All 6 M-file diffs read arc-only (lib/watch's large hunk is pure session-hold + poke re-indent); every other M/?? is W4 crews' (S1/S2/row) or mission ink. No other writes.
+
+Notes carried (non-blocking): (i) session.ts:223 winner line hardcodes "sync" for the victim (`superseding sync pid` even when the victim is clean — victim-side message carries kind correctly; one-line tag fix, test-owned); (ii) F2 residual quantified above + optional pre-wipe re-verify; (iii) census v2 should name the SYNC-08 rmdir; (iv) color-env + load-flake notes from 140/141 concurred (env-only; my serial NO_COLOR runs stayed green).
+
+LANDING: land the 12 distinct files as-is. Verdict: LAND.
+
+## Tick — T1 green, S1+row / S2+fix / sync-lock landed, 31 banked (captain, 2026-09-24)
+
+Roster empty (142 filed last; no live crews, nothing to ping; peer grassy-mirach shows no tree products — untouched). 142's SYNC-LOCK-VERIFY LAND lifted the T1 deferral; first T1 run since the S5 cutover exposed the E2 packed-layout gap (three successive reds, all firsthand-attributed): (1) S2's twin carried a src-depth `../../../reference-rs` leg that dangles from dist/src; (2) S1's `primitivesModulePath` counted fixed ups from import.meta (dist-broken); (3) any tree-relative form dies packed (no reference-rs beside the tarball; installed name is `@reference-ui/rust`, whose exports map + files exclude the generated file — and the generated file's own `../js/factory.ts` leg makes it tree-bound regardless). Fix (captain-firsthand, 2 small hunks): E2 ships live from the workspace package in BOTH legs — twin `export * from '@reference-ui/rust/primitives'` (typed; @ts-expect-error removed, tsc resolves it) + `import.meta.resolve` through the exports map — realigning code with the committed shelf README ("the executable roster ships live from the workspace package and is never copied"); intermediate walk-up + twin-rewrite attempts fully reverted (zero net lines in build-bin). Proof firsthand: build 300 exit 0, q 0/0 (3 files), twin+emit carry the package leg, cases 205/205 zero-moves (assembly exercises the publish leg in-harness), targeted packager unit 12/12, full units 59/406, T1 PASSED. Roster parity proven (all generated names in dist/primitives, 108 exports incl. the 7 entry-text names); container rust install proven via pack.ts (workspace:* → local-registry version, tree-fresh). RULING-4 TENSION FOR HQ: "tracked source, never dist" is unsatisfiable packed (no tree); uniform-package is the only coherent reading — legs agree in every layout; easily reversible if HQ disagrees. Landings stepped, bare commits only: A bf52849dc W4-S1 (3 files + 143 row, verifier-byte-exact via --cached hunk-pick), B 3a6d0e3e3 W4-S2 + E2 fix (5 files + react.ts body-swap), C ae89aba18 SYNC-LOCK (12 files, 142-verified; T1's in-container sync --watch gates it firsthand). FOOTGUN (bitten, recovered): `git commit -- <paths>` IGNORES the index and records worktree bytes — contaminated the first A (fix + S2 lines included); soft-reset to 7ece03932 (nothing pushed, zero bytes lost) and redid all three bare with staged==committed counts verified. Next: W4 S3 dispatch (types leg, unblocked — S1 landed), then S4-S7; Obj4/5 still parked; 142's 4 non-blocking notes carried (winner-line tag, F2 residual + optional pre-wipe re-verify, census-v2 rmdir naming, color-env concurred).

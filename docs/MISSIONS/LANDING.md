@@ -1,5 +1,7 @@
 # LANDING — lib hardening voyage (split from VOYAGE 2026-09-23)
 
+> **PARKED 2026-09-24 (HQ order): Neo/systems day — W4 + polish. No crews, no action. Resume on HQ call.**
+
 HQ split the lib work out of VOYAGE: once hardening begins, that is a
 landing sequence, not exploration. VOYAGE signs off reference-rs and
 reference-neo; LANDING productionizes reference-lib on top of the

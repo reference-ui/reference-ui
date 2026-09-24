@@ -75,27 +75,22 @@ system package; whether fixtures ship their own runtime bundle or the
 consumer adopts the upstream runtime (HERMDIV fix fork); what (if
 anything) of legacy's `postprocess/` survives de-panda'd.
 
-### 3.2. PostCSS module + CSS as its own module (HQ: definite need)
+### 3.2. Stylesheet: no Neo module until a forcing load (HQ: the seam constructs, RS prints)
 
-HQ: Neo must be load-bearing on the PostCSS selector pass and value
-parser. CSS gets its own module. No regex on CSS — core's hardening
-phase settled that.
-
-Captain: agree outright; our own tree is exhibit A. `packed-css.ts` is
-raw brace matching plus naive comma-split — a correct, well-tested
-regression to exactly what core's hardening map bans by name, including
-the two named edge classes (braces in comments/strings, comma
-functions). The CSS module should own parse (PostCSS), merge, scoping,
-and emission; sync/publish consume it and never touch CSS text
-directly. The selector pass owns layer/scope questions (`[data-layer]`
-scoping, statement order); the value parser owns `var()`/token-value
-analysis. NOTE — split by 3.6 below: PostCSS is for CSS we do NOT
-control (authored input, boundary validation, hardening). Open threads:
-dependency shape (full `postcss` + companions as in legacy, or narrower?
-— legacy's exact pins are the default candidate); module home
-(`src/css/` vs `src/lib/css/` — see 3.3); whether the merge migrates
-into it wholesale at stability-fix time or the migration waits for the
-rearch slices.
+Terminology law (HQ): the concept is *stylesheet* — never `css`
+(the `css()` function owns that word in-domain). SUPERSEDED:
+"definite need" for a Neo PostCSS module. HQ's steer: change the
+SEAM so construction is easy, not the parser stack — RS compiles
+and prints stylesheets, Neo assembles streams, and no CSS parser
+enters Neo until a concrete load forces it. NIGHT-2's touchpoint
+census (T1–T20) stands as the map; its home/deps picks are
+MOTHBALLED, not decided. Consequence: `reset.ts` (#15–17) stays
+in sync/ (spec-side injection, seam-independent) until a
+stylesheet home exists or the seam absorbs it. The 3.5 regex ban
+stands — stronger now: construction only, neither regex nor
+re-parse. A future parser needs a named forcing load (today's
+candidates, all unforced: foreign-payload boundary validation,
+`var()`/token-value analysis, hardening probes).
 
 ### 3.3. Layout: lib as the machinery home, subsystems stay top-level (HQ, REVISED)
 
@@ -145,9 +140,9 @@ all three levels because this is serious kit. README law (all Neo
 READMEs): purpose-first, never directory tours — say what the thing IS
 and does; ASCII diagrams welcome.
 
-Open threads: remaining move-list (css module home — 3.2 — plus
-stragglers); whether other top-level dirs want the same
-subsystem-vs-lib test applied.
+Open threads: remaining move-list (stylesheet home MOTHBALLED
+per 3.2 — plus stragglers as found); the subsystem-vs-lib test is
+standing discipline (applied: watch→lib).
 
 ### 3.4. Liquid: gone and staying gone (HQ: it was a Panda-era constraint)
 
@@ -218,10 +213,20 @@ payloads (`baseSystem` carries streams, merge assembles streams).
 `packed-css.ts` as written is therefore doubly provisional: wrong layer
 (text surgery on controlled output) as well as wrong technique (regex).
 It stands only until the stability gate is green, then dies by seam,
-not by PostCSS rewrite. Open threads: the stream vocabulary (what
-chunks — layers? concerns? both?); whether structured payloads ride the
-HERMDIV stability fix or the rearch slices; what (if anything) still
-needs PostCSS on the controlled path (validation? normalization?).
+not by PostCSS rewrite. DECIDED (HQ, Final): stream vocabulary is
+per-layer (names as data + one string per layer block + package
+name — WAVE1-D17-SEAM rec A, "not a question"), hard cut behind
+a schema bump, no additive fallback. DECIDED (HQ, Final):
+**A — end-to-end structured in one cutover.** RS emits the
+structured stylesheet, baseSystem carries it, extends/layers
+build over data — nobody anywhere walks CSS trees, regexes, or
+value-parses (the legacy sins stay dead). This supersedes the
+seam map's "published css stays string / T2-T8 untouched"
+scoping: D17 includes the baseSystem shape change, extends
+readers, and the full hermetic re-gate. S1 (capture) stands;
+S2/S4/S5 re-scope around the carried payload (shape spec crew
+→ S2 → S4 → S5). What still needs PostCSS on any path:
+nothing (3.2's law).
 
 ### 3.7. Sync as a tight engine block: the CLI recipe (HQ: style IS the point)
 
@@ -243,12 +248,14 @@ command (argv→options) → run (ordered subsystem calls) → index
 (exports), and everything it currently hosts drops into its item home
 (packager→3.1, css→3.2, collect→3.3, jsx/emit wherever the survey lands
 it). The recipe shape also answers "where does the chain merge live":
-not in sync — sync calls it. Open threads: CLI framework — legacy used
-commander, Neo's `bin/neo.ts` is hand-rolled (USAGE string, manual
-argv); adopt commander or keep hand-rolled and tight? Whether
-`--watch` stays a sync mode or becomes its own command next to it.
-What (if anything) replaces the event bus for cross-subsystem signals
-(HQ: not event bus — so: direct calls? a tiny typed emitter? nothing?).
+not in sync — sync calls it. DECIDED (HQ, Final): watch goes to
+lib — `sync/watch.ts` whole + `picomatch.d.ts` → `src/lib/watch/`
+(with parcel/picomatch deps), no split (the second-consumer
+trigger stands). CLI framework: Commander adopted (W2-CLI
+landed). `--watch` stays a sync flag routed by cli/ (driver home
+was this verdict). CLOSED (HQ): nothing — no event bus needed.
+Cross-subsystem signals are direct calls; re-open only if a real
+need ever appears.
 
 ### 3.8. author/ vs entry/ + public/private split (HQ: confusing as drawn)
 
@@ -277,9 +284,13 @@ in `collect/surface` files but leave the public id — that
 non-re-export IS the split. Wiring that moves with it: tsconfig paths
 (both ids), `config/bundle.ts` alias + `config/constants.ts`,
 vite/test-harness aliases by grep, `system-surface.d.ts` relocated.
-Open threads: real `"."` export in package.json; what `entry/`'s exact
-Neo roster is (react/types today — system?); where the public types
-live (HQ: with types — Neo has no top-level `types/` home yet).
+Delegated to captain (HQ: do what feels best, work done beats
+work queued). Ruling: public types live with the types leg (the
+packager output surface; `system/base` contract types stay
+domain-side — no top-level `types/` home); entry/ roster stays
+react/types unless the system package needs an authored entry
+(surveyed at W4 briefing, work proceeds meanwhile); the `"."`
+export rides that survey. HQ veto at review, not a pre-pick.
 
 ### 3.9. Primitives generation as its own spec'd module (HQ: probably lives in RS)
 
@@ -321,14 +332,28 @@ at sync time). Proposed module spec:
   This is a big overnight brief (see §4): the night crew specs the
   emission shapes + the station case list + the seam contract —
   implementation waves sequence in the morning.
-Rename: `vendor/` → TBD. Candidates: `upstream/` (RS *is* upstream
-of Neo — accurate), `rs/` (terse), `generated/rs/` (mechanical
-truth). Captain leans `upstream/`; HQ decides. The rename rides with
-this item, not separately.
-Open threads: RS-side vs Neo-side home for generator + station;
-exact artifact shapes (d.ts closure like tasty? JSON data?);
-whether per-system emission ever follows below the cut or stays Neo
-permanently; the folder name.
+DECIDED (HQ, Final): emit **101** — CONFIRMED after the gap
+review challenged it. Namespace law (HQ, supersedes the curation
+rule): SVG is a different namespace — classes land on the `<svg>`
+element itself, and everything after `<svg>` stays native SVG
+elements, always. No Tier-1 fold-in, no SVG wave ever, no
+deferred set in the vocabulary; F1's camelCase column is moot
+(React DOM owns native spellings, not us). Acknowledged edge:
+`image` is styleable but native-by-namespace. NIGHT-5 amended:
+E1 carries exactly 101, PGEN-07..10 + PGEN-21 drop from the
+station, set-parity pins 101 (PRIM-09 holds); W6 is answered
+(never) and closes.
+RENAME DECIDED (HQ, Final): `native/generated/` — the vendor
+contract migrates there (tasty done, primitives next, contracts
+after), the `upstream/` lean is dead.
+DECIDED (HQ, Final): **Rank 1 SPLIT** — generator in
+`modules/primitives/` (reference-rs), drawn through
+`native/generated/primitives/`. RS emits, Neo proves, the seam
+carries finished files.
+Shapes SPECIFIED by NIGHT-5 (E1 JSON data + E4 d.ts closure,
+W1 implements) — HQ veto at review, not a pre-pick. Open
+threads: whether per-system emission ever follows below the cut
+or stays Neo permanently (revisit only with measured cause).
 
 ### 3.10. jsx-elements artifact leaves sync for the tracer side (HQ: homeless join)
 
@@ -393,10 +418,11 @@ Relationships (the tension resolution — producers vs assemblers):
 - The 3.10 join is assembly, not discovery — one move to
   `system/base`; collect's goldens battery imports it (healthy
   consumer arrow). The traced half still leaves TS at seam time.
-Open threads: exact `system/base` file contents; the build/write
-split line in `publish/system.ts`; whether Neo's top-level
-`primitives/` docks under `system/` after 3.9 lands (aligned, not
-now); the `src/system` vs `out/system` naming collision watch.
+LANDED (W2 N-3): contents per WAVE1-SYSTEM-BASE S0/S1/S3/S4/S5/S6;
+split at packager/system.ts:104/105. Remaining: whether Neo's
+top-level `primitives/` docks under `system/` after 3.9 lands
+(aligned, not now); the `src/system` vs `out/system` naming
+collision watch.
 
 ### 3.12. `src/cli/`: the user-facing command layer, thin by law (HQ: no logic in the binary)
 
@@ -435,12 +461,35 @@ line — `⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB` — glyph + command + stats,
 nicely coloured, separators in a darker muted tone (never bright).
 Errors are the exception: full cause, loud. Standard path stays
 whisper-quiet.
-Open threads: exact cli/ file layout (per-command files + shared
-argv/print helpers); whether the tasty drain pushes into the recipe
-or stays a named subsystem call; `clean` unifying on `cleanDir`
-(includes its retry semantics — verify against the tasty-writer
-overlap the retry exists for); the output contract says `ref` but
-the binary is `neo` — rename or shorthand?
+LANDED (W2-CLI): per-command files + shared helpers; tasty drain
+stays a named subsystem call (essay to bridge); clean unified on
+`cleanDir` (retry verified, no HOLD needed). DECIDED (HQ, Final):
+it's `ref`
+— always was. `ref sync`. The binary renames `neo` → `ref`
+(mechanical wave + conscious pin updates: NEO-CLI pins `[neo]`
+strings today, and the rename re-pins them deliberately).
+
+### 3.13. Watch rebuild is level-triggered: the folded next tick (HQ: no compile queues)
+
+HQ thought (2026-09-24 morning): AI agents spit multiple changes —
+two files in 50ms draining a buffer, ten files mid-compile. If watch
+events were a queue, one compile with ten mid-flight changes would
+schedule ten recompiles after it. That is backwards.
+
+Rule: while a compilation runs, watch events ACCUMULATE into a
+single dirty bit; at compile end they fold into ONE "next tick".
+Loop: `while dirty { dirty = false; compile() }`. Ten files during
+one compile = exactly one recompile after. Trigger sources collapse
+— fs events, the session-lock SIGUSR2 poke, future manual triggers
+all just set dirty. Failure does not swallow the bit (failed
+compile + dirty → retry, same loop). Continuous change means
+continuous rebuild — correct, not starvation: the tree converges to
+latest instead of replaying history. Scope: the `lib/watch` driver
+loop only (one-shot `sync()` has no loop to fold). Orthogonal to
+the session lock (intra-process scheduling vs inter-process mutual
+exclusion) — the two compose. STATUS: planned, unbuilt — small
+follow-up arc after the sync-lock crew lands (same loop file,
+stepped commit, no mid-flight rebrief).
 
 ## 4. Run log (updated as we talk — the plan tracks reality)
 
