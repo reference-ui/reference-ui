@@ -63,7 +63,7 @@ import type {
   MatrixRunOptions,
 } from './types.js'
 
-const matrixConsumerSetupCommand = ['pnpm', 'exec', 'neo', 'sync'] as const
+const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e', '--reporter=/tmp/r.js'] as const
 

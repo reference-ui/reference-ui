@@ -27,7 +27,7 @@ export function resolveNeoAuthorEntry(): string {
   const here = dirname(fileURLToPath(import.meta.url))
   const candidates = [
     resolve(here, 'neo-author.mjs'),
-    resolve(here, '../../../reference-neo/src/author/index.ts'),
+    resolve(here, '../../../reference-neo/src/index.ts'),
   ]
 
   for (const candidate of candidates) {

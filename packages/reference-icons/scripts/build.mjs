@@ -24,7 +24,7 @@ function run(command, args) {
 await rm(distDir, { recursive: true, force: true })
 
 run(process.execPath, ['scripts/generate.mjs'])
-run('pnpm', ['exec', 'neo', 'sync'])
+run('pnpm', ['exec', 'ref', 'sync'])
 run('pnpm', ['exec', 'rollup', '-c'])
 run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])
 run(process.execPath, ['scripts/materialize-runtime.mjs'])

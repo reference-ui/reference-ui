@@ -30,7 +30,7 @@ describe('createManagedMatrixPackageJson', () => {
           },
           exports: { '.': './src/index.ts' },
           scripts: {
-            sync: 'pnpm exec neo sync',
+            sync: 'pnpm exec ref sync',
             test: 'vitest run && tsc --noEmit',
           },
           version: '0.0.7',
@@ -50,7 +50,7 @@ describe('createManagedMatrixPackageJson', () => {
     assert.equal(packageJson.version, '0.0.7')
     assert.equal(packageJson.scripts.setup, 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/mcp --sync')
     assert.equal(packageJson.scripts.test, 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/mcp')
-    assert.equal(packageJson.scripts.sync, 'pnpm exec neo sync')
+    assert.equal(packageJson.scripts.sync, 'pnpm exec ref sync')
     assert.deepEqual(Object.keys(packageJson.scripts).sort(), ['setup', 'sync', 'test'])
     assert.equal(packageJson.dependencies.react, MANAGED_REACT_DEPENDENCIES.react19.react)
     assert.equal(packageJson.dependencies['react-dom'], MANAGED_REACT_DEPENDENCIES.react19['react-dom'])
@@ -145,7 +145,7 @@ describe('createMatrixConsumerPackageJson', () => {
       scripts: {
         setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
-        sync: 'pnpm exec neo sync',
+        sync: 'pnpm exec ref sync',
       },
       type: 'module',
     }
@@ -200,7 +200,7 @@ describe('createMatrixConsumerPackageJson', () => {
       scripts: {
         setup: 'pnpm --dir ../../pipeline exec tsx src/cli.ts setup --packages=@matrix/distro --sync',
         test: 'pnpm --dir ../../pipeline exec tsx src/cli.ts test --packages=@matrix/distro',
-        sync: 'pnpm exec neo sync',
+        sync: 'pnpm exec ref sync',
       },
       type: 'module',
     }

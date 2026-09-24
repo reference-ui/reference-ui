@@ -18,9 +18,9 @@ const NEO_ALIAS: Record<string, string> = {
   '@reference-ui/neo/config/constants': neo('config/constants.ts'),
   '@reference-ui/neo/config/types': neo('config/types.ts'),
   '@reference-ui/neo/reference': neo('reference/api.ts'),
-  '@reference-ui/neo/fragments/runner': neo('fragments/lib/runner.ts'),
-  '@reference-ui/neo/fragments/scanner': neo('fragments/lib/scanner.ts'),
-  '@reference-ui/neo/fragments/tokens': neo('fragments/api/tokens.ts'),
+  '@reference-ui/neo/fragments/runner': neo('collect/lib/runner.ts'),
+  '@reference-ui/neo/fragments/scanner': neo('collect/lib/scan/scanner.ts'),
+  '@reference-ui/neo/fragments/tokens': neo('collect/surface/tokens.ts'),
   '@reference-ui/neo/microbundle': neo('lib/microbundle/index.ts'),
 }
 
@@ -55,7 +55,7 @@ export default defineConfig({
     'mcp-child': 'src/child-process/entry.ts',
     // Neo author entry as a real file: mcp-side esbuild alias maps (ui.config
     // bundling, token-fragment bundling) point at this artifact at runtime.
-    'neo-author': '../reference-neo/src/author/index.ts',
+    'neo-author': '../reference-neo/src/index.ts',
   },
   format: 'esm',
   outDir: 'dist',

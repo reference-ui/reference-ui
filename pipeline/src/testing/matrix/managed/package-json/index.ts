@@ -140,7 +140,7 @@ export function createManagedMatrixPackageJson(options: ManagedMatrixPackageJson
     ?? (existingPackageJson.scripts?.setup && !isPipelineManagedScript(existingPackageJson.scripts.setup)
       ? existingPackageJson.scripts.setup
       : undefined)
-    ?? 'pnpm exec neo sync'
+    ?? 'pnpm exec ref sync'
 
   const pipelineRel = options.packageDir ? pipelineRelDir(options.packageDir) : '../../pipeline'
 

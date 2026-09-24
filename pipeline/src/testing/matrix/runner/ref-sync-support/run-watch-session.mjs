@@ -15,7 +15,7 @@ import { dirname, resolve } from 'node:path'
 const matrixRefSyncPhasesEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_PHASES_JSON'
 const waitReadyScriptPath = resolve(process.cwd(), '.matrix-support/ref-sync/wait-ready.mjs')
 const watchLogPath = resolve(process.cwd(), '.matrix-support/ref-sync/watch.log')
-const watchCommand = ['pnpm', 'exec', 'neo', 'sync', '--watch']
+const watchCommand = ['pnpm', 'exec', 'ref', 'sync', '--watch']
 
 function isRunning(processHandle) {
   return processHandle.exitCode === null && processHandle.signalCode === null

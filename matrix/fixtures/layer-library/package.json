@@ -18,9 +18,9 @@
     "README.md"
   ],
   "scripts": {
-    "sync": "node scripts/bootstrap-runtime.mjs && neo sync",
+    "sync": "node scripts/bootstrap-runtime.mjs && ref sync",
     "build": "pnpm --filter @reference-ui/lib run sync && pnpm run sync && tsup && tsc -p tsconfig.build.json && node scripts/build-package.mjs",
-    "dev": "node scripts/bootstrap-runtime.mjs && neo sync --watch",
+    "dev": "node scripts/bootstrap-runtime.mjs && ref sync --watch",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -29,10 +29,10 @@
   ],
   "scripts": {
     "build:deps": "node ../../pipeline/scripts/run-if-env-absent.mjs REF_PIPELINE_SKIP_DEPENDENCY_BUILDS \"pnpm --filter @reference-ui/icons run build\"",
-    "sync": "node ../reference-neo/bin/neo.ts sync",
+    "sync": "node ../reference-neo/bin/ref.ts sync",
     "typecheck": "pnpm run build:deps && pnpm run sync && tsc --noEmit",
     "build": "pnpm run build:deps && pnpm run sync && tsup && tsc -p tsconfig.build.json && node scripts/build-package.mjs",
-    "dev": "node ./book/ensure-port.mjs && node ../reference-neo/bin/neo.ts sync && concurrently --kill-others-on-fail \"node ../reference-neo/bin/neo.ts sync --watch\" \"vite --config book/vite.config.ts\"",
+    "dev": "node ./book/ensure-port.mjs && node ../reference-neo/bin/ref.ts sync && concurrently --kill-others-on-fail \"node ../reference-neo/bin/ref.ts sync --watch\" \"vite --config book/vite.config.ts\"",
     "book": "node ./book/ensure-port.mjs && vite --config book/vite.config.ts",
     "book:build": "vite build --config book/vite.config.ts",
     "prepack": "pnpm run build",

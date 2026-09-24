@@ -7,7 +7,7 @@
   "scripts": {
     "setup": "pnpm --dir ../../../../pipeline exec tsx src/cli.ts setup --packages=@matrix/chain-t8 --sync",
     "test": "pnpm --dir ../../../../pipeline exec tsx src/cli.ts test --packages=@matrix/chain-t8",
-    "sync": "pnpm exec neo sync"
+    "sync": "pnpm exec ref sync"
   },
   "exports": {".":"./src/index.tsx"},
   "dependencies": {
