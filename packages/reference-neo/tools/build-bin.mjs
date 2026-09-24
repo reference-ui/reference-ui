@@ -5,7 +5,7 @@
 // beside the emit and makes the bin executable. Run from the Neo package
 // directory: node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
-import { chmodSync, copyFileSync, existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { chmodSync, copyFileSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -121,6 +121,9 @@ function countFiles(dir) {
   return count
 }
 
+// Wipe dist first: without a clean step, deleted sources linger as dead
+// emit beside fresh output and ship in the tarball.
+rmSync(DIST, { force: true, recursive: true })
 runTsc()
 assertLiteralSet()
 layTwinsAndAssets()

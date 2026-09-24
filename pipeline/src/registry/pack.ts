@@ -8,7 +8,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { constants } from 'node:fs'
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { access, mkdir, readdir, rm } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
@@ -69,6 +69,38 @@ function normalizeTarEntry(entry: string): string {
 
 function computeTarballArtifactHash(tarballPath: string): string {
   return createHash('sha256').update(readFileSync(tarballPath)).digest('hex')
+}
+
+export function hashDeclaredPackagedOutputs(packageDir: string, declaredPaths: readonly string[]): string {
+  const hash = createHash('sha256')
+
+  const visitPath = (absolutePath: string, displayPath: string): void => {
+    if (statSync(absolutePath).isDirectory()) {
+      for (const entry of readdirSync(absolutePath).sort((a, b) => a.localeCompare(b))) {
+        visitPath(resolve(absolutePath, entry), `${displayPath}/${entry}`)
+      }
+
+      return
+    }
+
+    hash.update(displayPath)
+    hash.update('\n')
+    hash.update(readFileSync(absolutePath))
+    hash.update('\n')
+  }
+
+  for (const declaredPath of [...declaredPaths].sort((a, b) => a.localeCompare(b))) {
+    const absolutePath = resolve(packageDir, declaredPath)
+
+    if (!existsSync(absolutePath)) {
+      hash.update(`missing:${declaredPath}\n`)
+      continue
+    }
+
+    visitPath(absolutePath, declaredPath)
+  }
+
+  return hash.digest('hex')
 }
 
 export function tarballContainsDeclaredPackagedPaths(
@@ -136,13 +168,20 @@ export async function packPublicPackages(
     if (!packageHash) {
       throw new Error(`Missing registry hash for ${pkg.name}`)
     }
-    const effectivePackageHash = applyPreparedRustPackageHash(pkg.name, packageHash, rustBuildArtifacts)
+    const sourceEffectiveHash = applyPreparedRustPackageHash(pkg.name, packageHash, rustBuildArtifacts)
 
     const tarballFileName = packedTarballName(pkg.name, pkg.version)
     const tarballPath = resolve(tarballsDir, tarballFileName)
     const previousPackage = previousManifestByPackage.get(pkg.name)
     const preparedPackageDir = stagedPackageDirPath(pkg)
     const declaredPackagedPaths = collectDeclaredPackagedPaths(pkg.packageJson ?? {})
+    // The source fingerprint ignores gitignored build outputs, so a rebuilt
+    // dist must join the reuse key or stale tarballs get served forever.
+    const effectivePackageHash = createHash('sha256')
+      .update(sourceEffectiveHash)
+      .update('\n')
+      .update(hashDeclaredPackagedOutputs(pkg.dir, declaredPackagedPaths))
+      .digest('hex')
     const canReuseExistingTarball = previousPackage?.hash === effectivePackageHash
       && previousPackage.tarballFileName === tarballFileName
       && tarballContainsDeclaredPackagedPaths(readTarballEntries(tarballPath), declaredPackagedPaths)

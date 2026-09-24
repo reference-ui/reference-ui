@@ -333,7 +333,16 @@ export function sortPackagesForInternalDependencyOrder(
   const dependents = new Map(packages.map((pkg) => [pkg.name, [] as string[]]))
 
   for (const pkg of packages) {
-    for (const dependencyName of Object.keys(pkg.dependencies)) {
+    // devDependencies are build-order edges too: fixtures and icons consume
+    // @reference-ui/neo's dist at build time via a devDep. The self-edge
+    // (neo devDepends on itself) cannot order and would wedge the sort.
+    const orderingDependencyNames = new Set([
+      ...Object.keys(pkg.dependencies),
+      ...Object.keys((pkg.packageJson?.devDependencies as Record<string, string> | undefined) ?? {}),
+    ])
+    orderingDependencyNames.delete(pkg.name)
+
+    for (const dependencyName of orderingDependencyNames) {
       if (!packageMap.has(dependencyName)) {
         continue
       }
