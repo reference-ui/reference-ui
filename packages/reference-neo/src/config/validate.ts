@@ -88,5 +88,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateStaticCss(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })
+  const layersSystems = validateBaseSystems('layers', cfg.layers)
+  validateBaseSystemEntries('layers', layersSystems, { requireFragment: true })
   return cfg as unknown as ReferenceUIConfig
 }

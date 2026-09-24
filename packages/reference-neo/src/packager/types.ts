@@ -12,8 +12,8 @@ export interface PublishInput {
   portableFragment: string
   stylesheet: string
   portableStylesheet: string
-  /** Published structured stylesheet. Optional until S5 wires sync's mergeStreams output through; then required. */
-  streams?: SystemStreams[]
+  /** Published structured stylesheet: the upstream expansion plus the own entry, always. */
+  streams: SystemStreams[]
   jsx: JsxElementsArtifact
 }
 

@@ -20,6 +20,7 @@ import {
 } from '../../src/collect/index.ts'
 import { createPortableFragmentBundle } from '../../src/system/base/fragments.ts'
 import { resolveJsxElements } from '../../src/system/base/jsx.ts'
+import { toPublishedEntry } from '../../src/system/base/streams.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
 import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'
 import { linkGeneratedPackages } from '../../src/packager/links.ts'
@@ -128,6 +129,9 @@ async function main(): Promise<void> {
     ),
     stylesheet: result.stylesheet,
     portableStylesheet: result.portableStylesheet ?? '',
+    // Single-system bench worlds carry no extends: the published payload is
+    // the own portable entry, projected without the merge's reprint work.
+    streams: [toPublishedEntry(result.streams)],
     jsx,
   }
   mkdirSync(outDir, { recursive: true })

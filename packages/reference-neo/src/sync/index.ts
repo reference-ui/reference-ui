@@ -34,7 +34,7 @@ import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
 import { cleanDir } from './clean.ts'
 import { assembleSystem } from '../packager/assembly.ts'
 import { markPhase } from './phases.ts'
-import { mergePackedStylesheets, type PackedUpstream } from './packed-css.ts'
+import { mergeStreams } from '../system/base/streams.ts'
 import type { ReferenceUIConfig } from '../config/types.ts'
 import {
   getReferenceManifestPath,
@@ -74,24 +74,6 @@ function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIC
       console.error(`[neo] [ref] background tasty refresh failed: ${detail}`)
     }
   )
-}
-
-// Packed-css merge (both assemblies, one function): the served sheet takes
-// upstream portable blocks plus the own :root-hoisted block; the published
-// portable takes upstream portable blocks plus the own self-scoped block.
-// Empty upstream css returns the own block byte-identical, so worlds without
-// extends merge nothing.
-function mergePublishedStylesheets(
-  extendsSystems: readonly PackedUpstream[] | undefined,
-  stylesheet: string,
-  portableStylesheet: string,
-  selfName: string
-): { stylesheet: string; portableStylesheet: string } {
-  const upstreams = extendsSystems ?? []
-  return {
-    stylesheet: mergePackedStylesheets(upstreams, stylesheet, selfName),
-    portableStylesheet: mergePackedStylesheets(upstreams, portableStylesheet, selfName),
-  }
 }
 
 /**
@@ -161,7 +143,13 @@ export async function sync(cwd: string): Promise<SyncResult> {
     // portable system, so downstream extends keep their fuel.
     const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
 
-    const merged = mergePublishedStylesheets(config.extends, result.stylesheet, result.portableStylesheet ?? '', spec.name)
+    // Structured merge over data: both buckets feed the streams merge in
+    // bucket order (extends, then layers), fragments stay extends-only.
+    const merged = mergeStreams(
+      [...(config.extends ?? []), ...(config.layers ?? [])],
+      result.streams,
+      spec.name
+    )
     await assembleSystem(cwd, {
       outDir,
       spec,
@@ -171,6 +159,7 @@ export async function sync(cwd: string): Promise<SyncResult> {
       ),
       stylesheet: merged.stylesheet,
       portableStylesheet: merged.portableStylesheet,
+      streams: merged.streams,
       jsx,
       runtime: result.runtime,
     })

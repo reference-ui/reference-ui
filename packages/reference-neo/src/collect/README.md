@@ -30,5 +30,5 @@ It never defines the wire format, which belongs to
 It never traces JSX — host discovery is the engine's job — and it never
 reads `ui.config` itself; configuration arrives already loaded and
 validated. Upstream global CSS passes through collect unevaluated on
-purpose: the packed-CSS merge owns that stream, and collect's
+purpose: the streams merge owns that stream, and collect's
 suppression window is the boundary, not an oversight.

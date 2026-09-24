@@ -1,5 +1,5 @@
-// Golden corpus for the structured-stylesheet merge: hand-written packed sheets
-// plus the entries split from them. Entries derive from the literals through a
+// Golden corpus for the structured-stylesheet merge: hand-written whole-string
+// sheets plus the entries split from them. Entries derive from the literals through a
 // fail-loud splitter, so the literals stay the single source of truth and the
 // reprint pins prove the split. Stripped variants stay hand-written: they are
 // expected merge outputs, never derivations. Persists past S5 as the goldens.
@@ -74,7 +74,7 @@ function assignChunk(name: string, entry: SystemStreams, chunk: string, field: T
   entry[target] = chunk
 }
 
-/** Split one packed sheet into its per-layer entry; unknown chunks throw. */
+/** Split one whole-string sheet into its per-layer entry; unknown chunks throw. */
 function splitEntry(name: string, css: string, options: SplitOptions): SystemStreams {
   const inner = options.wrapped ? unwrapEntry(name, css) : css
   const entry: SystemStreams = { name, preamble: '' }

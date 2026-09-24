@@ -3,7 +3,7 @@
 // both merged sheets plus the published payload in one call. The served sheet takes
 // the own :root-hoisted tokens, the portable sheet the own self-scoped tokens, while
 // upstream entries print their portable tokens resetless in both. Ported 1:1 from the
-// packed-css oracle, which stays the byte-identity reference until S5 deletes it.
+// packed-css oracle the S5 cutover deleted; the golden corpus holds the join now.
 
 import type { SystemStreams } from './types.ts'
 
@@ -118,7 +118,7 @@ function appendBlock(assembled: string, block: string): string {
 }
 
 /** Project the N-API own object onto its published entry: tokens never ship. */
-function toPublishedEntry(own: SystemStreams): SystemStreams {
+export function toPublishedEntry(own: SystemStreams): SystemStreams {
   return {
     name: own.name,
     preamble: own.preamble,

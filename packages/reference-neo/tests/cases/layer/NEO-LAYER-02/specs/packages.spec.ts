@@ -13,8 +13,14 @@ interface SpecInput {
   case: NeoCase;
 }
 
+interface PortableStreamEntry {
+  name: string;
+  reset?: string;
+  tokensPortable?: string;
+}
+
 interface PortableSystemFile {
-  streams?: unknown[];
+  streams: PortableStreamEntry[];
 }
 
 // The runner synced this two-system world before serving: the adopted
@@ -74,17 +80,17 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const upColor = await up.evaluate((el) => getComputedStyle(el).color);
   assert.equal(upColor, 'rgb(181, 137, 0)', `adopted upstream token paints, got ${upColor}`);
 
-  // S4 transient: baseSystem no longer carries the portable sheet — S5 restores
-  // carriage as streams and re-pins the [data-layer] scoping statically here.
-  // `css` stays dead forever.
+  // S5 carriage: baseSystem carries the portable sheet as streams. The fake
+  // upstream ships no streams of its own, so the payload is the own entry
+  // alone — reset riding, served-only tokens stripped. `css` stays dead forever.
   const baseSystemRaw = fs.readFileSync(path.join(outDir, 'system/baseSystem.mjs'), 'utf8');
   const baseSystem = JSON.parse(baseSystemRaw.slice(baseSystemRaw.indexOf('{'))) as PortableSystemFile;
   assert.ok(!('css' in baseSystem), 'baseSystem drops the dead css field forever');
-  assert.ok(!('streams' in baseSystem), 'S4 transient: S5 fills streams carriage');
-  // The iframe probes below need portable carriage, so they wait for S5: the
-  // pin above fails the moment streams land, forcing this handoff to delete
-  // the pin plus this early return and let the probes run.
-  return;
+  assert.equal(baseSystem.streams.length, 1, `own-entry-only payload, got ${baseSystem.streams.length} entries`);
+  const [own] = baseSystem.streams;
+  assert.equal(own.name, 'neo-layer2', 'own entry carries the system name last');
+  assert.ok('reset' in own, 'published own entry keeps reset for downstream drop');
+  assert.ok(!('tokens' in own), 'published entry strips served-only tokens');
 
   const frame = page.locator('#portable');
   await frame.waitFor();

@@ -51,6 +51,17 @@ function armHappy(): void {
     return {
       stylesheet: '/* sheet */',
       portableStylesheet: '/* sheet */',
+      streams: {
+        name: 'crossings',
+        preamble: '',
+        reset: '',
+        global: '',
+        tokens: '',
+        tokensPortable: '',
+        recipes: '',
+        utilities: '',
+        package: '',
+      },
       runtime: { schemaVersion: 2, namer: {}, recipes: {}, stylePropNames: [] },
       diagnostics: [],
       tracedJsxHosts: [],

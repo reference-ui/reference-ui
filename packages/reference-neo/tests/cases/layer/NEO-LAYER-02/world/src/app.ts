@@ -55,12 +55,10 @@ async function injectPortable(): Promise<void> {
   if (!response.ok) throw new Error(`portable fetch failed: HTTP ${response.status}`)
   const text = await response.text()
   const parsed = JSON.parse(text.slice(text.indexOf('{'))) as PortableSystem
-  // S4 transient: sync publishes no streams yet, so there is no portable sheet
-  // to inject — skip the consumer frame and let the spec pin the transient.
-  // S5 fills carriage and the injection below runs untouched.
+  // S5 carriage is guaranteed: sync always publishes at least the own entry,
+  // so missing streams is a real failure, never a transient to skip.
   if (parsed.streams === undefined || parsed.streams.length === 0) {
-    console.warn('[neo-layer2] S4 transient: no streams carriage; skipping portable injection')
-    return
+    throw new Error('published base system carries no streams')
   }
   const portableCss = reprintPortable(parsed.streams[parsed.streams.length - 1])
   if (portableCss.length === 0) throw new Error('portable base system reprints empty')

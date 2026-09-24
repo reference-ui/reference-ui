@@ -36,6 +36,13 @@ export interface ReferenceUIConfig {
   extends?: BaseSystem[]
 
   /**
+   * Visual-only upstream systems: their streams join the merge in bucket
+   * order (extends, then layers) while fragments and roster stay extends-only.
+   * Each entry is a BaseSystem (from baseSystem.mjs of another package).
+   */
+  layers?: BaseSystem[]
+
+  /**
    * Escape hatch for JSX element names that static tracing cannot infer.
    * Hosts are discovered by StyleTrace per compile; list here only generated
    * component surfaces and member spellings (e.g. `NSPanel` for `<NS.Panel>`).

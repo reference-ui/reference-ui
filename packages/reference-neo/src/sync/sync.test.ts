@@ -287,18 +287,19 @@ describe('sync generated packages', () => {
       baseSystem: {
         name: string
         fragment: string
-        streams?: unknown[]
+        streams: Array<Record<string, unknown>>
         jsxElements: string[]
       } & Record<string, unknown>
     }
     expect(mod.baseSystem.name).toBe('sync-test')
     expect(typeof mod.baseSystem.fragment).toBe('string')
     expect(mod.baseSystem.fragment).toContain('brand')
-    // S4 transient: the R6 leg projects PublishInput.streams but sync still runs
-    // the packed merge, so no streams ride yet — S5 fills carriage. `css` stays
-    // dead forever: its absence is permanent, the streams absence is not.
+    // S5 carriage: own-entry-only payload here; `css` stays dead forever.
     expect('css' in mod.baseSystem).toBe(false)
-    expect('streams' in mod.baseSystem).toBe(false)
+    expect(mod.baseSystem.streams).toHaveLength(1)
+    const [own] = mod.baseSystem.streams
+    expect(own.name).toBe('sync-test')
+    expect(['tokens' in own, typeof own.tokensPortable]).toEqual([false, 'string'])
     expect(mod.baseSystem.jsxElements).toEqual([])
     expect('fragments' in mod.baseSystem).toBe(false)
     expect('cssChunks' in mod.baseSystem).toBe(false)

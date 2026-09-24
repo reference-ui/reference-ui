@@ -5,12 +5,12 @@
 
 import type { BaseSystem } from './types.ts'
 
-type BaseSystemField = 'extends'
+type BaseSystemField = 'extends' | 'layers'
 type BaseSystemValidationOptions = {
   requireFragment?: boolean
 }
 
-export function invalidBaseSystem(field: 'extends', reason: string): Error {
+export function invalidBaseSystem(field: BaseSystemField, reason: string): Error {
   return new Error(`Config field '${field}' is invalid.\n${reason}`)
 }
 

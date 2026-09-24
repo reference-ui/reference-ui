@@ -12,7 +12,7 @@ Preparation gathers upstream portable bundles, local IIFEs, and the
 retention ref; evaluation runs the whole assembly exactly once as a
 single Node script with upstream bundles first (the `globalCss`
 collector suppressed, since upstream global CSS ships through the
-packed-CSS merge) and local bundles after, each source-tagged.
+streams merge) and local bundles after, each source-tagged.
 Merging resolves later-wins with recursive objects, wholesale arrays,
 and upstream `_private` stripped at the boundary.
 

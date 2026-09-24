@@ -14,10 +14,16 @@ interface SpecInput {
   case: NeoCase;
 }
 
+interface PublishedStreamEntry {
+  name: string;
+  preamble: string;
+  tokensPortable?: string;
+}
+
 interface PublishedBaseSystem {
   name: string;
   fragment: string;
-  streams?: unknown[];
+  streams: PublishedStreamEntry[];
   jsxElements?: string[];
 }
 
@@ -26,9 +32,8 @@ interface PublishedBaseSystem {
 // the bundled fragment string, the structured streams payload, and merged jsx
 // hosts. No plural write-only keys survive: fragments[], cssChunks[], and runtime
 // were cut at the publish boundary (the styled leg owns the runtime data).
-// S4 transient: sync still runs the packed merge so no streams ride yet — S5
-// fills carriage. `css` stays dead forever: its absence is permanent, the
-// streams absence is not.
+// `css` stays dead forever. This world extends nothing, so the payload is the
+// own entry alone with served-only tokens stripped.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const mod = (await import(
@@ -44,7 +49,10 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     'fragment bundle carries the token source',
   );
   assert.ok(!('css' in base), 'baseSystem drops the dead css field forever');
-  assert.ok(!('streams' in base), 'S4 transient: S5 fills streams carriage');
+  assert.equal(base.streams.length, 1, `own-entry-only payload, got ${base.streams.length} entries`);
+  assert.equal(base.streams[0].name, 'neo-sync3', 'own entry carries the system name last');
+  assert.ok(!('tokens' in base.streams[0]), 'published entry strips served-only tokens');
+  assert.equal(typeof base.streams[0].tokensPortable, 'string', 'published entry carries portable tokens');
   assert.deepEqual(base.jsxElements, [], `jsxElements merges hosts, got ${base.jsxElements?.join(', ')}`);
 
   assert.ok(!('fragments' in base), 'no plural fragments survivor');

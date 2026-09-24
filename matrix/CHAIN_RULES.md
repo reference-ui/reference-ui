@@ -22,13 +22,13 @@ In practice that boundary is made from four distinct surfaces:
 
 - `name`: the design-system identity from `ui.config.name`
 - `fragment`: the portable config-time fragment bundle used by `extends`
-- `css`: the portable layer-safe stylesheet used by `layers` and other downstream CSS consumers
+- `streams`: the portable per-system stylesheet blocks used by `layers` and other downstream CSS consumers (D17 cutover: the structured payload replaces the old `css` string, which stays dead)
 - `jsxElements`: published host metadata (discovered ∪ configured names); the config field is an escape hatch, not a registry
 
 The important rule is simple:
 
 - `extends` consumes the published `fragment` surface
-- `layers` consumes the published `css` surface
+- `layers` consumes the published `streams` surface
 
 Those surfaces are related, but they are not the same thing.
 
@@ -42,25 +42,25 @@ Those surfaces are related, but they are not the same thing.
 4. At one compilation boundary, composition is bucketed as `extends[]` and `layers[]`. There is no truly interleaved per-entry execution model.
 5. Upstream CSS assembly currently uses the bucket order `[...extends, ...layers]` for upstream layer ordering.
 6. The consumer's local system layer is always part of the final stylesheet and is ordered after upstream layers in the top-level `@layer` prelude.
-7. A published library may republish transitive styles through its own `baseSystem.css`, because that field is written from postprocessed output, not just raw local CSS.
+7. A published library may republish transitive styles through its own `baseSystem.streams`, because that field carries the merged upstream expansion plus the own entry, not just local styles.
 
 ---
 
 ## What crosses the boundary
 
-| Consumer config | Published fragment imported? | Published CSS imported? | Upstream tokens/types visible in consumer? | Result |
+| Consumer config | Published fragment imported? | Published streams imported? | Upstream tokens/types visible in consumer? | Result |
 | --- | --- | --- | --- | --- |
-| `extends: [LibA]` | Yes | Yes, if `LibA` published `css` | Yes | Full adoption of `LibA`'s published config surface plus its published styles |
+| `extends: [LibA]` | Yes | Yes, if `LibA` published `streams` | Yes | Full adoption of `LibA`'s published config surface plus its published styles |
 | `layers: [LibA]` | No | Yes | No | Visual adoption only |
 | `extends: [LibA], layers: [LibB]` | `LibA` only | `LibA` + `LibB` | `LibA` only | Mixed boundary: one adopted system, one visual-only system |
-| `extends: [Meta]` where `Meta` extends `Core` | Yes, through `Meta.fragment` | Yes, through `Meta.css` | Yes, for whatever `Meta.fragment` republishes | Transitive extend through the published outer package |
-| `layers: [Meta]` where `Meta` extends `Core` | No | Yes, through `Meta.css` | No | Styles can travel transitively even when tokens do not |
-| `extends: [Meta]` where `Meta` layers `Utility` | Yes, for `Meta.fragment` only | Yes, through `Meta.css` | No `Utility` token adoption unless `Meta` also extends it | Layered styles can travel through an extended package |
+| `extends: [Meta]` where `Meta` extends `Core` | Yes, through `Meta.fragment` | Yes, through `Meta.streams` | Yes, for whatever `Meta.fragment` republishes | Transitive extend through the published outer package |
+| `layers: [Meta]` where `Meta` extends `Core` | No | Yes, through `Meta.streams` | No | Styles can travel transitively even when tokens do not |
+| `extends: [Meta]` where `Meta` layers `Utility` | Yes, for `Meta.fragment` only | Yes, through `Meta.streams` | No `Utility` token adoption unless `Meta` also extends it | Layered styles can travel through an extended package |
 
 The key distinction is:
 
 - fragment transitivity is owned by `baseSystem.fragment`
-- style transitivity is owned by `baseSystem.css`
+- style transitivity is owned by `baseSystem.streams`
 
 That is why `extend` and `layer` can both carry styles transitively, while only `extend` carries config and type surfaces.
 
@@ -82,7 +82,7 @@ If `Meta` itself already extended or layered other systems, those effects may al
 
 ### 2. Layering a library means importing its published CSS only
 
-If `App` layers `Meta`, the app gets only `Meta.css`.
+If `App` layers `Meta`, the app gets only `Meta.streams`.
 
 The app does not get:
 
@@ -90,7 +90,7 @@ The app does not get:
 - `Meta` token names in generated TS types
 - `Meta` fragment-driven config extensions
 
-But the app can still get transitive styles if `Meta.css` already contains them.
+But the app can still get transitive styles if `Meta.streams` already contains them.
 
 ### 3. Chains are artifact chains, not source-file chains
 

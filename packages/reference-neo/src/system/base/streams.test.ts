@@ -1,9 +1,9 @@
 // Unit tests for the structured-stylesheet merge over per-system streams.
 // They take engine-shaped corpus entries and pin statement order, reset-drop
 // bytes, verbatim scoping, transitive composition, and the published payload.
-// Ported 1:1 from the packed-css battery; the differential file holds the two
-// implementations equal on depth-1 chains, and this file pins the streams-native
-// single-statement form for transitive chains. No strip unit exists: reset-drop
+// Provenance: ported 1:1 from the packed-css battery the S5 cutover deleted.
+// This file pins the streams-native single-statement form for transitive chains.
+// No strip unit exists: reset-drop
 // is structural (the chunk never prints), so unparseable payloads cannot occur.
 
 import { describe, expect, it } from 'vitest'

@@ -61,12 +61,13 @@ describe('validateConfig base fields', () => {
   })
 
   it('ignores unknown fields as core does today', () => {
+    // layers is a known field since the S5 cutover wired it; only genuinely
+    // unknown fields ride this test now.
     const config = validateConfig({
       name: SYSTEM_NAME,
       include: DEFAULT_INCLUDE,
       strict: ['colors'],
       mcp: { include: ['src/**'] },
-      layers: [{ name: 'layered' }],
     })
 
     expect(config.name).toBe(SYSTEM_NAME)

@@ -85,6 +85,44 @@ describe('validateConfig extends', () => {
   })
 })
 
+describe('validateConfig layers', () => {
+  it('requires layers to be an array of named systems with synced payloads', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: {} as never,
+      })
+    ).toThrowError(/field 'layers' is invalid/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: [{ name: 'upstream' } as never],
+      })
+    ).toThrowError(/must include synced system data/i)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: [{ name: 'tokens', fragment: '', streams: [] }],
+      })
+    ).toThrowError(/must include synced system data/i)
+  })
+
+  it('accepts layers entries that only contribute streams', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      layers: [{ name: 'tokens', fragment: '', streams: STREAMS }],
+    })
+
+    expect(config.layers).toEqual([{ name: 'tokens', fragment: '', streams: STREAMS }])
+  })
+})
+
 describe('validateConfig extends edges', () => {
   it('rejects non-object extends entries', () => {
     expect(() =>

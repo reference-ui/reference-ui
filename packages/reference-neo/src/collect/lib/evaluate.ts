@@ -138,7 +138,7 @@ export async function prepareFragments(
 /**
  * Evaluate fragments once in Node and merge the collected calls into the
  * frozen spec shape. Upstream bundles run first with the globalCss collector
- * suppressed (upstream global CSS ships via the sync-time packed-css merge).
+ * suppressed (upstream global CSS ships via the sync-time streams merge).
  */
 export async function evaluateFragments(
   cwd: string,
