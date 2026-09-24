@@ -1,8 +1,9 @@
-// Native generator for the Neo react entry plus its types.
-// It takes the system name plus compiled style prop names and emits source.
-// The entry binds the live RS primitives roster per system; the tag list
-// only names the destructure. The style prop union mirrors the typegen
-// shape until typegen wires in.
+// Native generator for the Neo react entry plus its bound per-system types.
+// It takes the system name, the compiled style prop names, the tracked E2
+// primitives path, and the spec recipes, and emits the bound entry source
+// plus the complete react.d.mts. The types bake narrows E4 per system:
+// the compiled StylePropName union, SystemStyleObject css, and the typegen
+// recipe-union variant (never when recipes are absent).
 
 import { TAGS, toJsxName } from '../tags.ts'
 
@@ -14,6 +15,8 @@ export interface ReactEntryInput {
 
 export interface ReactTypesInput {
   stylePropNames: readonly string[]
+  /** Raw spec recipes (name to RecipeDefinition JSON): stems the variant union. */
+  recipes: Record<string, unknown>
 }
 
 /**
@@ -51,21 +54,152 @@ function primitiveTagUnion(): string {
   return TAGS.map(tag => JSON.stringify(tag)).join(' | ')
 }
 
+function toPascalCase(name: string): string {
+  let out = ''
+  let capNext = true
+  for (const ch of name) {
+    if (!/[A-Za-z0-9]/.test(ch)) {
+      capNext = true
+      continue
+    }
+    out += capNext ? ch.toUpperCase() : ch
+    capNext = false
+  }
+  return out
+}
+
+function isTsIdent(name: string): boolean {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)
+}
+
+function hasVariantFields(recipe: unknown): boolean {
+  if (typeof recipe !== 'object' || recipe === null) return false
+  const variants = (recipe as Record<string, unknown>).variants
+  if (typeof variants !== 'object' || variants === null) return false
+  return Object.values(variants).some(
+    axis => typeof axis === 'object' && axis !== null && Object.keys(axis).length > 0
+  )
+}
+
 /**
- * Generate the react entry types for one system. Every tag gets a props
- * type (native props minus styling keys, plus the style prop union) and
- * a ref-as-prop component signature; the file stands alone on react types.
+ * Derive the typegen recipe alias names one system's spec recipes print.
+ * Mirrors the RS recipe printer exactly: PascalCase the recipe name, keep
+ * TypeScript identifiers with at least one non-empty variant axis, append
+ * VariantProps. Sorted and deduplicated so the union is stable.
+ */
+export function recipeVariantTypeNames(recipes: Record<string, unknown>): string[] {
+  const stems: string[] = []
+  for (const [name, recipe] of Object.entries(recipes)) {
+    if (!hasVariantFields(recipe)) continue
+    const stem = toPascalCase(name)
+    if (!isTsIdent(stem)) continue
+    stems.push(`${stem}VariantProps`)
+  }
+  return [...new Set(stems)].sort()
+}
+
+function styledImportLine(variantStems: readonly string[]): string {
+  const names = ['StyleConditionKey', 'StyleProps as NarrowStyleProps', 'SystemStyleObject', ...variantStems]
+  return `import type { ${names.join(', ')} } from '@reference-ui/styled'`
+}
+
+function perTagDecls(): string[] {
+  const lines: string[] = []
+  for (const tag of TAGS) {
+    const name = toJsxName(tag)
+    lines.push(
+      `export type ${name}Props = Omit<React.ComponentPropsWithoutRef<${JSON.stringify(tag)}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: unknown; variant?: unknown }`,
+      `export declare const ${name}: (props: ${name}Props & { ref?: React.Ref<React.ComponentRef<${JSON.stringify(tag)}>> }) => React.ReactNode`,
+      ''
+    )
+  }
+  return lines
+}
+
+function namedGraphLines(): string[] {
+  return [
+    `export type * from '@reference-ui/styled'`,
+    '/** One css() input: a style object, a list of them, or a conditional skip. */',
+    'export type CssStyles = SystemStyleObject | undefined | null | false',
+    '/** Shared prop shape every primitive accepts: native props for one tag plus style props and primitive extras. */',
+    'export type PrimitiveProps<T extends PrimitiveTag> = Omit<',
+    '  React.ComponentPropsWithoutRef<T>,',
+    `  StylePropName | 'css' | 'colorMode' | 'variant'`,
+    '> & StyleProps & {',
+    '  css?: PrimitiveCssProp',
+    '  colorMode?: unknown',
+    '  variant?: unknown',
+    '}',
+    'export declare function css(...styles: Array<CssStyles | CssStyles[]>): string',
+    '/** Wide authoring object for recipe configs: recipes are authored TS, not typegen. */',
+    'export type RecipeStyleObject = Record<string, unknown>',
+    '/** One variant axis value an author may pass. */',
+    'export type RecipePropValue = string | boolean | number',
+    '/** One compound rule: axis predicates plus the styles applied when all match. */',
+    'export interface RecipeCompoundConfig {',
+    '  css: RecipeStyleObject',
+    '  [axis: string]: unknown',
+    '}',
+    '/** Authored recipe: the className extraction keys on plus base, variants, compounds. */',
+    'export interface RecipeConfig {',
+    '  className: string',
+    '  base?: RecipeStyleObject',
+    '  variants?: Record<string, Record<string, RecipeStyleObject>>',
+    '  defaultVariants?: Record<string, string>',
+    '  compoundVariants?: RecipeCompoundConfig[]',
+    '}',
+    '/** Variant selection inferred from one recipe fn config: every axis optional. */',
+    'export type RecipeVariantProps<T> = T extends RecipeRuntimeFn<infer C>',
+    `  ? C extends { variants: Record<string, Record<string, unknown>> }`,
+    `    ? { [K in keyof C['variants']]?: Extract<keyof C['variants'][K], string> }`,
+    '    : Record<string, RecipePropValue | undefined | null>',
+    '  : Record<string, RecipePropValue | undefined | null>',
+    '/** Resolved recipe function: classes for a selection plus variant metadata. */',
+    '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>> (T3): */',
+    '/** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */',
+    'export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {',
+    '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string',
+    '  raw(props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): RecipeStyleObject',
+    '  variantKeys: string[]',
+    '  variantMap: Record<string, string[]>',
+    '  splitVariantProps(props: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): [RecipeVariantProps<RecipeRuntimeFn<TConfig>>, RecipeVariantProps<RecipeRuntimeFn<TConfig>>]',
+    '}',
+    'export declare function recipe<const TConfig extends RecipeConfig>(config: TConfig): RecipeRuntimeFn<TConfig>',
+    '',
+  ]
+}
+
+/**
+ * Generate the bound react entry types for one system. Every tag gets a
+ * props type plus a ref-as-prop component signature; the styled wiring and
+ * the named graph arrive complete, so no later leg rewrites this file.
+ * StylePropName is the compiled list verbatim (the splitter's list, (g)7);
+ * css narrows to SystemStyleObject ((g)9); per-tag variant stays open
+ * unknown so user-space spreads compile, while the exported
+ * PrimitiveVariantProp alias carries the union of this system's typegen
+ * recipe aliases, never when recipes are absent. PrimitiveProps<T>
+ * reuses the E4 text verbatim ((g)11).
  */
 export function generateReactTypesSource(input: ReactTypesInput): string {
   const union = stylePropUnion(input.stylePropNames)
+  const variantStems = recipeVariantTypeNames(input.recipes)
+  const variantUnion = variantStems.length === 0 ? 'never' : variantStems.join(' | ')
   const lines = [
     '/** Generated by ref sync — do not edit manually */',
     `import type * as React from 'react'`,
     '',
     '/** Compiled style prop names: the styling keys every primitive accepts. */',
     `export type StylePropName = ${union}`,
-    'export type StyleProps = { [K in StylePropName]?: unknown }',
-    'export type PrimitiveCssProp = Record<string, unknown> | Array<Record<string, unknown>>',
+    styledImportLine(variantStems),
+    '/** React style props: typegen precision where tokens exist, open everywhere else. */',
+    `export type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {`,
+    `  [K in Exclude<StylePropName, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown`,
+    '} & {',
+    '  [K in StyleConditionKey]?: StyleProps',
+    '}',
+    `export type PrimitiveCssProp = Omit<SystemStyleObject, 'font' | 'weight'> & { font?: unknown; weight?: unknown }`,
+    '/** Per-system variant selection: this system recipe unions, never when recipes are absent. */',
+    `export type PrimitiveVariantProp = ${variantUnion}`,
     '',
     '/** Every platform tag the generated primitives cover. */',
     `export type PrimitiveTag = ${primitiveTagUnion()}`,
@@ -78,23 +212,15 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     '/** Host element for one tag, with the caption/menu overrides applied. */',
     'export type PrimitiveElement<T extends PrimitiveTag> = T extends keyof PrimitiveElementOverrides ? PrimitiveElementOverrides[T] : React.ComponentRef<T>',
     '',
-  ]
-  for (const tag of TAGS) {
-    const name = toJsxName(tag)
-    lines.push(
-      `export type ${name}Props = Omit<React.ComponentPropsWithoutRef<${JSON.stringify(tag)}>, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: unknown; variant?: unknown }`,
-      `export declare const ${name}: (props: ${name}Props & { ref?: React.Ref<React.ComponentRef<${JSON.stringify(tag)}>> }) => React.ReactNode`,
-      ''
-    )
-  }
-  lines.push(
+    ...perTagDecls(),
     'export declare const LayerScopeContext: React.Context<boolean>',
     'export declare const ColorModeContext: React.Context<string | undefined>',
     'export declare const DocumentContext: React.Context<Document | null>',
     'export declare function useColorMode(): string | undefined',
     `export { Fragment } from 'react'`,
     `export { createElement } from 'react'`,
-    ''
-  )
+    '',
+    ...namedGraphLines(),
+  ]
   return lines.join('\n')
 }

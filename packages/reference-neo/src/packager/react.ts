@@ -23,6 +23,8 @@ export interface ReactPublishInput {
   outDir: string
   systemName: string
   stylePropNames: string[]
+  /** Raw spec recipes: stems the bound types variant union (never when absent). */
+  recipes: Record<string, unknown>
 }
 
 function runtimeModulePath(...parts: string[]): string {
@@ -61,7 +63,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
   mkdirSync(dir, { recursive: true })
   writeFileSync(
     join(dir, 'react.d.mts'),
-    generateReactTypesSource({ stylePropNames: input.stylePropNames }),
+    generateReactTypesSource({ stylePropNames: input.stylePropNames, recipes: input.recipes }),
     'utf-8'
   )
 

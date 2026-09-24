@@ -29,6 +29,7 @@ export async function assembleSystem(cwd: string, input: AssemblyInput): Promise
     outDir: input.outDir,
     systemName: input.spec.name,
     stylePropNames: input.runtime.stylePropNames,
+    recipes: input.spec.recipes,
   })
   await publishTypesBundle(input.outDir, input.spec)
   // After the react leg (its bundle is the alias target) and before the

@@ -36,7 +36,7 @@ async function buildFixture(): Promise<void> {
     'export const systemName = "probe"\nexport const runtimeData = {}\n',
     'utf-8'
   )
-  await publishReactBundle({ outDir, systemName: 'probe', stylePropNames: ['color', 'margin'] })
+  await publishReactBundle({ outDir, systemName: 'probe', stylePropNames: ['color', 'margin'], recipes: {} })
   await publishReferenceTypesBundle({ outDir })
 }
 

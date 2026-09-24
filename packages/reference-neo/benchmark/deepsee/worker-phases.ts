@@ -144,6 +144,7 @@ async function main(): Promise<void> {
     outDir,
     systemName: spec.name,
     stylePropNames: result.runtime.stylePropNames,
+    recipes: spec.recipes,
   })
   await publishTypesBundle(outDir, spec)
   linkGeneratedPackages(args.dir, outDir)

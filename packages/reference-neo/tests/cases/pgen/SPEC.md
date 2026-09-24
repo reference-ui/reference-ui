@@ -63,14 +63,14 @@ Ids are append-only; never renumber.
 | NEO-PGEN-19 | refs plus elements | LIVE | hosts resolve with overrides, bare generic fails TS2314, cross-host fails TS2322 |
 | NEO-PGEN-20 | forbidden surface | LIVE | forbidden imports fail TS2305, as fails TS2353, E4 panda-clean |
 | NEO-PGEN-21 | svg props | DROPPED | namespace law: no SVG hosts beyond the svg element itself |
-| NEO-PGEN-22 | per-system narrow | BLOCKED | needs the bound per-system entry with system-narrowed token unions |
+| NEO-PGEN-22 | per-system narrow | LIVE | bound entry: system tokens assign, foreign token fails TS2322, css TS2353, variant never |
 
 ## Re-anchors
 
 PRIM-09's census now cross-checks its pinned tag table against the E1 dom set
 at 101, and PRIM-10's surface census cross-checks its pinned names against
 the E4 declarations — both landed in this station, no renumbers. TYPE-01
-compiles against the bound entry and stays blocked on W4's cutover, alongside
+compiles unchanged against the bound entry (proven W4-S4), alongside
 TYPE-02/03/04/07/08 which keep passing unmodified on the per-system surface.
 
 ## Decisions

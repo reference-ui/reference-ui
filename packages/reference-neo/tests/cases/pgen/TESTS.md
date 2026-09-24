@@ -27,4 +27,4 @@ the full 22-case checklist with missing surfaces; this ledger tracks proof.
 | NEO-PGEN-19 | Hosts resolve with overrides, arity fails TS2314, cross-host fails TS2322 | live | case green, both codes pinned |
 | NEO-PGEN-20 | Forbidden imports fail TS2305, as fails TS2353, E4 panda-clean | live | case green, both codes pinned |
 | NEO-PGEN-21 | SVG presentation props through style keys | dropped | namespace law, never |
-| NEO-PGEN-22 | Bound entry narrows system tokens, foreign tokens fail | blocked-on-w4 | needs bound per-system entry |
+| NEO-PGEN-22 | Bound entry narrows system tokens, foreign tokens fail | live | case green, TS2322 pinned on foreign token |
