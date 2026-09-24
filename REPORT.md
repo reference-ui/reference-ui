@@ -236,14 +236,12 @@ discipline above — it has held so far.
 
 ## 7. Remaining program (for the map)
 
-- **S4 rework + re-verify + land**, then **S5A land** (order fixed
-  by the test coupling). T1/T2 green on landing.
-- **S5 flips, rebriefed.** PGEN-15 (css) as briefed — unaffected.
-  PGEN-17 (variant) re-targeted: alias assignability + recipe-call
-  negatives instead of `DivProps`. Needs S4+S5A landed.
-- **S6 deletes.** Tear down the old hand-written paths in
+- **S4 (+rework +css) + S5A: LANDED** (36th, 37th). Chain green.
+- **S5 flips: LANDED** (39th). PGEN-15 as briefed; PGEN-17 at alias
+  + recipe-call positions with a live tone recipe.
+- **S6 deletes (last).** Tear down the old hand-written paths in
   dependency order; the tags file goes last (and split sync.test.ts
-  first — §5). Needs S5 green.
+  first — §5).
 - Then W4 (the per-system cutover) is done.
 
 ## 8. Carried, no action

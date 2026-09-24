@@ -20815,3 +20815,84 @@ LANDING (css lines): `src/primitives/generate/generate.ts:200`, `src/primitives/
 
 ## Landings — S4 (+rework +css) + S5A banked, 37 total (captain, 2026-09-24)
 157 filed ## W4-S4-CSS-VERIFY LAND (bytes exact, proofs all firsthand green, lib-green certified md5 94f8b151 with only the 2 ct.ts errors, narrowing-intact 5/5 reproduced; REPORT:156 flagged + resolved as labeled history). Roster empty. Captain firsthand gates on the joint tree: build 303, q 0/0 css files (joint 0/all-warns-pre-existing), units 422 (1 carried clean-repro kill flake, isolated 2/2 + full green), cases 214/214 roster-identical, lib-local sync+tsc on certified hash (only 2 ct.ts, zero TS2322, md5 stable), T1 PASSED, T2 PASSED. User space green, chain green. Commits bare: 498883f88 W4-S4 (17 files) + 5a3addab1 W4-S5A (8 files). S5 flips rebriefed (PGEN-15 as-briefed; PGEN-17 to alias + recipe-call positions) dispatch next; S6 after.
+
+## Dispatch — w4-s5-flips/158 away (captain, 2026-09-24)
+S4+S5A landed → S5 flips dispatched on clean HEAD 1178af0a4, rebriefed under user-space law: PGEN-15 as-briefed (bogus-css-key TS2353 at the bound entry); PGEN-17 re-targeted from DivProps (provably wrong position) to alias assignability + recipe-call negatives, with the world extended by a fragment-time tone recipe per S5A notes. Verifier follows on its report; S6 deletes close W4 after.
+
+## W4-S5 (w4-s5-flips/158, 2026-09-24) — flips landed in tree, report only, never committed
+
+Implementer. `agent-neo` loaded first. LOG-2 ## W4-SURVEY (e) (:19615) + (f) item 5 (:19627), REPORT.md §0+§1, ## W4-S5A S5 notes (:20578) read firsthand. Base HEAD 1178af0a4 clean (+ captain's dispatch ink). No commits.
+
+### Footprint — 6 M + 1 new, exactly the scoped set
+
+`tests/cases/pgen/NEO-PGEN-15/specs/type.spec.ts` + `world/tsconfig.json` (−@pgen/primitives leg), `NEO-PGEN-17/specs/type.spec.ts` + `world/tsconfig.json` (−@pgen/primitives leg) + `world/src/recipes/tone.ts` (new fragment), `SPEC.md` + `TESTS.md` (2 rows each). Synced outputs + dist gitignored-confirmed. Untouched per scope: shared/, src/, RS, all other cases, both case READMEs + case.jsons (disclosed below), SPEC/TESTS prose (S4 precedent: rows only).
+
+### PGEN-15 as briefed — bound entry, bogus-css-key TS2353
+
+Consumers repointed `@pgen/primitives`→`@reference-ui/react` with an inlined bound-entry tsconfig reader (PGEN-22 pattern, zero shared/ touch); OPEN_CSS flipped to NARROW_CSS asserting non-zero + TS2353. Forced fallout, not choice: the text probe's array css (`css: [{…}]`) fails vs the bound entry with TS2322 (probed firsthand pre-edit — the landed css accommodation (c) made PrimitiveCssProp object-only), so the leg is now object-form with the reason in the spec comment. Props-object bogus key still TS2353 after repoint. Diagnostics verbatim: css leg `consumer.ts(3,32) TS2353 'definitelyNotAProp' does not exist in type 'PrimitiveCssProp'`; props leg TS2353 on DivProps; positive exit 0.
+
+### PGEN-17 rebriefed — alias + recipe-call positions, DivProps gone
+
+World extended with `src/recipes/tone.ts` (`recipe` from `@reference-ui/neo`, className tone, axis tone accent/muted, S5A-notes shape verbatim incl. no const assignment). Spec: POSITIVE (alias-good `{ tone: 'accent' }` + call-good `button({ tone: 'accent' })`, exit 0), NEG_ALIAS (`{ tone: 'not-a-tone' }` → TS2322 `not assignable to '"accent" | "muted" | undefined'`), NEG_CALL_NESTED (briefed REPORT §1 shape `button({ variant: { tone: 'not-a-tone' } })` → TS2353 excess 'variant' against the inferred `{ tone?: 'accent' | 'muted' }`), NEG_CALL_VALUE (`button({ tone: 'not-a-tone' })` → TS2322). Old compound leg dropped (single-axis recipe; brief names tone only). Live chain verified on synced bytes — three firsts: spec.recipes.tone (axis tone: accent/muted), styled `ToneVariantProps = { tone?: 'accent' | 'muted' }`, bake `PrimitiveVariantProp = ToneVariantProps` + extended import; 102 per-tag `variant?: unknown` intact.
+
+### Judgments (2, both disclosed for verifier ruling)
+
+1. NEG_CALL_VALUE is beyond the brief's letter (same call position, not a third position): the briefed nested shape fails on the 'variant' KEY (TS2353) under the narrow inference AND the wide fallback alike, so it cannot discriminate narrowing; the flat bad-literal leg (TS2322) is the value-level proof the position is narrow. Both pass; drop the companion if the letter is strict.
+2. Case READMEs left stale per the ONLY scope (PGEN-17 first line still says the red leg "waits on W4"; PGEN-15 still describes the exit-0 probe) — reword rides S6/docs, or the verifier rules it in.
+
+### Proofs — all firsthand, roster empty, heavy gates owned
+
+- Focused: NEO-PGEN-15 PASS, NEO-PGEN-17 PASS (world build 3 files incl. tone.ts, paint legs brand rgb(124,58,237)).
+- Full cases: 214/214 ok exit 0 vs own pre-change baseline 214/214 (/tmp/w4s5-baseline.json → /tmp/w4s5-final.json): added [], missing [], moved [].
+- Full units: 60 files / 422 passed (matches captain's joint-tree 422; my diff touches no src/tests).
+- `agentneo q` over the 3 code files: 0 errors, 0 warnings.
+- No commits. S6 unblocked (flips hold no deletes).
+
+## Dispatch — w4-s5-verify/159 away (captain, 2026-09-24)
+158 filed ## W4-S5 (PGEN-15 bound-entry + TS2353 with forced array→object fallout; PGEN-17 alias + both call legs with live tone chain spec→ToneVariantProps→bake verified; footprint 6M+1new; proofs 214/214 moved[] + 422 + q clean). 2 judgments disclosed for ruling: (a) NEG_CALL_VALUE companion beyond the brief's letter (nested shape fails on KEY, can't discriminate narrowing — flat leg is the real proof); (b) stale case READMEs deferred. 159 briefed adversarial + owns heavy gates: footprint, all flip codes observed firsthand (incl. array-fallout reproduction), live-chain re-derivation, RULE on both judgments with reasoning (name exact README lines if ruled in), full proofs. LAND/HOLD/CONDITION verdict gates the landing; S6 after.
+
+## W4-S5-VERIFY (w4-s5-verify/159, 2026-09-24) — VERDICT: LAND + CONDITION (README micro-followup first)
+
+Adversarial Neo verifier. `agent-neo` loaded first. LOG-2 ## W4-S5 (:20822) + survey (e) (:19615) + REPORT.md §0+§1 + ## W4-S5A S5 notes (:20578) read firsthand. Zero source edits, zero commits, HEAD still 1178af0a4; my runs wrote only to ignored world/artifact dirs + /tmp/w4s5v-*. Roster empty — I own heavy gates. Every number firsthand-observed.
+
+### FOOTPRINT — exactly 6 M + 1 new, every other M/?? is ink
+
+`git status` shows exactly: 2 specs (`NEO-PGEN-15/specs/type.spec.ts`, `NEO-PGEN-17/specs/type.spec.ts`) + 2 tsconfigs (−`@pgen/primitives` leg, bound legs kept) + `NEO-PGEN-17/world/src/recipes/tone.ts` (1 new) + 2 ledgers (`SPEC.md`, `TESTS.md`, 2 rows each, prose untouched) + LOG-2 ink only. `src/`, `shared/`, RS, all other cases, both case READMEs + case.jsons byte-identical to HEAD (empty name-only diff). Synced outputs + dist gitignored-confirmed (`.gitignore:52/.reference-ui`, `:71 …/cases/**/dist/`). Inlined bound-entry tsconfig reader is text-identical to the PGEN-22 pattern (zero `shared/` touch); `readPgenWorldTsconfig` (E4 leg) stands untouched for the remaining E4 cases.
+
+### PGEN-15 — repoint read, TS2353 observed, array fallout reproduced forced
+
+Both tsconfigs read: `@reference-ui/react → ./.reference-ui/react/react.d.mts`, `@pgen/primitives` absent (my tsc driver printed `pgen leg: undefined`). All legs reproduced with verifier-authored sources via the untouched shared harness: positive exit 0; NARROW_CSS exit 1 `TS2353 'definitelyNotAProp' does not exist in type 'PrimitiveCssProp'` (col 32 matches the filed verbatim); props-object bogus key exit 1 TS2353 on DivProps. Array→object fallout confirmed FORCED: `css: [{ color: 'brand' }]` vs the bound entry fails exit 1 `TS2322 ... not assignable to type 'PrimitiveCssProp'` (object-only per accommodation (c), `PrimitiveCssProp = Omit<SystemStyleObject,'font'|'weight'> & {...}` on the fresh bake) — the old array probe could not survive the repoint, so the object-form change was necessity, not choice.
+
+### PGEN-17 — tone shape verbatim, live chain re-derived, all four legs observed
+
+`tone.ts` matches the S5A-notes shape verbatim: `recipe` from `@reference-ui/neo` (note 4, tokens precedent), `className: 'tone'`, axis tone accent/muted, base + defaultVariants, bare call with NO const assignment (grep exit 1), riding the unchanged `src` include glob (note 2); runtime `button({...})` stays on the `@reference-ui/react` import per note 1. Live chain re-derived on MY sync: `spec.recipes.tone` (axis tone accent/muted, provenance `src/recipes/tone.ts` kind `recipes` keys `['tone']`) → styled `ToneVariantProps = { tone?: 'accent' | 'muted' }` (`index.d.ts:14`) → bake `PrimitiveVariantProp = ToneVariantProps` (`react.d.mts:15`) + extended import (`... SystemStyleObject, ToneVariantProps`, `:6`). Open position intact: 102 `variant?: unknown` lines = 101 per-tag + the shared `PrimitiveProps<T>` generic (`:348`), zero narrowed — the filed "102 per-tag" is loose by one in wording (the 102nd is the generic), correct in substance; S4's "101" counted tags only. Recipe-less PGEN-15 world bakes `PrimitiveVariantProp = never` as ruled. All four legs with verifier-authored sources: POSITIVE exit 0; NEG_ALIAS exit 1 `TS2322 '"not-a-tone"' vs '"accent" | "muted" | undefined'`; NEG_CALL_NESTED exit 1 `TS2353 'variant' does not exist in type '{ readonly tone?: "accent" | "muted" | undefined }'`; NEG_CALL_VALUE exit 1 TS2322 on the literal. Old compound leg gone (single-axis recipe, brief names tone only).
+
+### RULINGS
+
+(a) NEG_CALL_VALUE — KEEP. My wide-control probe (`f({ variant: {...} })` against a WIDE `{ tone?: string }` param) fails TS2353 on the 'variant' KEY identically to the narrow inference — so NEG_CALL_NESTED passes whether inference is narrow or wide and cannot discriminate narrowing. NEG_CALL_VALUE (TS2322 on the literal) is the only leg that is red-iff-narrow at the call position; dropping it leaves the case green under a wide-inference regression. It also tests where authors actually write (flat `button({tone:'x'})`), matching REPORT §1's relocation intent. 6 lines, self-disclosed as companion: keep.
+
+(b) Stale case READMEs — RULED IN (fix now, catalog accuracy). Both are factually false post-flip and contradict the ledgers this same commit flips: PGEN-17's first line "the wrong-axis red leg waits on W4" + "weak-live" + "assigns today too, pinned exit-0" vs SPEC/TESTS now LIVE with 3 red legs; PGEN-15's "object or array ... assign against the vendored E4" + "assigns today ... exit-0 probe" vs array now TS2322-red at the bound entry. README first lines ARE the catalog (`agentneo list` col 4) and feed the case index — stale lines poison search. S4's rows-only precedent doesn't apply (S4 wrote PGEN-22's README fresh-correct; this flip mutates existing cases). Micro-followup, zero proof risk (READMEs never gate). Exact replacement first lines: PGEN-15: `# NEO-PGEN-15 — the bound entry takes style props everywhere: family probes assign, bogus keys fail TS2353.` PGEN-17: `# NEO-PGEN-17 — bound recipe variants: alias good assigns, bad fails TS2322; recipe calls fail TS2353 nested, TS2322 flat.` Same edit rewrites the false body sentences (PGEN-15: object-only vs bound entry + flipped-negative para; PGEN-17: alias+call assign para + three-failures para, keep Related lines).
+
+### PROOFS — q clean, both cases green-with-red-legs, 214 + 422
+
+- `agentneo q` over the 3 code files: 0 errors, 0 warnings.
+- Focused: NEO-PGEN-15 PASS (world build 2 files), NEO-PGEN-17 PASS (world build 3 files incl. tone.ts); paint legs brand rgb(124,58,237) asserted in-spec.
+- Full cases: 214/214 `ok` exit 0 (`/tmp/w4s5v-final.json`); baseline validated firsthand (HEAD case.json id→folder pairs from git blobs vs live `list`: identical 214, added 0 missing 0 moved 0; final ids equal HEAD).
+- Full units: 60 files / 422 passed exit 0. Reds attributed, none on the arc: run 1 had 1 fail (clean-repro kill leg, the carried REPORT-§6 flake, also carried on the captain's joint tree); run 2 under back-to-back load had 2 (same + lib-barrel-negation Tasty-manifest /tmp race). Both isolated-green (2/2, 1/1); third full run 422/422. Structural: footprint shows zero `src/` changes and units exercise `src/` only, so arc content cannot influence them — parallel-load timing, closed.
+
+LANDING (7 paths under `packages/reference-neo/tests/cases/pgen/` + CONDITION): `NEO-PGEN-15/specs/type.spec.ts`, `NEO-PGEN-15/world/tsconfig.json`, `NEO-PGEN-17/specs/type.spec.ts`, `NEO-PGEN-17/world/tsconfig.json`, `SPEC.md`, `TESTS.md` (6 M) + `NEO-PGEN-17/world/src/recipes/tone.ts` (1 new). CONDITION: the 2 README first lines above (+ false body sentences) land before/with the commit — micro-followup, no re-proof beyond `list` eyeball. S6 unblocked after (flips hold no deletes). No commits. Carried: ruling-4 tension, sync.test.ts tripwire, P7-vs-8 HQ LOUD flag (all prior).
+
+## Tick (star-captain) — 159 verifying, no action (captain, 2026-09-24)
+§1: Obj1-3 COMPLETE; LANDING parked; user-space law in force. §2: live = 159 only (S5 verify, rules on 2 judgments), running, no silence signal — no ping. §3/4: no deadlock. §6: no verdict filed; S5 lands on 159 LAND/CONDITION (+ micro-followup if READMEs ruled in); S6 after. Tree steady at 8 (S5 6M+1new + ink). HEAD 1178af0a4, 38 banked.
+
+## Dispatch — w4-s5-readme/160 away (captain, 2026-09-24)
+159 filed ## W4-S5-VERIFY LAND + CONDITION: footprint exact, all flip codes observed firsthand (incl. array-fallout reproduction + live-chain re-derivation with a wording correction: 102nd unknown is the shared generic, not a tag), proofs green (214/214 moved[], 422 with flakes structurally attributed off-arc). Rulings: (a) NEG_CALL_VALUE KEPT (wide-control proves the nested leg can't discriminate narrowing — flat leg is the only red-iff-narrow proof + tests where authors write); (b) stale READMEs RULED IN with exact replacement lines (catalog accuracy — first lines feed list + index; S4 rows-only precedent distinguished). 160 dispatched for the 2-README micro-followup (exact lines + body rewrites, list eyeball); S5 lands with it on 160's report, S6 after.
+
+## W4-S5-README (w4-s5-readme/160, 2026-09-24) — CONDITION satisfied, S5 lands with this
+Micro-followup. `agent-neo` loaded first. LOG-2 ## W4-S5-VERIFY ruling (b) (:20874) read firsthand; applied ONLY its named edits to the 2 README files, nothing else (other tree Ms are S5's landed-in-tree flips + ink, untouched). No commits. No suite runs (READMEs never gate).
+PGEN-15 README: exact first line applied verbatim (`the bound entry takes style props everywhere: family probes assign, bogus keys fail TS2353.`); body rewritten (object-only bound-entry para + flipped-negative para: bogus css key now TS2353, array now TS2322); Related content kept.
+PGEN-17 README: exact first line applied verbatim (`bound recipe variants: alias good assigns, bad fails TS2322; recipe calls fail TS2353 nested, TS2322 flat.`); body rewritten (alias+call assign para with DivProps-stays-open law + three-failures para: TS2322 alias / TS2353 nested / TS2322 flat); Related content kept.
+Proof: `pnpm agentneo list` eyeballed — both rows show the new first lines verbatim (PGEN-15 `style props valid everywhere`, PGEN-17 `recipe variants`, col 4 exact). CONDITION met; S5 landing unblocked, S6 after.
+
+## Landing — S5 banked, 39 total (captain, 2026-09-24)
+160's CONDITION satisfied (exact README lines + body rewrites, list eyeball). Captain firsthand gates: q 0/0 (3 files), PGEN-15/17 focused PASS, units 422 (3 consecutive single-flakes — lib-barrel bytes, clean-repro kill, lib-barrel LoadConfig — each isolated-green; elevated load rate, all sync/, arc has zero src/ so content-excluded structurally + 159's clean 422), cases 214/214 roster-identical + zero tree moves. T1/T2 SKIPPED on the structural argument (footprint zero src/ — T1 inputs byte-identical to the green run; re-running proves nothing). Commit bare: ae532bae9 W4-S5 (9 paths). REPORT §7 updated. S6 deletes dispatched last.
