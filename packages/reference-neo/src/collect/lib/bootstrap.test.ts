@@ -1,10 +1,10 @@
 // Regression suite for the fragment bootstrap import map's react alias.
-// It takes a scratch fragment importing the fixture shape (css plus Div and
-// Span from @reference-ui/react) and emits the stub-clean pins: the alias
-// resolves to the Neo react source entry, the production bundle path builds
-// it with no require shims and no react-dom/client edge, and the bundle
-// evaluates in Node ESM with the surface intact. The four styled ids stay
-// absent by evaluated verdict, so the suite pins that too.
+// It takes a scratch fragment importing the fixture shape (css and recipe
+// plus Div and Span from @reference-ui/react) and emits the stub-clean pins:
+// the alias resolves to the unbound react shim, the production bundle path
+// builds it with no require shims and no react-dom/client edge, and the
+// bundle evaluates in Node ESM with the surface intact. The four styled ids
+// stay absent by evaluated verdict, so the suite pins that too.
 
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -18,6 +18,7 @@ const PROBE_KEY = '__neoBootstrapAliasProbe'
 
 interface AliasProbe {
   css: string
+  recipe: string
   div: string
   span: string
   divName: string
@@ -39,8 +40,8 @@ async function buildProbeBundle(): Promise<string> {
   const probePath = join(scratchRoot, 'probe.ts')
   writeFileSync(
     probePath,
-    `import { css, Div, Span } from '@reference-ui/react'\n` +
-      `globalThis.__neoBootstrapAliasProbe = { css: typeof css, div: typeof Div, span: typeof Span, divName: Div.displayName, spanName: Span.displayName }\n`,
+    `import { css, recipe, Div, Span } from '@reference-ui/react'\n` +
+      `globalThis.__neoBootstrapAliasProbe = { css: typeof css, recipe: typeof recipe, div: typeof Div, span: typeof Span, divName: Div.displayName, spanName: Span.displayName }\n`,
     'utf-8'
   )
   const bundles = await bundleFragments({
@@ -56,11 +57,11 @@ afterAll(() => {
 })
 
 describe('fragment bootstrap import map', () => {
-  it('aliases @reference-ui/react at the Neo react source entry', () => {
+  it('aliases @reference-ui/react at the unbound react shim', () => {
     const target = getFragmentBootstrapImportMap()['@reference-ui/react']
     expect(target).toBeDefined()
     expect(existsSync(target as string)).toBe(true)
-    expect(basename(target as string)).toBe('react.ts')
+    expect(basename(target as string)).toBe('react-unbound.ts')
   })
 
   it('carries none of the four styled ids', () => {
@@ -91,6 +92,7 @@ describe('fragment bootstrap import map', () => {
     }
     expect(readProbe()).toEqual({
       css: 'function',
+      recipe: 'function',
       div: 'function',
       span: 'function',
       divName: 'Div',

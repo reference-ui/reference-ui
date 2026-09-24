@@ -30,18 +30,12 @@ function runtimeModulePath(...parts: string[]): string {
 }
 
 function primitivesModulePath(): string {
-  // The tracked E2 primitives source: the committed RS generator output,
-  // resolved package-root-relative so the entry never depends on
-  // node_modules wiring or the gitignored dist build (stale trap).
-  return runtimeModulePath(
-    '..',
-    '..',
-    'reference-rs',
-    'modules',
-    'primitives',
-    'generated',
-    'primitives.mjs'
-  )
+  // The E2 primitives surface, live from the workspace package (never
+  // copied, never tree-relative: no relative hop survives src vs dist vs
+  // packed depths and the packed tree has no reference-rs). The exports map
+  // is the contract, so this resolves through it — workspace src/dist via
+  // the node_modules link, packed installs via the registry tarball.
+  return fileURLToPath(import.meta.resolve('@reference-ui/rust/primitives'))
 }
 
 function runtimeHeaderSource(dataPath: string): string {

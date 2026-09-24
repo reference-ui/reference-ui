@@ -11,8 +11,10 @@ import { dirname, resolve } from 'node:path'
  * At this point no generated package exists under `.reference-ui/` yet. We still
  * need to execute user fragment files so token, font, keyframe, and pattern
  * collectors can build the evaluated spec. This map points those imports back
- * at the Neo-owned root barrel, and react imports at the Neo-owned react
- * source entry, so fragment execution can happen first.
+ * at the Neo-owned root barrel, and react imports at the unbound react shim
+ * (E2 roster plus runtime css and recipe), so fragment execution can happen
+ * first. Fragment evaluation never renders and unbound primitives throw on
+ * render, so the eval-safe barrel contract holds by construction.
  *
  * No styled ids: core aliases four because its generated primitives import
  * the box pattern, but Neo primitives resolve styles through css() with no
@@ -21,7 +23,7 @@ import { dirname, resolve } from 'node:path'
 export function getFragmentBootstrapImportMap(): Record<string, string> {
   const baseDir = dirname(fileURLToPath(import.meta.url))
   const authorEntry = resolve(baseDir, '..', '..', 'index.ts')
-  const reactEntry = resolve(baseDir, '..', '..', 'entry', 'react.ts')
+  const reactEntry = resolve(baseDir, '..', '..', 'entry', 'react-unbound.ts')
 
   return {
     '@reference-ui/neo': authorEntry,

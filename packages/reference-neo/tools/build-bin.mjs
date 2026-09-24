@@ -22,7 +22,7 @@ const DIST = join(PKG, 'dist')
 // loudly — never ship a silent miss.
 const PATH_LITERAL_SOURCES = new Map([
   ['src/config/bundle.ts', ['index.ts']],
-  ['src/collect/lib/bootstrap.ts', ['index.ts', 'react.ts']],
+  ['src/collect/lib/bootstrap.ts', ['index.ts', 'react-unbound.ts']],
   ['src/packager/react.ts', ['index.ts']],
   ['src/packager/reference-types.ts', ['types.d.mts', 'types.tsx']],
 ])
@@ -33,6 +33,7 @@ const PATH_LITERAL_SOURCES = new Map([
 const TWINS = [
   ['src/index.js', 'src/index.ts'],
   ['src/entry/react.js', 'src/entry/react.ts'],
+  ['src/entry/react-unbound.js', 'src/entry/react-unbound.ts'],
   ['src/entry/types.js', 'src/entry/types.tsx'],
   ['src/runtime/index.js', 'src/runtime/index.ts'],
 ]

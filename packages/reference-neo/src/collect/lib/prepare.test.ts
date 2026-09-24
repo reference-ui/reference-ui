@@ -130,7 +130,7 @@ describe('fragments prepare flow', () => {
     const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
 
     const authorEntry = join(import.meta.dirname, '..', '..', 'index.ts')
-    const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react.ts')
+    const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react-unbound.ts')
     expect(getFragmentBootstrapImportMap()).toEqual({
       '@reference-ui/neo': authorEntry,
       '@reference-ui/neo/config': authorEntry,
