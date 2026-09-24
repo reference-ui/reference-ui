@@ -82,13 +82,13 @@ function assertRequiredFragment(
   if (!requireFragment) return
 
   const hasFragment = typeof sys.fragment === 'string' && sys.fragment.trim() !== ''
-  const hasCss = typeof sys.css === 'string' && sys.css.trim() !== ''
+  const hasStreams = Array.isArray(sys.streams) && sys.streams.length > 0
   const hasJsxElements = Array.isArray(sys.jsxElements) && sys.jsxElements.length > 0
 
-  if (!hasFragment && !hasCss && !hasJsxElements) {
+  if (!hasFragment && !hasStreams && !hasJsxElements) {
     throw invalidBaseSystem(
       field,
-      `Entry ${index} (${sys.name}) must include synced system data (fragment, css, or jsxElements). Run sync on the upstream package first.`
+      `Entry ${index} (${sys.name}) must include synced system data (fragment, streams, or jsxElements). Run sync on the upstream package first.`
     )
   }
 }

@@ -17,15 +17,18 @@ interface SpecInput {
 interface PublishedBaseSystem {
   name: string;
   fragment: string;
-  css?: string;
+  streams?: unknown[];
   jsxElements?: string[];
 }
 
 // The runner synced this world before serving: the base system imports as the
 // singular BaseSystem shape the extends validator and reader consume — name,
-// the bundled fragment string, the portable stylesheet, and merged jsx hosts.
-// No plural write-only keys survive: fragments[], cssChunks[], and runtime
+// the bundled fragment string, the structured streams payload, and merged jsx
+// hosts. No plural write-only keys survive: fragments[], cssChunks[], and runtime
 // were cut at the publish boundary (the styled leg owns the runtime data).
+// S4 transient: sync still runs the packed merge so no streams ride yet — S5
+// fills carriage. `css` stays dead forever: its absence is permanent, the
+// streams absence is not.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const mod = (await import(
@@ -40,11 +43,8 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     base.fragment.includes('brand'),
     'fragment bundle carries the token source',
   );
-  assert.equal(typeof base.css, 'string', 'baseSystem carries the portable stylesheet');
-  assert.ok(
-    (base.css as string).includes('--colors-brand: #7c3aed'),
-    'portable css carries the token var',
-  );
+  assert.ok(!('css' in base), 'baseSystem drops the dead css field forever');
+  assert.ok(!('streams' in base), 'S4 transient: S5 fills streams carriage');
   assert.deepEqual(base.jsxElements, [], `jsxElements merges hosts, got ${base.jsxElements?.join(', ')}`);
 
   assert.ok(!('fragments' in base), 'no plural fragments survivor');
@@ -57,6 +57,9 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
 
   const decl = fs.readFileSync(path.join(outDir, 'system', 'baseSystem.d.mts'), 'utf8');
   assert.ok(decl.includes('export interface BaseSystem'), 'baseSystem.d.mts declares BaseSystem');
+  assert.ok(decl.includes('export interface SystemStreams'), 'baseSystem.d.mts declares SystemStreams');
+  assert.ok(decl.includes('streams?: SystemStreams[]'), 'baseSystem.d.mts declares streams carriage');
+  assert.ok(!decl.includes('css?'), 'baseSystem.d.mts drops the dead css field');
   assert.ok(decl.includes('fragment: string'), 'baseSystem.d.mts declares the singular fragment');
   assert.ok(!decl.includes('fragments:'), 'baseSystem.d.mts drops the plural field');
   assert.ok(!decl.includes('PortableBaseSystem'), 'baseSystem.d.mts drops the portable type');

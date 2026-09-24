@@ -4,6 +4,7 @@
 
 import type { EvaluatedSystemSpec, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
 import type { JsxElementsArtifact } from '../system/base/jsx.ts'
+import type { SystemStreams } from '../system/base/types.ts'
 
 export interface PublishInput {
   outDir: string
@@ -11,6 +12,8 @@ export interface PublishInput {
   portableFragment: string
   stylesheet: string
   portableStylesheet: string
+  /** Published structured stylesheet. Optional until S5 wires sync's mergeStreams output through; then required. */
+  streams?: SystemStreams[]
   jsx: JsxElementsArtifact
 }
 

@@ -28,8 +28,9 @@ export interface BaseSystem {
   name: string
   /** Bundled fragment IIFEs representing the full upstream config contribution. */
   fragment: string
-  /** Merged portable CSS: extends stylesheets in declared order plus the own block; the publisher owns the reset. */
-  css?: string
+  /** Published structured stylesheet: transitively expanded,
+      merge-ordered systems, own entry last. Replaces `css`. */
+  streams?: SystemStreams[]
   /** Resolved non-primitive JSX elements contributed by this system and its upstream extends chain. */
   jsxElements?: string[]
 }
@@ -46,13 +47,13 @@ export interface ExtendsCarrier {
 
 /**
  * The narrow input the published-system assembler maps: identity, the portable
- * fragment bundle, the merged portable sheet, and the merged roster. The leg
- * projects this from the publish input at the call, so assembly never imports
- * packager types.
+ * fragment bundle, the published structured stylesheet, and the merged roster.
+ * The leg projects this from the publish input at the call, so assembly never
+ * imports packager types.
  */
 export interface BaseAssemblyInput {
   name: string
   fragment: string
-  css?: string
+  streams?: SystemStreams[]
   jsxElements: string[]
 }

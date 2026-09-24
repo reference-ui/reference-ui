@@ -9,7 +9,7 @@ import { validateConfig } from '../../config/validate.ts'
 const SYSTEM_NAME = 'my-system'
 const DEFAULT_INCLUDE = ['src/**/*.{ts,tsx}']
 const FRAGMENT_CODE = 'fragment-code'
-const LAYERS_CSS = '.root { color: red; }'
+const STREAMS = [{ name: 'tokens', preamble: '@layer reset, global, base, tokens, recipes, utilities;\n' }]
 
 describe('validateConfig extends', () => {
   it('requires extends to be an array of named systems with synced payloads', () => {
@@ -38,20 +38,30 @@ describe('validateConfig extends', () => {
     ).toThrowError(/must include synced system data/i)
   })
 
-  it('accepts extends entries that only contribute css or jsx elements', () => {
+  it('accepts extends entries that only contribute streams or jsx elements', () => {
     const config = validateConfig({
       name: SYSTEM_NAME,
       include: DEFAULT_INCLUDE,
       extends: [
         { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
-        { name: 'tokens', fragment: '', css: LAYERS_CSS },
+        { name: 'tokens', fragment: '', streams: STREAMS },
       ],
     })
 
     expect(config.extends).toEqual([
       { name: 'icons', fragment: '', jsxElements: ['HomeIcon'] },
-      { name: 'tokens', fragment: '', css: LAYERS_CSS },
+      { name: 'tokens', fragment: '', streams: STREAMS },
     ])
+  })
+
+  it('rejects extends entries whose streams array is empty', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [{ name: 'tokens', fragment: '', streams: [] }],
+      })
+    ).toThrowError(/must include synced system data/i)
   })
 
   it('accepts valid extends entries', () => {

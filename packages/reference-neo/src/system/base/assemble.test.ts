@@ -5,7 +5,17 @@
 
 import { describe, expect, it } from 'vitest'
 import { assembleBaseSystem } from './assemble.ts'
+import type { SystemStreams } from './types.ts'
 import { validateBaseSystemEntries } from './validate.ts'
+
+const STREAMS: SystemStreams[] = [
+  {
+    name: 'app-system',
+    preamble: '@layer reset, global, base, tokens, recipes, utilities;\n',
+    tokensPortable: '@layer tokens {\n}\n',
+    package: 'app-system',
+  },
+]
 
 describe('assembleBaseSystem', () => {
   it('maps the narrow input onto the published shape', () => {
@@ -13,25 +23,25 @@ describe('assembleBaseSystem', () => {
       assembleBaseSystem({
         name: 'app-system',
         fragment: ';tokens()',
-        css: '@layer app;',
+        streams: STREAMS,
         jsxElements: ['Card', 'Panel'],
       })
     ).toEqual({
       name: 'app-system',
       fragment: ';tokens()',
-      css: '@layer app;',
+      streams: STREAMS,
       jsxElements: ['Card', 'Panel'],
     })
   })
 
-  it('leaves css undefined when the input carries none', () => {
+  it('leaves streams undefined when the input carries none', () => {
     const assembled = assembleBaseSystem({
       name: 'app-system',
       fragment: ';tokens()',
       jsxElements: [],
     })
 
-    expect(assembled.css).toBeUndefined()
+    expect(assembled.streams).toBeUndefined()
     expect(assembled.name).toBe('app-system')
   })
 
@@ -39,7 +49,7 @@ describe('assembleBaseSystem', () => {
     const assembled = assembleBaseSystem({
       name: 'app-system',
       fragment: ';tokens()',
-      css: '@layer app;',
+      streams: STREAMS,
       jsxElements: ['Card'],
     })
 

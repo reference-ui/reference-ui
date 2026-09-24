@@ -8,10 +8,21 @@ import type { BaseSystem } from './types.ts'
 
 export function baseSystemInterfaceSource(): string {
   return [
+    'export interface SystemStreams {',
+    '  name: string',
+    '  preamble: string',
+    '  reset?: string',
+    '  global?: string',
+    '  tokens?: string',
+    '  tokensPortable?: string',
+    '  recipes?: string',
+    '  utilities?: string',
+    '  package?: string',
+    '}',
     'export interface BaseSystem {',
     '  name: string',
     '  fragment: string',
-    '  css?: string',
+    '  streams?: SystemStreams[]',
     '  jsxElements?: string[]',
     '}',
     '',

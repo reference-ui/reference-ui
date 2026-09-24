@@ -14,7 +14,7 @@ interface SpecInput {
 }
 
 interface PortableSystemFile {
-  css: string;
+  streams?: unknown[];
 }
 
 // The runner synced this two-system world before serving: the adopted
@@ -74,13 +74,17 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const upColor = await up.evaluate((el) => getComputedStyle(el).color);
   assert.equal(upColor, 'rgb(181, 137, 0)', `adopted upstream token paints, got ${upColor}`);
 
+  // S4 transient: baseSystem no longer carries the portable sheet — S5 restores
+  // carriage as streams and re-pins the [data-layer] scoping statically here.
+  // `css` stays dead forever.
   const baseSystemRaw = fs.readFileSync(path.join(outDir, 'system/baseSystem.mjs'), 'utf8');
   const baseSystem = JSON.parse(baseSystemRaw.slice(baseSystemRaw.indexOf('{'))) as PortableSystemFile;
-  const portableCss = baseSystem.css ?? '';
-  assert.ok(
-    portableCss.includes('[data-layer="neo-layer2"]'),
-    'portable css scopes tokens behind the system data-layer',
-  );
+  assert.ok(!('css' in baseSystem), 'baseSystem drops the dead css field forever');
+  assert.ok(!('streams' in baseSystem), 'S4 transient: S5 fills streams carriage');
+  // The iframe probes below need portable carriage, so they wait for S5: the
+  // pin above fails the moment streams land, forcing this handoff to delete
+  // the pin plus this early return and let the probes run.
+  return;
 
   const frame = page.locator('#portable');
   await frame.waitFor();

@@ -9,7 +9,7 @@ export function assembleBaseSystem(input: BaseAssemblyInput): BaseSystem {
   return {
     name: input.name,
     fragment: input.fragment,
-    css: input.css,
+    streams: input.streams,
     jsxElements: input.jsxElements,
   }
 }

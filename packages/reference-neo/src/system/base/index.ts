@@ -3,7 +3,8 @@
 // packager leg, sync, and config consume. Deep imports stay valid; this file
 // is the subsystem address.
 
-export type { BaseAssemblyInput, BaseSystem, ExtendsCarrier } from './types.ts'
+export type { BaseAssemblyInput, BaseSystem, ExtendsCarrier, SystemStreams } from './types.ts'
+export { mergeStreams, type MergedSheets, type StreamUpstream } from './streams.ts'
 export { createPortableFragmentBundle } from './fragments.ts'
 export { resolveJsxElements, type JsxElementsArtifact } from './jsx.ts'
 export {

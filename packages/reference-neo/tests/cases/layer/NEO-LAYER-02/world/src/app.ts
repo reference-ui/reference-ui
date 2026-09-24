@@ -1,8 +1,9 @@
 // Entry for the NEO-LAYER-02 world. It takes the three static probes and the
 // served portable base system, paints the mixed, recipe-only, and adopted
-// nodes synchronously, then fetches the portable css, injects it into a
-// blank consumer frame, and creates the two data-layer probes inside — so
-// the frame's existence proves the injection it depends on already landed.
+// nodes synchronously, then fetches the published streams, reprints the own
+// portable sheet, injects it into a blank consumer frame, and creates the two
+// data-layer probes inside — so the frame's existence proves the injection it
+// depends on already landed.
 import { css, recipe } from '@reference-ui/react'
 
 function el(id: string): HTMLElement {
@@ -17,8 +18,36 @@ el('mixed').className = `${card()} ${css({ color: 'ink' })}`
 el('recipeonly').className = card()
 el('up').className = css({ color: 'brass' })
 
+interface StreamEntry {
+  name: string
+  preamble: string
+  reset?: string
+  global?: string
+  tokensPortable?: string
+  recipes?: string
+  utilities?: string
+  package?: string
+}
+
 interface PortableSystem {
-  css: string
+  streams?: StreamEntry[]
+}
+
+// Own-portable reprint: the consumer's own reset rides alongside its portable
+// tokens, mirroring mergeStreams' own-portable join. Escape-free on purpose —
+// this world's package name needs no CSS escaping, and mergeStreams owns the
+// escaping port.
+function reprintPortable(own: StreamEntry): string {
+  const inner =
+    own.preamble +
+    (own.reset ?? '') +
+    (own.global ?? '') +
+    (own.tokensPortable ?? '') +
+    (own.recipes ?? '') +
+    (own.utilities ?? '')
+  const pkg = own.package ?? ''
+  if (pkg === '') return inner
+  return `@layer ${pkg} {\n${inner}}\n`
 }
 
 async function injectPortable(): Promise<void> {
@@ -26,9 +55,15 @@ async function injectPortable(): Promise<void> {
   if (!response.ok) throw new Error(`portable fetch failed: HTTP ${response.status}`)
   const text = await response.text()
   const parsed = JSON.parse(text.slice(text.indexOf('{'))) as PortableSystem
-  const portableCss = parsed.css
-  if (typeof portableCss !== 'string' || portableCss.length === 0)
-    throw new Error('portable base system carries no css')
+  // S4 transient: sync publishes no streams yet, so there is no portable sheet
+  // to inject — skip the consumer frame and let the spec pin the transient.
+  // S5 fills carriage and the injection below runs untouched.
+  if (parsed.streams === undefined || parsed.streams.length === 0) {
+    console.warn('[neo-layer2] S4 transient: no streams carriage; skipping portable injection')
+    return
+  }
+  const portableCss = reprintPortable(parsed.streams[parsed.streams.length - 1])
+  if (portableCss.length === 0) throw new Error('portable base system reprints empty')
   // A blank same-origin frame stands in for the downstream layers-mode
   // consumer: it carries the portable css alone, so any resolved var
   // proves the css is self-sufficient and the scoping did the work —

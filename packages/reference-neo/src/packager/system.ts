@@ -26,7 +26,7 @@ export function writeSystemDir(input: PublishInput): void {
       assembleBaseSystem({
         name: input.spec.name,
         fragment: input.portableFragment,
-        css: input.portableStylesheet,
+        streams: input.streams,
         jsxElements: input.jsx.merged,
       })
     ),
