@@ -23,36 +23,40 @@ function entrySource(): string {
   return generateReactEntrySource({
     systemName: 'neo-prim',
     stylePropNames: NAMES,
-    factoryPath: '/abs/runtime/factory.ts',
-    splitPath: '/abs/runtime/split.ts',
-    contextPath: '/abs/runtime/context.ts',
+    primitivesPath: '/abs/primitives.mjs',
   })
 }
 
 describe('generateReactEntrySource', () => {
-  it('bakes the layer name plus style props and shares the react-bound css', () => {
-    const source = entrySource()
-    expect(source).toContain(`const layerName = "neo-prim"`)
-    expect(source).toContain(`createPropSplitter(["backgroundColor","color","p"])`)
-    expect(source).toContain('split: splitPrimitiveProps, css')
-    expect(source).not.toContain('styled/')
-    expect(source).toContain(`from 'react'`)
-    expect(source).not.toMatch(/react-dom|createRoot/)
-    expect(source).toContain('export { Fragment, createElement }')
-  })
-
-  it('emits one factory component per tag', () => {
+  it('binds the live roster with the layer name plus style props over the shared css', () => {
     const source = entrySource()
     expect(source).toContain(
-      `export const Div = createPrimitive({ tag: "div", displayName: "Div", layerName, split: splitPrimitiveProps, css })`
+      `import { configurePrimitives, ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode } from "/abs/primitives.mjs"`
     )
-    const exported = source.match(/export const \w+ = createPrimitive\(/g) ?? []
-    expect(exported.length).toBe(PRIMITIVE_JSX_NAMES.length)
+    expect(source).toContain(
+      `configurePrimitives({ layerName: "neo-prim", stylePropNames: ["backgroundColor","color","p"], css })`
+    )
+    expect(source).toContain(
+      'export { ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode }'
+    )
+    expect(source).not.toContain('styled/')
+    expect(source).not.toMatch(/createPrimitive\(|createPropSplitter\(/)
+    expect(source).not.toMatch(/react-dom|createRoot/)
+  })
+
+  it('destructures one bound component per tag', () => {
+    const source = entrySource()
+    const line = source.split('\n').find(candidate => candidate.startsWith('export const { '))
+    expect(line).toBeDefined()
+    if (line === undefined) throw new Error('entry carries no bound destructure')
+    expect(line).toContain(' Div, ')
+    const bound = line.slice('export const { '.length, line.indexOf(' } =')).split(', ')
+    expect([...bound].sort()).toEqual([...PRIMITIVE_JSX_NAMES].sort())
   })
 
   it('never emits a Box, Flex, or Grid (map rule)', () => {
     const source = entrySource()
-    expect(source).not.toMatch(/export const (Box|Flex|Grid)\b/)
+    expect(source).not.toMatch(/[{,]\s*(Box|Flex|Grid)\b/)
   })
 })
 

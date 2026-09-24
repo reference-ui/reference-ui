@@ -29,6 +29,21 @@ function runtimeModulePath(...parts: string[]): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), '..', ...parts)
 }
 
+function primitivesModulePath(): string {
+  // The tracked E2 primitives source: the committed RS generator output,
+  // resolved package-root-relative so the entry never depends on
+  // node_modules wiring or the gitignored dist build (stale trap).
+  return runtimeModulePath(
+    '..',
+    '..',
+    'reference-rs',
+    'modules',
+    'primitives',
+    'generated',
+    'primitives.mjs'
+  )
+}
+
 function runtimeHeaderSource(dataPath: string): string {
   return [
     `import { css, recipe, registerRecipeData, registerRuntimeData } from ${JSON.stringify(runtimeModulePath('runtime', 'index.ts'))}`,
@@ -41,10 +56,11 @@ function runtimeHeaderSource(dataPath: string): string {
 }
 
 /**
- * Publish the generated react package: bundle the native entry (primitives
- * plus React, with css()/recipe() pre-registered over this system's data)
- * and write the standalone types. The shell already wrote the final
- * manifest plus the styles.css copy; this leg only adds the bundle.
+ * Publish the generated react package: bundle the bound entry (the live
+ * E2 roster bound per system, with css()/recipe() pre-registered over
+ * this system's data) and write the standalone types. The shell already
+ * wrote the final manifest plus the styles.css copy; this leg only adds
+ * the bundle.
  */
 export async function publishReactBundle(input: ReactPublishInput): Promise<void> {
   const dir = join(input.outDir, 'react')
@@ -68,9 +84,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
         generateReactEntrySource({
           systemName: input.systemName,
           stylePropNames: input.stylePropNames,
-          factoryPath: runtimeModulePath('primitives', 'runtime', 'factory.ts'),
-          splitPath: runtimeModulePath('primitives', 'runtime', 'split.ts'),
-          contextPath: runtimeModulePath('primitives', 'runtime', 'context.ts'),
+          primitivesPath: primitivesModulePath(),
         }),
       'utf-8'
     )

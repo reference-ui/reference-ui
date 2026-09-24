@@ -23,7 +23,7 @@ const DIST = join(PKG, 'dist')
 const PATH_LITERAL_SOURCES = new Map([
   ['src/config/bundle.ts', ['index.ts']],
   ['src/collect/lib/bootstrap.ts', ['index.ts', 'react.ts']],
-  ['src/packager/react.ts', ['context.ts', 'factory.ts', 'index.ts', 'split.ts']],
+  ['src/packager/react.ts', ['index.ts']],
   ['src/packager/reference-types.ts', ['types.d.mts', 'types.tsx']],
 ])
 
@@ -35,9 +35,6 @@ const TWINS = [
   ['src/entry/react.js', 'src/entry/react.ts'],
   ['src/entry/types.js', 'src/entry/types.tsx'],
   ['src/runtime/index.js', 'src/runtime/index.ts'],
-  ['src/primitives/runtime/factory.js', 'src/primitives/runtime/factory.ts'],
-  ['src/primitives/runtime/split.js', 'src/primitives/runtime/split.ts'],
-  ['src/primitives/runtime/context.js', 'src/primitives/runtime/context.ts'],
 ]
 
 // Verbatim asset copies: package-relative files sync reads at runtime that
