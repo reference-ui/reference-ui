@@ -3,14 +3,16 @@
 // the react bundle exports every tag plus css/recipe, the declarations carry
 // every consumer type name, and a temp consumer importing the whole surface
 // typechecks. Emits nothing on success; throws naming the missing export,
-// the absent type name, or the tsc diagnostic on failure.
+// the absent type name, or the tsc diagnostic on failure. It also anchors the
+// pinned names to the vendored E4 declarations, failing on any drift between
+// the generated surface and the shelf.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 
@@ -399,6 +401,29 @@ async function typecheckConsumer(worldDir: string, paths: Record<string, string[
   }
 }
 
+// The E4 re-anchor: the pinned names must appear in the vendored raw
+// declarations with the same per-tag shape the generated entry carries. The
+// generated surface above stays the oracle for the bound entry; this ties the
+// oracle to the shelf so the two can never drift apart.
+function assertE4Anchor(): void {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const shelf = path.resolve(here, '..', '..', '..', '..', '..', 'src', 'native', 'generated', 'primitives', 'primitives.d.ts');
+  const dts = fs.readFileSync(shelf, 'utf8');
+  for (const name of EXPECTED_JSX_NAMES) {
+    assert.ok(dts.includes(`export type ${name}Props = `), `E4 types ${name}Props`);
+    assert.ok(dts.includes(`export declare const ${name}: `), `E4 exports ${name}`);
+  }
+  for (const decl of [
+    'export type StylePropName = ',
+    'export type PrimitiveTag = ',
+    'export type PrimitiveProps<',
+    'export type PrimitiveElement<',
+  ]) {
+    assert.ok(dts.includes(decl), `E4 carries ${decl}`);
+  }
+  assert.ok(dts.includes(`from '@reference-ui/styled'`), 'E4 narrows through the styled graph');
+}
+
 // Third census plus the gate: after sync, the generated react entry plus the
 // styled typegen output compile a consumer importing every tag, css()/recipe(),
 // and every named type — the import census for the consumer surface.
@@ -408,6 +433,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   for (const file of ['react/react.mjs', 'react/react.d.mts', 'styled/types/index.d.ts']) {
     assert.ok(fs.existsSync(path.join(outDir, file)), `sync published ${file}`);
   }
+  assertE4Anchor();
   await assertRuntimeSurface(outDir);
   assertDeclarationSurface(outDir);
   await typecheckConsumer(c.worldDir, paths);
