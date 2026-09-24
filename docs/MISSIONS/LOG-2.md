@@ -20066,3 +20066,443 @@ LANDING: land the 12 distinct files as-is. Verdict: LAND.
 ## Tick — T1 green, S1+row / S2+fix / sync-lock landed, 31 banked (captain, 2026-09-24)
 
 Roster empty (142 filed last; no live crews, nothing to ping; peer grassy-mirach shows no tree products — untouched). 142's SYNC-LOCK-VERIFY LAND lifted the T1 deferral; first T1 run since the S5 cutover exposed the E2 packed-layout gap (three successive reds, all firsthand-attributed): (1) S2's twin carried a src-depth `../../../reference-rs` leg that dangles from dist/src; (2) S1's `primitivesModulePath` counted fixed ups from import.meta (dist-broken); (3) any tree-relative form dies packed (no reference-rs beside the tarball; installed name is `@reference-ui/rust`, whose exports map + files exclude the generated file — and the generated file's own `../js/factory.ts` leg makes it tree-bound regardless). Fix (captain-firsthand, 2 small hunks): E2 ships live from the workspace package in BOTH legs — twin `export * from '@reference-ui/rust/primitives'` (typed; @ts-expect-error removed, tsc resolves it) + `import.meta.resolve` through the exports map — realigning code with the committed shelf README ("the executable roster ships live from the workspace package and is never copied"); intermediate walk-up + twin-rewrite attempts fully reverted (zero net lines in build-bin). Proof firsthand: build 300 exit 0, q 0/0 (3 files), twin+emit carry the package leg, cases 205/205 zero-moves (assembly exercises the publish leg in-harness), targeted packager unit 12/12, full units 59/406, T1 PASSED. Roster parity proven (all generated names in dist/primitives, 108 exports incl. the 7 entry-text names); container rust install proven via pack.ts (workspace:* → local-registry version, tree-fresh). RULING-4 TENSION FOR HQ: "tracked source, never dist" is unsatisfiable packed (no tree); uniform-package is the only coherent reading — legs agree in every layout; easily reversible if HQ disagrees. Landings stepped, bare commits only: A bf52849dc W4-S1 (3 files + 143 row, verifier-byte-exact via --cached hunk-pick), B 3a6d0e3e3 W4-S2 + E2 fix (5 files + react.ts body-swap), C ae89aba18 SYNC-LOCK (12 files, 142-verified; T1's in-container sync --watch gates it firsthand). FOOTGUN (bitten, recovered): `git commit -- <paths>` IGNORES the index and records worktree bytes — contaminated the first A (fix + S2 lines included); soft-reset to 7ece03932 (nothing pushed, zero bytes lost) and redid all three bare with staged==committed counts verified. Next: W4 S3 dispatch (types leg, unblocked — S1 landed), then S4-S7; Obj4/5 still parked; 142's 4 non-blocking notes carried (winner-line tag, F2 residual + optional pre-wipe re-verify, census-v2 rmdir naming, color-env concurred).
+
+## Dispatch — w4-s3/145 + w4-s7/146 away (captain, 2026-09-24)
+S1 landed → S3 (8 PGEN render cases vs bound roster) + S7 (jsx.ts E1 feed, one line + test) dispatched in parallel on clean HEAD fd412c54f; scopes disjoint (tests/cases/pgen vs jsx module). Verifiers follow on reports; S4 next after S3 (types bake needs the render proof pattern).
+
+## W4-S7 (w4-s7/146, 2026-09-24) — FEED LANDED, 1 unit + 8 case pins handed off
+
+Implementer (tiny). `agent-neo` loaded first. Base HEAD fd412c54f verified
+(`git log` tip; tree held only sibling ink + my 2 files throughout).
+W4-SURVEY (f) item 7 + (g) item 10 + HQ ruling 10 read firsthand: feed
+`jsx.ts:30` from E1, one line + test. Scope held: the jsx module + its
+test ONLY; no commits, no other files, index untouched.
+
+### Change (2 files, +104/−10)
+
+- `src/system/base/jsx.ts`: `primitives: []` → `primitives:
+  PRIMITIVE_ROSTER`, read once at module load from the committed E1 shelf
+  (`src/native/generated/primitives/vocabulary.json`, 101 jsx names) via
+  the `reference-types.ts` path idiom (fileURLToPath + resolve, no
+  resolveJsonModule — tsconfig out of scope). Narrowing mirrors the
+  `session.ts` `as unknown` idiom; a missing/unparseable shelf throws
+  loud (`[jsx] E1 vocabulary.json ...`) — a silent empty roster would
+  re-darken the discovery the ruling exists to light. Header rewritten
+  (the "never feeds" rationale is what HQ-10 reverses). Deliberately NOT
+  via `primitives/tags.ts` (the hand path S6 deletes).
+- `src/system/base/jsx.test.ts`: 5 → 6 tests. Own shelf parse pins the
+  join (101, sorted, A/Div/Map/Obj/Table spot names incl. the E1
+  `object`→`Obj` rename; identical roster across empty/configured/traced
+  carriers; roster excluded from `merged`). E1's own bytes stay homed at
+  PGEN-12/13 parity + RS goldens, not here.
+
+### Proof (all firsthand)
+
+- Baselines green pre-edit: jsx.test.ts 5/5, sync.test.ts 18/18.
+- `pnpm agent vt .../jsx.test.ts` → 6/6 green post-edit (re-run green
+  after the gate refactor).
+- `pnpm agentneo q` over both files → 0 errors, 0 warnings (first pass
+  carried 1 complexity warn on the reader; flattened per-helper, re-green).
+- Full Neo units (`pnpm agent vitest reference-neo`) → 404/407, 57/59
+  files, TWICE (identical set): (a) `sync.test.ts:161` — MINE BY
+  MECHANISM (the `jsx.primitives == []` pin; the failure diff shows the
+  fed 101 live in `jsx-elements.json`); out-of-scope file, repin handed
+  off below, NOT touched. (b) `session-repro.test.ts` control + kill
+  legs — FOREIGN env/load, not mine: their assertions read stdout
+  regexes/exit codes/sheet bytes/lock files, zero jsx-elements bytes;
+  isolated `NO_COLOR=1` re-run → 8/8 green (matches the 140/142
+  documented color-env + parallel-load pattern; my bytes were in tree
+  for the green run).
+- No-panda over both files: clean. Footprint: exactly the 2 files
+  (`git diff --numstat`: 49/4 + 55/6); sibling `??` pgen dirs untouched.
+
+### Downstream census (firsthand, every consumer)
+
+BROKEN — all assert the exact `[]` HQ-10 reverses; each needs a landing/
+S6-crew one-line repin (all out of S7 scope, none touched): UNIT
+`src/sync/sync.test.ts:161`; CASES `CHAIN-01 :67`, `CHAIN-02 :69`,
+`CHAIN-03 :70`, `CHAIN-04 :73`, `CHAIN-05 :63`, `SYNC-04 :82`,
+`SYNC-10 :55`, `SYNC-15 :47` (whole-artifact deepEquals; SYNC-15's
+README :9 mirrors the pin in prose). No case runs from this crew
+(units-only proof bar; the unit red proves the byte mechanism live).
+
+UNBROKEN — verified by leg + corroborated by green suites:
+`request.jsxHosts` (merged + tags, `native/request.ts:34` — SYNC-04/15
+jsxHosts legs safe); `baseSystem.jsxElements` (merged,
+`packager/system.ts:30` — sync.test.ts:303 + SYNC-15:54-58 green);
+goldens + negation + worker request (merged-only — both suites green in
+the full run); SITE-11 (`merged.includes`, safe); SYNC-01/02 (file-list
+presence only); sheet/paint bytes (untouched — goldens' sheet pins +
+sync.test.ts's 17 other tests green). Non-primitives bytes provably
+unmoved: the diff touches only the primitives leg.
+
+PACKED NOTE (analyzed, landing-proves): the shelf read is
+import.meta-relative inside the Neo package and the `neo` bin runs
+source-direct `.ts` in every layout — no dist copy, no exports-map leg,
+so the S1 packed-gap class does not apply; T1/T2 hermetic proof still
+rides the landing.
+
+## W4-S7 DONE (w4-s7/146, 2026-09-24)
+
+Feed landed per HQ-10 (jsx.ts + jsx.test.ts only): 6/6 green, q 0/0,
+full units 404/407 with the 1 mechanism red (`sync.test.ts:161`)
+attributed and the 2 foreign reds isolated-green. Handoff to
+landing/S6: repin the 1 unit + 8 case `primitives: []` pins (exact
+lines above) — one line each, same roster this feed publishes.
+
+## Dispatch — w4-s7-repin/147 away (captain, 2026-09-24)
+146 filed ## W4-S7 (feed landed, 2 files, 6/6 + q clean, honest handoff: 1 unit + 8 case [] pins broken by mechanism + SYNC-15 README prose). S7 unlandable as-is (lands red) → followup owns the 9 repins + SYNC-15 prose AND a captain-caught dist gap the report's packed note misses (dist/src/native/... absent — tsc never emits the shelf JSON, so dist/packed sync hits the loud throw; fix = ASSETS row + PKG-side read + rebuild). Briefed focused-only (8 cases individually, no full runs — 145 owns heavy gates). 145 running with ?? pgen products, untouched. Micro-verify → land S7+repins together on its report.
+
+## W4-S7-REPIN (w4-s7-repin/147, 2026-09-24) — 9 repins + dist gap closed, S7 landable
+
+Implementer (tiny). `agent-neo` loaded first. `## W4-S7` (:20073) read
+firsthand. Base HEAD fd412c54f; S7's jsx.ts/jsx.test.ts uncommitted
+throughout, sibling w4-s3/145's `??` pgen dirs (5 → 8 during the run)
+untouched. No full suites anywhere (145 owns heavy gates): focused-only
+per brief. No commits.
+
+### Repins (9 files, one pin line each, same roster bytes)
+
+All 9 pins derive the expected roster the SYNC-04 way — read back from
+the world's own emitted `react.d.mts` per-tag declares (`/export declare
+const (\w+): \(props: \w+Props/g`, sorted set), never from neo source —
+and pin `primitives` to it. Set-equality verified firsthand before
+editing: the 101 declare names === the 101 shelf jsx names exactly
+(python set-compare, equal True). Byte-homing unchanged: E1's bytes stay
+at PGEN-12/13 + RS goldens; these pins assert the publish join only.
+
+- UNIT `src/sync/sync.test.ts:161` → `toEqual([...new Set(generated)].sort())`.
+- CHAIN-01 :67, -02 :69, -03 :70, -04 :73, -05 :63 → same one-line pin
+  (3-line SYNC-04-idiom derivation above each).
+- SYNC-04 :82 → one line onto the existing `generated` const.
+- SYNC-10 :55 → pin + derivation above.
+- SYNC-15 :47 → pin + the existing `generated` block moved above it
+  (jsxHosts leg below reuses it unchanged).
+- SYNC-15 README :9 prose mirror: "pins the 101 generated primitives
+  beside `{ upstream: [], local: ['Card'], merged: ['Card'] }`".
+- Pin messages/assertion shapes untouched; no other bytes moved.
+
+### Dist gap (1 file, `tools/build-bin.mjs`)
+
+Captain-proved gap confirmed at rest (`dist/src/native/...` absent):
+tsc never emits the shelf JSON, so any dist/packed sync hit S7's loud
+`[jsx]` throw — the S1 packed-gap class, contra S7's packed note. Fix
+via the established mechanism, 3 edits: ASSETS row for
+`src/native/generated/primitives/vocabulary.json` (source→dist verbatim);
+PKG-side read condition extended past `.d.mts` (`|| .json`, with the
+why-comment); `mkdirSync(dirname(dest), recursive)` in
+`layTwinsAndAssets` — firsthand-needed, not speculative: no `.ts` lives
+beside the shelf so tsc never creates the parent and `copyFileSync`
+would ENOENT without it. `files: ['dist']` ships it; dist layout
+mirrors src so jsx.ts's relative resolve keeps working.
+
+### Proof (all firsthand, focused only)
+
+- Units: jsx.test.ts 6/6, sync.test.ts 18/18 (re-run green after the
+  gate squeeze below).
+- Cases individually: CHAIN-01..05 PASS (transitive/diamond/parallel/
+  multi-extends/depth), SYNC-04/10/15 PASS (compile-request/extends/
+  discovery) — 8/8, each its own `agentneo run`.
+- `agentneo q` over all 10 touched lintables → 0 errors, exit 0. Two
+  non-failing warns, both pre-existing (not introduced): sync.test.ts
+  file-lines 500 (warn >365; was 499 at HEAD — the pin had to squeeze
+  to a net +1 single-line derivation to stay at the 500 fail line) and
+  SYNC-15 `run()` 91 lines (warn >80; was 83 at HEAD). Refactoring
+  either out of warn range is beyond repin scope; flagging for
+  landing/S6.
+- Full neo build (`pnpm build`) exit 0, 301 files; the shelf lands at
+  `dist/src/native/generated/primitives/vocabulary.json`, 101
+  elements, byte-identical to the source shelf.
+- Dist smoke (beyond the bar, cheap): `node import(dist/.../jsx.js)`
+  → `resolveJsxElements({}).primitives` = 101, sorted, Div/Obj
+  present — the loud throw is gone in dist layout.
+- No-panda over all touched files: clean. Footprint: exactly the 11
+  scoped files (`sync.test.ts` + 8 specs + README + build-bin);
+  `git status` shows nothing else of mine.
+
+### Handoff to landing
+
+S7 + repins land together on S7's report: apply order irrelevant (no
+overlapping lines), landable green on the focused set. Still riding the
+landing per S7: T1/T2 hermetic packed proof (now meaningful — the shelf
+ships), the 2 foreign session-repro reds (env/load, isolated-green by
+S7), and the full-unit 407 count (not re-run here — 145's gate).
+
+## Dispatch — w4-s7-verify/148 away (captain, 2026-09-24)
+147 filed ## W4-S7-REPIN (9 repins via SYNC-04 read-back idiom, dist gap closed with ASSETS + .json + mkdirSync, focused proofs green: 6/6 + 18/18 + 8/8 individual + q 0 errors + build 301 + dist smoke 101). Joint micro-verifier (13 files) briefed adversarial + focused-only (≤2 case runs, zero full suites — 145 owns heavy gates): feed re-derivation, pin spot-checks, dist byte-identity + mkdir necessity, q incl. the 500-line fail-line squeeze, footprint. Land S7+repins together on LAND (T1/T2 + full suites ride the captain's landing after 145 files). Carried: sync.test.ts sits EXACTLY at the 500 fail line — flag for S6.
+
+## W4-S7-VERIFY (w4-s7-verify/148, 2026-09-24) — LAND, 13 files, every number firsthand
+
+Micro-verifier (read-mostly). `agent-neo` loaded first. `## W4-S7`
+(:20073) + `## W4-S7-REPIN` (:20156) read firsthand. Base HEAD
+fd412c54f. Zero source edits, zero commits, no full units, no full
+cases, no T1, 2/2 individual case runs (cap). Sibling w4-s3/145
+RUNNING throughout — its files untouched, its gates unrunned.
+
+### FEED — re-derived, live
+
+- Shelf: 101 elements, 101 unique, pre-sorted, A/Div/Map/Obj/Table
+  present, lowercase `object` absent (E1 →`Obj` rename confirmed).
+- `jsx.ts` (80 lines): module-load `PRIMITIVE_ROSTER` via the
+  fileURLToPath+resolve idiom at `../../native/generated/primitives/
+  vocabulary.json`; `as unknown` + narrowing mirrors `sync/session.ts:
+  306`; 4 loud `[jsx]` throw legs read (not-object, no-elements,
+  malformed element, nameless element); `uniqueSorted` on the roster;
+  `merged` excludes primitives. Header (4 sentences, in the 2–6 band)
+  accurate: E1 shelf, downstream reads without tracing.
+- `jsx.test.ts`: 6 `it` blocks, no skips, own-parse join pin (101,
+  sorted, spot names, carrier-independence incl. traced,
+  merged-exclusion). Suite PASSED → 6/6.
+
+### REPINS — 3+ pins live, idiom honest
+
+- Spot checks live: (1) `sync.test.ts` pin green inside focused 18/18
+  (18 `it`, 18 passed, firsthand); (2) SYNC-15 PASS + set-compare
+  re-derived from MY run's own emitted `react.d.mts` (101 declares
+  === 101 shelf, True) with `jsx-elements.json` at 101/[]/`['Card']`/
+  `['Card']`; (3) CHAIN-01 PASS + pin-live check (101/101, True).
+- Idiom confirmed read-back, never neo source: the regex reads the
+  world's own emitted per-tag declares (comment + derivation in 7
+  files; SYNC-04 reuses its pre-existing `:45` const — verified in
+  file). SYNC-15 block-move read: identical derivation + `>= 100`
+  assert moved above the pin, jsxHosts leg below reuses `generated`
+  unchanged.
+- Completeness: `primitives: \[\]` grep over `src` + `tests` = ZERO
+  hits — all 9 pins repinned, none missed, none invented.
+- README prose true: "pins the 101 generated primitives beside
+  `{ upstream: [], local: ['Card'], merged: ['Card'] }`" matches the
+  emitted artifact byte for byte.
+
+### DIST — identical bytes, necessary mkdir, honest gap note
+
+- `dist/.../vocabulary.json` present, `cmp` BYTE-IDENTICAL to source,
+  101 elements; `files: ['dist']` ships it (package.json:23).
+- `mkdirSync` firsthand-necessary: the shelf dir holds NO `.ts`
+  (`.d.ts` + README + `.json` only), so tsc never creates the dist
+  parent and `copyFileSync` would ENOENT — read from code + listing,
+  not trust.
+- `build-bin.mjs` diff = exactly the 3 edits (import, ASSETS row +
+  PKG-side `.json` condition with why-comment, mkdir with
+  why-comment) — arc-only, nothing else.
+- Dist smoke re-run: `resolveJsxElements({})` from
+  `dist/src/system/base/jsx.js` → 101, sorted, Div/Obj present,
+  merged `[]` — the loud throw is gone in dist layout.
+- S1-gap challenge: S7's packed note was WRONG (bin-is-source-direct
+  does not cover packed, which ships dist-only) and the repin
+  correctly reverses it. Closure is now structural, not
+  situational: BOTH layouts carry the shelf at the mirrored relative
+  path, and jsx.ts's import.meta-relative resolve works in either —
+  verified in dist firsthand, in src by every unit/case run. What is
+  NOT proven: hermetic packed install (T1/T2) — correctly riding the
+  landing, meaningful now that the shelf ships.
+
+### PROOFS — gate + focused units + 2 cases, all firsthand
+
+- `agentneo q` over all 13 files → 0 errors, exit 0, exactly the 2
+  reported warns: sync.test.ts 500 lines (HEAD 499 by gate count,
+  +1 net from the single-line squeeze — warn pre-existed at 499 >
+  365, fail is >500 so 500 passes but sits EXACTLY at the line: one
+  more line fails the gate; S6 must split before touching) and
+  SYNC-15 `run()` 91 lines (HEAD 83, lines 39→121 firsthand — warn
+  pre-existed at 83 > 80; the +8 is the moved-not-added derivation
+  plus the expanded pin object).
+- Focused units: jsx.test.ts 6/6, sync.test.ts 18/18, both green
+  firsthand. No-panda over all 13: clean.
+- Cases (2/2 cap): SYNC-15 PASS, CHAIN-01 PASS. CHAIN-02..05 +
+  SYNC-04/10 not re-run (cap) — accepted on byte-pattern-identical
+  diffs to the two green runs + zero-leftover grep + repin's 8/8.
+
+### FOOTPRINT — exactly the 13
+
+`git status` before/after my runs identical: 15 M in neo + LOG-2 (ink)
++ 8 `??` pgen dirs. Non-arc attribution firsthand: SPEC.md/TESTS.md =
+  145's (8 BLOCKED→LIVE flips matching EXACTLY the 8 `??`
+  PGEN-01..06/11/14 dirs); `??` dirs = 145's; LOG-2.md = ink. My case
+  runs wrote only to ignored world/artifact dirs. The 13 below are the
+  complete arc; nothing else is mine, nothing of mine is missing.
+
+### Verdict: LAND
+
+LANDING (13 files, S7 2 + repin 11, apply order irrelevant — no
+overlapping lines): `src/system/base/jsx.ts`, `src/system/base/
+jsx.test.ts`, `src/sync/sync.test.ts`, `tests/cases/chain/
+NEO-CHAIN-01/specs/transitive.spec.ts`, `NEO-CHAIN-02/specs/
+diamond.spec.ts`, `NEO-CHAIN-03/specs/parallel.spec.ts`,
+`NEO-CHAIN-04/specs/multi-extends.spec.ts`, `NEO-CHAIN-05/specs/
+depth.spec.ts`, `tests/cases/sync/NEO-SYNC-04/specs/
+compile-request.spec.ts`, `NEO-SYNC-10/specs/extends.spec.ts`,
+`NEO-SYNC-15/specs/discovery.spec.ts`, `NEO-SYNC-15/README.md`,
+`tools/build-bin.mjs` (all under `packages/reference-neo/`).
+Still riding the landing per prior reports: T1/T2 hermetic packed
+proof, full-unit 407 count + 2 foreign session-repro reds (145's
+gate), and the sync.test.ts 500-line tripwire for S6.
+## W4-S3 (w4-s3, 2026-09-24) — render cases scaffolded + proved, 8/8 green
+
+Implementer. `agent-neo` loaded first. Base HEAD fd412c54f (S1+S2+E2-fix+sync-lock landed).
+Survey read: ## W4-SURVEY (f) item 3 (S3) plus (a)/(b)/(d) for the bound-entry shape;
+tests/cases/pgen/SPEC.md + TESTS.md ledgers flipped to LIVE as each case proved.
+
+Scope kept: tests/cases/pgen/ ONLY (8 new case dirs + SPEC.md/TESTS.md ledger flips) plus
+this report. No commits. Peer files in the shared tree (jsx.ts S7, sync.test.ts, chain/sync
+specs, build-bin.mjs, captain ticks) untouched — verified via `git status` before filing.
+
+Files (8 dirs × case.json + README + index.html + ui.config + src + 1 spec; 58 new files, PGEN-02/14 carry an extra theme.ts):
+NEO-PGEN-01 html-flow renders (27 probes + css leg, utility pin 2)
+NEO-PGEN-02 html-text renders (22 text + 7 single-letter specials A B I P Q S U, 29 probes
+plus 2 holed-array Span probes in sized containers, pin 3)
+NEO-PGEN-03 html-form renders (13 family, 15 pinned probes, native fill/toggle/fire legs, pin 1)
+NEO-PGEN-04 html-table renders (9 family + Caption guest, 13 pinned probes, nesting pins, pin 1)
+NEO-PGEN-05 html-media renders (10 family + inner image, 11 probes, native attrs, svg host over
+native circle, voids childless, pin 1)
+NEO-PGEN-06 html-interactive renders (5 family + island/light/dup pins, 9 probes, details toggle,
+dialog closed, hover + dark arms, pin 4)
+NEO-PGEN-11 special-cased roster (Obj Var Map + Br Hr Wbr + Caption/Menu override refs + table,
+9 probes, 109-export census, pin 1)
+NEO-PGEN-14 metadata plus passthrough (variant twin + dark island + passthrough probe, leak
+sweep over 6 keys × 3 probes, pin 2)
+SPEC.md: 8 rows BLOCKED→LIVE with proofs. TESTS.md: 8 rows blocked-on-w4→live with proofs.
+
+Per-case status: all 8 green, each proved first against the LANDED bound roster (per-system
+react.mjs/react.d.mts; E2 live from @reference-ui/rust/primitives — no tree-relative legs,
+no dist-direct legs anywhere in the new files; worlds consume only the published entry).
+
+Proofs, all firsthand:
+- `pnpm agentneo run NEO-PGEN`: 16/16 PASS (8 new + 12/13/15/16/17/18/19/20 unchanged-green),
+  re-run green after the gate-driven refactors below.
+- Full suite `pnpm agentneo run`: 213/213 ok, zero FAIL lines. Per-case diff vs pre-change
+  baseline /tmp/w4s3-baseline.json (205/205, saved before scaffolding): added exactly the 8
+  new ids, moved [], missing [].
+- Neo units `vitest run`: 59 files / 407 tests, all pass. The +1 vs S1-VERIFY's 406 is peer
+  S7 work (jsx.test.ts +55/-6 in tree, untouched by this crew); zero unit files of mine.
+- `pnpm agentneo q` over the 34 tracked case files (READMEs, ui.configs, src, specs):
+  0 errors, 0 warnings. (Directory-form q also scans gitignored .reference-ui/dist build
+  output and fails there — expected, out of scope; file-form is the proof.)
+- Bound-shape pins inside the cases: PGEN-01 asserts react.mjs + react.d.mts exist;
+  PGEN-11 parses the export block to exactly 101 roster (E1 vocabulary) + 6 helpers
+  (ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement,
+  useColorMode) + css + recipe = 109, 9 pattern names absent, react.d.mts pattern-free.
+
+Findings (behavioral, all pinned in specs, none blocking):
+- width/height are style props (mint w_*/h_* utilities, never land as attrs): excluded
+  from the PGEN-05 native-attr legs with the reason in the spec; first run caught 8
+  utilities vs the pinned 1.
+- Island children inherit the layer scope (factory usePrimitiveContext: explicit-colorMode
+  parent suppresses the child's data-layer restamp): PGEN-06 asserts data-layer null plus
+  inherited data-color-mode=dark on the island child, not a restamp.
+- `Map` import shadows the global (lint noShadowRestrictedNames): aliased to MapPrimitive
+  in the PGEN-11 world, mirroring the E2 shelf's own alias; the sp-map paint assertion
+  proves extraction still binds the aliased callsite.
+- Playwright waitFor defaults to visible: hidden probes (datalist, optgroup, options, col,
+  source, track, embed, area) read via evaluate-only after one visibility wait (PGEN-03/04/
+  05/06/11); first PGEN-03 run timed out 30s before the restructure.
+- Gate refactors (spec run() over the 120-line fail / 80-line warn): form, interactive,
+  media, special, metadata specs split into assertSheet/assertIdentity/assertNative-style
+  helpers; group re-run green after.
+
+Blockers: none. S3 unblocks 8 per the survey sequence (S4 bound-types + PGEN-22/TYPE-01 next).
+
+## W4-S3-VERIFY (w4-s3-verify, 2026-09-24) — VERDICT: LAND
+
+Adversarial Neo verifier. `agent-neo` loaded first. ## W4-S3 (:20339) +
+W4-SURVEY (f) item 3 (:19625) + tests/cases/pgen/SPEC.md read firsthand.
+Zero source edits, zero commits, peer files untouched; `git status`
+before/after my runs identical (16 M + 8 `??`; runs wrote only to
+ignored world/artifact dirs). Heavy gate was OPEN on entry: ##
+W4-S7-VERIFY already filed (:20234), so full suites ran without
+discipline risk. Every number below firsthand-observed.
+
+### FOOTPRINT — exactly the 10
+
+15 M in neo + LOG-2 (ink) + 8 `??`: the 13 non-ledger M files match
+W4-S7-VERIFY's 13-file LANDING list line for line (S7's, untouched);
+S3's share is exactly the 8 `??` PGEN-01/02/03/04/05/06/11/14 dirs +
+SPEC.md/TESTS.md. Ledger diffs re-derived: 8 rows BLOCKED→LIVE /
+blocked-on-w4→live in each file, zero other hunks, proofs naming real
+case content (27/29/15/13/11/9/9-probe counts, 109-census, sweep).
+58 source files under the 8 dirs (76 on disk minus 18 gitignored
+world/dist build outputs, `git check-ignore` confirmed); shape is 8
+dirs × case.json + README + index.html + ui.config + src + 1 spec,
+PGEN-02/14 carrying the extra theme.ts.
+
+### LEGS — zero forbidden, worlds on the published entry only
+
+- `reference-rs`: ZERO hits across all 58. `@reference-ui/rust`: ZERO.
+- `../` escapes: only the canonical `../../../../shared/*.ts` spec-harness
+  imports. `dist/primitives` / `primitives.mjs`: ZERO.
+- The sole `.reference-ui/react` hits are the 8 world importmaps
+  `"@reference-ui/react": "./.reference-ui/react/react.mjs"` —
+  byte-identical to the canonical shape in pre-existing prim/token
+  render cases (the bound per-system entry, not a dist-direct leg).
+  All world roster imports use the bare `@reference-ui/react`
+  specifier.
+- Coverage census (my own node pass): the 8 worlds import exactly the
+  full 101 E1 roster — zero roster names unrendered, zero non-roster
+  imports. The probes genuinely exercise the LANDED bound roster.
+
+### SPECS — 3 read adversarially + 2 worlds, probes honest
+
+- PGEN-11 census: expected = live E1 jsx names + 6 value helpers +
+  css + recipe, length-pinned to 109 (forces E1 = 101), deepEqual
+  against the bundle's parsed export block; 9 pattern names
+  explicitly absent; react.d.mts pattern-free. The 109 = 101 + 6 +
+  2 split matches the S1 bound contract (configurePrimitives stays
+  E2-internal). World ref callbacks genuinely discriminate
+  (`instanceof HTMLTableCaptionElement/HTMLMenuElement` → name, else
+  `HTMLElement` → 'miss') — not vacuous.
+- PGEN-01: react.mjs + react.d.mts existence pins, 27-probe
+  identity/paint/marker/layer/leak pass, css-background leg on
+  article. EXPECTED_TAGS is author-asserted (not E1-derived), so the
+  "pinned against E1" comment is soft — but my 101/101 import census
+  closes the coverage question structurally, and PGEN-12 guards the
+  set. Non-blocking note.
+- PGEN-14: variant/colorMode stamps, real globalCss recipe rule on
+  `.ref-div[data-variant="accent"]`, passthrough (aria/data/title +
+  handler + ref) over both style paths, leak sweep over 6 keys × 3
+  probes with self-checking dual lists. The sweep's `if (!probe)
+  continue` is lenient in isolation but unreachable-missing given
+  the earlier per-probe waitFor legs. Noted, not a hole.
+- PGEN-11 spec reads the Neo E1 shelf tree-relatively (spec-side
+  node read of Neo-owned data, established idiom) — not a
+  reference-rs leg; worlds consume only the published entry.
+
+### PROOFS — q + full cases + full units + PGEN subset, all firsthand
+
+- `pnpm agentneo q` over the 34 TS/TSX case files: 0 errors,
+  0 warnings, exit 0.
+- Full `pnpm agentneo run`: 213/213 ok, exit 0, zero FAIL lines.
+  vs S3's /tmp/w4s3-baseline.json (205/205, timestamped 08:20
+  pre-scaffold; validated: all-ok, contains none of the 8, and
+  roster-minus-8 from MY pre-run `agentneo list` snapshot equals it
+  exactly): added = exactly the 8 new ids, moved [], missing [].
+  The 3 "Build failed ... No such file or directory" log lines are
+  expected in-spec negative-path noise; all owning cases PASS.
+- Full Neo units (`vitest run`): 59 files / 407 tests, all pass.
+  The +1 vs S1-VERIFY's 406 is S7's jsx.test.ts in-tree; zero unit
+  files are S3's (no *.test.ts among the 58).
+- PGEN subset `pnpm agentneo run NEO-PGEN`: 16/16 PASS (8 new + the
+  8 unchanged-green elders), exit 0.
+- Attribution: zero red anywhere — no S7-interference, env, or
+  S3-own fault to attribute. Run executed with S7's 13 M-files in
+  the shared tree, so the 213/213 simultaneously re-confirms S7's
+  repinned CHAIN/SYNC cases green; no interference either direction.
+
+### Verdict: LAND
+
+LANDING (10 paths, all under `packages/reference-neo/tests/cases/
+pgen/`): `NEO-PGEN-01/`, `NEO-PGEN-02/`, `NEO-PGEN-03/`,
+`NEO-PGEN-04/`, `NEO-PGEN-05/`, `NEO-PGEN-06/`, `NEO-PGEN-11/`,
+`NEO-PGEN-14/` (8 new case dirs, 58 source files) + `SPEC.md` +
+`TESTS.md` (8 ledger flips each). S3 unblocks 8 per the survey
+sequence; S4 bound-types + PGEN-22/TYPE-01 next.
+
+## Dispatch — w4-s3-verify/149 away; S7 joint arc LAND-queued (captain, 2026-09-24)
+145 filed ## W4-S3 (8/8 render cases, 213/213 full, units 407, q 0/0, scope held to pgen + ledgers). Verifier 149 briefed adversarial with one-heavy-gate: cheap phase anytime, full suites only after ## W4-S7-VERIFY. 148 has since filed ## W4-S7-VERIFY LAND (feed re-derived, 3 pins live, dist byte-identical + mkdir necessary, packed-note reversal confirmed, q 0/13, footprint exact 13) — so 149's heavy phase is now unblocked; S7+repins joint landing queued behind MY firsthand gates (build + q + units + cases + T1/T2), which run after 149 files to hold the one-heavy-gate. 500-line tripwire on sync.test.ts carried for S6 (500 passes, +1 fails).
+
+## Tick (health-check) — 149 heavy phase running, S7 landing queued, no action (captain, 2026-09-24)
+Roster: 149 (S3 verifier) running, in its unblocked heavy phase — no ping (verifiers file once at the end; no silence signal). No new reports since the dispatch note; S7+repins LAND-queued behind my firsthand gates, which stay parked until 149 files (one-heavy-gate). Tree reconciles exactly 24 = S7 joint 13 + S3 10 (8 ?? dirs + 2 ledgers) + LOG-2 ink; HEAD fd412c54f, no fresh commits. No deadlock, no landings this tick.
+
+## Tick (star-captain) — Obj1-3 COMPLETE, LANDING parked, 149 heavy-phase running (captain, 2026-09-24)
+§1: LOG-1/2/3 first-line COMPLETE; LOG-4/5 → LANDING.md (HQ-parked, Neo/systems day in force — no stop on this work). §2: live crews = 149 only (S3 verifier, heavy phase); peers unchanged (grassy-mirach, no tree products). §3/4: 149 running, no silence signal (verifiers file once) — no ping, no intervention. Tree reconciles 24 = S7 joint 13 + S3 10 + ink (an early-early 26 count in this tick re-checked at 24 numbered lines — transient case-run droppings, gone, all-known files). §6: nothing to advance — no new reports; S7 landing gates stay parked behind 149 per one-heavy-gate. HEAD fd412c54f, 32 banked.
+
+## Landings — S7+repins + S3 banked, 34 total (captain, 2026-09-24)
+149 filed ## W4-S3-VERIFY LAND (footprint exact 10, zero forbidden legs + 101/101 import census, 3 specs read with 2 non-blocking notes, q/cases/units/PGEN all firsthand green) — roster empty, one-heavy-gate open. Captain firsthand gates on the joint tree: build 301 exit 0 (shelf ships), q S7 0e/2w-known + S3 34 files 0/0, units 59/407 (first run 1 transient red, name uncaptured — counts-only grep, my process gap — green on 3 consecutive reruns; stable-green standard met, consistent with the known load-flake class), cases 213/213 added[] missing[], T1 PASSED, T2 PASSED (hermetic packed proof now meaningful — shelf ships in dist). Commits bare: 55a3e0cbc W4-S7 (13 files) + 806049b30 W4-S3 (58 + 2 ledgers). Carried: sync.test.ts 500-line tripwire for S6 (500 passes, +1 fails); ruling-4 tension stands for HQ.
