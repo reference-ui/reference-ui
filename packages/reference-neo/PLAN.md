@@ -178,6 +178,26 @@ gate rule (`agentneo q` addition), review convention, or both. Also
 open: whether the ban extends to non-CSS text (fragments/scan) or
 stays CSS-scoped.
 
+FILED (wave-8 prose sweep — S5's not-taken, captain-ordered): the
+packed-css ban is now law, not migration. S5 deleted
+`src/sync/packed-css.ts` (128 lines: `mergePackedStylesheets`,
+`stripResetLayer`, `PackedUpstream`) plus its 364-line battery, and
+moved the extends chain onto `streams` (`css?: string` gone from
+the base-system shape, `.css` text readers gone with it).
+FORBIDDEN from this line on: reintroducing any of the four names
+in any form; `css?: string` on system/base shapes; `.css` text
+readers over baseSystem/upstream payloads — construction only,
+neither regex nor re-parse (3.2's law). EXEMPT (S4-audited, not
+violations): recipe style OBJECTS, the react `css()` fn,
+`styles.css` filenames, absence-pins asserting `!('css')`, and
+`css?:` Record/prop-typed (font config, vendored
+primitives/react-surface) — never `string`. Provenance: the 3
+marked comments (`streams.ts:6`, `streams.test.ts:4`,
+`streams-goldens.test.ts:4-5`). Living proof: zero packed-css
+bytes outside those comments with units + cases + hermetic green
+— the PGEN station (`tests/cases/pgen/`, 8/8) is the newest green
+rung on the cutover tree.
+
 ### 3.6. Seam, not surgery: the compiler should emit streams (HQ: packed-css is Panda-era)
 
 HQ: `packed-css.ts` (`matchCloseBrace` and friends) is a seam problem.

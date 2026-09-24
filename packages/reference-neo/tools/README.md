@@ -91,28 +91,28 @@ reorders: each one consumes the bytes of the previous.
 
 ## Compiled bin build
 
-The build script compiles the shippable `neo` bin. Node refuses to
+The build script compiles the shippable `ref` bin. Node refuses to
 type-strip files under `node_modules`, so the packed package cannot ship
-`bin/neo.ts` source the way dev runs it — the bin must be compiled JS.
+`bin/ref.ts` source the way dev runs it — the bin must be compiled JS.
 The build transpiles `src/` + `bin/` into the gitignored `dist/` tree with
 tsc (layout-preserving on purpose: sync resolves esbuild alias entries and
 reads declaration assets from paths computed off `import.meta.url`, so a
 single-file bundle would break resolution), then lays the alias-entry
 twins plus the runtime-read `types.d.mts` beside the emit, asserts the
 alias-literal set is exactly the known one (drift fails loudly), and makes
-`dist/bin/neo.js` executable. `package.json` points `bin` and the
+`dist/bin/ref.js` executable. `package.json` points `bin` and the
 `./runtime` export at the emit; `prepack`/`prepublishOnly` run the build,
 and `files` carries `dist` only.
 
 Run it from the Neo package directory after pulling or editing neo
-sources, and before any `.bin/neo` invocation in a fresh checkout:
+sources, and before any `.bin/ref` invocation in a fresh checkout:
 
 ```sh
 cd packages/reference-neo && node tools/build-bin.mjs
 ```
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
-build). Direct-source invocations (`node bin/neo.ts`, the CLI specs) keep
+build). Direct-source invocations (`node bin/ref.ts`, the CLI specs) keep
 working without it — only the installed-shim shape needs the emit.
 
 ## Quality gate

@@ -18,9 +18,9 @@ const NEO = `import '@reference-ui/neo'\n${CSS}`
 const FIXTURE_FILES: Array<[string, string]> = [
   ['src/ok.ts', CSS],
   ['src/.hidden.ts', CSS],
-  ['src/.hidden-neo.ts', NEO],
+  ['src/.hidden-ref.ts', NEO],
   ['src/t.d.ts', CSS],
-  ['src/t-neo.d.ts', NEO],
+  ['src/t-ref.d.ts', NEO],
   ['src/excluded/skip.ts', CSS],
   ['src/data.json', '{"note": "not a source"}\n'],
   ['src/frag-data.json', `{"note": "import '@reference-ui/neo'"}\n`],
@@ -63,7 +63,7 @@ const EXPECTED_MATCHES = ['dist/frag.ts', 'src/frag-data.json', 'theme/tokens.ts
 const EXPECTED_RETAINED = [
   'dist.ts',
   'src/.d.ts',
-  'src/.hidden-neo.ts',
+  'src/.hidden-ref.ts',
   'src/.hidden.ts',
   'src/..ts',
   'src/a/b/c/deep.ts',
@@ -73,7 +73,7 @@ const EXPECTED_RETAINED = [
   'src/lib.js',
   'src/ok.ts',
   'src/style.tsx',
-  'src/t-neo.d.ts',
+  'src/t-ref.d.ts',
   'src/t.d.ts',
   'src/with space.ts',
   'src/ünïcode.ts',
@@ -108,9 +108,9 @@ describe('scanner identity', () => {
   let outside = ''
 
   beforeAll(() => {
-    root = mkdtempSync(join(tmpdir(), 'neo-scanner-identity-'))
+    root = mkdtempSync(join(tmpdir(), 'ref-scanner-identity-'))
     writeTree(root, FIXTURE_FILES)
-    outside = mkdtempSync(join(tmpdir(), 'neo-scanner-outside-'))
+    outside = mkdtempSync(join(tmpdir(), 'ref-scanner-outside-'))
     writeTree(outside, OUTSIDE_FILES)
   })
 

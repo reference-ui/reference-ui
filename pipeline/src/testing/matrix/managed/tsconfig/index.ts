@@ -2,7 +2,7 @@
  * Managed tsconfig generation for matrix consumers.
  *
  * The synthetic matrix consumer only needs enough TypeScript configuration to
- * exercise `neo sync` and compile the selected fixture as a downstream app.
+ * exercise `ref sync` and compile the selected fixture as a downstream app.
  */
 
 import {

@@ -6,7 +6,7 @@ This repository is an active monorepo. It contains the Reference UI CLI, the fir
 
 ## What lives here
 
-- `packages/reference-neo` - the `neo` CLI, sync pipeline, config/runtime generation
+- `packages/reference-neo` - the `ref` CLI, sync pipeline, config/runtime generation
 - `packages/reference-lib` - the first-party React design system package built on `@reference-ui/neo`
 - `packages/reference-docs` - the Vite-based documentation site driven by the same sync pipeline
 - `packages/reference-rs` - Rust/native bindings used by the platform
@@ -35,7 +35,7 @@ Common root commands:
 
 ```bash
 pnpm dev           # docs site (or: pnpm dev lib)
-pnpm dev:lib       # neo sync watch + Book for the library
+pnpm dev:lib       # ref sync watch + Book for the library
 pnpm test:lib      # library tests
 pnpm test:rs       # Rust/native tests
 pnpm pipeline test # matrix suites (Dagger)
@@ -43,10 +43,10 @@ pnpm pipeline test # matrix suites (Dagger)
 
 ## Core workflow
 
-The center of the repo is `neo`, exposed by `@reference-ui/neo`.
+The center of the repo is `ref`, exposed by `@reference-ui/neo`.
 
-- `neo sync` builds and synchronizes generated design-system output
-- `neo sync --watch` keeps generated output current during development
+- `ref sync` builds and synchronizes generated design-system output
+- `ref sync --watch` keeps generated output current during development
 - `mcp` runs the Reference UI MCP server (`@reference-ui/mcp`)
 
 Most package-level dev and test flows build on top of that sync pipeline.

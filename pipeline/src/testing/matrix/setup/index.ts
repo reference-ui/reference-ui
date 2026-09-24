@@ -154,7 +154,7 @@ export async function setupMatrixPackages(options: MatrixSetupOptions = {}): Pro
     await run('pnpm', ['run', 'sync'], {
       cwd: definition.dir,
       interactive: true,
-      label: `Running neo sync for ${definition.packageName}`,
+      label: `Running ref sync for ${definition.packageName}`,
     })
   }
 }

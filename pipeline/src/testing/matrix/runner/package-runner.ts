@@ -203,10 +203,10 @@ export async function runMatrixPackageInDagger(
       ).withExec([...matrixConsumerSetupCommand])
       const setupOutput = await setupRunner.stdout()
       await writeMatrixPackageStageLog(packageRunContext, 'setup', setupOutput)
-      lines.push('  Prepared full neo sync runtime output.')
+      lines.push('  Prepared full ref sync runtime output.')
       testRunner = setupRunner
     } else {
-      const setupMessage = 'Deferred standalone setup; runtime tests will start neo sync --watch and wait for runtime-ready output.'
+      const setupMessage = 'Deferred standalone setup; runtime tests will start ref sync --watch and wait for runtime-ready output.'
       await writeMatrixPackageStageLog(packageRunContext, 'setup', `${setupMessage}\n`)
       lines.push(`  ${setupMessage}`)
     }
@@ -218,7 +218,7 @@ export async function runMatrixPackageInDagger(
     phase = 'test'
     announceMatrixPackageTesting(packageRunContext)
     lines.push(usesSharedWatchSession
-      ? '  Running tests against neo sync watch-ready output'
+      ? '  Running tests against ref sync watch-ready output'
       : '  Running tests')
     const testLogOutputs: string[] = []
 
@@ -250,7 +250,7 @@ export async function runMatrixPackageInDagger(
         const parsedWatchOutput = parseMatrixRefSyncWatchOutput(sharedWatchOutput)
 
         if (parsedWatchOutput.waitDurationMs !== null) {
-          lines.push('  Reached neo sync watch-ready output.')
+          lines.push('  Reached ref sync watch-ready output.')
         }
 
         appendOutputBlock(lines, parsedWatchOutput.cleanedOutput)

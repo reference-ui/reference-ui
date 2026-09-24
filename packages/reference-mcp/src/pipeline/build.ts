@@ -42,7 +42,7 @@ export async function generateMcpArtifact(
 
   if (!existsSync(manifestPath)) {
     throw new Error(
-      `MCP build requires generated Reference UI artifacts at "${manifestPath}". Run "neo sync" from the project root before starting the MCP server.`
+      `MCP build requires generated Reference UI artifacts at "${manifestPath}". Run "ref sync" from the project root before starting the MCP server.`
     )
   }
 

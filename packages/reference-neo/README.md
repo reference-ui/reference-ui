@@ -62,7 +62,7 @@ somewhere to live.
 
 ## Building the bin (build-once)
 
-The shippable `neo` bin is compiled: `bin` and the `./runtime` export
+The shippable `ref` bin is compiled: `bin` and the `./runtime` export
 point at `dist/` (see [`tools/README.md`](tools/README.md)), because
 Node refuses to type-strip shipped `.ts` under `node_modules`. `dist/`
 is gitignored, so build it once per checkout (and rebuild after editing
@@ -72,6 +72,6 @@ neo sources) before any installed-shim invocation:
 cd packages/reference-neo && node tools/build-bin.mjs
 ```
 
-Direct-source invocations (`node bin/neo.ts sync`, the `NEO-CLI-*`
-specs, `bin/neo.test.ts`) need no build. `prepack` and `prepublishOnly`
+Direct-source invocations (`node bin/ref.ts sync`, the `NEO-CLI-*`
+specs, `bin/ref.test.ts`) need no build. `prepack` and `prepublishOnly`
 build automatically for real publishes.

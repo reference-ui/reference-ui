@@ -1,6 +1,6 @@
 # watch
 
-The file watcher behind `neo sync --watch`, in one place. Watching is
+The file watcher behind `ref sync --watch`, in one place. Watching is
 not free: parcel delivers raw create/update/delete bursts across
 multiple roots, include globs name files while subscriptions need
 directories, and every matched event must settle into exactly one

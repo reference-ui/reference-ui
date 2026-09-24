@@ -25,9 +25,9 @@ export const TRICKY_TREE: Array<[string, string]> = [
   ['src/ok.ts', CSS_RED],
   ['src/.hidden.ts', CSS_RED],
   ['src/t.d.ts', CSS_RED],
-  ['src/neo.ts', NEO_IMPORT],
-  ['src/.hidden-neo.ts', NEO_IMPORT],
-  ['src/t-neo.d.ts', NEO_IMPORT],
+  ['src/ref.ts', NEO_IMPORT],
+  ['src/.hidden-ref.ts', NEO_IMPORT],
+  ['src/t-ref.d.ts', NEO_IMPORT],
   ['dist/frag.ts', NEO_IMPORT],
   ['node_modules/pkg/x.ts', CSS_RED],
   ['src/data.json', '{"note": "not a source"}\n'],
@@ -44,16 +44,16 @@ export const TRICKY_TREE: Array<[string, string]> = [
 
 // Neo importers past dot:false plus the d.ts exclusion; IGNORE/extension
 // survivors (live, dotfiles, d.ts; decoys and traps out).
-export const TRICKY_MATCHES = ['dist/frag.ts', 'src/frag-data.json', 'src/neo.ts', 'theme/tokens.ts']
+export const TRICKY_MATCHES = ['dist/frag.ts', 'src/frag-data.json', 'src/ref.ts', 'theme/tokens.ts']
 export const TRICKY_RETAINED = [
   'dist.ts',
-  'src/.hidden-neo.ts',
+  'src/.hidden-ref.ts',
   'src/.hidden.ts',
   'src/a/b/c/deep.ts',
   'src/dist-backup/keep.ts',
-  'src/neo.ts',
+  'src/ref.ts',
   'src/ok.ts',
-  'src/t-neo.d.ts',
+  'src/t-ref.d.ts',
   'src/t.d.ts',
   'src/with space.ts',
   'src/ünïcode.ts',

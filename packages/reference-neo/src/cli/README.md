@@ -1,6 +1,6 @@
 # cli — the user-facing command layer, thin by law
 
-`neo` is a surface, not an engine. This folder maps argv to subsystem
+`ref` is a surface, not an engine. This folder maps argv to subsystem
 calls, prints the human lines, and returns the exit code; the bin is a
 trampoline that forwards argv and exits.
 

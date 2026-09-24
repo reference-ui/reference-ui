@@ -34,7 +34,7 @@ hand-placed dirs, so the guard lives here instead of ad-hoc in the bin.
 ## Consumers
 
 - the packager's links leg, via `createSymlink`
-- `neo clean`, via `removeGeneratedLink`
+- `ref clean`, via `removeGeneratedLink`
 
 Every link call-site in Neo routes through here; nothing outside this
 module touches `symlink`/`readlink`/`unlink` for generated links.

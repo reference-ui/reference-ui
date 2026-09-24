@@ -20,9 +20,9 @@
       "@reference-ui/neo/config/constants": ["../reference-neo/src/config/constants.ts"],
       "@reference-ui/neo/config/types": ["../reference-neo/src/config/types.ts"],
       "@reference-ui/neo/reference": ["../reference-neo/src/reference/api.ts"],
-      "@reference-ui/neo/fragments/runner": ["../reference-neo/src/fragments/lib/runner.ts"],
-      "@reference-ui/neo/fragments/scanner": ["../reference-neo/src/fragments/lib/scanner.ts"],
-      "@reference-ui/neo/fragments/tokens": ["../reference-neo/src/fragments/api/tokens.ts"],
+      "@reference-ui/neo/fragments/runner": ["../reference-neo/src/collect/lib/runner.ts"],
+      "@reference-ui/neo/fragments/scanner": ["../reference-neo/src/collect/lib/scan/scanner.ts"],
+      "@reference-ui/neo/fragments/tokens": ["../reference-neo/src/collect/surface/tokens.ts"],
       "@reference-ui/neo/microbundle": ["../reference-neo/src/lib/microbundle/index.ts"]
     }
   },

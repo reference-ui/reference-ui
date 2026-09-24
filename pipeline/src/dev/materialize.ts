@@ -223,7 +223,7 @@ function rewriteNeoBinInvocations(scripts: Record<string, string>): Record<strin
   const next: Record<string, string> = {}
 
   for (const [name, cmd] of Object.entries(scripts)) {
-    next[name] = cmd.replace(/(?<!pnpm exec )\bneo\s+/gu, 'pnpm exec neo ')
+    next[name] = cmd.replace(/(?<!pnpm exec )\bref\s+/gu, 'pnpm exec ref ')
   }
 
   return next
@@ -365,7 +365,7 @@ export async function materializeRegistryBackedDevWorkspace(
 
   // Isolate this directory from the surrounding pnpm workspace. Without this,
   // pnpm walks up to the repo's pnpm-workspace.yaml, refuses to install into a
-  // non-member directory, and downstream `pnpm exec neo` resolves nothing.
+  // non-member directory, and downstream `pnpm exec ref` resolves nothing.
   await writeFile(join(workdir, 'pnpm-workspace.yaml'), workspaceYamlContents)
   await writeFile(join(workdir, '.npmrc'), npmrcContents)
 

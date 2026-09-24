@@ -10,7 +10,7 @@ Foundational design system package built on `@reference-ui/neo`.
 ## Usage
 
 ```bash
-pnpm run sync   # Run neo sync once
+pnpm run sync   # Run ref sync once
 pnpm run dev    # Watch mode
 ```
 

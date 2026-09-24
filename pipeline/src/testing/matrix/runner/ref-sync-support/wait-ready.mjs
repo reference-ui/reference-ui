@@ -1,7 +1,7 @@
 /**
  * Runtime helper staged into generated matrix consumers.
  *
- * This script waits for `neo sync --watch` to publish consumable output:
+ * This script waits for `ref sync --watch` to publish consumable output:
  * the generated system entry inside the out dir plus the scope links Neo
  * junctions into node_modules as the last step of a sync. Neo emits no
  * session sentinel, so readiness is the artifacts the tests consume.
@@ -63,7 +63,7 @@ while (Date.now() - startedAt <= timeoutMs) {
 }
 
 const details = lastMissingPaths.length > 0
-  ? `\nMissing neo sync output:\n${lastMissingPaths.join('\n')}`
+  ? `\nMissing ref sync output:\n${lastMissingPaths.join('\n')}`
   : ''
 
-throw new Error(`Timed out waiting for neo sync watch readiness at ${outDirPath}${details}`)
+throw new Error(`Timed out waiting for ref sync watch readiness at ${outDirPath}${details}`)

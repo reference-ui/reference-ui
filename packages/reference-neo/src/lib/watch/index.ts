@@ -1,4 +1,4 @@
-// Sync watch: the file watcher behind `neo sync --watch`.
+// Sync watch: the file watcher behind `ref sync --watch`.
 // It takes a project root plus callbacks and emits a handle whose stop()
 // ends the session. Every matched add/change/unlink settles through a
 // trailing-edge debounce into one serial sync(), so discovery, alignment,
