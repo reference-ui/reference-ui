@@ -57,6 +57,38 @@ The run wipes the generated tasty directory first and reports how many files it 
 and how many specifiers it rewrote. Both the tool and its output are
 checked in, so fresh checkouts typecheck with no extra step.
 
+## Primitives roster vendor
+
+The vendor script copies the committed primitives generator output (E1 vocabulary
+JSON plus the E4 raw-types closure) out of the linked `@reference-ui/rust` module
+sources and into the committed `src/native/generated/primitives/` shelf. E1 copies
+byte-exact, since JSON carries no header; every E4 declaration file gains a
+provenance header pinning the RS version and the regen command, with relative
+specifiers rewritten to their explicit NodeNext form exactly like the tasty vendor.
+The executable roster and its runtime trio are deliberately not copied: they ship
+live through the `@reference-ui/rust/primitives` subpath, so the shelf holds data
+and types only and can never drift from the code that renders.
+
+Run it from the Neo package directory after re-running the primitives generator,
+and use `--check` to verify the committed shelf is fresh:
+
+```sh
+pnpm --filter @reference-ui/rust run primitives && cd packages/reference-neo && node tools/vendor-rust-primitives.mjs
+cd packages/reference-neo && node tools/vendor-rust-primitives.mjs --check
+```
+
+The run writes the shelf in place (the authored shelf README is not a payload and
+is never touched) and sweeps vendored payloads the fresh set no longer contains.
+`--check` reports `missing:`/`stale:`/`extra:` lines plus the regen command and
+exits 1 on any drift. The quality gate runs `--check` first and fails on drift, and
+CI runs the same command, so a stale shelf breaks loudly in both places.
+
+Release checklist for the primitives contract, in order: re-run the RS generator
+until its own golden is green; rebuild the RS JS dist so the live roster entry
+stays coherent with the vendored pair; re-run this vendor tool; confirm `--check`
+prints fresh; confirm the quality gate is green. No step is optional and no step
+reorders: each one consumes the bytes of the previous.
+
 ## Compiled bin build
 
 The build script compiles the shippable `neo` bin. Node refuses to

@@ -59,6 +59,10 @@
       "types": "./dist/typegen.d.ts",
       "import": "./dist/typegen.mjs"
     },
+    "./primitives": {
+      "types": "./dist/primitives.d.ts",
+      "import": "./dist/primitives.mjs"
+    },
     "./contracts": {
       "types": "./dist/contracts/types.d.ts"
     }
@@ -75,6 +79,8 @@
     "dist/namer.d.ts",
     "dist/namer.mjs",
     "dist/native",
+    "dist/primitives.d.ts",
+    "dist/primitives.mjs",
     "dist/styletrace.d.ts",
     "dist/styletrace.mjs",
     "dist/system.d.ts",

@@ -18,11 +18,12 @@ for the two things no linter will ever judge, file headers and README shape.
 The runner itself is plumbing: it shells out, maps severities, prints one fix tip
 per violation, and exits 0 clean, 1 on violations, or 2 when tooling is missing.
 
-One override lives in `biome.json`: `noShadowRestrictedNames` is off for
-`react-surface.d.ts`, whose tag lines mirror generator emit — the `<map>`
-tag's component is honestly named `Map`, so the shadowing is the contract.
-The biome config is strict JSON (no comments), which is why this note lives
-here instead of beside the override.
+Two overrides live in `biome.json`, both the same contract: `noShadowRestrictedNames`
+is off for `react-surface.d.ts` and for the vendored
+`native/generated/primitives/primitives.d.ts`, whose tag lines mirror generator
+emit — the `<map>` tag's component is honestly named `Map`, so the shadowing is
+the contract. The biome config is strict JSON (no comments), which is why this
+note lives here instead of beside the overrides.
 
 Two facts about the toolchain shaped this split. First, Biome 2.x has no
 `--diagnostic-format` flag; the runner asks for `--reporter=json` and only falls
@@ -62,6 +63,17 @@ non-negotiable, so the `any` ban and the strict type pass are errors, and every
 enforced rule maps to a one-paragraph agent-facing tip printed under the fault.
 `q --report` prints the complexity distribution, percentiles plus top offenders
 per metric, and exits 0, so threshold tuning stays measured instead of vibes.
+
+## Vendor freshness rides first
+
+Before the linter runs, the gate shells out to the primitives vendor tool with
+`--check`. A stale, missing, or extra file on the vendored shelf fails the gate
+with a `neo/vendor-fresh` error naming the file, because vendored bytes that
+drifted from the generator output mean the tree cannot land no matter what the
+slower tiers say. The check runs on every invocation, scoped or not: freshness is
+a package invariant, and the tool answers in milliseconds from local files. When
+it fires, re-run the RS generator, then the vendor tool from the Neo package
+directory, and rerun the gate; the shelf is never hand-edited.
 
 ## Suppressions are their own failure
 

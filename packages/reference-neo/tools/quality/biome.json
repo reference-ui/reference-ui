@@ -64,6 +64,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/native/generated/primitives/primitives.d.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noShadowRestrictedNames": "off"
+          }
+        }
+      }
     }
   ]
 }

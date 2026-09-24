@@ -14,6 +14,7 @@ import { readTextFiles } from './files.ts';
 import { measureFiles, type FileMetric, type FunctionMetric, type MetricsResult } from './metrics.ts';
 import { checkHeader, checkReadme, type Violation } from './prose.ts';
 import { tipFor } from './tips.ts';
+import { vendorTier } from './vendor.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 const NEO_DIR: string = path.dirname(path.dirname(HERE));
@@ -434,6 +435,8 @@ async function runGate(ctx: GateCtx): Promise<number> {
   const errors: Violation[] = [];
   const warnings: Violation[] = [];
   let missingTool = ctx.measured.missing;
+  // Vendor freshness first and always: a drifted shelf means the tree cannot land.
+  errors.push(...(await vendorTier()));
   const tier = await biomeTier(ctx.code);
   errors.push(...tier.errors);
   warnings.push(...tier.warnings);

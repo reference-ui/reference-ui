@@ -33,6 +33,8 @@ export const TIPS: Record<string, string> = {
     'READMEs describe architecture in prose; filename tables rot and duplicate the file headers. Delete the table, describe what the module achieves and where its boundaries are, and let each file introduce itself.',
   'neo/tsc':
     'The strict type check failed, which means a type error the linter cannot see. Read the reported error, fix the types without widening anything toward any, and rerun the gate.',
+  'neo/vendor-fresh':
+    'The vendored primitives shelf drifted from the RS generator output. Re-run the primitives generator, then the vendor tool from the Neo package directory, and rerun the gate; never hand-edit the shelf.',
   'lint/*':
     'A recommended Biome rule fired. Read the message, apply the fix it suggests, and if the rule genuinely lies about honest gate code, say so: the rule gets turned off in the config, never suppressed in the file.',
 };
