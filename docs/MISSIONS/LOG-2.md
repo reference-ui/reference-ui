@@ -15930,3 +15930,3298 @@ separately per normal log practice — no blind `add
 WAVE3-NATIVE-VERIFY: LAND. The seam is a subsystem,
 the bytes prove it, and the one behavior change is
 the tests telling the truth.
+
+## HQ rapid picks (2026-09-23 ~22:35) — plan updated
+
+1. Terminology law: *stylesheet*, never `css` (§3.2).
+2. No stylesheet module / no PostCSS in Neo until a forcing
+   load is named — seam constructs, RS prints (§3.2 rewritten;
+   NIGHT-2 home/deps MOTHBALLED; reset stays in sync/,
+   superseding NIGHT-3 ruling #4's "#15-17 proceeds").
+3. Primitives rank: STILL OPEN (HQ skipped).
+4. Emit 101 curated FINAL; SVG deferred, F1 sleeps, gap
+   review queued (§3.9).
+5. Vocabulary A + hard cut FINAL (§3.6).
+6. Watch: clarity briefed, verdict open.
+7. native/generated FINAL; upstream/ dead (§3.9).
+8. `ref` FINAL — binary renames neo → ref (§3.12).
+
+## Wave 4 dispatch (2026-09-23 ~22:40) — both sides of the cut
+
+HQ rapid picks landed (7/8; rank still open). Wave 4 (5 crews,
+file/crate-disjoint): watch→lib/watch/ (neo), ref rename
+(neo, binary+output+pins only — package/agentneo/case-ids
+untouched), 101 gap review (cartographer, read-only), seam S1
+capture (RS atomic), PropDefs W0 (RS typegen). Verifiers follow
+implementers. Sequenced behind Wave 4: CLI one-line restyle
+(after rename pins settle), seam S2+ (after S1), NIGHT-5 W1/W2
+(gated on rank pick).
+
+## Watch lib-home rationale (HQ, 2026-09-23)
+
+HQ: legacy watch was top-level because it held its own piscina
+worker + its own event bus. Neither force exists in Neo (parcel
+subscribe direct, no bus by HQ law) — so lib/ stands. If either
+force ever appears (worker pool, bus), that joins the
+second-consumer trigger as a split-out cause.
+
+## Tick — Wave 4 away, watch-lib already moving, no action (2026-09-23)
+
+- Objectives: VOYAGE 1-3 COMPLETE; 4/5 in LANDING.md (IN
+  PROGRESS, untouched). Active: overnight run (HQ rapid picks
+  7/8 landed; rank still open).
+- Live: 5 Wave 4 crews (watch-lib, ref-rename, 101-gaps, seam
+  S1, typedefs W0 — all accepted minutes ago). Registry prefix
+  query returned not_found, so liveness is from spawn receipts
+  + tree: watch-lib already producing (staged git-mv renames +
+  spec repoints + cli importer). Others too young for product;
+  no deadlock signal at minutes old. No pings sent.
+- Staged-index note (recurring): watch crew used `git mv`
+  (stages by design) like the native crew. Landing rule holds:
+  verify index-vs-worktree, land whole arcs.
+- Advance: no commits (nothing verified), no dispatches (Wave
+  5 + verifiers sequence off Wave 4 reports + rank pick). No
+  park ordered; HQ present and deciding.
+
+## WAVE4-WATCH-LIB
+
+Implementer report (2026-09-23 ~22:55 UTC). Watch driver moved to
+lib per HQ Final (PLAN §3.7). Report, don't land — NEVER committed.
+
+Motion (git mv, history kept):
+- `src/sync/watch.ts` WHOLE (331 lines, no split) →
+  `src/lib/watch/index.ts`. Second-consumer trigger stands (see
+  README); worker pool / event bus join as split-out causes per HQ
+  rationale above.
+- `src/sync/picomatch.d.ts` → `src/lib/watch/picomatch.d.ts`
+  (parcel/picomatch deps ride along; package.json untouched —
+  same package).
+- New `src/lib/watch/README.md`: symlink shape (folder + index +
+  purpose-first README, no filename tables).
+
+Repoints (only these):
+- `src/cli/watch.ts` importer → `../lib/watch/index.ts` (+ one
+  stale-verdict comment line refreshed to WAVE4).
+- `NEO-SYNC-14/specs/watch.spec.ts` + `NEO-WATCH-01/specs/
+  watch-loop.spec.ts` → `../../../../../src/lib/watch/index.ts`.
+- Moved file's own two relative imports rebased (`../../config/
+  load.ts`, `../../sync/index.ts`) — part of the move, not a touch.
+- Spec-README prose rides stale per precedent (docs are not import
+  sites). NOTHING else touched.
+
+Proof:
+- Units: `pnpm vitest run` — 53 files / 354 tests, all pass.
+- Gate: `pnpm agentneo q` — 0 errors, 17 warnings (≤17 cap met);
+  zero warns in lib/watch or sync/watch paths.
+- Cases: NEO-SYNC-14 PASS (watch.spec.ts), NEO-WATCH-01 PASS
+  (watch-loop.spec.ts).
+- Sweep: zero `sync/watch` in code (src/tests/playground/tools/
+  bin/benchmark, worlds/dist excluded). Remaining 4 .md hits are
+  prose, not import sites: SYNC-14 README search terms (stale per
+  precedent), TESTS.md catalog, read-only evidence voyage-log,
+  PLAN.md §3.7 directive itself.
+
+## WAVE4-101-GAPS — curated-101 gap review (cartographer, 2026-09-23) — DONE
+
+Scope (strict): READ-ONLY everywhere except this section. HQ Final
+(PLAN §3.9: emit 101, "any primitive someone would want to style",
+SVG deferred, W6 folds into W1 as 101 + pinned deferred set, F1
+sleeps) queued this review: re-verify the 101 against the curation
+rule and name any gaps. No source edits, no commits, index untouched.
+
+Reads (all firsthand): `packages/reference-neo/src/primitives/tags.ts`
+(the 101); canon `ELEMENTS` (`packages/reference-rs/modules/canon/
+src/html.rs:22-148`) + overlay source (`canon/generate/overlay/
+primitives.ts`, incl. the 24 SVG block :19-23); NIGHT-4 FINDING +
+NIGHT-5 F1/F2 (§NIGHT-5/§NIGHT-4 above); PLAN §3.9 HQ Final;
+`tags.test.ts` + PRIM-09 census pins; `reference-icons/src/
+createIcon.tsx:69-77` (icon-system paint practice).
+
+Mechanical proof (comm diff, this session): canon = 125 entries,
+neo = 101, canon−neo = exactly the 24 SVG lowercased
+(circle/clippath/defs/ellipse/foreignobject/g/image/line/
+lineargradient/marker/mask/path/pattern/polygon/polyline/
+radialgradient/rect/stop/switch/symbol/text/tspan/use/view),
+neo−canon = EMPTY. The curation boundary is precisely "all canon
+HTML in, all SVG children out" — NIGHT-4's numbers corroborated.
+`svg` itself is in the 101 (tags.ts:92); only its children defer.
+
+Rule applied: "any primitive someone would want to style (add CSS
+to)" — would an author writing styles in normal component work
+reach for this element? Two corroborating witnesses: (a) the
+overlay's own comment calls the 24 "Curated SVG host child elements
+styled by authors" (primitives.ts:19) — canon's curator already
+judged them styled; (b) NIGHT-5 PGEN-07 assumed SVG shapes "take
+style props (fill/stroke via props, not attrs)". Both pre-date HQ's
+101 call and point the same way.
+
+### (1) Exclusions — 12 CHALLENGED, 12 CONFIRMED
+
+TIER-1 — CHALLENGED, rule violations (routinely styled with CSS):
+- path — fill/stroke/stroke-width via CSS; the icon/illustration
+  workhorse; per-path hover and multi-tone states.
+- circle — fill/stroke via CSS; data-viz nodes, status dots, icon
+  geometry.
+- rect — fill/stroke/rx via CSS; bars, panels, icon frames.
+- line — stroke/stroke-width via CSS; axes, dividers, icon strokes.
+- polyline — stroke via CSS; sparklines, chart series, icon outlines.
+- polygon — fill/stroke via CSS; stars, badges, chart areas.
+- ellipse — fill/stroke via CSS; orbits, avatars, diagram nodes.
+- text — font-size/weight/fill/text-anchor via CSS; chart labels,
+  diagram captions.
+- tspan — fill/font differentials inside a text run; multi-tone SVG
+  labels.
+- g — fill/stroke set once and inherited; the standard icon-system
+  hook (`g.icon{fill:currentColor}`) plus group hover states.
+- use — sprite-system icon instances styled via inherited
+  currentColor/vars plus class hooks.
+- stop — stop-color/stop-opacity ARE CSS properties; themed
+  (dark-mode) gradients are written against stop in stylesheets.
+
+TIER-2 — CONFIRMED exclusions (12). Plausible-future, SVG wave
+decides (5): image (opacity/filter/transform in SVG scenes);
+foreignObject (overflow/transform on the HTML viewport); mask
+(mask-type is CSS but set as attribute in practice); marker
+(marker-width/orient CSS-settable, rare via stylesheet); pattern
+(content styled, element itself rarely targeted). Never-styled,
+permanent-cut candidates (7): defs, view (non-rendered, nothing
+applies); symbol, switch (non-rendered until instantiated /
+conditional — take no paint); clipPath (geometry never painted);
+linearGradient, radialGradient (attribute-set, never via
+stylesheet in practice).
+
+Structural point: every HTML parent in the 101 ships with its
+styled children (table→td/th/tr/thead/…, ruby→rp/rt,
+select→optgroup/option, picture/video→source/track, map→area) —
+SVG is the SOLE family where the parent (`svg` ✓) ships without
+children. The 101 violates its own evident whole-subtree pattern
+for exactly one family. Honest counter-note: reference-icons
+styles paint at the Svg ROOT today (`createIcon.tsx:72`
+fill="currentColor", self-closing, no child primitives) — root
+fill covers single-tone icons; Tier-1 unlocks child-level paint
+(multi-tone, stroke sets, per-path states), which root fill
+cannot express.
+
+### (2) Inclusions — all 101 CONFIRMED, no removals
+
+Swept the full list against the rule. Weakest four are non-rendered
+and never styled — area, map (image-map machinery), source, track
+(media children) — but all four are RETAINED: each sits in an
+indivisible subtree (map→area, picture/video→source/track), and
+dropping them punches new subtree holes to save one export each;
+unused exports cost nothing while excluded-but-styleable elements
+force authors off primitives (the harm asymmetry runs against
+removal). Marginal keeps verified with real CSS use: br
+(`display:none` responsive pattern), col/colgroup (the 4-property
+column styling), meter/progress (pseudo-element styling), q (the
+`quotes` property exists for it), legend (attempted styling
+counts), dialog (backdrop), details/summary (marker styling),
+datalist/optgroup/option (form-family completeness, color/bg
+styleable), wbr (break-opportunity toggling, zero-cost). No
+inclusion is actively harmful as a primitive (no slot/template/
+script/style/param-class member present). Zero removals.
+
+### (3) Verdict: 101+12 (113) — Tier-1 is owed by the rule
+
+HQ's logic ("holds until a gap review says otherwise") does not
+hold as stated: 12 exclusions are elements authors routinely add
+CSS to. The +12 (Path, Circle, Rect, Line, Polyline, Polygon,
+Ellipse, Text, Tspan, G, Use, Stop — one-line rationale each in
+§1) restores the rule and the whole-subtree pattern. No removals.
+
+Why this costs ~zero RIGHT NOW: (a) F1 sleeps undisturbed — all
+12 spell identically in HTML-lowercase and React DOM (zero
+camelCase members; the 4 F1 spellings all sit in Tier-2), so no
+third `dom` column is needed for 113; (b) zero JSX collisions
+with the 101 (Map already sets the global-name-overlap precedent);
+(c) NIGHT-5 W1/W2 are still gated on the open rank pick (Wave-4
+dispatch) — E1/E4 carry 113 + deferred:12 instead of 101 +
+deferred:24 with no rework, and NIGHT-5 already designed PRIM-09's
+number to live in E1. Stating this AFTER W1/W4/W5 land at 101
+would cost a second cutover. RECOMMEND: fold +12 into W1.
+Fallback if HQ holds the 101 line: Tier-1 heads the SVG wave in
+the §1 order. HQ decides; this review names the gap either way.
+Blast radius on accept: vocabulary counts (113+12), tags.ts +
+tags.test.ts:13 pin + PRIM-09 census at the W4 cutover (all three
+delete at NIGHT-5 W4 anyway), PGEN-12 asserts 113 + 12 deferred.
+
+### (4) Pinned deferred-SVG set for the vocabulary
+
+Under the 113 verdict the deferred set is Tier-2 (12). React-
+correct `dom` spellings pinned here so the SVG wave never
+re-derives F1 (source: overlay primitives.ts:19-23, which still
+holds what Rust lowercased):
+plausible — image, foreignObject, mask, marker, pattern;
+never-styled cut candidates — defs, view, symbol, switch,
+clipPath, linearGradient, radialGradient. Canon-lowercase→dom
+map for the 4 F1 members: clippath→clipPath,
+lineargradient→linearGradient, radialgradient→radialGradient,
+foreignobject→foreignObject. If HQ holds 101, the pin is Tier-1
+(12, priority order §1) + Tier-2 (12) = the full 24.
+
+WAVE4-101-GAPS DONE: 24 exclusions individually ruled (12
+challenged / 12 confirmed), 101 inclusions confirmed (4 weakest
+named and retained, zero removals), verdict 101+12 filed with
+rationales, deferred set pinned vocabulary-ready. Read-only held
+(this section the sole write); no commits; index untouched.
+
+## WAVE4-WATCHLIB-VERIFY
+
+Verifier report (2026-09-23 ~23:05 UTC). Thinking hat only — no
+source edits, nothing committed. Scope: the WAVE4-WATCH-LIB arc
+(`src/sync/watch.ts` whole → `src/lib/watch/index.ts` +
+`picomatch.d.ts` + README). All checks firsthand against the
+working tree.
+
+(1) Motion pure — PASS. `git diff HEAD -M`: `sync/watch.ts` →
+`lib/watch/index.ts` at 98% similarity, delta is EXACTLY the two
+rebased relative imports (`../config/load.ts` →
+`../../config/load.ts`, `./index.ts` → `../../sync/index.ts`).
+331 lines, no split, no logic edits. `picomatch.d.ts` rename at
+100% similarity (zero-byte delta). `git mv` history kept (R/RM
+status confirmed).
+
+(2) Repoints complete and minimal — PASS. `src/cli/watch.ts`
+(import → `../lib/watch/index.ts` + one verdict-comment refresh
+to WAVE4), `NEO-SYNC-14/specs/watch.spec.ts` +
+`NEO-WATCH-01/specs/watch-loop.spec.ts` (one import line each) —
+ONLY. `package.json` untouched (zero diff). No other src/test
+file touched. Tree diffs outside the arc attributed: LOG-2.md
+(+234, additive) = HQ picks + Wave 4 dispatch + rationale +
+tick + this arc's report + sibling WAVE4-101-GAPS (sibling,
+out of scope); LOG.md = captain tick ("wave 4 away"); PLAN.md
+= HQ/captain plan update incl. the §3.7 watch directive itself
+(the order, not the work). Sibling noise named, none in
+watch-lib scope.
+
+(3) README follows lib precedent — PASS. Purpose-first ("in
+one place" + "not free" shape), What-it-owns / What-it-does-
+not-own, Consumers, no filename tables — mirrors
+`src/lib/symlink/README.md`. Triggers recorded (second
+consumer of internals, worker pool, event bus). Motion note
+cites WAVE4-WATCH-LIB + why lib/ stands (no piscina, no bus
+per HQ law) + why the picomatch seam rides along.
+
+(4) No stale refs — PASS. Repo-wide regex sweep for
+`sync/watch` + `sync/picomatch`: ZERO code (.ts/.mjs/import)
+hits. Residual prose hits, each dispositioned: SYNC-14
+README:18 search-terms + sync TESTS.md:18 host column — ride
+stale per the 6f381ee6f precedent (native-seam motion left
+TESTS.md host columns stale; SYNC-04/15 rows still read
+`sync/native.ts` today). NOTE mixed precedent: e091c008a DID
+refresh TESTS.md host columns — recorded, not a gate; the
+brief directs prose rides. voyage-log.md:8 (frozen evidence),
+PLAN.md:225 (the directive itself), LOG-2.md (append-only
+record), ARCHIVE/VOYAGE-LOG-3.md (frozen),
+matrix/TEST_MIGRATION.md:166 ("sync/watch invalidates"
+prose) — all ride. Two non-hits ruled out: pipeline
+run-watch-session.mjs:17 (`ref-sync/watch.log`, own path),
+reference-legacy `sync/watch-ready` (different file, legacy
+package, untouched).
+
+Proofs (firsthand, this session):
+- Units: `pnpm vitest run` in packages/reference-neo — 53
+  files / 354 tests, all pass.
+- Gate: `pnpm agentneo q` — 0 errors, 17 warnings (cap met);
+  zero warns mention lib/watch or sync/watch paths.
+- `pnpm agentneo run NEO-SYNC-14` → PASS watch.spec.ts.
+- `pnpm agentneo run NEO-WATCH-01` → PASS watch-loop.spec.ts.
+
+Verdict: LAND. Whole arc verified, no HOLD reason in
+watch-lib scope; sibling sections (101-GAPS et al.) untouched
+and unjudged.
+
+## Shared-file ruling — watch × rename (2026-09-23)
+
+`src/cli/watch.ts` holds both arcs' bytes (watch import repoint
++ rename `[ref]` strings) — confirmed firsthand. HOLD watch
+landing until rename verifies. Landing order: rename first, then
+watch, with the shared file HUNK-SPLIT (`git apply --cached` on
+a filtered patch): rename commit takes the `[ref]` hunks only
+(old import intact → green checkout), watch commit takes the
+repoint hunk. Per-commit-green holds at every HEAD; no arc
+carries the other's bytes. RS crews (S1/W0) also writing —
+combined firsthand gates run once when all three Neo arcs verify.
+
+## WAVE4-TYPEDEFS-W0 (implementer, 2026-09-23) — DONE
+
+Scope: NIGHT-5 wave W0 (PropDefs refactor) per `## NIGHT-5` §4.
+Typegen module only (emit + napi surface + one round-trip
+vitest); nothing else touched. Governing skill `agent-rs`
+loaded first. Never committed; report only.
+
+### What changed
+
+- NEW `modules/typegen/src/emit/props.rs`: `PropDefs`
+  assembles FIRST from canon tables — `props` (exact printed
+  key set with `PropKind` value domains), `conditions`
+  (named only; `@…` breakpoint keys join at print time from
+  the system), `aliases` (full alias→canonical map),
+  `dialect` (all 5 `REFERENCE_PROPS`, documented: r/size
+  land in props, variant/colorMode reserved, weight
+  font-owned). Name-set helpers moved verbatim from
+  `style.rs`; `vocabulary_json()` serializes the view
+  (`props`/`domains`/`conditions`/`aliases`/`dialect`).
+- `src/emit/style.rs`: `style_types` now collects `PropDefs`
+  and prints `StyleConditionKey`, `StyleProps`, and strict
+  wrappers from it. `emit_dts`/`emit_dts_with` both flow
+  through this path. Printing helpers byte-identical.
+- `src/lib.rs`: new pub `primitives_vocabulary_json()`.
+  `Cargo.toml`: `serde`/`serde_json` moved to `[dependencies]`
+  (lock diff is exactly the added `serde` edge on typegen).
+- `native.rs`: new `#[napi] primitives_vocabulary()`
+  (zero-arg, JSON string) beside `emit_dts_sync`.
+- `js/types.ts` (`PrimitivesVocabulary`, `PropValueDomain`),
+  `js/runtime.ts` (native iface + `callNativeJson` wrapper,
+  `TYPEGEN_NATIVE_EXPORTS` extended), `js/index.ts`
+  (`primitivesVocabulary()` export).
+- NEW `tests/vocabulary.test.ts` (TYP-VOCAB-01/02/03):
+  shape + domain/alias/dialect pins, determinism
+  round-trip, and vocabulary `props` equal to the
+  `styles.d.ts` golden StyleProps key extraction.
+- `src/tests/style.rs`: TYP-VOCAB-00 cargo contract test
+  (vocabulary JSON parses; key/domain/alias pins).
+
+### Proof (all firsthand)
+
+- `pnpm agentrs c typegen` → 43 passed, 0 failed (incl.
+  all 8 golden tests + new TYP-VOCAB-00).
+- `git diff` on `tests/goldens/` → empty (0 lines).
+- `pnpm agentrs b` (native rebuild for the new export) →
+  ready; `pnpm agentrs v typegen` → 5 files, 38 tests,
+  all pass (incl. new `vocabulary.test.ts`).
+- `pnpm agentrs q modules/typegen` → 0 violations; 1
+  warning (`value_for` cognitive 18) is pre-existing —
+  that function has zero diff lines (moved verbatim).
+
+### Notes
+
+- napi-rs maps Rust `primitives_vocabulary` to JS
+  `primitivesVocabulary` (confirmed empirically via the
+  passing vitest, not assumed).
+- First `agentrs v` run failed closed on the stale `.node`
+  (loader requires the new export); resolved by the
+  sanctioned `agentrs b` rebuild, then full green.
+- Concurrent `atomic/` working-tree edits belong to a
+  sibling crew; left untouched.
+
+## WAVE4-SEAM-S1 — capture streams struct in atomic emitter (implementer, 2026-09-23) — DONE
+
+S1 per WAVE1-D17-SEAM §5: `build_stylesheets_with` now builds a
+streams struct, then concatenates EXACTLY as today. Vocabulary A
+per-layer is FROZEN Final (PLAN §3.6); the emitter's push sequence
+is captured, not invented. NO seam/N-API change (that's S2).
+Zero commits (report, don't land).
+
+### Files (4, stylesheet/assembly scope only)
+
+- NEW `modules/atomic/src/stylesheet/emitter/streams.rs` —
+  `StylesheetStreams` (preamble / reset / global / tokens /
+  tokens-portable / recipes / utilities / package) +
+  `build_stylesheet_streams` + concat (`stylesheet()` /
+  `portable_stylesheet()` via the same `wrap_package_layer`).
+- `emitter/mod.rs` — `build_stylesheets_with` = build streams +
+  concat; `shared_layers`/`shared_capacity` replaced by the
+  per-stream captures (utilities pre-size moved with them).
+  Single-sheet builds stay sequential as the byte-identity oracle.
+- `system_layers/mod.rs` — `append_global` / `append_tokens`
+  widened to `pub` (+ docs) so streams capture each layer
+  separately; reset reuses `global::append_reset_css`.
+- `emitter/tests.rs` — new
+  `test_streams_concatenate_to_paired_single_builds`: streams
+  concat == untouched single builds (both sheets + both
+  diagnostic sinks), plus per-field pins (preamble verbatim,
+  package name, `:root` vs `[data-layer]`, shared recipes /
+  utilities).
+
+Diagnostics order preserved per sink: reset/global still run
+once per sheet (text captured once; `debug_assert_eq` pins the
+identical-text invariant S2 relies on), tokens take no sink.
+Concat order == today's push order, so bytes are identical by
+construction and by test.
+
+### Proof
+
+- `pnpm agentrs c atomic`: **659 passed / 0 failed** (incl. the
+  new streams test + the pre-existing dual-vs-single oracle).
+- `pnpm agentrs v atomic`: **13 files / 302 tests green**,
+  committed goldens untouched (no `--update-goldens`) —
+  byte-identical through the N-API seam. Binary-validity:
+  recomputed the `native-inputs` content hash over the current
+  tree — matches the tested
+  `virtual-native.darwin-x64.inputs.sha256` stamp exactly, so
+  the `.node` under test was built from these bytes.
+- `pnpm agentrs q` on all 4 touched files: **pass** (zero files
+  over 365 lines, zero CC>10/cognitive>15, zero Clippy allows);
+  zero rustc warnings in touched files.
+- First `agentrs c` run this session failed transiently under
+  the concurrent W0 typegen crew's working-tree edits (typegen
+  is an atomic dev-dependency); re-ran green on the settled
+  tree. Their files left untouched.
+
+### Handoff to S2
+
+`StylesheetStreams` is `pub` in `emitter/` with `pub` fields —
+the cross slice extends `CompileResult` + slim N-API from it
+behind the schema bump. Kept matrix T2/T8 tiers never see the
+seam (singular `css` preserved).
+
+## HQ namespace law — 101 stands, no SVG wave ever (2026-09-23)
+
+HQ overruled WAVE4-101-GAPS (101+12): SVG is a different
+namespace — style the `<svg>` root, everything inside stays
+native, that simple. Consequences recorded in PLAN §3.9:
+101 Final confirmed, Tier-1/2 both permanently out, no
+deferred set, F1 moot, PGEN SVG cases drop, PRIM-09 holds
+101, W6 closed. Gap crew's census (precise HTML-in/SVG-out
+boundary) stands as the verified fact base.
+
+## WAVE4-W0-VERIFY (verifier, 2026-09-23) — LAND
+
+Verdict: **LAND**. All five checks pass firsthand. No source edits made;
+`agent-rs` skill loaded first. Never committed. Report only.
+
+Scope note: `atomic/` and `reference-neo/` working-tree changes belong to
+Wave 4 sibling crews; left untouched and excluded from every check below.
+W0's footprint is the typegen module plus a 1-line `Cargo.lock` serde edge.
+
+### (1) Verbatim move — PASS, zero semantic drift
+
+Diffed `HEAD:style.rs` removed fns against new `props.rs` (`/tmp/w0-verbatim.sh`):
+`collect_props`, `open_prop_names`, `insert_css_prop`, `is_omitted_css`,
+`color_prop_names`, `spacing_prop_names`, `radius_prop_names`,
+`is_canon_radius_prop`, `is_box_spacing` — **9/9 byte-identical**.
+`condition_keys` is the only restructured piece and is set-equivalent: named
+conditions move to `named_conditions()` (`NAMED_CONDITIONS.iter().copied()`),
+then `condition_keys(&self, system)` maps to `String` and runs the old
+breakpoint loop verbatim (skip `base`, insert `@name`). Printing helpers
+(`strict_keys`, `keys_of`, `value_for`, `push_condition_key`,
+`push_props_type`, `present_strict`, `has_category`) have zero diff hunks;
+the empty-breakpoints early return is preserved; `emit_dts` →
+`emit_dts_with` → `emit::dts` → `style_types` remains the single print path.
+`PropKind` gains only `Serialize` + lowercase rename (the intended JSON
+behavior); variants and `Clone,Copy,PartialEq,Eq` unchanged.
+
+### (2) Goldens byte-identical — PASS
+
+`git status`/`git diff` on `modules/typegen/tests/goldens/`: empty (8 files,
+0 modified lines). All 8 goldens are asserted and green: 7 in
+`src/tests/goldens.rs` plus `recipes-two.d.ts` in `forbid.rs:107` (verified
+by name search, not assumed). `pnpm agentrs c typegen` → **43 passed,
+0 failed**, incl. new TYP-VOCAB-00 and all golden tests.
+
+### (3) napi surface + round-trip — PASS, independently probed
+
+Raw `.node` probe (`/tmp/w0-probe.cjs`, bypasses the TS wrapper):
+`primitivesVocabulary` exists, returns a string parsing to exactly the 5
+keys `aliases,conditions,dialect,domains,props`. 1391 props, sorted;
+`domains` keys equal props; domain values exactly the 6 lowercase kinds
+matching TS `PropValueDomain`; 79 conditions with zero `@…` keys;
+`dialect` is all 5 `REFERENCE_PROPS` (`colorMode,r,size,variant,weight`);
+props include `r`/`size`, exclude `variant`/`colorMode`/`font`/`weight`.
+My independent golden-key extraction (1391 keys) equals vocab props —
+TYP-VOCAB-03 is genuine, not self-confirming. Wiring needs no registry edit:
+runtime cdylib includes `typegen/native.rs` via `#[path]`, and napi-rs
+snake→camel mapping matches `TypegenNative`/`TYPEGEN_NATIVE_EXPORTS`.
+`pnpm agentrs v typegen` → **5 files, 38 tests, all pass** (incl. 3/3
+TYP-VOCAB in a solo file run); `callNativeJson` is the pre-existing shared
+helper in `modules/runtime/js/native.ts`.
+
+### (4) Quality gate — PASS
+
+`pnpm agentrs q modules/typegen` → **0 violations, 1 warning** across
+30 files. The warning (`value_for` cognitive 18) is pre-existing:
+`value_for` has zero diff lines (grep count 0). No `#[allow]`/`#[expect]` in
+any touched file (grep + gate agree). New files carry proper headers
+(`props.rs` 6-sentence `//!`, `vocabulary.test.ts` `/** */` block).
+
+### (5) Scope discipline — PASS
+
+Touched: `modules/typegen/{Cargo.toml,js/{index,runtime,types}.ts,
+native.rs,src/{lib.rs,emit/{mod,style}.rs,tests/style.rs}}` + new
+`src/emit/props.rs` + new `tests/vocabulary.test.ts` + 1-line lockfile edge.
+Typegen module + napi surface + round-trip tests ONLY. Nothing else.
+
+## WAVE4-S1-VERIFY — adversarial review of WAVE4-SEAM-S1 (verifier, 2026-09-23) — LAND
+
+Scope: WAVE4-SEAM-S1 report (`## WAVE4-SEAM-S1`, this log ~:16308) read
+firsthand; all 4 claimed files re-read in the current tree against
+WAVE1-D17-SEAM §§(2)/(3)/(5). Thinking hat only — zero source edits,
+zero commits. Sibling work (W0 typegen, ref-rename, neo crews) shares
+this tree; touched nothing outside this section.
+
+### (1) Stream vocabulary — PASS, exactly frozen-A
+
+`StylesheetStreams` (`emitter/streams.rs:18-35`) carries exactly 8
+fields: preamble / reset / global / tokens / tokens_portable /
+recipes / utilities / package. No extras, no missing, no renames —
+matches D17-SEAM §(2)'s push-sequence list (preamble … package-wrap)
+and §(3) option A (one string per layer block + package name as
+data) field-for-field. Note for S2 (not a deviation): `preamble` is
+the verbatim `LAYER_PREAMBLE` statement String, not names-as-`string[]`
+— correct for S1's capture mandate (byte-identity requires the pushed
+text); the names-as-data derivation belongs to the S2 cross / S4
+assembler, which is where the LEADING_STATEMENT kill lives.
+
+### (2) Byte-identity — PASS, provable by construction + test
+
+- Same wrap: `stylesheet()` / `portable_stylesheet()` call the same
+  `wrap_package_layer` with `package = system.name.clone()` — the
+  identical argument the old code passed (`streams.rs:39-46`).
+- Same push order: `inner()` joins preamble → reset → global →
+  tokens → recipes → utilities (`streams.rs:50-66`); old code pushed
+  `LAYER_PREAMBLE` + `append_system_layers` (= reset, global, tokens
+  per `system_layers/mod.rs:26-34`) + recipes + utilities. Order
+  identical on both sheets.
+- Shared-suffix split is content-neutral: old `shared_layers` =
+  recipes + utilities printed once; new code prints each via the same
+  `append_recipes_layer` / `append_utilities_layer` callees. The only
+  diffs are buffer pre-sizing (`reserve`/`with_capacity`) — capacity,
+  never bytes.
+- Diagnostics order preserved per sink: reset+global still run once
+  per sheet against their own sink, in the same reset→global order
+  `append_system_layers` used; tokens take no sink. The portable
+  reset/global texts are recomputed, `debug_assert_eq`-pinned
+  identical, then dropped — the invariant S2 relies on is asserted,
+  not assumed.
+- Oracle intact and actually compared: single-sheet
+  `build_stylesheet_with` / `build_portable_stylesheet_with`
+  (`emitter/mod.rs:42-67`) are untouched sequential builds; the new
+  `test_streams_concatenate_to_paired_single_builds` asserts streams
+  concat == both singles AND both diagnostic sinks equal, plus
+  per-field pins (`:root` vs `[data-layer=`, package name, preamble
+  verbatim); the pre-existing `test_dual_build_matches_paired_single_builds`
+  still passes through the new streams path.
+
+### (3) No seam/N-API change — PASS, zero leak
+
+`git status` on `modules/atomic/`: exactly the 4 claimed stylesheet
+files (3 modified + new `streams.rs`). `native/`, `runtime/`,
+`types.rs` (`CompileResult`), `wire.rs`, `js/`, schema — all clean,
+zero diff lines. The only cross-file surface change is `fn` → `pub fn`
+(no signature change) on `append_global` / `append_tokens`, consumed
+inside the same crate. The `Cargo.lock` 1-line edge (`serde` for
+typegen) is the W0 sibling's — attributed, not S1's.
+
+### (4) Scope discipline — PASS
+
+All S1 changes live under `modules/atomic/src/stylesheet/`
+(emitter + system_layers): stylesheet/assembly only, per the S1 brief.
+
+### (5) Gates — all green, observed this session
+
+- `pnpm agentrs c atomic`: **659 passed / 0 failed** (unit) + 1/1/7/5
+  integration suites green — matches the report exactly.
+- `pnpm agentrs v atomic`: **13 files / 302 tests green**, committed
+  goldens untouched (no `--update-goldens`; no golden files in the
+  atomic diff) — byte-identical through the N-API seam.
+- `pnpm agentrs q` on all 4 touched files: **PASS** — zero files over
+  365 lines, zero CC>10 / cognitive>15, zero Clippy allows; new
+  `streams.rs` carries a proper 5-sentence `//!` header.
+
+No transient failures this run; no sibling attribution needed beyond
+the lockfile edge above.
+
+**Verdict: LAND.** S1 is a faithful capture — vocabulary exact,
+concatenation provably identical, seam untouched, scope clean, gates
+green. Ready for S2 (cross `CompileResult` + slim N-API behind the
+schema bump). Report filed; landing is the parent's call.
+
+## WAVE4-REF-RENAME (implementer, 2026-09-23)
+
+HQ Final PLAN §3.12 ("it's `ref` — always was"): the Neo binary
+renames `neo` → `ref`. Surgical per brief — binary + user-visible
+surface only. No behavior change, no output restyle (one-line
+contract is the next arc). Report, don't land; nothing committed.
+
+Footprint (unstaged; sibling's staged watch entries untouched):
+R `bin/neo.ts`→`bin/ref.ts` (header: "ref — the Neo host CLI entry"),
+R `bin/neo.test.ts`→`bin/ref.test.ts`, M `package.json`
+(`"ref": "./dist/bin/ref.js"`), M `src/cli/` (index/output/sync/
+clean/watch), M `tools/build-bin.mjs`, M `NEO-CLI-01/specs/
+lifecycle.spec.ts` + `NEO-CLI-02/specs/watch-flag.spec.ts`.
+
+Conscious re-pins (4, one per pin):
+1. `bin/ref.test.ts:55` `--help` usage → `usage: ref <sync|clean> [dir]`.
+2. `bin/ref.test.ts:62` unknown-command usage → same.
+3. `bin/ref.test.ts:107` clean --watch usage → same.
+4. `NEO-CLI-02:97` boot pin `[neo] sync ` → `[ref] sync `.
+Spawned-command updates: BIN_PATH→`bin/ref.ts` in all 3 spawn
+files; `runNeo`→`runRef` helper (def + 8 calls, CLI-01 only);
+spec headers (`spawned `ref` binary`, one-shot `ref sync`,
+`ref sync --watch`); `orphaned ref process` message. `SYSTEM_NAME
+'neo-cli'` KEPT (fixture system name, not the binary).
+
+Proof (all firsthand, final bytes):
+- Build: `[ref build] dist ready: 385 files, bin dist/bin/ref.js`;
+  stale `dist/bin/neo.{js,d.ts}` removed (gitignored output);
+  `ref --help` exit 0, `Usage: ref`, usage block says `ref`.
+- `pnpm agentneo q`: full **0 errors, 17 warnings** (baseline 17,
+  zero delta); touched-10-files scope **0/0**.
+- Units: **53 files, 354/354 pass** (incl. renamed `bin/ref.test.ts`).
+- `pnpm agentneo run NEO-CLI-01` → **PASS**; `NEO-CLI-02` → **PASS**.
+- T1 tier via dist bin: `ref sync` exit 0 (`[ref] sync 294ms`);
+  `ref clean` reports **4 links**, lib+neo real dirs kept; resync
+  restores 6 entries; `pnpm agent playwright --dir
+  matrix/tests/chain/T1 --no-build` → **7 passed (0 failed)**.
+  (Dist sync also shows the out-of-scope `[neo]` diagnostics +
+  `[neo] [ref]` bridge lines below — coexistence verified, exit 0.)
+
+Repo-wide sweep dispositions (`bin/neo`, spawn `neo`, `[neo]`):
+- DONE in scope: all `[neo]` prints in `src/cli/*.ts` (12),
+  USAGE, Commander `.name('ref')`, build-bin refs. `neoFilePath()`
+  symbol deliberately preserved (src/packager/reference-types.ts
+  + build-bin regex/comment) — not the binary.
+- LIVE OUT-OF-SCOPE — landing blockers, mechanical re-points for
+  the landing/follow-up (untouched: outside the touch list, and
+  tiers/generator are test-core land):
+  - `packages/reference-lib/package.json:32/:35` — `node
+    ../reference-neo/bin/neo.ts` → `bin/ref.ts`. BREAKS NOW
+    (source path gone); blocks lib sync/dev. Fix first at landing.
+  - `pipeline/.../managed/package-json/index.ts:143` (default
+    `pnpm exec neo sync` → `ref`) + `index.test.ts` pins ×4
+    (:33/:53/:148/:203). The generator owns tier scripts — fix
+    here, then align the 12 emitted `sync` scripts
+    (`matrix/tests/chain/T*/package.json:10`,
+    `matrix/tests/mcp/package.json:10`).
+  - `matrix/fixtures/*/package.json` (7 fixtures, sync+dev:
+    bare `neo sync` → `ref`; works until reinstall via stale
+    root `.bin/neo` shim) + 3 `Run neo sync` JSDoc lines in
+    fixture `src/index.ts`.
+  - `packages/reference-docs/package.json:7-8` (`neo sync` ×3).
+  - `packages/reference-mcp`: `build.ts:45` + `build.test.ts:123`
+    `Run "neo sync"` pins, `project-context.ts:53` message.
+    (No action: `model-state.ts:48` + `entry.ts:73` already
+    match both `neo sync` and `ref sync`.)
+  - `pipeline/.../package-runner.ts:206/209/221/253`,
+    `pipeline/src/dev/materialize.ts:226/368` (`\bneo\s+`
+    rewrite): pipeline-crew call.
+- `[neo]` EMITTERS KEPT (output shape = next arc; pins live in
+  non-enumerated tests): `src/native/diagnostics.ts:34/45`
+  (`[neo] sync warning`, `[neo] compiler`; pins in
+  `src/sync/sync.test.ts` + NEO-SYNC-16), `bridge/logging.ts:8`
+  + `src/sync/index.ts:74` (pre-existing intentional `[neo] [ref]`
+  double badge), `tests/shared/cli.ts:142/162` (agentneo harness,
+  explicitly out), `src/lib/watch/index.ts:1` header.
+- DOCS RIDE STALE (brief + WAVE2-CLI/PACKAGER-LEGS precedent):
+  `src/cli/README.md`, `tools/README.md`, neo `README.md:75-76`,
+  `PLAN.md` §3.12 + run log, CLI-01/02 + cli/ READMEs (catalog
+  first lines included), SYNC TESTS.md/SWITCH-READINESS,
+  `docs/ARCHITECTURE.MD:17`, `docs/LANGUAGE/PUBLIC-API.MD:61-62`,
+  `docs/evidence/*` (read-only), `LOG-*.md` (append-only history).
+- Explicit keeps verified: `@reference-ui/neo` name (incl. the
+  CLI-02 TOKENS_START import), `NEO-*` ids + `[NEO-CLI-*]` tags,
+  agentneo verbs, `neo/` path shorthand, Commander description
+  ("the Neo host CLI" — codename, not binary).
+
+Notes for the captain: reinstall re-points the root `.bin/neo`
+stale shim to `.bin/ref`; until then old installed-shim
+invocations keep working. The mixed `[ref]`/`[neo]` sync output
+is the known seam the one-line-contract arc closes.
+WAVE4-REF-RENAME DONE.
+
+## HQ: D17 end-to-end structured, one cutover (2026-09-23)
+
+HQ picked A ("we've been over this") and corrected the
+captain's B recommendation: §3.6 always said baseSystem
+carries streams. Captain owned it; plan updated. Consequences:
+(1) WAVE1-D17-SEAM §3/§4 scoping partially superseded —
+published payload goes structured, T2/T8 tiers in scope,
+S2/S4/S5 re-scope (S1/S3 unaffected); (2) payload-shape spec
+crew dispatched NOW (baseSystem carriage fields, extends
+readers, tier impact, dual-carry-vs-cut with recommendation,
+amended S2/S4/S5); S2 implements off that spec; (3) NIGHT-2
+mothball holds — construction from data needs no parser.
+
+## WAVE5-TYPEDEFS-W1 (implementer, 2026-09-23) — DONE
+
+Scope: NIGHT-5 wave W1 (generator + E1/E4) per `## NIGHT-5` §4,
+AS AMENDED by HQ Finals (PLAN §3.9: Rank-1 SPLIT, emit 101,
+namespace law, consume home `native/generated/primitives/`).
+New `modules/primitives/` + napi consumption ONLY; one
+spec-required line outside it (the `primitives` run script).
+Governing skill `agent-rs` loaded first. Never committed;
+report only.
+
+### What changed (new module + 1 script line)
+
+- NEW `modules/primitives/generate/generate.ts` — ENTRY
+  (`pnpm --filter @reference-ui/rust run primitives`, canon-script
+  precedent). Collects the canon roster + live typegen vocabulary,
+  prints E1 + E4, scans tripwires, writes both files. Exports
+  `buildArtifacts()` for the golden test.
+- NEW `generate/elements.ts` — roster join: overlay partition (HTML
+  vs SVG at the `Curated SVG` marker) + strict parse of the Rust
+  `ELEMENTS`/`PRIMITIVE_JSX` tables. Emits the 101 HTML rows sorted
+  by jsx with station families (flow 27 / text 22 / form 13 / table
+  9 / media 10 / interactive 5 / special 15).
+- NEW `generate/vocabulary.ts` — napi intake over landed W0
+  `primitivesVocabulary()` + cross-check of named conditions against
+  canon `NAMED_CONDITIONS` (stale-`.node` guard). Pins reserved keys
+  and the caption/menu overrides.
+- NEW `generate/emit.ts` — E1/E4 printers + tripwire scanner.
+- NEW `generated/vocabulary.json` (E1) + `generated/primitives.d.ts`
+  (E4) — committed output, never hand-edited.
+- NEW `tests/vocabulary.test.ts` (PRIMGEN-01..04) +
+  `vitest.config.ts` (project `primitives`).
+- NEW `README.md` — purpose-first (SOURCE/GENERATOR/CONSUMERS).
+- `package.json`: +1 script line (`primitives`). Sole out-of-module
+  edit; the spec'd entry point requires it.
+
+### HQ amendments applied (verified, not assumed)
+
+- EMIT 101: E1 carries exactly 101 elements; SVG children never
+  emit; NO deferred set (tripwire rejects `"deferred"`).
+- F1 MOOT verified: every tag asserted `tag === tag.toLowerCase()`
+  against the Rust table — a single `dom` column, no third column.
+- Consume home noted as `native/generated/primitives/` (W3 tool
+  work; this wave writes RS-side `generated/` only).
+
+### Fail-closed join (all exit nonzero with source named)
+
+Overlay partition 101/24 + concatenation == imported array;
+ELEMENTS 125 + sorted + jsx set == PRIMITIVE_JSX; SVG-lower union
+completeness; HTML byte-identity in ELEMENTS; JSX uniqueness;
+Box/Flex/Grid roster refusal; props sorted + non-empty; zero `@`
+conditions + equality with `NAMED_CONDITIONS`; every alias key
+AND target inside the prop set; colorMode/variant in dialect;
+overrides inside the roster. Tripwires on both outputs: Box/Flex/
+Grid word, `as?:` prop, `styled.`/`styled(`, `jsx(`, slot word,
+`rounded`, atomic-class pattern, pandacss, `"deferred"`.
+
+### E4 shape decisions (spec list followed exactly)
+
+Today's `generateReactTypesSource` shape minus the bake: exact
+1391-union `StylePropName`, printed `stylePropsWiring` merge
+(byte-identical static text, not spliced), `PrimitiveCssProp`,
+101-literal `PrimitiveTag`, overrides + `PrimitiveElement`,
+per-tag Props + consts (dom order == overlay order — verified
+sorted, so identical to today's TAGS order), contexts +
+`useColorMode`, Fragment/createElement re-exports, plus the
+`PrimitiveProps<T>` generic in named-graph position. `css`/`recipe`/
+`Recipe*`/`CssStyles`/styled-star stay Neo-appended at W4.
+
+### E2: flagged for W2 (not emitted)
+
+E2 calls `createPrimitive` against the runtime trio still living
+Neo-side; emitting now would import across the cut or stub the
+runtime. W2 moves the runtime home (E3) and emits E2 against it.
+
+### Proof (all firsthand, this session)
+
+- `pnpm run primitives` twice + `cmp` on both files: silent
+  (DETERMINISTIC), and again after prettier: bytes stable.
+- E1 census: 101 elements (jsx-sorted), 1391 stylePropNames, 79
+  conditions, 319 aliases. E4: 101 const decls + 3 contexts, 101
+  PrimitiveTag literals.
+- `stylePropNames` == live napi props AND == typegen golden
+  `StyleProps` key extraction (PRIMGEN-03, TYP-VOCAB-03 technique).
+- `pnpm agentrs v modules/primitives/tests/vocabulary.test.ts` →
+  4/4 pass (`v primitives` needs a KNOWN_MODULES entry — out of
+  scope to add; path targeting used).
+- `pnpm agentrs q modules/primitives` → 0 violations, 0 warnings,
+  6 files. `tsc --noEmit` on generate + tests → clean. Prettier →
+  clean (generated/ excluded — printer owns those bytes).
+- Tripwire negative probe (`/tmp/prim-negative.mjs`): all 7
+  violations caught with the offending source named.
+- Landed-tree check: `git status` on `modules/typegen` +
+  `modules/canon` empty (W0 commit `7b3c65d53`); the import
+  resolves to committed sources and the `.node` serves the W0
+  export (shape: 1391/79/319/dialect-5, alias targets all in props).
+
+## WAVE5-PAYLOAD-SHAPE — structured published payload for D17 (cartographer, 2026-09-23)
+
+Scope: the shape-spec crew HQ dispatched in `## HQ: D17 end-to-end
+structured` (:16623): baseSystem carriage fields, extends readers,
+tier impact, dual-carry-vs-cut with recommendation, amended
+S2/S4/S5 sequencing off S1-landed (commit `7a6628af3`).
+READ-ONLY: this section is the only write. Every file:line below
+re-read firsthand in the current tree (S1 + W0 + ref-rename
+landed). Supersedes WAVE1-D17-SEAM §3/§4's "published css stays
+string / T2-T8 untouched" scoping per PLAN §3.6 Final; vocabulary
+A frozen stands (this spec is A carried end-to-end, not A
+revisited).
+
+### (0) Load-bearing facts (firsthand, not inherited)
+
+- S1's `StylesheetStreams` (`emitter/streams.rs:18-35`) = 8 fields:
+  preamble / reset / global / tokens / tokens_portable / recipes /
+  utilities / package. `preamble` is verbatim `LAYER_PREAMBLE` =
+  `"@layer reset, global, base, tokens, recipes, utilities;\n"`
+  (`layers/mod.rs:11`) — the FIXED inner layer vocabulary, NOT
+  system names. The merged TOP statement (`@layer a, b, self;`)
+  lists SYSTEMS. Two different namespaces; the spec carries both.
+- The two sheets differ ONLY in token selectors (`:root` served
+  vs `[data-layer]` portable) + identical reset/global
+  (D17-SEAM §2, S1 report). Served `:root` tokens are
+  consumer-local by construction (merge takes upstream portable
+  + own hoisted, `sync/index.ts:84-95`) → NEVER published.
+- Each block in today's merged output keeps its own package wrap
+  (`wrap_package_layer`, `layers/mod.rs:20-31`; empty name stays
+  flat) + its inner preamble. Downstream concat is per-direct-
+  upstream verbatim. Any flat (non-per-system) published shape
+  loses the per-system wraps → byte-identity fails. The
+  published payload MUST stay per-system granular. This rules
+  out "merged flat streams" without an array.
+- `layers:` is CURRENTLY SILENT: zero non-comment hits for a
+  `layers` config key anywhere in neo `src/` (`ReferenceUIConfig`
+  has extends only, `config/types.ts`). T2/T3/T8/T9/T10/T12/T13
+  pass `layers:` today; sync ignores it (the parked D17×7 rows).
+  `evaluate.ts` (fragments) + `jsx.ts` (roster) read
+  `config.extends` ONLY → a future `layers[]` bucket is
+  css-only for free.
+
+### (1) BaseSystem carriage: REPLACE `css` with `streams`
+
+```ts
+// system/base/types.ts (contract home; base/ stays a leaf)
+/** Per-layer blocks of ONE system. Served `tokens` rides N-API
+    only; published entries carry `tokensPortable`. */
+export interface SystemStreams {
+  name: string
+  preamble: string        // verbatim inner prelude (~55 B, drift-proof)
+  reset?: string          // separable chunk; downstream DROPS, never concats
+  global?: string
+  tokens?: string         // :root-hoisted; N-API own-compile ONLY, never published
+  tokensPortable?: string // [data-layer]-scoped; the published variant
+  recipes?: string
+  utilities?: string
+  package?: string        // wrap name; empty/absent stays flat
+}
+
+export interface BaseSystem {
+  name: string
+  fragment: string
+  /** Published structured stylesheet: transitively expanded,
+      merge-ordered systems, own entry last. Replaces `css`. */
+  streams?: SystemStreams[]
+  jsxElements?: string[]
+}
+// `css?: string` is DELETED, not deprecated (see §2).
+```
+
+Population rules (the whole contract in four lines):
+
+1. N-API own object (S2/S3): single `SystemStreams`, BOTH token
+   variants populated, `name` = system name (RS emits it —
+   names-as-data from the source, no TS invention).
+2. Published `streams` (S4/S5): `SystemStreams[]`, full transitive
+   expansion in merge order (each direct upstream's array
+   concat'd in declared order, own portable entry last),
+   `tokens` NEVER set. Publisher invariant: every sync emits
+   ≥1 entry (own entry always, blocks possibly empty).
+3. Statement = first-occurrence dedupe over the expansion's
+   entry names in order, self last (bare `entry.name` fallback
+   subsumed: names are data now; keep the one-line
+   `layerNames.length ? … : [name]`-equivalent ONLY if a
+   ported test needs it — it shouldn't, publishers always
+   emit names).
+4. Block reprint per entry (byte-identity): published-string
+   entry = `wrap(package, preamble + global + tokensPortable
+   + recipes + utilities)`; served-string own entry swaps in
+   `tokens` + own `reset`; upstream `reset` dropped. Preamble
+   carried verbatim per entry (S1 already captures it; immune
+   to future engine preamble changes — a TS-side constant
+   would be the next drift bug).
+
+Why a bare array, no `{layerNames, blocks}` wrapper: the
+expansion is single-source-of-truth (closure walks free from
+entry names — verified equal to today's transitive induction
+on chain A→B→app AND diamond T7); a separate closure list is
+D17-SEAM's rejected option C ("A with indentation"). Why not
+`cssChunks[]`: still dead — Pubshape jettisoned hashed chunks
+deliberately; these are keyed per-system layer fields.
+
+### (2) Transition: HARD CUT (unanimous recommendation)
+
+Dual-carry dies on three counts: (a) PLAN §3.6 already Decided
+"hard cut behind a schema bump, no additive fallback" as the
+D17 transition law — dual-carry invents a second law for the
+same cutover; (b) dual-carry doubles published css bytes in
+every baseSystem.mjs (enterprise sheets are MiB-scale);
+(c) dual truth invites drift + doubles the S5 proof surface.
+
+The "live extends readers" argue back, but the census
+deflates them — EVERY upstream-`.css` reader is in-repo and
+moves in the same S5 slice (see §3: exactly R1 + R2 + the
+`.d.mts` text). No tier spec/src/test reads `.css` off a
+baseSystem (verified by grep: specs assert computed DOM
+styles; src imports `styles.css` via `@reference-ui/react`
++ fixture components only). The cross-package hazard is
+stale artifacts (fixture `baseSystem.mjs` ships in `files`
++ `./baseSystem` subpath), handled by: (i) pipeline order
+(fixtures sync before tiers — already true); (ii) the
+validate error failing LOUD with "Run sync on the upstream
+package first" (message kept, leg swapped); (iii) deleting
+`css` outright so stale TS readers fail typecheck, never
+misread. `css` stays dead forever (never reuse the name).
+
+One nuance, stated plainly: the N-API wire carries strings +
+streams transiently between S2 and S5. That is NOT dual-carry
+— it is the byte-identity oracle channel inside one pipeline
+(schema bump moves both sides together; no fallback code).
+S5 deletes the slim string legs (see §5).
+
+### (3) Extends-reader changes (complete census, firsthand)
+
+| # | Site | Reads today | Change |
+|---|------|-------------|--------|
+| R1 | `sync/index.ts:84-95` wrapper + `:164` call (NIGHT-2 T7/T8) | `config.extends` as `PackedUpstream[]` | → single `mergeStreams` call; `PackedUpstream` dies with packed-css.ts |
+| R2 | `system/base/validate.ts:84-93` presence triad | `sys.css` non-empty string | → `Array.isArray(sys.streams) && length > 0`; message kept, "css"→"streams". SHAPE-only per T16 tradition — no css parse, ever |
+| R3 | `collect/lib/evaluate.ts:71-78` `getUpstreamFragments` | `system.fragment` | UNTOUCHED |
+| R4 | same `:80-87` `getUpstreamFragmentNames` | fragment+name | UNTOUCHED |
+| R5 | `system/base/jsx.ts:26` `resolveJsxElements` | `system.jsxElements` | UNTOUCHED |
+| R6 | `packager/system.ts:26-31` leg projection | `input.portableStylesheet` → `css` | → `input.streams` → `streams`; `PublishInput` gains `streams: SystemStreams[]`, `stylesheet`/`portableStylesheet` STAY strings (assembly output, never surgery input) |
+| R7 | `system/base/assemble.ts` + `BaseAssemblyInput` | `css?: string` | → `streams?: SystemStreams[]`, straight passthrough |
+| R8 | `system/base/sources.ts:9-19` `.d.mts` text | emits `css?: string` | → emits `SystemStreams` + `streams?` (fixture consumers' typecheck surface — moves in lockstep, same slice) |
+| R9 | `benchmark/deepsee/worker-phases.ts:106,122-132` bench-local sync mirror | raw `result.stylesheet` (NO merge — single-system bench worlds), `schemaVersion: 1` | S5 adapts: project `[ownPortableEntry]` into `PublishInput.streams`; bump its schemaVersion with the sweep (§5). IF any bench world has extends, call `mergeStreams` there (S5 verifies) |
+| R10 | mcp suite (`extends: [lib, extend-library]`) | tokens via `get_tokens`, never css | UNTOUCHED (re-sync only) |
+| R11 | `config/validate.ts:89-90` extends call-through | delegates to base | UNTOUCHED (legs decision §4 may add a `layers` call) |
+| — | `runtime/recipe/recipe.ts` `css` fields | style OBJECTS (pre-CSS) | NOT a reader. Untouched. Cited so no one sweeps it. |
+
+`mergeStreams` signature (NEW `src/system/base/streams.ts` —
+the D17-SEAM §4 LAND file; base/ leaf keeps it):
+
+```ts
+export interface StreamUpstream { name: string; streams?: SystemStreams[] }
+export interface MergedSheets {
+  stylesheet: string          // served: upstream portable blocks + own hoisted block
+  portableStylesheet: string  // published string: upstream portable + own portable
+  streams: SystemStreams[]    // published structured payload: expansion + own entry
+}
+export function mergeStreams(
+  upstreams: readonly StreamUpstream[],  // BaseSystem[] passes structurally
+  own: SystemStreams,                    // N-API own object (both token variants)
+  selfName: string
+): MergedSheets
+```
+
+Semantics (ported 1:1 from packed-css.ts:109-128):
+statement-first (`@layer …, self;\n`, dedupe by first
+occurrence, self last incl. pathological self-extends);
+each usable upstream's entries in order, reset dropped,
+blocks verbatim (`preamble + global + tokensPortable +
+recipes + utilities`, package-wrapped); own block last with
+own reset RIDING (`normalizeCss: false` still opts the
+subtree out); diamond duplicates repeat identical bytes;
+no usable upstreams → own sheets byte-identical (S1 concat
+test is the oracle). Usable = `streams != null`; empty
+array contributes nothing (today's `hasCss` filter analog).
+ONE call returns all three (statement computed once —
+replaces the run-twice wrapper).
+
+### (4) Tier impact census (which tiers touch `baseSystem.css`)
+
+Direct `.css` readers in tiers: NONE (grep-verified §2).
+Indirect (extends/layers carriage → sync merge): ALL 11
+chain tiers + mcp. Tier `.reference-ui/` is GITIGNORED
+(regenerated by sync) → ZERO committed tier files change
+for the payload shape; tiers re-sync + re-gate.
+
+- Extends-only (T1, T6, T7, T11): merge input swaps
+  css→streams; assertions (computed styles, token adoption)
+  go green-identical. Re-gate proves.
+- Layers-carrying (T2, T3, T8, T9, T10, T12, T13):
+  RECOMMEND S5 wires `layers[]` as streams-only upstreams —
+  `[...extends, ...layers]` bucket order per CHAIN_RULES.md
+  rule 5, `layers?: BaseSystem[]` on `ReferenceUIConfig`,
+  presence check via R2 (widen field to
+  `'extends' | 'layers'`). Cost ~15 lines; fragments/roster
+  already extends-only (correct per CHAIN_RULES: layers =
+  css-only); flips the parked D17×7 rows. HQ Final's
+  "extends/layers build over data" reads as both buckets.
+  FALLBACK (if HQ holds the layers surface): S5 keeps
+  ignoring `layers`, tiers park as today — costs nothing,
+  decide at S5 kickoff. Either way T2/T8 re-gate under the
+  cutover (that is what "in scope" means).
+- mcp suite: re-sync only (R10).
+- Fixtures (7: extend/extend-2/layer/layer-2/meta/meta-2/
+  meta-sibling) + lib: rebuild (re-sync); committed sources
+  unchanged, generated `.d.mts` text changes with R8.
+- Docs: `matrix/CHAIN_RULES.md` rules re: "`css`: the
+  portable surface" + rule 5 bucket order get a D17 touch
+  at S5 (surface doc, not code).
+- Neo cases: S5 proof extends D17-SEAM's list (chain 6/6 +
+  LAYER-01/02 + SYNC-10/17 + NEO-CHAIN-06 + SYNC-06
+  determinism) with the FULL hermetic tier re-gate T1–T13
+  + mcp (not just T1/T2 — every tier consumes structured
+  payloads now).
+
+### (5) Amended S2/S4/S5 (sequencing off S1-landed)
+
+Blocks cleared: N-1/legs sequencing (D17-SEAM's watch-out)
+is SATISFIED — legs landed in `packager/*`, NIGHT-1 done,
+`system/base/` landed + verified. Remaining order: S2 →
+S4 → S5; S3 parallel now (vocabulary frozen + this spec
+freezes TS field names). S1/S3 shapes stand per HQ.
+
+- **S2 (RS: cross) AMENDED.** Extend `CompileResult` +
+  slim N-API (`native.rs:180-207` `SlimCompileResult`)
+  with `streams`: all 8 S1 fields (snake→camel) PLUS
+  `layerNames`… — NO: per §1 there is NO layerNames field;
+  entry `name` = system name IS the names-as-data (S2
+  emits `name`, S4 unions). Correction recorded so S2
+  doesn't build a dropped field: slim `streams` = the 9-key
+  own object (`name` + 8 S1 fields). Ship streams VERBATIM
+  alongside the whole-string sheets (oracle channel, §2);
+  NO refold cleverness (D17-SEAM stands). Schema bump
+  (request `schemaVersion` 1→2): sweep list =
+  `native/request.ts:32`, `worker-phases.ts:106`,
+  `contracts/types.ts` `NativeCompileRequest`,
+  `atomic/js/types.ts` wire types, engine-side version
+  check. `streams` REQUIRED post-bump (hard cut: schema 2
+  guarantees presence; reconcile the
+  optional/required drift D17-SEAM §2 noted in S2's favor:
+  required). Proof: `agentrs c/v atomic` + schema-reject
+  test (v1 LOUD) + goldens untouched.
+- **S3 (TS seam: receive) UNAFFECTED.** `NativeCompileResult`
+  (`native/contract.ts:55-73`) += `streams: SystemStreams`
+  (REQUIRED per S2; import the type from
+  `system/base/types.ts` — native→base is the healthy
+  arrow, no hand-mirror) + `contracts/types.ts` mirror +
+  fixture. S3 can start NOW off this spec.
+- **S4 (TS assembly) AMENDED.** `system/base/types.ts` +=
+  `SystemStreams`, BaseSystem `css→streams` (§1),
+  `BaseAssemblyInput` ditto; NEW `streams.ts` (§3) +
+  `streams.test.ts` ported battery (statement dedupe,
+  diamond identical bytes, reset-drop, empty passthrough,
+  own-reset-rides, self-last); `assemble.ts`/`sources.ts`
+  (R7/R8)/`validate.ts` (R2) legs; `PublishInput.streams`
+  (R6). Coexistence proof (the byte-identity bridge):
+  DIFFERENTIAL test — `mergeStreams` strings ==
+  `mergePackedStylesheets` output on a fixture-chain
+  corpus; corpus persists as streams goldens post-S5.
+  `packed-css.ts` UNTOUCHED in S4 (still the oracle).
+- **S5 (cutover) AMENDED — one cutover.** `sync/index.ts`
+  swaps the call (R1; `layers[]` concat iff §4 layers
+  decision lands); slim drops whole-string sheets
+  (proof channel KEEPS them; reader census for the drop:
+  `sync/index.ts:164` + R9 + S5-time sweep for stragglers);
+  DELETE `packed-css.ts` + test + `PackedUpstream`;
+  fixtures + lib re-sync (pipeline order); CHAIN_RULES.md
+  surface-doc touch; NIGHT-2 map note + 3.5-ban first
+  deletion filing FOLDED IN (S6 absorbed — one cutover,
+  one gate). Proof: units + `agentneo q` + §4 case/tier
+  list (chain 6/6, LAYER-01/02, SYNC-10/17, NEO-CHAIN-06,
+  SYNC-06 determinism, ALL tiers T1–T13 + mcp hermetic).
+
+Handoff: S2 implements off §1 + S2-amended above; S4 off
+§1/§3/§4; S5 off §2/§4/S5-amended. Single confirm-or-cut
+at S5 kickoff: the `layers[]` wiring (§4).
+
+## WAVE5-W1-VERIFY (verifier, 2026-09-23) — LAND
+
+Verdict: **LAND**. All seven checks pass firsthand against NIGHT-5 §1/§4
+as amended by HQ Finals (PLAN §3.9: emit 101, namespace law, Rank-1 SPLIT,
+consume home `native/generated/primitives/`). Thinking hat only — zero
+source edits, never committed. `agent-rs` skill loaded first. Sibling
+rename-crew files (Neo-side, disjoint) untouched and excluded from every
+check; zero gate failures to attribute.
+
+### (1) E1 carries EXACTLY 101 HTML — PASS, counted firsthand
+
+`vocabulary.json`: 101 elements, jsx-sorted, jsx-unique. Zero SVG members
+(independent partition replay: overlay SVG block = 24, 0 in E1). No
+`deferred` key anywhere. Element columns are exactly `dom,jsx,family` —
+no F1 third column — and every `dom` is lowercase (0 violations), so the
+mootness is verified, not assumed. Families: flow 27 / text 22 / form 13 /
+table 9 / media 10 / interactive 5 / special 15 — the spec'd census.
+
+### (2) Vocabulary sourced from LANDED W0 napi — PASS, traced end to end
+
+Import chain read in full: `generate/vocabulary.ts` →
+`typegen/js/index.js primitivesVocabulary()` → `runtime.ts
+primitivesVocabularyNative()` → `requireNative` → `native.rs
+primitives_vocabulary()` → `lib.rs primitives_vocabulary_json()`. No copy:
+W0 commit `7b3c65d53` landed, `typegen` + `canon` working trees clean.
+Raw-`.node` probe (x64 binary, bypasses the TS wrapper): keys
+`aliases,conditions,dialect,domains,props`, 1391/79/319/dialect-5, and
+props/conditions/aliases ALL byte-equal to E1. Independent golden-key
+re-extraction (my own script, TYP-VOCAB-03 technique): 1391 keys,
+DIFF EQUAL to `stylePropNames`.
+
+### (3) E4 d.ts closure per spec — PASS
+
+`PrimitiveTag`: 101 literals, set-equal to the E1 dom set.
+`StylePropName`: 1391 literals, EXACT ordered match to E1 (hence to napi
+and goldens). Per-tag coverage: 101 `XProps` + 101 const decls, every E1
+jsx present in both (the 102nd `*Props` regex hit is the `PrimitiveProps<T>`
+generic itself). Present: `PrimitiveElement<T>`, `PrimitiveCssProp`,
+`StyleProps` merge, 3 contexts, `useColorMode`, Fragment/createElement
+re-exports. The 7-line `stylePropsWiring` text is byte-identical to Neo's
+`packager/types-bundle.ts` splice. Tripwires grepped in BOTH artifacts:
+`\b(Box|Flex|Grid)\b` 0 (substring hits are legit CSS props —
+`boxShadow`, `flexDirection`, vendor `*Box*` — inside the exact union),
+`as?:` 0, `styled.`/`styled(` 0 (sole `styled` string is the
+`'@reference-ui/styled'` import specifier shared with Neo's splice),
+`jsx(` 0, `slot` 0, `rounded` 0 (case-insensitive), atomic `c_*` 0,
+`pandacss` 0, `deferred` 0, `Recipe`/`CssStyles` 0 (correctly Neo-appended
+at W4). The two ` as ` hits are import aliases, not casts.
+
+### (4) Determinism — PASS, ran twice + cmp clean FIRSTHAND
+
+`pnpm --filter @reference-ui/rust run primitives` twice; `cmp` silent on
+both files after both runs; sha256 of E1/E4 identical across all three
+generations (committed bytes included — the checked-in files ARE current
+generator output).
+
+### (5) Fail-closed join — PASS, 6 live scratch probes + code read
+
+Scratch run (`/tmp/w1v-failclosed.mts`, tsx, uncommitted): tripwire throws
+on Box / `as?:` / `"deferred"`, overlay/import drift throws, Rust-table
+jsx drift throws, partition drift throws — every throw names the source
+(`[primitives] <source>: ...`). A consistent-mutation probe confirmed the
+downstream ELEMENTS-completeness gate fires. Controls pass: real sources
+join to 101 rows, real artifacts pass tripwires. The alias-target
+(`vocabulary.ts:82-94`, key AND target must be in the prop set) and
+map-rule branches are 4–6 unconditional-throw lines verified by read.
+
+### (6) Module quality + README — PASS
+
+`pnpm agentrs q modules/primitives` → 6 files, 0 violations, 0 warnings
+(no CC>10, no cognitive>15, no Clippy allows). Every file carries a proper
+2–6 sentence header. README is purpose-first (SOURCE/GENERATOR/CONSUMERS),
+states the 101 law + W2 E2 deferral + W3 vendor home, no directory table.
+`tsc --noEmit` (repo `bundler` resolution) clean on all 5 W1 TS files; the
+suite `pnpm agentrs v modules/primitives/tests/vocabulary.test.ts` → 4/4
+pass. (`v primitives` shorthand still needs a KNOWN_MODULES entry — noted
+in the W1 report, out of scope, path targeting used.)
+
+### (7) Scope — PASS
+
+`git status` on `packages/reference-rs`: exactly `M package.json` + `??
+modules/primitives/`. The package.json diff is the single spec'd
+`primitives` script line (canon-script precedent). Nothing else touched.
+
+## Captain's payload rulings (2026-09-23) — hard cut + layers wired
+
+READ: WAVE5-PAYLOAD-SHAPE firsthand. Two calls, both captain's
+(HQ veto at review):
+1. Transition: HARD CUT (concur, unanimous spec). Dual-carry
+   dies per §2's three counts + the §3.6 hard-cut law + the
+   in-repo reader census. `css` deleted, never reused; stale
+   artifacts fail loud (validate message + typecheck).
+2. `layers[]` WIRED in S5 (adopt the §4 recommendation).
+   Cost ~15 lines, flips the parked D17×7 rows, matches HQ's
+   "extends/layers build over data" phrasing; fragments/roster
+   stay extends-only (css-only bucket, free). Fallback
+   (keep ignoring) documented if S5 hits trouble.
+Sequencing per spec: S2 + S3 NOW in parallel (S3's regions are
+structurally disjoint from S2's sweep — result-mirror +
+fixture vs request-type + wire; briefs carry exact region
+ownership), S4 on S2's landing, S5 last with T1–T13+mcp.
+
+## Tick — 4 crews building, tree hot, no action (2026-09-23)
+
+- Objectives: VOYAGE 1-3 COMPLETE; 4/5 in LANDING.md (IN
+  PROGRESS, untouched). Active: overnight program (all
+  decisions made; W1 + S1 + W0 landed since last tick).
+- Live: rename (102, running, producing — bin/cli/tests
+  moving), W2, S2, S3 (all young). Liveness from substance:
+  48 modified + 5 new in tree across Neo + RS. No pings.
+  Deadlock test: negative — products flowing everywhere.
+- Advance: no commits (nothing newly verified), no
+  dispatches (verifiers go on reports; S4 on S2's landing).
+  No park ordered; HQ quiet till 11.
+
+## WAVE6-SEAM-S3 — D17 receive slice (implementer, 2026-09-23) — DONE
+
+Scope: S3 per WAVE5-PAYLOAD-SHAPE §5 (S3 UNAFFECTED) +
+captain's payload rulings (hard cut; S2+S3 parallel, regions
+disjoint). Governing skill `agent-neo` loaded first.
+Never committed; report only.
+
+### What changed (4 files — 1 over brief, forced, see §Scope)
+
+- `packages/reference-neo/src/native/contract.ts` (+3):
+  `NativeCompileResult += streams: SystemStreams` REQUIRED,
+  imported from `../system/base/types.ts` (native→base
+  arrow, no hand-mirror).
+- `packages/reference-rs/contracts/types.ts` (result region
+  ONLY): + frozen `SystemStreams` (wire truth) +
+  `CompileResult.streams` REQUIRED + 1-word header list.
+  Request region untouched — S2's `schemaVersion: 2` hunk
+  landed beside mine mid-slice, zero interference.
+- `packages/reference-rs/contracts/fixtures/
+  compile-result.json` (+11, pure insertion, zero existing
+  bytes changed): the result fixture now carries the 9-key
+  own object (name + 8 S1 fields, BOTH token variants,
+  empties as `""` per serde-default wire shape).
+- `packages/reference-neo/src/system/base/types.ts` (+17):
+  `SystemStreams` planted verbatim from spec §1 — the
+  FORCED 4th file (see §Scope).
+
+### Fixture design (self-consistent oracle for S4)
+
+Blocks split programmatically from the fixture's own
+sheets (fail-loud script, `/tmp/s3-fixture/build.mjs`,
+kept out of tree): preamble = verbatim leading
+statement, tokens/tokensPortable = the two `@layer
+tokens` blocks, utilities shared (asserted byte-identical
+across sheets — the shared-tail law), reset/global/
+recipes/package `""` (this world prints none; flat sheet
+means empty wrap name). Served reprint
+(preamble+reset+global+tokens+recipes+utilities) ==
+`stylesheet` byte-exact; portable reprint (tokensPortable
+swap) == `portableStylesheet` byte-exact. Fixture
+preamble is verbatim-from-sheet per the drift-proof
+principle, not the S1 `LAYER_PREAMBLE` constant (this
+hand-made sheet carries the 5-layer statement) — S4's
+differential recomputes from the carried preamble
+either way.
+
+### Scope: why 4 files, and the S4-brief amendment
+
+The brief named 3 files but its own import instruction
+(`import the type from system/base/types.ts`) names a
+type that existed NOWHERE in the tree (verified zero
+hits; S4 unstarted, S2's sweep doesn't plant it). Three
+options: (i) dangling import (red tree), (ii) import
+from frozen contracts (violates the arrow AND red until
+a dist rebuild I cannot deliver — dist is gitignored),
+(iii) plant the 13-line frozen interface in its spec-§1
+home. Took (iii): green tree, zero S2/S4 collision
+(S2's sweep never touches base/; S4 unstarted).
+AMEND S4's brief: skip the `SystemStreams` line (landed
+here, verbatim §1) — S4 does BaseSystem css→streams +
+rest. The two homes carry mutual keep-field-identical
+notes (frozen-source + neo-mirror precedent:
+VirtualSource/NativeSourceFile, Diagnostic/
+NativeDiagnostic).
+
+### Proof (all firsthand, this session)
+
+- Neo tsc: exactly 2 errors, BOTH S2-owned sweep sites
+  (`native/request.ts:32`, `worker-phases.ts:106` —
+  `schemaVersion: 2` vs stale dist), zero in S3 files.
+- Neo full units: 49 files / 331 tests pass, 4 files /
+  19 tests fail — IDENTICAL to the pre-edit baseline
+  (pre-existing native-binary schemaVersion skew, not
+  S2's and not mine). Zero new failures.
+- `pnpm agentneo q`: 17 warnings (baseline count, none
+  in S3 files) + 1 error = S2's tsc transient above.
+- RS contracts suite: 13/13 pass (exercises the edited
+  fixture at runtime). `pnpm agentrs q
+  contracts/types.ts`: ALL PASSED. Cargo `shared`
+  fixture tests: 3/3 pass with the edited fixture.
+- Round-trip (`/tmp/s3-roundtrip/`, kept out of tree):
+  `fixture.streams satisfies` BOTH SystemStreams homes
+  (tsc green — the drift guard) + node census (9 string
+  keys, both reprints byte-exact, JSON round-trip
+  identical).
+- Incidental finding (pre-existing, not mine): every
+  `satisfies` in contracts/tests is tsc-red under JSON
+  widening (`number` vs `1`/`2` literals) — no gate
+  typechecks that dir (RS build tsc covers only
+  modules/*/js; vitest strips types). My lines add no
+  new error kind (only the same schemaVersion widening;
+  streams itself accepted).
+
+## WAVE6-SEAM-S2 (implementer, 2026-09-23) — REPORT, not landed
+
+Scope: RS atomic + the §5 sweep list ONLY, per brief
+(S1 landed `7a6628af3`; vocabulary A frozen; HARD CUT
+decided). `agent-rs` skill loaded first. NEVER committed.
+Region discipline held vs the parallel S3 crew:
+contracts/types.ts request-type line ONLY (their
+result-mirror + `SystemStreams` + fixture lines landed
+beside mine in the same file, zero interference —
+corroborated by their filed report); neo
+`native/contract.ts` result mirror untouched (theirs).
+
+### Engine (atomic crate + napi bridge)
+
+- `src/stylesheet/emitter/streams.rs`: S1's
+  `StylesheetStreams` gains `name` (system name,
+  names-as-data) + serde derives (camelCase) + a
+  `preamble_only()` constructor for fail-closed
+  artifacts. NO `layerNames` field per the §5
+  correction — entry `name` IS the names-as-data.
+- `src/types.rs`: `CompileResult` gains REQUIRED
+  `streams: StylesheetStreams` (no serde default —
+  hard cut, stale payloads fail loud on read).
+- `src/stylesheet/emitter/mod.rs`:
+  `build_stylesheets_with` now returns
+  `(streams, sheet, portable)` — the S1 concat stays
+  the single join; S2 just keeps the streams.
+- `src/assembly.rs` populates it;
+  `src/lib.rs::token_rejection` + `native.rs::rejection`
+  carry `preamble_only()` (empty name, both sheets
+  reprint to the bare preamble — byte-identical to the
+  old rejection sheets since empty wraps stay flat).
+- `native.rs::SlimCompileResult` gains `streams`
+  VERBATIM (no refold — the §2 oracle channel rides
+  next to the refolded whole-string sheets).
+- Version gate (`native.rs::check_schema_version`):
+  `Some(2) | None` pass, else
+  `unsupported schemaVersion {n}: expected 2`. Legacy
+  shapeless requests still pass; the base-system SPEC
+  version stays 1 (untouched — separate namespace).
+
+### Schema 1→2 sweep (four one-liners + fallout)
+
+- `contracts/types.ts`: `NativeCompileRequest`
+  `schemaVersion: 1` → `2` — the ONLY hunk in that
+  file that is mine (S3 owns the rest).
+- `neo/src/native/request.ts:32` → 2;
+  `benchmark/deepsee/worker-phases.ts:106` → 2.
+- `atomic/js/types.ts`: `CompileStreams` (9 required
+  string keys) + REQUIRED `streams` on
+  `CompileResult` + `AnyCompileRequest` doc; exported
+  from `js/index.ts`. The `runtime.ts` wrapper needed
+  NO change (spread passes streams through on both
+  channels — verified by the slim/proof equality pin).
+- Fallout pin (keeps the tree green, not S3's
+  region): NEO-SYNC-04 spec expects `schemaVersion: 2`
+  in `compile-request.json`.
+- Dist rebuild (S2-attributed tsc transient per S3's
+  report): `pnpm --filter @reference-ui/rust run
+  build:js` — regenerates gitignored dist from source
+  so neo tsc resolves request-version 2. Neo tsc now
+  exits 0 (was: exactly the 2 sweep-site errors).
+
+### Tests touched (request-shape only, zero goldens)
+
+- ATM-SEAM-02: frozen shape 1→2; the reject leg now
+  sends v1 (the LOUD v1-reject test: 1 error
+  diagnostic naming schemaVersion, preamble-only
+  sheet, atomCount 0, preamble-only streams with
+  empty name) + frozen≈legacy `streams` parity pin.
+- ATM-SEAM-05, ATM-SCAN-01, ATM-SCAN-02, ATM-SITE-57:
+  frozen shape 1→2 (mechanical).
+- `seam.test.ts` slim test: 9-key pin (sorted) +
+  `name == 'lib-test-system'` + slim≈proof streams
+  equality. `injectivity-quarantine.test.ts` fake
+  literal gains a 9-key streams object.
+- Rust: `test_dual_build_matches_*` updated for the
+  3-tuple (+ name/reprint pins); NEW
+  `test_streams_serialize_to_nine_wire_keys` (exact
+  camelCase key order incl. `tokensPortable`, both
+  token variants asserted) + NEW
+  `test_preamble_only_reprints_to_bare_preamble`.
+- `atomic/SPEC.md` ATM-SEAM-02 row: v2 + streams
+  parity wording.
+
+### Proof (all firsthand, this session)
+
+- `pnpm agentrs c atomic`: PASS (full suite;
+  targeted re-runs show all 4 emitter tests green:
+  2 new S2 + S1 concat + updated dual-build).
+- `pnpm agentrs v atomic`: 302/302 PASS (13 files).
+  One self-caught red during the run (my new preamble
+  pin used exact `toBe` against the no-trailing-`\n`
+  TS helper const — fixed to `` `${LAYER_PREAMBLE}\n` ``,
+  engine emits verbatim with newline; re-run green).
+- Raw-`.node` probe (`/tmp/S2-probe.mjs`, kept out of
+  tree): v2 accepted with 9-key slim streams; v1 →
+  `unsupported schemaVersion 1: expected 2` + 9-key
+  preamble-only streams. LOUD confirmed below the TS
+  wrapper too.
+- Goldens untouched: 5 spec.ts edits under
+  `tests/cases/`, ZERO `output/` files changed; no
+  `--update-goldens` run. (Goldens extract only
+  stylesheet/css/diagnostics — streams cannot churn
+  them by construction.)
+- `pnpm agentrs q`: 0 violations on the 8 Rust files
+  (4 warnings, all pre-existing in assembly/lib —
+  none on my lines); ALL 5 TS files PASSED.
+- Neighbor sanity: contracts suite 13/13 green;
+  NEO-SYNC-04 PASS (sweep loop-closer: emit-2 →
+  accept-2 → pin-2 byte-exact → paint).
+
+### Findings / handoffs (not mine, flagged)
+
+- F1 — HEAD's cargo workspace is unloadable:
+  landed `modules/primitives/` (TS-only, commit
+  `b9a7a67c4`) trips the `modules/*` member glob, so
+  EVERY `cargo` invocation fails at manifest load. I
+  worked around it with a temporary `exclude` (used
+  for c/b/v, then byte-reverted — verified 0 diff). A
+  sibling has since landed a commented permanent
+  `exclude` in-tree (not my text, leaving it alone).
+  Captain: confirm that exclude is the durable shape
+  (a future primitives Rust crate would silently not
+  build under it).
+- F2 — request fixtures still pin v1:
+  `contracts/fixtures/native-compile-request*.json` +
+  `contracts.test.ts:168-177` + `shared/.../contracts.rs`
+  assert request `schemaVersion` 1 against a type that
+  now says 2. Runtime-green (vitest strips
+  `satisfies`; no gate typechecks that dir — S3
+  concurs). Fixtures were S3's region and S3 shipped
+  the result fixture only — the REQUEST fixtures need
+  a reconciliation owner (S5 cutover or a named
+  follow-up), else the frozen-request fixtures lie.
+- S4 unblocked: `mergeStreams` can now be proven
+  against live N-API own objects (both token variants
+  populated, `name` = system name). S5's slim-drop
+  reader census starts at `sync/index.ts:164` + R9
+  per §5.
+
+## WAVE6-S3-VERIFY (verifier, 2026-09-23) — LAND
+
+Scope: adversarial review of WAVE6-SEAM-S3 (D17 receive
+slice), thinking hat, zero source edits, never committed.
+Read S3's report + spec WAVE5-PAYLOAD-SHAPE §1 + S2's
+filed report (bilateral corroboration) firsthand; all
+proof below re-run firsthand in this session against the
+hot tree (rename, W2, S2 mid-flight — untouched, out of
+scope; failures attributed precisely).
+
+### (1) Import arrow — PASS
+
+`native/contract.ts:11` carries `import type {
+SystemStreams } from '../system/base/types.ts'` and
+`NativeCompileResult` uses the imported name — no local
+hand-mirrored struct (zero other declarations;
+tree-wide `SystemStreams` hits = exactly the 3 source
+files). Native→base arrow as briefed; base/ stays a leaf
+(no back-import introduced).
+
+### (2) REQUIRED both sides, hard-cut wire — PASS
+
+`streams: SystemStreams` with NO `?` in BOTH
+`NativeCompileResult` (contract.ts:60) and frozen
+`CompileResult` (contracts/types.ts:185); zero
+`streams?` hits in all three files. Matches S2's
+hard-cut wire: schema 2 guarantees presence (S2's
+`types.rs` REQUIRED + version gate corroborate from
+the Rust side). Safe in-tree: the sole producer
+(`compile.ts:14-17`) passes the N-API return through
+by type (no literal construction); consumers only read.
+
+### (3) Region discipline — PASS
+
+`contracts/types.ts` holds exactly 3 hunks: S3's header
+word + `SystemStreams` + `streams` (result region) and
+S2's `schemaVersion: 1→2` one-liner (request region) —
+structurally disjoint, zero interference. S2's report
+confirms bilaterally ("request-type line ONLY ...
+result mirror untouched (theirs)"). `native/request.ts`
++ `worker-phases.ts` diffs are pure S2 one-liners, no S3
+content. Fixture hunk is a pure +11 insertion, zero
+existing bytes changed. The forced 4th file
+(`base/types.ts` +17) is UPHELD: `SystemStreams` had
+zero HEAD hits (`git grep` clean), so the brief's own
+import instruction named a nonexistent type — planting
+verbatim §1 in its spec'd home was the only green-tree
+option. Both homes are byte-identical (`diff` clean)
+and field-match spec §1 (comment-spacing only).
+
+### (4) Fixture round-trips — PASS (run, not trusted)
+
+Firsthand node census on `compile-result.json`: 9 keys
+(name + 8 S1 fields), all strings; served reprint
+(preamble+reset+global+tokens+recipes+utilities) ==
+`stylesheet` byte-exact; portable reprint
+(tokensPortable swap) == `portableStylesheet`
+byte-exact; `tokens` has `:root`, portable has
+`[data-layer=` and no `:root`; JSON round-trip
+identical. Suites: RS contracts 13/13 pass; shared-crate
+fixture tests pass (see §Gates for the shadow-workspace
+note); S2's `atomic/tests/seam.test.ts` 10/10 pass —
+its `frozen.streams` assertions read S3's fixture
+green, the strongest cross-slice proof.
+
+### (5) No other files — PASS
+
+S3-content (`SystemStreams`, `streams: SystemStreams`,
+fixture block) appears in exactly the 4 claimed files.
+All other `streams`-vocabulary diffs are S2's
+(`CompileStreams`, Rust emitter/N-API, "S2 oracle
+channel" in atomic files) or S1-landed (`7a6628af3`).
+
+### Gates (firsthand, attributed)
+
+- Neo tsc: exactly 2 errors, BOTH S2-owned
+  (`native/request.ts:32`, `worker-phases.ts:106`,
+  `Type '2' is not assignable to type '1'` vs stale
+  dist) — zero in S3 files. S2's transient; dist is
+  gitignored and S2 is mid-flight.
+- Neo full units: 53 files / 354 tests ALL PASS —
+  better than S3's session (its 4-file/19-test skew
+  failures cleared: a sibling rebuilt the native
+  binary mid-flight; tsc still shows the stale dist
+  TYPES, runtime is green). Zero S3 failures.
+- `pnpm agentneo q`: 17 warnings (≤17, NONE in S3
+  files) + 1 error = S2's `request.ts:32` transient
+  above. S3-attributable count: 0 errors, 0 warns.
+- Cargo workspace is CURRENTLY unresolvable at
+  tree+HEAD (`members = ["modules/*"]` vs
+  `modules/primitives/` having no Cargo.toml — a
+  TS-only W1/W2 dir; NOT S3's; S3's session predates
+  the breakage): `cargo test -p shared` fails at
+  manifest load. Ran the identical test sources +
+  edited fixtures in a /tmp shadow workspace instead:
+  11/11 pass incl. `contracts::fixtures_are_valid_json`.
+  Touched nothing in-tree to do it.
+
+### Verdict: LAND
+
+All five checks pass; every gate failure in the tree
+is S2-owned (schemaVersion transient) or sibling-owned
+(cargo glob) with zero S3 attribution. S3's slice is
+seam-correct and cross-proven by S2's own oracle test.
+Landing order note (not a hold): S3's REQUIRED field
+is runtime-satisfied only by a schema-2 native binary —
+land alongside or after S2's binary, or accept the
+hard-cut fail-loud S2's gate already encodes.
+
+## Holding note — S3 LAND waits for S2 verdict (2026-09-23)
+
+WAVE6-S3-VERIFY returned LAND. Landing HELD until S2 verifies:
+contracts/types.ts holds both slices' bytes (request region S2,
+result region S3) and S4 keys off S2's landing, not S3's — so one
+combined gate run + stepped landings (S2, then S3 hunk-split)
+beats two solo landings. No per-commit-green risk either way
+(S3 is additive types; S2's wire is ignored until received).
+
+## WAVE5-TYPEDEFS-W2 (implementer, 2026-09-23) — DONE
+
+Scope: NIGHT-5 wave W2 (runtime move + E2) per `## NIGHT-5` §4,
+AS AMENDED (W1 LANDED 101/no-deferred — built on the landed
+tree; HQ Finals: emit 101, namespace law, Rank-1 SPLIT).
+`modules/primitives/js/` + E2 + moved tests; four
+spec-required infra lines outside it (listed below, W1
+precedent). Governing skill `agent-rs` loaded first. Never
+committed; report only. Neo's copies byte-untouched
+(`git status` on `primitives/runtime/` empty — W4 cutover
+deletes them; reported, not preempted).
+
+### What changed
+
+- NEW `modules/primitives/js/{factory,split,context}.ts` (E3)
+  + the 4 colocated suites — moved from Neo
+  `src/primitives/runtime/`. Diff-verified firsthand: 4 of 7
+  files byte-identical (`context.ts`, `factory-ref.test.ts`,
+  `split.test.ts`, `context.test.ts`); the other 3 differ by
+  EXACTLY one type-only import line each
+  (`../../runtime/css/css.ts` → `./css-types.ts`). Runtime
+  code byte-identical; behavior byte-identical.
+- NEW `js/css-types.ts` — the cut adapter. Neo's trio types
+  against the style runtime (`SystemStyleObject`,
+  `CssStyles`), which never crosses the cut; the RS home
+  declares the same two structural shapes locally
+  (`Record<string, unknown>` + the skip union — verified
+  firsthand against Neo `runtime/css/css.ts:22-25`). Erased
+  at compile; zero runtime bytes.
+- NEW `generated/primitives.mjs` (E2, 239 lines) — printed
+  by the generator, never hand-edited. 101 unbound named
+  exports (dom order, today's barrel shape; `Map` through
+  the `MapPrimitive` alias) + `Fragment`/`createElement`
+  + the 4 context names + the single
+  `configurePrimitives({ layerName, stylePropNames, css })`
+  seam returning the fresh 101-key bound roster. Unbound
+  exports carry the empty splitter, blank layer, and a
+  throwing css — importing E2 renders nothing, unreachable
+  by construction (the eval-safe barrel contract).
+- `generate/emit.ts` += `buildPrimitivesMjs` (+ sortedByDom,
+  unbound/bound decl printers); `generate/generate.ts`
+  writes + tripwire-scans the third artifact. Rust never
+  prints React runtime (PLAN §3.4): the trio is authored
+  and moved; the printer emits roster names + thin calls
+  plus the 3-line unbound guard only.
+- `tests/vocabulary.test.ts`: PRIMGEN-01 now pins all three
+  artifacts byte-identical; NEW PRIMGEN-05 (namespace ==
+  101 E1 jsx + 7 seam names; bound `Div` renders marker +
+  layer; unbound `Div` throws `/configurePrimitives/`).
+- `vitest.config.ts` include += `js/**/*.test.ts`;
+  `README.md` Generator + Consumers rewritten for E2
+  emitted / E3 home (no dir table).
+- Infra (4 files, spec-required): `package.json` += react,
+  react-dom, @types/react, @types/react-dom devDeps (exact
+  Neo versions: 19.2.4/19.2.4/^19.2.14/^19.2.3 — pnpm
+  relinked, lockfile churn mechanical); `tsconfig.json` +=
+  `allowImportingTsExtensions` (moved files keep Neo's
+  `.ts` specifiers verbatim; without it node type-stripping
+  and tsc disagree and one proof must fail — proven by
+  A/B below); `Cargo.toml` += `exclude =
+  ["modules/primitives"]` (W1-escaped-defect repair, see
+  finding F-W2-1).
+
+### Proof (all firsthand, this session)
+
+- `pnpm agentrs v modules/primitives/js` → 24/24 pass
+  (factory 7, factory-ref 5, split 7, context 5).
+- `pnpm agentrs v modules/primitives/tests/
+  vocabulary.test.ts` → 5/5 (PRIMGEN-01..05).
+- E2 under plain node: import OK (108 exports = 101 +
+  seam + 2 react + 4 context); bound roster 101 keys,
+  set-equal to E1 jsx (missing [] extra [] dupes []);
+  unbound `Div` render throws the seam error; bound `Div`
+  renders `<div class="ref-div c" data-layer="L"
+  id="y">hi</div>` (marker + layer + resolution +
+  passthrough).
+- Determinism: generator re-run + `cmp` on all three
+  files silent; E1/E4 bytes unchanged vs HEAD (only the
+  new E2 shows in status).
+- Tripwires: E2 scanned in the generator run (exit 0);
+  scratch probe confirms Box / `as?:` / `styled.`
+  violations throw naming `primitives.mjs`.
+- `pnpm agentrs q modules/primitives` → 0 violations, 1
+  warning in 14 files (CC14 on `readDocumentColorMode`,
+  carried verbatim from Neo — warn, gate passes; the
+  `//` headers pass the gate's header check as-is).
+- `tsc --noEmit`: exactly 1 error (canon dialect.ts
+  TS2339, pre-existing — present with and without my
+  files); ZERO in W2 files. A/B: HEAD tsconfig yields 7
+  extra TS5097 on js/ — the flag is load-bearing.
+- `pnpm agentrs c` (workspace cargo) → PASSED all crates
+  (after F-W2-1 fix).
+- Prettier: all authored files clean; the 4 moved files
+  flagged dirty are dirty at the Neo source too
+  (verified firsthand) — inherited verbatim, not
+  reformatted.
+- `pnpm agentrs t`: stages 1–2 green (ensure-native,
+  cargo), stage 3 stops at 11 reds in 2 files, BOTH
+  outside this footprint with zero cross-imports
+  (grep-verified): 10× virtualrs VRT-* (filed
+  pre-existing semicolon drift, Q-3-6-excluded) + 1×
+  ATM-SEAM-02 (sibling D17 S-wave in flight —
+  preamble trailing-newline; tree visibly mid-edit).
+  Full green is unachievable on this tree through no
+  fault of W2; every W2-owned stage is green.
+
+### Findings for captain (out of scope, not fixed beyond noted)
+
+- F-W2-1 (W1-escaped defect, REPAIRED minimally): W1's
+  TS-only `modules/primitives/` under the workspace
+  `modules/*` cargo glob broke `cargo test --workspace`
+  AT HEAD (missing Cargo.toml — fatal at manifest load;
+  W1's proofs never ran full-workspace cargo). Fix:
+  2-line `exclude` + honesty comment (no junk stub
+  crate). LANDING WATCH: a sibling modified then
+  reverted `Cargo.toml` mid-window — if they re-apply
+  their own exclude elsewhere, duplicate keys break
+  cargo parsing LOUDLY; keep exactly one.
+- F-W2-2 (verbatim-carried): CC14 `readDocumentColorMode`
+  warning + 4 prettier-dirty moved files are Neo's
+  bytes, carried exactly. Refactoring either breaks
+  the W2 verbatim contract; owners (W4 cutover) decide.
+- F-W2-3 (t corner): bare `tsc -p tsconfig.json` (emit
+  mode, no flags) now reports TS5096 instead of
+  typechecking — nobody runs it (build uses
+  `tsconfig.build.json` with emitDeclarationOnly;
+  manual runs use --noEmit; both satisfy the flag).
+- Handoff to W4: E2 imports the trio via `../js/*.ts`
+  (node-stripping + esbuild native); `configurePrimitives`
+  is a thin binder (no arg validation — spec'd seam
+  shape exactly); E1 remains the TAGS-as-data home (no
+  runtime HTML_TAGS in E2, matching E4).
+
+## Incident — W1 landing broke cargo, hotfixed (2026-09-23)
+
+Captain's defective landing, caught by S3-verify's tail (push
+tick): W1 created TS-only modules/primitives/ without a
+workspace exclude, and my firsthand gates (determinism + q +
+vitest) never resolved the workspace — HEAD went red for any
+cargo command. The W2 crew authored the correct fix in-flight
+(exclude + rationale comment); captain verified firsthand
+(metadata exit 0, shared test-profile builds) and landed it as
+a hotfix. W2's verifier brief will note the pre-landing.
+WAVE LAW: any RS landing touching modules/ layout proves
+workspace resolution firsthand (`cargo metadata` minimum)
+before commit. No exceptions.
+
+## Push tick — hotfix landed, 3 crews out, no further action (2026-09-23)
+
+Push tick found S3-verify's cargo-breakage note, confirmed
+HEAD-red firsthand, and landed the 1-line workspace hotfix
+(firsthand: metadata + shared build green). Live: W2
+implementer (running), rename-verify, S2-verify. Deadlock
+test negative (tree hot, reports flowing). No other
+dispatches (verifiers go on reports; S4 on S2's landing).
+
+## WAVE6-S2-VERIFY (verifier, 2026-09-23) — LAND
+
+Verdict: **LAND**. All seven checks pass firsthand against
+WAVE5-PAYLOAD-SHAPE §5 (S2 AMENDED). Thinking hat only — zero
+source edits, never committed. `agent-rs` skill loaded first.
+Sibling tree shared with W2, rename-verify, S3-verify: every
+non-S2 change attributed by diff, zero gate failures to
+attribute to anyone (full tree: cargo 661 green, vitest
+302/302, neo tsc exit 0).
+
+### (1) Wire shape EXACT — PASS, probed below the wrapper
+
+Independent raw-`.node` probe (`/tmp/s2-verify/probe.mjs`,
+kept out of tree — NOT S2's probe): v2 slim `streams` is the
+9-key OWN object in exact wire order
+`[name, preamble, reset, global, tokens, tokensPortable,
+recipes, utilities, package]` (snake→camel, `name` first);
+`name == spec.name` (names-as-data, `@reference-ui/lib` on
+the lib fixture); `tokens` carries `:root`,
+`tokensPortable` carries `[data-layer=`; `layerNames`
+zero hits across atomic src/native/js + contracts (grep
+exit 1). Verbatim: every non-empty stream is a substring
+of its sheet on the proof channel, and the portable sheet
+contains the portable tokens and NOT the served tokens
+(`tokensPortable` starts `@layer tokens` — a full block,
+not a refold fragment). Slim carries `&result.streams`
+by borrow next to the refolded sheets (`native.rs:189,
+205`); S1's concat stays the single join (`mod.rs` builds
+sheet+portable from the kept streams, then returns the
+3-tuple). Rejection sheets == bare preamble reprint.
+
+### (2) Schema bump complete — PASS, v1 LOUD run it
+
+All five sweep sites at 2, firsthand: `request.ts:32`,
+`worker-phases.ts:106`, contracts `NativeCompileRequest:231`
+(the ONLY S2 line in that file), `js/types.ts`
+(`CompileStreams` + doc; `NativeRuntimeArtifact:203` was
+already 2, untouched), engine gate `Some(2) | None`
+(`native.rs:125-130`). Raw-addon v1 leg: exactly
+`unsupported schemaVersion 1: expected 2`, 1 error
+diagnostic, preamble-only 9-key streams with empty name,
+sheet == bare preamble. Legacy shapeless requests still
+pass (`None` arm, probed). Correctly UNTOUCHED: spec
+version 1 namespace (`EvaluatedSystemSpec:1`,
+`PortableBaseSystem:1` — separate namespace, still 1).
+
+### (3) Streams REQUIRED — PASS, zero fallback paths
+
+Required at all four layers: Rust `CompileResult.streams`
+(no serde default — stale payloads fail loud on read),
+`SlimCompileResult.streams` (non-Option borrow), atomic
+js `CompileResult.streams: CompileStreams` (9 required
+string keys), contracts `CompileResult.streams` (required).
+Greps across atomic js/src/native + contracts + neo
+native: zero `streams?`, zero `?.streams`, zero
+`??`/`||` streams fallbacks. `preamble_only()` is
+fail-closed CONSTRUCTION (both rejection paths always
+emit streams), not a fallback for missing streams. The
+wrapper needed no change: `runtime.ts:61-64` spreads
+`...tail` through on the slim channel (read firsthand),
+proof channel is raw JSON — pinned by the slim≈proof
+streams equality test.
+
+### (4) Goldens untouched — PASS, by construction + by diff
+
+Zero `output/`/golden/expected files in `git status`;
+the extractor (`helpers.ts:73-89`) reads ONLY
+`stylesheet`/`css.classes`/`diagnostics` — streams cannot
+churn goldens by construction. The 5 `spec.ts` edits are
+request-shape only (1→2 + parity pins); no
+`--update-goldens` run (no output diffs anywhere).
+
+### (5) Region discipline — PASS, zero overlap
+
+Diffed every shared file: S2's sole shared-file hunk is
+the contracts `NativeCompileRequest` 1→2 line, sitting
+beside S3's result-region insertions with zero
+interference. S3's regions (`native/contract.ts`,
+`system/base/types.ts`, `compile-result.json` +11 pure
+insertion, contracts `SystemStreams` + result `streams`)
+contain ONLY S3's hunks, matching the S3 report
+line-for-line. S2 touched none of them. Overlap = none.
+
+### (6) Scope — PASS, RS atomic + sweep list ONLY
+
+S2's set, complete: 8 Rust files (streams/types/
+native/assembly/lib/emitter-mod/stylesheet-mod/
+emitter-tests) + `js/types.ts` + `js/index.ts` +
+contracts 1-liner + `request.ts` + `worker-phases.ts` +
+NEO-SYNC-04 one-line pin + 7 test files + `SPEC.md` row.
+Everything else in the 57-entry tree status attributes
+away: rename crew (bin/cli/sync-deletions/tests/tools/
+`ref.ts`/`lib/watch`), S3 (above), W2/W1 (primitives/*,
+Cargo exclude, package/tsconfig/lock). Ambiguous-file
+grep (package/tsconfig/lock/PLAN diffs): exactly one
+streams mention, a PLAN.md prose line — not code, not S2.
+
+### (7) q green — PASS, warnings pre-existing in kind
+
+`q` on all 8 Rust files: 0 violations, 4 warnings — all
+pre-existing in kind (assembly `finish` >80: HEAD already
+~100, S2 +1 line; lib 488→490 lines; `reuse_programs`
+5 args untouched by S2). All 5 TS files: 0 violations
+(3 RS files ALL PASSED; 2 neo files carry only the
+pre-existing `worker-phases main` complexity warnings —
+S2's hunk there is one-token, line-neutral). Zero Clippy
+allows.
+
+### Proof runs (this session, firsthand)
+
+- `pnpm agentrs c atomic`: 661 passed / 0 failed; both
+  new S2 tests green (`nine_wire_keys`,
+  `preamble_only`) + S1 concat + updated dual-build.
+- `pnpm agentrs v atomic`: 302/302 PASS (13 files).
+- `/tmp/s2-verify/probe.mjs`: all 4 legs green (v1
+  LOUD / v2 9-key / verbatim / legacy passes). One
+  self-caught probe bug (expected `lib-test-system`,
+  fixture spec is `@reference-ui/lib` — the engine was
+  right, names-as-data; fixed the probe, re-run green).
+- Neo `tsc --noEmit`: exit 0 — S2's dist-rebuild claim
+  confirmed; the 2 S3-reported transient errors are gone.
+
+### Findings (not S2's, flagged for the captain)
+
+- F2 CONFIRMED (S2's report is accurate): request
+  fixtures still pin top-level v1
+  (`native-compile-request*.json:2`,
+  `contracts.test.ts:170 toBe(1)`,
+  `modules/shared/src/testing/contracts.rs:67`) — green
+  but lying, since the engine now rejects v1 LOUD. The
+  nested spec-version-1 assertions are CORRECT (separate
+  namespace). NOT held against S2: fixtures are S3's
+  region (touching them would have violated check 5)
+  and outside the §5 sweep list. Needs a named
+  reconciliation owner — recommend folding into S4's
+  brief (S4 already owns the contracts neighborhood)
+  or a one-line fix crew; do NOT let it drift to S5.
+- F1 (workspace exclude): workspace loads fine in every
+  run this session (cargo metadata + full suites
+  green); the push-tick hotfix is the sibling's to
+  keep. Read, no action.
+- S4 unblocked on this LAND: live N-API own objects
+  carry both token variants + system name, exactly the
+  `mergeStreams` proof input §5 promises.
+
+## WAVE5-W2-VERIFY (verifier, 2026-09-23) — LAND
+
+Verdict: **LAND**. All six checks pass firsthand against NIGHT-5
+§1 (E2/E3) and the W2 report. Governing skill `agent-rs` loaded
+first. No source edits, no commits; report only. Sibling crews
+(rename-verify, S2-verify, atomic S-wave) share this tree —
+touched nothing outside reads + test runs; failures attributed
+precisely below.
+
+### (1) Move fidelity — PASS, zero runtime delta
+
+Diffed all 7 files Neo `src/primitives/runtime/` →
+`modules/primitives/js/` firsthand. 4 byte-identical
+(`context.ts`, `factory-ref.test.ts`, `split.test.ts`,
+`context.test.ts`); 3 differ by EXACTLY one line each
+(`factory.ts:10`, `split.ts:9`, `factory.test.ts:8`), all
+`import type { … } from '../../runtime/css/css.ts'` →
+`from './css-types.ts'`. `import type` erases fully — no
+runtime delta is expressible in these hunks. The adapter
+`js/css-types.ts` re-declares both aliases structurally
+identical to Neo `runtime/css/css.ts:22/:25` (verified
+line-for-line; comments differ, shapes identical). No other
+import in `js/` reaches outside `react` + siblings
+(grep-verified).
+
+### (2) E2 shape — PASS (101, seam, unbound-by-construction)
+
+`generated/primitives.mjs` (239 lines, committed by generator):
+108 exports = 101 roster + `configurePrimitives` + `Fragment` /
+`createElement` + 4 context names — counted firsthand under
+node, roster set-equal to E1 jsx (missing [] extra [] dupes
+[]). Seam is exactly `configurePrimitives({ layerName,
+stylePropNames, css })` (single object param, spec shape).
+Unbound construction verified two ways: (a) code — every
+factory render unconditionally calls `css(styleProps, cssProp)`
+(`js/factory.ts:51`), and the unbound binds are empty splitter
++ blank layer + throwing css, so render always throws; (b)
+firsthand — unbound `Div` render throws `/configurePrimitives/`,
+bound `Div` renders `<div class="ref-div c" data-layer="L"
+id="y">hi</div>` (marker + layer + resolution + passthrough),
+bound roster 101 keys in roster order, `Map` alias renders
+`<map>` with displayName `Map`. Generator printer
+(`buildPrimitivesMjs` + decl printers) emits roster names +
+thin calls + the 3-line guard only — Rust prints no React
+runtime (PLAN §3.4).
+
+### (3) E2 imports clean unbound under node — PASS FIRSTHAND
+
+Plain `node` (v24, type-stripping for the `.ts` trio imports):
+import succeeds with zero side effects; all assertions in (2)
+observed in the same process (`/tmp/w2-verify-e2.mjs`, kept
+out of tree).
+
+### (4) Neo untouched — PASS
+
+`git status` + `git diff HEAD` on
+`packages/reference-neo/src/primitives/` both empty. W4 owns
+the deletion; nothing preempted.
+
+### (5) q green on new files — PASS
+
+`pnpm agentrs q modules/primitives` → 0 violations, 1 warning
+in 14 files (CC14 `readDocumentColorMode`, exit 0, gate
+passes). The warning rides `context.ts`, which is byte-identical
+to Neo — verbatim-carried, correctly not refactored (refactoring
+would break the W2 verbatim contract; W4 decides).
+
+### (6) Scope — PASS
+
+Footprint is exactly: `js/` (trio + adapter + 4 suites), E2,
+generator E2 emission (`emit.ts` += printer, `generate.ts` +=
+third artifact + tripwire entry), `tests/vocabulary.test.ts`
+(PRIMGEN-01 three-artifact pin + NEW PRIMGEN-05), vitest
+`js/**/*.test.ts` include, README Generator/Consumers rewrite
+(no dir table), infra `package.json` (4 react devDeps, exact
+Neo versions) + `tsconfig.json` (1 flag) + lockfile (12 lines,
+reference-rs importer only — diff-verified). E1/E4 bytes
+unchanged vs HEAD; generator re-run exits 0 and leaves no new
+modifications (determinism firsthand). `Cargo.toml` correctly
+ABSENT from the diff — the exclude pre-landed as 6e45a7f6f
+(verified in HEAD); not flagged per brief. No file outside
+`packages/reference-rs` touched by W2.
+
+### Proof runs (all firsthand, this session)
+
+- `pnpm agentrs v modules/primitives/js` → 24/24 pass.
+- `pnpm agentrs v modules/primitives/tests/vocabulary.test.ts`
+  → 5/5 (PRIMGEN-01..05).
+- `pnpm agentrs t` → stages 1–2 green (run reached vitest),
+  stage 3: 607 pass / 10 fail, ALL 10 in
+  `modules/virtualrs/tests/cases.test.ts` (VRT-CSS/CVA/FN/RESP
+  whitespace golden drift — expected-multiline vs
+  received-single-line). Zero cross-imports either direction
+  (grep-verified both ways). The implementer's 11th red
+  (ATM-SEAM-02, sibling S-wave) resolved in-flight — sibling
+  tree still mid-edit, not mine to touch. `cargo metadata`
+  exit 0 (workspace resolves, hotfix holds).
+- `tsc --noEmit` → exactly 1 error (canon `dialect.ts`
+  TS2339 in an untouched file — type-shape error, cannot be
+  caused by the resolution-only tsconfig flag); ZERO in W2
+  files.
+
+LAND: move verbatim modulo disclosed type-only lines, E2 =
+101 + seam + unbound contract proven firsthand, Neo clean,
+q green, scope tight, all W2-owned stages green.
+
+## Finding — two pre-existing reds outside tonight's program (2026-09-23)
+
+Surfaced by W2-verify's `agentrs t` run, reproduced firsthand by
+captain. Both red in tree, both untouched by every tonight arc
+(git status clean on those paths; no crew scope covers them):
+1. virtualrs cases.test.ts 10 failures — printer-vs-golden drift
+   (received import semicolons vs expected bare). virtualrs'
+   own transform output; nothing tonight touches its printer.
+2. canon dialect.ts TS2339 (1 tsc error) — type-shape error in
+   an untouched file; not caused by W2's resolution-only
+   tsconfig flag.
+Cause predates tonight's program in both cases. NOT tonight's
+to fix (program discipline — no scope drift into red herrings);
+queued for the 11 AM brief as morning findings with owner TBD.
+
+## WAVE4-RENAME-VERIFY (verifier, 2026-09-23) — LAND
+
+Adversarial review of the WAVE4-REF-RENAME arc (binary neo → ref).
+All gates firsthand on final worktree bytes. No commits, no stages;
+the verdict append is the only tracked write. Siblings share the
+tree: S2 (a9ae5c72a) + S3 (15437c9bf) + RS hotfix landed mid-flight
+with ZERO intersection vs the rename footprint (name-only check),
+so every result below stands on identical bytes either side.
+
+Gates (firsthand): q **0 errors, 17 warnings** (≤17, zero in the
+footprint — all 17 in collect/sync/runtime/tools/quality/lastRun);
+units **53 files, 354/354**; `agentneo run NEO-CLI-01` **PASS**,
+`NEO-CLI-02` **PASS**; dist build `[ref build] dist ready`
+(`ref --help` exit 0, `Usage: ref`); dist `ref sync` T1 exit 0,
+`ref clean` **4 links** + lib/neo real links kept + out dir gone,
+resync restores; T1 e2e **7 passed (0 failed)**.
+
+(1) SCOPE: PASS. Touch list is EXACTLY bin pair (D neo.ts/test,
+untracked ref.ts/test — trampoline body identical, header only),
+package.json bin line only, src/cli ×5, build-bin, CLI-01/02
+specs. Grep-proven zero touches: package name (`@reference-ui/neo`
++ self-dep + description), agentneo harness/verbs (tests/shared/*
+clean), case.json (0), NEO- ids + `[NEO-CLI-*]` tags, docs prose
+(no .md in footprint), tsconfig (dir-scoped, no per-file entry).
+Every other worktree file attributes cleanly: watch-lib (sync
+deletions + lib/watch + SYNC-14/WATCH-01 specs), W2 (RS
+primitives + lockfile — no dep delta from rename), captain
+(docs/PLAN). Lockfile M is sibling install artifact, not rename's.
+
+(2) PINS: code PASS, report undercounts (corrected here, non-blocking).
+True enumeration: bin/ref.test.ts **17 lines** = 2 header comments +
+BIN_PATH + 4 usage lines (2 blocks) + 1 throws regex + **5 `[ref]`
+asserts** (sync-failed, sync, clean-removed, clean-failed,
+clean-nothing) + 4 death comments — the report's "re-pins (4)"
+omits the 5 print asserts + regex. CLI-01: 11 lines, **0 output
+pins** (BIN_PATH, runNeo→runRef def + **7 calls, not 8**, 2
+comments). CLI-02: 4 lines, 1 output pin (`[ref] sync ` :97).
+src/cli: 12 `[ref]` prints + USAGE + `.name('ref')` + 2 header
+comments. Zero sed casualties: `neoFilePath` (regex + comments +
+reference-types.ts), `'neo-cli'` SYSTEM_NAME, NEO- tags, "Neo host
+CLI" description, scan fixtures (`src/neo.ts`), all `[neo]`
+subsystem emitters — kept, each deliberate.
+
+(3) DIST E2E: PASS (above). Mixed `[ref] sync` + kept `[neo] sync
+warning` + pre-existing `[neo] [ref]` bridge badge coexist, exit 0.
+Double badge verified byte-identical in HEAD (unrelated "reference"
+badge, predates the rename).
+
+(4) STRAGGLERS: re-swept independently, all dispositioned. Zero
+`[neo]`/`bin/neo`/`neo.ts` in src/cli, bin/, build-bin. Crew's
+LIVE OUT-OF-SCOPE list re-verified entry by entry (lib pkg
+:32/:35 hard-break — source path gone; pipeline generator :143 +
+test ×4; 12 emitted T*/mcp scripts; 7 fixtures + 3 JSDoc; docs pkg
+×3; mcp build/context messages; package-runner ×4; materialize
+×2). ADDITIONS the crew missed (all port-wave, none blocking):
+lib README:13, mcp README:53 + tools.md:300, lib/watch README:3 +
+index.ts:1 (watch-lib's new files, stale-on-arrival — watch-lib or
+port wave), symlink README:37, recipe README/TESTS.md,
+wait-ready.mjs + run-watch-session.mjs + setup/index.ts:157 +
+managed tsconfig comment + matrix README:14, unenumerated `[neo]`
+emitters (runtime/probe.ts, runtime/model-context.ts,
+bridge/probe.ts, lib/logging — untouched, colocated pins green).
+CORRECTION: "old shims keep working" is FALSE post-rebuild —
+stale `.bin/neo` execs deleted dist/bin/neo.js (MODULE_NOT_FOUND,
+verified); only unrebuilt trees keep working. `ref` shim works.
+
+(5) BEHAVIOR: PASS. Diff is strings/paths/symbol-renames only;
+behavioral proof is units + CLI lifecycle legs + T1 e2e, all green.
+
+Report-accuracy flags (prose, not code — no HOLD): (a) re-pins
+undercount, (b) 7 not 8 calls, (c) 383 not 385 dist files (sibling
+drift), (d) resync restores **5** entries here (react/styled/
+system/tmp/types) vs claimed 6 — unexplained, non-gating, T1 green,
+(e) stale-shim claim false (above), (f) footprint omits the
+watch.ts shared-file overlap.
+
+LANDING (captain): rename commit = footprint above with watch.ts
+LINE-split — rename takes line 2 (`ref sync --watch`) + the six
+`[ref]` print lines; watch-lib keeps line 5 (lives-in-lib/watch
+comment) + line 11 (`../lib/watch` import). Lines 2/5 are
+hunk-adjacent: stage line-granular, not hunk-granular. Known
+breakage without the port wave: lib sync/dev (hard), matrix
+`pnpm exec neo` (fresh install / rebuilt dist), docs + fixture
+scripts, pipeline default, mcp message. Sequencing (fold
+mechanical re-points into the cutover vs separate port wave) is
+the captain's call — the arc itself is exactly to brief. LAND.
+
+## Landing note — rename/watch line-split, one redo (2026-09-23)
+
+cli/watch.ts held both arcs' bytes interwoven in ONE hunk.
+First split attempt dropped hunk-1's [ref] console pairs
+(filter bug — kept only one pair); caught by remainder
+inspection BEFORE anything built on it (mixed-prefix HEAD
+would have been red). Reset the unpushed commit (worktree
+untouched, S4 running unaffected), re-split correctly
+(rename = all neo→ref pairs; watch = import + comment),
+landed both green. History clean; gates ran on the
+byte-identical worktree throughout.
+
+## Push tick — S4 building hard, no action (2026-09-23)
+
+Sole crew S4-assembly (119, running) producing to spec:
+system/base streams work + differential corpus + legs in
+tree, no report yet. Deadlock test negative. Flag for S4's
+future verifier (not an intervention): `sync/sync.test.ts`
++ `NEO-SYNC-03 portable.spec.ts` are modified though the
+brief scoped system/base/* + packager/types.ts — judge
+whether pin updates or scope drift. No oracle word → no
+dispatches, no landings.
+
+## Tick — S4 sole crew, still building, no action (2026-09-23)
+
+- Objectives: VOYAGE 1-3 COMPLETE; 4/5 in LANDING.md (IN
+  PROGRESS, untouched). Active: overnight program (18
+  commits banked).
+- Live: S4-assembly only (119, running). 18 files in flight,
+  all its arc. No pings. Deadlock test negative.
+- Advance: no oracle word since the rename/watch landings —
+  no commits, no dispatches (S4 verifier goes on its report).
+  No park ordered; HQ quiet till 11.
+
+## WAVE6-SEAM-S4 — D17 assembly slice (implementer, 2026-09-23) — REPORT, not landed
+
+Scope: S4 per WAVE5-PAYLOAD-SHAPE §1/§3/§5 (S4 AMENDED),
+S2+S3 landed (`a9ae5c72a`, `15437c9bf`). Governing skill
+`agent-neo` loaded first. NEVER committed; report only.
+
+### What changed (18 files: 4 new, 14 modified)
+
+NEW `system/base/streams.ts` (172 lines): `StreamUpstream`,
+`MergedSheets`, `mergeStreams` per §3 signature. Ported-1:1
+semantics: statement-first with first-occurrence dedupe and
+self-last, upstream entries reprinted portable with reset
+dropped, own block verbatim in both token variants with own
+reset riding, diamond blocks repeating identical bytes,
+empty merge returning the own S1 reprints with no statement,
+usable = `streams != null && length > 0`. ONE call returns
+all three sheets; statement computes once. Includes the
+byte-exact `wrap_package_layer` + `escape_css_selector`
+ports (leading-digit/dash hex with terminating space,
+control-char hex, ident-body passthrough, else backslash).
+
+NEW `system/base/streams-corpus.ts` (362 lines): the
+persisted streams goldens. Hand-written packed literals stay
+the single truth; entries derive through a fail-loud
+top-level splitter (unknown chunks throw — the S3 fixture
+precedent, in-tree). Stripped variants stay hand-written:
+they are expected merge outputs, never derivations.
+
+NEW `system/base/streams.test.ts` (port battery: statement,
+reset, scoping, assemblies, published payload, wrap) +
+`streams-differential.test.ts` (reprint pins + oracle
+differential + the transitive-divergence demonstration).
+
+Legs: `types.ts` BaseSystem + BaseAssemblyInput `css→streams`
+(S3's `SystemStreams` verified field-identical to the
+contracts mirror first — 9 keys both homes — and UNTOUCHED);
+`assemble.ts` R7 passthrough; `validate.ts` R2 presence triad
+(`Array.isArray && length > 0`, message kept, "css"→"streams",
++ empty-array rejection test); `sources.ts` R8 `.d.mts` text
+(full `SystemStreams` interface + `streams?`, goldens
+updated); `packager/types.ts` R6 `PublishInput.streams?`
+(optional — S5 requires when sync fills it); `index.ts`
+barrel += `SystemStreams`/`mergeStreams`/`MergedSheets`/
+`StreamUpstream`.
+
+FORCED companions (beyond the brief's scope shorthand —
+each required by the hard cut or the zero-readers sweep):
+`packager/system.ts` R6 projection (`streams:
+input.streams`; without it the tree is tsc-red —
+`assembleBaseSystem` no longer takes `css`);
+`src/sync/sync.test.ts` (baseSystem css asserts → cut pins);
+`NEO-SYNC-03/specs/portable.spec.ts` (same + `.d.mts`
+streams asserts); `NEO-LAYER-02/specs/packages.spec.ts` +
+`world/src/app.ts` (the world fetched baseSystem.mjs and
+read `.css` to feed its consumer iframe — moved to
+streams-first reprint with a loud transient skip; spec pins
+the cut and returns before the iframe probes with a
+fail-loud S5 handoff).
+
+UNTOUCHED per brief: `packed-css.ts` + test (the oracle),
+`sync/index.ts` wrapper (R1), `runtime/recipe/recipe.ts`.
+Verified zero diff on all four paths.
+
+### Two canonicalization deltas the differential found
+
+The oracle and the merge agree byte-exact on wrapped
+depth-1 chains ONLY. Transitive chains diverge by exactly
+the upstream inner-statement lines (packed retains them
+verbatim; streams prints one statement — demonstrated
+byte-exact in the differential, streams-native goldens in
+the battery). Flat (unpackaged) upstreams diverge harder:
+packed's LEADING_STATEMENT misreads a flat payload's inner
+prelude as a transitive statement (inner layer names leak
+into the merged statement); streams uses entry names. Both
+are S5-canonical behavior, both documented in the tests;
+flat stays out of the differential with the reason stated.
+
+### S4 transients (all loud, all heal at S5)
+
+- Published baseSystem.mjs carries NO stylesheet yet
+  (sync still runs the packed merge; `PublishInput.streams`
+  unfilled). Pinned `!('css')` (permanent — css stays
+  dead) + `!('streams')` (S5 flips) in sync.test,
+  SYNC-03, LAYER-02.
+- Extends css-merge no-ops tree-wide (css-less BaseSystems
+  fail the oracle's `hasCss` filter). Fragment/roster
+  adoption unaffected. Matrix tiers with css-carrying
+  fixtures go transient-dark on upstream utilities —
+  S5's re-gate heals (no tier runs attempted; S5's proof).
+- LAYER-02's iframe probes wait for S5 carriage (spec
+  returns after the pins; the pin fails the moment
+  streams land, forcing the handoff).
+
+### Decisions locked (for the S5 brief + verifier)
+
+- Published own entry keeps `reset` (downstream drops at
+  print); only `tokens` is stripped. Pinned.
+- `.d.mts` mirrors the full 9-key interface (not a
+  published subset). Pinned in goldens + SYNC-03.
+- World reprint inlines the join WITHOUT the escape port
+  (escape-free name, mergeStreams owns the port). Noted
+  in the world.
+- `matrix/CHAIN_RULES.md` `baseSystem.css` mentions left
+  for the S5 surface-doc touch per spec §4.
+
+### Proof (all firsthand, this session)
+
+- Baseline before edits: 53 files / 354 tests green, tsc
+  green, `q` 0 errors / 17 warnings. After: 55 files /
+  397 tests green (+43: battery, differential, validate),
+  tsc green, `q` 0 errors / 17 warnings (byte-identical
+  warn set — zero in S4 files; scoped run over base/ +
+  packager: 0/0).
+- Differential green: 5 depth-1 chains × 2 assemblies +
+  empties, all `toBe`-equal to the oracle; 11 reprint
+  pins + 3 served pins.
+- Cases: SYNC-10/15/17 ok, SYNC-03 PASS, LAYER-01/02 PASS
+  (02 via the handoff), LAYER-03/05/06 PASS, CHAIN 6/6
+  PASS, SYNC-01/02/04/05/06/12 PASS, CLI-01/02 PASS.
+- Sweep: zero live `.css` readers off baseSystem outside
+  `packed-css.ts` (broad `\.css` regex over src, tests
+  incl. worlds, benchmark, playground, bin, tools +
+  targeted baseSystem/sys/input/upstream/entry patterns
+  over matrix). Survivors audited: oracle (3), recipe
+  style objects, react `css()` fn, `styles.css` paths,
+  absence-pins, CHAIN_RULES doc (S5's).
+- No-panda grep over all touched src: clean.
+
+## WAVE6-S4-VERIFY (verifier, 2026-09-23) — LAND
+
+Adversarial review of the WAVE6-SEAM-S4 arc (D17 assembly slice)
+against WAVE5-PAYLOAD-SHAPE §1/§3/§5 (S4 AMENDED). Thinking hat
+only — zero source edits, never committed. `agent-neo` loaded
+first. Tree quiet, S4 the sole arc (captain's tick corroborates);
+all gates below ran firsthand this session and every red would
+have been S4's. None found.
+
+### (1) mergeStreams signature EXACT + semantics 1:1 — PASS
+
+Signature byte-compared to §3 (modulo doc comments):
+`StreamUpstream{name,streams?}`, `MergedSheets{stylesheet,
+portableStylesheet,streams}`, `mergeStreams(upstreams:
+readonly StreamUpstream[], own: SystemStreams, selfName:
+string): MergedSheets`. All 7 rules tested, each run green:
+statement-first + first-occurrence dedupe + self-last incl.
+pathological self-extends (4 battery tests); upstream entries
+in order, reset dropped, blocks verbatim
+(preamble+global+tokensPortable+recipes+utilities,
+package-wrapped — NORMAL_GOLDEN `toBe`); own block last with
+own reset riding, normalizeCss:false → zero resets
+(NORESET_GOLDEN); diamond identical bytes (count 2, structural:
+reprint is a pure function of entry fields); no usable
+upstreams → own sheets byte-identical, no statement (empty AND
+ghost/blank `toBe` OWN_CSS); usable = `streams != null &&
+length > 0` (the hasCss-filter analog — the literal `streams
+!= null` phrase alone would wrongly print a self-statement for
+all-empty upstreams; the analog reading is the correct one and
+the empty test pins it); ONE call returns all three, statement
+once. `appendBlock` line-identical to the oracle;
+`collectEntryNames` mirrors the oracle shape with entry names
+per §1 rule 3.
+
+### (2) BaseSystem.css DELETED, streams in place — PASS, grep-proven
+
+`css?: string` over neo src/tests/benchmark/playground/bin/tools:
+sole hit `packed-css.ts:12` (PackedUpstream — the oracle, dies
+at S5). Zero survivors. BaseSystem + BaseAssemblyInput carry
+`streams?: SystemStreams[]` in spec §1 language. Receiver sweep
+`(baseSystem|sys|upstream|entry|input)?.css`: oracle (3) +
+recipe style-object (spec-exempt pre-CSS) + PRIM-10 react
+`css()` fn. Matrix + matrix/fixtures + mcp + lib + pipeline:
+only CHAIN_RULES.md prose (S5's surface-doc touch, deferred
+per spec §4).
+
+### (3) Legs R7/R8/R2/R6 — PASS (+ label flag)
+
+R7 assemble: one-line straight passthrough swap. R8 sources:
+emits the full 9-key SystemStreams + `streams?`, text
+field-matches types.ts (name/preamble required, rest optional),
+goldens updated, SYNC-03 pins the `.d.mts`. R2 validate:
+`Array.isArray && length > 0`, message kept with css→streams,
+shape-only (no parse, T16 tradition) + empty-array rejection
+test. R6 types: `PublishInput += streams?: SystemStreams[]`,
+string sheets stay; optional-transitional is the only
+green-tree choice while R1 still runs packed (S5 requires).
+R6 system.ts projection diff is exactly `css:→streams:` on the
+same call. FLAG (labels, not substance): the brief's "R2
+transitional recipe-call" names a call R2 does not contain —
+the transitional oracle call site is R1
+(sync/index.ts:92-93), verified byte-identical to HEAD, hence
+same args trivially.
+
+### (4) Differential genuine — PASS, ran green
+
+11 portable reprint pins + 3 served pins against HAND-WRITTEN
+literals; 5 depth-1 chains × 2 assemblies `toBe`-equal to the
+oracle; empties/ghost differential; transitive divergence
+demonstrated byte-exact with both goldens. Circularity audit:
+`packUpstream` derives oracle input via the empty merge, BUT
+the reprint pins first pin those reprints == hand-written
+literals, own-side strings are hand-written, and the merge
+comparison exercises genuinely independent paths (structural
+drop vs brace-match strip incl. nested @media, name-union vs
+regex induction). Corpus persists in-tree as streams-corpus.ts
+with a fail-loud splitter. The transitive + flat deltas are
+inherent to §1 rules 3-4 (single statement, entry names) —
+agreement there is impossible by construction, and the
+implementer documented rather than faked it. S5-canonical.
+
+### (5) Oracle + wrapper + recipe UNTOUCHED — PASS
+
+`git diff HEAD --quiet` silent on all four: packed-css.ts +
+test, sync/index.ts, runtime/recipe/recipe.ts. Byte-identical.
+
+### (6) SCOPE FLAG — PASS (pin-updates-necessary, not drift)
+
+Every beyond-shorthand file is forced by the hard cut, minimal,
+and loud: sync.test.ts (old asserts read the deleted `.css` →
+red without the update; new pins `!css` permanent + `!streams`
+S5-flips); portable.spec.ts (same + ADDS R8 `.d.mts` streams
+pins — in-scope proof); LAYER-02 spec+world (world
+runtime-read `.css` → case red without the move; streams-first
+reprint + transient skip + early return behind a handoff pin
+that fails the moment carriage lands); packager/system.ts
+(tree tsc-red without it). No new behavior, no unrelated
+edits. The parked LAYER-02 iframe probes are the spec'd S4
+transient (S4 publishes no carriage by §5), pinned loud.
+
+### (7) wrap + escape ports byte-exact vs RS — PASS
+
+Line-by-line vs `layers/mod.rs:20-31` + `escape.rs:148-173`:
+rule order, lowercase hex + terminating space, Cc two-run
+control def (complete — Unicode Cc is exactly those runs),
+ident-body, astral takes, empty-stays-flat, `@layer … {\n…}\n`
+framing. Live probe (`/tmp/s4v-escape.mjs`, out of tree) 6/6
+vs RS-derived vectors incl. the control-char branch the
+battery skips (`\r`→`\d `, leading `--`, `é`, `2xl`, takes,
+plain). Observation (non-blocking): battery skips
+control/astral wrap — covered externally here; S5 may fold a
+vector in.
+
+### (8) No other files touched — PASS
+
+Working tree is exactly the claimed 18 (14 modified + 4 new
+neo files) + LOG-2.md (report filing) + LOG.md (captain
+ticks) + PLAN.md (captain/HQ plan prose — S4 mentions are
+sequencing notes only, verified by diff).
+
+### Gates (firsthand)
+
+Full neo units 55 files / 397 pass (+43 = 23 battery + 19
+differential + 1 validate, exact); `q` 0 errors / 17 warns,
+zero in S4 files (sync.test.ts warn predates: 494 lines at
+HEAD); SYNC-10/15/17 PASS, SYNC-03 PASS, LAYER-02 PASS (each
+run typechecks — tsc green); sweep zero live readers outside
+the oracle.
+
+### S5 handoffs (findings, not holds)
+
+F1: brief label slip R2→R1 (§3 above). F2: transitive/flat
+canonical deltas — tier re-gate is the proof. F3: `.d.mts`
+carries the full 9-key interface incl. served-only `tokens?`
+(type-level; §3-conformant — S5 may narrow). F4: degenerate
+all-empty entry prints a statement where the oracle filters —
+out-of-contract input, no action. F5: LAYER-02 probes parked
+to S5, pinned loud. F6: published own entry keeps `reset`
+(downstream drops at print) — locked + pinned, keep.
+
+WAVE6-S4-VERIFY: LAND. Report, don't land — captain commits.
+
+## WAVE7-CLI-RESTYLE (implementer, 2026-09-23) — REPORT, not landed
+
+Brief: restyle the `ref sync` success print to the PLAN.md §3.12
+output contract (HQ verbatim shape): ONE minimal line — `⎔ ref
+sync ⫶ 100 ms ⫶ 1.0 MB` — glyph + command + stats, nicely
+coloured, separators in a darker muted tone (never bright).
+Errors stay loud with full cause. Scope: `src/cli/output.ts` +
+minimal call-site adaptation in `src/cli/*` + NEO-CLI-01/02 spec
+pin updates. Nothing else. Never commit. Report, don't land.
+
+### What changed (6 files, all in scope)
+
+- `src/cli/output.ts` (rewrite, 89 +/-): owns the success
+  shape now — `formatSyncLine(elapsedMs, bytes)` (pure, pinned
+  verbatim), `outDirSizeBytes(outDir)` (regular-files walk,
+  missing/unreadable dir → 0, links never followed so no loop),
+  `printSyncLine(elapsedMs, outDir)` (measure + log). Colors:
+  glyph cyan, `ref sync` bold, stats green, `⫶` separators faint
+  (SGR 2 — darker muted, never bright). Enable rule: TTY-only;
+  FORCE_COLOR (non-empty, non-`0`) forces on; NO_COLOR
+  (present, non-empty) always wins; piped runs stay plain.
+  USAGE / messageOf / printUsageError byte-identical.
+- `src/cli/sync.ts` (2 lines): one-shot success print routes
+  through `printSyncLine`. Error lines untouched.
+- `src/cli/watch.ts` (2 lines): watch-boot baseline sync print
+  routes through `printSyncLine`. Watching / change / resync /
+  error lines untouched.
+- `src/cli/output.test.ts` (new, 6 tests): verbatim plain pin
+  (`⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB`), B/KB sizing pins, verbatim
+  full-ANSI pin incl. faint separators, NO_COLOR-beats-FORCE
+  pin, size-walk pin (nested sum + missing dir → 0),
+  single-console.log pin.
+- NEO-CLI-02 `specs/watch-flag.spec.ts` (re-pin, boot leg):
+  OLD `watch.output().includes('[ref] sync ')` → NEW
+  `SYNC_LINE_RE.test(stripAnsiSpans(watch.output()))` where
+  `SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/`.
+  Message text kept (`watch boot prints the baseline sync
+  line`). `watching <dir>` / `change` / `resync` pins untouched.
+- NEO-CLI-01 `specs/lifecycle.spec.ts` (ADDED pin, no old —
+  the spec previously ignored sync stdout): `proveIdempotent-
+  Resync` now captures the one-shot output and asserts some
+  line carries the §3.12 shape (`carriesSyncLine`). Contains-
+  pin, not whole-output equality: the background tasty phase
+  may land its own stdout lines alongside on a slow exit
+  (observed live this session — `reference/bridge` chatter,
+  out of scope, untouched).
+
+Deliberately NOT changed (all byte-identical, all deliberate):
+error lines (`sync/watch/clean failed`, `watch error` — "stay
+loud" = stay), `clean` success lines (`clean removed`,
+`nothing to remove`), resync/watching/change lines,
+`bin/ref.ts`, Commander wiring. `bin/ref.test.ts` untouched —
+its 7 pins hold as-is. Case READMEs untouched (CLI-02 README
+still shows pre-rename `[neo]` strings — pre-existing
+staleness, out of scope, flagged not fixed). No-panda grep
+over all 6 touched files: clean.
+
+### Proof (all firsthand, this session)
+
+- Full Neo units (`vitest run`): **56 files / 403 passed**
+  (baseline 55/397; +1 file +6 tests = output.test.ts).
+- `pnpm agentneo q` whole package: **0 errors, 17 warnings,
+  238 files** — warn count identical to the pre-change tree
+  (17/237); scoped run over my 6 files: **0/0**. One
+  self-caught `noImplicitAnyLet` fixed before proof (typed
+  `Dirent[]`, no suppression).
+- `pnpm agentneo run NEO-CLI-01` → **PASS** (new one-shot
+  shape pin green). `pnpm agentneo run NEO-CLI-02` → **PASS**
+  (re-pinned boot pin green).
+- T1 tier (`matrix/tests/chain/T1`): `ref sync` exit 0, new
+  line live, all four scope links land;
+  `pnpm agent playwright --dir matrix/tests/chain/T1
+  --no-build` → **7 passed (0 failed)**.
+- Byte check (`od -tx1`): glyph `e2 8e 94` = U+2394, separators
+  `e2 ab b6` = U+2AF6 — verbatim per the contract.
+- Captured-ANSI sample (real bin, `FORCE_COLOR=1`, `cat -v`):
+  `^[[36m⎔^[[0m ^[[1mref sync^[[0m ^[[2m⫶^[[0m
+  ^[[32m114 ms^[[0m ^[[2m⫶^[[0m ^[[32m1.4 MB^[[0m`
+  Plain (piped): `⎔ ref sync ⫶ 105 ms ⫶ 1.4 MB`
+- Footprint: exactly the 6 scope files; the other tree deltas
+  (PLAN.md, packager, system/base, LAYER-02, SYNC-03, LOGs) are
+  siblings' — verified via `git status` before and after. No
+  commits. No foreign gate reds encountered.
+
+## WAVE7-RESTYLE-VERIFY (verifier, 2026-09-23) — LAND
+
+Scope: the 6-file restyle above vs PLAN.md §3.12 one-line contract
+(`⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB`, coloured, separators muted-never-bright,
+errors loud). No source edits. Siblings share this tree mid-flight —
+their deltas attributed, untouched.
+
+### (1) Output EXACT — PASS, probed firsthand
+
+- Piped plain via real `formatSyncLine(100, 1048576)`, `od -tx1`:
+  `e2 8e 94` (U+2394) + `e2 ab b6` (U+2AF6) ×2, zero ESC bytes —
+  byte-identical to the §3.12 shape.
+- `FORCE_COLOR=1`, `cat -v`: `^[[36m⎔^[[0m ^[[1mref
+  sync^[[0m ^[[2m⫶^[[0m ^[[32m100 ms^[[0m ^[[2m⫶^[[0m
+  ^[[32m1.0 MB^[[0m` — glyph cyan, command bold, stats green,
+  separators SGR-faint. Source constants are 0/1/2/32/36 only —
+  no bright range (90–97) exists in the file.
+
+### (2) Color discipline — PASS, all four firsthand
+
+Piped no-env → plain; `FORCE_COLOR=1` → coloured;
+`NO_COLOR=1`+`FORCE_COLOR=1` → plain (NO_COLOR wins);
+pty (`script -q /dev/null`, no env) → coloured (TTY-only).
+Bonus: `FORCE_COLOR=0` piped → plain (correct fall-through).
+
+### (3) Loud/quiet lines byte-identical — PASS
+
+`git diff HEAD` over clean.ts, cli/index.ts, bin/, cli README:
+0 bytes. sync.ts/watch.ts diffs touch ONLY the success line +
+import. All 9 loud lines (`sync failed` ×2, `clean` ×3, `watching`,
+`resync`, `watch error`, `watch failed`) present verbatim.
+`bin/ref.test.ts` untouched — its 7 pins (usage/clean/failures)
+never pinned the old success shape.
+
+### (4) Re-pins deliberate, no casualties — PASS
+
+CLI-02: OLD `includes('[ref] sync ')` → NEW `SYNC_LINE_RE` over
+ANSI-stripped output, message text kept — matches the report.
+CLI-01: ADDED contains-pin (old code ignored sync stdout; verified
+in diff — no old to document). `output.test.ts`: 6 new verbatim
+pins. Sweep: new glyphs live in exactly 4 files (output.ts,
+output.test.ts, 2 specs); zero old-shape (`Nms`, `ms →`,
+`[ref] sync `) pins remain anywhere in the package.
+
+### (5) Thinness law — PASS
+
+output.ts owns printing + printing-support measurement only.
+`sync()` returns `{outDir, spec}` — no byte count — so the
+regular-files walk is the minimal way to produce the MB stat;
+it is none of the MUST-NOT items (link list, wipe, tasty drain,
+compile/publish/link). No logic crept into cli/.
+
+### (6) Scope — PASS
+
+Exactly 6 files: output.ts, sync.ts, watch.ts, output.test.ts
+(new), CLI-01/02 specs. All other tree deltas (PLAN.md,
+reference-rs ×4, LOG.md, sibling untracked files) are siblings'.
+
+### Gates (firsthand, this session)
+
+- Full units (`vitest run`): **56 files / 403 passed** — matches
+  the report exactly (baseline 55/397 + output.test.ts).
+- `pnpm agentneo q` scoped over all 6 restyle files: **0/0**.
+- Whole-package q: 1 error + 18 warns + 239 files — delta vs the
+  report is **entirely sibling W3's**: untracked
+  `src/native/generated/primitives/primitives.d.ts` (error:
+  `noShadowRestrictedNames` :204; 18th warn: `noUnusedImports`
+  :18) + `vocabulary.json` + `tools/vendor-rust-primitives.mjs`,
+  all landed mid-flight (absent from `git status` at session
+  start). Zero warns/errors touch `src/cli` or `tests/cases/cli`.
+- `pnpm agentneo run NEO-CLI-01` → **PASS**;
+  `pnpm agentneo run NEO-CLI-02` → **PASS**.
+- T1 (`pnpm agent playwright --dir matrix/tests/chain/T1
+  --no-build`) → **7 passed (0 failed)**.
+
+### Verdict: LAND
+
+The restyle is exact, disciplined, thin, and in scope with all
+its gates green. The whole-package q red is a sibling in-flight
+artifact, precisely attributed — not this wave's. Never committed.
+
+## Flag for W3's verifier — quality runner over fail line (2026-09-23)
+
+W3's vendor-tier wiring (+29 lines) pushed
+`tools/quality/run.ts` 487 → 516 lines (q FAILS above 500).
+The wiring is legitimate (NIGHT-4's freshness hole), but W3
+cannot land while the gate it extends is red on its own file:
+split run.ts or slim the tier before landing. W3's verifier:
+HOLD unless resolved. Restyle landed around it (scoped proof
+green; q-red provably not its arc).
+
+## WAVE7-TYPEDEFS-W3 (implementer, 2026-09-23) — DONE
+
+Scope: NIGHT-5 wave W3 (vendor tool) per `## NIGHT-5` §4,
+AS AMENDED (W1 commit `b9a7a67c4` + W2 commit `66a09ef41`
+LANDED — built on the landed tree; HQ Finals: Rank-1 SPLIT,
+emit 101, namespace law, consume home
+`native/generated/primitives/`). The tool + generated-target +
+wiring ONLY. Governing skill `agent-rs` loaded first (entry
+wiring lives RS-side); `agent-neo` gate section read for the
+q-tier contract. Never committed; report only. S4 + CLI-rest
+landed mid-flight (`c20e1e021`, `4a414cd41`), disjoint from
+every W3 file — no interference, no attribution owed.
+
+### Dispositions (spec-exact)
+
+- E1 + E4 vendored as committed copies (§3/§4 W3: "E1
+  byte-exact + E4 closure"). E1 carries exactly 101, no
+  `deferred` key anywhere (namespace law, verified in the
+  vendored bytes).
+- E2 ships LIVE through the wired `@reference-ui/rust/
+  primitives` entry (§3 LIVE row: "no committed copy") —
+  vendoring E2 verbatim would ship dangling `../js/*.ts`
+  imports, and copying the trio would re-create the
+  hand-mirror disease. The dist bundle carries the trio.
+- E3: NO reference file — NIGHT-5 §1 specs none (E3 = RS
+  home + RS vitest + Neo station through the bound roster).
+- Target `src/native/generated/primitives/` (HQ Final; the
+  `vendor/` path is dead — zero `vendor/` strings in W3
+  files except the inherited contract name).
+
+### What changed
+
+NEW `tools/vendor-rust-primitives.mjs` (tasty-vendor
+contract, adapted): reads E1/E4 from the linked package's
+committed `modules/primitives/generated/`, writes the shelf
+in place (E1 byte-exact, E4 closure with header + the same
+FROM/IMPORT NodeNext rewrite — a no-op today, kept for the
+first relative edge), sweeps payloads the fresh set drops,
+`--check` prints `missing:`/`stale:`/`extra:` + regen and
+exits 1. The authored shelf README is not a payload and is
+never touched.
+NEW shelf payloads `vocabulary.json` + `primitives.d.ts`
+(landed by the tool, not by hand). Shelf README rewritten
+(prose, no filename tables — the placeholder's "no RS
+emitter exists" is now false).
+Entry point (RS): `package.json` `./primitives` export +
+`files` pair; `tsup.config.ts` entry (E2 bundles the trio,
+`external: ['react']` — no other entry imports react,
+proven by grep, so the flag is a no-op elsewhere);
+`tsconfig.build.json` includes E4 (tsc parses it, emits
+nothing for `.d.ts` inputs); `create-dts-entrypoints.mjs`
+carries E4 into dist by copy (new, commented) + the stub
+in the namer NodeNext form.
+q wiring (Neo): NEW `tools/quality/vendor.ts` tier —
+`--check` first and always (scoped or not), drift maps to
+`neo/vendor-fresh` errors naming the file; `run.ts` +3
+lines (import + call + comment); `tips.ts` +1 tip;
+`biome.json` +1 override (E4's honest `Map` shadow, the
+documented `react-surface.d.ts` precedent); both READMEs
+document the tier. `tools/README.md` gains the vendor
+section + the 5-step release checklist (generator →
+dist → vendor → `--check` → q, in order, none optional).
+CI: NEW `.github/workflows/neo-vendor.yml` (install +
+`--check`, paths-triggered; no Rust toolchain — the tool
+reads committed sources, needs no build, no network).
+
+### Deliberate adaptations of §3 (2, reasoned)
+
+A1. The tool reads E1/E4 from the linked package's
+committed module sources, NOT from dist. E1/E4 are
+checked-in generator outputs, not dist-only build
+products like tasty's closure (JSON is never emitted;
+E4 reaches dist only via the stub chain). Freshness
+layer (i) compares vendored-vs-committed-source; a dist
+round-trip would add build latency and flake with zero
+added signal. B. The printed regen command is `run
+primitives && vendor` with NO `build` step — the build
+serves the live E2 entry (wired here, consumed at W4),
+not vendor freshness.
+
+### Proof (all firsthand, this session)
+
+- Vendor run: `Vendored 2 primitives files
+  (@reference-ui/rust@0.0.42, 0 specifiers)`; E1 `cmp`
+  byte-exact vs the module source; E4 body byte-identical
+  past the 8-line header; README untouched by the run.
+- `--check` green after the run; negatives all exit 1
+  with the drift line + regen command: appended byte →
+  `stale:`; hidden E4 → `missing:`; planted
+  `linger.d.ts` → `extra:`; re-vendor heals all three
+  and sweeps the linger. Vendor run 3× + `sha256sum -c`
+  clean (deterministic, README included).
+- Entry: `build:js` exit 0; `dist/primitives.mjs`
+  (28.9 KB, trio bundled, `from "react"` external) +
+  stub + E4 copy (`cmp` identical); all other dist
+  files byte-identical vs the pre-build snapshot (112
+  hashed, 3 new, 0 removed, 0 changed). Live probe
+  through the real export map: 108 exports, roster
+  101 set-equal E1 (missing [] extra []), unbound
+  throws `/configurePrimitives/`, bound renders
+  `<div class="ref-div c" data-layer="L" id="y">hi</div>`,
+  101-key roster. Types probe: `./primitives` resolves
+  through stub → E4 copy, `PrimitiveTag`/`DivProps`
+  usable (`TYPES-ENTRY-OK` under real-config parity).
+- q: scoped W3 files → 0 errors (7 non-failing warns:
+  4 pre-existing run.ts/prose, 2 tasty-identical tool
+  shapes outside default targets, 1 E4 `noUnusedImports`
+  carried from W1's emit — the shelf is never hand-fixed).
+  Full default q → **0 errors, 18 warnings, 240 files**
+  (baseline 17 + the 1 carried E4 warn; S4-landed tree).
+  Drift injection → q exits 1 with the `neo/vendor-fresh`
+  error naming the file; re-vendor heals.
+- `pnpm agentrs q` on the touched RS files → ALL PASSED
+  (0 violations). `reference-types.test.ts` 12/12 green;
+  `modules/primitives/tests/vocabulary.test.ts` green
+  (PRIMGEN byte-pins hold — nothing RS-side regressed).
+
+### Sibling flag ANSWERED (run.ts 516 — MOOT)
+
+The CLI-rest flag below is resolved, not pending: the
+tier left `run.ts` for its own leaf module
+(`tools/quality/vendor.ts`, zero cycles — it owns its
+spawn, `files.ts` stays read-only). `run.ts` reads 490
+lines (warn, was already 486-warn before W3); the full
+q above (0 errors) ran after the split. No HOLD reason
+remains in W3 scope.
+
+### Findings for W4 (out of scope, flagged)
+
+- W3-F1: E4 declares no `configurePrimitives` type
+  though E2 exports the seam value — W4 calls it from
+  TS and needs the type from an E4 amendment or a local
+  declaration. Surfaced by the types probe (value entry
+  proven; seam type absent by spec, not by bug).
+- W3-F2: `react` stays devDep-only in `@reference-ui/
+  rust`; the dist entry imports it external. In-workspace
+  resolution holds (proven); the published peer-shape is
+  W4/release's call.
+- W3-F3 (not mine, stays open): tasty `--check` passes
+  (38 files, fresh) but remains unwired to q/CI —
+  NIGHT-4's hole persists for tasty. Untouched per scope.
+
+Footprint (10 modified + 5 new, zero else): M shelf
+README, tools/README, quality/README, biome.json, run.ts,
+tips.ts, RS package.json, tsup.config.ts,
+tsconfig.build.json, create-dts-entrypoints.mjs; NEW
+vendor tool, vendor.ts, vocabulary.json, primitives.d.ts,
+neo-vendor.yml. Index untouched by W3 hands; NOTHING
+committed.
+
+## Push tick — S5 cutting over, W3 under review, no action (2026-09-23)
+
+Two crews out: S5-cutover (running, tree hot with the swap)
+and W3-verify (reviewing, HOLD-conditioned on the runner
+breach). No new oracle word since the restyle landing (20
+commits banked). Deadlock test negative. Nothing to dispatch
+(S4-verify's followers all sent) or land (both arcs
+unverified). W3's runner-breach flag stands.
+
+## WAVE7-W3-VERIFY (verifier, 2026-09-23) — LAND
+
+Scope (strict): thinking hat, zero source edits. Adversarial
+review of `## WAVE7-TYPEDEFS-W3` (vendor-rust-primitives.mjs
+→ native/generated/primitives/, --check, freshness wiring)
+against NIGHT-5 §1/§4 as amended (W1 `b9a7a67c4` + W2
+`66a09ef41` landed; HQ Finals: Rank-1 SPLIT, emit 101,
+namespace law, consume home `native/generated/primitives/`).
+S5 shared the tree mid-flight (sync/packager/streams,
+disjoint) and wrote DURING this review — every S5 byte
+attributed below, nothing S5 touched. Never committed.
+
+### (0) HOLD condition — RESOLVED, verified firsthand
+
+`tools/quality/run.ts` reads **489 lines** (`wc -l`; the
+gate counts 490 — warn-only either way), HEAD was 486, W3
+adds exactly +3 (import + call + comment, diff-verified).
+The vendor tier lives in its own leaf module
+`tools/quality/vendor.ts` (54 lines, zero cycles — owns its
+spawn, `files.ts` untouched). Full q shows run.ts as
+`neo/file-lines` **warn**, never error. The 516-line breach
+is gone with no exception and no allowlist. No HOLD remains.
+
+### (1) E1 — byte-exact, 101, no deferred (all firsthand)
+
+- `cmp` vendored `vocabulary.json` vs
+  `reference-rs/modules/primitives/generated/vocabulary.json`
+  → identical (re-verified AFTER S5's churn + my own
+  negatives/heals: `FINAL-E1-EXACT`).
+- `elements` = 101, sorted by jsx; top-level keys
+  `version,elements,stylePropNames,conditions,conditionRule,
+  aliases,reserved,elementOverrides` — **no `deferred`**.
+- Linked RS resolves to the workspace package (not a
+  registry copy), so "vendored vs committed source" is the
+  honest comparison.
+
+### (2) E4 closure — tasty-identical (mechanically diffed)
+
+- Normalized diff of `specifiersIn` / `collectClosure` /
+  `rewriteSpecifier` / `rewriteText` / `headerFor` between
+  `vendor-rust-tasty-dts.mjs` and the new tool:
+  `specifiersIn` + `rewriteText` IDENTICAL; `collectClosure`
+  differs only in seed (`TOPS`×3 vs `E4_TOP`×1 — expected)
+  and error-wording ("dist shape" vs "shape");
+  `rewriteSpecifier` differs only in error wording;
+  `headerFor` differs only in provenance prose (dist output
+  vs generator output — the reasoned A1 adaptation). The
+  rewrite LOGIC is tasty-identical.
+- E4 body byte-identical past the 8-line header (`tail -n +9
+  | cmp` clean); header stamps `@reference-ui/rust@0.0.42`
+  = live RS version. All E4 specifiers today are externals
+  (`react`, `@reference-ui/styled`) — the 0-rewrite run
+  (`0 specifiers`) is correct, and the rewrite stands ready
+  for the first relative edge. Closure seed is the single
+  E4 top; no `index.d.ts` fallback exists to misfire.
+
+### (3) --check semantics — all three negatives firsthand
+
+- Clean tree: `Vendored primitives are fresh
+  (@reference-ui/rust@0.0.42, 2 files).`, exit 0.
+- Appended byte → `stale:
+  src/native/generated/primitives/vocabulary.json`, exit 1.
+- Hidden E4 → `missing: .../primitives.d.ts`, exit 1.
+- Planted `linger.d.ts` → `extra: .../linger.d.ts`, exit 1.
+- Every drift block prints the literal prefix + the regen
+  command. Re-vendor heals all three, sweeps the linger,
+  and `cmp` vs pre-test backups is exact. Shelf `ls` after
+  heal: exactly `primitives.d.ts + README.md +
+  vocabulary.json` — E2 correctly NOT vendored (live entry),
+  README never touched, zero `vendor/` strings in W3 files.
+
+### (4) Freshness wiring — proven to fire
+
+- `run.ts` +3 calls `vendorTier()` first and always (scoped
+  or not); `tips.ts` carries `neo/vendor-fresh`; quality
+  README documents the tier; tools README carries the vendor
+  section + the 5-step release checklist in order, none
+  optional; `biome.json` +1 override (E4's honest `Map`
+  shadow, same contract as the `react-surface.d.ts`
+  precedent); CI `.github/workflows/neo-vendor.yml` is valid
+  YAML (parsed: 1 job, final step `--check` from the Neo
+  dir, paths-triggered, no Rust toolchain — correct, the
+  tool reads committed sources).
+- Scoped `pnpm agentneo q` on W3 files → 0 errors (2
+  non-failing warns: tool complexity/params, tasty-identical
+  shapes). Drift injection → q exits 1 with
+  `neo/vendor-fresh: stale vendored file
+  (src/native/generated/primitives/vocabulary.json)` naming
+  the file + the re-run tip; re-vendor heals. The tier
+  executes; the gate fails loudly.
+
+### (5) Scope — tool + target + wiring ONLY
+
+Footprint confirmed firsthand, exactly 10 modified + 5 new:
+M shelf README, tools/README, quality/README, biome.json,
+run.ts, tips.ts, RS package.json (`./primitives` export +
+`files` pair), tsup.config.ts (E2 entry + `react` external),
+tsconfig.build.json (E4 include — tsc parses, emits nothing),
+create-dts-entrypoints.mjs (E4 copy + NodeNext stub in the
+namer form; stub target `./modules/primitives/generated/
+primitives.js` resolves the copied `.d.ts` per the namer
+precedent); NEW vendor tool, vendor.ts, vocabulary.json,
+primitives.d.ts, neo-vendor.yml. No E2 copy, no E3 file
+(§1 specs none — correct), no per-record extras.
+
+### (6) Units + gates
+
+- `reference-types.test.ts` 12/12 green (Neo vitest, direct).
+- `modules/primitives/tests/vocabulary.test.ts` 5/5 green
+  (`pnpm agentrs v` — PRIMGEN byte-pins hold).
+- `pnpm agentrs q` on the touched RS files → ALL PASSED.
+- Full `pnpm agentneo q` → **2 errors — ALL S5, zero W3**
+  (precise attribution): `src/sync/index.ts:149` TS2339
+  (`config.layers`) and the streams-goldens test TS2307
+  (`../../sync/packed-css.ts`) trace to S5's in-flight
+  swap observed DURING this review (`D
+  src/sync/packed-css.ts`, `D packed-css.test.ts`, `M
+  src/sync/index.ts`, streams rename, collect edits —
+  `git status` before/after). S5 files are disjoint from
+  every W3 path; W3-scoped q stays 0 errors. Out of scope,
+  untouched, flagged for the captain — NOT a W3 HOLD.
+
+### Findings inherited (unchanged, still out of scope)
+
+W3-F1 (E4 declares no `configurePrimitives` type — W4's
+call), W3-F2 (react devDep-only peer shape — W4/release),
+W3-F3 (tasty `--check` still unwired to q/CI — NIGHT-4's
+hole, not W3's to fill). Logged, not relitigated.
+
+Verdict: **LAND**. Every amended-spec clause verified
+firsthand; the runner-breach HOLD is resolved by the leaf
+split; the only red on the board is S5's mid-flight swap,
+precisely attributed and disjoint. Report only — nothing
+committed, index untouched by these hands.
+
+## Tick — W3 LANDED (d575c7be6, 21st commit), S5 sole crew cutting over
+W3-verifier filed LAND with the runner HOLD resolved (run.ts 489 + vendor.ts leaf, diff-verified +3); captain landed firsthand after confirming --check clean, W3-scoped q 0 errors, RS q PASSED, units 383/383 (the lone X2a miss was a flake: green in isolation + on full re-run), and full-tree q-red attributed to S5's in-flight sync.test.ts 501. Landing caught a stage leak — S5's `git mv` had staged its streams rename into the shared index and my `^M /^A` grep missed the `R` entry, so the first commit took 16 files; recovered via soft-reset (bad commit dangling, S5's worktree bytes proven intact, reland verified 15 files / zero S5 paths). STANDING LESSON: every future landing diffs `git diff --cached --stat` for the exact arc list before commit. Tree now holds only S5's cutover (sync/packager/streams/collect/config/cases/PLAN, packed-css deleted) + others' log bytes; S5 untouched and running, nothing else to dispatch until its report.
+
+## Tick (health-check) — S5 moving, sole crew, no action
+Roster 125 crews: 124 result_ready, only wave6-seam-s5/123 running. S5 liveness firsthand from read-only evidence: tree products minutes-fresh (00:13–00:16), cutover deep (packed-css deleted, sync/streams/collect/config/cases churning) plus the S5-time rename sweep sweeping `neo`→`ref` stragglers repo-wide (matrix fixtures, lib, icons, mcp — in-scope per brief R9/S5-amended, not drift). No S5 interim log note yet, but fresh in-scope products across the tree = moving, not stuck — no ping per §4. Peer session grassy-mirach shares the workspace but no unattributed bytes in the tree; nothing staged/committed this tick. Obj1/2/3 first lines COMPLETE (night waves are follow-on, banked separately — 21 commits); Obj4/5 live in LANDING.md, undispatched (HQ morning call). Next: S5 report → verifier → landing → pgen station + prose sweep. No deadlock, no dispatch, no commits.
+
+## Tick — S5 gating (quiet 9 min, products fresh), no action
+Roster unchanged: only wave6-seam-s5 running, no new reports filed. S5's tree products fresh to 00:16 (cutover + rename sweep, 54 entries), silent since — consistent with a long gate phase (T1-T13 + cases run writeless for stretches), and the deadlock bar needs no-log-AND-no-products while S5 holds 54 files of products. No ping, no intervention. W3 landing complete 14+ min ago with no active gates, so no mid-landing conflict — but nothing verified to land and nothing to dispatch until S5's report. Next: S5 report → verifier → landing → pgen station + prose sweep.
+
+## Tick — S5 in hermetic gates (Dagger live), no action
+Roster unchanged: only wave6-seam-s5 running, no new reports filed. S5 writeless since 00:16 (~29 min) but read-only process evidence is decisive: a Dagger session started 12:16AM has burned 6:37 CPU with active buildctl channels — S5 finished writing and launched the hermetic T1-T13 matrix, which runs writeless by nature. Exact correlation (writes stop = Dagger start) rules out stuck; no ping, no intervention. Tree steady at 54 entries, no commits since W3 (34 min), no mid-landing conflict. Nothing verified to land, nothing to dispatch until S5's report. Next: S5 report → verifier → landing → pgen station + prose sweep.
+
+## Tick (health-check) — S5 at gate tail, rotor-low, no action
+Roster: only wave6-seam-s5 running; peers unchanged (grassy-mirach shares workspace, no unattributed bytes). S5 writeless 32 min (tree steady 54) and Dagger channels draining (one dial-stdio gone, session CPU flat) — signature of a hermetic run finishing + results collation, not stuck. Interrupting now would kill ~30 min of completing T1-T13 proof for zero gain; asymmetry favors waiting one more tick. Revisit intervention only if next tick shows no report + no processes + no writes past ~50 min. Obj1/2/3 COMPLETE, night waves banked (21 commits, latest W3); Obj4/5 in LANDING.md undispatched (HQ morning call). No oracle word → no landings, no dispatches.
+
+## Tick — S5 alive: gate run #2 + editing again, no action
+Tripwire check passes clean: no S5 report yet, but a NEW Dagger session started 12:57AM (3 fresh channels) and lib/package.json written 01:04 — S5's first hermetic run finished, it is fixing fallout and re-gating. Healthy implement→gate→fix loop, not stuck; no ping, no intervention. Roster unchanged (S5 sole runner), tree steady 54, no commits since W3 (54 min), no mid-landing conflict. Nothing verified to land, nothing to dispatch until S5's report. Next: S5 report → verifier → landing → pgen station + prose sweep.
+
+## WAVE6-SEAM-S5 — D17 cutover (implementer, 2026-09-24) — REPORT, not landed
+
+Scope: S5 per WAVE5-PAYLOAD-SHAPE §2/§4/S5-amended +
+captain's payload rulings (hard cut; layers WIRED) + S4-verify
+F1–F6 handoffs. Governing skills `agent-neo` + `test-core`
+loaded first. NEVER committed; report only. S1–S4 landed;
+this is the cutover.
+
+### What changed (51 worktree entries: 24 S5 + 27 enabler)
+
+S5 core (10): `sync/index.ts` swaps the R1 transitional
+oracle call (F1: the brief's "R2" was a slip, the call is R1)
+for one `mergeStreams([...extends, ...layers], result.streams,
+spec.name)` + publishes `streams: merged.streams`; the
+`mergePublishedStylesheets` wrapper is deleted with it.
+DELETE `packed-css.ts` + `packed-css.test.ts` (492 lines gone —
+the ban's first deletion). `packager/types.ts` requires
+`PublishInput.streams` (S4's "then required" lands).
+Layers wiring (~15 lines): `config/types.ts` +=
+`layers?: BaseSystem[]`, `config/validate.ts` += the two
+layers legs, `system/base/validate.ts` widens
+`BaseSystemField` + `invalidBaseSystem` to
+`'extends' | 'layers'` — fragments (`evaluate.ts:131/:162`)
+and roster (`jsx.ts`, `ExtendsCarrier`) verified extends-only,
+untouched. LAYER-02 unparked (spec pins carriage + drops the
+early return so the iframe probes run; world skip → fail-loud
+throw). `matrix/CHAIN_RULES.md` surface-doc touch (`css` →
+`streams` across core model, rule 7, boundary table,
+transitivity rules; T8/H4 policy untouched).
+
+S5 forced companions (14, S4-verify-§6 class — each required
+by the hard cut, else the tree is red or lying):
+`streams-differential.test.ts` → `streams-goldens.test.ts`
+(oracle import/legs deleted with the oracle; 11 reprint pins +
+3 served pins + the streams-side transitive golden persist —
+19→13 tests); `sync.test.ts` + SYNC-03 pin flips (`!streams`
+→ carriage pins incl. tokens-stripped); `worker-phases.ts`
+R9 (bench worlds verified extends-free — zero `extends` hits
+in `benchmark/deepsee/` — so direct `[toPublishedEntry()]`
+projection, no merge reprint to pollute the measured publish
+phase; `toPublishedEntry` newly exported from `streams.ts`,
+barrel untouched); `crossings.test.ts` mock result += the
+REQUIRED 9-key `streams` (only red the cutover caused);
+`streams.ts`/`streams.test.ts`/`streams-corpus.ts` header +
+`packed`→`whole-string` wording (spec §5 vocabulary);
+`evaluate.ts:141` + both collect READMEs (deleted-module
+cites → streams merge); `config/validate.test.ts` drops
+`layers` from unknown-fields (it is known now — the old
+entry would throw); `system/base/validate.test.ts` +=
+layers accept/reject (+2 tests).
+
+ENABLER — rename/rearch fallout, NOT S5 (27 files, land
+separately; captain's tick pre-approves as in-scope-per-brief,
+filed apart anyway): matrix was red at HEAD — NOBODY had run
+it since the rename (S4 attempted no tier runs). `neo` binary
+dead (`bin/neo.ts` deleted, `dist/bin/neo.js` gone, only
+stale `.bin/neo` shims → MODULE_NOT_FOUND): `lib`
+package.json (2 lines), icons `build.mjs:27`, pipeline
+`package-runner.ts:66` + `run-watch-session.mjs:18` +
+managed template + its test, 7 fixture + 12 tier/mcp
+package.jsons — all mechanical `neo`→`ref`. Plus mcp's
+rearch rot: tsup `neo-author` entry + `author-entry.ts:30`
+fallback re-pointed at the root barrel (verified
+entry-compatible: identical surface minus the unexported
+factories, which bundled code never imports per the PLAN
+census), and the 3 dead `fragments/*` aliases re-pointed at
+their `collect/*` motion homes (0-line tokens diff,
+export-lines untouched in the scanner motion, all three
+mcp-needed names + both token types verified live).
+Proved: managed-template test 8/8, mcp package builds.
+
+### S4-handoff dispositions (F1–F6)
+
+F1 (R2→R1 slip): honored — the swapped call is R1
+(`sync/index.ts`, ex-`:164`). F2 (transitive/flat canonical
+deltas): NO action by design — the tier re-gate below is the
+proof (T6/T7/T11 transitive + T9/T10/T12/T13 mixed all
+green). F3 (`.d.mts` served-only `tokens?`): evaluated,
+LEFT per "iff clean" — the three homes (frozen contracts,
+neo types, emitted text) carry mutual keep-field-identical
+notes, so narrowing one breaks the triple; the field is
+type-level-only and never populated (pinned absent in
+SYNC-03 + LAYER-02 + sync.test). F4 (degenerate all-empty):
+NO action, out of contract. F5 (LAYER-02 parked): UNPARKED
+above. F6 (own entry keeps reset): KEPT — `toPublishedEntry`
+untouched, pinned (`'reset' in own`, LAYER-02).
+
+FLAG (F1-class, labels not substance): brief item (4) "T16
+author-facing error OUT" names no deletable error — NIGHT-2
+T16 is the presence-triad row and the spec keeps its message
+("message kept", §3 R2) as the hard cut's loud stale-artifact
+instrument; deleting it would contradict §2 and break 5
+validate tests. Executed as OUT-of-scope (guardrail, same
+vocabulary as the brief's F4 "NO action"): the triad's
+message/shape-only-ness is byte-identical; only the
+spec-§4-mandated field-union widening rode in (5). Verifier
+rules on the label; the substance is covered either way.
+
+### Proof (all firsthand, this session)
+
+- Units: 55 files / 383 green (baseline 56/403 on the
+  S4+CLI tree; delta reconciles EXACT: −16 packed battery,
+  −6 oracle legs, +2 layers). tsc exit 0. `q` 0 errors /
+  18 warns — warn SET diffed line-by-line vs baseline:
+  identical except the two pre-existing kinds (sync 95→102
+  lines, sync.test 498→499); zero S5 warns. (Parent's ≤17
+  was written against the S4 tree; the 18th predates S5 —
+  sibling drift, zero in S5 files. Mid-flight self-catch:
+  my first pin flip pushed sync.test.ts to 501 = q FAIL;
+  compressed to 499 before proceeding.)
+- Neo cases 23/23: SYNC-01/02/03/04/05/06/10/12/15/17,
+  LAYER-01/02/03/05/06, CHAIN 6/6, CLI-01/02 — incl. the
+  unparked LAYER-02 iframe probes + SYNC-06 determinism.
+- FULL hermetic T1–T13 + mcp (`pnpm agent test`, test-core):
+  T1 unit 3/3 + PW 7/7, T2 unit 3/3 + PW **3/3** (the parked
+  D17 row FLIPPED — the layers-wire proof), T3 unit 3/3 +
+  PW 7/7, T6 5/5, T7 5/5, T8 4/4 (duplication-safe
+  `toBeGreaterThanOrEqual(1)` as coded), T9 6/6, T10 3/3,
+  T11 3/3, T12 3/3, T13 4/4, mcp 18/18 files 73/73. The mcp
+  gate needed one re-run: first pass hit `EADDRINUSE` in
+  `registry-lifecycle-stress` — a pre-existing TOCTOU port
+  race in `tests/unit/helpers/server.ts:82-99` (bind :0 →
+  close → child rebinds), S5-independent by mechanism
+  (nothing I touched is on the server-boot/port path);
+  re-run green, flake filed.
+- Sweeps: zero `packed-css`/`PackedUpstream`/
+  `mergePackedStylesheets`/`stripResetLayer` code survivors
+  (3 provenance comments, all marked deleted); zero
+  baseSystem `.css` readers (survivors: recipe style
+  OBJECTS, react `css()` fn, absence-pins, MIME map —
+  all S4-audited exempt kinds); zero `css?: string`;
+  matrix + dependents clean.
+
+### Findings (out of scope, flagged for captain)
+
+- G1 — pipeline builds fixtures BEFORE neo and the sorter
+  only counts `dependencies` while fixtures carry neo in
+  `devDependencies` (`workspace.ts:336`): fixture syncs
+  consume ambient workspace dist. Matrix run 1 proved it
+  (css-era fixture tarballs from stale dist → T1 4/3).
+  Unblocked by rebuilding workspace dist (gitignored, no
+  tracked bytes) — durable fix is pipeline-owned (order
+  neo first or hash devDeps).
+- G2 — pack/registry caches are blind to gitignored
+  outputs: rebuilt (streams) fixtures still packed +
+  served the css-era tarballs until I deleted
+  `.pipeline/registry/manifest.json` (state, not source),
+  which forced re-pack → artifactHash change → registry
+  auto-rebuild → green. Same class as G1: pipeline-owned.
+- G3 — `build-bin.mjs` never cleans: tarballs ship dead
+  `packed-css.js`/`fragments/*`/`neo.js` leftovers beside
+  fresh emit. Harmless (nothing imports them) but a
+  source-grep-verifier trap. Suggest a `rm -rf dist`
+  first line (1 line, not taken — build tooling, outside
+  this slice).
+- G4 — `mcp: Neo author entry` + `neo sync` PROSE
+  survivors (log strings, README, generated banners,
+  `MCP_FRAGMENT_NEEDLES` ids): left for the rename crew —
+  my enabler touched FUNCTIONAL refs only.
+- Not taken (brief-scoped OUT): slim whole-string drop
+  (RS `native.rs`, spec §5 names it — needs an RS slice;
+  the oracle channel rides on, harmlessly); PLAN §3.5 ban
+  filing (PLAN.md untouched per scope — captain files);
+  `system.d.mts` emitted `ReferenceUIConfig` gains no
+  `layers` (that emitted surface is curated-subset, not a
+  mirror — staticCss/logs also absent; tiers typecheck
+  against real source). PLAN.md's worktree modification is
+  PRE-EXISTING, not mine.
+
+WAVE6-SEAM-S5: REPORT, not landed — captain commits (S5
+files + enabler files listed separately above for stepped
+landing). S5's `git mv` staged the rename into the shared
+index again (same as the W3-tick incident) — landing crew
+re-checks `git diff --cached --stat` per the standing lesson.
+
+## Tick (health-check) — S5 mid-inference, alive, no action
+Roster: only wave6-seam-s5 running; peers unchanged (no unattributed bytes). Gate run #2's Dagger session has exited and S5 is writeless since 01:04, but its own session log wrote this minute (seq 8501, model stream opening) — the crew is mid-inference now, composing or analyzing, definitively not stuck. No ping, no intervention. Obj1/2/3 COMPLETE, night waves banked (21 commits, latest W3 67 min ago); Obj4/5 in LANDING.md undispatched (HQ morning call). No oracle word → no landings, no dispatches. Next: S5 report → verifier → landing → pgen station + prose sweep.
+
+## Dispatch — wave6-s5-verify/126 away (captain, 2026-09-24)
+S5 implementer DONE (## WAVE6-SEAM-S5, 10 core + 14 companions + 27 enabler, never committed). Report complete: units/q/cases/hermetic-T1-T13+mcp all claimed green firsthand, F1–F6 disposed, T16 FLAG for ruling, G1–G4 flagged pipeline-owned, PLAN.md mod disclaimed as pre-existing. Verifier briefed adversarial: full re-proof incl. FULL hermetic re-run, T2-flip confirm, sweeps, F1–F6 + FLAG ruling, enabler order ruling, two stepped landing lists, PLAN.md attribution, staged-index check. Zero edits, report only. Landing follows on verifier LAND + captain firsthand gates.
+
+## Tick — verifier/126 reading, S5 landed-pending, no action
+Roster: only wave6-s5-verify/126 running (dispatched ~7 min ago, no report yet — expected, it is reading the S5 section + specs first). Deadlock bar N/A to a minutes-old read-mostly crew; no ping. Tree steady at 54, no commits since W3 (74 min), no mid-landing conflict. Nothing verified to land until the verifier files. Next: S5-verify LAND/HOLD → enabler + S5 stepped landings via firsthand gates → pgen station + prose sweep.
+
+## WAVE6-S5-VERIFY (verifier, 2026-09-24) — ENABLER: LAND, S5: LAND
+
+Adversarial review of `## WAVE6-SEAM-S5` (D17 hard cutover +
+27-file enabler) against WAVE5-PAYLOAD-SHAPE §0–§5, the S4-verify
+F1–F6 handoffs, and the NIGHT-2 T16 row. Thinking hat only —
+zero source edits (this filing is the only write), never
+committed. `agent-neo` + `test-core` loaded first. Every number
+below observed firsthand this session; every claim re-proved,
+not inherited. Tree steady at 54 entries throughout; `git
+status` before/after identical (my runs wrote only gitignored
+dist/.reference-ui state + /tmp logs).
+
+### (1) Units + tsc + q — PASS, all firsthand
+
+- Full Neo units (`vitest run`): **55 files / 383 passed** —
+  matches the report exactly. Delta reconciles EXACT: packed
+  battery 16 `it(` (counted, no it.each) + differential 19
+  (11-entry PORTABLE_REPRINTS + 1 served + 6 oracle `matches`
+  legs + 1 diverges, all counted at HEAD) − goldens 13 (11 +
+  1 served-variant + 1 transitive, observed live) + 2 layers
+  = 403−16−6+2 = 383. Files 56−2+1 = 55.
+- `tsc --noEmit` exit 0. `sync.test.ts` wc 498 (gate counts
+  499 — under the 500 fail line; the 501 self-catch is
+  resolved, not pending).
+- `pnpm agentneo q`: **0 errors, 18 warnings, 238 files**.
+  Warn SET diffed line-by-line vs baseline: 16 warns sit in
+  files S5 never touched (identical by construction); the 2
+  in S5 files are pre-existing kinds with arithmetically
+  exact shifts — sync fn 95→102 (HEAD file 198 lines, fn
+  at :104, 198−104+1 = 95; now 187−86+1 = 102; the +7 is
+  the diff's own +8/−1), sync.test 498→499 (HEAD wc 497,
+  gate = wc+1 both sides). evaluate.ts (S5-touched) keeps
+  its 2 warns byte-identical (1-line comment swap, net-zero
+  lines above :276). Zero NEW warns. (238 files = W3-tree
+  240 − 3 deleted + 1 new.)
+
+### (2) Cases — PASS, full 197-case run (superset of 23/23)
+
+`pnpm agentneo run` (no filter): exit 0, **218 PASS spec-lines,
+0 FAIL, 197 cases** — no sampling needed, the run was cheap.
+Decisive set all green: LAYER-02 packages.spec.ts (iframe
+probes run — the early return is gone and app.ts now throws
+instead of skipping, so PASS proves execution), SYNC-03
+portable.spec.ts (carriage pins), SYNC-06 deterministic.spec.ts,
+CHAIN-01..06 all PASS, CLI-01/02 PASS. Targeted re-run:
+crossings 2/2, goldens 13/13, streams 23/23, base-validate 9/9
+(+2 layers), config-validate 12/12.
+
+### (3) Hermetic T1–T13 + mcp — PASS, re-run TWICE firsthand
+
+Bare `pnpm agent test` (the 12 matrix suites), exit 0 both
+runs, per-tier attribution from the full log: T1 unit 3/3 + PW
+7/7, **T2 unit 3/3 + PW 3/3**, T3 unit 3/3 + PW 7/7, T6 5/5, T7
+5/5, T8 4/4 (the `toBeGreaterThanOrEqual(1)` as coded, :43),
+T9 6/6, T10 3/3, T11 3/3, T12 3/3, T13 4/4, mcp 18 files /
+73 tests. Every count matches the report.
+- T2 flip corroborated: captain firsthand T2 2/1 pre-cutover
+  (line 11478) with the layers test the single D17 row; T2's
+  world passes `layers: [baseSystem]` (ignored pre-S5 per the
+  old unknown-fields test) and now goes 3/3. T3 6/1→7/7
+  corroborates the same flip. This is the layers-wire proof.
+- EADDRINUSE did NOT recur in 2/2 runs (mcp green both).
+  S5's TOCTOU mechanism corroborated anyway: `getAvailable-
+  Port` binds :0 → closes → child rebinds
+  (helpers/server.ts:84-103; S5 cited :82-99, same function).
+  The filed flake has standing.
+
+### (4) Sweeps — PASS
+
+- packed-css/PackedUpstream/mergePackedStylesheets/
+  stripResetLayer: exactly the **3 marked provenance comments**
+  (streams.ts:6, streams.test.ts:4, goldens:4 — all carry
+  "deleted"), zero code survivors in Neo src/tests/bench/
+  tools/bin; matrix + pipeline + mcp + lib + icons clean.
+- `css?: string`: zero in source. The only hits anywhere are
+  stale GITIGNORED tier `.d.mts` (Sep 23 19:17, pre-S4) — a
+  FRESH emit from my case run carries `streams` with zero
+  `css` bytes. Fresh tree is clean.
+- baseSystem `.css` readers: zero. Survivors all S4-audited
+  exempt kinds (recipe style OBJECTS, react `css()` fn,
+  styles.css filenames, 3 absence-pins asserting `!('css')`).
+- `css?:` in src is `Record`/prop-typed only (font,
+  primitives/react-surface vendored) — never `string`.
+
+### (5) F1–F6 + FLAG — all dispositions SUSTAINED
+
+- F1 (R2→R1): honored. HEAD grep pins the chain: oracle
+  invocations :92-93 inside the wrapper, wrapper call :164 —
+  S4-verify and S5 cite the same call from opposite ends.
+  The swap deletes exactly import + wrapper + call. CORRECT.
+- F2 (deltas): no action by design. The deltas are inherent
+  to §1 rules 3-4 (S4-verify §4); my hermetic re-gate
+  (T6/T7/T11 + T9/T10/T12/T13 all green) IS the proof. CORRECT.
+- F3 (tokens? left): LEFT, correct. The triple verified
+  field-identical today (contracts/types.ts:174, neo
+  types.ts:16 with the keep-note, sources.ts:16); narrowing
+  one breaks the triple, so "iff clean" fails honestly. The
+  field is never populated (absence pinned in SYNC-03 +
+  LAYER-02 + sync.test). CORRECT.
+- F4 (all-empty): no action, out of contract per S4-verify;
+  mergeStreams logic untouched by S5 (export keyword +
+  comment only). CORRECT.
+- F5 (LAYER-02): UNPARKED, probes run, PASS firsthand. CORRECT.
+- F6 (reset kept): `toPublishedEntry` body untouched
+  (diff = `export` keyword only), `'reset' in own` pinned
+  in LAYER-02. CORRECT.
+- FLAG (brief item (4) "T16 author-facing error OUT") —
+  RULED, labels and substance separately. Substance: KEEP,
+  sustained — the governing spec mandates it twice (§2(ii)
+  "failing LOUD … (message kept, leg swapped)", §3 R2
+  "message kept … SHAPE-only per T16 tradition"); deletion
+  would break exactly 5 validate tests (all 5 rejection
+  tests route through `invalidBaseSystem`, verified in
+  validate.ts). Label: brief slip in the F1 class — no
+  spec-compatible deletable error exists (the css→streams leg
+  swap the item could have meant already landed in S4 per
+  S4-verify §3). S5's OUT-of-scope guardrail execution is the
+  correct reading. The §4-mandated field-union widening is
+  the only bytes that rode in. SUSTAINED on both.
+
+### (6) Enabler (27 files) — LAND (with 2 named follow-ups)
+
+- Mechanical completeness: all 19 package.jsons flip ONLY
+  the sync/dev invocation lines (12 tier/mcp `pnpm exec`,
+  7 fixtures bootstrap — grepped, no other bytes); lib,
+  icons, package-runner, run-watch-session, managed
+  template + test all one-shape `neo`→`ref`. No functional
+  neo survivors: remaining hits are G4-prose (pipeline/mcp
+  log + error STRINGS, NEEDLE ids, registry .store READMEs,
+  scanner `src/neo.ts` fixture filenames — no invocations).
+  One inert code survivor REPORTED, not held:
+  `pipeline/src/dev/materialize.ts:226`
+  (`rewriteNeoBinInvocations` targets `'pnpm exec neo '`) —
+  live module, but zero bare-`neo` inputs exist anywhere, so
+  it can never fire; 2-line rename-crew follow-up.
+- Managed-template test: **8/8** firsthand (`tsx --test`).
+- mcp builds: exit 0, `neo-author.mjs` emitted from the
+  re-pointed barrel.
+- Entry-compat PROVEN LIVE: old `src/author/` dead since
+  4386d9d9b; new barrel = old exports minus exactly the 4
+  `create*Collector` factories (line-by-line diff;
+  BaseSystem identical via the config/types re-export);
+  bare-id importers today are defineConfig/tokens only (the
+  kill-commit census re-verified); live probe of the built
+  artifact exports exactly
+  `defineConfig,font,globalCss,keyframes,tokens` with zero
+  factory bytes. Hermetic mcp 18/18 exercises it shipped.
+- 3 alias re-points: old `fragments/*` targets dead, new
+  `collect/*` targets live with all 3 mcp-needed values
+  (createTokensCollector, scanForFragments, bundleFragments)
+  + both token types (grep-verified at the new homes);
+  tokens motion = 0-line diff (pure rename, e091c008a
+  stat); scanner motion's only export-line change is the
+  non-mcp RETENTION_EXCLUDE re-export form (precision note:
+  all MCP-NEEDED export lines untouched). tsup resolves all
+  three (build green) and hermetic get_tokens legs pass.
+- MISSED COMPANION (same-class, pre-existing, no gate
+  exercises it — follow-up, NOT hold): mcp `tsconfig.json`
+  `paths` still point at the dead `fragments/*` paths, so
+  `pnpm --dir packages/reference-mcp run typecheck` is red
+  (6 errors, all tracing to the 3 stale ids). Byte-identical
+  inputs at HEAD ⇒ identically red before S5 — S5 owns zero
+  of it and claimed only "mcp package builds" (true). No CI
+  workflow touches mcp/typecheck. The 3-line tsconfig mirror
+  of S5's own tsup re-point should ride the next touch.
+- LANDING ORDER RULED: **enabler-first, S5-second, forced.**
+  S5's hermetic proof needs a runnable matrix and the matrix
+  is dead-binary red at HEAD — S5-first is unprovable. The
+  enabler is S5-independent (zero S5 files) and restores a
+  runnable matrix whose intermediate signature is the
+  documented pre-cutover one (T2 2/1, T3 6/1, the parked
+  D17×7 rows per §0 — landing crew: EXPECT that, not full
+  green); S5-second flips exactly those rows (proven 3/3 +
+  7/7 above). Each step has a distinct verifiable signature.
+
+### (7) Landing lists + attribution + index
+
+- S5 CORE (10): `packages/reference-neo/src/sync/index.ts`,
+  `src/sync/packed-css.ts` (D), `src/sync/packed-css.test.ts`
+  (D), `src/packager/types.ts`, `src/config/types.ts`,
+  `src/config/validate.ts`, `src/system/base/validate.ts`,
+  `tests/cases/layer/NEO-LAYER-02/specs/packages.spec.ts`,
+  `tests/cases/layer/NEO-LAYER-02/world/src/app.ts`,
+  `matrix/CHAIN_RULES.md`.
+- S5 COMPANIONS (14): `src/system/base/streams-
+  differential.test.ts` (D) + `streams-goldens.test.ts`
+  (NEW — the rename pair), `src/sync/sync.test.ts`,
+  `tests/cases/sync/NEO-SYNC-03/specs/portable.spec.ts`,
+  `benchmark/deepsee/worker-phases.ts`,
+  `src/collect/lib/scan/crossings.test.ts`,
+  `src/system/base/streams.ts`, `streams.test.ts`,
+  `streams-corpus.ts`, `src/collect/lib/evaluate.ts`,
+  `src/collect/README.md`, `src/collect/lib/README.md`,
+  `src/config/validate.test.ts`,
+  `src/system/base/validate.test.ts`.
+- ENABLER (27): 7 `matrix/fixtures/*/package.json` +
+  11 `matrix/tests/chain/T*/package.json` +
+  `matrix/tests/mcp/package.json` +
+  `packages/reference-lib/package.json` +
+  `packages/reference-icons/scripts/build.mjs` +
+  `pipeline/.../package-runner.ts` +
+  `pipeline/.../ref-sync-support/run-watch-session.mjs` +
+  `pipeline/.../managed/package-json/index.ts` + its test +
+  `packages/reference-mcp/tsup.config.ts` +
+  `packages/reference-mcp/src/neo/author-entry.ts`.
+- PLAN.md: PRE-EXISTING, disclaimer SUSTAINED — mtime Sep 23
+  23:03 predates S5's first writes (00:06+); content is HQ/
+  captain plan register (§3.2 PostCSS→stylesheet steer,
+  wave sequencing); decisive tell: its REMOVED text still
+  cites packed-css.ts as live tree evidence, impossible for
+  post-cutover bytes. Must NOT ride either arc. LOG.md
+  (captain ticks) and LOG-2.md (reports) likewise ride log
+  commits, never the arcs.
+- Shared index: `git diff --cached` EMPTY at session start
+  and end — no staged git-mv is pending NOW (whoever held
+  the W3-tick lesson cleared it). The rename pair to stage
+  explicitly at landing:
+  `src/system/base/streams-differential.test.ts` (D) →
+  `src/system/base/streams-goldens.test.ts` (??). Standing
+  lesson stands: diff `--cached --stat` against the arc
+  list before each commit.
+
+### (8) G1–G4 — genuinely out-of-scope, all four
+
+- G1: mechanism CONFIRMED firsthand — the sorter reads only
+  `dependencies` (workspace.ts:288-296, loop :336; S5's path
+  prefix was slightly off, `build/` not `testing/matrix/`,
+  line exact) while fixtures carry neo in `devDependencies`
+  (extend-library:35-36). S5 touches no sorter code.
+  Pipeline-owned. CORRECT.
+- G2: S5 touches no pack/registry code (file lists
+  verified); remedy was gitignored state, and my 2/2 green
+  hermetic runs ride that healed state. Pipeline-owned. CORRECT.
+- G3: CONFIRMED firsthand — `dist/src/sync/packed-css.js`
+  (+ .d.ts) sit beside fresh emit; build-bin.mjs has no
+  clean step (no rm/clean hit); dist is gitignored. S5
+  touches no build tooling. (My sweeps excluded /dist/ and
+  .reference-ui/ throughout — no trap fell.) CORRECT.
+- G4: prose survivors verified as prose (log/error strings,
+  NEEDLE ids, READMEs, fixture filenames); every enabler
+  diff is invocation/path/alias-only. Rename-crew scope. CORRECT.
+- "Not taken" items concurred: slim string-drop is RS-slice
+  work (oracle channel harmless — dual sheets still emitted
+  and hermetic-green); PLAN §3.5 filing is captain's
+  (PLAN.md untouched by S5, verified); emitted
+  ReferenceUIConfig lacks `layers` (curated-subset, tiers
+  typecheck against real source — hermetic green proves no
+  breakage; flagged, not held).
+
+### Verdicts
+
+- ENABLER: **LAND** first. 27/27 files verified mechanical
+  and in-class; matrix red→runnable with the documented
+  D17 signature. Two follow-ups filed (mcp tsconfig 3-line
+  mirror, materialize 2-liner) — both pre-existing, neither
+  gate-exercised, neither regression: not holds.
+- S5: **LAND** second. Cutover exact per §2/§4/S5-amended +
+  layers-wired per §4 (~15 lines as estimated); every gate
+  green firsthand (units 55/383, tsc 0, q 0/18 with zero new
+  warns, 197 cases, hermetic 12/12 with the T2 flip);
+  F1–F6 + FLAG all sustained; G1–G4 correctly out-of-scope.
+- Landing: two stepped commits in forced order (lists in
+  §7), each diffed `--cached` before commit; PLAN.md/LOGs
+  excluded from both. Report only — nothing committed,
+  index untouched by these hands.

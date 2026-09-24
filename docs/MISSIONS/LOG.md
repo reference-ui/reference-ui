@@ -76,3 +76,15 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 ## Tick — 8 commits banked (legs, delete, cli, base), N-2 building, no action.
 
 ## Tick — N-2 DONE filed, crew exiting, verifier next, no action.
+
+## Tick — wave 4 away (5 crews), watch-lib moving, no action.
+
+## Tick — 4 crews building (rename, W2, S2, S3), no action.
+
+## Tick — S4 sole crew building, no action.
+
+## Tick — S5 sole crew moving (cutover + rename sweep), no action.
+
+## Tick — S5 at gate tail (Dagger draining), no action.
+
+## Tick — S5 mid-inference post-gate-2, no action.
