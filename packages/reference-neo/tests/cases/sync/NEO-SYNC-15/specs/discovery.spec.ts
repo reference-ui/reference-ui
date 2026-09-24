@@ -39,12 +39,25 @@ interface CompileRequest {
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
 
+  // Primitives read back from the generated types, not from neo source: the
+  // per-tag declares are what the packager emitted for this very sync.
+  const reactTypes = fs.readFileSync(path.join(outDir, 'react', 'react.d.mts'), 'utf8');
+  const generated = [...reactTypes.matchAll(/export declare const (\w+): \(props: \w+Props/g)].map(
+    (m) => m[1] as string,
+  );
+  assert.ok(generated.length >= 100, `generated types name the primitive set, got ${generated.length}`);
+
   const jsx = JSON.parse(
     fs.readFileSync(path.join(outDir, 'system', 'jsx-elements.json'), 'utf8'),
   ) as JsxElementsArtifact;
   assert.deepEqual(
     jsx,
-    { primitives: [], upstream: [], local: ['Card'], merged: ['Card'] },
+    {
+      primitives: [...new Set(generated)].sort(),
+      upstream: [],
+      local: ['Card'],
+      merged: ['Card'],
+    },
     'jsx-elements.json pins the traced Card as the only local host',
   );
 
@@ -65,11 +78,6 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     ['schemaVersion', 'spec', 'jsxHosts', 'sourceRoot', 'declarationRoot', 'include'],
     'compile-request.json keeps exactly the frozen six keys',
   );
-  const reactTypes = fs.readFileSync(path.join(outDir, 'react', 'react.d.mts'), 'utf8');
-  const generated = [...reactTypes.matchAll(/export declare const (\w+): \(props: \w+Props/g)].map(
-    (m) => m[1] as string,
-  );
-  assert.ok(generated.length >= 100, `generated types name the primitive set, got ${generated.length}`);
   assert.deepEqual(
     request.jsxHosts,
     [...new Set(generated)].sort(),

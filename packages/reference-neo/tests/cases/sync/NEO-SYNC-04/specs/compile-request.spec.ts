@@ -79,7 +79,12 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   ) as { primitives: string[]; upstream: string[]; local: string[]; merged: string[] };
   assert.deepEqual(
     jsxElements,
-    { primitives: [], upstream: [], local: CONFIG_HOSTS, merged: CONFIG_HOSTS },
+    {
+      primitives: [...new Set(generated)].sort(),
+      upstream: [],
+      local: CONFIG_HOSTS,
+      merged: CONFIG_HOSTS,
+    },
     'jsx-elements.json pins the merged multi-host content',
   );
 

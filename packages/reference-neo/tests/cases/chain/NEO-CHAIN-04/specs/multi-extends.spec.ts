@@ -64,13 +64,20 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     'evaluated tokens union both upstreams with the later entry winning shared',
   );
 
+  // Primitives read back from the generated types, not from neo source: the
+  // per-tag declares are what the packager emitted for this very sync.
+  const reactTypes = fs.readFileSync(path.join(outDir, 'react', 'react.d.mts'), 'utf8');
+  const generated = [...reactTypes.matchAll(/export declare const (\w+): \(props: \w+Props/g)].map(
+    (m) => m[1] as string,
+  );
+
   const jsx = JSON.parse(
     fs.readFileSync(path.join(outDir, 'system', 'jsx-elements.json'), 'utf8'),
   ) as { primitives: string[]; upstream: string[]; local: string[]; merged: string[] };
   assert.deepEqual(
     jsx,
     {
-      primitives: [],
+      primitives: [...new Set(generated)].sort(),
       upstream: ['DemoComponent', 'SecondaryDemoComponent'],
       local: [],
       merged: ['DemoComponent', 'SecondaryDemoComponent'],

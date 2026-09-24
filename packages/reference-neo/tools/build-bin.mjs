@@ -5,7 +5,7 @@
 // beside the emit and makes the bin executable. Run from the Neo package
 // directory: node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
-import { chmodSync, copyFileSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -39,8 +39,14 @@ const TWINS = [
 ]
 
 // Verbatim asset copies: package-relative files sync reads at runtime that
-// tsc never emits (declaration inputs).
-const ASSETS = [['src/entry/types.d.mts', 'src/entry/types.d.mts']]
+// tsc never emits (declaration inputs, JSON shelves).
+const ASSETS = [
+  ['src/entry/types.d.mts', 'src/entry/types.d.mts'],
+  [
+    'src/native/generated/primitives/vocabulary.json',
+    'src/native/generated/primitives/vocabulary.json',
+  ],
+]
 
 function fail(message) {
   console.error(`[ref build] ${message}`)
@@ -95,9 +101,16 @@ function assertLiteralSet() {
 
 function layTwinsAndAssets() {
   for (const [from, to] of [...TWINS, ...ASSETS]) {
-    const src = from.endsWith('.d.mts') ? join(PKG, from) : join(DIST, from)
+    // Twins are transpiled emit (DIST-side); assets are verbatim source
+    // copies (PKG-side) — tsc never emits the .d.mts input or the shelf
+    // JSON, so a DIST-side read would miss and fail the build.
+    const src =
+      from.endsWith('.d.mts') || from.endsWith('.json') ? join(PKG, from) : join(DIST, from)
     const dest = join(DIST, to)
     if (!existsSync(src)) fail(`missing build input ${src}`)
+    // Shelf rows land under dirs tsc never emits (no .ts beside the
+    // JSON), so the parent may not exist yet — create it, never fail.
+    mkdirSync(dirname(dest), { recursive: true })
     copyFileSync(src, dest)
   }
 }

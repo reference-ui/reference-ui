@@ -43,6 +43,13 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     'evaluated tokens merge upstream with the local override winning',
   );
 
+  // Primitives read back from the generated types, not from neo source: the
+  // per-tag declares are what the packager emitted for this very sync.
+  const reactTypes = fs.readFileSync(path.join(outDir, 'react', 'react.d.mts'), 'utf8');
+  const generated = [...reactTypes.matchAll(/export declare const (\w+): \(props: \w+Props/g)].map(
+    (m) => m[1] as string,
+  );
+
   const jsx = JSON.parse(fs.readFileSync(path.join(outDir, 'system', 'jsx-elements.json'), 'utf8')) as {
     primitives: string[];
     upstream: string[];
@@ -52,7 +59,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.deepEqual(
     jsx,
     {
-      primitives: [],
+      primitives: [...new Set(generated)].sort(),
       upstream: ['UpstreamCard'],
       local: ['LocalPanel'],
       merged: ['LocalPanel', 'UpstreamCard'],

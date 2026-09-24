@@ -153,12 +153,13 @@ describe('sync published folder', () => {
     expect(styles).toContain('@layer sync-test')
     expect(styles).toContain('--colors-brand: #7c3aed')
 
+    const generated = [...readFileSync(outFile(dir, 'react', 'react.d.mts'), 'utf-8').matchAll(/export declare const (\w+): \(props: \w+Props/g)].map(match => match[1] as string)
     const jsx = JSON.parse(readFileSync(outFile(dir, 'system/jsx-elements.json'), 'utf-8')) as {
       primitives: string[]
       local: string[]
       merged: string[]
     }
-    expect(jsx.primitives).toEqual([])
+    expect(jsx.primitives).toEqual([...new Set(generated)].sort())
     expect(jsx.local).toEqual(['CardFrame'])
     expect(jsx.merged).toEqual(['CardFrame'])
   })
