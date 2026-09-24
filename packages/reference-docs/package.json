@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "content-collections build && neo sync && concurrently --kill-others-on-fail \"content-collections watch\" \"neo sync --watch\" \"vite\"",
-    "build": "content-collections build && neo sync && vite build",
+    "dev": "content-collections build && ref sync && concurrently --kill-others-on-fail \"content-collections watch\" \"ref sync --watch\" \"vite\"",
+    "build": "content-collections build && ref sync && vite build",
     "build:pages": "pnpm build && cp dist/index.html dist/404.html",
     "preview": "vite preview"
   },

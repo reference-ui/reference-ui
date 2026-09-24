@@ -21,7 +21,7 @@ Discovery tools then fail:
 ```text
 Project at '/.../packages/reference-rs/modules/styletrace/tests/cases/plain_react_wrappers' has not been synced yet.
 Generated type artifacts are missing at '/.../packages/reference-rs/modules/styletrace/tests/cases/plain_react_wrappers/.reference-ui/types/tasty/manifest.js'.
-Run 'neo sync' (or 'pnpm dev') to generate the model artifacts.
+Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.
 ```
 
 An agent without shell access, or unaware it must switch projects, is stuck.
