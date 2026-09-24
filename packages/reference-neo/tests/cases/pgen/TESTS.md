@@ -20,9 +20,9 @@ the full 22-case checklist with missing surfaces; this ledger tracks proof.
 | NEO-PGEN-12 | Roster jsx equals E1 equals live canon at pinned 101 | live | case green, drift-injection trips by name |
 | NEO-PGEN-13 | E1 equals napi props equals E4 union, aliases resolve, seam binds | live | case green, drift-injection trips by name |
 | NEO-PGEN-14 | variant plus colorMode stamp, passthrough reaches host, no leaks | live | case green, stamps land, sweep empty |
-| NEO-PGEN-15 | Every family probe assigns, bogus key fails TS2353 | live | case green, TS2353 pinned |
+| NEO-PGEN-15 | Every family probe assigns at the bound entry, bogus keys fail TS2353 | live | case green, both TS2353 pinned |
 | NEO-PGEN-16 | Token literals assign, mistype fails TS2322, hatch documented | live | case green, TS2322 pinned |
-| NEO-PGEN-17 | Selection objects assign; wrong-axis negative needs narrowed variant | weak | positive green, negative blocked-on-w4 |
+| NEO-PGEN-17 | Alias assigns good, fails bad TS2322; recipe call fails nested TS2353 plus bad value TS2322 | live | case green, all three codes pinned |
 | NEO-PGEN-18 | Arms plus null-hole arrays assign, bare sm fails TS2353 | live | case green, TS2353 pinned |
 | NEO-PGEN-19 | Hosts resolve with overrides, arity fails TS2314, cross-host fails TS2322 | live | case green, both codes pinned |
 | NEO-PGEN-20 | Forbidden imports fail TS2305, as fails TS2353, E4 panda-clean | live | case green, both codes pinned |

@@ -56,9 +56,9 @@ Ids are append-only; never renumber.
 | NEO-PGEN-12 | set parity with canon | LIVE | roster jsx equals E1 equals canon HTML partition at pinned 101, drift-injection trips |
 | NEO-PGEN-13 | prop parity with typegen | LIVE | E1 equals napi props equals E4 union plus alias probes and seam bind |
 | NEO-PGEN-14 | metadata plus passthrough | LIVE | variant plus colorMode stamp, passthrough lands, leak sweep empty |
-| NEO-PGEN-15 | style props valid everywhere | LIVE | family probes assign, bogus key fails TS2353, open css pinned for W4 |
+| NEO-PGEN-15 | style props valid everywhere | LIVE | bound entry: family probes assign, props-object plus css bogus keys fail TS2353 |
 | NEO-PGEN-16 | token unions real | LIVE | literals assign incl prefixed, mistype fails TS2322, hatch documented |
-| NEO-PGEN-17 | recipe variants | WEAK | selection assigns but wrong-axis assigns too: variant unknown until W4 narrows |
+| NEO-PGEN-17 | recipe variants | LIVE | bound entry: alias good assigns, bad fails TS2322; recipe call fails nested TS2353, bad value TS2322 |
 | NEO-PGEN-18 | conditions plus responsive | LIVE | arms and null-hole arrays assign, bare sm fails TS2353 |
 | NEO-PGEN-19 | refs plus elements | LIVE | hosts resolve with overrides, bare generic fails TS2314, cross-host fails TS2322 |
 | NEO-PGEN-20 | forbidden surface | LIVE | forbidden imports fail TS2305, as fails TS2353, E4 panda-clean |
