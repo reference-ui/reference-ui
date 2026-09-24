@@ -4,7 +4,7 @@
 // never-promise that holds the process open. The watch driver itself
 // (watchSync) lives in lib/watch per the WAVE4 verdict; this file only
 // routes the flag to it.
-import { messageOf } from './output.ts'
+import { messageOf, printSyncLine } from './output.ts'
 
 export async function runWatch(dir: string): Promise<number> {
   try {
@@ -15,7 +15,7 @@ export async function runWatch(dir: string): Promise<number> {
       onResync: (result) => console.log(`[ref] resync → ${result.outDir}`),
       onError: (err) => console.log(`[ref] watch error: ${messageOf(err)}`),
     })
-    console.log(`[ref] sync ${Date.now() - started}ms → ${dir}/.reference-ui`)
+    printSyncLine(Date.now() - started, `${dir}/.reference-ui`)
     console.log(`[ref] watching ${dir} — Ctrl-C to stop`)
     const shutdown = (): void => {
       void handle.stop().then(

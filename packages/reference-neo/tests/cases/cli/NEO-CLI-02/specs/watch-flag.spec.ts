@@ -21,6 +21,11 @@ interface SpecInput {
 const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const BRAND_VALUE = '#7c3aed';
 const CHANGED_VALUE = '#0e5c3f';
+// The §3.12 one-line success shape: glyph + command + stats. Plain under a
+// pipe, ANSI-spanned under a terminal — the pin strips spans first, so the
+// shape holds however the child ran.
+const SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/;
+const ANSI_SPAN_RE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
 
 // Canonical spelling, byte-identical to the committed world source. The
 // changed spelling derives by single-line replacement, so only the intended
@@ -71,6 +76,10 @@ function resyncCount(watch: WatchChild): number {
   return watch.output().split('resync').length - 1;
 }
 
+function stripAnsiSpans(text: string): string {
+  return text.replace(ANSI_SPAN_RE, '');
+}
+
 function childDone(watch: WatchChild): boolean {
   return watch.child.exitCode !== null || watch.child.signalCode !== null;
 }
@@ -94,7 +103,7 @@ async function waitForOutput(watch: WatchChild, cond: () => boolean, label: stri
 // are live — so no settle sleep is needed before the first mutation.
 async function proveBoot(watch: WatchChild, worldDir: string): Promise<void> {
   await waitForOutput(watch, () => watch.output().includes(`watching ${worldDir}`), 'the watching line');
-  assert.ok(watch.output().includes('[ref] sync '), 'watch boot prints the baseline sync line');
+  assert.ok(SYNC_LINE_RE.test(stripAnsiSpans(watch.output())), 'watch boot prints the baseline sync line');
 }
 
 // The resync leg: one token-value edit must surface as the bin's resync

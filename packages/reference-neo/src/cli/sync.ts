@@ -5,7 +5,7 @@
 // No build logic lives here — the command calls subsystems and reports.
 import type { Command } from 'commander'
 import { resolve } from 'node:path'
-import { messageOf } from './output.ts'
+import { messageOf, printSyncLine } from './output.ts'
 import { runWatch } from './watch.ts'
 
 export interface SyncCommandOptions {
@@ -25,7 +25,7 @@ export async function runSyncCommand(dir: string | undefined, watch: boolean): P
       console.log(`[ref] sync failed: reference tasty build failed: ${build.message}`)
       return 1
     }
-    console.log(`[ref] sync ${Date.now() - started}ms → ${result.outDir}`)
+    printSyncLine(Date.now() - started, result.outDir)
     return 0
   } catch (err) {
     console.log(`[ref] sync failed: ${messageOf(err)}`)

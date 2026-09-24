@@ -20,6 +20,11 @@ interface SpecInput {
 const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const SYSTEM_NAME = 'neo-cli';
 const KILL_ATTEMPTS = 10;
+// The §3.12 one-line success shape: glyph + command + stats. Plain under a
+// pipe, ANSI-spanned under a terminal — the pin strips spans first, so the
+// shape holds however the child ran.
+const SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/;
+const ANSI_SPAN_RE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
 
 const EXPECTED_FILES = [
   'system/baseSystem.mjs',
@@ -73,6 +78,17 @@ function execFailureText(command: string, args: string[], error: unknown): strin
 
 function runRef(args: string[], worldDir: string): string {
   return execOutput(process.execPath, [BIN_PATH, ...args], worldDir);
+}
+
+function stripAnsiSpans(text: string): string {
+  return text.replace(ANSI_SPAN_RE, '');
+}
+
+// The one-shot success print: some line of the child's stdout carries the
+// §3.12 shape. A contains-pin, not whole-output equality — the background
+// tasty phase may land its own stdout lines alongside on a slow exit.
+function carriesSyncLine(output: string): boolean {
+  return output.split('\n').some((line) => SYNC_LINE_RE.test(stripAnsiSpans(line)));
 }
 
 // The consumer import probe: resolves the sync-made scope links from the
@@ -153,7 +169,8 @@ function generatedShape(worldDir: string): void {
 function proveIdempotentResync(worldDir: string): void {
   const sheetPath = path.join(worldDir, '.reference-ui', 'styled', 'styles.css');
   const before = fs.readFileSync(sheetPath, 'utf8');
-  runRef(['sync', worldDir], worldDir);
+  const output = runRef(['sync', worldDir], worldDir);
+  assert.ok(carriesSyncLine(output), 'one-shot sync prints the one-line success shape');
   assert.equal(fs.readFileSync(sheetPath, 'utf8'), before, 'a second sync is byte-identical');
   assert.equal(runImportProbe(worldDir), 'ok', 'consumer imports work after the re-sync');
 }
