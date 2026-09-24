@@ -10,8 +10,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { subscribe, type AsyncSubscription, type Event as ParcelEvent } from '@parcel/watcher'
 import picomatch from 'picomatch'
-import { loadUserConfigWithDependencies } from '../config/load.ts'
-import { sync, type SyncResult } from './index.ts'
+import { loadUserConfigWithDependencies } from '../../config/load.ts'
+import { sync, type SyncResult } from '../../sync/index.ts'
 
 export type WatchEvent = 'add' | 'change' | 'unlink'
 

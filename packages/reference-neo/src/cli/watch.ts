@@ -2,13 +2,13 @@
 // watcher behind `ref sync --watch`. The runner owns the process half only —
 // boot lines, change/resync/error prints, signal shutdown, and the
 // never-promise that holds the process open. The watch driver itself
-// (watchSync) stays where WAVE1-WATCH's verdict put it; this file only
+// (watchSync) lives in lib/watch per the WAVE4 verdict; this file only
 // routes the flag to it.
 import { messageOf } from './output.ts'
 
 export async function runWatch(dir: string): Promise<number> {
   try {
-    const { watchSync } = await import('../sync/watch.ts')
+    const { watchSync } = await import('../lib/watch/index.ts')
     const started = Date.now()
     const handle = await watchSync(dir, {
       onChange: (change) => console.log(`[ref] ${change.event} ${change.relativePath}`),

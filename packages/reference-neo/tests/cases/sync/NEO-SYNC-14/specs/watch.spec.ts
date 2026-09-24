@@ -9,7 +9,7 @@ import path from 'node:path';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import { sync } from '../../../../../src/sync/index.ts';
-import { watchSync } from '../../../../../src/sync/watch.ts';
+import { watchSync } from '../../../../../src/lib/watch/index.ts';
 
 interface SpecInput {
   page: SpecPage;
