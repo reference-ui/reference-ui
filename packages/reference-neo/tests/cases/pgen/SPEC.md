@@ -42,20 +42,20 @@ Ids are append-only; never renumber.
 
 | id | name | status | proof or missing surface |
 | --- | --- | --- | --- |
-| NEO-PGEN-01 | html-flow renders | BLOCKED | needs the bound roster rendering flow probes with style props and markers |
-| NEO-PGEN-02 | html-text renders | BLOCKED | needs the bound roster rendering text probes incl single-letters and null-hole arrays |
-| NEO-PGEN-03 | html-form renders | BLOCKED | needs the bound roster keeping native form behavior with style props applied |
-| NEO-PGEN-04 | html-table renders | BLOCKED | needs the bound roster rendering table probes inside a real table element |
-| NEO-PGEN-05 | html-media renders | BLOCKED | needs the bound roster carrying native media attrs with void elements childless |
-| NEO-PGEN-06 | html-interactive renders | BLOCKED | needs the bound roster toggling natively with hover and dark arms painting |
+| NEO-PGEN-01 | html-flow renders | LIVE | 27 flow probes render own tag, paint sibling color plus css background, stamp markers |
+| NEO-PGEN-02 | html-text renders | LIVE | 22 text plus 7 single-letters render, holed array keeps 1r then paints 4r |
+| NEO-PGEN-03 | html-form renders | LIVE | form probes keep native behavior with style props applied, no key leakage |
+| NEO-PGEN-04 | html-table renders | LIVE | table probes nest inside a real table element, Caption paints |
+| NEO-PGEN-05 | html-media renders | LIVE | media probes carry native attrs, svg host styled over native child, voids childless |
+| NEO-PGEN-06 | html-interactive renders | LIVE | details toggles natively, dialog closed, hover plus dark arms paint |
 | NEO-PGEN-07 | svg-shapes render | DROPPED | namespace law: no SVG-namespace children ever, no deferred set |
 | NEO-PGEN-08 | svg-text renders | DROPPED | namespace law: Text stays native SVG, never a primitive |
 | NEO-PGEN-09 | svg-gradients render | DROPPED | namespace law: gradients stay native SVG, never primitives |
 | NEO-PGEN-10 | svg-containers render | DROPPED | namespace law: no F1 fold-in, the camelCase column is moot |
-| NEO-PGEN-11 | special-cased roster | BLOCKED | needs the bound roster: Obj Var Map rendering plus override refs at runtime |
+| NEO-PGEN-11 | special-cased roster | LIVE | Obj Var Map render, override refs land, 109-export census, no pattern pack |
 | NEO-PGEN-12 | set parity with canon | LIVE | roster jsx equals E1 equals canon HTML partition at pinned 101, drift-injection trips |
 | NEO-PGEN-13 | prop parity with typegen | LIVE | E1 equals napi props equals E4 union plus alias probes and seam bind |
-| NEO-PGEN-14 | metadata plus passthrough | BLOCKED | needs the bound roster: variant and colorMode stamping plus the leak sweep |
+| NEO-PGEN-14 | metadata plus passthrough | LIVE | variant plus colorMode stamp, passthrough lands, leak sweep empty |
 | NEO-PGEN-15 | style props valid everywhere | LIVE | family probes assign, bogus key fails TS2353, open css pinned for W4 |
 | NEO-PGEN-16 | token unions real | LIVE | literals assign incl prefixed, mistype fails TS2322, hatch documented |
 | NEO-PGEN-17 | recipe variants | WEAK | selection assigns but wrong-axis assigns too: variant unknown until W4 narrows |

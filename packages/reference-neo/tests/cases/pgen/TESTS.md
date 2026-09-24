@@ -6,20 +6,20 @@ the full 22-case checklist with missing surfaces; this ledger tracks proof.
 
 | id | claim | status | proof |
 | --- | --- | --- | --- |
-| NEO-PGEN-01 | Flow probes render own tagName, paint style plus css props, stamp markers | blocked-on-w4 | needs bound roster render |
-| NEO-PGEN-02 | Text probes incl single-letters render and resolve null-hole arrays | blocked-on-w4 | needs bound roster render |
-| NEO-PGEN-03 | Form probes keep native behavior with style props, no key leakage | blocked-on-w4 | needs bound roster render |
-| NEO-PGEN-04 | Table probes render inside a real table, Caption paints | blocked-on-w4 | needs bound roster render |
-| NEO-PGEN-05 | Media probes carry native attrs, void elements render childless | blocked-on-w4 | needs bound roster render |
-| NEO-PGEN-06 | Interactive probes toggle natively, hover plus dark arms paint | blocked-on-w4 | needs bound roster render |
+| NEO-PGEN-01 | Flow probes render own tagName, paint style plus css props, stamp markers | live | case green, 27 probes plus css leg, markers plus layer |
+| NEO-PGEN-02 | Text probes incl single-letters render and resolve null-hole arrays | live | case green, 29 probes, holed array paints 1r then 4r |
+| NEO-PGEN-03 | Form probes keep native behavior with style props, no key leakage | live | case green, fill plus toggle plus select legs, no leaks |
+| NEO-PGEN-04 | Table probes render inside a real table, Caption paints | live | case green, nesting pins, col childless, Caption paints |
+| NEO-PGEN-05 | Media probes carry native attrs, void elements render childless | live | case green, native attrs land, svg host plus native child |
+| NEO-PGEN-06 | Interactive probes toggle natively, hover plus dark arms paint | live | case green, details toggles, hover plus dark arms paint |
 | NEO-PGEN-07 | SVG shapes render camelCase tagNames with style props | dropped | namespace law, never |
 | NEO-PGEN-08 | SVG text renders with the text-collision probe | dropped | namespace law, never |
 | NEO-PGEN-09 | SVG gradients render with url refs resolving | dropped | namespace law, never |
 | NEO-PGEN-10 | SVG containers render camelCase tagNames | dropped | namespace law, never |
-| NEO-PGEN-11 | Obj Var Map render right, override refs land, pattern pack absent | blocked-on-w4 | needs bound roster render |
+| NEO-PGEN-11 | Obj Var Map render right, override refs land, pattern pack absent | live | case green, override refs land, 109-export census |
 | NEO-PGEN-12 | Roster jsx equals E1 equals live canon at pinned 101 | live | case green, drift-injection trips by name |
 | NEO-PGEN-13 | E1 equals napi props equals E4 union, aliases resolve, seam binds | live | case green, drift-injection trips by name |
-| NEO-PGEN-14 | variant plus colorMode stamp, passthrough reaches host, no leaks | blocked-on-w4 | needs bound roster render |
+| NEO-PGEN-14 | variant plus colorMode stamp, passthrough reaches host, no leaks | live | case green, stamps land, sweep empty |
 | NEO-PGEN-15 | Every family probe assigns, bogus key fails TS2353 | live | case green, TS2353 pinned |
 | NEO-PGEN-16 | Token literals assign, mistype fails TS2322, hatch documented | live | case green, TS2322 pinned |
 | NEO-PGEN-17 | Selection objects assign; wrong-axis negative needs narrowed variant | weak | positive green, negative blocked-on-w4 |
