@@ -7,6 +7,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { ReferenceUIConfig } from '../../config/types.ts'
+import {
+  generateReactTypesSource,
+  recipeVariantTypeNames,
+} from '../../primitives/generate/generate.ts'
 import { evaluateFragments } from './evaluate.ts'
 
 const tempDirs: string[] = []
@@ -269,5 +273,74 @@ describe('evaluateFragments provenance', () => {
       kind: 'tokens',
       keys: ['colors.up'],
     })
+  })
+})
+
+describe('evaluateFragments recipes', () => {
+  const TONE_RECIPE_FILE = [
+    "import { recipe } from '@reference-ui/neo'",
+    '',
+    'recipe({',
+    "  className: 'tone',",
+    "  base: { display: 'inline-flex' },",
+    '  variants: {',
+    '    tone: {',
+    "      accent: { color: 'brand' },",
+    "      muted: { color: 'paper' },",
+    '    },',
+    '  },',
+    "  defaultVariants: { tone: 'muted' },",
+    '})',
+    '',
+  ].join('\n')
+
+  it('merges recipe() calls into spec.recipes keyed by className', async () => {
+    const dir = await writeProject({ 'theme/tone.ts': TONE_RECIPE_FILE })
+
+    const spec = await evaluateFragments(dir, configWith())
+
+    expect(spec.recipes).toEqual({
+      tone: {
+        className: 'tone',
+        base: { display: 'inline-flex' },
+        variants: {
+          tone: {
+            accent: { color: 'brand' },
+            muted: { color: 'paper' },
+          },
+        },
+        defaultVariants: { tone: 'muted' },
+      },
+    })
+    expect(spec.provenance).toContainEqual({
+      source: 'theme/tone.ts',
+      kind: 'recipes',
+      keys: ['tone'],
+    })
+  })
+
+  it('mints the ToneVariantProps stem S5 assigns against', async () => {
+    const dir = await writeProject({ 'theme/tone.ts': TONE_RECIPE_FILE })
+
+    const spec = await evaluateFragments(dir, configWith())
+
+    expect(recipeVariantTypeNames(spec.recipes)).toEqual(['ToneVariantProps'])
+    const types = generateReactTypesSource({ stylePropNames: [], recipes: spec.recipes })
+    expect(types).toContain('export type PrimitiveVariantProp = ToneVariantProps')
+    expect(types).toContain(
+      'StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject, ToneVariantProps'
+    )
+  })
+
+  it('skips recipe fragments without a string className', async () => {
+    const dir = await writeProject({
+      'theme/broken.ts': ["import { recipe } from '@reference-ui/neo'", '', 'recipe({})', ''].join(
+        '\n'
+      ),
+    })
+
+    const spec = await evaluateFragments(dir, configWith())
+
+    expect(spec.recipes).toEqual({})
   })
 })

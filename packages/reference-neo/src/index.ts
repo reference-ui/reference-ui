@@ -23,3 +23,4 @@ export {
   type GlobalCssConfig,
   type GlobalCssRule,
 } from './collect/surface/index.ts'
+export { recipe, type RecipeConfig } from './collect/surface/index.ts'

@@ -24,6 +24,7 @@ import { createKeyframesCollector } from '../surface/keyframes.ts'
 import { createTokensCollector } from '../surface/tokens.ts'
 import { createFontCollector } from '../surface/font.ts'
 import { createGlobalCssCollector } from '../surface/globalCss.ts'
+import { createRecipeCollector } from '../surface/recipe.ts'
 import { getFragmentBootstrapImportMap } from './bootstrap.ts'
 
 export { UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
@@ -114,6 +115,7 @@ export function getFragmentCollectors(): EvaluateCollector[] {
     createKeyframesCollector(),
     createFontCollector(),
     createGlobalCssCollector(),
+    createRecipeCollector(),
   ]
 }
 
@@ -286,6 +288,7 @@ function mergeCollectedSpec(
   const keyframes = bucketByName(collected, 'keyframes')
   const fonts = bucketByName(collected, 'font')
   const css = bucketByName(collected, 'globalCss')
+  const recipes = bucketByName(collected, 'recipe')
   const mergedFonts = mergeFontRecord(fonts)
   return {
     schemaVersion: 1,
@@ -295,13 +298,14 @@ function mergeCollectedSpec(
     fonts: mergedFonts,
     globalCss: toGlobalCssEntries(css, cwd),
     keyframes: mergeRecordFragments(keyframes),
-    recipes: {},
+    recipes: mergeRecipeRecord(recipes),
     staticCss,
     provenance: [
       ...tokenProvenance(tokens, cwd),
       ...fontProvenance(fonts, cwd),
       ...keyframeProvenance(keyframes, cwd),
       ...globalCssProvenance(css, cwd),
+      ...recipeProvenance(recipes, cwd),
     ],
   }
 }
@@ -333,6 +337,15 @@ function mergeFontRecord(fonts: unknown[]): Record<string, unknown> {
     if (!isPlainObject(fragment) || typeof fragment.name !== 'string') continue
     const { name, ...rest } = fragment
     record[name] = rest
+  }
+  return record
+}
+
+function mergeRecipeRecord(recipes: unknown[]): Record<string, unknown> {
+  const record: Record<string, unknown> = {}
+  for (const fragment of recipes) {
+    if (!isPlainObject(fragment) || typeof fragment.className !== 'string') continue
+    record[fragment.className] = { ...fragment }
   }
   return record
 }
@@ -394,5 +407,16 @@ function globalCssProvenance(css: unknown[], cwd: string): SpecProvenance {
   return css.map(fragment => ({
     source: sourceOfFragment(fragment, cwd),
     kind: 'globalCss' as const,
+  }))
+}
+
+function recipeProvenance(recipes: unknown[], cwd: string): SpecProvenance {
+  return recipes.map(fragment => ({
+    source: sourceOfFragment(fragment, cwd),
+    kind: 'recipes' as const,
+    keys:
+      isPlainObject(fragment) && typeof fragment.className === 'string'
+        ? [fragment.className]
+        : [],
   }))
 }

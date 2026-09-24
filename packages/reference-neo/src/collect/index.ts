@@ -7,10 +7,12 @@ export {
   keyframes,
   font,
   globalCss,
+  recipe,
   createTokensCollector,
   createKeyframesCollector,
   createFontCollector,
   createGlobalCssCollector,
+  createRecipeCollector,
   type ReferenceTokenConfig,
   type ReferenceTokenLeaf,
   type TokenConfig,
@@ -21,6 +23,7 @@ export {
   type FontWeightName,
   type GlobalCssConfig,
   type GlobalCssRule,
+  type RecipeConfig,
 } from './surface/index.ts'
 export {
   getUpstreamFragments,

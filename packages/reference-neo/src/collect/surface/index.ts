@@ -1,5 +1,5 @@
 // Fragment author surface: the calls fragment files import from Neo.
-// It takes nothing and re-exports the four collectors plus their shapes.
+// It takes nothing and re-exports the five collectors plus their shapes.
 // This barrel is the bootstrap alias target for fragment execution.
 
 export {
@@ -24,3 +24,4 @@ export {
   type GlobalCssConfig,
   type GlobalCssRule,
 } from './globalCss.ts'
+export { recipe, createRecipeCollector, type RecipeConfig } from './recipe.ts'
