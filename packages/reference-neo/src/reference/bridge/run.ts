@@ -1,20 +1,23 @@
-// Reference bridge run: it takes the phase payload plus an optional symbol name
-// and emits the structured build result. Diagnostics warn, the built line
-// infos; a throw becomes a failed result — never a rejection, so the
-// background phase cannot take sync down with it.
+// Reference bridge run: it takes the phase payload plus the build options
+// and emits the structured build result. Tasty warnings ride the unified
+// one-line reporter (the verbose list under --verbose); the built line infos;
+// a throw becomes a failed result — never a rejection, so the background
+// phase cannot take sync down with it.
 
-import { createReferenceBuildReport, formatReferenceBuildDiagnostic } from './build-report.ts'
+import { reportRefDiagnostics } from '../../native/diagnostics.ts'
+import { createReferenceBuildReport, tastyDiagnosticToNative } from './build-report.ts'
 import type { ReferenceBuildComplete, ReferenceBuildResult } from './events.ts'
-import {
-  logReferenceBuilt,
-  logReferenceError,
-  logReferenceWarning,
-} from './logging.ts'
+import { logReferenceBuilt, logReferenceError } from './logging.ts'
 import { rebuildReferenceTastyBuild } from './tasty-build.ts'
 import type { ReferenceTastyPayload } from './types.ts'
 
 export interface ReferenceBuildPayload {
   name?: string
+  /**
+   * List every tasty warning with its location instead of the one-line
+   * summary. Threaded from `ref sync --verbose` through sync.
+   */
+  verbose?: boolean
 }
 
 export async function onRunBuild(
@@ -29,9 +32,10 @@ export async function onRunBuild(
     const symbol = name ? await state.api.loadSymbolByName(name) : undefined
     const report = createReferenceBuildReport(state)
 
-    for (const diagnostic of report.diagnostics) {
-      logReferenceWarning(formatReferenceBuildDiagnostic(diagnostic))
-    }
+    reportRefDiagnostics(
+      report.diagnostics.map(tastyDiagnosticToNative),
+      { verbose: buildPayload.verbose === true }
+    )
 
     logReferenceBuilt(Date.now() - startedAt)
 

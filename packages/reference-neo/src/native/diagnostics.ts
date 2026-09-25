@@ -1,7 +1,9 @@
 // Native diagnostic discipline: how the recipe answers the engine's report.
 // It takes the result diagnostics and emits one warning line by default or
 // the deduped verbose list, plus the error throw. Speaks only the diagnostic
-// shape, so the next native consumer reuses it untouched.
+// shape, so the next native consumer reuses it untouched. The reference tasty
+// phase maps its engine strings onto the shape and reports through the ref
+// channel below.
 import { dedupeDiagnostics, formatVerboseWarningLine, formatWarningSummary } from '../cli/output.ts'
 import type { NativeDiagnostic } from './contract.ts'
 
@@ -34,7 +36,7 @@ export function reportWarningDiagnostics(
   const warnings = diagnostics.filter(entry => entry.severity === 'warning')
   if (warnings.length === 0) return
   if (options.verbose === true) {
-    const lines = dedupeDiagnostics(warnings).map(item => formatVerboseWarningLine(item, false))
+    const lines = dedupeDiagnostics(warnings).map(item => formatVerboseWarningLine(item))
     console.warn(lines.join('\n'))
   } else {
     console.warn(formatWarningSummary(warnings.length))
@@ -50,7 +52,26 @@ export function reportCompilerDiagnostics(
 ): void {
   if (!entries || entries.length === 0) return
   if (options.verbose === true) {
-    const lines = dedupeDiagnostics(entries).map(item => formatVerboseWarningLine(item, true))
+    const lines = dedupeDiagnostics(entries).map(item => formatVerboseWarningLine(item, 'compiler'))
+    console.warn(lines.join('\n'))
+  } else {
+    console.warn(formatWarningSummary(entries.length))
+  }
+}
+
+// The reference tasty backchannel prints through the same shapes: the
+// summary counts its mapped entries, and verbose lists them behind the ref
+// tag so the channel stays distinguishable on the shared stderr. Entries
+// arrive codeless (engine strings, file-only at most) and print hintless —
+// the message carries the fix. The summary counts raw occurrences so the
+// verbose ×Ns sum to N, and silence at zero keeps clean builds quiet.
+export function reportRefDiagnostics(
+  entries: NativeDiagnostic[],
+  options: DiagnosticReportOptions = {}
+): void {
+  if (entries.length === 0) return
+  if (options.verbose === true) {
+    const lines = dedupeDiagnostics(entries).map(item => formatVerboseWarningLine(item, 'ref'))
     console.warn(lines.join('\n'))
   } else {
     console.warn(formatWarningSummary(entries.length))
@@ -72,8 +93,8 @@ export function reportSyncDiagnostics(
   if (total === 0) return
   if (options.verbose === true) {
     const lines = [
-      ...dedupeDiagnostics(warnings).map(item => formatVerboseWarningLine(item, false)),
-      ...dedupeDiagnostics(compiler).map(item => formatVerboseWarningLine(item, true)),
+      ...dedupeDiagnostics(warnings).map(item => formatVerboseWarningLine(item)),
+      ...dedupeDiagnostics(compiler).map(item => formatVerboseWarningLine(item, 'compiler')),
     ]
     console.warn(lines.join('\n'))
   } else {

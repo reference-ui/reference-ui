@@ -2,7 +2,7 @@
 // payload, and path modules and emits the serial-phase surface sync wires.
 // No workers, no bus, no virtual copy — the buried core scaffolds stay buried.
 
-export { createReferenceBuildReport, formatReferenceBuildDiagnostic } from './build-report.ts'
+export { createReferenceBuildReport, tastyDiagnosticToNative } from './build-report.ts'
 export { flushReferenceBuild, initReference } from './init.ts'
 export {
   getReferenceManifestPath,

@@ -57,8 +57,8 @@ export interface SyncResult {
 // awaits it, so the perf law holds by signature — and the refresh only
 // re-arms a warm session whose artifacts this run's wipe deleted (REF-04),
 // also without awaiting.
-function scheduleReferenceTastyPhase(cwd: string, config: ReferenceUIConfig): void {
-  initReference({ sourceDir: cwd, config })
+function scheduleReferenceTastyPhase(cwd: string, config: ReferenceUIConfig, verbose: boolean): void {
+  initReference({ sourceDir: cwd, config }, { verbose })
   refreshStaleReferenceTastyBuild(cwd, config)
 }
 
@@ -192,7 +192,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     markPhase('publishEnd')
 
     // Sync END only: schedule the background tasty phase, never await it.
-    scheduleReferenceTastyPhase(cwd, config)
+    scheduleReferenceTastyPhase(cwd, config, options.verbose === true)
 
     return { outDir, spec }
   } catch (error) {

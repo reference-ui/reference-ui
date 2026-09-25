@@ -19,6 +19,7 @@ const SEPARATOR = '⫶'
 const WARN_GLYPH = '⚠'
 const MULT_SIGN = '×'
 const COMPILER_TAG = '[compiler]'
+const REF_TAG = '[ref]'
 
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
@@ -196,11 +197,16 @@ function verboseLocation(entry: NativeDiagnostic): string {
 }
 
 // One verbose item: location plus message plus the fix hint where known.
-// The compiler backchannel rides the same shape behind its tag, so the
-// two channels stay distinguishable in a single deduped list.
-export function formatVerboseWarningLine(item: DeduplicatedDiagnostic, compiler: boolean): string {
+// The compiler and ref backchannels ride the same shape behind their tags,
+// so every channel stays distinguishable on the shared stderr. Codeless
+// items (the ref channel's engine strings) print without a code segment or
+// hint — the message itself carries the fix — and locationless items degrade
+// to tag plus message, never a guessed location. Coded lines keep their code
+// on every channel; the tag never replaces it.
+export function formatVerboseWarningLine(item: DeduplicatedDiagnostic, channel?: 'compiler' | 'ref'): string {
   const head: string[] = []
-  if (compiler) head.push(COMPILER_TAG)
+  if (channel === 'compiler') head.push(COMPILER_TAG)
+  if (channel === 'ref') head.push(REF_TAG)
   const location = verboseLocation(item.entry)
   if (location !== '') head.push(location)
   const prefix = head.length > 0 ? `${head.join(' ')} ` : ''

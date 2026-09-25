@@ -154,7 +154,7 @@ describe('formatVerboseWarningLine', () => {
   it('prints location, code, message, and the fix hint on one line', () => {
     vi.stubEnv('NO_COLOR', '1')
     vi.stubEnv('FORCE_COLOR', '')
-    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, false)).toBe(
+    expect(formatVerboseWarningLine({ entry: warning(), count: 1 })).toBe(
       '  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
     )
   })
@@ -163,7 +163,7 @@ describe('formatVerboseWarningLine', () => {
     vi.stubEnv('NO_COLOR', '1')
     const [group] = dedupeDiagnostics([warning(), warning(), warning()])
     expect(group?.count).toBe(3)
-    expect(formatVerboseWarningLine(group!, false)).toBe(
+    expect(formatVerboseWarningLine(group!)).toBe(
       '  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS ×3 — use a CSS keyword, token, or value the prop accepts'
     )
   })
@@ -171,25 +171,25 @@ describe('formatVerboseWarningLine', () => {
   it('omits the hint for unknown codes and info telemetry', () => {
     vi.stubEnv('NO_COLOR', '1')
     expect(
-      formatVerboseWarningLine({ entry: warning({ code: 'ATM-W-FROM-THE-FUTURE' }), count: 1 }, false)
+      formatVerboseWarningLine({ entry: warning({ code: 'ATM-W-FROM-THE-FUTURE' }), count: 1 })
     ).toBe('  theme/warn.ts:3:33 ATM-W-FROM-THE-FUTURE: `display: true` is not valid CSS')
     expect(
       formatVerboseWarningLine(
         { entry: warning({ severity: 'info', code: 'ATM-I-DEAD-BRANCH', message: 'dead branch' }), count: 1 },
-        true
+        'compiler'
       )
     ).toBe('  [compiler] theme/warn.ts:3:33 ATM-I-DEAD-BRANCH: dead branch')
   })
 
   it('tags compiler entries and degrades gracefully without a location', () => {
     vi.stubEnv('NO_COLOR', '1')
-    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, true)).toBe(
+    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, 'compiler')).toBe(
       '  [compiler] theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
     )
     expect(
-      formatVerboseWarningLine({ entry: warning({ file: undefined, line: undefined, column: undefined }), count: 1 }, false)
+      formatVerboseWarningLine({ entry: warning({ file: undefined, line: undefined, column: undefined }), count: 1 })
     ).toBe('  ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts')
-    expect(formatVerboseWarningLine({ entry: warning({ line: undefined, column: undefined }), count: 1 }, false)).toBe(
+    expect(formatVerboseWarningLine({ entry: warning({ line: undefined, column: undefined }), count: 1 })).toBe(
       '  theme/warn.ts ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
     )
   })
@@ -197,12 +197,65 @@ describe('formatVerboseWarningLine', () => {
   it('paints the code yellow on FORCE_COLOR and stays plain under NO_COLOR', () => {
     vi.stubEnv('NO_COLOR', '')
     vi.stubEnv('FORCE_COLOR', '1')
-    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, false)).toBe(
+    expect(formatVerboseWarningLine({ entry: warning(), count: 1 })).toBe(
       '  theme/warn.ts:3:33 \x1b[33mATM-W-INVALID-CSS-VALUE\x1b[0m: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
     )
     vi.stubEnv('NO_COLOR', '1')
-    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, false)).toBe(
+    expect(formatVerboseWarningLine({ entry: warning(), count: 1 })).toBe(
       '  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
+    )
+  })
+})
+
+describe('formatVerboseWarningLine ref channel', () => {
+  it('prints codeless locationless ref engine strings as tag plus message', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const manifest = warning({
+      code: undefined,
+      file: undefined,
+      line: undefined,
+      column: undefined,
+      message: 'Duplicate symbol name "Shared" matched 2 entries. Use symbol id or scoped lookup to disambiguate.',
+    })
+    expect(formatVerboseWarningLine({ entry: manifest, count: 1 }, 'ref')).toBe(
+      '  [ref] Duplicate symbol name "Shared" matched 2 entries. Use symbol id or scoped lookup to disambiguate.'
+    )
+  })
+
+  it('keeps the file-only location on ref scanner entries without inventing a line', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const scanner = warning({
+      code: undefined,
+      file: 'src/broken.ts',
+      line: undefined,
+      column: undefined,
+      message: 'parse reported an error',
+    })
+    expect(formatVerboseWarningLine({ entry: scanner, count: 1 }, 'ref')).toBe(
+      '  [ref] src/broken.ts parse reported an error'
+    )
+  })
+
+  it('keeps codes on coded lines whatever the channel', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatVerboseWarningLine({ entry: warning(), count: 1 }, 'ref')).toBe(
+      '  [ref] theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
+    )
+  })
+
+  it('collapses identical ref engine strings with ×N so counts reconcile', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const manifest = warning({
+      code: undefined,
+      file: undefined,
+      line: undefined,
+      column: undefined,
+      message: 'Duplicate symbol name "Shared" matched 2 entries.',
+    })
+    const [group] = dedupeDiagnostics([manifest, { ...manifest }, { ...manifest }])
+    expect(group?.count).toBe(3)
+    expect(formatVerboseWarningLine(group!, 'ref')).toBe(
+      '  [ref] Duplicate symbol name "Shared" matched 2 entries. ×3'
     )
   })
 })

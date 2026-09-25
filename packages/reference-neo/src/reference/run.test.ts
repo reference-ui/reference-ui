@@ -1,12 +1,21 @@
 // Reference bridge run suite: it takes the mocked tasty rebuild plus the mocked
-// logging seam and emits the REF-07 pins — diagnostics logged, structured
-// complete returned, throw mapped to a failed result. Neo port of the core
-// run suite; the bus is gone, so assertions read the return value, not emits.
+// logging and reporter seams and emits the REF-07 pins — diagnostics reported
+// through the unified ref channel, structured complete returned, throw mapped
+// to a failed result. Neo port of the core run suite; the bus is gone, so
+// assertions read the return value, not emits.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 
 import { DEFAULT_OUT_DIR } from '../constants.ts'
+import type { ReferenceTastyPayload } from './bridge/types.ts'
+
+function testPhasePayload(): ReferenceTastyPayload {
+  return {
+    sourceDir: '/workspace',
+    config: { include: ['src/**/*.{ts,tsx}'], name: 'fixture' },
+  }
+}
 
 function createTastyStateStub(loadSymbolByName: unknown) {
   const diagnostics: TastyBuildDiagnostic[] = [
@@ -37,8 +46,8 @@ async function importRunModule(options?: {
   vi.resetModules()
 
   const logReferenceBuilt = vi.fn()
-  const logReferenceWarning = vi.fn()
   const logReferenceError = vi.fn()
+  const reportRefDiagnostics = vi.fn()
   const loadSymbolByName = vi.fn(async (name: string) => {
     if (options?.loadSymbolImpl) {
       return options.loadSymbolImpl(name)
@@ -57,8 +66,10 @@ async function importRunModule(options?: {
 
   vi.doMock('./bridge/logging.ts', () => ({
     logReferenceBuilt,
-    logReferenceWarning,
     logReferenceError,
+  }))
+  vi.doMock('../native/diagnostics.ts', () => ({
+    reportRefDiagnostics,
   }))
   vi.doMock('./bridge/tasty-build.ts', () => ({
     rebuildReferenceTastyBuild,
@@ -68,8 +79,8 @@ async function importRunModule(options?: {
   return {
     ...mod,
     logReferenceBuilt,
-    logReferenceWarning,
     logReferenceError,
+    reportRefDiagnostics,
     loadSymbolByName,
     rebuildReferenceTastyBuild,
   }
@@ -78,29 +89,23 @@ async function importRunModule(options?: {
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('./bridge/logging.ts')
+  vi.doUnmock('../native/diagnostics.ts')
   vi.doUnmock('./bridge/tasty-build.ts')
   vi.restoreAllMocks()
 })
 
-describe('reference/bridge/run', () => {
-  it('logs diagnostics and returns structured build details on success', async () => {
-    const {
-      onRunBuild,
-      logReferenceBuilt,
-      logReferenceWarning,
-      loadSymbolByName,
-    } = await importRunModule()
+describe('reference/bridge/run reporting', () => {
+  it('reports diagnostics and returns structured build details on success', async () => {
+    const { onRunBuild, logReferenceBuilt, reportRefDiagnostics, loadSymbolByName } = await importRunModule()
 
-    const result = await onRunBuild(
-      {
-        sourceDir: '/workspace',
-        config: { include: ['src/**/*.{ts,tsx}'], name: 'fixture' },
-      },
-      { name: 'ButtonProps' }
-    )
+    const result = await onRunBuild(testPhasePayload(), { name: 'ButtonProps' })
 
     expect(loadSymbolByName).toHaveBeenCalledWith('ButtonProps')
-    expect(logReferenceWarning).toHaveBeenCalledWith('/workspace/src/reference.ts: scanner warning')
+    expect(reportRefDiagnostics).toHaveBeenCalledTimes(1)
+    expect(reportRefDiagnostics).toHaveBeenCalledWith(
+      [{ severity: 'warning', message: 'scanner warning', file: '/workspace/src/reference.ts' }],
+      { verbose: false }
+    )
     expect(logReferenceBuilt).toHaveBeenCalledTimes(1)
     expect(result).toEqual({
       status: 'complete',
@@ -120,16 +125,39 @@ describe('reference/bridge/run', () => {
     })
   })
 
+  it('threads verbose through to the ref reporter', async () => {
+    const { onRunBuild, reportRefDiagnostics } = await importRunModule()
+
+    await onRunBuild(testPhasePayload(), { verbose: true })
+
+    expect(reportRefDiagnostics).toHaveBeenCalledTimes(1)
+    expect(reportRefDiagnostics).toHaveBeenCalledWith(expect.any(Array), {
+      verbose: true,
+    })
+  })
+
+  it('hands the reporter an empty list when the build reports no diagnostics', async () => {
+    const { onRunBuild, reportRefDiagnostics } = await importRunModule({
+      rebuildImpl: async () => {
+        const stub = createTastyStateStub(vi.fn())
+        return { ...stub, warnings: [], diagnostics: [] }
+      },
+    })
+
+    const result = await onRunBuild(testPhasePayload(), {})
+
+    expect(reportRefDiagnostics).toHaveBeenCalledWith([], { verbose: false })
+    expect(result).toEqual(
+      expect.objectContaining({ status: 'complete', warningCount: 0, diagnosticCount: 0 })
+    )
+  })
+})
+
+describe('reference/bridge/run outcomes', () => {
   it('skips the symbol lookup when no name is requested', async () => {
     const { onRunBuild, loadSymbolByName } = await importRunModule()
 
-    const result = await onRunBuild(
-      {
-        sourceDir: '/workspace',
-        config: { include: ['src/**/*.{ts,tsx}'], name: 'fixture' },
-      },
-      {}
-    )
+    const result = await onRunBuild(testPhasePayload(), {})
 
     expect(loadSymbolByName).not.toHaveBeenCalled()
     expect(result).toEqual(
@@ -138,21 +166,16 @@ describe('reference/bridge/run', () => {
   })
 
   it('returns a failed result when the build throws', async () => {
-    const { onRunBuild, logReferenceError } = await importRunModule({
+    const { onRunBuild, logReferenceError, reportRefDiagnostics } = await importRunModule({
       rebuildImpl: async () => {
         throw new Error('build exploded')
       },
     })
 
-    const result = await onRunBuild(
-      {
-        sourceDir: '/workspace',
-        config: { include: ['src/**/*.{ts,tsx}'], name: 'fixture' },
-      },
-      { name: 'ButtonProps' }
-    )
+    const result = await onRunBuild(testPhasePayload(), { name: 'ButtonProps' })
 
     expect(logReferenceError).toHaveBeenCalledWith(expect.any(Error))
+    expect(reportRefDiagnostics).not.toHaveBeenCalled()
     expect(result).toEqual({
       status: 'failed',
       name: 'ButtonProps',

@@ -1,7 +1,8 @@
 // Reference bridge logging: it takes build milestones and emits `[neo] [ref]`
 // console lines. Neo has no log module — bare console with the `[neo]` prefix
-// is the house convention — so the bridge logs straight through it. One line
-// per level per build; the background phase stays quiet by shape, not by flag.
+// is the house convention — so the bridge logs straight through it. Warnings
+// ride the unified one-line summary, not this badge; only the built line and
+// the loud failure stay here, one per build.
 
 const BADGE = '[neo] [ref]'
 
@@ -11,10 +12,6 @@ function formatElapsed(durationMs: number): string {
 
 export function logReferenceBuilt(durationMs: number): void {
   console.info(`${BADGE} Built reference in ${formatElapsed(durationMs)}`)
-}
-
-export function logReferenceWarning(message: string): void {
-  console.warn(`${BADGE} ${message}`)
 }
 
 export function logReferenceError(error: unknown): void {

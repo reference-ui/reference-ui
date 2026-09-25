@@ -138,6 +138,31 @@ describe('ref bin', () => {
   });
 });
 
+describe('ref bin tasty warnings', () => {
+  it('sync folds duplicate-symbol warnings into one line on stderr by default', async () => {
+    const dir = await makeTempDir();
+    plantDupSymbolProject(dir);
+    const run = await runBin(['sync', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout).toContain('ref sync');
+    expect(run.stdout).toContain('Built reference');
+    const lines = run.stderr.trim().split('\n');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/^⚠ \d+ warnings? \[--verbose\]$/);
+  });
+
+  it('sync --verbose lists duplicate-symbol warnings behind the ref tag', async () => {
+    const dir = await makeTempDir();
+    plantDupSymbolProject(dir);
+    const run = await runBin(['sync', '--verbose', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout).toContain('Built reference');
+    expect(run.stderr).toContain('[ref]');
+    expect(run.stderr).toContain('Duplicate symbol name "Shared"');
+    expect(run.stderr).not.toContain('[--verbose]');
+  });
+});
+
 function assertVerboseWarningList(stderr: string): void {
   const lines = stderr.trim().split('\n');
   expect(lines).toHaveLength(3);
@@ -190,5 +215,42 @@ function plantWarningProject(dir: string): void {
       "export const c = css({ color: 'notacolor-xyz' })",
       '',
     ].join('\n')
+  );
+}
+
+function plantDupSymbolProject(dir: string): void {
+  writeFileSync(
+    join(dir, 'ui.config.ts'),
+    [
+      "import { defineConfig } from '@reference-ui/neo'",
+      '',
+      'export default defineConfig({',
+      "  name: 'ref-bin-dup',",
+      "  include: ['theme/**/*.{ts,tsx}'],",
+      '})',
+      '',
+    ].join('\n')
+  );
+  mkdirSync(join(dir, 'theme'), { recursive: true });
+  writeFileSync(
+    join(dir, 'theme', 'tokens.ts'),
+    [
+      "import { tokens } from '@reference-ui/neo'",
+      '',
+      'tokens({',
+      '  colors: {',
+      "    brand: { value: '#7c3aed' },",
+      '  },',
+      '})',
+      '',
+    ].join('\n')
+  );
+  writeFileSync(
+    join(dir, 'theme', 'alpha.ts'),
+    ['export interface Shared {', '  alpha: string', '}', ''].join('\n')
+  );
+  writeFileSync(
+    join(dir, 'theme', 'beta.ts'),
+    ['export interface Shared {', '  beta: number', '}', ''].join('\n')
   );
 }
