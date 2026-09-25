@@ -18,7 +18,9 @@
           }
         ],
         "usage": "common",
-        "examples": ["<Badge>"],
+        "examples": [
+          "<Badge>"
+        ],
         "usedWith": {
           "Button": "very common",
           "Card": "very common"
@@ -40,7 +42,9 @@
           }
         ],
         "usage": "common",
-        "examples": ["<Button>"],
+        "examples": [
+          "<Button>"
+        ],
         "usedWith": {
           "Badge": "very common",
           "Card": "very common"
@@ -62,7 +66,9 @@
           }
         ],
         "usage": "common",
-        "examples": ["<Card>"],
+        "examples": [
+          "<Card>"
+        ],
         "usedWith": {
           "Badge": "very common",
           "Button": "very common"

@@ -1,39 +1,13 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Atlas analysis result: the serializable component inventory plus its diagnostics.
+//! Takes the finalized component list and the template diagnostics the analysis raised.
+//! Emits one JSON payload the native boundary serializes and the JS wrapper parses.
+//! Diagnostics ride the shared template shape via an explicit ts-rs import, never a sibling.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::diagnostics::AtlasDiagnostic;
 use crate::model::Component;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "kebab-case")]
-#[ts(export_to = "modules/atlas/js/generated/", rename_all = "kebab-case")]
-pub enum AtlasDiagnosticCode {
-    UnresolvedPropsType,
-    UnsupportedPropsAnnotation,
-    UnresolvedIncludePackage,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(
-    export,
-    export_to = "modules/atlas/js/generated/",
-    rename_all = "camelCase"
-)]
-pub struct AtlasDiagnostic {
-    pub code: AtlasDiagnosticCode,
-    pub message: String,
-    pub source: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub component_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub interface_name: Option<String>,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -44,5 +18,6 @@ pub struct AtlasDiagnostic {
 )]
 pub struct AtlasAnalysisResult {
     pub components: Vec<Component>,
+    #[ts(type = "Array<import(\"../../../diagnostics/js/generated/Diagnostic\").Diagnostic>")]
     pub diagnostics: Vec<AtlasDiagnostic>,
 }

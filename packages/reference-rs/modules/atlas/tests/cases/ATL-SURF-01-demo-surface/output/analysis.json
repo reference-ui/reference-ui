@@ -191,7 +191,10 @@
           }
         ],
         "usage": "occasional",
-        "examples": ["<UserBadge count={5}>", "<UserBadge>"],
+        "examples": [
+          "<UserBadge count={5}>",
+          "<UserBadge>"
+        ],
         "usedWith": {
           "Button": "very common"
         }
@@ -434,7 +437,9 @@
             }
           ],
           "usage": "rare",
-          "examples": ["<BaseButton size=\"md\" {...props} />"],
+          "examples": [
+            "<BaseButton size=\"md\" {...props} />"
+          ],
           "usedWith": {}
         },
         {
@@ -575,7 +580,10 @@
             }
           ],
           "usage": "occasional",
-          "examples": ["<UserBadge count={5}>", "<UserBadge>"],
+          "examples": [
+            "<UserBadge count={5}>",
+            "<UserBadge>"
+          ],
           "usedWith": {
             "Button": "very common"
           }

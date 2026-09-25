@@ -7,7 +7,7 @@ use crate::internal::{
     component_key, ComponentDecl, ComponentTemplate, ImportKind, ModuleInfo, PropTemplate,
     PropValueType, ResolvedType, TypeExpr, UsageState,
 };
-use crate::output::{AtlasDiagnostic, AtlasDiagnosticCode};
+use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
 use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -84,20 +84,14 @@ pub fn build_component_template(
     modules: &HashMap<PathBuf, ModuleInfo>,
     package_indexes: &HashMap<String, PathBuf>,
     diagnostics: &mut Vec<AtlasDiagnostic>,
-) -> Option<ComponentTemplate> {
+) -> Result<Option<ComponentTemplate>, DiagnosticError> {
     let (interface_name, interface_source, resolved_type) = match &component.props {
         crate::internal::PropsAnnotation::InlineObject => {
-            diagnostics.push(AtlasDiagnostic {
-                code: AtlasDiagnosticCode::UnsupportedPropsAnnotation,
-                message: format!(
-                    "Component {} uses an inline props type annotation that Atlas does not index.",
-                    component.name
-                ),
-                source: component.source_display.clone(),
-                component_name: Some(component.name.clone()),
-                interface_name: None,
-            });
-            return None;
+            diagnostics.push(crate::diagnostics::unsupported_props_annotation(
+                &component.source_display,
+                &component.name,
+            )?);
+            return Ok(None);
         }
         crate::internal::PropsAnnotation::Named(type_name) => match resolve_named_type(
             modules,
@@ -112,16 +106,11 @@ pub fn build_component_template(
                 Some(resolved),
             ),
             None => {
-                diagnostics.push(AtlasDiagnostic {
-                    code: AtlasDiagnosticCode::UnresolvedPropsType,
-                    message: format!(
-                        "Component {} references props type {} which Atlas could not resolve.",
-                        component.name, type_name
-                    ),
-                    source: component.source_display.clone(),
-                    component_name: Some(component.name.clone()),
-                    interface_name: Some(type_name.clone()),
-                });
+                diagnostics.push(crate::diagnostics::unresolved_props_type(
+                    &component.source_display,
+                    &component.name,
+                    type_name,
+                )?);
                 (
                     Some(type_name.clone()),
                     Some(guess_interface_source(module, type_name)),
@@ -137,7 +126,7 @@ pub fn build_component_template(
         .map(|resolved| resolve_component_props(modules, package_indexes, resolved))
         .unwrap_or_default();
 
-    Some(ComponentTemplate {
+    Ok(Some(ComponentTemplate {
         name: component.name.clone(),
         source: component.source_display.clone(),
         interface_name,
@@ -145,7 +134,7 @@ pub fn build_component_template(
         file_path: component.file_path.clone(),
         app_relative_path: component.app_relative_path.clone(),
         props,
-    })
+    }))
 }
 
 pub fn apply_excludes(

@@ -17,7 +17,7 @@ Atlas is structured as a self-contained module containing its Rust engine, JavaS
 
 ## Key Invariants
 
-1. **Diagnostics Over Guesses**: Unsupported or unresolved inputs surface explicitly through diagnostics (e.g. `unresolved-props-type`, `unsupported-props-annotation`) rather than hallucinated or guessed data.
+1. **Diagnostics Over Guesses**: Unsupported or unresolved inputs surface explicitly through template diagnostics (e.g. `ATL-W-UNRESOLVED-PROPS-TYPE`, `ATL-W-UNSUPPORTED-PROPS-ANNOTATION`) rather than hallucinated or guessed data.
 2. **Fail-Closed Boundary**: Only exported components and explicitly included design packages are tracked. Arbitrary node_modules dependencies are never eagerly scanned.
 3. **No Kitchen-Sink Leakage**: Atlas never depends on style system runtime or compiler passes. It is strictly a semantic analysis product.
 

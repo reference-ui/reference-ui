@@ -2,10 +2,10 @@
   "caseName": "ATL-TYPE-01-unsupported-inline",
   "diagnostics": [
     {
-      "code": "unsupported-props-annotation",
-      "message": "Component InlineBadge uses an inline props type annotation that Atlas does not index.",
-      "source": "./components/InlineBadge.tsx",
-      "componentName": "InlineBadge"
+      "severity": "warning",
+      "code": "ATL-W-UNSUPPORTED-PROPS-ANNOTATION",
+      "message": "Component `InlineBadge` uses an inline props type annotation that Atlas does not index.",
+      "file": "./components/InlineBadge.tsx"
     }
   ],
   "notes": [

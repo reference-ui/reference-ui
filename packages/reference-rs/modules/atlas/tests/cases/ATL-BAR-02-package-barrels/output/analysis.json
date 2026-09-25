@@ -27,7 +27,10 @@
           }
         ],
         "usage": "very common",
-        "examples": ["<AppButton variant=\"solid\">", "<AppButton variant=\"ghost\">"],
+        "examples": [
+          "<AppButton variant=\"solid\">",
+          "<AppButton variant=\"ghost\">"
+        ],
         "usedWith": {}
       }
     ],
@@ -58,7 +61,10 @@
             }
           ],
           "usage": "very common",
-          "examples": ["<AppButton variant=\"solid\">", "<AppButton variant=\"ghost\">"],
+          "examples": [
+            "<AppButton variant=\"solid\">",
+            "<AppButton variant=\"ghost\">"
+          ],
           "usedWith": {}
         },
         {
@@ -86,7 +92,9 @@
             }
           ],
           "usage": "common",
-          "examples": ["<BaseButton {...props} />"],
+          "examples": [
+            "<BaseButton {...props} />"
+          ],
           "usedWith": {}
         }
       ]

@@ -2,18 +2,16 @@
   "caseName": "ATL-BAR-01-local-namespace",
   "diagnostics": [
     {
-      "code": "unresolved-props-type",
-      "message": "Component Button references props type ButtonProps which Atlas could not resolve.",
-      "source": "./components/Button.tsx",
-      "componentName": "Button",
-      "interfaceName": "ButtonProps"
+      "severity": "warning",
+      "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
+      "message": "Component `Button` references props type `ButtonProps` which Atlas could not resolve.",
+      "file": "./components/Button.tsx"
     },
     {
-      "code": "unresolved-props-type",
-      "message": "Component UserBadge references props type BadgeProps which Atlas could not resolve.",
-      "source": "./components/UserBadge.tsx",
-      "componentName": "UserBadge",
-      "interfaceName": "BadgeProps"
+      "severity": "warning",
+      "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
+      "message": "Component `UserBadge` references props type `BadgeProps` which Atlas could not resolve.",
+      "file": "./components/UserBadge.tsx"
     }
   ],
   "notes": [

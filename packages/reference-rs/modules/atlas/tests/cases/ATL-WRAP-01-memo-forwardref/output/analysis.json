@@ -134,7 +134,10 @@
           }
         ],
         "usage": "common",
-        "examples": ["<SearchBox size=\"sm\">", "<SearchBox size=\"md\">"],
+        "examples": [
+          "<SearchBox size=\"sm\">",
+          "<SearchBox size=\"md\">"
+        ],
         "usedWith": {
           "FancyButton": "very common"
         }

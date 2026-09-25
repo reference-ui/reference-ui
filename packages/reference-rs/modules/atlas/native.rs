@@ -16,7 +16,9 @@ pub fn analyze_atlas(root_dir: String, config_json: Option<String>) -> Result<St
     config.root_dir = root_dir.clone();
 
     let mut analyzer = atlas::AtlasAnalyzer::new(config);
-    let result: atlas::AtlasAnalysisResult = analyzer.analyze_detailed(&root_dir);
+    let result: atlas::AtlasAnalysisResult = analyzer
+        .analyze_detailed(&root_dir)
+        .map_err(|err| napi::Error::from_reason(err.to_string()))?;
     serde_json::to_string(&result)
         .map_err(|err| napi::Error::from_reason(format!("Failed to serialize Atlas result: {err}")))
 }

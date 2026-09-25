@@ -33,9 +33,10 @@ export const USAGE_VALUES: Usage[] = [
 ]
 
 const VALID_DIAGNOSTIC_CODES = [
-  'unresolved-props-type',
-  'unsupported-props-annotation',
-  'unresolved-include-package',
+  'ATL-W-UNRESOLVED-PROPS-TYPE',
+  'ATL-W-UNSUPPORTED-PROPS-ANNOTATION',
+  'ATL-W-UNRESOLVED-INCLUDE-PACKAGE',
+  'ATL-E-SCAN-FAILED',
 ]
 
 export interface AtlasDiagnosticsPayload {
@@ -162,9 +163,12 @@ export const atlasGauges: StandingGauge<AtlasCaseResult>[] = [
   // ATL-DIAG-01: Diagnostic schema integrity
   (res: AtlasCaseResult) => {
     for (const diag of res.diagnostics) {
+      expect(['warning', 'error']).toContain(diag.severity)
       expect(VALID_DIAGNOSTIC_CODES).toContain(diag.code)
-      expect(diag.message).toBeTruthy()
-      expect(diag.source).toBeTruthy()
+      expect(diag.message.trim().length).toBeGreaterThan(0)
+      if (diag.file !== undefined) {
+        expect(diag.file).toBeTruthy()
+      }
     }
   },
 ]

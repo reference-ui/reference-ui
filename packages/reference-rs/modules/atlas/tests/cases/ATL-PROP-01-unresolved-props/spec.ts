@@ -16,12 +16,15 @@ const spec: AtlasCaseSpec = {
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'unresolved-props-type',
-          componentName: 'BrokenCard',
-          interfaceName: 'MissingProps',
+          code: 'ATL-W-UNRESOLVED-PROPS-TYPE',
+          severity: 'warning',
+          file: './components/BrokenCard.tsx',
         }),
       ])
     )
+    const found = result.diagnostics.find(d => d.code === 'ATL-W-UNRESOLVED-PROPS-TYPE')
+    expect(found?.message).toContain('`BrokenCard`')
+    expect(found?.message).toContain('`MissingProps`')
   },
 }
 

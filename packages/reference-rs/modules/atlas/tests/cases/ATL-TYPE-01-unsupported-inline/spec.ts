@@ -16,11 +16,16 @@ const spec: AtlasCaseSpec = {
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'unsupported-props-annotation',
-          componentName: 'InlineBadge',
+          code: 'ATL-W-UNSUPPORTED-PROPS-ANNOTATION',
+          severity: 'warning',
+          file: './components/InlineBadge.tsx',
         }),
       ])
     )
+    const found = result.diagnostics.find(
+      d => d.code === 'ATL-W-UNSUPPORTED-PROPS-ANNOTATION'
+    )
+    expect(found?.message).toContain('`InlineBadge`')
   },
 }
 

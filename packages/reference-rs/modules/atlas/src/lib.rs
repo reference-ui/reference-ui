@@ -6,6 +6,7 @@
 
 mod analyzer;
 mod config;
+pub(crate) mod diagnostics;
 mod internal;
 mod model;
 mod output;
@@ -20,7 +21,8 @@ mod tests;
 
 pub use analyzer::AtlasAnalyzer;
 pub use config::AtlasConfig;
+pub use diagnostics::{AtlasDiagnostic, AtlasDiagnosticCode};
 #[allow(unused_imports)]
 pub use model::{Component, ComponentInterface, ComponentProp, Usage};
 #[allow(unused_imports)]
-pub use output::{AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode};
+pub use output::AtlasAnalysisResult;
