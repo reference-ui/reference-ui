@@ -459,8 +459,9 @@ above is unchanged.
 Output contract (HQ, verbatim shape): success emits ONE minimal
 line — `⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB` — glyph + command + stats,
 nicely coloured, separators in a darker muted tone (never bright).
-Errors are the exception: full cause, loud. Standard path stays
-whisper-quiet.
+Warnings fold onto the line — `⫶ ⚠ 3 warnings [--verbose]` — by
+default; verbose lists them instead. Errors are the exception:
+full cause, loud. Standard path stays whisper-quiet.
 LANDED (W2-CLI): per-command files + shared helpers; tasty drain
 stays a named subsystem call (essay to bridge); clean unified on
 `cleanDir` (retry verified, no HOLD needed). DECIDED (HQ, Final):

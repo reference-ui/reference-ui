@@ -1,8 +1,8 @@
 {
   "revision": "latest",
-  "hash": "c62838b329f4",
+  "hash": "ba4ab8f84dea",
   "dirty": true,
-  "createdAt": "2026-09-23T09:51:57.737Z",
+  "createdAt": "2026-09-24T21:46:40.085Z",
   "scorer": "bench-worker/2",
   "machine": {
     "node": "v24.16.0",
@@ -13,46 +13,46 @@
   "scales": [
     {
       "plan": {
-        "scale": "enterprise+custom",
+        "scale": "small",
         "generator": "app",
         "optIn": false,
         "seed": 7,
-        "defaultRuns": 1,
-        "files": 3000,
-        "deadFiles": 12000,
+        "defaultRuns": 3,
+        "files": 60,
+        "deadFiles": 240,
         "minCalls": 1,
         "maxCalls": 4,
-        "tokenColors": 300,
-        "tokenSpacing": 64,
-        "recipes": 120,
-        "uniqueRatio": 0.35,
-        "conditionRatio": 0.35,
-        "responsiveRatio": 0.3
+        "tokenColors": 80,
+        "tokenSpacing": 30,
+        "recipes": 6,
+        "uniqueRatio": 0.15,
+        "conditionRatio": 0.25,
+        "responsiveRatio": 0.2
       },
       "generated": {
-        "styleFiles": 3000,
-        "deadFiles": 12000,
-        "cssCalls": 7527,
-        "recipes": 120
+        "styleFiles": 60,
+        "deadFiles": 240,
+        "cssCalls": 171,
+        "recipes": 6
       },
-      "genMs": 1354.2871069999999,
+      "genMs": 27.69962000000001,
       "samples": [
         {
-          "syncMs": 958.797087,
-          "rssBefore": 101814272,
-          "rssPeak": 310022144,
-          "rssAfter": 300179456,
-          "rssPeakHw": 351506432,
+          "syncMs": 109.31673199999999,
+          "rssBefore": 108576768,
+          "rssPeak": 121106432,
+          "rssAfter": 121106432,
+          "rssPeakHw": 121106432,
           "scorer": "bench-worker/2"
         }
       ],
       "bundle": {
-        "cssBytes": 3091125,
-        "dataBytes": 217697,
-        "totalBytes": 3308822,
-        "cssGzip": 273286,
-        "dataGzip": 22179,
-        "totalGzip": 295465
+        "cssBytes": 92651,
+        "dataBytes": 91160,
+        "totalBytes": 183811,
+        "cssGzip": 12566,
+        "dataGzip": 18750,
+        "totalGzip": 31316
       }
     }
   ]
