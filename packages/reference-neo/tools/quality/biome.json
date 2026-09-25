@@ -1,6 +1,12 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
-  "formatter": { "enabled": false },
+  "formatter": {
+    "enabled": true,
+    "lineWidth": 90,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf"
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -51,7 +57,17 @@
       "suspicious": { "recommended": true, "noExplicitAny": "error" }
     }
   },
-  "javascript": { "formatter": { "enabled": false } },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "arrowParentheses": "asNeeded",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
   "json": { "formatter": { "enabled": false } },
   "css": { "formatter": { "enabled": false } },
   "overrides": [
@@ -64,6 +80,10 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/generated/**", "**/dist/**", "**/node_modules/**"],
+      "formatter": { "enabled": false }
     }
   ]
 }
