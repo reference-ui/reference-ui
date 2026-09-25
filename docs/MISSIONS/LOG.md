@@ -122,3 +122,5 @@ Docs cleanup runs overnight alongside objectives (user order 2026-09-22).
 ## Tick — row LAND, S1+row T1 deferred for 142's suites.
 
 ## Tick — CLI-WARN shipped (15c5dbcae + rebuild, live one-liner proven); CLI-DUMP crew (165) live with exact-scope work products, no action.
+
+## Tick — CLI-TASTY verified LAND (per-report ACCEPT); landing + wrap in progress.
