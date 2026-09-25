@@ -5,7 +5,11 @@
     "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"watDown\"",
     "file": "input/src/App.tsx",
     "line": 8,
-    "column": 23
+    "column": 23,
+    "span": {
+      "start": 200,
+      "end": 209
+    }
   },
   {
     "severity": "warning",
@@ -13,7 +17,11 @@
     "message": "Unknown condition \"tabletDown\"",
     "file": "input/src/App.tsx",
     "line": 11,
-    "column": 26
+    "column": 26,
+    "span": {
+      "start": 383,
+      "end": 392
+    }
   },
   {
     "severity": "warning",
@@ -21,7 +29,11 @@
     "message": "Unknown condition \"smTotablet\"",
     "file": "input/src/App.tsx",
     "line": 12,
-    "column": 30
+    "column": 30,
+    "span": {
+      "start": 441,
+      "end": 445
+    }
   },
   {
     "severity": "warning",
@@ -29,6 +41,10 @@
     "message": "Unknown condition \"aToxDown\"",
     "file": "input/src/App.tsx",
     "line": 15,
-    "column": 31
+    "column": 31,
+    "span": {
+      "start": 628,
+      "end": 637
+    }
   }
 ]

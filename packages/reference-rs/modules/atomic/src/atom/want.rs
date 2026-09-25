@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
 use super::AtomValue;
-use crate::diagnostics::DiagnosticLocation;
+use crate::diagnostics::{byte_span, DiagnosticLocation};
+use diagnostics::ByteSpan;
 
 /// Raw declaration authored in StyleProps or css() calls.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,6 +23,8 @@ pub struct Want {
     pub line: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub column: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub span: Option<ByteSpan>,
 }
 
 impl Want {
@@ -35,6 +38,7 @@ impl Want {
             file: None,
             line: None,
             column: None,
+            span: None,
         }
     }
 
@@ -44,7 +48,14 @@ impl Want {
             file: self.file.as_deref().map(str::to_string),
             line: self.line,
             column: self.column,
+            span: self.span,
         }
+    }
+
+    /// Record the literal's byte offsets: cheap facts for the rendering channel.
+    pub fn with_oxc_span(mut self, span: Option<oxc_span::Span>) -> Self {
+        self.span = span.map(byte_span);
+        self
     }
 
     pub fn with_when(mut self, when: SmallVec<[Box<str>; 2]>) -> Self {

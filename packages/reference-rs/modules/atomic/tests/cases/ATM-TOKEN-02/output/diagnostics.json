@@ -5,6 +5,10 @@
     "message": "unknown token path `blue.600`",
     "file": "input/src/App.tsx",
     "line": 4,
-    "column": 49
+    "column": 49,
+    "span": {
+      "start": 115,
+      "end": 125
+    }
   }
 ]

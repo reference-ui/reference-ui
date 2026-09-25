@@ -5,6 +5,10 @@
     "message": "`color: true` has no compiled style plan; this lookup will emit no class. `color` value `true` is not valid CSS",
     "file": "input/src/App.tsx",
     "line": 7,
-    "column": 19
+    "column": 19,
+    "span": {
+      "start": 124,
+      "end": 128
+    }
   }
 ]

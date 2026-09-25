@@ -25,8 +25,8 @@ use smallvec::SmallVec;
 use super::walk::{walk_expression, ExpressionWalk};
 use crate::diagnostics::adapters::extract::extract_note;
 use crate::diagnostics::{
-    line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
-    DiagnosticsSession, LineIndex,
+    byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity,
+    DiagnosticSink, DiagnosticsSession, LineIndex,
 };
 use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
@@ -94,6 +94,7 @@ impl<'a> ObjectWalk<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics
             .push(location.warning(code, message.clone()));
@@ -109,6 +110,7 @@ impl<'a> ObjectWalk<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics.push(location.info(code, message.clone()));
         self.session

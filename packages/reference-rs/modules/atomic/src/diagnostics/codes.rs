@@ -400,4 +400,36 @@ mod tests {
         assert!("ATM-W-NOPE".parse::<DiagnosticCode>().is_err());
         assert!(serde_json::from_str::<DiagnosticCode>("\"ATM1001\"").is_err());
     }
+
+    #[test]
+    fn warning_and_error_codes_parse_in_the_shared_template() {
+        for (_, text) in CODE_TABLE {
+            let parsed = diagnostics::DiagnosticCode::parse(text);
+            if text.contains("-I-") {
+                assert!(
+                    parsed.is_err(),
+                    "info code must stay module-local until the template grows an info level: {text}"
+                );
+                continue;
+            }
+            let code = parsed.unwrap();
+            assert!(code.is_registered_namespace(), "unregistered: {text}");
+            assert_eq!(code.namespace(), "ATM");
+        }
+    }
+
+    #[test]
+    fn template_tags_match_table_severity() {
+        for (_, text) in CODE_TABLE {
+            if text.contains("-I-") {
+                continue;
+            }
+            let code = diagnostics::DiagnosticCode::parse(text).unwrap();
+            if text.contains("-W-") {
+                assert!(code.is_warning_code(), "tag drift: {text}");
+            } else {
+                assert!(code.is_error_code(), "tag drift: {text}");
+            }
+        }
+    }
 }

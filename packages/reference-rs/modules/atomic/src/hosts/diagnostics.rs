@@ -6,11 +6,9 @@
 use crate::diagnostics::adapters::hosts::HostReport;
 
 /// One host skip report per skipped trace file.
-pub(crate) fn convert_trace_diagnostic(diagnostic: styletrace::TraceDiagnostic) -> HostReport {
+pub(crate) fn convert_trace_diagnostic(diagnostic: styletrace::StyletraceDiagnostic) -> HostReport {
     HostReport {
-        file: diagnostic
-            .file
-            .map(|path| path.to_string_lossy().to_string()),
+        file: diagnostic.file,
         message: diagnostic.message,
     }
 }

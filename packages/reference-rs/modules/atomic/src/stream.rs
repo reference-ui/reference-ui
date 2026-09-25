@@ -11,6 +11,7 @@ use oxc_parser::ParserReturn;
 
 use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::extract::constants::{self, LocalConstants};
+use diagnostics::ByteSpan;
 use crate::extract::resolver::{RetainedSource, StreamedSource};
 use crate::parse_source;
 
@@ -203,8 +204,11 @@ fn push_parse_error(
     let (line, column) = offset
         .and_then(|start| crate::diagnostics::line_col(content, start))
         .unzip();
-    diagnostics.push(
+    let mut diagnostic =
         Diagnostic::error(DiagnosticCode::ParseError, message.to_string())
-            .with_location(path, line, column),
-    );
+            .with_location(path, line, column);
+    if let Some(start) = offset.as_ref().copied() {
+        diagnostic = diagnostic.with_span(path, ByteSpan::point(start));
+    }
+    diagnostics.push(diagnostic);
 }

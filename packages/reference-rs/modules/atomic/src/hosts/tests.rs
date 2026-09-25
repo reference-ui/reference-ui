@@ -49,16 +49,19 @@ fn test_empty_hosts_match_legacy_fields() {
 
 #[test]
 fn test_trace_skip_converts_to_host_report() {
-    let located = super::diagnostics::convert_trace_diagnostic(styletrace::TraceDiagnostic {
-        file: Some(std::path::PathBuf::from("entry.ts")),
-        message: "trace skipped: unparsable".to_string(),
-    });
+    let located = super::diagnostics::convert_trace_diagnostic(
+        styletrace::StyletraceDiagnostic::warning(
+            "STT-W-SKIPPED-FILE",
+            "trace skipped: unparsable",
+        )
+        .unwrap()
+        .with_location("entry.ts", None, None),
+    );
     assert_eq!(located.file.as_deref(), Some("entry.ts"));
     assert_eq!(located.message, "trace skipped: unparsable");
-    let bare = super::diagnostics::convert_trace_diagnostic(styletrace::TraceDiagnostic {
-        file: None,
-        message: "trace skipped".to_string(),
-    });
+    let bare = super::diagnostics::convert_trace_diagnostic(
+        styletrace::StyletraceDiagnostic::warning("STT-W-SKIPPED-FILE", "trace skipped").unwrap(),
+    );
     assert_eq!(bare.file, None);
     assert_eq!(bare.message, "trace skipped");
 }

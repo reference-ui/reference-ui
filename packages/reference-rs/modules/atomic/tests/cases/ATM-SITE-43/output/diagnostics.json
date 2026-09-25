@@ -5,7 +5,11 @@
     "message": "`flexGrow` value `true` is not valid CSS",
     "file": "input/src/enums.ts",
     "line": 49,
-    "column": 13
+    "column": 13,
+    "span": {
+      "start": 728,
+      "end": 741
+    }
   },
   {
     "severity": "warning",
@@ -13,6 +17,10 @@
     "message": "`flexGrow` value `true` is not valid CSS",
     "file": "input/src/enums.ts",
     "line": 66,
-    "column": 37
+    "column": 37,
+    "span": {
+      "start": 1056,
+      "end": 1064
+    }
   }
 ]

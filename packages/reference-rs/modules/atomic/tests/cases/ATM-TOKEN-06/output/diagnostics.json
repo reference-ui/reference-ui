@@ -5,7 +5,11 @@
     "message": "malformed opacity modifier `red.500/`",
     "file": "input/src/App.tsx",
     "line": 5,
-    "column": 10
+    "column": 10,
+    "span": {
+      "start": 108,
+      "end": 118
+    }
   },
   {
     "severity": "warning",
@@ -13,6 +17,10 @@
     "message": "malformed opacity modifier `/40`",
     "file": "input/src/App.tsx",
     "line": 6,
-    "column": 16
+    "column": 16,
+    "span": {
+      "start": 135,
+      "end": 140
+    }
   }
 ]

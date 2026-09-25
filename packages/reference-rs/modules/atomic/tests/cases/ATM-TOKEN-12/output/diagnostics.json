@@ -5,7 +5,11 @@
     "message": "unknown token reference `{}}`",
     "file": "input/src/braceless.tsx",
     "line": 9,
-    "column": 38
+    "column": 38,
+    "span": {
+      "start": 490,
+      "end": 505
+    }
   },
   {
     "severity": "error",
@@ -13,7 +17,11 @@
     "message": "unknown token reference `{colors.nope}`",
     "file": "input/src/missing-ref.tsx",
     "line": 4,
-    "column": 10
+    "column": 10,
+    "span": {
+      "start": 77,
+      "end": 92
+    }
   },
   {
     "severity": "error",
@@ -21,7 +29,11 @@
     "message": "unknown token reference `{colors.nope}`",
     "file": "input/src/missing-ref.tsx",
     "line": 5,
-    "column": 11
+    "column": 11,
+    "span": {
+      "start": 104,
+      "end": 129
+    }
   },
   {
     "severity": "warning",

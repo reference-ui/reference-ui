@@ -78,6 +78,9 @@ fn render_producer(fact: &DiagnosticFact) -> Option<Diagnostic> {
             file: location.file.clone(),
             line: location.line,
             column: location.column,
+            span: location.span,
+            labels: None,
+            help: None,
         }),
         DiagnosticFact::HarvestOutcome {
             location,

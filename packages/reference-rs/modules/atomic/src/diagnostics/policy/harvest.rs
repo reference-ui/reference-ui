@@ -35,6 +35,7 @@ mod tests {
                 file: Some("t.ts".to_string()),
                 line: Some(7),
                 column: Some(3),
+                span: None,
             },
             prop: prop.into(),
             when: when.iter().map(|part| (*part).into()).collect(),

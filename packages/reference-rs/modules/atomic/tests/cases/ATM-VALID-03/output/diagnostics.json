@@ -5,6 +5,10 @@
     "message": "unknown token path `ghost.white`",
     "file": "input/src/App.tsx",
     "line": 3,
-    "column": 31
+    "column": 31,
+    "span": {
+      "start": 73,
+      "end": 86
+    }
   }
 ]

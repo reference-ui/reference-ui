@@ -10,6 +10,7 @@ use oxc_span::Span;
 use serde::{Deserialize, Serialize};
 
 use super::{Diagnostic, DiagnosticCode};
+use diagnostics::ByteSpan;
 
 /// Opaque identity for one compile input within a [`DiagnosticsSession`](super::DiagnosticsSession).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -60,8 +61,9 @@ impl<'a> SourceCatalog<'a> {
     }
 
     /// The file position of one analysis span: file plus 1-based line/column
-    /// of the span start. Unknown ids and unresolvable offsets fall back to
-    /// an honest unlocated position; the line is never skipped.
+    /// of the span start plus the byte offsets themselves. Unknown ids and
+    /// unresolvable offsets fall back to an honest unlocated position; the
+    /// line is never skipped.
     pub fn locate(&self, source: SourceId, span: Span) -> DiagnosticLocation {
         let Some((path, content)) = self.sources.get(source.0 as usize) else {
             return DiagnosticLocation::default();
@@ -73,11 +75,12 @@ impl<'a> SourceCatalog<'a> {
             file: Some((*path).to_string()),
             line: Some(line),
             column: Some(column),
+            span: Some(byte_span(span)),
         }
     }
 }
 
-/// File/line/column carried from extract to resolve for located diagnostics.
+/// File/line/column plus byte offsets carried from extract to resolve for located diagnostics.
 /// Extract populates it from literal spans; resolve attaches it to warnings
 /// and errors. Empty when the want was synthesized rather than authored in
 /// source (harvest, static CSS, plan rebuilds), in which case the diagnostic
@@ -87,6 +90,7 @@ pub struct DiagnosticLocation {
     pub file: Option<String>,
     pub line: Option<u32>,
     pub column: Option<u32>,
+    pub span: Option<ByteSpan>,
 }
 
 impl DiagnosticLocation {
@@ -110,8 +114,19 @@ impl DiagnosticLocation {
             diagnostic.file = Some(file.clone());
             diagnostic.line = self.line;
             diagnostic.column = self.column;
+            diagnostic.span = self.span;
         }
         diagnostic
+    }
+}
+
+/// The template span for one Oxc span: byte offsets copied verbatim, no line math.
+/// Oxc spans are ordered by construction, so the literal is infallible; reversed
+/// ranges from anywhere else still refuse at the template's wire boundary.
+pub fn byte_span(span: Span) -> ByteSpan {
+    ByteSpan {
+        start: span.start,
+        end: span.end,
     }
 }
 
@@ -296,6 +311,7 @@ mod tests {
             file: Some("a.tsx".to_string()),
             line: Some(4),
             column: Some(12),
+            span: None,
         };
         let diagnostic = loc.error(
             DiagnosticCode::UnknownTokenReference,
@@ -314,12 +330,14 @@ mod tests {
             file: Some("located.ts".to_string()),
             line: Some(5),
             column: Some(15),
+            span: Some(ByteSpan::new(60, 63).unwrap()),
         };
         let diagnostic = loc.warning(DiagnosticCode::UnknownTokenPath, "unknown token path `x.y`");
         assert_eq!(diagnostic.severity, DiagnosticSeverity::Warning);
         assert_eq!(diagnostic.file.as_deref(), Some("located.ts"));
         assert_eq!(diagnostic.line, Some(5));
         assert_eq!(diagnostic.column, Some(15));
+        assert_eq!(diagnostic.span, Some(ByteSpan::new(60, 63).unwrap()));
     }
 
     #[test]
@@ -347,10 +365,12 @@ mod tests {
         assert_eq!(located.file.as_deref(), Some("a.ts"));
         assert_eq!(located.line, Some(2));
         assert_eq!(located.column, Some(1));
+        assert_eq!(located.span, Some(ByteSpan::new(3, 4).unwrap()));
         let second = catalog.locate(SourceId(1), Span::new(1, 2));
         assert_eq!(second.file.as_deref(), Some("b.ts"));
         assert_eq!(second.line, Some(1));
         assert_eq!(second.column, Some(2));
+        assert_eq!(second.span, Some(ByteSpan::new(1, 2).unwrap()));
     }
 
     #[test]

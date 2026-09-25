@@ -40,6 +40,7 @@ mod tests {
                 file: Some("t.ts".to_string()),
                 line: None,
                 column: None,
+                span: None,
             },
             prop: "color".into(),
             when: vec!["_hover".into()],

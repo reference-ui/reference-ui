@@ -80,6 +80,7 @@ mod tests {
             file: Some("a.ts".to_string()),
             line: Some(2),
             column: Some(9),
+            span: None,
         }
     }
 

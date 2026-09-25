@@ -5,6 +5,10 @@
     "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"_hovr\"",
     "file": "input/src/absent.ts",
     "line": 4,
-    "column": 19
+    "column": 19,
+    "span": {
+      "start": 89,
+      "end": 98
+    }
   }
 ]

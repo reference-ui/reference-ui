@@ -5,7 +5,11 @@
     "message": "recipe(...) requires an explicit string-literal 'className' property",
     "file": "input/src/recipe.ts",
     "line": 20,
-    "column": 23
+    "column": 23,
+    "span": {
+      "start": 588,
+      "end": 617
+    }
   },
   {
     "severity": "error",
@@ -13,6 +17,10 @@
     "message": "recipe(...) requires an explicit string-literal 'className' property",
     "file": "input/src/recipe.ts",
     "line": 25,
-    "column": 22
+    "column": 22,
+    "span": {
+      "start": 705,
+      "end": 736
+    }
   }
 ]

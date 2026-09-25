@@ -77,6 +77,68 @@ warnings stay unlocated (the `BaseSystem` carries no source identity).
 Proof stations: `ATM-DIAG-01`–`14` (`tests/cases/`); emitter verdicts:
 `docs/MISSIONS/ERROR_CORRECT_LEDGER.md`.
 
+## ERROR CODES
+
+Every code the compiler can emit, with the channel that carries it and the
+minimal authored shape that raises it. `default` is `CompileResult.diagnostics`;
+`compiler` is the opt-in `compilerDiagnostics` backchannel (`logs: ['compiler']`).
+The shared registry (`modules/diagnostics/REGISTRY.md`) is the deliberate home
+for meanings and raise sites; Neo's `repro.test.ts` pins one whole-compiler
+repro per warn/err row. Codes are wire contract: never rename, never remove.
+
+| Code | Channel | Trigger |
+| ---- | ------- | ------- |
+| `ATM-W-DYNAMIC-EXPRESSION` | compiler | `css({ color: maybeColor() })` |
+| `ATM-W-DYNAMIC-MEMBER` | compiler | `css({ width: props.w })` |
+| `ATM-W-DYNAMIC-IDENTIFIER` | compiler | `css({ color: themeColor })` (unresolvable) |
+| `ATM-W-MUTATED-BINDING` | compiler | `css({ color: tint })` after `tint = …` |
+| `ATM-W-DYNAMIC-TEMPLATE` | compiler | `` css({ margin: `${gap}px` }) `` (unfoldable) |
+| `ATM-W-DYNAMIC-UNARY` | compiler | `css({ order: typeof x })` |
+| `ATM-W-UNFOLDABLE-KEY` | compiler | `css({ [dynamicKey]: '10px' })` |
+| `ATM-W-UNKNOWN-PROPERTY` | default | `css({ frobnicate: 'x' })` |
+| `ATM-W-UNKNOWN-BREAKPOINT` | compiler | `css({ r: { wat: { p: '1r' } } })` |
+| `ATM-W-NON-OBJECT-CONDITION` | compiler | `css({ _hover: 'red' })` |
+| `ATM-W-UNFOLDABLE-SPREAD` | compiler | `css({ ...overrides })` (unresolvable) |
+| `ATM-W-UNKNOWN-CONDITION` | default | `css({ _hovr: { color: 'red' } })` |
+| `ATM-W-MISSING-CONTAINER-ROOT` | default | `r:` container query with globals but no container root |
+| `ATM-W-NON-CANONICAL-NUMERIC` | default | `css({ width: '0x10' })` |
+| `ATM-W-INVALID-CSS-VALUE` | default | `css({ display: true })` |
+| `ATM-W-MALFORMED-OPACITY` | default | `css({ color: 'red.500/' })` |
+| `ATM-W-UNKNOWN-TOKEN-PATH` | default | `css({ caretColor: 'ui.missing.path' })` |
+| `ATM-W-TOKEN-CATEGORY-MISMATCH` | — | Retired: never emitted, kept for wire stability |
+| `ATM-W-UNTERMINATED-BRACE` | default | `css({ content: '"{oops"' })` |
+| `ATM-W-STATIC-WILDCARD` | default | `staticCss: { display: ['*'] }` |
+| `ATM-W-EMPTY-AT-RULE` | default | `globalCss({ '@supports': { … } })` |
+| `ATM-W-UNSUPPORTED-GLOBAL-VALUE` | default | `globalCss({ body: { color: { sm: […] } } })` |
+| `ATM-W-TRACE-SKIPPED` | default | Unparsable sibling beside traced files |
+| `ATM-E-MISSING-HOST-GRAPH` | default | Style-bearing JSX with empty `jsxHosts` |
+| `ATM-E-RECIPE-ARG-SHAPE` | default | `recipe('nope')` |
+| `ATM-E-RECIPE-SPREAD` | default | `recipe({ className: 'x', ...rest })` |
+| `ATM-E-RECIPE-CLASSNAME` | default | `recipe({ base: … })` with no `className` |
+| `ATM-E-PARSE` | default | `export function Broken( {` |
+| `ATM-E-DUPLICATE-RECIPE` | default | Two `recipe({ className: 'dup', … })` |
+| `ATM-E-UNKNOWN-TOKEN` | default | `css({ color: '{colors.nope}' })` |
+| `ATM-E-INVALID-BASE-SYSTEM` | default | Spec that fails contract validation |
+| `ATM-W-NON-OBJECT-CSS-ARG` | compiler | `css(fn())` |
+| `ATM-W-NON-OBJECT-JSX-STYLE` | compiler | `<Div css={cond && { … }} />` |
+| `ATM-W-RESPONSIVE-ARRAY-SPREAD` | compiler | `css({ padding: ['8px', ...dyn] })` |
+| `ATM-W-TAGGED-TEMPLATE-SITE` | compiler | `` css`color: red` `` |
+| `ATM-W-UNFOLDABLE-OBJECT-PROP` | compiler | `css({ ...dyn })` over `{ color: pick() }` |
+| `ATM-W-PARTIAL-OBJECT-PROP` | compiler | `css({ ...part })` over `{ color: flag ? 'white' : run() }` |
+| `ATM-W-DYNAMIC-BINARY` | compiler | `css({ order: 1 / 0 })` |
+| `ATM-I-DEAD-BRANCH` | module-local | Folded ternary drops an arm (never crosses the transport) |
+| `ATM-W-TOKEN-CALL-REFUSED` | compiler | `css({ color: token() })` |
+| `ATM-W-UNKNOWN-COLOR` | default | `css({ color: 'notacolor-xyz' })` |
+| `ATM-I-HARVEST-SINK` | module-local | One info per harvest sink (never crosses the transport) |
+| `ATM-W-MISSING-STYLE-PLAN` | default | Exact lookup with no plan beside a fatal drop |
+| `ATM-I-EXPECTED-LOOKUP` | module-local | Exact-lookup telemetry (never crosses the transport) |
+| `ATM-I-DYNAMIC-SLOT` | module-local | Dynamic-slot telemetry (never crosses the transport) |
+| `ATM-W-RESPONSIVE-LEAF-IMPORTANT` | default | `css({ width: { base: '50px!' } })` |
+| `ATM-W-UNREALIZABLE-EXTENSION` | default | `css({ translateX: '10px' })` |
+| `ATM-E-CONFLICTING-SCAN-INPUTS` | default | Request with both `files` and `retentionToken` |
+| `ATM-E-UNKNOWN-RETENTION-TOKEN` | default | Request with a never-minted token |
+| `ATM-E-DRAINED-RETENTION-TOKEN` | default | Request reusing a drained token |
+
 ## Must not
 
 - Let a producer construct prose or choose an audience — facts only.

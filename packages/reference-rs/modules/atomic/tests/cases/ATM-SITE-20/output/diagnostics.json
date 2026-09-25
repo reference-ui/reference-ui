@@ -5,7 +5,11 @@
     "message": "Unknown style property \"fooBar\"",
     "file": "input/src/App.tsx",
     "line": 3,
-    "column": 24
+    "column": 24,
+    "span": {
+      "start": 66,
+      "end": 72
+    }
   },
   {
     "severity": "warning",
@@ -13,7 +17,11 @@
     "message": "Unknown style property \"divideX\"",
     "file": "input/src/App.tsx",
     "line": 3,
-    "column": 37
+    "column": 37,
+    "span": {
+      "start": 79,
+      "end": 86
+    }
   },
   {
     "severity": "warning",
@@ -21,7 +29,11 @@
     "message": "Unknown style property \"frobnicate\"",
     "file": "input/src/App.tsx",
     "line": 7,
-    "column": 27
+    "column": 27,
+    "span": {
+      "start": 191,
+      "end": 197
+    }
   },
   {
     "severity": "warning",

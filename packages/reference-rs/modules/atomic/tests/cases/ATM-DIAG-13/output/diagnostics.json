@@ -5,7 +5,11 @@
     "message": "unknown token path `ui.missing.path`",
     "file": "input/src/hover.ts",
     "line": 4,
-    "column": 17
+    "column": 17,
+    "span": {
+      "start": 87,
+      "end": 104
+    }
   },
   {
     "severity": "warning",
@@ -13,6 +17,10 @@
     "message": "unknown token path `ui.missing.path`",
     "file": "input/src/hover.ts",
     "line": 5,
-    "column": 17
+    "column": 17,
+    "span": {
+      "start": 124,
+      "end": 141
+    }
   }
 ]

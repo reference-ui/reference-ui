@@ -73,6 +73,7 @@ mod tests {
             file: Some("t.ts".to_string()),
             line: Some(1),
             column: Some(1),
+            span: None,
         }
     }
 

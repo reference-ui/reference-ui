@@ -5,6 +5,10 @@
     "message": "`md` is neither a color token nor a CSS color",
     "file": "input/src/App.tsx",
     "line": 5,
-    "column": 10
+    "column": 10,
+    "span": {
+      "start": 95,
+      "end": 99
+    }
   }
 ]

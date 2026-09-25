@@ -14,6 +14,7 @@ alloc-trace = []
 [dependencies]
 canon.workspace = true
 base_system.workspace = true
+diagnostics.workspace = true
 module_graph.workspace = true
 styletrace.workspace = true
 serde = { workspace = true }

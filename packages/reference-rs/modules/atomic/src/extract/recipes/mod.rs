@@ -9,7 +9,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::{GetSpan, Span};
 
-use crate::diagnostics::{line_col, Diagnostic, DiagnosticCode, DiagnosticLocation};
+use crate::diagnostics::{byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation};
 use crate::extract::ExtractContext;
 use crate::recipes::Recipe;
 
@@ -103,7 +103,9 @@ fn located_error(
         .source
         .and_then(|source| line_col(source, span.start))
         .unzip();
-    Diagnostic::error(code, message).with_location(ctx.file, line, column)
+    Diagnostic::error(code, message)
+        .with_location(ctx.file, line, column)
+        .with_span(ctx.file, byte_span(span))
 }
 
 /// Source call site for a collected recipe, carried for refusal diagnostics.
@@ -116,6 +118,7 @@ fn call_location(ctx: &ExtractContext<'_>, span: Span) -> DiagnosticLocation {
         file: Some(ctx.file.to_string()),
         line,
         column,
+        span: Some(byte_span(span)),
     }
 }
 

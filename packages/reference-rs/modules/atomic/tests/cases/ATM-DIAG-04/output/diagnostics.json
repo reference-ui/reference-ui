@@ -5,6 +5,10 @@
     "message": "unknown token path `ui.missing.path`",
     "file": "input/src/located.ts",
     "line": 5,
-    "column": 15
+    "column": 15,
+    "span": {
+      "start": 102,
+      "end": 119
+    }
   }
 ]

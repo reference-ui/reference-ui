@@ -5,6 +5,10 @@
     "message": "unknown token path `ui.missing.path`",
     "file": "input/src/App.tsx",
     "line": 11,
-    "column": 15
+    "column": 15,
+    "span": {
+      "start": 332,
+      "end": 349
+    }
   }
 ]

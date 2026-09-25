@@ -47,6 +47,7 @@ impl<'a> GlobalWalker<'a> {
                 file: Some(source.clone()),
                 line: Some(1),
                 column: Some(1),
+                span: None,
             },
             None => DiagnosticLocation::default(),
         }

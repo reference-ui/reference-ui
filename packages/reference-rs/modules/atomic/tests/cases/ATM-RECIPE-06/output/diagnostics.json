@@ -5,7 +5,11 @@
     "message": "recipe(...) requires an explicit string-literal 'className' property",
     "file": "input/src/recipe.ts",
     "line": 4,
-    "column": 19
+    "column": 19,
+    "span": {
+      "start": 85,
+      "end": 114
+    }
   },
   {
     "severity": "error",
@@ -13,7 +17,11 @@
     "message": "recipe(...) requires an inline object literal as its first argument",
     "file": "input/src/recipe.ts",
     "line": 10,
-    "column": 19
+    "column": 19,
+    "span": {
+      "start": 188,
+      "end": 198
+    }
   },
   {
     "severity": "error",
@@ -21,6 +29,10 @@
     "message": "Duplicate recipe className 'duplicateBadge' within system '@reference-ui/lib'",
     "file": "input/src/recipe.ts",
     "line": 18,
-    "column": 12
+    "column": 12,
+    "span": {
+      "start": 326,
+      "end": 397
+    }
   }
 ]

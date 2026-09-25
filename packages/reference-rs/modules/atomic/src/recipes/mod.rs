@@ -343,6 +343,7 @@ mod tests {
             file: None,
             line: None,
             column: None,
+            span: None,
         }
     }
 

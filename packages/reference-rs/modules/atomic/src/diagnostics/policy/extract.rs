@@ -105,6 +105,7 @@ mod tests {
                 file: Some("a.ts".to_string()),
                 line: Some(4),
                 column: Some(11),
+                span: None,
             },
             prop: "color".into(),
             when: Vec::new(),

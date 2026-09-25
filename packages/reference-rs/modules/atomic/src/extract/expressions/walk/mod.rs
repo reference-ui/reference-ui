@@ -25,8 +25,8 @@ use super::literal::{
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::adapters::extract::{extract_note, ExtractReport};
 use crate::diagnostics::{
-    line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, DiagnosticSeverity,
-    DiagnosticSink, DiagnosticsSession, ExtractDetail, LineIndex, Policy,
+    byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation,
+    DiagnosticSeverity, DiagnosticSink, DiagnosticsSession, ExtractDetail, LineIndex, Policy,
 };
 use crate::extract::harvest::{is_sink_code, Sink, SinkSite};
 use crate::extract::scope::Scoped;
@@ -76,7 +76,8 @@ impl<'a> ExpressionWalk<'a> {
         let mut want = Want::new(self.prop, value)
             .with_when(when)
             .with_important(self.important || important)
-            .with_origin(self.origin);
+            .with_origin(self.origin)
+            .with_oxc_span(span);
         want.file = Some(self.file.into());
         if let Some(position) = self.span_position(span) {
             want.line = Some(position.0);
@@ -103,6 +104,7 @@ impl<'a> ExpressionWalk<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics
             .push(location.warning(code, message.clone()));
@@ -122,6 +124,7 @@ impl<'a> ExpressionWalk<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics.push(location.warning(code, message));
     }
@@ -134,6 +137,7 @@ impl<'a> ExpressionWalk<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics.push(location.info(code, message.clone()));
         self.session
@@ -165,6 +169,7 @@ impl<'a> ExpressionWalk<'a> {
                 file: self.file,
                 line,
                 column,
+                span: Some(byte_span(span)),
             }) {
                 self.sinks.push(sink);
                 sink_recorded = true;
@@ -175,6 +180,7 @@ impl<'a> ExpressionWalk<'a> {
                 file: Some(self.file.to_string()),
                 line,
                 column,
+                span: Some(byte_span(span)),
             },
             prop: self.prop.into(),
             when: when.iter().cloned().collect(),

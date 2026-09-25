@@ -5,6 +5,10 @@
     "message": "unterminated `{` in value `\"{oops\"`",
     "file": "input/src/unterminated.tsx",
     "line": 3,
-    "column": 35
+    "column": 35,
+    "span": {
+      "start": 77,
+      "end": 86
+    }
   }
 ]

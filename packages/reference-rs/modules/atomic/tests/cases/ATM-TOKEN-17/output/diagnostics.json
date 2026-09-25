@@ -5,7 +5,11 @@
     "message": "unknown token reference `{unknown.path}`",
     "file": "input/src/App.tsx",
     "line": 8,
-    "column": 7
+    "column": 7,
+    "span": {
+      "start": 216,
+      "end": 233
+    }
   },
   {
     "severity": "warning",

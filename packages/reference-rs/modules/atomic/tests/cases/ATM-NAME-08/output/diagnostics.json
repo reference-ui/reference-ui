@@ -5,7 +5,11 @@
     "message": "`padding: 1e21` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"1e21\" on `padding`",
     "file": "input/src/numerics.ts",
     "line": 4,
-    "column": 36
+    "column": 36,
+    "span": {
+      "start": 124,
+      "end": 130
+    }
   },
   {
     "severity": "warning",
@@ -13,7 +17,11 @@
     "message": "`padding: 1e-7` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"1e-7\" on `padding`",
     "file": "input/src/numerics.ts",
     "line": 5,
-    "column": 36
+    "column": 36,
+    "span": {
+      "start": 169,
+      "end": 175
+    }
   },
   {
     "severity": "warning",
@@ -21,7 +29,11 @@
     "message": "`top: 0x10` has no compiled style plan; this lookup will emit no class. Non-canonical numeric value \"0x10\" on `top`",
     "file": "input/src/numerics.ts",
     "line": 6,
-    "column": 31
+    "column": 31,
+    "span": {
+      "start": 209,
+      "end": 215
+    }
   },
   {
     "severity": "warning",
@@ -29,7 +41,11 @@
     "message": "`margin: ` has no compiled style plan; this lookup will emit no class. Empty string value on `margin`",
     "file": "input/src/numerics.ts",
     "line": 7,
-    "column": 36
+    "column": 36,
+    "span": {
+      "start": 254,
+      "end": 256
+    }
   },
   {
     "severity": "warning",
@@ -37,7 +53,11 @@
     "message": "Empty string value on `margin`",
     "file": "input/src/numerics.ts",
     "line": 8,
-    "column": 36
+    "column": 36,
+    "span": {
+      "start": 295,
+      "end": 299
+    }
   },
   {
     "severity": "warning",
@@ -45,6 +65,10 @@
     "message": "`İnk` is neither a color token nor a CSS color",
     "file": "input/src/text.ts",
     "line": 6,
-    "column": 43
+    "column": 43,
+    "span": {
+      "start": 247,
+      "end": 257
+    }
   }
 ]

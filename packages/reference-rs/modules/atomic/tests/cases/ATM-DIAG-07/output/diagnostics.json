@@ -5,6 +5,10 @@
     "message": "Unknown style property \"frobnicate\"",
     "file": "input/src/channel.ts",
     "line": 10,
-    "column": 3
+    "column": 3,
+    "span": {
+      "start": 195,
+      "end": 205
+    }
   }
 ]

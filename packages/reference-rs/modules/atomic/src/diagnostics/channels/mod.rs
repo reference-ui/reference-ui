@@ -126,6 +126,7 @@ impl EchoTriple {
                 file: line.file.clone(),
                 line: line.line,
                 column: line.column,
+                span: line.span,
             },
             message: line.message.clone(),
         }
@@ -155,6 +156,7 @@ fn remove_rendered(userspace: &mut Vec<Diagnostic>, line: &Diagnostic) {
         file: line.file.clone(),
         line: line.line,
         column: line.column,
+        span: line.span,
     };
     remove_line(userspace, line.code, &location, &line.message);
 }
@@ -191,6 +193,7 @@ mod tests {
             file: Some("t.ts".to_string()),
             line: Some(4),
             column: Some(19),
+            span: None,
         }
     }
 

@@ -15,11 +15,12 @@ interface ChannelDiagnostic {
   file?: string
   line?: number
   column?: number
+  span?: { start: number; end: number }
 }
 
 /** Channel entry with source position stripped, for cross-surface equality. */
 function keyShape(entry: ChannelDiagnostic): string {
-  const { file: _file, line: _line, column: _column, ...rest } = entry
+  const { file: _file, line: _line, column: _column, span: _span, ...rest } = entry
   return JSON.stringify(rest)
 }
 

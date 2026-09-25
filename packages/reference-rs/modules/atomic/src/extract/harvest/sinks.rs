@@ -9,6 +9,7 @@ use canon::ValueKind;
 use smallvec::SmallVec;
 
 use crate::diagnostics::DiagnosticCode;
+use diagnostics::ByteSpan;
 
 /// Props Slice 5 owns per host (§14); until the surface lands, the S4-1 sink
 /// filter drops them wholesale. `gap`/`offset` on ToastHost and
@@ -32,6 +33,7 @@ pub struct Sink {
     pub file: Box<str>,
     pub line: Option<u32>,
     pub column: Option<u32>,
+    pub span: Option<ByteSpan>,
 }
 
 /// The refused site a sink is recorded from (the hook's context struct).
@@ -41,6 +43,7 @@ pub struct SinkSite<'a> {
     pub file: &'a str,
     pub line: Option<u32>,
     pub column: Option<u32>,
+    pub span: Option<ByteSpan>,
 }
 
 impl Sink {
@@ -61,6 +64,7 @@ impl Sink {
             file: site.file.into(),
             line: site.line,
             column: site.column,
+            span: site.span,
         })
     }
 }
@@ -120,6 +124,7 @@ mod tests {
             file: "t.ts",
             line: None,
             column: None,
+            span: None,
         })
     }
 

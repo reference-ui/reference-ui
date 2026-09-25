@@ -40,6 +40,9 @@ mod tests {
             file: Some("test.tsx".to_string()),
             line: Some(3),
             column: Some(18),
+            span: None,
+            labels: None,
+            help: None,
         }
     }
 

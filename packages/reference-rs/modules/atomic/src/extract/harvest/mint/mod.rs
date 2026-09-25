@@ -88,6 +88,7 @@ pub fn mint(ctx: MintCtx<'_>) {
                 file: Some(sink.file.to_string()),
                 line: sink.line,
                 column: sink.column,
+                span: sink.span,
             },
             prop: sink.prop.clone(),
             when: sink.when.iter().cloned().collect(),
@@ -193,6 +194,7 @@ mod tests {
             file: "t.ts",
             line: None,
             column: None,
+            span: None,
         })
         .expect("known style prop sinks")
     }

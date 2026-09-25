@@ -48,8 +48,8 @@ use rustc_hash::FxHashSet;
 use crate::atom::Want;
 use crate::diagnostics::adapters::extract::extract_note;
 use crate::diagnostics::{
-    line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity, DiagnosticSink,
-    DiagnosticsSession, LineIndex,
+    byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity,
+    DiagnosticSink, DiagnosticsSession, LineIndex,
 };
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
@@ -208,6 +208,7 @@ impl<'a> ExtractContext<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics
             .push(location.warning(code, message.clone()));
@@ -226,6 +227,7 @@ impl<'a> ExtractContext<'a> {
             file: Some(self.file.to_string()),
             line,
             column,
+            span: Some(byte_span(span)),
         };
         self.diagnostics.push(location.info(code, message.clone()));
         self.session

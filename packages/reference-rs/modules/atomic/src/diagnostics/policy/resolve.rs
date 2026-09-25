@@ -101,6 +101,7 @@ mod tests {
                 file: Some("located.ts".to_string()),
                 line: Some(5),
                 column: Some(15),
+                span: None,
             },
             key: None,
             outcome,
