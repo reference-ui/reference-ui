@@ -3,8 +3,9 @@
 Current freeze, cases, and proof. Design narrative: [Switch.md](./Switch.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
-Playwright: `matrix/lib/tests/e2e/switch.spec.ts`
-Page: `/switch`
+Playwright: `__e2e__/Switch.ct.spec.ts` (colocated CT; quarantine matrix cases re-targeted here)
+Vitest: `ssr.test.tsx`, `Switch.test.tsx`, `types.test.tsx` (colocated)
+Page: `/switch` (quarantine matrix fixture; CT mounts `Switch.story.tsx` ParityFixture)
 
 ## Legend
 
@@ -32,15 +33,37 @@ geometry CSS vars.
 | ARIA | `aria-checked` true/false — not `aria-pressed`, not mixed |
 | Form | application HTML; Switch does not serialize (no hidden checkbox / `name`) |
 
-### Status (2026-09-10)
+### Status (2026-09-25 landing)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype button + thumb. |
-| Production | **No.** |
-| Named `[x]` | 3 / 27 (`SW-DOM-01`–`03` in one smoke) |
-| Playwright | 1 |
-| Vitest | 0 |
+| Engine | Hardened button + thumb (landing). |
+| Production | **No** — freeze items 1–2 superseded, see Landing note. |
+| Named `[x]` | 23 / 27 |
+| Playwright | 22 |
+| Vitest | 4 |
+
+### Landing note (quarantine-landing, 2026-09-25)
+
+Quarantine ported as **tests + hardening only**. Deliberate divergences
+from the freeze catalog above, per recon (mangling exhibits 1–2):
+
+- Uncontrolled mode (`defaultChecked` + internal store) is **preserved**,
+  not removed. Freeze work-order item 1 is superseded.
+- Thumb `transform` / transition is **preserved**. Freeze work-order
+  item 2 is superseded; visuals are frozen per LANDING.md.
+- `SW-ACT-08` is re-targeted: pins the controlled-without-`onChange`
+  readout (holds `checked`); uncontrolled-without-`onChange` toggles
+  its own DOM by design.
+- `SW-DOM-04` asserts extra-child presence, not visibility: the themed
+  track clips extra authored children (matrix page was unstyled).
+- Not ported: `SW-DOM-08` (quarantine e2e only re-proved the DOM-04
+  swap), `SW-COMP-01` (covered by existing CT + `SW-ACT-03` +
+  `SW-NAME-01`), `SW-ENV-03` (synthetic shadow-DOM harness, not lib
+  behavior), `SW-COMP-03` (Overlay/RovingFocus territory).
+- Source hardening (no visual change): `Switch.Thumb` forwards ref;
+  consumer `aria-pressed` is stripped at runtime; managed
+  `type`/`role`/`aria-checked`/`data-state` win over consumer conflicts.
 
 ### Gaps & incoherence
 
@@ -61,9 +84,17 @@ geometry CSS vars.
 
 ### Case index
 
-- `[x]` `SW-DOM-01`, `SW-DOM-02`, `SW-DOM-03`
-- `[ ]` `SW-TYPE-01`, remaining `SW-DOM-*`, `SW-ACT-*`, `SW-NAME-*`,
-  `SW-ENV-*`, `SW-A11Y-01`, `SW-COMP-*`
+- `[x]` `SW-TYPE-01` (re-targeted: `defaultChecked` allowed + pinned)
+- `[x]` `SW-DOM-01`, `SW-DOM-02`, `SW-DOM-03`, `SW-DOM-04`, `SW-DOM-05`,
+  `SW-DOM-06`, `SW-DOM-07`
+- `[x]` `SW-ACT-01`, `SW-ACT-02`, `SW-ACT-03`, `SW-ACT-04`, `SW-ACT-05`,
+  `SW-ACT-06`, `SW-ACT-07`, `SW-ACT-08` (re-targeted, see Landing note)
+- `[x]` `SW-NAME-01`, `SW-NAME-02`
+- `[x]` `SW-ENV-01`, `SW-ENV-02`, `SW-ENV-04`
+- `[x]` `SW-A11Y-01`
+- `[x]` `SW-COMP-02`
+- `[ ]` `SW-DOM-08`, `SW-ENV-03`, `SW-COMP-01`, `SW-COMP-03` (not ported,
+  see Landing note)
 
 ### Work order
 

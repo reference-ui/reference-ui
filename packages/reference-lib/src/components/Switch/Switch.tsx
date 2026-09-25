@@ -17,26 +17,29 @@ interface SwitchContextValue {
 
 const SwitchContext = React.createContext<SwitchContextValue | null>(null)
 
-export function SwitchThumb({ className, style, ...props }: SwitchThumbProps) {
-  const context = React.useContext(SwitchContext)
-  const checked = context?.checked ?? false
-  const disabled = context?.disabled ?? false
+export const SwitchThumb = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
+  function SwitchThumb({ className, style, ...props }, ref) {
+    const context = React.useContext(SwitchContext)
+    const checked = context?.checked ?? false
+    const disabled = context?.disabled ?? false
 
-  return (
-    <Span
-      data-reference-switch-thumb=""
-      data-state={checked ? 'checked' : 'unchecked'}
-      data-disabled={disabled ? '' : undefined}
-      className={className}
-      style={{
-        transform: checked ? 'translateX(1.25rem)' : 'translateX(0)',
-        transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        ...style,
-      }}
-      {...props}
-    />
-  )
-}
+    return (
+      <Span
+        ref={ref}
+        data-reference-switch-thumb=""
+        data-state={checked ? 'checked' : 'unchecked'}
+        data-disabled={disabled ? '' : undefined}
+        className={className}
+        style={{
+          transform: checked ? 'translateX(1.25rem)' : 'translateX(0)',
+          transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+          ...style,
+        }}
+        {...props}
+      />
+    )
+  }
+)
 
 export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
   function Switch(
@@ -77,9 +80,14 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
       child => React.isValidElement(child) && (child.type === SwitchThumb || (child.type as any)?.displayName === 'SwitchThumb')
     )
 
+    // Root owns its managed ARIA/state: consumer conflicts lose, aria-pressed is dropped.
+    const managedProps = { ...props } as Record<string, any>
+    delete managedProps['aria-pressed']
+
     return (
       <SwitchContext.Provider value={contextValue}>
         <Button
+          {...managedProps}
           type="button"
           role="switch"
           ref={ref}
@@ -91,7 +99,6 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           onClick={handleClick}
           className={className}
           style={style}
-          {...props}
         >
           {children}
           {!hasAuthoredThumb && <SwitchThumb />}
