@@ -14,8 +14,8 @@ pub const TEMPLATE_NAMESPACE: &str = "RS";
 
 /// Machine-readable copy of the `REGISTRY.md` namespace table, for advisory checks and documentation.
 /// The registry document is the deliberate gate; parsing stays shape-open so consumers keep reading newer codes.
-pub const REGISTERED_NAMESPACES: [&str; 10] = [
-    "RS", "ATM", "ATL", "TST", "STT", "TGN", "CAN", "BSS", "VRS", "MGP",
+pub const REGISTERED_NAMESPACES: [&str; 9] = [
+    "RS", "ATM", "ATL", "TST", "STT", "TGN", "CAN", "BSS", "MGP",
 ];
 
 /// Longest accepted code text; names stay short enough to grep and pin in goldens.

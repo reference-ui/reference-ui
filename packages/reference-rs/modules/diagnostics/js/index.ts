@@ -39,7 +39,6 @@ export const REGISTERED_NAMESPACES: readonly string[] = [
   'TGN',
   'CAN',
   'BSS',
-  'VRS',
   'MGP',
 ]
 
