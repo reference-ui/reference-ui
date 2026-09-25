@@ -134,7 +134,13 @@ describe('tasty runtime', () => {
       preferredExternalLibraries: ['alpha-lib'],
       manifest: {
         version: '2',
-        warnings: ['Duplicate symbol name "Shared" matched 2 entries.'],
+        warnings: [
+          {
+            severity: 'warning',
+            code: 'TST-W-DUPLICATE-SYMBOL-NAME',
+            message: 'Duplicate symbol name `Shared` matched 2 entries.',
+          },
+        ],
         symbolsByName: {
           Shared: ['_alpha', '_beta'],
         },
@@ -194,7 +200,13 @@ describe('tasty runtime', () => {
     expect(alpha.getId()).toBe('_alpha')
     expect(beta.getId()).toBe('_beta')
     expect(api.getWarnings()).toEqual([
-      'Duplicate symbol name "Shared" matched 2 entries.',
+      {
+        severity: 'warning',
+        code: 'TST-W-DUPLICATE-SYMBOL-NAME',
+        message: 'Duplicate symbol name `Shared` matched 2 entries.',
+      },
+    ])
+    expect(api.getRuntimeNotices()).toEqual([
       'Ambiguous symbol name "Shared" matched multiple external libraries. Using _alpha (alpha-lib); other matches: _beta (beta-lib). Use a scoped lookup to disambiguate.',
     ])
   })
@@ -341,7 +353,8 @@ describe('tasty runtime', () => {
     const styleProps = await api.loadSymbolByName('StyleProps')
 
     expect(styleProps.getId()).toBe('_react')
-    expect(api.getWarnings()).toEqual([
+    expect(api.getWarnings()).toEqual([])
+    expect(api.getRuntimeNotices()).toEqual([
       'Ambiguous symbol name "StyleProps" matched multiple external libraries. Using _react (@reference-ui/react); other matches: _system (@reference-ui/system), _types (@reference-ui/types). Use a scoped lookup to disambiguate.',
     ])
   })

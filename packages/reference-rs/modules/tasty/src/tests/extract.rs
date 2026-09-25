@@ -68,7 +68,7 @@ fn parsed_file<'a>(
 #[test]
 fn extracts_interface_with_optional_member() {
     let scanned = single_file("test.ts", "export interface Props { label?: string }\n");
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     assert_eq!(file.exports.len(), 1);
     assert_eq!(file.exports[0].name, "Props");
@@ -83,7 +83,7 @@ fn interface_extends_yields_reference_type_refs() {
         "test.ts",
         "export interface Child extends Base, Other { x: number }\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let shell = &file.exports[0];
     assert_eq!(shell.extends.len(), 2);
@@ -108,7 +108,7 @@ fn interface_extends_utility_preserves_type_arguments() {
         "test.ts",
         "export interface Base { a: string; drop: number }\nexport interface S extends Omit<Base, 'drop'> {}\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let shell = file.exports.iter().find(|s| s.name == "S").expect("S");
     assert_eq!(shell.extends.len(), 1);
@@ -128,7 +128,7 @@ fn interface_extends_utility_preserves_type_arguments() {
 #[test]
 fn type_alias_union_underlying() {
     let scanned = single_file("test.ts", "export type U = string | number | boolean\n");
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let shell = &file.exports[0];
     let underlying = shell
@@ -152,7 +152,7 @@ fn named_reexport_populates_export_bindings() {
         ("src/other.ts", "export interface X { x: number }\n"),
         ("src/index.ts", "export { X } from './other'\n"),
     ]);
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let index = parsed_file(&ast, "src/index.ts");
     assert_eq!(index.export_bindings.get("X"), Some(&"X".to_string()));
 }
@@ -160,7 +160,7 @@ fn named_reexport_populates_export_bindings() {
 #[test]
 fn export_type_from_package_does_not_add_local_type_alias_shell() {
     let scanned = single_file("src/index.ts", "export type { T } from 'pkg';\n");
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let index = parsed_file(&ast, "src/index.ts");
     assert!(index.exports.iter().all(|s| s.name != "T"));
     assert!(index.import_bindings.get("T").is_none());
@@ -172,7 +172,7 @@ fn export_type_from_local_module_skips_synthetic_type_alias_shell() {
         ("src/other.ts", "export type T = string;\n"),
         ("src/index.ts", "export type { T } from './other';\n"),
     ]);
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let index = parsed_file(&ast, "src/index.ts");
     assert!(
         index.exports.iter().all(|s| s.name != "T"),
@@ -191,7 +191,7 @@ fn library_export_list_materializes_local_type_closure() {
          type ButtonProps = Shared & { size?: number }\n\
          export { type ButtonProps }\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "node_modules/fancy-lib/index.d.mts");
 
     let shared = file
@@ -215,7 +215,7 @@ fn default_export_interface_registers_binding_and_export() {
         "test.ts",
         "export default interface DefaultExport { n: number }\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     assert_eq!(
         file.export_bindings.get("default"),
@@ -232,7 +232,7 @@ fn default_export_interface_registers_binding_and_export() {
 #[test]
 fn const_object_as_const_populates_value_bindings() {
     let scanned = single_file("test.ts", "const cfg = { a: 1 } as const\nexport {}\n");
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let binding = file
         .value_bindings
@@ -255,7 +255,7 @@ fn recipe_call_populates_value_bindings_with_variant_selection_function() {
         "test.ts",
         "import { recipe } from '@reference-ui/react'\nconst buttonRecipe = recipe({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let binding = file
         .value_bindings
@@ -288,7 +288,7 @@ fn cva_call_populates_value_bindings_with_variant_selection_function() {
         "test.ts",
         "import { cva } from 'src/system/runtime'\nconst buttonRecipe = cva({ variants: { visual: { solid: {}, ghost: {} }, size: { sm: {}, md: {} } } })\nexport {}\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let binding = file
         .value_bindings
@@ -325,7 +325,7 @@ fn jsdoc_block_on_interface_is_parsed() {
         "test.ts",
         "/**\n * Summary line for the interface.\n */\nexport interface Documented {}\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let shell = &file.exports[0];
     let summary = shell
@@ -349,7 +349,7 @@ fn nested_array_map_reference_structure() {
         "test.ts",
         "export type Nested = Array<Map<string, number>>\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let underlying = file.exports[0].underlying.as_ref().expect("underlying");
     match underlying {
@@ -380,7 +380,7 @@ fn import_bindings_named_default_namespace() {
             "import type { Foo } from './dep'\nimport D from './dep'\nimport * as DepNs from './dep'\n\nexport type Entry = Foo\n",
         ),
     ]);
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "src/entry.ts");
 
     let named = file.import_bindings.get("Foo").expect("Foo import");
@@ -409,7 +409,7 @@ fn readonly_tuple_of_string_literals_lowers_to_tuple() {
         "test.ts",
         "export type ConstAssertion = readonly ['users', 'posts', 'comments']\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let underlying = file.exports[0].underlying.as_ref().expect("underlying");
     match underlying {
@@ -427,7 +427,7 @@ fn readonly_tuple_primitive_lowers() {
         "test.ts",
         "export type ReadonlyTuple = readonly [string, number]\n",
     );
-    let ast = extract_ast(&scanned);
+    let ast = extract_ast(&scanned).expect("extract should succeed");
     let file = parsed_file(&ast, "test.ts");
     let underlying = file.exports[0].underlying.as_ref().expect("underlying");
     eprintln!("ReadonlyTuple underlying: {underlying:?}");

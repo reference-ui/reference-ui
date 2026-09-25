@@ -10,6 +10,7 @@ export type {
   RawTastyFnParam,
   RawTastyInterfaceSymbol,
   RawTastyJsDoc,
+  RawTastyDiagnostic,
   RawTastyJsDocTag,
   RawTastyManifest,
   RawTastyMappedModifierKind,

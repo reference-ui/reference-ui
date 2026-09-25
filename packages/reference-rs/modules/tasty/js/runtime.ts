@@ -2,19 +2,23 @@
  * Native Node-API ABI bindings and invocation helpers for Tasty module generation.
  * Defines exported symbol manifests and interfaces for raw module scanning and emission.
  * Passes root directory paths and include globs to the Rust scanner.
- * Emits raw serialized module maps and diagnostic payloads from the native engine.
+ * Emits raw serialized module maps and typed diagnostic payloads from the native engine.
  */
 import { callNativeJson } from '../../runtime/js/native'
 
-export interface RawScannerDiagnostic {
-  file_id: string
+export interface TastyDiagnostic {
+  severity: 'warning' | 'error'
+  code: string
   message: string
+  file?: string
+  line?: number
+  column?: number
 }
 
 export interface EmittedModulesPayload {
   modules: Record<string, string>
   type_declarations: Record<string, string>
-  diagnostics?: RawScannerDiagnostic[]
+  diagnostics?: TastyDiagnostic[]
 }
 
 export const TASTY_NATIVE_EXPORTS = ['scanAndEmitModules'] as const

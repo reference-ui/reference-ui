@@ -13,14 +13,15 @@ use super::values::value_bindings_from_statement;
 use super::ExtractionContext;
 use crate::ast::model::{ImportBinding, ParsedFileAst, SymbolShell};
 use crate::constants::libraries::USER_LIBRARY_NAME;
-use crate::model::{ScannerDiagnostic, TypeRef};
+use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
+use crate::model::TypeRef;
 use crate::scanner::symbol_id;
 use crate::scanner::{ScannedFile, ScannedWorkspace};
 
 pub(crate) fn extract_files(
     scanned_workspace: &ScannedWorkspace,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) -> Vec<ParsedFileAst> {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<Vec<ParsedFileAst>, DiagnosticError> {
     scanned_workspace
         .files
         .iter()
@@ -39,13 +40,13 @@ fn extract_file(
     root_dir: &std::path::Path,
     scanned_file: &ScannedFile,
     file_id_set: &std::collections::BTreeSet<String>,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) -> ParsedFileAst {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<ParsedFileAst, DiagnosticError> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(&scanned_file.file_id).unwrap_or_default();
     let parsed = Parser::new(&allocator, &scanned_file.source, source_type).parse();
 
-    record_parse_errors(scanned_file, parsed.errors.len(), diagnostics);
+    record_parse_errors(scanned_file, parsed.errors.len(), diagnostics)?;
 
     let comments = &parsed.program.comments;
     let mut bindings = FileBindings::default();
@@ -56,7 +57,7 @@ fn extract_file(
 
     bindings.materialize_library_export_closure(scanned_file, &parsed.program.body, comments);
 
-    ParsedFileAst {
+    Ok(ParsedFileAst {
         file_id: scanned_file.file_id.clone(),
         module_specifier: scanned_file.module_specifier.clone(),
         library: scanned_file.library.clone(),
@@ -67,7 +68,7 @@ fn extract_file(
         reexport_target: bindings.reexport_target,
         export_all_targets: bindings.export_all_targets,
         exports: bindings.exports,
-    }
+    })
 }
 
 #[derive(Default)]
@@ -240,14 +241,15 @@ fn local_references_in_file(shell: &SymbolShell, module_specifier: &str) -> Vec<
 fn record_parse_errors(
     scanned_file: &ScannedFile,
     error_count: usize,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<(), DiagnosticError> {
     if error_count == 0 {
-        return;
+        return Ok(());
     }
 
-    diagnostics.push(ScannerDiagnostic {
-        file_id: scanned_file.file_id.clone(),
-        message: format!("parse reported {error_count} error(s)"),
-    });
+    diagnostics.push(crate::diagnostics::parse_error(
+        &scanned_file.file_id,
+        error_count,
+    )?);
+    Ok(())
 }

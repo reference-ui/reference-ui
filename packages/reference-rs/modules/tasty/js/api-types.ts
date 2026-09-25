@@ -47,6 +47,9 @@ export type {
 export type TastySymbolKind = 'interface' | 'typeAlias'
 export type TastyTypeKind = RawTastyStructuredTypeRef['kind'] | 'reference'
 
+/** One typed compiler warning from the manifest: severity plus code plus message. */
+export type RawTastyDiagnostic = RawTastyManifest['warnings'][number]
+
 export interface TastyCallableParameter {
   name: string
   type?: string
@@ -181,7 +184,8 @@ export interface TastyApi {
   ready(): Promise<void>
   loadManifest(): Promise<RawTastyManifest>
   getManifest(): RawTastyManifest | undefined
-  getWarnings(): string[]
+  getWarnings(): RawTastyDiagnostic[]
+  getRuntimeNotices(): string[]
   /** True when the id refers to a chunk-backed symbol in the loaded manifest. */
   hasManifestSymbol(id: string): boolean
   loadSymbolById(id: string): Promise<TastySymbol>

@@ -34,7 +34,8 @@ pub struct TastyModule {
 )]
 pub struct TastyManifest {
     pub version: String,
-    pub warnings: Vec<String>,
+    #[ts(type = "Array<import(\"../../../diagnostics/js/generated/Diagnostic\").Diagnostic>")]
+    pub warnings: Vec<diagnostics::Diagnostic>,
     pub symbols_by_name: BTreeMap<String, Vec<String>>,
     pub symbols_by_id: BTreeMap<String, TastySymbolIndexEntry>,
 }

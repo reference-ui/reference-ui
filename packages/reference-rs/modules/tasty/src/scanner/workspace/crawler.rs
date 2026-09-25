@@ -5,6 +5,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::constants::libraries::USER_LIBRARY_NAME;
+use crate::diagnostics::scan_failed;
 
 use super::policy::{resolve_import_for_discovery, DiscoveryContext};
 use crate::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
@@ -91,8 +92,12 @@ impl<'a> Crawler<'a> {
 
     fn read_source(&self, file_id: &str) -> Result<String, String> {
         let absolute_path = self.root_dir.join(file_id);
-        fs::read_to_string(&absolute_path)
-            .map_err(|err| format!("failed to read {}: {err}", absolute_path.display()))
+        fs::read_to_string(&absolute_path).map_err(|err| {
+            scan_failed(format!(
+                "failed to read {}: {err}",
+                absolute_path.display()
+            ))
+        })
     }
 
     fn known_file_ids(&self) -> BTreeSet<String> {

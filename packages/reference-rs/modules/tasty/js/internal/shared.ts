@@ -196,7 +196,7 @@ function isRawTastyManifest(value: unknown): value is RawTastyManifest {
   return (
     typeof candidate.version === 'string' &&
     Array.isArray(candidate.warnings) &&
-    candidate.warnings.every(warning => typeof warning === 'string') &&
+    candidate.warnings.every(isRawTastyDiagnostic) &&
     candidate.symbolsByName != null &&
     typeof candidate.symbolsByName === 'object' &&
     Object.values(candidate.symbolsByName).every(
@@ -206,6 +206,18 @@ function isRawTastyManifest(value: unknown): value is RawTastyManifest {
     ) &&
     candidate.symbolsById != null &&
     typeof candidate.symbolsById === 'object'
+  )
+}
+
+function isRawTastyDiagnostic(value: unknown): boolean {
+  if (value == null || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  return (
+    (candidate.severity === 'warning' || candidate.severity === 'error') &&
+    typeof candidate.code === 'string' &&
+    candidate.code.length > 0 &&
+    typeof candidate.message === 'string' &&
+    candidate.message.length > 0
   )
 }
 

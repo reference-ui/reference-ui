@@ -11,17 +11,18 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ast::model::{ParsedFileAst, SymbolShell};
-use crate::model::{ScannerDiagnostic, TsMember, TsMemberKind, TsSymbolKind};
+use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
+use crate::model::{TsMember, TsMemberKind, TsSymbolKind};
 
 /// Fold same-file same-name shells in place, preserving first-occurrence
 /// declaration order. Groups of one pass through untouched (zero behavior
 /// change); groups of several fold per M1–M3 with diagnostics appended.
 pub(crate) fn fold_same_file_merges(
     parsed: &mut ParsedFileAst,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<(), DiagnosticError> {
     if parsed.exports.len() < 2 {
-        return;
+        return Ok(());
     }
     let mut order: Vec<String> = Vec::new();
     let mut groups: BTreeMap<String, Vec<SymbolShell>> = BTreeMap::new();
@@ -35,18 +36,19 @@ pub(crate) fn fold_same_file_merges(
     let mut folded = Vec::with_capacity(order.len());
     for name in order {
         let group = groups.remove(&name).expect("group pushed above");
-        folded.push(fold_group(&parsed.file_id, group, diagnostics));
+        folded.push(fold_group(&parsed.file_id, group, diagnostics)?);
     }
     parsed.exports = folded;
+    Ok(())
 }
 
 fn fold_group(
     file_id: &str,
     group: Vec<SymbolShell>,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) -> SymbolShell {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<SymbolShell, DiagnosticError> {
     if group.len() == 1 {
-        return group.into_iter().next().expect("non-empty group");
+        return Ok(group.into_iter().next().expect("non-empty group"));
     }
     if group
         .iter()
@@ -60,11 +62,10 @@ fn fold_group(
         .map(|shell| kind_label(&shell.kind))
         .collect::<Vec<_>>()
         .join(" + ");
-    diagnostics.push(ScannerDiagnostic {
-        file_id: file_id.to_string(),
-        message: format!("duplicate declaration of \"{name}\" ({kinds}); keeping the last"),
-    });
-    group.into_iter().last().expect("non-empty group")
+    diagnostics.push(crate::diagnostics::duplicate_declaration(
+        file_id, &name, &kinds,
+    )?);
+    Ok(group.into_iter().last().expect("non-empty group"))
 }
 
 /// M1: union all-Interface shells in declaration order. Members union by
@@ -74,15 +75,15 @@ fn fold_group(
 fn merge_interfaces(
     file_id: &str,
     group: Vec<SymbolShell>,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
-) -> SymbolShell {
+    diagnostics: &mut Vec<TastyDiagnostic>,
+) -> Result<SymbolShell, DiagnosticError> {
     let mut shells = group.into_iter();
     let first = shells.next().expect("non-empty merge group");
     let mut merge = InterfaceMerge::new(first);
     for shell in shells {
-        merge.absorb(shell, file_id, diagnostics);
+        merge.absorb(shell, file_id, diagnostics)?;
     }
-    merge.finish()
+    Ok(merge.finish())
 }
 
 /// Accumulator for one M1 merge: the surviving shell plus the nominal
@@ -105,8 +106,8 @@ impl InterfaceMerge {
         &mut self,
         shell: SymbolShell,
         file_id: &str,
-        diagnostics: &mut Vec<ScannerDiagnostic>,
-    ) {
+        diagnostics: &mut Vec<TastyDiagnostic>,
+    ) -> Result<(), DiagnosticError> {
         self.merged.exported |= shell.exported;
         self.merged.extends.extend(shell.extends);
         self.merged.references.extend(shell.references);
@@ -120,27 +121,27 @@ impl InterfaceMerge {
             self.merged.jsdoc = shell.jsdoc;
         }
         for member in shell.defined_members {
-            self.push_member(member, file_id, diagnostics);
+            self.push_member(member, file_id, diagnostics)?;
         }
+        Ok(())
     }
 
     fn push_member(
         &mut self,
         member: TsMember,
         file_id: &str,
-        diagnostics: &mut Vec<ScannerDiagnostic>,
-    ) {
+        diagnostics: &mut Vec<TastyDiagnostic>,
+    ) -> Result<(), DiagnosticError> {
         if is_nominal(&member) && !self.seen.insert(member.name.clone()) {
-            diagnostics.push(ScannerDiagnostic {
-                file_id: file_id.to_string(),
-                message: format!(
-                    "interface \"{}\" declares member \"{}\" more than once; keeping the first",
-                    self.merged.name, member.name
-                ),
-            });
-            return;
+            diagnostics.push(crate::diagnostics::duplicate_member(
+                file_id,
+                &self.merged.name,
+                &member.name,
+            )?);
+            return Ok(());
         }
         self.merged.defined_members.push(member);
+        Ok(())
     }
 
     fn finish(self) -> SymbolShell {

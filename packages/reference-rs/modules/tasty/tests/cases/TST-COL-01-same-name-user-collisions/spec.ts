@@ -17,7 +17,11 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(
       api
         .getWarnings()
-        .some(warning => warning.includes('Duplicate symbol name "SharedProps"'))
+        .some(
+          warning =>
+            warning.code === 'TST-W-DUPLICATE-SYMBOL-NAME' &&
+            warning.message.includes('Duplicate symbol name `SharedProps`')
+        )
     ).toBe(true)
 
     await expect(api.loadSymbolByName('SharedProps')).rejects.toThrow(

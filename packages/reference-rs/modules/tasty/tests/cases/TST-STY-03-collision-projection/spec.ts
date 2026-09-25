@@ -35,7 +35,13 @@ const spec: StationSpec<TastyCaseResult> = {
       'PublicStyleProps'
     )
     expect(
-      api.getWarnings().some(w => w.includes('Duplicate symbol name "StyleProps"'))
+      api
+        .getWarnings()
+        .some(
+          w =>
+            w.code === 'TST-W-DUPLICATE-SYMBOL-NAME' &&
+            w.message.includes('Duplicate symbol name `StyleProps`')
+        )
     ).toBe(true)
 
     await expect(api.loadSymbolByName('StyleProps')).rejects.toThrow(

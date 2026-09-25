@@ -1,7 +1,12 @@
 export const manifest = {
   "version": "2",
   "warnings": [
-    "cases/TST-ERR-01-parse-error/input/broken.ts: parse reported 1 error(s)"
+    {
+      "severity": "warning",
+      "code": "TST-W-PARSE-ERROR",
+      "message": "parse reported 1 error(s); keeping the recoverable declarations",
+      "file": "cases/TST-ERR-01-parse-error/input/broken.ts"
+    }
   ],
   "symbolsByName": {
     "Ok": [

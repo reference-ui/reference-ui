@@ -4,14 +4,15 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::model::{ExportMap, ScannerDiagnostic, TsFile, TsSymbol};
+use crate::diagnostics::TastyDiagnostic;
+use crate::model::{ExportMap, TsFile, TsSymbol};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedTypeScriptGraph {
     pub(crate) files: BTreeMap<String, TsFile>,
     pub(crate) symbols: BTreeMap<String, TsSymbol>,
     pub(crate) exports: BTreeMap<String, ExportMap>,
-    pub(crate) diagnostics: Vec<ScannerDiagnostic>,
+    pub(crate) diagnostics: Vec<TastyDiagnostic>,
     /// External libraries bridged by user re-exports (carried from scan to
     /// the manifest name-index filter; untouched by extract/resolve).
     pub(crate) bridged_libraries: BTreeSet<String>,

@@ -42,9 +42,9 @@ fn resolves_cross_file_import_reference() {
             "import type { Foo } from './a'\nexport interface Bar { f: Foo }\n",
         ),
     ]);
-    let parsed = extract_ast(&scanned);
+    let parsed = extract_ast(&scanned).expect("extract should succeed");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let graph = resolve_ast(parsed);
+    let graph = resolve_ast(parsed).expect("resolve should succeed");
 
     let bar = graph
         .symbols
@@ -76,7 +76,7 @@ fn resolves_same_file_interface_reference() {
         "src/one.ts",
         "export interface LocalA { n: number }\nexport interface LocalB { a: LocalA }\n",
     )]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
 
     let local_b = graph
         .symbols
@@ -108,9 +108,9 @@ fn local_export_type_reexport_keeps_only_canonical_symbol() {
         ("src/other.ts", "export type T = string;\n"),
         ("src/index.ts", "export type { T } from './other';\n"),
     ]);
-    let parsed = extract_ast(&scanned);
+    let parsed = extract_ast(&scanned).expect("extract should succeed");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let graph = resolve_ast(parsed);
+    let graph = resolve_ast(parsed).expect("resolve should succeed");
 
     let matching = graph
         .symbols
@@ -155,9 +155,9 @@ fn leaves_cross_library_external_import_reference_without_target() {
 
     let scanned = scan_workspace(root.path(), &["src/**/*.ts".to_string()])
         .expect("workspace scan should succeed");
-    let parsed = extract_ast(&scanned);
+    let parsed = extract_ast(&scanned).expect("extract should succeed");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let graph = resolve_ast(parsed);
+    let graph = resolve_ast(parsed).expect("resolve should succeed");
 
     let primitive_native_props = graph
         .symbols
@@ -194,9 +194,9 @@ fn merges_same_file_interface_declarations() {
         "src/widgets.ts",
         "export interface Widget {\n  alpha: string\n}\n\nexport interface Widget {\n  beta: number\n}\n",
     )]);
-    let parsed = extract_ast(&scanned);
+    let parsed = extract_ast(&scanned).expect("extract should succeed");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let graph = resolve_ast(parsed);
+    let graph = resolve_ast(parsed).expect("resolve should succeed");
     assert!(graph.diagnostics.is_empty(), "{:?}", graph.diagnostics);
 
     let matching = graph
@@ -222,7 +222,7 @@ fn merged_interface_member_collision_keeps_first_with_diagnostic() {
         "src/widgets.ts",
         "export interface Widget {\n  alpha: string\n}\n\nexport interface Widget {\n  alpha: number\n  beta: boolean\n}\n",
     )]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
 
     let matching = graph
         .symbols
@@ -247,10 +247,17 @@ fn merged_interface_member_collision_keeps_first_with_diagnostic() {
     }
 
     assert_eq!(graph.diagnostics.len(), 1, "{:?}", graph.diagnostics);
-    assert_eq!(graph.diagnostics[0].file_id, "src/widgets.ts");
+    assert_eq!(
+        graph.diagnostics[0].file.as_deref(),
+        Some("src/widgets.ts")
+    );
+    assert_eq!(
+        graph.diagnostics[0].code.as_str(),
+        "TST-W-DUPLICATE-MEMBER"
+    );
     assert!(
-        graph.diagnostics[0].message.contains("\"Widget\"")
-            && graph.diagnostics[0].message.contains("\"alpha\""),
+        graph.diagnostics[0].message.contains("`Widget`")
+            && graph.diagnostics[0].message.contains("`alpha`"),
         "unexpected diagnostic: {:?}",
         graph.diagnostics[0]
     );
@@ -265,7 +272,7 @@ fn non_mergeable_same_file_collision_keeps_last_with_diagnostic() {
         "src/widgets.ts",
         "export type Dup = string;\nexport type Dup = number;\n\nexport interface Mix {\n  a: string\n}\nexport type Mix = number;\n",
     )]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
 
     let dup = graph
         .symbols
@@ -288,7 +295,11 @@ fn non_mergeable_same_file_collision_keeps_last_with_diagnostic() {
 
     assert_eq!(graph.diagnostics.len(), 2, "{:?}", graph.diagnostics);
     for diagnostic in &graph.diagnostics {
-        assert_eq!(diagnostic.file_id, "src/widgets.ts");
+        assert_eq!(diagnostic.file.as_deref(), Some("src/widgets.ts"));
+        assert_eq!(
+            diagnostic.code.as_str(),
+            "TST-W-DUPLICATE-DECLARATION"
+        );
     }
     let messages = graph
         .diagnostics
@@ -297,9 +308,9 @@ fn non_mergeable_same_file_collision_keeps_last_with_diagnostic() {
         .collect::<Vec<_>>()
         .join("\n");
     assert!(
-        messages.contains("\"Dup\"")
+        messages.contains("`Dup`")
             && messages.contains("TypeAlias + TypeAlias")
-            && messages.contains("\"Mix\"")
+            && messages.contains("`Mix`")
             && messages.contains("Interface + TypeAlias"),
         "unexpected diagnostics: {messages}"
     );
@@ -320,7 +331,7 @@ fn star_ambiguous_name_excluded_from_barrel_with_diagnostic() {
             "import { Widget } from './barrel'\nexport interface Use {\n  w: Widget\n}\n",
         ),
     ]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
 
     let barrel_has_widget = graph
         .exports
@@ -350,10 +361,14 @@ fn star_ambiguous_name_excluded_from_barrel_with_diagnostic() {
     }
 
     assert_eq!(graph.diagnostics.len(), 1, "{:?}", graph.diagnostics);
-    assert_eq!(graph.diagnostics[0].file_id, "src/barrel.ts");
+    assert_eq!(graph.diagnostics[0].file.as_deref(), Some("src/barrel.ts"));
+    assert_eq!(
+        graph.diagnostics[0].code.as_str(),
+        "TST-W-STAR-AMBIGUITY"
+    );
     let message = graph.diagnostics[0].message.as_str();
     assert!(
-        message.contains("\"Widget\"")
+        message.contains("`Widget`")
             && message.contains("src/a.ts")
             && message.contains("src/b.ts"),
         "unexpected diagnostic: {message}"
@@ -374,7 +389,7 @@ fn star_diamond_same_binding_still_resolves() {
             "import { Widget } from './barrel'\nexport interface Use {\n  w: Widget\n}\n",
         ),
     ]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
     assert!(graph.diagnostics.is_empty(), "{:?}", graph.diagnostics);
 
     let expected = symbol_id("src/shared.ts", "Widget");
@@ -417,7 +432,7 @@ fn explicit_barrel_binding_shadows_star_names() {
             "import { Widget } from './barrel'\nexport interface Use {\n  w: Widget\n}\n",
         ),
     ]);
-    let graph = resolve_ast(extract_ast(&scanned));
+    let graph = resolve_ast(extract_ast(&scanned).expect("extract should succeed")).expect("resolve should succeed");
     assert!(graph.diagnostics.is_empty(), "{:?}", graph.diagnostics);
 
     let expected = symbol_id("src/barrel.ts", "Widget");

@@ -7,25 +7,23 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 
-import { scanAndEmitModules } from './runtime'
+import { scanAndEmitModules, type TastyDiagnostic } from './runtime'
 import { createTastyApi, type TastyApi } from './index'
 
 interface EmittedModulesPayload {
   modules: Record<string, string>
   type_declarations: Record<string, string>
-  diagnostics?: RawScannerDiagnostic[]
-}
-
-interface RawScannerDiagnostic {
-  file_id: string
-  message: string
+  diagnostics?: TastyDiagnostic[]
 }
 
 export interface TastyBuildDiagnostic {
-  level: 'warning'
+  level: 'warning' | 'error'
   source: 'scanner' | 'manifest'
+  code: string
   message: string
-  fileId?: string
+  file?: string
+  line?: number
+  column?: number
 }
 
 export interface BuildTastyOptions {
@@ -38,7 +36,7 @@ export interface BuiltTasty {
   rootDir: string
   outputDir: string
   manifestPath: string
-  warnings: string[]
+  warnings: TastyDiagnostic[]
   diagnostics: TastyBuildDiagnostic[]
   api: TastyApi
 }
@@ -63,13 +61,17 @@ export async function buildTasty(options: BuildTastyOptions): Promise<BuiltTasty
   await api.ready()
   const warnings = api.getWarnings()
   const scannerDiagnostics = normalizeScannerDiagnostics(emitted.diagnostics)
-  const scannerWarningTexts = new Set(scannerDiagnostics.map(formatScannerWarning))
+  const scannerKeys = new Set(scannerDiagnostics.map(diagnosticKey))
   const manifestDiagnostics = warnings
-    .filter(warning => !scannerWarningTexts.has(warning))
+    .filter(warning => !scannerKeys.has(diagnosticKey(warning)))
     .map(warning => ({
-      level: 'warning' as const,
+      level: warning.severity,
       source: 'manifest' as const,
-      message: warning,
+      code: warning.code,
+      message: warning.message,
+      file: warning.file,
+      line: warning.line,
+      column: warning.column,
     }))
 
   return {
@@ -131,7 +133,7 @@ function validateEmittedPayload(
     typeof parsed.modules !== 'object' ||
     parsed.type_declarations == null ||
     typeof parsed.type_declarations !== 'object' ||
-    (parsed.diagnostics != null && !isRawScannerDiagnostics(parsed.diagnostics))
+    (parsed.diagnostics != null && !isTastyDiagnostics(parsed.diagnostics))
   ) {
     throw new Error('Malformed emitted Tasty modules payload.')
   }
@@ -142,36 +144,48 @@ function validateEmittedPayload(
   }
 }
 
-function isRawScannerDiagnostics(value: unknown): value is RawScannerDiagnostic[] {
+function isTastyDiagnostics(value: unknown): value is TastyDiagnostic[] {
   return (
     Array.isArray(value) &&
     value.every(
       entry =>
         entry != null &&
         typeof entry === 'object' &&
-        'file_id' in entry &&
-        typeof entry.file_id === 'string' &&
+        'severity' in entry &&
+        (entry.severity === 'warning' || entry.severity === 'error') &&
+        'code' in entry &&
+        typeof entry.code === 'string' &&
+        entry.code.length > 0 &&
         'message' in entry &&
-        typeof entry.message === 'string'
+        typeof entry.message === 'string' &&
+        entry.message.length > 0 &&
+        (!('file' in entry) || typeof entry.file === 'string') &&
+        (!('line' in entry) || typeof entry.line === 'number') &&
+        (!('column' in entry) || typeof entry.column === 'number')
     )
   )
 }
 
 function normalizeScannerDiagnostics(
-  diagnostics: RawScannerDiagnostic[] | undefined
+  diagnostics: TastyDiagnostic[] | undefined
 ): TastyBuildDiagnostic[] {
   return (diagnostics ?? []).map(diagnostic => ({
-    level: 'warning',
+    level: diagnostic.severity,
     source: 'scanner',
-    fileId: diagnostic.file_id,
+    code: diagnostic.code,
     message: diagnostic.message,
+    file: diagnostic.file,
+    line: diagnostic.line,
+    column: diagnostic.column,
   }))
 }
 
-function formatScannerWarning(diagnostic: TastyBuildDiagnostic): string {
-  return diagnostic.fileId
-    ? `${diagnostic.fileId}: ${diagnostic.message}`
-    : diagnostic.message
+function diagnosticKey(diagnostic: {
+  code: string
+  message: string
+  file?: string
+}): string {
+  return [diagnostic.code, diagnostic.message, diagnostic.file ?? ''].join('\0')
 }
 
 async function writeEmittedArtifacts(

@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use serde::Serialize;
+use crate::diagnostics::TastyDiagnostic;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeScriptBundle {
@@ -14,7 +14,7 @@ pub struct TypeScriptBundle {
     pub files: BTreeMap<String, TsFile>,
     pub symbols: BTreeMap<String, TsSymbol>,
     pub exports: BTreeMap<String, ExportMap>,
-    pub diagnostics: Vec<ScannerDiagnostic>,
+    pub diagnostics: Vec<TastyDiagnostic>,
     /// External libraries bridged by user re-exports. Only these (plus user
     /// symbols) enter the manifest name index; other followed libraries emit
     /// chunks without name entries (followed-without-indexing).
@@ -247,8 +247,4 @@ pub enum TypeRef {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct ScannerDiagnostic {
-    pub file_id: String,
-    pub message: String,
-}
+

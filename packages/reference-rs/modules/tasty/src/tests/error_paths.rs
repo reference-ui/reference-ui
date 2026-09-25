@@ -17,10 +17,9 @@ fn parse_error_surfaces_in_diagnostics() {
     .expect("scan should complete");
 
     assert!(
-        bundle
-            .diagnostics
-            .iter()
-            .any(|d| d.message.contains("parse reported")),
+        bundle.diagnostics.iter().any(|d| {
+            d.code.as_str() == "TST-W-PARSE-ERROR" && d.message.contains("parse reported")
+        }),
         "expected parse diagnostic, got {:?}",
         bundle.diagnostics
     );

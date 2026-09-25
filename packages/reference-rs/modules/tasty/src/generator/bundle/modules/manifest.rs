@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use super::chunk_path_for_export_name;
 use crate::constants::libraries::USER_LIBRARY_NAME;
+use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
 use crate::emitted::{TastyManifest, TastySymbolIndexEntry, TastySymbolKind};
 use crate::generator::util::to_js_pretty_literal;
 use crate::model::{TsSymbolKind, TypeScriptBundle};
@@ -15,17 +16,11 @@ pub(crate) fn emit_manifest_module(
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
     let (symbols_by_name, symbols_by_id) = build_manifest_symbol_indices(bundle, export_names);
-    let mut warnings = bundle
-        .diagnostics
-        .iter()
-        .map(|diagnostic| format!("{}: {}", diagnostic.file_id, diagnostic.message))
-        .collect::<Vec<_>>();
-    warnings.extend(duplicate_symbol_name_warnings(
-        bundle,
-        export_names,
-        &symbols_by_name,
-        &symbols_by_id,
-    ));
+    let mut warnings = bundle.diagnostics.clone();
+    warnings.extend(
+        duplicate_symbol_name_warnings(bundle, export_names, &symbols_by_name, &symbols_by_id)
+            .map_err(|error| error.to_string())?,
+    );
 
     let manifest = TastyManifest {
         version: "2".to_string(),
@@ -86,7 +81,7 @@ fn duplicate_symbol_name_warnings(
     export_names: &BTreeMap<String, String>,
     symbols_by_name: &BTreeMap<String, Vec<String>>,
     symbols_by_id: &BTreeMap<String, TastySymbolIndexEntry>,
-) -> Vec<String> {
+) -> Result<Vec<TastyDiagnostic>, DiagnosticError> {
     let symbol_ids_by_export_name = export_names
         .iter()
         .map(|(symbol_id, export_name)| (export_name.clone(), symbol_id.clone()))
@@ -104,10 +99,7 @@ fn duplicate_symbol_name_warnings(
         })
         .map(|(symbol_name, symbol_ids)| {
             let matches = duplicate_symbol_matches(symbol_ids, symbols_by_id);
-            format!(
-                "Duplicate symbol name \"{symbol_name}\" matched {} entries: {matches}. Use symbol id or scoped lookup to disambiguate.",
-                symbol_ids.len()
-            )
+            crate::diagnostics::duplicate_symbol_name(symbol_name, symbol_ids.len(), &matches)
         })
         .collect()
 }

@@ -7,18 +7,20 @@ mod extract;
 pub(crate) mod model;
 mod resolve;
 
-use super::model::ScannerDiagnostic;
+use super::diagnostics::{DiagnosticError, TastyDiagnostic};
 use super::scanner::ScannedWorkspace;
 use model::ParsedTypeScriptAst;
 pub(crate) use resolve::{resolve_ast, ResolvedTypeScriptGraph};
 
-pub(crate) fn extract_ast(scanned_workspace: &ScannedWorkspace) -> ParsedTypeScriptAst {
-    let mut diagnostics = Vec::<ScannerDiagnostic>::new();
-    let files = extract::extract_files(scanned_workspace, &mut diagnostics);
+pub(crate) fn extract_ast(
+    scanned_workspace: &ScannedWorkspace,
+) -> Result<ParsedTypeScriptAst, DiagnosticError> {
+    let mut diagnostics = Vec::<TastyDiagnostic>::new();
+    let files = extract::extract_files(scanned_workspace, &mut diagnostics)?;
 
-    ParsedTypeScriptAst {
+    Ok(ParsedTypeScriptAst {
         files,
         diagnostics,
         bridged_libraries: scanned_workspace.bridged_libraries.clone(),
-    }
+    })
 }

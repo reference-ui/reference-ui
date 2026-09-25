@@ -1,7 +1,11 @@
 export const manifest = {
   "version": "2",
   "warnings": [
-    "Duplicate symbol name \"StyleProps\" matched 3 entries: _0198cb19f7dd4fdc (user), _9fa9dee0187a1439 (user), _62e67017b7fa8a6d (user). Use symbol id or scoped lookup to disambiguate."
+    {
+      "severity": "warning",
+      "code": "TST-W-DUPLICATE-SYMBOL-NAME",
+      "message": "Duplicate symbol name `StyleProps` matched 3 entries: _0198cb19f7dd4fdc (user), _9fa9dee0187a1439 (user), _62e67017b7fa8a6d (user). Use symbol id or scoped lookup to disambiguate."
+    }
   ],
   "symbolsByName": {
     "ContainerProps": [

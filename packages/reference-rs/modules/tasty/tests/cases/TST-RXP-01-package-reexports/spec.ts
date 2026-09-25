@@ -19,7 +19,9 @@ const spec: StationSpec<TastyCaseResult> = {
     const aliasedCssMatches = await api.findSymbolsByName('CSSProperties')
 
     expect(
-      api.getWarnings().some(warning => warning.includes('Duplicate symbol name'))
+      api
+        .getWarnings()
+        .some(warning => warning.message.includes('Duplicate symbol name'))
     ).toBe(false)
     expect(schemaMatches).toHaveLength(1)
     expect(cssMatches).toHaveLength(1)

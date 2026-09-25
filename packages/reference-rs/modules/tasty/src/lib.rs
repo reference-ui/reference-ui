@@ -9,6 +9,7 @@
 
 mod ast;
 mod constants;
+pub(crate) mod diagnostics;
 mod emitted;
 mod generator;
 mod model;

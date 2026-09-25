@@ -5,6 +5,7 @@
 import type {
   CreateTastyApiOptions,
   CreateTastyApiFromManifestOptions,
+  RawTastyDiagnostic,
   RawTastyManifest,
   RawTastyMember,
   RawTastySymbolIndexEntry,
@@ -230,8 +231,12 @@ export class TastyApiRuntime implements TastyApi {
     return this.manifest
   }
 
-  getWarnings(): string[] {
-    return [...(this.manifest?.warnings ?? []), ...this.runtimeWarnings]
+  getWarnings(): RawTastyDiagnostic[] {
+    return [...(this.manifest?.warnings ?? [])]
+  }
+
+  getRuntimeNotices(): string[] {
+    return [...this.runtimeWarnings]
   }
 
   /** True when `id` is a chunk-backed symbol in the loaded manifest (not e.g. an unresolved utility name). */

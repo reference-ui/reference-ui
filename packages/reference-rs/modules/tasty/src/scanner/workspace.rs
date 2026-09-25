@@ -13,6 +13,7 @@ use std::path::Path;
 use self::discovery::discover_reachable_files;
 use self::file_discovery::discover_file_ids;
 use super::model::{DiscoveredFile, ScannedFile, ScannedWorkspace};
+use crate::diagnostics::scan_failed;
 
 pub(crate) fn scan_workspace(
     root_dir: &Path,
@@ -33,8 +34,12 @@ pub(crate) fn scan_workspace(
     ) in discovery.files
     {
         let absolute_path = root_dir.join(&file_id);
-        let source = fs::read_to_string(&absolute_path)
-            .map_err(|err| format!("failed to read {}: {err}", absolute_path.display()))?;
+        let source = fs::read_to_string(&absolute_path).map_err(|err| {
+            scan_failed(format!(
+                "failed to read {}: {err}",
+                absolute_path.display()
+            ))
+        })?;
 
         files.push(ScannedFile {
             file_id,

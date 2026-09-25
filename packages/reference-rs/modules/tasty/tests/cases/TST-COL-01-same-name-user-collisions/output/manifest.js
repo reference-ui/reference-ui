@@ -1,7 +1,11 @@
 export const manifest = {
   "version": "2",
   "warnings": [
-    "Duplicate symbol name \"SharedProps\" matched 2 entries: _abf8121639bd9db0 (user), _acff3a1253d8ece4 (user). Use symbol id or scoped lookup to disambiguate."
+    {
+      "severity": "warning",
+      "code": "TST-W-DUPLICATE-SYMBOL-NAME",
+      "message": "Duplicate symbol name `SharedProps` matched 2 entries: _abf8121639bd9db0 (user), _acff3a1253d8ece4 (user). Use symbol id or scoped lookup to disambiguate."
+    }
   ],
   "symbolsByName": {
     "SharedProps": [

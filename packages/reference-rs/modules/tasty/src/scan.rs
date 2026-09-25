@@ -3,6 +3,7 @@
 //! See module README for architecture details.
 
 use super::ast::{extract_ast, resolve_ast};
+use super::diagnostics::TastyDiagnostic;
 use super::generator::build_typescript_bundle;
 use super::generator::emit_artifact_bundle;
 use super::model::TypeScriptBundle;
@@ -14,13 +15,13 @@ use serde::Serialize;
 struct EmittedModulesPayload {
     modules: std::collections::BTreeMap<String, String>,
     type_declarations: std::collections::BTreeMap<String, String>,
-    diagnostics: Vec<super::model::ScannerDiagnostic>,
+    diagnostics: Vec<TastyDiagnostic>,
 }
 
 pub fn scan_typescript_bundle(request: &ScanRequest) -> Result<TypeScriptBundle, String> {
     let scanned_workspace = scan_workspace(&request.root_dir, &request.include)?;
-    let parsed_ast = extract_ast(&scanned_workspace);
-    let resolved_graph = resolve_ast(parsed_ast);
+    let parsed_ast = extract_ast(&scanned_workspace).map_err(|error| error.to_string())?;
+    let resolved_graph = resolve_ast(parsed_ast).map_err(|error| error.to_string())?;
     Ok(build_typescript_bundle(request, resolved_graph))
 }
 

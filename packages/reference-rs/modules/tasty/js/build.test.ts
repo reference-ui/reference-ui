@@ -197,18 +197,24 @@ describe('buildTasty', () => {
           expect.objectContaining({
             level: 'warning',
             source: 'scanner',
-            fileId: expect.stringContaining('src/broken.ts'),
+            code: 'TST-W-PARSE-ERROR',
+            file: expect.stringContaining('src/broken.ts'),
             message: expect.stringContaining('parse reported'),
           }),
           expect.objectContaining({
             level: 'warning',
             source: 'manifest',
-            message: expect.stringContaining('Duplicate symbol name "Shared"'),
+            code: 'TST-W-DUPLICATE-SYMBOL-NAME',
+            message: expect.stringContaining('Duplicate symbol name `Shared`'),
           }),
         ])
       )
       expect(
-        built.warnings.some(warning => warning.includes('Duplicate symbol name "Shared"'))
+        built.warnings.some(
+          warning =>
+            warning.code === 'TST-W-DUPLICATE-SYMBOL-NAME' &&
+            warning.message.includes('Duplicate symbol name `Shared`')
+        )
       ).toBe(true)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
@@ -254,13 +260,18 @@ describe('buildTasty', () => {
 
     try {
       expect(
-        built.warnings.some(warning => warning.includes('Duplicate symbol name "Shared"'))
+        built.warnings.some(
+          warning =>
+            warning.code === 'TST-W-DUPLICATE-SYMBOL-NAME' &&
+            warning.message.includes('Duplicate symbol name `Shared`')
+        )
       ).toBe(true)
       expect(
         built.diagnostics.some(
           d =>
             d.source === 'manifest' &&
-            d.message.includes('Duplicate symbol name "Shared"')
+            d.code === 'TST-W-DUPLICATE-SYMBOL-NAME' &&
+            d.message.includes('Duplicate symbol name `Shared`')
         )
       ).toBe(true)
     } finally {

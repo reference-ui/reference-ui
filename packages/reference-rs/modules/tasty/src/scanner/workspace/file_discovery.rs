@@ -7,6 +7,7 @@ use std::path::Path;
 
 use globwalk::GlobWalkerBuilder;
 
+use crate::diagnostics::scan_failed;
 use crate::scanner::paths::{is_external_file_id, path_to_unix};
 
 pub(super) fn discover_file_ids(
@@ -17,7 +18,8 @@ pub(super) fn discover_file_ids(
     walker
         .into_iter()
         .try_fold(BTreeSet::new(), |mut file_ids, entry| {
-            let entry = entry.map_err(|err| format!("failed to walk scan root: {err}"))?;
+            let entry =
+                entry.map_err(|err| scan_failed(format!("failed to walk scan root: {err}")))?;
             if is_supported_source_entry(&entry) {
                 let file_id = normalized_file_id(root_dir, entry.path())?;
                 if !is_external_file_id(&file_id) {
@@ -33,7 +35,7 @@ fn build_glob_walker(root_dir: &Path, include: &[String]) -> Result<globwalk::Gl
     GlobWalkerBuilder::from_patterns(root_dir, include)
         .follow_links(true)
         .build()
-        .map_err(|err| format!("failed to build glob walker: {err}"))
+        .map_err(|err| scan_failed(format!("failed to build glob walker: {err}")))
 }
 
 fn is_supported_source_entry(entry: &globwalk::DirEntry) -> bool {
@@ -48,8 +50,11 @@ fn has_supported_source_extension(path: &Path) -> bool {
 }
 
 fn normalized_file_id(root_dir: &Path, path: &Path) -> Result<String, String> {
-    let relative = path
-        .strip_prefix(root_dir)
-        .map_err(|err| format!("failed to normalize path {}: {err}", path.display()))?;
+    let relative = path.strip_prefix(root_dir).map_err(|err| {
+        scan_failed(format!(
+            "failed to normalize path {}: {err}",
+            path.display()
+        ))
+    })?;
     Ok(path_to_unix(relative))
 }
