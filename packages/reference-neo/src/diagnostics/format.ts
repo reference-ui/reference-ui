@@ -2,7 +2,7 @@
 // It takes diagnostics and emits the yellow count line by default or the
 // location-plus-code-plus-hint rows under --verbose. Every channel rides
 // this shape behind its tag; the strings are pinned by the CLI tests.
-import { warningHintFor } from './codes.ts'
+import { warningHintFor } from './hints.ts'
 import type { DeduplicatedDiagnostic, NeoDiagnostic } from './types.ts'
 
 // U+26A0 WARNING SIGN with no variation selector: terminals render the

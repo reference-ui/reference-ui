@@ -3,7 +3,7 @@
 // lenient legacy carries the compiler channel still needs. Typed values are
 // fail-closed (warn/err plus a matching code); info telemetry rides the
 // legacy path untouched until the template grows an info level.
-import { DiagnosticParseError, codeSeverityTag, parseCode } from './codes.ts'
+import { DiagnosticParseError, codeSeverityTag, parseCode } from '@reference-ui/rust/diagnostics'
 import type {
   CompileResultView,
   DiagnosticLabel,

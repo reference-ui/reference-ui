@@ -1,19 +1,18 @@
 // Barrel for the Neo-owned diagnostics module.
-// It takes nothing and re-exports the typed vocabulary, the code registry
-// mirror, the pull/push transport, the warning presentation, the span
-// resolver, and the reporters.
+// It takes nothing and re-exports the typed vocabulary, the native code
+// template, the warning hints, the pull/push transport, the warning
+// presentation, the span resolver, and the reporters.
 export {
   DiagnosticParseError,
   REGISTERED_NAMESPACES,
   TEMPLATE_NAMESPACE,
   codeNamespace,
   codeSeverityTag,
-  isErrorCode,
   isRegisteredNamespace,
-  isWarningCode,
   parseCode,
-  warningHintFor,
-} from './codes.ts'
+} from '@reference-ui/rust/diagnostics'
+export type { DiagnosticCode } from '@reference-ui/rust/diagnostics'
+export { warningHintFor } from './hints.ts'
 export {
   dedupeDiagnostics,
   formatVerboseWarningLine,

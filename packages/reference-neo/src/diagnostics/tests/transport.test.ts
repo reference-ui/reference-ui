@@ -1,4 +1,4 @@
-// Unit pins for the diagnostic transport and code mirror.
+// Unit pins for the diagnostic transport and the native code template.
 // They take wire payloads and assert typed round-trips, fail-closed parsing,
 // the typed/legacy partition, and the tasty push. No compiler runs here;
 // the repro suite proves the codes end to end.
@@ -10,10 +10,8 @@ import {
   encodeBatch,
   encodeDiagnostic,
   fromTastyDiagnostic,
-  isErrorCode,
   isRegisteredNamespace,
   isTypedDiagnostic,
-  isWarningCode,
   parseCode,
   parseTypedBatch,
   parseTypedDiagnostic,
@@ -27,10 +25,8 @@ describe('parseCode', () => {
     expect(parseCode('ATM-W-UNKNOWN-PROPERTY')).toBe('ATM-W-UNKNOWN-PROPERTY')
     expect(codeNamespace('ATM-W-UNKNOWN-PROPERTY')).toBe('ATM')
     expect(codeSeverityTag('ATM-W-UNKNOWN-PROPERTY')).toBe('W')
-    expect(isWarningCode('ATM-W-UNKNOWN-PROPERTY')).toBe(true)
-    expect(isErrorCode('ATM-W-UNKNOWN-PROPERTY')).toBe(false)
     expect(parseCode('ATM-E-UNKNOWN-TOKEN')).toBe('ATM-E-UNKNOWN-TOKEN')
-    expect(isErrorCode('ATM-E-UNKNOWN-TOKEN')).toBe(true)
+    expect(codeSeverityTag('ATM-E-UNKNOWN-TOKEN')).toBe('E')
     expect(isRegisteredNamespace('ATM-W-UNKNOWN-PROPERTY')).toBe(true)
   })
 
