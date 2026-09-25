@@ -1,7 +1,0 @@
-{
-  "api": "replaceFunctionName",
-  "relativePath": "src/virtualrs/example.tsx",
-  "fromName": "css",
-  "importFrom": "src/system/css",
-  "toName": "__reference_ui_css"
-}

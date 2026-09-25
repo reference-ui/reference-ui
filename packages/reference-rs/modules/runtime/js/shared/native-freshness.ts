@@ -13,9 +13,9 @@ import {
   nativeStampFileName,
 } from './native-inputs'
 import {
-  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  SUPPORTED_REFERENCE_NATIVE_TARGETS,
   TARGET_TRIPLES,
-  type VirtualNativeTarget,
+  type ReferenceNativeTarget,
 } from './targets'
 
 export type NativeFreshnessKind =
@@ -31,14 +31,14 @@ export interface NativeFreshnessIssue {
 }
 
 export interface NativeFreshnessReport {
-  verified: VirtualNativeTarget[]
-  missing: VirtualNativeTarget[]
+  verified: ReferenceNativeTarget[]
+  missing: ReferenceNativeTarget[]
   issues: NativeFreshnessIssue[]
 }
 
-export function tripleForRustTarget(rustTarget: string): VirtualNativeTarget | null {
+export function tripleForRustTarget(rustTarget: string): ReferenceNativeTarget | null {
   for (const [triple, mapped] of Object.entries(TARGET_TRIPLES)) {
-    if (mapped === rustTarget) return triple as VirtualNativeTarget
+    if (mapped === rustTarget) return triple as ReferenceNativeTarget
   }
   return null
 }
@@ -55,7 +55,7 @@ function readRecordedStamp(nativeDirPath: string, triple: string): string | null
 
 function checkTriple(
   nativeDirPath: string,
-  triple: VirtualNativeTarget,
+  triple: ReferenceNativeTarget,
   rustTarget: string,
   currentHash: string,
   report: NativeFreshnessReport
@@ -100,7 +100,7 @@ export function collectNativeFreshnessIssues(options: {
       report.issues.push({
         triple: rustTarget,
         kind: 'unknown-target',
-        detail: 'is not a supported virtual-native target triple',
+        detail: 'is not a supported reference-native target triple',
       })
       continue
     }
@@ -123,10 +123,10 @@ export function writeNativeStamp(options: {
   packageDirPath: string
   triple: string
 }): string {
-  if (!SUPPORTED_VIRTUAL_NATIVE_TARGETS.includes(options.triple as VirtualNativeTarget)) {
+  if (!SUPPORTED_REFERENCE_NATIVE_TARGETS.includes(options.triple as ReferenceNativeTarget)) {
     throw new Error(
       `Cannot stamp unknown native triple ${JSON.stringify(options.triple)}. ` +
-        `Supported targets: ${SUPPORTED_VIRTUAL_NATIVE_TARGETS.join(', ')}.`
+        `Supported targets: ${SUPPORTED_REFERENCE_NATIVE_TARGETS.join(', ')}.`
     )
   }
   const binaryPath = join(options.nativeDirPath, nativeBinaryFileName(options.triple))

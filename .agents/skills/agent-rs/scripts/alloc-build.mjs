@@ -28,7 +28,7 @@ function napiTriple() {
 }
 
 function shippedBinaryPath(rsDir) {
-  return path.join(rsDir, 'dist', 'native', `virtual-native.${napiTriple()}.node`)
+  return path.join(rsDir, 'dist', 'native', `reference-native.${napiTriple()}.node`)
 }
 
 function instrumentBuildDir(rsDir, inputsHash, suffix) {
@@ -36,7 +36,7 @@ function instrumentBuildDir(rsDir, inputsHash, suffix) {
 }
 
 function instrumentBinaryPath(rsDir, inputsHash, suffix) {
-  return path.join(instrumentBuildDir(rsDir, inputsHash, suffix), `virtual-native.${napiTriple()}.node`)
+  return path.join(instrumentBuildDir(rsDir, inputsHash, suffix), `reference-native.${napiTriple()}.node`)
 }
 
 function traceBuildDir(rsDir, inputsHash) {
@@ -118,7 +118,7 @@ async function buildTraceNative(rsDir, traceDir, inputsHash) {
 }
 
 async function buildInstrumentNative(rsDir, traceDir, inputsHash, feature, tag) {
-  const binaryPath = path.join(traceDir, `virtual-native.${napiTriple()}.node`)
+  const binaryPath = path.join(traceDir, `reference-native.${napiTriple()}.node`)
   if (traceBuildFresh(traceDir, binaryPath, inputsHash)) {
     console.log(`[agent-rs] ${tag}: reusing ${feature} binary for inputs ${inputsHash.slice(0, 12)}`)
     return binaryPath
@@ -126,7 +126,7 @@ async function buildInstrumentNative(rsDir, traceDir, inputsHash, feature, tag) 
   mkdirSync(traceDir, { recursive: true })
   const args = [
     'exec', 'napi', 'build',
-    '--package', 'reference-virtual-native',
+    '--package', 'reference-native',
     '--platform', '--release',
     '--features', feature,
     '--output-dir', traceDir,

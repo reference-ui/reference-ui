@@ -98,7 +98,7 @@ in the `RecipeConfig` doc comment so the next reader doesn't re-ask.
 Repo-wide census: exactly ONE `recipe()` call in shipped source
 (`SummaryChip.tsx`). Everything else is fixtures: core
 virtual-transform tests plus RS station cases (`ATM-RECIPE-*`,
-`ATM-SITE-*`, `VRT-CVA-05`) — notably `ATM-RECIPE-08`, which
+`ATM-SITE-*`) — notably `ATM-RECIPE-08`, which
 pins the inference backstop (`chipRecipe` → stem, bare
 `Recipe` / `plain` uninferrable), and `ATM-SITE-10`, which
 covers both spellings. So the migration surface in-repo is

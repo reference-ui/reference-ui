@@ -7,15 +7,15 @@ import { describe, expect, it } from 'vitest'
 
 import {
   getRustTarget,
-  getVirtualNativePackageName,
-  getVirtualNativeTriple,
-  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  getReferenceNativePackageName,
+  getReferenceNativeTriple,
+  SUPPORTED_REFERENCE_NATIVE_TARGETS,
   TARGET_TRIPLES,
 } from './targets'
 
 describe('targets', () => {
   it('keeps supported runtime targets aligned with Rust targets', () => {
-    expect(SUPPORTED_VIRTUAL_NATIVE_TARGETS).toEqual([
+    expect(SUPPORTED_REFERENCE_NATIVE_TARGETS).toEqual([
       'darwin-x64',
       'darwin-arm64',
       'linux-x64-gnu',
@@ -30,16 +30,16 @@ describe('targets', () => {
   })
 
   it('maps supported platform and architecture combinations to target triples', () => {
-    expect(getVirtualNativeTriple('darwin', 'x64')).toBe('darwin-x64')
-    expect(getVirtualNativeTriple('darwin', 'arm64')).toBe('darwin-arm64')
-    expect(getVirtualNativeTriple('linux', 'x64')).toBe('linux-x64-gnu')
-    expect(getVirtualNativeTriple('win32', 'x64')).toBe('win32-x64-msvc')
+    expect(getReferenceNativeTriple('darwin', 'x64')).toBe('darwin-x64')
+    expect(getReferenceNativeTriple('darwin', 'arm64')).toBe('darwin-arm64')
+    expect(getReferenceNativeTriple('linux', 'x64')).toBe('linux-x64-gnu')
+    expect(getReferenceNativeTriple('win32', 'x64')).toBe('win32-x64-msvc')
   })
 
   it('returns null for unsupported platform and architecture combinations', () => {
-    expect(getVirtualNativeTriple('linux', 'arm64')).toBeNull()
-    expect(getVirtualNativeTriple('win32', 'arm64')).toBeNull()
-    expect(getVirtualNativeTriple('freebsd', 'x64')).toBeNull()
+    expect(getReferenceNativeTriple('linux', 'arm64')).toBeNull()
+    expect(getReferenceNativeTriple('win32', 'arm64')).toBeNull()
+    expect(getReferenceNativeTriple('freebsd', 'x64')).toBeNull()
   })
 
   it('returns the Rust target for a runtime triple', () => {
@@ -48,10 +48,10 @@ describe('targets', () => {
   })
 
   it('returns the npm package name for a runtime triple', () => {
-    expect(getVirtualNativePackageName('linux-x64-gnu')).toBe(
+    expect(getReferenceNativePackageName('linux-x64-gnu')).toBe(
       '@reference-ui/rust-linux-x64-gnu'
     )
-    expect(getVirtualNativePackageName('darwin-arm64')).toBe(
+    expect(getReferenceNativePackageName('darwin-arm64')).toBe(
       '@reference-ui/rust-darwin-arm64'
     )
   })

@@ -11,7 +11,7 @@
 
 import type { WorkspacePackage } from '../types.js'
 import type { BuildRegistryArtifacts } from '../types.js'
-import type { VirtualNativeTarget } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
+import type { ReferenceNativeTarget } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import { computePackageBuildHashes } from '../cache.js'
 import { logSkip } from '../../lib/log/index.js'
 import {
@@ -30,7 +30,7 @@ import {
 
 export interface PrepareReferenceRustRegistryArtifactsOptions {
   forceBuildNativeTargets?: boolean
-  requiredTargets?: readonly VirtualNativeTarget[]
+  requiredTargets?: readonly ReferenceNativeTarget[]
 }
 
 export async function prepareReferenceRustRegistryArtifacts(

@@ -35,7 +35,6 @@ consumers never break on codes minted after they shipped.
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
 | `BSS`     | base-system | Reserved, unminted                                     |
-| `VRS`     | virtualrs   | Reserved, unminted                                     |
 | `MGP`     | module-graph| Reserved, unminted                                     |
 
 Rules:

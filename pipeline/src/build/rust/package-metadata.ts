@@ -8,8 +8,8 @@
 
 import type { BuildPackageJsonOverride } from '../types.js'
 import {
-  getVirtualNativePackageName,
-  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
+  getReferenceNativePackageName,
+  SUPPORTED_REFERENCE_NATIVE_TARGETS,
 } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 
 export interface ReferenceRustTargetPackageValidationOptions {
@@ -24,8 +24,8 @@ export function getReferenceRustTargetPackageValidationErrors(
     options.targetPackages.map(targetPackage => [targetPackage.name, targetPackage]),
   )
 
-  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.flatMap((triple) => {
-    const expectedName = getVirtualNativePackageName(triple)
+  return SUPPORTED_REFERENCE_NATIVE_TARGETS.flatMap((triple) => {
+    const expectedName = getReferenceNativePackageName(triple)
     const targetPackage = targetPackagesByName.get(expectedName)
 
     if (!targetPackage) {

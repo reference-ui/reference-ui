@@ -43,7 +43,7 @@ function createPackageFixture(): { packageDir: string; nativeDir: string } {
 }
 
 function writeBinary(nativeDir: string, triple: string): void {
-  writeFileSync(join(nativeDir, `virtual-native.${triple}.node`), 'fake-binary', 'utf-8')
+  writeFileSync(join(nativeDir, `reference-native.${triple}.node`), 'fake-binary', 'utf-8')
 }
 
 afterEach(() => {
@@ -53,7 +53,7 @@ afterEach(() => {
 })
 
 describe('tripleForRustTarget', () => {
-  it('maps release rust targets to virtual-native triples', () => {
+  it('maps release rust targets to reference-native triples', () => {
     expect(tripleForRustTarget('x86_64-unknown-linux-gnu')).toBe('linux-x64-gnu')
     expect(tripleForRustTarget('aarch64-apple-darwin')).toBe('darwin-arm64')
     expect(tripleForRustTarget('x86_64-apple-darwin')).toBe('darwin-x64')

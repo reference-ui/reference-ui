@@ -24,11 +24,11 @@ function isHashedFile(relativePosix: string): boolean {
 }
 
 export function nativeBinaryFileName(triple: string): string {
-  return `virtual-native.${triple}.node`
+  return `reference-native.${triple}.node`
 }
 
 export function nativeStampFileName(triple: string): string {
-  return `virtual-native.${triple}.inputs.sha256`
+  return `reference-native.${triple}.inputs.sha256`
 }
 
 function framePath(packageDir: string, path: string): string {

@@ -8,16 +8,16 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 
-import { getVirtualNativeCompatibilityError } from '../loader'
+import { getReferenceNativeCompatibilityError } from '../loader'
 import { nativeDir, packageDir } from '../shared/paths'
 import {
   hashNativeInputs,
   nativeBinaryFileName,
   nativeStampFileName,
 } from '../shared/native-inputs'
-import { getRustTarget, getVirtualNativeTriple } from '../shared/targets'
+import { getRustTarget, getReferenceNativeTriple } from '../shared/targets'
 
-const triple = getVirtualNativeTriple()
+const triple = getReferenceNativeTriple()
 if (!triple) {
   throw new Error('Unsupported platform for @reference-ui/rust native build.')
 }
@@ -52,7 +52,7 @@ if (existsSync(binaryPath)) {
     try {
       const require = createRequire(import.meta.url)
       const binding = require(binaryPath) as Record<string, unknown>
-      const compatibilityError = getVirtualNativeCompatibilityError(binding)
+      const compatibilityError = getReferenceNativeCompatibilityError(binding)
       if (!compatibilityError) {
         console.log(`Using existing native binary ${binaryPath}`)
         process.exit(0)

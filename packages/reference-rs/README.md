@@ -8,7 +8,7 @@ The **atomic style engine** is a stack of sibling crates under `modules/` — Ty
 
 | Subsystem | Location | Role |
 | --- | --- | --- |
-| **Native Addon** | `modules/runtime` | The sole `cdylib` crate (`reference-virtual-native`) compiling to `.node`. Thin switchboard exposing domain capabilities through `#[napi]` functions with zero business logic. |
+| **Native Addon** | `modules/runtime` | The sole `cdylib` crate (`reference-native`) compiling to `.node`. Thin switchboard exposing domain capabilities through `#[napi]` functions with zero business logic. |
 | **Runtime Infrastructure** | `modules/runtime/js` | Shared TypeScript layer providing platform detection, addon binary loading (`loader.ts`), and JSON call bridging (`native.ts`). Not the browser `css()` / `recipe()` contract. |
 | **Shared Rust Helpers** | `modules/shared` | Internal compiler utilities (Oxc parser helpers, span conversions, unquoting). |
 | **Product Modules** | `modules/*` | Self-contained feature modules, each with a pure domain Rust crate, TypeScript API wrappers where needed, and tests. |
@@ -25,7 +25,7 @@ Sibling crates. Each verifies itself with `pnpm agentrs c <crate>`.
 | **typegen** | `.d.ts` unions from base-system + canon. Not a jsx farm. | `pnpm agentrs c typegen` |
 | **styletrace** | Which JSX names still carry StyleProps. Atomic extract calls this. | `pnpm agentrs c styletrace` · `pnpm agentrs v styletrace` |
 
-Other products in this package (`tasty`, `atlas`, `virtualrs`) are not this engine.
+Other products in this package (`tasty`, `atlas`) are not this engine.
 
 JS face for the compiler: `import { compile } from '@reference-ui/rust/atomic'`. Core's live wire is still `@reference-ui/rust/system` (same module).
 
@@ -47,8 +47,7 @@ packages/reference-rs/
 │   ├── typegen/                            # Token unions / StyleProps .d.ts
 │   ├── styletrace/                         # StyleProps names + wrapper graph
 │   ├── tasty/                              # AST extraction, type contracts, emitters
-│   ├── atlas/                              # Component and token usage analyzer
-│   └── virtualrs/                          # Virtual module CSS/CVA rewrites
+│   └── atlas/                              # Component and token usage analyzer
 │
 └── dist/                                   # All generated outputs (gitignored)
 ```

@@ -8,7 +8,6 @@ import { STYLETRACE_NATIVE_EXPORTS } from '../../../styletrace/js/runtime'
 import { ATOMIC_NATIVE_EXPORTS } from '../../../atomic/js/runtime'
 import { TASTY_NATIVE_EXPORTS } from '../../../tasty/js/runtime'
 import { TYPEGEN_NATIVE_EXPORTS } from '../../../typegen/js/runtime'
-import { VIRTUALRS_NATIVE_EXPORTS } from '../../../virtualrs/js/runtime'
 
 export const HOST_NATIVE_EXPORTS = ['getNativeCapabilities'] as const
 
@@ -25,11 +24,10 @@ function composeNativeExports(): readonly string[] {
   appendExports(list, ATOMIC_NATIVE_EXPORTS)
   appendExports(list, TASTY_NATIVE_EXPORTS)
   appendExports(list, TYPEGEN_NATIVE_EXPORTS)
-  appendExports(list, VIRTUALRS_NATIVE_EXPORTS)
   return list
 }
 
-export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = new Proxy([] as readonly string[], {
+export const REQUIRED_REFERENCE_NATIVE_EXPORTS = new Proxy([] as readonly string[], {
   get(target, prop, receiver) {
     const list = composeNativeExports()
     const val = Reflect.get(list, prop, receiver)
@@ -37,4 +35,4 @@ export const REQUIRED_VIRTUAL_NATIVE_EXPORTS = new Proxy([] as readonly string[]
   },
 }) as readonly string[]
 
-export const REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS = REQUIRED_VIRTUAL_NATIVE_EXPORTS
+export const REQUIRED_REFERENCE_NATIVE_BINARY_MARKERS = REQUIRED_REFERENCE_NATIVE_EXPORTS

@@ -279,7 +279,7 @@ async function runQualityCommand(args, repoRoot, rsDir) {
 
 async function runCargoTests(args, rsDir) {
   const cargoArgs = ['test']
-  const knownCrates = new Set(['atomic', 'canon', 'base_system', 'base-system', 'system', 'typegen', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-virtual-native'])
+  const knownCrates = new Set(['atomic', 'canon', 'base_system', 'base-system', 'system', 'typegen', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-native'])
 
   const crateIdx = args.indexOf('--crate')
   let targetedCrate = null
@@ -294,7 +294,7 @@ async function runCargoTests(args, rsDir) {
 
   const requestedCrate = targetedCrate
   const crateAliases = {
-    napi: 'reference-virtual-native',
+    napi: 'reference-native',
     system: 'atomic',
     'base-system': 'base_system',
   }
@@ -340,7 +340,7 @@ async function runCargoTests(args, rsDir) {
 
 async function runBenchCommand(args, rsDir) {
   const cargoArgs = ['bench']
-  const knownCrates = new Set(['atomic', 'canon', 'module_graph', 'module-graph', 'base_system', 'base-system', 'system', 'typegen', 'virtualrs', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'runtime', 'reference-virtual-native'])
+  const knownCrates = new Set(['atomic', 'canon', 'module_graph', 'module-graph', 'base_system', 'base-system', 'system', 'typegen', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'runtime', 'reference-native'])
 
   const crateIdx = args.indexOf('--crate')
   let targetedCrate = null
@@ -355,8 +355,8 @@ async function runBenchCommand(args, rsDir) {
 
   const requestedCrate = targetedCrate
   const crateAliases = {
-    napi: 'reference-virtual-native',
-    runtime: 'reference-virtual-native',
+    napi: 'reference-native',
+    runtime: 'reference-native',
     system: 'atomic',
     'base-system': 'base_system',
     'module-graph': 'module_graph',
@@ -418,8 +418,6 @@ async function runVitestTests(args, rsDir) {
     ['atlas', 'atlas'],
     ['styletrace', 'styletrace'],
     ['typegen', 'typegen'],
-    ['virtualrs', 'virtualrs'],
-    ['virtualfs', 'virtualrs'],
     ['runtime', 'runtime'],
     ['shared', 'runtime'],
   ])
@@ -428,8 +426,6 @@ async function runVitestTests(args, rsDir) {
   const GOLDEN_SUPPORTED_MODULES = new Set([
     'atomic',
     'system',
-    'virtualrs',
-    'virtualfs',
     'atlas',
     'tasty',
     'styletrace',
@@ -563,7 +559,7 @@ function printHelp() {
   \x1b[33m--json\x1b[0m                     Emit raw JSON report
 
 \x1b[1mOPTIONS FOR 'cargo':\x1b[0m
-  \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic, --crate virtualrs)
+  \x1b[33m--crate <name>\x1b[0m             Target a specific crate (e.g. --crate atomic, --crate tasty)
   \x1b[33m-t <filter>\x1b[0m                Target specific test name substring
   \x1b[33m--release\x1b[0m                  Run tests in release profile
 

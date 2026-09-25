@@ -7,7 +7,7 @@
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { VirtualNativeTarget } from '../../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
+import type { ReferenceNativeTarget } from '../../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 
 const runnerDir = dirname(fileURLToPath(import.meta.url))
 
@@ -16,4 +16,4 @@ export const pipelineDir = resolve(runnerDir, '..', '..', '..', '..')
 export const repoRoot = resolve(pipelineDir, '..')
 export const matrixLogDir = resolve(repoRoot, '.pipeline', 'testing', 'matrix')
 export const matrixConsumerArtifactsDir = resolve(matrixLogDir, 'artifacts')
-export const matrixNativeTarget: VirtualNativeTarget = 'linux-x64-gnu'
+export const matrixNativeTarget: ReferenceNativeTarget = 'linux-x64-gnu'

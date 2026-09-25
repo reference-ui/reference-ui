@@ -76,7 +76,7 @@ const RULES: Rule[] = [
   },
   { phase: 'scan/read', match: (symbol) => has(symbol, 'sources::collect', 'scan_dir', 'read_to_string', 'walkdir', 'glob::', 'ignore::', 'collect_compile_files', 'ReadFile', 'fs::read') },
   { phase: 'serde', match: (symbol) => has(symbol, 'serde', 'simd_json', 'ryu::', 'itoa::', 'to_string', 'from_str', 'JSON::Parse', 'json::parse') },
-  { phase: 'napi-bridge', match: (symbol) => has(symbol, 'reference_virtual_native', '__napi__', 'napi::', 'FunctionCallbackWrapper', 'CallApiCallback') },
+  { phase: 'napi-bridge', match: (symbol) => has(symbol, 'reference_native', '__napi__', 'napi::', 'FunctionCallbackWrapper', 'CallApiCallback') },
   { phase: 'parse', match: (symbol) => has(symbol, 'oxc_parser', 'oxc_allocator', 'oxc_ast', 'parse_source', 'Parser::parse', 'from_path') },
   { phase: 'constants', match: (symbol) => has(symbol, 'constants::', 'LocalConstants', 'ValueGraph', 'resolver::', 'merge') },
   { phase: 'hosts', match: (symbol) => has(symbol, 'hosts::', 'styletrace', 'traced_jsx', 'IdentityGraph') },

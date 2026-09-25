@@ -1,5 +1,5 @@
 [package]
-name = "reference-virtual-native"
+name = "reference-native"
 version.workspace = true
 edition.workspace = true
 publish = false
@@ -21,7 +21,6 @@ napi = { workspace = true }
 napi-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-virtualrs = { workspace = true }
 atlas = { workspace = true }
 tasty = { workspace = true }
 styletrace = { workspace = true }

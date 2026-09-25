@@ -4,21 +4,21 @@
  * Handles JSON serialization and parsing boundaries between TypeScript wrappers and the Rust core.
  * Ensures consistent diagnostic error reporting when native features are invoked across environments.
  */
-import { getVirtualNative, getVirtualNativeUnavailableMessage } from './loader'
-import type { VirtualNativeBinding } from './loader'
+import { getReferenceNative, getReferenceNativeUnavailableMessage } from './loader'
+import type { ReferenceNativeBinding } from './loader'
 
-export type { VirtualNativeBinding } from './loader'
+export type { ReferenceNativeBinding } from './loader'
 
-export function requireNative<N = VirtualNativeBinding>(feature: string): N {
-  const native = getVirtualNative()
+export function requireNative<N = ReferenceNativeBinding>(feature: string): N {
+  const native = getReferenceNative()
   if (!native) {
-    throw new Error(getVirtualNativeUnavailableMessage(feature))
+    throw new Error(getReferenceNativeUnavailableMessage(feature))
   }
 
   return native as unknown as N
 }
 
-export function callNativeJson<T, N = VirtualNativeBinding>(
+export function callNativeJson<T, N = ReferenceNativeBinding>(
   feature: string,
   run: (n: N) => string
 ): T {

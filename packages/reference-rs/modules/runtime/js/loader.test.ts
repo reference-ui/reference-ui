@@ -5,14 +5,14 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { getVirtualNativePackageName, getVirtualNativeTriple } from './shared/targets'
-import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from './shared/native-contract'
+import { getReferenceNativePackageName, getReferenceNativeTriple } from './shared/targets'
+import { REQUIRED_REFERENCE_NATIVE_EXPORTS } from './shared/native-contract'
 
 function createDefaultMockBinding() {
   const binding: Record<string, unknown> = {
     getNativeCapabilities: vi.fn(() => JSON.stringify({ schema: 1 })),
   }
-  for (const name of REQUIRED_VIRTUAL_NATIVE_EXPORTS) {
+  for (const name of REQUIRED_REFERENCE_NATIVE_EXPORTS) {
     binding[name] = vi.fn()
   }
   return binding
@@ -104,23 +104,23 @@ describe('loader', () => {
   })
 
   it('builds native candidate path for a target triple', async () => {
-    const { getVirtualNativeCandidates } = await importLoaderModule()
+    const { getReferenceNativeCandidates } = await importLoaderModule()
 
     expect(
-      getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')
+      getReferenceNativeCandidates('/workspace/packages/reference-rs', 'darwin-arm64')
     ).toEqual([
-      '/workspace/packages/reference-rs/dist/native/virtual-native.darwin-arm64.node',
+      '/workspace/packages/reference-rs/dist/native/reference-native.darwin-arm64.node',
     ])
   })
 
   it('honors REFERENCE_UI_NATIVE_PATH as the only candidate', async () => {
-    const { getVirtualNativeCandidates } = await importLoaderModule()
+    const { getReferenceNativeCandidates } = await importLoaderModule()
     const previous = process.env.REFERENCE_UI_NATIVE_PATH
-    process.env.REFERENCE_UI_NATIVE_PATH = '/tmp/trace/virtual-native.darwin-x64.node'
+    process.env.REFERENCE_UI_NATIVE_PATH = '/tmp/trace/reference-native.darwin-x64.node'
     try {
       expect(
-        getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
-      ).toEqual(['/tmp/trace/virtual-native.darwin-x64.node'])
+        getReferenceNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
+      ).toEqual(['/tmp/trace/reference-native.darwin-x64.node'])
     } finally {
       if (previous === undefined) delete process.env.REFERENCE_UI_NATIVE_PATH
       else process.env.REFERENCE_UI_NATIVE_PATH = previous
@@ -128,14 +128,14 @@ describe('loader', () => {
   })
 
   it('ignores an empty REFERENCE_UI_NATIVE_PATH', async () => {
-    const { getVirtualNativeCandidates } = await importLoaderModule()
+    const { getReferenceNativeCandidates } = await importLoaderModule()
     const previous = process.env.REFERENCE_UI_NATIVE_PATH
     process.env.REFERENCE_UI_NATIVE_PATH = ''
     try {
       expect(
-        getVirtualNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
+        getReferenceNativeCandidates('/workspace/packages/reference-rs', 'darwin-x64')
       ).toEqual([
-        '/workspace/packages/reference-rs/dist/native/virtual-native.darwin-x64.node',
+        '/workspace/packages/reference-rs/dist/native/reference-native.darwin-x64.node',
       ])
     } finally {
       if (previous === undefined) delete process.env.REFERENCE_UI_NATIVE_PATH
@@ -144,7 +144,7 @@ describe('loader', () => {
   })
 
   it('also resolves binaries from the installed platform package when present', async () => {
-    const { resolveVirtualNativeBinaryPath } = await importLoaderModule({
+    const { resolveReferenceNativeBinaryPath } = await importLoaderModule({
       requireResolveImpl: (path: string) => {
         expect(path).toBe('@reference-ui/rust-linux-x64-gnu/package.json')
         return '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/package.json'
@@ -153,60 +153,60 @@ describe('loader', () => {
     const fileExists = vi.fn((path: string) => {
       return (
         path ===
-        '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/virtual-native.linux-x64-gnu.node'
+        '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/reference-native.linux-x64-gnu.node'
       )
     })
 
     expect(
-      resolveVirtualNativeBinaryPath(
+      resolveReferenceNativeBinaryPath(
         '/workspace/app/node_modules/@reference-ui/rust',
         'linux',
         'x64',
         fileExists
       )
     ).toBe(
-      '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/virtual-native.linux-x64-gnu.node'
+      '/workspace/app/node_modules/@reference-ui/rust-linux-x64-gnu/reference-native.linux-x64-gnu.node'
     )
   })
 
   it('returns null when no binary exists for a supported target', async () => {
-    const { existsSync, resolveVirtualNativeBinaryPath } = await importLoaderModule()
+    const { existsSync, resolveReferenceNativeBinaryPath } = await importLoaderModule()
 
     expect(
-      resolveVirtualNativeBinaryPath('/workspace/packages/reference-rs', 'linux', 'x64')
+      resolveReferenceNativeBinaryPath('/workspace/packages/reference-rs', 'linux', 'x64')
     ).toBeNull()
     expect(existsSync).toHaveBeenCalledTimes(1)
   })
 
   it('prefers the first existing candidate when resolving a binary path', async () => {
-    const { resolveVirtualNativeBinaryPath } = await importLoaderModule()
+    const { resolveReferenceNativeBinaryPath } = await importLoaderModule()
     const fileExists = vi.fn((path: string) => {
       return (
         path ===
-        '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+        '/workspace/packages/reference-rs/dist/native/reference-native.win32-x64-msvc.node'
       )
     })
 
     expect(
-      resolveVirtualNativeBinaryPath(
+      resolveReferenceNativeBinaryPath(
         '/workspace/packages/reference-rs',
         'win32',
         'x64',
         fileExists
       )
     ).toBe(
-      '/workspace/packages/reference-rs/dist/native/virtual-native.win32-x64-msvc.node'
+      '/workspace/packages/reference-rs/dist/native/reference-native.win32-x64-msvc.node'
     )
     expect(fileExists).toHaveBeenCalledTimes(1)
   })
 
   it('rejects stale binaries that do not advertise required capabilities', async () => {
-    const triple = getVirtualNativeTriple(process.platform, process.arch)
+    const triple = getReferenceNativeTriple(process.platform, process.arch)
     expect(triple).not.toBeNull()
 
     const missingCapabilityBinding = () => {
       const binding: Record<string, unknown> = {}
-      for (const name of REQUIRED_VIRTUAL_NATIVE_EXPORTS) {
+      for (const name of REQUIRED_REFERENCE_NATIVE_EXPORTS) {
         if (name !== 'getNativeCapabilities') {
           binding[name] = vi.fn()
         }
@@ -215,37 +215,37 @@ describe('loader', () => {
     }
 
     const {
-      getVirtualNativeCompatibilityError,
-      getVirtualNativeDiagnostics,
-      loadVirtualNative,
+      getReferenceNativeCompatibilityError,
+      getReferenceNativeDiagnostics,
+      loadReferenceNative,
     } = await importLoaderModule({
       existingPaths: [
         '/workspace/packages/reference-rs/package.json',
-        `/workspace/packages/reference-rs/dist/native/virtual-native.${triple}.node`,
+        `/workspace/packages/reference-rs/dist/native/reference-native.${triple}.node`,
       ],
       requireImpl: missingCapabilityBinding,
     })
 
-    expect(getVirtualNativeCompatibilityError(missingCapabilityBinding())).toContain(
+    expect(getReferenceNativeCompatibilityError(missingCapabilityBinding())).toContain(
       'getNativeCapabilities'
     )
-    expect(loadVirtualNative()).toBeNull()
-    expect(getVirtualNativeDiagnostics().status).toBe('load-failed')
-    expect(getVirtualNativeDiagnostics().cause).toContain('Incompatible native binary')
+    expect(loadReferenceNative()).toBeNull()
+    expect(getReferenceNativeDiagnostics().status).toBe('load-failed')
+    expect(getReferenceNativeDiagnostics().cause).toContain('Incompatible native binary')
   })
 
   it('returns a consumer-safe missing-binary message without monorepo pnpm guidance', async () => {
-    const { getVirtualNativeUnavailableMessage } = await importLoaderModule({
+    const { getReferenceNativeUnavailableMessage } = await importLoaderModule({
       currentModulePath:
         '/workspace/app/node_modules/@reference-ui/rust/js/runtime/loader.ts',
       existingPaths: ['/workspace/app/node_modules/@reference-ui/rust/package.json'],
     })
 
-    const message = getVirtualNativeUnavailableMessage('rewrite CSS imports')
-    const triple = getVirtualNativeTriple(process.platform, process.arch)
+    const message = getReferenceNativeUnavailableMessage('run native operations')
+    const triple = getReferenceNativeTriple(process.platform, process.arch)
 
     expect(triple).not.toBeNull()
-    const packageName = getVirtualNativePackageName(triple!)
+    const packageName = getReferenceNativePackageName(triple!)
 
     expect(message).toContain(
       'Prebuilt binaries for @reference-ui/rust should install automatically'
@@ -262,11 +262,11 @@ describe('loader', () => {
   })
 
   it('adds contributor guidance only for workspace checkouts', async () => {
-    const { getVirtualNativeUnavailableMessage } = await importLoaderModule({
+    const { getReferenceNativeUnavailableMessage } = await importLoaderModule({
       existingPaths: ['/workspace/packages/reference-rs/package.json'],
     })
 
-    const message = getVirtualNativeUnavailableMessage('rewrite CSS imports')
+    const message = getReferenceNativeUnavailableMessage('run native operations')
 
     expect(message).toContain('pnpm --filter @reference-ui/rust run build')
   })

@@ -91,5 +91,5 @@ generated output.
 - The merged result is what should be materialized into the virtual tree the engine
   consumes, not the original multi-argument call. (An earlier revision pointed at
   `CSS_FRAGMENTS.md` at the repo root; that file never existed — pointer dropped 2026-09-23.)
-- The target implementation site is the same virtual transform infrastructure used by `r`:
-  `packages/reference-rs/modules/virtualrs/`
+- The target implementation site is the same Rust transform seam used by `r`:
+  the atomic engine under `packages/reference-rs/modules/atomic/`.

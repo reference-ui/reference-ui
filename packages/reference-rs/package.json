@@ -16,7 +16,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
-    "binaryName": "virtual-native"
+    "binaryName": "reference-native"
   },
   "exports": {
     ".": {
@@ -108,7 +108,7 @@
     "artifacts": "pnpm exec napi artifacts --output-dir dist/artifacts --npm-dir dist/npm",
     "build": "pnpm run ensure-native && pnpm run build:js",
     "build:js": "tsup && tsc -p tsconfig.build.json && node ./modules/runtime/js/tools/create-dts-entrypoints.mjs",
-    "build:native": "pnpm exec napi build --package reference-virtual-native --platform --release --output-dir dist/native --no-js",
+    "build:native": "pnpm exec napi build --package reference-native --platform --release --output-dir dist/native --no-js",
     "create-npm-dirs": "pnpm exec napi create-npm-dirs --npm-dir dist/npm",
     "ensure-native": "pnpm exec tsx ./modules/runtime/js/tools/ensure-native.ts",
     "verify:native": "pnpm exec tsx ./modules/runtime/js/tools/verify-native-freshness.ts",
@@ -118,7 +118,7 @@
     "publish:native": "pnpm exec tsx ./modules/runtime/js/tools/publish-native.ts",
     "stage-local-artifacts": "pnpm exec tsx ./modules/runtime/js/tools/stage-local-artifacts.ts",
     "test": "pnpm run ensure-native && cargo test --workspace && vitest run",
-    "test:rust": "cargo test --workspace --exclude reference-virtual-native",
+    "test:rust": "cargo test --workspace --exclude reference-native",
     "test:vitest": "vitest run",
     "test:watch": "vitest"
   },

@@ -9,7 +9,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
+import type { ReferenceNativeTarget } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
 import { repoRoot, run } from '../build/workspace.js'
 import { logSkip } from '../lib/log/index.js'
@@ -154,7 +154,7 @@ export async function loadPackedTarballsIntoLocalRegistry(registryUrl: string = 
 export async function stagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
   packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
-  requiredRustTargets?: readonly VirtualNativeTarget[],
+  requiredRustTargets?: readonly ReferenceNativeTarget[],
 ): Promise<void> {
   await packPublicPackages(packageNames, { requiredTargets: requiredRustTargets })
   await loadPackedTarballsIntoLocalRegistry(registryUrl)
@@ -163,7 +163,7 @@ export async function stagePublicPackages(
 export async function rebuildLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
   packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
-  requiredRustTargets?: readonly VirtualNativeTarget[],
+  requiredRustTargets?: readonly ReferenceNativeTarget[],
 ): Promise<void> {
   await rebuildManagedLocalRegistry(registryUrl)
   await stagePublicPackages(registryUrl, packageNames, requiredRustTargets)
@@ -172,7 +172,7 @@ export async function rebuildLocalRegistryAndStagePublicPackages(
 export async function ensureLocalRegistryAndStagePublicPackages(
   registryUrl: string = defaultRegistryUrl,
   packageNames: readonly string[] = REGISTRY_PACKAGE_NAMES,
-  requiredRustTargets?: readonly VirtualNativeTarget[],
+  requiredRustTargets?: readonly ReferenceNativeTarget[],
 ): Promise<void> {
   await ensureManagedLocalRegistry(registryUrl)
   await stagePublicPackages(registryUrl, packageNames, requiredRustTargets)

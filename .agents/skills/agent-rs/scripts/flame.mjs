@@ -133,7 +133,7 @@ export function nativeBinaryPath(rsDir) {
   const triple = process.platform === 'darwin'
     ? (process.arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64')
     : 'linux-x64-gnu'
-  return path.join(rsDir, 'dist', 'native', `virtual-native.${triple}.node`)
+  return path.join(rsDir, 'dist', 'native', `reference-native.${triple}.node`)
 }
 
 function sha256File(filePath) {

@@ -16,7 +16,7 @@ TypeScript. The style language contract lives in [LANGUAGE/](LANGUAGE/PUBLIC-API
 |---|---|---|
 | `@reference-ui/neo` | Compiler driver: config, fragments, sync, `neo` bin | `packages/reference-neo/package.json` (name + `bin.neo` → `./dist/bin/neo.js`) |
 | `@reference-ui/lib` | Component library + theme (`.` and `./theme` exports) | `packages/reference-lib/package.json:14-23` |
-| `@reference-ui/rust` | Native engine: 11 modules (atlas, atomic, base-system, canon, module-graph, runtime, shared, styletrace, tasty, typegen, virtualrs) | `packages/reference-rs/modules/` listing |
+| `@reference-ui/rust` | Native engine: 10 modules (atlas, atomic, base-system, canon, module-graph, runtime, shared, styletrace, tasty, typegen) | `packages/reference-rs/modules/` listing |
 | `@reference-ui/mcp` | MCP server (`mcp` bin + `.`/`./cli` exports) | `packages/reference-mcp/package.json:12-15,26-34` |
 | `@reference-ui/icons` | Icon set, ships a `baseSystem` (`.`/`./baseSystem` exports) | `packages/reference-icons/package.json:21-29` |
 | `@reference-ui/reference-docs` | Published docs site | `packages/reference-docs/package.json:2` |

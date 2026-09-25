@@ -12,24 +12,24 @@ import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
 
 import {
-  getVirtualNativeTriple,
-  type VirtualNativeTarget,
+  getReferenceNativeTriple,
+  type ReferenceNativeTarget,
 } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
-import { REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS } from '../../../../packages/reference-rs/modules/runtime/js/shared/native-contract.js'
-import { getVirtualNativeCompatibilityError } from '../../../../packages/reference-rs/modules/runtime/js/loader.js'
+import { REQUIRED_REFERENCE_NATIVE_BINARY_MARKERS } from '../../../../packages/reference-rs/modules/runtime/js/shared/native-contract.js'
+import { getReferenceNativeCompatibilityError } from '../../../../packages/reference-rs/modules/runtime/js/loader.js'
 
 const requireFromPipeline = createRequire(import.meta.url)
 
 export interface ReferenceRustBinaryCompatibilityOptions {
   binaryPath: string
   fileCompatibilityCheck?: (binaryPath: string) => boolean
-  hostRuntimeCompatibilityCheck?: (binaryPath: string, target: VirtualNativeTarget) => boolean
-  hostTarget?: VirtualNativeTarget | null
-  target: VirtualNativeTarget
+  hostRuntimeCompatibilityCheck?: (binaryPath: string, target: ReferenceNativeTarget) => boolean
+  hostTarget?: ReferenceNativeTarget | null
+  target: ReferenceNativeTarget
 }
 
 export function hasCompatibleReferenceRustBinaryContents(contents: Buffer): boolean {
-  return REQUIRED_VIRTUAL_NATIVE_BINARY_MARKERS.every(marker => contents.includes(Buffer.from(marker)))
+  return REQUIRED_REFERENCE_NATIVE_BINARY_MARKERS.every(marker => contents.includes(Buffer.from(marker)))
 }
 
 function hasCompatibleReferenceRustBinaryFile(binaryPath: string): boolean {
@@ -42,9 +42,9 @@ function hasCompatibleReferenceRustBinaryFile(binaryPath: string): boolean {
 
 function hasHostRuntimeCompatibleReferenceRustBinary(
   binaryPath: string,
-  target: VirtualNativeTarget,
+  target: ReferenceNativeTarget,
 ): boolean {
-  if (getVirtualNativeTriple() !== target) {
+  if (getReferenceNativeTriple() !== target) {
     return false
   }
 
@@ -56,7 +56,7 @@ function hasHostRuntimeCompatibleReferenceRustBinary(
   try {
     copyFileSync(binaryPath, validationPath)
     const binding = requireFromPipeline(validationPath) as Record<string, unknown>
-    return getVirtualNativeCompatibilityError(binding) === null
+    return getReferenceNativeCompatibilityError(binding) === null
   } catch {
     return false
   } finally {
@@ -67,7 +67,7 @@ function hasHostRuntimeCompatibleReferenceRustBinary(
 export function isReferenceRustBinaryCompatible(
   options: ReferenceRustBinaryCompatibilityOptions,
 ): boolean {
-  const hostTarget = options.hostTarget ?? getVirtualNativeTriple()
+  const hostTarget = options.hostTarget ?? getReferenceNativeTriple()
   const hostRuntimeCompatibilityCheck =
     options.hostRuntimeCompatibilityCheck ?? hasHostRuntimeCompatibleReferenceRustBinary
   const fileCompatibilityCheck = options.fileCompatibilityCheck ?? hasCompatibleReferenceRustBinaryFile

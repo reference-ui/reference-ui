@@ -54,8 +54,8 @@ packages/reference-rs/
     ├── *.d.ts
     │
     ├── native/                     local .node the loader require()s
-    │   ├── virtual-native.<triple>.node
-    │   └── virtual-native.<triple>.inputs.sha256
+    │   ├── reference-native.<triple>.node
+    │   └── reference-native.<triple>.inputs.sha256
     │
     ├── cargo/                      CARGO_TARGET_DIR  (today’s target/)
     ├── npm/                        napi platform packages (today’s npm/)
@@ -67,7 +67,7 @@ packages/reference-rs/
 - `target/`
 - `npm/`
 - `artifacts/`
-- `native/virtual-native.*.node`
+- `native/reference-native.*.node`
 - `native/*.sha256`
 - `native/index.d.ts` (napi junk next to the crate)
 
@@ -118,7 +118,7 @@ Do **not** set a repo-wide `CARGO_TARGET_DIR` that steals other packages’ buil
 Today:
 
 ```text
-join(packageDir, 'native', `virtual-native.${triple}.node`)
+join(packageDir, 'native', `reference-native.${triple}.node`)
 napi build --output-dir native
 napi artifacts --output-dir artifacts
 ```
@@ -126,14 +126,14 @@ napi artifacts --output-dir artifacts
 After:
 
 ```text
-join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)
+join(packageDir, 'dist', 'native', `reference-native.${triple}.node`)
 napi build --output-dir dist/native
 napi artifacts --output-dir dist/artifacts
 ```
 
 Touch:
 
-- `modules/runtime/js/loader.ts` (`getVirtualNativeCandidates`)
+- `modules/runtime/js/loader.ts` (`getReferenceNativeCandidates`)
 - `modules/runtime/js/loader.test.ts`
 - `modules/runtime/js/tools/ensure-native.ts` (binary path, stamp path, **input hash still includes `modules/runtime/src` + product `native.rs`**)
 - `modules/runtime/js/shared/paths.ts` (`artifactsDir` → `dist/artifacts`)

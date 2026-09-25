@@ -26,12 +26,11 @@ packages/reference-rs/
     ├── typegen/          # Token unions / StyleProps .d.ts
     ├── tasty/            # Tasty module (Rust crate + JS API + tests)
     ├── atlas/            # Atlas module (Rust crate + JS API + tests)
-    ├── styletrace/       # Styletrace module (Rust crate + JS API + tests)
-    └── virtualrs/        # Virtual transforms crate & tests
+    └── styletrace/       # Styletrace module (Rust crate + JS API + tests)
 ```
 
 ### Layer & Module Responsibilities
-1. **Modules (`modules/atomic/`, `modules/canon/`, `modules/base-system/`, `modules/typegen/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`, `modules/virtualrs/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
+1. **Modules (`modules/atomic/`, `modules/canon/`, `modules/base-system/`, `modules/typegen/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
 2. **N-API Switchboard (`native/`)**: The sole `cdylib` native addon exposing module capabilities to Node.js via `napi-rs`.
 3. **Runtime & Tools (`runtime/`)**: Addon loader, platform detection, packaging, and binary artifact distribution scripts.
 4. **Scope Discipline**: When assigned to work on a specific module, keep changes focused on your target scope.
@@ -50,7 +49,6 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **typegen** | `.d.ts` unions | Cargo printer tests + Vitest `tsc --noEmit` consumers. Goldens: `TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen`. | `pnpm agentrs c typegen` / `v typegen` |
 | **tasty** | scan types, emit modules, assert API | **spec + committed goldens** (`manifest.js`, `chunks.json`). Runtime emit goes to `.scratch/`. | `pnpm agentrs v tasty` |
 | **atlas** | analyze an app, named assertions | **spec + committed** `analysis.json` / `diagnostics.json`; standing schema gauges. | `pnpm agentrs v atlas` |
-| **virtualrs** | rewrite source | **spec + committed** `output/expected.tsx`. | `pnpm agentrs v virtualrs` |
 | **styletrace** | wrapper graph / StyleProps names | Fixture in, names out. `VirtualWorkspace` for node_modules cases. | `pnpm agentrs v styletrace` |
 | **native / runtime** | loader, exports exist | Smoke only. | `pnpm agentrs v runtime` |
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
@@ -166,7 +164,7 @@ pnpm agentrs v atomic                                        # runs ONLY atomic 
 pnpm agentrs v tasty                                         # runs ONLY tasty tests
 pnpm agentrs v atlas                                         # runs ONLY atlas tests
 pnpm agentrs v styletrace                                    # runs ONLY styletrace tests
-pnpm agentrs v atomic --update-goldens                       # rewrite committed goldens (atomic, atlas, tasty, virtualrs)
+pnpm agentrs v atomic --update-goldens                       # rewrite committed goldens (atomic, atlas, tasty)
 pnpm agentrs v <path-to-test>                                # target specific test file
 pnpm agentrs v -t "<pattern>"                                # filter by describe/it pattern
 pnpm agentrs v --watch                                       # watch mode

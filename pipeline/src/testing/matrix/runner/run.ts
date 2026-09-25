@@ -7,7 +7,7 @@
  */
 
 import * as dagger from '@dagger.io/dagger'
-import { getVirtualNativePackageName } from '../../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
+import { getReferenceNativePackageName } from '../../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import {
   DEFAULT_REGISTRY_URL,
   MANAGED_REGISTRY_PORT,
@@ -44,7 +44,7 @@ function assertMatrixRustTargetAvailable(
     return
   }
 
-  const requiredTargetPackageName = getVirtualNativePackageName(matrixNativeTarget)
+  const requiredTargetPackageName = getReferenceNativePackageName(matrixNativeTarget)
   const requiredTargetPackage = manifest.packages.find((pkg) => pkg.name === requiredTargetPackageName)
 
   if (requiredTargetPackage?.version === rustRootPackage.version) {

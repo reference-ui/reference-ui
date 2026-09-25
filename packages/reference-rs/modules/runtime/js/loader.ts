@@ -1,6 +1,6 @@
 /**
- * Load the Rust native addon for virtual transforms.
- * Provides import rewrites, generic call renaming, and responsive lowering via NAPI.
+ * Load the Rust native addon for Reference UI.
+ * Resolves the platform-specific .node binary and validates its export contract.
  *
  * Falls back to null if the native addon is unavailable (e.g. wrong platform,
  * not built, or load error). Callers should use JS fallback when native is null.
@@ -13,26 +13,26 @@ import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
-  getVirtualNativePackageName,
-  getVirtualNativeTriple,
-  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
-  type VirtualNativeTarget,
+  getReferenceNativePackageName,
+  getReferenceNativeTriple,
+  SUPPORTED_REFERENCE_NATIVE_TARGETS,
+  type ReferenceNativeTarget,
 } from './shared/targets.js'
-import { REQUIRED_VIRTUAL_NATIVE_EXPORTS } from './shared/native-contract.js'
+import { REQUIRED_REFERENCE_NATIVE_EXPORTS } from './shared/native-contract.js'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
 const NATIVE_PATH_ENV = 'REFERENCE_UI_NATIVE_PATH'
 type RequireFn = ReturnType<typeof createRequire>
 
-export { getVirtualNativeTriple, SUPPORTED_VIRTUAL_NATIVE_TARGETS }
+export { getReferenceNativeTriple, SUPPORTED_REFERENCE_NATIVE_TARGETS }
 
-export interface VirtualNativeBinding {
+export interface ReferenceNativeBinding {
   getNativeCapabilities: () => string
   [key: string]: unknown
 }
 
-export interface VirtualNativeDiagnostics {
+export interface ReferenceNativeDiagnostics {
   status:
     | 'loaded'
     | 'unsupported-platform'
@@ -49,13 +49,13 @@ export interface VirtualNativeDiagnostics {
   cause: string | null
 }
 
-let _native: VirtualNativeBinding | null | undefined = undefined
-let _diagnostics: VirtualNativeDiagnostics | undefined = undefined
+let _native: ReferenceNativeBinding | null | undefined = undefined
+let _diagnostics: ReferenceNativeDiagnostics | undefined = undefined
 
-export function getVirtualNativeCompatibilityError(
+export function getReferenceNativeCompatibilityError(
   binding: Record<string, unknown>
 ): string | null {
-  const missingExports = REQUIRED_VIRTUAL_NATIVE_EXPORTS.filter(
+  const missingExports = REQUIRED_REFERENCE_NATIVE_EXPORTS.filter(
     (name: string) => typeof binding[name] !== 'function'
   )
 
@@ -89,12 +89,12 @@ function getDefaultRequire(): RequireFn {
   return createRequire(import.meta.url)
 }
 
-function setDiagnostics(diagnostics: VirtualNativeDiagnostics): void {
+function setDiagnostics(diagnostics: ReferenceNativeDiagnostics): void {
   _diagnostics = diagnostics
 }
 
 function formatSupportedTargets(): string {
-  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.join(', ')
+  return SUPPORTED_REFERENCE_NATIVE_TARGETS.join(', ')
 }
 
 export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url): string {
@@ -113,19 +113,19 @@ export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url):
   throw new Error('@reference-ui/rust package directory could not be resolved.')
 }
 
-export function getVirtualNativeCandidates(packageDir: string, triple: string): string[] {
+export function getReferenceNativeCandidates(packageDir: string, triple: string): string[] {
   const override = process.env[NATIVE_PATH_ENV]
   if (override && override.length > 0) return [override]
-  return [join(packageDir, 'dist', 'native', `virtual-native.${triple}.node`)]
+  return [join(packageDir, 'dist', 'native', `reference-native.${triple}.node`)]
 }
 
 function resolveOptionalTargetPackageDir(
-  triple: VirtualNativeTarget,
+  triple: ReferenceNativeTarget,
   requireImpl: RequireFn = getDefaultRequire()
 ): string | null {
   try {
     const packageJsonPath = requireImpl.resolve(
-      `${getVirtualNativePackageName(triple)}/package.json`
+      `${getReferenceNativePackageName(triple)}/package.json`
     )
     return dirname(packageJsonPath)
   } catch {
@@ -133,44 +133,44 @@ function resolveOptionalTargetPackageDir(
   }
 }
 
-function getVirtualNativeCandidatePaths(
+function getReferenceNativeCandidatePaths(
   packageDir: string,
-  triple: VirtualNativeTarget,
+  triple: ReferenceNativeTarget,
   requireImpl: RequireFn = getDefaultRequire()
 ): string[] {
-  const candidates = getVirtualNativeCandidates(packageDir, triple)
+  const candidates = getReferenceNativeCandidates(packageDir, triple)
   const optionalTargetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
 
   if (optionalTargetPackageDir && optionalTargetPackageDir !== packageDir) {
-    candidates.push(join(optionalTargetPackageDir, `virtual-native.${triple}.node`))
+    candidates.push(join(optionalTargetPackageDir, `reference-native.${triple}.node`))
   }
 
   return candidates
 }
 
-export function resolveVirtualNativeBinaryPath(
+export function resolveReferenceNativeBinaryPath(
   packageDir: string,
   platform: NodeJS.Platform = process.platform,
   arch: string = process.arch,
   fileExists: (path: string) => boolean = existsSync,
   requireImpl: RequireFn = getDefaultRequire()
 ): string | null {
-  const triple = getVirtualNativeTriple(platform, arch)
+  const triple = getReferenceNativeTriple(platform, arch)
   if (!triple) return null
 
   return (
-    getVirtualNativeCandidatePaths(packageDir, triple, requireImpl).find(path =>
+    getReferenceNativeCandidatePaths(packageDir, triple, requireImpl).find(path =>
       fileExists(path)
     ) ?? null
   )
 }
 
-export function loadVirtualNative(): VirtualNativeBinding | null {
+export function loadReferenceNative(): ReferenceNativeBinding | null {
   if (_native !== undefined) return _native
 
   const platform = process.platform
   const arch = process.arch
-  const triple = getVirtualNativeTriple(platform, arch)
+  const triple = getReferenceNativeTriple(platform, arch)
 
   try {
     const requireImpl = getDefaultRequire()
@@ -192,8 +192,8 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
     }
 
     const targetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
-    const targetPackageName = getVirtualNativePackageName(triple)
-    const candidatePaths = getVirtualNativeCandidatePaths(packageDir, triple, requireImpl)
+    const targetPackageName = getReferenceNativePackageName(triple)
+    const candidatePaths = getReferenceNativeCandidatePaths(packageDir, triple, requireImpl)
     const nodePath = candidatePaths.find(path => existsSync(path)) ?? null
     if (!nodePath) {
       setDiagnostics({
@@ -212,7 +212,7 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
     }
 
     const binding = requireImpl(nodePath) as Record<string, unknown>
-    const compatibilityError = getVirtualNativeCompatibilityError(binding)
+    const compatibilityError = getReferenceNativeCompatibilityError(binding)
     if (compatibilityError) {
       setDiagnostics({
         status: 'load-failed',
@@ -240,7 +240,7 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       candidatePaths: [nodePath],
       cause: null,
     })
-    _native = binding as unknown as VirtualNativeBinding
+    _native = binding as unknown as ReferenceNativeBinding
     return _native
   } catch (error) {
     setDiagnostics({
@@ -254,7 +254,7 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
       arch,
       triple,
       targetPackageDir: null,
-      targetPackageName: triple ? getVirtualNativePackageName(triple) : null,
+      targetPackageName: triple ? getReferenceNativePackageName(triple) : null,
       candidatePaths: [],
       cause: error instanceof Error ? error.message : String(error),
     })
@@ -263,13 +263,13 @@ export function loadVirtualNative(): VirtualNativeBinding | null {
   }
 }
 
-export function getVirtualNative(): VirtualNativeBinding | null {
-  return loadVirtualNative()
+export function getReferenceNative(): ReferenceNativeBinding | null {
+  return loadReferenceNative()
 }
 
-export function getVirtualNativeDiagnostics(): VirtualNativeDiagnostics {
+export function getReferenceNativeDiagnostics(): ReferenceNativeDiagnostics {
   if (_diagnostics) return _diagnostics
-  loadVirtualNative()
+  loadReferenceNative()
 
   return (
     _diagnostics ?? {
@@ -277,7 +277,7 @@ export function getVirtualNativeDiagnostics(): VirtualNativeDiagnostics {
       packageDir: null,
       platform: process.platform,
       arch: process.arch,
-      triple: getVirtualNativeTriple(process.platform, process.arch),
+      triple: getReferenceNativeTriple(process.platform, process.arch),
       targetPackageDir: null,
       targetPackageName: null,
       candidatePaths: [],
@@ -286,8 +286,8 @@ export function getVirtualNativeDiagnostics(): VirtualNativeDiagnostics {
   )
 }
 
-export function getVirtualNativeUnavailableMessage(feature: string): string {
-  const diagnostics = getVirtualNativeDiagnostics()
+export function getReferenceNativeUnavailableMessage(feature: string): string {
+  const diagnostics = getReferenceNativeDiagnostics()
   const messageParts = [
     `Reference UI could not load the native addon required to ${feature}.`,
     'Prebuilt binaries for @reference-ui/rust should install automatically during dependency installation.',

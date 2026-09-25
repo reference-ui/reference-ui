@@ -397,7 +397,7 @@
         <h2>The stack</h2>
         <div class="meta">TypeScript above the cut. Rust below.</div>
         <p>The engine emits two things: <code>styles.css</code> and types. Above that dotted line is TypeScript land — a build-time layer (<code>tokens()</code>, <code>font()</code>, <code>keyframes()</code>, <code>globalCss()</code>, sitting on fragments) and a runtime layer (<code>css()</code>, <code>recipe()</code>). Primitives sit on the runtime. Fragments stay in JS: authors write real TypeScript. Rust consumes the dump; it does not run the files.</p>
-        <p class="hint">Hover a function to see which module it rests on. Written plan: <code>docs/atomic.md</code>. tasty, atlas, virtualrs, and <code>modules/runtime</code> (the .node loader) are other products — not this engine.</p>
+        <p class="hint">Hover a function to see which module it rests on. Written plan: <code>docs/atomic.md</code>. tasty, atlas, and <code>modules/runtime</code> (the .node loader) are other products — not this engine.</p>
         </div>
         <div class="rail" aria-hidden="true"><div class="thumb"></div></div>
       </aside>

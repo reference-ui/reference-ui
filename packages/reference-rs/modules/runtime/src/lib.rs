@@ -17,8 +17,6 @@ mod styletrace;
 mod tasty;
 #[path = "../../typegen/native.rs"]
 mod typegen;
-#[path = "../../virtualrs/native.rs"]
-mod virtualrs;
 
 #[cfg(feature = "counters-trace")]
 mod counters_abi;
