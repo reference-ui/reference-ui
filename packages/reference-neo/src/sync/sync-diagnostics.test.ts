@@ -88,15 +88,22 @@ function hasChannelCode(output: string): boolean {
   return /ATM-W-DYNAMIC-|ATM-W-UNFOLDABLE-SPREAD|ATM-I-HARVEST-SINK|ATM-I-DEAD-BRANCH/.test(output)
 }
 
-async function syncWithWarnCapture(dir: string): Promise<string[]> {
+async function syncWithWarnCapture(dir: string, options: { verbose?: boolean } = {}): Promise<string[]> {
   const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
   try {
-    await sync(dir)
+    await sync(dir, options)
     // Capture before restore: mockRestore clears the call history.
     return spy.mock.calls.map((args) => String(args[0]))
   } finally {
     spy.mockRestore()
   }
+}
+
+async function writeStaticCssProject(): Promise<string> {
+  return writeProject({
+    'ui.config.ts': configFile("  staticCss: { notAStyleProp: ['x'] },"),
+    'theme/tokens.ts': TOKENS_FILE,
+  })
 }
 
 describe('sync diagnostics', () => {
@@ -134,24 +141,28 @@ describe('sync diagnostics', () => {
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 
-  it('prints compile warnings to the sync log without failing', async () => {
-    const dir = await writeProject({
-      'ui.config.ts': configFile("  staticCss: { notAStyleProp: ['x'] },"),
-      'theme/tokens.ts': TOKENS_FILE,
-    })
+  it('prints one warning summary line by default without failing', async () => {
+    const dir = await writeStaticCssProject()
 
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    let output = ''
-    try {
-      await sync(dir)
-      // Capture before restore: mockRestore clears the call history.
-      output = spy.mock.calls.map((args) => String(args[0])).join('\n')
-    } finally {
-      spy.mockRestore()
-    }
+    const calls = await syncWithWarnCapture(dir)
 
-    expect(output).toContain('[neo] sync warning ATM-W-UNKNOWN-PROPERTY:')
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toBe('⚠ 1 warning [--verbose]')
+    expect(calls[0]).not.toContain('ATM-')
+    expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
+  })
+
+  it('lists location, message, and fix hint under verbose without failing', async () => {
+    const dir = await writeStaticCssProject()
+
+    const calls = await syncWithWarnCapture(dir, { verbose: true })
+    const output = calls.join('\n')
+
+    expect(calls).toHaveLength(1)
+    expect(output).toContain('ATM-W-UNKNOWN-PROPERTY')
     expect(output).toContain('Unknown property in staticCss')
+    expect(output).toContain('remove it or check the property spelling')
+    expect(output).not.toContain('[--verbose]')
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 
@@ -176,7 +187,7 @@ describe('sync diagnostics', () => {
 })
 
 describe('sync compiler backchannel', () => {
-  it('prints compiler diagnostics on the opt-in channel without leaking them into userspace warnings', async () => {
+  it('counts compiler diagnostics in the one-line summary by default', async () => {
     const dir = await writeProject({
       'ui.config.ts': configFile("  logs: ['compiler'],"),
       'theme/tokens.ts': TOKENS_FILE,
@@ -185,13 +196,30 @@ describe('sync compiler backchannel', () => {
 
     const calls = await syncWithWarnCapture(dir)
 
-    const compiler = calls.filter((call) => call.includes('[neo] compiler'))
-    expect(compiler).toHaveLength(1)
-    expect(compiler[0]).toMatch(/ATM-W-DYNAMIC-[A-Z0-9-]+/)
-    expect(compiler[0]).toContain('ATM-W-UNFOLDABLE-SPREAD')
-    expect(compiler[0]).toContain('ATM-I-HARVEST-SINK')
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toMatch(/^⚠ \d+ warnings? \[--verbose\]$/)
+    expect(calls[0]).not.toContain('ATM-')
+    expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
+  })
 
-    const userspace = calls.filter((call) => call.includes('[neo] sync warning')).join('\n')
+  it('lists compiler diagnostics behind the compiler tag under verbose without leaking them into userspace warnings', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile("  logs: ['compiler'],"),
+      'theme/tokens.ts': TOKENS_FILE,
+      'theme/dynamic.ts': BACKCHANNEL_FILE,
+    })
+
+    const calls = await syncWithWarnCapture(dir, { verbose: true })
+
+    expect(calls).toHaveLength(1)
+    const lines = calls.join('\n').split('\n')
+    const compiler = lines.filter((line) => line.includes('[compiler]'))
+    expect(compiler.length).toBeGreaterThan(0)
+    expect(compiler.join('\n')).toMatch(/ATM-W-DYNAMIC-[A-Z0-9-]+/)
+    expect(compiler.join('\n')).toContain('ATM-W-UNFOLDABLE-SPREAD')
+    expect(compiler.join('\n')).toContain('ATM-I-HARVEST-SINK')
+
+    const userspace = lines.filter((line) => !line.includes('[compiler]')).join('\n')
     expect(hasChannelCode(userspace)).toBe(false)
 
     const request = JSON.parse(
@@ -210,7 +238,7 @@ describe('sync compiler backchannel', () => {
 
     const calls = await syncWithWarnCapture(dir)
 
-    expect(calls.join('\n')).not.toContain('[neo] compiler')
+    expect(calls.join('\n')).not.toContain('[compiler]')
 
     const request = JSON.parse(
       readFileSync(outFile(dir, 'system/compile-request.json'), 'utf-8')

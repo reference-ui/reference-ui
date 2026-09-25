@@ -68,8 +68,9 @@ export interface NativeCompileResult {
   tracedJsxHosts?: string[]
   /**
    * Compiler-channel diagnostics, present only when `logs` requested them.
-   * The engine omits this field for userspace-only compiles; sync prints
-   * its entries as `[neo] compiler` lines without touching the userspace
+   * The engine omits this field for userspace-only compiles; sync counts
+   * its entries in the one-line warning summary and lists them behind
+   * the compiler tag under --verbose, without touching the userspace
    * warning collapse.
    */
   compilerDiagnostics?: NativeDiagnostic[]

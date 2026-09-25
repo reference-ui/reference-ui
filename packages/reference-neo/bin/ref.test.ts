@@ -1,7 +1,8 @@
 // Unit tests for the ref bin over temp projects plus arg handling.
 // They take temp dirs with fake generated output and assert clean removes
-// exactly that output. Sync itself is proven live in case worlds; the bin
-// only forwards to the sync the harness already covers.
+// exactly that output, plus warning fixtures proving sync prints the
+// one-line summary by default and the structured list under --verbose.
+// Deep sync behavior stays proven live in case worlds.
 import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -20,13 +21,23 @@ afterEach(async () => {
 interface BinRun {
   code: number | null;
   stdout: string;
+  stderr: string;
 }
 
 function runBin(args: string[], cwd: string): Promise<BinRun> {
   return new Promise((resolve) => {
-    execFile(process.execPath, [BIN_PATH, ...args], { cwd, timeout: 120000 }, (err, stdout) => {
-      resolve({ code: err ? ((err as { code?: number }).code ?? 1) : 0, stdout: String(stdout) });
-    });
+    execFile(
+      process.execPath,
+      [BIN_PATH, ...args],
+      { cwd, timeout: 120000, env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: undefined } },
+      (err, stdout, stderr) => {
+        resolve({
+          code: err ? ((err as { code?: number }).code ?? 1) : 0,
+          stdout: String(stdout),
+          stderr: String(stderr),
+        });
+      }
+    );
   });
 }
 
@@ -107,4 +118,77 @@ describe('ref bin', () => {
     expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
     expect(run.stdout).toContain('clean takes no --watch');
   });
+
+  it('sync prints at most one warning line on stderr by default', async () => {
+    const dir = await makeTempDir();
+    plantWarningProject(dir);
+    const run = await runBin(['sync', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout).toContain('ref sync');
+    expect(run.stderr.trim()).toBe('⚠ 3 warnings [--verbose]');
+  });
+
+  it('sync --verbose lists every warning with location, message, and fix hint', async () => {
+    const dir = await makeTempDir();
+    plantWarningProject(dir);
+    const run = await runBin(['sync', '--verbose', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout).toContain('ref sync');
+    assertVerboseWarningList(run.stderr);
+  });
 });
+
+function assertVerboseWarningList(stderr: string): void {
+  const lines = stderr.trim().split('\n');
+  expect(lines).toHaveLength(3);
+  const [first, second, third] = lines;
+  expect(first).toContain('warn.ts:3');
+  expect(first).toContain('ATM-W-INVALID-CSS-VALUE');
+  expect(first).toContain('use a CSS keyword, token, or value the prop accepts');
+  expect(second).toContain('warn.ts:4');
+  expect(second).toContain('ATM-W-INVALID-CSS-VALUE');
+  expect(third).toContain('warn.ts:5');
+  expect(third).toContain('ATM-W-UNKNOWN-COLOR');
+  expect(third).toContain('use a color token or a CSS color');
+  expect(stderr).not.toContain('[--verbose]');
+}
+
+function plantWarningProject(dir: string): void {
+  writeFileSync(
+    join(dir, 'ui.config.ts'),
+    [
+      "import { defineConfig } from '@reference-ui/neo'",
+      '',
+      'export default defineConfig({',
+      "  name: 'ref-bin-warn',",
+      "  include: ['theme/**/*.{ts,tsx}'],",
+      '})',
+      '',
+    ].join('\n')
+  );
+  mkdirSync(join(dir, 'theme'), { recursive: true });
+  writeFileSync(
+    join(dir, 'theme', 'tokens.ts'),
+    [
+      "import { tokens } from '@reference-ui/neo'",
+      '',
+      'tokens({',
+      '  colors: {',
+      "    brand: { value: '#7c3aed' },",
+      '  },',
+      '})',
+      '',
+    ].join('\n')
+  );
+  writeFileSync(
+    join(dir, 'theme', 'warn.ts'),
+    [
+      "import { css } from '@reference-ui/react'",
+      '',
+      'export const a = css({ display: true })',
+      'export const b = css({ display: true })',
+      "export const c = css({ color: 'notacolor-xyz' })",
+      '',
+    ].join('\n')
+  );
+}

@@ -10,11 +10,7 @@ import type {
   NativeCompileResult,
   ScopedCompileRequest,
 } from '../native/contract.ts'
-import {
-  reportCompilerDiagnostics,
-  reportWarningDiagnostics,
-  throwOnErrorDiagnostics,
-} from '../native/diagnostics.ts'
+import { reportSyncDiagnostics, throwOnErrorDiagnostics } from '../native/diagnostics.ts'
 import { buildCompileRequest } from '../native/request.ts'
 import {
   attachScanRetention,
@@ -81,6 +77,11 @@ function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIC
 export interface SyncOptions {
   sessionKind?: SyncSessionKind
   breakLock?: boolean
+  /**
+   * List every warning with its location and fix hint instead of the
+   * one-line summary. Threaded from `ref sync --verbose`.
+   */
+  verbose?: boolean
 }
 
 /**
@@ -151,8 +152,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     } finally {
       await releaseScanRetention(retentionToken)
     }
-    reportWarningDiagnostics(result.diagnostics)
-    reportCompilerDiagnostics(result.compilerDiagnostics)
+    reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, { verbose: options.verbose === true })
     throwOnErrorDiagnostics(result.diagnostics)
 
     // Publish carries configured ∪ traced: hosts the engine discovered

@@ -1,5 +1,5 @@
 // CLI entry: it takes the raw argv tail and emits the process exit code.
-// Commander owns the argv shape — verbs, the optional dir, the --watch flag —
+// Commander owns the argv shape — verbs, the optional dir, the sync flags —
 // while the per-command files own their runs and prints. Unknown verbs fall
 // through to the usage error below; --help prints Commander help plus the
 // pinned usage block the bin tests assert.

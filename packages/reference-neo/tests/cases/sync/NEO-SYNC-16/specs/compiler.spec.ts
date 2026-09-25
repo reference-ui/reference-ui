@@ -30,14 +30,14 @@ const PLAIN_CONFIG = [
   '',
 ].join('\n');
 
-async function syncWithWarnCapture(dir: string): Promise<string[]> {
+async function syncWithWarnCapture(dir: string, verbose: boolean): Promise<string[]> {
   const calls: string[] = [];
   const original = console.warn;
   console.warn = (...args: unknown[]): void => {
     calls.push(args.map(String).join(' '));
   };
   try {
-    await sync(dir);
+    await sync(dir, { verbose });
   } finally {
     console.warn = original;
   }
@@ -45,10 +45,11 @@ async function syncWithWarnCapture(dir: string): Promise<string[]> {
 }
 
 // The runner served this world without syncing it: the opt-in world threads
-// logs through the frozen request and prints one collapsed compiler call,
+// logs through the frozen request and counts the channel in the one-line
+// summary by default, lists it behind the compiler tag under verbose,
 // while a no-logs copy of the same world stays compiler-silent.
 export default async function run({ case: c }: SpecInput): Promise<void> {
-  const calls = await syncWithWarnCapture(c.worldDir);
+  const calls = await syncWithWarnCapture(c.worldDir, false);
 
   // (i) config threading: the frozen request carries the opt-in.
   const requestPath = path.join(c.worldDir, '.reference-ui', 'system', 'compile-request.json');
@@ -56,35 +57,43 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const request = JSON.parse(fs.readFileSync(requestPath, 'utf8')) as { logs?: string[] };
   assert.deepStrictEqual(request.logs, ['compiler'], 'compile-request.json carries logs [compiler]');
 
-  // (ii) distinct printer: one collapsed compiler call with stable codes.
-  const compiler = calls.filter((call) => call.includes('[neo] compiler'));
-  assert.equal(compiler.length, 1, `expected one compiler call, got ${compiler.length}`);
-  assert.match(compiler[0], /ATM-W-DYNAMIC-[A-Z0-9-]+/, 'compiler output names a dynamic code');
+  // (ii) default summary: one call, the counted line, no codes.
+  assert.equal(calls.length, 1, `expected one warning call, got ${calls.length}`);
+  assert.match(calls[0], /^⚠ \d+ warnings? \[--verbose\]$/, 'default prints the one-line summary');
+  assert.doesNotMatch(calls[0], /ATM-/, 'default summary carries no codes');
+
+  // (ii) verbose list: one call whose compiler-tagged lines carry the codes.
+  const verbose = await syncWithWarnCapture(c.worldDir, true);
+  assert.equal(verbose.length, 1, `expected one verbose call, got ${verbose.length}`);
+  const lines = verbose.join('\n').split('\n');
+  const compiler = lines.filter((line) => line.includes('[compiler]'));
+  assert.ok(compiler.length > 0, 'verbose lists compiler-tagged lines');
+  assert.match(compiler.join('\n'), /ATM-W-DYNAMIC-[A-Z0-9-]+/, 'compiler output names a dynamic code');
   assert.ok(
-    compiler[0].includes('ATM-W-UNFOLDABLE-SPREAD'),
+    compiler.join('\n').includes('ATM-W-UNFOLDABLE-SPREAD'),
     'compiler output names the spread code',
   );
   assert.ok(
-    compiler[0].includes('ATM-I-HARVEST-SINK'),
+    compiler.join('\n').includes('ATM-I-HARVEST-SINK'),
     'compiler output names the harvest code',
   );
   assert.ok(
-    compiler[0].includes('ATM-I-DEAD-BRANCH'),
+    compiler.join('\n').includes('ATM-I-DEAD-BRANCH'),
     'compiler output names the dead-branch code',
   );
 
-  // (iii) isolation: userspace warnings carry no channel-family code.
-  const userspace = calls.filter((call) => call.includes('[neo] sync warning')).join('\n');
-  assert.doesNotMatch(userspace, CHANNEL_CODE, 'userspace warnings carry no channel-family code');
+  // (iii) isolation: userspace lines carry no channel-family code.
+  const userspace = lines.filter((line) => !line.includes('[compiler]')).join('\n');
+  assert.doesNotMatch(userspace, CHANNEL_CODE, 'userspace lines carry no channel-family code');
 
   // (iii) isolation, second half: the same world without logs prints none.
   const plainDir = fs.mkdtempSync(path.join(tmpdir(), 'neo-sync16-'));
   try {
     fs.cpSync(path.join(c.worldDir, 'theme'), path.join(plainDir, 'theme'), { recursive: true });
     fs.writeFileSync(path.join(plainDir, 'ui.config.ts'), PLAIN_CONFIG);
-    const plainCalls = await syncWithWarnCapture(plainDir);
+    const plainCalls = await syncWithWarnCapture(plainDir, false);
     assert.ok(
-      !plainCalls.join('\n').includes('[neo] compiler'),
+      !plainCalls.join('\n').includes('[compiler]'),
       'no-logs world prints no compiler output',
     );
     assert.ok(

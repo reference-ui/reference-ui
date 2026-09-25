@@ -1,4 +1,4 @@
-// CLI sync command: it takes the project dir plus the watch flag and emits
+// CLI sync command: it takes the project dir plus the sync flags and emits
 // a fresh generated folder or the resident watcher. One-shot sync runs the
 // world's own sync, drains the session-owned tasty phase with a single
 // subsystem call, and prints the cost; --watch routes to the watch runner.
@@ -12,15 +12,21 @@ import { runWatch } from './watch.ts'
 export interface SyncCommandOptions {
   watch?: boolean
   breakLock?: boolean
+  verbose?: boolean
 }
 
-export async function runSyncCommand(dir: string | undefined, watch: boolean, breakLock = false): Promise<number> {
+export async function runSyncCommand(
+  dir: string | undefined,
+  watch: boolean,
+  breakLock = false,
+  verbose = false
+): Promise<number> {
   const cwd = resolve(dir ?? process.cwd())
-  if (watch) return runWatch(cwd, breakLock)
+  if (watch) return runWatch(cwd, breakLock, verbose)
   try {
     const { sync } = await import('../sync/index.ts')
     const started = Date.now()
-    const result = await sync(cwd, { breakLock })
+    const result = await sync(cwd, { breakLock, verbose })
     const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
     const build = await flushReferenceBuild(cwd)
     if (build?.status === 'failed') {
@@ -46,7 +52,8 @@ export function registerSyncCommand(program: Command, report: (code: number) => 
     .argument('[dir]', 'project dir (defaults to cwd)')
     .option('--watch', 'stay resident and resync on every matched change')
     .option('--break-lock', 'take the sync session lock unconditionally')
+    .option('--verbose', 'list every warning with its location and fix hint')
     .action(async (dir: string | undefined, options: SyncCommandOptions) => {
-      report(await runSyncCommand(dir, options.watch ?? false, options.breakLock ?? false))
+      report(await runSyncCommand(dir, options.watch ?? false, options.breakLock ?? false, options.verbose ?? false))
     })
 }

@@ -71,8 +71,9 @@ export interface ReferenceUIConfig {
   /**
    * Opt-in diagnostic channels for the compiler backchannel.
    * Omit or pass `[]` for userspace diagnostics only; `['compiler']`
-   * returns compiler telemetry in `compilerDiagnostics` and prints it
-   * as `[neo] compiler` lines. Unrelated to `debug`, which stays the
+   * returns compiler telemetry in `compilerDiagnostics`, counted in the
+   * one-line warning summary and listed behind the compiler tag under
+   * --verbose. Unrelated to `debug`, which stays the
    * JS infrastructure logger and never implies this channel.
    */
   logs?: LogChannel[]

@@ -274,6 +274,7 @@ function createParcelHandler(state: WatchState, schedule: () => void, reportErro
 
 export interface WatchSyncOptions {
   breakLock?: boolean
+  verbose?: boolean
 }
 
 /**
@@ -300,7 +301,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
   const onPoke = (): void => { pokeTarget() }
   process.on('SIGUSR2', onPoke)
   try {
-    await sync(projectRoot)
+    await sync(projectRoot, { verbose: options.verbose ?? false })
 
     const state: WatchState = {
       projectRoot,
@@ -317,7 +318,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
     let stopped = false
     const scheduler = createResyncScheduler(async () => {
       try {
-        const result = await sync(projectRoot)
+        const result = await sync(projectRoot, { verbose: options.verbose ?? false })
         if (!stopped) callbacks.onResync?.(result)
       } catch (error) {
         if (!stopped) callbacks.onError?.(toError(error))

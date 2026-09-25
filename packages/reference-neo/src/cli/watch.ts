@@ -6,7 +6,7 @@
 // routes the flag to it.
 import { messageOf, printSyncLine } from './output.ts'
 
-export async function runWatch(dir: string, breakLock = false): Promise<number> {
+export async function runWatch(dir: string, breakLock = false, verbose = false): Promise<number> {
   try {
     const { watchSync } = await import('../lib/watch/index.ts')
     const started = Date.now()
@@ -14,7 +14,7 @@ export async function runWatch(dir: string, breakLock = false): Promise<number> 
       onChange: (change) => console.log(`[ref] ${change.event} ${change.relativePath}`),
       onResync: (result) => console.log(`[ref] resync → ${result.outDir}`),
       onError: (err) => console.log(`[ref] watch error: ${messageOf(err)}`),
-    }, { breakLock })
+    }, { breakLock, verbose })
     printSyncLine(Date.now() - started, `${dir}/.reference-ui`)
     console.log(`[ref] watching ${dir} — Ctrl-C to stop`)
     const shutdown = (): void => {
