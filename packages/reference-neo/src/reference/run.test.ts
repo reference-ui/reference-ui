@@ -38,7 +38,6 @@ async function importRunModule(options?: {
 
   const logReferenceBuilt = vi.fn()
   const logReferenceWarning = vi.fn()
-  const logReferenceCompleted = vi.fn()
   const logReferenceError = vi.fn()
   const loadSymbolByName = vi.fn(async (name: string) => {
     if (options?.loadSymbolImpl) {
@@ -59,7 +58,6 @@ async function importRunModule(options?: {
   vi.doMock('./bridge/logging.ts', () => ({
     logReferenceBuilt,
     logReferenceWarning,
-    logReferenceCompleted,
     logReferenceError,
   }))
   vi.doMock('./bridge/tasty-build.ts', () => ({
@@ -71,7 +69,6 @@ async function importRunModule(options?: {
     ...mod,
     logReferenceBuilt,
     logReferenceWarning,
-    logReferenceCompleted,
     logReferenceError,
     loadSymbolByName,
     rebuildReferenceTastyBuild,
@@ -91,7 +88,6 @@ describe('reference/bridge/run', () => {
       onRunBuild,
       logReferenceBuilt,
       logReferenceWarning,
-      logReferenceCompleted,
       loadSymbolByName,
     } = await importRunModule()
 
@@ -106,17 +102,6 @@ describe('reference/bridge/run', () => {
     expect(loadSymbolByName).toHaveBeenCalledWith('ButtonProps')
     expect(logReferenceWarning).toHaveBeenCalledWith('/workspace/src/reference.ts: scanner warning')
     expect(logReferenceBuilt).toHaveBeenCalledTimes(1)
-    expect(logReferenceCompleted).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'ButtonProps',
-        symbolId: 'symbol:ButtonProps',
-        source: 'project',
-        manifestPath: `/workspace/${DEFAULT_OUT_DIR}/types/tasty/manifest.js`,
-        outputDir: `/workspace/${DEFAULT_OUT_DIR}/types/tasty`,
-        warningCount: 1,
-        diagnosticCount: 1,
-      })
-    )
     expect(result).toEqual({
       status: 'complete',
       name: 'ButtonProps',

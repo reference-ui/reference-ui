@@ -1,13 +1,12 @@
 // Reference bridge run: it takes the phase payload plus an optional symbol name
 // and emits the structured build result. Diagnostics warn, the built line
-// infos, completion details debug; a throw becomes a failed result — never a
-// rejection, so the background phase cannot take sync down with it.
+// infos; a throw becomes a failed result — never a rejection, so the
+// background phase cannot take sync down with it.
 
 import { createReferenceBuildReport, formatReferenceBuildDiagnostic } from './build-report.ts'
 import type { ReferenceBuildComplete, ReferenceBuildResult } from './events.ts'
 import {
   logReferenceBuilt,
-  logReferenceCompleted,
   logReferenceError,
   logReferenceWarning,
 } from './logging.ts'
@@ -46,7 +45,6 @@ export async function onRunBuild(
       diagnosticCount: report.diagnosticCount,
       diagnostics: report.diagnostics,
     }
-    logReferenceCompleted(completed)
     return { status: 'complete', ...completed }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
