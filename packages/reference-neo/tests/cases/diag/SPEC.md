@@ -48,11 +48,13 @@ a red file behind.
 
 - `ATM-W-TOKEN-CATEGORY-MISMATCH` — retired, never emitted, kept for wire
   stability. No repro, no case.
-- `ATM-I-*` (4 rows) — module-local telemetry; the template carries
-  warnings and errors only. No transport, no case.
+- `ATM-I-*` (4 rows) — module-local telemetry on the legacy/native
+  compiler channel only, no typed transport; the template carries
+  warnings and errors only. Pinned by RS stations (ATM-DIAG-07,
+  ATM-ATOM-06, harvest-census), no case.
 - `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` — template tests and docs only,
   never emitted by shipped code. No case.
-- `CAN` / `BSS` / `VRS` / `MGP` — reserved, unminted. Nothing to index.
+- `CAN` / `BSS` / `MGP` — reserved, unminted. Nothing to index.
 
 ## Out of scope
 
