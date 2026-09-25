@@ -30,7 +30,7 @@ import {
 import { createPortableFragmentBundle } from '../system/base/fragments.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
-import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
+import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { cleanDir, removeDirIfEmpty } from './clean.ts'
 import { SYNC_LOCK_DIR_NAME, type SyncSessionKind } from './session-owner.ts'
 import { acquireSyncSession } from './session.ts'
@@ -134,7 +134,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
       request = buildCompileRequest({
         spec,
         requested: requested.merged,
-        primitiveNames: PRIMITIVE_JSX_NAMES,
+        primitiveNames: ELEMENT_JSX_NAMES,
         sourceRoot: cwd,
         declarationRoot: cwd,
         include: config.include,

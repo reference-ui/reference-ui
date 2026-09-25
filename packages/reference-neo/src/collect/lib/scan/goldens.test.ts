@@ -24,7 +24,7 @@ import { compileNative } from '../../../native/compile.ts'
 import { buildCompileRequest } from '../../../native/request.ts'
 import { attachScanRetention } from '../../../native/retention.ts'
 import { applyNormalizeCss } from '../../../sync/reset.ts'
-import { PRIMITIVE_JSX_NAMES } from '../../../primitives/tags.ts'
+import { ELEMENT_JSX_NAMES } from '../../../native/element-vocabulary.ts'
 import type { ScannedSource } from './scanner.ts'
 import {
   NEEDLES,
@@ -99,7 +99,7 @@ async function dietCompile(world: ScaleWorld) {
   const request = buildCompileRequest({
     spec,
     requested: requested.merged,
-    primitiveNames: PRIMITIVE_JSX_NAMES,
+    primitiveNames: ELEMENT_JSX_NAMES,
     sourceRoot: world.dir,
     declarationRoot: world.dir,
     include: world.config.include,

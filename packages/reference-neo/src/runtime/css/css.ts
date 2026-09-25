@@ -21,6 +21,12 @@ import {
 /** Author style object: flat declarations plus nested conditions. */
 export type SystemStyleObject = Record<string, unknown>
 
+/** Unbound narrow style props: wide open, since no compiled system narrows them. */
+export type StyleProps = { [key: string]: unknown }
+
+/** Unbound condition keys: none compiled, so conditions ride the open narrow props. */
+export type StyleConditionKey = never
+
 /** One css() input: a style object, a list of them, or a conditional skip. */
 export type CssStyles = SystemStyleObject | undefined | null | false
 

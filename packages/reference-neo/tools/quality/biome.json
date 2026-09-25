@@ -56,16 +56,6 @@
   "css": { "formatter": { "enabled": false } },
   "overrides": [
     {
-      "includes": ["**/react-surface.d.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noShadowRestrictedNames": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["**/native/generated/primitives/primitives.d.ts"],
       "linter": {
         "rules": {

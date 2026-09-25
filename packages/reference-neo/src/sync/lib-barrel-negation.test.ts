@@ -15,7 +15,7 @@ import {
   prepareFragments,
   scanFragmentFilesNative,
 } from '../collect/lib/evaluate.ts'
-import { PRIMITIVE_JSX_NAMES } from '../primitives/tags.ts'
+import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
 import { compileNative } from '../native/compile.ts'
 import { buildCompileRequest, uniqueSorted } from '../native/request.ts'
@@ -60,7 +60,7 @@ async function fingerprintInclude(config: ReferenceUIConfig, include: string[]):
   const request = buildCompileRequest({
     spec,
     requested: requested.merged,
-    primitiveNames: PRIMITIVE_JSX_NAMES,
+    primitiveNames: ELEMENT_JSX_NAMES,
     sourceRoot: LIB_DIR,
     declarationRoot: LIB_DIR,
     include,

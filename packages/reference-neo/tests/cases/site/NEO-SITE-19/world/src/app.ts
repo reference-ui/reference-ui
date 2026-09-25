@@ -9,5 +9,4 @@ function el(id: string): HTMLElement {
   return node
 }
 
-// @ts-expect-error: the false hole widens to boolean — the merge pin needs the literal hole
 el('target').className = css([{ margin: '10px' }, { margin: '20px' }, false])

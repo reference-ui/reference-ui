@@ -13,6 +13,7 @@ function el(id: string): HTMLElement {
   return node
 }
 
+// @ts-expect-error: className-less by design — the runtime resolves through the inferred table while the types still require the field
 const chipRecipe = recipe({
   base: { color: 'ink' },
   variants: {

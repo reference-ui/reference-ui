@@ -10,8 +10,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { createPropSplitter } from '../../primitives/runtime/split.ts'
+import * as primitivesEntry from '@reference-ui/rust/primitives'
+import { createElement, type ComponentType } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { css, registerRuntimeData } from './css.ts'
 import { cleanDir } from '../../sync/clean.ts'
 import { sync } from '../../sync/index.ts'
@@ -113,16 +115,34 @@ describe('axis shorthands', () => {
   })
 
   it('split onto style resolution, never onto the element', () => {
-    const split = createPropSplitter(stylePropNames())
+    // The E2 seam carries no types (raw roster only), so the test binds
+    // through the same unknown-cast the PGEN parity specs use, then renders
+    // one bound primitive and reads the split off css plus the host attrs.
+    const entry = primitivesEntry as unknown as {
+      configurePrimitives: (options: {
+        layerName: string
+        stylePropNames: readonly string[]
+        css: (style: Record<string, unknown>, extra?: Record<string, unknown>) => string
+      }) => Record<string, ComponentType<Record<string, unknown>>>
+    }
+    const recordingCss = vi.fn(() => 'mock-class')
+    const { Div } = entry.configurePrimitives({
+      layerName: 'axis-test',
+      stylePropNames: stylePropNames(),
+      css: recordingCss,
+    })
     const props: Record<string, unknown> = {
       marginX: '2r',
       marginY: '8r',
       paddingX: '1r',
       paddingY: '0.5r',
     }
-    const { styleProps, elementProps } = split(props)
-    expect(styleProps).toEqual(props)
-    expect(elementProps).toEqual({})
+    const html = renderToStaticMarkup(createElement(Div, props))
+    expect(recordingCss).toHaveBeenCalledWith(props, undefined)
+    expect(html).not.toContain('marginX')
+    expect(html).not.toContain('marginY')
+    expect(html).not.toContain('paddingX')
+    expect(html).not.toContain('paddingY')
   })
 
   it('name backed classes through css()', () => {

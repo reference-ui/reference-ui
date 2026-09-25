@@ -16,7 +16,7 @@
     "paths": {
       "@reference-ui/neo": ["./src/index.ts"],
       "@reference-ui/styled": ["./src/runtime/index.ts"],
-      "@reference-ui/react": ["./src/primitives/generate/react-surface.d.ts"],
+      "@reference-ui/react": ["./src/entry/react-unbound.ts"],
       "@reference-ui/system": ["./src/system-surface.d.ts"],
       "@reference-ui/rust/tasty": ["./src/native/generated/tasty/tasty.d.ts"],
       "@reference-ui/rust/tasty/build": ["./src/native/generated/tasty/tasty/build.d.ts"],

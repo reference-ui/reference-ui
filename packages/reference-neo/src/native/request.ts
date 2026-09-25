@@ -13,9 +13,8 @@ export function uniqueSorted(names: readonly string[]): string[] {
 
 /**
  * The request parts the builder joins. `primitiveNames` arrives as a plain
- * param: the roster still lives in `primitives/tags.ts` until the NIGHT-5
- * cutover, and the builder takes it rather than importing a home that has
- * not moved yet.
+ * param: callers read it from the E1 element vocabulary, and the builder
+ * takes it rather than importing the shelf itself.
  */
 export interface CompileRequestInput {
   spec: EvaluatedSystemSpec

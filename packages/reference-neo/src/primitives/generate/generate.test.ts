@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { PRIMITIVE_JSX_NAMES, TAGS } from '../tags.ts'
+import { ELEMENT_DOM_TAGS, ELEMENT_JSX_NAMES } from '../../native/element-vocabulary.ts'
 import { generateReactEntrySource, generateReactTypesSource, recipeVariantTypeNames } from './generate.ts'
 
 const PACKAGE_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
@@ -56,7 +56,7 @@ describe('generateReactEntrySource', () => {
     if (line === undefined) throw new Error('entry carries no bound destructure')
     expect(line).toContain(' Div, ')
     const bound = line.slice('export const { '.length, line.indexOf(' } =')).split(', ')
-    expect([...bound].sort()).toEqual([...PRIMITIVE_JSX_NAMES].sort())
+    expect([...bound].sort()).toEqual([...ELEMENT_JSX_NAMES].sort())
   })
 
   it('never emits a Box, Flex, or Grid (map rule)', () => {
@@ -117,7 +117,7 @@ describe('generateReactTypesSource', () => {
     const source = typesSource()
     const tagLine = source.split('\n').find(line => line.startsWith('export type PrimitiveTag = '))
     expect(tagLine).toBeDefined()
-    for (const tag of TAGS) {
+    for (const tag of ELEMENT_DOM_TAGS) {
       expect(tagLine).toContain(JSON.stringify(tag))
     }
     expect(source).toContain('export type PrimitiveElement<T extends PrimitiveTag>')
@@ -319,42 +319,4 @@ function primitivePropsBlock(dts: string): string {
   return dts.slice(start, end + 3)
 }
 
-function readSurface(): string {
-  return readFileSync(join(PACKAGE_ROOT, 'src/primitives/generate/react-surface.d.ts'), 'utf8')
-}
 
-describe('react surface contract', () => {
-  it('declares the same tag set the generator emits', () => {
-    const declared = [...readSurface().matchAll(/export declare const (\w+): \(props: \w+Props/g)].map((m) => m[1])
-    expect([...declared].sort()).toEqual([...PRIMITIVE_JSX_NAMES].sort())
-  })
-
-  it('declares the same primitive tag union the generator emits', () => {
-    const line = readSurface()
-      .split('\n')
-      .find(candidate => candidate.startsWith('export type PrimitiveTag = '))
-    expect(line).toBeDefined()
-    for (const tag of TAGS) {
-      expect(line).toContain(`'${tag}'`)
-    }
-  })
-
-  it('keeps the shared surface app code touches', () => {
-    const surface = readSurface()
-    for (const line of [
-      'export type StylePropName',
-      'export type StyleProps',
-      'export type PrimitiveTag',
-      'export type PrimitiveElement',
-      'export declare const LayerScopeContext',
-      'export declare const ColorModeContext',
-      'export declare const DocumentContext',
-      'export declare function useColorMode',
-      `export { Fragment } from 'react'`,
-      `export { createElement } from 'react'`,
-    ]) {
-      expect(surface).toContain(line)
-    }
-    expect(surface).not.toMatch(/react-dom|createRoot/)
-  })
-})

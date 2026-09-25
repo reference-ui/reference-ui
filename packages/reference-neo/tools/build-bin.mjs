@@ -32,7 +32,6 @@ const PATH_LITERAL_SOURCES = new Map([
 // node never loads these paths — every node import points at .js/.jsx.
 const TWINS = [
   ['src/index.js', 'src/index.ts'],
-  ['src/entry/react.js', 'src/entry/react.ts'],
   ['src/entry/react-unbound.js', 'src/entry/react-unbound.ts'],
   ['src/entry/types.js', 'src/entry/types.tsx'],
   ['src/runtime/index.js', 'src/runtime/index.ts'],

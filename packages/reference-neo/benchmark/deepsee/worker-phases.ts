@@ -22,7 +22,7 @@ import { createPortableFragmentBundle } from '../../src/system/base/fragments.ts
 import { resolveJsxElements } from '../../src/system/base/jsx.ts'
 import { toPublishedEntry } from '../../src/system/base/streams.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
-import { PRIMITIVE_JSX_NAMES } from '../../src/primitives/tags.ts'
+import { ELEMENT_JSX_NAMES } from '../../src/native/element-vocabulary.ts'
 import { linkGeneratedPackages } from '../../src/packager/links.ts'
 import { publishRuntimeBundle, writeStyledDir } from '../../src/packager/styled.ts'
 import { writeSystemDir } from '../../src/packager/system.ts'
@@ -106,7 +106,7 @@ async function main(): Promise<void> {
   const request: ScopedCompileRequest = {
     schemaVersion: 2,
     spec,
-    jsxHosts: uniqueSorted([...requested.merged, ...PRIMITIVE_JSX_NAMES]),
+    jsxHosts: uniqueSorted([...requested.merged, ...ELEMENT_JSX_NAMES]),
     sourceRoot: args.dir,
     declarationRoot: args.dir,
     include: config.include,
