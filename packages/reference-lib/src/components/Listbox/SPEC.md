@@ -6,6 +6,7 @@ Case catalog: [TESTS.md](./TESTS.md).
 Playwright: `matrix/lib/tests/e2e/listbox.spec.ts`
 Unit: `matrix/lib/tests/unit/listbox.test.ts` (missing)
 Page: `/listbox`
+Colocated: `./Listbox.test.ts` (Vitest) + `./__e2e__/Listbox.ct.spec.ts` (Playwright CT, React 17/18/19)
 
 ## Legend
 
@@ -33,25 +34,33 @@ Virtualizer.
 | Groups | application `div[role=group]`; flatten options in DOM order |
 | Virtual | `virtual={{ items, scrollToIndex }}`; owns `aria-setsize` / `posinset` |
 
-### Status (2026-09-10)
+### Status (2026-09-25 — quarantine-landing Listbox crew; colocated + CT proof only)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype click-select. |
-| Production | **No.** |
-| Named `[x]` | 1 / 73 (`LB-DOM-01`) |
-| Playwright | 1 |
-| Vitest | 0 |
+| Engine | Controlled-only selection; own roving/typeahead/virtual engine (quarantine port). |
+| Production | **No** (partial: 29 / 73 named cases proven in-dir). |
+| Named `[x]` | 29 / 73 |
+| Playwright CT | 25 (React 17/18/19 green; 8 frozen snapshots unmoved) |
+| Vitest | 7 (colocated) |
 
 ### Gaps & incoherence
 
-- `defaultValue` + uncontrolled store. Freeze: omission never creates an
-  uncontrolled selection store.
-- `onChange?: (value: any)`.
-- No `virtual` adapter, setsize/posinset, or Combobox activedescendant
-  bridge on Listbox.
+- `onChange?: (value: any)` — still untyped (quarantine kept it; freeze
+  work-order #1 half-open).
 - Extra chrome parts (`Section` / `Header` / `Empty`) beyond freeze.
-- Does not compose RovingFocus as the movement kernel.
+- No `RovingFocus` composition: the port carries its own movement/typeahead
+  kernel (quarantine shape); TESTS.md "Owned elsewhere" still routes generic
+  movement to `RovingFocus` — convergence is future work.
+- `validateVirtualAdapter` is exported but never invoked internally
+  (faithful to quarantine); LB-VIRT-09 diagnostics need matrix proof.
+- Duplicate detection only fires for same-value options with distinct ids;
+  exact-duplicate options (same derived id) slip through (see crew log).
+- Unproven in-dir: `LB-DOM-04/05/07/09/11/12`, `LB-GROUP-01..06`,
+  `LB-SINGLE-02/03/06/07`, `LB-MULTI-02/04/05/06/07/08`, `LB-KEY-06/07`,
+  `LB-POINTER-02/03/04`, `LB-DYNAMIC-03/04/05/06`, `LB-VIRT-04/06/08/09/10`,
+  `LB-CB-01/02/04`, `LB-ENV-03`, `LB-A11Y-01`, `LB-COMP-01/02/03`.
+  (Quarantine proves all 73 in matrix; re-targeting belongs to matrix crews.)
 
 ### Vendor
 
@@ -65,10 +74,20 @@ focus-in-list; shift-range / select-all.
 
 ### Case index
 
-- `[x]` `LB-DOM-01`
-- `[ ]` remaining `LB-DOM-*`, `LB-GROUP-*`, `LB-SINGLE-*`, `LB-MULTI-*`,
-  `LB-KEY-*`, `LB-POINTER-*`, `LB-DYNAMIC-*`, `LB-VIRT-*`, `LB-CB-*`,
-  `LB-ENV-*`, `LB-A11Y-01`, `LB-COMP-*`
+Proven by colocated Vitest (`Listbox.test.ts`) or CT (`__e2e__`, React
+17/18/19) — passing titles contain these IDs:
+
+- `[x]` `LB-DOM-01`, `LB-DOM-02`, `LB-DOM-03`, `LB-DOM-06`, `LB-DOM-08`, `LB-DOM-10`
+- `[x]` `LB-SINGLE-01`, `LB-SINGLE-04`, `LB-SINGLE-05`, `LB-SINGLE-08`
+- `[x]` `LB-MULTI-01`, `LB-MULTI-03`
+- `[x]` `LB-KEY-01`, `LB-KEY-02`, `LB-KEY-03`, `LB-KEY-04`, `LB-KEY-05`
+- `[x]` `LB-POINTER-01`
+- `[x]` `LB-DYNAMIC-01`, `LB-DYNAMIC-02`
+- `[x]` `LB-VIRT-01`, `LB-VIRT-02`, `LB-VIRT-03`, `LB-VIRT-05`, `LB-VIRT-07`
+- `[x]` `LB-CB-03` (unit: invalid-shape diagnostic only; valid shape needs Combobox)
+- `[x]` `LB-ENV-01`, `LB-ENV-02`
+- `[x]` `LB-COMP-04`
+- `[ ]` all other TESTS.md IDs (see Gaps; quarantine matrix proof awaits re-targeting)
 
 ### Work order
 
