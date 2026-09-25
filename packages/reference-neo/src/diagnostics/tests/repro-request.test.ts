@@ -3,9 +3,9 @@
 // diagnostics for host, spec, and retention failures. Each test pins one
 // error code with its severity through native compile, like the row suite.
 import { describe, expect, it } from 'vitest'
-import { compileNative } from '../native/compile.ts'
-import type { NativeDiagnostic } from '../native/contract.ts'
-import { releaseScanRetention } from '../native/retention.ts'
+import { compileNative } from '../../native/compile.ts'
+import type { NativeDiagnostic } from '../../native/contract.ts'
+import { releaseScanRetention } from '../../native/retention.ts'
 import { prepareCustomWorld, useReproCleanup } from './repro-world.ts'
 
 useReproCleanup()

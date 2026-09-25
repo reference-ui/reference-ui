@@ -19,8 +19,8 @@ import {
   parseTypedDiagnostic,
   partitionTyped,
   pullSyncDiagnostics,
-} from './index.ts'
-import type { NeoDiagnostic, TypedDiagnostic } from './index.ts'
+} from '../index.ts'
+import type { NeoDiagnostic, TypedDiagnostic } from '../index.ts'
 
 describe('parseCode', () => {
   it('parses warning and error codes into namespace and tag', () => {

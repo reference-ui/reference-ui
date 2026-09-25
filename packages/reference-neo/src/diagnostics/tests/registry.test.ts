@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const ROOT = join(HERE, '..', '..', '..', '..')
+const ROOT = join(HERE, '..', '..', '..', '..', '..')
 const RS = join(ROOT, 'packages', 'reference-rs')
 
 const CODE_TABLES = [

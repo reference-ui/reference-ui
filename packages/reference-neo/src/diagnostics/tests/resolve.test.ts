@@ -7,7 +7,7 @@ import {
   ByteLineIndex,
   createSpanResolver,
   lineColForOffset,
-} from './index.ts'
+} from '../index.ts'
 
 function expectPositions(source: string, cases: Array<[number, [number, number] | undefined]>): void {
   const index = ByteLineIndex.forSource(source)

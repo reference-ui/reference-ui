@@ -4,7 +4,7 @@
 // `CODE: message` segment while codeless entries degrade without one.
 // Censuses count the throw by `rg -c`, never by prose.
 import { describe, expect, it } from 'vitest'
-import { throwOnErrorDiagnostics } from './report.ts'
+import { throwOnErrorDiagnostics } from '../report.ts'
 import {
   TOKENS_FILE,
   compileWorld,

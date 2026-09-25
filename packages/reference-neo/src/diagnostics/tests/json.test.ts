@@ -11,8 +11,8 @@ import {
   parseTypedBatch,
   parseTypedDiagnostic,
   reportedSyncEntries,
-} from './index.ts'
-import type { NeoDiagnostic, TypedDiagnostic } from './index.ts'
+} from '../index.ts'
+import type { NeoDiagnostic, TypedDiagnostic } from '../index.ts'
 
 /** Byte-identical to the Rust transport goldens in `diagnostics/src/transport.rs`. */
 const SINGLE_GOLDEN =
