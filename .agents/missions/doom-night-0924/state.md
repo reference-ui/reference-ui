@@ -1,4 +1,13 @@
-Status: COMPLETE — all 12 finds confirmed, 1 clean; morning report written; holding for landing orders
+Status: LANDED — all 12 breaks fortified, chained, committed (neo 177802e09, tasty 183f1c1e7, trivial 8e667e190, rsmisc 250696fee)
+
+## Landing tracker
+
+| Cluster | Breaks | Rule | Fortify | Chain | Commit |
+| --- | --- | --- | --- | --- | --- |
+| tasty | #1 #6 #7 #8 | ruled ✓ | verified ✓ | VERIFIED | 183f1c1e7 ✓ |
+| neo | #3 #11 #13 | ruled ✓ | verified ✓ | VERIFIED | 177802e09 ✓ |
+| rsmisc | #2 #5 #10 #12 | ruled ✓ | verified ✓ | VERIFIED | 250696fee ✓ |
+| trivial | #4 | ruled ✓ | verified ✓ | VERIFIED | 8e667e190 ✓ |
 
 # Doom Night 2026-09-24 — captain's board
 
