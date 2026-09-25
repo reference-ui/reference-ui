@@ -2,6 +2,7 @@
 // It takes a working directory and emits the validated config plus dependencies.
 // This module is a Neo-owned copy of the core loader with no global registry.
 
+import { resolve } from 'node:path'
 import type { ReferenceUIConfig } from './types.ts'
 import { ConfigNotFoundError, LoadConfigError } from './errors.ts'
 import { resolveRefConfigFile } from '../lib/paths/index.ts'
@@ -12,6 +13,17 @@ import { validateConfig } from './validate.ts'
 export interface LoadedUserConfig {
   config: ReferenceUIConfig
   dependencyPaths: string[]
+}
+
+// Last successful load per resolved project root: the watch resync path
+// rebuilds its trigger scope from the same load the compile consumed,
+// never a second load. A failed load records nothing, so a broken config
+// never corrupts the scope the watcher keeps.
+const lastLoadedByRoot = new Map<string, LoadedUserConfig>()
+
+/** The last successfully loaded config for this root, if this process loaded one. */
+export function getLastLoadedUserConfig(cwd: string): LoadedUserConfig | undefined {
+  return lastLoadedByRoot.get(resolve(cwd))
 }
 
 /**
@@ -44,8 +56,7 @@ export async function loadUserConfigWithDependencies(
 
   const config = validateConfig(raw)
 
-  return {
-    config,
-    dependencyPaths,
-  }
+  const loaded = { config, dependencyPaths }
+  lastLoadedByRoot.set(resolve(cwd), loaded)
+  return loaded
 }

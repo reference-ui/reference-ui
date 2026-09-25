@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { subscribe, type AsyncSubscription, type Event as ParcelEvent } from '@parcel/watcher'
 import picomatch from 'picomatch'
-import { loadUserConfigWithDependencies } from '../../config/load.ts'
+import { getLastLoadedUserConfig, loadUserConfigWithDependencies } from '../../config/load.ts'
 import { sync, type SyncResult } from '../../sync/index.ts'
 import { acquireSyncSession } from '../../sync/session.ts'
 
@@ -90,6 +90,17 @@ export function deriveWatchRoots(projectRoot: string, include: string[], extraDi
     ? [root]
     : prefixes.filter((prefix): prefix is string => prefix !== undefined).map((prefix) => resolve(root, prefix))
   return collapseRoots([...includeRoots, ...extraDirs.map((dir) => resolve(root, dir))])
+}
+
+// Root-set diff for the resync rebuild: subscribe only what appeared,
+// unsubscribe only what vanished. An unchanged set churns nothing.
+function diffWatchRoots(current: string[], next: string[]): { added: string[]; removed: string[] } {
+  const before = new Set(current)
+  const after = new Set(next)
+  return {
+    added: next.filter((root) => !before.has(root)),
+    removed: current.filter((root) => !after.has(root)),
+  }
 }
 
 function isIgnorableLine(trimmed: string): boolean {
@@ -275,6 +286,44 @@ function createParcelHandler(state: WatchState, schedule: () => void, reportErro
   }
 }
 
+// Mutable trigger-scope handle the resync rebuild writes through: the
+// captured state the parcel handler closes over, the owning root, the
+// current roots, and the live subscriptions keyed by root.
+interface TriggerScope {
+  state: WatchState
+  projectRoot: string
+  currentRoots: string[]
+  subscriptions: Map<string, AsyncSubscription>
+  onParcelEvent: ParcelHandler
+}
+
+// The resync-path trigger rebuild: after the compile's fresh load, the
+// matcher, dependency files, and parcel subscriptions follow the same
+// loaded config the compile used — one load, never two. It writes
+// through the captured state the parcel handler already closes over,
+// and roots diff so an unchanged set churns no subscription.
+async function refreshTriggerScope(scope: TriggerScope): Promise<void> {
+  const resyncLoaded = getLastLoadedUserConfig(scope.projectRoot)
+  if (resyncLoaded === undefined) return
+  scope.state.isMatch = picomatch(resyncLoaded.config.include)
+  scope.state.dependencyFiles = new Set(resyncLoaded.dependencyPaths.map((entry) => resolve(entry)))
+  const nextRoots = deriveWatchRoots(
+    scope.projectRoot,
+    resyncLoaded.config.include,
+    [...scope.state.dependencyFiles].map((file) => dirname(file))
+  )
+  const { added, removed } = diffWatchRoots(scope.currentRoots, nextRoots)
+  for (const root of removed) {
+    const subscription = scope.subscriptions.get(root)
+    scope.subscriptions.delete(root)
+    if (subscription !== undefined) await subscription.unsubscribe()
+  }
+  for (const root of added) {
+    scope.subscriptions.set(root, await subscribe(root, scope.onParcelEvent, { ignore: getIgnoreGlobs(root) }))
+  }
+  scope.currentRoots = nextRoots
+}
+
 export interface WatchSyncOptions {
   breakLock?: boolean
   verbose?: boolean
@@ -325,7 +374,8 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
       dependencyFiles: new Set(loaded.dependencyPaths.map((entry) => resolve(entry))),
       callbacks,
     }
-    const roots = deriveWatchRoots(
+    const subscriptions = new Map<string, AsyncSubscription>()
+    const initialRoots = deriveWatchRoots(
       projectRoot,
       loaded.config.include,
       [...state.dependencyFiles].map((file) => dirname(file)),
@@ -337,7 +387,10 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
         const resyncStart = Date.now()
         const result = await sync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false })
         result.elapsedMs = Date.now() - resyncStart
-        if (!stopped) callbacks.onResync?.(result)
+        if (!stopped) {
+          await refreshTriggerScope(scope)
+          callbacks.onResync?.(result)
+        }
       } catch (error) {
         if (!stopped) callbacks.onError?.(toError(error))
       }
@@ -348,17 +401,17 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
       () => scheduler.request(),
     )
     const onParcelEvent = createParcelHandler(state, () => scheduler.schedule(), reportError)
+    const scope: TriggerScope = { state, projectRoot, currentRoots: initialRoots, subscriptions, onParcelEvent }
 
-    const subscriptions: AsyncSubscription[] = []
-    for (const root of roots) {
-      subscriptions.push(await subscribe(root, onParcelEvent, { ignore: getIgnoreGlobs(root) }))
+    for (const root of scope.currentRoots) {
+      subscriptions.set(root, await subscribe(root, onParcelEvent, { ignore: getIgnoreGlobs(root) }))
     }
     if (pokeRequested) scheduler.request()
 
     async function stop(): Promise<void> {
       stopped = true
       await scheduler.settle()
-      await Promise.all(subscriptions.map(async (subscription) => {
+      await Promise.all([...subscriptions.values()].map(async (subscription) => {
         try {
           await subscription.unsubscribe()
         } catch {

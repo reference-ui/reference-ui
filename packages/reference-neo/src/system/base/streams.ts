@@ -107,8 +107,10 @@ function collectEntryNames(entries: readonly SystemStreams[], selfName: string):
     seen.add(entry.name)
     names.push(entry.name)
   }
-  // Self stays last even against a pathological self-extends entry.
-  return [...names.filter((name) => name !== selfName), selfName]
+  // Self stays last even against a pathological self-extends entry. Names
+  // escape at print time, after the raw-keyed dedupe above, so the statement
+  // names exactly the layers the blocks define.
+  return [...names.filter((name) => name !== selfName).map((name) => escapeSelector(name)), escapeSelector(selfName)]
 }
 
 function appendBlock(assembled: string, block: string): string {

@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { mergeStreams } from './streams.ts'
+import type { SystemStreams } from './types.ts'
 import {
   APP_CSS,
   APP_OWN,
@@ -109,6 +110,32 @@ describe('mergeStreams statement', () => {
     const [statement] = merged.stylesheet.split('\n')
     expect(statement).toBe('@layer extend-library, app;')
     expect(merged.streams.map((entry) => entry.name)).toEqual(['extend-library', 'app'])
+  })
+})
+
+describe('mergeStreams statement escaping', () => {
+  it('escapes a scoped upstream name in the statement like its block', () => {
+    const merged = mergeStreams(
+      [{ name: '@scope/pkg', streams: [SCOPED_ENTRY] }],
+      APP_OWN,
+      'app'
+    )
+    expect(merged.stylesheet.split('\n')[0]).toBe('@layer \\@scope\\/pkg, app;')
+    expect(merged.portableStylesheet.split('\n')[0]).toBe('@layer \\@scope\\/pkg, app;')
+    expect(merged.stylesheet).toContain('@layer \\@scope\\/pkg {')
+  })
+
+  it('escapes a comma upstream name in the statement like its block', () => {
+    const commaUpstream: SystemStreams = {
+      name: 'a,b',
+      preamble: '@layer reset, global, base, tokens, recipes, utilities;\n',
+      utilities: '@layer utilities {\n  .up { color: red; }\n}\n',
+      package: 'a,b',
+    }
+    const merged = mergeStreams([{ name: 'a,b', streams: [commaUpstream] }], APP_OWN, 'app')
+    expect(merged.stylesheet.split('\n')[0]).toBe('@layer a\\,b, app;')
+    expect(merged.portableStylesheet.split('\n')[0]).toBe('@layer a\\,b, app;')
+    expect(merged.stylesheet).toContain('@layer a\\,b {')
   })
 })
 
