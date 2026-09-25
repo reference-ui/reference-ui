@@ -32,7 +32,10 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await page.waitForTimeout(200)
     await snap(page, 'basic-resting')
 
-    await btnA.focus()
+    // TT-FOCUS-01: honest keyboard Tab (not programmatic focus) — ring + tip together.
+    await page.keyboard.press('Tab')
+    await expect(btnA).toBeFocused()
+    await expect(btnA).toHaveAttribute('data-focus-visible', '')
 
     await expect(contentA).toBeVisible()
     await expect(contentA).toHaveAttribute('role', 'tooltip')
@@ -44,7 +47,10 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await page.waitForTimeout(200)
     await snap(page, 'focus-open-btn-a')
 
-    await page.getByTestId('btn-outside').focus()
+    // Tab off via btn-tooltip-b onto the outside control; blur closes unconditionally.
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('btn-outside')).toBeFocused()
     await expect(contentA).toHaveCount(0)
   })
 
@@ -75,7 +81,9 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     const btnA = page.getByTestId('btn-tooltip-a')
     const contentA = page.getByTestId('tooltip-content-a')
 
-    await btnA.focus()
+    // Honest keyboard Tab (not programmatic focus); anchoring assertions untouched.
+    await page.keyboard.press('Tab')
+    await expect(btnA).toBeFocused()
     await expect(contentA).toBeVisible()
     await expectAnchoredTop(btnA, contentA)
 
@@ -182,7 +190,15 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await page.getByTestId('dialog-trigger').click()
     await expect(dialog).toBeVisible()
 
-    await trigger.focus()
+    // Mouse-opened dialog autofocus must NOT pop the tip (TT-FOCUS-03 regression).
+    await expect(trigger).toBeFocused()
+    await expect(tip).toHaveCount(0)
+
+    // Single-tabbable trap wraps Tab to self (no focus event), so blur out and
+    // Tab back in: the open below is an honest keyboard Tab with a ring.
+    await trigger.evaluate(el => (el as HTMLElement).blur())
+    await page.keyboard.press('Tab')
+    await expect(trigger).toBeFocused()
     await expect(tip).toBeVisible()
     await page.waitForTimeout(200)
     await snap(page, 'nested-dialog-tooltip-open')
@@ -192,6 +208,34 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await expect(dialog).toBeVisible()
     await page.waitForTimeout(200)
     await snap(page, 'nested-dialog-tooltip-dismissed')
+  })
+
+  test('TT-FOCUS-03: Tooltip should stay shut on mouse-opened dialog autofocus, then open on Tab with a ring', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tooltip/Tooltip/NestedOverlay')
+    await expect(page.getByTestId('tooltip-fixture-root')).toBeVisible()
+
+    const dialog = page.getByTestId('dialog-content')
+    const trigger = page.getByTestId('nested-tooltip-trigger')
+    const tip = page.getByTestId('nested-tooltip-content')
+
+    // Mouse-click dialog open: focus correctly moves inside (APG), tip stays shut.
+    await page.getByTestId('dialog-trigger').click()
+    await expect(dialog).toBeVisible()
+    await expect(trigger).toBeFocused()
+    await expect(trigger).not.toHaveAttribute('data-focus-visible')
+    await expect(tip).toHaveCount(0)
+
+    // Focus away and back via a real Tab: tip opens WITH the ring (TT-FOCUS-01).
+    // (Single-tabbable trap wraps Tab to self, so the "away" leg is a blur;
+    // the "back" leg is the honest keyboard Tab through the trap.)
+    await trigger.evaluate(el => (el as HTMLElement).blur())
+    await page.keyboard.press('Tab')
+    await expect(trigger).toBeFocused()
+    await expect(trigger).toHaveAttribute('data-focus-visible', '')
+    await expect(tip).toBeVisible()
   })
 
   test('TT-CLOSE-03: Tooltip should dismiss and suppress hover reopening when its open Trigger is clicked', async ({
@@ -280,7 +324,10 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     const button = page.getByRole('button', { name: 'Keyboard focus trigger' })
     await expect(button).toBeVisible()
 
-    await button.focus()
+    // The story is named KeyboardFocus: make it honest with a real Tab.
+    await page.keyboard.press('Tab')
+    await expect(button).toBeFocused()
+    await expect(button).toHaveAttribute('data-focus-visible', '')
     await page.waitForTimeout(200)
     const tip = page.getByText('Appears on keyboard focus')
     await expect(tip).toBeVisible()

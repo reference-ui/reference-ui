@@ -299,7 +299,7 @@ as owned `aria-describedby` token merging.
 
 ### Focus and input modality
 
-- [ ] `TT-FOCUS-01` `[vendor]` `[browser:all]` —
+- [x] `TT-FOCUS-01` `[vendor]` `[browser:all]` —
   **Tooltip should request open immediately when keyboard Tab gives Trigger
   focus.**
   Begin from a preceding control, press Tab onto Trigger without pointer
@@ -314,7 +314,7 @@ as owned `aria-describedby` token merging.
   diagnostic fixture. Assert ordinary blur requests close once, while entering
   Content does not create a supported focus region, trap, roving model, or
   contract that keeps interactive Tooltip open.
-- [ ] `TT-FOCUS-03` `[convergence]` `[browser]` —
+- [x] `TT-FOCUS-03` `[convergence]` `[browser]` —
   **Tooltip should retain hover delay when pointer input causes Trigger focus.**
   Mouse- or pen-press a focusable Trigger from pointer modality and sample
   before `openDelay`. Assert focus alone does not produce the immediate

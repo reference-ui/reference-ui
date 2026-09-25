@@ -9,6 +9,7 @@ import {
 } from '../Overlay'
 import { type PortalProps } from '../Portal'
 import { isHoverCapablePointer } from '../Popover/hover'
+import { isFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 import { getTooltipGroupStore, isGroupWarmed } from './tooltipGroup'
 
 export interface TooltipProps extends OverlayDismissHandlers {
@@ -208,6 +209,7 @@ export function Tooltip({
   const onTriggerFocus = React.useCallback(
     (event: React.FocusEvent<HTMLElement>) => {
       if (event.defaultPrevented) return
+      if (!isFocusVisible()) return
       if (session.current.fromPointer || session.current.suppressHover) return
       cancelTimers()
       if (!latest.current.isOpen) setIsOpen(true)
