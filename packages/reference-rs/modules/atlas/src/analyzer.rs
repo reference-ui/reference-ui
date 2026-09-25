@@ -3,9 +3,10 @@
 //! See module README for architecture details.
 
 use crate::config::AtlasConfig;
+use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
 use crate::internal::{component_key, create_usage_state};
 use crate::model::Component;
-use crate::output::{AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode};
+use crate::output::AtlasAnalysisResult;
 use crate::parser::parse_modules;
 use crate::resolver::{
     apply_excludes, build_component_template, collect_included_packages,
@@ -29,30 +30,32 @@ impl AtlasAnalyzer {
     }
 
     pub fn analyze(&mut self, project_path: &str) -> Vec<Component> {
-        self.analyze_detailed(project_path).components
+        // Diagnostic construction uses hardcoded valid codes and non-blank
+        // messages, so the error is unreachable; an empty inventory is the
+        // honest fallback if the template ever rejects what we mint.
+        self.analyze_detailed(project_path)
+            .map(|result| result.components)
+            .unwrap_or_default()
     }
 
-    pub fn analyze_detailed(&mut self, _project_path: &str) -> AtlasAnalysisResult {
+    pub fn analyze_detailed(
+        &mut self,
+        _project_path: &str,
+    ) -> Result<AtlasAnalysisResult, DiagnosticError> {
         let app_root = PathBuf::from(&self.config.root_dir);
         let mut diagnostics = Vec::new();
 
         let local_files = match self.scanner.discover_files(&self.config) {
             Ok(files) => files,
             Err(err) => {
-                return failed_result(
-                    &self.config.root_dir,
-                    &format!("Failed to discover Atlas files: {err}"),
-                )
+                return failed_result(&format!("Failed to discover Atlas files: {err}"));
             }
         };
 
         let local_sources = match self.scanner.parse_files(&local_files) {
             Ok(files) => files,
             Err(err) => {
-                return failed_result(
-                    &self.config.root_dir,
-                    &format!("Failed to parse Atlas files: {err}"),
-                )
+                return failed_result(&format!("Failed to parse Atlas files: {err}"));
             }
         };
 
@@ -68,13 +71,9 @@ impl AtlasAnalyzer {
         for package_name in packages_to_load {
             let Some(package_src) = self.resolve_package_src(&package_name) else {
                 if include_packages.contains_key(&package_name) {
-                    diagnostics.push(AtlasDiagnostic {
-                        code: AtlasDiagnosticCode::UnresolvedIncludePackage,
-                        message: format!("Could not resolve include package {package_name}"),
-                        source: package_name,
-                        component_name: None,
-                        interface_name: None,
-                    });
+                    diagnostics.push(crate::diagnostics::unresolved_include_package(
+                        &package_name,
+                    )?);
                 }
                 continue;
             };
@@ -92,11 +91,19 @@ impl AtlasAnalyzer {
                 ]),
             };
 
-            let Ok(files) = package_scanner.discover_files(&package_config) else {
-                continue;
+            let files = match package_scanner.discover_files(&package_config) {
+                Ok(files) => files,
+                Err(err) => {
+                    diagnostics.push(crate::diagnostics::package_scan_failed(&package_name, err)?);
+                    continue;
+                }
             };
-            let Ok(source_files) = package_scanner.parse_files(&files) else {
-                continue;
+            let source_files = match package_scanner.parse_files(&files) {
+                Ok(files) => files,
+                Err(err) => {
+                    diagnostics.push(crate::diagnostics::package_scan_failed(&package_name, err)?);
+                    continue;
+                }
             };
 
             let package_modules = parse_modules(&source_files, None, Some(&package_name));
@@ -119,7 +126,7 @@ impl AtlasAnalyzer {
                     &modules,
                     &package_indexes,
                     &mut diagnostics,
-                ) {
+                )? {
                     tracked.insert(component_key(&template.name, &template.source), template);
                 }
             }
@@ -152,7 +159,7 @@ impl AtlasAnalyzer {
                     &modules,
                     &package_indexes,
                     &mut diagnostics,
-                ) {
+                )? {
                     tracked.insert(component_key(&template.name, &template.source), template);
                 }
             }
@@ -182,10 +189,10 @@ impl AtlasAnalyzer {
             collect_usage_for_module(module, &modules, &snapshot, &mut states);
         }
 
-        AtlasAnalysisResult {
+        Ok(AtlasAnalysisResult {
             components: finalize_components(states),
             diagnostics: normalize_diagnostics(diagnostics),
-        }
+        })
     }
 
     fn resolve_package_src(&self, package: &str) -> Option<PathBuf> {
@@ -206,34 +213,23 @@ impl AtlasAnalyzer {
     }
 }
 
-fn failed_result(root_dir: &str, message: &str) -> AtlasAnalysisResult {
-    AtlasAnalysisResult {
+fn failed_result(message: &str) -> Result<AtlasAnalysisResult, DiagnosticError> {
+    Ok(AtlasAnalysisResult {
         components: Vec::new(),
-        diagnostics: vec![AtlasDiagnostic {
-            code: AtlasDiagnosticCode::UnresolvedIncludePackage,
-            message: message.to_string(),
-            source: root_dir.to_string(),
-            component_name: None,
-            interface_name: None,
-        }],
-    }
+        diagnostics: vec![crate::diagnostics::scan_failed(message)?],
+    })
 }
 
 fn normalize_diagnostics(mut diagnostics: Vec<AtlasDiagnostic>) -> Vec<AtlasDiagnostic> {
     diagnostics.sort_by(|left, right| {
-        let left_code = serde_json::to_string(&left.code).unwrap_or_default();
-        let right_code = serde_json::to_string(&right.code).unwrap_or_default();
-        left_code
-            .cmp(&right_code)
-            .then(left.source.cmp(&right.source))
-            .then(left.component_name.cmp(&right.component_name))
-            .then(left.interface_name.cmp(&right.interface_name))
+        left.code
+            .as_str()
+            .cmp(right.code.as_str())
+            .then(left.file.cmp(&right.file))
+            .then(left.message.cmp(&right.message))
     });
     diagnostics.dedup_by(|left, right| {
-        left.code == right.code
-            && left.source == right.source
-            && left.component_name == right.component_name
-            && left.interface_name == right.interface_name
+        left.code == right.code && left.file == right.file && left.message == right.message
     });
     diagnostics
 }

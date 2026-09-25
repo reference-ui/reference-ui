@@ -4,7 +4,8 @@
 //! `PascalCase(name)CompoundVariant` repeats those axis unions plus a `css`
 //! declaration map. Compound `when` keys that name an unknown axis or value
 //! are skipped so they cannot introduce `'nope'` literals. Names that cannot
-//! PascalCase to a TypeScript identifier are skipped.
+//! PascalCase to a TypeScript identifier are skipped. Individually-valid names
+//! that PascalCase to one stem share it first-wins: later recipes are skipped.
 
 use super::ts::{is_ts_ident, join_union, push_prop_name, to_pascal_case};
 use base_system::{BaseSystem, CompoundVariant, RecipeDefinition};
@@ -14,6 +15,7 @@ const CSS_MAP: &str = "css: { [property: string]: string }";
 
 pub(super) fn recipe_types(system: &BaseSystem) -> String {
     let mut out = String::new();
+    let mut seen_stems = BTreeSet::new();
     for (name, recipe) in system.list_recipes() {
         let Some(stem) = recipe_type_stem(name) else {
             continue;
@@ -21,6 +23,12 @@ pub(super) fn recipe_types(system: &BaseSystem) -> String {
         let Some(variant_body) = variant_props_body(recipe) else {
             continue;
         };
+        if !seen_stems.insert(stem.clone()) {
+            // Individually-valid names sharing one stem: the first recipe in
+            // list order wins and the loser is skipped, both aliases (the
+            // collector mirrors this skip with the duplicate-stem row).
+            continue;
+        }
         push_type_alias(&mut out, &format!("{stem}VariantProps"), &variant_body);
         if let Some(compound_body) = compound_variant_body(recipe) {
             push_type_alias(&mut out, &format!("{stem}CompoundVariant"), &compound_body);

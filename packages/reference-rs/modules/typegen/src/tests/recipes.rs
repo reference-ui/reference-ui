@@ -136,3 +136,49 @@ fn skips_recipe_names_that_are_not_typescript_identifiers() {
         "digit-only recipe name must be skipped:\n{dts}"
     );
 }
+
+/// Colliding recipe stems print one alias first-wins: `button` wins, `Button`
+/// is skipped, both aliases (C pin).
+#[test]
+fn colliding_recipe_stems_emit_one_alias_first_wins() {
+    let dts = emit_dts(&parse_dump(
+        r##"{
+          "recipes": {
+            "button": {
+              "variants": {
+                "size": { "sm": { "p": "1r" }, "lg": { "p": "3r" } },
+                "tone": { "quiet": { "bg": "n100" }, "loud": { "bg": "n300" } }
+              },
+              "compoundVariants": [
+                { "tone": "loud", "size": "lg", "css": { "border": "2px solid" } }
+              ]
+            },
+            "Button": {
+              "variants": {
+                "flavor": { "sweet": { "bg": "n100" }, "sour": { "bg": "n300" } }
+              },
+              "compoundVariants": [
+                { "flavor": "sweet", "css": { "outline": "1px" } }
+              ]
+            }
+          }
+        }"##,
+        "colliding-stems",
+    ));
+    assert_eq!(
+        dts.matches("export type ButtonVariantProps").count(),
+        1,
+        "one VariantProps alias in:\n{dts}"
+    );
+    assert_eq!(
+        dts.matches("export type ButtonCompoundVariant").count(),
+        1,
+        "one CompoundVariant alias in:\n{dts}"
+    );
+    assert_alias(&dts, "ButtonVariantProps", VARIANT_PROPS);
+    assert_alias(&dts, "ButtonCompoundVariant", COMPOUND_VARIANT);
+    assert!(
+        !dts.contains("flavor"),
+        "loser axes must not print in:\n{dts}"
+    );
+}

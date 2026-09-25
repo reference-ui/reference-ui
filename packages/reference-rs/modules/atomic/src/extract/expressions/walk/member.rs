@@ -8,7 +8,7 @@
 use oxc_ast::ast::{ChainExpression, ComputedMemberExpression, StaticMemberExpression};
 use smallvec::SmallVec;
 
-use super::{leaf::mutated_warn, DynamicRefusal, ExpressionWalk};
+use super::{branch::push_folded_want, leaf::mutated_warn, DynamicRefusal, ExpressionWalk};
 use crate::diagnostics::{DiagnosticCode, ExtractDetail, LeafDetail};
 
 pub(crate) fn handle_static_member(
@@ -20,7 +20,8 @@ pub(crate) fn handle_static_member(
     if !leaves.is_empty() {
         // color={theme.primary}  /  color={tokens.colors.red}  /  tokens!.color
         for val in leaves {
-            ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
+            // Recorded leaves split `!` exactly like inline literals (S5-2).
+            push_folded_want(ctx, &val, when, mem.span);
         }
         if crate::extract::fold::member_path_residue(mem, ctx.scopes) {
             let path = crate::extract::fold::member_path_text(mem);
@@ -58,7 +59,8 @@ pub(crate) fn handle_computed_member(
     use crate::extract::fold::{describe_base, describe_snippet, fold_element_access};
     let fold = fold_element_access(&mem.object, &mem.expression, ctx.scopes);
     for val in &fold.values {
-        ctx.push_want(val.clone(), when.clone(), false, Some(mem.span));
+        // Recorded leaves split `!` exactly like inline literals (S5-2).
+        push_folded_want(ctx, val, when, mem.span);
     }
     if fold.residue {
         let prop = ctx.prop;
@@ -108,7 +110,8 @@ pub(crate) fn handle_chain(
     let values = crate::extract::fold::fold_chain(chain, ctx.scopes);
     if !values.is_empty() {
         for val in &values {
-            ctx.push_want(val.clone(), when.clone(), false, Some(chain.span));
+            // Recorded leaves split `!` exactly like inline literals (S5-2).
+            push_folded_want(ctx, val, when, chain.span);
         }
         if let Some(path) = crate::extract::fold::chain_residue_path(chain, ctx.scopes) {
             ctx.warn(

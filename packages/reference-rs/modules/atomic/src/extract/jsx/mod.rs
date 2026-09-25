@@ -12,7 +12,6 @@ use oxc_ast::ast::{
 use oxc_span::{GetSpan, Span};
 use smallvec::{smallvec, SmallVec};
 
-use crate::atom::Want;
 use crate::diagnostics::{line_col, DiagnosticCode};
 use crate::extract::constants::ConstArrayElement;
 use crate::extract::expressions::walk::{
@@ -28,6 +27,9 @@ use canon::{is_condition_prop, is_known_style_prop};
 use names::{format_jsx_attribute_name, format_jsx_element_name};
 
 mod names;
+
+#[cfg(test)]
+mod bare_attr_tests;
 
 /// A JSX style-block prop site (`css`, `r`, or a condition prop) under walk.
 struct StyleAttr<'a> {
@@ -80,9 +82,10 @@ fn handle_jsx_attribute(
     let Some(val) = &attr.value else {
         // <Div truncate />
         if is_known_style_prop(&name) {
-            let want =
-                Want::new(name.clone(), crate::atom::AtomValue::Bool(true)).with_origin(origin);
-            ctx.wants.push(want);
+            // Bare attrs mint located, like string attrs (ATM-DIAG-05).
+            let mut expr_ctx = ctx.expression_walk(&name, origin, false);
+            let span = Some(attr.name.span());
+            expr_ctx.push_want(crate::atom::AtomValue::Bool(true), smallvec![], false, span);
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
                 when: Vec::new(),
                 prop: name,
@@ -494,3 +497,4 @@ fn tag_may_carry_styles(
         JSXAttributeItem::SpreadAttribute(_) => true,
     })
 }
+

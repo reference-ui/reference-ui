@@ -185,7 +185,10 @@ fn spread_const_json(name: &str, scoped: Scoped<'_>) -> Option<Vec<Value>> {
     for element in scoped.array(name)? {
         match element {
             ConstArrayElement::Leaf(leaf) => {
-                out.push(atom_value_to_json(leaf)?);
+                // Spliced leaves strip `!` exactly like inline elements; the
+                // flag drops with them (array_elem_to_json keeps none either).
+                let (val, _) = folded_value_to_json(leaf)?;
+                out.push(val);
             }
             ConstArrayElement::Hole => out.push(Value::Null),
             ConstArrayElement::Object(_) => return None,
@@ -391,7 +394,7 @@ fn convert_static_member_leaves(
     // color: theme.primary  /  color: tokens.colors.red, like the walker
     crate::extract::fold::member_path_leaves(mem, scoped)
         .iter()
-        .filter_map(|leaf| atom_value_to_json(leaf).map(|val| (val, false)))
+        .filter_map(folded_value_to_json)
         .collect()
 }
 
@@ -400,8 +403,7 @@ fn convert_identifier(name: &str, scoped: Scoped<'_>) -> Option<(Value, bool)> {
         return Some((Value::Null, false));
     }
     let atom_val = scoped.scalar(name)?;
-    let val = atom_value_to_json(atom_val)?;
-    Some((val, false))
+    folded_value_to_json(atom_val)
 }
 
 /// Every static leaf recorded for an identifier, for multi-valued positions.
@@ -409,7 +411,7 @@ fn convert_identifier_leaves(name: &str, scoped: Scoped<'_>) -> Vec<(Value, bool
     scoped
         .scalar_leaves(name)
         .iter()
-        .filter_map(|leaf| atom_value_to_json(leaf).map(|val| (val, false)))
+        .filter_map(folded_value_to_json)
         .collect()
 }
 
@@ -480,7 +482,7 @@ fn convert_computed_member(
     // Single-valued positions take the first fold, mirroring convert_unary.
     let fold = crate::extract::fold::fold_element_access(&mem.object, &mem.expression, scoped);
     let first = fold.values.first()?;
-    atom_value_to_json(first).map(|val| (val, false))
+    folded_value_to_json(first)
 }
 
 /// The first folded leaf of a chain; unfoldable chains plan nothing.
@@ -495,7 +497,7 @@ fn convert_chain(
     let first = crate::extract::fold::fold_chain(chain, scoped)
         .into_iter()
         .next()?;
-    atom_value_to_json(&first).map(|val| (val, false))
+    folded_value_to_json(&first)
 }
 
 /// Every leaf the element node folds; refused reads plan nothing.
@@ -507,7 +509,7 @@ fn convert_computed_member_values(
     let fold = crate::extract::fold::fold_element_access(object, index, scoped);
     fold.values
         .iter()
-        .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .filter_map(folded_value_to_json)
         .collect()
 }
 
@@ -522,7 +524,7 @@ fn convert_chain_values(
     // tokens?.color  — every folded leaf, like the want walker
     crate::extract::fold::fold_chain(chain, scoped)
         .iter()
-        .filter_map(|val| atom_value_to_json(val).map(|json| (json, false)))
+        .filter_map(folded_value_to_json)
         .collect()
 }
 

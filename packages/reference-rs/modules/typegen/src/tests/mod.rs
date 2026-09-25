@@ -10,6 +10,7 @@ use std::fs;
 use std::path::PathBuf;
 
 mod boundary;
+mod diagnostics;
 mod fixtures;
 mod fonts;
 mod forbid;

@@ -14,6 +14,7 @@ use smallvec::SmallVec;
 
 use super::object::resolve_property_key;
 use super::walk::{walk_expression, ExpressionWalk};
+use crate::atom::AtomValue;
 use crate::diagnostics::DiagnosticCode;
 use crate::extract::fold::{flatten_value_slots, spread_base_name, spread_flattens, ValueSlot};
 
@@ -90,7 +91,18 @@ fn walk_slot(
     match slot {
         ValueSlot::Walk(elem) => walk_array_element(ctx, elem, item_when),
         ValueSlot::Leaf(leaf) => {
-            ctx.push_want(leaf.clone(), item_when.clone(), false, None);
+            // Spliced leaves split `!` exactly like inline literals (S5-2).
+            if let AtomValue::String(text) = leaf {
+                let (clean, important) = super::literal::split_important_flag(text);
+                ctx.push_want(
+                    AtomValue::String(clean.into()),
+                    item_when.clone(),
+                    important,
+                    None,
+                );
+            } else {
+                ctx.push_want(leaf.clone(), item_when.clone(), false, None);
+            }
         }
         ValueSlot::Hole => {
             // const sizes = ['1r', , '4r']  — spliced holes consume the slot

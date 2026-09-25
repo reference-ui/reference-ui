@@ -362,4 +362,127 @@ mod tests {
         assert!(res.stylesheet.contains("border-bottom-color: transparent !important;"));
         assert!(res.stylesheet.contains("color: red !important;"));
     }
+
+    fn site_wants(res: &crate::CompileResult) -> Vec<&crate::Want> {
+        res.wants
+            .iter()
+            .filter(|w| w.origin.as_deref() != Some(crate::extract::harvest::HARVEST_ORIGIN))
+            .collect()
+    }
+
+    fn assert_color_splits(code: &str) -> crate::CompileResult {
+        let res = compile_code(code);
+        let site = site_wants(&res);
+        let want = site
+            .iter()
+            .find(|w| &*w.prop == "color")
+            .expect("leaf mints");
+        assert_eq!(want.value.to_string(), "red");
+        assert!(want.important);
+        res
+    }
+
+    const IMPORT: &str = "import { css } from '@reference-ui/styled';";
+
+    /// Const-identifier `!` splits like the identical inline literal: stripped,
+    /// flagged, and silent — the stripped color clears `UnknownColor` (D pin).
+    #[test]
+    fn identifier_const_important_splits_and_clears_unknown_color() {
+        let res = assert_color_splits(&format!(
+            "{IMPORT} const c = 'red !important'; export const cls = css({{ color: c }});"
+        ));
+        assert!(
+            res.diagnostics
+                .iter()
+                .all(|d| d.code != crate::diagnostics::DiagnosticCode::UnknownColor),
+            "stripped color warns nothing: {:?}",
+            res.diagnostics
+        );
+    }
+
+    /// Static-member `!` splits like the identical inline literal (D pin).
+    #[test]
+    fn static_member_const_important_splits_like_inline() {
+        assert_color_splits(&format!(
+            "{IMPORT} const theme = {{ primary: 'red !important' }};\
+             export const cls = css({{ color: theme.primary }});"
+        ));
+    }
+
+    /// Computed-member `!` splits like the identical inline literal (D pin).
+    #[test]
+    fn computed_member_const_important_splits_like_inline() {
+        assert_color_splits(&format!(
+            "{IMPORT} const colors = {{ red: 'red !important' }};\
+             export const cls = css({{ color: colors['red'] }});"
+        ));
+    }
+
+    /// Optional-chain `!` splits like the identical inline literal (D pin).
+    #[test]
+    fn chain_const_important_splits_like_inline() {
+        assert_color_splits(&format!(
+            "{IMPORT} const theme = {{ primary: 'red !important' }};\
+             export const cls = css({{ color: theme?.primary }});"
+        ));
+    }
+
+    /// Spliced const-array slots split `!` exactly like the inline array (D pin).
+    #[test]
+    fn const_array_slot_important_splits_like_inline() {
+        let spliced = compile_code(&format!(
+            "{IMPORT} const sizes = ['1r!', '2r']; export const cls = css({{ mt: [...sizes] }});"
+        ));
+        let inline = compile_code(&format!(
+            "{IMPORT} export const cls = css({{ mt: ['1r!', '2r'] }});"
+        ));
+        let shape = |res: &crate::CompileResult| {
+            site_wants(res)
+                .iter()
+                .map(|w| {
+                    (
+                        w.prop.to_string(),
+                        w.value.to_string(),
+                        w.important,
+                        w.when.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(shape(&spliced), shape(&inline));
+        let site = site_wants(&spliced);
+        let slot = site
+            .iter()
+            .find(|w| w.value.to_string() == "1r")
+            .expect("slot mints");
+        assert!(slot.important);
+        assert_eq!(
+            serde_json::to_value(&spliced.style_plans).expect("plans serialize"),
+            serde_json::to_value(&inline.style_plans).expect("plans serialize"),
+            "spliced and inline arrays plan identically"
+        );
+    }
+
+    /// The plan carries the stripped key the runtime queries, with no orphan
+    /// rule under an unqueryable class (D pin).
+    #[test]
+    fn identifier_const_important_plan_key_is_runtime_queryable() {
+        let res = compile_code(&format!(
+            "{IMPORT} const c = 'red !important'; export const cls = css({{ color: c }});"
+        ));
+        let plans = serde_json::to_value(&res.style_plans).expect("plans serialize");
+        let rows = plans.as_array().expect("plans array");
+        assert!(
+            rows.iter().any(|row| {
+                row.get("prop").and_then(|p| p.as_str()) == Some("color")
+                    && row.get("value").and_then(|v| v.as_str()) == Some("red")
+                    && row.get("important").and_then(|i| i.as_bool()) == Some(true)
+            }),
+            "plan carries the stripped key the runtime queries (got {plans})"
+        );
+        assert!(
+            !res.stylesheet.contains("c_red_\\!important"),
+            "no orphan rule under an unqueryable class"
+        );
+    }
 }

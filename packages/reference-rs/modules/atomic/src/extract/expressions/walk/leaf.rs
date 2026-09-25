@@ -31,7 +31,8 @@ pub(crate) fn handle_identifier_fallback(
         return;
     }
     for val in leaves {
-        ctx.push_want(val.clone(), when.clone(), false, Some(span));
+        // Recorded leaves split `!` exactly like inline literals (S5-2).
+        push_folded_want(ctx, &val, when, span);
     }
 }
 
