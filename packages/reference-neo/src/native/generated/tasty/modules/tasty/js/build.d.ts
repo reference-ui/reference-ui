@@ -6,12 +6,16 @@
  * Regen: cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs
  */
 
+import { type TastyDiagnostic } from './runtime.js';
 import { type TastyApi } from './index.js';
 export interface TastyBuildDiagnostic {
-    level: 'warning';
+    level: 'warning' | 'error';
     source: 'scanner' | 'manifest';
+    code: string;
     message: string;
-    fileId?: string;
+    file?: string;
+    line?: number;
+    column?: number;
 }
 export interface BuildTastyOptions {
     rootDir: string;
@@ -22,7 +26,7 @@ export interface BuiltTasty {
     rootDir: string;
     outputDir: string;
     manifestPath: string;
-    warnings: string[];
+    warnings: TastyDiagnostic[];
     diagnostics: TastyBuildDiagnostic[];
     api: TastyApi;
 }

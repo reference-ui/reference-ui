@@ -8,8 +8,11 @@ import { join, relative, resolve, sep } from 'node:path'
 import { type TastyApi, type TastySymbol } from '@reference-ui/rust/tasty'
 import {
   createTastyBuildSession,
+  type BuiltTasty,
   type TastyBuildDiagnostic,
 } from '@reference-ui/rust/tasty/build'
+
+type BuiltTastyWarnings = BuiltTasty['warnings']
 import { getOutDirPath } from '../../lib/paths/index.ts'
 import { createReferenceUiTastyApi } from '../tasty/api.ts'
 import type { ReferenceTastyPayload } from './types.ts'
@@ -24,7 +27,7 @@ export interface ReferenceTastyBuildState {
   sourceDir: string
   outputDir: string
   manifestPath: string
-  warnings: string[]
+  warnings: BuiltTastyWarnings
   diagnostics: TastyBuildDiagnostic[]
   api: TastyApi
 }
@@ -126,7 +129,7 @@ function toReferenceTastyBuildState(
   builtTasty: {
     outputDir: string
     manifestPath: string
-    warnings: string[]
+    warnings: BuiltTastyWarnings
     diagnostics: TastyBuildDiagnostic[]
     api: TastyApi
   }

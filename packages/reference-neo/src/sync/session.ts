@@ -32,6 +32,18 @@ export interface AcquireSyncSessionOptions {
   cwd: string
   kind: SyncSessionKind
   breakLock?: boolean
+  /**
+   * Machine-readable run: lock-takeover notices ride stderr so stdout
+   * stays purely the diagnostics array. Threaded from `ref sync --json`.
+   */
+  json?: boolean
+}
+
+// Contention notices stay on stdout for human runs; JSON runs move them to
+// stderr, where every other human line already rides.
+function notice(json: boolean, line: string): void {
+  if (json) console.error(line)
+  else console.log(line)
 }
 
 export interface SyncSession {
@@ -211,62 +223,62 @@ async function pokeWatchHolder(holder: SyncSessionOwner): Promise<'stale'> {
 // flip says otherwise); every other live leg kills. Clean-kills-always falls
 // out of the same shape: clean is never the poke newcomer and never the poke
 // holder, so all four clean legs route to the kill branch with no carve-out.
-async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner): Promise<Contention> {
+async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
   if (!UNIFORM_KILL && mine.kind === 'one-shot' && holder.kind === 'watch') {
     await pokeWatchHolder(holder)
-    console.log(`[ref] ${tag}: stale lock (pid ${holder.pid} not running), taking over`)
+    notice(json, `[ref] ${tag}: stale lock (pid ${holder.pid} not running), taking over`)
     return { action: 'take' }
   }
   const killed = await killHolder(lockDir, holder, mine)
   if (killed === 'retry') return { action: 'retry' }
-  console.log(`[ref] ${tag}: superseding sync pid ${holder.pid}, taking over`)
+  notice(json, `[ref] ${tag}: superseding sync pid ${holder.pid}, taking over`)
   return { action: 'take' }
 }
 
 // Contention over a well-formed owner: re-read before signaling (a changed
 // nonce means the lock already moved on), then liveness, then the matrix.
 // Our own pid with a foreign nonce is a phantom, never a signal target.
-async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: SyncSessionOwner): Promise<Contention> {
+async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
   if (first.pid === process.pid) {
-    console.log(`[ref] ${tag}: stale lock (pid ${first.pid} is this process), taking over`)
+    notice(json, `[ref] ${tag}: stale lock (pid ${first.pid} is this process), taking over`)
     return { action: 'take' }
   }
   const again = await readOwnerFile(lockDir)
   if (again.status !== 'ok' || again.owner.lockNonce !== first.lockNonce) return { action: 'retry' }
   if (!pidAlive(first.pid)) {
-    console.log(`[ref] ${tag}: stale lock (pid ${first.pid} not running), taking over`)
+    notice(json, `[ref] ${tag}: stale lock (pid ${first.pid} not running), taking over`)
     return { action: 'take' }
   }
-  return preemptLiveHolder(lockDir, first, mine)
+  return preemptLiveHolder(lockDir, first, mine, json)
 }
 
-function warnBreakLock(seen: OwnerRead, mine: SyncSessionOwner): void {
+function warnBreakLock(seen: OwnerRead, mine: SyncSessionOwner, json: boolean): void {
   const tag = lockActorTag(mine.kind)
   if (seen.status === 'ok') {
-    console.log(`[ref] ${tag}: --break-lock: taking over lock held by pid ${seen.owner.pid}`)
+    notice(json, `[ref] ${tag}: --break-lock: taking over lock held by pid ${seen.owner.pid}`)
   } else {
-    console.log(`[ref] ${tag}: --break-lock: taking over lock unconditionally`)
+    notice(json, `[ref] ${tag}: --break-lock: taking over lock unconditionally`)
   }
 }
 
 // The EEXIST branch: break-lock takes unconditionally, an unreadable owner
 // takes as stale, and a live owner routes through the matrix. Null retries.
-async function acquireContendedLock(lockDir: string, mine: SyncSessionOwner, breakLock: boolean): Promise<SyncSession | null> {
+async function acquireContendedLock(lockDir: string, mine: SyncSessionOwner, breakLock: boolean, json: boolean): Promise<SyncSession | null> {
   let seen = await readOwnerFile(lockDir)
   if (seen.status === 'missing') seen = await settleMissingOwner(lockDir)
   if (breakLock) {
-    warnBreakLock(seen, mine)
-    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine) : null
+    warnBreakLock(seen, mine, json)
+    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine, json) : null
   }
   if (seen.status !== 'ok') {
-    console.log(`[ref] ${lockActorTag(mine.kind)}: stale lock (owner unreadable), taking over`)
-    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine) : null
+    notice(json, `[ref] ${lockActorTag(mine.kind)}: stale lock (owner unreadable), taking over`)
+    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine, json) : null
   }
-  const verdict = await contendForLock(lockDir, seen.owner, mine)
+  const verdict = await contendForLock(lockDir, seen.owner, mine, json)
   if (verdict.action === 'retry') return null
-  return (await forceTake(lockDir, mine, seen.owner)) ? holdSession(lockDir, mine) : null
+  return (await forceTake(lockDir, mine, seen.owner)) ? holdSession(lockDir, mine, json) : null
 }
 
 /**
@@ -281,11 +293,12 @@ export async function acquireSyncSession(options: AcquireSyncSessionOptions): Pr
   if (held !== undefined) return { owner: held.owner, release: () => {} }
   await mkdir(getOutDirPath(options.cwd), { recursive: true })
   const mine = newSessionOwner(options.kind)
+  const json = options.json ?? false
   for (let attempt = 0; attempt < MAX_ACQUIRE_ATTEMPTS; attempt += 1) {
     if ((await tryClaimDir(lockDir)) && (await writeFreshOwner(lockDir, mine))) {
-      return holdSession(lockDir, mine)
+      return holdSession(lockDir, mine, json)
     }
-    const session = await acquireContendedLock(lockDir, mine, options.breakLock ?? false)
+    const session = await acquireContendedLock(lockDir, mine, options.breakLock ?? false, json)
     if (session !== null) return session
   }
   throw new Error('[ref] sync: lock contention did not settle')
@@ -335,12 +348,12 @@ function makeReraiseHandler(lockDir: string, signal: 'SIGINT' | 'SIGHUP'): () =>
   return handler
 }
 
-function holdSession(lockDir: string, owner: SyncSessionOwner): SyncSession {
+function holdSession(lockDir: string, owner: SyncSessionOwner, json: boolean): SyncSession {
   const onSigterm = (): void => {
     const marker = readPreemptMarkerSync(lockDir)
     if (marker !== null && marker.pid !== process.pid) {
       releaseSession(lockDir)
-      console.log(supersededMessage(marker.pid, marker.kind))
+      notice(json, supersededMessage(marker.pid, marker.kind))
       process.exit(SUPERSEDED_EXIT_CODE)
     }
     if (owner.kind === 'watch') return

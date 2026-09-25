@@ -13,6 +13,8 @@ export interface ReferenceBuildComplete {
   outputDir: string
   warningCount: number
   diagnosticCount: number
+  /** Count the reporter folded (or printed): what the one-liner carries. */
+  reportedWarningCount: number
   diagnostics: readonly TastyBuildDiagnostic[]
 }
 

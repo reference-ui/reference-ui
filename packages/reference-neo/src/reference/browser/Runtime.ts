@@ -6,6 +6,7 @@
 
 import * as React from 'react'
 import type {
+  RawTastyDiagnostic,
   RawTastyMember,
   RawTastyTypeRef,
   RawTastyTypeReference,
@@ -29,7 +30,7 @@ export interface ReferenceRuntimeData {
   extendsChain: TastySymbol[]
   memberOrigins: Map<string, TastySymbol>
   relatedSymbols: TastySymbol[]
-  warnings: string[]
+  warnings: RawTastyDiagnostic[]
 }
 
 export interface ReferenceDocumentState {

@@ -1,5 +1,5 @@
 // Reference build report suite: it takes tasty scanner and manifest
-// diagnostics and pins the counted report plus the codeless native mapping
+// diagnostics and pins the counted report plus the typed native mapping
 // run.ts hands the unified reporter. Pure tally and pure translation, so the
 // structured data and the presented shape hold together with no seams.
 
@@ -10,20 +10,25 @@ import { createReferenceBuildReport, tastyDiagnosticToNative } from './build-rep
 const SCANNER: TastyBuildDiagnostic = {
   level: 'warning',
   source: 'scanner',
-  fileId: '/workspace/src/broken.ts',
+  code: 'TST-W-PARSE-ERROR',
+  file: '/workspace/src/broken.ts',
   message: 'parse reported an error',
 }
 
 const MANIFEST: TastyBuildDiagnostic = {
   level: 'warning',
   source: 'manifest',
-  message: 'Duplicate symbol name "Shared" matched 2 entries.',
+  code: 'TST-W-DUPLICATE-SYMBOL-NAME',
+  message: 'Duplicate symbol name `Shared` matched 2 entries.',
 }
 
 describe('createReferenceBuildReport', () => {
   it('counts warnings and diagnostics without touching the entries', () => {
     const report = createReferenceBuildReport({
-      warnings: ['first', 'second'],
+      warnings: [
+        { severity: 'warning', code: 'TST-W-PARSE-ERROR', message: 'first' },
+        { severity: 'warning', code: 'TST-W-STAR-AMBIGUITY', message: 'second' },
+      ],
       diagnostics: [SCANNER, MANIFEST],
     })
 
@@ -34,16 +39,18 @@ describe('createReferenceBuildReport', () => {
 })
 
 describe('tastyDiagnosticToNative', () => {
-  it('maps manifest engine strings to codeless locationless warnings', () => {
+  it('maps manifest diagnostics to coded locationless warnings', () => {
     expect(tastyDiagnosticToNative(MANIFEST)).toEqual({
       severity: 'warning',
-      message: 'Duplicate symbol name "Shared" matched 2 entries.',
+      code: 'TST-W-DUPLICATE-SYMBOL-NAME',
+      message: 'Duplicate symbol name `Shared` matched 2 entries.',
     })
   })
 
-  it('carries the scanner file id as the file without inventing line or code', () => {
+  it('carries the scanner file onto the native shape with its code', () => {
     expect(tastyDiagnosticToNative(SCANNER)).toEqual({
       severity: 'warning',
+      code: 'TST-W-PARSE-ERROR',
       message: 'parse reported an error',
       file: '/workspace/src/broken.ts',
     })

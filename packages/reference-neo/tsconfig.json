@@ -20,7 +20,10 @@
       "@reference-ui/system": ["./src/system-surface.d.ts"],
       "@reference-ui/rust/tasty": ["./src/native/generated/tasty/tasty.d.ts"],
       "@reference-ui/rust/tasty/build": ["./src/native/generated/tasty/tasty/build.d.ts"],
-      "@reference-ui/rust/tasty/browser": ["./src/native/generated/tasty/tasty/browser.d.ts"]
+      "@reference-ui/rust/tasty/browser": ["./src/native/generated/tasty/tasty/browser.d.ts"],
+      "@reference-ui/rust/atlas": ["./src/native/generated/atlas/atlas.d.ts"],
+      "@reference-ui/rust/styletrace": ["./src/native/generated/styletrace/styletrace.d.ts"],
+      "@reference-ui/rust/typegen": ["./src/native/generated/typegen/typegen.d.ts"]
     }
   },
   "include": ["src", "tests", "tools", "playground", "bin", "benchmark"]

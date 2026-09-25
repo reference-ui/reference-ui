@@ -4,6 +4,7 @@
 // in `browser-model/` produce these values from tasty handles.
 
 import type {
+  RawTastyDiagnostic,
   RawTastyMappedModifierKind,
   RawTastyMemberKind,
   RawTastyTypeOperatorKind,
@@ -212,7 +213,7 @@ export interface ReferenceDocument {
   kind: 'interface' | 'typeAlias'
   kindLabel: string
   library?: string
-  warnings: string[]
+  warnings: RawTastyDiagnostic[]
   description?: string
   jsDoc: ReferenceJsDoc
   typeParameters: string[]

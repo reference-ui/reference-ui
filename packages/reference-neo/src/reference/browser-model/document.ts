@@ -4,7 +4,7 @@
 // extends chain, and links related symbols for alias reduction.
 
 import { getTastyResolvedType } from '@reference-ui/rust/tasty'
-import type { RawTastySymbol, RawTastySymbolRef, TastyMember, TastySymbol, TastySymbolRef } from '@reference-ui/rust/tasty'
+import type { RawTastyDiagnostic, RawTastySymbol, RawTastySymbolRef, TastyMember, TastySymbol, TastySymbolRef } from '@reference-ui/rust/tasty'
 import type { ReferenceDocument, ReferenceSymbolRef } from '../browser/types.ts'
 import { createReferenceMemberDocument } from './member.ts'
 import { createReferenceJsDoc, createReferenceType, createReferenceTypeParameter, formatReferenceType } from './type.ts'
@@ -13,7 +13,7 @@ interface CreateReferenceDocumentOptions {
   extendsChain?: TastySymbol[]
   memberOrigins?: Map<string, TastySymbol>
   relatedSymbols?: TastySymbol[]
-  warnings?: string[]
+  warnings?: RawTastyDiagnostic[]
 }
 
 export function createReferenceDocument(

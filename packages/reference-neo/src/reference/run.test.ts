@@ -22,7 +22,8 @@ function createTastyStateStub(loadSymbolByName: unknown) {
     {
       level: 'warning',
       source: 'scanner',
-      fileId: '/workspace/src/reference.ts',
+      code: 'TST-W-PARSE-ERROR',
+      file: '/workspace/src/reference.ts',
       message: 'scanner warning',
     },
   ]
@@ -31,7 +32,9 @@ function createTastyStateStub(loadSymbolByName: unknown) {
     sourceDir: '/workspace',
     outputDir: `/workspace/${DEFAULT_OUT_DIR}/types/tasty`,
     manifestPath: `/workspace/${DEFAULT_OUT_DIR}/types/tasty/manifest.js`,
-    warnings: ['scanner warning'],
+    warnings: [
+      { severity: 'warning', code: 'TST-W-PARSE-ERROR', message: 'scanner warning' },
+    ],
     diagnostics,
     api: {
       loadSymbolByName,
@@ -45,9 +48,8 @@ async function importRunModule(options?: {
 }) {
   vi.resetModules()
 
-  const logReferenceBuilt = vi.fn()
   const logReferenceError = vi.fn()
-  const reportRefDiagnostics = vi.fn()
+  const reportRefDiagnostics = vi.fn().mockReturnValue(1)
   const loadSymbolByName = vi.fn(async (name: string) => {
     if (options?.loadSymbolImpl) {
       return options.loadSymbolImpl(name)
@@ -65,7 +67,6 @@ async function importRunModule(options?: {
   })
 
   vi.doMock('./bridge/logging.ts', () => ({
-    logReferenceBuilt,
     logReferenceError,
   }))
   vi.doMock('../native/diagnostics.ts', () => ({
@@ -78,7 +79,6 @@ async function importRunModule(options?: {
   const mod = await import('./bridge/run.ts')
   return {
     ...mod,
-    logReferenceBuilt,
     logReferenceError,
     reportRefDiagnostics,
     loadSymbolByName,
@@ -96,17 +96,23 @@ afterEach(() => {
 
 describe('reference/bridge/run reporting', () => {
   it('reports diagnostics and returns structured build details on success', async () => {
-    const { onRunBuild, logReferenceBuilt, reportRefDiagnostics, loadSymbolByName } = await importRunModule()
+    const { onRunBuild, reportRefDiagnostics, loadSymbolByName } = await importRunModule()
 
     const result = await onRunBuild(testPhasePayload(), { name: 'ButtonProps' })
 
     expect(loadSymbolByName).toHaveBeenCalledWith('ButtonProps')
     expect(reportRefDiagnostics).toHaveBeenCalledTimes(1)
     expect(reportRefDiagnostics).toHaveBeenCalledWith(
-      [{ severity: 'warning', message: 'scanner warning', file: '/workspace/src/reference.ts' }],
-      { verbose: false }
+      [
+        {
+          severity: 'warning',
+          code: 'TST-W-PARSE-ERROR',
+          message: 'scanner warning',
+          file: '/workspace/src/reference.ts',
+        },
+      ],
+      { verbose: false, fold: false }
     )
-    expect(logReferenceBuilt).toHaveBeenCalledTimes(1)
     expect(result).toEqual({
       status: 'complete',
       name: 'ButtonProps',
@@ -116,9 +122,11 @@ describe('reference/bridge/run reporting', () => {
       outputDir: `/workspace/${DEFAULT_OUT_DIR}/types/tasty`,
       warningCount: 1,
       diagnosticCount: 1,
+      reportedWarningCount: 1,
       diagnostics: [
         expect.objectContaining({
-          fileId: '/workspace/src/reference.ts',
+          code: 'TST-W-PARSE-ERROR',
+          file: '/workspace/src/reference.ts',
           message: 'scanner warning',
         }),
       ],
@@ -133,7 +141,18 @@ describe('reference/bridge/run reporting', () => {
     expect(reportRefDiagnostics).toHaveBeenCalledTimes(1)
     expect(reportRefDiagnostics).toHaveBeenCalledWith(expect.any(Array), {
       verbose: true,
+      fold: false,
     })
+  })
+
+  it('threads fold through and returns the reporter count on success', async () => {
+    const { onRunBuild, reportRefDiagnostics } = await importRunModule()
+    reportRefDiagnostics.mockReturnValue(2)
+
+    const result = await onRunBuild(testPhasePayload(), { fold: true })
+
+    expect(reportRefDiagnostics).toHaveBeenCalledWith(expect.any(Array), { verbose: false, fold: true })
+    expect(result).toEqual(expect.objectContaining({ status: 'complete', reportedWarningCount: 2 }))
   })
 
   it('hands the reporter an empty list when the build reports no diagnostics', async () => {
@@ -146,10 +165,33 @@ describe('reference/bridge/run reporting', () => {
 
     const result = await onRunBuild(testPhasePayload(), {})
 
-    expect(reportRefDiagnostics).toHaveBeenCalledWith([], { verbose: false })
+    expect(reportRefDiagnostics).toHaveBeenCalledWith([], { verbose: false, fold: false })
     expect(result).toEqual(
       expect.objectContaining({ status: 'complete', warningCount: 0, diagnosticCount: 0 })
     )
+  })
+
+  it('prints the ref array on stdout for unfolded json landings only', async () => {
+    const { onRunBuild } = await importRunModule()
+    const logged = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      await onRunBuild(testPhasePayload(), { json: true })
+      expect(logged).toHaveBeenCalledTimes(1)
+      expect(logged).toHaveBeenCalledWith(expect.stringMatching(/^\[.*\]$/))
+    } finally {
+      logged.mockRestore()
+    }
+  })
+
+  it('stays silent on stdout for folded json builds; the caller prints', async () => {
+    const { onRunBuild } = await importRunModule()
+    const logged = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      await onRunBuild(testPhasePayload(), { json: true, fold: true })
+      expect(logged).not.toHaveBeenCalled()
+    } finally {
+      logged.mockRestore()
+    }
   })
 })
 

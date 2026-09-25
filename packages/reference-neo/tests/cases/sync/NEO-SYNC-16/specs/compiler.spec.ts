@@ -30,26 +30,26 @@ const PLAIN_CONFIG = [
   '',
 ].join('\n');
 
-async function syncWithWarnCapture(dir: string, verbose: boolean): Promise<string[]> {
+async function syncWithWarnCapture(dir: string, verbose: boolean): Promise<{ calls: string[]; warningCount: number }> {
   const calls: string[] = [];
   const original = console.warn;
   console.warn = (...args: unknown[]): void => {
     calls.push(args.map(String).join(' '));
   };
   try {
-    await sync(dir, { verbose });
+    const result = await sync(dir, { verbose });
+    return { calls, warningCount: result.warningCount };
   } finally {
     console.warn = original;
   }
-  return calls;
 }
 
 // The runner served this world without syncing it: the opt-in world threads
-// logs through the frozen request and counts the channel in the one-line
-// summary by default, lists it behind the compiler tag under verbose,
+// logs through the frozen request and folds the channel into the returned
+// warning count by default, lists it behind the compiler tag under verbose,
 // while a no-logs copy of the same world stays compiler-silent.
 export default async function run({ case: c }: SpecInput): Promise<void> {
-  const calls = await syncWithWarnCapture(c.worldDir, false);
+  const { calls, warningCount } = await syncWithWarnCapture(c.worldDir, false);
 
   // (i) config threading: the frozen request carries the opt-in.
   const requestPath = path.join(c.worldDir, '.reference-ui', 'system', 'compile-request.json');
@@ -57,15 +57,14 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const request = JSON.parse(fs.readFileSync(requestPath, 'utf8')) as { logs?: string[] };
   assert.deepStrictEqual(request.logs, ['compiler'], 'compile-request.json carries logs [compiler]');
 
-  // (ii) default summary: one call, the counted line, no codes.
-  assert.equal(calls.length, 1, `expected one warning call, got ${calls.length}`);
-  assert.match(calls[0], /^⚠ \d+ warnings? \[--verbose\]$/, 'default prints the one-line summary');
-  assert.doesNotMatch(calls[0], /ATM-/, 'default summary carries no codes');
+  // (ii) default fold: silence on stderr, the count on the result.
+  assert.equal(calls.length, 0, `expected no warning calls, got ${calls.length}`);
+  assert.ok(warningCount > 0, `expected a folded warning count, got ${warningCount}`);
 
   // (ii) verbose list: one call whose compiler-tagged lines carry the codes.
-  const verbose = await syncWithWarnCapture(c.worldDir, true);
-  assert.equal(verbose.length, 1, `expected one verbose call, got ${verbose.length}`);
-  const lines = verbose.join('\n').split('\n');
+  const { calls: verboseCalls } = await syncWithWarnCapture(c.worldDir, true);
+  assert.equal(verboseCalls.length, 1, `expected one verbose call, got ${verboseCalls.length}`);
+  const lines = verboseCalls.join('\n').split('\n');
   const compiler = lines.filter((line) => line.includes('[compiler]'));
   assert.ok(compiler.length > 0, 'verbose lists compiler-tagged lines');
   assert.match(compiler.join('\n'), /ATM-W-DYNAMIC-[A-Z0-9-]+/, 'compiler output names a dynamic code');
@@ -91,7 +90,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   try {
     fs.cpSync(path.join(c.worldDir, 'theme'), path.join(plainDir, 'theme'), { recursive: true });
     fs.writeFileSync(path.join(plainDir, 'ui.config.ts'), PLAIN_CONFIG);
-    const plainCalls = await syncWithWarnCapture(plainDir, false);
+    const { calls: plainCalls } = await syncWithWarnCapture(plainDir, false);
     assert.ok(
       !plainCalls.join('\n').includes('[compiler]'),
       'no-logs world prints no compiler output',

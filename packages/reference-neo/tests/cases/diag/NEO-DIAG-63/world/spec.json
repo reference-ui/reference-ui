@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "tgn-repro",
+  "tokens": {
+    "colors": {
+      "n100": {
+        "value": "#fff"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": [],
+  "breakpoints": {
+    "sm": "640px"
+  }
+}

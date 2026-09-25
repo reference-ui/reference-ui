@@ -14,6 +14,8 @@ import type { TastyManifest as RawTastyManifest, TastyMember as RawTastyMember, 
 export type { TastyChunkModule as RawTastyChunkModule, TastyFnParam as RawTastyFnParam, TastyInterfaceSymbol as RawTastyInterfaceSymbol, TastyJsDoc as RawTastyJsDoc, TastyJsDocTag as RawTastyJsDocTag, TastyManifest as RawTastyManifest, TastyMappedModifierKind as RawTastyMappedModifierKind, TastyMember as RawTastyMember, TastyMemberKind as RawTastyMemberKind, TastyModule as RawTastyModule, TastyStructuredTypeRef as RawTastyStructuredTypeRef, TastySymbol as RawTastySymbol, TastySymbolIndexEntry as RawTastySymbolIndexEntry, TastySymbolKind as RawTastySymbolKind, TastySymbolRef as RawTastySymbolRef, TastyTemplateLiteralPart as RawTastyTemplateLiteralPart, TastyTupleElement as RawTastyTupleElement, TastyTypeAliasSymbol as RawTastyTypeAliasSymbol, TastyTypeOperatorKind as RawTastyTypeOperatorKind, TastyTypeParameter as RawTastyTypeParameter, TastyTypeRef as RawTastyTypeRef, TastyTypeReference as RawTastyTypeReference, } from './generated/index.js';
 export type TastySymbolKind = 'interface' | 'typeAlias';
 export type TastyTypeKind = RawTastyStructuredTypeRef['kind'] | 'reference';
+/** One typed compiler warning from the manifest: severity plus code plus message. */
+export type RawTastyDiagnostic = RawTastyManifest['warnings'][number];
 export interface TastyCallableParameter {
     name: string;
     type?: string;
@@ -136,7 +138,8 @@ export interface TastyApi {
     ready(): Promise<void>;
     loadManifest(): Promise<RawTastyManifest>;
     getManifest(): RawTastyManifest | undefined;
-    getWarnings(): string[];
+    getWarnings(): RawTastyDiagnostic[];
+    getRuntimeNotices(): string[];
     /** True when the id refers to a chunk-backed symbol in the loaded manifest. */
     hasManifestSymbol(id: string): boolean;
     loadSymbolById(id: string): Promise<TastySymbol>;

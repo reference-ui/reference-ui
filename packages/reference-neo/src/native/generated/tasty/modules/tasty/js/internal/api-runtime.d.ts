@@ -10,7 +10,7 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { CreateTastyApiOptions, CreateTastyApiFromManifestOptions, RawTastyManifest, RawTastyMember, RawTastySymbolIndexEntry, RawTastySymbolRef, RawTastyTypeRef, TastyApi, TastyMember, TastyGraphApi, TastySymbol, TastySymbolRef, TastySymbolSearchResult, TastyTypeParameterMemberProjector, TastyTypeRef } from '../api-types.js';
+import type { CreateTastyApiOptions, CreateTastyApiFromManifestOptions, RawTastyDiagnostic, RawTastyManifest, RawTastyMember, RawTastySymbolIndexEntry, RawTastySymbolRef, RawTastyTypeRef, TastyApi, TastyMember, TastyGraphApi, TastySymbol, TastySymbolRef, TastySymbolSearchResult, TastyTypeParameterMemberProjector, TastyTypeRef } from '../api-types.js';
 import { type ArtifactImporter } from './shared.js';
 interface CreateTastyApiRuntimeOptions {
     manifestPath: string;
@@ -42,7 +42,8 @@ export declare class TastyApiRuntime implements TastyApi {
     ready(): Promise<void>;
     loadManifest(): Promise<RawTastyManifest>;
     getManifest(): RawTastyManifest | undefined;
-    getWarnings(): string[];
+    getWarnings(): RawTastyDiagnostic[];
+    getRuntimeNotices(): string[];
     /** True when `id` is a chunk-backed symbol in the loaded manifest (not e.g. an unresolved utility name). */
     hasManifestSymbol(id: string): boolean;
     loadSymbolById(id: string): Promise<TastySymbol>;

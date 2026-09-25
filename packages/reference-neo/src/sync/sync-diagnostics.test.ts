@@ -1,8 +1,8 @@
 // Sync diagnostics proofs over temp projects with the native compiler.
 // They take error, warning, and dynamic fixtures and assert located
-// failures leave no folder, warnings print without failing, and the
-// opt-in compiler channel never leaks into userspace warnings. Every run
-// compiles for real: no stubs stand between sync and the engine.
+// failures leave no folder, warnings fold into counts without failing,
+// and the opt-in compiler channel never leaks into userspace warnings.
+// Every run compiles for real: no stubs stand between sync and the engine.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
@@ -88,12 +88,12 @@ function hasChannelCode(output: string): boolean {
   return /ATM-W-DYNAMIC-|ATM-W-UNFOLDABLE-SPREAD|ATM-I-HARVEST-SINK|ATM-I-DEAD-BRANCH/.test(output)
 }
 
-async function syncWithWarnCapture(dir: string, options: { verbose?: boolean } = {}): Promise<string[]> {
+async function syncWithWarnCapture(dir: string, options: { verbose?: boolean } = {}): Promise<{ calls: string[]; warningCount: number }> {
   const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
   try {
-    await sync(dir, options)
+    const result = await sync(dir, options)
     // Capture before restore: mockRestore clears the call history.
-    return spy.mock.calls.map((args) => String(args[0]))
+    return { calls: spy.mock.calls.map((args) => String(args[0])), warningCount: result.warningCount }
   } finally {
     spy.mockRestore()
   }
@@ -141,21 +141,20 @@ describe('sync diagnostics', () => {
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 
-  it('prints one warning summary line by default without failing', async () => {
+  it('folds one warning into the returned count with no stderr by default', async () => {
     const dir = await writeStaticCssProject()
 
-    const calls = await syncWithWarnCapture(dir)
+    const { calls, warningCount } = await syncWithWarnCapture(dir)
 
-    expect(calls).toHaveLength(1)
-    expect(calls[0]).toBe('⚠ 1 warning [--verbose]')
-    expect(calls[0]).not.toContain('ATM-')
+    expect(calls).toHaveLength(0)
+    expect(warningCount).toBe(1)
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 
   it('lists location, message, and fix hint under verbose without failing', async () => {
     const dir = await writeStaticCssProject()
 
-    const calls = await syncWithWarnCapture(dir, { verbose: true })
+    const { calls } = await syncWithWarnCapture(dir, { verbose: true })
     const output = calls.join('\n')
 
     expect(calls).toHaveLength(1)
@@ -187,18 +186,17 @@ describe('sync diagnostics', () => {
 })
 
 describe('sync compiler backchannel', () => {
-  it('counts compiler diagnostics in the one-line summary by default', async () => {
+  it('counts compiler diagnostics in the returned warning count by default', async () => {
     const dir = await writeProject({
       'ui.config.ts': configFile("  logs: ['compiler'],"),
       'theme/tokens.ts': TOKENS_FILE,
       'theme/dynamic.ts': BACKCHANNEL_FILE,
     })
 
-    const calls = await syncWithWarnCapture(dir)
+    const { calls, warningCount } = await syncWithWarnCapture(dir)
 
-    expect(calls).toHaveLength(1)
-    expect(calls[0]).toMatch(/^⚠ \d+ warnings? \[--verbose\]$/)
-    expect(calls[0]).not.toContain('ATM-')
+    expect(calls).toHaveLength(0)
+    expect(warningCount).toBeGreaterThan(0)
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
 
@@ -209,7 +207,7 @@ describe('sync compiler backchannel', () => {
       'theme/dynamic.ts': BACKCHANNEL_FILE,
     })
 
-    const calls = await syncWithWarnCapture(dir, { verbose: true })
+    const { calls } = await syncWithWarnCapture(dir, { verbose: true })
 
     expect(calls).toHaveLength(1)
     const lines = calls.join('\n').split('\n')
@@ -236,7 +234,7 @@ describe('sync compiler backchannel', () => {
       'theme/dynamic.ts': BACKCHANNEL_FILE,
     })
 
-    const calls = await syncWithWarnCapture(dir)
+    const { calls } = await syncWithWarnCapture(dir)
 
     expect(calls.join('\n')).not.toContain('[compiler]')
 

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "tgn-repro",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {
+    "card": {
+      "variants": {}
+    }
+  },
+  "staticCss": {},
+  "provenance": []
+}

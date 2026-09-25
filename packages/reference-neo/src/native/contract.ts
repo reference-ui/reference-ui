@@ -42,6 +42,16 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
   retentionToken?: number
 }
 
+export interface NativeDiagnosticSpan {
+  start: number
+  end: number
+}
+
+export interface NativeDiagnosticLabel {
+  span: NativeDiagnosticSpan
+  message: string
+}
+
 export interface NativeDiagnostic {
   severity: 'error' | 'warning' | 'info'
   message: string
@@ -51,6 +61,11 @@ export interface NativeDiagnostic {
   file?: string
   line?: number
   column?: number
+  // Rendering channel: cheap byte offsets plus labeled underlines plus
+  // `= help:` lines, resolved to caret positions only when presented.
+  span?: NativeDiagnosticSpan
+  labels?: NativeDiagnosticLabel[]
+  help?: string[]
 }
 
 export interface NativeCompileResult {

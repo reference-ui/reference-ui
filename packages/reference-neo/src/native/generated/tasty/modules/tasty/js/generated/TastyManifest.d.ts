@@ -9,7 +9,7 @@
 import type { TastySymbolIndexEntry } from "./TastySymbolIndexEntry.js";
 export type TastyManifest = {
     version: string;
-    warnings: Array<string>;
+    warnings: Array<import("../../../diagnostics/js/generated/Diagnostic.js").Diagnostic>;
     symbolsByName: {
         [key in string]: Array<string>;
     };
