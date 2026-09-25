@@ -103,8 +103,11 @@ const EXPECTED_BYTES = {
   // Axis shorthands: +42 raw is the four baked names
   // ("marginX","marginY","paddingX","paddingY"); the rest of the move from
   // the 149479/32889 pin is in-flight tree drift, re-verify at landing.
-  reactRaw: 149593,
-  reactGzip: 32898,
+  // 2026-09-25 re-verify: 149593/32898 -> 158073/39595 post-Jettison
+  // implementation (Slices 0-4) plus the W4 bound-entry legs; the Jettison
+  // acceptance caveat stands, so re-verify again if acceptance moves bytes.
+  reactRaw: 158073,
+  reactGzip: 39595,
   fixtureRules: 4941,
   m500Rules: 33806,
 }
@@ -330,6 +333,7 @@ describe('enterprise harvest census', () => {
         outDir,
         systemName,
         stylePropNames: result.runtime.stylePropNames,
+        recipes: LIB_SYSTEM_SPEC.recipes,
       })
       const bundle = fs.readFileSync(path.join(outDir, 'react', 'react.mjs'))
       const measured = {
