@@ -26,15 +26,16 @@ interface CollapsibleContextValue {
   skipEnterRef: React.MutableRefObject<boolean>
   isContentPresent: boolean
   setIsContentPresent: (present: boolean) => void
+  isContentMounted: boolean
+  setIsContentMounted: React.Dispatch<React.SetStateAction<boolean>>
+  triggerRef: React.MutableRefObject<HTMLButtonElement | null>
 }
 
 const CollapsibleContext = React.createContext<CollapsibleContextValue | null>(null)
 
-let collapsibleIdCounter = 0
-
-function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {
+function setRef<T>(ref: React.Ref<T> | undefined, value: T | null): (() => void) | void {
   if (typeof ref === 'function') {
-    ref(value)
+    return ref(value)
   } else if (ref && typeof ref === 'object' && 'current' in ref) {
     ;(ref as React.MutableRefObject<T | null>).current = value
   }
@@ -61,15 +62,21 @@ export function Collapsible({
       : internalOpen
 
   const [isContentPresent, setIsContentPresent] = React.useState(isOpen)
+  const [isContentMounted, setIsContentMounted] = React.useState(false)
 
+  // Cache the first generated id: the React 17 CT shim mints a fresh useId
+  // per render, and linkage must stay stable across renders on every runtime.
+  const reactId = React.useId()
   const generatedContentIdRef = React.useRef<string | null>(null)
   if (!generatedContentIdRef.current) {
-    generatedContentIdRef.current = `collapsible-content-${++collapsibleIdCounter}`
+    generatedContentIdRef.current = `collapsible-content-${reactId.replace(/:/g, '')}`
   }
+  const generatedContentId = generatedContentIdRef.current
 
   const [explicitContentId, setExplicitContentId] = React.useState<string | null>(null)
-  const contentId = explicitContentId ?? generatedContentIdRef.current
+  const contentId = explicitContentId ?? generatedContentId
   const skipEnterRef = React.useRef(isOpen)
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
   const notify = onChange ?? onOpenChange
 
@@ -100,8 +107,11 @@ export function Collapsible({
       skipEnterRef,
       isContentPresent,
       setIsContentPresent,
+      isContentMounted,
+      setIsContentMounted,
+      triggerRef,
     }),
-    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem, isContentPresent]
+    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem, isContentPresent, isContentMounted]
   )
 
   return (
@@ -116,88 +126,112 @@ export type CollapsibleTriggerProps = PrimitiveProps<'button'> & {
   icon?: React.ReactNode
 }
 
-export function CollapsibleTrigger({
-  children,
-  onClick,
-  disabled: disabledProp,
-  type = 'button',
-  hideIcon = false,
-  icon,
-  style,
-  borderBottomWidth,
-  ...props
-}: CollapsibleTriggerProps) {
-  const context = React.useContext(CollapsibleContext)
-  const isDisabled = disabledProp ?? context?.disabled ?? false
-  const isOpen = context?.isOpen ?? false
-  const isContentPresent = context?.isContentPresent ?? isOpen
-  const hideBottomBorder = isOpen || isContentPresent
+export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
+  function CollapsibleTrigger(
+    {
+      children,
+      onClick,
+      disabled: disabledProp,
+      type = 'button',
+      hideIcon = false,
+      icon,
+      style,
+      borderBottomWidth,
+      ...props
+    },
+    forwardedRef
+  ) {
+    const context = React.useContext(CollapsibleContext)
+    const isDisabled = disabledProp ?? context?.disabled ?? false
+    const isOpen = context?.isOpen ?? false
+    const isContentPresent = context?.isContentPresent ?? isOpen
+    const isContentMounted = context?.isContentMounted ?? false
+    const hideBottomBorder = isOpen || isContentPresent
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented && !isDisabled && context) {
-      context.setIsOpen(!context.isOpen)
-    }
-  }
+    // CO-DOM-02 & CO-DOM-03: link open trigger to mounted content, keep during exit, remove after unmount
+    // CO-DOM-09: no dangling aria-controls if Content is absent
+    const hasTarget = isContentMounted && (isOpen || isContentPresent)
+    const ariaControls = hasTarget ? context?.contentId : undefined
 
-  const triggerStyle: React.CSSProperties | undefined = React.useMemo(() => {
-    if (!hideBottomBorder || !style) return style
-    return {
-      ...style,
-      borderBottomWidth: 0,
-      borderBottomStyle: 'none' as const,
-    }
-  }, [hideBottomBorder, style])
-
-  const renderIcon = () => {
-    if (hideIcon) return null
-    return (
-      <Span
-        data-reference-disclosure-icon=""
-        aria-hidden="true"
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        pointerEvents="none"
-        ml="auto"
-        flexShrink={0}
-        color="design.text.light"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-          marginLeft: 'auto',
-          flexShrink: 0,
-          transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-        }}
-      >
-        {icon ?? <KeyboardArrowDownIcon width="1.25em" height="1.25em" />}
-      </Span>
+    const setRefs = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        if (context) {
+          context.triggerRef.current = node
+        }
+        return setRef(forwardedRef, node)
+      },
+      [forwardedRef, context]
     )
-  }
 
-  return (
-    <Button
-      type={type}
-      aria-expanded={isOpen}
-      aria-controls={isOpen ? context?.contentId : undefined}
-      data-state={isOpen ? 'open' : 'closed'}
-      data-disabled={isDisabled ? '' : undefined}
-      data-content-present={isContentPresent ? '' : undefined}
-      data-reference-accordion-item={context?.accordionItem ? '' : undefined}
-      disabled={isDisabled}
-      onClick={handleClick}
-      borderBottomWidth={hideBottomBorder && borderBottomWidth !== undefined ? '0px' : borderBottomWidth}
-      style={triggerStyle}
-      {...props}
-    >
-      {children}
-      {renderIcon()}
-    </Button>
-  )
-}
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e)
+      // CO-ACT-08: Collapsible owns only native primary button activation
+      if (e.button !== 0) return
+      if (!e.defaultPrevented && !isDisabled && context) {
+        context.setIsOpen(!context.isOpen)
+      }
+    }
+
+    const triggerStyle: React.CSSProperties | undefined = React.useMemo(() => {
+      if (!hideBottomBorder || !style) return style
+      return {
+        ...style,
+        borderBottomWidth: 0,
+        borderBottomStyle: 'none' as const,
+      }
+    }, [hideBottomBorder, style])
+
+    const renderIcon = () => {
+      if (hideIcon) return null
+      return (
+        <Span
+          data-reference-disclosure-icon=""
+          aria-hidden="true"
+          display="inline-flex"
+          alignItems="center"
+          justifyContent="center"
+          pointerEvents="none"
+          ml="auto"
+          flexShrink={0}
+          color="design.text.light"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            marginLeft: 'auto',
+            flexShrink: 0,
+            transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        >
+          {icon ?? <KeyboardArrowDownIcon width="1.25em" height="1.25em" />}
+        </Span>
+      )
+    }
+
+    return (
+      <Button
+        type={type}
+        {...props}
+        ref={setRefs}
+        aria-expanded={isOpen}
+        aria-controls={ariaControls}
+        data-state={isOpen ? 'open' : 'closed'}
+        data-disabled={isDisabled ? '' : undefined}
+        data-content-present={isContentPresent ? '' : undefined}
+        data-reference-accordion-item={context?.accordionItem ? '' : undefined}
+        disabled={isDisabled}
+        onClick={handleClick}
+        borderBottomWidth={hideBottomBorder && borderBottomWidth !== undefined ? '0px' : borderBottomWidth}
+        style={triggerStyle}
+      >
+        {children}
+        {renderIcon()}
+      </Button>
+    )
+    }
+)
 
 
 export type CollapsibleContentProps = PrimitiveProps<'div'>
@@ -207,11 +241,23 @@ type CollapsibleContentPanelProps = CollapsibleContentProps & {
   disabled: boolean
   consumerRef?: React.Ref<HTMLDivElement>
   skipEnterRef: React.MutableRefObject<boolean>
+  inert?: boolean
+  'aria-hidden'?: boolean | 'true' | 'false'
 }
 
 const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleContentPanelProps>(
   function CollapsibleContentPanel(
-    { isOpen, disabled, consumerRef, skipEnterRef, children, style, ...props },
+    {
+      isOpen,
+      disabled,
+      consumerRef,
+      skipEnterRef,
+      children,
+      style,
+      inert: userInert,
+      'aria-hidden': userAriaHidden,
+      ...props
+    },
     presenceRef
   ) {
     const nodeRef = React.useRef<HTMLDivElement | null>(null)
@@ -219,8 +265,8 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
     const setRefs = React.useCallback(
       (node: HTMLDivElement | null) => {
         nodeRef.current = node
-        assignRef(presenceRef, node)
-        assignRef(consumerRef, node)
+        setRef(presenceRef, node)
+        setRef(consumerRef, node)
       },
       [presenceRef, consumerRef]
     )
@@ -234,6 +280,33 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
         setIsContentPresent?.(false)
       }
     }, [setIsContentPresent])
+
+    // CO-PRES-07: Evacuate focus before closing Content becomes inert
+    const prevOpenRef = React.useRef(isOpen)
+    React.useLayoutEffect(() => {
+      const wasOpen = prevOpenRef.current
+      prevOpenRef.current = isOpen
+
+      if (wasOpen && !isOpen) {
+        const node = nodeRef.current
+        if (node && typeof document !== 'undefined') {
+          const activeEl = document.activeElement
+          if (activeEl && node.contains(activeEl)) {
+            const trigger = context?.triggerRef.current
+            if (trigger && trigger.isConnected && !trigger.disabled) {
+              trigger.focus()
+            } else {
+              if (activeEl instanceof HTMLElement) {
+                activeEl.blur()
+              }
+              if (document.body && typeof document.body.focus === 'function') {
+                document.body.focus()
+              }
+            }
+          }
+        }
+      }
+    }, [isOpen, context])
 
     const publish = React.useCallback(() => {
 
@@ -282,13 +355,34 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       }
     }, [isOpen, skipEnterRef, publish])
 
+    // CO-PRES-08: isolate visually exiting closed Content, restore only isolation it owns
+    const isInert = !isOpen || Boolean(userInert)
+    const isAriaHidden = !isOpen ? 'true' : userAriaHidden
+    const contentStyle: React.CSSProperties = {
+      ...style,
+      ...(!isOpen ? { pointerEvents: 'none' } : undefined),
+    }
+
+    // `inert` is a known React attribute only from 19 (17/18 skip dash-less
+    // unknown attributes), so toggle it imperatively for every runtime.
+    React.useLayoutEffect(() => {
+      const node = nodeRef.current
+      if (!node) return
+      if (isInert) {
+        node.setAttribute('inert', '')
+      } else {
+        node.removeAttribute('inert')
+      }
+    }, [isInert])
+
     return (
       <Div
         ref={setRefs}
         {...props}
         data-state={isOpen ? 'open' : 'closed'}
         data-disabled={disabled ? '' : undefined}
-        style={style}
+        aria-hidden={isAriaHidden}
+        style={contentStyle}
       >
         {children}
       </Div>
@@ -299,14 +393,17 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
 export const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(
   function CollapsibleContent({ children, id: idProp, style, ...props }, forwardedRef) {
     const context = React.useContext(CollapsibleContext)
-    const setContentId = context?.setContentId
 
-    React.useEffect(() => {
-      if (idProp && setContentId) {
-        setContentId(idProp)
-        return () => setContentId(null)
+    // CO-DOM-06: register linkage atomically with mount so trigger and content never disagree
+    React.useLayoutEffect(() => {
+      if (!context) return
+      context.setContentId(idProp ?? null)
+      context.setIsContentMounted(true)
+      return () => {
+        context.setContentId(null)
+        context.setIsContentMounted(false)
       }
-    }, [idProp, setContentId])
+    }, [idProp, context])
 
     if (!context) return null
 
