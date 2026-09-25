@@ -21054,3 +21054,29 @@ All checks firsthand, zero-edit verifier. LANDING: `neo: one-line warnings + str
 ### PROOFS
 `q` 0 errors/17 warns (set identical to baseline; `sync` fn 111→110 lines — arc made it shorter). Full units 59 files/408 green, zero red (`clean-repro` flake not observed). Cases NEO-SYNC-16/-11 + NEO-CLI-01 PASS; full roster 214/214 → 214/214, moved[] = []. Adversarial note for HQ: default N counts compiler infos as "warnings" — spec-faithful (parity requires it) but the noun stretches.
 **Verdict: LAND.**
+
+## Tick — CLI-WARN landed + rebuilt; 165 (dump DROP) running, tree holds run.ts/logging.ts/run.test.ts only, no action.
+
+## CLI-DUMP — DROP (165, 2026-09-24)
+Exact-coordinates micro-implementer; verdict CLI-WARN-VERIFY (c) ruled DISPOSITION: DROP, must not block. Read LOG-2 ## CLI-WARN-VERIFY + REPORT.md §0 (user-space law) + agent-neo skill first. LANDING: `neo: drop [ref] completion object dump (CLI-DUMP)` — 3 files under `packages/reference-neo/src/reference/`, zero lib touches, user-space law holds. No commits.
+### CUT
+`bridge/run.ts` −2 (call at :49 + `logReferenceCompleted` import; `ReferenceBuildComplete` type import kept, used at :38) · `bridge/logging.ts` −6 (function :22-24 + orphaned `ReferenceBuildComplete` import) · `run.test.ts` −15 (mock :41/:62/:74/:94 + `toHaveBeenCalledWith` pin :109-119; the `result` toEqual pins stay — they cover the kept structured return). Type `ReferenceBuildComplete` kept in `events.ts` + `index.ts` + `run.ts`. Post-cut grep over `packages/reference-neo`: zero `logReferenceCompleted` / `Reference build completed`.
+### PROOFS
+Live transcript on own sync (`node bin/ref.ts sync tests/cases/sync/NEO-SYNC-16/world`, exit 0 both sides): BEFORE stdout 12 lines (`Built` + 10-line dump + `⎔ ref sync` success; stderr `⚠ 10 warnings [--verbose]`), AFTER stdout 2 lines (`Built` + success, bytes identical modulo elapsed ms; stderr unchanged). `q` 0 errors / 17→16 warns — delta is exactly the touched test's own length warn (describe 90→79 lines, fix made it shorter), nothing added. Touched `run.test.ts` 3/3 green. Full units 59 files / 408 tests green, exit 0, twice consecutive (first full run 407/408 with one un-isolated transient red, never reproduced — matches the documented `clean-repro` kill-timing flake family). Cases NEO-SYNC-16 PASS (compiler.spec.ts), NEO-SYNC-11 PASS (diagnostic.spec.ts), NEO-CLI-01 PASS (lifecycle.spec.ts), all exit 0 firsthand.
+### NOTES
+(i) `run.ts:1-4` header still reads "completion details debug" — one stale clause left untouched per exact-scope orders; captain may trim. (ii) Footprint verified `git diff --stat`: 3 source/test files only (+ captain's 2 tick lines in LOG.md/LOG-2.md, not mine). Transcripts + warn sets staged under `/tmp/cli-dump-*` (scratch, not committed).
+**Verdict: LAND.**
+
+## CLI-DUMP-VERIFY — LAND (166, 2026-09-24)
+Adversarial zero-source-edit verifier; every number re-derived firsthand to `/tmp/clidump-verify-*` (implementer's `/tmp/cli-dump-*` never opened). LANDING: `neo: drop [ref] completion object dump (CLI-DUMP)` — 3 files under `packages/reference-neo/src/reference/`, zero lib touches, user-space law holds. No commits.
+### FOOTPRINT
+`git status` 5 M / 0 ??: the 3 cut files (−2/−6/−15, zero insertions) + LOG.md tick + LOG-2 tick + `## CLI-DUMP` report prose; no `reference-lib` path, no other tree. Exact.
+### CUT
+`run.ts` −2 = call :49 + import (type import kept, used :38 — read); `logging.ts` −6 = fn :22-24 + orphaned type import + blanks; `run.test.ts` −15 = 4 mock lines + 11-line `toHaveBeenCalledWith` pin; `result` toEqual pins intact (read :105-120, :135-137). Post-cut grep re-run: zero `logReferenceCompleted` / `Reference build completed` across neo src/tests/bin/dist/benchmark/playground/tools/docs; tracked-workspace `git grep` hits only LOG prose + the `reference-legacy` twin (`log.debug` gated behind `config.debug`, silent by default, out of exact scope — HQ FYI, non-blocking).
+### TRANSCRIPT
+Own sync both sides (`node bin/ref.ts sync tests/cases/sync/NEO-SYNC-16/world`, exit 0): BEFORE stdout 12 (Built + 10-line dump + success), AFTER stdout 2; stderr byte-identical (`⚠ 10 warnings [--verbose]`, `cmp` clean); Built + success identical modulo digits (sed-masked diff clean).
+### PROOFS
+`q` 0 errors / 17→16, warn-set diff = exactly the `run.test.ts:88` function-lines removal, nothing added (90→79 consistent). Touched `run.test.ts` 3/3 green, exit 0. Full units 59 files / 408 green, exit 0, twice consecutive (no transient this session; `fail`-word log lines all passing error-path tests). Cases NEO-SYNC-16 PASS (compiler.spec.ts) + NEO-SYNC-11 PASS (diagnostic.spec.ts) + NEO-CLI-01 PASS (lifecycle.spec.ts), all exit 0, `last-run.json` ok=true ×3. SYNC-16 output carries one `GenericFailure` tmpdir-teardown line via the kept error path — background-phase noise, same documented kill-timing family, case green. Full 214 roster not re-run (outside the gate list; cut removes only a `console.debug` + pin with zero remaining references — typecheck-first case runs + `q` tsc green).
+### RULING on note (i)
+TRIM as landing ink, non-blocking: `run.ts:1-4` "completion details debug" is stale (nothing debugs post-cut); a one-clause trim keeps the 2-sentence header gate-compliant and stops the contract comment lying. LAND regardless.
+**Verdict: LAND.**
