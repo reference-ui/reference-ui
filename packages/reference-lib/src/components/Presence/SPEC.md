@@ -33,15 +33,15 @@ API, no extra host node.
 | Nested | Child Presence completion gates parent unmount |
 | Skip | Hidden document |
 
-### Status (2026-09-10)
+### Status (2026-09-25 — quarantine-landing: stability + colocated wins only)
 
 | | |
 | :--- | :--- |
-| Engine | Partial. Anim/transition listeners exist. |
-| Production | **No.** |
-| Named `[x]` | 8 / 48 (browser smokes + thin unit DOM) |
-| Playwright | 5 |
-| Vitest | 3 (`PR-DOM-01`–`03`, JSDOM — not the browser contract) |
+| Engine | Hardened. Multi-effect exit machine + stable refs + child validation (colocated-proven). |
+| Production | **No.** (browser matrix still pending) |
+| Named `[x]` | 17 / 48 (5 CT specs + 11 colocated unit) |
+| Playwright | 5 (CT, React 19) |
+| Vitest | 11 colocated (`PR-DOM-06`–`08`, `PR-REF-01`–`04`, `PR-ENV-01`–`03`, `PR-NEST-04`) + 3 matrix (`PR-DOM-01`–`03`) |
 
 ### Gaps & incoherence
 
@@ -65,10 +65,14 @@ nesting as contrast.
 
 - `[x]` `PR-DOM-01` (e2e + unit), `PR-INSTANT-01`, `PR-TRANSITION-01`,
   `PR-ANIMATION-01`, `PR-RACE-02`, `PR-NEST-01`
+- `[x]` `PR-DOM-06`, `PR-DOM-07`, `PR-DOM-08` (colocated unit)
+- `[x]` `PR-REF-01`, `PR-REF-02`, `PR-REF-03`, `PR-REF-04` (colocated unit)
+- `[x]` `PR-ENV-01`, `PR-ENV-02`, `PR-ENV-03` (colocated unit)
+- `[x]` `PR-NEST-04` (colocated unit, StrictMode)
 - `[~]` `PR-DOM-02`, `PR-DOM-03` — unit titles only; catalog is `[browser]`
-- `[ ]` remaining `PR-DOM-*`, `PR-INSTANT-*`, `PR-TRANSITION-*`,
-  `PR-ANIMATION-*`, `PR-RACE-*`, `PR-NEST-*`, `PR-REF-*`, `PR-ENV-*`,
-  `PR-COMP-*`
+- `[ ]` remaining `PR-DOM-04`, `PR-DOM-05`, `PR-INSTANT-02`–`07`,
+  `PR-TRANSITION-02`–`06`, `PR-ANIMATION-02`–`07`, `PR-RACE-01`,
+  `PR-RACE-03`–`06`, `PR-NEST-02`, `PR-NEST-03`, `PR-COMP-01`–`03`
 
 ### Work order
 

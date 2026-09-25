@@ -115,7 +115,16 @@ export function usePresenceCoordinator(present: boolean): PresenceCoordinatorCon
 
 let presenceIdCounter = 0
 
-export function usePresence(present: boolean) {
+function parseDuration(str: string): number {
+  const trimmed = str.trim()
+  if (!trimmed) return 0
+  const val = parseFloat(trimmed)
+  if (isNaN(val)) return 0
+  return trimmed.endsWith('ms') ? val : val * 1000
+}
+
+export function usePresence(present: boolean, options?: { hasChild?: boolean }) {
+  const hasChild = options?.hasChild ?? true
   const [node, setNode] = React.useState<HTMLElement | null>(null)
   const nodeRef = React.useRef<HTMLElement | null>(null)
   const [state, setState] = React.useState<PresenceState>(
@@ -124,7 +133,6 @@ export function usePresence(present: boolean) {
   const prevPresentRef = React.useRef(present)
   const prevAnimationNameRef = React.useRef<string>('none')
   const pendingDescendantsRef = React.useRef<Set<string>>(new Set())
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
 
   const parentPresence = React.useContext(PresenceContext)
   const coordinator = React.useContext(PresenceCoordinatorContext)
@@ -165,9 +173,19 @@ export function usePresence(present: boolean) {
 
     // Transitioning from present to not present
     if (prevPresent && !present) {
-      if (!el || typeof window === 'undefined') {
+      if (typeof window === 'undefined' || !hasChild) {
         setState('unmounted')
+        if (parentPresence) {
+          parentPresence.onDescendantExitComplete(presenceId)
+        }
         return
+      }
+
+      if (!el) {
+        // PR-DOM-08: Fail descriptively when child does not expose an observable node
+        throw new Error(
+          'Reference UI: Presence child must expose an observable DOM node. Ensure custom components forward ref.'
+        )
       }
 
       // Check document visibility
@@ -194,22 +212,19 @@ export function usePresence(present: boolean) {
       const isAnimationChanged =
         currentAnimationName !== 'none' && currentAnimationName !== prevAnimationName
 
-      // Check if there are active CSS transitions or animations
       let hasFiniteAnimation = false
       if (isAnimationChanged) {
-        const animDurations = (styles.animationDuration || '')
-          .split(',')
-          .map(s => parseFloat(s) * (s.includes('ms') ? 1 : 1000))
-        const animDelays = (styles.animationDelay || '')
-          .split(',')
-          .map(s => parseFloat(s) * (s.includes('ms') ? 1 : 1000))
+        const animDurations = (styles.animationDuration || '').split(',').map(parseDuration)
+        const animDelays = (styles.animationDelay || '').split(',').map(parseDuration)
         const animIterations = (styles.animationIterationCount || '').split(',')
+        const animNames = currentAnimationName.split(',').map(s => s.trim())
 
-        for (let i = 0; i < animDurations.length; i++) {
-          const dur = animDurations[i] || 0
-          const del = animDelays[i] || 0
-          const iter = animIterations[i] ? animIterations[i].trim() : '1'
-          if (iter !== 'infinite' && dur + del > 0) {
+        for (let i = 0; i < animNames.length; i++) {
+          const dur = animDurations[i % animDurations.length] || 0
+          const del = animDelays[i % animDelays.length] || 0
+          const iter = animIterations[i % animIterations.length]?.trim() || '1'
+          const name = animNames[i]
+          if (name !== 'none' && iter !== 'infinite' && dur + del > 0) {
             hasFiniteAnimation = true
             break
           }
@@ -217,19 +232,16 @@ export function usePresence(present: boolean) {
       }
 
       let hasFiniteTransition = false
-      const transProps = (styles.transitionProperty || '').split(',')
-      const transDurations = (styles.transitionDuration || '')
-        .split(',')
-        .map(s => parseFloat(s) * (s.includes('ms') ? 1 : 1000))
-      const transDelays = (styles.transitionDelay || '')
-        .split(',')
-        .map(s => parseFloat(s) * (s.includes('ms') ? 1 : 1000))
+      const transPropStr = styles.transitionProperty || 'none'
+      if (transPropStr !== 'none') {
+        const transProps = transPropStr.split(',').map(s => s.trim())
+        const transDurations = (styles.transitionDuration || '').split(',').map(parseDuration)
+        const transDelays = (styles.transitionDelay || '').split(',').map(parseDuration)
 
-      if (styles.transitionProperty && styles.transitionProperty !== 'none') {
-        for (let i = 0; i < transDurations.length; i++) {
-          const dur = transDurations[i] || 0
-          const del = transDelays[i] || 0
-          const prop = transProps[i] ? transProps[i].trim() : 'all'
+        for (let i = 0; i < transProps.length; i++) {
+          const prop = transProps[i]
+          const dur = transDurations[i % transDurations.length] || 0
+          const del = transDelays[i % transDelays.length] || 0
           if (prop !== 'none' && dur + del > 0) {
             hasFiniteTransition = true
             break
@@ -237,17 +249,18 @@ export function usePresence(present: boolean) {
         }
       }
 
-      // If Web Animations API is available, also check getAnimations
+      // Check Web Animations API
       if (typeof el.getAnimations === 'function') {
-        const anims = el.getAnimations()
+        const anims = el.getAnimations({ subtree: false })
         const finiteAnims = anims.filter(a => {
+          if (a.playState === 'finished') return false
           const effect = a.effect
           if (effect && 'getTiming' in effect) {
             const timing = effect.getTiming()
             const duration = typeof timing.duration === 'number' ? timing.duration : 0
             const delay = typeof timing.delay === 'number' ? timing.delay : 0
             const iterations = typeof timing.iterations === 'number' ? timing.iterations : 1
-            return iterations !== Infinity && (duration + delay) > 0
+            return iterations !== Infinity && duration + delay > 0
           }
           return false
         })
@@ -260,8 +273,7 @@ export function usePresence(present: boolean) {
         typeof window !== 'undefined' &&
         window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
       if (prefersReducedMotion) {
-        hasFiniteAnimation = false
-        hasFiniteTransition = false
+        // If reduced motion computes durations to 0s, styles check already captures it
       }
 
       const hasFiniteGsap = !prefersReducedMotion && finiteGsapTweens(el).length > 0
@@ -337,9 +349,32 @@ export function usePresence(present: boolean) {
     }
 
     let isCompleted = false
+    let isCancelled = false
+    let fillModeTimeoutId: number | undefined
+
+    const checkAllCompleted = () => {
+      if (typeof el.getAnimations === 'function') {
+        const active = el.getAnimations({ subtree: false }).filter(a => {
+          if (a.playState === 'finished') return false
+          const timing = a.effect?.getTiming()
+          if (!timing) return false
+          if (timing.iterations === Infinity) return false
+          const duration = typeof timing.duration === 'number' ? timing.duration : 0
+          const delay = typeof timing.delay === 'number' ? timing.delay : 0
+          return duration + delay > 0
+        })
+        if (active.length > 0) {
+          return false
+        }
+      }
+      return true
+    }
 
     const handleExitComplete = () => {
       if (prevPresentRef.current || stateRef.current !== 'unmountSuspended') {
+        return
+      }
+      if (!checkAllCompleted()) {
         return
       }
       isOwnAnimationDoneRef.current = true
@@ -361,6 +396,16 @@ export function usePresence(present: boolean) {
 
     const onAnimationEnd = (event: AnimationEvent) => {
       if (event.target === el) {
+        if (!prevPresentRef.current) {
+          // PR-ANIMATION-02: prevent final-frame flash by holding forwards fillMode
+          const currentFillMode = el.style.animationFillMode
+          el.style.animationFillMode = 'forwards'
+          fillModeTimeoutId = window.setTimeout(() => {
+            if (el.style.animationFillMode === 'forwards') {
+              el.style.animationFillMode = currentFillMode
+            }
+          })
+        }
         handleExitComplete()
       }
     }
@@ -388,6 +433,21 @@ export function usePresence(present: boolean) {
     el.addEventListener('transitionend', onTransitionEnd)
     el.addEventListener('transitioncancel', onTransitionCancel)
 
+    // Also attach to getAnimations if present
+    if (typeof el.getAnimations === 'function') {
+      const anims = el.getAnimations({ subtree: false }).filter(a => {
+        const timing = a.effect?.getTiming()
+        return timing?.iterations !== Infinity
+      })
+      if (anims.length > 0) {
+        Promise.allSettled(anims.map(a => a.finished)).then(() => {
+          if (!isCancelled) {
+            handleExitComplete()
+          }
+        })
+      }
+    }
+
     let gsapCancelled = false
     const gsapTweens = finiteGsapTweens(el)
     if (gsapTweens.length > 0) {
@@ -396,19 +456,20 @@ export function usePresence(present: boolean) {
       })
     }
 
-
     // Fallback timer in case events don't fire
     const fallbackTimer = setTimeout(() => {
       handleExitComplete()
     }, 5000)
 
     return () => {
+      isCancelled = true
       gsapCancelled = true
+      window.clearTimeout(fillModeTimeoutId)
+      clearTimeout(fallbackTimer)
       el.removeEventListener('animationend', onAnimationEnd)
       el.removeEventListener('animationcancel', onAnimationCancel)
       el.removeEventListener('transitionend', onTransitionEnd)
       el.removeEventListener('transitioncancel', onTransitionCancel)
-      clearTimeout(fallbackTimer)
     }
   }, [state, presenceId, parentPresence])
 
@@ -420,7 +481,7 @@ export function usePresence(present: boolean) {
       unregisterDescendant: (id: string) => {
         pendingDescendantsRef.current.delete(id)
         if (
-          state === 'unmountSuspended' &&
+          stateRef.current === 'unmountSuspended' &&
           isOwnAnimationDoneRef.current &&
           pendingDescendantsRef.current.size === 0
         ) {
@@ -433,7 +494,7 @@ export function usePresence(present: boolean) {
       onDescendantExitComplete: (id: string) => {
         pendingDescendantsRef.current.delete(id)
         if (
-          state === 'unmountSuspended' &&
+          stateRef.current === 'unmountSuspended' &&
           isOwnAnimationDoneRef.current &&
           pendingDescendantsRef.current.size === 0
         ) {
@@ -444,7 +505,7 @@ export function usePresence(present: boolean) {
         }
       },
     }
-  }, [state, presenceId, parentPresence])
+  }, [presenceId, parentPresence])
 
   const isPresent = state === 'mounted' || state === 'unmountSuspended'
 
@@ -455,33 +516,99 @@ export function usePresence(present: boolean) {
   }
 }
 
-export function Presence({ children, present }: PresenceProps) {
-  const { isPresent, ref, contextValue } = usePresence(present)
+type PossibleRef<T> = React.Ref<T> | undefined
 
-  if (!isPresent || !children) {
-    return null
+function setRef<T>(ref: PossibleRef<T>, value: T | null) {
+  if (typeof ref === 'function') {
+    return ref(value)
+  } else if (ref && typeof ref === 'object' && 'current' in ref) {
+    ;(ref as React.MutableRefObject<T | null>).current = value
   }
+}
 
-  // Reject text or non-element children if present
-  if (typeof children !== 'object' || !React.isValidElement(children)) {
-    throw new Error(
-      'Reference UI: Presence expects a single valid React element child.'
-    )
-  }
+function useStableComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
+  const refsRef = React.useRef(refs)
+  refsRef.current = refs
 
-  // Compose the child's ref with Presence internal observer ref.
-  // React 19 stores `ref` on props; React 18 stores it on the element.
-  const child = children as React.ReactElement<{ ref?: React.Ref<HTMLElement> }>
-  const originalRef =
-    (child as { ref?: React.Ref<HTMLElement> }).ref ?? child.props?.ref
+  return React.useCallback((node: T | null) => {
+    const currentRefs = refsRef.current
+    let hasCleanup = false
+    const cleanups = currentRefs.map((ref) => {
+      const cleanup = setRef(ref, node)
+      if (!hasCleanup && typeof cleanup === 'function') {
+        hasCleanup = true
+      }
+      return cleanup
+    })
 
-  const composedRef = (node: HTMLElement | null) => {
-    ref(node)
-    if (typeof originalRef === 'function') {
-      originalRef(node)
-    } else if (originalRef && typeof originalRef === 'object' && 'current' in originalRef) {
-      ;(originalRef as React.MutableRefObject<HTMLElement | null>).current = node
+    if (hasCleanup) {
+      return () => {
+        for (let i = 0; i < cleanups.length; i++) {
+          const cleanup = cleanups[i]
+          if (typeof cleanup === 'function') {
+            cleanup()
+          } else {
+            setRef(currentRefs[i], null)
+          }
+        }
+      }
     }
+  }, [])
+}
+
+function getElementRef(element: React.ReactElement<any>): React.Ref<any> | undefined {
+  let getter = Object.getOwnPropertyDescriptor(element.props, 'ref')?.get
+  let mayWarn = getter && 'isReactWarning' in getter && (getter as any).isReactWarning
+  if (mayWarn) {
+    return (element as any).ref
+  }
+  getter = Object.getOwnPropertyDescriptor(element, 'ref')?.get
+  mayWarn = getter && 'isReactWarning' in getter && (getter as any).isReactWarning
+  if (mayWarn) {
+    return element.props.ref
+  }
+  return element.props.ref || (element as any).ref
+}
+
+export function Presence({ children, present }: PresenceProps) {
+  // PR-DOM-06: Reject text or non-element children early if nonempty
+  if (children !== null && children !== false && children !== undefined) {
+    if (React.isValidElement(children) && children.type === React.Fragment) {
+      const fragChildren = (children.props as any)?.children
+      if (!fragChildren || React.Children.count(fragChildren) === 0) {
+        // Empty fragment is treated as falsy/empty child
+      } else {
+        throw new Error(
+          'Reference UI: Presence expects a single valid React element child.'
+        )
+      }
+    } else if (typeof children !== 'object' || !React.isValidElement(children)) {
+      throw new Error(
+        'Reference UI: Presence expects a single valid React element child.'
+      )
+    }
+  }
+
+  const isChildEmpty =
+    children === null ||
+    children === false ||
+    children === undefined ||
+    (React.isValidElement(children) &&
+      children.type === React.Fragment &&
+      (!(children.props as any)?.children ||
+        React.Children.count((children.props as any).children) === 0))
+
+  const { isPresent, ref, contextValue } = usePresence(present, { hasChild: !isChildEmpty })
+
+  const child =
+    React.isValidElement(children) && children.type !== React.Fragment
+      ? (children as React.ReactElement<any>)
+      : null
+  const originalRef = child ? getElementRef(child) : undefined
+  const composedRef = useStableComposedRefs(ref, originalRef)
+
+  if (!isPresent || !child) {
+    return null
   }
 
   return (
