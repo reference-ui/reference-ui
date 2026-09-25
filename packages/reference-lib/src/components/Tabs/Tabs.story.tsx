@@ -80,6 +80,115 @@ export const Vertical = () => {
   )
 }
 
+export const Manual = () => {
+  const [value, setValue] = React.useState('preview')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-manual-root" maxW="100r">
+        <Tabs value={value} onChange={setValue} activation="manual">
+          <Tabs.List data-testid="tabs-manual-list">
+            <Tabs.Tab value="preview" data-testid="tab-m-preview">
+              Preview
+            </Tabs.Tab>
+            <Tabs.Tab value="history" data-testid="tab-m-history" disabled>
+              History
+            </Tabs.Tab>
+            <Tabs.Tab value="source" data-testid="tab-m-source">
+              Source
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="preview" data-testid="panel-m-preview">
+            <Span fontSize="3.5r">Live preview output.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="history" data-testid="panel-m-history">
+            <Span fontSize="3.5r">Revision history.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="source" data-testid="panel-m-source">
+            <Span fontSize="3.5r">Editable source.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Rtl = () => {
+  const [value, setValue] = React.useState('billing')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-rtl-root" maxW="100r" dir="rtl">
+        <Tabs value={value} onChange={setValue}>
+          <Tabs.List data-testid="tabs-rtl-list">
+            <Tabs.Tab value="general" data-testid="tab-r-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-r-billing">
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab value="security" data-testid="tab-r-security">
+              Security
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-r-general">
+            <Span fontSize="3.5r">General settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-r-billing">
+            <Span fontSize="3.5r">Billing settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="security" data-testid="panel-r-security">
+            <Span fontSize="3.5r">Security settings.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Nested = () => {
+  const [outer, setOuter] = React.useState('general')
+  const [inner, setInner] = React.useState('a')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-nested-root" maxW="100r">
+        <Tabs value={outer} onChange={setOuter}>
+          <Tabs.List data-testid="tabs-nested-outer-list">
+            <Tabs.Tab value="general" data-testid="tab-n-outer-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-n-outer-billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-n-outer-general">
+            <Tabs value={inner} onChange={setInner}>
+              <Tabs.List data-testid="tabs-nested-inner-list">
+                <Tabs.Tab value="a" data-testid="tab-n-inner-a">
+                  A
+                </Tabs.Tab>
+                <Tabs.Tab value="b" data-testid="tab-n-inner-b">
+                  B
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="a" data-testid="panel-n-inner-a">
+                <Span fontSize="3.5r">Inner A content.</Span>
+              </Tabs.Panel>
+              <Tabs.Panel value="b" data-testid="panel-n-inner-b">
+                <Span fontSize="3.5r">Inner B content.</Span>
+              </Tabs.Panel>
+            </Tabs>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-n-outer-billing">
+            <Span fontSize="3.5r">Outer billing content.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const Pill = () => {
   const [value, setValue] = React.useState('overview')
 

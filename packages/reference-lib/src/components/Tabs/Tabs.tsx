@@ -24,11 +24,13 @@ interface TabsContextValue {
   variant: TabsVariant
   disabled: boolean
   baseId: string
+  rovingValue: string
+  setRovingValue: (value: string) => void
+  claimTabValue: (tabValue: string) => () => void
+  claimPanelValue: (panelValue: string) => () => void
 }
 
 const TabsContext = React.createContext<TabsContextValue | null>(null)
-
-let tabsIdCounter = 0
 
 export function Tabs({
   children,
@@ -44,19 +46,70 @@ export function Tabs({
   const isControlled = valueProp !== undefined
   const value = isControlled ? valueProp : internalValue
 
-  const baseIdRef = React.useRef<string | null>(null)
-  if (!baseIdRef.current) {
-    baseIdRef.current = `tabs-${++tabsIdCounter}`
-  }
+  // Stable SSR-safe identity (TB-DOM-07, TB-ENV-01): useId keeps
+  // server/client markup identical, unlike a module counter.
+  const reactId = React.useId()
+  const baseId = `tabs-${reactId.replace(/:/g, '')}`
+
+  // Roving tab stop (TB-DOM-03, TB-MANUAL-01): follows focus so manual
+  // arrows can leave the selected tab; selection changes re-sync it.
+  const [rovingValue, setRovingValueState] = React.useState(value)
+  const setRovingValue = React.useCallback((next: string) => {
+    setRovingValueState(next)
+  }, [])
+  React.useEffect(() => {
+    setRovingValueState(value)
+  }, [value])
+
+  // Duplicate tracking (TB-DOM-10): value identity is claimed in an
+  // effect with cleanup, so StrictMode double-render/double-effects and
+  // dynamic add/remove never false-positive. Render-phase claiming
+  // breaks under React 17/18 double-render (hook state resets between
+  // the two invocations); commit-phase claiming is version-robust.
+  const tabValueCounts = React.useRef<Map<string, number>>(new Map())
+  const panelValueCounts = React.useRef<Map<string, number>>(new Map())
+  const claimTabValue = React.useCallback((tabValue: string) => {
+    const counts = tabValueCounts.current
+    const next = (counts.get(tabValue) ?? 0) + 1
+    counts.set(tabValue, next)
+    if (next > 1) {
+      throw new Error(
+        `Reference UI: Tabs contains duplicate Tab value "${tabValue}". Every Tab must have a unique value.`
+      )
+    }
+    return () => {
+      const left = (counts.get(tabValue) ?? 1) - 1
+      if (left <= 0) counts.delete(tabValue)
+      else counts.set(tabValue, left)
+    }
+  }, [])
+  const claimPanelValue = React.useCallback((panelValue: string) => {
+    const counts = panelValueCounts.current
+    const next = (counts.get(panelValue) ?? 0) + 1
+    counts.set(panelValue, next)
+    if (next > 1) {
+      throw new Error(
+        `Reference UI: Tabs contains duplicate Panel value "${panelValue}". Every Panel must have a unique value.`
+      )
+    }
+    return () => {
+      const left = (counts.get(panelValue) ?? 1) - 1
+      if (left <= 0) counts.delete(panelValue)
+      else counts.set(panelValue, left)
+    }
+  }, [])
 
   const setValue = React.useCallback(
     (nextValue: string) => {
+      // Redundant requests are suppressed (TB-SELECT-04, TB-MANUAL-04):
+      // activating the selected tab is a no-op, not a transition.
+      if (nextValue === value) return
       if (!isControlled) {
         setInternalValue(nextValue)
       }
       onChange?.(nextValue)
     },
-    [isControlled, onChange]
+    [isControlled, onChange, value]
   )
 
   const contextValue = React.useMemo<TabsContextValue>(
@@ -67,9 +120,25 @@ export function Tabs({
       activation,
       variant,
       disabled,
-      baseId: baseIdRef.current!,
+      baseId,
+      rovingValue,
+      setRovingValue,
+      claimTabValue,
+      claimPanelValue,
     }),
-    [value, setValue, orientation, activation, variant, disabled]
+    [
+      value,
+      setValue,
+      orientation,
+      activation,
+      variant,
+      disabled,
+      baseId,
+      rovingValue,
+      setRovingValue,
+      claimTabValue,
+      claimPanelValue,
+    ]
   )
 
   return (
@@ -99,22 +168,37 @@ export function TabsList({
     onKeyDown?.(e)
     if (e.defaultPrevented) return
 
+    // Scope to this list only (TB-NEST-01): nested instances' tabs live
+    // inside this subtree but belong to their own tablist.
     const tabs = Array.from(
       e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    ).filter(tab => !tab.disabled)
+    ).filter(
+      tab =>
+        !tab.disabled &&
+        tab.closest('[role="tablist"]') === e.currentTarget
+    )
 
     if (tabs.length === 0) return
 
     const activeIndex = tabs.indexOf(document.activeElement as HTMLButtonElement)
     if (activeIndex === -1) return
 
+    // Read at event time (TB-AUTO-02, TB-AUTO-06): runtime dir flips apply
+    // to the next keypress with no cached direction to go stale.
+    const dirAncestor = e.currentTarget.closest('[dir]')
+    const isRTL = dirAncestor?.getAttribute('dir') === 'rtl'
+
     let targetIndex = -1
 
     if (orientation === 'horizontal') {
       if (e.key === 'ArrowRight') {
-        targetIndex = (activeIndex + 1) % tabs.length
+        targetIndex = isRTL
+          ? (activeIndex - 1 + tabs.length) % tabs.length
+          : (activeIndex + 1) % tabs.length
       } else if (e.key === 'ArrowLeft') {
-        targetIndex = (activeIndex - 1 + tabs.length) % tabs.length
+        targetIndex = isRTL
+          ? (activeIndex + 1) % tabs.length
+          : (activeIndex - 1 + tabs.length) % tabs.length
       }
     } else {
       if (e.key === 'ArrowDown') {
@@ -204,6 +288,15 @@ export function Tab({
   const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
   const panelId = context ? `${context.baseId}-panel-${value}` : undefined
 
+  // Duplicate identity is a hard error (TB-DOM-10): value is the public
+  // Tab-to-Panel mapping, so a collision would fork ARIA linkage.
+  // Claimed in an effect (commit phase), never during render.
+  const claimTabValue = context?.claimTabValue
+  React.useEffect(() => {
+    if (!claimTabValue) return
+    return claimTabValue(value)
+  }, [claimTabValue, value])
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
     if (!e.defaultPrevented && !isDisabled && context) {
@@ -211,14 +304,25 @@ export function Tab({
     }
   }
 
+  const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
+    onFocus?.(e)
+    // The roving stop tracks focus (TB-MANUAL-01); disabled tabs stay
+    // unreachable (TB-DOM-08, TB-DOM-11).
+    if (!isDisabled && context) {
+      context.setRovingValue(value)
+    }
+  }
+
   const isLine = variant === 'line'
+  const isRovingStop =
+    !!context && !isDisabled && context.rovingValue === value
 
   return (
     <Button
       type="button"
       role="tab"
       id={tabId}
-      tabIndex={isSelected ? 0 : -1}
+      tabIndex={isRovingStop ? 0 : -1}
       aria-selected={isSelected}
       aria-controls={isSelected ? panelId : undefined}
       data-state={isSelected ? 'active' : 'inactive'}
@@ -227,6 +331,7 @@ export function Tab({
       data-value={value}
       disabled={isDisabled}
       onClick={handleClick}
+      onFocus={handleFocus}
       h={isLine ? 'auto' : undefined}
       px={isLine ? (orientation === 'vertical' ? '3r' : '2r') : '3r'}
       pt={isLine ? (orientation === 'horizontal' ? '2.5r' : '2r') : '1.5r'}
@@ -308,6 +413,12 @@ export function TabPanel({
   const isSelected = context ? context.value === value : false
   const tabId = context ? `${context.baseId}-tab-${value}` : undefined
   const panelId = idProp ?? (context ? `${context.baseId}-panel-${value}` : undefined)
+
+  const claimPanelValue = context?.claimPanelValue
+  React.useEffect(() => {
+    if (!claimPanelValue) return
+    return claimPanelValue(value)
+  }, [claimPanelValue, value])
 
   return (
     <Div

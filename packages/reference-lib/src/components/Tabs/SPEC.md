@@ -31,22 +31,23 @@ Visual polish is not this gate. No `variant`, no `defaultValue`.
 | ARIA | `aria-controls` only on the selected Tab |
 | Panels | all stay mounted; inactive use native `hidden` |
 
-### Status (2026-09-10)
+### Status (2026-09-10; proofs updated 2026-09-25)
 
 | | |
 | :--- | :--- |
 | Engine | Prototype. Does not compose RovingFocus. |
 | Production | **No.** |
-| Named `[x]` | 3 / 49 |
-| Playwright | 1 |
-| Vitest | 0 contract IDs (2 visual tests) |
+| Named `[x]` | 18 / 49 |
+| Playwright | 6 CT (3 snapshot + 3 assertion-only) |
+| Vitest | 14 contract IDs (17 tests, incl. 2 visual) |
 
 ### Gaps & incoherence
 
 - `defaultValue`, `variant` (`line` / `pill`), root `disabled` — not in freeze.
 - Reinvents arrows on List. Freeze: RovingFocus.
-- `tabIndex={isSelected ? 0 : -1}` ties the tab stop to selection — breaks
-  manual activation (`TB-MANUAL-*`).
+- [x] ~~`tabIndex={isSelected ? 0 : -1}` ties the tab stop to selection~~ —
+  fixed 2026-09-25: roving stop follows focus, selection re-syncs it
+  (`TB-MANUAL-01` proven in Vitest + CT).
 - Hardcoded line/pill chrome in List/Tab.
 
 ### Vendor
@@ -58,7 +59,13 @@ activation / focus-blur regressions.
 
 ### Case index
 
-- `[x]` `TB-DOM-01`, `TB-DOM-03`, `TB-DOM-04`
+- `[x]` `TB-DOM-01`, `TB-DOM-02`, `TB-DOM-03`, `TB-DOM-04`, `TB-DOM-05`,
+  `TB-DOM-07`, `TB-DOM-08`, `TB-DOM-10`, `TB-DOM-11`, `TB-DOM-12`,
+  `TB-DOM-14`, `TB-SELECT-04`, `TB-MANUAL-01`, `TB-MANUAL-04`,
+  `TB-AUTO-02`, `TB-AUTO-06`, `TB-NEST-01`, `TB-EVENT-03`
+  (`TB-DOM-02`/`TB-DOM-05` proven by pre-existing CT titles, recorded
+  2026-09-25; rest ported from quarantine recon as stability wins with
+  uncontrolled mode + variant preserved.)
 - `[ ]` remaining `TB-DOM-*`, `TB-SELECT-*`, `TB-AUTO-*`, `TB-MANUAL-*`,
   `TB-EVENT-*`, `TB-DYNAMIC-*`, `TB-NEST-*`, `TB-ENV-*`, `TB-A11Y-01`,
   `TB-COMP-*`

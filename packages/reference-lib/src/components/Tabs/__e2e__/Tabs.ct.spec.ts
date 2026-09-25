@@ -192,4 +192,96 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await page.waitForTimeout(200)
     await snap(page, 'pill-activity-focused')
   })
+
+  // Assertion-only browser proofs for quarantine-landing stability ports.
+  // No snapshots: these pin behavior, and visuals must not move.
+
+  test('TB-MANUAL-01: Manual arrows move focus and the tab stop without selecting', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/Manual')
+    await expect(page.getByTestId('tabs-manual-root')).toBeVisible()
+
+    const tabPreview = page.getByTestId('tab-m-preview')
+    const tabSource = page.getByTestId('tab-m-source')
+    const panelPreview = page.getByTestId('panel-m-preview')
+    const panelSource = page.getByTestId('panel-m-source')
+
+    await tabPreview.focus()
+    await page.keyboard.press('ArrowRight')
+    // Skips disabled history, lands on source; selection stays on preview.
+    await expect(tabSource).toBeFocused()
+    await expect(tabSource).toHaveAttribute('tabindex', '0')
+    await expect(tabPreview).toHaveAttribute('tabindex', '-1')
+    await expect(tabPreview).toHaveAttribute('aria-selected', 'true')
+    await expect(tabSource).toHaveAttribute('aria-selected', 'false')
+    await expect(panelPreview).toBeVisible()
+    await expect(panelSource).toBeHidden()
+
+    // Explicit Enter activates the focused tab.
+    await page.keyboard.press('Enter')
+    await expect(tabSource).toHaveAttribute('aria-selected', 'true')
+    await expect(panelSource).toBeVisible()
+    await expect(panelPreview).toBeHidden()
+  })
+
+  test('TB-AUTO-02: Horizontal arrows reverse under inherited RTL', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/Rtl')
+    await expect(page.getByTestId('tabs-rtl-root')).toBeVisible()
+
+    const tabGeneral = page.getByTestId('tab-r-general')
+    const tabBilling = page.getByTestId('tab-r-billing')
+
+    await tabBilling.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(tabGeneral).toBeFocused()
+    await expect(tabGeneral).toHaveAttribute('aria-selected', 'true')
+
+    await page.keyboard.press('ArrowLeft')
+    await expect(tabBilling).toBeFocused()
+    await expect(tabBilling).toHaveAttribute('aria-selected', 'true')
+  })
+
+  test('TB-NEST-01: Nested instances isolate arrow movement in both directions', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/Nested')
+    await expect(page.getByTestId('tabs-nested-root')).toBeVisible()
+
+    const tabOuterGeneral = page.getByTestId('tab-n-outer-general')
+    const tabOuterBilling = page.getByTestId('tab-n-outer-billing')
+    const tabInnerA = page.getByTestId('tab-n-inner-a')
+    const tabInnerB = page.getByTestId('tab-n-inner-b')
+    const panelInnerA = page.getByTestId('panel-n-inner-a')
+    const panelInnerB = page.getByTestId('panel-n-inner-b')
+
+    // Inner arrows stay inner.
+    await tabInnerA.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(tabInnerB).toBeFocused()
+    await expect(tabInnerB).toHaveAttribute('aria-selected', 'true')
+    await expect(panelInnerB).toBeVisible()
+    await expect(panelInnerA).toBeHidden()
+    await expect(tabOuterGeneral).toHaveAttribute('aria-selected', 'true')
+
+    // Outer arrows skip over nested tabs.
+    await tabOuterGeneral.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(tabOuterBilling).toBeFocused()
+    await expect(tabOuterBilling).toHaveAttribute('aria-selected', 'true')
+
+    // Inactive panels unmount their children, so the inner tree detaches
+    // with the outer general panel (current mount policy, unchanged).
+    await expect(tabInnerB).toBeHidden()
+
+    // Returning restores the inner tree with its controlled selection.
+    await tabOuterGeneral.click()
+    await expect(tabInnerB).toHaveAttribute('aria-selected', 'true')
+    await expect(panelInnerB).toBeVisible()
+  })
 })
