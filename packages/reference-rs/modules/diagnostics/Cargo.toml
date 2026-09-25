@@ -1,0 +1,11 @@
+[package]
+name = "diagnostics"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "Shared diagnostic template, transport, and code registry for Reference UI native modules"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+ts-rs.workspace = true

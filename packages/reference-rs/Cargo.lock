@@ -59,6 +59,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dashmap",
+ "diagnostics",
  "globwalk",
  "indexmap",
  "oxc_allocator",
@@ -79,6 +80,7 @@ dependencies = [
  "base_system",
  "canon",
  "criterion",
+ "diagnostics",
  "indexmap",
  "module_graph",
  "oxc_allocator",
@@ -377,6 +379,15 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+]
+
+[[package]]
+name = "diagnostics"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ts-rs",
 ]
 
 [[package]]
@@ -1475,6 +1486,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 name = "styletrace"
 version = "0.1.0"
 dependencies = [
+ "diagnostics",
  "globwalk",
  "module_graph",
  "oxc_allocator",
@@ -1506,6 +1518,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dashmap",
+ "diagnostics",
  "globwalk",
  "indexmap",
  "oxc_allocator",
@@ -1612,6 +1625,7 @@ version = "0.1.0"
 dependencies = [
  "base_system",
  "canon",
+ "diagnostics",
  "serde",
  "serde_json",
  "shared",

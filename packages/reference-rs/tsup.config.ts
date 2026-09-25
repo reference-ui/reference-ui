@@ -34,6 +34,7 @@ export default defineConfig({
     namer: 'modules/atomic/js/namer/index.ts',
     system: 'modules/atomic/js/index.ts',
     typegen: 'modules/typegen/js/index.ts',
+    diagnostics: 'modules/diagnostics/js/index.ts',
     // The generated E2 roster bundles the authored trio in; react stays external so the
     // dist entry shares the consumer's copy (no other entry imports react, so this is
     // a no-op for every other bundle).

@@ -59,6 +59,10 @@
       "types": "./dist/typegen.d.ts",
       "import": "./dist/typegen.mjs"
     },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.mjs"
+    },
     "./primitives": {
       "types": "./dist/primitives.d.ts",
       "import": "./dist/primitives.mjs"
@@ -73,6 +77,8 @@
     "dist/atomic.d.ts",
     "dist/atomic.mjs",
     "dist/contracts",
+    "dist/diagnostics.d.ts",
+    "dist/diagnostics.mjs",
     "dist/index.d.ts",
     "dist/index.mjs",
     "dist/modules",
