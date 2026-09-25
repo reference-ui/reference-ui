@@ -5,18 +5,29 @@
  * Receives emitted .d.ts text string without filesystem side effects.
  */
 import { callNativeJson, requireNative } from '../../runtime/js/native.js'
-import type { PrimitivesVocabulary } from './types.js'
+import type { PrimitivesVocabulary, TypegenDetailedEmit } from './types.js'
 
-export const TYPEGEN_NATIVE_EXPORTS = ['emitDtsSync', 'primitivesVocabulary'] as const
+export const TYPEGEN_NATIVE_EXPORTS = [
+  'emitDtsSync',
+  'emitDtsDetailed',
+  'primitivesVocabulary',
+] as const
 
 export interface TypegenNative {
   emitDtsSync(requestJson: string): string
+  emitDtsDetailed(requestJson: string): string
   primitivesVocabulary(): string
 }
 
 export function emitDtsNative(requestJson: string): string {
   const native = requireNative<TypegenNative>('emit typegen')
   return native.emitDtsSync(requestJson)
+}
+
+export function emitDtsDetailedNative(requestJson: string): TypegenDetailedEmit {
+  return callNativeJson<TypegenDetailedEmit, TypegenNative>('emit typegen with diagnostics', native =>
+    native.emitDtsDetailed(requestJson)
+  )
 }
 
 export function primitivesVocabularyNative(): PrimitivesVocabulary {

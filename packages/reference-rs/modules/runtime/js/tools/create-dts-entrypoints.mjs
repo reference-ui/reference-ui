@@ -33,6 +33,8 @@ const entrypoints = [
   { file: 'system.d.ts', target: './modules/atomic/js/index' },
   { file: 'typegen.d.ts', target: './modules/typegen/js/index' },
   // New like the namer, so the explicit `.js` NodeNext form (no node10 consumers).
+  { file: 'diagnostics.d.ts', target: './modules/diagnostics/js/index.js' },
+  // New like the namer, so the explicit `.js` NodeNext form (no node10 consumers).
   { file: 'primitives.d.ts', target: './modules/primitives/generated/primitives.js' },
 ]
 

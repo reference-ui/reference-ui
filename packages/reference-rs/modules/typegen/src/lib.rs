@@ -9,6 +9,7 @@
 //! strict category wrappers live on `emit_dts_with` because `strict` is not a
 //! spec field.
 
+pub mod diagnostics;
 mod emit;
 
 use base_system::BaseSystem;
@@ -45,6 +46,33 @@ pub fn emit_dts(system: &BaseSystem) -> String {
 /// declaration order. This does not parse `ui.config.ts`.
 pub fn emit_dts_with(system: &BaseSystem, options: &EmitOptions) -> String {
     emit::dts(system, options)
+}
+
+/// One emit plus the warnings for everything the printers skipped.
+/// `dts` is byte-identical to `emit_dts_with`; `diagnostics` carries the
+/// `TGN-W-*` rows sorted by code and message, empty when nothing was skipped.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DetailedEmit {
+    pub dts: String,
+    pub diagnostics: Vec<diagnostics::TypegenDiagnostic>,
+}
+
+/// Print `.d.ts` text plus the skip warnings, in open mode.
+pub fn emit_dts_detailed(system: &BaseSystem) -> DetailedEmit {
+    emit_dts_with_diagnostics(system, &EmitOptions::default())
+}
+
+/// Print `.d.ts` text plus the skip warnings, with printer options.
+/// Unknown strict names and absent strict categories join the rows.
+pub fn emit_dts_with_diagnostics(
+    system: &BaseSystem,
+    options: &EmitOptions,
+) -> DetailedEmit {
+    DetailedEmit {
+        dts: emit::dts(system, options),
+        diagnostics: diagnostics::collect_diagnostics(system, options),
+    }
 }
 
 /// Serialize typegen's system-independent StyleProps vocabulary as JSON.

@@ -66,12 +66,26 @@ struct MappedWrapper<'a> {
     wrapper_name: &'static str,
 }
 
+/// Strict category names the printer knows, in enum order; `parse` and the diagnostics
+/// collector both read this list, so the printer and its suggestions can never drift. Keep the
+/// order coupled to the `StrictCategory` declaration order (`normalize` indexes `seen` by it).
+pub(crate) const KNOWN_STRICT_CATEGORIES: &[&str] = &["colors", "radii", "spacing"];
+
+/// Whether `strict` names a printable category; unknown names are skipped
+/// by `normalize` and reported by the diagnostics collector.
+pub(crate) fn is_known_strict_category(name: &str) -> bool {
+    StrictCategory::parse(name).is_some()
+}
+
 impl StrictCategory {
     fn parse(name: &str) -> Option<Self> {
-        match name {
-            "colors" => Some(Self::Colors),
-            "radii" => Some(Self::Radii),
-            "spacing" => Some(Self::Spacing),
+        match KNOWN_STRICT_CATEGORIES
+            .iter()
+            .position(|known| *known == name)
+        {
+            Some(0) => Some(Self::Colors),
+            Some(1) => Some(Self::Radii),
+            Some(2) => Some(Self::Spacing),
             _ => None,
         }
     }

@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 use oxc_ast::ast::Program;
 use rustc_hash::FxHashMap;
 
+use crate::diagnostics::{push_skipped, unresolved_surface, StyletraceDiagnostic};
+use crate::output::StyletraceDetailedResult;
 use crate::resolver::{
     collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
 };
@@ -64,36 +66,17 @@ impl StyleSurface {
         self.trust_surface_type_names
     }
 
-    /// Build the surface from a declaration root (disk path).
+    /// Build the surface from a declaration root (disk path). A missing entrypoint,
+    /// malformed graph, or unreadable declaration refuses the request with
+    /// `STT-E-UNRESOLVED-SURFACE`.
     pub fn from_declaration_root(root: &Path) -> Result<Self, StyleTraceError> {
-        let style_props = collect_reference_style_prop_names(root)?
+        let style_props = collect_reference_style_prop_names(root)
+            .map_err(|error| StyleTraceError::new(unresolved_surface(error.message())))?
             .into_iter()
             .collect::<BTreeSet<_>>();
-        let primitives = collect_reference_primitive_jsx_names(root)?;
+        let primitives = collect_reference_primitive_jsx_names(root)
+            .map_err(|error| StyleTraceError::new(unresolved_surface(error.message())))?;
         Ok(Self::new(style_props, primitives))
-    }
-}
-
-/// One skipped file or trace-level note; the caller renders it as a warning.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TraceDiagnostic {
-    pub file: Option<PathBuf>,
-    pub message: String,
-}
-
-impl TraceDiagnostic {
-    pub fn new(message: String) -> Self {
-        Self {
-            file: None,
-            message,
-        }
-    }
-
-    pub fn for_file(file: PathBuf, message: String) -> Self {
-        Self {
-            file: Some(file),
-            message,
-        }
     }
 }
 
@@ -101,7 +84,7 @@ impl TraceDiagnostic {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TraceOutcome {
     pub bindings: Vec<TracedBinding>,
-    pub diagnostics: Vec<TraceDiagnostic>,
+    pub diagnostics: Vec<StyletraceDiagnostic>,
     /// Each traced export name to its owned declared prop names (§14),
     /// unioned with the input surface's seeds.
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
@@ -146,6 +129,33 @@ pub fn trace_style_bindings_with_hint(
     source_root: &Path,
     declaration_root: Option<&Path>,
 ) -> Result<Vec<TracedBinding>, StyleTraceError> {
+    // The names seam has no diagnostics channel; per-file skips stay silent
+    // here by shape. The detailed twin and compile() are the diagnosed paths.
+    Ok(trace_outcome_with_hint(source_root, declaration_root)?.bindings)
+}
+
+/// Trace a source root against a declaration root, keeping per-file diagnostics.
+/// Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each with
+/// their siblings kept; an unusable surface or source root refuses the request
+/// with `STT-E-UNRESOLVED-SURFACE` or `STT-E-SCAN-FAILED`.
+pub fn trace_style_bindings_detailed(
+    source_root: &Path,
+    declaration_root: Option<&Path>,
+) -> Result<StyletraceDetailedResult, StyleTraceError> {
+    let outcome = trace_outcome_with_hint(source_root, declaration_root)?;
+    Ok(StyletraceDetailedResult {
+        bindings: outcome.bindings,
+        diagnostics: outcome.diagnostics,
+    })
+}
+
+/// One root-based trace: resolve the declaration root, build the surface,
+/// discover entries, and trace them. Request-level failures arrive coded
+/// from the surface and discovery boundaries below.
+fn trace_outcome_with_hint(
+    source_root: &Path,
+    declaration_root: Option<&Path>,
+) -> Result<TraceOutcome, StyleTraceError> {
     let normalized_source = normalize_path(source_root);
     let resolved_decl_root = match declaration_root {
         Some(hint) => normalize_path(hint),
@@ -160,16 +170,13 @@ pub fn trace_style_bindings_with_hint(
         staged: &staged,
         programs: &programs,
     };
-    let outcome = trace_style_bindings_with_surface(
+    Ok(trace_style_bindings_with_surface(
         &entries,
         &normalized_source,
         &resolved_decl_root,
         &surface,
         &sources,
-    );
-    // The names seam has no diagnostics channel; per-file skips stay silent
-    // here by shape. compile() is the diagnosed path (ATM-SITE-57).
-    Ok(outcome.bindings)
+    ))
 }
 
 /// Trace explicit entries against a prebuilt surface. Entries that fail to
@@ -253,7 +260,7 @@ impl SurfaceTraceSession<'_> {
         &self,
         entries: &[PathBuf],
         modules: &mut BTreeMap<PathBuf, TraceModule>,
-        diagnostics: &mut Vec<TraceDiagnostic>,
+        diagnostics: &mut Vec<StyletraceDiagnostic>,
     ) {
         for entry in entries {
             if modules.contains_key(entry) {
@@ -264,7 +271,8 @@ impl SurfaceTraceSession<'_> {
                     modules.insert(entry.clone(), module);
                 }
                 Err(error) => {
-                    diagnostics.push(TraceDiagnostic::for_file(entry.clone(), error.to_string()))
+                    let file = entry.to_string_lossy().to_string();
+                    push_skipped(diagnostics, Some(&file), error.to_string());
                 }
             }
         }
@@ -274,7 +282,7 @@ impl SurfaceTraceSession<'_> {
     fn walk(
         &self,
         modules: BTreeMap<PathBuf, TraceModule>,
-        diagnostics: &mut Vec<TraceDiagnostic>,
+        diagnostics: &mut Vec<StyletraceDiagnostic>,
     ) -> (Vec<TracedBinding>, BTreeMap<String, BTreeSet<String>>) {
         let mut analyzer = StyleTraceAnalyzer::new(
             modules,
@@ -287,7 +295,7 @@ impl SurfaceTraceSession<'_> {
         let bindings = match analyzer.collect_exported_bindings(self.source_root) {
             Ok(bindings) => bindings,
             Err(error) => {
-                diagnostics.push(TraceDiagnostic::new(error.to_string()));
+                push_skipped(diagnostics, None, error.to_string());
                 Vec::new()
             }
         };

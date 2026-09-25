@@ -12,10 +12,10 @@
 mod fonts;
 mod props;
 mod recipes;
-mod strict;
+pub(crate) mod strict;
 mod style;
-mod tokens;
-mod ts;
+pub(crate) mod tokens;
+pub(crate) mod ts;
 
 use crate::EmitOptions;
 use base_system::BaseSystem;

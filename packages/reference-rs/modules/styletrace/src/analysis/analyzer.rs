@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 use rustc_hash::FxHashMap;
 
+use crate::diagnostics::{push_skipped, StyletraceDiagnostic};
 use crate::resolver::StyleTraceError;
 
 use super::model::{
@@ -18,7 +19,7 @@ use super::model::{
 use super::module_resolution::ModuleResolver;
 use super::parser::parse_trace_module;
 use super::source_files::format_relative_module;
-use super::surface::{StyleSurface, TraceDiagnostic, TraceSources};
+use super::surface::{StyleSurface, TraceSources};
 
 pub(super) struct StyleTraceAnalyzer<'s> {
     modules: BTreeMap<PathBuf, TraceModule>,
@@ -30,7 +31,7 @@ pub(super) struct StyleTraceAnalyzer<'s> {
     factory_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     export_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
     owned_props: BTreeMap<String, BTreeSet<String>>,
-    diagnostics: Vec<TraceDiagnostic>,
+    diagnostics: Vec<StyletraceDiagnostic>,
 }
 
 impl<'s> StyleTraceAnalyzer<'s> {
@@ -55,7 +56,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
     }
 
     /// Drain edge-target diagnostics recorded while walking.
-    pub(super) fn take_diagnostics(&mut self) -> Vec<TraceDiagnostic> {
+    pub(super) fn take_diagnostics(&mut self) -> Vec<StyletraceDiagnostic> {
         std::mem::take(&mut self.diagnostics)
     }
 
@@ -372,10 +373,8 @@ impl<'s> StyleTraceAnalyzer<'s> {
                 self.modules.insert(module_path.to_path_buf(), module);
             }
             Err(error) => {
-                self.diagnostics.push(TraceDiagnostic::for_file(
-                    module_path.to_path_buf(),
-                    error.to_string(),
-                ));
+                let file = module_path.to_string_lossy().to_string();
+                push_skipped(&mut self.diagnostics, Some(&file), error.to_string());
                 self.modules
                     .insert(module_path.to_path_buf(), TraceModule::empty());
             }

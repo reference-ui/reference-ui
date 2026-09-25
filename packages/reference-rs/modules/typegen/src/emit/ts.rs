@@ -5,7 +5,7 @@
 
 use std::collections::BTreeSet;
 
-pub(super) fn to_pascal_case(name: &str) -> String {
+pub(crate) fn to_pascal_case(name: &str) -> String {
     let mut out = String::new();
     let mut cap_next = true;
     for c in name.chars() {
@@ -23,7 +23,7 @@ pub(super) fn to_pascal_case(name: &str) -> String {
     out
 }
 
-pub(super) fn is_ts_ident(name: &str) -> bool {
+pub(crate) fn is_ts_ident(name: &str) -> bool {
     let mut chars = name.chars();
     let Some(first) = chars.next() else {
         return false;

@@ -18,6 +18,11 @@ impl StyleTraceError {
             message: message.into(),
         }
     }
+
+    /// The inner sentence without the display prefix, for coded re-wraps.
+    pub(crate) fn message(&self) -> &str {
+        &self.message
+    }
 }
 
 impl fmt::Display for StyleTraceError {

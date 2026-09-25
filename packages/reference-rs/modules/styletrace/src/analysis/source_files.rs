@@ -6,6 +6,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::diagnostics::scan_failed;
 use crate::resolver::StyleTraceError;
 
 pub(super) fn discover_source_files(root_dir: &Path) -> Result<Vec<PathBuf>, StyleTraceError> {
@@ -28,13 +29,16 @@ fn collect_source_files(
     files: &mut Vec<PathBuf>,
 ) -> Result<(), StyleTraceError> {
     for entry in fs::read_dir(current_dir).map_err(|error| {
-        StyleTraceError::new(format!("failed to read {}: {error}", current_dir.display()))
+        StyleTraceError::new(scan_failed(format!(
+            "failed to read {}: {error}",
+            current_dir.display()
+        )))
     })? {
         let entry = entry.map_err(|error| {
-            StyleTraceError::new(format!(
+            StyleTraceError::new(scan_failed(format!(
                 "failed to read dir entry in {}: {error}",
                 current_dir.display()
-            ))
+            )))
         })?;
         let path = entry.path();
         let file_name = entry.file_name();

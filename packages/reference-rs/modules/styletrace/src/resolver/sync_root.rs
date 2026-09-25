@@ -6,6 +6,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::diagnostics::unresolved_surface;
+
 use super::{normalize_path, StyleTraceError};
 
 const SYNC_REACT_PACKAGE_ENTRY: &str = ".reference-ui/react/package.json";
@@ -29,10 +31,10 @@ pub(crate) fn resolve_sync_root(
         }
     }
 
-    Err(StyleTraceError::new(format!(
+    Err(StyleTraceError::new(unresolved_surface(format!(
         "could not resolve sync root for {}",
         start_path.display()
-    )))
+    ))))
 }
 
 fn sync_root_candidates(start_path: &Path, sync_root_hint: Option<&Path>) -> Vec<PathBuf> {

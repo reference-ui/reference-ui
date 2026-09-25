@@ -5,6 +5,7 @@ edition.workspace = true
 publish = false
 
 [dependencies]
+diagnostics.workspace = true
 shared.workspace = true
 module_graph.workspace = true
 tasty.workspace = true

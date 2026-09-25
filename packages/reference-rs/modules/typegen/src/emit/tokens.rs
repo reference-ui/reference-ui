@@ -116,6 +116,18 @@ fn spec_for(category: &str) -> Option<&'static CategorySpec> {
     CATEGORIES.iter().find(|spec| spec.category == category)
 }
 
+/// Category names the printer knows, for the diagnostics collector's suggestions.
+/// Reads the spec table directly, so the printer and its suggestions can never drift.
+pub(crate) fn known_token_categories() -> Vec<&'static str> {
+    CATEGORIES.iter().map(|spec| spec.category).collect()
+}
+
+/// Whether the printer knows a dump token category; unknown categories are
+/// skipped by `group_literals` and reported by the diagnostics collector.
+pub(crate) fn is_known_token_category(category: &str) -> bool {
+    spec_for(category).is_some()
+}
+
 fn relative_path<'a>(key: &'a str, category: &str) -> &'a str {
     key.strip_prefix(category)
         .and_then(|rest| rest.strip_prefix('.'))
