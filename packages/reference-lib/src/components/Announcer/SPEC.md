@@ -20,10 +20,12 @@ Fixture root: `ReferenceLibrary`
 ## Next agent — Announcer is not production
 
 The engine exists as a Toast / ReferenceLibrary appendix. It is not a frozen
-runtime. Five Vitest cases poke a fake `Document` object and never paint live
-regions. Toast Playwright covers a subset of speech vs visual (`TO-ANN-*`).
-ReferenceLibrary covers mount/election smokes (`RL-*`). None of those titles
-are `ANN-*`, and several production holes are untested.
+runtime. Twelve Vitest cases poke a fake `Document` object and never paint live
+regions (7 named `ANN-*`, 5 dual-titled `TO-ANN-*` siblings). Toast Playwright
+covers a subset of speech vs visual (`TO-ANN-*`). ReferenceLibrary covers
+mount/election smokes (`RL-*`). Browser-prose `ANN-*` cases are unproven until
+`matrix/lib/tests/e2e/announcer.spec.ts` is re-targeted (quarantine corpus,
+pending).
 
 Do not add Toast queue, swipe, or toaster chrome here. Do not add Overlay
 dismiss / inert / FocusLock catalogs. Do not add a public Provider, a second
@@ -72,9 +74,9 @@ and call it done.
 | | |
 | :--- | :--- |
 | Engine | Shipped (two-channel store, host, pending, 7s clear, overlay-ignore) |
-| Production | **No.** Host-activation, document routing, AT-safe remount, and overlay exemption are not `ANN-*` proven. |
-| Named `ANN-*` | 0 / 41 |
-| Vitest | 5 store tests (`TO-ANN-01` / `02` / `05` / `07` / `08` titles) against `{} as Document` |
+| Production | **No.** Host-activation, document routing, AT-safe remount, and overlay exemption are not `ANN-*` browser-proven. |
+| Named `ANN-*` | 7 / 41 (`ANN-API-01` / `06` / `07`, `ANN-LIVE-08`, `ANN-ENV-01` / `02` / `04` — unit/ssr only) |
+| Vitest | 12 store/ssr tests (7 `ANN-*` + 5 dual-titled `TO-ANN-*` siblings) against `{} as Document` |
 | Playwright | 0 Announcer files. Toast + ReferenceLibrary smokes only |
 
 ### Defects this freeze names
@@ -159,7 +161,8 @@ in-flight insert (token). The spoken result is the latest string, not a FIFO
 of same-channel bursts. **Before** first activation, every non-blank call is
 appended to `pending` and replayed in order after mount, with a clear-then-
 insert per item and a double-`requestAnimationFrame` boundary between items
-so AT can observe each mutation.
+so AT can observe each mutation. `pending` is capped at 50 entries
+(`MAX_PENDING_ANNOUNCEMENTS`); beyond the cap the oldest entry is dropped.
 
 The frozen recycle delay is **7000ms** (`ANNOUNCE_CLEAR_DELAY`). There is no
 per-call `timeout`. Clearing after the delay must not itself cause a second
@@ -220,7 +223,7 @@ probe, not a product getter.
 
 ### API
 
-- [ ] `ANN-API-01` `[reference]` `[unit]` —
+- [x] `ANN-API-01` `[reference]` `[unit]` —
   **Announcer should ignore blank messages when `announce` is called with
   empty or whitespace-only strings.** Call `announce("", {document})`,
   `announce("   ", {document})`, and `announce("\n\t", {document})` on an
@@ -250,13 +253,13 @@ probe, not a product getter.
   with no `document`. Assert targeted calls mutate only the named host and
   the untargeted call emits one development diagnostic while mutating neither
   region. This is the `RL-ROOT-08` freeze applied to `announce()` itself.
-- [ ] `ANN-API-06` `[reference]` `[ssr]` —
+- [x] `ANN-API-06` `[reference]` `[ssr]` —
   **Announcer should no-op when `announce` runs without a DOM document.**
   In Node with throwing `window`/`document` getters, call `announce("Saved")`
   and `announce("Saved", {politeness: "assertive"})`. Assert no throw, no
   timer, no module-level node, and no pending store keyed to a real
   Document.
-- [ ] `ANN-API-07` `[reference]` `[unit]` —
+- [x] `ANN-API-07` `[reference]` `[unit]` —
   **Announcer should not require a snapshot getter when application code
   announces.** Type-level / public-export assert: `@reference-ui/lib`
   documents `announce` and `AnnounceOptions` as the product API.
@@ -345,7 +348,7 @@ probe, not a product getter.
   the empty text is not recorded as an announcement in application-facing
   probes and that repeating `"Complete"` after clear still produces a fresh
   insertion (clear-then-insert still required).
-- [ ] `ANN-LIVE-08` `[reference]` `[unit]` —
+- [x] `ANN-LIVE-08` `[reference]` `[unit]` —
   **Announcer should drop in-flight inserts when a newer token lands on that
   channel.** Drive the store with fake timers: announce `"A"`, then `"B"`
   before the microtask flush, then announce `"C"` after `"B"` is committed
@@ -445,12 +448,12 @@ probe, not a product getter.
 
 ### Environment
 
-- [ ] `ANN-ENV-01` `[reference]` `[ssr]` —
+- [x] `ANN-ENV-01` `[reference]` `[ssr]` —
   **Announcer should emit no host markup when ReferenceLibrary server-renders.**
   `renderToString` a library with a child `<main>Hello</main>`. Assert child
   markup without announcer host / live-region attributes, and no timers.
   Sibling: `RL-ENV-01`.
-- [ ] `ANN-ENV-02` `[reference]` `[ssr]` —
+- [x] `ANN-ENV-02` `[reference]` `[ssr]` —
   **Announcer should create one client host when server markup hydrates.**
   Hydrate one library. Assert no duplicate polite/assertive regions and no
   hydration mismatch diagnostics.
@@ -458,7 +461,7 @@ probe, not a product getter.
   **Announcer should isolate stores when two Documents each have a host.**
   Same as `ANN-API-03` plus recycle timers: clearing top `"Top"` must not
   clear iframe `"Frame"`.
-- [ ] `ANN-ENV-04` `[reference]` `[react:all]` —
+- [x] `ANN-ENV-04` `[reference]` `[react:all]` —
   **Announcer should not throw when `flushSync` has no React flush target.**
   Drive replay/pending in a non-browser or detached store. Assert notify
   still runs subscribers and does not surface `flushSync` errors.
