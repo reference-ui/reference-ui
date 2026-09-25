@@ -20977,3 +20977,80 @@ LANDING (36 paths under `packages/reference-neo/`): 13 D + 6 new + 17 M exactly 
 
 ## Landing — S6 banked, W4 CLOSED, 41 total (captain, 2026-09-24)
 162 LAND verified firsthand. Captain gates: build 292 (E1 emitted, trio/entry gone), q 0 errors (3 warns all pre-existing — sync/index diff is a 2-line identifier swap), units 392 (4 attributed singles under load-9 — clean-repro ×2, lib-barrel, session-repro, all isolated-green — then full green fifth run), cases 214/214 roster-identical, lib-local tsc on certified hash (only 2 ct.ts, md5 stable). T1 FIRST red: "lib tarball missing declared packaged outputs" — diagnosed NOT S6 content: foreign stale watcher (PID 25848) wiped lib/.reference-ui/system/ between my sync and the pack (fresh sync emits it unconditionally via assembly; only two writers exist; mine writes it; it was gone → watcher red-handed by elimination). Re-synced + immediate T1+T2: BOTH GREEN, system/ present throughout. S6 exonerated. Commit bare: f6492c6f5 W4-S6 (36 paths: 13D+6A+17M). REPORT §7 closed. W4 DONE: bound roster/entry/types live, flips holding, hand paths deleted, tags last, chain green, ZERO lib touches end to end. Standing: user-space law permanent; watcher restart still wanted (now landing-breaking, not just polluting); LANDING Obj4/5 still parked.
+
+## Tick (star-captain) — W4 closed, tree clean, all quiet (captain, 2026-09-24)
+§1: Obj1-3 COMPLETE; LANDING parked; W4 CLOSED (bound cutover done, chain green, zero lib touches). §2: no live crews; nothing running, nothing stuck. §6: no waves to dispatch — mission complete pending HQ's next orders (LANDING unpark and/or watcher restart). Tree clean, HEAD c89f0e5fc, 42 banked.
+
+## Tick (star-captain) — standing by, all quiet (captain, 2026-09-24)
+No live crews, no new reports. Tree holds 1 file (my own tick ink). W4 closed, chain green, 42 banked. Awaiting HQ's next orders.
+
+## Dispatch — cli-warn-ux/163 away (captain, 2026-09-24)
+HQ: tidy the ref sync warning experience (cherry on top before moving on). Recon firsthand: warnings emit from native/diagnostics.ts reportWarningDiagnostics + reportCompilerDiagnostics — flat undeduped [neo] console.warn lines, no summary/counts/colors/hints; success/usage style home is cli/output.ts (TTY-gated colors, pinned strings). 163 briefed to HQ spec: one-line default (U+26A0 orange + N warnings + --verbose hint), structured deduped --verbose (×N collapse, file:line + fix hint, never repeat), output.ts color convention, zero terminal JSON, deliberate pin updates. Presentation-only: severities/codes/throws + compile-request.json untouched, no lib touches. Captain's own dev:lib run terminated to free port 5000 for the crew. Verifier follows on ## CLI-WARN.
+
+## Tick (star-captain) — 163 early run, no action (captain, 2026-09-24)
+§1: Obj1-3 COMPLETE; LANDING parked; W4 CLOSED. §2: live = 163 only (CLI warnings UX), running, just dispatched — no products yet, no silence signal, no ping. §3/4: no deadlock. §6: no report filed; verifier follows on ## CLI-WARN. Tree = dispatch ink only. HEAD c89f0e5fc, 42 banked.
+
+## HQ refinement — verbose hint bracketed, no ref-sync repeat (captain, 2026-09-24)
+HQ: the one-line warning rides the sync line that already opens with `ref sync`, so the hint is `[--verbose]` in brackets (e.g. `⚠ 3 warnings [--verbose]`), never `ref sync --verbose to see`. Queued to 163 mid-run (non-disruptive) + recorded here for the verifier.
+
+## CLI-WARN — one-line warnings + structured --verbose landed (163, 2026-09-24)
+Done, presentation-only, zero lib touches. Default sync prints at most ONE warning line (`⚠ N warning(s) [--verbose]`, U+26A0 yellow on live TTY, silent at zero); `--verbose` prints the deduped per-item list (file:line + code + message + ×N + one-line fix hint, compiler channel behind `[compiler]`). Severities, codes, error throw, and `compile-request.json` byte-identical; `ref sync --help` lists the flag; no JSON reaches the terminal on any warn/error path. 15 files under `packages/reference-neo/`, no commits. HQ bracket refinement applied mid-run (see TRANSCRIPT).
+
+### SHAPE — the pinned strings
+- Default (stderr, one `console.warn` call): `⚠ 16 warnings [--verbose]` / singular `⚠ 1 warning [--verbose]`. Glyph is U+26A0 with no VS15/VS16 (byte-pinned `E2 9A A0`); yellow `ESC[33m` wraps the glyph only, via the existing `paint()`/`colorsEnabled()` — live-TTY on, FORCE_COLOR forces, NO_COLOR wins, piped plain.
+- Verbose (stderr, one joined `console.warn` call, userspace first then compiler): `  <file:line[:col]> <CODE>: <message>[ ×N][ — <hint>]`, compiler lines prefixed `  [compiler] `. Codes stay on the line (censuses keep `rg -c`); 35 one-line hints cover every `ATM-W-*` code, infos print hintless (telemetry, no author action); unknown codes print hintless, never guessed. Column kept when the engine sends it (`file:line` prefix per spec, `:col` preserved info — deliberate).
+- Dedupe key = severity + code + message + file + line + column, first-seen order; summary counts raw occurrences so verbose ×Ns sum to N. Errors unchanged (loud `native compile failed`, full cause, same throw).
+
+### PLUMBING — flag threading (`bin/ref.ts` is a trampoline; the argv lives in `src/cli/`)
+`registerSyncCommand --verbose` → `runSyncCommand(..., verbose)` → `sync(cwd, { verbose })` + `runWatch(..., verbose)` → `watchSync(..., { verbose })` (baseline + resync) → `reportSyncDiagnostics(diagnostics, compilerDiagnostics, { verbose })`. `USAGE` untouched (commander renders the flag). `reportWarningDiagnostics`/`reportCompilerDiagnostics` kept as verbose-aware single-channel exports; sync calls the unified reporter (the only way to hold ≤1 line across both channels). `SyncOptions.verbose`, `WatchSyncOptions.verbose` documented. Doc comments naming the old `[neo] …` shapes updated in `contract.ts`, `config/types.ts`, NEO-SYNC-16 README/world.
+
+### PINS — updated deliberately, none silent
+`output.test.ts` (+11: summary singular/plural/color-matrix/VS15+VS16-absence, dedupe order/counts/severity-split, verbose line/hint/×N/compiler-tag/location-degrade/code-color), `bin/ref.test.ts` (stderr capture added — `FORCE_COLOR: undefined` drop, Node warns on empty-string override — +2 spawned-sync legs: exact one-line stderr, 3-line verbose structure), `sync-diagnostics.test.ts` (default summary + verbose legs, channel isolation via `[compiler]` filter), NEO-SYNC-16 spec + README + world comment. Silence test (`calls === 0`) and all error/throw/compile-request assertions pass UNCHANGED.
+
+### TRANSCRIPT — same fixture (`warn.ts` 3 userspace + `dynamic.ts` 13 compiler, `logs: ['compiler']`), stderr
+BEFORE (16 flat lines, 2 calls):
+```
+[neo] sync warning ATM-W-INVALID-CSS-VALUE: `display: true` has no compiled style plan; this lookup will emit no class. `display` value `true` is not valid CSS (/tmp/warn-before/theme/warn.ts:3:33)
+[neo] sync warning ATM-W-INVALID-CSS-VALUE: `display: true` has no compiled style plan; this lookup will emit no class. `display` value `true` is not valid CSS (/tmp/warn-before/theme/warn.ts:4:33)
+[neo] sync warning ATM-W-UNKNOWN-COLOR: `notacolor-xyz` is neither a color token nor a CSS color (/tmp/warn-before/theme/warn.ts:5:31)
+[neo] compiler ATM-I-DYNAMIC-SLOT: dynamic style slot for prop `color` (unknown value) (/tmp/warn-before/theme/dynamic.ts:6:23)
+[neo] compiler ATM-I-DYNAMIC-SLOT: dynamic style slot for prop `color` (unknown value) (/tmp/warn-before/theme/dynamic.ts:10:23)
+[neo] compiler ATM-I-EXPECTED-LOOKUP: expected runtime lookup `color:brand` ["warn-before",[],"color","brand",false] (/tmp/warn-before/theme/dynamic.ts:14:23)
+[neo] compiler ATM-I-DYNAMIC-SLOT: dynamic style slot for prop `` (spread) (/tmp/warn-before/theme/dynamic.ts:14:32)
+[neo] compiler ATM-I-DYNAMIC-SLOT: dynamic style slot for prop `borderColor` (unknown value) (/tmp/warn-before/theme/dynamic.ts:19:44)
+[neo] compiler ATM-I-EXPECTED-LOOKUP: expected runtime lookup `display:true` ["warn-before",[],"display",true,false] (/tmp/warn-before/theme/warn.ts:3:33)
+[neo] compiler ATM-I-EXPECTED-LOOKUP: expected runtime lookup `display:true` ["warn-before",[],"display",true,false] (/tmp/warn-before/theme/warn.ts:4:33)
+[neo] compiler ATM-I-EXPECTED-LOOKUP: expected runtime lookup `color:notacolor-xyz` ["warn-before",[],"color","notacolor-xyz",false] (/tmp/warn-before/theme/warn.ts:5:31)
+[neo] compiler ATM-W-DYNAMIC-MEMBER: Dynamic non-literal element index 'i' encountered for prop 'color' (/tmp/warn-before/theme/dynamic.ts:6:31)
+[neo] compiler ATM-W-DYNAMIC-IDENTIFIER: Dynamic non-literal identifier 'themeColor' encountered for prop 'color' (/tmp/warn-before/theme/dynamic.ts:10:23)
+[neo] compiler ATM-W-UNFOLDABLE-SPREAD: Dynamic object spread encountered in style object; keeping sibling properties (/tmp/warn-before/theme/dynamic.ts:14:35)
+[neo] compiler ATM-I-DEAD-BRANCH: dead branch 'black' for prop 'borderColor' (test folds to true) (/tmp/warn-before/theme/dynamic.ts:19:65)
+[neo] compiler ATM-I-HARVEST-SINK: color under []: 5 harvested values minted (/tmp/warn-before/theme/dynamic.ts:6:31)
+```
+AFTER default (1 line, 1 call): `⚠ 16 warnings [--verbose]` (stdout success line `⎔ ref sync …` untouched).
+AFTER `--verbose` (16 deduped lines, 1 call — first 4 + tail shape; full text verified byte-for-byte against BEFORE content):
+```
+  /tmp/warn-before/theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` has no compiled style plan; … — use a CSS keyword, token, or value the prop accepts
+  /tmp/warn-before/theme/warn.ts:4:33 ATM-W-INVALID-CSS-VALUE: `display: true` has no compiled style plan; … — use a CSS keyword, token, or value the prop accepts
+  /tmp/warn-before/theme/warn.ts:5:31 ATM-W-UNKNOWN-COLOR: `notacolor-xyz` is neither a color token nor a CSS color — use a color token or a CSS color
+  [compiler] /tmp/warn-before/theme/dynamic.ts:6:23 ATM-I-DYNAMIC-SLOT: dynamic style slot for prop `color` (unknown value)
+  … 9 more compiler telemetry lines verbatim (locations/codes/messages identical to BEFORE) …
+  [compiler] /tmp/warn-before/theme/dynamic.ts:6:31 ATM-W-DYNAMIC-MEMBER: Dynamic non-literal element index 'i' … — replace the member lookup with a literal value
+  [compiler] /tmp/warn-before/theme/dynamic.ts:10:23 ATM-W-DYNAMIC-IDENTIFIER: Dynamic non-literal identifier 'themeColor' … — replace the identifier with a literal or token
+  [compiler] /tmp/warn-before/theme/dynamic.ts:14:35 ATM-W-UNFOLDABLE-SPREAD: Dynamic object spread … — inline the spread or keep only static props
+```
+Count reconciles 16 → 16 → 16. ×N proven at unit level (engine emits no exact dupes naturally — distinct locations stay distinct). FORCE_COLOR bytes verified: `1B 5B 33 33 6D E2 9A A0 1B 5B 30 6D`.
+
+### PROOF — all firsthand
+Full units 59 files / 408 tests green (final run; one transient red across runs isolated to `clean-repro.test.ts` kill-timing leg — file untouched by 163, isolated-green 2/2, documented flake family). `q` 0 errors / 17 warns — warn SET identical to stashed-HEAD baseline (3 interim new warns fixed: `=== true` instead of `??` for cyclomatic, 2 describe-length trims). Cases: NEO-SYNC-16 PASS (rewritten), NEO-SYNC-11 PASS, NEO-CLI-01 PASS. No `[neo] sync warning`/`[neo] compiler` strings remain outside frozen `docs/evidence/`.
+
+### FINDINGS (out of scope, not touched)
+(i) `console.debug('[neo] [ref] Reference build completed', details)` dumps a 9-line object to STDOUT on every sync — noisy, but debug/info paths, not warn/error; needs a captain call. (ii) Engine `ATM-I-EXPECTED-LOOKUP` messages embed `["name",[],…]` lookup tuples — CLI prints messages verbatim; structured-JSON-in-message would be an agent-rs change. (iii) `ref clean --verbose` hard-errors via commander (unknown option); only sync takes the flag — matches the brief, flagging for the verifier.
+
+## CLI-WARN-VERIFY — LAND (164, 2026-09-24)
+All checks firsthand, zero-edit verifier. LANDING: `neo: one-line warnings + structured --verbose (CLI-WARN)` — 15 files under `packages/reference-neo/`, zero lib touches, user-space law holds. Footprint exact (16 M / 0 ??: 1 ink + the 15; tracked source clean outside frozen `docs/evidence/`, stale `[neo]` strings only in gitignored `dist/`). Shape reproduced live on own fixture: default 1 call `⚠ 16 warnings [--verbose]` (bytes `E2 9A A0`, no VS15/16, no `ref sync` repeat), singular + silent-at-zero; verbose 1 call / 16 lines (3 userspace + 13 `[compiler]`, userspace-first, `×N` sums to N); hints 35/35 cross-checked against engine `codes.rs` zero gaps; color matrix re-derived (pty glyph-only, FORCE_COLOR bytes, piped plain, NO_COLOR wins). Plumbing read end to end (trampoline → `registerSyncCommand --verbose` → sync + `runWatch` → baseline + resync → unified reporter, the only multi-channel path, ≤1 `console.warn` structural); `--help` renders the flag; no watch-verbose pin exists (read-only proof). Preservation re-run: error live exit 1, touched tests 35/35 green, zero `JSON.stringify` on terminal paths, reconciliation 16→16→16 on own fixture + stashed HEAD.
+### RULINGS
+(a) `:col` KEEP — frozen error path already renders `file:line:col`; cutting destroys engine precision and splits channel shapes; spec's `file:line` is a minimum, not a ban. (b) `clean --verbose` hard-error ACCEPTABLE (matches brief) — commander default, exit 1; parse-and-ignore would lie. (c) Debug dump DISPOSITION: DROP via micro-followup, must not block — every successful sync prints 12 stdout lines (`Built` + 10-line dump + success; LOG's "9-line" is 10); `console.debug` hits stdout with ANSI under ambient FORCE_COLOR even piped; gate-behind-verbose is a category error. Exact fix: delete call at `src/reference/bridge/run.ts:49` + function at `src/reference/bridge/logging.ts:22-24` + orphaned imports; keep `ReferenceBuildComplete` type; `Built reference in Xs` already covers the milestone.
+### PROOFS
+`q` 0 errors/17 warns (set identical to baseline; `sync` fn 111→110 lines — arc made it shorter). Full units 59 files/408 green, zero red (`clean-repro` flake not observed). Cases NEO-SYNC-16/-11 + NEO-CLI-01 PASS; full roster 214/214 → 214/214, moved[] = []. Adversarial note for HQ: default N counts compiler infos as "warnings" — spec-faithful (parity requires it) but the noun stretches.
+**Verdict: LAND.**
