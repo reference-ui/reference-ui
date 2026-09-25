@@ -5,7 +5,55 @@
  */
 import { expect } from 'vitest'
 import type { StationSpec } from '../../../testing/index.js'
-import { findMember, type TastyCaseResult } from '../../helpers.js'
+import { findMember, type TastyApi, type TastyCaseResult } from '../../helpers.js'
+
+interface TypeQueryRaw {
+  kind?: string
+  expression?: string
+  resolved?: {
+    kind?: string
+    members?: Array<{ name?: string }>
+  }
+}
+
+function expectSpacingObject(raw: TypeQueryRaw | undefined, expression: string): void {
+  expect(raw?.kind).toBe('type_query')
+  expect(raw?.expression).toBe(expression)
+  expect(raw?.resolved?.kind).toBe('object')
+  expect(raw?.resolved?.members?.map(member => member.name).sort()).toEqual(['lg', 'sm'])
+}
+
+async function verifyImportedTypeQueries(api: TastyApi): Promise<void> {
+  const imported = await api.loadSymbolByName('ImportedSpacingScale')
+  expectSpacingObject(
+    imported.getUnderlyingType()?.getRaw() as TypeQueryRaw,
+    'tokens.spacing'
+  )
+
+  const aliased = await api.loadSymbolByName('AliasedSpacingScale')
+  expectSpacingObject(
+    aliased.getUnderlyingType()?.getRaw() as TypeQueryRaw,
+    'aliasedTokens.spacing'
+  )
+
+  const withImported = await api.loadSymbolByName('WithImportedTypeQueries')
+  expectSpacingObject(
+    findMember(withImported, 'spacing').getType()?.getRaw() as TypeQueryRaw,
+    'tokens.spacing'
+  )
+  expectSpacingObject(
+    findMember(withImported, 'aliased').getType()?.getRaw() as TypeQueryRaw,
+    'aliasedTokens.spacing'
+  )
+}
+
+async function verifyTypeofCycleFailsClosed(api: TastyApi): Promise<void> {
+  const cycle = await api.loadSymbolByName('CycleType')
+  const raw = cycle.getUnderlyingType()?.getRaw() as TypeQueryRaw
+  expect(raw.kind).toBe('type_query')
+  expect(raw.expression).toBe('cycleA')
+  expect(raw.resolved ?? undefined).toBeUndefined()
+}
 
 const spec: StationSpec<TastyCaseResult> = {
   id: 'TST-QRY-01',
@@ -34,6 +82,9 @@ const spec: StationSpec<TastyCaseResult> = {
     expect(configType.expression).toBe('themeConfig')
     expect(spacingType.kind).toBe('type_query')
     expect(spacingType.expression).toBe('tokens.spacing')
+
+    await verifyImportedTypeQueries(api)
+    await verifyTypeofCycleFailsClosed(api)
   },
 }
 

@@ -63,13 +63,29 @@ impl<'a> Resolver<'a> {
     fn resolve_type_query_expression(&self, expression: &str) -> Option<TypeRef> {
         let mut path = expression.split('.');
         let first = path.next()?;
-        let mut current = self.parsed.value_bindings.get(first)?.clone();
+        let mut current = match self.parsed.value_bindings.get(first) {
+            Some(local) => local.clone(),
+            None => self.resolve_imported_value(first)?,
+        };
 
         for segment in path {
             current = resolve_object_member_type(&current, segment)?;
         }
 
         Some(current)
+    }
+
+    /// Named-import root for `typeof`: `import { tokens }` looks up the
+    /// target file's value through its export bindings. Default imports,
+    /// namespace members, and re-export chains stay out of scope and miss.
+    fn resolve_imported_value(&self, name: &str) -> Option<TypeRef> {
+        let binding = self.parsed.import_bindings.get(name)?;
+        if !matches!(binding.kind, ImportBindingKind::Named) {
+            return None;
+        }
+        let target_file_id = binding.target_file_id.as_ref()?;
+        self.cross_file_values
+            .imported_value(target_file_id, &binding.imported_name)
     }
 }
 

@@ -10,18 +10,21 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::graph::ResolvedTypeScriptGraph;
 use super::merge::fold_same_file_merges;
-use super::resolver::Resolver;
-use crate::ast::model::{ParsedFileAst, ParsedTypeScriptAst, SymbolShell};
-use crate::model::{ExportMap, ScannerDiagnostic, TsFile, TsSymbol};
+use super::resolver::{CrossFileValues, Resolver};
+use crate::ast::model::{ParsedFileAst, ParsedTypeScriptAst};
+use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
+use crate::model::{ExportMap, TsFile, TsSymbol};
 
-pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScriptGraph {
+pub(crate) fn resolve_ast(
+    parsed_ast: ParsedTypeScriptAst,
+) -> Result<ResolvedTypeScriptGraph, DiagnosticError> {
     let ParsedTypeScriptAst {
         files: mut parsed_files,
         mut diagnostics,
         bridged_libraries,
     } = parsed_ast;
     for parsed in parsed_files.iter_mut() {
-        fold_same_file_merges(parsed, &mut diagnostics);
+        fold_same_file_merges(parsed, &mut diagnostics)?;
     }
     let symbol_index = build_symbol_index(&parsed_files);
     let mut reported_ambiguities = BTreeSet::new();
@@ -30,7 +33,8 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
         &symbol_index,
         &mut diagnostics,
         &mut reported_ambiguities,
-    );
+    )?;
+    let cross_file_values = CrossFileValues::new(&parsed_files);
     let parsed_by_file_id = parsed_files
         .iter()
         .map(|parsed| (parsed.file_id.clone(), parsed))
@@ -52,7 +56,7 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
 
     for parsed in parsed_files.iter().cloned() {
         let (file_id, module_specifier, ts_file, file_exports, resolved_symbols) =
-            resolve_file(parsed, &export_index, &mut fold);
+            resolve_file(parsed, &export_index, &cross_file_values, &mut fold)?;
 
         files.insert(file_id, ts_file);
         symbols.extend(
@@ -66,13 +70,13 @@ pub(crate) fn resolve_ast(parsed_ast: ParsedTypeScriptAst) -> ResolvedTypeScript
         }
     }
 
-    ResolvedTypeScriptGraph {
+    Ok(ResolvedTypeScriptGraph {
         files,
         symbols,
         exports,
         diagnostics,
         bridged_libraries,
-    }
+    })
 }
 
 /// Fold context for building export maps: lookup tables, the per-pass map
@@ -86,46 +90,77 @@ struct ExportFold<'a> {
 }
 
 impl ExportFold<'_> {
-    fn collect(&mut self, file_id: &str) -> ExportMap {
+    fn collect(&mut self, file_id: &str) -> Result<ExportMap, DiagnosticError> {
         if let Some(cached) = self.cache.get(file_id) {
-            return cached.clone();
+            return Ok(cached.clone());
         }
         if !self.visited.insert(file_id.to_string()) {
-            return BTreeMap::new();
+            return Ok(BTreeMap::new());
         }
         let parsed_by_file_id = self.parsed_by_file_id;
-        let symbol_index = self.symbol_index;
         let Some(parsed) = parsed_by_file_id.get(file_id) else {
             self.visited.remove(file_id);
-            return BTreeMap::new();
+            return Ok(BTreeMap::new());
         };
 
-        let mut exports = parsed
-            .export_bindings
-            .iter()
-            .filter_map(|(export_name, local_name)| {
-                resolve_symbol_id(
-                    symbol_index,
-                    &parsed.file_id,
-                    local_name,
-                    &parsed.reexport_target,
-                )
-                .map(|symbol_id| (export_name.clone(), symbol_id))
-            })
-            .collect::<ExportMap>();
-
-        let mut star_fold = StarFold::new(&mut exports);
-        for target_file_id in &parsed.export_all_targets {
-            for (export_name, symbol_id) in self.collect(target_file_id) {
-                if let Some(conflict) = star_fold.merge(target_file_id, export_name, symbol_id) {
-                    self.sink.report(file_id, &conflict, target_file_id);
-                }
+        let mut exports = ExportMap::new();
+        for (export_name, local_name) in &parsed.export_bindings {
+            if let Some(symbol_id) = self.resolve_seed_symbol_id(parsed, local_name)? {
+                exports.insert(export_name.clone(), symbol_id);
             }
         }
 
+        self.fold_star_targets(file_id, parsed, &mut exports)?;
+
         self.visited.remove(file_id);
         self.cache.insert(file_id.to_string(), exports.clone());
-        exports
+        Ok(exports)
+    }
+
+    /// Resolve one explicit seed: the local shell first, else the remote
+    /// name through the target's folded export map — transitive and
+    /// default-aware, since the fold owns both. Remaining misses stay
+    /// silent drops (unresolved-import shape); cycle misses stay silent
+    /// since any diagnostic would fire on visit order, not the input.
+    fn resolve_seed_symbol_id(
+        &mut self,
+        parsed: &ParsedFileAst,
+        local_name: &str,
+    ) -> Result<Option<String>, DiagnosticError> {
+        if let Some(id) = self
+            .symbol_index
+            .get(&file_symbol_key(&parsed.file_id, local_name))
+        {
+            return Ok(Some(id.clone()));
+        }
+        let Some((target_file, remote_name)) = parsed.reexport_target.get(local_name) else {
+            return Ok(None);
+        };
+        Ok(self.collect(target_file)?.get(remote_name).cloned())
+    }
+
+    /// Merge every `export *` target after the explicit seeds. ESM star
+    /// never re-exports default, so star-provided `"default"` is skipped
+    /// silently (absence, not ambiguity — no diagnostic); explicit
+    /// `export { X as default }` seeds are already in the map and survive.
+    fn fold_star_targets(
+        &mut self,
+        file_id: &str,
+        parsed: &ParsedFileAst,
+        exports: &mut ExportMap,
+    ) -> Result<(), DiagnosticError> {
+        let mut star_fold = StarFold::new(exports);
+        for target_file_id in &parsed.export_all_targets {
+            for (export_name, symbol_id) in self.collect(target_file_id)? {
+                if export_name == "default" {
+                    continue;
+                }
+                if let Some(conflict) = star_fold.merge(target_file_id, export_name, symbol_id) {
+                    self.sink.report(file_id, &conflict, target_file_id)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -208,25 +243,30 @@ impl<'a> StarFold<'a> {
 /// (export index, then per-file exports), so reports dedupe by barrel and
 /// name and exactly one diagnostic lands per conflict.
 struct StarAmbiguitySink<'a> {
-    diagnostics: &'a mut Vec<ScannerDiagnostic>,
+    diagnostics: &'a mut Vec<TastyDiagnostic>,
     reported: &'a mut BTreeSet<(String, String)>,
 }
 
 impl StarAmbiguitySink<'_> {
-    fn report(&mut self, barrel_file_id: &str, conflict: &StarConflict, second_source: &str) {
+    fn report(
+        &mut self,
+        barrel_file_id: &str,
+        conflict: &StarConflict,
+        second_source: &str,
+    ) -> Result<(), DiagnosticError> {
         if !self.reported.insert((
             barrel_file_id.to_string(),
             conflict.export_name.clone(),
         )) {
-            return;
+            return Ok(());
         }
-        self.diagnostics.push(ScannerDiagnostic {
-            file_id: barrel_file_id.to_string(),
-            message: format!(
-                "export * ambiguity: \"{}\" in \"{barrel_file_id}\" is provided by both \"{}\" and \"{second_source}\"; excluding from barrel exports",
-                conflict.export_name, conflict.first_source
-            ),
-        });
+        self.diagnostics.push(crate::diagnostics::star_ambiguity(
+            barrel_file_id,
+            &conflict.export_name,
+            &conflict.first_source,
+            second_source,
+        )?);
+        Ok(())
     }
 }
 
@@ -251,9 +291,9 @@ fn build_symbol_index(parsed_files: &[ParsedFileAst]) -> BTreeMap<(String, Strin
 fn build_export_index(
     parsed_files: &[ParsedFileAst],
     symbol_index: &BTreeMap<(String, String), String>,
-    diagnostics: &mut Vec<ScannerDiagnostic>,
+    diagnostics: &mut Vec<TastyDiagnostic>,
     reported: &mut BTreeSet<(String, String)>,
-) -> BTreeMap<(String, String), String> {
+) -> Result<BTreeMap<(String, String), String>, DiagnosticError> {
     let parsed_by_file_id = parsed_files
         .iter()
         .map(|parsed| (parsed.file_id.clone(), parsed))
@@ -270,50 +310,44 @@ fn build_export_index(
         },
     };
 
-    parsed_files
-        .iter()
-        .flat_map(|parsed| {
-            fold.collect(&parsed.file_id)
-                .into_iter()
-                .map(|(export_name, symbol_id)| {
-                    (file_symbol_key(&parsed.file_id, &export_name), symbol_id)
-                })
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
-
-fn resolve_symbol_references(
-    symbol: SymbolShell,
-    symbol_index: &BTreeMap<(String, String), String>,
-    export_index: &BTreeMap<(String, String), String>,
-    parsed: &ParsedFileAst,
-) -> TsSymbol {
-    Resolver::new(symbol_index, export_index, parsed).resolve_symbol(symbol)
+    let mut index = BTreeMap::new();
+    for parsed in parsed_files {
+        for (export_name, symbol_id) in fold.collect(&parsed.file_id)? {
+            index.insert(
+                file_symbol_key(&parsed.file_id, &export_name),
+                symbol_id,
+            );
+        }
+    }
+    Ok(index)
 }
 
 fn resolve_file(
     parsed: ParsedFileAst,
     export_index: &BTreeMap<(String, String), String>,
+    cross_file_values: &CrossFileValues,
     fold: &mut ExportFold<'_>,
-) -> (String, String, TsFile, ExportMap, Vec<TsSymbol>) {
+) -> Result<(String, String, TsFile, ExportMap, Vec<TsSymbol>), DiagnosticError> {
     let ts_file = ts_file_from_parsed(&parsed);
-    let file_exports = fold.collect(&parsed.file_id);
+    let file_exports = fold.collect(&parsed.file_id)?;
     let symbol_index = fold.symbol_index;
     let parsed_view = parsed.clone();
     let resolved_symbols = parsed
         .exports
         .into_iter()
-        .map(|symbol| resolve_symbol_references(symbol, symbol_index, export_index, &parsed_view))
+        .map(|symbol| {
+            Resolver::new(symbol_index, export_index, &parsed_view, cross_file_values)
+                .resolve_symbol(symbol)
+        })
         .collect();
 
-    (
+    Ok((
         parsed.file_id.clone(),
         parsed.module_specifier.clone(),
         ts_file,
         file_exports,
         resolved_symbols,
-    )
+    ))
 }
 
 fn ts_file_from_parsed(parsed: &ParsedFileAst) -> TsFile {
@@ -322,19 +356,4 @@ fn ts_file_from_parsed(parsed: &ParsedFileAst) -> TsFile {
         module_specifier: parsed.module_specifier.clone(),
         library: parsed.library.clone(),
     }
-}
-
-fn resolve_symbol_id(
-    symbol_index: &BTreeMap<(String, String), String>,
-    file_id: &str,
-    local_name: &str,
-    reexport_target: &BTreeMap<String, (String, String)>,
-) -> Option<String> {
-    if let Some(id) = symbol_index.get(&file_symbol_key(file_id, local_name)) {
-        return Some(id.clone());
-    }
-    let (target_file, remote_name) = reexport_target.get(local_name)?;
-    symbol_index
-        .get(&file_symbol_key(target_file, remote_name))
-        .cloned()
 }

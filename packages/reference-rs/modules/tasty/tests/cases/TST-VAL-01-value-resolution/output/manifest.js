@@ -5,6 +5,9 @@ export const manifest = {
     "ConcreteVariantMeta": [
       "_32610ab3b4354bcc"
     ],
+    "ImportedSizeKey": [
+      "_94e31c2ea7cb667d"
+    ],
     "IntentFromInterface": [
       "_f78418b32271a9a4"
     ],
@@ -67,6 +70,13 @@ export const manifest = {
       "name": "SizeValue",
       "kind": "typeAlias",
       "chunk": "./chunks/_8230510ea27fe6a1.js",
+      "library": "user"
+    },
+    "_94e31c2ea7cb667d": {
+      "id": "_94e31c2ea7cb667d",
+      "name": "ImportedSizeKey",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_94e31c2ea7cb667d.js",
       "library": "user"
     },
     "_a490a766979a4574": {

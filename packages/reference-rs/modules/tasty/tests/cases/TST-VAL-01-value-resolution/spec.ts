@@ -115,12 +115,28 @@ async function verifyInterfaceAndMemberValues(api: TastyApi): Promise<void> {
   expect(sizeMember?.getResolved()?.describe()).toBe("'sm' | 'md' | 'lg'")
 }
 
+async function verifyImportedKeyofComposition(api: TastyApi): Promise<void> {
+  const imported = await api.loadSymbolByName('ImportedSizeKey')
+  const importedRaw = imported.getUnderlyingType()?.getRaw() as {
+    kind?: string
+    resolved?: { kind?: string; types?: Array<{ kind?: string; value?: string }> }
+  }
+  expect(importedRaw.kind).toBe('type_operator')
+  expect(importedRaw.resolved?.kind).toBe('union')
+  expect(importedRaw.resolved?.types?.map(item => item.value)).toEqual([
+    "'sm'",
+    "'md'",
+    "'lg'",
+  ])
+}
+
 const spec: StationSpec<TastyCaseResult> = {
   id: 'TST-VAL-01',
   async verify({ api }) {
     await verifyIntentAndSizeValues(api)
     await verifyToneAndVariantValues(api)
     await verifyInterfaceAndMemberValues(api)
+    await verifyImportedKeyofComposition(api)
   },
 }
 

@@ -2,8 +2,12 @@
   "modules": [
     "./chunk-registry.js",
     "./chunks/_1bbbf42ce59cd490.js",
+    "./chunks/_3201d20946d746d8.js",
+    "./chunks/_7a2f2460507867d0.js",
     "./chunks/_7dffd7bb82e10899.js",
     "./chunks/_afc6e4011a365278.js",
+    "./chunks/_f472daaf5d1f0457.js",
+    "./chunks/_fcda2c8fed2a3fc3.js",
     "./manifest.js",
     "./runtime.js"
   ],

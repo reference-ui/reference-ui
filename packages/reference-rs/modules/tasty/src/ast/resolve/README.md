@@ -15,6 +15,17 @@ into the final `ResolvedTypeScriptGraph`.
 - exclude star-ambiguous names from the barrel map with one diagnostic
   (two `export *` targets, different ids — ESM absence; diamond
   same-id and explicit seeds still resolve)
+- exclude star-provided `"default"` from the barrel map silently (ESM
+  star never re-exports default; explicit `export { X as default }`
+  seeds still resolve; no diagnostic — absence, not ambiguity)
+- resolve named-reexport seeds transitively and default-aware through
+  the target's folded export map (local shells first, so declaring
+  files win and `a↔b` cycles terminate); remaining misses stay silent
+  drops, the fail-closed shape shared with unresolved imports
+- resolve cross-file `typeof` over named value imports through the
+  target's value bindings (aliased target exports included;
+  default/namespace/re-export-chain values out of scope; cycles fail
+  closed to no `resolved`)
 - build symbol and export lookup indexes
 - resolve imported references through export maps
 - resolve local symbol references within a file

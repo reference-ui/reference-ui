@@ -4,7 +4,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::model::{JsDoc, ScannerDiagnostic, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
+use crate::diagnostics::TastyDiagnostic;
+use crate::model::{JsDoc, TsMember, TsSymbolKind, TsTypeParameter, TypeRef};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParsedFileAst {
@@ -17,7 +18,7 @@ pub(crate) struct ParsedFileAst {
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
     pub(crate) value_bindings: BTreeMap<String, TypeRef>,
     pub(crate) export_bindings: BTreeMap<String, String>,
-    /// For `export { X } from './m'`, maps the specifier local name → (target file id, symbol name in target).
+    /// For `export { X } from './m'`, maps the specifier local name → (target file id, export name in target's folded map).
     pub(crate) reexport_target: BTreeMap<String, (String, String)>,
     /// For `export * from './m'`, stores the fully resolved target file id.
     pub(crate) export_all_targets: Vec<String>,
@@ -58,7 +59,7 @@ pub(crate) struct SymbolShell {
 #[derive(Debug, Clone)]
 pub(crate) struct ParsedTypeScriptAst {
     pub(crate) files: Vec<ParsedFileAst>,
-    pub(crate) diagnostics: Vec<ScannerDiagnostic>,
+    pub(crate) diagnostics: Vec<TastyDiagnostic>,
     /// External libraries bridged by user re-exports (carried from scan to
     /// the manifest name-index filter; untouched by extract/resolve).
     pub(crate) bridged_libraries: BTreeSet<String>,
