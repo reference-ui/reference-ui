@@ -239,10 +239,9 @@ discipline above — it has held so far.
 - **S4 (+rework +css) + S5A: LANDED** (36th, 37th). Chain green.
 - **S5 flips: LANDED** (39th). PGEN-15 as briefed; PGEN-17 at alias
   + recipe-call positions with a live tone recipe.
-- **S6 deletes (last).** Tear down the old hand-written paths in
-  dependency order; the tags file goes last (and split sync.test.ts
-  first — §5).
-- Then W4 (the per-system cutover) is done.
+- **S6 deletes: LANDED** (41st). Split first, deletes in order,
+  tags last. W4 (the per-system cutover) is DONE — chain green,
+  user space untouched throughout.
 
 ## 8. Carried, no action
 
