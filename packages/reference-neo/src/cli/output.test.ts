@@ -1,20 +1,24 @@
-// Unit pins for the §3.12 one-line sync shape and the warning presentation.
-// They take the output helpers and assert the verbatim plain lines, the
-// color spans with their enable rules, the warning dedupe and counts, and
-// the folder-size walk over temp dirs. The CLI cases prove the shapes end
-// to end; these pins hold the exact bytes.
+// Unit pins for the boot block, the §3.12 resync line, the fold rule,
+// and the warning presentation. They take the output helpers and assert
+// the verbatim plain shapes, the color spans with their enable rules,
+// the warning dedupe and counts, and the sheet-size read over temp dirs.
+// The CLI cases prove the shapes end to end; these pins hold the bytes.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { NativeDiagnostic } from '../native/contract.ts'
 import {
+  cssSizeBytes,
   dedupeDiagnostics,
+  foldedWarningCount,
+  formatBootBlock,
   formatSyncLine,
   formatVerboseWarningLine,
   formatWarningSummary,
-  outDirSizeBytes,
+  printBootBlock,
   printSyncLine,
+  refVersion,
 } from './output.ts'
 
 const PLAIN_LINE = '⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB'
@@ -52,15 +56,105 @@ describe('formatSyncLine', () => {
   })
 })
 
-describe('outDirSizeBytes', () => {
-  it('sums nested files and returns zero for a missing dir', () => {
+describe('formatSyncLine warnings', () => {
+  it('appends the warning segment after a separator when warnings rode along', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatSyncLine(100, 1024 * 1024, 3)).toBe('⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB ⫶ ⚠ 3 warnings [--verbose]')
+    expect(formatSyncLine(100, 1024 * 1024, 1)).toBe('⎔ ref sync ⫶ 100 ms ⫶ 1.0 MB ⫶ ⚠ 1 warning [--verbose]')
+  })
+
+  it('prints the bare shape for zero warnings', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatSyncLine(100, 1024 * 1024, 0)).toBe(PLAIN_LINE)
+    expect(formatSyncLine(100, 1024 * 1024)).toBe(PLAIN_LINE)
+  })
+
+  it('paints the folded glyph yellow with faint separators on FORCE_COLOR', () => {
+    vi.stubEnv('NO_COLOR', '')
+    vi.stubEnv('FORCE_COLOR', '1')
+    expect(formatSyncLine(100, 1024 * 1024, 3)).toBe(
+      '\x1b[36m⎔\x1b[0m \x1b[1mref sync\x1b[0m \x1b[2m⫶\x1b[0m \x1b[32m100 ms\x1b[0m \x1b[2m⫶\x1b[0m \x1b[32m1.0 MB\x1b[0m \x1b[2m⫶\x1b[0m \x1b[33m⚠\x1b[0m 3 warnings [--verbose]'
+    )
+  })
+})
+
+describe('foldedWarningCount', () => {
+  it('carries the total by default and zero under verbose', () => {
+    expect(foldedWarningCount(3, false)).toBe(3)
+    expect(foldedWarningCount(3, true)).toBe(0)
+    expect(foldedWarningCount(0, false)).toBe(0)
+    expect(foldedWarningCount(-2, false)).toBe(0)
+  })
+})
+
+describe('cssSizeBytes', () => {
+  it('reads the published sheet and returns zero for a missing dir', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ref-output-'))
     try {
-      mkdirSync(join(dir, 'nested'), { recursive: true })
-      writeFileSync(join(dir, 'a.mjs'), 'x'.repeat(100))
-      writeFileSync(join(dir, 'nested', 'b.css'), 'y'.repeat(50))
-      expect(outDirSizeBytes(dir)).toBe(150)
-      expect(outDirSizeBytes(join(dir, 'absent'))).toBe(0)
+      mkdirSync(join(dir, 'styled'), { recursive: true })
+      writeFileSync(join(dir, 'system.mjs'), 'x'.repeat(100))
+      writeFileSync(join(dir, 'styled', 'styles.css'), 'y'.repeat(50))
+      expect(cssSizeBytes(dir)).toBe(50)
+      expect(cssSizeBytes(join(dir, 'absent'))).toBe(0)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('refVersion', () => {
+  it('resolves the Neo package version', () => {
+    expect(refVersion()).toMatch(/^\d+\.\d+\.\d+/)
+  })
+})
+
+describe('formatBootBlock', () => {
+  it('prints the verbatim plain block with warnings and watch rows', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    vi.stubEnv('FORCE_COLOR', '')
+    expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3, watch: true })).toBe(
+      '\n  REF  v1.0.0  ready in 104 ms\n\n  → CSS:       1.0 MB\n  → Warnings:  3 [--verbose]\n  → Watch:     on'
+    )
+  })
+
+  it('omits the warnings row at zero and the watch row for one-shots', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatBootBlock({ version: '1.0.0', elapsedMs: 7, cssBytes: 512 })).toBe(
+      '\n  REF  v1.0.0  ready in 7 ms\n\n  → CSS:       512 B'
+    )
+  })
+
+  it('paints the brand blue, ready-in dim with a bold time, CSS green, and the count yellow on FORCE_COLOR', () => {
+    vi.stubEnv('NO_COLOR', '')
+    vi.stubEnv('FORCE_COLOR', '1')
+    expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
+      '\n  \x1b[1m\x1b[94mREF \x1b[0m v1.0.0  \x1b[2mready in\x1b[0m \x1b[1m104\x1b[0m\x1b[2m ms\x1b[0m\n\n  \x1b[94m→\x1b[0m CSS:       \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m→\x1b[0m Warnings:  \x1b[33m3\x1b[0m [--verbose]'
+    )
+  })
+
+  it('lets NO_COLOR win over FORCE_COLOR', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    vi.stubEnv('FORCE_COLOR', '1')
+    expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
+      '\n  REF  v1.0.0  ready in 104 ms\n\n  → CSS:       1.0 MB\n  → Warnings:  3 [--verbose]'
+    )
+  })
+})
+
+describe('printBootBlock', () => {
+  it('emits the measured block through a single console.log', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    vi.stubEnv('FORCE_COLOR', '')
+    const dir = mkdtempSync(join(tmpdir(), 'ref-output-'))
+    try {
+      mkdirSync(join(dir, 'styled'), { recursive: true })
+      writeFileSync(join(dir, 'styled', 'styles.css'), 'x'.repeat(2048))
+      const logged = vi.spyOn(console, 'log').mockImplementation(() => {})
+      printBootBlock({ elapsedMs: 42, outDir: dir, warnings: 2 })
+      expect(logged).toHaveBeenCalledTimes(1)
+      expect(logged).toHaveBeenCalledWith(
+        `\n  REF  v${refVersion()}  ready in 42 ms\n\n  → CSS:       2.0 KB\n  → Warnings:  2 [--verbose]`
+      )
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -72,11 +166,27 @@ describe('printSyncLine', () => {
     vi.stubEnv('NO_COLOR', '1')
     const dir = mkdtempSync(join(tmpdir(), 'ref-output-'))
     try {
-      writeFileSync(join(dir, 'a.mjs'), 'x'.repeat(2048))
+      mkdirSync(join(dir, 'styled'), { recursive: true })
+      writeFileSync(join(dir, 'styled', 'styles.css'), 'x'.repeat(2048))
       const logged = vi.spyOn(console, 'log').mockImplementation(() => {})
       printSyncLine(42, dir)
       expect(logged).toHaveBeenCalledTimes(1)
       expect(logged).toHaveBeenCalledWith('⎔ ref sync ⫶ 42 ms ⫶ 2.0 KB')
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('carries folded warnings on the measured line', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const dir = mkdtempSync(join(tmpdir(), 'ref-output-'))
+    try {
+      mkdirSync(join(dir, 'styled'), { recursive: true })
+      writeFileSync(join(dir, 'styled', 'styles.css'), 'x'.repeat(2048))
+      const logged = vi.spyOn(console, 'log').mockImplementation(() => {})
+      printSyncLine(42, dir, 3)
+      expect(logged).toHaveBeenCalledTimes(1)
+      expect(logged).toHaveBeenCalledWith('⎔ ref sync ⫶ 42 ms ⫶ 2.0 KB ⫶ ⚠ 3 warnings [--verbose]')
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -145,6 +255,16 @@ describe('dedupeDiagnostics', () => {
     expect(groups.map(group => group.count)).toEqual([1, 1, 1, 1])
   })
 
+  it('folds only identical spans and keeps distinct rendering channels apart', () => {
+    const groups = dedupeDiagnostics([
+      warning({ span: { start: 10, end: 14 } }),
+      warning({ span: { start: 10, end: 14 } }),
+      warning({ span: { start: 20, end: 24 } }),
+      warning({ span: { start: 10, end: 14 }, help: ['other guidance'] }),
+    ])
+    expect(groups.map(group => group.count)).toEqual([2, 1, 1])
+  })
+
   it('dedupes nothing out of an empty list', () => {
     expect(dedupeDiagnostics([])).toEqual([])
   })
@@ -208,31 +328,31 @@ describe('formatVerboseWarningLine', () => {
 })
 
 describe('formatVerboseWarningLine ref channel', () => {
-  it('prints codeless locationless ref engine strings as tag plus message', () => {
+  it('prints coded ref entries with code and fix hint', () => {
     vi.stubEnv('NO_COLOR', '1')
     const manifest = warning({
-      code: undefined,
+      code: 'TST-W-DUPLICATE-SYMBOL-NAME',
       file: undefined,
       line: undefined,
       column: undefined,
-      message: 'Duplicate symbol name "Shared" matched 2 entries. Use symbol id or scoped lookup to disambiguate.',
+      message: 'Duplicate symbol name `Shared` matched 2 entries. Use symbol id or scoped lookup to disambiguate.',
     })
     expect(formatVerboseWarningLine({ entry: manifest, count: 1 }, 'ref')).toBe(
-      '  [ref] Duplicate symbol name "Shared" matched 2 entries. Use symbol id or scoped lookup to disambiguate.'
+      '  [ref] TST-W-DUPLICATE-SYMBOL-NAME: Duplicate symbol name `Shared` matched 2 entries. Use symbol id or scoped lookup to disambiguate. — use the symbol id or a scoped lookup to disambiguate'
     )
   })
 
   it('keeps the file-only location on ref scanner entries without inventing a line', () => {
     vi.stubEnv('NO_COLOR', '1')
     const scanner = warning({
-      code: undefined,
+      code: 'TST-W-PARSE-ERROR',
       file: 'src/broken.ts',
       line: undefined,
       column: undefined,
       message: 'parse reported an error',
     })
     expect(formatVerboseWarningLine({ entry: scanner, count: 1 }, 'ref')).toBe(
-      '  [ref] src/broken.ts parse reported an error'
+      '  [ref] src/broken.ts TST-W-PARSE-ERROR: parse reported an error — fix the syntax error so the file parses cleanly'
     )
   })
 
@@ -243,19 +363,33 @@ describe('formatVerboseWarningLine ref channel', () => {
     )
   })
 
-  it('collapses identical ref engine strings with ×N so counts reconcile', () => {
+  it('collapses identical ref entries with ×N so counts reconcile', () => {
     vi.stubEnv('NO_COLOR', '1')
     const manifest = warning({
-      code: undefined,
+      code: 'TST-W-DUPLICATE-SYMBOL-NAME',
       file: undefined,
       line: undefined,
       column: undefined,
-      message: 'Duplicate symbol name "Shared" matched 2 entries.',
+      message: 'Duplicate symbol name `Shared` matched 2 entries.',
     })
     const [group] = dedupeDiagnostics([manifest, { ...manifest }, { ...manifest }])
     expect(group?.count).toBe(3)
     expect(formatVerboseWarningLine(group!, 'ref')).toBe(
-      '  [ref] Duplicate symbol name "Shared" matched 2 entries. ×3'
+      '  [ref] TST-W-DUPLICATE-SYMBOL-NAME: Duplicate symbol name `Shared` matched 2 entries. ×3 — use the symbol id or a scoped lookup to disambiguate'
+    )
+  })
+
+  it('prints legacy codeless items as tag plus message with no hint', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const legacy = warning({
+      code: undefined,
+      file: undefined,
+      line: undefined,
+      column: undefined,
+      message: 'a straggler without a code',
+    })
+    expect(formatVerboseWarningLine({ entry: legacy, count: 1 }, 'ref')).toBe(
+      '  [ref] a straggler without a code'
     )
   })
 })

@@ -8,6 +8,7 @@ import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { compileNative } from '../native/compile.ts'
 import type {
   NativeCompileResult,
+  NativeDiagnostic,
   ScopedCompileRequest,
 } from '../native/contract.ts'
 import { reportSyncDiagnostics, throwOnErrorDiagnostics } from '../native/diagnostics.ts'
@@ -44,6 +45,14 @@ import {
 export interface SyncResult {
   outDir: string
   spec: EvaluatedSystemSpec
+  /** Userspace + compiler warnings reported: the one-liner folds this. */
+  warningCount: number
+  /** Userspace diagnostics as the engine reported them: `--json` prints these. */
+  diagnostics: NativeDiagnostic[]
+  /** Compiler backchannel entries (empty without the `logs` opt-in). */
+  compilerDiagnostics: NativeDiagnostic[]
+  /** Wall time for a watch resync in ms: the scheduler stamps it so the resync one-liner matches the sync shape. */
+  elapsedMs?: number
 }
 
 // REF-04 trigger: every sync rm-wipes the output dir, so a warm-session
@@ -57,8 +66,12 @@ export interface SyncResult {
 // awaits it, so the perf law holds by signature — and the refresh only
 // re-arms a warm session whose artifacts this run's wipe deleted (REF-04),
 // also without awaiting.
-function scheduleReferenceTastyPhase(cwd: string, config: ReferenceUIConfig, verbose: boolean): void {
-  initReference({ sourceDir: cwd, config }, { verbose })
+function scheduleReferenceTastyPhase(
+  cwd: string,
+  config: ReferenceUIConfig,
+  reporting: { verbose: boolean; foldRefDiagnostics: boolean; json: boolean }
+): void {
+  initReference({ sourceDir: cwd, config }, { verbose: reporting.verbose, fold: reporting.foldRefDiagnostics, json: reporting.json })
   refreshStaleReferenceTastyBuild(cwd, config)
 }
 
@@ -78,10 +91,23 @@ export interface SyncOptions {
   sessionKind?: SyncSessionKind
   breakLock?: boolean
   /**
-   * List every warning with its location and fix hint instead of the
-   * one-line summary. Threaded from `ref sync --verbose`.
+   * List every warning with its location and fix hint instead of folding
+   * the count into the one-liner. Threaded from `ref sync --verbose`.
    */
   verbose?: boolean
+  /**
+   * Fold the reference tasty warning count into the caller's one-liner
+   * instead of printing the summary. One-shot sync sets it (it drains
+   * the build and carries the count); watch leaves it unset so the
+   * background landing keeps its standalone line.
+   */
+  foldRefDiagnostics?: boolean
+  /**
+   * Machine-readable run: the tasty phase routes its human lines to
+   * stderr and reports its diagnostics as JSON. Threaded from
+   * `ref sync --json`; sync itself prints nothing differently.
+   */
+  json?: boolean
 }
 
 /**
@@ -104,6 +130,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     cwd,
     kind: options.sessionKind ?? 'one-shot',
     breakLock: options.breakLock ?? false,
+    json: options.json ?? false,
   })
   let failed = false
 
@@ -152,7 +179,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     } finally {
       await releaseScanRetention(retentionToken)
     }
-    reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, { verbose: options.verbose === true })
+    const warningCount = reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, { verbose: options.verbose === true })
     throwOnErrorDiagnostics(result.diagnostics)
 
     // Publish carries configured ∪ traced: hosts the engine discovered
@@ -192,9 +219,13 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     markPhase('publishEnd')
 
     // Sync END only: schedule the background tasty phase, never await it.
-    scheduleReferenceTastyPhase(cwd, config, options.verbose === true)
+    scheduleReferenceTastyPhase(cwd, config, {
+      verbose: options.verbose === true,
+      foldRefDiagnostics: options.foldRefDiagnostics === true,
+      json: options.json === true,
+    })
 
-    return { outDir, spec }
+    return { outDir, spec, warningCount, diagnostics: result.diagnostics, compilerDiagnostics: result.compilerDiagnostics ?? [] }
   } catch (error) {
     failed = true
     await cleanDir(outDir, { preserve: [SYNC_LOCK_DIR_NAME] })

@@ -177,7 +177,7 @@ describe('clean writer kind: live kill legs', () => {
     const dir = await writeWorld(0)
     const outDir = join(dir, '.reference-ui')
     const watch = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(watch, () => watch.output().includes(`watching ${dir}`), 'the watching line')
+    await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
     const cleaner = await runBin(['clean', dir], dir)
     await waitForExit(watch.child)
     expect(watch.child.exitCode).toBe(75)

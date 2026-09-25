@@ -1,11 +1,12 @@
 // Sync watch: the file watcher behind `ref sync --watch`.
 // It takes a project root plus callbacks and emits a handle whose stop()
-// ends the session. Every matched add/change/unlink settles through a
-// trailing-edge debounce into one serial sync(), so discovery, alignment,
-// and deletion all ride the same full resync. Scope is the config include
-// globs plus the config file's own dependencies; node_modules, the
-// generated folder, git internals, and gitignored paths never emit. The
-// session holds the sync lock for its life; a SIGUSR2 poke resyncs now.
+// ends the session and whose baseline carries the first sync's result.
+// Every matched add/change/unlink settles through a trailing-edge debounce
+// into one serial sync(), so discovery, alignment, and deletion all ride
+// the same full resync. Scope is the config include globs plus the config
+// file's own dependencies; node_modules, the generated folder, git
+// internals, and gitignored paths never emit. The session holds the sync
+// lock for its life; a SIGUSR2 poke resyncs now.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -31,6 +32,8 @@ export interface WatchCallbacks {
 
 export interface WatchHandle {
   stop(): Promise<void>
+  /** The baseline sync's result: the boot line folds its warning count. */
+  baseline: SyncResult
 }
 
 const EVENT_MAP = {
@@ -275,6 +278,17 @@ function createParcelHandler(state: WatchState, schedule: () => void, reportErro
 export interface WatchSyncOptions {
   breakLock?: boolean
   verbose?: boolean
+  /**
+   * Machine-readable session: threaded into every baseline and resync so
+   * the tasty phase reports JSON. Threaded from `ref sync --watch --json`.
+   */
+  json?: boolean
+  /**
+   * Baseline only: the runner drains the baseline tasty build and folds
+   * its warning count into the boot one-liner, so the background stays
+   * silent. Resync builds always print — they land with no line to ride.
+   */
+  foldRefDiagnostics?: boolean
 }
 
 /**
@@ -284,7 +298,8 @@ export interface WatchSyncOptions {
  * sync, so a burst of saves costs one rebuild; a failing resync reports
  * through onError and keeps watching. onResync fires only for watch-driven
  * resyncs, never the baseline. A SIGUSR2 poke (a one-shot meeting the
- * session) resyncs now. Resolves once the subscriptions are attached.
+ * session) resyncs now. Resolves with the handle plus the baseline result
+ * once the subscriptions are attached.
  */
 export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, options: WatchSyncOptions = {}): Promise<WatchHandle> {
   const projectRoot = resolve(cwd)
@@ -293,6 +308,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
     cwd: projectRoot,
     kind: 'watch',
     breakLock: options.breakLock ?? false,
+    json: options.json ?? false,
   })
   // A poke during the baseline queues instead of racing it: the early poke
   // only records, and the live target drains the flag once attached.
@@ -301,7 +317,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
   const onPoke = (): void => { pokeTarget() }
   process.on('SIGUSR2', onPoke)
   try {
-    await sync(projectRoot, { verbose: options.verbose ?? false })
+    const baseline = await sync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false, foldRefDiagnostics: options.foldRefDiagnostics ?? false })
 
     const state: WatchState = {
       projectRoot,
@@ -318,7 +334,9 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
     let stopped = false
     const scheduler = createResyncScheduler(async () => {
       try {
-        const result = await sync(projectRoot, { verbose: options.verbose ?? false })
+        const resyncStart = Date.now()
+        const result = await sync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false })
+        result.elapsedMs = Date.now() - resyncStart
         if (!stopped) callbacks.onResync?.(result)
       } catch (error) {
         if (!stopped) callbacks.onError?.(toError(error))
@@ -351,7 +369,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
       session.release()
     }
 
-    return { stop }
+    return { stop, baseline }
   } catch (error) {
     process.removeListener('SIGUSR2', onPoke)
     session.release()

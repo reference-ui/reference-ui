@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const BIN_PATH = fileURLToPath(new URL('../../bin/ref.ts', import.meta.url))
-const SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/
+const BOOT_BLOCK_RE = /REF  v\d+\.\d+\.\d+  ready in \d+ ms/
 const POSIX = process.platform !== 'win32'
 const tempDirs: string[] = []
 const liveChildren: ChildProcess[] = []
@@ -156,7 +156,7 @@ describe('sync session lock: control and kill legs', () => {
     const dir = await writeWorld(0)
     const run = await runBin(['sync', dir], dir)
     expect(run.code).toBe(0)
-    expect(run.stdout).toMatch(SYNC_LINE_RE)
+    expect(run.stdout).toMatch(BOOT_BLOCK_RE)
     expect(run.stdout).not.toMatch(/stale lock|supersed|covered by|break-lock/)
     expect(sheetHasBrand(dir)).toBe(true)
     expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
@@ -184,7 +184,7 @@ describe('sync session lock: control and kill legs', () => {
     expect(done.output()).toContain(`superseded by sync pid ${newcomer.pid}`)
     expect(newcomer.code).toBe(0)
     expect(newcomer.stdout).toContain(`superseding sync pid ${done.child.pid}`)
-    expect(newcomer.stdout).toMatch(SYNC_LINE_RE)
+    expect(newcomer.stdout).toMatch(BOOT_BLOCK_RE)
     expect(sheetHasBrand(dir)).toBe(true)
     expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
   }, 120000)
@@ -192,12 +192,12 @@ describe('sync session lock: control and kill legs', () => {
   it.skipIf(!POSIX)('watch toward watch kills: old session exits 75, new session watches', async () => {
     const dir = await writeWorld(0)
     const old = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(old, () => old.output().includes(`watching ${dir}`), 'the old watching line')
+    await waitForOutput(old, () => old.output().includes('ready in'), 'the old boot block')
     const fresh = spawnBin(['sync', '--watch', dir], dir)
     await waitForExit(old.child)
     expect(old.child.exitCode).toBe(75)
     expect(old.output()).toContain(`superseded by sync pid ${fresh.child.pid}`)
-    await waitForOutput(fresh, () => fresh.output().includes(`watching ${dir}`), 'the new watching line')
+    await waitForOutput(fresh, () => fresh.output().includes('ready in'), 'the new boot block')
     expect(fresh.output()).toContain(`superseding sync pid ${old.child.pid}`)
     expect(childDone(fresh.child)).toBe(false)
     fresh.child.kill('SIGTERM')
@@ -235,8 +235,8 @@ describe('sync session lock: cover, takeover, and release legs', () => {
   it.skipIf(!POSIX)('one-shot toward watch pokes: newcomer exits 0 covered, watch rebuilds and lives', async () => {
     const dir = await writeWorld(0)
     const watch = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(watch, () => watch.output().includes(`watching ${dir}`), 'the watching line')
-    const resyncs = (): number => watch.output().split('resync').length - 1
+    await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
+    const resyncs = (): number => watch.output().split('⎔ ref sync').length - 1
     const before = resyncs()
     const run = await runBin(['sync', dir], dir)
     expect(run.code).toBe(0)
@@ -252,7 +252,7 @@ describe('sync session lock: cover, takeover, and release legs', () => {
   it.skipIf(!POSIX)('SIGINT releases the lock: the next sync proceeds with no stale warning', async () => {
     const dir = await writeWorld(0)
     const watch = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(watch, () => watch.output().includes(`watching ${dir}`), 'the watching line')
+    await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
     watch.child.kill('SIGINT')
     await waitForExit(watch.child)
     expect(watch.child.exitCode).toBe(0)
@@ -265,7 +265,7 @@ describe('sync session lock: cover, takeover, and release legs', () => {
   it.skipIf(!POSIX)('--break-lock takes a live lock with a warning and the holder survives', async () => {
     const dir = await writeWorld(0)
     const watch = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(watch, () => watch.output().includes(`watching ${dir}`), 'the watching line')
+    await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
     const run = await runBin(['sync', '--break-lock', dir], dir)
     expect(run.code).toBe(0)
     expect(run.stdout).toContain(`--break-lock: taking over lock held by pid ${watch.child.pid}`)

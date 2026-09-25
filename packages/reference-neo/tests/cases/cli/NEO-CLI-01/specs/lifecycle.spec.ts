@@ -20,10 +20,10 @@ interface SpecInput {
 const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const SYSTEM_NAME = 'neo-cli';
 const KILL_ATTEMPTS = 10;
-// The §3.12 one-line success shape: glyph + command + stats. Plain under a
-// pipe, ANSI-spanned under a terminal — the pin strips spans first, so the
-// shape holds however the child ran.
-const SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/;
+// The boot-block success shape: brand + version + ready time. Plain under
+// a pipe, ANSI-spanned under a terminal — the pin strips spans first, so
+// the shape holds however the child ran.
+const BOOT_BLOCK_RE = /REF  v\d+\.\d+\.\d+  ready in \d+ ms/;
 const ANSI_SPAN_RE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
 
 const EXPECTED_FILES = [
@@ -85,10 +85,10 @@ function stripAnsiSpans(text: string): string {
 }
 
 // The one-shot success print: some line of the child's stdout carries the
-// §3.12 shape. A contains-pin, not whole-output equality — the background
+// boot header. A contains-pin, not whole-output equality — the background
 // tasty phase may land its own stdout lines alongside on a slow exit.
-function carriesSyncLine(output: string): boolean {
-  return output.split('\n').some((line) => SYNC_LINE_RE.test(stripAnsiSpans(line)));
+function carriesBootBlock(output: string): boolean {
+  return output.split('\n').some((line) => BOOT_BLOCK_RE.test(stripAnsiSpans(line)));
 }
 
 // The consumer import probe: resolves the sync-made scope links from the
@@ -170,7 +170,7 @@ function proveIdempotentResync(worldDir: string): void {
   const sheetPath = path.join(worldDir, '.reference-ui', 'styled', 'styles.css');
   const before = fs.readFileSync(sheetPath, 'utf8');
   const output = runRef(['sync', worldDir], worldDir);
-  assert.ok(carriesSyncLine(output), 'one-shot sync prints the one-line success shape');
+  assert.ok(carriesBootBlock(output), 'one-shot sync prints the boot block');
   assert.equal(fs.readFileSync(sheetPath, 'utf8'), before, 'a second sync is byte-identical');
   assert.equal(runImportProbe(worldDir), 'ok', 'consumer imports work after the re-sync');
 }

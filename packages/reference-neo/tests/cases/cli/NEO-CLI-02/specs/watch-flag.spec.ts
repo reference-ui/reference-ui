@@ -1,10 +1,11 @@
 // watch-flag.spec.ts — spec for NEO-CLI-02, the bin --watch flag-path proof.
 // Takes { case } with the world freshly synced and drives the real spawned
-// `ref sync --watch` binary through three legs: the watcher boots and names
-// the world in its watching line, a token edit triggers a resync line plus
-// a changed sheet, and SIGTERM shuts the resident child down with exit 0.
-// Emits nothing on success; throws naming the leg and the failed expectation
-// on failure.
+// `ref sync --watch` binary through four legs: the watcher boots with its
+// boot block and watch row, a token edit triggers a sync one-liner plus a
+// changed sheet, a --debug spawn traces the file event on the dev-only
+// channel, and SIGTERM shuts the resident child down with exit 0. Emits
+// nothing on success; throws naming the leg and the failed expectation on
+// failure.
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -21,9 +22,11 @@ interface SpecInput {
 const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const BRAND_VALUE = '#7c3aed';
 const CHANGED_VALUE = '#0e5c3f';
-// The §3.12 one-line success shape: glyph + command + stats. Plain under a
-// pipe, ANSI-spanned under a terminal — the pin strips spans first, so the
-// shape holds however the child ran.
+// The boot header and the §3.12 resync one-liner: brand + version + ready
+// time, then glyph + command + stats. Plain under a pipe, ANSI-spanned
+// under a terminal — the pins strip spans first, so the shapes hold
+// however the child ran.
+const BOOT_BLOCK_RE = /REF  v\d+\.\d+\.\d+  ready in \d+ ms/;
 const SYNC_LINE_RE = /⎔ ref sync ⫶ \d+ ms ⫶ [\d.]+ (B|KB|MB)/;
 const ANSI_SPAN_RE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
 
@@ -57,8 +60,8 @@ function sleep(ms: number): Promise<void> {
 // Spawns the real bin in watch mode with piped streams. Stdout and stderr
 // accumulate into one buffer, since the bin reports failures on stdout and
 // the failure text should read as the child's own verdict either way.
-function spawnWatch(worldDir: string): WatchChild {
-  const child = spawn(process.execPath, [BIN_PATH, 'sync', '--watch', worldDir], {
+function spawnWatch(worldDir: string, extraArgs: string[] = []): WatchChild {
+  const child = spawn(process.execPath, [BIN_PATH, 'sync', '--watch', ...extraArgs, worldDir], {
     cwd: worldDir,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -72,12 +75,12 @@ function spawnWatch(worldDir: string): WatchChild {
   return { child, output: () => text };
 }
 
-function resyncCount(watch: WatchChild): number {
-  return watch.output().split('resync').length - 1;
-}
-
 function stripAnsiSpans(text: string): string {
   return text.replace(ANSI_SPAN_RE, '');
+}
+
+function syncLineCount(watch: WatchChild): number {
+  return stripAnsiSpans(watch.output()).split('⎔ ref sync').length - 1;
 }
 
 function childDone(watch: WatchChild): boolean {
@@ -98,41 +101,81 @@ async function waitForOutput(watch: WatchChild, cond: () => boolean, label: stri
   }
 }
 
-// The boot leg: the watching line proves the --watch flag routed to the
+// The boot leg: the boot header proves the --watch flag routed to the
 // bin's watch command, the baseline sync ran, and the watcher subscriptions
 // are live — so no settle sleep is needed before the first mutation.
-async function proveBoot(watch: WatchChild, worldDir: string): Promise<void> {
-  await waitForOutput(watch, () => watch.output().includes(`watching ${worldDir}`), 'the watching line');
-  assert.ok(SYNC_LINE_RE.test(stripAnsiSpans(watch.output())), 'watch boot prints the baseline sync line');
+async function proveBoot(watch: WatchChild): Promise<void> {
+  await waitForOutput(watch, () => BOOT_BLOCK_RE.test(stripAnsiSpans(watch.output())), 'the boot block');
+  assert.ok(stripAnsiSpans(watch.output()).includes('→ CSS:'), 'watch boot prints the CSS row');
+  assert.ok(stripAnsiSpans(watch.output()).includes('→ Watch:'), 'watch boot prints the watch row');
+  assert.match(
+    stripAnsiSpans(watch.output()),
+    /Warnings:\s+\d+ \[--verbose\]/,
+    'watch boot folds the background ref warnings into its block',
+  );
+  assert.equal(
+    stripAnsiSpans(watch.output()).match(/\d+ \[--verbose\]/g)?.length ?? 0,
+    1,
+    'the folded row is the only warning line at boot',
+  );
+  assert.ok(!watch.output().includes('watching'), 'boot prints no watching line');
+  assert.ok(!watch.output().includes('Built reference'), 'boot prints no built-reference trivia');
 }
 
-// The resync leg: one token-value edit must surface as the bin's resync
-// signal plus its change line, with the sheet bytes flipped to match.
-// Waits count resync deltas, never absolutes, so a coalesced burst cannot
-// skip a wait. Restoring the spelling resyncs again and flips the pin back.
+// The resync leg: one token-value edit must surface as another sync
+// one-liner with no file-event lines and no resync word, plus a changed
+// sheet. Waits count sync-line deltas, never absolutes, so a coalesced
+// burst cannot skip a wait. Restoring the spelling resyncs again and flips
+// the pin back.
 async function proveResync(watch: WatchChild, worldDir: string): Promise<void> {
   const tokensFile = path.join(worldDir, 'theme', 'tokens.ts');
   const sheetPath = path.join(worldDir, '.reference-ui', 'styled', 'styles.css');
   const sheet = (): string => fs.readFileSync(sheetPath, 'utf8').toLowerCase();
 
-  let before = resyncCount(watch);
+  let before = syncLineCount(watch);
   fs.writeFileSync(tokensFile, TOKENS_CHANGED);
-  await waitForOutput(watch, () => resyncCount(watch) > before, 'resync after the token edit');
+  await waitForOutput(watch, () => syncLineCount(watch) > before, 'resync after the token edit');
   assert.ok(
-    watch.output().includes('change theme/tokens.ts'),
-    'watch boot reports the edited fragment path',
+    SYNC_LINE_RE.test(stripAnsiSpans(watch.output())),
+    'resync prints the sync one-liner',
+  );
+  assert.ok(
+    !watch.output().includes('resync'),
+    'resync prints no resync word',
+  );
+  assert.ok(
+    !/\[ref\] (add|change|unlink) /.test(watch.output()),
+    'default watch prints no file-event lines',
   );
   assert.ok(
     sheet().includes(`--colors-brand: ${CHANGED_VALUE}`),
     'resynced sheet carries the edited token value',
   );
 
-  before = resyncCount(watch);
+  before = syncLineCount(watch);
   fs.writeFileSync(tokensFile, TOKENS_START);
-  await waitForOutput(watch, () => resyncCount(watch) > before, 'resync after the restore');
+  await waitForOutput(watch, () => syncLineCount(watch) > before, 'resync after the restore');
   assert.ok(
     sheet().includes(`--colors-brand: ${BRAND_VALUE}`),
     'restored sheet carries the canonical token value',
+  );
+}
+
+// The debug leg: a --debug spawn traces the triggering file event on the
+// dev-only channel while the sync one-liner still prints. The event line
+// never appears without the flag (proved above); here it must.
+async function proveDebugEvents(watch: WatchChild, worldDir: string): Promise<void> {
+  const tokensFile = path.join(worldDir, 'theme', 'tokens.ts');
+  await waitForOutput(watch, () => BOOT_BLOCK_RE.test(stripAnsiSpans(watch.output())), 'the debug boot block');
+  const before = syncLineCount(watch);
+  fs.writeFileSync(tokensFile, TOKENS_CHANGED);
+  await waitForOutput(
+    watch, () => watch.output().includes('change theme/tokens.ts'), 'the debug event line',
+  );
+  await waitForOutput(watch, () => syncLineCount(watch) > before, 'the debug resync line');
+  assert.ok(
+    SYNC_LINE_RE.test(stripAnsiSpans(watch.output())),
+    'debug resync still prints the sync one-liner',
   );
 }
 
@@ -167,18 +210,26 @@ async function reapQuietly(watch: WatchChild): Promise<void> {
 }
 
 // The runner synced this world before serving: spawn the watcher, prove
-// boot, resync, and shutdown in order, then reap the child, restore the
-// canonical spelling, and heal with a one-shot sync in a finally, so no
-// outcome leaves the world dirty or unusable for the next run.
+// boot, resync, and shutdown in order, then a --debug spawn for the event
+// channel leg, then reap the children, restore the canonical spelling, and
+// heal with a one-shot sync in a finally, so no outcome leaves the world
+// dirty or unusable for the next run.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const tokensFile = path.join(c.worldDir, 'theme', 'tokens.ts');
   const watch = spawnWatch(c.worldDir);
   try {
-    await proveBoot(watch, c.worldDir);
+    await proveBoot(watch);
     await proveResync(watch, c.worldDir);
     await proveShutdown(watch);
   } finally {
     await reapQuietly(watch);
+  }
+  const debug = spawnWatch(c.worldDir, ['--debug']);
+  try {
+    await proveDebugEvents(debug, c.worldDir);
+    await proveShutdown(debug);
+  } finally {
+    await reapQuietly(debug);
     fs.writeFileSync(tokensFile, TOKENS_START);
     try {
       execFileSync(process.execPath, [BIN_PATH, 'sync', c.worldDir], {

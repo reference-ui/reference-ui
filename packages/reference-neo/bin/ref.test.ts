@@ -1,7 +1,8 @@
 // Unit tests for the ref bin over temp projects plus arg handling.
 // They take temp dirs with fake generated output and assert clean removes
-// exactly that output, plus warning fixtures proving sync prints the
-// one-line summary by default and the structured list under --verbose.
+// exactly that output, plus warning fixtures proving sync folds warnings
+// into the boot block by default and lists them structured under --verbose,
+// plus json diagnostics proving the canonical stdout array.
 // Deep sync behavior stays proven live in case worlds.
 import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -119,13 +120,16 @@ describe('ref bin', () => {
     expect(run.stdout).toContain('clean takes no --watch');
   });
 
-  it('sync prints at most one warning line on stderr by default', async () => {
+  it('sync prints the boot block with folded warnings and leaves stderr empty by default', async () => {
     const dir = await makeTempDir();
     plantWarningProject(dir);
     const run = await runBin(['sync', dir], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('ref sync');
-    expect(run.stderr.trim()).toBe('⚠ 3 warnings [--verbose]');
+    expect(run.stdout).toContain('REF  v');
+    expect(run.stdout).toContain('ready in');
+    expect(run.stdout).toContain('CSS:');
+    expect(run.stdout).toMatch(/Warnings:\s+3 \[--verbose\]/);
+    expect(run.stderr.trim()).toBe('');
   });
 
   it('sync --verbose lists every warning with location, message, and fix hint', async () => {
@@ -133,22 +137,80 @@ describe('ref bin', () => {
     plantWarningProject(dir);
     const run = await runBin(['sync', '--verbose', dir], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('ref sync');
+    expect(run.stdout).toContain('REF  v');
+    expect(run.stdout).toContain('ready in');
+    expect(run.stdout).not.toContain('Warnings:');
     assertVerboseWarningList(run.stderr);
+  });
+
+  it('sync --quiet prints nothing on success', async () => {
+    const dir = await makeTempDir();
+    plantWarningProject(dir);
+    const run = await runBin(['sync', '--quiet', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout.trim()).toBe('');
+    expect(run.stderr.trim()).toBe('');
+  });
+
+  it('sync --quiet still fails loud when no config exists', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['sync', '--quiet', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout).toContain('sync failed');
+  });
+});
+
+describe('ref bin json diagnostics', () => {
+  it('sync --json prints the canonical array on stdout with empty stderr', async () => {
+    const dir = await makeTempDir();
+    plantWarningProject(dir);
+    const run = await runBin(['sync', '--json', dir], dir);
+    expect(run.code).toBe(0);
+    expect(run.stdout.trim().split('\n')).toHaveLength(1);
+    const parsed = JSON.parse(run.stdout) as Array<Record<string, unknown>>;
+    expect(parsed).toHaveLength(3);
+    expect(parsed.map((row) => row.code)).toEqual([
+      'ATM-W-INVALID-CSS-VALUE',
+      'ATM-W-INVALID-CSS-VALUE',
+      'ATM-W-UNKNOWN-COLOR',
+    ]);
+    for (const row of parsed) {
+      expect(Object.keys(row).slice(0, 3)).toEqual(['severity', 'code', 'message']);
+      expect(row.severity).toBe('warning');
+    }
+    expect(run.stdout).not.toContain('ref sync');
+    expect(run.stderr.trim()).toBe('');
+  });
+
+  it('sync --json folds ref diagnostics into the combined array', async () => {
+    const dir = await makeTempDir();
+    plantDupSymbolProject(dir);
+    const run = await runBin(['sync', '--json', dir], dir);
+    expect(run.code).toBe(0);
+    const parsed = JSON.parse(run.stdout) as Array<Record<string, unknown>>;
+    const codes = parsed.map((row) => row.code);
+    expect(codes).toContain('TST-W-DUPLICATE-SYMBOL-NAME');
+    expect(run.stderr.trim()).toBe('');
+  });
+
+  it('sync --json reports failures on stderr with empty stdout and exit 1', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['sync', '--json', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout.trim()).toBe('');
+    expect(run.stderr).toContain('sync failed');
   });
 });
 
 describe('ref bin tasty warnings', () => {
-  it('sync folds duplicate-symbol warnings into one line on stderr by default', async () => {
+  it('sync folds duplicate-symbol warnings into the boot block by default', async () => {
     const dir = await makeTempDir();
     plantDupSymbolProject(dir);
     const run = await runBin(['sync', dir], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('ref sync');
-    expect(run.stdout).toContain('Built reference');
-    const lines = run.stderr.trim().split('\n');
-    expect(lines).toHaveLength(1);
-    expect(lines[0]).toMatch(/^⚠ \d+ warnings? \[--verbose\]$/);
+    expect(run.stdout).toContain('REF  v');
+    expect(run.stdout).toMatch(/Warnings:\s+\d+ \[--verbose\]/);
+    expect(run.stderr.trim()).toBe('');
   });
 
   it('sync --verbose lists duplicate-symbol warnings behind the ref tag', async () => {
@@ -156,9 +218,10 @@ describe('ref bin tasty warnings', () => {
     plantDupSymbolProject(dir);
     const run = await runBin(['sync', '--verbose', dir], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('Built reference');
     expect(run.stderr).toContain('[ref]');
-    expect(run.stderr).toContain('Duplicate symbol name "Shared"');
+    expect(run.stderr).toContain('TST-W-DUPLICATE-SYMBOL-NAME');
+    expect(run.stderr).toContain('Duplicate symbol name `Shared`');
+    expect(run.stderr).toContain('use the symbol id or a scoped lookup to disambiguate');
     expect(run.stderr).not.toContain('[--verbose]');
   });
 });
