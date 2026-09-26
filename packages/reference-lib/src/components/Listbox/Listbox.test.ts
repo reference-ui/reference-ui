@@ -16,6 +16,30 @@ import { ComboboxContext } from '../Combobox/combobox-context'
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 
 describe('Listbox Unit Contract', () => {
+  class CaptureBoundary extends React.Component<{
+    onError: (error: Error) => void
+    children: React.ReactNode
+  }> {
+    state: { caught: Error | null } = { caught: null }
+    static getDerivedStateFromError(error: Error) {
+      return { caught: error }
+    }
+    componentDidCatch(error: Error) {
+      this.props.onError(error)
+    }
+    render() {
+      return this.state.caught ? null : this.props.children
+    }
+  }
+
+  function boundary(element: React.ReactElement, errors: Error[]) {
+    return React.createElement(
+      CaptureBoundary,
+      { onError: (e: Error) => errors.push(e) },
+      element
+    )
+  }
+
   describe('Public API and TypeScript types', () => {
     it('compiles with controlled types and no defaultValue', () => {
       const validProps: ListboxProps = {
@@ -107,6 +131,118 @@ describe('Listbox Unit Contract', () => {
       ).toThrowError(
         /Mounted option disabled state does not match virtual item disabled state at index 3/
       )
+    })
+  })
+
+  describe('Virtual adapter registration wiring', () => {
+    it('LB-VIRT-09 (unit): Virtual Listbox should emit a descriptive diagnostic for an invalid indexed mount', async () => {
+      const adapter: VirtualFocusAdapter = {
+        items: [
+          { value: 'item-0', textValue: 'Item 0' },
+          { value: 'item-1', textValue: 'Item 1' },
+        ],
+        scrollToIndex: vi.fn(),
+      }
+      const errors: Error[] = []
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const root = createRoot(container)
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        await React.act(async () => {
+          root.render(
+            boundary(
+              React.createElement(
+                Listbox,
+                { value: null, onChange: () => {}, virtual: adapter },
+                React.createElement(Listbox.Option, { value: 'item-WRONG', index: 0 }, 'Wrong')
+              ),
+              errors
+            )
+          )
+        })
+      } finally {
+        errSpy.mockRestore()
+      }
+
+      expect(errors).toHaveLength(1)
+      expect(errors[0].message).toMatch(
+        /Mounted option value "item-WRONG" does not match virtual item value "item-0" at index 0/
+      )
+
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
+    })
+
+    it('LB-VIRT-09 (unit): Virtual Listbox should emit a descriptive diagnostic when logical items are replaced with an invalid mapping', async () => {
+      const validAdapter: VirtualFocusAdapter = {
+        items: [
+          { value: 'item-0', textValue: 'Item 0' },
+          { value: 'item-1', textValue: 'Item 1' },
+        ],
+        scrollToIndex: vi.fn(),
+      }
+      const errors: Error[] = []
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const root = createRoot(container)
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        await React.act(async () => {
+          root.render(
+            boundary(
+              React.createElement(
+                Listbox,
+                { value: null, onChange: () => {}, virtual: validAdapter },
+                React.createElement(Listbox.Option, { value: 'item-0', index: 0 }, 'Item 0')
+              ),
+              errors
+            )
+          )
+        })
+
+        // Valid adapters register silently
+        expect(errors).toHaveLength(0)
+        const mounted = container.querySelector('[data-value="item-0"]')
+        expect(mounted).toBeTruthy()
+        expect(mounted?.getAttribute('aria-setsize')).toBe('2')
+
+        const duplicateAdapter: VirtualFocusAdapter = {
+          items: [
+            { value: 'item-0', textValue: 'Item 0' },
+            { value: 'item-0', textValue: 'Item 0 dup' },
+          ],
+          scrollToIndex: vi.fn(),
+        }
+        await React.act(async () => {
+          root.render(
+            boundary(
+              React.createElement(
+                Listbox,
+                { value: null, onChange: () => {}, virtual: duplicateAdapter },
+                React.createElement(Listbox.Option, { value: 'item-0', index: 0 }, 'Item 0')
+              ),
+              errors
+            )
+          )
+        })
+      } finally {
+        errSpy.mockRestore()
+      }
+
+      // Both wiring points (indexed re-registration, items-change effect) fire
+      // the same descriptive diagnostic for the invalid replacement.
+      expect(errors.length).toBeGreaterThanOrEqual(1)
+      for (const error of errors) {
+        expect(error.message).toMatch(/Duplicate value in virtual items: "item-0"/)
+      }
+
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
     })
   })
 
@@ -205,7 +341,7 @@ describe('Listbox Unit Contract', () => {
   })
 
   describe('Option identity diagnostics', () => {
-    it('LB-DOM-06 (unit): Listbox should preserve zero-like identities while diagnosing duplicates', () => {
+    it('LB-DOM-06 (unit): Listbox should preserve zero-like identities while diagnosing duplicates', async () => {
       // "" and "0" are distinct selectable identities (no truthiness coercion)
       const zeroHtml = renderToString(
         React.createElement(
@@ -242,6 +378,40 @@ describe('Listbox Unit Contract', () => {
           )
         )
       ).toThrowError(/Duplicate option value "alpha"/)
+
+      // Same-value options sharing one colliding derived id throw naming the
+      // value at commit time (registerOption runs once per committed instance,
+      // so indeterminate double-renders cannot false-positive)
+      const errors: Error[] = []
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const root = createRoot(container)
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        await React.act(async () => {
+          root.render(
+            boundary(
+              React.createElement(
+                Listbox,
+                { value: null, onChange: () => {} },
+                React.createElement(Listbox.Option, { value: 'alpha' }, 'Alpha'),
+                React.createElement(Listbox.Option, { value: 'alpha' }, 'Alpha again')
+              ),
+              errors
+            )
+          )
+        })
+      } finally {
+        errSpy.mockRestore()
+      }
+      expect(errors.length).toBeGreaterThanOrEqual(1)
+      for (const error of errors) {
+        expect(error.message).toMatch(/Duplicate option value "alpha"/)
+      }
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
     })
   })
 

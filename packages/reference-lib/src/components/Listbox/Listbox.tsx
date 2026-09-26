@@ -100,6 +100,12 @@ export function validateVirtualAdapter(
   }
 }
 
+function toMountedIndexEntries(records: Iterable<OptionRecord>) {
+  return Array.from(records)
+    .filter((rec): rec is OptionRecord & { index: number } => rec.index != null)
+    .map(rec => ({ value: rec.value, index: rec.index, disabled: rec.disabled }))
+}
+
 export function computeNextMultipleSelection(
   currentValue: ListboxValue | null | undefined,
   toggledValue: string,
@@ -572,7 +578,9 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       setFocusedValue(null)
     }, [valueProp])
 
-    // Render-time duplicate detection
+    // Render-time duplicate detection (id comparison: deterministic across
+    // StrictMode and React 17/18 indeterminate double-renders; colliding
+    // derived ids fall through to the commit-phase registerOption check below)
     const renderValuesMapRef = React.useRef<Map<string, string>>(new Map())
     renderValuesMapRef.current.clear()
 
@@ -586,12 +594,25 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       renderValuesMapRef.current.set(val, id)
     }, [])
 
+    // Live virtual adapter for registration-time validation (ref: registering
+    // options must not re-subscribe when the adapter object identity changes).
+    const virtualRef = React.useRef(virtual)
+    virtualRef.current = virtual
+
     const registerOption = React.useCallback((record: OptionRecord) => {
       const existing = optionsMapRef.current.get(record.value)
-      if (existing && existing.id !== record.id) {
+      if (existing) {
         throw new Error(
           `Reference UI: Duplicate option value "${record.value}". Option values must be unique.`
         )
+      }
+
+      // LB-VIRT-09: validate an indexed mount against the live virtual adapter
+      const liveVirtual = virtualRef.current
+      if (liveVirtual && record.index != null) {
+        const candidate = toMountedIndexEntries(optionsMapRef.current.values())
+        candidate.push({ value: record.value, index: record.index, disabled: record.disabled })
+        validateVirtualAdapter(liveVirtual, candidate)
       }
 
       optionsMapRef.current.set(record.value, record)
@@ -602,6 +623,15 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
         setOptionsVersion(v => v + 1)
       }
     }, [])
+
+    const virtualItems = virtual?.items
+
+    // LB-VIRT-09: re-validate mounted indexed options when logical items change
+    React.useEffect(() => {
+      const liveVirtual = virtualRef.current
+      if (!liveVirtual || !virtualItems) return
+      validateVirtualAdapter(liveVirtual, toMountedIndexEntries(optionsMapRef.current.values()))
+    }, [virtualItems])
 
     const getOrderedOptions = React.useCallback((): OptionRecord[] => {
       const records = Array.from(optionsMapRef.current.values())
