@@ -116,10 +116,11 @@ All three gaps have moved out of this file:
 
 ## Non-decisions (rejected outright)
 
-- Controlled-only `value` (dropping `defaultValue` + internal state) —
-  mangling-class breaking change, rejected at triage; see crew log
-  (`calendar.md:6-7`) and SPEC.md "Gaps & incoherence" (`defaultValue`
-  retained deliberately).
+- ~~Controlled-only `value` (dropping `defaultValue` + internal state) —
+  mangling-class breaking change, rejected at triage~~ — SUPERSEDED by
+  the FEATURES campaign triage (IMPLEMENT-NOW #1 under API-STANCE:
+  breaking happens NOW pre-release) and LANDED by cluster A 2026-09-26.
+  The struck rejection is quarantine-landing history, not standing policy.
 - `PrevButton`/`NextButton` → `Previous`/`Next` rename (quarantine kept
   `PrevButton`/`NextButton` as aliases at `Calendar.tsx:909-910`, used
   the new names only in its Book rewrite) — rename-class churn,

@@ -777,6 +777,11 @@ controller stays in the DateField module.
   remains empty, the same gridcell stays selected, focus may stay on its day
   button, and no null request is produced; single Calendar selection is not a
   toggle.
+  > TRIAGE AMENDMENT (FEATURES #13, decided uniform-request — SUPERSEDES
+  > the no-emit read above): every activation requests its ISO once, so
+  > re-activating the selected date DOES emit one request. The surviving
+  > half of this case is "no null request, not a toggle". Pinned by the
+  > CA-SINGLE uniform-request CT (cluster A 2026-09-26).
 - [x] `CA-SINGLE-04` `[reference]` `[browser]` —
   **Calendar should prevent every input modality from selecting a blocked
   date.** Test one date below `min`, one above `max`, and one returned by

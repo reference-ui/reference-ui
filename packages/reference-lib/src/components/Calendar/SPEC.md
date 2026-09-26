@@ -47,8 +47,11 @@ Visual polish is not this gate.
 
 ### Gaps & incoherence
 
-- `defaultValue`, `locale = 'en-US'`, `onChange?: (value: any)` — retained
-  deliberately (quarantine's controlled-only/discriminated redesign NOT ported).
+- ~~`defaultValue`, `onChange?: (value: any)` retained~~ → LANDED
+  (FEATURES #1, cluster A 2026-09-26): discriminated mode props, required
+  controlled `value`, mode-typed `onChange`; `defaultValue` removed and
+  whole-calendar `disabled` removed (FEATURES #14). `locale = 'en-US'`
+  default retained for cluster B (FEATURES #3).
 - ~~**`new Date()`** seeds empty pane / today~~ → optional `today` prop added
   (default = system UTC date, behavior preserved); `new Date()` remains only
   as the default-fallback and out-of-domain legacy path.
@@ -82,12 +85,18 @@ as public values; ±100y Date min/max defaults.
 - `[x]` `CA-UTIL-01` (via public `./index` barrel — proves curated export)
 - `[x]` `CA-ENV-02` (StrictMode SSR, adapted), `CA-STATE-11` (adapted:
   today-seeded default pane), `CA-ENV-01` (adapted: SSR determinism)
-- `[ ]` `CA-ISO-06`, `CA-ISO-07` (fail-closed render-'' — NOT ported),
-  `CA-MODE-04` (discriminated props — NOT ported), `CA-DAY-13`, `CA-DAY-14`
-  (Weekdays/Days/Day parts — NOT ported), remaining `CA-DAY-*`,
-  `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`, `CA-SINGLE-*`, `CA-RANGE-*`,
-  `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`, `CA-DYNAMIC-*`, `CA-ENV-*`,
-  `CA-A11Y-01`, `CA-COMP-*`
+- `[x]` `CA-ISO-06`, `CA-ISO-07` (fail-closed render-null + one dev
+  diagnostic, FEATURES #2 cluster A), `CA-MODE-04` (discriminated props +
+  month/year pane seeding, FEATURES #1 cluster A), `CA-STATE-10` (null
+  empty state + omitted-value diagnostic), `CA-MONTH-01`, `CA-MONTH-02`,
+  `CA-MONTH-04` (domain-bounds half; min/max half waits on FEATURES #6),
+  `CA-MONTH-05`, `CA-MONTH-09`, `CA-MONTH-10`, `CA-SINGLE-01`,
+  `CA-SINGLE-02`, `CA-SINGLE-05` (uniform-request read per triage —
+  overrides the old `CA-SINGLE-03` no-emit text, see TESTS.md)
+- `[ ]` `CA-DAY-13`, `CA-DAY-14` (Weekdays/Days/Day parts — NOT ported),
+  remaining `CA-DAY-*`, `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`,
+  `CA-SINGLE-*`, `CA-RANGE-*`, `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`,
+  `CA-DYNAMIC-*`, `CA-ENV-*`, `CA-A11Y-01`, `CA-COMP-*`
 
 ### Work order
 

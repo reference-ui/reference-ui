@@ -122,16 +122,19 @@ export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof C
   const context = React.useContext(DateFieldContext)
   // isDateUnavailable stays DateField-side: Calendar has no such prop yet (Calendar #6),
   // so passing it would leak a function onto the grid DOM node.
-  return (
-    <Calendar
-      value={context?.value}
-      locale={context?.locale}
-      min={context?.min}
-      max={context?.max}
-      onChange={(nextVal) => context?.handleDateSelect(nextVal)}
-      {...props}
-    />
-  )
+  // Single-spread object: Calendar props are a mode-keyed union, so
+  // caller `value`/`onChange` merge explicitly and everything else spreads
+  // through. Caller props still override context, as before.
+  const { value: callerValue, onChange: callerOnChange, ...rest } = props
+  const calendarProps = {
+    value: callerValue ?? context?.value ?? null,
+    locale: context?.locale,
+    min: context?.min,
+    max: context?.max,
+    onChange: callerOnChange ?? ((nextVal: ISODate) => context?.handleDateSelect(nextVal)),
+    ...rest,
+  } as React.ComponentPropsWithoutRef<typeof Calendar>
+  return <Calendar {...calendarProps} />
 }
 DateFieldCalendar.displayName = 'DateFieldCalendar'
 

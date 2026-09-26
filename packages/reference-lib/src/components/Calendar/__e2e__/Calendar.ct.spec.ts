@@ -116,6 +116,117 @@ test.describe('Calendar CT', () => {
     await expect(page.locator('button[data-date="2024-02-01"]')).toBeFocused()
   })
 
+  test('CA-SINGLE-01/02/05 uniform-request: every activation requests its ISO once; rejection leaves selection', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/EmissionCounter')
+
+    const log = page.getByTestId('emit-log')
+    const day10 = page.locator('button[data-date="2024-04-10"]')
+    const day12 = page.locator('button[data-date="2024-04-12"]')
+
+    await expect(log).toHaveText('none')
+
+    await day10.click()
+    await expect(log).toHaveText('2024-04-10')
+    await expect(day10).toHaveAttribute('data-selected', '')
+
+    // Re-activating the selected date re-requests it (uniform-request;
+    // triage overrides the old CA-SINGLE-03 no-emit read).
+    await day10.click()
+    await expect(log).toHaveText('2024-04-10,2024-04-10')
+
+    // Parent rejection: the request logs but selection stays put.
+    await page.getByTestId('emit-toggle-accept').click()
+    await day12.click()
+    await expect(log).toHaveText('2024-04-10,2024-04-10,2024-04-12')
+    await expect(day10).toHaveAttribute('data-selected', '')
+    await expect(day12).not.toHaveAttribute('data-selected', '')
+  })
+
+  test('CA-MONTH-02/05: controlled nav requests the adjacent month once with no optimistic render', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/MonthMachine')
+
+    const heading = page.getByTestId('month-heading')
+    const requests = page.getByTestId('month-requests')
+
+    await expect(heading).toContainText('January 2024')
+    await expect(requests).toHaveText('none')
+
+    await page.getByTestId('month-next').click()
+    await expect(requests).toHaveText('2024-02')
+    await expect(heading).toContainText('January 2024')
+
+    // A second gesture re-requests the same adjacent target; still January.
+    await page.getByTestId('month-next').click()
+    await expect(requests).toHaveText('2024-02,2024-02')
+    await expect(heading).toContainText('January 2024')
+
+    await page.getByTestId('month-accept').click()
+    await expect(heading).toContainText('February 2024')
+    await expect(requests).toHaveText('none')
+  })
+
+  test('CA-MONTH-04: nav disables at the 0001/9999 domain bounds', async ({ mount, page }) => {
+    await mount('components/Calendar/Calendar/MonthMachine')
+
+    const prev = page.getByTestId('month-prev')
+    const next = page.getByTestId('month-next')
+    const requests = page.getByTestId('month-requests')
+
+    await expect(prev).toBeEnabled()
+    await expect(next).toBeEnabled()
+
+    await page.getByTestId('month-min').click()
+    await expect(page.getByTestId('month-heading')).toContainText('January')
+    await expect(page.locator('button[data-date="0001-01-01"]')).toBeVisible()
+    await expect(prev).toBeDisabled()
+    await expect(next).toBeEnabled()
+
+    await page.getByTestId('month-max').click()
+    await expect(page.getByTestId('month-heading')).toContainText('December 9999')
+    await expect(next).toBeDisabled()
+    await expect(prev).toBeEnabled()
+    await expect(requests).toHaveText('none')
+  })
+
+  test('CA-MONTH-09/10: omitted month follows value, keeps user nav while mounted, reseeds on remount', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/UncontrolledMonth')
+
+    const heading = page.getByTestId('unc-heading')
+    const value = page.getByTestId('unc-value')
+
+    await expect(heading).toContainText('September 2024')
+    await expect(value).toHaveText('2024-09-18')
+
+    // User navigation commits internally without emitting onChange.
+    await page.getByTestId('unc-next').click()
+    await expect(heading).toContainText('October 2024')
+    await expect(value).toHaveText('2024-09-18')
+
+    // Hide without unmounting keeps the pane.
+    await page.getByTestId('unc-hide').click()
+    await page.getByTestId('unc-show').click()
+    await expect(heading).toContainText('October 2024')
+
+    // Remount reseeds from value.
+    await page.getByTestId('unc-unmount').click()
+    await page.getByTestId('unc-remount').click()
+    await expect(heading).toContainText('September 2024')
+
+    // A new value re-seats the pane.
+    await page.getByTestId('unc-set-april').click()
+    await expect(heading).toContainText('April 2024')
+    await expect(value).toHaveText('2024-04-10')
+  })
+
   test('navigates across the year boundary from a today-seeded pane', async ({ mount, page }) => {
     await mount('components/Calendar/Calendar/DecemberNav')
 
