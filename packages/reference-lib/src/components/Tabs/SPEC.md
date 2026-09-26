@@ -17,17 +17,18 @@ TESTS.md checkboxes mean **specified**, not proven.
 
 ## Next agent
 
-**API and TESTS.md are the contract.** Required controlled `value`. Movement
-is RovingFocus (typeahead off). Tabs owns activation policy only.
+**API and TESTS.md are the contract.** Dual-mode `value` (HQ EOD
+2026-09-26 reversed the required-`value` cut; `defaultValue` restored).
+Movement is RovingFocus (typeahead off). Tabs owns activation policy only.
 
-Visual polish is not this gate. No `variant`, no `defaultValue`.
+Visual polish is not this gate. No `variant`.
 
 ### Surface
 
 | Axis | Freeze |
 | :--- | :--- |
 | Parts | Transparent root; List / Tab / Panel fixed hosts + roles |
-| State | required `value`; `orientation?`; `activation?` (horizontal / automatic) |
+| State | `value?` + `defaultValue?`; `orientation?`; `activation?` (horizontal / automatic) |
 | ARIA | `aria-controls` only on the selected Tab |
 | Panels | all stay mounted; inactive use native `hidden` |
 
@@ -43,8 +44,9 @@ Visual polish is not this gate. No `variant`, no `defaultValue`.
 
 ### Gaps & incoherence
 
-- `defaultValue`, root `disabled` — not in freeze: removed 2026-09-26
-  (FEATURES #1, partial): `value` required + throws.
+- Root `disabled` — not in freeze: removed 2026-09-26 (FEATURES #1,
+  partial). `defaultValue` was removed in the same cut but RESTORED
+  EOD 2026-09-26 (HQ reversal: Tabs keeps uncontrolled support).
 - `variant` (`line` / `pill`) — RETAINED 2026-09-26: deletion is
   pipeline-blocked (same campaign). Book-side token recipes flip in/out
   of the generated CSS across syncs (proven: 12+ probes, triple-sync +
@@ -88,7 +90,8 @@ activation / focus-blur regressions.
 
 1. Require controlled `value`; remove `defaultValue` / root `disabled`.
    DONE 2026-09-26 (FEATURES #1, partial — `variant` retained, see
-   Gaps).
+   Gaps), then REVERSED in part EOD 2026-09-26 (HQ: Tabs keeps
+   uncontrolled support — `value` optional, `defaultValue` restored).
 2. Compose RovingFocus; Tabs owns automatic vs manual only. BLOCKED —
    needs a kernel currentness input (see Gaps).
 3. Manual mode: focus can leave the selected tab stop. DONE (roving
@@ -101,7 +104,7 @@ Indicator / panel transitions as kernel. Provider API. Overlay in panels.
 
 ### Done when
 
-Public API matches Tabs.md (TRUE 2026-09-26 — required `value`,
-`orientation?`, `activation?`, `variant?`, per-Tab `disabled?`,
-per-Panel `keepMounted?`; no `defaultValue` / root `disabled`).
+Public API matches Tabs.md (TRUE 2026-09-26 — dual-mode `value?` /
+`defaultValue?`, `orientation?`, `activation?`, `variant?`, per-Tab
+`disabled?`, per-Panel `keepMounted?`; no root `disabled`).
 Every TESTS.md ID is `[x]` here. Arrows come from RovingFocus.

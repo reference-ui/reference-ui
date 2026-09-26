@@ -7,7 +7,10 @@ export type TabsVariant = 'line' | 'pill'
 
 export interface TabsProps {
   children?: React.ReactNode
-  value: string
+  /** Controlled value. Omitted = uncontrolled (self-managed from defaultValue). */
+  value?: string
+  /** Uncontrolled initial value. Ignored once controlled. */
+  defaultValue?: string | null
   onChange?: (value: string) => void
   orientation?: TabsOrientation
   activation?: TabsActivation
@@ -65,12 +68,24 @@ const TabsContext = React.createContext<TabsContextValue | null>(null)
 
 export function Tabs({
   children,
-  value,
+  value: valueProp,
+  defaultValue,
   onChange,
   orientation = 'horizontal',
   activation = 'automatic',
   variant = 'line',
 }: TabsProps) {
+  // Dual-mode selection (HQ EOD 2026-09-26 reversal of FEATURES #1):
+  // value !== undefined → controlled; else self-managed from
+  // defaultValue (Accordion shape: isControlled + internalValue
+  // precedent). A null/missing default normalizes to '' so no tab
+  // matches and nothing is selected; the roving repair still parks
+  // the stop on first-enabled.
+  const isControlled = valueProp !== undefined
+  const [internalValue, setInternalValue] = React.useState<string>(
+    () => defaultValue ?? ''
+  )
+  const value = isControlled ? valueProp : internalValue
 
   // Stable SSR-safe identity (TB-DOM-07, TB-ENV-01): useId keeps
   // server/client markup identical, unlike a module counter. Pinned in
@@ -373,9 +388,12 @@ export function Tabs({
       // Redundant requests are suppressed (TB-SELECT-04, TB-MANUAL-04):
       // activating the selected tab is a no-op, not a transition.
       if (nextValue === value) return
+      if (!isControlled) {
+        setInternalValue(nextValue)
+      }
       onChange?.(nextValue)
     },
-    [onChange, value]
+    [isControlled, onChange, value]
   )
 
   const contextValue = React.useMemo<TabsContextValue>(
@@ -418,15 +436,6 @@ export function Tabs({
       registryVersion,
     ]
   )
-
-  // Required controlled value (FEATURES #1): an omitted value throws
-  // instead of silently mounting an uncontrolled instance. Placed after
-  // the hooks so hook order is unconditional.
-  if (value === undefined) {
-    throw new Error(
-      'Reference UI: Tabs requires a controlled `value` prop.'
-    )
-  }
 
   return (
     <TabsContext.Provider value={contextValue}>

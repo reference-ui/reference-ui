@@ -20,7 +20,7 @@ function tabIndexOf(id: string) {
   return document.getElementById(id)?.getAttribute('tabindex')
 }
 
-describe('Tabs FEATURES #1 proofs (required value)', () => {
+describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -38,35 +38,174 @@ describe('Tabs FEATURES #1 proofs (required value)', () => {
     container.remove()
   })
 
-  it('throws a descriptive error when value is omitted', async () => {
-    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
-    try {
-      const div = document.createElement('div')
-      document.body.appendChild(div)
-      const localRoot = createRoot(div)
-      try {
-        await expect(
-          React.act(async () => {
-            localRoot.render(
-              // @ts-expect-error — omitted value is a type error AND a runtime throw.
-              <Tabs>
-                <Tabs.List>
-                  <Tabs.Tab value="general">General</Tabs.Tab>
-                </Tabs.List>
-                <Tabs.Panel value="general">G</Tabs.Panel>
-              </Tabs>
-            )
-          })
-        ).rejects.toThrow('requires a controlled `value` prop')
-      } finally {
-        await React.act(async () => {
-          localRoot.unmount()
-        })
-        div.remove()
-      }
-    } finally {
-      errors.mockRestore()
-    }
+  it('uncontrolled: defaultValue seeds selection and clicks self-manage', async () => {
+    const log: string[] = []
+    await React.act(async () => {
+      root.render(
+        <Tabs defaultValue="general" onChange={(next: string) => log.push(next)}>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel id="p-general" value="general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel id="p-billing" value="billing">
+            B
+          </Tabs.Panel>
+        </Tabs>
+      )
+    })
+
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-general')?.hidden).toBe(false)
+    expect(document.getElementById('p-billing')?.hidden).toBe(true)
+
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-billing')?.hidden).toBe(false)
+    expect(document.getElementById('p-general')?.hidden).toBe(true)
+    expect(tabIndexOf('t-billing')).toBe('0')
+    expect(tabIndexOf('t-general')).toBe('-1')
+    // onChange stays an optional notification in uncontrolled mode.
+    expect(log).toEqual(['billing'])
+  })
+
+  it('uncontrolled: omitted value and defaultValue select nothing and never throw', async () => {
+    await React.act(async () => {
+      root.render(
+        <Tabs>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel id="p-general" value="general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel id="p-billing" value="billing">
+            B
+          </Tabs.Panel>
+        </Tabs>
+      )
+    })
+
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('false')
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('false')
+    expect(document.getElementById('p-general')?.hidden).toBe(true)
+    // The roving repair still parks the stop on first-enabled.
+    expect(tabIndexOf('t-general')).toBe('0')
+
+    // First click self-selects from the empty state.
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-billing')?.hidden).toBe(false)
+  })
+
+  it('uncontrolled: automatic arrows self-select through the same funnel', async () => {
+    const log: string[] = []
+    await React.act(async () => {
+      root.render(
+        <Tabs defaultValue="general" onChange={(next: string) => log.push(next)}>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel id="p-general" value="general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel id="p-billing" value="billing">
+            B
+          </Tabs.Panel>
+        </Tabs>
+      )
+    })
+
+    await React.act(async () => {
+      document.getElementById('t-general')!.focus()
+      keydown(document.activeElement!, 'ArrowRight')
+    })
+
+    expect(document.activeElement?.id).toBe('t-billing')
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-billing')?.hidden).toBe(false)
+    expect(log).toEqual(['billing'])
+  })
+
+  it('uncontrolled: null defaultValue selects nothing and never throws', async () => {
+    await React.act(async () => {
+      root.render(
+        <Tabs defaultValue={null}>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general">G</Tabs.Panel>
+        </Tabs>
+      )
+    })
+
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('false')
+  })
+
+  it('controlled value takes precedence over defaultValue', async () => {
+    await React.act(async () => {
+      root.render(
+        <Tabs value="billing" defaultValue="general">
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel id="p-general" value="general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel id="p-billing" value="billing">
+            B
+          </Tabs.Panel>
+        </Tabs>
+      )
+    })
+
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-billing')?.hidden).toBe(false)
+    expect(document.getElementById('p-general')?.hidden).toBe(true)
   })
 
   it('renders tabs with 3px indicator on active tab and table-border baseline on list', async () => {

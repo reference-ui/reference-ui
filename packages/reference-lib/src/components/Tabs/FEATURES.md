@@ -7,11 +7,19 @@ verdicts, this file keeps the proposals.
 
 ## 1. Required controlled value; API freeze removals (from DECISIONS candidate #1)
 
-**What it does:** Makes `value` required-controlled and deletes
+**REVERSED in part (HQ EOD 2026-09-26):** Tabs keeps uncontrolled
+support — users don't always want to control tabs. `value` is optional
+again and `defaultValue?: string | null` is restored (dual-mode per the
+Accordion shape: `value !== undefined` → controlled, else self-managed;
+`onChange` notifies in both). Root-`disabled` removal, `variant`
+retention, `keepMounted`, rescue, handoff, stop policy, and the link
+recipe all stand — only the required-`value` cut is undone.
+
+**What it did:** Made `value` required-controlled and deleted
 `defaultValue`, `variant` (`line`/`pill`), and root `disabled`; line/pill
 visuals move to Book, not the kernel.
 
-**API:**
+**API (as landed, before the reversal):**
 
 ```tsx
 // value becomes required; undefined throws

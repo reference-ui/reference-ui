@@ -25,7 +25,8 @@ Directional keyboard cycling, automatic vs. manual activation, `aria-controls` /
 ```ts
 interface TabsProps {
   children?: React.ReactNode
-  value: string
+  value?: string
+  defaultValue?: string | null
   onChange?: (value: string) => void
   orientation?: "horizontal" | "vertical"
   activation?: "automatic" | "manual"
@@ -51,11 +52,13 @@ interface TabsPanelProps
 `Tabs` renders no node. `Tabs.List` renders `div` with `role="tablist"`.
 `Tabs.Tab` renders `button[type=button]` with `role="tab"`. `Tabs.Panel`
 renders `div` with `role="tabpanel"`. Every declared Panel stays mounted; the
-one matching controlled `value` is visible and every inactive Panel has the
+one matching the current `value` is visible and every inactive Panel has the
 native `hidden` attribute. A programmatic selection change moves focus out of
 a panel that becomes hidden to the newly selected Tab or a safe enabled
 fallback.
 Omitted orientation is horizontal and omitted activation is automatic.
+Selection is dual-mode: a supplied `value` controls the tab, an omitted
+`value` self-manages from `defaultValue` (`onChange` notifies in both).
 
 List and Tab render the signed line look by default and the pill look
 under `variant="pill"` (also settable per List/Tab). `variant` stays in
