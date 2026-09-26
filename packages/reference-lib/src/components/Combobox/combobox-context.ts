@@ -29,3 +29,19 @@ export interface ComboboxContextValue {
 }
 
 export const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)
+
+/**
+ * PATCHES #1 (CB-ENV-03): the popover's portal destination follows the
+ * focus source. A source inside an open ShadowRoot keeps its popover in
+ * that same root; light-DOM sources (and SSR, where ShadowRoot is
+ * undefined) keep the default body destination.
+ */
+export function shadowContainerForSource(
+  source: { getRootNode?: () => Node } | null | undefined
+): ShadowRoot | undefined {
+  const root = source?.getRootNode?.()
+  if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot) {
+    return root
+  }
+  return undefined
+}

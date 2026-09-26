@@ -1473,3 +1473,26 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     await unmount(second.container, second.root)
   })
 })
+
+describe('Combobox PATCHES #1: shadow portal destination', () => {
+  it('shadowContainerForSource resolves the containing open ShadowRoot, nothing otherwise', async () => {
+    const { shadowContainerForSource } = await import('./combobox-context')
+
+    expect(shadowContainerForSource(null)).toBeUndefined()
+    expect(shadowContainerForSource(undefined)).toBeUndefined()
+
+    const light = document.createElement('div')
+    document.body.appendChild(light)
+    expect(shadowContainerForSource(light)).toBeUndefined()
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = host.attachShadow({ mode: 'open' })
+    const inner = document.createElement('input')
+    root.appendChild(inner)
+    expect(shadowContainerForSource(inner)).toBe(root)
+
+    light.remove()
+    host.remove()
+  })
+})

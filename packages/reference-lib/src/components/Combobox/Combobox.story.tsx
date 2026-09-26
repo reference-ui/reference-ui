@@ -1,10 +1,12 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span, Button } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Combobox } from './index'
 import { Listbox } from '../Listbox'
 import { Field } from '../Field'
 import { Overlay } from '../Overlay'
+import { useOverlayStore } from '../Overlay/stack'
 
 export const FruitSelect = () => {
   const [value, setValue] = React.useState<string | null>(null)
@@ -521,6 +523,160 @@ export const FixedClosed = () => {
         <Button data-testid="fixed-clear" onClick={() => setLog([])}>
           Clear log
         </Button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+function LayerCount({ testid }: { testid: string }) {
+  const openLayers = useOverlayStore(state => state.layers.filter(l => l.open).length)
+  return <Div data-testid={testid}>{openLayers}</Div>
+}
+
+export const LayerAudit = () => {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [inputValue, setInputValue] = React.useState('')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="layer-root">
+        <Div style={{ width: 240, margin: '16px 0' }}>
+          <Combobox
+            open={open}
+            onOpen={() => {
+              push('open')
+              setOpen(true)
+            }}
+            onDismiss={() => {
+              push('dismiss')
+              setOpen(false)
+            }}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+              setInputValue(logOptions.find(o => o.value === v)?.label ?? '')
+            }}
+            inputValue={inputValue}
+            onInputValueChange={v => {
+              push(`input:${v}`)
+              setInputValue(v)
+            }}
+          >
+            <Field>
+              <Combobox.Input data-testid="layer-input" placeholder="Search..." />
+            </Field>
+            <Combobox.Popover data-testid="layer-popover">
+              <Listbox>
+                {logOptions.map(opt => (
+                  <Listbox.Option
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={opt.disabled}
+                    data-testid={`layer-opt-${opt.value}`}
+                  >
+                    {opt.label}
+                  </Listbox.Option>
+                ))}
+              </Listbox>
+            </Combobox.Popover>
+          </Combobox>
+        </Div>
+        <LayerCount testid="layer-count" />
+        <Div data-testid="layer-log">{JSON.stringify(log)}</Div>
+        <Button data-testid="layer-clear" onClick={() => setLog([])}>
+          Clear log
+        </Button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+const shadowOptions = Array.from({ length: 15 }, (_, i) => ({
+  value: `opt-${String(i).padStart(2, '0')}`,
+  label: `Option ${i}`,
+}))
+
+function ShadowLogInner() {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [inputValue, setInputValue] = React.useState('')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <div style={{ width: 240, margin: '16px 0' }}>
+      <Combobox
+        open={open}
+        onOpen={() => {
+          push('open')
+          setOpen(true)
+        }}
+        onDismiss={() => {
+          push('dismiss')
+          setOpen(false)
+        }}
+        value={value}
+        onChange={v => {
+          push(`change:${v}`)
+          setValue(v)
+          setInputValue(shadowOptions.find(o => o.value === v)?.label ?? '')
+        }}
+        inputValue={inputValue}
+        onInputValueChange={v => {
+          push(`input:${v}`)
+          setInputValue(v)
+        }}
+      >
+        <Field>
+          <Combobox.Input data-testid="sh-input" placeholder="Search..." />
+        </Field>
+        {/* Inline padding: theme classes do not pierce shadow, so the
+            chrome-click target needs layout that survives unstyled. */}
+        <Combobox.Popover data-testid="sh-popover" style={{ padding: 8 }}>
+          <Listbox style={{ maxHeight: 200, overflowY: 'auto' }}>
+            {shadowOptions.map(opt => (
+              <Listbox.Option
+                key={opt.value}
+                value={opt.value}
+                data-testid={`sh-opt-${opt.value}`}
+              >
+                {opt.label}
+              </Listbox.Option>
+            ))}
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+      <div data-testid="sh-log">{JSON.stringify(log)}</div>
+      <button data-testid="sh-clear" type="button" onClick={() => setLog([])}>
+        Clear log
+      </button>
+    </div>
+  )
+}
+
+export const ShadowLog = () => {
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    if (host.shadowRoot) {
+      setShadow(host.shadowRoot)
+      return
+    }
+    setShadow(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="sh-root">
+        <div ref={hostRef} data-testid="sh-host" />
+        {shadow ? createPortal(<ShadowLogInner />, shadow) : null}
       </Div>
     </ReferenceLibrary>
   )

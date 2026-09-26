@@ -613,3 +613,154 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(await readLog(page, 'select-log')).toEqual(['open', 'dismiss'])
   })
 })
+
+test.describe('Combobox PATCHES CT', () => {
+  test('CB-CLOSE-03 escape: one layer, one positioned popover, one ordered revert-before-dismiss', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/LayerAudit')
+
+    const input = page.getByTestId('layer-input')
+    const popover = page.getByTestId('layer-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // One popover, one open layer, shared Popover positioning.
+    await expect(page.getByTestId('layer-popover')).toHaveCount(1)
+    await expect(page.getByTestId('layer-count')).toHaveText('1')
+    await expect(popover).toHaveAttribute('data-side', 'bottom')
+    await expect(popover).toHaveAttribute('data-align', 'start')
+    await expectAnchoredBottomStart(input, popover)
+
+    // Escape reverts unmatched text, then dismisses — exactly once each,
+    // with no double-registered document-level dismissal.
+    await page.keyboard.type('Z')
+    await expect(input).toHaveValue('Z')
+    await page.keyboard.press('Escape')
+    expect(await readLog(page, 'layer-log')).toEqual(['open', 'input:Z', 'input:', 'dismiss'])
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('')
+    await expect(input).toBeFocused()
+    await expect(popover).toHaveCount(0)
+    await expect(page.getByTestId('layer-count')).toHaveText('0')
+  })
+
+  test('CB-CLOSE-03 outside: one layer, one positioned popover, one dismissal', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/LayerAudit')
+
+    const input = page.getByTestId('layer-input')
+    const popover = page.getByTestId('layer-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    await expect(page.getByTestId('layer-popover')).toHaveCount(1)
+    await expect(page.getByTestId('layer-count')).toHaveText('1')
+    await expect(popover).toHaveAttribute('data-side', 'bottom')
+    await expect(popover).toHaveAttribute('data-align', 'start')
+    await expectAnchoredBottomStart(input, popover)
+
+    // Click fixture padding above the input: guaranteed outside the popover.
+    await page.mouse.click(6, 6)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'layer-log')).toEqual(['open', 'dismiss'])
+    await expect(page.getByTestId('layer-count')).toHaveText('0')
+  })
+
+  test('CB-ENV-03: shadow-root portal destination, focus, scroll, composed paths, ordered callbacks', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ShadowLog')
+
+    const host = page.getByTestId('sh-host')
+    const input = page.getByTestId('sh-input')
+    const popover = page.getByTestId('sh-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // The popover portals into the focus source's ShadowRoot, not body.
+    expect(
+      await host.evaluate(
+        el => !!el.shadowRoot?.querySelector('[data-testid="sh-popover"]')
+      )
+    ).toBe(true)
+    expect(
+      await page.evaluate(
+        () => !!document.querySelector('[data-testid="sh-popover"]')
+      )
+    ).toBe(false)
+
+    // Focus is discovered in the owning root.
+    expect(
+      await host.evaluate(
+        el =>
+          ((el.shadowRoot?.activeElement ?? null) as HTMLElement | null)?.getAttribute(
+            'data-testid'
+          ) ?? null
+      )
+    ).toBe('sh-input')
+
+    // Navigate beyond the window: active IDs resolve in the same root and
+    // scroll correction stays inside the popover.
+    await page.mouse.move(6, 6)
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    const target = page.getByTestId('sh-opt-opt-11')
+    await expectActiveDescendant(input, target)
+    const descId = await input.getAttribute('aria-activedescendant')
+    expect(descId).toBeTruthy()
+    expect(await host.evaluate((el, id) => !!el.shadowRoot?.getElementById(id!), descId)).toBe(
+      true
+    )
+    await expect(target).toBeInViewport()
+    const listScrollTop = await popover
+      .locator('[role="listbox"]')
+      .evaluate(el => (el as HTMLElement).scrollTop)
+    expect(listScrollTop).toBeGreaterThan(0)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+
+    // Typing resets active to the first match; Enter commits with the exact
+    // ordered callback sequence a cross-engine run compares against.
+    await page.keyboard.type('x')
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'sh-log')).toEqual([
+      'open',
+      'input:x',
+      'change:opt-00',
+      'dismiss',
+    ])
+    await expect(popover).toHaveCount(0)
+
+    // Composed inside paths stay open with no extra callbacks.
+    await input.click()
+    await expect(popover).toBeVisible()
+    await clickPopoverChrome(page, popover)
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'sh-log')).toEqual([
+      'open',
+      'input:x',
+      'change:opt-00',
+      'dismiss',
+      'open',
+    ])
+
+    // A true outside path dismisses exactly once.
+    await page.mouse.click(6, 6)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'sh-log')).toEqual([
+      'open',
+      'input:x',
+      'change:opt-00',
+      'dismiss',
+      'open',
+      'dismiss',
+    ])
+  })
+})

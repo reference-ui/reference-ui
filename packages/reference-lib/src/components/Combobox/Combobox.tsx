@@ -7,7 +7,11 @@ import {
   ListboxEmpty,
   type ListboxOptionProps,
 } from '../Listbox'
-import { ComboboxContext, type ComboboxOptionEntry } from './combobox-context'
+import {
+  ComboboxContext,
+  shadowContainerForSource,
+  type ComboboxOptionEntry,
+} from './combobox-context'
 
 // The package declares no node types, so the bare `process` global is
 // unresolvable in the narrow build program — read it through globalThis
@@ -333,11 +337,22 @@ export function ComboboxPopover({
   ...props
 }: ComboboxPopoverProps) {
   const context = React.useContext(ComboboxContext)
+  const overlay = useOverlay()
   const registerPopover = context?.registerPopover
 
   React.useLayoutEffect(() => {
     if (registerPopover) return registerPopover(idProp)
   }, [registerPopover, idProp])
+
+  // PATCHES #1 (CB-ENV-03): when the focus source lives in an open
+  // ShadowRoot, portal the popover into that same root. Light-DOM
+  // sources leave the default body destination untouched.
+  const sourceRef = context?.sourceRef
+  const popoverOpen = context?.isOpen
+  React.useLayoutEffect(() => {
+    const container = shadowContainerForSource(sourceRef?.current)
+    if (container) overlay?.setPortalContainer(container)
+  }, [overlay, sourceRef, popoverOpen])
 
   const id = idProp ?? context?.popoverId
 
