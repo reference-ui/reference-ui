@@ -742,3 +742,401 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
     await expect(trigger).toBeFocused()
   })
 })
+
+test.describe('Menu Nested Submenus (FEATURES #1)', () => {
+  test('MN-DOM-03: Submenu trigger exposes expansion and a stable relationship to content', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    await expect(trigger).toHaveAttribute('role', 'menuitem')
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'menu')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(trigger).not.toHaveAttribute('aria-controls')
+
+    await trigger.focus()
+    await page.keyboard.press('ArrowRight')
+    const content = page.getByTestId('menu-sub-content')
+    await expect(content).toBeVisible()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    const contentId = await content.getAttribute('id')
+    expect(contentId).toBeTruthy()
+    if (!contentId) throw new Error('expected stable submenu content id')
+    await expect(trigger).toHaveAttribute('aria-controls', contentId)
+
+    await page.keyboard.press('Escape')
+    await expect(content).toHaveCount(0)
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+
+    await trigger.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    expect(await page.getByTestId('menu-sub-content').getAttribute('id')).toBe(contentId)
+    await expect(trigger).toHaveAttribute('aria-controls', contentId!)
+  })
+
+  test('MN-DOM-01: Nested Menu contributes no node between trigger and parent items', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    const itemNew = page.getByTestId('menu-sub-item-new')
+    const itemHandle = await itemNew.elementHandle()
+    if (!itemHandle) throw new Error('expected submenu sibling item handle')
+    const sameParent = await trigger.evaluate(
+      (el, other) => el.parentElement === (other as HTMLElement).parentElement,
+      itemHandle
+    )
+    expect(sameParent).toBe(true)
+  })
+
+  test('MN-SUBKEY-01: Right opens a submenu and focuses its first enabled item', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    await trigger.focus()
+
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: share:onOpen')
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-item-email')).toBeFocused()
+  })
+
+  test('MN-SUBKEY-02: Enter and Space open a submenu without selecting', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    await trigger.focus()
+
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-item-email')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-action')).toHaveText('Sub Action: None')
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('menu-sub-content')).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+
+    await page.keyboard.press('Space')
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-item-email')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-action')).toHaveText('Sub Action: None')
+  })
+
+  test('MN-SUBKEY-03: Left closes one submenu level and restores its trigger', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.getByTestId('menu-sub-trigger-l2').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-item-deep')).toBeFocused()
+
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.getByTestId('menu-sub-content-l2')).toHaveCount(0)
+    await expect(page.getByTestId('menu-sub-trigger-l2')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-root')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText(
+      'Sub Logs: share:onOpen,more:onOpen,more:onDismiss'
+    )
+  })
+
+  test('MN-SUBKEY-05: Escape closes one level at a time up the tree', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    const rootTrigger = page.getByTestId('btn-sub-trigger')
+    await rootTrigger.click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.getByTestId('menu-sub-trigger-l2').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-item-deep')).toBeFocused()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('menu-sub-content-l2')).toHaveCount(0)
+    await expect(page.getByTestId('menu-sub-trigger-l2')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('menu-sub-content')).toHaveCount(0)
+    await expect(page.getByTestId('menu-sub-trigger')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-root')).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('menu-sub-root')).toHaveCount(0)
+    await expect(rootTrigger).toBeFocused()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText(
+      'Sub Logs: share:onOpen,more:onOpen,more:onDismiss,share:onDismiss'
+    )
+  })
+
+  test('MN-SUBKEY-09: Omitted nested open requests once and stays closed', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger-omitted')
+    await trigger.focus()
+
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: omitted:onOpen')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('menu-sub-content-omitted')).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+
+  test('MN-SUBKEY-10: Directional key after hover-open moves focus without a second request', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    await trigger.focus()
+
+    await trigger.hover()
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: share:onOpen')
+    await expect(trigger).toBeFocused()
+
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-item-email')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: share:onOpen')
+  })
+
+  test('MN-INTENT-01: Hover requests opening after 100ms without moving focus', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const trigger = page.getByTestId('menu-sub-trigger')
+    await page.getByTestId('menu-sub-item-new').focus()
+
+    await trigger.hover()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: ')
+    await expect(page.getByTestId('menu-sub-content')).toHaveCount(0)
+
+    await expect(page.getByTestId('menu-sub-content')).toBeVisible()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: share:onOpen')
+    await expect(page.getByTestId('menu-sub-item-new')).toBeFocused()
+  })
+
+  test('MN-FOCUS-06: Roving onto a closed trigger does not open it', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    await page.getByTestId('menu-sub-item-new').focus()
+
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByTestId('menu-sub-trigger')).toBeFocused()
+    await expect(page.getByTestId('menu-sub-trigger')).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('menu-sub-content')).toHaveCount(0)
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText('Sub Logs: ')
+  })
+
+  test('MN-ACT-04: Deep selection unwinds deepest-first with one root close', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.getByTestId('menu-sub-trigger-l2').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-item-deep')).toBeFocused()
+
+    await page.getByTestId('menu-sub-item-deep').click()
+    await expect(page.getByTestId('menu-sub-action')).toHaveText('Sub Action: Deep')
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText(
+      'Sub Logs: share:onOpen,more:onOpen,more:onDismiss,share:onDismiss'
+    )
+    await expect(page.getByTestId('menu-sub-root-logs')).toHaveText('Sub Root Logs: true,false')
+    await expect(page.getByTestId('menu-sub-root')).toHaveCount(0)
+  })
+
+  test('MN-ACT-05: Submenu selection restores only the root trigger', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    const rootTrigger = page.getByTestId('btn-sub-trigger')
+    await rootTrigger.click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-item-email')).toBeFocused()
+
+    await page.getByTestId('menu-sub-item-email').click()
+    await expect(page.getByTestId('menu-sub-action')).toHaveText('Sub Action: Email')
+    await expect(page.getByTestId('menu-sub-content')).toHaveCount(0)
+    await expect(page.getByTestId('menu-sub-root')).toHaveCount(0)
+    await expect(rootTrigger).toBeFocused()
+  })
+
+  test('MN-CLOSE-01: Outside press unwinds every open level deepest-first', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.getByTestId('menu-sub-trigger-l2').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('menu-sub-content-l2')).toBeVisible()
+
+    await page.getByTestId('sub-outside').click()
+    await expect(page.getByTestId('menu-sub-logs')).toHaveText(
+      'Sub Logs: share:onOpen,more:onOpen,more:onDismiss,share:onDismiss'
+    )
+    await expect(page.getByTestId('menu-sub-root-logs')).toHaveText('Sub Root Logs: true,false')
+    await expect(page.getByTestId('menu-sub-root')).toHaveCount(0)
+    await expect(page.getByTestId('sub-outside')).toBeFocused()
+  })
+})
+
+test.describe('Menu LinkItem (FEATURES #3)', () => {
+  test('MN-LINK-01: LinkItem is a native anchor with menuitem semantics in roving order', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    await page.getByTestId('btn-link-trigger').click()
+    const help = page.getByTestId('menu-link-help')
+    await expect(help).toHaveAttribute('role', 'menuitem')
+    expect(await help.evaluate(el => el.tagName.toLowerCase())).toBe('a')
+    expect(await help.evaluate(el => el instanceof HTMLAnchorElement)).toBe(true)
+    await expect(help).toHaveAttribute('href', '#help-section')
+    await expect(page.getByTestId('menu-link-download')).toHaveAttribute('download', 'report.csv')
+    await expect(page.getByTestId('menu-link-blank')).toHaveAttribute('target', '_blank')
+
+    await help.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByTestId('menu-link-download')).toBeFocused()
+    await page.keyboard.press('End')
+    await expect(page.getByTestId('menu-link-plain')).toBeFocused()
+  })
+
+  test('MN-LINK-02: Primary click navigates natively and dismisses by default', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    const trigger = page.getByTestId('btn-link-trigger')
+    await trigger.click()
+
+    await page.getByTestId('menu-link-help').click()
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: Help')
+    await expect(page.getByTestId('menu-link-select-event')).toHaveText(
+      'Link Select Event: click:1:false'
+    )
+    expect(await page.evaluate(() => window.location.hash)).toBe('#help-section')
+    await expect(page.getByTestId('menu-link-root')).toHaveCount(0)
+    await expect(page.getByTestId('menu-link-open-logs')).toHaveText('Link Open Logs: true,false')
+    await expect(trigger).toBeFocused()
+  })
+
+  test('MN-LINK-03: Enter and Space activate a link once with native navigation', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    const trigger = page.getByTestId('btn-link-trigger')
+    await trigger.click()
+    await page.getByTestId('menu-link-help').focus()
+
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: Help')
+    expect(await page.evaluate(() => window.location.hash)).toBe('#help-section')
+    await expect(page.getByTestId('menu-link-root')).toHaveCount(0)
+
+    await page.evaluate(() => {
+      window.location.hash = ''
+    })
+    await trigger.click()
+    await page.getByTestId('menu-link-help').focus()
+    await page.keyboard.press('Space')
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: Help')
+    expect(await page.evaluate(() => window.location.hash)).toBe('#help-section')
+    await expect(page.getByTestId('menu-link-root')).toHaveCount(0)
+    await expect(page.getByTestId('menu-link-select-event')).toHaveText(
+      'Link Select Event: click:0:false'
+    )
+  })
+
+  test('MN-LINK-05: Modified click stays native without selecting or dismissing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    await page.getByTestId('btn-link-trigger').click()
+
+    await page.keyboard.down('Meta')
+    await page.getByTestId('menu-link-help').click()
+    await page.keyboard.up('Meta')
+
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: None')
+    await expect(page.getByTestId('menu-link-root')).toBeVisible()
+    await expect(page.getByTestId('menu-link-open-logs')).toHaveText('Link Open Logs: true')
+  })
+
+  test('MN-LINK-07: Disabled link is skipped and inert on every route', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    await page.getByTestId('btn-link-trigger').click()
+    const disabled = page.getByTestId('menu-link-disabled')
+    await expect(disabled).toHaveAttribute('aria-disabled', 'true')
+    await expect(disabled).not.toHaveAttribute('tabindex', '0')
+
+    await page.getByTestId('menu-link-stay').focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByTestId('menu-link-plain')).toBeFocused()
+
+    await disabled.click({ force: true })
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: None')
+    await expect(page.getByTestId('menu-link-root')).toBeVisible()
+    expect(await page.evaluate(() => window.location.hash)).toBe('')
+
+    await disabled.focus()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Space')
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: None')
+    await expect(page.getByTestId('menu-link-root')).toBeVisible()
+  })
+
+  test('MN-LINK-08: closeOnSelect=false navigates without dismissing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Links')
+    await page.getByTestId('btn-link-trigger').click()
+
+    await page.getByTestId('menu-link-stay').click()
+    await expect(page.getByTestId('menu-link-action')).toHaveText('Link Action: Stay')
+    expect(await page.evaluate(() => window.location.hash)).toBe('#stay-section')
+    await expect(page.getByTestId('menu-link-root')).toBeVisible()
+    await expect(page.getByTestId('menu-link-open-logs')).toHaveText('Link Open Logs: true')
+  })
+})

@@ -169,4 +169,77 @@ export default {
       </Div>
     )
   },
+
+  NestedSubmenu: () => {
+    const [shareOpen, setShareOpen] = React.useState(false)
+    return (
+      <Div p="6r" maxW="200r">
+        <SectionCard
+          title="Nested Submenu"
+          subtitle="Recursive Menu: Right/Enter/Space open, Left closes one level, hover intent opens after 100ms."
+        >
+          <Div display="flex" gap="4r" alignItems="center">
+            <Popover>
+              <EntryTrigger>
+                <span>File</span>
+                <KeyboardArrowDownIcon />
+              </EntryTrigger>
+              <Popover.Content placement="bottom-start">
+                <Menu>
+                  <Menu.Item onClick={() => toast.show('New clicked')}>New</Menu.Item>
+                  <Menu.Item onClick={() => toast.show('Open clicked')}>Open</Menu.Item>
+                  <Menu.Separator />
+                  <Menu
+                    open={shareOpen}
+                    onOpen={() => setShareOpen(true)}
+                    onDismiss={() => setShareOpen(false)}
+                  >
+                    <Menu.Trigger>Share</Menu.Trigger>
+                    <Menu.Content>
+                      <Menu.Item onClick={() => toast.show('Email clicked')}>Email</Menu.Item>
+                      <Menu.Item onClick={() => toast.show('Copy link clicked')}>
+                        Copy link
+                      </Menu.Item>
+                    </Menu.Content>
+                  </Menu>
+                </Menu>
+              </Popover.Content>
+            </Popover>
+          </Div>
+        </SectionCard>
+      </Div>
+    )
+  },
+
+  LinkItems: () => {
+    return (
+      <Div p="6r" maxW="200r">
+        <SectionCard
+          title="Link Items"
+          subtitle="Real anchors with menuitem semantics: native navigation preserved, dismissed by default."
+        >
+          <Div display="flex" gap="4r" alignItems="center">
+            <Popover>
+              <EntryTrigger>
+                <span>Docs</span>
+                <KeyboardArrowDownIcon />
+              </EntryTrigger>
+              <Popover.Content placement="bottom-start">
+                <Menu>
+                  <Menu.LinkItem href="#getting-started">Getting started</Menu.LinkItem>
+                  <Menu.LinkItem href="#api" target="_blank" rel="noreferrer">
+                    API reference
+                  </Menu.LinkItem>
+                  <Menu.Separator />
+                  <Menu.LinkItem href="#archived" disabled>
+                    Archived (Disabled)
+                  </Menu.LinkItem>
+                </Menu>
+              </Popover.Content>
+            </Popover>
+          </Div>
+        </SectionCard>
+      </Div>
+    )
+  },
 }

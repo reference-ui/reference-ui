@@ -264,6 +264,343 @@ describe('Menu component keyboard navigation and triggers', () => {
     expect(openChangeSpy).toHaveBeenNthCalledWith(2, false)
   })
 
+  it('MN-DOM-01-nested: nested Menu renders no node with trigger/content roles and controlled expansion', async () => {
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu id="menu-root">
+              <Menu.Item id="item-new">New</Menu.Item>
+              <Menu open onOpen={() => {}} onDismiss={() => {}}>
+                <Menu.Trigger id="sub-trigger">Share</Menu.Trigger>
+                <Menu.Content id="sub-content">
+                  <Menu.Item id="sub-item-email">Email</Menu.Item>
+                </Menu.Content>
+              </Menu>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const trigger = document.getElementById('sub-trigger')!
+    const content = document.getElementById('sub-content')!
+    expect(trigger.tagName).toBe('DIV')
+    expect(trigger.getAttribute('role')).toBe('menuitem')
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger.getAttribute('aria-controls')).toBe('sub-content')
+    expect(content.tagName).toBe('DIV')
+    expect(content.getAttribute('role')).toBe('menu')
+
+    // Nested Menu contributes no node: trigger shares the parent roving container.
+    const itemNew = document.getElementById('item-new')!
+    expect(trigger.parentElement).toBe(itemNew.parentElement)
+  })
+
+  it('MN-SUBKEY-09: omitted nested open stays controlled false and requests open once', async () => {
+    const onOpen = vi.fn()
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu onOpen={onOpen} onDismiss={() => {}}>
+                <Menu.Trigger id="sub-trigger">Share</Menu.Trigger>
+                <Menu.Content id="sub-content">
+                  <Menu.Item>Never mounted</Menu.Item>
+                </Menu.Content>
+              </Menu>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const trigger = document.getElementById('sub-trigger')!
+    trigger.focus()
+    await React.act(async () => {
+      trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    })
+
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(trigger.hasAttribute('aria-controls')).toBe(false)
+    expect(document.getElementById('sub-content')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('MN-ACT-04: deep selection dismisses deepest-first then the root', async () => {
+    const order: string[] = []
+    function Harness() {
+      const [rootOpen, setRootOpen] = React.useState(true)
+      const [l1Open, setL1Open] = React.useState(true)
+      const [l2Open, setL2Open] = React.useState(true)
+      return (
+        <Popover open={rootOpen} onOpenChange={setRootOpen} onDismiss={() => order.push('root')}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu
+                open={l1Open}
+                onOpen={() => setL1Open(true)}
+                onDismiss={() => {
+                  order.push('l1')
+                  setL1Open(false)
+                }}
+              >
+                <Menu.Trigger>Share</Menu.Trigger>
+                <Menu.Content>
+                  <Menu
+                    open={l2Open}
+                    onOpen={() => setL2Open(true)}
+                    onDismiss={() => {
+                      order.push('l2')
+                      setL2Open(false)
+                    }}
+                  >
+                    <Menu.Trigger>More</Menu.Trigger>
+                    <Menu.Content>
+                      <Menu.Item id="deep-item" onSelect={() => order.push('select')}>
+                        Deep
+                      </Menu.Item>
+                    </Menu.Content>
+                  </Menu>
+                </Menu.Content>
+              </Menu>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Harness />)
+    })
+
+    const deep = document.getElementById('deep-item')!
+    await React.act(async () => {
+      deep.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(order).toEqual(['select', 'l2', 'l1', 'root'])
+    expect(document.getElementById('trigger-btn')?.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('MN-LINK-01: LinkItem renders a native anchor with menuitem semantics', async () => {
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem
+                id="link-help"
+                href="/help"
+                target="_blank"
+                download="report.csv"
+                rel="noreferrer"
+              >
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    expect(link).toBeInstanceOf(HTMLAnchorElement)
+    expect(link.tagName).toBe('A')
+    expect(link.getAttribute('role')).toBe('menuitem')
+    expect(link.getAttribute('href')).toBe('/help')
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('download')).toBe('report.csv')
+    expect(link.getAttribute('rel')).toBe('noreferrer')
+  })
+
+  it('MN-LINK-02: unmodified LinkItem click selects once and dismisses without preventing navigation', async () => {
+    const onSelect = vi.fn()
+    const rootChanges: boolean[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => rootChanges.push(next)}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem id="link-help" href="/help" onSelect={onSelect}>
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    let defaultPrevented: boolean | null = null
+    link.addEventListener('click', e => {
+      defaultPrevented = e.defaultPrevented
+    })
+    await React.act(async () => {
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    })
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
+    expect(defaultPrevented).toBe(false)
+    expect(rootChanges).toEqual([false])
+  })
+
+  it('MN-LINK-04: prevented LinkItem click cancels both navigation and dismissal', async () => {
+    const rootChanges: boolean[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => rootChanges.push(next)}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem
+                id="link-help"
+                href="/help"
+                onSelect={e => e.preventDefault()}
+              >
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    await React.act(async () => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+      link.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    })
+    expect(rootChanges).toEqual([])
+    expect(document.getElementById('link-help')).not.toBeNull()
+  })
+
+  it('MN-LINK-05: modified LinkItem click stays native without selecting or dismissing', async () => {
+    const onSelect = vi.fn()
+    const rootChanges: boolean[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => rootChanges.push(next)}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem id="link-help" href="/help" onSelect={onSelect}>
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    await React.act(async () => {
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }))
+    })
+
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(rootChanges).toEqual([])
+    expect(document.getElementById('link-help')).not.toBeNull()
+  })
+
+  it('MN-LINK-07: disabled LinkItem is non-navigable and inert', async () => {
+    const onSelect = vi.fn()
+    const rootChanges: boolean[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => rootChanges.push(next)}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem id="link-help" href="/help" disabled onSelect={onSelect}>
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    expect(link.getAttribute('aria-disabled')).toBe('true')
+    await React.act(async () => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+      link.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    })
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(rootChanges).toEqual([])
+  })
+
+  it('MN-LINK-03: LinkItem Space funnels through one synthetic click', async () => {
+    const onSelect = vi.fn()
+    const clicks: number[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem
+                id="link-help"
+                href="/help"
+                onSelect={onSelect}
+                onClick={() => clicks.push(1)}
+              >
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    link.focus()
+    await React.act(async () => {
+      link.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }))
+    })
+
+    expect(clicks).toHaveLength(1)
+    expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  it('MN-LINK-08: LinkItem closeOnSelect=false preserves activation without dismissal', async () => {
+    const onSelect = vi.fn()
+    const rootChanges: boolean[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => rootChanges.push(next)}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.LinkItem id="link-help" href="/help" closeOnSelect={false} onSelect={onSelect}>
+                Help
+              </Menu.LinkItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const link = document.getElementById('link-help')!
+    await React.act(async () => {
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    })
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
+    expect(rootChanges).toEqual([])
+    expect(document.getElementById('link-help')).not.toBeNull()
+  })
+
   it('does not focus menu items when opened via mouse click', async () => {
     await React.act(async () => {
       root.render(

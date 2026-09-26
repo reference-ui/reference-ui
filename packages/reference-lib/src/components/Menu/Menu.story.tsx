@@ -402,3 +402,195 @@ export const Parity = () => {
     </ReferenceLibrary>
   )
 }
+
+export const Submenu = () => {
+  const [shareOpen, setShareOpen] = React.useState(false)
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const [subLogs, setSubLogs] = React.useState<string[]>([])
+  const [rootLogs, setRootLogs] = React.useState<string[]>([])
+  const [action, setAction] = React.useState<string | null>(null)
+
+  const log = (entry: string) => setSubLogs(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
+        <Div mb="4r">
+          <button data-testid="sub-outside" type="button">
+            Outside
+          </button>
+          <Popover onOpenChange={next => setRootLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-sub-trigger">Open Submenu</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-sub-root">
+                <Menu.Item
+                  data-testid="menu-sub-item-new"
+                  onSelect={() => setAction('New')}
+                >
+                  New
+                </Menu.Item>
+                <Menu
+                  open={shareOpen}
+                  onOpen={() => {
+                    log('share:onOpen')
+                    setShareOpen(true)
+                  }}
+                  onDismiss={() => {
+                    log('share:onDismiss')
+                    setShareOpen(false)
+                  }}
+                >
+                  <Menu.Trigger data-testid="menu-sub-trigger">Share</Menu.Trigger>
+                  <Menu.Content data-testid="menu-sub-content">
+                    <Menu.Item
+                      data-testid="menu-sub-item-email"
+                      onSelect={() => setAction('Email')}
+                    >
+                      Email
+                    </Menu.Item>
+                    <Menu
+                      open={moreOpen}
+                      onOpen={() => {
+                        log('more:onOpen')
+                        setMoreOpen(true)
+                      }}
+                      onDismiss={() => {
+                        log('more:onDismiss')
+                        setMoreOpen(false)
+                      }}
+                    >
+                      <Menu.Trigger data-testid="menu-sub-trigger-l2">More</Menu.Trigger>
+                      <Menu.Content data-testid="menu-sub-content-l2">
+                        <Menu.Item
+                          data-testid="menu-sub-item-deep"
+                          onSelect={() => setAction('Deep')}
+                        >
+                          Deep link
+                        </Menu.Item>
+                      </Menu.Content>
+                    </Menu>
+                    <Menu.Item
+                      data-testid="menu-sub-item-copy"
+                      onSelect={() => setAction('Copy')}
+                    >
+                      Copy link
+                    </Menu.Item>
+                  </Menu.Content>
+                </Menu>
+                <Menu
+                  onOpen={() => log('omitted:onOpen')}
+                  onDismiss={() => log('omitted:onDismiss')}
+                >
+                  <Menu.Trigger data-testid="menu-sub-trigger-omitted">
+                    Omitted
+                  </Menu.Trigger>
+                  <Menu.Content data-testid="menu-sub-content-omitted">
+                    <Menu.Item data-testid="menu-sub-item-omitted">
+                      Never mounted
+                    </Menu.Item>
+                  </Menu.Content>
+                </Menu>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        <Span data-testid="menu-sub-action" fontSize="3.5r" color="design.text.base">
+          Sub Action: {action ?? 'None'}
+        </Span>
+        <Span data-testid="menu-sub-logs" fontSize="3.5r" color="design.text.base">
+          Sub Logs: {subLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-sub-root-logs" fontSize="3.5r" color="design.text.base">
+          Sub Root Logs: {rootLogs.join(',')}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Links = () => {
+  const [action, setAction] = React.useState<string | null>(null)
+  const [selectEvent, setSelectEvent] = React.useState<string>('none')
+  const [openLogs, setOpenLogs] = React.useState<string[]>([])
+
+  const recordSelect = (label: string) => (event: Event) => {
+    setAction(label)
+    setSelectEvent(`${event.type}:${(event as MouseEvent).detail ?? ''}:${event.defaultPrevented}`)
+  }
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
+        <Div mb="4r">
+          <Popover onOpenChange={next => setOpenLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-link-trigger">Open Links</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-link-root">
+                <Menu.LinkItem
+                  data-testid="menu-link-help"
+                  href="#help-section"
+                  onSelect={recordSelect('Help')}
+                >
+                  Help
+                </Menu.LinkItem>
+                <Menu.LinkItem
+                  data-testid="menu-link-download"
+                  href="#dl-section"
+                  download="report.csv"
+                  onSelect={recordSelect('Download')}
+                >
+                  Download
+                </Menu.LinkItem>
+                <Menu.LinkItem
+                  data-testid="menu-link-blank"
+                  href="#blank-section"
+                  target="_blank"
+                  rel="noreferrer"
+                  onSelect={recordSelect('Blank')}
+                >
+                  Blank
+                </Menu.LinkItem>
+                <Menu.LinkItem
+                  data-testid="menu-link-stay"
+                  href="#stay-section"
+                  closeOnSelect={false}
+                  onSelect={recordSelect('Stay')}
+                >
+                  Stay open
+                </Menu.LinkItem>
+                <Menu.LinkItem
+                  data-testid="menu-link-disabled"
+                  href="#nope-section"
+                  disabled
+                  onSelect={recordSelect('Disabled')}
+                >
+                  Disabled
+                </Menu.LinkItem>
+                <Menu.Item
+                  data-testid="menu-link-plain"
+                  onSelect={recordSelect('Plain')}
+                >
+                  Plain
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        <div id="help-section" />
+        <div id="stay-section" />
+
+        <Span data-testid="menu-link-action" fontSize="3.5r" color="design.text.base">
+          Link Action: {action ?? 'None'}
+        </Span>
+        <Span data-testid="menu-link-select-event" fontSize="3.5r" color="design.text.base">
+          Link Select Event: {selectEvent}
+        </Span>
+        <Span data-testid="menu-link-open-logs" fontSize="3.5r" color="design.text.base">
+          Link Open Logs: {openLogs.join(',')}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}

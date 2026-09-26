@@ -1,10 +1,36 @@
 import * as React from 'react'
-import { Div, type PrimitiveProps } from '@reference-ui/react'
-import { useOverlay } from '../Overlay'
-import { RovingFocus } from '../RovingFocus'
+import { A, Div, type PrimitiveProps } from '@reference-ui/react'
+import {
+  Overlay,
+  OverlayPortal,
+  isEventConsumed,
+  isPrimaryPointer,
+  markEventConsumed,
+  overlayStackStore,
+  useOverlay,
+  type OverlayContentProps,
+} from '../Overlay'
+import { isInsideLayer } from '../Overlay/dismiss'
+import { RovingFocus, getDirection } from '../RovingFocus'
 import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
+import {
+  asRect as intentAsRect,
+  evaluateSubmenuIntent,
+  SUBMENU_CLOSE_DELAY_MS,
+  SUBMENU_OPEN_DELAY_MS,
+  type Point as IntentPoint,
+  type PointerSample as IntentSample,
+  type Side as IntentSide,
+} from './menu-intent'
 
-export type MenuProps = PrimitiveProps<'div'>
+export type MenuProps = PrimitiveProps<'div'> & {
+  /** Nested-only: controlled submenu open. Omitted nested open is controlled false. */
+  open?: boolean
+  /** Nested-only: submenu open request. */
+  onOpen?: () => void
+  /** Nested-only: submenu dismiss request. */
+  onDismiss?: () => void
+}
 
 export type MenuEntryStrategy = 'first' | 'last' | null
 
@@ -92,10 +118,140 @@ const UNCONSUMED: unique symbol = Symbol('unconsumed')
 // render) the memo holds the first one. One root Menu per Popover.
 const menuIdByTriggerRef = new WeakMap<object, string>()
 
-export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
-  { children, className, style, onKeyDown, id: authoredId, ...props }: MenuProps,
+const MENU_ROOT_ID = 'menu-root'
+
+const ENABLED_MENUITEM_SELECTOR =
+  '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled])'
+
+function focusFirstEnabledItem(content: HTMLElement | null) {
+  if (!content) return
+  const items = Array.from(content.querySelectorAll<HTMLElement>(ENABLED_MENUITEM_SELECTOR))
+  items[0]?.focus()
+}
+
+function nodeContains(node: HTMLElement | null, target: EventTarget | null): boolean {
+  return (
+    !!node && !!target && target instanceof Node && (node === target || node.contains(target))
+  )
+}
+
+function hoverCapablePointer(pointerType: string, pressure = 0): boolean {
+  if (pointerType === 'touch') return false
+  if (pointerType === 'mouse' || pointerType === '') return true
+  if (pointerType === 'pen') return pressure === 0
+  return false
+}
+
+function submenuSide(content: HTMLElement | null, fallback: IntentSide): IntentSide {
+  const side = content?.getAttribute('data-side')?.split('-')[0]
+  if (side === 'top' || side === 'right' || side === 'bottom' || side === 'left') return side
+  return fallback
+}
+
+// --- Menu level tree -------------------------------------------------------
+// Root Menu adopts its Popover layer; each open nested Menu owns one child
+// Overlay layer. Levels chain through context; the root owns the submenu
+// registry that Escape, outside press, and item selection consult.
+
+interface SubmenuRegistration {
+  id: string
+  depth: number
+  parentId: string
+  isOpen: boolean
+  getTrigger: () => HTMLElement | null
+  getContent: () => HTMLDivElement | null
+  requestClose: () => void
+}
+
+interface SubmenuIntentState {
+  openTimer: ReturnType<typeof setTimeout> | null
+  closeTimer: ReturnType<typeof setTimeout> | null
+  leavePoint: IntentPoint | null
+  prevSample: IntentSample | null
+  keyboardOpen: boolean
+}
+
+function freshIntentState(): SubmenuIntentState {
+  return { openTimer: null, closeTimer: null, leavePoint: null, prevSample: null, keyboardOpen: false }
+}
+
+function clearIntentTimer(state: SubmenuIntentState, kind: 'openTimer' | 'closeTimer') {
+  if (state[kind]) {
+    clearTimeout(state[kind]!)
+    state[kind] = null
+  }
+}
+
+interface MenuLevelValue {
+  id: string
+  depth: number
+  isSubmenu: boolean
+  isOpen: boolean
+  contentId: string
+  // Live node reads. Presence mounts Content a commit after open without
+  // re-rendering Menu, so mirrored refs go stale; read at use time.
+  getContentNode: () => HTMLDivElement | null
+  getTrigger: () => HTMLElement | null
+  parent: MenuLevelValue | null
+  intent: SubmenuIntentState | null
+  requestClose: () => void
+  requestOpen: () => void
+  requestDeepestClose: () => boolean
+  requestTreeDismiss: () => void
+  registerSubmenu: (reg: SubmenuRegistration) => () => void
+  unwindForPress: (target: EventTarget | null) => void
+  registry: Map<string, SubmenuRegistration>
+  /** Submenu levels reconcile authored Content ids through this. */
+  setContentId: ((id: string) => void) | null
+}
+
+const MenuLevelContext = React.createContext<MenuLevelValue | null>(null)
+
+function useMenuLevel() {
+  return React.useContext(MenuLevelContext)
+}
+
+function rootTriggerOf(level: MenuLevelValue | null): HTMLElement | null {
+  let current = level
+  while (current?.parent) current = current.parent
+  return current?.getTrigger() ?? null
+}
+
+function isLevelDescendantOf(
+  registry: Map<string, SubmenuRegistration>,
+  id: string,
+  ancestorId: string
+): boolean {
+  let current = registry.get(id)
+  while (current) {
+    if (current.parentId === ancestorId) return true
+    if (current.parentId === MENU_ROOT_ID) return false
+    current = registry.get(current.parentId)
+  }
+  return false
+}
+
+function openRegistrationsDeepestFirst(
+  registry: Map<string, SubmenuRegistration>
+): SubmenuRegistration[] {
+  return [...registry.values()].filter(r => r.isOpen).sort((a, b) => b.depth - a.depth)
+}
+
+function devWarn(message: string) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(`Reference UI: ${message}`)
+  }
+}
+
+// --- Root Menu -------------------------------------------------------------
+
+const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
+  { children, className, style, onKeyDown, id: authoredId, open, onOpen, onDismiss, ...props }: MenuProps,
   ref
 ) {
+  if (open !== undefined || onOpen !== undefined || onDismiss !== undefined) {
+    devWarn('Menu `open`/`onOpen`/`onDismiss` apply only to nested Menu. Root open state lives on the wrapping Popover.')
+  }
   const overlay = useOverlay()
   const isOpen = overlay?.isOpen ?? false
   const menuRef = React.useRef<HTMLDivElement | null>(null)
@@ -125,6 +281,110 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
     generatedMenuId = stableIdRef.current
   }
   const menuId = authoredId ?? generatedMenuId
+
+  // Submenu registry + tree operations. Stable callbacks over mutable refs
+  // so nested levels never churn subscriptions when open state changes.
+  const registryRef = React.useRef(new Map<string, SubmenuRegistration>())
+  const overlayRef = React.useRef(overlay)
+  overlayRef.current = overlay
+
+  const registerSubmenu = React.useCallback((reg: SubmenuRegistration) => {
+    const registry = registryRef.current
+    registry.set(reg.id, reg)
+    return () => {
+      for (const [key, value] of registry) {
+        if (value === reg) registry.delete(key)
+      }
+    }
+  }, [])
+
+  const requestRootClose = React.useCallback(() => {
+    overlayRef.current?.setIsOpen(false)
+  }, [])
+
+  const requestRootDeepestClose = React.useCallback(() => {
+    for (const reg of openRegistrationsDeepestFirst(registryRef.current)) {
+      reg.requestClose()
+      return true
+    }
+    return false
+  }, [])
+
+  const requestRootTreeDismiss = React.useCallback(() => {
+    for (const reg of openRegistrationsDeepestFirst(registryRef.current)) {
+      reg.requestClose()
+    }
+    overlayRef.current?.setIsOpen(false)
+  }, [])
+
+  const unwindForPress = React.useCallback(
+    (target: EventTarget | null) => {
+      const registry = registryRef.current
+      // Keep levels containing the press plus their ancestors; close every
+      // other open submenu deepest-first. A press outside the whole tree
+      // additionally closes the root.
+      const keep = new Set<string>()
+      for (const reg of registry.values()) {
+        if (nodeContains(reg.getTrigger(), target) || nodeContains(reg.getContent(), target)) {
+          keep.add(reg.id)
+          let ancestorId: string | undefined = reg.parentId
+          while (ancestorId && ancestorId !== MENU_ROOT_ID) {
+            keep.add(ancestorId)
+            ancestorId = registry.get(ancestorId)?.parentId
+          }
+        }
+      }
+      const rootContent = menuRef.current
+      const rootTrigger = overlayRef.current?.triggerRef.current ?? null
+      const rootKept = nodeContains(rootContent, target) || nodeContains(rootTrigger, target)
+      for (const reg of openRegistrationsDeepestFirst(registry)) {
+        if (!keep.has(reg.id)) reg.requestClose()
+      }
+      if (!rootKept && keep.size === 0) {
+        overlayRef.current?.setIsOpen(false)
+      }
+    },
+    []
+  )
+
+  const getRootTrigger = React.useCallback(() => {
+    return (overlayRef.current?.triggerRef.current as HTMLElement | null) ?? null
+  }, [])
+
+  const getRootContentNode = React.useCallback(() => menuRef.current, [])
+
+  const levelValue = React.useMemo<MenuLevelValue>(
+    () => ({
+      id: MENU_ROOT_ID,
+      depth: 0,
+      isSubmenu: false,
+      isOpen,
+      contentId: menuId,
+      getContentNode: getRootContentNode,
+      getTrigger: getRootTrigger,
+      parent: null,
+      intent: null,
+      requestClose: requestRootClose,
+      requestOpen: () => overlayRef.current?.setIsOpen(true),
+      requestDeepestClose: requestRootDeepestClose,
+      requestTreeDismiss: requestRootTreeDismiss,
+      registerSubmenu,
+      unwindForPress,
+      registry: registryRef.current,
+      setContentId: null,
+    }),
+    [
+      isOpen,
+      menuId,
+      getRootContentNode,
+      getRootTrigger,
+      requestRootClose,
+      requestRootDeepestClose,
+      requestRootTreeDismiss,
+      registerSubmenu,
+      unwindForPress,
+    ]
+  )
 
   const composedRef = React.useCallback(
     (node: HTMLDivElement | null) => {
@@ -160,9 +420,7 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
       }
 
       const items = Array.from(
-        menuRef.current.querySelectorAll<HTMLElement>(
-          '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled])'
-        )
+        menuRef.current.querySelectorAll<HTMLElement>(ENABLED_MENUITEM_SELECTOR)
       )
       if (items.length === 0) return
 
@@ -200,15 +458,553 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
     } else if (e.key === 'Escape') {
       e.preventDefault()
       e.stopPropagation()
+      // Level-local Escape: an open submenu absorbs this key; only a
+      // submenu-free tree closes the root.
+      if (requestRootDeepestClose()) return
       overlay.setIsOpen(false)
       restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
     }
   }
 
   return (
-    <Div
+    <MenuLevelContext.Provider value={levelValue}>
+      <Div
+        role="menu"
+        id={menuId}
+        data-reference-menu-content=""
+        tabIndex={-1}
+        minW="40r"
+        bg="ui.dialog.background"
+        color="ui.dialog.foreground"
+        borderRadius="md"
+        p="1r"
+        boxShadow="0 4px 16px rgba(0,0,0,0.12)"
+        border="1px solid"
+        borderColor="ui.dialog.border"
+        outline="none"
+        className={className}
+        style={style}
+        onKeyDown={handleKeyDown}
+        {...props}
+        ref={composedRef}
+      >
+        <RovingFocus.Root orientation="vertical" loop typeahead>
+          <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
+            {children}
+          </Div>
+        </RovingFocus.Root>
+      </Div>
+    </MenuLevelContext.Provider>
+  )
+})
+
+// --- Nested Menu -----------------------------------------------------------
+// A nested Menu renders no node: it owns one submenu Overlay (one child
+// layer per open Content) and provides the child level. Omitted open is
+// controlled false; there is no ephemeral submenu state.
+
+function NestedMenuInner({
+  parentLevel,
+  children,
+}: {
+  parentLevel: MenuLevelValue
+  children: React.ReactNode
+}) {
+  const overlay = useOverlay()
+  const isOpen = overlay?.isOpen ?? false
+  const intentRef = React.useRef<SubmenuIntentState | null>(null)
+  if (!intentRef.current) intentRef.current = freshIntentState()
+  const intent = intentRef.current
+
+  const generatedId = React.useId()
+  const stableIdRef = React.useRef<string | null>(null)
+  if (stableIdRef.current === null) {
+    stableIdRef.current = `menu-${String(generatedId).replace(/[^a-zA-Z0-9_-]/g, '')}`
+  }
+  // Authored Content ids reconcile through state so Trigger aria-controls
+  // never points at a stale duplicate.
+  const [contentId, setContentId] = React.useState(stableIdRef.current)
+
+  const isOpenRef = React.useRef(isOpen)
+  isOpenRef.current = isOpen
+  const overlayRef = React.useRef(overlay)
+  overlayRef.current = overlay
+
+  // Registration identity is stable; open/request fields refresh per render.
+  const regRef = React.useRef<SubmenuRegistration | null>(null)
+  if (!regRef.current) {
+    regRef.current = {
+      id: contentId,
+      depth: parentLevel.depth + 1,
+      parentId: parentLevel.id,
+      isOpen,
+      getTrigger: () => overlayRef.current?.triggerRef.current ?? null,
+      getContent: () => overlayRef.current?.contentRef.current ?? null,
+      requestClose: () => {},
+    }
+  }
+  const reg = regRef.current
+  reg.id = contentId
+  reg.isOpen = isOpen
+  reg.requestClose = () => {
+    overlayRef.current?.setIsOpen(false)
+  }
+
+  React.useEffect(() => parentLevel.registerSubmenu(reg), [parentLevel, reg, contentId])
+
+  // Intent timers die with the level; open state resets travel samples.
+  React.useEffect(() => {
+    if (!isOpen) {
+      clearIntentTimer(intent, 'openTimer')
+      clearIntentTimer(intent, 'closeTimer')
+      intent.leavePoint = null
+      intent.prevSample = null
+    }
+  }, [isOpen, intent])
+  React.useEffect(() => {
+    const state = intentRef.current
+    return () => {
+      if (state) {
+        clearIntentTimer(state, 'openTimer')
+        clearIntentTimer(state, 'closeTimer')
+      }
+    }
+  }, [])
+
+  const requestClose = React.useCallback(() => {
+    overlayRef.current?.setIsOpen(false)
+  }, [])
+  const requestOpen = React.useCallback(() => {
+    overlayRef.current?.setIsOpen(true)
+  }, [])
+  const getTrigger = React.useCallback(
+    () => overlayRef.current?.triggerRef.current ?? null,
+    []
+  )
+  const getContentNode = React.useCallback(
+    () => overlayRef.current?.contentRef.current ?? null,
+    []
+  )
+  const requestDeepestClose = React.useCallback(() => {
+    // Deepest open descendant absorbs; else this level closes itself.
+    const registry = parentLevel.registry
+    for (const candidate of openRegistrationsDeepestFirst(registry)) {
+      if (candidate.id === contentId || isLevelDescendantOf(registry, candidate.id, contentId)) {
+        candidate.requestClose()
+        return true
+      }
+    }
+    requestClose()
+    return true
+  }, [parentLevel, contentId, requestClose])
+
+  const levelValue = React.useMemo<MenuLevelValue>(
+    () => ({
+      id: contentId,
+      depth: parentLevel.depth + 1,
+      isSubmenu: true,
+      isOpen,
+      contentId,
+      getContentNode,
+      getTrigger,
+      parent: parentLevel,
+      intent,
+      requestClose,
+      requestOpen,
+      requestDeepestClose,
+      requestTreeDismiss: parentLevel.requestTreeDismiss,
+      registerSubmenu: parentLevel.registerSubmenu,
+      unwindForPress: parentLevel.unwindForPress,
+      registry: parentLevel.registry,
+      setContentId,
+    }),
+    [
+      contentId,
+      parentLevel,
+      isOpen,
+      getContentNode,
+      getTrigger,
+      intent,
+      requestClose,
+      requestOpen,
+      requestDeepestClose,
+      setContentId,
+    ]
+  )
+
+  // Menu-owned outside press. Overlay dismisses only its top layer, but a
+  // press outside the menu tree must unwind every level deepest-first while
+  // a press inside an ancestor keeps it. Capture runs before Overlay's
+  // bubble listener; marking consumed pre-empts the single dismiss without
+  // preventDefault, so native focus and outside clicks are preserved.
+  React.useLayoutEffect(() => {
+    if (!isOpen) return
+    const doc =
+      overlayRef.current?.triggerRef.current?.ownerDocument ??
+      (typeof document !== 'undefined' ? document : null)
+    if (!doc) return
+    const onDown = (event: PointerEvent) => {
+      if (!isPrimaryPointer(event) || isEventConsumed(event)) return
+      const overlayId = overlayRef.current?.id
+      const layer = overlayId
+        ? overlayStackStore.getState().layers.find(l => l.id === overlayId)
+        : undefined
+      if (!layer || !layer.open) return
+      if (isInsideLayer(layer, event)) return
+      parentLevel.unwindForPress(event.target)
+      markEventConsumed(event)
+    }
+    doc.addEventListener('pointerdown', onDown, true)
+    return () => doc.removeEventListener('pointerdown', onDown, true)
+  }, [isOpen, parentLevel])
+
+  // Grace-polygon travel tracking while open. Inside/grace samples cancel
+  // the close timer; leave samples arm the frozen 300ms close.
+  React.useEffect(() => {
+    if (!isOpen) return
+    const doc =
+      overlayRef.current?.contentRef.current?.ownerDocument ??
+      overlayRef.current?.triggerRef.current?.ownerDocument ??
+      (typeof document !== 'undefined' ? document : null)
+    if (!doc) return
+    const onMove = (event: PointerEvent) => {
+      if (!hoverCapablePointer(event.pointerType, event.pressure)) return
+      const trigger = overlayRef.current?.triggerRef.current ?? null
+      const content = overlayRef.current?.contentRef.current ?? null
+      if (!trigger || !content) return
+      const fallback: IntentSide =
+        getDirection(trigger) === 'rtl' ? 'left' : 'right'
+      const decision = evaluateSubmenuIntent({
+        currentPoint: [event.clientX, event.clientY],
+        triggerRect: intentAsRect(trigger.getBoundingClientRect()),
+        contentRect: intentAsRect(content.getBoundingClientRect()),
+        side: submenuSide(content, fallback),
+        leavePoint: intent.leavePoint ?? undefined,
+        prevSample: intent.prevSample ?? undefined,
+      })
+      intent.prevSample = { x: event.clientX, y: event.clientY, timestamp: event.timeStamp }
+      if (decision === 'leave') {
+        if (!intent.closeTimer) {
+          intent.closeTimer = setTimeout(() => {
+            intent.closeTimer = null
+            if (isOpenRef.current) overlayRef.current?.setIsOpen(false)
+          }, SUBMENU_CLOSE_DELAY_MS)
+        }
+      } else {
+        clearIntentTimer(intent, 'closeTimer')
+      }
+    }
+    doc.addEventListener('pointermove', onMove, true)
+    return () => doc.removeEventListener('pointermove', onMove, true)
+  }, [isOpen, intent])
+
+  return <MenuLevelContext.Provider value={levelValue}>{children}</MenuLevelContext.Provider>
+}
+
+function NestedMenu({ open, onOpen, onDismiss, children }: MenuProps) {
+  const parentLevel = useMenuLevel()
+  const parentOverlay = useOverlay()
+  const portalContainer = parentOverlay?.portalContainer
+  if (!parentLevel) return null
+  const inner = <NestedMenuInner parentLevel={parentLevel}>{children}</NestedMenuInner>
+  return (
+    <Overlay
+      open={open ?? false}
+      onOpen={onOpen}
+      onDismiss={onDismiss}
+      isolation={false}
+    >
+      {portalContainer !== undefined && portalContainer !== null ? (
+        <OverlayPortal container={portalContainer}>{inner}</OverlayPortal>
+      ) : (
+        inner
+      )}
+    </Overlay>
+  )
+}
+
+// --- Submenu parts ---------------------------------------------------------
+
+export type MenuTriggerProps = PrimitiveProps<'div'> & {
+  disabled?: boolean
+  textValue?: string
+}
+
+export const MenuTrigger = React.forwardRef<HTMLDivElement, MenuTriggerProps>(function MenuTrigger(
+  {
+    children,
+    disabled = false,
+    textValue,
+    onKeyDown,
+    onClick,
+    onPointerEnter,
+    onPointerLeave,
+    className,
+    style,
+    id: authoredId,
+    ...props
+  }: MenuTriggerProps,
+  ref
+) {
+  const level = useMenuLevel()
+  const overlay = useOverlay()
+  if (!level || !level.isSubmenu) {
+    devWarn('Menu.Trigger is valid only when nested inside a submenu Menu.')
+  }
+  const isOpen = level?.isOpen ?? false
+
+  const generatedId = React.useId()
+  const stableTriggerIdRef = React.useRef<string | null>(null)
+  if (stableTriggerIdRef.current === null) {
+    stableTriggerIdRef.current = `menu-trigger-${String(generatedId).replace(/[^a-zA-Z0-9_-]/g, '')}`
+  }
+  const triggerId = authoredId ?? stableTriggerIdRef.current
+
+  const composedRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      // The submenu Overlay anchors geometry and outside-press ownership to
+      // this node, mirroring Overlay.Trigger registration without the button.
+      // RovingFocus.Item drops child refs on React 17/18 (props.ref
+      // stripping), so the layout resolution below is the portable path.
+      if (overlay) {
+        overlay.triggerRef.current = node as HTMLElement | null
+        overlayStackStore.getState().setLayerTrigger(overlay.id, node)
+      }
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref && typeof ref === 'object' && 'current' in ref) {
+        ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }
+    },
+    [overlay, ref]
+  )
+
+  // Portable trigger registration: resolve the mounted node by stable id so
+  // geometry, outside-press ownership, and focus restore work on React 17/18
+  // where the child ref above is dropped. Follows authored id changes.
+  React.useLayoutEffect(() => {
+    if (!overlay || typeof document === 'undefined') return
+    const node = document.getElementById(triggerId)
+    overlay.triggerRef.current = node
+    overlayStackStore.getState().setLayerTrigger(overlay.id, node)
+  }, [overlay, triggerId])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(e)
+    if (e.defaultPrevented || disabled || !level || !level.isSubmenu) return
+    const isRtl = getDirection(e.currentTarget) === 'rtl'
+    const openKey = isRtl ? 'ArrowLeft' : 'ArrowRight'
+    if (e.key === openKey || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (isOpen) {
+        // Open by pointer, now directed by key: move focus in once, never a
+        // second open request.
+        focusFirstEnabledItem(level.getContentNode())
+        return
+      }
+      if (level.intent) level.intent.keyboardOpen = true
+      level.requestOpen()
+    }
+  }
+
+  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerEnter?.(e)
+    if (e.defaultPrevented || disabled || !level || !level.isSubmenu || !level.intent) return
+    if (!hoverCapablePointer(e.pointerType, e.pressure)) return
+    const intent = level.intent
+    // Hover supersedes any stale keyboard-open flag from a rejected request.
+    intent.keyboardOpen = false
+    clearIntentTimer(intent, 'closeTimer')
+    if (isOpen || intent.openTimer) return
+    intent.openTimer = setTimeout(() => {
+      intent.openTimer = null
+      level.requestOpen()
+    }, SUBMENU_OPEN_DELAY_MS)
+  }
+
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerLeave?.(e)
+    if (e.defaultPrevented || disabled || !level || !level.isSubmenu || !level.intent) return
+    if (!hoverCapablePointer(e.pointerType, e.pressure)) return
+    const intent = level.intent
+    intent.leavePoint = [e.clientX, e.clientY]
+    clearIntentTimer(intent, 'openTimer')
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    onClick?.(e)
+    if (e.defaultPrevented || disabled || !level || !level.isSubmenu) return
+    // Tap/click activation opens once; the hover timer would only duplicate.
+    if (level.intent) clearIntentTimer(level.intent, 'openTimer')
+    if (!isOpen) level.requestOpen()
+  }
+
+  return (
+    <RovingFocus.Item disabled={disabled} textValue={textValue}>
+      <Div
+        role="menuitem"
+        id={triggerId}
+        tabIndex={disabled ? -1 : 0}
+        aria-haspopup="menu"
+        aria-expanded={level?.isSubmenu ? isOpen : undefined}
+        aria-controls={level?.isSubmenu && isOpen ? level.contentId : undefined}
+        aria-disabled={disabled ? 'true' : undefined}
+        data-disabled={disabled ? '' : undefined}
+        onKeyDown={handleKeyDown}
+        onClick={handleClick}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        display="flex"
+        alignItems="center"
+        minHeight={controlSize.height}
+        height="auto"
+        px="3r"
+        py={controlSize.paddingBlock}
+        boxSizing="border-box"
+        borderRadius="sm"
+        fontSize="3.5r"
+        lineHeight="5r"
+        cursor={disabled ? 'not-allowed' : 'pointer'}
+        bg="transparent"
+        color="design.text.base"
+        opacity={disabled ? 0.5 : 1}
+        outline="none"
+        userSelect="none"
+        _hover={!disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+        _focus={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+        _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+        className={className}
+        style={{
+          minHeight: controlHeightPx,
+          boxSizing: 'border-box',
+          ...style,
+        }}
+        {...props}
+        ref={composedRef}
+      >
+        {children}
+      </Div>
+    </RovingFocus.Item>
+  )
+})
+
+export type MenuContentProps = OverlayContentProps
+
+export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(function MenuContent(
+  {
+    children,
+    id: authoredId,
+    placement,
+    onKeyDown,
+    className,
+    style,
+    ...props
+  }: MenuContentProps,
+  ref
+) {
+  const level = useMenuLevel()
+  const overlay = useOverlay()
+  if (!level || !level.isSubmenu) {
+    devWarn('Menu.Content is valid only when nested inside a submenu Menu.')
+  }
+  const isOpen = level?.isOpen ?? false
+
+  // Authored ids reconcile to the level so Trigger aria-controls follows.
+  React.useLayoutEffect(() => {
+    if (authoredId && level?.setContentId && authoredId !== level.contentId) {
+      level.setContentId(authoredId)
+    }
+  }, [authoredId, level])
+
+  const contentId = authoredId ?? level?.contentId ?? undefined
+
+  // Overlay.Content owns the host node; resolve the consumer ref once it is
+  // mounted (a frame after open — Presence mounts a commit late) and release
+  // it on close. Levels read the live node at use time instead.
+  React.useEffect(() => {
+    if (!isOpen) {
+      if (typeof ref === 'function') {
+        ref(null)
+      } else if (ref && typeof ref === 'object' && 'current' in ref) {
+        ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = null
+      }
+      return
+    }
+    const frameId = requestAnimationFrame(() => {
+      const node = overlay?.contentRef.current ?? null
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref && typeof ref === 'object' && 'current' in ref) {
+        ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }
+    })
+    return () => cancelAnimationFrame(frameId)
+  }, [isOpen, overlay, ref])
+
+  const resolvedPlacement =
+    placement ?? (getDirection(level?.getTrigger() ?? null) === 'rtl' ? 'left-start' : 'right-start')
+
+  // Keyboard-open entry focus once per open; close restores the trigger
+  // unless focus already left (outside press) or the trigger is gone
+  // (fallback to a live parent target). Effects run deepest-first, so a
+  // full-tree unwind lands on the root trigger last.
+  const wasOpenRef = React.useRef(isOpen)
+  React.useEffect(() => {
+    const wasOpen = wasOpenRef.current
+    wasOpenRef.current = isOpen
+    if (!level || !level.isSubmenu) return
+    if (!wasOpen && isOpen) {
+      const keyboardOpen = level.intent?.keyboardOpen ?? false
+      if (level.intent) level.intent.keyboardOpen = false
+      if (!keyboardOpen) return
+      const frameId = requestAnimationFrame(() => {
+        focusFirstEnabledItem(level.getContentNode())
+      })
+      return () => cancelAnimationFrame(frameId)
+    }
+    if (wasOpen && !isOpen) {
+      if (level.intent) level.intent.keyboardOpen = false
+      const content = level.getContentNode()
+      if (!content?.contains(document.activeElement)) return
+      const trigger = level.getTrigger()
+      if (trigger && trigger.isConnected && !trigger.hasAttribute('disabled') && trigger.getAttribute('aria-disabled') !== 'true') {
+        trigger.focus()
+        return
+      }
+      const parentContent = level.parent?.getContentNode() ?? null
+      const fallback = parentContent?.querySelector<HTMLElement>(ENABLED_MENUITEM_SELECTOR) ?? null
+      if (fallback) {
+        fallback.focus()
+        return
+      }
+      restoreFocusToTrigger(rootTriggerOf(level))
+    }
+    return undefined
+  })
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(e)
+    if (e.defaultPrevented || !level || !level.isSubmenu) return
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      level.requestDeepestClose()
+      return
+    }
+    const isRtl = getDirection(e.currentTarget) === 'rtl'
+    const closeKey = isRtl ? 'ArrowRight' : 'ArrowLeft'
+    if (e.key === closeKey) {
+      e.preventDefault()
+      level.requestClose()
+    }
+  }
+
+  return (
+    <Overlay.Content
+      placement={resolvedPlacement}
+      {...props}
       role="menu"
-      id={menuId}
+      id={contentId}
       data-reference-menu-content=""
       tabIndex={-1}
       minW="40r"
@@ -223,20 +1019,17 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(
       className={className}
       style={style}
       onKeyDown={handleKeyDown}
-      {...props}
-      ref={composedRef}
     >
       <RovingFocus.Root orientation="vertical" loop typeahead>
         <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
           {children}
         </Div>
       </RovingFocus.Root>
-    </Div>
+    </Overlay.Content>
   )
-}) as React.ForwardRefExoticComponent<MenuProps & React.RefAttributes<HTMLDivElement>> & {
-  Item: typeof MenuItem
-  Separator: typeof MenuSeparator
-}
+})
+
+// --- Command items ---------------------------------------------------------
 
 export type MenuItemProps = Omit<PrimitiveProps<'div'>, 'onSelect'> & {
   disabled?: boolean
@@ -266,7 +1059,20 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function
   ref
 ) {
   const overlay = useOverlay()
+  const level = useMenuLevel()
   const shouldClose = closeOnSelect !== undefined ? closeOnSelect : closeOnClick
+
+  const dismissAfterSelect = React.useCallback(() => {
+    if (level) {
+      level.requestTreeDismiss()
+      restoreFocusToTrigger(rootTriggerOf(level))
+      return
+    }
+    if (overlay) {
+      overlay.setIsOpen(false)
+      restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
+    }
+  }, [level, overlay])
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (disabled) {
@@ -277,10 +1083,7 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function
     if (e.defaultPrevented) return
     onSelect?.(e.nativeEvent)
     if (e.nativeEvent.defaultPrevented) return
-    if (shouldClose && overlay) {
-      overlay.setIsOpen(false)
-      restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
-    }
+    if (shouldClose) dismissAfterSelect()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -296,10 +1099,7 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function
         return
       }
       e.preventDefault()
-      if (shouldClose && overlay) {
-        overlay.setIsOpen(false)
-        restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
-      }
+      if (shouldClose) dismissAfterSelect()
     }
   }
 
@@ -347,6 +1147,130 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function
   )
 })
 
+export type MenuLinkItemProps = Omit<PrimitiveProps<'a'>, 'onSelect'> & {
+  href: string
+  disabled?: boolean
+  textValue?: string
+  onSelect?: (event: Event) => void
+  closeOnSelect?: boolean
+}
+
+export const MenuLinkItem = React.forwardRef<HTMLAnchorElement, MenuLinkItemProps>(
+  function MenuLinkItem(
+    {
+      children,
+      href,
+      disabled = false,
+      textValue,
+      onSelect,
+      closeOnSelect = true,
+      onClick,
+      onKeyDown,
+      className,
+      style,
+      ...props
+    }: MenuLinkItemProps,
+    ref
+  ) {
+    const overlay = useOverlay()
+    const level = useMenuLevel()
+
+    const dismissAfterSelect = React.useCallback(() => {
+      // Deferred restore: the anchor-focus default lands after React's flush,
+      // so both synchronous and effect restores would be clobbered. A frame
+      // later the dismissal has committed and the default has run; a real
+      // navigation unloads before the frame and needs no restore.
+      if (level) {
+        level.requestTreeDismiss()
+        const rootTrigger = rootTriggerOf(level)
+        requestAnimationFrame(() => {
+          restoreFocusToTrigger(rootTrigger)
+        })
+        return
+      }
+      if (overlay) {
+        overlay.setIsOpen(false)
+        restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
+      }
+    }, [level, overlay])
+
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      onClick?.(e)
+      if (disabled) {
+        // Non-navigable: block every activation route after observability.
+        e.preventDefault()
+        return
+      }
+      if (e.defaultPrevented) return
+      // Modified, middle-button, and right-button gestures stay fully native:
+      // no selection, no dismissal.
+      if (e.button !== 0) return
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      onSelect?.(e.nativeEvent)
+      // Cancellation prevents both Menu defaults and navigation; the native
+      // event is the click itself, so its prevention already blocks nav.
+      if (e.nativeEvent.defaultPrevented) return
+      if (closeOnSelect) dismissAfterSelect()
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>) => {
+      onKeyDown?.(e)
+      if (e.defaultPrevented || disabled) return
+      // Enter activates natively through click; Space is Menu-owned (anchors
+      // scroll natively) and funnels through one synthetic click so handlers,
+      // navigation, and dismissal observe a single primary activation.
+      if (e.key === ' ') {
+        e.preventDefault()
+        e.currentTarget.click()
+      }
+    }
+
+    return (
+      <RovingFocus.Item disabled={disabled} textValue={textValue}>
+        <A
+          role="menuitem"
+          href={href}
+          tabIndex={disabled ? -1 : 0}
+          aria-disabled={disabled ? 'true' : undefined}
+          data-disabled={disabled ? '' : undefined}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          display="flex"
+          alignItems="center"
+          minHeight={controlSize.height}
+          height="auto"
+          px="3r"
+          py={controlSize.paddingBlock}
+          boxSizing="border-box"
+          borderRadius="sm"
+          fontSize="3.5r"
+          lineHeight="5r"
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          bg="transparent"
+          color="design.text.base"
+          opacity={disabled ? 0.5 : 1}
+          outline="none"
+          userSelect="none"
+          textDecoration="none"
+          _hover={!disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+          _focus={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          className={className}
+          style={{
+            minHeight: controlHeightPx,
+            boxSizing: 'border-box',
+            ...style,
+          }}
+          {...props}
+          ref={ref}
+        >
+          {children}
+        </A>
+      </RovingFocus.Item>
+    )
+  }
+)
+
 export type MenuSeparatorProps = PrimitiveProps<'div'>
 
 export const MenuSeparator = React.forwardRef<HTMLDivElement, MenuSeparatorProps>(
@@ -366,5 +1290,29 @@ export const MenuSeparator = React.forwardRef<HTMLDivElement, MenuSeparatorProps
   }
 )
 
+// --- Dispatcher ------------------------------------------------------------
+
+export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(props: MenuProps, ref) {
+  const parentLevel = useMenuLevel()
+  if (parentLevel) {
+    const { open, onOpen, onDismiss, children } = props
+    return (
+      <NestedMenu open={open} onOpen={onOpen} onDismiss={onDismiss}>
+        {children}
+      </NestedMenu>
+    )
+  }
+  return <RootMenu {...props} ref={ref} />
+}) as React.ForwardRefExoticComponent<MenuProps & React.RefAttributes<HTMLDivElement>> & {
+  Item: typeof MenuItem
+  Separator: typeof MenuSeparator
+  Trigger: typeof MenuTrigger
+  Content: typeof MenuContent
+  LinkItem: typeof MenuLinkItem
+}
+
 Menu.Item = MenuItem
 Menu.Separator = MenuSeparator
+Menu.Trigger = MenuTrigger
+Menu.Content = MenuContent
+Menu.LinkItem = MenuLinkItem
