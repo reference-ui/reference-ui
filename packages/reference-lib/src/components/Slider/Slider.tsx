@@ -9,21 +9,28 @@ import {
   sliderThumb,
 } from '../../core/theme/primitives/shared'
 import { isFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
+import {
+  snapValueToStep,
+  stepValue,
+  getPageStep,
+  getThumbBounds,
+  valueToPercent,
+} from './slider-math'
 
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
 
-export type SliderProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
-  value?: SliderValue
-  defaultValue?: SliderValue
+export type SliderProps<T extends SliderValue = SliderValue> = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
+  value?: T
+  defaultValue?: T
   min?: number
   max?: number
   step?: number
   minStepsBetweenThumbs?: number
   orientation?: SliderOrientation
   disabled?: boolean
-  onChange?: (value: any) => void
-  onChangeEnd?: (value: any) => void
+  onChange?: (value: T) => void
+  onChangeEnd?: (value: T) => void
 }
 
 interface SliderContextValue {
@@ -116,10 +123,9 @@ export function SliderRange({
   const { values, min, max, orientation } = context
   const startVal = values.length > 1 ? Math.min(...values) : min
   const endVal = values.length > 1 ? Math.max(...values) : values[0] ?? min
-  const range = max - min || 1
 
-  const startPercent = Math.max(0, Math.min(100, ((startVal - min) / range) * 100))
-  const endPercent = Math.max(0, Math.min(100, ((endVal - min) / range) * 100))
+  const startPercent = valueToPercent(startVal, min, max)
+  const endPercent = valueToPercent(endVal, min, max)
   const sizePercent = endPercent - startPercent
 
   const isHorizontal = orientation === 'horizontal'
@@ -189,8 +195,7 @@ export function SliderThumb({
       : localFocusVisible
 
   const val = values[index] ?? min
-  const range = max - min || 1
-  const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
+  const percent = valueToPercent(val, min, max)
   const isHorizontal = orientation === 'horizontal'
   const isDraggingRef = React.useRef(false)
   const [isThumbPressed, setIsThumbPressed] = React.useState(false)
@@ -204,8 +209,9 @@ export function SliderThumb({
     [registerThumb, index]
   )
 
-  const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-  const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
+  const thumbBounds = getThumbBounds(values, index, min, max, step, minStepsBetweenThumbs)
+  const thumbMin = thumbBounds.min
+  const thumbMax = thumbBounds.max
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
@@ -214,14 +220,17 @@ export function SliderThumb({
     setFocusVisibleIndex(index)
     setLocalFocusVisible(true)
 
-    const pageStep = Math.max(step, Math.ceil((max - min) / 10 / step) * step)
-    const stepAmount = e.shiftKey ? pageStep : step
+    const pageStep = getPageStep(min, max, step)
 
     let nextVal = val
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      nextVal = Math.min(thumbMax, val + stepAmount)
+      nextVal = e.shiftKey
+        ? Math.min(thumbMax, val + pageStep)
+        : Math.min(thumbMax, stepValue(val, 1, min, max, step))
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      nextVal = Math.max(thumbMin, val - stepAmount)
+      nextVal = e.shiftKey
+        ? Math.max(thumbMin, val - pageStep)
+        : Math.max(thumbMin, stepValue(val, -1, min, max, step))
     } else if (e.key === 'Home') {
       nextVal = thumbMin
     } else if (e.key === 'End') {
@@ -429,9 +438,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
     const updateThumbValue = React.useCallback(
       (index: number, nextVal: number) => {
-        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
-        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
+        const snapped = snapValueToStep(nextVal, min, max, step)
+        const bounds = getThumbBounds(values, index, min, max, step, minStepsBetweenThumbs)
+        const clampedVal = Math.max(bounds.min, Math.min(bounds.max, snapped))
         const nextValues = [...values]
         nextValues[index] = clampedVal
 
@@ -446,9 +455,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
     const commitThumbValue = React.useCallback(
       (index: number, nextVal: number) => {
-        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
-        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
+        const snapped = snapValueToStep(nextVal, min, max, step)
+        const bounds = getThumbBounds(values, index, min, max, step, minStepsBetweenThumbs)
+        const clampedVal = Math.max(bounds.min, Math.min(bounds.max, snapped))
         const nextValues = [...values]
         nextValues[index] = clampedVal
         const result = Array.isArray(currentValue) ? nextValues : clampedVal
@@ -594,7 +603,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       </SliderContext.Provider>
     )
   }
-) as React.ForwardRefExoticComponent<SliderProps & React.RefAttributes<HTMLDivElement>> & {
+) as unknown as (<T extends SliderValue = SliderValue>(
+  props: SliderProps<T> & React.RefAttributes<HTMLDivElement>
+) => React.ReactElement | null) & {
   Track: typeof SliderTrack
   Range: typeof SliderRange
   Thumb: typeof SliderThumb

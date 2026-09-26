@@ -33,15 +33,32 @@ Visual polish is not this gate. Invented `SD-FOCUS-*` titles are not catalog.
 | Axis | `orientation?` horizontal \| vertical → `aria-orientation` + `data-orientation`; RTL flips the horizontal value↔position mapping |
 | Geometry | `--reference-slider-thumb-position`, range start/end; never overwrite consumer `transform` |
 
-### Status (2026-09-10)
+### Status (2026-09-25 quarantine-landing)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype. Keyboard/pointer smoke. |
-| Production | **No.** Math unit missing. |
-| Named `[x]` | 3 / 73 (`SD-DOM-01`–`03`) |
-| Playwright | 4 (two are invented FOCUS IDs) |
-| Vitest | 0 catalog IDs |
+| Engine | Prototype + pure math kernel. Keyboard/pointer smoke; min-anchored snap, precision, neighbor bounds wired. |
+| Production | **No.** Matrix KEY/POINTER/END/CTRL/DYNAMIC/COMP cases not yet re-targeted. |
+| Named `[x]` | 15 / 73 (`SD-TYPE-01`, `SD-MATH-01`–`13`, `SD-ENV-01`, all colocated) |
+| Playwright | 4 CT (`Slider.ct.spec.ts`, react19, frozen baselines green) |
+| Vitest | 17 colocated (2 geometry + 13 math + 2 contract) |
+
+### Landing notes (2026-09-25)
+
+- Ported from quarantine `0b1388d87`: pure `slider-math.ts`
+  verbatim + colocated `SD-MATH-*`, `SD-TYPE-01` (adapted),
+  `SD-ENV-01`.
+- Wired snap/bounds/step/page/percent kernels into `Slider.tsx`;
+  `onChange`/`onChangeEnd` typed via generic `SliderProps<T>`.
+- Deliberately NOT ported (suspect per recon): controlled-only
+  `value`, thumb chrome/transition/transform changes, RTL geometry,
+  grab-offset/window-listener drag rewrite, anatomy/count-mismatch
+  throws, auto thumb index. Uncontrolled `value?` + `defaultValue`
+  retained; visuals frozen (CT baselines unmodified).
+- Matrix re-target (58 quarantine e2e cases + 15 unit cases, visible
+  only on the quarantine branch — no slider spec exists under
+  `matrix/` here) is a handoff: fixtures encode mangled APIs and need
+  rework against the retained uncontrolled API + explicit thumb index.
 
 ### Gaps & incoherence
 
@@ -66,10 +83,12 @@ is a parsed scalar, not a controlled array).
 
 ### Case index
 
-- `[x]` `SD-DOM-01`, `SD-DOM-02`, `SD-DOM-03`
-- `[ ]` `SD-TYPE-01`, remaining `SD-DOM-*`, `SD-A11Y-01`, `SD-MATH-*`,
-  `SD-CTRL-*`, `SD-END-*`, `SD-KEY-*`, `SD-POINTER-*`, `SD-DYNAMIC-*`,
-  `SD-ENV-*`, `SD-COMP-*`
+- `[x]` `SD-TYPE-01` (adapted: uncontrolled retained), `SD-MATH-01`
+  – `SD-MATH-13`, `SD-ENV-01`
+- `[ ]` all `SD-DOM-*` (no matrix slider spec exists on this branch;
+  old `SD-DOM-01`–`03` proof lapsed with the `matrix/lib` layout),
+  `SD-A11Y-01`, `SD-CTRL-*`, `SD-END-*`, `SD-KEY-*`, `SD-POINTER-*`,
+  `SD-DYNAMIC-*`, remaining `SD-ENV-*`, `SD-COMP-*`
 
 Not catalog: `SD-FOCUS-01`, `SD-FOCUS-02`. Drop or rehome after freeze.
 
