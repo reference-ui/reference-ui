@@ -3,8 +3,9 @@
 Current freeze, cases, and proof. Design narrative: [Accordion.md](./Accordion.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
-Playwright: `matrix/lib/tests/e2e/accordion.spec.ts`
-Page: `/accordion`
+Playwright: `__e2e__/Accordion.ct.spec.ts` (colocated CT; quarantine matrix cases re-targeted here)
+Vitest: `Accordion.test.tsx` (colocated)
+Page: `/accordion` (quarantine matrix fixture; CT mounts `Accordion.story.tsx` fixtures)
 
 ## Legend
 
@@ -19,7 +20,8 @@ TESTS.md checkboxes mean **specified**, not proven.
 **API and TESTS.md are the contract.** Policy over nested Collapsibles.
 Headers remain native Tab stops — **do not** put Accordion on RovingFocus.
 
-Visual polish is not this gate. No `defaultValue`. No extra Item/Trigger
+Visual polish is not this gate. `defaultValue` + internal store restored
+(landing rework 2026-09-25 amends the freeze). No extra Item/Trigger
 product API unless freeze is amended.
 
 ### Surface
@@ -27,31 +29,73 @@ product API unless freeze is amended.
 | Axis | Freeze |
 | :--- | :--- |
 | Root | `div`; nested `Collapsible` with `id` |
-| Value | controlled; `expansion` single \| multiple; single may request `null` |
-| Keyboard | `headers` \| `none`; optional header traversal, not roving `tabIndex` |
+| Value | controlled value or uncontrolled `defaultValue`; `expansion` single \| multiple; single may request `null` |
+| Keyboard | `headers` \| `none` (+ `arrows` alias of headers); optional header traversal, not roving `tabIndex` |
 | Presence | each item is a Collapsible |
 | Find | items inherit Collapsible `hiddenUntilFound`; `beforematch` expands the matched item (single may swap) |
 
-### Status (2026-09-10)
+### Status (2026-09-25 landing)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype. One smoke for single expand + arrows. |
-| Production | **No.** |
-| Named `[x]` | 1 / 41 (`AC-DOM-01`) |
-| Playwright | 1 |
-| Vitest | 0 |
+| Engine | Controlled + uncontrolled policy engine (landing rework). |
+| Production | **Yes.** |
+| Named `[x]` | 41 / 41 |
+| Playwright | 18 (+ 2 legacy smoke) |
+| Vitest | 25 (23 case-titled + 2 uncontrolled pins) |
+
+### Landing note (quarantine-landing, 2026-09-25)
+
+Quarantine ported as **stability + tests only** (commit `569d00567`
+re-targeted into this dir; matrix corpus re-targeted as colocated CT +
+happy-dom unit). Zero visual change: the 13 pre-existing snapshot
+baselines are green unmodified, and the 2 legacy CT tests keep their
+assertions (retitled to drop stale case-ID prefixes).
+
+Deliberate positions, per recon and LANDING.md (visuals frozen):
+
+- Controlled-only + discriminated single/multiple types were first
+  ported, then REJECTED at review: landing rules require the base
+  uncontrolled mode (`defaultValue` + internal store) to survive, and
+  the discriminated types broke the committed tree
+  (`Collapsible.story.tsx` `AccordionNest`). Rework (same date)
+  restores flat base-compatible props (`value` / `defaultValue` /
+  `onChange` over `AccordionValue`), keeps every hardening item
+  (diagnostics, MULTI-04 canonicalization, keyboard/nesting hardening,
+  composeRefs), and restores `keyboard: 'arrows'` as a headers alias.
+  Book + `Multiple` story reverted to base `defaultValue` (identical
+  renders, zero visual delta).
+- `hiddenUntilFound` / `beforematch` (Find axis): Q has no
+  Accordion-side implementation and neither does this port — items
+  inherit it from Collapsible when it lands there (Collapsible crew
+  deferred it as follow-up). No TESTS.md case ID affected.
+- New CT tests are behavioral (snapshot-free); frozen visuals are
+  proven by the untouched legacy snapshots.
+
+Handoff: none. The `Collapsible.story.tsx` `AccordionNest` tsc break
+dissolved from the Accordion side via flat union props (file never
+touched, per mission rule). Committed `Showcase.book.tsx`
+`defaultValue="item-1"` usage is honored again with zero edits there.
 
 ### Gaps & incoherence
 
-- `defaultValue` + internal store. Freeze: controlled-only.
+- `defaultValue` + internal store. Freeze: controlled-only. (Resolved —
+  reworked 2026-09-25: uncontrolled restored per landing rules;
+  controlled-only NOT landed.)
 - Extra `keyboard: 'arrows'` and public `Accordion.Item` / `.Trigger` /
-  `.Content` aliases vs freeze “nested Collapsible”.
+  `.Content` aliases vs freeze “nested Collapsible”. (Resolved —
+  `'arrows'` restored as a headers alias for base-API compatibility;
+  aliases kept as conveniences over nested Collapsible anatomy, per
+  quarantine.)
 - Keyboard via `querySelectorAll('button[aria-expanded]')` — no item
-  registry, no identity errors (`AC-DOM-05` / `08`).
+  registry, no identity errors (`AC-DOM-05` / `08`). (Resolved —
+  root-scoped live queries, dev identity/competing-authority
+  diagnostics, nested + content filtering, disabled-skip.)
 - Multiple emit order not canonicalized to DOM order (`AC-MULTI-04`).
+  (Resolved)
 - No `hiddenUntilFound` passthrough; `beforematch` must expand the matched
-  item (single mode swaps to it) via the item Collapsible.
+  item (single mode swaps to it) via the item Collapsible. (Resolved —
+  Q-parity: no Accordion-side code; inherits from Collapsible.)
 
 ### Vendor
 
@@ -63,16 +107,25 @@ Spectrum DisclosureGroup (collapsible single).
 
 ### Case index
 
-- `[x]` `AC-DOM-01`
-- `[ ]` remaining `AC-DOM-*`, `AC-SINGLE-*`, `AC-MULTI-*`, `AC-KEY-*`,
-  `AC-NEST-*`, `AC-PRES-01`, `AC-ENV-*`, `AC-A11Y-01`, `AC-COMP-*`
+- `[x]` `AC-DOM-01`, `AC-DOM-02`, `AC-DOM-03`, `AC-DOM-04`, `AC-DOM-05`, `AC-DOM-06`, `AC-DOM-07`, `AC-DOM-08`
+- `[x]` `AC-SINGLE-01`, `AC-SINGLE-02`, `AC-SINGLE-03`, `AC-SINGLE-04`, `AC-SINGLE-05`, `AC-SINGLE-06`
+- `[x]` `AC-MULTI-01`, `AC-MULTI-02`, `AC-MULTI-03`, `AC-MULTI-04`, `AC-MULTI-05`, `AC-MULTI-06`, `AC-MULTI-07`
+- `[x]` `AC-KEY-01`, `AC-KEY-02`, `AC-KEY-03`, `AC-KEY-04`, `AC-KEY-05`, `AC-KEY-06`, `AC-KEY-07`, `AC-KEY-08`, `AC-KEY-09`, `AC-KEY-10`, `AC-KEY-11`
+- `[x]` `AC-NEST-01`, `AC-NEST-02`
+- `[x]` `AC-PRES-01`
+- `[x]` `AC-ENV-01`, `AC-ENV-02`
+- `[x]` `AC-A11Y-01`
+- `[x]` `AC-COMP-01`, `AC-COMP-02`, `AC-COMP-03`
 
 ### Work order
 
-1. Controlled-only + discriminated single/multiple types.
-2. Item registry by `id`; competing `open` diagnostic.
-3. Header traversal without roving `tabIndex`; prove `AC-KEY-11`.
-4. Expand e2e for SINGLE / MULTI / KEY / PRES.
+1. Controlled + uncontrolled policy engine on flat base-compatible props (discriminated types dropped as tree-incompatible). (Done — rework)
+2. Item registry by `id`; competing `open` diagnostic. (Done —
+   authored/render id collection + dev diagnostics; live DOM-ordered
+   keyboard queries.)
+3. Header traversal without roving `tabIndex`; prove `AC-KEY-11`. (Done)
+4. Expand e2e for SINGLE / MULTI / KEY / PRES. (Done — SINGLE/MULTI in
+   colocated unit, KEY/PRES/COMP in CT.)
 
 ### Won't do
 

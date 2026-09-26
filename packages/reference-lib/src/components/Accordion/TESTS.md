@@ -16,9 +16,11 @@ order for deterministic controlled state.
 
 ## Freeze defaults
 
-`expansion`, `value`, and `keyboard` are optional with the documented omitted
-behavior: controlled single expansion, `value=null`, and APG header traversal
-enabled. Applications can opt out with `keyboard="none"`.
+`expansion` and `keyboard` are optional with the documented omitted
+behavior: single expansion and APG header traversal enabled. Omitted
+`value` means uncontrolled state: single starts `null`, multiple starts
+`[]`, and `defaultValue` seeds the internal store. Applications can opt
+out of traversal with `keyboard="none"`.
 
 ## Source evidence
 
@@ -87,13 +89,12 @@ enabled. Applications can opt out with `keyboard="none"`.
   open without a corrective callback; temporary collection absence must not
   mutate parent state.
 - [x] `AC-DOM-07` `[reference]` `[browser]` —
-  **Accordion should default omitted policy to controlled single-null state
+  **Accordion should default omitted policy to uncontrolled single-null state
   with header traversal enabled.** Omit `expansion`, `value`, and `keyboard`,
   focus A, press ArrowDown, and activate focused B while recording
-  `onChange` but not updating props. Assert focus moves to B, one `"b"`
-  request is emitted, every item remains closed, and all enabled Triggers keep
-  native `tabIndex=0`; omission must not create uncontrolled expansion or a
-  roving tab stop.
+  `onChange`. Assert focus moves to B, one `"b"` request is emitted, B opens
+  via internal state, and all enabled Triggers keep native `tabIndex=0`;
+  omission creates uncontrolled expansion, never a roving tab stop.
 - [x] `AC-DOM-08` `[reference]` `[browser]` —
   **Accordion should remain the sole expansion authority when a child
   Collapsible supplies competing controlled props.** In development, render
@@ -196,12 +197,11 @@ enabled. Applications can opt out with `keyboard="none"`.
   commit does not guess an item or reinterpret characters as IDs; runtime
   validation must match the discriminated public type.
 - [x] `AC-MULTI-07` `[reference]` `[browser]` —
-  **A multiple Accordion should default an omitted value to a controlled empty
-  array.** Render `expansion="multiple"` without `value`, activate A with and
-  without an `onChange` callback in separate fixtures, and do not rerender
-  state. Assert the callback fixture requests `["a"]` once, both fixtures keep
-  every item closed, and no hidden array store appears; omitted value and
-  uncontrolled state are not synonyms.
+  **A multiple Accordion should default an omitted value to an uncontrolled
+  empty array.** Render `expansion="multiple"` without `value`, activate A
+  while recording `onChange` without rerendering state. Assert the callback
+  fixture requests `["a"]` once and A opens via internal state; an omitted
+  value means uncontrolled state.
 
 ### Header keyboard policy
 
@@ -382,5 +382,5 @@ enabled. Applications can opt out with `keyboard="none"`.
 ## Out of scope
 
 - A second Accordion-specific disclosure implementation.
-- Uncontrolled/default values, Provider APIs, horizontal orientation, or
-  vendor heading wrappers not present in the public API.
+- Provider APIs, horizontal orientation, or vendor heading wrappers not
+  present in the public API.
