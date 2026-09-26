@@ -126,4 +126,43 @@ describe('Switch environments', () => {
     container.remove()
     container2.remove()
   })
+
+  it('FEATURES-05: Switch should pass the click event as the second onChange argument', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const calls: Array<{ checked: boolean; event: React.MouseEvent<HTMLButtonElement>; currentTargetAtCall: unknown }> = []
+    const root = createRoot(container)
+    await React.act(async () => {
+      root.render(
+        <Switch
+          checked={false}
+          onChange={(checked, event) => {
+            // currentTarget is nulled after dispatch — capture it at call time.
+            calls.push({ checked, event, currentTargetAtCall: event.currentTarget })
+          }}
+        />
+      )
+    })
+
+    const button = container.querySelector('button[role="switch"]') as HTMLButtonElement
+    expect(button).not.toBeNull()
+    await React.act(async () => {
+      button.click()
+    })
+
+    expect(calls.length).toBe(1)
+    expect(calls[0]!.checked).toBe(true)
+    // React synthetic mouse event for the click that requested the toggle.
+    const event = calls[0]!.event
+    expect(event.type).toBe('click')
+    expect(event.target).toBe(button)
+    expect(calls[0]!.currentTargetAtCall).toBe(button)
+    expect(event.nativeEvent).toBeInstanceOf(MouseEvent)
+
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
 })

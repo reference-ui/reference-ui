@@ -117,10 +117,10 @@ export const ParityFixture = () => {
             data-testid="sw-dom-02"
             checked={dom02Checked}
             onChange={setDom02Checked}
-            data-state="checked"
-            aria-checked="true"
             data-custom="keep-me"
-            {...({ 'aria-pressed': 'true' } as any)}
+            // Managed-prop conflicts: omitted from SwitchProps (FEATURES #2),
+            // passed through `any` so SW-DOM-02 still pins runtime managed-wins.
+            {...({ 'data-state': 'checked', 'aria-checked': 'true', 'aria-pressed': 'true' } as any)}
           />
           <button type="button" data-testid="sw-dom-02-flip" onClick={() => setDom02Checked(c => !c)}>
             Flip DOM 02

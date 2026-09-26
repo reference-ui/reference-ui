@@ -1,10 +1,13 @@
 import * as React from 'react'
 import { Button, Span, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
-export type SwitchProps = Omit<PrimitiveProps<'button'>, 'onChange' | 'role' | 'type'> & {
+export type SwitchProps = Omit<
+  PrimitiveProps<'button'>,
+  'onChange' | 'role' | 'type' | 'aria-checked' | 'aria-pressed' | 'data-state' | 'data-disabled'
+> & {
   checked?: boolean
   defaultChecked?: boolean
-  onChange?: (checked: boolean) => void
+  onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
 }
 
@@ -67,7 +70,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         if (!isControlled) {
           setInternalChecked(nextChecked)
         }
-        onChange?.(nextChecked)
+        onChange?.(nextChecked, e)
       }
     }
 

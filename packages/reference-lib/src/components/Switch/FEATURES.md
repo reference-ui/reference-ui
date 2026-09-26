@@ -15,12 +15,14 @@ until HQ (or a reporting consumer) settles the API.
 - **What it does:** Hides `aria-checked`/`aria-pressed` (with `onChange`/`type`/`role`) from public Root types so the managed ARIA contract is enforced at compile time, matching the landed runtime strip.
 - **API:** `SwitchProps = Omit<..., 'onChange' | 'type' | 'role' | 'aria-checked' | 'aria-pressed'>`. Open: error or silent Omit for current passers? Extend to `data-state`/`data-disabled`?
 - **Maintainer take:** Good to add, but only as one coherent breaking-type story in the next intentional type-surface pass.
+- **Landed (features campaign 2026-09-26):** silent Omit extended to `'aria-checked' | 'aria-pressed' | 'data-state' | 'data-disabled'` in one breaking-type pass; pinned by `SW-TYPE-01` (`@ts-expect-error` on the aria keys; `data-*` unpinnable — TS permits all `data-*` JSX attributes, runtime managed-wins still enforced by `SW-DOM-02`).
 
 ### 3. Clipped extra children vs the accessible name (from DECISIONS gap #1)
 
 - **What it does:** Resolves the leak where visually clipped extra children still surface in the switch's accessible name (live tree reads `switch "Extra Visual"` while the track clips that child).
 - **API:** No new API by default — HQ picks one: doc note ("extras are clipped; keep them decorative and `aria-hidden`"), behavior fix (name computation excludes clipped descendants), or dev warning on text-bearing non-Thumb children.
 - **Maintainer take:** Worth settling at walkthrough; start with the doc note and build the guard only if a consumer proves harm.
+- **Landed (features campaign 2026-09-26):** doc note in `Switch.md` ("keep extras decorative and `aria-hidden`"). No guard — no consumer has proven harm.
 
 ### 4. Ref or handle to the default thumb (from DECISIONS gap #2)
 
@@ -35,3 +37,4 @@ until HQ (or a reporting consumer) settles the API.
 - **API:** Either keep boolean-only and bless the `onClick` + `onChange` pairing (`SW-ACT-05` pattern) as the event channel, or widen to `onChange(checked, event)` / a single request object.
 - **Maintainer take:** Don't widen on a hypothetical — bless the `onClick` pairing unless a consumer shows it insufficient.
 - **HQ 2026-09-26:** Approved — implement event access as widened `onChange(checked, event)`.
+- **Landed (features campaign 2026-09-26):** `onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void`; the click (incl. Space/Enter/thumb clicks) is passed through. Single-arg handlers keep working.

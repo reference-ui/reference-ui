@@ -65,6 +65,19 @@ from the freeze catalog above, per recon (mangling exhibits 1–2):
   consumer `aria-pressed` is stripped at runtime; managed
   `type`/`role`/`aria-checked`/`data-state` win over consumer conflicts.
 
+### Features-campaign note (quarantine-landing, 2026-09-26)
+
+FEATURES #2, #3, #5 landed; #1 (restyle) and #4 (thumb ref) stay HELD.
+Deliberate divergences from the TESTS.md freeze catalog, per triage:
+
+- `SW-TYPE-01` is re-targeted: the Omit now also hides `aria-checked` /
+  `aria-pressed` / `data-state` / `data-disabled`, and `onChange` is widened
+  to `(checked, event)`. Single-argument handlers keep working.
+- `SW-DOM-04`'s extra child is now covered by the `Switch.md` doc note
+  (extras are clipped; keep them decorative and `aria-hidden`) — no guard
+  built, none proven necessary.
+- No visual change: all 7 snapshots must pass byte-identical.
+
 ### Gaps & incoherence
 
 - `checked?` + `defaultChecked` + internal store. Freeze: `checked` required,

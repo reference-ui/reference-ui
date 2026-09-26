@@ -34,10 +34,16 @@ describe('Switch type contract', () => {
 
     expectTypeOf<SwitchProps['checked']>().toEqualTypeOf<boolean | undefined>()
     expectTypeOf<SwitchProps['defaultChecked']>().toEqualTypeOf<boolean | undefined>()
-    expectTypeOf<SwitchProps['onChange']>().toEqualTypeOf<((checked: boolean) => void) | undefined>()
+    expectTypeOf<SwitchProps['onChange']>().toEqualTypeOf<
+      ((checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void) | undefined
+    >()
     expectTypeOf<SwitchProps['disabled']>().toEqualTypeOf<boolean | undefined>()
     expectTypeOf<SwitchProps>().not.toHaveProperty('role')
     expectTypeOf<SwitchProps>().not.toHaveProperty('type')
+    expectTypeOf<SwitchProps>().not.toHaveProperty('aria-checked')
+    expectTypeOf<SwitchProps>().not.toHaveProperty('aria-pressed')
+    expectTypeOf<SwitchProps>().not.toHaveProperty('data-state')
+    expectTypeOf<SwitchProps>().not.toHaveProperty('data-disabled')
 
     // @ts-expect-error - checked="true" must fail (string not boolean)
     const _invalidChecked: SwitchProps = { checked: 'true' }
@@ -51,7 +57,17 @@ describe('Switch type contract', () => {
     const _invalidType: SwitchProps = { checked: false, type: 'submit' }
     expect(_invalidType).toBeDefined()
 
-    // NOTE: aria-checked / aria-pressed stay in the public types (no Omit churn);
-    // at runtime Root owns them (aria-pressed stripped, aria-checked managed-wins).
+    // @ts-expect-error - aria-checked is managed by Root (FEATURES #2 Omit)
+    const _invalidAriaChecked: SwitchProps = { checked: false, 'aria-checked': true }
+    expect(_invalidAriaChecked).toBeDefined()
+
+    // @ts-expect-error - aria-pressed is stripped by Root (FEATURES #2 Omit)
+    const _invalidAriaPressed: SwitchProps = { checked: false, 'aria-pressed': true }
+    expect(_invalidAriaPressed).toBeDefined()
+
+    // NOTE: data-state / data-disabled are in the Omit list but cannot take
+    // expect-error pins — TypeScript permits all data-* JSX attributes, so
+    // only the not.toHaveProperty assertions above cover them. Runtime
+    // managed-wins (SW-DOM-02) remains the enforcement for data-* conflicts.
   })
 })
