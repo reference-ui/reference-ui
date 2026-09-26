@@ -240,6 +240,102 @@ export const ShadowTabs = () => {
   )
 }
 
+export const FocusRescue = () => {
+  const [value, setValue] = React.useState('general')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-rescue-root" maxW="100r">
+        {/* Fixture control: mousedown-prevented so the click never steals
+            focus from the panel input under test. */}
+        <button
+          type="button"
+          data-testid="rescue-switch"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setValue('billing')}
+        >
+          Switch to billing
+        </button>
+        <Tabs value={value} onChange={setValue}>
+          <Tabs.List>
+            <Tabs.Tab value="general" data-testid="tab-f-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-f-billing">
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab value="security" data-testid="tab-f-security">
+              Security
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-f-general">
+            <input data-testid="panel-f-input" aria-label="Panel input" />
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-f-billing">
+            <Span fontSize="3.5r">Billing settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="security" data-testid="panel-f-security">
+            <Span fontSize="3.5r">Security settings.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Handoff = () => {
+  const [value, setValue] = React.useState('general')
+  const [disabledBilling, setDisabledBilling] = React.useState(false)
+  const [removedBilling, setRemovedBilling] = React.useState(false)
+  const order = ['general', 'billing', 'security', 'archive'].filter(
+    v => !(v === 'billing' && removedBilling)
+  )
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-handoff-root" maxW="100r">
+        {/* Fixture controls: mousedown-prevented so neither click steals
+            focus from the tab under test. */}
+        <button
+          type="button"
+          data-testid="handoff-disable"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setDisabledBilling(true)}
+        >
+          Disable billing
+        </button>
+        <button
+          type="button"
+          data-testid="handoff-remove"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setRemovedBilling(true)}
+        >
+          Remove billing
+        </button>
+        <Tabs value={value} onChange={setValue} activation="manual">
+          <Tabs.List>
+            {order.map(v => (
+              <Tabs.Tab
+                key={v}
+                value={v}
+                data-testid={`tab-h-${v}`}
+                disabled={v === 'billing' && disabledBilling}
+              >
+                {v}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {order.map(v => (
+            <Tabs.Panel key={v} value={v} data-testid={`panel-h-${v}`}>
+              <Span fontSize="3.5r">{v} content.</Span>
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const Pill = () => {
   const [value, setValue] = React.useState('overview')
 

@@ -20,7 +20,7 @@ function tabIndexOf(id: string) {
   return document.getElementById(id)?.getAttribute('tabindex')
 }
 
-describe('Tabs component indicator styling and stability', () => {
+describe('Tabs FEATURES #1 proofs (required value)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -38,10 +38,42 @@ describe('Tabs component indicator styling and stability', () => {
     container.remove()
   })
 
+  it('throws a descriptive error when value is omitted', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const div = document.createElement('div')
+      document.body.appendChild(div)
+      const localRoot = createRoot(div)
+      try {
+        await expect(
+          React.act(async () => {
+            localRoot.render(
+              // @ts-expect-error — omitted value is a type error AND a runtime throw.
+              <Tabs>
+                <Tabs.List>
+                  <Tabs.Tab value="general">General</Tabs.Tab>
+                </Tabs.List>
+                <Tabs.Panel value="general">G</Tabs.Panel>
+              </Tabs>
+            )
+          })
+        ).rejects.toThrow('requires a controlled `value` prop')
+      } finally {
+        await React.act(async () => {
+          localRoot.unmount()
+        })
+        div.remove()
+      }
+    } finally {
+      errors.mockRestore()
+    }
+  })
+
   it('renders tabs with 3px indicator on active tab and table-border baseline on list', async () => {
-    await React.act(async () => {
-      root.render(
-        <Tabs defaultValue="account">
+    function Fixture() {
+      const [value, setValue] = React.useState('account')
+      return (
+        <Tabs value={value} onChange={setValue}>
           <Tabs.List id="tabs-list">
             <Tabs.Trigger id="tab-account" value="account">
               Account
@@ -54,6 +86,9 @@ describe('Tabs component indicator styling and stability', () => {
           <Tabs.Content value="password">Password content</Tabs.Content>
         </Tabs>
       )
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
     })
 
     const tabsList = document.getElementById('tabs-list')
@@ -79,9 +114,10 @@ describe('Tabs component indicator styling and stability', () => {
   })
 
   it('renders pill variant tabs with primary button styling on active tab', async () => {
-    await React.act(async () => {
-      root.render(
-        <Tabs defaultValue="overview" variant="pill">
+    function Fixture() {
+      const [value, setValue] = React.useState('overview')
+      return (
+        <Tabs value={value} onChange={setValue} variant="pill">
           <Tabs.List id="tabs-list-pill">
             <Tabs.Trigger id="tab-overview" value="overview">
               Overview
@@ -94,6 +130,9 @@ describe('Tabs component indicator styling and stability', () => {
           <Tabs.Content value="activity">Activity content</Tabs.Content>
         </Tabs>
       )
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
     })
 
     const tabsList = document.getElementById('tabs-list-pill')
@@ -219,9 +258,11 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
 
   it('TB-DOM-07: separate instances reusing values keep unique stable IDs', async () => {
     function Two() {
+      const [first, setFirst] = React.useState('general')
+      const [second, setSecond] = React.useState('general')
       return (
         <>
-          <Tabs defaultValue="general">
+          <Tabs value={first} onChange={setFirst}>
             <Tabs.List>
               <Tabs.Tab value="general">General</Tabs.Tab>
               <Tabs.Tab value="billing">Billing</Tabs.Tab>
@@ -229,7 +270,7 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
             <Tabs.Panel value="general">G1</Tabs.Panel>
             <Tabs.Panel value="billing">B1</Tabs.Panel>
           </Tabs>
-          <Tabs defaultValue="general">
+          <Tabs value={second} onChange={setSecond}>
             <Tabs.List>
               <Tabs.Tab value="general">General</Tabs.Tab>
               <Tabs.Tab value="billing">Billing</Tabs.Tab>
@@ -271,7 +312,7 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
     )) {
       const labelledBy = panel.getAttribute('aria-labelledby')
       expect(labelledBy).toBeTruthy()
-      const tab = labelledBy && container.querySelector(`#${labelledBy}`)
+      const tab = labelledBy ? container.querySelector(`#${labelledBy}`) : null
       expect(tab?.getAttribute('role')).toBe('tab')
     }
   })
@@ -427,7 +468,7 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
   it('TB-DOM-14: tabs default to type=button and honor an explicit type override', async () => {
     await React.act(async () => {
       root.render(
-        <Tabs defaultValue="general">
+        <Tabs value="general">
           <Tabs.List>
             <Tabs.Tab id="t-general" value="general">
               General
@@ -707,7 +748,7 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
     expect(first).toContain('aria-selected="true"')
     const controls = first.match(/aria-controls="([^"]+)"/g) ?? []
     expect(controls.length).toBe(1)
-    const panelId = controls[0].match(/aria-controls="([^"]+)"/)![1]
+    const panelId = controls[0]!.match(/aria-controls="([^"]+)"/)![1]
     expect(first).toContain(`id="${panelId}"`)
     expect(first).toContain('hidden')
     const labelled = first.match(/aria-labelledby="([^"]+)"/g) ?? []
@@ -718,51 +759,522 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
     }
   })
 
-  it('Uncontrolled mode is preserved: defaultValue selects and switches with no value prop', async () => {
+})
+
+describe('Tabs FEATURES #3 proofs (keepMounted opt-in)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
     await React.act(async () => {
-      root.render(
-        <Tabs defaultValue="account">
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  it('keepMounted keeps inactive children alive under hidden; default still unmounts', async () => {
+    const mounts: string[] = []
+    function Probe({ name }: { name: string }) {
+      React.useEffect(() => {
+        mounts.push(name)
+      }, [name])
+      return <span>{name} content</span>
+    }
+    function Fixture() {
+      const [value, setValue] = React.useState('general')
+      return (
+        <Tabs value={value} onChange={setValue}>
           <Tabs.List>
-            <Tabs.Tab id="t-account" value="account">
-              Account
+            <Tabs.Tab id="t-general" value="general">
+              General
             </Tabs.Tab>
-            <Tabs.Tab id="t-password" value="password">
-              Password
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
             </Tabs.Tab>
           </Tabs.List>
-          <Tabs.Panel id="p-account" value="account">
-            Account content
+          <Tabs.Panel value="general">G</Tabs.Panel>
+          <Tabs.Panel value="billing" keepMounted>
+            <Probe name="billing" />
           </Tabs.Panel>
-          <Tabs.Panel id="p-password" value="password">
-            Password content
+          <Tabs.Panel value="security">S</Tabs.Panel>
+        </Tabs>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
+    })
+
+    // Opted-out inactive panel unmounts children (default law preserved).
+    expect(
+      container.querySelector('[role="tabpanel"][data-value="security"]')
+        ?.textContent
+    ).toBe('')
+    // Opted-in inactive panel keeps children mounted under native hidden.
+    const kept = container.querySelector(
+      '[role="tabpanel"][data-value="billing"]'
+    ) as HTMLElement
+    expect(kept.hidden).toBe(true)
+    expect(kept.textContent).toContain('billing content')
+    expect(mounts).toEqual(['billing'])
+
+    // Switch away and back: no remount, effects/state stay alive.
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-general')!)
+    })
+    expect(mounts).toEqual(['billing'])
+    expect(
+      (
+        container.querySelector(
+          '[role="tabpanel"][data-value="billing"]'
+        ) as HTMLElement
+      ).hidden
+    ).toBe(true)
+    expect(
+      container.querySelector('[role="tabpanel"][data-value="billing"]')
+        ?.textContent
+    ).toContain('billing content')
+  })
+
+  it('keepMounted preserves form state across tab switches', async () => {
+    function Fixture() {
+      const [value, setValue] = React.useState('general')
+      return (
+        <Tabs value={value} onChange={setValue}>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general">G</Tabs.Panel>
+          <Tabs.Panel value="billing" keepMounted>
+            <input id="billing-input" defaultValue="" />
           </Tabs.Panel>
         </Tabs>
       )
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
     })
 
+    const input = document.getElementById('billing-input') as HTMLInputElement
+    expect(input).not.toBeNull()
+    await React.act(async () => {
+      input.value = 'draft'
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-general')!)
+    })
     expect(
-      document.getElementById('t-account')?.getAttribute('aria-selected')
-    ).toBe('true')
-    expect(tabIndexOf('t-account')).toBe('0')
+      (document.getElementById('billing-input') as HTMLInputElement).value
+    ).toBe('draft')
+  })
+})
+
+describe('Tabs FEATURES #8 proofs (tab-stop fallback)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function TrioControlled({
+    value,
+    onChange,
+    disabledBilling = false,
+  }: {
+    value: string
+    onChange: (next: string) => void
+    disabledBilling?: boolean
+  }) {
+    return (
+      <>
+        <button id="external">external</button>
+        <Tabs value={value} onChange={onChange}>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing" disabled={disabledBilling}>
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab id="t-security" value="security">
+              Security
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general">G</Tabs.Panel>
+          <Tabs.Panel value="billing">B</Tabs.Panel>
+          <Tabs.Panel value="security">S</Tabs.Panel>
+        </Tabs>
+      </>
+    )
+  }
+
+  it('TB-SELECT-03: programmatic value change moves the preferred tab stop without onChange', async () => {
+    const log: string[] = []
+    // Non-first initial selection already holds the stop (TB-DOM-03 class).
+    await React.act(async () => {
+      root.render(
+        <TrioControlled
+          value="security"
+          onChange={(next: string) => log.push(next)}
+        />
+      )
+    })
+    expect(tabIndexOf('t-security')).toBe('0')
+    expect(tabIndexOf('t-general')).toBe('-1')
+    expect(tabIndexOf('t-billing')).toBe('-1')
 
     await React.act(async () => {
-      click(document.getElementById('t-password')!)
+      document.getElementById('external')!.focus()
     })
-    expect(
-      document.getElementById('t-password')?.getAttribute('aria-selected')
-    ).toBe('true')
-    expect(document.getElementById('p-password')?.hidden).toBe(false)
-    expect(document.getElementById('p-account')?.hidden).toBe(true)
-
-    // Automatic arrows switch the uncontrolled selection too.
+    // Programmatic change with focus outside: stop follows, focus stays.
     await React.act(async () => {
-      document.getElementById('t-password')!.focus()
-      keydown(document.activeElement!, 'ArrowLeft')
+      root.render(
+        <TrioControlled
+          value="general"
+          onChange={(next: string) => log.push(next)}
+        />
+      )
     })
-    expect(document.activeElement?.id).toBe('t-account')
+    expect(document.activeElement?.id).toBe('external')
+    expect(tabIndexOf('t-general')).toBe('0')
+    expect(tabIndexOf('t-security')).toBe('-1')
     expect(
-      document.getElementById('t-account')?.getAttribute('aria-selected')
+      document.getElementById('t-general')?.getAttribute('aria-selected')
     ).toBe('true')
+    expect(log).toEqual([])
+  })
+
+  it('FEATURES #8: disabled selection falls back to the first-enabled tab stop', async () => {
+    const log: string[] = []
+    await React.act(async () => {
+      root.render(
+        <TrioControlled
+          value="billing"
+          disabledBilling
+          onChange={(next: string) => log.push(next)}
+        />
+      )
+    })
+    // First-enabled general holds the stop; the disabled selected tab is
+    // not focusable, while its controlled panel may still show (TB-DOM-08).
+    expect(tabIndexOf('t-general')).toBe('0')
+    expect(tabIndexOf('t-billing')).toBe('-1')
+    expect(tabIndexOf('t-security')).toBe('-1')
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(log).toEqual([])
+  })
+
+  it('FEATURES #8: removing the selected value moves the stop without selecting', async () => {
+    const log: string[] = []
+    function Fixture({ values }: { values: string[] }) {
+      return (
+        <Tabs value="billing" onChange={(next: string) => log.push(next)}>
+          <Tabs.List>
+            {values.map(v => (
+              <Tabs.Tab key={v} id={`t-${v}`} value={v}>
+                {v}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {values.map(v => (
+            <Tabs.Panel key={v} value={v}>
+              {v} content
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Fixture values={['general', 'billing', 'security']} />)
+    })
+    expect(tabIndexOf('t-billing')).toBe('0')
+
+    await React.act(async () => {
+      root.render(<Fixture values={['general', 'security']} />)
+    })
+    // No fallback selection, no request — but the list keeps a live stop.
+    for (const tab of Array.from(container.querySelectorAll('[role="tab"]'))) {
+      expect(tab.getAttribute('aria-selected')).toBe('false')
+    }
+    expect(tabIndexOf('t-general')).toBe('0')
+    expect(tabIndexOf('t-security')).toBe('-1')
+    expect(log).toEqual([])
+  })
+})
+
+describe('Tabs FEATURES #4 proofs (focus rescue)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function RescueFixture({
+    value,
+    onChange,
+    disabledBilling = false,
+  }: {
+    value: string
+    onChange: (next: string) => void
+    disabledBilling?: boolean
+  }) {
+    return (
+      <Tabs value={value} onChange={onChange}>
+        <Tabs.List>
+          <Tabs.Tab id="t-general" value="general">
+            General
+          </Tabs.Tab>
+          <Tabs.Tab id="t-billing" value="billing" disabled={disabledBilling}>
+            Billing
+          </Tabs.Tab>
+          <Tabs.Tab id="t-security" value="security">
+            Security
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="general">
+          <input id="panel-input" defaultValue="" />
+        </Tabs.Panel>
+        <Tabs.Panel value="billing">B</Tabs.Panel>
+        <Tabs.Panel value="security">S</Tabs.Panel>
+      </Tabs>
+    )
+  }
+
+  it('TB-SELECT-07: hiding the focused panel rescues focus to the new tab without onChange', async () => {
+    const log: string[] = []
+    await React.act(async () => {
+      root.render(
+        <RescueFixture value="general" onChange={(n: string) => log.push(n)} />
+      )
+    })
+    await React.act(async () => {
+      document.getElementById('panel-input')!.focus()
+    })
+    expect(document.activeElement?.id).toBe('panel-input')
+
+    await React.act(async () => {
+      root.render(
+        <RescueFixture value="billing" onChange={(n: string) => log.push(n)} />
+      )
+    })
+    expect(document.activeElement?.id).toBe('t-billing')
+    expect(tabIndexOf('t-billing')).toBe('0')
+    expect(log).toEqual([])
+  })
+
+  it('TB-SELECT-07: rescue falls back to nearest-enabled when the new tab is disabled', async () => {
+    const log: string[] = []
+    await React.act(async () => {
+      root.render(
+        <RescueFixture
+          value="general"
+          disabledBilling
+          onChange={(n: string) => log.push(n)}
+        />
+      )
+    })
+    await React.act(async () => {
+      document.getElementById('panel-input')!.focus()
+    })
+
+    await React.act(async () => {
+      root.render(
+        <RescueFixture
+          value="billing"
+          disabledBilling
+          onChange={(n: string) => log.push(n)}
+        />
+      )
+    })
+    // general and security tie at distance 1 from billing; preceding wins.
+    expect(document.activeElement?.id).toBe('t-general')
+    expect(tabIndexOf('t-general')).toBe('0')
+    expect(log).toEqual([])
+  })
+})
+
+describe('Tabs FEATURES #6 proofs (disabled/removed handoff)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function HandoffFixture({
+    order,
+    value,
+    onChange,
+    disabledBilling = false,
+  }: {
+    order: string[]
+    value: string
+    onChange: (next: string) => void
+    disabledBilling?: boolean
+  }) {
+    return (
+      <Tabs value={value} onChange={onChange} activation="manual">
+        <Tabs.List>
+          {order.map(v => (
+            <Tabs.Tab
+              key={v}
+              id={`t-${v}`}
+              value={v}
+              disabled={v === 'billing' ? disabledBilling : false}
+            >
+              {v}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+        {order.map(v => (
+          <Tabs.Panel key={v} id={`p-${v}`} value={v}>
+            {v} content
+          </Tabs.Panel>
+        ))}
+      </Tabs>
+    )
+  }
+
+  it('TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie', async () => {
+    const log: string[] = []
+    const render = (disabledBilling: boolean) =>
+      root.render(
+        <HandoffFixture
+          order={['general', 'billing', 'security']}
+          value="general"
+          disabledBilling={disabledBilling}
+          onChange={(n: string) => log.push(n)}
+        />
+      )
+    await React.act(async () => {
+      render(false)
+    })
+    await React.act(async () => {
+      document.getElementById('t-billing')!.focus()
+    })
+    expect(document.activeElement?.id).toBe('t-billing')
+
+    await React.act(async () => {
+      render(true)
+    })
+    // general and security tie at distance 1; preceding wins. Selection,
+    // visible panel unchanged; no request.
+    expect(document.activeElement?.id).toBe('t-general')
+    expect(tabIndexOf('t-general')).toBe('0')
+    expect(tabIndexOf('t-billing')).toBe('-1')
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-general')?.hidden).toBe(false)
+    expect(log).toEqual([])
+  })
+
+  it('TB-DYNAMIC-03: disabling the first focused tab hands off to the nearest follower', async () => {
+    const log: string[] = []
+    const render = (disabledBilling: boolean) =>
+      root.render(
+        <HandoffFixture
+          order={['billing', 'security', 'general']}
+          value="general"
+          disabledBilling={disabledBilling}
+          onChange={(n: string) => log.push(n)}
+        />
+      )
+    await React.act(async () => {
+      render(false)
+    })
+    await React.act(async () => {
+      document.getElementById('t-billing')!.focus()
+    })
+
+    await React.act(async () => {
+      render(true)
+    })
+    expect(document.activeElement?.id).toBe('t-security')
+    expect(tabIndexOf('t-security')).toBe('0')
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(log).toEqual([])
+  })
+
+  it('TB-DYNAMIC-03: removing the focused tab hands off from its former position', async () => {
+    const log: string[] = []
+    const render = (order: string[]) =>
+      root.render(
+        <HandoffFixture
+          order={order}
+          value="general"
+          onChange={(n: string) => log.push(n)}
+        />
+      )
+    await React.act(async () => {
+      render(['general', 'security', 'billing', 'archive'])
+    })
+    await React.act(async () => {
+      document.getElementById('t-billing')!.focus()
+    })
+
+    await React.act(async () => {
+      render(['general', 'security', 'archive'])
+    })
+    // security/archive tie around billing's former slot; preceding wins
+    // (first-enabled general would prove a position-blind fallback).
+    expect(document.activeElement?.id).toBe('t-security')
+    expect(tabIndexOf('t-security')).toBe('0')
+    expect(
+      document.getElementById('t-general')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-general')?.hidden).toBe(false)
+    expect(log).toEqual([])
   })
 })
 
@@ -806,7 +1318,7 @@ describe('Tabs PATCHES proofs (identity registry)', () => {
   it('TB-DOM-06: explicit Tab and Panel IDs win on both sides of the linkage', async () => {
     function Fixture({ tabId, panelId }: { tabId: string; panelId: string }) {
       return (
-        <Tabs defaultValue="general">
+        <Tabs value="general">
           <Tabs.List>
             <Tabs.Tab id={tabId} value="general">
               General

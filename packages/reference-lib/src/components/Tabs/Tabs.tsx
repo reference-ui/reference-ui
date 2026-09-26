@@ -7,13 +7,11 @@ export type TabsVariant = 'line' | 'pill'
 
 export interface TabsProps {
   children?: React.ReactNode
-  value?: string
-  defaultValue?: string
+  value: string
   onChange?: (value: string) => void
   orientation?: TabsOrientation
   activation?: TabsActivation
   variant?: TabsVariant
-  disabled?: boolean
 }
 
 interface TabsTabEntry {
@@ -33,7 +31,6 @@ interface TabsContextValue {
   orientation: TabsOrientation
   activation: TabsActivation
   variant: TabsVariant
-  disabled: boolean
   baseId: string
   rovingValue: string
   setRovingValue: (value: string) => void
@@ -43,6 +40,8 @@ interface TabsContextValue {
   registerPanel: (panelValue: string, entry: TabsPanelEntry) => () => void
   getTabId: (tabValue: string) => string | undefined
   getPanelId: (panelValue: string) => string | undefined
+  notePanelFocus: (panelValue: string) => void
+  noteTabFocus: (tabValue: string) => void
 }
 
 // Layout before paint in the browser (atomic ARIA linkage, TB-DOM-06),
@@ -66,17 +65,12 @@ const TabsContext = React.createContext<TabsContextValue | null>(null)
 
 export function Tabs({
   children,
-  value: valueProp,
-  defaultValue = '',
+  value,
   onChange,
   orientation = 'horizontal',
   activation = 'automatic',
   variant = 'line',
-  disabled = false,
 }: TabsProps) {
-  const [internalValue, setInternalValue] = React.useState(defaultValue)
-  const isControlled = valueProp !== undefined
-  const value = isControlled ? valueProp : internalValue
 
   // Stable SSR-safe identity (TB-DOM-07, TB-ENV-01): useId keeps
   // server/client markup identical, unlike a module counter. Pinned in
@@ -92,9 +86,6 @@ export function Tabs({
   const setRovingValue = React.useCallback((next: string) => {
     setRovingValueState(next)
   }, [])
-  React.useEffect(() => {
-    setRovingValueState(value)
-  }, [value])
 
   // Duplicate tracking (TB-DOM-10): value identity is claimed in an
   // effect with cleanup, so StrictMode double-render/double-effects and
@@ -178,17 +169,213 @@ export function Tabs({
     []
   )
 
+  // DOM-ordered enabled tabs (FEATURES #8, #4, #6): registry insertion
+  // order goes stale across reorders (TB-DYNAMIC-01), so enabled entries
+  // sort by document position. Detached entries are excluded; entries
+  // without a measured element keep their relative order.
+  const getOrderedEnabledTabs = React.useCallback((): string[] => {
+    return Array.from(tabEntries.current.entries())
+      .filter(([, entry]) => {
+        if (entry.disabled) return false
+        const el = entry.element
+        if (el && !el.isConnected) return false
+        return true
+      })
+      .sort(([, a], [, b]) => {
+        const elA = a.element
+        const elB = b.element
+        if (!elA || !elB || elA === elB) return 0
+        const pos = elA.compareDocumentPosition(elB)
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+        return 0
+      })
+      .map(([tabValue]) => tabValue)
+  }, [])
+
+  // DOM-ordered connected tabs (FEATURES #4, #6): the full list that
+  // nearest-enabled fallback walks; disabled entries included so distance
+  // is measured in tab order, not enabled order.
+  const getOrderedTabs = React.useCallback((): string[] => {
+    return Array.from(tabEntries.current.entries())
+      .filter(([, entry]) => {
+        const el = entry.element
+        if (el && !el.isConnected) return false
+        return true
+      })
+      .sort(([, a], [, b]) => {
+        const elA = a.element
+        const elB = b.element
+        if (!elA || !elB || elA === elB) return 0
+        const pos = elA.compareDocumentPosition(elB)
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+        return 0
+      })
+      .map(([tabValue]) => tabValue)
+  }, [])
+
+  // Nearest enabled tab to a value in tab order; ties go to the
+  // preceding tab (TESTS tie-break, FEATURES #6). Unknown values fall
+  // back to first-enabled. An explicit order override lets removals walk
+  // the pre-removal positions (the removed value is already gone from
+  // the live registry when the handoff effect runs).
+  const nearestEnabledTab = React.useCallback(
+    (fromValue: string, allOverride?: string[]): string | undefined => {
+      const enabled = getOrderedEnabledTabs()
+      if (enabled.includes(fromValue)) return fromValue
+      const all = allOverride ?? getOrderedTabs()
+      const idx = all.indexOf(fromValue)
+      for (let d = 1; d <= all.length; d++) {
+        const prev = idx === -1 ? undefined : all[idx - d]
+        if (prev !== undefined && enabled.includes(prev)) return prev
+        const next = idx === -1 ? undefined : all[idx + d]
+        if (next !== undefined && enabled.includes(next)) return next
+      }
+      return enabled[0]
+    },
+    [getOrderedEnabledTabs, getOrderedTabs]
+  )
+
+  // Last panel to hold focus (FEATURES #4): set on focus-enter, never
+  // cleared on blur — removal drops focus synchronously during commit, so
+  // a blur-clear would erase the trail before the rescue effect reads it.
+  // Stale values are safe: rescue also requires focus to be inside that
+  // hidden panel or lost to the root, so focus on a tab or an external
+  // control never rescues.
+  const focusedPanelRef = React.useRef<string | null>(null)
+  const notePanelFocus = React.useCallback((panelValue: string) => {
+    focusedPanelRef.current = panelValue
+  }, [])
+
+  // Focus rescue (TB-SELECT-07, FEATURES #4): a programmatic selection
+  // change that hides the focused panel moves focus to the newly selected
+  // Tab — or the nearest enabled fallback when that tab is disabled —
+  // with no onChange. Fires when focus is still inside the hidden panel
+  // (keepMounted, display:none drop pending) or was lost to the root by
+  // the unmounting children. Focus anywhere else (a tab, an external
+  // control) is left untouched — never stolen.
+  useIsomorphicLayoutEffect(() => {
+    const lastPanel = focusedPanelRef.current
+    if (lastPanel === null || lastPanel === value) return
+    let scope: Element | null = null
+    for (const entry of tabEntries.current.values()) {
+      if (entry.element) {
+        scope = entry.element
+        break
+      }
+    }
+    if (!scope && typeof document !== 'undefined') scope = document.documentElement
+    if (!scope) return
+    const active = getDeepActiveElement(scope)
+    const panelEl = panelEntries.current.get(lastPanel)?.element
+    const insideHidden =
+      active instanceof HTMLElement && !!panelEl?.contains(active)
+    const ownerDoc =
+      scope.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+    const lost = !active || (ownerDoc !== null && active === ownerDoc.body)
+    if (!insideHidden && !lost) return
+    focusedPanelRef.current = null
+    const target = nearestEnabledTab(value)
+    if (target === undefined) return
+    const targetEl = tabEntries.current.get(target)?.element
+    if (targetEl && targetEl.isConnected) {
+      setRovingValueState(target)
+      targetEl.focus()
+    }
+  }, [value, nearestEnabledTab])
+
+  // Selection re-syncs the stop (TB-SELECT-03); a disabled or unmatched
+  // selection falls back to the first enabled tab (FEATURES #8). With no
+  // enabled tab the stop stays on the value, which no enabled tab
+  // matches, so zero tabIndex=0 is exposed (TB-DOM-11). Registry churn
+  // repairs only a broken stop — never snaps a focus-moved stop back to
+  // the selection (TB-MANUAL-01, TB-AUTO-05). Selection is untouched and
+  // no onChange fires on either path.
+  const prevValueRef = React.useRef(value)
+  React.useEffect(() => {
+    const ordered = getOrderedEnabledTabs()
+    if (value !== prevValueRef.current) {
+      prevValueRef.current = value
+      setRovingValueState(ordered.includes(value) ? value : (ordered[0] ?? value))
+    } else if (!ordered.includes(rovingValue)) {
+      const first = ordered[0]
+      if (first !== undefined) setRovingValueState(first)
+    }
+  }, [value, registryVersion, rovingValue, getOrderedEnabledTabs])
+
+  // Focused tab trail (FEATURES #6): the tab holding DOM focus, for the
+  // disable/remove handoff. Focusing a tab also clears the panel trail —
+  // focus demonstrably left the panel subtree.
+  const focusedTabRef = React.useRef<string | null>(null)
+  const noteTabFocus = React.useCallback((tabValue: string) => {
+    focusedTabRef.current = tabValue
+    focusedPanelRef.current = null
+  }, [])
+
+  // Pre-change tab order (FEATURES #6): removals walk the positions from
+  // before the removal commit, so nearest-enabled is measured from where
+  // the focused tab stood, not from first-enabled.
+  const prevTabOrderRef = React.useRef<string[]>([])
+
+  // Disabled/removed-tab handoff (TB-DYNAMIC-03, FEATURES #6): when the
+  // focused tab disables or unmounts, focus and the current stop move to
+  // the nearest enabled tab (ties to preceding), while selection and the
+  // visible panel stay unchanged and no request fires. Declared after the
+  // #8 repair so the handoff target wins over first-enabled. Focus that
+  // already moved elsewhere is never stolen.
+  React.useEffect(() => {
+    const currentOrder = getOrderedTabs()
+    const walkOrder =
+      prevTabOrderRef.current.length > 0
+        ? prevTabOrderRef.current
+        : currentOrder
+    prevTabOrderRef.current = currentOrder
+    const focused = focusedTabRef.current
+    if (focused === null) return
+    const entry = tabEntries.current.get(focused)
+    const broken =
+      !entry ||
+      entry.disabled ||
+      (entry.element !== null && !entry.element.isConnected)
+    if (!broken) return
+    let scope: Element | null = entry?.element ?? null
+    if (!scope) {
+      for (const candidate of tabEntries.current.values()) {
+        if (candidate.element) {
+          scope = candidate.element
+          break
+        }
+      }
+    }
+    if (!scope && typeof document !== 'undefined') {
+      scope = document.documentElement
+    }
+    if (!scope) return
+    const active = getDeepActiveElement(scope)
+    const ownerDoc =
+      scope.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+    const lost = !active || (ownerDoc !== null && active === ownerDoc.body)
+    const onBroken = entry?.element != null && active === entry.element
+    if (!lost && !onBroken) return
+    const target = nearestEnabledTab(focused, walkOrder)
+    if (target === undefined) return
+    const targetEl = tabEntries.current.get(target)?.element
+    if (targetEl && targetEl.isConnected) {
+      focusedTabRef.current = target
+      setRovingValueState(target)
+      targetEl.focus()
+    }
+  }, [registryVersion, getOrderedTabs, nearestEnabledTab])
+
   const setValue = React.useCallback(
     (nextValue: string) => {
       // Redundant requests are suppressed (TB-SELECT-04, TB-MANUAL-04):
       // activating the selected tab is a no-op, not a transition.
       if (nextValue === value) return
-      if (!isControlled) {
-        setInternalValue(nextValue)
-      }
       onChange?.(nextValue)
     },
-    [isControlled, onChange, value]
+    [onChange, value]
   )
 
   const contextValue = React.useMemo<TabsContextValue>(
@@ -198,7 +385,6 @@ export function Tabs({
       orientation,
       activation,
       variant,
-      disabled,
       baseId,
       rovingValue,
       setRovingValue,
@@ -208,6 +394,8 @@ export function Tabs({
       registerPanel,
       getTabId,
       getPanelId,
+      notePanelFocus,
+      noteTabFocus,
     }),
     [
       value,
@@ -215,7 +403,6 @@ export function Tabs({
       orientation,
       activation,
       variant,
-      disabled,
       baseId,
       rovingValue,
       setRovingValue,
@@ -225,10 +412,21 @@ export function Tabs({
       registerPanel,
       getTabId,
       getPanelId,
+      notePanelFocus,
+      noteTabFocus,
       // Unread by the factory: bumps re-render ARIA-linkage readers.
       registryVersion,
     ]
   )
+
+  // Required controlled value (FEATURES #1): an omitted value throws
+  // instead of silently mounting an uncontrolled instance. Placed after
+  // the hooks so hook order is unconditional.
+  if (value === undefined) {
+    throw new Error(
+      'Reference UI: Tabs requires a controlled `value` prop.'
+    )
+  }
 
   return (
     <TabsContext.Provider value={contextValue}>
@@ -320,6 +518,10 @@ export function TabsList({
     }
   }
 
+  // Variant chrome stays kernel-inline (FEATURES #1): the collector
+  // only reliably harvests inline JSX literals on primitives — Book-side
+  // recipe consts flip in/out across syncs (proven 2026-09-26) — so the
+  // pill look has no other collectible home and `variant` stays.
   const isLine = variant === 'line'
 
   return (
@@ -377,7 +579,7 @@ export function Tab({
   const orientation = context?.orientation ?? 'horizontal'
   const variant = variantProp ?? context?.variant ?? 'line'
   const isSelected = context ? context.value === value : false
-  const isDisabled = disabledProp ?? context?.disabled ?? false
+  const isDisabled = disabledProp ?? false
   const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
   // Explicit Panel IDs flow in through the registry (TB-DOM-06); the
   // generated fallback keeps SSR and first render unchanged.
@@ -419,8 +621,12 @@ export function Tab({
   const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
     onFocus?.(e)
     // The roving stop tracks focus (TB-MANUAL-01); disabled tabs stay
-    // unreachable (TB-DOM-08, TB-DOM-11).
-    if (!isDisabled && context) {
+    // unreachable (TB-DOM-08, TB-DOM-11). Every tab focus (even a
+    // disabled one, where the engine allows it) records the handoff
+    // trail (FEATURES #6).
+    if (!context) return
+    context.noteTabFocus(value)
+    if (!isDisabled) {
       context.setRovingValue(value)
     }
   }
@@ -512,12 +718,15 @@ export function Tab({
 
 export type TabPanelProps = Omit<PrimitiveProps<'div'>, 'value'> & {
   value: string
+  keepMounted?: boolean
 }
 
 export function TabPanel({
   value,
   children,
+  keepMounted = false,
   id: idProp,
+  onFocus,
   className,
   style,
   ...props
@@ -546,6 +755,15 @@ export function TabPanel({
     return registerPanel(value, { id: panelId, element: panelRef.current })
   }, [registerPanel, value, panelId])
 
+  const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    onFocus?.(e)
+    // Focus entered this panel's subtree (FEATURES #4): record the trail
+    // so a hiding selection change can rescue it. React normalizes focus
+    // to bubble through the tree, so descendant (even portalled) focus
+    // lands here. Consumer-first.
+    context?.notePanelFocus(value)
+  }
+
   return (
     <Div
       role="tabpanel"
@@ -553,6 +771,7 @@ export function TabPanel({
       id={panelId}
       aria-labelledby={tabId}
       hidden={!isSelected}
+      onFocus={handleFocus}
       data-state={isSelected ? 'active' : 'inactive'}
       data-value={value}
       py="5r"
@@ -562,7 +781,7 @@ export function TabPanel({
       style={style}
       {...props}
     >
-      {isSelected && children}
+      {(isSelected || keepMounted) && children}
     </Div>
   )
 }

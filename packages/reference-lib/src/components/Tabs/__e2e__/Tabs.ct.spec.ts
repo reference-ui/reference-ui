@@ -285,6 +285,69 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await expect(panelInnerB).toBeVisible()
   })
 
+  test('TB-SELECT-07: hiding the focused panel rescues focus to the new tab', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/FocusRescue')
+    await expect(page.getByTestId('tabs-rescue-root')).toBeVisible()
+
+    const panelInput = page.getByTestId('panel-f-input')
+    const tabBilling = page.getByTestId('tab-f-billing')
+    const panelBilling = page.getByTestId('panel-f-billing')
+
+    await panelInput.focus()
+    await expect(panelInput).toBeFocused()
+    // Programmatic switch (no pointer focus transfer): the focused input
+    // unmounts with its panel and focus rescues to the billing tab.
+    await page.getByTestId('rescue-switch').click()
+    await expect(tabBilling).toBeFocused()
+    await expect(tabBilling).toHaveAttribute('aria-selected', 'true')
+    await expect(tabBilling).toHaveAttribute('tabindex', '0')
+    await expect(panelBilling).toBeVisible()
+  })
+
+  test('TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/Handoff')
+    await expect(page.getByTestId('tabs-handoff-root')).toBeVisible()
+
+    const tabGeneral = page.getByTestId('tab-h-general')
+    const tabBilling = page.getByTestId('tab-h-billing')
+    const panelGeneral = page.getByTestId('panel-h-general')
+
+    await tabBilling.focus()
+    await expect(tabBilling).toBeFocused()
+    await page.getByTestId('handoff-disable').click()
+    // general/security tie around billing; preceding wins. Selection and
+    // visible panel unchanged.
+    await expect(tabGeneral).toBeFocused()
+    await expect(tabGeneral).toHaveAttribute('tabindex', '0')
+    await expect(tabGeneral).toHaveAttribute('aria-selected', 'true')
+    await expect(panelGeneral).toBeVisible()
+  })
+
+  test('TB-DYNAMIC-03: removing the focused tab hands off from its former position', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tabs/Tabs/Handoff')
+    await expect(page.getByTestId('tabs-handoff-root')).toBeVisible()
+
+    const tabBilling = page.getByTestId('tab-h-billing')
+    const tabGeneral = page.getByTestId('tab-h-general')
+
+    await tabBilling.focus()
+    await page.getByTestId('handoff-remove').click()
+    // general/security tie around billing's former slot; preceding wins.
+    // (Position-aware walk past first-enabled is pinned in unit.)
+    await expect(tabGeneral).toBeFocused()
+    await expect(tabGeneral).toHaveAttribute('tabindex', '0')
+    await expect(tabGeneral).toHaveAttribute('aria-selected', 'true')
+  })
+
   test('TB-ENV-03: Tabs keep focus and linkage local inside a ShadowRoot', async ({
     mount,
     page,

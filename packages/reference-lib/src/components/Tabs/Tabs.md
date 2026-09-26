@@ -29,6 +29,7 @@ interface TabsProps {
   onChange?: (value: string) => void
   orientation?: "horizontal" | "vertical"
   activation?: "automatic" | "manual"
+  variant?: "line" | "pill"
 }
 
 interface TabsListProps
@@ -43,6 +44,7 @@ interface TabsTabProps
 interface TabsPanelProps
   extends ReferencePartProps<"div"> {
   value: string
+  keepMounted?: boolean
 }
 ```
 
@@ -54,6 +56,25 @@ native `hidden` attribute. A programmatic selection change moves focus out of
 a panel that becomes hidden to the newly selected Tab or a safe enabled
 fallback.
 Omitted orientation is horizontal and omitted activation is automatic.
+
+List and Tab render the signed line look by default and the pill look
+under `variant="pill"` (also settable per List/Tab). `variant` stays in
+the kernel by pipeline necessity, not by design taste: the stylesheet
+collector only reliably harvests inline props on primitives, so
+Book-side token recipes flip in and out of the CSS across syncs and the
+pill look has no other collectible home (proven 2026-09-26; see the
+crew log). A `keepMounted` panel keeps inactive children alive under
+`hidden`; the default still unmounts them.
+
+## Link navigation (recipe, not API)
+
+When tabs navigate between URLs (docs sites, settings sections), do not
+look for `href` on `Tabs.Tab` — the kernel has no link API by decision,
+and anchor semantics (middle-click, open-in-tab, one tab stop per link)
+collide with the ARIA tab pattern (roving tabindex, arrow keys,
+`aria-selected`). Use the Book `LinkNav` recipe instead: real anchors in
+a `nav` landmark reusing the kernel's own line-tab utility classes, and
+`aria-current="page"` for the current route, owned by your router.
 
 ---
 
