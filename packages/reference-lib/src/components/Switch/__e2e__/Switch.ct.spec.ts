@@ -135,9 +135,21 @@ test.describe('Switch quarantine parity', () => {
     await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
     await expect(page.getByTestId('sw-dom-04-thumb-tag')).toHaveText('SPAN')
 
+    // PATCHES item 1: Fragment-wrapped authored thumb replaces the default.
+    await page.getByTestId('sw-dom-04-to-fragment').click()
+    await expect(page.getByTestId('sw-dom-04-fragment-thumb')).toBeVisible()
+    await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
+
+    // PATCHES item 1: HOC-forwarded authored thumb replaces the default.
+    await page.getByTestId('sw-dom-04-to-forwarded').click()
+    await expect(page.getByTestId('sw-dom-04-forwarded-thumb')).toBeVisible()
+    await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
+
     await page.getByTestId('sw-dom-04-to-restored').click()
     await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
     await expect(page.getByTestId('sw-dom-04-authored-thumb')).toHaveCount(0)
+    await expect(page.getByTestId('sw-dom-04-fragment-thumb')).toHaveCount(0)
+    await expect(page.getByTestId('sw-dom-04-forwarded-thumb')).toHaveCount(0)
     await expect(page.getByTestId('sw-dom-04-extra')).toHaveCount(0)
   })
 

@@ -3,7 +3,13 @@ import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { createRoot } from 'react-dom/client'
-import { Switch } from './Switch'
+import { Switch, type SwitchThumbProps } from './Switch'
+
+const ForwardedThumbForTest = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
+  function ForwardedThumbForTest(props, ref) {
+    return <Switch.Thumb {...props} ref={ref} />
+  }
+)
 
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -164,5 +170,52 @@ describe('Switch environments', () => {
       root.unmount()
     })
     container.remove()
+  })
+
+  it('PATCHES-01: Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs', async () => {
+    async function thumbCountFor(node: React.ReactNode): Promise<number> {
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const root = createRoot(container)
+      await React.act(async () => {
+        root.render(node)
+      })
+      const count = container.querySelectorAll('[data-reference-switch-thumb]').length
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
+      return count
+    }
+
+    // Bare and direct-authored sanity shapes.
+    expect(await thumbCountFor(<Switch checked={false} />)).toBe(1)
+    expect(
+      await thumbCountFor(
+        <Switch checked={false}>
+          <Switch.Thumb data-testid="direct-thumb" />
+        </Switch>
+      )
+    ).toBe(1)
+
+    // Fragment-wrapped authored thumb replaces the default.
+    expect(
+      await thumbCountFor(
+        <Switch checked={false}>
+          <React.Fragment>
+            <Switch.Thumb data-testid="fragment-thumb" />
+          </React.Fragment>
+        </Switch>
+      )
+    ).toBe(1)
+
+    // HOC-forwarded authored thumb replaces the default.
+    expect(
+      await thumbCountFor(
+        <Switch checked={false}>
+          <ForwardedThumbForTest data-testid="forwarded-thumb" />
+        </Switch>
+      )
+    ).toBe(1)
   })
 })

@@ -1,7 +1,16 @@
 import * as React from 'react'
 import { Div, Button, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
-import { Switch } from './index'
+import { Switch, type SwitchThumbProps } from './index'
+
+// PATCHES item 1: HOC-forwarded thumb — an opaque wrapper component that
+// renders Switch.Thumb inside. Structural detection must see through it
+// (no element-type probing can), so exactly one thumb still renders.
+const ForwardedSwitchThumb = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
+  function ForwardedSwitchThumb(props, ref) {
+    return <Switch.Thumb {...props} ref={ref} />
+  }
+)
 
 export const InteractiveFixture = () => {
   const [checked, setChecked] = React.useState(false)
@@ -62,7 +71,7 @@ export const StatesFixture = () => (
 export const ParityFixture = () => {
   const [dom01Checked, setDom01Checked] = React.useState(false)
   const [dom02Checked, setDom02Checked] = React.useState(false)
-  const [dom04Shape, setDom04Shape] = React.useState<'thumbless' | 'authored' | 'restored'>('thumbless')
+  const [dom04Shape, setDom04Shape] = React.useState<'thumbless' | 'authored' | 'fragment' | 'forwarded' | 'restored'>('thumbless')
   const [dom04Checked, setDom04Checked] = React.useState(false)
   const [dom04ThumbTag, setDom04ThumbTag] = React.useState('')
   const [dom05Rerender, setDom05Rerender] = React.useState(0)
@@ -146,12 +155,30 @@ export const ParityFixture = () => {
               <span data-testid="sw-dom-04-extra">Extra Visual</span>
             </Switch>
           )}
+          {dom04Shape === 'fragment' && (
+            <Switch data-testid="sw-dom-04" checked={dom04Checked} onChange={setDom04Checked}>
+              <React.Fragment>
+                <Switch.Thumb data-testid="sw-dom-04-fragment-thumb" />
+              </React.Fragment>
+            </Switch>
+          )}
+          {dom04Shape === 'forwarded' && (
+            <Switch data-testid="sw-dom-04" checked={dom04Checked} onChange={setDom04Checked}>
+              <ForwardedSwitchThumb data-testid="sw-dom-04-forwarded-thumb" />
+            </Switch>
+          )}
           {dom04Shape === 'restored' && (
             <Switch data-testid="sw-dom-04" checked={dom04Checked} onChange={setDom04Checked} />
           )}
           <span data-testid="sw-dom-04-thumb-tag">{dom04ThumbTag}</span>
           <button type="button" data-testid="sw-dom-04-to-authored" onClick={() => setDom04Shape('authored')}>
             To Authored
+          </button>
+          <button type="button" data-testid="sw-dom-04-to-fragment" onClick={() => setDom04Shape('fragment')}>
+            To Fragment
+          </button>
+          <button type="button" data-testid="sw-dom-04-to-forwarded" onClick={() => setDom04Shape('forwarded')}>
+            To Forwarded
           </button>
           <button type="button" data-testid="sw-dom-04-to-restored" onClick={() => setDom04Shape('restored')}>
             To Restored

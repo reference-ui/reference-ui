@@ -20,6 +20,44 @@ interface SwitchContextValue {
 
 const SwitchContext = React.createContext<SwitchContextValue | null>(null)
 
+// Layout before paint in the browser (pre-paint default-thumb
+// reconciliation), plain effect on the server where layout effects warn.
+const useIsomorphicLayoutEffect =
+  typeof document !== 'undefined' ? React.useLayoutEffect : React.useEffect
+
+function composeRefs<T>(...refs: (React.Ref<T> | undefined | null)[]) {
+  return (node: T | null) => {
+    const cleanups: (() => void)[] = []
+    for (const ref of refs) {
+      if (typeof ref === 'function') {
+        const cleanup = ref(node)
+        if (typeof cleanup === 'function') {
+          cleanups.push(cleanup)
+        }
+      } else if (ref && typeof ref === 'object' && 'current' in ref) {
+        ;(ref as React.MutableRefObject<T | null>).current = node
+      }
+    }
+    if (cleanups.length > 0) {
+      return () => {
+        for (const cleanup of cleanups) {
+          cleanup()
+        }
+      }
+    }
+  }
+}
+
+// Static seed for the direct-authored shape only: reference identity, no
+// displayName read, no fragment penetration. Seeds initial state so the
+// first paint (including SSR) is already correct; Fragment-wrapped and
+// HOC-forwarded thumbs are reconciled from rendered DOM structure below.
+function hasDirectAuthoredThumb(children: React.ReactNode): boolean {
+  return React.Children.toArray(children).some(
+    child => React.isValidElement(child) && child.type === SwitchThumb
+  )
+}
+
 export const SwitchThumb = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
   function SwitchThumb({ className, style, ...props }, ref) {
     const context = React.useContext(SwitchContext)
@@ -63,6 +101,29 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
     const isControlled = checkedProp !== undefined
     const checked = isControlled ? checkedProp : internalChecked
 
+    // Structural thumb identity: the rendered DOM is the source of truth
+    // for whether an authored thumb exists, so Fragment-wrapped and
+    // HOC-forwarded thumbs suppress the default without element probing.
+    const [authoredThumbPresent, setAuthoredThumbPresent] = React.useState(
+      () => hasDirectAuthoredThumb(children)
+    )
+    const rootNodeRef = React.useRef<HTMLButtonElement | null>(null)
+    const rootRef = React.useMemo(() => composeRefs(rootNodeRef, ref), [ref])
+
+    useIsomorphicLayoutEffect(() => {
+      const root = rootNodeRef.current
+      if (!root) return
+      let thumbs = 0
+      for (const el of root.children) {
+        if (el.hasAttribute('data-reference-switch-thumb')) thumbs++
+      }
+      if (authoredThumbPresent) {
+        if (thumbs === 0) setAuthoredThumbPresent(false)
+      } else if (thumbs > 1) {
+        setAuthoredThumbPresent(true)
+      }
+    })
+
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e)
       if (!e.defaultPrevented && !disabled) {
@@ -79,10 +140,6 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
       [checked, disabled]
     )
 
-    const hasAuthoredThumb = React.Children.toArray(children).some(
-      child => React.isValidElement(child) && (child.type === SwitchThumb || (child.type as any)?.displayName === 'SwitchThumb')
-    )
-
     // Root owns its managed ARIA/state: consumer conflicts lose, aria-pressed is dropped.
     const managedProps = { ...props } as Record<string, any>
     delete managedProps['aria-pressed']
@@ -93,7 +150,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           {...managedProps}
           type="button"
           role="switch"
-          ref={ref}
+          ref={rootRef}
           disabled={disabled}
           aria-checked={checked}
           data-reference-switch=""
@@ -104,7 +161,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           style={style}
         >
           {children}
-          {!hasAuthoredThumb && <SwitchThumb />}
+          {!authoredThumbPresent && <SwitchThumb />}
         </Button>
       </SwitchContext.Provider>
     )
