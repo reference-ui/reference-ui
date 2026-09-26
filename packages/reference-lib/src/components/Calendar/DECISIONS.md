@@ -15,6 +15,15 @@ nested UX review approved. Log:
 `f50f24ff7` ("feat(calendar): land quarantine ISO kit + 17-case suite,
 freeze visuals").
 
+FEATURES cluster B landed #3/#4/#6/#7/#8/#11 (log:
+`.agents/missions/quarantine-landing/features-Calendar-B.md`) with four
+judgment calls: `firstDayOfWeek` takes short kit tokens (`'mon'`, not
+the sketch's `"monday"`); the prototype heading drill-down toggle and
+its dead month branch were removed as the #11 div-heading consequence
+(#10 reintroduces view via Month/Year parts); unrecognized runtime
+tokens fall back to the locale default per the pinned kit; disabled-skip
+search caps at 10,000 steps so fully-blocked spans terminate.
+
 ## Candidate features (quarantine-sourced)
 
 OPEN/DEFERRED candidates have moved out of this file. The full

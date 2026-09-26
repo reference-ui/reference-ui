@@ -26,6 +26,17 @@ export interface MonthGrid {
   allDays: GridDay[]
 }
 
+// Date.UTC maps years 0..99 onto 19xx, which would corrupt the weekday in
+// accessible labels for years 1..99 (CA-ISO-08: accepted years keep
+// Gregorian Intl labels). Build from a leap base year, then restore the
+// true proleptic-Gregorian year. Feb 29 can only name a leap year here
+// because the grid contains only real days, so the base never rolls.
+function utcDateForLabel(year: number, month: number, day: number): Date {
+  const date = new Date(Date.UTC(2000, month - 1, day))
+  date.setUTCFullYear(year)
+  return date
+}
+
 export function buildMonthGrid(
   monthStr: ISOMonth,
   firstDayOfWeek: number,
@@ -68,7 +79,7 @@ export function buildMonthGrid(
     for (let i = leadingCount - 1; i >= 0; i--) {
       const day = prevMonthDays - i
       const date = formatISODate(prevYear, prevMonth, day)
-      const dateObj = new Date(Date.UTC(prevYear, prevMonth - 1, day))
+      const dateObj = utcDateForLabel(prevYear, prevMonth, day)
       allDays.push({
         date,
         year: prevYear,
@@ -84,7 +95,7 @@ export function buildMonthGrid(
   // 2. In-month days
   for (let day = 1; day <= daysInCurrentMonth; day++) {
     const date = formatISODate(year, month, day)
-    const dateObj = new Date(Date.UTC(year, month - 1, day))
+    const dateObj = utcDateForLabel(year, month, day)
     allDays.push({
       date,
       year,
@@ -102,7 +113,7 @@ export function buildMonthGrid(
     const nextMonth = month === 12 ? 1 : month + 1
     for (let day = 1; day <= trailingCount; day++) {
       const date = formatISODate(nextYear, nextMonth, day)
-      const dateObj = new Date(Date.UTC(nextYear, nextMonth - 1, day))
+      const dateObj = utcDateForLabel(nextYear, nextMonth, day)
       allDays.push({
         date,
         year: nextYear,

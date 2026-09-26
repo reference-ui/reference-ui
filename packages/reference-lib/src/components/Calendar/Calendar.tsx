@@ -1,7 +1,6 @@
 import * as React from 'react'
 import {
   Div,
-  H2,
   Button,
   Table,
   Thead,
@@ -10,9 +9,9 @@ import {
   Th,
   Td,
   type PrimitiveProps,
-  type PrimitiveElement,
 } from '@reference-ui/react'
 import {
+  addCalendarDays,
   formatISODate,
   formatISOMonth,
   getDayOfWeek,
@@ -22,9 +21,13 @@ import {
   isValidISOYear,
   parseISODate,
   parseISOMonth,
+  type CalendarWeekday,
+  type ISODate as CanonicalISODate,
   type ISOMonth,
   type ISOYear,
 } from './iso'
+import { getWeekStart, getWeekdayHeaders, validateLocale, type WeekdayHeader } from './week'
+import { buildMonthGrid, type GridDay, type MonthGrid } from './grid'
 
 export type CalendarMode = 'day' | 'range' | 'month' | 'year'
 export type ISODate = string // YYYY-MM-DD
@@ -43,11 +46,22 @@ function calendarDevDiagnostic(message: string) {
 }
 
 type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
-  locale?: string
+  /** Required BCP 47 locale (FEATURES #3): drives headers, grid padding,
+   * week boundaries, and every label. There is no default — freeze
+   * decision 6 forbids a server-environment-dependent fallback. */
+  locale: string
+  /** Optional weekday-token override for the locale's CLDR week start
+   * (FEATURES #3). Short kit tokens (`'sun'`…`'sat'`); an unrecognized
+   * runtime value falls back to the locale default per the pinned kit. */
+  firstDayOfWeek?: CalendarWeekday
   month?: ISOMonth // YYYY-MM
   onMonthChange?: (month: ISOMonth) => void
   min?: ISODate
   max?: ISODate
+  /** Per-date availability predicate (FEATURES #6). Combined with
+   * `min`/`max` into one non-interactive day state; called only with
+   * valid canonical in-domain dates. */
+  isDateUnavailable?: (date: ISODate) => boolean
   /** Seeds the default pane when neither `month` nor `value` is given.
    * Defaults to the current UTC date (previous behavior); pass an explicit
    * ISO date for SSR-safe deterministic rendering. Ignored when `month`
@@ -143,6 +157,26 @@ function validateCalendarProps(props: CalendarProps): string | null {
   ) {
     return `contradictory bounds min ${JSON.stringify(props.min)} > max ${JSON.stringify(props.max)}.`
   }
+  // Required locale (FEATURES #3) fails closed like every other invalid
+  // prop: one diagnostic, null render, no callbacks.
+  const locale = (props as { locale?: unknown }).locale
+  if (locale === undefined) {
+    return `locale is required. Pass an explicit BCP 47 locale such as "en-US".`
+  }
+  if (typeof locale !== 'string') {
+    return `invalid locale ${JSON.stringify(locale)}. Expected a BCP 47 locale string such as "en-US".`
+  }
+  try {
+    validateLocale(locale)
+  } catch (error) {
+    return error instanceof Error ? error.message : `invalid locale ${JSON.stringify(locale)}.`
+  }
+  try {
+    // Structural probe: every render-time formatter below must accept it.
+    new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' })
+  } catch {
+    return `invalid locale ${JSON.stringify(locale)}. Expected a structurally valid BCP 47 locale.`
+  }
   return null
 }
 
@@ -151,23 +185,76 @@ interface CalendarContextValue {
   value: CalendarValue
   currentMonth: { year: number; month: number }
   locale: string
-  /** Nav directions with no enabled target date stay disabled (FEATURES
-   * #12; cluster A pins the 0001/9999 domain bounds, FEATURES #6 extends
-   * this to min/max/unavailable). */
+  /** CLDR week start (0 = Sunday) after the firstDayOfWeek override. */
+  weekStart: number
+  /** Locale-ordered weekday headers: short visible text + full names. */
+  headers: WeekdayHeader[]
+  /** Padded month grid for the current pane (FEATURES #4). */
+  grid: MonthGrid
+  /** Stable Heading id; Grid names itself from it unless overridden. */
+  headingId: string
+  /** Instance-local id prefix; day ids are `${idPrefix}-${ISO}`. */
+  idPrefix: string
+  /** A nav direction disables exactly when its target month holds no
+   * enabled in-domain date (domain bounds + min/max + unavailable). */
   prevDisabled: boolean
   nextDisabled: boolean
-  /** Effective ISO today: valid `today` prop, else current UTC date. */
-  today: ISODate
-  viewMode: 'day' | 'month'
-  toggleViewMode: () => void
-  selectMonth: (monthIndex: number) => void
+  /** Locale target-month names for the nav buttons (FEATURES #11). */
+  prevLabel: string
+  nextLabel: string
+  /** Today marker (FEATURES #8): explicit `today`, else the client-local
+   * date after mount, else null pre-mount so SSR stays deterministic. */
+  markerToday: ISODate | null
+  /** Bounds pass through for keyboard bound-stops (FEATURES #7). */
+  min?: ISODate
+  max?: ISODate
   goToPrevMonth: () => void
   goToNextMonth: () => void
+  requestMonthChange: (month: ISOMonth) => void
   selectDate: (dateStr: ISODate) => void
   isDateSelected: (dateStr: ISODate) => boolean
   isDateInRange: (dateStr: ISODate) => boolean
   isRangeStart: (dateStr: ISODate) => boolean
   isRangeEnd: (dateStr: ISODate) => boolean
+  /** Single non-interactive day state (FEATURES #6): outside min/max or
+   * refused by isDateUnavailable. Never called with out-of-domain dates. */
+  isDateDisabled: (dateStr: ISODate) => boolean
+}
+
+/** Locale month/year name ("February 2024") for Heading + nav targets.
+ * Gregorian is forced so locales with another default calendar keep
+ * their language while naming the rendered Gregorian pane (CA-LOC-08);
+ * explicit non-Gregorian requests never reach here (fail-closed). */
+function formatMonthYear(locale: string, year: number, month0: number): string {
+  // Date.UTC maps years 0..99 onto 19xx; setUTCFullYear restores the true
+  // proleptic-Gregorian year (same correction the grid kernels apply).
+  const date = new Date(Date.UTC(2000, month0, 1))
+  date.setUTCFullYear(year)
+  return date.toLocaleDateString(locale, {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+    calendar: 'gregory',
+  })
+}
+
+/** Adjacent month, or null when the step would leave 0001–9999. */
+function shiftMonth(
+  year: number,
+  month0: number,
+  delta: -1 | 1
+): { year: number; month: number } | null {
+  let nextY = year
+  let nextM = month0 + delta
+  if (nextM < 0) {
+    nextM = 11
+    nextY -= 1
+  } else if (nextM > 11) {
+    nextM = 0
+    nextY += 1
+  }
+  if (nextY < 1 || nextY > 9999) return null
+  return { year: nextY, month: nextM }
 }
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null)
@@ -196,7 +283,7 @@ export function CalendarHeader({
   )
 }
 
-export type CalendarHeadingProps = PrimitiveProps<'button'>
+export type CalendarHeadingProps = PrimitiveProps<'div'>
 
 export function CalendarHeading({
   className,
@@ -206,42 +293,32 @@ export function CalendarHeading({
   const context = React.useContext(CalendarContext)
   if (!context) return null
 
-  const { currentMonth, locale, toggleViewMode, viewMode } = context
-  // Date.UTC maps years 0..99 onto 19xx; setUTCFullYear restores the true
-  // proleptic-Gregorian year (same correction the grid kernels apply).
-  const date = new Date(Date.UTC(2000, currentMonth.month, 1))
-  date.setUTCFullYear(currentMonth.year)
-  const monthName = date.toLocaleDateString(locale, {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+  // Locale-formatted div + the stable polite atomic announcement source
+  // (FEATURES #11): one text mutation per accepted month, no global
+  // announcer. Sync text — never effect-written — so mount produces no
+  // redundant post-mount mutation (CA-GRID-12). The prototype heading
+  // drill-down toggle is gone with the button host; Month/Year parts own
+  // view when FEATURES #10 lands.
+  const { currentMonth, locale, headingId } = context
+  const monthName = formatMonthYear(locale, currentMonth.year, currentMonth.month)
 
   return (
-    <Button
-      type="button"
+    <Div
       data-reference-calendar-heading=""
-      onClick={toggleViewMode}
-      bg="transparent"
-      border="none"
+      id={headingId}
+      aria-live="polite"
+      aria-atomic="true"
       p="1r 2r"
-      borderRadius="sm"
-      cursor="pointer"
       fontSize="4r"
       fontWeight="600"
       m="0"
       color="design.text.base"
-      display="inline-flex"
-      alignItems="center"
-      gap="1r"
-      _hover={{ bg: 'ui.button.mutedBackground' }}
       className={className}
       style={style}
       {...props}
     >
-      <span>{monthName}</span>
-      <span style={{ fontSize: '0.65em', opacity: 0.6 }}>{viewMode === 'month' ? '▲' : '▼'}</span>
-    </Button>
+      {monthName}
+    </Div>
   )
 }
 
@@ -267,7 +344,7 @@ export function CalendarPrevButton({
   return (
     <Button
       type="button"
-      aria-label="Previous month"
+      aria-label={context?.prevLabel ?? 'Previous month'}
       disabled={navDisabled}
       onClick={handleClick}
       width="7r"
@@ -313,7 +390,7 @@ export function CalendarNextButton({
   return (
     <Button
       type="button"
-      aria-label="Next month"
+      aria-label={context?.nextLabel ?? 'Next month'}
       disabled={navDisabled}
       onClick={handleClick}
       width="7r"
@@ -337,11 +414,17 @@ export function CalendarNextButton({
   )
 }
 
-export type CalendarGridProps = PrimitiveProps<'table'>
+export type CalendarGridProps = PrimitiveProps<'table'> & {
+  ref?: React.Ref<HTMLTableElement>
+}
 
 export function CalendarGrid({
   className,
   style,
+  ref: consumerRef,
+  onKeyDown: consumerOnKeyDown,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: CalendarGridProps) {
   const context = React.useContext(CalendarContext)
@@ -349,119 +432,354 @@ export function CalendarGrid({
 
   const {
     currentMonth,
+    headers,
+    grid,
+    headingId,
+    idPrefix,
+    markerToday,
+    weekStart,
+    min,
+    max,
+    requestMonthChange,
     selectDate,
-    selectMonth,
     isDateSelected,
     isDateInRange,
     isRangeStart,
     isRangeEnd,
-    today,
-    viewMode,
+    isDateDisabled,
   } = context
 
-  if (viewMode === 'month') {
-    const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ]
-    return (
-      <Div
-        data-reference-calendar-month-grid=""
-        display="grid"
-        gridTemplateColumns="repeat(3, 1fr)"
-        gap="2r"
-        py="2r"
-        className={className}
-        style={style}
-        {...props}
-      >
-        {monthNames.map((mName, i) => {
-          const isCurrent = i === currentMonth.month
-          return (
-            <Button
-              key={mName}
-              type="button"
-              onClick={() => selectMonth(i)}
-              p="2.5r 1r"
-              borderRadius="sm"
-              border="none"
-              bg={isCurrent ? 'ui.button.background' : 'transparent'}
-              color={isCurrent ? 'ui.button.foreground' : 'design.text.base'}
-              fontWeight={isCurrent ? '600' : '400'}
-              fontSize="3.5r"
-              cursor="pointer"
-              _hover={!isCurrent ? { bg: 'ui.button.mutedBackground' } : undefined}
-            >
-              {mName}
-            </Button>
-          )
-        })}
-      </Div>
-    )
-  }
-
-  const { year, month } = currentMonth
-
-  // Generate days in month. Gregorian kernels own in-domain years; out-of-domain
-  // input (year < 1 or month outside 0..11, reachable only via adversarial
-  // props) keeps the legacy Date path so behavior never changes there.
-  // NOTE: years 1..99 now render proleptic-Gregorian weekdays instead of
-  // Date.UTC's 1900-offset mapping — a deliberate correction, unbaselined.
-  const monthInRange = month >= 0 && month <= 11
-  const firstDayOfWeek =
-    year >= 1 && monthInRange
-      ? getDayOfWeek(year, month + 1, 1)
-      : new Date(Date.UTC(year, month, 1)).getUTCDay()
-  const daysInMonth =
-    year >= 1 && monthInRange
-      ? getDaysInMonth(year, month + 1)
-      : new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
-
-  const weeks: Array<Array<{ dateStr: string; dayNum: number; inMonth: boolean }>> = []
-  let currentWeek: Array<{ dateStr: string; dayNum: number; inMonth: boolean }> = []
-
-  // Prepend empty slots / previous month days
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    currentWeek.push({ dateStr: '', dayNum: 0, inMonth: false })
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    // Canonical four-digit years (CA-ISO-08): years below 1000 must still
-    // emit `YYYY-MM-DD` so grid dates validate and match controlled values.
-    const dateStr = formatISODate(year, month + 1, d)
-
-    currentWeek.push({ dateStr, dayNum: d, inMonth: true })
-
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek)
-      currentWeek = []
-    }
-  }
-
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push({ dateStr: '', dayNum: 0, inMonth: false })
-    }
-    weeks.push(currentWeek)
-  }
-
-  const weekDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-
-  // Deterministic initial tab target: selected in-month date, else today when
-  // it renders in this pane, else the first in-month day — so a
-  // selection-less pane keeps exactly one tab stop (CA-STATE-03). No per-day
-  // disabled state exists yet (FEATURES #6), so every in-month day is enabled.
-  const renderedDays = weeks.flatMap((week) =>
-    week.filter((cell) => cell.inMonth).map((cell) => cell.dateStr)
+  const gridRef = React.useRef<HTMLTableElement>(null)
+  const setGridRef = React.useCallback(
+    (node: HTMLTableElement | null) => {
+      gridRef.current = node
+      if (typeof consumerRef === 'function') {
+        consumerRef(node)
+      } else if (consumerRef && typeof consumerRef === 'object') {
+        ;(consumerRef as React.RefObject<HTMLTableElement | null>).current = node
+      }
+    },
+    [consumerRef]
   )
-  const tabTarget =
-    renderedDays.find((dateStr) => isDateSelected(dateStr)) ??
-    (renderedDays.includes(today) ? today : renderedDays[0])
+
+  // Padding past the 0001/9999 domain edge is not a date: void cells stay
+  // empty so the predicate only ever sees valid canonical in-domain
+  // strings (CA-STATE-05) and no out-of-domain value can escape (CA-ISO-08).
+  const renderedDays = React.useMemo(
+    () => grid.allDays.filter((cell) => cell.year >= 1 && cell.year <= 9999),
+    [grid]
+  )
+  const renderedSet = React.useMemo(
+    () => new Set<string>(renderedDays.map((cell) => cell.date)),
+    [renderedDays]
+  )
+
+  // Preferred roving target (CA-STATE-03): enabled rendered selection,
+  // then enabled rendered today, then the first enabled in-month day,
+  // then the first enabled rendered day. Null when nothing is enabled —
+  // no artificial tab stop (CA-STATE-07).
+  const computePreferredTarget = React.useCallback((): ISODate | null => {
+    const enabledSelected = renderedDays.find(
+      (cell) => !isDateDisabled(cell.date) && isDateSelected(cell.date)
+    )
+    if (enabledSelected) return enabledSelected.date
+    if (markerToday && renderedSet.has(markerToday) && !isDateDisabled(markerToday)) {
+      return markerToday
+    }
+    const firstInMonth = renderedDays.find(
+      (cell) => !cell.outsideMonth && !isDateDisabled(cell.date)
+    )
+    if (firstInMonth) return firstInMonth.date
+    return renderedDays.find((cell) => !isDateDisabled(cell.date))?.date ?? null
+  }, [renderedDays, renderedSet, isDateDisabled, isDateSelected, markerToday])
+
+  const [focusedDate, setFocusedDate] = React.useState<ISODate | null>(computePreferredTarget)
+
+  // Nearest enabled rendered date to a lost target, forward-first
+  // (CA-DYNAMIC-02: April 10 → April 11), else null.
+  const nearestEnabled = React.useCallback(
+    (origin: ISODate | null): ISODate | null => {
+      const originIndex = origin ? renderedDays.findIndex((cell) => cell.date === origin) : -1
+      const scan = (from: number, step: 1 | -1): ISODate | null => {
+        for (let i = from; i >= 0 && i < renderedDays.length; i += step) {
+          if (!isDateDisabled(renderedDays[i].date)) return renderedDays[i].date
+        }
+        return null
+      }
+      if (originIndex >= 0) {
+        return scan(originIndex + 1, 1) ?? scan(originIndex - 1, -1)
+      }
+      return scan(0, 1)
+    },
+    [renderedDays, isDateDisabled]
+  )
+
+  // Cross-month keyboard/outside-day focus (CA-KEY-07, CA-MONTH-07):
+  // requested but not yet rendered. Applied after the parent commits
+  // the month; dropped when stale (CA-KEY-10).
+  const pendingFocusRef = React.useRef<{
+    date: ISODate
+    focusWasInGrid: boolean
+    from: ISOMonth
+  } | null>(null)
+
+  const focusInGrid = () => {
+    const root = gridRef.current?.getRootNode() as Document | ShadowRoot | null
+    const active = root?.activeElement
+    return !!active && !!gridRef.current?.contains(active)
+  }
+  // True when focus fell out of the document entirely (disable-blur or
+  // unmount drops it to body) rather than landing on a real target —
+  // the only case where rebuilding grid focus cannot steal (CA-KEY-10).
+  const focusLostToBody = () => {
+    const root = gridRef.current?.getRootNode() as Document | ShadowRoot | null
+    const active = root?.activeElement ?? null
+    return active === null || active === (root as Document).body
+  }
+  // Grid-owned focus across synchronous browser drops: disabling or
+  // unmounting the focused day blurs to body/null *during* the commit,
+  // before effects run, so the live check alone would miss it. A blur
+  // onto a real outside target clears the flag; a null-target blur
+  // (disable/unmount — or a dead-space click, the accepted corner)
+  // keeps the last value.
+  const hadGridFocusRef = React.useRef(false)
+  const handleGridFocusCapture = (event: React.FocusEvent) => {
+    if (gridRef.current?.contains(event.target as Node)) hadGridFocusRef.current = true
+  }
+  const handleGridBlurCapture = (event: React.FocusEvent) => {
+    const related = event.relatedTarget as Node | null
+    if (related && gridRef.current?.contains(related)) return
+    if (related) hadGridFocusRef.current = false
+  }
+  const focusDay = (date: ISODate) => {
+    // Owner-root-safe: query inside the grid element, never the
+    // document, so Shadow DOM keeps working (CA-ENV-03).
+    gridRef.current?.querySelector<HTMLButtonElement>(`button[data-date="${date}"]`)?.focus()
+  }
+
+  const showingMonth = formatISOMonth(currentMonth.year, currentMonth.month + 1)
+
+  // Grid identity across commits: a rebuild (month/locale change) may
+  // replace the focused day's node while its ISO stays the tab target.
+  const prevGridRef = React.useRef<MonthGrid | null>(null)
+
+  React.useEffect(() => {
+    const gridChanged = prevGridRef.current !== grid
+    prevGridRef.current = grid
+    const pending = pendingFocusRef.current
+    if (pending) {
+      const pendingMonth = pending.date.slice(0, 7)
+      if (pendingMonth !== showingMonth) {
+        if (showingMonth !== pending.from) {
+          // The pane moved elsewhere while the request was pending → the
+          // target is stale; drop it (CA-KEY-10 programmatic-month case).
+          pendingFocusRef.current = null
+        } else {
+          // Still waiting on the parent (CA-KEY-07): the target may
+          // already be visible as padding, but focus stays on the origin
+          // until the month commits. Keep the tab target valid meanwhile.
+          if (focusedDate && renderedSet.has(focusedDate) && !isDateDisabled(focusedDate)) return
+          const next =
+            focusedDate && renderedSet.has(focusedDate)
+              ? nearestEnabled(focusedDate)
+              : computePreferredTarget()
+          if (next !== focusedDate) setFocusedDate(next)
+          return
+        }
+      } else if (renderedSet.has(pending.date) && !isDateDisabled(pending.date)) {
+        pendingFocusRef.current = null
+        setFocusedDate(pending.date)
+        if (pending.focusWasInGrid) focusDay(pending.date)
+        return
+      } else {
+        // Committed but unusable (disabled/removed) → drop and relocate
+        // to one valid tab target without stealing focus (CA-KEY-10).
+        pendingFocusRef.current = null
+      }
+    }
+    if (focusedDate && renderedSet.has(focusedDate) && !isDateDisabled(focusedDate)) {
+      // Valid target, but a rebuild may have dropped its node: repair
+      // grid-owned DOM focus only when it fell to body (CA-LOC-07).
+      if (gridChanged && hadGridFocusRef.current && !focusInGrid() && focusLostToBody()) {
+        focusDay(focusedDate)
+      }
+      return
+    }
+    // Disabled in place → nearest (CA-DYNAMIC-02); unrendered (month or
+    // locale moved on) → preferred target (CA-DYNAMIC-03, CA-LOC-07).
+    // DOM focus follows only when it was grid-owned: live in the grid,
+    // or dropped by the same commit's disable/unmount.
+    const next =
+      focusedDate && renderedSet.has(focusedDate)
+        ? nearestEnabled(focusedDate)
+        : computePreferredTarget()
+    if (next !== focusedDate) {
+      setFocusedDate(next)
+      if (next && (focusInGrid() || hadGridFocusRef.current)) focusDay(next)
+    }
+  })
+
+  // Disabled-date skip: walk from the candidate while blocked, stopping
+  // at the inclusive bounds without wrapping (CA-KEY-05). The step cap
+  // terminates fully-blocked spans instead of looping (CA-KEY-06); ten
+  // thousand days covers any plausible constraint window.
+  const skipToEnabled = (
+    candidate: ISODate,
+    step: 1 | -1,
+    minBound: ISODate,
+    maxBound: ISODate
+  ): ISODate | null => {
+    let current = candidate
+    for (let i = 0; i < 10000; i++) {
+      if (current < minBound || current > maxBound) return null
+      if (!isDateDisabled(current)) return current
+      try {
+        // Canonical by construction: the candidate entered validated and
+        // every step preserves canonical form.
+        current = addCalendarDays(current as CanonicalISODate, step)
+      } catch {
+        return null // Gregorian domain edge
+      }
+    }
+    return null
+  }
+
+  const handleGridKeyDown = (event: React.KeyboardEvent) => {
+    if (event.defaultPrevented) return // consumer Grid onKeyDown ran first
+    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return // CA-KEY-04
+    const target = event.target as HTMLElement | null
+    const dayButton = target?.closest?.('button[data-date]') ?? null
+    if (!dayButton || !gridRef.current?.contains(dayButton)) return
+    const origin = dayButton.getAttribute('data-date') as ISODate
+    const key = event.key
+    const horizontal = key === 'ArrowLeft' || key === 'ArrowRight'
+    const vertical = key === 'ArrowUp' || key === 'ArrowDown'
+    if (
+      !horizontal &&
+      !vertical &&
+      key !== 'Home' &&
+      key !== 'End' &&
+      key !== 'PageUp' &&
+      key !== 'PageDown'
+    ) {
+      return
+    }
+    // Inherited RTL reverses only the visual horizontal keys (CA-LOC-06);
+    // time itself never reverses.
+    const dirTarget =
+      target?.closest?.('[dir]')?.getAttribute('dir') ??
+      event.currentTarget.ownerDocument?.documentElement?.getAttribute('dir')
+    const rtl = dirTarget === 'rtl'
+    const minBound = (min ?? '0001-01-01') as ISODate
+    const maxBound = (max ?? '9999-12-31') as ISODate
+
+    let candidate: ISODate | null = null
+    if (horizontal || vertical) {
+      const step =
+        key === 'ArrowLeft'
+          ? rtl
+            ? 1
+            : -1
+          : key === 'ArrowRight'
+            ? rtl
+              ? -1
+              : 1
+            : key === 'ArrowUp'
+              ? -1
+              : 1
+      const dirOrStep: 1 | -1 = step > 0 ? 1 : -1
+      try {
+        candidate = skipToEnabled(
+          addCalendarDays(origin as CanonicalISODate, vertical ? step * 7 : step),
+          dirOrStep,
+          minBound,
+          maxBound
+        )
+      } catch {
+        candidate = null
+      }
+    } else if (key === 'Home' || key === 'End') {
+      // Locale week boundary (CA-KEY-02); blocked boundary dates skip
+      // inward toward the origin week interior.
+      try {
+        const { year, month, day } = parseISODate(origin)
+        const dow = getDayOfWeek(year, month, day)
+        const offset =
+          key === 'Home' ? (dow - weekStart + 7) % 7 : (weekStart + 6 - dow + 7) % 7
+        const inward: 1 | -1 = key === 'Home' ? 1 : -1
+        // The origin is a rendered canonical date; steps preserve form.
+        let current: ISODate = addCalendarDays(origin as CanonicalISODate, key === 'Home' ? -offset : offset)
+        candidate = null
+        for (let i = 0; i <= offset; i++) {
+          if (!isDateDisabled(current)) {
+            candidate = current
+            break
+          }
+          if (current === origin) break
+          current = addCalendarDays(current as CanonicalISODate, inward)
+        }
+      } catch {
+        candidate = null
+      }
+    } else {
+      // Adjacent month preserving the day when possible, constrained at
+      // month end (CA-KEY-03); focus applies after the month commits.
+      const { year, month, day } = parseISODate(origin)
+      const direction = key === 'PageUp' ? -1 : 1
+      const targetMonth = shiftMonth(year, month - 1, direction)
+      if (targetMonth) {
+        const clampedDay = Math.min(day, getDaysInMonth(targetMonth.year, targetMonth.month + 1))
+        candidate = skipToEnabled(
+          formatISODate(targetMonth.year, targetMonth.month + 1, clampedDay),
+          direction,
+          minBound,
+          maxBound
+        )
+      }
+    }
+
+    event.preventDefault() // handled keys never scroll (CA-KEY-01)
+    if (!candidate || candidate === origin) return
+    // Movement changes only focus and, when necessary, the requested
+    // month — never selection (CA-KEY-08).
+    if (candidate.slice(0, 7) === showingMonth) {
+      setFocusedDate(candidate)
+      focusDay(candidate)
+    } else {
+      pendingFocusRef.current = { date: candidate, focusWasInGrid: focusInGrid(), from: showingMonth }
+      requestMonthChange(candidate.slice(0, 7) as ISOMonth)
+    }
+  }
+
+  const handleDayClick = (cell: GridDay) => {
+    if (isDateDisabled(cell.date)) return // locked out in every modality (CA-SINGLE-04)
+    if (cell.outsideMonth) {
+      // Outside activation requests the month first, then the date
+      // (CA-SINGLE-07); focus survives month acceptance (CA-MONTH-07).
+      pendingFocusRef.current = {
+        date: cell.date,
+        focusWasInGrid: focusInGrid(),
+        from: showingMonth,
+      }
+      requestMonthChange(formatISOMonth(cell.year, cell.month))
+    }
+    setFocusedDate(cell.date) // the roving target follows activation (CA-SINGLE-01)
+    selectDate(cell.date)
+  }
 
   return (
     <Table
+      ref={setGridRef}
       role="grid"
       data-reference-calendar-grid=""
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy ?? (ariaLabel ? undefined : headingId)}
+      onKeyDown={(event) => {
+        consumerOnKeyDown?.(event)
+        handleGridKeyDown(event)
+      }}
+      onFocusCapture={handleGridFocusCapture}
+      onBlurCapture={handleGridBlurCapture}
       borderCollapse="collapse"
       tableLayout="fixed"
       width="100%"
@@ -472,36 +790,41 @@ export function CalendarGrid({
     >
       <Thead>
         <Tr role="row">
-          {weekDayNames.map((wd, i) => (
+          {headers.map((header) => (
             <Th
-              key={i}
+              key={header.weekday}
               role="columnheader"
+              scope="col"
+              aria-label={header.accessibleName}
               fontSize="3r"
               color="design.text.light"
               p="1r 0"
               fontWeight="500"
             >
-              {wd}
+              {header.visibleText}
             </Th>
           ))}
         </Tr>
       </Thead>
       <Tbody>
-        {weeks.map((week, wIdx) => (
+        {grid.weeks.map((week, wIdx) => (
           <Tr key={wIdx} role="row">
-            {week.map((cell, cIdx) => {
-              if (!cell.inMonth) {
-                return <Td key={cIdx} role="gridcell" p="0.5r 0" />
+            {week.map((cell) => {
+              if (cell.year < 1 || cell.year > 9999) {
+                return <Td key={cell.date} role="gridcell" p="0.5r 0" />
               }
 
-              const selected = isDateSelected(cell.dateStr)
-              const inRange = isDateInRange(cell.dateStr)
-              const rangeStart = isRangeStart(cell.dateStr)
-              const rangeEnd = isRangeEnd(cell.dateStr)
+              const selected = isDateSelected(cell.date)
+              const inRange = isDateInRange(cell.date)
+              const rangeStart = isRangeStart(cell.date)
+              const rangeEnd = isRangeEnd(cell.date)
+              const disabled = isDateDisabled(cell.date)
+              const isToday = markerToday === cell.date
+              const isFocused = focusedDate === cell.date
 
               return (
                 <Td
-                  key={cIdx}
+                  key={cell.date}
                   role="gridcell"
                   p="0.5r 0"
                   textAlign="center"
@@ -513,14 +836,21 @@ export function CalendarGrid({
                 >
                   <Button
                     type="button"
-                    role="gridcell"
-                    tabIndex={cell.dateStr === tabTarget ? 0 : -1}
+                    id={`${idPrefix}-${cell.date}`}
+                    tabIndex={isFocused ? 0 : -1}
+                    disabled={disabled}
+                    aria-disabled={disabled ? 'true' : undefined}
                     aria-selected={selected}
-                    aria-label={cell.dateStr}
-                    data-date={cell.dateStr}
+                    aria-current={isToday ? 'date' : undefined}
+                    aria-label={cell.accessibleName}
+                    data-date={cell.date}
                     data-selected={selected ? '' : undefined}
                     data-in-range={inRange ? '' : undefined}
-                    onClick={() => selectDate(cell.dateStr)}
+                    data-outside-month={cell.outsideMonth ? '' : undefined}
+                    data-today={isToday ? '' : undefined}
+                    data-disabled={disabled ? '' : undefined}
+                    data-focused={isFocused ? '' : undefined}
+                    onClick={() => handleDayClick(cell)}
                     width="7r"
                     height="7r"
                     display="inline-flex"
@@ -529,15 +859,23 @@ export function CalendarGrid({
                     borderRadius="full"
                     border="none"
                     bg={selected ? 'ui.button.background' : 'transparent'}
-                    color={selected ? 'ui.button.foreground' : 'design.text.base'}
+                    color={
+                      selected
+                        ? 'ui.button.foreground'
+                        : disabled || cell.outsideMonth
+                          ? 'design.text.light'
+                          : 'design.text.base'
+                    }
                     fontSize="3r"
-                    fontWeight={selected ? '600' : '400'}
-                    cursor="pointer"
+                    fontWeight={selected || isToday ? '600' : '400'}
+                    textDecoration={isToday ? 'underline' : undefined}
+                    textUnderlineOffset={isToday ? '0.15em' : undefined}
+                    cursor={disabled ? 'not-allowed' : 'pointer'}
                     outline="none"
-                    _hover={!selected ? { bg: 'ui.button.mutedBackground' } : undefined}
+                    _hover={!selected && !disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
                     _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
                   >
-                    {cell.dayNum}
+                    {cell.formattedDay}
                   </Button>
                 </Td>
               )
@@ -586,11 +924,13 @@ export function Calendar(calendarProps: CalendarProps) {
     mode = 'day',
     value,
     onChange,
-    locale = 'en-US',
+    locale,
+    firstDayOfWeek,
     month: monthProp,
     onMonthChange,
     min,
     max,
+    isDateUnavailable,
     today,
     className,
     style,
@@ -600,7 +940,6 @@ export function Calendar(calendarProps: CalendarProps) {
   // render. Computed before hooks; the early return below runs after all
   // hooks so hook order stays stable across valid/invalid transitions.
   const invalid = validateCalendarProps(calendarProps)
-  const [viewMode, setViewMode] = React.useState<'day' | 'month'>('day')
 
   // Uncontrolled pane seed (FEATURES #12): value, else today, else the
   // system month. Total — invalid props fall through to the next source
@@ -641,68 +980,104 @@ export function Calendar(calendarProps: CalendarProps) {
     )
   }, [followedMonth])
 
-  // Effective today for the grid tab target: valid `today` prop, else the
-  // same current-UTC-date default the pane seed uses.
-  const effectiveToday = React.useMemo<ISODate>(() => {
-    if (today && isValidISODate(today)) return today
+  // Today marker (FEATURES #8): explicit `today` renders synchronously
+  // (SSR-deterministic); an omitted `today` marks the client-local date
+  // only after mount, so SSR and first hydration render no marker and
+  // hydrate warning-free (CA-STATE-11). Local — not UTC — date.
+  const [mountedToday, setMountedToday] = React.useState<ISODate | null>(null)
+  React.useEffect(() => {
+    if (today !== undefined) return
     const now = new Date()
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`
+    setMountedToday(formatISODate(now.getFullYear(), now.getMonth() + 1, now.getDate()))
   }, [today])
+  const markerToday = today ?? mountedToday
 
-  const toggleViewMode = React.useCallback(() => {
-    setViewMode(v => (v === 'day' ? 'month' : 'day'))
-  }, [])
+  // Single non-interactive day state (FEATURES #6): outside the
+  // canonical bounds or refused by the predicate. Lexical comparison is
+  // exact here — bounds passed the CA-ISO-04 canonical gate and grid
+  // dates are canonical by construction.
+  const isDateDisabled = React.useCallback(
+    (dateStr: ISODate) => {
+      if (min !== undefined && dateStr < min) return true
+      if (max !== undefined && dateStr > max) return true
+      return isDateUnavailable?.(dateStr) ?? false
+    },
+    [min, max, isDateUnavailable]
+  )
 
   // A nav direction disables exactly when its target month holds no
-  // enabled in-domain date (CA-MONTH-04). Cluster A pins the Gregorian
-  // domain bounds; FEATURES #6 (cluster B) extends these with min/max and
-  // isDateUnavailable target-month coverage.
-  const prevDisabled = currentMonth.year <= 1 && currentMonth.month <= 0
-  const nextDisabled = currentMonth.year >= 9999 && currentMonth.month >= 11
+  // enabled in-domain date: domain edge, fully out-of-bounds, or wholly
+  // unavailable (CA-MONTH-04). Partial target months stay navigable.
+  // Predicate evaluation runs day 1 → N, deterministically.
+  const navModel = React.useMemo(() => {
+    const prevTarget = shiftMonth(currentMonth.year, currentMonth.month, -1)
+    const nextTarget = shiftMonth(currentMonth.year, currentMonth.month, 1)
+    if (invalid) {
+      // Fail-closed owns invalid props and renders null below; keep the
+      // memo total without touching the predicate, so no callback can
+      // observe an invalid fixture (CA-ISO-06).
+      return {
+        prevTarget,
+        nextTarget,
+        prevDisabled: !prevTarget,
+        nextDisabled: !nextTarget,
+        prevLabel: 'Previous month',
+        nextLabel: 'Next month',
+      }
+    }
+    const targetHasEnabledDate = (target: { year: number; month: number }) => {
+      const days = getDaysInMonth(target.year, target.month + 1)
+      for (let day = 1; day <= days; day++) {
+        const dateStr = formatISODate(target.year, target.month + 1, day)
+        if (min !== undefined && dateStr < min) continue
+        if (max !== undefined && dateStr > max) break // days ascend
+        if (!(isDateUnavailable?.(dateStr) ?? false)) return true
+      }
+      return false
+    }
+    const prevDisabled = !prevTarget || !targetHasEnabledDate(prevTarget)
+    const nextDisabled = !nextTarget || !targetHasEnabledDate(nextTarget)
+    // Navigation names its target month (CA-LOC-05); a disabled
+    // direction keeps the generic name rather than naming a month with
+    // no enabled date. Total under invalid locales — fail-closed owns
+    // those, and this memo runs before the early return.
+    const safeLabel = (target: { year: number; month: number } | null, fallback: string) => {
+      if (!target) return fallback
+      try {
+        return formatMonthYear(locale, target.year, target.month)
+      } catch {
+        return fallback
+      }
+    }
+    const prevLabel = prevDisabled ? 'Previous month' : safeLabel(prevTarget, 'Previous month')
+    const nextLabel = nextDisabled ? 'Next month' : safeLabel(nextTarget, 'Next month')
+    return { prevTarget, nextTarget, prevDisabled, nextDisabled, prevLabel, nextLabel }
+  }, [invalid, currentMonth, locale, min, max, isDateUnavailable])
+  const { prevTarget, nextTarget, prevDisabled, nextDisabled, prevLabel, nextLabel } = navModel
 
-  const selectMonth = React.useCallback(
-    (monthIndex: number) => {
-      const nextY = currentMonth.year
-      const monthStr = formatISOMonth(nextY, monthIndex + 1)
+  // One request seam for nav buttons, outside days, and Page keys:
+  // omitted `month` commits internally, controlled `month` only
+  // requests; the callback stays ISO either way.
+  const requestMonthChange = React.useCallback(
+    (monthStr: ISOMonth) => {
       if (!monthProp) {
-        setInternalMonth({ year: nextY, month: monthIndex })
+        const { year, month } = parseISOMonth(monthStr)
+        setInternalMonth({ year, month: month - 1 })
       }
       onMonthChange?.(monthStr)
-      setViewMode('day')
     },
-    [currentMonth.year, monthProp, onMonthChange]
+    [monthProp, onMonthChange]
   )
 
   const goToPrevMonth = React.useCallback(() => {
-    if (prevDisabled) return
-    let nextY = currentMonth.year
-    let nextM = currentMonth.month - 1
-    if (nextM < 0) {
-      nextM = 11
-      nextY -= 1
-    }
-    const monthStr = formatISOMonth(nextY, nextM + 1)
-    if (!monthProp) {
-      setInternalMonth({ year: nextY, month: nextM })
-    }
-    onMonthChange?.(monthStr)
-  }, [currentMonth, monthProp, onMonthChange, prevDisabled])
+    if (prevDisabled || !prevTarget) return
+    requestMonthChange(formatISOMonth(prevTarget.year, prevTarget.month + 1))
+  }, [prevDisabled, prevTarget, requestMonthChange])
 
   const goToNextMonth = React.useCallback(() => {
-    if (nextDisabled) return
-    let nextY = currentMonth.year
-    let nextM = currentMonth.month + 1
-    if (nextM > 11) {
-      nextM = 0
-      nextY += 1
-    }
-    const monthStr = formatISOMonth(nextY, nextM + 1)
-    if (!monthProp) {
-      setInternalMonth({ year: nextY, month: nextM })
-    }
-    onMonthChange?.(monthStr)
-  }, [currentMonth, monthProp, onMonthChange, nextDisabled])
+    if (nextDisabled || !nextTarget) return
+    requestMonthChange(formatISOMonth(nextTarget.year, nextTarget.month + 1))
+  }, [nextDisabled, nextTarget, requestMonthChange])
 
   const isDateSelected = React.useCallback(
     (dateStr: ISODate) => {
@@ -760,11 +1135,14 @@ export function Calendar(calendarProps: CalendarProps) {
 
   const selectDate = React.useCallback(
     (dateStr: ISODate) => {
-      // Request-only control: every activation requests its payload once
-      // (FEATURES #13 uniform-request — re-activating the selected date
-      // re-requests it; there is no no-op-vs-toggle branch). The parent
-      // owns selection; rejection leaves it unchanged, programmatic value
-      // changes apply silently with no focus move.
+      // Blocked dates never emit, in any modality (FEATURES #6,
+      // CA-SINGLE-04). Request-only control otherwise: every activation
+      // requests its payload once (FEATURES #13 uniform-request —
+      // re-activating the selected date re-requests it; there is no
+      // no-op-vs-toggle branch). The parent owns selection; rejection
+      // leaves it unchanged, programmatic value changes apply silently
+      // with no focus move.
+      if (isDateDisabled(dateStr)) return
       if (mode === 'day') {
         emitChange?.(dateStr)
       } else if (mode === 'range') {
@@ -780,8 +1158,38 @@ export function Calendar(calendarProps: CalendarProps) {
         emitChange?.(nextRange)
       }
     },
-    [mode, value, emitChange]
+    [mode, value, emitChange, isDateDisabled]
   )
+
+  // Locale-derived render data (FEATURES #3): CLDR week start, ordered
+  // headers, padded grid. Guarded so an invalid locale still fails
+  // closed below instead of throwing out of a hook.
+  const localeData = React.useMemo(() => {
+    try {
+      const weekStart = getWeekStart(locale, firstDayOfWeek)
+      return {
+        weekStart,
+        headers: getWeekdayHeaders(locale, weekStart),
+        grid: buildMonthGrid(
+          formatISOMonth(currentMonth.year, currentMonth.month + 1),
+          weekStart,
+          locale
+        ),
+      }
+    } catch {
+      return null
+    }
+  }, [locale, firstDayOfWeek, currentMonth])
+
+  // Instance-local identity (CA-GRID-07, CA-ENV-01): useId is stable
+  // across SSR/hydration and unique per instance; day ids append the
+  // ISO date so equal dates keep their node while mounted.
+  const reactId = React.useId()
+  const idPrefix = React.useMemo(
+    () => `cal${reactId.replace(/[^a-zA-Z0-9]/g, '')}`,
+    [reactId]
+  )
+  const headingId = `${idPrefix}-heading`
 
   const contextValue = React.useMemo<CalendarContextValue>(
     () => ({
@@ -789,43 +1197,57 @@ export function Calendar(calendarProps: CalendarProps) {
       value: value as CalendarValue,
       currentMonth,
       locale,
+      weekStart: localeData?.weekStart ?? 0,
+      headers: localeData?.headers ?? [],
+      grid: localeData?.grid ?? { year: 0, month: 0, weeks: [], allDays: [] },
+      headingId,
+      idPrefix,
       prevDisabled,
       nextDisabled,
-      today: effectiveToday,
-      viewMode,
-      toggleViewMode,
-      selectMonth,
+      prevLabel,
+      nextLabel,
+      markerToday,
+      min,
+      max,
       goToPrevMonth,
       goToNextMonth,
+      requestMonthChange,
       selectDate,
       isDateSelected,
       isDateInRange,
       isRangeStart,
       isRangeEnd,
+      isDateDisabled,
     }),
     [
       mode,
       value,
       currentMonth,
       locale,
+      localeData,
+      headingId,
+      idPrefix,
       prevDisabled,
       nextDisabled,
-      effectiveToday,
-      viewMode,
-      toggleViewMode,
-      selectMonth,
+      prevLabel,
+      nextLabel,
+      markerToday,
+      min,
+      max,
       goToPrevMonth,
       goToNextMonth,
+      requestMonthChange,
       selectDate,
       isDateSelected,
       isDateInRange,
       isRangeStart,
       isRangeEnd,
+      isDateDisabled,
     ]
   )
 
-  if (invalid) {
-    calendarDevDiagnostic(invalid)
+  if (invalid || !localeData) {
+    if (invalid) calendarDevDiagnostic(invalid)
     return null
   }
 

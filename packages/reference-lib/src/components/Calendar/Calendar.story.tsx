@@ -9,6 +9,7 @@ export const SingleDate = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="calendar-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-calendar"
           month="2026-08"
           value={date}
@@ -38,6 +39,7 @@ export const DateRange = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="range-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-range-calendar"
           mode="range"
           month="2026-08"
@@ -65,6 +67,7 @@ export const LeapFebruary = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="leap-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-leap-calendar"
           month="2024-02"
           value={date}
@@ -88,6 +91,7 @@ export const NoSelectionTodayElsewhere = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="elsewhere-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-elsewhere-calendar"
           month="2024-02"
           today="2024-03-10"
@@ -114,6 +118,7 @@ export const EmissionCounter = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="emit-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-emit-calendar"
           month="2024-04"
           value={date}
@@ -151,6 +156,7 @@ export const MonthMachine = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="month-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-month-calendar"
           month={month}
           onMonthChange={(next) => setRequests((prev) => [...prev, next])}
@@ -206,6 +212,7 @@ export const UncontrolledMonth = () => {
         {mounted && (
           <Div style={{ display: hidden ? 'none' : undefined }}>
             <Calendar
+              locale="en-US"
               data-testid="test-unc-calendar"
               value={value}
               onChange={setValue}
@@ -251,6 +258,7 @@ export const DecemberNav = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="dec-fixture-root">
         <Calendar
+          locale="en-US"
           data-testid="test-dec-calendar"
           today="2026-12-15"
           value={date}
@@ -263,6 +271,246 @@ export const DecemberNav = () => {
           </Calendar.Header>
           <Calendar.Grid data-testid="dec-grid" />
         </Calendar>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const BritishGrid = () => {
+  const [locale, setLocale] = React.useState('en-GB')
+  const [date, setDate] = React.useState<string | null>('2024-09-18')
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="gb-fixture-root">
+        <Calendar
+          locale={locale}
+          data-testid="test-gb-calendar"
+          month="2024-09"
+          today="2024-09-10"
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="gb-prev" />
+            <Calendar.Heading data-testid="gb-heading" />
+            <Calendar.NextButton data-testid="gb-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="gb-grid" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="gb-value">
+          {date ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="gb-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="gb-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Button
+          type="button"
+          data-testid="gb-toggle-locale"
+          onClick={() => setLocale((l) => (l === 'en-GB' ? 'en-US' : 'en-GB'))}
+        >
+          {locale}
+        </Button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Constrained = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  const [blockTen, setBlockTen] = React.useState(false)
+  const [blockAll, setBlockAll] = React.useState(false)
+  const isDateUnavailable = React.useCallback(
+    (d: string) => {
+      if (blockAll) return true
+      if (d >= '2024-04-11' && d <= '2024-04-13') return true
+      if (blockTen && d === '2024-04-10') return true
+      return false
+    },
+    [blockAll, blockTen]
+  )
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="con-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-con-calendar"
+          month="2024-04"
+          today="2024-05-01"
+          min="2024-04-05"
+          max="2024-04-20"
+          isDateUnavailable={isDateUnavailable}
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="con-prev" />
+            <Calendar.Heading data-testid="con-heading" />
+            <Calendar.NextButton data-testid="con-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="con-grid" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="con-value">
+          {date ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="con-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="con-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button type="button" data-testid="con-toggle-ten" onClick={() => setBlockTen((b) => !b)}>
+            {blockTen ? 'unblock-10' : 'block-10'}
+          </Button>
+          <Button type="button" data-testid="con-toggle-all" onClick={() => setBlockAll((b) => !b)}>
+            {blockAll ? 'unblock-all' : 'block-all'}
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const OutsideMonth = () => {
+  const [month, setMonth] = React.useState<ISOMonth>('2024-09')
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  const [date, setDate] = React.useState<string | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [events, setEvents] = React.useState<string[]>([])
+  const [bounded, setBounded] = React.useState(false)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="out-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-out-calendar"
+          month={month}
+          today="2024-09-15"
+          min={bounded ? '2024-09-10' : undefined}
+          max={bounded ? '2024-09-20' : undefined}
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setEvents((prev) => [...prev, `c:${next}`])
+            setDate(next)
+          }}
+          onMonthChange={(next) => {
+            setMonthReqs((prev) => [...prev, next])
+            setEvents((prev) => [...prev, `m:${next}`])
+          }}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="out-prev" />
+            <Calendar.Heading data-testid="out-heading" />
+            <Calendar.NextButton data-testid="out-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="out-grid" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="out-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="out-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="out-events">
+          {events.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button
+            type="button"
+            data-testid="out-accept"
+            onClick={() =>
+              setMonthReqs((prev) => {
+                const last = prev[prev.length - 1]
+                if (last) setMonth(last)
+                return []
+              })
+            }
+          >
+            Accept
+          </Button>
+          <Button type="button" data-testid="out-reject" onClick={() => setMonthReqs([])}>
+            Reject
+          </Button>
+          <Button type="button" data-testid="out-toggle-bounds" onClick={() => setBounded((b) => !b)}>
+            {bounded ? 'unbind' : 'bind'}
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const UncontrolledToday = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="omt-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-omt-calendar"
+          value={date}
+          onChange={setDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="omt-prev" />
+            <Calendar.Heading data-testid="omt-heading" />
+            <Calendar.NextButton data-testid="omt-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="omt-grid" />
+        </Calendar>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const RtlGrid = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="rtl-fixture-root" dir="rtl">
+        <Calendar
+          locale="ar-AE"
+          data-testid="test-rtl-calendar"
+          month="2024-01"
+          today="2024-01-15"
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="rtl-prev" />
+            <Calendar.Heading data-testid="rtl-heading" />
+            <Calendar.NextButton data-testid="rtl-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="rtl-grid" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="rtl-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="rtl-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
       </Div>
     </ReferenceLibrary>
   )

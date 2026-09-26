@@ -39,11 +39,11 @@ Visual polish is not this gate.
 
 | | |
 | :--- | :--- |
-| Engine | Prototype month grid + click select on Gregorian kernels. |
+| Engine | Locale CLDR grids + padded outside days + disable + 2D keys + today + live heading on Gregorian kernels. |
 | Production | **No.** |
-| Named `[x]` | 17 / 132 (colocated; matrix 110 e2e + remaining unit NOT ported — needs API rework, see handoffs) |
-| Playwright CT | 4 tests: 7 frozen snaps green unmodified + 2 behavioral (leap-Feb grid, Dec→Jan nav) |
-| Vitest | 19 (`iso.test.ts` 7, `week-grid.test.ts` 8, `Calendar.contract.test.tsx` 4) |
+| Named `[x]` | 60 / 132 (colocated; matrix 110 e2e + remaining unit NOT ported — needs API rework, see handoffs) |
+| Playwright CT | 32 tests react19 + react18 green (7 frozen snaps pass unmodified within 2% tolerance; 11 cluster-A + 21 cluster-B behavioral) |
+| Vitest | 56 (`iso.test.ts`, `week-grid.test.ts` 9, `Calendar.contract.test.tsx` 40) |
 
 ### Gaps & incoherence
 
@@ -58,11 +58,18 @@ Visual polish is not this gate.
 - ISO kit exports: DONE (curated — `ISODate`/`CalendarMode` names stay with
   `Calendar.tsx` for DateField compat; kit functions + `ISOMonth`/`ISOYear`/
   `CalendarWeekday`/`CalendarDateRange` re-exported).
-- CLDR week-start table: ported (`week.ts`) but NOT wired to render (moves
-  paint for non-Sunday locales — needs UX review).
-- Still missing: `isDateUnavailable` (`min`/`max` remain dead props),
-  range Tab-commit preview, padded outside-day grid (suspect paint),
-  2D keyboard nav, today marker, month/year product modes.
+- ~~CLDR week-start table: ported (`week.ts`) but NOT wired to render~~ →
+  LANDED (FEATURES #3, cluster B 2026-09-26): required `locale`,
+  `firstDayOfWeek` token override, CLDR wiring through headers, padding,
+  Home/End, and labels; 7 frozen snaps pass unmodified within tolerance.
+- ~~`isDateUnavailable` (`min`/`max` remain dead props), padded
+  outside-day grid, 2D keyboard nav, today marker~~ → LANDED (FEATURES
+  #4/#6/#7/#8/#11, cluster B 2026-09-26): padded enabled outside days,
+  single disable state + nav coverage, 2D keys + skip + pending focus,
+  post-mount local today marker, div Heading live-atomic + target-month
+  nav names + grid labelling.
+- Still missing: range Tab-commit preview (HOLD #9), month/year product
+  modes (HOLD #10), Day renderer parts (HOLD #5).
 - Part naming drift vs Calendar.md — kept (quarantine renames NOT ported).
 - `CA-ISO-01` is now the ISO gate (unit); the old click-smoke title lives on
   as CT coverage without the ID.
@@ -89,10 +96,22 @@ as public values; ±100y Date min/max defaults.
   diagnostic, FEATURES #2 cluster A), `CA-MODE-04` (discriminated props +
   month/year pane seeding, FEATURES #1 cluster A), `CA-STATE-10` (null
   empty state + omitted-value diagnostic), `CA-MONTH-01`, `CA-MONTH-02`,
-  `CA-MONTH-04` (domain-bounds half; min/max half waits on FEATURES #6),
-  `CA-MONTH-05`, `CA-MONTH-09`, `CA-MONTH-10`, `CA-SINGLE-01`,
-  `CA-SINGLE-02`, `CA-SINGLE-05` (uniform-request read per triage —
-  overrides the old `CA-SINGLE-03` no-emit text, see TESTS.md)
+  `CA-MONTH-04` (domain bounds cluster A + min/max/unavailable target
+  coverage cluster B), `CA-MONTH-05`, `CA-MONTH-09`, `CA-MONTH-10`,
+  `CA-SINGLE-01`, `CA-SINGLE-02`, `CA-SINGLE-05` (uniform-request read
+  per triage — overrides the old `CA-SINGLE-03` no-emit text, see TESTS.md)
+- `[x]` `CA-LOC-04`, `CA-LOC-05`, `CA-LOC-06`, `CA-LOC-07` (locale
+  headers/names/RTL/switch, FEATURES #3/#11 cluster B), `CA-GRID-05`,
+  `CA-GRID-06`, `CA-GRID-07`, `CA-GRID-09`, `CA-GRID-12` (outside days,
+  names, ids, labelling, announcements, FEATURES #4/#11 cluster B),
+  `CA-STATE-01`, `CA-STATE-02`, `CA-STATE-03` (full: selection/today/
+  first-enabled preference, FEATURES #6/#8 cluster B), `CA-STATE-04`,
+  `CA-STATE-05`, `CA-STATE-06`, `CA-STATE-07`, `CA-STATE-08`,
+  `CA-MONTH-06`, `CA-MONTH-07`, `CA-KEY-01`, `CA-KEY-02`, `CA-KEY-03`,
+  `CA-KEY-04`, `CA-KEY-05`, `CA-KEY-07`, `CA-KEY-08`, `CA-KEY-10`,
+  `CA-SINGLE-04`, `CA-SINGLE-07`, `CA-DYNAMIC-02` (FEATURES #4/#6/#7/#8
+  cluster B; `CA-KEY-06`-style bound termination covered inside the
+  `CA-KEY-01/05` bounds leg, `CA-KEY-09` waits on HOLD #5 Day parts)
 - `[ ]` `CA-DAY-13`, `CA-DAY-14` (Weekdays/Days/Day parts — NOT ported),
   remaining `CA-DAY-*`, `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`,
   `CA-SINGLE-*`, `CA-RANGE-*`, `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`,

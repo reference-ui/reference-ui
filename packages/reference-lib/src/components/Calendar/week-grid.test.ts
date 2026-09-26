@@ -127,6 +127,15 @@ describe('Calendar week-start and month grid', () => {
     }
   })
 
+  it('CA-ISO-08 (labels): sub-100 years keep proleptic-Gregorian accessible weekday names', () => {
+    // Date.UTC maps years 0..99 onto 19xx; grid labels must not inherit
+    // that offset (June 1 0099 was a Monday; June 1 1999 a Tuesday).
+    const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const grid = buildMonthGrid('0099-06', 0, 'en-US')
+    const june1 = grid.allDays.find((d) => d.date === '0099-06-01')
+    expect(june1?.accessibleName).toContain(names[getDayOfWeek(99, 6, 1)])
+  })
+
   it('grid kernels match Date.UTC across 1900-2100 (Calendar.tsx wire safety)', () => {
     // getDayOfWeek (Sakamoto) and getDaysInMonth must agree with the legacy
     // Date.UTC math they replaced for every in-domain year the UI can show.
