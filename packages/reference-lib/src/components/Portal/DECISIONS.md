@@ -21,24 +21,8 @@ quarantine-sourced candidate APIs to decide.
 
 ## Suspected gaps (no quarantine source)
 
-### 1. Shadow-portal event contract — verdict: OPEN
-
-- **Evidence:** sibling handoffs, not quarantine. `tree.md:46` skipped ENV-03:
-  shadow-portal key events hit React container-delegation retargeting (native
-  target retargets to the host, item handlers never fire) — "lib-wide
-  framework concern". `date-field.md:49-51,124-125` blocks DF-COMP-04/ENV-01
-  (ShadowRoot picker) on the shadow-portal contract, "not authored blind".
-  `menu.md:23` precedent-skips ENV-03 (shadow); `combobox.md:48` notes
-  modal+shadow blocked CB-COMP-04.
-- **API sketch:** undecided. Placement into a ShadowRoot already works
-  (PT-DOM-05, PT-ENV-03, PT-COMP-03); what's missing is the event half —
-  either Portal attaches shadow-root listeners / a retargeting shim, or the
-  contract is documented as unsupported and consumers stay in light DOM.
-- **Why not landed:** no Portal landing crew existed to author it, and no
-  sibling crew would own another component's contract blind.
-- **Revisit when:** HQ assigns ownership (Portal vs Overlay vs per-consumer).
-- **Open questions:** Does Portal own shadow event bridging, or only DOM
-  placement? Is shadow+modal a supported combination at all (CB-COMP-04)?
+Moved to FEATURES.md — the one OPEN gap (shadow-portal event contract,
+gap #1) needs a design call.
 
 ## Non-decisions (rejected outright)
 
@@ -50,9 +34,9 @@ quarantine-sourced candidate APIs to decide.
 
 ## Walkthrough notes for HQ
 
-- The one OPEN item is the shadow-portal event contract: placement in a
-  ShadowRoot is specced and tested, but key/pointer delivery across the
-  boundary is unowned — decide who owns it before any shadow consumer ships.
+- Open design work lives in FEATURES.md (1 item: shadow-portal event
+  contract) — decide ownership before any shadow consumer ships.
+- No mechanical patches pending — PATCHES.md confirms the honest none.
 - The no-wrapper model is settled (non-decision): open the Portal story in
   Book, inspect the DOM, children land directly in the destination body node.
 - Late-resolved containers (ref/function resolving null-then-target, never a
