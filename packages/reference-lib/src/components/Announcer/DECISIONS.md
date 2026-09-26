@@ -34,6 +34,25 @@ No mangling-class items exist for Announcer — the quarantine commit is the cle
 - `aria-relevant` experiments, `role="log"`, status-only assertive hacks — rejected in SPEC Won't-do until a named AT defect requires them.
 - `as` prop on the host — out of scope per SPEC "Do not duplicate" row.
 
+## Features campaign resolutions (2026-09-26)
+
+- `FEATURES.md` #1 (Book story): landed — `Announcer.story.tsx`
+  (`AnnouncerFixture`: Announce Polite/Assertive buttons + MutationObserver
+  readout mirror) surfaced in Book via `Announcer.book.tsx`. Visible readout
+  chosen over pure (triage: manual-AT click target + readout).
+- `FEATURES.md` #2 (export freeze): landed — public barrel is `announce` +
+  `AnnounceOptions` only; host/snapshot/constants/registry/diagnostics/store
+  moved to the internal/test-only `internal.ts` entry with no shims.
+  Consumer audit in the same change: `ReferenceLibrary.tsx` (sole
+  `AnnouncerHost` user) migrated to `../Announcer/internal`; `announce`
+  users (`Toast.tsx`, `Toast.story.tsx`, `ReferenceLibrary.story.tsx`)
+  unaffected; matrix/Showcase/books have no Announcer-symbol consumers.
+  Pinned by `ANN-API-07` (runtime barrel keys `== ['announce']`).
+- `FEATURES.md` #3 (multi-document topology): decided (a) —
+  ReferenceLibrary-per-document is the product topology; direct
+  `<AnnouncerHost document>` mount is test-only (recorded in README +
+  SPEC freeze).
+
 ## Walkthrough notes for HQ
 
 - Most important #1 is `FEATURES.md` #2 (export freeze): today any app can mount a second `AnnouncerHost` and double-speak — in Book open the ReferenceLibrary story, count `[data-reference-announcer-host]` nodes in devtools (must be exactly 1), and weigh whether the host stays importable.

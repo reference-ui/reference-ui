@@ -23,6 +23,12 @@ Applications never mount `AnnouncerHost`. `ReferenceLibrary` is the only
 supported host. Toast `{ announce: "…" }` is the same path: visual card and
 live text are separate on purpose.
 
+Multi-document topology (decided): mount one `ReferenceLibrary` per
+document (top page plus each same-origin iframe/microfrontend root) and
+target cross-document speech with `announce(message, { document })`. A
+direct `<AnnouncerHost document={doc}>` mount is test-only — it is not
+exported from the public barrel and is not a supported recipe.
+
 ## Public API
 
 ```ts

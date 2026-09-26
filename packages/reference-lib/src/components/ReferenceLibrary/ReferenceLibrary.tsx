@@ -2,7 +2,7 @@ import * as React from 'react'
 import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 import { ToastHost, type ToastClassNames, type ToastOffset, type ToastTheme } from '../Toast'
 import { getTooltipGroupStore } from '../Tooltip/tooltipGroup'
-import { AnnouncerHost } from '../Announcer'
+import { AnnouncerHost } from '../Announcer/internal'
 import { DEFAULT_TOAST_HOTKEY } from '../Toast/toastQueue'
 
 setupFocusVisible()

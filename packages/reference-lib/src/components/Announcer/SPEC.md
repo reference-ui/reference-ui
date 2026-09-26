@@ -200,6 +200,13 @@ host server-renders nothing.
 `AnnouncerHost` is not application API. `getAnnouncerSnapshot` is a test
 probe, not a product getter.
 
+Multi-document topology is ReferenceLibrary-per-document: one
+`ReferenceLibrary` per eligible `Document`, cross-document speech via
+`announce(message, { document })`. A direct `AnnouncerHost` mount with an
+explicit `document` prop is test-only. The public barrel (`index.ts`)
+exports `announce` + `AnnounceOptions` only; all other symbols live in
+the internal/test-only entry (`internal.ts`).
+
 ---
 
 ## Source evidence

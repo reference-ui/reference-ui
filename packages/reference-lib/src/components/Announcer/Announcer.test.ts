@@ -1,12 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
-import {
-  ANNOUNCE_CLEAR_DELAY,
-  announce,
-  getAnnouncerSnapshot,
-  type AnnounceOptions,
-} from './Announcer'
+import { announce, type AnnounceOptions } from './index'
+import { ANNOUNCE_CLEAR_DELAY, getAnnouncerSnapshot } from './internal'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 
 function doc(): Document {
@@ -79,7 +75,7 @@ describe('announce', () => {
     }
   })
 
-  it('ANN-API-07: Announcer should not require a snapshot getter when application code announces', () => {
+  it('ANN-API-07: Announcer should not require a snapshot getter when application code announces', async () => {
     expect(typeof announce).toBe('function')
     const opts: AnnounceOptions = {
       politeness: 'polite',
@@ -87,6 +83,20 @@ describe('announce', () => {
     expect(opts.politeness).toBe('polite')
     const d = doc()
     expect(() => announce('Test message', { document: d })).not.toThrow()
+    // Export freeze (FEATURES #2): the public barrel is announce-only at
+    // runtime (AnnounceOptions is type-only); host + probes are internal.
+    const pub = await import('./index')
+    expect(Object.keys(pub).sort()).toEqual(['announce'])
+    const internal = await import('./internal')
+    expect(typeof internal.AnnouncerHost).toBe('function')
+    expect(typeof internal.getAnnouncerSnapshot).toBe('function')
+    expect(typeof internal.getAnnouncerStore).toBe('function')
+    expect(typeof internal.registerAnnouncerDocument).toBe('function')
+    expect(typeof internal.unregisterAnnouncerDocument).toBe('function')
+    expect(typeof internal.resolveAnnouncerDocument).toBe('function')
+    expect(typeof internal.announcerDiagnostic).toBe('function')
+    expect(internal.ANNOUNCE_CLEAR_DELAY).toBe(7000)
+    expect(internal.MAX_PENDING_ANNOUNCEMENTS).toBe(50)
   })
 
   it('ANN-LIVE-08: Announcer should drop in-flight inserts when a newer token lands on that channel', async () => {
