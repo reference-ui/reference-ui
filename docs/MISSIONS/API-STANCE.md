@@ -37,9 +37,16 @@ now, but once we release there will be."
 - Land PATCHES + obvious FEATURES across all components today.
   Crews roll all day; tree stays green, 1 commit per component unit.
 - Themes: controllability + customization.
-- Controlled-only leaning (HQ: "I never got the whole defaultValue
-  thing — seems like a relic... seems to be a stance we're taking"):
-  required-controlled proposals are in-line with the stance and
-  triage weights them toward IMPLEMENT-NOW; defaultValue is
-  suspect. NOT a blanket removal order — crews implement only what
-  is written in their docs.
+- Controlled-only RULE (HQ confirmed EOD 2026-09-26: "no
+  defaultValue across them... old school stuff"): value + onChange
+  required everywhere; defaultValue deleted catalog-wide with
+  in-repo migration (sweep crews 147-150: Tree/Accordion/Combobox/
+  DateField; Tabs/Splitter/NumberField/Calendar already clean;
+  Slider-F carries #1). Sibling uncontrolled props (defaultOpen,
+  defaultChecked, defaultInputValue, defaultView, ...) AWAIT HQ
+  call — reported, not started.
+- EXCEPTION (HQ EOD 2026-09-26): Accordion + Tabs KEEP uncontrolled
+  support (defaultValue dual-mode) — users don't always want to
+  control these. Accordion purge cancelled + reverted; Tabs
+  defaultValue restoration dispatched (value optional, onChange
+  notification).

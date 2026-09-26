@@ -396,6 +396,22 @@ firsthand (3/3 + 53/53) and committed. Tree was the LAST features
 crew. Running: Slider-F only. Endgame: Slider-F → Overlay gate in
 true lull → EOD report + doom cycles (standing objective 6).
 
+Tick 66: HQ back. defaultValue grep: REAL uncontrolled state in
+exactly 4 components (Tree/Accordion/Combobox/DateField); Tabs/
+Splitter/NumberField/Calendar/Listbox clean; Slider-F carries #1.
+HQ confirmed the blanket purge → dispatched 4 controlled-only
+crews (147-150). Siblings (defaultOpen x100 etc.) reported, NOT
+started — awaiting HQ call. Running: Slider-F + 4 purge crews.
+
+Tick 67: HQ carved the uncontrolled EXCEPTION (Accordion + Tabs
+keep defaultValue dual-mode). Accordion purge CANCELLED + its 6
+dirty files reverted (caught mid-run, tree clean). Tabs
+uncontrolled-restoration dispatched (151). Tree/Combobox/DateField
+purges continue. Recipe thread recorded:
+docs/BUGS/TABS_RECIPE_COLLECTION.md + README row (open, needs
+quiet-tree experiment). Stance amended. Running: Slider-F,
+3 purge crews, Tabs-uncontrolled.
+
 Tick 59: Accordion-F verify-BLOCKED as predicted (Collapsible #1
 held, primitive absent; tree clean ✓). No dispatchable work left
 except Tree-F (waiting on Portal-F for #2; #1 circular-held) —
