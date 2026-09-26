@@ -69,6 +69,8 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
 
 export default {
   Overview: () => {
+    const [dateVal, setDateVal] = React.useState<string | null>('2026-09-05')
+    const [comboVal, setComboVal] = React.useState<string | null>('option-1')
     return (
       <Div maxW="220r" mx="auto" p="6r" display="flex" flexDirection="column" gap="5r">
         {/* Header */}
@@ -204,7 +206,7 @@ export default {
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
                 DateField with FoldedPicker Trigger
               </Span>
-              <DateField defaultValue="2026-09-05">
+              <DateField locale="en-US" value={dateVal} onChange={setDateVal}>
                 <DateField.Picker />
               </DateField>
             </Div>
@@ -214,7 +216,7 @@ export default {
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
                 Combobox with Chevron Trigger
               </Span>
-              <Combobox defaultValue="option-1">
+              <Combobox value={comboVal} onChange={setComboVal}>
                 <Field width="100%">
                   <Combobox.Input placeholder="Select an option..." />
                   <Button

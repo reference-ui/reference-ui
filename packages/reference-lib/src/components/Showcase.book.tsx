@@ -220,8 +220,8 @@ function FormInputsRow({
               >
                 <Slider.Track>
                   <Slider.Range />
-                  <Slider.Thumb index={0} aria-label="Minimum" />
-                  <Slider.Thumb index={1} aria-label="Maximum" />
+                  <Slider.Thumb aria-label="Minimum" />
+                  <Slider.Thumb aria-label="Maximum" />
                 </Slider.Track>
               </Slider>
             </Div>
@@ -525,7 +525,7 @@ function SelectionRow({
               <DateField.Trigger />
             </Field>
             <DateField.Picker>
-              <Calendar value={dateVal} onChange={setDateVal}>
+              <Calendar locale="en-US" value={dateVal} onChange={setDateVal}>
                 <Calendar.Header>
                   <Calendar.PrevButton />
                   <Calendar.Heading />
@@ -543,6 +543,7 @@ function SelectionRow({
 
 function DataLayoutRow() {
   const [splitterSizes, setSplitterSizes] = React.useState([40, 60])
+  const [treeValue, setTreeValue] = React.useState<string | null>('file-1')
   return (
     <SectionCard
       title="Data & Layout"
@@ -551,7 +552,8 @@ function DataLayoutRow() {
       <Div display="grid" gap="4r" gridTemplateColumns="repeat(auto-fit, minmax(70r, 1fr))">
         <DemoCell label="Tree View">
           <Tree
-            defaultValue="file-1"
+            value={treeValue}
+            onChange={setTreeValue}
             defaultExpanded={['folder-1']}
             border="1px solid"
             borderColor="ui.field.border"
