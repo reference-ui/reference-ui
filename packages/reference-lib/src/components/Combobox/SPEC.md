@@ -4,8 +4,9 @@ Current freeze, cases, and proof. Design narrative: [Combobox.md](./Combobox.md)
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/combobox.spec.ts`
-Colocated: `Combobox.test.tsx` (41 tests; case IDs throughout)
-CT: `__e2e__/Combobox.ct.spec.ts` (25 specs, React 19 + snapshots)
+Colocated: `Combobox.test.tsx` (77 tests; case IDs throughout)
+CT: `__e2e__/Combobox.ct.spec.ts` + `__e2e__/Combobox.touch.ct.spec.ts`
+(65 specs, React 17/18/19 + snapshots)
 Page: `/combobox`
 
 ## Legend
@@ -74,39 +75,46 @@ render props; Base UI / Zag `multiple` (`selectionMode`) token-chip combobox
 
 Proven in-dir (`Combobox.test.tsx` Vitest + `__e2e__` CT):
 
-- `[x]` `CB-DOM-01`, `CB-DOM-05`, `CB-DOM-06`, `CB-DOM-07`, `CB-DOM-08`,
-  `CB-DOM-09`, `CB-DOM-11`, `CB-DOM-12`
+- `[x]` `CB-DOM-01`, `CB-DOM-02`, `CB-DOM-03`, `CB-DOM-04`, `CB-DOM-05`,
+  `CB-DOM-06`, `CB-DOM-07`, `CB-DOM-08`, `CB-DOM-09`, `CB-DOM-11`,
+  `CB-DOM-12`
 - `[~]` `CB-DOM-10` (defaults only; no blur-dismiss), `CB-A11Y-01`
   (role/relationship assertions across shapes; no automated scan)
-- `[x]` `CB-OPEN-01`, `CB-OPEN-02`, `CB-OPEN-04`, `CB-OPEN-05`, `CB-OPEN-06`,
-  `CB-OPEN-07`, `CB-OPEN-08`
+- `[x]` `CB-OPEN-01`, `CB-OPEN-02`, `CB-OPEN-03`, `CB-OPEN-04`, `CB-OPEN-05`,
+  `CB-OPEN-06`, `CB-OPEN-07`, `CB-OPEN-08`
 - `[x]` `CB-EDIT-01`, `CB-EDIT-02`, `CB-EDIT-03`, `CB-EDIT-05`, `CB-EDIT-06`,
   `CB-EDIT-07`, `CB-EDIT-08`, `CB-EDIT-09`
 - `[~]` `CB-EDIT-04` (ancestor-scroll dismiss only; no input self-scroll half)
 - `[x]` `CB-NAV-01`, `CB-NAV-02`, `CB-NAV-03`, `CB-NAV-04`, `CB-NAV-05`,
   `CB-NAV-06`, `CB-NAV-07`, `CB-NAV-08`
-- `[~]` `CB-MODE-02` (default list behavior only; no `autocomplete` prop)
+- `[x]` `CB-MODE-01`, `CB-MODE-02`, `CB-MODE-03`, `CB-MODE-04`, `CB-MODE-05`,
+  `CB-MODE-06`, `CB-MODE-07`
 - `[x]` `CB-COMMIT-01`, `CB-COMMIT-03`, `CB-COMMIT-04`, `CB-COMMIT-05`,
   `CB-COMMIT-06`, `CB-COMMIT-07`, `CB-COMMIT-08`, `CB-COMMIT-09`
-- `[x]` `CB-REVERT-01`, `CB-REVERT-03`, `CB-REVERT-04`, `CB-REVERT-05`,
-  `CB-REVERT-06`, `CB-REVERT-07`
+- `[x]` `CB-REVERT-01`, `CB-REVERT-02`, `CB-REVERT-03`, `CB-REVERT-04`,
+  `CB-REVERT-05`, `CB-REVERT-06`, `CB-REVERT-07`
 - `[x]` `CB-SELECT-01`, `CB-SELECT-02`, `CB-SELECT-03`, `CB-SELECT-04`,
   `CB-SELECT-05`, `CB-SELECT-06`, `CB-SELECT-07`
-- `[~]` `CB-SELECT-08` (non-virtual Home/End only; `scrollToIndex` wait needs
-  `virtualFocus`)
-- `[x]` `CB-CLOSE-01`, `CB-CLOSE-02`, `CB-CLOSE-04`
+- `[x]` `CB-SELECT-08` (non-virtual + `virtualFocus` grid Home/End/Page with
+  `scrollToIndex` wait)
+- `[x]` `CB-CLOSE-01`, `CB-CLOSE-02`, `CB-CLOSE-04`, `CB-CLOSE-05`
+- `[x]` `CB-ADAPTER-01`, `CB-ADAPTER-02`, `CB-ADAPTER-03`, `CB-ADAPTER-04`,
+  `CB-ADAPTER-05`, `CB-ADAPTER-06`, `CB-ADAPTER-07`, `CB-ADAPTER-08`
+  (grid halves; windowed-Listbox VIRT halves verify-blocked on the
+  Listbox upward registry)
+- `[x]` `CB-COMP-02` (filtered both-mode; list-mode peers cover the list
+  fixture)
 - `[x]` `CB-ENV-01`, `CB-ENV-02`, `CB-ENV-05`
 
 Cross-owned proofs (handoff cases, Combobox side): `LB-CB-01`, `LB-CB-03`
 valid shape, `LB-CB-04` (+ highlight snapshot), `FI-COMP-04` commit/remove
 flows. `LB-CB-02` (windowed) needs `virtualFocus` — not proven.
 
-Not proven (need freeze features outside this mission): `CB-DOM-02`,
-`CB-DOM-03` (Trigger `aria-haspopup` variants), `CB-DOM-04`, `CB-OPEN-03`,
-`CB-COMMIT-02`, `CB-REVERT-02`, `CB-CUSTOM-*`, `CB-MODE-01`, `CB-MODE-03`,
-`CB-MODE-04`, `CB-MODE-05`, `CB-MODE-06`, `CB-MODE-07`, `CB-VIRT-*`,
-`CB-TREE-01`, `CB-ADAPTER-*`, `CB-CLOSE-03`, `CB-CLOSE-05`, `CB-ENV-03`,
-`CB-ENV-04`, `CB-COMP-*`.
+Not proven (need freeze features outside this mission): `CB-COMMIT-02`,
+`CB-CUSTOM-*`, `CB-VIRT-*` (verify-blocked: Listbox upward registry),
+`CB-TREE-01` (verify-blocked: circular Tree/Combobox contract),
+`CB-CLOSE-03`, `CB-ENV-03`, `CB-ENV-04`, `CB-COMP-01` (needs VIRT),
+`CB-COMP-03` (needs Tree bridge).
 
 ### Work order
 

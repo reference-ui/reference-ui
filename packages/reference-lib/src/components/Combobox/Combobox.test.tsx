@@ -2093,3 +2093,534 @@ describe('Combobox PATCHES #1: shadow portal destination', () => {
     host.remove()
   })
 })
+
+describe('Combobox cluster B: inline-completion decision matrix', () => {
+  it('completionForPrefix completes exact-case prefixes and matches case-insensitively', async () => {
+    const { completionForPrefix } = await import('./autocomplete')
+    expect(completionForPrefix('Al', 'Alpha')).toBe('Alpha')
+    expect(completionForPrefix('al', 'Alpha')).toBe('Alpha')
+    expect(completionForPrefix('AL', 'alpine')).toBe('alpine')
+  })
+
+  it('completionForPrefix returns null when there is nothing to complete or select', async () => {
+    const { completionForPrefix } = await import('./autocomplete')
+    expect(completionForPrefix('', 'Alpha')).toBeNull()
+    expect(completionForPrefix('Alpha', 'Alpha')).toBeNull()
+    expect(completionForPrefix('Alphax', 'Alpha')).toBeNull()
+    expect(completionForPrefix('Br', 'Alpha')).toBeNull()
+    expect(completionForPrefix('Al', null)).toBeNull()
+    expect(completionForPrefix('Al', undefined)).toBeNull()
+    expect(completionForPrefix('Al', '')).toBeNull()
+  })
+})
+
+describe('Combobox cluster B: virtual-focus helpers', () => {
+  const items = [
+    { value: 'a', textValue: 'Alpha' },
+    { value: 'b', textValue: 'Bravo', disabled: true },
+    { value: 'c', textValue: 'Charlie' },
+  ]
+
+  it('findDuplicateValue reports the first duplicated logical value', async () => {
+    const { findDuplicateValue } = await import('./virtual-focus')
+    expect(findDuplicateValue(items)).toBeNull()
+    expect(findDuplicateValue([...items, { value: 'a', textValue: 'Again' }])).toBe('a')
+    expect(findDuplicateValue([])).toBeNull()
+  })
+
+  it('currentVirtualIndex resolves the active value to a logical index', async () => {
+    const { currentVirtualIndex } = await import('./virtual-focus')
+    expect(currentVirtualIndex(items, 'c')).toBe(2)
+    expect(currentVirtualIndex(items, null)).toBeNull()
+    expect(currentVirtualIndex(items, 'missing')).toBeNull()
+  })
+
+  it('validateVirtualTarget enforces in-range enabled navigation targets', async () => {
+    const { validateVirtualTarget } = await import('./virtual-focus')
+    expect(validateVirtualTarget(items, 0)).toBe('ok')
+    expect(validateVirtualTarget(items, 2)).toBe('ok')
+    expect(validateVirtualTarget(items, 1)).toBe('disabled')
+    expect(validateVirtualTarget(items, -1)).toBe('out-of-range')
+    expect(validateVirtualTarget(items, 3)).toBe('out-of-range')
+    expect(validateVirtualTarget(items, 1.5)).toBe('out-of-range')
+  })
+
+  it('validateVirtualMount enforces range only; disabled cells mount', async () => {
+    const { validateVirtualMount } = await import('./virtual-focus')
+    expect(validateVirtualMount(items, 0)).toBe(true)
+    expect(validateVirtualMount(items, 1)).toBe(true)
+    expect(validateVirtualMount(items, 3)).toBe(false)
+    expect(validateVirtualMount(items, -1)).toBe(false)
+  })
+
+  it('findVirtualMatch searches labels case-insensitively and skips disabled items', async () => {
+    const { findVirtualMatch } = await import('./virtual-focus')
+    expect(findVirtualMatch(items, 'ch')).toBe(2)
+    expect(findVirtualMatch(items, 'AL')).toBe(0)
+    expect(findVirtualMatch(items, 'br')).toBeNull()
+    expect(findVirtualMatch(items, 'zzz')).toBeNull()
+    expect(findVirtualMatch(items, '')).toBe(0)
+    expect(findVirtualMatch([{ value: 'x', textValue: 'X', disabled: true }], '')).toBeNull()
+  })
+
+  it('directionForElement reads element direction with document and SSR fallbacks', async () => {
+    const { directionForElement } = await import('./virtual-focus')
+    expect(directionForElement(null)).toBe('ltr')
+    expect(directionForElement(undefined)).toBe('ltr')
+    const rtl = document.createElement('div')
+    rtl.style.direction = 'rtl'
+    document.body.appendChild(rtl)
+    expect(directionForElement(rtl)).toBe('rtl')
+    rtl.remove()
+  })
+})
+
+describe('Combobox cluster B: authored-children scan (gate + authority diagnostics)', () => {
+  async function scanOf(children: React.ReactNode, rootHasOnChange: boolean) {
+    const { scanAuthoredCollections } = await import('./authored')
+    const { ComboboxPopover, ComboboxOption, ComboboxVirtualItem } = await import('./Combobox')
+    const { Listbox, ListboxOption, ListboxEmpty } = await import('../Listbox')
+    const { Tree, TreeItem } = await import('../Tree')
+    return scanAuthoredCollections(
+      children,
+      {
+        Popover: ComboboxPopover,
+        ComboboxOption,
+        ListboxOption,
+        VirtualItem: ComboboxVirtualItem,
+        Listbox,
+        Tree,
+        TreeItem,
+        Empty: ListboxEmpty,
+      },
+      rootHasOnChange
+    )
+  }
+
+  it('gate: populated popover has content; missing or empty popover does not', async () => {
+    const { scanHasPopoverContent } = await import('./authored')
+    const { ComboboxPopover } = await import('./Combobox')
+    const { Listbox, ListboxOption, ListboxEmpty } = await import('../Listbox')
+
+    const populated = await scanOf(
+      <ComboboxPopover>
+        <Listbox>
+          <ListboxOption value="a">A</ListboxOption>
+        </Listbox>
+      </ComboboxPopover>,
+      false
+    )
+    expect(scanHasPopoverContent(populated)).toBe(true)
+
+    const absent = await scanOf(<div />, false)
+    expect(scanHasPopoverContent(absent)).toBe(false)
+
+    const empty = await scanOf(
+      <ComboboxPopover>
+        <Listbox>
+          <ListboxEmpty>No results</ListboxEmpty>
+        </Listbox>
+      </ComboboxPopover>,
+      false
+    )
+    expect(scanHasPopoverContent(empty)).toBe(false)
+  })
+
+  it('gate: adapter metadata counts as content without mounted elements', async () => {
+    const { scanHasPopoverContent } = await import('./authored')
+    const { ComboboxPopover } = await import('./Combobox')
+    const { Listbox } = await import('../Listbox')
+    const grid = {
+      role: 'grid',
+      items: [{ value: 'a', textValue: 'A' }],
+      getNextIndex: () => null,
+      scrollToIndex: () => {},
+    }
+
+    const gridScan = await scanOf(<ComboboxPopover virtualFocus={grid as never} />, false)
+    expect(scanHasPopoverContent(gridScan)).toBe(true)
+    expect(gridScan.virtualFocusAdapter).toBe(grid)
+
+    const windowed = await scanOf(
+      <ComboboxPopover>
+        <Listbox virtual={{ items: [{ value: 'a', textValue: 'A' }], scrollToIndex: () => {} }}>
+          <></>
+        </Listbox>
+      </ComboboxPopover>,
+      false
+    )
+    expect(scanHasPopoverContent(windowed)).toBe(true)
+  })
+
+  it('gate: fragments and arrays are transparent to the scan', async () => {
+    const { scanHasPopoverContent } = await import('./authored')
+    const { ComboboxPopover } = await import('./Combobox')
+    const { ListboxOption } = await import('../Listbox')
+
+    const scan = await scanOf(
+      <>
+        {[<ComboboxPopover key="p">{[<ListboxOption key="o" value="a">A</ListboxOption>]}</ComboboxPopover>]}
+      </>,
+      false
+    )
+    expect(scan.popovers).toHaveLength(1)
+    expect(scan.authoredItemCount).toBe(1)
+    expect(scanHasPopoverContent(scan)).toBe(true)
+  })
+
+  it('ADAPTER-02/03: nested onChange and multiple selection are detected', async () => {
+    const { ComboboxPopover } = await import('./Combobox')
+    const { Listbox } = await import('../Listbox')
+    const { Tree, TreeItem } = await import('../Tree')
+
+    const listboxChange = await scanOf(
+      <ComboboxPopover>
+        <Listbox onChange={() => {}}>
+          <></>
+        </Listbox>
+      </ComboboxPopover>,
+      true
+    )
+    expect(listboxChange.nestedOnChangeKind).toBe('listbox')
+
+    // Without a root onChange there is no two-authority conflict to report.
+    const unowned = await scanOf(
+      <ComboboxPopover>
+        <Listbox onChange={() => {}}>
+          <></>
+        </Listbox>
+      </ComboboxPopover>,
+      false
+    )
+    expect(unowned.nestedOnChangeKind).toBeNull()
+
+    const treeChange = await scanOf(
+      <ComboboxPopover>
+        <Tree onChange={() => {}}>
+          <TreeItem value="a">A</TreeItem>
+        </Tree>
+      </ComboboxPopover>,
+      true
+    )
+    expect(treeChange.nestedOnChangeKind).toBe('tree')
+    expect(treeChange.collectionKinds).toEqual(['tree'])
+
+    const multiple = await scanOf(
+      <ComboboxPopover>
+        <Listbox selection="multiple">
+          <></>
+        </Listbox>
+      </ComboboxPopover>,
+      true
+    )
+    expect(multiple.multipleListbox).toBe(true)
+  })
+})
+
+describe('Combobox cluster B: SSR attribute mapping (autocomplete + haspopup)', () => {
+  it('maps autocomplete none/list/both to aria-autocomplete', () => {
+    for (const mode of ['none', 'list', 'both'] as const) {
+      const html = renderToString(
+        <Combobox inputValue="" autocomplete={mode}>
+          <Combobox.Input aria-label="search" />
+        </Combobox>
+      )
+      expect(html).toContain(`aria-autocomplete="${mode}"`)
+    }
+    const omitted = renderToString(
+      <Combobox inputValue="">
+        <Combobox.Input aria-label="search" />
+      </Combobox>
+    )
+    expect(omitted).toContain('aria-autocomplete="list"')
+  })
+
+  it('maps the popup collection to aria-haspopup listbox/tree/grid', async () => {
+    const { Listbox, ListboxOption } = await import('../Listbox')
+    const { Tree, TreeItem } = await import('../Tree')
+
+    const listHtml = renderToString(
+      <Combobox inputValue="">
+        <Combobox.Input aria-label="search" />
+        <Combobox.Popover>
+          <Listbox>
+            <ListboxOption value="a">A</ListboxOption>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    expect(listHtml).toContain('aria-haspopup="listbox"')
+
+    const treeHtml = renderToString(
+      <Combobox inputValue="">
+        <Combobox.Input aria-label="search" />
+        <Combobox.Popover>
+          <Tree>
+            <TreeItem value="a">A</TreeItem>
+          </Tree>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    expect(treeHtml).toContain('aria-haspopup="tree"')
+
+    const grid = {
+      role: 'grid',
+      items: [{ value: 'a', textValue: 'A' }],
+      getNextIndex: () => 0,
+      scrollToIndex: () => {},
+    }
+    const gridHtml = renderToString(
+      <Combobox inputValue="">
+        <Combobox.Input aria-label="search" />
+        <Combobox.Popover virtualFocus={grid as never} />
+      </Combobox>
+    )
+    expect(gridHtml).toContain('aria-haspopup="grid"')
+  })
+})
+
+describe('Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('CB-OPEN-03 support: edits request open only with authored collection content', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        open={false}
+        onOpen={() => calls.push('open')}
+        inputValue="a"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+      >
+        <Combobox.Input aria-label="empty-gate" />
+        <Combobox.Popover>
+          <Listbox>{[]}</Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await React.act(async () => {
+      typeText(input, 'ab')
+    })
+    expect(calls).toEqual(['input:ab'])
+
+    const openCalls: string[] = []
+    const populated = await mount(
+      <Combobox
+        open={false}
+        onOpen={() => openCalls.push('open')}
+        inputValue="a"
+        onInputValueChange={v => openCalls.push(`input:${v}`)}
+      >
+        <Combobox.Input aria-label="full-gate" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    await React.act(async () => {
+      typeText(inputOf(populated.container), 'ab')
+    })
+    expect(openCalls).toEqual(['input:ab', 'open'])
+
+    await unmount(container, root)
+    await unmount(populated.container, populated.root)
+  })
+
+  it('CB-REVERT-02 support: onEscape preventDefault stops revert and dismissal', async () => {
+    const calls: string[] = []
+    let prevent = true
+    const { container, root } = await mount(
+      <Combobox
+        value="alpha"
+        onChange={v => calls.push(`change:${v}`)}
+        inputValue="Alp"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        open
+        onDismiss={() => calls.push('dismiss')}
+        onEscape={e => {
+          calls.push(`escape:${e.key}`)
+          expect(e).toBeInstanceOf(KeyboardEvent)
+          if (prevent) e.preventDefault()
+        }}
+      >
+        <Combobox.Input aria-label="esc" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'Escape')
+    expect(calls).toEqual(['escape:Escape'])
+    expect(input.getAttribute('aria-expanded')).toBe('true')
+
+    prevent = false
+    await pressKey(input, 'Escape')
+    expect(calls).toEqual(['escape:Escape', 'escape:Escape', 'input:Alpha', 'dismiss'])
+    await unmount(container, root)
+  })
+
+  it('CB-MODE-03/07 support: both-mode completes the suffix with zero text callbacks', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        inputValue="Al"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        defaultOpen
+        autocomplete="both"
+      >
+        <Combobox.Input aria-label="both" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+            <Listbox.Option value="alpine">Alpine</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    // Typing-derived active selects the first match; navigate to prove preview silence.
+    await pressKey(input, 'ArrowDown')
+    await pressKey(input, 'ArrowDown')
+    expect(calls).toEqual([])
+    expect(input.value).toBe('Alpine')
+    expect(input.selectionStart).toBe(2)
+    expect(input.selectionEnd).toBe(6)
+    expect(input.getAttribute('aria-autocomplete')).toBe('both')
+    await unmount(container, root)
+  })
+
+  it('CB-MODE-04 support: filtering active away restores the typed prefix', async () => {
+    const { container, root } = await mount(
+      <Combobox inputValue="Al" defaultOpen autocomplete="both">
+        <Combobox.Input aria-label="both-restore" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    expect(input.value).toBe('Alpha')
+    await React.act(async () => {
+      root.render(
+        <Combobox inputValue="Al" defaultOpen autocomplete="both">
+          <Combobox.Input aria-label="both-restore" />
+          <Combobox.Popover>
+            <Listbox>{[]}</Listbox>
+          </Combobox.Popover>
+        </Combobox>
+      )
+    })
+    expect(input.value).toBe('Al')
+    expect(input.selectionStart).toBe(2)
+    expect(input.selectionEnd).toBe(2)
+    await unmount(container, root)
+  })
+
+  it('CB-ADAPTER-01 support: grid mount timing pends scroll targets until cells mount', async () => {
+    const scrolls: number[] = []
+    const gridItems = Array.from({ length: 6 }, (_, i) => ({
+      value: `g-${i}`,
+      textValue: `G ${i}`,
+    }))
+    const gridAdapter = {
+      role: 'grid',
+      items: gridItems,
+      getNextIndex: ({ currentIndex }: { currentIndex: number | null }) =>
+        currentIndex == null ? 0 : Math.min(currentIndex + 1, gridItems.length - 1),
+      scrollToIndex: (index: number) => scrolls.push(index),
+    }
+
+    function WindowedGrid({ windowEnd }: { windowEnd: number }) {
+      return (
+        <Combobox inputValue="" defaultOpen>
+          <Combobox.Input aria-label="grid" />
+          <Combobox.Popover virtualFocus={gridAdapter as never}>
+            <div role="row">
+              {gridItems.slice(0, windowEnd).map((item, index) => (
+                <Combobox.VirtualItem key={item.value} index={index}>
+                  <div role="gridcell">{item.textValue}</div>
+                </Combobox.VirtualItem>
+              ))}
+            </div>
+          </Combobox.Popover>
+        </Combobox>
+      )
+    }
+
+    const { container, root } = await mount(<WindowedGrid windowEnd={2} />)
+    const input = inputOf(container)
+    expect(popoverOf()?.getAttribute('role')).toBe('grid')
+    expect(input.getAttribute('aria-haspopup')).toBe('grid')
+
+    // Mounted target: active ID publishes with no scroll.
+    await pressKey(input, 'ArrowDown')
+    expect(scrolls).toEqual([])
+    const firstId = input.getAttribute('aria-activedescendant')
+    expect(firstId).toContain('g-0')
+    expect(document.getElementById(firstId ?? '')?.getAttribute('role')).toBe('gridcell')
+
+    // Unmounted target: one scroll, no ID until mount.
+    await pressKey(input, 'ArrowDown')
+    await pressKey(input, 'ArrowDown')
+    expect(scrolls).toEqual([2])
+    expect(input.getAttribute('aria-activedescendant')).toBeNull()
+
+    await React.act(async () => {
+      root.render(<WindowedGrid windowEnd={3} />)
+    })
+    const pendingId = input.getAttribute('aria-activedescendant')
+    expect(pendingId).toContain('g-2')
+    expect(document.getElementById(pendingId ?? '')?.textContent).toBe('G 2')
+    await unmount(container, root)
+  })
+
+  it('CB-ADAPTER-08 support: conflicting authorities diagnose and stay inert', async () => {
+    const errors: string[] = []
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    const calls: string[] = []
+    const gridAdapter = {
+      role: 'grid',
+      items: [{ value: 'g-0', textValue: 'G 0' }],
+      getNextIndex: () => 0,
+      scrollToIndex: () => calls.push('scroll'),
+    }
+    const { container, root } = await mount(
+      <Combobox defaultOpen onChange={v => calls.push(`change:${v}`)}>
+        <Combobox.Input aria-label="conflict" />
+        <Combobox.Popover virtualFocus={gridAdapter as never}>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    expect(errors.some(text => text.includes('exactly one collection authority'))).toBe(true)
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    expect(calls).toEqual([])
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+    await React.act(async () => {
+      optionOf('alpha')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(calls).toEqual([])
+    await unmount(container, root)
+  })
+})
+
