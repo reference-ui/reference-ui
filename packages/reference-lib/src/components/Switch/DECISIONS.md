@@ -5,6 +5,11 @@ acceptance, per decision, never by exhaustion.
 
 One line: compact on/off button with default-or-authored thumb.
 
+Open/deferred items have moved: mechanical, test-pinnable work lives in
+[PATCHES.md](./PATCHES.md); items needing a design call live in
+[FEATURES.md](./FEATURES.md). This file keeps the header, Landed, all
+DECLINED verdicts, and non-decisions.
+
 ## Landed (context, 2-4 lines)
 
 Quarantine-landing ported tests + hardening only: 3 zero-paint source edits
@@ -35,71 +40,17 @@ mode and thumb motion deliberately preserved; UX SIGN-OFF. Crew log:
 - **Open questions:** none. Killer reason: removing shipped uncontrolled
   state breaks consumers for spec tidiness.
 
-### 2. Geometry-authority removal (strip inline thumb transform/transition; `data-state`-only styling) — verdict: OPEN
+### 2. Geometry-authority removal (strip inline thumb transform/transition; `data-state`-only styling) — moved
 
-- **Source:** quarantine commit `7bed212af`, `Switch.tsx` (Thumb lost inline
-  `transform: translateX(...)` + `transition`) + SPEC.md freeze work-order
-  item 2 ("no geometry authority; `data-state` only"); no case ID.
-- **API sketch:** Switch sets no `transform`/`transition` on either thumb;
-  apps style travel purely against `data-state="checked" | "unchecked"`
-  (including RTL, per `SW-ENV-04`); no `--reference-switch-*` geometry
-  custom properties published.
-- **Why not landed:** visuals are frozen per LANDING.md and the strip was
-  recon mangling exhibit 2 — landing with it would have deleted the shipped
-  slide animation. The freeze demand and the shipped paint genuinely
-  disagree, so this stays an open product call, not a landed behavior.
-- **Revisit when:** HQ rules on who owns thumb motion — now, at walkthrough:
-  either bless the inline transform/transition as the shipped visual
-  contract (and amend the freeze), or approve a designed restyle arc that
-  moves travel to app CSS with fresh snapshots.
-- **Open questions:** is the 200ms slide part of the brand feel HQ wants
-  pinned, or should the first app-owned-travel story prove `data-state`
-  CSS is sufficient? If apps own travel, do low-specificity (default
-  thumb) consumers get a documented CSS recipe?
+Moved to [FEATURES.md](./FEATURES.md) entry 1 — needs an HQ product call on who owns thumb motion.
 
-### 3. Structural Thumb identity (replace `displayName` sniffing; Fragment-wrapped thumbs) — verdict: DEFERRED
+### 3. Structural Thumb identity (replace `displayName` sniffing; Fragment-wrapped thumbs) — moved
 
-- **Source:** quarantine commit `7bed212af`, `Switch.tsx`
-  (`hasStructuralThumb` fragment-walker) + SPEC.md freeze work-order item 3
-  ("detect authored `Switch.Thumb` structurally, not `displayName`"); case
-  ID `SW-DOM-04` (authored-Thumb replacement shapes).
-- **API sketch:** no public API change; internally, authored-Thumb detection
-  survives `React.Fragment` wrapping and HOC forwarding, so exactly one
-  thumb exists in every shape without relying on
-  `displayName === 'SwitchThumb'`.
-- **Why not landed:** quarantine's mechanism was probing scaffolding
-  (`Symbol.for('@reference-ui/Switch.Thumb')`, `__referencePart`), recon
-  exhibit 4 — test hooks baked into the shipped component. The need is
-  real (current code still displayName-sniffs and misses
-  Fragment-wrapped thumbs) but wants a designed identity (Slot or part
-  marker), not walker machinery.
-- **Revisit when:** a consumer reports a Fragment-wrapped or forwarded
-  `Switch.Thumb` rendering a duplicate default thumb, or the catalog
-  adopts a standard part-identity primitive Switch can share.
-- **Open questions:** which identity primitive — Slot-based composition,
-  context registration, or a shared part marker? Must detection see
-  through exactly one Fragment level or arbitrary depth?
+Moved to [PATCHES.md](./PATCHES.md) entry 1 — mechanical: no API change, behavior fully specified, pinnable by `SW-DOM-04` today.
 
-### 4. Managed-prop type Omit (hide `aria-checked` / `aria-pressed` from public Root types) — verdict: DEFERRED
+### 4. Managed-prop type Omit (hide `aria-checked` / `aria-pressed` from public Root types) — moved
 
-- **Source:** quarantine commit `7bed212af`, `Switch.tsx` (`Omit<...,
-  'onChange' | 'type' | 'role' | 'aria-checked' | 'aria-pressed'>`) +
-  SPEC.md freeze gap item 4; case ID `SW-TYPE-01` (managed-prop omissions).
-- **API sketch:** `SwitchProps` omits `aria-checked` and `aria-pressed` so
-  consumers cannot declare them; Root owns `aria-checked="true" | "false"`
-  and the absence of `aria-pressed` at the type level, matching the
-  runtime strip + managed-wins spread order already landed.
-- **Why not landed:** any Omit change is public type-surface churn; landing
-  kept types untouched and enforced the same contract at runtime (consumer
-  `aria-pressed` stripped, conflicting `data-state`/`aria-checked`
-  ignored per `SW-DOM-02`). Types deserve their own designed pass, not a
-  stability-landing side effect.
-- **Revisit when:** the next intentional type-surface pass — land together
-  with any sibling managed-prop Omits so consumers meet one coherent
-  breaking-type story.
-- **Open questions:** error or silent Omit for consumers currently passing
-  `aria-checked`? Does the Omit extend to `data-state` / `data-disabled`
-  (currently runtime-ignored but type-visible)?
+Moved to [FEATURES.md](./FEATURES.md) entry 2 — public type-surface change, needs its design call.
 
 ### 5. Hidden form checkbox / `name`-value serialization (Radix `BubbleInput`) — verdict: DECLINED
 
@@ -186,64 +137,17 @@ mode and thumb motion deliberately preserved; UX SIGN-OFF. Crew log:
 
 ## Suspected gaps (no quarantine source)
 
-### 1. Clipped extra children leak into the accessible name — verdict: OPEN
+### 1. Clipped extra children leak into the accessible name — moved
 
-- **Evidence:** UX verdict F1 advisory in
-  `.agents/missions/quarantine-landing/switch.md` (Handoff) — live a11y
-  tree showed `switch "Extra Visual"` while the themed track visually
-  clips that child; `SW-DOM-04` had to assert presence-not-visibility
-  for the same reason (SPEC.md Landing note).
-- **API sketch:** no new API by default — either a doc note ("extra
-  children are clipped; keep them decorative and `aria-hidden`"), or a
-  behavior fix (Root computes its accessible name excluding clipped
-  descendants), or a dev warning when a text-bearing non-Thumb child is
-  authored.
-- **Why not landed:** pre-existing behavior, not a quarantine regression;
-  landing re-targeted the test and recorded the observation instead of
-  inventing name-computation semantics mid-arc.
-- **Revisit when:** now, at walkthrough — HQ picks doc-note vs. fix vs.
-  warning.
-- **Open questions:** is advisory text in `Switch.md` enough, or should
-  Switch actively guard (warn / `aria-hidden` enforcement)? Is there a
-  legitimate design where a visible extra child coexists with the thumb?
+Moved to [FEATURES.md](./FEATURES.md) entry 3 — HQ picks doc-note vs. fix vs. warning.
 
-### 2. No ref or handle to the default thumb — verdict: OPEN
+### 2. No ref or handle to the default thumb — moved
 
-- **Evidence:** TESTS.md `SW-DOM-05` — "the default thumb is not
-  referenced in this fixture"; landing added `forwardRef` to authored
-  `Switch.Thumb` only (`switch.md` STABILITY item 1), so low-specificity
-  consumers have no handle to the rendered thumb `span`.
-- **API sketch:** options range from a `thumbRef?` prop on Root, to a
-  `Switch.useThumb()` accessor, to documenting "author `Switch.Thumb`
-  when you need the node" as the complete answer.
-- **Why not landed:** nothing in quarantine or the suite needed it —
-  measurement/animation consumers are hypothetical, and the authored
-  Thumb escape hatch exists.
-- **Revisit when:** a consumer needs to measure or animate the default
-  thumb (e.g. travel-distance readout, FLIP animation) without taking on
-  authored-Thumb styling.
-- **Open questions:** is "author a Thumb" an acceptable answer, or does
-  low-specificity need first-class node access? If added, prop vs. hook?
+Moved to [FEATURES.md](./FEATURES.md) entry 4 — new API surface (prop vs. hook vs. doc answer).
 
-### 3. `onChange` receives only the boolean — no event access — verdict: OPEN
+### 3. `onChange` receives only the boolean — no event access — moved
 
-- **Evidence:** `Switch.md` request contract (`onChange?: (checked:
-  boolean) => void`) + `SW-ACT-05` (cancellation flows through consumer
-  `onClick` + `preventDefault`, not through the change callback);
-  consumers needing modifier keys, timestamps, or `stopPropagation`
-  context at request time have no channel.
-- **API sketch:** either keep boolean-only and document the `onClick`
-  pairing (`SW-ACT-05` pattern) as the event channel, or widen to
-  `onChange(checked, event)` / a request object.
-- **Why not landed:** the request contract is deliberate (button has no
-  durable checked state; the boolean *is* the request) and quarantine
-  never questioned it — widening mid-landing would fork every `SW-ACT`
-  title for a hypothetical need.
-- **Revisit when:** a consumer shows the `onClick`-pairing insufficient —
-  e.g. needs the request and the event atomically in one callback.
-- **Open questions:** is the `onClick` + `onChange` pairing ergonomic
-  enough to bless as the permanent pattern? If widened, second-arg event
-  or single request object?
+Moved to [FEATURES.md](./FEATURES.md) entry 5 — signature widening needs its design call.
 
 ## Non-decisions (rejected outright)
 
@@ -255,18 +159,28 @@ mode and thumb motion deliberately preserved; UX SIGN-OFF. Crew log:
 
 ## Walkthrough notes for HQ
 
-- Most important #1: uncontrolled is **preserved** (§1 DECLINED) — try
-  Book `CheckedByDefault` (toggles with no wiring) vs. `Default`
-  controlled story; killing `defaultChecked` would break the former.
-- Most important #2: thumb motion is **shipped paint** (§2 OPEN) — click
-  any story and watch the 200ms slide; HQ must bless it as contract or
+- Most important #1: uncontrolled is **preserved** (candidate §1 DECLINED,
+  kept above) — try Book `CheckedByDefault` (toggles with no wiring) vs.
+  `Default` controlled story; killing `defaultChecked` would break the
+  former.
+- Most important #2: thumb motion is **shipped paint** — click any story
+  and watch the 200ms slide, then read [FEATURES.md](./FEATURES.md) entry
+  1: HQ must bless the inline transform/transition as contract or
   commission the `data-state`-CSS restyle arc.
-- Most important #3: clipped children leak into the **accessible name**
-  (suspected §1 OPEN) — inspect the a11y tree of a Switch with an extra
-  child; decide doc-note vs. fix vs. warning.
+- Most important #3: clipped children leak into the **accessible name** —
+  inspect the a11y tree of a Switch with an extra child (it reads
+  `switch "Extra Visual"` while the track clips that child), then read
+  FEATURES.md entry 3: decide doc-note vs. fix vs. warning.
 - Feel item: disabled is natively inert + unfocusable, and consumer
   `aria-pressed` / conflicting `data-state` are now ignored at runtime
   (managed-wins) — toggle DevTools ARIA on the `Disabled` story.
+- Patch preview: author a `Switch.Thumb` wrapped in `React.Fragment` and
+  watch the duplicate default thumb appear — [PATCHES.md](./PATCHES.md)
+  entry 1 pins the structural-detection fix, no API change.
+- API backlog: managed-prop Omit, default-thumb ref, and `onChange`
+  event access live in FEATURES.md entries 2, 4, 5 — each needs its
+  design call before any code; feel the boolean-only contract by pairing
+  `onClick` + `onChange` per `SW-ACT-05`.
 - Skipped cases (`SW-DOM-08`, `SW-COMP-01`, `SW-ENV-03`, `SW-COMP-03`)
   are recorded non-ports with reasons, not backlog — see SPEC.md Landing
   note.
