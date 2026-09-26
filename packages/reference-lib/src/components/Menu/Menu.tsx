@@ -4,6 +4,7 @@ import {
   Overlay,
   OverlayPortal,
   isEventConsumed,
+  isEventInside,
   isPrimaryPointer,
   markEventConsumed,
   overlayStackStore,
@@ -129,10 +130,23 @@ function focusFirstEnabledItem(content: HTMLElement | null) {
   items[0]?.focus()
 }
 
-function nodeContains(node: HTMLElement | null, target: EventTarget | null): boolean {
-  return (
-    !!node && !!target && target instanceof Node && (node === target || node.contains(target))
-  )
+// Owning-root reads for ShadowRoot-mounted trees. A trigger or menu living
+// in a shadow root retargets document-level lookups (event.target becomes
+// the host, document.activeElement never enters), so id and focus discovery
+// run against the node's own root.
+function owningScope(node: HTMLElement | null): Document | ShadowRoot | null {
+  if (typeof document === 'undefined') return null
+  const root = node?.getRootNode?.() ?? null
+  if (root !== null && typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot) {
+    return root
+  }
+  return document
+}
+
+function activeElementIn(node: HTMLElement | null): Element | null {
+  const scope = owningScope(node)
+  if (typeof ShadowRoot !== 'undefined' && scope instanceof ShadowRoot) return scope.activeElement
+  return scope?.activeElement ?? null
 }
 
 function hoverCapablePointer(pointerType: string, pressure = 0): boolean {
@@ -199,7 +213,7 @@ interface MenuLevelValue {
   requestDeepestClose: () => boolean
   requestTreeDismiss: () => void
   registerSubmenu: (reg: SubmenuRegistration) => () => void
-  unwindForPress: (target: EventTarget | null) => void
+  unwindForPress: (event: Event) => void
   registry: Map<string, SubmenuRegistration>
   /** Submenu levels reconcile authored Content ids through this. */
   setContentId: ((id: string) => void) | null
@@ -318,14 +332,16 @@ const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
   }, [])
 
   const unwindForPress = React.useCallback(
-    (target: EventTarget | null) => {
+    (event: Event) => {
       const registry = registryRef.current
       // Keep levels containing the press plus their ancestors; close every
       // other open submenu deepest-first. A press outside the whole tree
-      // additionally closes the root.
+      // additionally closes the root. Containment reads the composed path:
+      // event.target retargets to the shadow host for shadow-internal
+      // presses, so a bare target check would unwind the whole tree.
       const keep = new Set<string>()
       for (const reg of registry.values()) {
-        if (nodeContains(reg.getTrigger(), target) || nodeContains(reg.getContent(), target)) {
+        if (isEventInside(reg.getTrigger(), event) || isEventInside(reg.getContent(), event)) {
           keep.add(reg.id)
           let ancestorId: string | undefined = reg.parentId
           while (ancestorId && ancestorId !== MENU_ROOT_ID) {
@@ -336,7 +352,7 @@ const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
       }
       const rootContent = menuRef.current
       const rootTrigger = overlayRef.current?.triggerRef.current ?? null
-      const rootKept = nodeContains(rootContent, target) || nodeContains(rootTrigger, target)
+      const rootKept = isEventInside(rootContent, event) || isEventInside(rootTrigger, event)
       for (const reg of openRegistrationsDeepestFirst(registry)) {
         if (!keep.has(reg.id)) reg.requestClose()
       }
@@ -436,7 +452,7 @@ const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
     const wasOpen = wasOpenRef.current
     wasOpenRef.current = isOpen
     if (!wasOpen || isOpen) return
-    if (menuRef.current?.contains(document.activeElement)) {
+    if (menuRef.current?.contains(activeElementIn(menuRef.current))) {
       restoreFocusToTrigger(overlay?.triggerRef.current as HTMLElement | null)
     }
   })
@@ -651,7 +667,7 @@ function NestedMenuInner({
         : undefined
       if (!layer || !layer.open) return
       if (isInsideLayer(layer, event)) return
-      parentLevel.unwindForPress(event.target)
+      parentLevel.unwindForPress(event)
       markEventConsumed(event)
     }
     doc.addEventListener('pointerdown', onDown, true)
@@ -784,10 +800,13 @@ export const MenuTrigger = React.forwardRef<HTMLDivElement, MenuTriggerProps>(fu
   // where the child ref above is dropped. Follows authored id changes.
   React.useLayoutEffect(() => {
     if (!overlay || typeof document === 'undefined') return
-    const node = document.getElementById(triggerId)
+    // Resolve in the parent level's owning root: document.getElementById
+    // never sees shadow-hosted triggers (and would null a good ref on 19).
+    const scope = owningScope(level?.parent?.getContentNode() ?? null) ?? document
+    const node = scope.getElementById(triggerId)
     overlay.triggerRef.current = node
     overlayStackStore.getState().setLayerTrigger(overlay.id, node)
-  }, [overlay, triggerId])
+  }, [overlay, triggerId, level])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
@@ -965,7 +984,7 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(fu
     if (wasOpen && !isOpen) {
       if (level.intent) level.intent.keyboardOpen = false
       const content = level.getContentNode()
-      if (!content?.contains(document.activeElement)) return
+      if (!content?.contains(activeElementIn(content))) return
       const trigger = level.getTrigger()
       if (trigger && trigger.isConnected && !trigger.hasAttribute('disabled') && trigger.getAttribute('aria-disabled') !== 'true') {
         trigger.focus()

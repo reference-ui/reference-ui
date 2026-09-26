@@ -8,7 +8,7 @@ import { toast } from '../Toast'
 // Popover.Trigger with Menu keyboard-entry wiring (ArrowDown/Enter/Space open
 // on the first item, ArrowUp on the last; pointer opens focus the menu).
 const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
-  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  { children, onKeyDown, onClick, 'aria-haspopup': ariaHasPopup = 'menu', ...props }: PopoverTriggerProps,
   ref
 ) {
   const keys = useMenuTriggerKeys()
@@ -24,6 +24,7 @@ const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(fu
         keys.onClick(e)
       }}
       {...triggerProps}
+      aria-haspopup={ariaHasPopup}
     >
       {children}
     </Popover.Trigger>

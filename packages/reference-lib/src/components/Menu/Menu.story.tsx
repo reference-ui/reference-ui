@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Popover, type PopoverTriggerProps } from '../Popover'
@@ -7,7 +8,7 @@ import { Menu, useMenuTriggerKeys } from './index'
 // Popover.Trigger with Menu keyboard-entry wiring (ArrowDown/Enter/Space open
 // on the first item, ArrowUp on the last; pointer opens focus the menu).
 const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
-  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  { children, onKeyDown, onClick, 'aria-haspopup': ariaHasPopup = 'menu', ...props }: PopoverTriggerProps,
   ref
 ) {
   const keys = useMenuTriggerKeys()
@@ -23,6 +24,7 @@ const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(fu
         keys.onClick(e)
       }}
       {...triggerProps}
+      aria-haspopup={ariaHasPopup}
     >
       {children}
     </Popover.Trigger>
@@ -590,6 +592,105 @@ export const Links = () => {
         <Span data-testid="menu-link-open-logs" fontSize="3.5r" color="design.text.base">
           Link Open Logs: {openLogs.join(',')}
         </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+function ShadowMenuInner() {
+  const [shareOpen, setShareOpen] = React.useState(false)
+  const [subLogs, setSubLogs] = React.useState<string[]>([])
+  const [rootLogs, setRootLogs] = React.useState<string[]>([])
+  const [action, setAction] = React.useState<string | null>(null)
+
+  return (
+    <div data-testid="menu-shadow-inner">
+      <Popover onOpenChange={next => setRootLogs(prev => [...prev, String(next)])}>
+        <EntryTrigger data-testid="btn-shadow-trigger">Open Shadow</EntryTrigger>
+        <Popover.Content placement="bottom-start">
+          <Menu data-testid="menu-shadow-content">
+            <Menu.Item
+              data-testid="menu-shadow-item-edit"
+              onSelect={() => setAction('Edit')}
+            >
+              Edit Document
+            </Menu.Item>
+            <Menu.Item
+              data-testid="menu-shadow-item-duplicate"
+              textValue="Zulu"
+              onSelect={() => setAction('Duplicate')}
+            >
+              Duplicate
+            </Menu.Item>
+            {/* Inert inside-pad: composed inside path that selects nothing.
+                Inline style survives the unstyled shadow root. */}
+            <div data-testid="menu-shadow-pad" style={{ height: 20 }} />
+            <Menu
+              open={shareOpen}
+              onOpen={() => {
+                setSubLogs(prev => [...prev, 'share:onOpen'])
+                setShareOpen(true)
+              }}
+              onDismiss={() => {
+                setSubLogs(prev => [...prev, 'share:onDismiss'])
+                setShareOpen(false)
+              }}
+            >
+              <Menu.Trigger data-testid="menu-shadow-sub-trigger">Share</Menu.Trigger>
+              <Menu.Content data-testid="menu-shadow-sub-content">
+                <Menu.Item
+                  data-testid="menu-shadow-sub-item-email"
+                  onSelect={() => setAction('Email')}
+                >
+                  Email
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-shadow-sub-item-copy"
+                  onSelect={() => setAction('Copy')}
+                >
+                  Copy link
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </Menu>
+        </Popover.Content>
+      </Popover>
+
+      <Span data-testid="menu-shadow-action" fontSize="3.5r" color="design.text.base">
+        Shadow Action: {action ?? 'None'}
+      </Span>
+      <Span data-testid="menu-shadow-sub-logs" fontSize="3.5r" color="design.text.base">
+        Sub Logs: {subLogs.join(',')}
+      </Span>
+      <Span data-testid="menu-shadow-root-logs" fontSize="3.5r" color="design.text.base">
+        Sub Root Logs: {rootLogs.join(',')}
+      </Span>
+    </div>
+  )
+}
+
+export const Shadow = () => {
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    if (host.shadowRoot) {
+      setShadow(host.shadowRoot)
+      return
+    }
+    setShadow(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
+        <button data-testid="btn-shadow-outside" type="button">
+          Outside
+        </button>
+        <div ref={hostRef} data-testid="menu-shadow-host" />
+        {shadow ? createPortal(<ShadowMenuInner />, shadow) : null}
       </Div>
     </ReferenceLibrary>
   )

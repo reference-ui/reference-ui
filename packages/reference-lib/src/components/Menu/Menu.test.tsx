@@ -8,7 +8,7 @@ import { Menu, useMenuTriggerKeys } from './Menu'
 
 // Popover.Trigger with Menu keyboard-entry wiring.
 const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
-  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  { children, onKeyDown, onClick, 'aria-haspopup': ariaHasPopup = 'menu', ...props }: PopoverTriggerProps,
   ref
 ) {
   const keys = useMenuTriggerKeys()
@@ -24,6 +24,7 @@ const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(fu
         keys.onClick(e)
       }}
       {...triggerProps}
+      aria-haspopup={ariaHasPopup}
     >
       {children}
     </Popover.Trigger>
@@ -75,9 +76,7 @@ describe('Menu component keyboard navigation and triggers', () => {
     const trigger = document.getElementById('trigger-btn')
     expect(trigger).not.toBeNull()
     expect(trigger?.getAttribute('data-variant')).toBe('primary')
-    // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
-    // menu-correct value is "menu" once the Popover crew ships an override seam.
-    expect(trigger?.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(trigger?.getAttribute('aria-haspopup')).toBe('menu')
     expect(trigger?.getAttribute('aria-expanded')).toBe('false')
   })
 
@@ -180,9 +179,7 @@ describe('Menu component keyboard navigation and triggers', () => {
       )
 
       expect(html).toContain('ssr-trigger-btn')
-      // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
-      // menu-correct value is "menu" once the Popover crew ships an override seam.
-      expect(html).toContain('aria-haspopup="dialog"')
+      expect(html).toContain('aria-haspopup="menu"')
       expect(html).not.toContain('ssr-item-1')
 
       const host = document.createElement('div')

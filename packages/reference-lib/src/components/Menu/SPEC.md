@@ -96,7 +96,7 @@ Proven by passing CT/unit titles (root-level adaptations of TESTS.md):
   `MN-CLOSE-07` `MN-CLOSE-09` (dup of CLOSE-01 single-level)
   `MN-CLOSE-10`
 - `[ ]` `MN-DYNAMIC-02` `MN-DYNAMIC-04` (submenu ownership)
-- `[ ]` `MN-ENV-03` (shadow; lib-wide framework concern, Tree/Switch precedent)
+- `[x]` `MN-ENV-03` (shadow; Overlay FEATURES #1 automatic rule + Menu owning-root adoption; Tab traversal stays document-scoped per Tree-deferred precedent)
 - `[ ]` all `MN-COMP-*` (need Popover-root/nested model)
 
 Adaptations (pinned current behavior over quarantine where they
