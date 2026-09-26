@@ -65,25 +65,29 @@ export default {
       </Div>
     )
   },
-  CollapsedByDefault: () => (
-    <Div maxW="60r">
-      <Tree
-        defaultValue="item-a"
-        border="1px solid"
-        borderColor="ui.field.border"
-        borderRadius="md"
-        p="1.5r"
-      >
-        <Tree.Item id="branch-1" isBranch>
-          <Tree.Expander itemId="branch-1" />
-          <Span fontSize="3.5r">Expandable branch</Span>
-          <Tree.Group>
-            <Tree.Item id="item-a">
-              <Span fontSize="3.5r">Hidden until expanded</Span>
-            </Tree.Item>
-          </Tree.Group>
-        </Tree.Item>
-      </Tree>
-    </Div>
-  ),
+  CollapsedByDefault: () => {
+    const [selected, setSelected] = React.useState<string | null>('item-a')
+    return (
+      <Div maxW="60r">
+        <Tree
+          value={selected}
+          onChange={setSelected}
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          p="1.5r"
+        >
+          <Tree.Item id="branch-1" isBranch>
+            <Tree.Expander itemId="branch-1" />
+            <Span fontSize="3.5r">Expandable branch</Span>
+            <Tree.Group>
+              <Tree.Item id="item-a">
+                <Span fontSize="3.5r">Hidden until expanded</Span>
+              </Tree.Item>
+            </Tree.Group>
+          </Tree.Item>
+        </Tree>
+      </Div>
+    )
+  },
 }

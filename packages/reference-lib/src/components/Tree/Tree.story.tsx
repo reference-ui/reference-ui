@@ -86,6 +86,14 @@ export const Parity = () => {
   const [typeaheadLabel, setTypeaheadLabel] = React.useState('Zulu')
   const [typeaheadTextValue, setTypeaheadTextValue] = React.useState<string | undefined>(undefined)
 
+  // Auxiliary fixture trees: selection is state-controlled everywhere
+  // (expansion stays default/uncontrolled unless the section drives it).
+  const [emptyValue, setEmptyValue] = React.useState<string | null>(null)
+  const [omittedValue, setOmittedValue] = React.useState<string | null>(null)
+  const [reorderValue, setReorderValue] = React.useState<string | null>(null)
+  const [detValue, setDetValue] = React.useState<string | null>(null)
+  const [refsValue, setRefsValue] = React.useState<string | null>(null)
+
   // Deterministic-order section state (TR-EXPAND-06)
   const [detExpanded, setDetExpanded] = React.useState<string[]>([
     'unknown-2',
@@ -355,15 +363,15 @@ export const Parity = () => {
           <button type="button" data-testid="btn-before-empty">
             Before
           </button>
-          <Tree data-testid="empty-tree" />
+          <Tree data-testid="empty-tree" value={emptyValue} onChange={setEmptyValue} />
           <button type="button" data-testid="btn-after-empty">
             After
           </button>
         </section>
 
         <section style={{ margin: '16px 0' }} data-testid="omitted-props-section">
-          <h2>Omitted Props Tree (uncontrolled)</h2>
-          <Tree data-testid="omitted-tree">
+          <h2>Controlled Selection, Default Expansion</h2>
+          <Tree data-testid="omitted-tree" value={omittedValue} onChange={setOmittedValue}>
             <Tree.Item value="omitted-branch" data-testid="omitted-branch">
               <Tree.Expander data-testid="omitted-expander" />
               <span>Omitted Branch</span>
@@ -376,24 +384,9 @@ export const Parity = () => {
           </Tree>
         </section>
 
-        <section style={{ margin: '16px 0' }} data-testid="controlled-noop-section">
-          <h2>Controlled Tree Without Callbacks</h2>
-          <Tree data-testid="noop-tree" value="noop-branch" expanded={['noop-branch']}>
-            <Tree.Item value="noop-branch" data-testid="noop-branch-item">
-              <Tree.Expander data-testid="noop-expander" />
-              <span>Noop Branch</span>
-              <Tree.Group>
-                <Tree.Item value="noop-child" data-testid="noop-child-item">
-                  <span>Noop Child</span>
-                </Tree.Item>
-              </Tree.Group>
-            </Tree.Item>
-          </Tree>
-        </section>
-
         <section style={{ margin: '16px 0' }} data-testid="reorder-section">
           <h2>Reorder &amp; Interleaved Non-Items</h2>
-          <Tree data-testid="reorder-tree">
+          <Tree data-testid="reorder-tree" value={reorderValue} onChange={setReorderValue}>
             <div data-testid="decorative-heading">Category Header</div>
             <Tree.Item value="item-1" data-testid="reorder-item-1">
               <span>Item 1</span>
@@ -412,6 +405,8 @@ export const Parity = () => {
           <h2>Deterministic Expansion Order</h2>
           <Tree
             data-testid="det-tree"
+            value={detValue}
+            onChange={setDetValue}
             expanded={detExpanded}
             onExpandedChange={(next) => {
               setDetLog((prev) => [...prev, next])
@@ -451,7 +446,13 @@ export const Parity = () => {
 
         <section style={{ margin: '16px 0' }} data-testid="refs-section">
           <h2>Ref Forwarding Probes</h2>
-          <Tree data-testid="refs-tree" ref={refsRootRef} defaultExpanded={['refs-branch']}>
+          <Tree
+            data-testid="refs-tree"
+            ref={refsRootRef}
+            value={refsValue}
+            onChange={setRefsValue}
+            defaultExpanded={['refs-branch']}
+          >
             <Tree.Item value="refs-branch" data-testid="refs-item" ref={refsItemRef}>
               <Tree.Expander data-testid="refs-expander" ref={refsExpanderRef} />
               <span>Refs Branch</span>

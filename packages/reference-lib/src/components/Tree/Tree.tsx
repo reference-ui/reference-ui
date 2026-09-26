@@ -116,9 +116,8 @@ function isGroupChild(child: React.ReactNode): boolean {
 }
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
-  value?: string | null
-  defaultValue?: string | null
-  onChange?: (value: string | null) => void
+  value: string | null
+  onChange: (value: string | null) => void
   expanded?: string[]
   defaultExpanded?: string[]
   onExpandedChange?: (expanded: string[]) => void
@@ -572,8 +571,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
   function Tree(
     {
       children,
-      value: valueProp,
-      defaultValue = null,
+      value,
       onChange,
       expanded: expandedProp,
       defaultExpanded = [],
@@ -585,9 +583,19 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     },
     ref
   ) {
-    const isControlledValue = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<string | null>(defaultValue)
-    const value = isControlledValue ? valueProp : internalValue
+    // Fully controlled selection: value is required (null is the empty
+    // value) and onChange is required — a callback-less tree would freeze
+    // silently. Render-phase pure checks: StrictMode-safe.
+    if (value === undefined) {
+      throw new Error(
+        'Reference UI: Tree "value" is required — the tree is fully controlled, with null as the empty value.'
+      )
+    }
+    if (onChange === undefined) {
+      throw new Error(
+        'Reference UI: Tree "onChange" is required — the tree is fully controlled; pass a handler that writes selection state back.'
+      )
+    }
 
     const isControlledExpanded = expandedProp !== undefined
     const [internalExpanded, setInternalExpanded] = React.useState<string[]>(defaultExpanded)
@@ -639,12 +647,9 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         if (value === id) {
           return
         }
-        if (!isControlledValue) {
-          setInternalValue(id)
-        }
-        onChange?.(id)
+        onChange(id)
       },
-      [isControlledValue, onChange, value]
+      [onChange, value]
     )
 
     const toggleExpanded = React.useCallback(

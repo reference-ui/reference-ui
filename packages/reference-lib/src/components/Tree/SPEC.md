@@ -51,10 +51,14 @@ freeze catalog above, per recon:
 
 - Uncontrolled mode (`defaultValue` / `defaultExpanded` + internal store)
   is **preserved**, not removed (recon exhibit 1). Freeze work-order
-  item 1 is superseded.
+  item 1 is superseded. (Superseded 2026-09-26 for selection: HQ
+  controlled-only rule deleted `defaultValue`; `defaultExpanded` kept
+  pending the HQ call on sibling default props.)
 - `TR-DOM-10` is re-targeted: pins uncontrolled omission (expands and
   selects through internal state) plus controlled-without-callbacks
   staying put, instead of the controlled-only omission freeze.
+  (Re-targeted again 2026-09-26: selection is state-driven, omission of
+  `value`/`onChange` fails fast, and callback-less frozen trees are gone.)
 - `TR-EXPAND-06` is proven twice: browser payload order plus a unit test
   of the exported `getDeterministicExpanded`.
 - Branch auto-detection (Group-authored items are branches without an
@@ -85,7 +89,8 @@ freeze catalog above, per recon:
 
 ### Gaps & incoherence
 
-- `defaultValue` / `defaultExpanded` uncontrolled.
+- `defaultExpanded` uncontrolled (selection went controlled-only
+  2026-09-26: `value` + `onChange` required, `defaultValue` deleted).
 - `React.Children.forEach` sniffs Group vs row — not Slot / part
   registration.
 - Roving via DOM queries, not shared RovingFocus.

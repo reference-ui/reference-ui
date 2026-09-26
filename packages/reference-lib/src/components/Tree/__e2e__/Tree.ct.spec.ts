@@ -332,15 +332,18 @@ test.describe('Tree Quarantine Parity', () => {
     await expect(btnAfter).toBeFocused()
   })
 
-  test('TR-DOM-10: Tree should keep uncontrolled omission working while controlled omission without callbacks stays put', async ({
+  test('TR-DOM-10: Tree should expand and select through state when only expansion props are omitted', async ({
     mount,
     page,
   }) => {
     await mount('components/Tree/Tree/Parity')
     await expect(page.getByTestId('tree-fixture-root')).toBeVisible()
 
-    // Re-targeted: uncontrolled mode is preserved (recon exhibit 1), so the
-    // omitted-props tree expands and selects through internal state.
+    // Re-targeted (controlled-only): selection is state-driven, so the
+    // auxiliary tree expands through default expansion and selects through
+    // its onChange state. Callback-less frozen trees are gone — omitting
+    // value/onChange fails fast (unit TR-API-01/TR-API-02); staying put on
+    // a rejecting parent is covered by TR-SELECT-04/TR-EXPAND-03.
     const omittedBranch = page.getByTestId('omitted-branch')
     await expect(omittedBranch).toHaveAttribute('aria-expanded', 'false')
     await expect(page.getByTestId('omitted-child')).toHaveCount(0)
@@ -351,20 +354,6 @@ test.describe('Tree Quarantine Parity', () => {
 
     await page.getByText('Omitted Branch', { exact: true }).click()
     await expect(omittedBranch).toHaveAttribute('aria-selected', 'true')
-
-    // Controlled props without callbacks stay put instead.
-    const noopBranch = page.getByTestId('noop-branch-item')
-    const noopChild = page.getByTestId('noop-child-item')
-    await expect(noopBranch).toHaveAttribute('aria-expanded', 'true')
-    await expect(noopChild).toBeVisible()
-
-    await page.getByTestId('noop-expander').click()
-    await expect(noopBranch).toHaveAttribute('aria-expanded', 'true')
-    await expect(noopChild).toBeVisible()
-
-    await noopChild.click()
-    await expect(noopChild).toHaveAttribute('aria-selected', 'false')
-    await expect(noopBranch).toHaveAttribute('aria-selected', 'true')
   })
 
   test('TR-DOM-11: Tree Expander should be a named non-tab-stop button linked to its branch Group', async ({

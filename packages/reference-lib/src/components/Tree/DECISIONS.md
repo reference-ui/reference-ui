@@ -53,7 +53,7 @@ proven by a real `TR-ENV-03` CT. See FEATURES.md entry 2.
   called it, so exporting it would ship API surface with zero
   behavioral proof.
 
-### 4. Controlled-only state (delete `defaultValue`/`defaultExpanded`) — verdict: DECLINED
+### 4. Controlled-only state (delete `defaultValue`/`defaultExpanded`) — verdict: SUPERSEDED (selection LANDED 2026-09-26; expansion still declined)
 
 - **Source:** quarantine commit `b8b5f1aff`,
   `packages/reference-lib/src/components/Tree/Tree.tsx` (no
@@ -75,6 +75,12 @@ proven by a real `TR-ENV-03` CT. See FEATURES.md entry 2.
   migration major, never a per-component drift.
 - **Open questions:** none — killer reason: deleting working public
   API to match a freeze is a breaking change with no user ask.
+- **Outcome 2026-09-26:** HQ controlled-only rule
+  (`docs/MISSIONS/API-STANCE.md`: "no defaultValue across them")
+  reversed this for selection — `defaultValue` deleted, `value` +
+  `onChange` required with fail-fast throws, in-repo consumers migrated
+  in the same change. `defaultExpanded` stays: sibling uncontrolled
+  props await a separate HQ call.
 
 ### 5. Fall-through key handling for non-editable descendants — verdict: DECLINED
 
@@ -119,7 +125,7 @@ Moved to [FEATURES.md](./FEATURES.md) entry 4: needs visible-set engine design (
 ## Walkthrough notes for HQ
 
 - Most important #1: the Combobox bridge stays **deferred** — full spec now in [FEATURES.md](./FEATURES.md) entry 1. To feel the gap: in Book, open the Tree + Combobox stories side by side and confirm no composition story exists — nesting Tree in a Combobox popover today gets no virtual focus, no `aria-activedescendant`, no routed commit. The design question is `data-active` semantics (focus vs virtual-active) before any code.
-- Most important #2: uncontrolled mode is **preserved**, controlled-only **declined** (candidate 4, kept verbatim above) — `defaultValue`/`defaultExpanded` keep working. In Book, open `CollapsedByDefault` and expand/select without any state props; deleting that would be a breaking change needing a catalog-wide major.
+- Most important #2 (superseded 2026-09-26): selection is now controlled-only — `defaultValue` deleted, `value` + `onChange` required (candidate 4 outcome above). `defaultExpanded` keeps working. In Book, `CollapsedByDefault` now drives selection from state.
 - Most important #3: the hierarchy model export is **declined as theater** (candidate 3, kept verbatim above) — dynamics are proven in the browser, not via a class quarantine itself never called. In Book, try collapsing an ancestor of a selected nested item (selection survives, focus lands on the branch) to feel `TR-DYNAMIC-03`/`04` without any model import.
 - Open-items map: every open/deferred item now lives in [FEATURES.md](./FEATURES.md) (entries 1–4) because each needs a design call; [PATCHES.md](./PATCHES.md) is therefore empty. To feel what the two refactor entries must preserve: in Book's FileExplorer story, arrow-key through branches (visible-only roving entry 4 must not regress) and note the SSR-safe two-path branch/leaf DOM (entry 3 must stay hydration-safe).
 - Bonus feel: the expander AT-exposure fix is the biggest landed a11y win — in Book's FileExplorer story, inspect any branch Expander: it is a named `button[tabindex=-1]` with `aria-controls` resolving to its Group, no longer `aria-hidden`.

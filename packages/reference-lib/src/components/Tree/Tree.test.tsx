@@ -20,7 +20,7 @@ describe('Tree Unit Proofs', () => {
 
   it('TR-ENV-01: Tree should hydrate nested hierarchy and generated relationships without mismatch', () => {
     const html = renderToString(
-      <Tree value="src/index" expanded={['src']}>
+      <Tree value="src/index" onChange={() => {}} expanded={['src']}>
         <Tree.Item value="src">
           <Tree.Expander aria-label="Toggle src" />
           <span>src</span>
@@ -69,5 +69,28 @@ describe('Tree Unit Proofs', () => {
     expect(html).toContain('role="tree"')
     expect(onChange).not.toHaveBeenCalled()
     expect(onExpandedChange).not.toHaveBeenCalled()
+  })
+
+  it('TR-API-01: Tree should fail fast when value is omitted (fully controlled, null is empty)', () => {
+    expect(() =>
+      renderToString(
+        <Tree value={undefined as unknown as string | null} onChange={() => {}}>
+          <Tree.Item value="a">A</Tree.Item>
+        </Tree>
+      )
+    ).toThrow('Tree "value" is required')
+  })
+
+  it('TR-API-02: Tree should fail fast when onChange is omitted (no silent-frozen controlled)', () => {
+    expect(() =>
+      renderToString(
+        <Tree
+          value={null}
+          onChange={undefined as unknown as (value: string | null) => void}
+        >
+          <Tree.Item value="a">A</Tree.Item>
+        </Tree>
+      )
+    ).toThrow('Tree "onChange" is required')
   })
 })
