@@ -35,26 +35,34 @@ Visual polish is not this gate.
 | View | private; `month` / `onMonthChange` optional |
 | Grid | padded month, 2D keyboard, unavailable skip, range preview |
 
-### Status (2026-09-10)
+### Status (2026-09-25, quarantine-landing)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype month grid + click select. |
+| Engine | Prototype month grid + click select on Gregorian kernels. |
 | Production | **No.** |
-| Named `[x]` | 0 / 132 |
-| Playwright | 1 title (`CA-ISO-01`) — click smoke, not the ISO gate |
-| Vitest | 0 |
+| Named `[x]` | 17 / 132 (colocated; matrix 110 e2e + remaining unit NOT ported — needs API rework, see handoffs) |
+| Playwright CT | 4 tests: 7 frozen snaps green unmodified + 2 behavioral (leap-Feb grid, Dec→Jan nav) |
+| Vitest | 19 (`iso.test.ts` 7, `week-grid.test.ts` 8, `Calendar.contract.test.tsx` 4) |
 
 ### Gaps & incoherence
 
-- `defaultValue`, `locale = 'en-US'`, `onChange?: (value: any)`.
-- **`new Date()`** seeds empty pane / today (`Calendar.tsx`). Freeze:
-  optional `today` prop; no timezone-dependent default.
-- Month/year product modes and Years window incomplete.
-- No `today` prop, `isDateUnavailable`, range Tab-commit preview, ISO kit
-  exports, CLDR week-start table.
-- Part naming drift vs Calendar.md.
-- `CA-ISO-01` title exists but does not assert the Gregorian ISO gate.
+- `defaultValue`, `locale = 'en-US'`, `onChange?: (value: any)` — retained
+  deliberately (quarantine's controlled-only/discriminated redesign NOT ported).
+- ~~**`new Date()`** seeds empty pane / today~~ → optional `today` prop added
+  (default = system UTC date, behavior preserved); `new Date()` remains only
+  as the default-fallback and out-of-domain legacy path.
+- ISO kit exports: DONE (curated — `ISODate`/`CalendarMode` names stay with
+  `Calendar.tsx` for DateField compat; kit functions + `ISOMonth`/`ISOYear`/
+  `CalendarWeekday`/`CalendarDateRange` re-exported).
+- CLDR week-start table: ported (`week.ts`) but NOT wired to render (moves
+  paint for non-Sunday locales — needs UX review).
+- Still missing: `isDateUnavailable` (`min`/`max` remain dead props),
+  range Tab-commit preview, padded outside-day grid (suspect paint),
+  2D keyboard nav, today marker, month/year product modes.
+- Part naming drift vs Calendar.md — kept (quarantine renames NOT ported).
+- `CA-ISO-01` is now the ISO gate (unit); the old click-smoke title lives on
+  as CT coverage without the ID.
 
 ### Vendor
 
@@ -67,16 +75,27 @@ as public values; ±100y Date min/max defaults.
 
 ### Case index
 
-- `[~]` `CA-ISO-01` — title exists; rewrite as the ISO gate, not click smoke
-- `[ ]` remaining `CA-ISO-*`, `CA-LOC-*`, `CA-GRID-*`, `CA-DAY-*`,
+- `[x]` `CA-ISO-01`, `CA-ISO-02`, `CA-ISO-03`, `CA-ISO-04`, `CA-ISO-05`,
+  `CA-ISO-08` (`iso.test.ts`, ported verbatim from quarantine bar import path)
+- `[x]` `CA-LOC-01`, `CA-LOC-02`, `CA-LOC-03`, `CA-LOC-08`,
+  `CA-GRID-01`, `CA-GRID-02`, `CA-GRID-03` (`week-grid.test.ts`, same)
+- `[x]` `CA-UTIL-01` (via public `./index` barrel — proves curated export)
+- `[x]` `CA-ENV-02` (StrictMode SSR, adapted), `CA-STATE-11` (adapted:
+  today-seeded default pane), `CA-ENV-01` (adapted: SSR determinism)
+- `[ ]` `CA-ISO-06`, `CA-ISO-07` (fail-closed render-'' — NOT ported),
+  `CA-MODE-04` (discriminated props — NOT ported), `CA-DAY-13`, `CA-DAY-14`
+  (Weekdays/Days/Day parts — NOT ported), remaining `CA-DAY-*`,
   `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`, `CA-SINGLE-*`, `CA-RANGE-*`,
-  `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`, `CA-UTIL-01`, `CA-DYNAMIC-*`,
-  `CA-ENV-*`, `CA-A11Y-01`, `CA-COMP-*`
+  `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`, `CA-DYNAMIC-*`, `CA-ENV-*`,
+  `CA-A11Y-01`, `CA-COMP-*`
 
 ### Work order
 
-1. Required `locale`; kill `defaultValue` / `onChange any`.
-2. ISO gate + helpers; remove public `Date` (`CA-ISO-*`).
+1. Required `locale`; kill `defaultValue` / `onChange any`. (DEFERRED by
+   quarantine-landing: API redesign, not stability.)
+2. ISO gate + helpers; remove public `Date` (`CA-ISO-*`). (DONE colocated
+   2026-09-25: `iso.ts`/`week.ts`/`grid.ts` + 17 cases; grid `Date.UTC`
+   replaced by kernels with out-of-domain legacy fallback.)
 3. Locale week-start + padded grid (`CA-LOC-*` / `CA-GRID-*`).
 4. Day keyboard + unavailable skip (`CA-KEY-*` / `CA-DAY-*`).
 5. Range preview machine (`CA-RANGE-*`) — DateField.Range depends on this.

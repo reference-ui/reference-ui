@@ -12,6 +12,14 @@ import {
   type PrimitiveProps,
   type PrimitiveElement,
 } from '@reference-ui/react'
+import {
+  getDayOfWeek,
+  getDaysInMonth,
+  isValidISODate,
+  isValidISOMonth,
+  parseISODate,
+  parseISOMonth,
+} from './iso'
 
 export type CalendarMode = 'day' | 'range' | 'month' | 'year'
 export type ISODate = string // YYYY-MM-DD
@@ -31,6 +39,11 @@ export type CalendarProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | '
   min?: ISODate
   max?: ISODate
   disabled?: boolean
+  /** Seeds the default pane when neither `month` nor `value` is given.
+   * Defaults to the current UTC date (previous behavior); pass an explicit
+   * ISO date for SSR-safe deterministic rendering. Ignored when `month`
+   * or a value-derived month is available. */
+  today?: ISODate
 }
 
 interface CalendarContextValue {
@@ -278,9 +291,20 @@ export function CalendarGrid({
 
   const { year, month } = currentMonth
 
-  // Generate days in month
-  const firstDayOfWeek = new Date(Date.UTC(year, month, 1)).getUTCDay()
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  // Generate days in month. Gregorian kernels own in-domain years; out-of-domain
+  // input (year < 1 or month outside 0..11, reachable only via adversarial
+  // props) keeps the legacy Date path so behavior never changes there.
+  // NOTE: years 1..99 now render proleptic-Gregorian weekdays instead of
+  // Date.UTC's 1900-offset mapping — a deliberate correction, unbaselined.
+  const monthInRange = month >= 0 && month <= 11
+  const firstDayOfWeek =
+    year >= 1 && monthInRange
+      ? getDayOfWeek(year, month + 1, 1)
+      : new Date(Date.UTC(year, month, 1)).getUTCDay()
+  const daysInMonth =
+    year >= 1 && monthInRange
+      ? getDaysInMonth(year, month + 1)
+      : new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
 
   const weeks: Array<Array<{ dateStr: string; dayNum: number; inMonth: boolean }>> = []
   let currentWeek: Array<{ dateStr: string; dayNum: number; inMonth: boolean }> = []
@@ -416,6 +440,7 @@ export function Calendar({
   min,
   max,
   disabled = false,
+  today,
   className,
   style,
   ...props
@@ -427,16 +452,34 @@ export function Calendar({
 
   const parseMonth = (mStr?: string) => {
     if (!mStr) {
+      if (typeof value === 'string' && isValidISODate(value)) {
+        const { year, month } = parseISODate(value)
+        return { year, month: month - 1 }
+      }
       if (typeof value === 'string' && value.includes('-')) {
         const [y, m] = value.split('-').map(Number)
         if (y && m) return { year: y, month: m - 1 }
       }
       if (value && typeof value === 'object' && 'start' in value && value.start) {
+        if (isValidISODate(value.start)) {
+          const { year, month } = parseISODate(value.start)
+          return { year, month: month - 1 }
+        }
         const [y, m] = value.start.split('-').map(Number)
         if (y && m) return { year: y, month: m - 1 }
       }
+      // Explicit `today` seeds the default pane for SSR-safe rendering;
+      // an absent or invalid `today` keeps the legacy system-date default.
+      if (today && isValidISODate(today)) {
+        const { year, month } = parseISODate(today)
+        return { year, month: month - 1 }
+      }
       const now = new Date()
       return { year: now.getUTCFullYear(), month: now.getUTCMonth() }
+    }
+    if (isValidISOMonth(mStr)) {
+      const { year, month } = parseISOMonth(mStr)
+      return { year, month: month - 1 }
     }
     const [y, m] = mStr.split('-').map(Number)
     return { year: y || 2026, month: (m || 1) - 1 }

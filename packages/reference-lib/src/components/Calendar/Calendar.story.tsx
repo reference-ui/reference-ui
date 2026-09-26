@@ -58,3 +58,49 @@ export const DateRange = () => {
     </ReferenceLibrary>
   )
 }
+
+export const LeapFebruary = () => {
+  const [date, setDate] = React.useState<string | null>('2024-02-15')
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="leap-fixture-root">
+        <Calendar
+          data-testid="test-leap-calendar"
+          month="2024-02"
+          value={date}
+          onChange={setDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton />
+            <Calendar.Heading data-testid="leap-heading" />
+            <Calendar.NextButton />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="leap-grid" />
+        </Calendar>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const DecemberNav = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="dec-fixture-root">
+        <Calendar
+          data-testid="test-dec-calendar"
+          today="2026-12-15"
+          value={date}
+          onChange={setDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="dec-prev" />
+            <Calendar.Heading data-testid="dec-heading" />
+            <Calendar.NextButton data-testid="dec-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="dec-grid" />
+        </Calendar>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
