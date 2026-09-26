@@ -8,6 +8,7 @@ import {
   validatePanelConstraints,
   type PanelConstraints,
 } from './splitter-math'
+import { SPLITTER_STYLES } from './splitterStyles'
 
 export type SplitterOrientation = 'horizontal' | 'vertical'
 
@@ -52,6 +53,20 @@ function collectPanelConstraints(children: React.ReactNode): Map<number, PanelCo
   return found
 }
 
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
+
+type SplitterDirection = 'ltr' | 'rtl'
+
+// Inherited direction for the group: nearest [dir] ancestor wins, falling back
+// to the document. Read fresh at each use so mid-focus switches apply at once.
+function readDirection(element: HTMLElement | null): SplitterDirection {
+  const scoped = element?.closest?.('[dir]')?.getAttribute('dir')?.toLowerCase()
+  if (scoped === 'rtl' || scoped === 'ltr') return scoped
+  if (typeof document !== 'undefined' && document.dir?.toLowerCase() === 'rtl') return 'rtl'
+  return 'ltr'
+}
+
 export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
   orientation?: SplitterOrientation
   value?: number[]
@@ -61,19 +76,29 @@ export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultVal
   disabled?: boolean
 }
 
+export interface SplitterSeparatorAria {
+  valueNow: number
+  valueMin: number
+  valueMax: number
+}
+
 interface SplitterContextValue {
   orientation: SplitterOrientation
   value: number[]
   disabled: boolean
-  containerRef: React.RefObject<HTMLDivElement | null>
+  isRtl: boolean
+  isResizing: boolean
+  resizingHandleIndex: number | null
   panelConstraints: PanelConstraints[]
-  adjustHandle: (handleIndex: number, deltaPercent: number) => void
-  resizeFromOrigin: (
-    handleIndex: number,
-    originLayout: number[],
-    deltaPercent: number,
-    isFinal?: boolean
-  ) => void
+  primaryPanelIndex: (handleIndex: number) => number
+  getPanelId: (panelIndex: number) => string | undefined
+  registerPanel: (panelIndex: number, id: string, element: HTMLDivElement | null) => () => void
+  getSeparatorAria: (handleIndex: number) => SplitterSeparatorAria
+  cancelOwnedSession: (handleIndex: number) => void
+  cancelKeyboardSession: (handleIndex: number) => void
+  onHandlePointerDown: (handleIndex: number, e: React.PointerEvent<HTMLDivElement>) => void
+  onHandleKeyDown: (handleIndex: number, e: React.KeyboardEvent<HTMLDivElement>) => void
+  onHandleKeyUp: () => void
 }
 
 const SplitterContext = React.createContext<SplitterContextValue | null>(null)
@@ -89,6 +114,9 @@ export type SplitterPanelProps = PrimitiveProps<'div'> & {
 export function SplitterPanel({
   children,
   index = 0,
+  id: idProp,
+  collapsible = false,
+  collapsedSize = 0,
   className,
   style,
   ...props
@@ -97,9 +125,27 @@ export function SplitterPanel({
   const orientation = context?.orientation ?? 'horizontal'
   const size = context?.value[index] ?? 50
 
+  // Pin the first render's id: the React 17 CT shim mints a fresh useId
+  // per render, and the registration effect below keys off this value.
+  const autoId = React.useId().replace(/:/g, '')
+  const [stableAutoId] = React.useState(autoId)
+  const panelId = idProp ?? `splitter-panel-${stableAutoId}`
+  const panelRef = React.useRef<HTMLDivElement | null>(null)
+  const registerPanel = context?.registerPanel
+  useIsomorphicLayoutEffect(() => {
+    if (!registerPanel) return
+    return registerPanel(index, panelId, panelRef.current)
+  }, [registerPanel, index, panelId])
+
+  const isCollapsed = collapsible && layoutNumbersEqual(size, collapsedSize)
+
   return (
     <Div
+      ref={panelRef}
+      id={panelId}
       data-reference-splitter-panel=""
+      data-collapsed={isCollapsed ? '' : undefined}
+      data-resizing={context?.isResizing ? '' : undefined}
       flex={`0 0 ${size}%`}
       minWidth={orientation === 'horizontal' ? 0 : undefined}
       minHeight={orientation === 'vertical' ? 0 : undefined}
@@ -226,9 +272,11 @@ export function SplitterHandle({
   className,
   style,
   onKeyDown,
+  onKeyUp,
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onPointerCancel,
   onPointerEnter,
   onPointerLeave,
   onFocus,
@@ -238,112 +286,59 @@ export function SplitterHandle({
   const context = React.useContext(SplitterContext)
   if (!context) return null
 
-  const {
-    orientation,
-    value,
-    disabled: groupDisabled,
-    panelConstraints,
-    adjustHandle,
-    resizeFromOrigin,
-  } = context
+  const { orientation, disabled: groupDisabled, isResizing, resizingHandleIndex } = context
   const isDisabled = disabledProp ?? groupDisabled
-  const separatorAria = calculateSeparatorAriaValues({
-    layout: value,
-    panelConstraints,
-    panelIndex: index,
-  })
   const isHorizontal = orientation === 'horizontal'
+  const separatorAria = context.getSeparatorAria(index)
+  const primaryPanelId = context.getPanelId(context.primaryPanelIndex(index))
+  const isDragging = isResizing && resizingHandleIndex === index
 
-  const [isDragging, setIsDragging] = React.useState(false)
   const [isHovered, setIsHovered] = React.useState(false)
   const [isFocused, setIsFocused] = React.useState(false)
   const handleRef = React.useRef<HTMLDivElement>(null)
-  const dragStartRef = React.useRef<{
-    pointerPos: number
-    containerSize: number
-    originLayout: number[]
-  } | null>(null)
 
+  const cancelOwnedSession = context.cancelOwnedSession
+  const cancelKeyboardSession = context.cancelKeyboardSession
+  React.useEffect(() => {
+    if (isDisabled) cancelOwnedSession(index)
+    return () => cancelOwnedSession(index)
+  }, [isDisabled, cancelOwnedSession, index])
+
+  // Hover may go stale while captured (leave is suppressed mid-drag), so
+  // recompute it from the release position once the session settles.
   React.useEffect(() => {
     if (!isDragging) return
-
-    const handleWindowPointerMove = (e: PointerEvent) => {
-      if (!dragStartRef.current || isDisabled) return
-
-      const { pointerPos, containerSize, originLayout } = dragStartRef.current
-      const currentPos = isHorizontal ? e.clientX : e.clientY
-      const deltaPixels = currentPos - pointerPos
-      const deltaPercent = (deltaPixels / containerSize) * 100
-
-      resizeFromOrigin(index, originLayout, deltaPercent, false)
-    }
-
-    const handleWindowPointerUp = (e: PointerEvent) => {
-      if (dragStartRef.current) {
-        const { pointerPos, containerSize, originLayout } = dragStartRef.current
-        const currentPos = isHorizontal ? e.clientX : e.clientY
-        const deltaPixels = currentPos - pointerPos
-        const deltaPercent = (deltaPixels / containerSize) * 100
-
-        resizeFromOrigin(index, originLayout, deltaPercent, true)
+    const recomputeHover = (e: PointerEvent) => {
+      const rect = handleRef.current?.getBoundingClientRect()
+      if (!rect) {
+        setIsHovered(false)
+        return
       }
-
-      dragStartRef.current = null
-      setIsDragging(false)
-
-      if (handleRef.current) {
-        const rect = handleRef.current.getBoundingClientRect()
-        const isInside =
-          e.clientX >= rect.left &&
+      setIsHovered(
+        e.clientX >= rect.left &&
           e.clientX <= rect.right &&
           e.clientY >= rect.top &&
           e.clientY <= rect.bottom
-        setIsHovered(isInside)
-      }
+      )
     }
-
-    window.addEventListener('pointermove', handleWindowPointerMove)
-    window.addEventListener('pointerup', handleWindowPointerUp)
-    window.addEventListener('pointercancel', handleWindowPointerUp)
-
+    window.addEventListener('pointerup', recomputeHover)
+    window.addEventListener('pointercancel', recomputeHover)
     return () => {
-      window.removeEventListener('pointermove', handleWindowPointerMove)
-      window.removeEventListener('pointerup', handleWindowPointerUp)
-      window.removeEventListener('pointercancel', handleWindowPointerUp)
+      window.removeEventListener('pointerup', recomputeHover)
+      window.removeEventListener('pointercancel', recomputeHover)
     }
-  }, [isDragging, isDisabled, isHorizontal, index, resizeFromOrigin])
+  }, [isDragging])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || isDisabled) return
+    context.onHandleKeyDown(index, e)
+  }
 
-    const step = e.shiftKey ? 10 : 1
-
-    if (isHorizontal) {
-      if (e.key === 'ArrowRight') {
-        e.preventDefault()
-        adjustHandle(index, step)
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault()
-        adjustHandle(index, -step)
-      }
-    } else {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        adjustHandle(index, step)
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        adjustHandle(index, -step)
-      }
-    }
-
-    if (e.key === 'Home') {
-      e.preventDefault()
-      adjustHandle(index, -(value[index] ?? 50))
-    } else if (e.key === 'End') {
-      e.preventDefault()
-      adjustHandle(index, value[index + 1] ?? 50)
-    }
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyUp?.(e)
+    if (e.defaultPrevented) return
+    context.onHandleKeyUp()
   }
 
   const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -370,76 +365,26 @@ export function SplitterHandle({
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     onBlur?.(e)
     setIsFocused(false)
+    cancelKeyboardSession(index)
   }
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerDown?.(e)
     if (e.defaultPrevented || isDisabled) return
-
-    const containerEl = context.containerRef.current
-    if (!containerEl) return
-
-    const rect = containerEl.getBoundingClientRect()
-    const containerSize = isHorizontal ? rect.width : rect.height
-    if (containerSize <= 0) return
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId)
-    } catch {}
-
-    setIsDragging(true)
-    dragStartRef.current = {
-      pointerPos: isHorizontal ? e.clientX : e.clientY,
-      containerSize,
-      originLayout: [...value],
-    }
+    context.onHandlePointerDown(index, e)
   }
 
+  // Consumer-only: the Root session owns moves, release, and cancel.
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerMove?.(e)
-    if (!dragStartRef.current || isDisabled) return
-
-    const { pointerPos, containerSize, originLayout } = dragStartRef.current
-    const currentPos = isHorizontal ? e.clientX : e.clientY
-    const deltaPixels = currentPos - pointerPos
-    const deltaPercent = (deltaPixels / containerSize) * 100
-
-    resizeFromOrigin(index, originLayout, deltaPercent, false)
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerUp?.(e)
-    if (dragStartRef.current) {
-      const { pointerPos, containerSize, originLayout } = dragStartRef.current
-      const currentPos = isHorizontal ? e.clientX : e.clientY
-      const deltaPixels = currentPos - pointerPos
-      const deltaPercent = (deltaPixels / containerSize) * 100
-
-      resizeFromOrigin(index, originLayout, deltaPercent, true)
-    }
-
-    dragStartRef.current = null
-    setIsDragging(false)
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId)
-      }
-    } catch {}
-
-    if (handleRef.current) {
-      const rect = handleRef.current.getBoundingClientRect()
-      const isInside =
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      setIsHovered(isInside)
-    }
   }
 
-  const handleLostPointerCapture = () => {
-    dragStartRef.current = null
-    setIsDragging(false)
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerCancel?.(e)
   }
 
   const handleContextValue = React.useMemo<SplitterHandleContextValue>(
@@ -473,6 +418,7 @@ export function SplitterHandle({
     return (
       <>
         <Div
+          data-reference-splitter-handle-line=""
           pointerEvents="none"
           style={{
             width: isHorizontal ? 1 : '100%',
@@ -497,17 +443,19 @@ export function SplitterHandle({
         aria-valuenow={Math.round(separatorAria.valueNow)}
         aria-valuemin={separatorAria.valueMin}
         aria-valuemax={separatorAria.valueMax}
-        aria-orientation={orientation}
+        aria-controls={primaryPanelId || undefined}
+        aria-orientation={isHorizontal ? 'vertical' : 'horizontal'}
         data-reference-splitter-handle=""
         data-disabled={isDisabled ? '' : undefined}
         data-state={isDragging ? 'active' : isHovered ? 'hover' : 'idle'}
         data-hover={isHovered ? '' : undefined}
+        data-resizing={isDragging ? '' : undefined}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onLostPointerCapture={handleLostPointerCapture}
+        onPointerCancel={handlePointerCancel}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
         onFocus={handleFocus}
@@ -536,6 +484,12 @@ export function SplitterHandle({
       </Div>
     </SplitterHandleContext.Provider>
   )
+}
+
+interface ActivePointerSession {
+  handleIndex: number
+  pointerId: number
+  cancel: () => void
 }
 
 export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
@@ -586,6 +540,383 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       if (!constraintCheck.valid && constraintCheck.error) warnSplitter(constraintCheck.error)
     }
 
+    // Sessions outlive renders: callbacks, constraints, and value stay live
+    // through this ref so mid-gesture swaps apply to the captured origin.
+    const latestRef = React.useRef({ value, panelConstraints, onChange, onChangeEnd, isControlled })
+    latestRef.current = { value, panelConstraints, onChange, onChangeEnd, isControlled }
+
+    // Nearest-context Panel registry: ids for aria-controls plus owned
+    // elements for data-resizing. Nested groups register to their own Root.
+    const panelRegistryRef = React.useRef(
+      new Map<number, { id: string; element: HTMLDivElement | null }>()
+    )
+    const [partsRevision, setPartsRevision] = React.useState(0)
+    const registerPanel = React.useCallback(
+      (panelIndex: number, id: string, element: HTMLDivElement | null) => {
+        panelRegistryRef.current.set(panelIndex, { id, element })
+        setPartsRevision((r) => r + 1)
+        return () => {
+          const entry = panelRegistryRef.current.get(panelIndex)
+          if (entry && entry.id === id) panelRegistryRef.current.delete(panelIndex)
+          setPartsRevision((r) => r + 1)
+        }
+      },
+      []
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const getPanelId = React.useCallback(
+      (panelIndex: number) => panelRegistryRef.current.get(panelIndex)?.id,
+      [partsRevision]
+    )
+
+    const [dir, setDir] = React.useState<SplitterDirection>('ltr')
+    const updateDir = React.useCallback(() => {
+      setDir((prev) => {
+        const next = readDirection(containerRef.current)
+        return prev === next ? prev : next
+      })
+    }, [])
+    // Re-read every render so React-driven dir switches apply immediately.
+    useIsomorphicLayoutEffect(() => {
+      updateDir()
+    })
+    React.useEffect(() => {
+      updateDir()
+      const root = containerRef.current
+      if (!root || typeof MutationObserver === 'undefined') return
+      const target =
+        root.closest('[dir]') ?? (typeof document !== 'undefined' ? document.documentElement : null)
+      if (!target) return
+      const observer = new MutationObserver(updateDir)
+      observer.observe(target, { attributes: true, attributeFilter: ['dir'] })
+      return () => observer.disconnect()
+    }, [updateDir])
+    const isRtl = dir === 'rtl' && orientation === 'horizontal'
+
+    const primaryPanelIndex = React.useCallback(
+      (handleIndex: number) => (isRtl ? handleIndex + 1 : handleIndex),
+      [isRtl]
+    )
+
+    const getSeparatorAria = React.useCallback(
+      (handleIndex: number) => {
+        const aria = calculateSeparatorAriaValues({
+          layout: value,
+          panelConstraints,
+          panelIndex: primaryPanelIndex(handleIndex),
+        })
+        return { valueNow: aria.valueNow, valueMin: aria.valueMin, valueMax: aria.valueMax }
+      },
+      [value, panelConstraints, primaryPanelIndex]
+    )
+
+    // Restore memory, keyed by array position: every accepted expanded size
+    // overwrites, so Enter restores the newest feasible expanded size.
+    const rememberedSizesRef = React.useRef(new Map<number, number>())
+    useIsomorphicLayoutEffect(() => {
+      value.forEach((size, panelIndex) => {
+        const constraints = panelConstraints[panelIndex]
+        if (!constraints?.collapsible) return
+        const collapsedSize = constraints.collapsedSize ?? 0
+        if (!layoutNumbersEqual(size, collapsedSize) && size > collapsedSize) {
+          rememberedSizesRef.current.set(panelIndex, size)
+        }
+      })
+    })
+
+    const keyboardSessionRef = React.useRef<{
+      handleIndex: number
+      hasInteracted: boolean
+      lastLayout: number[]
+    }>({ handleIndex: -1, hasInteracted: false, lastLayout: [] })
+
+    const cancelKeyboardSession = React.useCallback((handleIndex: number) => {
+      if (keyboardSessionRef.current.handleIndex === handleIndex) {
+        keyboardSessionRef.current.hasInteracted = false
+      }
+    }, [])
+
+    const onHandleKeyDown = React.useCallback(
+      (handleIndex: number, e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (handleIndex < 0 || handleIndex >= value.length - 1) return
+        if (e.ctrlKey || e.metaKey || e.altKey) return
+
+        const isHorizontal = orientation === 'horizontal'
+        const step = e.shiftKey ? 10 : 1
+        let delta = 0
+        let handled = false
+
+        if (isHorizontal) {
+          if (e.key === 'ArrowRight') {
+            handled = true
+            delta = isRtl ? -step : step
+          } else if (e.key === 'ArrowLeft') {
+            handled = true
+            delta = isRtl ? step : -step
+          }
+        } else {
+          if (e.key === 'ArrowDown') {
+            handled = true
+            delta = step
+          } else if (e.key === 'ArrowUp') {
+            handled = true
+            delta = -step
+          }
+        }
+
+        if (e.key === 'Home') {
+          handled = true
+          delta = -(value[handleIndex] ?? 50)
+        } else if (e.key === 'End') {
+          handled = true
+          delta = value[handleIndex + 1] ?? 50
+        } else if (e.key === 'Enter') {
+          const primary = primaryPanelIndex(handleIndex)
+          const constraints = panelConstraints[primary]
+          if (constraints?.collapsible) {
+            handled = true
+            const currentSize = value[primary] ?? 50
+            const collapsedSize = constraints.collapsedSize ?? 0
+            const minSize = constraints.minSize ?? 0
+            let targetSize: number
+            if (layoutNumbersEqual(currentSize, collapsedSize)) {
+              const remembered = rememberedSizesRef.current.get(primary)
+              targetSize = Math.max(minSize, remembered ?? minSize)
+            } else {
+              rememberedSizesRef.current.set(primary, currentSize)
+              targetSize = collapsedSize
+            }
+            delta = isRtl ? currentSize - targetSize : targetSize - currentSize
+          }
+        }
+
+        if (!handled) return
+        e.preventDefault()
+
+        const nextLayout = adjustLayoutByDelta({
+          delta,
+          initialLayout: value,
+          panelConstraints,
+          pivotIndices: [handleIndex, handleIndex + 1],
+          prevLayout: value,
+          trigger: 'keyboard',
+        })
+        const hasChanged = nextLayout.some(
+          (entry, entryIndex) => !layoutNumbersEqual(entry, value[entryIndex] ?? 0)
+        )
+        if (!hasChanged) return
+        keyboardSessionRef.current = { handleIndex, hasInteracted: true, lastLayout: nextLayout }
+        if (!isControlled) {
+          setInternalValue(nextLayout)
+        }
+        onChange?.(nextLayout)
+      },
+      [isControlled, isRtl, onChange, orientation, panelConstraints, primaryPanelIndex, value]
+    )
+
+    const onHandleKeyUp = React.useCallback(() => {
+      if (keyboardSessionRef.current.hasInteracted) {
+        keyboardSessionRef.current.hasInteracted = false
+        latestRef.current.onChangeEnd?.(keyboardSessionRef.current.lastLayout)
+      }
+    }, [])
+
+    const [isResizing, setIsResizing] = React.useState(false)
+    const [resizingHandleIndex, setResizingHandleIndex] = React.useState<number | null>(null)
+    const activeSessionRef = React.useRef<ActivePointerSession | null>(null)
+
+    const cancelOwnedSession = React.useCallback(
+      (handleIndex: number) => {
+        cancelKeyboardSession(handleIndex)
+        const session = activeSessionRef.current
+        if (session && session.handleIndex === handleIndex) session.cancel()
+      },
+      [cancelKeyboardSession]
+    )
+
+    React.useEffect(() => {
+      return () => {
+        activeSessionRef.current?.cancel()
+        activeSessionRef.current = null
+      }
+    }, [])
+
+    const onHandlePointerDown = React.useCallback(
+      (handleIndex: number, e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.button !== 0) return
+        if (e.isPrimary === false) return
+        if (activeSessionRef.current !== null) return
+        if (handleIndex < 0 || handleIndex >= value.length - 1) return
+
+        const containerEl = containerRef.current
+        if (!containerEl) return
+
+        updateDir()
+        const isHorizontal = orientation === 'horizontal'
+        const sessionIsRtl = readDirection(containerEl) === 'rtl' && isHorizontal
+        const rect = containerEl.getBoundingClientRect()
+        const containerSize = isHorizontal ? rect.width : rect.height
+        if (containerSize <= 0) return
+
+        const handleEl = e.currentTarget
+        const pointerId = e.pointerId
+
+        try {
+          handleEl.setPointerCapture(pointerId)
+        } catch {}
+
+        handleEl.focus()
+
+        containerEl.setAttribute('data-resizing', '')
+        handleEl.setAttribute('data-resizing', '')
+        const ownPanels: HTMLElement[] = []
+        panelRegistryRef.current.forEach((entry) => {
+          if (entry.element) {
+            entry.element.setAttribute('data-resizing', '')
+            ownPanels.push(entry.element)
+          }
+        })
+
+        const ownerDoc =
+          handleEl.ownerDocument ?? (typeof document !== 'undefined' ? document : undefined)
+        const ownerWindow =
+          ownerDoc?.defaultView ?? (typeof window !== 'undefined' ? window : undefined)
+        const originalUserSelect = ownerDoc?.body?.style.userSelect ?? ''
+        const originalCursor = ownerDoc?.body?.style.cursor ?? ''
+        if (ownerDoc?.body) {
+          ownerDoc.body.style.userSelect = 'none'
+          ownerDoc.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize'
+        }
+
+        setIsResizing(true)
+        setResizingHandleIndex(handleIndex)
+
+        const originLayout = [...value]
+        const originPointer = isHorizontal ? e.clientX : e.clientY
+        let lastRequested = [...originLayout]
+        let emittedAny = false
+        let settled = false
+
+        const solveAndEmit = (deltaPercent: number) => {
+          const latest = latestRef.current
+          const nextLayout = adjustLayoutByDelta({
+            delta: deltaPercent,
+            initialLayout: originLayout,
+            panelConstraints: latest.panelConstraints,
+            pivotIndices: [handleIndex, handleIndex + 1],
+            prevLayout: latest.value,
+            trigger: 'mouse-or-touch',
+          })
+          // Compare against the last emitted request, not the controlled
+          // value: a parent that rejects every request must not receive the
+          // same clamped candidate twice.
+          const unchanged =
+            nextLayout.length === lastRequested.length &&
+            nextLayout.every((entry, entryIndex) =>
+              layoutNumbersEqual(entry, lastRequested[entryIndex] ?? 0)
+            )
+          if (unchanged) return
+          lastRequested = nextLayout
+          emittedAny = true
+          if (!latest.isControlled) {
+            setInternalValue(nextLayout)
+          }
+          latest.onChange?.(nextLayout)
+        }
+
+        const cleanup = (outcome: 'end' | 'cancel') => {
+          if (settled) return
+          settled = true
+          activeSessionRef.current = null
+
+          ownerWindow?.removeEventListener('pointermove', onPointerMove)
+          ownerWindow?.removeEventListener('pointerup', onPointerUp)
+          ownerWindow?.removeEventListener('pointercancel', onPointerCancel)
+          ownerWindow?.removeEventListener('mousedown', onSecondaryDown, true)
+          handleEl.removeEventListener('lostpointercapture', onLostCapture)
+          ownerWindow?.removeEventListener('blur', onWindowBlur)
+
+          try {
+            if (
+              typeof handleEl.hasPointerCapture === 'function' &&
+              handleEl.hasPointerCapture(pointerId)
+            ) {
+              handleEl.releasePointerCapture(pointerId)
+            }
+          } catch {}
+
+          if (ownerDoc?.body) {
+            ownerDoc.body.style.userSelect = originalUserSelect
+            ownerDoc.body.style.cursor = originalCursor
+          }
+
+          containerEl.removeAttribute('data-resizing')
+          handleEl.removeAttribute('data-resizing')
+          for (const panel of ownPanels) panel.removeAttribute('data-resizing')
+
+          setIsResizing(false)
+          setResizingHandleIndex(null)
+
+          if (outcome === 'end' && emittedAny) {
+            latestRef.current.onChangeEnd?.(lastRequested)
+          }
+        }
+
+        const toDeltaPercent = (clientX: number, clientY: number) => {
+          const currentPointer = isHorizontal ? clientX : clientY
+          const directed = sessionIsRtl
+            ? originPointer - currentPointer
+            : currentPointer - originPointer
+          return (directed / containerSize) * 100
+        }
+
+        const onPointerMove = (moveEv: PointerEvent) => {
+          if (moveEv.pointerId !== pointerId) return
+          // A move with no buttons means the release was missed: abort.
+          if (moveEv.buttons === 0) {
+            cleanup('cancel')
+            return
+          }
+          solveAndEmit(toDeltaPercent(moveEv.clientX, moveEv.clientY))
+        }
+
+        const onPointerUp = (upEv: PointerEvent) => {
+          if (upEv.pointerId !== pointerId) return
+          solveAndEmit(toDeltaPercent(upEv.clientX, upEv.clientY))
+          cleanup('end')
+        }
+
+        const onPointerCancel = (cancelEv: PointerEvent) => {
+          if (cancelEv.pointerId !== pointerId) return
+          cleanup('cancel')
+        }
+
+        const onLostCapture = () => {
+          cleanup('cancel')
+        }
+
+        const onWindowBlur = () => {
+          cleanup('cancel')
+        }
+
+        // A secondary click terminates the session at the last candidate;
+        // the still-held primary release afterwards is a no-op.
+        const onSecondaryDown = (secEv: MouseEvent) => {
+          if (secEv.button === 2) cleanup('end')
+        }
+
+        ownerWindow?.addEventListener('pointermove', onPointerMove)
+        ownerWindow?.addEventListener('pointerup', onPointerUp)
+        ownerWindow?.addEventListener('pointercancel', onPointerCancel)
+        ownerWindow?.addEventListener('mousedown', onSecondaryDown, true)
+        handleEl.addEventListener('lostpointercapture', onLostCapture)
+        ownerWindow?.addEventListener('blur', onWindowBlur)
+
+        activeSessionRef.current = { handleIndex, pointerId, cancel: () => cleanup('cancel') }
+      },
+      [orientation, updateDir, value]
+    )
+
     const handleRef = React.useCallback(
       (node: HTMLDivElement | null) => {
         containerRef.current = node
@@ -598,89 +929,43 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       [forwardedRef]
     )
 
-    const commitLayout = React.useCallback(
-      (nextValues: number[], isFinal: boolean) => {
-        if (!isControlled) {
-          setInternalValue(nextValues)
-        }
-        onChange?.(nextValues)
-        if (isFinal) {
-          onChangeEnd?.(nextValues)
-        }
-      },
-      [isControlled, onChange, onChangeEnd]
-    )
-
-    const adjustHandle = React.useCallback(
-      (handleIndex: number, deltaPercent: number) => {
-        if (handleIndex < 0 || handleIndex >= value.length - 1) return
-
-        const nextValues = adjustLayoutByDelta({
-          delta: deltaPercent,
-          initialLayout: value,
-          panelConstraints,
-          pivotIndices: [handleIndex, handleIndex + 1],
-          prevLayout: value,
-          trigger: 'keyboard',
-        })
-        // The solver returns the previous layout by reference when nothing
-        // could move: an exact no-op fires no callbacks.
-        if (nextValues === value) return
-        commitLayout(nextValues, true)
-      },
-      [value, panelConstraints, commitLayout]
-    )
-
-    const resizeFromOrigin = React.useCallback(
-      (handleIndex: number, originLayout: number[], deltaPercent: number, isFinal = false) => {
-        if (handleIndex < 0 || handleIndex >= value.length - 1) return
-
-        const nextValues = adjustLayoutByDelta({
-          delta: deltaPercent,
-          initialLayout: originLayout,
-          panelConstraints,
-          pivotIndices: [handleIndex, handleIndex + 1],
-          prevLayout: value,
-          trigger: 'mouse-or-touch',
-        })
-        // A zero-delta solve returns the origin copy, which is element-equal
-        // but not reference-equal: compare element-wise so a press without
-        // movement fires no callbacks. The final event of a session that did
-        // move still closes with onChangeEnd even though the last move already
-        // committed the final layout.
-        const unchangedVsCurrent =
-          nextValues === value ||
-          (nextValues.length === value.length &&
-            nextValues.every((entry, entryIndex) =>
-              layoutNumbersEqual(entry, value[entryIndex] ?? 0)
-            ))
-        if (unchangedVsCurrent) {
-          if (isFinal) {
-            const sessionMoved =
-              originLayout.length !== value.length ||
-              originLayout.some(
-                (entry, entryIndex) => !layoutNumbersEqual(entry, value[entryIndex] ?? 0)
-              )
-            if (sessionMoved) onChangeEnd?.(value)
-          }
-          return
-        }
-        commitLayout(nextValues, isFinal)
-      },
-      [value, panelConstraints, commitLayout, onChangeEnd]
-    )
-
     const contextValue = React.useMemo<SplitterContextValue>(
       () => ({
         orientation,
         value,
         disabled,
-        containerRef,
+        isRtl,
+        isResizing,
+        resizingHandleIndex,
         panelConstraints,
-        adjustHandle,
-        resizeFromOrigin,
+        primaryPanelIndex,
+        getPanelId,
+        registerPanel,
+        getSeparatorAria,
+        cancelOwnedSession,
+        cancelKeyboardSession,
+        onHandlePointerDown,
+        onHandleKeyDown,
+        onHandleKeyUp,
       }),
-      [orientation, value, disabled, panelConstraints, adjustHandle, resizeFromOrigin]
+      [
+        orientation,
+        value,
+        disabled,
+        isRtl,
+        isResizing,
+        resizingHandleIndex,
+        panelConstraints,
+        primaryPanelIndex,
+        getPanelId,
+        registerPanel,
+        getSeparatorAria,
+        cancelOwnedSession,
+        cancelKeyboardSession,
+        onHandlePointerDown,
+        onHandleKeyDown,
+        onHandleKeyUp,
+      ]
     )
 
     return (
@@ -689,6 +974,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           ref={handleRef}
           data-reference-splitter=""
           data-orientation={orientation}
+          data-resizing={isResizing ? '' : undefined}
           data-disabled={disabled ? '' : undefined}
           display="flex"
           flexDirection={orientation === 'vertical' ? 'column' : 'row'}
@@ -699,6 +985,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           style={style}
           {...props}
         >
+          <style>{SPLITTER_STYLES}</style>
           {children}
         </Div>
       </SplitterContext.Provider>
@@ -713,4 +1000,3 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 Splitter.Panel = SplitterPanel
 Splitter.Handle = SplitterHandle
 Splitter.Thumb = SplitterThumb
-

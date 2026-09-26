@@ -32,14 +32,14 @@ Visual polish is not this gate. No grid mode. No `SplitterThumb` dots.
 | Hot path | `--reference-splitter-panel-size` (and indexed vars); ARIA off the 60fps path |
 | Keys | 1% / 10%, Home/End, Enter collapse/restore |
 
-### Status (2026-09-10)
+### Status (2026-09-10; PATCHES items 1–4, 6–7 landed 2026-09-26)
 
 | | |
 | :--- | :--- |
 | Engine | Constraint solver wired; keyboard + drag + collapse-snap proven. |
 | Production | **Partial.** Uncontrolled retained; freeze API deltas open. |
-| Named `[x]` | 24 / 83 |
-| Playwright CT | 8 |
+| Named `[x]` | 47 / 83 |
+| Playwright CT | 36 |
 | Vitest | 16 |
 
 ### Gaps & incoherence
@@ -62,9 +62,10 @@ Still open (quarantine behavior deliberately not ported):
 - Writes `flexBasis: ${size}%` instead of `--reference-splitter-panel-size`
   / `--reference-splitter-N`.
 - Drag commits React per move (`SP-PERF-*` hot path untouched).
-- `SplitterThumb` chrome retained; no RTL direction wiring (`SP-KEY-05`);
-  no Enter collapse (`SP-COLLAPSE-01..03`); default min floor stays 5%,
-  not the freeze 0.
+- `SplitterThumb` chrome retained; default min floor stays 5%, not the
+  freeze 0. Pointer robustness, keyboard sessions, Enter collapse/restore,
+  RTL wiring, reduced-motion guard, and the a11y sweep landed via PATCHES
+  (matrix-only env/composition proofs excluded — no matrix home on branch).
 
 ### Vendor
 
@@ -79,13 +80,17 @@ re-render-every-move as the model; auto-save; `defaultSize`.
 ### Case index
 
 - `[x]` `SP-TYPE-01` (re-targeted to the current uncontrolled API), `SP-DOM-01`,
-  `SP-DOM-02`, `SP-DOM-03`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-06`,
-  `SP-END-01`, `SP-END-03`, `SP-KEY-04`, `SP-COLLAPSE-04`, `SP-COLLAPSE-07`,
-  `SP-COLLAPSE-08`, `SP-ENV-01` (SSR)
-- `[ ]` remaining `SP-DOM-*`, `SP-A11Y-01`, remaining `SP-CTRL-*`,
-  `SP-END-02`, `SP-END-04`, `SP-DRAG-*`, remaining `SP-KEY-*`, remaining
-  `SP-COLLAPSE-*`, `SP-DYNAMIC-*`, remaining `SP-ENV-*`, `SP-PERF-*`,
-  `SP-COMP-*`
+  `SP-DOM-02`, `SP-DOM-03`, `SP-DOM-05`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-06`,
+  `SP-END-01`, `SP-END-02`, `SP-END-03`, `SP-END-04`, `SP-KEY-02`, `SP-KEY-04`,
+  `SP-KEY-05`, `SP-KEY-07`, `SP-KEY-08`, `SP-DRAG-01`, `SP-DRAG-02`, `SP-DRAG-04`,
+  `SP-DRAG-05` (first slice), `SP-DRAG-06`, `SP-DRAG-07`, `SP-DRAG-08`,
+  `SP-DRAG-09`, `SP-DRAG-10`, `SP-DRAG-11` (first slice), `SP-DRAG-12`,
+  `SP-COLLAPSE-01`, `SP-COLLAPSE-02`, `SP-COLLAPSE-03`, `SP-COLLAPSE-04`,
+  `SP-COLLAPSE-07`, `SP-COLLAPSE-08`, `SP-COMP-01`, `SP-A11Y-01` (explicit-assertion
+  sweep; full green awaits FEATURES per-Handle disable), `SP-ENV-01` (SSR)
+- `[ ]` remaining `SP-DOM-*`, remaining `SP-CTRL-*`, `SP-DRAG-03`,
+  remaining `SP-KEY-*`, remaining `SP-COLLAPSE-*`, `SP-DYNAMIC-*`,
+  remaining `SP-ENV-*`, `SP-PERF-*`, remaining `SP-COMP-*`
 
 ### Work order
 
