@@ -14,54 +14,17 @@ proven, `FI-CSS-06` theme-blocked); visuals frozen, UX sign-off LAND. Crew log:
 
 ## Candidate features (quarantine-sourced)
 
-### 1. Nested-button focus exclusion — verdict: DEFERRED
+Moved out of this file — every item below is fully specified and
+test-pinnable, so all three now live in `PATCHES.md`:
 
-- **Source:** quarantine commit `3b2afd0b1`, `matrix/lib/tests/e2e/field.spec.ts`,
-  case IDs `FI-CSS-06` + `FI-COMP-04` step 7 (ring-on-opener/chip).
-- **API sketch:** no new props — a behavior contract: keyboard focus on a nested
-  `Button` (clear, opener, chip) keeps its own ring and never sets Field
-  `data-focus-visible` or the 2px bezel ring; asserted via Tab-to-button +
-  computed outline + `hasFocusVisible === false`.
-- **Why not landed:** fails on the current theme — `setupFocusVisible` sets
-  `data-focus-visible` on the Field host for *any* keyboard-focused descendant.
-  Quarantine fixed this inside the shared-theme files (SUSPECT Exhibit 3 drive-by,
-  outside Field scope), so landing scoped it out rather than enshrine wrong behavior.
-- **Revisit when:** the theme crew narrows focus propagation (re-derived cleanly, not
-  ported) so only text-input focus marks the Field host; then Field adopts the
-  `FI-CSS-06` + COMP-04 ring titles unchanged.
-- **Open questions:** none for Field — the contract text in TESTS.md is final; the
-  only question is theme-crew scheduling.
+- 1. Nested-button focus exclusion → `PATCHES.md` #1 (mechanical behavior
+  contract, theme-blocked).
+- 2. Hosted DateField typing/publish sessions → `PATCHES.md` #2 (mechanical
+  hosted proof, DateField-crew-routed).
+- 3. Hosted token-picker commit/remove flows → `PATCHES.md` #3 (mechanical
+  hosted proof, Combobox-crew-routed).
 
-### 2. Hosted DateField typing/publish sessions — verdict: DEFERRED
-
-- **Source:** quarantine commit `3b2afd0b1`, `matrix/lib/tests/e2e/field.spec.ts`,
-  case ID `FI-COMP-02` (fill + Enter steps).
-- **API sketch:** no Field API — a hosted proof: `fill('2026-10-15')` + Enter inside
-  the Field bezel publishes ISO `onChange` (`Value: 2026-10-15`) with the bezel still
-  wrapping input + trigger and the Calendar staying portalled. Landed suite keeps the
-  bezel subset only (wrap/trigger/portalled assertions).
-- **Why not landed:** typing and picking sessions are DateField-owned per TESTS.md
-  "Owned elsewhere"; quarantine's steps assert DateField behavior through a Field
-  fixture, and DateField.Range shared-bezel sessions (`DF-COMP-05`) ride the same proof.
-- **Revisit when:** the DateField crew proves its session contract; Field then re-adds
-  the two hosted fill/publish assertions (plus a Range two-inputs-one-bezel hosted title).
-- **Open questions:** none for Field — session semantics (dirty/commit/ISO) are
-  DateField product questions, not Field's.
-
-### 3. Hosted token-picker commit/remove flows — verdict: DEFERRED
-
-- **Source:** quarantine commit `3b2afd0b1`, `matrix/lib/tests/e2e/field.spec.ts`,
-  case ID `FI-COMP-04` steps 8–9 (option commit, chip removal).
-- **API sketch:** no Field API — a hosted proof: clicking option Bob fires one scalar
-  Combobox `onChange`, application chips update, Combobox renders no token nodes;
-  clicking chip Alice removes it with no Combobox `onChange`. Landed suite keeps the
-  Field-owned subset (label/embed/opener/chips/portal/invalid-bezel).
-- **Why not landed:** scalar commit and chip-state flows are Combobox-owned per TESTS.md
-  "Owned elsewhere"; quarantine's steps assert Combobox behavior through a Field fixture.
-- **Revisit when:** the Combobox crew proves commit/remove semantics; Field then re-adds
-  the two hosted flow assertions verbatim.
-- **Open questions:** none for Field — commit shape and chip-state ownership are
-  Combobox + application questions, not Field's.
+No candidate needed design; `FEATURES.md` holds zero Field items.
 
 ## Suspected gaps (no quarantine source)
 
@@ -206,14 +169,20 @@ proven, `FI-CSS-06` theme-blocked); visuals frozen, UX sign-off LAND. Crew log:
 
 ## Walkthrough notes for HQ
 
-- Most important: §1 nested-button focus exclusion (DEFERRED) — the only proven-missing
-  Field behavior; try it in Book (Default story, Tab to the clear button) and watch the
-  bezel ring when it shouldn't, then weigh theme-crew scheduling.
-- Second: §3 status beyond warning (DECLINED) — if HQ wants `status="error"`, that
-  reopens the two-owner disagreement the whole freeze exists to prevent; read the killer
-  reason before asking.
-- Third: §1–§3 of suspected gaps (Label/Error parts, provider, mirroring — all DECLINED)
-  — together they define what Field *is* (a CSS bezel, not a form provider); accepting
-  any one of them re-founds the component, so walk them as a set.
-- The two DEFERRED hosted proofs (§2 DateField sessions, §3 token-picker flows) need no
-  HQ product input — they are crew-routing slips, and they auto-close when those crews land.
+- Most important: `PATCHES.md` #1 nested-button focus exclusion — the only
+  proven-missing Field behavior; feel it in Book (Default story, Tab to the clear
+  button) and watch the bezel ring light when only the button ring should, then
+  weigh theme-crew scheduling.
+- Second: this file §"Suspected gaps" #3 status beyond warning (DECLINED) — if HQ
+  wants `status="error"`, that reopens the two-owner disagreement the whole freeze
+  exists to prevent; read the killer reason before asking.
+- Third: this file §"Suspected gaps" #1, #2, #4 (Label/Error parts, provider,
+  mirroring — all DECLINED) — together they define what Field *is* (a CSS bezel,
+  not a form provider); accepting any one of them re-founds the component, so walk
+  them as a set.
+- The two hosted proofs (`PATCHES.md` #2 DateField sessions, #3 token-picker
+  flows) need no HQ product input — they are crew-routing slips, and they auto-close
+  when those crews land; feel them in Book by typing a date / committing a token
+  inside the Field bezel once the owning crews prove their sessions.
+- `FEATURES.md` is empty on purpose: no open Field item proposes new API or needs
+  a product call, so there is nothing to weigh there.
