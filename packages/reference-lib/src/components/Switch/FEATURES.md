@@ -27,9 +27,11 @@ until HQ (or a reporting consumer) settles the API.
 - **What it does:** Gives low-specificity consumers a node handle to the rendered default thumb `span` for measurement or animation, without taking on authored-Thumb styling.
 - **API:** One of: `thumbRef?: Ref<HTMLElement>` prop on Root, a `Switch.useThumb()` accessor, or no API — document "author `Switch.Thumb` when you need the node" as the complete answer.
 - **Maintainer take:** Don't add until a consumer proves measurement/animation need — "author a Thumb" is the working answer today.
+- **HQ 2026-09-26:** Unsure — weird-use-case smell. HOLD for HQ walkthrough, do not implement.
 
 ### 5. `onChange` event access (from DECISIONS gap #3)
 
 - **What it does:** Gives consumers event context (modifier keys, timestamps, propagation) at request time, beyond today's boolean-only `onChange(checked)`.
 - **API:** Either keep boolean-only and bless the `onClick` + `onChange` pairing (`SW-ACT-05` pattern) as the event channel, or widen to `onChange(checked, event)` / a single request object.
 - **Maintainer take:** Don't widen on a hypothetical — bless the `onClick` pairing unless a consumer shows it insufficient.
+- **HQ 2026-09-26:** Approved — implement event access as widened `onChange(checked, event)`.

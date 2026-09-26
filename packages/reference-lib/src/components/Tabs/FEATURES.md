@@ -49,6 +49,8 @@ either global always-mounted law per `Tabs.md`, or a per-panel opt-in:
 
 **Maintainer take:** Needs a real consumer (cross-tab form state) before changing effects semantics — don't pay the compat cost speculatively.
 
+**HQ 2026-09-26:** Approved as per-panel OPT-IN ONLY (`keepMounted` prop) — never the default behavior. The global always-mounted law is DECLINED.
+
 ## 4. Focus rescue on programmatic hide (from DECISIONS candidate #5)
 
 **What it does:** When the controlled value changes and focus sits inside
