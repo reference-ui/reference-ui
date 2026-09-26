@@ -10,9 +10,9 @@ export {
   codeSeverityTag,
   isRegisteredNamespace,
   parseCode,
+  warningHintFor,
 } from '@reference-ui/rust/diagnostics'
 export type { DiagnosticCode } from '@reference-ui/rust/diagnostics'
-export { warningHintFor } from './hints.ts'
 export {
   dedupeDiagnostics,
   formatVerboseWarningLine,
