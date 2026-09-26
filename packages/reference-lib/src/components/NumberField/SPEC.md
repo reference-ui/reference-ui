@@ -33,15 +33,15 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | Form | hidden canonical when `name` set; no `setCustomValidity` for constraints |
 | Step | one lattice; Shift = `10 * step`; no wheel |
 
-### Status (2026-09-10)
+### Status (2026-09-10; proofs updated 2026-09-25)
 
 | | |
 | :--- | :--- |
 | Engine | Prototype spinbutton + live `Number()` clamp. |
 | Production | **No.** |
-| Named `[x]` | 0 / 148 |
-| Playwright | 4 titles exist; they assert spinbutton / visual chrome |
-| Vitest | 0 |
+| Named `[x]` | 24 / 148 |
+| Playwright | 16 CT (5 pre-existing snapshot + 11 assertion-only landing) |
+| Vitest | 16 contract IDs (15 tests: 13 behavior + 2 type) |
 
 ### Gaps & incoherence
 
@@ -68,13 +68,27 @@ smallStep/largeStep.
 
 ### Case index
 
+- `[x]` `NF-TYPE-01`, `NF-TYPE-02`, `NF-TYPE-03`, `NF-DOM-05`,
+  `NF-DOM-06`, `NF-MATH-01`, `NF-MATH-02`, `NF-MATH-07`, `NF-MATH-08`,
+  `NF-MATH-14`, `NF-EDIT-04`, `NF-EDIT-13`, `NF-KEY-01`, `NF-KEY-02`,
+  `NF-KEY-03`, `NF-KEY-04`, `NF-KEY-05`, `NF-KEY-07`, `NF-STEP-01`,
+  `NF-STEP-02`, `NF-STEP-09`, `NF-STEP-11`, `NF-ENV-01`, `NF-ENV-05`
+  (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
+  to the current spinbutton + uncontrolled engine: spinbutton kept per
+  frozen visuals; `defaultValue` + optional `locale` preserved per recon
+  exhibit 1; ±Infinity bounds legal as unbounded sentinels; lattice /
+  snap / dirty-session / Intl meanings NOT ported. `NF-STEP-02` native
+  click only; `NF-STEP-11` root + authored disabled only; `NF-ENV-05`
+  StrictMode-on-19 only.)
 - `[~]` `NF-DOM-01` — title exists, asserts spinbutton (rewrite)
-- `[ ]` `NF-TYPE-*`, remaining `NF-DOM-*`, `NF-PARSE-*`, `NF-FORMAT-*`,
-  `NF-MATH-*`, `NF-EDIT-*`, `NF-COMMIT-*`, `NF-KEY-*`, `NF-STEP-*`,
-  `NF-FORM-*`, `NF-A11Y-*`, `NF-SURF-01`, `NF-DYNAMIC-*`, `NF-ENV-*`,
-  `NF-COMP-*`, `NF-MANUAL-*` (4 manual release gates)
+- `[ ]` remaining `NF-TYPE-*`, `NF-DOM-*`, `NF-PARSE-*`, `NF-FORMAT-*`,
+  remaining `NF-MATH-*` / `NF-EDIT-*`, `NF-COMMIT-*`, remaining `NF-KEY-*`
+  / `NF-STEP-*`, `NF-FORM-*`, `NF-A11Y-*`, `NF-SURF-01`, `NF-DYNAMIC-*`,
+  remaining `NF-ENV-*`, `NF-COMP-*`, `NF-MANUAL-*` (4 manual release gates)
 
 Not catalog: `NF-DOM-02`–`04` visual. Drop or rehome after freeze.
+Not catalog: uncontrolled-stepping CT (no freeze ID — uncontrolled
+preserved by landing law).
 
 ### Work order
 

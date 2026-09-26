@@ -43,3 +43,36 @@ export const DisabledFixture = () => (
     </Div>
   </ReferenceLibrary>
 )
+
+export const DecimalFixture = () => {
+  const [value, setValue] = React.useState<number | null>(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <NumberField
+          data-testid="decimal-number-field"
+          value={value}
+          onChange={setValue}
+          step={0.1}
+        >
+          <NumberField.Decrement data-testid="decimal-btn-decrement" />
+          <NumberField.Input data-testid="decimal-number-field-input" />
+          <NumberField.Increment data-testid="decimal-btn-increment" />
+        </NumberField>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const UncontrolledFixture = () => (
+  <ReferenceLibrary>
+    <Div p="4r" maxW="80r">
+      <NumberField data-testid="uncontrolled-number-field" defaultValue={5}>
+        <NumberField.Decrement data-testid="uncontrolled-btn-decrement" />
+        <NumberField.Input data-testid="uncontrolled-number-field-input" />
+        <NumberField.Increment data-testid="uncontrolled-btn-increment" />
+      </NumberField>
+    </Div>
+  </ReferenceLibrary>
+)

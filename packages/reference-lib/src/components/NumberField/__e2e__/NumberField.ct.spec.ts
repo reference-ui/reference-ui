@@ -240,4 +240,218 @@ test.describe('NumberField CT', () => {
     await snap(page, 'numberfield-disabled')
     await snap(root, 'numberfield-disabled-root', { maxDiffPixelRatio: 0.001 })
   })
+
+  test('NF-KEY-01: unmodified Up and Down request one step per keydown', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(input).toHaveValue('41')
+    await expect(display).toHaveText('Numeric Value: 41')
+    await page.keyboard.press('ArrowUp')
+    await page.keyboard.press('ArrowUp')
+    await expect(input).toHaveValue('43')
+    await expect(display).toHaveText('Numeric Value: 43')
+  })
+
+  test('NF-KEY-02: Shift+Arrow uses the fixed coarse delta 10 * step', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.focus()
+    await page.keyboard.press('Shift+ArrowUp')
+    await expect(input).toHaveValue('52')
+    await expect(display).toHaveText('Numeric Value: 52')
+    await page.keyboard.press('Shift+ArrowDown')
+    await expect(input).toHaveValue('42')
+    await expect(display).toHaveText('Numeric Value: 42')
+  })
+
+  test('NF-KEY-03: Alt-modified arrows remain completely native and unhandled', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.focus()
+    for (const mod of ['Alt', 'Control', 'Meta'] as const) {
+      await page.keyboard.down(mod)
+      await page.keyboard.press('ArrowUp')
+      await page.keyboard.press('ArrowDown')
+      await page.keyboard.up(mod)
+    }
+    await expect(input).toHaveValue('42')
+    await expect(display).toHaveText('Numeric Value: 42')
+  })
+
+  test('NF-KEY-04: Home and End target supplied bounds only when unmodified and present', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.focus()
+    await page.keyboard.press('Home')
+    await expect(input).toHaveValue('0')
+    await expect(display).toHaveText('Numeric Value: 0')
+    await page.keyboard.press('End')
+    await expect(input).toHaveValue('100')
+    await expect(display).toHaveText('Numeric Value: 100')
+
+    // Modified Home/End stay native: value unchanged.
+    await page.keyboard.press('Shift+Home')
+    await expect(input).toHaveValue('100')
+    await expect(display).toHaveText('Numeric Value: 100')
+  })
+
+  test('NF-KEY-04: Home and End are native when bounds are absent', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/UncontrolledFixture')
+
+    const input = page.getByTestId('uncontrolled-number-field-input')
+
+    await input.focus()
+    await page.keyboard.press('Home')
+    await expect(input).toHaveValue('5')
+    await page.keyboard.press('End')
+    await expect(input).toHaveValue('5')
+  })
+
+  test('NF-KEY-05: Unsupported keys remain native and never change the value', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.focus()
+    await page.keyboard.press('a')
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Tab')
+    await expect(input).toHaveValue('42')
+    await expect(display).toHaveText('Numeric Value: 42')
+  })
+
+  test('NF-STEP-01: Named steppers control the real Input without adding a tab stop', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const btnInc = page.getByTestId('btn-increment')
+    const btnDec = page.getByTestId('btn-decrement')
+
+    await expect(btnInc).toHaveAttribute('tabindex', '-1')
+    await expect(btnDec).toHaveAttribute('tabindex', '-1')
+
+    // Tab reaches the single Input stop, then leaves past the steppers.
+    await input.evaluate(node => {
+      const btn = document.createElement('button')
+      btn.id = '__test_tab_shim__'
+      btn.textContent = 'shim'
+      node.parentNode?.insertBefore(btn, node)
+      btn.focus()
+    })
+    await page.keyboard.press('Tab')
+    await expect(input).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(input).not.toBeFocused()
+    await expect(btnInc).not.toBeFocused()
+    await expect(btnDec).not.toBeFocused()
+    await page.locator('#__test_tab_shim__').evaluate(btn => btn?.remove()).catch(() => {})
+  })
+
+  test('NF-STEP-09: Secondary and auxiliary pointer buttons never start stepping', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const btnInc = page.getByTestId('btn-increment')
+    const display = page.getByTestId('number-field-value-display')
+
+    // Synthetic non-primary activation: no step, no focus steal.
+    await btnInc.evaluate(btn =>
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 1 }))
+    )
+    await btnInc.evaluate(btn =>
+      btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 2 }))
+    )
+    await expect(input).toHaveValue('42')
+    await expect(display).toHaveText('Numeric Value: 42')
+    await expect(input).not.toBeFocused()
+  })
+
+  test('NF-MATH-07: Decimal stepper clicks remove floating drift in the UI', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/DecimalFixture')
+
+    const input = page.getByTestId('decimal-number-field-input')
+    const btnInc = page.getByTestId('decimal-btn-increment')
+
+    await btnInc.click()
+    await btnInc.click()
+    await btnInc.click()
+    await expect(input).toHaveValue('0.3')
+  })
+
+  test('NF-EDIT-04: Clearing requests null as a live candidate', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const input = page.getByTestId('number-field-input')
+    const display = page.getByTestId('number-field-value-display')
+
+    await input.fill('')
+    await expect(input).toHaveValue('')
+    await expect(display).toHaveText('Numeric Value: None')
+  })
+
+  test('uncontrolled defaultValue steps without a controlled parent (no freeze ID: uncontrolled preserved)', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/UncontrolledFixture')
+
+    const input = page.getByTestId('uncontrolled-number-field-input')
+    const btnInc = page.getByTestId('uncontrolled-btn-increment')
+    const btnDec = page.getByTestId('uncontrolled-btn-decrement')
+
+    await expect(input).toHaveValue('5')
+    await btnInc.click()
+    await expect(input).toHaveValue('6')
+    await btnDec.click()
+    await btnDec.click()
+    await expect(input).toHaveValue('4')
+    await input.focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(input).toHaveValue('5')
+  })
 })

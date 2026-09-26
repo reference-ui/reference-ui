@@ -4,6 +4,21 @@ import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visib
 
 setupFocusVisible()
 
+// Float-drift cleanup ported verbatim from quarantine (NF-MATH-07/08/14):
+// snaps ordinary decimal stepping (0.1 + 0.2) back to the representable
+// value only when within float epsilon, and canonicalizes -0 to 0.
+function cleanFloat(value: number): number {
+  if (!Number.isFinite(value)) return value
+  const rounded = parseFloat(value.toPrecision(15))
+  if (
+    Math.abs(rounded - value) <=
+    Math.min(Number.EPSILON * Math.max(1, Math.abs(value)), 1e-10)
+  ) {
+    return Object.is(rounded, -0) ? 0 : rounded
+  }
+  return Object.is(value, -0) ? 0 : value
+}
+
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: number | null
   defaultValue?: number | null
@@ -39,6 +54,9 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       className,
       style,
       onKeyDown: userOnKeyDown,
+      onChange: userOnChange,
+      onFocus: userOnFocus,
+      onBlur: userOnBlur,
       ...props
     },
     ref
@@ -47,6 +65,27 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
     if (!context) return null
 
     const { value, min, max, disabled, handleInputChange, handleKeyDown, inputRef } = context
+
+    // Managed authority (NF-TYPE-03, NF-DOM-06): behavior-owned props are
+    // stripped so conflicting consumer casts cannot break the spinbutton.
+    // Unrelated props (readOnly, aria-invalid, aria-label, data-*) pass
+    // through untouched (NF-DOM-05).
+    const {
+      type: _managedType,
+      role: _managedRole,
+      value: _managedValue,
+      defaultValue: _managedDefaultValue,
+      inputMode: _managedInputMode,
+      min: _managedMin,
+      max: _managedMax,
+      step: _managedStep,
+      disabled: _managedDisabled,
+      'aria-valuenow': _managedNow,
+      'aria-valuemin': _managedMinAttr,
+      'aria-valuemax': _managedMaxAttr,
+      'aria-valuetext': _managedText,
+      ...restProps
+    } = props as Record<string, unknown>
 
     const setInputRef = React.useCallback(
       (node: HTMLInputElement | null) => {
@@ -69,6 +108,15 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       }
     }
 
+    // Consumer edit handlers run first in native order; cancellation at the
+    // cancelable boundary suppresses managed work (NF-EDIT-13, NF-KEY-07).
+    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      userOnChange?.(e)
+      if (!e.defaultPrevented) {
+        handleInputChange(e)
+      }
+    }
+
     return (
       <Input
         ref={setInputRef}
@@ -80,11 +128,13 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
         aria-valuemax={max}
         disabled={disabled}
         value={value !== null ? String(value) : ''}
-        onChange={handleInputChange}
+        onChange={onChange}
         onKeyDown={onKeyDown}
+        onFocus={userOnFocus}
+        onBlur={userOnBlur}
         className={className}
         style={style}
-        {...props}
+        {...restProps}
       />
     )
   }
@@ -100,15 +150,25 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
       style,
       onClick,
       onPointerDown,
+      type: _managedType,
+      tabIndex: _managedTabIndex,
+      disabled: authoredDisabled,
       ...props
     },
     ref
   ) {
     const context = React.useContext(NumberFieldContext)
 
+    // Capability follows root state or authored disabled (NF-STEP-11);
+    // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
+    // remains consumer-overridable via the trailing spread.
+    const isDisabled = context?.disabled || authoredDisabled || false
+
     const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
       onPointerDown?.(e)
-      if (!e.defaultPrevented && !context?.disabled) {
+      // Secondary/auxiliary buttons stay native, never step (NF-STEP-09).
+      if (e.button !== 0) return
+      if (!e.defaultPrevented && !isDisabled) {
         e.preventDefault()
         context?.focusInput()
       }
@@ -116,7 +176,8 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e)
-      if (!e.defaultPrevented && !context?.disabled) {
+      if (e.button !== 0) return
+      if (!e.defaultPrevented && !isDisabled) {
         context?.increment()
         context?.focusInput()
       }
@@ -128,7 +189,7 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
         type="button"
         tabIndex={-1}
         aria-label="Increment"
-        disabled={context?.disabled}
+        disabled={isDisabled}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         height="100%"
@@ -143,11 +204,11 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
         justifyContent="center"
         flexShrink={0}
         color="design.text.base"
-        cursor={context?.disabled ? 'not-allowed' : 'pointer'}
-        opacity={context?.disabled ? 0.5 : 1}
+        cursor={isDisabled ? 'not-allowed' : 'pointer'}
+        opacity={isDisabled ? 0.5 : 1}
         outline="none"
-        _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
-        _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _hover={!isDisabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+        _active={!isDisabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
         _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
         className={className}
         style={{
@@ -179,15 +240,25 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
       style,
       onClick,
       onPointerDown,
+      type: _managedType,
+      tabIndex: _managedTabIndex,
+      disabled: authoredDisabled,
       ...props
     },
     ref
   ) {
     const context = React.useContext(NumberFieldContext)
 
+    // Capability follows root state or authored disabled (NF-STEP-11);
+    // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
+    // remains consumer-overridable via the trailing spread.
+    const isDisabled = context?.disabled || authoredDisabled || false
+
     const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
       onPointerDown?.(e)
-      if (!e.defaultPrevented && !context?.disabled) {
+      // Secondary/auxiliary buttons stay native, never step (NF-STEP-09).
+      if (e.button !== 0) return
+      if (!e.defaultPrevented && !isDisabled) {
         e.preventDefault()
         context?.focusInput()
       }
@@ -195,7 +266,8 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e)
-      if (!e.defaultPrevented && !context?.disabled) {
+      if (e.button !== 0) return
+      if (!e.defaultPrevented && !isDisabled) {
         context?.decrement()
         context?.focusInput()
       }
@@ -207,7 +279,7 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
         type="button"
         tabIndex={-1}
         aria-label="Decrement"
-        disabled={context?.disabled}
+        disabled={isDisabled}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         height="100%"
@@ -222,11 +294,11 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
         justifyContent="center"
         flexShrink={0}
         color="design.text.base"
-        cursor={context?.disabled ? 'not-allowed' : 'pointer'}
-        opacity={context?.disabled ? 0.5 : 1}
+        cursor={isDisabled ? 'not-allowed' : 'pointer'}
+        opacity={isDisabled ? 0.5 : 1}
         outline="none"
-        _hover={!context?.disabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
-        _active={!context?.disabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
+        _hover={!isDisabled ? { bg: 'ui.button.mutedBackground', color: 'design.text.base' } : undefined}
+        _active={!isDisabled ? { bg: 'ui.table.row.mutedBackground' } : undefined}
         _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
         className={className}
         style={{
@@ -265,6 +337,29 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     },
     ref
   ) {
+    // Runtime validation of numeric props (NF-MATH-02, adapted): fail fast
+    // on NaN/unusable props instead of poisoning state. Unlike quarantine,
+    // ±Infinity bounds stay legal — they are this engine's unbounded
+    // sentinels (the defaults). Render-phase pure checks: StrictMode-safe.
+    if (valueProp !== undefined && valueProp !== null && !Number.isFinite(valueProp)) {
+      throw new Error('Reference UI: NumberField "value" must be a finite number or null.')
+    }
+    if (defaultValue !== null && !Number.isFinite(defaultValue)) {
+      throw new Error('Reference UI: NumberField "defaultValue" must be a finite number or null.')
+    }
+    if (Number.isNaN(min)) {
+      throw new Error('Reference UI: NumberField "min" must be a number.')
+    }
+    if (Number.isNaN(max)) {
+      throw new Error('Reference UI: NumberField "max" must be a number.')
+    }
+    if (min > max) {
+      throw new Error('Reference UI: NumberField "min" must be less than or equal to "max".')
+    }
+    if (!Number.isFinite(step) || step <= 0) {
+      throw new Error('Reference UI: NumberField "step" must be a finite number greater than 0.')
+    }
+
     const isControlled = valueProp !== undefined
     const [internalValue, setInternalValue] = React.useState<number | null>(defaultValue)
     const value = isControlled ? valueProp : internalValue
@@ -287,7 +382,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       (factor = 1) => {
         if (disabled) return
         const current = value ?? 0
-        const nextVal = Math.min(max, current + step * factor)
+        const nextVal = Math.min(max, cleanFloat(current + step * factor))
         if (!isControlled) {
           setInternalValue(nextVal)
         }
@@ -300,7 +395,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       (factor = 1) => {
         if (disabled) return
         const current = value ?? 0
-        const nextVal = Math.max(min, current - step * factor)
+        const nextVal = Math.max(min, cleanFloat(current - step * factor))
         if (!isControlled) {
           setInternalValue(nextVal)
         }
@@ -333,16 +428,24 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         const factor = e.shiftKey ? 10 : 1
 
         if (e.key === 'ArrowUp') {
+          // Alt/Ctrl/Meta-modified arrows stay native (NF-KEY-03).
+          if (e.altKey || e.ctrlKey || e.metaKey) return
           e.preventDefault()
           increment(factor)
         } else if (e.key === 'ArrowDown') {
+          if (e.altKey || e.ctrlKey || e.metaKey) return
           e.preventDefault()
           decrement(factor)
-        } else if (e.key === 'Home' && min !== -Infinity) {
+        } else if (e.key === 'Home') {
+          // Home/End target supplied bounds only when unmodified (NF-KEY-04).
+          if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
+          if (min === -Infinity) return
           e.preventDefault()
           if (!isControlled) setInternalValue(min)
           onChange?.(min)
-        } else if (e.key === 'End' && max !== Infinity) {
+        } else if (e.key === 'End') {
+          if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
+          if (max === Infinity) return
           e.preventDefault()
           if (!isControlled) setInternalValue(max)
           onChange?.(max)
@@ -370,15 +473,18 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
 
     return (
       <NumberFieldContext.Provider value={contextValue}>
+        {/* Consumer props spread first: managed role/data authority
+            defeats conflicting casts (NF-DOM-06); unrelated props and
+            StyleProps pass through (NF-DOM-05). */}
         <Div
           ref={ref}
+          {...props}
           role="group"
           data-reference-field=""
           data-reference-number-field=""
           data-disabled={disabled ? '' : undefined}
           className={className}
           style={style}
-          {...props}
         >
           {children ?? (
             <>
