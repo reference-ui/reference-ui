@@ -41,26 +41,21 @@ Visual polish is not this gate. No filtering helpers.
 | :--- | :--- |
 | Engine | Hardened prototype. Mounted-only active IDs, native Home/End/PageUp/PageDown, Escape revert, IME guards, dev anatomy diagnostics. |
 | Production | **No** (freeze features still out: modes, custom values, adapters). |
-| Named `[x]` | 49 / 96 in-dir (+ 6 `[~]` honest partials; matrix layer out of scope) |
-| CT | 25 specs (2 pre-existing on frozen snapshots + 23 new, 1 new baseline) |
-| Vitest | 41 tests, all ID'd (5 pre-existing, 1 re-targeted to catalog) |
+| Named `[x]` | 58 / 96 in-dir (+ 5 `[~]` honest partials; matrix layer out of scope) |
+| CT | 36 specs (2 pre-existing on frozen snapshots + 34 new, 1 new baseline) |
+| Vitest | 56 tests, all ID'd (5 pre-existing, 1 re-targeted to catalog) |
 
 ### Gaps & incoherence
 
 - Uncontrolled `defaultValue` / `defaultInputValue` / `defaultOpen` kept
   deliberately (mission law: uncontrolled-mode deletion is forbidden; pinned
   by an API freeze test). The freeze narrative wants controlled-only.
-- No `autocomplete` matrix, `allowCustomValue`, `closeOnBlur`, `loading`,
+- No `autocomplete` matrix, `allowCustomValue`, `loading`,
   `virtualFocus` / `VirtualItem` / grid adapter, Tree bridge, `onEscape`.
-- Focus opens the popup — fights deliberate open / closeOnBlur.
 - No async contract: `loading?` → `aria-busy` on the listbox and an empty /
   "no results" string routed through `announce()`, not a private live region.
-- Select-only Trigger has no keyboard handling (arrows/typeahead/Home/End):
-  mouse + native Enter/Space toggle only.
-- Pointer-leave resets active to the selected value (Listbox-owned); the
-  catalog wants pointer-derived state cleared (needs `activeSource`).
-- Enter/Tab commit the active option even when the text is unmatched
-  (needs custom-value decision semantics).
+- Enter commits any mounted active option even when the text is unmatched
+  (needs #2 custom-value decision semantics); Tab is source-gated.
 - The pre-existing CT `displays checkmark indicator...` stays a frozen
   visual guard with no catalog ID (rehomed, not dropped).
 
@@ -88,15 +83,17 @@ Proven in-dir (`Combobox.test.tsx` Vitest + `__e2e__` CT):
 - `[x]` `CB-EDIT-01`, `CB-EDIT-02`, `CB-EDIT-03`, `CB-EDIT-05`, `CB-EDIT-06`,
   `CB-EDIT-07`, `CB-EDIT-08`, `CB-EDIT-09`
 - `[~]` `CB-EDIT-04` (ancestor-scroll dismiss only; no input self-scroll half)
-- `[x]` `CB-NAV-01`, `CB-NAV-02`, `CB-NAV-03`, `CB-NAV-04`, `CB-NAV-06`,
-  `CB-NAV-07`, `CB-NAV-08`
-- `[~]` `CB-NAV-05` (hover half only; leave-clear is Listbox-owned)
+- `[x]` `CB-NAV-01`, `CB-NAV-02`, `CB-NAV-03`, `CB-NAV-04`, `CB-NAV-05`,
+  `CB-NAV-06`, `CB-NAV-07`, `CB-NAV-08`
 - `[~]` `CB-MODE-02` (default list behavior only; no `autocomplete` prop)
-- `[x]` `CB-COMMIT-01`, `CB-COMMIT-03`, `CB-COMMIT-04`, `CB-COMMIT-06`,
-  `CB-COMMIT-08`, `CB-COMMIT-09`
-- `[x]` `CB-REVERT-01`, `CB-REVERT-04`, `CB-REVERT-05`, `CB-REVERT-06`
-- `[x]` `CB-SELECT-01`, `CB-SELECT-06`, `CB-SELECT-07`
-- `[~]` `CB-SELECT-04` (native Enter toggle only; no keyboard commit path)
+- `[x]` `CB-COMMIT-01`, `CB-COMMIT-03`, `CB-COMMIT-04`, `CB-COMMIT-05`,
+  `CB-COMMIT-06`, `CB-COMMIT-07`, `CB-COMMIT-08`, `CB-COMMIT-09`
+- `[x]` `CB-REVERT-01`, `CB-REVERT-03`, `CB-REVERT-04`, `CB-REVERT-05`,
+  `CB-REVERT-06`, `CB-REVERT-07`
+- `[x]` `CB-SELECT-01`, `CB-SELECT-02`, `CB-SELECT-03`, `CB-SELECT-04`,
+  `CB-SELECT-05`, `CB-SELECT-06`, `CB-SELECT-07`
+- `[~]` `CB-SELECT-08` (non-virtual Home/End only; `scrollToIndex` wait needs
+  `virtualFocus`)
 - `[x]` `CB-CLOSE-01`, `CB-CLOSE-02`, `CB-CLOSE-04`
 - `[x]` `CB-ENV-01`, `CB-ENV-02`, `CB-ENV-05`
 
@@ -106,12 +103,10 @@ flows. `LB-CB-02` (windowed) needs `virtualFocus` — not proven.
 
 Not proven (need freeze features outside this mission): `CB-DOM-02`,
 `CB-DOM-03` (Trigger `aria-haspopup` variants), `CB-DOM-04`, `CB-OPEN-03`,
-`CB-COMMIT-02`, `CB-COMMIT-05`, `CB-COMMIT-07`, `CB-REVERT-02`,
-`CB-REVERT-03`, `CB-REVERT-07`, `CB-CUSTOM-*`, `CB-MODE-01`, `CB-MODE-03`,
-`CB-MODE-04`, `CB-MODE-05`, `CB-MODE-06`, `CB-MODE-07`, `CB-SELECT-02`,
-`CB-SELECT-03`, `CB-SELECT-05`, `CB-SELECT-08`, `CB-VIRT-*`, `CB-TREE-01`,
-`CB-ADAPTER-*`, `CB-CLOSE-03`, `CB-CLOSE-05`, `CB-ENV-03`, `CB-ENV-04`,
-`CB-COMP-*`.
+`CB-COMMIT-02`, `CB-REVERT-02`, `CB-CUSTOM-*`, `CB-MODE-01`, `CB-MODE-03`,
+`CB-MODE-04`, `CB-MODE-05`, `CB-MODE-06`, `CB-MODE-07`, `CB-VIRT-*`,
+`CB-TREE-01`, `CB-ADAPTER-*`, `CB-CLOSE-03`, `CB-CLOSE-05`, `CB-ENV-03`,
+`CB-ENV-04`, `CB-COMP-*`.
 
 ### Work order
 

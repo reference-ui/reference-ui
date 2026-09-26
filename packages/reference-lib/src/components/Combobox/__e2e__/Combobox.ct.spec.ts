@@ -13,7 +13,7 @@ async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
 }
 
 test.describe('Combobox CT', () => {
-  test('renders combobox input, opens popover on focus/click, selects option and closes', async ({
+  test('renders combobox input, opens popover on click, selects option and closes', async ({
     mount,
     page,
   }) => {
@@ -30,7 +30,7 @@ test.describe('Combobox CT', () => {
     await page.waitForTimeout(300)
     await snap(page, 'combobox-resting')
 
-    // Focus input -> opens popover
+    // Click input -> opens popover (focus alone never opens)
     await input.click()
     await expect(input).toHaveAttribute('aria-expanded', 'true')
     await expect(popover).toBeVisible()
@@ -193,14 +193,22 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await expect(before).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(input).toBeFocused()
-    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    // #11: focus alone never opens.
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
 
+    // Closed ArrowDown opens with first enabled pending; the next arrow
+    // derives keyboard intent, which Tab commits while traversing natively.
     await page.keyboard.press('ArrowDown')
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
     const apple = page.getByTestId('tab-opt-apple')
     await expectActiveDescendant(input, apple)
 
+    await page.keyboard.press('ArrowDown')
+    const banana = page.getByTestId('tab-opt-banana')
+    await expectActiveDescendant(input, banana)
+
     await page.keyboard.press('Tab')
-    await expect(page.getByTestId('tab-value-display')).toHaveText('Selected: apple')
+    await expect(page.getByTestId('tab-value-display')).toHaveText('Selected: banana')
     await expect(after).toBeFocused()
     await expect(input).toHaveAttribute('aria-expanded', 'false')
   })
@@ -229,13 +237,13 @@ test.describe('Combobox quarantine reconciliation CT', () => {
 
     const input = page.getByTestId('fixed-input')
     await input.focus()
-    // Focus requests open but the fixed-closed parent stays shut.
-    expect(await readLog(page, 'fixed-log')).toEqual(['open'])
+    // #11: focus never requests open.
+    expect(await readLog(page, 'fixed-log')).toEqual([])
     await expect(input).toHaveAttribute('aria-expanded', 'false')
 
     await page.keyboard.press('ArrowDown')
     // ArrowDown adds exactly one request; focus and text are undisturbed.
-    expect(await readLog(page, 'fixed-log')).toEqual(['open', 'open'])
+    expect(await readLog(page, 'fixed-log')).toEqual(['open'])
     await expect(input).toBeFocused()
     await expect(input).toHaveValue('Hello')
     await expect(input).toHaveAttribute('aria-expanded', 'false')
@@ -598,7 +606,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await expectActiveDescendant(trigger, bravo)
   })
 
-  test('CB-SELECT-04 native: Enter toggles the select-only popover via button activation', async ({
+  test('CB-SELECT-04 native: Enter opens then commits via one key-decided path, no toggle', async ({
     mount,
     page,
   }) => {
@@ -608,9 +616,241 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await trigger.focus()
     await page.keyboard.press('Enter')
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    // Second Enter commits the active option (not a toggle): one scalar
+    // commit plus dismissal, no synthetic click duplicate, no text callback.
     await page.keyboard.press('Enter')
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(await readLog(page, 'select-log')).toEqual(['open', 'dismiss'])
+    expect(await readLog(page, 'select-log')).toEqual(['open', 'change:bravo', 'dismiss'])
+  })
+
+  test('CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    // Wait for content mount before arrowing.
+    await expect(page.getByTestId('log-opt-alpha')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    // Pointer overwrites keyboard, then leave clears back to committed.
+    await page.getByTestId('log-opt-bravo').hover()
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+    await page.mouse.move(6, 6)
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+
+    await page.keyboard.press('Tab')
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual([])
+    expect(log.filter(e => e === 'dismiss').length).toBe(1)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('log-clear')).toBeFocused()
+  })
+
+  test('CB-COMMIT-04 source gate: immediate tab on selection-active commits nothing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectedLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    const bravo = page.getByTestId('log-opt-bravo')
+    await expectActiveDescendant(input, bravo)
+
+    // Initial-on-open active carries no source, so Tab cannot commit it.
+    await page.keyboard.press('Tab')
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual([])
+    expect(log.filter(e => e === 'dismiss').length).toBe(1)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('log-clear')).toBeFocused()
+  })
+
+  test('CB-REVERT-03: outside press blurs, reverts unmatched text, dismisses once', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await page.keyboard.type('Zulu')
+    await expect(input).toHaveValue('Zulu')
+
+    // Click fixture padding: blur reverts before Overlay's deferred
+    // click-dismiss collapses into the same single dismissal.
+    await page.mouse.click(6, 6)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:Z',
+      'input:Zu',
+      'input:Zul',
+      'input:Zulu',
+      'input:',
+      'dismiss',
+    ])
+  })
+
+  test('CB-REVERT-07: closeOnBlur=false preserves open and text on blur; escape still closes', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/BlurPersist')
+
+    const input = page.getByTestId('blur-input')
+    await input.click()
+    await input.press('End')
+    await page.keyboard.type('Z')
+    await expect(input).toHaveValue('AlphaZ')
+
+    // Programmatic focus (the open popover overlaps the outside button):
+    // a real blur with an outside relatedTarget, no pointer involved.
+    await page.getByTestId('blur-outside').focus()
+    await expect(page.getByTestId('blur-outside')).toBeFocused()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    await expect(input).toHaveValue('AlphaZ')
+    expect(await readLog(page, 'blur-log')).toEqual(['open', 'input:AlphaZ'])
+
+    // Escape still runs its documented revert-then-dismiss sequence.
+    await input.click()
+    await page.keyboard.press('Escape')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('Alpha')
+    expect(await readLog(page, 'blur-log')).toEqual([
+      'open',
+      'input:AlphaZ',
+      'input:Alpha',
+      'dismiss',
+    ])
+  })
+
+  test('CB-SELECT-02 trigger arrows: open keeps trigger focus with selection pending', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await trigger.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-bravo'))
+    expect(await focusedTestId(page)).toBe('select-trigger')
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+
+    // Open arrows wrap through enabled options, skipping disabled delta.
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-charlie'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-alpha'))
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-charlie'))
+    expect(await focusedTestId(page)).toBe('select-trigger')
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+  })
+
+  test('CB-SELECT-03 trigger typeahead: opens closed, cycles enabled matches, commits nothing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await trigger.focus()
+    // Closed typeahead requests one open; nothing is mounted to match yet.
+    await page.keyboard.press('a')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+
+    // Wait for content mount before typeahead matching.
+    await expect(page.getByTestId('select-opt-alpha')).toBeVisible()
+    await page.keyboard.press('a')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-alpha'))
+    await page.keyboard.press('a')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-alpha'))
+    expect(await focusedTestId(page)).toBe('select-trigger')
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+
+    // After the buffer timeout the cycle restarts from the first match.
+    await page.waitForTimeout(650)
+    await page.keyboard.press('b')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-bravo'))
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+  })
+
+  test('CB-SELECT-08 trigger home/end: jump to first and last enabled options', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+    // Wait for content mount before Home/End navigation.
+    await expect(page.getByTestId('select-opt-alpha')).toBeVisible()
+    await page.keyboard.press('End')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-charlie'))
+    await page.keyboard.press('Home')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-alpha'))
+    expect(await focusedTestId(page)).toBe('select-trigger')
+    expect(await readLog(page, 'select-log')).toEqual(['open'])
+  })
+
+  test('CB-SELECT-05: select-only escape/tab/blur mirror with zero text callbacks', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyTabOrder')
+
+    const trigger = page.getByTestId('sel-tab-trigger')
+    const logIsTextFree = async () => {
+      const log = await readLog(page, 'sel-tab-log')
+      expect(log.filter(e => e.startsWith('input:'))).toEqual([])
+      return log
+    }
+
+    // Escape: no commit, one close, cleared active, trigger keeps focus.
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Escape')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(trigger).toBeFocused()
+    expect(await logIsTextFree()).toEqual(['open', 'dismiss'])
+
+    // Tab with keyboard-derived active commits and traverses natively.
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    // Wait for content mount + selection resolution before arrowing.
+    await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-alpha'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-bravo'))
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('sel-tab-after')).toBeFocused()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(await logIsTextFree()).toEqual(['open', 'dismiss', 'open', 'change:bravo', 'dismiss'])
+
+    // Blur outside closes with no commit.
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.getByTestId('sel-tab-after').focus()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(await logIsTextFree()).toEqual([
+      'open',
+      'dismiss',
+      'open',
+      'change:bravo',
+      'dismiss',
+      'open',
+      'dismiss',
+    ])
   })
 })
 

@@ -176,6 +176,117 @@ export const SelectOnlyStory = () => {
   )
 }
 
+export const SelectOnlyTabOrder = () => {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>('alpha')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Button data-testid="sel-tab-before">Before</Button>
+        <Div style={{ width: 240, margin: '16px 0' }}>
+          <Combobox
+            open={open}
+            onOpen={() => {
+              push('open')
+              setOpen(true)
+            }}
+            onDismiss={() => {
+              push('dismiss')
+              setOpen(false)
+            }}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+            }}
+            onInputValueChange={v => push(`input:${v}`)}
+          >
+            <Combobox.Trigger data-testid="sel-tab-trigger">Choose</Combobox.Trigger>
+            <Combobox.Popover data-testid="sel-tab-popover">
+              <Listbox>
+                {logOptions.map(opt => (
+                  <Listbox.Option
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={opt.disabled}
+                    data-testid={`sel-tab-opt-${opt.value}`}
+                  >
+                    {opt.label}
+                  </Listbox.Option>
+                ))}
+              </Listbox>
+            </Combobox.Popover>
+          </Combobox>
+        </Div>
+        <Button data-testid="sel-tab-after">After</Button>
+        <Div data-testid="sel-tab-log">{JSON.stringify(log)}</Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const BlurPersist = () => {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>('alpha')
+  const [inputValue, setInputValue] = React.useState('Alpha')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ width: 240, margin: '16px 0' }}>
+          <Combobox
+            open={open}
+            onOpen={() => {
+              push('open')
+              setOpen(true)
+            }}
+            onDismiss={() => {
+              push('dismiss')
+              setOpen(false)
+            }}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+            }}
+            inputValue={inputValue}
+            onInputValueChange={v => {
+              push(`input:${v}`)
+              setInputValue(v)
+            }}
+            closeOnBlur={false}
+          >
+            <Field>
+              <Combobox.Input data-testid="blur-input" placeholder="Search..." />
+            </Field>
+            <Combobox.Popover data-testid="blur-popover">
+              <Listbox>
+                {logOptions.map(opt => (
+                  <Listbox.Option
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={opt.disabled}
+                    data-testid={`blur-opt-${opt.value}`}
+                  >
+                    {opt.label}
+                  </Listbox.Option>
+                ))}
+              </Listbox>
+            </Combobox.Popover>
+          </Combobox>
+        </Div>
+        <Button data-testid="blur-outside">Outside</Button>
+        <Div data-testid="blur-log">{JSON.stringify(log)}</Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const DynamicOptions = () => {
   const [options, setOptions] = React.useState(logOptions.slice(0, 3))
   const [value, setValue] = React.useState<string | null>('alpha')

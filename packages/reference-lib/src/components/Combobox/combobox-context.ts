@@ -8,17 +8,42 @@ export interface ComboboxOptionEntry {
   textValue?: string
 }
 
+/**
+ * Where the current active value came from (#9). `keyboard` marks fresh
+ * keyboard intent (arrows, typeahead, Home/End, typing) and is the only
+ * source Tab may commit; `pointer` marks hover/focus preview, cleared by
+ * leave; `null` means no derivable source (initial selection, cleared).
+ */
+export type ComboboxActiveSource = 'keyboard' | 'pointer' | null
+
 export interface ComboboxContextValue {
   value: string | null
   inputValue: string
   isOpen: boolean
   disabled: boolean
+  /** True when the focus source is Trigger (select-only): no text authority. */
+  selectOnly: boolean
+  /** Blur policy (#3): false preserves open/text state on blur. */
+  closeOnBlur: boolean
   setIsOpen: (open: boolean) => void
+  /** Closed-source arrow open (#8, CB-OPEN-02): captures direction so the open effect can pend first/last enabled when no selection is valid. */
+  requestArrowOpen: (direction: 1 | -1) => void
   handleSelect: (val: string | null) => void
   handleInputChange: (val: string) => void
+  /** Outside-focus commit-or-revert + dismissal (#3, #13). */
+  handleSourceBlur: (relatedTarget: EventTarget | null) => void
   sourceRef: React.MutableRefObject<HTMLElement | null>
   activeValue: string | null
-  setActiveValue: (val: string | null) => void
+  activeSource: ComboboxActiveSource
+  /**
+   * Source-tagged active setter (#9). Defaults to `pointer` so Listbox
+   * hover/focus call sites need no change. A non-keyboard request for the
+   * committed value while keyboard-active is ignored (leave-restore), so
+   * Listbox root leave cannot clobber keyboard intent.
+   */
+  setActiveValue: (val: string | null, source?: 'keyboard' | 'pointer' | null) => void
+  /** Leave path (#9): reverts pointer-derived active to the committed value; keyboard-derived survives. */
+  clearPointerActive: () => void
   activeOptionId: string | null
   registerOption: (entry: ComboboxOptionEntry) => () => void
   getOrderedOptions: () => ComboboxOptionEntry[]

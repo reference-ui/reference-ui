@@ -377,6 +377,7 @@ interface HarnessProps {
   onDismiss?: () => void
   onOpenChange?: (open: boolean) => void
   disabled?: boolean
+  closeOnBlur?: boolean
   options?: CaseOption[]
   inputProps?: Record<string, unknown>
   inputId?: string
@@ -396,6 +397,7 @@ function Harness({
   onDismiss,
   onOpenChange,
   disabled,
+  closeOnBlur,
   options = caseOptions,
   inputProps,
   inputId,
@@ -415,6 +417,7 @@ function Harness({
       onDismiss={onDismiss}
       onOpenChange={onOpenChange}
       disabled={disabled}
+      closeOnBlur={closeOnBlur}
     >
       <Field>
         <Combobox.Input placeholder="Search..." id={inputId} {...inputProps} />
@@ -430,6 +433,85 @@ function Harness({
       </Combobox.Popover>
     </Combobox>
   )
+}
+
+interface SelectHarnessProps {
+  value?: string | null
+  onChange?: (value: string | null) => void
+  onInputValueChange?: (value: string) => void
+  open?: boolean
+  defaultOpen?: boolean
+  onOpen?: () => void
+  onDismiss?: () => void
+  disabled?: boolean
+  closeOnBlur?: boolean
+  options?: CaseOption[]
+  label?: string
+}
+
+function SelectHarness({
+  value,
+  onChange,
+  onInputValueChange,
+  open,
+  defaultOpen = false,
+  onOpen,
+  onDismiss,
+  disabled,
+  closeOnBlur,
+  options = caseOptions,
+  label = 'Choose',
+}: SelectHarnessProps) {
+  return (
+    <Combobox
+      value={value}
+      onChange={onChange}
+      onInputValueChange={onInputValueChange}
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpen={onOpen}
+      onDismiss={onDismiss}
+      disabled={disabled}
+      closeOnBlur={closeOnBlur}
+    >
+      <Combobox.Trigger>{label}</Combobox.Trigger>
+      <Combobox.Popover>
+        <Listbox>
+          {options.map(opt => (
+            <Listbox.Option key={opt.value} value={opt.value} disabled={opt.disabled}>
+              {opt.label}
+            </Listbox.Option>
+          ))}
+        </Listbox>
+      </Combobox.Popover>
+    </Combobox>
+  )
+}
+
+async function hoverOption(option: HTMLElement) {
+  await React.act(async () => {
+    option.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+    option.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+  })
+}
+
+async function leaveListbox() {
+  const listbox = document.body.querySelector('[role="listbox"]') as HTMLElement
+  const popover = popoverOf() as HTMLElement
+  await React.act(async () => {
+    for (const node of [listbox, popover]) {
+      node.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
+      node.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false, relatedTarget: document.body }))
+      node.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, relatedTarget: document.body }))
+      node.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false, relatedTarget: document.body }))
+    }
+  })
+}
+
+async function blurSource(el: Element, relatedTarget: EventTarget | null) {
+  await React.act(async () => {
+    el.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: relatedTarget as Node | null }))
+  })
 }
 
 describe('Combobox quarantine reconciliation (CB case IDs)', () => {
@@ -640,7 +722,12 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
       input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
     })
     expect(onFocus).toHaveBeenCalledTimes(1)
-    // The anchor still works: focusing opened the popover.
+    // #11: focus alone never opens — but the anchor still works via click.
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    expect(popoverOf()).toBeNull()
+    await React.act(async () => {
+      input.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
     expect(input.getAttribute('aria-expanded')).toBe('true')
     expect(popoverOf()).toBeTruthy()
     await unmount(rerendered.container, rerendered.root)
@@ -774,17 +861,21 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     )
     const input = inputOf(container)
 
+    // #11: focus alone never requests open.
     await React.act(async () => {
       input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
     })
-    expect(onOpen).toHaveBeenCalled()
+    expect(onOpen).not.toHaveBeenCalled()
     expect(input.getAttribute('aria-expanded')).toBe('false')
     expect(popoverOf()).toBeNull()
 
     await pressKey(input, 'ArrowDown')
+    expect(onOpen).toHaveBeenCalledTimes(1)
     await React.act(async () => {
       input.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
+    // Duplicate requests inside one gesture collapse (CB-OPEN-03 no-spam).
+    expect(onOpen).toHaveBeenCalledTimes(1)
     expect(input.getAttribute('aria-expanded')).toBe('false')
     expect(popoverOf()).toBeNull()
     await unmount(container, root)
@@ -833,11 +924,11 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     await React.act(async () => {
       input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
     })
-    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(onOpen).not.toHaveBeenCalled()
 
     await pressKey(input, 'ArrowDown')
     expect(onKeyDown).toHaveBeenCalled()
-    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(onOpen).not.toHaveBeenCalled()
     expect(input.getAttribute('aria-expanded')).toBe('false')
     await unmount(container, root)
   })
@@ -1365,6 +1456,10 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     await React.act(async () => {
       input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
     })
+    // #11: focus never requests; one deliberate ArrowDown requests exactly
+    // once even with StrictMode effect replay.
+    expect(onOpen).not.toHaveBeenCalled()
+    await pressKey(input, 'ArrowDown')
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(errorSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('focus source')
@@ -1428,6 +1523,508 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     })
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith('bravo')
+    await unmount(container, root)
+  })
+
+  it('CB-NAV-05 leave half: popover leave clears pointer-derived active to the committed value', async () => {
+    const { container, root } = await mount(
+      <Harness value="alpha" onChange={() => {}} defaultOpen />
+    )
+    const input = inputOf(container)
+    const alpha = optionOf('alpha')!
+    const bravo = optionOf('bravo')!
+
+    // Keyboard-derive bravo, then hover charlie: pointer overwrites.
+    await pressKey(input, 'ArrowDown')
+    expect(input.getAttribute('aria-activedescendant')).toBe(bravo.id)
+    await hoverOption(optionOf('charlie')!)
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+
+    // Leave clears the pointer preview back to the committed value.
+    await leaveListbox()
+    expect(input.getAttribute('aria-activedescendant')).toBe(alpha.id)
+    expect(input.getAttribute('aria-expanded')).toBe('true')
+    await unmount(container, root)
+  })
+
+  it('CB-NAV-05/CB-COMMIT-07: keyboard intent survives leave-restore; Tab after leave commits nothing', async () => {
+    const onChange = vi.fn()
+    const onInputValueChange = vi.fn()
+    const onDismiss = vi.fn()
+    const { container, root } = await mount(
+      <Harness
+        value="alpha"
+        onChange={onChange}
+        defaultInputValue="Alpha"
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const input = inputOf(container)
+
+    // Keyboard-derive bravo; Listbox root leave targets the committed
+    // value, which the leave-restore rule ignores while keyboard-active.
+    await pressKey(input, 'ArrowDown')
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+    await leaveListbox()
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+
+    // Hover charlie, then leave: pointer preview clears to committed alpha.
+    await hoverOption(optionOf('charlie')!)
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+    await leaveListbox()
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+
+    // Tab revives no stale highlight: no commit, revert, close, native key.
+    onChange.mockClear()
+    onInputValueChange.mockClear()
+    onDismiss.mockClear()
+    const prevented = await pressKey(input, 'Tab')
+    expect(prevented).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+    await unmount(container, root)
+  })
+
+  it('CB-COMMIT-04 narrow: Tab never commits a stale pointer preview', async () => {
+    const onChange = vi.fn()
+    const { container, root } = await mount(
+      <Harness value={null} onChange={onChange} defaultOpen />
+    )
+    const input = inputOf(container)
+
+    await hoverOption(optionOf('bravo')!)
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+
+    const prevented = await pressKey(input, 'Tab')
+    expect(prevented).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-COMMIT-05: Tab with no active option reverts unmatched text and closes natively', async () => {
+    const onChange = vi.fn()
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Harness
+        value="alpha"
+        onChange={onChange}
+        defaultInputValue="Alpha"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        options={[]}
+        defaultOpen
+      />
+    )
+    const input = inputOf(container)
+    await React.act(async () => {
+      typeText(input, 'Zulu')
+    })
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+
+    const prevented = await pressKey(input, 'Tab')
+    expect(prevented).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+    // No options mounted, so the committed label falls back to the raw value.
+    expect(calls).toEqual(['input:Zulu', 'input:alpha', 'dismiss'])
+    expect(input.value).toBe('alpha')
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-REVERT-03: blur outside reverts unmatched text before dismissal', async () => {
+    const onChange = vi.fn()
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Harness
+        value="alpha"
+        onChange={onChange}
+        defaultInputValue="Alpha"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+      />
+    )
+    const input = inputOf(container)
+    await React.act(async () => {
+      typeText(input, 'Zulu')
+    })
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+
+    await blurSource(input, outside)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(calls).toEqual(['input:Zulu', 'input:Alpha', 'dismiss'])
+    expect(input.value).toBe('Alpha')
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    outside.remove()
+    await unmount(container, root)
+  })
+
+  it('CB-REVERT-03 null-target: blur to a non-focusable outside target still reverts and closes', async () => {
+    const onDismiss = vi.fn()
+    const { container, root } = await mount(
+      <Harness value="alpha" onChange={() => {}} defaultInputValue="Alp" onDismiss={onDismiss} defaultOpen />
+    )
+    const input = inputOf(container)
+    await blurSource(input, null)
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-REVERT-03 inside: blur into the popover keeps the session open', async () => {
+    const onDismiss = vi.fn()
+    const onInputValueChange = vi.fn()
+    const { container, root } = await mount(
+      <Harness
+        value="alpha"
+        onChange={() => {}}
+        defaultInputValue="Alp"
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const input = inputOf(container)
+    await blurSource(input, optionOf('bravo'))
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    expect(onDismiss).not.toHaveBeenCalled()
+    expect(input.getAttribute('aria-expanded')).toBe('true')
+    await unmount(container, root)
+  })
+
+  it('CB-REVERT-07: closeOnBlur=false preserves open and text on blur; Escape still closes', async () => {
+    const onDismiss = vi.fn()
+    const onInputValueChange = vi.fn()
+    const { container, root } = await mount(
+      <Harness
+        value="alpha"
+        onChange={() => {}}
+        defaultInputValue="Alp"
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        closeOnBlur={false}
+        defaultOpen
+      />
+    )
+    const input = inputOf(container)
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+
+    await blurSource(input, outside)
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    expect(onDismiss).not.toHaveBeenCalled()
+    expect(input.getAttribute('aria-expanded')).toBe('true')
+    expect(input.value).toBe('Alp')
+    outside.remove()
+
+    await pressKey(input, 'Escape')
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-OPEN-02 direction: closed editable arrows pend first/last enabled without a valid selection', async () => {
+    const { container, root } = await mount(
+      <Harness value={null} onChange={() => {}} />
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowUp')
+    expect(input.getAttribute('aria-expanded')).toBe('true')
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+    await unmount(container, root)
+
+    const second = await mount(<Harness value={null} onChange={() => {}} />)
+    const input2 = inputOf(second.container)
+    await pressKey(input2, 'ArrowDown')
+    expect(input2.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    await unmount(second.container, second.root)
+  })
+
+  it('CB-SELECT-02: closed Trigger arrows open with the selected or first/last enabled option pending', async () => {
+    const onOpen = vi.fn()
+    const { container, root } = await mount(
+      <SelectHarness value="bravo" onChange={() => {}} onOpen={onOpen} />
+    )
+    const trigger = triggerOf(container)
+    await React.act(async () => {
+      trigger.focus()
+    })
+
+    await pressKey(trigger, 'ArrowDown')
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+    expect(document.activeElement).toBe(trigger)
+    await unmount(container, root)
+
+    // No valid selection: Down pends first enabled, Up pends last enabled.
+    const second = await mount(<SelectHarness value={null} onChange={() => {}} />)
+    const trigger2 = triggerOf(second.container)
+    await pressKey(trigger2, 'ArrowUp')
+    expect(trigger2.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger2.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+    await unmount(second.container, second.root)
+
+    const third = await mount(<SelectHarness value={null} onChange={() => {}} />)
+    const trigger3 = triggerOf(third.container)
+    await pressKey(trigger3, 'ArrowDown')
+    expect(trigger3.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    await unmount(third.container, third.root)
+
+    // A disabled selection is not valid: direction fallback wins.
+    const fourth = await mount(
+      <SelectHarness
+        value="bravo"
+        onChange={() => {}}
+        options={[
+          { value: 'alpha', label: 'Alpha' },
+          { value: 'bravo', label: 'Bravo', disabled: true },
+          { value: 'charlie', label: 'Charlie' },
+        ]}
+      />
+    )
+    const trigger4 = triggerOf(fourth.container)
+    await pressKey(trigger4, 'ArrowDown')
+    expect(trigger4.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    await unmount(fourth.container, fourth.root)
+  })
+
+  it('CB-SELECT-03: Trigger typeahead cycles enabled matches without committing', async () => {
+    vi.useFakeTimers()
+    try {
+      const onChange = vi.fn()
+      const { container, root } = await mount(
+        <SelectHarness
+          value={null}
+          onChange={onChange}
+          defaultOpen
+          options={[
+            { value: 'apple', label: 'Apple' },
+            { value: 'apricot', label: 'Apricot', disabled: true },
+            { value: 'avocado', label: 'Avocado' },
+            { value: 'banana', label: 'Banana' },
+          ]}
+        />
+      )
+      const trigger = triggerOf(container)
+      await React.act(async () => {
+        trigger.focus()
+      })
+
+      await pressKey(trigger, 'a')
+      expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('apple')!.id)
+      await pressKey(trigger, 'a')
+      expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('avocado')!.id)
+      await pressKey(trigger, 'a')
+      expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('apple')!.id)
+      expect(document.activeElement).toBe(trigger)
+      expect(onChange).not.toHaveBeenCalled()
+
+      // After the buffer timeout the cycle restarts from the first match.
+      await React.act(async () => {
+        vi.advanceTimersByTime(600)
+      })
+      await pressKey(trigger, 'a')
+      expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('apple')!.id)
+      expect(onChange).not.toHaveBeenCalled()
+      await unmount(container, root)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('CB-SELECT-08: Trigger Home and End jump to first and last enabled options', async () => {
+    const { container, root } = await mount(
+      <SelectHarness
+        value={null}
+        onChange={() => {}}
+        defaultOpen
+        options={[
+          { value: 'alpha', label: 'Alpha', disabled: true },
+          { value: 'bravo', label: 'Bravo' },
+          { value: 'charlie', label: 'Charlie' },
+          { value: 'delta', label: 'Delta', disabled: true },
+        ]}
+      />
+    )
+    const trigger = triggerOf(container)
+    await React.act(async () => {
+      trigger.focus()
+    })
+    await pressKey(trigger, 'ArrowDown')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+
+    const endPrevented = await pressKey(trigger, 'End')
+    expect(endPrevented).toBe(true)
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+
+    const homePrevented = await pressKey(trigger, 'Home')
+    expect(homePrevented).toBe(true)
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+    expect(document.activeElement).toBe(trigger)
+    await unmount(container, root)
+  })
+
+  it('CB-SELECT-04: Enter and Space open closed Triggers and commit open ones exactly once', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <SelectHarness
+        value="bravo"
+        onChange={v => calls.push(`change:${v}`)}
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onOpen={() => calls.push('open')}
+        onDismiss={() => calls.push('dismiss')}
+      />
+    )
+    const trigger = triggerOf(container)
+
+    const openPrevented = await pressKey(trigger, 'Enter')
+    expect(openPrevented).toBe(true)
+    expect(calls).toEqual(['open'])
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+
+    const commitPrevented = await pressKey(trigger, 'Enter')
+    expect(commitPrevented).toBe(true)
+    expect(calls).toEqual(['open', 'change:bravo', 'dismiss'])
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+
+    // Space follows the same single path with no text callback.
+    const second = await mount(
+      <SelectHarness
+        value="alpha"
+        onChange={v => calls.push(`change:${v}`)}
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onOpen={() => calls.push('open')}
+        onDismiss={() => calls.push('dismiss')}
+      />
+    )
+    const trigger2 = triggerOf(second.container)
+    calls.length = 0
+    await pressKey(trigger2, ' ')
+    expect(calls).toEqual(['open'])
+    await pressKey(trigger2, ' ')
+    expect(calls).toEqual(['open', 'change:alpha', 'dismiss'])
+    await unmount(second.container, second.root)
+  })
+
+  it('CB-SELECT-05: select-only Escape/Tab/blur mirror commit-or-close with zero text callbacks', async () => {
+    const onInputValueChange = vi.fn()
+    const onChange = vi.fn()
+    const onDismiss = vi.fn()
+    const { container, root } = await mount(
+      <SelectHarness
+        value="alpha"
+        onChange={onChange}
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const trigger = triggerOf(container)
+    await React.act(async () => {
+      trigger.focus()
+    })
+
+    // Escape: no commit, one close, cleared active, Trigger keeps focus.
+    const escPrevented = await pressKey(trigger, 'Escape')
+    expect(escPrevented).toBe(true)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(trigger.hasAttribute('aria-activedescendant')).toBe(false)
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(trigger)
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    await unmount(container, root)
+
+    // Tab with keyboard-derived active commits; traversal stays native.
+    const second = await mount(
+      <SelectHarness
+        value="alpha"
+        onChange={onChange}
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const trigger2 = triggerOf(second.container)
+    await pressKey(trigger2, 'ArrowDown')
+    expect(trigger2.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+    const tabPrevented = await pressKey(trigger2, 'Tab')
+    expect(tabPrevented).toBe(false)
+    expect(onChange).toHaveBeenCalledWith('bravo')
+    expect(trigger2.getAttribute('aria-expanded')).toBe('false')
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    await unmount(second.container, second.root)
+
+    // Blur outside closes with no commit and no text callback.
+    onChange.mockClear()
+    onDismiss.mockClear()
+    const third = await mount(
+      <SelectHarness
+        value="alpha"
+        onChange={onChange}
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const trigger3 = triggerOf(third.container)
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+    await blurSource(trigger3, outside)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(trigger3.getAttribute('aria-expanded')).toBe('false')
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    outside.remove()
+    await unmount(third.container, third.root)
+
+    // Without an active option Tab and Escape just close, still text-free.
+    onChange.mockClear()
+    onDismiss.mockClear()
+    const fourth = await mount(
+      <SelectHarness
+        value={null}
+        onChange={onChange}
+        onInputValueChange={onInputValueChange}
+        onDismiss={onDismiss}
+        defaultOpen
+      />
+    )
+    const trigger4 = triggerOf(fourth.container)
+    expect(trigger4.hasAttribute('aria-activedescendant')).toBe(false)
+    const tabPrevented4 = await pressKey(trigger4, 'Tab')
+    expect(tabPrevented4).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(trigger4.getAttribute('aria-expanded')).toBe('false')
+    expect(onInputValueChange).not.toHaveBeenCalled()
+    await unmount(fourth.container, fourth.root)
+  })
+
+  it('CB-SELECT-07 trigger half: disabled Trigger ignores arrows, typeahead, and activation', async () => {
+    const onOpen = vi.fn()
+    const { container, root } = await mount(
+      <SelectHarness value={null} onChange={() => {}} onOpen={onOpen} disabled />
+    )
+    const trigger = triggerOf(container)
+    await pressKey(trigger, 'ArrowDown')
+    await pressKey(trigger, 'a')
+    await pressKey(trigger, 'Enter')
+    await pressKey(trigger, ' ')
+    await React.act(async () => {
+      trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onOpen).not.toHaveBeenCalled()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(trigger.hasAttribute('aria-activedescendant')).toBe(false)
     await unmount(container, root)
   })
 
