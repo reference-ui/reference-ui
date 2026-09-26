@@ -10,7 +10,7 @@ interface SpecInput {
   page: SpecPage;
   case: NeoCase;
 }
-import { compileWorld } from '../../../../../src/diagnostics/repro-world.ts';
+import { compileWorld } from '../../../../../src/diagnostics/tests/repro-world.ts';
 
 // The world carries the registry's minimal fixture for ATM-W-UNKNOWN-CONDITION; compiling
 // it through the whole compiler must surface the code on the diagnostics

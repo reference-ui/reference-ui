@@ -2,7 +2,7 @@
 // It takes a case world dir and emits the built world plus its prepared
 // fragments and mutable compile request, so request-level specs can apply
 // the registry-documented mutation and compile for real. Mirrors
-// prepareCustomWorld in src/diagnostics/repro-world.ts, minus the temp
+// prepareCustomWorld in src/diagnostics/tests/repro-world.ts, minus the temp
 // world it builds: the case world already exists. That module stays the
 // source of truth for the pipeline order; this file tracks it.
 import { evaluatePreparedFragments, prepareFragments } from '../../../src/collect/index.ts';

@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
-import { compileWorld } from '../../../../../src/diagnostics/repro-world.ts';
+import { compileWorld } from '../../../../../src/diagnostics/tests/repro-world.ts';
 
 interface SpecInput {
   page: SpecPage;
