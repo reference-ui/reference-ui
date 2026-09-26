@@ -4,14 +4,15 @@ Current freeze, cases, and proof. Design narrative: [Combobox.md](./Combobox.md)
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/combobox.spec.ts`
-Colocated: `Combobox.test.tsx` (5 tests; **no case IDs**)
+Colocated: `Combobox.test.tsx` (41 tests; case IDs throughout)
+CT: `__e2e__/Combobox.ct.spec.ts` (25 specs, React 19 + snapshots)
 Page: `/combobox`
 
 ## Legend
 
-- `[x]` A passing Playwright or Vitest title contains this case ID.
+- `[x]` A passing Playwright CT or Vitest title contains this case ID.
 - `[ ]` Specified in TESTS.md; not proven by a passing test title.
-- `[~]` A title exists but asserts the prototype, not the freeze.
+- `[~]` A title exists but asserts a subset (prototype behavior or one half).
 
 TESTS.md checkboxes mean **specified**, not proven.
 
@@ -34,26 +35,34 @@ Visual polish is not this gate. No filtering helpers.
 | Async | `loading?` → listbox `aria-busy`; empty / "no results" spoken via `announce()`, no private live region |
 | Commit | root `onChange` is the sole commit |
 
-### Status (2026-09-10)
+### Status (2026-09-25, quarantine-landing reconciliation)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype. Opens on focus; Listbox click commit. |
-| Production | **No.** |
-| Named `[x]` | 1 / 97 (`CB-DOM-01`) |
-| Playwright | 2 (`CB-DOM-02` is visual chrome, not catalog behavior) |
-| Vitest | 5 tests, 0 IDs |
+| Engine | Hardened prototype. Mounted-only active IDs, native Home/End/PageUp/PageDown, Escape revert, IME guards, dev anatomy diagnostics. |
+| Production | **No** (freeze features still out: modes, custom values, adapters). |
+| Named `[x]` | 49 / 96 in-dir (+ 6 `[~]` honest partials; matrix layer out of scope) |
+| CT | 25 specs (2 pre-existing on frozen snapshots + 23 new, 1 new baseline) |
+| Vitest | 41 tests, all ID'd (5 pre-existing, 1 re-targeted to catalog) |
 
 ### Gaps & incoherence
 
-- `defaultValue` / `defaultOpen` / uncontrolled open+value.
-- Prop drift: `onOpenChange` vs freeze `onOpen` / `onDismiss`.
-- No `autocomplete` matrix, `allowCustomValue`, `closeOnBlur`,
-  `VirtualItem`, Tree bridge.
+- Uncontrolled `defaultValue` / `defaultInputValue` / `defaultOpen` kept
+  deliberately (mission law: uncontrolled-mode deletion is forbidden; pinned
+  by an API freeze test). The freeze narrative wants controlled-only.
+- No `autocomplete` matrix, `allowCustomValue`, `closeOnBlur`, `loading`,
+  `virtualFocus` / `VirtualItem` / grid adapter, Tree bridge, `onEscape`.
 - Focus opens the popup — fights deliberate open / closeOnBlur.
 - No async contract: `loading?` → `aria-busy` on the listbox and an empty /
   "no results" string routed through `announce()`, not a private live region.
-- `CB-DOM-02` is a visual checkmark/ring title, not a catalog case.
+- Select-only Trigger has no keyboard handling (arrows/typeahead/Home/End):
+  mouse + native Enter/Space toggle only.
+- Pointer-leave resets active to the selected value (Listbox-owned); the
+  catalog wants pointer-derived state cleared (needs `activeSource`).
+- Enter/Tab commit the active option even when the text is unmatched
+  (needs custom-value decision semantics).
+- The pre-existing CT `displays checkmark indicator...` stays a frozen
+  visual guard with no catalog ID (rehomed, not dropped).
 
 ### Vendor
 
@@ -68,13 +77,41 @@ render props; Base UI / Zag `multiple` (`selectionMode`) token-chip combobox
 
 ### Case index
 
-- `[x]` `CB-DOM-01`
-- `[ ]` remaining `CB-DOM-*`, `CB-OPEN-*`, `CB-EDIT-*`, `CB-NAV-*`,
-  `CB-MODE-*`, `CB-COMMIT-*`, `CB-REVERT-*`, `CB-CUSTOM-*`, `CB-SELECT-*`,
-  `CB-VIRT-*`, `CB-TREE-01`, `CB-ADAPTER-*`, `CB-CLOSE-*`, `CB-ENV-*`,
-  `CB-A11Y-01`, `CB-COMP-*`
+Proven in-dir (`Combobox.test.tsx` Vitest + `__e2e__` CT):
 
-Not catalog: `CB-DOM-02` visual. Drop or rehome.
+- `[x]` `CB-DOM-01`, `CB-DOM-05`, `CB-DOM-06`, `CB-DOM-07`, `CB-DOM-08`,
+  `CB-DOM-09`, `CB-DOM-11`, `CB-DOM-12`
+- `[~]` `CB-DOM-10` (defaults only; no blur-dismiss), `CB-A11Y-01`
+  (role/relationship assertions across shapes; no automated scan)
+- `[x]` `CB-OPEN-01`, `CB-OPEN-02`, `CB-OPEN-04`, `CB-OPEN-05`, `CB-OPEN-06`,
+  `CB-OPEN-07`, `CB-OPEN-08`
+- `[x]` `CB-EDIT-01`, `CB-EDIT-02`, `CB-EDIT-03`, `CB-EDIT-05`, `CB-EDIT-06`,
+  `CB-EDIT-07`, `CB-EDIT-08`, `CB-EDIT-09`
+- `[~]` `CB-EDIT-04` (ancestor-scroll dismiss only; no input self-scroll half)
+- `[x]` `CB-NAV-01`, `CB-NAV-02`, `CB-NAV-03`, `CB-NAV-04`, `CB-NAV-06`,
+  `CB-NAV-07`, `CB-NAV-08`
+- `[~]` `CB-NAV-05` (hover half only; leave-clear is Listbox-owned)
+- `[~]` `CB-MODE-02` (default list behavior only; no `autocomplete` prop)
+- `[x]` `CB-COMMIT-01`, `CB-COMMIT-03`, `CB-COMMIT-04`, `CB-COMMIT-06`,
+  `CB-COMMIT-08`, `CB-COMMIT-09`
+- `[x]` `CB-REVERT-01`, `CB-REVERT-04`, `CB-REVERT-05`, `CB-REVERT-06`
+- `[x]` `CB-SELECT-01`, `CB-SELECT-06`, `CB-SELECT-07`
+- `[~]` `CB-SELECT-04` (native Enter toggle only; no keyboard commit path)
+- `[x]` `CB-CLOSE-01`, `CB-CLOSE-02`, `CB-CLOSE-04`
+- `[x]` `CB-ENV-01`, `CB-ENV-02`, `CB-ENV-05`
+
+Cross-owned proofs (handoff cases, Combobox side): `LB-CB-01`, `LB-CB-03`
+valid shape, `LB-CB-04` (+ highlight snapshot), `FI-COMP-04` commit/remove
+flows. `LB-CB-02` (windowed) needs `virtualFocus` — not proven.
+
+Not proven (need freeze features outside this mission): `CB-DOM-02`,
+`CB-DOM-03` (Trigger `aria-haspopup` variants), `CB-DOM-04`, `CB-OPEN-03`,
+`CB-COMMIT-02`, `CB-COMMIT-05`, `CB-COMMIT-07`, `CB-REVERT-02`,
+`CB-REVERT-03`, `CB-REVERT-07`, `CB-CUSTOM-*`, `CB-MODE-01`, `CB-MODE-03`,
+`CB-MODE-04`, `CB-MODE-05`, `CB-MODE-06`, `CB-MODE-07`, `CB-SELECT-02`,
+`CB-SELECT-03`, `CB-SELECT-05`, `CB-SELECT-08`, `CB-VIRT-*`, `CB-TREE-01`,
+`CB-ADAPTER-*`, `CB-CLOSE-03`, `CB-CLOSE-05`, `CB-ENV-03`, `CB-ENV-04`,
+`CB-COMP-*`.
 
 ### Work order
 

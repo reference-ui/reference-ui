@@ -1,5 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
-import type { Locator } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
   const triggerBox = await trigger.boundingBox()
@@ -122,5 +122,494 @@ test.describe('Combobox CT', () => {
     expect(appleStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
     expect(appleStyles.backgroundColor).not.toBe('transparent')
     expect(appleStyles.backgroundColor.includes('/ 0)')).toBe(false)
+  })
+})
+
+async function readLog(page: Page, testid: string): Promise<string[]> {
+  const text = await page.getByTestId(testid).textContent()
+  return JSON.parse(text ?? '[]')
+}
+
+async function focusedTestId(page: Page) {
+  return page.evaluate(
+    () => (document.activeElement as HTMLElement | null)?.getAttribute('data-testid')
+  )
+}
+
+async function expectActiveDescendant(source: Locator, option: Locator) {
+  const id = await option.getAttribute('id')
+  expect(id).toBeTruthy()
+  await expect(source).toHaveAttribute('aria-activedescendant', id!)
+}
+
+async function clickPopoverChrome(page: Page, popover: Locator) {
+  const box = await popover.boundingBox()
+  const firstOption = popover.locator('[role="option"]').first()
+  const optBox = await firstOption.boundingBox()
+  expect(box).toBeTruthy()
+  expect(optBox).toBeTruthy()
+  const gap = optBox!.y - box!.y
+  expect(gap).toBeGreaterThan(0)
+  await page.mouse.click(box!.x + 3, box!.y + gap / 2)
+}
+
+test.describe('Combobox quarantine reconciliation CT', () => {
+  test('CB-DOM-01: transparent coordinator with native parts and controlled relationships', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+
+    await expect(input).toHaveAttribute('role', 'combobox')
+    await expect(input).toHaveAttribute('aria-autocomplete', 'list')
+    await expect(input).toHaveAttribute('aria-haspopup', 'listbox')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(popover).toHaveCount(0)
+
+    await input.click()
+    await expect(popover).toBeVisible()
+    const tag = await popover.evaluate(el => el.tagName)
+    expect(tag).toBe('DIV')
+    await expect(popover).toHaveAttribute('role', 'presentation')
+    await expect(popover.locator('[role="listbox"]')).toBeVisible()
+    const controls = await input.getAttribute('aria-controls')
+    expect(controls).toBe(await popover.getAttribute('id'))
+  })
+
+  test('CB-DOM-09/CB-COMMIT-04: nonmodal tab order with tab commit and native traversal', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TabOrder')
+
+    const before = page.getByTestId('tab-before')
+    const input = page.getByTestId('tab-input')
+    const after = page.getByTestId('tab-after')
+
+    await before.click()
+    await expect(before).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(input).toBeFocused()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+
+    await page.keyboard.press('ArrowDown')
+    const apple = page.getByTestId('tab-opt-apple')
+    await expectActiveDescendant(input, apple)
+
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('tab-value-display')).toHaveText('Selected: apple')
+    await expect(after).toBeFocused()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('CB-DOM-12: one popover with collision-safe bottom-start placement', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/FruitSelect')
+
+    const input = page.getByTestId('combobox-input')
+    const popover = page.getByTestId('combobox-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expect(popover).toHaveAttribute('data-side', 'bottom')
+    await expect(popover).toHaveAttribute('data-align', 'start')
+    await expectAnchoredBottomStart(input, popover)
+    await expect(page.getByTestId('combobox-popover')).toHaveCount(1)
+  })
+
+  test('CB-OPEN-01: ArrowDown requests open without disturbing focus or text', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/FixedClosed')
+
+    const input = page.getByTestId('fixed-input')
+    await input.focus()
+    // Focus requests open but the fixed-closed parent stays shut.
+    expect(await readLog(page, 'fixed-log')).toEqual(['open'])
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+
+    await page.keyboard.press('ArrowDown')
+    // ArrowDown adds exactly one request; focus and text are undisturbed.
+    expect(await readLog(page, 'fixed-log')).toEqual(['open', 'open'])
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('Hello')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('fixed-popover')).toHaveCount(0)
+  })
+
+  test('CB-OPEN-02: ArrowUp opens with the selected option pending', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectedLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    const bravo = page.getByTestId('log-opt-bravo')
+    await expectActiveDescendant(input, bravo)
+  })
+
+  test('CB-OPEN-04: open editable input stays open on click; trigger toggles', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'log-counts')).not.toContain('dismiss')
+  })
+
+  test('CB-OPEN-04 select-only: trigger toggles with open and dismiss requests', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(await readLog(page, 'select-log')).toEqual(['open', 'dismiss'])
+  })
+
+  test('CB-OPEN-08: readOnly and disabled sources never request open', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/DisabledReadonly')
+
+    const readonly = page.getByTestId('dr-readonly')
+    await readonly.click()
+    await readonly.focus()
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'dr-log')).toEqual([])
+
+    // Disabled sources are inert: no focus, no click, no request.
+    await page.getByTestId('dr-disabled').focus()
+    await expect(page.getByTestId('dr-disabled')).not.toBeFocused()
+    expect(await readLog(page, 'dr-log')).toEqual([])
+  })
+
+  test('CB-EDIT-01: arrows move the active descendant while DOM focus stays in input', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    const bravo = page.getByTestId('log-opt-bravo')
+    await expectActiveDescendant(input, bravo)
+    expect(await focusedTestId(page)).toBe('log-input')
+  })
+
+  test('CB-EDIT-03 caret: Home and End move the caret with the active option unchanged', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/CaretField')
+
+    const input = page.getByTestId('caret-input')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+
+    await page.keyboard.press('Home')
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(0)
+    await page.keyboard.press('End')
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(11)
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    expect(await readLog(page, 'caret-log')).toEqual([])
+  })
+
+  test('CB-EDIT-04 ancestor scroll: scrolling the page dismisses the open popover', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ScrollPage')
+
+    const input = page.getByTestId('scroll-input')
+    await input.click()
+    await expect(page.getByTestId('scroll-popover')).toBeVisible()
+
+    await page.evaluate(() => window.scrollBy(0, 400))
+    await expect(page.getByTestId('scroll-popover')).toHaveCount(0)
+    expect(await readLog(page, 'scroll-log')).toContain('dismiss')
+  })
+
+  test('CB-EDIT-08: pointer commit keeps input focus and fills the label', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await page.getByTestId('log-opt-bravo').click()
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('Bravo')
+  })
+
+  test('CB-NAV-01: arrows wrap through enabled options, skipping disabled, focus stays', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    const opt = (testid: string) => page.getByTestId(testid)
+    await input.click()
+
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, opt('log-opt-alpha'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, opt('log-opt-bravo'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, opt('log-opt-charlie'))
+    // Wraps past the disabled delta back to alpha.
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, opt('log-opt-alpha'))
+    // Wraps back up to charlie.
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(input, opt('log-opt-charlie'))
+    expect(await focusedTestId(page)).toBe('log-input')
+  })
+
+  test('CB-NAV-05 hover half: pointer-hovered option goes active without focus or commit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await page.keyboard.press('ArrowDown')
+    await page.getByTestId('log-opt-bravo').hover()
+    const bravo = page.getByTestId('log-opt-bravo')
+    await expectActiveDescendant(input, bravo)
+    expect(await focusedTestId(page)).toBe('log-input')
+    expect(await readLog(page, 'log-counts')).not.toContain('change:bravo')
+  })
+
+  test('CB-NAV-08: newly active option scrolls inside the popover; page and input unmoved', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/LongList')
+
+    const input = page.getByTestId('long-input')
+    await input.click()
+    // Park the cursor off-fixture so no hover highlight races the arrows.
+    await page.mouse.move(6, 6)
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    // opt-05 is disabled, so 12 arrows land on opt-12.
+    const target = page.getByTestId('long-opt-opt-12')
+    await expectActiveDescendant(input, target)
+    await expect(target).toBeInViewport()
+    const listScrollTop = await page
+      .getByTestId('long-popover')
+      .locator('[role="listbox"]')
+      .evaluate(el => (el as HTMLElement).scrollTop)
+    expect(listScrollTop).toBeGreaterThan(0)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    await expect(input).toBeInViewport()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('CB-COMMIT-03: popup chrome click is ignored; option pointer commits exactly once', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+    await input.click()
+    await clickPopoverChrome(page, popover)
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'log-counts')).toEqual(['open'])
+
+    await page.getByTestId('log-opt-charlie').click()
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e === 'change:charlie').length).toBe(1)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('CB-CLOSE-01: true outside press dismisses once; internal chrome stays open', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+    await input.click()
+    await clickPopoverChrome(page, popover)
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+
+    // Click fixture padding above the input: guaranteed outside the popover.
+    await page.mouse.click(6, 6)
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e === 'dismiss').length).toBe(1)
+  })
+
+  test('CB-CLOSE-02: popover registers as an overlay branch inside a parent overlay', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/NestedOverlay')
+
+    await expect(page.getByTestId('parent-content')).toBeVisible()
+    const input = page.getByTestId('nested-input')
+    await input.click()
+    await expect(page.getByTestId('nested-popover')).toBeVisible()
+
+    await page.getByTestId('nested-opt-bravo').click()
+    await expect(page.getByTestId('nested-value-display')).toHaveText('Selected: bravo')
+    await expect(page.getByTestId('parent-state')).toHaveText('parent-open')
+    await expect(page.getByTestId('parent-content')).toBeVisible()
+  })
+
+  test('LB-CB-01: virtual focus without tab stops; activedescendant tracks; one scalar commit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    await input.click()
+
+    const tabIndexes = await page
+      .getByTestId('log-popover')
+      .locator('[role="option"]')
+      .evaluateAll(els => els.map(el => (el as HTMLElement).tabIndex))
+    expect(tabIndexes.length).toBe(4)
+    expect(tabIndexes.every(t => t === -1)).toBe(true)
+
+    await page.keyboard.press('ArrowDown')
+    const alpha = page.getByTestId('log-opt-alpha')
+    const activeId = await input.getAttribute('aria-activedescendant')
+    expect(activeId).toBe(await alpha.getAttribute('id'))
+    expect(
+      await page.evaluate(id => !!document.getElementById(id!), activeId)
+    ).toBe(true)
+
+    await page.keyboard.press('Enter')
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual(['change:alpha'])
+  })
+
+  test('LB-CB-04: only the activedescendant-named option publishes active styling', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/DynamicOptions')
+
+    const input = page.getByTestId('dyn-input')
+    await input.click()
+    await page.keyboard.press('ArrowDown')
+    const bravo = page.getByTestId('dyn-opt-bravo')
+    await expectActiveDescendant(input, bravo)
+
+    // Only bravo carries data-active; alpha keeps selected state independently.
+    await expect(bravo).toHaveAttribute('data-active', '')
+    await expect(page.getByTestId('dyn-opt-alpha')).not.toHaveAttribute('data-active', '')
+    await expect(page.getByTestId('dyn-opt-charlie')).not.toHaveAttribute('data-active', '')
+    await expect(page.getByTestId('dyn-opt-alpha')).toHaveAttribute('data-state', 'selected')
+    await page.waitForTimeout(300)
+    await snap(page, 'combobox-lb-cb-04-highlight')
+
+    // Removing the active option leaves no stale reference behind.
+    await page.getByTestId('dyn-remove-bravo').click()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await input.click()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    const alpha = page.getByTestId('dyn-opt-alpha')
+    await expectActiveDescendant(input, alpha)
+  })
+
+  test('FI-COMP-04 Combobox side: token picker commits one scalar value; chip removal is silent', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TokenPicker')
+
+    const opener = page.getByTestId('token-opener')
+    await expect(opener).toHaveAttribute('type', 'button')
+    await expect(opener).not.toHaveAttribute('role', 'combobox')
+    const labelFor = await page.locator('label[for="people"]').getAttribute('for')
+    expect(labelFor).toBe('people')
+
+    await opener.click()
+    const input = page.getByTestId('token-input')
+    await expect(input).toBeFocused()
+    const popover = page.getByTestId('token-popover')
+    await expect(popover).toBeVisible()
+    const listInsideField = await page.evaluate(() => {
+      const field = document.querySelector('[data-testid="token-field"]')!
+      const list = document.querySelector('[data-testid="token-popover"] [role="listbox"]')!
+      return field.contains(list)
+    })
+    expect(listInsideField).toBe(false)
+
+    await page.getByTestId('token-opt-grace').click()
+    await expect(page.getByTestId('token-change-count')).toHaveText('1')
+    await expect(page.getByTestId('token-value')).toHaveText('grace')
+    const chip = page.getByTestId('chip-grace')
+    await expect(chip).toBeVisible()
+    await expect(chip).toHaveText('Grace')
+    expect(await chip.evaluate(el => el.tagName)).toBe('BUTTON')
+    // The popover carries no token nodes; chips are application chrome in Field.
+    expect(await popover.locator('[data-testid^="chip-"]').count()).toBe(0)
+
+    await chip.click()
+    await expect(page.getByTestId('chip-grace')).toHaveCount(0)
+    await expect(page.getByTestId('token-change-count')).toHaveText('1')
+  })
+
+  test('CB-SELECT-01: trigger labeling stays app-owned; selected option is active on open', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await expect(trigger).toHaveText('Bravo')
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    const bravo = page.getByTestId('select-opt-bravo')
+    await expectActiveDescendant(trigger, bravo)
+  })
+
+  test('CB-SELECT-04 native: Enter toggles the select-only popover via button activation', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+
+    const trigger = page.getByTestId('select-trigger')
+    await trigger.focus()
+    await page.keyboard.press('Enter')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Enter')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(await readLog(page, 'select-log')).toEqual(['open', 'dismiss'])
   })
 })

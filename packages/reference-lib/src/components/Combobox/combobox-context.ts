@@ -22,6 +22,10 @@ export interface ComboboxContextValue {
   activeOptionId: string | null
   registerOption: (entry: ComboboxOptionEntry) => () => void
   getOrderedOptions: () => ComboboxOptionEntry[]
+  popoverId: string
+  registerFocusSource: (type: 'input' | 'trigger') => () => void
+  registerPopover: (id?: string) => () => void
+  revertToCommittedText: () => void
 }
 
 export const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)

@@ -9,6 +9,22 @@ import {
 } from '../Listbox'
 import { ComboboxContext, type ComboboxOptionEntry } from './combobox-context'
 
+// The package declares no node types, so the bare `process` global is
+// unresolvable in the narrow build program — read it through globalThis
+// with a file-local shape instead. Same pattern as Overlay's warn helper.
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+export function comboboxDiagnostic(message: string) {
+  const isProd = globalProcess?.env?.NODE_ENV === 'production'
+  if (!isProd) {
+    console.error(`[reference-ui] Combobox: ${message}`)
+  }
+}
+
+function sanitizeComboboxId(rawId: string) {
+  return `ref-cb-pop-${rawId.replace(/[^a-zA-Z0-9_-]/g, '')}`
+}
+
 export interface ComboboxProps {
   children?: React.ReactNode
   value?: string | null
@@ -26,26 +42,49 @@ export interface ComboboxProps {
   disabled?: boolean
 }
 
-export type ComboboxInputProps = Omit<PrimitiveProps<'input'>, 'value' | 'defaultValue'>
+export type ComboboxInputProps = Omit<PrimitiveProps<'input'>, 'value' | 'defaultValue'> & {
+  value?: never
+  defaultValue?: never
+}
 
-export function ComboboxInput({
-  onChange,
-  onClick,
-  onKeyDown,
-  onFocus,
-  className,
-  style,
-  ...props
-}: ComboboxInputProps) {
+export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
+  function ComboboxInput(
+    {
+      value: forbiddenValue,
+      defaultValue: forbiddenDefaultValue,
+      onChange,
+      onClick,
+      onKeyDown,
+      onFocus,
+      onCompositionStart,
+      onCompositionEnd,
+      disabled: disabledProp,
+      readOnly,
+      className,
+      style,
+      ...props
+    }: ComboboxInputProps,
+    userRef
+  ) {
+  const rawProps = { value: forbiddenValue, defaultValue: forbiddenDefaultValue }
+  if (rawProps.value !== undefined || rawProps.defaultValue !== undefined) {
+    comboboxDiagnostic(
+      'Combobox.Input does not accept value or defaultValue. Use root inputValue and onInputValueChange.'
+    )
+  }
+
   const context = React.useContext(ComboboxContext)
   const overlay = useOverlay()
   const inputRef = React.useRef<HTMLInputElement | null>(null)
+  const isComposingRef = React.useRef(false)
   const sourceRef = context?.sourceRef
   const inputValue = context?.inputValue ?? ''
   const isOpen = context?.isOpen ?? false
   const disabled = context?.disabled ?? false
   const setIsOpen = context?.setIsOpen
   const handleInputChange = context?.handleInputChange
+  const popoverId = context?.popoverId
+  const registerFocusSource = context?.registerFocusSource
 
   const assignAnchor = React.useCallback(
     (node: HTMLInputElement | null) => {
@@ -57,15 +96,34 @@ export function ComboboxInput({
     [overlay, sourceRef]
   )
 
+  const composedRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      assignAnchor(node)
+      if (typeof userRef === 'function') {
+        userRef(node)
+      } else if (userRef && 'current' in userRef) {
+        ;(userRef as React.MutableRefObject<HTMLInputElement | null>).current = node
+      }
+    },
+    [assignAnchor, userRef]
+  )
+
   React.useLayoutEffect(() => {
     assignAnchor(inputRef.current)
   })
 
+  React.useLayoutEffect(() => {
+    if (registerFocusSource) return registerFocusSource('input')
+  }, [registerFocusSource])
+
   if (!context || !setIsOpen || !handleInputChange) return null
+
+  const isDisabled = disabled || disabledProp
+  const isReadOnly = Boolean(readOnly)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(e)
-    if (!e.defaultPrevented) {
+    if (!e.defaultPrevented && !isDisabled && !isReadOnly) {
       handleInputChange(e.target.value)
       if (!isOpen) setIsOpen(true)
     }
@@ -73,25 +131,55 @@ export function ComboboxInput({
 
   const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
     onClick?.(e)
-    if (!e.defaultPrevented && !disabled && !isOpen) {
+    if (!e.defaultPrevented && !isDisabled && !isReadOnly && !isOpen) {
       setIsOpen(true)
     }
   }
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     onFocus?.(e)
-    if (!e.defaultPrevented && !disabled) {
+    if (!e.defaultPrevented && !isDisabled && !isReadOnly) {
       setIsOpen(true)
     }
   }
 
+  const handleCompositionStart = (e: React.CompositionEvent<HTMLInputElement>) => {
+    onCompositionStart?.(e)
+    isComposingRef.current = true
+  }
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    onCompositionEnd?.(e)
+    isComposingRef.current = false
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     onKeyDown?.(e)
-    if (e.defaultPrevented || disabled) return
+    if (e.defaultPrevented || isDisabled || isReadOnly) return
+    // IME composition owns the key: take no action and shield the
+    // document-level Overlay Escape listener, while leaving the native
+    // default (composition cancel) untouched (CB-EDIT-05/09).
+    if (
+      isComposingRef.current ||
+      e.key === 'Process' ||
+      e.nativeEvent.isComposing ||
+      (e.nativeEvent as KeyboardEvent).keyCode === 229
+    ) {
+      e.stopPropagation()
+      return
+    }
 
     const getEnabledOptions = () => {
       return context.getOrderedOptions().filter(opt => !opt.disabled)
     }
+
+    // The active value can go stale when its option unmounts (dynamic
+    // collections); only a still-mounted option may commit (CB-NAV-07).
+    const mountedActiveValue =
+      context.activeValue != null &&
+      getEnabledOptions().some(opt => opt.value === context.activeValue)
+        ? context.activeValue
+        : null
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -127,140 +215,132 @@ export function ComboboxInput({
           }
         }
       }
-    } else if (e.key === 'Home') {
-      if (isOpen) {
-        const enabled = getEnabledOptions()
-        if (enabled.length > 0) {
-          e.preventDefault()
-          context.setActiveValue(enabled[0].value)
-          enabled[0].node?.scrollIntoView({ block: 'nearest' })
-        }
-      }
-    } else if (e.key === 'End') {
-      if (isOpen) {
-        const enabled = getEnabledOptions()
-        if (enabled.length > 0) {
-          e.preventDefault()
-          const lastOption = enabled[enabled.length - 1]
-          context.setActiveValue(lastOption.value)
-          lastOption.node?.scrollIntoView({ block: 'nearest' })
-        }
-      }
-    } else if (e.key === 'PageDown') {
-      if (isOpen) {
-        const enabled = getEnabledOptions()
-        if (enabled.length > 0) {
-          e.preventDefault()
-          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
-          const nextIndex = Math.min(enabled.length - 1, (currentIndex === -1 ? 0 : currentIndex) + 5)
-          const nextOption = enabled[nextIndex]
-          context.setActiveValue(nextOption.value)
-          nextOption.node?.scrollIntoView({ block: 'nearest' })
-        }
-      }
-    } else if (e.key === 'PageUp') {
-      if (isOpen) {
-        const enabled = getEnabledOptions()
-        if (enabled.length > 0) {
-          e.preventDefault()
-          const currentIndex = enabled.findIndex(opt => opt.value === context.activeValue)
-          const prevIndex = Math.max(0, (currentIndex === -1 ? enabled.length - 1 : currentIndex) - 5)
-          const prevOption = enabled[prevIndex]
-          context.setActiveValue(prevOption.value)
-          prevOption.node?.scrollIntoView({ block: 'nearest' })
-        }
-      }
     } else if (e.key === 'Enter') {
-      if (isOpen && context.activeValue != null) {
+      if (isOpen && mountedActiveValue != null) {
         e.preventDefault()
-        context.handleSelect(context.activeValue)
+        context.handleSelect(mountedActiveValue)
       }
     } else if (e.key === 'Tab') {
-      if (isOpen && context.activeValue != null) {
-        context.handleSelect(context.activeValue)
+      if (isOpen && mountedActiveValue != null) {
+        context.handleSelect(mountedActiveValue)
       }
     } else if (e.key === 'Escape') {
       if (isOpen) {
         e.preventDefault()
+        context.revertToCommittedText()
+        context.setActiveValue(null)
         setIsOpen(false)
-      } else if (inputValue !== '') {
-        e.preventDefault()
-        handleInputChange(context.value ?? '')
       }
     }
   }
 
   return (
     <Input
-      ref={assignAnchor}
+      {...props}
+      ref={composedRef}
       role="combobox"
       aria-expanded={isOpen}
       aria-autocomplete="list"
       aria-haspopup="listbox"
+      aria-controls={popoverId}
       aria-activedescendant={isOpen ? (context.activeOptionId ?? undefined) : undefined}
-      disabled={disabled}
+      disabled={isDisabled}
+      readOnly={readOnly}
       value={inputValue}
       onChange={handleChange}
       onClick={handleClick}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
+      onCompositionStart={handleCompositionStart}
+      onCompositionEnd={handleCompositionEnd}
       className={className}
       style={style}
-      {...props}
     />
   )
-}
+  }
+)
 
 export type ComboboxTriggerProps = PrimitiveProps<'button'>
 
-export function ComboboxTrigger({
-  children,
-  onClick,
-  className,
-  style,
-  ...props
-}: ComboboxTriggerProps) {
+export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
+  function ComboboxTrigger(
+    {
+      children,
+      onClick,
+      disabled: disabledProp,
+      className,
+      style,
+      ...props
+    }: ComboboxTriggerProps,
+    userRef
+  ) {
   const context = React.useContext(ComboboxContext)
   const overlay = useOverlay()
+  const registerFocusSource = context?.registerFocusSource
+
+  React.useLayoutEffect(() => {
+    if (registerFocusSource) return registerFocusSource('trigger')
+  }, [registerFocusSource])
+
   if (!context) return null
 
   const composedRef = (node: HTMLButtonElement | null) => {
     context.sourceRef.current = node
     if (overlay) overlay.triggerRef.current = node
+    if (typeof userRef === 'function') {
+      userRef(node)
+    } else if (userRef && 'current' in userRef) {
+      ;(userRef as React.MutableRefObject<HTMLButtonElement | null>).current = node
+    }
   }
+
+  const isDisabled = context.disabled || disabledProp
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
-    if (!e.defaultPrevented && !context.disabled) {
+    if (!e.defaultPrevented && !isDisabled) {
       context.setIsOpen(!context.isOpen)
     }
   }
 
   return (
     <Button
+      {...props}
       ref={composedRef}
       type="button"
       role="combobox"
       aria-expanded={context.isOpen}
       aria-haspopup="listbox"
-      disabled={context.disabled}
+      aria-controls={context.popoverId}
+      aria-activedescendant={context.isOpen ? (context.activeOptionId ?? undefined) : undefined}
+      disabled={isDisabled}
       onClick={handleClick}
       className={`ref-input ${className || ''}`}
       style={style}
-      {...props}
     >
       {children}
     </Button>
   )
-}
+  }
+)
 
 export type ComboboxPopoverProps = OverlayContentProps
 
 export function ComboboxPopover({
   children,
   style,
+  id: idProp,
   ...props
 }: ComboboxPopoverProps) {
+  const context = React.useContext(ComboboxContext)
+  const registerPopover = context?.registerPopover
+
+  React.useLayoutEffect(() => {
+    if (registerPopover) return registerPopover(idProp)
+  }, [registerPopover, idProp])
+
+  const id = idProp ?? context?.popoverId
+
   return (
     <Overlay.Content
       data-reference-combobox-popover=""
@@ -273,6 +353,7 @@ export function ComboboxPopover({
       border="1px solid"
       borderColor="ui.dialog.border"
       boxShadow="0 4px 16px rgba(0,0,0,0.12)"
+      id={id}
       style={{
         minWidth: 'var(--reference-overlay-anchor-width, 12.5rem)',
         ...style,
@@ -319,13 +400,26 @@ export function Combobox({
   const isOpen = isControlledOpen ? openProp : internalOpen
   const sourceRef = React.useRef<HTMLElement | null>(null)
 
+  const rawDefaultPopoverId = React.useId()
+  const [popoverId, setPopoverId] = React.useState<string>(() =>
+    sanitizeComboboxId(rawDefaultPopoverId)
+  )
+  const focusSourcesCountRef = React.useRef(0)
+  const popoverCountRef = React.useRef(0)
+
   const [activeValue, setActiveValue] = React.useState<string | null>(value ?? null)
   const optionsMapRef = React.useRef<Map<string, ComboboxOptionEntry>>(new Map())
+  // Registration mutates the map (no render on its own), so each
+  // register/unregister also bumps a version to recompute the mounted-only
+  // active ID. The bump carries no data — the map is still the source.
+  const [, setOptionsVersion] = React.useState(0)
 
   const registerOption = React.useCallback((entry: ComboboxOptionEntry) => {
     optionsMapRef.current.set(entry.value, entry)
+    setOptionsVersion(v => v + 1)
     return () => {
       optionsMapRef.current.delete(entry.value)
+      setOptionsVersion(v => v + 1)
     }
   }, [])
 
@@ -341,6 +435,37 @@ export function Combobox({
       })
   }, [])
 
+  const registerFocusSource = React.useCallback((_type: 'input' | 'trigger') => {
+    focusSourcesCountRef.current += 1
+    if (focusSourcesCountRef.current > 1) {
+      comboboxDiagnostic(
+        'Combobox requires exactly one focus source (Input XOR Trigger). Detected multiple focus sources.'
+      )
+    }
+    return () => {
+      focusSourcesCountRef.current -= 1
+    }
+  }, [])
+
+  const registerPopover = React.useCallback((id?: string) => {
+    popoverCountRef.current += 1
+    if (id) setPopoverId(id)
+    if (popoverCountRef.current > 1) {
+      comboboxDiagnostic('Combobox allows at most one Popover. Detected duplicate Popovers.')
+    }
+    return () => {
+      popoverCountRef.current -= 1
+    }
+  }, [])
+
+  React.useLayoutEffect(() => {
+    if (focusSourcesCountRef.current === 0) {
+      comboboxDiagnostic(
+        'Combobox requires exactly one focus source (Input XOR Trigger). Detected 0 focus sources.'
+      )
+    }
+  })
+
   React.useEffect(() => {
     if (isOpen) {
       setActiveValue(value ?? null)
@@ -351,7 +476,10 @@ export function Combobox({
 
   const effectiveActive = activeValue ?? (isOpen ? value : null)
   const activeOption = effectiveActive ? optionsMapRef.current.get(effectiveActive) : null
-  const activeOptionId = effectiveActive ? (activeOption?.id ?? `ref-opt-${effectiveActive}`) : null
+  const activeOptionId =
+    activeOption && activeOption.node && activeOption.node.isConnected
+      ? activeOption.id
+      : null
 
   const notifyInput = onInputValueChange ?? onInputChange
 
@@ -376,6 +504,14 @@ export function Combobox({
     },
     [isControlledInput, notifyInput, getOrderedOptions]
   )
+
+  const revertToCommittedText = React.useCallback(() => {
+    const committedLabel =
+      value != null ? (optionsMapRef.current.get(value)?.textValue ?? String(value)) : ''
+    if (inputValue !== committedLabel) {
+      handleInputChange(committedLabel)
+    }
+  }, [value, inputValue, handleInputChange])
 
   const handleSelect = React.useCallback(
     (nextVal: string | null) => {
@@ -406,6 +542,10 @@ export function Combobox({
       activeOptionId,
       registerOption,
       getOrderedOptions,
+      popoverId,
+      registerFocusSource,
+      registerPopover,
+      revertToCommittedText,
     }),
     [
       value,
@@ -420,6 +560,10 @@ export function Combobox({
       activeOptionId,
       registerOption,
       getOrderedOptions,
+      popoverId,
+      registerFocusSource,
+      registerPopover,
+      revertToCommittedText,
     ]
   )
 
