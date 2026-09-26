@@ -19,6 +19,8 @@ pub type StyletraceDiagnostic = Diagnostic;
 /// no hosts while its siblings still trace. `message` is the legacy skip sentence, kept
 /// byte-identical for the atomic goldens; the envelope carries the file. The unlocated
 /// variant covers the defensive residual, where the walk degraded instead of one file.
+/// Carries no engine help: classifying parse-vs-read from the message is brittle,
+/// so the static hint wins and the bytes stay identical.
 pub(crate) fn skipped_file(
     file: Option<&str>,
     message: String,
@@ -78,11 +80,13 @@ mod tests {
         assert_eq!(skipped.severity, Severity::Warning);
         assert_eq!(skipped.file.as_deref(), Some("input/broken.ts"));
         assert!(skipped.message.contains("parse error"));
+        assert!(skipped.help.is_none());
 
         let residual = skipped_file(None, "StyleTrace: walk degraded".to_string()).unwrap();
         assert_eq!(residual.code.as_str(), "STT-W-SKIPPED-FILE");
         assert_eq!(residual.severity, Severity::Warning);
         assert!(residual.file.is_none());
+        assert!(residual.help.is_none());
     }
 
     #[test]

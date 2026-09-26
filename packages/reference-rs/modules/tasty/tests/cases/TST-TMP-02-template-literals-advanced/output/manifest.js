@@ -4,7 +4,10 @@ export const manifest = {
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `Post` matched 2 entries: _e10a107f95e9ae00 (user), _7d16347f6acc18bf (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `Post` matched 2 entries: _e10a107f95e9ae00 (user), _7d16347f6acc18bf (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `Post` by symbol id (_e10a107f95e9ae00 (user), _7d16347f6acc18bf (user)) or a scoped lookup"
+      ]
     }
   ],
   "symbolsByName": {

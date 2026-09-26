@@ -5,7 +5,10 @@
       "severity": "warning",
       "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
       "message": "Component `BrokenCard` references props type `MissingProps` which Atlas could not resolve.",
-      "file": "./components/BrokenCard.tsx"
+      "file": "./components/BrokenCard.tsx",
+      "help": [
+        "import `MissingProps` for `BrokenCard` or define it in scope"
+      ]
     }
   ],
   "notes": [

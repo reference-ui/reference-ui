@@ -5,27 +5,42 @@ export const manifest = {
       "severity": "warning",
       "code": "TST-W-STAR-AMBIGUITY",
       "message": "export * ambiguity: `StarWidget` in `cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts` is provided by both `cases/TST-RXP-02-reexport-edges/input/star-ambiguity-a.ts` and `cases/TST-RXP-02-reexport-edges/input/star-ambiguity-b.ts`; excluding from barrel exports",
-      "file": "cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts"
+      "file": "cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts",
+      "help": [
+        "re-export `StarWidget` explicitly from `cases/TST-RXP-02-reexport-edges/input/star-ambiguity-barrel.ts`"
+      ]
     },
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `NSType` matched 2 entries: _e6d501ddf7d22889 (user), _45f08cb8c10e7e77 (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `NSType` matched 2 entries: _e6d501ddf7d22889 (user), _45f08cb8c10e7e77 (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `NSType` by symbol id (_e6d501ddf7d22889 (user), _45f08cb8c10e7e77 (user)) or a scoped lookup"
+      ]
     },
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `StarWidget` matched 2 entries: _6fe5ab8f90e7b714 (user), _529f5b3ebcfda767 (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `StarWidget` matched 2 entries: _6fe5ab8f90e7b714 (user), _529f5b3ebcfda767 (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `StarWidget` by symbol id (_6fe5ab8f90e7b714 (user), _529f5b3ebcfda767 (user)) or a scoped lookup"
+      ]
     },
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `TypeA` matched 2 entries: _e0b5072be48655db (user), _85adc4e320b7f6b0 (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `TypeA` matched 2 entries: _e0b5072be48655db (user), _85adc4e320b7f6b0 (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `TypeA` by symbol id (_e0b5072be48655db (user), _85adc4e320b7f6b0 (user)) or a scoped lookup"
+      ]
     },
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `TypeB` matched 2 entries: _e0b5072be48655d8 (user), _85adc4e320b7f6b3 (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `TypeB` matched 2 entries: _e0b5072be48655d8 (user), _85adc4e320b7f6b3 (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `TypeB` by symbol id (_e0b5072be48655d8 (user), _85adc4e320b7f6b3 (user)) or a scoped lookup"
+      ]
     }
   ],
   "symbolsByName": {

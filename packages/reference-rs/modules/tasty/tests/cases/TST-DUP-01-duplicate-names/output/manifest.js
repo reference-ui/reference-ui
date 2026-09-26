@@ -4,7 +4,10 @@ export const manifest = {
     {
       "severity": "warning",
       "code": "TST-W-DUPLICATE-SYMBOL-NAME",
-      "message": "Duplicate symbol name `Shared` matched 2 entries: _c6d8bd1e192848a5 (user), _b899721439429933 (user). Use symbol id or scoped lookup to disambiguate."
+      "message": "Duplicate symbol name `Shared` matched 2 entries: _c6d8bd1e192848a5 (user), _b899721439429933 (user). Use symbol id or scoped lookup to disambiguate.",
+      "help": [
+        "look up `Shared` by symbol id (_c6d8bd1e192848a5 (user), _b899721439429933 (user)) or a scoped lookup"
+      ]
     }
   ],
   "symbolsByName": {

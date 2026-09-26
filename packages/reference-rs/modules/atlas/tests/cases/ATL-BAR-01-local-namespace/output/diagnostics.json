@@ -5,13 +5,19 @@
       "severity": "warning",
       "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
       "message": "Component `Button` references props type `ButtonProps` which Atlas could not resolve.",
-      "file": "./components/Button.tsx"
+      "file": "./components/Button.tsx",
+      "help": [
+        "import `ButtonProps` for `Button` or define it in scope"
+      ]
     },
     {
       "severity": "warning",
       "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
       "message": "Component `UserBadge` references props type `BadgeProps` which Atlas could not resolve.",
-      "file": "./components/UserBadge.tsx"
+      "file": "./components/UserBadge.tsx",
+      "help": [
+        "import `BadgeProps` for `UserBadge` or define it in scope"
+      ]
     }
   ],
   "notes": [

@@ -40,7 +40,10 @@ pub(crate) fn unknown_token_category(
     Diagnostic::warning(
         TypegenDiagnosticCode::UnknownTokenCategory.as_str(),
         message,
-    )
+    )?
+    .with_help(vec![format!(
+        "move the {token_count} token(s) from `{category}` into a printed category"
+    )])
 }
 
 /// A recipe name that cannot PascalCase to a TypeScript identifier; the recipe is omitted.
@@ -48,7 +51,10 @@ pub(crate) fn invalid_recipe_name(name: &str) -> Result<Diagnostic, DiagnosticEr
     Diagnostic::warning(
         TypegenDiagnosticCode::InvalidRecipeName.as_str(),
         format!("recipe `{name}` cannot form a TypeScript type name; omitting the recipe"),
-    )
+    )?
+    .with_help(vec![format!(
+        "rename `{name}` so it forms a TypeScript type name"
+    )])
 }
 
 /// A recipe with no printable variant axes; the whole recipe is omitted.
@@ -56,7 +62,10 @@ pub(crate) fn empty_recipe(name: &str) -> Result<Diagnostic, DiagnosticError> {
     Diagnostic::warning(
         TypegenDiagnosticCode::EmptyRecipe.as_str(),
         format!("recipe `{name}` declares no variant values; omitting the recipe"),
-    )
+    )?
+    .with_help(vec![format!(
+        "fill in variant axes for `{name}` or drop the recipe"
+    )])
 }
 
 /// One variant axis with no values while sibling axes still print; the axis is skipped.
@@ -64,7 +73,10 @@ pub(crate) fn empty_recipe_axis(name: &str, axis: &str) -> Result<Diagnostic, Di
     Diagnostic::warning(
         TypegenDiagnosticCode::EmptyRecipe.as_str(),
         format!("recipe `{name}` axis `{axis}` declares no values; skipping the axis"),
-    )
+    )?
+    .with_help(vec![format!(
+        "fill in axis `{axis}` of `{name}` or drop the axis"
+    )])
 }
 
 /// A compound row naming an unknown axis or value; the row is skipped, siblings kept.
@@ -78,7 +90,10 @@ pub(crate) fn invalid_compound_variant(
     Diagnostic::warning(
         TypegenDiagnosticCode::InvalidCompoundVariant.as_str(),
         format!("recipe `{name}` compound row {row} names unknown `{axis}={value}`; skipping the row"),
-    )
+    )?
+    .with_help(vec![format!(
+        "point row {row} of `{name}` at a declared value of `{axis}`"
+    )])
 }
 
 /// A strict name outside `colors` / `radii` / `spacing`; skipped with a near-match nudge.
@@ -98,7 +113,10 @@ pub(crate) fn unknown_strict_category(name: &str) -> Result<Diagnostic, Diagnost
     Diagnostic::warning(
         TypegenDiagnosticCode::UnknownStrictCategory.as_str(),
         message,
-    )
+    )?
+    .with_help(vec![format!(
+        "use colors, radii, or spacing instead of `{name}`"
+    )])
 }
 
 /// A known strict category with no tokens in this system; no wrapper is printed.
@@ -106,7 +124,10 @@ pub(crate) fn absent_strict_category(name: &str) -> Result<Diagnostic, Diagnosti
     Diagnostic::warning(
         TypegenDiagnosticCode::AbsentStrictCategory.as_str(),
         format!("strict category `{name}` has no tokens in this system; skipping the wrapper"),
-    )
+    )?
+    .with_help(vec![format!(
+        "declare {name} tokens or drop `{name}` from strict"
+    )])
 }
 
 /// A font family declaring no weights; omitted from the registry.
@@ -114,7 +135,10 @@ pub(crate) fn empty_font_family(name: &str) -> Result<Diagnostic, DiagnosticErro
     Diagnostic::warning(
         TypegenDiagnosticCode::EmptyFontFamily.as_str(),
         format!("font family `{name}` declares no weights; omitting the family"),
-    )
+    )?
+    .with_help(vec![format!(
+        "declare weights for `{name}` or drop the family"
+    )])
 }
 
 /// A recipe whose PascalCase stem collides with an earlier recipe in list order;
@@ -125,7 +149,10 @@ pub(crate) fn duplicate_recipe_stem(name: &str, stem: &str) -> Result<Diagnostic
         format!(
             "recipe `{name}` collides with an earlier recipe on type stem `{stem}`; omitting the recipe"
         ),
-    )
+    )?
+    .with_help(vec![format!(
+        "rename `{name}` so its stem no longer collides on `{stem}`"
+    )])
 }
 
 /// Spec refusal prefix: the baseSystem value failed contract validation, so the
@@ -176,12 +203,30 @@ mod tests {
         }
         assert!(rows[0].message.contains("`animations`"));
         assert!(rows[4].message.contains("`tone=nope`"));
+        let helps = [
+            "move the 3 token(s) from `animations` into a printed category",
+            "rename `123` so it forms a TypeScript type name",
+            "fill in variant axes for `card` or drop the recipe",
+            "fill in axis `size` of `button` or drop the axis",
+            "point row 2 of `button` at a declared value of `tone`",
+            "use colors, radii, or spacing instead of `fonts`",
+            "declare spacing tokens or drop `spacing` from strict",
+            "declare weights for `display` or drop the family",
+            "rename `Button` so its stem no longer collides on `Button`",
+        ];
+        for (diagnostic, help) in rows.iter().zip(helps) {
+            assert_eq!(diagnostic.help, Some(vec![help.to_string()]));
+        }
     }
 
     #[test]
     fn unknown_strict_suggests_near_names_and_stays_quiet_when_far() {
         let near = unknown_strict_category("colour").unwrap();
         assert!(near.message.contains("did you mean `colors`?"), "{near:?}");
+        assert!(
+            !near.help.as_ref().unwrap().join(" ").contains("did you mean"),
+            "{near:?}"
+        );
         let far = unknown_strict_category("zzz").unwrap();
         assert!(!far.message.contains("did you mean"), "{far:?}");
     }
@@ -190,6 +235,10 @@ mod tests {
     fn unknown_token_category_suggests_near_names_and_stays_quiet_when_far() {
         let near = unknown_token_category("colour", 2).unwrap();
         assert!(near.message.contains("did you mean `colors`?"), "{near:?}");
+        assert!(
+            !near.help.as_ref().unwrap().join(" ").contains("did you mean"),
+            "{near:?}"
+        );
         let far = unknown_token_category("animations", 3).unwrap();
         assert!(!far.message.contains("did you mean"), "{far:?}");
     }
@@ -200,47 +249,56 @@ mod tests {
             (
                 unknown_token_category("animations", 3).unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-UNKNOWN-TOKEN-CATEGORY\",\
-                 \"message\":\"token category `animations` has no printed union; omitting 3 token(s)\"}",
+                 \"message\":\"token category `animations` has no printed union; omitting 3 token(s)\",\
+                 \"help\":[\"move the 3 token(s) from `animations` into a printed category\"]}",
             ),
             (
                 invalid_recipe_name("123").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-INVALID-RECIPE-NAME\",\
-                 \"message\":\"recipe `123` cannot form a TypeScript type name; omitting the recipe\"}",
+                 \"message\":\"recipe `123` cannot form a TypeScript type name; omitting the recipe\",\
+                 \"help\":[\"rename `123` so it forms a TypeScript type name\"]}",
             ),
             (
                 empty_recipe("card").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-EMPTY-RECIPE\",\
-                 \"message\":\"recipe `card` declares no variant values; omitting the recipe\"}",
+                 \"message\":\"recipe `card` declares no variant values; omitting the recipe\",\
+                 \"help\":[\"fill in variant axes for `card` or drop the recipe\"]}",
             ),
             (
                 empty_recipe_axis("button", "size").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-EMPTY-RECIPE\",\
-                 \"message\":\"recipe `button` axis `size` declares no values; skipping the axis\"}",
+                 \"message\":\"recipe `button` axis `size` declares no values; skipping the axis\",\
+                 \"help\":[\"fill in axis `size` of `button` or drop the axis\"]}",
             ),
             (
                 invalid_compound_variant("button", 2, "tone", "nope").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-INVALID-COMPOUND-VARIANT\",\
-                 \"message\":\"recipe `button` compound row 2 names unknown `tone=nope`; skipping the row\"}",
+                 \"message\":\"recipe `button` compound row 2 names unknown `tone=nope`; skipping the row\",\
+                 \"help\":[\"point row 2 of `button` at a declared value of `tone`\"]}",
             ),
             (
                 unknown_strict_category("fonts").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-UNKNOWN-STRICT-CATEGORY\",\
-                 \"message\":\"strict category `fonts` is unknown; skipping it\"}",
+                 \"message\":\"strict category `fonts` is unknown; skipping it\",\
+                 \"help\":[\"use colors, radii, or spacing instead of `fonts`\"]}",
             ),
             (
                 absent_strict_category("spacing").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-ABSENT-STRICT-CATEGORY\",\
-                 \"message\":\"strict category `spacing` has no tokens in this system; skipping the wrapper\"}",
+                 \"message\":\"strict category `spacing` has no tokens in this system; skipping the wrapper\",\
+                 \"help\":[\"declare spacing tokens or drop `spacing` from strict\"]}",
             ),
             (
                 empty_font_family("display").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-EMPTY-FONT-FAMILY\",\
-                 \"message\":\"font family `display` declares no weights; omitting the family\"}",
+                 \"message\":\"font family `display` declares no weights; omitting the family\",\
+                 \"help\":[\"declare weights for `display` or drop the family\"]}",
             ),
             (
                 duplicate_recipe_stem("myButton", "MyButton").unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-DUPLICATE-RECIPE-STEM\",\
-                 \"message\":\"recipe `myButton` collides with an earlier recipe on type stem `MyButton`; omitting the recipe\"}",
+                 \"message\":\"recipe `myButton` collides with an earlier recipe on type stem `MyButton`; omitting the recipe\",\
+                 \"help\":[\"rename `myButton` so its stem no longer collides on `MyButton`\"]}",
             ),
         ];
         for (diagnostic, wire) in cases {

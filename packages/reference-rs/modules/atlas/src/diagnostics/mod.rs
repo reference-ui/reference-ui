@@ -19,13 +19,16 @@ pub(crate) fn unresolved_props_type(
     component: &str,
     type_name: &str,
 ) -> Result<Diagnostic, DiagnosticError> {
-    Ok(Diagnostic::warning(
+    Diagnostic::warning(
         AtlasDiagnosticCode::UnresolvedPropsType.as_str(),
         format!(
             "Component `{component}` references props type `{type_name}` which Atlas could not resolve."
         ),
     )?
-    .with_location(source, None, None))
+    .with_location(source, None, None)
+    .with_help(vec![format!(
+        "import `{type_name}` for `{component}` or define it in scope"
+    )])
 }
 
 /// Inline props object annotation: Atlas indexes named types only, so the component is omitted.
@@ -33,13 +36,16 @@ pub(crate) fn unsupported_props_annotation(
     source: &str,
     component: &str,
 ) -> Result<Diagnostic, DiagnosticError> {
-    Ok(Diagnostic::warning(
+    Diagnostic::warning(
         AtlasDiagnosticCode::UnsupportedPropsAnnotation.as_str(),
         format!(
             "Component `{component}` uses an inline props type annotation that Atlas does not index."
         ),
     )?
-    .with_location(source, None, None))
+    .with_location(source, None, None)
+    .with_help(vec![format!(
+        "name the props type of `{component}` instead of inlining the object"
+    )])
 }
 
 /// Included package resolves nowhere: the package is skipped with its siblings kept.
@@ -47,7 +53,10 @@ pub(crate) fn unresolved_include_package(package: &str) -> Result<Diagnostic, Di
     Diagnostic::warning(
         AtlasDiagnosticCode::UnresolvedIncludePackage.as_str(),
         format!("Include package `{package}` could not be resolved; skipping."),
-    )
+    )?
+    .with_help(vec![format!(
+        "check the name of `{package}` or install it alongside the app"
+    )])
 }
 
 /// Scan refusal: discovery or read failed, so the analysis is refused with empty components.
@@ -70,7 +79,10 @@ pub(crate) fn package_scan_failed(
             "Package `{package}` could not be scanned; skipping it: {}.",
             reason.into()
         ),
-    )
+    )?
+    .with_help(vec![format!(
+        "fix `{package}` so it scans or drop it from include"
+    )])
 }
 
 #[cfg(test)]
@@ -88,6 +100,12 @@ mod tests {
         assert_eq!(unresolved.file.as_deref(), Some("./components/BrokenCard.tsx"));
         assert!(unresolved.message.contains("`BrokenCard`"));
         assert!(unresolved.message.contains("`MissingProps`"));
+        assert_eq!(
+            unresolved.help,
+            Some(vec![
+                "import `MissingProps` for `BrokenCard` or define it in scope".to_string()
+            ])
+        );
 
         let unsupported =
             unsupported_props_annotation("./components/InlineBadge.tsx", "InlineBadge").unwrap();
@@ -97,6 +115,12 @@ mod tests {
         );
         assert_eq!(unsupported.severity, Severity::Warning);
         assert!(unsupported.message.contains("`InlineBadge`"));
+        assert_eq!(
+            unsupported.help,
+            Some(vec![
+                "name the props type of `InlineBadge` instead of inlining the object".to_string()
+            ])
+        );
 
         let package = unresolved_include_package("@fixtures/missing-ui").unwrap();
         assert_eq!(
@@ -106,6 +130,13 @@ mod tests {
         assert_eq!(package.severity, Severity::Warning);
         assert!(package.message.contains("`@fixtures/missing-ui`"));
         assert!(package.file.is_none());
+        assert_eq!(
+            package.help,
+            Some(vec![
+                "check the name of `@fixtures/missing-ui` or install it alongside the app"
+                    .to_string()
+            ])
+        );
     }
 
     #[test]
@@ -124,5 +155,47 @@ mod tests {
         assert!(failed.message.contains("`@probe/uilib`"));
         assert!(failed.message.contains("Glob walk error: denied"));
         assert!(failed.file.is_none());
+        assert_eq!(
+            failed.help,
+            Some(vec![
+                "fix `@probe/uilib` so it scans or drop it from include".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn every_warning_pins_its_exact_wire_bytes() {
+        let cases = [
+            (
+                unresolved_props_type("./components/BrokenCard.tsx", "BrokenCard", "MissingProps")
+                    .unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"ATL-W-UNRESOLVED-PROPS-TYPE\",\
+                 \"message\":\"Component `BrokenCard` references props type `MissingProps` which Atlas could not resolve.\",\
+                 \"file\":\"./components/BrokenCard.tsx\",\
+                 \"help\":[\"import `MissingProps` for `BrokenCard` or define it in scope\"]}",
+            ),
+            (
+                unsupported_props_annotation("./components/InlineBadge.tsx", "InlineBadge").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"ATL-W-UNSUPPORTED-PROPS-ANNOTATION\",\
+                 \"message\":\"Component `InlineBadge` uses an inline props type annotation that Atlas does not index.\",\
+                 \"file\":\"./components/InlineBadge.tsx\",\
+                 \"help\":[\"name the props type of `InlineBadge` instead of inlining the object\"]}",
+            ),
+            (
+                unresolved_include_package("@fixtures/missing-ui").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"ATL-W-UNRESOLVED-INCLUDE-PACKAGE\",\
+                 \"message\":\"Include package `@fixtures/missing-ui` could not be resolved; skipping.\",\
+                 \"help\":[\"check the name of `@fixtures/missing-ui` or install it alongside the app\"]}",
+            ),
+            (
+                package_scan_failed("@probe/uilib", "Glob walk error: denied").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"ATL-W-PACKAGE-SCAN-FAILED\",\
+                 \"message\":\"Package `@probe/uilib` could not be scanned; skipping it: Glob walk error: denied.\",\
+                 \"help\":[\"fix `@probe/uilib` so it scans or drop it from include\"]}",
+            ),
+        ];
+        for (diagnostic, wire) in cases {
+            assert_eq!(serde_json::to_string(&diagnostic).unwrap(), wire);
+        }
     }
 }
