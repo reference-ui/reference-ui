@@ -141,6 +141,26 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     await expect(handle).toHaveAttribute('aria-valuenow', '40')
   })
 
+  test('SP-DOM-03: Unconstrained panels clamp to the 5% default floor (FEATURES #10)', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Basic')
+    const handle = page.getByTestId('splitter-handle-0')
+    const display = page.getByTestId('splitter-value-display')
+
+    // Decided: KEEP 5% — an unconstrained Panel shrinks to the floor, never
+    // to nothing, on both bounds.
+    await handle.focus()
+    await page.keyboard.press('Home')
+    await expect(display).toHaveText('Layout: 5% / 95%')
+    await expect(handle).toHaveAttribute('aria-valuenow', '5')
+
+    await page.keyboard.press('End')
+    await expect(display).toHaveText('Layout: 95% / 5%')
+    await expect(handle).toHaveAttribute('aria-valuenow', '95')
+  })
+
   test('SP-KEY-04: Home and End move to feasible min/max bounds', async ({ mount, page }) => {
     await mount('components/Splitter/Splitter/Constrained')
     const handle = page.getByTestId('constrained-handle-0')

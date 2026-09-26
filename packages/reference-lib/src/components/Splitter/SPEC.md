@@ -32,15 +32,15 @@ Visual polish is not this gate. No grid mode. No `SplitterThumb` dots.
 | Hot path | `--reference-splitter-panel-size` (and indexed vars); ARIA off the 60fps path |
 | Keys | 1% / 10%, Home/End, Enter collapse/restore |
 
-### Status (2026-09-10; PATCHES items 1–4, 6–7 landed 2026-09-26)
+### Status (2026-09-10; PATCHES items 1–4, 6–7 landed 2026-09-26; FEATURES cluster A #1/#2/#10/#12 landed 2026-09-26)
 
 | | |
 | :--- | :--- |
 | Engine | Constraint solver wired; keyboard + drag + collapse-snap proven. |
-| Production | **Partial.** Uncontrolled retained; freeze API deltas open. |
+| Production | **Partial.** Controlled-only v1 API landed (required `value`, `min`/`max`, DOM order, no Root `disabled`); engine deltas (#3–#9) open for cluster B. |
 | Named `[x]` | 47 / 83 |
-| Playwright CT | 36 |
-| Vitest | 16 |
+| Playwright CT | 37 |
+| Vitest | 18 |
 
 ### Gaps & incoherence
 
@@ -54,18 +54,27 @@ Resolved by the quarantine-landing salvage (solver port + minimal wire):
   exact no-ops are now silent, and a moved drag closes with exactly one
   `onChangeEnd`.
 
-Still open (quarantine behavior deliberately not ported):
+Still open (cluster B owns the engine items):
 
-- `defaultValue`, optional `value`. Freeze: required controlled `value`.
-- Panel props `minSize` / `maxSize` / `index` vs freeze `min` / `max` + DOM
-  order registration. Numeric constraints only; no CSS-length `min`/`max`.
+- Panel `min`/`max` accept `number | string`; strings fall back to the
+  default bound with a dev diagnostic until measured resolution lands
+  (FEATURES #3 seam: `toSolverConstraints` in `Splitter.tsx`).
 - Writes `flexBasis: ${size}%` instead of `--reference-splitter-panel-size`
   / `--reference-splitter-N`.
 - Drag commits React per move (`SP-PERF-*` hot path untouched).
-- `SplitterThumb` chrome retained; default min floor stays 5%, not the
-  freeze 0. Pointer robustness, keyboard sessions, Enter collapse/restore,
-  RTL wiring, reduced-motion guard, and the a11y sweep landed via PATCHES
-  (matrix-only env/composition proofs excluded — no matrix home on branch).
+- `SplitterThumb` chrome retained. Pointer robustness, keyboard sessions,
+  Enter collapse/restore, RTL wiring, reduced-motion guard, and the a11y
+  sweep landed via PATCHES (matrix-only env/composition proofs excluded —
+  no matrix home on branch).
+
+Landed by FEATURES cluster A (2026-09-26):
+
+- Required controlled `value`; `defaultValue`, Root `disabled`/`display`/
+  `flexDirection` deleted (FEATURES #1, #12).
+- Panel `min`/`max` + DOM-order registration; `index` deleted; flex
+  overrides omitted from the Panel/Handle style surface (FEATURES #2).
+- Default min floor decided: KEEP 5%, pinned by the SP-DOM-03 CT slices
+  (FEATURES #10).
 
 ### Vendor
 
@@ -79,7 +88,7 @@ re-render-every-move as the model; auto-save; `defaultSize`.
 
 ### Case index
 
-- `[x]` `SP-TYPE-01` (re-targeted to the current uncontrolled API), `SP-DOM-01`,
+- `[x]` `SP-TYPE-01` (re-targeted to the v1 controlled API), `SP-DOM-01`,
   `SP-DOM-02`, `SP-DOM-03`, `SP-DOM-05`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-06`,
   `SP-END-01`, `SP-END-02`, `SP-END-03`, `SP-END-04`, `SP-KEY-02`, `SP-KEY-04`,
   `SP-KEY-05`, `SP-KEY-07`, `SP-KEY-08`, `SP-DRAG-01`, `SP-DRAG-02`, `SP-DRAG-04`,
@@ -95,7 +104,7 @@ re-render-every-move as the model; auto-save; `defaultSize`.
 ### Work order
 
 1. Align public API (`min` / `max`, required `value`, drop `defaultValue` /
-   `index` / Thumb).
+   `index`) — DONE by cluster A (Thumb retained per DECISIONS).
 2. Port percentage solver + idle constraint conversion (`SP-MATH-*`).
 3. Pointer session: origin capture, ref CSS vars, ARIA off the hot path.
 4. Collapse/Enter + keyboard matrix; then `SP-PERF` frame-budget tests.

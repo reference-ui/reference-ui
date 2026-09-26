@@ -15,13 +15,13 @@ export default {
           overflow="hidden"
         >
           <Splitter value={sizes} onChange={setSizes} height="100%">
-            <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter.Panel p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
               <Span fontSize="3r" fontWeight="500" color="design.text.base">
                 Sidebar ({Math.round(sizes[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} />
-            <Splitter.Panel index={1} p="3r" bg="ui.field.background" color="design.text.base">
+            <Splitter.Handle />
+            <Splitter.Panel p="3r" bg="ui.field.background" color="design.text.base">
               <Span fontSize="3r" fontWeight="500" color="design.text.base">
                 Main content ({Math.round(sizes[1])}%)
               </Span>
@@ -34,7 +34,9 @@ export default {
       </Div>
     )
   },
-  Vertical: () => (
+  Vertical: () => {
+    const [sizes, setSizes] = React.useState([60, 40])
+    return (
     <Div
       width="50r"
       height="40r"
@@ -43,18 +45,21 @@ export default {
       borderRadius="md"
       overflow="hidden"
     >
-      <Splitter orientation="vertical" defaultValue={[60, 40]} height="100%">
-        <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+      <Splitter orientation="vertical" value={sizes} onChange={setSizes} height="100%">
+        <Splitter.Panel p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
           <Span fontSize="3r" fontWeight="500" color="design.text.base">Editor</Span>
         </Splitter.Panel>
-        <Splitter.Handle index={0} />
-        <Splitter.Panel index={1} p="3r" bg="ui.field.background" color="design.text.base">
+        <Splitter.Handle />
+        <Splitter.Panel p="3r" bg="ui.field.background" color="design.text.base">
           <Span fontSize="3r" fontWeight="500" color="design.text.base">Console</Span>
         </Splitter.Panel>
       </Splitter>
     </Div>
-  ),
-  ThreePanels: () => (
+    )
+  },
+  ThreePanels: () => {
+    const [sizes, setSizes] = React.useState([25, 50, 25])
+    return (
     <Div
       height="25r"
       border="1px solid"
@@ -62,22 +67,25 @@ export default {
       borderRadius="md"
       overflow="hidden"
     >
-      <Splitter defaultValue={[25, 50, 25]} height="100%">
-        <Splitter.Panel index={0} p="2r" bg="ui.table.row.mutedBackground" color="design.text.base">
+      <Splitter value={sizes} onChange={setSizes} height="100%">
+        <Splitter.Panel p="2r" bg="ui.table.row.mutedBackground" color="design.text.base">
           <Span fontSize="3r" color="design.text.base">Nav</Span>
         </Splitter.Panel>
-        <Splitter.Handle index={0} />
-        <Splitter.Panel index={1} p="2r" bg="ui.field.background" color="design.text.base">
+        <Splitter.Handle />
+        <Splitter.Panel p="2r" bg="ui.field.background" color="design.text.base">
           <Span fontSize="3r" color="design.text.base">Canvas</Span>
         </Splitter.Panel>
-        <Splitter.Handle index={1} />
-        <Splitter.Panel index={2} p="2r" bg="ui.table.row.mutedBackground" color="design.text.base">
+        <Splitter.Handle />
+        <Splitter.Panel p="2r" bg="ui.table.row.mutedBackground" color="design.text.base">
           <Span fontSize="3r" color="design.text.base">Inspector</Span>
         </Splitter.Panel>
       </Splitter>
     </Div>
-  ),
-  CustomThumb: () => (
+    )
+  },
+  CustomThumb: () => {
+    const [sizes, setSizes] = React.useState([50, 50])
+    return (
     <Div
       height="25r"
       border="1px solid"
@@ -85,22 +93,23 @@ export default {
       borderRadius="md"
       overflow="hidden"
     >
-      <Splitter defaultValue={[50, 50]} height="100%">
-        <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+      <Splitter value={sizes} onChange={setSizes} height="100%">
+        <Splitter.Panel p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
           <Span fontSize="3r" fontWeight="500" color="design.text.base">
             Custom 5-Dot Thumb
           </Span>
         </Splitter.Panel>
-        <Splitter.Handle index={0}>
+        <Splitter.Handle>
           <Splitter.Thumb dots={5} />
         </Splitter.Handle>
-        <Splitter.Panel index={1} p="3r" bg="ui.field.background" color="design.text.base">
+        <Splitter.Panel p="3r" bg="ui.field.background" color="design.text.base">
           <Span fontSize="3r" fontWeight="500" color="design.text.base">
             Content
           </Span>
         </Splitter.Panel>
       </Splitter>
     </Div>
-  ),
+    )
+  },
 }
 

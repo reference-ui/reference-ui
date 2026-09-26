@@ -25,7 +25,6 @@ export const Basic = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="splitter-panel-0"
               p="3r"
               bg="ui.table.row.mutedBackground"
@@ -35,9 +34,8 @@ export const Basic = () => {
                 Left Pane ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="splitter-handle-0" />
+            <Splitter.Handle data-testid="splitter-handle-0" />
             <Splitter.Panel
-              index={1}
               data-testid="splitter-panel-1"
               p="3r"
               bg="ui.field.background"
@@ -84,10 +82,9 @@ export const Constrained = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="constrained-panel-0"
-              minSize={20}
-              maxSize={60}
+              min={20}
+              max={60}
               p="3r"
               bg="ui.table.row.mutedBackground"
               color="design.text.base"
@@ -96,9 +93,8 @@ export const Constrained = () => {
                 Left ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="constrained-handle-0" />
+            <Splitter.Handle data-testid="constrained-handle-0" />
             <Splitter.Panel
-              index={1}
               data-testid="constrained-panel-1"
               p="3r"
               bg="ui.field.background"
@@ -155,9 +151,8 @@ export const CollapsibleDemo = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="collapsible-panel-0"
-              minSize={20}
+              min={20}
               collapsible
               collapsedSize={5}
               p="3r"
@@ -168,9 +163,8 @@ export const CollapsibleDemo = () => {
                 Left ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="collapsible-handle-0" />
+            <Splitter.Handle data-testid="collapsible-handle-0" />
             <Splitter.Panel
-              index={1}
               data-testid="collapsible-panel-1"
               p="3r"
               bg="ui.field.background"
@@ -218,15 +212,15 @@ export const ThreePanel = () => {
             onChangeEnd={() => setChangeEndCount((c) => c + 1)}
             height="100%"
           >
-            <Splitter.Panel index={0} data-testid="threepanel-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter.Panel data-testid="threepanel-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">A ({Math.round(value[0])}%)</Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="threepanel-handle-0" />
-            <Splitter.Panel index={1} data-testid="threepanel-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
+            <Splitter.Handle data-testid="threepanel-handle-0" />
+            <Splitter.Panel data-testid="threepanel-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">B ({Math.round(value[1])}%)</Span>
             </Splitter.Panel>
-            <Splitter.Handle index={1} data-testid="threepanel-handle-1" />
-            <Splitter.Panel index={2} data-testid="threepanel-panel-2" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter.Handle data-testid="threepanel-handle-1" />
+            <Splitter.Panel data-testid="threepanel-panel-2" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">C ({Math.round(value[2])}%)</Span>
             </Splitter.Panel>
           </Splitter>
@@ -265,11 +259,11 @@ export const Nested = () => {
             onChangeEnd={() => setOuterEnds((c) => c + 1)}
             height="100%"
           >
-            <Splitter.Panel index={0} data-testid="nested-outer-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter.Panel data-testid="nested-outer-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">Nav ({Math.round(outer[0])}%)</Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="nested-outer-handle-0" />
-            <Splitter.Panel index={1} data-testid="nested-outer-panel-1" bg="ui.field.background" color="design.text.base">
+            <Splitter.Handle data-testid="nested-outer-handle-0" />
+            <Splitter.Panel data-testid="nested-outer-panel-1" bg="ui.field.background" color="design.text.base">
               <Splitter
                 orientation="vertical"
                 data-testid="nested-inner"
@@ -278,11 +272,11 @@ export const Nested = () => {
                 onChangeEnd={() => setInnerEnds((c) => c + 1)}
                 height="100%"
               >
-                <Splitter.Panel index={0} data-testid="nested-inner-panel-0" p="3r">
+                <Splitter.Panel data-testid="nested-inner-panel-0" p="3r">
                   <Span fontSize="3r" fontWeight="500">Editor ({Math.round(inner[0])}%)</Span>
                 </Splitter.Panel>
-                <Splitter.Handle index={0} data-testid="nested-inner-handle-0" />
-                <Splitter.Panel index={1} data-testid="nested-inner-panel-1" p="3r">
+                <Splitter.Handle data-testid="nested-inner-handle-0" />
+                <Splitter.Panel data-testid="nested-inner-panel-1" p="3r">
                   <Span fontSize="3r" fontWeight="500">Console ({Math.round(inner[1])}%)</Span>
                 </Splitter.Panel>
               </Splitter>
@@ -332,10 +326,9 @@ export const Sidebar = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="sidebar-panel-0"
-              minSize={20}
-              maxSize={max}
+              min={20}
+              max={max}
               collapsible
               collapsedSize={5}
               p="3r"
@@ -346,9 +339,8 @@ export const Sidebar = () => {
                 Sidebar ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="sidebar-handle-0" aria-label="Resize sidebar" />
+            <Splitter.Handle data-testid="sidebar-handle-0" aria-label="Resize sidebar" />
             <Splitter.Panel
-              index={1}
               data-testid="sidebar-panel-1"
               p="3r"
               bg="ui.field.background"
@@ -408,9 +400,8 @@ export const RtlSidebar = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="rtl-sidebar-panel-0"
-              minSize={20}
+              min={20}
               p="3r"
               bg="ui.table.row.mutedBackground"
               color="design.text.base"
@@ -419,11 +410,10 @@ export const RtlSidebar = () => {
                 A ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="rtl-sidebar-handle-0" aria-label="Resize panels" />
+            <Splitter.Handle data-testid="rtl-sidebar-handle-0" aria-label="Resize panels" />
             <Splitter.Panel
-              index={1}
               data-testid="rtl-sidebar-panel-1"
-              minSize={20}
+              min={20}
               collapsible
               collapsedSize={5}
               p="3r"
@@ -473,7 +463,6 @@ const DirToggleBase = ({ orientation }: { orientation: 'horizontal' | 'vertical'
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               id="dirtoggle-sidebar"
               data-testid="dirtoggle-panel-a"
               p="3r"
@@ -484,9 +473,8 @@ const DirToggleBase = ({ orientation }: { orientation: 'horizontal' | 'vertical'
                 A ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="dirtoggle-handle-0" aria-label="Resize A and B" />
+            <Splitter.Handle data-testid="dirtoggle-handle-0" aria-label="Resize A and B" />
             <Splitter.Panel
-              index={1}
               data-testid="dirtoggle-panel-b"
               p="3r"
               bg="ui.field.background"
@@ -549,10 +537,9 @@ export const Rejecting = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               data-testid="rejecting-panel-0"
-              minSize={20}
-              maxSize={max}
+              min={20}
+              max={max}
               p="3r"
               bg="ui.table.row.mutedBackground"
               color="design.text.base"
@@ -561,9 +548,8 @@ export const Rejecting = () => {
                 Left
               </Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="rejecting-handle-0" />
+            <Splitter.Handle data-testid="rejecting-handle-0" />
             <Splitter.Panel
-              index={1}
               data-testid="rejecting-panel-1"
               p="3r"
               bg="ui.field.background"
@@ -616,13 +602,12 @@ export const KeyPassthrough = () => {
             }}
             height="100%"
           >
-            <Splitter.Panel index={0} data-testid="passthrough-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter.Panel data-testid="passthrough-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">
                 Left ({Math.round(value[0])}%)
               </Span>
             </Splitter.Panel>
             <Splitter.Handle
-              index={0}
               data-testid="passthrough-handle-0"
               onKeyDown={(e) =>
                 setReceived((r) => [
@@ -631,7 +616,7 @@ export const KeyPassthrough = () => {
                 ])
               }
             />
-            <Splitter.Panel index={1} data-testid="passthrough-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
+            <Splitter.Panel data-testid="passthrough-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
               <Span fontSize="3r" fontWeight="500">
                 Right ({Math.round(value[1])}%)
               </Span>
@@ -674,18 +659,17 @@ export const Lifecycle = () => {
                 setValue(next)
               }}
               onChangeEnd={() => setChangeEndCount((c) => c + 1)}
-              disabled={disabled}
               height="100%"
             >
-              <Splitter.Panel index={0} data-testid="lifecycle-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+              <Splitter.Panel data-testid="lifecycle-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">
                   Left ({Math.round(value[0])}%)
                 </Span>
               </Splitter.Panel>
               {handleMounted ? (
-                <Splitter.Handle index={0} data-testid="lifecycle-handle-0" />
+                <Splitter.Handle data-testid="lifecycle-handle-0" disabled={disabled} />
               ) : null}
-              <Splitter.Panel index={1} data-testid="lifecycle-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
+              <Splitter.Panel data-testid="lifecycle-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">
                   Right ({Math.round(value[1])}%)
                 </Span>
@@ -730,41 +714,41 @@ export const A11ySweep = () => (
     <Div p="6r" colorMode="dark" data-testid="splitter-a11y-root">
       <Div width="100r" height="40r" border="1px solid" borderColor="ui.field.border" mb="4r" data-testid="a11y-group-horizontal">
         <Splitter value={[40, 60]} height="100%">
-          <Splitter.Panel index={0}>Left</Splitter.Panel>
-          <Splitter.Handle index={0} data-testid="a11y-horizontal-handle-0" aria-label="Resize main panels" />
-          <Splitter.Panel index={1}>Right</Splitter.Panel>
+          <Splitter.Panel>Left</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-horizontal-handle-0" aria-label="Resize main panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
         </Splitter>
       </Div>
       <Div width="80r" height="50r" border="1px solid" borderColor="ui.field.border" mb="4r" data-testid="a11y-group-vertical">
         <Splitter orientation="vertical" value={[50, 50]} height="100%">
-          <Splitter.Panel index={0}>Top</Splitter.Panel>
-          <Splitter.Handle index={0} data-testid="a11y-vertical-handle-0" aria-label="Resize editor panels" />
-          <Splitter.Panel index={1}>Bottom</Splitter.Panel>
+          <Splitter.Panel>Top</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-vertical-handle-0" aria-label="Resize editor panels" />
+          <Splitter.Panel>Bottom</Splitter.Panel>
         </Splitter>
       </Div>
       <Div width="100r" height="40r" border="1px solid" borderColor="ui.field.border" mb="4r" data-testid="a11y-group-three">
         <Splitter value={[20, 30, 50]} height="100%">
-          <Splitter.Panel index={0}>A</Splitter.Panel>
-          <Splitter.Handle index={0} data-testid="a11y-three-handle-0" aria-label="Resize A and B" />
-          <Splitter.Panel index={1}>B</Splitter.Panel>
-          <Splitter.Handle index={1} data-testid="a11y-three-handle-1" aria-label="Resize B and C" />
-          <Splitter.Panel index={2}>C</Splitter.Panel>
+          <Splitter.Panel>A</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-three-handle-0" aria-label="Resize A and B" />
+          <Splitter.Panel>B</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-three-handle-1" aria-label="Resize B and C" />
+          <Splitter.Panel>C</Splitter.Panel>
         </Splitter>
       </Div>
       <Div width="100r" height="40r" border="1px solid" borderColor="ui.field.border" mb="4r" data-testid="a11y-group-mixed">
         <Splitter value={[25, 50, 25]} height="100%">
-          <Splitter.Panel index={0} minSize={10} maxSize={40}>A</Splitter.Panel>
-          <Splitter.Handle index={0} data-testid="a11y-mixed-handle-0" aria-label="Resize constrained A" />
-          <Splitter.Panel index={1} minSize={30}>B</Splitter.Panel>
-          <Splitter.Handle index={1} data-testid="a11y-mixed-handle-1" aria-label="Resize frozen panels" disabled />
-          <Splitter.Panel index={2} minSize={10} maxSize={40}>C</Splitter.Panel>
+          <Splitter.Panel min={10} max={40}>A</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-mixed-handle-0" aria-label="Resize constrained A" />
+          <Splitter.Panel min={30}>B</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-mixed-handle-1" aria-label="Resize frozen panels" disabled />
+          <Splitter.Panel min={10} max={40}>C</Splitter.Panel>
         </Splitter>
       </Div>
       <Div width="100r" height="40r" border="1px solid" borderColor="ui.field.border" mb="4r" data-testid="a11y-group-collapsed">
         <Splitter value={[5, 95]} height="100%">
-          <Splitter.Panel index={0} minSize={20} collapsible collapsedSize={5}>Sidebar</Splitter.Panel>
-          <Splitter.Handle index={0} data-testid="a11y-collapsed-handle-0" aria-label="Resize sidebar panels" />
-          <Splitter.Panel index={1}>Main</Splitter.Panel>
+          <Splitter.Panel min={20} collapsible collapsedSize={5}>Sidebar</Splitter.Panel>
+          <Splitter.Handle data-testid="a11y-collapsed-handle-0" aria-label="Resize sidebar panels" />
+          <Splitter.Panel>Main</Splitter.Panel>
         </Splitter>
       </Div>
     </Div>
@@ -792,16 +776,14 @@ export const Vertical = () => {
             height="100%"
           >
             <Splitter.Panel
-              index={0}
               p="3r"
               bg="ui.table.row.mutedBackground"
               color="design.text.base"
             >
               <Span fontSize="3r" fontWeight="500">Top ({value[0]}%)</Span>
             </Splitter.Panel>
-            <Splitter.Handle index={0} data-testid="splitter-vertical-handle" />
+            <Splitter.Handle data-testid="splitter-vertical-handle" />
             <Splitter.Panel
-              index={1}
               p="3r"
               bg="ui.field.background"
               color="design.text.base"

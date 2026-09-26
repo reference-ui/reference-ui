@@ -12,10 +12,19 @@ import { SPLITTER_STYLES } from './splitterStyles'
 
 export type SplitterOrientation = 'horizontal' | 'vertical'
 
-// Shipped resize floor: panels clamp to >= 5% unless the author sets minSize.
-// Quarantine defaults this floor to 0; 5 preserves the current branch behavior.
+// Decided resize floor (FEATURES #10: KEEP 5%): an unconstrained Panel
+// clamps to >= 5% under drag/keys. Pinned by the SP-DOM-03 CT slices.
 const DEFAULT_PANEL_MIN_SIZE = 5
 const DEFAULT_PANEL_MAX_SIZE = 100
+
+// Pre-registration Handle ARIA: order is unknown on the server and on the
+// first client render, so separators render this safe range until layout
+// effects register them (before paint on the client).
+const UNREGISTERED_SEPARATOR_ARIA: SplitterSeparatorAria = {
+  valueNow: 50,
+  valueMin: 0,
+  valueMax: 100,
+}
 
 const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
 
@@ -24,33 +33,35 @@ function warnSplitter(message: string) {
   console.error(`[Reference UI Splitter] ${message}`)
 }
 
-// Collect per-Panel resize constraints from the element tree. Descends through
-// fragments/wrappers but stops at nested Splitter roots (they own their Panels)
-// and never descends into Panel content. Missing indices fall back to defaults,
-// so an unrecognized tree behaves exactly as before.
-function collectPanelConstraints(children: React.ReactNode): Map<number, PanelConstraints> {
-  const found = new Map<number, PanelConstraints>()
-  const visit = (node: React.ReactNode): void => {
-    React.Children.forEach(node, (child) => {
-      if (!React.isValidElement(child)) return
-      const type = child.type as unknown
-      if (type === SplitterPanel) {
-        const props = child.props as SplitterPanelProps
-        found.set(props.index ?? 0, {
-          minSize: props.minSize ?? DEFAULT_PANEL_MIN_SIZE,
-          maxSize: props.maxSize ?? DEFAULT_PANEL_MAX_SIZE,
-          collapsible: props.collapsible,
-          collapsedSize: props.collapsedSize ?? 0,
-        })
-        return
-      }
-      if (type === Splitter) return
-      const props = child.props as { children?: React.ReactNode } | undefined
-      if (props && typeof type !== 'string') visit(props.children)
-    })
-  }
-  visit(children)
-  return found
+// Numeric solver input from DOM-ordered Panel registrations. Numbers pass
+// through; measured strings fall back to the default bound with a dev
+// diagnostic until FEATURES #3 wires pointerdown/idle resolution (the
+// cluster-B seam: replace the string branches, keep the signature).
+function toSolverConstraints(panels: RegisteredPanel[]): PanelConstraints[] {
+  return panels.map((panel) => {
+    let minSize = DEFAULT_PANEL_MIN_SIZE
+    let maxSize = DEFAULT_PANEL_MAX_SIZE
+    if (typeof panel.min === 'number') {
+      minSize = panel.min
+    } else if (panel.min !== undefined) {
+      warnSplitter(
+        `Panel "${panel.id}" uses a measured min ("${panel.min}"); string constraints resolve with FEATURES #3 — falling back to the ${DEFAULT_PANEL_MIN_SIZE}% floor.`
+      )
+    }
+    if (typeof panel.max === 'number') {
+      maxSize = panel.max
+    } else if (panel.max !== undefined) {
+      warnSplitter(
+        `Panel "${panel.id}" uses a measured max ("${panel.max}"); string constraints resolve with FEATURES #3 — falling back to ${DEFAULT_PANEL_MAX_SIZE}%.`
+      )
+    }
+    return {
+      minSize,
+      maxSize,
+      collapsible: panel.collapsible,
+      collapsedSize: panel.collapsedSize,
+    }
+  })
 }
 
 const useIsomorphicLayoutEffect =
@@ -67,13 +78,11 @@ function readDirection(element: HTMLElement | null): SplitterDirection {
   return 'ltr'
 }
 
-export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
+export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'display' | 'flexDirection'> & {
   orientation?: SplitterOrientation
-  value?: number[]
-  defaultValue?: number[]
+  value: number[]
   onChange?: (value: number[]) => void
   onChangeEnd?: (value: number[]) => void
-  disabled?: boolean
 }
 
 export interface SplitterSeparatorAria {
@@ -82,17 +91,34 @@ export interface SplitterSeparatorAria {
   valueMax: number
 }
 
+interface RegisteredPanel {
+  key: string
+  id: string
+  element: HTMLDivElement | null
+  min: number | string | undefined
+  max: number | string | undefined
+  collapsible: boolean
+  collapsedSize: number
+}
+
+interface RegisteredHandle {
+  key: string
+  element: HTMLDivElement | null
+}
+
 interface SplitterContextValue {
   orientation: SplitterOrientation
   value: number[]
-  disabled: boolean
   isRtl: boolean
   isResizing: boolean
   resizingHandleIndex: number | null
   panelConstraints: PanelConstraints[]
   primaryPanelIndex: (handleIndex: number) => number
   getPanelId: (panelIndex: number) => string | undefined
-  registerPanel: (panelIndex: number, id: string, element: HTMLDivElement | null) => () => void
+  getPanelIndex: (key: string) => number
+  getHandleIndex: (key: string) => number
+  registerPanel: (panel: RegisteredPanel) => () => void
+  registerHandle: (handle: RegisteredHandle) => () => void
   getSeparatorAria: (handleIndex: number) => SplitterSeparatorAria
   cancelOwnedSession: (handleIndex: number) => void
   cancelKeyboardSession: (handleIndex: number) => void
@@ -103,17 +129,20 @@ interface SplitterContextValue {
 
 const SplitterContext = React.createContext<SplitterContextValue | null>(null)
 
-export type SplitterPanelProps = PrimitiveProps<'div'> & {
-  index?: number
+export type SplitterPanelProps = Omit<
+  PrimitiveProps<'div'>,
+  'flexGrow' | 'flexShrink' | 'flexBasis' | 'flex'
+> & {
+  min?: number | string
+  max?: number | string
   collapsible?: boolean
   collapsedSize?: number
-  minSize?: number
-  maxSize?: number
 }
 
 export function SplitterPanel({
   children,
-  index = 0,
+  min,
+  max,
   id: idProp,
   collapsible = false,
   collapsedSize = 0,
@@ -123,19 +152,29 @@ export function SplitterPanel({
 }: SplitterPanelProps) {
   const context = React.useContext(SplitterContext)
   const orientation = context?.orientation ?? 'horizontal'
-  const size = context?.value[index] ?? 50
 
   // Pin the first render's id: the React 17 CT shim mints a fresh useId
-  // per render, and the registration effect below keys off this value.
+  // per render, and DOM-order registration keys off this value.
   const autoId = React.useId().replace(/:/g, '')
   const [stableAutoId] = React.useState(autoId)
   const panelId = idProp ?? `splitter-panel-${stableAutoId}`
+  const panelIndex = context?.getPanelIndex(stableAutoId) ?? -1
+  const size = panelIndex >= 0 ? (context?.value[panelIndex] ?? 50) : 50
+
   const panelRef = React.useRef<HTMLDivElement | null>(null)
   const registerPanel = context?.registerPanel
   useIsomorphicLayoutEffect(() => {
     if (!registerPanel) return
-    return registerPanel(index, panelId, panelRef.current)
-  }, [registerPanel, index, panelId])
+    return registerPanel({
+      key: stableAutoId,
+      id: panelId,
+      element: panelRef.current,
+      min,
+      max,
+      collapsible,
+      collapsedSize,
+    })
+  }, [registerPanel, stableAutoId, panelId, min, max, collapsible, collapsedSize])
 
   const isCollapsed = collapsible && layoutNumbersEqual(size, collapsedSize)
 
@@ -258,15 +297,16 @@ export function SplitterThumb({
 }
 SplitterThumb.displayName = 'SplitterThumb'
 
-export type SplitterHandleProps = PrimitiveProps<'div'> & {
-  index?: number
+export type SplitterHandleProps = Omit<
+  PrimitiveProps<'div'>,
+  'flexGrow' | 'flexShrink' | 'flexBasis' | 'flex'
+> & {
   disabled?: boolean
   withThumb?: boolean
 }
 
 export function SplitterHandle({
-  index = 0,
-  disabled: disabledProp,
+  disabled = false,
   withThumb = true,
   children,
   className,
@@ -286,23 +326,35 @@ export function SplitterHandle({
   const context = React.useContext(SplitterContext)
   if (!context) return null
 
-  const { orientation, disabled: groupDisabled, isResizing, resizingHandleIndex } = context
-  const isDisabled = disabledProp ?? groupDisabled
+  const { orientation, isResizing, resizingHandleIndex } = context
+  const isDisabled = disabled
   const isHorizontal = orientation === 'horizontal'
-  const separatorAria = context.getSeparatorAria(index)
-  const primaryPanelId = context.getPanelId(context.primaryPanelIndex(index))
-  const isDragging = isResizing && resizingHandleIndex === index
+
+  // Pin the first render's key: the React 17 CT shim mints a fresh useId
+  // per render, and DOM-order registration keys off this value.
+  const autoHandleKey = React.useId().replace(/:/g, '')
+  const [handleKey] = React.useState(autoHandleKey)
+  const handleIndex = context.getHandleIndex(handleKey)
+  const separatorAria = context.getSeparatorAria(handleIndex)
+  const primaryPanelId = context.getPanelId(context.primaryPanelIndex(handleIndex))
+  const isDragging = isResizing && resizingHandleIndex === handleIndex
 
   const [isHovered, setIsHovered] = React.useState(false)
   const [isFocused, setIsFocused] = React.useState(false)
   const handleRef = React.useRef<HTMLDivElement>(null)
 
+  const registerHandle = context.registerHandle
+  useIsomorphicLayoutEffect(() => {
+    if (!registerHandle) return
+    return registerHandle({ key: handleKey, element: handleRef.current })
+  }, [registerHandle, handleKey])
+
   const cancelOwnedSession = context.cancelOwnedSession
   const cancelKeyboardSession = context.cancelKeyboardSession
   React.useEffect(() => {
-    if (isDisabled) cancelOwnedSession(index)
-    return () => cancelOwnedSession(index)
-  }, [isDisabled, cancelOwnedSession, index])
+    if (isDisabled) cancelOwnedSession(handleIndex)
+    return () => cancelOwnedSession(handleIndex)
+  }, [isDisabled, cancelOwnedSession, handleIndex])
 
   // Hover may go stale while captured (leave is suppressed mid-drag), so
   // recompute it from the release position once the session settles.
@@ -332,7 +384,7 @@ export function SplitterHandle({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || isDisabled) return
-    context.onHandleKeyDown(index, e)
+    context.onHandleKeyDown(handleIndex, e)
   }
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -365,13 +417,13 @@ export function SplitterHandle({
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     onBlur?.(e)
     setIsFocused(false)
-    cancelKeyboardSession(index)
+    cancelKeyboardSession(handleIndex)
   }
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerDown?.(e)
     if (e.defaultPrevented || isDisabled) return
-    context.onHandlePointerDown(index, e)
+    context.onHandlePointerDown(handleIndex, e)
   }
 
   // Consumer-only: the Root session owns moves, release, and cancel.
@@ -497,36 +549,91 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
     {
       children,
       orientation = 'horizontal',
-      value: valueProp,
-      defaultValue = [50, 50],
+      value,
       onChange,
       onChangeEnd,
-      disabled = false,
       className,
       style,
       ...props
     },
     forwardedRef
   ) {
-    const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<number[]>(defaultValue)
-    const value = isControlled ? valueProp : internalValue
-
     const containerRef = React.useRef<HTMLDivElement | null>(null)
 
-    const collectedConstraints = collectPanelConstraints(children)
-    const panelConstraints: PanelConstraints[] = value.map(
-      (_, panelIndex) =>
-        collectedConstraints.get(panelIndex) ?? {
-          minSize: DEFAULT_PANEL_MIN_SIZE,
-          maxSize: DEFAULT_PANEL_MAX_SIZE,
+    // Nearest-context part registries: Panels and Handles register from
+    // layout effects and stay sorted in DOM order, so array position always
+    // means document position (insert/remove/reorder included). Nested
+    // groups register to their own Root through the nearest context.
+    const panelsRef = React.useRef<RegisteredPanel[]>([])
+    const handlesRef = React.useRef<RegisteredHandle[]>([])
+    const [partsRevision, setPartsRevision] = React.useState(0)
+
+    const sortParts = React.useCallback(() => {
+      panelsRef.current.sort((a, b) => {
+        if (!a.element || !b.element) return 0
+        const pos = a.element.compareDocumentPosition(b.element)
+        return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+      })
+      handlesRef.current.sort((a, b) => {
+        if (!a.element || !b.element) return 0
+        const pos = a.element.compareDocumentPosition(b.element)
+        return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+      })
+    }, [])
+
+    const registerPanel = React.useCallback(
+      (panel: RegisteredPanel) => {
+        const existingIndex = panelsRef.current.findIndex((p) => p.key === panel.key)
+        if (existingIndex >= 0) {
+          panelsRef.current[existingIndex] = panel
+        } else {
+          panelsRef.current.push(panel)
         }
+        sortParts()
+        setPartsRevision((r) => r + 1)
+        return () => {
+          panelsRef.current = panelsRef.current.filter((p) => p.key !== panel.key)
+          sortParts()
+          setPartsRevision((r) => r + 1)
+        }
+      },
+      [sortParts]
     )
+
+    const registerHandle = React.useCallback(
+      (handle: RegisteredHandle) => {
+        const existingIndex = handlesRef.current.findIndex((h) => h.key === handle.key)
+        if (existingIndex >= 0) {
+          handlesRef.current[existingIndex] = handle
+        } else {
+          handlesRef.current.push(handle)
+        }
+        sortParts()
+        setPartsRevision((r) => r + 1)
+        return () => {
+          handlesRef.current = handlesRef.current.filter((h) => h.key !== handle.key)
+          sortParts()
+          setPartsRevision((r) => r + 1)
+        }
+      },
+      [sortParts]
+    )
+
+    const getPanelIndex = React.useCallback(
+      (key: string) => panelsRef.current.findIndex((p) => p.key === key),
+      []
+    )
+    const getHandleIndex = React.useCallback(
+      (key: string) => handlesRef.current.findIndex((h) => h.key === key),
+      []
+    )
+
+    const panelConstraints = toSolverConstraints(panelsRef.current)
 
     if (globalProcess?.env?.NODE_ENV !== 'production') {
       const layoutCheck = validateLayout(
         value,
-        collectedConstraints.size > 0 ? collectedConstraints.size : undefined
+        panelsRef.current.length > 0 ? panelsRef.current.length : undefined
       )
       if (!layoutCheck.valid && layoutCheck.error) warnSplitter(layoutCheck.error)
       const constraintCheck = validatePanelConstraints(
@@ -542,30 +649,12 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
     // Sessions outlive renders: callbacks, constraints, and value stay live
     // through this ref so mid-gesture swaps apply to the captured origin.
-    const latestRef = React.useRef({ value, panelConstraints, onChange, onChangeEnd, isControlled })
-    latestRef.current = { value, panelConstraints, onChange, onChangeEnd, isControlled }
+    const latestRef = React.useRef({ value, panelConstraints, onChange, onChangeEnd })
+    latestRef.current = { value, panelConstraints, onChange, onChangeEnd }
 
-    // Nearest-context Panel registry: ids for aria-controls plus owned
-    // elements for data-resizing. Nested groups register to their own Root.
-    const panelRegistryRef = React.useRef(
-      new Map<number, { id: string; element: HTMLDivElement | null }>()
-    )
-    const [partsRevision, setPartsRevision] = React.useState(0)
-    const registerPanel = React.useCallback(
-      (panelIndex: number, id: string, element: HTMLDivElement | null) => {
-        panelRegistryRef.current.set(panelIndex, { id, element })
-        setPartsRevision((r) => r + 1)
-        return () => {
-          const entry = panelRegistryRef.current.get(panelIndex)
-          if (entry && entry.id === id) panelRegistryRef.current.delete(panelIndex)
-          setPartsRevision((r) => r + 1)
-        }
-      },
-      []
-    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const getPanelId = React.useCallback(
-      (panelIndex: number) => panelRegistryRef.current.get(panelIndex)?.id,
+      (panelIndex: number) => panelsRef.current[panelIndex]?.id,
       [partsRevision]
     )
 
@@ -600,6 +689,13 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
     const getSeparatorAria = React.useCallback(
       (handleIndex: number) => {
+        if (
+          handleIndex < 0 ||
+          handleIndex >= value.length - 1 ||
+          panelConstraints.length !== value.length
+        ) {
+          return UNREGISTERED_SEPARATOR_ARIA
+        }
         const aria = calculateSeparatorAriaValues({
           layout: value,
           panelConstraints,
@@ -706,12 +802,9 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         )
         if (!hasChanged) return
         keyboardSessionRef.current = { handleIndex, hasInteracted: true, lastLayout: nextLayout }
-        if (!isControlled) {
-          setInternalValue(nextLayout)
-        }
         onChange?.(nextLayout)
       },
-      [isControlled, isRtl, onChange, orientation, panelConstraints, primaryPanelIndex, value]
+      [isRtl, onChange, orientation, panelConstraints, primaryPanelIndex, value]
     )
 
     const onHandleKeyUp = React.useCallback(() => {
@@ -770,7 +863,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         containerEl.setAttribute('data-resizing', '')
         handleEl.setAttribute('data-resizing', '')
         const ownPanels: HTMLElement[] = []
-        panelRegistryRef.current.forEach((entry) => {
+        panelsRef.current.forEach((entry) => {
           if (entry.element) {
             entry.element.setAttribute('data-resizing', '')
             ownPanels.push(entry.element)
@@ -818,9 +911,6 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           if (unchanged) return
           lastRequested = nextLayout
           emittedAny = true
-          if (!latest.isControlled) {
-            setInternalValue(nextLayout)
-          }
           latest.onChange?.(nextLayout)
         }
 
@@ -929,44 +1019,50 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       [forwardedRef]
     )
 
-    const contextValue = React.useMemo<SplitterContextValue>(
-      () => ({
+    const contextValue = React.useMemo<SplitterContextValue>(() => {
+      // Re-publish after every (un)registration so parts re-read DOM order.
+      void partsRevision
+      return {
         orientation,
         value,
-        disabled,
         isRtl,
         isResizing,
         resizingHandleIndex,
         panelConstraints,
         primaryPanelIndex,
         getPanelId,
+        getPanelIndex,
+        getHandleIndex,
         registerPanel,
+        registerHandle,
         getSeparatorAria,
         cancelOwnedSession,
         cancelKeyboardSession,
         onHandlePointerDown,
         onHandleKeyDown,
         onHandleKeyUp,
-      }),
-      [
-        orientation,
-        value,
-        disabled,
-        isRtl,
-        isResizing,
-        resizingHandleIndex,
-        panelConstraints,
-        primaryPanelIndex,
-        getPanelId,
-        registerPanel,
-        getSeparatorAria,
-        cancelOwnedSession,
-        cancelKeyboardSession,
-        onHandlePointerDown,
-        onHandleKeyDown,
-        onHandleKeyUp,
-      ]
-    )
+      }
+    }, [
+      orientation,
+      value,
+      isRtl,
+      isResizing,
+      resizingHandleIndex,
+      panelConstraints,
+      primaryPanelIndex,
+      getPanelId,
+      getPanelIndex,
+      getHandleIndex,
+      registerPanel,
+      registerHandle,
+      getSeparatorAria,
+      cancelOwnedSession,
+      cancelKeyboardSession,
+      onHandlePointerDown,
+      onHandleKeyDown,
+      onHandleKeyUp,
+      partsRevision,
+    ])
 
     return (
       <SplitterContext.Provider value={contextValue}>
@@ -975,7 +1071,6 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           data-reference-splitter=""
           data-orientation={orientation}
           data-resizing={isResizing ? '' : undefined}
-          data-disabled={disabled ? '' : undefined}
           display="flex"
           flexDirection={orientation === 'vertical' ? 'column' : 'row'}
           width="100%"
