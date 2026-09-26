@@ -88,9 +88,9 @@ DateField design": two shadow fixtures + two honest CT proofs, no
 
 ### Gaps & incoherence
 
-- `defaultValue` (uncontrolled) still exists. Freeze: required `value` + `locale`;
-  `locale` now required and throwing (FEATURES #1); required `value` is not a
-  FEATURES item and stays open.
+- ~~`defaultValue` (uncontrolled) still exists~~ — landed (HQ controlled-only
+  rule, `docs/MISSIONS/API-STANCE.md`): `defaultValue` deleted, `value` +
+  `onChange` + `locale` required and throwing; in-repo consumers migrated.
 - **No `DateField.Range` / Start / End.**
 - No locale `formatToParts` parse/format; input shows the ISO string.
 - No caret-aware stepping (`selectionStart` unused).

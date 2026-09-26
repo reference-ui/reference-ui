@@ -44,6 +44,68 @@ describe('DateField required locale (FEATURES #1)', () => {
   })
 })
 
+describe('DateField required value + onChange (controlled-only)', () => {
+  it('DF-CTL-01: DateField should throw without an explicit value (null is the empty value)', () => {
+    // Missing value throws loudly on the childless host (fail-closed).
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — value is required; the runtime must throw.
+        <DateField onChange={() => {}} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit value prop (null is the empty value).')
+
+    // Explicit undefined from a JS consumer throws the same way.
+    expect(() =>
+      renderToString(
+        <DateField value={undefined as unknown as null} onChange={() => {}} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit value prop')
+
+    // Missing value throws loudly on the compound host too (throw-for-all).
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — value is required; the runtime must throw.
+        <DateField onChange={() => {}} locale="en-GB">
+          <DateField.Picker />
+        </DateField>
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit value prop')
+
+    // null is the legal empty value — renders, no throw.
+    expect(() =>
+      renderToString(<DateField value={null} onChange={() => {}} locale="en-GB" />)
+    ).not.toThrow()
+  })
+
+  it('DF-CTL-02: DateField should throw without onChange (no silent-frozen controlled)', () => {
+    // Missing onChange throws loudly — a value without a writer would be
+    // silently frozen, so the field refuses to render instead.
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — onChange is required; the runtime must throw.
+        <DateField value={null} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit onChange prop.')
+
+    // Explicit null from a JS consumer throws the same way.
+    expect(() =>
+      renderToString(
+        <DateField value={null} onChange={null as unknown as (v: null) => void} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit onChange prop.')
+
+    // Compound host throws too (throw-for-all).
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — onChange is required; the runtime must throw.
+        <DateField value={null} locale="en-GB">
+          <DateField.Picker />
+        </DateField>
+      )
+    ).toThrow('[reference-ui] DateField requires an explicit onChange prop.')
+  })
+})
+
 describe('DateField constraint bounds (FEATURES #3)', () => {
   it('DF-BND-04: DateField should fail when min is after max or either is not canonical ISO', () => {
     // Fail-closed: invalid bounds throw during render, so no edit session

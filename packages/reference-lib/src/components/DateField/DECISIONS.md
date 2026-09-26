@@ -42,12 +42,16 @@ The 4 no-quarantine-source gaps moved the same way.
 
 ## Non-decisions (rejected outright)
 
-- Controlled-only rewrite: deleting `defaultValue` + internal state
+- ~~Controlled-only rewrite: deleting `defaultValue` + internal state
   (quarantine `DateField.tsx` vs current `DateField.tsx:10,242`) —
   breaking API removal, Recon Exhibit 1 class; rejection in crew log
-  "Triage" SKIP + "Brief" (API frozen).
-- Required `value` prop (quarantine `value: ISODate | null` required vs
-  current optional `value?`) — same breaking class; same pointers.
+  "Triage" SKIP + "Brief" (API frozen).~~ SUPERSEDED by the HQ
+  controlled-only rule (`docs/MISSIONS/API-STANCE.md`, 2026-09-26):
+  landing FROZE the API, the features campaign FINALIZES it — the
+  rewrite landed as required `value` + `onChange` with throwing guards.
+- ~~Required `value` prop (quarantine `value: ISODate | null` required vs
+  current optional `value?`) — same breaking class; same pointers.~~
+  SUPERSEDED the same way — `value` is now required (null = empty).
 - Quarantine `DateField.book.tsx` locale + Range stories (`FoldedRange`,
   `WithRange`, `locale="en-GB"` rewrites) — SUSPECT look-and-feel /
   unlanded-API showcase; rejection in crew log "Triage" SKIP

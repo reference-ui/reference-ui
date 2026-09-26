@@ -8,9 +8,8 @@ import { createSlotRootContext } from '../Slot'
 import { assertValidDateBounds, isDateWithinConstraints } from './parse'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
-  value?: ISODate | null
-  defaultValue?: ISODate | null
-  onChange?: (value: ISODate | null) => void
+  value: ISODate | null
+  onChange: (value: ISODate | null) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -411,8 +410,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
   function DateField(
     {
       children,
-      value: valueProp,
-      defaultValue = null,
+      value,
       onChange,
       locale,
       min,
@@ -434,9 +432,12 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       throw new Error('[reference-ui] DateField requires an explicit locale prop.')
     }
     assertValidDateBounds(min, max)
-    const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<ISODate | null>(defaultValue)
-    const value = isControlled ? valueProp : internalValue
+    if (value === undefined) {
+      throw new Error('[reference-ui] DateField requires an explicit value prop (null is the empty value).')
+    }
+    if (onChange == null) {
+      throw new Error('[reference-ui] DateField requires an explicit onChange prop.')
+    }
 
     // Programmatic constraint-invalid: a canonical value outside min/max or
     // marked unavailable still displays; dirty text is never invalid here.
@@ -475,24 +476,18 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         ) {
           return
         }
-        if (!isControlled) {
-          setInternalValue(nextDate)
-        }
-        onChange?.(nextDate)
+        onChange(nextDate)
         setIsOpen(false)
       },
-      [isControlled, onChange, min, max, isDateUnavailable]
+      [onChange, min, max, isDateUnavailable]
     )
 
     const handleInputChange = React.useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value
-        if (!isControlled) {
-          setInternalValue(val)
-        }
-        onChange?.(val)
+        onChange(val)
       },
-      [isControlled, onChange]
+      [onChange]
     )
 
     const handleInputKeyDown = React.useCallback(

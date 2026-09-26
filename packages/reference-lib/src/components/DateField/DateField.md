@@ -276,7 +276,7 @@ interface DateFieldProps
   > {
   children?: React.ReactNode
   value: ISODate | null
-  onChange?: (value: ISODate | null) => void
+  onChange: (value: ISODate | null) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -327,7 +327,7 @@ interface DateFieldRangeProps
   > {
   children?: React.ReactNode
   value: DateRangeValue
-  onChange?: (value: DateRangeValue) => void
+  onChange: (value: DateRangeValue) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -369,8 +369,9 @@ Calendar (`CA-ISO-01`). DateField never accepts or publishes JavaScript
 
 ## Defaults
 
-- `locale` and `value` are required. Locale has no environment-dependent
-  default. `null` is the controlled empty value.
+- `locale`, `value`, and `onChange` are required. Locale has no
+  environment-dependent default. `null` is the controlled empty value.
+  There is no `defaultValue` and no uncontrolled mode.
 - `min` and `max` are absent. Supplied bounds must be canonical ISO dates
   and `min <= max`.
 - `isDateUnavailable` is absent; every valid date in the domain is
