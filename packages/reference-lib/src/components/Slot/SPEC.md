@@ -28,7 +28,7 @@ singleton root.
 | :--- | :--- |
 | Public | `createSlotRootContext`, `SlotRoot`, `resolveSlotVisibility`, helpers |
 | Registration | Live getters + `deps`; unregister only on unmount |
-| Scan | `scanById` first match; `getAll` stable while the set is unchanged |
+| Read | `getById` first match; `select` / `useSlots(filter)` in registration order; `getAll` stable while the set is unchanged |
 | Visibility | omitted → visible; `hidden` wins; `visible: false` → unmounted |
 
 ### Status (2026-09-10)
@@ -36,10 +36,10 @@ singleton root.
 | | |
 | :--- | :--- |
 | Engine | Closest to freeze. Store + composition smokes exist. |
-| Production | **Yes.** Provider, hook, StrictMode, and scan cases proven in colocated Vitest. |
-| Named `[x]` | 56 / 56 |
+| Production | **Yes.** Provider, hook, StrictMode, and read cases proven in colocated Vitest. |
+| Named `[x]` | 61 / 61 |
 | Playwright | 4 (`SL-COMP-01`–`04`, CT) |
-| Vitest | 52 (colocated `SL-TYPE-01` through `SL-READ-07`) |
+| Vitest | 57 (colocated `SL-TYPE-01` through `SL-READ-12`) |
 
 ### Gaps & incoherence
 
@@ -67,7 +67,7 @@ singleton root.
 - `[x]` `SL-TYPE-01`, `SL-REG-01`–`04`, `SL-UNREG-01`–`04`, `SL-SCAN-01`–`04`,
   `SL-SCANALL-01`–`03`, `SL-ALL-01`–`04`, `SL-META-01`–`03`, `SL-SUB-01`–`06`,
   `SL-VER-01`, `SL-VIS-01`–`02`, `SL-HELP-01`–`02`, `SL-COMP-01`–`04`,
-  `SL-PROV-01`–`03`, `SL-USE-01`–`02`, `SL-HOOK-01`–`06`, `SL-READ-01`–`07`
+  `SL-PROV-01`–`03`, `SL-USE-01`–`02`, `SL-HOOK-01`–`06`, `SL-READ-01`–`12`
 
 ### Work order
 

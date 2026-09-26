@@ -18,6 +18,15 @@ behavior-identical on the full contract. No visuals: headless registry,
 UX APPROVE via artifact review. Crew log:
 `.agents/missions/quarantine-landing/slot.md`; landing commit `4b0793d7c`.
 
+Reactive API redesign (HQ no-`scan` stance, `docs/MISSIONS/API-STANCE.md`):
+breaking-clean rename — `scanById` → `getById`, `scanAll` → `select`,
+`useScanById` → `useSlot`, `useGetAll` → `useSlots()` — plus the deferred
+`useScanAll` capability shipped as the `useSlots(filter)` overload
+(inline filters, element-wise result identity; `SL-READ-08`–`12`). Old
+exports removed outright, no shims; zero in-repo consumers existed outside
+the Slot dir so migration was Slot-contained. Case IDs kept as stable keys.
+Crew log: `.agents/missions/quarantine-landing/slot-api.md`.
+
 ## Candidate features (quarantine-sourced)
 
 Quarantine's Slot freeze (`e04a64c8f`) surfaced exactly one functional
@@ -44,10 +53,12 @@ and it added no public API, so this section has one item.
 
 ## Suspected gaps (no quarantine source)
 
-### 1. Reactive `useScanAll(predicate)` hook — verdict: DEFERRED
+### 1. Reactive `useScanAll(predicate)` hook — verdict: SHIPPED as `useSlots(filter)`
 
-Moved to [FEATURES.md §1](./FEATURES.md) — new API surface needing
-design calls (predicate identity, selector shape, result identity).
+Was [FEATURES.md §1](./FEATURES.md); landed in the reactive API redesign
+with all three design calls resolved (inline-filter identity, snapshot
+selector shape, element-wise result identity). See [FEATURES.md
+shipped](./FEATURES.md) and `SL-READ-08`–`12`.
 
 ### 2. Document-global default root — verdict: DECLINED
 
@@ -86,7 +97,7 @@ design calls (predicate identity, selector shape, result identity).
 
 Omitted with stated reason: PageLayout `getRegisteredSlots`, sidebar
 pipelines, and product part wrappers (consumer-owned, built on
-`scanById`/`scanAll` — not Slot API); Portal relocation (Portal owns
+`getById`/`select` — not Slot API); Portal relocation (Portal owns
 DOM relocation; `Slot.md` "Sibling consume, not Portal"); element in
 store state (anti-pattern `SL-VER-01` forbids — content is not state).
 
@@ -110,10 +121,11 @@ store state (anti-pattern `SL-VER-01` forbids — content is not state).
   only real quarantine delta, declined on a 52/52 evidence run. Feel it
   by diffing `git show components-quarantine:.../Slot/Slot.ts` against
   current `Slot.ts`: identical facade, different engine.
-- Most important 2/3 — no `useScanAll` yet ([FEATURES.md
-  §1](./FEATURES.md)): the only genuine API gap. Feel it at
-  `Slot.story.tsx:193`, where the host scans imperatively and borrows
-  freshness from sibling subscriptions.
+- Most important 2/3 — reactive selection shipped ([FEATURES.md
+  shipped](./FEATURES.md)): the former `useScanAll` gap is now the
+  `useSlots(filter)` overload. Feel it at `Slot.story.tsx` `HostLayout`,
+  where the host selects the `"actions"` region reactively with an inline
+  filter and no longer touches `useRoot` at all.
 - Most important 3/3 — no global root (gap 2, DECLINED above): the
   design law. Feel it via `SL-USE-01` — `useRoot` outside a Provider
   throws, so two compound trees can never share a registry.

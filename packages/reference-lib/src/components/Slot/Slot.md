@@ -15,7 +15,7 @@ shell.
 const {
   Provider: MyComponentSlots,
   useSlotRegistration,
-  useScanById,
+  useSlot,
 } = createSlotRootContext()
 
 function MyComponent({ children }: { children: React.ReactNode }) {
@@ -45,8 +45,8 @@ function MyComponentActions({ children }: { children: React.ReactNode }) {
 }
 
 function MyComponentLayout() {
-  const title = useScanById("title")
-  const actions = useScanById("actions")
+  const title = useSlot("title")
+  const actions = useSlot("actions")
   return (
     <Div>
       <header>{title?.element}</header>
@@ -67,7 +67,7 @@ Authored order does not matter. The host layout is a sibling that renders
 after the filling children and reads live getters, not a snapshot from
 mount.
 
-A new region is a stable `slotId` plus a host that scans it. Optional
+A new region is a stable `slotId` plus a host that reads it. Optional
 `meta` is typed on the root (`createSlotRootContext<MyMeta>()`). Host part
 hooks may wrap `useSlotRegistration`; those wrappers are not Slot.
 
@@ -99,9 +99,9 @@ class SlotRoot<TMeta = unknown> {
   ): void
   unregister(registrationId: string): void
   getVersion(): number
-  scanById(slotId: string): SlotRegistration<TMeta> | undefined
-  scanAll(
-    predicate: (slot: SlotRegistration<TMeta>) => boolean,
+  getById(slotId: string): SlotRegistration<TMeta> | undefined
+  select(
+    filter: (slot: SlotRegistration<TMeta>) => boolean,
   ): SlotRegistration<TMeta>[]
   getAll(): SlotRegistration<TMeta>[]
   subscribe(listener: () => void): () => void
@@ -131,8 +131,10 @@ function createSlotRootContext<TMeta = unknown>(): {
     options: UseSlotRegistrationOptions<TMeta>,
     deps?: React.DependencyList,
   ): void
-  useScanById(slotId: string): SlotRegistration<TMeta> | undefined
-  useGetAll(): SlotRegistration<TMeta>[]
+  useSlot(slotId: string): SlotRegistration<TMeta> | undefined
+  useSlots(
+    filter?: (slot: SlotRegistration<TMeta>) => boolean,
+  ): SlotRegistration<TMeta>[]
 }
 ```
 
@@ -142,10 +144,12 @@ scope.
 
 `SlotRoot` keys entries by registration id, not slot id. The same slot id
 may have several registrations. Re-registering an existing registration id
-replaces that entry. `scanById` returns the **first** exact match, or
-`undefined`. `scanAll` returns every predicate match in registration
+replaces that entry. `getById` returns the **first** exact match, or
+`undefined`. `select` returns every filter match in registration
 order. `getAll` returns every entry; array identity is stable while the
-set is unchanged.
+set is unchanged. `useSlots(filter)` is the reactive form of `select`:
+inline filters need no `useCallback`, and the result array holds identity
+while the match set is unchanged.
 
 `resolveSlotVisibility`: omitted `visible` is true, omitted `hidden` is
 false. `hidden: true` → `"hidden"` (`display: none`, state kept) and wins
@@ -153,10 +157,10 @@ when both flags would hide. `visible: false` → `"unmounted"`. Otherwise
 `"visible"`. The host decides; hidden does not unregister.
 
 `createSlotCacheKey` and `transformSlotElements` are host helpers.
-Scan/get do not clone on read.
+Reads do not clone.
 
 Omitted `useSlotRegistration` `deps` is `[]`. `useRoot` /
-`useSlotRegistration` / `useScanById` / `useGetAll` throw outside the
+`useSlotRegistration` / `useSlot` / `useSlots` throw outside the
 provider.
 
 ---
@@ -239,7 +243,7 @@ visually hidden so internal state survives.
 
 Every declarative part API depends on this. Own edges the vendor tests
 skip: missing `unregister` is a silent no-op; one throwing subscriber
-does not skip the rest; `getAll` / `scanById` identity is stable across
+does not skip the rest; `getAll` / `getById` identity is stable across
 live content writes; StrictMode replay does not leak; owned adapters run
 on React 17.
 
@@ -254,7 +258,7 @@ in-place register** contract, on Zustand.
 | --- | --- | --- |
 | Registry | `SlotRoot` over a per-instance Zustand store | Listener `Set`; store keyed on `element` |
 | Fill | Kernel `useSlotRegistration` (live getters, `deps`) | PageLayout wrapper as the only live path |
-| Read | `scanById` (first match) / `scanAll` / `getAll` | `getRegisteredSlots`, sidebar pipelines |
+| Read | `getById` (first match) / `select` / `getAll` | `getRegisteredSlots`, sidebar pipelines |
 | Content | Ref getters, no version bump | Re-register on element identity |
 | Visibility | In-place `register`; unregister only on unmount | Unregister → register churn |
 | Merge onto a child | `ReferenceSlotPartProps` | Radix Slot as this component |

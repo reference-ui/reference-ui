@@ -39,14 +39,14 @@ describe('Slot Unit Contract', () => {
         open?: boolean
       }
 
-      const { Provider, useRoot, useSlotRegistration, useScanById, useGetAll } =
+      const { Provider, useRoot, useSlotRegistration, useSlot, useSlots } =
         createSlotRootContext<CustomMeta>()
 
       expect(typeof Provider).toBe('function')
       expect(typeof useRoot).toBe('function')
       expect(typeof useSlotRegistration).toBe('function')
-      expect(typeof useScanById).toBe('function')
-      expect(typeof useGetAll).toBe('function')
+      expect(typeof useSlot).toBe('function')
+      expect(typeof useSlots).toBe('function')
 
       expect(resolveSlotVisibility()).toBe('visible')
       expect(resolveSlotVisibility(undefined)).toBe('visible')
@@ -151,13 +151,13 @@ describe('Slot Unit Contract', () => {
     })
   })
 
-  describe('Scan by id', () => {
+  describe('Get by id', () => {
     it('SL-SCAN-01: finds a slot by exact id', () => {
       const root = new SlotRoot()
       const el = React.createElement('div', null, 'Target')
       root.register('r1', { slotId: 'target-slot', element: el })
 
-      const found = root.scanById('target-slot')
+      const found = root.getById('target-slot')
       expect(found).toBeDefined()
       expect(found?.slotId).toBe('target-slot')
       expect(found?.element).toBe(el)
@@ -165,10 +165,10 @@ describe('Slot Unit Contract', () => {
 
     it('SL-SCAN-02: returns undefined for non-existent id', () => {
       const root = new SlotRoot()
-      expect(root.scanById('missing')).toBeUndefined()
+      expect(root.getById('missing')).toBeUndefined()
 
       root.register('r1', { slotId: 'other', element: React.createElement('div') })
-      expect(root.scanById('missing')).toBeUndefined()
+      expect(root.getById('missing')).toBeUndefined()
     })
 
     it('SL-SCAN-03: returns the first match when multiple slots have the same id', () => {
@@ -179,7 +179,7 @@ describe('Slot Unit Contract', () => {
       root.register('r1', { slotId: 'duplicate', element: el1 })
       root.register('r2', { slotId: 'duplicate', element: el2 })
 
-      expect(root.scanById('duplicate')?.element).toBe(el1)
+      expect(root.getById('duplicate')?.element).toBe(el1)
     })
 
     it('SL-SCAN-04: does not treat a prefixed sibling as an exact id match', () => {
@@ -191,18 +191,18 @@ describe('Slot Unit Contract', () => {
       root.register('r2', { slotId: 'title', element: elExact })
       root.register('r3', { slotId: 'body', element: React.createElement('div') })
 
-      expect(root.scanById('title')?.element).toBe(elExact)
+      expect(root.getById('title')?.element).toBe(elExact)
     })
   })
 
-  describe('Scan all', () => {
-    it('SL-SCANALL-01: finds all slots matching a predicate in order', () => {
+  describe('Select', () => {
+    it('SL-SCANALL-01: finds all slots matching a filter in order', () => {
       const root = new SlotRoot()
       root.register('r1', { slotId: 'actions.primary', element: React.createElement('div') })
       root.register('r2', { slotId: 'actions.secondary', element: React.createElement('div') })
       root.register('r3', { slotId: 'title', element: React.createElement('div') })
 
-      const actions = root.scanAll(s => s.slotId.startsWith('actions'))
+      const actions = root.select(s => s.slotId.startsWith('actions'))
       expect(actions.length).toBe(2)
       expect(actions[0].slotId).toBe('actions.primary')
       expect(actions[1].slotId).toBe('actions.secondary')
@@ -212,23 +212,23 @@ describe('Slot Unit Contract', () => {
       const root = new SlotRoot()
       root.register('r1', { slotId: 'title', element: React.createElement('div') })
 
-      const result = root.scanAll(s => s.slotId === 'none')
+      const result = root.select(s => s.slotId === 'none')
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(0)
     })
 
-    it('SL-SCANALL-03: returns all slots when predicate is always true without sharing array identity', () => {
+    it('SL-SCANALL-03: returns all slots when filter is always true without sharing array identity', () => {
       const root = new SlotRoot()
       root.register('r1', { slotId: 's1', element: React.createElement('div') })
       root.register('r2', { slotId: 's2', element: React.createElement('div') })
       root.register('r3', { slotId: 's3', element: React.createElement('div') })
 
       const all = root.getAll()
-      const scanAll = root.scanAll(() => true)
+      const selected = root.select(() => true)
 
-      expect(scanAll.length).toBe(3)
-      expect(scanAll).toEqual(all)
-      expect(scanAll).not.toBe(all)
+      expect(selected.length).toBe(3)
+      expect(selected).toEqual(all)
+      expect(selected).not.toBe(all)
     })
   })
 
@@ -283,14 +283,14 @@ describe('Slot Unit Contract', () => {
         meta: { priority: 1, label: 'Test Item' },
       })
 
-      expect(root.scanById('s1')?.meta).toEqual({ priority: 1, label: 'Test Item' })
+      expect(root.getById('s1')?.meta).toEqual({ priority: 1, label: 'Test Item' })
     })
 
     it('SL-META-02: allows undefined metadata', () => {
       const root = new SlotRoot<Meta>()
       root.register('r1', { slotId: 's1', element: React.createElement('div') })
 
-      expect(root.scanById('s1')?.meta).toBeUndefined()
+      expect(root.getById('s1')?.meta).toBeUndefined()
     })
 
     it('SL-META-03: filters slots by metadata', () => {
@@ -298,7 +298,7 @@ describe('Slot Unit Contract', () => {
       root.register('r1', { slotId: 'low', element: React.createElement('div'), meta: { priority: 1 } })
       root.register('r2', { slotId: 'high', element: React.createElement('div'), meta: { priority: 10 } })
 
-      const filtered = root.scanAll(s => (s.meta?.priority ?? 0) >= 5)
+      const filtered = root.select(s => (s.meta?.priority ?? 0) >= 5)
       expect(filtered.length).toBe(1)
       expect(filtered[0].slotId).toBe('high')
     })
@@ -391,7 +391,7 @@ describe('Slot Unit Contract', () => {
 
       expect(root.getVersion()).toBe(ver)
       expect(root.getAll()).toBe(cached)
-      expect(root.scanById('live')?.element).toBe(currentEl)
+      expect(root.getById('live')?.element).toBe(currentEl)
     })
   })
 
@@ -419,10 +419,10 @@ describe('Slot Unit Contract', () => {
         visibility: { hidden: true },
       })
 
-      expect(root.scanById('s1')?.visibility).toEqual({ visible: false })
-      expect(root.scanById('s2')?.visibility).toEqual({ hidden: true })
-      expect(resolveSlotVisibility(root.scanById('s1')?.visibility)).toBe('unmounted')
-      expect(resolveSlotVisibility(root.scanById('s2')?.visibility)).toBe('hidden')
+      expect(root.getById('s1')?.visibility).toEqual({ visible: false })
+      expect(root.getById('s2')?.visibility).toEqual({ hidden: true })
+      expect(resolveSlotVisibility(root.getById('s1')?.visibility)).toBe('unmounted')
+      expect(resolveSlotVisibility(root.getById('s2')?.visibility)).toBe('hidden')
     })
   })
 
@@ -576,8 +576,8 @@ describe('Slot Unit Contract', () => {
 
       expect(capturedRoot).toBeInstanceOf(SlotRoot)
       expect(typeof capturedRoot!.getAll).toBe('function')
-      expect(typeof capturedRoot!.scanById).toBe('function')
-      expect(typeof capturedRoot!.scanAll).toBe('function')
+      expect(typeof capturedRoot!.getById).toBe('function')
+      expect(typeof capturedRoot!.select).toBe('function')
     })
   })
 
@@ -664,7 +664,7 @@ describe('Slot Unit Contract', () => {
         )
       })
 
-      expect(testRoot.scanById('test')?.meta).toEqual({ priority: 5 })
+      expect(testRoot.getById('test')?.meta).toEqual({ priority: 5 })
     })
 
     it('SL-HOOK-04: useSlotRegistration exposes live element, meta, and visibility without re-registering', async () => {
@@ -683,7 +683,7 @@ describe('Slot Unit Contract', () => {
       }
 
       function Consumer() {
-        const slot = Context.useScanById('title')
+        const slot = Context.useSlot('title')
         return React.createElement(
           'div',
           { id: 'readout' },
@@ -725,7 +725,7 @@ describe('Slot Unit Contract', () => {
       expect(subscriber).not.toHaveBeenCalled()
 
       // But live read through getter gets latest content
-      expect(testRoot.scanById('title')?.meta?.label).toBe('Meta 2')
+      expect(testRoot.getById('title')?.meta?.label).toBe('Meta 2')
       expect(container.querySelector('#readout')?.textContent).toContain('Version 2')
       expect(container.querySelector('#readout')?.textContent).toContain('Meta 2')
     })
@@ -793,7 +793,7 @@ describe('Slot Unit Contract', () => {
       expect(registerSpy).toHaveBeenCalledTimes(3)
       expect(unregisterSpy).not.toHaveBeenCalled()
       expect(testRoot.getVersion()).toBeGreaterThan(verAfterSlotIdChange)
-      expect(testRoot.scanById('changed-id')?.visibility).toEqual({ hidden: true })
+      expect(testRoot.getById('changed-id')?.visibility).toEqual({ hidden: true })
 
       // 3. Unrelated parent re-render with NO slotId or dep changes: must NOT re-register
       const verAfterDepChange = testRoot.getVersion()
@@ -840,7 +840,7 @@ describe('Slot Unit Contract', () => {
 
       // Under StrictMode replay, there should be exactly 1 registration, not 2
       expect(testRoot.getAll()).toHaveLength(1)
-      expect(testRoot.scanById('strict-slot')).toBeDefined()
+      expect(testRoot.getById('strict-slot')).toBeDefined()
 
       // Unmount: clean empty root after final unmount
       await React.act(async () => {
@@ -857,8 +857,8 @@ describe('Slot Unit Contract', () => {
     })
   })
 
-  describe('useScanById and useGetAll', () => {
-    it('SL-READ-01: useScanById returns a slot by id', async () => {
+  describe('useSlot and useSlots', () => {
+    it('SL-READ-01: useSlot returns a slot by id', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       testRoot.register('r1', {
@@ -869,7 +869,7 @@ describe('Slot Unit Contract', () => {
       let found: SlotRegistration | undefined
 
       function Consumer() {
-        found = Context.useScanById('target')
+        found = Context.useSlot('target')
         return null
       }
 
@@ -887,13 +887,13 @@ describe('Slot Unit Contract', () => {
       expect(found?.slotId).toBe('target')
     })
 
-    it('SL-READ-02: useScanById returns undefined for non-existent id', async () => {
+    it('SL-READ-02: useSlot returns undefined for non-existent id', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       let found: SlotRegistration | undefined
 
       function Consumer() {
-        found = Context.useScanById('non-existent')
+        found = Context.useSlot('non-existent')
         return null
       }
 
@@ -910,7 +910,7 @@ describe('Slot Unit Contract', () => {
       expect(found).toBeUndefined()
     })
 
-    it('SL-READ-03: useScanById updates when a slot is registered', async () => {
+    it('SL-READ-03: useSlot updates when a slot is registered', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       let renderCount = 0
@@ -918,7 +918,7 @@ describe('Slot Unit Contract', () => {
 
       function Consumer() {
         renderCount++
-        latestSlot = Context.useScanById('dynamic')
+        latestSlot = Context.useSlot('dynamic')
         return React.createElement(
           'div',
           { id: 'res' },
@@ -952,7 +952,7 @@ describe('Slot Unit Contract', () => {
       expect(renderCount).toBeGreaterThan(1)
     })
 
-    it('SL-READ-04: useGetAll returns all slots', async () => {
+    it('SL-READ-04: useSlots returns all slots', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       testRoot.register('r1', { slotId: 'one', element: React.createElement('div', null, '1') })
@@ -961,7 +961,7 @@ describe('Slot Unit Contract', () => {
       let all: SlotRegistration[] = []
 
       function Consumer() {
-        all = Context.useGetAll()
+        all = Context.useSlots()
         return null
       }
 
@@ -980,13 +980,13 @@ describe('Slot Unit Contract', () => {
       expect(all[1].slotId).toBe('two')
     })
 
-    it('SL-READ-05: useGetAll returns an empty array for an empty root', async () => {
+    it('SL-READ-05: useSlots returns an empty array for an empty root', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       let all: any
 
       function Consumer() {
-        all = Context.useGetAll()
+        all = Context.useSlots()
         return null
       }
 
@@ -1004,13 +1004,13 @@ describe('Slot Unit Contract', () => {
       expect(all).toEqual([])
     })
 
-    it('SL-READ-06: useGetAll updates when slots change', async () => {
+    it('SL-READ-06: useSlots updates when slots change', async () => {
       const Context = createSlotRootContext()
       const testRoot = new SlotRoot()
       let currentLength = -1
 
       function Consumer() {
-        const slots = Context.useGetAll()
+        const slots = Context.useSlots()
         currentLength = slots.length
         return null
       }
@@ -1040,7 +1040,7 @@ describe('Slot Unit Contract', () => {
       expect(currentLength).toBe(0)
     })
 
-    it('SL-READ-07: useGetAll keeps array identity while only live content changes', async () => {
+    it('SL-READ-07: useSlots keeps array identity while only live content changes', async () => {
       const Context = createSlotRootContext<{ label: string }>()
       const testRoot = new SlotRoot<{ label: string }>()
       let emittedArrays: SlotRegistration[][] = []
@@ -1054,7 +1054,7 @@ describe('Slot Unit Contract', () => {
       }
 
       function Consumer() {
-        const slots = Context.useGetAll()
+        const slots = Context.useSlots()
         emittedArrays.push(slots)
         return null
       }
@@ -1087,9 +1087,216 @@ describe('Slot Unit Contract', () => {
         )
       })
 
-      // Consumer rerendered as child of Provider, but the array returned by useGetAll must retain strict identity (===)
+      // Consumer rerendered as child of Provider, but the array returned by useSlots must retain strict identity (===)
       const secondArray = emittedArrays[emittedArrays.length - 1]
       expect(secondArray).toBe(firstArray)
+    })
+  })
+
+  describe('useSlots with filter', () => {
+    it('SL-READ-08: useSlots(filter) returns matches in registration order', async () => {
+      const Context = createSlotRootContext()
+      const testRoot = new SlotRoot()
+      testRoot.register('r1', { slotId: 'actions.primary', element: React.createElement('div', null, '1') })
+      testRoot.register('r2', { slotId: 'title', element: React.createElement('div', null, 't') })
+      testRoot.register('r3', { slotId: 'actions.secondary', element: React.createElement('div', null, '2') })
+
+      let matches: SlotRegistration[] = []
+
+      function Consumer() {
+        matches = Context.useSlots(s => s.slotId.startsWith('actions'))
+        return null
+      }
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer)
+          )
+        )
+      })
+
+      expect(matches).toHaveLength(2)
+      expect(matches[0].slotId).toBe('actions.primary')
+      expect(matches[1].slotId).toBe('actions.secondary')
+    })
+
+    it('SL-READ-09: useSlots(filter) returns an empty array when nothing matches', async () => {
+      const Context = createSlotRootContext()
+      const testRoot = new SlotRoot()
+      testRoot.register('r1', { slotId: 'title', element: React.createElement('div', null, 't') })
+
+      let matches: SlotRegistration[] | undefined
+
+      function Consumer() {
+        matches = Context.useSlots(s => s.slotId.startsWith('actions'))
+        return null
+      }
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer)
+          )
+        )
+      })
+
+      expect(Array.isArray(matches)).toBe(true)
+      expect(matches).toHaveLength(0)
+    })
+
+    it('SL-READ-10: useSlots(filter) updates when a matching slot registers and unregisters', async () => {
+      const Context = createSlotRootContext()
+      const testRoot = new SlotRoot()
+      testRoot.register('r0', { slotId: 'title', element: React.createElement('div', null, 't') })
+      let currentLength = -1
+
+      function Consumer() {
+        const slots = Context.useSlots(s => s.slotId.startsWith('actions'))
+        currentLength = slots.length
+        return null
+      }
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer)
+          )
+        )
+      })
+      expect(currentLength).toBe(0)
+
+      await React.act(async () => {
+        testRoot.register('r1', {
+          slotId: 'actions.primary',
+          element: React.createElement('div', null, 'Action'),
+        })
+      })
+      expect(currentLength).toBe(1)
+
+      await React.act(async () => {
+        testRoot.unregister('r1')
+      })
+      expect(currentLength).toBe(0)
+    })
+
+    it('SL-READ-11: useSlots(filter) keeps array identity across unrelated registrations', async () => {
+      const Context = createSlotRootContext()
+      const testRoot = new SlotRoot()
+      testRoot.register('r1', { slotId: 'actions.primary', element: React.createElement('div', null, '1') })
+      const emittedArrays: SlotRegistration[][] = []
+
+      function Consumer() {
+        const slots = Context.useSlots(s => s.slotId.startsWith('actions'))
+        emittedArrays.push(slots)
+        return null
+      }
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer)
+          )
+        )
+      })
+
+      expect(emittedArrays.length).toBeGreaterThan(0)
+      const firstArray = emittedArrays[emittedArrays.length - 1]
+      expect(firstArray).toHaveLength(1)
+
+      // Unrelated register + unregister churn: every emitted array stays identical
+      await React.act(async () => {
+        testRoot.register('r2', { slotId: 'title', element: React.createElement('div', null, 't') })
+      })
+      await React.act(async () => {
+        testRoot.unregister('r2')
+      })
+
+      expect(testRoot.getAll()).toHaveLength(1)
+      for (const emitted of emittedArrays) {
+        expect(emitted).toBe(firstArray)
+      }
+
+      // Contrast: a matching registration MUST produce a new array
+      await React.act(async () => {
+        testRoot.register('r3', { slotId: 'actions.secondary', element: React.createElement('div', null, '2') })
+      })
+      const latestArray = emittedArrays[emittedArrays.length - 1]
+      expect(latestArray).not.toBe(firstArray)
+      expect(latestArray.map(s => s.slotId)).toEqual(['actions.primary', 'actions.secondary'])
+    })
+
+    it('SL-READ-12: useSlots accepts an inline filter without resubscribing', async () => {
+      const Context = createSlotRootContext()
+      const testRoot = new SlotRoot()
+      testRoot.register('r1', { slotId: 'a', element: React.createElement('div', null, 'A') })
+      testRoot.register('r2', { slotId: 'b', element: React.createElement('div', null, 'B') })
+      const subscribeSpy = vi.spyOn(testRoot, 'subscribe')
+      let latestIds: string[] = []
+
+      function Consumer({ target }: { target: string }) {
+        // Deliberately inline: a new closure identity every render
+        const slots = Context.useSlots(s => s.slotId === target)
+        latestIds = slots.map(s => s.slotId)
+        return null
+      }
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer, { target: 'a' })
+          )
+        )
+      })
+      expect(latestIds).toEqual(['a'])
+      expect(subscribeSpy).toHaveBeenCalledTimes(1)
+
+      // Unrelated parent rerenders with fresh inline closures: no resubscribe
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer, { target: 'a' })
+          )
+        )
+      })
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer, { target: 'a' })
+          )
+        )
+      })
+      expect(subscribeSpy).toHaveBeenCalledTimes(1)
+      expect(latestIds).toEqual(['a'])
+
+      // The inline closure is still live: retargeting follows with no store change
+      const versionBefore = testRoot.getVersion()
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Context.Provider,
+            { root: testRoot },
+            React.createElement(Consumer, { target: 'b' })
+          )
+        )
+      })
+      expect(testRoot.getVersion()).toBe(versionBefore)
+      expect(latestIds).toEqual(['b'])
+      expect(subscribeSpy).toHaveBeenCalledTimes(1)
     })
   })
 })
