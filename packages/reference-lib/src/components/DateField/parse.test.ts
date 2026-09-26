@@ -5,6 +5,7 @@
 // DOM-light renders of public components, never by parser-helper tests.
 import { describe, expect, it } from 'vitest'
 import {
+  assertValidDateBounds,
   formatLocalDate,
   getLocaleSegmentOrder,
   getSegmentAtCaret,
@@ -142,5 +143,27 @@ describe('parse-kit constraints', () => {
     const unavailable = (d: string) => d === '2024-06-15'
     expect(isDateWithinConstraints('2024-06-15', undefined, undefined, unavailable)).toBe(false)
     expect(isDateWithinConstraints('2024-06-16', undefined, undefined, unavailable)).toBe(true)
+  })
+
+  it('throws loudly for min after max or non-canonical bounds', () => {
+    expect(() => assertValidDateBounds('2024-06-30', '2024-06-01')).toThrow(
+      '[reference-ui] DateField: "min" (2024-06-30) must not be after "max" (2024-06-01).'
+    )
+    expect(() => assertValidDateBounds('2024-6-1', undefined)).toThrow(
+      '[reference-ui] DateField: "min" must be a canonical ISO date (YYYY-MM-DD)'
+    )
+    expect(() => assertValidDateBounds(undefined, '06/30/2024')).toThrow(
+      '[reference-ui] DateField: "max" must be a canonical ISO date (YYYY-MM-DD)'
+    )
+    expect(() => assertValidDateBounds('2024-02-30', undefined)).toThrow(
+      '"min" must be a canonical ISO date'
+    )
+  })
+
+  it('accepts absent, open-ended, and equal bounds', () => {
+    expect(() => assertValidDateBounds(undefined, undefined)).not.toThrow()
+    expect(() => assertValidDateBounds('2024-06-01', undefined)).not.toThrow()
+    expect(() => assertValidDateBounds(undefined, '2024-06-30')).not.toThrow()
+    expect(() => assertValidDateBounds('2024-06-15', '2024-06-15')).not.toThrow()
   })
 })

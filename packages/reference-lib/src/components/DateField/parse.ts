@@ -257,6 +257,24 @@ export function stepDateSegment(
   return null
 }
 
+export function assertValidDateBounds(min?: unknown, max?: unknown): void {
+  if (min !== undefined && !isValidISODate(min)) {
+    throw new Error(
+      `[reference-ui] DateField: "min" must be a canonical ISO date (YYYY-MM-DD), received ${JSON.stringify(min)}.`
+    )
+  }
+  if (max !== undefined && !isValidISODate(max)) {
+    throw new Error(
+      `[reference-ui] DateField: "max" must be a canonical ISO date (YYYY-MM-DD), received ${JSON.stringify(max)}.`
+    )
+  }
+  if (min !== undefined && max !== undefined && compareISODate(min, max) > 0) {
+    throw new Error(
+      `[reference-ui] DateField: "min" (${min}) must not be after "max" (${max}).`
+    )
+  }
+}
+
 export function isDateWithinConstraints(
   date: ISODate,
   min?: ISODate,

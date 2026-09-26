@@ -358,6 +358,112 @@ test.describe('DateField quarantine re-targets', () => {
     await expect(page.getByTestId('form-submitted-payload')).toContainText('"birthday":"2024-02-01"')
   })
 
+  test('DF-BND-02: programmatic out-of-range value displays with managed invalid', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/ConstrainedFixture')
+
+    const input = page.getByTestId('constrained-input')
+
+    // In-range value: display only, no managed invalid.
+    await expect(input).toHaveValue('2026-08-15')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(input).not.toHaveAttribute('data-invalid', 'true')
+
+    // Out-of-range programmatic value still displays, with managed invalid.
+    await page.getByTestId('btn-set-constrained-early').click()
+    await expect(input).toHaveValue('2026-08-01')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(input).toHaveAttribute('data-invalid', 'true')
+
+    // Unavailable-marked value is invalid the same way.
+    await page.getByTestId('btn-set-constrained-unavail').click()
+    await expect(input).toHaveValue('2026-08-12')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+
+    // Back in range clears managed invalid.
+    await page.getByTestId('btn-set-constrained-mid').click()
+    await expect(input).toHaveValue('2026-08-15')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(input).not.toHaveAttribute('data-invalid', 'true')
+  })
+
+  test('constrained picker selection outside bounds or unavailable is rejected without commit (FEATURES #3)', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/ConstrainedFixture')
+
+    const input = page.getByTestId('constrained-input')
+    const trigger = page.getByTestId('constrained-trigger')
+    const picker = page.getByTestId('constrained-picker')
+    const display = page.getByTestId('constrained-value-display')
+    const changes = page.getByTestId('constrained-changes')
+
+    await trigger.click()
+    await expect(picker).toBeVisible()
+
+    // Below min: rejected, no commit, no dismiss, no clamp.
+    await page.locator('button[data-date="2026-08-05"]').click()
+    await expect(display).toHaveText('Value: 2026-08-15')
+    await expect(changes).toHaveText('Changes: 0')
+    await expect(input).toHaveValue('2026-08-15')
+    await expect(picker).toBeVisible()
+
+    // Above max: rejected the same way.
+    await page.locator('button[data-date="2026-08-25"]').click()
+    await expect(display).toHaveText('Value: 2026-08-15')
+    await expect(changes).toHaveText('Changes: 0')
+    await expect(picker).toBeVisible()
+
+    // Marked unavailable: rejected the same way.
+    await page.locator('button[data-date="2026-08-12"]').click()
+    await expect(display).toHaveText('Value: 2026-08-15')
+    await expect(changes).toHaveText('Changes: 0')
+    await expect(picker).toBeVisible()
+
+    // In-range available date commits and dismisses.
+    await page.locator('button[data-date="2026-08-18"]').click()
+    await expect(display).toHaveText('Value: 2026-08-18')
+    await expect(changes).toHaveText('Changes: 1')
+    await expect(input).toHaveValue('2026-08-18')
+    await expect(picker).toHaveCount(0)
+  })
+
+  test('click-while-open positions caret without toggling (FEATURES #4b)', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/CompoundFixture')
+
+    const input = page.getByTestId('date-field-input')
+    const picker = page.getByTestId('date-field-picker')
+
+    // First click opens.
+    await input.click()
+    await expect(picker).toBeVisible()
+
+    // Click-while-open near the left edge positions the caret there and
+    // keeps the picker open.
+    const box = await input.boundingBox()
+    expect(box).toBeTruthy()
+    await input.click({ position: { x: 8, y: Math.floor(box!.height / 2) } })
+    await expect(picker).toBeVisible()
+    await expect(input).toBeFocused()
+    const leftCaret = await input.evaluate((el) => (el as HTMLInputElement).selectionStart)
+    expect(leftCaret).toBeLessThanOrEqual(2)
+
+    // Click-while-open near the right edge moves the caret there.
+    await input.click({
+      position: { x: Math.floor(box!.width - 8), y: Math.floor(box!.height / 2) },
+    })
+    await expect(picker).toBeVisible()
+    await expect(input).toBeFocused()
+    const rightCaret = await input.evaluate((el) => (el as HTMLInputElement).selectionStart)
+    expect(rightCaret).toBeGreaterThanOrEqual(8)
+  })
+
   test('DF-ENV-03: onChange never passes a Date instance', async ({ mount, page }) => {
     await mount('components/DateField/DateField/ChildlessFixture')
 

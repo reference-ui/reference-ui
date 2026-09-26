@@ -145,6 +145,14 @@ aria-autocomplete="none"
 Without `DateField.Picker`, it remains an ordinary `input[type=text]` with
 standard textbox semantics.
 
+### Accessible naming for the label-less default
+
+A bare `<DateField />` has no name of its own. Authors must associate a
+`Label` (via `htmlFor`/`id`) or pass `aria-label` / `aria-labelledby` to
+the input. Shipping an unnamed date input is author error, not a fallback
+the component repairs: `placeholder` is a format hint (e.g. `DD/MM/YYYY`),
+never an accessible name, and DateField never reflects it as one.
+
 ### Deliberate activation and opening policy
 
 Focus arrival alone does not open the popup, ensuring keyboard typists are

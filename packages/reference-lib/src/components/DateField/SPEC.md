@@ -59,9 +59,26 @@ unit tests proving the kit, and 12 CT re-targets proving current behavior.
 | CT | 17 titles green (3 pre-existing + 14 `DF-*`); 8 frozen snapshots unmodified |
 | Vitest | 23 parse-kit contract tests (carry no `DF-*` IDs per TESTS.md `[unit]` law) |
 
+### FEATURES campaign (2026-09-26, features-DateField crew)
+
+Landed FEATURES #1 (required `locale`, throw-for-all), #3 (Constraint API:
+bounds throw, `isDateUnavailable`, picker-select gating, managed invalid —
+typed-path gating waits on the PATCHES #1 engine), #4b (click-while-open
+positions caret, proof-pinned), #5 (label-less naming policy, docs-only).
+`DateField.tsx` behavior change: invalid bounds / missing locale throw;
+no visual delta (all 8 frozen snapshots pass unmodified).
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 17 / 64 |
+| CT | 20 titles green (3 pre-existing + 15 `DF-*` + 2 FEATURES proofs); 8 frozen snapshots unmodified |
+| Vitest | 28 tests (25 parse-kit + 3 `renderToString` component proofs carrying `DF-FMT-06` / `DF-BND-04`) |
+
 ### Gaps & incoherence
 
-- `defaultValue`, `locale = 'en-US'`. Freeze: required `value` + `locale`.
+- `defaultValue` (uncontrolled) still exists. Freeze: required `value` + `locale`;
+  `locale` now required and throwing (FEATURES #1); required `value` is not a
+  FEATURES item and stays open.
 - **No `DateField.Range` / Start / End.**
 - No locale `formatToParts` parse/format; input shows the ISO string.
 - No caret-aware stepping (`selectionStart` unused).
@@ -110,7 +127,15 @@ windows; min/max clamp.
   canonical ISO (Field-crew handoff, proven with `2024-02-01`)
 - `[x]` `DF-ENV-03` — `onChange` payloads are `string` (never `Date`); current
   component echoes raw text, never `null` from typing
-- `[ ]` `DF-FMT-*`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-*`, `DF-KEY-01/02/03/04/07`,
+- `[x]` `DF-FMT-06` — missing `locale` throws on both hosts; SSR markup
+  deterministic with explicit locale (unit `renderToString` proof)
+- `[x]` `DF-BND-04` — `min > max` / non-canonical bounds throw during render,
+  fail-closed with no edit session (unit `renderToString` proof)
+- `[x]` `DF-BND-02` — programmatic out-of-range value displays with managed
+  `aria-invalid` / `data-invalid` (asserted against ISO display, not locale
+  text; `invalid`-prop union completes with the PATCHES #6 trio follow-up)
+- `[ ]` `DF-FMT-01..05`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-01`, `DF-BND-03`,
+  `DF-KEY-01/02/03/04/07`,
   `DF-CAL-02`, `DF-CAL-04`, `DF-RANGE-*`, `DF-FRM-03`, `DF-FRM-05`, `DF-ENV-02`,
   `DF-COMP-01`, `DF-COMP-03`, `DF-COMP-05`, `DF-COMP-06` — need the
   controlled-locale rewrite (dirty sessions, locale display, stepping, Range);

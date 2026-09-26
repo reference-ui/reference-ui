@@ -10,7 +10,7 @@ export const CompoundFixture = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="date-field-fixture-root">
         <Div style={{ margin: '16px 0' }}>
-          <DateField
+          <DateField locale="en-US"
             value={value}
             onChange={setValue}
           >
@@ -40,7 +40,7 @@ export const ChildlessFixture = () => {
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="childless-fixture-root">
-        <DateField
+        <DateField locale="en-US"
           ref={ref}
           id="bday-childless"
           value={value}
@@ -106,7 +106,7 @@ export const FoldedPickerFixture = () => {
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="folded-fixture-root">
-        <DateField value={value} onChange={setValue}>
+        <DateField locale="en-US" value={value} onChange={setValue}>
           <DateField.Picker />
         </DateField>
         <Span fontSize="3r" color="design.text.light" data-testid="folded-value-display">
@@ -124,7 +124,7 @@ export const PartResolutionFixture = () => {
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="merge-fixture-root">
-        <DateField
+        <DateField locale="en-US"
           value={value}
           onChange={setValue}
           placeholder="Root"
@@ -155,14 +155,14 @@ export const RequiredFixture = () => {
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="required-fixture-root">
-        <DateField
+        <DateField locale="en-US"
           id="req-childless"
           value={childlessValue}
           onChange={setChildlessValue}
           required
           data-testid="req-childless"
         />
-        <DateField value={compoundValue} onChange={setCompoundValue} required>
+        <DateField locale="en-US" value={compoundValue} onChange={setCompoundValue} required>
           <DateField.Input data-testid="req-compound-input" />
           <DateField.Picker data-testid="req-compound-picker" />
         </DateField>
@@ -172,6 +172,50 @@ export const RequiredFixture = () => {
           </button>
           <button type="button" data-testid="btn-set-req-compound" onClick={() => setCompoundValue('2024-02-01')}>
             Set compound
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ConstrainedFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2026-08-15')
+  const [changes, setChanges] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="constrained-fixture-root">
+        <DateField
+          locale="en-US"
+          value={value}
+          onChange={(next) => {
+            setChanges((c) => c + 1)
+            setValue(next)
+          }}
+          min="2026-08-10"
+          max="2026-08-20"
+          isDateUnavailable={(d) => d === '2026-08-12'}
+        >
+          <DateField.Input data-testid="constrained-input" />
+          <DateField.Trigger data-testid="constrained-trigger" />
+          <DateField.Picker data-testid="constrained-picker" />
+        </DateField>
+        <Span fontSize="3r" color="design.text.light" data-testid="constrained-value-display">
+          Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="constrained-changes">
+          Changes: {changes}
+        </Span>
+        <Div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button type="button" data-testid="btn-set-constrained-early" onClick={() => setValue('2026-08-01')}>
+            Set early
+          </button>
+          <button type="button" data-testid="btn-set-constrained-unavail" onClick={() => setValue('2026-08-12')}>
+            Set unavailable
+          </button>
+          <button type="button" data-testid="btn-set-constrained-mid" onClick={() => setValue('2026-08-15')}>
+            Set mid
           </button>
         </Div>
       </Div>
@@ -194,7 +238,7 @@ export const FormFixture = () => {
           }}
         >
           <label htmlFor="bday">Birthday Label</label>
-          <DateField
+          <DateField locale="en-US"
             id="bday"
             name="birthday"
             value={value}

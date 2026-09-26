@@ -2,16 +2,19 @@ import * as React from 'react'
 import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
+import { isValidISODate, type ISODate as CanonicalISODate } from '../Calendar/iso'
 import { CalendarTodayIcon } from '@reference-ui/icons'
 import { createSlotRootContext } from '../Slot'
+import { assertValidDateBounds, isDateWithinConstraints } from './parse'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: ISODate | null
   defaultValue?: ISODate | null
   onChange?: (value: ISODate | null) => void
-  locale?: string
+  locale: string
   min?: ISODate
   max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
   disabled?: boolean
   name?: string
   form?: string
@@ -28,6 +31,9 @@ interface DateFieldContextValue {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   locale: string
+  min?: ISODate
+  max?: ISODate
+  constraintInvalid: boolean
   disabled: boolean
   required: boolean
   pickerId: string
@@ -114,10 +120,14 @@ DateFieldPicker.displayName = 'DateFieldPicker'
 
 export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof Calendar>) {
   const context = React.useContext(DateFieldContext)
+  // isDateUnavailable stays DateField-side: Calendar has no such prop yet (Calendar #6),
+  // so passing it would leak a function onto the grid DOM node.
   return (
     <Calendar
       value={context?.value}
       locale={context?.locale}
+      min={context?.min}
+      max={context?.max}
       onChange={(nextVal) => context?.handleDateSelect(nextVal)}
       {...props}
     />
@@ -137,6 +147,7 @@ function DateFieldLayout() {
   const {
     value,
     isOpen,
+    constraintInvalid,
     disabled,
     required,
     pickerId,
@@ -205,11 +216,17 @@ function DateFieldLayout() {
     }
   }
 
+  const explicitAriaInvalid = explicitProps['aria-invalid']
+  // Managed constraint-invalid always wins (aria-invalid is a managed prop);
+  // otherwise the authored value passes through untouched.
+  const ariaInvalid = constraintInvalid ? true : explicitAriaInvalid
+
   const {
     className: _explicitClassName,
     style: _explicitStyle,
     placeholder: _explicitPlaceholder,
     id: _explicitId,
+    'aria-invalid': _explicitAriaInvalid,
     onInput: _explicitOnInput,
     onChange: _explicitOnChange,
     onKeyDown: _explicitOnKeyDown,
@@ -242,6 +259,8 @@ function DateFieldLayout() {
       aria-expanded={isPickerPresent ? isOpen : undefined}
       aria-controls={isPickerPresent ? pickerId : undefined}
       aria-autocomplete={isPickerPresent ? 'none' : undefined}
+      aria-invalid={ariaInvalid}
+      data-invalid={constraintInvalid ? 'true' : undefined}
       data-reference-date-input=""
       inputMode="text"
       autoComplete={explicitProps.autoComplete ?? rootInputProps.autoComplete ?? 'off'}
@@ -335,7 +354,7 @@ function DateFieldPickerLayer() {
   const pickerSlot = useSlot('picker')
   if (!context || !pickerSlot) return null
 
-  const { value, locale, pickerId, handleDateSelect } = context
+  const { value, locale, min, max, pickerId, handleDateSelect } = context
 
   const pickerProps = (pickerSlot.element.props as Record<string, any> | undefined) ?? {}
   const pickerRef = pickerSlot.meta?.ref as React.Ref<HTMLDivElement> | undefined
@@ -375,6 +394,8 @@ function DateFieldPickerLayer() {
         <Calendar
           value={value}
           locale={locale}
+          min={min}
+          max={max}
           onChange={(nextVal) => handleDateSelect(nextVal)}
         />
       )}
@@ -389,9 +410,10 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       value: valueProp,
       defaultValue = null,
       onChange,
-      locale = 'en-US',
+      locale,
       min,
       max,
+      isDateUnavailable,
       disabled = false,
       readOnly = false,
       required = false,
@@ -404,9 +426,27 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     },
     ref
   ) {
+    if (locale == null) {
+      throw new Error('[reference-ui] DateField requires an explicit locale prop.')
+    }
+    assertValidDateBounds(min, max)
     const isControlled = valueProp !== undefined
     const [internalValue, setInternalValue] = React.useState<ISODate | null>(defaultValue)
     const value = isControlled ? valueProp : internalValue
+
+    // Programmatic constraint-invalid: a canonical value outside min/max or
+    // marked unavailable still displays; dirty text is never invalid here.
+    const constraintInvalid =
+      value != null &&
+      isValidISODate(value) &&
+      // Bounds already passed assertValidDateBounds above; the casts bridge
+      // Calendar's string-typed ISODate to the canonical template type.
+      !isDateWithinConstraints(
+        value,
+        min as CanonicalISODate,
+        max as CanonicalISODate,
+        isDateUnavailable
+      )
 
     const [isOpen, setIsOpen] = React.useState(false)
 
@@ -418,13 +458,26 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
 
     const handleDateSelect = React.useCallback(
       (nextDate: ISODate | null) => {
+        // Never publish a violating date: reject without commit or dismiss,
+        // never clamp. Clearing (null) is always allowed.
+        if (
+          nextDate !== null &&
+          !isDateWithinConstraints(
+            nextDate as CanonicalISODate,
+            min as CanonicalISODate,
+            max as CanonicalISODate,
+            isDateUnavailable
+          )
+        ) {
+          return
+        }
         if (!isControlled) {
           setInternalValue(nextDate)
         }
         onChange?.(nextDate)
         setIsOpen(false)
       },
-      [isControlled, onChange]
+      [isControlled, onChange, min, max, isDateUnavailable]
     )
 
     const handleInputChange = React.useCallback(
@@ -483,6 +536,9 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         isOpen,
         setIsOpen,
         locale,
+        min,
+        max,
+        constraintInvalid,
         disabled,
         required,
         pickerId,
@@ -497,6 +553,9 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         value,
         isOpen,
         locale,
+        min,
+        max,
+        constraintInvalid,
         disabled,
         required,
         pickerId,
@@ -528,6 +587,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     }
 
     if (!children) {
+      const childlessAriaInvalid = (props as Record<string, any>)['aria-invalid']
       return (
         <>
           <Input
@@ -542,6 +602,8 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
             className={className}
             style={style}
             {...props}
+            aria-invalid={constraintInvalid ? true : childlessAriaInvalid}
+            data-invalid={constraintInvalid ? 'true' : undefined}
           />
           {name && !disabled && (
             <input type="hidden" name={name} value={value ?? ''} form={form} />
