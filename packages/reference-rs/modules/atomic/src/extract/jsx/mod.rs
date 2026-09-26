@@ -118,10 +118,13 @@ fn handle_attribute_value(
             // <Div mt=<span /> /> — element values are never styles; DOM attrs
             // share the namespace and stay silent (SITE-07/08 stands).
             if is_style_attr_name(ctx, origin.unwrap_or(""), name) {
-                ctx.warn(
+                ctx.warn_help(
                     val.span(),
                     DiagnosticCode::NonObjectJsxStyle,
                     format!("JSX '{name}' prop value is not a static style value (element)"),
+                    vec![format!(
+                        "pass a static style object to '{name}' (got element)"
+                    )],
                 );
             }
         }
@@ -323,7 +326,7 @@ fn mutated_attr_warn(
     let Some(write) = ctx.scoped().mutation(base) else {
         return false;
     };
-    ctx.warn(
+    ctx.warn_help(
         span,
         DiagnosticCode::MutatedBinding,
         format!(
@@ -331,6 +334,10 @@ fn mutated_attr_warn(
             site.prop,
             write.write_phrase()
         ),
+        vec![format!(
+            "hoist '{base}' above the style call and stop reassigning it ({})",
+            write.write_phrase()
+        )],
     );
     true
 }
@@ -349,7 +356,7 @@ fn refuse_unless_silent_jsx(
 /// Diagnose a JSX style-block value that is not a static style object.
 fn refuse_style_attr(expr: &Expression<'_>, site: &StyleAttr<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div css={styles} />  /  <Div _hover={on && {...}} />
-    ctx.warn(
+    ctx.warn_help(
         expr.span(),
         DiagnosticCode::NonObjectJsxStyle,
         format!(
@@ -357,6 +364,11 @@ fn refuse_style_attr(expr: &Expression<'_>, site: &StyleAttr<'_>, ctx: &mut Extr
             site.prop,
             block_value_kind(expr)
         ),
+        vec![format!(
+            "pass a static style object to '{}' (got {})",
+            site.prop,
+            block_value_kind(expr)
+        )],
     );
 }
 
@@ -412,13 +424,17 @@ fn walk_attr_spread(
             return;
         }
     }
-    ctx.warn(
+    ctx.warn_help(
         spread.span,
         DiagnosticCode::NonObjectJsxStyle,
         format!(
             "JSX '{}' prop value is not a static style object (spread element)",
             site.prop
         ),
+        vec![format!(
+            "pass a static style object to '{}' (got spread element)",
+            site.prop
+        )],
     );
 }
 
@@ -496,5 +512,71 @@ fn tag_may_carry_styles(
         }
         JSXAttributeItem::SpreadAttribute(_) => true,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn channel_for(
+        res: &crate::CompileResult,
+        code: crate::diagnostics::DiagnosticCode,
+    ) -> Vec<crate::Diagnostic> {
+        res.compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|diag| diag.code == code)
+            .cloned()
+            .collect()
+    }
+
+    /// A non-object `css` attr names the prop and the got-kind in its fix.
+    #[test]
+    fn jsx_style_kind_help_names_prop_and_kind() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             declare const getStyles: () => object;\
+             export const el = <Div css={getStyles()} />;",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::NonObjectJsxStyle);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("jsx style carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("pass a static style object to 'css' (got "),
+            "unexpected help: {help:?}"
+        );
+    }
+
+    /// A mutated `css` attr base names the hoist fix with its write phrase.
+    #[test]
+    fn jsx_mutated_attr_help_names_hoist_with_write() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             let styles = { color: 'red' };\
+             styles = { color: 'blue' };\
+             export const el = <Div css={styles} />;",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::MutatedBinding);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("mutated attr carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("hoist 'styles' above the style call and stop reassigning it ("),
+            "unexpected help: {help:?}"
+        );
+        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
+    }
 }
 

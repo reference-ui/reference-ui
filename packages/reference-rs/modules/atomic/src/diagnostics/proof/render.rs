@@ -108,6 +108,7 @@ impl<'a> Proof<'a> {
                 location,
                 key: Some(key),
                 outcome,
+                ..
             } => collect_reject(&mut self.rejects, location, key, outcome),
             _ => {}
         }
@@ -284,6 +285,7 @@ mod tests {
                     },
                 )),
             },
+            suggestion: Some("_hover".into()),
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -302,6 +304,7 @@ mod tests {
                     },
                 )),
             },
+            suggestion: None,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -322,6 +325,13 @@ mod tests {
         assert!(diagnostics[0].message.contains("red.500"));
         assert!(diagnostics[0].message.contains("Unknown condition"));
         assert_eq!(diagnostics[0].file.as_deref(), Some("t.ts"));
+        assert_eq!(
+            diagnostics[0].help,
+            Some(vec![
+                "did you mean `_hover`?".to_string(),
+                "use a condition from the theme".to_string(),
+            ])
+        );
     }
 
     #[test]
@@ -407,6 +417,7 @@ mod tests {
                     },
                 )),
             },
+            suggestion: None,
         };
         let line = Policy::render_resolve(&report);
         let mut diagnostics = vec![line.clone()];

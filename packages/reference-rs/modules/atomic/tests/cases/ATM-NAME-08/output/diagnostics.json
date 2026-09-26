@@ -9,7 +9,10 @@
     "span": {
       "start": 124,
       "end": 130
-    }
+    },
+    "help": [
+      "write '1e21' as a plain decimal on 'padding'"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +24,10 @@
     "span": {
       "start": 169,
       "end": 175
-    }
+    },
+    "help": [
+      "write '1e-7' as a plain decimal on 'padding'"
+    ]
   },
   {
     "severity": "warning",
@@ -33,7 +39,10 @@
     "span": {
       "start": 209,
       "end": 215
-    }
+    },
+    "help": [
+      "write '0x10' as a plain decimal on 'top'"
+    ]
   },
   {
     "severity": "warning",
@@ -45,7 +54,10 @@
     "span": {
       "start": 254,
       "end": 256
-    }
+    },
+    "help": [
+      "remove the empty value on 'margin'"
+    ]
   },
   {
     "severity": "warning",
@@ -57,7 +69,10 @@
     "span": {
       "start": 295,
       "end": 299
-    }
+    },
+    "help": [
+      "remove the empty value on 'margin'"
+    ]
   },
   {
     "severity": "warning",
@@ -69,6 +84,10 @@
     "span": {
       "start": 247,
       "end": 257
-    }
+    },
+    "help": [
+      "did you mean `pink`?",
+      "use a color token or CSS color"
+    ]
   }
 ]

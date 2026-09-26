@@ -70,13 +70,17 @@ pub(crate) fn mutated_warn(
         return false;
     };
     let prop = ctx.prop;
-    ctx.warn(
+    ctx.warn_help(
         span,
         DiagnosticCode::MutatedBinding,
         format!(
             "Dynamic mutated binding '{name}' encountered for prop '{prop}' ({}; {detail})",
             write.write_phrase()
         ),
+        vec![format!(
+            "hoist '{name}' above the style call and stop reassigning it ({})",
+            write.write_phrase()
+        )],
     );
     true
 }
@@ -171,5 +175,46 @@ pub(crate) fn handle_binary(
     emit_dead_arms(ctx, &fold.dead_arms);
     for operand in fold.dynamic {
         walk_expression(ctx, operand, when);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A mutated value leaf names the hoist fix with its write phrase.
+    #[test]
+    fn mutated_value_help_names_hoist_with_write() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             let accent = 'red';\
+             accent = 'blue';\
+             export const cls = css({ color: accent });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::MutatedBinding)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("mutated value carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("hoist 'accent' above the style call and stop reassigning it ("),
+            "unexpected help: {help:?}"
+        );
+        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
     }
 }

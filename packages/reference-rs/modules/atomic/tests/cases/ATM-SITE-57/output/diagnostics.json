@@ -3,7 +3,10 @@
     "severity": "warning",
     "code": "ATM-W-TRACE-SKIPPED",
     "message": "StyleTrace: failed to parse input/src/Broken.tsx: 1 parse error(s)",
-    "file": "input/src/Broken.tsx"
+    "file": "input/src/Broken.tsx",
+    "help": [
+      "check the StyleTrace host graph for 'input/src/Broken.tsx'"
+    ]
   },
   {
     "severity": "error",

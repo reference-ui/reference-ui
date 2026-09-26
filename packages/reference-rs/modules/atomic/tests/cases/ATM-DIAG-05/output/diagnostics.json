@@ -9,6 +9,9 @@
     "span": {
       "start": 195,
       "end": 205
-    }
+    },
+    "help": [
+      "remove 'frobnicate' or check its spelling"
+    ]
   }
 ]

@@ -9,6 +9,10 @@
     "span": {
       "start": 95,
       "end": 99
-    }
+    },
+    "help": [
+      "did you mean `red`?",
+      "use a color token or CSS color"
+    ]
   }
 ]

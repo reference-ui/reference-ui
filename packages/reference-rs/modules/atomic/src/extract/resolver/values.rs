@@ -135,6 +135,11 @@ impl UnfoldableSpread {
         }
     }
 
+    /// The spread name as authored in the origin file, for instance help.
+    pub fn local(&self) -> &str {
+        &self.local
+    }
+
     /// The site diagnostic: what spread, where, and why it could not be read.
     pub fn message(&self) -> String {
         format!(

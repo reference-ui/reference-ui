@@ -9,7 +9,10 @@
     "span": {
       "start": 486,
       "end": 488
-    }
+    },
+    "help": [
+      "remove the empty value on 'margin'"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +24,10 @@
     "span": {
       "start": 75,
       "end": 85
-    }
+    },
+    "help": [
+      "write 'Infinity' as a plain decimal on 'width'"
+    ]
   },
   {
     "severity": "warning",
@@ -33,7 +39,10 @@
     "span": {
       "start": 104,
       "end": 109
-    }
+    },
+    "help": [
+      "write 'NaN' as a plain decimal on 'height'"
+    ]
   },
   {
     "severity": "warning",
@@ -45,6 +54,9 @@
     "span": {
       "start": 125,
       "end": 131
-    }
+    },
+    "help": [
+      "write '0x10' as a plain decimal on 'top'"
+    ]
   }
 ]

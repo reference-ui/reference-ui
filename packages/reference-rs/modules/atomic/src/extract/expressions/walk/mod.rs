@@ -23,7 +23,9 @@ use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::adapters::extract::{extract_note, ExtractReport};
+use crate::diagnostics::adapters::extract::{
+    extract_note, extract_note_with_help, ExtractReport,
+};
 use crate::diagnostics::{
     byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation,
     DiagnosticSeverity, DiagnosticSink, DiagnosticsSession, ExtractDetail, LineIndex, Policy,
@@ -110,6 +112,37 @@ impl<'a> ExpressionWalk<'a> {
             .push(location.warning(code, message.clone()));
         self.session
             .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
+    }
+
+    /// Report a warning with instance help at the offending node's span.
+    /// The help rides the pushed line and the session fact alike, so the
+    /// compiler re-render re-attaches it.
+    pub fn warn_help(
+        &mut self,
+        span: Span,
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        help: Vec<String>,
+    ) {
+        let message: String = message.into();
+        let (line, column) = self.span_position(Some(span)).unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+            span: Some(byte_span(span)),
+        };
+        self.diagnostics.push(Policy::attach_help(
+            location.warning(code, message.clone()),
+            help.clone(),
+        ));
+        self.session.report(extract_note_with_help(
+            location,
+            DiagnosticSeverity::Warning,
+            code,
+            message,
+            Some(help),
+        ));
     }
 
     /// Report a userspace-visible warning at the offending node's span.
@@ -380,5 +413,62 @@ mod tests {
         );
         assert!(unrecorded, "mutated fact records no sink");
         assert!(recorded, "identifier fact records its sink");
+    }
+
+    /// `warn_help` carries the instance help on the pushed line and the
+    /// session fact alike, so the compiler re-render re-attaches it.
+    #[test]
+    fn warn_help_carries_help_on_the_line_and_the_fact() {
+        let code = "export const cls = {};\n";
+        let allocator = Allocator::default();
+        let source_type =
+            oxc_span::SourceType::from_path(std::path::Path::new("t.ts")).unwrap_or_default();
+        let parsed = Parser::new(&allocator, code, source_type).parse();
+        assert!(!parsed.panicked);
+        let bag = crate::extract::constants::collect_local_constants(&parsed.program, "t.ts", None);
+        let table = crate::extract::scope::collect(&parsed.program, &bag);
+        let stub = crate::extract::scope::ImportLookup::ProjectBag(&bag);
+        let chain = crate::extract::scope::ScopeChain::new(&table, stub);
+        let breakpoints = BreakpointScale::default();
+        let mut wants = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut sinks = Vec::new();
+        let mut session = DiagnosticsSession::new();
+        {
+            let mut ctx = ExpressionWalk {
+                prop: "mt",
+                origin: None,
+                important: false,
+                file: "t.ts",
+                source: Some(code),
+                line_index: None,
+                scopes: chain.at(crate::extract::scope::ROOT_SCOPE),
+                breakpoints: &breakpoints,
+                wants: &mut wants,
+                diagnostics: &mut diagnostics,
+                sinks: &mut sinks,
+                session: &mut session,
+            };
+            ctx.warn_help(
+                Span::new(0, 5),
+                DiagnosticCode::ResponsiveArraySpread,
+                "spread refuses the array",
+                vec!["remove the spread from the 'mt' value array".to_string()],
+            );
+        }
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics[0].help,
+            Some(vec!["remove the spread from the 'mt' value array".to_string()])
+        );
+        let facts = session.take_facts();
+        assert_eq!(facts.len(), 1);
+        let DiagnosticFact::ExtractNote { help, .. } = &facts[0] else {
+            panic!("warn_help reports an extract note");
+        };
+        assert_eq!(
+            help,
+            &Some(vec!["remove the spread from the 'mt' value array".to_string()])
+        );
     }
 }

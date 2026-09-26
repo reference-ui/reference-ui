@@ -3,7 +3,10 @@
     "severity": "warning",
     "code": "ATM-W-TRACE-SKIPPED",
     "message": "StyleTrace: failed to parse input/src/modes/broken.jsx: 1 parse error(s)",
-    "file": "input/src/modes/broken.jsx"
+    "file": "input/src/modes/broken.jsx",
+    "help": [
+      "check the StyleTrace host graph for 'input/src/modes/broken.jsx'"
+    ]
   },
   {
     "severity": "error",
@@ -27,6 +30,9 @@
     "span": {
       "start": 71,
       "end": 81
-    }
+    },
+    "help": [
+      "remove 'frobnicate' or check its spelling"
+    ]
   }
 ]

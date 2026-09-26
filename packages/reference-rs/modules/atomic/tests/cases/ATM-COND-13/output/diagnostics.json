@@ -9,7 +9,11 @@
     "span": {
       "start": 200,
       "end": 209
-    }
+    },
+    "help": [
+      "did you mean `xDown`?",
+      "use a condition from the theme"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +25,10 @@
     "span": {
       "start": 383,
       "end": 392
-    }
+    },
+    "help": [
+      "use a condition from the theme"
+    ]
   },
   {
     "severity": "warning",
@@ -33,7 +40,10 @@
     "span": {
       "start": 441,
       "end": 445
-    }
+    },
+    "help": [
+      "use a condition from the theme"
+    ]
   },
   {
     "severity": "warning",
@@ -45,6 +55,10 @@
     "span": {
       "start": 628,
       "end": 637
-    }
+    },
+    "help": [
+      "did you mean `xDown`?",
+      "use a condition from the theme"
+    ]
   }
 ]

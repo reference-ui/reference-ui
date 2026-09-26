@@ -42,6 +42,8 @@ pub fn collect<'a>(
         location: location.clone(),
         key: Some(key.clone()),
         outcome: outcome.clone(),
+        // Proof re-derives the legacy sentence only; help never joins.
+        suggestion: None,
     };
     rejects.push(Reject {
         location,

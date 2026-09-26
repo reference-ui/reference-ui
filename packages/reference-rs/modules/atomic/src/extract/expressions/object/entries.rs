@@ -9,6 +9,7 @@ use super::{lower::LowerSite, lower_const_object, ObjectWalk};
 use crate::atom::AtomValue;
 use crate::diagnostics::DiagnosticCode;
 use crate::extract::constants::{ConstObject, ObjectProp};
+use crate::extract::suggest;
 
 /// Lower one style entry: its leaves, or its responsive sub-entries by key.
 pub(crate) fn lower_style_entry(
@@ -25,24 +26,32 @@ pub(crate) fn lower_style_entry(
     if prop.leaves.is_empty() {
         if prop.nested.is_empty() {
             // { color: pick() } — recorded but unlowerable; name it (55/65)
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::UnfoldableObjectProp,
                 format!(
                     "property '{key}' of '{}' has no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "give '{key}' of '{}' a static value or drop it from the spread",
+                    site.name
+                )],
             );
         } else if prop.residue {
             // { ...(c ? { color: { base: 'red' } } : { color: pick() }) } —
             // the nested entries lowered above; name the dropped value arm
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::PartialObjectProp,
                 format!(
                     "property '{key}' of '{}' drops a dynamic arm with no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "make the dynamic arm of '{key}' of '{}' static or drop it",
+                    site.name
+                )],
             );
         }
         return;
@@ -51,13 +60,17 @@ pub(crate) fn lower_style_entry(
     if prop.residue {
         // { color: flag ? 'white' : run() } — the kept leaves lowered; name
         // the dropped arm (Ph4 residue channel)
-        ctx.warn(
+        ctx.warn_help(
             site.span,
             DiagnosticCode::PartialObjectProp,
             format!(
                 "property '{key}' of '{}' drops a dynamic arm with no static style value",
                 site.name
             ),
+            vec![format!(
+                "make the dynamic arm of '{key}' of '{}' static or drop it",
+                site.name
+            )],
         );
     }
 }
@@ -111,13 +124,17 @@ fn lower_responsive_entries(
     for (sub, subprop) in nested.iter() {
         if !subprop.nested.is_empty() || subprop.leaves.is_empty() {
             // Doubly nested or unlowerable responsive values stay out, named
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::UnfoldableObjectProp,
                 format!(
                     "property '{key}.{sub}' of '{}' has no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "give '{key}.{sub}' of '{}' a static value or drop it from the spread",
+                    site.name
+                )],
             );
             continue;
         }
@@ -130,13 +147,17 @@ fn lower_responsive_entries(
         };
         push_entry_leaves(ctx, key, &subprop.leaves, &sub_site);
         if subprop.residue {
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::PartialObjectProp,
                 format!(
                     "property '{key}.{sub}' of '{}' drops a dynamic arm with no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "make the dynamic arm of '{key}.{sub}' of '{}' static or drop it",
+                    site.name
+                )],
             );
         }
     }
@@ -160,33 +181,42 @@ pub(crate) fn lower_condition_entry(
     if prop.leaves.is_empty() {
         if prop.nested.is_empty() {
             // { _hover: pick() }  — recorded but unlowerable; name it
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::UnfoldableObjectProp,
                 format!(
                     "property '{key}' of '{}' has no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "give '{key}' of '{}' a static value or drop it from the spread",
+                    site.name
+                )],
             );
         } else if prop.residue {
             // The nested entries lowered above; name the dropped value arm
             // a union merged beside them
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::PartialObjectProp,
                 format!(
                     "property '{key}' of '{}' drops a dynamic arm with no static style value",
                     site.name
                 ),
+                vec![format!(
+                    "make the dynamic arm of '{key}' of '{}' static or drop it",
+                    site.name
+                )],
             );
         }
         return;
     }
     // { _hover: 'red' }  — a condition block must be an object, as inline
-    ctx.warn(
+    ctx.warn_help(
         site.span,
         DiagnosticCode::NonObjectCondition,
         "Condition block expected object expression",
+        vec![format!("give condition '{key}' a style object")],
     );
 }
 
@@ -206,23 +236,31 @@ pub(crate) fn lower_css_entry(
     }
     if prop.leaves.is_empty() && prop.nested.is_empty() {
         // { css: pick() }  — recorded but unlowerable; name it
-        ctx.warn(
+        ctx.warn_help(
             site.span,
             DiagnosticCode::UnfoldableObjectProp,
             format!(
                 "property '{key}' of '{}' has no static style value",
                 site.name
             ),
+            vec![format!(
+                "give '{key}' of '{}' a static value or drop it from the spread",
+                site.name
+            )],
         );
     } else if prop.residue {
         // The kept side lowered (or stayed silent); name the dropped arm
-        ctx.warn(
+        ctx.warn_help(
             site.span,
             DiagnosticCode::PartialObjectProp,
             format!(
                 "property '{key}' of '{}' drops a dynamic arm with no static style value",
                 site.name
             ),
+            vec![format!(
+                "make the dynamic arm of '{key}' of '{}' static or drop it",
+                site.name
+            )],
         );
     }
 }
@@ -242,10 +280,15 @@ pub(crate) fn lower_r_entry(
         let trimmed = sub.trim();
         let Some(query) = super::keys::resolve_r_key(trimmed, ctx.breakpoints) else {
             // r: { wat: {...} }  — unknown, like the inline key
-            ctx.warn(
+            let help = suggest::suggestion_lines(
+                suggest::suggest_breakpoint(trimmed, ctx.breakpoints),
+                "use a breakpoint from the theme".to_string(),
+            );
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::UnknownBreakpoint,
                 format!("Unknown breakpoint name in r prop: \"{trimmed}\""),
+                help,
             );
             continue;
         };
@@ -259,13 +302,17 @@ pub(crate) fn lower_r_entry(
     }
     if prop.leaves.is_empty() && prop.nested.is_empty() {
         // { r: pick() }  — recorded but unlowerable; name it
-        ctx.warn(
+        ctx.warn_help(
             site.span,
             DiagnosticCode::UnfoldableObjectProp,
             format!(
                 "property '{key}' of '{}' has no static style value",
                 site.name
             ),
+            vec![format!(
+                "give '{key}' of '{}' a static value or drop it from the spread",
+                site.name
+            )],
         );
     }
 }
@@ -291,32 +338,44 @@ fn lower_r_sub(ctx: &mut ObjectWalk<'_>, site: &LowerSite<'_>, sub: &RSub<'_>) {
     if sub.subprop.leaves.is_empty() {
         if sub.subprop.nested.is_empty() {
             // r: { md: pick() }  — recorded but unlowerable; name it
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::UnfoldableObjectProp,
                 format!(
                     "property '{}.{}' of '{}' has no static style value",
                     sub.key, sub.sub, site.name
                 ),
+                vec![format!(
+                    "give '{}.{}' of '{}' a static value or drop it from the spread",
+                    sub.key, sub.sub, site.name
+                )],
             );
         } else if sub.subprop.residue {
             // The nested entries lowered above; name the dropped value arm
-            ctx.warn(
+            ctx.warn_help(
                 site.span,
                 DiagnosticCode::PartialObjectProp,
                 format!(
                     "property '{}.{}' of '{}' drops a dynamic arm with no static style value",
                     sub.key, sub.sub, site.name
                 ),
+                vec![format!(
+                    "make the dynamic arm of '{}.{}' of '{}' static or drop it",
+                    sub.key, sub.sub, site.name
+                )],
             );
         }
         return;
     }
     // r: { md: '1r' }  — a condition block must be an object, as inline
-    ctx.warn(
+    ctx.warn_help(
         site.span,
         DiagnosticCode::NonObjectCondition,
         "Condition block expected object expression",
+        vec![format!(
+            "give condition '{}.{}' a style object",
+            sub.key, sub.sub
+        )],
     );
 }
 
@@ -333,6 +392,29 @@ mod tests {
             ..Default::default()
         };
         compile(&req).expect("compile succeeds")
+    }
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn channel_for(
+        res: &crate::CompileResult,
+        code: crate::diagnostics::DiagnosticCode,
+    ) -> Vec<crate::Diagnostic> {
+        res.compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|diag| diag.code == code)
+            .cloned()
+            .collect()
     }
 
     /// Const leaves split `!important` like inline literals: stripped, flagged, silent (S5-2).
@@ -460,6 +542,81 @@ mod tests {
             serde_json::to_value(&spliced.style_plans).expect("plans serialize"),
             serde_json::to_value(&inline.style_plans).expect("plans serialize"),
             "spliced and inline arrays plan identically"
+        );
+    }
+
+    /// An unlowerable spread entry names its key and const in the fix.
+    #[test]
+    fn unfoldable_object_prop_help_names_key_and_const() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const pick: () => string;\
+             const theme = { color: pick() };\
+             export const cls = css({ ...theme });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::UnfoldableObjectProp);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec![
+                "give 'color' of 'theme' a static value or drop it from the spread".to_string()
+            ])
+        );
+    }
+
+    /// An unlowerable responsive sub-entry names the dotted key in the fix.
+    #[test]
+    fn unfoldable_responsive_sub_help_names_dotted_key() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const pick: () => string;\
+             const theme = { padding: { md: pick() } };\
+             export const cls = css({ ...theme });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::UnfoldableObjectProp);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec![
+                "give 'padding.md' of 'theme' a static value or drop it from the spread"
+                    .to_string()
+            ])
+        );
+    }
+
+    /// A dropped union arm beside kept leaves names key and const in the fix.
+    #[test]
+    fn partial_object_prop_help_names_key_and_const() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const run: () => string;\
+             const theme = { color: flag ? 'white' : run() };\
+             export const cls = css({ ...theme });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::PartialObjectProp);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec![
+                "make the dynamic arm of 'color' of 'theme' static or drop it".to_string()
+            ])
+        );
+    }
+
+    /// A scalar recorded condition names its key in the fix.
+    #[test]
+    fn recorded_scalar_condition_help_names_the_key() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             const theme = { _hover: 'red' };\
+             export const cls = css({ ...theme });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::NonObjectCondition);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["give condition '_hover' a style object".to_string()])
         );
     }
 

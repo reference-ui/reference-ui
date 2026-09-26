@@ -6,8 +6,8 @@
 use base_system::{BaseSystem, GlobalDeclarationValue};
 
 use crate::atom::AtomValue;
-use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
-use crate::resolve::{font, rhythm, tokens, unit, ResolveSession};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, Policy};
+use crate::resolve::{font, rhythm, suggest, tokens, unit, ResolveSession};
 
 /// Lowering session holding design system references and diagnostic accumulators.
 pub struct ValueSession<'a> {
@@ -35,11 +35,15 @@ pub fn lower_declaration(
         return lower_weight_macro(val, session.system);
     }
     if !prop.starts_with("--") && !canon::is_known_style_prop(prop) {
-        let diagnostic = session.location.warning(
+        let help = suggest::suggestion_lines(
+            suggest::suggest_property(prop),
+            format!("remove '{prop}' or check its spelling"),
+        );
+        let line = session.location.warning(
             DiagnosticCode::UnknownProperty,
             format!("Unknown style property in global CSS: \"{prop}\""),
         );
-        session.diagnostics.push(diagnostic);
+        session.diagnostics.push(Policy::attach_help(line, help));
         return Vec::new();
     }
     lower_standard_property(prop, val, session)
@@ -130,12 +134,15 @@ fn lower_standard_property(
             vec![(css_prop, final_val)]
         }
         GlobalDeclarationValue::Number(n) => vec![(css_prop, lower_number_value(prop, n))],
-        GlobalDeclarationValue::Boolean(_) => {
-            let diagnostic = session.location.warning(
+        GlobalDeclarationValue::Boolean(value) => {
+            let line = session.location.warning(
                 DiagnosticCode::InvalidCssValue,
                 format!("Boolean value is not allowed on standard property \"{prop}\""),
             );
-            session.diagnostics.push(diagnostic);
+            let help = vec![format!(
+                "'{prop}' rejects '{value}'; use a CSS keyword, token, or accepted value"
+            )];
+            session.diagnostics.push(Policy::attach_help(line, help));
             Vec::new()
         }
         _ => Vec::new(),

@@ -9,6 +9,9 @@
     "span": {
       "start": 124,
       "end": 128
-    }
+    },
+    "help": [
+      "'color' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   }
 ]

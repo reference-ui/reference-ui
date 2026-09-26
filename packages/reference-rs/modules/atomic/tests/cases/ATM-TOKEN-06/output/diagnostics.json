@@ -9,7 +9,10 @@
     "span": {
       "start": 108,
       "end": 118
-    }
+    },
+    "help": [
+      "write the opacity modifier as /<0-100> (got 'red.500/')"
+    ]
   },
   {
     "severity": "warning",
@@ -21,6 +24,9 @@
     "span": {
       "start": 135,
       "end": 140
-    }
+    },
+    "help": [
+      "write the opacity modifier as /<0-100> (got '/40')"
+    ]
   }
 ]

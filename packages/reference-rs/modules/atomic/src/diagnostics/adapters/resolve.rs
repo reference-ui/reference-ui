@@ -7,12 +7,15 @@ use super::super::{DiagnosticFact, DiagnosticLocation, OwnedLookupKey, ResolveOu
 
 /// What resolve did with one authored declaration, ready to report. The key
 /// travels when a want context is in hand; the outcome always does, carrying
-/// its own render parts so policy never unwraps the key.
+/// its own render parts so policy never unwraps the key. The precomputed
+/// did-you-mean suggestion travels for unknown-name codes so policy renders
+/// the same help on both the pushed line and the compiler re-render.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResolveReport {
     pub location: DiagnosticLocation,
     pub key: Option<OwnedLookupKey>,
     pub outcome: ResolveOutcome,
+    pub suggestion: Option<Box<str>>,
 }
 
 impl From<ResolveReport> for DiagnosticFact {
@@ -21,6 +24,7 @@ impl From<ResolveReport> for DiagnosticFact {
             location: report.location,
             key: report.key,
             outcome: report.outcome,
+            suggestion: report.suggestion,
         }
     }
 }
@@ -43,14 +47,13 @@ mod tests {
                     },
                 )),
             },
+            suggestion: Some("_hover".into()),
         };
         let fact = DiagnosticFact::from(report);
-        assert!(matches!(
-            fact,
-            DiagnosticFact::ResolveOutcome {
-                outcome: ResolveOutcome::Rejected { .. },
-                ..
-            }
-        ));
+        let DiagnosticFact::ResolveOutcome { outcome, suggestion, .. } = fact else {
+            panic!("resolve reports convert to resolve outcomes");
+        };
+        assert!(matches!(outcome, ResolveOutcome::Rejected { .. }));
+        assert_eq!(suggestion.as_deref(), Some("_hover"));
     }
 }

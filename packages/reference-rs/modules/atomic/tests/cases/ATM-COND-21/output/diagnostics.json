@@ -9,7 +9,10 @@
     "span": {
       "start": 92,
       "end": 101
-    }
+    },
+    "help": [
+      "use a condition from the theme"
+    ]
   },
   {
     "severity": "warning",
@@ -21,6 +24,9 @@
     "span": {
       "start": 157,
       "end": 166
-    }
+    },
+    "help": [
+      "use a condition from the theme"
+    ]
   }
 ]

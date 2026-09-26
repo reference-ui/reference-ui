@@ -9,7 +9,11 @@
     "span": {
       "start": 245,
       "end": 250
-    }
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
   },
   {
     "severity": "error",
@@ -33,7 +37,11 @@
     "span": {
       "start": 358,
       "end": 390
-    }
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
   },
   {
     "severity": "warning",
@@ -45,6 +53,10 @@
     "span": {
       "start": 534,
       "end": 568
-    }
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
   }
 ]

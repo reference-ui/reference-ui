@@ -9,6 +9,9 @@
     "span": {
       "start": 332,
       "end": 349
-    }
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
   }
 ]

@@ -9,7 +9,8 @@ use base_system::BaseSystem;
 use smallvec::SmallVec;
 
 use crate::atom::{AtomValue, Want};
-use crate::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Policy};
+use crate::resolve::suggest;
 use crate::runtime::AuthoredDeclaration;
 
 const STATIC_ORIGIN: &str = "staticCss";
@@ -27,10 +28,15 @@ pub fn append_static_css(ctx: &mut StaticCssContext<'_>) {
     for (key, values) in &ctx.system.static_css {
         let (when, prop) = parse_static_key(key);
         if !canon::is_known_style_prop(prop) {
-            ctx.diagnostics.push(Diagnostic::warning(
+            let help = suggest::suggestion_lines(
+                suggest::suggest_property(prop),
+                format!("remove '{prop}' or check its spelling"),
+            );
+            let line = Diagnostic::warning(
                 DiagnosticCode::UnknownProperty,
                 format!("Unknown property in staticCss: \"{prop}\""),
-            ));
+            );
+            ctx.diagnostics.push(Policy::attach_help(line, help));
             continue;
         }
         if values.iter().any(|v| v == "*") {
@@ -73,10 +79,14 @@ fn parse_static_key(key: &str) -> (Vec<String>, &str) {
 
 fn expand_wildcard(ctx: &mut StaticCssContext<'_>, when: &[String], prop: &str) {
     let Some(category) = wildcard_category(prop) else {
-        ctx.diagnostics.push(Diagnostic::warning(
+        let line = Diagnostic::warning(
             DiagnosticCode::StaticWildcard,
             format!("Cannot expand wildcard for property \"{prop}\": no associated token category"),
-        ));
+        );
+        let help = vec![format!(
+            "'{prop}' has no token category; list concrete values instead of '*'"
+        )];
+        ctx.diagnostics.push(Policy::attach_help(line, help));
         return;
     };
     let target_cat = resolve_system_category(ctx.system, category);
@@ -324,5 +334,45 @@ mod tests {
         assert!(wants.is_empty());
         assert_eq!(diagnostics.len(), 1);
         assert!(diagnostics[0].message.contains("unknownProp"));
+        assert!(
+            diagnostics[0]
+                .help
+                .as_ref()
+                .is_some_and(|help| help
+                    .iter()
+                    .any(|line| line == "remove 'unknownProp' or check its spelling"))
+        );
+    }
+
+    #[test]
+    fn near_miss_property_suggests_and_wildcard_names_its_prop() {
+        let mut system = test_system();
+        system.static_css.insert("colr".into(), vec!["n100".into()]);
+        system.static_css.insert("display".into(), vec!["*".into()]);
+        let mut wants = Vec::new();
+        let mut authored = Vec::new();
+        let mut diagnostics = Vec::new();
+        let mut ctx = StaticCssContext {
+            system: &system,
+            wants: &mut wants,
+            authored: &mut authored,
+            diagnostics: &mut diagnostics,
+        };
+        append_static_css(&mut ctx);
+        assert_eq!(diagnostics.len(), 2);
+        assert_eq!(
+            diagnostics[0].help,
+            Some(vec![
+                "did you mean `color`?".to_string(),
+                "remove 'colr' or check its spelling".to_string(),
+            ])
+        );
+        assert_eq!(
+            diagnostics[1].help,
+            Some(vec![
+                "'display' has no token category; list concrete values instead of '*'"
+                    .to_string()
+            ])
+        );
     }
 }

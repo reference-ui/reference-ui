@@ -9,7 +9,10 @@
     "span": {
       "start": 728,
       "end": 741
-    }
+    },
+    "help": [
+      "'flexGrow' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   },
   {
     "severity": "warning",
@@ -21,6 +24,9 @@
     "span": {
       "start": 1056,
       "end": 1064
-    }
+    },
+    "help": [
+      "'flexGrow' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   }
 ]

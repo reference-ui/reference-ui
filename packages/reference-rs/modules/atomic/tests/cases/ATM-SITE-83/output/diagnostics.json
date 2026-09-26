@@ -9,6 +9,10 @@
     "span": {
       "start": 948,
       "end": 951
-    }
+    },
+    "help": [
+      "did you mean `cue`?",
+      "remove 'css' or check its spelling"
+    ]
   }
 ]

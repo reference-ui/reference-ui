@@ -9,7 +9,11 @@
     "span": {
       "start": 418,
       "end": 419
-    }
+    },
+    "help": [
+      "did you mean `cx`?",
+      "remove '42' or check its spelling"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +25,11 @@
     "span": {
       "start": 452,
       "end": 456
-    }
+    },
+    "help": [
+      "did you mean `cx`?",
+      "remove '-4' or check its spelling"
+    ]
   },
   {
     "severity": "warning",
@@ -33,6 +41,10 @@
     "span": {
       "start": 322,
       "end": 324
-    }
+    },
+    "help": [
+      "did you mean `cx`?",
+      "remove '42' or check its spelling"
+    ]
   }
 ]

@@ -24,9 +24,19 @@ pub fn render_proof(
 /// catalog maps analysis sites back to positions yet, so proof stays
 /// honest about what it cannot place.
 pub fn render_causeless(key: &OwnedLookupKey) -> Diagnostic {
-    Diagnostic::warning(
+    let line = Diagnostic::warning(
         DiagnosticCode::MissingStylePlan,
         causeless_sentence(key),
+    );
+    super::Policy::attach_help(line, vec![causeless_help(key)])
+}
+
+/// The help for one causeless miss: the declaration echoed with its fix.
+fn causeless_help(key: &OwnedLookupKey) -> String {
+    format!(
+        "make the '{}: {}' lookup static so the plan can serve it",
+        key.prop,
+        value_spelling(&key.value),
     )
 }
 
@@ -120,5 +130,22 @@ mod tests {
         assert!(rendered.message.contains("color"));
         assert!(rendered.message.contains("red"));
         assert!(rendered.file.is_none());
+        assert_eq!(
+            rendered.help,
+            Some(vec![
+                "make the 'color: red' lookup static so the plan can serve it".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn reason_carrying_proof_keeps_no_engine_help() {
+        let rendered = Policy::render_proof(
+            &key("color", serde_json::json!("red.500")),
+            &located(),
+            DiagnosticCode::UnknownCondition,
+            "Unknown condition \"_hovr\"",
+        );
+        assert_eq!(rendered.help, None);
     }
 }

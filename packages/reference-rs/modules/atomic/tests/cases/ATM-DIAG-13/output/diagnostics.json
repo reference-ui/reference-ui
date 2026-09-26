@@ -9,7 +9,10 @@
     "span": {
       "start": 87,
       "end": 104
-    }
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
   },
   {
     "severity": "warning",
@@ -21,6 +24,9 @@
     "span": {
       "start": 124,
       "end": 141
-    }
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
   }
 ]

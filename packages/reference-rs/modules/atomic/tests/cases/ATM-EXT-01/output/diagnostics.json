@@ -9,7 +9,10 @@
     "span": {
       "start": 86,
       "end": 92
-    }
+    },
+    "help": [
+      "drop 'translateY'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +24,10 @@
     "span": {
       "start": 86,
       "end": 92
-    }
+    },
+    "help": [
+      "drop 'translateX'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -33,7 +39,10 @@
     "span": {
       "start": 105,
       "end": 111
-    }
+    },
+    "help": [
+      "drop 'boxSize'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -45,7 +54,10 @@
     "span": {
       "start": 123,
       "end": 129
-    }
+    },
+    "help": [
+      "drop 'spaceX'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -57,7 +69,10 @@
     "span": {
       "start": 143,
       "end": 153
-    }
+    },
+    "help": [
+      "drop 'truncate'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -69,7 +84,10 @@
     "span": {
       "start": 167,
       "end": 171
-    }
+    },
+    "help": [
+      "drop 'hideFrom'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -81,7 +99,10 @@
     "span": {
       "start": 189,
       "end": 194
-    }
+    },
+    "help": [
+      "drop 'gradientFrom'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -93,7 +114,10 @@
     "span": {
       "start": 209,
       "end": 215
-    }
+    },
+    "help": [
+      "drop 'textStyle'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -105,7 +129,10 @@
     "span": {
       "start": 241,
       "end": 252
-    }
+    },
+    "help": [
+      "drop 'scrollSnapStrictness'; the dialect has no served css form"
+    ]
   },
   {
     "severity": "warning",
@@ -117,6 +144,9 @@
     "span": {
       "start": 277,
       "end": 282
-    }
+    },
+    "help": [
+      "drop 'spaceY'; the dialect has no served css form"
+    ]
   }
 ]

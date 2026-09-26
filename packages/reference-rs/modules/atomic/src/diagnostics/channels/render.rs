@@ -71,6 +71,7 @@ fn render_producer(fact: &DiagnosticFact) -> Option<Diagnostic> {
             severity,
             code,
             message,
+            help,
         } => Some(Diagnostic {
             severity: *severity,
             code: *code,
@@ -80,7 +81,7 @@ fn render_producer(fact: &DiagnosticFact) -> Option<Diagnostic> {
             column: location.column,
             span: location.span,
             labels: None,
-            help: None,
+            help: help.clone(),
         }),
         DiagnosticFact::HarvestOutcome {
             location,
@@ -106,6 +107,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         location,
         key,
         outcome,
+        suggestion,
     } = fact
     else {
         return None;
@@ -117,6 +119,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         location: location.clone(),
         key: key.clone(),
         outcome: outcome.clone(),
+        suggestion: suggestion.clone(),
     }))
 }
 

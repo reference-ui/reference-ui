@@ -9,6 +9,9 @@
     "span": {
       "start": 148,
       "end": 150
-    }
+    },
+    "help": [
+      "'order' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   }
 ]

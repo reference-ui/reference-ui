@@ -15,6 +15,7 @@ use super::{condition::is_condition_key, entries, BagSemantics, ObjectWalk};
 use crate::atom::AtomValue;
 use crate::diagnostics::DiagnosticCode;
 use crate::extract::constants::{ConstObject, ObjectProp};
+use crate::extract::suggest;
 use canon::is_known_style_prop;
 
 /// Lower one const-array object element exactly as if spread: its
@@ -105,11 +106,54 @@ fn warn_unknown_spread_keys(ctx: &mut ObjectWalk<'_>, obj: &ConstObject, span: S
     for (key, _) in obj.iter() {
         // Spread keys warn and drop like literal keys (N12).
         if !is_known_style_prop(key) && !is_condition_key(key, ctx.breakpoints) {
-            ctx.warn(
+            let help = suggest::suggestion_lines(
+                suggest::suggest_property(key),
+                format!("remove '{key}' or check its spelling"),
+            );
+            ctx.warn_help(
                 span,
                 DiagnosticCode::UnknownProperty,
                 format!("Unknown style property \"{key}\""),
+                help,
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_code(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// An unknown spread-const key suggests like a literal key, userspace.
+    #[test]
+    fn unknown_spread_key_help_suggests_closest_canon_name() {
+        let res = compile_code(
+            "import { css } from '@reference-ui/react';\
+             const theme = { colr: 'red' };\
+             export const cls = css({ ...theme });",
+        );
+        let hits: Vec<_> = res
+            .diagnostics
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::UnknownProperty)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec![
+                "did you mean `color`?".to_string(),
+                "remove 'colr' or check its spelling".to_string(),
+            ])
+        );
     }
 }

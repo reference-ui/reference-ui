@@ -223,13 +223,18 @@ mod tests {
     }
 
     fn note_pair() -> (DiagnosticFact, Diagnostic) {
+        let help = Some(vec!["define 'mix' as a static style object".to_string()]);
         let fact = DiagnosticFact::ExtractNote {
             location: located(),
             severity: DiagnosticSeverity::Warning,
             code: DiagnosticCode::UnfoldableSpread,
             message: "spread keeps siblings".into(),
+            help: help.clone(),
         };
-        let line = located().warning(DiagnosticCode::UnfoldableSpread, "spread keeps siblings");
+        let line = Policy::attach_help(
+            located().warning(DiagnosticCode::UnfoldableSpread, "spread keeps siblings"),
+            help.unwrap_or_default(),
+        );
         (fact, line)
     }
 
@@ -246,6 +251,7 @@ mod tests {
                     },
                 )),
             },
+            suggestion: None,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -261,6 +267,7 @@ mod tests {
                     name: "_hovr".into(),
                 })),
             },
+            suggestion: Some("_hover".into()),
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -341,6 +348,7 @@ mod tests {
             severity: DiagnosticSeverity::Warning,
             code: DiagnosticCode::UnknownProperty,
             message: "Unknown style property \"frobnicate\"".into(),
+            help: None,
         };
         let line = located().warning(
             DiagnosticCode::UnknownProperty,

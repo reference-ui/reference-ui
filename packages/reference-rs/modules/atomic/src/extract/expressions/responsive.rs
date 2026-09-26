@@ -61,24 +61,29 @@ fn refuse_array_spread(ctx: &mut ExpressionWalk<'_>, arr: &ArrayExpression<'_>) 
     if let Some(name) = spread_base_name(&spread.argument) {
         if let Some(write) = ctx.scopes.mutation(name) {
             let prop = ctx.prop;
-            ctx.warn(
+            ctx.warn_help(
                 spread.span,
                 DiagnosticCode::MutatedBinding,
                 format!(
                     "Dynamic mutated binding '{name}' spread in responsive array for prop '{prop}' ({}; refusing the array to keep breakpoint arity honest)",
                     write.write_phrase()
                 ),
+                vec![format!(
+                    "hoist '{name}' above the style call and stop reassigning it ({})",
+                    write.write_phrase()
+                )],
             );
             return;
         }
     }
     let prop = ctx.prop;
-    ctx.warn(
+    ctx.warn_help(
         spread.span,
         DiagnosticCode::ResponsiveArraySpread,
         format!(
             "Spread in responsive array for prop '{prop}'; refusing the array to keep breakpoint arity honest"
         ),
+        vec![format!("remove the spread from the '{prop}' value array")],
     );
 }
 
@@ -153,10 +158,11 @@ pub fn walk_object(
             continue;
         };
         if let Some(path) = crate::extract::fold::key_entry_residue(&prop.key, ctx.scopes) {
-            ctx.warn(
+            ctx.warn_help(
                 prop.key.span(),
                 DiagnosticCode::PartialObjectProp,
                 format!("property '{path}' drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of '{path}' static or drop it")],
             );
         }
         if refuse_leaf_important(ctx, &key, &prop.value) {
@@ -215,6 +221,29 @@ mod tests {
         compile(&req).expect("compile succeeds")
     }
 
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn channel_for(
+        res: &crate::CompileResult,
+        code: crate::diagnostics::DiagnosticCode,
+    ) -> Vec<crate::Diagnostic> {
+        res.compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|diag| diag.code == code)
+            .cloned()
+            .collect()
+    }
+
     /// A `!` responsive leaf warns on default naming prop + leaf, pushes no
     /// want, and leaves sibling leaves extracting (ATM-LEAF-11).
     #[test]
@@ -252,6 +281,42 @@ mod tests {
             !res.stylesheet.contains("50px !important"),
             "no orphan `!` class mints"
         );
+    }
+
+    /// A refused array spread names the prop's value array in its fix.
+    #[test]
+    fn responsive_array_spread_help_names_the_value_array() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const dyn: string[];\
+             export const cls = css({ mt: ['1r', ...dyn] });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::ResponsiveArraySpread);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["remove the spread from the 'mt' value array".to_string()])
+        );
+    }
+
+    /// A mutated array spread names the hoist fix with its write phrase.
+    #[test]
+    fn responsive_mutated_spread_help_names_hoist_with_write() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             let sizes = ['1r'];\
+             sizes = ['2r'];\
+             export const cls = css({ mt: ['0r', ...sizes] });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::MutatedBinding);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("mutated spread carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("hoist 'sizes' above the style call and stop reassigning it ("),
+            "unexpected help: {help:?}"
+        );
+        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
     }
 
     /// Plain responsive leaves stay silent: the refusal fires on `!` only.

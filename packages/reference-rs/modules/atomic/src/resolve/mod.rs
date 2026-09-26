@@ -14,6 +14,7 @@ pub mod r;
 pub mod rhythm;
 pub mod shorthands;
 pub mod size;
+pub mod suggest;
 pub mod tokens;
 pub mod unit;
 
@@ -50,11 +51,15 @@ pub struct WantContext<'w> {
 impl<'a, 'w> ResolveSession<'a, 'w> {
     /// Report one typed resolve outcome and push its rendered line. The fact
     /// lands in the session sink when one is wired; the line always lands.
+    /// Unknown-name outcomes precompute their suggestion here, where the
+    /// live system is in reach, so both renders share one ranking.
     pub fn emit(&mut self, key: Option<OwnedLookupKey>, outcome: ResolveOutcome) {
+        let suggestion = suggest::suggestion_for_outcome(&outcome, self.system);
         let report = ResolveReport {
             location: self.location.clone(),
             key,
             outcome,
+            suggestion,
         };
         let diagnostic = Policy::render_resolve(&report);
         if let Some(sink) = self.sink.as_deref_mut() {

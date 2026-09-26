@@ -27,10 +27,11 @@ pub(crate) fn handle_token_call(
     }
     if let Some(refusal) = fold.refusal {
         let prop = ctx.prop;
-        ctx.warn(
+        ctx.warn_help(
             refusal.span(call.span),
             refusal.code(),
             refusal.message(prop),
+            vec![refusal.help(prop)],
         );
     }
 }
@@ -56,10 +57,11 @@ fn handle_pure_call(
             });
         }
         if let Some(subject) = fold.residue.as_ref() {
-            ctx.warn(
+            ctx.warn_help(
                 call.span,
                 DiagnosticCode::PartialObjectProp,
                 format!("{subject} drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of {subject} static or drop it")],
             );
         }
         crate::extract::fold::lower_call_value(ctx, &value, when, call.span);
@@ -90,4 +92,67 @@ pub(crate) fn warn_dynamic_expression(
         detail: ExtractDetail::Leaf(LeafDetail::Generic),
         when,
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A refused `token()` call carries its reason's fix on the channel.
+    #[test]
+    fn token_call_refused_help_names_the_reason_fix() {
+        let res = compile_logs(
+            "import { css, token } from '@reference-ui/react';\
+             export const cls = css({ color: token() });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::TokenCallRefused)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["pass a path and an optional fallback".to_string()])
+        );
+    }
+
+    /// A folded call beside a dropped arm names the subject in its fix.
+    #[test]
+    fn call_residue_help_names_the_subject() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const run: () => string;\
+             const theme = { primary: flag ? 'red' : run() };\
+             export const cls = css({ color: (() => theme.primary)() });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::PartialObjectProp)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("call residue carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("make the dynamic arm of ")
+                && help[0].ends_with(" static or drop it"),
+            "unexpected help: {help:?}"
+        );
+    }
 }

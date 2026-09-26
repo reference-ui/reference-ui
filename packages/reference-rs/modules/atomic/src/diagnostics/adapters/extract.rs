@@ -43,11 +43,24 @@ pub fn extract_note(
     code: DiagnosticCode,
     message: String,
 ) -> DiagnosticFact {
+    extract_note_with_help(location, severity, code, message, None)
+}
+
+/// One extract note with its pushed instance help, carried so the compiler
+/// re-render re-attaches it. Help-less sites keep calling `extract_note`.
+pub fn extract_note_with_help(
+    location: DiagnosticLocation,
+    severity: DiagnosticSeverity,
+    code: DiagnosticCode,
+    message: String,
+    help: Option<Vec<String>>,
+) -> DiagnosticFact {
     DiagnosticFact::ExtractNote {
         location,
         severity,
         code,
         message: message.into(),
+        help,
     }
 }
 
@@ -113,6 +126,7 @@ mod tests {
             severity,
             code,
             message,
+            help,
         } = fact
         else {
             panic!("extract notes convert to extract notes");
@@ -121,5 +135,29 @@ mod tests {
         assert_eq!(severity, DiagnosticSeverity::Info);
         assert_eq!(code, DiagnosticCode::DeadBranch);
         assert_eq!(message.as_ref(), "dead arm skipped");
+        assert_eq!(help, None);
+    }
+
+    #[test]
+    fn extract_note_with_help_carries_the_pushed_lines() {
+        let fact = super::extract_note_with_help(
+            DiagnosticLocation {
+                file: Some("a.ts".to_string()),
+                line: Some(2),
+                column: Some(9),
+                span: None,
+            },
+            DiagnosticSeverity::Warning,
+            DiagnosticCode::UnfoldableSpread,
+            "spread keeps siblings".to_string(),
+            Some(vec!["define 'mix' as a static style object".to_string()]),
+        );
+        let DiagnosticFact::ExtractNote { help, .. } = fact else {
+            panic!("extract notes convert to extract notes");
+        };
+        assert_eq!(
+            help,
+            Some(vec!["define 'mix' as a static style object".to_string()])
+        );
     }
 }

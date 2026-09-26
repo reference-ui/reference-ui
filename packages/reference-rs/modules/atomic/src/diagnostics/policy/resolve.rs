@@ -24,7 +24,88 @@ pub fn render(report: &ResolveReport) -> Diagnostic {
         ResolveDetail::Declaration(declaration) => declaration_sentence(declaration),
         ResolveDetail::Token(token) => token_sentence(token),
     };
-    report.location.warning(*code, message)
+    let line = report.location.warning(*code, message);
+    let help = help_lines(report.suggestion.as_deref(), detail);
+    super::Policy::attach_help(line, help)
+}
+
+/// The instance help for one refusal: unknown names head their fix line
+/// with the precomputed did-you-mean, every other shape echoes its parts.
+/// The container-root advisory stays silent — static wins with no parts.
+fn help_lines(suggestion: Option<&str>, detail: &ResolveDetail) -> Vec<String> {
+    match detail {
+        ResolveDetail::Declaration(declaration) => declaration_help(suggestion, declaration),
+        ResolveDetail::Token(token) => token_help(suggestion, token),
+    }
+}
+
+/// The help for one declaration-shape refusal.
+fn declaration_help(suggestion: Option<&str>, detail: &DeclarationDetail) -> Vec<String> {
+    match detail {
+        DeclarationDetail::Name(name) => name_help(suggestion, name),
+        DeclarationDetail::Value(value) => value_help(value),
+        DeclarationDetail::ContainerRoot => Vec::new(),
+    }
+}
+
+/// The help for one unknown-name refusal: the fix headed by did-you-mean.
+fn name_help(suggestion: Option<&str>, name: &NameDetail) -> Vec<String> {
+    match name {
+        NameDetail::Property { prop } => crate::resolve::suggest::suggestion_lines(
+            suggestion,
+            format!("remove '{prop}' or check its spelling"),
+        ),
+        NameDetail::Condition { .. } => crate::resolve::suggest::suggestion_lines(
+            suggestion,
+            "use a condition from the theme".to_string(),
+        ),
+        NameDetail::UnrealizableExtension { prop } => {
+            vec![format!(
+                "drop '{prop}'; the dialect has no served css form"
+            )]
+        }
+    }
+}
+
+/// The help for one value-shape refusal: the spelling echoed with its fix.
+fn value_help(value: &ValueDetail) -> Vec<String> {
+    match value {
+        ValueDetail::NonCanonicalNumber { prop, spelling } => {
+            vec![format!(
+                "write '{spelling}' as a plain decimal on '{prop}'"
+            )]
+        }
+        ValueDetail::EmptyString { prop } => {
+            vec![format!("remove the empty value on '{prop}'")]
+        }
+        ValueDetail::InvalidValue { prop, value } => {
+            vec![format!(
+                "'{prop}' rejects '{value}'; use a CSS keyword, token, or accepted value"
+            )]
+        }
+    }
+}
+
+/// The help for one token-shape refusal: the spelling echoed with its fix.
+fn token_help(suggestion: Option<&str>, detail: &TokenDetail) -> Vec<String> {
+    match detail {
+        TokenDetail::MalformedOpacity { text } => {
+            vec![format!(
+                "write the opacity modifier as /<0-100> (got '{text}')"
+            )]
+        }
+        TokenDetail::UnknownTokenPath { .. } => crate::resolve::suggest::suggestion_lines(
+            suggestion,
+            "point the path at an existing token".to_string(),
+        ),
+        TokenDetail::UnknownColor { .. } => crate::resolve::suggest::suggestion_lines(
+            suggestion,
+            "use a color token or CSS color".to_string(),
+        ),
+        TokenDetail::UnterminatedBrace { value } => {
+            vec![format!("close the '{{' in '{value}'")]
+        }
+    }
 }
 
 /// The sentence for one declaration-shape refusal.
@@ -96,6 +177,13 @@ mod tests {
     use crate::diagnostics::{DiagnosticCode, DiagnosticLocation};
 
     fn report(outcome: ResolveOutcome) -> ResolveReport {
+        report_with_suggestion(outcome, None)
+    }
+
+    fn report_with_suggestion(
+        outcome: ResolveOutcome,
+        suggestion: Option<Box<str>>,
+    ) -> ResolveReport {
         ResolveReport {
             location: DiagnosticLocation {
                 file: Some("located.ts".to_string()),
@@ -105,6 +193,7 @@ mod tests {
             },
             key: None,
             outcome,
+            suggestion,
         }
     }
 
@@ -233,6 +322,100 @@ mod tests {
             rendered.message,
             "unterminated `{` in value `1px solid {colors.gray.800`"
         );
+    }
+
+    #[test]
+    fn suggestion_codes_head_the_fix_with_did_you_mean() {
+        let property = ResolveDetail::Declaration(DeclarationDetail::Name(NameDetail::Property {
+            prop: "colr".into(),
+        }));
+        let rendered = Policy::render_resolve(&report_with_suggestion(
+            rejected(property),
+            Some("color".into()),
+        ));
+        assert_eq!(
+            rendered.help,
+            Some(vec![
+                "did you mean `color`?".to_string(),
+                "remove 'colr' or check its spelling".to_string(),
+            ])
+        );
+        let lonely = Policy::render_resolve(&report(rejected(
+            ResolveDetail::Declaration(DeclarationDetail::Name(NameDetail::Property {
+                prop: "zzz".into(),
+            })),
+        )));
+        assert_eq!(
+            lonely.help,
+            Some(vec!["remove 'zzz' or check its spelling".to_string()])
+        );
+        let path = ResolveDetail::Token(TokenDetail::UnknownTokenPath {
+            path: "ui.ghost".into(),
+        });
+        let rendered = Policy::render_resolve(&report_with_suggestion(
+            rejected(path),
+            Some("ui.ghost-500".into()),
+        ));
+        assert_eq!(
+            rendered.help,
+            Some(vec![
+                "did you mean `ui.ghost-500`?".to_string(),
+                "point the path at an existing token".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn value_token_and_extension_shapes_echo_their_parts() {
+        let cases = [
+            (
+                ResolveDetail::Declaration(DeclarationDetail::Value(
+                    ValueDetail::NonCanonicalNumber {
+                        prop: "width".into(),
+                        spelling: "0x10".into(),
+                    },
+                )),
+                "write '0x10' as a plain decimal on 'width'",
+            ),
+            (
+                ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::EmptyString {
+                    prop: "mt".into(),
+                })),
+                "remove the empty value on 'mt'",
+            ),
+            (
+                ResolveDetail::Declaration(DeclarationDetail::Value(ValueDetail::InvalidValue {
+                    prop: "display".into(),
+                    value: "true".into(),
+                })),
+                "'display' rejects 'true'; use a CSS keyword, token, or accepted value",
+            ),
+            (
+                ResolveDetail::Token(TokenDetail::MalformedOpacity { text: "red/".into() }),
+                "write the opacity modifier as /<0-100> (got 'red/')",
+            ),
+            (
+                ResolveDetail::Token(TokenDetail::UnterminatedBrace {
+                    value: "1px solid {colors.gray.800".into(),
+                }),
+                "close the '{' in '1px solid {colors.gray.800'",
+            ),
+            (
+                ResolveDetail::Declaration(DeclarationDetail::Name(
+                    NameDetail::UnrealizableExtension { prop: "translateX".into() },
+                )),
+                "drop 'translateX'; the dialect has no served css form",
+            ),
+        ];
+        for (detail, expected) in cases {
+            let rendered = Policy::render_resolve(&report(rejected(detail)));
+            assert_eq!(rendered.help, Some(vec![expected.to_string()]));
+        }
+        let advisory = Policy::render_resolve(&report(ResolveOutcome::Advisory {
+            code: DiagnosticCode::MissingContainerRoot,
+            detail: ResolveDetail::Declaration(DeclarationDetail::ContainerRoot),
+        }));
+        assert_eq!(advisory.help, None);
     }
 
     #[test]

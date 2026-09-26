@@ -136,6 +136,19 @@ impl Policy {
     ) -> super::Diagnostic {
         analysis::render_dynamic(prop, shape, location)
     }
+
+    /// Attach instance help lines to a rendered line, untouched when empty.
+    /// Help lines are instance echoes built by the caller, never blank.
+    pub(crate) fn attach_help(line: super::Diagnostic, help: Vec<String>) -> super::Diagnostic {
+        if help.is_empty() {
+            line
+        } else {
+            super::Diagnostic {
+                help: Some(help),
+                ..line
+            }
+        }
+    }
 }
 
 /// True when an extract fact carries the unknown-prop code, on either the
@@ -220,6 +233,7 @@ mod tests {
                 location: DiagnosticLocation::default(),
                 key: Some(key()),
                 outcome: invalid_reject("true"),
+                suggestion: None,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -230,6 +244,7 @@ mod tests {
                         path: "ui.ghost".into(),
                     }),
                 },
+                suggestion: None,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -240,6 +255,7 @@ mod tests {
                         NameDetail::Condition { name: "_x".into() },
                     )),
                 },
+                suggestion: None,
             },
             DiagnosticFact::HostOutcome {
                 file: None,
@@ -277,6 +293,7 @@ mod tests {
                 severity: DiagnosticSeverity::Warning,
                 code: DiagnosticCode::UnfoldableSpread,
                 message: "spread".into(),
+                help: None,
             },
             DiagnosticFact::HarvestOutcome {
                 location: DiagnosticLocation::default(),
@@ -289,6 +306,7 @@ mod tests {
                 location: DiagnosticLocation::default(),
                 key: Some(key()),
                 outcome: invalid_reject("false"),
+                suggestion: None,
             },
         ];
         for fact in &facts {

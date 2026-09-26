@@ -44,6 +44,7 @@ pub fn remove_line(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::diagnostics::Policy;
 
     fn located() -> DiagnosticLocation {
         DiagnosticLocation {
@@ -85,6 +86,32 @@ mod tests {
     #[test]
     fn removal_drops_the_first_identity_match_only() {
         let mut diagnostics = lines();
+        remove_line(
+            &mut diagnostics,
+            DiagnosticCode::UnknownCondition,
+            &located(),
+            "first",
+        );
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].message, "second");
+    }
+
+    #[test]
+    fn identity_matches_through_attached_help() {
+        let mut diagnostics = vec![
+            Policy::attach_help(
+                located().warning(DiagnosticCode::UnknownCondition, "first"),
+                vec!["use a condition from the theme".to_string()],
+            ),
+            located().warning(DiagnosticCode::UnknownCondition, "second"),
+        ];
+        let found = find_line(
+            &mut diagnostics,
+            DiagnosticCode::UnknownCondition,
+            &located(),
+            "first",
+        );
+        assert_eq!(found.map(|line| line.message.as_str()), Some("first"));
         remove_line(
             &mut diagnostics,
             DiagnosticCode::UnknownCondition,

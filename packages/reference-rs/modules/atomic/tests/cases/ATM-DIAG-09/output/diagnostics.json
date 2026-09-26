@@ -9,6 +9,10 @@
     "span": {
       "start": 89,
       "end": 98
-    }
+    },
+    "help": [
+      "did you mean `_hover`?",
+      "use a condition from the theme"
+    ]
   }
 ]

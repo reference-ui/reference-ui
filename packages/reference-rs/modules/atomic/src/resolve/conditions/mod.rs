@@ -67,6 +67,7 @@ pub fn check_container_root(
                 code: DiagnosticCode::MissingContainerRoot,
                 detail: ResolveDetail::Declaration(DeclarationDetail::ContainerRoot),
             },
+            suggestion: None,
         };
         let diagnostic = Policy::render_resolve(&report);
         if let Some(sink) = sink {

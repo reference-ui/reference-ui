@@ -25,10 +25,11 @@ pub(crate) fn handle_static_member(
         }
         if crate::extract::fold::member_path_residue(mem, ctx.scopes) {
             let path = crate::extract::fold::member_path_text(mem);
-            ctx.warn(
+            ctx.warn_help(
                 mem.span,
                 DiagnosticCode::PartialObjectProp,
                 format!("property '{path}' drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of '{path}' static or drop it")],
             );
         }
         return;
@@ -66,12 +67,15 @@ pub(crate) fn handle_computed_member(
         let prop = ctx.prop;
         let base = describe_base(&mem.object);
         let index = describe_snippet(&mem.expression, ctx.source);
-        ctx.warn(
+        ctx.warn_help(
             mem.span,
             DiagnosticCode::PartialObjectProp,
             format!(
                 "Element access '{base}[{index}]' drops a dynamic arm with no static style value for prop '{prop}'"
             ),
+            vec![format!(
+                "make the dynamic arm of '{base}[{index}]' static or drop it"
+            )],
         );
     }
     if fold.refusals.is_empty() {
@@ -114,10 +118,11 @@ pub(crate) fn handle_chain(
             push_folded_want(ctx, val, when, chain.span);
         }
         if let Some(path) = crate::extract::fold::chain_residue_path(chain, ctx.scopes) {
-            ctx.warn(
+            ctx.warn_help(
                 chain.span,
                 DiagnosticCode::PartialObjectProp,
                 format!("property '{path}' drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of '{path}' static or drop it")],
             );
         }
         return;
@@ -129,4 +134,43 @@ pub(crate) fn handle_chain(
         detail: ExtractDetail::Leaf(LeafDetail::Generic),
         when,
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A member read beside a dropped arm names the path in its fix.
+    #[test]
+    fn member_residue_help_names_the_path() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const run: () => string;\
+             const theme = { primary: flag ? 'red' : run() };\
+             export const cls = css({ color: theme.primary });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::PartialObjectProp)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["make the dynamic arm of 'theme.primary' static or drop it".to_string()])
+        );
+    }
 }

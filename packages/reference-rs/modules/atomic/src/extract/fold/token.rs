@@ -72,6 +72,19 @@ impl TokenRefusal {
         }
     }
 
+    /// The instance help for a refused call: the surface fix per reason.
+    pub fn help(&self, prop: &str) -> String {
+        match self.reason {
+            TokenReason::Surface => {
+                format!("call token(path) or token.var(path) for '{prop}'")
+            }
+            TokenReason::Arity => "pass a path and an optional fallback".to_string(),
+            TokenReason::EmptyPath => "pass a non-empty token path".to_string(),
+            TokenReason::Path => "pass a string literal or const string path".to_string(),
+            TokenReason::Fallback => "pass a string or number literal fallback".to_string(),
+        }
+    }
+
     /// The refusal message for a style prop.
     pub fn message(&self, prop: &str) -> String {
         match self.reason {
@@ -180,5 +193,36 @@ fn fold_scoped_fallback(fallback: &Expression<'_>, scoped: Scoped<'_>) -> Option
             resolve_fallback_operand(TokenOperand::Name(name), leaves)
         }
         TokenOperand::Refused(_) => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every refusal reason names its own surface fix; only the surface
+    /// fix names the prop.
+    #[test]
+    fn token_refusal_help_names_the_fix_per_reason() {
+        let span = Span::default();
+        let cases = [
+            (
+                TokenReason::Surface,
+                "call token(path) or token.var(path) for 'color'",
+            ),
+            (TokenReason::Arity, "pass a path and an optional fallback"),
+            (TokenReason::EmptyPath, "pass a non-empty token path"),
+            (
+                TokenReason::Path,
+                "pass a string literal or const string path",
+            ),
+            (
+                TokenReason::Fallback,
+                "pass a string or number literal fallback",
+            ),
+        ];
+        for (reason, expected) in cases {
+            assert_eq!(TokenRefusal::at(reason, span).help("color"), expected);
+        }
     }
 }

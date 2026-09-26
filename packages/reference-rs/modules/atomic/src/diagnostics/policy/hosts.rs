@@ -11,7 +11,12 @@ use super::super::{Diagnostic, DiagnosticCode};
 pub fn render(report: &HostReport) -> Diagnostic {
     let warning = Diagnostic::warning(DiagnosticCode::TraceSkipped, report.message.clone());
     match &report.file {
-        Some(file) => warning.with_location(file.clone(), None, None),
+        Some(file) => {
+            let line = warning.with_location(file.clone(), None, None);
+            super::Policy::attach_help(line, vec![format!(
+                "check the StyleTrace host graph for '{file}'"
+            )])
+        }
         None => warning,
     }
 }
@@ -33,10 +38,17 @@ mod tests {
         assert_eq!(rendered.message, "trace skipped: unparsable");
         assert_eq!(rendered.file.as_deref(), Some("entry.ts"));
         assert_eq!(rendered.line, None);
+        assert_eq!(
+            rendered.help,
+            Some(vec![
+                "check the StyleTrace host graph for 'entry.ts'".to_string()
+            ])
+        );
         let bare = Policy::render_host(&HostReport {
             file: None,
             message: "trace skipped".to_string(),
         });
         assert_eq!(bare.file, None);
+        assert_eq!(bare.help, None);
     }
 }

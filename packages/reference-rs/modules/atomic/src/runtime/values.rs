@@ -111,6 +111,7 @@ fn refuse_r_multiplier(site: RefusalSite<'_>, spelling: &str, refuse: &mut Refus
                 },
             )),
         },
+        suggestion: None,
     };
     let diagnostic = Policy::render_resolve(&report);
     if !is_duplicate(refuse.diagnostics, &diagnostic) {

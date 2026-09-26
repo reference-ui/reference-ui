@@ -123,7 +123,15 @@ fn lower_css_block(
 /// Diagnose nested spreads the imported block object could not unfold.
 fn emit_import_residue(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
     for marker in ctx.scopes.import_unfoldable(name) {
-        ctx.warn(span, DiagnosticCode::UnfoldableSpread, marker.message());
+        ctx.warn_help(
+            span,
+            DiagnosticCode::UnfoldableSpread,
+            marker.message(),
+            vec![format!(
+                "define '{}' as a static style object or inline it",
+                marker.local()
+            )],
+        );
     }
 }
 
@@ -131,13 +139,17 @@ fn mutated_bag_warn(ctx: &mut ObjectWalk<'_>, prop: &str, base: &str, span: Span
     let Some(write) = ctx.scopes.mutation(base) else {
         return false;
     };
-    ctx.warn(
+    ctx.warn_help(
         span,
         DiagnosticCode::MutatedBinding,
         format!(
             "Dynamic mutated binding '{base}' in JSX '{prop}' prop value ({}; keeping sibling attributes)",
             write.write_phrase()
         ),
+        vec![format!(
+            "hoist '{base}' above the style call and stop reassigning it ({})",
+            write.write_phrase()
+        )],
     );
     true
 }
@@ -145,13 +157,17 @@ fn mutated_bag_warn(ctx: &mut ObjectWalk<'_>, prop: &str, base: &str, span: Span
 /// Diagnose a bag block value that extracts nothing, unless it skips silently.
 fn refuse_unless_silent_bag(ctx: &mut ObjectWalk<'_>, prop: &str, expr: &Expression<'_>) {
     if !is_silent_block_value(expr) {
-        ctx.warn(
+        ctx.warn_help(
             expr.span(),
             DiagnosticCode::NonObjectJsxStyle,
             format!(
                 "JSX '{prop}' prop value is not a static style object ({})",
                 block_value_kind(expr)
             ),
+            vec![format!(
+                "pass a static style object to '{prop}' (got {})",
+                block_value_kind(expr)
+            )],
         );
     }
 }
@@ -203,10 +219,11 @@ fn walk_css_spread(
             return;
         }
     }
-    ctx.warn(
+    ctx.warn_help(
         spread.span,
         DiagnosticCode::NonObjectJsxStyle,
         "JSX 'css' prop value is not a static style object (spread element)",
+        vec!["pass a static style object to 'css' (got spread element)".to_string()],
     );
 }
 
@@ -245,5 +262,87 @@ fn lower_css_const(
         if let ConstArrayElement::Object(map) = element {
             lower_array_object(ctx, name, map, when, arg.span());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn channel_for(
+        res: &crate::CompileResult,
+        code: crate::diagnostics::DiagnosticCode,
+    ) -> Vec<crate::Diagnostic> {
+        res.compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|diag| diag.code == code)
+            .cloned()
+            .collect()
+    }
+
+    /// A mutated bag `css` base names the hoist fix with its write phrase.
+    #[test]
+    fn bag_mutated_css_help_names_hoist_with_write() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             let styles = { color: 'red' };\
+             styles = { color: 'blue' };\
+             export const el = <Div {...{ css: styles }} />;",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::MutatedBinding);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("mutated bag carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("hoist 'styles' above the style call and stop reassigning it ("),
+            "unexpected help: {help:?}"
+        );
+        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
+    }
+
+    /// A non-object bag `css` value names the prop and kind in its fix.
+    #[test]
+    fn bag_css_kind_help_names_prop_and_kind() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             declare const getStyles: () => object;\
+             export const el = <Div {...{ css: getStyles() }} />;",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::NonObjectJsxStyle);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("bag css carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("pass a static style object to 'css' (got "),
+            "unexpected help: {help:?}"
+        );
+    }
+
+    /// A dynamic bag merge-list spread names the spread element in its fix.
+    #[test]
+    fn bag_css_spread_help_names_spread_element() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             declare const extras: object[];\
+             export const el = <Div {...{ css: [...extras] }} />;",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::NonObjectJsxStyle);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["pass a static style object to 'css' (got spread element)".to_string()])
+        );
     }
 }

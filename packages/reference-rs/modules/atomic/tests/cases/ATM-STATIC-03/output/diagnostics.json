@@ -2,6 +2,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-UNKNOWN-PROPERTY",
-    "message": "Unknown property in staticCss: \"unknownProp\""
+    "message": "Unknown property in staticCss: \"unknownProp\"",
+    "help": [
+      "remove 'unknownProp' or check its spelling"
+    ]
   }
 ]

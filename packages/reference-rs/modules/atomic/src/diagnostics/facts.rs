@@ -221,12 +221,14 @@ pub enum DiagnosticFact {
     /// A compiler-only extract note: a structure/refusal line that predates
     /// the structured-detail vocabulary. Slice 5 carries the legacy sentence
     /// verbatim — sixty bespoke call-site sentences; restructuring them
-    /// risks byte drift for zero behavioral gain.
+    /// risks byte drift for zero behavioral gain. The instance help rides
+    /// along so the compiler re-render re-attaches it byte for byte.
     ExtractNote {
         location: DiagnosticLocation,
         severity: DiagnosticSeverity,
         code: DiagnosticCode,
         message: Box<str>,
+        help: Option<Vec<String>>,
     },
     /// How many net-new pairs harvest minted onto one located sink, plus
     /// every kind-accepted pool value (pre-twin-skip) for coverage proof.
@@ -238,11 +240,14 @@ pub enum DiagnosticFact {
         offered: Vec<Box<str>>,
     },
     /// What resolve did with one authored declaration: the exact key when a
-    /// want context is in hand, the outcome always.
+    /// want context is in hand, the outcome always. The precomputed
+    /// did-you-mean suggestion rides along so the compiler re-render keeps
+    /// the pushed line's help byte for byte.
     ResolveOutcome {
         location: DiagnosticLocation,
         key: Option<OwnedLookupKey>,
         outcome: ResolveOutcome,
+        suggestion: Option<Box<str>>,
     },
     /// One skipped host trace: a file-only line with a dependency message.
     HostOutcome {

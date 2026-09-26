@@ -9,6 +9,10 @@
     "span": {
       "start": 96,
       "end": 102
-    }
+    },
+    "help": [
+      "did you mean `_last`?",
+      "use a condition from the theme"
+    ]
   }
 ]

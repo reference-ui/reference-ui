@@ -9,6 +9,10 @@
     "span": {
       "start": 65,
       "end": 70
-    }
+    },
+    "help": [
+      "did you mean `_open`?",
+      "use a condition from the theme"
+    ]
   }
 ]

@@ -14,6 +14,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`ml: -{unknown.path}` has no compiled style plan; this lookup will emit no class"
+    "message": "`ml: -{unknown.path}` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'ml: -{unknown.path}' lookup static so the plan can serve it"
+    ]
   }
 ]

@@ -9,6 +9,9 @@
     "span": {
       "start": 77,
       "end": 86
-    }
+    },
+    "help": [
+      "close the '{' in '\"{oops\"'"
+    ]
   }
 ]

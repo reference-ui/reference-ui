@@ -358,3 +358,46 @@ fn test_no_alias_targets_authored_match_prop() {
         );
     }
 }
+
+#[test]
+fn unknown_names_emit_help_and_carry_the_fact_suggestion() {
+    let system = BaseSystem::default();
+    let mut diagnostics = Vec::new();
+    let mut facts = DiagnosticsSession::new();
+    let mut session = ResolveSession {
+        system: &system,
+        diagnostics: &mut diagnostics,
+        location: DiagnosticLocation::default(),
+        sink: Some(&mut facts),
+        want: None,
+    };
+    let prop_want = Want::new("colr", AtomValue::String("red".into()));
+    assert!(resolve_want_with(&prop_want, &mut session).is_empty());
+    let mut when: smallvec::SmallVec<[Box<str>; 2]> = smallvec::SmallVec::new();
+    when.push("_hovr".into());
+    let cond_want = Want::new("color", AtomValue::String("red".into())).with_when(when);
+    assert!(resolve_want_with(&cond_want, &mut session).is_empty());
+    drop(session);
+    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(
+        diagnostics[0].help,
+        Some(vec![
+            "did you mean `color`?".to_string(),
+            "remove 'colr' or check its spelling".to_string(),
+        ])
+    );
+    assert_eq!(
+        diagnostics[1].help,
+        Some(vec![
+            "did you mean `_hover`?".to_string(),
+            "use a condition from the theme".to_string(),
+        ])
+    );
+    assert_eq!(facts.facts().len(), 2);
+    for (fact, expected) in facts.facts().iter().zip(["color", "_hover"]) {
+        let DiagnosticFact::ResolveOutcome { suggestion, .. } = fact else {
+            panic!("unknown-name refusal reports a resolve fact");
+        };
+        assert_eq!(suggestion.as_deref(), Some(expected));
+    }
+}

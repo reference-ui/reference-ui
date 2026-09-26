@@ -38,6 +38,9 @@
   {
     "severity": "warning",
     "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`color: {colors.nope}` has no compiled style plan; this lookup will emit no class"
+    "message": "`color: {colors.nope}` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'color: {colors.nope}' lookup static so the plan can serve it"
+    ]
   }
 ]

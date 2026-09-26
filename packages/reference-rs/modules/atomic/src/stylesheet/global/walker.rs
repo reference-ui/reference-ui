@@ -10,8 +10,9 @@ use canon::is_known_style_prop;
 use indexmap::IndexMap;
 
 use super::value::{lower_declaration, ValueSession};
-use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, Policy};
 use crate::resolve::conditions::{breakpoint_media_query, is_bare_query_rule, pseudoselectors};
+use crate::resolve::suggest;
 
 struct ListItemContext<'a> {
     selector: &'a str,
@@ -53,10 +54,19 @@ impl<'a> GlobalWalker<'a> {
         }
     }
 
-    /// Warn with the current fragment's location attached.
-    fn warn(&mut self, code: DiagnosticCode, message: impl Into<String>) {
-        let diagnostic = self.location().warning(code, message);
-        self.diagnostics.push(diagnostic);
+    /// Warn with the current fragment's location and instance help attached.
+    fn warn_help(&mut self, code: DiagnosticCode, message: impl Into<String>, help: Vec<String>) {
+        let line = self.location().warning(code, message);
+        self.diagnostics.push(Policy::attach_help(line, help));
+    }
+
+    /// The instance help for one unknown conditional key: the theme fix
+    /// headed by the closest known condition when one sits near enough.
+    fn condition_help(&self, name: &str) -> Vec<String> {
+        suggest::suggestion_lines(
+            suggest::suggest_condition(name, self.system).as_deref(),
+            "use a condition from the theme".to_string(),
+        )
     }
 
     pub fn walk_rules(&mut self, source: &str, rules: &IndexMap<String, GlobalStyleNode>) {
@@ -75,9 +85,10 @@ impl<'a> GlobalWalker<'a> {
     fn walk_top_at_rule(&mut self, at_key: &str, node: &GlobalStyleNode) {
         // '@media (min-width: 640px)': { body: {...} }
         if is_bare_query_rule(at_key) {
-            self.warn(
+            self.warn_help(
                 DiagnosticCode::EmptyAtRule,
                 format!("Empty at-rule query in global CSS: \"{at_key}\""),
+                vec![format!("fill in the query on '{at_key}' or drop the key")],
             );
             return;
         }
@@ -175,9 +186,10 @@ impl<'a> GlobalWalker<'a> {
             val,
             GlobalDeclarationValue::List(_) | GlobalDeclarationValue::Nested(_)
         ) {
-            self.warn(
+            self.warn_help(
                 DiagnosticCode::UnsupportedGlobalValue,
                 format!("Unsupported conditional value for \"{prop}.{sub}\" in global CSS"),
+                vec![format!("use a single value for '{prop}.{sub}'")],
             );
             return;
         }
@@ -195,9 +207,11 @@ impl<'a> GlobalWalker<'a> {
             self.handle_cond_condition(selector, prop, sub, val);
             return;
         }
-        self.warn(
+        let help = self.condition_help(sub);
+        self.warn_help(
             DiagnosticCode::UnknownCondition,
             format!("Unknown conditional key \"{sub}\" for \"{prop}\" in global CSS"),
+            help,
         );
     }
 
@@ -216,9 +230,10 @@ impl<'a> GlobalWalker<'a> {
 
     fn handle_at_rule(&mut self, selector: &str, at_key: &str, children: &GlobalStyleNode) {
         if is_bare_query_rule(at_key) {
-            self.warn(
+            self.warn_help(
                 DiagnosticCode::EmptyAtRule,
                 format!("Empty at-rule query in global CSS: \"{at_key}\""),
+                vec![format!("fill in the query on '{at_key}' or drop the key")],
             );
             return;
         }
@@ -247,9 +262,11 @@ impl<'a> GlobalWalker<'a> {
                 self.walk_node(&scoped, children);
             }
         } else {
-            self.warn(
+            let help = self.condition_help(cond);
+            self.warn_help(
                 DiagnosticCode::UnknownCondition,
                 format!("Unknown condition in global CSS: \"{cond}\""),
+                help,
             );
         }
     }

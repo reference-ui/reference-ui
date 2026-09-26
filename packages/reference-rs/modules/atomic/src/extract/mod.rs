@@ -20,6 +20,7 @@ pub mod jsx;
 pub mod recipes;
 pub mod resolver;
 pub mod scope;
+pub(crate) mod suggest;
 
 #[cfg(test)]
 mod gating_tests;
@@ -46,10 +47,10 @@ use oxc_syntax::scope::ScopeId as OxcScopeId;
 use rustc_hash::FxHashSet;
 
 use crate::atom::Want;
-use crate::diagnostics::adapters::extract::extract_note;
+use crate::diagnostics::adapters::extract::{extract_note, extract_note_with_help};
 use crate::diagnostics::{
     byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity,
-    DiagnosticSink, DiagnosticsSession, LineIndex,
+    DiagnosticSink, DiagnosticsSession, LineIndex, Policy,
 };
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
@@ -214,6 +215,40 @@ impl<'a> ExtractContext<'a> {
             .push(location.warning(code, message.clone()));
         self.session
             .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
+    }
+
+    /// Report a warning with instance help at the offending node's span.
+    /// The help rides the pushed line and the session fact alike, so the
+    /// compiler re-render re-attaches it.
+    pub fn warn_help(
+        &mut self,
+        span: Span,
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        help: Vec<String>,
+    ) {
+        let message: String = message.into();
+        let (line, column) = self
+            .source
+            .and_then(|source| line_col(source, span.start))
+            .unzip();
+        let location = DiagnosticLocation {
+            file: Some(self.file.to_string()),
+            line,
+            column,
+            span: Some(byte_span(span)),
+        };
+        self.diagnostics.push(Policy::attach_help(
+            location.warning(code, message.clone()),
+            help.clone(),
+        ));
+        self.session.report(extract_note_with_help(
+            location,
+            DiagnosticSeverity::Warning,
+            code,
+            message,
+            Some(help),
+        ));
     }
 
     /// Report an info diagnostic at the offending node's span.

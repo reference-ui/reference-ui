@@ -9,7 +9,10 @@
     "span": {
       "start": 578,
       "end": 583
-    }
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   },
   {
     "severity": "warning",
@@ -21,7 +24,10 @@
     "span": {
       "start": 793,
       "end": 799
-    }
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   },
   {
     "severity": "warning",
@@ -33,7 +39,10 @@
     "span": {
       "start": 834,
       "end": 841
-    }
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   },
   {
     "severity": "warning",
@@ -45,6 +54,9 @@
     "span": {
       "start": 876,
       "end": 881
-    }
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
   }
 ]
