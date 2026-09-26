@@ -19,55 +19,11 @@ suite, freeze visuals`, verified via `git log`).
 
 ### 1. Combobox virtual-focus bridge + commit routing — verdict: DEFERRED
 
-- **Source:** quarantine commit `b8b5f1aff`,
-  `packages/reference-lib/src/components/Tree/Tree.tsx`
-  (`ComboboxContext` import, `combobox.registerOption` /
-  `setActiveValue` / `activeValue` wiring) and fixture section
-  "Combobox Tree Integration" in `matrix/lib/src/tree.tsx`. Case IDs:
-  `TR-CB-01`–`TR-CB-06`, `TR-COMP-03`.
-- **API sketch:** no new Tree props. Nesting a Tree directly in
-  `Combobox.Popover` auto-registers its visible item set through the
-  shared bridge: DOM focus stays on the input,
-  `aria-activedescendant` names mounted visible treeitems, horizontal
-  keys request expansion under virtual focus, activation commits one
-  scalar through `Combobox.onChange` only, and the virtually focused
-  item publishes `data-active` as a preview hook independent of
-  `aria-selected`.
-- **Why not landed:** new cross-component feature, Combobox territory
-  per TESTS.md "Owned elsewhere" (input focus and active-descendant
-  lifecycle belong to Combobox). Landing stayed stability-only.
-  Quarantine's `data-active=combobox-active` flavor would additionally
-  have regressed the current `data-active=focus` semantics.
-- **Revisit when:** Combobox owns the bridge contract: adapter shape,
-  `data-active` semantics reconciliation (focus vs virtual-active),
-  and the commit-authority proof land together on the Combobox side.
-- **Open questions:** does `data-active` mean DOM focus, virtual
-  focus, or both (two hooks)? Must registration be fully automatic
-  (no adapter prop) or opt-in? Who clears stale active IDs on
-  collapse — Tree push or Combobox pull?
+Moved to [FEATURES.md](./FEATURES.md) entry 1: needs Combobox-owned bridge design (`data-active` semantics, adapter shape, commit authority).
 
 ### 2. Shadow-root focus discovery and traversal — verdict: DEFERRED
 
-- **Source:** quarantine commit `b8b5f1aff`,
-  `matrix/lib/tests/e2e/tree.spec.ts` (`TR-ENV-03`). No quarantine
-  source change proved it — the case specifies reading focus from the
-  owning root and matching light-DOM traversal inside an open
-  ShadowRoot.
-- **API sketch:** no new props. Focus reads (`document.activeElement`
-  assumptions) become owning-root reads (`getRootNode()`), so
-  vertical, horizontal, Home/End, and typeahead commands behave
-  identically for trees mounted in a ShadowRoot.
-- **Why not landed:** lib-wide framework concern, not Tree stability:
-  shadow-portal key events hit React container-delegation retargeting
-  (native target retargets to the host, so item handlers never fire).
-  Same skip as Switch `SW-ENV-03`; fixing it in Tree alone would fork
-  the event model.
-- **Revisit when:** a lib-wide shadow strategy exists (portal event
-  retargeting solved once, in shared infrastructure) with a passing
-  CT that mounts Tree in an open ShadowRoot.
-- **Open questions:** is ShadowRoot a supported mount target for all
-  components or a Tree/portal-only carve-out? Native listeners at the
-  shadow root vs React delegation — which layer owns the fix?
+Moved to [FEATURES.md](./FEATURES.md) entry 2: needs a lib-wide shadow/event strategy, not a Tree-only fix.
 
 ### 3. Exported `TreeHierarchyModel` (hierarchy unit model) — verdict: DECLINED
 
@@ -143,47 +99,11 @@ suite, freeze visuals`, verified via `git log`).
 
 ### 1. Slot / part registration replacing `Children.forEach` sniffing — verdict: OPEN
 
-- **Evidence:** SPEC.md "Gaps & incoherence" (`React.Children.forEach`
-  sniffs Group vs row — not Slot / part registration) and SPEC.md
-  work order item 6 ("Replace child sniffing with part registration
-  (Slot)"). Landing kept the render-time children scan deliberately:
-  with the two-path branch/leaf DOM, registration state would
-  mismatch SSR hydration.
-- **API sketch:** no public prop change. `Tree.Item` learns it owns a
-  `Tree.Group` via Slot composition / part registration context
-  rather than scanning `children` element types at render time —
-  internal architecture, same authored JSX.
-- **Why not landed:** internal refactor with hydration risk and no
-  behavioral delta; landing froze what works (render-time scan is
-  SSR-safe) and left the architecture call to HQ.
-- **Revisit when:** the library settles a shared Slot/part-registration
-  pattern other components already use, so Tree follows a proven
-  shape instead of inventing one.
-- **Open questions:** does Slot registration preserve SSR safety for
-  the two-path branch/leaf DOM? Is child-sniffing banned
-  catalog-wide or tolerated where hydration-safe?
+Moved to [FEATURES.md](./FEATURES.md) entry 3: needs a shared Slot-pattern design to follow first.
 
 ### 2. Shared `RovingFocus` for roving (not DOM queries) — verdict: OPEN
 
-- **Evidence:** SPEC.md "Gaps & incoherence" ("Roving via DOM queries,
-  not shared RovingFocus") and TESTS.md "Owned elsewhere" (generic
-  one-tab-stop/typeahead behavior belongs to `RovingFocus`). Landing
-  moved typeahead onto the shared `TypeaheadModel` but left arrow
-  roving on DOM queries.
-- **API sketch:** no public prop change. Up/Down/Home/End move through
-  the visible set via the shared `RovingFocus` engine (registration +
-  visible-set filter) instead of `querySelector` traversal — internal
-  architecture, identical key map.
-- **Why not landed:** behavior is fully proven via `TR-KEY-01`–`08`
-  on the DOM-query implementation; swapping engines mid-landing risked
-  the visible-only invariant (collapsed descendants absent from the
-  set) for no observable gain.
-- **Revisit when:** `RovingFocus` supports a visible-set / filtered
-  membership natively, so Tree can adopt it without reimplementing
-  collapse filtering on top.
-- **Open questions:** should the shared engine own visibility
-  filtering, or does each consumer filter? Who pays for the
-  `TR-KEY-08` stale-registration proof after the swap?
+Moved to [FEATURES.md](./FEATURES.md) entry 4: needs visible-set engine design (filter ownership) first.
 
 ## Non-decisions (rejected outright)
 
@@ -195,7 +115,8 @@ suite, freeze visuals`, verified via `git log`).
 
 ## Walkthrough notes for HQ
 
-- Most important #1: the Combobox bridge stays **deferred** (candidate 1) — nesting Tree in a Combobox popover today gets no virtual focus, no `aria-activedescendant`, no routed commit. In Book, open the Tree + Combobox stories side by side and confirm no composition story exists; the design question is `data-active` semantics (focus vs virtual-active) before any code.
-- Most important #2: uncontrolled mode is **preserved**, controlled-only **declined** (candidate 4) — `defaultValue`/`defaultExpanded` keep working. In Book, open `CollapsedByDefault` and expand/select without any state props; deleting that would be a breaking change needing a catalog-wide major.
-- Most important #3: the hierarchy model export is **declined as theater** (candidate 3) — dynamics are proven in the browser, not via a class quarantine itself never called. In Book, try collapsing an ancestor of a selected nested item (selection survives, focus lands on the branch) to feel `TR-DYNAMIC-03`/`04` without any model import.
+- Most important #1: the Combobox bridge stays **deferred** — full spec now in [FEATURES.md](./FEATURES.md) entry 1. To feel the gap: in Book, open the Tree + Combobox stories side by side and confirm no composition story exists — nesting Tree in a Combobox popover today gets no virtual focus, no `aria-activedescendant`, no routed commit. The design question is `data-active` semantics (focus vs virtual-active) before any code.
+- Most important #2: uncontrolled mode is **preserved**, controlled-only **declined** (candidate 4, kept verbatim above) — `defaultValue`/`defaultExpanded` keep working. In Book, open `CollapsedByDefault` and expand/select without any state props; deleting that would be a breaking change needing a catalog-wide major.
+- Most important #3: the hierarchy model export is **declined as theater** (candidate 3, kept verbatim above) — dynamics are proven in the browser, not via a class quarantine itself never called. In Book, try collapsing an ancestor of a selected nested item (selection survives, focus lands on the branch) to feel `TR-DYNAMIC-03`/`04` without any model import.
+- Open-items map: every open/deferred item now lives in [FEATURES.md](./FEATURES.md) (entries 1–4) because each needs a design call; [PATCHES.md](./PATCHES.md) is therefore empty. To feel what the two refactor entries must preserve: in Book's FileExplorer story, arrow-key through branches (visible-only roving entry 4 must not regress) and note the SSR-safe two-path branch/leaf DOM (entry 3 must stay hydration-safe).
 - Bonus feel: the expander AT-exposure fix is the biggest landed a11y win — in Book's FileExplorer story, inspect any branch Expander: it is a named `button[tabindex=-1]` with `aria-controls` resolving to its Group, no longer `aria-hidden`.
