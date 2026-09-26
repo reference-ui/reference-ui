@@ -314,6 +314,57 @@ describe('formatVerboseWarningLine', () => {
     )
   })
 
+  it('prefers engine help over the static hint when both are present', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(
+      formatVerboseWarningLine({ entry: warning({ help: ["remove the empty value on 'display'"] }), count: 1 })
+    ).toBe(
+      "  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — remove the empty value on 'display'"
+    )
+  })
+
+  it("joins multi-line engine help with '; ' on the one verbose row", () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(
+      formatVerboseWarningLine({
+        entry: warning({ help: ["did you mean 'float'?", "remove 'fooBar' or check its spelling"] }),
+        count: 1,
+      })
+    ).toBe(
+      "  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — did you mean 'float'?; remove 'fooBar' or check its spelling"
+    )
+  })
+
+  it('prints exactly one tail, never engine help plus the static hint', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const line = formatVerboseWarningLine({ entry: warning({ help: ['instance fix'] }), count: 1 })
+    expect(line).toContain('— instance fix')
+    expect(line).not.toContain('use a CSS keyword, token, or value the prop accepts')
+    expect(line.split('—')).toHaveLength(2)
+  })
+
+  it('renders engine help on codeless legacy items with no static fallback', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    const legacy = warning({
+      code: undefined,
+      file: undefined,
+      line: undefined,
+      column: undefined,
+      message: 'a straggler with guidance',
+      help: ['name the props type instead'],
+    })
+    expect(formatVerboseWarningLine({ entry: legacy, count: 1 }, 'ref')).toBe(
+      '  [ref] a straggler with guidance — name the props type instead'
+    )
+  })
+
+  it('ignores blank engine help lines and falls back to the static hint', () => {
+    vi.stubEnv('NO_COLOR', '1')
+    expect(formatVerboseWarningLine({ entry: warning({ help: ['   '] }), count: 1 })).toBe(
+      '  theme/warn.ts:3:33 ATM-W-INVALID-CSS-VALUE: `display: true` is not valid CSS — use a CSS keyword, token, or value the prop accepts'
+    )
+  })
+
   it('paints the code yellow on FORCE_COLOR and stays plain under NO_COLOR', () => {
     vi.stubEnv('NO_COLOR', '')
     vi.stubEnv('FORCE_COLOR', '1')

@@ -76,12 +76,25 @@ function verboseLocation(entry: NeoDiagnostic): string {
   return `${entry.file}:${entry.line}:${entry.column}`
 }
 
-// One verbose item: location plus message plus the fix hint where known.
+// The verbose tail, exactly one, never both: engine help first (joined
+// with '; ' so suggestion pairs stay on the one row), else the static
+// hint for the code, else no tail. Blank help lines never print — the
+// transport already rejects them, so a blank here reads as absent and the
+// static hint still wins over rendering nothing.
+function verboseTail(entry: NeoDiagnostic): string {
+  const help = entry.help?.filter(line => line.trim().length > 0) ?? []
+  if (help.length > 0) return ` — ${help.join('; ')}`
+  const hint = warningHintFor(entry.code)
+  if (hint !== undefined) return ` — ${hint}`
+  return ''
+}
+
+// One verbose item: location plus message plus the tail where known.
 // The compiler and ref backchannels ride the same shape behind their tags,
 // so every channel stays distinguishable on the shared stderr. Legacy
-// codeless items print without a code segment or hint, and locationless
-// items degrade to tag plus message, never a guessed location. Coded lines
-// keep their code on every channel; the tag never replaces it.
+// codeless items print without a code segment, and locationless items
+// degrade to tag plus message, never a guessed location. Coded lines keep
+// their code on every channel; the tag never replaces it.
 export function formatVerboseWarningLine(item: DeduplicatedDiagnostic, channel?: 'compiler' | 'ref'): string {
   const head: string[] = []
   if (channel === 'compiler') head.push(COMPILER_TAG)
@@ -91,7 +104,6 @@ export function formatVerboseWarningLine(item: DeduplicatedDiagnostic, channel?:
   const prefix = head.length > 0 ? `${head.join(' ')} ` : ''
   const code = item.entry.code === undefined ? '' : `${paint(item.entry.code, YELLOW)}: `
   const repeats = item.count > 1 ? ` ${MULT_SIGN}${item.count}` : ''
-  const hint = warningHintFor(item.entry.code)
-  const tail = hint === undefined ? '' : ` — ${hint}`
+  const tail = verboseTail(item.entry)
   return `  ${prefix}${code}${item.entry.message}${repeats}${tail}`
 }
