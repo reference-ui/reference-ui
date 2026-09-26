@@ -16,56 +16,15 @@ snapshot baselines green. Crew log:
 `.agents/missions/quarantine-landing/collapsible.md`; landing commit
 `b65ae4073`.
 
-## Candidate features (quarantine-sourced)
+## Candidate features (moved)
 
-### 1. hiddenUntilFound / beforematch find-in-page reveal — verdict: DEFERRED
+- hiddenUntilFound / beforematch find-in-page reveal — moved to FEATURES.md #1 (needs design: prop shape, semantics).
+- (Mechanical candidates, if any, live in PATCHES.md — currently none.)
 
-- **Source:** quarantine `43f0b03cc`,
-  `packages/reference-lib/src/components/Collapsible/Collapsible.tsx`
-  (root + Content `hiddenUntilFound`, `beforematch` listener,
-  `skipMotionOnceRef`); no TESTS.md case ID — specified only in the
-  SPEC.md freeze Surface table, Gaps list, and work-order item 4.
-- **API sketch:** `Collapsible` and `Collapsible.Content` each accept
-  `hiddenUntilFound?: boolean` (Content prop wins over root). When true,
-  closed Content renders `hidden="until-found"` instead of unmounting
-  through Presence, stays Ctrl+F-discoverable, and a `beforematch` event
-  opens the disclosure while skipping author motion once (zero the
-  transition/animation durations for one frame, then restore).
-- **Why not landed:** feature-needs-design, not stability: new public API
-  with no TESTS.md case ID, so there was no contract to port or prove;
-  landing rule ports stability + test-case wins only.
-- **Revisit when:** HQ approves the prop shape (root-only vs root +
-  Content override) and TESTS.md gains case IDs pinning closed-hidden
-  rendering, beforematch-open, and skip-motion-once.
-- **Open questions:** Should the Content-level override exist, or is
-  root-only enough? What does `aria-controls` point at while closed-hidden
-  (quarantine kept linkage live via `hasTarget` including the hidden
-  branch)? Does skip-motion-once zero GSAP duration too, or only author
-  CSS? What is the SSR story for `hidden="until-found"` markup?
+## Suspected gaps (moved)
 
-## Suspected gaps (no quarantine source)
-
-### 1. forceMount (always-mounted Content) — verdict: OPEN
-
-- **Evidence:** vendor parity — Radix `Collapsible.Content` supports
-  `forceMount`, and SPEC.md Vendor section cites Radix collapsible +
-  Presence/measure as the lift source; our Content always unmounts via
-  Presence, so closed content can never stay in the DOM for measurement,
-  print, or SEO. No consumer pain filed yet; no sibling handoff.
-- **API sketch:** `CollapsibleContentProps` gains `forceMount?: boolean`.
-  When true, Content skips Presence unmount and stays rendered with
-  `data-state="closed"` (visibility left to author CSS, e.g. `hidden`
-  attribute or `display: none`), while trigger linkage and `aria-expanded`
-  follow `open` as today.
-- **Why not landed:** never proposed before this document; no quarantine
-  source, no TESTS.md case, no freeze-catalog entry.
-- **Revisit when:** a consumer needs closed content in the DOM (Accordion
-  always-measure layout, print stylesheets, crawler-visible copy), or HQ
-  wants Radix prop parity as a catalog policy.
-- **Open questions:** Should forced-mounted closed content be `hidden`,
-  `inert`, or left fully to author CSS? Does focus evacuation still run
-  when nothing unmounts? How does it compose with a future
-  `hiddenUntilFound` — are they two props or one?
+- forceMount (always-mounted Content) — moved to FEATURES.md #2 (needs design: hidden/inert semantics, composition).
+- (Mechanical gaps, if any, live in PATCHES.md — currently none.)
 
 ## Non-decisions (rejected outright)
 
@@ -88,19 +47,22 @@ snapshot baselines green. Crew log:
 
 ## Walkthrough notes for HQ
 
-- Most important (1): `hiddenUntilFound` is deferred, so closed panels are
-  invisible to Ctrl+F — in Book `DefaultClosed`, close the panel and try
-  find-in-page for "revealed on trigger click": no match. Decide whether
+- Most important (1): find-in-page reveal is deferred — see FEATURES.md
+  #1, then feel it in Book `DefaultClosed`: close the panel and try
+  find-in-page for "revealed on trigger click" — no match. Decide whether
   findability ships and in which prop shape before TESTS.md cases are written.
 - Most important (2): uncontrolled mode (`defaultOpen`, internal store,
   `onOpenChange`) is preserved against the freeze catalog's controlled-only
-  work-order item 1 — in Book `DefaultClosed`/`DefaultOpen`, toggle with no
-  `open` prop at all. Decide whether the freeze catalog or Switch precedent wins.
+  work-order item 1 — feel it in Book `DefaultClosed`/`DefaultOpen` by
+  toggling with no `open` prop at all. Decide whether the freeze catalog or
+  Switch precedent wins.
 - Most important (3): GSAP-owned motion is preserved against freeze
-  work-order item 3 (apps own collapse CSS) — in Book `Controlled`, expand
-  and collapse and watch the height animation run with zero author CSS.
-  Measured `--reference-collapsible-content-*` vars already enable
+  work-order item 3 (apps own collapse CSS) — feel it in Book `Controlled`:
+  expand and collapse and watch the height animation run with zero author
+  CSS. Measured `--reference-collapsible-content-*` vars already enable
   app-owned CSS alongside; decide whether GSAP stays the kernel.
 - Minor: `forceMount` is the only suspected gap with no quarantine source —
-  Radix parity for always-mounted content. Worth 30 seconds: does any
-  consumer need closed content in the DOM?
+  see FEATURES.md #2, then worth 30 seconds: does any consumer need closed
+  content in the DOM?
+- Mechanical follow-ups, if any, live in PATCHES.md — currently none, so
+  every open item is a design call in FEATURES.md.
