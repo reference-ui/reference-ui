@@ -21,31 +21,11 @@ None — quarantine never froze FocusLock, so it surfaced no candidate API.
 
 ## Suspected gaps (no quarantine source)
 
-### 1. Cross-document trapping (`crossFrame`) — verdict: DEFERRED
+Moved out of this file:
 
-- **Evidence:** `SPEC.md` Deferred + `FocusLock.md` Shadow DOM section: "a lock
-  never traverses frame content or traps across Documents"; `FL-NEST-06` /
-  `FL-CAND-12` / `FL-CAND-14` pin one lock stack per Document.
-- **API sketch:** an opt-in (e.g. `crossFrame`) letting an outer lock contain
-  focus inside same-origin iframe content instead of treating the `<iframe>`
-  element as one opaque stop.
-- **Why not landed:** deliberately outside the freeze — per-Document stacks are
-  the shipped contract; cross-origin traversal is impossible by platform design.
-- **Revisit when:** a real consumer needs nested same-origin iframe dialogs
-  contained by one outer lock.
-- **Open questions:** none for the deferral itself — the boundary is explicit.
-
-### 2. TalkBack virtual-modality skip — verdict: DEFERRED
-
-- **Evidence:** `SPEC.md` ("TalkBack virtual-modality skip is **not** a
-  production blocker. Park it."), Deferred section, and Gate 3 work order
-  ("TalkBack stays parked").
-- **API sketch:** no new props — internal skip of virtual-modality handling on
-  Android Chrome TalkBack (cf. Aria's skip), behavior-only.
-- **Why not landed:** parked as non-blocking; no consumer pain evidenced.
-- **Revisit when:** an a11y audit or TalkBack user report names a concrete
-  failure inside a locked dialog.
-- **Open questions:** none — needs a repro, not a product decision.
+- Gap #1 (`crossFrame`, DEFERRED) → `FEATURES.md` §1 — needs an API-surface design call.
+- Gap #2 (TalkBack virtual-modality skip, DEFERRED) → `FEATURES.md` §2 — parked without a repro, not test-pinnable today.
+- `PATCHES.md`: none — nothing deferred is mechanical (see the honest none-line there).
 
 ## Non-decisions (rejected outright)
 
@@ -65,9 +45,11 @@ None — quarantine never froze FocusLock, so it surfaced no candidate API.
 
 - The headline is the absence: nothing to decide from quarantine — FocusLock
   is the null-quarantine primitive alongside Overlay.
-- `crossFrame` is the only structural gap, and it is a deliberate boundary,
-  not an oversight: open the Book FocusLock story with an iframe fixture and
-  Tab — the frame is one stop, inner content untouched.
-- TalkBack skip is parked with no repro — HQ should NOT reopen it without one.
+- Mechanical patches: none — see `PATCHES.md`.
+- Design gaps: two deferred items in `FEATURES.md` — `crossFrame` (§1, the
+  only structural gap, a deliberate boundary: open the Book FocusLock story
+  with an iframe fixture and Tab — the frame is one stop, inner content
+  untouched) and TalkBack skip (§2, parked with no repro — do NOT reopen
+  without one).
 - Non-decisions (no wrapper, no `as`, no autofocus DSL) are the load-bearing
   taste calls — feel them via any Dialog story: trap works with zero extra DOM.
