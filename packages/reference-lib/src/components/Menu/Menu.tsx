@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Div, Span, type PrimitiveProps } from '@reference-ui/react'
+import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { Overlay, useOverlay, type OverlayContentProps } from '../Overlay'
 import { RovingFocus } from '../RovingFocus'
 import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
@@ -16,9 +16,41 @@ interface MenuContextValue {
   setIsOpen: (open: boolean) => void
   focusStrategy: 'first' | 'last' | null
   setFocusStrategy: React.Dispatch<React.SetStateAction<'first' | 'last' | null>>
+  contentId: string | null
+  setContentId: (id: string | null) => void
 }
 
 const MenuContext = React.createContext<MenuContextValue | null>(null)
+
+function restoreFocusToTrigger(
+  trigger: HTMLElement | null | undefined,
+  fallback: HTMLElement | null | undefined = null
+) {
+  if (
+    trigger &&
+    trigger.isConnected &&
+    !trigger.hasAttribute('disabled') &&
+    trigger.getAttribute('aria-disabled') !== 'true'
+  ) {
+    trigger.focus()
+    return
+  }
+  if (fallback && fallback.isConnected) {
+    fallback.focus()
+  }
+}
+
+function findNextTabbable(from: HTMLElement, reverse = false): HTMLElement | null {
+  const allTabbables = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter(el => el.offsetParent !== null || el.offsetWidth > 0)
+
+  const index = allTabbables.indexOf(from)
+  if (index === -1) return null
+  return reverse ? (allTabbables[index - 1] ?? null) : (allTabbables[index + 1] ?? null)
+}
 
 export function Menu({
   children,
@@ -28,6 +60,7 @@ export function Menu({
 }: MenuProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const [focusStrategy, setFocusStrategy] = React.useState<'first' | 'last' | null>(null)
+  const [contentId, setContentId] = React.useState<string | null>(null)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
 
@@ -47,8 +80,10 @@ export function Menu({
       setIsOpen,
       focusStrategy,
       setFocusStrategy,
+      contentId,
+      setContentId,
     }),
-    [isOpen, setIsOpen, focusStrategy]
+    [isOpen, setIsOpen, focusStrategy, contentId]
   )
 
   return (
@@ -62,12 +97,10 @@ export function Menu({
 
 export type MenuTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
 
-export function MenuTrigger({
-  children,
-  onKeyDown,
-  onClick,
-  ...props
-}: MenuTriggerProps) {
+export const MenuTrigger = React.forwardRef<HTMLButtonElement, MenuTriggerProps>(function MenuTrigger(
+  { children, onKeyDown, onClick, ...props }: MenuTriggerProps,
+  ref
+) {
   const context = React.useContext(MenuContext)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -91,30 +124,62 @@ export function MenuTrigger({
     context.setFocusStrategy(null)
   }
 
+  // Overlay.Trigger reads props.ref (ref-as-prop); its public type omits ref,
+  // so deliver it through a spread variable instead of a direct attribute.
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+
   return (
     <Overlay.Trigger
       aria-haspopup="menu"
+      aria-controls={context?.isOpen ? (context.contentId ?? undefined) : undefined}
       onKeyDown={handleKeyDown}
       onClick={handleClick}
-      {...props}
+      {...triggerProps}
     >
       {children}
     </Overlay.Trigger>
   )
-}
+})
 
 export type MenuContentProps = OverlayContentProps
 
-export function MenuContent({
-  children,
-  className,
-  style,
-  onKeyDown,
-  ...props
-}: MenuContentProps) {
+export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(function MenuContent(
+  { children, className, style, onKeyDown, id: authoredId, ...props }: MenuContentProps,
+  ref
+) {
   const context = React.useContext(MenuContext)
   const overlay = useOverlay()
   const contentRef = React.useRef<HTMLDivElement | null>(null)
+  const generatedId = React.useId()
+  // The React 17 CT shim returns a fresh id every render; capture the first
+  // one. Real useId (18/19) is already stable, so this is a no-op there.
+  const stableIdRef = React.useRef<string | null>(null)
+  if (stableIdRef.current === null) {
+    stableIdRef.current = generatedId
+  }
+  const contentId = authoredId ?? stableIdRef.current
+  const setContentId = context?.setContentId
+
+  React.useLayoutEffect(() => {
+    if (!setContentId) return
+    setContentId(contentId)
+    return () => setContentId(null)
+  }, [setContentId, contentId])
+
+  const composedRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref && typeof ref === 'object' && 'current' in ref) {
+        ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }
+    },
+    [ref]
+  )
+
+  // Overlay.Content reads props.ref (ref-as-prop); its public type omits ref,
+  // so deliver it through a spread variable instead of a direct attribute.
+  const contentProps = { ...props, ref: composedRef as React.Ref<HTMLDivElement> }
 
   React.useEffect(() => {
     if (!context?.isOpen) return
@@ -141,23 +206,42 @@ export function MenuContent({
     return () => cancelAnimationFrame(frameId)
   }, [context?.isOpen, context?.focusStrategy])
 
+  const wasOpenRef = React.useRef(context?.isOpen ?? false)
+  React.useEffect(() => {
+    const wasOpen = wasOpenRef.current
+    wasOpenRef.current = context?.isOpen ?? false
+    if (!wasOpen || context?.isOpen) return
+    if (contentRef.current?.contains(document.activeElement)) {
+      restoreFocusToTrigger(overlay?.triggerRef.current as HTMLElement | null)
+    }
+  })
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || !context) return
 
     if (e.key === 'Tab') {
+      e.preventDefault()
       context.setIsOpen(false)
+      const trigger = overlay?.triggerRef.current as HTMLElement | null
+      const next = trigger ? findNextTabbable(trigger, e.shiftKey) : null
+      if (next) {
+        next.focus()
+      } else {
+        restoreFocusToTrigger(trigger)
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault()
       e.stopPropagation()
       context.setIsOpen(false)
-      overlay?.triggerRef.current?.focus()
+      restoreFocusToTrigger(overlay?.triggerRef.current as HTMLElement | null)
     }
   }
 
   return (
     <Overlay.Content
       role="menu"
+      id={contentId}
       data-reference-menu-content=""
       placement="bottom-start"
       minW="40r"
@@ -170,10 +254,10 @@ export function MenuContent({
       borderColor="ui.dialog.border"
       className={className}
       style={style}
-      {...props}
+      {...contentProps}
     >
       <div ref={contentRef} tabIndex={-1} onKeyDown={handleKeyDown} style={{ outline: 'none' }}>
-        <RovingFocus.Root orientation="vertical" loop>
+        <RovingFocus.Root orientation="vertical" loop typeahead>
           <Div display="flex" flexDirection="column" gap="0.5r" outline="none">
             {children}
           </Div>
@@ -181,59 +265,76 @@ export function MenuContent({
       </div>
     </Overlay.Content>
   )
-}
+})
 
-export type MenuItemProps = PrimitiveProps<'div'> & {
+export type MenuItemProps = Omit<PrimitiveProps<'div'>, 'onSelect'> & {
   disabled?: boolean
   selected?: boolean
-  onSelect?: () => void
+  textValue?: string
+  onSelect?: (event: Event) => void
   closeOnClick?: boolean
   /** @deprecated Use closeOnClick instead */
   closeOnSelect?: boolean
 }
 
-export function MenuItem({
-  children,
-  disabled = false,
-  selected = false,
-  onSelect,
-  closeOnClick = true,
-  closeOnSelect,
-  onClick,
-  onKeyDown,
-  className,
-  style,
-  ...props
-}: MenuItemProps) {
+export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function MenuItem(
+  {
+    children,
+    disabled = false,
+    selected = false,
+    textValue,
+    onSelect,
+    closeOnClick = true,
+    closeOnSelect,
+    onClick,
+    onKeyDown,
+    className,
+    style,
+    ...props
+  }: MenuItemProps,
+  ref
+) {
   const context = React.useContext(MenuContext)
   const overlay = useOverlay()
   const shouldClose = closeOnSelect !== undefined ? closeOnSelect : closeOnClick
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled) return
+    if (disabled) {
+      e.preventDefault()
+      return
+    }
     onClick?.(e)
-    onSelect?.()
-    if (!e.defaultPrevented && shouldClose && context) {
+    if (e.defaultPrevented) return
+    onSelect?.(e.nativeEvent)
+    if (e.nativeEvent.defaultPrevented) return
+    if (shouldClose && context) {
       context.setIsOpen(false)
-      overlay?.triggerRef.current?.focus()
+      restoreFocusToTrigger(overlay?.triggerRef.current as HTMLElement | null)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
-    if (!e.defaultPrevented && !disabled && (e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault()
+    if (e.defaultPrevented || disabled) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation()
       onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
-      onSelect?.()
+      if (e.defaultPrevented) return
+      onSelect?.(e.nativeEvent)
+      if (e.nativeEvent.defaultPrevented) {
+        e.preventDefault()
+        return
+      }
+      e.preventDefault()
       if (shouldClose && context) {
         context.setIsOpen(false)
-        overlay?.triggerRef.current?.focus()
+        restoreFocusToTrigger(overlay?.triggerRef.current as HTMLElement | null)
       }
     }
   }
 
   return (
-    <RovingFocus.Item disabled={disabled}>
+    <RovingFocus.Item disabled={disabled} textValue={textValue}>
       <Div
         role="menuitem"
         tabIndex={disabled ? -1 : 0}
@@ -268,32 +369,32 @@ export function MenuItem({
           ...style,
         }}
         {...props}
+        ref={ref}
       >
         {children}
       </Div>
     </RovingFocus.Item>
   )
-}
+})
 
 export type MenuSeparatorProps = PrimitiveProps<'div'>
 
-export function MenuSeparator({
-  className,
-  style,
-  ...props
-}: MenuSeparatorProps) {
-  return (
-    <Div
-      role="separator"
-      height="1px"
-      bg="ui.hr.border"
-      my="1r"
-      className={className}
-      style={style}
-      {...props}
-    />
-  )
-}
+export const MenuSeparator = React.forwardRef<HTMLDivElement, MenuSeparatorProps>(
+  function MenuSeparator({ className, style, ...props }: MenuSeparatorProps, ref) {
+    return (
+      <Div
+        role="separator"
+        height="1px"
+        bg="ui.hr.border"
+        my="1r"
+        className={className}
+        style={style}
+        {...props}
+        ref={ref}
+      />
+    )
+  }
+)
 
 Menu.Trigger = MenuTrigger
 Menu.Content = MenuContent

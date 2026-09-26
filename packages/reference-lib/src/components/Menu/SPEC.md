@@ -4,7 +4,8 @@ Current freeze, cases, and proof. Design narrative: [Menu.md](./Menu.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/menu.spec.ts`
-Colocated: `Menu.test.tsx` (5 tests; **no case IDs**)
+CT: `__e2e__/Menu.ct.spec.ts` (30 tests, React 17/18/19)
+Colocated: `Menu.test.tsx` (7 tests) + `menu-intent.test.ts` (1 test)
 Page: `/menu`
 
 ## Legend
@@ -34,15 +35,23 @@ rebuild Overlay dismiss.
 | Intent | 100ms open / 300ms close / 5px grace |
 | Escape | one level (Overlay stack) |
 
-### Status (2026-09-10)
+### Status (2026-09-25 quarantine landing)
 
 | | |
 | :--- | :--- |
-| Engine | Prototype Trigger/Content/Item/Separator + own Overlay. |
-| Production | **No.** |
-| Named `[x]` | 1 / 91 (`MN-DOM-01`) |
-| Playwright | 2 (`MN-DOM-02` is visual) |
-| Vitest | 5 tests, 0 IDs |
+| Engine | Trigger/Content/Item/Separator + own Overlay + RovingFocus typeahead. |
+| Production | **Root menu only.** No nested submenus / choice / link parts. |
+| Named `[x]` | 31 / 91 (root-level adaptations; see deviations) |
+| CT | 30 (2 frozen originals + 28 parity re-targets), React 17/18/19 green |
+| Vitest | 8 (5 original + ENV-01/ENV-02 + INTENT-09) |
+
+Landing ports (zero paint, uncontrolled API preserved): cancelable
+`onSelect(event)` (Menu.md already specified `(event: Event) => void`),
+`textValue` (Menu.md specified), RovingFocus `typeahead`, Tab
+trigger-relative continuation, live-trigger focus restore,
+close-transition focus restore, stable content id + `aria-controls`,
+forwardRef on all parts, `menu-intent.ts` verbatim (unwired — submenu
+follow-up fuel, not exported from index).
 
 ### Gaps & incoherence
 
@@ -63,12 +72,45 @@ rebuild Overlay dismiss.
 
 ### Case index
 
-- `[x]` `MN-DOM-01`
-- `[ ]` remaining `MN-DOM-*`, `MN-FOCUS-*`, `MN-TYPE-*`, `MN-ACT-*`,
-  `MN-CHOICE-*`, `MN-LINK-*`, `MN-SUBKEY-*`, `MN-INTENT-*`, `MN-CLOSE-*`,
-  `MN-DYNAMIC-*`, `MN-ENV-*`, `MN-A11Y-01`, `MN-COMP-*`
+Proven by passing CT/unit titles (root-level adaptations of TESTS.md):
 
-Not catalog: `MN-DOM-02` visual. Drop or rehome.
+- `[x]` `MN-DOM-01` `MN-DOM-02` `MN-DOM-03` `MN-DOM-04` `MN-DOM-05`
+  `MN-DOM-06` `MN-DOM-07` `MN-DOM-09`
+- `[x]` `MN-FOCUS-01` `MN-FOCUS-02` `MN-FOCUS-03` `MN-FOCUS-05`
+- `[x]` `MN-TYPE-01` `MN-TYPE-04`
+- `[x]` `MN-ACT-01` `MN-ACT-02` `MN-ACT-03` `MN-ACT-06` `MN-ACT-08`
+- `[x]` `MN-CHOICE-08` (plain-item close policy only)
+- `[x]` `MN-INTENT-09` (unit) `MN-INTENT-10`
+- `[x]` `MN-CLOSE-01` `MN-CLOSE-04` `MN-CLOSE-05` `MN-CLOSE-08`
+- `[x]` `MN-DYNAMIC-01` `MN-DYNAMIC-03`
+- `[x]` `MN-ENV-01` `MN-ENV-02` (unit) `MN-ENV-04` (via `--react all`)
+- `[x]` `MN-A11Y-01` (explicit asserts; no axe in repo)
+- `[ ]` `MN-DOM-08` `MN-DOM-10` (Popover engine / submenu placement)
+- `[ ]` `MN-FOCUS-04` `MN-FOCUS-06` (horizontal prop / submenus)
+- `[ ]` `MN-TYPE-02` `MN-TYPE-03` (Space-buffer gate needs RovingFocus
+  order change — child handlers run first; submenu buffers)
+- `[ ]` `MN-ACT-04` `MN-ACT-05` `MN-ACT-07` (submenu tree / press-drag)
+- `[ ]` `MN-CHOICE-*` except `-08`, all `MN-LINK-*` (parts do not exist)
+- `[ ]` all `MN-SUBKEY-*`, `MN-INTENT-01..08` (no submenus)
+- `[ ]` `MN-CLOSE-02` `MN-CLOSE-03` `MN-CLOSE-06` (submenu portion)
+  `MN-CLOSE-07` `MN-CLOSE-09` (dup of CLOSE-01 single-level)
+  `MN-CLOSE-10`
+- `[ ]` `MN-DYNAMIC-02` `MN-DYNAMIC-04` (submenu ownership)
+- `[ ]` `MN-ENV-03` (shadow; lib-wide framework concern, Tree/Switch precedent)
+- `[ ]` all `MN-COMP-*` (need Popover-root/nested model)
+
+Adaptations (pinned current behavior over quarantine where they
+conflict): `MN-FOCUS-02` asserts NO item focus after pointer opening
+(quarantine focused first item; contradicts pinned colocated test);
+`MN-CLOSE-08` asserts one request + retained open DOM but not focus
+retention (focus moves optimistically — strict retention needs an async
+accept signal); `MN-DOM-09` proven behaviorally (no `aria-orientation`
+attribute — validity risk without axe); focused-item removal recovery
+is RovingFocus-owned per TESTS.md ("Owned elsewhere"); item/trigger/
+content consumer refs resolve on React 19 only (RovingFocus
+cloneElement + Overlay ref-as-prop drop `props.ref` on 17/18 —
+handoff); `MN-DOM-02` original visual CT title kept as frozen
+regression alongside the catalog adaptation.
 
 ### Work order
 
