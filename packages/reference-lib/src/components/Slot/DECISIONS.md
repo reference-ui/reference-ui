@@ -5,6 +5,10 @@ acceptance, per decision, never by exhaustion.
 
 Named-region registry: parts register elements; hosts render them.
 
+Open work has moved out of this file: mechanical items live in
+[PATCHES.md](./PATCHES.md) (currently none), design items in
+[FEATURES.md](./FEATURES.md).
+
 ## Landed (context, 2-4 lines)
 
 Landing ported quarantine's 18 matrix cases (`SL-PROV`/`USE`/`HOOK`/`READ`)
@@ -42,25 +46,8 @@ and it added no public API, so this section has one item.
 
 ### 1. Reactive `useScanAll(predicate)` hook — verdict: DEFERRED
 
-- **Evidence:** the CT host hand-rolls an imperative scan inside render —
-  `Slot.story.tsx:193` calls `root.scanAll(s => s.slotId.startsWith('actions'))`,
-  which only stays fresh because sibling `useGetAll`/`useScanById`
-  subscriptions re-render the host. The context exposes `useScanById`
-  and `useGetAll` only (`Slot.ts:233-256`); `SL-COMP-03` pins
-  prefix-region scanning with no reactive hook behind it.
-- **API sketch:** `useScanAll(predicate: (slot) => boolean):
-  SlotRegistration[]` on the context object,
-  `useSyncExternalStore`-backed like its siblings, with a stable result
-  array while the match set is unchanged.
-- **Why not landed:** never proposed — no quarantine source, and
-  `SL-COMP-03` passes on the imperative call, so no consumer pain yet.
-- **Revisit when:** a second compound host needs reactive prefix/kind
-  scans (first real consumer beyond the fixture), or a host memoizing
-  on scan results hits identity churn.
-- **Open questions:** predicate identity semantics (inline closure vs
-  `useCallback` — resubscribe cost?); snapshot selector shape under
-  `useSyncExternalStore`; whether the result array must hold identity
-  across unrelated registrations (an `SL-READ-07` analog).
+Moved to [FEATURES.md §1](./FEATURES.md) — new API surface needing
+design calls (predicate identity, selector shape, result identity).
 
 ### 2. Document-global default root — verdict: DECLINED
 
@@ -119,16 +106,19 @@ store state (anti-pattern `SL-VER-01` forbids — content is not state).
 - Slot has no Book story by design (renders no DOM) — instead run
   `pnpm agentct Slot` (52 unit + 4 CT), read `Slot.story.tsx`
   `HostLayout`, and view the 5 snapshot baselines in `__e2e__`.
-- Most important 1/3 — keep-the-Map (candidate 1): the only real
-  quarantine delta, declined on a 52/52 evidence run. Feel it by
-  diffing `git show components-quarantine:.../Slot/Slot.ts` against
+- Most important 1/3 — keep-the-Map (candidate 1, DECLINED above): the
+  only real quarantine delta, declined on a 52/52 evidence run. Feel it
+  by diffing `git show components-quarantine:.../Slot/Slot.ts` against
   current `Slot.ts`: identical facade, different engine.
-- Most important 2/3 — no `useScanAll` yet (gap 1): the only genuine
-  API gap. Feel it at `Slot.story.tsx:193`, where the host scans
-  imperatively and borrows freshness from sibling subscriptions.
-- Most important 3/3 — no global root (gap 2): the design law. Feel it
-  via `SL-USE-01` — `useRoot` outside a Provider throws, so two
-  compound trees can never share a registry.
+- Most important 2/3 — no `useScanAll` yet ([FEATURES.md
+  §1](./FEATURES.md)): the only genuine API gap. Feel it at
+  `Slot.story.tsx:193`, where the host scans imperatively and borrows
+  freshness from sibling subscriptions.
+- Most important 3/3 — no global root (gap 2, DECLINED above): the
+  design law. Feel it via `SL-USE-01` — `useRoot` outside a Provider
+  throws, so two compound trees can never share a registry.
+- Mechanical follow-ups: none — [PATCHES.md](./PATCHES.md) is empty by
+  triage, not by omission (the one deferred item needs design).
 - Outstanding work is consumer-side, not Slot: Tree (`SPEC.md:89,136`),
   Switch (`SPEC.md:103`), and DateField (`SPEC.md:70`) still sniff
   children instead of registering parts through this kernel. Slot is
