@@ -40,6 +40,14 @@ Does not add a wrapper node. Slots keyboard behaviour onto a single composite ch
 non-looping, and typeahead-off; Listbox and Menu turn typeahead on. Tabs leave
 it off.
 
+Pressing an Item (pointer) makes it current without moving DOM focus, so
+Tab-out-and-back re-enters on the pressed item. Root and Item each take
+exactly one element child and throw a descriptive error otherwise.
+
+Forked engines converge through the exported seams — `TypeaheadModel`,
+`shouldIgnoreTypeaheadKey` (IME/editable guards), `getDirection` — instead
+of reimplementing typeahead, guards, or RTL direction.
+
 Toolbar, ToggleGroup, tag lists, and picker grids are documented compositions on top of this — they are not reasons to rebuild the same machinery.
 
 ## Proposed API

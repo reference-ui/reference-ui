@@ -1,7 +1,18 @@
+// @vitest-environment happy-dom
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
-import { RovingFocus, TypeaheadModel } from './RovingFocus'
+import { createRoot, type Root } from 'react-dom/client'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  RovingFocus,
+  TypeaheadModel,
+  getDirection,
+  shouldIgnoreTypeaheadKey,
+  type TypeaheadGuardEvent,
+} from './RovingFocus'
+
+// @ts-ignore
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 describe('RovingFocus Unit Tests', () => {
   it('RF-TYPE-02: RovingFocus should choose the next case-insensitive prefix match when typeahead receives one printable character', () => {
@@ -165,5 +176,167 @@ describe('RovingFocus Unit Tests', () => {
     expect(html).toMatch(/<button[^>]*data-testid="b-1"[^>]*tabindex="-1"/)
     expect(html).toMatch(/<button[^>]*data-testid="b-3"[^>]*tabindex="-1"/)
     expect(html.startsWith('<div role="toolbar"')).toBe(true)
+  })
+})
+
+// RF-DOM-06 shapes, bypassing type checking (children is typed as exactly one
+// element; runtime must still reject whatever JS hands it).
+const INVALID_CHILD_SHAPES: Array<{ name: string; make: () => unknown; message: RegExp }> = [
+  { name: 'omitted', make: () => undefined, message: /received none/ },
+  { name: 'null', make: () => null, message: /received none/ },
+  { name: 'false', make: () => false, message: /received none/ },
+  { name: 'text', make: () => 'hello', message: /received text/ },
+  { name: 'number', make: () => 42, message: /received a number/ },
+  {
+    name: 'nonempty Fragment',
+    make: () =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement('div'),
+        React.createElement('div')
+      ),
+    message: /received a Fragment/,
+  },
+  {
+    name: 'multiple elements',
+    make: () => [React.createElement('div', { key: 'a' }), React.createElement('div', { key: 'b' })],
+    message: /received 2 children/,
+  },
+]
+
+describe('RF-DOM-06 single-element anatomy errors (FEATURES #3)', () => {
+  let consoleError: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleError.mockRestore()
+  })
+
+  it.each(INVALID_CHILD_SHAPES)(
+    'Root throws a descriptive error for $name children',
+    ({ make, message }) => {
+      const el = React.createElement(RovingFocus.Root as any, null, make() as any)
+      expect(() => renderToString(el)).toThrow(/RovingFocus\.Root expects exactly one element/)
+      expect(() => renderToString(el)).toThrow(message)
+    }
+  )
+
+  it.each(INVALID_CHILD_SHAPES)(
+    'Item throws a descriptive error for $name children',
+    ({ make, message }) => {
+      const el = React.createElement(
+        RovingFocus.Root,
+        null,
+        React.createElement(
+          'div',
+          null,
+          React.createElement(RovingFocus.Item as any, null, make() as any)
+        )
+      )
+      expect(() => renderToString(el)).toThrow(/RovingFocus\.Item expects exactly one element/)
+      expect(() => renderToString(el)).toThrow(message)
+    }
+  )
+
+  it('leaves no partial DOM or stale registration after a rejected render', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root: Root = createRoot(container)
+    try {
+      let error: unknown = null
+      try {
+        await React.act(async () => {
+          root.render(
+            React.createElement(
+              RovingFocus.Root,
+              null,
+              React.createElement(
+                'div',
+                null,
+                React.createElement(RovingFocus.Item as any, null, 'not-an-element' as any)
+              )
+            )
+          )
+        })
+      } catch (e) {
+        error = e
+      }
+      expect(String(error)).toMatch(/RovingFocus\.Item expects exactly one element/)
+      expect(container.querySelectorAll('[tabindex]').length).toBe(0)
+
+      // A subsequent valid mount settles exactly one tab stop: nothing stale leaked.
+      await React.act(async () => {
+        root.render(
+          <RovingFocus.Root>
+            <div>
+              <RovingFocus.Item>
+                <button type="button">One</button>
+              </RovingFocus.Item>
+              <RovingFocus.Item>
+                <button type="button">Two</button>
+              </RovingFocus.Item>
+            </div>
+          </RovingFocus.Root>
+        )
+      })
+      expect(container.querySelectorAll('[tabindex="0"]').length).toBe(1)
+      expect(container.querySelectorAll('[tabindex="-1"]').length).toBe(1)
+    } finally {
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
+    }
+  })
+})
+
+describe('convergence seams (FEATURES #7)', () => {
+  function guardEvent(overrides: Partial<TypeaheadGuardEvent> = {}): TypeaheadGuardEvent {
+    return {
+      key: 'a',
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false,
+      target: document.createElement('button'),
+      nativeEvent: { isComposing: false },
+      ...overrides,
+    }
+  }
+
+  it('shouldIgnoreTypeaheadKey accepts a plain printable key', () => {
+    expect(shouldIgnoreTypeaheadKey(guardEvent())).toBe(false)
+  })
+
+  it('shouldIgnoreTypeaheadKey ignores modified and multi-character keys', () => {
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ key: 'Enter' }))).toBe(true)
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ ctrlKey: true }))).toBe(true)
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ altKey: true }))).toBe(true)
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ metaKey: true }))).toBe(true)
+  })
+
+  it('shouldIgnoreTypeaheadKey ignores IME-composing keys (the Listbox live bug)', () => {
+    expect(
+      shouldIgnoreTypeaheadKey(guardEvent({ nativeEvent: { isComposing: true } }))
+    ).toBe(true)
+  })
+
+  it('shouldIgnoreTypeaheadKey ignores keys from editable targets', () => {
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ target: document.createElement('input') }))).toBe(
+      true
+    )
+    expect(
+      shouldIgnoreTypeaheadKey(guardEvent({ target: document.createElement('textarea') }))
+    ).toBe(true)
+    const editable = document.createElement('div')
+    editable.contentEditable = 'true'
+    expect(shouldIgnoreTypeaheadKey(guardEvent({ target: editable }))).toBe(true)
+  })
+
+  it('getDirection defaults to ltr without an element', () => {
+    expect(getDirection(null)).toBe('ltr')
   })
 })

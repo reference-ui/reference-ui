@@ -46,8 +46,10 @@ Visual polish is not this gate. Do not add a selection store or
 
 ### Gaps & incoherence
 
-- Extra public surface: `currentId` / `defaultCurrentId` /
-  `onCurrentIdChange`. Freeze has no controlled current-id API.
+- ~~Extra public surface: `currentId` / `defaultCurrentId` /
+  `onCurrentIdChange`. Freeze has no controlled current-id API.~~ STRIPPED
+  2026-09-26 (FEATURES #5): currentness is internal-only; zero in-repo
+  consumers used the controlled props.
 - Root is a Provider wrapper, not a transparent slot onto one composite
   child (`ReferenceSlotPartProps`).
 - `orientation="both"` is 1D with both arrow axes, not measured visual grid
@@ -70,11 +72,15 @@ primitive.
   `RF-KEY-07`, `RF-TYPE-02`, `RF-TYPE-03`
 - `[ ]` `RF-API-01`, remaining `RF-DOM-*` / `RF-TAB-*` / `RF-KEY-*`, all
   `RF-GRID-*`, remaining `RF-TYPE-*`, `RF-NEST-*`, `RF-ENV-*`, `RF-COMP-*`
+- `RF-ENV-02` CUT 2026-09-26 (FEATURES #6 — shadow out of scope, see TESTS.md).
+  `RF-DOM-06` proven by colocated unit titles, `RF-TAB-04` by CT title
+  (2026-09-26 features pass; status table above is the 2026-09-10 snapshot).
 
 ### Work order
 
-1. Strip `currentId` / uncontrolled current to match freeze (or amend freeze
-   with a named reason — default is strip).
+1. ~~Strip `currentId` / uncontrolled current to match freeze (or amend freeze
+   with a named reason — default is strip).~~ DONE 2026-09-26 (stripped,
+   FEATURES #5).
 2. Slot Root/Item onto one child (`ReferenceSlotPartProps`).
 3. Visual-grid `both` + RTL (`RF-GRID-*`).
 4. Typeahead unit `RF-TYPE-02`–`08` (idle, Unicode, Space).

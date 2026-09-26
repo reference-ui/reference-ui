@@ -93,6 +93,48 @@ test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
     await snap(page, 'end-key-cherry-focused')
   })
 
+  test('RF-TAB-04: Pointer press sets current without stealing focus; Tab re-enters on pressed item', async ({
+    page,
+  }) => {
+    const outsideAfter = page.getByTestId('outside-after-btn')
+    const apple = page.getByTestId('item-apple')
+    const banana = page.getByTestId('item-banana')
+    const blueberry = page.getByTestId('item-blueberry')
+    const cherry = page.getByTestId('item-cherry')
+
+    await apple.focus()
+    await expect(apple).toBeFocused()
+
+    // Real click: browser moves focus AND currentness follows.
+    await cherry.click()
+    await expect(cherry).toBeFocused()
+    await expect(cherry).toHaveAttribute('tabindex', '0')
+    await expect(apple).toHaveAttribute('tabindex', '-1')
+
+    // Pointer press that never moves DOM focus (touch / Safari-tap shape):
+    // currentness-only, focus stays where it was.
+    await blueberry.dispatchEvent('pointerdown')
+    await expect(blueberry).toHaveAttribute('tabindex', '0')
+    await expect(cherry).toHaveAttribute('tabindex', '-1')
+    await expect(cherry).toBeFocused()
+
+    // Disabled items never become current via press.
+    await banana.dispatchEvent('pointerdown')
+    await expect(banana).toHaveAttribute('tabindex', '-1')
+    await expect(blueberry).toHaveAttribute('tabindex', '0')
+
+    // Non-primary presses (right-click) never move the stop.
+    await apple.dispatchEvent('pointerdown', { button: 2 })
+    await expect(apple).toHaveAttribute('tabindex', '-1')
+    await expect(blueberry).toHaveAttribute('tabindex', '0')
+
+    // Tab out of the composite, then back in: re-entry lands on the pressed item.
+    await page.keyboard.press('Tab')
+    await expect(outsideAfter).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(blueberry).toBeFocused()
+  })
+
   test('RF-TYPE-02 & RF-TYPE-03: Typeahead matches item prefix and moves focus', async ({
     page,
   }) => {

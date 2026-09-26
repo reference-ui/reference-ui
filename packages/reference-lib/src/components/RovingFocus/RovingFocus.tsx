@@ -1,23 +1,20 @@
 import * as React from 'react'
-import { TypeaheadModel, type TypeaheadItem } from './typeahead'
+import { TypeaheadModel, shouldIgnoreTypeaheadKey, type TypeaheadItem } from './typeahead'
 
-export { TypeaheadModel } from './typeahead'
-export type { TypeaheadItem } from './typeahead'
+export { TypeaheadModel, shouldIgnoreTypeaheadKey } from './typeahead'
+export type { TypeaheadItem, TypeaheadGuardEvent } from './typeahead'
 
 export type RovingFocusOrientation = 'horizontal' | 'vertical' | 'both'
 
 export interface RovingFocusRootProps {
-  children?: React.ReactElement | null | false
+  children: React.ReactElement
   orientation?: RovingFocusOrientation
   loop?: boolean
   typeahead?: boolean
-  defaultCurrentId?: string
-  currentId?: string
-  onCurrentIdChange?: (id: string) => void
 }
 
 export interface RovingFocusItemProps {
-  children?: React.ReactElement | null | false
+  children: React.ReactElement
   id?: string
   disabled?: boolean
   textValue?: string
@@ -94,17 +91,52 @@ function getItemSearchText(entry: ItemEntry): string {
   return text.replace(/\s+/g, ' ').trim()
 }
 
-function getDirection(el: HTMLElement | null): 'ltr' | 'rtl' {
+// Convergence seam (FEATURES #7): forked engines (Listbox navigation, Tabs
+// arrows) read inherited direction through this instead of a local copy.
+export function getDirection(el: HTMLElement | null): 'ltr' | 'rtl' {
   if (!el || typeof window === 'undefined') return 'ltr'
   return window.getComputedStyle(el).direction === 'rtl' ? 'rtl' : 'ltr'
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!target || !(target instanceof HTMLElement)) return false
-  const tagName = target.tagName.toLowerCase()
-  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return true
-  if (target.isContentEditable) return true
-  return false
+// Single-element anatomy gate (RF-DOM-06, FEATURES #3): Root and Item slot
+// behavior onto exactly one element, so anything else throws at render with
+// no partial registration. Called after hooks; a throw unmounts the tree.
+function assertSingleElementChild(
+  children: React.ReactNode,
+  part: 'Root' | 'Item'
+): asserts children is React.ReactElement {
+  // Nullish and booleans normalize to a zero count before measuring:
+  // Children.count(false) is 1 (booleans traverse as render-nothing nodes),
+  // but false/null/undefined all mean "no element was authored".
+  const count =
+    children === null || children === undefined || typeof children === 'boolean'
+      ? 0
+      : React.Children.count(children)
+  if (count === 0) {
+    throw new Error(
+      `Reference UI: RovingFocus.${part} expects exactly one element child, but received none (children omitted, null, or false). Render a single element so the kernel has a node to augment.`
+    )
+  }
+  if (count > 1) {
+    throw new Error(
+      `Reference UI: RovingFocus.${part} expects exactly one element child, but received ${count} children. Wrap them in a single element.`
+    )
+  }
+  // toArray (not Children.only, which throws its own invariant for non-element
+  // singles) — validation-only, never rendered.
+  const [child] = React.Children.toArray(children)
+  if (typeof child !== 'object' || child === null || !React.isValidElement(child)) {
+    const received =
+      typeof child === 'string' ? 'text' : typeof child === 'number' ? 'a number' : typeof child
+    throw new Error(
+      `Reference UI: RovingFocus.${part} expects exactly one element child, but received ${received}. Render a single element so the kernel has a node to augment.`
+    )
+  }
+  if (child.type === React.Fragment) {
+    throw new Error(
+      `Reference UI: RovingFocus.${part} expects exactly one element child, but received a Fragment. Fragments render no node for tabIndex/ref augmentation — render a single element instead.`
+    )
+  }
 }
 
 const RovingFocusContext = React.createContext<RovingFocusContextValue | null>(null)
@@ -116,30 +148,14 @@ export function RovingFocusRoot({
   orientation = 'horizontal',
   loop = false,
   typeahead = false,
-  defaultCurrentId,
-  currentId: currentIdProp,
-  onCurrentIdChange,
 }: RovingFocusRootProps) {
-  const [internalCurrentId, setInternalCurrentId] = React.useState<string | null>(
-    defaultCurrentId ?? null
-  )
+  // Currentness is internal-only (FEATURES #5): the controlled current-id API
+  // was stripped per the SPEC freeze — no consumer named a use.
+  const [currentId, setCurrentId] = React.useState<string | null>(null)
   const itemsMapRef = React.useRef<Map<string, ItemEntry>>(new Map())
   const typeaheadModelRef = React.useRef<TypeaheadModel>(new TypeaheadModel())
   const initialActiveIdRef = React.useRef<string | null>(null)
   const [registrationVersion, setRegistrationVersion] = React.useState(0)
-
-  const isControlled = currentIdProp !== undefined
-  const currentId = isControlled ? currentIdProp : internalCurrentId
-
-  const setCurrentId = React.useCallback(
-    (id: string) => {
-      if (!isControlled) {
-        setInternalCurrentId(id)
-      }
-      onCurrentIdChange?.(id)
-    },
-    [isControlled, onCurrentIdChange]
-  )
 
   const getOrderedItems = React.useCallback((): ItemEntry[] => {
     const entries = Array.from(itemsMapRef.current.values())
@@ -184,8 +200,8 @@ export function RovingFocusRoot({
     const available = ordered.filter(isItemAvailable)
 
     if (available.length === 0) {
-      if (currentId !== null && !isControlled) {
-        setInternalCurrentId(null)
+      if (currentId !== null) {
+        setCurrentId(null)
       }
       return
     }
@@ -228,7 +244,7 @@ export function RovingFocusRoot({
         setCurrentId(target)
       }
     }
-  }, [getOrderedItems, currentId, isControlled, registrationVersion, setCurrentId])
+  }, [getOrderedItems, currentId, registrationVersion])
 
   const registerItem = React.useCallback(
     (entry: ItemEntry) => {
@@ -310,9 +326,7 @@ export function RovingFocusRoot({
 
   const handleTypeahead = React.useCallback(
     (e: React.KeyboardEvent<HTMLElement>, activeId: string, orderedItems: ItemEntry[]) => {
-      if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return
-      if (e.nativeEvent?.isComposing) return
-      if (isEditableTarget(e.target)) return
+      if (shouldIgnoreTypeaheadKey(e)) return
       // Space only continues an active search; it never starts one, so buttons
       // keep native Space activation when no buffer is active.
       if (e.key === ' ' && !typeaheadModelRef.current.hasBuffer()) return
@@ -388,13 +402,7 @@ export function RovingFocusRoot({
     claimInitialActiveId,
   ])
 
-  if (!children) {
-    return null
-  }
-
-  if (typeof children !== 'object' || !React.isValidElement(children)) {
-    throw new Error('Reference UI: RovingFocus.Root expects a single valid React element child.')
-  }
+  assertSingleElementChild(children, 'Root')
 
   return (
     <RovingFocusContext.Provider value={contextValue}>
@@ -431,18 +439,13 @@ export function RovingFocusItem({
     })
   }, [context, id, disabled, textValue])
 
-  if (!children) {
-    return null
-  }
-
-  if (typeof children !== 'object' || !React.isValidElement(children)) {
-    throw new Error('Reference UI: RovingFocus.Item expects a single valid React element child.')
-  }
+  assertSingleElementChild(children, 'Item')
 
   const child = children as React.ReactElement<any>
   const originalRef = (child.props as any)?.ref
   const originalOnFocus = child.props.onFocus
   const originalOnKeyDown = child.props.onKeyDown
+  const originalOnPointerDown = child.props.onPointerDown
 
   // Before the client settles a current id (and during SSR), the first enabled
   // item to render claims the sole tab stop so server and client agree.
@@ -477,11 +480,26 @@ export function RovingFocusItem({
     }
   }
 
+  // Pointer press sets currentness (RF-TAB-04, FEATURES #4): taps that never
+  // move DOM focus (touch, Safari click) still choose the re-entry stop.
+  // Currentness-only — never focuses, so composed focus policies (Menu
+  // click-open restore) keep full authority. Consumer preventDefault opts out.
+  // Primary button only: right-clicks and aux presses must not move the stop
+  // (UX review); the consumer's own handler still sees every press.
+  const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    originalOnPointerDown?.(e)
+    if (e.defaultPrevented || e.button !== 0) return
+    if (!disabled && context.currentId !== id) {
+      context.setCurrentId(id)
+    }
+  }
+
   return React.cloneElement(child, {
     ref: composedRef,
     tabIndex,
     onFocus: handleFocus,
     onKeyDown: handleKeyDown,
+    onPointerDown: handlePointerDown,
   })
 }
 

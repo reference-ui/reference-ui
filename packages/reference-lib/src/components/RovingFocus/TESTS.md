@@ -352,12 +352,15 @@ typeahead off.
   same keys and props while capturing diagnostics. Assert identical authored
   DOM with exactly the same `tabIndex=0` assignment, no generated wrapper, no
   duplicate registration, and no hydration warning.
-- [x] `RF-ENV-02` `[reference]` `[shadow]` —
-  **RovingFocus should navigate by shadow-local focus and DOM order when the composite lives in a ShadowRoot.**
-  Render a reordered collection in an open ShadowRoot, focus an Item, and send
-  entry, arrow, Home, and End keys. Assert destinations follow composed shadow
-  order, the deepest shadow active element is recognized, and exactly one
-  shadow child remains the tab stop.
+- [ ] ~~`RF-ENV-02`~~ — **CUT (features-triage 2026-09-26, FEATURES #6): shadow-DOM
+  navigation is out of scope — no web-components consumer or harness names it.**
+  Cut case text (kept for the record): RovingFocus should navigate by
+  shadow-local focus and DOM order when the composite lives in a ShadowRoot —
+  render a reordered collection in an open ShadowRoot, focus an Item, and send
+  entry, arrow, Home, and End keys; destinations follow composed shadow order,
+  the deepest shadow active element is recognized, and exactly one shadow
+  child remains the tab stop. Revisit only with a real shadow consumer.
+  Tabs keeps its own shadow traversal local (Tabs PATCHES #2, unaffected).
 - [x] `RF-ENV-03` `[reference]` `[browser:all]` —
   **RovingFocus should keep core one-dimensional and grid behavior consistent when run across browser engines.**
   In Chromium, Firefox, and WebKit, run one horizontal loop/disabled fixture
