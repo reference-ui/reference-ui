@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Div, Button, H3, H4, P, Span, Input } from '@reference-ui/react'
 import { Overlay } from './index'
-import { Popover } from '../Popover'
-import { Menu } from '../Menu'
+import { Popover, type PopoverTriggerProps } from '../Popover'
+import { Menu, useMenuTriggerKeys } from '../Menu'
 import { Tooltip } from '../Tooltip'
 
 const dialogChrome = {
@@ -41,6 +41,30 @@ function LayerBadge({ level, zIndex, type }: { level: number; zIndex: number; ty
     </Div>
   )
 }
+
+// Popover.Trigger with Menu keyboard-entry wiring.
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
 
 export default {
   Dialog: () => {
@@ -675,27 +699,29 @@ export default {
 
                   {/* Tier 3 Menu Trigger inside Popover */}
                   <Div display="flex" justifyContent="space-between" alignItems="center">
-                    <Menu>
-                      <Menu.Trigger variant="secondary" data-testid="btn-open-shebang-tier3">
+                    <Popover>
+                      <EntryTrigger variant="secondary" data-testid="btn-open-shebang-tier3">
                         Node Operations Menu (Tier 3) ▾
-                      </Menu.Trigger>
-                      <Menu.Content data-testid="shebang-tier3-menu">
-                        <Menu.Item data-testid="menu-item-diagnostics" onClick={() => console.log('Diagnostics')}>
-                          Run Node Diagnostics
-                        </Menu.Item>
-                        <Menu.Item data-testid="menu-item-metrics" onClick={() => console.log('Metrics')}>
-                          Export Metrics (Prometheus)
-                        </Menu.Item>
-                        <Menu.Separator />
-                        <Menu.Item
-                          data-testid="menu-item-drain"
-                          color="ui.status.error.text"
-                          onClick={() => setConfirmModalOpen(true)}
-                        >
-                          ⚠️ Drain & Cordon Node...
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu>
+                      </EntryTrigger>
+                      <Popover.Content placement="bottom-start">
+                        <Menu data-testid="shebang-tier3-menu">
+                          <Menu.Item data-testid="menu-item-diagnostics" onClick={() => console.log('Diagnostics')}>
+                            Run Node Diagnostics
+                          </Menu.Item>
+                          <Menu.Item data-testid="menu-item-metrics" onClick={() => console.log('Metrics')}>
+                            Export Metrics (Prometheus)
+                          </Menu.Item>
+                          <Menu.Separator />
+                          <Menu.Item
+                            data-testid="menu-item-drain"
+                            color="ui.status.error.text"
+                            onClick={() => setConfirmModalOpen(true)}
+                          >
+                            ⚠️ Drain & Cordon Node...
+                          </Menu.Item>
+                        </Menu>
+                      </Popover.Content>
+                    </Popover>
 
                     <Button size="sm" onClick={() => setPopoverOpen(false)}>
                       Dismiss

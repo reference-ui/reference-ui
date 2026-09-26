@@ -1,7 +1,33 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
-import { Menu } from './index'
+import { Popover, type PopoverTriggerProps } from '../Popover'
+import { Menu, useMenuTriggerKeys } from './index'
+
+// Popover.Trigger with Menu keyboard-entry wiring (ArrowDown/Enter/Space open
+// on the first item, ArrowUp on the last; pointer opens focus the menu).
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
 
 export const Basic = () => {
   const [selectedAction, setSelectedAction] = React.useState<string | null>(null)
@@ -10,33 +36,35 @@ export const Basic = () => {
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-menu-trigger">
+          <Popover>
+            <EntryTrigger data-testid="btn-menu-trigger">
               Open Actions
-            </Menu.Trigger>
+            </EntryTrigger>
 
-            <Menu.Content data-testid="menu-content">
-              <Menu.Item
-                data-testid="menu-item-edit"
-                onSelect={() => setSelectedAction('Edit')}
-              >
-                Edit Document
-              </Menu.Item>
-              <Menu.Item
-                data-testid="menu-item-duplicate"
-                onSelect={() => setSelectedAction('Duplicate')}
-              >
-                Duplicate
-              </Menu.Item>
-              <Menu.Separator />
-              <Menu.Item
-                data-testid="menu-item-delete"
-                onSelect={() => setSelectedAction('Delete')}
-              >
-                Delete
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content">
+                <Menu.Item
+                  data-testid="menu-item-edit"
+                  onSelect={() => setSelectedAction('Edit')}
+                >
+                  Edit Document
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-item-duplicate"
+                  onSelect={() => setSelectedAction('Duplicate')}
+                >
+                  Duplicate
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item
+                  data-testid="menu-item-delete"
+                  onSelect={() => setSelectedAction('Delete')}
+                >
+                  Delete
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         <Span data-testid="menu-action-display" fontSize="3.5r" color="design.text.base">
@@ -91,8 +119,8 @@ export const Parity = () => {
       <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
         {/* Main menu: roles, roving, typeahead, activation */}
         <Div mb="4r">
-          <Menu onOpenChange={next => setOpenLogs(prev => [...prev, String(next)])}>
-            <Menu.Trigger
+          <Popover onOpenChange={next => setOpenLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger
               data-testid="btn-menu-trigger"
               ref={node => {
                 triggerProbeRef.current = node
@@ -100,130 +128,138 @@ export const Parity = () => {
               }}
             >
               Open Actions
-            </Menu.Trigger>
-            <Menu.Content
-              data-testid="menu-content"
-              data-probe="content"
-              ref={node => {
-                reportRefTags(node, 'content')
-              }}
-            >
-              <Menu.Item
-                data-testid="menu-item-edit"
-                data-probe="item"
-                className="menu-probe-class"
-                onSelect={recordSelect('Edit')}
+            </EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu
+                data-testid="menu-content"
+                data-probe="content"
                 ref={node => {
-                  reportRefTags(node, 'item')
+                  reportRefTags(node, 'content')
                 }}
               >
-                Edit Document
-              </Menu.Item>
-              <Menu.Item
-                data-testid="menu-item-duplicate"
-                textValue="Zulu"
-                onSelect={recordSelect('Duplicate')}
-              >
-                Duplicate
-              </Menu.Item>
-              <Menu.Separator
-                data-testid="menu-separator-1"
-                ref={node => {
-                  reportRefTags(node, 'separator')
-                }}
-              />
-              <Menu.Item
-                data-testid="menu-item-delete"
-                disabled
-                onSelect={recordSelect('Delete')}
-              >
-                Delete
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+                <Menu.Item
+                  data-testid="menu-item-edit"
+                  data-probe="item"
+                  className="menu-probe-class"
+                  onSelect={recordSelect('Edit')}
+                  ref={node => {
+                    reportRefTags(node, 'item')
+                  }}
+                >
+                  Edit Document
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-item-duplicate"
+                  textValue="Zulu"
+                  onSelect={recordSelect('Duplicate')}
+                >
+                  Duplicate
+                </Menu.Item>
+                <Menu.Separator
+                  data-testid="menu-separator-1"
+                  ref={node => {
+                    reportRefTags(node, 'separator')
+                  }}
+                />
+                <Menu.Item
+                  data-testid="menu-item-delete"
+                  disabled
+                  onSelect={recordSelect('Delete')}
+                >
+                  Delete
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Cancel menu: consumer cancellation */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-cancel-trigger">Open Cancel</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-cancel">
-              <Menu.Item
-                data-testid="menu-item-native-cancel"
-                onClick={e => e.preventDefault()}
-                onSelect={() => setCancelAction('NativeCancel')}
-              >
-                Native Cancel
-              </Menu.Item>
-              <Menu.Item
-                data-testid="menu-item-select-cancel"
-                onSelect={e => {
-                  e.preventDefault()
-                  setCancelAction('SelectCancel')
-                }}
-              >
-                Select Cancel
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-cancel-trigger">Open Cancel</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-cancel">
+                <Menu.Item
+                  data-testid="menu-item-native-cancel"
+                  onClick={e => e.preventDefault()}
+                  onSelect={() => setCancelAction('NativeCancel')}
+                >
+                  Native Cancel
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-item-select-cancel"
+                  onSelect={e => {
+                    e.preventDefault()
+                    setCancelAction('SelectCancel')
+                  }}
+                >
+                  Select Cancel
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Close-policy menu */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-close-trigger">Open Close</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-close">
-              <Menu.Item
-                data-testid="menu-item-default-close"
-                onSelect={() => setCloseAction('DefaultClose')}
-              >
-                Default Close
-              </Menu.Item>
-              <Menu.Item
-                data-testid="menu-item-stay-open"
-                closeOnSelect={false}
-                onSelect={() => setCloseAction('StayOpen')}
-              >
-                Stay Open
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-close-trigger">Open Close</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-close">
+                <Menu.Item
+                  data-testid="menu-item-default-close"
+                  onSelect={() => setCloseAction('DefaultClose')}
+                >
+                  Default Close
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-item-stay-open"
+                  closeOnSelect={false}
+                  onSelect={() => setCloseAction('StayOpen')}
+                >
+                  Stay Open
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Dynamic menu (mutators live inside content: outside presses dismiss) */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-dynamic-trigger">Open Dynamic</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-dynamic">
-              {dynamicItems.map(item => (
-                <Menu.Item
-                  key={item}
-                  data-testid={`dynamic-item-${item}`}
-                  disabled={item === 'bravo' && bravoDisabled}
-                  onSelect={() => setSelectedAction(`dyn:${item === 'bravo' ? bravoLabel : item}`)}
+          <Popover>
+            <EntryTrigger data-testid="btn-dynamic-trigger">Open Dynamic</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-dynamic">
+                {dynamicItems.map(item => (
+                  <Menu.Item
+                    key={item}
+                    data-testid={`dynamic-item-${item}`}
+                    disabled={item === 'bravo' && bravoDisabled}
+                    onSelect={() => setSelectedAction(`dyn:${item === 'bravo' ? bravoLabel : item}`)}
+                  >
+                    {item === 'bravo' ? bravoLabel : item}
+                  </Menu.Item>
+                ))}
+                <button
+                  data-testid="btn-mutate-items"
+                  type="button"
+                  onClick={() => {
+                    setDynamicItems(['charlie', 'bravo', 'delta'])
+                    setBravoDisabled(true)
+                  }}
                 >
-                  {item === 'bravo' ? bravoLabel : item}
-                </Menu.Item>
-              ))}
-              <button
-                data-testid="btn-mutate-items"
-                type="button"
-                onClick={() => {
-                  setDynamicItems(['charlie', 'bravo', 'delta'])
-                  setBravoDisabled(true)
-                }}
-              >
-                Mutate Items
-              </button>
-              <button
-                data-testid="btn-rename-items"
-                type="button"
-                onClick={() => setBravoLabel('bravo!')}
-              >
-                Rename Bravo
-              </button>
-            </Menu.Content>
-          </Menu>
+                  Mutate Items
+                </button>
+                <button
+                  data-testid="btn-rename-items"
+                  type="button"
+                  onClick={() => setBravoLabel('bravo!')}
+                >
+                  Rename Bravo
+                </button>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Controlled menu */}
@@ -243,18 +279,20 @@ export const Parity = () => {
           >
             Toggle Reject
           </button>
-          <Menu
+          <Popover
             open={controlledOpen}
             onOpenChange={next => {
               setControlledLogs(prev => [...prev, `request:${next}`])
               if (!controlledReject) setControlledOpen(next)
             }}
           >
-            <Menu.Trigger data-testid="btn-controlled-trigger">Open Controlled</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-controlled">
-              <Menu.Item data-testid="controlled-item-1">Controlled Item</Menu.Item>
-            </Menu.Content>
-          </Menu>
+            <EntryTrigger data-testid="btn-controlled-trigger">Open Controlled</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-controlled">
+                <Menu.Item data-testid="controlled-item-1">Controlled Item</Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
           <Span data-testid="menu-controlled-display">
             Controlled: {controlledOpen ? 'Open' : 'Closed'}
           </Span>
@@ -262,51 +300,59 @@ export const Parity = () => {
 
         {/* Empty + all-disabled menus */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-empty-trigger">Open Empty</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-empty" />
-          </Menu>
-          <Menu>
-            <Menu.Trigger data-testid="btn-disabled-trigger">Open Disabled</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-disabled">
-              <Menu.Item data-testid="disabled-item-1" disabled>
-                Off One
-              </Menu.Item>
-              <Menu.Item data-testid="disabled-item-2" disabled>
-                Off Two
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-empty-trigger">Open Empty</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-empty" />
+            </Popover.Content>
+          </Popover>
+          <Popover>
+            <EntryTrigger data-testid="btn-disabled-trigger">Open Disabled</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-disabled">
+                <Menu.Item data-testid="disabled-item-1" disabled>
+                  Off One
+                </Menu.Item>
+                <Menu.Item data-testid="disabled-item-2" disabled>
+                  Off Two
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Second menu for ID uniqueness */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-second-trigger">Open Second</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-second">
-              <Menu.Item data-testid="second-item-1">Second Item</Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-second-trigger">Open Second</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-second">
+                <Menu.Item data-testid="second-item-1">Second Item</Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Typeahead menu */}
         <Div mb="4r">
-          <Menu>
-            <Menu.Trigger data-testid="btn-type-trigger">Open Typeahead</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-type">
-              <Menu.Item data-testid="menu-item-apple">Apple</Menu.Item>
-              <Menu.Item data-testid="menu-item-anchor">Anchor</Menu.Item>
-              <Menu.Item data-testid="menu-item-apricot">Apricot</Menu.Item>
-              <Menu.Item data-testid="menu-item-banana">Banana</Menu.Item>
-              <Menu.Item data-testid="menu-item-eclair">Éclair</Menu.Item>
-              <Menu.Item data-testid="menu-item-aubergine" disabled>
-                Aubergine
-              </Menu.Item>
-              <Menu.Item data-testid="menu-item-notes">
-                Notes <input data-testid="menu-type-input" aria-label="note search" />
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-type-trigger">Open Typeahead</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-type">
+                <Menu.Item data-testid="menu-item-apple">Apple</Menu.Item>
+                <Menu.Item data-testid="menu-item-anchor">Anchor</Menu.Item>
+                <Menu.Item data-testid="menu-item-apricot">Apricot</Menu.Item>
+                <Menu.Item data-testid="menu-item-banana">Banana</Menu.Item>
+                <Menu.Item data-testid="menu-item-eclair">Éclair</Menu.Item>
+                <Menu.Item data-testid="menu-item-aubergine" disabled>
+                  Aubergine
+                </Menu.Item>
+                <Menu.Item data-testid="menu-item-notes">
+                  Notes <input data-testid="menu-type-input" aria-label="note search" />
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </Div>
 
         {/* Tab section MUST stay last: tab-before/after adjacency for CLOSE-05 */}
@@ -314,13 +360,15 @@ export const Parity = () => {
           <button data-testid="tab-before" type="button">
             Before
           </button>
-          <Menu>
-            <Menu.Trigger data-testid="btn-tab-trigger">Open Tab</Menu.Trigger>
-            <Menu.Content data-testid="menu-content-tab">
-              <Menu.Item data-testid="tab-item-1">Tab One</Menu.Item>
-              <Menu.Item data-testid="tab-item-2">Tab Two</Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover>
+            <EntryTrigger data-testid="btn-tab-trigger">Open Tab</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-content-tab">
+                <Menu.Item data-testid="tab-item-1">Tab One</Menu.Item>
+                <Menu.Item data-testid="tab-item-2">Tab Two</Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
           <button data-testid="tab-after" type="button">
             After
           </button>

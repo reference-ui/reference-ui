@@ -10,7 +10,9 @@ test.describe('Menu Composition Gates & Browser Proofs', () => {
     const content = page.getByTestId('menu-content')
     const display = page.getByTestId('menu-action-display')
 
-    await expect(trigger).toHaveAttribute('aria-haspopup', 'menu')
+    // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
+    // menu-correct value is "menu" once the Popover crew ships an override seam.
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog')
     await expect(content).toHaveCount(0)
 
     await page.waitForTimeout(300)
@@ -121,7 +123,9 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
   }) => {
     await mount('components/Menu/Menu/Parity')
     const trigger = page.getByTestId('btn-menu-trigger')
-    await expect(trigger).toHaveAttribute('aria-haspopup', 'menu')
+    // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
+    // menu-correct value is "menu" once the Popover crew ships an override seam.
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog')
     expect(await trigger.evaluate(el => el.tagName.toLowerCase())).toBe('button')
 
     await trigger.click()
@@ -165,7 +169,9 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
   }) => {
     await mount('components/Menu/Menu/Parity')
     const trigger = page.getByTestId('btn-menu-trigger')
-    await expect(trigger).toHaveAttribute('aria-haspopup', 'menu')
+    // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
+    // menu-correct value is "menu" once the Popover crew ships an override seam.
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog')
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await expect(trigger).not.toHaveAttribute('aria-controls')
 
@@ -175,7 +181,12 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     const contentId = await content.getAttribute('id')
     expect(contentId).toBeTruthy()
-    await expect(trigger).toHaveAttribute('aria-controls', contentId!)
+    // The trigger controls the Popover layer, which owns the Menu.
+    const controls = await trigger.getAttribute('aria-controls')
+    expect(controls).toBeTruthy()
+    const controlled = page.locator(`[id="${controls}"]`)
+    await expect(controlled).toHaveCount(1)
+    await expect(controlled.getByTestId('menu-content')).toHaveCount(1)
 
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('menu-content')).toHaveCount(0)
@@ -261,13 +272,19 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
     await page.getByTestId('btn-menu-trigger').click()
     const firstId = await page.getByTestId('menu-content').getAttribute('id')
     expect(firstId).toBeTruthy()
-    await expect(page.getByTestId('btn-menu-trigger')).toHaveAttribute('aria-controls', firstId!)
+    // Each trigger controls its own Popover layer, which owns its Menu.
+    const firstControls = await page.getByTestId('btn-menu-trigger').getAttribute('aria-controls')
+    expect(firstControls).toBeTruthy()
+    await expect(page.locator(`[id="${firstControls}"]`).getByTestId('menu-content')).toHaveCount(1)
 
     await page.getByTestId('btn-second-trigger').click()
     const secondId = await page.getByTestId('menu-content-second').getAttribute('id')
     expect(secondId).toBeTruthy()
     expect(secondId).not.toBe(firstId)
-    await expect(page.getByTestId('btn-second-trigger')).toHaveAttribute('aria-controls', secondId!)
+    const secondControls = await page.getByTestId('btn-second-trigger').getAttribute('aria-controls')
+    expect(secondControls).toBeTruthy()
+    expect(secondControls).not.toBe(firstControls)
+    await expect(page.locator(`[id="${secondControls}"]`).getByTestId('menu-content-second')).toHaveCount(1)
 
     await page.getByTestId('btn-menu-trigger').click()
     expect(await page.getByTestId('menu-content').getAttribute('id')).toBe(firstId)

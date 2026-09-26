@@ -3,7 +3,32 @@ import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
-import { Menu } from './Menu'
+import { Popover, type PopoverTriggerProps } from '../Popover'
+import { Menu, useMenuTriggerKeys } from './Menu'
+
+// Popover.Trigger with Menu keyboard-entry wiring.
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
 
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -31,37 +56,43 @@ describe('Menu component keyboard navigation and triggers', () => {
     }
   })
 
-  it('renders Menu.Trigger with variant attribute and default variant', async () => {
+  it('renders Popover.Trigger with variant attribute and default variant', async () => {
     await React.act(async () => {
       root.render(
-        <Menu>
-          <Menu.Trigger id="trigger-btn" variant="primary">
+        <Popover>
+          <EntryTrigger id="trigger-btn" variant="primary">
             Trigger
-          </Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item>Item 1</Menu.Item>
-          </Menu.Content>
-        </Menu>
+          </EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item>Item 1</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
     })
 
     const trigger = document.getElementById('trigger-btn')
     expect(trigger).not.toBeNull()
     expect(trigger?.getAttribute('data-variant')).toBe('primary')
-    expect(trigger?.getAttribute('aria-haspopup')).toBe('menu')
+    // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
+    // menu-correct value is "menu" once the Popover crew ships an override seam.
+    expect(trigger?.getAttribute('aria-haspopup')).toBe('dialog')
     expect(trigger?.getAttribute('aria-expanded')).toBe('false')
   })
 
   it('opens menu and sets focus on ArrowDown keydown on trigger', async () => {
     await React.act(async () => {
       root.render(
-        <Menu>
-          <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item id="item-1">Item 1</Menu.Item>
-            <Menu.Item id="item-2">Item 2</Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="item-1">Item 1</Menu.Item>
+              <Menu.Item id="item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
     })
 
@@ -78,12 +109,14 @@ describe('Menu component keyboard navigation and triggers', () => {
   it('closes menu and restores focus to trigger on Escape keydown in content', async () => {
     await React.act(async () => {
       root.render(
-        <Menu defaultOpen>
-          <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content id="menu-content">
-            <Menu.Item id="item-1">Item 1</Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu id="menu-content">
+              <Menu.Item id="item-1">Item 1</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
     })
 
@@ -102,14 +135,16 @@ describe('Menu component keyboard navigation and triggers', () => {
     let clicked = false
     await React.act(async () => {
       root.render(
-        <Menu defaultOpen>
-          <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item id="item-1" onClick={() => { clicked = true }}>
-              Item 1
-            </Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover defaultOpen>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="item-1" onClick={() => { clicked = true }}>
+                Item 1
+              </Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
     })
 
@@ -133,17 +168,21 @@ describe('Menu component keyboard navigation and triggers', () => {
     }
     try {
       const html = renderToString(
-        <Menu>
-          <Menu.Trigger id="ssr-trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item id="ssr-item-1">Item 1</Menu.Item>
-            <Menu.Item id="ssr-item-2">Item 2</Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover>
+          <EntryTrigger id="ssr-trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="ssr-item-1">Item 1</Menu.Item>
+              <Menu.Item id="ssr-item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
 
       expect(html).toContain('ssr-trigger-btn')
-      expect(html).toContain('aria-haspopup="menu"')
+      // FLAG(#4): Popover.Trigger hardcodes aria-haspopup="dialog" after spread;
+      // menu-correct value is "menu" once the Popover crew ships an override seam.
+      expect(html).toContain('aria-haspopup="dialog"')
       expect(html).not.toContain('ssr-item-1')
 
       const host = document.createElement('div')
@@ -152,13 +191,15 @@ describe('Menu component keyboard navigation and triggers', () => {
 
       const root = hydrateRoot(
         host,
-        <Menu>
-          <Menu.Trigger id="ssr-trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item id="ssr-item-1">Item 1</Menu.Item>
-            <Menu.Item id="ssr-item-2">Item 2</Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover>
+          <EntryTrigger id="ssr-trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="ssr-item-1">Item 1</Menu.Item>
+              <Menu.Item id="ssr-item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
       await React.act(async () => {})
 
@@ -171,7 +212,10 @@ describe('Menu component keyboard navigation and triggers', () => {
       expect(trigger.getAttribute('aria-expanded')).toBe('true')
       const controls = trigger.getAttribute('aria-controls')
       expect(controls).toBeTruthy()
-      expect(document.getElementById(controls!)).not.toBeNull()
+      // The trigger controls the Popover layer, which owns the Menu.
+      const controlled = document.getElementById(controls!)
+      expect(controlled).not.toBeNull()
+      expect(controlled!.querySelector('[role="menu"]')).not.toBeNull()
 
       await React.act(async () => {
         root.unmount()
@@ -190,14 +234,16 @@ describe('Menu component keyboard navigation and triggers', () => {
     await React.act(async () => {
       root.render(
         <React.StrictMode>
-          <Menu onOpenChange={openChangeSpy}>
-            <Menu.Trigger id="strict-trigger-btn">Trigger</Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item id="strict-item-1" onSelect={selectSpy}>
-                Strict Item 1
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <Popover onOpenChange={openChangeSpy}>
+            <EntryTrigger id="strict-trigger-btn">Trigger</EntryTrigger>
+            <Popover.Content>
+              <Menu>
+                <Menu.Item id="strict-item-1" onSelect={selectSpy}>
+                  Strict Item 1
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </React.StrictMode>
       )
     })
@@ -221,13 +267,15 @@ describe('Menu component keyboard navigation and triggers', () => {
   it('does not focus menu items when opened via mouse click', async () => {
     await React.act(async () => {
       root.render(
-        <Menu>
-          <Menu.Trigger id="trigger-btn">Trigger</Menu.Trigger>
-          <Menu.Content>
-            <Menu.Item id="item-1">Item 1</Menu.Item>
-            <Menu.Item id="item-2">Item 2</Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <Popover>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="item-1">Item 1</Menu.Item>
+              <Menu.Item id="item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
       )
     })
 

@@ -129,6 +129,12 @@ Separator renders `div[role=separator]`.
 Omitted root orientation is vertical; every `Menu.Content` is vertical.
 Nesting is recursive: `Menu.Content` may contain another nested Menu.
 
+Root trigger keys reach the Menu through `useMenuTriggerKeys()`, spread
+onto the `Popover.Trigger`: Enter/Space/ArrowDown open onto the first
+enabled item, ArrowUp onto the last, and pointer opens focus the menu
+itself. The opening key is consumed once per open; a Menu unmounted while
+closed cannot observe trigger keys any other way.
+
 An Item's consumer `onSelect` receives the cancelable native event first.
 Plain Item defaults `closeOnSelect=true`; CheckboxItem and RadioItem default
 it false. An unprevented command requests dismissal; checkbox activation

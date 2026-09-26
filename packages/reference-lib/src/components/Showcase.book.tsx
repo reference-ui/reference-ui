@@ -18,10 +18,10 @@ import { Combobox } from './Combobox'
 import { DateField } from './DateField'
 import { Field } from './Field'
 import { Listbox } from './Listbox'
-import { Menu } from './Menu'
+import { Menu, useMenuTriggerKeys } from './Menu'
 import { NumberField } from './NumberField'
 import { Overlay } from './Overlay'
-import { Popover } from './Popover'
+import { Popover, type PopoverTriggerProps } from './Popover'
 import { Slider } from './Slider'
 import { Splitter } from './Splitter'
 import { Switch } from './Switch'
@@ -29,6 +29,30 @@ import { Tabs } from './Tabs'
 import { Toast, toast } from './Toast'
 import { Tooltip } from './Tooltip'
 import { Tree } from './Tree'
+
+// Popover.Trigger with Menu keyboard-entry wiring.
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
 
 function SectionCard({
   title,
@@ -262,21 +286,23 @@ function FloatingUIRow({
         </DemoCell>
 
         <DemoCell label="Menu">
-          <Menu>
-            <Menu.Trigger
+          <Popover>
+            <EntryTrigger
               variant="primary"
               alignSelf="flex-start"
             >
               <span>Actions Menu</span>
               <KeyboardArrowDownIcon />
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item onClick={() => toast.show('Profile clicked')}>Profile</Menu.Item>
-              <Menu.Item onClick={() => toast.show('Settings clicked')}>Settings</Menu.Item>
-              <Menu.Separator />
-              <Menu.Item disabled>Disabled Action</Menu.Item>
-            </Menu.Content>
-          </Menu>
+            </EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu>
+                <Menu.Item onClick={() => toast.show('Profile clicked')}>Profile</Menu.Item>
+                <Menu.Item onClick={() => toast.show('Settings clicked')}>Settings</Menu.Item>
+                <Menu.Separator />
+                <Menu.Item disabled>Disabled Action</Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
         </DemoCell>
 
         <DemoCell label="Modal Overlay (Dialog)">
