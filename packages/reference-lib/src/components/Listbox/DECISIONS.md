@@ -19,93 +19,19 @@ freeze visuals`, verified via `git log`).
 
 ### 1. Type `onChange` (finish work-order #1) — verdict: OPEN
 
-- **Source:** quarantine commit `dcefd8d85`,
-  `packages/reference-lib/src/components/Listbox/Listbox.tsx`
-  (`ListboxProps<T = any>` keeps `onChange?: (value: any)`); Q unit
-  "compiles with controlled types and no defaultValue" pins only the
-  absence of `defaultValue`, not value typing. No case ID types the
-  callback.
-- **API sketch:** thread the existing (currently unused) generic:
-  `ListboxProps<TValue extends string = string>` with
-  `value?: TValue | TValue[] | null` and
-  `onChange?: (value: TValue | TValue[] | null) => void`, shared by
-  `Option`, `VirtualFocusItem`, and `computeNextMultipleSelection`.
-- **Why not landed:** quarantine kept `any`; landing stayed
-  Q-faithful. SPEC.md work-order #1 is half-open (kill `defaultValue`
-  done, typing open) and Gaps still lists the untyped callback.
-- **Revisit when:** HQ approves generic value threading through
-  Option/Listbox/virtual adapter plus the Combobox consumer, with
-  `tsc` over the full tree as the oracle.
-- **Open questions:** single vs multiple overloads, or one union
-  signature? Do unknown multi values (`LB-MULTI-03` append
-  semantics) widen the type or stay `string`? Must virtual items
-  share the generic, or does the adapter stay loosely typed?
+→ Moved to [FEATURES.md](./FEATURES.md) §1 — needs generic-overload design before implementation.
 
 ### 2. Wire `validateVirtualAdapter` into registration — verdict: DEFERRED
 
-- **Source:** quarantine commit `dcefd8d85`, `Listbox.tsx`
-  `validateVirtualAdapter` (current line 65): exported, never called
-  internally (defined once, zero call sites). Case IDs: `LB-VIRT-01`
-  (standalone unit, landed) and `LB-VIRT-09` (atomic replace +
-  diagnostics, unproven in-dir).
-- **API sketch:** no new props. Registration calls the validator on
-  `virtual.items` change and on indexed Option mount; an invalid
-  mapping emits the existing descriptive diagnostic.
-- **Why not landed:** quarantine shipped it unwired; wiring it into
-  the hot path exceeds the quarantine brief (crew log: "Gaps noted,
-  NOT invented").
-- **Revisit when:** `LB-VIRT-09` matrix re-targeting, which must
-  decide the throw-vs-warn policy first.
-- **Open questions:** dev-only throw or always-on? Per-render cost
-  on large adapters — memoize by `items` identity? Does a failed
-  diagnostic block focus or only warn?
+→ Moved to [PATCHES.md](./PATCHES.md) §1 — mechanical wiring with `LB-VIRT-09` proof.
 
 ### 3. Strengthen duplicate detection to same-pass re-registration — verdict: OPEN
 
-- **Source:** quarantine commit `dcefd8d85`, `Listbox.tsx` option
-  registry; case ID `LB-DOM-06`. Crew-log Surprises: the diagnostic
-  fires only when same-value options carry distinct ids; derived-id
-  collisions slip through. Colocated `Listbox.test.ts` pins the
-  implemented semantics.
-- **API sketch:** no API change. Any same-pass re-registration of
-  an already-registered value throws the descriptive identity error
-  naming the value, even when derived ids collide (the render map
-  clears per Listbox render, so a same-pass duplicate is always a
-  real duplicate).
-- **Why not landed:** quarantine's diagnostic has the distinct-id
-  caveat; landing kept faithful rather than redesigning validation.
-- **Revisit when:** next freeze pass — safe per the crew-log
-  analysis, needs only the error-shape decision below.
-- **Open questions:** error message shape — name the value plus the
-  colliding option ids? Dev-only or production throw?
+→ Moved to [PATCHES.md](./PATCHES.md) §2 — specified throw, test-pinnable today.
 
 ### 4. RovingFocus re-convergence (own kernel → composition) — verdict: DEFERRED
 
-- **Source:** quarantine commit `dcefd8d85` removed the
-  `<RovingFocus.Root orientation loop typeahead>` /
-  `RovingFocus.Item` wrappers; live-DOM orientation/RTL navigation
-  plus `Intl.Collator` typeahead now live in `Listbox.tsx`. Dead
-  `RovingFocus`/`TypeaheadModel` imports dropped at port; a local
-  `getComputedDirection` stands in for RovingFocus-private
-  `getDirection`. TESTS.md "Owned elsewhere" still routes generic
-  movement/typeahead to RovingFocus; SPEC.md Gaps flags
-  convergence as future work. No single case ID — spans
-  `LB-KEY-*`, `LB-DOM-08/09`.
-- **API sketch:** no public API change. Internal: re-compose
-  RovingFocus Root/Item, or RovingFocus exposes its
-  movement/typeahead kernel (`getDirection` export,
-  `TypeaheadModel` reuse, `RF-GRID-*` 2D movement) for Listbox to
-  consume.
-- **Why not landed:** quarantine's engine is proven (29 in-dir
-  cases green); recomposing mid-landing risks behavior drift under
-  frozen visuals, and RovingFocus owns the other side of the seam.
-- **Revisit when:** RovingFocus exports direction/typeahead seams;
-  convergence is proven when the 29-case suite stays green with
-  zero public API change.
-- **Open questions:** does RovingFocus want Listbox as a consumer
-  (grid-movement `RF-GRID-*` handoff)? Who owns collator typeahead
-  long-term? Live-DOM queries vs registry — any perf cliff at
-  scale?
+→ Moved to [FEATURES.md](./FEATURES.md) §2 — needs cross-crew ownership design.
 
 ### 5. Restore uncontrolled `defaultValue` — verdict: DECLINED
 
@@ -131,42 +57,11 @@ freeze visuals`, verified via `git log`).
 
 ### 6. `Section` / `Header` / `Empty` chrome fate — verdict: DEFERRED
 
-- **Source:** base `7aea45265` → quarantine `dcefd8d85` kept all
-  three byte-identical (crew log); `Listbox.Section` / `.Header` /
-  `.Empty` at current lines 1143/1188/1217. No case ID — zero
-  TESTS.md cases reference them. Zero consumers: no references
-  outside the Listbox dir, absent from story and book.
-- **API sketch:** either (a) remove the three exports (breaking)
-  and route all grouping through native `div[role=group]`, or (b)
-  document them as legacy chrome with a removal version.
-- **Why not landed (no action taken):** visuals frozen plus
-  base-compatible; removal is a breaking API decision HQ must take
-  explicitly, not landing-crew hygiene. SPEC.md Gaps records them
-  as "extra chrome parts beyond freeze".
-- **Revisit when:** HQ schedules a breaking catalog pass; removal
-  oracle is zero tree references (already true) plus
-  major-version release notes.
-- **Open questions:** does any downstream consumer outside this
-  repo use them — can we observe that? Deprecation warning first,
-  or hard removal?
+→ Moved to [FEATURES.md](./FEATURES.md) §3 — breaking-change decision for HQ.
 
 ### 7. `isInsideCombobox` dead context field: consume or delete — verdict: OPEN
 
-- **Source:** quarantine commit `dcefd8d85`, `Listbox.tsx` context
-  value (current line 160, written line 1046, read nowhere). No
-  case ID. Crew log: "provided but unconsumed".
-- **API sketch:** internal only. Either (a) consume it: Option
-  branches combobox-vs-standalone behavior off Listbox context
-  instead of importing ComboboxContext directly (one context hop),
-  or (b) delete the field.
-- **Why not landed:** quarantine provided it unconsumed; landing
-  kept faithful, and wiring exceeds the brief.
-- **Revisit when:** the next Listbox touch that edits context
-  (e.g. candidate §4 convergence) — resolve then, don't let it
-  linger past one more freeze.
-- **Open questions:** is the direct ComboboxContext import the
-  layering wart, or the duplicate boolean? Which direction does the
-  Combobox crew prefer?
+→ Moved to [FEATURES.md](./FEATURES.md) §4 — consume-vs-delete fork needs a Combobox-crew call.
 
 ## Suspected gaps (no quarantine source)
 
@@ -286,7 +181,8 @@ freeze visuals`, verified via `git log`).
 
 ## Walkthrough notes for HQ
 
-- Most important #1: `onChange` is still `(value: any)` (candidate §1, OPEN) — the primary callback has no type safety, and the `ListboxProps<T>` generic already exists unused. Feel it: open the `ControlledMirror` / `RequestLog` stories and hover `onChange`; request arrays flow untyped.
-- Most important #2: RovingFocus re-convergence (candidate §4, DEFERRED) — Listbox carries its own movement/typeahead kernel while TESTS.md still assigns generic movement to RovingFocus. Feel it: try `Horizontal`, `HorizontalRTL`, and `Typeahead` — mirrored arrows, wrap typeahead, zero RovingFocus in the tree. The decision is who owns movement long-term, not what the user sees.
-- Most important #3: uncontrolled `defaultValue` stays dead (candidate §5, DECLINED) — controlled-only is the freeze, not quarantine mangling. Feel it: open `Defaults` (omitted props mean controlled `null`; requests never stick without a parent update) and `RequestLog` (every request logged, none auto-applied).
-- Secondary: `Virtual` (scroll-before-focus coordination, `aria-setsize`/`posinset`) plus `ZeroValues` (`""` / `"0"` identities) show what quarantine bought with no new public API; `Cancel` shows consumer `preventDefault` authority over selection.
+- Most important #1: `onChange` is still `(value: any)` ([FEATURES.md](./FEATURES.md) §1, ex-candidate §1) — the primary callback has no type safety, and the `ListboxProps<T>` generic already exists unused. Feel it: open the `ControlledMirror` / `RequestLog` stories and hover `onChange`; request arrays flow untyped.
+- Most important #2: RovingFocus re-convergence ([FEATURES.md](./FEATURES.md) §2, ex-candidate §4) — Listbox carries its own movement/typeahead kernel while TESTS.md still assigns generic movement to RovingFocus. Feel it: try `Horizontal`, `HorizontalRTL`, and `Typeahead` — mirrored arrows, wrap typeahead, zero RovingFocus in the tree. The decision is who owns movement long-term, not what the user sees.
+- Most important #3: uncontrolled `defaultValue` stays dead (candidate §5 below, DECLINED) — controlled-only is the freeze, not quarantine mangling. Feel it: open `Defaults` (omitted props mean controlled `null`; requests never stick without a parent update) and `RequestLog` (every request logged, none auto-applied).
+- Patches ready to take: validator wiring ([PATCHES.md](./PATCHES.md) §1, ex-candidate §2) — feel it in `Virtual` (scroll-before-focus coordination, `aria-setsize`/`posinset`; an invalid adapter mapping currently emits nothing); duplicate detection ([PATCHES.md](./PATCHES.md) §2, ex-candidate §3) — feel it in `ZeroValues` (`""` / `"0"` identities) plus rendering two same-value options to see the current distinct-id caveat.
+- Secondary: `Cancel` shows consumer `preventDefault` authority over selection; `Section` / `Header` / `Empty` fate ([FEATURES.md](./FEATURES.md) §3) and the dead `isInsideCombobox` field ([FEATURES.md](./FEATURES.md) §4) are decided on paper, not in stories — nothing to feel.
