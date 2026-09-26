@@ -50,9 +50,11 @@ Virtualizer.
   campaign: discriminated `ListboxProps<TValue>` overloads keyed on
   `selection`; work-order #1 closed).
 - Extra chrome parts (`Section` / `Header` / `Empty`) beyond freeze.
-- No `RovingFocus` composition: the port carries its own movement/typeahead
-  kernel (quarantine shape); TESTS.md "Owned elsewhere" still routes generic
-  movement to `RovingFocus` — convergence is future work.
+- Partial `RovingFocus` convergence (F2): direction (`getDirection`) and
+  the typeahead entry guard (`shouldIgnoreTypeaheadKey`) are kernel
+  imports; the search model stays local — `TypeaheadModel` lacks the
+  LB-KEY-04 empty-buffer cycle branch and uses `toLowerCase` repeat
+  detection, so a swap would fork pinned behavior (see crew log).
 - `validateVirtualAdapter` is exported but never invoked internally
   (faithful to quarantine); LB-VIRT-09 diagnostics need matrix proof.
 - Duplicate detection only fires for same-value options with distinct ids;

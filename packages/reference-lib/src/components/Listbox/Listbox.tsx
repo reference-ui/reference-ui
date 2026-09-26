@@ -9,13 +9,10 @@ import {
 import { CheckIcon } from '@reference-ui/icons'
 import { ComboboxContext } from '../Combobox/combobox-context'
 import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared'
-
-// Local direction helper (quarantine imported a non-exported RovingFocus private;
-// kept in-dir so Listbox stays self-contained across concurrent crew landings).
-function getComputedDirection(el: HTMLElement | null): 'ltr' | 'rtl' {
-  if (!el || typeof window === 'undefined') return 'ltr'
-  return window.getComputedStyle(el).direction === 'rtl' ? 'rtl' : 'ltr'
-}
+// Kernel seams (F2 #2): direction + typeahead entry guard converge on
+// RovingFocus; the search model stays local (TypeaheadModel lacks the
+// LB-KEY-04 empty-buffer cycle branch — see crew log).
+import { getDirection, shouldIgnoreTypeaheadKey } from '../RovingFocus/RovingFocus'
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
@@ -182,7 +179,6 @@ interface ListboxContextValue {
   isOptionSelected: (val: string) => boolean
   selectOption: (val: string) => void
   virtual?: ListboxVirtualAdapter
-  isInsideCombobox: boolean
   focusedValue: string | null
   setFocusedValue: (val: string | null) => void
   preferredTabValue: string | null
@@ -396,14 +392,10 @@ export function ListboxOption<TValue extends string = string>({
       return
     }
 
-    // Typeahead handling for printable characters
-    if (
-      e.key.length === 1 &&
-      !e.ctrlKey &&
-      !e.metaKey &&
-      !e.altKey &&
-      e.key !== ' '
-    ) {
+    // Typeahead handling for printable characters (kernel entry guard;
+    // Space routes through the buffer-aware branch above). The guard also
+    // skips IME-composing keys, which previously fed the buffer.
+    if (e.key !== ' ' && !shouldIgnoreTypeaheadKey(e)) {
       if (context?.virtual && index != null) {
         e.preventDefault()
         e.stopPropagation()
@@ -781,7 +773,7 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
         const currentIndex = allOptionEls.indexOf(currentEl as HTMLDivElement)
         if (currentIndex === -1) return
 
-        const isRtl = getComputedDirection(containerRef.current) === 'rtl'
+        const isRtl = getDirection(containerRef.current) === 'rtl'
         let targetIndex = currentIndex
 
         if (orientation === 'vertical') {
@@ -835,7 +827,7 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
         const items = virtual.items
         if (items.length === 0) return
 
-        const isRtl = getComputedDirection(containerRef.current) === 'rtl'
+        const isRtl = getDirection(containerRef.current) === 'rtl'
         // Coalesce rapid navigation from pending target
         const effectiveIndex = pendingVirtualIndex ?? currentIndex
         let targetIndex = effectiveIndex
@@ -1092,7 +1084,6 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
         isOptionSelected,
         selectOption,
         virtual,
-        isInsideCombobox: Boolean(combobox),
         focusedValue,
         setFocusedValue,
         preferredTabValue,

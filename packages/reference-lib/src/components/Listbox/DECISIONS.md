@@ -59,9 +59,11 @@ freeze visuals`, verified via `git log`).
 
 → Moved to [FEATURES.md](./FEATURES.md) §3 — breaking-change decision for HQ.
 
-### 7. `isInsideCombobox` dead context field: consume or delete — verdict: OPEN
+### 7. `isInsideCombobox` dead context field: consume or delete — verdict: DECIDED (delete)
 
-→ Moved to [FEATURES.md](./FEATURES.md) §4 — consume-vs-delete fork needs a Combobox-crew call.
+→ Moved to [FEATURES.md](./FEATURES.md) §4 — Combobox-F landed without
+claiming the field (tree-wide grep: zero consumers; context is
+module-private), so F2 deleted it.
 
 ## Suspected gaps (no quarantine source)
 

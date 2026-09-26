@@ -28,6 +28,8 @@ shared by `Option`, `VirtualFocusItem`, and `computeNextMultipleSelection`. Stil
 
 **Maintainer take:** Worth doing only after RovingFocus exports the seams — don't churn a proven 29-green engine speculatively.
 
+**Status (features campaign F2 2026-09-26):** PARTIAL — `getDirection` adopted (local helper deleted, body-identical) and `shouldIgnoreTypeaheadKey` adopted as the printable-char entry guard (delta: IME-composing keys no longer feed the buffer — convergent bug fix). `TypeaheadModel` swap VERIFY-BLOCKED: the kernel lacks Listbox's empty-buffer cycle branch (LB-KEY-04 pins focus apple + `a` → avocado; kernel returns apple — proven by swap experiment failing CT) and its repeat detection is `toLowerCase`-based vs Listbox's collator-based (diverge on e.g. `σ`/`ς`). Zero public API change. See crew log `features-Listbox-F2.md`.
+
 ## 3. `Section` / `Header` / `Empty` chrome fate (from DECISIONS candidate #6)
 
 **What it does:** Resolves the three byte-identical extra chrome exports (`Listbox.Section` / `.Header` / `.Empty`, zero TESTS.md cases, zero in-repo consumers) by removal or legacy documentation.
@@ -43,3 +45,5 @@ shared by `Option`, `VirtualFocusItem`, and `computeNextMultipleSelection`. Stil
 **API:** Internal only. Either (a) consume it: `Option` branches combobox-vs-standalone behavior off Listbox context instead of importing `ComboboxContext` directly, or (b) delete the field.
 
 **Maintainer take:** Good to resolve at the next context touch — small either way; take whichever direction the Combobox crew prefers and close it.
+
+**Status (features campaign F2 2026-09-26):** LANDED (deleted) — Combobox-F landed without claiming the field; tree-wide grep showed zero consumers and `ListboxContext` is module-private, so the field was unobservable outside Listbox. Removed from the context interface + provider. Internal only; zero public API change.
