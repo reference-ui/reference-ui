@@ -20,14 +20,13 @@ function cleanFloat(value: number): number {
 }
 
 export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
-  value?: number | null
-  defaultValue?: number | null
+  value: number | null
   onChange?: (value: number | null) => void
+  locale: string
   min?: number
   max?: number
   step?: number
   disabled?: boolean
-  locale?: string
 }
 
 interface NumberFieldContextValue {
@@ -635,14 +634,13 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
   function NumberField(
     {
       children,
-      value: valueProp,
-      defaultValue = null,
+      value,
       onChange,
+      locale,
       min = -Infinity,
       max = Infinity,
       step = 1,
       disabled = false,
-      locale = 'en-US',
       className,
       style,
       ...props
@@ -653,11 +651,19 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     // on NaN/unusable props instead of poisoning state. Unlike quarantine,
     // ±Infinity bounds stay legal — they are this engine's unbounded
     // sentinels (the defaults). Render-phase pure checks: StrictMode-safe.
-    if (valueProp !== undefined && valueProp !== null && !Number.isFinite(valueProp)) {
+    // FEATURES #1: value is required-controlled (null is the empty value)
+    // and locale is required with no environment default; there is no
+    // defaultValue and no uncontrolled mode.
+    if (value === undefined) {
+      throw new Error(
+        'Reference UI: NumberField "value" is required — the field is fully controlled, with null as the empty value.'
+      )
+    }
+    if (value !== null && !Number.isFinite(value)) {
       throw new Error('Reference UI: NumberField "value" must be a finite number or null.')
     }
-    if (defaultValue !== null && !Number.isFinite(defaultValue)) {
-      throw new Error('Reference UI: NumberField "defaultValue" must be a finite number or null.')
+    if (locale == null) {
+      throw new Error('Reference UI: NumberField "locale" is required — pass an explicit locale (no environment default).')
     }
     if (Number.isNaN(min)) {
       throw new Error('Reference UI: NumberField "min" must be a number.')
@@ -671,10 +677,6 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     if (!Number.isFinite(step) || step <= 0) {
       throw new Error('Reference UI: NumberField "step" must be a finite number greater than 0.')
     }
-
-    const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<number | null>(defaultValue)
-    const value = isControlled ? valueProp : internalValue
 
     const inputRef = React.useRef<HTMLInputElement | null>(null)
 
@@ -695,12 +697,11 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         if (disabled) return
         const current = value ?? 0
         const nextVal = Math.min(max, cleanFloat(current + step * factor))
-        if (!isControlled) {
-          setInternalValue(nextVal)
-        }
+        // FEATURES #2: no change → no event (uniform, not bounds-only).
+        if (nextVal === value) return
         onChange?.(nextVal)
       },
-      [value, max, step, disabled, isControlled, onChange]
+      [value, max, step, disabled, onChange]
     )
 
     const decrement = React.useCallback(
@@ -708,30 +709,31 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         if (disabled) return
         const current = value ?? 0
         const nextVal = Math.max(min, cleanFloat(current - step * factor))
-        if (!isControlled) {
-          setInternalValue(nextVal)
-        }
+        // FEATURES #2: no change → no event (uniform, not bounds-only).
+        if (nextVal === value) return
         onChange?.(nextVal)
       },
-      [value, min, step, disabled, isControlled, onChange]
+      [value, min, step, disabled, onChange]
     )
 
     const handleInputChange = React.useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const valStr = e.target.value
         if (valStr.trim() === '') {
-          if (!isControlled) setInternalValue(null)
+          // FEATURES #2: clearing an already-empty field is no change.
+          if (value === null) return
           onChange?.(null)
           return
         }
         const num = Number(valStr)
         if (!Number.isNaN(num)) {
           const clamped = Math.max(min, Math.min(max, num))
-          if (!isControlled) setInternalValue(clamped)
+          // FEATURES #2: retyping the current value is no change.
+          if (clamped === value) return
           onChange?.(clamped)
         }
       },
-      [min, max, isControlled, onChange]
+      [value, min, max, onChange]
     )
 
     const handleKeyDown = React.useCallback(
@@ -753,17 +755,21 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
           if (min === -Infinity) return
           e.preventDefault()
-          if (!isControlled) setInternalValue(min)
+          // FEATURES #2: already at the bound is no change — the key
+          // stays handled (caret pinned) but emits nothing.
+          if (value === min) return
           onChange?.(min)
         } else if (e.key === 'End') {
           if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
           if (max === Infinity) return
           e.preventDefault()
-          if (!isControlled) setInternalValue(max)
+          // FEATURES #2: already at the bound is no change — the key
+          // stays handled (caret pinned) but emits nothing.
+          if (value === max) return
           onChange?.(max)
         }
       },
-      [disabled, increment, decrement, min, max, isControlled, onChange]
+      [disabled, increment, decrement, value, min, max, onChange]
     )
 
     const contextValue = React.useMemo<NumberFieldContextValue>(

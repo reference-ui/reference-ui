@@ -41,12 +41,11 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | Production | **No.** |
 | Named `[x]` | 36 / 148 |
 | Playwright | 17 CT (5 pre-existing snapshot + 12 assertion-only landing) |
-| Vitest | 27 contract IDs (24 tests: 22 behavior + 2 type) |
+| Vitest | 27 contract IDs (24 tests: 22 behavior + 2 type) + FEATURES #2 trio |
+| API | FEATURES #1 landed 2026-09-26: required controlled `value` + required `locale`, no `defaultValue`, no env default; FEATURES #2 landed (any-no-change suppression). |
 
 ### Gaps & incoherence
 
-- `defaultValue`, optional `locale = 'en-US'`. Freeze: required controlled
-  `value` + required `locale`, no env default.
 - Input **`role="spinbutton"`** + `aria-valuenow/min/max` — direct freeze
   violation (VoiceOver textbox reason in NumberField.md).
 - No Group part, no Intl/`formatOptions`, no dirty/`data-editing`, no
@@ -95,12 +94,13 @@ smallStep/largeStep.
   remaining `NF-ENV-*`, `NF-COMP-*`, `NF-MANUAL-*` (4 manual release gates)
 
 Not catalog: `NF-DOM-02`–`04` visual. Drop or rehome after freeze.
-Not catalog: uncontrolled-stepping CT (no freeze ID — uncontrolled
-preserved by landing law).
+Not catalog: FEATURES #2 suppression trio (no freeze ID — behavior wart
+fix, decided any-no-change).
 
 ### Work order
 
-1. Strip spinbutton + uncontrolled + locale default. Rewrite `NF-DOM-01`.
+1. Strip spinbutton. Rewrite `NF-DOM-01`. (Uncontrolled + locale default
+   stripped by FEATURES #1, 2026-09-26.)
 2. Group / Field-surface + named steppers.
 3. Dirty buffer + commit boundaries (`NF-EDIT-*` / `NF-COMMIT-*`).
 4. Intl parse/format (`NF-PARSE-*` / `NF-FORMAT-*`) + inputMode.

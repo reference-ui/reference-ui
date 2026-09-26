@@ -325,9 +325,9 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    await mount('components/NumberField/NumberField/UncontrolledFixture')
+    await mount('components/NumberField/NumberField/UnboundedFixture')
 
-    const input = page.getByTestId('uncontrolled-number-field-input')
+    const input = page.getByTestId('unbounded-number-field-input')
 
     await input.focus()
     await page.keyboard.press('Home')
@@ -513,15 +513,15 @@ test.describe('NumberField CT', () => {
     await expect(display).toHaveText('Numeric Value: 42')
   })
 
-  test('uncontrolled defaultValue steps without a controlled parent (no freeze ID: uncontrolled preserved)', async ({
+  test('controlled unbounded field steps from echoed state (FEATURES #1: no uncontrolled mode)', async ({
     mount,
     page,
   }) => {
-    await mount('components/NumberField/NumberField/UncontrolledFixture')
+    await mount('components/NumberField/NumberField/UnboundedFixture')
 
-    const input = page.getByTestId('uncontrolled-number-field-input')
-    const btnInc = page.getByTestId('uncontrolled-btn-increment')
-    const btnDec = page.getByTestId('uncontrolled-btn-decrement')
+    const input = page.getByTestId('unbounded-number-field-input')
+    const btnInc = page.getByTestId('unbounded-btn-increment')
+    const btnDec = page.getByTestId('unbounded-btn-decrement')
 
     await expect(input).toHaveValue('5')
     await btnInc.click()

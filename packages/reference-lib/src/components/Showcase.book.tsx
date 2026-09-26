@@ -26,6 +26,7 @@ import { Slider } from './Slider'
 import { Splitter } from './Splitter'
 import { Switch } from './Switch'
 import { Tabs } from './Tabs'
+import { lineTab, lineTabList, tabPanel } from './Tabs/Tabs.recipes'
 import { Toast, toast } from './Toast'
 import { Tooltip } from './Tooltip'
 import { Tree } from './Tree'
@@ -147,6 +148,7 @@ function FormInputsRow({
         <DemoCell label="NumberField">
           <NumberField
             value={numberVal}
+            locale="en-US"
             onChange={setNumberVal}
             min={0}
             max={100}
@@ -362,6 +364,7 @@ function FloatingUIRow({
 }
 
 function DisclosureRow() {
+  const [tabsValue, setTabsValue] = React.useState('tab1')
   return (
     <SectionCard
       title="Disclosure & Tabs"
@@ -401,19 +404,25 @@ function DisclosureRow() {
         </DemoCell>
 
         <DemoCell label="Tabs">
-          <Tabs defaultValue="tab1">
-            <Tabs.List>
-              <Tabs.Tab value="tab1">Overview</Tabs.Tab>
-              <Tabs.Tab value="tab2">Tokens</Tabs.Tab>
-              <Tabs.Tab value="tab3">Props</Tabs.Tab>
+          <Tabs value={tabsValue} onChange={setTabsValue}>
+            <Tabs.List {...lineTabList()}>
+              <Tabs.Tab value="tab1" {...lineTab({ selected: tabsValue === 'tab1' })}>
+                Overview
+              </Tabs.Tab>
+              <Tabs.Tab value="tab2" {...lineTab({ selected: tabsValue === 'tab2' })}>
+                Tokens
+              </Tabs.Tab>
+              <Tabs.Tab value="tab3" {...lineTab({ selected: tabsValue === 'tab3' })}>
+                Props
+              </Tabs.Tab>
             </Tabs.List>
-            <Tabs.Panel value="tab1">
+            <Tabs.Panel value="tab1" {...tabPanel()}>
               <Span fontSize="3r">Overview tab panel using semantic design tokens.</Span>
             </Tabs.Panel>
-            <Tabs.Panel value="tab2">
+            <Tabs.Panel value="tab2" {...tabPanel()}>
               <Span fontSize="3r">Tokens tab panel styled with rhythm units.</Span>
             </Tabs.Panel>
-            <Tabs.Panel value="tab3">
+            <Tabs.Panel value="tab3" {...tabPanel()}>
               <Span fontSize="3r">Props extending PrimitiveProps for type safety.</Span>
             </Tabs.Panel>
           </Tabs>

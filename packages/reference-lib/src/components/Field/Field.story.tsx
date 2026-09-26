@@ -231,20 +231,20 @@ export const CompoundEmbedFixture = () => (
         </Field>
       </Combobox>
 
-      <NumberField data-testid="host-numberfield-group" value={10} onChange={() => {}}>
+      <NumberField data-testid="host-numberfield-group" value={10} locale="en-US" onChange={() => {}}>
         <NumberField.Decrement data-testid="compound-number-dec" />
         <NumberField.Input data-testid="compound-number-input" />
         <NumberField.Increment data-testid="compound-number-inc" />
       </NumberField>
 
-      <NumberField data-testid="comp-numberfield-group" value={42} onChange={() => {}}>
+      <NumberField data-testid="comp-numberfield-group" value={42} locale="en-US" onChange={() => {}}>
         <NumberField.Decrement data-testid="comp-number-dec" />
         <NumberField.Input data-testid="comp-number-input" />
         <NumberField.Increment data-testid="comp-number-inc" />
       </NumberField>
 
       <Field data-testid="comp-double-bezel-wrapper" width="100%">
-        <NumberField data-testid="comp-double-bezel-inner" value={10} onChange={() => {}}>
+        <NumberField data-testid="comp-double-bezel-inner" value={10} locale="en-US" onChange={() => {}}>
           <NumberField.Input />
         </NumberField>
       </Field>
@@ -333,6 +333,7 @@ export const SurfaceRecipeFixture = () => {
         <NumberField
           data-testid="surf-fixture-4"
           value={5}
+          locale="en-US"
           onChange={() => {}}
           disabled={surfState === 'disabled'}
           data-invalid={surfState === 'invalid' ? '' : undefined}

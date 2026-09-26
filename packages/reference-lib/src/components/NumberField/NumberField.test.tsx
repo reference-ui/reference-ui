@@ -41,7 +41,7 @@ describe('NumberField numeric defaults', () => {
     const { container, root } = mount()
     await React.act(async () => {
       root.render(
-        <NumberField value={0} onChange={v => void seen.push(v)}>
+        <NumberField value={0} locale="en-US" onChange={v => void seen.push(v)}>
           <NumberField.Decrement />
           <NumberField.Input />
           <NumberField.Increment />
@@ -71,22 +71,51 @@ describe('NumberField numeric validation', () => {
   it('NF-MATH-02: Runtime should reject every nonfinite or unusable numeric prop', () => {
     // Landing adaptation: ±Infinity bounds stay legal (this engine's
     // unbounded sentinels); quarantine required finite min/max.
-    expect(() => renderToString(<NumberField value={NaN} />)).toThrow(/"value" must be a finite number or null/)
-    expect(() => renderToString(<NumberField value={Infinity} />)).toThrow(/"value" must be a finite number or null/)
-    expect(() => renderToString(<NumberField defaultValue={NaN} />)).toThrow(/"defaultValue" must be a finite number or null/)
-    expect(() => renderToString(<NumberField value={0} min={NaN} />)).toThrow(/"min" must be a number/)
-    expect(() => renderToString(<NumberField value={0} max={NaN} />)).toThrow(/"max" must be a number/)
-    expect(() => renderToString(<NumberField value={0} min={10} max={5} />)).toThrow(/"min" must be less than or equal to "max"/)
-    expect(() => renderToString(<NumberField value={0} step={0} />)).toThrow(/"step" must be a finite number greater than 0/)
-    expect(() => renderToString(<NumberField value={0} step={-1} />)).toThrow(/"step" must be a finite number greater than 0/)
-    expect(() => renderToString(<NumberField value={0} step={NaN} />)).toThrow(/"step" must be a finite number greater than 0/)
-    expect(() => renderToString(<NumberField value={0} step={Infinity} />)).toThrow(/"step" must be a finite number greater than 0/)
+    // FEATURES #1: missing value/locale also throw — required controlled
+    // value + required locale, no defaultValue, no env default.
+    expect(() => renderToString(<NumberField value={NaN} locale="en-US" />)).toThrow(
+      /"value" must be a finite number or null/
+    )
+    expect(() => renderToString(<NumberField value={Infinity} locale="en-US" />)).toThrow(
+      /"value" must be a finite number or null/
+    )
+    expect(() => renderToString(<NumberField value={0} locale="en-US" min={NaN} />)).toThrow(/"min" must be a number/)
+    expect(() => renderToString(<NumberField value={0} locale="en-US" max={NaN} />)).toThrow(/"max" must be a number/)
+    expect(() => renderToString(<NumberField value={0} locale="en-US" min={10} max={5} />)).toThrow(
+      /"min" must be less than or equal to "max"/
+    )
+    expect(() => renderToString(<NumberField value={0} locale="en-US" step={0} />)).toThrow(
+      /"step" must be a finite number greater than 0/
+    )
+    expect(() => renderToString(<NumberField value={0} locale="en-US" step={-1} />)).toThrow(
+      /"step" must be a finite number greater than 0/
+    )
+    expect(() => renderToString(<NumberField value={0} locale="en-US" step={NaN} />)).toThrow(
+      /"step" must be a finite number greater than 0/
+    )
+    expect(() => renderToString(<NumberField value={0} locale="en-US" step={Infinity} />)).toThrow(
+      /"step" must be a finite number greater than 0/
+    )
+    expect(() =>
+      renderToString(
+        // @ts-expect-error - missing value must throw at runtime
+        <NumberField locale="en-US" />
+      )
+    ).toThrow(/"value" is required/)
+    expect(() =>
+      renderToString(
+        // @ts-expect-error - missing locale must throw at runtime
+        <NumberField value={0} />
+      )
+    ).toThrow(/"locale" is required/)
+    expect(() => renderToString(<NumberField value={0} locale={null as unknown as string} />)).toThrow(
+      /"locale" is required/
+    )
 
-    // Legal: null, undefined (uncontrolled), ±Infinity bounds, defaults.
-    expect(() => renderToString(<NumberField value={null} />)).not.toThrow()
-    expect(() => renderToString(<NumberField defaultValue={5} />)).not.toThrow()
-    expect(() => renderToString(<NumberField value={0} min={-Infinity} max={Infinity} />)).not.toThrow()
-    expect(() => renderToString(<NumberField value={0} />)).not.toThrow()
+    // Legal: null, ±Infinity bounds, defaults.
+    expect(() => renderToString(<NumberField value={null} locale="en-US" />)).not.toThrow()
+    expect(() => renderToString(<NumberField value={0} locale="en-US" min={-Infinity} max={Infinity} />)).not.toThrow()
+    expect(() => renderToString(<NumberField value={0} locale="en-US" />)).not.toThrow()
   })
 })
 
@@ -98,6 +127,7 @@ describe('NumberField step math', () => {
       return (
         <NumberField
           value={value}
+          locale="en-US"
           step={0.1}
           onChange={v => {
             seen.push(v)
@@ -138,6 +168,7 @@ describe('NumberField step math', () => {
       return (
         <NumberField
           value={value}
+          locale="en-US"
           step={0.001}
           onChange={v => {
             seen.push(v)
@@ -171,6 +202,7 @@ describe('NumberField step math', () => {
       return (
         <NumberField
           value={value}
+          locale="en-US"
           step={1}
           onChange={v => {
             seen.push(v)
@@ -198,7 +230,7 @@ describe('NumberField step math', () => {
 
     // A programmatic -0 prop still displays (String(-0) === '0'); the
     // component must not rewrite the prop itself.
-    const html = renderToString(<NumberField value={-0} />)
+    const html = renderToString(<NumberField value={-0} locale="en-US" />)
     expect(html).toContain('value="0"')
   })
 })
@@ -210,7 +242,7 @@ describe('NumberField managed authority', () => {
     const { container, root } = mount()
     await React.act(async () => {
       root.render(
-        <NumberField value={42} role="form" data-testid="nf-root">
+        <NumberField value={42} locale="en-US" role="form" data-testid="nf-root">
           <NumberField.Decrement type="submit" tabIndex={0} />
           <NumberField.Input
             type="number"
@@ -243,12 +275,21 @@ describe('NumberField managed authority', () => {
 
   it('NF-EDIT-13: Consumer edit handlers should run in native order without breaking managed state', async () => {
     // Regression: user onChange used to clobber the internal handler via
-    // last-spread, silently killing typing in uncontrolled mode.
+    // last-spread, silently killing typing.
+    // FEATURES #1: controlled — the App echoes requests into value.
     const userEdits: string[] = []
     const managed: Array<number | null> = []
     function App() {
+      const [value, setValue] = React.useState<number | null>(1)
       return (
-        <NumberField defaultValue={1} onChange={v => void managed.push(v)}>
+        <NumberField
+          value={value}
+          locale="en-US"
+          onChange={v => {
+            managed.push(v)
+            setValue(v)
+          }}
+        >
           <NumberField.Decrement />
           <NumberField.Input onChange={e => void userEdits.push(e.target.value)} />
           <NumberField.Increment />
@@ -277,7 +318,7 @@ describe('NumberField managed authority', () => {
     let blurred = 0
     function App() {
       return (
-        <NumberField ref={rootRef} value={5} data-testid="nf-root" className="consumer-root">
+        <NumberField ref={rootRef} value={5} locale="en-US" data-testid="nf-root" className="consumer-root">
           <NumberField.Decrement />
           <NumberField.Input
             ref={inputRef}
@@ -321,7 +362,7 @@ describe('NumberField steppers', () => {
     const seen: Array<number | null> = []
     function App() {
       return (
-        <NumberField value={10} onChange={v => void seen.push(v)}>
+        <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
           <NumberField.Decrement disabled />
           <NumberField.Input />
           <NumberField.Increment />
@@ -354,6 +395,7 @@ describe('NumberField steppers', () => {
       return (
         <NumberField
           value={value}
+          locale="en-US"
           onChange={v => {
             seen.push(v)
             setValue(v)
@@ -383,7 +425,7 @@ describe('NumberField keyboard', () => {
     const seen: Array<number | null> = []
     function App() {
       return (
-        <NumberField value={10} onChange={v => void seen.push(v)}>
+        <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
           <NumberField.Decrement />
           <NumberField.Input
             onKeyDown={e => {
@@ -414,7 +456,7 @@ describe('NumberField keyboard', () => {
     const d = mount()
     await React.act(async () => {
       d.root.render(
-        <NumberField value={10} disabled onChange={v => void seenDisabled.push(v)}>
+        <NumberField value={10} locale="en-US" disabled onChange={v => void seenDisabled.push(v)}>
           <NumberField.Decrement />
           <NumberField.Input />
           <NumberField.Increment />
@@ -484,6 +526,7 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
     return root.render(
       <NumberField
         value={value}
+        locale="en-US"
         max={extra?.max}
         disabled={extra?.disabled}
         onChange={v => {
@@ -989,6 +1032,7 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
       root.render(
         <NumberField
           value={current}
+          locale="en-US"
           onChange={v => {
             seen.push(v)
             current = v
@@ -1155,10 +1199,207 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
   })
 })
 
+describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
+  it('Steppers and arrows at bounds should emit nothing while real steps still fire', async () => {
+    // Decided any-no-change: uniform "no change → no event", not a
+    // bounds-only special case — but bounds are where it bites.
+    const seen: Array<number | null> = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(10)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={0}
+          max={10}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    const dec = container.querySelector('button[aria-label="Decrement"]') as HTMLButtonElement
+    const input = container.querySelector('input') as HTMLInputElement
+
+    // At max: stepper click and ArrowUp emit nothing.
+    await React.act(async () => {
+      inc.click()
+    })
+    expect(seen).toEqual([])
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([])
+
+    // A real step still fires exactly once.
+    await React.act(async () => {
+      dec.click()
+    })
+    expect(seen).toEqual([9])
+    expect(input.value).toBe('9')
+    await cleanup(container, root)
+
+    // Mirror at min: decrement and ArrowDown emit nothing.
+    const seenMin: Array<number | null> = []
+    const m = mount()
+    await React.act(async () => {
+      m.root.render(
+        <NumberField value={0} locale="en-US" min={0} max={10} onChange={v => void seenMin.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const decMin = m.container.querySelector('button[aria-label="Decrement"]') as HTMLButtonElement
+    const inputMin = m.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      decMin.click()
+    })
+    expect(seenMin).toEqual([])
+    await React.act(async () => {
+      pressKey(inputMin, 'ArrowDown')
+    })
+    expect(seenMin).toEqual([])
+    await cleanup(m.container, m.root)
+  })
+
+  it('Home and End at their bound should stay handled but emit nothing', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={0} locale="en-US" min={0} max={100} onChange={v => void seen.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+
+    // Already at min: Home is handled (caret pinned) but silent.
+    let home: KeyboardEvent | null = null
+    await React.act(async () => {
+      home = new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true })
+      input.dispatchEvent(home)
+    })
+    expect(home!.defaultPrevented).toBe(true)
+    expect(seen).toEqual([])
+    await cleanup(container, root)
+
+    // Away from bounds both keys still request exactly once.
+    const seenAway: Array<number | null> = []
+    const a = mount()
+    await React.act(async () => {
+      a.root.render(
+        <NumberField value={50} locale="en-US" min={0} max={100} onChange={v => void seenAway.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const inputAway = a.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      pressKey(inputAway, 'Home')
+    })
+    expect(seenAway).toEqual([0])
+    await React.act(async () => {
+      // Parent holds 50, so End still requests from the same base.
+      pressKey(inputAway, 'End')
+    })
+    expect(seenAway).toEqual([0, 100])
+    await cleanup(a.container, a.root)
+
+    // Already at max: End is handled but silent.
+    const seenMax: Array<number | null> = []
+    const b = mount()
+    await React.act(async () => {
+      b.root.render(
+        <NumberField value={100} locale="en-US" min={0} max={100} onChange={v => void seenMax.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const inputMax = b.container.querySelector('input') as HTMLInputElement
+    let end: KeyboardEvent | null = null
+    await React.act(async () => {
+      end = new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true })
+      inputMax.dispatchEvent(end)
+    })
+    expect(end!.defaultPrevented).toBe(true)
+    expect(seenMax).toEqual([])
+    await cleanup(b.container, b.root)
+  })
+
+  it('Text edits that change nothing should emit nothing', async () => {
+    // Retyping the current value and clearing an empty field are no-ops.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(input, '5')
+    })
+    expect(seen).toEqual([])
+    // Clearing a non-empty field still requests null.
+    await React.act(async () => {
+      setNativeValue(input, '')
+    })
+    expect(seen).toEqual([null])
+    await cleanup(container, root)
+
+    const seenNull: Array<number | null> = []
+    const n = mount()
+    await React.act(async () => {
+      n.root.render(
+        <NumberField value={null} locale="en-US" onChange={v => void seenNull.push(v)}>
+          <NumberField.Decrement />
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField>
+      )
+    })
+    const inputNull = n.container.querySelector('input') as HTMLInputElement
+    // Clearing an already-empty field emits nothing.
+    await React.act(async () => {
+      setNativeValue(inputNull, '')
+    })
+    expect(seenNull).toEqual([])
+    // Typing a real value still requests it.
+    await React.act(async () => {
+      setNativeValue(inputNull, '8')
+    })
+    expect(seenNull).toEqual([8])
+    await cleanup(n.container, n.root)
+  })
+})
+
 describe('NumberField environments', () => {
   it('NF-ENV-01: Server markup should carry spinbutton semantics for hydration', () => {
     const html = renderToString(
-      <NumberField value={42} min={0} max={100}>
+      <NumberField value={42} locale="en-US" min={0} max={100}>
         <NumberField.Decrement />
         <NumberField.Input />
         <NumberField.Increment />
@@ -1178,6 +1419,7 @@ describe('NumberField environments', () => {
         <React.StrictMode>
           <NumberField
             value={value}
+            locale="en-US"
             onChange={v => {
               seen.push(v)
               setValue(v)

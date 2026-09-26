@@ -13,6 +13,7 @@ export const StepperFixture = () => {
           <NumberField
             data-testid="number-field-root"
             value={value}
+            locale="en-US"
             onChange={setValue}
             min={0}
             max={100}
@@ -35,7 +36,7 @@ export const StepperFixture = () => {
 export const DisabledFixture = () => (
   <ReferenceLibrary>
     <Div p="4r" maxW="80r">
-      <NumberField value={7} disabled min={0} max={100} data-testid="disabled-number-field">
+      <NumberField value={7} locale="en-US" disabled min={0} max={100} data-testid="disabled-number-field">
         <NumberField.Decrement />
         <NumberField.Input />
         <NumberField.Increment />
@@ -53,6 +54,7 @@ export const DecimalFixture = () => {
         <NumberField
           data-testid="decimal-number-field"
           value={value}
+          locale="en-US"
           onChange={setValue}
           step={0.1}
         >
@@ -65,14 +67,18 @@ export const DecimalFixture = () => {
   )
 }
 
-export const UncontrolledFixture = () => (
-  <ReferenceLibrary>
-    <Div p="4r" maxW="80r">
-      <NumberField data-testid="uncontrolled-number-field" defaultValue={5}>
-        <NumberField.Decrement data-testid="uncontrolled-btn-decrement" />
-        <NumberField.Input data-testid="uncontrolled-number-field-input" />
-        <NumberField.Increment data-testid="uncontrolled-btn-increment" />
-      </NumberField>
-    </Div>
-  </ReferenceLibrary>
-)
+export const UnboundedFixture = () => {
+  const [value, setValue] = React.useState<number | null>(5)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <NumberField data-testid="unbounded-number-field" value={value} locale="en-US" onChange={setValue}>
+          <NumberField.Decrement data-testid="unbounded-btn-decrement" />
+          <NumberField.Input data-testid="unbounded-number-field-input" />
+          <NumberField.Increment data-testid="unbounded-btn-increment" />
+        </NumberField>
+      </Div>
+    </ReferenceLibrary>
+  )
+}

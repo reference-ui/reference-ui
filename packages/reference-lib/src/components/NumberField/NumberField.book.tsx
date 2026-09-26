@@ -7,7 +7,7 @@ export default {
     const [value, setValue] = React.useState<number | null>(42)
     return (
       <Div display="flex" flexDirection="column" gap="3r">
-        <NumberField value={value} onChange={setValue} min={0} max={100} step={1}>
+        <NumberField value={value} locale="en-US" onChange={setValue} min={0} max={100} step={1}>
           <NumberField.Decrement />
           <NumberField.Input aria-label="Quantity" />
           <NumberField.Increment />
@@ -20,7 +20,7 @@ export default {
     const [value, setValue] = React.useState<number | null>(5)
     return (
       <Div display="flex" flexDirection="column" gap="3r">
-        <NumberField value={value} onChange={setValue} min={1} max={10} step={1}>
+        <NumberField value={value} locale="en-US" onChange={setValue} min={1} max={10} step={1}>
           <NumberField.Decrement aria-label="Decrease" />
           <NumberField.Input aria-label="Quantity" />
           <NumberField.Increment aria-label="Increase" />
@@ -30,7 +30,7 @@ export default {
     )
   },
   Disabled: () => (
-    <NumberField value={7} disabled min={0} max={100}>
+    <NumberField value={7} locale="en-US" disabled min={0} max={100}>
       <NumberField.Decrement />
       <NumberField.Input aria-label="Quantity" />
       <NumberField.Increment />

@@ -9,7 +9,7 @@ import {
 } from './NumberField'
 
 describe('NumberField type contract', () => {
-  it('NF-TYPE-01: NumberField should export the conventional parts with no Root alias', () => {
+  it('NF-TYPE-01: NumberField should export the conventional root and no Root alias', () => {
     expect(NumberField).toBeDefined()
     expect(NumberField.Input).toBeDefined()
     expect(NumberField.Increment).toBeDefined()
@@ -18,16 +18,27 @@ describe('NumberField type contract', () => {
     // @ts-expect-error - NumberField.Root does not exist
     const _noRoot = NumberField.Root
     expect(_noRoot).toBeUndefined()
+
+    // FEATURES #1: omitted value/locale, defaultValue, and uncontrolled
+    // usage all fail — the root is conventional and required-controlled.
+    // @ts-expect-error - value is required
+    const _noValue: NumberFieldProps = { locale: 'en-US' }
+    expect(_noValue).toBeDefined()
+
+    // @ts-expect-error - locale is required
+    const _noLocale: NumberFieldProps = { value: null }
+    expect(_noLocale).toBeDefined()
+
+    // @ts-expect-error - defaultValue does not exist
+    const _noDefault: NumberFieldProps = { value: null, locale: 'en-US', defaultValue: 5 }
+    expect(_noDefault).toBeDefined()
   })
 
-  it('NF-TYPE-02: NumberField should type one numeric request authority with uncontrolled mode preserved', () => {
-    // Landing re-target: defaultValue is intentionally allowed and locale
-    // stays optional with an 'en-US' default (uncontrolled mode preserved
-    // per recon exhibit 1), unlike the TESTS.md freeze catalog which
-    // requires controlled value + locale.
+  it('NF-TYPE-02: NumberField should type one controlled numeric request authority without claiming compile-time finiteness', () => {
+    // FEATURES #1: required controlled value + required locale, no
+    // defaultValue, no uncontrolled mode — the TESTS.md freeze catalog.
     const validProps: NumberFieldProps = {
       value: 123.45,
-      defaultValue: null,
       onChange: (value: number | null) => void value,
       min: 0,
       max: 100,
@@ -58,21 +69,20 @@ describe('NumberField type contract', () => {
     )
     expect(React.isValidElement(element)).toBe(true)
 
-    expectTypeOf<NumberFieldProps['value']>().toEqualTypeOf<number | null | undefined>()
-    expectTypeOf<NumberFieldProps['defaultValue']>().toEqualTypeOf<number | null | undefined>()
+    expectTypeOf<NumberFieldProps['value']>().toEqualTypeOf<number | null>()
     expectTypeOf<NumberFieldProps['onChange']>().toEqualTypeOf<((value: number | null) => void) | undefined>()
     expectTypeOf<NumberFieldProps['min']>().toEqualTypeOf<number | undefined>()
     expectTypeOf<NumberFieldProps['max']>().toEqualTypeOf<number | undefined>()
     expectTypeOf<NumberFieldProps['step']>().toEqualTypeOf<number | undefined>()
     expectTypeOf<NumberFieldProps['disabled']>().toEqualTypeOf<boolean | undefined>()
-    expectTypeOf<NumberFieldProps['locale']>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<NumberFieldProps['locale']>().toEqualTypeOf<string>()
 
     // @ts-expect-error - string value rejected
-    const _strVal: NumberFieldProps = { value: '123' }
+    const _strVal: NumberFieldProps = { value: '123', locale: 'en-US' }
     expect(_strVal).toBeDefined()
 
     // @ts-expect-error - raw text callback rejected
-    const _rawCb: NumberFieldProps = { value: null, onTextChange: (s: string) => void s }
+    const _rawCb: NumberFieldProps = { value: null, locale: 'en-US', onTextChange: (s: string) => void s }
     expect(_rawCb).toBeDefined()
 
     // NOTE: role/type/aria-valuenow stay in the public part types (no Omit
