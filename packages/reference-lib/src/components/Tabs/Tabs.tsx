@@ -16,6 +16,17 @@ export interface TabsProps {
   disabled?: boolean
 }
 
+interface TabsTabEntry {
+  id: string
+  element: HTMLElement | null
+  disabled: boolean
+}
+
+interface TabsPanelEntry {
+  id: string
+  element: HTMLElement | null
+}
+
 interface TabsContextValue {
   value: string
   setValue: (value: string) => void
@@ -28,6 +39,27 @@ interface TabsContextValue {
   setRovingValue: (value: string) => void
   claimTabValue: (tabValue: string) => () => void
   claimPanelValue: (panelValue: string) => () => void
+  registerTab: (tabValue: string, entry: TabsTabEntry) => () => void
+  registerPanel: (panelValue: string, entry: TabsPanelEntry) => () => void
+  getTabId: (tabValue: string) => string | undefined
+  getPanelId: (panelValue: string) => string | undefined
+}
+
+// Layout before paint in the browser (atomic ARIA linkage, TB-DOM-06),
+// plain effect on the server where layout effects warn and never run.
+const useIsomorphicLayoutEffect =
+  typeof document !== 'undefined' ? React.useLayoutEffect : React.useEffect
+
+// Shadow-aware focus lookup (TB-ENV-03): document.activeElement stops at
+// the shadow host, so start from the list's own root and descend through
+// open shadow roots. In light DOM this is document.activeElement.
+function getDeepActiveElement(scope: Element): Element | null {
+  let active: Element | null = (scope.getRootNode() as Document | ShadowRoot)
+    .activeElement
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement
+  }
+  return active
 }
 
 const TabsContext = React.createContext<TabsContextValue | null>(null)
@@ -47,9 +79,12 @@ export function Tabs({
   const value = isControlled ? valueProp : internalValue
 
   // Stable SSR-safe identity (TB-DOM-07, TB-ENV-01): useId keeps
-  // server/client markup identical, unlike a module counter.
+  // server/client markup identical, unlike a module counter. Pinned in
+  // state so registry effects settle even where useId is shimmed
+  // per-render (CT React 17): a churning baseId would resubscribe every
+  // render and the version bump would loop forever.
   const reactId = React.useId()
-  const baseId = `tabs-${reactId.replace(/:/g, '')}`
+  const [baseId] = React.useState(() => `tabs-${reactId.replace(/:/g, '')}`)
 
   // Roving tab stop (TB-DOM-03, TB-MANUAL-01): follows focus so manual
   // arrows can leave the selected tab; selection changes re-sync it.
@@ -99,6 +134,50 @@ export function Tabs({
     }
   }, [])
 
+  // Identity registry (TB-DOM-06, TB-DYNAMIC-01/02): value-keyed Tab and
+  // Panel entries subscribed in a layout effect with cleanup, so explicit
+  // IDs flow to the other side's ARIA reference and insert/reorder/remove
+  // keep surviving IDs stable. The version bump re-renders consumers that
+  // read through getTabId/getPanelId; the generated-ID fallback keeps SSR
+  // and first render identical to the unregistered state.
+  const tabEntries = React.useRef<Map<string, TabsTabEntry>>(new Map())
+  const panelEntries = React.useRef<Map<string, TabsPanelEntry>>(new Map())
+  const [registryVersion, setRegistryVersion] = React.useState(0)
+  const registerTab = React.useCallback(
+    (tabValue: string, entry: TabsTabEntry) => {
+      tabEntries.current.set(tabValue, entry)
+      setRegistryVersion(version => version + 1)
+      return () => {
+        if (tabEntries.current.get(tabValue) === entry) {
+          tabEntries.current.delete(tabValue)
+        }
+        setRegistryVersion(version => version + 1)
+      }
+    },
+    []
+  )
+  const registerPanel = React.useCallback(
+    (panelValue: string, entry: TabsPanelEntry) => {
+      panelEntries.current.set(panelValue, entry)
+      setRegistryVersion(version => version + 1)
+      return () => {
+        if (panelEntries.current.get(panelValue) === entry) {
+          panelEntries.current.delete(panelValue)
+        }
+        setRegistryVersion(version => version + 1)
+      }
+    },
+    []
+  )
+  const getTabId = React.useCallback(
+    (tabValue: string) => tabEntries.current.get(tabValue)?.id,
+    []
+  )
+  const getPanelId = React.useCallback(
+    (panelValue: string) => panelEntries.current.get(panelValue)?.id,
+    []
+  )
+
   const setValue = React.useCallback(
     (nextValue: string) => {
       // Redundant requests are suppressed (TB-SELECT-04, TB-MANUAL-04):
@@ -125,6 +204,10 @@ export function Tabs({
       setRovingValue,
       claimTabValue,
       claimPanelValue,
+      registerTab,
+      registerPanel,
+      getTabId,
+      getPanelId,
     }),
     [
       value,
@@ -138,6 +221,12 @@ export function Tabs({
       setRovingValue,
       claimTabValue,
       claimPanelValue,
+      registerTab,
+      registerPanel,
+      getTabId,
+      getPanelId,
+      // Unread by the factory: bumps re-render ARIA-linkage readers.
+      registryVersion,
     ]
   )
 
@@ -180,7 +269,11 @@ export function TabsList({
 
     if (tabs.length === 0) return
 
-    const activeIndex = tabs.indexOf(document.activeElement as HTMLButtonElement)
+    // Deep lookup (TB-ENV-03): document.activeElement returns the shadow
+    // host inside a ShadowRoot, which would index -1 and kill the arrows.
+    const activeIndex = tabs.indexOf(
+      getDeepActiveElement(e.currentTarget) as HTMLButtonElement
+    )
     if (activeIndex === -1) return
 
     // Read at event time (TB-AUTO-02, TB-AUTO-06): runtime dir flips apply
@@ -286,7 +379,11 @@ export function Tab({
   const isSelected = context ? context.value === value : false
   const isDisabled = disabledProp ?? context?.disabled ?? false
   const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
-  const panelId = context ? `${context.baseId}-panel-${value}` : undefined
+  // Explicit Panel IDs flow in through the registry (TB-DOM-06); the
+  // generated fallback keeps SSR and first render unchanged.
+  const panelId = context
+    ? (context.getPanelId(value) ?? `${context.baseId}-panel-${value}`)
+    : undefined
 
   // Duplicate identity is a hard error (TB-DOM-10): value is the public
   // Tab-to-Panel mapping, so a collision would fork ARIA linkage.
@@ -296,6 +393,21 @@ export function Tab({
     if (!claimTabValue) return
     return claimTabValue(value)
   }, [claimTabValue, value])
+
+  // Identity registry entry (TB-DOM-06, TB-DYNAMIC-01/02): layout effect
+  // with cleanup, so the Panel's aria-labelledby updates before paint and
+  // unmounts unsubscribe. Refs attach before layout effects, so the host
+  // element is captured on the same commit.
+  const tabRef = React.useRef<HTMLButtonElement>(null)
+  const registerTab = context?.registerTab
+  useIsomorphicLayoutEffect(() => {
+    if (!registerTab || tabId === undefined) return
+    return registerTab(value, {
+      id: tabId,
+      element: tabRef.current,
+      disabled: isDisabled,
+    })
+  }, [registerTab, value, tabId, isDisabled])
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
@@ -321,6 +433,7 @@ export function Tab({
     <Button
       type="button"
       role="tab"
+      ref={tabRef}
       id={tabId}
       tabIndex={isRovingStop ? 0 : -1}
       aria-selected={isSelected}
@@ -411,7 +524,11 @@ export function TabPanel({
 }: TabPanelProps) {
   const context = React.useContext(TabsContext)
   const isSelected = context ? context.value === value : false
-  const tabId = context ? `${context.baseId}-tab-${value}` : undefined
+  // Explicit Tab IDs flow in through the registry (TB-DOM-06); the
+  // generated fallback keeps SSR and first render unchanged.
+  const tabId = context
+    ? (context.getTabId(value) ?? `${context.baseId}-tab-${value}`)
+    : undefined
   const panelId = idProp ?? (context ? `${context.baseId}-panel-${value}` : undefined)
 
   const claimPanelValue = context?.claimPanelValue
@@ -420,9 +537,19 @@ export function TabPanel({
     return claimPanelValue(value)
   }, [claimPanelValue, value])
 
+  // Identity registry entry (TB-DOM-06): same subscribe/unsubscribe shape
+  // as Tab, so the Tab's aria-controls tracks explicit Panel IDs.
+  const panelRef = React.useRef<HTMLDivElement>(null)
+  const registerPanel = context?.registerPanel
+  useIsomorphicLayoutEffect(() => {
+    if (!registerPanel || panelId === undefined) return
+    return registerPanel(value, { id: panelId, element: panelRef.current })
+  }, [registerPanel, value, panelId])
+
   return (
     <Div
       role="tabpanel"
+      ref={panelRef}
       id={panelId}
       aria-labelledby={tabId}
       hidden={!isSelected}

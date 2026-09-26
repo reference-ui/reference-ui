@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tabs } from './index'
@@ -184,6 +185,56 @@ export const Nested = () => {
             <Span fontSize="3.5r">Outer billing content.</Span>
           </Tabs.Panel>
         </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ShadowTabs = () => {
+  const hostRef = React.useRef<HTMLDivElement>(null)
+  const [shadowRoot, setShadowRoot] = React.useState<ShadowRoot | null>(null)
+  const [value, setValue] = React.useState('general')
+  const [requests, setRequests] = React.useState<string[]>([])
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (host && !host.shadowRoot) {
+      setShadowRoot(host.attachShadow({ mode: 'open' }))
+    }
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-shadow-root" maxW="100r">
+        <div ref={hostRef} data-testid="tabs-shadow-host" />
+        <Div data-testid="tabs-shadow-log">{requests.join(',')}</Div>
+        {shadowRoot &&
+          ReactDOM.createPortal(
+            <Tabs
+              value={value}
+              activation="manual"
+              onChange={(next: string) => {
+                setRequests(prev => [...prev, next])
+                setValue(next)
+              }}
+            >
+              <Tabs.List>
+                <Tabs.Tab value="general" data-testid="tab-s-general">
+                  General
+                </Tabs.Tab>
+                <Tabs.Tab value="billing" data-testid="tab-s-billing">
+                  Billing
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="general" data-testid="panel-s-general">
+                <Span fontSize="3.5r">General settings.</Span>
+              </Tabs.Panel>
+              <Tabs.Panel value="billing" data-testid="panel-s-billing">
+                <Span fontSize="3.5r">Billing settings.</Span>
+              </Tabs.Panel>
+            </Tabs>,
+            shadowRoot as unknown as Element
+          )}
       </Div>
     </ReferenceLibrary>
   )

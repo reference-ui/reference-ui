@@ -765,3 +765,240 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
     ).toBe('true')
   })
 })
+
+describe('Tabs PATCHES proofs (identity registry)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function expectLinked(tabId: string, panelId: string) {
+    const tab = document.getElementById(tabId)
+    const panel = document.getElementById(panelId)
+    expect(tab?.getAttribute('role')).toBe('tab')
+    expect(panel?.getAttribute('role')).toBe('tabpanel')
+    // Selected-only aria-controls: only assert when the tab carries one.
+    const controls = tab?.getAttribute('aria-controls')
+    if (controls) {
+      expect(controls).toBe(panelId)
+      expect(document.getElementById(controls)?.getAttribute('role')).toBe(
+        'tabpanel'
+      )
+    }
+    const labelledBy = panel?.getAttribute('aria-labelledby')
+    expect(labelledBy).toBe(tabId)
+    expect(document.getElementById(labelledBy!)?.getAttribute('role')).toBe(
+      'tab'
+    )
+  }
+
+  it('TB-DOM-06: explicit Tab and Panel IDs win on both sides of the linkage', async () => {
+    function Fixture({ tabId, panelId }: { tabId: string; panelId: string }) {
+      return (
+        <Tabs defaultValue="general">
+          <Tabs.List>
+            <Tabs.Tab id={tabId} value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing">Billing</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel id={panelId} value="general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel value="billing">B</Tabs.Panel>
+        </Tabs>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Fixture tabId="tab-general" panelId="panel-general" />)
+    })
+
+    // Explicit IDs win over the generated pair on both references.
+    expectLinked('tab-general', 'panel-general')
+    // The generated pair stays linked through the registry fallback.
+    const billingPanel = container.querySelector(
+      '[role="tabpanel"][data-value="billing"]'
+    )!
+    const billingLabelledBy = billingPanel.getAttribute('aria-labelledby')!
+    expect(
+      document.getElementById(billingLabelledBy)?.getAttribute('role')
+    ).toBe('tab')
+
+    // Rerender each ID: both references update together, old IDs vanish,
+    // nothing dangles. (Registry subscription is a layout effect, so in a
+    // real browser the update lands before paint — no dangling frame.)
+    await React.act(async () => {
+      root.render(<Fixture tabId="tab-profile" panelId="panel-profile" />)
+    })
+    expect(document.getElementById('tab-general')).toBeNull()
+    expect(document.getElementById('panel-general')).toBeNull()
+    expectLinked('tab-profile', 'panel-profile')
+  })
+
+  it('TB-DYNAMIC-01: insert and reorder keep selection, IDs, and focus on survivors', async () => {
+    const log: string[] = []
+    function Fixture({ order }: { order: string[] }) {
+      const [value, setValue] = React.useState('billing')
+      return (
+        <Tabs
+          value={value}
+          onChange={(next: string) => {
+            log.push(next)
+            setValue(next)
+          }}
+        >
+          <Tabs.List>
+            {order.map(v => (
+              <Tabs.Tab key={v} value={v}>
+                {v}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {order.map(v => (
+            <Tabs.Panel key={v} value={v}>
+              {v} content
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      )
+    }
+    const idsFor = (value: string) => ({
+      tab: container.querySelector(`[role="tab"][data-value="${value}"]`)!.id,
+      panel: container.querySelector(
+        `[role="tabpanel"][data-value="${value}"]`
+      )!.id,
+    })
+
+    await React.act(async () => {
+      root.render(<Fixture order={['general', 'billing', 'security']} />)
+    })
+    const before = {
+      general: idsFor('general'),
+      billing: idsFor('billing'),
+      security: idsFor('security'),
+    }
+
+    await React.act(async () => {
+      ;(
+        container.querySelector(
+          '[role="tab"][data-value="billing"]'
+        ) as HTMLElement
+      ).focus()
+    })
+
+    // Insert profile before the selected billing tab.
+    await React.act(async () => {
+      root.render(
+        <Fixture order={['general', 'profile', 'billing', 'security']} />
+      )
+    })
+    expect(
+      container
+        .querySelector('[role="tab"][data-value="billing"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(
+      (
+        container.querySelector(
+          '[role="tabpanel"][data-value="billing"]'
+        ) as HTMLElement
+      )?.hidden
+    ).toBe(false)
+    expect(idsFor('general')).toEqual(before.general)
+    expect(idsFor('billing')).toEqual(before.billing)
+    expect(idsFor('security')).toEqual(before.security)
+    expect(document.activeElement?.getAttribute('data-value')).toBe('billing')
+    expectLinked(before.billing.tab, before.billing.panel)
+    expect(log).toEqual([])
+
+    // Reorder billing after security: still selected, still stable, silent.
+    await React.act(async () => {
+      root.render(
+        <Fixture order={['general', 'profile', 'security', 'billing']} />
+      )
+    })
+    expect(
+      container
+        .querySelector('[role="tab"][data-value="billing"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(idsFor('billing')).toEqual(before.billing)
+    expect(document.activeElement?.getAttribute('data-value')).toBe('billing')
+    expectLinked(before.billing.tab, before.billing.panel)
+    expect(log).toEqual([])
+  })
+
+  it('TB-DYNAMIC-02: removing the controlled value selects no fallback and requests nothing', async () => {
+    // Behavioral half only: the dev-diagnostic half of TB-DYNAMIC-02 was
+    // DECLINED (DECISIONS candidate #10) — silent-tolerant, no warn.
+    const log: string[] = []
+    function Fixture({ values }: { values: string[] }) {
+      const [value, setValue] = React.useState('billing')
+      return (
+        <Tabs
+          value={value}
+          onChange={(next: string) => {
+            log.push(next)
+            setValue(next)
+          }}
+        >
+          <Tabs.List>
+            {values.map(v => (
+              <Tabs.Tab key={v} value={v}>
+                {v}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {values.map(v => (
+            <Tabs.Panel key={v} value={v}>
+              {v} content
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      )
+    }
+
+    await React.act(async () => {
+      root.render(<Fixture values={['general', 'billing', 'security']} />)
+    })
+    expect(
+      container
+        .querySelector('[role="tab"][data-value="billing"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true')
+
+    // Remove both billing parts while the controlled value stays billing.
+    await React.act(async () => {
+      root.render(<Fixture values={['general', 'security']} />)
+    })
+    for (const tab of Array.from(container.querySelectorAll('[role="tab"]'))) {
+      expect(tab.getAttribute('aria-selected')).toBe('false')
+    }
+    for (const panel of Array.from(
+      container.querySelectorAll('[role="tabpanel"]')
+    )) {
+      expect((panel as HTMLElement).hidden).toBe(true)
+    }
+    expect(log).toEqual([])
+    // Survivors keep resolving linkage with nothing dangling.
+    for (const panel of Array.from(
+      container.querySelectorAll('[role="tabpanel"]')
+    )) {
+      const labelledBy = panel.getAttribute('aria-labelledby')!
+      expect(document.getElementById(labelledBy)?.getAttribute('role')).toBe(
+        'tab'
+      )
+    }
+  })
+})
