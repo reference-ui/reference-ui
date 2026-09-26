@@ -22,26 +22,12 @@ claim, `Production: Yes`, and nested-registration "Done" are proof-status claims
 not API, and were deliberately not copied (they rest on out-of-scope matrix
 proof); they are omitted here, not decisions.
 
-### 1. GSAP completion wait as documented extension — verdict: OPEN
+Moved out of this file:
 
-- **Source:** quarantine commit `77ea89ba0`,
-  `packages/reference-lib/src/components/Presence/SPEC.md` ("Frozen as
-  progressive enhancement"), no case ID.
-- **API sketch:** no new props — a documented behavior contract: Presence keeps
-  waiting on `finiteGsapTweens(el)` (GSAP-driven exits hold unmount alongside
-  CSS effects), blessed as deliberate rather than tolerated, presumably with a
-  `PR-*-GSAP` case if HQ wants it proven.
-- **Why not landed:** landing kept the GSAP code paths (including the
-  reduced-motion gate) but refused the status claim: the freeze is CSS-only per
-  SPEC.md "Gaps & incoherence" ("Document that as a deliberate extension or
-  remove it"), and blessing a third-party animation library as a supported exit
-  driver is an HQ product call, not a landing call.
-- **Revisit when:** HQ rules one way or the other — either name GSAP a supported
-  exit driver (then document it in Presence.md + add a case) or delete
-  `finiteGsapTweens` and its branches outright.
-- **Open questions:** is any in-repo consumer (Collapsible measured-height work
-  is the rumored one) actually driving exits through GSAP today, and does HQ
-  want a GSAP dependency in Presence's contract at all?
+- GSAP completion wait as documented extension (was candidate §1, OPEN) → now [FEATURES.md §1](./FEATURES.md); it needs an HQ product call, not a patch.
+
+Mechanical backlog: [PATCHES.md](./PATCHES.md) currently holds no Presence
+items — nothing open is test-pinnable today.
 
 ## Suspected gaps (no quarantine source)
 
@@ -130,15 +116,21 @@ proof); they are omitted here, not decisions.
 
 ## Walkthrough notes for HQ
 
-- Most important: candidate §1 (GSAP wait — OPEN) — the only undecided behavior
-  in the component; the code is live but the contract is not. Decide bless or
-  delete before any consumer leans on it; try nothing in Book, read the SPEC gap.
-- Second: suspected §4 (no host / no self-stamped `data-state` — DECLINED) — the
-  decision that *defines* Presence; try the Book Default story (toggle Hide/Show)
-  and note the panel you see is 100% consumer markup that Presence merely retains.
-- Third: suspected §1 + §2 (`forceMount`, class orchestration — DECLINED) — if HQ
-  wants either, that re-founds Presence as an animation orchestrator rather than
-  an exit gate; read both killer reasons before asking.
-- The landed reduced-motion behavior change (JS media-query branch removed per
-  PR-INSTANT-05; exits now follow computed CSS) is already UX-approved and needs
-  no walkthrough ruling — it is context, not backlog.
+- Most important: [FEATURES.md §1](./FEATURES.md) (GSAP wait) — the only
+  undecided behavior in the component; the code is live but the contract is
+  not. Feel it: nothing to click in Book (the freeze is CSS-only, so no GSAP
+  story exists) — read the FEATURES.md API sketch against the SPEC gap, then
+  decide bless or delete before any consumer leans on it.
+- Second: suspected §4 in this file (no host / no self-stamped `data-state` —
+  DECLINED) — the decision that *defines* Presence. Feel it: open the Book
+  Default story, toggle Hide/Show, and note the panel you see is 100%
+  consumer markup that Presence merely retains.
+- Third: suspected §1 + §2 in this file (`forceMount`, class orchestration —
+  DECLINED) — if HQ wants either, that re-founds Presence as an animation
+  orchestrator rather than an exit gate. Feel it: read both killer reasons
+  above before asking; there is no story to try because the API was refused.
+- Context, no ruling needed: the landed reduced-motion behavior change (JS
+  media-query branch removed per PR-INSTANT-05; exits now follow computed
+  CSS) is already UX-approved — feel it in the Book Default story under
+  reduced motion, where exits go instant. [PATCHES.md](./PATCHES.md) holds no
+  items, so there is no mechanical backlog to walk.
