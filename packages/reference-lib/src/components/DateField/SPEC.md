@@ -46,6 +46,19 @@ public API.
 | Vitest | 0 |
 | Catalog `[ ]` | `DF-COMP-05`, `DF-COMP-06` (only TESTS.md unchecked items) |
 
+### Reconciliation (2026-09-25, quarantine-landing)
+
+Ported the quarantine `parse.ts` pure kit **verbatim** (staged, unwired —
+wiring it would change display text and is out of scope) plus 23 colocated
+unit tests proving the kit, and 12 CT re-targets proving current behavior.
+`DateField.tsx` is byte-untouched: visuals, API, and behavior frozen.
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 12 / 64 (CT re-targets against current ISO display) |
+| CT | 15 titles green (3 pre-existing + 12 `DF-*`); 8 frozen snapshots unmodified |
+| Vitest | 23 parse-kit contract tests (carry no `DF-*` IDs per TESTS.md `[unit]` law) |
+
 ### Gaps & incoherence
 
 - `defaultValue`, `locale = 'en-US'`. Freeze: required `value` + `locale`.
@@ -71,11 +84,37 @@ windows; min/max clamp.
 
 ### Case index
 
-- `[~]` `DF-DOM-02`, `DF-DOM-03`, `DF-CAL-01` — titles exist; rewrite against
-  freeze prose
-- `[ ]` `DF-DOM-01`, remaining `DF-DOM-*`, `DF-FMT-*`, `DF-EDT-*`,
-  `DF-CMT-*`, `DF-BND-*`, `DF-KEY-*`, remaining `DF-CAL-*`, `DF-RANGE-*`,
-  `DF-FRM-*`, `DF-ENV-*`, `DF-MAN-*`, `DF-COMP-*`
+- `[x]` `DF-DOM-01` — childless resolves to one text input; ref targets it
+- `[x]` `DF-DOM-02` — folded picker renders bezel + synthesized input/trigger;
+  day select commits and dismisses
+- `[x]` `DF-DOM-04` — hidden input only with `name`; carries ISO or `""`
+- `[x]` `DF-DOM-05` — display follows controlled prop; `onChange` silent;
+  no `data-editing` (asserted against ISO display, not locale text)
+- `[x]` `DF-KEY-05` — ArrowUp/Down no-op on null (no stepping exists; honest
+  no-op proof, not a stepping proof)
+- `[x]` `DF-KEY-06` — ArrowUp/Down no-op when disabled or read-only
+- `[x]` `DF-CAL-01` — APG attrs (`role`, `aria-haspopup`, `aria-expanded`,
+  `aria-autocomplete`) + deliberate activation + day commit/dismiss.
+  Scoped: `aria-controls` absent (quarantine e2e never asserted it either)
+- `[x]` `DF-CAL-03` — trigger `tabIndex={-1}`, `type="button"`, toggles picker.
+  Scoped: input-focus retention not asserted (Overlay focus domain)
+- `[x]` `DF-FRM-01` — submit sends canonical ISO via hidden input
+- `[x]` `DF-FRM-02` — submit sends `""` for controlled null
+- `[x]` `DF-COMP-02` — `htmlFor` label focuses; submit sends `2000-01-15`-style
+  canonical ISO (Field-crew handoff, proven with `2024-02-01`)
+- `[x]` `DF-ENV-03` — `onChange` payloads are `string` (never `Date`); current
+  component echoes raw text, never `null` from typing
+- `[ ]` `DF-DOM-03` — Part-Resolution Law not implemented (sniffing remains)
+- `[ ]` `DF-FMT-*`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-*`, `DF-KEY-01/02/03/04/07`,
+  `DF-CAL-02`, `DF-CAL-04`, `DF-RANGE-*`, `DF-FRM-03`, `DF-FRM-05`, `DF-ENV-02`,
+  `DF-COMP-01`, `DF-COMP-03`, `DF-COMP-05`, `DF-COMP-06` — need the
+  controlled-locale rewrite (dirty sessions, locale display, stepping, Range);
+  forbidden in this mission. Pure-kit coverage for the FMT/EDT/KEY/BND logic
+  exists in `parse.test.ts` (no `DF-*` IDs claimed).
+- `[ ]` `DF-FRM-04` — untested (`required` passthrough not exercised)
+- `[ ]` `DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition; needs the
+  Overlay-crew shadow-portal contract before a DateField test can be honest
+- `[ ]` `DF-MAN-01`, `DF-MAN-02` — manual release gates
 
 ### Work order
 
