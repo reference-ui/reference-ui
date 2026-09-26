@@ -199,4 +199,68 @@ describe('announce', () => {
       { politeness: 'polite', message: 'Ready' },
     ])
   })
+
+  it('ANN-API-05: Announcer should warn once for repeated same-shape ambiguous untargeted calls in development', async () => {
+    vi.resetModules()
+    const fresh = await import('./Announcer')
+    const d1 = doc()
+    const d2 = doc()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      fresh.registerAnnouncerDocument(d1)
+      fresh.registerAnnouncerDocument(d2)
+      fresh.announce('Nope')
+      fresh.announce('Nope')
+      fresh.announce('Nope')
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('ambiguous untargeted call'))
+    } finally {
+      fresh.unregisterAnnouncerDocument(d1)
+      fresh.unregisterAnnouncerDocument(d2)
+      warn.mockRestore()
+    }
+  })
+
+  it('ANN-API-05: Announcer should warn once per diagnostic shape in development', async () => {
+    vi.resetModules()
+    const fresh = await import('./Announcer')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      fresh.announcerDiagnostic('shape-a dedup probe')
+      fresh.announcerDiagnostic('shape-a dedup probe')
+      fresh.announcerDiagnostic('shape-b dedup probe')
+      expect(warn).toHaveBeenCalledTimes(2)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it('ANN-API-05: Announcer should stay silent on ambiguous untargeted calls in production', async () => {
+    const proc = (globalThis as { process?: { env: Record<string, string | undefined> } }).process
+    expect(proc).toBeDefined()
+    const prevEnv = proc!.env.NODE_ENV
+    proc!.env.NODE_ENV = 'production'
+    vi.resetModules()
+    const fresh = await import('./Announcer')
+    const d1 = doc()
+    const d2 = doc()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      fresh.registerAnnouncerDocument(d1)
+      fresh.registerAnnouncerDocument(d2)
+      fresh.announce('Nope')
+      fresh.announce('Nope')
+      fresh.announcerDiagnostic('direct production probe')
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      fresh.unregisterAnnouncerDocument(d1)
+      fresh.unregisterAnnouncerDocument(d2)
+      warn.mockRestore()
+      if (prevEnv === undefined) {
+        delete proc!.env.NODE_ENV
+      } else {
+        proc!.env.NODE_ENV = prevEnv
+      }
+    }
+  })
 })

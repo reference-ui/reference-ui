@@ -46,7 +46,16 @@ function safeGetGlobalDocument(): Document | undefined {
   }
 }
 
+// The package declares no node types, so the bare `process` global is
+// unresolvable in the narrow build program — read it through globalThis
+// with a file-local shape instead. Semantics identical in every state.
+const globalProcess = (globalThis as { process?: { env: { NODE_ENV?: string } } }).process
+const warnedAnnouncerDiagnostics = new Set<string>()
+
 export function announcerDiagnostic(message: string) {
+  if (typeof globalProcess === 'undefined' || globalProcess.env.NODE_ENV === 'production') return
+  if (warnedAnnouncerDiagnostics.has(message)) return
+  warnedAnnouncerDiagnostics.add(message)
   console.warn(`[reference-ui] ${message}`)
 }
 
