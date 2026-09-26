@@ -278,7 +278,6 @@ export function AnnouncerHost({ document: docProp }: { document?: Document } = {
         aria-live="polite"
         aria-atomic="true"
         data-reference-announcer="polite"
-        data-testid="polite-announcer"
       >
         {store.politeAnnouncement}
       </div>
@@ -287,7 +286,6 @@ export function AnnouncerHost({ document: docProp }: { document?: Document } = {
         aria-live="assertive"
         aria-atomic="true"
         data-reference-announcer="assertive"
-        data-testid="assertive-announcer"
       >
         {store.assertiveAnnouncement}
       </div>

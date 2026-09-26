@@ -1050,8 +1050,8 @@ test.describe('Toast hardening', () => {
     await mount('components/Toast/Toast/Harden')
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
-    const polite = page.getByTestId('polite-announcer')
-    const assertive = page.getByTestId('assertive-announcer')
+    const polite = page.locator('[data-reference-announcer="polite"]')
+    const assertive = page.locator('[data-reference-announcer="assertive"]')
     await page.getByTestId('btn-announce-polite').click()
     await expect(polite).toHaveText('Project saved')
     await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
@@ -1127,7 +1127,7 @@ test.describe('Toast hardening', () => {
     await page.getByTestId('btn-open-overlay').click()
     await expect(page.getByTestId('harden-modal')).toBeVisible()
     await expect(host).not.toHaveAttribute('inert')
-    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    await expect(page.locator('[data-reference-announcer="polite"]')).toBeVisible()
     await page.getByTestId('toast-input').click()
     await page.getByTestId('toast-input').fill('kept')
     await expect(page.getByTestId('harden-modal')).toBeVisible()
@@ -1169,7 +1169,7 @@ test.describe('Toast hardening', () => {
 
     await page.getByTestId('btn-interactive').click()
     await expect(page.getByTestId('toast-form')).toBeVisible()
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Draft was saved')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Draft was saved')
     await page.getByTestId('toast-form-close').click()
 
     await page.evaluate(() => {
@@ -1325,13 +1325,13 @@ test.describe('Toast hardening', () => {
     await page.getByTestId('btn-announce-both').click()
     const host = page.locator('[data-reference-toast-host]')
     await expect(host).toHaveAttribute('role', 'region')
-    await expect(page.getByTestId('polite-announcer')).toHaveAttribute('aria-live', 'polite')
-    await expect(page.getByTestId('assertive-announcer')).toHaveAttribute('aria-live', 'assertive')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveAttribute('aria-live', 'polite')
+    await expect(page.locator('[data-reference-announcer="assertive"]')).toHaveAttribute('aria-live', 'assertive')
     await expect(page.locator('[data-reference-toast-id="interactive"]')).not.toHaveAttribute('role')
     await page.getByTestId('btn-open-overlay').click()
     await expect(page.getByTestId('harden-modal')).toBeVisible()
     await expect(host).not.toHaveAttribute('inert')
-    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    await expect(page.locator('[data-reference-announcer="polite"]')).toBeVisible()
     const snapshot = typeof (page as any).accessibility?.snapshot === 'function'
       ? await (page as any).accessibility.snapshot()
       : null
@@ -1376,7 +1376,7 @@ test.describe('Toast hardening premount', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
     await page.getByTestId('btn-premount-queue').click()
     await expect(page.locator('[data-reference-toast-host]')).toHaveCount(0)
-    await expect(page.getByTestId('polite-announcer')).toHaveCount(0)
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveCount(0)
     await page.evaluate(() => {
       ;(window as unknown as { __ann?: string[] }).__ann = []
       const seen = (window as unknown as { __ann: string[] }).__ann
@@ -1391,7 +1391,7 @@ test.describe('Toast hardening premount', () => {
     })
     await page.getByTestId('btn-premount-mount').click()
     await expect(page.locator('[data-reference-toast-id="pre"]')).toHaveCount(1)
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Ready')
     await expect.poll(async () => page.evaluate(() => (window as unknown as { __ann?: string[] }).__ann ?? [])).toEqual(
       expect.arrayContaining(['Saved', 'Ready'])
     )
@@ -1420,10 +1420,10 @@ test.describe('Toast hardening shadow', () => {
     await page.getByTestId('btn-shadow-update').click()
     await expect(page.locator('[data-reference-toast-id="shadow-toast"]')).toContainText('shadow updated')
     await page.getByTestId('btn-shadow-announce').click()
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Shadow ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Shadow ready')
     const announcerInShadow = await page.evaluate(() => {
       const shadowHost = document.querySelector('[data-testid="shadow-host"]') as HTMLElement | null
-      return Boolean(shadowHost?.shadowRoot?.querySelector('[data-testid="polite-announcer"]'))
+      return Boolean(shadowHost?.shadowRoot?.querySelector('[data-reference-announcer="polite"]'))
     })
     expect(announcerInShadow).toBe(true)
     await page.getByTestId('btn-shadow-dismiss').click()
@@ -1438,7 +1438,7 @@ test.describe('Toast hardening StrictMode', () => {
     const item = page.locator('[data-reference-toast-id="compat"]')
     await expect(item).toHaveCount(1)
     await expect(item).toContainText('Saved')
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Ready')
     await page.getByTestId('btn-strict-update').click()
     await expect(item).toHaveCount(1)
     await page.getByTestId('btn-strict-dismiss').click()

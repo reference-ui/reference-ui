@@ -37,7 +37,7 @@ test.describe('ReferenceLibrary Composition Gates & Browser Proofs', () => {
     await snap(page, 'toast-displayed')
 
     await page.getByTestId('btn-announce').click()
-    const politeAnnouncer = page.getByTestId('polite-announcer')
+    const politeAnnouncer = page.locator('[data-reference-announcer="polite"]')
     await expect(politeAnnouncer).toHaveText('File uploaded completely')
     await snap(page, 'polite-announced')
   })
