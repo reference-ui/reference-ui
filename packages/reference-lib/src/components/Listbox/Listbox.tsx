@@ -19,39 +19,58 @@ function getComputedDirection(el: HTMLElement | null): 'ltr' | 'rtl' {
 
 export type ListboxSelection = 'single' | 'multiple'
 export type ListboxOrientation = 'horizontal' | 'vertical'
-export type ListboxValue = string | string[]
+export type ListboxValue<TValue extends string = string> = TValue | TValue[]
 
-export interface VirtualFocusItem {
-  value: string
+export interface VirtualFocusItem<TValue extends string = string> {
+  value: TValue
   textValue: string
   disabled?: boolean
 }
 
-export interface VirtualFocusAdapter {
-  items: readonly VirtualFocusItem[]
+export interface VirtualFocusAdapter<TValue extends string = string> {
+  items: readonly VirtualFocusItem<TValue>[]
   scrollToIndex(index: number): void
 }
 
-export type ListboxVirtualAdapter = VirtualFocusAdapter
+export type ListboxVirtualAdapter<TValue extends string = string> =
+  VirtualFocusAdapter<TValue>
 
 type ReferencePartProps<Tag extends PrimitiveTag> =
   PrimitiveProps<Tag> & React.RefAttributes<PrimitiveElement<Tag>>
 
-export type ListboxProps<T = any> = Omit<ReferencePartProps<'div'>, 'onChange' | 'value'> & {
-  selection?: ListboxSelection
-  value?: T
-  onChange?: (value: any) => void
+type ListboxBaseProps = Omit<
+  ReferencePartProps<'div'>,
+  'onChange' | 'value' | 'defaultValue'
+> & {
   orientation?: ListboxOrientation
-  virtual?: ListboxVirtualAdapter
   disabled?: boolean
 }
 
-export type ListboxOptionProps = ReferencePartProps<'div'> & {
-  value: string
-  disabled?: boolean
-  textValue?: string
-  index?: number
+export type ListboxSingleProps<TValue extends string = string> = ListboxBaseProps & {
+  selection?: 'single'
+  value?: TValue | null
+  onChange?: (value: TValue | null) => void
+  virtual?: ListboxVirtualAdapter<TValue>
 }
+
+export type ListboxMultipleProps<TValue extends string = string> = ListboxBaseProps & {
+  selection: 'multiple'
+  value?: TValue[]
+  onChange?: (value: TValue[]) => void
+  virtual?: ListboxVirtualAdapter<TValue>
+}
+
+export type ListboxProps<TValue extends string = string> =
+  | ListboxSingleProps<TValue>
+  | ListboxMultipleProps<TValue>
+
+export type ListboxOptionProps<TValue extends string = string> =
+  ReferencePartProps<'div'> & {
+    value: TValue
+    disabled?: boolean
+    textValue?: string
+    index?: number
+  }
 
 export interface OptionRecord {
   value: string
@@ -62,9 +81,9 @@ export interface OptionRecord {
   ref: React.RefObject<HTMLDivElement | null>
 }
 
-export function validateVirtualAdapter(
-  virtual: ListboxVirtualAdapter,
-  mountedOptions: Array<{ value: string; index?: number; disabled?: boolean }>
+export function validateVirtualAdapter<TValue extends string = string>(
+  virtual: ListboxVirtualAdapter<TValue>,
+  mountedOptions: Array<{ value: TValue; index?: number; disabled?: boolean }>
 ) {
   const seenValues = new Set<string>()
   for (const item of virtual.items) {
@@ -106,22 +125,22 @@ function toMountedIndexEntries(records: Iterable<OptionRecord>) {
     .map(rec => ({ value: rec.value, index: rec.index, disabled: rec.disabled }))
 }
 
-export function computeNextMultipleSelection(
-  currentValue: ListboxValue | null | undefined,
-  toggledValue: string,
-  orderedKnownValues: string[]
-): string[] {
-  const currentArray = Array.isArray(currentValue) ? currentValue : []
+export function computeNextMultipleSelection<TValue extends string = string>(
+  currentValue: TValue | TValue[] | null | undefined,
+  toggledValue: TValue,
+  orderedKnownValues: readonly TValue[]
+): TValue[] {
+  const currentArray: readonly TValue[] = Array.isArray(currentValue) ? currentValue : []
   const isCurrentlySelected = currentArray.includes(toggledValue)
 
-  let nextSelectedSet: Set<string>
+  let nextSelectedSet: Set<TValue>
   if (isCurrentlySelected) {
     nextSelectedSet = new Set(currentArray.filter(v => v !== toggledValue))
   } else {
     nextSelectedSet = new Set([...currentArray, toggledValue])
   }
 
-  const knownSelected: string[] = []
+  const knownSelected: TValue[] = []
   for (const val of orderedKnownValues) {
     if (nextSelectedSet.has(val)) {
       knownSelected.push(val)
@@ -129,7 +148,7 @@ export function computeNextMultipleSelection(
     }
   }
 
-  const unknownSelected: string[] = []
+  const unknownSelected: TValue[] = []
   for (const val of currentArray) {
     if (nextSelectedSet.has(val) && !unknownSelected.includes(val)) {
       unknownSelected.push(val)
@@ -181,7 +200,7 @@ interface ListboxContextValue {
 
 const ListboxContext = React.createContext<ListboxContextValue | null>(null)
 
-export function ListboxOption({
+export function ListboxOption<TValue extends string = string>({
   value,
   disabled = false,
   textValue,
@@ -198,7 +217,7 @@ export function ListboxOption({
   style,
   id: idProp,
   ...props
-}: ListboxOptionProps) {
+}: ListboxOptionProps<TValue>) {
   const context = React.useContext(ListboxContext)
   const combobox = React.useContext(ComboboxContext)
   const optionRef = React.useRef<HTMLDivElement | null>(null)
@@ -1270,16 +1289,20 @@ export function ListboxEmpty({
   )
 }
 
-export type ListboxComponent = React.ForwardRefExoticComponent<
-  ListboxProps & React.RefAttributes<HTMLDivElement>
-> & {
+export type ListboxComponent = {
+  <TValue extends string = string>(
+    props: ListboxProps<TValue> & React.RefAttributes<HTMLDivElement>
+  ): React.ReactElement | null
   Option: typeof ListboxOption
   Section: typeof ListboxSection
   Header: typeof ListboxHeader
   Empty: typeof ListboxEmpty
 }
 
-export const Listbox = ListboxComponentBase as ListboxComponent
+// Public generic face over the string-typed forwardRef implementation:
+// TValue infers per use site (literals narrow, default string); internals
+// erase to string since TValue extends string. Runtime untouched.
+export const Listbox = ListboxComponentBase as unknown as ListboxComponent
 Listbox.Option = ListboxOption
 Listbox.Section = ListboxSection
 Listbox.Header = ListboxHeader

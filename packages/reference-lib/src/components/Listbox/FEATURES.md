@@ -18,6 +18,8 @@ shared by `Option`, `VirtualFocusItem`, and `computeNextMultipleSelection`. Stil
 
 **Maintainer take:** Good to add once the overload shape is settled — the generic already exists, so this is pure type safety with no runtime change.
 
+**Status (features campaign 2026-09-26):** LANDED — discriminated overloads keyed on `selection` (`ListboxSingleProps` / `ListboxMultipleProps`): single→`TValue | null`, multiple→`TValue[]`. Unknown multi values stay inside `TValue` (no widening; LB-MULTI-03 append is TValue by construction). The generic is shared by `Option`, `VirtualFocusItem` / `VirtualFocusAdapter`, `validateVirtualAdapter`, and `computeNextMultipleSelection`. Type-only; zero runtime change.
+
 ## 2. RovingFocus re-convergence (from DECISIONS candidate #4)
 
 **What it does:** Replaces Listbox's private movement/typeahead kernel (live-DOM orientation/RTL navigation, `Intl.Collator` typeahead, local direction helper) with shared RovingFocus composition or kernel reuse, with zero public API change.

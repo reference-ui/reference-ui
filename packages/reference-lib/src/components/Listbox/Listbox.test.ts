@@ -9,6 +9,8 @@ import {
   computeNextMultipleSelection,
   type VirtualFocusAdapter,
   type ListboxProps,
+  type ListboxSingleProps,
+  type ListboxMultipleProps,
   type ListboxOptionProps,
 } from './index'
 import { ComboboxContext } from '../Combobox/combobox-context'
@@ -33,11 +35,10 @@ describe('Listbox Unit Contract', () => {
   }
 
   function boundary(element: React.ReactElement, errors: Error[]) {
-    return React.createElement(
-      CaptureBoundary,
-      { onError: (e: Error) => errors.push(e) },
-      element
-    )
+    return React.createElement(CaptureBoundary, {
+      onError: (e: Error) => errors.push(e),
+      children: element,
+    })
   }
 
   describe('Public API and TypeScript types', () => {
@@ -61,6 +62,75 @@ describe('Listbox Unit Contract', () => {
       // @ts-expect-error - defaultValue must not exist on ListboxProps
       const _invalidDefault: ListboxProps = { defaultValue: 'alpha' }
       expect(_invalidDefault).toBeTruthy()
+    })
+
+    it('types single vs multiple selection as discriminated overloads sharing one generic', () => {
+      // Single: TValue | null end to end, literal-narrowed
+      const single: ListboxProps<'apple' | 'banana'> = {
+        selection: 'single',
+        value: 'apple',
+        onChange: val => {
+          const _check: 'apple' | 'banana' | null = val
+          expect(_check).toBeDefined()
+        },
+      }
+      expect(single.selection).toBe('single')
+
+      // Omitted selection means single
+      const omitted: ListboxProps = { value: null, onChange: () => {} }
+      expect(omitted.value).toBeNull()
+
+      // Multiple: TValue[] end to end
+      const multi: ListboxProps<'a' | 'b'> = {
+        selection: 'multiple',
+        value: ['a'],
+        onChange: vals => {
+          const _check: Array<'a' | 'b'> = vals
+          expect(_check).toBeDefined()
+        },
+      }
+      expect(multi.selection).toBe('multiple')
+
+      // useState setters plug directly into the matching overload
+      const setSingle: React.Dispatch<React.SetStateAction<string | null>> = () => {}
+      const _plugSingle: ListboxSingleProps = { onChange: setSingle }
+      expect(_plugSingle).toBeTruthy()
+      const setMulti: React.Dispatch<React.SetStateAction<string[]>> = () => {}
+      const _plugMulti: ListboxMultipleProps = { selection: 'multiple', onChange: setMulti }
+      expect(_plugMulti).toBeTruthy()
+
+      // @ts-expect-error - single rejects arrays
+      const _badSingle: ListboxProps = { selection: 'single', value: ['a'] }
+      expect(_badSingle).toBeTruthy()
+
+      // @ts-expect-error - multiple rejects scalars
+      const _badMulti: ListboxProps = { selection: 'multiple', value: 'a' }
+      expect(_badMulti).toBeTruthy()
+
+      // @ts-expect-error - arrays require the multiple discriminant
+      const _badMissing: ListboxProps = { value: ['a'] }
+      expect(_badMissing).toBeTruthy()
+    })
+
+    it('shares the generic with options and the virtual adapter', () => {
+      const opt: ListboxOptionProps<'k1' | 'k2'> = { value: 'k1', index: 0 }
+      expect(opt.value).toBe('k1')
+
+      const adapter: VirtualFocusAdapter<'k1' | 'k2'> = {
+        items: [{ value: 'k1', textValue: 'K1' }],
+        scrollToIndex: () => {},
+      }
+      expect(() => validateVirtualAdapter(adapter, [{ value: 'k1', index: 0 }])).not.toThrow()
+
+      // @ts-expect-error - adapter values outside the generic are rejected
+      const _badAdapter: VirtualFocusAdapter<'k1' | 'k2'> = { items: [{ value: 'nope', textValue: 'Nope' }], scrollToIndex: () => {} }
+      expect(_badAdapter).toBeTruthy()
+    })
+
+    it('keeps unknown multi values inside the shared generic', () => {
+      const next = computeNextMultipleSelection<'x' | 'y' | 'zzz'>(['zzz', 'x'], 'y', ['x', 'y'])
+      const _check: Array<'x' | 'y' | 'zzz'> = next
+      expect(next).toEqual(['x', 'y', 'zzz'])
     })
   })
 

@@ -46,8 +46,9 @@ Virtualizer.
 
 ### Gaps & incoherence
 
-- `onChange?: (value: any)` — still untyped (quarantine kept it; freeze
-  work-order #1 half-open).
+- ~~`onChange?: (value: any)` — still untyped~~ typed (features
+  campaign: discriminated `ListboxProps<TValue>` overloads keyed on
+  `selection`; work-order #1 closed).
 - Extra chrome parts (`Section` / `Header` / `Empty`) beyond freeze.
 - No `RovingFocus` composition: the port carries its own movement/typeahead
   kernel (quarantine shape); TESTS.md "Owned elsewhere" still routes generic
@@ -91,7 +92,7 @@ Proven by colocated Vitest (`Listbox.test.ts`) or CT (`__e2e__`, React
 
 ### Work order
 
-1. Kill `defaultValue` / uncontrolled; type `onChange`.
+1. Kill `defaultValue` / uncontrolled; type `onChange`. — DONE (features campaign).
 2. RovingFocus + disabled skip + typeahead gate.
 3. Multiple selection contract.
 4. Virtual freeze-gate (`LB-VIRT-*`).
