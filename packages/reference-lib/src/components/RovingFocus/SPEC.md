@@ -69,7 +69,9 @@ primitive.
 ### Case index
 
 - `[x]` `RF-TAB-01`, `RF-TAB-02`, `RF-KEY-01`, `RF-KEY-04`, `RF-KEY-06`,
-  `RF-KEY-07`, `RF-TYPE-02`, `RF-TYPE-03`
+  `RF-KEY-07`, `RF-TYPE-02`, `RF-TYPE-03`, `RF-TYPE-06` (CT title
+  2026-09-26 patches pass; bubble preventDefault already cancels Space
+  activation — no capture remainder, see PATCHES.md #1)
 - `[ ]` `RF-API-01`, remaining `RF-DOM-*` / `RF-TAB-*` / `RF-KEY-*`, all
   `RF-GRID-*`, remaining `RF-TYPE-*`, `RF-NEST-*`, `RF-ENV-*`, `RF-COMP-*`
 - `RF-ENV-02` CUT 2026-09-26 (FEATURES #6 — shadow out of scope, see TESTS.md).

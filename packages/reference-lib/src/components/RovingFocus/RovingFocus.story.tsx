@@ -119,3 +119,72 @@ export function RovingFocusFixture() {
     </div>
   )
 }
+
+// PATCHES #1 (RF-TYPE-06) fixture: separate story so the main fixture — and
+// its snapshots — stay byte-identical. "Blueberry" vs "Blue Berry" keeps the
+// "blue" prefix ambiguous until Space disambiguates; the counter records
+// every native button activation.
+const spaceButtonStyle: React.CSSProperties = {
+  padding: '8px 16px',
+  borderRadius: '4px',
+  border: '1px solid #cbd5e1',
+  background: '#ffffff',
+  color: '#0f172a',
+  cursor: 'pointer',
+  fontSize: '14px',
+}
+
+export function RovingFocusSpaceFixture() {
+  const [activations, setActivations] = React.useState(0)
+  const countActivation = () => setActivations(c => c + 1)
+
+  return (
+    <div
+      data-testid="roving-focus-space-root"
+      style={{
+        padding: '24px',
+        fontFamily: 'sans-serif',
+        maxWidth: '700px',
+      }}
+    >
+      <RovingFocus.Root orientation="horizontal" loop typeahead>
+        <div
+          role="toolbar"
+          data-testid="space-toolbar"
+          style={{
+            display: 'flex',
+            gap: '8px',
+            border: '1px solid #94a3b8',
+            borderRadius: '6px',
+            padding: '12px',
+            background: '#f8fafc',
+          }}
+        >
+          <RovingFocus.Item id="space-blueberry" textValue="Blueberry">
+            <button
+              type="button"
+              data-testid="space-blueberry"
+              onClick={countActivation}
+              style={spaceButtonStyle}
+            >
+              Blueberry
+            </button>
+          </RovingFocus.Item>
+
+          <RovingFocus.Item id="space-blue-berry" textValue="Blue Berry">
+            <button
+              type="button"
+              data-testid="space-blue-berry"
+              onClick={countActivation}
+              style={spaceButtonStyle}
+            >
+              Blue Berry
+            </button>
+          </RovingFocus.Item>
+        </div>
+      </RovingFocus.Root>
+
+      <div data-testid="space-activation-count">{activations}</div>
+    </div>
+  )
+}
