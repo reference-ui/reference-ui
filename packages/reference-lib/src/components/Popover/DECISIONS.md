@@ -5,6 +5,9 @@ acceptance, per decision, never by exhaustion.
 
 Controlled, anchored, non-isolating floating content with hover policy.
 
+Open/mechanical follow-ups live in `PATCHES.md` (currently none);
+open/design follow-ups live in `FEATURES.md` (currently none).
+
 ## Landed (context, 2-4 lines)
 
 No quarantine freeze and no landing crew: quarantine's 18 freeze commits
@@ -49,6 +52,8 @@ mangling-class items to reject. Recorded here and in `QUARANTINE_RECON.md`.
 
 ## Walkthrough notes for HQ
 
+- Open items: none on either track — `PATCHES.md` (mechanical) and
+  `FEATURES.md` (design) each record the honest none-line.
 - The only decision is the DECLINED Menu-on-Popover root: open Menu's
   StandardDropdown story and Popover's story side by side — both ride Overlay
   directly, and neither needs the other as a root.
