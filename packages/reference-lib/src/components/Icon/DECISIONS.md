@@ -14,11 +14,11 @@ quarantine arc.
 
 ## Candidate features (quarantine-sourced)
 
-No quarantine freeze touched Icon, so quarantine surfaced zero candidate APIs; no quarantine-adjacent API question was found in recon or sibling logs.
+Moved to [FEATURES.md](./FEATURES.md). None pending: no quarantine freeze touched Icon, so quarantine surfaced zero candidate APIs; no quarantine-adjacent API question was found in recon or sibling logs.
 
 ## Suspected gaps (no quarantine source)
 
-No evidenced functionality gaps — Icon is a sizing/integration story with no SPEC/TESTS contract and no consumer pain or handoff on record.
+Mechanical items moved to [PATCHES.md](./PATCHES.md); design-needing items moved to [FEATURES.md](./FEATURES.md). None pending in either: no evidenced functionality gaps — Icon is a sizing/integration story with no SPEC/TESTS contract and no consumer pain or handoff on record.
 
 ## Non-decisions (rejected outright)
 
@@ -26,5 +26,5 @@ No evidenced functionality gaps — Icon is a sizing/integration story with no S
 
 ## Walkthrough notes for HQ
 
-- Nothing is pending a decision; the only walkthrough question is whether the current token scale (`small` 16px / `base` 20px / `large` 24px) still feels right — open the Icon Overview story in Book and check the three sizing tokens card.
-- If HQ wants a future decision surface, the trigger would be a new ask (e.g. more sizes, custom glyph registration) arriving with a consumer case — none exists today.
+- Nothing is pending a decision — see [PATCHES.md](./PATCHES.md) (mechanical, none) and [FEATURES.md](./FEATURES.md) (design, none); the only walkthrough question is whether the current token scale (`small` 16px / `base` 20px / `large` 24px) still feels right — open the Icon Overview story in Book and check the three sizing tokens card.
+- If HQ wants a future decision surface, the trigger would be a new ask (e.g. more sizes, custom glyph registration) arriving with a consumer case — none exists today; file mechanical asks in PATCHES.md and API/behavior asks in FEATURES.md.
