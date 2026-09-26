@@ -40,8 +40,9 @@ port; Popover owns Trigger/hover/`closeOnScroll` policy.
   composition, not a virtual Combobox adapter.
 
 Omitted `autocomplete`, `allowCustomValue`, and `closeOnBlur` mean
-`"list"`, false, and true respectively. Omitted `value`/`inputValue` mean
-controlled `null`/`""`, never hidden uncontrolled state.
+`"list"`, false, and true respectively. `value`/`onChange` are required
+(controlled-only, no `defaultValue`); omitted `inputValue` means
+controlled `""`, never hidden uncontrolled state.
 
 These are API details inside Combobox, not reasons for separate Select,
 Autocomplete, or CommandPalette primitives.
@@ -132,8 +133,9 @@ Autocomplete, or CommandPalette primitives.
   background inerting occurs; Combobox remains nonmodal.
 - [x] `CB-DOM-10` `[reference]` `[browser]` —
   **Combobox should apply deterministic controlled defaults when optional behavior props are omitted.**
-  Omit `value`, `inputValue`, `autocomplete`, `allowCustomValue`, and
-  `closeOnBlur`, type unmatched `Zulu`, then blur while callbacks are ignored.
+  Pass explicit `value={null}`, omit `inputValue`, `autocomplete`,
+  `allowCustomValue`, and `closeOnBlur`, type unmatched `Zulu`, then blur
+  while callbacks are ignored.
   Assert controlled `null`/`""`, `aria-autocomplete=list`, a request to restore
   committed-only text and dismiss on blur, and no hidden state change;
   truthiness cannot choose defaults.

@@ -48,9 +48,10 @@ Visual polish is not this gate. No filtering helpers.
 
 ### Gaps & incoherence
 
-- Uncontrolled `defaultValue` / `defaultInputValue` / `defaultOpen` kept
-  deliberately (mission law: uncontrolled-mode deletion is forbidden; pinned
-  by an API freeze test). The freeze narrative wants controlled-only.
+- Root `value`/`onChange` are required controlled-only (landed
+  2026-09-26 under the HQ no-defaultValue stance; the API freeze test pins
+  the controlled contract). Sibling `defaultInputValue` / `defaultOpen`
+  stay until the HQ call on sibling uncontrolled props.
 - No `autocomplete` matrix, `allowCustomValue`, `loading`,
   `virtualFocus` / `VirtualItem` / grid adapter, Tree bridge, `onEscape`.
 - No async contract: `loading?` → `aria-busy` on the listbox and an empty /

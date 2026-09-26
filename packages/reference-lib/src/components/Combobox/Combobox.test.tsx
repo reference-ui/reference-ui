@@ -366,7 +366,6 @@ function typeText(input: HTMLInputElement, text: string) {
 
 interface HarnessProps {
   value?: string | null
-  defaultValue?: string | null
   onChange?: (value: string | null) => void
   inputValue?: string
   defaultInputValue?: string
@@ -385,9 +384,8 @@ interface HarnessProps {
 }
 
 function Harness({
-  value,
-  defaultValue = null,
-  onChange,
+  value = null,
+  onChange = () => {},
   inputValue,
   defaultInputValue,
   onInputValueChange,
@@ -406,7 +404,6 @@ function Harness({
   return (
     <Combobox
       value={value}
-      defaultValue={defaultValue}
       onChange={onChange}
       inputValue={inputValue}
       defaultInputValue={defaultInputValue}
@@ -450,8 +447,8 @@ interface SelectHarnessProps {
 }
 
 function SelectHarness({
-  value,
-  onChange,
+  value = null,
+  onChange = () => {},
   onInputValueChange,
   open,
   defaultOpen = false,
@@ -527,7 +524,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     // Transparent root without a Field bezel: the input is a direct child
     // of the mount container (Combobox adds no host node).
     const bare = await mount(
-      <Combobox>
+      <Combobox value={null} onChange={() => {}}>
         <Combobox.Input />
       </Combobox>
     )
@@ -689,7 +686,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     const onFocus = vi.fn()
     const ref = React.createRef<HTMLInputElement>()
     const rerendered = await mount(
-      <Combobox defaultOpen={false}>
+      <Combobox value={null} onChange={() => {}} defaultOpen={false}>
         <Field>
           <Combobox.Input
             ref={ref}
@@ -738,7 +735,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
 
     // Input + Trigger: exactly-one-source diagnostic.
     const both = await mount(
-      <Combobox open={false} onOpen={() => {}} onDismiss={() => {}}>
+      <Combobox value={null} onChange={() => {}} open={false} onOpen={() => {}} onDismiss={() => {}}>
         <Combobox.Input />
         <Combobox.Trigger>Choose</Combobox.Trigger>
       </Combobox>
@@ -751,7 +748,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     // Duplicate popovers (mounted via open state): at-most-one diagnostic.
     errorSpy.mockClear()
     const dup = await mount(
-      <Combobox open onOpen={() => {}} onDismiss={() => {}}>
+      <Combobox value={null} onChange={() => {}} open onOpen={() => {}} onDismiss={() => {}}>
         <Combobox.Input />
         <Combobox.Popover>
           <div>First</div>
@@ -769,7 +766,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     // No focus source: exactly-one-source diagnostic.
     errorSpy.mockClear()
     const none = await mount(
-      <Combobox open={false} onOpen={() => {}} onDismiss={() => {}}>
+      <Combobox value={null} onChange={() => {}} open={false} onOpen={() => {}} onDismiss={() => {}}>
         <div>No source</div>
       </Combobox>
     )
@@ -795,7 +792,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
 
   it('CB-DOM-10 partial: applies list autocomplete and empty-text defaults', async () => {
     const { container, root } = await mount(
-      <Combobox defaultOpen>
+      <Combobox value={null} onChange={() => {}} defaultOpen>
         <Field>
           <Combobox.Input />
         </Field>
@@ -815,7 +812,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
   it('CB-DOM-11: root inputValue wins over forbidden Input value props with a diagnostic', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { container, root } = await mount(
-      <Combobox inputValue="Alpha" onInputValueChange={() => {}} defaultOpen>
+      <Combobox value={null} onChange={() => {}} inputValue="Alpha" onInputValueChange={() => {}} defaultOpen>
         <Field>
           {/* @ts-expect-error value is forbidden on Combobox.Input by design */}
           <Combobox.Input value="Bravo" />
@@ -835,7 +832,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
 
     errorSpy.mockClear()
     const second = await mount(
-      <Combobox inputValue="Alpha" onInputValueChange={() => {}} defaultOpen>
+      <Combobox value={null} onChange={() => {}} inputValue="Alpha" onInputValueChange={() => {}} defaultOpen>
         <Field>
           {/* @ts-expect-error defaultValue is forbidden on Combobox.Input by design */}
           <Combobox.Input defaultValue="Charlie" />
@@ -1427,7 +1424,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
 
   it('CB-ENV-01: hydrates closed anatomy and IDs without a mounted active descendant', () => {
     const html = renderToString(
-      <Combobox>
+      <Combobox value={null} onChange={() => {}}>
         <Field>
           <Combobox.Input />
         </Field>
@@ -1478,7 +1475,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     function Inline() {
       const [query, setQuery] = React.useState('')
       return (
-        <Combobox defaultOpen inputValue={query} onInputValueChange={setQuery}>
+        <Combobox value={null} onChange={() => {}} defaultOpen inputValue={query} onInputValueChange={setQuery}>
           <Field>
             <Combobox.Input />
           </Field>
@@ -2028,16 +2025,20 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     await unmount(container, root)
   })
 
-  it('uncontrolled value/input/open work end-to-end without callbacks (API freeze pin)', async () => {
-    // No value/input/open callbacks at all: the component owns its state.
-    const { container, root } = await mount(
-      <Harness defaultValue="react" defaultInputValue={undefined} options={[
-        { value: 'react', label: 'React' },
-        { value: 'vue', label: 'Vue' },
-      ]} />
-    )
+  it('controlled value with uncontrolled input/open works end-to-end (API freeze pin)', async () => {
+    // Value is required-controlled; input/open stay uncontrolled here.
+    function Controlled() {
+      const [val, setVal] = React.useState<string | null>('react')
+      return (
+        <Harness value={val} onChange={setVal} defaultInputValue={undefined} options={[
+          { value: 'react', label: 'React' },
+          { value: 'vue', label: 'Vue' },
+        ]} />
+      )
+    }
+    const { container, root } = await mount(<Controlled />)
     const input = inputOf(container)
-    // Uncontrolled input seeds from the default value.
+    // Uncontrolled input seeds from the controlled value.
     expect(input.value).toBe('react')
     expect(input.getAttribute('aria-expanded')).toBe('false')
 
@@ -2058,7 +2059,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
 
     // defaultOpen + defaultInputValue compose the same way.
     const second = await mount(
-      <Harness defaultValue={null} defaultInputValue="Hello" defaultOpen options={[
+      <Harness value={null} onChange={() => {}} defaultInputValue="Hello" defaultOpen options={[
         { value: 'react', label: 'React' },
       ]} />
     )
@@ -2296,7 +2297,7 @@ describe('Combobox cluster B: authored-children scan (gate + authority diagnosti
 
     const treeChange = await scanOf(
       <ComboboxPopover>
-        <Tree onChange={() => {}}>
+        <Tree value={null} onChange={() => {}}>
           <TreeItem value="a">A</TreeItem>
         </Tree>
       </ComboboxPopover>,
@@ -2321,14 +2322,14 @@ describe('Combobox cluster B: SSR attribute mapping (autocomplete + haspopup)', 
   it('maps autocomplete none/list/both to aria-autocomplete', () => {
     for (const mode of ['none', 'list', 'both'] as const) {
       const html = renderToString(
-        <Combobox inputValue="" autocomplete={mode}>
+        <Combobox value={null} onChange={() => {}} inputValue="" autocomplete={mode}>
           <Combobox.Input aria-label="search" />
         </Combobox>
       )
       expect(html).toContain(`aria-autocomplete="${mode}"`)
     }
     const omitted = renderToString(
-      <Combobox inputValue="">
+      <Combobox value={null} onChange={() => {}} inputValue="">
         <Combobox.Input aria-label="search" />
       </Combobox>
     )
@@ -2340,7 +2341,7 @@ describe('Combobox cluster B: SSR attribute mapping (autocomplete + haspopup)', 
     const { Tree, TreeItem } = await import('../Tree')
 
     const listHtml = renderToString(
-      <Combobox inputValue="">
+      <Combobox value={null} onChange={() => {}} inputValue="">
         <Combobox.Input aria-label="search" />
         <Combobox.Popover>
           <Listbox>
@@ -2352,10 +2353,10 @@ describe('Combobox cluster B: SSR attribute mapping (autocomplete + haspopup)', 
     expect(listHtml).toContain('aria-haspopup="listbox"')
 
     const treeHtml = renderToString(
-      <Combobox inputValue="">
+      <Combobox value={null} onChange={() => {}} inputValue="">
         <Combobox.Input aria-label="search" />
         <Combobox.Popover>
-          <Tree>
+          <Tree value={null} onChange={() => {}}>
             <TreeItem value="a">A</TreeItem>
           </Tree>
         </Combobox.Popover>
@@ -2370,7 +2371,7 @@ describe('Combobox cluster B: SSR attribute mapping (autocomplete + haspopup)', 
       scrollToIndex: () => {},
     }
     const gridHtml = renderToString(
-      <Combobox inputValue="">
+      <Combobox value={null} onChange={() => {}} inputValue="">
         <Combobox.Input aria-label="search" />
         <Combobox.Popover virtualFocus={grid as never} />
       </Combobox>
@@ -2392,6 +2393,8 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
     const calls: string[] = []
     const { container, root } = await mount(
       <Combobox
+        value={null}
+        onChange={() => {}}
         open={false}
         onOpen={() => calls.push('open')}
         inputValue="a"
@@ -2412,6 +2415,8 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
     const openCalls: string[] = []
     const populated = await mount(
       <Combobox
+        value={null}
+        onChange={() => {}}
         open={false}
         onOpen={() => openCalls.push('open')}
         inputValue="a"
@@ -2474,6 +2479,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
     const calls: string[] = []
     const { container, root } = await mount(
       <Combobox
+        value={null}
         inputValue="Al"
         onInputValueChange={v => calls.push(`input:${v}`)}
         onChange={v => calls.push(`change:${v}`)}
@@ -2503,7 +2509,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
 
   it('CB-MODE-04 support: filtering active away restores the typed prefix', async () => {
     const { container, root } = await mount(
-      <Combobox inputValue="Al" defaultOpen autocomplete="both">
+      <Combobox value={null} onChange={() => {}} inputValue="Al" defaultOpen autocomplete="both">
         <Combobox.Input aria-label="both-restore" />
         <Combobox.Popover>
           <Listbox>
@@ -2517,7 +2523,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
     expect(input.value).toBe('Alpha')
     await React.act(async () => {
       root.render(
-        <Combobox inputValue="Al" defaultOpen autocomplete="both">
+        <Combobox value={null} onChange={() => {}} inputValue="Al" defaultOpen autocomplete="both">
           <Combobox.Input aria-label="both-restore" />
           <Combobox.Popover>
             <Listbox>{[]}</Listbox>
@@ -2547,7 +2553,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
 
     function WindowedGrid({ windowEnd }: { windowEnd: number }) {
       return (
-        <Combobox inputValue="" defaultOpen>
+        <Combobox value={null} onChange={() => {}} inputValue="" defaultOpen>
           <Combobox.Input aria-label="grid" />
           <Combobox.Popover virtualFocus={gridAdapter as never}>
             <div role="row">
@@ -2602,7 +2608,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
       scrollToIndex: () => calls.push('scroll'),
     }
     const { container, root } = await mount(
-      <Combobox defaultOpen onChange={v => calls.push(`change:${v}`)}>
+      <Combobox value={null} defaultOpen onChange={v => calls.push(`change:${v}`)}>
         <Combobox.Input aria-label="conflict" />
         <Combobox.Popover virtualFocus={gridAdapter as never}>
           <Listbox>

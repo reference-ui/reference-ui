@@ -570,7 +570,7 @@ export const DisabledReadonly = () => {
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r">
-        <Combobox open={false} onOpen={() => push('readonly-open')} onDismiss={() => {}}>
+        <Combobox value={null} onChange={() => {}} open={false} onOpen={() => push('readonly-open')} onDismiss={() => {}}>
           <Field>
             <Combobox.Input data-testid="dr-readonly" readOnly placeholder="Read-only" />
           </Field>
@@ -580,7 +580,7 @@ export const DisabledReadonly = () => {
             </Listbox>
           </Combobox.Popover>
         </Combobox>
-        <Combobox open={false} onOpen={() => push('disabled-open')} onDismiss={() => {}}>
+        <Combobox value={null} onChange={() => {}} open={false} onOpen={() => push('disabled-open')} onDismiss={() => {}}>
           <Field>
             <Combobox.Input data-testid="dr-disabled" disabled placeholder="Disabled" />
           </Field>
@@ -590,7 +590,7 @@ export const DisabledReadonly = () => {
             </Listbox>
           </Combobox.Popover>
         </Combobox>
-        <Combobox open={false} onOpen={() => push('trigger-open')} onDismiss={() => {}}>
+        <Combobox value={null} onChange={() => {}} open={false} onOpen={() => push('trigger-open')} onDismiss={() => {}}>
           <Combobox.Trigger data-testid="dr-trigger" disabled>
             Choose
           </Combobox.Trigger>
@@ -615,6 +615,8 @@ export const FixedClosed = () => {
       <Div p="4r" maxW="80r">
         <Div style={{ width: 240, margin: '16px 0' }}>
           <Combobox
+            value={null}
+            onChange={() => {}}
             open={false}
             onOpen={() => push('open')}
             onDismiss={() => push('dismiss')}
@@ -1237,6 +1239,7 @@ export const SlottedCellLog = () => {
 
 export const ConflictLog = () => {
   const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
   const [log, setLog] = React.useState<string[]>([])
   const [single, setSingle] = React.useState(false)
   const push = (entry: string) => setLog(prev => [...prev, entry])
@@ -1265,7 +1268,11 @@ export const ConflictLog = () => {
               push('dismiss')
               setOpen(false)
             }}
-            onChange={v => push(`change:${v}`)}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+            }}
           >
             <Field>
               <Combobox.Input data-testid="cf-input" placeholder="Search..." />
@@ -1305,6 +1312,7 @@ export const ConflictLog = () => {
 
 export const MultipleLog = () => {
   const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
   const [log, setLog] = React.useState<string[]>([])
   const push = (entry: string) => setLog(prev => [...prev, entry])
 
@@ -1322,7 +1330,11 @@ export const MultipleLog = () => {
               push('dismiss')
               setOpen(false)
             }}
-            onChange={v => push(`change:${JSON.stringify(v)}`)}
+            value={value}
+            onChange={v => {
+              push(`change:${JSON.stringify(v)}`)
+              setValue(v)
+            }}
           >
             <Field>
               <Combobox.Input data-testid="ml-input" placeholder="Search..." />
@@ -1361,6 +1373,7 @@ class ChangeBoundary extends React.Component<
 }
 
 export const NestedChangeLog = () => {
+  const [value, setValue] = React.useState<string | null>(null)
   const [log, setLog] = React.useState<string[]>([])
   const push = (entry: string) => setLog(prev => [...prev, entry])
 
@@ -1369,7 +1382,14 @@ export const NestedChangeLog = () => {
       <Div p="4r" maxW="80r" data-testid="nc-root">
         <Div style={{ width: 240, margin: '16px 0' }}>
           <ChangeBoundary>
-            <Combobox defaultOpen onChange={v => push(`root:${v}`)}>
+            <Combobox
+              defaultOpen
+              value={value}
+              onChange={v => {
+                push(`root:${v}`)
+                setValue(v)
+              }}
+            >
               <Field>
                 <Combobox.Input data-testid="nc-input" placeholder="Search..." />
               </Field>
@@ -1396,7 +1416,9 @@ const treeBranchOptions = [
 
 export const TreePopupLog = () => {
   const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
   const [log, setLog] = React.useState<string[]>([])
+  const [treeValue, setTreeValue] = React.useState<string | null>(null)
   const push = (entry: string) => setLog(prev => [...prev, entry])
 
   return (
@@ -1413,13 +1435,17 @@ export const TreePopupLog = () => {
               push('dismiss')
               setOpen(false)
             }}
-            onChange={v => push(`change:${v}`)}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+            }}
           >
             <Field>
               <Combobox.Input data-testid="tp-input" placeholder="Search..." />
             </Field>
             <Combobox.Popover data-testid="tp-popover">
-              <Tree data-testid="tp-tree">
+              <Tree data-testid="tp-tree" value={treeValue} onChange={setTreeValue}>
                 {treeBranchOptions.map(opt => (
                   <TreeItem key={opt.value} value={opt.value} data-testid={`tp-item-${opt.value}`}>
                     {opt.label}
@@ -1437,15 +1463,23 @@ export const TreePopupLog = () => {
 
 export const TreeTriggerLog = () => {
   const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [treeValue, setTreeValue] = React.useState<string | null>(null)
 
   return (
     <ReferenceLibrary>
       <Div p="4r" maxW="80r" data-testid="tt-root">
         <Div style={{ width: 240, margin: '16px 0' }}>
-          <Combobox open={open} onOpen={() => setOpen(true)} onDismiss={() => setOpen(false)}>
+          <Combobox
+            value={value}
+            onChange={setValue}
+            open={open}
+            onOpen={() => setOpen(true)}
+            onDismiss={() => setOpen(false)}
+          >
             <Combobox.Trigger data-testid="tt-trigger">Choose</Combobox.Trigger>
             <Combobox.Popover data-testid="tt-popover">
-              <Tree>
+              <Tree value={treeValue} onChange={setTreeValue}>
                 {treeBranchOptions.map(opt => (
                   <TreeItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -1480,6 +1514,8 @@ export const EmptyPopoverLog = () => {
               push('dismiss')
               setOpen(false)
             }}
+            value={null}
+            onChange={() => {}}
             inputValue={inputValue}
             onInputValueChange={v => {
               push(`input:${v}`)
@@ -1519,6 +1555,8 @@ export const NoPopoverLog = () => {
             open={open}
             onOpen={() => setOpen(true)}
             onDismiss={() => setOpen(false)}
+            value={null}
+            onChange={() => {}}
             inputValue={inputValue}
             onInputValueChange={v => {
               push(`input:${v}`)
@@ -1611,9 +1649,10 @@ function InvalidFrame({
   adapter: ComboboxGridAdapter
   items: React.ReactNode
 }) {
+  const [value, setValue] = React.useState<string | null>(null)
   return (
     <Div style={{ width: 240, margin: '16px 0' }}>
-      <Combobox defaultOpen>
+      <Combobox defaultOpen value={value} onChange={setValue}>
         <Field>
           <Combobox.Input data-testid={`${prefix}-input`} placeholder="Search..." />
         </Field>
@@ -1938,6 +1977,7 @@ export const StaleGridLog = () => {
 export const RecoverLog = () => {
   const [valid, setValid] = React.useState(false)
   const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
   const [log, setLog] = React.useState<string[]>([])
   const push = (entry: string) => setLog(prev => [...prev, entry])
 
@@ -1975,7 +2015,11 @@ export const RecoverLog = () => {
               push('dismiss')
               setOpen(false)
             }}
-            onChange={v => push(`change:${v}`)}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+            }}
           >
             <Field>
               <Combobox.Input data-testid="rc-input" placeholder="Search..." />

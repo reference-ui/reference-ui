@@ -113,9 +113,12 @@ function mountedValue(
 
 export interface ComboboxProps {
   children?: React.ReactNode
-  value?: string | null
-  defaultValue?: string | null
-  onChange?: (value: string | null) => void
+  /** Required controlled selection (`null` is the empty value). There is no
+   * `defaultValue` and no uncontrolled branch. */
+  value: string | null
+  /** Required commit callback — every selection request emits here and the
+   * parent owns the value (no silent-frozen controlled). */
+  onChange: (value: string | null) => void
   inputValue?: string
   defaultInputValue?: string
   onInputValueChange?: (value: string) => void
@@ -937,8 +940,7 @@ export const ComboboxVirtualItem = React.forwardRef<HTMLElement, ComboboxVirtual
 
 export function Combobox({
   children,
-  value: valueProp,
-  defaultValue = null,
+  value,
   onChange,
   inputValue: inputValProp,
   defaultInputValue,
@@ -954,9 +956,21 @@ export function Combobox({
   autocomplete = 'list',
   onEscape,
 }: ComboboxProps) {
-  const isControlledValue = valueProp !== undefined
-  const [internalValue, setInternalValue] = React.useState<string | null>(defaultValue)
-  const value = isControlledValue ? valueProp : internalValue
+  // Controlled-only: value + onChange are required; there is no uncontrolled branch.
+  if (globalProcess?.env?.NODE_ENV !== 'production') {
+    if (value === undefined) {
+      const err =
+        '[reference-ui] Combobox: Missing required "value" prop. Combobox is controlled-only: pass value + onChange.'
+      console.error(err)
+      throw new Error(err)
+    }
+    if (onChange === undefined) {
+      const err =
+        '[reference-ui] Combobox: Missing required "onChange" prop. Combobox is controlled-only: pass value + onChange.'
+      console.error(err)
+      throw new Error(err)
+    }
+  }
 
   const isControlledInput = inputValProp !== undefined
   const [internalInput, setInternalInput] = React.useState<string>(
@@ -1463,8 +1477,7 @@ export function Combobox({
       // Two-authority conflict (#5, CB-ADAPTER-08): no adapter
       // receives a commit until exactly one authority remains.
       if (collectionConflict) return
-      if (!isControlledValue) setInternalValue(nextVal)
-      onChange?.(nextVal)
+      onChange(nextVal)
       if (nextVal !== null && !isControlledInput && !selectOnly) {
         const selectedOpt = optionsMapRef.current.get(nextVal)
         const labelText = selectedOpt?.textValue ?? nextVal
@@ -1472,7 +1485,7 @@ export function Combobox({
       }
       setIsOpen(false)
     },
-    [isControlledValue, isControlledInput, selectOnly, onChange, handleInputChange, setIsOpen, collectionConflict]
+    [isControlledInput, selectOnly, onChange, handleInputChange, setIsOpen, collectionConflict]
   )
 
   // Outside press (#3): Overlay dismisses non-inert layers synchronously

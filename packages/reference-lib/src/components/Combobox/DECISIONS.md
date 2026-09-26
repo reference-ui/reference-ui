@@ -91,6 +91,10 @@ Moved items live in PATCHES.md (mechanical) or FEATURES.md (needs design), as no
   `defaultInputValue`) — mangling-class; rejection in crew log
   ("Deliberately NOT ported") + SPEC.md "Gaps & incoherence" (uncontrolled
   kept deliberately, pinned by an API freeze test).
+  PARTIALLY SUPERSEDED 2026-09-26: HQ's no-defaultValue stance landed the
+  root `defaultValue` deletion (`value`/`onChange` required); sibling
+  `defaultOpen` / `defaultInputValue` deletion is still rejected pending
+  the HQ call.
 - Book/tests re-targeted to `open` + `onOpen`/`onDismiss` only —
   same rewrite's test half; rejected crew log + SPEC.md Status.
 - Enshrining vacuous quarantine e2e titles (`CB-CLOSE-03/05`,

@@ -114,8 +114,8 @@ interface ComboboxProps extends OverlayDismissHandlers {
   children?: React.ReactNode
   open: boolean
   onOpen?: () => void
-  value?: string | null
-  onChange?: (value: string | null) => void
+  value: string | null
+  onChange: (value: string | null) => void
   inputValue?: string
   onInputValueChange?: (value: string) => void
   autocomplete?: ComboboxAutocomplete
@@ -168,7 +168,8 @@ siblings — `Field`, opener Buttons, chip Buttons — are visual chrome and
 do not register as Combobox parts. Unprevented native
 Trigger activation requests open/dismiss internally, so select-only
 compositions do not add a second toggle handler.
-Omitted `value`/`inputValue` are controlled `null`/`""`; omitted
+`value`/`onChange` are required (controlled-only, no `defaultValue`);
+omitted `inputValue` is controlled `""`; omitted
 autocomplete/custom/blur policy is `"list"`/false/true.
 Input omits native `value`, `defaultValue`, and `onChange`; root
 `inputValue`/`onInputValueChange` are the sole editable-text authority.
